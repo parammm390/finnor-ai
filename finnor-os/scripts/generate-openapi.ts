@@ -71,6 +71,7 @@ import { PROCEDURE_OPERATIONS, PROCEDURE_OPERATION_SCHEMAS } from "../packages/p
 import { DELIBERATION_OPERATIONS } from "../packages/private-equity/src/deliberation/api";
 import { ComputeSearchRequestSchema, SearchIdSchema, SearchProjectionSchema } from "../packages/private-equity/src/compute-search/contracts";
 import { R4_OPERATIONS, R4_OPERATION_SCHEMAS } from "../packages/private-equity/src/r4/contracts";
+import { OperationSchemas as DecisionAtlasOperationSchemas } from "../packages/private-equity/src/r7/contracts";
 import { CalibrationRequestSchema, DeliberationRequestSchema, DeliberationEvidenceReadSchema, DeliberationCurrentReaderSchema, DeliberationProjectionSchema, DeliberationModuleReaderSchema } from "../packages/private-equity/src/deliberation/contracts";
 
 const page = z.object({ limit: z.number().int().min(1).max(100).optional(), cursor: z.string().min(1).max(4096).optional() }).strict();
@@ -659,6 +660,21 @@ const paths = {
     post: { security: secured, parameters: [{ name: "key", in: "path", required: true, schema: { type: "string", minLength: 3, maxLength: 160 } }], requestBody: json(ArtifactTemplateInstantiateSchema), responses: { "201": { description: "New Core Document and first immutable version instantiated with lineage" } } },
   },
 } satisfies Record<string, unknown>;
+
+for (const [operation,schema] of Object.entries(DecisionAtlasOperationSchemas)) {
+  Object.assign(paths, { ["/api/decision-atlases/" + operation]: { post: {
+    security: secured, requestBody: json(schema), responses: {
+      "200": { description: "Current original-family exact model-relative atlas, owner revision, query or S4/S5 intent. No effect authority or admission." },
+      "202": { description: "Original episode-bound durable build accepted; output remains provisional until independently checked." },
+      "400": { description: "Strict bounded request schema or exact reference rejected." },
+      "401": { description: "Current authenticated caller required." },
+      "404": { description: "Absent or unauthorized private owner reference." },
+      "409": { description: "Original source, Work, rights, method, grant or idempotency preimage changed." },
+      "422": { description: "Unsupported affine semantics, exceeded declared bound or unavailable admitted fallback. No grant or effect authority renewed." },
+      "503": { description: "Required ordinary native profile configuration unavailable." },
+    },
+  } } });
+}
 
 for (const operation of R4_OPERATIONS) {
   Object.assign(paths, { ["/api/identification-plans/" + operation]: { post: {

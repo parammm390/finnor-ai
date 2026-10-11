@@ -102,7 +102,13 @@ const artifactOperations = {
   POST: ["drafts", "patches", "comments", "reviews", "bindings", "lineage", "publish", "publish-new", "recalculate"],
 }
 
+const atlasSource = readFileSync(join(project, "finnor-os/packages/private-equity/src/r7/contracts.ts"), "utf8")
+const atlasOperations = new Map([...block(atlasSource, "export const R7OperationClasses={", "} as const;")
+  .matchAll(/([a-z]+):'(READ|CONTROL|MUTATION)'/g)].map(match => [match[1], match[2]]))
+if (!atlasOperations.size) throw new Error("Missing versioned R7 operation classes")
+
 const familyRules = [
+  [/^decision-atlases\//, "decision-atlas", "@finnor/private-equity", ["CANVAS"]],
   [/^identification-plans\//, "identification-plan", "@finnor/private-equity", ["CANVAS"]],
   [/^branches\//,"branch-fabric","@finnor/private-equity",["CANVAS"]],
   [/^company-brain\//, "company-brain", "@finnor/private-equity", ["WORLD", "CANVAS"]],
@@ -163,6 +169,7 @@ function familyFor(path) {
 
 function tags(family) {
   const byFamily = {
+    "decision-atlas": ["work", "company-brain"],
     "identification-plan": ["work", "company-brain"],
     "company-brain": ["company-brain"], "digital-twin": ["company-brain"], ic: ["ic", "company-brain", "semantic-activity"],
     underwriting: ["underwriting", "company-brain", "semantic-activity"], artifact: ["artifact", "source", "company-brain"], m365: ["source"], connection: ["source"],
@@ -182,7 +189,8 @@ function routeEntry(method, path, source) {
     : familyFor(path)
   const stream = path === "stream"
   // Digital Twin POST includes evidence-backed canonical mutations.
-  const ownerClassification=coalitionClassification??(path.startsWith("branches/")?branchOperations.get(path.slice("branches/".length)):
+  const ownerClassification=coalitionClassification??(path.startsWith("decision-atlases/")?atlasOperations.get(path.slice("decision-atlases/".length)):
+    path.startsWith("branches/")?branchOperations.get(path.slice("branches/".length)):
     path.startsWith("company-brain/")?m4Operations.get(path.slice("company-brain/".length)):undefined)
   const r1=path.startsWith("policies/")&&r1Operations.includes(path.slice("policies/".length))
   const read = method === "GET" || ownerClassification==="READ" || r1&&r1Reads.has(path.slice("policies/".length)) || (family === "identification-plan" && identificationReads.has(path.slice("identification-plans/".length))) || (family === "company-brain" && companyBrainReads.has(path.slice("company-brain/".length))) || ["query", "semantic-activity"].includes(family)
@@ -238,6 +246,8 @@ for (const file of files(apiRoot)) {
       routes.push(routeEntry(method,path,source))
     } else if(path==="branches/:operation"){
       for(const operation of branchOperations.keys())routes.push(routeEntry(method,`branches/${operation}`,source))
+    } else if (path === "decision-atlases/:operation") {
+      for (const operation of atlasOperations.keys()) routes.push(routeEntry(method, `decision-atlases/${operation}`, source))
     } else if (path === "identification-plans/:operation") {
       for (const operation of identificationOperations) routes.push(routeEntry(method, `identification-plans/${operation}`, source))
     } else if (path === "read-models/:view") {

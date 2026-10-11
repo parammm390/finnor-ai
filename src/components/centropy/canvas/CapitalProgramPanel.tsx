@@ -14,6 +14,7 @@ import {
 import { OriginalChallengePanel } from "./OriginalChallengePanel"
 import { ExactControlReview } from "./ExactControlReview"
 import { CoalitionProgrammeReview } from "./CoalitionProgrammeReview"
+import { DecisionAtlasReview } from "./DecisionAtlasReview"
 import "./capital-program.css"
 
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
@@ -300,6 +301,7 @@ export function CapitalProgramPanel({ workId, root }: {
     <ExactControlReview scope={scope} authorized={authorized} workId={workId} root={root} />
     <CoalitionProgrammeReview programme={program?.coalitionProgramme ?? null}
       scope={scope} authorized={authorized} workId={workId} root={root} />
+    <DecisionAtlasReview workId={workId} root={root} />
     <p>Construct changed economic terms under the current owner model. Proposals do not reserve capital, change agreements or execute effects.</p>
     {!authorized ? <p>Sign in with current Work access to inspect arrangements.</p> : null}
     <button type="button" disabled={!authorized || busy} onClick={loadPolicies}>Load current arrangements</button>

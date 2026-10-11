@@ -14037,6 +14037,1113 @@
         }
       }
     },
+    "/api/decision-atlases/register": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "workId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "root": {
+                    "type": "object",
+                    "properties": {
+                      "entityType": {
+                        "type": "string",
+                        "enum": [
+                          "pe_strategy",
+                          "pe_opportunity",
+                          "pe_deal",
+                          "pe_fund",
+                          "pe_vehicle",
+                          "external_organization",
+                          "pe_portfolio_holding"
+                        ]
+                      },
+                      "entityId": {
+                        "type": "string",
+                        "format": "uuid"
+                      }
+                    },
+                    "required": [
+                      "entityType",
+                      "entityId"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "evidenceVersionId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "expectedFamilyRef": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "owner": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 256
+                          },
+                          "id": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 4096
+                          },
+                          "version": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 256
+                          },
+                          "contentDigest": {
+                            "type": "string",
+                            "pattern": "^[a-f0-9]{64}$"
+                          }
+                        },
+                        "required": [
+                          "owner",
+                          "id",
+                          "version",
+                          "contentDigest"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "workId",
+                  "root",
+                  "evidenceVersionId",
+                  "expectedFamilyRef"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current original-family exact model-relative atlas, owner revision, query or S4/S5 intent. No effect authority or admission."
+          },
+          "202": {
+            "description": "Original episode-bound durable build accepted; output remains provisional until independently checked."
+          },
+          "400": {
+            "description": "Strict bounded request schema or exact reference rejected."
+          },
+          "401": {
+            "description": "Current authenticated caller required."
+          },
+          "404": {
+            "description": "Absent or unauthorized private owner reference."
+          },
+          "409": {
+            "description": "Original source, Work, rights, method, grant or idempotency preimage changed."
+          },
+          "422": {
+            "description": "Unsupported affine semantics, exceeded declared bound or unavailable admitted fallback. No grant or effect authority renewed."
+          },
+          "503": {
+            "description": "Required ordinary native profile configuration unavailable."
+          }
+        }
+      }
+    },
+    "/api/decision-atlases/context": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "workId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "root": {
+                    "type": "object",
+                    "properties": {
+                      "entityType": {
+                        "type": "string",
+                        "enum": [
+                          "pe_strategy",
+                          "pe_opportunity",
+                          "pe_deal",
+                          "pe_fund",
+                          "pe_vehicle",
+                          "external_organization",
+                          "pe_portfolio_holding"
+                        ]
+                      },
+                      "entityId": {
+                        "type": "string",
+                        "format": "uuid"
+                      }
+                    },
+                    "required": [
+                      "entityType",
+                      "entityId"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "workId",
+                  "root"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current original-family exact model-relative atlas, owner revision, query or S4/S5 intent. No effect authority or admission."
+          },
+          "202": {
+            "description": "Original episode-bound durable build accepted; output remains provisional until independently checked."
+          },
+          "400": {
+            "description": "Strict bounded request schema or exact reference rejected."
+          },
+          "401": {
+            "description": "Current authenticated caller required."
+          },
+          "404": {
+            "description": "Absent or unauthorized private owner reference."
+          },
+          "409": {
+            "description": "Original source, Work, rights, method, grant or idempotency preimage changed."
+          },
+          "422": {
+            "description": "Unsupported affine semantics, exceeded declared bound or unavailable admitted fallback. No grant or effect authority renewed."
+          },
+          "503": {
+            "description": "Required ordinary native profile configuration unavailable."
+          }
+        }
+      }
+    },
+    "/api/decision-atlases/build": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "envelope_inputs": {
+                    "type": "object",
+                    "properties": {
+                      "familyRef": {
+                        "type": "object",
+                        "properties": {
+                          "owner": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 256
+                          },
+                          "id": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 4096
+                          },
+                          "version": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 256
+                          },
+                          "contentDigest": {
+                            "type": "string",
+                            "pattern": "^[a-f0-9]{64}$"
+                          }
+                        },
+                        "required": [
+                          "owner",
+                          "id",
+                          "version",
+                          "contentDigest"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "required": [
+                      "familyRef"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "problem_ref": {
+                    "type": "object",
+                    "properties": {
+                      "owner": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "id": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 4096
+                      },
+                      "version": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "contentDigest": {
+                        "type": "string",
+                        "pattern": "^[a-f0-9]{64}$"
+                      }
+                    },
+                    "required": [
+                      "owner",
+                      "id",
+                      "version",
+                      "contentDigest"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "existing_work_revision": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "domain_profile_ref": {
+                    "type": "object",
+                    "properties": {
+                      "owner": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "id": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 4096
+                      },
+                      "version": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "contentDigest": {
+                        "type": "string",
+                        "pattern": "^[a-f0-9]{64}$"
+                      }
+                    },
+                    "required": [
+                      "owner",
+                      "id",
+                      "version",
+                      "contentDigest"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "budget_grant_ref": {
+                    "type": "object",
+                    "properties": {
+                      "owner": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "id": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 4096
+                      },
+                      "version": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "contentDigest": {
+                        "type": "string",
+                        "pattern": "^[a-f0-9]{64}$"
+                      }
+                    },
+                    "required": [
+                      "owner",
+                      "id",
+                      "version",
+                      "contentDigest"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "cancellation_ref": {
+                    "type": "object",
+                    "properties": {
+                      "owner": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "id": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 4096
+                      },
+                      "version": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "contentDigest": {
+                        "type": "string",
+                        "pattern": "^[a-f0-9]{64}$"
+                      }
+                    },
+                    "required": [
+                      "owner",
+                      "id",
+                      "version",
+                      "contentDigest"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "budget": {
+                    "type": "object",
+                    "properties": {
+                      "maxNodes": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 1024
+                      },
+                      "maxDepth": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 256
+                      },
+                      "maxFacets": {
+                        "type": "integer",
+                        "minimum": 8,
+                        "maximum": 256
+                      },
+                      "maxBases": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 200000
+                      },
+                      "maxTotalBases": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 2000000
+                      },
+                      "maxBytes": {
+                        "type": "integer",
+                        "minimum": 4096,
+                        "maximum": 33554432
+                      },
+                      "deadlineMs": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 30000
+                      }
+                    },
+                    "required": [
+                      "maxNodes",
+                      "maxDepth",
+                      "maxFacets",
+                      "maxBases",
+                      "maxTotalBases",
+                      "maxBytes",
+                      "deadlineMs"
+                    ],
+                    "additionalProperties": false,
+                    "default": {
+                      "maxNodes": 1024,
+                      "maxDepth": 256,
+                      "maxFacets": 256,
+                      "maxBases": 200000,
+                      "maxTotalBases": 2000000,
+                      "maxBytes": 33554432,
+                      "deadlineMs": 30000
+                    }
+                  },
+                  "idempotencyKey": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200
+                  }
+                },
+                "required": [
+                  "envelope_inputs",
+                  "problem_ref",
+                  "existing_work_revision",
+                  "domain_profile_ref",
+                  "budget_grant_ref",
+                  "cancellation_ref",
+                  "idempotencyKey"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current original-family exact model-relative atlas, owner revision, query or S4/S5 intent. No effect authority or admission."
+          },
+          "202": {
+            "description": "Original episode-bound durable build accepted; output remains provisional until independently checked."
+          },
+          "400": {
+            "description": "Strict bounded request schema or exact reference rejected."
+          },
+          "401": {
+            "description": "Current authenticated caller required."
+          },
+          "404": {
+            "description": "Absent or unauthorized private owner reference."
+          },
+          "409": {
+            "description": "Original source, Work, rights, method, grant or idempotency preimage changed."
+          },
+          "422": {
+            "description": "Unsupported affine semantics, exceeded declared bound or unavailable admitted fallback. No grant or effect authority renewed."
+          },
+          "503": {
+            "description": "Required ordinary native profile configuration unavailable."
+          }
+        }
+      }
+    },
+    "/api/decision-atlases/read": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "buildId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "eventsAfter": {
+                    "type": "object",
+                    "properties": {
+                      "at": {
+                        "type": "string",
+                        "format": "date-time"
+                      },
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      }
+                    },
+                    "required": [
+                      "at",
+                      "id"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "buildId"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current original-family exact model-relative atlas, owner revision, query or S4/S5 intent. No effect authority or admission."
+          },
+          "202": {
+            "description": "Original episode-bound durable build accepted; output remains provisional until independently checked."
+          },
+          "400": {
+            "description": "Strict bounded request schema or exact reference rejected."
+          },
+          "401": {
+            "description": "Current authenticated caller required."
+          },
+          "404": {
+            "description": "Absent or unauthorized private owner reference."
+          },
+          "409": {
+            "description": "Original source, Work, rights, method, grant or idempotency preimage changed."
+          },
+          "422": {
+            "description": "Unsupported affine semantics, exceeded declared bound or unavailable admitted fallback. No grant or effect authority renewed."
+          },
+          "503": {
+            "description": "Required ordinary native profile configuration unavailable."
+          }
+        }
+      }
+    },
+    "/api/decision-atlases/status": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "buildId": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                },
+                "required": [
+                  "buildId"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current original-family exact model-relative atlas, owner revision, query or S4/S5 intent. No effect authority or admission."
+          },
+          "202": {
+            "description": "Original episode-bound durable build accepted; output remains provisional until independently checked."
+          },
+          "400": {
+            "description": "Strict bounded request schema or exact reference rejected."
+          },
+          "401": {
+            "description": "Current authenticated caller required."
+          },
+          "404": {
+            "description": "Absent or unauthorized private owner reference."
+          },
+          "409": {
+            "description": "Original source, Work, rights, method, grant or idempotency preimage changed."
+          },
+          "422": {
+            "description": "Unsupported affine semantics, exceeded declared bound or unavailable admitted fallback. No grant or effect authority renewed."
+          },
+          "503": {
+            "description": "Required ordinary native profile configuration unavailable."
+          }
+        }
+      }
+    },
+    "/api/decision-atlases/cancel": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "buildId": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                },
+                "required": [
+                  "buildId"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current original-family exact model-relative atlas, owner revision, query or S4/S5 intent. No effect authority or admission."
+          },
+          "202": {
+            "description": "Original episode-bound durable build accepted; output remains provisional until independently checked."
+          },
+          "400": {
+            "description": "Strict bounded request schema or exact reference rejected."
+          },
+          "401": {
+            "description": "Current authenticated caller required."
+          },
+          "404": {
+            "description": "Absent or unauthorized private owner reference."
+          },
+          "409": {
+            "description": "Original source, Work, rights, method, grant or idempotency preimage changed."
+          },
+          "422": {
+            "description": "Unsupported affine semantics, exceeded declared bound or unavailable admitted fallback. No grant or effect authority renewed."
+          },
+          "503": {
+            "description": "Required ordinary native profile configuration unavailable."
+          }
+        }
+      }
+    },
+    "/api/decision-atlases/parameters": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "familyRef": {
+                    "type": "object",
+                    "properties": {
+                      "owner": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "id": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 4096
+                      },
+                      "version": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "contentDigest": {
+                        "type": "string",
+                        "pattern": "^[a-f0-9]{64}$"
+                      }
+                    },
+                    "required": [
+                      "owner",
+                      "id",
+                      "version",
+                      "contentDigest"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "expectedRef": {
+                    "type": "object",
+                    "properties": {
+                      "owner": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "id": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 4096
+                      },
+                      "version": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "contentDigest": {
+                        "type": "string",
+                        "pattern": "^[a-f0-9]{64}$"
+                      }
+                    },
+                    "required": [
+                      "owner",
+                      "id",
+                      "version",
+                      "contentDigest"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "values": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "maxLength": 170
+                    },
+                    "minItems": 1,
+                    "maxItems": 4
+                  }
+                },
+                "required": [
+                  "familyRef",
+                  "expectedRef",
+                  "values"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current original-family exact model-relative atlas, owner revision, query or S4/S5 intent. No effect authority or admission."
+          },
+          "202": {
+            "description": "Original episode-bound durable build accepted; output remains provisional until independently checked."
+          },
+          "400": {
+            "description": "Strict bounded request schema or exact reference rejected."
+          },
+          "401": {
+            "description": "Current authenticated caller required."
+          },
+          "404": {
+            "description": "Absent or unauthorized private owner reference."
+          },
+          "409": {
+            "description": "Original source, Work, rights, method, grant or idempotency preimage changed."
+          },
+          "422": {
+            "description": "Unsupported affine semantics, exceeded declared bound or unavailable admitted fallback. No grant or effect authority renewed."
+          },
+          "503": {
+            "description": "Required ordinary native profile configuration unavailable."
+          }
+        }
+      }
+    },
+    "/api/decision-atlases/query": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "buildId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "parameterRef": {
+                    "type": "object",
+                    "properties": {
+                      "owner": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "id": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 4096
+                      },
+                      "version": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "contentDigest": {
+                        "type": "string",
+                        "pattern": "^[a-f0-9]{64}$"
+                      }
+                    },
+                    "required": [
+                      "owner",
+                      "id",
+                      "version",
+                      "contentDigest"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "idempotencyKey": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200
+                  },
+                  "fallback": {
+                    "type": "string",
+                    "enum": [
+                      "DEVELOPMENT_EXACT",
+                      "REQUIRE_ADMITTED"
+                    ],
+                    "default": "REQUIRE_ADMITTED"
+                  }
+                },
+                "required": [
+                  "buildId",
+                  "parameterRef",
+                  "idempotencyKey"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current original-family exact model-relative atlas, owner revision, query or S4/S5 intent. No effect authority or admission."
+          },
+          "202": {
+            "description": "Original episode-bound durable build accepted; output remains provisional until independently checked."
+          },
+          "400": {
+            "description": "Strict bounded request schema or exact reference rejected."
+          },
+          "401": {
+            "description": "Current authenticated caller required."
+          },
+          "404": {
+            "description": "Absent or unauthorized private owner reference."
+          },
+          "409": {
+            "description": "Original source, Work, rights, method, grant or idempotency preimage changed."
+          },
+          "422": {
+            "description": "Unsupported affine semantics, exceeded declared bound or unavailable admitted fallback. No grant or effect authority renewed."
+          },
+          "503": {
+            "description": "Required ordinary native profile configuration unavailable."
+          }
+        }
+      }
+    },
+    "/api/decision-atlases/select": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "buildId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "queryRef": {
+                    "type": "object",
+                    "properties": {
+                      "owner": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "id": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 4096
+                      },
+                      "version": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "contentDigest": {
+                        "type": "string",
+                        "pattern": "^[a-f0-9]{64}$"
+                      }
+                    },
+                    "required": [
+                      "owner",
+                      "id",
+                      "version",
+                      "contentDigest"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "idempotencyKey": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200
+                  }
+                },
+                "required": [
+                  "buildId",
+                  "queryRef",
+                  "idempotencyKey"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current original-family exact model-relative atlas, owner revision, query or S4/S5 intent. No effect authority or admission."
+          },
+          "202": {
+            "description": "Original episode-bound durable build accepted; output remains provisional until independently checked."
+          },
+          "400": {
+            "description": "Strict bounded request schema or exact reference rejected."
+          },
+          "401": {
+            "description": "Current authenticated caller required."
+          },
+          "404": {
+            "description": "Absent or unauthorized private owner reference."
+          },
+          "409": {
+            "description": "Original source, Work, rights, method, grant or idempotency preimage changed."
+          },
+          "422": {
+            "description": "Unsupported affine semantics, exceeded declared bound or unavailable admitted fallback. No grant or effect authority renewed."
+          },
+          "503": {
+            "description": "Required ordinary native profile configuration unavailable."
+          }
+        }
+      }
+    },
+    "/api/decision-atlases/continue": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "consumptionRef": {
+                    "type": "object",
+                    "properties": {
+                      "owner": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "id": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 4096
+                      },
+                      "version": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "contentDigest": {
+                        "type": "string",
+                        "pattern": "^[a-f0-9]{64}$"
+                      }
+                    },
+                    "required": [
+                      "owner",
+                      "id",
+                      "version",
+                      "contentDigest"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "decision": {},
+                  "measurements": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "protocol": {},
+                        "events": {
+                          "type": "array",
+                          "items": {},
+                          "maxItems": 256
+                        }
+                      },
+                      "required": [
+                        "events"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "maxItems": 8,
+                    "default": []
+                  },
+                  "idempotencyKey": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200
+                  }
+                },
+                "required": [
+                  "consumptionRef",
+                  "idempotencyKey"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current original-family exact model-relative atlas, owner revision, query or S4/S5 intent. No effect authority or admission."
+          },
+          "202": {
+            "description": "Original episode-bound durable build accepted; output remains provisional until independently checked."
+          },
+          "400": {
+            "description": "Strict bounded request schema or exact reference rejected."
+          },
+          "401": {
+            "description": "Current authenticated caller required."
+          },
+          "404": {
+            "description": "Absent or unauthorized private owner reference."
+          },
+          "409": {
+            "description": "Original source, Work, rights, method, grant or idempotency preimage changed."
+          },
+          "422": {
+            "description": "Unsupported affine semantics, exceeded declared bound or unavailable admitted fallback. No grant or effect authority renewed."
+          },
+          "503": {
+            "description": "Required ordinary native profile configuration unavailable."
+          }
+        }
+      }
+    },
     "/api/identification-plans/register": {
       "post": {
         "security": [
@@ -36455,6 +37562,43 @@
                       "budget"
                     ],
                     "additionalProperties": false
+                  },
+                  "coalition": {
+                    "type": "object",
+                    "properties": {
+                      "schema": {
+                        "type": "string",
+                        "const": "finnor.r5.owner-request.v1"
+                      },
+                      "source": {
+                        "type": "object",
+                        "properties": {
+                          "sourceId": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "versionId": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "contentDigest": {
+                            "type": "string",
+                            "pattern": "^[a-f0-9]{64}$"
+                          }
+                        },
+                        "required": [
+                          "sourceId",
+                          "versionId",
+                          "contentDigest"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "required": [
+                      "schema",
+                      "source"
+                    ],
+                    "additionalProperties": false
                   }
                 },
                 "required": [
@@ -37559,6 +38703,43 @@
                           "source",
                           "initialWorlds",
                           "budget"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "coalition": {
+                        "type": "object",
+                        "properties": {
+                          "schema": {
+                            "type": "string",
+                            "const": "finnor.r5.owner-request.v1"
+                          },
+                          "source": {
+                            "type": "object",
+                            "properties": {
+                              "sourceId": {
+                                "type": "string",
+                                "format": "uuid"
+                              },
+                              "versionId": {
+                                "type": "string",
+                                "format": "uuid"
+                              },
+                              "contentDigest": {
+                                "type": "string",
+                                "pattern": "^[a-f0-9]{64}$"
+                              }
+                            },
+                            "required": [
+                              "sourceId",
+                              "versionId",
+                              "contentDigest"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "required": [
+                          "schema",
+                          "source"
                         ],
                         "additionalProperties": false
                       }

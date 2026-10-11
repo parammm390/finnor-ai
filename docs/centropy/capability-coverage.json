@@ -1,21 +1,21 @@
 {
   "schema": "centropy.capability-coverage-audit/v1",
-  "generatedAt": "2026-10-11T10:47:12.467Z",
-  "sourceBaseCommit": "ba735eea8e36ceeaa0dcb31c58416f60064886f3",
-  "manifestSha256": "161f3ab423524b762d4e6baa574fee87fdbb1ddcd91b59cbe323296ffb83bf88",
+  "generatedAt": "2026-10-11T11:54:26.533Z",
+  "sourceBaseCommit": "717f9f20c436437b35890abcfe0e3e7376028208",
+  "manifestSha256": "5038acaed6f5654066f4235bd0170c9c30c5fa196456b57f97039853eecd1a0f",
   "formsSha256": "c9aff79bf89a5556a1cef5bc40bb304f34443f4031dd085c1be6fad9eacf13c9",
   "method": "Actual API/planner manifest; import graph from active CENTROPY route entries; literal API call bindings; typed human form registrations; explicit restricted/compatibility/protocol classifications. Source presence is not execution evidence.",
   "counts": {
-    "total": 398,
-    "http": 330,
+    "total": 408,
+    "http": 340,
     "planner": 68,
-    "classified": 398,
+    "classified": 408,
     "classificationCoveragePercent": 100,
     "unclassified": 0,
     "disposition": {
       "ACTIVE_TYPED_HUMAN_CONTROL": 62,
-      "INTENTIONAL_COMPATIBILITY": 15,
-      "ACTIVE_DIRECT_FRONTEND_PATH": 221,
+      "INTENTIONAL_COMPATIBILITY": 17,
+      "ACTIVE_DIRECT_FRONTEND_PATH": 229,
       "RESTRICTED_SYSTEM_OR_ADMIN": 28,
       "PROVIDER_PROTOCOL_CALLBACK": 2,
       "INTENTIONAL_ALTERNATE_CANONICAL_INTAKE": 2,
@@ -84,6 +84,7 @@
       "src/components/centropy/canvas/ComputeSearchPanel.tsx",
       "src/components/centropy/canvas/ContinuationPanel.tsx",
       "src/components/centropy/canvas/CounterexamplePanel.tsx",
+      "src/components/centropy/canvas/DecisionAtlasReview.tsx",
       "src/components/centropy/canvas/DecisionSlicePanel.tsx",
       "src/components/centropy/canvas/DeliberationPanel.tsx",
       "src/components/centropy/canvas/EvidenceWorkbench.tsx",
@@ -106,6 +107,7 @@
       "src/components/centropy/canvas/capital-request-view.ts",
       "src/components/centropy/canvas/causal-replay-contract.ts",
       "src/components/centropy/canvas/coalition-programme-view.ts",
+      "src/components/centropy/canvas/decision-atlas-view.ts",
       "src/components/centropy/canvas/decision-slice-view.ts",
       "src/components/centropy/canvas/exact-control-view.ts",
       "src/components/centropy/canvas/ic-vote-model.ts",
@@ -244,7 +246,7 @@
       },
       {
         "file": "src/lib/centropy/capability-manifest.generated.json",
-        "sha256": "161f3ab423524b762d4e6baa574fee87fdbb1ddcd91b59cbe323296ffb83bf88"
+        "sha256": "5038acaed6f5654066f4235bd0170c9c30c5fa196456b57f97039853eecd1a0f"
       },
       {
         "file": "src/components/centropy/shell/CentropyHost.tsx",
@@ -308,7 +310,7 @@
       },
       {
         "file": "src/components/centropy/canvas/CapitalProgramPanel.tsx",
-        "sha256": "3301ff5f9e2b3ed035edafaf58e359c830004fcd41ad2636e42ae0f8a9f9f103"
+        "sha256": "336f7ed2841d1e01085458a7c3cec6001061b8854d5df282aece3ef72e973f67"
       },
       {
         "file": "src/components/centropy/canvas/decision-slice-view.ts",
@@ -351,6 +353,14 @@
         "sha256": "24d6a19b96b4ee1d33d9bbe8acd1b57f398cde103b462c4abeac71530e1e7064"
       },
       {
+        "file": "src/components/centropy/canvas/DecisionAtlasReview.tsx",
+        "sha256": "ee400f9a987fcc7fa3e14eb9581ce4bab405bea9f9814c015647f1468f4e3577"
+      },
+      {
+        "file": "src/components/centropy/canvas/decision-atlas-view.ts",
+        "sha256": "32cd3eb7f5002d6c4e2243c4afc9ebee54b988a04b41456b3473525a219d64a9"
+      },
+      {
         "file": "src/components/centropy/canvas/BranchRehearsalPanel.tsx",
         "sha256": "a63d25bc33a2aa701bd1f24f2182a5c989dcd96d65fe4a2d64173e3898d371cb"
       },
@@ -368,7 +378,7 @@
       },
       {
         "file": "src/lib/jarvis/openapi-types.ts",
-        "sha256": "41fa277748a395a37972f2c7f373fc2a627c4d112a77083d46d161e86c43ce3e"
+        "sha256": "d83e99c2c1504444c9f9fc97e82f8f44f33e02b2803164c98ab5031719a7400b"
       },
       {
         "file": "src/components/centropy/canvas/ProgramSynthesisPanel.tsx",
@@ -15960,6 +15970,629 @@
       },
       "testEvidenceState": "SOURCE_REFERENCES_ONLY; executed proofs are indexed separately",
       "compatibilityReason": null,
+      "externalConfiguration": null
+    },
+    {
+      "capabilityId": "http.post.decision-atlases.build",
+      "family": "decision-atlas",
+      "owner": "@finnor/private-equity",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "decision-atlases/build",
+      "routeDepth": 2,
+      "classification": "MUTATION",
+      "kind": "mutation",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "backend_policy",
+      "effectClass": "domain_mutation",
+      "verificationClass": "canonical_reread",
+      "presentationTargets": [
+        "CANVAS"
+      ],
+      "invalidationTags": [
+        "work",
+        "company-brain"
+      ],
+      "timeoutClass": "WRITE",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/decision-atlases/[operation]/route.ts",
+      "disposition": "ACTIVE_DIRECT_FRONTEND_PATH",
+      "actualRouteOrTool": "POST /api/decision-atlases/build",
+      "frontendSourceBindings": [
+        {
+          "file": "src/components/centropy/canvas/DecisionAtlasReview.tsx",
+          "route": "decision-atlases/build",
+          "method": "POST",
+          "line": 94
+        }
+      ],
+      "humanForms": [],
+      "humanRoute": null,
+      "agentPath": null,
+      "authorityPath": {
+        "class": "backend_policy",
+        "backendSource": "finnor-os/apps/api/app/api/decision-atlases/[operation]/route.ts",
+        "frontendNeverAuthorizes": true
+      },
+      "verificationPath": {
+        "class": "canonical_reread",
+        "backendSource": "finnor-os/apps/api/app/api/decision-atlases/[operation]/route.ts"
+      },
+      "presentation": {
+        "targets": [
+          "CANVAS"
+        ],
+        "familyRendererSources": [
+          "src/components/centropy/canvas/DecisionAtlasReview.tsx"
+        ],
+        "directRuntimeExecutionProvenByThisReport": false
+      },
+      "testEvidenceState": "SOURCE_REFERENCES_ONLY; executed proofs are indexed separately",
+      "compatibilityReason": null,
+      "externalConfiguration": null
+    },
+    {
+      "capabilityId": "http.post.decision-atlases.cancel",
+      "family": "decision-atlas",
+      "owner": "@finnor/private-equity",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "decision-atlases/cancel",
+      "routeDepth": 2,
+      "classification": "CONTROL",
+      "kind": "control",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "backend_policy",
+      "effectClass": "runtime_control",
+      "verificationClass": "canonical_reread",
+      "presentationTargets": [
+        "CANVAS"
+      ],
+      "invalidationTags": [
+        "work",
+        "company-brain"
+      ],
+      "timeoutClass": "WRITE",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/decision-atlases/[operation]/route.ts",
+      "disposition": "ACTIVE_DIRECT_FRONTEND_PATH",
+      "actualRouteOrTool": "POST /api/decision-atlases/cancel",
+      "frontendSourceBindings": [
+        {
+          "file": "src/components/centropy/canvas/DecisionAtlasReview.tsx",
+          "route": "decision-atlases/cancel",
+          "method": "POST",
+          "line": 135
+        }
+      ],
+      "humanForms": [],
+      "humanRoute": null,
+      "agentPath": null,
+      "authorityPath": {
+        "class": "backend_policy",
+        "backendSource": "finnor-os/apps/api/app/api/decision-atlases/[operation]/route.ts",
+        "frontendNeverAuthorizes": true
+      },
+      "verificationPath": {
+        "class": "canonical_reread",
+        "backendSource": "finnor-os/apps/api/app/api/decision-atlases/[operation]/route.ts"
+      },
+      "presentation": {
+        "targets": [
+          "CANVAS"
+        ],
+        "familyRendererSources": [
+          "src/components/centropy/canvas/DecisionAtlasReview.tsx"
+        ],
+        "directRuntimeExecutionProvenByThisReport": false
+      },
+      "testEvidenceState": "SOURCE_REFERENCES_ONLY; executed proofs are indexed separately",
+      "compatibilityReason": null,
+      "externalConfiguration": null
+    },
+    {
+      "capabilityId": "http.post.decision-atlases.context",
+      "family": "decision-atlas",
+      "owner": "@finnor/private-equity",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "decision-atlases/context",
+      "routeDepth": 2,
+      "classification": "READ",
+      "kind": "read",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "query",
+      "effectClass": null,
+      "verificationClass": "canonical_read",
+      "presentationTargets": [
+        "CANVAS"
+      ],
+      "invalidationTags": [],
+      "timeoutClass": "READ",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/decision-atlases/[operation]/route.ts",
+      "disposition": "ACTIVE_DIRECT_FRONTEND_PATH",
+      "actualRouteOrTool": "POST /api/decision-atlases/context",
+      "frontendSourceBindings": [
+        {
+          "file": "src/components/centropy/canvas/DecisionAtlasReview.tsx",
+          "route": "decision-atlases/context",
+          "method": "POST",
+          "line": 36
+        }
+      ],
+      "humanForms": [],
+      "humanRoute": null,
+      "agentPath": null,
+      "authorityPath": {
+        "class": "query",
+        "backendSource": "finnor-os/apps/api/app/api/decision-atlases/[operation]/route.ts",
+        "frontendNeverAuthorizes": true
+      },
+      "verificationPath": {
+        "class": "canonical_read",
+        "backendSource": "finnor-os/apps/api/app/api/decision-atlases/[operation]/route.ts"
+      },
+      "presentation": {
+        "targets": [
+          "CANVAS"
+        ],
+        "familyRendererSources": [
+          "src/components/centropy/canvas/DecisionAtlasReview.tsx"
+        ],
+        "directRuntimeExecutionProvenByThisReport": false
+      },
+      "testEvidenceState": "SOURCE_REFERENCES_ONLY; executed proofs are indexed separately",
+      "compatibilityReason": null,
+      "externalConfiguration": null
+    },
+    {
+      "capabilityId": "http.post.decision-atlases.continue",
+      "family": "decision-atlas",
+      "owner": "@finnor/private-equity",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "decision-atlases/continue",
+      "routeDepth": 2,
+      "classification": "MUTATION",
+      "kind": "mutation",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "backend_policy",
+      "effectClass": "domain_mutation",
+      "verificationClass": "canonical_reread",
+      "presentationTargets": [
+        "CANVAS"
+      ],
+      "invalidationTags": [
+        "work",
+        "company-brain"
+      ],
+      "timeoutClass": "WRITE",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/decision-atlases/[operation]/route.ts",
+      "disposition": "INTENTIONAL_COMPATIBILITY",
+      "actualRouteOrTool": "POST /api/decision-atlases/continue",
+      "frontendSourceBindings": [],
+      "humanForms": [],
+      "humanRoute": null,
+      "agentPath": null,
+      "authorityPath": {
+        "class": "backend_policy",
+        "backendSource": "finnor-os/apps/api/app/api/decision-atlases/[operation]/route.ts",
+        "frontendNeverAuthorizes": true
+      },
+      "verificationPath": {
+        "class": "canonical_reread",
+        "backendSource": "finnor-os/apps/api/app/api/decision-atlases/[operation]/route.ts"
+      },
+      "presentation": {
+        "targets": [
+          "CANVAS"
+        ],
+        "familyRendererSources": [],
+        "directRuntimeExecutionProvenByThisReport": false
+      },
+      "testEvidenceState": "SOURCE_REFERENCES_ONLY; executed proofs are indexed separately",
+      "compatibilityReason": "Native R7 original-policy continuation API. Authenticated owner execution is checked separately; no direct CENTROPY continuation control is claimed.",
+      "externalConfiguration": null
+    },
+    {
+      "capabilityId": "http.post.decision-atlases.parameters",
+      "family": "decision-atlas",
+      "owner": "@finnor/private-equity",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "decision-atlases/parameters",
+      "routeDepth": 2,
+      "classification": "MUTATION",
+      "kind": "mutation",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "backend_policy",
+      "effectClass": "domain_mutation",
+      "verificationClass": "canonical_reread",
+      "presentationTargets": [
+        "CANVAS"
+      ],
+      "invalidationTags": [
+        "work",
+        "company-brain"
+      ],
+      "timeoutClass": "WRITE",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/decision-atlases/[operation]/route.ts",
+      "disposition": "ACTIVE_DIRECT_FRONTEND_PATH",
+      "actualRouteOrTool": "POST /api/decision-atlases/parameters",
+      "frontendSourceBindings": [
+        {
+          "file": "src/components/centropy/canvas/DecisionAtlasReview.tsx",
+          "route": "decision-atlases/parameters",
+          "method": "POST",
+          "line": 103
+        }
+      ],
+      "humanForms": [],
+      "humanRoute": null,
+      "agentPath": null,
+      "authorityPath": {
+        "class": "backend_policy",
+        "backendSource": "finnor-os/apps/api/app/api/decision-atlases/[operation]/route.ts",
+        "frontendNeverAuthorizes": true
+      },
+      "verificationPath": {
+        "class": "canonical_reread",
+        "backendSource": "finnor-os/apps/api/app/api/decision-atlases/[operation]/route.ts"
+      },
+      "presentation": {
+        "targets": [
+          "CANVAS"
+        ],
+        "familyRendererSources": [
+          "src/components/centropy/canvas/DecisionAtlasReview.tsx"
+        ],
+        "directRuntimeExecutionProvenByThisReport": false
+      },
+      "testEvidenceState": "SOURCE_REFERENCES_ONLY; executed proofs are indexed separately",
+      "compatibilityReason": null,
+      "externalConfiguration": null
+    },
+    {
+      "capabilityId": "http.post.decision-atlases.query",
+      "family": "decision-atlas",
+      "owner": "@finnor/private-equity",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "decision-atlases/query",
+      "routeDepth": 2,
+      "classification": "MUTATION",
+      "kind": "mutation",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "backend_policy",
+      "effectClass": "domain_mutation",
+      "verificationClass": "canonical_reread",
+      "presentationTargets": [
+        "CANVAS"
+      ],
+      "invalidationTags": [
+        "work",
+        "company-brain"
+      ],
+      "timeoutClass": "WRITE",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/decision-atlases/[operation]/route.ts",
+      "disposition": "ACTIVE_DIRECT_FRONTEND_PATH",
+      "actualRouteOrTool": "POST /api/decision-atlases/query",
+      "frontendSourceBindings": [
+        {
+          "file": "src/components/centropy/canvas/DecisionAtlasReview.tsx",
+          "route": "decision-atlases/query",
+          "method": "POST",
+          "line": 110
+        }
+      ],
+      "humanForms": [],
+      "humanRoute": null,
+      "agentPath": null,
+      "authorityPath": {
+        "class": "backend_policy",
+        "backendSource": "finnor-os/apps/api/app/api/decision-atlases/[operation]/route.ts",
+        "frontendNeverAuthorizes": true
+      },
+      "verificationPath": {
+        "class": "canonical_reread",
+        "backendSource": "finnor-os/apps/api/app/api/decision-atlases/[operation]/route.ts"
+      },
+      "presentation": {
+        "targets": [
+          "CANVAS"
+        ],
+        "familyRendererSources": [
+          "src/components/centropy/canvas/DecisionAtlasReview.tsx"
+        ],
+        "directRuntimeExecutionProvenByThisReport": false
+      },
+      "testEvidenceState": "SOURCE_REFERENCES_ONLY; executed proofs are indexed separately",
+      "compatibilityReason": null,
+      "externalConfiguration": null
+    },
+    {
+      "capabilityId": "http.post.decision-atlases.read",
+      "family": "decision-atlas",
+      "owner": "@finnor/private-equity",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "decision-atlases/read",
+      "routeDepth": 2,
+      "classification": "READ",
+      "kind": "read",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "query",
+      "effectClass": null,
+      "verificationClass": "canonical_read",
+      "presentationTargets": [
+        "CANVAS"
+      ],
+      "invalidationTags": [],
+      "timeoutClass": "READ",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/decision-atlases/[operation]/route.ts",
+      "disposition": "ACTIVE_DIRECT_FRONTEND_PATH",
+      "actualRouteOrTool": "POST /api/decision-atlases/read",
+      "frontendSourceBindings": [
+        {
+          "file": "src/components/centropy/canvas/DecisionAtlasReview.tsx",
+          "route": "decision-atlases/read",
+          "method": "POST",
+          "line": 47
+        }
+      ],
+      "humanForms": [],
+      "humanRoute": null,
+      "agentPath": null,
+      "authorityPath": {
+        "class": "query",
+        "backendSource": "finnor-os/apps/api/app/api/decision-atlases/[operation]/route.ts",
+        "frontendNeverAuthorizes": true
+      },
+      "verificationPath": {
+        "class": "canonical_read",
+        "backendSource": "finnor-os/apps/api/app/api/decision-atlases/[operation]/route.ts"
+      },
+      "presentation": {
+        "targets": [
+          "CANVAS"
+        ],
+        "familyRendererSources": [
+          "src/components/centropy/canvas/DecisionAtlasReview.tsx"
+        ],
+        "directRuntimeExecutionProvenByThisReport": false
+      },
+      "testEvidenceState": "SOURCE_REFERENCES_ONLY; executed proofs are indexed separately",
+      "compatibilityReason": null,
+      "externalConfiguration": null
+    },
+    {
+      "capabilityId": "http.post.decision-atlases.register",
+      "family": "decision-atlas",
+      "owner": "@finnor/private-equity",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "decision-atlases/register",
+      "routeDepth": 2,
+      "classification": "MUTATION",
+      "kind": "mutation",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "backend_policy",
+      "effectClass": "domain_mutation",
+      "verificationClass": "canonical_reread",
+      "presentationTargets": [
+        "CANVAS"
+      ],
+      "invalidationTags": [
+        "work",
+        "company-brain"
+      ],
+      "timeoutClass": "WRITE",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/decision-atlases/[operation]/route.ts",
+      "disposition": "ACTIVE_DIRECT_FRONTEND_PATH",
+      "actualRouteOrTool": "POST /api/decision-atlases/register",
+      "frontendSourceBindings": [
+        {
+          "file": "src/components/centropy/canvas/DecisionAtlasReview.tsx",
+          "route": "decision-atlases/register",
+          "method": "POST",
+          "line": 87
+        }
+      ],
+      "humanForms": [],
+      "humanRoute": null,
+      "agentPath": null,
+      "authorityPath": {
+        "class": "backend_policy",
+        "backendSource": "finnor-os/apps/api/app/api/decision-atlases/[operation]/route.ts",
+        "frontendNeverAuthorizes": true
+      },
+      "verificationPath": {
+        "class": "canonical_reread",
+        "backendSource": "finnor-os/apps/api/app/api/decision-atlases/[operation]/route.ts"
+      },
+      "presentation": {
+        "targets": [
+          "CANVAS"
+        ],
+        "familyRendererSources": [
+          "src/components/centropy/canvas/DecisionAtlasReview.tsx"
+        ],
+        "directRuntimeExecutionProvenByThisReport": false
+      },
+      "testEvidenceState": "SOURCE_REFERENCES_ONLY; executed proofs are indexed separately",
+      "compatibilityReason": null,
+      "externalConfiguration": null
+    },
+    {
+      "capabilityId": "http.post.decision-atlases.select",
+      "family": "decision-atlas",
+      "owner": "@finnor/private-equity",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "decision-atlases/select",
+      "routeDepth": 2,
+      "classification": "MUTATION",
+      "kind": "mutation",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "backend_policy",
+      "effectClass": "domain_mutation",
+      "verificationClass": "canonical_reread",
+      "presentationTargets": [
+        "CANVAS"
+      ],
+      "invalidationTags": [
+        "work",
+        "company-brain"
+      ],
+      "timeoutClass": "WRITE",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/decision-atlases/[operation]/route.ts",
+      "disposition": "ACTIVE_DIRECT_FRONTEND_PATH",
+      "actualRouteOrTool": "POST /api/decision-atlases/select",
+      "frontendSourceBindings": [
+        {
+          "file": "src/components/centropy/canvas/DecisionAtlasReview.tsx",
+          "route": "decision-atlases/select",
+          "method": "POST",
+          "line": 157
+        }
+      ],
+      "humanForms": [],
+      "humanRoute": null,
+      "agentPath": null,
+      "authorityPath": {
+        "class": "backend_policy",
+        "backendSource": "finnor-os/apps/api/app/api/decision-atlases/[operation]/route.ts",
+        "frontendNeverAuthorizes": true
+      },
+      "verificationPath": {
+        "class": "canonical_reread",
+        "backendSource": "finnor-os/apps/api/app/api/decision-atlases/[operation]/route.ts"
+      },
+      "presentation": {
+        "targets": [
+          "CANVAS"
+        ],
+        "familyRendererSources": [
+          "src/components/centropy/canvas/DecisionAtlasReview.tsx"
+        ],
+        "directRuntimeExecutionProvenByThisReport": false
+      },
+      "testEvidenceState": "SOURCE_REFERENCES_ONLY; executed proofs are indexed separately",
+      "compatibilityReason": null,
+      "externalConfiguration": null
+    },
+    {
+      "capabilityId": "http.post.decision-atlases.status",
+      "family": "decision-atlas",
+      "owner": "@finnor/private-equity",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "decision-atlases/status",
+      "routeDepth": 2,
+      "classification": "READ",
+      "kind": "read",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "query",
+      "effectClass": null,
+      "verificationClass": "canonical_read",
+      "presentationTargets": [
+        "CANVAS"
+      ],
+      "invalidationTags": [],
+      "timeoutClass": "READ",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/decision-atlases/[operation]/route.ts",
+      "disposition": "INTENTIONAL_COMPATIBILITY",
+      "actualRouteOrTool": "POST /api/decision-atlases/status",
+      "frontendSourceBindings": [],
+      "humanForms": [],
+      "humanRoute": null,
+      "agentPath": null,
+      "authorityPath": {
+        "class": "query",
+        "backendSource": "finnor-os/apps/api/app/api/decision-atlases/[operation]/route.ts",
+        "frontendNeverAuthorizes": true
+      },
+      "verificationPath": {
+        "class": "canonical_read",
+        "backendSource": "finnor-os/apps/api/app/api/decision-atlases/[operation]/route.ts"
+      },
+      "presentation": {
+        "targets": [
+          "CANVAS"
+        ],
+        "familyRendererSources": [],
+        "directRuntimeExecutionProvenByThisReport": false
+      },
+      "testEvidenceState": "SOURCE_REFERENCES_ONLY; executed proofs are indexed separately",
+      "compatibilityReason": "Native R7 status alias. The active Work panel rereads the authenticated build through decision-atlases/read.",
       "externalConfiguration": null
     },
     {

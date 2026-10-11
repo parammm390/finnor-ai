@@ -1,3 +1,4 @@
+import {runDecisionAtlasJob} from '../../../packages/private-equity/src/r7/worker';
 import {handleBranch} from '@finnor/private-equity/src/branch-fabric/worker';
 import {runComputeSearchUnitJob} from '@finnor/private-equity/src/compute-search/worker';
 import {runHarnessProgramJob} from '@finnor/private-equity/src/program-synthesis/worker';
@@ -52,6 +53,7 @@ import { installWorkerDrainSignals } from "./drain-signals";
 
 export function createWorker(): JobQueue {
   const queue = new JobQueue();
+  queue.register('run_decision_atlas_v1',runDecisionAtlasJob,PRODUCTION_JOB_CONTRACTS.run_decision_atlas_v1);
   queue.register('run_certified_state_reduction_v1',runCertifiedStateReductionJob,PRODUCTION_JOB_CONTRACTS.run_certified_state_reduction_v1);
   queue.register('run_identification_plan_v1',runIdentificationPlan,PRODUCTION_JOB_CONTRACTS.run_identification_plan_v1);
   queue.register('run_capital_program_v2',runCapitalProgramJob,PRODUCTION_JOB_CONTRACTS.run_capital_program_v2);
