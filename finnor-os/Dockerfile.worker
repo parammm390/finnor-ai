@@ -49,10 +49,11 @@ RUN FINNOR_BUILD_ID="$FINNOR_BUILD_ID" NEXT_TELEMETRY_DISABLED=1 npm run build -
 # are never copied into Linux. Protected R2 activation remains separately guarded.
 FROM node-runtime AS r2-scientific-build
 RUN apt-get update \
-    && apt-get install --yes --no-install-recommends ca-certificates python3 make g++ cmake curl xz-utils bzip2 zlib1g-dev patchelf \
+    && apt-get install --yes --no-install-recommends ca-certificates python3 make m4 g++ cmake curl xz-utils bzip2 zlib1g-dev patchelf \
     && rm -rf /var/lib/apt/lists/*
 COPY finnor-os/scripts/r2/build-native.py /opt/finnor-r2-build.py
 RUN test -s /etc/ssl/certs/ca-certificates.crt \
+    && command -v m4 \
     && python3 /opt/finnor-r2-build.py --build-root /opt/r2-build
 
 FROM scientific-runtime

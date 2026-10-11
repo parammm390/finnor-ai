@@ -21,7 +21,7 @@
     },
     {
       "path": "finnor-os/Dockerfile.worker",
-      "sha256": "7b2dc843a4e53f9948114879b470ac7af6dda5454384acad4f625e461a5f05f8"
+      "sha256": "9371ced32f31c2b558e6255b00f10450609e3101774e689285e2383b17df6114"
     },
     {
       "path": "finnor-os/scripts/r1/run-owners.mts",
@@ -124,6 +124,10 @@
     {
       "path": "scope-r/completion/handoff/ci-failure-audit-01/r1-sealed-history.json",
       "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    {
+      "path": "scope-r/completion/handoff/ci-failure-audit-01/native-prerequisites.json",
+      "sha256": "166fb1c7c8ceb41904c968cf33e22a3b529eb444b48bf813ddeb5235f113492c"
     }
   ],
   "verification": {
@@ -138,7 +142,8 @@
     "releaseGuards": "PASS 23 existing cases",
     "nativeArchives": "All six downloaded and digest checked; original VIPR endpoint failed 404, canonical same-byte source verified",
     "linuxImage": "NOT_RUN locally; no local Linux container engine",
-    "isolatedR1CompiledOwner": "PASS_LOCAL, same original deadline, complete staged HEAD reconstruction"
+    "isolatedR1CompiledOwner": "PASS_LOCAL, same original deadline, complete staged HEAD reconstruction",
+    "nativePreparationPrerequisites": "PASS source preflight against pinned configure/CMake files; trust store, m4 and selected compiler/archive/library tools installed explicitly"
   },
   "unchanged": [
     "native dependency commits and archive digests",
@@ -158,5 +163,7 @@
   "administrativeCeiling": "worker CI 45 minutes for first exact native preparation; no accepted product budget changed",
   "publication": "LOCAL_REVIEWED_NOT_PUSHED; prepare coordinated scope updates before any further publication",
   "qualification": "No protected admission, deployment, economic gain or universal CI PASS claimed",
-  "isolatedR1Candidate": "8556ea00c11fce407e267f1316c30c944c9a80f9"
+  "isolatedR1Candidate": "8556ea00c11fce407e267f1316c30c944c9a80f9",
+  "publicationCandidateParent": "20e15133744bb4baf8cb7bbf346a5f68f67777c2",
+  "unfinishedLinuxIsolationIncluded": false
 }

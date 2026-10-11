@@ -19,3 +19,11 @@ The pre-push source-archive audit found another real build failure hidden behind
 The first unpublished repair commit's full-history scan caught the verifier's own inline synthetic placeholder. Assemble that non-secret fixture value from components, as the verifier already does for its credential negatives. The generated fixture bytes and exact detector policy remain unchanged. Preserve the red finding, rerun the policy proof and scan the amended, still-unpublished candidate. Do not expand the scanner exception to the verifier.
 
 The isolated R1 branch exposed a staged-only reconstruction defect: `git ls-files --modified` reports no files when changes are already staged, so the overlay loop never creates `source-cut` and writing the full HEAD patch fails. Create the patch directory unconditionally and bind the full HEAD patch digest, including staged edits. Keep the actual clean/staged branch regression artifact. This is a source-custody fix, not a deadline increase or product-path bypass.
+
+The pinned GMP 6.3.0 configure script requires working `m4`; the slim native
+stage does not install it. Its earlier TLS failure masked this next preparation
+failure. Install `m4` explicitly and check its presence before download/build.
+Selected SCIP/SoPlex options require no LAPACK/IPOPT/ZIMPL/Papilo packages;
+those optional branches remain disabled, rather than changing exact semantics.
+SCIP's shared-mode executable embeds its source objects, so do not invent a
+missing `libscip` dependency or copy unrelated libraries.
