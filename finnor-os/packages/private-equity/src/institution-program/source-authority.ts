@@ -13,6 +13,9 @@ type Source = OriginalInstitutionEvidence["sources"][number];
 export type OwnerOriginal = Source & {
   grantId: string; grantVersion: number; coreDocumentId: string; coreVersionId: string;
   originalSha256: string; purpose: string;
+  /** Server-side retention time of the pinned Core version or acquisition
+   * receipt; the knowledge cut binds to it, never to caller input. */
+  retainedAt: string;
 };
 const digest = (bytes: Buffer) => createHash("sha256").update(bytes).digest("hex");
 const sensitive = (sourceClass: string) =>
@@ -65,7 +68,7 @@ export async function acquireInstitutionOriginal(
     return { row, rightsRevision: String(rights.rows[0]?.revision ?? "") };
   });
   const { row, rightsRevision } = grant;
-  let bytes: Buffer; let documentId: string; let versionId: string;
+  let bytes: Buffer; let documentId: string; let versionId: string; let retainedAt: string;
   if (row.acquisition_kind === "core_export") {
     // Immutable Core versions are retained before X1 sees the source. A grant
     // to a version does not confer authority to a newer document head.
@@ -80,6 +83,7 @@ export async function acquireInstitutionOriginal(
       throw new Error("X1_ORIGINAL_VERSION_OR_DIGEST_CHANGED");
     }
     bytes = acquiredCore.bytes; documentId = row.document_id; versionId = row.document_version_id;
+    retainedAt = new Date(acquiredCore.version.created_at).toISOString();
   } else if (row.acquisition_kind === "installed_adapter") {
     // The installed owner fetches exact original bytes through its own current
     // credential, scope and permission reads, then retains them in Core. X1
@@ -95,6 +99,7 @@ export async function acquireInstitutionOriginal(
       provider: row.provider, revision: row.revision, original_sha256: row.original_sha256,
     }, profile);
     bytes = acquired.bytes; documentId = acquired.documentId; versionId = acquired.versionId;
+    retainedAt = acquired.retainedAt;
   } else {
     throw new Error("X1_ACQUISITION_KIND_UNSUPPORTED");
   }
@@ -112,7 +117,7 @@ export async function acquireInstitutionOriginal(
     ...(binary ? { rawBase64: bytes.toString("base64") } : {}),
     coverage: { expectedObjectIds: row.expected_object_ids as string[], readObjectIds: [], complete: false },
     grantId: row.id, grantVersion: row.version, coreDocumentId: documentId,
-    coreVersionId: versionId, originalSha256: digest(bytes), purpose: row.purpose,
+    coreVersionId: versionId, originalSha256: digest(bytes), purpose: row.purpose, retainedAt,
     ...(row.integration_id ? { integrationId: row.integration_id } : {}),
     ...(row.provider ? { provider: row.provider } : {}),
     ...(row.adapter_scope ? { sourceScope: row.adapter_scope } : {}),

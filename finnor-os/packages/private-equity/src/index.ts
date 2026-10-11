@@ -26,7 +26,10 @@ export { proposeInstitutionModel } from "./institution-program/reconstruction";
 export { independentlyCheckInstitutionModel } from "./institution-program/checker";
 export { checkInstitutionInSeparateProcess } from "./institution-program/checker-process";
 export { X1_NATIVE_SOURCE_CONTRACT, X1_CHECKER_PROCESS_CONTRACT } from "./institution-program/contracts";
-export { retainInstitutionSource, loadInstitutionAdmissionOriginal, loadInstitutionCanonicalOwnerSnapshot, admitCheckedInstitutionMappings, reconstructAndAdmitInstitutionSources } from "./institution-program/owner-admission";
+// admitCheckedInstitutionMappings is deliberately not exported: publication is
+// reachable only through reconstructAndAdmitInstitutionSources, whose inputs are
+// assembled and rehydrated server-side from digest-pinned owner reads.
+export { retainInstitutionSource, loadInstitutionAdmissionOriginal, loadInstitutionCanonicalOwnerSnapshot, reconstructAndAdmitInstitutionSources } from "./institution-program/owner-admission";
 export { grantInstitutionSubjectConsent } from "./institution-program/source-authority";
 export { acquireInstalledMailOriginal } from "./institution-program/installed-source";
 export type { InstalledMailGrant } from "./institution-program/installed-source";

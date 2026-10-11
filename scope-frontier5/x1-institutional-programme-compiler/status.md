@@ -1,5 +1,47 @@
 # FRONTIER5.X1 status
 
+## Owner-admission finish repairs on 24e5aa64c (11 October 2026)
+
+The six repairs from the independent read-only review (mission library
+`admission-finish.md`) are implemented, with the offline-expressible
+invariants frozen pre-repair in `reference/admission-finish-contract.md` and
+`admission-finish-cases.mts`. Pre-repair, the new kernel case failed with all
+eight invariants VIOLATED and the actual defective excerpts retained
+(`x1-control/evidence/verify-kernel-1791711931912-f837a1b1-95bb-4e3a-b05c-b10d90bcba79`).
+After repair: (1) `admitCheckedInstitutionMappings` is module-private and
+absent from the barrel; its preflight and serializable write loop consume only
+the server-rehydrated `sources`, with the caller's original reduced to opaque
+validated rehydration handles. (2) The publication grant relock matches
+acquisition strength: `FOR SHARE` with `revision` + `original_sha256`
+equality, valid window and the not-superseded `NOT EXISTS` predicate.
+(3) `knowledgeCut` binds to server-side retention facts (Core version
+`created_at` / acquisition receipt, carried as `retainedAt`), never caller
+input or a wall-clock mint; identical owner state now replays to an identical
+digest. (4) Replay readback re-verifies each Source Truth link against
+`finnor_os.external_refs` and refuses with
+`X1_ADMISSION_REPLAY_SOURCE_TRUTH_CHANGED`. (5) Migration 0172 (never applied;
+amended before first application and re-bundled) revokes raw `INSERT` from
+`finnor_app` on `x1_source_acquisitions`/`x1_mapping_admissions` and routes
+writes through `SECURITY DEFINER` owner functions that re-derive
+tenant/principal from request GUCs and cross-check the referenced
+grant/document/Work. (6) The publication consent recheck restores the
+`users.status='active'` predicate enforced at acquisition.
+`owner-live-packet.md` now documents the deliberate latest-migration schema
+pin update step and the new failure boundaries.
+
+Verified-sound behavior is preserved: atomic serializable admission,
+deterministic tenant-sealed IDs, no invented Deal prerequisites, idempotent
+digest-bound replay, Graph pin enforcement, forced tenant RLS and fail-closed
+unsupported provider families (profile unchanged). Bounded offline evidence on
+the final cut: `--stage kernel` exit 0 (nine cases including
+`admission-finish`) and `--stage static` exit 0. The migration is still not
+applied to any database; no owner transaction, readback, installed Graph call
+or live proof has run (shared disk below the 1.5 GiB floor). VAL-X1-MAP-001
+remains UNCLAIMED; the frozen `--stage owners` live proof stays with
+x1-native-fixture-and-slice-e2e and x1-installation-compatibility-and-handoff.
+S5/S8 currentness sentinels remain with their downstream owners.
+**PARTIAL — source repaired and static-passing, runtime/owner proof NOT RUN.**
+
 ## Reconstruction and semantic admission owner slice (11 October 2026)
 
 Source-authoritative admission now exists as real code, not scaffolding.

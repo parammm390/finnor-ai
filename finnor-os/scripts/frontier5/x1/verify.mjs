@@ -50,6 +50,9 @@ for (const path of [
   "finnor-os/packages/private-equity/src/institution-program/owner-admission.ts",
   "finnor-os/packages/private-equity/src/institution-program/source-authority.ts",
   "finnor-os/packages/private-equity/src/institution-program/installed-source.ts",
+  "finnor-os/packages/private-equity/src/index.ts",
+  "finnor-os/packages/db/migrations/0172_x1_institution_source_authority.sql",
+  "finnor-os/packages/db/migrations-bundle.ts",
   "finnor-os/packages/private-equity/package.json",
   "finnor-os/package-lock.json",
   "finnor-os/scripts/frontier5/x1/verify.mjs",
@@ -62,7 +65,9 @@ for (const path of [
   "finnor-os/scripts/frontier5/x1/native-finish-cases.mts",
   "finnor-os/scripts/frontier5/x1/creation-native-cases.mts",
   "finnor-os/scripts/frontier5/x1/transport-cases.mts",
+  "finnor-os/scripts/frontier5/x1/admission-finish-cases.mts",
   "finnor-os/scripts/frontier5/x1/reference/native-finish-contract.md",
+  "finnor-os/scripts/frontier5/x1/reference/admission-finish-contract.md",
   "finnor-os/scripts/frontier5/x1/reference/creation-native-contract.md",
   "finnor-os/scripts/frontier5/x1/reference/owner-currentness-contract.md",
   "finnor-os/scripts/frontier5/x1/reference/owner-live-packet.md",
@@ -136,6 +141,7 @@ if (stage === "kernel" || stage === "scrutiny") {
   run("native-finish", process.execPath, ["./node_modules/tsx/dist/cli.mjs", "scripts/frontier5/x1/native-finish-cases.mts"], os, manifest.limits.kernelNodeHeapMiB);
   run("native-creation", process.execPath, ["./node_modules/tsx/dist/cli.mjs", "scripts/frontier5/x1/creation-native-cases.mts"], os, manifest.limits.kernelNodeHeapMiB);
   run("process-transport", process.execPath, ["./node_modules/tsx/dist/cli.mjs", "scripts/frontier5/x1/transport-cases.mts"], os, manifest.limits.kernelNodeHeapMiB);
+  run("admission-finish", process.execPath, ["./node_modules/tsx/dist/cli.mjs", "scripts/frontier5/x1/admission-finish-cases.mts"], os, manifest.limits.kernelNodeHeapMiB);
 }
 if (stage === "static" || stage === "scrutiny") {
   if (!only || only === "typecheck") {
@@ -165,6 +171,7 @@ if (stage === "static" || stage === "scrutiny") {
       "finnor-os/scripts/frontier5/x1/native-finish-cases.mts",
       "finnor-os/scripts/frontier5/x1/creation-native-cases.mts",
       "finnor-os/scripts/frontier5/x1/transport-cases.mts",
+      "finnor-os/scripts/frontier5/x1/admission-finish-cases.mts",
       "finnor-os/scripts/frontier5/x1/checker-command.mts"], repo, manifest.limits.smallCheckNodeHeapMiB);
   }
 }

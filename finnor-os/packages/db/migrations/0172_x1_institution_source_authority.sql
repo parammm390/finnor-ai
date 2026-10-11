@@ -1,5 +1,8 @@
 -- X1 source and subject authority is distinct from source content and mandate.
 -- No provider credential, inferred role or supplied consent string is a grant.
+-- The two immutable receipt tables (x1_source_acquisitions,
+-- x1_mapping_admissions) accept no raw INSERT from the application role; writes
+-- route through the SECURITY DEFINER owner functions at the end of this file.
 CREATE TABLE finnor_os.x1_source_grants (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   tenant_id uuid NOT NULL REFERENCES finnor_os.tenants(id),
@@ -161,6 +164,80 @@ CREATE TRIGGER x1_mapping_admissions_immutable BEFORE UPDATE OR DELETE
  ON finnor_os.x1_mapping_admissions FOR EACH ROW
  EXECUTE FUNCTION finnor_os.x1_mapping_admissions_immutable();
 
+-- Receipt writers. Each re-derives tenant/principal from the request GUCs and
+-- cross-checks the referenced grant or document before writing, so a caller
+-- with only finnor_app cannot forge an immutable receipt. The acquisition
+-- writer rejects a revoked/expired/superseded grant or a digest that differs
+-- from the grant pin or the referenced document version; the admission writer
+-- requires the referenced Work to be the calling principal's own.
+CREATE FUNCTION finnor_os.x1_record_source_acquisition(
+  p_grant_id uuid, p_document_id uuid, p_document_version_id uuid,
+  p_byte_sha256 text, p_provider_revision text
+) RETURNS SETOF finnor_os.x1_source_acquisitions
+LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog,finnor_os AS $$
+DECLARE
+  v_tenant uuid := finnor_os.request_tenant_id();
+  v_principal uuid := nullif(current_setting('app.user_id',true),'')::uuid;
+BEGIN
+  IF v_tenant IS NULL OR v_principal IS NULL THEN
+    RAISE EXCEPTION 'X1 acquisition receipt requires tenant and principal context';
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM finnor_os.x1_source_grants g
+     WHERE g.tenant_id=v_tenant AND g.id=p_grant_id AND g.principal_id=v_principal
+       AND g.valid_from<=clock_timestamp() AND g.expires_at>clock_timestamp()
+       AND g.revoked_at IS NULL AND g.original_sha256=p_byte_sha256
+       AND NOT EXISTS (
+         SELECT 1 FROM finnor_os.x1_source_grants newer
+          WHERE newer.tenant_id=g.tenant_id AND newer.work_id=g.work_id
+            AND newer.principal_id=g.principal_id AND newer.source_id=g.source_id
+            AND newer.version>g.version)
+  ) THEN
+    RAISE EXCEPTION 'X1 acquisition receipt grant is not current or its digest differs';
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM finnor_os.document_versions v
+     WHERE v.tenant_id=v_tenant AND v.document_id=p_document_id
+       AND v.id=p_document_version_id AND v.byte_sha256=p_byte_sha256
+  ) THEN
+    RAISE EXCEPTION 'X1 acquisition receipt document version digest differs';
+  END IF;
+  RETURN QUERY
+    INSERT INTO finnor_os.x1_source_acquisitions
+      (tenant_id,grant_id,document_id,document_version_id,byte_sha256,provider_revision)
+    VALUES (v_tenant,p_grant_id,p_document_id,p_document_version_id,p_byte_sha256,p_provider_revision)
+    ON CONFLICT (tenant_id,grant_id) DO NOTHING
+    RETURNING *;
+END $$;
+
+CREATE FUNCTION finnor_os.x1_publish_mapping_admission(
+  p_work_id uuid, p_original_digest text, p_candidate_digest text,
+  p_checker_digest text, p_receipts jsonb
+) RETURNS finnor_os.x1_mapping_admissions
+LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog,finnor_os AS $$
+DECLARE
+  v_tenant uuid := finnor_os.request_tenant_id();
+  v_principal uuid := nullif(current_setting('app.user_id',true),'')::uuid;
+  v_row finnor_os.x1_mapping_admissions;
+BEGIN
+  IF v_tenant IS NULL OR v_principal IS NULL THEN
+    RAISE EXCEPTION 'X1 admission publication requires tenant and principal context';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM finnor_os.works w
+    WHERE w.tenant_id=v_tenant AND w.id=p_work_id AND w.created_by=v_principal) THEN
+    RAISE EXCEPTION 'X1 admission publication work is not owned by the principal';
+  END IF;
+  INSERT INTO finnor_os.x1_mapping_admissions
+    (tenant_id,work_id,principal_id,original_digest,candidate_digest,checker_digest,receipts)
+  VALUES (v_tenant,p_work_id,v_principal,p_original_digest,p_candidate_digest,
+    p_checker_digest,p_receipts)
+  RETURNING * INTO v_row;
+  RETURN v_row;
+END $$;
+
+REVOKE ALL ON FUNCTION finnor_os.x1_record_source_acquisition(uuid,uuid,uuid,text,text) FROM PUBLIC;
+REVOKE ALL ON FUNCTION finnor_os.x1_publish_mapping_admission(uuid,text,text,text,jsonb) FROM PUBLIC;
+
 DO $x1_rls$ DECLARE t text; BEGIN
   FOREACH t IN ARRAY ARRAY['x1_source_grants','x1_source_acquisitions','x1_work_mandates','x1_subject_identity_bindings','x1_subject_consents','x1_mapping_admissions'] LOOP
     EXECUTE format('ALTER TABLE finnor_os.%I ENABLE ROW LEVEL SECURITY',t);
@@ -184,9 +261,13 @@ DO $x1_grants$ BEGIN
   IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname='finnor_app') THEN
     GRANT SELECT ON finnor_os.x1_source_grants,finnor_os.x1_work_mandates,
       finnor_os.x1_subject_identity_bindings TO finnor_app;
-    GRANT SELECT,INSERT ON finnor_os.x1_source_acquisitions TO finnor_app;
+    GRANT SELECT ON finnor_os.x1_source_acquisitions TO finnor_app;
     GRANT SELECT,INSERT,UPDATE (expires_at,revoked_at,revision)
       ON finnor_os.x1_subject_consents TO finnor_app;
-    GRANT SELECT,INSERT ON finnor_os.x1_mapping_admissions TO finnor_app;
+    GRANT SELECT ON finnor_os.x1_mapping_admissions TO finnor_app;
+    GRANT EXECUTE ON FUNCTION finnor_os.x1_record_source_acquisition(uuid,uuid,uuid,text,text)
+      TO finnor_app;
+    GRANT EXECUTE ON FUNCTION finnor_os.x1_publish_mapping_admission(uuid,text,text,text,jsonb)
+      TO finnor_app;
   END IF;
 END $x1_grants$;

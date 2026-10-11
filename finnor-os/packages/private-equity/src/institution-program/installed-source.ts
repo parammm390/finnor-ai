@@ -16,7 +16,7 @@ const digest = (bytes: Buffer) => createHash("sha256").update(bytes).digest("hex
 /** One exact installed source, not a generic caller-supplied URL or authority. */
 export async function acquireInstalledMailOriginal(
   ctx: PeMutationContext, workId: string, grant: InstalledMailGrant, profile: DigitalInstitutionProfile,
-): Promise<{ documentId: string; versionId: string; bytes: Buffer }> {
+): Promise<{ documentId: string; versionId: string; bytes: Buffer; retainedAt: string }> {
   if (grant.provider !== "microsoft_graph" || grant.source_class !== "email"
       || grant.external_object_type !== "message" || grant.protocol !== "rfc822"
       || !grant.integration_id || !grant.adapter_scope || !grant.external_id
@@ -77,8 +77,8 @@ export async function acquireInstalledMailOriginal(
         || digest(known.bytes) !== prior.rows[0].byte_sha256) {
       throw new Error("X1_INSTALLED_ORIGINAL_RECEIPT_CHANGED");
     }
-    return { documentId: prior.rows[0].document_id,
-      versionId: prior.rows[0].document_version_id, bytes: known.bytes };
+    return { documentId: prior.rows[0].document_id, versionId: prior.rows[0].document_version_id,
+      bytes: known.bytes, retainedAt: new Date(known.version.created_at).toISOString() };
   }
   const response = await client.requestBytes({
     operation: "x1.mail.original.mime.read", pathOrUrl: `${path}/$value`, headers,
@@ -117,15 +117,16 @@ export async function acquireInstalledMailOriginal(
         actor: ctx.auth.userId, sourceSystem: "microsoft_graph", sourceRef: grant.id,
         providerVersionId: grant.revision,
       });
+      // Raw INSERT is revoked from finnor_app; the SECURITY DEFINER owner
+      // function re-derives tenant/principal from the request GUCs and
+      // cross-checks the referenced grant and document version digests.
       const inserted = await sql.query<{ document_id: string; document_version_id: string; byte_sha256: string }>(
-        `INSERT INTO finnor_os.x1_source_acquisitions
-           (tenant_id,grant_id,document_id,document_version_id,byte_sha256,provider_revision)
-         VALUES ($1,$2,$3,$4,$5,$6)
-         ON CONFLICT (tenant_id,grant_id) DO NOTHING
-         RETURNING document_id::text,document_version_id::text,byte_sha256`,
-        [ctx.auth.tenantId, grant.id, document.documentId, version.id, digest(bytes), grant.revision],
+        `SELECT document_id::text,document_version_id::text,byte_sha256
+           FROM finnor_os.x1_record_source_acquisition($1,$2,$3,$4,$5)`,
+        [grant.id, document.documentId, version.id, digest(bytes), grant.revision],
       );
       if (!inserted.rows[0]) throw new Error("X1_CONCURRENT_SOURCE_ACQUISITION_RETRY");
-      return { documentId: document.documentId, versionId: version.id, bytes };
+      return { documentId: document.documentId, versionId: version.id, bytes,
+        retainedAt: new Date(version.created_at).toISOString() };
     });
 }

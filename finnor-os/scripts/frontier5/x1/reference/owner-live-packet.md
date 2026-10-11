@@ -14,6 +14,11 @@ runbook; nothing here is passed evidence.
    0172 of 174). Expected new relations: `x1_source_grants`,
    `x1_source_acquisitions`, `x1_work_mandates`, `x1_subject_identity_bindings`,
    `x1_subject_consents`, `x1_mapping_admissions`, all with forced tenant RLS.
+   `finnor_app` holds no raw `INSERT` on the two immutable receipt tables; the
+   driver writes receipts only through the `SECURITY DEFINER` owner functions
+   `x1_record_source_acquisition` and `x1_publish_mapping_admission`, which
+   re-derive tenant/principal from the request GUCs and cross-check the
+   referenced grant/document/Work.
 3. One existing tenant, active user (principal) and Work row created by that
    principal; an `authority_states` row for the tenant.
 
@@ -61,9 +66,34 @@ runbook; nothing here is passed evidence.
 - Changed mandate or rights revision at admission -> `X1_MANDATE_CHANGED` /
   `X1_AUTHORITY_CHANGED_DURING_PUBLICATION`; no `x1_mapping_admissions` row and
   no evidence link left behind (single serializable transaction).
+- A newer `(source_id, version)` grant inserted during the publication window
+  aborts the older admission -> `X1_SOURCE_GRANT_CHANGED_DURING_PUBLICATION`
+  (the relock carries revision + original digest equality and the
+  not-superseded predicate at acquisition strength).
+- A subject deactivated between acquisition and admission ->
+  `X1_SENSITIVE_CONSENT_CHANGED` (publication rechecks `users.status='active'`).
 - Changed digest replay -> `X1_ADMISSION_REPLAY_DIGEST_MISMATCH`.
+- Replay after the Source Truth link was re-mapped or tombstoned ->
+  `X1_ADMISSION_REPLAY_SOURCE_TRUTH_CHANGED` (readback re-verifies the link
+  against `finnor_os.external_refs`, not just the canonical ref and evidence
+  version).
+- Raw `INSERT` as `finnor_app` into `x1_source_acquisitions` or
+  `x1_mapping_admissions` -> permission denied; only the owner functions write.
 - Missing Deal prerequisites remain `unresolved`; supported independent
   fund/vehicle mappings in the same candidate still admit.
+
+## Schema pin (deliberate fail-closed)
+
+`owner-admission.ts` requires the latest applied migration to be exactly
+`0172_x1_institution_source_authority.sql`. Once any newer migration is the
+latest applied migration, admission refuses with
+`X1_AUTHORITY_SCHEMA_NOT_INSTALLED` until the pin is deliberately advanced.
+Update step: review the newer migration for any change to the X1
+authority/admission tables or their writer functions, update the pinned name in
+`owner-admission.ts`, regenerate the bundle if migrations changed
+(`npm run db:bundle`), and rerun `--stage kernel` and `--stage static` before
+any owner stage. Never weaken the pin to a prefix match or a skip-list to make
+a run pass; the schema pin is a deliberate stop, not an obstacle.
 
 ## Commands
 

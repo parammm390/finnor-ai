@@ -90,9 +90,13 @@ export async function loadInstitutionAdmissionOriginal(
       workId, risk: "low",
     })) allowed.push(operation);
   }
+  // The knowledge cut binds to the server-side retention facts (Core version
+  // or acquisition receipt), so an identical owner state replays to an
+  // identical digest and a caller can never supply or shift the cut.
   const original: OriginalInstitutionEvidence = {
     tenantId: ctx.auth.tenantId, institutionId: mandate.institutionId,
-    workId, principalId: ctx.auth.userId, knowledgeCut: new Date().toISOString(),
+    workId, principalId: ctx.auth.userId,
+    knowledgeCut: retained.map((source) => source.retainedAt).sort().at(-1)!,
     sources: retained, mandate,
     canonical: { tenantId: ctx.auth.tenantId, revision: "", entities: [] },
     current: {
@@ -222,27 +226,39 @@ export async function reconstructAndAdmitInstitutionSources(
   ctx: PeMutationContext, workId: string, grantIds: string[], profile: DigitalInstitutionProfile,
 ): Promise<{ mappings: AcceptedInstitutionMappingRef[];
   unresolved: NonNullable<InstitutionCandidate["unresolved"]>; check: InstitutionCheck }> {
-  const { original, retained } = await loadInstitutionAdmissionOriginal(ctx, workId, grantIds, profile);
+  const { original } = await loadInstitutionAdmissionOriginal(ctx, workId, grantIds, profile);
   const candidate = await proposeInstitutionModel(original, profile);
   const check = checkInstitutionInSeparateProcess(original, candidate, profile);
   if (check.disposition !== "ACCEPTED_DEVELOPMENT") {
     return { mappings: [], unresolved: candidate.unresolved ?? [], check };
   }
-  const mappings = await admitCheckedInstitutionMappings(ctx, original, retained, candidate, check, profile);
+  const mappings = await admitCheckedInstitutionMappings(ctx, original, candidate, check, profile);
   return { mappings, unresolved: candidate.unresolved ?? [], check };
 }
 
 /** Separate checker acceptance is rederived from owner bytes/snapshot. No
- * producer-issued check, inferred norm or direct canonical row write is used. */
-export async function admitCheckedInstitutionMappings(
+ * producer-issued check, inferred norm or direct canonical row write is used.
+ * Module-private on purpose: every preflight and write input below derives
+ * from the server-rehydrated `sources`, never from a caller-retained array. */
+async function admitCheckedInstitutionMappings(
   ctx: PeMutationContext, original: OriginalInstitutionEvidence,
-  retained: RetainedOriginalSource[], candidate: InstitutionCandidate,
+  candidate: InstitutionCandidate,
   acceptedCheck: InstitutionCheck, profile: DigitalInstitutionProfile,
 ): Promise<AcceptedInstitutionMappingRef[]> {
   if (original.tenantId !== ctx.auth.tenantId || original.principalId !== ctx.auth.userId
-      || retained.length !== original.sources.length
       || acceptedCheck.disposition !== "ACCEPTED_DEVELOPMENT") throw new Error("X1_ADMISSION_NOT_CURRENT_OR_UNRESOLVED");
-  const sources = await rereadSources(ctx, original.workId, retained, profile);
+  // The caller's original supplies only opaque rehydration handles; content,
+  // class, purpose, consent and Source Truth inputs come from `sources`.
+  const handles = original.sources as unknown as RetainedOriginalSource[];
+  if (handles.some((handle) => !handle || typeof handle.grantId !== "string" || !handle.grantId
+      || typeof handle.originalSha256 !== "string" || typeof handle.coreVersionId !== "string"
+      || typeof handle.grantVersion !== "number")) {
+    throw new Error("X1_ADMISSION_NOT_CURRENT_OR_UNRESOLVED");
+  }
+  const sources = await rereadSources(ctx, original.workId, handles, profile);
+  if (sources.length !== handles.length || sources.some((source, index) => source.id !== handles[index]!.id)) {
+    throw new Error("X1_ORIGINAL_BYTES_OR_REVISION_MISMATCH");
+  }
   const mandate = await readInstitutionMandate(ctx, original.workId);
   if (mandate.id !== original.mandate.id || mandate.revision !== original.mandate.revision
       || sha(JSON.stringify(mandate.rules)) !== sha(JSON.stringify(original.mandate.rules))
@@ -261,7 +277,7 @@ export async function admitCheckedInstitutionMappings(
       throw new Error("X1_ADMISSION_REPLAY_DIGEST_MISMATCH");
     }
     const current = await loadInstitutionAdmissionOriginal(ctx, original.workId,
-      retained.map((source) => source.grantId), profile);
+      sources.map((source) => source.grantId), profile);
     if (current.original.current.rightsRevision !== original.current.rightsRevision
         || current.original.current.checkerRevision !== acceptedCheck.checkerRevision) {
       throw new Error("X1_ADMISSION_REPLAY_STALE_RIGHTS_OR_CHECKER");
@@ -271,6 +287,8 @@ export async function admitCheckedInstitutionMappings(
         if (!current.original.canonical.entities.some((entity) => entity.ref === receipt.canonicalRef)) {
           throw new Error("X1_ADMISSION_REPLAY_CANONICAL_CHANGED");
         }
+        const entity = /^pe_(deal|fund|vehicle):([0-9a-f-]{36})@v\d+$/.exec(receipt.canonicalRef);
+        if (!entity) throw new Error("X1_ADMISSION_REPLAY_CANONICAL_CHANGED");
         const evidence = await client.query(
           `SELECT 1 FROM finnor_os.evidence_source_versions v
              JOIN finnor_os.pe_evidence_links l ON l.tenant_id=v.tenant_id
@@ -280,15 +298,26 @@ export async function admitCheckedInstitutionMappings(
           [ctx.auth.tenantId, receipt.evidenceVersionId, receipt.evidenceSourceId, receipt.evidenceLinkId],
         );
         if (!evidence.rows[0]) throw new Error("X1_ADMISSION_REPLAY_EVIDENCE_CHANGED");
+        // Readback also re-verifies the Source Truth link: a later re-map or
+        // tombstone of the observed provider object refuses the replay.
+        if (receipt.sourceTruthLinkId) {
+          const truth = await client.query(
+            `SELECT 1 FROM finnor_os.external_refs
+              WHERE tenant_id=$1 AND id=$2 AND entity=$3
+                AND (internal_id=$4::uuid OR candidate_canonical_ids @> ARRAY[$4::uuid])
+                AND mapping_status<>'tombstoned' AND tombstoned_at IS NULL`,
+            [ctx.auth.tenantId, receipt.sourceTruthLinkId, `pe_${entity[1]}`, entity[2]],
+          );
+          if (!truth.rows[0]) throw new Error("X1_ADMISSION_REPLAY_SOURCE_TRUTH_CHANGED");
+        }
       }
     });
     return prior.rows[0].receipts;
   }
   const currentOwner = await loadInstitutionAdmissionOriginal(ctx, original.workId,
-    retained.map((source) => source.grantId), profile);
-  // Knowledge cut is an original retained observation, not a freshly minted
-  // success timestamp. All semantic revisions must still be identical now.
-  currentOwner.original.knowledgeCut = original.knowledgeCut;
+    sources.map((source) => source.grantId), profile);
+  // The knowledge cut binds to the server-side retention receipts, so the
+  // fresh owner read must reproduce it exactly; caller input never moves it.
   const owner = await loadInstitutionCanonicalOwnerSnapshot(ctx, { ...original, sources }, profile);
   const sourceRevisions = Object.fromEntries(sources.map((source) => [source.id, source.revision]));
   const sourceDigests = Object.fromEntries(sources.map((source) => [source.id, source.originalSha256]));
@@ -311,7 +340,7 @@ export async function admitCheckedInstitutionMappings(
   // Preflight every target before any owner write; unresolved independent
   // sources do not prevent the supported mappings from committing.
   for (const mapping of candidate.mappings) {
-    const source = retained.find((item) => item.id === mapping.sourceId);
+    const source = sources.find((item) => item.id === mapping.sourceId);
     const exact = owner.canonical.entities.find((item) => item.ref === mapping.canonicalRef
       && item.registrationId === mapping.registrationId);
     const entity = /^pe_(deal|fund|vehicle):([0-9a-f-]{36})@v\d+$/.exec(mapping.canonicalRef);
@@ -340,7 +369,7 @@ export async function admitCheckedInstitutionMappings(
       const rank = (ref: string) => ref.startsWith("pe_fund:") ? 0 : ref.startsWith("pe_vehicle:") ? 1 : 2;
       return rank(a.canonicalRef) - rank(b.canonicalRef);
     })) {
-      const source = retained.find((item) => item.id === mapping.sourceId)!;
+      const source = sources.find((item) => item.id === mapping.sourceId)!;
       const entity = /^pe_(deal|fund|vehicle):([0-9a-f-]{36})@v(\d+)$/.exec(mapping.canonicalRef);
       if (!entity) throw new Error("X1_MAPPING_NO_CANONICAL_OWNER_TARGET");
       const [, kind, entityId, expectedVersion] = entity;
@@ -383,26 +412,42 @@ export async function admitCheckedInstitutionMappings(
       }
       const version = await loadDocumentVersion(db, ctx.auth.tenantId, source.coreDocumentId, source.coreVersionId);
       if (!version || sha(version.bytes) !== source.originalSha256) throw new Error("X1_ORIGINAL_CHANGED_DURING_PUBLICATION");
+      // Publication relocks the grant at acquisition strength: exact revision
+      // and original digest, inside its valid window, and not superseded by a
+      // newer version issued during the publication window.
       const grant = await client.query(
-        `SELECT 1 FROM finnor_os.x1_source_grants WHERE tenant_id=$1 AND id=$2
-          AND principal_id=$3 AND work_id=$4 AND version=$5
-          AND revoked_at IS NULL AND expires_at>clock_timestamp() FOR SHARE`,
-        [ctx.auth.tenantId, source.grantId, ctx.auth.userId, original.workId, source.grantVersion],
+        `SELECT 1 FROM finnor_os.x1_source_grants g WHERE g.tenant_id=$1 AND g.id=$2
+          AND g.principal_id=$3 AND g.work_id=$4 AND g.version=$5
+          AND g.revision=$6 AND g.original_sha256=$7
+          AND g.valid_from<=clock_timestamp()
+          AND g.revoked_at IS NULL AND g.expires_at>clock_timestamp()
+          AND NOT EXISTS (
+            SELECT 1 FROM finnor_os.x1_source_grants newer
+             WHERE newer.tenant_id=g.tenant_id AND newer.work_id=g.work_id
+               AND newer.principal_id=g.principal_id AND newer.source_id=g.source_id
+               AND newer.version>g.version)
+          FOR SHARE`,
+        [ctx.auth.tenantId, source.grantId, ctx.auth.userId, original.workId, source.grantVersion,
+          source.revision, source.originalSha256],
       );
       if (!grant.rows[0]) throw new Error("X1_SOURCE_GRANT_CHANGED_DURING_PUBLICATION");
       if (source.sourceClass === "personnel_benefits" || source.sourceClass === "expense_administration") {
         const records = await originalRawRecords(source, profile.bounds.tabularRowsPerObject, profile.bounds.objectBytes);
         const subjects = [...new Set(records.map((row) => row.registrationId))];
         if (!subjects.length || subjects.some((id) => !id)) throw new Error("X1_SENSITIVE_SUBJECT_UNRESOLVED");
+        // Same strength as acquisition: the bound subject must still be an
+        // active employee at publication, not only at retention.
         const consent = await client.query<{ registration_id: string }>(
           `SELECT b.registration_id FROM finnor_os.x1_subject_identity_bindings b
              JOIN finnor_os.x1_subject_consents c ON c.tenant_id=b.tenant_id
                AND c.subject_user_id=b.subject_user_id AND c.institution_id=b.institution_id
                AND c.source_class=$4 AND c.purpose=$5
+             JOIN finnor_os.users u ON u.tenant_id=b.tenant_id AND u.id=b.subject_user_id
            WHERE b.tenant_id=$1 AND b.institution_id=$2 AND b.source_id=$3
              AND b.registration_id=ANY($6::text[]) AND b.revoked_at IS NULL
              AND b.valid_from<=clock_timestamp() AND b.expires_at>clock_timestamp()
              AND c.revoked_at IS NULL AND c.expires_at>clock_timestamp()
+             AND u.status='active'
            FOR SHARE OF b,c`,
           [ctx.auth.tenantId, source.institutionId, source.id, source.sourceClass, source.purpose, subjects],
         );
@@ -503,12 +548,13 @@ export async function admitCheckedInstitutionMappings(
         sourceTruthLinkId, ...(relationId ? { relationId } : {}),
         disposition: "SOURCE_ASSERTION_ATTACHED_NOT_SETTLED_TRUTH" });
     }
+    // Raw INSERT is revoked from finnor_app; publication routes through the
+    // SECURITY DEFINER owner function, which re-derives tenant/principal from
+    // the request GUCs and cross-checks the referenced Work.
     const publication = await client.query(
-      `INSERT INTO finnor_os.x1_mapping_admissions
-        (tenant_id,work_id,principal_id,original_digest,candidate_digest,checker_digest,receipts)
-       VALUES ($1,$2,$3,$4,$5,$6,$7::jsonb)`,
-      [ctx.auth.tenantId, original.workId, ctx.auth.userId, check.inputDigest,
-        check.candidateDigest, check.checkerRevision, JSON.stringify(receipts)],
+      `SELECT id::text FROM finnor_os.x1_publish_mapping_admission($1,$2,$3,$4,$5::jsonb)`,
+      [original.workId, check.inputDigest, check.candidateDigest, check.checkerRevision,
+        JSON.stringify(receipts)],
     );
     if (publication.rowCount !== 1) throw new Error("X1_ADMISSION_PUBLICATION_FAILED");
     return receipts;
