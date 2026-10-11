@@ -1,0 +1,110 @@
+# Independently specified X1 oracle v1
+
+Frozen before critical checker/compiler code. Owned by the validation specification, not candidate inference. Scope is `profile.json`; consistency means consistency in this encoded domain, not unique truth, causal qualification or protected admission.
+
+## Independent inputs and custody
+
+Checker reads (1) authorized retained original source bytes and transport metadata, (2) supplied standing mandate/current explicit policies, (3) independently fetched canonical identity/fact/right/resource/operation snapshots and revision vector, (4) candidate bytes only as the object being checked, (5) frozen profile and checker revision. It MUST NOT import producer inference, hypothesis ranking, source-to-domain mapping or rule-selection functions. Format-only libraries may be shared if semantic-free; raw byte identity and interpretation witnesses are independently checked.
+
+Reference expectations and material denominators are authored/derived separately from original sources/mandate, before candidate exposure. An omission is visible even when no candidate record exists. Expected population cannot be candidate-selected, created by a mock implementing its asserted behavior, or obtained by running the producer. Development fixtures use independently hand-specified truth for their raw inputs; protected evaluation loads an independently administered inaccessible ledger.
+
+Protected credentials/filesystem/process custody, immutable validator revision and independently controlled outcome observations must be verified by the evaluator. A development process/file split alone does not prove hostile isolation. Absent custody blocks protected qualification, not source engineering.
+
+## Typed reference/value semantics
+
+Use discriminated known/unknown bindings. A known owner ref binds owner, kind, canonical identity, revision/content digest, tenant/institution scope, rights revision and temporal cut where applicable. An unknown binds exact reason, affected claims/obligations and required owner/input; it is not an invented UUID, empty successful result, zero cost or null without meaning.
+
+Quantity = exact value representation + currency/unit + canonical entity + economic period/as-of + accounting basis + source witness. Missing/incompatible components remain unknown. Identity requires institution/source scoped durable identifier or explicit checked cross-reference. Matching names/embeddings or balancing accounts do not establish identity.
+
+Time distinguishes occurrence/validity, admitted-channel availability and knowledge cut. Dates with multiple supported meanings retain alternatives unless original protocol/context disambiguates. No future-available assertion enters an earlier knowledge cut.
+
+## Obligation and programme semantics
+
+The owner supplies responsibility, materiality, priority/risk, responsible role/principal requirements, deadlines and current grants, not an ontology or workflow. Generic canonical vocabulary and bounded responsibility/rule forms are permitted; institution-specific source field maps and hand-written held-out workflow code are not.
+
+A derivation binds: original trigger occurrence and evidence revision set; current explicit rule/policy or mandate clause; condition; materiality/priority; original deadline; responsible current principal; permissible operation class; exact preconditions; expected external/canonical postcondition; independent observer contract; stable obligation identity; derivation revision; existing effect binding if any.
+
+Rule provenance is normative only when explicitly supplied/authorized. A process hypothesis is descriptive. An exception-request email, silence, title, employment record or historical approval cannot satisfy a current approval predicate.
+
+The independent ledger recomputes supported triggers across ALL relevant authorized observations. Multiple supported alternatives remain unresolved, never uniquely true by consistency alone. Unsupported responsibility parts produce exact gaps while independent supported parts continue.
+
+S4/P1 lowering is checked against the accepted obligation set:
+- Each executable branch has an admitted operation with the original trigger/guard/principal/deadline/postcondition.
+- Each WAIT/STOP retains unresolved duties, reservations and possible effects according to existing owners.
+- New data can disable a branch or create a traced successor, never silently erase an old obligation/effect.
+- Continuation uses canonical owner semantics; it does not claim a supplied institutional rule is an S3 causal law.
+- S5 demand/actual reserve/consume refs join that branch and original parent.
+- Compiler/check receipts grant neither execution authority nor S6 settlement.
+
+Preservation argument: initial binding establishes the supplied mandate and source cut; each checked typed transition either preserves the same obligation and guard/deadline/completion contract, appends a justified revision, waits/stops without dropping liability, or executes a currently authorized native operation followed by independent observation. Induction over accepted native transitions preserves those obligations within the declared grammar. This is an encoded-contract argument, not a theorem of institutional/business truth.
+
+## Acceptance predicate
+
+1. Complete tenant/institution/source/principal/Work binding and original raw bytes; current source access and sensitive consent.
+2. Complete declared source/page/object coverage, or explicit gaps that disable every dependent positive claim. No truncated “complete” input.
+3. Every accepted entity/relation/quantity/time claim has a supported witness in originals/canonical owner state. Identity collisions and incompatible unit/context are not silently merged.
+4. Every material contradiction has a preserved disposition. Corrected prior data is superseded with history, not erased.
+5. Every normative rule has current mandate/policy provenance; unsupported text/process regularity supplies no authority.
+6. Complete independent supported-obligation population matches triggers, principals, materiality, deadlines and action classes, including omitted obligations.
+7. Accepted programme is expressible by the versioned actual S4/P1 grammar and preserves original semantics.
+8. Relevant current rights/resources/method/operation/checker/profile/schema/runtime/source/mandate dependencies match at acceptance and every later use.
+9. Check receipt binds exact original/candidate/checker/profile/currentness inputs and cannot be forged/reused for another revision.
+10. Completion requires a separately observed exact postcondition and timing. Prepared/submitted/acknowledged/UNKNOWN are not completed.
+
+Each failure emits a typed finding with witness/ref, reached predicate, affected claim/obligation and permitted exact intervention. A checker crash/exhaustion produces no accepted check; compatible fallback may run under the remaining original grant.
+
+## Complete artifact fields and owner mapping
+
+| InstitutionProgram field | Required meaning |
+|---|---|
+| envelope | Full envelope below, immutable artifact identity |
+| mandate_ref | Current immutable owner mandate/Work input revision |
+| inferred_source_mapping_refs | Candidate/check witnesses and accepted semantic-owner receipts |
+| canonical_entity_and_relation_refs | Actual S1/Core/PE identities/revisions, no replica |
+| temporal_and_unit_constraints | Complete checked quantity/identity/time semantics |
+| obligation_derivation_rules | Normative derivations with all bindings above |
+| materiality_and_priority_contract | Supplied mandate thresholds/risk/priority |
+| unresolved_interpretations | Alternatives, exact missing input/decision, affected commitments |
+| evidence_dependency_graph | Complete typed P7 dependency membership |
+| incremental_update_rules | Sound changed-node seeds, closure/reuse rules and revision behavior |
+| s4_programme_ref | Actual versioned owner responsibility/native programme |
+| s6_obligation_refs | Real governed obligations; ordinary effect binding is separately discriminated |
+| validity_and_invalidation_contract | All currentness predicates/fences/expiry |
+| independently_checked_model_revision | Exact candidate/source/profile/checker binding, basis and current disposition |
+
+| Envelope field(s) | Required canonical binding |
+|---|---|
+| artifact_id, kind, schema_revision, content_digest | Immutable typed revision; nonrecursive digest preimage |
+| tenant_ref, work_ref, institutional_program_ref | Actual canonical ownership and lineage |
+| parent_artifact_refs, producer_revision, baseline_manifest_ref | Immutable ancestry and exact code/dirty/runtime baseline |
+| authority_grant_ref, rights_revision, resource_grant_ref | Actual current authority/access and S5 original parent or explicit unknown |
+| source_refs, source_revision_vector, knowledge_cut | Complete retained sources/revisions and reconstructible knowledge cut |
+| admitted_domain_ref, application_fingerprints | Actual admission disposition and source/operation semantics; profile alone is not admission |
+| model_refs, dependency_lock_digest, runtime_digest | Actual provider/model if any, locks and installed identity; unknown alias explicitly unknown |
+| observed_claims, inferred_claims, predicted_claims, unresolved_claims | Distinct typed claims with witnesses/basis, never collapsed into facts |
+| postcondition_contract_refs, independent_check_refs | Frozen actual completion contracts and independent check records |
+| S6_obligation_refs, provider_observation_refs | Exact governed identities/observations; ordinary canonical readbacks separately typed |
+| invalidation_dependencies, lifecycle_state, lifecycle_events | Complete dependency set and append-only lifecycle transitions |
+| build_learning_compute_cost_refs, attributable_human_work_refs | Once-only actual parent S5/S7 meter/human refs with unknown coverage |
+
+All34 logical envelope fields must exist in parsable persisted output, even where a meaningful unknown binding is necessary. Full14 output fields are independently inspected.
+
+## Positive native completion oracle
+
+First supported responsibility: create exactly one specified internal evidence Request before its registered deadline. Original mandate/source-derived target is checked independently. Observer reads canonical state by frozen authorized DomainAction-derived ID and compares tenant, Deal, workstream, requested-from party, owner, request text, requestedAt/dueAt, accepted-deliverable requirement and creation/lifecycle state. A row existing under another target or with different fields fails. Creation does not mean requested evidence received, accepted, fulfilled or approved.
+
+Lost acknowledgement retains same effect/obligation/grant/deadline and UNKNOWN. Read-only canonical observation can reconcile supported exact completion; absent/ambiguous state cannot authorize blind retry. No new effect ID is invented to “recover.”
+
+## Qualification score specification
+
+Independently freeze material mapping set M, supported obligation set O, unique business assignment identities/weights/deadlines, critical subset K and actionable-change set C per environment before exposure. Candidate claims are CANDIDATE, not expectations. Match one-to-one only under independently defined equivalence; no duplicate credit.
+
+Mapping and obligation precision = accepted correct claimed items / all material claimed items; recall = accepted correct items / all independently expected items. Missing candidates remain in denominator. Empty or invalid denominators are unqualified/unknown, never a perfect score. Each environment must independently meet mapping99%/95% and obligation99%/95%.
+
+Within-deadline supported completion uses ALL O and independently observed exact postconditions; missed/blocked/unknown/refused/expired/overridden remain. At least95% by contractual deadline; critical misses may veto independently. Change recognition uses all actionable C and admitted-channel availability, at least95% within120s. Source occurrence-to-availability transport lag is a separate measurement, never subtracted to disguise slow recognition.
+
+Any observed unauthorized effect, tenant disclosure, stale-grant execution, false completion, silent material contradiction, scorer/oracle contamination or institutional human patch invalidates the affected qualification. Human clarification/supervision/rescue and all failures are charged, never removed.
+
+Ten environments each>=8 genuinely heterogeneous system classes; full30-day replay plus separate7-day live elapsed soak for each. Separate clocks/start/checkpoint/resume observations. No renamed known fixture, eight labels over one JSON object, shortened population/horizon or accelerated-live substitution.
+
+Original resource/generator/correctness/regret/calibration/downside/comparator and financialH2 contracts remain unchanged. X1 on/off is component development evidence, not qualifiedB_V or operational100x.

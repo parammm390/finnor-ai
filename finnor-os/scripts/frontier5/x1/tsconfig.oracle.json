@@ -1,0 +1,17 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "baseUrl": "../../..",
+    "types": ["node"],
+    "noUnusedLocals": true,
+    "noUnusedParameters": true
+  },
+  "files": [
+    "../../../packages/private-equity/src/institution-program/contracts.ts",
+    "../../../packages/private-equity/src/institution-program/checker.ts",
+    "./kernel.mts"
+  ],
+  "include": [],
+  "exclude": ["node_modules"]
+}
