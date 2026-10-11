@@ -17,11 +17,11 @@ from pathlib import Path
 
 PINS = {
  'gmp': ('https://ftp.gnu.org/gnu/gmp/gmp-6.3.0.tar.xz', 'a3c2b80201b89e68616f4ad30bc66aee4927c3ce50e33929ca819d5c43538898', 'gmp-6.3.0', 'xz'),
- 'mpfr': ('https://www.mpfr.org/mpfr-current/mpfr-4.2.2.tar.xz', 'b67ba0383ef7e8a8563734e2e889ef5ec3c3b898a01d00fa0a6869ad81c6ce01', 'mpfr-4.2.2', 'xz'),
+ 'mpfr': ('https://www.mpfr.org/mpfr-4.2.2/mpfr-4.2.2.tar.xz', 'b67ba0383ef7e8a8563734e2e889ef5ec3c3b898a01d00fa0a6869ad81c6ce01', 'mpfr-4.2.2', 'xz'),
  'boost': ('https://archives.boost.io/release/1.85.0/source/boost_1_85_0.tar.bz2', '7009fe1faa1697476bdc7027703a2badb84e849b7b0baad5086b087b971f8617', 'boost_1_85_0', 'bz2'),
  'soplex': ('https://codeload.github.com/scipopt/soplex/tar.gz/2207cfb274dbce5c2644911dd621438535733607', 'a5719b584d1995582812ad0ec72ddfca2c0441f2ff16da69eee72d1dc65031df', 'soplex-2207cfb274dbce5c2644911dd621438535733607', 'gz'),
  'scip': ('https://codeload.github.com/scipopt/scip/tar.gz/0c80fdd8e91d7d9f23c0c7a55b68884209d5f27c', '1f149c6d30443193c0e8bae4cba9929a43d2bb35c8952d18a44bb23193d7312c', 'scip-0c80fdd8e91d7d9f23c0c7a55b68884209d5f27c', 'gz'),
- 'vipr': ('https://codeload.github.com/ambros-gleixner/VIPR/tar.gz/30f2951d1e90e47afa821bdd1b12b82246656c42', 'bfd905e3378353b5f4e93ad2405c75feed0d477e0a74113496fb2d6e04ca7786', 'vipr-30f2951d1e90e47afa821bdd1b12b82246656c42', 'gz')}
+ 'vipr': ('https://codeload.github.com/scipopt/vipr/tar.gz/30f2951d1e90e47afa821bdd1b12b82246656c42', 'bfd905e3378353b5f4e93ad2405c75feed0d477e0a74113496fb2d6e04ca7786', 'vipr-30f2951d1e90e47afa821bdd1b12b82246656c42', 'gz')}
 
 
 def timestamp():
@@ -124,13 +124,21 @@ def main():
     env = dict(os.environ, SOURCE_DATE_EPOCH='1760000000')
 
     def run(argv, cwd=root, log='build.log'):
-        with (root/log).open('ab') as out:
-            subprocess.run([str(a) for a in argv], cwd=cwd, env=env, stdout=out, stderr=subprocess.STDOUT, check=True, timeout=1800)
+        try:
+            with (root/log).open('ab') as out:
+                subprocess.run([str(a) for a in argv], cwd=cwd, env=env, stdout=out, stderr=subprocess.STDOUT, check=True, timeout=1800)
+        except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
+            # A Docker build cannot retain a failed intermediate layer. Surface
+            # the actual bounded compiler/download diagnostic before refusing.
+            with (root/log).open('rb') as diagnostic:
+                diagnostic.seek(max(0, (root/log).stat().st_size-16384))
+                print(diagnostic.read().decode(errors='replace'), flush=True)
+            raise
     if not args.package_existing:
         for name, (url, expected, directory, extension) in PINS.items():
             archive = root/(name+'.tar.'+extension)
             if not archive.exists():
-                run(['curl', '--fail', '--location', '--connect-timeout', '20', '--max-time', '300', url, '--output', archive], log='downloads.log')
+                run(['curl', '--fail', '--location', '--proto', '=https', '--proto-redir', '=https', '--connect-timeout', '20', '--max-time', '300', url, '--output', archive], log='downloads.log')
             if sha(archive) != expected:
                 raise ValueError('Pinned archive digest mismatch: '+name)
             if not (root/directory).exists():

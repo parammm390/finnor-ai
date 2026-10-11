@@ -86,7 +86,16 @@ jobs:
           printf 'Complete history range: %s; reachable commits: %s\n' "$scan_range" "$count"
           "$scanner" git . --config=.gitleaks.toml --redact=100 --no-banner \
             --ignore-gitleaks-allow --gitleaks-ignore-path="${tooling}/no-ignore-file" \
+            --report-format=json --report-path="${RUNNER_TEMP}/finnor-secret-history-redacted.json" \
             --log-opts="-m ${scan_range}"
+      - name: Retain redacted complete-history findings
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: secret-history-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/finnor-secret-history-redacted.json
+          if-no-files-found: warn
+          retention-days: 7
   osv:
     name: osv-scanner
     if: ${{ github.event_name == 'push' || inputs.run_dependency_scan }}
