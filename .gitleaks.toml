@@ -85,6 +85,24 @@ paths = ['''(^|/)finnor-os/scripts/r2/run-owner\.mts$''']
 regexTarget = "match"
 regexes = ['''^refresh_token:'r2-disposable'$''']
 
+# This exact static underwriting model name is public synthetic metadata.
+# Other model names, credential fields and paths remain fully scanned.
+[[rules.allowlists]]
+description = "Exact authored R6 synthetic underwriting model identifier"
+condition = "AND"
+paths = ['''(^|/)finnor-os/scripts/r6/run-e2e\.mts$''']
+regexTarget = "match"
+regexes = ['''^modelKey: "r6-synthetic-mechanics"$''']
+
+# Static request identity for the disposable publication-revocation fixture.
+# Neither runtime idempotency values nor other fields on this path are exempt.
+[[rules.allowlists]]
+description = "Exact authored R8 publication-fault request identifier"
+condition = "AND"
+paths = ['''(^|/)finnor-os/scripts/r8/run-owner\.mts$''']
+regexTarget = "match"
+regexes = ['''^idempotencyKey:'r8-publish-fault'$''']
+
 # This is the checked SHA-256 of y0's public identification API source.
 # Only its exact detector match on these two R4 method files is metadata.
 [[rules.allowlists]]
