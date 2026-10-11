@@ -26,6 +26,7 @@ function asFields(value: unknown): Record<string, string> {
   if (!value || typeof value !== "object" || Array.isArray(value)) return fail("record must be an object");
   return Object.fromEntries(Object.entries(value).filter(([, item]) => item !== null && item !== undefined).map(([key, item]) => {
     if (typeof item !== "string" && typeof item !== "number" && typeof item !== "boolean") return fail(`nested field ${key}`);
+    if (typeof item === "number" && !Number.isSafeInteger(item)) return fail(`non-exact numeric token ${key}`);
     return [key, String(item)];
   }));
 }
@@ -73,7 +74,9 @@ function table(raw: string, separator: string): Record<string, string>[] {
 }
 function markup(raw: string): Record<string, string>[] {
   if (/<(?:script|style|iframe)\b/i.test(raw)) fail("active HTML is not a record");
-  const fragment = /<table\b[^>]*>([\s\S]*?)<\/table>/i.exec(raw)?.[1];
+  const tables = [...raw.matchAll(/<table\b[^>]*>([\s\S]*?)<\/table>/gi)];
+  if (tables.length > 1) fail("multiple HTML tables require separate complete material coverage");
+  const fragment = tables[0]?.[1];
   if (!fragment) return fail("HTML table missing");
   const rows = [...fragment.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)].map((match) =>
     [...match[1]!.matchAll(/<(?:th|td)\b[^>]*>([\s\S]*?)<\/(?:th|td)>/gi)].map((item) =>
@@ -113,7 +116,9 @@ function workbook(bytes: Buffer): Record<string, string>[] {
   const packageFile = new OfficePackage(bytes);
   if (packageFile.format !== "xlsx") return fail("XLSX package required");
   const root = packageFile.xml(packageFile.mainPart);
-  const sheet = descendants(root, "sheet", NS.sheet)[0];
+  const sheets = descendants(root, "sheet", NS.sheet);
+  if (sheets.length > 1) fail("multiple worksheets require separate complete material coverage");
+  const sheet = sheets[0];
   const links = packageFile.relationships(packageFile.mainPart);
   const part = links.find((link) => link.id === sheet?.attrs["r:id"])?.resolved;
   if (!part) return fail("worksheet relation absent");

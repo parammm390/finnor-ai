@@ -18,6 +18,7 @@ type RawRecord = {
   relation?: string; relationRegistrationId?: string;
   endsAt?: string;
   narrative?: string;
+  observationKind?: string; balanceRole?: string; accountingRelationId?: string;
 };
 type Rule = {
   id: string; triggerKind: string; operation: string; principalId: string;
@@ -55,7 +56,7 @@ export type InstitutionCandidate = {
   contradictions: { left: string; right: string; disposition: "unresolved" | "superseded" }[];
   obligations: Obligation[];
   dependencies: Record<string, unknown> & { sourceRevisions: Record<string, string> };
-  limits: Record<string, number>;
+  limits: Record<string, number | null>;
   unresolved?: { witness: string; reason: string; alternatives: string[] }[];
   processHypotheses?: { witness: string; interpretation: string; normative: false }[];
   /** A producer cannot provide its own independently accepted check. */
@@ -151,8 +152,9 @@ export async function independentlyCheckInstitutionModel(
   }
   const bounds: Record<string, number> = profile.bounds;
   const boundKeys = Object.keys(bounds);
-  if (boundKeys.some((key) => !Number.isSafeInteger(candidate.limits[key]) || candidate.limits[key]! < 0
-        || candidate.limits[key]! > bounds[key]!)
+  if (boundKeys.some((key) => candidate.limits[key] !== null
+        && (!Number.isSafeInteger(candidate.limits[key]) || candidate.limits[key]! < 0
+          || candidate.limits[key]! > bounds[key]!))
       || (candidate.unresolved?.length ?? 0) > profile.bounds.unresolvedInterpretations
       || candidate.unresolved?.some((item) => !Array.isArray(item.alternatives)
         || item.alternatives.length > profile.bounds.alternativesPerInterpretation)
@@ -229,32 +231,58 @@ export async function independentlyCheckInstitutionModel(
     const matches = canonicalByRegistration.get(registrationId ?? "") ?? [];
     return matches.length === 1 && matches[0]!.institutionId === original.institutionId ? matches[0]!.ref : null;
   };
-  for (const [key, { source, record }] of unknowns) {
-    const basis = candidate.unresolved?.find((item) => item.witness === witness(source.id, record.id));
-    if (!basis || typeof basis.reason !== "string" || !Array.isArray(basis.alternatives)) {
-      return fail("COVERAGE", `Native source meaning omitted ${key}`, [key]);
+  const unresolvedFor = (key: string, record: RawRecord, options: string[]): InstitutionCheck | null => {
+    const basis = candidate.unresolved?.find((item) => item.witness === key);
+    if (!basis || typeof basis.reason !== "string" || !basis.reason
+        || !Array.isArray(basis.alternatives)) return fail("COVERAGE", `Unresolved original omitted ${key}`, [key]);
+    if (options.length > profile.bounds.alternativesPerInterpretation
+        || !unique(basis.alternatives) || !same([...basis.alternatives].sort(), [...options].sort())) {
+      return fail("IDENTITY", `Original alternatives differ ${key}`, [key]);
     }
-    const options = canonical.entities.filter((entity) => entity.institutionId === original.institutionId
+    void record;
+    return null;
+  };
+  const optionsFor = (record: RawRecord): string[] => canonical.entities.filter((entity) =>
+    entity.institutionId === original.institutionId
       && (entity.registrationId === record.registrationId
         || (entity.registrationId.length >= 3 && record.narrative?.includes(entity.registrationId))))
-      .map((entity) => entity.ref);
-    if (options.length > profile.bounds.alternativesPerInterpretation
-      || !same([...new Set(basis.alternatives)].sort(), [...new Set(options)].sort())) {
-      return fail("IDENTITY", `Descriptive cross-reference alternatives differ ${key}`, [key]);
-    }
+    .map((entity) => entity.ref);
+  for (const [, { source, record }] of unknowns) {
+    const key = witness(source.id, record.id), invalid = unresolvedFor(key, record, optionsFor(record));
+    if (invalid) return invalid;
   }
   const mapByKey = new Map(candidate.mappings.map((item) => [recordKey(item.sourceId, item.recordId), item]));
   if (mapByKey.size !== candidate.mappings.length) return fail("IDENTITY", "Duplicate candidate mapping");
   for (const [key, { record }] of entities) {
     const proposal = mapByKey.get(key), ref = canonicalRef(record.registrationId);
-    if (!ref || !proposal || recordKey(proposal.sourceId, proposal.recordId) !== key
+    if (!ref) {
+      const [source] = JSON.parse(key) as string[];
+      const invalid = unresolvedFor(witness(source!, record.id), record, optionsFor(record));
+      if (invalid) return invalid;
+      if (proposal) return fail("IDENTITY", `Ambiguous original cannot support mapping ${key}`, [key]);
+      continue;
+    }
+    if (!proposal || recordKey(proposal.sourceId, proposal.recordId) !== key
         || proposal.registrationId !== record.registrationId || proposal.canonicalRef !== ref
         || record.entityType !== canonical.entities.find((entity) => entity.ref === ref)?.entityType) {
       return fail("IDENTITY", `Original scoped identity does not support ${key}`, [key]);
     }
   }
-  if (mapByKey.size !== entities.length) return fail("IDENTITY", "Unsupported or extra material mapping");
-  const relationRows = [...records].filter(([, value]) => value.record.relation && value.record.relationRegistrationId);
+  if (mapByKey.size !== entities.filter(([, { record }]) => canonicalRef(record.registrationId)).length)
+    return fail("IDENTITY", "Unsupported or extra material mapping");
+  const relationRows = [...records].filter(([, value]) =>
+    value.record.relation && value.record.relationRegistrationId
+      && canonicalRef(value.record.registrationId) && canonicalRef(value.record.relationRegistrationId));
+  for (const [, { source, record }] of records) {
+    if (!record.relation || !record.relationRegistrationId || canonicalRef(record.relationRegistrationId)) continue;
+    const alternatives = canonical.entities.filter((entity) => entity.institutionId === original.institutionId
+      && entity.registrationId === record.relationRegistrationId).map((entity) => entity.ref);
+    const gap = candidate.unresolved?.find((item) => item.witness === witness(source.id, record.id));
+    if (!gap || alternatives.length > profile.bounds.alternativesPerInterpretation
+        || !same([...alternatives].sort(), [...gap.alternatives].sort())) {
+      return fail("IDENTITY", `Cross-reference alternatives differ ${source.id}/${record.id}`);
+    }
+  }
   const relationByKey = new Map((candidate.relations ?? []).map((item) => [recordKey(item.sourceId, item.recordId), item]));
   if (relationByKey.size !== (candidate.relations ?? []).length || relationByKey.size !== relationRows.length) {
     return fail("IDENTITY", "Material relation denominator differs");
@@ -285,12 +313,25 @@ export async function independentlyCheckInstitutionModel(
     }
   }
   const quantityByKey = new Map(candidate.quantities.map((item) => [recordKey(item.sourceId, item.recordId), item]));
-  if (quantityByKey.size !== candidate.quantities.length || quantityByKey.size !== quantityRows.length) {
+  if (quantityByKey.size !== candidate.quantities.length) {
     return fail("QUANTITY", "Material quantity denominator differs");
   }
   for (const [key, { record }] of quantityRows) {
     const proposal = quantityByKey.get(key), ref = canonicalRef(record.registrationId);
-    if (!ref || !proposal || recordKey(proposal.sourceId, proposal.recordId) !== key
+    if (["factKey", "value", "currency", "unit", "period", "basis", "occurredAt", "availableAt"]
+      .some((field) => record[field as keyof RawRecord] !== undefined
+        && typeof record[field as keyof RawRecord] !== "string")) {
+      return fail("QUANTITY", `Malformed original quantity context ${key}`, [key]);
+    }
+    if (!ref || !quantityContext(record) || !decimal(record.value)
+        || !iso(record.occurredAt) || !iso(record.availableAt)) {
+      const [source] = JSON.parse(key) as string[];
+      const invalid = unresolvedFor(witness(source!, record.id), record, optionsFor(record));
+      if (invalid) return invalid;
+      if (proposal) return fail("QUANTITY", `Unsupported original quantity proposed as exact ${key}`, [key]);
+      continue;
+    }
+    if (!proposal || recordKey(proposal.sourceId, proposal.recordId) !== key
         || proposal.canonicalRef !== ref || proposal.registrationId !== record.registrationId) {
       return fail("IDENTITY", `Quantity belongs to a different institutional identity ${key}`, [key]);
     }
@@ -308,10 +349,45 @@ export async function independentlyCheckInstitutionModel(
       return fail("QUANTITY", `Exact original quantity/context conflict ${key}`, [key]);
     }
   }
+  if (quantityByKey.size !== quantityRows.filter(([, { record }]) =>
+    canonicalRef(record.registrationId) && quantityContext(record) && decimal(record.value)
+      && iso(record.occurredAt) && iso(record.availableAt)).length) {
+    return fail("QUANTITY", "Supported quantity omitted or unsupported quantity claimed");
+  }
+  const accountingGroups = new Map<string, Map<string, RawRecord>>();
+  for (const [key, { record }] of quantityRows) {
+    if (!record.accountingRelationId && !record.balanceRole) continue;
+    if (!record.accountingRelationId || !["opening", "movement", "closing"].includes(record.balanceRole ?? "")
+        || !quantityContext(record) || !decimal(record.value)) return fail("QUANTITY", `Invalid accounting relation ${key}`, [key]);
+    const group = JSON.stringify([record.accountingRelationId, record.registrationId, record.factKey,
+      record.currency, record.unit, record.period, record.basis]);
+    const roles = accountingGroups.get(group) ?? new Map<string, RawRecord>();
+    if (roles.has(record.balanceRole!)) return fail("QUANTITY", `Repeated accounting role ${key}`, [key]);
+    roles.set(record.balanceRole!, record); accountingGroups.set(group, roles);
+  }
+  for (const [group, roles] of accountingGroups) {
+    if (roles.size !== 3) {
+      const [id] = JSON.parse(group) as string[];
+      const missing = ["opening", "movement", "closing"].filter((role) => !roles.has(role));
+      const gap = candidate.unresolved?.find((item) => item.witness === `accounting:${id}`);
+      if (!gap || !missing.every((role) => gap.reason.includes(role)) || gap.alternatives.length) {
+        return fail("QUANTITY", `Partial accounting relationship not disclosed ${group}`, [group]);
+      }
+      continue; // Missing equation evidence is unresolved, not an assumed zero.
+    }
+    const opening = decimal(roles.get("opening")!.value)!;
+    const movement = decimal(roles.get("movement")!.value)!;
+    const closing = decimal(roles.get("closing")!.value)!;
+    const scale = Math.max(opening.scale, movement.scale, closing.scale);
+    const units = (item: typeof opening) => item.coefficient * 10n ** BigInt(scale - item.scale);
+    if (units(opening) + units(movement) !== units(closing)) return fail("QUANTITY", `Original accounting conservation fails ${group}`, [group]);
+  }
   const conflictPairs = new Set<string>();
   for (let i = 0; i < quantityRows.length; i++) for (let j = i + 1; j < quantityRows.length; j++) {
     const [aKey, a] = quantityRows[i]!, [bKey, b] = quantityRows[j]!;
-    if (a.record.registrationId === b.record.registrationId && a.record.factKey === b.record.factKey
+    if (a.record.observationKind !== "transaction" && b.record.observationKind !== "transaction"
+      && !a.record.balanceRole && !b.record.balanceRole
+      && a.record.registrationId === b.record.registrationId && a.record.factKey === b.record.factKey
       && a.record.currency === b.record.currency && a.record.unit === b.record.unit
       && a.record.period === b.record.period && a.record.basis === b.record.basis
       && !equalDecimal(a.record.value, b.record.value)) conflictPairs.add(JSON.stringify([aKey, bKey].sort()));
@@ -346,7 +422,11 @@ export async function independentlyCheckInstitutionModel(
     if (!iso(record.occurredAt) || !iso(record.availableAt) || record.availableAt < record.occurredAt
         || record.availableAt > original.knowledgeCut) return fail("CHRONOLOGY", `Trigger not available ${key}`, [key]);
     const ref = canonicalRef(record.registrationId);
-    if (!ref) return fail("IDENTITY", `Trigger identity unresolved ${key}`, [key]);
+    if (!ref) {
+      const invalid = unresolvedFor(witness(source.id, record.id), record, optionsFor(record));
+      if (invalid) return invalid;
+      continue;
+    }
     for (const rule of mandate.rules.filter((entry) => entry.triggerKind === record.triggerKind)) {
       if (!iso(rule.deadlineAt) || rule.deadlineAt < record.occurredAt) {
         return fail("CHRONOLOGY", `Mandate deadline precedes trigger ${key}`, [key]);

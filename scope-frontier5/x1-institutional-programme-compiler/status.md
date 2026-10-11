@@ -1,5 +1,34 @@
 # FRONTIER5.X1 status
 
+## Native/checker finish on e933b6988 (11 October 2026)
+
+The five remaining source predicates have finite original-byte cases and
+independently derived checker outcomes: transaction occurrences do not imply
+equal balances; exact decimal equivalence and explicitly evidenced
+opening/movement/closing conservation are checked; recognized ambiguous
+identities and missing quantity context retain complete alternatives or exact
+gaps without suppressing independent duties; secondary HTML tables/XLSX
+worksheets refuse at COVERAGE rather than disappear; negated, quoted and
+hedged task activity does not produce an affirmative mandate trigger; safe
+integer JSON numeric tokens retain exact decimal meaning, and fully dated
+lender Outstanding values support quantities. Incomplete lender availability
+names `AVAILABLE_AT`. A partial accounting equation remains unresolved.
+
+Original 32 MiB raw plus 8 MiB canonical state crosses the former 48 MiB
+framing cap and is accepted by the separate pinned development checker under
+the unchanged profile. Unmeasured human, dollars, aggregate memory and
+unmaterialized node/clarification counts are null, not measured zeros.
+The historical checker-001 controls and failed observations remain intact.
+The bounded kernel and affected static stage passed on the changed cut.
+The pre-repair failures and exact case/source pins are recorded in the
+mission library native finish receipt, without implying installed packaging,
+owner admission, protected qualification or live E2E verification.
+
+Native/checker **source scope complete, development offline basis only**.
+The separately assigned semantic owner, installed package and live fixture
+features retain their actual work. No global CODE_COMPLETE, E2E_DEV_VERIFIED,
+DOMAIN_QUALIFIED, protected authority, B_V or economic gain is claimed.
+
 ## Native source interpretation/checker repair (11 October 2026)
 
 Source work on ten class-native records now uses generic ID/vocabulary, amount/context,

@@ -89,5 +89,33 @@ for (const fixture of [...cases.map((item) => ({ ...item, bytes: undefined })),
   assert.equal((await independentlyCheckInstitutionModel(missing, candidate, profile)).disposition, "REJECTED",
     `${fixture.protocol} missing object must not count as complete`);
 }
+// Original-byte coverage must enumerate every material table/sheet, not just
+// the first worksheet/table named in the caller's coverage list.
+for (const [protocol, bytes, raw] of [
+  ["html", undefined, cases.find((item) => item.protocol === "html")!.raw
+    .replace("</body>", '<table><tr><th>Facility ID</th><th>Outstanding</th></tr><tr><td>facility-B</td><td>20</td></tr></table></body>')],
+  ["xlsx", office("xl/workbook.xml",
+    `<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Records" sheetId="1" r:id="rId1"/><sheet name="Expenses" sheetId="2" r:id="rId2"/></sheets></workbook>`,
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml", {
+      "xl/_rels/workbook.xml.rels": `<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet2.xml"/></Relationships>`,
+      "xl/worksheets/sheet1.xml": `<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData><row r="1"><c r="A1" t="inlineStr"><is><t>id</t></is></c><c r="B1" t="inlineStr"><is><t>kind</t></is></c><c r="C1" t="inlineStr"><is><t>entityType</t></is></c><c r="D1" t="inlineStr"><is><t>registrationId</t></is></c></row><row r="2"><c r="A2" t="inlineStr"><is><t>entity-A</t></is></c><c r="B2" t="inlineStr"><is><t>entity</t></is></c><c r="C2" t="inlineStr"><is><t>deal</t></is></c><c r="D2" t="inlineStr"><is><t>FIRM-100</t></is></c></row></sheetData></worksheet>`,
+      "xl/worksheets/sheet2.xml": `<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData><row r="1"><c r="A1" t="inlineStr"><is><t>Employee ID</t></is></c><c r="B1" t="inlineStr"><is><t>Amount</t></is></c></row><row r="2"><c r="A2" t="inlineStr"><is><t>employee-B</t></is></c><c r="B2"><v>12</v></c></row></sheetData></worksheet>`,
+    }), ""],
+] as const) {
+  const fixture = protocol === "html" ? cases.find((item) => item.protocol === "html")! : binaryCases.find((item) => item.protocol === "xlsx")!;
+  const source = { ...baseline.sources[0]!, id: "source-A", sourceClass: fixture.sourceClass,
+    protocol, rawUtf8: raw, ...(bytes ? { rawBase64: bytes.toString("base64") } : {}),
+    ...(protocol === "xlsx" ? { sensitiveConsentRef: "current-consent-A" } : {}),
+    coverage: { complete: true, expectedObjectIds: ["entity-A"], readObjectIds: ["entity-A"] } };
+  const original = { ...baseline, sources: [source], mandate: { ...baseline.mandate, rules: [] },
+    current: { ...baseline.current, sourceRevisions: { "source-A": source.revision } } };
+  const candidate = { ...originalCandidate, coverage: ["source-A"], mappings: [{ sourceId: "source-A",
+    recordId: "entity-A", canonicalRef: "pe_deal:deal-100@v2", registrationId: "FIRM-100" }],
+    quantities: [], contradictions: [], obligations: [],
+    dependencies: { ...original.current, sourceRevisions: original.current.sourceRevisions } };
+  const result = await independentlyCheckInstitutionModel(original, candidate, profile);
+  assert.equal(result.disposition, "REJECTED", `${protocol}: unlisted material structure accepted`);
+  if (result.disposition === "REJECTED") assert.equal(result.guard, "COVERAGE", `${protocol}: wrong predicate`);
+}
 console.log(JSON.stringify({ basis: "independently authored original-format development corpus",
   protocols: [...cases, ...binaryCases].map(({ protocol }) => protocol), checked: cases.length + binaryCases.length }));

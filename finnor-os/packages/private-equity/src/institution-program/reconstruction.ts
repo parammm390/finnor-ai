@@ -4,6 +4,13 @@ import type { DigitalInstitutionProfile } from "./contracts";
 
 type Observation = Awaited<ReturnType<typeof decodeInstitutionSources>>["observations"][number];
 const key = (source: string, record: string) => `${source}/${record}`;
+const equalAmount = (a: string | undefined, b: string | undefined): boolean => {
+  if (!a || !b || !/^-?(?:0|[1-9]\d*)(?:\.\d+)?$/.test(a) || !/^-?(?:0|[1-9]\d*)(?:\.\d+)?$/.test(b)
+      || a.length > 128 || b.length > 128) return false;
+  const scale = Math.max((a.split(".")[1] ?? "").length, (b.split(".")[1] ?? "").length);
+  const units = (value: string) => BigInt(value.replace(".", "")) * 10n ** BigInt(scale - (value.split(".")[1] ?? "").length);
+  return units(a) === units(b);
+};
 function fields(row: Observation): Record<string, string> {
   return Object.fromEntries(Object.entries(row.fields).map(([name, value]) =>
     [name.replace(/[^a-z0-9]/gi, "").toLowerCase(), value]));
@@ -31,16 +38,17 @@ function interpret(row: Observation, data: Record<string, string>) {
   const entityType = row.sourceClass === "crm_deals" ? "deal"
     : row.sourceClass === "personnel_benefits" ? "person" : "";
   const triggerKind = row.sourceClass === "work_tracking"
-    && /evidence[\s_-]*request[\s_-]*needed/i.test(data.activity ?? data.subject ?? "")
+    && /^\s*evidence[\s_-]+request[\s_-]+needed\s*[.!]?\s*$/i.test(data.activity ?? data.subject ?? "")
     ? "evidence_request_needed" : undefined;
-  const value = data.amount ?? data.balance;
+  const value = data.amount ?? data.balance ?? (row.sourceClass === "lender_portal" ? data.outstanding : undefined);
   const kind = triggerKind ? "trigger"
-    : value && ["financial_ledger", "expense_administration"].includes(row.sourceClass) ? "quantity"
+    : value && ["financial_ledger", "expense_administration", "lender_portal"].includes(row.sourceClass) ? "quantity"
       : entityType && registrationId ? "entity" : "unknown";
   return {
     kind, registrationId, entityType, triggerKind, value, currency: data.currency,
     unit: data.unit, period: data.period, basis: data.accountingbasis ?? data.basis,
-    factKey: (data.account ?? data.description)?.toLowerCase().replace(/\s+/g, "_"),
+    factKey: (data.account ?? data.description ?? (row.sourceClass === "lender_portal" ? "outstanding" : undefined))
+      ?.toLowerCase().replace(/\s+/g, "_"),
     occurredAt: data.postedat ?? data.createdat ?? data.asof ?? data.occurredat,
     availableAt: data.availableat,
     relationTarget: row.sourceClass === "crm_deals" ? data.counterpartynumber : undefined,
@@ -72,7 +80,12 @@ export async function proposeInstitutionModel(
         || unresolved.length >= bounds.unresolvedInterpretations) {
       throw new Error("X1_RECONSTRUCTION_BOUND: unresolved/alternative limit exceeded");
     }
-    unresolved.push({ witness: key(row.sourceId, row.objectId), reason, alternatives });
+    const existing = unresolved.find((item) => item.witness === key(row.sourceId, row.objectId));
+    if (existing) {
+      existing.reason += `;${reason}`;
+      existing.alternatives = [...new Set([...existing.alternatives, ...alternatives])];
+      if (existing.alternatives.length > bounds.alternativesPerInterpretation) throw new Error("X1_RECONSTRUCTION_BOUND: alternatives exceeded");
+    } else unresolved.push({ witness: key(row.sourceId, row.objectId), reason, alternatives });
   };
   for (const row of decoded.observations) {
     const raw = fields(row), data = interpret(row, raw), { kind, registrationId, entityType } = data;
@@ -110,7 +123,12 @@ export async function proposeInstitutionModel(
       if (ref && value && currency && unit && period && basis && factKey && occurredAt && availableAt) {
         quantities.push({ sourceId: row.sourceId, recordId: row.objectId, canonicalRef: ref,
           registrationId, value, currency, unit, period, basis, factKey, occurredAt, availableAt });
-      } else addUnresolved(row, "QUANTITY_UNIT_TIME_OR_ACCOUNTING_CONTEXT_MISSING");
+      } else {
+        const missing = Object.entries({ value, currency, unit, period, basis, factKey, occurredAt, availableAt })
+          .filter(([, entry]) => !entry).map(([name]) => name.replace(/[A-Z]/g, (letter) => `_${letter}`).toUpperCase());
+        addUnresolved(row, `QUANTITY_${missing.join("_") || "IDENTITY"}_MISSING`,
+          options.map((entity) => entity.ref));
+      }
     }
     if (kind === "unknown") {
       const narrative = [raw.subject, raw.summary, raw.body, raw.content, raw.description]
@@ -120,7 +138,7 @@ export async function proposeInstitutionModel(
           && entity.registrationId.length >= 3 && narrative.includes(entity.registrationId))
         .map((entity) => entity.ref);
       addUnresolved(row, "DESCRIPTIVE_CROSS_REFERENCE_NOT_IDENTITY_OR_NORM",
-        [...new Set([...(ref ? [ref] : []), ...mentioned])].slice(0, bounds.alternativesPerInterpretation));
+        [...new Set([...(ref ? [ref] : []), ...mentioned])]);
     }
     if (["work_tracking", "approval_records", "email", "calendar", "document_dms"].includes(row.sourceClass)) {
       const participants = [raw.from, raw.to, raw.organizer, raw.attendee].filter(Boolean).join(" → ");
@@ -133,12 +151,29 @@ export async function proposeInstitutionModel(
   }
   const contradictions: InstitutionCandidate["contradictions"] = [];
   const values = claimed.filter((item) => item.kind === "quantity");
+  const accounting = new Map<string, Set<string>>();
+  for (const item of values) {
+    const data = fields(item.row), id = data.accountingrelationid, role = data.balancerole;
+    if (!id || !role) continue;
+    const roles = accounting.get(id) ?? new Set<string>();
+    roles.add(role); accounting.set(id, roles);
+  }
+  for (const [id, roles] of accounting) {
+    const missing = ["opening", "movement", "closing"].filter((role) => !roles.has(role));
+    if (missing.length) {
+      if (unresolved.length >= bounds.unresolvedInterpretations) throw new Error("X1_RECONSTRUCTION_BOUND: accounting gaps");
+      unresolved.push({ witness: `accounting:${id}`, reason: `ACCOUNTING_${missing.join("_")}_MISSING`, alternatives: [] });
+    }
+  }
   for (let i = 0; i < values.length; i++) for (let j = i + 1; j < values.length; j++) {
     const a = values[i]!, b = values[j]!;
     if (a.data.registrationId === b.data.registrationId
       && a.data.factKey === b.data.factKey && a.data.currency === b.data.currency
       && a.data.unit === b.data.unit && a.data.period === b.data.period
-      && a.data.basis === b.data.basis && a.data.value !== b.data.value) {
+      && a.data.basis === b.data.basis
+      && !fields(a.row).transactionid && !fields(b.row).transactionid
+      && !fields(a.row).balancerole && !fields(b.row).balancerole
+      && !equalAmount(a.data.value, b.data.value)) {
       const [left, right] = [key(a.row.sourceId, a.row.objectId), key(b.row.sourceId, b.row.objectId)].sort();
       contradictions.push({ left: left!, right: right!, disposition: "unresolved" });
     }
@@ -157,7 +192,7 @@ export async function proposeInstitutionModel(
     unresolved.push({ witness: gap.sourceId, reason: gap.reason, alternatives: gap.affectedObjectIds });
   }
   const elapsed = Math.ceil((Date.now() - start) / 1000);
-  const measured: Record<string, number> = Object.fromEntries(Object.keys(bounds).map((name) => [name, 0]));
+  const measured: InstitutionCandidate["limits"] = Object.fromEntries(Object.keys(bounds).map((name) => [name, null]));
   Object.assign(measured, {
     sourceInstances: original.sources.length, observationReferences: decoded.observations.length,
     rawBytes: decoded.rawBytes, objectBytes: Math.max(0, ...original.sources.map((source) =>
@@ -168,15 +203,13 @@ export async function proposeInstitutionModel(
     people: original.canonical.entities.filter((entity) => entity.entityType === "person").length,
     s1AssertionsPerSlice: mappings.length + quantities.length + relations.length,
     s1SnapshotBytes: Buffer.byteLength(JSON.stringify(original.canonical)),
-    derivedObligations: obligations.length, institutionDependencyNodes: decoded.observations.length + original.sources.length,
-    institutionDependencyEdges: decoded.observations.length,
-    nativePlanNodes: obligations.length, authorizedAcquisitionCalls: decoded.acquisitionCalls,
+    derivedObligations: obligations.length,
     alternativesPerInterpretation: Math.max(0, ...unresolved.map((item) => item.alternatives.length)),
-    unresolvedInterpretations: unresolved.length, concurrentSourceReads: 1, concurrentCompilerEpisodes: 1,
+    unresolvedInterpretations: unresolved.length,
     initialResponseSeconds: elapsed, episodeWallSeconds: elapsed,
   });
   for (const [name, count] of Object.entries(measured)) {
-    if (!Number.isSafeInteger(count) || count > bounds[name as keyof typeof bounds]!) {
+    if (count !== null && (!Number.isSafeInteger(count) || count > bounds[name as keyof typeof bounds]!)) {
       throw new Error(`X1_RECONSTRUCTION_BOUND: ${name}=${count} exceeds frozen ${bounds[name as keyof typeof bounds]}`);
     }
   }

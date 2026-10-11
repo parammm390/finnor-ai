@@ -14,6 +14,7 @@ type RecordRow = {
   relation?: string; relationRegistrationId?: string;
   endsAt?: string;
   narrative?: string;
+  observationKind?: string; balanceRole?: string; accountingRelationId?: string;
 };
 
 function requireRows(value: unknown, limit: number, sourceClass: string): RecordRow[] {
@@ -29,7 +30,12 @@ function requireRows(value: unknown, limit: number, sourceClass: string): Record
     const attributes = Object.fromEntries(Object.entries(row).map(([key, val]) =>
       [key.replace(/[^a-z0-9]/gi, "").toLowerCase(), val]));
     const string = (...names: string[]): string | undefined => {
-      const found = names.map((name) => attributes[name]).find((item) => typeof item === "string" && item.length);
+      const found = names.map((name) => attributes[name]).find((item) =>
+        (typeof item === "string" && item.length > 0) || typeof item === "number");
+      if (typeof found === "number") {
+        if (!Number.isSafeInteger(found)) throw new Error("Non-exact original numeric token");
+        return String(found);
+      }
       return typeof found === "string" ? found : undefined;
     };
     const id = string("id", "recordid", "opportunityid", "transactionid", "documentid",
@@ -38,13 +44,17 @@ function requireRows(value: unknown, limit: number, sourceClass: string): Record
     if (!id) throw new Error("Original native object identity missing");
     const kind = sourceClass === "crm_deals" && string("dealnumber", "opportunitynumber") ? "entity"
       : sourceClass === "personnel_benefits" && string("employeenumber") ? "entity"
-        : sourceClass === "work_tracking" && /evidence[\s_-]*request[\s_-]*needed/i.test(string("activity", "subject") ?? "")
+      : sourceClass === "work_tracking" && /^\s*evidence[\s_-]+request[\s_-]+needed\s*[.!]?\s*$/i.test(string("activity", "subject") ?? "")
           ? "trigger" : ["financial_ledger", "expense_administration"].includes(sourceClass)
-            && string("amount", "balance") ? "quantity" : "unresolved";
+            && string("amount", "balance") ? "quantity" : sourceClass === "lender_portal"
+              && string("outstanding") ? "quantity" : "unresolved";
     const result: RecordRow = {
       id,
       kind,
       registrationId: string("registrationid", "dealnumber", "opportunitynumber", "employeenumber"),
+      observationKind: string("transactionid") ? "transaction" : "assertion",
+      balanceRole: string("balancerole"),
+      accountingRelationId: string("accountingrelationid"),
       occurredAt: string("occurredat"),
       endsAt: string("endsat"),
       narrative: string("narrative", "body", "summary", "subject", "content", "description"),
@@ -60,8 +70,9 @@ function requireRows(value: unknown, limit: number, sourceClass: string): Record
       result.availableAt = string("availableat");
     }
     if (kind === "quantity") {
-      result.value = string("amount", "balance");
-      result.factKey = string("account", "description")?.toLowerCase().replace(/\s+/g, "_");
+      result.value = string("amount", "balance", "outstanding");
+      result.factKey = string("account", "description")?.toLowerCase().replace(/\s+/g, "_")
+        ?? (sourceClass === "lender_portal" ? "outstanding" : undefined);
       result.currency = string("currency");
       result.unit = string("unit");
       result.period = string("period");
@@ -186,7 +197,9 @@ function calendarRecords(raw: string): RecordRow[] {
 
 function htmlRecords(raw: string): Record<string, string>[] {
   if (/<(?:script|iframe|style)\b/i.test(raw)) throw new Error("Active or unparsed HTML");
-  const table = /<table\b[^>]*>([\s\S]*?)<\/table>/i.exec(raw)?.[1];
+  const tables = [...raw.matchAll(/<table\b[^>]*>([\s\S]*?)<\/table>/gi)];
+  if (tables.length > 1) throw new Error("Multiple material HTML tables require complete coverage");
+  const table = tables[0]?.[1];
   if (!table) throw new Error("No source table");
   const rows = [...table.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)].map((match) =>
     [...match[1]!.matchAll(/<(?:th|td)\b[^>]*>([\s\S]*?)<\/(?:th|td)>/gi)]
@@ -203,7 +216,9 @@ function workbookRows(bytes: Buffer): Record<string, string>[] {
   const pkg = new OfficePackage(bytes);
   if (pkg.format !== "xlsx") throw new Error("XLSX package expected");
   const relationships = pkg.relationships(pkg.mainPart);
-  const sheet = descendants(pkg.xml(pkg.mainPart), "sheet", NS.sheet)[0];
+  const sheets = descendants(pkg.xml(pkg.mainPart), "sheet", NS.sheet);
+  if (sheets.length > 1) throw new Error("Multiple material worksheets require complete coverage");
+  const sheet = sheets[0];
   const part = relationships.find((rel) => rel.id === sheet?.attrs["r:id"])?.resolved;
   if (!part) throw new Error("Worksheet unavailable");
   const sharedPart = relationships.find((rel) => rel.type.endsWith("/sharedStrings"))?.resolved;

@@ -57,6 +57,9 @@ for (const path of [
   "finnor-os/scripts/frontier5/x1/checker-command.mts",
   "finnor-os/scripts/frontier5/x1/review-cases.mts",
   "finnor-os/scripts/frontier5/x1/native-cases.mts",
+  "finnor-os/scripts/frontier5/x1/native-finish-cases.mts",
+  "finnor-os/scripts/frontier5/x1/transport-cases.mts",
+  "finnor-os/scripts/frontier5/x1/reference/native-finish-contract.md",
   "finnor-os/scripts/frontier5/x1/protocol-cases.mts",
   "finnor-os/scripts/frontier5/x1/reconstruction-cases.mts",
   "finnor-os/scripts/frontier5/x1/reference/original-input.json",
@@ -124,6 +127,8 @@ if (stage === "kernel" || stage === "scrutiny") {
   run("reconstruction", process.execPath, ["./node_modules/tsx/dist/cli.mjs", "scripts/frontier5/x1/reconstruction-cases.mts"], os, manifest.limits.kernelNodeHeapMiB);
   run("checker-review", process.execPath, ["./node_modules/tsx/dist/cli.mjs", "scripts/frontier5/x1/review-cases.mts"], os, manifest.limits.kernelNodeHeapMiB);
   run("native-corpus", process.execPath, ["./node_modules/tsx/dist/cli.mjs", "scripts/frontier5/x1/native-cases.mts"], os, manifest.limits.kernelNodeHeapMiB);
+  run("native-finish", process.execPath, ["./node_modules/tsx/dist/cli.mjs", "scripts/frontier5/x1/native-finish-cases.mts"], os, manifest.limits.kernelNodeHeapMiB);
+  run("process-transport", process.execPath, ["./node_modules/tsx/dist/cli.mjs", "scripts/frontier5/x1/transport-cases.mts"], os, manifest.limits.kernelNodeHeapMiB);
 }
 if (stage === "static" || stage === "scrutiny") {
   if (!only || only === "typecheck") {
@@ -148,6 +153,8 @@ if (stage === "static" || stage === "scrutiny") {
       "finnor-os/scripts/frontier5/x1/eslint.config.mjs", "--max-warnings=0",
       "finnor-os/scripts/frontier5/x1/review-cases.mts",
       "finnor-os/scripts/frontier5/x1/native-cases.mts",
+      "finnor-os/scripts/frontier5/x1/native-finish-cases.mts",
+      "finnor-os/scripts/frontier5/x1/transport-cases.mts",
       "finnor-os/scripts/frontier5/x1/checker-command.mts"], repo, manifest.limits.smallCheckNodeHeapMiB);
   }
 }

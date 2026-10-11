@@ -14,7 +14,7 @@ const pins = Object.fromEntries(files.map((file) => [file, sha(readFileSync(file
 let input = "";
 for await (const chunk of process.stdin) {
   input += chunk;
-  if (Buffer.byteLength(input) > 48 * 1024 * 1024) throw new Error("X1_CHECKER_TRANSPORT_BOUND");
+  if (Buffer.byteLength(input) > 384 * 1024 * 1024) throw new Error("X1_CHECKER_TRANSPORT_BOUND");
 }
 const request = JSON.parse(input) as {
   schema: string; pins: Record<string, string>;
