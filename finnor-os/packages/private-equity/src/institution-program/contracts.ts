@@ -1,5 +1,8 @@
 import { z } from "zod";
 
+export const X1_NATIVE_SOURCE_CONTRACT = "finnor.x1.native-source-interpretation.v1" as const;
+export const X1_CHECKER_PROCESS_CONTRACT = "finnor.x1.checker-process.v1" as const;
+
 /** Logical immutable artifact contracts. An owner reference is not an owner receipt. */
 const NonEmpty = z.string().min(1);
 const IsoInstant = z.string().datetime({ offset: true });

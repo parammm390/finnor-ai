@@ -24,6 +24,8 @@ export * from "./enterprise-beliefs";
 export { decodeInstitutionSources } from "./institution-program/source-decoder";
 export { proposeInstitutionModel } from "./institution-program/reconstruction";
 export { independentlyCheckInstitutionModel } from "./institution-program/checker";
+export { checkInstitutionInSeparateProcess } from "./institution-program/checker-process";
+export { X1_NATIVE_SOURCE_CONTRACT, X1_CHECKER_PROCESS_CONTRACT } from "./institution-program/contracts";
 export { retainInstitutionSource, loadInstitutionCanonicalOwnerSnapshot, admitCheckedInstitutionMappings } from "./institution-program/owner-admission";
 export type { OriginalInstitutionEvidence, InstitutionCandidate, InstitutionCheck } from "./institution-program/checker";
 export type { RetainedOriginalSource, AcceptedInstitutionMappingRef } from "./institution-program/owner-admission";

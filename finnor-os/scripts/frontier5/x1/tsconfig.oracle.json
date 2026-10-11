@@ -10,13 +10,17 @@
   "files": [
     "../../../packages/private-equity/src/institution-program/contracts.ts",
     "../../../packages/private-equity/src/institution-program/checker.ts",
+    "../../../packages/private-equity/src/institution-program/checker-process.ts",
     "../../../packages/private-equity/src/institution-program/checker-raw.ts",
     "../../../packages/private-equity/src/institution-program/source-decoder.ts",
     "../../../packages/private-equity/src/institution-program/reconstruction.ts",
     "../../../packages/private-equity/src/institution-program/owner-admission.ts",
     "./protocol-cases.mts",
     "./reconstruction-cases.mts",
-    "./kernel.mts"
+    "./kernel.mts",
+    "./native-cases.mts",
+    "./review-cases.mts",
+    "./checker-command.mts"
   ],
   "include": [],
   "exclude": ["node_modules"]

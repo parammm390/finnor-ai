@@ -32,12 +32,18 @@ function asFields(value: unknown): Record<string, string> {
 function lines(raw: string): Record<string, string>[] {
   return raw.replace(/\r\n/g, "\n").trim().split(/\n\s*\n/).map((block) => {
     const fields: Record<string, string> = {};
+    const narrative: string[] = [];
     for (const line of block.split("\n")) {
       const match = /^([A-Za-z][\w -]*):\s*(\S.*)$/.exec(line);
-      if (!match) return fail("unparsed document line");
+      if (!match) {
+        if (!fields["Document ID"] && !fields["Record ID"]) return fail("unidentified document text");
+        narrative.push(line);
+        continue;
+      }
       if (fields[match[1]!] !== undefined) return fail("repeated document field");
       fields[match[1]!] = match[2]!;
     }
+    if (narrative.length) fields.Content = [fields.Content, ...narrative].filter(Boolean).join("\n");
     return fields;
   });
 }
@@ -87,7 +93,7 @@ function mail(raw: string): Record<string, string>[] {
     return [line.slice(0, at), line.slice(at + 1).trim()];
   }));
   if (!fields["Message-ID"] || !fields.From || !fields.To || !fields.Date) fail("RFC822 provenance absent");
-  return [fields];
+  return [{ ...fields, body: body.join("\n\n").trim() }];
 }
 function calendar(raw: string): Record<string, string>[] {
   if (!raw.startsWith("BEGIN:VCALENDAR") || !raw.trimEnd().endsWith("END:VCALENDAR")) fail("calendar framing absent");
@@ -157,9 +163,11 @@ async function decode(protocol: string, raw: string, bytes: Buffer): Promise<Rec
     case "html": return markup(raw);
     case "financial_xml": {
       const root = parseXml(raw);
-      if (root.local !== "records" || root.children.some((node) => node.children.length
-        || !["entity", "quantity", "trigger"].includes(node.local))) return fail("financial XML record structure unsupported");
-      return root.children.map((node) => ({ ...node.attrs, kind: node.local }));
+      if (!["records", "decisions", "transactions"].includes(root.local)
+        || root.children.some((node) => node.children.length
+        || !["entity", "quantity", "trigger", "decision", "transaction"].includes(node.local))) return fail("financial XML record structure unsupported");
+      return root.children.map((node) => ({ ...node.attrs,
+        ...(["entity", "quantity", "trigger"].includes(node.local) ? { kind: node.local } : {}) }));
     }
     case "text": return lines(raw);
     case "docx": {
@@ -219,7 +227,11 @@ export async function decodeInstitutionSources(
         || Buffer.byteLength(JSON.stringify(rows)) > bounds.objectBytes) fail(`row/observation/decoded bound ${source.id}`);
     const seen = new Set<string>();
     for (const [index, fields] of rows.entries()) {
-      const id = fields.id ?? fields["Record ID"] ?? fields.UID ?? /^<([^@<>]+)@/.exec(fields["Message-ID"] ?? "")?.[1];
+      const normalized = Object.fromEntries(Object.entries(fields).map(([name, value]) =>
+        [name.replace(/[^a-z0-9]/gi, "").toLowerCase(), value]));
+      const id = normalized.id ?? normalized.recordid ?? normalized.opportunityid ?? normalized.transactionid
+        ?? normalized.documentid ?? normalized.taskid ?? normalized.facilityid ?? normalized.employeeid
+        ?? normalized.receiptid ?? normalized.uid ?? /^<([^@<>]+)@/.exec(normalized.messageid ?? "")?.[1];
       if (!id || seen.has(id)) return fail(`missing/duplicate object identity ${source.id}`);
       seen.add(id);
       observations.push({ sourceId: source.id, objectId: id, protocol: source.protocol,

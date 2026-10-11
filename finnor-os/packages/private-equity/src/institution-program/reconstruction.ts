@@ -17,6 +17,35 @@ function classify(data: Record<string, string>): "entity" | "quantity" | "trigge
   // Descriptive source classes do not imply a normative trigger.
   return "unknown";
 }
+function interpret(row: Observation, data: Record<string, string>) {
+  const control = classify(data);
+  if (control !== "unknown") return {
+    kind: control, registrationId: data.registrationid ?? data.xinstitutionregistrationid ?? "",
+    entityType: data.entitytype ?? data.xinstitutionentitytype ?? "",
+    triggerKind: data.triggerkind ?? data.xinstitutiontriggerkind,
+    value: data.value, currency: data.currency, unit: data.unit, period: data.period,
+    basis: data.basis, factKey: data.factkey, occurredAt: data.occurredat,
+    availableAt: data.availableat, relationTarget: undefined as string | undefined,
+  };
+  const registrationId = data.dealnumber ?? data.opportunitynumber ?? data.employeenumber ?? "";
+  const entityType = row.sourceClass === "crm_deals" ? "deal"
+    : row.sourceClass === "personnel_benefits" ? "person" : "";
+  const triggerKind = row.sourceClass === "work_tracking"
+    && /evidence[\s_-]*request[\s_-]*needed/i.test(data.activity ?? data.subject ?? "")
+    ? "evidence_request_needed" : undefined;
+  const value = data.amount ?? data.balance;
+  const kind = triggerKind ? "trigger"
+    : value && ["financial_ledger", "expense_administration"].includes(row.sourceClass) ? "quantity"
+      : entityType && registrationId ? "entity" : "unknown";
+  return {
+    kind, registrationId, entityType, triggerKind, value, currency: data.currency,
+    unit: data.unit, period: data.period, basis: data.accountingbasis ?? data.basis,
+    factKey: (data.account ?? data.description)?.toLowerCase().replace(/\s+/g, "_"),
+    occurredAt: data.postedat ?? data.createdat ?? data.asof ?? data.occurredat,
+    availableAt: data.availableat,
+    relationTarget: row.sourceClass === "crm_deals" ? data.counterpartynumber : undefined,
+  };
+}
 
 /** Bounded proposal only. The original-byte checker and canonical owner state
  * decide acceptance. A name or an observed approval-looking event never does. */
@@ -29,13 +58,15 @@ export async function proposeInstitutionModel(
   const unresolved: NonNullable<InstitutionCandidate["unresolved"]> = [];
   const processHypotheses: NonNullable<InstitutionCandidate["processHypotheses"]> = [];
   const mappings: InstitutionCandidate["mappings"] = [], quantities: InstitutionCandidate["quantities"] = [];
+  const relations: NonNullable<InstitutionCandidate["relations"]> = [];
+  const temporalLinks: NonNullable<InstitutionCandidate["temporalLinks"]> = [];
   const obligations: InstitutionCandidate["obligations"] = [];
   const byRegistration = new Map<string, typeof original.canonical.entities>();
   for (const entity of original.canonical.entities) {
     const existing = byRegistration.get(entity.registrationId) ?? [];
     existing.push(entity); byRegistration.set(entity.registrationId, existing);
   }
-  const claimed: Array<{ row: Observation; data: Record<string, string>; kind: string; ref: string | null }> = [];
+  const claimed: Array<{ row: Observation; data: ReturnType<typeof interpret>; kind: string; ref: string | null }> = [];
   const addUnresolved = (row: Observation, reason: string, alternatives: string[] = []) => {
     if (alternatives.length > bounds.alternativesPerInterpretation
         || unresolved.length >= bounds.unresolvedInterpretations) {
@@ -44,29 +75,58 @@ export async function proposeInstitutionModel(
     unresolved.push({ witness: key(row.sourceId, row.objectId), reason, alternatives });
   };
   for (const row of decoded.observations) {
-    const data = fields(row), kind = classify(data);
-    const registrationId = data.registrationid ?? data.xinstitutionregistrationid ?? "";
-    const entityType = data.entitytype ?? data.xinstitutionentitytype ?? "";
+    const raw = fields(row), data = interpret(row, raw), { kind, registrationId, entityType } = data;
+    if (row.sourceClass === "calendar") {
+      const instant = (value: string | undefined): string | null => {
+        if (!value || !/^\d{8}T\d{6}Z$/.test(value)) return null;
+        const iso = `${value.slice(0, 4)}-${value.slice(4, 6)}-${value.slice(6, 8)}T${value.slice(9, 11)}:${value.slice(11, 13)}:${value.slice(13, 15)}.000Z`;
+        return Number.isFinite(Date.parse(iso)) && new Date(iso).toISOString() === iso ? iso : null;
+      };
+      const startsAt = instant(raw.dtstart), endsAt = instant(raw.dtend);
+      if (startsAt && endsAt && startsAt < endsAt) temporalLinks.push({
+        sourceId: row.sourceId, recordId: row.objectId, startsAt, endsAt, kind: "scheduled",
+      });
+      else addUnresolved(row, "CALENDAR_TIMEZONE_OR_CHRONOLOGY_UNRESOLVED");
+    }
     const options = (byRegistration.get(registrationId) ?? [])
       .filter((entity) => entity.institutionId === original.institutionId && (!entityType || entity.entityType === entityType));
     const ref = options.length === 1 ? options[0]!.ref : null;
-    if (!ref) {
+    if (!ref && (registrationId || kind !== "unknown")) {
       addUnresolved(row, options.length > 1 ? "AMBIGUOUS_CANONICAL_IDENTITY" : "CANONICAL_IDENTITY_NOT_ESTABLISHED",
         options.map((entity) => entity.ref));
     }
     if (kind === "entity" && ref) mappings.push({
       sourceId: row.sourceId, recordId: row.objectId, canonicalRef: ref, registrationId });
+    if (data.relationTarget && ref) {
+      const related = (byRegistration.get(data.relationTarget) ?? [])
+        .filter((entity) => entity.institutionId === original.institutionId && entity.entityType === "counterparty");
+      if (related.length === 1) relations.push({ sourceId: row.sourceId, recordId: row.objectId,
+        canonicalRef: ref, registrationId, relation: "counterparty",
+        targetRef: related[0]!.ref, targetRegistrationId: data.relationTarget });
+      else addUnresolved(row, "CROSS_REFERENCE_IDENTITY_NOT_ESTABLISHED", related.map((item) => item.ref));
+    }
     if (kind === "quantity") {
-      const value = data.value, currency = data.currency, unit = data.unit, period = data.period,
-        basis = data.basis, factKey = data.factkey, occurredAt = data.occurredat, availableAt = data.availableat;
+      const { value, currency, unit, period, basis, factKey, occurredAt, availableAt } = data;
       if (ref && value && currency && unit && period && basis && factKey && occurredAt && availableAt) {
         quantities.push({ sourceId: row.sourceId, recordId: row.objectId, canonicalRef: ref,
           registrationId, value, currency, unit, period, basis, factKey, occurredAt, availableAt });
       } else addUnresolved(row, "QUANTITY_UNIT_TIME_OR_ACCOUNTING_CONTEXT_MISSING");
     }
-    if (["work_tracking", "approval_records", "email", "calendar"].includes(row.sourceClass)) {
+    if (kind === "unknown") {
+      const narrative = [raw.subject, raw.summary, raw.body, raw.content, raw.description]
+        .filter((item): item is string => !!item).join("\n");
+      const mentioned = original.canonical.entities.filter((entity) =>
+        entity.institutionId === original.institutionId
+          && entity.registrationId.length >= 3 && narrative.includes(entity.registrationId))
+        .map((entity) => entity.ref);
+      addUnresolved(row, "DESCRIPTIVE_CROSS_REFERENCE_NOT_IDENTITY_OR_NORM",
+        [...new Set([...(ref ? [ref] : []), ...mentioned])].slice(0, bounds.alternativesPerInterpretation));
+    }
+    if (["work_tracking", "approval_records", "email", "calendar", "document_dms"].includes(row.sourceClass)) {
+      const participants = [raw.from, raw.to, raw.organizer, raw.attendee].filter(Boolean).join(" → ");
       processHypotheses.push({ witness: key(row.sourceId, row.objectId),
-        interpretation: `${row.sourceClass}: observed ${data.state ?? data.subject ?? data.summary ?? "record"}; no inferred rule or permission`,
+        interpretation: `${row.sourceClass}: observed ${(raw.state ?? raw.subject ?? raw.summary ?? raw.status ?? "record").slice(0, 256)}`
+          + `${participants ? `; participants ${participants.slice(0, 256)}` : ""}; no inferred rule or permission`,
         normative: false });
     }
     claimed.push({ row, data, kind, ref });
@@ -75,8 +135,8 @@ export async function proposeInstitutionModel(
   const values = claimed.filter((item) => item.kind === "quantity");
   for (let i = 0; i < values.length; i++) for (let j = i + 1; j < values.length; j++) {
     const a = values[i]!, b = values[j]!;
-    if (a.data.registrationid === b.data.registrationid
-      && a.data.factkey === b.data.factkey && a.data.currency === b.data.currency
+    if (a.data.registrationId === b.data.registrationId
+      && a.data.factKey === b.data.factKey && a.data.currency === b.data.currency
       && a.data.unit === b.data.unit && a.data.period === b.data.period
       && a.data.basis === b.data.basis && a.data.value !== b.data.value) {
       const [left, right] = [key(a.row.sourceId, a.row.objectId), key(b.row.sourceId, b.row.objectId)].sort();
@@ -84,7 +144,7 @@ export async function proposeInstitutionModel(
     }
   }
   for (const item of claimed.filter((record) => record.kind === "trigger" && record.ref)) {
-    const triggerKind = item.data.triggerkind ?? item.data.xinstitutiontriggerkind;
+    const triggerKind = item.data.triggerKind;
     for (const rule of original.mandate.rules.filter((entry) => entry.triggerKind === triggerKind)) {
       obligations.push({ trigger: key(item.row.sourceId, item.row.objectId), subjectRef: item.ref!,
         ruleId: rule.id, deadlineAt: rule.deadlineAt, principalId: rule.principalId,
@@ -104,9 +164,9 @@ export async function proposeInstitutionModel(
       source.rawBase64 ? Buffer.from(source.rawBase64, "base64").length : Buffer.byteLength(source.rawUtf8))),
     tabularRowsPerObject: Math.max(0, ...original.sources.map((source) =>
       decoded.observations.filter((record) => record.sourceId === source.id).length)),
-    canonicalReferences: mappings.length + quantities.length, deals: original.canonical.entities.filter((entity) => entity.entityType === "deal").length,
+    canonicalReferences: mappings.length + quantities.length + relations.length, deals: original.canonical.entities.filter((entity) => entity.entityType === "deal").length,
     people: original.canonical.entities.filter((entity) => entity.entityType === "person").length,
-    s1AssertionsPerSlice: mappings.length + quantities.length,
+    s1AssertionsPerSlice: mappings.length + quantities.length + relations.length,
     s1SnapshotBytes: Buffer.byteLength(JSON.stringify(original.canonical)),
     derivedObligations: obligations.length, institutionDependencyNodes: decoded.observations.length + original.sources.length,
     institutionDependencyEdges: decoded.observations.length,
@@ -122,7 +182,7 @@ export async function proposeInstitutionModel(
   }
   return { tenantId: original.tenantId, institutionId: original.institutionId,
     workId: original.workId, principalId: original.principalId,
-    coverage: original.sources.map((source) => source.id), mappings, quantities,
+    coverage: original.sources.map((source) => source.id), mappings, quantities, relations, temporalLinks,
     contradictions, obligations, dependencies: { ...original.current }, limits: measured,
     unresolved, processHypotheses, receipt: null };
 }

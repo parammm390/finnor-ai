@@ -5,22 +5,72 @@ import { PDFParse } from "pdf-parse";
  * ranking, mapping or rule-selection dependency. Unknown material structure
  * is an error, not an empty complete observation. */
 type OriginalSource = {
-  protocol: string; rawUtf8: string; rawBase64?: string;
+  sourceClass: string; protocol: string; rawUtf8: string; rawBase64?: string;
 };
 type RecordRow = {
   id: string; kind: string; registrationId?: string; entityType?: string;
   factKey?: string; value?: string; currency?: string; unit?: string; period?: string; basis?: string;
   occurredAt?: string; availableAt?: string; triggerKind?: string;
+  relation?: string; relationRegistrationId?: string;
+  endsAt?: string;
+  narrative?: string;
 };
 
-function requireRows(value: unknown, limit: number): RecordRow[] {
+function requireRows(value: unknown, limit: number, sourceClass: string): RecordRow[] {
   if (!Array.isArray(value) || value.length > limit
-      || value.some((row) => !row || typeof row !== "object" || Array.isArray(row)
-        || typeof row.id !== "string" || !row.id || typeof row.kind !== "string"
-        || !["entity", "quantity", "trigger"].includes(row.kind))) {
+      || value.some((row) => !row || typeof row !== "object" || Array.isArray(row))) {
     throw new Error("Missing, unsupported or oversized original records");
   }
-  return value as RecordRow[];
+  return (value as Record<string, unknown>[]).map((row) => {
+    if (["entity", "quantity", "trigger"].includes(String(row.kind))) {
+      if (typeof row.id !== "string" || !row.id) throw new Error("Original record identity missing");
+      return row as RecordRow;
+    }
+    const attributes = Object.fromEntries(Object.entries(row).map(([key, val]) =>
+      [key.replace(/[^a-z0-9]/gi, "").toLowerCase(), val]));
+    const string = (...names: string[]): string | undefined => {
+      const found = names.map((name) => attributes[name]).find((item) => typeof item === "string" && item.length);
+      return typeof found === "string" ? found : undefined;
+    };
+    const id = string("id", "recordid", "opportunityid", "transactionid", "documentid",
+      "taskid", "facilityid", "employeeid", "receiptid", "uid")
+      ?? /^<([^@<>]+)@/.exec(string("messageid") ?? "")?.[1];
+    if (!id) throw new Error("Original native object identity missing");
+    const kind = sourceClass === "crm_deals" && string("dealnumber", "opportunitynumber") ? "entity"
+      : sourceClass === "personnel_benefits" && string("employeenumber") ? "entity"
+        : sourceClass === "work_tracking" && /evidence[\s_-]*request[\s_-]*needed/i.test(string("activity", "subject") ?? "")
+          ? "trigger" : ["financial_ledger", "expense_administration"].includes(sourceClass)
+            && string("amount", "balance") ? "quantity" : "unresolved";
+    const result: RecordRow = {
+      id,
+      kind,
+      registrationId: string("registrationid", "dealnumber", "opportunitynumber", "employeenumber"),
+      occurredAt: string("occurredat"),
+      endsAt: string("endsat"),
+      narrative: string("narrative", "body", "summary", "subject", "content", "description"),
+    };
+    if (kind === "entity") result.entityType = sourceClass === "crm_deals" ? "deal" : "person";
+    if (sourceClass === "crm_deals" && string("counterpartynumber")) {
+      result.relation = "counterparty";
+      result.relationRegistrationId = string("counterpartynumber");
+    }
+    if (kind === "trigger") {
+      result.triggerKind = "evidence_request_needed";
+      result.occurredAt = string("createdat", "occurredat");
+      result.availableAt = string("availableat");
+    }
+    if (kind === "quantity") {
+      result.value = string("amount", "balance");
+      result.factKey = string("account", "description")?.toLowerCase().replace(/\s+/g, "_");
+      result.currency = string("currency");
+      result.unit = string("unit");
+      result.period = string("period");
+      result.basis = string("accountingbasis", "basis");
+      result.occurredAt = string("postedat", "asof", "occurredat");
+      result.availableAt = string("availableat");
+    }
+    return result;
+  });
 }
 
 function delimited(raw: string, delimiter: string): Record<string, string>[] {
@@ -52,18 +102,26 @@ function textRecords(raw: string): RecordRow[] {
   const paragraphs = raw.replace(/\r\n/g, "\n").trim().split(/\n\s*\n/);
   return paragraphs.map((paragraph) => {
     const fields = new Map<string, string>();
+    const narrative: string[] = [];
     for (const line of paragraph.split("\n")) {
       const match = /^([A-Za-z][A-Za-z -]*):\s*(\S.*)$/.exec(line.trim());
-      if (!match) throw new Error("Unparsed document text");
+      if (!match) {
+        if (!fields.has("documentid") && !fields.has("recordid")) throw new Error("Unidentified document text");
+        narrative.push(line);
+        continue;
+      }
       const name = match[1]!.toLowerCase().replace(/[\s-]/g, "");
       if (fields.has(name)) throw new Error("Repeated document field");
       fields.set(name, match[2]!);
     }
-    return { id: fields.get("recordid") ?? "", kind: fields.get("kind") ?? "entity",
-      registrationId: fields.get("registrationid"), entityType: fields.get("entitytype"),
+    if (narrative.length) fields.set("content", [fields.get("content"), ...narrative].filter(Boolean).join("\n"));
+    return { id: fields.get("recordid") ?? fields.get("documentid") ?? "",
+      kind: fields.get("kind") ?? (fields.has("entitytype") && fields.has("registrationid") ? "entity" : "unresolved"),
+      registrationId: fields.get("registrationid") ?? fields.get("dealnumber"), entityType: fields.get("entitytype"),
       factKey: fields.get("factkey"), value: fields.get("value"), currency: fields.get("currency"),
       unit: fields.get("unit"), period: fields.get("period"), basis: fields.get("basis"),
       occurredAt: fields.get("occurredat"), availableAt: fields.get("availableat"),
+      narrative: [fields.get("subject"), fields.get("content")].filter(Boolean).join("\n"),
       triggerKind: fields.get("triggerkind") };
   });
 }
@@ -82,11 +140,13 @@ function mimeRecord(raw: string): RecordRow[] {
       || !Number.isFinite(Date.parse(headers.get("date")!))) throw new Error("Unidentified RFC822 message");
   // A source header is an assertion, never an authority or approval grant.
   if (!body.join("\n\n").trim()) throw new Error("Empty message body");
-  return [{ id: messageId[1]!, kind: headers.has("x-institution-trigger-kind") ? "trigger" : "entity",
+  return [{ id: messageId[1]!, kind: headers.has("x-institution-trigger-kind") ? "trigger"
+    : headers.has("x-institution-entity-type") ? "entity" : "unresolved",
     registrationId: headers.get("x-institution-registration-id"),
     entityType: headers.get("x-institution-entity-type"),
     triggerKind: headers.get("x-institution-trigger-kind"),
     occurredAt: new Date(headers.get("date")!).toISOString(),
+    narrative: `${headers.get("subject") ?? ""}\n${body.join("\n\n")}`,
     availableAt: headers.get("x-institution-available-at") }];
 }
 
@@ -103,15 +163,24 @@ function calendarRecords(raw: string): RecordRow[] {
       if (fields.has(key)) throw new Error("Repeated calendar property");
       fields.set(key, line.slice(at + 1));
     }
-    const date = fields.get("DTSTART") ?? "";
-    if (!/^\d{8}T\d{6}Z$/.test(date) || !fields.get("UID") || !fields.get("DTEND")) throw new Error("Ambiguous calendar time");
-    const timestamp = `${date.slice(0, 4)}-${date.slice(4, 6)}-${date.slice(6, 8)}T${date.slice(9, 11)}:${date.slice(11, 13)}:${date.slice(13, 15)}.000Z`;
-    if (!Number.isFinite(Date.parse(timestamp))) throw new Error("Invalid calendar time");
-    return { id: fields.get("UID")!, kind: fields.has("X-INSTITUTION-TRIGGER-KIND") ? "trigger" : "entity",
+    const calendarInstant = (date: string): string => {
+      if (!/^\d{8}T\d{6}Z$/.test(date)) throw new Error("Ambiguous calendar time");
+      const instant = `${date.slice(0, 4)}-${date.slice(4, 6)}-${date.slice(6, 8)}T${date.slice(9, 11)}:${date.slice(11, 13)}:${date.slice(13, 15)}.000Z`;
+      if (!Number.isFinite(Date.parse(instant)) || new Date(instant).toISOString() !== instant) throw new Error("Invalid calendar time");
+      return instant;
+    };
+    if (!fields.get("UID") || !fields.get("DTEND")) throw new Error("Calendar identity/end absent");
+    const timestamp = calendarInstant(fields.get("DTSTART") ?? "");
+    const endsAt = calendarInstant(fields.get("DTEND")!);
+    if (endsAt <= timestamp) throw new Error("Calendar end precedes start");
+    return { id: fields.get("UID")!, kind: fields.has("X-INSTITUTION-TRIGGER-KIND") ? "trigger"
+      : fields.has("X-INSTITUTION-ENTITY-TYPE") ? "entity" : "unresolved",
       registrationId: fields.get("X-INSTITUTION-REGISTRATION-ID"),
       entityType: fields.get("X-INSTITUTION-ENTITY-TYPE"),
       triggerKind: fields.get("X-INSTITUTION-TRIGGER-KIND"),
-      occurredAt: timestamp, availableAt: fields.get("X-INSTITUTION-AVAILABLE-AT") };
+      occurredAt: timestamp, narrative: `${fields.get("SUMMARY") ?? ""}\n${fields.get("DESCRIPTION") ?? ""}`,
+      endsAt: fields.has("X-INSTITUTION-ENTITY-TYPE") || fields.has("X-INSTITUTION-TRIGGER-KIND") ? undefined : endsAt,
+      availableAt: fields.get("X-INSTITUTION-AVAILABLE-AT") };
   });
 }
 
@@ -191,9 +260,11 @@ export async function originalRawRecords(source: OriginalSource, limit: number, 
     case "html": value = htmlRecords(source.rawUtf8); break;
     case "financial_xml": {
       const root = parseXml(source.rawUtf8);
-      if (root.local !== "records" || root.children.some((item) => !["entity", "quantity", "trigger"].includes(item.local)
+      if (!["records", "decisions", "transactions"].includes(root.local)
+          || root.children.some((item) => !["entity", "quantity", "trigger", "decision", "transaction"].includes(item.local)
           || item.children.length)) throw new Error("Unsupported financial XML structure");
-      value = root.children.map((item) => ({ ...item.attrs, kind: item.local }));
+      value = root.children.map((item) => ({ ...item.attrs,
+        kind: ["entity", "quantity", "trigger"].includes(item.local) ? item.local : "unresolved" }));
       break;
     }
     case "text": value = textRecords(source.rawUtf8); break;
@@ -220,5 +291,5 @@ export async function originalRawRecords(source: OriginalSource, limit: number, 
     default: throw new Error("Unsupported original protocol");
   }
   if (Buffer.byteLength(JSON.stringify(value)) > maxBytes) throw new Error("Decoded original exceeds object bound");
-  return requireRows(value, limit);
+  return requireRows(value, limit, source.sourceClass);
 }

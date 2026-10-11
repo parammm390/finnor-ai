@@ -1,5 +1,32 @@
 # FRONTIER5.X1 status
 
+## Native source interpretation/checker repair (11 October 2026)
+
+Source work on ten class-native records now uses generic ID/vocabulary, amount/context,
+task-event and scoped cross-reference interpretations without source-side X1 labels.
+Original-byte checking is separately implemented; the owner-admission seam now
+spawns a bounded checker process with pinned command/checker/decoder/tsx/lock bytes,
+input and response. Its source-script/tsx route is a **development-only**
+process boundary, not protected custody or final installed checker packaging.
+The frozen profile and 14/34 schemas were not reduced. The original flat
+protocol corpus remains an independent control. Five original native records
+remain explicit descriptive/unresolved evidence, not invented approvals or
+canonical targets. CRM/HR identities, ledger/expense quantities, a CRM
+counterparty relation and one task-plus-mandate obligation reach the offline
+checker. Lender amount lacks availability metadata and is unresolved.
+
+The checker-001 observed pre-repair vector and fixed review SHA context are
+retained privately at `x1-control/reviews/checker-001-worker-observations.md`.
+The composite source/record bug, four-duty denominator collision, malformed
+currency/unit, object-order false refusal and independently pinned stale-byte
+case pass their intended offline guards after repair. On this newer cut
+101 actual deals already reached BOUND, so that review finding is obsolete
+without rewriting its historical observation. Kernel/static outputs and their
+source/profile/corpus pins are fresh private evidence. This is **PARTIAL**
+source implementation, not owner/consent/admission/runtime E2E verification.
+Actual server-side acquisition/rights/consent/canonical creation/relationships
+and installed checker packaging remain the next source owner feature.
+
 ## Reconstruction and semantic owner source slice (11 October 2026)
 
 The checker now independently parses original CSV/TSV, paginated JSON,

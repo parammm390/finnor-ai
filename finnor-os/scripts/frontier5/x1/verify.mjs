@@ -43,6 +43,7 @@ const sourcePins = changed.filter((path) => existsSync(join(repo, path))).map((p
 for (const path of [
   "finnor-os/packages/private-equity/src/institution-program/contracts.ts",
   "finnor-os/packages/private-equity/src/institution-program/checker.ts",
+  "finnor-os/packages/private-equity/src/institution-program/checker-process.ts",
   "finnor-os/packages/private-equity/src/institution-program/checker-raw.ts",
   "finnor-os/packages/private-equity/src/institution-program/source-decoder.ts",
   "finnor-os/packages/private-equity/src/institution-program/reconstruction.ts",
@@ -53,12 +54,18 @@ for (const path of [
   "finnor-os/scripts/frontier5/x1/eslint.config.mjs",
   "finnor-os/scripts/frontier5/x1/tsconfig.oracle.json",
   "finnor-os/scripts/frontier5/x1/kernel.mts",
+  "finnor-os/scripts/frontier5/x1/checker-command.mts",
+  "finnor-os/scripts/frontier5/x1/review-cases.mts",
+  "finnor-os/scripts/frontier5/x1/native-cases.mts",
   "finnor-os/scripts/frontier5/x1/protocol-cases.mts",
   "finnor-os/scripts/frontier5/x1/reconstruction-cases.mts",
   "finnor-os/scripts/frontier5/x1/reference/original-input.json",
   "finnor-os/scripts/frontier5/x1/reference/expected-ledger.json",
   "finnor-os/scripts/frontier5/x1/reference/challenges.json",
   "finnor-os/scripts/frontier5/x1/reference/base-candidate.json",
+  "finnor-os/scripts/frontier5/x1/reference/native-input.json",
+  "finnor-os/scripts/frontier5/x1/reference/native-expectations.json",
+  "finnor-os/scripts/frontier5/x1/reference/native-contract.md",
 ]) if (!sourcePins.some((entry) => entry.path === path)) sourcePins.push(pin(join(repo, path)));
 const free = (() => { const fs = statfsSync(repo, { bigint: true }); return fs.bavail * fs.bsize; })();
 const record = {
@@ -115,6 +122,8 @@ if (stage === "kernel" || stage === "scrutiny") {
   run("kernel", process.execPath, ["./node_modules/tsx/dist/cli.mjs", "scripts/frontier5/x1/kernel.mts"], os, manifest.limits.kernelNodeHeapMiB);
   run("protocols", process.execPath, ["./node_modules/tsx/dist/cli.mjs", "scripts/frontier5/x1/protocol-cases.mts"], os, manifest.limits.kernelNodeHeapMiB);
   run("reconstruction", process.execPath, ["./node_modules/tsx/dist/cli.mjs", "scripts/frontier5/x1/reconstruction-cases.mts"], os, manifest.limits.kernelNodeHeapMiB);
+  run("checker-review", process.execPath, ["./node_modules/tsx/dist/cli.mjs", "scripts/frontier5/x1/review-cases.mts"], os, manifest.limits.kernelNodeHeapMiB);
+  run("native-corpus", process.execPath, ["./node_modules/tsx/dist/cli.mjs", "scripts/frontier5/x1/native-cases.mts"], os, manifest.limits.kernelNodeHeapMiB);
 }
 if (stage === "static" || stage === "scrutiny") {
   if (!only || only === "typecheck") {
@@ -127,6 +136,7 @@ if (stage === "static" || stage === "scrutiny") {
       "finnor-os/scripts/frontier5/x1/eslint.config.mjs", "--max-warnings=0",
       "finnor-os/packages/private-equity/src/institution-program/contracts.ts",
       "finnor-os/packages/private-equity/src/institution-program/checker.ts",
+      "finnor-os/packages/private-equity/src/institution-program/checker-process.ts",
       "finnor-os/packages/private-equity/src/institution-program/checker-raw.ts",
       "finnor-os/packages/private-equity/src/institution-program/source-decoder.ts",
       "finnor-os/packages/private-equity/src/institution-program/reconstruction.ts",
@@ -134,6 +144,11 @@ if (stage === "static" || stage === "scrutiny") {
       "finnor-os/scripts/frontier5/x1/kernel.mts",
       "finnor-os/scripts/frontier5/x1/protocol-cases.mts",
       "finnor-os/scripts/frontier5/x1/reconstruction-cases.mts"], repo, manifest.limits.smallCheckNodeHeapMiB);
+    run("checker-command-lint", process.execPath, ["node_modules/eslint/bin/eslint.js", "--config",
+      "finnor-os/scripts/frontier5/x1/eslint.config.mjs", "--max-warnings=0",
+      "finnor-os/scripts/frontier5/x1/review-cases.mts",
+      "finnor-os/scripts/frontier5/x1/native-cases.mts",
+      "finnor-os/scripts/frontier5/x1/checker-command.mts"], repo, manifest.limits.smallCheckNodeHeapMiB);
   }
 }
 if (stage !== "kernel" && stage !== "static" && stage !== "scrutiny") {

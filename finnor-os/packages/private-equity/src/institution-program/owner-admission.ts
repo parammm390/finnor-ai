@@ -7,7 +7,8 @@ import { authorizeBeliefResources, authorizeBeliefCandidateCut } from "../enterp
 import { loadPrivateEquityWorldState } from "../world-state";
 import { recordPrivateEquitySourceObservation } from "../source-mapping";
 import type { PeMutationContext } from "../types";
-import { independentlyCheckInstitutionModel, type InstitutionCandidate, type InstitutionCheck, type OriginalInstitutionEvidence } from "./checker";
+import type { InstitutionCandidate, InstitutionCheck, OriginalInstitutionEvidence } from "./checker";
+import { checkInstitutionInSeparateProcess } from "./checker-process";
 import { originalRawRecords } from "./checker-raw";
 import type { DigitalInstitutionProfile } from "./contracts";
 
@@ -164,7 +165,7 @@ export async function admitCheckedInstitutionMappings(
     ...original, sources, canonical: owner.canonical,
     current: { ...original.current, canonicalRevision: owner.canonical.revision, rightsRevision: owner.rightsRevision },
   };
-  const check = await independentlyCheckInstitutionModel(independent, candidate, profile);
+  const check = checkInstitutionInSeparateProcess(independent, candidate, profile);
   if (check.disposition !== "ACCEPTED_DEVELOPMENT"
       || check.inputDigest !== acceptedCheck.inputDigest
       || check.candidateDigest !== acceptedCheck.candidateDigest
