@@ -5,8 +5,8 @@
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
 import {spawnSync} from 'node:child_process';
-import {mkdir,readFile,readdir,stat,symlink,writeFile} from 'node:fs/promises';
-import {dirname,join,resolve} from 'node:path';
+import {mkdir,readFile,readdir,readlink,stat,symlink,writeFile} from 'node:fs/promises';
+import {dirname,join,relative,resolve} from 'node:path';
 
 const repo=resolve(import.meta.dirname,'../../..'),base='4a90ed33ca96afa252c51f511fea279e0034cddb',
   output=process.argv[2],dependencies=process.argv[3],rootDependencies=process.argv[4];
@@ -27,10 +27,16 @@ const tree=git(['ls-tree','-r','-z',base]).toString().split('\0').filter(Boolean
   const [meta,path]=line.split('\t'),[mode,type,blob]=meta.split(' ');
   return {mode,type,blob,path};
 });
+// Original retained S5 driver hashes these exact public governing assets.
+// Export only this finite allowlist from the pinned base, never scope evidence.
+const retainedS5Sources=new Set(['scope-5/scope-plan.md','scope-5/scope-evidence/test-registration.json',
+  'scope-5/scope-evidence/failure-model.md','scope-5/scope-evidence/test-selection.md',
+  'scope-5/scope-evidence/additional-challenge-registration.md','finnor-os/openapi.json']);
 const source=tree.filter(f=>f.type==='blob'&&f.mode!=='120000'&&
   !/(?:^|\/)(?:node_modules|\.venv|\.cache|source-snapshot)(?:\/|$)/.test(f.path)&&
   !/^finnor-os\/scripts\/(?:.*\/)?(?:evidence|artifacts)\//.test(f.path)&&
-  (/^finnor-os\/(?:packages|apps|scripts)\//.test(f.path)&&/\.(?:ts|tsx|mts|mjs|cjs|js|m|py|json|sql|yml|yaml)$/.test(f.path)||
+  (retainedS5Sources.has(f.path)||
+   /^finnor-os\/(?:packages|apps|scripts)\//.test(f.path)&&/\.(?:ts|tsx|mts|mjs|cjs|js|m|py|json|sql|yml|yaml|txt)$/.test(f.path)||
    /^src\//.test(f.path)&&/\.(?:ts|tsx|js|mjs|cjs|json|css|svg)$/.test(f.path)||
    /^public\//.test(f.path)&&/\.(?:svg|woff2?|ttf)$/.test(f.path)||
    f.path==='scripts/centropy/generate-capability-manifest.mjs'||
@@ -83,10 +89,37 @@ for(const patch of manifest.orderedPatches){
   }
 }
 for(const record of manifest.records)assert.equal(sha(await readFile(join(output,record.path))),record.postSha256,'Exact serial postimage: '+record.path);
-await symlink(dependencies,join(output,'finnor-os/node_modules'));
-if(rootDependencies)await symlink(rootDependencies,join(output,'node_modules'));
+// Third-party dependency files are borrowed read-only, but @finnor workspace
+// links must resolve INSIDE the cut. A whole-directory node_modules symlink
+// would silently resolve @finnor/* imports into the borrowed foreign tree
+// (which lacks r1/r4/r7 sources), mixing unverified bytes into the verified
+// cut; successor-3 retained S5 failed exactly this way.
+const workspaceLinks=[],skippedWorkspaceLinks=[];
+async function linkDependencies(target,borrowed){
+  await mkdir(target,{recursive:true});
+  for(const e of await readdir(borrowed,{withFileTypes:true})){
+    if(e.name==='@finnor')continue;
+    await symlink(join(borrowed,e.name),join(target,e.name));
+  }
+  const scope=join(borrowed,'@finnor'),sourceRoot=dirname(borrowed);
+  let entries=[];
+  try{entries=await readdir(scope,{withFileTypes:true});}catch(e){if(e.code!=='ENOENT')throw e;}
+  if(!entries.length)return;
+  await mkdir(join(target,'@finnor'),{recursive:true});
+  for(const e of entries){
+    const absolute=resolve(scope,await readlink(join(scope,e.name))),
+      rel=relative(sourceRoot,absolute),cutTarget=join(dirname(target),rel);
+    try{await stat(cutTarget);}
+    catch(error){if(error.code==='ENOENT'){skippedWorkspaceLinks.push({name:e.name,repoPath:rel});continue;}throw error;}
+    await symlink(join('..','..',rel),join(target,'@finnor',e.name));
+    workspaceLinks.push({name:e.name,repoPath:rel});
+  }
+}
+await linkDependencies(join(output,'finnor-os/node_modules'),dependencies);
+if(rootDependencies)await linkDependencies(join(output,'node_modules'),rootDependencies);
 const projection={schema:'finnor.r7.private-serial-projection.v1',base,output,files,shared:manifest.records,
   borrowedDependencies:dependencies,borrowedRootDependencies:rootDependencies??null,
+  borrowedDependencyLinkMode:'symlink-farm-except-finnor-workspace',workspaceLinks,skippedWorkspaceLinks,
   qualification:'R7_SERIAL_PROPOSALS_CHECKED_NOT_CANONICAL_JOINED_RELEASE_OR_INSTALLED',
   excluded:'No Git history, raw evidence, private state, dependency/runtime/cache tree or unrelated R adoption'};
 const destination=join(output,'serial-projection.json');

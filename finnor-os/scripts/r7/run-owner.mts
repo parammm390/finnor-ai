@@ -63,6 +63,7 @@ async function save(){await artifact('results.json',{schema:'finnor.r7.owner-e2e
   rerun:'cd finnor-os && FINNOR_R7_EVIDENCE_DIR=<new-evidence-directory> node --import=tsx scripts/r7/run-owner.mts'});}
 async function challenge(id:string,invariant:string,fn:()=>Promise<unknown>){
   if(selected&&!selected.includes(id))return;
+  if(id!=='campaign-boundary-reconcile')requireCampaignDecisionWork();
   const begin=performance.now();let status='PASS',observed:unknown;
   try{observed=await fn();}catch(error){status='FAIL';observed={predicate:String(error),stack:(error as Error).stack};}
   cases.push({id,invariant,status,wallMs:performance.now()-begin,observed});console.log(JSON.stringify({id,status}));await save();
@@ -73,10 +74,22 @@ const directory=await mkdtemp(join(tmpdir(),'finnor-r7-owner-')),port=await new 
 const postgres=new EmbeddedPostgres({databaseDir:directory,user:'finnor',password:'finnor',port,persistent:false,onLog:()=>undefined});
 let admin:pg.Client|undefined,host:Awaited<ReturnType<typeof localHost>>|undefined;
 const children=new Set<ChildProcess>(),actors:LocalActor[]=[];
+const campaignStopPath=process.env.FINNOR_R7_CAMPAIGN_STOP,
+  campaignDeadline=Number(process.env.FINNOR_R7_CAMPAIGN_DEADLINE_AT??0),
+  campaignSupervisor=Number(process.env.FINNOR_R7_CAMPAIGN_SUPERVISOR_PID??0);
+let campaignStopped=false,campaignAbortPromise:Promise<void>|undefined,campaignPoll:NodeJS.Timeout|undefined;
+let finishCampaignBoundary!:(value:unknown)=>void;
+const campaignBoundary=new Promise<unknown>(yes=>{finishCampaignBoundary=yes;});
 export type OwnerFixture={tenant:string;principal:string;ctx:PeMutationContext;root:{entityType:'external_organization';entityId:string};workId:string;evidenceVersionId:string;
   source:AffineFamilySource;family?:R7Family;parameters?:R7Parameters;resource?:AllocationResource};
 type F=OwnerFixture;
+const preparedFixtures:F[]=[];
+function requireCampaignDecisionWork(){
+  if(campaignDeadline&&Date.now()>=campaignDeadline){void abortCampaign('GLOBAL_DEADLINE');throw Error('GLOBAL_CAMPAIGN_DEADLINE');}
+  if(campaignStopped)throw Error('GLOBAL_CAMPAIGN_STOPPED_NO_NEW_DECISION_WORK');
+}
 async function call(f:F,op:string,body:unknown,family='decision-atlases',token?:string){
+  if(!['cancel','read','status','context'].includes(op))requireCampaignDecisionWork();
   const actor=actors.find(a=>a.id===f.principal)!;const started=performance.now();
   const response=await fetch(host!.apiUrl+'/api/'+family+'/'+op,{method:'POST',headers:{'content-type':'application/json',
     authorization:'Bearer '+(token??host!.issue(actor))},body:JSON.stringify(body),signal:AbortSignal.timeout(30000)});
@@ -86,6 +99,7 @@ async function call(f:F,op:string,body:unknown,family='decision-atlases',token?:
 }
 const ok=(r:{status:number;body:any},status=200)=>{assert.equal(r.status,status,JSON.stringify(r));return r.body;};
 async function fixture(name:string,kind='diagnostic',n=1,count=3,w=2,h=1,prepare?:(source:AffineFamilySource)=>void):Promise<F>{
+  requireCampaignDecisionWork();
   const tenant=randomUUID(),principal=randomUUID(),root={entityType:'external_organization' as const,entityId:randomUUID()},email=principal+'@r7.test.invalid';
   const ctx:PeMutationContext={auth:{tenantId:tenant,userId:principal,employeeId:principal,role:'owner'},provenance:{createdBy:principal,sourceSystem:'R7:disposable-setup'}};
   await admin!.query("INSERT INTO finnor_os.tenants(id,client_key,name) VALUES($1,$2,$3)",[tenant,randomUUID(),name]);
@@ -110,7 +124,8 @@ async function fixture(name:string,kind='diagnostic',n=1,count=3,w=2,h=1,prepare
   const metric=await createMetricSeries(ctx,{subjectType:root.entityType,subjectId:root.entityId,metricKey:'r7-law',name:'Original affine law',unit:'USD',frequency:'daily'});
   await attachCanonicalEvidenceToWorld(ctx,{worldRoot:root,entity:{entityType:'pe_metric_series',entityId:String(metric.row.id)},
     evidenceSourceId:sourceId,evidenceVersionId,relationship:'supports'});
-  const f:F={tenant,principal,ctx,root,workId,evidenceVersionId,source};await artifact(name+'/original.json',{...f,ctx:undefined});return f;
+  const f:F={tenant,principal,ctx,root,workId,evidenceVersionId,source};preparedFixtures.push(f);
+  await artifact(name+'/original.json',{...f,ctx:undefined});return f;
 }
 function canonical(v:unknown):string{return v===null||typeof v!=='object'?JSON.stringify(v):Array.isArray(v)?'['+v.map(canonical).join(',')+']':
   '{'+Object.keys(v).sort().map(k=>JSON.stringify(k)+':'+canonical((v as Record<string,unknown>)[k])).join(',')+'}';}
@@ -148,6 +163,7 @@ function buildBody(f:F,budget?:unknown){const family=f.family!;return {envelope_
   existing_work_revision:family.input.work.inputId,domain_profile_ref:family.input.domainRef,budget_grant_ref:family.grantRef,
   cancellation_ref:family.cancellationRef,idempotencyKey:randomUUID(),...(budget?{budget}:{})};}
 function startWorker(productionRegistry=false){
+  requireCampaignDecisionWork();
   const workerUrl=new URL(process.env.DATABASE_URL!);workerUrl.username='finnor_worker';workerUrl.password='disposable_worker';
   const child=spawn(process.execPath,['--import=tsx',join(os,'scripts/r7/worker-once.mts')],{cwd:os,
     env:{...process.env,DATABASE_URL:workerUrl.href,FINNOR_R7_WORKER_REGISTRY:productionRegistry?'PRODUCTION_ALL':'R7_ONLY'},stdio:['ignore','pipe','pipe']});
@@ -195,17 +211,71 @@ async function query(f:F,id:string,fallback='REQUIRE_ADMITTED'):Promise<R7Query>
   await artifact('queries/'+q.ref.contentDigest+'.json',q);return q;
 }
 function reference(f:F,values:string[]){
+  requireCampaignDecisionWork();
   const r=spawnSync(process.env.FINNOR_R7_PYTHON??'/usr/bin/python3',[join(os,'scripts/r7/reference.py')],{
     input:JSON.stringify({source:f.source,points:[values]}),encoding:'utf8',timeout:30000});
   assert.equal(r.status,0,r.stderr);return JSON.parse(r.stdout);
+}
+async function campaignSnapshot(){
+  assert(admin);
+  return {episodes:(await admin.query('SELECT tenant_id,episode_id,deadline_at,max_invocations,invocations FROM finnor_os.r7_episodes ORDER BY tenant_id,episode_id')).rows,
+    builds:(await admin.query('SELECT id,tenant_id,status FROM finnor_os.r7_builds ORDER BY id')).rows,
+    physical:(await admin.query("SELECT build_id,kind,body FROM finnor_os.r7_events WHERE kind IN('CHILD_STARTED','BUILD_RETURNED','CHECK_ACCEPTED','FAILED','CANCELLED','FINISHED') ORDER BY created_at,id")).rows,
+    leases:(await admin.query("SELECT owner_id,released_at,expires_at,release_reason FROM finnor_os.compute_resource_leases WHERE owner_id LIKE 'r7:%' ORDER BY owner_id")).rows,
+    reservations:(await admin.query('SELECT tenant_id,reservation_id,status,envelopes,revision FROM finnor_os.s5_reservations ORDER BY tenant_id,reservation_id')).rows,
+    consumptions:(await admin.query('SELECT tenant_id,consumption_id,status,revision FROM finnor_os.s5_consumption_states ORDER BY tenant_id,consumption_id')).rows};
+}
+function abortCampaign(predicate:string){
+  if(campaignAbortPromise)return campaignAbortPromise;
+  campaignStopped=true;
+  campaignAbortPromise=(async()=>{
+    const before=admin?await campaignSnapshot():null,cancelResponses:unknown[]=[];
+    for(const row of before?.builds??[]){
+      if(!['QUEUED','RUNNING'].includes(row.status))continue;
+      const actor=preparedFixtures.find(f=>f.tenant===row.tenant_id);
+      if(!actor)throw Error('GLOBAL_STOP_ORIGINAL_ACTOR_UNAVAILABLE');
+      cancelResponses.push({buildId:row.id,...await call(actor,'cancel',{buildId:row.id})});
+    }
+    const until=Date.now()+3000;
+    while(children.size&&Date.now()<until)await new Promise(yes=>setTimeout(yes,50));
+    const after=admin?await campaignSnapshot():null,livePhysical:number[]=[];
+    for(const e of after?.physical??[])if(e.kind==='CHILD_STARTED'&&e.body.pid){
+      const result=spawnSync('ps',['-p',String(e.body.pid),'-o','stat='],{encoding:'utf8'});
+      if(result.status===0&&!result.stdout.trim().startsWith('Z'))livePhysical.push(e.body.pid);
+    }
+    const receipt={schema:'finnor.r7.actual-campaign-stop-reconciliation.v1',predicate,before,after,cancelResponses,
+      livePhysical:[...new Set(livePhysical)],workerPids:[...children].map(c=>c.pid),
+      originalGrantAndDeadlineRenewed:false,financialReleaseOrSettlementAttempted:false,unacknowledgedCosts:'UNKNOWN'};
+    await artifact('campaign-reconciliation.json',receipt);finishCampaignBoundary(receipt);
+  })().catch(async error=>{
+    const receipt={schema:'finnor.r7.actual-campaign-stop-reconciliation.v1',predicate,status:'UNKNOWN',
+      before:null,after:null,cancelResponses:[],livePhysical:[],workerPids:[...children].map(c=>c.pid),
+      error:String(error),unacknowledgedCosts:'UNKNOWN',financialReleaseOrSettlementAttempted:false};
+    await artifact('campaign-reconciliation.json',receipt);finishCampaignBoundary(receipt);
+  });
+  return campaignAbortPromise;
+}
+const onCampaignSigterm=()=>{void abortCampaign('SUPERVISOR_STOP_REQUEST');};
+const onCampaignSigint=()=>{void abortCampaign('SUPERVISOR_INTERRUPTED');};
+if(campaignStopPath){
+  process.on('SIGTERM',onCampaignSigterm);
+  process.on('SIGINT',onCampaignSigint);
 }
 let f:F|undefined,trial:Awaited<ReturnType<typeof build>>|undefined,selection:any,retainedJobId:string|undefined,futureJobId:string|undefined;
 try{
   process.env.FINNOR_TEST_MANAGED_EXTENSIONS='omit';process.env.NODE_ENV='test';process.env.FINNOR_R7_PROFILE='DISPOSABLE_NATIVE';
   await postgres.initialise();await appendFile(join(directory,'postgresql.conf'),'\ntrack_commit_timestamp=on\n');await postgres.start();
+  if(campaignStopPath){
+    // embedded-postgres registers async-exit-hook SIGTERM/SIGINT handlers that stop the
+    // database on those signals. Under campaign control the supervisor's SIGTERM must
+    // trigger reconciliation while the database stays alive for readback; keep only the
+    // campaign handlers and leave orderly shutdown to the explicit stop() in finally.
+    for(const listener of process.rawListeners('SIGTERM'))if(listener!==onCampaignSigterm)process.removeListener('SIGTERM',listener as (...args:any[])=>void);
+    for(const listener of process.rawListeners('SIGINT'))if(listener!==onCampaignSigint)process.removeListener('SIGINT',listener as (...args:any[])=>void);
+  }
   await postgres.createDatabase('r7_owner');const url=`postgres://finnor:finnor@127.0.0.1:${port}/r7_owner`;
   const priorMigrations=await migrate(url,compatibility?MIGRATIONS.filter(m=>!r7Migrations.includes(m)):undefined);
-  admin=new pg.Client({connectionString:url});await admin.connect();
+  admin=new pg.Client({connectionString:url});admin.on('error',error=>console.error('campaign-admin-client-error',String(error)));await admin.connect();
   if(compatibility){
     const commit=process.env.FINNOR_COMMIT_SHA??spawnSync('git',['-C',repo,'rev-parse','HEAD'],{encoding:'utf8'}).stdout?.trim();
     assert(commit&&/^[a-f0-9]{40}$/.test(commit),'Actual parent Git commit or explicitly supplied installed-image commit pin');
@@ -224,11 +294,43 @@ try{
   process.env.DATABASE_URL=`postgres://finnor_app:finnor_app@127.0.0.1:${port}/r7_owner`;await closePool();
   await admin.query("INSERT INTO finnor_os.compute_resource_policies(resource_key,capacity,per_tenant_capacity,interactive_reserve,lease_seconds,enabled,source) VALUES('native:r7',2,2,0,15,true,'R7 explicitly configured disposable ordinary capacity, unmetered') ON CONFLICT DO NOTHING");
   host=await localHost(repo,actors,traffic,process.argv.includes('--browser'));
+  if(campaignStopPath)campaignPoll=setInterval(()=>{
+    if(campaignStopped)return;
+    void readFile(campaignStopPath,'utf8').then(text=>abortCampaign(JSON.parse(text).predicate)).catch((error:unknown)=>{
+      if((error as {code?:string}).code!=='ENOENT')void abortCampaign('STOP_CONTROL_UNKNOWN');
+    });
+    if(campaignDeadline&&Date.now()>=campaignDeadline)void abortCampaign('GLOBAL_DEADLINE');
+    if(campaignSupervisor)try{process.kill(campaignSupervisor,0);}catch{void abortCampaign('CAMPAIGN_SUPERVISOR_LOST');}
+  },100);
   await artifact('runtime.json',{head:CURRENT_MIGRATION_HEAD,migrations,roles:(await admin.query("SELECT rolname,rolsuper,rolbypassrls FROM pg_roles WHERE rolname IN('finnor','finnor_app')")).rows,
     serialSchema:serialSchemaPath?{path:serialSchemaPath,sha256:sha(await readFile(serialSchemaPath)),qualification:'UNNUMBERED_DISPOSABLE_PROPOSAL_NOT_RELEASE_MIGRATION'}:null,
     bundleEqualDisk:await Promise.all(MIGRATIONS.map(async m=>({name:m.name,equal:m.sql===await readFile(join(os,'packages/db/migrations',m.name),'utf8')}))),
     node:process.version,python:spawnSync(process.env.FINNOR_R7_PYTHON??'/usr/bin/python3',['--version'],{encoding:'utf8'}).stdout});
   f=await fixture('r7-positive');await resource(f);await bind(f);
+  await challenge('campaign-boundary-reconcile','Registered negative global expiry stops an actual in-flight native child while original grants and already UNKNOWN S5 responsibilities remain',async()=>{
+    assert(campaignStopPath&&campaignDeadline&&process.env.FINNOR_R7_BOUNDARY_READY);
+    const issued=await build(f!),covered=await query(f!,issued.accepted.buildId),
+      selected=ok(await call(f!,'select',{buildId:issued.accepted.buildId,queryRef:covered.ref,idempotencyKey:randomUUID()})),
+      unknown=ok(await call(f!,'reconcile',{allocationRef:selected.consumption.certificateRef},'allocations'));
+    assert.equal(unknown.reservation.status,'UNKNOWN_OUTCOME');
+    const p=await fixture('r7-global-stop','maximal',4,32,64,12);await resource(p);await bind(p);
+    const accepted=ok(await call(p,'build',buildBody(p)),202),running=startWorker();
+    const start=await waitFor(async()=>(await admin!.query("SELECT body FROM finnor_os.r7_events WHERE tenant_id=$1 AND build_id=$2 AND kind='CHILD_STARTED' AND body->>'mode'='BUILD'",
+      [p.tenant,accepted.buildId])).rows[0]?.body??false);
+    process.kill(start.pid,'SIGSTOP'); // External registered fault, not a product shortcut.
+    await writeFile(process.env.FINNOR_R7_BOUNDARY_READY,JSON.stringify({accepted,start,workerPid:running.child.pid,unknown,at:new Date().toISOString()})+'\n');
+    const reconciled:any=await campaignBoundary;await running.done;
+    assert(reconciled.before&&reconciled.after,JSON.stringify(reconciled));
+    assert.deepEqual(reconciled.livePhysical,[]);assert.deepEqual(reconciled.workerPids,[]);
+    assert(reconciled.cancelResponses.some((r:any)=>r.buildId===accepted.buildId&&r.status===200));
+    assert(reconciled.after.builds.some((r:any)=>r.id===accepted.buildId&&r.status==='CANCELLED'));
+    assert.deepEqual(reconciled.after.episodes,reconciled.before.episodes);
+    assert.deepEqual(reconciled.after.reservations,reconciled.before.reservations);
+    assert.deepEqual(reconciled.after.consumptions,reconciled.before.consumptions);
+    const lease=reconciled.after.leases.find((l:any)=>l.owner_id==='r7:'+start.invocationId);
+    assert(lease?.released_at);assert.throws(()=>process.kill(start.pid,0));
+    return {accepted,start,unknown,reconciled,qualification:'Expected negative GLOBAL_DEADLINE; never a complete 23-case campaign or settled liability'};
+  });
   await challenge('runtime-schema-compatibility','Actual pre-R7 schema/job retained through the forward migration and cold production handler registry; restart skips all migrations, future protocol is not claimed, installed R7 still builds and queries',async()=>{
     assert(retainedJobId&&futureJobId);assert.deepEqual(upgradeMigrations,r7Migrations.map(m=>m.name));
     const before=(await admin!.query('SELECT id,type,status,protocol_version,payload FROM finnor_os.jobs WHERE id=ANY($1::uuid[]) ORDER BY protocol_version',
@@ -592,7 +694,7 @@ try{
   await challenge('actual-principal-publication-race','Real principal FOR UPDATE revocation wins against publication FOR SHARE after actual checker acceptance; no atlas publishes and costs/accepted history remain',async()=>{
     const p=await fixture('r7-principal-race');await pausePublication(p.tenant,'r7_events');await resource(p);await bind(p);
     const accepted=ok(await call(p,'build',buildBody(p)),202);
-    const locker=new pg.Client({connectionString:url});await locker.connect();const running=startWorker();
+    const locker=new pg.Client({connectionString:url});locker.on('error',error=>console.error('campaign-locker-client-error',String(error)));await locker.connect();const running=startWorker();
     try{
       await waitFor(async()=>Boolean((await admin!.query("SELECT pid FROM pg_stat_activity WHERE wait_event_type='Lock' AND query LIKE '%INSERT INTO finnor_os.r7_events%'")).rows.length));
       await locker.query('BEGIN');await locker.query('SELECT id FROM finnor_os.users WHERE tenant_id=$1 AND id=$2 FOR UPDATE',[p.tenant,p.principal]);
@@ -683,6 +785,8 @@ try{
 }catch(error){cases.push({id:'campaign-setup',status:'FAIL',observed:{predicate:String(error),stack:(error as Error).stack}});await save();console.error(String(error));}
 finally{
   if(cases.some((c:any)=>c.status==='FAIL'))process.exitCode=1;
+  if(campaignPoll)clearInterval(campaignPoll);
+  if(campaignAbortPromise)await campaignAbortPromise;
   for(const c of children)if(c.exitCode===null&&c.signalCode===null)c.kill('SIGTERM');
   await save();await host?.close();await closePool();await admin?.end();await postgres.stop().catch(()=>undefined);
 }
