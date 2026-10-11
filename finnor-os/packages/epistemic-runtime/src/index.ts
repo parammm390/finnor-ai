@@ -42,3 +42,4 @@ export * from "./allocation-checker";
 export * from "./allocation-verifier";
 
 export * from "./economic-attribution";
+export * from "./incentive-rule-synthesis/contracts";

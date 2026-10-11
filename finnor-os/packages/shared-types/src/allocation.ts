@@ -86,7 +86,7 @@ export interface AllocationCheck {
   scenarioValues: Array<{ scenarioId: string; value: ResourceQuantity }>;
   envelopes: AllocationEnvelope[];
   witnesses: Array<{ constraintId: string; scenarioId: string; period: number; used: ResourceQuantity; maximum: ResourceQuantity; margin: ResourceQuantity }>;
-  numericalSemantics: 'EXACT_DECIMAL_RATIONAL_ZERO_FEASIBILITY_TOLERANCE';
+  numericalSemantics: 'EXACT_DECIMAL_RATIONAL_ZERO_FEASIBILITY_TOLERANCE' | 'EXACT_RATIONAL_LEDGER_V1_ZERO_FEASIBILITY_TOLERANCE';
   executionAuthorityGranted: false;
 }
 export interface AllocationDualProposal {

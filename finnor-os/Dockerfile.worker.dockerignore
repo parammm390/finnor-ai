@@ -14,6 +14,11 @@
 !infra/
 !infra/deployment/
 !infra/deployment/production.contract.json
+!scripts/
+!scripts/release/
+!scripts/release/production-mutation-guard.mjs
+!scripts/release/release-policy.mjs
+!scripts/release/worktree-state.mjs
 **/node_modules
 **/.*
 **/.env
@@ -27,3 +32,6 @@
 **/*.log
 **/*.pem
 **/*.key
+**/__pycache__
+**/*.pyc
+**/*.tsbuildinfo

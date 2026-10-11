@@ -19,6 +19,7 @@ export * from "./outcome-packs";
 export * from "./vertical-runtime";
 export * from "./retired-water";
 export * from "./private-equity";
+export * from "./elicitation-protocol";
 
 export type Role = "owner";
 

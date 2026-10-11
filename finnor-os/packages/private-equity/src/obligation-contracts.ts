@@ -17,6 +17,7 @@ export const GovernedRequestBindingSchema=z.object({
  expectedVersion:z.string().min(1).max(512).refine(value=>!/[\u0000-\u001f\u007f]/.test(value)),
 }).strict();
 export const ObligationOperationSchemas={prepare:z.object({preparationRef:ExperimentRefSchema,allocationRef:ExperimentRefSchema,consumptionRef:ExperimentRefSchema}).strict(),read:reference,validate:reference,'read-commitment':reference,
+ 'prepare-elicitation':z.object({requestId:z.string().uuid(),consumptionRef:ExperimentRefSchema.optional()}).strict(),
  'budget-status':reference,
  'read-execution-handoff':reference,
  'check-budget':reference.extend({requestRef:ExperimentRefSchema.refine(ref=>ref.owner==='S6'&&ref.version==='s6-conditional-json-v1'&&ref.id===`request-ir:${ref.contentDigest}`),memberId:z.string().regex(/^request-member:[a-f0-9]{64}$/),phase:z.enum(['EXECUTION','RECOVERY','HUMAN']),ordinal:z.number().int().min(1).max(64),units:z.number().int().min(1).max(100000),nonce:z.string().uuid()}).strict(),

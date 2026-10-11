@@ -27,6 +27,8 @@ export * from "./enterprise-control";
 export * from "./enterprise-allocation";
 export * from './enterprise-obligations';
 export * from './obligation-contracts';
+// API adapters and native owners must classify the same ledger fault instance.
+export { LedgerFault } from '../../governed-execution/src/protocol';
 
 export * from "./enterprise-economic-attribution";
 export * from "./enterprise-economic-assignments";

@@ -11,6 +11,7 @@ import {
   CapitalWitnessViewSchema, type CapitalPolicyView, type CapitalQueryView, type CapitalWitnessView,
 } from "./capital-program-view"
 import { OriginalChallengePanel } from "./OriginalChallengePanel"
+import { ElicitationProtocolReview } from "./ElicitationProtocolReview"
 import "./capital-program.css"
 
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
@@ -368,6 +369,10 @@ export function CapitalProgramPanel({ workId, root }: {
       <details><summary>Exact owner checks and response assumptions</summary><pre tabIndex={0}>{JSON.stringify({ checks: proof.checks, model: proof.model }, null, 2)}</pre></details>
       <button type="button" onClick={() => { sourceGeneration.current++; setWitness(null); setSourceWitness(null); requestAnimationFrame(() => opener.current?.focus()) }}>Close arrangement witnesses</button>
     </section> : null}
+    <ElicitationProtocolReview workId={workId} root={root} programTargets={current && program && ["TESTED", "PARTIAL"].includes(current.status)
+      ? program.candidates.filter(candidate => candidate.disposition === "CHECKED_MODEL_RELATIVE" && candidate.finitePolicyComplete && candidate.policyRef)
+        .map(candidate => ({ grammar: "r3-m3-report-extension-v1", queryId: current.queryId, programRef: program.ref,
+          candidateDigest: candidate.semanticDigest, policyRef: candidate.policyRef! })) : []} />
   </section>
 }
 

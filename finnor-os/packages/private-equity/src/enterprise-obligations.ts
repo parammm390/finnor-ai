@@ -19,6 +19,11 @@ import {canonical} from '../../governed-execution/src/protocol';
 import {s6AdapterContract} from '../../governed-execution/src/adapter-contract';
 import {readS5GovernedBudgets,recordS5GovernedResourceUnits} from './allocation-store';
 const actor=(ctx:PeMutationContext)=>ctx.auth.employeeId??ctx.auth.userId;
+/** Versioned ordinary proposed schedules, never mapped to the JSON effect method. */
+export async function prepareEnterpriseElicitationHandoff(ctx:PeMutationContext,input:unknown){
+ const parsed=ObligationOperationSchemas['prepare-elicitation'].parse(input);
+ return (await import('./r3/obligations')).prepareR3OwnerHandoff(ctx,parsed);
+}
 const denied=()=>new PeDomainError('PE_ENTITY_NOT_FOUND','Permitted S6 obligation context is unavailable');
 const same=(a:unknown,b:unknown)=>epistemicHash(a)===epistemicHash(b);
 const authoritySourcePaths=()=>['enterprise-obligations.ts','enterprise-allocation.ts','enterprise-control.ts','enterprise-beliefs.ts','allocation-store.ts','obligation-contracts.ts'].map(name=>fileURLToPath(new URL(name,import.meta.url))).concat(fileURLToPath(new URL('../../../apps/api/app/api/obligations/[operation]/route.ts',import.meta.url)));

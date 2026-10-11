@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { AllocationContractError, ControlContractError, ExperimentContractError, ExperimentRefSchema, InterventionContractError } from '@finnor/epistemic-runtime';
 import { PeDomainError, synthesizeEnterpriseControl, readEnterpriseContingentPolicy, replayEnterpriseContingentPolicy, validateEnterpriseContingentPolicy, recordEnterpriseControlAssessment, observeEnterpriseControl, chooseEnterpriseControlBranch, prepareEnterpriseContingentHandoff } from '@finnor/private-equity';
 import { errorResponse, requireContext } from '../../../../lib/auth';
+import { R3OwnerOperationSchemas } from '../../../../../../packages/epistemic-runtime/src/incentive-rule-synthesis/output-contracts';
 
 export const runtime='nodejs';
 const synthesis=z.object({mandate:z.unknown(),problem:z.unknown(),protocols:z.array(z.unknown()).max(8),scenarios:z.object({pathsPerMechanism:z.number().int().min(1).max(64),seed:z.number().int().min(0).max(4294967295)}).strict()}).strict();
@@ -17,11 +18,13 @@ export async function POST(req:Request,{params}:{params:Promise<{operation:strin
  case 'synthesize':return response(await synthesizeEnterpriseControl(ctx,synthesis.parse(body)));
  case 'replan':return response(await synthesizeEnterpriseControl(ctx,revision.parse(body)));
  case 'read':return response(await readEnterpriseContingentPolicy(ctx,reference.parse(body).policyRef));
+ case 'read-mechanism':return response(await readEnterpriseContingentPolicy(ctx,{schema:'finnor.s4.r3-policy-read.v1',policyRef:R3OwnerOperationSchemas.policies['read-mechanism'].parse(body).policyRef}));
  case 'replay':return response(await replayEnterpriseContingentPolicy(ctx,reference.parse(body).policyRef));
  case 'validate':return response(await validateEnterpriseContingentPolicy(ctx,reference.parse(body).policyRef));
  case 'assessment':return response(await recordEnterpriseControlAssessment(ctx,assessment.parse(body)));
  case 'observe':return response(await observeEnterpriseControl(ctx,temporal.parse(body)));
  case 'decide':return response(await chooseEnterpriseControlBranch(ctx,branch.parse(body)));
+ case 'decide-mechanism':return response(await chooseEnterpriseControlBranch(ctx,{schema:'finnor.s4.r3-choice-request.v1',policyRef:R3OwnerOperationSchemas.policies['decide-mechanism'].parse(body).policyRef}));
  case 'handoff':return response(await prepareEnterpriseContingentHandoff(ctx,handoff.parse(body)));
  default:return response({error:'S4 operation was not found',code:'NOT_FOUND'},404);
  }}catch(e){if(e instanceof z.ZodError)return response({error:'Invalid S4 request',code:'INVALID_REQUEST'},400);if(e instanceof AllocationContractError)return response({error:e.message,code:e.code},e.code==='LIMIT_EXCEEDED'?413:e.code==='PERMITTED_CONTEXT_UNAVAILABLE'?404:['IDEMPOTENCY_CONFLICT','STALE_INPUT'].includes(e.code)?409:e.code==='BLOCKED_AUTHORITY'?422:400);if(e instanceof ControlContractError||e instanceof InterventionContractError||e instanceof ExperimentContractError)return response({error:e.message,code:e.code},e.code==='LIMIT_EXCEEDED'?413:e.code==='PERMITTED_CONTEXT_UNAVAILABLE'?404:400);if(e instanceof PeDomainError)return response({error:e.message,code:e.code},/NOT_FOUND/.test(e.code)?404:/INVALID/.test(e.code)?400:422);return errorResponse(e);}}

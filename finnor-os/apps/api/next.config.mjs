@@ -15,7 +15,6 @@ const nextConfig = {
   transpilePackages: [
     "@finnor/shared-types",
     "@finnor/policy-schema",
-    "@finnor/db",
     "@finnor/provider-microsoft365",
     "@finnor/memory",
     "@finnor/tools",
@@ -25,10 +24,18 @@ const nextConfig = {
   // transport starts a thread-stream worker for structured logs. Bundling either
   // rewrites its worker path into `.next/server/chunks/lib/worker.js`, which does not
   // exist at static-generation time. Keep the Node-only stacks external.
-  serverExternalPackages: ["pg", "ioredis", "groq-sdk", "pdf-parse", "pino", "thread-stream", "pino-pretty", "@axiomhq/pino", "tsx", "esbuild", "fs-ext", "@finnor/source-custody"],
+  // These retained source owners evaluate runtime security and disposable
+  // admission posture. Next substitutes NODE_ENV at build time inside bundles;
+  // keep their original checks in Node, with the installed TS loader.
+  serverExternalPackages: ["pg", "ioredis", "groq-sdk", "pdf-parse", "pino", "thread-stream", "pino-pretty", "@axiomhq/pino", "tsx", "esbuild", "fs-ext", "zod", "@finnor/source-custody", "@finnor/security", "@finnor/private-equity", "@finnor/epistemic-runtime", "@finnor/db"],
   // The separately compiled S6 runtime uses Node ESM .js specifiers. Resolve
   // those same imports to original TS when bundling the ordinary API client.
-  experimental: { extensionAlias: { ".js": [".ts", ".tsx", ".js"] } },
+  experimental: {
+    extensionAlias: { ".js": [".ts", ".tsx", ".js"] },
+    // Release compiler memory before Next's separate typechecking phase.
+    // Native source-custody/owner externals below remain part of this build.
+    webpackBuildWorker: true,
+  },
   webpack: (config, { webpack, isServer }) => {
     // Native numerical workers read and hash their original files. Webpack's
     // asset URL wrapper is not a Node file URL and cannot replace that binding.
@@ -40,6 +47,15 @@ const nextConfig = {
       javascript: { ...config.module.parser?.javascript, url: false, worker: false, createRequire: false },
     };
     if (isServer) {
+      // Workspace TS packages resolve outside node_modules after symlinks are
+      // followed. Force the security/owner/transaction modules to stay native
+      // Node imports, including their subpaths; serverExternalPackages alone
+      // did not retain these boundaries in the observed Next 15 release build.
+      config.externals.push(({ request }, callback) => {
+        if (/^@finnor\/(?:security|private-equity|epistemic-runtime|db)(?:\/|$)/.test(request ?? ""))
+          return callback(null, `commonjs ${request}`);
+        callback();
+      });
       // API release builds use an isolated context once. Avoid writing a large
       // disposable disk cache alongside the immutable function artifacts.
       config.cache = { type: "memory" };

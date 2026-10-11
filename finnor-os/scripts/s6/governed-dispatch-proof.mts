@@ -17,7 +17,31 @@ const privatePem=(k:any)=>k.privateKey.export({type:'pkcs8',format:'pem'}).toStr
 const listen=(server:any)=>new Promise<number>(done=>server.listen(0,'127.0.0.1',()=>done(server.address().port)));
 const close=(server:any)=>new Promise<void>(done=>{server.closeAllConnections?.();server.close(()=>done());});
 
-export async function proveGovernedDispatch(f:any,obligation:any,api:any,admin:any,artifact:any,revokeBeforeDispatch=false,workflowProof?:'delivery'|'cancel'|'crash'|'stale',recoveryBudgetProof=false){
+async function observePhysicalProcess(pid:number|undefined,mustExist:boolean){
+ assert(pid&&Number.isInteger(pid),'S6_PHYSICAL_CHILD_PID_REQUIRED');
+ if(process.platform!=='linux'){
+  const census=spawnSync('ps',['-p',String(pid),'-o','pid=,ppid=,pgid=,uid=,stat=,command='],{encoding:'utf8'});
+  assert.equal(census.status,mustExist?0:1);
+  return {source:'PS',pid,exists:mustExist,exitCode:census.status,output:census.stdout};
+ }
+ let stat:string;
+ try{stat=await readFile(`/proc/${pid}/stat`,'utf8')}
+ catch(error){
+  if((error as NodeJS.ErrnoException).code==='ENOENT'&&!mustExist)
+   return {source:'LINUX_PROCFS',pid,exists:false};
+  throw error;
+ }
+ assert(mustExist,'S6_PHYSICAL_CHILD_NOT_REAPED');
+ const [status,command]=await Promise.all(['status','cmdline'].map(name=>readFile(`/proc/${pid}/${name}`,'utf8')));
+ const fields=stat.slice(stat.lastIndexOf(')')+2).trim().split(/\s+/),uid=status.match(/^Uid:\s+(\d+)/m);assert(uid);
+ assert.equal(Number(stat.slice(0,stat.indexOf('(')).trim()),pid);
+ assert.equal(Number(fields[1]),process.pid);assert.equal(Number(uid[1]),process.getuid!());assert.notEqual(fields[0],'Z');
+ return {source:'LINUX_PROCFS',pid,exists:true,parentPid:Number(fields[1]),processGroup:Number(fields[2]),uid:Number(uid[1]),stat,status,command:command.replaceAll('\0',' ')};
+}
+
+
+export async function proveGovernedDispatch(f:any,obligation:any,api:any,admin:any,artifact:any,revokeBeforeDispatch=false,workflowProof?:'delivery'|'cancel'|'crash'|'stale',recoveryBudgetProof=false,
+ authenticatedFixture?:{ownerCall:(operation:string,input:any)=>Promise<{status:number;body:any}>;workerDatabaseUrl:string}){
  const root=await realpath(await mkdtemp(join(tmpdir(),'finnor-s6-dispatch-'))),requests:any[]=[],authorityCalls:any[]=[],steps:any[]=[];
  const ownerKey=generateKeyPairSync('ed25519'),methodKey=generateKeyPairSync('ed25519'),businessKey=generateKeyPairSync('ed25519'),ledgerKey=generateKeyPairSync('ed25519'),reviewer=generateKeyPairSync('ed25519');
  const controlToken=randomUUID()+randomUUID(),protectedToken=randomUUID()+randomUUID(),s5Token=randomUUID()+randomUUID(),consumerToken=randomUUID()+randomUUID(),providerToken=randomUUID()+randomUUID(),authorityToken=randomUUID()+randomUUID();
@@ -49,7 +73,11 @@ export async function proveGovernedDispatch(f:any,obligation:any,api:any,admin:a
  });
  const providerPort=await listen(provider),origin=`https://127.0.0.1:${providerPort}`;
  const {POST}=await import('../../apps/api/app/api/obligations/[operation]/route.js');
- const authority=httpServer(async(req,res)=>{let raw='';for await(const chunk of req)raw+=chunk;const input=JSON.parse(raw),operation=req.url?.split('/').at(-1),call:any={input,operation,at:new Date().toISOString()};authorityCalls.push(call);if(req.headers.authorization!=='Bearer '+authorityToken){res.writeHead(401);res.end('{}');return;}if(!['check-dispatch','check-budget'].includes(operation??'')){res.writeHead(404);res.end('{}');return;}const answer=await POST(new Request('http://localhost/api/obligations/'+operation,{method:'POST',headers:{'content-type':'application/json','x-tenant-id':f.tenant,'x-user-id':f.principal},body:raw}),{params:Promise.resolve({operation:operation!})});const bytes=await answer.text();call.assessment=JSON.parse(bytes);if(input.delivery){call.leases=(await admin.query('SELECT s.lease_expires_at AS step_lease,j.lease_expires_at AS job_lease FROM finnor_os.workflow_steps s JOIN finnor_os.workflow_step_claims sc ON sc.tenant_id=s.tenant_id AND sc.workflow_step_id=s.id AND sc.claim_token=s.claim_token JOIN finnor_os.job_delivery_attempts a ON a.tenant_id=sc.tenant_id AND a.id=sc.job_delivery_attempt_id JOIN finnor_os.jobs j ON j.tenant_id=a.tenant_id AND j.id=a.job_id WHERE s.tenant_id=$1 AND s.id=$2',[f.tenant,input.delivery.workflowStepId])).rows[0];}
+ const authority=httpServer(async(req,res)=>{let raw='';for await(const chunk of req)raw+=chunk;const input=JSON.parse(raw),operation=req.url?.split('/').at(-1),call:any={input,operation,at:new Date().toISOString()};authorityCalls.push(call);if(req.headers.authorization!=='Bearer '+authorityToken){res.writeHead(401);res.end('{}');return;}if(!['check-dispatch','check-budget'].includes(operation??'')){res.writeHead(404);res.end('{}');return;}
+  const answer=authenticatedFixture?await authenticatedFixture.ownerCall(operation!,input):await (async()=>{
+   const result=await POST(new Request('http://localhost/api/obligations/'+operation,{method:'POST',headers:{'content-type':'application/json','x-tenant-id':f.tenant,'x-user-id':f.principal},body:raw}),{params:Promise.resolve({operation:operation!})});
+   return {status:result.status,body:await result.json()};
+  })();const bytes=JSON.stringify(answer.body);call.assessment=answer.body;call.authentication=authenticatedFixture?'SIGNED_BEARER_REAL_HTTP':'LEGACY_DEVELOPMENT_HEADERS';if(input.delivery){call.leases=(await admin.query('SELECT s.lease_expires_at AS step_lease,j.lease_expires_at AS job_lease FROM finnor_os.workflow_steps s JOIN finnor_os.workflow_step_claims sc ON sc.tenant_id=s.tenant_id AND sc.workflow_step_id=s.id AND sc.claim_token=s.claim_token JOIN finnor_os.job_delivery_attempts a ON a.tenant_id=sc.tenant_id AND a.id=sc.job_delivery_attempt_id JOIN finnor_os.jobs j ON j.tenant_id=a.tenant_id AND j.id=a.job_id WHERE s.tenant_id=$1 AND s.id=$2',[f.tenant,input.delivery.workflowStepId])).rows[0];}
   if(input.delivery?.kind==='RECOVERY')call.leases=(await admin.query('SELECT s.lease_expires_at AS step_lease,j.lease_expires_at AS job_lease FROM finnor_os.workflow_steps s JOIN finnor_os.jobs j ON j.tenant_id=s.tenant_id AND j.id=$3 WHERE s.tenant_id=$1 AND s.id=$2',[f.tenant,input.delivery.workflowStepId,input.delivery.jobId])).rows[0];
   if(workflowProof==='stale'&&operation==='check-dispatch'&&authorityCalls.filter(c=>c.operation==='check-dispatch').length===1){assert.equal(call.assessment.status,'CURRENT');assert(scheduledRunId);call.cancellation=await api(f,'cancel-delivery',{obligationRef:obligation.ref,workflowRunId:scheduledRunId,expectedVersion:input.delivery.runVersion},POST);assert.equal(call.cancellation.status,200);assert.equal(call.cancellation.body.ok,true);}
   res.writeHead(answer.status,{'content-type':'application/json'});res.end(bytes);});
@@ -121,10 +149,10 @@ export async function proveGovernedDispatch(f:any,obligation:any,api:any,admin:a
    const workers:any[]=[];
    const worker=async(expectKilled=false,allowIdle=false)=>{
     const env:any={};for(const key of ['PATH','HOME','TMPDIR','NODE_ENV','DATABASE_URL','FINNOR_TEST_MANAGED_EXTENSIONS','FINNOR_S3_PYTHON','FINNOR_S4_POLICY_STORE','FINNOR_S3_MODEL_STORE','FINNOR_S5_PYTHON','FINNOR_S6_OWNER_TRANSPORT_CONFIG','FINNOR_S6_OWNER_TRANSPORT_ROOT'])if(process.env[key])env[key]=process.env[key];
-    env.LOG_LEVEL='silent';env.CI='1';env.FINNOR_S6_TEST_TENANT_ID=f.tenant;if(workflowProof==='crash'){env.FINNOR_STEP_LEASE_SECONDS='5';env.WORKER_JOB_LEASE_SECONDS='5';}
+    env.LOG_LEVEL='silent';env.CI='1';env.FINNOR_S6_TEST_TENANT_ID=f.tenant;if(authenticatedFixture){env.DATABASE_URL=authenticatedFixture.workerDatabaseUrl;env.AUTH_DEV_BYPASS='0';}if(workflowProof==='crash'){env.FINNOR_STEP_LEASE_SECONDS='5';env.WORKER_JOB_LEASE_SECONDS='5';}
     const p=spawn(process.execPath,['--import=tsx','scripts/s6/governed-workflow-worker.mts'],{cwd:process.cwd(),env,stdio:['ignore','pipe','pipe']});activeWorkerPid=p.pid;let log='';p.stdout!.on('data',b=>log+=b.toString());p.stderr!.on('data',b=>log+=b.toString());
     const terminal=await new Promise<any>((done,no)=>{const timer=setTimeout(()=>{p.kill('SIGKILL');no(Error('WORKFLOW_PROCESS_TIMEOUT:'+log));},60000);p.once('error',no);p.once('exit',(exitCode,signal)=>{clearTimeout(timer);done({pid:p.pid,exitCode,signal,log,role:allowIdle?'LEASE_SWEEPER':'DELIVERY'});});});workers.push(terminal);
-    if(expectKilled){assert.equal(terminal.signal,'SIGKILL');const census=spawnSync('ps',['-p',String(p.pid),'-o','pid=,ppid=,pgid=,uid=,stat=,command='],{encoding:'utf8'});assert.equal(census.status,1);terminal.reaped={exitCode:census.status,output:census.stdout};}
+    if(expectKilled){assert.equal(terminal.signal,'SIGKILL');const census=await observePhysicalProcess(p.pid,false);terminal.reaped=census;}
     else{assert.equal(terminal.exitCode,0,log);assert.match(log,allowIdle?/"worked":false/:/"worked":true/);}return terminal;
    };
    if(workflowProof==='cancel'){
@@ -142,7 +170,7 @@ export async function proveGovernedDispatch(f:any,obligation:any,api:any,admin:a
     await new Promise(done=>setTimeout(done,5600));const swept=await worker(false,true);assert.match(swept.log,/"recovered":1/);const parked=(await graph())[0];assert.equal(parked.status,'waiting_observation');assert.equal(parked.dispatch_generation,queued[0].dispatch_generation);assert.equal(parked.job_status,'queued');assert(parked.run_at.getTime()>Date.now());
    }
    else{assert.equal(waiting[0].status,'waiting_observation',JSON.stringify(waiting));assert.equal(waiting[0].job_status,'queued');assert.equal(waiting[0].evidence.settlementEstablished,false);}assert.equal(requests.filter(r=>r.method==='PATCH').length,1);assert.equal(current.fields.priceAdjustmentFraction,0.15);
-   const previous=processHandle!,killedPid=previous.pid;await stop('SIGKILL');assert.equal(previous.signalCode,'SIGKILL');const reaped=spawnSync('ps',['-p',String(killedPid),'-o','pid='],{encoding:'utf8'});assert.equal(reaped.status,1);await start();await configureTransport();
+   const previous=processHandle!,killedPid=previous.pid;await stop('SIGKILL');assert.equal(previous.signalCode,'SIGKILL');const reaped=await observePhysicalProcess(killedPid,false);await start();await configureTransport();
    let partialRead:any=null;
    if(workflowProof==='crash'){
     assert.equal(request.ir.members.length,2);const before=await protectedHistory();assert.equal(before.filter((r:any)=>r.event.type==='ATTEMPT').length,1);
@@ -164,7 +192,7 @@ export async function proveGovernedDispatch(f:any,obligation:any,api:any,admin:a
    }
    const claims=(await admin.query('SELECT * FROM finnor_os.workflow_step_claims WHERE tenant_id=$1 AND workflow_step_id=$2',[f.tenant,scheduled.body.workflowStepId])).rows;assert.equal(claims.length,1);assert(claims[0].job_delivery_attempt_id);const deliveries=(await admin.query('SELECT * FROM finnor_os.job_delivery_attempts WHERE tenant_id=$1 ORDER BY started_at',[f.tenant])).rows;assert.equal(deliveries.length,4);assert.equal(new Set(workers.map(w=>w.pid)).size,workflowProof==='crash'?5:4);
    const native=(await admin.query('SELECT st.status,r.status AS reservation_status,r.envelopes,e.status AS effect_status,d.status AS action_status FROM finnor_os.s5_consumption_states st JOIN finnor_os.s5_consumptions co USING(tenant_id,consumption_id) JOIN finnor_os.s5_reservations r USING(tenant_id,reservation_id) JOIN finnor_os.s6_obligation_origins o ON o.tenant_id=st.tenant_id AND o.consumption_id=st.consumption_id JOIN finnor_os.business_effects e ON e.tenant_id=o.tenant_id AND e.id=o.effect_id JOIN finnor_os.domain_actions d ON d.tenant_id=o.tenant_id AND d.id=o.domain_action_id WHERE st.tenant_id=$1',[f.tenant])).rows;assert.equal(native[0].status,'RECONCILED');assert.equal(native[0].effect_status,'verified');assert.equal(native[0].action_status,'completed');assert.notEqual(native[0].reservation_status,'RELEASED');assert.deepEqual(native[0].envelopes,obligation.resourceEnvelope);
-   const proof={scheduled,replay,queued,conflict,waiting,killedPid,reaped:{exitCode:reaped.status,output:reaped.stdout},restartedPid:processHandle!.pid,workers,claims,deliveries,after:await graph(),requests,authorityCalls,current,providerRecords:[...providerRecords.values()],partialRead,finalHistory,native,sourceDigests,qualification:'ACTUAL_NATIVE_QUEUE_WORKER_PROCESSES_AND_PROTECTED_READBACK; DISPOSABLE_LOCAL_TLS_PROVIDER_AND_AUTHORITY'};await artifact(`workflow-${workflowProof}.json`,proof);return proof;
+   const proof={scheduled,replay,queued,conflict,waiting,killedPid,reaped,restartedPid:processHandle!.pid,workers,claims,deliveries,after:await graph(),requests,authorityCalls,current,providerRecords:[...providerRecords.values()],partialRead,finalHistory,native,sourceDigests,qualification:'ACTUAL_NATIVE_QUEUE_WORKER_PROCESSES_AND_PROTECTED_READBACK; DISPOSABLE_LOCAL_TLS_PROVIDER_AND_AUTHORITY'};await artifact(`workflow-${workflowProof}.json`,proof);return proof;
   }
   if(revokeBeforeDispatch){
    const mechanicallyVerified=await call('/verify-request',request);assert.equal(mechanicallyVerified.status,200,JSON.stringify(mechanicallyVerified));
@@ -187,10 +215,10 @@ export async function proveGovernedDispatch(f:any,obligation:any,api:any,admin:a
   if(recoveryBudgetProof){
    readFault='WRONG_RECORD';const responses=[];
    for(let n=0;n<64;n++){const response=await call('/reconcile',input);assert.equal(response.status,200,JSON.stringify(response));assert.equal(response.body.status,'UNRESOLVED');responses.push(response);}
-   const exhaustedBeforeRestart=await protectedHistory();const before=processHandle!,killedPid=before.pid;await stop('SIGKILL');const census=spawnSync('ps',['-p',String(killedPid),'-o','pid=,ppid=,stat='],{encoding:'utf8'});assert.equal(before.signalCode,'SIGKILL');assert.equal(census.status,1);await start();await configureTransport();
+   const exhaustedBeforeRestart=await protectedHistory();const before=processHandle!,killedPid=before.pid;await stop('SIGKILL');assert.equal(before.signalCode,'SIGKILL');const census=await observePhysicalProcess(killedPid,false);await start();await configureTransport();
    for(let n=0;n<3;n++){const response=n===0?await api(f,'reconcile-request',input,POST):await call('/reconcile',input);assert.equal(response.status,200,JSON.stringify(response));assert.equal(response.body.status,'UNRESOLVED');responses.push(response);}
    const after=await protectedHistory(),native=(await admin.query('SELECT st.status,r.status AS reservation_status,r.envelopes FROM finnor_os.s5_consumption_states st JOIN finnor_os.s5_consumptions co USING(tenant_id,consumption_id) JOIN finnor_os.s5_reservations r USING(tenant_id,reservation_id) WHERE st.tenant_id=$1',[f.tenant])).rows;
-   const proof={input,accepted,uncertain,responses,requests,authorityCalls,exhaustedBeforeRestart,after,killedPid,restartedPid:processHandle!.pid,census:{exitCode:census.status,output:census.stdout},native,sourceDigests,qualification:'64_ACTUAL_LOCAL_TLS_READS_AND_COLD_PROTECTED_RECOVERY; NO_S5_MONETARY_METERING_OR_PRODUCTION_ADMISSION'};await artifact('protected-recovery-budget.json',proof);
+   const proof={input,accepted,uncertain,responses,requests,authorityCalls,exhaustedBeforeRestart,after,killedPid,restartedPid:processHandle!.pid,census,native,sourceDigests,qualification:'64_ACTUAL_LOCAL_TLS_READS_AND_COLD_PROTECTED_RECOVERY; NO_S5_MONETARY_METERING_OR_PRODUCTION_ADMISSION'};await artifact('protected-recovery-budget.json',proof);
    assert.equal(requests.filter(r=>r.method==='GET').length,64,'Protected recovery exceeded 64 actual provider observations');assert.equal(requests.filter(r=>r.method==='PATCH').length,1);
    const claims=after.filter((r:any)=>r.event.type==='RECONCILIATION'&&r.event.detail.kind==='OBSERVATION_ATTEMPT');assert.equal(claims.length,64);assert.equal(new Set(claims.map((r:any)=>r.event.detail.observationOrdinal)).size,64);
    const exhausted=after.filter((r:any)=>r.event.type==='RECONCILIATION'&&r.event.detail.kind==='OBSERVATION_BUDGET_EXHAUSTED');assert.equal(exhausted.length,1);assert.equal(exhausted[0].event.detail.status,'REQUIRES_OPERATOR');
@@ -198,7 +226,7 @@ export async function proveGovernedDispatch(f:any,obligation:any,api:any,admin:a
    for(const [index,request] of requests.filter(r=>r.method==='GET').entries()){assert.equal(claims[index].event.detail.observationOrdinal,index+1);assert(Date.parse(claims[index].receipt.appendAt)<=Date.parse(request.at),'An observation left without its durable protected claim');}
    return proof;
   }
-  const killedProcess=processHandle!,killedPid=killedProcess.pid,beforeKill=spawnSync('ps',['-p',String(killedPid),'-o','pid=,ppid=,pgid=,uid=,stat=,command='],{encoding:'utf8'});assert.equal(beforeKill.status,0);await stop('SIGKILL');const afterKill=spawnSync('ps',['-p',String(killedPid),'-o','pid=,ppid=,pgid=,uid=,stat=,command='],{encoding:'utf8'});assert.equal(killedProcess.signalCode,'SIGKILL');assert.equal(afterKill.status,1);const originalHistory=await readFile(pathOf('protected/commitments.jsonl'),'utf8'),priorPin={releaseId:releaseBody.releaseId,verifierDigest:hash(sourceDigests),policyDigest:hash(ledgerPolicy)};
+  const killedProcess=processHandle!,killedPid=killedProcess.pid,beforeKill=await observePhysicalProcess(killedPid,true);await stop('SIGKILL');const afterKill=await observePhysicalProcess(killedPid,false);assert.equal(killedProcess.signalCode,'SIGKILL');const originalHistory=await readFile(pathOf('protected/commitments.jsonl'),'utf8'),priorPin={releaseId:releaseBody.releaseId,verifierDigest:hash(sourceDigests),policyDigest:hash(ledgerPolicy)};
   Object.assign(releaseBody,{releaseId:'disposable-governed-dispatch-recovery'});
   const saveDeployment=async()=>secret('ledger.json',JSON.stringify({policy:ledgerPolicy,release:{...releaseBody,signature:sign(null,Buffer.from(canonical(releaseBody)),reviewer.privateKey).toString('base64')},signerPath:pathOf('ledger-key.pem'),protectedDirectory:pathOf('protected'),contentDirectory:pathOf('ordinary'),dispatchConfigPath:pathOf('broker.json'),port:0}));
   await saveDeployment();await assert.rejects(start(),/HISTORICAL_RELEASE_UNADMITTED_HISTORY_RETAINED/);const incompatibleBoot=logs;assert.equal(await readFile(pathOf('protected/commitments.jsonl'),'utf8'),originalHistory);
@@ -225,7 +253,7 @@ export async function proveGovernedDispatch(f:any,obligation:any,api:any,admin:a
   const witness=authorityWitnesses[0],assessment=witness.event.detail.assessment,{signature:ownerSignature,...ownerBody}=assessment;assert(verify(null,Buffer.from(canonical(ownerBody)),publicPem(ownerKey),Buffer.from(ownerSignature,'base64')),'Protected assessment signature does not authenticate the native owner');
   assert.deepEqual(assessment,authorityCalls.filter(c=>c.operation==='check-dispatch').at(-1).assessment);assert(Date.parse(witness.receipt.appendAt)<=Date.parse(wire.at));assert(Date.parse(assessment.validUntil)>Date.parse(wire.at));
   const attempt=history.find((r:any)=>r.event.type==='ATTEMPT');assert(attempt);assert(witness.receipt.sequence>attempt.receipt.sequence);assert(witness.receipt.parentCheckpoints.includes(attempt.receipt.checkpointDigest));
-  steps.push({substituted,foreign,producerAppend,accepted,uncertain,killedPid,kill:{signal:killedProcess.signalCode,exitCode:killedProcess.exitCode,before:{exitCode:beforeKill.status,output:beforeKill.stdout},after:{exitCode:afterKill.status,output:afterKill.stdout}},restartedPid:processHandle!.pid,wrong,cleared,recovered,duplicate,read,reconciled,replay,native});
+  steps.push({substituted,foreign,producerAppend,accepted,uncertain,killedPid,kill:{signal:killedProcess.signalCode,exitCode:killedProcess.exitCode,before:beforeKill,after:afterKill},restartedPid:processHandle!.pid,wrong,cleared,recovered,duplicate,read,reconciled,replay,native});
   const nativeHandoff=await api(f,'read-execution-handoff',{obligationRef:obligation.ref},POST);assert.equal(nativeHandoff.status,200,JSON.stringify(nativeHandoff));assert.equal(nativeHandoff.body.handoff.consumer.semanticOwner,'S6');
   const downstream=await call('/execution-handoff/'+encodeURIComponent(obligation.ref.id),undefined,consumerToken);assert.equal(downstream.status,200,JSON.stringify(downstream));
   assert(verify(null,Buffer.from(canonical(downstream.body.handoff)),publicPem(ledgerKey),Buffer.from(downstream.body.signature,'base64')));assert.deepEqual(downstream.body.handoff.history,history);assert.deepEqual(downstream.body.handoff.request,request);assert.equal(downstream.body.handoff.consumer.semanticOwner,'S7');assert.equal(downstream.body.handoff.attributionGranted,false);
