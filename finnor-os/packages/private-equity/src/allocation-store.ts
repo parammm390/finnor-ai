@@ -7,7 +7,7 @@ import {LedgerFault} from '../../governed-execution/src/protocol';
 import { epistemicHash } from '../../epistemic-runtime/src/source-precedence';
 import { enqueueOwnerDeliveryInTransaction } from '../../governed-execution/src/owner-delivery-store';
 import type { PeMutationContext } from './types';
-import {planInstitutionDemandCharge,type InstitutionResourceDemand} from './institution-program/resource-demand';
+import {planInstitutionDemandCharge,type InstitutionResourceDemand,type InstitutionChargeRequest} from './institution-program/resource-demand';
 import {validateBeliefViewPin} from './enterprise-beliefs';
 
 const actor=(ctx:PeMutationContext)=>ctx.auth.employeeId??ctx.auth.userId;
@@ -133,7 +133,7 @@ export async function reserveInstitutionDemand(ctx:PeMutationContext,demand:Inst
     ||demand.tenantId!==ctx.auth.tenantId||demand.principalId!==actor(ctx))throw denied();
   const requestDigest=epistemicHash(demand);
   const {demandDigest,...preimage}=demand;
-  if(demandDigest!==createHash('sha256').update(JSON.stringify(preimage)).digest('hex'))throw denied();
+  if(demandDigest!==epistemicHash(preimage))throw denied();
   await currentInstitutionMandate(ctx,c,demand.workId,demand.institutionId,demand.originalDeadline);
   if(demand.lines.every(line=>line.quantity==='0'))
     throw new AllocationContractError('INVALID_REQUEST','S5 cannot reserve an empty institution resource occupation');
@@ -196,11 +196,13 @@ export async function reserveInstitutionDemand(ctx:PeMutationContext,demand:Inst
   return {reservation,semanticReplay:false,currentUseAllowed:true};
  });
 }
-export async function chargeInstitutionDemand(ctx:PeMutationContext,ref:ExperimentRef,request:{
- responsibilityIdentity:string;phase:'EXECUTION'|'RECOVERY'|'HUMAN';ordinal:number;units:number;
-}){
+export async function chargeInstitutionDemand(ctx:PeMutationContext,ref:ExperimentRef,request:InstitutionChargeRequest){
  return locked(ctx,async c=>{
   const r=await institutionState(ctx,c,ref);
+  if(!(await c.query<{allowed:boolean}>(
+    'SELECT finnor_os.x1_s5_charge_authorized($1::jsonb,$2) AS allowed',
+    [JSON.stringify(r),request.responsibilityIdentity])).rows[0]?.allowed)
+    throw new AllocationContractError('BLOCKED_AUTHORITY','X1 charge has no current checked duty in the original Work envelope');
   const rows=(await c.query(`SELECT ch.body FROM finnor_os.s5_governed_resource_charges ch
     JOIN finnor_os.s5_consumptions co ON co.tenant_id=ch.tenant_id AND co.consumption_id=ch.consumption_id
     WHERE ch.tenant_id=$1 AND ch.reservation_id=$2 AND co.principal_id=$3 ORDER BY ch.created_at,ch.charge_key LIMIT 513`,
@@ -349,7 +351,6 @@ export async function readAllocationConsumptions(ctx:PeMutationContext,ref:Exper
    ? institutionConsumptions(ctx,c,(await institutionState(ctx,c,ref)).ref)
    : consumptions(ctx,c,ref));
 }
-type InstitutionChargeRequest={responsibilityIdentity:string;phase:'EXECUTION'|'RECOVERY'|'HUMAN';ordinal:number;units:number};
 export function recordAllocationConsumption(ctx:PeMutationContext,reservationRef:ExperimentRef,
   request:InstitutionChargeRequest):ReturnType<typeof chargeInstitutionDemand>;
 export function recordAllocationConsumption(ctx:PeMutationContext,reservationRef:ExperimentRef,

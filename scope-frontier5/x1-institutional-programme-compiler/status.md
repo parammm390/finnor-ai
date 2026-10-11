@@ -379,3 +379,32 @@ Required next action: the host/resource owner must restore sufficient capacity w
 | Financial 100× / $100M / H2 | UNKNOWN/UNPASSED |
 
 The ten-environment, eight-or-more-system-class population, 30-day replay, separate seven-day live soak, original thresholds, comparator/resource/generator contracts, financial floors, and reconstruction requirements are retained in full. No scaled-down fixture replaces them. X2–X5 remain out of scope.
+
+
+## Primary implementation checkpoint — 12 October 2026
+
+The native source writers were stopped after four authoritative inactivity
+failures. Primary is the sole source writer. This checkpoint adds authenticated
+Work submit/read/revise/cancel/resume, the physical compiler job, full artifact
+projection, original S5 Work envelope, S7 compute attribution, additive S8 domain
+port, P7 dependency comparison, all three canonical creation observers, and
+mounted Work review with private cache clearing. These are source changes; no
+positive owner/worker/browser/installed-runtime claim is made.
+
+Scoped backend/P1 and root frontend typechecks passed on recorded cuts. The
+backdated late-creation and JSON-property-order duty-seal regressions failed at
+the intended predicates before repair, then passed. Earlier failures remain
+retained. Migrations 0174 and 0175 have not been applied; the generated bundle
+contains 177 migrations.
+
+Engineering remains INCOMPLETE and release state DESIGNED. Required remaining
+work includes full canonical type/relationship owner coverage, automatic source
+change recognition and lawful currentness/recovery/fallback, the full protected
+qualification harness and packets, actual A–H owner/mounted/installation proofs,
+finite independent scrutiny, reconstruction and sealed handoff. The source
+checkpoint does not establish completion of those contracts.
+
+The shared disk is below the frozen 1.5 GiB live floor and 2.5 GiB final-build
+floor. No peer data is deleted and no live/build loop is started below the floor.
+Protected qualification, admission, activation, operational 100× and financial/H2
+remain separate and unavailable. The goal remains active.

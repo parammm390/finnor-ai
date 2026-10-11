@@ -15,7 +15,9 @@ export async function nativeRequestRow(ctx:PeMutationContext,id:string,c?:PoolCl
    WHERE tenant_id=$1 AND principal_id=$2 AND id=$3${lock?' FOR UPDATE':''}`,
    [ctx.auth.tenantId,principal(ctx),id])).rows[0];
   if(!r)throw unavailable();
-  return r;
+  const fence=r.claim_fence===null?null:Number(r.claim_fence);
+  if(fence!==null&&(!Number.isSafeInteger(fence)||fence<1))throw Error('P1_CLAIM_FENCE_INVALID');
+  return {...r,claim_fence:fence};
  };
  return c?read(c):tx(ctx,read,true);
 }
@@ -34,6 +36,12 @@ export async function assertProgramCurrent(ctx:PeMutationContext,q:ProgramRow|In
   let authenticStop=false;if(stoppedSnapshot&&q.status==='PARTIAL'&&plan?.status==='blocked')authenticStop=!!(await client.query("SELECT l.id FROM finnor_os.work_objective_loops l WHERE l.tenant_id=$1 AND l.id=$2 AND l.work_id=$3 AND l.created_by=$4 AND l.state='blocked' AND EXISTS(SELECT 1 FROM finnor_os.p1_events e WHERE e.tenant_id=$1 AND e.principal_id=$4 AND e.request_id=$5 AND e.generation=$6 AND e.kind='BOUNDED_STOP') AND NOT EXISTS(SELECT 1 FROM finnor_os.work_plan_revisions p WHERE p.tenant_id=$1 AND p.work_id=$3 AND p.status='active')",[q.tenant_id,plan.objective_loop_id,q.work_id,q.principal_id,q.id,q.generation])).rows[0];
   if(!plan||plan.work_input_id!==q.work_input_id||(!['active','completed'].includes(plan.status)&&!authenticStop))throw Error('CANONICAL_PLAN_REVISION_SUPERSEDED');
   if(isInstitutionRequest(q.request)){
+   if(q.request.institution.compilerRequestId){
+    const {compilerRow,assertInstitutionCompilerCurrent}=await import('../institution-program/store');
+    const compiler=await compilerRow(ctx,q.request.institution.compilerRequestId,client);
+    if(['CANCELLED','INVALIDATED'].includes(compiler.status))throw Error('X1_COMPILER_CONTINUATION_FENCED');
+    await assertInstitutionCompilerCurrent(ctx,compiler,compiler.input_manifest?.current,client,lock);
+   }
    const reservation=(await client.query(`SELECT o.body,s.status FROM finnor_os.s5_reservation_origins o
      JOIN finnor_os.s5_reservations s USING(tenant_id,reservation_id)
      WHERE o.tenant_id=$1 AND o.principal_id=$2 AND o.reservation_id=$3`,
@@ -88,7 +96,18 @@ export async function durableNode(ctx:PeMutationContext,q:ProgramRow|Institution
  });
 }
 export async function reserveCandidate(ctx:PeMutationContext,q:ProgramRow){await tx(ctx,async c=>{const charged=await c.query('UPDATE finnor_os.p1_episodes SET candidates_used=candidates_used+1 WHERE id=$1 AND tenant_id=$2 AND principal_id=$3 AND candidates_used<max_candidates AND deadline_at>clock_timestamp() RETURNING candidates_used,max_candidates',[q.episode_id,q.tenant_id,q.principal_id]);if(!charged.rowCount)throw Error('ORIGINAL_CANDIDATE_BOUND_EXHAUSTED');await trace(ctx,q,'CANDIDATE_GRANT_CHARGED',{episodeId:q.episode_id,...charged.rows[0]},c);});}
-export async function enqueueProgram(ctx:PeMutationContext,q:ProgramRow|InstitutionProgramRow,stage:string,c?:PoolClient,delayMs=0){const write=(client:PoolClient)=>client.query("INSERT INTO finnor_os.jobs(tenant_id,type,payload,idempotency_key,lane,protocol_version,retry_safety,run_at) VALUES($1,'run_harness_program_v1',$2::jsonb,$3,'interactive',1,'locally_idempotent',clock_timestamp()+$4::int*interval '1 millisecond') ON CONFLICT(idempotency_key) DO NOTHING",[q.tenant_id,stable({tenantId:q.tenant_id,principalId:q.principal_id,programId:q.id,generation:q.generation,stage}),'p1:'+q.id+':'+q.generation+':'+stage,delayMs]);return c?write(c):tx(ctx,write);}
+export async function enqueueProgram(ctx:PeMutationContext,q:ProgramRow|InstitutionProgramRow,stage:string,c?:PoolClient,delayMs=0){
+ const institution=isInstitutionRequest(q.request);
+ const write=(client:PoolClient)=>client.query(`INSERT INTO finnor_os.jobs
+  (tenant_id,type,payload,idempotency_key,lane,protocol_version,retry_safety,run_at)
+  VALUES($1,$2,$3::jsonb,$4,'interactive',1,$5,clock_timestamp()+$6::int*interval '1 millisecond')
+  ON CONFLICT(idempotency_key) DO NOTHING`,
+ [q.tenant_id,institution?'run_x1_institution_continuation_v1':'run_harness_program_v1',
+  stable({tenantId:q.tenant_id,principalId:q.principal_id,programId:q.id,generation:q.generation,stage}),
+  (institution?'x1:':'p1:')+q.id+':'+q.generation+':'+stage,
+  institution?'reconcilable':'locally_idempotent',delayMs]);
+ return c?write(c):tx(ctx,write);
+}
 export async function readCurrentProgram(ctx:PeMutationContext,id:string){
  const q=await requestRow(ctx,id);await authorize(ctx,q.request.root,[{type:'work',id:q.work_id}]);
  if(['CANCELLED','INVALIDATED'].includes(q.status))return {programId:q.id,workId:q.work_id,workRevision:q.work_input_id,status:q.status,program:null,reason:q.failure,incurredCosts:terminalCostSummary(await episodeCosts(ctx,q))};

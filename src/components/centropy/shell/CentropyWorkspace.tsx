@@ -5,6 +5,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { ArrowRight, Globe2, History, LockKeyhole, LogOut, PanelsTopLeft, Plus, Settings } from "lucide-react"
 import { useCentropyAuth } from "@/components/centropy/lib/centropy-auth"
+import { usePrivateRequestScope } from "@/components/centropy/lib/use-private-request-scope"
 import { centropyGet, centropyPost, CentropyApiError } from "@/components/centropy/lib/api"
 import { readPeOperatingContext } from "@/components/centropy/pe/context-routing"
 import { isPeWorldRootRef, type CompanyBrainNode, type CompanyBrainObjectRef, type PeWorldRootRef } from "@/components/centropy/pe/contracts"
@@ -57,6 +58,11 @@ function formatDate(value: string): string {
 }
 
 export function CentropyWorkspace() {
+  const scope = usePrivateRequestScope("centropy-workspace")
+  return <CentropyWorkspaceContent key={scope.key} />
+}
+
+function CentropyWorkspaceContent() {
   const pathname = usePathname()
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -93,6 +99,7 @@ export function CentropyWorkspace() {
   const investigation = useInvestigation(threadId, ready, refreshToken)
   const [recent, setRecent] = useState<ConversationThreadSummary[]>([])
   const [recentError, setRecentError] = useState<string | null>(null)
+  const recentGeneration = useRef(0)
   const [busy, setBusy] = useState(false)
   const [stopping, setStopping] = useState(false)
   const [pending, setPending] = useState<PendingTurn | null>(null)
@@ -143,9 +150,15 @@ export function CentropyWorkspace() {
   }, [selectionKey, routeSelection, routeClearsContext])
 
   const refreshRecent = useCallback(async () => {
+    const generation = ++recentGeneration.current
+    setRecent([])
     if (!ready) return
-    try { setRecent(await listInvestigations()); setRecentError(null) }
-    catch (cause) { setRecentError(cause instanceof Error ? cause.message : "Investigations are unavailable") }
+    try {
+      const next = await listInvestigations()
+      if (recentGeneration.current === generation) { setRecent(next); setRecentError(null) }
+    } catch (cause) {
+      if (recentGeneration.current === generation) { setRecent([]); setRecentError(cause instanceof Error ? cause.message : "Investigations are unavailable") }
+    }
   }, [ready])
 
   useEffect(() => { void refreshRecent() }, [refreshRecent])

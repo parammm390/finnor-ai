@@ -30,6 +30,10 @@ export async function runHarnessProgramJob(payload:Record<string,unknown>,execut
  if(incoming.generation!==payload.generation||['TESTED','CANCELLED','INVALIDATED'].includes(incoming.status))return;
  if(typeof payload.stage==='string'&&payload.stage.startsWith('native-wait-deadline:')&&incoming.status!=='WAITING')return;
  if(isInstitutionRequest(incoming.request)){
+  if(incoming.status==='WAITING'&&incoming.head_id){
+   await enqueueProgram(ctx,incoming,'old-job-observe-'+execution.jobId);
+   return;
+  }
   await runInstitutionHarnessJob(ctx,incoming as InstitutionProgramRow,execution);
   return;
  }
@@ -161,4 +165,20 @@ program.semanticBindings=[{producer:'P4',id:d.id,schema:d.schema,resultDigest:d.
   });
  }catch(error){const predicate=safePredicate(error);await tx(ctx,async c=>{const current=await requestRow(ctx,q.id,c,true);await trace(ctx,q,'FAILED_OR_FENCED',{predicate,jobId:execution.jobId,deliveryAttemptId:execution.deliveryAttemptId,claimFence:execution.claimFence,costUSD:null,acceptanceUnchanged:true},c);if(executedProgram&&current.generation===q.generation&&current.status==='RUNNING'&&current.claim_token===q.claim_token){executedProgram.status='FAILED';executedProgram.result=null;await persistProgrammeHead(ctx,q,executedProgram,'FAILED',predicate,c);}
    if(current.generation===q.generation&&!['CANCELLED','TESTED'].includes(current.status)){await c.query("UPDATE finnor_os.p1_requests SET status=$4,failure=$5,updated_at=clock_timestamp() WHERE tenant_id=$1 AND principal_id=$2 AND id=$3",[q.tenant_id,q.principal_id,q.id,/REVISION|FENCED|SOURCE_CHANGED|SCHEMA_CHANGED|SUPERSEDED/.test(predicate)?'INVALIDATED':'FAILED',predicate]);await invalidateUnstartedProgramSearch(ctx,current,c);}});}
+}
+
+/** Registered physical X1 handler. The shared P1 entry retains old analytical
+ * jobs, while this type cannot be claimed by old workers. */
+export async function runX1InstitutionContinuationJob(payload:Record<string,unknown>,execution?:Readonly<JobExecutionContext>):Promise<void>{
+ if(!execution||execution.protocolVersion!==1||execution.retrySafety!=='reconcilable')
+  throw Error('X1_PHYSICAL_CONTINUATION_CLAIM_REQUIRED');
+ if(typeof payload.tenantId!=='string'||typeof payload.principalId!=='string'
+   ||typeof payload.programId!=='string'||payload.tenantId!==execution.tenantId)
+  throw Error('X1_PHYSICAL_CONTINUATION_PAYLOAD_REQUIRED');
+ const ctx:PeMutationContext={auth:{tenantId:payload.tenantId,userId:payload.principalId,
+  employeeId:payload.principalId,role:'owner'},provenance:{sourceSystem:'X1:owner-continuation',createdBy:payload.principalId}};
+ const row=await nativeRequestRow(ctx,payload.programId);
+ if(!isInstitutionRequest(row.request))throw Error('X1_TYPED_INSTITUTION_REQUEST_REQUIRED');
+ if(row.generation!==payload.generation||['OBSERVED','CANCELLED','INVALIDATED'].includes(row.status))return;
+ await runInstitutionHarnessJob(ctx,row as InstitutionProgramRow,execution);
 }

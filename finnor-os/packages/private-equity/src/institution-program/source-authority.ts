@@ -8,6 +8,7 @@ import { originalRawRecords } from "./checker-raw";
 import { acquireInstalledMailOriginal } from "./installed-source";
 import type { OriginalInstitutionEvidence } from "./checker";
 import type { DigitalInstitutionProfile } from "./contracts";
+import { recordInstitutionSourceAttempt } from "./meter";
 
 type Source = OriginalInstitutionEvidence["sources"][number];
 export type OwnerOriginal = Source & {
@@ -16,6 +17,7 @@ export type OwnerOriginal = Source & {
   /** Server-side retention time of the pinned Core version or acquisition
    * receipt; the knowledge cut binds to it, never to caller input. */
   retainedAt: string;
+  sensitiveSubjectRegistrations?:string[];
 };
 const digest = (bytes: Buffer) => createHash("sha256").update(bytes).digest("hex");
 const sensitive = (sourceClass: string) =>
@@ -34,6 +36,7 @@ type Grant = {
 export async function acquireInstitutionOriginal(
   ctx: PeMutationContext, workId: string, grantId: string, profile: DigitalInstitutionProfile,
 ): Promise<OwnerOriginal> {
+  await recordInstitutionSourceAttempt(grantId);
   const principal = ctx.auth.userId;
   await authorizeBeliefResources(ctx, [{ type: "tenant", id: ctx.auth.tenantId }, { type: "work", id: workId }]);
   const grant = await withTenantTransaction(ctx.auth.tenantId, {
@@ -131,6 +134,7 @@ export async function acquireInstitutionOriginal(
   if (!source.coverage.complete) throw new Error("X1_SOURCE_COVERAGE_INCOMPLETE");
   if (sensitive(row.source_class)) {
     await verifySubjectConsent(ctx, source, rows, profile);
+    source.sensitiveSubjectRegistrations=[...new Set(rows.map(item=>item.registrationId!))].sort();
     // Compatibility witness for the original-byte checker. Only owner reads
     // can issue it; admission rechecks the actual rows, not this string.
     source.sensitiveConsentRef = `owner-current:${digest(Buffer.from(JSON.stringify([

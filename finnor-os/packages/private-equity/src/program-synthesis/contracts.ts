@@ -66,7 +66,8 @@ export const InstitutionHarnessRequestSchema=z.object({
   actions:z.array(z.object({responsibilityIdentity:z.string().min(1),
     operation:z.enum(['create_deal_request','open_workstream','record_finding']),
     payload:z.record(z.unknown()),expectedEntityId:uuid,postconditionDigest:z.string().regex(/^[a-f0-9]{64}$/),
-  }).strict()).max(40).optional(),
+  }).strict()).max(128).optional(),
+  compilerRequestId:uuid.optional(),
  }).strict(),
 }).strict();
 export type InstitutionHarnessRequest=z.infer<typeof InstitutionHarnessRequestSchema>;
@@ -105,6 +106,8 @@ export interface InstitutionHarnessProgram {
  costs:HarnessProgram['costs'];runtime:HarnessProgram['runtime'];
  status:'PROPOSED'|'WAITING'|'PARTIAL'|'FAILED'|'OBSERVED';
  observedPostconditions:Array<{stableIdentity:string;canonicalRef:string;observerDigest:string}>;
+ deliveryCursor?:number;
+ interventions?:Array<{stableIdentity:string;predicate:string;possibleEffect:boolean}>;
  executionAuthorityGranted:false;
 }
 export type NativeHarnessProgram=HarnessProgram|InstitutionHarnessProgram;

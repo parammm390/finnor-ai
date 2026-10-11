@@ -8,6 +8,7 @@ import type {PeMutationContext} from '../types';
 import {authorize,principal,sha,tx} from '../evidence-execution/store';
 import {isInstitutionRequest,type HarnessRequest,type InstitutionHarnessRequest,type OwnerOperation,type InstitutionHarnessProgram} from './contracts';
 import type {ProgramRow,InstitutionProgramRow} from './store';
+import {supportsInstitutionCompletion} from '../institution-program/completion-contracts';
 
 export async function resolveEconomicBindings(ctx:PeMutationContext,request:HarnessRequest|InstitutionHarnessRequest,cut:{programId:string;workId:string;inputId:string;validAt:string;knowledgeAt:string}){const refs=[];
  if(isInstitutionRequest(request)){
@@ -30,6 +31,9 @@ export async function executeOwnerOperation(ctx:PeMutationContext,q:ProgramRow|I
     ||!q.proposed.nodes.some(node=>node.id===operation.node.id
       &&sha(node)===sha(operation.node)))throw Error('X1_P1_DUTY_NOT_IN_CHECKED_PROGRAMME');
   const node=operation.node;
+  if(!supportsInstitutionCompletion(node.operation,node.postconditionRef,node.observerRef))
+   return {status:'STOP',value:{reason:'X1_COMPLETION_CONTRACT_NOT_REGISTERED',stableIdentity:node.stableIdentity,
+    originalDeadline:node.deadlineAt,goalSuccess:false}};
   if(!node.action)return {status:'STOP',value:{reason:'X1_EXACT_ACTION_PAYLOAD_MISSING',
    stableIdentity:node.stableIdentity,originalDeadline:node.deadlineAt,
    reservationRef:q.proposed.reservationRef,goalSuccess:false}};

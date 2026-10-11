@@ -30,6 +30,7 @@ function registeredOperations(path, name) {
   return operations
 }
 const delegatedRegistries = [
+  ["INSTITUTION_OPERATIONS", "institution-program/api.ts"],
   ["EVIDENCE_OPERATIONS", "evidence-execution/api.ts"],
   ["PROGRAM_OPERATIONS", "program-synthesis/api.ts"],
   ["COMPUTE_SEARCH_OPERATIONS", "compute-search/api.ts"],
@@ -62,6 +63,7 @@ const companyBrainOperations = [...new Set([
   }),
 ])]
 const companyBrainReads = new Set([
+  "institution-read", "institution-status", "institution-witness", "institution-sources",
   "belief-view", "belief-pin", "roots", "projection", "search", "object", "traverse",
   "provenance", "history", "evidence-lineage", "decision-lineage", "available-actions", "context",
   "evidence-handles", "evidence-read", "evidence-witness",

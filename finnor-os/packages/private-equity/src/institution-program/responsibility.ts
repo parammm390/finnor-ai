@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import type { DigitalInstitutionProfile } from "./contracts";
 import type { InstitutionCandidate, InstitutionCheck, OriginalInstitutionEvidence } from "./checker";
+import { institutionDigest as hash } from "./canonical-json";
 
 export const X1_RESPONSIBILITY_VERSION = "institution-responsibility-v1";
 const observerEntity = {
@@ -8,7 +9,7 @@ const observerEntity = {
   open_workstream: "pe_workstream",
   record_finding: "pe_finding",
 } as const;
-const hash = (value: unknown) => createHash("sha256").update(JSON.stringify(value)).digest("hex");
+const originalDigest = (value: unknown) => createHash("sha256").update(JSON.stringify(value)).digest("hex");
 const witness = (sourceId: string, recordId: string) => `${sourceId}/${recordId}`;
 export type InstitutionObligationPreimage = {
   tenantId: string; institutionId: string; mandateId: string; ruleId: string;
@@ -59,8 +60,8 @@ type Input = {
 export function deriveInstitutionResponsibilities(input: Input) {
   const { original, candidate, check, admittedCanonicalRefs, authorizedOperations, profile } = input;
   if (candidate.obligations.length > profile.bounds.derivedObligations) throw new Error("X1_DERIVED_OBLIGATION_BOUND");
-  if (check.disposition !== "ACCEPTED_DEVELOPMENT" || check.inputDigest !== hash(original)
-      || check.candidateDigest !== hash(candidate) || check.profileDigest !== hash(profile)
+  if (check.disposition !== "ACCEPTED_DEVELOPMENT" || check.inputDigest !== originalDigest(original)
+      || check.candidateDigest !== originalDigest(candidate) || check.profileDigest !== originalDigest(profile)
       || check.checkerRevision !== original.current.checkerRevision
       || check.obligationDenominator !== candidate.obligations.length) {
     throw new Error("X1_CHECK_NOT_ACCEPTED_FOR_CANDIDATE");

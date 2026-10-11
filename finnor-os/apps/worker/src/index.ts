@@ -1,6 +1,8 @@
 import {handleBranch} from '@finnor/private-equity/src/branch-fabric/worker';
 import {runComputeSearchUnitJob} from '@finnor/private-equity/src/compute-search/worker';
 import {runHarnessProgramJob} from '@finnor/private-equity/src/program-synthesis/worker';
+import {runX1InstitutionContinuationJob} from '@finnor/private-equity/src/program-synthesis/worker';
+import {runInstitutionCompilerJob} from '@finnor/private-equity/src/institution-program/worker';
 import {runInterfaceAcquisitionJob} from '@finnor/private-equity/src/interface-synthesis/worker';
 import {runProgrammeContinuationJob} from '@finnor/private-equity/src/live-recompilation/worker';
 import {runProcedureInductionJob} from '@finnor/private-equity/src/procedure-induction/worker';
@@ -60,6 +62,8 @@ export function createWorker(): JobQueue {
   queue.register('run_evidence_derivation_v1',runEvidenceDerivationJob,PRODUCTION_JOB_CONTRACTS.run_evidence_derivation_v1);
   queue.register('run_compute_search_unit_v1',runComputeSearchUnitJob,PRODUCTION_JOB_CONTRACTS.run_compute_search_unit_v1);
   queue.register('run_harness_program_v1',runHarnessProgramJob,PRODUCTION_JOB_CONTRACTS.run_harness_program_v1);
+  queue.register('run_x1_institution_continuation_v1',runX1InstitutionContinuationJob,PRODUCTION_JOB_CONTRACTS.run_x1_institution_continuation_v1);
+  queue.register('run_x1_institution_compiler_v1',runInstitutionCompilerJob,PRODUCTION_JOB_CONTRACTS.run_x1_institution_compiler_v1);
   queue.register("process_instruction", processInstruction, PRODUCTION_JOB_CONTRACTS.process_instruction);
   queue.register("run_workflow_step", runWorkflowStep, PRODUCTION_JOB_CONTRACTS.run_workflow_step);
   // Protocol 2 uses a new physical type so a mixed-deploy protocol-1 worker cannot

@@ -32,6 +32,7 @@ import {handleComputeSearchOperation,COMPUTE_SEARCH_OPERATIONS} from '@finnor/pr
 import {handleDeliberationOperation,DELIBERATION_OPERATIONS} from '@finnor/private-equity/src/deliberation/api';
 import {DeliberationDeadlineError,deliberationTransportDeadline,inDeliberationDeadline} from '@finnor/private-equity/src/deliberation/deadline';
 import {handleProgramOperation,PROGRAM_OPERATIONS} from '@finnor/private-equity/src/program-synthesis/api';
+import {handleInstitutionOperation,INSTITUTION_OPERATIONS} from '@finnor/private-equity/src/institution-program/api';
 import {handleInterfaceOperation,INTERFACE_OPERATIONS} from '@finnor/private-equity/src/interface-synthesis/api';
 import {handleContinuationOperation,CONTINUATION_OPERATIONS} from '@finnor/private-equity/src/live-recompilation/api';
 import {handleProcedureOperation,PROCEDURE_OPERATIONS} from '@finnor/private-equity/src/procedure-induction/api';
@@ -219,6 +220,7 @@ async function dispatchPost(req:Request,route:{operation:string}):Promise<Respon
     if((INTERFACE_OPERATIONS as readonly string[]).includes(route.operation)){const result=await handleInterfaceOperation(ctx,route.operation,body);return response(result.body,result.status);}
     if((DELIBERATION_OPERATIONS as readonly string[]).includes(route.operation)){const result=await handleDeliberationOperation(ctx,route.operation,body);return response(result.body,result.status);}
     if((COMPUTE_SEARCH_OPERATIONS as readonly string[]).includes(route.operation)){const result=await handleComputeSearchOperation(ctx,route.operation,body);return response(result.body,result.status);}
+    if((INSTITUTION_OPERATIONS as readonly string[]).includes(route.operation)){const result=await handleInstitutionOperation(ctx,route.operation,body);return response(result.body,result.status);}
     if((PROGRAM_OPERATIONS as readonly string[]).includes(route.operation)){const result=await handleProgramOperation(ctx,route.operation,body);return response(result.body,result.status);}
     if((EVIDENCE_OPERATIONS as readonly string[]).includes(route.operation)){const result=await handleEvidenceOperation(ctx,route.operation,body);return response(result.body,result.status);}
     switch (route.operation) {

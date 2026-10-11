@@ -8,25 +8,27 @@ import { selectHarnessPlan } from './plan';
 import { assertProgramCurrent, durableNode, enqueueProgram, episodeCosts, nativeRequestRow, persistProgrammeHead, trace,
  type InstitutionProgramRow } from './store';
 import { executeOwnerOperation, resolveEconomicBindings } from './owners';
+import { continueInstitutionProgram } from './institution-continuation';
 
 /** Admission checks existing owner receipts and the original S5 reservation,
  * rather than accepting a caller's `LOWERED` label as owner authority. */
 export async function submitInstitutionHarnessProgram(ctx:PeMutationContext,request:InstitutionHarnessRequest){
- const {programme,responsibilities,unresolved,demand,reservationRef,actions=[]}=request.institution;
+ const {programme,responsibilities,unresolved,demand,reservationRef,actions=[],compilerRequestId}=request.institution;
+ let originalCompilerDeadline:string|null=null;
  if(process.env.NODE_ENV==='production'||process.env.FINNOR_P4_PROFILE!=='ordinary_disposable')
   throw Error('HARNESS_PROTECTED_FUNDING_ADMISSION_AND_RUNTIME_UNAVAILABLE');
  verifyInstitutionDutyPopulation(programme,responsibilities,unresolved);
  if(request.workId!==programme.workId||request.workId!==demand.workId
    ||programme.tenantId!==ctx.auth.tenantId||demand.tenantId!==ctx.auth.tenantId
    ||programme.principalId!==principal(ctx)||demand.principalId!==principal(ctx)
-   ||sha(programme)!==demand.programmeDigest
-   ||programme.parentEnvelope.deadlineAt!==demand.originalDeadline
-   ||responsibilities.length+unresolved.length>128||responsibilities.length>40
+   ||(!compilerRequestId&&sha(programme)!==demand.programmeDigest)
+   ||(!compilerRequestId&&programme.parentEnvelope.deadlineAt!==demand.originalDeadline)
+   ||responsibilities.length+unresolved.length>128
    ||new Set([...responsibilities.map(r=>r.obligation.stableIdentity),
       ...unresolved.map(r=>r.stableIdentity)]).size!==responsibilities.length+unresolved.length
-   ||stable(demand.responsibilityIdentities)!==stable(responsibilities.map(r=>r.obligation.stableIdentity).sort())
-   ||responsibilities.some(r=>r.obligation.responsiblePrincipal!==principal(ctx)
-     ||r.obligation.originalDeadline<demand.originalDeadline)
+   ||(!compilerRequestId&&stable(demand.responsibilityIdentities)!==stable(responsibilities.map(r=>r.obligation.stableIdentity).sort()))
+   ||responsibilities.some(r=>(!compilerRequestId&&r.obligation.responsiblePrincipal!==principal(ctx))
+     ||Date.parse(r.obligation.originalDeadline)<Date.parse(demand.originalDeadline))
    ||actions.some(a=>!responsibilities.some(r=>r.obligation.stableIdentity===a.responsibilityIdentity
      &&r.obligation.permissibleOperationClass===a.operation))
    ||new Set(actions.map(a=>a.responsibilityIdentity)).size!==actions.length)
@@ -42,8 +44,20 @@ export async function submitInstitutionHarnessProgram(ctx:PeMutationContext,requ
    programme.admission.candidateDigest,programme.admission.checkerDigest,
    programme.dutyPopulationDigest])).rows[0],true);
  if(!admission)throw Error('X1_P1_CHECKED_OWNER_ADMISSION_REQUIRED');
+ if(compilerRequestId){
+  const {compilerRow,compilerEpisode,assertInstitutionCompilerCurrent}=await import('../institution-program/store');
+  const owner=await compilerRow(ctx,compilerRequestId),episode=await compilerEpisode(ctx,owner.episode_id);
+  if(!['RUNNING','WAITING','PARTIAL'].includes(owner.status)||owner.work_id!==request.workId
+    ||owner.work_input_id!==request.workInputId||owner.admission_id!==admission.id
+    ||!episode.parent_reservation||stable(episode.parent_reservation)!==stable(reservationRef)
+    ||!episode.parent_demand||stable(episode.parent_demand)!==stable(demand)
+    ||demand.chargeScope?.episodeId!==episode.id||owner.programme_digest!==sha(programme)
+    ||owner.intent_digest!==sha(actions))throw Error('X1_P1_ORIGINAL_COMPILER_BINDING_REQUIRED');
+  await assertInstitutionCompilerCurrent(ctx,owner,owner.input_manifest?.current);
+  originalCompilerDeadline=episode.wall_deadline.toISOString();
+ }
  const mandate=await tx(ctx,async c=>(await c.query<{revision:string;rules:Array<{
-  id:string;operation:string;deadlineAt:string;actionPayload?:unknown;
+  id:string;operation:string;deadlineAt:string;principalId:string;actionPayload?:unknown;
   expectedEntityId?:string;postconditionDigest?:string;
  }>}>(`SELECT revision,rules FROM finnor_os.x1_work_mandates
    WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3 AND institution_id=$4
@@ -53,14 +67,15 @@ export async function submitInstitutionHarnessProgram(ctx:PeMutationContext,requ
  if(mandate.length!==1||responsibilities.some(r=>r.obligation.rule.mandateRevision!==mandate[0]!.revision
    ||!mandate[0]!.rules.some(rule=>rule.id===r.obligation.rule.id
      &&rule.operation===r.obligation.permissibleOperationClass
+     &&rule.principalId===r.obligation.responsiblePrincipal
      &&rule.deadlineAt===r.obligation.originalDeadline))
-   ||actions.some(action=>{
+   ||(!compilerRequestId&&actions.some(action=>{
     const duty=responsibilities.find(r=>r.obligation.stableIdentity===action.responsibilityIdentity);
     const rule=mandate[0]!.rules.find(r=>r.id===duty?.obligation.rule.id);
     return !rule?.actionPayload||stable(rule.actionPayload)!==stable(action.payload)
       ||rule.expectedEntityId!==action.expectedEntityId
       ||rule.postconditionDigest!==action.postconditionDigest;
-   }))throw Error('X1_P1_FROZEN_MANDATE_ACTION_NOT_ESTABLISHED');
+   })))throw Error('X1_P1_FROZEN_MANDATE_ACTION_NOT_ESTABLISHED');
  const digest=sha(request),code=await codeIdentity(),schemaDigest=await schemaIdentity(ctx);
  return tx(ctx,async c=>{
   await c.query('SELECT pg_advisory_xact_lock(hashtextextended($1,4401))',
@@ -79,10 +94,10 @@ export async function submitInstitutionHarnessProgram(ctx:PeMutationContext,requ
   const parentPlan=(await c.query<{id:string}>(`SELECT id::text FROM finnor_os.work_plan_revisions
     WHERE tenant_id=$1 AND work_id=$2 ORDER BY (status='active') DESC,revision DESC LIMIT 1`,
     [ctx.auth.tenantId,request.workId])).rows[0];
-  const episodeDeadline=new Date(Math.min(Date.parse(demand.originalDeadline),Date.now()+3600000)).toISOString();
+  const episodeDeadline=originalCompilerDeadline??new Date(Math.min(Date.parse(demand.originalDeadline),Date.now()+3600000)).toISOString();
   const selected=await selectHarnessPlan(ctx,request,{programId:id,workId:request.workId,
    inputId:work.id,inputDigest,parentRevisionId:parentPlan?.id??null,
-   rightsRevision:Number(resource.reservation.rightsRevision),deadlineAt:demand.originalDeadline});
+   rightsRevision:Number(resource.reservation.rightsRevision),deadlineAt:episodeDeadline});
   const previous=(await c.query(`SELECT * FROM finnor_os.p1_episodes
     WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3`,
     [ctx.auth.tenantId,principal(ctx),request.workId])).rows[0];
@@ -158,6 +173,7 @@ function isInstitutionRow(q:Awaited<ReturnType<typeof nativeRequestRow>>):q is I
 }
 
 export async function runInstitutionHarnessJob(ctx:PeMutationContext,q:InstitutionProgramRow,execution:Readonly<JobExecutionContext>){
+ if(q.status==='WAITING'&&q.head_id)return continueInstitutionProgram(ctx,q,execution);
  let current=q;
  await assertProgramCurrent(ctx,q);
  const valid=await validateInstitutionDemand(ctx,q.proposed.reservationRef);
@@ -165,7 +181,8 @@ export async function runInstitutionHarnessJob(ctx:PeMutationContext,q:Instituti
  current=await tx(ctx,async c=>{
   const row=await nativeRequestRow(ctx,q.id,c,true);
   const claim=(await c.query(`SELECT id FROM finnor_os.jobs WHERE id=$1 AND tenant_id=$2
-    AND type='run_harness_program_v1' AND status='running' AND claim_token=$3
+    AND type IN('run_harness_program_v1','run_x1_institution_continuation_v1')
+    AND status='running' AND claim_token=$3
     AND claim_fence=$4 AND protocol_version=1 FOR SHARE`,
    [execution.jobId,q.tenant_id,execution.claimToken,execution.claimFence])).rows[0];
   if(!claim||row.generation!==q.generation)throw Error('PROGRAM_JOB_CLAIM_FENCED');
@@ -192,13 +209,16 @@ export async function runInstitutionHarnessJob(ctx:PeMutationContext,q:Instituti
   await assertProgramCurrent(ctx,current);
   const outcome=await executeOwnerOperation(ctx,current,{op:'institution_duty',node});
   await durableNode(ctx,current,node.id,outcome);
+  if(outcome.status==='STOP'){
+   node.action=null;
+   head.interventions=[...(head.interventions??[]),{stableIdentity:node.stableIdentity,
+    predicate:String((outcome.value as {reason?:string}).reason??'X1_EXACT_OPERATION_INTERPRETATION_REQUIRED'),possibleEffect:false}];
+  }
   await trace(ctx,current,'INSTITUTION_OWNER_OPERATION',{nodeId:node.id,
    outcome,originalDeadline:node.deadlineAt,reservationRef:head.reservationRef,
    bindings,completed:false,executionAuthorityGranted:false});
-  if(outcome.status!=='DONE')head.status='PARTIAL';
  }
- if(head.institution.unresolved.length||head.nodes.some(n=>!n.action))head.status='PARTIAL';
- else head.status='WAITING';
+ head.status=head.nodes.some(n=>n.action)?'WAITING':'PARTIAL';
  // Neither a P1 node nor an analytical TESTED result may publish OBSERVED.
  await tx(ctx,async(c,db)=>{
   await c.query(`SELECT l.id FROM finnor_os.work_objective_loops l
@@ -212,8 +232,11 @@ export async function runInstitutionHarnessJob(ctx:PeMutationContext,q:Instituti
   if(!claim)throw Error('ATOMIC_PROGRAM_PUBLICATION_FENCED');
   await persistProgrammeHead(ctx,current,head,head.status,
    head.status==='PARTIAL'?'X1_EXACT_ACTION_PAYLOAD_OR_OBSERVER_MISSING':null,c);
-  if(head.status==='WAITING')await (await import('../../../orchestration/src/objective-loop'))
-   .schedulePreparedHarnessObjectiveTx(db,{tenantId:q.tenant_id,workId:q.work_id,planRevisionId:q.plan_revision_id});
+  if(head.status==='WAITING'){
+   await enqueueProgram(ctx,current,'first-canonical-observation',c);
+   await (await import('../../../orchestration/src/objective-loop'))
+    .schedulePreparedHarnessObjectiveTx(db,{tenantId:q.tenant_id,workId:q.work_id,planRevisionId:q.plan_revision_id});
+  }
  });
  }catch(error){
   await tx(ctx,async c=>{

@@ -145,6 +145,12 @@ async function scopedPeTransaction<T>(
             { activeVertical: active.rows[0]?.vertical_key ?? null },
           );
         }
+        // X1 ordinary continuation is revalidated at the actual canonical
+        // mutation. The same transaction holds its source/Work/mandate locks;
+        // compiler/check receipts cannot substitute for current permission.
+        if (!options.readOnly && source.externalId && UUID.test(source.externalId)) {
+          await client.query("SELECT finnor_os.x1_assert_effect_current($1::uuid)", [source.externalId]);
+        }
         return fn(client);
       });
     } catch (error) {

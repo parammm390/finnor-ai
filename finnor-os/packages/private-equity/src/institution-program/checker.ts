@@ -37,6 +37,7 @@ export type OriginalInstitutionEvidence = {
     checkerRevision: string; profileRevision: number; schemaRevision: string; runtimeRevision: string;
     authorizedOperations: string[];
     sourceDigests?: Record<string, string>;
+    sensitiveSubjects?: Array<{sourceId:string;institutionId:string;sourceClass:string;purpose:string;registrations:string[]}>;
   };
 };
 type Mapping = { sourceId: string; recordId: string; canonicalRef: string; registrationId: string };

@@ -4,4 +4,4 @@
  * Keep this beside the migrations so readiness and worker heartbeats cannot drift
  * by carrying independent literals.
  */
-export const CURRENT_MIGRATION_HEAD = "0173_x1_institution_s5_reservations.sql";
+export const CURRENT_MIGRATION_HEAD = "0175_x1_work_compiler.sql";

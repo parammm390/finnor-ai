@@ -14,11 +14,12 @@ import { readAllocationSnapshot } from "../allocation-store";
 import { deriveInstitutionResponsibilities, verifyInstitutionDutyPopulation } from "./responsibility";
 import type { PeMutationContext } from "../types";
 import type { InstitutionCandidate, InstitutionCheck, OriginalInstitutionEvidence } from "./checker";
-import { checkInstitutionInSeparateProcess } from "./checker-process";
+import { checkInstitutionInSeparateProcessAsync } from "./checker-process";
 import { originalRawRecords } from "./checker-raw";
 import { proposeInstitutionModel } from "./reconstruction";
 import type { DigitalInstitutionProfile } from "./contracts";
 import { acquireInstitutionOriginal, readInstitutionMandate, type OwnerOriginal } from "./source-authority";
+import { installedInstitutionCompilerIdentity } from "../../../capability-evolution/src/institution-port";
 
 type Source = OriginalInstitutionEvidence["sources"][number];
 export type RetainedOriginalSource = OwnerOriginal;
@@ -102,6 +103,7 @@ export async function loadInstitutionAdmissionOriginal(
     })) allowed.push(operation);
   }
   const s5 = await readAllocationSnapshot(ctx);
+  const method=await installedInstitutionCompilerIdentity();
   // The knowledge cut binds to the server-side retention facts (Core version
   // or acquisition receipt), so an identical owner state replays to an
   // identical digest and a caller can never supply or shift the cut.
@@ -114,9 +116,12 @@ export async function loadInstitutionAdmissionOriginal(
     current: {
       sourceRevisions: Object.fromEntries(retained.map((source) => [source.id, source.revision])),
       sourceDigests: Object.fromEntries(retained.map((source) => [source.id, source.originalSha256])),
+      sensitiveSubjects:retained.filter(source=>source.sensitiveSubjectRegistrations).map(source=>({
+        sourceId:source.id,institutionId:source.institutionId,sourceClass:source.sourceClass,
+        purpose:source.purpose,registrations:source.sensitiveSubjectRegistrations!})),
       mandateRevision: mandate.revision, canonicalRevision: "", rightsRevision,
       resourceRevision: s5.snapshotDigest,
-      methodRevision: "S8_OWNER_CURRENTNESS_PENDING",
+      methodRevision: method.ref.contentDigest,
       operationRevision: sha(JSON.stringify([rightsRevision, allowed])),
       checkerRevision: sha(Buffer.concat([readFileSync(checkerPath), readFileSync(checkerRawPath)])),
       profileRevision: profile.revision, schemaRevision: await withTenantTransaction(ctx.auth.tenantId,
@@ -237,15 +242,16 @@ export interface AcceptedInstitutionMappingRef {
 export async function reconstructAndAdmitInstitutionSources(
   ctx: PeMutationContext, workId: string, grantIds: string[], profile: DigitalInstitutionProfile,
 ): Promise<{ mappings: AcceptedInstitutionMappingRef[];
-  unresolved: NonNullable<InstitutionCandidate["unresolved"]>; check: InstitutionCheck }> {
+  unresolved: NonNullable<InstitutionCandidate["unresolved"]>; check: InstitutionCheck;
+  original: OriginalInstitutionEvidence; candidate: InstitutionCandidate }> {
   const { original } = await loadInstitutionAdmissionOriginal(ctx, workId, grantIds, profile);
   const candidate = await proposeInstitutionModel(original, profile);
-  const check = checkInstitutionInSeparateProcess(original, candidate, profile);
+  const check = await checkInstitutionInSeparateProcessAsync(original, candidate, profile);
   if (check.disposition !== "ACCEPTED_DEVELOPMENT") {
-    return { mappings: [], unresolved: candidate.unresolved ?? [], check };
+    return { mappings: [], unresolved: candidate.unresolved ?? [], check, original, candidate };
   }
   const mappings = await admitCheckedInstitutionMappings(ctx, original, candidate, check, profile);
-  return { mappings, unresolved: candidate.unresolved ?? [], check };
+  return { mappings, unresolved: candidate.unresolved ?? [], check, original, candidate };
 }
 
 /** Separate checker acceptance is rederived from owner bytes/snapshot. No
@@ -343,7 +349,7 @@ async function admitCheckedInstitutionMappings(
   if (sha(JSON.stringify(independent)) !== sha(JSON.stringify(original))) {
     throw new Error("X1_ORIGINAL_OR_CURRENT_OWNER_CUT_MISMATCH");
   }
-  const check = checkInstitutionInSeparateProcess(independent, candidate, profile);
+  const check = await checkInstitutionInSeparateProcessAsync(independent, candidate, profile);
   if (check.disposition !== "ACCEPTED_DEVELOPMENT"
       || check.inputDigest !== acceptedCheck.inputDigest
       || check.candidateDigest !== acceptedCheck.candidateDigest
@@ -483,7 +489,7 @@ async function admitCheckedInstitutionMappings(
           tenantId: ctx.auth.tenantId, integrationId: source.integrationId, provider: source.provider,
           sourceScope: source.sourceScope, externalObjectType: source.externalObjectType,
           externalId: mapping.recordId, canonicalEntity: `pe_${kind}`, candidateCanonicalIds: [entityId!],
-          identityKey: `${original.institutionId}:${kind}:${mapping.registrationId}`,
+          identityKey: JSON.stringify([original.institutionId,kind,mapping.registrationId]),
           sourceVersion: source.revision, observedAt: original.knowledgeCut,
           data: { schema: "finnor.x1.checked-identity.v1", registrationId: mapping.registrationId,
             originalSha256: source.originalSha256, originalDocumentVersionId: source.coreVersionId },
@@ -535,7 +541,7 @@ async function admitCheckedInstitutionMappings(
         }
         const relationshipKind = nativeVehicle.vehicleType === "feeder" ? "feeder" : "other";
         const id = canonicalId(ctx.auth.tenantId, original.institutionId, "fund_vehicle",
-          `${relation.targetRegistrationId}:${mapping.registrationId}`);
+          JSON.stringify([relation.targetRegistrationId,mapping.registrationId]));
         const key = `${fund[1]}:${entityId}`;
         if (!createdRelations.has(key)) {
           const existing = await client.query<{ id: string }>(

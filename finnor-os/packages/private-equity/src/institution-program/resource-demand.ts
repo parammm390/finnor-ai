@@ -1,19 +1,20 @@
-import { createHash } from "node:crypto";
 import type { DigitalInstitutionProfile } from "./contracts";
+import { institutionDigest as hash } from "./canonical-json";
 
-const hash = (value: unknown) => createHash("sha256").update(JSON.stringify(value)).digest("hex");
 export type InstitutionResourceDemand = {
   schema: "finnor.x1.institution-resource-demand.v1"; semanticOwner: "S5";
   tenantId: string; workId: string; principalId: string; institutionId: string;
   programmeDigest: string; responsibilityIdentities: string[]; originalDeadline: string;
   lines: { resourceClass: "COMPUTE" | "HUMAN_ATTENTION"; unit: "request" | "seconds"; quantity: string }[];
   demandDigest: string; parentReservationRef: null;
+  chargeScope?: { kind: "ORIGINAL_WORK_EPISODE"; episodeId: string };
   qualification: "DECLARED_ACCOUNTING_NOT_FUNDING"; executionAuthorityGranted: false;
 };
 export function buildInstitutionResourceDemand(input: {
   tenantId: string; workId: string; principalId: string; institutionId: string;
   programmeDigest: string; responsibilityIdentities: string[];
   computeRequests: number; humanSeconds: number; originalDeadline: string; profile: DigitalInstitutionProfile;
+  chargeScope?: InstitutionResourceDemand["chargeScope"];
 }): InstitutionResourceDemand {
   if (!Number.isSafeInteger(input.computeRequests) || input.computeRequests < 0
     || !Number.isSafeInteger(input.humanSeconds) || input.humanSeconds < 0
@@ -34,23 +35,30 @@ export function buildInstitutionResourceDemand(input: {
       { resourceClass: "HUMAN_ATTENTION" as const, unit: "seconds" as const, quantity: String(input.humanSeconds) },
     ],
     parentReservationRef: null, qualification: "DECLARED_ACCOUNTING_NOT_FUNDING" as const,
+    ...(input.chargeScope ? { chargeScope: input.chargeScope } : {}),
     executionAuthorityGranted: false as const,
   };
   return { ...body, demandDigest: hash(body) };
 }
 type Envelope = { resourceId: string; unit: string; kind: string; quantities: string[] };
 type Charge = { chargeKey: string; requestDigest: string; phase: string; ordinal: number; units: number; resourceId: string; unit: string };
-type Request = { responsibilityIdentity: string; phase: "EXECUTION" | "RECOVERY" | "HUMAN"; ordinal: number; units: number };
+export type InstitutionChargeRequest = { responsibilityIdentity: string;
+  phase: "EXECUTION" | "RECOVERY" | "HUMAN" | "ACQUISITION" | "CHECK" | "COMPILE";
+  ordinal: number; units: number };
+type Request = InstitutionChargeRequest;
 type Result = { status: "REFUSED"; reason: string } | { status: "REPLAY"; chargeKey: string }
   | { status: "PLANNED"; chargeKey: string; requestDigest: string; resourceId: string; unit: string; usedAfter: string };
 export function planInstitutionDemandCharge(input: {
   demand: InstitutionResourceDemand; envelope: Envelope[] | null; existingCharges: Charge[]; request: Request;
 }): Result {
   const { demand, envelope, existingCharges, request } = input;
-  if (!demand.responsibilityIdentities.includes(request.responsibilityIdentity))
+  if (!demand.responsibilityIdentities.includes(request.responsibilityIdentity)
+      && !(demand.chargeScope?.kind === "ORIGINAL_WORK_EPISODE"
+        && /^x1-obligation:[a-f0-9]{64}$/.test(request.responsibilityIdentity)))
     return { status: "REFUSED", reason: "X1_CHARGE_RESPONSIBILITY_FOREIGN" };
-  if (!["EXECUTION", "RECOVERY", "HUMAN"].includes(request.phase)
-      || !Number.isSafeInteger(request.ordinal) || request.ordinal < 1 || request.ordinal > 64)
+  if (!["EXECUTION", "RECOVERY", "HUMAN", "ACQUISITION", "CHECK", "COMPILE"].includes(request.phase)
+      || !Number.isSafeInteger(request.ordinal) || request.ordinal < 1
+      || request.ordinal > (demand.chargeScope ? 128 : 64))
     return { status: "REFUSED", reason: "X1_CHARGE_PHASE_OR_ORDINAL_INVALID" };
   if (!Number.isSafeInteger(request.units) || request.units < 1 || request.units > 100000)
     return { status: "REFUSED", reason: "X1_CHARGE_UNITS_INVALID" };

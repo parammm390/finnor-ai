@@ -26,6 +26,14 @@ assert.match((lowered.programme as typeof lowered.programme & {dutyPopulationDig
 const { verifyInstitutionDutyPopulation } = await import("../../../packages/private-equity/src/institution-program/responsibility");
 const sealed = verifyInstitutionDutyPopulation(lowered.programme, lowered.responsibilities, lowered.unresolved);
 assert.equal(sealed.length, 64);
+// SQL jsonb and bounded Zod decoding may reorder object properties. They must
+// preserve the admitted duty seal; semantic field mutations below must not.
+const reorderedJson = (value: unknown): any => Array.isArray(value) ? value.map(reorderedJson)
+  : value && typeof value === "object"
+    ? Object.fromEntries(Object.entries(value).reverse().map(([key, item]) => [key, reorderedJson(item)])) : value;
+const roundTrip = reorderedJson(lowered) as typeof lowered;
+assert.doesNotThrow(() => verifyInstitutionDutyPopulation(roundTrip.programme,
+  roundTrip.responsibilities, roundTrip.unresolved), "owner serialization must preserve the checked population seal");
 for (const mutate of [
   (v: typeof lowered) => { v.responsibilities[0]!.obligation.independentObserver.ref = "wrong-observer"; },
   (v: typeof lowered) => { v.responsibilities[0]!.obligation.postcondition.contractRef = "wrong-postcondition"; },
