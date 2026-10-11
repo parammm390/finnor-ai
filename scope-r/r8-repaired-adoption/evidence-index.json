@@ -1,0 +1,3073 @@
+{
+  "schema": "finnor.r8.retained-evidence-index.v1",
+  "sourceCommit": "2a7a22edf71be8caddde1e29a98403b0eeda1a4f",
+  "directories": [
+    {
+      "id": "custody-red-01",
+      "root": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/custody-red-01",
+      "files": [
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/custody-red-01/results.json",
+          "relativeToDirectory": "results.json",
+          "bytes": 15622,
+          "sha256": "5185a02c16121c14ee8feb29fc254513bd779d2f9bfcb36307aea5beebe85eb2"
+        }
+      ],
+      "filesCount": 1,
+      "bytes": 15622,
+      "custody": "EXTERNAL_PRIVATE_LOCAL_FILES_NOT_COPIED_OR_PUBLISHED"
+    },
+    {
+      "id": "custody-green-02",
+      "root": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/custody-green-02",
+      "files": [
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/custody-green-02/results.json",
+          "relativeToDirectory": "results.json",
+          "bytes": 29545,
+          "sha256": "f127263619491221eb17cec145e9f6566da8c55221298b01f8fe2c388d54c7eb"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/custody-green-02/runner.log",
+          "relativeToDirectory": "runner.log",
+          "bytes": 2710,
+          "sha256": "25ae230f7ffc2c31ce575ec0d1ce2e16c90fa505f3b9194dbf29bcbcdd495da3"
+        }
+      ],
+      "filesCount": 2,
+      "bytes": 32255,
+      "custody": "EXTERNAL_PRIVATE_LOCAL_FILES_NOT_COPIED_OR_PUBLISHED"
+    },
+    {
+      "id": "custody-green-03",
+      "root": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/custody-green-03",
+      "files": [
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/custody-green-03/close-refusal-probe.json",
+          "relativeToDirectory": "close-refusal-probe.json",
+          "bytes": 1603,
+          "sha256": "3104d96ad5a1250b0ef795394e9b7d4dcf541728c8ec8041167213c97a2ccbe5"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/custody-green-03/exit.json",
+          "relativeToDirectory": "exit.json",
+          "bytes": 542,
+          "sha256": "c46f95c0f163d1ec606e7e7e967f883644f267dcd47344675375e89c0c896a7d"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/custody-green-03/results.json",
+          "relativeToDirectory": "results.json",
+          "bytes": 29532,
+          "sha256": "b768b0cf1e95c1f9275d03b19d51c734e33d5dac818df271c215620a013d8c64"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/custody-green-03/runner.log",
+          "relativeToDirectory": "runner.log",
+          "bytes": 2792,
+          "sha256": "a00be83e2ac4a5051b71fbda4544add02a3ee5fc766a7a577ab087e6c8e35db9"
+        }
+      ],
+      "filesCount": 4,
+      "bytes": 34469,
+      "custody": "EXTERNAL_PRIVATE_LOCAL_FILES_NOT_COPIED_OR_PUBLISHED"
+    },
+    {
+      "id": "semantic-01",
+      "root": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01",
+      "files": [
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/acceptance-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263.json",
+          "relativeToDirectory": "acceptance-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263.json",
+          "bytes": 888029,
+          "sha256": "ea6096ac0740e9744032ba205c3ecd33a11960d81f768bf4738fd2d54f5b2f76"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/acceptance-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002.json",
+          "relativeToDirectory": "acceptance-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002.json",
+          "bytes": 885966,
+          "sha256": "f59af8b16971346ee15c749c77b2224b4e2aaa05988296ad3adb21d04f989dcf"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-000000.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-000000.json",
+          "bytes": 13119,
+          "sha256": "5903962ba2914f333062573822d64f65662d261e078393d6b91a5a8317f686c3"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-004096.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-004096.json",
+          "bytes": 13122,
+          "sha256": "631ec805d32b80318f9809a6ffd4d36a45f74df13f682fe8a584b5620d13e80b"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-008192.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-008192.json",
+          "bytes": 13122,
+          "sha256": "a3fece48064fe0d0c3d543a8f86d14e42507391bcb7c2fdd924b36ef9be7d79c"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-012288.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-012288.json",
+          "bytes": 13123,
+          "sha256": "5389672da8077460083c290768cd529d75e0613946825c2c26923f925271372c"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-016384.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-016384.json",
+          "bytes": 13123,
+          "sha256": "e393f4cc8e3cbc430c2a406ad33ec54c4e669afc699984cbd33dc3f82aeb31e9"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-020480.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-020480.json",
+          "bytes": 13123,
+          "sha256": "18d080e071a38d55f8c85f6cf1b0f452f09011d426f593eb3e63a7675a7a11ae"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-024576.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-024576.json",
+          "bytes": 13123,
+          "sha256": "50360bb2040518128fe87268c3baa3e5570e7e55491dd25b3ba14a36aa825228"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-028672.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-028672.json",
+          "bytes": 13123,
+          "sha256": "a6f719264806feff337eecc9c2c56492496c1b52d08308f621f00fbcb37819bb"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-032768.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-032768.json",
+          "bytes": 13123,
+          "sha256": "f7f5446aa30a6cd7b5d81729aa0ad3a4232b05cdd96cc91c566585c08b16c435"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-036864.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-036864.json",
+          "bytes": 13123,
+          "sha256": "e8b74884ea35144b464e102231fb0a99293dce1bff384bc18566a1218dba866e"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-040960.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-040960.json",
+          "bytes": 13123,
+          "sha256": "9e9d61788ece9a40044bb768ee5adbdd7c74777ec73a638fb222a7e0ec19742a"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-045056.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-045056.json",
+          "bytes": 13123,
+          "sha256": "803982604bbe0ba04b7c3ebd7875ed2ff479b043b7c25b186e2e8203ff31972a"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-049152.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-049152.json",
+          "bytes": 13123,
+          "sha256": "8a24e0b74764b03c5a4d403a984bd2544444a57f6418fa318e6f102c71e0fbc8"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-053248.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-053248.json",
+          "bytes": 13123,
+          "sha256": "fc65d0e0debfe9358c0b528e778ab40c267dab159d89940ddba3f62f5f836300"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-057344.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-057344.json",
+          "bytes": 13123,
+          "sha256": "b5904f170b54aba3282e65b3894446180c0a60d09be062951d10f0c5ef36b6ca"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-061440.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-061440.json",
+          "bytes": 13123,
+          "sha256": "2d097e971d7a83d3704bf7b54cdcd6f27bddbbcc686451c80d46540c4c25a155"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-065536.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-065536.json",
+          "bytes": 13123,
+          "sha256": "760270e318c81710661821b29acd33e24fdcb41167834485842a029d748e29e6"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-069632.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-069632.json",
+          "bytes": 13123,
+          "sha256": "1671a3d7dbf0abd0967cfe5f07fc249731ce3f9c14d1a70a1682cd4cf88a8a8a"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-073728.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-073728.json",
+          "bytes": 13123,
+          "sha256": "2fa7dc99ddb40db62b38a794342357f894e216434c77c190f37e2f4ca95f1900"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-077824.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-077824.json",
+          "bytes": 13123,
+          "sha256": "e34694fa082962ff1b73a526a19dc73da7f4d35be387265a42c6067558dba01c"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-081920.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-081920.json",
+          "bytes": 13123,
+          "sha256": "620b747573ab5a81f1eb619c5913db05259ab9709b161da10bebd1435c60884d"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-086016.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-086016.json",
+          "bytes": 13123,
+          "sha256": "9abde4d65229e277126004f86190782851f022e7f83664058bc62328ed21d899"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-090112.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-090112.json",
+          "bytes": 13123,
+          "sha256": "6b42da14369845387137d4a2dc95e2fa8509f4c88c8d955cb91e1d5391fe56f5"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-094208.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-094208.json",
+          "bytes": 13123,
+          "sha256": "b6c7fed42af1c837e4a8a358367ffd6d100155575ebde587a5cc4c5b7325482c"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-098304.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-098304.json",
+          "bytes": 13123,
+          "sha256": "b2e3675ecc36b47b4ad8638dce6363d970767e5b5cd965e502a02c70fed56816"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-102400.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-102400.json",
+          "bytes": 13124,
+          "sha256": "b2cada5c2ea7d5f28f19de6a49e9abd39ddcd2a1a033ae739d277a2673bcbb99"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-106496.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-106496.json",
+          "bytes": 13124,
+          "sha256": "ef974b2edc78f43a9b65afbaa9253b0c57d70661dcc8523382fddcad2b69ee70"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-110592.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-110592.json",
+          "bytes": 13124,
+          "sha256": "818e290ff34464458c5b7f15dfd1b018be136c959674a661ea4d93ca6acbbe2f"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-114688.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-114688.json",
+          "bytes": 13124,
+          "sha256": "d40ce2c36a858fd6c066111f0a044109b184e42f061fb23ad6a9eec59ed1240d"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-118784.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-118784.json",
+          "bytes": 13124,
+          "sha256": "d55ab3eca33d6a3113be03e2b9c4a583867c44b3cfe5e0525d7f37f2a4b76903"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-122880.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-122880.json",
+          "bytes": 13124,
+          "sha256": "4598f5db8f7344d3d4ca1232ec80edf92bf4959f9238c2bb77ddcdc4b6f0cd52"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-126976.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-126976.json",
+          "bytes": 13124,
+          "sha256": "0fe426cf228035e85d50570570b769cce1666788f51afd4a8831491627f691fd"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-131072.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-131072.json",
+          "bytes": 13124,
+          "sha256": "fbf8b0c11b15bd0aa3434ac28812fc39d746157625250bb91965f6803193826a"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-135168.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-135168.json",
+          "bytes": 13124,
+          "sha256": "1178ba4ba8ff9fc5cc9e6e019d400df176beac690126eb78b41dd14f5c7a079d"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-139264.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-139264.json",
+          "bytes": 13124,
+          "sha256": "08ef6211bfa01e23944b7ffbcc416d46d6f11d1780cf0b5f927c831fe57d81a8"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-143360.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-143360.json",
+          "bytes": 13124,
+          "sha256": "8c78b833f85e3acc8e16a8c7734ba19d32820f4b06f136524812696cd6986804"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-147456.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-147456.json",
+          "bytes": 13124,
+          "sha256": "8f67926c3ffc2f86207a7658bdff440b3422cc03d65e93b9bb7c33f11ad69e76"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-151552.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-151552.json",
+          "bytes": 13124,
+          "sha256": "0678b392b93e515014059fc9ad1070ba253ccb9ecd38b9f4d1f4a145c1db58e6"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-155648.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-155648.json",
+          "bytes": 13124,
+          "sha256": "1a6078a087c2af4332085041187ee78bcbef6213d479db7e6014b65b30bf4097"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-159744.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-159744.json",
+          "bytes": 13124,
+          "sha256": "924def8c80e22d71221b176cdc08c105204180901412b11db384a57e548bccd7"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-163840.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-163840.json",
+          "bytes": 13124,
+          "sha256": "5ee7ad89dea35964dc8088523c1355a813365864df5dc8b4249541dc7ce7f944"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-167936.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-167936.json",
+          "bytes": 13124,
+          "sha256": "3708fe6ee21322a78ca3a81e3fcc34ece5d782009e400a073521842f0a6e8309"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-172032.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-172032.json",
+          "bytes": 13124,
+          "sha256": "f3f7257eb24b9898132db8ff033a351899fa97f674f655aad53054b23659429e"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-176128.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-176128.json",
+          "bytes": 13124,
+          "sha256": "86d10d867b018f010922ba0b6dcd4f8e93ef34ee4408a80da8f4ef88c023375e"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-180224.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-180224.json",
+          "bytes": 13124,
+          "sha256": "e4b8500a12ee7025720bcc778f7bb16390d3c94c6ec0913d19e1560b980e20cf"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-184320.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-184320.json",
+          "bytes": 13124,
+          "sha256": "b1de2f645835bffddd58a4847f240383cee1345f784790df4d671270c90d2e4e"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-188416.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-188416.json",
+          "bytes": 13124,
+          "sha256": "905f874db1820e170968355983fdf64be584a1ae773584f4f275840f65d2057e"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-192512.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-192512.json",
+          "bytes": 13124,
+          "sha256": "af8ad8dd64a89c4f94487c4f6a0421d22ff1b5440626b3edff4d30f650098b4f"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-196608.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-196608.json",
+          "bytes": 13124,
+          "sha256": "6a1f2431d2b9f1563efa205ea1ca6e1910875d8d19b632c218f6cdd51444b89f"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-200704.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-200704.json",
+          "bytes": 13124,
+          "sha256": "92d6a08c6d5a891ea0f5f718098c7c8784d4b2c0c270c7b49c28cc6b01099173"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-204800.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-204800.json",
+          "bytes": 13124,
+          "sha256": "40a9ac51e4e134967c82e167f9c31f050ce4b7a51496b86c3c96279064e708c9"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-208896.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-208896.json",
+          "bytes": 13124,
+          "sha256": "f1f0cceceed3dac8e16f1eb792ab1902022ac0b8055742083197d5909f7cb791"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-212992.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-212992.json",
+          "bytes": 13124,
+          "sha256": "490b3168ca6bde1912b6c5197ec3e90d88a1217b6894af5a453fc9450ab7546a"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-217088.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-217088.json",
+          "bytes": 13124,
+          "sha256": "8caaef33dbbc075947d23e30f1d47f6c99704795b49fc7f2b67f3d6b6915b088"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-221184.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-221184.json",
+          "bytes": 13124,
+          "sha256": "56d9276669f5d3e35a810901ae5104c2ff07da321a041bc27e2009489e888aaa"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-225280.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-225280.json",
+          "bytes": 13124,
+          "sha256": "24bdf0996b14e5430894466a1d8fa118374d7cde3957cc531aa6f1d3d0cac5d5"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-229376.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-229376.json",
+          "bytes": 13124,
+          "sha256": "c04bc272038d9e32e39703b3cb0ad0ec0621ea6605eb2dd65a951fcb66514abd"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-233472.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-233472.json",
+          "bytes": 13124,
+          "sha256": "d30fd53b54f8fcd324736ca46e6eb351f7ce95baa2f466aa8e836c53339b719b"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-237568.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-237568.json",
+          "bytes": 13124,
+          "sha256": "5b163966e169c7d0a8f2622be3c3d3a67930193408631eb651a21c2e4f1f6db8"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-241664.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-241664.json",
+          "bytes": 13124,
+          "sha256": "c507a6a10e70cf5ee0765994be7360709ef85a6fa0b603f8e10bddd4c09f3ee8"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-245760.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-245760.json",
+          "bytes": 13124,
+          "sha256": "4d8c259b33bcc0e72cc1452e7012356c002418ddab5429dce5b62617750958fa"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-249856.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-249856.json",
+          "bytes": 13124,
+          "sha256": "6d11781d17b71daf7c364f99439d8b8797adeff03a23bf369f5100ae307a517e"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-253952.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-253952.json",
+          "bytes": 13124,
+          "sha256": "b9bdd4850f87695afdaddde75a2e8cef71a02a69a3233aeecab022b042b2e9f6"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-258048.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-258048.json",
+          "bytes": 13124,
+          "sha256": "fa3ad00e903d9331380795b7fbc1b5721d9c73b4f9643ef336509e8c5a00defb"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-000000.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-000000.json",
+          "bytes": 13119,
+          "sha256": "daafbf28eee6a87eee8ee47254a4e33a1045ae65e5645359dcf853884f047ce9"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-004096.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-004096.json",
+          "bytes": 13122,
+          "sha256": "ae3be0eb764c13046c831b8c7dc3563107648258ab99af4e5f64ce14b34e7225"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-008192.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-008192.json",
+          "bytes": 13122,
+          "sha256": "088bb79a9244569493d350e19d0f2a39920fc0201bb61a32b6250d90c48013ab"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-012288.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-012288.json",
+          "bytes": 13123,
+          "sha256": "77b662c7e0fdb40de7c55cde744d06334ab917bd2b8987a34a5e966ca012092b"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-016384.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-016384.json",
+          "bytes": 13123,
+          "sha256": "4d4a4e4045eecb24d49707a2075c6f1b01aa7683efbb7fe4ed69ba4ca3ed5393"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-020480.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-020480.json",
+          "bytes": 13123,
+          "sha256": "4227c5a16e88c8ef475ed8e6d179aee5b6f4c8b80a358ca998a0b2fc32da13fa"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-024576.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-024576.json",
+          "bytes": 13123,
+          "sha256": "d8c4558d9ef88e53b61a55ef347be2b92ebd2f15dbb9d61c16169167dddab00d"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-028672.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-028672.json",
+          "bytes": 13123,
+          "sha256": "15624a2652bf0d1a78e935517ad39f043bef0fcbe06d740648ec8787731cbf0e"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-032768.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-032768.json",
+          "bytes": 13123,
+          "sha256": "33f746f17de05b49f47f994334a794ce11f9af97174869c034de1b3155e83b3d"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-036864.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-036864.json",
+          "bytes": 13123,
+          "sha256": "a58d6febec1125fd8870aa9596ce58a0cc9f2bd1b41037c4bf34da12d34a3658"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-040960.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-040960.json",
+          "bytes": 13123,
+          "sha256": "f9696dea576778becf504296cd6269b431580de4cf248801135805cc4a4dd06c"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-045056.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-045056.json",
+          "bytes": 13123,
+          "sha256": "6c818b389d93f4b67cbeeeda9d3a97bc9c4c6bbeccd433700aa2a88a3acdaa4e"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-049152.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-049152.json",
+          "bytes": 13123,
+          "sha256": "65313c75666a63d22e6f8a9ea782f719863fbc3f90c7c2bb4b95f7fa98f0e94b"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-053248.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-053248.json",
+          "bytes": 13123,
+          "sha256": "4f03c2d56e3246810c6659e87d42074fd6d86ddf6c4905ab5adeeb9e0856cef9"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-057344.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-057344.json",
+          "bytes": 13123,
+          "sha256": "d26e76250d0dcb28a3d1623a2c490cfa669f96113b3ac2db9e4975d0c60e68ef"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-061440.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-061440.json",
+          "bytes": 13123,
+          "sha256": "7792a9db1884d6a453049852fd5e6b0dedd47ece3a9448992a7fd5a05b4c1773"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-065536.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-065536.json",
+          "bytes": 13123,
+          "sha256": "85e80b4fa561712864c2396c4d5be7163af699d35ba92126c96efd01a82e8de1"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-069632.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-069632.json",
+          "bytes": 13123,
+          "sha256": "deb0081820684335dc1dde110889fc12f22c4e4a0e65b1e2aacd03459692f848"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-073728.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-073728.json",
+          "bytes": 13123,
+          "sha256": "6364a4c605f392229e454f9478afe23862d7284a5c823b51b62acaf97a6ac928"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-077824.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-077824.json",
+          "bytes": 13123,
+          "sha256": "5f3e2fa716e8c33126785bb499d29f6797d7f323eb4ddf7ba95250a519abc12e"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-081920.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-081920.json",
+          "bytes": 13123,
+          "sha256": "854320a6ab97080d7e5aba684b6da39d54942289232253d2c9161080c7759be4"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-086016.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-086016.json",
+          "bytes": 13123,
+          "sha256": "ea0f8fdac3028c8197de6cd969a4acde7adef432ed065c32c99e8b844b4fd70c"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-090112.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-090112.json",
+          "bytes": 13123,
+          "sha256": "96652e5a379643feb86cf269822133ecd4a5d90680b3e0556639d81c1d44fa50"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-094208.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-094208.json",
+          "bytes": 13123,
+          "sha256": "54e9ba76eb81fa65acb83a108706f94d7d698f02ed8ffbe31f68d41ffd75be45"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-098304.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-098304.json",
+          "bytes": 13123,
+          "sha256": "6de63696f32ea2a290c543176233ac2723478bebf4b7075b1234950e052281af"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-102400.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-102400.json",
+          "bytes": 13124,
+          "sha256": "bc12e378ada3cf63ad7937a8536479d2a5172342cd16a80d1b03b3b61de0bac7"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-106496.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-106496.json",
+          "bytes": 13124,
+          "sha256": "e5da884becd121ad2f1e244102e9896d78de5896d6a12f874a5963651baf81b6"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-110592.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-110592.json",
+          "bytes": 13124,
+          "sha256": "7027efbdd78a4a3c7b7bf6679205840ada8da539b6c3aef8f0aab3d84f7a8d7c"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-114688.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-114688.json",
+          "bytes": 13124,
+          "sha256": "74a7e26a499da426160442aa91687bf1cfa5deb25a3ba0f3c3b8db9c3031b082"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-118784.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-118784.json",
+          "bytes": 13124,
+          "sha256": "94f562c7c3fbd76ab75e2b4683a62e477bb1b2d5bf0eccd458f7052b1e599000"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-122880.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-122880.json",
+          "bytes": 13124,
+          "sha256": "119dc71814b12142ffe7576d8aaf4a4c56f1b44fb946d5d732bdaf4d3d73a63f"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-126976.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-126976.json",
+          "bytes": 13124,
+          "sha256": "341af991656ed33e6be3c7ff5d6dc9f7d5d259de510292317faeee42b3a0e8e6"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-131072.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-131072.json",
+          "bytes": 13124,
+          "sha256": "20a9138900812de8b2f9a6376dc8b7811de505403c4ea369b966c5de6aae7c55"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-135168.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-135168.json",
+          "bytes": 13124,
+          "sha256": "6027051f48dc7d3df453d14ef0a2a6f7be36a39a27e748b771f14d77085d0cb8"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-139264.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-139264.json",
+          "bytes": 13124,
+          "sha256": "1be47bdf0861c02783ed7245f497b8203dab2e29ff20d9f3c5471c0e559cfb47"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-143360.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-143360.json",
+          "bytes": 13124,
+          "sha256": "e2c937954c3954cf7982fb4f455dd2738262fdc730221955fa5d093362ef6efa"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-147456.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-147456.json",
+          "bytes": 13124,
+          "sha256": "f64d9ba40f22f814226692fcb1dbde4cd4a7f16129544138b0b4faa7476eab55"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-151552.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-151552.json",
+          "bytes": 13124,
+          "sha256": "21f85a345e43767766f041d56bf66ce432de56a4c6ceba0146aeb5d2229493dc"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-155648.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-155648.json",
+          "bytes": 13124,
+          "sha256": "558c43fb3c0d4f5ef21049cd21b0d642b51d66dbb23b4946417b3491ff6a3966"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-159744.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-159744.json",
+          "bytes": 13124,
+          "sha256": "7316081c4316459bcd494d41bc30b2ecf9103c632f123f50ad54b86f9fa40ddc"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-163840.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-163840.json",
+          "bytes": 13124,
+          "sha256": "12021a8a07ad153614a440725eed873e460f67bede714e842b2981d033b62c8e"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-167936.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-167936.json",
+          "bytes": 13124,
+          "sha256": "ba6ef16109a8f6a29e431d67b1d336b33c471d7625a7cebc15162c191ef374e2"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-172032.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-172032.json",
+          "bytes": 13124,
+          "sha256": "717112c6aa79c34418f3eddf5f2e15cdb3247f95e7595a1ea1c5ac98fd4d9583"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-176128.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-176128.json",
+          "bytes": 13124,
+          "sha256": "06421d265a5b49f34e522c853fc072f06a82d2a1c5b2ae016c5ea63f151ef94a"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-180224.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-180224.json",
+          "bytes": 13124,
+          "sha256": "734303abdeb2e6089f1c37fb5eb3ee5a02cb405d2c77f9b744de6d2b323da9ff"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-184320.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-184320.json",
+          "bytes": 13124,
+          "sha256": "cebf7451411b6ee2b931924561171a0b56a252a83cc85521856e633f6a9b8765"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-188416.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-188416.json",
+          "bytes": 13124,
+          "sha256": "896c664169632bc1e0bcaa273558371c1ca89890f73640ed0254eeb5b066a96b"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-192512.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-192512.json",
+          "bytes": 13124,
+          "sha256": "7cadb79b325c3d5cfe265cd105bcc7eba1490a755deafdec64f3e76ac775e531"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-196608.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-196608.json",
+          "bytes": 13124,
+          "sha256": "a0435b06779cde975c1b8fd3f0e2a0e6ce636a26e13825c77e72db650a7361e1"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-200704.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-200704.json",
+          "bytes": 13124,
+          "sha256": "cc13a334b28b7f941980bb8e8b312cc149945f99d71080e45ae2cb946dccd6c8"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-204800.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-204800.json",
+          "bytes": 13124,
+          "sha256": "870a418d5701c4ec8ecf8fafb2cc44a0e4bb134085f26f1fa3e5263dc565225f"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-208896.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-208896.json",
+          "bytes": 13124,
+          "sha256": "66b79cb11e8a01ad62860bc675463cdf4c23961561ae6045eb377e795d61b90b"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-212992.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-212992.json",
+          "bytes": 13124,
+          "sha256": "5b8c117695593539abc594fd4dacb7c5cb08304ec75450aeda82eafe5bbb5538"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-217088.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-217088.json",
+          "bytes": 13124,
+          "sha256": "10c28ec187865454fd62fbe0454401e424f80270718ad194e7344f5437285b59"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-221184.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-221184.json",
+          "bytes": 13124,
+          "sha256": "96da0c1c459b887bb3c4d5153d23cc958c7a3649ea70316b0a1b425a113d09f9"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-225280.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-225280.json",
+          "bytes": 13124,
+          "sha256": "fe22f5670a234e7959f971aee1a640cc939aab2d56671ea81fee638b357e8861"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-229376.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-229376.json",
+          "bytes": 13124,
+          "sha256": "abc37e5031ab65f5ed1d884f37bbf0d6bd13a2f86dbf256661650084cc0683dd"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-233472.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-233472.json",
+          "bytes": 13124,
+          "sha256": "63bd8d767561b5824563f8381faf3f6fb5a38df53c06f4a43dcb718d969e84f3"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-237568.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-237568.json",
+          "bytes": 13124,
+          "sha256": "c56d9876421ee698e2f86fb59ad2686da3e3bc5f9e13ff91849489d47e5caffe"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-241664.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-241664.json",
+          "bytes": 13124,
+          "sha256": "7b60b22c7187374e6978b0c7b3a027e744341cb165c2501dbfac1cbe7e62cae6"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-245760.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-245760.json",
+          "bytes": 13124,
+          "sha256": "43e6710dc95bae8abd2d1e7d0358d4c9ff00e2335adba0b572d334b8bda21d7a"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-249856.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-249856.json",
+          "bytes": 13124,
+          "sha256": "f3b6426b2171fbda0b99e31fdcfc3d516587d46a7d66156964ebd417e108da76"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-253952.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-253952.json",
+          "bytes": 13124,
+          "sha256": "ae368798fcf3aa5944d0e113adeaabf6bbb32d8cd88247edcc2b0cf689cb11fe"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-258048.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-258048.json",
+          "bytes": 13124,
+          "sha256": "80bdc6e59489bf449f8489d5d1204d01e8787b99fbdab6c9ba1a1c68f407e45a"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/identity-mutations.json",
+          "relativeToDirectory": "identity-mutations.json",
+          "bytes": 849,
+          "sha256": "542b7f284b41304cbbe091c56fe5d9cd1a067fa2edcfc594d49422c1686a0420"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/original-budget.json",
+          "relativeToDirectory": "original-budget.json",
+          "bytes": 81,
+          "sha256": "b7ee58c862fedc1f15ca581d5571cc82b66841f2f2e45591f4ad5fec5b1806cd"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/query-03c5ac4eb4b21ee13e1d223edd131b3250549b2dcc5035f0695b0a37b266fef5.json",
+          "relativeToDirectory": "query-03c5ac4eb4b21ee13e1d223edd131b3250549b2dcc5035f0695b0a37b266fef5.json",
+          "bytes": 2930,
+          "sha256": "1de53be7dc7e7df36d6ec0ef3e7350f7a78d22649750f7bc6809eab384a50b45"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/query-07f60aa8e4fbedc9c465b7f971adb81f79773b5ffbf57b2d5d6de53afe9132f5.json",
+          "relativeToDirectory": "query-07f60aa8e4fbedc9c465b7f971adb81f79773b5ffbf57b2d5d6de53afe9132f5.json",
+          "bytes": 2875,
+          "sha256": "ad51f5c49caced63e59ceca7db3466dbbc07279d3e0878fc9d70a659ebcc35c5"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/query-1902e2d47c06e0dc0aaa77727f408accdfdae17adcbe222be1946b892cd172de.json",
+          "relativeToDirectory": "query-1902e2d47c06e0dc0aaa77727f408accdfdae17adcbe222be1946b892cd172de.json",
+          "bytes": 2864,
+          "sha256": "450ff66fe562ed07bda8b3e6f9f1691458a471bc65a5556897e1531bdd703bbd"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/query-1dbed1d84c09993b24f2799c6a8ac27e9d3ec63678ef2d5a8635dd2c2afd9ace.json",
+          "relativeToDirectory": "query-1dbed1d84c09993b24f2799c6a8ac27e9d3ec63678ef2d5a8635dd2c2afd9ace.json",
+          "bytes": 3079,
+          "sha256": "04e5c96d2d0e8d6ebc71f1af25ce225b5fa379d3e0f82fdaa97f8732f168296c"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/query-2dc1c16da06b46333cd7f39fd7c8d371e3c9bf4dfcde7344a6b79006fd0a918c.json",
+          "relativeToDirectory": "query-2dc1c16da06b46333cd7f39fd7c8d371e3c9bf4dfcde7344a6b79006fd0a918c.json",
+          "bytes": 2842,
+          "sha256": "e55ad90f3752d25d57653683edec534d7af17275ea802f41e1828d72ebaaf219"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/query-30aba2ae56821725cbd6b9f0f77db3e97db0280337605be02755f8a4c8c19c25.json",
+          "relativeToDirectory": "query-30aba2ae56821725cbd6b9f0f77db3e97db0280337605be02755f8a4c8c19c25.json",
+          "bytes": 2920,
+          "sha256": "5d1315439e37154da56fbc69a10c8613f1afbf339b8eac7c01900574355bdddf"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/query-3b4a40c95696a2cc26eef569fe69799e90c60b18e7bdd4528a0e27b2ade4735d.json",
+          "relativeToDirectory": "query-3b4a40c95696a2cc26eef569fe69799e90c60b18e7bdd4528a0e27b2ade4735d.json",
+          "bytes": 2964,
+          "sha256": "fbe0118cf88cee5a0623291bbc228a6267755ec0279d2d265e85987e9f6b6583"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/query-4370e01e436c4d580f2309a1980628f655ddbcfd4bd4fefc5556c12b6e00c103.json",
+          "relativeToDirectory": "query-4370e01e436c4d580f2309a1980628f655ddbcfd4bd4fefc5556c12b6e00c103.json",
+          "bytes": 2717,
+          "sha256": "0e037e64b90c9e20b969a2e87a6c195f5556b2066b1f9ef66424a63662a6ceac"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/query-48add9754a980d0d6fa82bd5bb2dae2d94430eaffe2e49d2dd21cfeb379b8cc2.json",
+          "relativeToDirectory": "query-48add9754a980d0d6fa82bd5bb2dae2d94430eaffe2e49d2dd21cfeb379b8cc2.json",
+          "bytes": 2886,
+          "sha256": "cc756a23ff6f94c074ba057ca59f13e4c22e77dbeeecd3f06bde4bef7e861aa5"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/query-4d510248e706d91a5d26918bdbf37382c475d2fbea66f2c2cf6418ebc7274552.json",
+          "relativeToDirectory": "query-4d510248e706d91a5d26918bdbf37382c475d2fbea66f2c2cf6418ebc7274552.json",
+          "bytes": 2897,
+          "sha256": "fdd1f5bd7bf8a8b64893cc89c3054aa9ab6620e1e828a0bab4216c3137352e8b"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/query-506a9086335a2f5d332f3b4210ba0419693ad6de75740068e23df17e65449c40.json",
+          "relativeToDirectory": "query-506a9086335a2f5d332f3b4210ba0419693ad6de75740068e23df17e65449c40.json",
+          "bytes": 2714,
+          "sha256": "7886f166e1ab55851edbb0360c4271d21a687e209785cd3b671d3760e66ed94c"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/query-59aefe4459e103e03d42ae0d5d843b996ba7281adb0c1095d7ca5f02e5a528d5.json",
+          "relativeToDirectory": "query-59aefe4459e103e03d42ae0d5d843b996ba7281adb0c1095d7ca5f02e5a528d5.json",
+          "bytes": 2705,
+          "sha256": "2bde9d975ce57de9617a51443c077646387d9b519ea397f45dbeab7e1802fa2f"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/query-63d07bde93898536bb7da3e99ffd6c5e3f70a5106d06628066446b66dc507adc.json",
+          "relativeToDirectory": "query-63d07bde93898536bb7da3e99ffd6c5e3f70a5106d06628066446b66dc507adc.json",
+          "bytes": 2788,
+          "sha256": "b95d1c1d566bfbfea16056690bfe6f23ba2e12cfb58ddb2611008eab745d38c3"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/query-64af5be07ab5c309c79aa701fefbc833c4ef7a0666ccd0d9f4c9bafd46d7a793.json",
+          "relativeToDirectory": "query-64af5be07ab5c309c79aa701fefbc833c4ef7a0666ccd0d9f4c9bafd46d7a793.json",
+          "bytes": 2865,
+          "sha256": "4d25cec566420a0d55f6e04e96e0418416c8730b885d0eca92100868e70d7f3c"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/query-7184771cc5f84c983700f091ec56ec122041a223d256f9fdfa542a988768cece.json",
+          "relativeToDirectory": "query-7184771cc5f84c983700f091ec56ec122041a223d256f9fdfa542a988768cece.json",
+          "bytes": 2931,
+          "sha256": "a37b3e0c4168e28fe5d14096046dc6c6a5ea729111266ca091d3e6a2dbff17b3"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/query-72659002c109fe095ef2ed2eefb5acb6a107910839c23ed4ed0cae0a9efa3d36.json",
+          "relativeToDirectory": "query-72659002c109fe095ef2ed2eefb5acb6a107910839c23ed4ed0cae0a9efa3d36.json",
+          "bytes": 2952,
+          "sha256": "49a8d71aff2f3af3c7f26dbed0a97be2ec862fffee3157cf45acca4a68e40c85"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/query-72eec2e651e0907d6459bfc895ed0697fcff3d7a051a4d09c3c473c79ff9dda9.json",
+          "relativeToDirectory": "query-72eec2e651e0907d6459bfc895ed0697fcff3d7a051a4d09c3c473c79ff9dda9.json",
+          "bytes": 2703,
+          "sha256": "fcf300cba6f504ef05938b0f5be3987df9e13c19d90e5618086750d3692c0365"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/query-72f247fc455260ec4b62839c34687138b807d4f2c850165278172a1679c0c404.json",
+          "relativeToDirectory": "query-72f247fc455260ec4b62839c34687138b807d4f2c850165278172a1679c0c404.json",
+          "bytes": 2953,
+          "sha256": "4a8db97ef4fb2585cb73a6547c9ddec5932b190ed77ea3d738cbb0a37035d221"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/query-786817b85266c3c112f77c7feb8bc571dab0b7f7187e4edf03e42555cdb5c936.json",
+          "relativeToDirectory": "query-786817b85266c3c112f77c7feb8bc571dab0b7f7187e4edf03e42555cdb5c936.json",
+          "bytes": 2964,
+          "sha256": "e0fabb8dec581b0196fc4502a7d4c9ba351c699725095166519e1025950f5104"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/query-7b2e88075bc0062dd36428f52eb15d49928c109a9222905b73b2e1599d8cb8e5.json",
+          "relativeToDirectory": "query-7b2e88075bc0062dd36428f52eb15d49928c109a9222905b73b2e1599d8cb8e5.json",
+          "bytes": 2941,
+          "sha256": "493bc2ceb98562eeb3ae392797b3ad36e92322ca1f53b58a6c09eecfce8c00e2"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/query-82bc0e1940a15dd31cb85f1b8ae5073dbe7e477422455692ca9eed1474db1ac8.json",
+          "relativeToDirectory": "query-82bc0e1940a15dd31cb85f1b8ae5073dbe7e477422455692ca9eed1474db1ac8.json",
+          "bytes": 2971,
+          "sha256": "ba27758f039d10cc36045e22163af82ef2314a9a84d0f5cb02ddcb327278da56"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/query-861d53e3b3203d7b2a3a1f3fe9f4277d77044519cbd226c6007652dbc79b0982.json",
+          "relativeToDirectory": "query-861d53e3b3203d7b2a3a1f3fe9f4277d77044519cbd226c6007652dbc79b0982.json",
+          "bytes": 2832,
+          "sha256": "5f5d95513e3187f83394e61f4efba2908c4fe0a38099bd0f049dc0248f4db11f"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/query-883c64b37b4e0400f33472308f80480d04255fa95982fe5d1cbee50ed17ed571.json",
+          "relativeToDirectory": "query-883c64b37b4e0400f33472308f80480d04255fa95982fe5d1cbee50ed17ed571.json",
+          "bytes": 2898,
+          "sha256": "95a13e69e8abd682dc3c19149afe6c8093d330c922ddf9ece3714247fe100804"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/query-920086112d3bb01533a715638bafdd5489d8b2b49204eb5661e84f92638d5f82.json",
+          "relativeToDirectory": "query-920086112d3bb01533a715638bafdd5489d8b2b49204eb5661e84f92638d5f82.json",
+          "bytes": 2852,
+          "sha256": "d9db4e15b666a3b87c556933de6519957fb54fbbd54d9edcd68d2ad9732eb3d7"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/query-95404735834bd28f03a617ed8f741f902e2ae3f5c2350000f143fa03ea221656.json",
+          "relativeToDirectory": "query-95404735834bd28f03a617ed8f741f902e2ae3f5c2350000f143fa03ea221656.json",
+          "bytes": 2953,
+          "sha256": "da8b6d40ddc12c490c3093ec58579ea6946926bdcc590fef17ae3b974d0e54e5"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/query-a731e6d4d03f74ca22644adce3f1fb47a96e3ad61a0f7180b3c63dd2134785a9.json",
+          "relativeToDirectory": "query-a731e6d4d03f74ca22644adce3f1fb47a96e3ad61a0f7180b3c63dd2134785a9.json",
+          "bytes": 3100,
+          "sha256": "4657e090fd3ecdaaa221d3a81b257ec0d8e4591ec5aeb8dec75aca3c59a54442"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/query-b047241070bbc00a8ab46f520b438d535cd4ce7d59dc1e932e9e9ba058f03eba.json",
+          "relativeToDirectory": "query-b047241070bbc00a8ab46f520b438d535cd4ce7d59dc1e932e9e9ba058f03eba.json",
+          "bytes": 2941,
+          "sha256": "2f7d1cd63b0ae78ff1350fd58d5868731960dc5785d348cc52cbd62da01303c8"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/query-c19c419467f56c58456d7e2ab3ca382d9a217100d095c0e61ba5a12b3f18f9f8.json",
+          "relativeToDirectory": "query-c19c419467f56c58456d7e2ab3ca382d9a217100d095c0e61ba5a12b3f18f9f8.json",
+          "bytes": 2897,
+          "sha256": "fe00ce2f833730e5709b4a6eae45c9ca5586a2ff02ee9652076e72436eec3209"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/query-cad805a5cdc72ac6b5305333ecaae86c9f20993e71f0968fbdc5724ec234a73c.json",
+          "relativeToDirectory": "query-cad805a5cdc72ac6b5305333ecaae86c9f20993e71f0968fbdc5724ec234a73c.json",
+          "bytes": 2974,
+          "sha256": "c02a8815a1ba2590b37d9b565bf9ad505a0ad38171df3af40276fedd6e138fc0"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/query-cd40e42dc62339f5bd6a0c814d0930f1ca0069ffdcc461b2cc85141dd312f301.json",
+          "relativeToDirectory": "query-cd40e42dc62339f5bd6a0c814d0930f1ca0069ffdcc461b2cc85141dd312f301.json",
+          "bytes": 2931,
+          "sha256": "65fb05cbc299d944e3111eb3286878b63f013446e64dd31e4b809c4aded12f4a"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/query-ce55fa85139d3ab6083338015cfb8cd61eaed9cd2627a04159aff6c4a74d086e.json",
+          "relativeToDirectory": "query-ce55fa85139d3ab6083338015cfb8cd61eaed9cd2627a04159aff6c4a74d086e.json",
+          "bytes": 3132,
+          "sha256": "0619b9ee83591ea49a1ee2ffd9624da6a6c557442bb4249e457a02ce7a4ca9e4"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/query-df5a543565d6b2e5fde512694c9f48bbb344d6fe621f34e964b5cc1d8dab0075.json",
+          "relativeToDirectory": "query-df5a543565d6b2e5fde512694c9f48bbb344d6fe621f34e964b5cc1d8dab0075.json",
+          "bytes": 2788,
+          "sha256": "40a6a9dac2987f53395f43a274eb1a56813122593021188bc3da3289a90232ea"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/query-e2b7780a6f6fb2fec30f0f29c0183cb6c4555b1c0babd20b8fa0fd7a818b0bfa.json",
+          "relativeToDirectory": "query-e2b7780a6f6fb2fec30f0f29c0183cb6c4555b1c0babd20b8fa0fd7a818b0bfa.json",
+          "bytes": 2842,
+          "sha256": "833b34c4b9274cf6cdeda2bf87da706888a80bb71a94f648be0ef2d0d277da4c"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/query-e5f15ebef9eb3a978bed45a8b511bb96561a4f0d4e2f9274db3e5df3da5ea895.json",
+          "relativeToDirectory": "query-e5f15ebef9eb3a978bed45a8b511bb96561a4f0d4e2f9274db3e5df3da5ea895.json",
+          "bytes": 3004,
+          "sha256": "07c64a4fde9c4570ae6a5302e3f44840810a492a59b328385f845e514ef089f2"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/query-ebe7ed6beec640d0354e9f42855d2537d167219ab157b370d175a1a5ae855721.json",
+          "relativeToDirectory": "query-ebe7ed6beec640d0354e9f42855d2537d167219ab157b370d175a1a5ae855721.json",
+          "bytes": 3047,
+          "sha256": "6919ab77ccacaadb597e4b05ac98dfeb5c567030a26218716737f8aa5dafef38"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/query-efc9498c30832adda5fe2542295d6d7e40a13fed6044fbca118c20637ef978f5.json",
+          "relativeToDirectory": "query-efc9498c30832adda5fe2542295d6d7e40a13fed6044fbca118c20637ef978f5.json",
+          "bytes": 2953,
+          "sha256": "1b23df19d602ba4b6e8224092c034c8c1fb0d471a2a771444408ad038d4cb02f"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/query-f48ebd9ed220c6fa5a8ae1bd4056862bbc87fe8fcfabc86177f085d74187d6f9.json",
+          "relativeToDirectory": "query-f48ebd9ed220c6fa5a8ae1bd4056862bbc87fe8fcfabc86177f085d74187d6f9.json",
+          "bytes": 2787,
+          "sha256": "781785c1047ce421eabecef3ffbbf70a1c36704e53bedc9579e67f3ec10c5dcd"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/query-fe1867c0013daaa0d0fe64665c65bfb9e05b9754efc231fd0a2564ae5ed8a0e5.json",
+          "relativeToDirectory": "query-fe1867c0013daaa0d0fe64665c65bfb9e05b9754efc231fd0a2564ae5ed8a0e5.json",
+          "bytes": 2706,
+          "sha256": "138e3a45d4d64349f33e52e449d739c857360b83a3f76f9706c517e12670dfda"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/query-fe29041e938662719f25e60b8afef43672c54f0916e12c4c8798548666ee2058.json",
+          "relativeToDirectory": "query-fe29041e938662719f25e60b8afef43672c54f0916e12c4c8798548666ee2058.json",
+          "bytes": 2709,
+          "sha256": "edd5373cb84aae65fa419e0f76cff1d21a6bcd6c3540b7493360dccb5cf311c0"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/query-fe8f00ae9116873a46c6cf21727fcb164ef6105bb9c2e61d795bd6a0540a7a77.json",
+          "relativeToDirectory": "query-fe8f00ae9116873a46c6cf21727fcb164ef6105bb9c2e61d795bd6a0540a7a77.json",
+          "bytes": 2896,
+          "sha256": "6a90416dbbaefcd272e8cda5f9e751df8b848b48b694a4f53b477b024f6023a9"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/results.json",
+          "relativeToDirectory": "results.json",
+          "bytes": 5008,
+          "sha256": "9d9f61e212a191cddd4da66a1ea1caadafd7c3380a6a7e1aada31e885ca062ed"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/runner.log",
+          "relativeToDirectory": "runner.log",
+          "bytes": 16653,
+          "sha256": "c728acde2214f2e5cf1224f031fe90733c2e8b0fff5e67dc84daf121ac8493f1"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/semantic-mutations.json",
+          "relativeToDirectory": "semantic-mutations.json",
+          "bytes": 29000,
+          "sha256": "32c4922c41d1f5d1f40b0acc421ff80b6935d5dce1e15c1150a0aa4572a3fc5e"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/structural-mutations.json",
+          "relativeToDirectory": "structural-mutations.json",
+          "bytes": 931,
+          "sha256": "426e082d9851af37f9bc131caa82fa074514c9e6c49d493b083cde27a1ec8ea0"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/synthesis.json",
+          "relativeToDirectory": "synthesis.json",
+          "bytes": 6261970,
+          "sha256": "2d2ce42a34d23a3fbc716cf26d435624dc78194e253abfa32f0d1bc848d26ae1"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/trial-0.json",
+          "relativeToDirectory": "trial-0.json",
+          "bytes": 34684,
+          "sha256": "281927e791253113796020f4cd15f5e28be6821cbda4041a724cc4853f658d2e"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/trial-1.json",
+          "relativeToDirectory": "trial-1.json",
+          "bytes": 36881,
+          "sha256": "9e288330b98e9deb684fcd8b1ffba58f9adf624ef9d78be0d6e45c5255009adc"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/trial-2.json",
+          "relativeToDirectory": "trial-2.json",
+          "bytes": 39982,
+          "sha256": "bb5a3584710ab2db30fe0ea34d8e20ab5e3e87b3de4865b2cf05ce3909d31467"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/trial-3.json",
+          "relativeToDirectory": "trial-3.json",
+          "bytes": 42502,
+          "sha256": "81ddd2039c9de8acd9f5711684c4e8e06aea045f25787a5aadafd66436dfb4e6"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/trial-4.json",
+          "relativeToDirectory": "trial-4.json",
+          "bytes": 45139,
+          "sha256": "7909caf7494baf9548a588c01b8984c642ca7233ab129e8041efe7b218e4237b"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/trial-5.json",
+          "relativeToDirectory": "trial-5.json",
+          "bytes": 44069,
+          "sha256": "177c6db8967e463366f680ec8f3b647793c127818546b5cdc49b1bd09d5e15f5"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-01/trial-6.json",
+          "relativeToDirectory": "trial-6.json",
+          "bytes": 42007,
+          "sha256": "6ce2af088453259fd0a01f92105daf2bdad376203b35e110728c8a442198cafa"
+        }
+      ],
+      "filesCount": 184,
+      "bytes": 10169264,
+      "custody": "EXTERNAL_PRIVATE_LOCAL_FILES_NOT_COPIED_OR_PUBLISHED"
+    },
+    {
+      "id": "semantic-02",
+      "root": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02",
+      "files": [
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/acceptance-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263.json",
+          "relativeToDirectory": "acceptance-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263.json",
+          "bytes": 888033,
+          "sha256": "b3461ab3ee7fecd71f0fee62088c4dbd643f4d6543a17539b556f1bbcc5520b4"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/acceptance-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002.json",
+          "relativeToDirectory": "acceptance-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002.json",
+          "bytes": 885970,
+          "sha256": "baba8ac2950e02bd2ebfb7bfeb66ca560703f476ceac6ab32b7cfdd287fdaf1d"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-000000.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-000000.json",
+          "bytes": 13119,
+          "sha256": "5903962ba2914f333062573822d64f65662d261e078393d6b91a5a8317f686c3"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-004096.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-004096.json",
+          "bytes": 13122,
+          "sha256": "631ec805d32b80318f9809a6ffd4d36a45f74df13f682fe8a584b5620d13e80b"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-008192.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-008192.json",
+          "bytes": 13122,
+          "sha256": "a3fece48064fe0d0c3d543a8f86d14e42507391bcb7c2fdd924b36ef9be7d79c"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-012288.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-012288.json",
+          "bytes": 13123,
+          "sha256": "5389672da8077460083c290768cd529d75e0613946825c2c26923f925271372c"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-016384.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-016384.json",
+          "bytes": 13123,
+          "sha256": "e393f4cc8e3cbc430c2a406ad33ec54c4e669afc699984cbd33dc3f82aeb31e9"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-020480.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-020480.json",
+          "bytes": 13123,
+          "sha256": "18d080e071a38d55f8c85f6cf1b0f452f09011d426f593eb3e63a7675a7a11ae"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-024576.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-024576.json",
+          "bytes": 13123,
+          "sha256": "50360bb2040518128fe87268c3baa3e5570e7e55491dd25b3ba14a36aa825228"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-028672.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-028672.json",
+          "bytes": 13123,
+          "sha256": "a6f719264806feff337eecc9c2c56492496c1b52d08308f621f00fbcb37819bb"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-032768.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-032768.json",
+          "bytes": 13123,
+          "sha256": "f7f5446aa30a6cd7b5d81729aa0ad3a4232b05cdd96cc91c566585c08b16c435"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-036864.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-036864.json",
+          "bytes": 13123,
+          "sha256": "e8b74884ea35144b464e102231fb0a99293dce1bff384bc18566a1218dba866e"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-040960.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-040960.json",
+          "bytes": 13123,
+          "sha256": "9e9d61788ece9a40044bb768ee5adbdd7c74777ec73a638fb222a7e0ec19742a"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-045056.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-045056.json",
+          "bytes": 13123,
+          "sha256": "803982604bbe0ba04b7c3ebd7875ed2ff479b043b7c25b186e2e8203ff31972a"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-049152.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-049152.json",
+          "bytes": 13123,
+          "sha256": "8a24e0b74764b03c5a4d403a984bd2544444a57f6418fa318e6f102c71e0fbc8"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-053248.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-053248.json",
+          "bytes": 13123,
+          "sha256": "fc65d0e0debfe9358c0b528e778ab40c267dab159d89940ddba3f62f5f836300"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-057344.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-057344.json",
+          "bytes": 13123,
+          "sha256": "b5904f170b54aba3282e65b3894446180c0a60d09be062951d10f0c5ef36b6ca"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-061440.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-061440.json",
+          "bytes": 13123,
+          "sha256": "2d097e971d7a83d3704bf7b54cdcd6f27bddbbcc686451c80d46540c4c25a155"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-065536.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-065536.json",
+          "bytes": 13123,
+          "sha256": "760270e318c81710661821b29acd33e24fdcb41167834485842a029d748e29e6"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-069632.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-069632.json",
+          "bytes": 13123,
+          "sha256": "1671a3d7dbf0abd0967cfe5f07fc249731ce3f9c14d1a70a1682cd4cf88a8a8a"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-073728.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-073728.json",
+          "bytes": 13123,
+          "sha256": "2fa7dc99ddb40db62b38a794342357f894e216434c77c190f37e2f4ca95f1900"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-077824.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-077824.json",
+          "bytes": 13123,
+          "sha256": "e34694fa082962ff1b73a526a19dc73da7f4d35be387265a42c6067558dba01c"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-081920.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-081920.json",
+          "bytes": 13123,
+          "sha256": "620b747573ab5a81f1eb619c5913db05259ab9709b161da10bebd1435c60884d"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-086016.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-086016.json",
+          "bytes": 13123,
+          "sha256": "9abde4d65229e277126004f86190782851f022e7f83664058bc62328ed21d899"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-090112.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-090112.json",
+          "bytes": 13123,
+          "sha256": "6b42da14369845387137d4a2dc95e2fa8509f4c88c8d955cb91e1d5391fe56f5"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-094208.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-094208.json",
+          "bytes": 13123,
+          "sha256": "b6c7fed42af1c837e4a8a358367ffd6d100155575ebde587a5cc4c5b7325482c"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-098304.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-098304.json",
+          "bytes": 13123,
+          "sha256": "b2e3675ecc36b47b4ad8638dce6363d970767e5b5cd965e502a02c70fed56816"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-102400.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-102400.json",
+          "bytes": 13124,
+          "sha256": "b2cada5c2ea7d5f28f19de6a49e9abd39ddcd2a1a033ae739d277a2673bcbb99"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-106496.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-106496.json",
+          "bytes": 13124,
+          "sha256": "ef974b2edc78f43a9b65afbaa9253b0c57d70661dcc8523382fddcad2b69ee70"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-110592.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-110592.json",
+          "bytes": 13124,
+          "sha256": "818e290ff34464458c5b7f15dfd1b018be136c959674a661ea4d93ca6acbbe2f"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-114688.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-114688.json",
+          "bytes": 13124,
+          "sha256": "d40ce2c36a858fd6c066111f0a044109b184e42f061fb23ad6a9eec59ed1240d"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-118784.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-118784.json",
+          "bytes": 13124,
+          "sha256": "d55ab3eca33d6a3113be03e2b9c4a583867c44b3cfe5e0525d7f37f2a4b76903"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-122880.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-122880.json",
+          "bytes": 13124,
+          "sha256": "4598f5db8f7344d3d4ca1232ec80edf92bf4959f9238c2bb77ddcdc4b6f0cd52"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-126976.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-126976.json",
+          "bytes": 13124,
+          "sha256": "0fe426cf228035e85d50570570b769cce1666788f51afd4a8831491627f691fd"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-131072.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-131072.json",
+          "bytes": 13124,
+          "sha256": "fbf8b0c11b15bd0aa3434ac28812fc39d746157625250bb91965f6803193826a"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-135168.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-135168.json",
+          "bytes": 13124,
+          "sha256": "1178ba4ba8ff9fc5cc9e6e019d400df176beac690126eb78b41dd14f5c7a079d"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-139264.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-139264.json",
+          "bytes": 13124,
+          "sha256": "08ef6211bfa01e23944b7ffbcc416d46d6f11d1780cf0b5f927c831fe57d81a8"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-143360.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-143360.json",
+          "bytes": 13124,
+          "sha256": "8c78b833f85e3acc8e16a8c7734ba19d32820f4b06f136524812696cd6986804"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-147456.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-147456.json",
+          "bytes": 13124,
+          "sha256": "8f67926c3ffc2f86207a7658bdff440b3422cc03d65e93b9bb7c33f11ad69e76"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-151552.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-151552.json",
+          "bytes": 13124,
+          "sha256": "0678b392b93e515014059fc9ad1070ba253ccb9ecd38b9f4d1f4a145c1db58e6"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-155648.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-155648.json",
+          "bytes": 13124,
+          "sha256": "1a6078a087c2af4332085041187ee78bcbef6213d479db7e6014b65b30bf4097"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-159744.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-159744.json",
+          "bytes": 13124,
+          "sha256": "924def8c80e22d71221b176cdc08c105204180901412b11db384a57e548bccd7"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-163840.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-163840.json",
+          "bytes": 13124,
+          "sha256": "5ee7ad89dea35964dc8088523c1355a813365864df5dc8b4249541dc7ce7f944"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-167936.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-167936.json",
+          "bytes": 13124,
+          "sha256": "3708fe6ee21322a78ca3a81e3fcc34ece5d782009e400a073521842f0a6e8309"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-172032.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-172032.json",
+          "bytes": 13124,
+          "sha256": "f3f7257eb24b9898132db8ff033a351899fa97f674f655aad53054b23659429e"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-176128.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-176128.json",
+          "bytes": 13124,
+          "sha256": "86d10d867b018f010922ba0b6dcd4f8e93ef34ee4408a80da8f4ef88c023375e"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-180224.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-180224.json",
+          "bytes": 13124,
+          "sha256": "e4b8500a12ee7025720bcc778f7bb16390d3c94c6ec0913d19e1560b980e20cf"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-184320.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-184320.json",
+          "bytes": 13124,
+          "sha256": "b1de2f645835bffddd58a4847f240383cee1345f784790df4d671270c90d2e4e"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-188416.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-188416.json",
+          "bytes": 13124,
+          "sha256": "905f874db1820e170968355983fdf64be584a1ae773584f4f275840f65d2057e"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-192512.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-192512.json",
+          "bytes": 13124,
+          "sha256": "af8ad8dd64a89c4f94487c4f6a0421d22ff1b5440626b3edff4d30f650098b4f"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-196608.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-196608.json",
+          "bytes": 13124,
+          "sha256": "6a1f2431d2b9f1563efa205ea1ca6e1910875d8d19b632c218f6cdd51444b89f"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-200704.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-200704.json",
+          "bytes": 13124,
+          "sha256": "92d6a08c6d5a891ea0f5f718098c7c8784d4b2c0c270c7b49c28cc6b01099173"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-204800.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-204800.json",
+          "bytes": 13124,
+          "sha256": "40a9ac51e4e134967c82e167f9c31f050ce4b7a51496b86c3c96279064e708c9"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-208896.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-208896.json",
+          "bytes": 13124,
+          "sha256": "f1f0cceceed3dac8e16f1eb792ab1902022ac0b8055742083197d5909f7cb791"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-212992.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-212992.json",
+          "bytes": 13124,
+          "sha256": "490b3168ca6bde1912b6c5197ec3e90d88a1217b6894af5a453fc9450ab7546a"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-217088.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-217088.json",
+          "bytes": 13124,
+          "sha256": "8caaef33dbbc075947d23e30f1d47f6c99704795b49fc7f2b67f3d6b6915b088"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-221184.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-221184.json",
+          "bytes": 13124,
+          "sha256": "56d9276669f5d3e35a810901ae5104c2ff07da321a041bc27e2009489e888aaa"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-225280.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-225280.json",
+          "bytes": 13124,
+          "sha256": "24bdf0996b14e5430894466a1d8fa118374d7cde3957cc531aa6f1d3d0cac5d5"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-229376.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-229376.json",
+          "bytes": 13124,
+          "sha256": "c04bc272038d9e32e39703b3cb0ad0ec0621ea6605eb2dd65a951fcb66514abd"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-233472.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-233472.json",
+          "bytes": 13124,
+          "sha256": "d30fd53b54f8fcd324736ca46e6eb351f7ce95baa2f466aa8e836c53339b719b"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-237568.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-237568.json",
+          "bytes": 13124,
+          "sha256": "5b163966e169c7d0a8f2622be3c3d3a67930193408631eb651a21c2e4f1f6db8"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-241664.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-241664.json",
+          "bytes": 13124,
+          "sha256": "c507a6a10e70cf5ee0765994be7360709ef85a6fa0b603f8e10bddd4c09f3ee8"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-245760.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-245760.json",
+          "bytes": 13124,
+          "sha256": "4d8c259b33bcc0e72cc1452e7012356c002418ddab5429dce5b62617750958fa"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-249856.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-249856.json",
+          "bytes": 13124,
+          "sha256": "6d11781d17b71daf7c364f99439d8b8797adeff03a23bf369f5100ae307a517e"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-253952.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-253952.json",
+          "bytes": 13124,
+          "sha256": "b9bdd4850f87695afdaddde75a2e8cef71a02a69a3233aeecab022b042b2e9f6"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-258048.json",
+          "relativeToDirectory": "chunk-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263-258048.json",
+          "bytes": 13124,
+          "sha256": "fa3ad00e903d9331380795b7fbc1b5721d9c73b4f9643ef336509e8c5a00defb"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-000000.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-000000.json",
+          "bytes": 13119,
+          "sha256": "daafbf28eee6a87eee8ee47254a4e33a1045ae65e5645359dcf853884f047ce9"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-004096.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-004096.json",
+          "bytes": 13122,
+          "sha256": "ae3be0eb764c13046c831b8c7dc3563107648258ab99af4e5f64ce14b34e7225"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-008192.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-008192.json",
+          "bytes": 13122,
+          "sha256": "088bb79a9244569493d350e19d0f2a39920fc0201bb61a32b6250d90c48013ab"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-012288.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-012288.json",
+          "bytes": 13123,
+          "sha256": "77b662c7e0fdb40de7c55cde744d06334ab917bd2b8987a34a5e966ca012092b"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-016384.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-016384.json",
+          "bytes": 13123,
+          "sha256": "4d4a4e4045eecb24d49707a2075c6f1b01aa7683efbb7fe4ed69ba4ca3ed5393"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-020480.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-020480.json",
+          "bytes": 13123,
+          "sha256": "4227c5a16e88c8ef475ed8e6d179aee5b6f4c8b80a358ca998a0b2fc32da13fa"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-024576.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-024576.json",
+          "bytes": 13123,
+          "sha256": "d8c4558d9ef88e53b61a55ef347be2b92ebd2f15dbb9d61c16169167dddab00d"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-028672.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-028672.json",
+          "bytes": 13123,
+          "sha256": "15624a2652bf0d1a78e935517ad39f043bef0fcbe06d740648ec8787731cbf0e"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-032768.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-032768.json",
+          "bytes": 13123,
+          "sha256": "33f746f17de05b49f47f994334a794ce11f9af97174869c034de1b3155e83b3d"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-036864.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-036864.json",
+          "bytes": 13123,
+          "sha256": "a58d6febec1125fd8870aa9596ce58a0cc9f2bd1b41037c4bf34da12d34a3658"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-040960.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-040960.json",
+          "bytes": 13123,
+          "sha256": "f9696dea576778becf504296cd6269b431580de4cf248801135805cc4a4dd06c"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-045056.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-045056.json",
+          "bytes": 13123,
+          "sha256": "6c818b389d93f4b67cbeeeda9d3a97bc9c4c6bbeccd433700aa2a88a3acdaa4e"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-049152.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-049152.json",
+          "bytes": 13123,
+          "sha256": "65313c75666a63d22e6f8a9ea782f719863fbc3f90c7c2bb4b95f7fa98f0e94b"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-053248.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-053248.json",
+          "bytes": 13123,
+          "sha256": "4f03c2d56e3246810c6659e87d42074fd6d86ddf6c4905ab5adeeb9e0856cef9"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-057344.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-057344.json",
+          "bytes": 13123,
+          "sha256": "d26e76250d0dcb28a3d1623a2c490cfa669f96113b3ac2db9e4975d0c60e68ef"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-061440.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-061440.json",
+          "bytes": 13123,
+          "sha256": "7792a9db1884d6a453049852fd5e6b0dedd47ece3a9448992a7fd5a05b4c1773"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-065536.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-065536.json",
+          "bytes": 13123,
+          "sha256": "85e80b4fa561712864c2396c4d5be7163af699d35ba92126c96efd01a82e8de1"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-069632.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-069632.json",
+          "bytes": 13123,
+          "sha256": "deb0081820684335dc1dde110889fc12f22c4e4a0e65b1e2aacd03459692f848"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-073728.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-073728.json",
+          "bytes": 13123,
+          "sha256": "6364a4c605f392229e454f9478afe23862d7284a5c823b51b62acaf97a6ac928"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-077824.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-077824.json",
+          "bytes": 13123,
+          "sha256": "5f3e2fa716e8c33126785bb499d29f6797d7f323eb4ddf7ba95250a519abc12e"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-081920.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-081920.json",
+          "bytes": 13123,
+          "sha256": "854320a6ab97080d7e5aba684b6da39d54942289232253d2c9161080c7759be4"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-086016.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-086016.json",
+          "bytes": 13123,
+          "sha256": "ea0f8fdac3028c8197de6cd969a4acde7adef432ed065c32c99e8b844b4fd70c"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-090112.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-090112.json",
+          "bytes": 13123,
+          "sha256": "96652e5a379643feb86cf269822133ecd4a5d90680b3e0556639d81c1d44fa50"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-094208.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-094208.json",
+          "bytes": 13123,
+          "sha256": "54e9ba76eb81fa65acb83a108706f94d7d698f02ed8ffbe31f68d41ffd75be45"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-098304.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-098304.json",
+          "bytes": 13123,
+          "sha256": "6de63696f32ea2a290c543176233ac2723478bebf4b7075b1234950e052281af"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-102400.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-102400.json",
+          "bytes": 13124,
+          "sha256": "bc12e378ada3cf63ad7937a8536479d2a5172342cd16a80d1b03b3b61de0bac7"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-106496.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-106496.json",
+          "bytes": 13124,
+          "sha256": "e5da884becd121ad2f1e244102e9896d78de5896d6a12f874a5963651baf81b6"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-110592.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-110592.json",
+          "bytes": 13124,
+          "sha256": "7027efbdd78a4a3c7b7bf6679205840ada8da539b6c3aef8f0aab3d84f7a8d7c"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-114688.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-114688.json",
+          "bytes": 13124,
+          "sha256": "74a7e26a499da426160442aa91687bf1cfa5deb25a3ba0f3c3b8db9c3031b082"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-118784.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-118784.json",
+          "bytes": 13124,
+          "sha256": "94f562c7c3fbd76ab75e2b4683a62e477bb1b2d5bf0eccd458f7052b1e599000"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-122880.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-122880.json",
+          "bytes": 13124,
+          "sha256": "119dc71814b12142ffe7576d8aaf4a4c56f1b44fb946d5d732bdaf4d3d73a63f"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-126976.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-126976.json",
+          "bytes": 13124,
+          "sha256": "341af991656ed33e6be3c7ff5d6dc9f7d5d259de510292317faeee42b3a0e8e6"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-131072.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-131072.json",
+          "bytes": 13124,
+          "sha256": "20a9138900812de8b2f9a6376dc8b7811de505403c4ea369b966c5de6aae7c55"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-135168.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-135168.json",
+          "bytes": 13124,
+          "sha256": "6027051f48dc7d3df453d14ef0a2a6f7be36a39a27e748b771f14d77085d0cb8"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-139264.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-139264.json",
+          "bytes": 13124,
+          "sha256": "1be47bdf0861c02783ed7245f497b8203dab2e29ff20d9f3c5471c0e559cfb47"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-143360.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-143360.json",
+          "bytes": 13124,
+          "sha256": "e2c937954c3954cf7982fb4f455dd2738262fdc730221955fa5d093362ef6efa"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-147456.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-147456.json",
+          "bytes": 13124,
+          "sha256": "f64d9ba40f22f814226692fcb1dbde4cd4a7f16129544138b0b4faa7476eab55"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-151552.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-151552.json",
+          "bytes": 13124,
+          "sha256": "21f85a345e43767766f041d56bf66ce432de56a4c6ceba0146aeb5d2229493dc"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-155648.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-155648.json",
+          "bytes": 13124,
+          "sha256": "558c43fb3c0d4f5ef21049cd21b0d642b51d66dbb23b4946417b3491ff6a3966"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-159744.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-159744.json",
+          "bytes": 13124,
+          "sha256": "7316081c4316459bcd494d41bc30b2ecf9103c632f123f50ad54b86f9fa40ddc"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-163840.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-163840.json",
+          "bytes": 13124,
+          "sha256": "12021a8a07ad153614a440725eed873e460f67bede714e842b2981d033b62c8e"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-167936.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-167936.json",
+          "bytes": 13124,
+          "sha256": "ba6ef16109a8f6a29e431d67b1d336b33c471d7625a7cebc15162c191ef374e2"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-172032.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-172032.json",
+          "bytes": 13124,
+          "sha256": "717112c6aa79c34418f3eddf5f2e15cdb3247f95e7595a1ea1c5ac98fd4d9583"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-176128.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-176128.json",
+          "bytes": 13124,
+          "sha256": "06421d265a5b49f34e522c853fc072f06a82d2a1c5b2ae016c5ea63f151ef94a"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-180224.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-180224.json",
+          "bytes": 13124,
+          "sha256": "734303abdeb2e6089f1c37fb5eb3ee5a02cb405d2c77f9b744de6d2b323da9ff"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-184320.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-184320.json",
+          "bytes": 13124,
+          "sha256": "cebf7451411b6ee2b931924561171a0b56a252a83cc85521856e633f6a9b8765"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-188416.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-188416.json",
+          "bytes": 13124,
+          "sha256": "896c664169632bc1e0bcaa273558371c1ca89890f73640ed0254eeb5b066a96b"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-192512.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-192512.json",
+          "bytes": 13124,
+          "sha256": "7cadb79b325c3d5cfe265cd105bcc7eba1490a755deafdec64f3e76ac775e531"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-196608.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-196608.json",
+          "bytes": 13124,
+          "sha256": "a0435b06779cde975c1b8fd3f0e2a0e6ce636a26e13825c77e72db650a7361e1"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-200704.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-200704.json",
+          "bytes": 13124,
+          "sha256": "cc13a334b28b7f941980bb8e8b312cc149945f99d71080e45ae2cb946dccd6c8"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-204800.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-204800.json",
+          "bytes": 13124,
+          "sha256": "870a418d5701c4ec8ecf8fafb2cc44a0e4bb134085f26f1fa3e5263dc565225f"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-208896.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-208896.json",
+          "bytes": 13124,
+          "sha256": "66b79cb11e8a01ad62860bc675463cdf4c23961561ae6045eb377e795d61b90b"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-212992.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-212992.json",
+          "bytes": 13124,
+          "sha256": "5b8c117695593539abc594fd4dacb7c5cb08304ec75450aeda82eafe5bbb5538"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-217088.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-217088.json",
+          "bytes": 13124,
+          "sha256": "10c28ec187865454fd62fbe0454401e424f80270718ad194e7344f5437285b59"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-221184.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-221184.json",
+          "bytes": 13124,
+          "sha256": "96da0c1c459b887bb3c4d5153d23cc958c7a3649ea70316b0a1b425a113d09f9"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-225280.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-225280.json",
+          "bytes": 13124,
+          "sha256": "fe22f5670a234e7959f971aee1a640cc939aab2d56671ea81fee638b357e8861"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-229376.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-229376.json",
+          "bytes": 13124,
+          "sha256": "abc37e5031ab65f5ed1d884f37bbf0d6bd13a2f86dbf256661650084cc0683dd"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-233472.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-233472.json",
+          "bytes": 13124,
+          "sha256": "63bd8d767561b5824563f8381faf3f6fb5a38df53c06f4a43dcb718d969e84f3"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-237568.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-237568.json",
+          "bytes": 13124,
+          "sha256": "c56d9876421ee698e2f86fb59ad2686da3e3bc5f9e13ff91849489d47e5caffe"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-241664.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-241664.json",
+          "bytes": 13124,
+          "sha256": "7b60b22c7187374e6978b0c7b3a027e744341cb165c2501dbfac1cbe7e62cae6"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-245760.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-245760.json",
+          "bytes": 13124,
+          "sha256": "43e6710dc95bae8abd2d1e7d0358d4c9ff00e2335adba0b572d334b8bda21d7a"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-249856.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-249856.json",
+          "bytes": 13124,
+          "sha256": "f3b6426b2171fbda0b99e31fdcfc3d516587d46a7d66156964ebd417e108da76"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-253952.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-253952.json",
+          "bytes": 13124,
+          "sha256": "ae368798fcf3aa5944d0e113adeaabf6bbb32d8cd88247edcc2b0cf689cb11fe"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-258048.json",
+          "relativeToDirectory": "chunk-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002-258048.json",
+          "bytes": 13124,
+          "sha256": "80bdc6e59489bf449f8489d5d1204d01e8787b99fbdab6c9ba1a1c68f407e45a"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/exit.json",
+          "relativeToDirectory": "exit.json",
+          "bytes": 536,
+          "sha256": "f57cdb7e2e2a6161439837004e525c7798a1fdf0d8a28116fd0af170c82a21ca"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/identity-mutations.json",
+          "relativeToDirectory": "identity-mutations.json",
+          "bytes": 849,
+          "sha256": "542b7f284b41304cbbe091c56fe5d9cd1a067fa2edcfc594d49422c1686a0420"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/original-budget.json",
+          "relativeToDirectory": "original-budget.json",
+          "bytes": 81,
+          "sha256": "02076a9640c96cb33900585d8f65d58fbffc4094c0bb05364982252e84f117fa"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/query-04de673496dadb81275023db2d3db066169f8fe6af51e639fc68a331216463a9.json",
+          "relativeToDirectory": "query-04de673496dadb81275023db2d3db066169f8fe6af51e639fc68a331216463a9.json",
+          "bytes": 2787,
+          "sha256": "748dd06a89b320e003cfec7470fd2787869b87964e43833615fa9aa2ab09218f"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/query-0658966382409de4b40ad7d61cee916050a519d00ea490b086c10a66f487213a.json",
+          "relativeToDirectory": "query-0658966382409de4b40ad7d61cee916050a519d00ea490b086c10a66f487213a.json",
+          "bytes": 2920,
+          "sha256": "992d7bb56755fa1eb24861480f1b98f9e27ef3339073fa812df8b5b1b077cf93"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/query-0a284ebd88a81c3f561bf93b7bf090ab28b86192c11af378be7c04644fb7935c.json",
+          "relativeToDirectory": "query-0a284ebd88a81c3f561bf93b7bf090ab28b86192c11af378be7c04644fb7935c.json",
+          "bytes": 3036,
+          "sha256": "1698fc51bd799864a7c9ce3810f9bcc5b7251cf44b320299ce017919e6329987"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/query-13cf03786b9955753ea4579fa44844d1510f2a1b218a5e0783f3d75508b8de21.json",
+          "relativeToDirectory": "query-13cf03786b9955753ea4579fa44844d1510f2a1b218a5e0783f3d75508b8de21.json",
+          "bytes": 2953,
+          "sha256": "670c8801b6c899997d52d21157d5776a7b3f0f04c64412376f3d451d1b09b936"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/query-14409848b1f1efa182fbe968a52d89ba7ef22414341f634f4461b8a3fbd58177.json",
+          "relativeToDirectory": "query-14409848b1f1efa182fbe968a52d89ba7ef22414341f634f4461b8a3fbd58177.json",
+          "bytes": 2716,
+          "sha256": "25420032d2661a935bf8ff9f07cb429e5750b453e03247ffa6c6bbcaa599f551"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/query-16e868795f72a6c6f4d7c79c72754d809f6148da932c4950d4b7857db268e135.json",
+          "relativeToDirectory": "query-16e868795f72a6c6f4d7c79c72754d809f6148da932c4950d4b7857db268e135.json",
+          "bytes": 2964,
+          "sha256": "7e5777daa8de0c43d2ec0b0ddf7a9d40a9b512798982c925ac51162f6c67cd22"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/query-1e7631e8230188eebcc3b7b313aee0cc91e24c6a9badb763b9ef7093b5ae5601.json",
+          "relativeToDirectory": "query-1e7631e8230188eebcc3b7b313aee0cc91e24c6a9badb763b9ef7093b5ae5601.json",
+          "bytes": 2887,
+          "sha256": "722c0a98acbe7536fb72499dad71e7fb175de44c1d22d76eeff7aee6a93a2a3f"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/query-233990e3f199b007579e61fe0b32b97eb5b9cbf6ea33cd24ff35e556e3311c0b.json",
+          "relativeToDirectory": "query-233990e3f199b007579e61fe0b32b97eb5b9cbf6ea33cd24ff35e556e3311c0b.json",
+          "bytes": 3068,
+          "sha256": "9d7622adb16efa49c173fbb9781e5c69e6b3977f610c17605f04a868fb619ca0"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/query-23707e68e6a2b3187edd91ddb925b9c6b0e7cb7a7c154c899e2da229b0775fe7.json",
+          "relativeToDirectory": "query-23707e68e6a2b3187edd91ddb925b9c6b0e7cb7a7c154c899e2da229b0775fe7.json",
+          "bytes": 2715,
+          "sha256": "6ae064c8a99fb879145437b971faeedf8bc8512f005b6735ab762a30941de51d"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/query-2601b8388a63ba8b316b18aac2905721aa86ded2b9c7bb360e1a3e1abdaa7b9c.json",
+          "relativeToDirectory": "query-2601b8388a63ba8b316b18aac2905721aa86ded2b9c7bb360e1a3e1abdaa7b9c.json",
+          "bytes": 2931,
+          "sha256": "6021b1e930911ecdd9a29ce103abd0f7ade52cd54df898507e93cad0d1b96ecd"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/query-2c29a7b099fe793d3ebcfd2dbfc81a82b6fed9834c756131f7af76b92fb127da.json",
+          "relativeToDirectory": "query-2c29a7b099fe793d3ebcfd2dbfc81a82b6fed9834c756131f7af76b92fb127da.json",
+          "bytes": 2897,
+          "sha256": "4a25f3d283d6710146076a777972e882d0bc298b93285ac6f62f452fb1a3efac"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/query-441bd5462daf874ce2b94664ae9d28f58853d8c75bb68969a6c27be9679ca757.json",
+          "relativeToDirectory": "query-441bd5462daf874ce2b94664ae9d28f58853d8c75bb68969a6c27be9679ca757.json",
+          "bytes": 2898,
+          "sha256": "4d4ba9e79173b80dc5c7312438e4f0932841d2a331f08d21b166f1c8d955cb60"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/query-45059aabfc282ac59970b459446373585b239d6bad998928a9a4b71dadc7bb98.json",
+          "relativeToDirectory": "query-45059aabfc282ac59970b459446373585b239d6bad998928a9a4b71dadc7bb98.json",
+          "bytes": 2887,
+          "sha256": "8fd6b7a3e609c744ff134c92a4d825b603f40bf4289a346621688013acb5fdbb"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/query-4ab9a76a67fd289e2c2b873db461a85529da269cc6de97fb520b28b6c22b1633.json",
+          "relativeToDirectory": "query-4ab9a76a67fd289e2c2b873db461a85529da269cc6de97fb520b28b6c22b1633.json",
+          "bytes": 2865,
+          "sha256": "bd49318169f33e54c000e85107f8f629b305aef6dd5cd6300adedfa498c8bfcb"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/query-4c910763e0bed606256860f8cd2ba497e604914bf2a6d30fea552e109c7a1366.json",
+          "relativeToDirectory": "query-4c910763e0bed606256860f8cd2ba497e604914bf2a6d30fea552e109c7a1366.json",
+          "bytes": 2953,
+          "sha256": "8f63e8c6ef2d854a52d79e155dcddfbd996a9f545c6cb2f9d6ac58db87bf059f"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/query-501bd9782ced569c3b0e3375419e370a38564af87a9f0eabcb5f0555a26cdcb5.json",
+          "relativeToDirectory": "query-501bd9782ced569c3b0e3375419e370a38564af87a9f0eabcb5f0555a26cdcb5.json",
+          "bytes": 2963,
+          "sha256": "2b9d1ed2925e61bd596a9d568737379bbed89a725c8362d3d4fc4d87fdadd63d"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/query-52cd9fb1334e5cbb80455543e79ff1aae1d80019741654fc3715d2e5c4834916.json",
+          "relativeToDirectory": "query-52cd9fb1334e5cbb80455543e79ff1aae1d80019741654fc3715d2e5c4834916.json",
+          "bytes": 2920,
+          "sha256": "88272b2a264c1f3070dc47d26ff29a4e260025afc2c9481b7876560e47daa5a1"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/query-5d148dc99985790f6b9ea8a35b35d22812af3ee41acbe80a002cc884e5fbf0cd.json",
+          "relativeToDirectory": "query-5d148dc99985790f6b9ea8a35b35d22812af3ee41acbe80a002cc884e5fbf0cd.json",
+          "bytes": 2863,
+          "sha256": "a4b1dca45ec38491d39f8351bf532a2fd6cedb03e3540de2abca9d2eb14e12f6"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/query-5da1315f861c150899dd4690bdbc3666d2941a1dcbb37d58443b852e5fcbcf60.json",
+          "relativeToDirectory": "query-5da1315f861c150899dd4690bdbc3666d2941a1dcbb37d58443b852e5fcbcf60.json",
+          "bytes": 2706,
+          "sha256": "dc97a107870fb62c4205606b797172f4264a24df796c035af818f0bb705735b6"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/query-5e5dfb8a601b8736b36af4ad2bb1bb7b49608c92f550d1cd7173ec826962dc8a.json",
+          "relativeToDirectory": "query-5e5dfb8a601b8736b36af4ad2bb1bb7b49608c92f550d1cd7173ec826962dc8a.json",
+          "bytes": 2831,
+          "sha256": "939a2b4c9527b95a4aba70a3c7bd38c9abc421d8d6b30968cdc1e6587d4eb378"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/query-6706309d087ff05b93fef796ca602e0c19a0bbc62406f82cbb02243f310a46d9.json",
+          "relativeToDirectory": "query-6706309d087ff05b93fef796ca602e0c19a0bbc62406f82cbb02243f310a46d9.json",
+          "bytes": 2969,
+          "sha256": "5ca589d7a23fbe973c28d6bedba1a89b436463739d5e29937eefeb93fd7df916"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/query-6e019c7f7a94076f9fc08d59184e2209c0f4a2ad395b7f028773d62c35bc95a7.json",
+          "relativeToDirectory": "query-6e019c7f7a94076f9fc08d59184e2209c0f4a2ad395b7f028773d62c35bc95a7.json",
+          "bytes": 2715,
+          "sha256": "25324f1ef1fa4afbf31cec40249d93f789d316fe5ed97e74aba4f1aade831e0d"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/query-70eb25083e43ace533571ff57195cf50778e4245d7fd20520ac77a05e67db60d.json",
+          "relativeToDirectory": "query-70eb25083e43ace533571ff57195cf50778e4245d7fd20520ac77a05e67db60d.json",
+          "bytes": 3014,
+          "sha256": "4cd10a5a13f01b6df5808cf0178de8d83b71b80dc80a46956dcceea8e1abf4d0"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/query-7539a78bf17f010d8f96bd3b3e8813695ae51a08460541586dcc92f47c548bb6.json",
+          "relativeToDirectory": "query-7539a78bf17f010d8f96bd3b3e8813695ae51a08460541586dcc92f47c548bb6.json",
+          "bytes": 2964,
+          "sha256": "cf53105bdd6f4ddf17e93f37fbd6d03c0e742d3a4274f8aaf95303710cfbd82e"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/query-848c0334d788940fbce1916ad64cc499084f3029a24c6bb6436d85eef25cb452.json",
+          "relativeToDirectory": "query-848c0334d788940fbce1916ad64cc499084f3029a24c6bb6436d85eef25cb452.json",
+          "bytes": 3099,
+          "sha256": "2c13daade19c2e3a451dbe2fd1835cbfe00339d23ad8c89e30c7dbb98a09b56b"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/query-84ffb840cec78da9d506b72b3b5f6248126f97e11e5aca35726aab8bd6d1ef91.json",
+          "relativeToDirectory": "query-84ffb840cec78da9d506b72b3b5f6248126f97e11e5aca35726aab8bd6d1ef91.json",
+          "bytes": 2963,
+          "sha256": "0e632dccb69c27c882f4be3769f0b35290777e74b466ae3077fc4687f0fd55ca"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/query-91f143800d972884170f99b861bd84a850ef4b87805cb2903534eb7a24666177.json",
+          "relativeToDirectory": "query-91f143800d972884170f99b861bd84a850ef4b87805cb2903534eb7a24666177.json",
+          "bytes": 3143,
+          "sha256": "db6f23b19cd6019d76a50901cdc41aed6464f64b0e94d93edd1d6c11b104396d"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/query-986aae636139b8f1074d4f828bafe52e9fbe7b05819653dee7b1b9973faa6f8d.json",
+          "relativeToDirectory": "query-986aae636139b8f1074d4f828bafe52e9fbe7b05819653dee7b1b9973faa6f8d.json",
+          "bytes": 2788,
+          "sha256": "bac5173da176a6b7a46da36a33492df84c842c64bfaf7d52eb409c5f2d09593e"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/query-ac5d852e05ca33dd799b80783791f5e46b892b933d0ab5872a14b95d1a1ad4fc.json",
+          "relativeToDirectory": "query-ac5d852e05ca33dd799b80783791f5e46b892b933d0ab5872a14b95d1a1ad4fc.json",
+          "bytes": 2713,
+          "sha256": "4dbcd5266d03b25eea29e96aa173d42f1940caaa9842b1523616f1d49f0b11be"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/query-af0a0e470e7b00b257c821366769d6e62f74f94e2014bb0eae0a16d775a9b27c.json",
+          "relativeToDirectory": "query-af0a0e470e7b00b257c821366769d6e62f74f94e2014bb0eae0a16d775a9b27c.json",
+          "bytes": 2941,
+          "sha256": "237f3c8f23ecce98ea892193983488b0520a3792cef5f3e554202c4a6a34acf8"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/query-b4fd8d157d725c83ce3636b08e5de6277c1f4519189aab0d8db665530869dca1.json",
+          "relativeToDirectory": "query-b4fd8d157d725c83ce3636b08e5de6277c1f4519189aab0d8db665530869dca1.json",
+          "bytes": 2920,
+          "sha256": "8c6db38a8fab201ae9391da0e92d34007fd798174ea062c46a70a4ce506f065b"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/query-c76802a7239656b196853645e92b2d5052ec94d051a27fd28964086c0a194c3b.json",
+          "relativeToDirectory": "query-c76802a7239656b196853645e92b2d5052ec94d051a27fd28964086c0a194c3b.json",
+          "bytes": 2864,
+          "sha256": "d83837d307bb55a10dee62b67e36e5aa4126cf3ca9fb2636aaed4796615d222a"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/query-c97ecc9e884e0e7a558498a96b5aa62413cbed543ab0a807fb9afc5b8b610df5.json",
+          "relativeToDirectory": "query-c97ecc9e884e0e7a558498a96b5aa62413cbed543ab0a807fb9afc5b8b610df5.json",
+          "bytes": 2698,
+          "sha256": "1ae264c91c96a349150d3fd62a847f4bc1e4f3368e560da90b6f502a67009871"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/query-caeb5278635cf5bc9ec3017b781e53419b8492040f372a9cd375bcac99b75531.json",
+          "relativeToDirectory": "query-caeb5278635cf5bc9ec3017b781e53419b8492040f372a9cd375bcac99b75531.json",
+          "bytes": 2832,
+          "sha256": "9c7291ebdf7e8a5310dbaa47347f52ed1140ffe1be6e6b21a18b363576d3f8ae"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/query-d90fb4a2114a27e0015a519fd84f9d41a329d6e6a0d8db68151e1757184445ab.json",
+          "relativeToDirectory": "query-d90fb4a2114a27e0015a519fd84f9d41a329d6e6a0d8db68151e1757184445ab.json",
+          "bytes": 2842,
+          "sha256": "98bd6376c9e4b3f4931f2fcb0582a1d4c3fb47d5ae940defe0d441a5e919a04a"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/query-dea856f6928d11cf1c6ea4331e88fd7199756e8b6e8abccbc3cddd17e8d116c9.json",
+          "relativeToDirectory": "query-dea856f6928d11cf1c6ea4331e88fd7199756e8b6e8abccbc3cddd17e8d116c9.json",
+          "bytes": 2854,
+          "sha256": "d164321aad539535d60c904027aa49a98983070de4eb71e819eebc810d810cf1"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/query-e84d767439adb69740c617418407d8a6def2744bfd2bd16e6ae32f446048d1af.json",
+          "relativeToDirectory": "query-e84d767439adb69740c617418407d8a6def2744bfd2bd16e6ae32f446048d1af.json",
+          "bytes": 2931,
+          "sha256": "6b63b771bf1265cfdfe04c66a70f5090d675f747cbbd6ce25ac51b052f734ea1"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/query-f2b0c965df44a6e20d66eb56e96c31bb0d5e5cc39919c412bc17ef69cb1d10d6.json",
+          "relativeToDirectory": "query-f2b0c965df44a6e20d66eb56e96c31bb0d5e5cc39919c412bc17ef69cb1d10d6.json",
+          "bytes": 2899,
+          "sha256": "5783e5f1e804796d7015092b1397d67f8be929c03ec178f14879dcc450bad9c6"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/query-f423d728c162d07f466c1fd38403ca79c714cf6ef56c2c1ae85a3b8c73c89d47.json",
+          "relativeToDirectory": "query-f423d728c162d07f466c1fd38403ca79c714cf6ef56c2c1ae85a3b8c73c89d47.json",
+          "bytes": 2789,
+          "sha256": "b0f8ce5ee4a0d8880b50aff6d4dfe53f1d997c40cef0c6e6c195bb6a13c1c5a2"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/query-ff5f391399b5f1e4b4c05ec6bdcf1818ed6b584443ed8233d3886eca26747008.json",
+          "relativeToDirectory": "query-ff5f391399b5f1e4b4c05ec6bdcf1818ed6b584443ed8233d3886eca26747008.json",
+          "bytes": 2963,
+          "sha256": "0e0cc9cc845ba650a9ec513d69d2557a2ce072b0295e89273f99e6d55f5a45ad"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/results.json",
+          "relativeToDirectory": "results.json",
+          "bytes": 5006,
+          "sha256": "0272d77b9a5c5766dc7cc5a68e8de944004f43f9d9f52c760a21b8a00dfd0c3e"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/runner.log",
+          "relativeToDirectory": "runner.log",
+          "bytes": 16651,
+          "sha256": "f8c0a22e786d32928591b824d06b4a759673ef3cb124bbe10d6a856caba7ecfa"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/semantic-mutations.json",
+          "relativeToDirectory": "semantic-mutations.json",
+          "bytes": 28984,
+          "sha256": "d60614b5468e81008bc0f8421df9084e4de86da8c5b2268679e678fede159d75"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/structural-mutations.json",
+          "relativeToDirectory": "structural-mutations.json",
+          "bytes": 931,
+          "sha256": "426e082d9851af37f9bc131caa82fa074514c9e6c49d493b083cde27a1ec8ea0"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/synthesis.json",
+          "relativeToDirectory": "synthesis.json",
+          "bytes": 6261908,
+          "sha256": "185b42dd5b1ad2ba02e8977d91c04b65fa4d0eee7a9dc009f60ebb1c7626cb0f"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/trial-0.json",
+          "relativeToDirectory": "trial-0.json",
+          "bytes": 34684,
+          "sha256": "d4be57c7d65a193fa62fd82de86b14255749f95c7a2fc2bd5770cf2f7af70fa2"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/trial-1.json",
+          "relativeToDirectory": "trial-1.json",
+          "bytes": 36906,
+          "sha256": "d408e000b3016d13e1ebfff9eab79c72ed47e0bbb56bd7244ca71c36d85ae2a8"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/trial-2.json",
+          "relativeToDirectory": "trial-2.json",
+          "bytes": 39984,
+          "sha256": "72a26100c93e735473cf2b330f14310a95953b79277999f4e10441ca621b02da"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/trial-3.json",
+          "relativeToDirectory": "trial-3.json",
+          "bytes": 42502,
+          "sha256": "9481b1ef66f2e626bb10876eab509fe6c4a5251c924b4305ff44c5c563360b06"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/trial-4.json",
+          "relativeToDirectory": "trial-4.json",
+          "bytes": 45095,
+          "sha256": "a0b95c5b8396d60b4cf562e783b5bee0e214975eb5cbf99f385c2fb3b71a805b"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/trial-5.json",
+          "relativeToDirectory": "trial-5.json",
+          "bytes": 44071,
+          "sha256": "def3ababe7c2c09907f1010d82743a4de900c1491ba5a7dfcaa0e89d591eafbb"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/trial-6.json",
+          "relativeToDirectory": "trial-6.json",
+          "bytes": 42009,
+          "sha256": "7a5815247831eee7dcfbb03ebf8dd1d0454e15af8199363787920213801670b3"
+        }
+      ],
+      "filesCount": 185,
+      "bytes": 10169671,
+      "custody": "EXTERNAL_PRIVATE_LOCAL_FILES_NOT_COPIED_OR_PUBLISHED"
+    },
+    {
+      "id": "structural-01",
+      "root": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/structural-01",
+      "files": [
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/structural-01/backend.log",
+          "relativeToDirectory": "backend.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/structural-01/check-proposals.cjs",
+          "relativeToDirectory": "check-proposals.cjs",
+          "bytes": 2799,
+          "sha256": "566f903942fa042674b08c098dac90fa6f661e9bea7771257568027e380d7cb8"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/structural-01/fixture-results-02.json",
+          "relativeToDirectory": "fixture-results-02.json",
+          "bytes": 516,
+          "sha256": "457105f45399242428f491049bcce7ceb2cb9b3bf0cb6ff73a0549aa8cb324a1"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/structural-01/fixture-results-03.json",
+          "relativeToDirectory": "fixture-results-03.json",
+          "bytes": 425,
+          "sha256": "51db07f1a51f915f32973a9a42eb7bf729fd797ea0f97e2f1a61075984f32323"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/structural-01/fixture-results.json",
+          "relativeToDirectory": "fixture-results.json",
+          "bytes": 1210,
+          "sha256": "774a12057f0e7592825d5c29daf4b0c584586e2405f4c1bac056a52707b36a30"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/structural-01/fixtures-02.log",
+          "relativeToDirectory": "fixtures-02.log",
+          "bytes": 80,
+          "sha256": "df3f61c3a618c20a37a30e57fdf67029ecb88089da47d967be85181c1b7fd1f5"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/structural-01/fixtures-02.tsconfig.json",
+          "relativeToDirectory": "fixtures-02.tsconfig.json",
+          "bytes": 646,
+          "sha256": "938c837b08c42dd4f62a8e7a4d69c81a59435030157b7222930093c4ba52c4ea"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/structural-01/fixtures-03.log",
+          "relativeToDirectory": "fixtures-03.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/structural-01/fixtures.log",
+          "relativeToDirectory": "fixtures.log",
+          "bytes": 692,
+          "sha256": "359c85ba1a0c2de5adc83d509a68380224c49140796987c155b7d8a864bd152f"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/structural-01/fixtures.tsconfig.json",
+          "relativeToDirectory": "fixtures.tsconfig.json",
+          "bytes": 382,
+          "sha256": "cce4bf252c143b6162c40a825babb7134a138a7b42179cfa59c0810c5ace6f70"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/structural-01/frontend.log",
+          "relativeToDirectory": "frontend.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/structural-01/preimages-01.json",
+          "relativeToDirectory": "preimages-01.json",
+          "bytes": 2688,
+          "sha256": "e036eca0c076fefccfd9794da0d911a65f32ce18b265fad6e4ba3229c19b1085"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/structural-01/results.json",
+          "relativeToDirectory": "results.json",
+          "bytes": 1402,
+          "sha256": "ec43dc35b1bed0f2cd73ffe984ccc0283f64140ff195fad1dddd1cfb7da13218"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/structural-01/virtual-backend-01.log",
+          "relativeToDirectory": "virtual-backend-01.log",
+          "bytes": 183,
+          "sha256": "8092e38a1c2df6b9a2e7cebd49ef38c8fd494ac705af56514efed02ff570656a"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/structural-01/virtual-frontend-01.log",
+          "relativeToDirectory": "virtual-frontend-01.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/structural-01/virtual-proposal-runner-01.log",
+          "relativeToDirectory": "virtual-proposal-runner-01.log",
+          "bytes": 599,
+          "sha256": "ab3ee04f58aa8a7c9795ef5921cc719c8f3a86f465d7436d458d397c309dcea8"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/structural-01/virtual-proposal-types-01.json",
+          "relativeToDirectory": "virtual-proposal-types-01.json",
+          "bytes": 779,
+          "sha256": "4c0d1620dd4e9ffb001af93fdf7e9505ac272ce4496d3bba8310f503039e4a31"
+        }
+      ],
+      "filesCount": 17,
+      "bytes": 12401,
+      "custody": "EXTERNAL_PRIVATE_LOCAL_FILES_NOT_COPIED_OR_PUBLISHED"
+    },
+    {
+      "id": "structural-02",
+      "root": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/structural-02",
+      "files": [
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/structural-02/backend.log",
+          "relativeToDirectory": "backend.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/structural-02/fixtures.log",
+          "relativeToDirectory": "fixtures.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/structural-02/frontend.log",
+          "relativeToDirectory": "frontend.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/structural-02/patch-check.log",
+          "relativeToDirectory": "patch-check.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/structural-02/preimages.log",
+          "relativeToDirectory": "preimages.log",
+          "bytes": 2688,
+          "sha256": "e036eca0c076fefccfd9794da0d911a65f32ce18b265fad6e4ba3229c19b1085"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/structural-02/results.json",
+          "relativeToDirectory": "results.json",
+          "bytes": 3734,
+          "sha256": "8c44e485f0017909924af4e0a8bb8e9f8a078a57b4eb1e0a92bd73fc76bb9026"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/structural-02/virtual-backend-01.log",
+          "relativeToDirectory": "virtual-backend-01.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/structural-02/virtual-frontend-01.log",
+          "relativeToDirectory": "virtual-frontend-01.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/structural-02/virtual-proposal-types-01.json",
+          "relativeToDirectory": "virtual-proposal-types-01.json",
+          "bytes": 779,
+          "sha256": "aefbf7a9b7d8ef6cbff86bd8c9134cf511ea1947f7d0d2822d58a00a831bc977"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/structural-02/virtual-proposals.log",
+          "relativeToDirectory": "virtual-proposals.log",
+          "bytes": 599,
+          "sha256": "453a4bb96f7d1baf5c94e75f94461c86516f72fcd8b6df7b81b23acddfc993ef"
+        }
+      ],
+      "filesCount": 10,
+      "bytes": 7800,
+      "custody": "EXTERNAL_PRIVATE_LOCAL_FILES_NOT_COPIED_OR_PUBLISHED"
+    },
+    {
+      "id": "structural-03",
+      "root": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/structural-03",
+      "files": [
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/structural-03/backend.log",
+          "relativeToDirectory": "backend.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/structural-03/custody-child-syntax.log",
+          "relativeToDirectory": "custody-child-syntax.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/structural-03/fixtures.log",
+          "relativeToDirectory": "fixtures.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/structural-03/frontend.log",
+          "relativeToDirectory": "frontend.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/structural-03/python-syntax.json",
+          "relativeToDirectory": "python-syntax.json",
+          "bytes": 930,
+          "sha256": "79a9d521e1bb94d619276dabbceab3dbe1da240999195dd3cc8ee51f374bd047"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/structural-03/results.json",
+          "relativeToDirectory": "results.json",
+          "bytes": 2999,
+          "sha256": "d1c0ec693769de82dbd3dc94ca2124434c27d2c7a6e52a58b74ce15c7b8b4f14"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/structural-03/virtual-backend-01.log",
+          "relativeToDirectory": "virtual-backend-01.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/structural-03/virtual-frontend-01.log",
+          "relativeToDirectory": "virtual-frontend-01.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/structural-03/virtual-proposal-types-01.json",
+          "relativeToDirectory": "virtual-proposal-types-01.json",
+          "bytes": 779,
+          "sha256": "aefbf7a9b7d8ef6cbff86bd8c9134cf511ea1947f7d0d2822d58a00a831bc977"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/structural-03/virtual-proposals.log",
+          "relativeToDirectory": "virtual-proposals.log",
+          "bytes": 599,
+          "sha256": "453a4bb96f7d1baf5c94e75f94461c86516f72fcd8b6df7b81b23acddfc993ef"
+        }
+      ],
+      "filesCount": 10,
+      "bytes": 5307,
+      "custody": "EXTERNAL_PRIVATE_LOCAL_FILES_NOT_COPIED_OR_PUBLISHED"
+    },
+    {
+      "id": "structural-04",
+      "root": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/structural-04",
+      "files": [
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/structural-04/backend.log",
+          "relativeToDirectory": "backend.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/structural-04/custody-child-syntax.log",
+          "relativeToDirectory": "custody-child-syntax.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/structural-04/fixtures.log",
+          "relativeToDirectory": "fixtures.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/structural-04/frontend.log",
+          "relativeToDirectory": "frontend.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/structural-04/patch-check.log",
+          "relativeToDirectory": "patch-check.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/structural-04/preimages.log",
+          "relativeToDirectory": "preimages.log",
+          "bytes": 2688,
+          "sha256": "e036eca0c076fefccfd9794da0d911a65f32ce18b265fad6e4ba3229c19b1085"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/structural-04/python-syntax.json",
+          "relativeToDirectory": "python-syntax.json",
+          "bytes": 930,
+          "sha256": "79a9d521e1bb94d619276dabbceab3dbe1da240999195dd3cc8ee51f374bd047"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/structural-04/results.json",
+          "relativeToDirectory": "results.json",
+          "bytes": 4315,
+          "sha256": "a679ba20d1bd83c29496c6bde03a722fc69cac248792795831b1506f94b44237"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/structural-04/virtual-backend-01.log",
+          "relativeToDirectory": "virtual-backend-01.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/structural-04/virtual-frontend-01.log",
+          "relativeToDirectory": "virtual-frontend-01.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/structural-04/virtual-proposal-types-01.json",
+          "relativeToDirectory": "virtual-proposal-types-01.json",
+          "bytes": 779,
+          "sha256": "aefbf7a9b7d8ef6cbff86bd8c9134cf511ea1947f7d0d2822d58a00a831bc977"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/structural-04/virtual-proposals.log",
+          "relativeToDirectory": "virtual-proposals.log",
+          "bytes": 599,
+          "sha256": "453a4bb96f7d1baf5c94e75f94461c86516f72fcd8b6df7b81b23acddfc993ef"
+        }
+      ],
+      "filesCount": 12,
+      "bytes": 9311,
+      "custody": "EXTERNAL_PRIVATE_LOCAL_FILES_NOT_COPIED_OR_PUBLISHED"
+    },
+    {
+      "id": "review-01",
+      "root": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/review-01",
+      "files": [
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/review-01/manifest.json",
+          "relativeToDirectory": "manifest.json",
+          "bytes": 18291,
+          "sha256": "592d5d134abd2c688fff7ef07bfc64f627770bd773fabbc28b99bd7691b88f9a"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/review-01/symbols.json",
+          "relativeToDirectory": "symbols.json",
+          "bytes": 23867,
+          "sha256": "91a3a4f3fd945915b754225f3e7db7afc522fbafc5f88e7316fda60c20b8cc27"
+        }
+      ],
+      "filesCount": 2,
+      "bytes": 42158,
+      "custody": "EXTERNAL_PRIVATE_LOCAL_FILES_NOT_COPIED_OR_PUBLISHED"
+    },
+    {
+      "id": "seal-01",
+      "root": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/seal-01",
+      "files": [
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/seal-01/final-census.json",
+          "relativeToDirectory": "final-census.json",
+          "bytes": 699,
+          "sha256": "266dc18bb0de3bcae0db748dc58303d860c34023de5ea283fd7dfb370e1e0b06"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/seal-01/preimages-final.json",
+          "relativeToDirectory": "preimages-final.json",
+          "bytes": 2688,
+          "sha256": "e036eca0c076fefccfd9794da0d911a65f32ce18b265fad6e4ba3229c19b1085"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/seal-01/source-commit.json",
+          "relativeToDirectory": "source-commit.json",
+          "bytes": 189,
+          "sha256": "0d3f5ed5a36e9f5703ee62cdf339fe2545e2c20c774d9e49237ac002016aa250"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/seal-01/staged-code-whitespace.log",
+          "relativeToDirectory": "staged-code-whitespace.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/seal-01/staged-manifest.json",
+          "relativeToDirectory": "staged-manifest.json",
+          "bytes": 10146,
+          "sha256": "9ac919d224199a66446209b10416be0bb2a16f65b8ade965d1059af431862c81"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/seal-01/staged-review.json",
+          "relativeToDirectory": "staged-review.json",
+          "bytes": 10516,
+          "sha256": "3aae59c1e1d3e2b73820eba03716bdfb8570f9291875a40fb9bc7e03438c7744"
+        },
+        {
+          "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/seal-01/staged-source.diff",
+          "relativeToDirectory": "staged-source.diff",
+          "bytes": 492595,
+          "sha256": "a7f5e99cbd0bfd979ed515284775d123cd97510e2d965e1753e48b40ee0588c7"
+        }
+      ],
+      "filesCount": 7,
+      "bytes": 516833,
+      "custody": "EXTERNAL_PRIVATE_LOCAL_FILES_NOT_COPIED_OR_PUBLISHED"
+    }
+  ],
+  "historical": [
+    {
+      "path": "/Users/paramdave/.cache/finnor-r8-runtime/evidence/final-owner-03/bootstrap-repaired/observed-bootstrap/results.json",
+      "bytes": 46702,
+      "sha256": "89c851b7e29a3b3e5344a1bcd487c215754b3796e73c6257c39141868c49c3d8",
+      "status": "HISTORICAL_NOT_CURRENT_BRANCH_ACCEPTANCE"
+    },
+    {
+      "path": "/Users/paramdave/.cache/finnor-r8-runtime/evidence/handoff/selected-validation.json",
+      "bytes": 2849,
+      "sha256": "ec709c0c738ca2733ebc9aa1176773c0e2a6a731de4244b218d72903d058f50c",
+      "status": "HISTORICAL_NOT_CURRENT_BRANCH_ACCEPTANCE"
+    },
+    {
+      "path": "/Users/paramdave/.cache/finnor-r8-runtime/evidence/final-owner-03/bootstrap-repaired/observed-bootstrap/inputs.json",
+      "bytes": 77290,
+      "sha256": "04d02bcf21d28919095ce719c99728402430a813fc082bfb0b1d6e06239e6ab7",
+      "status": "HISTORICAL_ORIGINAL_OWNER_INPUTS_NOT_CURRENT_BRANCH_ACCEPTANCE"
+    }
+  ],
+  "finalSemantic": {
+    "manifest": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/results.json",
+    "startedAt": "2026-10-11T08:09:24.500Z",
+    "finishedAt": "2026-10-11T08:12:44.567Z",
+    "cases": [
+      {
+        "id": "actual-cegis-and-full-original-domain",
+        "status": "PASS"
+      },
+      {
+        "id": "semantic-mutations-reach-original-oracle",
+        "status": "PASS"
+      },
+      {
+        "id": "grammar-arithmetic-termination-and-domain-mutations",
+        "status": "PASS"
+      },
+      {
+        "id": "lowering-compiler-emitted-and-coverage-substitution",
+        "status": "PASS"
+      }
+    ],
+    "observed": {
+      "rounds": 7,
+      "counterexamples": 5,
+      "receiptDigest": "8c7caf97d9ca783d463d877bd9deeae3858242635a1ff977ac1b6fda3ea1f096",
+      "checkedInputs": 262144,
+      "checkedPairs": 2097152,
+      "independentAcceptances": 2,
+      "originalDeadlineAt": "2026-10-11T08:18:59.240Z",
+      "resources": {
+        "elapsedMs": 187303.31875,
+        "queries": 40,
+        "rounds": 7,
+        "optimization": {
+          "plan": "ONE_REDUNDANT_ALL_ENABLED_GUARD_ALTERNATIVE",
+          "costOrder": [
+            "compiledBytes",
+            "ssaRegisters",
+            "astBytes"
+          ],
+          "globalCheapestClaim": false,
+          "status": "COMPLETE",
+          "originalDeadlineAt": "2026-10-11T08:18:59.240Z",
+          "remainingOriginalMs": 434311,
+          "verificationCapMs": 600000,
+          "before": [
+            6555,
+            72,
+            2796
+          ],
+          "after": [
+            6555,
+            72,
+            1983
+          ],
+          "alternativeReceiptDigest": "8c7caf97d9ca783d463d877bd9deeae3858242635a1ff977ac1b6fda3ea1f096",
+          "selected": true,
+          "elapsedMs": 46876.91916600001
+        },
+        "usd": null,
+        "humanSeconds": null,
+        "aggregatePeakMemoryBytes": null,
+        "qualification": "ACTUAL_CHILD_USAGE_AND_WALL_NO_COMPLETE_DOLLAR_HUMAN_OR_AGGREGATE_METER"
+      }
+    },
+    "acceptances": [
+      {
+        "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/acceptance-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263.json",
+        "keys": [
+          "trial",
+          "receipt"
+        ],
+        "receiptDigest": "d3c20a555f31d155606daea9ceef0a8b904e0da3f1a995462d09f6bbb608ac86",
+        "programDigest": "b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263",
+        "moduleDigest": "0bd084ef49b4d68cdbf9e8e84b4d21059338785f20c2f3f180aa16cfa002d970",
+        "checkedInputs": 262144,
+        "checkedPairs": 2097152,
+        "chunks": 64
+      },
+      {
+        "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/acceptance-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002.json",
+        "keys": [
+          "trial",
+          "receipt"
+        ],
+        "receiptDigest": "8c7caf97d9ca783d463d877bd9deeae3858242635a1ff977ac1b6fda3ea1f096",
+        "programDigest": "c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002",
+        "moduleDigest": "0bd084ef49b4d68cdbf9e8e84b4d21059338785f20c2f3f180aa16cfa002d970",
+        "checkedInputs": 262144,
+        "checkedPairs": 2097152,
+        "chunks": 64
+      }
+    ],
+    "sourcePinsMatchFinalSourceCommit": true
+  },
+  "finalCustody": {
+    "manifest": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/custody-green-03/results.json",
+    "cases": [
+      {
+        "id": "witness-startup-custody",
+        "status": "PASS",
+        "forcedCleanup": []
+      },
+      {
+        "id": "full-domain-startup-custody",
+        "status": "PASS",
+        "forcedCleanup": []
+      },
+      {
+        "id": "backpressure-original-deadline",
+        "status": "PASS",
+        "forcedCleanup": []
+      },
+      {
+        "id": "pre-aborted-no-child",
+        "status": "PASS",
+        "forcedCleanup": []
+      },
+      {
+        "id": "normal-supervised-physical-close",
+        "status": "PASS",
+        "forcedCleanup": []
+      }
+    ],
+    "negativeProbe": {
+      "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/custody-green-03/close-refusal-probe.json",
+      "status": "PASS_EXPECTED_BOUNDED_REFUSAL_NOT_PHYSICAL_CLOSE",
+      "elapsedMs": 5001.767292,
+      "aliveBeforeTestCleanup": true,
+      "productClosedBeforeTestCleanup": 0,
+      "forcedTestCleanupGroups": [
+        50477
+      ],
+      "physicalCloseProven": false,
+      "capacityReleaseProven": false
+    }
+  },
+  "retainedEarlyGreens": {
+    "semantic01": "4_PASS_ON_PRE_FINAL_TRANSPORT_BYTES_NOT_FINAL_SOURCE_CUSTODY_ACCEPTANCE",
+    "custody02": "5_PASS_ON_PRE_FINAL_TRANSPORT_BYTES"
+  },
+  "retainedReds": {
+    "custody01": "Two startup FAILs with forced checker cleanup; later unhandled EPERM crash, incomplete five-case campaign",
+    "virtualBackend01": "One TS2305 missing relocated source-closure export diagnostic",
+    "initialFixtureTypes": "Type-root resolution and possibly undefined reservation; preserved in structural-01",
+    "custodyCrashRawLog": {
+      "status": "PRIMARY_RAW_CRASH_LOG_NOT_LOCATED_IN_EXTERNAL_CAMPAIGN_DIRECTORY",
+      "retainedObservation": "Source-commit repair-addendum.json and prior session observation retain exit1 on unhandled EPERM. custody-red-01/results.json directly retains the two actual startup failures.",
+      "limitation": "Do not present the documented crash observation as an independently indexed primary stderr artifact."
+    }
+  },
+  "historicalOwnerCases": [
+    {
+      "id": "current-native-owner-projection",
+      "status": "PASS",
+      "predicate": "Actual issued S3/S4/S5/Work profiles reach lossless all-eight-subset projection with original IDs and ordinary nonbypass role"
+    },
+    {
+      "id": "durable-whole-domain-owner-worker",
+      "status": "FAIL",
+      "predicate": "Actual submit/read/API/SQL/queue/separate worker retain genuine failed trials and independently accept all 262144 emitted inputs/2097152 pairs with no business writes"
+    },
+    {
+      "id": "native-fallback-original-grant",
+      "status": "PASS",
+      "predicate": "Missing separate S8 admission executes strongest original SciPy/HiGHS full route then original independent S5 check inside unchanged Work grant"
+    },
+    {
+      "id": "private-scope-grant-and-compute-contention",
+      "status": "FAIL",
+      "predicate": "Real tenant/principal API refusals, immutable original grant, and occupied aggregate scientific capacity cannot disclose or amplify work"
+    },
+    {
+      "id": "separated-s8-full-review-reuse-revoke",
+      "status": "FAIL",
+      "predicate": "Separate actual ordinary S8 owner executes full D, then distinct evaluator/promoter admission, emitted S5 reuse, restart and revocation cause executed original native fallback"
+    },
+    {
+      "id": "mounted-built-authenticated-work",
+      "status": "FAIL",
+      "predicate": "Actual mounted existing Work reaches built authenticated API/SQL/worker and clears private state across reload and Work switches"
+    },
+    {
+      "id": "verifier-death-and-budget-fallback",
+      "status": "FAIL",
+      "predicate": "A real checker is SIGKILLed and a separate original two-round Work exhausts search; both execute the exact current full S5 route without renewing either grant"
+    },
+    {
+      "id": "source-resource-invalidation",
+      "status": "FAIL",
+      "predicate": "Actual owner resource change invalidates the Work use without replacing the abstract semantic theorem or erasing incurred work"
+    },
+    {
+      "id": "two-work-capital-and-unknown-responsibility",
+      "status": "PASS",
+      "predicate": "Two actual Works share one canonical S5 capacity; concurrent reservations remain bounded and UNKNOWN consumption cannot be hidden by a capsule or release"
+    },
+    {
+      "id": "locked-principal-publication-revocation",
+      "status": "FAIL",
+      "predicate": "A real full-domain checker reaches its final accepted chunk, publication blocks on the actual principal, and revocation fences the artifact without erasing the grant or checked children"
+    }
+  ],
+  "historicalOwnerPass": 3,
+  "historicalOwnerFail": 7,
+  "historicalOwnerShellExitNotAuthoritative": true,
+  "historicalS6": {
+    "prerequisiteAndAckPredicatesPassed": 2,
+    "effectiveFailedPredicates": 0,
+    "processExit": 1,
+    "qualification": "ACTUAL_ACK_CASE_PASS; TERMINAL_EXPECTED_COUNT_GUARD_MISMATCH_RETAINED; NOT_FULL_SUITE"
+  },
+  "finalStructural": {
+    "schema": "finnor.r8.structural-results.v1",
+    "sharedFilesWritten": 0,
+    "results": [
+      {
+        "name": "preimages",
+        "command": [
+          "python3",
+          "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/scope-r/r8-repaired-adoption/integration/check-preimages.py",
+          "--repo",
+          "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR"
+        ],
+        "cwd": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR",
+        "exitCode": 0,
+        "elapsedMs": 79,
+        "qualification": "FINAL_STRUCTURAL_ONLY_NOT_ASSEMBLED_OWNER_MOUNTED_PROTECTED_OR_JOINED_EXECUTION"
+      },
+      {
+        "name": "patch-check",
+        "command": [
+          "git",
+          "-C",
+          "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR",
+          "apply",
+          "--check",
+          "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/scope-r/r8-repaired-adoption/integration/shared-seams.patch"
+        ],
+        "cwd": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR",
+        "exitCode": 0,
+        "elapsedMs": 12,
+        "qualification": "FINAL_STRUCTURAL_ONLY_NOT_ASSEMBLED_OWNER_MOUNTED_PROTECTED_OR_JOINED_EXECUTION"
+      },
+      {
+        "name": "backend",
+        "command": [
+          "/Users/paramdave/.hermes/node/bin/node",
+          "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/node_modules/typescript/bin/tsc",
+          "--noEmit",
+          "--incremental",
+          "false"
+        ],
+        "cwd": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os",
+        "exitCode": 0,
+        "elapsedMs": 17441,
+        "qualification": "FINAL_STRUCTURAL_ONLY_NOT_ASSEMBLED_OWNER_MOUNTED_PROTECTED_OR_JOINED_EXECUTION"
+      },
+      {
+        "name": "frontend",
+        "command": [
+          "/Users/paramdave/.hermes/node/bin/node",
+          "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/node_modules/typescript/bin/tsc",
+          "--noEmit",
+          "--incremental",
+          "false"
+        ],
+        "cwd": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR",
+        "exitCode": 0,
+        "elapsedMs": 6089,
+        "qualification": "FINAL_STRUCTURAL_ONLY_NOT_ASSEMBLED_OWNER_MOUNTED_PROTECTED_OR_JOINED_EXECUTION"
+      },
+      {
+        "name": "fixtures",
+        "command": [
+          "/Users/paramdave/.hermes/node/bin/node",
+          "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/node_modules/typescript/bin/tsc",
+          "-p",
+          "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/structural-01/fixtures-02.tsconfig.json"
+        ],
+        "cwd": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os",
+        "exitCode": 0,
+        "elapsedMs": 10832,
+        "qualification": "FINAL_STRUCTURAL_ONLY_NOT_ASSEMBLED_OWNER_MOUNTED_PROTECTED_OR_JOINED_EXECUTION"
+      },
+      {
+        "name": "virtual-proposals",
+        "command": [
+          "/Users/paramdave/.hermes/node/bin/node",
+          "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/structural-01/check-proposals.cjs",
+          "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR",
+          "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/structural-04"
+        ],
+        "cwd": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR",
+        "exitCode": 0,
+        "elapsedMs": 23632,
+        "qualification": "FINAL_STRUCTURAL_ONLY_NOT_ASSEMBLED_OWNER_MOUNTED_PROTECTED_OR_JOINED_EXECUTION"
+      },
+      {
+        "name": "custody-child-syntax",
+        "command": [
+          "/Users/paramdave/.hermes/node/bin/node",
+          "--check",
+          "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/scripts/r8/custody-child.mjs"
+        ],
+        "cwd": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR",
+        "exitCode": 0,
+        "elapsedMs": 49,
+        "qualification": "FINAL_STRUCTURAL_ONLY_NOT_ASSEMBLED_OWNER_MOUNTED_PROTECTED_OR_JOINED_EXECUTION"
+      }
+    ]
+  },
+  "virtualPostimages": {
+    "sharedFilesWritten": 0,
+    "results": [
+      {
+        "name": "backend",
+        "diagnostics": 0,
+        "exitCode": 0,
+        "qualification": "VIRTUAL_UNAPPLIED_PROPOSAL_STRUCTURAL_ONLY_NOT_OWNER_EXECUTION_OR_JOINED_COMPATIBILITY"
+      },
+      {
+        "name": "frontend",
+        "diagnostics": 0,
+        "exitCode": 0,
+        "qualification": "VIRTUAL_UNAPPLIED_PROPOSAL_STRUCTURAL_ONLY_NOT_OWNER_EXECUTION_OR_JOINED_COMPATIBILITY"
+      },
+      {
+        "name": "finnor-os/apps/api/next.config.mjs",
+        "exitCode": 0,
+        "stderr": "",
+        "qualification": "UNAPPLIED_PROPOSAL_SYNTAX_ONLY"
+      },
+      {
+        "name": "scripts/centropy/generate-capability-manifest.mjs",
+        "exitCode": 0,
+        "stderr": "",
+        "qualification": "UNAPPLIED_PROPOSAL_SYNTAX_ONLY"
+      }
+    ]
+  },
+  "scope": "Mathematics/ordinary local scientific custody and structural proposals only; not current owner/applicability, ordinary S8, protected, mounted, joined, gain or economic acceptance.",
+  "freezeBoundary": "434 private local artifacts were hashed before the handoff-data commit. Subsequent staged-handoff diff/final sealing output is separate metadata, not additional scientific/owner evidence."
+}

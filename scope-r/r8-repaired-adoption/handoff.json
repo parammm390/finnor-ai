@@ -1,0 +1,378 @@
+{
+  "schema": "finnor.r8.independent-repaired-adoption-handoff.v1",
+  "status": "INCOMPLETE_INTERNAL_REPAIRED_SCIENTIFIC_CONTRIBUTION",
+  "branch": "factory/r8-repaired-adoption-producer-2026-10-11",
+  "sourceCommit": "2a7a22edf71be8caddde1e29a98403b0eeda1a4f",
+  "sourceTree": "ba57567a01c052363b3a438e18ca045057a6a3f8",
+  "baseCommit": "4a90ed33ca96afa252c51f511fea279e0034cddb",
+  "leadCommit": "e4a8f1a6f80733fe6bfe4e9f3c072c46c560fec4",
+  "repo": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR",
+  "publication": {
+    "pushed": false,
+    "pullRequest": false,
+    "deployment": false,
+    "provisioning": false,
+    "businessEffects": false,
+    "protectedAdmissionAuthorized": false,
+    "protectedActivation": false
+  },
+  "indexes": [
+    {
+      "path": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/scope-r/r8-repaired-adoption/source-index.json",
+      "sha256": "e7ecfff8b55a0f386098efb0ee494da42c4f4699e6ece6054b6473468dad5754"
+    },
+    {
+      "path": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/scope-r/r8-repaired-adoption/evidence-index.json",
+      "sha256": "62ff6ae3c2cb7fa5dc4276ee27ab09452650d3934d10db7247765e0e8829c509"
+    },
+    {
+      "path": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/scope-r/r8-repaired-adoption/helper-inventory.json",
+      "sha256": "2cd38425d4c39c11fff01493f12216fd7a5a09df00954eb40ec7a784b633ab41"
+    },
+    {
+      "path": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/scope-r/r8-repaired-adoption/adoption-map.json",
+      "sha256": "10de9241239814dfeef191072f656c7691aceed213192935aedb7fef2e221614"
+    },
+    {
+      "path": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/scope-r/r8-repaired-adoption/registration.json",
+      "sha256": "01111a69b4311b89d40e82ecd4a968aca278a67213d8a59da332731ba209fe4c"
+    }
+  ],
+  "integration": {
+    "packet": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/scope-r/r8-repaired-adoption/integration/packet.json",
+    "sha256": "8fdaec81947693f6a943a70c9e49c91b0ed229e71251095f1449993e47222618",
+    "patch": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/scope-r/r8-repaired-adoption/integration/shared-seams.patch",
+    "applied": false,
+    "targets": 10,
+    "schemaSql": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/scope-r/r8-repaired-adoption/integration/solver-capsules.sql",
+    "installed": false,
+    "migrationOrdinal": null,
+    "sharedTrackedPathsChanged": 0
+  },
+  "delivered": [
+    "37 source/runtime-lock leaves, plus exclusive read-only integration guard and scoped original/adoption/registration/repair/reuse records",
+    "Actual Rosette CEGIS and independently checked full original D against registered P1 emitted bytes",
+    "Bounded scientific native-startup/backpressure/cancellation/signal/physical-close custody",
+    "Owner fixture finally cleanup, early fixed-budget faults, strict S5 resource preimage/readback/grant-preserving restore",
+    "Render-time Work/root/principal/token-version/URL/access privacy and delayed-response fencing with one polling chain",
+    "Ten unapplied byte-bound cumulative owner integration proposals; no schema ordinal selected"
+  ],
+  "mathematics": {
+    "status": "PASS_FINAL_SOURCE_4_OF_4",
+    "domain": {
+      "profile": "r8-three-optional-projects-integer-v1",
+      "inputOrder": [
+        "c1",
+        "c2",
+        "c3",
+        "v1",
+        "v2",
+        "v3"
+      ],
+      "coordinateRangeInclusive": [
+        0,
+        7
+      ],
+      "inputs": 262144,
+      "subsetsPerInput": 8,
+      "pairs": 2097152,
+      "chunks": 64,
+      "chunkSize": 4096,
+      "capacity": 7,
+      "tie": "MINIMUM_CANONICAL_MASK",
+      "utility": "SUM_SUPPLIED_UTILITIES_NO_COST_REDEDUCTION"
+    },
+    "caps": {
+      "campaignOriginalWallMs": 3600000,
+      "ownerDriverObserverMs": 2400000,
+      "cegisCandidates": 16,
+      "durableAttempts": 3,
+      "queryMs": 45000,
+      "solverMs": 40000,
+      "verificationMs": 600000,
+      "witnessMs": 60000,
+      "grammarNodes": 512,
+      "grammarDepth": 24,
+      "locals": 32,
+      "astBytes": 16384,
+      "loops": 1,
+      "loopIterations": 7,
+      "fuel": 1024,
+      "integerMagnitude": 63,
+      "p1Registers": 256,
+      "p1CompiledBytes": 65536,
+      "processFrameBytes": 262144,
+      "physicalCloseGraceMs": 5000
+    },
+    "originalWallMs": 574739,
+    "trials": 7,
+    "counterexamples": 5,
+    "queries": 40,
+    "twoIndependentFullDAcceptances": [
+      {
+        "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/acceptance-b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263.json",
+        "keys": [
+          "trial",
+          "receipt"
+        ],
+        "receiptDigest": "d3c20a555f31d155606daea9ceef0a8b904e0da3f1a995462d09f6bbb608ac86",
+        "programDigest": "b90a588c2afb00c3e356a4df2721c07002af833cb6509209e11c3f0f139dd263",
+        "moduleDigest": "0bd084ef49b4d68cdbf9e8e84b4d21059338785f20c2f3f180aa16cfa002d970",
+        "checkedInputs": 262144,
+        "checkedPairs": 2097152,
+        "chunks": 64
+      },
+      {
+        "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/semantic-02/acceptance-c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002.json",
+        "keys": [
+          "trial",
+          "receipt"
+        ],
+        "receiptDigest": "8c7caf97d9ca783d463d877bd9deeae3858242635a1ff977ac1b6fda3ea1f096",
+        "programDigest": "c1ab66d0abb5c4b25e56892c5a74f5cc617b992c1309de00b583732a996a8002",
+        "moduleDigest": "0bd084ef49b4d68cdbf9e8e84b4d21059338785f20c2f3f180aa16cfa002d970",
+        "checkedInputs": 262144,
+        "checkedPairs": 2097152,
+        "chunks": 64
+      }
+    ],
+    "selectedReceiptDigest": "8c7caf97d9ca783d463d877bd9deeae3858242635a1ff977ac1b6fda3ea1f096",
+    "synthesisElapsedMs": 187303.31875,
+    "optimization": {
+      "plan": "ONE_REDUNDANT_ALL_ENABLED_GUARD_ALTERNATIVE",
+      "costOrder": [
+        "compiledBytes",
+        "ssaRegisters",
+        "astBytes"
+      ],
+      "globalCheapestClaim": false,
+      "status": "COMPLETE",
+      "originalDeadlineAt": "2026-10-11T08:18:59.240Z",
+      "remainingOriginalMs": 434311,
+      "verificationCapMs": 600000,
+      "before": [
+        6555,
+        72,
+        2796
+      ],
+      "after": [
+        6555,
+        72,
+        1983
+      ],
+      "alternativeReceiptDigest": "8c7caf97d9ca783d463d877bd9deeae3858242635a1ff977ac1b6fda3ea1f096",
+      "selected": true,
+      "elapsedMs": 46876.91916600001
+    },
+    "meaning": "Exact model-relative branch D, supplied utilities, no business truth/forecast/wealth or global-cheapest claim"
+  },
+  "custody": {
+    "manifest": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/custody-green-03/results.json",
+    "cases": [
+      {
+        "id": "witness-startup-custody",
+        "status": "PASS",
+        "forcedCleanup": []
+      },
+      {
+        "id": "full-domain-startup-custody",
+        "status": "PASS",
+        "forcedCleanup": []
+      },
+      {
+        "id": "backpressure-original-deadline",
+        "status": "PASS",
+        "forcedCleanup": []
+      },
+      {
+        "id": "pre-aborted-no-child",
+        "status": "PASS",
+        "forcedCleanup": []
+      },
+      {
+        "id": "normal-supervised-physical-close",
+        "status": "PASS",
+        "forcedCleanup": []
+      }
+    ],
+    "negativeProbe": {
+      "path": "/Users/paramdave/.cache/finnor-r8-repaired-adoption-2026-10-11/custody-green-03/close-refusal-probe.json",
+      "status": "PASS_EXPECTED_BOUNDED_REFUSAL_NOT_PHYSICAL_CLOSE",
+      "elapsedMs": 5001.767292,
+      "aliveBeforeTestCleanup": true,
+      "productClosedBeforeTestCleanup": 0,
+      "forcedTestCleanupGroups": [
+        50477
+      ],
+      "physicalCloseProven": false,
+      "capacityReleaseProven": false
+    }
+  },
+  "structural": {
+    "actualBackendFrontendFixtureTypes": "PASS_EXIT0",
+    "virtualUnappliedBackendFrontendTypes": "ZERO_DIAGNOSTICS",
+    "nextAndCapabilityGeneratorSyntax": "PASS_NOT_EXECUTED",
+    "preimageGuardAndGitApplyCheck": "PASS_UNAPPLIED",
+    "fullBuild": "NOT_RUN_ON_THIS_BRANCH",
+    "lint": "NOT_RUN_ON_THIS_BRANCH",
+    "notJoinedQualification": true
+  },
+  "verificationBudget": {
+    "custodyRunsUsed": 3,
+    "custodyMaximum": 3,
+    "semanticRunsUsed": 2,
+    "semanticMaximum": 2,
+    "ownerRunsUsedOnThisBranch": 0,
+    "ownerMaximum": 2,
+    "noAdditionalScientificRerunWithoutNewRegistration": true
+  },
+  "qualification": {
+    "currentOwnerApplicability": "NOT_RUN_REPAIRED_SHARED_ASSEMBLY_ABSENT",
+    "ordinaryS8Mechanics": "NOT_RUN_REPAIRED_SHARED_ASSEMBLY_ABSENT_HISTORICAL_TRANSPORT_FAIL_RETAINED",
+    "mountedBuiltAuthenticatedWork": "NOT_RUN_REPAIRED_ASSEMBLY_HISTORICAL_LOGIN_TIMEOUT_RETAINED",
+    "protectedAdmission": "NOT_RUN_NOT_AUTHORIZED",
+    "protectedActivation": false,
+    "joinedCompatibility": "NOT_ASSEMBLED",
+    "allEntrypointAggregateScientificFencing": "NOT_QUALIFIED",
+    "installedLayoutCleanHostRestore": "NOT_RUN",
+    "linuxIsolationRuntime": "REFUSED_UNQUALIFIED",
+    "comparativeEquippedXGain": "NOT_RUN",
+    "S7H2Economics": "NOT_RUN",
+    "usd": null,
+    "humanSeconds": null,
+    "aggregatePeakMemoryBytes": null,
+    "independentParallelReviewers": "NOT_AVAILABLE_NO_TASK_TOOL_0_OF_3",
+    "manualReview": "THREE_PERSPECTIVES_278_SYMBOLS_DISPOSITIONED_NOT_INDEPENDENT_AGENTS"
+  },
+  "retainedFailureObligations": {
+    "historicalOwnerPass": 3,
+    "historicalOwnerFail": 7,
+    "historicalOwnerCases": [
+      {
+        "id": "current-native-owner-projection",
+        "status": "PASS",
+        "predicate": "Actual issued S3/S4/S5/Work profiles reach lossless all-eight-subset projection with original IDs and ordinary nonbypass role"
+      },
+      {
+        "id": "durable-whole-domain-owner-worker",
+        "status": "FAIL",
+        "predicate": "Actual submit/read/API/SQL/queue/separate worker retain genuine failed trials and independently accept all 262144 emitted inputs/2097152 pairs with no business writes"
+      },
+      {
+        "id": "native-fallback-original-grant",
+        "status": "PASS",
+        "predicate": "Missing separate S8 admission executes strongest original SciPy/HiGHS full route then original independent S5 check inside unchanged Work grant"
+      },
+      {
+        "id": "private-scope-grant-and-compute-contention",
+        "status": "FAIL",
+        "predicate": "Real tenant/principal API refusals, immutable original grant, and occupied aggregate scientific capacity cannot disclose or amplify work"
+      },
+      {
+        "id": "separated-s8-full-review-reuse-revoke",
+        "status": "FAIL",
+        "predicate": "Separate actual ordinary S8 owner executes full D, then distinct evaluator/promoter admission, emitted S5 reuse, restart and revocation cause executed original native fallback"
+      },
+      {
+        "id": "mounted-built-authenticated-work",
+        "status": "FAIL",
+        "predicate": "Actual mounted existing Work reaches built authenticated API/SQL/worker and clears private state across reload and Work switches"
+      },
+      {
+        "id": "verifier-death-and-budget-fallback",
+        "status": "FAIL",
+        "predicate": "A real checker is SIGKILLed and a separate original two-round Work exhausts search; both execute the exact current full S5 route without renewing either grant"
+      },
+      {
+        "id": "source-resource-invalidation",
+        "status": "FAIL",
+        "predicate": "Actual owner resource change invalidates the Work use without replacing the abstract semantic theorem or erasing incurred work"
+      },
+      {
+        "id": "two-work-capital-and-unknown-responsibility",
+        "status": "PASS",
+        "predicate": "Two actual Works share one canonical S5 capacity; concurrent reservations remain bounded and UNKNOWN consumption cannot be hidden by a capsule or release"
+      },
+      {
+        "id": "locked-principal-publication-revocation",
+        "status": "FAIL",
+        "predicate": "A real full-domain checker reaches its final accepted chunk, publication blocks on the actual principal, and revocation fences the artifact without erasing the grant or checked children"
+      }
+    ],
+    "S6": {
+      "prerequisiteAndAckPredicatesPassed": 2,
+      "effectiveFailedPredicates": 0,
+      "processExit": 1,
+      "qualification": "ACTUAL_ACK_CASE_PASS; TERMINAL_EXPECTED_COUNT_GUARD_MISMATCH_RETAINED; NOT_FULL_SUITE"
+    },
+    "S8TransportCause": "UNRESOLVED_NOT_RELABELED_OWNER_EVALUATION",
+    "noAssertionsRemovedNoDeadlineReset": true,
+    "custodyCrashRawLog": {
+      "status": "PRIMARY_RAW_CRASH_LOG_NOT_LOCATED_IN_EXTERNAL_CAMPAIGN_DIRECTORY",
+      "retainedObservation": "Source-commit repair-addendum.json and prior session observation retain exit1 on unhandled EPERM. custody-red-01/results.json directly retains the two actual startup failures.",
+      "limitation": "Do not present the documented crash observation as an independently indexed primary stderr artifact."
+    }
+  },
+  "reconstruction": {
+    "source": "Import sourceCommit only on the intended cumulative ancestry and verify source-index blobs/hashes. No runtime archive/dependencies/private evidence are in Git. Do not redo R3.",
+    "runtime": "Pinned borrowed macOS runtime inventory/executables/licenses are fully rechecked; reconstruct the same layout via original seal/package recipes only with adequate disk. Node path/version/digest are in source-index. This is not clean-host/Linux acceptance.",
+    "evidence": "434 frozen local artifacts plus historical result/input/selected-validation pointers have byte counts/SHA256 in evidence-index. Later sealing output is metadata. Two startup reds are primary artifacts; the earlier unhandled EPERM crash is a retained prerepair observation with an unlocated primary crash-log pointer. No private evidence was uploaded.",
+    "preimages": [
+      "python3",
+      "scope-r/r8-repaired-adoption/integration/check-preimages.py",
+      "--repo",
+      "<assembled-checkout>"
+    ],
+    "preimageRule": "Changed cumulative preimages require shared-owner rebase/review, never blind application or overwriting R1/R2/R4/R5/R6/R7.",
+    "semanticRecipe": {
+      "cwd": "<source-checkout>/finnor-os",
+      "command": [
+        "<pinned-node>",
+        "--import=tsx",
+        "scripts/r8/run-semantic.mts"
+      ],
+      "environment": {
+        "FINNOR_R8_RUNTIME_MANIFEST": "<verified sealed runtime>",
+        "FINNOR_R8_EVIDENCE_DIR": "<new private directory>"
+      },
+      "authority": "Recipe only; two registered runs are exhausted. Register a new finite campaign for changed joined sources."
+    },
+    "custodyRecipe": {
+      "cwd": "<source-checkout>/finnor-os",
+      "command": [
+        "<pinned-node>",
+        "--import=tsx",
+        "scripts/r8/run-custody.mts"
+      ],
+      "environment": {
+        "FINNOR_R8_RUNTIME_MANIFEST": "<verified sealed runtime>",
+        "FINNOR_R8_EVIDENCE_DIR": "<new private directory>"
+      },
+      "authority": "Recipe only; three registered runs exhausted. Keep negative forced cleanup separate from the five positive close predicates."
+    },
+    "ownerRecipe": {
+      "cwd": "<assembled-checkout>",
+      "command": [
+        "python3",
+        "finnor-os/scripts/r8/run-local.py"
+      ],
+      "environment": {
+        "PATH": "<pinned node directory>:<trusted inherited PATH>",
+        "FINNOR_R8_RUNTIME_MANIFEST": "<verified sealed runtime>",
+        "FINNOR_R8_EVIDENCE_DIR": "<new private directory>",
+        "FINNOR_R8_ORIGINAL_DEADLINE_CAP": "574739"
+      },
+      "requires": "Real serial schema/privileges/canonical job/API/S5/S8/mounted caller assembly; original ten cases and all assertions. The local API harness declares AUTH_DEV_BYPASS=1/test scope; it cannot substitute for the separate actual built/authenticated mounted proof."
+    }
+  },
+  "serialFollowups": [
+    "Rebase every proposed shared target on actual cumulative owners; retain R4 exact quantity encoding and all prior registrations.",
+    "Choose unused cumulative migration ordinal; install/bundle exact SQL and head; verify real finnor_app/worker INHERIT, FORCE RLS and nonsuper/nonbypass principals.",
+    "Configure real HEAVY provider:r8-scientific capacity and worker lease at least 630 seconds; fixture uses 660. Retain unknown physical groups/leases as charged. Qualify aggregate fencing for S8/API reuse too.",
+    "Assemble canonical job registration, authenticated API, pure S5 resolver, ordinary-only signed S8 dispatch and mounted Work caller; regenerate migration bundle/OpenAPI/client/capability manifest and review exact diffs.",
+    "Run actual fixed-budget ten-case ordinary owner campaign, expired-grant/publication faults and built/authenticated mounted Work proof with exact source identities. Preserve historical and new failures, cleanup custody and all original grants/deadlines.",
+    "Shared S6 harness owner must correct selected-count guard for its two prerequisite/ack predicates; the retained exit1 is not a suite PASS. No R8 shared harness edit was installed.",
+    "Independently review the entire contribution and unapplied postimages; three parallel review agents were not exposed in this environment.",
+    "Separate authorization/evidence is still required for protected admission/activation, installed/Linux layout, equipped-X comparison and complete money/human/aggregate-memory/S7 H2 economics."
+  ]
+}
