@@ -1,3 +1,17 @@
+# Latest joined cut, 11 October 2026
+
+Canonical native campaign 13 passed 15/15; durable canonical-family lane 11
+passed all five authenticated owner cases, including exact thirds division,
+four-party two-branch allocation and competing-Works currentness refusal.
+The frontend leaf and its four preimage-bound shared changes are joined.
+Root/backend typechecks, scoped frontend/tooling lint, generated manifest,
+client/form checks and capability source-coverage audit passed locally.
+The audit is source reachability, not mounted execution.
+
+Physical-fault, cancellation, fallback, mounted Work and final R5 installed
+qualification remain open. Hosted PR CI is separate from those scope gates.
+The entries below preserve earlier observations rather than supersede this cut.
+
 # Selected P1 follow-up, 11 October 2026
 
 Native campaign `scope-r/completion/handoff/r5-native-11` passed 11/11,

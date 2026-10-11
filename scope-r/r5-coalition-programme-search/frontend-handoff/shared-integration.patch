@@ -1,0 +1,129 @@
+diff --git a/src/components/centropy/canvas/capital-program-view.ts b/src/components/centropy/canvas/capital-program-view.ts
+--- a/src/components/centropy/canvas/capital-program-view.ts
++++ b/src/components/centropy/canvas/capital-program-view.ts
+@@ -2,6 +2,7 @@
+
+ import { CapitalRefViewSchema } from "./capital-ref-view"
+ import { CapitalRequestViewSchema } from "./capital-request-view"
++import { CoalitionProgrammeViewSchema } from "./coalition-programme-view"
+ export { CapitalRefViewSchema } from "./capital-ref-view"
+ const digest = z.string().regex(/^[a-f0-9]{64}$/)
+ const blocker = z.object({ code: z.string(), owner: z.string(), requirement: z.string() })
+@@ -86,6 +87,7 @@
+   }),
+   blockers: z.array(blocker), limitations: z.array(z.string()),
+   jointSearchCertificate: jointCertificate.optional(),
++  coalitionProgramme: CoalitionProgrammeViewSchema.optional(),
+   costs: z.object({
+     money: z.null(), status: z.literal("UNMETERED"), wallMs: z.number().finite(),
+     generated: z.number().int(), attempted: z.number().int(), refinementSteps: z.number().int(),
+diff --git a/src/components/centropy/canvas/capital-request-view.ts b/src/components/centropy/canvas/capital-request-view.ts
+--- a/src/components/centropy/canvas/capital-request-view.ts
++++ b/src/components/centropy/canvas/capital-request-view.ts
+@@ -28,6 +28,11 @@
+     budget: z.object({ maxPaths: z.number().int(), maxHistories: z.number().int(), maxVariables: z.number().int(), maxRows: z.number().int(),
+       maxProofBytes: z.number().int(), cpuMs: z.number().int(), memoryMiB: z.number().int(), maxNativeCalls: z.number().int() }),
+   }).optional(),
++  coalition: z.object({
++    schema: z.literal("finnor.r5.owner-request.v1"),
++    source: z.object({ sourceId: z.string().uuid(), versionId: z.string().uuid(),
++      contentDigest: z.string().regex(/^[a-f0-9]{64}$/) }).strict(),
++  }).strict().optional(),
+   challengeEvidence: z.array(z.object({ searchId: z.string().uuid(), resultRef: CapitalRefViewSchema })).min(1).max(8).optional(),
+   resource: z.object({
+     deadlineMs: z.number().int().min(1).max(30000), maxAttempts: z.number().int().min(1).max(16),
+diff --git a/src/components/centropy/canvas/CapitalProgramPanel.tsx b/src/components/centropy/canvas/CapitalProgramPanel.tsx
+--- a/src/components/centropy/canvas/CapitalProgramPanel.tsx
++++ b/src/components/centropy/canvas/CapitalProgramPanel.tsx
+@@ -13,6 +13,7 @@
+ } from "./capital-program-view"
+ import { OriginalChallengePanel } from "./OriginalChallengePanel"
+ import { ExactControlReview } from "./ExactControlReview"
++import { CoalitionProgrammeReview } from "./CoalitionProgrammeReview"
+ import "./capital-program.css"
+
+ const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+@@ -297,6 +298,8 @@
+
+   return <section className="ct-capital-program" aria-label="Economic arrangements" aria-busy={busy}>
+     <ExactControlReview scope={scope} authorized={authorized} workId={workId} root={root} />
++    <CoalitionProgrammeReview programme={program?.coalitionProgramme ?? null}
++      scope={scope} authorized={authorized} workId={workId} root={root} />
+     <p>Construct changed economic terms under the current owner model. Proposals do not reserve capital, change agreements or execute effects.</p>
+     {!authorized ? <p>Sign in with current Work access to inspect arrangements.</p> : null}
+     <button type="button" disabled={!authorized || busy} onClick={loadPolicies}>Load current arrangements</button>
+@@ -349,7 +352,7 @@
+     <p role="status" aria-live="polite">{notice}</p>
+     {error ? <p role="alert">{error}</p> : null}
+     {current ? <div className="ct-capital-program__actions"><span>{label(current.status)} · {current.progress.attempted}/{current.progress.generated} attempted</span><button type="button" disabled={busy} onClick={() => { clear(); void refresh(current.queryId, ++generation.current) }}>Recheck current sources</button><button type="button" disabled={busy || !pending(current)} onClick={() => control("cancel")}>Cancel search</button><button type="button" disabled={busy} onClick={() => control("resume")}>Resume original grant</button><button type="button" disabled={busy} onClick={() => control("recompile")}>Recompile current Work</button></div> : null}
+-    {program ? <>
++    {program && !program.coalitionProgramme ? <>
+       {!certificate ? <OriginalChallengePanel query={current!} onRepair={repairedChallenge} onUnavailable={unavailableChallenge} /> : null}
+       <h4>Modeled arrangements, not agreed transactions</h4>
+       {certificate ? <section aria-label="Declared-world search certificate">
+diff --git a/scripts/centropy/generate-capability-manifest.mjs b/scripts/centropy/generate-capability-manifest.mjs
+--- a/scripts/centropy/generate-capability-manifest.mjs
++++ b/scripts/centropy/generate-capability-manifest.mjs
+@@ -60,6 +60,17 @@
+ if(!capitalOperations.length||!m4Operations.size||!branchOperations.size||
+   !companyBrainSource.includes("CAPITAL_PROGRAM_V2_OPERATIONS")||!companyBrainSource.includes("M4_OPERATIONS"))
+   throw new Error("Completed owner operation registries must be present and actually delegated")
++// Only the stagewise Work leaf's actual POST owners are added. Generic policies,
++// release/consent/effect routes and unknown operations remain unchanged/denied.
++const coalitionOperations = new Map([
++  ["policies/coalition-read", "READ"],
++  ["allocations/coalition-read", "READ"],
++  ["allocations/coalition-clear", "MUTATION"],
++  ["allocations/coalition-consume", "MUTATION"],
++  ["obligations/coalition-read", "READ"],
++  ["obligations/coalition-consent-history", "READ"],
++  ["obligations/coalition-prepare", "MUTATION"],
++])
+ const companyBrainOperations = [...new Set([
+   ...capitalOperations,...m4Operations.keys(),
+   ...[...companyBrainSource.matchAll(/case "([a-z-]+)":/g)].map((match) => match[1]),
+@@ -165,14 +176,17 @@
+ }
+
+ function routeEntry(method, path, source) {
+-  const { family, owner, presentationTargets } = familyFor(path)
++  const coalitionClassification = method === "POST" ? coalitionOperations.get(path) : undefined
++  const { family, owner, presentationTargets } = coalitionClassification
++    ? { family: "coalition-programme", owner: "@finnor/private-equity", presentationTargets: ["CANVAS"] }
++    : familyFor(path)
+   const stream = path === "stream"
+   // Digital Twin POST includes evidence-backed canonical mutations.
+-  const ownerClassification=path.startsWith("branches/")?branchOperations.get(path.slice("branches/".length)):
+-    path.startsWith("company-brain/")?m4Operations.get(path.slice("company-brain/".length)):undefined
++  const ownerClassification=coalitionClassification??(path.startsWith("branches/")?branchOperations.get(path.slice("branches/".length)):
++    path.startsWith("company-brain/")?m4Operations.get(path.slice("company-brain/".length)):undefined)
+   const r1=path.startsWith("policies/")&&r1Operations.includes(path.slice("policies/".length))
+   const read = method === "GET" || ownerClassification==="READ" || r1&&r1Reads.has(path.slice("policies/".length)) || (family === "identification-plan" && identificationReads.has(path.slice("identification-plans/".length))) || (family === "company-brain" && companyBrainReads.has(path.slice("company-brain/".length))) || ["query", "semantic-activity"].includes(family)
+-  const adminOnly = denyPrefixes.some((prefix) => `${path}/`.startsWith(prefix)&&!(prefix==="policies/"&&r1)) ||
++  const adminOnly = denyPrefixes.some((prefix) => `${path}/`.startsWith(prefix)&&!(prefix==="policies/"&&(r1||coalitionClassification))) ||
+     (family === "read-model" && /read-models\/(reliability|readiness|readiness-slo|failure-injections)/.test(path))
+   const control = r1&&["r1-cancel","r1-reconcile"].includes(path.slice("policies/".length)) || controls.test(path) || path === "company-brain/procedure-induction-cancel" || /^company-brain\/(?:evidence|program|compute-search|interface|decision-slice|deliberation|capital-program)-(?:cancel|resume|reconcile)$/.test(path)
+   const classification = adminOnly ? "ADMIN" : stream ? "STREAM" : ownerClassification ?? (read ? "READ" : control ? "CONTROL" : "MUTATION")
+@@ -189,7 +203,7 @@
+     effectClass: read ? null : classification === "CONTROL" ? "runtime_control" : "domain_mutation",
+     verificationClass: read ? "canonical_read" : "canonical_reread",
+     presentationTargets: userProduct ? presentationTargets : [],
+-    invalidationTags: read ? [] : r1?["work","company-brain"]:family==="branch-fabric"?["work","branch-fabric"]:
++    invalidationTags: read ? [] : coalitionClassification||r1?["work","company-brain"]:family==="branch-fabric"?["work","branch-fabric"]:
+       path.startsWith("company-brain/capital-program-")||m4Operations.has(path.slice("company-brain/".length))?["work","company-brain"]:tags(family),
+     timeoutClass: stream ? "STREAM" : read ? "READ" : "WRITE",
+     tests: [], source,
+@@ -214,6 +228,13 @@
+       for (const operation of companyBrainOperations) routes.push(routeEntry(method, `company-brain/${operation}`, source))
+     } else if(path==="policies/:operation"){
+       for(const operation of r1Operations)routes.push(routeEntry(method,`policies/${operation}`,source))
++      if(method==="POST")routes.push(routeEntry(method,"policies/coalition-read",source))
++      routes.push(routeEntry(method,path,source))
++    } else if(path==="allocations/:operation"||path==="obligations/:operation"){
++      const prefix=path.split("/")[0]+"/"
++      if(method==="POST")for(const operation of coalitionOperations.keys()){
++        if(operation.startsWith(prefix))routes.push(routeEntry(method,operation,source))
++      }
+       routes.push(routeEntry(method,path,source))
+     } else if(path==="branches/:operation"){
+       for(const operation of branchOperations.keys())routes.push(routeEntry(method,`branches/${operation}`,source))

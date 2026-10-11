@@ -2755,6 +2755,96 @@
       "source": "finnor-os/apps/api/app/api/allocations/[operation]/route.ts"
     },
     {
+      "capabilityId": "http.post.allocations.coalition-clear",
+      "family": "coalition-programme",
+      "owner": "@finnor/private-equity",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "allocations/coalition-clear",
+      "routeDepth": 2,
+      "classification": "MUTATION",
+      "kind": "mutation",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "backend_policy",
+      "effectClass": "domain_mutation",
+      "verificationClass": "canonical_reread",
+      "presentationTargets": [
+        "CANVAS"
+      ],
+      "invalidationTags": [
+        "work",
+        "company-brain"
+      ],
+      "timeoutClass": "WRITE",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/allocations/[operation]/route.ts"
+    },
+    {
+      "capabilityId": "http.post.allocations.coalition-consume",
+      "family": "coalition-programme",
+      "owner": "@finnor/private-equity",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "allocations/coalition-consume",
+      "routeDepth": 2,
+      "classification": "MUTATION",
+      "kind": "mutation",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "backend_policy",
+      "effectClass": "domain_mutation",
+      "verificationClass": "canonical_reread",
+      "presentationTargets": [
+        "CANVAS"
+      ],
+      "invalidationTags": [
+        "work",
+        "company-brain"
+      ],
+      "timeoutClass": "WRITE",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/allocations/[operation]/route.ts"
+    },
+    {
+      "capabilityId": "http.post.allocations.coalition-read",
+      "family": "coalition-programme",
+      "owner": "@finnor/private-equity",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "allocations/coalition-read",
+      "routeDepth": 2,
+      "classification": "READ",
+      "kind": "read",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "query",
+      "effectClass": null,
+      "verificationClass": "canonical_read",
+      "presentationTargets": [
+        "CANVAS"
+      ],
+      "invalidationTags": [],
+      "timeoutClass": "READ",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/allocations/[operation]/route.ts"
+    },
+    {
       "capabilityId": "http.post.artifact-templates",
       "family": "artifact",
       "owner": "@finnor/artifacts",
@@ -3208,6 +3298,36 @@
       "timeoutClass": "WRITE",
       "tests": [],
       "source": "finnor-os/apps/api/app/api/branches/[operation]/route.ts"
+    },
+    {
+      "capabilityId": "http.post.coalition-programmes.$operation",
+      "family": "coalition-programmes",
+      "owner": "@finnor/api",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "coalition-programmes/:operation",
+      "routeDepth": 2,
+      "classification": "ADMIN",
+      "kind": "mutation",
+      "userProduct": false,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": false,
+      "adminOnly": true,
+      "systemOnly": false,
+      "requiredContext": [
+        "path_reference"
+      ],
+      "authorityClass": "backend_policy",
+      "effectClass": "domain_mutation",
+      "verificationClass": "canonical_reread",
+      "presentationTargets": [],
+      "invalidationTags": [
+        "coalition-programmes"
+      ],
+      "timeoutClass": "WRITE",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/coalition-programmes/[operation]/route.ts"
     },
     {
       "capabilityId": "http.post.company-brain.available-actions",
@@ -7245,6 +7365,93 @@
       "source": "finnor-os/apps/api/app/api/obligations/[operation]/route.ts"
     },
     {
+      "capabilityId": "http.post.obligations.coalition-consent-history",
+      "family": "coalition-programme",
+      "owner": "@finnor/private-equity",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "obligations/coalition-consent-history",
+      "routeDepth": 2,
+      "classification": "READ",
+      "kind": "read",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "query",
+      "effectClass": null,
+      "verificationClass": "canonical_read",
+      "presentationTargets": [
+        "CANVAS"
+      ],
+      "invalidationTags": [],
+      "timeoutClass": "READ",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/obligations/[operation]/route.ts"
+    },
+    {
+      "capabilityId": "http.post.obligations.coalition-prepare",
+      "family": "coalition-programme",
+      "owner": "@finnor/private-equity",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "obligations/coalition-prepare",
+      "routeDepth": 2,
+      "classification": "MUTATION",
+      "kind": "mutation",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "backend_policy",
+      "effectClass": "domain_mutation",
+      "verificationClass": "canonical_reread",
+      "presentationTargets": [
+        "CANVAS"
+      ],
+      "invalidationTags": [
+        "work",
+        "company-brain"
+      ],
+      "timeoutClass": "WRITE",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/obligations/[operation]/route.ts"
+    },
+    {
+      "capabilityId": "http.post.obligations.coalition-read",
+      "family": "coalition-programme",
+      "owner": "@finnor/private-equity",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "obligations/coalition-read",
+      "routeDepth": 2,
+      "classification": "READ",
+      "kind": "read",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "query",
+      "effectClass": null,
+      "verificationClass": "canonical_read",
+      "presentationTargets": [
+        "CANVAS"
+      ],
+      "invalidationTags": [],
+      "timeoutClass": "READ",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/obligations/[operation]/route.ts"
+    },
+    {
       "capabilityId": "http.post.outcome-packs",
       "family": "outcome-pack",
       "owner": "@finnor/orchestration",
@@ -7399,6 +7606,34 @@
       "timeoutClass": "WRITE",
       "tests": [],
       "source": "finnor-os/apps/api/app/api/policies/[operation]/[actionType]/simulate/route.ts"
+    },
+    {
+      "capabilityId": "http.post.policies.coalition-read",
+      "family": "coalition-programme",
+      "owner": "@finnor/private-equity",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "policies/coalition-read",
+      "routeDepth": 2,
+      "classification": "READ",
+      "kind": "read",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "query",
+      "effectClass": null,
+      "verificationClass": "canonical_read",
+      "presentationTargets": [
+        "CANVAS"
+      ],
+      "invalidationTags": [],
+      "timeoutClass": "READ",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/policies/[operation]/route.ts"
     },
     {
       "capabilityId": "http.post.policies.r1-cancel",

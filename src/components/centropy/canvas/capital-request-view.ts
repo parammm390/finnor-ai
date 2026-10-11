@@ -28,6 +28,11 @@ export const CapitalRequestViewSchema = z.object({
     budget: z.object({ maxPaths: z.number().int(), maxHistories: z.number().int(), maxVariables: z.number().int(), maxRows: z.number().int(),
       maxProofBytes: z.number().int(), cpuMs: z.number().int(), memoryMiB: z.number().int(), maxNativeCalls: z.number().int() }),
   }).optional(),
+  coalition: z.object({
+    schema: z.literal("finnor.r5.owner-request.v1"),
+    source: z.object({ sourceId: z.string().uuid(), versionId: z.string().uuid(),
+      contentDigest: z.string().regex(/^[a-f0-9]{64}$/) }).strict(),
+  }).strict().optional(),
   challengeEvidence: z.array(z.object({ searchId: z.string().uuid(), resultRef: CapitalRefViewSchema })).min(1).max(8).optional(),
   resource: z.object({
     deadlineMs: z.number().int().min(1).max(30000), maxAttempts: z.number().int().min(1).max(16),

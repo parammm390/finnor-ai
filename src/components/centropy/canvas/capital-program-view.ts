@@ -2,6 +2,7 @@ import { z } from "zod"
 
 import { CapitalRefViewSchema } from "./capital-ref-view"
 import { CapitalRequestViewSchema } from "./capital-request-view"
+import { CoalitionProgrammeViewSchema } from "./coalition-programme-view"
 export { CapitalRefViewSchema } from "./capital-ref-view"
 const digest = z.string().regex(/^[a-f0-9]{64}$/)
 const blocker = z.object({ code: z.string(), owner: z.string(), requirement: z.string() })
@@ -86,6 +87,7 @@ export const CapitalProgramViewSchema = z.object({
   }),
   blockers: z.array(blocker), limitations: z.array(z.string()),
   jointSearchCertificate: jointCertificate.optional(),
+  coalitionProgramme: CoalitionProgrammeViewSchema.optional(),
   costs: z.object({
     money: z.null(), status: z.literal("UNMETERED"), wallMs: z.number().finite(),
     generated: z.number().int(), attempted: z.number().int(), refinementSteps: z.number().int(),

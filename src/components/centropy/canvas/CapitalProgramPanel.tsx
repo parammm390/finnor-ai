@@ -13,6 +13,7 @@ import {
 } from "./capital-program-view"
 import { OriginalChallengePanel } from "./OriginalChallengePanel"
 import { ExactControlReview } from "./ExactControlReview"
+import { CoalitionProgrammeReview } from "./CoalitionProgrammeReview"
 import "./capital-program.css"
 
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
@@ -297,6 +298,8 @@ export function CapitalProgramPanel({ workId, root }: {
 
   return <section className="ct-capital-program" aria-label="Economic arrangements" aria-busy={busy}>
     <ExactControlReview scope={scope} authorized={authorized} workId={workId} root={root} />
+    <CoalitionProgrammeReview programme={program?.coalitionProgramme ?? null}
+      scope={scope} authorized={authorized} workId={workId} root={root} />
     <p>Construct changed economic terms under the current owner model. Proposals do not reserve capital, change agreements or execute effects.</p>
     {!authorized ? <p>Sign in with current Work access to inspect arrangements.</p> : null}
     <button type="button" disabled={!authorized || busy} onClick={loadPolicies}>Load current arrangements</button>
@@ -349,7 +352,7 @@ export function CapitalProgramPanel({ workId, root }: {
     <p role="status" aria-live="polite">{notice}</p>
     {error ? <p role="alert">{error}</p> : null}
     {current ? <div className="ct-capital-program__actions"><span>{label(current.status)} · {current.progress.attempted}/{current.progress.generated} attempted</span><button type="button" disabled={busy} onClick={() => { clear(); void refresh(current.queryId, ++generation.current) }}>Recheck current sources</button><button type="button" disabled={busy || !pending(current)} onClick={() => control("cancel")}>Cancel search</button><button type="button" disabled={busy} onClick={() => control("resume")}>Resume original grant</button><button type="button" disabled={busy} onClick={() => control("recompile")}>Recompile current Work</button></div> : null}
-    {program ? <>
+    {program && !program.coalitionProgramme ? <>
       {!certificate ? <OriginalChallengePanel query={current!} onRepair={repairedChallenge} onUnavailable={unavailableChallenge} /> : null}
       <h4>Modeled arrangements, not agreed transactions</h4>
       {certificate ? <section aria-label="Declared-world search certificate">

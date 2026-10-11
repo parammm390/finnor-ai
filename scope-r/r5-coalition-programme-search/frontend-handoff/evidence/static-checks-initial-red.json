@@ -1,0 +1,105 @@
+{
+  "schema": "finnor.r5.frontend-static-evidence.v1",
+  "qualification": "STATIC_SOURCE_ONLY_NOT_MOUNTED_OR_INSTALLED_BUILD",
+  "root": "/Users/paramdave/.factory/worktrees/r5-work-child-2026-10-11/FINNOR",
+  "backend": "/Users/paramdave/.factory/worktrees/r-programme-completion-2026-10-11/FINNOR",
+  "sourcePins": [
+    {
+      "path": "src/components/centropy/canvas/CoalitionProgrammeReview.tsx",
+      "sha256": "0267d4aeff18368dd814bfe82e8ddfffc951d2760f0a82755e4ac86c966f280c"
+    },
+    {
+      "path": "src/components/centropy/canvas/coalition-programme-view.ts",
+      "sha256": "64bfb717986a115397d9fd53f0242c075450c589cba25fde16e6cb06d00738d2"
+    }
+  ],
+  "dependencyVersions": {
+    "next": "16.3.8",
+    "react": "19.2.8",
+    "zod": "3.25.76",
+    "typescript": "5.9.3",
+    "eslint": "9.39.5"
+  },
+  "lockSha256": "4ae84fbe370dfdf4708e35a2274f4be0fb612665d4dda88ddeb342c264f5b697",
+  "commands": [
+    {
+      "id": "TYPECHECK",
+      "command": [
+        "/Users/paramdave/.hermes/node/bin/node",
+        "--max-old-space-size=768",
+        "/Users/paramdave/.factory/worktrees/r-programme-completion-2026-10-11/FINNOR/node_modules/typescript/bin/tsc",
+        "--project",
+        "/Users/paramdave/.factory/worktrees/r5-work-child-2026-10-11/FINNOR/scope-r/r5-coalition-programme-search/frontend-handoff/evidence/tsconfig.frontend.json",
+        "--pretty",
+        "false"
+      ],
+      "exitCode": 2,
+      "signal": null,
+      "elapsedMs": 1621.862208,
+      "stdout": "scope-r/r5-coalition-programme-search/frontend-handoff/evidence/owner-contract.typecheck.ts(24,40): error TS2322: Type 'AllocationConsumption' is not assignable to type '{ status: \"UNKNOWN_OUTCOME\" | \"INTENDED_PENDING_S6\" | \"RECONCILED\"; schema: \"finnor.allocation-consumption.v1\"; ref: { owner: string; id: string; version: string; contentDigest: string; }; ... 13 more ...; envelope: { ...; }[]; }'.\n  Types of property 'nodeId' are incompatible.\n    Type 'string' is not assignable to type '\"joint-coalition-programme\"'.\nsrc/components/centropy/canvas/CoalitionProgrammeReview.tsx(3,58): error TS7016: Could not find a declaration file for module 'react'. '/Users/paramdave/.factory/worktrees/r-programme-completion-2026-10-11/FINNOR/node_modules/react/index.js' implicitly has an 'any' type.\n  Try `npm i --save-dev @types/react` if it exists or add a new declaration (.d.ts) file containing `declare module 'react';`\nsrc/components/centropy/canvas/CoalitionProgrammeReview.tsx(257,10): error TS7016: Could not find a declaration file for module 'react/jsx-runtime'. '/Users/paramdave/.factory/worktrees/r-programme-completion-2026-10-11/FINNOR/node_modules/react/jsx-runtime.js' implicitly has an 'any' type.\n  Try `npm i --save-dev @types/react` if it exists or add a new declaration (.d.ts) file containing `declare module 'react/jsx-runtime';`\nsrc/components/centropy/canvas/CoalitionProgrammeReview.tsx(277,55): error TS7006: Parameter 'issue' implicitly has an 'any' type.\nsrc/components/centropy/lib/centropy-auth.tsx(9,85): error TS7016: Could not find a declaration file for module 'react'. '/Users/paramdave/.factory/worktrees/r-programme-completion-2026-10-11/FINNOR/node_modules/react/index.js' implicitly has an 'any' type.\n  Try `npm i --save-dev @types/react` if it exists or add a new declaration (.d.ts) file containing `declare module 'react';`\nsrc/components/centropy/lib/centropy-auth.tsx(99,23): error TS7006: Parameter 'previous' implicitly has an 'any' type.\nsrc/components/centropy/lib/centropy-auth.tsx(160,53): error TS7006: Parameter 'value' implicitly has an 'any' type.\nsrc/components/centropy/lib/centropy-auth.tsx(163,19): error TS7006: Parameter 'value' implicitly has an 'any' type.\nsrc/components/centropy/lib/centropy-auth.tsx(171,10): error TS7016: Could not find a declaration file for module 'react/jsx-runtime'. '/Users/paramdave/.factory/worktrees/r-programme-completion-2026-10-11/FINNOR/node_modules/react/jsx-runtime.js' implicitly has an 'any' type.\n  Try `npm i --save-dev @types/react` if it exists or add a new declaration (.d.ts) file containing `declare module 'react/jsx-runtime';`\n",
+      "stderr": "",
+      "error": null
+    },
+    {
+      "id": "LINT",
+      "command": [
+        "/Users/paramdave/.hermes/node/bin/node",
+        "--max-old-space-size=768",
+        "/Users/paramdave/.factory/worktrees/r-programme-completion-2026-10-11/FINNOR/node_modules/eslint/bin/eslint.js",
+        "--config",
+        "/Users/paramdave/.factory/worktrees/r-programme-completion-2026-10-11/FINNOR/eslint.config.mjs",
+        "src/components/centropy/canvas/CoalitionProgrammeReview.tsx",
+        "src/components/centropy/canvas/coalition-programme-view.ts"
+      ],
+      "exitCode": 1,
+      "signal": null,
+      "elapsedMs": 2537.135042,
+      "stdout": "\n/Users/paramdave/.factory/worktrees/r5-work-child-2026-10-11/FINNOR/src/components/centropy/canvas/CoalitionProgrammeReview.tsx\n  152:6   warning  React Hook useCallback has a missing dependency: 'pointers'. Either include it or remove the dependency array                                                                                                                                              react-hooks/exhaustive-deps\n  179:31  warning  The ref value 'epoch.current' will likely have changed by the time this effect cleanup function runs. If this ref points to a node rendered by React, copy 'epoch.current' to a variable inside the effect, and use that variable in the cleanup function  react-hooks/exhaustive-deps\n  365:81  error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`                                                                                                                                                                                            react/no-unescaped-entities\n\n✖ 3 problems (1 error, 2 warnings)\n\n",
+      "stderr": "Warning: React version was set to \"detect\" in eslint-plugin-react settings, but the \"react\" package is not installed. Assuming latest React version for linting.\n",
+      "error": null
+    },
+    {
+      "id": "DIFF_CHECK",
+      "command": [
+        "git",
+        "-C",
+        "/Users/paramdave/.factory/worktrees/r5-work-child-2026-10-11/FINNOR",
+        "diff",
+        "--check"
+      ],
+      "exitCode": 0,
+      "signal": null,
+      "elapsedMs": 27.057875000000422,
+      "stdout": "",
+      "stderr": "",
+      "error": null
+    }
+  ],
+  "mounted": "NOT RUN",
+  "clientTranspile": [
+    {
+      "path": "src/components/centropy/canvas/CoalitionProgrammeReview.tsx",
+      "imports": [
+        "react",
+        "next/navigation",
+        "@/components/centropy/lib/api",
+        "@/components/centropy/lib/centropy-auth",
+        "@/components/centropy/lib/business-invalidation",
+        "./coalition-programme-view"
+      ],
+      "diagnostics": [],
+      "frontendOnly": true
+    },
+    {
+      "path": "src/components/centropy/canvas/coalition-programme-view.ts",
+      "imports": [
+        "zod",
+        "./capital-ref-view"
+      ],
+      "diagnostics": [],
+      "frontendOnly": true
+    }
+  ],
+  "elapsedMs": 4300.696542,
+  "staticChecksPassed": false
+}

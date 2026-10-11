@@ -60,6 +60,17 @@ const branchOperations = new Map([...block(branchSource,"export const BranchOper
 if(!capitalOperations.length||!m4Operations.size||!branchOperations.size||
   !companyBrainSource.includes("CAPITAL_PROGRAM_V2_OPERATIONS")||!companyBrainSource.includes("M4_OPERATIONS"))
   throw new Error("Completed owner operation registries must be present and actually delegated")
+// Only the stagewise Work leaf's actual POST owners are added. Generic policies,
+// release/consent/effect routes and unknown operations remain unchanged/denied.
+const coalitionOperations = new Map([
+  ["policies/coalition-read", "READ"],
+  ["allocations/coalition-read", "READ"],
+  ["allocations/coalition-clear", "MUTATION"],
+  ["allocations/coalition-consume", "MUTATION"],
+  ["obligations/coalition-read", "READ"],
+  ["obligations/coalition-consent-history", "READ"],
+  ["obligations/coalition-prepare", "MUTATION"],
+])
 const companyBrainOperations = [...new Set([
   ...capitalOperations,...m4Operations.keys(),
   ...[...companyBrainSource.matchAll(/case "([a-z-]+)":/g)].map((match) => match[1]),
@@ -126,7 +137,7 @@ const familyRules = [
 
 const denyPrefixes = [
   "admin/", "webhooks/", "dlq/", "policies/", "audit/", "ready/", "release/", "vitals/",
-  "setup/", "events/", "private-equity/calibration/",
+  "setup/", "events/", "private-equity/calibration/", "coalition-programmes/",
 ]
 const humanOnlyPatterns = [
   /^private-equity\/ic\/committee-configurations$/,
@@ -165,14 +176,17 @@ function tags(family) {
 }
 
 function routeEntry(method, path, source) {
-  const { family, owner, presentationTargets } = familyFor(path)
+  const coalitionClassification = method === "POST" ? coalitionOperations.get(path) : undefined
+  const { family, owner, presentationTargets } = coalitionClassification
+    ? { family: "coalition-programme", owner: "@finnor/private-equity", presentationTargets: ["CANVAS"] }
+    : familyFor(path)
   const stream = path === "stream"
   // Digital Twin POST includes evidence-backed canonical mutations.
-  const ownerClassification=path.startsWith("branches/")?branchOperations.get(path.slice("branches/".length)):
-    path.startsWith("company-brain/")?m4Operations.get(path.slice("company-brain/".length)):undefined
+  const ownerClassification=coalitionClassification??(path.startsWith("branches/")?branchOperations.get(path.slice("branches/".length)):
+    path.startsWith("company-brain/")?m4Operations.get(path.slice("company-brain/".length)):undefined)
   const r1=path.startsWith("policies/")&&r1Operations.includes(path.slice("policies/".length))
   const read = method === "GET" || ownerClassification==="READ" || r1&&r1Reads.has(path.slice("policies/".length)) || (family === "identification-plan" && identificationReads.has(path.slice("identification-plans/".length))) || (family === "company-brain" && companyBrainReads.has(path.slice("company-brain/".length))) || ["query", "semantic-activity"].includes(family)
-  const adminOnly = denyPrefixes.some((prefix) => `${path}/`.startsWith(prefix)&&!(prefix==="policies/"&&r1)) ||
+  const adminOnly = denyPrefixes.some((prefix) => `${path}/`.startsWith(prefix)&&!(prefix==="policies/"&&(r1||coalitionClassification))) ||
     (family === "read-model" && /read-models\/(reliability|readiness|readiness-slo|failure-injections)/.test(path))
   const control = r1&&["r1-cancel","r1-reconcile"].includes(path.slice("policies/".length)) || controls.test(path) || path === "company-brain/procedure-induction-cancel" || /^company-brain\/(?:evidence|program|compute-search|interface|decision-slice|deliberation|capital-program)-(?:cancel|resume|reconcile)$/.test(path)
   const classification = adminOnly ? "ADMIN" : stream ? "STREAM" : ownerClassification ?? (read ? "READ" : control ? "CONTROL" : "MUTATION")
@@ -189,7 +203,7 @@ function routeEntry(method, path, source) {
     effectClass: read ? null : classification === "CONTROL" ? "runtime_control" : "domain_mutation",
     verificationClass: read ? "canonical_read" : "canonical_reread",
     presentationTargets: userProduct ? presentationTargets : [],
-    invalidationTags: read ? [] : r1?["work","company-brain"]:family==="branch-fabric"?["work","branch-fabric"]:
+    invalidationTags: read ? [] : coalitionClassification||r1?["work","company-brain"]:family==="branch-fabric"?["work","branch-fabric"]:
       path.startsWith("company-brain/capital-program-")||m4Operations.has(path.slice("company-brain/".length))?["work","company-brain"]:tags(family),
     timeoutClass: stream ? "STREAM" : read ? "READ" : "WRITE",
     tests: [], source,
@@ -214,6 +228,13 @@ for (const file of files(apiRoot)) {
       for (const operation of companyBrainOperations) routes.push(routeEntry(method, `company-brain/${operation}`, source))
     } else if(path==="policies/:operation"){
       for(const operation of r1Operations)routes.push(routeEntry(method,`policies/${operation}`,source))
+      if(method==="POST")routes.push(routeEntry(method,"policies/coalition-read",source))
+      routes.push(routeEntry(method,path,source))
+    } else if(path==="allocations/:operation"||path==="obligations/:operation"){
+      const prefix=path.split("/")[0]+"/"
+      if(method==="POST")for(const operation of coalitionOperations.keys()){
+        if(operation.startsWith(prefix))routes.push(routeEntry(method,operation,source))
+      }
       routes.push(routeEntry(method,path,source))
     } else if(path==="branches/:operation"){
       for(const operation of branchOperations.keys())routes.push(routeEntry(method,`branches/${operation}`,source))

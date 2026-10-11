@@ -1,0 +1,130 @@
+{
+  "schema": "finnor.r5.frontend-static-evidence.v1",
+  "qualification": "STATIC_SOURCE_ONLY_NOT_MOUNTED_OR_INSTALLED_BUILD",
+  "root": "/Users/paramdave/.factory/worktrees/r5-work-child-2026-10-11/FINNOR",
+  "backend": "/Users/paramdave/.factory/worktrees/r-programme-completion-2026-10-11/FINNOR",
+  "sourcePins": [
+    {
+      "path": "src/components/centropy/canvas/CoalitionProgrammeReview.tsx",
+      "sha256": "24d6a19b96b4ee1d33d9bbe8acd1b57f398cde103b462c4abeac71530e1e7064"
+    },
+    {
+      "path": "src/components/centropy/canvas/coalition-programme-view.ts",
+      "sha256": "f89f840134ce8ecc6a06909ca463ad5a26a1e7dfbe9ab2e2cc85aa5455c97795"
+    }
+  ],
+  "backendTypePins": [
+    {
+      "path": "finnor-os/packages/shared-types/src/coalition-programme.ts",
+      "sha256": "e23c7581a20a0f16713447fa3f38cc284c2372ef17f72258760d7e2f1a001a1c"
+    },
+    {
+      "path": "finnor-os/packages/shared-types/src/allocation.ts",
+      "sha256": "0bffe2289cccdb01c6838ce20164946ba419f45ee76a568f86d4b04c0d156687"
+    }
+  ],
+  "toolingPins": [
+    {
+      "path": "scope-r/r5-coalition-programme-search/frontend-handoff/evidence/tsconfig.frontend.json",
+      "sha256": "0541e4eec742b1f905b07d2539d16e0567fa5d80af3214e1f1ec20217ff3f8d9"
+    },
+    {
+      "path": "scope-r/r5-coalition-programme-search/frontend-handoff/evidence/owner-contract.typecheck.ts",
+      "sha256": "2b10bef49e08d81088124a603a2b50ee47ef49210e9cfe8275afdd568230190e"
+    },
+    {
+      "path": "scope-r/r5-coalition-programme-search/frontend-handoff/evidence/verify-frontend.mjs",
+      "sha256": "3afd972139192b9b3e6379a8fefcc851e2591412d557ccf0ef7d3090b6ee46e4"
+    }
+  ],
+  "dependencyVersions": {
+    "next": "16.3.8",
+    "react": "19.2.8",
+    "zod": "3.25.76",
+    "typescript": "5.9.3",
+    "eslint": "9.39.5"
+  },
+  "lockSha256": "4ae84fbe370dfdf4708e35a2274f4be0fb612665d4dda88ddeb342c264f5b697",
+  "commands": [
+    {
+      "id": "TYPECHECK",
+      "command": [
+        "/Users/paramdave/.hermes/node/bin/node",
+        "--max-old-space-size=768",
+        "/Users/paramdave/.factory/worktrees/r-programme-completion-2026-10-11/FINNOR/node_modules/typescript/bin/tsc",
+        "--project",
+        "/Users/paramdave/.factory/worktrees/r5-work-child-2026-10-11/FINNOR/scope-r/r5-coalition-programme-search/frontend-handoff/evidence/tsconfig.frontend.json",
+        "--pretty",
+        "false"
+      ],
+      "exitCode": 0,
+      "signal": null,
+      "elapsedMs": 1568.03825,
+      "stdout": "",
+      "stderr": "",
+      "error": null
+    },
+    {
+      "id": "LINT",
+      "command": [
+        "/Users/paramdave/.hermes/node/bin/node",
+        "--max-old-space-size=768",
+        "/Users/paramdave/.factory/worktrees/r-programme-completion-2026-10-11/FINNOR/node_modules/eslint/bin/eslint.js",
+        "--config",
+        "/Users/paramdave/.factory/worktrees/r-programme-completion-2026-10-11/FINNOR/eslint.config.mjs",
+        "src/components/centropy/canvas/CoalitionProgrammeReview.tsx",
+        "src/components/centropy/canvas/coalition-programme-view.ts"
+      ],
+      "exitCode": 0,
+      "signal": null,
+      "elapsedMs": 2162.824667,
+      "stdout": "",
+      "stderr": "Warning: React version was set to \"detect\" in eslint-plugin-react settings, but the \"react\" package is not installed. Assuming latest React version for linting.\n",
+      "error": null
+    },
+    {
+      "id": "DIFF_CHECK",
+      "command": [
+        "git",
+        "-C",
+        "/Users/paramdave/.factory/worktrees/r5-work-child-2026-10-11/FINNOR",
+        "diff",
+        "--check"
+      ],
+      "exitCode": 0,
+      "signal": null,
+      "elapsedMs": 34.43333399999983,
+      "stdout": "",
+      "stderr": "",
+      "error": null
+    }
+  ],
+  "mounted": "NOT RUN",
+  "clientTranspile": [
+    {
+      "path": "src/components/centropy/canvas/CoalitionProgrammeReview.tsx",
+      "imports": [
+        "react",
+        "next/navigation",
+        "@/components/centropy/lib/api",
+        "@/components/centropy/lib/centropy-auth",
+        "@/components/centropy/lib/business-invalidation",
+        "./coalition-programme-view"
+      ],
+      "diagnostics": [],
+      "frontendOnly": true
+    },
+    {
+      "path": "src/components/centropy/canvas/coalition-programme-view.ts",
+      "imports": [
+        "zod",
+        "./capital-ref-view"
+      ],
+      "diagnostics": [],
+      "frontendOnly": true
+    }
+  ],
+  "sourceCutStable": true,
+  "elapsedMs": 3877.5282500000003,
+  "staticChecksPassed": true
+}
