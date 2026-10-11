@@ -319,11 +319,43 @@ jobs:
           DATABASE_URL: postgres://finnor:finnor@127.0.0.1:5432/finnor
           FINNOR_TEST_MANAGED_EXTENSIONS: omit
 
+      - name: Set up pinned cached image builder
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f
+        env:
+          ACTIONS_ID_TOKEN_REQUEST_TOKEN: ""
+          ACTIONS_ID_TOKEN_REQUEST_URL: ""
+
+      - name: Check Docker build definition before compiling
+        run: docker buildx build --check --file finnor-os/Dockerfile.worker .
+        env:
+          ACTIONS_ID_TOKEN_REQUEST_TOKEN: ""
+          ACTIONS_ID_TOKEN_REQUEST_URL: ""
+
+      - name: Build exact application-worker image before production authority
+        id: worker_image
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8
+        with:
+          context: .
+          file: finnor-os/Dockerfile.worker
+          load: true
+          push: false
+          tags: finnor-worker:${{ env.FINNOR_COMMIT_SHA }}
+          build-args: FINNOR_BUILD_ID=${{ env.FINNOR_BUILD_ID }}
+          labels: |
+            org.opencontainers.image.revision=${{ env.FINNOR_COMMIT_SHA }}
+            ai.finnor.build-id=${{ env.FINNOR_BUILD_ID }}
+          cache-from: type=gha,scope=finnor-worker-${{ runner.arch }}
+          cache-to: type=gha,mode=max,scope=finnor-worker-${{ runner.arch }}
+        env:
+          ACTIONS_ID_TOKEN_REQUEST_TOKEN: ""
+          ACTIONS_ID_TOKEN_REQUEST_URL: ""
+
       - name: Build and smoke-test exact worker image without production credentials
         run: bash scripts/release/smoke-worker-image.sh
         env:
           ACTIONS_ID_TOKEN_REQUEST_TOKEN: ""
           ACTIONS_ID_TOKEN_REQUEST_URL: ""
+          FINNOR_WORKER_PREBUILT_IMAGE_ID: ${{ steps.worker_image.outputs.imageid }}
 
       - name: Retain exact Linux worker smoke evidence
         if: ${{ always() }}

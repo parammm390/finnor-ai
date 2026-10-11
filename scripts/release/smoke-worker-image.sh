@@ -58,7 +58,16 @@ NODE
 }
 trap cleanup EXIT
 
-docker build --file finnor-os/Dockerfile.worker --tag "$image" . --build-arg "FINNOR_BUILD_ID=$FINNOR_BUILD_ID"
+if [[ -n "${FINNOR_WORKER_PREBUILT_IMAGE_ID:-}" ]]; then
+  # CI supplies the immutable ID returned by its actual cached BuildKit build,
+  # not a boolean skip or an assumed tag. Local reruns still build by default.
+  [[ "$FINNOR_WORKER_PREBUILT_IMAGE_ID" =~ ^sha256:[0-9a-f]{64}$ ]]
+  [[ "$(docker image inspect --format '{{.Id}}' "$image")" == "$FINNOR_WORKER_PREBUILT_IMAGE_ID" ]]
+  [[ "$(docker image inspect --format '{{index .Config.Labels "org.opencontainers.image.revision"}}' "$image")" == "$FINNOR_COMMIT_SHA" ]]
+  [[ "$(docker image inspect --format '{{index .Config.Labels "ai.finnor.build-id"}}' "$image")" == "$FINNOR_BUILD_ID" ]]
+else
+  docker build --file finnor-os/Dockerfile.worker --tag "$image" . --build-arg "FINNOR_BUILD_ID=$FINNOR_BUILD_ID"
+fi
 docker image inspect --format '{{.Id}}' "$image" > "$evidence/image-id.txt"
 for attempt in $(seq 1 30); do
   pg_isready --host 127.0.0.1 --port 5432 --username finnor --dbname finnor && break

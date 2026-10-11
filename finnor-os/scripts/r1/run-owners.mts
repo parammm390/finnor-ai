@@ -70,14 +70,15 @@ try{
  const adminUrl='postgres://finnor:finnor@127.0.0.1:'+port+'/r1_e2e';
  if(selected==='runtime'){
   const migrations=join(repo,'finnor-os/packages/db/migrations'),files=await Promise.all((await readdir(migrations)).filter(p=>p.endsWith('.sql')).sort().map(async name=>({name,sql:await readFile(join(migrations,name),'utf8')})));
-  const prior=files.filter(p=>p.name!=='0172_r1_certified_state_reduction.sql');assert.equal(prior.length,files.length-1);
+  const split=files.findIndex(p=>p.name==='0172_r1_certified_state_reduction.sql');assert(split>0,'R1 migration must follow the retained historical prefix');
+  const prior=files.slice(0,split),successors=files.slice(split).map(p=>p.name);
   const priorApplied=await migrate(adminUrl,prior),c=new pg.Client({connectionString:adminUrl});await c.connect();
   try{
    const old=(await c.query("INSERT INTO finnor_os.jobs(type,payload,idempotency_key,protocol_version,max_attempts) VALUES('release_probe',$1::jsonb,'r1-existing-release-probe',1,1) RETURNING *",[JSON.stringify({commitSha:process.env.FINNOR_COMMIT_SHA})])).rows[0];legacyJobId=old.id;
    const catalogSql="SELECT column_name,data_type,is_nullable,column_default FROM information_schema.columns WHERE table_schema='finnor_os' AND table_name='jobs' ORDER BY ordinal_position",before=(await c.query(catalogSql)).rows;
    const upgrade=await migrate(adminUrl,files),replay=await migrate(adminUrl,files),after=(await c.query(catalogSql)).rows,preserved=(await c.query('SELECT * FROM finnor_os.jobs WHERE id=$1',[old.id])).rows[0];
    await artifact('migration-upgrade-replay.json',{priorApplied,upgrade,replay,old,preserved,before,after,migrations:files.map(f=>({name:f.name,sha256:sha(f.sql)})),ordinaryDisposable:true});
-   assert.deepEqual(upgrade,['0172_r1_certified_state_reduction.sql']);assert.deepEqual(replay,[]);assert.deepEqual(preserved,old);assert.deepEqual(after,before);migrationCount=priorApplied.length+upgrade.length;
+   assert.deepEqual(upgrade,successors);assert.deepEqual(replay,[]);assert.deepEqual(preserved,old);assert.deepEqual(after,before);migrationCount=priorApplied.length+upgrade.length;
   }finally{await c.end();}
  }else migrationCount=(await migrate(adminUrl)).length;
  admin=new pg.Client({connectionString:adminUrl});await admin.connect();await admin.query("SET app.test_vertical_mode='explicit'");
@@ -108,7 +109,8 @@ try{
    const bytes=await readFile(join(repo,path));overlayBytes+=bytes.length;assert(overlayBytes<=20*1024*1024,'R1_RECONSTRUCTION_OVERLAY_BOUND');
    const target=join(evidence,'source-cut','dirty',path);await mkdir(join(target,'..'),{recursive:true});await writeFile(target,bytes);overlay.push({path,sha256:sha(bytes),bytes:bytes.length});
   }
-  const patch=spawnSync('git',['diff','--binary','HEAD'],{cwd:repo,encoding:'utf8'});assert.equal(patch.status,0,patch.stderr);await writeFile(join(evidence,'source-cut','tracked.patch'),patch.stdout);dirtyPatchDigest=sha(git(['diff','--binary']));
+  await mkdir(join(evidence,'source-cut'),{recursive:true});
+  const patch=spawnSync('git',['diff','--binary','HEAD'],{cwd:repo,encoding:'utf8'});assert.equal(patch.status,0,patch.stderr);await writeFile(join(evidence,'source-cut','tracked.patch'),patch.stdout);dirtyPatchDigest=sha(patch.stdout);
   reconstruction={parentCommit:commit,trackedPatch:'source-cut/tracked.patch',trackedPatchSha256:sha(patch.stdout),overlayRoot:'source-cut/dirty',overlay,overlayBytes};
  }
  await artifact('pre-run-freeze.json',{frozenAt:new Date().toISOString(),source:cut,commit,tree,dirtyPatchDigest,tests,reconstruction,
@@ -125,6 +127,10 @@ try{
      const response=await fetch(http.apiBase+'/api/policies/'+path,{method,headers:{authorization:'Bearer '+f.token,'content-type':'application/json'},...(method==='GET'?{}:{body:'{}'})}),body=await response.json();probes.push({method,path,status:response.status,body,expected});await artifact('built-legacy-policy-boundaries.json',probes);assert.equal(response.status,expected,JSON.stringify(probes.at(-1)));
     }
    }
+   // Start the unrelated legacy compatibility runtime before accepting the
+   // positive decision. Its real work/costs are retained; it stays live across
+   // enqueue so the original refusal assertions still exercise that boundary.
+   const old=selected==='runtime'?await worker('COMPATIBILITY_OLD'):null;
    const commonRequest={schema:'finnor.r1.run.v2',problem_ref:f.runRequest.problem_ref,envelope_inputs:f.runRequest.envelope_inputs,existing_work_revision:f.runRequest.work_rev,domain_profile_ref:f.source.sourceRef,budget_grant_ref:f.runRequest.grant,cancellation_ref:null,idempotencyKey:f.runRequest.idempotencyKey};
    await f.artifact('common-owner-request.json',commonRequest);
    const submitted=ok(await http.api(f.token,'policies','r1-submit',commonRequest),202);
@@ -132,7 +138,7 @@ try{
    const pending=ok(await http.api(f.token,'policies','r1-read',{runId:submitted.runId}));assert.equal(pending.status,'QUEUED');assert.equal(pending.head,null);
    const replay=ok(await http.api(f.token,'policies','r1-submit',f.runRequest),202);assert.equal(replay.runId,submitted.runId);assert.equal(replay.replayed,true);
    if(selected==='runtime'){
-    assert(legacyJobId);const old=await worker('COMPATIBILITY_OLD');
+    assert(legacyJobId);assert(old);
     try{for(let i=0;i<120;i++){if((await admin.query('SELECT status FROM finnor_os.jobs WHERE id=$1',[legacyJobId])).rows[0]?.status==='completed')break;await new Promise(yes=>setTimeout(yes,25));}}finally{await old.stop();}
     const legacy=(await admin.query('SELECT * FROM finnor_os.jobs WHERE id=$1',[legacyJobId])).rows[0],accepted=(await admin.query("SELECT * FROM finnor_os.jobs WHERE type='run_certified_state_reduction_v1' AND payload->>'runId'=$1",[submitted.runId])).rows[0];
     await artifact('old-worker-new-job-refusal.json',{legacy,accepted,attempts:(await admin.query('SELECT * FROM finnor_os.r1_attempts WHERE run_id=$1',[submitted.runId])).rows});

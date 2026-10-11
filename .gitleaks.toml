@@ -75,6 +75,16 @@ paths = ['''(^|/)finnor-os/packages/private-equity/src/capital-program/v2-owners
 regexTarget = "match"
 regexes = ['''^candidateKey:'m3-nonconsequential-proposal'$''']
 
+# This literal belongs to a local synthetic Auth server, not a usable token.
+# Keep every other refresh-token value and every other path fully scanned,
+# including the complete history of side parents and merge resolutions.
+[[rules.allowlists]]
+description = "Exact synthetic R2 local Auth refresh-token placeholder"
+condition = "AND"
+paths = ['''(^|/)finnor-os/scripts/r2/run-owner\.mts$''']
+regexTarget = "match"
+regexes = ['''^refresh_token:'r2-disposable'$''']
+
 # Each value is the verified SHA-256 of the named public migration, not a key.
 [[rules.allowlists]]
 description = "Four exact public SQL source pins in this release allocation"

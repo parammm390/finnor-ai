@@ -1,0 +1,113 @@
+{
+  "schema": "finnor.r1.ci-repair.v1",
+  "parent": "288ae56fc313e18c06ecf2d1c161bee49e3599eb",
+  "cumulativeSharedRepair": "fdbacd71eefd8e95861d2e965f5e51335d1b9975",
+  "changes": [
+    {
+      "path": ".github/workflows/ci.yml",
+      "preimageSha256": "a79478e239f3d3b318160841701d14975434cbd8dd9b4de2e93a2cab49029f19",
+      "postimageSha256": "1642933036567383687b566b6ddf9a735b1e94c5254b8636b4c49d897201e1e4"
+    },
+    {
+      "path": ".github/workflows/production-release.yml",
+      "preimageSha256": "6d8668c4e622e029b1876c9492367ed5070521bb843cd0ed9829856eaf434438",
+      "postimageSha256": "faad064cdb15bed71960ca7e5ba7439e480209b7d41573460d66803aa2776563"
+    },
+    {
+      "path": ".github/workflows/security.yml",
+      "preimageSha256": "6ee186082be25f8f15c048e6106d584e45c6116bc1d9820bf60f3e51230353fc",
+      "postimageSha256": "c6748920140cb46c655db3f91c1183bcd8636c6fb989a55741716059bbbaa8f5"
+    },
+    {
+      "path": ".gitleaks.toml",
+      "preimageSha256": "162f084d49199f7691366560c62399c44960418a93482478c05873f1ab6fed92",
+      "postimageSha256": "1ee2b8d27f67a0ba6847ede42bab234eb44d6926f9216961d135b8b54ad3ff6d"
+    },
+    {
+      "path": "finnor-os/scripts/r1/run-owners.mts",
+      "preimageSha256": "e2ad1ca42a55912aa9b9e0d31caac78940ed1dffb353f87e0d941d3438f1b715",
+      "postimageSha256": "95e726012c7b2e69e56dba5ad440d75ac87eb5587fc3505d13ed45f9629075e4"
+    },
+    {
+      "path": "scripts/centropy/verify-secret-scan-policy.mjs",
+      "preimageSha256": "4dccc7618194919e33f99850e1fdeecc8f0c0aabb029be55c4c7dd023f111e18",
+      "postimageSha256": "60aefa28d4089c3e7699a6ee21dce96a352b726418080c6210df3f93bbf6b12f"
+    },
+    {
+      "path": "scripts/release/smoke-worker-image.sh",
+      "preimageSha256": "253b1d0bf47bbe5d6188b99424fab90313d01c3df860ed4b0dbb5237abfa4b6a",
+      "postimageSha256": "e35631b350a2c03fab09a0a8c599f43fd1ba3ffd4e2cf2a4b25299caed6b6006"
+    }
+  ],
+  "rawEvidenceCustody": "/Users/paramdave/.factory/worktrees/r-programme-completion-2026-10-11/FINNOR",
+  "evidence": [
+    {
+      "path": "scope-r/completion/handoff/ci-failure-audit-01/r1-isolated-build.log",
+      "sha256": "42c8e947519ab1b1845ee626e1ca204f40fba25a66c0b08c553d60e8e4e7b4a4"
+    },
+    {
+      "path": "scope-r/completion/handoff/ci-failure-audit-01/r1-isolated-layout/worker-image-layout.json",
+      "sha256": "4ef150908794aa9cab2ed5786ffba77d936ea47533e40bcc042ca57ac973b31b"
+    },
+    {
+      "path": "scope-r/completion/handoff/ci-failure-audit-01/r1-isolated-policy.json",
+      "sha256": "e6d51355afe44c3fed575bfc4217d38496cf2745ee60fd8fb47e447f5b6b36f7"
+    },
+    {
+      "path": "scope-r/completion/handoff/ci-failure-audit-01/r1-isolated-compiled-owner/results.json",
+      "sha256": "992b5aac0da9bdd75d7d896408bd83e4bbb3e87c77f5e4fa3051e304ab951e90"
+    },
+    {
+      "path": "scope-r/completion/handoff/ci-failure-audit-01/r1-isolated-compiled-owner-02/driver-receipt.json",
+      "sha256": "2b65a14c752f53380d97dc9a87660e6f9f1b6e631fccf0bd3eac6a44bad121dc"
+    },
+    {
+      "path": "scope-r/completion/handoff/ci-failure-audit-01/r1-isolated-compiled-owner-02/results.json",
+      "sha256": "c19df42015e63b65da847b09a502e0d949c6f8bcb4c3c1edbea39c4dd76e99c4"
+    },
+    {
+      "path": "scope-r/completion/handoff/ci-failure-audit-01/r1-isolated-compiled-owner-02/pre-run-freeze.json",
+      "sha256": "a91dd2c42bff41b17b510b16b1fe8b06e722409cf45750641acf3fe160dd4e78"
+    },
+    {
+      "path": "scope-r/completion/handoff/ci-failure-audit-01/r1-isolated-compiled-owner-02/migration-upgrade-replay.json",
+      "sha256": "dc6767b47ade81e1d39b93e953840378d01d211ff70529a5d390939c53b6506a"
+    },
+    {
+      "path": "scope-r/completion/handoff/ci-failure-audit-01/r1-isolated-compiled-owner-02/old-worker-new-job-refusal.json",
+      "sha256": "bb45ecbd5f02ad5d3d3503221e3b465abb38af6ff376c723292a77201b15db80"
+    },
+    {
+      "path": "scope-r/completion/handoff/ci-failure-audit-01/r1-isolated-compiled-owner-02/cold-restart-and-protocol-compatibility.json",
+      "sha256": "8bf43bee8e1be3c048c2933a8391b00a9956ffb978cd4a0fb0e1d7e4b40c7d1d"
+    },
+    {
+      "path": "scope-r/completion/handoff/ci-failure-audit-01/r1-isolated-compiled-owner-02/database-teardown.json",
+      "sha256": "cc66f7d8e007776d2be85fe0b4c726877cfdabbd85214144d1c3ec2905a8447c"
+    }
+  ],
+  "result": {
+    "builtApi": "PASS",
+    "authenticatedCompiledOwner": "PASS_LOCAL",
+    "migrationUpgradeAndReplay": "PASS 174 files",
+    "legacyAndNewJobProtocol": "PASS",
+    "sourceCustody": "PASS",
+    "scannerPolicy": "PASS 63 probes and 4 history scenarios",
+    "linuxImage": "NOT_RUN locally; CI required"
+  },
+  "regressions": [
+    "Original Linux owner exhausted original deadline because cold unrelated compatibility startup was inside accepted clock",
+    "Isolated staged-only source reconstruction lacked patch directory; full HEAD patch now includes staged edits"
+  ],
+  "unchanged": [
+    "30-second accepted decision deadline",
+    "actual old-worker refusal and future-protocol assertions",
+    "real checker/S4/S5 consumers",
+    "original grants and authority",
+    "protected release guards"
+  ],
+  "publication": "UNPUBLISHED_CANDIDATE_FOR_COORDINATED_PUSH",
+  "r3": "EXCLUDED",
+  "protectedAdmission": false,
+  "economicGainClaimed": false
+}
