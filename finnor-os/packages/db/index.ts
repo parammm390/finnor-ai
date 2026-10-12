@@ -1251,7 +1251,11 @@ export async function beginWorkPlannerAttempt(params: {
   decisionContextSnapshot: DecisionContextSnapshot | null;
   decisionContextHash: string | null;
 }> {
-  return withTenant(params.tenantId, async (db) => {
+  return withTenant(params.tenantId, db => beginWorkPlannerAttemptTx(db, params));
+}
+
+/** Same owner boundary on an already authenticated transaction. */
+export async function beginWorkPlannerAttemptTx(db: Db, params: Parameters<typeof beginWorkPlannerAttempt>[0]): ReturnType<typeof beginWorkPlannerAttempt> {
     await db.execute(sql`SELECT id FROM ${schema.works} WHERE ${schema.works.id} = ${params.workId} AND ${schema.works.tenantId} = ${params.tenantId} FOR NO KEY UPDATE`);
     const [work] = await db.select().from(schema.works).where(and(eq(schema.works.id, params.workId), eq(schema.works.tenantId, params.tenantId))).limit(1);
     if (!work) throw new Error("Work not found");
@@ -1286,7 +1290,6 @@ export async function beginWorkPlannerAttempt(params: {
       decisionContextSnapshot: snapshot,
       decisionContextHash: provenanceHash(snapshot),
     };
-  });
 }
 
 export async function finishWorkPlannerAttempt(params: {
@@ -1296,12 +1299,16 @@ export async function finishWorkPlannerAttempt(params: {
   plannerResult?: Record<string, unknown>;
   failure?: Record<string, unknown>;
 }): Promise<void> {
-  await withTenant(params.tenantId, (db) => db.update(schema.workPlannerAttempts).set({
+  await withTenant(params.tenantId, db => finishWorkPlannerAttemptTx(db, params));
+}
+
+export async function finishWorkPlannerAttemptTx(db: Db, params: Parameters<typeof finishWorkPlannerAttempt>[0]): Promise<void> {
+  await db.update(schema.workPlannerAttempts).set({
     status: params.status,
     plannerResult: params.plannerResult ?? null,
     failure: params.failure ?? null,
     completedAt: new Date(),
-  }).where(and(eq(schema.workPlannerAttempts.id, params.attemptId), eq(schema.workPlannerAttempts.tenantId, params.tenantId))));
+  }).where(and(eq(schema.workPlannerAttempts.id, params.attemptId), eq(schema.workPlannerAttempts.tenantId, params.tenantId)));
 }
 
 export interface PersistSelectedWorkPlanParams {
@@ -1399,7 +1406,11 @@ async function planRevisionTransition(
  * semantic selection, but it cannot create a second active revision. Replanning
  * must name and supersede the exact current parent. */
 export async function persistSelectedWorkPlan(params: PersistSelectedWorkPlanParams): Promise<typeof schema.workPlanRevisions.$inferSelect> {
-  return withTenant(params.tenantId, async (db) => {
+  return withTenant(params.tenantId, db => persistSelectedWorkPlanTx(db, params));
+}
+
+/** Same owner boundary on an already authenticated transaction. */
+export async function persistSelectedWorkPlanTx(db: Db, params: Parameters<typeof persistSelectedWorkPlan>[0]): ReturnType<typeof persistSelectedWorkPlan> {
     // The Work identity is immutable. Serialize competing plan writers while
     // permitting specialist-finalization foreign-key KEY SHARE checks. A full
     // UPDATE lock here can deadlock with the Plan's assignment fencing trigger.
@@ -1538,7 +1549,6 @@ export async function persistSelectedWorkPlan(params: PersistSelectedWorkPlanPar
       selectedPlanRevisionId: created.id,
     }).where(and(eq(schema.workPlannerAttempts.tenantId, params.tenantId), eq(schema.workPlannerAttempts.id, params.plannerAttemptId)));
     return created;
-  });
 }
 
 export async function recordRejectedWorkPlan(params: Omit<PersistSelectedWorkPlanParams, "workInputId" | "planGraph" | "score" | "semanticHash" | "parentRevisionId" | "reason">): Promise<void> {

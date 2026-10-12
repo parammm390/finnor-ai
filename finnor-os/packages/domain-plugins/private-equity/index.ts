@@ -154,6 +154,14 @@ const CREATE_ID_FIELD: Partial<Record<PrivateEquityActionType, string>> = {
   create_closing_condition: "closingConditionId",
 };
 
+/** The actual PE creation contract distinguishes its reserved output identity
+ * from input foreign references. Execution still requires this ID = action.id. */
+export function privateEquityCreationIdentity(actionType: string) {
+  const field = CREATE_ID_FIELD[actionType as PrivateEquityActionType];
+  const contract = CONTRACT_BY_ACTION.get(actionType as PrivateEquityActionType);
+  return field && contract ? { field, entityType: contract.resultEntityType } : null;
+}
+
 const COLLECTION_BY_TYPE: Partial<Record<PeEntityRef["entityType"], keyof DealExecutionGraph>> = {
   pe_deal_party: "dealParties",
   pe_workstream: "workstreams",

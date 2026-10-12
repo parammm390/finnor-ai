@@ -80,7 +80,7 @@ export async function submitInstitutionHarnessProgram(ctx:PeMutationContext,requ
       ||rule.postconditionDigest!==action.postconditionDigest;
    })))throw Error('X1_P1_FROZEN_MANDATE_ACTION_NOT_ESTABLISHED');
  const digest=sha(request),code=await codeIdentity(),schemaDigest=await schemaIdentity(ctx);
- return tx(ctx,async c=>{
+ return tx(ctx,async(c,db)=>{
   await c.query('SELECT pg_advisory_xact_lock(hashtextextended($1,4401))',
    [ctx.auth.tenantId+':'+principal(ctx)+':'+request.idempotencyKey]);
   const old=(await c.query<InstitutionProgramRow>(`SELECT * FROM finnor_os.p1_requests
@@ -100,7 +100,7 @@ export async function submitInstitutionHarnessProgram(ctx:PeMutationContext,requ
   const episodeDeadline=originalCompilerDeadline??new Date(Math.min(Date.parse(demand.originalDeadline),Date.now()+3600000)).toISOString();
   const selected=await selectHarnessPlan(ctx,request,{programId:id,workId:request.workId,
    inputId:work.id,inputDigest,parentRevisionId:parentPlan?.id??null,
-   rightsRevision:Number(resource.reservation.rightsRevision),deadlineAt:episodeDeadline});
+   rightsRevision:Number(resource.reservation.rightsRevision),deadlineAt:episodeDeadline},db);
   const previous=(await c.query(`SELECT * FROM finnor_os.p1_episodes
     WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3`,
     [ctx.auth.tenantId,principal(ctx),request.workId])).rows[0];
@@ -249,7 +249,7 @@ export async function runInstitutionHarnessJob(ctx:PeMutationContext,q:Instituti
  }
  head.status=head.nodes.some(n=>n.action)?'WAITING':'PARTIAL';
  // Neither a P1 node nor an analytical TESTED result may publish OBSERVED.
- await tx(ctx,async(c,db)=>{
+ await tx(ctx,async c=>{
   await c.query(`SELECT l.id FROM finnor_os.work_objective_loops l
     JOIN finnor_os.work_plan_revisions p ON p.objective_loop_id=l.id AND p.tenant_id=l.tenant_id
     WHERE l.tenant_id=$1 AND p.id=$2 FOR UPDATE OF l`,[q.tenant_id,q.plan_revision_id]);
@@ -263,8 +263,6 @@ export async function runInstitutionHarnessJob(ctx:PeMutationContext,q:Instituti
    head.status==='PARTIAL'?'X1_EXACT_ACTION_PAYLOAD_OR_OBSERVER_MISSING':null,c);
   if(head.status==='WAITING'){
    await enqueueProgram(ctx,current,'first-canonical-observation',c);
-   await (await import('../../../orchestration/src/objective-loop'))
-    .schedulePreparedHarnessObjectiveTx(db,{tenantId:q.tenant_id,workId:q.work_id,planRevisionId:q.plan_revision_id});
   }
  });
  meterStatus='PREPARATION_PUBLISHED';

@@ -67,3 +67,23 @@ lock: PostgreSQL bigint claim fences reached handlers as strings while the owner
 reader normalized them to numbers. Normalize the real queue claim at dispatch,
 reject unsafe numeric values, and preserve the exact claim token/fence. Do not
 weaken publication checks or restart because a polling window alone expired.
+
+The actual native action insert then reached `domain_actions_plan_link_pair`.
+The selected institutional plan contained no action nodes. A repair must retain
+the native trigger: both plan/node IDs, exact checked payload, actual registered
+capability, current policy/authority and canonical input grounding. Reserved
+creation output IDs are not pre-existing input entities; they must equal the
+original frozen action identity, and a foreign existing ID must still refuse.
+
+Before the bounded-plan repair, freeze these additional observable predicates:
+every allowed action links to its actual selected action node; no selected plan
+exceeds the profile's 40 nodes or 24 dependencies; a batch rolls only after all
+its actions have completed, verified effects and independent canonical witnesses;
+all 128 declared duties remain in the denominator and retain their original IDs,
+episode, reservation and deadline. Prior batches remain immutable and readable.
+The native Objective controller and periodic recovery must not materialize a
+second identity while P1 owns a batch. Final native Work verification uses a
+selected observation-only child after canonical completion. A stale Objective
+delivery cannot dispatch a batch. Repeat the existing one-duty owner run first,
+then the same independently specified raw-input scenario at the 128-duty bound.
+Neither run establishes the remaining A–H or protected population gates.

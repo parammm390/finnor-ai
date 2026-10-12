@@ -7,6 +7,7 @@ import type { InstitutionHarnessProgram } from "./contracts";
 import { frozenDutyExpectation, readCanonicalDuty, matchesFrozenInstitutionIntent } from "./duty-observer";
 import { assertProgramCurrent, enqueueProgram, nativeRequestRow, persistProgrammeHead, trace, type InstitutionProgramRow } from "./store";
 import { persistInstitutionCompute } from "../institution-program/meter";
+import { institutionPlanBatchSize, selectInstitutionPlan } from "./plan";
 
 // PE creation reserves the canonical request ID from DomainAction.id. The
 // mandate's frozen expectedEntityId is therefore also the durable action ID.
@@ -26,7 +27,8 @@ export async function continueInstitutionProgram(ctx: PeMutationContext, q: Inst
    FROM finnor_os.p1_programs WHERE tenant_id=$1 AND principal_id=$2 AND id=$3 AND request_id=$4`,
    [q.tenant_id,q.principal_id,q.head_id,q.id])).rows[0];
   if(!row||sha(row.body)!==row.digest||row.body.schema!=="finnor.institution-harness-program.v1"
-    ||!["WAITING","PARTIAL"].includes(row.body.status)||row.body.work.revision!==q.work_input_id)
+    ||!["WAITING","PARTIAL"].includes(row.body.status)||row.body.work.revision!==q.work_input_id
+    ||row.body.work.planRevisionId!==q.plan_revision_id)
     throw Error("X1_WAITING_HEAD_CHANGED");
   return row.body;
  },true);
@@ -125,7 +127,9 @@ export async function continueInstitutionProgram(ctx: PeMutationContext, q: Inst
     phase:"RECOVERY",ordinal:claimed.continuationOrdinal,units:1});
   }
   resourceCharged=true;
-  const cursor=head.deliveryCursor??0,chunk=executable.slice(cursor,cursor+40);
+  const cursor=head.deliveryCursor??0,chunk=executable.slice(cursor,cursor+institutionPlanBatchSize());
+  if(!Number.isSafeInteger(cursor)||cursor<0||cursor>executable.length)
+   throw Error("X1_SAVED_BATCH_CURSOR_INVALID");
   const interventions=[...(head.interventions??[])];
   for(const node of chunk){
    await assertProgramCurrent(ctx,claimed);
@@ -139,7 +143,7 @@ export async function continueInstitutionProgram(ctx: PeMutationContext, q: Inst
    }>(`SELECT a.work_id,a.initiated_by,a.action_type,a.payload,a.plan_revision_id,a.status,
       p.episode_id,a.authority_context FROM finnor_os.domain_actions a
      LEFT JOIN finnor_os.p1_requests p ON p.tenant_id=a.tenant_id
-      AND p.plan_revision_id=a.plan_revision_id AND p.principal_id=a.initiated_by
+      AND p.id::text=a.authority_context->>'programId' AND p.principal_id=a.initiated_by
      WHERE a.tenant_id=$1 AND a.id=$2`,[q.tenant_id,id])).rows[0],true);
    if(existing&&(existing.work_id!==q.work_id||existing.initiated_by!==q.principal_id
      ||existing.action_type!==node.operation||existing.episode_id!==q.episode_id
@@ -160,15 +164,21 @@ export async function continueInstitutionProgram(ctx: PeMutationContext, q: Inst
    // Accepted/possibly submitted actions are reconciled in place. The native
    // runtime owns their retry/receipt path; P1 never creates a replacement ID.
    if(!existing||existing.status==="draft"){
+    const planNodes=head.planGraph.nodes.filter(planNode=>planNode.kind==='action'
+     &&planNode.actionType===node.operation&&sha(planNode.payload)===sha(node.action!.payload));
+    const planNode=planNodes[0];
+    if(planNodes.length!==1||planNode?.kind!=='action'
+      ||sha(planNode.groundedPayload)!==sha(node.action!.payload))
+     throw Error('X1_EXACT_NATIVE_ACTION_NODE_REQUIRED');
     // The deterministic action ID makes uncertain delivery recoverable by the
     // native bridge. No self-supplied completion receipt is accepted.
     const { FinnorOrchestrator }=await import("../../../orchestration/src");
-    await new FinnorOrchestrator().draftKnownAction(node.operation,node.action!.payload,q.tenant_id,{
+    await new FinnorOrchestrator().draftKnownAction(node.operation,planNode.groundedPayload,q.tenant_id,{
      source:"x1_checked_institution_duty",actionId:id,workId:q.work_id,initiatedBy:principal(ctx),
      authorityContext:{principal:principal(ctx),kind:"institution_duty",programId:q.id,
       compilerRequestId:q.request.institution.compilerRequestId??null,
       stableIdentity:node.stableIdentity,workInputId:q.work_input_id},
-     planRevisionId:q.plan_revision_id,reviewBeforeExecution:false,
+     planRevisionId:q.plan_revision_id,planNodeId:planNode.id,reviewBeforeExecution:false,
     });
    }
   }
@@ -208,7 +218,7 @@ export async function continueInstitutionProgram(ctx: PeMutationContext, q: Inst
       WHERE a.tenant_id=$1 AND a.id=$2 AND a.work_id=$3
         AND a.initiated_by=$4 AND EXISTS
         (SELECT 1 FROM finnor_os.p1_requests prior WHERE prior.tenant_id=a.tenant_id
-          AND prior.plan_revision_id=a.plan_revision_id AND prior.work_id=a.work_id
+          AND prior.id::text=a.authority_context->>'programId' AND prior.work_id=a.work_id
           AND prior.principal_id=a.initiated_by AND prior.episode_id=$5)
         AND a.action_type=$6 AND NOT EXISTS
         (SELECT 1 FROM finnor_os.s6_obligation_origins o
@@ -233,21 +243,42 @@ export async function continueInstitutionProgram(ctx: PeMutationContext, q: Inst
    }
    const supportedComplete=observed.length===executable.length;
    const completed=supportedComplete&&executable.length===head.nodes.length
-    &&head.institution.unresolved.length===0&&interventions.length===0;
+    &&head.institution.unresolved.length===0&&interventions.length===0
+    &&Date.now()<Date.parse(head.bounds.deadlineAt);
    const deadlineExpired=Date.now()>=Date.parse(head.bounds.deadlineAt);
+   const batchObserved=chunk.every(node=>observed.some(item=>item.stableIdentity===node.stableIdentity));
+   const nextCursor=supportedComplete?executable.length:batchObserved?cursor+chunk.length:cursor;
+   let selected:{goal:InstitutionHarnessProgram['goal'];planGraph:InstitutionHarnessProgram['planGraph'];planRevisionId:string}|null=null;
+   // Retire a batch only after actual completed/verified actions and independent
+   // canonical witnesses. The next/final graph and P1 pointer commit together.
+   if(batchObserved&&!deadlineExpired&&interventions.length===0&&nextCursor!==cursor){
+    selected=await selectInstitutionPlan(ctx,q.request,{programId:q.id,workId:q.work_id,
+     inputId:q.work_input_id,inputDigest:q.work_input_digest,parentRevisionId:q.plan_revision_id,
+     rightsRevision:Number(resource.reservation.rightsRevision),deadlineAt:head.bounds.deadlineAt,
+     cursor:nextCursor},db);
+    await c.query(`UPDATE finnor_os.p1_requests SET plan_revision_id=$4
+     WHERE tenant_id=$1 AND principal_id=$2 AND id=$3`,
+     [q.tenant_id,q.principal_id,q.id,selected.planRevisionId]);
+    await trace(ctx,claimed,'X1_NATIVE_BATCH_ADVANCED',{previousPlan:q.plan_revision_id,
+     selectedPlan:selected.planRevisionId,batchStart:cursor,batchEnd:nextCursor,
+     population:executable.length,originalEpisode:q.episode_id,originalReservation:head.reservationRef},c);
+   }
    const revised:InstitutionHarnessProgram={...head,observedPostconditions:observed,
-    deliveryCursor:Math.min(cursor+chunk.length,executable.length),interventions,
+    deliveryCursor:nextCursor,interventions,
+    ...(selected?{goal:selected.goal,planGraph:selected.planGraph,
+     work:{...head.work,planRevisionId:selected.planRevisionId}}:{}),
     status:completed?"OBSERVED":supportedComplete||deadlineExpired?"PARTIAL":"WAITING",runtime:{...head.runtime,jobId:execution.jobId,
      workerId:execution.workerId,deliveryAttemptId:execution.deliveryAttemptId,
      claimFence:execution.claimFence}};
-   await persistProgrammeHead(ctx,claimed,revised,revised.status,
+   const advanced=selected?{...claimed,plan_revision_id:selected.planRevisionId}:claimed;
+   await persistProgrammeHead(ctx,advanced,revised,revised.status,
     interventions[0]?.predicate??(deadlineExpired?"X1_ORIGINAL_OBSERVATION_DEADLINE_EXPIRED":
      supportedComplete&&!completed?"X1_UNRESOLVED_DUTIES_RETAINED":null),c);
    await trace(ctx,claimed,completed?"X1_CANONICAL_DUTIES_OBSERVED":"X1_CANONICAL_OBSERVATION_PENDING",
     {count:observed.length,total:head.nodes.length,deadlineAt:head.bounds.deadlineAt},c);
    if(completed){
     await (await import("../../../orchestration/src/objective-loop"))
-     .schedulePreparedHarnessObjectiveTx(db,{tenantId:q.tenant_id,workId:q.work_id,planRevisionId:q.plan_revision_id});
+     .schedulePreparedHarnessObjectiveTx(db,{tenantId:q.tenant_id,workId:q.work_id,planRevisionId:advanced.plan_revision_id});
    }else if(!supportedComplete&&!deadlineExpired){
     await c.query("UPDATE finnor_os.p1_requests SET poll_count=poll_count+1 WHERE tenant_id=$1 AND id=$2",
      [q.tenant_id,q.id]);
@@ -255,7 +286,7 @@ export async function continueInstitutionProgram(ctx: PeMutationContext, q: Inst
     // the original deadline; poll 60 is not a silent unscheduled WAITING state.
     const remaining=Date.parse(head.bounds.deadlineAt)-Date.now();
     const delay=Math.max(1,Math.min(remaining,60000,2000*2**Math.min(q.poll_count,5)));
-    await enqueueProgram(ctx,claimed,"observe-"+(q.poll_count+1),c,delay);
+    await enqueueProgram(ctx,advanced,"observe-"+(q.poll_count+1),c,delay);
    }
   });
  }catch(error){

@@ -43,20 +43,21 @@ import { and, asc, desc, eq, sql, type AnyColumn, type SQL } from "drizzle-orm";
 import { createHash, randomUUID } from "node:crypto";
 import { inputSnapshotHash } from "../../underwriting/src/snapshot";
 import { runResultHash } from "../../underwriting/src/result";
-import type {
-  BusinessEffectBinding,
-  BusinessEffectOperationClass,
-  BusinessEffectSet,
-  BusinessEffectStateSnapshot,
-  BusinessEffectTarget,
-  BusinessEffectVerification,
-  DomainAction,
-  DomainPolicy,
-  DraftAction,
-  ExecutionResult,
+import {
+  BUSINESS_EFFECT_SCHEMA_VERSION,
+  type BusinessEffectBinding,
+  type BusinessEffectOperationClass,
+  type BusinessEffectSet,
+  type BusinessEffectStateSnapshot,
+  type BusinessEffectTarget,
+  type BusinessEffectVerification,
+  type DomainAction,
+  type DomainPolicy,
+  type DraftAction,
+  type ExecutionResult,
 } from "@finnor/shared-types";
-import { BUSINESS_EFFECT_SCHEMA_VERSION } from "@finnor/shared-types";
 import { ACTION_HARDENING_SPEC_BY_ACTION, type ActionProfile } from "../../../scripts/release/action-hardening-spec";
+import { privateEquityCreationIdentity } from "../../domain-plugins/private-equity";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -287,6 +288,23 @@ export async function groundEntitiesWithDb(db: Db, tenantOrPayload: string | Rec
     });
   }
   return results;
+}
+
+/** A canonical non-model owner may reserve the future action identity. Only the
+ * native creation contract's top-level output field is exempt from existence;
+ * nested/input references and any foreign existing output remain checked. */
+export async function groundReservedActionWithDb(db: Db, tenantId: string, actionType: string,
+  payload: Record<string, unknown>, actionIdentity: string): Promise<GroundedField[]> {
+  const output = privateEquityCreationIdentity(actionType);
+  if (!output || !UUID_RE.test(actionIdentity) || payload[output.field] !== actionIdentity)
+    return [{ field: output?.field ?? "reservedActionIdentity", status: "unverifiable" }];
+  const { [output.field]: reserved, ...inputs } = payload;
+  const fields = await groundEntitiesWithDb(db, tenantId, inputs);
+  const result = await db.execute<{ tenant_id: string | null }>(sql`
+    SELECT finnor_os.canonical_entity_tenant(${output.entityType},${reserved as string}::uuid)::text tenant_id
+  `);
+  const owner = result.rows[0]?.tenant_id ?? null;
+  return [...fields, { field: output.field, status: owner === null || owner === tenantId ? "verified" : "not_found" }];
 }
 
 /** Convenience wrapper for callers with no transaction of their own already open

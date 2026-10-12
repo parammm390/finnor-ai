@@ -19,6 +19,9 @@ import { authenticatedApiFixture } from "./authenticated-api-fixture.mts";
 const repo = fileURLToPath(new URL("../../../../", import.meta.url));
 const evidence = process.env.FINNOR_X1_OWNER_EVIDENCE;
 if (!evidence || !evidence.startsWith("/")) throw Error("FRESH_PRIVATE_X1_OWNER_EVIDENCE_REQUIRED");
+const dutyCount=process.env.FINNOR_X1_OWNER_CASE==='128'?128:1;
+if(process.env.FINNOR_X1_OWNER_CASE&&!['1','128'].includes(process.env.FINNOR_X1_OWNER_CASE))
+  throw Error('EXACT_FROZEN_OWNER_CASE_REQUIRED');
 const limits = JSON.parse(await readFile(join(repo, "scope-frontier5/x1-institutional-programme-compiler/verification-plan.json"), "utf8")).limits;
 const disk = () => { const s = statfsSync(repo, { bigint: true }); return s.bavail * s.bsize; };
 if (disk() < BigInt(limits.liveMinimumFreeBytes)) throw Error("FROZEN_LIVE_CAPACITY_REFUSED");
@@ -35,7 +38,7 @@ const freeze = { source: { commit: git("rev-parse", "HEAD"), tree: git("rev-pars
   dirty: git("status", "--porcelain=v1", "-uall"), pins: sourcePins }, startedAt,
   runtime: { node: process.version, platform: process.platform, arch: process.arch },
   profile: "DISPOSABLE_LOCAL_AUTH_SERVICE_ACTUAL_BEARER_AND_RLS", hostedSupabaseQualified: false,
-  authDevBypass: false, expectedMigrations: 178, limits, freeBytesBefore: String(diskBefore),
+  authDevBypass: false, expectedMigrations: 178, limits, freeBytesBefore: String(diskBefore), dutyCount,
   cases: ["A-raw-two-identity-native-request", "C-unsigned-forged-input", "D-same-key-replay", "G-restricted-roles"],
   omitted: "Full B–H, physical interruption, mounted browser, clean built installation/upgrade and protected qualification remain distinct required evidence" };
 await writeFile(join(evidence, "freeze.json"), JSON.stringify(freeze, null, 2) + "\n", { mode: 0o600, flag: "wx" });
@@ -134,9 +137,9 @@ try {
       { id: "deal-B", kind: "entity", entityType: "deal", registrationId: registrationB, name: "Conflicting Harbor" }] },
     { id: "ledger-original", sourceClass: "financial_ledger", rows: [{ id: "balance-A", kind: "quantity", registrationId: registrationA,
       factKey: "facility_balance", value: "20.00", currency: "USD", unit: "units", period: "2026-10", basis: "outstanding", occurredAt, availableAt }] },
-    { id: "work-original", sourceClass: "work_tracking", rows: [{ id: "request-A", kind: "trigger", triggerKind: "evidence_request_needed",
+    { id: "work-original", sourceClass: "work_tracking", rows: Array.from({length:dutyCount},(_,index)=>({ id: "request-"+index, kind: "trigger", triggerKind: "evidence_request_needed",
       registrationId: registrationA, occurredAt, availableAt, workstreamExternalId, requestedFromExternalId: recipientExternalId,
-      requestText, requiresAcceptedDeliverable: true }] },
+      requestText:dutyCount===1?requestText:requestText+' item '+index, requiresAcceptedDeliverable: true })) },
   ];
   const grantIds: string[] = [], sourceBindings: unknown[] = [];
   for (const source of sources) {
@@ -159,7 +162,8 @@ try {
     { sourceId: "crm-original", recordId: "deal-B", canonicalId: String(second.row.id) }],
     request: { tenantId: tenant, dealId: String(first.row.id), workstreamId: String(stream.row.id), requestedFromDealPartyId: String(party.row.id),
       ownerPartyId: actor, requestText, requestedAt: occurredAt, dueAt: deadlineAt, requiresAcceptedDeliverable: true },
-    expectedRequestCount: 1, expectedCompletionMeaning: "CREATION_ONLY_NOT_FULFILLMENT_OR_APPROVAL" };
+    requestTexts:Array.from({length:dutyCount},(_,index)=>dutyCount===1?requestText:requestText+' item '+index),
+    expectedRequestCount: dutyCount, expectedCompletionMeaning: "CREATION_ONLY_NOT_FULFILLMENT_OR_APPROVAL" };
   await save("inputs-and-independent-expectations.json", { tenant, actor, institutionId, workId, rule, sourceBindings, expected });
   await admin.query(`INSERT INTO finnor_os.domain_policies(tenant_id,action_type,policy,requires_confirmation)
     VALUES($1,'create_deal_request','{"scope":"DISPOSABLE_INTERNAL_REQUEST_ONLY"}'::jsonb,false)`, [tenant]);
@@ -203,6 +207,15 @@ try {
     await appendFile(join(evidence, "compiler-observations.jsonl"), JSON.stringify({ at: new Date().toISOString(), response }) + "\n", { mode: 0o600 });
     assert.equal(response.status, 200, JSON.stringify(response)); reading = response.body;
     if (["OBSERVED", "CHECK_REJECTED", "FAILED", "UNKNOWN", "INVALIDATED", "PARTIAL"].includes(reading.status)) break;
+    const terminal=(await admin.query(`SELECT p.status,p.failure,
+      (SELECT count(*)::int FROM finnor_os.jobs j WHERE j.tenant_id=p.tenant_id
+        AND j.status IN('queued','running')) active_jobs FROM finnor_os.p1_requests p
+      JOIN finnor_os.x1_compiler_requests x ON x.tenant_id=p.tenant_id AND x.program_id=p.id
+      WHERE x.tenant_id=$1 AND x.id=$2`,[tenant,compilerId])).rows[0];
+    if(terminal?.failure&&terminal.active_jobs===0){
+      await save('terminal-queue-observation.json',{at:new Date().toISOString(),terminal,
+        originalFailureRetained:true,episodeRestarted:false});break;
+    }
     await new Promise(resolve => setTimeout(resolve, 1000));
   }
   await save("compiler-ending-projection.json", reading);
@@ -215,21 +228,39 @@ try {
     const receipt=admission.receipts.find((r:any)=>r.sourceId===mapping.sourceId&&r.recordId===mapping.recordId);
     assert.ok(receipt,"independently expected original mapping must be admitted");
     assert.match(receipt.canonicalRef,new RegExp(`^pe_deal:${mapping.canonicalId}@v[1-9][0-9]*$`));
-    const link=(await admin.query(`SELECT entity_type,entity_id,evidence_source_id,evidence_version_id FROM finnor_os.pe_evidence_links
+    const link:{entity_type:string;entity_id:string;evidence_source_id:string;evidence_version_id:string}|undefined=(await admin.query(`SELECT entity_type,entity_id,evidence_source_id,evidence_version_id FROM finnor_os.pe_evidence_links
       WHERE tenant_id=$1 AND id=$2 AND archived_at IS NULL`,[tenant,receipt.evidenceLinkId])).rows[0];
     assert.equal(link?.entity_type,"pe_deal");assert.equal(link?.entity_id,mapping.canonicalId);
     assert.equal(link?.evidence_source_id,receipt.evidenceSourceId);assert.equal(link?.evidence_version_id,receipt.evidenceVersionId);
   }
-  const rows = (await admin.query(`SELECT * FROM finnor_os.pe_requests WHERE tenant_id=$1 AND deal_id=$2 AND request_text=$3`, [tenant, expected.request.dealId, requestText])).rows;
-  assert.equal(rows.length, 1); const row = rows[0], oracle = expected.request;
+  const rows = (await admin.query(`SELECT * FROM finnor_os.pe_requests WHERE tenant_id=$1 AND deal_id=$2 AND request_text=ANY($3::text[])`, [tenant, expected.request.dealId, expected.requestTexts])).rows;
+  assert.equal(rows.length, expected.expectedRequestCount);
+  const allEffects:any[]=[];
+  for(const expectedText of expected.requestTexts){
+  const matching=rows.filter(row=>row.request_text===expectedText);assert.equal(matching.length,1);
+  const row = matching[0], oracle = expected.request;
   assert.equal(row.workstream_id, oracle.workstreamId); assert.equal(row.requested_from_deal_party_id, oracle.requestedFromDealPartyId);
   assert.equal(row.owner_party_type, "employee"); assert.equal(row.owner_party_id, actor); assert.equal(row.requires_accepted_deliverable, true);
   assert.equal(new Date(row.requested_at).toISOString(), occurredAt); assert.equal(new Date(row.due_at).toISOString(), deadlineAt);
   assert.ok(new Date(row.created_at).getTime() <= Date.parse(deadlineAt)); assert.equal(row.state, "open"); assert.equal(row.fulfilled_at, null);
-  const effects = (await admin.query(`SELECT a.id,a.status,e.status effect_status FROM finnor_os.domain_actions a
+  const effects:{id:string;status:string;effect_status:string}[] = (await admin.query(`SELECT a.id,a.status,e.status effect_status FROM finnor_os.domain_actions a
     JOIN finnor_os.business_effects e ON e.tenant_id=a.tenant_id AND e.domain_action_id=a.id
     WHERE a.tenant_id=$1 AND a.id=$2 AND a.work_id=$3`, [tenant, row.id, workId])).rows;
-  assert.equal(effects.length, 1); assert.equal(effects[0].status, "completed"); assert.equal(effects[0].effect_status, "verified");
+  assert.equal(effects.length, 1); assert.equal(effects[0]!.status, "completed"); assert.equal(effects[0]!.effect_status, "verified");
+  allEffects.push(...effects);
+  }
+  const plans=(await admin.query(`SELECT id,revision,status,parent_revision_id,plan_graph FROM finnor_os.work_plan_revisions
+    WHERE tenant_id=$1 AND work_id=$2 ORDER BY revision`,[tenant,workId])).rows;
+  assert.ok(plans.length>=2,'native action batch followed by independent observation child');
+  for(const plan of plans){assert.ok(plan.plan_graph.nodes.length<=40);
+    for(const node of plan.plan_graph.nodes)assert.ok(node.dependsOn.length<=24);}
+  assert.equal(plans.at(-1)!.plan_graph.nodes.filter((node:any)=>node.kind==='action').length,0);
+  const linked=(await admin.query(`SELECT a.id,a.plan_node_id,a.plan_revision_id,
+    n->>'kind' node_kind,n->>'actionType' node_action_type FROM finnor_os.domain_actions a
+    JOIN finnor_os.work_plan_revisions p ON p.tenant_id=a.tenant_id AND p.id=a.plan_revision_id
+    JOIN LATERAL jsonb_array_elements(p.plan_graph->'nodes') n ON n->>'id'=a.plan_node_id
+    WHERE a.tenant_id=$1 AND a.work_id=$2 AND a.id=ANY($3::uuid[])`,[tenant,workId,rows.map(row=>row.id)])).rows;
+  assert.equal(linked.length,dutyCount);assert.ok(linked.every(row=>row.node_kind==='action'&&row.node_action_type==='create_deal_request'));
   const originalEnvelope=async()=>({episodes:(await admin!.query(`SELECT id,original_deadline,wall_deadline,parent_reservation,parent_demand
     FROM finnor_os.x1_compiler_episodes WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3 ORDER BY id`,[tenant,actor,workId])).rows,
     reservations:(await admin!.query(`SELECT reservation_id,status,envelopes FROM finnor_os.s5_reservations WHERE tenant_id=$1 ORDER BY reservation_id`,[tenant])).rows,
@@ -237,8 +268,8 @@ try {
   const beforeReplay=await originalEnvelope();
   const repeated = await api("institution-submit", input); assert.equal(repeated.status, 202); assert.equal(repeated.body.requestId, compilerId);
   const afterReplay=await originalEnvelope();assert.deepEqual(afterReplay,beforeReplay,"same original episode/reservation/resources on replay");
-  assert.equal((await admin.query("SELECT count(*)::int n FROM finnor_os.pe_requests WHERE tenant_id=$1 AND request_text=$2", [tenant, requestText])).rows[0].n, 1);
-  results.push({ id: "A-authenticated-owner-creation", status: "PASS", observed: { compilerId, admission, row, effects, repeated, beforeReplay, afterReplay },
+  assert.equal((await admin.query("SELECT count(*)::int n FROM finnor_os.pe_requests WHERE tenant_id=$1 AND request_text=ANY($2::text[])", [tenant, expected.requestTexts])).rows[0].n,dutyCount);
+  results.push({ id: "A-authenticated-owner-creation", status: "PASS", observed: { compilerId, admission, rows, effects:allEffects,plans,linked,repeated, beforeReplay, afterReplay },
     basis: "ACTUAL_LOCAL_AUTH_HTTP_SQL_PHYSICAL_WORKER_NATIVE_CREATE_AND_INDEPENDENT_SQL_OBSERVER" });
 } catch (error) {
   results.push({ id: "actual-owner-boundary", status: "FAIL", observed: { message: String((error as Error).message),
@@ -257,6 +288,9 @@ try {
       ["resource-charges", "SELECT * FROM finnor_os.s5_governed_resource_charges WHERE tenant_id=$1"],
       ["deals", "SELECT id,version,source_system,external_id,status,name FROM finnor_os.pe_deals WHERE tenant_id=$1 ORDER BY id"],
       ["mapping-admissions", "SELECT * FROM finnor_os.x1_mapping_admissions WHERE tenant_id=$1"],
+      ["actions", "SELECT id,status,action_type,work_id,plan_revision_id,plan_node_id,authority_context FROM finnor_os.domain_actions WHERE tenant_id=$1"],
+      ["native-events", "SELECT kind,body,created_at FROM finnor_os.p1_events WHERE tenant_id=$1 ORDER BY created_at,id"],
+      ["plans", "SELECT id,revision,status,parent_revision_id,plan_graph,revision_transition FROM finnor_os.work_plan_revisions WHERE tenant_id=$1 ORDER BY revision"],
     ]) { try { await save(name! + ".json", (await admin.query(sql!, [tenant])).rows); } catch (error) { await save(name! + "-read-gap.json", { predicate: String((error as Error).message) }); } }
   }
   if (worker && worker.exitCode === null && worker.signalCode === null) {
