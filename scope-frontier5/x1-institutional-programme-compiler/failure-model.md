@@ -259,6 +259,19 @@ episodes or users. Bound the cache to the declared source/byte envelope. Source
 acquisition counters count real raw reads; metadata checks remain measured compute.
 No deadline, original cost, population or bound is reset.
 
+### Registered owner case F-physical-checker-crash-and-compatible-resume
+
+Find the actual first independent checker process as a child of the owned physical
+worker, observing its exact pinned checker-command argv and parent chain. SIGKILL
+only that checker tree, retaining the live worker. Its refusal must leave UNKNOWN,
+no mapping admission/artifact/native effect, a quarantined original queue delivery,
+and incurred acquisition/check/compute costs under the same S5 parent. Invoke the
+existing authenticated same-request resume and require an actual second compiler
+job, actual independent checker, native effect and completed Work without another
+episode/reservation/deadline. A candidate receipt or fallback flag cannot substitute
+for the callee/queue/physical checker and canonical outcome. Never kill an unrelated
+process, repair source inside the run, or silently drop the failed attempt.
+
 ### Publication compute attribution continued
 
 The compiler's existing COMPILE measurement ends before baseline/catalog reads,

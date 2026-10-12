@@ -21,7 +21,7 @@ const ownerCases={owners:{'one-duty':{count:'1',mode:'api'},'128-duty':{count:'1
   heterogeneous:{count:'1',mode:'heterogeneous'},canonical:{count:'1',mode:'canonical'},ordinary:{count:'1',mode:'ordinary'},
   domain:{count:'1',mode:'domain'}},
   lifecycle:{material:{count:'1',mode:'material'},'reporting-changes':{count:'1',mode:'reporting_changes'},recovery:{count:'1',mode:'recovery'},
-    contention:{count:'1',mode:'contention'},unsupported:{count:'1',mode:'unsupported'},
+    contention:{count:'1',mode:'contention'},unsupported:{count:'1',mode:'unsupported'},'checker-crash':{count:'1',mode:'checker_crash'},
     'cancel-observed':{count:'1',mode:'cancel_observed'},
     'effect-recovery':{count:'1',mode:'effect_recovery'}},mounted:{mounted:{count:'1',mode:'mounted'}},
   installed:{'schema-upgrade':{count:'1',mode:'upgrade'}}};

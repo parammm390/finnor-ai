@@ -36,12 +36,13 @@ const recovery=process.env.FINNOR_X1_OWNER_MODE==='recovery';
 const effectRecovery=process.env.FINNOR_X1_OWNER_MODE==='effect_recovery';
 const ordinary=process.env.FINNOR_X1_OWNER_MODE==='ordinary'||fullDomain;
 const upgrade=process.env.FINNOR_X1_OWNER_MODE==='upgrade';
+const checkerCrash=process.env.FINNOR_X1_OWNER_MODE==='checker_crash';
 const contention=process.env.FINNOR_X1_OWNER_MODE==='contention';
 const unsupported=process.env.FINNOR_X1_OWNER_MODE==='unsupported';
 const cancelObserved=process.env.FINNOR_X1_OWNER_MODE==='cancel_observed';
-if(process.env.FINNOR_X1_OWNER_MODE&&!['api','mounted','revision','material','heterogeneous','canonical','recovery','effect_recovery','ordinary','domain','reporting_changes','upgrade','contention','unsupported','cancel_observed'].includes(process.env.FINNOR_X1_OWNER_MODE))
+if(process.env.FINNOR_X1_OWNER_MODE&&!['api','mounted','revision','material','heterogeneous','canonical','recovery','effect_recovery','ordinary','domain','reporting_changes','upgrade','checker_crash','contention','unsupported','cancel_observed'].includes(process.env.FINNOR_X1_OWNER_MODE))
   throw Error('EXACT_REGISTERED_OWNER_MODE_REQUIRED');
-if((mounted||material||heterogeneous||canonical||recovery||effectRecovery||ordinary||upgrade||contention||unsupported||cancelObserved)&&dutyCount!==1)throw Error('NAMED_ONE_DUTY_SCENARIO_REQUIRED');
+if((mounted||material||heterogeneous||canonical||recovery||effectRecovery||ordinary||upgrade||checkerCrash||contention||unsupported||cancelObserved)&&dutyCount!==1)throw Error('NAMED_ONE_DUTY_SCENARIO_REQUIRED');
 if(process.env.FINNOR_X1_OWNER_CASE&&!['1','128'].includes(process.env.FINNOR_X1_OWNER_CASE))
   throw Error('EXACT_FROZEN_OWNER_CASE_REQUIRED');
 const limits = JSON.parse(await readFile(join(repo, "scope-frontier5/x1-institutional-programme-compiler/verification-plan.json"), "utf8")).limits;
@@ -72,6 +73,7 @@ const freeze = { source: { commit: git("rev-parse", "HEAD"), tree: git("rev-pars
     ...(upgrade?['G-existing-schema-upgrade-and-jobs']:[]),
     ...(fullDomain?['A-full-declared-source-and-owner-domain']:[]),
     ...(reportingChanges?['B-report-meaning-exception-and-cosmetic-change']:[]),
+    ...(checkerCrash?['F-physical-checker-crash-and-compatible-resume']:[]),
     ...(contention?['E-original-shared-parent-contention']:[]),...(unsupported?['F-mixed-unsupported-rule']:[]),
     ...(cancelObserved?['E-cancel-observed-standing-continuation']:[])],
   omitted: "Full B–H, physical interruption, mounted browser, clean built installation/upgrade and protected qualification remain distinct required evidence" };
@@ -80,6 +82,7 @@ const results: any[] = [], traffic: unknown[] = [];
 let database: EmbeddedPostgres | undefined, admin: pg.Client | undefined;
 let publicationBlocker:pg.Client|undefined;
 let acknowledgementBlocker:pg.Client|undefined,effectRecoveryProof:any;
+let checkerCrashProof:any;
 let service: Awaited<ReturnType<typeof authenticatedApiFixture>> | undefined, worker: ReturnType<typeof spawn> | undefined;
 let frontend:ReturnType<typeof spawn>|undefined;
 let mountedControl:Server|undefined;
@@ -356,6 +359,50 @@ try {
     role: "finnor_worker", actualProductionRegistrations: true, credentialsPersisted: false });
   let guardFailure: string | null = null;
   guard = setInterval(() => { void take().catch(error => { guardFailure = String(error.message); worker?.kill("SIGTERM"); }); }, 2000);
+  if(checkerCrash){
+    const exactEnvelope=async()=>({episodes:(await admin!.query(`SELECT id,original_deadline,wall_deadline,parent_reservation,parent_demand
+      FROM finnor_os.x1_compiler_episodes WHERE tenant_id=$1 ORDER BY id`,[tenant])).rows,
+      reservations:(await admin!.query(`SELECT reservation_id,envelopes FROM finnor_os.s5_reservations
+        WHERE tenant_id=$1 ORDER BY reservation_id`,[tenant])).rows});
+    let checkerTree:Array<{pid:number;ppid:number;argv:string}>=[];
+    for(let poll=0;poll<600;poll++){
+      if(guardFailure)throw Error(guardFailure);
+      const processes=execFileSync('ps',['-axo','pid=,ppid=,command='],{encoding:'utf8',timeout:5000,maxBuffer:8*1024*1024})
+        .split('\n').map(line=>/^\s*(\d+)\s+(\d+)\s+(.*)$/.exec(line)).filter(Boolean)
+        .map(match=>({pid:Number(match![1]),ppid:Number(match![2]),argv:match![3]!}));
+      const root=processes.find(p=>p.ppid===worker!.pid&&p.argv.includes('/tsx/dist/cli.mjs')
+        &&p.argv.includes('/scripts/frontier5/x1/checker-command.mts'));
+      if(root){
+        const owned=new Set([root.pid]);for(let cursor=0;cursor<3;cursor++)for(const p of processes)if(owned.has(p.ppid))owned.add(p.pid);
+        checkerTree=processes.filter(p=>owned.has(p.pid));
+        for(const p of [...checkerTree].reverse())process.kill(p.pid,'SIGKILL');break;
+      }
+      await new Promise(resolve=>setTimeout(resolve,25));
+    }
+    assert.ok(checkerTree.length>0,'actual independent checker child owned by this physical worker');
+    await save('checker-crash-physical-process.json',{at:new Date().toISOString(),workerPid:worker.pid,checkerTree,
+      signal:'SIGKILL',workerRetained:true,credentialsExposed:false});
+    let refused:any,quarantine:any;
+    for(let poll=0;poll<60;poll++){
+      if(guardFailure)throw Error(guardFailure);
+      refused=await api('institution-read',{requestId:compilerId});assert.equal(refused.status,200);
+      quarantine=(await admin.query(`SELECT id,status,last_error,attempts FROM finnor_os.jobs WHERE tenant_id=$1
+        AND type='run_x1_institution_compiler_v1' AND payload->>'requestId'=$2 ORDER BY id`,[tenant,compilerId])).rows[0];
+      if(refused.body.status==='UNKNOWN'&&quarantine.status==='quarantined')break;
+      await new Promise(resolve=>setTimeout(resolve,250));
+    }
+    assert.equal(refused.body.status,'UNKNOWN');assert.equal(refused.body.reason,'X1_CHECKER_PROCESS_REFUSED');
+    assert.equal(quarantine.status,'quarantined');assert.ok(quarantine.last_error.includes('X1_CHECKER_PROCESS_REFUSED'));
+    for(const table of ['x1_mapping_admissions','x1_compiler_artifacts','domain_actions','pe_requests'])
+      assert.equal((await admin.query(`SELECT count(*)::int n FROM finnor_os.${table} WHERE tenant_id=$1`,[tenant])).rows[0].n,0);
+    const before=await exactEnvelope();assert.equal(before.episodes.length,1);assert.equal(before.reservations.length,1);
+    const resumed=await api('institution-resume',{requestId:compilerId});assert.equal(resumed.status,202);
+    assert.equal(resumed.body.requestId,compilerId);assert.equal(resumed.body.originalParentRetained,true);
+    assert.deepEqual(await exactEnvelope(),before);
+    checkerCrashProof={checkerTree,workerPid:worker.pid,refused,quarantine,before,resumed,
+      actualCompatibleContinuation:'EXISTING_AUTHENTICATED_INSTITUTION_RESUME_NO_ALGORITHM_SUBSTITUTION'};
+    await save('checker-crash-original-refusal-and-resume.json',checkerCrashProof);
+  }
   if(effectRecovery){
     const originalEnvelope=async()=>({episodes:(await admin!.query(`SELECT id,original_deadline,wall_deadline,
       parent_reservation,parent_demand FROM finnor_os.x1_compiler_episodes WHERE tenant_id=$1 ORDER BY id`,[tenant])).rows,
@@ -880,6 +927,22 @@ try {
       originalEffects:allEffects,canonicalRequests:rows,executorReplayCount:0,acknowledgementStillUnknown:true});
     results.push({id:'D-effect-submit-lost-ack',status:'PASS',observed:{operationId:operation.id,step,completion},
       basis:'ACTUAL_CANONICAL_COMMIT_LOST_ACK_SIGKILL_SAME_IDENTITY_UNKNOWN_JOURNAL_READ_ONLY_OWNER_SETTLEMENT'});
+  }
+  if(checkerCrash){
+    const history=(await admin.query(`SELECT id,attempts,acquisition_calls,original_deadline,wall_deadline,parent_reservation,parent_demand
+      FROM finnor_os.x1_compiler_episodes WHERE tenant_id=$1`,[tenant])).rows;
+    assert.equal(history.length,1);assert.equal(history[0].attempts,2);assert.equal(history[0].acquisition_calls,6);
+    assert.deepEqual(Object.fromEntries(Object.keys(checkerCrashProof.before.episodes[0]).map(key=>[key,history[0][key]])),
+      checkerCrashProof.before.episodes[0]);
+    const compilerJobs=(await admin.query(`SELECT id,status,attempts,payload,claim_fence FROM finnor_os.jobs
+      WHERE tenant_id=$1 AND type='run_x1_institution_compiler_v1' AND payload->>'requestId'=$2 ORDER BY id`,[tenant,compilerId])).rows;
+    assert.equal(compilerJobs.length,2);assert.deepEqual(compilerJobs.map(job=>job.status).sort(),['completed','quarantined']);
+    assert.equal(reading.costs.physicalCompute.phases.COMPILE.deliveries,2);
+    await save('checker-crash-compatible-native-completion.json',{...checkerCrashProof,history,compilerJobs,
+      actualCosts:reading.costs,completion,rows,effects:allEffects,originalFailureAndCostRetained:true,
+      oneOriginalRequestAndEpisode:true,alternativeAlgorithmClaimed:false});
+    results.push({id:'F-physical-checker-crash-and-compatible-resume',status:'PASS',observed:{compilerJobs,history,completion},
+      basis:'ACTUAL_CHECKER_SIGKILL_UNKNOWN_QUARANTINE_ORIGINAL_PARENT_AUTH_RESUME_SECOND_CHECKER_AND_NATIVE_COMPLETION'});
   }
   if(reportingChanges){
     const initialObjective=(await admin.query('SELECT * FROM finnor_os.work_objective_loops WHERE tenant_id=$1 AND work_id=$2',[tenant,workId])).rows[0];

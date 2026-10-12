@@ -539,6 +539,18 @@
       "limits": "UNCHANGED",
       "acceptance": "oracle-contract.md#b-report-meaning-exception-and-cosmetic-change-independent-expectations",
       "fullBFixtureEstablished": false
+    },
+    {
+      "id": "F-physical-checker-crash-and-compatible-resume",
+      "mode": "checker_crash",
+      "dutyCount": 1,
+      "status": "FROZEN_BEFORE_CASE_IMPLEMENTATION",
+      "fault": "OWNED_PHYSICAL_CHECKER_TREE_SIGKILL",
+      "expectedOriginalDisposition": "UNKNOWN_QUARANTINED_NO_ADMISSION_OR_EFFECT",
+      "continuation": "ACTUAL_AUTHENTICATED_SAME_REQUEST_RESUME_SECOND_CHECKER_NATIVE_OWNER",
+      "limits": "UNCHANGED",
+      "acceptance": "oracle-contract.md#f-physical-checker-crash-and-compatible-resume-independent-expectations",
+      "alternativeAlgorithmClaimed": false
     }
   ]
 }

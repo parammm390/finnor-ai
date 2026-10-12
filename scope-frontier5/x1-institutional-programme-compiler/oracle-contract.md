@@ -316,3 +316,15 @@ the original lender object as unresolved with its canonical alternative. Current
 explicit Outstanding restores the quantity; old failures/costs remain. Three
 automatic child IDs/immutable parents, exact fifteen-source population and all
 original limits survive; Request/Workstream/Finding counts and IDs never grow.
+
+# F-physical-checker-crash-and-compatible-resume independent expectations
+
+Use the original A raw three-source/one-duty oracle. Kill the first real checker
+child after its existing CHECK charge and spawn, before admission. Require actual
+X1_CHECKER_PROCESS_REFUSED/UNKNOWN and no candidate/check/native exposure. Read the
+original episode, S5 reservation/envelopes and deadline before resume. The existing
+authenticated institution-resume must reuse that exact request and parent, start
+the real second compiler/checker and produce exactly one independently observed
+Request plus completed native Work/Objective/Plan. Attempts become two, original
+raw acquisitions six, and both immutable physical COMPILE measurements persist.
+No alternative algorithm or protected fallback admission is claimed.
