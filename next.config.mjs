@@ -38,9 +38,25 @@ const SECURITY_HEADERS = [
 ]
 
 import { withSentryConfig } from "@sentry/nextjs"
+import { createRequire } from "node:module"
+import { dirname, relative, sep } from "node:path"
+import { fileURLToPath } from "node:url"
+
+// Linked dependency checkouts must live inside Turbopack's resolution root.
+// Normal installations resolve to this project; managed read-only overlays use
+// their common parent without changing which product source is imported.
+const projectRoot = dirname(fileURLToPath(import.meta.url))
+const nextPackageRoot = dirname(createRequire(import.meta.url).resolve("next/package.json"))
+let dependencyRoot = projectRoot
+while (relative(dependencyRoot, nextPackageRoot) === ".." || relative(dependencyRoot, nextPackageRoot).startsWith(`..${sep}`)) {
+  const parent = dirname(dependencyRoot)
+  if (parent === dependencyRoot) throw new Error("Linked Next dependency has no bounded common root")
+  dependencyRoot = parent
+}
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  turbopack: { root: dependencyRoot },
   allowedDevOrigins: ["127.0.0.1"],
   // Release builds provide a commit-derived value. Keeping the Next build ID
   // deterministic makes the runtime release record independently checkable.

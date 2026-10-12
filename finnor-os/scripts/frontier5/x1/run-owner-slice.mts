@@ -237,7 +237,7 @@ try {
       NEXT_PUBLIC_CENTROPY_TEST_MODE:'0',CENTROPY_TEST_MODE:'0',FINNOR_OS_API_URL:service.origin,
       NEXT_PUBLIC_OS_API_URL:service.origin,NEXT_PUBLIC_SUPABASE_URL:service.authOrigin,
       NEXT_PUBLIC_SUPABASE_ANON_KEY:'disposable-local-auth'};
-    frontend=spawn(process.execPath,[join(repo,'node_modules/next/dist/bin/next'),'dev','--webpack',
+    frontend=spawn(process.execPath,[join(repo,'node_modules/next/dist/bin/next'),'dev','--turbopack',
       '--hostname','127.0.0.1','--port',String(frontendPort)],{cwd:repo,env:frontendEnv,stdio:['ignore','pipe','pipe']});
     let frontendLogBytes=0;for(const stream of [frontend.stdout!,frontend.stderr!])stream.on('data',b=>{
       frontendLogBytes+=b.length;if(frontendLogBytes<=limits.smallCheckOutputBytes)

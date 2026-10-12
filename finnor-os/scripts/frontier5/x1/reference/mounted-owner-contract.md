@@ -45,3 +45,11 @@ compiler exposure, retain the actual generated diff and browser connection error
 then freeze that generated source for the affected mounted run. Reuse its owned
 Webpack cache and record preparation separately; this is not a clean installation
 claim. Keep the original heap, stack wall, disk and memory bounds unchanged.
+
+Run 028 retained the same Webpack memory-threshold restart and an unhydrated
+LoginForm; no compiler request was accepted within the fixed 240 observations.
+Use installed Next 16's default Turbopack instead of that optional Webpack path.
+Its documented linked-package rule requires a root containing the owned product
+and the exact read-only third-party dependency checkout. Derive the common root
+from the actual Next package resolution; do not copy dependencies, import peer
+product source, enlarge the heap/stack bounds or bypass authentication.
