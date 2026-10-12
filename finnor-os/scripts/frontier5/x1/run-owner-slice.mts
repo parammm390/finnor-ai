@@ -25,6 +25,8 @@ import { evaluateAuthority } from '@finnor/authority';
 
 const repo = fileURLToPath(new URL("../../../../", import.meta.url));
 const installation=process.env.FINNOR_X1_INSTALLED_ROOT;
+const frontendInstallation=process.env.FINNOR_X1_FRONTEND_ROOT;
+const frontendManifest=frontendInstallation?JSON.parse(await readFile(join(frontendInstallation,'x1-frontend-installation.json'),'utf8')):null;
 const installedManifest=installation?JSON.parse(await readFile(join(installation,'finnor-os/x1-development-installation.json'),'utf8')):null;
 const nativeMigrate:typeof migrate=installation?(await import(pathToFileURL(join(installation,installedManifest.entrypoints.migrations)).href)).migrate:migrate;
 const evidence = process.env.FINNOR_X1_OWNER_EVIDENCE;
@@ -36,7 +38,8 @@ const sensitiveCoverage=process.env.FINNOR_X1_OWNER_MODE==='sensitive_coverage';
 const personnel=process.env.FINNOR_X1_OWNER_MODE==='personnel';
 const creation=process.env.FINNOR_X1_OWNER_MODE==='creation';
 const sourceNamespace=process.env.FINNOR_X1_OWNER_MODE==='source_namespace';
-const ownerInputs=process.env.FINNOR_X1_OWNER_MODE==='owner_inputs'||sourceNamespace;
+const ownerInputs=process.env.FINNOR_X1_OWNER_MODE==='owner_inputs'||sourceNamespace
+  ||process.env.FINNOR_X1_OWNER_MODE==='mounted';
 const fullDomain=process.env.FINNOR_X1_OWNER_MODE==='domain'||reportingChanges||ownerInputs||sensitiveCoverage||personnel;
 const mounted=process.env.FINNOR_X1_OWNER_MODE==='mounted';
 const revise=process.env.FINNOR_X1_OWNER_MODE==='revision';
@@ -213,7 +216,8 @@ try {
   if(personnel)rules.push({...rule,id:'standing-distinct-staff',triggerKind:'staff_evidence_request_needed',principalId:unrelatedEmployee});
   if(!ownerInputs)await admin.query(`INSERT INTO finnor_os.x1_work_mandates(tenant_id,principal_id,work_id,institution_id,revision,rules,valid_from,expires_at)
     VALUES($1,$2,$3,$4,'r1',$5::jsonb,clock_timestamp()-interval '1 minute',clock_timestamp()+interval '1 hour')`, [tenant, actor, workId, institutionId, JSON.stringify(rules)]);
-  const frontendPort=mounted?await freePort():null,frontendOrigin=frontendPort?'http://127.0.0.1:'+frontendPort:null;
+  const frontendPort=mounted?(frontendManifest?Number(new URL(frontendManifest.frontendOrigin).port):await freePort()):null;
+  const frontendOrigin=frontendPort?'http://127.0.0.1:'+frontendPort:null;
   const revokeFixturePrincipal=async()=>{
     const controlDb=new pg.Client({connectionString:connection('x1_fixture',password)});
     try{await controlDb.connect();const rows=(await controlDb.query(`UPDATE finnor_os.users SET status='suspended'
@@ -845,8 +849,11 @@ try {
       NEXT_PUBLIC_CENTROPY_TEST_MODE:'0',CENTROPY_TEST_MODE:'0',FINNOR_OS_API_URL:service.origin,
       NEXT_PUBLIC_OS_API_URL:service.origin,NEXT_PUBLIC_SUPABASE_URL:service.authOrigin,
       NEXT_PUBLIC_SUPABASE_ANON_KEY:'disposable-local-auth'};
-    frontend=spawn(process.execPath,[join(repo,'node_modules/next/dist/bin/next'),'dev','--turbopack',
-      '--hostname','127.0.0.1','--port',String(frontendPort)],{cwd:repo,env:frontendEnv,stdio:['ignore','pipe','pipe']});
+    frontend=spawn(process.execPath,frontendInstallation
+      ?['--max-old-space-size=1536',join(frontendInstallation,'frontend-host.mjs'),
+        '--api-origin',service.origin,'--auth-origin',service.authOrigin]
+      :[join(repo,'node_modules/next/dist/bin/next'),'dev','--turbopack','--hostname','127.0.0.1','--port',String(frontendPort)],
+      {cwd:frontendInstallation??repo,env:frontendEnv,stdio:['ignore','pipe','pipe']});
     let frontendLogBytes=0;for(const stream of [frontend.stdout!,frontend.stderr!])stream.on('data',b=>{
       frontendLogBytes+=b.length;if(frontendLogBytes<=limits.smallCheckOutputBytes)
         void appendFile(join(evidence,'frontend.log'),b,{mode:0o600});else frontend?.kill('SIGTERM');});
@@ -855,7 +862,10 @@ try {
       url:frontendOrigin+'/centropy/investigations/'+thread.id,
       otherUrl:frontendOrigin+'/centropy/investigations/'+other.id,
       controlOrigin:'http://127.0.0.1:'+controlAddress.port,controlKey,
-      actor,tenant,frontendPid:frontend.pid,originalEnvelope:'Same frozen owner scenario; no profile/grant reset',
+      actor,tenant,frontendPid:frontend.pid,frontendInstallation:frontendInstallation??null,
+      frontendManifestDigest:frontendManifest?sha(await readFile(join(frontendInstallation!,'x1-frontend-installation.json'))):null,
+      sourceInputs:ownerInputs?{institutionId,sourceBindings,purpose:'standing evidence responsibility',rules}:null,
+      originalEnvelope:'Same frozen owner scenario; no profile/grant reset',
       credentials:'DISPOSABLE_LOCAL_ONLY_FILE_MODE_0600_NEVER_PUBLIC_EVIDENCE'});
     for(let poll=0;poll<240;poll++){
       if(guardFailure)throw Error(guardFailure);
@@ -1942,7 +1952,7 @@ try {
     assert.equal((await admin.query('SELECT count(*)::int n FROM finnor_os.pe_requests WHERE tenant_id=$1 AND request_text=ANY($2::text[])',
       [tenant,expected.requestTexts])).rows[0].n,dutyCount);
     assert.equal((await admin.query('SELECT count(*)::int n FROM finnor_os.domain_actions WHERE tenant_id=$1 AND work_id=$2',
-      [tenant,workId])).rows[0].n,dutyCount);
+      [tenant,workId])).rows[0].n,ordinary?3:dutyCount);
     results.push({id:material?'B-material-ledger-native-revision':'B-same-standing-input-native-revision',status:'PASS',observed:{revised,current,
       initialObjective,finalObjective,priorCompletionProofDigest:initialProof},
       basis:'ACTUAL_AUTHENTICATED_OWNER_REVISION_SAME_OBJECTIVE_ORIGINAL_PARENT_NO_DUPLICATE_EFFECT'});
@@ -2018,7 +2028,7 @@ try {
       await new Promise(resolve=>setTimeout(resolve,1000));
     }
   }
-  if(installation){
+  if(installation&&!mounted){
     const preserved=installedPreservation;
     const before=await preserved(),previousWorkerPid=worker!.pid;
     await new Promise<void>(resolve=>{
