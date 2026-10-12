@@ -217,6 +217,9 @@ export async function runInstitutionCompilerJob(payload: Record<string, unknown>
     await tx(ctx, async c => {
       const current = await compilerRow(ctx, q.id, c, true);
       await compilerEvent(ctx, current, "COMPILER_FAILED_OR_FENCED", { predicate,
+        ...(predicate==="X1_CANONICAL_ENTITY_CHANGED_DURING_ADMISSION"
+          &&(error as Error).cause&&(error as {cause?:{kind?:string}}).cause?.kind==="X1_CANONICAL_OWNER_MISMATCH"
+          ?{ownerMismatch:(error as Error).cause}:{}),
         jobId: execution.jobId, claimFence: execution.claimFence, elapsedMs: performance.now() - started,
         originalEpisode: q.episode_id, possibleAdmissionsOrEffectsRetained: true, monetaryCost: null,
         physicalComputeAttribution:meterGap?"METER_GAP":"S7_ATTEMPT_RECORDED",meterGap }, c);

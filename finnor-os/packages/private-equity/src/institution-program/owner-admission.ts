@@ -461,7 +461,11 @@ async function admitCheckedInstitutionMappings(
       if (row.id !== entityId || row.external_id !== mapping.registrationId
           || entity.revision !== `v${row.version}`
           || row.source_system !== `x1:${original.institutionId}`) {
-        throw new Error("X1_CANONICAL_ENTITY_CHANGED_DURING_ADMISSION");
+        throw new Error("X1_CANONICAL_ENTITY_CHANGED_DURING_ADMISSION", { cause: {
+          kind: "X1_CANONICAL_OWNER_MISMATCH", canonicalRef: mapping.canonicalRef,
+          registrationId: mapping.registrationId, expectedSourceSystem: `x1:${original.institutionId}`,
+          observed: { id: row.id, registrationId: row.external_id, version: row.version, sourceSystem: row.source_system },
+        } });
       }
       }else{
         const locked=await lockAdditionalInstitutionOwner(client,ctx,original,mapping.canonicalRef,
