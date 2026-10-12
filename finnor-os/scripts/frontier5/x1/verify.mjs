@@ -88,6 +88,7 @@ for (const path of [
   'finnor-os/packages/private-equity/src/institution-program/inputs.ts',
   'finnor-os/packages/db/migrations/0181_x1_authenticated_work_inputs.sql',
   'finnor-os/packages/db/migrations/0182_x1_core_source_parameter_binding.sql',
+  'finnor-os/packages/db/migrations/0183_x1_source_authority_role_isolation.sql',
   "finnor-os/packages/private-equity/src/institution-program/installed-source.ts",
   "finnor-os/packages/private-equity/src/index.ts",
   "finnor-os/packages/db/migrations/0172_x1_institution_source_authority.sql",

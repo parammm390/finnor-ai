@@ -67,7 +67,7 @@ const freeze = { source: { commit: git("rev-parse", "HEAD"), tree: git("rev-pars
   dirty: git("status", "--porcelain=v1", "-uall"),dirtyDiffDigest:sha(git('diff','--binary')), pins: sourcePins }, startedAt,
   runtime: { node: process.version, platform: process.platform, arch: process.arch },
   profile: "DISPOSABLE_LOCAL_AUTH_SERVICE_ACTUAL_BEARER_AND_RLS", hostedSupabaseQualified: false,
-  authDevBypass: false, expectedMigrations: 184, limits, freeBytesBefore: String(diskBefore), dutyCount,mounted,
+  authDevBypass: false, expectedMigrations: 185, limits, freeBytesBefore: String(diskBefore), dutyCount,mounted,
   cases: ["A-raw-two-identity-native-request", "C-unsigned-forged-input", "D-same-key-replay", "G-restricted-roles",
     ...(material?['B-ledger-correction']:[]),...(heterogeneous?['A-eight-class-original-corpus']:[]),
     ...(canonical?['A-fourteen-canonical-kinds']:[]),...(recovery?['D-compiler-before-publication-death']:[]),
@@ -360,6 +360,19 @@ try {
       zeroRowsTargeted:true,authorityMutated:false});
     assert.equal(actualRole,'finnor_app');assert.equal(rawWriteCode,'42501','actual raw source authority DML must be rejected');
     assert.ok(privileges.every(row=>row.allowed===false),'compiler/application raw source authority writes must be absent');
+    const workerProbe=new pg.Client({connectionString:connection('finnor_worker',workerPassword)});
+    let workerRole:string|null=null,workerRawWriteCode:string|null=null;
+    try{
+      await workerProbe.connect();await workerProbe.query('BEGIN');
+      await workerProbe.query("SELECT set_config('app.tenant_id',$1,true),set_config('app.user_id',$2,true)",[tenant,actor]);
+      workerRole=(await workerProbe.query('SELECT current_user AS role')).rows[0].role;
+      try{await workerProbe.query('UPDATE finnor_os.x1_source_grants SET revoked_at=clock_timestamp() WHERE tenant_id=$1 AND false',[tenant]);}
+      catch(error){workerRawWriteCode=(error as {code?:string}).code??null;}
+      await workerProbe.query('ROLLBACK');
+    }finally{await workerProbe.end();}
+    assert.equal(workerRole,'finnor_worker');assert.equal(workerRawWriteCode,'42501');
+    await save('source-authority-role-independent-proof.json',{actualRole,privileges,rawWriteCode,workerRole,workerRawWriteCode,
+      zeroRowsTargeted:true,authorityMutated:false,credentialsExposed:false});
     const expiry=new Date(Date.now()+3600000).toISOString();
     const userRules=rules.map(({postconditionRef:_postcondition,observerRef:_observer,...userRule})=>userRule);
     const mandateInput={workId,institutionId,rules:userRules,expiresAt:expiry};
