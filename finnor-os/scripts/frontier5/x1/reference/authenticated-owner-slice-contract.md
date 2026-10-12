@@ -87,3 +87,15 @@ selected observation-only child after canonical completion. A stale Objective
 delivery cannot dispatch a batch. Repeat the existing one-duty owner run first,
 then the same independently specified raw-input scenario at the 128-duty bound.
 Neither run establishes the remaining A–H or protected population gates.
+
+Run 010 reached a correctly linked native action but retained pending approval.
+Actual action/readback showed two independent faults: the fixture inserted only
+the compatibility policy row, while the executor correctly reads immutable
+policy revisions; and `recordActionAuthority` replaced the action's original
+institution binding with its decision projection. The repair must create the
+disposable ordinary policy through the authenticated existing owner PUT API
+before exposure, and merge current authoritative decision fields while retaining
+the original institution origin. Pin those origin fields against SQL update.
+Independently assert the retained origin on the actual completed action and
+prove a downgrade fails at the native database boundary. Existing approval and
+protected authority floors remain unchanged. Preserve the failed pending run.

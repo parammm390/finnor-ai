@@ -38,7 +38,7 @@ const freeze = { source: { commit: git("rev-parse", "HEAD"), tree: git("rev-pars
   dirty: git("status", "--porcelain=v1", "-uall"), pins: sourcePins }, startedAt,
   runtime: { node: process.version, platform: process.platform, arch: process.arch },
   profile: "DISPOSABLE_LOCAL_AUTH_SERVICE_ACTUAL_BEARER_AND_RLS", hostedSupabaseQualified: false,
-  authDevBypass: false, expectedMigrations: 178, limits, freeBytesBefore: String(diskBefore), dutyCount,
+  authDevBypass: false, expectedMigrations: 179, limits, freeBytesBefore: String(diskBefore), dutyCount,
   cases: ["A-raw-two-identity-native-request", "C-unsigned-forged-input", "D-same-key-replay", "G-restricted-roles"],
   omitted: "Full B–H, physical interruption, mounted browser, clean built installation/upgrade and protected qualification remain distinct required evidence" };
 await writeFile(join(evidence, "freeze.json"), JSON.stringify(freeze, null, 2) + "\n", { mode: 0o600, flag: "wx" });
@@ -117,6 +117,13 @@ try {
     deadlineAt, materiality: "material", postconditionRef: "x1:pe-request-created:v1", observerRef: "x1:pe-request-creation-observer:v1" };
   await admin.query(`INSERT INTO finnor_os.x1_work_mandates(tenant_id,principal_id,work_id,institution_id,revision,rules,valid_from,expires_at)
     VALUES($1,$2,$3,$4,'r1',$5::jsonb,clock_timestamp()-interval '1 minute',clock_timestamp()+interval '1 hour')`, [tenant, actor, workId, institutionId, JSON.stringify([rule])]);
+  service = await authenticatedApiFixture(repo, actor, entry => traffic.push(entry));
+  const policyResponse=await fetch(service.origin+`/api/policies/${tenant}/create_deal_request`,{
+    method:'PUT',headers:{'content-type':'application/json',authorization:'Bearer '+service.token},
+    body:JSON.stringify({policy:{scope:'DISPOSABLE_INTERNAL_REQUEST_ONLY'},requiresConfirmation:false})});
+  const policyBody=await policyResponse.json();assert.equal(policyResponse.status,200,JSON.stringify(policyBody));
+  await save('authenticated-standing-native-policy.json',{status:policyResponse.status,body:policyBody,
+    boundary:'ACTUAL_AUTHENTICATED_ORDINARY_OWNER_POLICY_API_BEFORE_COMPILER_EXPOSURE',protectedGrantCreated:false});
   const rights = String((await admin.query("SELECT revision FROM finnor_os.authority_states WHERE tenant_id=$1", [tenant])).rows[0].revision);
   const ref = (owner: string, id: string) => ({ owner, id, version: "owner-fixture-v1", contentDigest: sha(id) });
   const now = new Date().toISOString();
@@ -165,11 +172,8 @@ try {
     requestTexts:Array.from({length:dutyCount},(_,index)=>dutyCount===1?requestText:requestText+' item '+index),
     expectedRequestCount: dutyCount, expectedCompletionMeaning: "CREATION_ONLY_NOT_FULFILLMENT_OR_APPROVAL" };
   await save("inputs-and-independent-expectations.json", { tenant, actor, institutionId, workId, rule, sourceBindings, expected });
-  await admin.query(`INSERT INTO finnor_os.domain_policies(tenant_id,action_type,policy,requires_confirmation)
-    VALUES($1,'create_deal_request','{"scope":"DISPOSABLE_INTERNAL_REQUEST_ONLY"}'::jsonb,false)`, [tenant]);
   await admin.query(`INSERT INTO finnor_os.compute_resource_policies(resource_key,capacity,per_tenant_capacity,interactive_reserve,lease_seconds,source)
     VALUES('native:p4',2,2,0,60,'explicit disposable X1 validation capacity; not protected funding')`);
-  service = await authenticatedApiFixture(repo, actor, entry => traffic.push(entry));
   const api = async (operation: string, body: unknown, bearer: string | null = service!.token) => {
     const response = await fetch(service!.origin + "/api/company-brain/" + operation, { method: "POST",
       headers: { "content-type": "application/json", ...(bearer ? { authorization: "Bearer " + bearer } : {}) },
@@ -243,10 +247,13 @@ try {
   assert.equal(row.owner_party_type, "employee"); assert.equal(row.owner_party_id, actor); assert.equal(row.requires_accepted_deliverable, true);
   assert.equal(new Date(row.requested_at).toISOString(), occurredAt); assert.equal(new Date(row.due_at).toISOString(), deadlineAt);
   assert.ok(new Date(row.created_at).getTime() <= Date.parse(deadlineAt)); assert.equal(row.state, "open"); assert.equal(row.fulfilled_at, null);
-  const effects:{id:string;status:string;effect_status:string}[] = (await admin.query(`SELECT a.id,a.status,e.status effect_status FROM finnor_os.domain_actions a
+  const effects:{id:string;status:string;effect_status:string;authority_context:any}[] = (await admin.query(`SELECT a.id,a.status,a.authority_context,e.status effect_status FROM finnor_os.domain_actions a
     JOIN finnor_os.business_effects e ON e.tenant_id=a.tenant_id AND e.domain_action_id=a.id
     WHERE a.tenant_id=$1 AND a.id=$2 AND a.work_id=$3`, [tenant, row.id, workId])).rows;
   assert.equal(effects.length, 1); assert.equal(effects[0]!.status, "completed"); assert.equal(effects[0]!.effect_status, "verified");
+  const origin=effects[0]!.authority_context;assert.equal(origin.kind,'institution_duty');
+  assert.equal(origin.principal,actor);assert.equal(origin.compilerRequestId,compilerId);
+  assert.equal(origin.workInputId,input.workInputId);assert.ok(origin.stableIdentity);
   allEffects.push(...effects);
   }
   const plans=(await admin.query(`SELECT id,revision,status,parent_revision_id,plan_graph FROM finnor_os.work_plan_revisions
@@ -261,6 +268,10 @@ try {
     JOIN LATERAL jsonb_array_elements(p.plan_graph->'nodes') n ON n->>'id'=a.plan_node_id
     WHERE a.tenant_id=$1 AND a.work_id=$2 AND a.id=ANY($3::uuid[])`,[tenant,workId,rows.map(row=>row.id)])).rows;
   assert.equal(linked.length,dutyCount);assert.ok(linked.every(row=>row.node_kind==='action'&&row.node_action_type==='create_deal_request'));
+  const immutableOrigin={tenantId:tenant,actionId:rows[0]!.id,predicate:'X1_ORIGINAL_ACTION_ORIGIN_IMMUTABLE'};
+  await assert.rejects(admin.query(`UPDATE finnor_os.domain_actions SET authority_context=authority_context-'kind'
+    WHERE tenant_id=$1 AND id=$2`,[tenant,immutableOrigin.actionId]),new RegExp(immutableOrigin.predicate));
+  await save('native-origin-downgrade-refusal.json',{...immutableOrigin,actualSqlRefusal:true});
   const originalEnvelope=async()=>({episodes:(await admin!.query(`SELECT id,original_deadline,wall_deadline,parent_reservation,parent_demand
     FROM finnor_os.x1_compiler_episodes WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3 ORDER BY id`,[tenant,actor,workId])).rows,
     reservations:(await admin!.query(`SELECT reservation_id,status,envelopes FROM finnor_os.s5_reservations WHERE tenant_id=$1 ORDER BY reservation_id`,[tenant])).rows,

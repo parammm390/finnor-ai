@@ -404,7 +404,10 @@ export async function recordActionAuthority(params: {
       initiatedBy: params.decision.employeeId,
       authorityDecisionId: params.decision.id,
       authorityRevision: params.decision.authorityRevision,
-      authorityContext: context,
+      // The current decision replaces its own fields while retaining the native
+      // caller's original obligation/Work identity. Dropping that origin would
+      // bypass its currentness guard and break same-effect reconciliation.
+      authorityContext: sql`${domainActions.authorityContext} || ${JSON.stringify(context)}::jsonb`,
     }).where(and(eq(domainActions.tenantId, params.ctx.tenantId), eq(domainActions.id, params.actionId)));
     await db.insert(actionLog).values({
       tenantId: params.ctx.tenantId,
