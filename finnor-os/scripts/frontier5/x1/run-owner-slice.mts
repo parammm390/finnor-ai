@@ -95,7 +95,7 @@ try {
   process.env.DATABASE_URL = connection("finnor_app", appPassword); await closePool();
   await configureTenantVertical({ tenantId: tenant, verticalKey: "private_equity", expectedVersion: 0, createdBy: actor, sourceSystem: "X1:owner-e2e" });
   const companyIds = [randomUUID(), randomUUID()];
-  for (const id of companyIds) await admin.query("INSERT INTO finnor_os.external_organizations(id,tenant_id,organization_key,name,kind) VALUES($1,$2,$3,'Conflicting Harbor','other')", [id, tenant, "ORG-" + id]);
+  for (const id of companyIds) await admin.query("INSERT INTO finnor_os.external_organizations(id,tenant_id,organization_key,name,kind) VALUES($1,$2,$3,'Conflicting Harbor','other')", [id, tenant, "org-" + id]);
   const deal = async (index: number, registration: string) => createDeal({ ...ctx, provenance: { ...ctx.provenance, externalId: registration } },
     { targetOrganizationId: companyIds[index]!, name: "Conflicting Harbor", dealLeadEmployeeId: actor,
       signedLoiAt: new Date(Date.now() - 86400000), targetClosingAt: new Date(Date.now() + 86400000) });
@@ -251,5 +251,8 @@ try {
     monetaryCostUsd: null, aggregateMemoryQualification: "UNKNOWN_SAMPLED_LOCAL_PROCESSES_ONLY", source: freeze.source,
     fullEngineeringOrQualificationEstablished: false, rerun: "Use a new private FINNOR_X1_OWNER_EVIDENCE directory and run the exact recorded source/runtime command" });
 }
-console.log(JSON.stringify({ evidence, passed: results.filter(r => r.status === "PASS").length, failed: results.filter(r => r.status === "FAIL").length, fullEngineeringComplete: false }));
-process.exitCode = results.some(r => r.status === "FAIL") || !results.length ? 1 : 0;
+const exitCode = results.some(r => r.status === "FAIL") || !results.length ? 1 : 0;
+await new Promise<void>(done => process.stdout.write(JSON.stringify({ evidence, passed: results.filter(r => r.status === "PASS").length,
+  failed: results.filter(r => r.status === "FAIL").length, fullEngineeringComplete: false, exitCode }) + "\n", () => done()));
+// Imported disposable DB lifecycle hooks cannot replace the recorded verdict.
+process.exit(exitCode);
