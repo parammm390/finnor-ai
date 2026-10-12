@@ -11,7 +11,7 @@ import { createDocument,appendDocumentVersion } from '@finnor/data-platform';
 const base='517003a4396bc8101a90be4b425ee01de9446740';
 const digest=(bytes:Buffer|string)=>createHash('sha256').update(bytes).digest('hex');
 export async function prepareExistingOwnerUpgrade(input:{repo:string;databaseUrl:string;applicationUrl:string;
-  appPassword:string;commit:string;expectedMigrationCount:number}){
+  workerUrl:string;workerPassword:string;appPassword:string;commit:string;expectedMigrationCount:number}){
   const prefix='finnor-os/packages/db/migrations/';
   const files=execFileSync('git',['ls-tree','-r','--name-only',base,'--',prefix],
     {cwd:input.repo,encoding:'utf8',timeout:5000}).trim().split('\n').filter(path=>path.endsWith('.sql')).sort();
@@ -27,6 +27,7 @@ export async function prepareExistingOwnerUpgrade(input:{repo:string;databaseUrl
   const c=new pg.Client({connectionString:input.databaseUrl});await c.connect();
   try{
     await c.query('ALTER ROLE finnor_app LOGIN PASSWORD '+c.escapeLiteral(input.appPassword));
+    await c.query('ALTER ROLE finnor_worker LOGIN PASSWORD '+c.escapeLiteral(input.workerPassword));
     await c.query("SET app.test_vertical_mode='explicit'");
     await c.query("INSERT INTO finnor_os.tenants(id,client_key,name) VALUES($1,$2,'Preserved pre-X1 institution')",[tenantId,randomUUID()]);
     await c.query("INSERT INTO finnor_os.users(id,tenant_id,email,role,status) VALUES($1,$2,$3,'owner','active')",[userId,tenantId,userId+'@test.invalid']);
@@ -45,6 +46,10 @@ export async function prepareExistingOwnerUpgrade(input:{repo:string;databaseUrl
       providerVersionId:'before-X1'});
   });
   const probeKey='old-release-probe:'+randomUUID();
+  // Global maintenance enqueue belongs to the existing independent worker
+  // role. The application role's inherited global-probe refusal is retained in
+  // the first failed run; no policy or role membership is relaxed here.
+  process.env.DATABASE_URL=input.workerUrl;await closePool();
   await enqueueJob('release_probe',{commitSha:input.commit},probeKey);
   const admin=new pg.Client({connectionString:input.databaseUrl});await admin.connect();
   try{
@@ -59,7 +64,8 @@ export async function prepareExistingOwnerUpgrade(input:{repo:string;databaseUrl
     assert.deepEqual(await observePreservedUpgradeOwners(admin,{tenantId,userId,workId:work.workId,documentVersionId:version.id}),starting);
     return {base,oldHead:'0171_runtime_database_role_isolation.sql',sourceMigrations:retained.map(row=>({name:row.name,sha256:digest(row.sql)})),
       oldMigrations,additiveMigrations:added,secondPassApplied:again,tenantId,userId,workId:work.workId,
-      documentVersionId:version.id,originalByteSha256:digest(bytes),probeId:probe.id,retiredId:retired.id,starting};
+      documentVersionId:version.id,originalByteSha256:digest(bytes),probeId:probe.id,retiredId:retired.id,starting,
+      legacyGlobalJobPublisherRole:'finnor_worker',applicationWorkerMembershipGranted:false};
   }finally{await admin.end();await closePool();}
 }
 

@@ -126,7 +126,8 @@ try {
   await database.start(); await database.createDatabase("x1_owner");
   const connection = (user: string, pass: string) => `postgres://${user}:${pass}@127.0.0.1:${port}/x1_owner`;
   const legacyUpgrade=upgrade?await prepareExistingOwnerUpgrade({repo,databaseUrl:connection('x1_fixture',password),
-    applicationUrl:connection('finnor_app',appPassword),appPassword,commit:freeze.source.commit,
+    applicationUrl:connection('finnor_app',appPassword),appPassword,workerUrl:connection('finnor_worker',workerPassword),
+    workerPassword,commit:freeze.source.commit,
     expectedMigrationCount:freeze.expectedMigrations}):null;
   if(legacyUpgrade)await save('existing-schema-upgrade-starting-proof.json',legacyUpgrade);
   const migrated=await migrate(connection("x1_fixture", password));
