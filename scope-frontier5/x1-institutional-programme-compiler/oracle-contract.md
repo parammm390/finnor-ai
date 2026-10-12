@@ -539,3 +539,10 @@ first durable UI submit, preserving the earlier API-preparation prefix byte for
 byte. Compare only physical authorized200/400 input calls before that actual202;
 post-submit API calls belong to their existing episode meter. No earlier record,
 parent or expected outcome is rewritten to count browser configuration work.
+
+During mounted cost readback, real UI polling is part of the workload. Retain and
+validate all new physical records. Exactly one successful and one refused status
+invocation plus at least one successful read must be present; any additional
+record must be an actual200 source/read poll under the same original parent.
+All physical invocation IDs remain unique. Keep exact-three checking when no
+browser is mounted, and report actual mounted record counts without gain credit.

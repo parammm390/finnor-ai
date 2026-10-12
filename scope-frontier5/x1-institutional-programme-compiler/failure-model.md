@@ -537,3 +537,14 @@ The same successful build also changed next-env.d.ts's two generated route/root
 type imports from .next/dev/types/ to .next-x1-install/types/.
 Accept exactly those type-only framework substitutions with their old/new preimages;
 all other declarations must remain byte-identical after normalizing that line.
+
+### Mounted cost observer concurrency error
+
+Compiled mounted001 completed fifteen-source reconstruction, three native effects
+and canonical Work, then its CLI-only cost observer assumed exactly three new
+records. The real UI also polled, yielding four valid physical invocations.
+Preserve this actual4≠3 failure. In mounted mode retain every concurrent record,
+require the two distinct status invocations200/400 and at least one native200 read,
+and validate every additional polling record's operation, status, principal,
+episode, parent and unique physical identity. The unmounted exact-three predicate
+stays unchanged. Do not stop real UI polling or discard its cost to obtain PASS.
