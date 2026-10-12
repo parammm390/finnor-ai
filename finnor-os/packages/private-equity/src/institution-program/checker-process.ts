@@ -31,7 +31,7 @@ export async function checkInstitutionInSeparateProcessAsync(
   const stdout = await new Promise<string>((resolve, reject) => {
     const child = spawn(process.execPath, ["--max-old-space-size=512", tsx, command], {
       cwd: root, stdio: ["pipe", "pipe", "pipe"],
-      env: { PATH: process.env.PATH, NODE_OPTIONS: "" },
+      env: { PATH: process.env.PATH, NODE_ENV: "test", NODE_OPTIONS: "" },
     });
     let output = "", bytes = 0, failed = false;
     const refuse = () => { if (!failed) { failed = true; child.kill("SIGKILL"); reject(Error("X1_CHECKER_PROCESS_REFUSED")); } };
@@ -75,7 +75,7 @@ export function checkInstitutionInSeparateProcess(
   if (Buffer.byteLength(input) > transportLimit) throw new Error("X1_CHECKER_TRANSPORT_BOUND");
   const result = spawnSync(process.execPath, ["--max-old-space-size=512", tsx, command], {
     cwd: root, encoding: "utf8", input, timeout: 180_000, maxBuffer: 16 * 1024 * 1024,
-    env: { ...process.env, NODE_OPTIONS: "" },
+    env: { PATH: process.env.PATH, NODE_ENV: "test", NODE_OPTIONS: "" },
   });
   if (result.error || result.status !== 0 || result.signal) throw new Error("X1_CHECKER_PROCESS_REFUSED");
   let reply: { schema: string; pins: Record<string, string>; inputDigest: string; check: InstitutionCheck };
