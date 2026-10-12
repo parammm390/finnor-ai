@@ -133,4 +133,15 @@ completion proof and one observed Request remain identical. No resource is
 refilled or released merely to make the second task succeed. This covers real
 S5 contention and cancellation before exposure, not every concurrency variant.
 
+### Registered owner case F-mixed-unsupported-rule
+
+The current mandate has one supported evidence-Request rule and a second rule
+whose approvalCondition meaning is unsupported. Both have explicit original
+principal, deadline, operation and observer. The unsupported field is not an
+approval, and must not be silently dropped. One actual native Request from the
+independent supported rule is allowed; the other duty retains a precise missing
+interpretation under its original identity/rule digest/deadline. The programme
+remains PARTIAL and Work cannot claim full completion. Preserve all costs and
+the same parent. No human reconstruction or fallback flag receives credit.
+
 The independent oracle contract defines expectations and preservation. Boundary bugs need a pre-fix failing regression at their owning boundary. No post-code unit tests. Source changes following a failed proof retain the original run and rerun only affected proof plus necessary regressions.

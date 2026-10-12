@@ -192,6 +192,17 @@ exposure only because no parent, native programme or effect was ever created.
 The first parent remains ACTIVE with unchanged envelope/resource revisions and
 its exact Request/effect/native completion. This is no new authority or budget.
 
+### F-mixed-unsupported-rule independent expectations
+
+Two original rule IDs match one retained trigger. The first has fully supported
+meaning and produces one exact independently observed Request. The second adds
+approvalCondition, whose unsupported meaning remains an unresolved duty with
+that rule ID/digest, original principal/deadline and exact field needing decision.
+Expected completed effects are one, unresolved duties one and programme PARTIAL.
+The native Work/Objective must not report completed. Both duties remain in the
+original population and original resource/cost envelope. No approval exists and
+no equivalent approved alternate operation is available for the unresolved duty.
+
 ## Qualification score specification
 
 Independently freeze material mapping set M, supported obligation set O, unique business assignment identities/weights/deadlines, critical subset K and actionable-change set C per environment before exposure. Candidate claims are CANDIDATE, not expectations. Match one-to-one only under independently defined equivalence; no duplicate credit.

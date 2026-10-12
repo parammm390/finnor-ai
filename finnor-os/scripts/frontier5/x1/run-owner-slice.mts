@@ -31,9 +31,10 @@ const heterogeneous=process.env.FINNOR_X1_OWNER_MODE==='heterogeneous';
 const canonical=process.env.FINNOR_X1_OWNER_MODE==='canonical';
 const recovery=process.env.FINNOR_X1_OWNER_MODE==='recovery';
 const contention=process.env.FINNOR_X1_OWNER_MODE==='contention';
-if(process.env.FINNOR_X1_OWNER_MODE&&!['api','mounted','revision','material','heterogeneous','canonical','recovery','contention'].includes(process.env.FINNOR_X1_OWNER_MODE))
+const unsupported=process.env.FINNOR_X1_OWNER_MODE==='unsupported';
+if(process.env.FINNOR_X1_OWNER_MODE&&!['api','mounted','revision','material','heterogeneous','canonical','recovery','contention','unsupported'].includes(process.env.FINNOR_X1_OWNER_MODE))
   throw Error('EXACT_REGISTERED_OWNER_MODE_REQUIRED');
-if((mounted||material||heterogeneous||canonical||recovery||contention)&&dutyCount!==1)throw Error('NAMED_ONE_DUTY_SCENARIO_REQUIRED');
+if((mounted||material||heterogeneous||canonical||recovery||contention||unsupported)&&dutyCount!==1)throw Error('NAMED_ONE_DUTY_SCENARIO_REQUIRED');
 if(process.env.FINNOR_X1_OWNER_CASE&&!['1','128'].includes(process.env.FINNOR_X1_OWNER_CASE))
   throw Error('EXACT_FROZEN_OWNER_CASE_REQUIRED');
 const limits = JSON.parse(await readFile(join(repo, "scope-frontier5/x1-institutional-programme-compiler/verification-plan.json"), "utf8")).limits;
@@ -58,7 +59,7 @@ const freeze = { source: { commit: git("rev-parse", "HEAD"), tree: git("rev-pars
   cases: ["A-raw-two-identity-native-request", "C-unsigned-forged-input", "D-same-key-replay", "G-restricted-roles",
     ...(material?['B-ledger-correction']:[]),...(heterogeneous?['A-eight-class-original-corpus']:[]),
     ...(canonical?['A-fourteen-canonical-kinds']:[]),...(recovery?['D-compiler-before-publication-death']:[]),
-    ...(contention?['E-original-shared-parent-contention']:[])],
+    ...(contention?['E-original-shared-parent-contention']:[]),...(unsupported?['F-mixed-unsupported-rule']:[])],
   omitted: "Full B–H, physical interruption, mounted browser, clean built installation/upgrade and protected qualification remain distinct required evidence" };
 await writeFile(join(evidence, "freeze.json"), JSON.stringify(freeze, null, 2) + "\n", { mode: 0o600, flag: "wx" });
 const results: any[] = [], traffic: unknown[] = [];
@@ -145,8 +146,9 @@ try {
   for (const d of [first, second]) await attachWorkEntity(tenant, workId, { entityType: "pe_deal", entityId: String(d.row.id), source: "X1:original-owner-registration" });
   const rule = { id: "standing-request", triggerKind: "evidence_request_needed", operation: "create_deal_request", principalId: actor,
     deadlineAt, materiality: "material", postconditionRef: "x1:pe-request-created:v1", observerRef: "x1:pe-request-creation-observer:v1" };
+  const rules=unsupported?[rule,{...rule,id:'approval-conditioned-request',approvalCondition:'Current independent committee approval must be supplied; its meaning is not defined by this record'}]:[rule];
   await admin.query(`INSERT INTO finnor_os.x1_work_mandates(tenant_id,principal_id,work_id,institution_id,revision,rules,valid_from,expires_at)
-    VALUES($1,$2,$3,$4,'r1',$5::jsonb,clock_timestamp()-interval '1 minute',clock_timestamp()+interval '1 hour')`, [tenant, actor, workId, institutionId, JSON.stringify([rule])]);
+    VALUES($1,$2,$3,$4,'r1',$5::jsonb,clock_timestamp()-interval '1 minute',clock_timestamp()+interval '1 hour')`, [tenant, actor, workId, institutionId, JSON.stringify(rules)]);
   const frontendPort=mounted?await freePort():null,frontendOrigin=frontendPort?'http://127.0.0.1:'+frontendPort:null;
   const revokeFixturePrincipal=async()=>{
     const controlDb=new pg.Client({connectionString:connection('x1_fixture',password)});
@@ -260,7 +262,9 @@ try {
     expected.canonicalKinds=JSON.parse(await readFile(join(repo,'scope-frontier5/x1-institutional-programme-compiler/profile.json'),'utf8')).canonicalTypes;
     assert.deepEqual([...new Set(expected.mappings.map((m:any)=>m.kind))].sort(),[...expected.canonicalKinds].sort());
   }
-  await save("inputs-and-independent-expectations.json", { tenant, actor, institutionId, workId, rule, sourceBindings, expected });
+  if(unsupported)expected.unsupported={matchingRules:2,unresolvedDuties:1,ruleId:'approval-conditioned-request',
+    reason:'X1_RULE_MEANING_UNSUPPORTED',unsupportedFields:['approvalCondition'],observedEffects:1,programme:'PARTIAL',fullWorkCompletionAllowed:false};
+  await save("inputs-and-independent-expectations.json", { tenant, actor, institutionId, workId, rule,rules,sourceBindings, expected });
   await admin.query(`INSERT INTO finnor_os.compute_resource_policies(resource_key,capacity,per_tenant_capacity,interactive_reserve,lease_seconds,source)
     VALUES('native:p4',2,2,0,60,'explicit disposable X1 validation capacity; not protected funding')`);
   const api = async (operation: string, body: unknown, bearer: string | null = service!.token) => {
@@ -437,7 +441,7 @@ try {
     await new Promise(resolve => setTimeout(resolve, dutyCount===128?2000:1000));
   }
   await save("compiler-ending-projection.json", reading);
-  assert.equal(reading.status, "OBSERVED", "actual compiler/native progression: " + JSON.stringify({ status: reading.status, reason: reading.reason }));
+  assert.equal(reading.status,unsupported?'PARTIAL':"OBSERVED", "actual compiler/native progression: " + JSON.stringify({ status: reading.status, reason: reading.reason }));
   assert.equal((await admin.query(`SELECT count(*)::int n FROM finnor_os.x1_compiler_requests
     WHERE tenant_id=$1 AND work_id=$2`,[tenant,workId])).rows[0].n,1,
     'own native graph maintenance must not create a spurious compiler revision');
@@ -529,17 +533,41 @@ try {
       WHERE w.tenant_id=$1 AND w.id=$2 ORDER BY p.revision DESC LIMIT 1`,[tenant,workId])).rows[0];
     await appendFile(join(evidence,'native-work-completion-observations.jsonl'),JSON.stringify({
       at:new Date().toISOString(),completion})+'\n',{mode:0o600});
+    if(unsupported)break;
     if(completion?.work_status==='completed'&&completion.objective_state==='completed'
       &&completion.plan_status==='completed')break;
     if(['failed','blocked','cancelled'].includes(completion?.objective_state))break;
     await new Promise(resolve=>setTimeout(resolve,1000));
   }
   await save('native-work-completion.json',completion);
-  assert.equal(completion?.work_status,'completed','actual native Work completion');
-  assert.equal(completion.objective_state,'completed','same native Objective completes');
-  assert.equal(completion.success_verification?.state,'verified','actual native success-condition verification');
-  assert.equal(completion.plan_status,'completed');assert.equal(completion.completion_proof?.verified,true);
-  results.push({ id: "A-authenticated-owner-creation", status: "PASS", observed: { compilerId, admission, rows, effects:allEffects,plans,linked,repeated, beforeReplay, afterReplay },
+  if(unsupported){
+    assert.notEqual(completion?.work_status,'completed','unresolved material duty prevents full Work completion');
+    assert.notEqual(completion.objective_state,'completed');assert.notEqual(completion.completion_proof?.verified,true);
+    const native=(await admin.query(`SELECT request FROM finnor_os.p1_requests
+      WHERE tenant_id=$1 AND id=(SELECT program_id FROM finnor_os.x1_compiler_requests WHERE tenant_id=$1 AND id=$2)`,
+      [tenant,compilerId])).rows[0];
+    const unresolved=native.request.institution.unresolved;assert.equal(unresolved.length,1);
+    assert.equal(unresolved[0].reason,expected.unsupported.reason);assert.equal(unresolved[0].ruleId,expected.unsupported.ruleId);
+    assert.equal(unresolved[0].originalDeadline,deadlineAt);assert.deepEqual(unresolved[0].unsupportedFields,expected.unsupported.unsupportedFields);
+    assert.match(unresolved[0].ruleDigest,/^[a-f0-9]{64}$/);assert.ok(unresolved[0].stableIdentity);
+    const actual=(await admin.query(`SELECT a.candidate,a.check_result FROM finnor_os.x1_compiler_requests r
+      JOIN finnor_os.x1_compiler_artifacts a ON a.tenant_id=r.tenant_id AND a.id=r.artifact_id
+      WHERE r.tenant_id=$1 AND r.id=$2`,[tenant,compilerId])).rows[0];
+    assert.equal(actual.candidate.obligations.length,2);assert.equal(actual.check_result.obligationDenominator,2);
+    assert.ok(reading.artifact.unresolved_interpretations.some((gap:any)=>gap.reason===expected.unsupported.reason
+      &&gap.alternatives?.includes('Interpret approvalCondition in standing rule '+expected.unsupported.ruleId)));
+    await save('mixed-unsupported-independent-proof.json',{expectation:expected.unsupported,actual,unresolved,
+      completion,supportedCanonicalRequests:rows,effects:allEffects,originalEnvelope:beforeReplay,
+      humanOrFallbackCredit:0,fullWorkCompleted:false,missingApprovalNotInvented:true});
+    results.push({id:'F-mixed-unsupported-rule',status:'PASS',observed:{unresolved,completion,obligationDenominator:2,observedEffects:1},
+      basis:'ACTUAL_INDEPENDENTLY_CHECKED_FULL_DUTY_POPULATION_SUPPORTED_NATIVE_EFFECT_AND_EXACT_PARTIAL_INTERVENTION'});
+  }else{
+    assert.equal(completion?.work_status,'completed','actual native Work completion');
+    assert.equal(completion.objective_state,'completed','same native Objective completes');
+    assert.equal(completion.success_verification?.state,'verified','actual native success-condition verification');
+    assert.equal(completion.plan_status,'completed');assert.equal(completion.completion_proof?.verified,true);
+  }
+  results.push({ id: unsupported?'A-supported-independent-native-creation':"A-authenticated-owner-creation", status: "PASS", observed: { compilerId, admission, rows, effects:allEffects,plans,linked,repeated, beforeReplay, afterReplay },
     basis: "ACTUAL_LOCAL_AUTH_HTTP_SQL_PHYSICAL_WORKER_NATIVE_CREATE_AND_INDEPENDENT_SQL_OBSERVER" });
   if(heterogeneous){
     const actual=(await admin.query(`SELECT a.candidate,a.check_result,a.body,a.body_digest
