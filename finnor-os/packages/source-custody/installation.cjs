@@ -1,5 +1,5 @@
 const { createHash } = require("node:crypto");
-const { readFileSync, readlinkSync, existsSync, realpathSync, lstatSync, openSync, fstatSync, closeSync, constants } = require("node:fs");
+const { readFileSync, readSync, readlinkSync, existsSync, realpathSync, lstatSync, openSync, fstatSync, closeSync, constants } = require("node:fs");
 const { resolve, dirname, sep } = require("node:path");
 
 // The fixed sibling manifest belongs to this installation. Neither CWD nor an
@@ -10,6 +10,28 @@ const sha = bytes => createHash("sha256").update(bytes).digest("hex");
 let loadedDigest;
 const measured = new Map();
 const metadata = s => [s.dev,s.ino,s.size,s.mtimeNs,s.ctimeNs,s.mode].join(':');
+const hashBuffer = Buffer.allocUnsafe(1024 * 1024);
+function measuredFileHash(path, observed = lstatSync(path, { bigint: true })) {
+  if (!observed.isFile()) throw Error('X1_INSTALLATION_FILE_OUTSIDE_CUSTODY');
+  const current = metadata(observed), previous = measured.get(path);
+  if (previous?.metadata === current) return previous.sha256;
+  const fd = openSync(path, constants.O_RDONLY | constants.O_NOFOLLOW);
+  let actual;
+  try {
+    const held = fstatSync(fd, { bigint: true });
+    if (!held.isFile() || metadata(held) !== current) throw Error('X1_INSTALLATION_FILE_CHANGED_DURING_CHECK');
+    const hash = createHash('sha256');
+    let count, bytes = 0n;
+    while ((count = readSync(fd, hashBuffer, 0, hashBuffer.length, null)) !== 0) {
+      hash.update(hashBuffer.subarray(0, count)); bytes += BigInt(count);
+    }
+    if (bytes !== held.size || metadata(fstatSync(fd, { bigint: true })) !== current)
+      throw Error('X1_INSTALLATION_FILE_CHANGED_DURING_CHECK');
+    actual = hash.digest('hex');
+  } finally { closeSync(fd); }
+  measured.set(path, { metadata: current, sha256: actual });
+  return actual;
+}
 function pathInRoot(relative) {
   if (typeof relative !== "string" || relative.startsWith("/") || relative.includes("\\")
       || relative.split("/").some(p => !p || p === "." || p === "..")) throw Error("X1_INSTALLATION_PATH_INVALID");
@@ -36,7 +58,7 @@ function installedRuntime(required = false) {
       || !Array.isArray(manifest.files) || !Array.isArray(manifest.checkerPins) || !Array.isArray(manifest.links)
       || manifest.runtime.node !== process.version || manifest.runtime.platform !== process.platform
       || manifest.runtime.architecture !== process.arch
-      || manifest.runtime.nodeBinarySha256 !== sha(readFileSync(process.execPath))) {
+      || manifest.runtime.nodeBinarySha256 !== measuredFileHash(realpathSync(process.execPath))) {
     throw Error("X1_INSTALLATION_CONTRACT_OR_RUNTIME_MISMATCH");
   }
   const declared = new Map();
@@ -63,19 +85,8 @@ function installedRuntime(required = false) {
     if (!observed.isFile()) throw Error('X1_INSTALLATION_FILE_OUTSIDE_CUSTODY');
     if (!Number.isInteger(pin.mode) || Number(observed.mode & 0o7777n) !== pin.mode)
       throw Error('X1_INSTALLATION_FILE_MODE_MISMATCH:' + pin.path);
-    const current = metadata(observed), previous = measured.get(path);
-    let actual = previous?.metadata === current ? previous.sha256 : null;
-    if (!actual) {
-      const fd = openSync(path, constants.O_RDONLY | constants.O_NOFOLLOW);
-      try {
-        const held = fstatSync(fd, { bigint: true });
-        if (!held.isFile() || metadata(held) !== current) throw Error('X1_INSTALLATION_FILE_CHANGED_DURING_CHECK');
-        actual = sha(readFileSync(fd));
-        if (metadata(fstatSync(fd, { bigint: true })) !== current) throw Error('X1_INSTALLATION_FILE_CHANGED_DURING_CHECK');
-      } finally { closeSync(fd); }
-    }
+    const actual = measuredFileHash(path, observed);
     if (actual !== pin.sha256) throw Error("X1_INSTALLATION_BYTE_PIN_MISMATCH:" + pin.path);
-    measured.set(path, { metadata: current, sha256: actual });
     declared.set(pin.path, pin.sha256);
   }
   for (const entry of Object.values(manifest.entrypoints)) {
@@ -86,6 +97,6 @@ function installedRuntime(required = false) {
   return { root, manifestPath, manifestDigest, manifest,
     entrypoint: name => safeFile(manifest.entrypoints[name]),
     checkerPins: () => Object.fromEntries([...new Set([manifestPath,
-      ...manifest.checkerPins.map(safeFile), process.execPath])].sort().map(path => [path, sha(readFileSync(path))])) };
+      ...manifest.checkerPins.map(safeFile), realpathSync(process.execPath)])].sort().map(path => [path, measuredFileHash(path)])) };
 }
 exports.installedRuntime = installedRuntime;

@@ -482,3 +482,11 @@ release environment are the actual installed manifest source commit. The
 observer checkout commit remains separately recorded; equality of an invented
 verifier label is not installed release evidence. Preserve all173 original SQL
 preimages, seventeen additive migrations, historical owners and old/new jobs.
+
+The bounded scanner must still reproduce every original installed SHA256 exactly
+and refuse byte, special-mode, namespace/link and manifest changes. Each actual
+process hashes its first declared file/executable bytes; cached digests require
+the same current trusted kernel metadata and descriptor-race checks. Existing
+adverse installation cases, actual401→503→401 same-size/mtime mutation and new
+post-restart queue processing remain decisive. Record actual resources without
+assigning shared swap/disk changes to this worker or assuming a memory gain.

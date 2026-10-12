@@ -458,3 +458,18 @@ for both the queued native release witness and its worker environment, and retai
 the independent verifier commit separately. Source-only proof keeps its existing
 checkout commit. This changes no runtime bytes, admission or expected migration,
 old Work/Core preservation, queue disposition or restart predicate.
+
+### Installed scanner buffer pressure (pre-code)
+
+Installed delivery006 retains a real resource stop at108.57s: shared-volume
+growth846,073,856 bytes exceeds the unchanged805,306,368 bound; owned sampled
+RSS2,316,009,472 remains below5GiB. Shared growth is not attributed to this worker.
+The current scanner nevertheless allocates full-file buffers for every first
+hash, including an actual130,105,240-byte SWC binary, and rereads the complete
+Node executable on every verification. Use one bounded1MiB synchronous read
+buffer, hash every byte through the held O_NOFOLLOW descriptor, and retain exact
+before/after fstat checks. The executable may reuse only its own measured digest
+when current trusted kernel metadata matches; resolve its actual path each time.
+Checker closure reads use the same bounded hash. No declared file or integrity
+predicate is removed. Rebuild changed runtime bytes; preserve every failed run,
+all installed adverse cases, the same-size live mutation case and restart oracle.
