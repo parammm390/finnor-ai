@@ -263,3 +263,15 @@ checked original obligations and three actual completed/verified native effects,
 all attached to their real Plan action nodes, one original parent envelope and
 actual Work/Objective/Plan completion. Read fields from canonical owner SQL and
 retain the raw source, mandate, policy/API, queue and physical worker evidence.
+
+# G-existing-schema-upgrade-and-jobs independent expectations
+
+The frozen old source contains no X1 migration and ends at 0171. The independently
+created legacy Work and original binary document/version rows form a byte-exact
+preimage before upgrade. Compare every selected column and original byte hash
+after additive migration and again after new X1 native completion. The original
+release probe identity and retired job identity are retained; require actual
+delivery attempts, completed compatible probe, quarantined retired job, and one
+new independently observed Request with completed native Work. A copied tracker,
+renamed old row or a new identity cannot satisfy this case. It is schema/job
+compatibility evidence, with final build/install explicitly separate.

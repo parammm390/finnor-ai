@@ -19,6 +19,7 @@ import { parseAllocationResource } from "../../../packages/epistemic-runtime/src
 import { authenticatedApiFixture } from "./authenticated-api-fixture.mts";
 import { heterogeneousOwnerSources,type OwnerSource } from './owner-source-corpus.mts';
 import { canonicalOwnerSources } from './canonical-owner-corpus.mts';
+import { prepareExistingOwnerUpgrade,observePreservedUpgradeOwners } from './upgrade-owner-fixture.mts';
 
 const repo = fileURLToPath(new URL("../../../../", import.meta.url));
 const evidence = process.env.FINNOR_X1_OWNER_EVIDENCE;
@@ -32,12 +33,13 @@ const canonical=process.env.FINNOR_X1_OWNER_MODE==='canonical';
 const recovery=process.env.FINNOR_X1_OWNER_MODE==='recovery';
 const effectRecovery=process.env.FINNOR_X1_OWNER_MODE==='effect_recovery';
 const ordinary=process.env.FINNOR_X1_OWNER_MODE==='ordinary';
+const upgrade=process.env.FINNOR_X1_OWNER_MODE==='upgrade';
 const contention=process.env.FINNOR_X1_OWNER_MODE==='contention';
 const unsupported=process.env.FINNOR_X1_OWNER_MODE==='unsupported';
 const cancelObserved=process.env.FINNOR_X1_OWNER_MODE==='cancel_observed';
-if(process.env.FINNOR_X1_OWNER_MODE&&!['api','mounted','revision','material','heterogeneous','canonical','recovery','effect_recovery','ordinary','contention','unsupported','cancel_observed'].includes(process.env.FINNOR_X1_OWNER_MODE))
+if(process.env.FINNOR_X1_OWNER_MODE&&!['api','mounted','revision','material','heterogeneous','canonical','recovery','effect_recovery','ordinary','upgrade','contention','unsupported','cancel_observed'].includes(process.env.FINNOR_X1_OWNER_MODE))
   throw Error('EXACT_REGISTERED_OWNER_MODE_REQUIRED');
-if((mounted||material||heterogeneous||canonical||recovery||effectRecovery||ordinary||contention||unsupported||cancelObserved)&&dutyCount!==1)throw Error('NAMED_ONE_DUTY_SCENARIO_REQUIRED');
+if((mounted||material||heterogeneous||canonical||recovery||effectRecovery||ordinary||upgrade||contention||unsupported||cancelObserved)&&dutyCount!==1)throw Error('NAMED_ONE_DUTY_SCENARIO_REQUIRED');
 if(process.env.FINNOR_X1_OWNER_CASE&&!['1','128'].includes(process.env.FINNOR_X1_OWNER_CASE))
   throw Error('EXACT_FROZEN_OWNER_CASE_REQUIRED');
 const limits = JSON.parse(await readFile(join(repo, "scope-frontier5/x1-institutional-programme-compiler/verification-plan.json"), "utf8")).limits;
@@ -51,6 +53,7 @@ const git = (...args: string[]) => execFileSync("git", args, { cwd: repo, encodi
 const sourcePaths = ["finnor-os/scripts/frontier5/x1/run-owner-slice.mts", "finnor-os/scripts/frontier5/x1/authenticated-api-fixture.mts",
   'finnor-os/scripts/frontier5/x1/owner-source-corpus.mts',
   'finnor-os/scripts/frontier5/x1/canonical-owner-corpus.mts',
+  'finnor-os/scripts/frontier5/x1/upgrade-owner-fixture.mts',
   "finnor-os/scripts/frontier5/x1/physical-owner-worker.mts", "finnor-os/packages/db/migrations-bundle.ts",
   "finnor-os/package-lock.json", "scope-frontier5/x1-institutional-programme-compiler/profile.json"];
 const sourcePins = await Promise.all(sourcePaths.map(async path => ({ path, sha256: sha(await readFile(join(repo, path))) })));
@@ -64,6 +67,7 @@ const freeze = { source: { commit: git("rev-parse", "HEAD"), tree: git("rev-pars
     ...(canonical?['A-fourteen-canonical-kinds']:[]),...(recovery?['D-compiler-before-publication-death']:[]),
     ...(effectRecovery?['D-effect-submit-lost-ack']:[]),
     ...(ordinary?['A-all-ordinary-operations']:[]),
+    ...(upgrade?['G-existing-schema-upgrade-and-jobs']:[]),
     ...(contention?['E-original-shared-parent-contention']:[]),...(unsupported?['F-mixed-unsupported-rule']:[]),
     ...(cancelObserved?['E-cancel-observed-standing-continuation']:[])],
   omitted: "Full B–H, physical interruption, mounted browser, clean built installation/upgrade and protected qualification remain distinct required evidence" };
@@ -121,7 +125,13 @@ try {
   await database.initialise(); await appendFile(join(directory, "postgresql.conf"), "\ntrack_commit_timestamp=on\n");
   await database.start(); await database.createDatabase("x1_owner");
   const connection = (user: string, pass: string) => `postgres://${user}:${pass}@127.0.0.1:${port}/x1_owner`;
-  const migrations = await migrate(connection("x1_fixture", password)); assert.equal(migrations.length, freeze.expectedMigrations);
+  const legacyUpgrade=upgrade?await prepareExistingOwnerUpgrade({repo,databaseUrl:connection('x1_fixture',password),
+    applicationUrl:connection('finnor_app',appPassword),appPassword,commit:freeze.source.commit,
+    expectedMigrationCount:freeze.expectedMigrations}):null;
+  if(legacyUpgrade)await save('existing-schema-upgrade-starting-proof.json',legacyUpgrade);
+  const migrated=await migrate(connection("x1_fixture", password));
+  assert.equal(migrated.length,upgrade?0:freeze.expectedMigrations);
+  const migrations=legacyUpgrade?[...legacyUpgrade.oldMigrations,...legacyUpgrade.additiveMigrations]:migrated;
   admin = new pg.Client({ connectionString: connection("x1_fixture", password) }); await admin.connect();
   await admin.query("ALTER ROLE finnor_app LOGIN PASSWORD " + admin.escapeLiteral(appPassword));
   await admin.query("ALTER ROLE finnor_worker LOGIN PASSWORD " + admin.escapeLiteral(workerPassword));
@@ -317,6 +327,7 @@ try {
     XDG_CACHE_HOME: join(evidence, "cache"), TSX_DISABLE_CACHE: "1", DOTENV_CONFIG_PATH: join(evidence, "empty.env"),
     NODE_ENV: "test", AUTH_DEV_BYPASS: "0", FINNOR_P4_PROFILE: "ordinary_disposable", FINNOR_TEST_MANAGED_EXTENSIONS: "omit",
     DATABASE_URL: connection("finnor_worker", workerPassword), CI: "1", LOG_LEVEL: "silent", NEXT_TELEMETRY_DISABLED: "1",
+    ...(upgrade?{FINNOR_COMMIT_SHA:freeze.source.commit,FINNOR_RELEASE_SOURCE:'x1-local-source-runner-not-built-release'}:{}),
     ...(recovery||effectRecovery?{WORKER_JOB_LEASE_SECONDS:'5'}:{}),
     ...(effectRecovery?{FINNOR_STEP_LEASE_SECONDS:'5'}:{}) };
   if(recovery||effectRecovery){publicationBlocker=new pg.Client({connectionString:connection('x1_fixture',password)});
@@ -743,6 +754,34 @@ try {
   }
   if(mounted)await save('mounted-canonical-completion.json',{compilerId,workId,completion,
     browserEvidenceRequired:true,mountedPassEstablished:false});
+  if(legacyUpgrade){
+    let compatible:any,retired:any;
+    for(let poll=0;poll<60;poll++){
+      if(guardFailure)throw Error(guardFailure);
+      compatible=(await admin.query('SELECT * FROM finnor_os.jobs WHERE id=$1',[legacyUpgrade.probeId])).rows[0];
+      retired=(await admin.query('SELECT * FROM finnor_os.jobs WHERE id=$1',[legacyUpgrade.retiredId])).rows[0];
+      if(compatible?.status==='completed'&&retired?.status==='quarantined')break;
+      await new Promise(resolve=>setTimeout(resolve,500));
+    }
+    assert.equal(compatible.status,'completed');assert.equal(compatible.protocol_version,1);
+    assert.equal(compatible.payload.commitSha,freeze.source.commit);assert.equal(compatible.attempts,1);
+    assert.equal(retired.status,'quarantined');assert.match(retired.last_error,/RETIRED_VERTICAL/);assert.equal(retired.attempts,0);
+    const claims=(await admin.query(`SELECT job_id,outcome,protocol_version,claim_fence,finished_at
+      FROM finnor_os.job_delivery_attempts WHERE job_id=ANY($1::uuid[]) ORDER BY job_id`,
+      [[legacyUpgrade.probeId,legacyUpgrade.retiredId]])).rows;
+    assert.equal(claims.length,1);assert.equal(claims[0].job_id,legacyUpgrade.probeId);assert.equal(claims[0].outcome,'completed');
+    const ending=await observePreservedUpgradeOwners(admin,legacyUpgrade);assert.deepEqual(ending,legacyUpgrade.starting);
+    const newJobs=(await admin.query(`SELECT type,protocol_version,status,count(*)::int count FROM finnor_os.jobs
+      WHERE tenant_id=$1 GROUP BY type,protocol_version,status ORDER BY type,protocol_version,status`,[tenant])).rows;
+    assert.ok(newJobs.some(row=>row.type==='run_x1_institution_compiler_v1'&&row.protocol_version===1&&row.status==='completed'));
+    assert.ok(newJobs.some(row=>row.type==='run_workflow_step_v2'&&row.protocol_version===2&&row.status==='completed'));
+    await save('existing-schema-upgrade-ending-proof.json',{starting:legacyUpgrade,ending,compatible,retired,claims,newJobs,completion,
+      protectedAuthorityCreated:false,claimDomain:'ACTUAL_PRE_X1_SCHEMA_ADDITIVE_UPGRADE_NATIVE_OWNER_DATA_AND_JOB_COMPATIBILITY',
+      finalBuiltInstallationEstablished:false});
+    results.push({id:'G-existing-schema-upgrade-and-jobs',status:'PASS',observed:{oldHead:legacyUpgrade.oldHead,
+      applied:legacyUpgrade.additiveMigrations,secondPassApplied:0,compatibleJob:compatible.id,retiredJob:retired.id,
+      oldRowsAndBytesPreserved:true,newJobs,completion},basis:'ACTUAL_IMMUTABLE_BASE_SQL_NATIVE_LEGACY_OWNER_FIXTURE_ADDITIVE_UPGRADE_PHYSICAL_MIXED_JOB_DELIVERY'});
+  }
   if(recovery){
     const history=(await admin.query(`SELECT e.id,e.attempts,e.acquisition_calls,r.id request_id,r.episode_id,r.grant_ids,r.work_input_id
       FROM finnor_os.x1_compiler_episodes e JOIN finnor_os.x1_compiler_requests r ON r.tenant_id=e.tenant_id AND r.episode_id=e.id

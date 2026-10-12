@@ -139,6 +139,20 @@ raw evidence, run the existing native owners and complete the same Work. A
 receipt, queue acceptance, unrelated preexisting row or candidate-derived expected
 field cannot count. Creation never establishes fulfillment, resolution or approval.
 
+### Registered owner case G-existing-schema-upgrade-and-jobs
+
+Create the disposable database from the actual immutable 517003a source SQL through
+0171, checking that every retained migration byte is unchanged. Before X1 upgrade,
+create an ordinary authorized Work and a binary Core document/version through their
+real owners. Enqueue an existing release_probe and retain an old retired Water job.
+Apply only the additive X1 migrations, compare the exact old rows/bytes, and require
+a second migration pass to apply zero files. Then run the authenticated X1 native
+owner chain on that upgraded database with the physical registered worker. The
+old probe must execute under the observed source release identity; the retired job
+must be quarantined without execution; new jobs must retain their registered types
+and protocol versions. Preserve the old Work/document/version after all new work.
+This case does not establish clean dependency installation or final built bytes.
+
 ### Installed baseline and immutable parent bindings
 
 The full output currently carries an avoidable unknown baseline and empty parent

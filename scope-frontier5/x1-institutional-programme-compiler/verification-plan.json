@@ -491,6 +491,24 @@
       ],
       "limits": "UNCHANGED",
       "acceptance": "oracle-contract.md#a-all-ordinary-operations-independent-expectations"
+    },
+    {
+      "id": "G-existing-schema-upgrade-and-jobs",
+      "mode": "upgrade",
+      "dutyCount": 1,
+      "status": "FROZEN_BEFORE_CASE_IMPLEMENTATION",
+      "oldSourceCommit": "517003a4396bc8101a90be4b425ee01de9446740",
+      "oldMigrationHead": "0171_runtime_database_role_isolation.sql",
+      "migrationPolicy": "ALL_RETAINED_SQL_BYTE_IDENTICAL_ADDITIVE_ONLY",
+      "legacyObjects": [
+        "Work",
+        "DocumentVersion",
+        "release_probe",
+        "retired_Water_job"
+      ],
+      "limits": "UNCHANGED",
+      "acceptance": "oracle-contract.md#g-existing-schema-upgrade-and-jobs-independent-expectations",
+      "finalBuiltInstallationEstablished": false
     }
   ]
 }

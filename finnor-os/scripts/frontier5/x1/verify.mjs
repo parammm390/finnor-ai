@@ -22,7 +22,8 @@ const ownerCases={owners:{'one-duty':{count:'1',mode:'api'},'128-duty':{count:'1
   lifecycle:{material:{count:'1',mode:'material'},recovery:{count:'1',mode:'recovery'},
     contention:{count:'1',mode:'contention'},unsupported:{count:'1',mode:'unsupported'},
     'cancel-observed':{count:'1',mode:'cancel_observed'},
-    'effect-recovery':{count:'1',mode:'effect_recovery'}},mounted:{mounted:{count:'1',mode:'mounted'}}};
+    'effect-recovery':{count:'1',mode:'effect_recovery'}},mounted:{mounted:{count:'1',mode:'mounted'}},
+  installed:{'schema-upgrade':{count:'1',mode:'upgrade'}}};
 const selectedOwnerCase=ownerCase?ownerCases[stage]?.[ownerCase]:null;
 const named = manifest.stages.find((entry) => entry.id === stage);
 if (!named || args.length%2!==0||new Set(args.filter((_,i)=>i%2===0)).size!==args.length/2
@@ -95,6 +96,7 @@ for (const path of [
   'finnor-os/scripts/frontier5/x1/physical-owner-worker.mts',
   'finnor-os/scripts/frontier5/x1/owner-source-corpus.mts',
   'finnor-os/scripts/frontier5/x1/canonical-owner-corpus.mts',
+  'finnor-os/scripts/frontier5/x1/upgrade-owner-fixture.mts',
   'finnor-os/scripts/frontier5/x1/institution-method-plan.mts',
   'finnor-os/scripts/frontier5/x1/tsconfig.p1-contract.json',
   'finnor-os/packages/private-equity/src/institution-program/baseline.ts',
