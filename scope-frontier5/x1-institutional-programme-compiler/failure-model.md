@@ -426,3 +426,14 @@ to source mode after a previously verified manifest disappears, and that mode
 comparison ignores special permission bits. Both must refuse. The live cache
 regression must replace one byte at the same size/inode and restore the exact
 warmed mtime, isolating the actual kernel ctime witness rather than a size change.
+
+### Installed transitive peer resolution (before repair)
+
+The repaired installed API reaches READY as finnor_app, but its first actual
+workforce/profiles route fails importing @langchain/langgraph-checkpoint from
+the installed @langchain/langgraph-checkpoint-postgres module. The package copier
+followed dependencies/optionalDependencies and omitted declared peerDependencies.
+Include actual installed peer resolution in the same pinned closure; unavailable
+required peers refuse the build before serving. Preserve this failed run, all
+original pins and limits. Completion still requires actual authenticated owner
+flow, live same-size tamper refusal and post-restart queue processing.

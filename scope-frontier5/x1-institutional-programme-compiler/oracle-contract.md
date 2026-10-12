@@ -465,3 +465,8 @@ Keep size/inode unchanged during this live byte mutation and assert exact warmed
 mtime equality. A missing manifest must never turn a compiled checker into the
 source fallback, including after a prior verified load. Added special mode bits
 must fail the exact mode predicate without changing any byte or manifest hash.
+
+Actual installed peer imports must resolve to copied and pinned package bytes.
+The observed workforce/profiles import failure is retained; its repair is proved
+by the same native401, authenticated201 and full downstream owner flow, not by
+replacing the handler, peer module or expected status.

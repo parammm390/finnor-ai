@@ -109,6 +109,12 @@ for (let at = 0; at < requests.length; at++) {
     try { await dependency(name, location, destination + '/node_modules/' + name); }
     catch (error) { if (!error.message.startsWith('X1_INSTALLED_DEPENDENCY_UNAVAILABLE:')) throw error; }
   }
+  for (const name of Object.keys(pkg.peerDependencies ?? {})) {
+    try { await dependency(name, location, destination + '/node_modules/' + name); }
+    catch (error) {
+      if (!pkg.peerDependenciesMeta?.[name]?.optional || !error.message.startsWith('X1_INSTALLED_DEPENDENCY_UNAVAILABLE:')) throw error;
+    }
+  }
 }
 const routes = [];
 const apiRoot = join(backend, 'apps/api/app/api');
