@@ -55,7 +55,7 @@ export async function prepareExistingOwnerUpgrade(input:{repo:string;databaseUrl
   try{
     const probe=(await admin.query('SELECT id FROM finnor_os.jobs WHERE idempotency_key=$1',[probeKey])).rows[0];
     const retired=(await admin.query(`INSERT INTO finnor_os.jobs(tenant_id,type,payload,idempotency_key)
-      VALUES($1,'voice_confirm_request',$2::jsonb,$3) RETURNING id`,[tenantId,JSON.stringify({tenantId,legacy:true}),
+      VALUES($1,'scheduled_reminder',$2::jsonb,$3) RETURNING id`,[tenantId,JSON.stringify({tenantId,legacy:true}),
       'old-retired-job:'+randomUUID()])).rows[0];
     const starting=await observePreservedUpgradeOwners(admin,{tenantId,userId,workId:work.workId,documentVersionId:version.id});
     const added=await migrate(input.databaseUrl),again=await migrate(input.databaseUrl);
