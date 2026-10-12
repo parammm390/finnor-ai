@@ -329,4 +329,17 @@ Lowering must retain the exact operation/rule/deadline as an unresolved duty and
 produce no executable action for it. Native supported work must still complete;
 the full Work must remain incomplete while this material duty is unresolved.
 
+### Inherited application table privileges
+
+The original migration chain grants default privileges to new tables. A later
+GRANT SELECT does not remove inherited INSERT/UPDATE/DELETE. Source authority,
+subject identity and immutable acquisition/admission receipts must be read-only
+to the compiler/application roles, with mutations through their actual restricted
+owner functions. Test current_user and actual raw DML with a zero-row predicate;
+an application UPDATE must fail with SQLSTATE 42501, not merely change no rows.
+Retain the exposed privilege proof before repair. The authenticated input/native
+completion proof must still pass after removing raw writes. External source-owner
+fixture updates use their explicit independent owner connection; API and worker
+connections remain restricted.
+
 The independent oracle contract defines expectations and preservation. Boundary bugs need a pre-fix failing regression at their owning boundary. No post-code unit tests. Source changes following a failed proof retain the original run and rerun only affected proof plus necessary regressions.

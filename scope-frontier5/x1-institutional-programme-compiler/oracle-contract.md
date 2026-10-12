@@ -369,3 +369,14 @@ fails authority or normative consistency. The resulting programme is PARTIAL,
 Work is not completed, no approval action/effect exists, original costs/deadline
 remain and the artifact names the missing operation in its exact intervention.
 
+## G-source-authority-role isolation
+
+In the actual disposable schema, `finnor_app` and `finnor_worker` must have no raw
+INSERT/UPDATE/DELETE on x1_source_grants, x1_work_mandates,
+x1_subject_identity_bindings, x1_source_acquisitions or x1_mapping_admissions.
+The authenticated application's zero-row direct UPDATE of source authority must
+raise SQLSTATE 42501. Reading privilege metadata alone is insufficient. Configuring
+all fifteen supported originals through authenticated owner functions must still
+produce real canonical admissions, three native effects and completed Work. Do
+not change the API/worker connection to a privileged role to recover that result.
+

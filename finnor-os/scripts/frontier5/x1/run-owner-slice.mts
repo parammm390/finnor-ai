@@ -344,6 +344,22 @@ try {
   const me = await fetch(service.origin + "/api/me", { headers: { authorization: "Bearer " + service.token } });
   const identity = await me.json(); assert.equal(me.status, 200); assert.equal(identity.tenantId, tenant); assert.equal(identity.userId, actor);
   if(ownerInputs){
+    const sourceAuthorityTables=['x1_source_grants','x1_work_mandates','x1_subject_identity_bindings',
+      'x1_source_acquisitions','x1_mapping_admissions'];
+    const privileges=(await admin.query(`SELECT r.role,t.tab,p.permission,
+      has_table_privilege(r.role,'finnor_os.'||t.tab,p.permission) allowed
+      FROM unnest(ARRAY['finnor_app','finnor_worker']) r(role)
+      CROSS JOIN unnest($1::text[]) t(tab) CROSS JOIN unnest(ARRAY['INSERT','UPDATE','DELETE']) p(permission)
+      ORDER BY r.role,t.tab,p.permission`,[sourceAuthorityTables])).rows;
+    let actualRole:string|null=null,rawWriteCode:string|null=null;
+    try{await withTenantTransaction(tenant,{userId:actor},async(_db,c)=>{
+      actualRole=(await c.query('SELECT current_user AS role')).rows[0].role;
+      await c.query('UPDATE finnor_os.x1_source_grants SET revoked_at=clock_timestamp() WHERE tenant_id=$1 AND false',[tenant]);
+    });}catch(error){rawWriteCode=(error as {code?:string}).code??null;}
+    await save('source-authority-role-independent-proof.json',{actualRole,privileges,rawWriteCode,
+      zeroRowsTargeted:true,authorityMutated:false});
+    assert.equal(actualRole,'finnor_app');assert.equal(rawWriteCode,'42501','actual raw source authority DML must be rejected');
+    assert.ok(privileges.every(row=>row.allowed===false),'compiler/application raw source authority writes must be absent');
     const expiry=new Date(Date.now()+3600000).toISOString();
     const userRules=rules.map(({postconditionRef:_postcondition,observerRef:_observer,...userRule})=>userRule);
     const mandateInput={workId,institutionId,rules:userRules,expiresAt:expiry};
