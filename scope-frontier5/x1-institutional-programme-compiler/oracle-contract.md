@@ -490,3 +490,8 @@ the same current trusted kernel metadata and descriptor-race checks. Existing
 adverse installation cases, actual401→503→401 same-size/mtime mutation and new
 post-restart queue processing remain decisive. Record actual resources without
 assigning shared swap/disk changes to this worker or assuming a memory gain.
+
+The fixed manifest file itself must refuse a same-byte outside symlink and
+special-mode change with X1_INSTALLATION_MANIFEST_PATH_OR_MODE_REFUSED. Test
+actual compiled cold startup and an already-running API; preserve its original
+digest and restore the original regular0444 file after every mutation.

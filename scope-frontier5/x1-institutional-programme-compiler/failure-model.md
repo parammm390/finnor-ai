@@ -473,3 +473,15 @@ when current trusted kernel metadata matches; resolve its actual path each time.
 Checker closure reads use the same bounded hash. No declared file or integrity
 predicate is removed. Rebuild changed runtime bytes; preserve every failed run,
 all installed adverse cases, the same-size live mutation case and restart oracle.
+
+### Manifest namespace and exact mode (pre-code)
+
+Independent bounded review found the manifest itself uses a following pathname
+read, although its declared files are held through O_NOFOLLOW. A same-byte
+manifest symlink to a file outside the installation can pass the API scanner.
+Retain an actual original compiled-entry observation before repair. The fixed
+sibling manifest must itself be a regular file with exact0444 mode and be read
+through an O_NOFOLLOW descriptor with matching before/after kernel metadata.
+Cold and already-warmed API checks must refuse an external same-byte link or
+special-mode change before executing a route; restored original bytes/mode/path
+must resume the ordinary original refusal/owner flow. No manifest rewrite.

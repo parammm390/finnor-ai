@@ -51,6 +51,14 @@ try {
   try{renameSync(manifestPath,manifestPath+'.held');
     run('compiled-checker-missing-manifest-refusal','checker','X1_COMPILED_INSTALLATION_MANIFEST_REQUIRED');
   }finally{renameSync(manifestPath+'.held',manifestPath);}
+  try{chmodSync(manifestPath,0o444|0o4000);
+    run('manifest-special-mode-refusal','api','X1_INSTALLATION_MANIFEST_PATH_OR_MODE_REFUSED');
+  }finally{chmodSync(manifestPath,0o444);}
+  const outsideManifest=join(evidence,'external-same-byte-manifest.json');
+  writeFileSync(outsideManifest,bytes,{flag:'wx',mode:0o444});
+  try{renameSync(manifestPath,manifestPath+'.held');symlinkSync(outsideManifest,manifestPath);
+    run('manifest-external-same-byte-link-refusal','api','X1_INSTALLATION_MANIFEST_PATH_OR_MODE_REFUSED');
+  }finally{unlinkSync(manifestPath);renameSync(manifestPath+'.held',manifestPath);}
   const link = manifest.links.find(p => p.path === 'finnor-os/node_modules/@finnor/db'); assert.ok(link);
   const full = join(installation, link.path), target = readlinkSync(full);
   try { unlinkSync(full); symlinkSync('../../packages/tools', full);

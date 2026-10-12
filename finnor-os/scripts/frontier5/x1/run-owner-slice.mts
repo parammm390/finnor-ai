@@ -5,7 +5,7 @@ import { randomUUID, randomBytes, createHash } from "node:crypto";
 import { createServer } from "node:net";
 import { createServer as createHttpServer,type Server } from 'node:http';
 import { spawn, execFileSync } from "node:child_process";
-import { mkdir, writeFile, appendFile, readFile, rm, chmod, stat, utimes } from "node:fs/promises";
+import { mkdir, writeFile, appendFile, readFile, rm, chmod, stat, utimes, rename, symlink, unlink } from "node:fs/promises";
 import { statfsSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -259,6 +259,32 @@ try {
     await utimes(full,observed.atime,observed.mtime);
     results.push({id:'G-installed-same-process-byte-currentness',status:'PASS',observed:{before,refused,restored},
       basis:'ACTUAL_RUNNING_COMPILED_API_REFUSAL_AFTER_BYTE_CHANGE_WITH_RESTORED_MTIME'});
+    const manifestPath=join(installation,'finnor-os/x1-development-installation.json');
+    const manifestBytes=await readFile(manifestPath),outsideManifest=join(evidence,'external-same-byte-manifest.json');
+    await writeFile(outsideManifest,manifestBytes,{flag:'wx',mode:0o444});
+    const manifestCases=[];
+    for(const mutation of ['external-same-byte-link','special-mode'] as const){
+      const trafficStart=traffic.length;let refusal;
+      try{
+        if(mutation==='external-same-byte-link'){
+          await rename(manifestPath,manifestPath+'.held');await symlink(outsideManifest,manifestPath);
+        }else await chmod(manifestPath,0o444|0o4000);
+        refusal=await probe();assert.equal(refusal.status,503);
+        assert.ok(traffic.slice(trafficStart).some((entry:any)=>entry.event==='X1_COMPILED_API_REFUSAL'
+          &&entry.predicate==='X1_INSTALLATION_MANIFEST_PATH_OR_MODE_REFUSED'));
+      }finally{
+        if(mutation==='external-same-byte-link'){
+          await unlink(manifestPath);await rename(manifestPath+'.held',manifestPath);
+        }else await chmod(manifestPath,0o444);
+      }
+      const afterRestore=await probe();assert.equal(afterRestore.status,401);
+      assert.equal(sha(await readFile(manifestPath)),sha(manifestBytes));
+      manifestCases.push({mutation,refusal,afterRestore});
+    }
+    await save('installed-live-manifest-currentness.json',{cases:manifestCases,compiledApiPid:service.compiledPid,
+      manifestDigest:sha(manifestBytes),manifestNeverRewritten:true,restoredRegularMode:0o444});
+    results.push({id:'G-installed-same-process-manifest-custody',status:'PASS',observed:manifestCases,
+      basis:'ACTUAL_WARMED_COMPILED_API_REFUSAL_BEFORE_HANDLER_AND_RESTORED_ORIGINAL_PATH_MODE'});
   }
   const profileResponse=await fetch(service.origin+'/api/workforce/profiles',{
     method:'POST',headers:{'content-type':'application/json',authorization:'Bearer '+service.token},

@@ -50,7 +50,19 @@ function installedRuntime(required = false) {
     if (required || loadedDigest) throw Error("X1_COMPILED_INSTALLATION_MANIFEST_REQUIRED");
     return null;
   }
-  const bytes = readFileSync(manifestPath), manifestDigest = sha(bytes);
+  const manifestStat = lstatSync(manifestPath, { bigint: true });
+  if (!manifestStat.isFile() || (manifestStat.mode & 0o7777n) !== 0o444n)
+    throw Error('X1_INSTALLATION_MANIFEST_PATH_OR_MODE_REFUSED');
+  const manifestFd = openSync(manifestPath, constants.O_RDONLY | constants.O_NOFOLLOW);
+  let bytes;
+  try {
+    if (metadata(fstatSync(manifestFd, { bigint: true })) !== metadata(manifestStat))
+      throw Error('X1_INSTALLATION_FILE_CHANGED_DURING_CHECK');
+    bytes = readFileSync(manifestFd);
+    if (BigInt(bytes.length) !== manifestStat.size || metadata(fstatSync(manifestFd, { bigint: true })) !== metadata(manifestStat))
+      throw Error('X1_INSTALLATION_FILE_CHANGED_DURING_CHECK');
+  } finally { closeSync(manifestFd); }
+  const manifestDigest = sha(bytes);
   if (loadedDigest && loadedDigest !== manifestDigest) throw Error("X1_LOADED_INSTALLATION_MANIFEST_CHANGED");
   const manifest = JSON.parse(bytes);
   if (manifest.schema !== "finnor.x1.development-installation.v1" || manifest.mode !== "DEVELOPMENT_ONLY"
