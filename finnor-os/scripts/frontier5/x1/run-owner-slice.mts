@@ -1182,7 +1182,12 @@ try {
     const restored=await api('institution-consent',{...consentInput,expiresAt:new Date(Date.now()+3600000).toISOString()});
     assert.equal(restored.status,200);assert.equal(restored.body.revoked_at,null);
     await awaitScope('OBSERVED');
-    const requests=(await admin.query('SELECT request_text,owner_party_id,due_at FROM finnor_os.pe_requests WHERE tenant_id=$1 ORDER BY request_text',[tenant])).rows;
+    // The frozen starting corpus includes a preexisting canonical Request,
+    // excluded from new effect credit. Observe every actual new Request effect
+    // through its native DomainAction identity, independently of the candidate.
+    const requests=(await admin.query(`SELECT r.request_text,r.owner_party_id,r.due_at FROM finnor_os.pe_requests r
+      JOIN finnor_os.domain_actions a ON a.tenant_id=r.tenant_id AND a.id=r.id AND a.work_id=r.work_id
+      WHERE r.tenant_id=$1 AND r.work_id=$2 AND a.action_type='create_deal_request' ORDER BY r.request_text`,[tenant,workId])).rows;
     assert.deepEqual(requests.map(row=>row.request_text).sort(),[requestText,newText].sort());
     const finalWork=(await admin.query('SELECT status FROM finnor_os.works WHERE tenant_id=$1 AND id=$2',[tenant,workId])).rows[0];
     assert.equal(finalWork.status,'completed');assert.deepEqual(await originalEnvelope(),originalFrame);
