@@ -57,6 +57,7 @@ type Obligation = {
   trigger: string; sourceId: string; recordId: string; occurredAt: string; availableAt: string;
   subjectRef: string; ruleId: string; deadlineAt: string; principalId: string;
   operation: string; materiality: string; postconditionRef: string; observerRef: string;
+  nonExecutable?:'OUTSIDE_PROFILE'|'CURRENT_AUTHORITY_UNAVAILABLE';
 };
 export type InstitutionCandidate = {
   tenantId: string; institutionId: string; workId: string; principalId: string;
@@ -476,19 +477,28 @@ export async function independentlyCheckInstitutionModel(
       }
       const trigger = witness(source.id, record.id);
       const identity = obligationKey(source.id, record.id, rule.id);
+      const withheld=!profile.ordinaryOperations.includes(rule.operation)?'OUTSIDE_PROFILE'
+        :!current.authorizedOperations.includes(rule.operation)?'CURRENT_AUTHORITY_UNAVAILABLE':null;
       expected.set(identity, { trigger, sourceId: source.id, recordId: record.id,
         occurredAt: record.occurredAt, availableAt: record.availableAt, subjectRef: ref, ruleId: rule.id,
         deadlineAt: rule.deadlineAt, principalId: rule.principalId, operation: rule.operation,
-        materiality: rule.materiality, postconditionRef: rule.postconditionRef, observerRef: rule.observerRef });
+        materiality: rule.materiality, postconditionRef: rule.postconditionRef, observerRef: rule.observerRef,
+        ...(withheld?{nonExecutable:withheld}: {}) });
     }
   }
   for (const actual of candidate.obligations) {
     const trigger = records.get(recordKey(actual.sourceId, actual.recordId))?.record;
     const matchingRules = mandate.rules.filter((rule) => rule.triggerKind === trigger?.triggerKind);
     if (!matchingRules.some((rule) => rule.id === actual.ruleId)) return fail("RULE", `No current explicit normative rule for ${actual.trigger}`, [actual.trigger]);
-    if (!current.authorizedOperations.includes(actual.operation)
-      || !profile.ordinaryOperations.includes(actual.operation)) return fail("AUTHORITY", `Operation is not currently authorized: ${actual.operation}`, [actual.trigger]);
     const basis = expected.get(obligationKey(actual.sourceId, actual.recordId, actual.ruleId));
+    // A normative unsupported duty stays in the denominator as explicitly
+    // non-executable. The original mandate/profile/authority snapshot fixes
+    // this disposition; a producer cannot invent or silently withhold an action.
+    if(basis?.nonExecutable
+      ?actual.operation!==basis.operation||actual.nonExecutable!==basis.nonExecutable
+      :actual.nonExecutable!==undefined||!current.authorizedOperations.includes(actual.operation)
+        ||!profile.ordinaryOperations.includes(actual.operation))
+      return fail('AUTHORITY',`Operation is not independently authorized or explicitly withheld: ${actual.operation}`,[actual.trigger]);
     if (!basis || !same(actual, basis)) return fail("OBLIGATION", `Mandate trigger/principal/deadline/postcondition differs ${actual.trigger}`, [actual.trigger]);
   }
   if (candidate.obligations.length !== expected.size

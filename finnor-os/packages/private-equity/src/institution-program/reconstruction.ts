@@ -211,11 +211,14 @@ export async function proposeInstitutionModel(
   for (const item of claimed.filter((record) => record.kind === "trigger" && record.ref)) {
     const triggerKind = item.data.triggerKind;
     for (const rule of original.mandate.rules.filter((entry) => entry.triggerKind === triggerKind)) {
+      const withheld=!profile.ordinaryOperations.includes(rule.operation)?'OUTSIDE_PROFILE'
+        :!original.current.authorizedOperations.includes(rule.operation)?'CURRENT_AUTHORITY_UNAVAILABLE':null;
       obligations.push({ trigger: key(item.row.sourceId, item.row.objectId),
         sourceId: item.row.sourceId, recordId: item.row.objectId, subjectRef: item.ref!,
         occurredAt: item.data.occurredAt!, availableAt: item.data.availableAt!,
         ruleId: rule.id, deadlineAt: rule.deadlineAt, principalId: rule.principalId,
         operation: rule.operation, materiality: rule.materiality,
+        ...(withheld?{nonExecutable:withheld}:{}),
         postconditionRef: rule.postconditionRef, observerRef: rule.observerRef });
     }
   }

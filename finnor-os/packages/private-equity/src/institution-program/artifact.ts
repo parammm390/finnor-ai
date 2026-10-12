@@ -49,8 +49,9 @@ export function buildInstitutionArtifact(input: {
       domainRef: "pe-institution-responsibility-v1", knowledgeCut: o.knowledgeCut,
       reason: item.reason, requiredOwnerOrInput: "current operation or canonical owner",
       affectedRefs: [item.stableIdentity],
-      ...(item.unsupportedFields ? { alternatives: item.unsupportedFields.map(field =>
-        `Interpret ${field} in standing rule ${item.ruleId}`) } : {}) })),
+      alternatives:[...(item.unsupportedFields??[]).map(field=>`Interpret ${field} in standing rule ${item.ruleId}`),
+        ...(item.reason==='X1_OPERATION_NOT_CURRENTLY_AUTHORIZED'&&item.operation
+          ?[`Supply a current admitted operation ${item.operation} for standing rule ${item.ruleId}`]:[])] })),
     ...(input.operationGaps ?? []).map(item => ({ basis: "unresolved" as const,
       statement: `Operation intent for ${item.stableIdentity}`, witnessRefs: [item.stableIdentity],
       domainRef: "pe-institution-responsibility-v1", knowledgeCut: o.knowledgeCut,

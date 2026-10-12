@@ -68,7 +68,7 @@ export function deriveInstitutionResponsibilities(input: Input) {
   }
   const responsibilities: InstitutionResponsibility[] = [];
   const unresolved: { stableIdentity: string; sourceId: string; recordId: string; reason: string;
-    originalDeadline: string; ruleId?: string; unsupportedFields?: string[]; ruleDigest?: string }[] = [];
+    originalDeadline: string; ruleId?: string; unsupportedFields?: string[]; ruleDigest?: string;operation?:string }[] = [];
   const graphNodes = new Set<string>(), graphEdges = new Set<string>();
   let deadlineAt: string | null = null;
   for (const [rank, obligation] of candidate.obligations.entries()) {
@@ -99,7 +99,7 @@ export function deriveInstitutionResponsibilities(input: Input) {
     if (reason) {
       unresolved.push({ stableIdentity: identity, sourceId: row.sourceId, recordId: row.recordId,
         reason, originalDeadline: rule.deadlineAt,
-        ...(unsupportedFields.length ? { ruleId: rule.id, unsupportedFields, ruleDigest: hash(rule) } : {}) });
+        ruleId:rule.id,unsupportedFields,ruleDigest:hash(rule),operation:rule.operation });
       continue;
     }
     const match = /^pe_deal:([^@]+)@v\d+$/.exec(obligation.subjectRef)!;
