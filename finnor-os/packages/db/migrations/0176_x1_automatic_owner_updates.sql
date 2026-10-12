@@ -61,6 +61,12 @@ DECLARE owner_body jsonb:=CASE WHEN TG_OP='DELETE' THEN to_jsonb(OLD) ELSE to_js
  t uuid; changed_owner_id text; entity_type text; change_hash text; q record; update_id uuid; can_run boolean;
 BEGIN
  IF TG_OP='UPDATE' AND to_jsonb(OLD)=to_jsonb(NEW) THEN RETURN NEW; END IF;
+ -- Same exact maintenance contract as the canonical PE lifecycle owner (0105).
+ -- Native facts keep version; every other field/version change still invalidates.
+ IF TG_OP='UPDATE' AND TG_TABLE_NAME='pe_deals'
+   AND (to_jsonb(NEW)-'graph_version'-'updated_at')=(to_jsonb(OLD)-'graph_version'-'updated_at')
+   AND (to_jsonb(NEW)->>'graph_version')::integer=(to_jsonb(OLD)->>'graph_version')::integer+1
+ THEN RETURN NEW; END IF;
  t:=(owner_body->>'tenant_id')::uuid;
  IF t IS NULL THEN RETURN CASE WHEN TG_OP='DELETE' THEN OLD ELSE NEW END; END IF;
  changed_owner_id:=coalesce(owner_body->>'id',owner_body->>'document_id',t::text);

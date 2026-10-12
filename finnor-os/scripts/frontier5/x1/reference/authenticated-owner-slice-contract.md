@@ -107,3 +107,15 @@ in the never-deployed 0176 migration; preserve exact change identity, locks,
 coalescing and invalidation. Retain the actual terminal workflow error. A failed
 native action also requires a precise retained intervention, rather than passive
 polling without an explanation; do not replay it as a fresh action or refill S5.
+
+Run 014 created the actual Request with a completed native action. Its own graph
+maintenance then scheduled an automatic compiler revision before the independent
+observer could publish. Native migration 0105 explicitly defines a Deal's sole
+graph_version/updated_at increment as graph maintenance, retaining native fact
+version; that maintenance cannot invalidate an identity mapping. Preserve these
+immutable history ordinals/hashes as provenance, and compare the native version
+for the mapping's semantic currentness. P7 must ignore only that exact native
+maintenance transition, still recognizing any other Deal field/version change.
+The owner run independently asserts unchanged compiler revision for its own
+creation and captures P7 update rows on all outcomes. Material owner-change and
+automatic revision proofs remain separately required.

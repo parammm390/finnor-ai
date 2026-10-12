@@ -224,6 +224,9 @@ try {
   }
   await save("compiler-ending-projection.json", reading);
   assert.equal(reading.status, "OBSERVED", "actual compiler/native progression: " + JSON.stringify({ status: reading.status, reason: reading.reason }));
+  assert.equal((await admin.query(`SELECT count(*)::int n FROM finnor_os.x1_compiler_requests
+    WHERE tenant_id=$1 AND work_id=$2`,[tenant,workId])).rows[0].n,1,
+    'own native graph maintenance must not create a spurious compiler revision');
   const admission=(await admin.query(`SELECT a.receipts FROM finnor_os.x1_mapping_admissions a
     JOIN finnor_os.x1_compiler_requests r ON r.tenant_id=a.tenant_id AND r.admission_id=a.id
     WHERE r.tenant_id=$1 AND r.principal_id=$2 AND r.id=$3`,[tenant,actor,compilerId])).rows[0];
@@ -295,6 +298,7 @@ try {
       ["deliveries", "SELECT a.* FROM finnor_os.job_delivery_attempts a WHERE a.tenant_id=$1 ORDER BY started_at"],
       ["compiler", "SELECT * FROM finnor_os.x1_compiler_requests WHERE tenant_id=$1 ORDER BY revision"],
       ["compiler-events", "SELECT kind,body,created_at FROM finnor_os.x1_compiler_events WHERE tenant_id=$1 ORDER BY created_at,id"],
+      ["compiler-updates", "SELECT * FROM finnor_os.x1_compiler_updates WHERE tenant_id=$1 ORDER BY created_at,id"],
       ["native", "SELECT id,status,failure,proposed,request,head_id FROM finnor_os.p1_requests WHERE tenant_id=$1"],
       ["resource-charges", "SELECT * FROM finnor_os.s5_governed_resource_charges WHERE tenant_id=$1"],
       ["deals", "SELECT id,version,source_system,external_id,status,name FROM finnor_os.pe_deals WHERE tenant_id=$1 ORDER BY id"],
