@@ -89,3 +89,10 @@ which hit its unchanged transport timeout; this is an observer defect, not a
 product revision failure or privacy verdict. Guard delay arming with the actual
 completed canonical revision proof, returning 409 beforehand. Do not extend the
 timeout, restart the same episode or mark this failed observation passing.
+
+Run 033 stopped before compiler exposure when shared volume growth exceeded the
+unchanged 768 MiB guard. Its owned persistent Next cache was ~760 MiB afterward;
+this measurement alone does not attribute all shared growth. Use installed Next
+16's documented `turbopackFileSystemCacheForDev:false` to avoid retaining cache
+for each fresh disposable browser/auth origin. Keep build settings and the
+original heap, memory, disk and wall bounds intact. Retain that failed setup.
