@@ -5,6 +5,7 @@ import { authorizeBeliefResources } from "../enterprise-beliefs";
 import type { DigitalInstitutionProfile } from "./contracts";
 import type { OriginalInstitutionEvidence } from "./checker";
 import { institutionDigest } from "./canonical-json";
+import { lockInstitutionSourceAuthority } from "./source-locks";
 
 /** Closed owner registry; source data never selects a SQL table or predicate. */
 const PE = {
@@ -94,7 +95,7 @@ export async function readAdditionalInstitutionOwners(ctx:PeMutationContext,orig
 /** Publication locks a genuine current owner row and returns its stable
  * identity; Core version tokens are owner preimages, not invented counters. */
 export async function lockAdditionalInstitutionOwner(c:PoolClient,ctx:PeMutationContext,
-  original:OriginalInstitutionEvidence,ref:string,registrationId:string,sourceId?:string){
+  original:OriginalInstitutionEvidence,ref:string,registrationId:string,sourceId:string,grantId:string){
   const parsed=parseInstitutionOwnerRef(ref);if(!parsed)throw Error("X1_CANONICAL_OWNER_REF_INVALID");
   const pe=[...Object.values(PE),...RELATIONS].find(owner=>owner.entity===parsed.entityType);
   if(pe){
@@ -106,11 +107,12 @@ export async function lockAdditionalInstitutionOwner(c:PoolClient,ctx:PeMutation
   }
   let expected:string|null=null;
   if(parsed.entityType==="user"){
+    await lockInstitutionSourceAuthority(ctx,c,original.workId,[grantId]);
     const rows=(await c.query<{id:string;source_id:string;registration_id:string;revision:number}>(`SELECT b.id::text,b.source_id,b.registration_id,b.revision
       FROM finnor_os.x1_subject_identity_bindings b JOIN finnor_os.users u ON u.tenant_id=b.tenant_id AND u.id=b.subject_user_id
       WHERE b.tenant_id=$1 AND b.institution_id=$2 AND b.subject_user_id=$3 AND b.registration_id=$4
        AND b.source_id=$5 AND b.revoked_at IS NULL AND b.valid_from<=clock_timestamp() AND b.expires_at>clock_timestamp()
-       AND u.status='active' FOR SHARE OF b,u`,[ctx.auth.tenantId,original.institutionId,parsed.entityId,registrationId,sourceId])).rows;
+       AND u.status='active' FOR SHARE OF u`,[ctx.auth.tenantId,original.institutionId,parsed.entityId,registrationId,sourceId])).rows;
     if(rows.length===1){const p=rows[0]!;expected=coreRef("user",parsed.entityId,{bindingId:p.id,sourceId:p.source_id,registrationId:p.registration_id,revision:p.revision});}
   }else if(parsed.entityType==="external_organization"){
     const row=(await c.query<{organization_key:string}>("SELECT organization_key FROM finnor_os.external_organizations WHERE tenant_id=$1 AND id=$2 AND organization_key=$3 AND active FOR SHARE",

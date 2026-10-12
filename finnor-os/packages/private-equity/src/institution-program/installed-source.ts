@@ -5,6 +5,7 @@ import { resolveMicrosoftProviderAuthContext } from "@finnor/security";
 import { MicrosoftGraphClient } from "@finnor/provider-microsoft365";
 import type { PeMutationContext } from "../types";
 import type { DigitalInstitutionProfile } from "./contracts";
+import { lockInstitutionSourceAuthority } from "./source-locks";
 
 export interface InstalledMailGrant {
   id: string; integration_id: string; adapter_scope: string; external_id: string;
@@ -91,11 +92,12 @@ export async function acquireInstalledMailOriginal(
   await metadata();
   return withTenantTransaction(ctx.auth.tenantId, { userId: ctx.auth.userId, isolation: "serializable" },
     async (db, sql) => {
+      await lockInstitutionSourceAuthority(ctx,sql,workId,[grant.id]);
       const locked = await sql.query(
         `SELECT 1 FROM finnor_os.x1_source_grants
           WHERE tenant_id=$1 AND id=$2 AND work_id=$3 AND principal_id=$4
             AND revoked_at IS NULL AND expires_at>clock_timestamp() AND revision=$5
-            AND original_sha256=$6 FOR SHARE`,
+            AND original_sha256=$6`,
         [ctx.auth.tenantId, grant.id, workId, ctx.auth.userId, grant.revision, grant.original_sha256],
       );
       const currentScope = await sql.query(

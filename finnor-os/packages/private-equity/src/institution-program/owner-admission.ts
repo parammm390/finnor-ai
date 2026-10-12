@@ -503,7 +503,7 @@ async function admitCheckedInstitutionMappings(
       }
       }else{
         const locked=await lockAdditionalInstitutionOwner(client,ctx,original,mapping.canonicalRef,
-          mapping.registrationId,mapping.sourceId);
+          mapping.registrationId,mapping.sourceId,source.grantId);
         dealId=locked.dealId;
       }
       const version = await loadDocumentVersion(db, ctx.auth.tenantId, source.coreDocumentId, source.coreVersionId);

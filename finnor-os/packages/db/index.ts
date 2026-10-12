@@ -1073,6 +1073,10 @@ export async function assertInstitutionPlanContinuationTx(db: Db, params: {
   tenantId: string; workId: string; workInputId: string; compilerRequestId: string;
   priorPlanRevisionId: string;
 }): Promise<{ compilerRequestId: string; parentRequestId: string; episodeId: string; priorProgramId: string }> {
+  await db.execute(sql`SELECT finnor_os.x1_lock_source_authority(${params.workId}::uuid,
+    ARRAY(SELECT jsonb_array_elements_text(q.grant_ids)::uuid FROM finnor_os.x1_compiler_requests q
+      WHERE q.tenant_id=${params.tenantId}::uuid AND q.work_id=${params.workId}::uuid
+        AND q.id=${params.compilerRequestId}::uuid))`);
   const result=await db.execute(sql`SELECT q.id::text compiler_request_id,parent.id::text parent_request_id,
       q.episode_id::text episode_id,p.id::text prior_program_id
     FROM finnor_os.x1_compiler_requests q
@@ -1117,7 +1121,7 @@ export async function assertInstitutionPlanContinuationTx(db: Db, params: {
             AND g.revision=q.input_manifest->'current'->'sourceRevisions'->>g.source_id
             AND NOT EXISTS(SELECT 1 FROM finnor_os.x1_source_grants n WHERE n.tenant_id=g.tenant_id
               AND n.principal_id=g.principal_id AND n.work_id=g.work_id AND n.source_id=g.source_id AND n.version>g.version)))
-    FOR SHARE OF q,parent,e,a,checked,p,u,rights,m`);
+    FOR SHARE OF q,parent,e,checked,p,u,rights`);
   if(result.rows.length!==1)throw new Error('X1_NATIVE_CHECKED_COMPILER_CONTINUATION_REQUIRED');
   const row=result.rows[0]!;
   return {compilerRequestId:String(row.compiler_request_id),parentRequestId:String(row.parent_request_id),
