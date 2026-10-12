@@ -56,10 +56,19 @@ while (relative(dependencyRoot, nextPackageRoot) === ".." || relative(dependency
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  ...(process.env.FINNOR_X1_FRONTEND_INSTALL === "1" ? {
+    output: "standalone",
+    outputFileTracingRoot: dependencyRoot,
+    distDir: ".next-x1-install",
+  } : {}),
   turbopack: { root: dependencyRoot },
   // Disposable authenticated sessions use fresh local origins. Persisting each
   // development compilation grows a cache that these sessions cannot reuse.
-  experimental: { turbopackFileSystemCacheForDev: false },
+  experimental: { turbopackFileSystemCacheForDev: false,
+    ...(process.env.FINNOR_X1_FRONTEND_INSTALL === "1" ? {
+      cpus: 1, webpackMemoryOptimizations: true, preloadEntriesOnStart: false,
+    } : {}),
+  },
   allowedDevOrigins: ["127.0.0.1"],
   // Release builds provide a commit-derived value. Keeping the Next build ID
   // deterministic makes the runtime release record independently checkable.

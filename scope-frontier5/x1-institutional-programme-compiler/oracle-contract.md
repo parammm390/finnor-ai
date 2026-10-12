@@ -502,3 +502,21 @@ S5 reservation IDs/envelopes. Execute these exact SELECTs after migration before
 compiler exposure; repeat before and after physical restart. No expected field
 or row population changes. Upgrade release readback and installed revision
 baseline bind actual installed source identity independently of verifier Git.
+
+## G compiled mounted frontend and ordinary input configuration
+
+Build the actual frontend once with Next standalone output, no type-error bypass,
+and unchanged registered build wall/output/free-space bounds. Installed frontend
+and auth transport bind loopback; actual password sign-in remains SDK managed.
+The public Supabase URL is the same compiled frontend origin, and /auth/v1 is
+forwarded byte-for-byte to the disposable auth owner. Production CSP remains
+unchanged. Backend proof uses installed original API/worker/checker bytes.
+
+The independent fifteen-source fixture freezes all original mappings, three
+duties, fields and deadlines before browser exposure. Actual form save, own
+consent revoke/regrant and original attach must produce their canonical owner
+rows/API outcomes before actual UI submit. Native effects and Work completion
+remain independently read. UI must show revision2, retain original frame, cancel
+future continuation and prevent scope/identity/late-response resurrection.
+Record screenshots, DOM predicates, original HTTP/SQL transitions and exact
+frontend/source/runtime/manifest identities; a compiled page load is insufficient.

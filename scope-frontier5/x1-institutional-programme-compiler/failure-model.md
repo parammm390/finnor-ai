@@ -498,3 +498,23 @@ Upgrade release-witness readback must compare the same installed source commit
 already used by its queued payload and worker, separately from verifier history.
 Installed revision baseline checks must bind the actual installation identity
 and absent Git history, using the same established initial-baseline predicate.
+
+## Mounted compiled frontend and input controls (pre-code)
+
+The existing mounted fixture runs Next dev and does not prove installed frontend
+bytes. Compile the actual Next16.3.8 app with supported standalone output and
+traced dependencies; retain its source, lock, Node, build ID and every shipped
+byte/link. Its browser Supabase URL is build-inlined. A disposable loopback
+transport must forward /auth/v1 to the actual existing local auth fixture at
+the SAME frontend origin; preserve the production CSP and backend X1 guard.
+All other requests reach the compiled original Next server. No fake business
+handler, injected token, new protected authority or CSP relaxation is allowed.
+
+The mounted case uses the normal fifteen-source authenticated input fixture,
+ten classes/fourteen canonical kinds/three ordinary duties. Through real form
+controls read/save standing responsibility, choose an owned sensitive original,
+revoke/regrant self-consent and attach that original before compile. No human
+mapping or normative rule is supplied beyond the original standing mandate.
+Original expectation fields remain pinned. Verify actual SQL/API transitions,
+mounted compile/revision/cancel and A→B→A/revoked late response behavior. Source
+and compiled frontend proofs remain separately pinned when their cuts differ.
