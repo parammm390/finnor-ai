@@ -533,3 +533,9 @@ The observed generated next-env.d.ts route-type import may change to the compile
 distDir type path only. Independently compare all remaining declaration bytes
 against the original build commit and retain both hashes. This is type generation,
 not a silent runtime-source repair or new compiled-source history.
+
+For mounted input controls, freeze the additional actual preparation records at
+first durable UI submit, preserving the earlier API-preparation prefix byte for
+byte. Compare only physical authorized200/400 input calls before that actual202;
+post-submit API calls belong to their existing episode meter. No earlier record,
+parent or expected outcome is rewritten to count browser configuration work.

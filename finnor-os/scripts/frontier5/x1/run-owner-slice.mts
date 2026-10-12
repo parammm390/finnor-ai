@@ -877,6 +877,23 @@ try {
       await new Promise(resolve=>setTimeout(resolve,1000));
     }
     assert.ok(compilerId,'actual mounted compile control must reach durable acceptance');
+    if(ownerInputs){
+      for(let wait=0;wait<50&&!traffic.some((entry:any)=>entry.path==='/api/company-brain/institution-submit'&&entry.status===202);wait++)
+        await new Promise(resolve=>setTimeout(resolve,100));
+      const acceptedAt=traffic.findIndex((entry:any)=>entry.path==='/api/company-brain/institution-submit'&&entry.status===202);
+      assert.ok(acceptedAt>=0,'actual mounted submit response observed before preparation freeze');
+      const calls=(traffic.slice(0,acceptedAt) as Array<{path:string;status:number;bearer:boolean}>).filter(call=>call.bearer
+        &&['institution-inputs','institution-mandate','institution-register-source','institution-sources','institution-submit'].includes(call.path.split('/').at(-1)!)
+        &&[200,400].includes(call.status));
+      const retained=(await admin.query(`SELECT record_id,content_digest,body->'payload' payload FROM finnor_os.s7_economic_records
+        WHERE tenant_id=$1 AND principal_id=$2 AND kind='COMPUTE' AND body->'payload'->>'schema'='finnor.x1.api-preparation-compute.v1'
+          AND body->'payload'->>'workId'=$3 ORDER BY knowledge_at,record_id`,[tenant,actor,workId])).rows;
+      assert.deepEqual(retained.slice(0,preparationCostProof.length),preparationCostProof);
+      assert.equal(retained.length,calls.length);assert.deepEqual(retained.map(r=>r.payload.statusCode).sort(),calls.map(r=>r.status).sort());
+      await save('mounted-input-preparation-cost-proof.json',{original:preparationCostProof,retained,calls,
+        actualSubmitTrafficIndex:acceptedAt,originalMeasurementsUnchanged:true});
+      preparationCostProof=retained;
+    }
   }
   let reading: any;
   for (let poll = 0; poll < 240; poll++) {
