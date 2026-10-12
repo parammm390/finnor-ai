@@ -35,7 +35,8 @@ export function observeExactCreatedRequest(expected: Expected, row: RequestRow |
   const desired = {
     tenantId: expected.tenantId, requestId: expected.requestId, dealId: expected.dealId,
     workstreamId: expected.workstreamId, requestedFromDealPartyId: expected.requestedFromDealPartyId,
-    owner: expected.owner, requestText: expected.requestText, requestedAt: instant(expected.requestedAt),
+    owner: { partyType: expected.owner.partyType, partyId: expected.owner.partyId },
+    requestText: expected.requestText, requestedAt: instant(expected.requestedAt),
     dueAt: instant(expected.dueAt), requiresAcceptedDeliverable: expected.requiresAcceptedDeliverable,
     state: "open", acknowledgedAt: null, fulfilledAt: null, cancelledAt: null, archivedAt: null,
   };

@@ -119,3 +119,9 @@ maintenance transition, still recognizing any other Deal field/version change.
 The owner run independently asserts unchanged compiler revision for its own
 creation and captures P7 update rows on all outcomes. Material owner-change and
 automatic revision proofs remain separately required.
+
+Run 015 independently read the exact native Request, completed DomainAction and
+verified BusinessEffect while P1 retained WAITING. SQL showed every requested
+field correct, but JSONB reordered the nested owner object; the observer compared
+its property insertion order. Normalize the expected owner's two named fields
+explicitly. Preserve all value/time/state comparisons and original evidence.
