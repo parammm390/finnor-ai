@@ -83,7 +83,7 @@ try {
   await database.initialise(); await appendFile(join(directory, "postgresql.conf"), "\ntrack_commit_timestamp=on\n");
   await database.start(); await database.createDatabase("x1_owner");
   const connection = (user: string, pass: string) => `postgres://${user}:${pass}@127.0.0.1:${port}/x1_owner`;
-  const migrations = await migrate(connection("x1_fixture", password)); assert.equal(migrations.length, 178);
+  const migrations = await migrate(connection("x1_fixture", password)); assert.equal(migrations.length, freeze.expectedMigrations);
   admin = new pg.Client({ connectionString: connection("x1_fixture", password) }); await admin.connect();
   await admin.query("ALTER ROLE finnor_app LOGIN PASSWORD " + admin.escapeLiteral(appPassword));
   await admin.query("ALTER ROLE finnor_worker LOGIN PASSWORD " + admin.escapeLiteral(workerPassword));
