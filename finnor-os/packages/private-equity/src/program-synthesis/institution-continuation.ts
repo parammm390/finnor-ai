@@ -46,7 +46,7 @@ export async function continueInstitutionProgram(ctx: PeMutationContext, q: Inst
    const locked=await nativeRequestRow(ctx,q.id,c,true);
    const claim=(await c.query(`SELECT id FROM finnor_os.jobs WHERE tenant_id=$1 AND id=$2
     AND type='run_x1_institution_continuation_v1' AND status='running'
-    AND claim_token=$3 AND claim_fence=$4 FOR SHARE`,
+    AND claim_token=$3 AND claim_fence=$4 AND lease_expires_at>clock_timestamp() FOR SHARE`,
     [q.tenant_id,execution.jobId,execution.claimToken,execution.claimFence])).rows[0];
    if(!claim||locked.generation!==q.generation||locked.head_id!==q.head_id
     ||["OBSERVED","CANCELLED","INVALIDATED"].includes(locked.status))
@@ -79,7 +79,7 @@ export async function continueInstitutionProgram(ctx: PeMutationContext, q: Inst
   const locked=await nativeRequestRow(ctx,q.id,c,true);
   const job=(await c.query(`SELECT id FROM finnor_os.jobs WHERE tenant_id=$1 AND id=$2
     AND type='run_x1_institution_continuation_v1' AND protocol_version=1 AND status='running'
-    AND claim_token=$3 AND claim_fence=$4 FOR SHARE`,
+    AND claim_token=$3 AND claim_fence=$4 AND lease_expires_at>clock_timestamp() FOR SHARE`,
    [q.tenant_id,execution.jobId,execution.claimToken,execution.claimFence])).rows[0];
   if(!job||locked.generation!==q.generation||locked.head_id!==q.head_id
     ||!["WAITING","RUNNING","QUEUED","FAILED","PARTIAL"].includes(locked.status))
@@ -180,7 +180,7 @@ export async function continueInstitutionProgram(ctx: PeMutationContext, q: Inst
    const current=await nativeRequestRow(ctx,q.id,c,true);
    const job=(await c.query(`SELECT id FROM finnor_os.jobs WHERE tenant_id=$1 AND id=$2
     AND type='run_x1_institution_continuation_v1' AND status='running'
-    AND claim_token=$3 AND claim_fence=$4 FOR SHARE`,
+    AND claim_token=$3 AND claim_fence=$4 AND lease_expires_at>clock_timestamp() FOR SHARE`,
     [q.tenant_id,execution.jobId,execution.claimToken,execution.claimFence])).rows[0];
    if(!job||current.generation!==q.generation||current.status!=="RUNNING"
      ||current.claim_token!==execution.claimToken||current.claim_fence!==execution.claimFence)

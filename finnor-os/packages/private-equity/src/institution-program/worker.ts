@@ -24,7 +24,7 @@ async function liveClaim(ctx: PeMutationContext, q: CompilerRequestRow, executio
   const request = await compilerRow(ctx, q.id, c, true);
   const job = (await c.query(`SELECT id FROM finnor_os.jobs WHERE tenant_id=$1 AND id=$2
     AND type='run_x1_institution_compiler_v1' AND protocol_version=1 AND status='running'
-    AND claim_token=$3 AND claim_fence=$4 FOR SHARE`,
+    AND claim_token=$3 AND claim_fence=$4 AND lease_expires_at>clock_timestamp() FOR SHARE`,
   [q.tenant_id, execution.jobId, execution.claimToken, execution.claimFence])).rows[0];
   if (!job || request.generation !== q.generation || request.status === "CANCELLED"
       || (request.status === "RUNNING" && request.claim_token !== execution.claimToken

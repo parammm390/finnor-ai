@@ -6,6 +6,7 @@ import { readInstitutionHarnessProgram } from "../program-synthesis/institution"
 import { handleProgramOperation } from "../program-synthesis/api";
 import { InstitutionProgram } from "./contracts";
 import { INSTITUTION_COMPLETION_CONTRACTS } from "./completion-contracts";
+import { readInstitutionComputeCosts } from "./meter";
 import {releaseUntouchedInstitutionDemand} from "../allocation-store";
 import { authorizeInstitutionWork, assertInstitutionCompilerCurrent, compilerRow, compilerEvent,
   compilerEpisode, enqueueInstitutionCompiler, submitInstitutionCompiler } from "./store";
@@ -23,6 +24,8 @@ export async function readInstitutionCompiler(ctx: PeMutationContext, requestId:
   const costs = { parentReservation: episode.parent_reservation, originalDeadline: episode.original_deadline.toISOString(),
     wallDeadline: episode.wall_deadline.toISOString(), acquisitionCalls: episode.acquisition_calls,
     compilerAttempts: episode.attempts, monetaryCost: null, monetaryCostStatus: "UNKNOWN",
+    coordinationCalls: episode.coordination_calls,
+    physicalCompute: await readInstitutionComputeCosts(ctx, q.work_id, episode.id),
     aggregatePeakMemoryBytes: null, humanSeconds: null };
   if (["CANCELLED", "INVALIDATED"].includes(q.status)) return { requestId: q.id, workId: q.work_id,
     workRevision: q.work_input_id, revision: q.revision, status: q.status, artifact: null,

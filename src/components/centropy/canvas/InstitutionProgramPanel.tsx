@@ -21,6 +21,10 @@ type Read = { requestId: string; workId: string; workRevision: string; revision:
     observedPostconditions: Array<{ stableIdentity: string; canonicalRef: string; observerDigest: string }>;
     interventions?: Array<{ stableIdentity: string; predicate: string; possibleEffect: boolean }> } };
   costs: { acquisitionCalls: number; compilerAttempts: number; originalDeadline: string;
+    coordinationCalls?: number;
+    physicalCompute?: { registeredDeliveryPhases: number; attributedElapsedMs: number;
+      phases: Record<string, { deliveries: number; attributedElapsedMs: number }>;
+      gaps: string[]; meterGapEvents: unknown[]; recordRefs: unknown[] };
     monetaryCostStatus: string; monetaryCost: number | null; humanSeconds: number | null } }
 type Sources = { workId: string; workInputId: string | null;
   grants: Array<{ id: string; source_id: string; source_class: string; revision: string }>;
@@ -39,46 +43,47 @@ const intervention = (reason: string) => ({
 } as Record<string, string>)[reason] ?? reason.replace(/^X1_/, "").replaceAll("_", " ").toLowerCase()
 
 export function InstitutionProgramPanel({ workId }: { workId: string }) {
-  const scope = usePrivateRequestScope(workId)
+  const { key: scopeKey, isCurrent, allowed } = usePrivateRequestScope(workId)
   const [sources, setSources] = useState<{ key: string; value: Sources } | null>(null)
   const [reading, setReading] = useState<{ key: string; value: Read } | null>(null)
   const [message, setMessage] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
-  const visibleSources = scope.allowed && sources?.key === scope.key ? sources.value : null
-  const visible = scope.allowed && reading?.key === scope.key ? reading.value : null
+  const visibleSources = allowed && sources?.key === scopeKey ? sources.value : null
+  const visible = allowed && reading?.key === scopeKey ? reading.value : null
   const refresh = useCallback(async () => {
-    const key = scope.key
-    if (!scope.allowed) return
+    const key = scopeKey
+    if (!allowed) return
     try {
       const next = await centropyPost<Sources>("company-brain/institution-sources", { workId })
-      if (!scope.isCurrent(key)) return
+      if (!isCurrent(key)) return
       if (next.workId !== workId) throw Error("Responsibility sources returned another Work")
       setSources({ key, value: next })
       if (next.request) {
         const result = await centropyPost<Read>("company-brain/institution-read", { requestId: next.request.id })
-        if (!scope.isCurrent(key)) return
+        if (!isCurrent(key)) return
         if (result.workId !== workId) throw Error("Responsibility returned another Work")
         setReading({ key, value: result })
       } else setReading(null)
       setMessage(null)
     } catch (error) {
-      if (!scope.isCurrent(key)) return
+      if (!isCurrent(key)) return
       setSources(null); setReading(null)
       setMessage(error instanceof Error ? error.message : "Responsibility is unavailable in this scope")
     }
-  }, [scope.allowed, scope.isCurrent, scope.key, workId])
+  }, [allowed, isCurrent, scopeKey, workId])
   useEffect(() => {
     setSources(null); setReading(null); setMessage(null); setBusy(false)
     void refresh()
   }, [refresh])
   useEffect(() => {
-    if (!visible || !["QUEUED", "RUNNING", "WAITING"].includes(visible.status)) return
-    const timer = window.setTimeout(() => void refresh(), 3000)
+    if (!visibleSources?.request || visible?.status === "CANCELLED") return
+    const active = ["QUEUED", "RUNNING", "WAITING"].includes(visible?.status ?? "")
+    const timer = window.setTimeout(() => void refresh(), active ? 3000 : 15000)
     return () => window.clearTimeout(timer)
-  }, [refresh, visible])
+  }, [refresh, visible, visibleSources])
 
   async function compile() {
-    const key = scope.key, metadata = visibleSources
+    const key = scopeKey, metadata = visibleSources
     if (!metadata?.workInputId || !metadata.grants.length || metadata.grants.length > 16 || busy) return
     setBusy(true); setMessage("Reconstructing authorized sources against the standing responsibility…")
     try {
@@ -87,23 +92,23 @@ export function InstitutionProgramPanel({ workId }: { workId: string }) {
         idempotencyKey: `institution:${crypto.randomUUID()}`,
         ...(metadata.request ? { parentRequestId: metadata.request.id } : {}),
       })
-      if (scope.isCurrent(key)) await refresh()
+      if (isCurrent(key)) await refresh()
     } catch (error) {
-      if (scope.isCurrent(key)) { setReading(null); setMessage(error instanceof Error ? error.message : "Responsibility submission is uncertain; refresh to reconcile it") }
-    } finally { if (scope.isCurrent(key)) setBusy(false) }
+      if (isCurrent(key)) { setReading(null); setMessage(error instanceof Error ? error.message : "Responsibility submission is uncertain; refresh to reconcile it") }
+    } finally { if (isCurrent(key)) setBusy(false) }
   }
   async function control(command: "cancel" | "resume") {
-    const key = scope.key, requestId = visible?.requestId
+    const key = scopeKey, requestId = visible?.requestId
     if (!requestId || busy) return
     setBusy(true)
     try {
       await centropyPost(`company-brain/institution-${command}`, { requestId })
-      if (scope.isCurrent(key)) await refresh()
+      if (isCurrent(key)) await refresh()
     } catch (error) {
-      if (scope.isCurrent(key)) { setReading(null); setMessage(error instanceof Error ? error.message : "Continuation is uncertain; refresh its owner state") }
-    } finally { if (scope.isCurrent(key)) setBusy(false) }
+      if (isCurrent(key)) { setReading(null); setMessage(error instanceof Error ? error.message : "Continuation is uncertain; refresh its owner state") }
+    } finally { if (isCurrent(key)) setBusy(false) }
   }
-  if (!scope.allowed) return null
+  if (!allowed) return null
   const artifact = visible?.artifact, program = visible?.programme?.program
   const observed = new Map(program?.observedPostconditions.map(p => [p.stableIdentity, p]) ?? [])
   return <section className="ct-canvas-block ct-institution" aria-label="Institution responsibility">
@@ -144,5 +149,11 @@ export function InstitutionProgramPanel({ workId }: { workId: string }) {
           revisionDigest: artifact.envelope.content_digest }, null, 2)}</pre></details>
     </> : null}
     {visible ? <p>Original deadline {date(visible.costs.originalDeadline)}. {visible.costs.compilerAttempts} compiler attempts and {visible.costs.acquisitionCalls} acquisition units retained. Monetary cost and human supervision remain unknown. Cancellation retains possible effects and resource exposure.</p> : null}
+    {visible?.costs.physicalCompute ? <details><summary>Recorded compute and cost gaps</summary>
+      <p>{visible.costs.physicalCompute.registeredDeliveryPhases} saved compute measurements account for {(visible.costs.physicalCompute.attributedElapsedMs / 1000).toFixed(1)} seconds of attributed work. These measurements cover recorded attempts; full cost and aggregate memory remain unknown.</p>
+      {visible.costs.physicalCompute.gaps.length || visible.costs.physicalCompute.meterGapEvents.length
+        ? <p role="alert">Some compute attribution is missing or incomplete. Inspect the retained cost witnesses before comparing total cost.</p> : null}
+      <pre>{JSON.stringify(visible.costs.physicalCompute, null, 2)}</pre>
+    </details> : null}
   </section>
 }

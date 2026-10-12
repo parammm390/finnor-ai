@@ -1,5 +1,37 @@
 # FRONTIER5.X1 status
 
+## Current source checkpoint — retained compute history and mounted refresh, 12 October 2026
+
+Engineering remains **INCOMPLETE**. The authenticated Work cost projection reads
+and verifies existing immutable S7 compute records across its original compiler
+and native episodes. Duplicate or malformed physical measurements create explicit
+gaps and receive no elapsed credit. Attribution covers recorded native work;
+money, human time, aggregate simultaneous memory and other lifecycle costs stay
+unknown. Initial native preparation now records its physical delivery and charges
+the unique original P1 step under the existing S5 parent. Preparation respects
+the original step cap; all touched X1 publication claims require unexpired leases.
+
+The existing Work panel shows retained compute witnesses and gaps and refreshes
+terminal/partial revisions to observe subsequent automatic updates. Its monotone
+private-scope guards still fence late responses. The installed source descriptor
+now covers 33 actual source files, including both accounting owners.
+
+Scoped backend types/lint and root frontend types/panel lint passed on recorded
+cuts. The malformed-measurement source review finding and initial frontend hook
+dependency warning were repaired; original failures remain retained. Source
+checks do not establish actual mounted, SQL, queue, provider or installation
+behavior. All 0174–0176 migrations remain **UNAPPLIED**; 178 migrations are bundled.
+The frozen 1.5 GiB service and 2.5 GiB build floors still prevent live work.
+
+The three new source checkpoints add automatic owner updates, unaffected sealed
+creation history and retained compute/current Work refresh. They do not complete
+the promised phase. Remaining internal work includes precise unfinished owner
+matching/closure, lawful S5 revalidation, genuine compatible fallback, full
+qualification software and finite launch/observe/resume packets, authenticated
+A–H, built installation/upgrade/mounted behavior, scrutiny and reconstruction.
+Protected qualification, S8 admission, activation, operational 100× and financial
+outcomes remain separate and unestablished. The goal remains active.
+
 ## Current source checkpoint — preserved unaffected creation history, 12 October 2026
 
 Engineering remains **INCOMPLETE**. Native recompilation now reads the actual

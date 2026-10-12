@@ -1,11 +1,13 @@
 import type { JobExecutionContext } from '../../../../apps/worker/src/queue';
-import { validateInstitutionDemand } from '../allocation-store';
+import { employeeAuthoritySnapshot } from '@finnor/authority';
+import { validateInstitutionDemand, chargeInstitutionDemand } from '../allocation-store';
+import { persistInstitutionCompute } from '../institution-program/meter';
 import { verifyInstitutionDutyPopulation } from '../institution-program/responsibility';
 import type { PeMutationContext } from '../types';
 import { authorize, codeIdentity, principal, schemaIdentity, sha, stable, tx } from '../evidence-execution/store';
 import { P1_VERSION, isInstitutionRequest, type InstitutionHarnessRequest, type InstitutionHarnessProgram } from './contracts';
 import { selectHarnessPlan } from './plan';
-import { assertProgramCurrent, durableNode, enqueueProgram, episodeCosts, nativeRequestRow, persistProgrammeHead, trace,
+import { assertProgramCurrent, durableNode, enqueueProgram, episodeCosts, nativeRequestRow, persistProgrammeHead, trace, safePredicate,
  type InstitutionProgramRow } from './store';
 import { executeOwnerOperation, resolveEconomicBindings } from './owners';
 import { continueInstitutionProgram } from './institution-continuation';
@@ -189,7 +191,9 @@ export async function runInstitutionHarnessJob(ctx:PeMutationContext,q:Instituti
  // A published head is durable progress even if the previous claimant died
  // after setting RUNNING. Recovery must never clone the initial proposal.
  if(q.head_id)return continueInstitutionProgram(ctx,q,execution);
- let current=q;
+ const started=performance.now(),startedAt=new Date().toISOString();
+ let current=q,nativeOrdinal=0,meterStatus='PREPARATION_UNCERTAIN';
+ try{
  await assertProgramCurrent(ctx,q);
  const valid=await validateInstitutionDemand(ctx,q.proposed.reservationRef);
  if(valid.status!=='CURRENT')throw Error('X1_P1_S5_PARENT_NOT_CURRENT');
@@ -198,15 +202,16 @@ export async function runInstitutionHarnessJob(ctx:PeMutationContext,q:Instituti
   const claim=(await c.query(`SELECT id FROM finnor_os.jobs WHERE id=$1 AND tenant_id=$2
     AND type IN('run_harness_program_v1','run_x1_institution_continuation_v1')
     AND status='running' AND claim_token=$3
-    AND claim_fence=$4 AND protocol_version=1 FOR SHARE`,
+    AND claim_fence=$4 AND protocol_version=1 AND lease_expires_at>clock_timestamp() FOR SHARE`,
    [execution.jobId,q.tenant_id,execution.claimToken,execution.claimFence])).rows[0];
   if(!claim||row.generation!==q.generation)throw Error('PROGRAM_JOB_CLAIM_FENCED');
   const charged=await c.query(`UPDATE finnor_os.p1_episodes SET steps_used=steps_used+1,
     attempts_used=attempts_used+1 WHERE id=$1 AND tenant_id=$2 AND principal_id=$3
-    AND steps_used+1<=max_steps AND attempts_used+1<=max_attempts
-    AND deadline_at>clock_timestamp() RETURNING id`,
-   [q.episode_id,q.tenant_id,q.principal_id]);
+    AND steps_used+1<=LEAST(max_steps,$4) AND attempts_used+1<=max_attempts
+    AND deadline_at>clock_timestamp() RETURNING steps_used`,
+   [q.episode_id,q.tenant_id,q.principal_id,q.request.institution.compilerRequestId?128:64]);
   if(!charged.rowCount)throw Error('ORIGINAL_EPISODE_GRANT_EXHAUSTED');
+  nativeOrdinal=Number(charged.rows[0].steps_used);
   await c.query(`UPDATE finnor_os.p1_requests SET status='RUNNING',claim_token=$4,claim_fence=$5
     WHERE tenant_id=$1 AND principal_id=$2 AND id=$3`,
    [q.tenant_id,q.principal_id,q.id,execution.claimToken,execution.claimFence]);
@@ -214,7 +219,16 @@ export async function runInstitutionHarnessJob(ctx:PeMutationContext,q:Instituti
    originalEpisode:q.episode_id,reservationRef:q.proposed.reservationRef},c);
   return {...row,status:'RUNNING',claim_token:execution.claimToken,claim_fence:execution.claimFence} as InstitutionProgramRow;
  });
- try{
+ if(q.request.institution.compilerRequestId){
+  const {compilerRow,compilerEpisode}=await import('../institution-program/store');
+  const compiler=await compilerRow(ctx,q.request.institution.compilerRequestId);
+  const episode=await compilerEpisode(ctx,compiler.episode_id);
+  // The original P1 step domain includes preparation and continuation, so
+  // this physical delivery cannot alias a later continuation's charge.
+  await chargeInstitutionDemand(ctx,q.proposed.reservationRef,{
+   responsibilityIdentity:`x1-compiler-episode:${episode.id}`,phase:'RECOVERY',
+   ordinal:nativeOrdinal,units:1});
+ }
  const head:InstitutionHarnessProgram=structuredClone(q.proposed);
  head.runtime={node:process.version,imageDigest:null,jobId:execution.jobId,
   workerId:execution.workerId,deliveryAttemptId:execution.deliveryAttemptId,claimFence:execution.claimFence};
@@ -242,7 +256,7 @@ export async function runInstitutionHarnessJob(ctx:PeMutationContext,q:Instituti
   await assertProgramCurrent(ctx,current,c,true);
   const claim=(await c.query(`SELECT id FROM finnor_os.jobs
     WHERE tenant_id=$1 AND id=$2 AND status='running'
-      AND claim_token=$3 AND claim_fence=$4 FOR SHARE`,
+      AND claim_token=$3 AND claim_fence=$4 AND lease_expires_at>clock_timestamp() FOR SHARE`,
    [q.tenant_id,execution.jobId,execution.claimToken,execution.claimFence])).rows[0];
   if(!claim)throw Error('ATOMIC_PROGRAM_PUBLICATION_FENCED');
   await persistProgrammeHead(ctx,current,head,head.status,
@@ -253,14 +267,21 @@ export async function runInstitutionHarnessJob(ctx:PeMutationContext,q:Instituti
     .schedulePreparedHarnessObjectiveTx(db,{tenantId:q.tenant_id,workId:q.work_id,planRevisionId:q.plan_revision_id});
   }
  });
+ meterStatus='PREPARATION_PUBLISHED';
  }catch(error){
+  meterStatus=safePredicate(error);
   await tx(ctx,async c=>{
    const row=await nativeRequestRow(ctx,q.id,c,true);
    await trace(ctx,row,'FAILED_OR_FENCED',{predicate:String((error as Error).message),
     claimFence:execution.claimFence,originalDeadline:q.request.institution.demand.originalDeadline,
     reservationRef:q.proposed.reservationRef,exposureRetained:true},c);
-   if(row.generation===q.generation&&row.status==='RUNNING'
-     &&row.claim_token===execution.claimToken){
+   const claim=(await c.query(`SELECT id FROM finnor_os.jobs WHERE tenant_id=$1 AND id=$2
+     AND type IN('run_harness_program_v1','run_x1_institution_continuation_v1')
+     AND status='running' AND claim_token=$3 AND claim_fence=$4
+     AND lease_expires_at>clock_timestamp() FOR SHARE`,
+    [q.tenant_id,execution.jobId,execution.claimToken,execution.claimFence])).rows[0];
+   if(claim&&row.generation===q.generation&&(row.status==='QUEUED'
+     ||row.status==='RUNNING'&&row.claim_token===execution.claimToken&&row.claim_fence===execution.claimFence)){
     await c.query(`UPDATE finnor_os.p1_requests
       SET status='FAILED',failure=$4,updated_at=clock_timestamp()
       WHERE tenant_id=$1 AND principal_id=$2 AND id=$3`,
@@ -270,5 +291,19 @@ export async function runInstitutionHarnessJob(ctx:PeMutationContext,q:Instituti
    }
   });
   throw error;
+ }
+ finally{
+  try{
+   const rights=await employeeAuthoritySnapshot(ctx.auth);
+   const compute=await persistInstitutionCompute(ctx,{requestId:q.id,workId:q.work_id,
+    episodeId:q.episode_id,jobId:execution.jobId,deliveryAttemptId:execution.deliveryAttemptId,
+    parentReservation:q.proposed.reservationRef,rightsRevision:String(rights.revision),
+    startedAt,elapsedMs:performance.now()-started,phase:'PREPARATION',status:meterStatus,
+    observedAcquisitionAttempts:0,observedCheckerAttempts:0});
+   await trace(ctx,current,'X1_PREPARATION_COMPUTE_ATTRIBUTED',{
+    ordinal:nativeOrdinal,compute:compute.record.ref,jobId:execution.jobId,
+    deliveryAttemptId:execution.deliveryAttemptId,originalEpisode:q.episode_id});
+  }catch(error){await trace(ctx,current,'X1_PREPARATION_METER_GAP',{
+   jobId:execution.jobId,deliveryAttemptId:execution.deliveryAttemptId,predicate:safePredicate(error)});}
  }
 }
