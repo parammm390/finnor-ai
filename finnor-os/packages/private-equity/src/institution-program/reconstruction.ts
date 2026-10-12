@@ -20,7 +20,8 @@ function classify(data: Record<string, string>): "entity" | "quantity" | "trigge
   if (explicit === "entity" || explicit === "quantity" || explicit === "trigger") return explicit;
   if (data.triggerkind || data.xinstitutiontriggerkind) return "trigger";
   if (data.factkey && data.value) return "quantity";
-  if (data.registrationid && (data.entitytype || data.xinstitutionentitytype)) return "entity";
+  if ((data.registrationid || data.xinstitutionregistrationid)
+      && (data.entitytype || data.xinstitutionentitytype)) return "entity";
   // Descriptive source classes do not imply a normative trigger.
   return "unknown";
 }
@@ -97,7 +98,7 @@ export async function proposeInstitutionModel(
   };
   for (const row of decoded.observations) {
     const raw = fields(row), data = interpret(row, raw), { kind, registrationId, entityType } = data;
-    if (row.sourceClass === "calendar") {
+    if (row.sourceClass === "calendar" && kind === "unknown") {
       const instant = (value: string | undefined): string | null => {
         if (!value || !/^\d{8}T\d{6}Z$/.test(value)) return null;
         const iso = `${value.slice(0, 4)}-${value.slice(4, 6)}-${value.slice(6, 8)}T${value.slice(9, 11)}:${value.slice(11, 13)}:${value.slice(13, 15)}.000Z`;
