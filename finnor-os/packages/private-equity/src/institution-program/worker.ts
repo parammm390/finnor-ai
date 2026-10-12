@@ -107,6 +107,8 @@ export async function runInstitutionCompilerJob(payload: Record<string, unknown>
         });
         await chargeInstitutionDemand(ctx, parentRef, { responsibilityIdentity: `x1-compiler-episode:${episode.id}`,
           phase: "ACQUISITION", ordinal, units: 1 });
+        await compilerEvent(ctx,q,"SOURCE_ACQUISITION_ATTEMPTED",{grantId,ordinal,
+          parentReservation:parentRef,successfulReadClaimed:false});
         sourceAttempts++;
       },
       checkerAttempt: async () => {

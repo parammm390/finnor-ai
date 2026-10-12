@@ -360,4 +360,25 @@ reset cost, extend deadlines, issue grants or weaken final mutation fencing.
 Actor/resource revocation still refuses use. This case does not prove all sensitive
 source/personnel or minimal-closure cases.
 
+### Sensitive acquisition and honest partial source coverage
+
+The current source reader loads Core originals before verifying sensitive subject
+consent. A revoked personnel source can therefore be acquired before refusal and
+can block independent duties. Before changing this boundary, the sensitive_coverage
+case completes all three native duties, revokes actual self-consent for personnel
+benefits and publishes a new unrelated work-tracking trigger. Retain the owning
+refusal and actual acquisition attempts. A source-specific native event records
+attempts for product provenance and cost attribution; it is not proof of success.
+
+Sensitive acquisition must require a complete owner-certified subject population,
+current bindings, active subjects and current purpose/class consent before any
+raw fetch or cache reuse, under the same owner locks. Missing/revoked scope becomes
+an owner-observed metadata-only coverage gap, with no private payload in producer,
+checker or mounted output. Preserve the full source population and distinguish
+known obligations from an unknown normative population; a gap is not business
+work. Independently executable duties continue under the original reservation.
+Regranting actual self-consent must restore the same source and standing frame,
+not create another effect or reset cost. Certification cannot come from names,
+caller mappings, supplied coverage fields or an invented permission.
+
 The independent oracle contract defines expectations and preservation. Boundary bugs need a pre-fix failing regression at their owning boundary. No post-code unit tests. Source changes following a failed proof retain the original run and rerun only affected proof plus necessary regressions.

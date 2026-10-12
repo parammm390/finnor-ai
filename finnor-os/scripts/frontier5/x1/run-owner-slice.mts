@@ -28,8 +28,9 @@ if (!evidence || !evidence.startsWith("/")) throw Error("FRESH_PRIVATE_X1_OWNER_
 const dutyCount=process.env.FINNOR_X1_OWNER_CASE==='128'?128:1;
 const reportingChanges=process.env.FINNOR_X1_OWNER_MODE==='reporting_changes';
 const authorityEpoch=process.env.FINNOR_X1_OWNER_MODE==='authority_epoch';
+const sensitiveCoverage=process.env.FINNOR_X1_OWNER_MODE==='sensitive_coverage';
 const ownerInputs=process.env.FINNOR_X1_OWNER_MODE==='owner_inputs';
-const fullDomain=process.env.FINNOR_X1_OWNER_MODE==='domain'||reportingChanges||ownerInputs;
+const fullDomain=process.env.FINNOR_X1_OWNER_MODE==='domain'||reportingChanges||ownerInputs||sensitiveCoverage;
 const mounted=process.env.FINNOR_X1_OWNER_MODE==='mounted';
 const revise=process.env.FINNOR_X1_OWNER_MODE==='revision';
 const material=process.env.FINNOR_X1_OWNER_MODE==='material';
@@ -44,7 +45,7 @@ const contention=process.env.FINNOR_X1_OWNER_MODE==='contention';
 const unsupportedOperation=process.env.FINNOR_X1_OWNER_MODE==='unsupported_operation';
 const unsupported=process.env.FINNOR_X1_OWNER_MODE==='unsupported'||unsupportedOperation;
 const cancelObserved=process.env.FINNOR_X1_OWNER_MODE==='cancel_observed';
-if(process.env.FINNOR_X1_OWNER_MODE&&!['api','mounted','revision','material','heterogeneous','canonical','recovery','effect_recovery','ordinary','domain','owner_inputs','reporting_changes','authority_epoch','upgrade','checker_crash','contention','unsupported','unsupported_operation','cancel_observed'].includes(process.env.FINNOR_X1_OWNER_MODE))
+if(process.env.FINNOR_X1_OWNER_MODE&&!['api','mounted','revision','material','heterogeneous','canonical','recovery','effect_recovery','ordinary','domain','owner_inputs','reporting_changes','authority_epoch','sensitive_coverage','upgrade','checker_crash','contention','unsupported','unsupported_operation','cancel_observed'].includes(process.env.FINNOR_X1_OWNER_MODE))
   throw Error('EXACT_REGISTERED_OWNER_MODE_REQUIRED');
 if((mounted||material||heterogeneous||canonical||recovery||effectRecovery||ordinary||upgrade||checkerCrash||contention||unsupported||cancelObserved||authorityEpoch)&&dutyCount!==1)throw Error('NAMED_ONE_DUTY_SCENARIO_REQUIRED');
 if(process.env.FINNOR_X1_OWNER_CASE&&!['1','128'].includes(process.env.FINNOR_X1_OWNER_CASE))
@@ -78,6 +79,7 @@ const freeze = { source: { commit: git("rev-parse", "HEAD"), tree: git("rev-pars
     ...(fullDomain?['A-full-declared-source-and-owner-domain']:[]),
     ...(reportingChanges?['B-report-meaning-exception-and-cosmetic-change']:[]),
     ...(authorityEpoch?['B-unrelated-personnel-epoch-original-parent']:[]),
+    ...(sensitiveCoverage?['B-sensitive-consent-independent-continuation']:[]),
     ...(checkerCrash?['F-physical-checker-crash-and-compatible-resume']:[]),
     ...(contention?['E-original-shared-parent-contention']:[]),...(unsupported?['F-mixed-unsupported-rule']:[]),
     ...(cancelObserved?['E-cancel-observed-standing-continuation']:[])],
@@ -1107,6 +1109,87 @@ try {
       oneOriginalRequestAndEpisode:true,alternativeAlgorithmClaimed:false});
     results.push({id:'F-physical-checker-crash-and-compatible-resume',status:'PASS',observed:{compilerJobs,history,completion},
       basis:'ACTUAL_CHECKER_SIGKILL_UNKNOWN_QUARANTINE_ORIGINAL_PARENT_AUTH_RESUME_SECOND_CHECKER_AND_NATIVE_COMPLETION'});
+  }
+  if(sensitiveCoverage){
+    const originalFrame=await originalEnvelope(),oldProof=sha(JSON.stringify(completion.completion_proof));
+    const privateBinding=sourceBindings.find(binding=>binding.sourceClass==='personnel_benefits')!;
+    const workSource=sources.find(source=>source.id==='work-original')!;
+    const newText='Authorized independent duty during a sensitive source gap '+randomUUID();
+    const newRecord={...workSource.rows[0],id:'request-during-consent-gap',requestText:newText};
+    const revisedRows=[...workSource.rows,newRecord],bytes=Buffer.from(JSON.stringify(revisedRows));
+    await writeFile(join(evidence,'originals/work-during-consent-gap.json'),bytes,{mode:0o600,flag:'wx'});
+    await save('sensitive-coverage-pre-exposure-independent-expectations.json',{sourcePopulation:15,
+      unavailableSource:privateBinding.sourceId,privateGrantId:privateBinding.grantId,originalFrame,oldProof,
+      knownDutyDenominator:4,overallNormativePopulationDuringGap:'UNKNOWN',expectedRequests:[requestText,newText],
+      expectedTotalEffects:4,sourceGapIsBusinessAssignment:false,newRecord,sha256:sha(bytes),deadlineAt});
+    const replacement=await independentSourceOwner(async(db,c)=>{
+      const old=(await c.query<{id:string;document_id:string}>(`SELECT id::text,document_id::text FROM finnor_os.x1_source_grants
+        WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3 AND source_id='work-original' ORDER BY version DESC LIMIT 1 FOR UPDATE`,[tenant,actor,workId])).rows[0]!;
+      const version=await appendDocumentVersion(db,{tenantId:tenant,documentId:old.document_id,bytes,
+        mediaType:'application/json',format:'unknown',origin:'manual_upload',actor,sourceSystem:'owner-export',
+        sourceRef:'work-original',providerVersionId:'r2'});
+      const grant=(await c.query(`INSERT INTO finnor_os.x1_source_grants
+        (tenant_id,principal_id,work_id,institution_id,source_id,source_class,purpose,acquisition_kind,
+          document_id,document_version_id,protocol,revision,original_sha256,expected_object_ids,version,valid_from,expires_at)
+        SELECT tenant_id,principal_id,work_id,institution_id,source_id,source_class,purpose,acquisition_kind,
+          document_id,$4,protocol,'r2',$5,$6::jsonb,version+1,valid_from,expires_at
+        FROM finnor_os.x1_source_grants WHERE tenant_id=$1 AND principal_id=$2 AND id=$3 RETURNING id::text,version`,
+        [tenant,actor,old.id,version.id,sha(bytes),JSON.stringify(revisedRows.map(row=>row.id))])).rows[0];
+      return {grant,versionId:version.id};
+    });
+    const consentInput={institutionId,sourceClass:'personnel_benefits',purpose:'standing evidence responsibility'};
+    const revoked=await api('institution-consent',{...consentInput,revoke:true});assert.equal(revoked.status,200);
+    const revokedAt=revoked.body.revoked_at;assert.ok(revokedAt);
+    await save('sensitive-consent-actual-revocation.json',{revoked,replacement,revokedAt,originalFrame});
+    let latest:any,response:any,nativeEffects:any[]=[];
+    const awaitScope=async(expectedStatus:'PARTIAL'|'OBSERVED')=>{
+      for(let poll=0;poll<180;poll++){
+        if(guardFailure)throw Error(guardFailure);
+        latest=(await admin!.query(`SELECT id::text,revision,parent_request_id,episode_id FROM finnor_os.x1_compiler_requests
+          WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3 ORDER BY revision DESC LIMIT 1`,[tenant,actor,workId])).rows[0];
+        if(latest.id!==compilerId){
+          response=await api('institution-read',{requestId:latest.id});assert.equal(response.status,200);
+          if(['UNKNOWN','FAILED','CHECK_REJECTED','CANCELLED'].includes(response.body.status)){
+            await save('sensitive-coverage-owner-refusal.json',{revoked,replacement,latest,response,originalFrame});
+            throw Error('ACTUAL_SENSITIVE_COVERAGE_REFUSAL:'+response.body.status+':'+response.body.reason);
+          }
+          nativeEffects=(await admin!.query(`SELECT a.id,a.action_type,a.status,e.status effect_status FROM finnor_os.domain_actions a
+            JOIN finnor_os.business_effects e ON e.tenant_id=a.tenant_id AND e.domain_action_id=a.id
+            WHERE a.tenant_id=$1 AND a.work_id=$2 ORDER BY a.id`,[tenant,workId])).rows;
+          if(response.body.status===expectedStatus&&nativeEffects.length===4
+            &&nativeEffects.every(effect=>effect.status==='completed'&&effect.effect_status==='verified'))return;
+        }
+        await new Promise(resolve=>setTimeout(resolve,1000));
+      }
+      throw Error('SENSITIVE_COVERAGE_EXPECTED_NATIVE_STATE_NOT_REACHED:'+expectedStatus);
+    };
+    await awaitScope('PARTIAL');
+    const partial=await api('institution-read',{requestId:latest.id});assert.equal(partial.body.status,'PARTIAL');
+    const artifact=(await admin.query(`SELECT a.candidate,a.body,a.input_manifest FROM finnor_os.x1_compiler_artifacts a
+      JOIN finnor_os.x1_compiler_requests r ON r.tenant_id=a.tenant_id AND r.artifact_id=a.id WHERE r.tenant_id=$1 AND r.id=$2`,[tenant,latest.id])).rows[0];
+    assert.equal(artifact.candidate.coverage.length,15);assert.equal(artifact.candidate.obligations.length,4);
+    assert.equal(artifact.candidate.sourceCoverageGaps.length,1);assert.equal(artifact.candidate.sourceCoverageGaps[0].sourceId,privateBinding.sourceId);
+    assert.equal(artifact.candidate.mappings.filter((mapping:any)=>mapping.sourceId===privateBinding.sourceId).length,0);
+    const privateAttempts=(await admin.query(`SELECT request_id,body,created_at FROM finnor_os.x1_compiler_events
+      WHERE tenant_id=$1 AND kind='SOURCE_ACQUISITION_ATTEMPTED' AND body->>'grantId'=$2 AND created_at>=$3::timestamptz`,
+      [tenant,privateBinding.grantId,revokedAt])).rows;
+    assert.equal(privateAttempts.length,0,'revoked private source is fenced before acquisition or reuse');
+    const partialWork=(await admin.query('SELECT status FROM finnor_os.works WHERE tenant_id=$1 AND id=$2',[tenant,workId])).rows[0];
+    assert.notEqual(partialWork.status,'completed');assert.deepEqual(await originalEnvelope(),originalFrame);
+    await save('sensitive-coverage-partial-independent-proof.json',{partial,artifact,privateAttempts,nativeEffects,partialWork,originalFrame});
+    const restored=await api('institution-consent',{...consentInput,expiresAt:new Date(Date.now()+3600000).toISOString()});
+    assert.equal(restored.status,200);assert.equal(restored.body.revoked_at,null);
+    await awaitScope('OBSERVED');
+    const requests=(await admin.query('SELECT request_text,owner_party_id,due_at FROM finnor_os.pe_requests WHERE tenant_id=$1 ORDER BY request_text',[tenant])).rows;
+    assert.deepEqual(requests.map(row=>row.request_text).sort(),[requestText,newText].sort());
+    const finalWork=(await admin.query('SELECT status FROM finnor_os.works WHERE tenant_id=$1 AND id=$2',[tenant,workId])).rows[0];
+    assert.equal(finalWork.status,'completed');assert.deepEqual(await originalEnvelope(),originalFrame);
+    const retained=(await admin.query('SELECT completion_proof FROM finnor_os.work_plan_revisions WHERE tenant_id=$1 AND id=$2',[tenant,completion.plan_id])).rows[0];
+    assert.equal(sha(JSON.stringify(retained.completion_proof)),oldProof);
+    await save('sensitive-coverage-restored-independent-proof.json',{restored,latest,response,requests,nativeEffects,finalWork,
+      originalFrame,oldProof,knownDutyDenominator:4,fullSourcePopulation:15,noNewReservationOrEffect:true});
+    results.push({id:'B-sensitive-consent-independent-continuation',status:'PASS',observed:{sources:15,knownDuties:4,effects:4},
+      basis:'ACTUAL_CONSENT_REVOCATION_METADATA_GAP_NO_PRIVATE_ACQUISITION_LAWFUL_INDEPENDENT_EFFECTS_SAME_PARENT_AUTH_REGRANT'});
   }
   if(authorityEpoch){
     const oldProof=sha(JSON.stringify(completion.completion_proof));

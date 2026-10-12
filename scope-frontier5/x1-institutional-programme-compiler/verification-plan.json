@@ -594,6 +594,22 @@
       "acceptance": "oracle-contract.md#b-unrelated-personnel-epoch-and-original-s5-continuation",
       "fullSensitivePersonnelCase": false,
       "protectedQualification": false
+    },
+    {
+      "id": "B-sensitive-consent-independent-continuation",
+      "mode": "sensitive_coverage",
+      "dutyCount": 1,
+      "status": "FROZEN_BEFORE_SOURCE_SCOPE_CHANGE",
+      "sourcePopulation": 15,
+      "knownEndingDuties": 4,
+      "expectedTotalEffects": 4,
+      "expectedCoverageGaps": 1,
+      "privateAcquisitionDuringRevokedInterval": 0,
+      "overallNormativePopulationDuringGap": "UNKNOWN",
+      "sourceGapIsBusinessAssignment": false,
+      "limits": "UNCHANGED",
+      "acceptance": "oracle-contract.md#b-sensitive-consent-and-independent-continuation",
+      "protectedQualification": false
     }
   ]
 }

@@ -404,3 +404,28 @@ native authority readback to consumption and final dispatch under the original
 frame. No new grant is accepted. Report the actual dependency closure without
 crediting this case as full sensitive-personnel or minimum semantic closure proof.
 
+## B-sensitive consent and independent continuation
+
+Frozen before the source/checker/continuation change. Start with fifteen originals,
+ten classes, fourteen native canonical kinds and three observed ordinary duties.
+The personnel source contains a person assertion; the independently retained raw
+expectations contain no normative trigger in that source. Revoke the actual
+subject's personnel-benefits consent for its exact institution and purpose, then
+publish one new literal evidence-request trigger in the independent source owner.
+
+Expect all fifteen source identities retained, one explicit personnel access gap,
+no private source acquisition during its revoked interval, exactly two Requests,
+one new Workstream and one Finding overall, and independent observations for all
+four known duties. The source gap must preserve unknown normative coverage and
+keep overall Work uncompleted/partial; it cannot be renamed a fifth assignment.
+The original three effects, completion proof, episode, S5 origin/resources/limits,
+standing identity and deadline are unchanged. Regrant actual self-consent through
+the authenticated owner API: the current full model and Work must complete under
+that same frame with no fifth effect. Failure/cost history remains immutable.
+
+The intended pre-fix boundary is an actual sensitive-consent refusal after source
+acquisition, or refusal of independent continuation due that unavailable source.
+Retain queue/compiler/native-owner evidence; an unrelated ACL or resource stop
+cannot replace this predicate. The fixture's expectations are original records,
+not inferred from candidate output. No protected qualification is claimed.
+
