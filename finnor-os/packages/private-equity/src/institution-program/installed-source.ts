@@ -18,7 +18,7 @@ export async function acquireInstalledMailOriginal(
   ctx: PeMutationContext, workId: string, grant: InstalledMailGrant, profile: DigitalInstitutionProfile,
 ): Promise<{ documentId: string; versionId: string; bytes: Buffer; retainedAt: string }> {
   if (grant.provider !== "microsoft_graph" || grant.source_class !== "email"
-      || grant.external_object_type !== "message" || grant.protocol !== "rfc822"
+      || grant.external_object_type !== "message" || !['rfc822','installed_source_adapter'].includes(grant.protocol)
       || !grant.integration_id || !grant.adapter_scope || !grant.external_id
       || profile.bounds.authorizedAcquisitionCalls < 3) {
     throw new Error("X1_INSTALLED_ADAPTER_UNSUPPORTED_OR_ACQUISITION_BOUND");

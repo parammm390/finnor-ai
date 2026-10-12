@@ -270,6 +270,20 @@ episode/reservation/deadline. A candidate receipt or fallback flag cannot substi
 for the callee/queue/physical checker and canonical outcome. Never kill an unrelated
 process, repair source inside the run, or silently drop the failed attempt.
 
+### Quantitative semantic-owner source assertions
+
+Checked quantities currently appear only in the immutable candidate/artifact.
+Admit their supported identity/context through existing Memory evidence and PE
+evidence owners, without inventing a settled financial fact or another truth
+store. The original source document/version/hash, canonical subject, exact decimal,
+currency, unit, economic period, accounting basis, occurrence, availability and
+knowledge cut must be retained in an immutable typed source-assertion snapshot.
+Sensitive quantity subjects are rechecked and locked at publication. Quantity
+assertions never create a missing entity, confer approval or execute a payment.
+Identity mapping denominators remain unchanged; quantitative receipts are separate
+members and every admitted quantity must have an independently readable owner
+witness. A copied artifact field or a reference lacking the original context fails.
+
 ### Publication compute attribution
 
 The compiler's existing COMPILE measurement ends before baseline/catalog reads,

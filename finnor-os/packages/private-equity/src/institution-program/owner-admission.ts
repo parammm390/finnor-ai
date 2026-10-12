@@ -272,6 +272,7 @@ export interface AcceptedInstitutionMappingRef {
   evidenceSourceId: string; evidenceVersionId: string; evidenceLinkId: string;
   sourceTruthLinkId: string | null;
   relationId?: string;
+  assertionKind?:'IDENTITY'|'QUANTITY';
   disposition: "SOURCE_ASSERTION_ATTACHED_NOT_SETTLED_TRUTH";
   evidenceAttachmentKind?:"PE_EVIDENCE_LINK"|"CORE_EVIDENCE_ENTITY_REF";
   workAttachmentKind?:"CANONICAL_WORK_LINK"|"MEMORY_ENTITY_REF_ONLY";
@@ -436,11 +437,12 @@ async function admitCheckedInstitutionMappings(
     if (!mandateLocked.rows[0]) throw new Error("X1_MANDATE_CHANGED_DURING_PUBLICATION");
     const receipts: AcceptedInstitutionMappingRef[] = [];
     const createdRelations = new Map<string,string>();
-    for (const mapping of [...candidate.mappings].sort((a, b) => {
+    for (const mapping of [...candidate.mappings,...candidate.quantities].sort((a, b) => {
       const rank = (ref: string) => ref.startsWith("pe_fund:") ? 0 : ref.startsWith("pe_vehicle:") ? 1 : 2;
       return rank(a.canonicalRef) - rank(b.canonicalRef);
     })) {
       const source = sources.find((item) => item.id === mapping.sourceId)!;
+      const quantity=candidate.quantities.find(item=>item.sourceId===mapping.sourceId&&item.recordId===mapping.recordId);
       const entity = parseInstitutionOwnerRef(mapping.canonicalRef);
       if (!entity) throw new Error("X1_MAPPING_NO_CANONICAL_OWNER_TARGET");
       const entityId=entity.entityId,entityType=entity.entityType;
@@ -456,7 +458,7 @@ async function admitCheckedInstitutionMappings(
       } else {
         const records = await originalRawRecords(source, profile.bounds.tabularRowsPerObject, profile.bounds.objectBytes);
         const native = records.find((item) => item.id === mapping.recordId);
-        if (!native || native.entityType !== kind || native.registrationId !== mapping.registrationId) {
+        if (!native || !quantity&&(native.entityType !== kind || native.registrationId !== mapping.registrationId)) {
           throw new Error("X1_NATIVE_CANONICAL_CREATION_EVIDENCE_MISSING");
         }
         const table = kind === "fund" ? "pe_funds" : "pe_vehicles";
@@ -469,6 +471,7 @@ async function admitCheckedInstitutionMappings(
             kind==='fund'?'pe_fund':'pe_vehicle'],
         );
         if (!current.rows[0]) {
+          if(quantity)throw Error('X1_QUANTITY_REQUIRES_EXISTING_CANONICAL_OWNER');
           if(!native.name||native.name.length>256)throw Error("X1_NATIVE_CANONICAL_CREATION_EVIDENCE_MISSING");
           if(canonicalId(ctx.auth.tenantId,original.institutionId,kind,mapping.registrationId)!==entityId)
             throw Error("X1_NATIVE_CANONICAL_CREATION_IDENTITY_CHANGED");
@@ -581,12 +584,16 @@ async function admitCheckedInstitutionMappings(
           originalSha256: source.originalSha256, protocol: source.protocol, sourceRevision: source.revision },
       });
       const evidenceVersion = await appendEvidenceVersionTx(db, ctx.auth.tenantId, evidence.id, {
-        content: `Original source assertion ${mapping.recordId}; sha256:${source.originalSha256}`,
+        content: `Original source assertion ${mapping.recordId}; sha256:${source.originalSha256}`
+          +(quantity?'; quantity-context:'+JSON.stringify(quantity):''),
         snapshot: { sourceId: source.id, objectId: mapping.recordId,
           documentId: source.coreDocumentId, documentVersionId: source.coreVersionId,
           originalSha256: source.originalSha256, canonicalCandidate: mapping.canonicalRef,
-          disposition: "source_assertion_not_settled_truth" },
-        asOf: new Date(original.knowledgeCut), retrievedAt: new Date(),
+          disposition: "source_assertion_not_settled_truth",
+          ...(quantity?{sourceQuantity:{schema:'finnor.x1.source-quantity-assertion.v1',...quantity,
+            sourceRevision:source.revision,knowledgeCut:original.knowledgeCut,
+            classification:'SOURCE_ASSERTION_ATTACHED_NOT_SETTLED_TRUTH',executionAuthorityGranted:false}}:{}) },
+        asOf: new Date(quantity?.occurredAt??original.knowledgeCut), retrievedAt: new Date(),
         entityRefs: [{ type: entityType, id: entityId }],
       });
       const peEntity=PE_ENTITY_TYPES.find(type=>type===entityType) as PeEntityType|undefined;
@@ -645,6 +652,7 @@ async function admitCheckedInstitutionMappings(
         evidenceAttachmentKind:link?"PE_EVIDENCE_LINK":"CORE_EVIDENCE_ENTITY_REF",
         workAttachmentKind:attachable?"CANONICAL_WORK_LINK":"MEMORY_ENTITY_REF_ONLY",
         sourceTruthLinkId, ...(relationId ? { relationId } : {}),
+        assertionKind:quantity?'QUANTITY':'IDENTITY',
         disposition: "SOURCE_ASSERTION_ATTACHED_NOT_SETTLED_TRUTH" });
     }
     // Raw INSERT is revoked from finnor_app; publication routes through the

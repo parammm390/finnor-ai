@@ -328,3 +328,16 @@ the real second compiler/checker and produce exactly one independently observed
 Request plus completed native Work/Objective/Plan. Attempts become two, original
 raw acquisitions six, and both immutable physical COMPILE measurements persist.
 No alternative algorithm or protected fallback admission is claimed.
+
+# Quantitative semantic-owner source assertions independent expectations
+
+Keep the original all-domain identity denominator twenty-six and the original
+three contextual quantity expectations. The actual admission additionally carries
+three QUANTITY receipts, distinct from IDENTITY receipts. Read their genuine
+Memory versions and entity references plus PE attachment when applicable. Compare
+every stored decimal/currency/unit/period/basis/subject/time field against original
+pre-exposure owner inputs; require original Core document/version/hash and source
+revision, and explicit SOURCE_ASSERTION_ATTACHED_NOT_SETTLED_TRUTH. Sensitive
+expense subject stays the consented user and creates no payment. Material source
+revision retains old immutable assertions and adds the new current source version.
+No producer-derived numeric expectation or settled-truth claim is accepted.

@@ -79,7 +79,8 @@ export function buildInstitutionArtifact(input: {
         effect: unknown("Action intent is not a verified effect", "native DomainAction/BusinessEffect", [duty.stableIdentity]) },
     };
   });
-  const mappingRefs = input.mappings.map(m => known("S1", "checked_source_assertion_attachment",
+  const mappingRefs = input.mappings.map(m => known("S1", m.assertionKind==='QUANTITY'
+    ?"checked_quantity_source_assertion":"checked_source_assertion_attachment",
     m.evidenceLinkId, m.originalDocumentVersionId, hash(m)));
   const canonicalRefs = input.mappings.flatMap(m => [
     known("S1", "canonical_identity", m.canonicalRef, o.canonical.revision,

@@ -284,6 +284,15 @@ try {
       ownerPartyId: actor, requestText, requestedAt: occurredAt, dueAt: deadlineAt, requiresAcceptedDeliverable: true },
     requestTexts:Array.from({length:dutyCount},(_,index)=>dutyCount===1?requestText:requestText+' item '+index),
     expectedRequestCount: dutyCount, expectedCompletionMeaning: "CREATION_ONLY_NOT_FULFILLMENT_OR_APPROVAL" };
+  expected.quantityAssertions=[{sourceId:'ledger-original',recordId:'balance-A',factKey:'facility_balance',value:'20.00',
+    currency:'USD',unit:'units',period:'2026-10',basis:'outstanding',occurredAt,availableAt,
+    nativeType:'pe_deal',canonicalId:String(first.row.id)}];
+  if(heterogeneous)expected.quantityAssertions.push({sourceId:'lender-original',recordId:'lender-A',factKey:'outstanding',value:'20.00',
+    currency:'USD',unit:'units',period:'2026-10',basis:'outstanding',occurredAt,availableAt,
+    nativeType:'pe_deal',canonicalId:String(first.row.id)});
+  if(fullDomain)expected.quantityAssertions.push({sourceId:'expense-owner-original',recordId:'expense-A',factKey:'travel_expense',value:'17.50',
+    currency:'USD',unit:'dollars',period:'2026-10',basis:'submitted_unapproved',occurredAt,availableAt,
+    nativeType:'user',canonicalId:actor});
   if(ordinary)expected.ordinary={...ordinaryFields,dealId:String(first.row.id),existingWorkstreamId:String(stream.row.id),
     ownerPartyType:'employee',ownerPartyId:actor,workstreamKind:'financial_diligence',workstreamState:'not_started',
     findingState:'open',severity:'high',materiality:'material',requiredForWorkstreamCompletion:true,
@@ -637,6 +646,36 @@ try {
     assert.equal(link?.entity_type,nativeType);assert.equal(link?.entity_id,mapping.canonicalId);
     assert.equal(link?.evidence_source_id,receipt.evidenceSourceId);assert.equal(link?.evidence_version_id,receipt.evidenceVersionId);
   }
+  const quantityReceipts=admission.receipts.filter((receipt:any)=>receipt.assertionKind==='QUANTITY');
+  assert.equal(quantityReceipts.length,expected.quantityAssertions.length);
+  const quantityOwnerProofs=[];
+  for(const oracle of expected.quantityAssertions){
+    const receipt=quantityReceipts.find((item:any)=>item.sourceId===oracle.sourceId&&item.recordId===oracle.recordId);
+    assert.ok(receipt,'every original contextual quantity must reach its semantic evidence owner');
+    const record:{snapshot:Record<string,any>;as_of:Date;entity_refs:Array<{type:string;id:string}>}=(await admin.query(`SELECT v.snapshot,v.as_of,ch.entity_refs FROM finnor_os.evidence_source_versions v
+      JOIN finnor_os.evidence_chunks ch ON ch.tenant_id=v.tenant_id AND ch.source_id=v.source_id AND ch.version_id=v.id
+      WHERE v.tenant_id=$1 AND v.source_id=$2 AND v.id=$3`,[tenant,receipt.evidenceSourceId,receipt.evidenceVersionId])).rows[0];
+    assert.ok(record);const q:Record<string,any>=record.snapshot.sourceQuantity;
+    assert.equal(q.schema,'finnor.x1.source-quantity-assertion.v1');
+    assert.equal(q.classification,'SOURCE_ASSERTION_ATTACHED_NOT_SETTLED_TRUTH');assert.equal(q.executionAuthorityGranted,false);
+    for(const field of ['sourceId','recordId','factKey','value','currency','unit','period','basis','occurredAt','availableAt'])
+      assert.equal(q[field],oracle[field],'independent original semantic quantity '+field);
+    assert.match(q.canonicalRef,new RegExp('^'+oracle.nativeType+':'+oracle.canonicalId+'@(v[1-9][0-9]*|s[a-f0-9]{64})$'));
+    assert.equal(new Date(record.as_of).toISOString(),oracle.occurredAt);
+    assert.ok(record.entity_refs.some((ref:any)=>ref.type===oracle.nativeType&&ref.id===oracle.canonicalId));
+    const source=sourceBindings.find((binding:any)=>binding.sourceId===oracle.sourceId) as any;
+    assert.equal(record.snapshot.documentId,source.documentId);assert.equal(record.snapshot.documentVersionId,source.versionId);
+    assert.equal(record.snapshot.originalSha256,source.sha256);assert.equal(q.sourceRevision,'r1');
+    assert.equal(q.knowledgeCut,reading.artifact.envelope.knowledge_cut);assert.equal(receipt.disposition,'SOURCE_ASSERTION_ATTACHED_NOT_SETTLED_TRUTH');
+    if(oracle.nativeType==='pe_deal')assert.equal(receipt.evidenceAttachmentKind,'PE_EVIDENCE_LINK');
+    else assert.equal(receipt.evidenceAttachmentKind,'CORE_EVIDENCE_ENTITY_REF');
+    quantityOwnerProofs.push({oracle,receipt,record});
+  }
+  await save('quantity-semantic-owner-independent-proof.json',{identityMappingDenominator:expected.mappings.length,
+    quantityDenominator:expected.quantityAssertions.length,proofs:quantityOwnerProofs,
+    expectationsNotCandidateDerived:true,settledFinancialTruthEstablished:false,paymentAuthorityEstablished:false});
+  results.push({id:'A-quantitative-semantic-owner-assertions',status:'PASS',observed:{identityMappingDenominator:expected.mappings.length,
+    quantityDenominator:expected.quantityAssertions.length},basis:'ACTUAL_INDEPENDENT_RAW_EXPECTATIONS_IMMUTABLE_MEMORY_QUANTITY_CONTEXT_ENTITY_REFS_PE_ATTACHMENT_AND_ORIGINAL_CORE_PROVENANCE'});
   const rows = (await admin.query(`SELECT * FROM finnor_os.pe_requests WHERE tenant_id=$1 AND deal_id=$2 AND request_text=ANY($3::text[])`, [tenant, expected.request.dealId, expected.requestTexts])).rows;
   assert.equal(rows.length, expected.expectedRequestCount);
   const allEffects:any[]=[];
@@ -781,7 +820,7 @@ try {
     assert.equal(Object.keys(actual.body).length,14);assert.equal(Object.keys(actual.body.envelope).length,34);
     assert.equal(actual.body.envelope.source_refs.length,expected.sourceCorpus.sourceInstances);
     assert.deepEqual(Object.keys(actual.body.envelope.source_revision_vector).sort(),sources.map(s=>s.id).sort());
-    assert.equal(actual.body.inferred_source_mapping_refs.length,expected.mappings.length);
+    assert.equal(actual.body.inferred_source_mapping_refs.length,expected.mappings.length+actual.candidate.quantities.length);
     await save('heterogeneous-original-corpus-independent-proof.json',{expectations:expected.sourceCorpus,
       expectedMappings:expected.mappings,sourceBindings,actual,completion,
       nativeRequestCount:rows.length,independentOracleNotCandidateDerived:true,
@@ -792,7 +831,7 @@ try {
       fullFieldStructure:{program:14,envelope:34},completion},basis:'ACTUAL_AUTHENTICATED_CORE_ORIGINALS_SEPARATE_CHECK_S1_NATIVE_WORK_AND_INDEPENDENT_SQL'});
   }
   if(canonicalFixture){
-    assert.equal(admission.receipts.length,fullDomain?26:17);
+    assert.equal(admission.receipts.filter((receipt:any)=>receipt.assertionKind!=='QUANTITY').length,fullDomain?26:17);
     const currentConsent=(await admin.query(`SELECT b.registration_id,b.subject_user_id,c.revision,c.expires_at
       FROM finnor_os.x1_subject_identity_bindings b JOIN finnor_os.x1_subject_consents c
         ON c.tenant_id=b.tenant_id AND c.subject_user_id=b.subject_user_id AND c.institution_id=b.institution_id
