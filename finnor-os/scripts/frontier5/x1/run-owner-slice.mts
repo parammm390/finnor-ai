@@ -20,6 +20,7 @@ import { authenticatedApiFixture } from "./authenticated-api-fixture.mts";
 import { heterogeneousOwnerSources,type OwnerSource } from './owner-source-corpus.mts';
 import { canonicalOwnerSources } from './canonical-owner-corpus.mts';
 import { prepareExistingOwnerUpgrade,observePreservedUpgradeOwners } from './upgrade-owner-fixture.mts';
+import { registerInstitutionCoreSource } from '../../../packages/private-equity/src/institution-program/inputs';
 
 const repo = fileURLToPath(new URL("../../../../", import.meta.url));
 const evidence = process.env.FINNOR_X1_OWNER_EVIDENCE;
@@ -363,7 +364,23 @@ try {
         ={workId,documentId:binding.documentId,documentVersionId:binding.versionId,
         sourceClass:binding.sourceClass,protocol:binding.protocol,purpose:'standing evidence responsibility',expiresAt:expiry};
       assert.equal((await api('institution-register-source',{...registration,expectedObjectIds:binding.expectedObjectIds})).status,400);
-      const registered=await api('institution-register-source',registration);assert.equal(registered.status,200,JSON.stringify(registered));
+      const registered=await api('institution-register-source',registration);
+      if(registered.status!==200){
+        // Diagnostic invocation of the same owner after a failed HTTP request.
+        // It can never convert the original run to PASS or count as product use.
+        try{
+          const diagnostic=await registerInstitutionCoreSource(ctx,registration);
+          await save('failed-input-owner-diagnostic.json',{registration,registered,diagnostic,
+            disposition:'ORIGINAL_HTTP_FAILURE_RETAINED_ASSISTED_DIAGNOSIS_ONLY'});
+        }catch(error){
+          const e=error as Error&{code?:string;where?:string;internalQuery?:string;position?:string;cause?:unknown};
+          await save('failed-input-owner-diagnostic.json',{registration,registered,
+            error:{message:e.message,code:e.code??null,where:e.where??null,internalQuery:e.internalQuery??null,
+              position:e.position??null,cause:e.cause??null},
+            disposition:'ORIGINAL_HTTP_FAILURE_RETAINED_SAME_PRODUCTION_OWNER_BOUNDARY'});
+        }
+      }
+      assert.equal(registered.status,200,JSON.stringify(registered));
       assert.equal(registered.body.original_sha256,binding.sha256);assert.equal(registered.body.source_id,binding.sourceId);
       assert.deepEqual(registered.body.expected_object_ids,binding.expectedObjectIds);assert.equal(registered.body.principal_id,actor);
       binding.grantId=registered.body.id;grantIds.push(binding.grantId);
