@@ -28,3 +28,7 @@ B_live is observed source/runtime/refusals. B_V is missing. B_ref must identify 
 ## Pre-code artifacts
 
 `profile.json`, `failure-model.md`, `oracle-contract.md` and `verification-plan.json` are frozen planning contracts before checker/kernel implementation. A defect never permits silent profile shrink or altered expected result. Requirements coverage retains the exhaustive original-scope inventory plus this native validation contract. No generated fraction is a completion claim.
+
+## Installed development packaging decision
+
+Preserve Next production refusal and actual route/worker owners. Add explicit local development HTTP and worker entrypoints to their existing apps, compiled with a versioned route registry built from actual route modules. The HTTP adapter uses genuine Request/Response handlers and configured bearer authentication, binds127.0.0.1 only, and requires restricted finnor_app. Worker requires finnor_worker and uses existing physical queue registrations/leases. Both refuse production. Compile checker separately and bind actual artifact/source pins. Reuse source-custody to resolve retained canonical source files at the installed location; no builder absolute URL/environment source override. Third-party packages remain separately pinned dependencies. This is an additive local packaging adapter, not another institution service, workflow engine or truth store.

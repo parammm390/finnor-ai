@@ -17,6 +17,7 @@ const option = (name) => {
 const stage = option("--stage");
 const only = option("--check");
 const ownerCase=option('--case');
+const installation=option('--installation');
 const ownerCases={owners:{'one-duty':{count:'1',mode:'api'},'128-duty':{count:'128',mode:'api'},
   heterogeneous:{count:'1',mode:'heterogeneous'},canonical:{count:'1',mode:'canonical'},creation:{count:'1',mode:'creation'},ordinary:{count:'1',mode:'ordinary'},
   domain:{count:'1',mode:'domain'},'owner-inputs':{count:'1',mode:'owner_inputs'},'source-namespace':{count:'1',mode:'source_namespace'}},
@@ -24,13 +25,16 @@ const ownerCases={owners:{'one-duty':{count:'1',mode:'api'},'128-duty':{count:'1
     contention:{count:'1',mode:'contention'},unsupported:{count:'1',mode:'unsupported'},'unsupported-operation':{count:'1',mode:'unsupported_operation'},'checker-crash':{count:'1',mode:'checker_crash'},
     'cancel-observed':{count:'1',mode:'cancel_observed'},
     'effect-recovery':{count:'1',mode:'effect_recovery'}},mounted:{mounted:{count:'1',mode:'mounted'}},
-  installed:{'schema-upgrade':{count:'1',mode:'upgrade'}}};
+  installed:{'schema-upgrade':{count:'1',mode:'upgrade'},delivery:{count:'1',mode:'owner_inputs'},
+    'upgrade-installed':{count:'1',mode:'upgrade'}}};
 const selectedOwnerCase=ownerCase?ownerCases[stage]?.[ownerCase]:null;
 const named = manifest.stages.find((entry) => entry.id === stage);
 if (!named || args.length%2!==0||new Set(args.filter((_,i)=>i%2===0)).size!==args.length/2
-    ||args.some((arg, i) => i%2===0&&!['--stage','--check','--evidence','--case'].includes(arg))
+    ||args.some((arg, i) => i%2===0&&!['--stage','--check','--evidence','--case','--installation'].includes(arg))
     || (only && !["typecheck", "lint"].includes(only))||ownerCase&&!selectedOwnerCase
-    ||selectedOwnerCase&&only||ownerCases[stage]&&!selectedOwnerCase) {
+    ||selectedOwnerCase&&only||ownerCases[stage]&&!selectedOwnerCase
+    ||installation&&(!selectedOwnerCase||!installation.startsWith('/'))
+    ||['delivery','upgrade-installed'].includes(ownerCase)&&!installation) {
   console.error("Use --stage <frozen-stage> [--case <registered-owner-case>] [--check typecheck|lint] [--evidence <fresh-private-directory>]");
   process.exit(2);
 }
@@ -177,10 +181,19 @@ if (free < BigInt(manifest.limits.smallCheckOutputBytes + 100 * 1024 * 1024)) {
   finish("CAPACITY_REFUSED", 2, "Less than bounded small-check output plus 100 MiB free; no command launched");
 }
 if (named.live || stage === "installed" || stage === "diagnostic") {
-  if (free < BigInt(stage === "installed" ? manifest.limits.finalBuildMinimumFreeBytes : manifest.limits.liveMinimumFreeBytes)) {
+  if (free < BigInt(stage === "installed" && !installation ? manifest.limits.finalBuildMinimumFreeBytes : manifest.limits.liveMinimumFreeBytes)) {
     finish("CAPACITY_REFUSED", 2, "Registered live/build disk floor not met; no service or build launched");
   }
   if(selectedOwnerCase){
+    if(installation){
+      const path=join(realpathSync(installation),'finnor-os/x1-development-installation.json');
+      const installed=JSON.parse(readFileSync(path,'utf8'));
+      if(installed.source.commit!==record.source.commit||installed.source.tree!==record.source.tree
+        ||installed.mode!=='DEVELOPMENT_ONLY'||installed.productionActive!==false)
+        finish('REFUSED',2,'Installed source does not equal this frozen engineering cut');
+      record.installation={root:realpathSync(installation),manifestPath:path,sha256:sha(readFileSync(path)),
+        source:installed.source,entrypoints:installed.entrypoints};
+    }
     const leaf=join(destination,'owner'),argv=['--max-old-space-size=1536','./node_modules/tsx/dist/cli.mjs','scripts/frontier5/x1/run-owner-slice.mts'];
     const started=Date.now();
     record.schema='finnor.frontier5.x1.named-owner-evidence.v1';
@@ -193,7 +206,8 @@ if (named.live || stage === "installed" || stage === "diagnostic") {
     const child=spawnSync(process.execPath,argv,{cwd:os,encoding:'utf8',timeout:880000,maxBuffer:manifest.limits.smallCheckOutputBytes,
       killSignal:'SIGTERM',env:{PATH:'/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin',HOME:join(leaf,'home'),TMPDIR:'/tmp',
         LANG:'en_US.UTF-8',CI:'1',LOG_LEVEL:'silent',TSX_DISABLE_CACHE:'1',NEXT_TELEMETRY_DISABLED:'1',
-        FINNOR_X1_OWNER_EVIDENCE:leaf,FINNOR_X1_OWNER_CASE:selectedOwnerCase.count,FINNOR_X1_OWNER_MODE:selectedOwnerCase.mode}});
+        FINNOR_X1_OWNER_EVIDENCE:leaf,FINNOR_X1_OWNER_CASE:selectedOwnerCase.count,FINNOR_X1_OWNER_MODE:selectedOwnerCase.mode,
+        ...(installation?{FINNOR_X1_INSTALLED_ROOT:realpathSync(installation)}:{})}});
     const output=(child.stdout??'')+(child.stderr??'');
     writeFileSync(join(destination,'owner-driver.log'),output,{flag:'wx',mode:0o600});
     record.commands.push({label:'actual-owner:'+ownerCase,argv:[process.execPath,...argv],cwd:os,

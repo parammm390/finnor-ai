@@ -8,7 +8,7 @@ import { spawn, execFileSync } from "node:child_process";
 import { mkdir, writeFile, appendFile, readFile, rm } from "node:fs/promises";
 import { statfsSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { migrate } from "../../../packages/db/migrate";
 import { closePool, withTenantTransaction, configureTenantVertical, receiveWork, attachWorkEntity,
   createEmployeeConversationThread,updateEmployeeConversationThreadContext,transactionDb } from "@finnor/db";
@@ -24,6 +24,9 @@ import { registerInstitutionCoreSource } from '../../../packages/private-equity/
 import { evaluateAuthority } from '@finnor/authority';
 
 const repo = fileURLToPath(new URL("../../../../", import.meta.url));
+const installation=process.env.FINNOR_X1_INSTALLED_ROOT;
+const installedManifest=installation?JSON.parse(await readFile(join(installation,'finnor-os/x1-development-installation.json'),'utf8')):null;
+const nativeMigrate:typeof migrate=installation?(await import(pathToFileURL(join(installation,installedManifest.entrypoints.migrations)).href)).migrate:migrate;
 const evidence = process.env.FINNOR_X1_OWNER_EVIDENCE;
 if (!evidence || !evidence.startsWith("/")) throw Error("FRESH_PRIVATE_X1_OWNER_EVIDENCE_REQUIRED");
 const dutyCount=process.env.FINNOR_X1_OWNER_CASE==='128'?128:1;
@@ -69,7 +72,9 @@ const sourcePaths = ["finnor-os/scripts/frontier5/x1/run-owner-slice.mts", "finn
   "finnor-os/scripts/frontier5/x1/physical-owner-worker.mts", "finnor-os/packages/db/migrations-bundle.ts",
   "finnor-os/package-lock.json", "scope-frontier5/x1-institutional-programme-compiler/profile.json"];
 const sourcePins = await Promise.all(sourcePaths.map(async path => ({ path, sha256: sha(await readFile(join(repo, path))) })));
-const freeze = { source: { commit: git("rev-parse", "HEAD"), tree: git("rev-parse", "HEAD^{tree}"),
+const freeze = { installation:installedManifest?{root:installation,manifestDigest:sha(await readFile(join(installation!,'finnor-os/x1-development-installation.json'))),
+    source:installedManifest.source,entrypoints:installedManifest.entrypoints}:null,
+  source: { commit: git("rev-parse", "HEAD"), tree: git("rev-parse", "HEAD^{tree}"),
   dirty: git("status", "--porcelain=v1", "-uall"),dirtyDiffDigest:sha(git('diff','--binary')), pins: sourcePins }, startedAt,
   runtime: { node: process.version, platform: process.platform, arch: process.arch },
   profile: "DISPOSABLE_LOCAL_AUTH_SERVICE_ACTUAL_BEARER_AND_RLS", hostedSupabaseQualified: false,
@@ -150,9 +155,9 @@ try {
   const legacyUpgrade=upgrade?await prepareExistingOwnerUpgrade({repo,databaseUrl:connection('x1_fixture',password),
     applicationUrl:connection('finnor_app',appPassword),appPassword,workerUrl:connection('finnor_worker',workerPassword),
     workerPassword,commit:freeze.source.commit,
-    expectedMigrationCount:freeze.expectedMigrations}):null;
+    expectedMigrationCount:freeze.expectedMigrations,migrationOwner:nativeMigrate}):null;
   if(legacyUpgrade)await save('existing-schema-upgrade-starting-proof.json',legacyUpgrade);
-  const migrated=await migrate(connection("x1_fixture", password));
+  const migrated=await nativeMigrate(connection("x1_fixture", password));
   assert.equal(migrated.length,upgrade?0:freeze.expectedMigrations);
   const migrations=legacyUpgrade?[...legacyUpgrade.oldMigrations,...legacyUpgrade.additiveMigrations]:migrated;
   admin = new pg.Client({ connectionString: connection("x1_fixture", password) }); await admin.connect();
@@ -217,7 +222,7 @@ try {
         if(revokeOnHeldRead)await revokeFixturePrincipal();
         await delayedRead.promise;
       }
-    }}:{});
+    },...(installation?{installation}:{})}:{...(installation?{installation}:{})});
   const profileResponse=await fetch(service.origin+'/api/workforce/profiles',{
     method:'POST',headers:{'content-type':'application/json',authorization:'Bearer '+service.token},
     body:JSON.stringify({key:'x1-disposable-native',name:'Disposable native responsibility query and check executor',
@@ -544,7 +549,8 @@ try {
     XDG_CACHE_HOME: join(evidence, "cache"), TSX_DISABLE_CACHE: "1", DOTENV_CONFIG_PATH: join(evidence, "empty.env"),
     NODE_ENV: "test", AUTH_DEV_BYPASS: "0", FINNOR_P4_PROFILE: "ordinary_disposable", FINNOR_TEST_MANAGED_EXTENSIONS: "omit",
     DATABASE_URL: connection("finnor_worker", workerPassword), CI: "1", LOG_LEVEL: "silent", NEXT_TELEMETRY_DISABLED: "1",
-    ...(upgrade?{FINNOR_COMMIT_SHA:freeze.source.commit,FINNOR_RELEASE_SOURCE:'x1-local-source-runner-not-built-release'}:{}),
+    ...(upgrade?{FINNOR_COMMIT_SHA:freeze.source.commit,FINNOR_RELEASE_SOURCE:installation
+      ?'x1-local-compiled-development':'x1-local-source-runner-not-built-release'}:{}),
     ...(recovery||effectRecovery?{WORKER_JOB_LEASE_SECONDS:'5'}:{}),
     ...(effectRecovery?{FINNOR_STEP_LEASE_SECONDS:'5'}:{}) };
   if(recovery||effectRecovery){publicationBlocker=new pg.Client({connectionString:connection('x1_fixture',password)});
@@ -552,17 +558,38 @@ try {
     await publicationBlocker.query(effectRecovery?'LOCK TABLE finnor_os.pe_requests IN SHARE MODE'
       :'LOCK TABLE finnor_os.x1_mapping_admissions IN SHARE MODE');}
   let logBytes=0;
+  const workerReadiness=new WeakMap<ReturnType<typeof spawn>,Promise<Record<string,unknown>>>();
   const startWorker=()=>{
-    const child=spawn(process.execPath,["--max-old-space-size=1536","--import=tsx","scripts/frontier5/x1/physical-owner-worker.mts"],
-      {cwd:join(repo,'finnor-os'),env,stdio:['ignore','pipe','pipe']});
+    const child=spawn(process.execPath,installation
+      ?["--max-old-space-size=1536",join(installation,installedManifest.entrypoints.worker)]
+      :["--max-old-space-size=1536","--import=tsx","scripts/frontier5/x1/physical-owner-worker.mts"],
+      {cwd:join(installation??repo,'finnor-os'),env,stdio:['ignore','pipe','pipe']});
+    const ready=new Promise<Record<string,unknown>>((resolve,reject)=>{
+      let buffer='';const timer=setTimeout(()=>reject(Error('X1_PHYSICAL_WORKER_STARTUP_BOUND')),30_000);
+      child.stdout!.on('data',chunk=>{
+        buffer+=chunk.toString();if(buffer.length>65536){clearTimeout(timer);reject(Error('X1_WORKER_STARTUP_OUTPUT_BOUND'));return;}
+        while(buffer.includes('\n')){
+          const at=buffer.indexOf('\n'),line=buffer.slice(0,at);buffer=buffer.slice(at+1);
+          try{const entry=JSON.parse(line);if(entry.event==='X1_PHYSICAL_WORKER_READY'){
+            clearTimeout(timer);if(installation&&entry.compiled!==true)reject(Error('X1_ACTUAL_COMPILED_WORKER_REQUIRED'));
+            else resolve(entry);
+          }}catch{/* Other owner output cannot prove startup. */}
+        }
+      });
+      child.once('exit',code=>{clearTimeout(timer);reject(Error('X1_PHYSICAL_WORKER_EARLY_EXIT:'+code));});
+      child.once('error',error=>{clearTimeout(timer);reject(error);});
+    });
+    void ready.catch(()=>undefined);workerReadiness.set(child,ready);
     for(const stream of [child.stdout!,child.stderr!])stream.on('data',b=>{
       logBytes+=b.length;if(logBytes<=limits.smallCheckOutputBytes)void appendFile(join(evidence,'worker.log'),b,{mode:0o600});
       else child.kill('SIGTERM');
     });return child;
   };
   worker=startWorker();
+  await save('physical-worker-readiness.json',await workerReadiness.get(worker));
   await save("physical-worker.json", { pid: worker.pid, parentPid: process.pid, environmentNames: Object.keys(env),
-    role: "finnor_worker", actualProductionRegistrations: true, credentialsPersisted: false });
+    role: "finnor_worker", actualProductionRegistrations: true, compiledInstallation:Boolean(installation),
+    compiledEntrypoint:installedManifest?.entrypoints.worker??null, credentialsPersisted: false });
   let guardFailure: string | null = null;
   guard = setInterval(() => { void take().catch(error => { guardFailure = String(error.message); worker?.kill("SIGTERM"); }); }, 2000);
   if(checkerCrash){
@@ -817,8 +844,15 @@ try {
     WHERE r.tenant_id=$1 AND r.id=$2`,[tenant,compilerId])).rows[0];
   assert.ok(actualBaseline?.input_manifest.baseline,'actual immutable B_live preimage');
   assert.equal(actualBaseline.input_manifest.baseline.classification,'B_live');
-  assert.equal(actualBaseline.input_manifest.baseline.source.git.commit,freeze.source.commit);
-  assert.equal(actualBaseline.input_manifest.baseline.source.git.tree,freeze.source.tree);
+  if(installedManifest){
+    assert.equal(actualBaseline.input_manifest.baseline.source.git.status,'UNKNOWN','no invented Git history at relocated installation');
+    assert.equal(actualBaseline.input_manifest.baseline.source.installation.source.commit,freeze.source.commit);
+    assert.equal(actualBaseline.input_manifest.baseline.source.installation.source.tree,freeze.source.tree);
+    assert.equal(actualBaseline.input_manifest.baseline.source.installation.manifestDigest,freeze.installation!.manifestDigest);
+  }else{
+    assert.equal(actualBaseline.input_manifest.baseline.source.git.commit,freeze.source.commit);
+    assert.equal(actualBaseline.input_manifest.baseline.source.git.tree,freeze.source.tree);
+  }
   assert.equal(actualBaseline.input_manifest.baseline.schemaState.migrations.length,freeze.expectedMigrations);
   assert.equal(actualBaseline.input_manifest.baseline.sourceGrantPins.length,grantIds.length);
   assert.equal(actualBaseline.body.envelope.baseline_manifest_ref.status,'known');
@@ -1906,6 +1940,45 @@ try {
       }catch(error){if((error as NodeJS.ErrnoException).code!=='ENOENT')throw error;}
       await new Promise(resolve=>setTimeout(resolve,1000));
     }
+  }
+  if(installation){
+    const preserved=async()=>({
+      episodes:(await admin!.query(`SELECT id,original_deadline,wall_deadline,parent_reservation,parent_demand
+        FROM finnor_os.x1_compiler_episodes WHERE tenant_id=$1 ORDER BY id`,[tenant])).rows,
+      reservations:(await admin!.query(`SELECT reservation_id,envelopes FROM finnor_os.s5_reservations
+        WHERE tenant_id=$1 ORDER BY reservation_id`,[tenant])).rows,
+      requests:(await admin!.query('SELECT id,status FROM finnor_os.pe_requests WHERE tenant_id=$1 ORDER BY id',[tenant])).rows,
+      actions:(await admin!.query('SELECT id,status FROM finnor_os.pe_domain_actions WHERE tenant_id=$1 ORDER BY id',[tenant])).rows,
+    });
+    const before=await preserved(),previousWorkerPid=worker!.pid;
+    await new Promise<void>(resolve=>{
+      const child=worker!,timer=setTimeout(()=>child.kill('SIGKILL'),5000);
+      child.once('exit',()=>{clearTimeout(timer);resolve();});child.kill('SIGTERM');
+    });
+    const apiRestart=await service!.restartCompiled();worker=startWorker();
+    const readiness=await workerReadiness.get(worker);
+    assert.equal(worker.exitCode,null);assert.equal(worker.signalCode,null);
+    const revision=await api('institution-revise',{...input,parentRequestId:compilerId,idempotencyKey:'installed-restart:'+randomUUID()});
+    assert.equal(revision.status,202,JSON.stringify(revision.body));assert.notEqual(revision.body.requestId,compilerId);
+    let after=await api('institution-read',{requestId:revision.body.requestId});
+    for(let poll=0;poll<180&&after.body.status!=='OBSERVED';poll++){
+      if(guardFailure)throw Error(guardFailure);
+      assert.equal(worker.exitCode,null);assert.equal(worker.signalCode,null);
+      await new Promise(resolve=>setTimeout(resolve,500));after=await api('institution-read',{requestId:revision.body.requestId});
+    }
+    assert.equal(after.status,200,JSON.stringify(after.body));assert.equal(after.body.status,'OBSERVED');
+    const delivered=(await admin!.query(`SELECT id,status,attempts,lease_owner FROM finnor_os.jobs
+      WHERE tenant_id=$1 AND type='run_x1_institution_compiler_v1' AND payload->>'requestId'=$2`,
+      [tenant,revision.body.requestId])).rows;
+    assert.equal(delivered.length,1);assert.equal(delivered[0].status,'completed');assert.equal(delivered[0].attempts,1);
+    assert.deepEqual(await preserved(),before,'installed restart preserves original identities, envelopes and effects');
+    await save('installed-restart-owner-proof.json',{before,after:await preserved(),apiRestart,readiness,revision,delivered,
+      previousWorkerPid,currentWorkerPid:worker.pid,manifestDigest:freeze.installation!.manifestDigest,
+      compilerId,readStatus:after.status,programmeStatus:after.body.status,source:installedManifest.source});
+    results.push({id:'G-compiled-installed-api-worker-checker-and-restart',status:'PASS',
+      observed:{manifestDigest:freeze.installation!.manifestDigest,previousWorkerPid,currentWorkerPid:worker.pid,
+        apiRestart,originalReservationPreserved:true},
+      basis:'ACTUAL_RELOCATED_COMPILED_API_WORKER_CHECKER_NATIVE_EFFECTS_AND_AUTHENTICATED_READBACK'});
   }
 } catch (error) {
   results.push({ id: "actual-owner-boundary", status: "FAIL", observed: { message: String((error as Error).message),

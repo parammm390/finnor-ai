@@ -9,6 +9,8 @@
   "files": [
     "./run-owner-slice.mts",
     "./physical-owner-worker.mts",
+    "../../../apps/worker/src/dev-entry.mts",
+    "../../../apps/api/dev-server.ts",
     "./qualification-admin.mts",
     "./institution-method-plan.mts",
     "../../../packages/private-equity/src/institution-qualification/administration.ts",

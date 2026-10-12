@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 import type { DigitalInstitutionProfile } from "./contracts";
 import type { InstitutionCandidate, InstitutionCheck, OriginalInstitutionEvidence } from "./checker";
 import { recordInstitutionCheckerAttempt } from "./meter";
+import { installedDevelopmentRuntime } from "./installed-runtime";
 
 const sha = (data: Buffer | string) => createHash("sha256").update(data).digest("hex");
 const root = dirname(fileURLToPath(new URL("../../../../package.json", import.meta.url)));
@@ -14,6 +15,13 @@ const tsx = join(root, "node_modules/tsx/dist/cli.mjs");
 const files = [command, fileURLToPath(new URL("./checker.ts", import.meta.url)),
   fileURLToPath(new URL("./checker-raw.ts", import.meta.url)),
   fileURLToPath(new URL("./canonical-json.ts", import.meta.url)), tsx, join(root, "package-lock.json")];
+function invocation() {
+  const installed = installedDevelopmentRuntime();
+  if (installed && (process.env.NODE_ENV === 'production' || process.env.FINNOR_ENVIRONMENT === 'production'
+      || process.env.FINNOR_P4_PROFILE !== 'ordinary_disposable')) throw Error('X1_COMPILED_DEVELOPMENT_PROFILE_REQUIRED');
+  return installed ? { pins: installed.checkerPins(), args: [installed.entrypoint("checker")], cwd: join(installed.root, "finnor-os") }
+    : { pins: Object.fromEntries(files.map(file => [file, sha(readFileSync(file))])), args: [tsx, command], cwd: root };
+}
 // 32 MiB raw can expand through base64 and JSON escaping in the same request
 // as an 8 MiB canonical snapshot. This is a transport limit, not a profile cut.
 const transportLimit = 384 * 1024 * 1024;
@@ -25,13 +33,13 @@ export async function checkInstitutionInSeparateProcessAsync(
   original: OriginalInstitutionEvidence, candidate: InstitutionCandidate, profile: DigitalInstitutionProfile,
 ): Promise<InstitutionCheck> {
   await recordInstitutionCheckerAttempt();
-  const pins = Object.fromEntries(files.map(file => [file, sha(readFileSync(file))]));
+  const { pins, args, cwd } = invocation();
   const input = JSON.stringify({ schema: "finnor.x1.checker-process.v1", pins, original, candidate, profile });
   if (Buffer.byteLength(input) > transportLimit) throw Error("X1_CHECKER_TRANSPORT_BOUND");
   const stdout = await new Promise<string>((resolve, reject) => {
-    const child = spawn(process.execPath, ["--max-old-space-size=512", tsx, command], {
-      cwd: root, stdio: ["pipe", "pipe", "pipe"],
-      env: { PATH: process.env.PATH, NODE_ENV: "test", NODE_OPTIONS: "" },
+    const child = spawn(process.execPath, ["--max-old-space-size=512", ...args], {
+      cwd, stdio: ["pipe", "pipe", "pipe"],
+      env: { PATH: process.env.PATH, NODE_ENV: "test", NODE_OPTIONS: "", FINNOR_P4_PROFILE: 'ordinary_disposable' },
     });
     let output = "", bytes = 0, failed = false;
     const refuse = () => { if (!failed) { failed = true; child.kill("SIGKILL"); reject(Error("X1_CHECKER_PROCESS_REFUSED")); } };
@@ -70,12 +78,12 @@ export async function checkInstitutionInSeparateProcessAsync(
 export function checkInstitutionInSeparateProcess(
   original: OriginalInstitutionEvidence, candidate: InstitutionCandidate, profile: DigitalInstitutionProfile,
 ): InstitutionCheck {
-  const pins = Object.fromEntries(files.map((file) => [file, sha(readFileSync(file))]));
+  const { pins, args, cwd } = invocation();
   const input = JSON.stringify({ schema: "finnor.x1.checker-process.v1", pins, original, candidate, profile });
   if (Buffer.byteLength(input) > transportLimit) throw new Error("X1_CHECKER_TRANSPORT_BOUND");
-  const result = spawnSync(process.execPath, ["--max-old-space-size=512", tsx, command], {
-    cwd: root, encoding: "utf8", input, timeout: 180_000, maxBuffer: 16 * 1024 * 1024,
-    env: { PATH: process.env.PATH, NODE_ENV: "test", NODE_OPTIONS: "" },
+  const result = spawnSync(process.execPath, ["--max-old-space-size=512", ...args], {
+    cwd, encoding: "utf8", input, timeout: 180_000, maxBuffer: 16 * 1024 * 1024,
+    env: { PATH: process.env.PATH, NODE_ENV: "test", NODE_OPTIONS: "", FINNOR_P4_PROFILE: 'ordinary_disposable' },
   });
   if (result.error || result.status !== 0 || result.signal) throw new Error("X1_CHECKER_PROCESS_REFUSED");
   let reply: { schema: string; pins: Record<string, string>; inputDigest: string; check: InstitutionCheck };

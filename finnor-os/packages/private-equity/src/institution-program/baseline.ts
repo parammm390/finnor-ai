@@ -5,6 +5,7 @@ import type { PeMutationContext } from '../types';
 import { tx,sha,schemaIdentity,principal } from '../evidence-execution/store';
 import type { OriginalInstitutionEvidence } from './checker';
 import type { DigitalInstitutionProfile } from './contracts';
+import { installedDevelopmentRuntime } from './installed-runtime';
 
 const root=fileURLToPath(new URL('../../../../../',import.meta.url));
 /** Observed installation identity, not predecessor qualification or promotion.
@@ -38,7 +39,9 @@ export async function observedInstitutionBaseline(ctx:PeMutationContext,input:{
   const body={schema:'finnor.x1.observed-baseline.v1',classification:'B_live',
     tenantId:ctx.auth.tenantId,principalId:principal(ctx),workId:input.original.workId,
     workInputId:input.workInputId,compilerId:input.compilerId,originalEpisodeId:input.episodeId,
-    source:{git:gitCut,loaded:input.producer},
+    source:{git:gitCut,loaded:input.producer,installation:(()=>{const i=installedDevelopmentRuntime();
+      return i?{manifestDigest:i.manifestDigest,source:i.manifest.source,
+        kind:'OBSERVED_COMPILED_DEVELOPMENT_INSTALLATION',gitHistoryAvailable:false}:null;})()},
     runtime:{node:process.version,platform:process.platform,architecture:process.arch,executableDigest:sha(bytes[2]!),
       runtimeRevision:input.original.current.runtimeRevision},
     dependencies:{rootLockDigest:sha(bytes[0]!),backendLockDigest:sha(bytes[1]!)},

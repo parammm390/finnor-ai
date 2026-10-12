@@ -2,12 +2,14 @@
  * verification, no reconstructed business API/owner/queue or completion mock. */
 import { createServer } from "node:http";
 import { randomBytes, createHmac, timingSafeEqual } from "node:crypto";
-import { readdir } from "node:fs/promises";
+import { readdir, readFile } from "node:fs/promises";
 import { join, relative } from "node:path";
 import { pathToFileURL } from "node:url";
+import { spawn } from 'node:child_process';
 
 export async function authenticatedApiFixture(repo: string, actor: string, record: (entry: unknown) => void,
-  options: { frontendOrigin?: string; afterResponse?: (path:string,body:string,status:number)=>Promise<void> } = {}) {
+  options: { frontendOrigin?: string; installation?: string;
+    afterResponse?: (path:string,body:string,status:number)=>Promise<void> } = {}) {
   const secret = randomBytes(32), password = randomBytes(24).toString("hex"), email = actor + "@test.invalid";
   const refreshToken=randomBytes(32).toString('base64url');
   if(options.frontendOrigin&&!/^http:\/\/127\.0\.0\.1:[0-9]{2,5}$/.test(options.frontendOrigin))
@@ -62,6 +64,33 @@ export async function authenticatedApiFixture(repo: string, actor: string, recor
   const authOrigin = await listen(auth);
   process.env.AUTH_DEV_BYPASS = "0"; process.env.SUPABASE_URL = authOrigin;
   process.env.SUPABASE_SERVICE_ROLE_KEY = "disposable-local-auth-key";
+  let compiled: ReturnType<typeof spawn> | undefined, compiledOrigin: string | undefined;
+  const startCompiled=async()=>{
+    if(!options.installation)throw Error('X1_INSTALLED_API_RESTART_UNAVAILABLE');
+    const manifest=JSON.parse(await readFile(join(options.installation,'finnor-os/x1-development-installation.json'),'utf8'));
+    if(manifest.schema!=='finnor.x1.development-installation.v1'||manifest.productionActive!==false)
+      throw Error('X1_INSTALLED_FIXTURE_MANIFEST_INVALID');
+    compiled=spawn(process.execPath,['--max-old-space-size=1536',join(options.installation,manifest.entrypoints.api)],{
+      cwd:join(options.installation,'finnor-os'),stdio:['ignore','pipe','pipe'],env:{...process.env,PORT:'0',
+        NODE_ENV:'test',NODE_OPTIONS:'',AUTH_DEV_BYPASS:'0',FINNOR_P4_PROFILE:'ordinary_disposable'}});
+    try{compiledOrigin=await new Promise<string>((resolve,reject)=>{
+      let output='',diagnostics='';const timer=setTimeout(()=>reject(Error('X1_COMPILED_API_STARTUP_BOUND')),30_000);
+      compiled!.stdout!.on('data',chunk=>{
+        output+=chunk.toString();if(output.length>65536){clearTimeout(timer);reject(Error('X1_COMPILED_API_STARTUP_OUTPUT_BOUND'));return;}
+        while(output.includes('\n')){
+          const at=output.indexOf('\n'),line=output.slice(0,at);output=output.slice(at+1);
+          try{const entry=JSON.parse(line);record(entry);
+            if(entry.event==='X1_COMPILED_API_READY'){
+              clearTimeout(timer);resolve('http://127.0.0.1:'+entry.address.port);
+            }}catch{/* Non-JSON owner logging is not an authority receipt. */}
+        }
+      });
+      compiled!.stderr!.on('data',chunk=>{diagnostics+=chunk.toString();if(diagnostics.length>65536)diagnostics=diagnostics.slice(-65536);});
+      compiled!.once('error',error=>{clearTimeout(timer);reject(error);});
+      compiled!.once('exit',code=>{clearTimeout(timer);reject(Error('X1_COMPILED_API_EARLY_EXIT:'+code+':'+diagnostics));});
+    });}catch(error){compiled.kill('SIGKILL');auth.close();throw error;}
+  };
+  if(options.installation)await startCompiled();
   const apiRoot = join(repo, "finnor-os/apps/api/app/api"), routes: Array<{ file: string; parts: string[] }> = [];
   const scan = async (directory: string) => { for (const item of await readdir(directory, { withFileTypes: true })) {
     const path = join(directory, item.name); if (item.isDirectory()) await scan(path);
@@ -72,6 +101,17 @@ export async function authenticatedApiFixture(repo: string, actor: string, recor
     const started = performance.now();
     try {
       const url = new URL(req.url ?? "/", "http://localhost"), parts = url.pathname.replace(/^\/api\//, "").split("/").map(decodeURIComponent);
+      if(compiledOrigin){
+        let body='';for await(const chunk of req){body+=chunk;if(Buffer.byteLength(body)>8388608)throw Error('BODY_BOUND');}
+        const headers=new Headers();for(const [name,value]of Object.entries(req.headers))if(typeof value==='string')headers.set(name,value);
+        const response=await fetch(compiledOrigin+url.pathname+url.search,{method:req.method,headers,
+          ...(!['GET','HEAD'].includes(req.method??'GET')?{body}:{})});
+        const bytes=Buffer.from(await response.arrayBuffer()),out:Record<string,string>={};response.headers.forEach((v,k)=>{out[k]=v;});
+        await options.afterResponse?.(url.pathname,body,response.status);
+        res.writeHead(response.status,out);res.end(bytes);
+        record({path:url.pathname,method:req.method,status:response.status,bearer:Boolean(req.headers.authorization),
+          elapsedMs:performance.now()-started,compiledApi:true});return;
+      }
       let selected: { file: string; params: Record<string, unknown> } | null = null;
       for (const route of routes) {
         const params: Record<string, unknown> = {}; let index = 0, ok = true;
@@ -103,6 +143,22 @@ export async function authenticatedApiFixture(repo: string, actor: string, recor
     headers: { "content-type": "application/json" }, body: JSON.stringify({ email, password }) });
   if (session.status !== 200) throw Error("REAL_LOCAL_PASSWORD_SIGNIN_FAILED");
   const token = (await session.json()).access_token as string;
-  return { origin, authOrigin, token, email, password, profile: "DISPOSABLE_LOCAL_AUTH_SERVICE_ACTUAL_BEARER_AND_RLS",
-    close: async () => { await Promise.all([auth, api].map(server => new Promise<void>(resolve => server.close(() => resolve())))); } };
+  return { origin, authOrigin, token, email, password, compiledPid:compiled?.pid,
+    profile: "DISPOSABLE_LOCAL_AUTH_SERVICE_ACTUAL_BEARER_AND_RLS",
+    restartCompiled:async()=>{
+      if(!compiled||compiled.exitCode!==null||compiled.signalCode!==null)throw Error('X1_INSTALLED_API_NOT_RUNNING');
+      const previousPid=compiled.pid,child=compiled;
+      await new Promise<void>(resolve=>{
+        const timer=setTimeout(()=>child.kill('SIGKILL'),5000);child.once('exit',()=>{clearTimeout(timer);resolve();});child.kill('SIGTERM');
+      });
+      await startCompiled();return {previousPid,currentPid:compiled!.pid,origin:compiledOrigin};
+    },
+    close: async () => {
+      if(compiled&&compiled.exitCode===null&&compiled.signalCode===null){
+        const child=compiled;await new Promise<void>(resolve=>{
+          const timer=setTimeout(()=>child.kill('SIGKILL'),5000);child.once('exit',()=>{clearTimeout(timer);resolve();});child.kill('SIGTERM');
+        });
+      }
+      await Promise.all([auth, api].map(server => new Promise<void>(resolve => server.close(() => resolve()))));
+    } };
 }

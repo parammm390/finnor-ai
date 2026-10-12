@@ -11,7 +11,9 @@ import { createDocument,appendDocumentVersion } from '@finnor/data-platform';
 const base='517003a4396bc8101a90be4b425ee01de9446740';
 const digest=(bytes:Buffer|string)=>createHash('sha256').update(bytes).digest('hex');
 export async function prepareExistingOwnerUpgrade(input:{repo:string;databaseUrl:string;applicationUrl:string;
-  workerUrl:string;workerPassword:string;appPassword:string;commit:string;expectedMigrationCount:number}){
+  workerUrl:string;workerPassword:string;appPassword:string;commit:string;expectedMigrationCount:number;
+  migrationOwner?:typeof migrate}){
+  const migrationOwner=input.migrationOwner??migrate;
   const prefix='finnor-os/packages/db/migrations/';
   const files=execFileSync('git',['ls-tree','-r','--name-only',base,'--',prefix],
     {cwd:input.repo,encoding:'utf8',timeout:5000}).trim().split('\n').filter(path=>path.endsWith('.sql')).sort();
@@ -22,7 +24,7 @@ export async function prepareExistingOwnerUpgrade(input:{repo:string;databaseUrl
     assert.equal(digest(await readFile(join(input.repo,path))),digest(sql),'immutable retained migration '+path);
     retained.push({name:path.slice(prefix.length),sql});
   }
-  const oldMigrations=await migrate(input.databaseUrl,retained);
+  const oldMigrations=await migrationOwner(input.databaseUrl,retained);
   const tenantId=randomUUID(),userId=randomUUID();
   const c=new pg.Client({connectionString:input.databaseUrl});await c.connect();
   try{
@@ -58,7 +60,7 @@ export async function prepareExistingOwnerUpgrade(input:{repo:string;databaseUrl
       VALUES($1,'scheduled_reminder',$2::jsonb,$3) RETURNING id`,[tenantId,JSON.stringify({tenantId,legacy:true}),
       'old-retired-job:'+randomUUID()])).rows[0];
     const starting=await observePreservedUpgradeOwners(admin,{tenantId,userId,workId:work.workId,documentVersionId:version.id});
-    const added=await migrate(input.databaseUrl),again=await migrate(input.databaseUrl);
+    const added=await migrationOwner(input.databaseUrl),again=await migrationOwner(input.databaseUrl);
     assert.equal(oldMigrations.length+added.length,input.expectedMigrationCount);assert.equal(again.length,0);
     assert.ok(added.every(name=>!oldMigrations.includes(name)));
     assert.deepEqual(await observePreservedUpgradeOwners(admin,{tenantId,userId,workId:work.workId,documentVersionId:version.id}),starting);

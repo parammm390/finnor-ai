@@ -1,5 +1,6 @@
 import { readFile } from "node:fs/promises";
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
+import { installedDevelopmentRuntime } from '../../private-equity/src/institution-program/installed-runtime';
 import { z } from "zod";
 import { assertSignature, byteDigest, digest, fault, RefSchema, sameRef,
   type AuthorityKey, type CapabilityRef, type Signed } from "./contracts";
@@ -10,7 +11,7 @@ import type { JournalEntry } from "./journal";
 async function readInstalledInstitutionCompilerIdentity(){
   const paths=["contracts.ts","reconstruction.ts","source-decoder.ts","checker.ts","checker-raw.ts","responsibility.ts",
     "resource-demand.ts","completion-contracts.ts","action-resolution.ts","canonical-json.ts",
-    "canonical-owners.ts","owner-admission.ts","source-authority.ts","source-scope.ts","source-locks.ts","checker-process.ts",
+    "canonical-owners.ts","owner-admission.ts","source-authority.ts","source-scope.ts","source-locks.ts","checker-process.ts","installed-runtime.ts",
     "store.ts","worker.ts","api.ts","inputs.ts","artifact.ts","baseline.ts","meter.ts","installed-source.ts"].map(path=>
       new URL(`../../private-equity/src/institution-program/${path}`,import.meta.url));
   for(const path of ["institution-dependencies.ts","institution-worker.ts"])
@@ -25,9 +26,14 @@ async function readInstalledInstitutionCompilerIdentity(){
   for(const path of ['finnor-os/package-lock.json','package-lock.json',
     'scope-frontier5/x1-institutional-programme-compiler/profile.json','finnor-os/packages/db/migration-head.ts',
     'finnor-os/packages/db/migrations-bundle.ts'])paths.push(new URL('../../../../'+path,import.meta.url));
+  const installation=installedDevelopmentRuntime();
+  if(installation){paths.push(pathToFileURL(installation.manifestPath));
+    paths.push(new URL('../../source-custody/installation.cjs',import.meta.url));
+    paths.push(new URL('../../source-custody/index.cjs',import.meta.url));}
   const sources=await Promise.all(paths.map(async path=>({path:fileURLToPath(path),sha256:byteDigest(await readFile(path))})));
   const body={schema:"finnor.s8.installed-institution-compiler.v1",sources,
-    runtime:{node:process.version,platform:process.platform,architecture:process.arch},
+    runtime:{node:process.version,platform:process.platform,architecture:process.arch,
+      ...(installation?{compiledInstallationDigest:installation.manifestDigest}: {})},
     state:"INSTALLED_PROPOSAL_UNADMITTED",protectedQualification:false,executionAuthorityGranted:false};
   return {...body,ref:institutionCapabilityRef("installed-proposal",body)};
 }
