@@ -32,9 +32,10 @@ const canonical=process.env.FINNOR_X1_OWNER_MODE==='canonical';
 const recovery=process.env.FINNOR_X1_OWNER_MODE==='recovery';
 const contention=process.env.FINNOR_X1_OWNER_MODE==='contention';
 const unsupported=process.env.FINNOR_X1_OWNER_MODE==='unsupported';
-if(process.env.FINNOR_X1_OWNER_MODE&&!['api','mounted','revision','material','heterogeneous','canonical','recovery','contention','unsupported'].includes(process.env.FINNOR_X1_OWNER_MODE))
+const cancelObserved=process.env.FINNOR_X1_OWNER_MODE==='cancel_observed';
+if(process.env.FINNOR_X1_OWNER_MODE&&!['api','mounted','revision','material','heterogeneous','canonical','recovery','contention','unsupported','cancel_observed'].includes(process.env.FINNOR_X1_OWNER_MODE))
   throw Error('EXACT_REGISTERED_OWNER_MODE_REQUIRED');
-if((mounted||material||heterogeneous||canonical||recovery||contention||unsupported)&&dutyCount!==1)throw Error('NAMED_ONE_DUTY_SCENARIO_REQUIRED');
+if((mounted||material||heterogeneous||canonical||recovery||contention||unsupported||cancelObserved)&&dutyCount!==1)throw Error('NAMED_ONE_DUTY_SCENARIO_REQUIRED');
 if(process.env.FINNOR_X1_OWNER_CASE&&!['1','128'].includes(process.env.FINNOR_X1_OWNER_CASE))
   throw Error('EXACT_FROZEN_OWNER_CASE_REQUIRED');
 const limits = JSON.parse(await readFile(join(repo, "scope-frontier5/x1-institutional-programme-compiler/verification-plan.json"), "utf8")).limits;
@@ -59,7 +60,8 @@ const freeze = { source: { commit: git("rev-parse", "HEAD"), tree: git("rev-pars
   cases: ["A-raw-two-identity-native-request", "C-unsigned-forged-input", "D-same-key-replay", "G-restricted-roles",
     ...(material?['B-ledger-correction']:[]),...(heterogeneous?['A-eight-class-original-corpus']:[]),
     ...(canonical?['A-fourteen-canonical-kinds']:[]),...(recovery?['D-compiler-before-publication-death']:[]),
-    ...(contention?['E-original-shared-parent-contention']:[]),...(unsupported?['F-mixed-unsupported-rule']:[])],
+    ...(contention?['E-original-shared-parent-contention']:[]),...(unsupported?['F-mixed-unsupported-rule']:[]),
+    ...(cancelObserved?['E-cancel-observed-standing-continuation']:[])],
   omitted: "Full B–H, physical interruption, mounted browser, clean built installation/upgrade and protected qualification remain distinct required evidence" };
 await writeFile(join(evidence, "freeze.json"), JSON.stringify(freeze, null, 2) + "\n", { mode: 0o600, flag: "wx" });
 const results: any[] = [], traffic: unknown[] = [];
@@ -677,6 +679,44 @@ try {
       additionalReservations:0,additionalEffects:0,fullConcurrencySuiteEstablished:false});
     results.push({id:'E-original-shared-parent-contention',status:'PASS',observed:{submitted,refused,cancelled,originalEnvelope:beforeReplay},
       basis:'ACTUAL_SECOND_AUTHENTICATED_WORK_PHYSICAL_COMPILER_S5_CAPACITY_REFUSAL_AND_CANCELLATION_FIRST_OWNER_UNCHANGED'});
+  }
+  if(cancelObserved){
+    const priorProofDigest=sha(JSON.stringify(completion.completion_proof));
+    const cancelled=await api('institution-cancel',{requestId:compilerId});
+    await save('observed-standing-cancellation.json',{cancelled,priorCompletion:completion,originalEnvelope:beforeReplay});
+    assert.equal(cancelled.status,200);assert.equal(cancelled.body.status,'CANCELLED','observed standing continuation can be stopped');
+    assert.equal(cancelled.body.exposureRetained,true);
+    const stopped=await api('institution-read',{requestId:compilerId});assert.equal(stopped.status,200);
+    assert.equal(stopped.body.status,'CANCELLED');assert.equal(stopped.body.artifact,null);assert.equal(stopped.body.programme,null);
+    const ledger=(await admin.query<{id:string;document_id:string}>(`SELECT id::text,document_id::text FROM finnor_os.x1_source_grants
+      WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3 AND source_id='ledger-original' AND version=1`,[tenant,actor,workId])).rows[0]!;
+    const corrected=Buffer.from(JSON.stringify(sources.find(s=>s.id==='ledger-original')!.rows.map(row=>({...row,value:'25.00'}))));
+    const version=await withTenantTransaction(tenant,{userId:actor},async db=>appendDocumentVersion(db,{tenantId:tenant,
+      documentId:ledger.document_id,bytes:corrected,mediaType:'application/json',format:'unknown',origin:'manual_upload',
+      actor,sourceSystem:'owner-export',sourceRef:'ledger-original',providerVersionId:'r2'}));
+    await admin.query(`INSERT INTO finnor_os.x1_source_grants
+      (tenant_id,principal_id,work_id,institution_id,source_id,source_class,purpose,acquisition_kind,
+        document_id,document_version_id,protocol,revision,original_sha256,expected_object_ids,version,valid_from,expires_at)
+      SELECT tenant_id,principal_id,work_id,institution_id,source_id,source_class,purpose,acquisition_kind,
+        document_id,$4,protocol,'r2',$5,expected_object_ids,2,valid_from,expires_at
+      FROM finnor_os.x1_source_grants WHERE tenant_id=$1 AND principal_id=$2 AND id=$3`,
+      [tenant,actor,ledger.id,version.id,sha(corrected)]);
+    await writeFile(join(evidence,'originals/ledger-after-cancel.json'),corrected,{mode:0o600,flag:'wx'});
+    const state=(await admin.query(`SELECT r.status,r.generation,
+      (SELECT count(*)::int FROM finnor_os.x1_compiler_requests WHERE tenant_id=r.tenant_id AND work_id=r.work_id) compiler_count,
+      (SELECT count(*)::int FROM finnor_os.x1_compiler_updates WHERE tenant_id=r.tenant_id AND work_id=r.work_id) update_count
+      FROM finnor_os.x1_compiler_requests r WHERE tenant_id=$1 AND id=$2`,[tenant,compilerId])).rows[0];
+    assert.equal(state.status,'CANCELLED');assert.equal(state.compiler_count,1);assert.equal(state.update_count,0);
+    assert.deepEqual(await originalEnvelope(),beforeReplay,'consumed original parent/resource envelope retained');
+    assert.equal((await admin.query('SELECT count(*)::int n FROM finnor_os.pe_requests WHERE tenant_id=$1',[tenant])).rows[0].n,1);
+    const retained=(await admin.query('SELECT completion_proof,status FROM finnor_os.work_plan_revisions WHERE tenant_id=$1 AND id=$2',
+      [tenant,completion.plan_id])).rows[0];assert.equal(retained.status,'completed');assert.equal(sha(JSON.stringify(retained.completion_proof)),priorProofDigest);
+    assert.equal((await admin.query('SELECT status FROM finnor_os.works WHERE tenant_id=$1 AND id=$2',[tenant,workId])).rows[0].status,'completed');
+    await save('cancel-observed-standing-independent-proof.json',{cancelled,stopped,state,
+      originalEnvelope:await originalEnvelope(),priorCompletionProofDigest:priorProofDigest,
+      ownerRevisionCreated:true,newCompilerChildren:0,newEffects:0,consumedReservationReleased:false});
+    results.push({id:'E-cancel-observed-standing-continuation',status:'PASS',observed:{cancelled,state},
+      basis:'ACTUAL_AUTHENTICATED_CANCEL_AFTER_NATIVE_COMPLETION_AND_SOURCE_OWNER_CHANGE_NO_FUTURE_COMPILER_OR_DUPLICATE_EFFECT'});
   }
   if(revise||mounted||material){
     const initialObjective=(await admin.query('SELECT * FROM finnor_os.work_objective_loops WHERE tenant_id=$1 AND work_id=$2',

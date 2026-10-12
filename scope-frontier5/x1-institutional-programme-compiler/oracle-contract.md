@@ -203,6 +203,16 @@ The native Work/Objective must not report completed. Both duties remain in the
 original population and original resource/cost envelope. No approval exists and
 no equivalent approved alternate operation is available for the unresolved duty.
 
+### E-cancel-observed-standing-continuation independent expectations
+
+After exact native Request creation and Work completion, institution-cancel must
+record CANCELLED for future compiler continuation and retain the original effect,
+completion proof and incurred resource envelope. Authenticated read returns the
+cancelled current disposition. Append a corrected Core source and a superseding
+grant with the same scope, then observe the physical queue: no second compiler
+request or P7 update may be accepted for that cancelled parent. The first Request
+and verified effect stay unique, and consumed resources are not marked released.
+
 ## Qualification score specification
 
 Independently freeze material mapping set M, supported obligation set O, unique business assignment identities/weights/deadlines, critical subset K and actionable-change set C per environment before exposure. Candidate claims are CANDIDATE, not expectations. Match one-to-one only under independently defined equivalence; no duplicate credit.

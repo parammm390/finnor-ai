@@ -450,6 +450,19 @@
       "limits": "UNCHANGED",
       "acceptance": "oracle-contract.md#f-mixed-unsupported-rule-independent-expectations",
       "noFallbackCreditWithoutCallee": true
+    },
+    {
+      "id": "E-cancel-observed-standing-continuation",
+      "mode": "cancel_observed",
+      "dutyCount": 1,
+      "status": "FROZEN_BEFORE_CASE_IMPLEMENTATION",
+      "startingState": "ACTUAL_OBSERVED_CREATION_AND_COMPLETED_WORK",
+      "expectedCompiler": "CANCELLED",
+      "expectedFollowingCompilerChildren": 0,
+      "expectedDuplicateEffects": 0,
+      "consumedParentReleased": false,
+      "limits": "UNCHANGED",
+      "acceptance": "oracle-contract.md#e-cancel-observed-standing-continuation-independent-expectations"
     }
   ]
 }

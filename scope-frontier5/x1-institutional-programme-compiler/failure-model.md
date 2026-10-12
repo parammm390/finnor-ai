@@ -144,4 +144,14 @@ interpretation under its original identity/rule digest/deadline. The programme
 remains PARTIAL and Work cannot claim full completion. Preserve all costs and
 the same parent. No human reconstruction or fallback flag receives credit.
 
+### Registered owner case E-cancel-observed-standing-continuation
+
+Complete the first native creation, then cancel future institution continuation
+through the actual authenticated compiler API. The observed Request/effect and
+immutable completion proof remain retained, while the compiler becomes CANCELLED.
+A later legitimate source-owner revision must not start a new P7 compiler child.
+No consumed reservation is released and no completion is interpreted as evidence
+fulfillment or settlement. Credible regression: treating OBSERVED as a no-op for
+cancellation lets a completed standing programme continue after the user stops it.
+
 The independent oracle contract defines expectations and preservation. Boundary bugs need a pre-fix failing regression at their owning boundary. No post-code unit tests. Source changes following a failed proof retain the original run and rerun only affected proof plus necessary regressions.
