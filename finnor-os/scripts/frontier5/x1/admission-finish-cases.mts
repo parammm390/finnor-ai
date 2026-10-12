@@ -13,6 +13,8 @@ const barrel = read("../../../packages/private-equity/src/index.ts");
 const authority = read("../../../packages/private-equity/src/institution-program/source-authority.ts");
 const installed = read("../../../packages/private-equity/src/institution-program/installed-source.ts");
 const migration = read("../../../packages/db/migrations/0172_x1_institution_source_authority.sql");
+const sourceLocks=read('../../../packages/private-equity/src/institution-program/source-locks.ts');
+const scopedLockMigration=read('../../../packages/db/migrations/0184_x1_scoped_source_authority_locks.sql');
 const bundle = read("../../../packages/db/migrations-bundle.ts");
 const packet = read("./reference/owner-live-packet.md");
 
@@ -56,7 +58,23 @@ check("rehydrated-write-inputs", () => {
 
 check("publication-grant-relock", () => {
   const sql = before(admission, "X1_SOURCE_GRANT_CHANGED_DURING_PUBLICATION", 900);
-  assert.ok(sql.includes("FOR SHARE"), `relock is not FOR SHARE: ${excerpt(sql, "x1_source_grants")}`);
+  if(!sql.includes('FOR SHARE')){
+    // PostgreSQL requires UPDATE privilege for direct FOR SHARE. The current
+    // app role has no authority-table DML. Trace the scoped SQL owner without
+    // weakening the original row-lock, identity or currentness requirements.
+    const transaction=admission.slice(admission.indexOf('return peTransaction(ctx, async (db, client) =>'));
+    assert.ok(transaction.includes('await lockInstitutionSourceAuthority(ctx,client,original.workId,sources.map(source=>source.grantId))'),
+      'publication does not lock its complete rehydrated grant population');
+    assert.ok(sourceLocks.includes('SELECT finnor_os.x1_lock_source_authority($1,$2::uuid[])'),
+      'scoped TypeScript lock does not reach the actual SQL owner');
+    const owner=scopedLockMigration.slice(0,scopedLockMigration.indexOf('REVOKE ALL ON FUNCTION finnor_os.x1_lock_source_authority'));
+    assert.ok(owner.includes('SECURITY DEFINER')&&owner.includes('work.created_by=u')&&owner.includes("actor.status='active'"),
+      'SQL locking owner lacks current principal/Work scope');
+    assert.ok(/FROM finnor_os\.x1_source_grants g\s+WHERE g\.tenant_id=t AND g\.work_id=w AND g\.principal_id=u\s+AND g\.id=ANY\(grant_ids\) FOR SHARE OF g/.test(owner),
+      'SQL locking owner lacks exact tenant/principal/Work/grant row locks');
+    assert.ok(transaction.indexOf('await lockInstitutionSourceAuthority')<transaction.indexOf('SELECT 1 FROM finnor_os.x1_source_grants'),
+      'scoped locks are taken after the final grant predicate');
+  }
   assert.ok(/revision=\$\d/.test(sql), `relock lacks revision equality: ${excerpt(sql, "x1_source_grants")}`);
   assert.ok(/original_sha256=\$\d/.test(sql), `relock lacks digest equality: ${excerpt(sql, "x1_source_grants")}`);
   assert.ok(sql.includes("NOT EXISTS"), `relock lacks the not-superseded predicate: ${excerpt(sql, "x1_source_grants")}`);

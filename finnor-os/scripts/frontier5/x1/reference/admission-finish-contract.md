@@ -26,6 +26,15 @@ pre-repair failures are retained as defective observations.
    `revision` and `original_sha256` equality, a valid window, and the
    not-superseded `NOT EXISTS` newer-version predicate. A v2 grant issued
    during the publication window aborts a v1-based admission.
+   Migration 0184 moves the same `FOR SHARE` grant locks into the scoped SQL
+   owner because PostgreSQL requires UPDATE privilege for a direct row lock.
+   The current app/worker roles retain no raw authority-table DML. The offline
+   observer must trace the publication transaction's complete rehydrated grant
+   IDs through `lockInstitutionSourceAuthority` to the SQL owner's exact
+   tenant/principal/Work/grant `FOR SHARE OF g`, before the unchanged revision,
+   digest, window and not-superseded predicates. The original direct-lock
+   implementation also satisfies this invariant; missing either mechanism
+   remains a failure. This changes the observer's location, not its predicate.
 4. **owner-knowledge-cut** — `knowledgeCut` derives from server-side retention
    facts (Core version `created_at` / acquisition receipt), carried on each
    rehydrated source as `retainedAt`; the loader never mints
