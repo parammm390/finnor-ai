@@ -4,7 +4,7 @@ import type {JobExecutionContext} from '../../../../apps/worker/src/queue';
 import type {PeMutationContext} from '../types';
 import {sha,stable,tx,currentDerivation,assertDependencies} from '../evidence-execution/store';
 import {requestRow,assertProgramCurrent,trace,reserveCandidate} from '../program-synthesis/store';
-import {parseHarnessRequest,type NativeModule} from '../program-synthesis/contracts';
+import {parseHarnessRequest,isInstitutionRequest,type NativeModule} from '../program-synthesis/contracts';
 import {constructModules} from '../program-synthesis/compiler';
 import {executeHarnessCandidate} from '../program-synthesis/execution';
 import {checkNumericalAcceptance} from '../program-synthesis/checker';
@@ -45,6 +45,7 @@ async function runUnit(payload:UnitPayload,x:Readonly<JobExecutionContext>,deliv
   if(deliveryDeadline!==null&&deliveryDeadline>Date.parse(q.proposed.bounds.deadlineAt))throw Error('M2_ORIGINAL_DELIVERY_DEADLINE_CANNOT_EXTEND_PARENT');
   const originalDeadline=Math.min(deliveryDeadline??Infinity,Date.parse(q.proposed.bounds.deadlineAt));
   const d=await currentDerivation(ctx,s.context.derivationId),request=parseHarnessRequest(q.request);
+  if(isInstitutionRequest(request))throw Error('P2_ANALYTICAL_HARNESS_REQUIRED');
   if(u.body.sourceDigest!==d.result?.digest||u.body.inputDigest!==s.context.inputDigest)throw Error('P2_EXACT_UNIT_SOURCE_CUT_MISMATCH');
   const module=s.context.program.modules.find((m:NativeModule)=>m.id===u!.body.moduleId);
   if(u.kind==='MODEL_REFINE'){const endpoints=await readEndpointConfig();const route=u.body.routeIds[Math.min(u.attempts,u.body.routeIds.length-1)];endpoint=endpoints.find(e=>e.id===route);if(!endpoint)throw Error('P2_ROUTE_UNAVAILABLE');}
@@ -107,6 +108,7 @@ async function runUnit(payload:UnitPayload,x:Readonly<JobExecutionContext>,deliv
    const parsed=replySchema.parse(decoded);if(parsed.model!==endpoint.model)throw Error('P2_RETURNED_MODEL_IDENTITY_MISMATCH');
    if(parsed.usage.inputTokens>inputTokens||parsed.usage.outputTokens>endpoint.limits.maxOutputTokens)throw Error('P2_ACTUAL_USAGE_EXCEEDS_RESERVED_BOUND');
    const proposal=parseHarnessRequest({...request,acceptance:{...request.acceptance,targets:parsed.targets}});
+   if(isInstitutionRequest(proposal))throw Error('P2_ANALYTICAL_HARNESS_REQUIRED');
    if(stable(proposal.acceptance.targets.map(t=>({key:t.key,unit:t.unit,currencyCode:t.currencyCode})))!==stable(request.acceptance.targets.map(t=>({key:t.key,unit:t.unit,currencyCode:t.currencyCode}))))throw Error('P2_MODEL_ACCEPTANCE_REWRITE');
    const alternate=constructModules(proposal,q.proposed.producer.codeDigest)[0]!;
    result={actualProvider:endpoint.provider,actualModel:parsed.model,usage:parsed.usage,finishReason:parsed.finishReason,responseDigest:sha(raw),proposal:alternate,duplicate:s.context.program.modules.some((m:NativeModule)=>m.structureDigest===alternate.structureDigest),qualification:'DIAGNOSTIC_PROPOSAL_REQUIRES_P1_EXECUTION_AND_ORIGINAL_SQL_CHECK'};

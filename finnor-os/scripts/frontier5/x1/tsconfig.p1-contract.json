@@ -1,11 +1,14 @@
 {
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
+    "allowImportingTsExtensions": true,
     "noEmit": true,
     "baseUrl": "../../..",
     "types": ["node"]
   },
   "files": [
+    "./run-owner-slice.mts",
+    "./physical-owner-worker.mts",
     "./qualification-admin.mts",
     "../../../packages/private-equity/src/institution-qualification/administration.ts",
     "../../../packages/private-equity/src/institution-program/api.ts",
