@@ -216,8 +216,6 @@ No consumed reservation is released and no completion is interpreted as evidence
 fulfillment or settlement. Credible regression: treating OBSERVED as a no-op for
 cancellation lets a completed standing programme continue after the user stops it.
 
-### Publication compute attribution
-
 ### Authenticated API lifecycle metering
 
 Physical compiler/P1 delivery meters omit repeated authenticated source/read/status
@@ -272,7 +270,7 @@ episode/reservation/deadline. A candidate receipt or fallback flag cannot substi
 for the callee/queue/physical checker and canonical outcome. Never kill an unrelated
 process, repair source inside the run, or silently drop the failed attempt.
 
-### Publication compute attribution continued
+### Publication compute attribution
 
 The compiler's existing COMPILE measurement ends before baseline/catalog reads,
 parent verification, artifact construction and immutable publication. That is an

@@ -1,5 +1,69 @@
 # FRONTIER5.X1 status
 
+## Current checkpoint — owner recovery, full source domain and automatic revisions, 12 October 2026
+
+Engineering remains **INCOMPLETE**. The following additional finite cases are
+**EMPIRICALLY_VERIFIED** in the authenticated disposable development profile.
+Each binds its own source cut; they are not a final installed-cut or qualification
+PASS. Current source at this checkpoint is `1053179bf3c921a9e8747ac68c19fb9d0f7746a3`.
+
+| Case | Duration | Private evidence |
+|---|---|---|
+| Lost native acknowledgement | 29.73 s | verify-effect-recovery-002/owner |
+| Three ordinary operations | 25.90 s | verify-ordinary-001/owner |
+| Existing schema plus API meters | 52.31 s | verify-schema-upgrade-004/owner |
+| All source classes and canonical kinds | 46.83 s | verify-full-domain-003/owner |
+| Three automatic reporting revisions | 48.81 s | verify-reporting-changes-002/owner |
+| Physical checker crash and compatible resume | 20.26 s | verify-checker-crash-001/owner |
+
+Lost acknowledgement now settles through an exact frozen canonical creation read
+without invoking the executor. Its original journal stays UNKNOWN with null
+response; the separate observation and real reconciliation case retain the proof.
+All three declared operations execute the actual Request/Workstream/Finding
+owners. Fifteen raw source instances cover all ten classes, twelve direct-byte
+protocols, fourteen canonical kinds and twenty-six identity mappings, with genuine
+source-scoped sensitive consent. Existing Work-scoped CRM owners and one arbitrary
+relationship ID are reused; another fund/vehicle relationship is created.
+
+Additive 0180 completes Work-scoped canonical currentness through the final native
+mutation guard. There are now 182 migrations. The latest upgrade proof starts with
+173 byte-identical old migrations through 0171, preserves existing Work/users and
+exact original document/version/content bytes, applies nine additive files, and
+performs a zero-file second pass. Compatible old maintenance and new X1 jobs run;
+retired history remains quarantined. Clean dependency installation and final built
+API/worker/checker compatibility remain required.
+
+Actual S7 API meters include successful and refused owned HTTP invocations under
+the original episode. Prices, supervision, aggregate memory, meter-writer and
+other lifecycle costs remain partial or unknown. Bounded in-delivery immutable
+Core reuse reduced actual raw acquisitions from 45 to 15 for fifteen sources;
+current metadata, grants, rights and consent are reread at every use. Three actual
+P7 revisions keep the same Objective, reservation, deadlines, source population
+and effects: a financial correction, cosmetic/name change and emailed exception
+never create approval; a changed lender field remains unresolved until an
+explicit owner assertion arrives. Four original attempts consumed sixty raw
+acquisitions, within the unchanged 128 bound.
+
+The real checker was SIGKILLed. The worker retained UNKNOWN/quarantine and failed
+compute/check costs, then the existing authenticated same-request resume executed
+a second real checker and native completion under the original parent. No
+alternative algorithm or protected fallback admission is claimed.
+
+Retained failures include native reconciliation resolver audit omission, invalid
+global application enqueue and retired-provider fixture, missing legacy owner
+currentness, read-only lock misuse, an invalidated source-check cut, and the
+verifier's wrong P7 field name. Their original evidence remains unchanged.
+
+Remaining internal work includes complete quantitative semantic-owner admission,
+remaining personnel/grant/mandate material changes and unaffected lawful work,
+additional currentness/concurrency and bounded failure dispositions, avoidable
+lifecycle meters, final built installation/reconstruction and mandatory checks,
+affected mounted controls/privacy, matched diagnostic, native scrutiny and final
+handoff. Existing signed S8/custody/provider assets block only their dependent
+proofs; no protected key, grant or receipt has been manufactured. Protected ten-
+environment replay/soak, qualified baselines/comparators, admission/activation and
+operational/financial/H2 outcomes remain distinct and unestablished.
+
 ## Current checkpoint — domain, recovery, partial continuation and cancellation, 12 October 2026
 
 Engineering remains **INCOMPLETE**. The following finite owner cases are

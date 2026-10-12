@@ -1,6 +1,6 @@
 {
   "schema": "finnor.frontier5.x1.requirement-coverage.v1",
-  "status": "PENDING_IMPLEMENTATION_AND_VERIFICATION",
+  "status": "PARTIAL_DEVELOPMENT_EVIDENCE_ENGINEERING_INCOMPLETE",
   "originalInventory": {
     "path": "/Users/paramdave/.codex/visualizations/2026/10/11/01a12960-fabc-7b31-8d1a-fa67a0be7117/x1-control/requirements-audit.json",
     "sha256": "565a88716b09d999162b6bcba314dca4fe971dd241f0f9b90c534d7e74a83ccd",
@@ -16,9 +16,11 @@
       "featureIds": [
         "x1-reconstruction-and-semantic-admission"
       ],
-      "status": "pending",
+      "status": "partial",
       "sourceEvidence": [],
-      "runtimeEvidence": [],
+      "runtimeEvidence": [
+        "private:x1-control/evidence/verify-full-domain-003/owner (all10 classes/all14 kinds; direct12 protocols, external adapter separate)"
+      ],
       "failures": [],
       "notRun": []
     },
@@ -52,7 +54,8 @@
       "sourceEvidence": [],
       "runtimeEvidence": [
         "private:x1-control/evidence/actual-owner-slice-026 (authorized immutable Core JSON originals; no supplied mapping; 3 classes only)",
-        "private:x1-control/evidence/actual-owner-slice-042 (12 actual original-byte protocols across 8 classes; Core retention, worker/checker/native completion)"
+        "private:x1-control/evidence/actual-owner-slice-042 (12 actual original-byte protocols across 8 classes; Core retention, worker/checker/native completion)",
+        "private:x1-control/evidence/verify-full-domain-003/owner (15 authorized raw instances, sensitive consent)"
       ],
       "failures": [],
       "notRun": [
@@ -65,9 +68,11 @@
       "featureIds": [
         "x1-reconstruction-and-semantic-admission"
       ],
-      "status": "pending",
+      "status": "partial",
       "sourceEvidence": [],
-      "runtimeEvidence": [],
+      "runtimeEvidence": [
+        "private:x1-control/evidence/verify-full-domain-003/owner (26 identity mappings, quantities, relations; development-only)"
+      ],
       "failures": [],
       "notRun": []
     },
@@ -118,7 +123,8 @@
       "sourceEvidence": [],
       "runtimeEvidence": [
         "private:x1-control/evidence/actual-owner-slice-026 (two conflicting-name Deal identities, actual immutable S1 mapping admissions and evidence links)",
-        "private:x1-control/evidence/actual-owner-slice-044 (17 exact canonical owner mappings covering all 14 declared kinds; actual Memory/PE attachments and sensitive self-consent)"
+        "private:x1-control/evidence/actual-owner-slice-044 (17 exact canonical owner mappings covering all 14 declared kinds; actual Memory/PE attachments and sensitive self-consent)",
+        "private:x1-control/evidence/verify-full-domain-003/owner (actual canonical identities, evidence, relation reuse/new link; quantity semantic owner still incomplete)"
       ],
       "failures": [
         "private:x1-control/evidence/actual-owner-slice-043 (0139 omitted previously supported Request evidence type; additive 0179 repair)"
@@ -137,7 +143,8 @@
       "sourceEvidence": [],
       "runtimeEvidence": [
         "private:x1-control/evidence/actual-owner-slice-026/native-work-completion.json (same Work/Objective/final Plan completed with verified native proof)",
-        "private:x1-control/evidence/actual-owner-slice-031 (same standing-input revision 2, original Objective limits/deadline/counters and no duplicate effect)"
+        "private:x1-control/evidence/actual-owner-slice-031 (same standing-input revision 2, original Objective limits/deadline/counters and no duplicate effect)",
+        "private:x1-control/evidence/verify-ordinary-001/owner (all3 ordinary ops with completed native Work)"
       ],
       "failures": [],
       "notRun": [
@@ -178,7 +185,9 @@
       "status": "partial",
       "sourceEvidence": [],
       "runtimeEvidence": [
-        "private:x1-control/evidence/actual-owner-slice-026 (128 canonical Requests, completed native Actions, verified effects and independently checked Request fields)"
+        "private:x1-control/evidence/actual-owner-slice-026 (128 canonical Requests, completed native Actions, verified effects and independently checked Request fields)",
+        "private:x1-control/evidence/verify-ordinary-001/owner (Request/Workstream/Finding exact native states)",
+        "private:x1-control/evidence/verify-effect-recovery-002/owner (same effect lost ack, canonical settlement)"
       ],
       "failures": [],
       "notRun": [
@@ -215,7 +224,8 @@
       "status": "partial",
       "sourceEvidence": [],
       "runtimeEvidence": [
-        "private:x1-control/evidence/actual-owner-slice-047 (automatic real ledger correction, exactly changed ledger source dependency, unaffected duty/effect/proof/original parent retained)"
+        "private:x1-control/evidence/actual-owner-slice-047 (automatic real ledger correction, exactly changed ledger source dependency, unaffected duty/effect/proof/original parent retained)",
+        "private:x1-control/evidence/verify-reporting-changes-002/owner (3 automatic revisions, exact minimal source closure, same original Objective/parent/limits/effects)"
       ],
       "failures": [],
       "notRun": [
@@ -227,9 +237,11 @@
       "featureIds": [
         "x1-invalidation-recovery-and-fallback"
       ],
-      "status": "pending",
+      "status": "partial",
       "sourceEvidence": [],
-      "runtimeEvidence": [],
+      "runtimeEvidence": [
+        "private:x1-control/evidence/verify-reporting-changes-002/owner (stale projection withdrawn before current revision, field meaning unresolved; personnel/mandate remain)"
+      ],
       "failures": [],
       "notRun": []
     },
@@ -241,7 +253,9 @@
       "status": "partial",
       "sourceEvidence": [],
       "runtimeEvidence": [
-        "private:x1-control/evidence/actual-owner-slice-046 (real pre-publication worker SIGKILL, queue quarantine, retained UNKNOWN, authenticated same-request/original-parent resume and completion)"
+        "private:x1-control/evidence/actual-owner-slice-046 (real pre-publication worker SIGKILL, queue quarantine, retained UNKNOWN, authenticated same-request/original-parent resume and completion)",
+        "private:x1-control/evidence/verify-effect-recovery-002/owner (physical effect commit/ack loss/read-only same-effect settlement)",
+        "private:x1-control/evidence/verify-checker-crash-001/owner (physical checker death, actual compatible same-parent resume)"
       ],
       "failures": [
         "private:x1-control/evidence/actual-owner-slice-045 (orphan remained RUNNING after actual lease quarantine; repaired owner reconciliation)"
@@ -277,7 +291,8 @@
       "status": "partial",
       "sourceEvidence": [],
       "runtimeEvidence": [
-        "private:x1-control/evidence/actual-owner-slice-053 (actual supported native Request beside precise unsupported approval condition; original denominator 2, PARTIAL, Work/Objective waiting, no invented approval/fallback credit)"
+        "private:x1-control/evidence/actual-owner-slice-053 (actual supported native Request beside precise unsupported approval condition; original denominator 2, PARTIAL, Work/Objective waiting, no invented approval/fallback credit)",
+        "private:x1-control/evidence/verify-checker-crash-001/owner (real existing authenticated resume/second checker/native owner; no alternative algorithm claimed)"
       ],
       "failures": [
         "private:x1-control/evidence/actual-owner-slice-050 (artifact rejected unresolved choices)",
@@ -331,9 +346,12 @@
       "featureIds": [
         "x1-s8-domain-and-meter-writers"
       ],
-      "status": "pending",
+      "status": "partial",
       "sourceEvidence": [],
-      "runtimeEvidence": [],
+      "runtimeEvidence": [
+        "private:x1-control/evidence/verify-schema-upgrade-004/owner (S7 physical API 200/200/400, same episode; costs still partial)",
+        "private:x1-control/evidence/verify-reporting-changes-002/owner (four attempts/60 raw acquisitions, immutable reuse/costs retained)"
+      ],
       "failures": [],
       "notRun": []
     },
@@ -410,9 +428,11 @@
       "featureIds": [
         "x1-installation-compatibility-and-handoff"
       ],
-      "status": "pending",
+      "status": "partial",
       "sourceEvidence": [],
-      "runtimeEvidence": [],
+      "runtimeEvidence": [
+        "private:x1-control/evidence/verify-schema-upgrade-004/owner (173 old+9 additive/182 total, zero rerun; exact old Work/doc/version/bytes and mixed jobs; final built restart separate)"
+      ],
       "failures": [],
       "notRun": []
     },
@@ -16327,5 +16347,56 @@
     "fullEngineeringComplete": false,
     "protectedQualification": false,
     "finalInstalledCutVerified": false
-  }
+  },
+  "checkpointSourceCommit": "1053179bf3c921a9e8747ac68c19fb9d0f7746a3",
+  "latestEvidenceCuts": [
+    {
+      "case": "Lost native acknowledgement",
+      "evidence": "verify-effect-recovery-002/owner",
+      "commit": "c52a1cbd6c5a0b52e1e200d8f30b38cafa1919e2",
+      "tree": "318da219f45c5fcfa3b2515f5589624f464ea545",
+      "durationMs": 29729.425666999996,
+      "sampledOwnedRssBytes": 2072920064
+    },
+    {
+      "case": "Three ordinary operations",
+      "evidence": "verify-ordinary-001/owner",
+      "commit": "958172f8ffac0fdf140f5b88186b0f97705a3c7f",
+      "tree": "cd7048d6973586468b90065903fa0561eaafd668",
+      "durationMs": 25897.241875,
+      "sampledOwnedRssBytes": 1715372032
+    },
+    {
+      "case": "Existing schema plus API meters",
+      "evidence": "verify-schema-upgrade-004/owner",
+      "commit": "b59ee1c6ddac9aa38eeae2cdefb0e0fb8dfec418",
+      "tree": "340a8e61b1bf45a50f600405131f6aa3701abd56",
+      "durationMs": 52305.663791,
+      "sampledOwnedRssBytes": 1879293952
+    },
+    {
+      "case": "All source classes and canonical kinds",
+      "evidence": "verify-full-domain-003/owner",
+      "commit": "69be82dcd8ee84a1020118c6e5a60d27e2fb8b69",
+      "tree": "c259e5f63fd8e3cb1569c63483c1c6f06208c897",
+      "durationMs": 46825.173500000004,
+      "sampledOwnedRssBytes": 2226880512
+    },
+    {
+      "case": "Three automatic reporting revisions",
+      "evidence": "verify-reporting-changes-002/owner",
+      "commit": "d4decc6d17ecc9087c50695ea2bf72ccfc69ac96",
+      "tree": "009230f4cbdfb0c6b878dc474f1845cff377665d",
+      "durationMs": 48812.432041,
+      "sampledOwnedRssBytes": 2978054144
+    },
+    {
+      "case": "Physical checker crash and compatible resume",
+      "evidence": "verify-checker-crash-001/owner",
+      "commit": "1053179bf3c921a9e8747ac68c19fb9d0f7746a3",
+      "tree": "08fd7c4ecf997c64028d109608d6f3935a65ba12",
+      "durationMs": 20258.784,
+      "sampledOwnedRssBytes": 2162425856
+    }
+  ]
 }
