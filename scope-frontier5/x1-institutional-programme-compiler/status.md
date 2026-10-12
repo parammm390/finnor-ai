@@ -1,6 +1,51 @@
 # FRONTIER5.X1 status
 
-## Current checkpoint — authenticated inputs and precise unsupported continuation, 12 October 2026
+## Current checkpoint — source authority isolation and original S5 currentness, 12 October 2026
+
+Engineering remains **INCOMPLETE**. Source `f138c560b5acb88e38d54ac69a6888d2a1c10d77`,
+tree `5394ca570b95964ff2c977a3c6b2df32a948cb52` binds the last three runs below.
+These are **EMPIRICALLY_VERIFIED** named development cases.
+
+| Case | Duration | Private evidence |
+|---|---|---|
+| Actual source authority DML denial and full native completion | 49.93 s | verify-source-authority-privilege-fixed-003/owner |
+| Unrelated employee epoch, lawful continuation and revocation refusals | 32.51 s | verify-staff-epoch-fixed-002/owner |
+| Authenticated fifteen-source setup and three native effects after S5 repair | 39.94 s | verify-original-s5-full-inputs-001/owner |
+| Financial/reporting/mail changes and immutable quantity preservation | 62.87 s | verify-scoped-authority-reporting-001/owner |
+
+An inherited default-privilege defect made all thirty raw INSERT/UPDATE/DELETE
+checks true on five source-authority/receipt tables for application and worker.
+The pre-fix actual zero-row UPDATE succeeded. Earlier SELECT-grant declarations
+were insufficient evidence of role isolation. Additive 0183 explicitly revokes
+those writes; 0184 acquires required row locks through scoped owner functions.
+Both actual roles now refuse raw DML with 42501 while authenticated owner inputs,
+canonical admission and Request/Workstream/Finding completion still pass. The
+intervening permission failures are retained; no role was elevated to obtain PASS.
+
+Additive 0185 revalidates current native read authority against the immutable
+original S5 frame. Its consumption records retain actual selected-grant decision
+references and current epochs; final native mutation rechecks the same frame.
+It grants no execution authority. Suspending an unrelated employee advanced the
+tenant epoch from 37 to 38. A new raw trigger produced one new Request through
+automatic P7 and the same objective, reservation, resources and original deadline.
+The prior duty/proof was preserved; the exact affected closure has one new duty.
+Later explicit negative controls refuse a suspended actor and a revoked resource,
+retain consumed exposure/original demand and create no additional effect.
+
+Both pre-fix staff runs encountered the unchanged shared-disk guard. The second
+also reached and retained the intended native P7 original-S5 refusal before that
+stop. They remain failures, not passing runs. There are **187 migrations**, head
+`0185_x1_original_s5_authority_currentness.sql`; earlier migration bytes remain
+unchanged. The final built upgrade/restart still requires verification at this head.
+
+Remaining internal work includes source/personnel/mandate changes with partial
+authorized coverage, sensitive-byte preflight, other concurrency/failure boundaries,
+remaining avoidable meters, final supported packaging/reconstruction and mandatory
+checks, new mounted controls/privacy, the equipped diagnostic and native scrutiny.
+Protected custody/population/replay/live soak, S8 admission/activation, qualified
+comparators and operational/financial outcomes remain separate unestablished gates.
+
+## Earlier checkpoint — authenticated inputs and precise unsupported continuation, 12 October 2026
 
 Engineering remains **INCOMPLETE**. The source implementation cut is
 `52743d499f62a98ab6edb1748570a33684a18531`, tree
