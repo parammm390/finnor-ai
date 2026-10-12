@@ -829,7 +829,12 @@ export async function bindHarnessWorkObjective(params: {
   ]});
   const [existing] = await withTenant(params.tenantId,db=>db.select().from(workObjectiveLoops).where(and(eq(workObjectiveLoops.tenantId,params.tenantId),eq(workObjectiveLoops.workId,params.workId))).limit(1));
   if (!existing) {
-    const result=await startWorkObjective(params.instruction,{tenantId:params.tenantId,userId:params.principalId,employeeId:params.principalId,role:"owner"},{workId:params.workId,workInputId:params.workInputId,instructionId:params.workInputId,channel:"console",successCondition:condition,maxSteps:12,maxActions:0,maxQueries:12,deadlineAt:new Date(params.deadlineAt),deferInitialIteration:true});
+    const [nativeInput]=await withTenant(params.tenantId,db=>db.select({instructionId:workInputs.instructionId,instructionText:workInputs.instructionText})
+      .from(workInputs).innerJoin(works,and(eq(works.tenantId,workInputs.tenantId),eq(works.id,workInputs.workId)))
+      .where(and(eq(workInputs.tenantId,params.tenantId),eq(workInputs.workId,params.workId),
+        eq(workInputs.id,params.workInputId),eq(works.createdBy,params.principalId))).limit(1));
+    if(!nativeInput||nativeInput.instructionText!==params.instruction)throw Error("HARNESS_EXACT_NATIVE_WORK_INSTRUCTION_REQUIRED");
+    const result=await startWorkObjective(params.instruction,{tenantId:params.tenantId,userId:params.principalId,employeeId:params.principalId,role:"owner"},{workId:params.workId,workInputId:params.workInputId,instructionId:nativeInput.instructionId,channel:"console",successCondition:condition,maxSteps:12,maxActions:0,maxQueries:12,deadlineAt:new Date(params.deadlineAt),deferInitialIteration:true});
     return {id:result.objectiveLoopId,revision:1};
   }
   return withTenant(params.tenantId,async db=>{

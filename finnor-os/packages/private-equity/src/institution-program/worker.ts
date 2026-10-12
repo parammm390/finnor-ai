@@ -160,8 +160,13 @@ export async function runInstitutionCompilerJob(payload: Record<string, unknown>
       const rootRef = lowered.responsibilities[0]!.obligation.preconditions[0]!.ref;
       const match = /^pe_deal:([^@]+)@v\d+$/.exec(rootRef);
       if (!match) throw Error("X1_NATIVE_PROGRAMME_ROOT_UNRESOLVED");
+      const instruction=await tx(ctx,async c=>(await c.query<{instruction_text:string}>(`SELECT i.instruction_text
+        FROM finnor_os.work_inputs i JOIN finnor_os.works w ON w.tenant_id=i.tenant_id AND w.id=i.work_id
+        WHERE i.tenant_id=$1 AND i.work_id=$2 AND i.id=$3 AND w.created_by=$4`,
+        [q.tenant_id,q.work_id,q.work_input_id,q.principal_id])).rows[0]?.instruction_text??null,true);
+      if(!instruction)throw Error("X1_EXACT_NATIVE_WORK_INSTRUCTION_REQUIRED");
       native = await submitInstitutionHarnessProgram(ctx, { schema: "finnor.harness-request.v1",
-        kind: "institution_responsibility_v1", instruction: `Carry the checked standing responsibility for ${result.original.institutionId}`,
+        kind: "institution_responsibility_v1", instruction,
         root: { entityType: "pe_deal", entityId: match[1]! }, workId: q.work_id, workInputId: q.work_input_id,
         idempotencyKey: `x1-compiler:${q.id}`, validAt: result.original.knowledgeCut, mode: "ordinary_disposable",
         institution: { programme: lowered.programme as any, responsibilities: lowered.responsibilities,
