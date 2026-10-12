@@ -10,6 +10,8 @@ import { acquireInstalledMailOriginal } from "./installed-source";
 import type { OriginalInstitutionEvidence } from "./checker";
 import type { DigitalInstitutionProfile } from "./contracts";
 import { recordInstitutionSourceAttempt } from "./meter";
+import { lockInstitutionSourceAuthority } from './source-locks';
+import { readInstitutionSourceScope,type InstitutionSourceScope } from './source-scope';
 
 type Source = OriginalInstitutionEvidence["sources"][number];
 export type OwnerOriginal = Source & {
@@ -19,6 +21,7 @@ export type OwnerOriginal = Source & {
    * receipt; the knowledge cut binds to it, never to caller input. */
   retainedAt: string;
   sensitiveSubjectRegistrations?:string[];
+  sourceScopePin:{grantId:string;digest:string;originalReadAllowed:boolean};
 };
 const digest = (bytes: Buffer) => createHash("sha256").update(bytes).digest("hex");
 const sensitive = (sourceClass: string) =>
@@ -33,6 +36,7 @@ type Grant = {
   document_id: string | null; document_version_id: string | null; original_sha256: string | null;
   expected_object_ids: unknown; integration_id: string | null; provider: string | null;
   adapter_scope: string | null; external_object_type: string | null; external_id: string | null;
+  valid_from:Date;
 };
 
 /** The registration and bytes come only from the current owner grant and Core.
@@ -49,16 +53,11 @@ export async function acquireInstitutionOriginal(
       `SELECT g.id::text,g.source_id,g.source_class,g.protocol,g.revision,g.institution_id,g.purpose,
               g.acquisition_kind,g.version,g.document_id::text,g.document_version_id::text,
               g.original_sha256,g.expected_object_ids,g.integration_id::text,g.provider,
-              g.adapter_scope,g.external_object_type,g.external_id
+              g.adapter_scope,g.external_object_type,g.external_id,g.valid_from
          FROM finnor_os.x1_source_grants g
          JOIN finnor_os.works w ON w.tenant_id=g.tenant_id AND w.id=g.work_id
         WHERE g.tenant_id=$1 AND g.work_id=$2 AND g.principal_id=$3 AND g.id=$4
-          AND w.created_by=$3 AND g.valid_from<=clock_timestamp() AND g.expires_at>clock_timestamp()
-          AND g.revoked_at IS NULL AND NOT EXISTS (
-            SELECT 1 FROM finnor_os.x1_source_grants newer
-             WHERE newer.tenant_id=g.tenant_id AND newer.work_id=g.work_id
-               AND newer.principal_id=g.principal_id AND newer.source_id=g.source_id
-               AND newer.version>g.version)
+          AND w.created_by=$3
         LIMIT 1`,
       [ctx.auth.tenantId, workId, principal, grantId],
     );
@@ -74,6 +73,32 @@ export async function acquireInstitutionOriginal(
     return { row, rightsRevision: String(rights.rows[0]?.revision ?? "") };
   });
   const { row, rightsRevision } = grant;
+  if(!rightsRevision||!row.original_sha256||!Array.isArray(row.expected_object_ids)
+    ||row.expected_object_ids.length>profile.bounds.tabularRowsPerObject
+    ||row.expected_object_ids.some(id=>typeof id!=='string'||!id))throw Error('X1_SOURCE_GRANT_COVERAGE_INVALID');
+  let sourceScope=await readInstitutionSourceScope(ctx,workId,grantId);
+  if(sourceScope.body.sourceRevision!==row.revision||sourceScope.body.originalSha256!==row.original_sha256
+    ||sourceScope.body.sourceId!==row.source_id||sourceScope.body.sourceClass!==row.source_class
+    ||sourceScope.body.institutionId!==row.institution_id||sourceScope.body.purpose!==row.purpose
+    ||JSON.stringify(sourceScope.body.expectedObjectIds)!==JSON.stringify(row.expected_object_ids))
+    throw Error('X1_SOURCE_METADATA_CHANGED_BEFORE_READ');
+  const unavailable=async(scope:InstitutionSourceScope):Promise<OwnerOriginal>=>{
+    if(scope.body.originalReadAllowed||!scope.body.gap)throw Error('X1_SOURCE_GAP_REQUIRES_NATIVE_REFUSAL');
+    const metadata=row.document_id&&row.document_version_id?await withTenantTransaction(ctx.auth.tenantId,
+      {userId:principal,readOnly:true},async(_db,c)=>(await c.query<{created_at:Date}>(
+        'SELECT created_at FROM finnor_os.document_versions WHERE tenant_id=$1 AND document_id=$2 AND id=$3',
+        [ctx.auth.tenantId,row.document_id,row.document_version_id])).rows[0]):undefined;
+    return {id:row.source_id,revision:row.revision,sourceClass:row.source_class,protocol:row.protocol,
+      tenantId:ctx.auth.tenantId,institutionId:row.institution_id,authorizedPrincipalIds:[],rightsRevision,
+      rawUtf8:'',coverage:{expectedObjectIds:row.expected_object_ids as string[],readObjectIds:[],complete:false},
+      grantId:row.id,grantVersion:row.version,coreDocumentId:row.document_id??'',coreVersionId:row.document_version_id??'',
+      originalSha256:row.original_sha256!,purpose:row.purpose,
+      retainedAt:new Date(metadata?.created_at??row.valid_from).toISOString(),
+      sourceScopePin:{grantId,digest:scope.digest,originalReadAllowed:false},
+      ownerCoverageGap:{sourceId:row.source_id,grantId,reason:scope.body.gap,scopeDigest:scope.digest,
+        expectedObjectCount:(row.expected_object_ids as string[]).length}};
+  };
+  if(!sourceScope.body.originalReadAllowed)return unavailable(sourceScope);
   let bytes: Buffer; let documentId: string; let versionId: string; let retainedAt: string;
   if (row.acquisition_kind === "core_export") {
     // Immutable Core versions are retained before X1 sees the source. A grant
@@ -82,39 +107,40 @@ export async function acquireInstitutionOriginal(
     const cache=coreOriginalCache.getStore(),key=JSON.stringify([ctx.auth.tenantId,principal,workId,
       row.id,row.document_id,row.document_version_id,row.original_sha256]);
     const reused=cache?.get(key);
-    if(reused){
-      const current=await withTenantTransaction(ctx.auth.tenantId,{userId:principal,readOnly:true},async(_db,c)=>
-        (await c.query<{byte_sha256:string;provider_version_id:string|null;id:string;created_at:Date;size_bytes:number;
+    if(!reused)await recordInstitutionSourceAttempt(grantId);
+    const read=await withTenantTransaction(ctx.auth.tenantId,{userId:principal,isolation:'repeatable read'},async(db,c)=>{
+      await lockInstitutionSourceAuthority(ctx,c,workId,[grantId]);
+      const scope=await readInstitutionSourceScope(ctx,workId,grantId,c);
+      if(!scope.body.originalReadAllowed)return {scope,core:null};
+      if(scope.body.sourceRevision!==row.revision||scope.body.originalSha256!==row.original_sha256)
+        throw Error('X1_SOURCE_METADATA_CHANGED_BEFORE_READ');
+      if(reused){
+        const current=(await c.query<{byte_sha256:string;provider_version_id:string|null;id:string;size_bytes:number;
           sha256:string;content_size:number;physical_size:number;storage_backend:string}>(`SELECT v.id::text,v.byte_sha256,
-          v.provider_version_id,v.created_at,v.size_bytes,c.sha256,c.size_bytes content_size,
-          octet_length(c.bytes) physical_size,c.storage_backend FROM finnor_os.document_versions v
-          JOIN finnor_os.document_version_contents c ON c.tenant_id=v.tenant_id AND c.version_id=v.id
-          WHERE v.tenant_id=$1 AND v.document_id=$2 AND v.id=$3`,
-        [ctx.auth.tenantId,row.document_id,row.document_version_id])).rows[0]);
-      if(!current||current.byte_sha256!==row.original_sha256||current.sha256!==row.original_sha256
-        ||current.storage_backend!=='postgres'||current.size_bytes!==reused.bytes.length
-        ||current.content_size!==reused.bytes.length||current.physical_size!==reused.bytes.length
-        ||(current.provider_version_id??current.id)!==row.revision||digest(reused.bytes)!==row.original_sha256)
-        throw Error('X1_RETAINED_IMMUTABLE_ORIGINAL_OWNER_CHANGED');
-      bytes=reused.bytes;documentId=reused.documentId;versionId=reused.versionId;retainedAt=reused.retainedAt;
-    }else{
-    await recordInstitutionSourceAttempt(grantId);
-    const acquiredCore = await withTenantTransaction(ctx.auth.tenantId, {
-      userId: principal, readOnly: true, isolation: "repeatable read",
-    }, async (db) => loadDocumentVersion(db, ctx.auth.tenantId, row.document_id!, row.document_version_id!));
-    if (!acquiredCore || acquiredCore.version.byte_sha256 !== row.original_sha256
-        || digest(acquiredCore.bytes) !== row.original_sha256
-        || (acquiredCore.version.provider_version_id ?? acquiredCore.version.id) !== row.revision
-        || acquiredCore.bytes.length === 0 || acquiredCore.bytes.length > profile.bounds.objectBytes) {
-      throw new Error("X1_ORIGINAL_VERSION_OR_DIGEST_CHANGED");
-    }
-    bytes = acquiredCore.bytes; documentId = row.document_id; versionId = row.document_version_id;
-    retainedAt = new Date(acquiredCore.version.created_at).toISOString();
-    if(cache){
+          v.provider_version_id,v.size_bytes,c.sha256,c.size_bytes content_size,octet_length(c.bytes) physical_size,c.storage_backend
+          FROM finnor_os.document_versions v JOIN finnor_os.document_version_contents c ON c.tenant_id=v.tenant_id AND c.version_id=v.id
+          WHERE v.tenant_id=$1 AND v.document_id=$2 AND v.id=$3`,[ctx.auth.tenantId,row.document_id,row.document_version_id])).rows[0];
+        if(!current||current.byte_sha256!==row.original_sha256||current.sha256!==row.original_sha256
+          ||current.storage_backend!=='postgres'||current.size_bytes!==reused.bytes.length
+          ||current.content_size!==reused.bytes.length||current.physical_size!==reused.bytes.length
+          ||(current.provider_version_id??current.id)!==row.revision||digest(reused.bytes)!==row.original_sha256)
+          throw Error('X1_RETAINED_IMMUTABLE_ORIGINAL_OWNER_CHANGED');
+        return {scope,core:reused};
+      }
+      const acquired=await loadDocumentVersion(db,ctx.auth.tenantId,row.document_id!,row.document_version_id!);
+      if(!acquired||acquired.version.byte_sha256!==row.original_sha256||digest(acquired.bytes)!==row.original_sha256
+        ||(acquired.version.provider_version_id??acquired.version.id)!==row.revision
+        ||!acquired.bytes.length||acquired.bytes.length>profile.bounds.objectBytes)throw Error('X1_ORIGINAL_VERSION_OR_DIGEST_CHANGED');
+      return {scope,core:{bytes:acquired.bytes,documentId:row.document_id!,versionId:row.document_version_id!,
+        retainedAt:new Date(acquired.version.created_at).toISOString()}};
+    });
+    sourceScope=read.scope;
+    if(!read.core)return unavailable(sourceScope);
+    ({bytes,documentId,versionId,retainedAt}=read.core);
+    if(cache&&!reused){
       const total=[...cache.values()].reduce((sum,item)=>sum+item.bytes.length,bytes.length);
       if(cache.size>=profile.bounds.sourceInstances||total>profile.bounds.rawBytes)throw Error('X1_ORIGINAL_REUSE_BOUND');
-      cache.set(key,{bytes,documentId,versionId,retainedAt});
-    }
+      cache.set(key,read.core);
     }
   } else if (row.acquisition_kind === "installed_adapter") {
     await recordInstitutionSourceAttempt(grantId);
@@ -150,6 +176,7 @@ export async function acquireInstitutionOriginal(
     ...(binary ? { rawBase64: bytes.toString("base64") } : {}),
     coverage: { expectedObjectIds: row.expected_object_ids as string[], readObjectIds: [], complete: false },
     grantId: row.id, grantVersion: row.version, coreDocumentId: documentId,
+    sourceScopePin:{grantId,digest:sourceScope.digest,originalReadAllowed:true},
     coreVersionId: versionId, originalSha256: digest(bytes), purpose: row.purpose, retainedAt,
     ...(row.integration_id ? { integrationId: row.integration_id } : {}),
     ...(row.provider ? { provider: row.provider } : {}),
@@ -165,6 +192,8 @@ export async function acquireInstitutionOriginal(
   if (sensitive(row.source_class)) {
     await verifySubjectConsent(ctx, source, rows, profile);
     source.sensitiveSubjectRegistrations=[...new Set(rows.map(item=>item.registrationId!))].sort();
+    if(JSON.stringify(source.sensitiveSubjectRegistrations)!==JSON.stringify(sourceScope.body.expectedSubjectRegistrations))
+      throw Error('X1_ORIGINAL_SUBJECT_CERTIFICATION_DIFFERS');
     // Compatibility witness for the original-byte checker. Only owner reads
     // can issue it; admission rechecks the actual rows, not this string.
     source.sensitiveConsentRef = `owner-current:${digest(Buffer.from(JSON.stringify([

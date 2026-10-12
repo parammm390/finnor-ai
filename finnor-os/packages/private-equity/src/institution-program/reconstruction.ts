@@ -252,5 +252,6 @@ export async function proposeInstitutionModel(
     workId: original.workId, principalId: original.principalId,
     coverage: original.sources.map((source) => source.id), mappings, quantities, relations, temporalLinks,
     contradictions, obligations, dependencies: { ...original.current }, limits: measured,
+    ...(original.sources.some(s=>s.ownerCoverageGap)?{sourceCoverageGaps:original.sources.flatMap(s=>s.ownerCoverageGap?[s.ownerCoverageGap]:[])}:{}),
     unresolved, processHypotheses, receipt: null };
 }

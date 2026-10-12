@@ -54,6 +54,11 @@ export const InstitutionHarnessRequestSchema=z.object({
     admission:z.object({originalDigest:z.string().regex(/^[a-f0-9]{64}$/),
       candidateDigest:z.string().regex(/^[a-f0-9]{64}$/),checkerDigest:z.string().min(1)}).passthrough(),
     dutyPopulationDigest:z.string().regex(/^[a-f0-9]{64}$/),
+    sourceScopes:z.array(z.object({grantId:uuid,digest:z.string().regex(/^[a-f0-9]{64}$/),
+      originalReadAllowed:z.boolean()}).strict()).min(1).max(16).optional(),
+    sourceCoverageGaps:z.array(z.object({sourceId:z.string().min(1),grantId:uuid,
+      reason:z.string().min(1),scopeDigest:z.string().regex(/^[a-f0-9]{64}$/),
+      expectedObjectCount:z.number().int().min(1).max(1000)}).strict()).max(16).optional(),
   }).passthrough(),
   responsibilities:z.array(z.custom<InstitutionResponsibility>((value)=>!!value&&typeof value==='object'
     &&(value as InstitutionResponsibility).schema==='finnor.x1.institution-responsibility.v1')).max(128),

@@ -276,7 +276,8 @@ export async function continueInstitutionProgram(ctx: PeMutationContext, q: Inst
    }
    const supportedComplete=observed.length===executable.length;
    const completed=supportedComplete&&executable.length===head.nodes.length
-    &&head.institution.unresolved.length===0&&interventions.length===0
+    &&head.institution.unresolved.length===0
+    &&(head.institution.programme.sourceCoverageGaps?.length??0)===0&&interventions.length===0
     &&Date.now()<Date.parse(head.bounds.deadlineAt);
    const deadlineExpired=Date.now()>=Date.parse(head.bounds.deadlineAt);
    const batchObserved=chunk.every(node=>observed.some(item=>item.stableIdentity===node.stableIdentity));
@@ -306,7 +307,8 @@ export async function continueInstitutionProgram(ctx: PeMutationContext, q: Inst
    const advanced=selected?{...claimed,plan_revision_id:selected.planRevisionId}:claimed;
    await persistProgrammeHead(ctx,advanced,revised,revised.status,
     interventions[0]?.predicate??(deadlineExpired?"X1_ORIGINAL_OBSERVATION_DEADLINE_EXPIRED":
-     supportedComplete&&!completed?"X1_UNRESOLVED_DUTIES_RETAINED":null),c);
+     supportedComplete&&!completed?(head.institution.programme.sourceCoverageGaps?.length
+       ?"X1_SOURCE_COVERAGE_GAP_NORMATIVE_POPULATION_UNKNOWN":"X1_UNRESOLVED_DUTIES_RETAINED"):null),c);
    await trace(ctx,claimed,completed?"X1_CANONICAL_DUTIES_OBSERVED":"X1_CANONICAL_OBSERVATION_PENDING",
     {count:observed.length,total:head.nodes.length,deadlineAt:head.bounds.deadlineAt},c);
    if(completed){

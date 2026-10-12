@@ -66,12 +66,16 @@ export async function registerInstitutionCoreSource(ctx:PeMutationContext,body:u
     ...(binary?{rawBase64:acquired.bytes.toString('base64')}:{})},profile.bounds.tabularRowsPerObject,profile.bounds.objectBytes);
   const expected=records.map(r=>r.id);
   if(!expected.length||new Set(expected).size!==expected.length)throw Error('X1_INPUT_ORIGINAL_OBJECT_IDENTITY_REQUIRED');
+  const sensitive=['personnel_benefits','expense_administration'].includes(input.sourceClass);
+  if(sensitive&&records.some(r=>!r.registrationId))throw Error('X1_COMPLETE_SENSITIVE_SUBJECT_CERTIFICATION_REQUIRED');
+  const subjects=sensitive?[...new Set(records.map(r=>r.registrationId!))].sort():[];
+  if(subjects.length>profile.bounds.people)throw Error('X1_SENSITIVE_SUBJECT_BOUND');
   // Parsing can be expensive. Obtain the current decision after it and let the
   // SQL owner lock the exact revision and immutable version before publication.
   const decisionId=await inputDecision(ctx,input.workId,input.documentId);
-  return tx(ctx,async c=>(await c.query(`SELECT * FROM finnor_os.x1_register_owned_core_source($1,$2,$3,$4,$5,$6,$7,$8::jsonb,$9,$10)`,
+  return tx(ctx,async c=>(await c.query(`SELECT * FROM finnor_os.x1_register_owned_core_source_v2($1,$2,$3,$4,$5,$6,$7,$8::jsonb,$9::jsonb,$10,$11)`,
     [input.workId,input.documentId,input.documentVersionId,input.sourceClass,input.protocol,input.purpose,
-      acquired.version.byte_sha256,stable(expected),input.expiresAt,decisionId])).rows[0]);
+      acquired.version.byte_sha256,stable(expected),stable(subjects),input.expiresAt,decisionId])).rows[0]);
 }
 
 export async function readInstitutionInputs(ctx:PeMutationContext,workId:string){

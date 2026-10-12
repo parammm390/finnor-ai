@@ -30,7 +30,8 @@ export function buildInstitutionArtifact(input: {
   });
   const source = (id: string) => {
     const s = o.sources.find(item => item.id === id);
-    return s ? known("source", "authorized_original", s.id, s.revision,
+    return s?.ownerCoverageGap?unknown(s.ownerCoverageGap.reason,'current source owner or subject consent',[id])
+      :s ? known("source", "authorized_original", s.id, s.revision,
       o.current.sourceDigests?.[s.id] ?? hash(s)) : unknown("Original source not retained", "source", [id]);
   };
   const check = input.check.disposition === "ACCEPTED_DEVELOPMENT"
@@ -39,6 +40,10 @@ export function buildInstitutionArtifact(input: {
     : unknown("Independent checker rejected this candidate", "independent checker", [input.id]);
   const mandate = known("Work", "standing_mandate", o.mandate.id, o.mandate.revision, hash(o.mandate));
   const unresolved = [
+    ...(input.candidate.sourceCoverageGaps??[]).map(gap=>({basis:'unresolved' as const,
+      statement:`Source coverage for ${gap.sourceId}; overall normative population is unknown`,
+      witnessRefs:[gap.grantId,gap.scopeDigest],domainRef:'pe-institution-responsibility-v1',knowledgeCut:o.knowledgeCut,
+      reason:gap.reason,requiredOwnerOrInput:'current source owner or subject consent',affectedRefs:[gap.sourceId]})),
     ...(input.candidate.unresolved ?? []).map(item => ({ basis: "unresolved" as const,
       statement: `Interpretation of ${item.witness}`, witnessRefs: [item.witness],
       domainRef: "pe-institution-responsibility-v1", knowledgeCut: o.knowledgeCut,

@@ -83,6 +83,8 @@ export async function readInstitutionCompiler(ctx: PeMutationContext, requestId:
   return { requestId: q.id, workId: q.work_id, workRevision: q.work_input_id, revision: q.revision,
     status: programme?.status ?? q.status, artifact: artifact ? InstitutionProgram.parse(artifact.body) : null,
     check: artifact?.check_result ?? null, programme, reason: q.failure, costs,
+    sourceCoverage:{gaps:(artifact?.candidate as {sourceCoverageGaps?:unknown[]}|undefined)?.sourceCoverageGaps??[],
+      normativePopulation:!artifact||(artifact.candidate as {sourceCoverageGaps?:unknown[]}).sourceCoverageGaps?.length?'UNKNOWN':'KNOWN_MODEL_RELATIVE'},
     canResume: ["FAILED", "UNKNOWN", "PARTIAL", "WAITING"].includes(q.status),
     canRevise: !["QUEUED", "RUNNING"].includes(q.status),
     executionAuthorityGranted: false, protectedQualification: "UNAVAILABLE" };
@@ -108,7 +110,6 @@ async function handleInstitutionOperationBody(ctx: PeMutationContext, operation:
       return { status: 200, body: await tx(ctx, async c => {
         const grants = (await c.query(`SELECT id::text,source_id,source_class,protocol,revision,expires_at
           FROM finnor_os.x1_source_grants g WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3
-          AND revoked_at IS NULL AND valid_from<=clock_timestamp() AND expires_at>clock_timestamp()
           AND NOT EXISTS(SELECT 1 FROM finnor_os.x1_source_grants n WHERE n.tenant_id=g.tenant_id
             AND n.work_id=g.work_id AND n.principal_id=g.principal_id AND n.source_id=g.source_id AND n.version>g.version)
           ORDER BY source_id LIMIT 17`, [ctx.auth.tenantId, principal(ctx), workId])).rows;

@@ -10,8 +10,11 @@ type Source = {
   rawBase64?: string;
   integrationId?: string; provider?: string; sourceScope?: string; externalObjectType?: string;
   sensitiveConsentRef?: string;
+  ownerCoverageGap?: SourceCoverageGap;
+  sourceScopePin?: {grantId:string;digest:string;originalReadAllowed:boolean};
   coverage: { expectedObjectIds: string[]; readObjectIds: string[]; complete: boolean };
 };
+export type SourceCoverageGap = {sourceId:string;grantId:string;reason:string;scopeDigest:string;expectedObjectCount:number};
 type RawRecord = {
   id: string; kind: string; registrationId?: string; entityType?: string;
   effectiveFrom?: string;
@@ -38,6 +41,7 @@ export type OriginalInstitutionEvidence = {
     checkerRevision: string; profileRevision: number; schemaRevision: string; runtimeRevision: string;
     authorizedOperations: string[];
     sourceDigests?: Record<string, string>;
+    sourceScopes?: Array<{grantId:string;digest:string;originalReadAllowed:boolean}>;
     canonicalOwners?: OriginalInstitutionEvidence["canonical"]["entities"];
     methodCapability?: {schema:'finnor.s8.institution-consumer-binding.v1';
       revisionRef:{owner:string;id:string;version:string;contentDigest:string};
@@ -62,6 +66,7 @@ type Obligation = {
 export type InstitutionCandidate = {
   tenantId: string; institutionId: string; workId: string; principalId: string;
   coverage: string[];
+  sourceCoverageGaps?: SourceCoverageGap[];
   mappings: Mapping[]; quantities: Quantity[];
   relations?: Relation[];
   temporalLinks?: { sourceId: string; recordId: string; startsAt: string; endsAt: string; kind: "scheduled" }[];
@@ -159,10 +164,11 @@ export async function independentlyCheckInstitutionModel(
         || !Array.isArray(source.coverage.expectedObjectIds) || !Array.isArray(source.coverage.readObjectIds)
         || !Array.isArray(source.authorizedPrincipalIds)
         || source.tenantId !== original.tenantId
-        || source.institutionId !== original.institutionId || !source.authorizedPrincipalIds.includes(original.principalId)
+        || source.institutionId !== original.institutionId
+        || (!source.ownerCoverageGap&&!source.authorizedPrincipalIds.includes(original.principalId))
         || source.rightsRevision !== current.rightsRevision
         || (["personnel_benefits", "expense_administration"].includes(source.sourceClass)
-          && !source.sensitiveConsentRef))
+          && !source.ownerCoverageGap&&!source.sensitiveConsentRef))
       || !unique(original.sources.map((source) => source.id))) {
     return fail("SOURCE_AUTHORITY", "Original source access or scope is not current");
   }
@@ -187,10 +193,32 @@ export async function independentlyCheckInstitutionModel(
     return fail("COVERAGE", "A declared original source is missing or duplicated", sourceIds);
   }
   const records = new Map<string, { source: Source; record: RawRecord }>();
+  const sourceGaps=original.sources.flatMap(source=>source.ownerCoverageGap?[source.ownerCoverageGap]:[]);
+  if(!Array.isArray(candidate.sourceCoverageGaps??[])
+    ||!unique((candidate.sourceCoverageGaps??[]).map(g=>g.sourceId))
+    ||!same([...(candidate.sourceCoverageGaps??[])].sort((a,b)=>a.sourceId.localeCompare(b.sourceId)),
+      [...sourceGaps].sort((a,b)=>a.sourceId.localeCompare(b.sourceId))))
+    return fail('COVERAGE','Native source coverage gaps were omitted, duplicated or forged');
   for (const source of original.sources) {
     const declared = profile.sourceClasses.find((entry) => entry.id === source.sourceClass);
     if (!declared || !declared.protocols.includes(source.protocol)) {
       return fail("COVERAGE", `No independent raw decoder for ${source.id}/${source.protocol}`, [source.id]);
+    }
+    if(source.ownerCoverageGap){
+      const gap=source.ownerCoverageGap,pin=source.sourceScopePin;
+      if(gap.sourceId!==source.id||!gap.grantId||!/^[a-f0-9]{64}$/.test(gap.scopeDigest)
+        ||!['SOURCE_GRANT_REVOKED','SOURCE_GRANT_WINDOW_UNAVAILABLE','SUBJECT_SCOPE_NOT_CERTIFIED',
+          'SENSITIVE_SUBJECT_CONSENT_OR_IDENTITY_UNAVAILABLE'].includes(gap.reason)
+        ||gap.expectedObjectCount!==source.coverage.expectedObjectIds.length
+        ||!gap.expectedObjectCount||!unique(source.coverage.expectedObjectIds)
+        ||source.coverage.expectedObjectIds.some(id=>typeof id!=='string'||!id)
+        ||source.rawUtf8!==''||source.rawBase64!==undefined||source.authorizedPrincipalIds.length!==0
+        ||source.coverage.complete!==false||source.coverage.readObjectIds.length!==0
+        ||source.sensitiveConsentRef!==undefined||!pin||pin.grantId!==gap.grantId
+        ||pin.digest!==gap.scopeDigest||pin.originalReadAllowed!==false
+        ||!current.sourceScopes?.some(p=>same(p,pin)))
+        return fail('SOURCE_AUTHORITY','Unavailable source lacks its exact native metadata-only refusal',[source.id]);
+      continue;
     }
     let rows: RawRecord[];
     try {
@@ -452,7 +480,7 @@ export async function independentlyCheckInstitutionModel(
       || original.sources.some((source) => source.revision !== current.sourceRevisions[source.id])
       || Object.keys(current.sourceRevisions).length !== original.sources.length
       || !same(candidate.dependencies.sourceRevisions, current.sourceRevisions)
-      || (current.sourceDigests && original.sources.some((source) =>
+      || (current.sourceDigests && original.sources.some((source) => !source.ownerCoverageGap &&
         current.sourceDigests?.[source.id] !== createHash("sha256").update(source.rawBase64
           ? Buffer.from(source.rawBase64, "base64") : Buffer.from(source.rawUtf8)).digest("hex")))
       || Object.keys(current).some((key) => key !== "sourceRevisions" && key !== "authorizedOperations"

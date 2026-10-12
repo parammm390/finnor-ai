@@ -212,6 +212,11 @@ export async function decodeInstitutionSources(
     ids.add(source.id);
     const declaration = profile.sourceClasses.find((item) => item.id === source.sourceClass);
     if (!declaration?.protocols.includes(source.protocol)) fail(`undeclared ${source.sourceClass}/${source.protocol}`);
+    if(source.ownerCoverageGap){
+      if(source.rawUtf8!==''||source.rawBase64!==undefined||source.coverage.readObjectIds.length
+        ||source.coverage.complete||source.authorizedPrincipalIds.length)fail(`unavailable source contains private evidence ${source.id}`);
+      continue;
+    }
     const binary = ["pdf_text", "docx", "xlsx"].includes(source.protocol);
     const bytes = binary ? Buffer.from(source.rawBase64 ?? "", "base64") : Buffer.from(source.rawUtf8, "utf8");
     if (binary && (source.rawUtf8 !== "" || bytes.toString("base64") !== source.rawBase64)

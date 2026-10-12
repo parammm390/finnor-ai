@@ -29,6 +29,7 @@ export function buildInstitutionDependencyGraph(candidate: InstitutionCandidate,
       relations:canonical((candidate.relations??[]).filter(r=>r.sourceId===sourceId)),
       contradictions:canonical(candidate.contradictions.filter(c=>c.leftRef.sourceId===sourceId||c.rightRef.sourceId===sourceId)),
       unresolved:canonical((candidate.unresolved??[]).filter(r=>r.sourceId===sourceId)),
+      coverageGaps:canonical((candidate.sourceCoverageGaps??[]).filter(g=>g.sourceId===sourceId)),
     });
   }
   for (const responsibility of duties) {

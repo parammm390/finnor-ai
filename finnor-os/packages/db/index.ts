@@ -1077,6 +1077,10 @@ export async function assertInstitutionPlanContinuationTx(db: Db, params: {
     ARRAY(SELECT jsonb_array_elements_text(q.grant_ids)::uuid FROM finnor_os.x1_compiler_requests q
       WHERE q.tenant_id=${params.tenantId}::uuid AND q.work_id=${params.workId}::uuid
         AND q.id=${params.compilerRequestId}::uuid))`);
+  await db.execute(sql`SELECT finnor_os.x1_assert_source_scopes(${params.workId}::uuid,
+    q.input_manifest->'current'->'sourceScopes',ARRAY(SELECT jsonb_array_elements_text(q.grant_ids)::uuid))
+    FROM finnor_os.x1_compiler_requests q WHERE q.tenant_id=${params.tenantId}::uuid
+      AND q.work_id=${params.workId}::uuid AND q.id=${params.compilerRequestId}::uuid`);
   const result=await db.execute(sql`SELECT q.id::text compiler_request_id,parent.id::text parent_request_id,
       q.episode_id::text episode_id,p.id::text prior_program_id
     FROM finnor_os.x1_compiler_requests q
@@ -1117,7 +1121,7 @@ export async function assertInstitutionPlanContinuationTx(db: Db, params: {
       AND NOT EXISTS(SELECT 1 FROM jsonb_array_elements_text(q.grant_ids) AS ids(grant_id)
         WHERE NOT EXISTS(SELECT 1 FROM finnor_os.x1_source_grants g
           WHERE g.tenant_id=q.tenant_id AND g.principal_id=q.principal_id AND g.work_id=q.work_id
-            AND g.id=ids.grant_id::uuid AND g.revoked_at IS NULL AND g.valid_from<=clock_timestamp() AND g.expires_at>clock_timestamp()
+            AND g.id=ids.grant_id::uuid
             AND g.revision=q.input_manifest->'current'->'sourceRevisions'->>g.source_id
             AND NOT EXISTS(SELECT 1 FROM finnor_os.x1_source_grants n WHERE n.tenant_id=g.tenant_id
               AND n.principal_id=g.principal_id AND n.work_id=g.work_id AND n.source_id=g.source_id AND n.version>g.version)))

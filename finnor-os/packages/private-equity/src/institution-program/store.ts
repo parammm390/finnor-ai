@@ -192,7 +192,9 @@ export async function submitInstitutionCompiler(ctx: PeMutationContext, input: {
     await lockInstitutionSourceAuthority(ctx,c,input.workId,request.grantIds);
     const grants = await c.query(`SELECT id FROM finnor_os.x1_source_grants WHERE tenant_id=$1
       AND principal_id=$2 AND work_id=$3 AND id=ANY($4::uuid[]) AND institution_id=$5
-      AND revoked_at IS NULL AND valid_from<=clock_timestamp() AND expires_at>clock_timestamp()`,
+      AND NOT EXISTS(SELECT 1 FROM finnor_os.x1_source_grants newer WHERE newer.tenant_id=x1_source_grants.tenant_id
+        AND newer.principal_id=x1_source_grants.principal_id AND newer.work_id=x1_source_grants.work_id
+        AND newer.source_id=x1_source_grants.source_id AND newer.version>x1_source_grants.version)`,
     [ctx.auth.tenantId, principal(ctx), input.workId, request.grantIds, mandate.institutionId]);
     if (grants.rowCount !== request.grantIds.length) throw unavailable();
     let episode = (await c.query<CompilerEpisodeRow>(`SELECT * FROM finnor_os.x1_compiler_episodes
@@ -254,13 +256,14 @@ export async function assertInstitutionCompilerCurrent(ctx: PeMutationContext, q
     if (head?.id !== q.id) throw Error("X1_COMPILER_REVISION_SUPERSEDED");
     const grants = (await client.query<{ source_id: string; revision: string }>(`SELECT g.source_id,g.revision
       FROM finnor_os.x1_source_grants g WHERE g.tenant_id=$1 AND g.principal_id=$2
-      AND g.work_id=$3 AND g.id=ANY($4::uuid[]) AND g.revoked_at IS NULL
-      AND g.valid_from<=clock_timestamp() AND g.expires_at>clock_timestamp()
+      AND g.work_id=$3 AND g.id=ANY($4::uuid[])
       AND NOT EXISTS(SELECT 1 FROM finnor_os.x1_source_grants n WHERE n.tenant_id=g.tenant_id
         AND n.principal_id=g.principal_id AND n.work_id=g.work_id AND n.source_id=g.source_id AND n.version>g.version)
       `, [q.tenant_id, q.principal_id, q.work_id, q.grant_ids])).rows;
     if (grants.length !== q.grant_ids.length) throw Error("X1_SOURCE_GRANT_REVOKED_OR_SUPERSEDED");
     if (manifest) {
+      await client.query('SELECT finnor_os.x1_assert_source_scopes($1,$2::jsonb,$3::uuid[])',
+        [q.work_id,stable(manifest.sourceScopes),q.grant_ids]);
       await client.query("SELECT finnor_os.x1_assert_canonical_owner_cut($1::jsonb,$2)",
         [stable(manifest.canonicalOwners),lock]);
       if (grants.some(g => manifest.sourceRevisions[g.source_id] !== g.revision)) throw Error("X1_SOURCE_REVISION_CHANGED");

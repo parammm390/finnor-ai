@@ -65,7 +65,8 @@ async function rereadSources(
   for (const source of sources) {
     const current = await acquireInstitutionOriginal(ctx, workId, source.grantId, profile);
     if (current.originalSha256 !== source.originalSha256
-        || current.coreVersionId !== source.coreVersionId || current.grantVersion !== source.grantVersion) {
+        || current.coreVersionId !== source.coreVersionId || current.grantVersion !== source.grantVersion
+        || JSON.stringify(current.sourceScopePin)!==JSON.stringify(source.sourceScopePin)) {
       throw new Error("X1_ORIGINAL_BYTES_OR_REVISION_MISMATCH");
     }
     restored.push(current);
@@ -124,6 +125,7 @@ export async function loadInstitutionAdmissionOriginal(
     current: {
       sourceRevisions: Object.fromEntries(retained.map((source) => [source.id, source.revision])),
       sourceDigests: Object.fromEntries(retained.map((source) => [source.id, source.originalSha256])),
+      sourceScopes:retained.map(source=>source.sourceScopePin),
       sensitiveSubjects:retained.filter(source=>source.sensitiveSubjectRegistrations).map(source=>({
         sourceId:source.id,institutionId:source.institutionId,sourceClass:source.sourceClass,
         purpose:source.purpose,registrations:source.sensitiveSubjectRegistrations!})),
@@ -165,6 +167,7 @@ export async function loadInstitutionCanonicalOwnerSnapshot(
   const identifiers = new Set<string>();
   const prospective = new Map<string, { entityType: "fund" | "vehicle"; registrationId: string; id: string; name: string; ambiguousName?:boolean }>();
   for (const source of original.sources) {
+    if(source.ownerCoverageGap)continue;
     const rows = await originalRawRecords(source, profile.bounds.tabularRowsPerObject, profile.bounds.objectBytes);
     for (const row of rows) {
       if (row.registrationId) identifiers.add(row.registrationId);
@@ -341,7 +344,8 @@ async function admitCheckedInstitutionMappings(
     const current = await loadInstitutionAdmissionOriginal(ctx, original.workId,
       sources.map((source) => source.grantId), profile);
     if (current.original.current.rightsRevision !== original.current.rightsRevision
-        || current.original.current.checkerRevision !== acceptedCheck.checkerRevision) {
+        || current.original.current.checkerRevision !== acceptedCheck.checkerRevision
+        || JSON.stringify(current.original.current.sourceScopes)!==JSON.stringify(original.current.sourceScopes)) {
       throw new Error("X1_ADMISSION_REPLAY_STALE_RIGHTS_OR_CHECKER");
     }
     await withTenantTransaction(ctx.auth.tenantId, { userId: ctx.auth.userId, readOnly: true }, async (_db, client) => {
@@ -423,6 +427,8 @@ async function admitCheckedInstitutionMappings(
   }
   return peTransaction(ctx, async (db, client) => {
     await lockInstitutionSourceAuthority(ctx,client,original.workId,sources.map(source=>source.grantId));
+    await client.query('SELECT finnor_os.x1_assert_source_scopes($1,$2::jsonb,$3::uuid[])',
+      [original.workId,JSON.stringify(original.current.sourceScopes),sources.map(source=>source.grantId)]);
     const rights = await client.query<{ revision: number }>(
       "SELECT revision FROM finnor_os.authority_states WHERE tenant_id=$1 FOR SHARE",
       [ctx.auth.tenantId],

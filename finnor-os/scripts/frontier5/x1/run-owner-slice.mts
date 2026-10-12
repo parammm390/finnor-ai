@@ -69,7 +69,7 @@ const freeze = { source: { commit: git("rev-parse", "HEAD"), tree: git("rev-pars
   dirty: git("status", "--porcelain=v1", "-uall"),dirtyDiffDigest:sha(git('diff','--binary')), pins: sourcePins }, startedAt,
   runtime: { node: process.version, platform: process.platform, arch: process.arch },
   profile: "DISPOSABLE_LOCAL_AUTH_SERVICE_ACTUAL_BEARER_AND_RLS", hostedSupabaseQualified: false,
-  authDevBypass: false, expectedMigrations: 187, limits, freeBytesBefore: String(diskBefore), dutyCount,mounted,
+  authDevBypass: false, expectedMigrations: 188, limits, freeBytesBefore: String(diskBefore), dutyCount,mounted,
   cases: ["A-raw-two-identity-native-request", "C-unsigned-forged-input", "D-same-key-replay", "G-restricted-roles",
     ...(material?['B-ledger-correction']:[]),...(heterogeneous?['A-eight-class-original-corpus']:[]),
     ...(canonical?['A-fourteen-canonical-kinds']:[]),...(recovery?['D-compiler-before-publication-death']:[]),
@@ -282,10 +282,12 @@ try {
         origin: "manual_upload", actor, sourceSystem: "owner-export", sourceRef: source.id, providerVersionId: "r1" });
     });
     if(!ownerInputs)await admin.query(`INSERT INTO finnor_os.x1_source_grants(id,tenant_id,principal_id,work_id,institution_id,source_id,source_class,
-      purpose,acquisition_kind,document_id,document_version_id,protocol,revision,original_sha256,expected_object_ids,valid_from,expires_at)
-      VALUES($1,$2,$3,$4,$5,$6,$7,'standing evidence responsibility','core_export',$8,$9,$10,'r1',$11,$12::jsonb,
+      purpose,acquisition_kind,document_id,document_version_id,protocol,revision,original_sha256,expected_object_ids,expected_subject_registrations,valid_from,expires_at)
+      VALUES($1,$2,$3,$4,$5,$6,$7,'standing evidence responsibility','core_export',$8,$9,$10,'r1',$11,$12::jsonb,$13::jsonb,
         clock_timestamp()-interval '1 minute',clock_timestamp()+interval '1 hour')`,
-    [grantId, tenant, actor, workId, institutionId, source.id, source.sourceClass, version.document_id, version.id,protocol,sha(bytes), JSON.stringify(source.rows.map(r => r.id))]);
+    [grantId, tenant, actor, workId, institutionId, source.id, source.sourceClass, version.document_id, version.id,protocol,sha(bytes),
+      JSON.stringify(source.rows.map(r => r.id)),JSON.stringify(['personnel_benefits','expense_administration'].includes(source.sourceClass)
+        ?[...new Set(source.rows.map(r=>r.registrationId))].sort():[])]);
     await writeFile(join(evidence, "originals", source.id + '.'+(source.extension??'json')), bytes, { mode: 0o600, flag: "wx" });
     if(!ownerInputs)grantIds.push(grantId); sourceBindings.push({ sourceId: source.id, sourceClass: source.sourceClass,protocol,
       expectedObjectIds:source.rows.map(r=>{assert.equal(typeof r.id,'string');return r.id as string;}),grantId, versionId: version.id, documentId: version.document_id, sha256: sha(bytes) });

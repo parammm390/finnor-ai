@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import type { DigitalInstitutionProfile } from "./contracts";
-import type { InstitutionCandidate, InstitutionCheck, OriginalInstitutionEvidence } from "./checker";
+import type { InstitutionCandidate, InstitutionCheck, OriginalInstitutionEvidence, SourceCoverageGap } from "./checker";
 import { institutionDigest as hash } from "./canonical-json";
 
 export const X1_RESPONSIBILITY_VERSION = "institution-responsibility-v1";
@@ -42,13 +42,16 @@ export type InstitutionResponsibility = {
 type DutyPopulation = {
   admission: { originalDigest: string; candidateDigest: string; checkerDigest: string };
   dutyPopulationDigest: string;
+  sourceCoverageGaps?: SourceCoverageGap[];
+  sourceScopes?: OriginalInstitutionEvidence['current']['sourceScopes'];
 };
 export function verifyInstitutionDutyPopulation(
   programme: DutyPopulation, responsibilities: InstitutionResponsibility[],
   unresolved: Array<{ stableIdentity: string; reason: string; originalDeadline: string }>,
 ): string {
   const digest = hash(["x1-checked-duty-population-v1", programme.admission,
-    responsibilities, unresolved]);
+    responsibilities, unresolved,...(programme.sourceScopes?[{sourceScopes:programme.sourceScopes}]:[]),
+    ...(programme.sourceCoverageGaps?.length?[programme.sourceCoverageGaps]:[])]);
   if (programme.dutyPopulationDigest !== digest)
     throw new Error("X1_P1_CHECKED_DUTY_POPULATION_MISMATCH");
   return digest;
@@ -148,9 +151,13 @@ export function deriveInstitutionResponsibilities(input: Input) {
     status: "LOWERED" as const,
     qualification: "TYPED_OWNER_PROGRESSION_NOT_NUMERIC_S4_NOT_S3_CAUSAL" as const,
     executionAuthorityGranted: false as const, protectedReceipt: null,
+    ...(original.current.sourceScopes?{sourceScopes:original.current.sourceScopes}:{}),
+    ...(candidate.sourceCoverageGaps?.length?{sourceCoverageGaps:candidate.sourceCoverageGaps}:{}),
   };
   const programme = { ...programmeBody,
     dutyPopulationDigest: hash(["x1-checked-duty-population-v1",
-      programmeBody.admission, responsibilities, unresolved]) };
+      programmeBody.admission, responsibilities, unresolved,
+      ...(original.current.sourceScopes?[{sourceScopes:original.current.sourceScopes}]:[]),
+      ...(candidate.sourceCoverageGaps?.length?[candidate.sourceCoverageGaps]:[])]) };
   return { programme, responsibilities, unresolved };
 }

@@ -96,8 +96,10 @@ export async function selectInstitutionPlan(ctx:PeMutationContext,request:Instit
   canonicalStateHash:binding.inputDigest,canonicalEntities:[{kind:'entity',
    type:request.root.entityType,id:request.root.entityId,versionHash:null,sourceRef:'S1:authenticated-root'}],
   authority:{revision:binding.rightsRevision,roles:[ctx.auth.role],employeeId:principal(ctx)},
-  capabilities,policyRefs,currentEffects:[],sourceHealth:{status:request.institution.unresolved.length?'partial':'complete',
-   missing:request.institution.unresolved.map(item=>item.stableIdentity)}});
+  capabilities,policyRefs,currentEffects:[],sourceHealth:{status:request.institution.unresolved.length
+    ||request.institution.programme.sourceCoverageGaps?.length?'partial':'complete',
+   missing:[...request.institution.unresolved.map(item=>item.stableIdentity),
+    ...(request.institution.programme.sourceCoverageGaps??[]).map(g=>g.sourceId)]}});
  const actionNodes:CandidatePlanNode[]=batch.map(action=>({
   key:'duty_'+sha(action.responsibilityIdentity).slice(0,24),kind:'action',
   actionType:action.operation,payload:action.payload,

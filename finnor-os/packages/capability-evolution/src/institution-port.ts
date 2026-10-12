@@ -10,7 +10,7 @@ import type { JournalEntry } from "./journal";
 async function readInstalledInstitutionCompilerIdentity(){
   const paths=["contracts.ts","reconstruction.ts","source-decoder.ts","checker.ts","checker-raw.ts","responsibility.ts",
     "resource-demand.ts","completion-contracts.ts","action-resolution.ts","canonical-json.ts",
-    "canonical-owners.ts","owner-admission.ts","source-authority.ts","source-locks.ts","checker-process.ts",
+    "canonical-owners.ts","owner-admission.ts","source-authority.ts","source-scope.ts","source-locks.ts","checker-process.ts",
     "store.ts","worker.ts","api.ts","inputs.ts","artifact.ts","baseline.ts","meter.ts","installed-source.ts"].map(path=>
       new URL(`../../private-equity/src/institution-program/${path}`,import.meta.url));
   for(const path of ["institution-dependencies.ts","institution-worker.ts"])

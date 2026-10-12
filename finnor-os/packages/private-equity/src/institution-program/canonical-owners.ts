@@ -62,7 +62,7 @@ export async function readAdditionalInstitutionOwners(ctx:PeMutationContext,orig
        WHERE b.tenant_id=$1 AND b.institution_id=$2 AND b.registration_id=ANY($3::text[])
         AND b.source_id=ANY($4::text[]) AND b.revoked_at IS NULL AND b.valid_from<=clock_timestamp()
         AND b.expires_at>clock_timestamp() AND u.status='active' ORDER BY b.source_id,b.registration_id LIMIT $5`,
-      [ctx.auth.tenantId,original.institutionId,identifiers,original.sources.map(s=>s.id),profile.bounds.canonicalReferences+1])).rows;
+      [ctx.auth.tenantId,original.institutionId,identifiers,original.sources.filter(s=>!s.ownerCoverageGap).map(s=>s.id),profile.bounds.canonicalReferences+1])).rows;
     if(people.length>profile.bounds.canonicalReferences)throw Error("X1_CANONICAL_REFERENCE_BOUND");
     if(new Set(people.map(p=>p.subject_user_id)).size>profile.bounds.people)throw Error("X1_PERSON_BOUND");
     for(const p of people){const proof={bindingId:p.id,sourceId:p.source_id,registrationId:p.registration_id,revision:p.revision};

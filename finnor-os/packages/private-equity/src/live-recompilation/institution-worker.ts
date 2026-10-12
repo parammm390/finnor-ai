@@ -127,8 +127,7 @@ export async function runInstitutionUpdateJob(payload:Record<string,unknown>,exe
        AND g.principal_id=original.principal_id AND g.work_id=original.work_id AND g.source_id=original.source_id
        ORDER BY g.version DESC LIMIT 1) latest_grant ON true
      WHERE original.tenant_id=$1 AND original.principal_id=$2 AND original.id=ANY($3::uuid[])
-      AND latest_grant.revoked_at IS NULL AND latest_grant.valid_from<=clock_timestamp()
-      AND latest_grant.expires_at>clock_timestamp() ORDER BY latest_grant.source_id`,
+      ORDER BY latest_grant.source_id`,
      [row.tenant_id,row.principal_id,latest.grant_ids])).rows;
     if(grants.length!==latest.grant_ids.length||new Set(grants.map(g=>g.source_id)).size!==grants.length)
      throw Error("X1_P7_ORIGINAL_SOURCE_POPULATION_UNAVAILABLE");
