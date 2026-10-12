@@ -162,13 +162,31 @@ export async function submitInstitutionHarnessProgram(ctx:PeMutationContext,requ
 }
 
 export async function readInstitutionHarnessProgram(ctx:PeMutationContext,id:string){
+ return readInstitutionHarnessOwnerCut(ctx,id,1);
+}
+type InstitutionHarnessOwnerProjection={programId:string;workId:string;workRevision:string;
+ status:string;program:InstitutionHarnessProgram|null;reason:string|null;
+ incurredCosts:Awaited<ReturnType<typeof episodeCosts>>;canResume?:boolean};
+async function readInstitutionHarnessOwnerCut(ctx:PeMutationContext,id:string,remainingRefresh:number):Promise<InstitutionHarnessOwnerProjection>{
  const q=await nativeRequestRow(ctx,id);
  if(!isInstitutionRow(q))throw Error('X1_P1_TYPED_HEAD_REQUIRED');
  await authorize(ctx,q.request.root,[{type:'work',id:q.work_id}]);
  if(['CANCELLED','INVALIDATED'].includes(q.status))
   return {programId:id,workId:q.work_id,workRevision:q.work_input_id,status:q.status,
    program:null,reason:q.failure,incurredCosts:await episodeCosts(ctx,q)};
- await assertProgramCurrent(ctx,q);
+ try{await assertProgramCurrent(ctx,q);}
+ catch(error){
+  if(remainingRefresh>0&&(error as Error).message==='CANONICAL_PLAN_REVISION_SUPERSEDED'){
+   const latest=await nativeRequestRow(ctx,id);
+   // A canonical batch can advance while this read validates its old pointer.
+   // Refresh once only after proving the same owner/input/generation acquired a
+   // different actual plan. Unrelated supersession and all other guards refuse.
+   if(latest.generation===q.generation&&latest.work_input_id===q.work_input_id
+     &&latest.plan_revision_id!==q.plan_revision_id)
+    return readInstitutionHarnessOwnerCut(ctx,id,remainingRefresh-1);
+  }
+  throw error;
+ }
  const program=q.head_id?await tx(ctx,async c=>{
   const row=(await c.query<{body:InstitutionHarnessProgram;digest:string}>(`SELECT body,digest
     FROM finnor_os.p1_programs WHERE tenant_id=$1 AND principal_id=$2 AND id=$3`,
