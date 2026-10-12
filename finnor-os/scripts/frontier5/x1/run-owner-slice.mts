@@ -443,6 +443,19 @@ try {
     JOIN finnor_os.x1_compiler_requests r ON r.tenant_id=a.tenant_id AND r.admission_id=a.id
     WHERE r.tenant_id=$1 AND r.principal_id=$2 AND r.id=$3`,[tenant,actor,compilerId])).rows[0];
   assert.ok(admission,"actual S1 mapping admission required");
+  const actualBaseline=(await admin.query(`SELECT a.id,a.body,a.input_manifest FROM finnor_os.x1_compiler_requests r
+    JOIN finnor_os.x1_compiler_artifacts a ON a.tenant_id=r.tenant_id AND a.id=r.artifact_id
+    WHERE r.tenant_id=$1 AND r.id=$2`,[tenant,compilerId])).rows[0];
+  assert.ok(actualBaseline?.input_manifest.baseline,'actual immutable B_live preimage');
+  assert.equal(actualBaseline.input_manifest.baseline.classification,'B_live');
+  assert.equal(actualBaseline.input_manifest.baseline.source.git.commit,freeze.source.commit);
+  assert.equal(actualBaseline.input_manifest.baseline.source.git.tree,freeze.source.tree);
+  assert.equal(actualBaseline.input_manifest.baseline.schemaState.migrations.length,freeze.expectedMigrations);
+  assert.equal(actualBaseline.input_manifest.baseline.sourceGrantPins.length,grantIds.length);
+  assert.equal(actualBaseline.body.envelope.baseline_manifest_ref.status,'known');
+  assert.equal(actualBaseline.body.envelope.baseline_manifest_ref.digest,actualBaseline.input_manifest.baselineDigest);
+  assert.equal(actualBaseline.body.envelope.parent_artifact_refs.length,0);
+  await save('observed-installed-baseline.json',actualBaseline);
   for(const mapping of expected.mappings){
     const receipt=admission.receipts.find((r:any)=>r.sourceId===mapping.sourceId&&r.recordId===mapping.recordId);
     assert.ok(receipt,"independently expected original mapping must be admitted");
@@ -661,11 +674,18 @@ try {
       initialObjective,finalObjective,priorCompletionProofDigest:initialProof},
       basis:'ACTUAL_AUTHENTICATED_OWNER_REVISION_SAME_OBJECTIVE_ORIGINAL_PARENT_NO_DUPLICATE_EFFECT'});
     if(material){
-      const artifacts=(await admin.query(`SELECT r.id request_id,r.revision,a.candidate,a.check_result,a.dependency_graph
+      const artifacts=(await admin.query(`SELECT r.id request_id,r.revision,a.id artifact_id,a.body,a.body_digest,a.input_manifest,
+        a.candidate,a.check_result,a.dependency_graph
         FROM finnor_os.x1_compiler_requests r JOIN finnor_os.x1_compiler_artifacts a
           ON a.tenant_id=r.tenant_id AND a.id=r.artifact_id
         WHERE r.tenant_id=$1 AND r.principal_id=$2 AND r.work_id=$3 ORDER BY r.revision`,[tenant,actor,workId])).rows;
       assert.equal(artifacts.length,2);const prior=artifacts[0],next=artifacts[1],oracle=expected.correction;
+      assert.equal(next.body.envelope.parent_artifact_refs.length,1);
+      assert.equal(next.body.envelope.parent_artifact_refs[0].ref,prior.artifact_id);
+      assert.equal(next.body.envelope.parent_artifact_refs[0].digest,prior.body_digest);
+      assert.equal(next.input_manifest.baseline.source.git.commit,freeze.source.commit);
+      assert.equal(next.input_manifest.baseline.schemaState.migrations.length,freeze.expectedMigrations);
+      assert.equal(next.body.envelope.baseline_manifest_ref.digest,next.input_manifest.baselineDigest);
       assert.equal(next.candidate.coverage.length,oracle.sourcePopulation);
       const quantity=next.candidate.quantities.filter((q:any)=>q.sourceId===oracle.sourceId&&q.recordId===oracle.recordId);
       assert.equal(quantity.length,1);for(const field of ['value','currency','unit','period','basis'])

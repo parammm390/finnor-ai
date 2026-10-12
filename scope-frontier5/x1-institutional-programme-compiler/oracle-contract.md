@@ -162,6 +162,21 @@ observed Request and effect, then complete the same native Work/Objective/Plan.
 An absence observed in this coordinated pre-publication case does not generalize
 to absence after an unobserved external submission.
 
+### Installed baseline and parent readback expectations
+
+The immutable baseline preimage records actual loaded source digests, available
+Git commit/tree/dirty digest, root/backend locks, executable runtime, installed
+migration history/catalog digest, profile, source/mandate/rights/operation handles
+and original S5 parent. The artifact reference must hash that exact stored
+preimage. Its classification is B_live, with qualified B_V unavailable and
+preparation-cost/hosted-auth qualification gaps explicitly retained.
+
+A successor has exactly its actual parent's artifact ID and stored body digest
+under the same tenant, principal, Work and original episode. Authenticated read
+rechecks stored body and baseline reference digests. No caller can supply those
+bindings. The real material-correction case independently compares Git/source,
+schema/profile, original source handles and parent ID/digest from owner storage.
+
 ## Qualification score specification
 
 Independently freeze material mapping set M, supported obligation set O, unique business assignment identities/weights/deadlines, critical subset K and actionable-change set C per environment before exposure. Candidate claims are CANDIDATE, not expectations. Match one-to-one only under independently defined equivalence; no duplicate credit.

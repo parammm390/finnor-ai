@@ -15,6 +15,8 @@ import { deriveInstitutionResponsibilities } from "./responsibility";
 import { resolveInstitutionActions } from "./action-resolution";
 import { buildInstitutionArtifact } from "./artifact";
 import { withInstitutionMeter, persistInstitutionCompute } from "./meter";
+import { observedInstitutionBaseline } from './baseline';
+import type { Binding } from './contracts';
 import { buildInstitutionDependencyGraph, compareInstitutionDependencies,
   type InstitutionDependencyGraph } from "../live-recompilation/institution-dependencies";
 import { assertInstitutionCompilerCurrent, compilerEpisode, compilerEvent, compilerRow,
@@ -179,12 +181,26 @@ export async function runInstitutionCompilerJob(payload: Record<string, unknown>
       phase:"COMPILE",status:accepted?(native?"CHECKED_AND_NATIVE_SUBMITTED":"CHECKED_WITH_GAPS"):"CHECK_REJECTED",observedAcquisitionAttempts:sourceAttempts,
       observedCheckerAttempts:checkerAttempts});
     const code = await codeIdentity(), artifactId = randomUUID();
+    const baseline=await observedInstitutionBaseline(ctx,{compilerId:q.id,workInputId:q.work_input_id,
+      episodeId:q.episode_id,original:result.original,profile,producer:code,parentReservation:parentRef});
+    const parents:Binding[]=q.parent_request_id?await tx(ctx,async c=>{
+      const parent=(await c.query<{id:string;revision:number;body:unknown;body_digest:string}>(`SELECT a.id::text,r.revision,a.body,a.body_digest
+        FROM finnor_os.x1_compiler_requests r JOIN finnor_os.x1_compiler_artifacts a
+          ON a.tenant_id=r.tenant_id AND a.principal_id=r.principal_id AND a.id=r.artifact_id AND a.request_id=r.id
+        WHERE r.tenant_id=$1 AND r.principal_id=$2 AND r.work_id=$3 AND r.episode_id=$4 AND r.id=$5`,
+        [q.tenant_id,q.principal_id,q.work_id,q.episode_id,q.parent_request_id])).rows[0];
+      if(!parent||sha(parent.body)!==parent.body_digest)throw Error('X1_IMMUTABLE_PARENT_ARTIFACT_REQUIRED');
+      return [{status:'known',owner:'S4_P1',kind:'immutable_parent_institution_projection',ref:parent.id,
+        revision:String(parent.revision),digest:parent.body_digest,tenantRef:q.tenant_id,
+        institutionRef:result.original.institutionId,rightsRevision:result.original.current.rightsRevision,
+        knowledgeCut:result.original.knowledgeCut}];
+    },true):[];
     const artifact = buildInstitutionArtifact({ id: artifactId, revision: String(q.revision),
       workInput:{id:q.work_input_id,digest:q.work_input_digest}, ...result,
       lowered, admissionId, programme: native ? { id: native.programId, revision: native.workRevision,
         digest: sha(lowered!.programme) } : null, reservation: parentRef, producer: code,
       lockDigest: sha(readFileSync(fileURLToPath(new URL("../../../../package-lock.json", import.meta.url)))),
-      baseline: null, parents: [], costRefs: [{status:"known",owner:"S7",kind:"physical_compute_attribution",
+      baseline: {ref:'x1-baseline:'+artifactId,digest:baseline.digest}, parents, costRefs: [{status:"known",owner:"S7",kind:"physical_compute_attribution",
         ref:compute.record.ref.id,revision:compute.record.ref.version,digest:compute.record.ref.contentDigest,
         tenantRef:q.tenant_id,institutionRef:result.original.institutionId,
         rightsRevision:result.original.current.rightsRevision,knowledgeCut:result.original.knowledgeCut}],
@@ -197,7 +213,8 @@ export async function runInstitutionCompilerJob(payload: Record<string, unknown>
         (id,tenant_id,principal_id,request_id,generation,candidate,check_result,body,body_digest,input_manifest,dependency_graph)
         VALUES($1,$2,$3,$4,$5,$6::jsonb,$7::jsonb,$8::jsonb,$9,$10::jsonb,$11::jsonb)`,
       [artifactId, q.tenant_id, q.principal_id, q.id, q.generation, stable(result.candidate), stable(result.check),
-        stable(artifact), sha(artifact), stable({ current: result.original.current, originalDigest: accepted
+        stable(artifact), sha(artifact), stable({ current: result.original.current,baseline:baseline.body,baselineDigest:baseline.digest,
+          originalDigest: accepted
           ? (result.check as { inputDigest: string }).inputDigest : null }), stable(graph)]);
       await c.query(`UPDATE finnor_os.x1_compiler_requests SET status=$4,artifact_id=$5,program_id=$6,
         failure=$7,updated_at=clock_timestamp() WHERE tenant_id=$1 AND principal_id=$2 AND id=$3`,

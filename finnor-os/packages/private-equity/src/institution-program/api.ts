@@ -39,6 +39,25 @@ export async function readInstitutionCompiler(ctx: PeMutationContext, requestId:
   try {
     await assertInstitutionCompilerCurrent(ctx, q, artifact?.input_manifest?.current);
     if (artifact && sha(artifact.body) !== artifact.body_digest) throw Error("X1_IMMUTABLE_ARTIFACT_DIGEST_MISMATCH");
+    if(artifact){
+      const parsed=InstitutionProgram.parse(artifact.body),baseline=artifact.input_manifest?.baseline;
+      if(!baseline||sha(baseline)!==artifact.input_manifest.baselineDigest
+        ||parsed.envelope.baseline_manifest_ref.status!=='known'
+        ||parsed.envelope.baseline_manifest_ref.ref!=='x1-baseline:'+q.artifact_id
+        ||parsed.envelope.baseline_manifest_ref.digest!==artifact.input_manifest.baselineDigest)
+        throw Error('X1_IMMUTABLE_BASELINE_BINDING_MISMATCH');
+      if(q.parent_request_id){
+        const parent=await tx(ctx,async c=>(await c.query<{id:string;body:unknown;body_digest:string}>(`SELECT a.id::text,a.body,a.body_digest
+          FROM finnor_os.x1_compiler_requests r JOIN finnor_os.x1_compiler_artifacts a
+            ON a.tenant_id=r.tenant_id AND a.principal_id=r.principal_id AND a.id=r.artifact_id AND a.request_id=r.id
+          WHERE r.tenant_id=$1 AND r.principal_id=$2 AND r.work_id=$3 AND r.episode_id=$4 AND r.id=$5`,
+          [q.tenant_id,q.principal_id,q.work_id,q.episode_id,q.parent_request_id])).rows[0],true);
+        const binding=parsed.envelope.parent_artifact_refs[0];
+        if(!parent||sha(parent.body)!==parent.body_digest||parsed.envelope.parent_artifact_refs.length!==1
+          ||binding?.status!=='known'||binding.ref!==parent.id||binding.digest!==parent.body_digest)
+          throw Error('X1_IMMUTABLE_PARENT_BINDING_MISMATCH');
+      }else if(parsed.envelope.parent_artifact_refs.length)throw Error('X1_UNEXPECTED_PARENT_ARTIFACT');
+    }
   } catch (error) {
     const reason = safePredicate(error);
     await tx(ctx, async c => {

@@ -108,4 +108,17 @@ or action identity, lost cost history or a stale claim publishing afterward.
 This case covers pre-publication compiler death; lost effect acknowledgement and
 other registered interruption points remain separate required cases.
 
+### Installed baseline and immutable parent bindings
+
+The full output currently carries an avoidable unknown baseline and empty parent
+list even for a successor. Before repair, freeze these failure conditions: a
+source/runtime/lock/schema/profile substitution must not receive a known B_live
+binding; an original grants/resource envelope must not be presented as qualified
+B_V; a successor must reference its exact immutable parent artifact, including a
+digest verified from stored bytes. Record unavailable Git/build or preparation
+qualification as explicit gaps, never invent commit or completed qualification.
+Persist the actual baseline preimage with the immutable owner artifact, and verify
+it at authenticated readback. Original-source and signed qualification custody
+remain separate. Reuse the real material-correction E2E for parent lineage.
+
 The independent oracle contract defines expectations and preservation. Boundary bugs need a pre-fix failing regression at their owning boundary. No post-code unit tests. Source changes following a failed proof retain the original run and rerun only affected proof plus necessary regressions.
