@@ -60,3 +60,10 @@ identical ID/registration/source namespace. Those are different owner version
 domains. Use the actual native mutation version for PE references, preserving the
 history version/hash as provenance and requiring the selected native snapshots
 to agree. Do not remove the publication/currentness version comparison.
+
+The actual native continuation retained a quarantined immutable-head refusal
+after compiler/admission/plan publication. A live SQL observer found no blocking
+lock: PostgreSQL bigint claim fences reached handlers as strings while the owner
+reader normalized them to numbers. Normalize the real queue claim at dispatch,
+reject unsafe numeric values, and preserve the exact claim token/fence. Do not
+weaken publication checks or restart because a polling window alone expired.

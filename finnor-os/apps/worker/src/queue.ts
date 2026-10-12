@@ -434,7 +434,15 @@ export class JobQueue {
             [this.workloadClass, candidate.tenantKey],
           );
         }
-        const claimedJob = claimed.rows[0] as Omit<ClaimedJob, "deliveryAttemptId">;
+        // PostgreSQL bigint arrives as text. Handlers receive the declared
+        // numeric fence so a genuine claim cannot fail strict owner comparisons.
+        // Refuse unrepresentable values instead of rounding a fencing token.
+        const claimFence = Number(claimed.rows[0].claimFence);
+        if (!Number.isSafeInteger(claimFence) || claimFence < 1) {
+          await client.query("ROLLBACK");
+          throw new Error("JOB_CLAIM_FENCE_NOT_SAFE_INTEGER");
+        }
+        const claimedJob = { ...claimed.rows[0], claimFence } as Omit<ClaimedJob, "deliveryAttemptId">;
         const delivery = await client.query<{ id: string }>(
           `INSERT INTO job_delivery_attempts(
              job_id,tenant_id,claim_token,claim_fence,worker_id,protocol_version,retry_safety,outcome
