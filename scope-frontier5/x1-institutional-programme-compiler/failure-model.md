@@ -485,3 +485,16 @@ through an O_NOFOLLOW descriptor with matching before/after kernel metadata.
 Cold and already-warmed API checks must refuse an external same-byte link or
 special-mode change before executing a route; restored original bytes/mode/path
 must resume the ordinary original refusal/owner flow. No manifest rewrite.
+
+### Restart observer relation error (before observer repair)
+
+Installed delivery007 completed all three native operations and Work, then its
+restart observer failed42P01 for finnor_os.pe_domain_actions. The actual canonical
+owner is finnor_os.domain_actions, declared in0000_init.sql with status. Preserve
+that failure. Use the same exact preservation SELECTs immediately after clean
+migration and again before/after restart, so a schema error fails before costly
+compilation. Expected identities, states, deadlines and envelopes stay unchanged.
+Upgrade release-witness readback must compare the same installed source commit
+already used by its queued payload and worker, separately from verifier history.
+Installed revision baseline checks must bind the actual installation identity
+and absent Git history, using the same established initial-baseline predicate.

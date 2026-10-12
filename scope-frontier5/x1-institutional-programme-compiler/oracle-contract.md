@@ -495,3 +495,10 @@ The fixed manifest file itself must refuse a same-byte outside symlink and
 special-mode change with X1_INSTALLATION_MANIFEST_PATH_OR_MODE_REFUSED. Test
 actual compiled cold startup and an already-running API; preserve its original
 digest and restore the original regular0444 file after every mutation.
+
+Restart preservation uses canonical domain_actions.status from0000_init.sql,
+pe_requests.state, the original compiler episode deadlines/parent and original
+S5 reservation IDs/envelopes. Execute these exact SELECTs after migration before
+compiler exposure; repeat before and after physical restart. No expected field
+or row population changes. Upgrade release readback and installed revision
+baseline bind actual installed source identity independently of verifier Git.

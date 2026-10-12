@@ -121,6 +121,14 @@ const occurredAt = new Date(Date.now() - 120000).toISOString(), availableAt = ne
 const registrationA = "DEAL-" + randomUUID(), registrationB = "DEAL-" + randomUUID();
 const requestText = "Provide the original signed evidence schedule " + randomUUID();
 let workId: string | null = null, compilerId: string | null = null, expected: any = null;
+const installedPreservation = async () => ({
+  episodes:(await admin!.query(`SELECT id,original_deadline,wall_deadline,parent_reservation,parent_demand
+    FROM finnor_os.x1_compiler_episodes WHERE tenant_id=$1 ORDER BY id`,[tenant])).rows,
+  reservations:(await admin!.query(`SELECT reservation_id,envelopes FROM finnor_os.s5_reservations
+    WHERE tenant_id=$1 ORDER BY reservation_id`,[tenant])).rows,
+  requests:(await admin!.query('SELECT id,state FROM finnor_os.pe_requests WHERE tenant_id=$1 ORDER BY id',[tenant])).rows,
+  actions:(await admin!.query('SELECT id,status FROM finnor_os.domain_actions WHERE tenant_id=$1 ORDER BY id',[tenant])).rows,
+});
 const take = async () => {
   const rows = execFileSync("ps", ["-axo", "pid=,ppid=,rss="], { encoding: "utf8" }).trim().split("\n")
     .map(line => line.trim().split(/\s+/).map(Number));
@@ -161,6 +169,8 @@ try {
   assert.equal(migrated.length,upgrade?0:freeze.expectedMigrations);
   const migrations=legacyUpgrade?[...legacyUpgrade.oldMigrations,...legacyUpgrade.additiveMigrations]:migrated;
   admin = new pg.Client({ connectionString: connection("x1_fixture", password) }); await admin.connect();
+  if(installation)await save('installed-observer-schema-preflight.json',{
+    observations:await installedPreservation(),basis:'EXACT_RESTART_PRESERVATION_SELECTS_AFTER_NATIVE_MIGRATION_BEFORE_EXPOSURE'});
   await admin.query("ALTER ROLE finnor_app LOGIN PASSWORD " + admin.escapeLiteral(appPassword));
   await admin.query("ALTER ROLE finnor_worker LOGIN PASSWORD " + admin.escapeLiteral(workerPassword));
   const roles = (await admin.query(`SELECT rolname,rolsuper,rolbypassrls,
@@ -1257,7 +1267,7 @@ try {
       await new Promise(resolve=>setTimeout(resolve,500));
     }
     assert.equal(compatible.status,'completed');assert.equal(compatible.protocol_version,1);
-    assert.equal(compatible.payload.commitSha,freeze.source.commit);assert.equal(compatible.attempts,1);
+    assert.equal(compatible.payload.commitSha,installedManifest?.source.commit??freeze.source.commit);assert.equal(compatible.attempts,1);
     assert.equal(retired.status,'quarantined');assert.match(retired.last_error,/RETIRED_VERTICAL/);assert.equal(retired.attempts,0);
     const claims=(await admin.query(`SELECT job_id,outcome,protocol_version,claim_fence,finished_at
       FROM finnor_os.job_delivery_attempts WHERE job_id=ANY($1::uuid[]) ORDER BY job_id`,
@@ -1946,7 +1956,11 @@ try {
       assert.equal(next.body.envelope.parent_artifact_refs.length,1);
       assert.equal(next.body.envelope.parent_artifact_refs[0].ref,prior.artifact_id);
       assert.equal(next.body.envelope.parent_artifact_refs[0].digest,prior.body_digest);
-      assert.equal(next.input_manifest.baseline.source.git.commit,freeze.source.commit);
+      if(installedManifest){
+        assert.equal(next.input_manifest.baseline.source.git.status,'UNKNOWN');
+        assert.equal(next.input_manifest.baseline.source.installation.source.commit,installedManifest.source.commit);
+        assert.equal(next.input_manifest.baseline.source.installation.manifestDigest,freeze.installation!.manifestDigest);
+      }else assert.equal(next.input_manifest.baseline.source.git.commit,freeze.source.commit);
       assert.equal(next.input_manifest.baseline.schemaState.migrations.length,freeze.expectedMigrations);
       assert.equal(next.body.envelope.baseline_manifest_ref.digest,next.input_manifest.baselineDigest);
       assert.equal(next.candidate.coverage.length,oracle.sourcePopulation);
@@ -2005,14 +2019,7 @@ try {
     }
   }
   if(installation){
-    const preserved=async()=>({
-      episodes:(await admin!.query(`SELECT id,original_deadline,wall_deadline,parent_reservation,parent_demand
-        FROM finnor_os.x1_compiler_episodes WHERE tenant_id=$1 ORDER BY id`,[tenant])).rows,
-      reservations:(await admin!.query(`SELECT reservation_id,envelopes FROM finnor_os.s5_reservations
-        WHERE tenant_id=$1 ORDER BY reservation_id`,[tenant])).rows,
-      requests:(await admin!.query('SELECT id,state FROM finnor_os.pe_requests WHERE tenant_id=$1 ORDER BY id',[tenant])).rows,
-      actions:(await admin!.query('SELECT id,status FROM finnor_os.pe_domain_actions WHERE tenant_id=$1 ORDER BY id',[tenant])).rows,
-    });
+    const preserved=installedPreservation;
     const before=await preserved(),previousWorkerPid=worker!.pid;
     await new Promise<void>(resolve=>{
       const child=worker!,timer=setTimeout(()=>child.kill('SIGKILL'),5000);
