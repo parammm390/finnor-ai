@@ -71,7 +71,7 @@ export async function resolveInstitutionActions(ctx: PeMutationContext, original
         const requestedFrom = string("requestedFromExternalId"), requestText = string("requestText");
         const parties = requestedFrom ? await tx(ctx, async c => (await c.query<{ id: string }>(`SELECT id::text
           FROM finnor_os.pe_deal_parties WHERE tenant_id=$1 AND deal_id=$2 AND external_id=$3
-          AND state='active' AND archived_at IS NULL LIMIT 2`, [original.tenantId, dealId, requestedFrom])).rows, true) : [];
+          AND state='active' AND removed_at IS NULL LIMIT 2`, [original.tenantId, dealId, requestedFrom])).rows, true) : [];
         const accepted = boolean("requiresAcceptedDeliverable");
         if (parties.length !== 1 || !requestText || accepted === undefined)
           reason = "X1_EXACT_REQUEST_RECIPIENT_TEXT_AND_ACCEPTANCE_RULE_REQUIRED";
