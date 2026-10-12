@@ -18,6 +18,7 @@ import { putAllocationResource } from "../../../packages/private-equity/src/allo
 import { parseAllocationResource } from "../../../packages/epistemic-runtime/src/allocation-contracts";
 import { authenticatedApiFixture } from "./authenticated-api-fixture.mts";
 import { heterogeneousOwnerSources,type OwnerSource } from './owner-source-corpus.mts';
+import { canonicalOwnerSources } from './canonical-owner-corpus.mts';
 
 const repo = fileURLToPath(new URL("../../../../", import.meta.url));
 const evidence = process.env.FINNOR_X1_OWNER_EVIDENCE;
@@ -27,9 +28,10 @@ const mounted=process.env.FINNOR_X1_OWNER_MODE==='mounted';
 const revise=process.env.FINNOR_X1_OWNER_MODE==='revision';
 const material=process.env.FINNOR_X1_OWNER_MODE==='material';
 const heterogeneous=process.env.FINNOR_X1_OWNER_MODE==='heterogeneous';
-if(process.env.FINNOR_X1_OWNER_MODE&&!['api','mounted','revision','material','heterogeneous'].includes(process.env.FINNOR_X1_OWNER_MODE))
+const canonical=process.env.FINNOR_X1_OWNER_MODE==='canonical';
+if(process.env.FINNOR_X1_OWNER_MODE&&!['api','mounted','revision','material','heterogeneous','canonical'].includes(process.env.FINNOR_X1_OWNER_MODE))
   throw Error('EXACT_REGISTERED_OWNER_MODE_REQUIRED');
-if((mounted||material||heterogeneous)&&dutyCount!==1)throw Error('NAMED_ONE_DUTY_SCENARIO_REQUIRED');
+if((mounted||material||heterogeneous||canonical)&&dutyCount!==1)throw Error('NAMED_ONE_DUTY_SCENARIO_REQUIRED');
 if(process.env.FINNOR_X1_OWNER_CASE&&!['1','128'].includes(process.env.FINNOR_X1_OWNER_CASE))
   throw Error('EXACT_FROZEN_OWNER_CASE_REQUIRED');
 const limits = JSON.parse(await readFile(join(repo, "scope-frontier5/x1-institutional-programme-compiler/verification-plan.json"), "utf8")).limits;
@@ -42,6 +44,7 @@ const sha = (bytes: string | Buffer) => createHash("sha256").update(bytes).diges
 const git = (...args: string[]) => execFileSync("git", args, { cwd: repo, encoding: "utf8", timeout: 5000 }).trim();
 const sourcePaths = ["finnor-os/scripts/frontier5/x1/run-owner-slice.mts", "finnor-os/scripts/frontier5/x1/authenticated-api-fixture.mts",
   'finnor-os/scripts/frontier5/x1/owner-source-corpus.mts',
+  'finnor-os/scripts/frontier5/x1/canonical-owner-corpus.mts',
   "finnor-os/scripts/frontier5/x1/physical-owner-worker.mts", "finnor-os/packages/db/migrations-bundle.ts",
   "finnor-os/package-lock.json", "scope-frontier5/x1-institutional-programme-compiler/profile.json"];
 const sourcePins = await Promise.all(sourcePaths.map(async path => ({ path, sha256: sha(await readFile(join(repo, path))) })));
@@ -51,7 +54,8 @@ const freeze = { source: { commit: git("rev-parse", "HEAD"), tree: git("rev-pars
   profile: "DISPOSABLE_LOCAL_AUTH_SERVICE_ACTUAL_BEARER_AND_RLS", hostedSupabaseQualified: false,
   authDevBypass: false, expectedMigrations: 180, limits, freeBytesBefore: String(diskBefore), dutyCount,mounted,
   cases: ["A-raw-two-identity-native-request", "C-unsigned-forged-input", "D-same-key-replay", "G-restricted-roles",
-    ...(material?['B-ledger-correction']:[]),...(heterogeneous?['A-eight-class-original-corpus']:[])],
+    ...(material?['B-ledger-correction']:[]),...(heterogeneous?['A-eight-class-original-corpus']:[]),
+    ...(canonical?['A-fourteen-canonical-kinds']:[])],
   omitted: "Full B–H, physical interruption, mounted browser, clean built installation/upgrade and protected qualification remain distinct required evidence" };
 await writeFile(join(evidence, "freeze.json"), JSON.stringify(freeze, null, 2) + "\n", { mode: 0o600, flag: "wx" });
 const results: any[] = [], traffic: unknown[] = [];
@@ -201,6 +205,10 @@ try {
   ];
   if(heterogeneous)sources=await heterogeneousOwnerSources({registrationA,registrationB,occurredAt,availableAt,
     workRecords:sources.find(source=>source.id==='work-original')!.rows});
+  const canonicalFixture=canonical?await canonicalOwnerSources({ctx,admin,institutionId,workId,
+    dealId:String(first.row.id),companyId:companyIds[0]!,organizationKey:'org-'+companyIds[0]!,
+    workstreamId:String(stream.row.id),requestedFromDealPartyId:String(party.row.id),occurredAt,availableAt}):null;
+  if(canonicalFixture){sources.push(...canonicalFixture.sources);await save('canonical-owner-starting-state.json',canonicalFixture);}
   const grantIds: string[] = [], sourceBindings: unknown[] = [];
   for (const source of sources) {
     const bytes = source.bytes??Buffer.from(JSON.stringify(source.rows)), grantId = randomUUID(),protocol=source.protocol??'json_records';
@@ -240,6 +248,13 @@ try {
         {sourceId:'lender-original',recordId:'lender-A',factKey:'outstanding',value:'20.00'}].map(q=>({...q,
           currency:'USD',unit:'units',period:'2026-10',basis:'outstanding',canonicalDealId:String(first.row.id)}))};
     assert.equal(expected.sourceCorpus.sourceClasses.length,8);assert.equal(expected.sourceCorpus.protocols.length,12);
+  }
+  if(canonicalFixture){
+    expected.mappings=[...expected.mappings.map((mapping:any)=>({...mapping,nativeType:'pe_deal',kind:'deal'})),
+      ...canonicalFixture.expected];
+    assert.equal(expected.mappings.length,17);
+    expected.canonicalKinds=JSON.parse(await readFile(join(repo,'scope-frontier5/x1-institutional-programme-compiler/profile.json'),'utf8')).canonicalTypes;
+    assert.deepEqual([...new Set(expected.mappings.map((m:any)=>m.kind))].sort(),[...expected.canonicalKinds].sort());
   }
   await save("inputs-and-independent-expectations.json", { tenant, actor, institutionId, workId, rule, sourceBindings, expected });
   await admin.query(`INSERT INTO finnor_os.compute_resource_policies(resource_key,capacity,per_tenant_capacity,interactive_reserve,lease_seconds,source)
@@ -372,10 +387,19 @@ try {
   for(const mapping of expected.mappings){
     const receipt=admission.receipts.find((r:any)=>r.sourceId===mapping.sourceId&&r.recordId===mapping.recordId);
     assert.ok(receipt,"independently expected original mapping must be admitted");
-    assert.match(receipt.canonicalRef,new RegExp(`^pe_deal:${mapping.canonicalId}@v[1-9][0-9]*$`));
+    const nativeType=mapping.nativeType??'pe_deal';
+    assert.match(receipt.canonicalRef,new RegExp(`^${nativeType}:${mapping.canonicalId}@(v[1-9][0-9]*|s[a-f0-9]{64})$`));
+    const memory=(await admin.query(`SELECT 1 FROM finnor_os.evidence_source_versions v
+      JOIN finnor_os.evidence_chunks ch ON ch.tenant_id=v.tenant_id AND ch.source_id=v.source_id AND ch.version_id=v.id
+      WHERE v.tenant_id=$1 AND v.id=$2 AND v.source_id=$3 AND ch.entity_refs @> $4::jsonb`,
+      [tenant,receipt.evidenceVersionId,receipt.evidenceSourceId,JSON.stringify([{type:nativeType,id:mapping.canonicalId}])])).rows;
+    assert.ok(memory.length,'exact actual Memory evidence entity reference');
+    if(receipt.evidenceAttachmentKind==='CORE_EVIDENCE_ENTITY_REF'){
+      assert.equal(receipt.evidenceLinkId,receipt.evidenceVersionId);continue;
+    }
     const link:{entity_type:string;entity_id:string;evidence_source_id:string;evidence_version_id:string}|undefined=(await admin.query(`SELECT entity_type,entity_id,evidence_source_id,evidence_version_id FROM finnor_os.pe_evidence_links
       WHERE tenant_id=$1 AND id=$2 AND archived_at IS NULL`,[tenant,receipt.evidenceLinkId])).rows[0];
-    assert.equal(link?.entity_type,"pe_deal");assert.equal(link?.entity_id,mapping.canonicalId);
+    assert.equal(link?.entity_type,nativeType);assert.equal(link?.entity_id,mapping.canonicalId);
     assert.equal(link?.evidence_source_id,receipt.evidenceSourceId);assert.equal(link?.evidence_version_id,receipt.evidenceVersionId);
   }
   const rows = (await admin.query(`SELECT * FROM finnor_os.pe_requests WHERE tenant_id=$1 AND deal_id=$2 AND request_text=ANY($3::text[])`, [tenant, expected.request.dealId, expected.requestTexts])).rows;
@@ -468,6 +492,22 @@ try {
     results.push({id:'A-eight-class-original-corpus',status:'PASS',observed:{classes:expected.sourceCorpus.sourceClasses,
       protocols:expected.sourceCorpus.protocols,mappingCount:10,quantityCount:2,dutyCount:1,
       fullFieldStructure:{program:14,envelope:34},completion},basis:'ACTUAL_AUTHENTICATED_CORE_ORIGINALS_SEPARATE_CHECK_S1_NATIVE_WORK_AND_INDEPENDENT_SQL'});
+  }
+  if(canonicalFixture){
+    assert.equal(admission.receipts.length,17);
+    const currentConsent=(await admin.query(`SELECT b.registration_id,b.subject_user_id,c.revision,c.expires_at
+      FROM finnor_os.x1_subject_identity_bindings b JOIN finnor_os.x1_subject_consents c
+        ON c.tenant_id=b.tenant_id AND c.subject_user_id=b.subject_user_id AND c.institution_id=b.institution_id
+      WHERE b.tenant_id=$1 AND b.source_id='person-owner-original' AND c.source_class='personnel_benefits'
+        AND b.revoked_at IS NULL AND c.revoked_at IS NULL`,[tenant])).rows;
+    assert.equal(currentConsent.length,1);assert.equal(currentConsent[0].subject_user_id,actor);
+    assert.equal((await admin.query('SELECT count(*)::int n FROM finnor_os.pe_requests WHERE tenant_id=$1',[tenant])).rows[0].n,2);
+    await save('fourteen-canonical-kind-independent-proof.json',{expectedKinds:expected.canonicalKinds,
+      expectedMappings:expected.mappings,actualAdmission:admission,currentConsent,completion,
+      actualPreexistingRequestId:canonicalFixture.existingRequestId,additionalNativeEffects:1,
+      allExpectedEvidenceReferencesChecked:true,protectedQualification:false});
+    results.push({id:'A-fourteen-canonical-kinds',status:'PASS',observed:{kinds:expected.canonicalKinds,
+      mappings:17,additionalEffects:1,currentConsent,completion},basis:'ACTUAL_PREEXPOSURE_CANONICAL_OWNERS_SENSITIVE_CONSENT_S1_ADMISSIONS_AND_NATIVE_COMPLETION'});
   }
   if(mounted)await save('mounted-canonical-completion.json',{compilerId,workId,completion,
     browserEvidenceRequired:true,mountedPassEstablished:false});

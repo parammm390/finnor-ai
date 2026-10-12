@@ -72,4 +72,21 @@ specified mappings, two quantities, one original duty/effect and native Work
 completion. This is an engineering corpus; it supplies no protected unseen
 population, hosted connector, sensitive-access or complete fourteen-kind proof.
 
+### Registered owner case A-fourteen-canonical-kinds
+
+Before adding this case, freeze the fourteen profile kinds as the expected
+mapping population. Create each prerequisite through its actual Core/Memory/PE
+owner; sensitive person input requires the active employee's source-scoped
+identity evidence and subject-issued consent. Two fund identities share a name
+without merging. Requests, Findings and Decisions are existing records; a draft
+Decision assertion grants no approval. One separate trigger still requires one
+new native Request. No other commitment is inferred from entity existence.
+
+Credible regressions include wrong canonical kind, guessed identity from a name,
+lost Core evidence attachment, unsupported native world roots, revoked sensitive
+consent, changed owner version or treating a relationship record as a Deal.
+Independent SQL must verify each immutable admission's target, evidence entity
+reference and native/Memory attachment plus the same bounded creation proof.
+This is a development case; it does not establish protected domain qualification.
+
 The independent oracle contract defines expectations and preservation. Boundary bugs need a pre-fix failing regression at their owning boundary. No post-code unit tests. Source changes following a failed proof retain the original run and rerun only affected proof plus necessary regressions.

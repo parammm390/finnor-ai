@@ -368,6 +368,34 @@
       "acceptance": "oracle-contract.md#a-eight-class-original-corpus-independent-expectations",
       "protectedQualification": false,
       "allCanonicalKindsEstablished": false
+    },
+    {
+      "id": "A-fourteen-canonical-kinds",
+      "mode": "canonical",
+      "dutyCount": 1,
+      "status": "FROZEN_BEFORE_CASE_IMPLEMENTATION",
+      "canonicalKinds": [
+        "fund",
+        "vehicle",
+        "deal",
+        "investment_case",
+        "counterparty",
+        "person",
+        "document",
+        "metric",
+        "facility",
+        "relationship",
+        "work",
+        "request",
+        "finding",
+        "decision"
+      ],
+      "entityRecords": 17,
+      "expectedAdditionalEffects": 1,
+      "prerequisites": "ACTUAL_CORE_MEMORY_PE_CREATORS_AND_SUBJECT_CONSENT_BEFORE_EXPOSURE",
+      "limits": "UNCHANGED",
+      "acceptance": "oracle-contract.md#a-fourteen-canonical-kinds-independent-expectations",
+      "protectedQualification": false
     }
   ]
 }

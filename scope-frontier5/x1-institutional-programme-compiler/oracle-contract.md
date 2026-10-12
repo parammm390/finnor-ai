@@ -130,6 +130,20 @@ separate checker, immutable S1 receipts, ordinary native creation and exact
 canonical completion. Native Work/Objective/Plan proof is required. Protected
 qualification and the other canonical types remain separate requirements.
 
+### A-fourteen-canonical-kinds independent expectations
+
+The frozen mapping population contains seventeen entity records covering fund,
+vehicle, deal, investment_case, counterparty, person, document, metric, facility,
+relationship, work, request, finding and decision. Two funds and two vehicles
+remain distinct; the source population includes their existing relationship.
+Every expected canonical ID comes from the corresponding pre-exposure owner
+creation result, never candidate output. Each checked evidence version must
+reference that exact owner type and ID. Core targets use Memory entity references;
+PE targets retain native evidence links when the canonical root supports them.
+One current person identity has an explicit expiring source binding and actual
+self-issued consent. One additional work-tracking trigger creates one new Request;
+the preexisting Request and draft Decision are not counted as completed effects.
+
 ## Qualification score specification
 
 Independently freeze material mapping set M, supported obligation set O, unique business assignment identities/weights/deadlines, critical subset K and actionable-change set C per environment before exposure. Candidate claims are CANDIDATE, not expectations. Match one-to-one only under independently defined equivalence; no duplicate credit.
