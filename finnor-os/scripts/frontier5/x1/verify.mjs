@@ -16,10 +16,19 @@ const option = (name) => {
 };
 const stage = option("--stage");
 const only = option("--check");
+const ownerCase=option('--case');
+const ownerCases={owners:{'one-duty':{count:'1',mode:'api'},'128-duty':{count:'128',mode:'api'},
+  heterogeneous:{count:'1',mode:'heterogeneous'},canonical:{count:'1',mode:'canonical'}},
+  lifecycle:{material:{count:'1',mode:'material'},recovery:{count:'1',mode:'recovery'},
+    contention:{count:'1',mode:'contention'},unsupported:{count:'1',mode:'unsupported'},
+    'cancel-observed':{count:'1',mode:'cancel_observed'}},mounted:{mounted:{count:'1',mode:'mounted'}}};
+const selectedOwnerCase=ownerCase?ownerCases[stage]?.[ownerCase]:null;
 const named = manifest.stages.find((entry) => entry.id === stage);
-if (!named || args.some((arg, i) => arg.startsWith("--") && !["--stage", "--check", "--evidence"].includes(arg))
-    || (only && !["typecheck", "lint"].includes(only))) {
-  console.error("Use --stage <frozen-stage> [--check typecheck|lint] [--evidence <fresh-private-directory>]");
+if (!named || args.length%2!==0||new Set(args.filter((_,i)=>i%2===0)).size!==args.length/2
+    ||args.some((arg, i) => i%2===0&&!['--stage','--check','--evidence','--case'].includes(arg))
+    || (only && !["typecheck", "lint"].includes(only))||ownerCase&&!selectedOwnerCase
+    ||selectedOwnerCase&&only||ownerCases[stage]&&!selectedOwnerCase) {
+  console.error("Use --stage <frozen-stage> [--case <registered-owner-case>] [--check typecheck|lint] [--evidence <fresh-private-directory>]");
   process.exit(2);
 }
 const root = manifest.privateEvidenceRoot;
@@ -80,6 +89,20 @@ for (const path of [
   "finnor-os/packages/private-equity/package.json",
   "finnor-os/package-lock.json",
   "finnor-os/scripts/frontier5/x1/verify.mjs",
+  'finnor-os/scripts/frontier5/x1/run-owner-slice.mts',
+  'finnor-os/scripts/frontier5/x1/authenticated-api-fixture.mts',
+  'finnor-os/scripts/frontier5/x1/physical-owner-worker.mts',
+  'finnor-os/scripts/frontier5/x1/owner-source-corpus.mts',
+  'finnor-os/scripts/frontier5/x1/canonical-owner-corpus.mts',
+  'finnor-os/scripts/frontier5/x1/institution-method-plan.mts',
+  'finnor-os/scripts/frontier5/x1/tsconfig.p1-contract.json',
+  'finnor-os/packages/private-equity/src/institution-program/baseline.ts',
+  'finnor-os/packages/private-equity/src/institution-program/worker.ts',
+  'finnor-os/packages/private-equity/src/institution-program/store.ts',
+  'finnor-os/packages/private-equity/src/institution-program/api.ts',
+  'finnor-os/packages/private-equity/src/institution-program/meter.ts',
+  'finnor-os/packages/capability-evolution/src/institution-consumer.ts',
+  'finnor-os/packages/capability-evolution/src/institution-port.ts',
   "finnor-os/scripts/frontier5/x1/eslint.config.mjs",
   "finnor-os/scripts/frontier5/x1/tsconfig.oracle.json",
   "finnor-os/scripts/frontier5/x1/kernel.mts",
@@ -108,6 +131,7 @@ for (const path of [
 const free = (() => { const fs = statfsSync(repo, { bigint: true }); return fs.bavail * fs.bsize; })();
 const record = {
   schema: "finnor.frontier5.x1.offline-evidence.v1", stage, check: only,
+  ownerCase,selectedOwnerCase,
   startedAt: new Date().toISOString(), status: "NOT_RUN", source: {
     commit: git("rev-parse", "HEAD"), tree: git("rev-parse", "HEAD^{tree}"),
     dirty: sourcePins, userInstructionFileUnstaged: changed.includes("AGENTS.md"),
@@ -129,7 +153,7 @@ const record = {
 const save = () => writeFileSync(join(destination, "run.json"), JSON.stringify(record, null, 2) + "\n", { flag: "wx", mode: 0o600 });
 const finish = (status, exit, reason) => {
   record.status = status; record.endedAt = new Date().toISOString(); record.reason = reason;
-  record.rerun = `node finnor-os/scripts/frontier5/x1/verify.mjs --stage ${stage}${only ? ` --check ${only}` : ""} --evidence <new-private-directory>`;
+  record.rerun = `node finnor-os/scripts/frontier5/x1/verify.mjs --stage ${stage}${ownerCase?` --case ${ownerCase}`:''}${only ? ` --check ${only}` : ""} --evidence <new-private-directory>`;
   save();
   console.log(JSON.stringify({ status, stage, reason, evidence: destination, commands: record.commands.map(({ label, exitCode }) => ({ label, exitCode })) }));
   process.exit(exit);
@@ -141,7 +165,32 @@ if (named.live || stage === "installed" || stage === "diagnostic") {
   if (free < BigInt(stage === "installed" ? manifest.limits.finalBuildMinimumFreeBytes : manifest.limits.liveMinimumFreeBytes)) {
     finish("CAPACITY_REFUSED", 2, "Registered live/build disk floor not met; no service or build launched");
   }
-  finish("NOT_IMPLEMENTED_NOT_RUN", 2, "Live stage has no owner driver in this feature; never report PASS");
+  if(selectedOwnerCase){
+    const leaf=join(destination,'owner'),argv=['--max-old-space-size=1536','./node_modules/tsx/dist/cli.mjs','scripts/frontier5/x1/run-owner-slice.mts'];
+    const started=Date.now();
+    record.schema='finnor.frontier5.x1.named-owner-evidence.v1';
+    record.limits={wallSeconds:880,driverWallSeconds:840,workerWallSeconds:600,nodeHeapMiB:1536,
+      outputBytes:manifest.limits.smallCheckOutputBytes,sharedDiskGrowthBytes:manifest.limits.liveEpisodeIncrementalDiskBytes,
+      sampledOwnedRssStopBytes:manifest.limits.localSampledProcessMemoryStopBytes};
+    record.authority='actual disposable authenticated API/queue/worker/canonical owners; no protected qualification or production authority';
+    if(stage==='mounted')console.log(JSON.stringify({status:'WAITING_ACTUAL_BROWSER',evidence:leaf,
+      fixture:join(leaf,'mounted-private-fixture.json'),originalLimitsUnchanged:true,credentialsMustRemainPrivate:true}));
+    const child=spawnSync(process.execPath,argv,{cwd:os,encoding:'utf8',timeout:880000,maxBuffer:manifest.limits.smallCheckOutputBytes,
+      killSignal:'SIGTERM',env:{PATH:'/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin',HOME:join(leaf,'home'),TMPDIR:'/tmp',
+        LANG:'en_US.UTF-8',CI:'1',LOG_LEVEL:'silent',TSX_DISABLE_CACHE:'1',NEXT_TELEMETRY_DISABLED:'1',
+        FINNOR_X1_OWNER_EVIDENCE:leaf,FINNOR_X1_OWNER_CASE:selectedOwnerCase.count,FINNOR_X1_OWNER_MODE:selectedOwnerCase.mode}});
+    const output=(child.stdout??'')+(child.stderr??'');
+    writeFileSync(join(destination,'owner-driver.log'),output,{flag:'wx',mode:0o600});
+    record.commands.push({label:'actual-owner:'+ownerCase,argv:[process.execPath,...argv],cwd:os,
+      exitCode:child.status,signal:child.signal,elapsedMs:Date.now()-started,outputSha256:sha(output),outputBytes:Buffer.byteLength(output)});
+    let result;try{result=JSON.parse(readFileSync(join(leaf,'results.json'),'utf8'));}catch{finish('FAIL_OR_INTERRUPTED',1,'Owner result absent; actual process interruption/failure retained, no restart or PASS');}
+    record.ownerResult={path:join(leaf,'results.json'),sha256:sha(readFileSync(join(leaf,'results.json'))),
+      status:result.status,sourceUnchanged:result.sourceUnchanged,cases:result.results.map(r=>({id:r.id,status:r.status}))};
+    if(child.error||child.status!==0||result.status!=='PASS_LOCAL_OWNER_SLICE'||result.sourceUnchanged!==true
+      ||result.source.commit!==record.source.commit)finish('FAIL',1,'Exact named actual owner case failed; raw evidence retained');
+    finish('DEVELOPMENT_NAMED_OWNER_CASE_PASS',0,'Only the named actual owner case passed; complete groups/final installation/protected qualification remain unestablished');
+  }
+  finish("NOT_IMPLEMENTED_NOT_RUN", 2, "This live stage still lacks its complete installed/diagnostic driver; never report PASS");
 }
 const run = (label, binary, argv, cwd, heapMiB) => {
   const started = Date.now();
