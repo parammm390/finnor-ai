@@ -208,7 +208,15 @@ try {
     if (guardFailure) throw Error(guardFailure);
     if (worker.exitCode !== null || worker.signalCode !== null) throw Error("PHYSICAL_WORKER_STOPPED_BEFORE_OWNER_OBSERVATION");
     const response = await api("institution-read", { requestId: compilerId });
-    await appendFile(join(evidence, "compiler-observations.jsonl"), JSON.stringify({ at: new Date().toISOString(), response }) + "\n", { mode: 0o600 });
+    const projection=response.body.programme?.program;
+    await appendFile(join(evidence, "compiler-observations.jsonl"), JSON.stringify({at:new Date().toISOString(),
+      response:{status:response.status,body:{requestId:response.body.requestId,status:response.body.status,
+        revision:response.body.revision,reason:response.body.reason,
+        nativeStatus:response.body.programme?.status,nativeReason:response.body.programme?.reason,
+        observedDutyCount:projection?.observedPostconditions?.length??null,
+        totalDutyCount:projection?.nodes?.length??null,deliveryCursor:projection?.deliveryCursor??null}},
+      completeResponseSha256:sha(JSON.stringify(response.body)),
+      completeEndingProjectionDestination:'compiler-ending-projection.json'}) + "\n", {mode:0o600});
     assert.equal(response.status, 200, JSON.stringify(response)); reading = response.body;
     if (["OBSERVED", "CHECK_REJECTED", "FAILED", "UNKNOWN", "INVALIDATED", "PARTIAL"].includes(reading.status)) break;
     const terminal=(await admin.query(`SELECT p.status,p.failure,

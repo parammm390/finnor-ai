@@ -136,9 +136,7 @@ export async function continueInstitutionProgram(ctx: PeMutationContext, q: Inst
   const activeRoots=new Set<string>();
   let newlyDispatched=0;
   for(const node of chunk){
-   await assertProgramCurrent(ctx,claimed);
    const expected=frozenDutyExpectation(q.tenant_id,node);
-   await authorize(ctx,{entityType:"pe_deal",entityId:expected.dealId},[{type:"work",id:q.work_id}]);
    const id=actionId(node);
    if(!await noGovernedOrigin(id))throw Error("X1_GOVERNED_ORIGIN_REQUIRES_PROTOCOL3");
    const existing=await tx(ctx,async c=>(await c.query<{
@@ -178,6 +176,8 @@ export async function continueInstitutionProgram(ctx: PeMutationContext, q: Inst
    // runtime owns their retry/receipt path; P1 never creates a replacement ID.
    if(!existing||existing.status==="draft"){
     if(activeRoots.has(expected.dealId))continue;
+    await assertProgramCurrent(ctx,claimed);
+    await authorize(ctx,{entityType:"pe_deal",entityId:expected.dealId},[{type:"work",id:q.work_id}]);
     const planNodes=head.planGraph.nodes.filter(planNode=>planNode.kind==='action'
      &&planNode.actionType===node.operation&&sha(planNode.payload)===sha(node.action!.payload));
     const planNode=planNodes[0];
@@ -224,22 +224,27 @@ export async function continueInstitutionProgram(ctx: PeMutationContext, q: Inst
      ||prior.frozenIntentDigest&&prior.frozenIntentDigest!==sha(node.action))
      throw Error("X1_SAVED_CREATION_WITNESS_INTENT_CHANGED");
    }
-   for(const node of executable){
-    const id=actionId(node);
-    const action=(await c.query<{status:string;effect_status:string|null;payload:unknown}>(
-     `SELECT a.status,e.status effect_status,a.payload FROM finnor_os.domain_actions a
+   const actionRows=(await c.query<{id:string;action_type:string;status:string;effect_status:string|null;payload:unknown;stable_identity:string}>(
+     `SELECT a.id,a.action_type,a.status,e.status effect_status,a.payload,
+       a.authority_context->>'stableIdentity' stable_identity FROM finnor_os.domain_actions a
       LEFT JOIN finnor_os.business_effects e ON e.tenant_id=a.tenant_id
         AND e.domain_action_id=a.id
-      WHERE a.tenant_id=$1 AND a.id=$2 AND a.work_id=$3
-        AND a.initiated_by=$4 AND EXISTS
+      WHERE a.tenant_id=$1 AND a.id=ANY($2::uuid[]) AND a.work_id=$3
+        AND a.initiated_by=$4 AND a.authority_context->>'kind'='institution_duty' AND EXISTS
         (SELECT 1 FROM finnor_os.p1_requests prior WHERE prior.tenant_id=a.tenant_id
           AND prior.id::text=a.authority_context->>'programId' AND prior.work_id=a.work_id
-          AND prior.principal_id=a.initiated_by AND prior.episode_id=$5)
-        AND a.action_type=$6 AND NOT EXISTS
+          AND prior.principal_id=a.initiated_by AND prior.episode_id=$5
+          AND prior.work_input_id::text=a.authority_context->>'workInputId')
+        AND NOT EXISTS
         (SELECT 1 FROM finnor_os.s6_obligation_origins o
           WHERE o.tenant_id=a.tenant_id AND o.domain_action_id=a.id)`,
-     [q.tenant_id,id,q.work_id,q.principal_id,q.episode_id,node.operation])).rows[0];
-    if(!action||!matchesFrozenInstitutionIntent(node.action!.payload,action.payload,q.work_id,true)
+     [q.tenant_id,executable.map(actionId),q.work_id,q.principal_id,q.episode_id])).rows;
+   const actionsById=new Map(actionRows.map(action=>[action.id,action]));
+   if(actionsById.size!==actionRows.length)throw Error('X1_NATIVE_EFFECT_POPULATION_AMBIGUOUS');
+   for(const node of executable){
+    const id=actionId(node),action=actionsById.get(id);
+    if(!action||action.action_type!==node.operation||action.stable_identity!==node.stableIdentity
+      ||!matchesFrozenInstitutionIntent(node.action!.payload,action.payload,q.work_id,true)
       ||action.status!=="completed"||action.effect_status!=="verified"){
      if(previous.has(node.stableIdentity))interventions.push({stableIdentity:node.stableIdentity,
       predicate:"X1_PRIOR_CREATION_EFFECT_REQUIRES_RECONCILIATION",possibleEffect:true});

@@ -151,3 +151,16 @@ coordinates retain their 128 bound, and S5 still refuses cumulative overspend.
 Wake promptly after real dispatch/observation progress; back off while no owner
 state changes. The 128-case independent observer polls every two seconds for
 the existing 240 observations inside the unchanged 840-second stack guard.
+
+Run 020 completed twelve actual sequenced actions with no stale native refusal,
+then the unchanged 768 MiB shared-volume growth guard fired after a measured
+1 GiB jump in two seconds. Do not classify this as a product terminal failure or
+raise the guard. Physical continuation timings were 6.0–11.7 seconds; source
+inspection identifies repeated full currentness reads for every already completed
+node in a batch. Preserve currentness at initial claim, each actual new dispatch,
+and locked publication; retrieve the full frozen action population in one scoped
+SQL read for observation. All per-action identity/intent/status/effect predicates
+remain exact. Poll evidence stores a digest and bounded projection per response,
+retaining the complete final projection once; avoid redundant multi-megabyte
+copies of unchanged input/proposal fields on every background poll. Preserve the
+actual failed run, resource samples, SQL observation and timing evidence.
