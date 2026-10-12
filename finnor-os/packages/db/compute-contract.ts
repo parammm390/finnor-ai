@@ -91,6 +91,7 @@ export const PRODUCTION_JOB_CONTRACTS = {
   run_harness_program_v1: tenantFixed("INTERACTIVE", "locally_idempotent", "P1 bounded ordinary programme linked to canonical WorkPlanRevision; no effect authority."),
   run_x1_institution_continuation_v1: tenantFixed("INTERACTIVE", "reconcilable", "X1 owner-bound ordinary duty with gated action and independent canonical observation; no governed S6 origin."),
   run_x1_institution_compiler_v1: tenantFixed("INTERACTIVE", "reconcilable", "X1 authenticated raw-source reconstruction and original-evidence check under one original Work envelope."),
+  run_x1_institution_update_v1: tenantFixed("INTERACTIVE", "reconcilable", "P7 current owner-input update under the original X1 Work episode; no replacement grant or effect authority."),
   reconciliation: tenantFixed("INTERACTIVE", "locally_idempotent", "Provider events may unblock an actively observed effect."),
   process_instruction: tenantFixed("INTERACTIVE", "locally_idempotent", "An accepted user instruction has a near-term response dependency."),
   run_workflow_step: tenantFixed("INTERACTIVE", "durably_effect_guarded", "Scope-2 workflow execution advances accepted Work."),

@@ -89,6 +89,8 @@ export async function runInstitutionCompilerJob(payload: Record<string, unknown>
     }
     const parentRef = episode.parent_reservation!, parentDemand = episode.parent_demand!;
     if ((await validateInstitutionDemand(ctx, parentRef)).status !== "CURRENT") throw Error("X1_ORIGINAL_S5_PARENT_NOT_CURRENT");
+    await chargeInstitutionDemand(ctx,parentRef,{responsibilityIdentity:`x1-compiler-episode:${episode.id}`,
+      phase:"COMPILE",ordinal:episode.attempts,units:1});
     const result = await withInstitutionMeter({
       sourceAttempt: async grantId => {
         if (!q.grant_ids.includes(grantId)) throw Error("X1_METER_SOURCE_OUTSIDE_ORIGINAL_REQUEST");

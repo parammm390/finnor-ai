@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { randomUUID } from "node:crypto";
 import type { PoolClient } from "pg";
+import type { JobExecutionContext } from "../../../../apps/worker/src/queue";
 import type { PeMutationContext } from "../types";
 import { authorizeBeliefResources } from "../enterprise-beliefs";
 import { principal, sha, stable, tx, unavailable } from "../evidence-execution/store";
@@ -26,7 +27,7 @@ export type CompilerRequestRow = {
 export type CompilerEpisodeRow = { id: string; tenant_id: string; principal_id: string; work_id: string;
   institution_id: string; original_deadline: Date; wall_deadline: Date; profile_digest: string;
   parent_reservation: { owner: string; id: string; version: string; contentDigest: string } | null;
-  parent_demand: InstitutionResourceDemand | null; acquisition_calls: number; attempts: number };
+  parent_demand: InstitutionResourceDemand | null; acquisition_calls: number; attempts: number; coordination_calls:number };
 
 export async function authorizeInstitutionWork(ctx: PeMutationContext, workId: string, c?: PoolClient) {
   await authorizeBeliefResources(ctx, [{ type: "work", id: workId }]);
@@ -81,7 +82,7 @@ export async function enqueueInstitutionCompiler(ctx: PeMutationContext, q: Comp
 
 export async function submitInstitutionCompiler(ctx: PeMutationContext, input: {
   workId: string; workInputId: string; grantIds: string[]; idempotencyKey: string; parentRequestId?: string;
-}) {
+}, automatic?: { updateId: string; execution: Readonly<JobExecutionContext> }) {
   if (process.env.NODE_ENV === "production" || process.env.FINNOR_P4_PROFILE !== "ordinary_disposable")
     throw Error("X1_PROTECTED_INSTALLATION_AND_ADMISSION_UNAVAILABLE");
   await authorizeInstitutionWork(ctx, input.workId);
@@ -103,9 +104,39 @@ export async function submitInstitutionCompiler(ctx: PeMutationContext, input: {
       return { requestId: old.id, workId: old.work_id, workRevision: old.work_input_id,
         revision: old.revision, status: old.status, replayed: true };
     }
+    // This internal handoff is checked in the acceptance transaction. Reclaim
+    // may adopt an already accepted key, but cannot start new work after a
+    // cancellation or after losing its physical queue claim.
+    let automaticEpisode: string | undefined;
+    if (automatic) {
+      const update = (await c.query<{ episode_id: string; state: string; prepared_request: unknown }>(`
+        SELECT episode_id,state,prepared_request FROM finnor_os.x1_compiler_updates
+        WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3 AND id=$4 FOR UPDATE`,
+      [ctx.auth.tenantId, principal(ctx), input.workId, automatic.updateId])).rows[0];
+      if (!update || update.state !== "PREPARED" || sha(update.prepared_request) !== sha(input))
+        throw Error("X1_P7_PREPARED_HANDOFF_CHANGED");
+      const execution = automatic.execution;
+      if (execution.tenantId !== ctx.auth.tenantId || execution.protocolVersion !== 1
+          || execution.retrySafety !== "reconcilable"
+          || !(await c.query(`SELECT id FROM finnor_os.jobs WHERE tenant_id=$1 AND id=$2
+            AND type='run_x1_institution_update_v1' AND protocol_version=1 AND status='running'
+            AND payload->>'updateId'=$5 AND payload->>'principalId'=$6
+            AND claim_token=$3 AND claim_fence=$4 AND lease_expires_at>clock_timestamp() FOR SHARE`,
+          [ctx.auth.tenantId, execution.jobId, execution.claimToken, execution.claimFence,
+            automatic.updateId, principal(ctx)])).rows[0])
+        throw Error("X1_P7_UPDATE_CLAIM_FENCED");
+      automaticEpisode = update.episode_id;
+    }
     const latest = (await c.query<CompilerRequestRow>(`SELECT * FROM finnor_os.x1_compiler_requests
       WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3 ORDER BY revision DESC LIMIT 1 FOR UPDATE`,
     [ctx.auth.tenantId, principal(ctx), input.workId])).rows[0];
+    if (automatic) {
+      const currentWork = (await c.query<{ status: string }>(`SELECT status FROM finnor_os.works
+        WHERE tenant_id=$1 AND id=$2 FOR SHARE`, [ctx.auth.tenantId, input.workId])).rows[0];
+      if (!currentWork || currentWork.status === "cancelled" || latest?.status === "CANCELLED")
+        throw Error("X1_P7_AUTOMATIC_PARENT_CANCELLED");
+      if (latest?.episode_id !== automaticEpisode) throw Error("X1_P7_ORIGINAL_EPISODE_CHANGED");
+    }
     if ((latest?.id ?? undefined) !== input.parentRequestId) throw Error("X1_EXACT_PARENT_REVISION_REQUIRED");
     const active = (await c.query<{ n: number }>(`SELECT count(DISTINCT episode_id)::int n
       FROM finnor_os.x1_compiler_requests WHERE tenant_id=$1 AND status IN('QUEUED','RUNNING')`,

@@ -1,5 +1,35 @@
 # FRONTIER5.X1 status
 
+## Current source checkpoint — automatic owner update coordination, 12 October 2026
+
+Engineering remains **INCOMPLETE**. Migration 0176 records relevant owner
+changes and queues the registered P7 update job in the owner transaction. The
+worker rehydrates the latest original source population, Work input and compiler
+parent, preserving the original episode, deadline, S5 reservation and counters.
+Compiler and coordinator charges use separate ordinals within the same parent.
+
+The immutable prepared request/key survives acceptance and lost acknowledgement.
+Fresh automatic acceptance checks the actual queue claim and cancellation in its
+own transaction. Accepted-key reconciliation runs before terminal failure;
+uncertain handoffs retry within the original remaining envelope. Coalescing is
+coordination metadata and does not assert checked meaning or completed duties.
+Two source-confirmed read-only review defects were repaired and retained in the
+automatic update contract. Scoped types and three-rule source lint passed on
+recorded cuts; the sealed checkpoint identifies their exact source hashes.
+
+Migrations 0174–0176 are **UNAPPLIED**; the generated bundle contains 178 files.
+Disk remains below the frozen service/build floors. No live SQL, queue, browser,
+installation or A–H outcome is claimed from these source checks.
+
+Remaining internal work includes exact affected closure and unaffected native
+continuation, newly introduced owner matching, lawful S5 revalidation, compatible
+fallback, complete cost projections, qualification runner, finite live A–H,
+installation/mounted proof, independent scrutiny and reconstructible handoff.
+The full protected population, S8 admission, activation, operational 100× and
+financial/H2 remain separate gates. The goal remains active.
+
+Earlier entries record historical source cuts and retained evidence.
+
 ## Current source checkpoint — canonical owners and durable progress, 12 October 2026
 
 Engineering delivery remains **INCOMPLETE**. The source cut now adds closed
