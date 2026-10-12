@@ -186,3 +186,12 @@ it must not revive cancelled/failed/blocked Work or refill any counters. Retain
 recovery decisions and Work events alongside the completion proof so a later
 failure identifies the actual native predicate. No provider configuration is
 required to execute a previously checked deterministic observation plan.
+
+Run 023 reached the selected native query and correctly refused assignment:
+`No enabled AgentProfileRevision is eligible for query:harness_program_v1`.
+The disposable fixture omitted the ordinary query/check profile configured by
+the existing P1 E2E setup. Configure that profile through the actual authenticated
+Workforce API before exposing sources or starting the compiler. Grant only the
+registered read/check capabilities; preserve the refusal and do not bypass
+assignment eligibility or manufacture protected admission. Retain its immutable
+revision, physical assignments and native query receipts in ending evidence.

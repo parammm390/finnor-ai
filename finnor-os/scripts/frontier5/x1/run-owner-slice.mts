@@ -118,6 +118,16 @@ try {
   await admin.query(`INSERT INTO finnor_os.x1_work_mandates(tenant_id,principal_id,work_id,institution_id,revision,rules,valid_from,expires_at)
     VALUES($1,$2,$3,$4,'r1',$5::jsonb,clock_timestamp()-interval '1 minute',clock_timestamp()+interval '1 hour')`, [tenant, actor, workId, institutionId, JSON.stringify([rule])]);
   service = await authenticatedApiFixture(repo, actor, entry => traffic.push(entry));
+  const profileResponse=await fetch(service.origin+'/api/workforce/profiles',{
+    method:'POST',headers:{'content-type':'application/json',authorization:'Bearer '+service.token},
+    body:JSON.stringify({key:'x1-disposable-native',name:'Disposable native responsibility query and check executor',
+      capabilityGrants:[{kind:'query',capability:'query:harness_program_v1'},
+        {kind:'check',capability:'check:objective_success'}],
+      autonomyLimits:{maxActions:1,maxQueries:8,maxReplans:6,maxPlannerCalls:8,maxWallClockMs:3600000},
+      planningHints:{qualification:'DISPOSABLE_ORDINARY_NO_PROTECTED_ADMISSION'}})});
+  const profileBody=await profileResponse.json();assert.equal(profileResponse.status,201,JSON.stringify(profileBody));
+  await save('authenticated-native-query-profile.json',{status:profileResponse.status,body:profileBody,
+    boundary:'ACTUAL_AUTHENTICATED_WORKFORCE_CONFIGURATION_BEFORE_COMPILER_EXPOSURE',protectedGrantCreated:false});
   const policyResponse=await fetch(service.origin+`/api/policies/${tenant}/create_deal_request`,{
     method:'PUT',headers:{'content-type':'application/json',authorization:'Bearer '+service.token},
     body:JSON.stringify({policy:{scope:'DISPOSABLE_INTERNAL_REQUEST_ONLY'},requiresConfirmation:false})});
@@ -341,6 +351,10 @@ try {
       ["objective-steps", "SELECT * FROM finnor_os.work_objective_steps WHERE tenant_id=$1 ORDER BY step_number"],
       ["recovery-decisions", "SELECT * FROM finnor_os.work_recovery_decisions WHERE tenant_id=$1 ORDER BY created_at,id"],
       ["work-events", "SELECT * FROM finnor_os.work_events WHERE tenant_id=$1 ORDER BY work_id,seq"],
+      ["agent-profiles", "SELECT * FROM finnor_os.agent_profiles WHERE tenant_id=$1 ORDER BY id"],
+      ["agent-profile-revisions", "SELECT * FROM finnor_os.agent_profile_revisions WHERE tenant_id=$1 ORDER BY agent_profile_id,revision"],
+      ["workforce-assignments", "SELECT * FROM finnor_os.workforce_assignments WHERE tenant_id=$1 ORDER BY created_at,id"],
+      ["query-executions", "SELECT * FROM finnor_os.work_query_executions WHERE tenant_id=$1 ORDER BY created_at,id"],
     ]) { try { await save(name! + ".json", (await admin.query(sql!, [tenant])).rows); } catch (error) { await save(name! + "-read-gap.json", { predicate: String((error as Error).message) }); } }
   }
   if (worker && worker.exitCode === null && worker.signalCode === null) {
