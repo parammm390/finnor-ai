@@ -181,8 +181,8 @@ export async function loadInstitutionCanonicalOwnerSnapshot(
   if (identifiers.size > profile.bounds.canonicalReferences) throw new Error("X1_CANONICAL_REFERENCE_BOUND");
   const matches = await withTenantTransaction(ctx.auth.tenantId, { userId: ctx.auth.userId,
     readOnly: true, isolation: "repeatable read" }, async (_db, client) => {
-    const result = await client.query<{ id: string; external_id: string;version:number }>(
-      `SELECT id::text,external_id,version FROM finnor_os.pe_deals
+    const result = await client.query<{ id: string; external_id: string;version:number;source_system:string }>(
+      `SELECT id::text,external_id,version,source_system FROM finnor_os.pe_deals
         WHERE tenant_id=$1 AND (source_system=$4 OR EXISTS(SELECT 1 FROM finnor_os.work_entity_links w
           WHERE w.tenant_id=pe_deals.tenant_id AND w.work_id=$5 AND w.entity_type='pe_deal'
             AND w.entity_id=pe_deals.id)) AND external_id=ANY($2::text[]) AND archived_at IS NULL AND status='active'
@@ -208,15 +208,16 @@ export async function loadInstitutionCanonicalOwnerSnapshot(
     // mutation/CAS version. Do not use that ordinal as a PE API version.
     entities.push({ ref: `pe_deal:${deal.id}@v${nativeVersion}`, entityType: "deal",
       registrationId: deal.external_id, institutionId: original.institutionId,
-      ownerWitness:{historyVersion:owner.entityVersion,historySnapshotHash:owner.snapshotHash} });
+      ownerWitness:{historyVersion:owner.entityVersion,historySnapshotHash:owner.snapshotHash,
+        ...(deal.source_system!==`x1:${original.institutionId}`?{workScope:original.workId}:{})} });
   }
   const currentTwins = await withTenantTransaction(ctx.auth.tenantId, { userId: ctx.auth.userId,
     readOnly: true, isolation: "repeatable read" }, async (_db, client) => {
-    const refs: Array<{ kind: "fund" | "vehicle"; id: string; registration: string; name: string; version: number }> = [];
+    const refs: Array<{ kind: "fund" | "vehicle"; id: string; registration: string; name: string; version: number;workScope?:string }> = [];
     for (const entry of prospective.values()) {
       const table = entry.entityType === "fund" ? "pe_funds" : "pe_vehicles";
-      const row = await client.query<{ id: string; name: string; external_id: string; version: number }>(
-        `SELECT id::text,name,external_id,version FROM finnor_os.${table}
+      const row = await client.query<{ id: string; name: string; external_id: string; version: number;source_system:string }>(
+        `SELECT id::text,name,external_id,version,source_system FROM finnor_os.${table}
           WHERE tenant_id=$1 AND (source_system=$2 OR EXISTS(SELECT 1 FROM finnor_os.work_entity_links w
             WHERE w.tenant_id=${table}.tenant_id AND w.work_id=$4 AND w.entity_type=$5 AND w.entity_id=${table}.id))
             AND external_id=$3 AND status<>'liquidated' ORDER BY id LIMIT 2`,
@@ -228,12 +229,13 @@ export async function loadInstitutionCanonicalOwnerSnapshot(
       // Existing owners supply their actual ID. A display-label correction is
       // an assertion difference, not a new identity or permission to rename.
       refs.push({ kind: entry.entityType, id: found?.id??entry.id, registration: entry.registrationId,
-        name: found?.name??entry.name, version: found?.version ?? 0 });
+        name: found?.name??entry.name, version: found?.version ?? 0,
+        ...(found&&found.source_system!==`x1:${original.institutionId}`?{workScope:original.workId}:{}) });
     }
     for(const kind of ["fund","vehicle"] as const){
       const table=kind==="fund"?"pe_funds":"pe_vehicles";
-      const rows=(await client.query<{id:string;name:string;external_id:string;version:number}>(
-        `SELECT id::text,name,external_id,version FROM finnor_os.${table}
+      const rows=(await client.query<{id:string;name:string;external_id:string;version:number;source_system:string}>(
+        `SELECT id::text,name,external_id,version,source_system FROM finnor_os.${table}
           WHERE tenant_id=$1 AND (source_system=$2 OR EXISTS(SELECT 1 FROM finnor_os.work_entity_links w
             WHERE w.tenant_id=${table}.tenant_id AND w.work_id=$5 AND w.entity_type=$6 AND w.entity_id=${table}.id))
             AND external_id=ANY($3::text[])
@@ -242,13 +244,15 @@ export async function loadInstitutionCanonicalOwnerSnapshot(
           original.workId,kind==='fund'?'pe_fund':'pe_vehicle'])).rows;
       if(rows.length>profile.bounds.canonicalReferences)throw Error("X1_CANONICAL_REFERENCE_BOUND");
       for(const row of rows)if(!refs.some(ref=>ref.kind===kind&&ref.id===row.id))
-        refs.push({kind,id:row.id,registration:row.external_id,name:row.name,version:row.version});
+        refs.push({kind,id:row.id,registration:row.external_id,name:row.name,version:row.version,
+          ...(row.source_system!==`x1:${original.institutionId}`?{workScope:original.workId}:{})});
     }
     return refs;
   });
   for (const entry of currentTwins) {
     entities.push({ ref: `pe_${entry.kind}:${entry.id}@v${entry.version || 1}`,
-      entityType: entry.kind, registrationId: entry.registration, institutionId: original.institutionId });
+      entityType: entry.kind, registrationId: entry.registration, institutionId: original.institutionId,
+      ...(entry.workScope?{ownerWitness:{workScope:entry.workScope}}:{}) });
   }
   const additional=await readAdditionalInstitutionOwners(ctx,original,[...identifiers],profile);
   for(const entity of additional)entities.push(entity);

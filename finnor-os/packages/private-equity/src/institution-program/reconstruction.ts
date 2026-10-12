@@ -33,9 +33,9 @@ function interpret(row: Observation, data: Record<string, string>) {
     triggerKind: data.triggerkind ?? data.xinstitutiontriggerkind,
     value: data.value, currency: data.currency, unit: data.unit, period: data.period,
     basis: data.basis, factKey: data.factkey, occurredAt: data.occurredat,
-    availableAt: data.availableat, relationTarget: undefined as string | undefined,
-    effectiveFrom: undefined as string | undefined,
-    vehicleType: undefined as string | undefined,
+    availableAt: data.availableat, relationTarget: data.relationregistrationid,
+    effectiveFrom: data.effectivefrom,
+    vehicleType: data.vehicletype,
   };
   const registrationId = data.vehiclenumber ?? data.fundnumber
     ?? data.dealnumber ?? data.opportunitynumber ?? data.employeenumber ?? "";
