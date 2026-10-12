@@ -37,3 +37,11 @@ late response disclosure; changed original reservation/deadline; unbounded reads
 worker exit, source drift, shared disk growth or memory guard. Capture the reached
 boundary and exact queue/SQL/browser predicate. Do not widen the fixed resource
 limits or weaken privacy/completion checks after failure.
+
+Run 027 cold preparation reached LoginForm but Next regenerated the tracked
+`next-env.d.ts` development route reference after freezing source and restarted
+its own development server at the heap threshold. Stop the owned frontend before
+compiler exposure, retain the actual generated diff and browser connection error,
+then freeze that generated source for the affected mounted run. Reuse its owned
+Webpack cache and record preparation separately; this is not a clean installation
+claim. Keep the original heap, stack wall, disk and memory bounds unchanged.
