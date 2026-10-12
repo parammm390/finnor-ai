@@ -5,6 +5,7 @@ import { safePredicate } from "../program-synthesis/store";
 import { readInstitutionHarnessProgram } from "../program-synthesis/institution";
 import { handleProgramOperation } from "../program-synthesis/api";
 import { InstitutionProgram } from "./contracts";
+import { configureInstitutionMandate,registerInstitutionCoreSource,readInstitutionInputs,setInstitutionSelfConsent } from './inputs';
 import { INSTITUTION_COMPLETION_CONTRACTS } from "./completion-contracts";
 import { readInstitutionComputeCosts,persistInstitutionApiCompute } from "./meter";
 import {releaseUntouchedInstitutionDemand} from "../allocation-store";
@@ -12,7 +13,8 @@ import { authorizeInstitutionWork, assertInstitutionCompilerCurrent, compilerRow
   compilerEpisode, enqueueInstitutionCompiler, submitInstitutionCompiler,reconcileInstitutionCompilerDelivery } from "./store";
 
 export const INSTITUTION_OPERATIONS = ["institution-submit", "institution-revise", "institution-read",
-  "institution-status", "institution-cancel", "institution-resume", "institution-witness", "institution-sources"] as const;
+  "institution-status", "institution-cancel", "institution-resume", "institution-witness", "institution-sources",
+  'institution-inputs','institution-mandate','institution-register-source','institution-consent'] as const;
 const id = z.object({ requestId: z.string().uuid() }).strict();
 const submit = z.object({ workId: z.string().uuid(), workInputId: z.string().uuid(),
   grantIds: z.array(z.string().uuid()).min(1).max(16), idempotencyKey: z.string().min(1).max(160) }).strict();
@@ -88,6 +90,13 @@ export async function readInstitutionCompiler(ctx: PeMutationContext, requestId:
 
 async function handleInstitutionOperationBody(ctx: PeMutationContext, operation: string, body: unknown) {
   try {
+    if(operation==='institution-inputs'){
+      const {workId}=z.object({workId:z.string().uuid()}).strict().parse(body);
+      return {status:200,body:await readInstitutionInputs(ctx,workId)};
+    }
+    if(operation==='institution-mandate')return {status:200,body:await configureInstitutionMandate(ctx,body)};
+    if(operation==='institution-register-source')return {status:200,body:await registerInstitutionCoreSource(ctx,body)};
+    if(operation==='institution-consent')return {status:200,body:await setInstitutionSelfConsent(ctx,body)};
     if (operation === "institution-submit") return { status: 202, body: await submitInstitutionCompiler(ctx, submit.parse(body)) };
     if (operation === "institution-revise") {
       const parsed = submit.extend({ parentRequestId: z.string().uuid() }).strict().parse(body);

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react"
 import { centropyPost } from "../lib/api"
 import { usePrivateRequestScope } from "../lib/use-private-request-scope"
+import { InstitutionInputForm } from "./InstitutionInputForm"
 
 type Binding = { status: "known"; ref: string; revision: string; owner: string; digest: string }
   | { status: "unknown"; reason: string; requiredOwnerOrInput: string; affectedRefs: string[] }
@@ -50,6 +51,7 @@ export function InstitutionProgramPanel({ workId }: { workId: string }) {
   const [reading, setReading] = useState<{ key: string; value: Read } | null>(null)
   const [message, setMessage] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  const [configure, setConfigure] = useState(false)
   const visibleSources = allowed && sources?.key === scopeKey ? sources.value : null
   const visible = allowed && reading?.key === scopeKey ? reading.value : null
   const refresh = useCallback(async () => {
@@ -74,7 +76,7 @@ export function InstitutionProgramPanel({ workId }: { workId: string }) {
     }
   }, [allowed, isCurrent, scopeKey, workId])
   useEffect(() => {
-    setSources(null); setReading(null); setMessage(null); setBusy(false)
+    setSources(null); setReading(null); setMessage(null); setBusy(false); setConfigure(false)
     void refresh()
   }, [refresh])
   useEffect(() => {
@@ -117,12 +119,14 @@ export function InstitutionProgramPanel({ workId }: { workId: string }) {
     <header><div><span className="ct-eyebrow">STANDING RESPONSIBILITY</span><h3>Institution programme</h3></div>
       <button type="button" onClick={() => void refresh()} disabled={busy}>Refresh current owners</button></header>
     <p>Compile this Work’s authorized sources into checked responsibilities and continue the permitted operations.</p>
+    <button type="button" onClick={() => setConfigure(value => !value)} disabled={busy}>{configure ? "Close input configuration" : "Configure responsibility inputs"}</button>
+    {configure ? <InstitutionInputForm key={scopeKey} workId={workId} onSaved={async () => { if (isCurrent(scopeKey)) await refresh() }} /> : null}
     <div className="ct-evidence__actions"><button type="button" disabled={busy || !visibleSources?.workInputId
       || !visibleSources.grants.length || visibleSources.grants.length > 16
       || ["QUEUED", "RUNNING", "CANCELLED"].includes(visible?.status ?? "")}
       onClick={() => void compile()}>{visibleSources?.request ? "Recompile under the original budget" : "Compile standing responsibility"}</button>
       {visible?.canResume ? <button type="button" disabled={busy} onClick={() => void control("resume")}>Resume retained continuation</button> : null}
-      {visible && !["CANCELLED", "INVALIDATED"].includes(visible.status)
+      {visible && visible.status !== "CANCELLED"
         ? <button type="button" disabled={busy} onClick={() => void control("cancel")}>Cancel future continuation</button> : null}</div>
     <p role="status" aria-live="polite">{message ?? (visible ? `Revision ${visible.revision} · ${visible.status.toLowerCase()}`
       : visibleSources?.grants.length ? `${visibleSources.grants.length} current source bindings` : "Attach authorized sources and a standing responsibility to this Work.")}</p>

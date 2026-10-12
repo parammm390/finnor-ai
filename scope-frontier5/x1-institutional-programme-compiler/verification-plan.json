@@ -551,6 +551,22 @@
       "limits": "UNCHANGED",
       "acceptance": "oracle-contract.md#f-physical-checker-crash-and-compatible-resume-independent-expectations",
       "alternativeAlgorithmClaimed": false
+    },
+    {
+      "id": "G-authenticated-owner-inputs",
+      "mode": "owner_inputs",
+      "dutyCount": 1,
+      "status": "FROZEN_BEFORE_CASE_RUN",
+      "sourceInstances": 15,
+      "sourceClasses": 10,
+      "canonicalKinds": 14,
+      "independentMappingDenominator": 26,
+      "independentObligationDenominator": 3,
+      "privilegedMandateWrites": 0,
+      "privilegedSourceGrantWrites": 0,
+      "limits": "UNCHANGED",
+      "acceptance": "oracle-contract.md#g-authenticated-owner-inputs-independent-expectations",
+      "protectedQualification": false
     }
   ]
 }

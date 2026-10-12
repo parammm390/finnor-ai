@@ -30,7 +30,7 @@ type Rule = {
 export type OriginalInstitutionEvidence = {
   tenantId: string; institutionId: string; workId: string; principalId: string; knowledgeCut: string;
   sources: Source[];
-  mandate: { id: string; revision: string; tenantId: string; institutionId: string; workId: string; rules: Rule[] };
+  mandate: { id: string; standingId?:string; revision: string; tenantId: string; institutionId: string; workId: string; rules: Rule[] };
   canonical: { tenantId: string; revision: string; entities: { ref: string; entityType: string; registrationId: string; institutionId: string; sourceId?:string; ownerWitness?:Record<string,unknown> }[] };
   current: {
     sourceRevisions: Record<string, string>; mandateRevision: string; canonicalRevision: string;

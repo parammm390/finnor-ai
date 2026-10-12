@@ -19,7 +19,7 @@ const only = option("--check");
 const ownerCase=option('--case');
 const ownerCases={owners:{'one-duty':{count:'1',mode:'api'},'128-duty':{count:'128',mode:'api'},
   heterogeneous:{count:'1',mode:'heterogeneous'},canonical:{count:'1',mode:'canonical'},ordinary:{count:'1',mode:'ordinary'},
-  domain:{count:'1',mode:'domain'}},
+  domain:{count:'1',mode:'domain'},'owner-inputs':{count:'1',mode:'owner_inputs'}},
   lifecycle:{material:{count:'1',mode:'material'},'reporting-changes':{count:'1',mode:'reporting_changes'},recovery:{count:'1',mode:'recovery'},
     contention:{count:'1',mode:'contention'},unsupported:{count:'1',mode:'unsupported'},'checker-crash':{count:'1',mode:'checker_crash'},
     'cancel-observed':{count:'1',mode:'cancel_observed'},
@@ -85,6 +85,8 @@ for (const path of [
   "finnor-os/scripts/frontier5/x1/reference/responsibility-contract.md",
   "finnor-os/scripts/frontier5/x1/reference/responsibility-expectations.json",
   "finnor-os/packages/private-equity/src/institution-program/source-authority.ts",
+  'finnor-os/packages/private-equity/src/institution-program/inputs.ts',
+  'finnor-os/packages/db/migrations/0181_x1_authenticated_work_inputs.sql',
   "finnor-os/packages/private-equity/src/institution-program/installed-source.ts",
   "finnor-os/packages/private-equity/src/index.ts",
   "finnor-os/packages/db/migrations/0172_x1_institution_source_authority.sql",

@@ -4,4 +4,4 @@
  * Keep this beside the migrations so readiness and worker heartbeats cannot drift
  * by carrying independent literals.
  */
-export const CURRENT_MIGRATION_HEAD = "0180_x1_work_scoped_canonical_owners.sql";
+export const CURRENT_MIGRATION_HEAD = "0181_x1_authenticated_work_inputs.sql";

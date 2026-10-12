@@ -295,4 +295,25 @@ Meter-writer latency, money, supervision and aggregate memory remain explicit
 coverage gaps. Failure to record the second phase must emit a retained METER_GAP
 and must not erase an already published artifact or observed effect.
 
+### Authenticated Work input configuration
+
+Source and mandate setup currently depend on privileged fixture writes. The ordinary
+input path must accept existing Core document-version handles and a supplied
+standing responsibility, never canonical mappings, original hashes, expected-row
+lists, observer implementations, another principal or provider credentials. A
+format-only original reader derives coverage from the retained bytes. A restricted
+SQL owner verifies the current native authority decision, active Work owner,
+document/version ownership and immutable byte pin before writing a source binding.
+The caller supplies the source class and protocol as transport declarations; the
+compiler and independent checker still determine business interpretations.
+
+Credible failures: foreign Work/document/version, inactive principal, stale native
+authority decision, forged coverage/hash/principal fields, unsupported protocol,
+duplicate source version, mutation of an earlier mandate, a source binding issued
+without read authority, self-consent renewed through an ungranted column, and
+setup that succeeds only for the fixture administrator. Verify the real HTTP path
+with the non-superuser application role, normal Core creators and pre-exposure
+source/mandate expectations. Final completion remains native independently observed
+creation; input setup is not execution authority.
+
 The independent oracle contract defines expectations and preservation. Boundary bugs need a pre-fix failing regression at their owning boundary. No post-code unit tests. Source changes following a failed proof retain the original run and rerun only affected proof plus necessary regressions.

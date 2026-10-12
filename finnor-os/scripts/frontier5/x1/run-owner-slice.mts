@@ -26,7 +26,8 @@ const evidence = process.env.FINNOR_X1_OWNER_EVIDENCE;
 if (!evidence || !evidence.startsWith("/")) throw Error("FRESH_PRIVATE_X1_OWNER_EVIDENCE_REQUIRED");
 const dutyCount=process.env.FINNOR_X1_OWNER_CASE==='128'?128:1;
 const reportingChanges=process.env.FINNOR_X1_OWNER_MODE==='reporting_changes';
-const fullDomain=process.env.FINNOR_X1_OWNER_MODE==='domain'||reportingChanges;
+const ownerInputs=process.env.FINNOR_X1_OWNER_MODE==='owner_inputs';
+const fullDomain=process.env.FINNOR_X1_OWNER_MODE==='domain'||reportingChanges||ownerInputs;
 const mounted=process.env.FINNOR_X1_OWNER_MODE==='mounted';
 const revise=process.env.FINNOR_X1_OWNER_MODE==='revision';
 const material=process.env.FINNOR_X1_OWNER_MODE==='material';
@@ -40,7 +41,7 @@ const checkerCrash=process.env.FINNOR_X1_OWNER_MODE==='checker_crash';
 const contention=process.env.FINNOR_X1_OWNER_MODE==='contention';
 const unsupported=process.env.FINNOR_X1_OWNER_MODE==='unsupported';
 const cancelObserved=process.env.FINNOR_X1_OWNER_MODE==='cancel_observed';
-if(process.env.FINNOR_X1_OWNER_MODE&&!['api','mounted','revision','material','heterogeneous','canonical','recovery','effect_recovery','ordinary','domain','reporting_changes','upgrade','checker_crash','contention','unsupported','cancel_observed'].includes(process.env.FINNOR_X1_OWNER_MODE))
+if(process.env.FINNOR_X1_OWNER_MODE&&!['api','mounted','revision','material','heterogeneous','canonical','recovery','effect_recovery','ordinary','domain','owner_inputs','reporting_changes','upgrade','checker_crash','contention','unsupported','cancel_observed'].includes(process.env.FINNOR_X1_OWNER_MODE))
   throw Error('EXACT_REGISTERED_OWNER_MODE_REQUIRED');
 if((mounted||material||heterogeneous||canonical||recovery||effectRecovery||ordinary||upgrade||checkerCrash||contention||unsupported||cancelObserved)&&dutyCount!==1)throw Error('NAMED_ONE_DUTY_SCENARIO_REQUIRED');
 if(process.env.FINNOR_X1_OWNER_CASE&&!['1','128'].includes(process.env.FINNOR_X1_OWNER_CASE))
@@ -177,7 +178,7 @@ try {
       postconditionRef:'x1:pe-workstream-created:v1',observerRef:'x1:pe-workstream-creation-observer:v1'},
       {...rule,id:'standing-finding',triggerKind:'material_finding_observed',operation:'record_finding',
         postconditionRef:'x1:pe-finding-created:v1',observerRef:'x1:pe-finding-creation-observer:v1'}]:[rule];
-  await admin.query(`INSERT INTO finnor_os.x1_work_mandates(tenant_id,principal_id,work_id,institution_id,revision,rules,valid_from,expires_at)
+  if(!ownerInputs)await admin.query(`INSERT INTO finnor_os.x1_work_mandates(tenant_id,principal_id,work_id,institution_id,revision,rules,valid_from,expires_at)
     VALUES($1,$2,$3,$4,'r1',$5::jsonb,clock_timestamp()-interval '1 minute',clock_timestamp()+interval '1 hour')`, [tenant, actor, workId, institutionId, JSON.stringify(rules)]);
   const frontendPort=mounted?await freePort():null,frontendOrigin=frontendPort?'http://127.0.0.1:'+frontendPort:null;
   const revokeFixturePrincipal=async()=>{
@@ -260,7 +261,8 @@ try {
     dealId:String(first.row.id),companyId:companyIds[0]!,organizationKey:'org-'+companyIds[0]!,
     workstreamId:String(stream.row.id),requestedFromDealPartyId:String(party.row.id),occurredAt,availableAt,fullDomain}):null;
   if(canonicalFixture){sources.push(...canonicalFixture.sources);await save('canonical-owner-starting-state.json',canonicalFixture);}
-  const grantIds: string[] = [], sourceBindings: unknown[] = [];
+  const grantIds: string[] = [], sourceBindings: Array<{sourceId:string;sourceClass:string;protocol:string;
+    expectedObjectIds:string[];grantId:string;versionId:string;documentId:string;sha256:string}> = [];
   for (const source of sources) {
     const bytes = source.bytes??Buffer.from(JSON.stringify(source.rows)), grantId = randomUUID(),protocol=source.protocol??'json_records';
     const version = await withTenantTransaction(tenant, { userId: actor }, async db => {
@@ -269,14 +271,14 @@ try {
       return appendDocumentVersion(db, { tenantId: tenant, documentId: doc.documentId, bytes, mediaType: source.mediaType??"application/octet-stream", format: "unknown",
         origin: "manual_upload", actor, sourceSystem: "owner-export", sourceRef: source.id, providerVersionId: "r1" });
     });
-    await admin.query(`INSERT INTO finnor_os.x1_source_grants(id,tenant_id,principal_id,work_id,institution_id,source_id,source_class,
+    if(!ownerInputs)await admin.query(`INSERT INTO finnor_os.x1_source_grants(id,tenant_id,principal_id,work_id,institution_id,source_id,source_class,
       purpose,acquisition_kind,document_id,document_version_id,protocol,revision,original_sha256,expected_object_ids,valid_from,expires_at)
       VALUES($1,$2,$3,$4,$5,$6,$7,'standing evidence responsibility','core_export',$8,$9,$10,'r1',$11,$12::jsonb,
         clock_timestamp()-interval '1 minute',clock_timestamp()+interval '1 hour')`,
     [grantId, tenant, actor, workId, institutionId, source.id, source.sourceClass, version.document_id, version.id,protocol,sha(bytes), JSON.stringify(source.rows.map(r => r.id))]);
     await writeFile(join(evidence, "originals", source.id + '.'+(source.extension??'json')), bytes, { mode: 0o600, flag: "wx" });
-    grantIds.push(grantId); sourceBindings.push({ sourceId: source.id, sourceClass: source.sourceClass,protocol,
-      expectedObjectIds:source.rows.map(r=>r.id),grantId, versionId: version.id, documentId: version.document_id, sha256: sha(bytes) });
+    if(!ownerInputs)grantIds.push(grantId); sourceBindings.push({ sourceId: source.id, sourceClass: source.sourceClass,protocol,
+      expectedObjectIds:source.rows.map(r=>{assert.equal(typeof r.id,'string');return r.id as string;}),grantId, versionId: version.id, documentId: version.document_id, sha256: sha(bytes) });
   }
   expected = { mappings: [{ sourceId: "crm-original", recordId: "deal-A", canonicalId: String(first.row.id) },
     { sourceId: "crm-original", recordId: "deal-B", canonicalId: String(second.row.id) }],
@@ -335,6 +337,54 @@ try {
   };
   const me = await fetch(service.origin + "/api/me", { headers: { authorization: "Bearer " + service.token } });
   const identity = await me.json(); assert.equal(me.status, 200); assert.equal(identity.tenantId, tenant); assert.equal(identity.userId, actor);
+  if(ownerInputs){
+    const expiry=new Date(Date.now()+3600000).toISOString();
+    const userRules=rules.map(({postconditionRef:_postcondition,observerRef:_observer,...userRule})=>userRule);
+    const mandateInput={workId,institutionId,rules:userRules,expiresAt:expiry};
+    assert.equal((await api('institution-mandate',mandateInput,null)).status,401);
+    assert.equal((await api('institution-mandate',{...mandateInput,rules:[{...userRules[0],observerRef:'invented'}]})).status,400);
+    assert.equal((await api('institution-mandate',{...mandateInput,workId:randomUUID()})).status,404);
+    assert.equal((await admin.query('SELECT count(*)::int n FROM finnor_os.x1_work_mandates WHERE tenant_id=$1',[tenant])).rows[0].n,0);
+    const mandate=await api('institution-mandate',mandateInput);assert.equal(mandate.status,200,JSON.stringify(mandate));
+    assert.equal(mandate.body.standing_id,mandate.body.id);assert.deepEqual(mandate.body.rules,rules);
+    const repeatMandate=await api('institution-mandate',mandateInput);assert.equal(repeatMandate.status,200);
+    assert.equal(repeatMandate.body.id,mandate.body.id);
+    const configured=[];
+    const selfConsent={institutionId,sourceClass:'personnel_benefits',purpose:'standing evidence responsibility',expiresAt:expiry};
+    assert.equal((await api('institution-consent',{...selfConsent,subjectUserId:randomUUID()})).status,400);
+    const consentRenewed=await api('institution-consent',selfConsent);assert.equal(consentRenewed.status,200,JSON.stringify(consentRenewed));
+    assert.equal(consentRenewed.body.subject_user_id,actor);
+    const consentRevoked=await api('institution-consent',{...selfConsent,revoke:true});assert.equal(consentRevoked.status,200);
+    assert.ok(consentRevoked.body.revoked_at);assert.equal(consentRevoked.body.revision,consentRenewed.body.revision+1);
+    const consentRestored=await api('institution-consent',selfConsent);assert.equal(consentRestored.status,200);
+    assert.equal(consentRestored.body.revoked_at,null);assert.equal(consentRestored.body.revision,consentRevoked.body.revision+1);
+    for(const binding of sourceBindings){
+      const registration:{workId:string;documentId:string;documentVersionId:string;sourceClass:string;protocol:string;purpose:string;expiresAt:string}
+        ={workId,documentId:binding.documentId,documentVersionId:binding.versionId,
+        sourceClass:binding.sourceClass,protocol:binding.protocol,purpose:'standing evidence responsibility',expiresAt:expiry};
+      assert.equal((await api('institution-register-source',{...registration,expectedObjectIds:binding.expectedObjectIds})).status,400);
+      const registered=await api('institution-register-source',registration);assert.equal(registered.status,200,JSON.stringify(registered));
+      assert.equal(registered.body.original_sha256,binding.sha256);assert.equal(registered.body.source_id,binding.sourceId);
+      assert.deepEqual(registered.body.expected_object_ids,binding.expectedObjectIds);assert.equal(registered.body.principal_id,actor);
+      binding.grantId=registered.body.id;grantIds.push(binding.grantId);
+      const repeated=await api('institution-register-source',registration);assert.equal(repeated.status,200);
+      assert.equal(repeated.body.id,binding.grantId);assert.equal(repeated.body.version,1);
+      configured.push({registration,registered,repeated});
+    }
+    const choices=await api('institution-inputs',{workId});assert.equal(choices.status,200);
+    assert.equal(choices.body.mandate.id,mandate.body.id);
+    for(const binding of sourceBindings)assert.ok(choices.body.documents.some((d:any)=>d.document_id===binding.documentId&&d.version_id===binding.versionId));
+    const actualGrants=(await admin.query(`SELECT id::text,source_id,expected_object_ids,original_sha256,version
+      FROM finnor_os.x1_source_grants WHERE tenant_id=$1 ORDER BY source_id`,[tenant])).rows;
+    assert.equal(actualGrants.length,sources.length);
+    await save('authenticated-owner-input-independent-proof.json',{mandateInput,mandate,repeatMandate,configured,
+      choices,actualGrants,sourceBindings,consentRenewed,consentRevoked,consentRestored,
+      oracle:'PRE_EXPOSURE_LITERAL_RAW_OBJECT_IDS_BYTE_HASHES_AND_STANDING_RULES',
+      privilegedMandateWrites:0,privilegedSourceGrantWrites:0,applicationRole:'finnor_app',executionAuthorityGranted:false});
+    results.push({id:'G-authenticated-owner-inputs',status:'PASS',observed:{sources:sources.length,mandateRules:rules.length,
+      privilegedInputWrites:0,idempotent:true},basis:'ACTUAL_AUTHENTICATED_HTTP_NATIVE_AUTHORITY_CORE_AND_RESTRICTED_SQL_INPUT_OWNER'});
+    await save('inputs-and-independent-expectations.json',{tenant,actor,institutionId,workId,rule,rules,sourceBindings,expected});
+  }
   const metadata = await api("institution-sources", { workId }); assert.equal(metadata.status, 200, JSON.stringify(metadata));
   const input = { workId, workInputId: metadata.body.workInputId, grantIds, idempotencyKey: "x1-original:" + randomUUID() };
   assert.equal((await api("institution-submit", input, null)).status, 401);

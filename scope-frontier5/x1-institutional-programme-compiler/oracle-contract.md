@@ -341,3 +341,18 @@ revision, and explicit SOURCE_ASSERTION_ATTACHED_NOT_SETTLED_TRUTH. Sensitive
 expense subject stays the consented user and creates no payment. Material source
 revision retains old immutable assertions and adds the new current source version.
 No producer-derived numeric expectation or settled-truth claim is accepted.
+# G-authenticated-owner-inputs independent expectations
+
+Freeze the existing raw-source ledger and standing rules before exposing them to
+FINNOR. In `owner_inputs`, do not insert source grants or mandates with fixture
+SQL. Upload exact originals with the existing Core owner, then call authenticated
+`institution-mandate` and `institution-register-source` through the actual route
+using `finnor_app`. Coverage, immutable hashes, revisions and principal derive from
+owner records. The response and independent SQL reader must agree with the frozen
+original bytes and literal source-record IDs, with no supplied semantic mapping.
+Unknown Work and additional hash/coverage/canonical/observer fields fail before a
+binding is written. Identical registration is idempotent. The independent checker,
+registered physical worker, canonical creators and completion observer must still
+produce the same full-domain native effects; setup alone gives no PASS. Self-consent
+is subject-owned and renewal/revocation use the same authenticated owner boundary.
+

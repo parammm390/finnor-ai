@@ -79,7 +79,7 @@ export function deriveInstitutionResponsibilities(input: Input) {
       occurredAt: obligation.occurredAt, availableAt: obligation.availableAt };
     const identity = institutionObligationIdentity({
       tenantId: original.tenantId, institutionId: original.institutionId,
-      mandateId: original.mandate.id, ruleId: rule.id, subjectRef: obligation.subjectRef,
+      mandateId: original.mandate.standingId??original.mandate.id, ruleId: rule.id, subjectRef: obligation.subjectRef,
       sourceId: row.sourceId, recordId: row.recordId, occurredAt: row.occurredAt,
     });
     if (deadlineAt === null || rule.deadlineAt < deadlineAt) deadlineAt = rule.deadlineAt;

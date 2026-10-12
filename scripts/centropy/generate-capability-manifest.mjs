@@ -63,7 +63,7 @@ const companyBrainOperations = [...new Set([
   }),
 ])]
 const companyBrainReads = new Set([
-  "institution-read", "institution-status", "institution-witness", "institution-sources",
+  "institution-read", "institution-status", "institution-witness", "institution-sources", "institution-inputs",
   "belief-view", "belief-pin", "roots", "projection", "search", "object", "traverse",
   "provenance", "history", "evidence-lineage", "decision-lineage", "available-actions", "context",
   "evidence-handles", "evidence-read", "evidence-witness",

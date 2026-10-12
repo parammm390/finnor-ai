@@ -215,13 +215,8 @@ export async function grantInstitutionSubjectConsent(ctx: PeMutationContext, inp
       || input.expiresAt <= new Date()) throw new Error("X1_CONSENT_INVALID");
   await withTenantTransaction(ctx.auth.tenantId, { userId: ctx.auth.userId, isolation: "serializable" }, async (_db, client) => {
     const result = await client.query(
-      `INSERT INTO finnor_os.x1_subject_consents
-         (tenant_id,subject_user_id,institution_id,source_class,purpose,expires_at)
-       VALUES ($1,$2,$3,$4,$5,$6)
-       ON CONFLICT (tenant_id,subject_user_id,institution_id,source_class,purpose)
-       DO UPDATE SET granted_at=clock_timestamp(),expires_at=EXCLUDED.expires_at,
-         revoked_at=NULL,revision=finnor_os.x1_subject_consents.revision+1`,
-      [ctx.auth.tenantId, ctx.auth.userId, input.institutionId, input.sourceClass, input.purpose, input.expiresAt],
+      `SELECT * FROM finnor_os.x1_set_subject_consent($1,$2,$3,$4,false)`,
+      [input.institutionId, input.sourceClass, input.purpose, input.expiresAt],
     );
     if (result.rowCount !== 1) throw new Error("X1_CONSENT_WRITE_FAILED");
   });
@@ -233,9 +228,9 @@ export async function readInstitutionMandate(
 ): Promise<OriginalInstitutionEvidence["mandate"]> {
   return withTenantTransaction(ctx.auth.tenantId, { userId: ctx.auth.userId, readOnly: true }, async (_db, client) => {
     const result = await client.query<{
-      id: string; revision: string; institution_id: string; rules: OriginalInstitutionEvidence["mandate"]["rules"];
+      id: string; standing_id:string; revision: string; institution_id: string; rules: OriginalInstitutionEvidence["mandate"]["rules"];
     }>(
-      `SELECT m.id::text,m.revision,m.institution_id,m.rules
+      `SELECT m.id::text,m.standing_id::text,m.revision,m.institution_id,m.rules
          FROM finnor_os.x1_work_mandates m JOIN finnor_os.works w
            ON w.tenant_id=m.tenant_id AND w.id=m.work_id
         WHERE m.tenant_id=$1 AND m.work_id=$2 AND m.principal_id=$3
@@ -246,7 +241,7 @@ export async function readInstitutionMandate(
     );
     const row = result.rows[0];
     if (!row || !Array.isArray(row.rules) || row.rules.length > 128) throw new Error("X1_CURRENT_MANDATE_UNAVAILABLE");
-    return { id: row.id, revision: row.revision, tenantId: ctx.auth.tenantId,
+    return { id: row.id, standingId:row.standing_id,revision: row.revision, tenantId: ctx.auth.tenantId,
       institutionId: row.institution_id, workId, rules: row.rules };
   });
 }
