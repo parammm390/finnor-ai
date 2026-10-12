@@ -21,6 +21,7 @@ import { heterogeneousOwnerSources,type OwnerSource } from './owner-source-corpu
 import { canonicalOwnerSources } from './canonical-owner-corpus.mts';
 import { prepareExistingOwnerUpgrade,observePreservedUpgradeOwners } from './upgrade-owner-fixture.mts';
 import { registerInstitutionCoreSource } from '../../../packages/private-equity/src/institution-program/inputs';
+import { evaluateAuthority } from '@finnor/authority';
 
 const repo = fileURLToPath(new URL("../../../../", import.meta.url));
 const evidence = process.env.FINNOR_X1_OWNER_EVIDENCE;
@@ -31,7 +32,8 @@ const authorityEpoch=process.env.FINNOR_X1_OWNER_MODE==='authority_epoch';
 const sensitiveCoverage=process.env.FINNOR_X1_OWNER_MODE==='sensitive_coverage';
 const personnel=process.env.FINNOR_X1_OWNER_MODE==='personnel';
 const creation=process.env.FINNOR_X1_OWNER_MODE==='creation';
-const ownerInputs=process.env.FINNOR_X1_OWNER_MODE==='owner_inputs';
+const sourceNamespace=process.env.FINNOR_X1_OWNER_MODE==='source_namespace';
+const ownerInputs=process.env.FINNOR_X1_OWNER_MODE==='owner_inputs'||sourceNamespace;
 const fullDomain=process.env.FINNOR_X1_OWNER_MODE==='domain'||reportingChanges||ownerInputs||sensitiveCoverage||personnel;
 const mounted=process.env.FINNOR_X1_OWNER_MODE==='mounted';
 const revise=process.env.FINNOR_X1_OWNER_MODE==='revision';
@@ -47,7 +49,7 @@ const contention=process.env.FINNOR_X1_OWNER_MODE==='contention';
 const unsupportedOperation=process.env.FINNOR_X1_OWNER_MODE==='unsupported_operation';
 const unsupported=process.env.FINNOR_X1_OWNER_MODE==='unsupported'||unsupportedOperation;
 const cancelObserved=process.env.FINNOR_X1_OWNER_MODE==='cancel_observed';
-if(process.env.FINNOR_X1_OWNER_MODE&&!['api','mounted','revision','material','heterogeneous','canonical','creation','recovery','effect_recovery','ordinary','domain','owner_inputs','reporting_changes','authority_epoch','sensitive_coverage','personnel','upgrade','checker_crash','contention','unsupported','unsupported_operation','cancel_observed'].includes(process.env.FINNOR_X1_OWNER_MODE))
+if(process.env.FINNOR_X1_OWNER_MODE&&!['api','mounted','revision','material','heterogeneous','canonical','creation','recovery','effect_recovery','ordinary','domain','owner_inputs','reporting_changes','authority_epoch','sensitive_coverage','personnel','source_namespace','upgrade','checker_crash','contention','unsupported','unsupported_operation','cancel_observed'].includes(process.env.FINNOR_X1_OWNER_MODE))
   throw Error('EXACT_REGISTERED_OWNER_MODE_REQUIRED');
 if((mounted||material||heterogeneous||canonical||recovery||effectRecovery||ordinary||upgrade||checkerCrash||contention||unsupported||cancelObserved||authorityEpoch)&&dutyCount!==1)throw Error('NAMED_ONE_DUTY_SCENARIO_REQUIRED');
 if(process.env.FINNOR_X1_OWNER_CASE&&!['1','128'].includes(process.env.FINNOR_X1_OWNER_CASE))
@@ -477,7 +479,41 @@ try {
       privilegedMandateWrites:0,privilegedSourceGrantWrites:0,applicationRole:'finnor_app',executionAuthorityGranted:false});
     results.push({id:'G-authenticated-owner-inputs',status:'PASS',observed:{sources:sources.length,mandateRules:rules.length,
       privilegedInputWrites:0,idempotent:true},basis:'ACTUAL_AUTHENTICATED_HTTP_NATIVE_AUTHORITY_CORE_AND_RESTRICTED_SQL_INPUT_OWNER'});
-    await save('inputs-and-independent-expectations.json',{tenant,actor,institutionId,workId,rule,rules,sourceBindings,expected});
+    await save('inputs-and-independent-expectations.json',{tenant,actor,institutionId,workId,rule,rules,sourceBindings,expected});    if(sourceNamespace){
+      const source=sourceBindings.find(s=>s.sourceClass==='personnel_benefits')!;
+      const privateConsent={institutionId,sourceClass:'personnel_benefits',purpose:'standing evidence responsibility'};
+      const revoked=await api('institution-consent',{...privateConsent,revoke:true});assert.equal(revoked.status,200);
+      const before=(await admin.query(`SELECT id::text,version,source_class FROM finnor_os.x1_source_grants
+        WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3 AND source_id=$4 ORDER BY version`,[tenant,actor,workId,source.sourceId])).rows;
+      const attempted=await api('institution-register-source',{workId,documentId:source.documentId,documentVersionId:source.versionId,
+        sourceClass:'crm_deals',protocol:source.protocol,purpose:'standing evidence responsibility',expiresAt:expiry});
+      const scope=await withTenantTransaction(tenant,{userId:actor,readOnly:true},async(_db,c)=>(await c.query(
+        'SELECT finnor_os.x1_source_scope($1,$2) scope',[workId,source.grantId])).rows[0].scope);
+      const changedScope=attempted.status===200?await withTenantTransaction(tenant,{userId:actor,readOnly:true},async(_db,c)=>(await c.query(
+        'SELECT finnor_os.x1_source_scope($1,$2) scope',[workId,attempted.body.id])).rows[0].scope):null;
+      await save('source-namespace-class-pre-exposure-observations.json',{revoked,before,attempted,scope,
+        changedScope,
+        sameOwnedOriginalAndNamespace:true,expected:'X1_SOURCE_NAMESPACE_CLASS_RECLASSIFICATION_DENIED'});
+      assert.equal(attempted.status,422,'ACTUAL_SOURCE_NAMESPACE_CLASS_CHANGE_MUST_REFUSE');
+      assert.ok(JSON.stringify(attempted.body).includes('X1_SOURCE_NAMESPACE_CLASS_RECLASSIFICATION_DENIED'));
+      const after=(await admin.query(`SELECT id::text,version,source_class FROM finnor_os.x1_source_grants
+        WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3 AND source_id=$4 ORDER BY version`,[tenant,actor,workId,source.sourceId])).rows;
+      assert.deepEqual(after,before);assert.equal(scope.body.originalReadAllowed,false);
+      const decision=await evaluateAuthority(ctx.auth,{operation:'query',capability:'query:pe_world_state',risk:'low',workId,
+        resources:[{type:'work',id:workId},{type:'document',id:source.documentId}]});assert.equal(decision.outcome,'allowed');
+      let legacyRefusal:string|null=null;
+      try{await withTenantTransaction(tenant,{userId:actor},async(_db,c)=>c.query(
+        'SELECT * FROM finnor_os.x1_register_owned_core_source($1,$2,$3,$4,$5,$6,$7,$8::jsonb,$9,$10)',
+        [workId,source.documentId,source.versionId,'crm_deals',source.protocol,'standing evidence responsibility',
+          source.sha256,JSON.stringify(source.expectedObjectIds),expiry,decision.id]));}
+      catch(error){legacyRefusal=(error as Error).message;}
+      assert.equal(legacyRefusal,'X1_SOURCE_NAMESPACE_CLASS_RECLASSIFICATION_DENIED');
+      await save('legacy-source-namespace-class-refusal.json',{legacyRefusal,actualDecisionId:decision.id,
+        role:'finnor_app',sameOwnedOriginal:true,rawGrantWrite:false});
+      const restored=await api('institution-consent',{...privateConsent,expiresAt:expiry});assert.equal(restored.status,200);
+      results.push({id:'C-established-source-class-reclassification',status:'PASS',observed:{statusCode:422,originalClass:'personnel_benefits'},
+        basis:'ACTUAL_SELF_CONSENT_REVOCATION_AUTHENTICATED_SAME_ORIGINAL_RECLASSIFICATION_NATIVE_DENIAL_NO_GRANT_CHANGE'});
+    }
   }
   const metadata = await api("institution-sources", { workId }); assert.equal(metadata.status, 200, JSON.stringify(metadata));
   const input = { workId, workInputId: metadata.body.workInputId, grantIds, idempotencyKey: "x1-original:" + randomUUID() };
