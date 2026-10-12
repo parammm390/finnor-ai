@@ -104,12 +104,14 @@ export async function createFund(ctx: PeMutationContext, input: {
 /** X1 owner transaction variant: canonical row and original EvidenceVersion
  * commit together. The caller must already have checked scoped identity. */
 export async function createFundTx(client: PeClient, ctx: PeMutationContext, input: {
-  id: string; name: string; registrationId: string;
+  id: string; name: string; registrationId: string;baseCurrency?:string;
 }): Promise<PeMutationResult> {
   assertPeText(input.name, "Fund name");
   assertPeText(input.registrationId, "Fund registration");
+  if(input.baseCurrency!==undefined&&!/^[A-Z]{3}$/.test(input.baseCurrency))
+    throw new PeDomainError('PE_INVALID_INPUT','Fund base currency must be an explicit ISO currency code');
   return createTwin(client, ctx, "pe_funds", { id: input.id, name: input.name.trim(),
-    external_id: input.registrationId, status: "forming" });
+    external_id: input.registrationId,base_currency:input.baseCurrency??null,status: "forming" });
 }
 
 export async function createVehicle(ctx: PeMutationContext, input: {

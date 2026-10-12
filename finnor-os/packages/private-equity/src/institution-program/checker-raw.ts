@@ -9,7 +9,7 @@ type OriginalSource = {
 };
 type RecordRow = {
   id: string; kind: string; registrationId?: string; entityType?: string;
-  name?: string; vehicleType?: string;
+  name?: string; vehicleType?: string; baseCurrency?:string;
   effectiveFrom?: string;
   factKey?: string; value?: string; currency?: string; unit?: string; period?: string; basis?: string;
   occurredAt?: string; availableAt?: string; triggerKind?: string;
@@ -56,6 +56,7 @@ function requireRows(value: unknown, limit: number, sourceClass: string): Record
       registrationId: string("registrationid", "vehiclenumber", "fundnumber", "dealnumber", "opportunitynumber", "employeenumber"),
       name: string("fundname", "vehiclename"),
       vehicleType: string("vehicletype"),
+      baseCurrency:string('basecurrency'),
       effectiveFrom: string("effectivefrom"),
       observationKind: string("transactionid") ? "transaction" : "assertion",
       balanceRole: string("balancerole"),

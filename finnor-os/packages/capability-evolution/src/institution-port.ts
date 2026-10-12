@@ -18,7 +18,7 @@ async function readInstalledInstitutionCompilerIdentity(){
   for(const path of ["contracts.ts","plan.ts","owners.ts","store.ts","institution.ts",
     "institution-history.ts","institution-continuation.ts","institution-recovery.ts","duty-observer.ts","request-observer.ts"])
     paths.push(new URL(`../../private-equity/src/program-synthesis/${path}`,import.meta.url));
-  for(const path of ["allocation-store.ts","economic-store.ts"])
+  for(const path of ["allocation-store.ts","economic-store.ts","digital-twin.ts"])
     paths.push(new URL(`../../private-equity/src/${path}`,import.meta.url));
   paths.push(new URL("./institution-port.ts",import.meta.url));
   paths.push(new URL('./institution-consumer.ts',import.meta.url));

@@ -47,6 +47,37 @@ function canonicalId(tenant: string, institution: string, kind: string, registra
   return `${value.slice(0, 8)}-${value.slice(8, 12)}-4${value.slice(13, 16)}-8${value.slice(17, 20)}-${value.slice(20)}`;
 }
 
+type CreationProperties={name:string;baseCurrency?:string;vehicleType?:Parameters<typeof createVehicleTx>[2]['vehicleType']};
+/** Aggregate only explicit original properties of the same scoped identity.
+ * Missing assertions do not override known ones; competing or unsupported
+ * properties cannot mint a canonical row through a default value. */
+async function canonicalCreationProperties(sources:Source[],profile:DigitalInstitutionProfile){
+  const entries=new Map<string,{kind:'fund'|'vehicle';names:Set<string>;currencies:Set<string>;types:Set<string>;invalid:boolean}>();
+  for(const source of sources){
+    if(source.ownerCoverageGap)continue;
+    for(const row of await originalRawRecords(source,profile.bounds.tabularRowsPerObject,profile.bounds.objectBytes)){
+      if(row.kind!=='entity'||!['fund','vehicle'].includes(row.entityType??'')||!row.registrationId)continue;
+      const kind=row.entityType as 'fund'|'vehicle',key=JSON.stringify([kind,row.registrationId]);
+      const entry=entries.get(key)??{kind,names:new Set<string>(),currencies:new Set<string>(),types:new Set<string>(),invalid:false};
+      if(row.name!==undefined){if(typeof row.name!=='string'||!row.name.trim()||row.name.length>256)entry.invalid=true;
+        else entry.names.add(row.name);}
+      if(kind==='fund'&&row.baseCurrency!==undefined){
+        if(typeof row.baseCurrency!=='string'||!(/^[A-Z]{3}$/).test(row.baseCurrency))entry.invalid=true;
+        else entry.currencies.add(row.baseCurrency);
+      }
+      if(kind==='vehicle'&&row.vehicleType!==undefined){
+        if(!['main','feeder','parallel','co_invest','blocker','continuation','other'].includes(row.vehicleType))entry.invalid=true;
+        else entry.types.add(row.vehicleType);
+      }
+      entries.set(key,entry);
+    }
+  }
+  return new Map([...entries].map(([key,entry]):[string,CreationProperties|null]=>[key,
+    entry.invalid||entry.names.size!==1||entry.currencies.size>1||(entry.kind==='vehicle'&&entry.types.size!==1)?null:
+      {name:[...entry.names][0]!,...([...entry.currencies][0]?{baseCurrency:[...entry.currencies][0]}:{}),
+        ...(entry.kind==='vehicle'?{vehicleType:[...entry.types][0] as CreationProperties['vehicleType']}:{})}]));
+}
+
 /** Acquisition is authorized by the currently active owner grant, not by
  * caller bytes or source metadata. */
 export async function retainInstitutionSource(
@@ -168,6 +199,7 @@ export async function loadInstitutionCanonicalOwnerSnapshot(
   await authorizeBeliefResources(ctx, [{ type: "tenant", id: ctx.auth.tenantId }]);
   await authorizeBeliefCandidateCut(ctx);
   const identifiers = new Set<string>();
+  const creationProperties=await canonicalCreationProperties(original.sources,profile);
   const prospective = new Map<string, { entityType: "fund" | "vehicle"; registrationId: string; id: string; name: string; ambiguousName?:boolean }>();
   for (const source of original.sources) {
     if(source.ownerCoverageGap)continue;
@@ -232,7 +264,7 @@ export async function loadInstitutionCanonicalOwnerSnapshot(
           entry.entityType==='fund'?'pe_fund':'pe_vehicle']);
       if(row.rows.length>1)continue; // retained owner population below exposes the ambiguity
       const found = row.rows[0];
-      if(!found&&entry.ambiguousName)continue;
+      if(!found&&(entry.ambiguousName||!creationProperties.get(JSON.stringify([entry.entityType,entry.registrationId]))))continue;
       // Existing owners supply their actual ID. A display-label correction is
       // an assertion difference, not a new identity or permission to rename.
       refs.push({ kind: entry.entityType, id: found?.id??entry.id, registration: entry.registrationId,
@@ -322,6 +354,7 @@ async function admitCheckedInstitutionMappings(
     throw new Error("X1_ADMISSION_NOT_CURRENT_OR_UNRESOLVED");
   }
   const sources = await rereadSources(ctx, original.workId, handles, profile);
+  const creationProperties=await canonicalCreationProperties(sources,profile);
   if (sources.length !== handles.length || sources.some((source, index) => source.id !== handles[index]!.id)) {
     throw new Error("X1_ORIGINAL_BYTES_OR_REVISION_MISMATCH");
   }
@@ -486,17 +519,18 @@ async function admitCheckedInstitutionMappings(
         );
         if (!current.rows[0]) {
           if(quantity)throw Error('X1_QUANTITY_REQUIRES_EXISTING_CANONICAL_OWNER');
-          if(!native.name||native.name.length>256)throw Error("X1_NATIVE_CANONICAL_CREATION_EVIDENCE_MISSING");
+          const properties=creationProperties.get(JSON.stringify([kind,mapping.registrationId]));
+          if(!properties)throw Error('X1_CANONICAL_CREATION_PROPERTIES_NOT_ESTABLISHED');
           if(canonicalId(ctx.auth.tenantId,original.institutionId,kind,mapping.registrationId)!==entityId)
             throw Error("X1_NATIVE_CANONICAL_CREATION_IDENTITY_CHANGED");
           const creation = { ...ctx, provenance: { sourceSystem: `x1:${original.institutionId}`,
             externalId: mapping.registrationId, createdBy: ctx.auth.userId,
             observedAt: new Date(original.knowledgeCut) } };
           const result = kind === "fund"
-            ? await createFundTx(client, creation, { id: entityId!, name: native.name, registrationId: mapping.registrationId })
-            : await createVehicleTx(client, creation, { id: entityId!, name: native.name, registrationId: mapping.registrationId,
-              vehicleType: native.vehicleType === "feeder" ? "feeder"
-                : native.vehicleType === "main" ? "main" : "other" });
+            ? await createFundTx(client, creation, { id: entityId!, name: properties.name, registrationId: mapping.registrationId,
+              baseCurrency:properties.baseCurrency })
+            : await createVehicleTx(client, creation, { id: entityId!, name: properties.name, registrationId: mapping.registrationId,
+              vehicleType:properties.vehicleType! });
           row = { id: String(result.row.id), external_id: String(result.row.externalId),
             version: Number(result.row.version), source_system: String(result.row.sourceSystem) };
         } else row = current.rows[0];

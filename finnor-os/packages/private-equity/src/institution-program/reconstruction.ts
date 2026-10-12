@@ -115,7 +115,8 @@ export async function proposeInstitutionModel(
         &&(!entity.sourceId||entity.sourceId===row.sourceId));
     const ref = options.length === 1 ? options[0]!.ref : null;
     if (!ref && (registrationId || kind !== "unknown")) {
-      addUnresolved(row, options.length > 1 ? "AMBIGUOUS_CANONICAL_IDENTITY" : "CANONICAL_IDENTITY_NOT_ESTABLISHED",
+      addUnresolved(row, options.length > 1 ? "AMBIGUOUS_CANONICAL_IDENTITY"
+        :entityType==='vehicle'&&!data.vehicleType?'VEHICLE_TYPE_REQUIRED_FOR_CANONICAL_CREATION':"CANONICAL_IDENTITY_NOT_ESTABLISHED",
         options.map((entity) => entity.ref));
     }
     if (kind === "entity" && ref) mappings.push({

@@ -317,6 +317,10 @@ export async function independentlyCheckInstitutionModel(
     if (!ref) {
       const invalid = unresolvedFor(source.id, record, optionsFor(record,source.id));
       if (invalid) return invalid;
+      if(record.entityType==='vehicle'&&!record.vehicleType&&optionsFor(record,source.id).length===0
+        &&candidate.unresolved?.find(g=>g.sourceId===source.id&&g.recordId===record.id)?.reason
+          !=='VEHICLE_TYPE_REQUIRED_FOR_CANONICAL_CREATION')
+        return fail('IDENTITY','Missing native Vehicle type requires an exact creation gap',[key]);
       if (proposal) return fail("IDENTITY", `Ambiguous original cannot support mapping ${key}`, [key]);
       continue;
     }
