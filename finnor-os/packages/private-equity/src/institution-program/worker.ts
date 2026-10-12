@@ -10,7 +10,7 @@ import { submitInstitutionHarnessProgram } from "../program-synthesis/institutio
 import { reserveInstitutionDemand, chargeInstitutionDemand, validateInstitutionDemand } from "../allocation-store";
 import { buildInstitutionResourceDemand } from "./resource-demand";
 import { reconstructAndAdmitInstitutionSources } from "./owner-admission";
-import { readInstitutionMandate } from "./source-authority";
+import { readInstitutionMandate,withInstitutionOriginalReuse } from "./source-authority";
 import { deriveInstitutionResponsibilities } from "./responsibility";
 import { resolveInstitutionActions } from "./action-resolution";
 import { buildInstitutionArtifact } from "./artifact";
@@ -113,7 +113,7 @@ export async function runInstitutionCompilerJob(payload: Record<string, unknown>
         await chargeInstitutionDemand(ctx, parentRef, { responsibilityIdentity: `x1-compiler-episode:${episode.id}`,
           phase: "CHECK", ordinal: (episode.attempts-1)*2+(++checkerAttempts), units: 1 });
       },
-    }, () => reconstructAndAdmitInstitutionSources(ctx, q.work_id, q.grant_ids, profile));
+    }, () => withInstitutionOriginalReuse(()=>reconstructAndAdmitInstitutionSources(ctx, q.work_id, q.grant_ids, profile)));
     await assertInstitutionCompilerCurrent(ctx, q, result.original.current);
     const accepted = result.check.disposition === "ACCEPTED_DEVELOPMENT";
     const lowered = accepted ? deriveInstitutionResponsibilities({ ...result, profile,

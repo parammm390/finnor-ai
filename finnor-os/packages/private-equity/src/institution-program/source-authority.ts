@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { AsyncLocalStorage } from 'node:async_hooks';
 import { withTenantTransaction } from "@finnor/db";
 import { loadDocumentVersion } from "@finnor/data-platform";
 import { employeeAuthoritySnapshot } from "@finnor/authority";
@@ -22,6 +23,9 @@ export type OwnerOriginal = Source & {
 const digest = (bytes: Buffer) => createHash("sha256").update(bytes).digest("hex");
 const sensitive = (sourceClass: string) =>
   sourceClass === "personnel_benefits" || sourceClass === "expense_administration";
+type RetainedCore={bytes:Buffer;documentId:string;versionId:string;retainedAt:string};
+const coreOriginalCache=new AsyncLocalStorage<Map<string,RetainedCore>>();
+export const withInstitutionOriginalReuse=<T>(run:()=>Promise<T>)=>coreOriginalCache.run(new Map(),run);
 
 type Grant = {
   id: string; source_id: string; source_class: string; protocol: string; revision: string;
@@ -36,7 +40,6 @@ type Grant = {
 export async function acquireInstitutionOriginal(
   ctx: PeMutationContext, workId: string, grantId: string, profile: DigitalInstitutionProfile,
 ): Promise<OwnerOriginal> {
-  await recordInstitutionSourceAttempt(grantId);
   const principal = ctx.auth.userId;
   await authorizeBeliefResources(ctx, [{ type: "tenant", id: ctx.auth.tenantId }, { type: "work", id: workId }]);
   const grant = await withTenantTransaction(ctx.auth.tenantId, {
@@ -76,6 +79,26 @@ export async function acquireInstitutionOriginal(
     // Immutable Core versions are retained before X1 sees the source. A grant
     // to a version does not confer authority to a newer document head.
     if (!row.document_id || !row.document_version_id) throw new Error("X1_CORE_GRANT_INCOMPLETE");
+    const cache=coreOriginalCache.getStore(),key=JSON.stringify([ctx.auth.tenantId,principal,workId,
+      row.id,row.document_id,row.document_version_id,row.original_sha256]);
+    const reused=cache?.get(key);
+    if(reused){
+      const current=await withTenantTransaction(ctx.auth.tenantId,{userId:principal,readOnly:true},async(_db,c)=>
+        (await c.query<{byte_sha256:string;provider_version_id:string|null;id:string;created_at:Date;size_bytes:number;
+          sha256:string;content_size:number;physical_size:number;storage_backend:string}>(`SELECT v.id::text,v.byte_sha256,
+          v.provider_version_id,v.created_at,v.size_bytes,c.sha256,c.size_bytes content_size,
+          octet_length(c.bytes) physical_size,c.storage_backend FROM finnor_os.document_versions v
+          JOIN finnor_os.document_version_contents c ON c.tenant_id=v.tenant_id AND c.version_id=v.id
+          WHERE v.tenant_id=$1 AND v.document_id=$2 AND v.id=$3`,
+        [ctx.auth.tenantId,row.document_id,row.document_version_id])).rows[0]);
+      if(!current||current.byte_sha256!==row.original_sha256||current.sha256!==row.original_sha256
+        ||current.storage_backend!=='postgres'||current.size_bytes!==reused.bytes.length
+        ||current.content_size!==reused.bytes.length||current.physical_size!==reused.bytes.length
+        ||(current.provider_version_id??current.id)!==row.revision||digest(reused.bytes)!==row.original_sha256)
+        throw Error('X1_RETAINED_IMMUTABLE_ORIGINAL_OWNER_CHANGED');
+      bytes=reused.bytes;documentId=reused.documentId;versionId=reused.versionId;retainedAt=reused.retainedAt;
+    }else{
+    await recordInstitutionSourceAttempt(grantId);
     const acquiredCore = await withTenantTransaction(ctx.auth.tenantId, {
       userId: principal, readOnly: true, isolation: "repeatable read",
     }, async (db) => loadDocumentVersion(db, ctx.auth.tenantId, row.document_id!, row.document_version_id!));
@@ -87,7 +110,14 @@ export async function acquireInstitutionOriginal(
     }
     bytes = acquiredCore.bytes; documentId = row.document_id; versionId = row.document_version_id;
     retainedAt = new Date(acquiredCore.version.created_at).toISOString();
+    if(cache){
+      const total=[...cache.values()].reduce((sum,item)=>sum+item.bytes.length,bytes.length);
+      if(cache.size>=profile.bounds.sourceInstances||total>profile.bounds.rawBytes)throw Error('X1_ORIGINAL_REUSE_BOUND');
+      cache.set(key,{bytes,documentId,versionId,retainedAt});
+    }
+    }
   } else if (row.acquisition_kind === "installed_adapter") {
+    await recordInstitutionSourceAttempt(grantId);
     // The installed owner fetches exact original bytes through its own current
     // credential, scope and permission reads, then retains them in Core. X1
     // never receives a caller URL, token or pre-mapped provider record.

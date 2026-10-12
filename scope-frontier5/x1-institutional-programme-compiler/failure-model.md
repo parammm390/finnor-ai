@@ -231,6 +231,34 @@ build/validator costs or aggregate memory are zero. The response cannot include
 its own later meter-write latency; retain that gap and independently read the next
 canonical meter records.
 
+### Registered owner case B-report-meaning-exception-and-cosmetic-change
+
+Continue the full fifteen-source/all-owner fixture under one original episode.
+First correct a financial number, change only a CRM display label, and append an
+emailed exception request in one external-owner transaction. The canonical IDs
+and existing three effects remain unchanged, the exact semantic closure changes
+only the financial assertion, and the email supplies no approval. Next rename
+the lender report's Outstanding field to Committed without supplying a mapping:
+preserve a precise unresolved interpretation and withdraw its old quantity.
+Finally supply an explicit current Outstanding assertion through the source owner.
+Automatic P7 revisions retain original grants/population, parent reservation,
+deadline, native Objective and all completed effects/proofs. No new business-work
+credit comes from old creations. This covers reporting/financial/email/cosmetic
+changes; employee revocation and mandate changes remain separately required.
+
+### Bounded immutable original reuse inside one physical compiler delivery
+
+The full source run measured 45 Core byte acquisitions for fifteen inputs because
+admission independently rehydrates the same immutable version three times. Reuse
+bytes only inside one physical compiler delivery, keyed by exact tenant/principal/
+Work/grant/document/version/digest. Every use still rereads current grant, rights,
+native immutable content metadata and sensitive consent. Missing rows, changed
+hash/size/revision, revoked access or expired consent must refuse. Never reuse an
+installed provider observation through this cache or carry it across workers,
+episodes or users. Bound the cache to the declared source/byte envelope. Source
+acquisition counters count real raw reads; metadata checks remain measured compute.
+No deadline, original cost, population or bound is reset.
+
 ### Publication compute attribution continued
 
 The compiler's existing COMPILE measurement ends before baseline/catalog reads,

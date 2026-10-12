@@ -25,7 +25,8 @@ const repo = fileURLToPath(new URL("../../../../", import.meta.url));
 const evidence = process.env.FINNOR_X1_OWNER_EVIDENCE;
 if (!evidence || !evidence.startsWith("/")) throw Error("FRESH_PRIVATE_X1_OWNER_EVIDENCE_REQUIRED");
 const dutyCount=process.env.FINNOR_X1_OWNER_CASE==='128'?128:1;
-const fullDomain=process.env.FINNOR_X1_OWNER_MODE==='domain';
+const reportingChanges=process.env.FINNOR_X1_OWNER_MODE==='reporting_changes';
+const fullDomain=process.env.FINNOR_X1_OWNER_MODE==='domain'||reportingChanges;
 const mounted=process.env.FINNOR_X1_OWNER_MODE==='mounted';
 const revise=process.env.FINNOR_X1_OWNER_MODE==='revision';
 const material=process.env.FINNOR_X1_OWNER_MODE==='material';
@@ -38,7 +39,7 @@ const upgrade=process.env.FINNOR_X1_OWNER_MODE==='upgrade';
 const contention=process.env.FINNOR_X1_OWNER_MODE==='contention';
 const unsupported=process.env.FINNOR_X1_OWNER_MODE==='unsupported';
 const cancelObserved=process.env.FINNOR_X1_OWNER_MODE==='cancel_observed';
-if(process.env.FINNOR_X1_OWNER_MODE&&!['api','mounted','revision','material','heterogeneous','canonical','recovery','effect_recovery','ordinary','domain','upgrade','contention','unsupported','cancel_observed'].includes(process.env.FINNOR_X1_OWNER_MODE))
+if(process.env.FINNOR_X1_OWNER_MODE&&!['api','mounted','revision','material','heterogeneous','canonical','recovery','effect_recovery','ordinary','domain','reporting_changes','upgrade','contention','unsupported','cancel_observed'].includes(process.env.FINNOR_X1_OWNER_MODE))
   throw Error('EXACT_REGISTERED_OWNER_MODE_REQUIRED');
 if((mounted||material||heterogeneous||canonical||recovery||effectRecovery||ordinary||upgrade||contention||unsupported||cancelObserved)&&dutyCount!==1)throw Error('NAMED_ONE_DUTY_SCENARIO_REQUIRED');
 if(process.env.FINNOR_X1_OWNER_CASE&&!['1','128'].includes(process.env.FINNOR_X1_OWNER_CASE))
@@ -70,6 +71,7 @@ const freeze = { source: { commit: git("rev-parse", "HEAD"), tree: git("rev-pars
     ...(ordinary?['A-all-ordinary-operations']:[]),
     ...(upgrade?['G-existing-schema-upgrade-and-jobs']:[]),
     ...(fullDomain?['A-full-declared-source-and-owner-domain']:[]),
+    ...(reportingChanges?['B-report-meaning-exception-and-cosmetic-change']:[]),
     ...(contention?['E-original-shared-parent-contention']:[]),...(unsupported?['F-mixed-unsupported-rule']:[]),
     ...(cancelObserved?['E-cancel-observed-standing-continuation']:[])],
   omitted: "Full B–H, physical interruption, mounted browser, clean built installation/upgrade and protected qualification remain distinct required evidence" };
@@ -878,6 +880,110 @@ try {
       originalEffects:allEffects,canonicalRequests:rows,executorReplayCount:0,acknowledgementStillUnknown:true});
     results.push({id:'D-effect-submit-lost-ack',status:'PASS',observed:{operationId:operation.id,step,completion},
       basis:'ACTUAL_CANONICAL_COMMIT_LOST_ACK_SIGKILL_SAME_IDENTITY_UNKNOWN_JOURNAL_READ_ONLY_OWNER_SETTLEMENT'});
+  }
+  if(reportingChanges){
+    const initialObjective=(await admin.query('SELECT * FROM finnor_os.work_objective_loops WHERE tenant_id=$1 AND work_id=$2',[tenant,workId])).rows[0];
+    const originalProof=sha(JSON.stringify(completion.completion_proof)),originalPlanId=completion.plan_id;
+    const originalEnvelopeBefore=await originalEnvelope();let previousRequest=compilerId;
+    const replaceSources=async(variants:Array<{sourceId:string;bytes:Buffer}>)=>withTenantTransaction(tenant,{userId:actor},async(db,c)=>{
+      const replacements=[];
+      for(const variant of variants){
+        const original=(await c.query<{id:string;document_id:string;version:number}>(`SELECT id::text,document_id::text,version
+          FROM finnor_os.x1_source_grants WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3 AND source_id=$4
+          ORDER BY version DESC LIMIT 1 FOR UPDATE`,[tenant,actor,workId,variant.sourceId])).rows[0]!;
+        const revision='r'+(original.version+1),source=sources.find(source=>source.id===variant.sourceId)!;
+        const version=await appendDocumentVersion(db,{tenantId:tenant,documentId:original.document_id,bytes:variant.bytes,
+          mediaType:source.mediaType??'application/octet-stream',format:'unknown',origin:'manual_upload',actor,
+          sourceSystem:'owner-export',sourceRef:variant.sourceId,providerVersionId:revision});
+        const grant=(await c.query(`INSERT INTO finnor_os.x1_source_grants
+          (tenant_id,principal_id,work_id,institution_id,source_id,source_class,purpose,acquisition_kind,
+            document_id,document_version_id,protocol,revision,original_sha256,expected_object_ids,version,valid_from,expires_at)
+          SELECT tenant_id,principal_id,work_id,institution_id,source_id,source_class,purpose,acquisition_kind,
+            document_id,$4,protocol,$5,$6,expected_object_ids,version+1,valid_from,expires_at
+          FROM finnor_os.x1_source_grants WHERE tenant_id=$1 AND principal_id=$2 AND id=$3 RETURNING id::text,version,source_id`,
+          [tenant,actor,original.id,version.id,revision,sha(variant.bytes)])).rows[0];
+        replacements.push({grant,versionId:version.id,originalId:original.id,revision,sha256:sha(variant.bytes)});
+        await writeFile(join(evidence,'originals',variant.sourceId+'-'+revision+'.bin'),variant.bytes,{mode:0o600,flag:'wx'});
+      }
+      return replacements;
+    });
+    const ledgerSource=sources.find(source=>source.id==='ledger-original')!,mailSource=sources.find(source=>source.id==='mail-original')!;
+    const crmSource=sources.find(source=>source.id==='crm-original')!,lenderSource=sources.find(source=>source.id==='lender-original')!;
+    const changes=[
+      {id:'financial-mail-cosmetic',variants:[{sourceId:ledgerSource.id,bytes:Buffer.from(ledgerSource.bytes!.toString().replace('\t20.00\t','\t25.00\t'))},
+        {sourceId:crmSource.id,bytes:Buffer.from(crmSource.bytes!.toString().replaceAll('Conflicting Harbor','Changed cosmetic label'))},
+        {sourceId:mailSource.id,bytes:Buffer.from(mailSource.bytes!.toString()+'An exception remains requested. The owner has not supplied any approval.\r\n')}],
+        expectedSemanticSource:'ledger-original',lenderUnknown:false},
+      {id:'lender-field-meaning',variants:[{sourceId:lenderSource.id,bytes:Buffer.from(lenderSource.bytes!.toString().replace('<th>Outstanding</th>','<th>Committed</th>'))}],
+        expectedSemanticSource:'lender-original',lenderUnknown:true},
+      {id:'explicit-current-lender-assertion',variants:[{sourceId:lenderSource.id,bytes:lenderSource.bytes!}],
+        expectedSemanticSource:'lender-original',lenderUnknown:false},
+    ];
+    for(const change of changes){
+      const replacements=await replaceSources(change.variants);
+      const stale=await api('institution-read',{requestId:previousRequest});assert.equal(stale.status,200);
+      assert.equal(stale.body.status,'INVALIDATED');assert.equal(stale.body.artifact,null);assert.equal(stale.body.programme,null);
+      let next:any,response:any,ending:any;
+      for(let poll=0;poll<180;poll++){
+        if(guardFailure)throw Error(guardFailure);
+        next=(await admin.query(`SELECT id::text,parent_request_id,episode_id,revision,status FROM finnor_os.x1_compiler_requests
+          WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3 ORDER BY revision DESC LIMIT 1`,[tenant,actor,workId])).rows[0];
+        if(next.id!==previousRequest){
+          response=await api('institution-read',{requestId:next.id});assert.equal(response.status,200,JSON.stringify(response));
+          if(['UNKNOWN','FAILED','CHECK_REJECTED','INVALIDATED','CANCELLED'].includes(response.body.status)){
+            await save('reporting-change-'+change.id+'-failure.json',{change,replacements,next,response});
+            throw Error('ACTUAL_REPORTING_CHANGE_REFUSAL:'+response.body.status+':'+response.body.reason);
+          }
+          ending=(await admin.query(`SELECT w.status work_status,l.id objective_id,l.state objective_state,
+            l.success_verification,p.id plan_id,p.status plan_status,p.completion_proof
+            FROM finnor_os.works w JOIN finnor_os.work_objective_loops l ON l.tenant_id=w.tenant_id AND l.work_id=w.id
+            JOIN finnor_os.work_plan_revisions p ON p.tenant_id=l.tenant_id AND p.objective_loop_id=l.id
+            WHERE w.tenant_id=$1 AND w.id=$2 ORDER BY p.revision DESC LIMIT 1`,[tenant,workId])).rows[0];
+          if(response.body.status==='OBSERVED'&&ending.work_status==='completed'&&ending.plan_status==='completed')break;
+        }
+        await new Promise(resolve=>setTimeout(resolve,1000));
+      }
+      assert.notEqual(next.id,previousRequest);assert.equal(next.parent_request_id,previousRequest);
+      assert.equal(response.body.status,'OBSERVED');assert.equal(ending.work_status,'completed');assert.equal(ending.objective_state,'completed');
+      assert.equal(ending.objective_id,initialObjective.id);assert.equal(ending.completion_proof.verified,true);
+      const current:{candidate:any;body:any;input_manifest:any;dependency_graph:any}=(await admin.query(`SELECT a.candidate,a.body,a.input_manifest,a.dependency_graph
+        FROM finnor_os.x1_compiler_artifacts a JOIN finnor_os.x1_compiler_requests r
+          ON r.tenant_id=a.tenant_id AND r.artifact_id=a.id WHERE r.tenant_id=$1 AND r.id=$2`,[tenant,next.id])).rows[0];
+      assert.equal(current.candidate.coverage.length,15);assert.equal(current.candidate.mappings.length,26);
+      assert.equal(current.candidate.obligations.length,3);assert.equal(response.body.programme.program.observedPostconditions.length,3);
+      const ledger=current.candidate.quantities.filter((q:any)=>q.sourceId==='ledger-original');assert.equal(ledger.length,1);
+      assert.equal(ledger[0].value,'25.00');assert.equal(ledger[0].currency,'USD');assert.equal(ledger[0].basis,'outstanding');
+      const lender=current.candidate.quantities.filter((q:any)=>q.sourceId==='lender-original');
+      assert.equal(lender.length,change.lenderUnknown?0:1);
+      const unknown=current.candidate.unresolved.filter((gap:any)=>gap.sourceId==='lender-original'&&gap.recordId==='lender-A');
+      assert.equal(unknown.length,change.lenderUnknown?1:0);
+      if(change.lenderUnknown){assert.equal(unknown[0].reason,'DESCRIPTIVE_CROSS_REFERENCE_NOT_IDENTITY_OR_NORM');
+        assert.deepEqual(unknown[0].alternatives,[`pe_deal:${String(first.row.id)}@v1`]);
+        assert.ok(current.body.unresolved_interpretations.some((gap:any)=>gap.witnessRefs.includes(unknown[0].witness)));}
+      const update:{changedNodes:string[];affectedPreviousDutyIds:string[];affectedCurrentDutyIds:string[];preservedCurrentDutyIds:string[]}=(await admin.query(`SELECT body FROM finnor_os.x1_compiler_events
+        WHERE tenant_id=$1 AND request_id=$2 AND kind='P7_EXACT_AFFECTED_UPDATE' ORDER BY created_at DESC LIMIT 1`,[tenant,next.id])).rows[0].body;
+      assert.deepEqual(update.changedNodes,[JSON.stringify(['source-semantics',change.expectedSemanticSource])]);
+      assert.equal(update.affectedPreviousDutyIds.length,0);assert.equal(update.affectedCurrentDutyIds.length,0);
+      assert.equal(update.preservedCurrentDutyIds.length,3);
+      const finalObjective:Record<string,any>=(await admin.query('SELECT * FROM finnor_os.work_objective_loops WHERE tenant_id=$1 AND work_id=$2',[tenant,workId])).rows[0];
+      for(const field of ['max_steps','max_actions','max_queries','max_waits','max_node_attempts','deadline_at'])
+        assert.deepEqual(finalObjective[field],initialObjective[field],'original objective envelope '+field);
+      for(const field of ['step_count','query_count','action_count','node_attempt_count'])assert.ok(finalObjective[field]>=initialObjective[field]);
+      assert.deepEqual(await originalEnvelope(),originalEnvelopeBefore);
+      assert.equal(sha(JSON.stringify((await admin.query('SELECT completion_proof FROM finnor_os.work_plan_revisions WHERE tenant_id=$1 AND id=$2',
+        [tenant,originalPlanId])).rows[0].completion_proof)),originalProof);
+      assert.equal((await admin.query('SELECT count(*)::int n FROM finnor_os.domain_actions WHERE tenant_id=$1 AND work_id=$2',[tenant,workId])).rows[0].n,3);
+      await save('reporting-change-'+change.id+'-independent-proof.json',{change,replacements,stale,next,response,current,update,ending,
+        originalEnvelope:originalEnvelopeBefore,initialObjective,finalObjective,originalCreationEffectsRetained:allEffects,
+        newBusinessWorkCredit:0,exceptionApprovalSupplied:false});
+      previousRequest=next.id;
+    }
+    const finalEpisode=(await admin.query(`SELECT attempts,acquisition_calls FROM finnor_os.x1_compiler_episodes WHERE tenant_id=$1
+      AND id=(SELECT episode_id FROM finnor_os.x1_compiler_requests WHERE tenant_id=$1 AND id=$2)`,[tenant,previousRequest])).rows[0];
+    assert.equal(finalEpisode.attempts,4);assert.equal(finalEpisode.acquisition_calls,60);
+    results.push({id:'B-report-meaning-exception-and-cosmetic-change',status:'PASS',observed:{automaticChildren:3,
+      originalSourcePopulation:15,originalDutiesPreserved:3,totalNativeEffects:3,episode:finalEpisode},
+      basis:'ACTUAL_SOURCE_OWNER_CHANGES_AUTOMATIC_P7_MINIMAL_SEMANTIC_CLOSURE_LENDER_UNKNOWN_SAME_NATIVE_OBJECTIVE_AND_PARENT'});
   }
   if(contention){
     const firstProofDigest=sha(JSON.stringify(completion.completion_proof));

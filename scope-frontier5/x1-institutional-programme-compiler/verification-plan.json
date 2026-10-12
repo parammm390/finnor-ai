@@ -524,6 +524,21 @@
       "limits": "UNCHANGED",
       "acceptance": "oracle-contract.md#a-full-declared-source-and-owner-domain-independent-expectations",
       "protectedQualification": false
+    },
+    {
+      "id": "B-report-meaning-exception-and-cosmetic-change",
+      "mode": "reporting_changes",
+      "dutyCount": 1,
+      "status": "FROZEN_BEFORE_CASE_IMPLEMENTATION",
+      "sourceInstances": 15,
+      "automaticRevisions": 3,
+      "independentMappingDenominator": 26,
+      "independentObligationDenominator": 3,
+      "expectedTotalEffects": 3,
+      "sourcePhysicalAcquisitions": 60,
+      "limits": "UNCHANGED",
+      "acceptance": "oracle-contract.md#b-report-meaning-exception-and-cosmetic-change-independent-expectations",
+      "fullBFixtureEstablished": false
     }
   ]
 }

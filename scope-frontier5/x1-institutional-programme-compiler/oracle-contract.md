@@ -302,3 +302,17 @@ physical read. An owned malformed request is a refused invocation with retained
 cost, not business-work credit. Unrelated tenant/principal requests must fail the
 original scope boundary without private attribution. The S7 owner preimage reader
 verifies stored hashes; API poll counts alone cannot establish measured compute.
+
+# B-report-meaning-exception-and-cosmetic-change independent expectations
+
+Start with the complete A-full-declared-source-and-owner-domain oracle. External
+ledger bytes change 20.00 to 25.00 with identical USD/unit/period/accounting basis;
+CRM names change with original registrations; mail adds only an exception request.
+The first successor has exactly the corrected financial value, unchanged mapping
+identities and three carried original creation witnesses. No duty is affected by
+these independent non-trigger sources. Lender Committed has no registered meaning
+as Outstanding: the next successor must omit that prior exact quantity and retain
+the original lender object as unresolved with its canonical alternative. Current
+explicit Outstanding restores the quantity; old failures/costs remain. Three
+automatic child IDs/immutable parents, exact fifteen-source population and all
+original limits survive; Request/Workstream/Finding counts and IDs never grow.
