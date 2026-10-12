@@ -14,6 +14,7 @@ import type { DomainAction, ExecutionResult, MemorySnapshot, ObjectiveSuccessCon
 import {
   MAX_HIGH_EGRESS_ROWS,
   activeWorkPlanRevision,
+  assertInstitutionPlanContinuationTx,
   beginWorkPlannerAttempt as beginCanonicalWorkPlannerAttempt,
   completeWorkPlanRevision,
   finishWorkPlannerAttempt as finishCanonicalWorkPlannerAttempt,
@@ -825,6 +826,7 @@ export async function bindHarnessWorkObjective(params: {
   tenantId:string; principalId:string; workId:string; workInputId:string;
   instruction:string; programId:string; acceptanceDigest:string; deadlineAt:string;
   expectedStatus?:'TESTED'|'OBSERVED';
+  institutionCompilerRequestId?:string;
 }, nativeDb?:Db): Promise<{id:string;revision:number}> {
   const scoped=<T>(fn:(db:Db)=>Promise<T>)=>nativeDb?fn(nativeDb):withTenant(params.tenantId,fn);
   const condition = parseObjectiveSuccessCondition({version:1,statement:params.instruction,mode:"all",source:"explicit",criteria:[
@@ -866,6 +868,37 @@ export async function bindHarnessWorkObjective(params: {
       return {id:loop.id,revision:waiting!.revision};
     }
     const old=parseObjectiveSuccessCondition(loop.successCondition);
+    if(params.expectedStatus==='OBSERVED'&&params.institutionCompilerRequestId
+      &&old.criteria.every(c=>c.kind==='canonical_query'&&c.request.intent==='harness_program_v1'
+        &&c.request.workId===params.workId)&&loop.state!=='cancelled'){
+      const [priorPlan]=await db.select().from(workPlanRevisions).where(and(
+        eq(workPlanRevisions.tenantId,params.tenantId),eq(workPlanRevisions.workId,params.workId)))
+        .orderBy(desc(workPlanRevisions.revision)).limit(1);
+      if(!priorPlan||priorPlan.workInputId!==params.workInputId||priorPlan.objectiveLoopId!==loop.id)
+        throw Error('X1_NATIVE_STANDING_OBJECTIVE_LINEAGE_REQUIRED');
+      const continuation=await assertInstitutionPlanContinuationTx(db,{tenantId:params.tenantId,
+        workId:params.workId,workInputId:params.workInputId,compilerRequestId:params.institutionCompilerRequestId,
+        priorPlanRevisionId:priorPlan.id});
+      const oldProgramIds=old.criteria.flatMap(c=>c.kind==='canonical_query'&&c.request.intent==='harness_program_v1'
+        ?[c.request.programId]:[]);
+      if(oldProgramIds.length!==old.criteria.length||oldProgramIds.some(id=>id!==continuation.priorProgramId))
+        throw Error('X1_NATIVE_ORIGINAL_SUCCESS_BINDING_CHANGED');
+      await db.update(workObjectiveSteps).set({phase:'finished',executionState:'superseded',iterationOutcome:'blocked',
+        failure:{code:'X1_CHECKED_STANDING_PROGRAMME_REVISED',...continuation},claimOwner:null,claimUntil:null,
+        completedAt:new Date()}).where(and(eq(workObjectiveSteps.tenantId,params.tenantId),
+          eq(workObjectiveSteps.objectiveLoopId,loop.id),sql`${workObjectiveSteps.completedAt} IS NULL`));
+      const [continued]=await db.update(workObjectiveLoops).set({successCondition:condition,state:'waiting',
+        revision:loop.revision+1,successVerification:null,successVerifiedAt:null,completedAt:null,
+        leaseOwner:null,leaseUntil:null,nextRunAt:null,reason:'Checked standing programme revision; original Objective envelope retained.',
+        updatedAt:new Date()}).where(and(eq(workObjectiveLoops.tenantId,params.tenantId),eq(workObjectiveLoops.id,loop.id))).returning();
+      await transitionWorkTx(db,params.tenantId,params.workId,'executing','institution_programme_continued',{
+        ...continuation,objectiveLoopId:loop.id,revision:continued!.revision,
+        previousSuccessCondition:loop.successCondition,previousSuccessVerification:loop.successVerification,
+        priorPlanRevisionId:priorPlan.id,newProgramId:params.programId,
+        countersAndDeadlineRetained:true,
+      },{expectedWorkInputId:params.workInputId,institutionCompilerRequestId:params.institutionCompilerRequestId,finalOutcome:null});
+      return {id:loop.id,revision:continued!.revision};
+    }
     if(!old.criteria.every(c=>c.kind==="canonical_query"&&c.request.intent==="harness_program_v1"&&c.request.workId===params.workId)||!event||loop.state==="cancelled")throw Error("HARNESS_OBJECTIVE_NATIVE_CONTINUATION_UNAVAILABLE");
     await db.execute(sql`SELECT id FROM ${workPlanRevisions} WHERE ${workPlanRevisions.tenantId}=${params.tenantId} AND ${workPlanRevisions.workId}=${params.workId} AND ${workPlanRevisions.status}='active' FOR UPDATE`);
     const [latestPlan]=await db.select({workInputId:workPlanRevisions.workInputId}).from(workPlanRevisions).where(and(eq(workPlanRevisions.tenantId,params.tenantId),eq(workPlanRevisions.workId,params.workId))).orderBy(desc(workPlanRevisions.revision)).limit(1);

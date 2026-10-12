@@ -56,7 +56,8 @@ export async function selectInstitutionPlan(ctx:PeMutationContext,request:Instit
  const objective=await (await import('../../../orchestration/src/objective-loop')).bindHarnessWorkObjective({
   tenantId:ctx.auth.tenantId,principalId:principal(ctx),workId:binding.workId,
   workInputId:binding.inputId,instruction:request.instruction,programId:binding.programId,
-  acceptanceDigest:sha(request.institution),deadlineAt:binding.deadlineAt,expectedStatus:'OBSERVED'},db);
+  acceptanceDigest:sha(request.institution),deadlineAt:binding.deadlineAt,expectedStatus:'OBSERVED',
+  institutionCompilerRequestId:request.institution.compilerRequestId},db);
  const attemptParams={tenantId:ctx.auth.tenantId,workId:binding.workId,
   workInputId:binding.inputId,attemptKey:'p1:'+binding.programId+':batch:'+cursor};
  const attempt=db?await beginWorkPlannerAttemptTx(db,attemptParams):await beginWorkPlannerAttempt(attemptParams);
@@ -128,7 +129,8 @@ export async function selectInstitutionPlan(ctx:PeMutationContext,request:Instit
   reason:binding.parentRevisionId?'observation' as const:'initial' as const,
   goalSpec:goal,constraintSet:constraints,planningSnapshot:snapshot,candidatePlans:[candidate],
   compilationResult:compiled,planGraph:compiled.selected.graph,score:compiled.selected.score,
-  semanticHash:compiled.selected.graph.semanticHash,compilerVersion:DETERMINISTIC_PLAN_COMPILER_VERSION};
+  semanticHash:compiled.selected.graph.semanticHash,compilerVersion:DETERMINISTIC_PLAN_COMPILER_VERSION,
+  institutionCompilerRequestId:request.institution.compilerRequestId};
  const plan=db?await persistSelectedWorkPlanTx(db,params):await persistSelectedWorkPlan(params);
  await finish({tenantId:ctx.auth.tenantId,attemptId:attempt.id,status:'succeeded',plannerResult:{
   planRevisionId:plan.id,batchStart:cursor,batchEnd:cursor+batch.length,totalActions:actions.length,

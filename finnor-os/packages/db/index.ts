@@ -1063,6 +1063,65 @@ export interface TransitionWorkPatch {
   expectedStatus?: WorkStatus;
   /** Optimistic generation fence for instruction-owned transitions. */
   expectedWorkInputId?: string;
+  /** Standing X1 revisions are verified against actual compiler owner lineage. */
+  institutionCompilerRequestId?: string;
+}
+
+/** A versioned owner adapter for a checked child of the same standing Work
+ * instruction. No caller boolean, producer receipt or fresh budget authorizes it. */
+export async function assertInstitutionPlanContinuationTx(db: Db, params: {
+  tenantId: string; workId: string; workInputId: string; compilerRequestId: string;
+  priorPlanRevisionId: string;
+}): Promise<{ compilerRequestId: string; parentRequestId: string; episodeId: string; priorProgramId: string }> {
+  const result=await db.execute(sql`SELECT q.id::text compiler_request_id,parent.id::text parent_request_id,
+      q.episode_id::text episode_id,p.id::text prior_program_id
+    FROM finnor_os.x1_compiler_requests q
+    JOIN finnor_os.x1_compiler_requests parent ON parent.tenant_id=q.tenant_id
+      AND parent.principal_id=q.principal_id AND parent.id=q.parent_request_id
+      AND parent.episode_id=q.episode_id AND parent.work_id=q.work_id AND parent.work_input_id=q.work_input_id
+    JOIN finnor_os.x1_compiler_episodes e ON e.tenant_id=q.tenant_id AND e.principal_id=q.principal_id
+      AND e.id=q.episode_id AND e.work_id=q.work_id
+    JOIN finnor_os.x1_mapping_admissions a ON a.tenant_id=q.tenant_id AND a.principal_id=q.principal_id
+      AND a.id=q.admission_id AND a.work_id=q.work_id
+    JOIN finnor_os.x1_checked_artifacts checked ON checked.tenant_id=q.tenant_id AND checked.principal_id=q.principal_id
+      AND checked.admission_id=a.id AND checked.work_id=q.work_id
+      AND checked.check_result->>'inputDigest'=a.original_digest AND checked.candidate_digest=a.candidate_digest
+      AND checked.check_result->>'checkerRevision'=a.checker_digest
+    JOIN finnor_os.authority_states rights ON rights.tenant_id=q.tenant_id
+      AND rights.revision::text=q.input_manifest->'current'->>'rightsRevision'
+    JOIN finnor_os.x1_work_mandates m ON m.tenant_id=q.tenant_id AND m.principal_id=q.principal_id
+      AND m.work_id=q.work_id AND m.institution_id=e.institution_id AND m.revoked_at IS NULL
+      AND m.valid_from<=clock_timestamp() AND m.expires_at>clock_timestamp()
+      AND m.revision=q.input_manifest->'current'->>'mandateRevision'
+    JOIN finnor_os.p1_requests p ON p.tenant_id=parent.tenant_id AND p.principal_id=parent.principal_id
+      AND p.id=parent.program_id AND p.work_id=q.work_id AND p.work_input_id=q.work_input_id
+      AND p.request->'institution'->>'compilerRequestId'=parent.id::text
+    JOIN finnor_os.works w ON w.tenant_id=q.tenant_id AND w.id=q.work_id AND w.created_by=q.principal_id
+    JOIN finnor_os.users u ON u.tenant_id=q.tenant_id AND u.id=q.principal_id AND u.status='active' AND u.role='owner'
+    WHERE q.tenant_id=${params.tenantId}::uuid AND q.work_id=${params.workId}::uuid
+      AND q.id=${params.compilerRequestId}::uuid AND q.work_input_id=${params.workInputId}::uuid
+      AND p.plan_revision_id=${params.priorPlanRevisionId}::uuid
+      AND q.status IN('RUNNING','WAITING','PARTIAL') AND q.programme_digest IS NOT NULL AND q.intent_digest IS NOT NULL
+      AND parent.revision+1=q.revision AND parent.status<>'CANCELLED'
+      AND e.parent_reservation IS NOT NULL AND e.parent_demand IS NOT NULL
+      AND e.wall_deadline>clock_timestamp() AND e.original_deadline>clock_timestamp()
+      AND w.status NOT IN('cancelled','failed','blocked')
+      AND q.id=(SELECT n.id FROM finnor_os.x1_compiler_requests n
+        WHERE n.tenant_id=q.tenant_id AND n.principal_id=q.principal_id AND n.work_id=q.work_id ORDER BY n.revision DESC LIMIT 1)
+      AND q.work_input_id=(SELECT i.id FROM finnor_os.work_inputs i
+        WHERE i.tenant_id=q.tenant_id AND i.work_id=q.work_id ORDER BY i.created_at DESC,i.id DESC LIMIT 1)
+      AND NOT EXISTS(SELECT 1 FROM jsonb_array_elements_text(q.grant_ids) AS ids(grant_id)
+        WHERE NOT EXISTS(SELECT 1 FROM finnor_os.x1_source_grants g
+          WHERE g.tenant_id=q.tenant_id AND g.principal_id=q.principal_id AND g.work_id=q.work_id
+            AND g.id=ids.grant_id::uuid AND g.revoked_at IS NULL AND g.valid_from<=clock_timestamp() AND g.expires_at>clock_timestamp()
+            AND g.revision=q.input_manifest->'current'->'sourceRevisions'->>g.source_id
+            AND NOT EXISTS(SELECT 1 FROM finnor_os.x1_source_grants n WHERE n.tenant_id=g.tenant_id
+              AND n.principal_id=g.principal_id AND n.work_id=g.work_id AND n.source_id=g.source_id AND n.version>g.version)))
+    FOR SHARE OF q,parent,e,a,checked,p,u,rights,m`);
+  if(result.rows.length!==1)throw new Error('X1_NATIVE_CHECKED_COMPILER_CONTINUATION_REQUIRED');
+  const row=result.rows[0]!;
+  return {compilerRequestId:String(row.compiler_request_id),parentRequestId:String(row.parent_request_id),
+    episodeId:String(row.episode_id),priorProgramId:String(row.prior_program_id)};
 }
 
 /** Transaction-scoped Work transition for callers that must commit lifecycle truth
@@ -1105,7 +1164,17 @@ export async function transitionWorkTx(
     const explicitlyContinued = patch.expectedWorkInputId
       && (latestEvent?.eventType === "input_received" || latestEvent?.eventType === "recovery_input_received")
       && eventInputId === patch.expectedWorkInputId;
-    if (!explicitlyContinued) {
+    const standingContinuation=work.status==='completed'&&toStatus==='executing'
+      &&eventType==='institution_programme_continued'&&patch.expectedWorkInputId&&patch.institutionCompilerRequestId;
+    if(standingContinuation){
+      const [priorPlan]=await db.select({id:schema.workPlanRevisions.id}).from(schema.workPlanRevisions)
+        .where(and(eq(schema.workPlanRevisions.tenantId,tenantId),eq(schema.workPlanRevisions.workId,workId)))
+        .orderBy(desc(schema.workPlanRevisions.revision)).limit(1);
+      if(!priorPlan)throw new WorkTransitionConflictError('Standing programme continuation has no prior native plan');
+      await assertInstitutionPlanContinuationTx(db,{tenantId,workId,workInputId:patch.expectedWorkInputId!,
+        compilerRequestId:patch.institutionCompilerRequestId!,priorPlanRevisionId:priorPlan.id});
+    }
+    if (!explicitlyContinued&&!standingContinuation) {
       throw new WorkTransitionConflictError(`Terminal Work ${workId} cannot transition from ${work.status} to ${toStatus} without a newer active input`);
     }
   }
@@ -1328,6 +1397,7 @@ export interface PersistSelectedWorkPlanParams {
   score: object;
   semanticHash: string;
   compilerVersion?: string;
+  institutionCompilerRequestId?: string;
 }
 
 type PlanNodeProjection = { id: string; semanticHash: string; kind: string };
@@ -1472,7 +1542,12 @@ export async function persistSelectedWorkPlanTx(db: Db, params: Parameters<typeo
           sql`${schema.workEvents.eventType} IN ('input_received','recovery_input_received')`,
           sql`${schema.workEvents.payload}->>'workInputId' = ${params.workInputId}`,
         )).limit(1);
-        if (!currentInput || currentInput.id !== params.workInputId
+        if(params.institutionCompilerRequestId&&currentInput?.id===params.workInputId
+          &&currentInput.id===historicalParent.workInputId){
+          await assertInstitutionPlanContinuationTx(db,{tenantId:params.tenantId,workId:params.workId,
+            workInputId:params.workInputId,compilerRequestId:params.institutionCompilerRequestId,
+            priorPlanRevisionId:historicalParent.id});
+        }else if (!currentInput || currentInput.id !== params.workInputId
           || currentInput.id === historicalParent.workInputId || !intakeEvent) {
           throw new Error("Completed PlanRevision continuation requires a new current native Work input");
         }

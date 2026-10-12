@@ -195,3 +195,13 @@ Workforce API before exposing sources or starting the compiler. Grant only the
 registered read/check capabilities; preserve the refusal and do not bypass
 assignment eligibility or manufacture protected admission. Retain its immutable
 revision, physical assignments and native query receipts in ending evidence.
+
+The affected `revision` variant uses the same one-duty scenario. After the actual
+native completion proof, submit the actual institution-revise API with its exact
+parent and unchanged current Work input/grants. Within ninety one-second samples,
+require revision 2 independently observed and its new native plan completed under
+the same Objective ID/deadline/max budgets. Counters are monotone, costs increase,
+one canonical Request/completed action/verified effect remains, original S5 and
+compiler episode identities/envelopes are unchanged, and the previous completion
+proof remains byte-identical. Capture precise native failure rather than count a
+queued revision as success. The whole unchanged 840-second stack guard applies.

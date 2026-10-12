@@ -22,7 +22,8 @@ const evidence = process.env.FINNOR_X1_OWNER_EVIDENCE;
 if (!evidence || !evidence.startsWith("/")) throw Error("FRESH_PRIVATE_X1_OWNER_EVIDENCE_REQUIRED");
 const dutyCount=process.env.FINNOR_X1_OWNER_CASE==='128'?128:1;
 const mounted=process.env.FINNOR_X1_OWNER_MODE==='mounted';
-if(process.env.FINNOR_X1_OWNER_MODE&&!['api','mounted'].includes(process.env.FINNOR_X1_OWNER_MODE))
+const revise=process.env.FINNOR_X1_OWNER_MODE==='revision';
+if(process.env.FINNOR_X1_OWNER_MODE&&!['api','mounted','revision'].includes(process.env.FINNOR_X1_OWNER_MODE))
   throw Error('EXACT_REGISTERED_OWNER_MODE_REQUIRED');
 if(mounted&&dutyCount!==1)throw Error('MOUNTED_NAMED_ONE_DUTY_SCENARIO_REQUIRED');
 if(process.env.FINNOR_X1_OWNER_CASE&&!['1','128'].includes(process.env.FINNOR_X1_OWNER_CASE))
@@ -369,6 +370,50 @@ try {
   assert.equal(completion.plan_status,'completed');assert.equal(completion.completion_proof?.verified,true);
   results.push({ id: "A-authenticated-owner-creation", status: "PASS", observed: { compilerId, admission, rows, effects:allEffects,plans,linked,repeated, beforeReplay, afterReplay },
     basis: "ACTUAL_LOCAL_AUTH_HTTP_SQL_PHYSICAL_WORKER_NATIVE_CREATE_AND_INDEPENDENT_SQL_OBSERVER" });
+  if(revise){
+    const initialObjective=(await admin.query('SELECT * FROM finnor_os.work_objective_loops WHERE tenant_id=$1 AND work_id=$2',
+      [tenant,workId])).rows[0];
+    const initialProof=sha(completion.completion_proof),initialPlanId=completion.plan_id;
+    const revised=await api('institution-revise',{...input,parentRequestId:compilerId,idempotencyKey:'x1-revision:'+randomUUID()});
+    assert.equal(revised.status,202,JSON.stringify(revised));assert.equal(revised.body.revision,2);
+    let current:any;
+    for(let poll=0;poll<90;poll++){
+      if(guardFailure)throw Error(guardFailure);
+      const read=await api('institution-read',{requestId:revised.body.requestId});
+      current=(await admin.query(`SELECT w.status work_status,l.id objective_id,l.state objective_state,
+        l.success_verification,p.id plan_id,p.status plan_status,p.completion_proof
+        FROM finnor_os.works w JOIN finnor_os.work_objective_loops l ON l.tenant_id=w.tenant_id AND l.work_id=w.id
+        JOIN finnor_os.work_plan_revisions p ON p.tenant_id=l.tenant_id AND p.objective_loop_id=l.id
+        WHERE w.tenant_id=$1 AND w.id=$2 ORDER BY p.revision DESC LIMIT 1`,[tenant,workId])).rows[0];
+      await appendFile(join(evidence,'revision-observations.jsonl'),JSON.stringify({at:new Date().toISOString(),
+        requestId:revised.body.requestId,status:read.body.status,reason:read.body.reason,
+        nativeStatus:read.body.programme?.status,completion:current})+'\n',{mode:0o600});
+      if(read.body.status==='OBSERVED'&&current?.work_status==='completed'&&current.plan_id!==initialPlanId
+        &&current.plan_status==='completed')break;
+      if(['FAILED','UNKNOWN','INVALIDATED','CANCELLED','PARTIAL'].includes(read.body.status))
+        throw Error('ACTUAL_NATIVE_REVISION_REFUSAL:'+read.body.status+':'+read.body.reason);
+      await new Promise(resolve=>setTimeout(resolve,1000));
+    }
+    assert.equal(current?.work_status,'completed');assert.equal(current.objective_state,'completed');
+    assert.notEqual(current.plan_id,initialPlanId);assert.equal(current.completion_proof?.verified,true);
+    assert.equal(current.success_verification?.state,'verified');assert.equal(current.objective_id,initialObjective.id);
+    const finalObjective=(await admin.query('SELECT * FROM finnor_os.work_objective_loops WHERE tenant_id=$1 AND work_id=$2',
+      [tenant,workId])).rows[0];
+    for(const field of ['max_steps','max_actions','max_queries','max_waits','max_node_attempts','deadline_at'])
+      assert.deepEqual(finalObjective[field],initialObjective[field],'original Objective '+field);
+    for(const field of ['step_count','query_count','action_count','node_attempt_count'])
+      assert.ok(finalObjective[field]>=initialObjective[field],'monotone original Objective '+field);
+    assert.equal(sha((await admin.query('SELECT completion_proof FROM finnor_os.work_plan_revisions WHERE tenant_id=$1 AND id=$2',
+      [tenant,initialPlanId])).rows[0].completion_proof),initialProof);
+    assert.deepEqual(await originalEnvelope(),beforeReplay,'same original episode/reservation/resources across revision');
+    assert.equal((await admin.query('SELECT count(*)::int n FROM finnor_os.pe_requests WHERE tenant_id=$1 AND request_text=ANY($2::text[])',
+      [tenant,expected.requestTexts])).rows[0].n,dutyCount);
+    assert.equal((await admin.query('SELECT count(*)::int n FROM finnor_os.domain_actions WHERE tenant_id=$1 AND work_id=$2',
+      [tenant,workId])).rows[0].n,dutyCount);
+    results.push({id:'B-same-standing-input-native-revision',status:'PASS',observed:{revised,current,
+      initialObjective,finalObjective,priorCompletionProofDigest:initialProof},
+      basis:'ACTUAL_AUTHENTICATED_OWNER_REVISION_SAME_OBJECTIVE_ORIGINAL_PARENT_NO_DUPLICATE_EFFECT'});
+  }
   if(mounted){
     await save('mounted-canonical-completion.json',{compilerId,workId,completion,
       browserEvidenceRequired:true,mountedPassEstablished:false});

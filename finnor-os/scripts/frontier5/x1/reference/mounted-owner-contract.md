@@ -53,3 +53,22 @@ Its documented linked-package rule requires a root containing the owned product
 and the exact read-only third-party dependency checkout. Derive the common root
 from the actual Next package resolution; do not copy dependencies, import peer
 product source, enlarge the heap/stack bounds or bypass authentication.
+
+Run 029 passed real LoginForm, mounted compile, independent canonical effect,
+completed native Work/Objective/Plan and observed Canvas readback. Work A->B->A
+cleared the private programme and restored the current observation. Mounted
+recompile was then accepted as compiler revision 2 under the same input and S5
+episode but refused `HARNESS_OBJECTIVE_NATIVE_CONTINUATION_UNAVAILABLE`. The
+original native Objective/Plan adapter only accepts fresh Work instructions.
+
+For the existing standing instruction, require a narrow owner-derived continuation
+binding: the latest checked compiler child and its exact parent, same original
+episode/principal/input, current mandate/source grants, immutable admission and
+original reservation/deadline, and the parent's actual native plan. Native Work,
+Objective and selected plan must validate this binding in their transactions.
+Retain completed historical plans/proofs and verified effects, advance only the
+same Objective generation, and never refill grants, counters or deadlines. Generic
+Work terminal continuation and cancelled Work retain their existing guards.
+The decisive rerun must show revision 2 observed/completed, one Request/effect
+total, identical original reservation and deadline, additional attributed costs,
+and current mounted readback. A completion proof for revision 1 is insufficient.
