@@ -117,18 +117,33 @@ export async function handleInstitutionOperation(ctx: PeMutationContext, operati
     if (["institution-read", "institution-status", "institution-witness"].includes(operation))
       return { status: 200, body: await readInstitutionCompiler(ctx, requestId) };
     if (operation === "institution-cancel") {
-      const programme=q.program_id?await readInstitutionHarnessProgram(ctx,q.program_id):null;
-      if(programme?.status==="OBSERVED")return {status:200,body:{requestId,status:"OBSERVED",exposureRetained:true}};
+      // Cancellation remains available after source-grant invalidation. This
+      // historical status only decides whether to preserve an already completed
+      // native owner; it supplies no current readiness or execution permission.
+      const nativeStatus=q.program_id?await tx(ctx,async c=>(await c.query<{status:string}>(`SELECT status
+        FROM finnor_os.p1_requests WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3 AND id=$4`,
+        [q.tenant_id,q.principal_id,q.work_id,q.program_id])).rows[0]?.status??null,true):null;
       await tx(ctx, async c => {
+        // Serialize with manual/automatic acceptance. Stopping a stale revision
+        // must not falsely claim that a newer current head has been cancelled.
+        await c.query('SELECT pg_advisory_xact_lock(hashtextextended($1,5510))',[q.tenant_id]);
         const current = await compilerRow(ctx, q.id, c, true);
-        if (!["OBSERVED", "CANCELLED"].includes(current.status)) {
+        const head=(await c.query<{id:string}>(`SELECT id::text FROM finnor_os.x1_compiler_requests
+          WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3 ORDER BY revision DESC LIMIT 1`,
+          [q.tenant_id,q.principal_id,q.work_id])).rows[0];
+        if(head?.id!==current.id)throw Error('X1_COMPILER_REVISION_SUPERSEDED');
+        if (current.status!=="CANCELLED") {
           await c.query(`UPDATE finnor_os.x1_compiler_requests SET status='CANCELLED',generation=generation+1,
-            updated_at=clock_timestamp() WHERE tenant_id=$1 AND principal_id=$2 AND id=$3`, [q.tenant_id, q.principal_id, q.id]);
+            failure='X1_FUTURE_CONTINUATION_CANCELLED',updated_at=clock_timestamp()
+            WHERE tenant_id=$1 AND principal_id=$2 AND id=$3`, [q.tenant_id, q.principal_id, q.id]);
           await compilerEvent(ctx, current, "CANCELLED_RECONCILIATION_RETAINED", {
-            parentEpisode: q.episode_id, parentReservationRetained: true, possibleEffectsRetained: true }, c);
+            parentEpisode: q.episode_id, parentReservationRetained: true, possibleEffectsRetained: true,
+            priorStatus:current.status,priorProgrammeId:current.program_id,priorArtifactId:current.artifact_id,
+            futureCompilerContinuationStopped:true,priorNativeObservationsRetained:true }, c);
         }
       });
-      if (q.program_id) await handleProgramOperation(ctx, "program-cancel", { programId: q.program_id });
+      if (q.program_id&&nativeStatus!=="OBSERVED")
+        await handleProgramOperation(ctx, "program-cancel", { programId: q.program_id });
       let exposureRetained=true;
       const parent=await compilerEpisode(ctx,q.episode_id);
       if(!parent.parent_reservation)exposureRetained=false;

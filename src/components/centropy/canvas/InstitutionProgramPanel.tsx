@@ -6,7 +6,7 @@ import { usePrivateRequestScope } from "../lib/use-private-request-scope"
 
 type Binding = { status: "known"; ref: string; revision: string; owner: string; digest: string }
   | { status: "unknown"; reason: string; requiredOwnerOrInput: string; affectedRefs: string[] }
-type Claim = { statement: string; witnessRefs: string[]; reason?: string; requiredOwnerOrInput?: string }
+type Claim = { statement: string; witnessRefs: string[]; reason?: string; requiredOwnerOrInput?: string;alternatives?:string[] }
 type Artifact = { envelope: { artifact_id: string; observed_claims: Claim[]; inferred_claims: Claim[];
   unresolved_claims: Claim[]; knowledge_cut: string; content_digest: string };
   mandate_ref: Binding; canonical_entity_and_relation_refs: Binding[];
@@ -33,6 +33,8 @@ const date = (value: string) => new Date(value).toLocaleString([], { dateStyle: 
 const operation = (value: string) => ({ create_deal_request: "Create evidence Request",
   open_workstream: "Open Workstream", record_finding: "Record Finding" } as Record<string, string>)[value] ?? value.replaceAll("_", " ")
 const intervention = (reason: string) => ({
+  X1_FUTURE_CONTINUATION_CANCELLED: "Future continuation is stopped. Existing effects and incurred resources remain recorded.",
+  X1_RULE_MEANING_UNSUPPORTED: "A condition in the standing responsibility needs an explicit interpretation before its dependent commitment can proceed.",
   X1_COMPLETION_CONTRACT_NOT_REGISTERED: "Choose an established completion contract. Request creation cannot establish evidence fulfillment, approval or settlement.",
   X1_CURRENT_MANDATE_UNAVAILABLE: "A current standing responsibility is missing for this Work.",
   X1_EXACT_REQUEST_RECIPIENT_TEXT_AND_ACCEPTANCE_RULE_REQUIRED: "Specify the evidence recipient, request text and deliverable acceptance rule in the source or standing responsibility.",
@@ -117,10 +119,10 @@ export function InstitutionProgramPanel({ workId }: { workId: string }) {
     <p>Compile this Work’s authorized sources into checked responsibilities and continue the permitted operations.</p>
     <div className="ct-evidence__actions"><button type="button" disabled={busy || !visibleSources?.workInputId
       || !visibleSources.grants.length || visibleSources.grants.length > 16
-      || ["QUEUED", "RUNNING"].includes(visible?.status ?? "")}
+      || ["QUEUED", "RUNNING", "CANCELLED"].includes(visible?.status ?? "")}
       onClick={() => void compile()}>{visibleSources?.request ? "Recompile under the original budget" : "Compile standing responsibility"}</button>
       {visible?.canResume ? <button type="button" disabled={busy} onClick={() => void control("resume")}>Resume retained continuation</button> : null}
-      {visible && !["CANCELLED", "OBSERVED", "INVALIDATED"].includes(visible.status)
+      {visible && !["CANCELLED", "INVALIDATED"].includes(visible.status)
         ? <button type="button" disabled={busy} onClick={() => void control("cancel")}>Cancel future continuation</button> : null}</div>
     <p role="status" aria-live="polite">{message ?? (visible ? `Revision ${visible.revision} · ${visible.status.toLowerCase()}`
       : visibleSources?.grants.length ? `${visibleSources.grants.length} current source bindings` : "Attach authorized sources and a standing responsibility to this Work.")}</p>
@@ -140,7 +142,8 @@ export function InstitutionProgramPanel({ workId }: { workId: string }) {
         {artifact.temporal_and_unit_constraints.map((item, index) => <p key={index}>{item.quantity
           ? `${item.quantity.decimal} ${item.quantity.currency} · ${item.quantity.unit} · ${item.quantity.period} · ${item.quantity.accountingBasis}` : "Temporal constraint"} · {item.disposition}</p>)}</details> : null}
       {artifact.unresolved_interpretations.length ? <div><h4>Required interpretation or authority</h4><ul>{artifact.unresolved_interpretations.map((gap, i) =>
-        <li key={i}>{intervention(gap.reason ?? gap.statement)} <span>{gap.requiredOwnerOrInput}</span></li>)}</ul></div> : null}
+        <li key={i}>{intervention(gap.reason ?? gap.statement)} <span>{gap.requiredOwnerOrInput}</span>
+          {gap.alternatives?.length ? <p>{gap.alternatives.map(choice => choice.replace(/([a-z])([A-Z])/g, "$1 $2")).join("; ")}</p> : null}</li>)}</ul></div> : null}
       {program?.interventions?.map(item => <p key={item.stableIdentity} role="alert">{intervention(item.predicate)} {item.possibleEffect ? "A possible prior effect remains retained." : ""}</p>)}
       <details><summary>Evidence witnesses and current revision</summary><p>Knowledge cut {date(artifact.envelope.knowledge_cut)}</p>
         <pre>{JSON.stringify({ mandate: artifact.mandate_ref, canonical: artifact.canonical_entity_and_relation_refs,
