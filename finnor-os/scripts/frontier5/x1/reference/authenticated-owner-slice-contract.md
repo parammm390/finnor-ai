@@ -99,3 +99,11 @@ the original institution origin. Pin those origin fields against SQL update.
 Independently assert the retained origin on the actual completed action and
 prove a downgrade fails at the native database boundary. Existing approval and
 protected authority floors remain unchanged. Preserve the failed pending run.
+
+Run 013 passed the ordinary native policy/authority boundary and dispatched the
+physical protocol-2 workflow. The canonical mutation failed on the P7 trigger's
+local `owner_id` colliding with the ON CONFLICT column. Rename the local variable
+in the never-deployed 0176 migration; preserve exact change identity, locks,
+coalescing and invalidation. Retain the actual terminal workflow error. A failed
+native action also requires a precise retained intervention, rather than passive
+polling without an explanation; do not replay it as a fresh action or refill S5.

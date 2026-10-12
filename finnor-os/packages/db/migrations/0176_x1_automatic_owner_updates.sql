@@ -58,12 +58,12 @@ CREATE TRIGGER x1_update_handoff_immutable BEFORE UPDATE ON finnor_os.x1_compile
 CREATE FUNCTION finnor_os.x1_owner_change_trigger() RETURNS trigger
  LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog,finnor_os AS $$
 DECLARE owner_body jsonb:=CASE WHEN TG_OP='DELETE' THEN to_jsonb(OLD) ELSE to_jsonb(NEW) END;
- t uuid; owner_id text; entity_type text; change_hash text; q record; update_id uuid; can_run boolean;
+ t uuid; changed_owner_id text; entity_type text; change_hash text; q record; update_id uuid; can_run boolean;
 BEGIN
  IF TG_OP='UPDATE' AND to_jsonb(OLD)=to_jsonb(NEW) THEN RETURN NEW; END IF;
  t:=(owner_body->>'tenant_id')::uuid;
  IF t IS NULL THEN RETURN CASE WHEN TG_OP='DELETE' THEN OLD ELSE NEW END; END IF;
- owner_id:=coalesce(owner_body->>'id',owner_body->>'document_id',t::text);
+ changed_owner_id:=coalesce(owner_body->>'id',owner_body->>'document_id',t::text);
  change_hash:=encode(sha256(convert_to(jsonb_build_array(TG_OP,owner_body)::text,'UTF8')),'hex');
  entity_type:=CASE TG_TABLE_NAME
   WHEN 'pe_deals' THEN 'pe_deal' WHEN 'pe_funds' THEN 'pe_fund' WHEN 'pe_vehicles' THEN 'pe_vehicle'
@@ -88,7 +88,7 @@ BEGIN
     OR entity_type IS NOT NULL AND EXISTS(SELECT 1
       FROM jsonb_array_elements(coalesce(r.input_manifest->'current'->'canonicalOwners','[]'::jsonb)) ref
       WHERE split_part(ref->>'ref','@',1)=entity_type||':'||CASE WHEN TG_TABLE_NAME='document_version_heads'
-       THEN owner_body->>'document_id' ELSE owner_id END))
+       THEN owner_body->>'document_id' ELSE changed_owner_id END))
  LOOP
   PERFORM pg_advisory_xact_lock(hashtextextended('x1-update:'||q.episode_id::text,5517));
   can_run:=q.wall_deadline>clock_timestamp() AND q.coordination_calls<124
@@ -97,7 +97,7 @@ BEGIN
   update_id:=NULL;
   INSERT INTO finnor_os.x1_compiler_updates(tenant_id,principal_id,work_id,episode_id,trigger_request_id,
     owner_table,owner_id,change_digest,state,failure)
-   VALUES(t,q.principal_id,q.work_id,q.episode_id,q.id,TG_TABLE_NAME,owner_id,change_hash,
+   VALUES(t,q.principal_id,q.work_id,q.episode_id,q.id,TG_TABLE_NAME,changed_owner_id,change_hash,
     CASE WHEN q.wall_deadline<=clock_timestamp() OR q.coordination_calls>=124 THEN 'BLOCKED' ELSE 'PENDING' END,
     CASE WHEN q.wall_deadline<=clock_timestamp() OR q.coordination_calls>=124 THEN 'X1_P7_ORIGINAL_COORDINATION_ENVELOPE_EXHAUSTED' END)
    ON CONFLICT(tenant_id,principal_id,trigger_request_id,owner_table,owner_id,change_digest) DO NOTHING

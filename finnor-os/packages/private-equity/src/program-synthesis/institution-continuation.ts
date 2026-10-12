@@ -161,6 +161,11 @@ export async function continueInstitutionProgram(ctx: PeMutationContext, q: Inst
      predicate:"X1_PRIOR_DRAFT_PLAN_SUPERSEDED_REQUIRES_DECISION",possibleEffect:false});
     continue;
    }
+   if(existing&&['failed','rejected','needs_human_review','blocked_integration_unavailable'].includes(existing.status)){
+    interventions.push({stableIdentity:node.stableIdentity,
+     predicate:'X1_NATIVE_ACTION_'+existing.status.toUpperCase()+'_REQUIRES_DECISION',possibleEffect:true});
+    continue;
+   }
    // Accepted/possibly submitted actions are reconciled in place. The native
    // runtime owns their retry/receipt path; P1 never creates a replacement ID.
    if(!existing||existing.status==="draft"){
@@ -267,7 +272,7 @@ export async function continueInstitutionProgram(ctx: PeMutationContext, q: Inst
     deliveryCursor:nextCursor,interventions,
     ...(selected?{goal:selected.goal,planGraph:selected.planGraph,
      work:{...head.work,planRevisionId:selected.planRevisionId}}:{}),
-    status:completed?"OBSERVED":supportedComplete||deadlineExpired?"PARTIAL":"WAITING",runtime:{...head.runtime,jobId:execution.jobId,
+    status:completed?"OBSERVED":supportedComplete||deadlineExpired||interventions.length?"PARTIAL":"WAITING",runtime:{...head.runtime,jobId:execution.jobId,
      workerId:execution.workerId,deliveryAttemptId:execution.deliveryAttemptId,
      claimFence:execution.claimFence}};
    const advanced=selected?{...claimed,plan_revision_id:selected.planRevisionId}:claimed;
@@ -279,7 +284,7 @@ export async function continueInstitutionProgram(ctx: PeMutationContext, q: Inst
    if(completed){
     await (await import("../../../orchestration/src/objective-loop"))
      .schedulePreparedHarnessObjectiveTx(db,{tenantId:q.tenant_id,workId:q.work_id,planRevisionId:advanced.plan_revision_id});
-   }else if(!supportedComplete&&!deadlineExpired){
+   }else if(!supportedComplete&&!deadlineExpired&&interventions.length===0){
     await c.query("UPDATE finnor_os.p1_requests SET poll_count=poll_count+1 WHERE tenant_id=$1 AND id=$2",
      [q.tenant_id,q.id]);
     // Exponential backoff reaches one minute. The final scheduled wake reaches
