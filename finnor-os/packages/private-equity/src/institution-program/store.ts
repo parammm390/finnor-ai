@@ -69,6 +69,45 @@ export async function compilerEvent(ctx: PeMutationContext, q: CompilerRequestRo
   [q.tenant_id, q.principal_id, q.id, q.generation, kind, stable(body)]);
   return c ? write(c) : tx(ctx, write);
 }
+
+/** A vanished physical delivery is uncertainty, not a failed business effect.
+ * Only the exact retained claim/delivery and expired or quarantined queue owner
+ * can move an orphaned RUNNING projection to UNKNOWN. No replay is scheduled. */
+export async function reconcileInstitutionCompilerDelivery(ctx:PeMutationContext,q:CompilerRequestRow){
+  if(q.status!=='RUNNING')return q;
+  return tx(ctx,async c=>{
+    await authorizeInstitutionWork(ctx,q.work_id,c);
+    const current=await compilerRow(ctx,q.id,c,true);
+    if(current.status!=='RUNNING'||!current.claim_token||current.claim_fence===null)return current;
+    const delivery=(await c.query(`SELECT j.id job_id,j.status job_status,j.lease_expires_at,
+      a.id delivery_attempt_id,a.claim_token,a.claim_fence,a.outcome,a.failure_kind
+      FROM finnor_os.jobs j JOIN finnor_os.job_delivery_attempts a ON a.job_id=j.id AND a.tenant_id=j.tenant_id
+      WHERE j.tenant_id=$1 AND j.type='run_x1_institution_compiler_v1' AND j.protocol_version=1
+        AND j.payload->>'requestId'=$2 AND j.payload->>'principalId'=$3
+        AND (j.payload->>'generation')::integer=$4 AND a.claim_token=$5 AND a.claim_fence=$6
+        AND ((j.status='quarantined' AND a.outcome='reconciliation_required')
+          OR (j.status='running' AND j.claim_token=$5 AND j.claim_fence=$6
+            AND j.lease_expires_at<=clock_timestamp()))
+      ORDER BY a.started_at DESC LIMIT 1 FOR SHARE OF j,a`,
+      [current.tenant_id,current.id,current.principal_id,current.generation,current.claim_token,current.claim_fence])).rows[0];
+    if(!delivery)return current;
+    const failure='X1_COMPILER_DELIVERY_OUTCOME_UNCERTAIN';
+    await c.query(`UPDATE finnor_os.x1_compiler_requests SET status='UNKNOWN',failure=$4,updated_at=clock_timestamp()
+      WHERE tenant_id=$1 AND principal_id=$2 AND id=$3`,[current.tenant_id,current.principal_id,current.id,failure]);
+    await compilerEvent(ctx,current,'COMPILER_ORPHANED_DELIVERY_RETAINED_UNKNOWN',{
+      delivery,originalEpisode:current.episode_id,originalWorkInputId:current.work_input_id,
+      admissionId:current.admission_id,artifactId:current.artifact_id,programId:current.program_id,
+      possibleAdmissionsOrEffectsRetained:true,automaticReplayScheduled:false,
+      physicalCostCoverage:'INTERRUPTED_ATTEMPT_RETAINS_CHARGES_AND_UNOBSERVED_ELAPSED_COST_GAP',
+    },c);
+    await compilerEvent(ctx,current,'COMPILER_INTERRUPTED_DELIVERY_METER_GAP',{
+      jobId:delivery.job_id,deliveryAttemptId:delivery.delivery_attempt_id,originalEpisode:current.episode_id,
+      reason:'Process disappeared before final elapsed-compute attribution; original charge history is retained',
+      elapsedMs:null,monetaryCost:null,possibleEffectsRetained:true,
+    },c);
+    return {...current,status:'UNKNOWN',failure};
+  });
+}
 export async function enqueueInstitutionCompiler(ctx: PeMutationContext, q: CompilerRequestRow,
   stage: string, c?: PoolClient) {
   const write = (client: PoolClient) => client.query(`INSERT INTO finnor_os.jobs

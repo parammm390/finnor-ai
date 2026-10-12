@@ -9,7 +9,7 @@ import { INSTITUTION_COMPLETION_CONTRACTS } from "./completion-contracts";
 import { readInstitutionComputeCosts } from "./meter";
 import {releaseUntouchedInstitutionDemand} from "../allocation-store";
 import { authorizeInstitutionWork, assertInstitutionCompilerCurrent, compilerRow, compilerEvent,
-  compilerEpisode, enqueueInstitutionCompiler, submitInstitutionCompiler } from "./store";
+  compilerEpisode, enqueueInstitutionCompiler, submitInstitutionCompiler,reconcileInstitutionCompilerDelivery } from "./store";
 
 export const INSTITUTION_OPERATIONS = ["institution-submit", "institution-revise", "institution-read",
   "institution-status", "institution-cancel", "institution-resume", "institution-witness", "institution-sources"] as const;
@@ -18,8 +18,9 @@ const submit = z.object({ workId: z.string().uuid(), workInputId: z.string().uui
   grantIds: z.array(z.string().uuid()).min(1).max(16), idempotencyKey: z.string().min(1).max(160) }).strict();
 
 export async function readInstitutionCompiler(ctx: PeMutationContext, requestId: string) {
-  const q = await compilerRow(ctx, requestId);
+  let q = await compilerRow(ctx, requestId);
   await authorizeInstitutionWork(ctx, q.work_id);
+  q=await reconcileInstitutionCompilerDelivery(ctx,q);
   const episode = await compilerEpisode(ctx, q.episode_id);
   const costs = { parentReservation: episode.parent_reservation, originalDeadline: episode.original_deadline.toISOString(),
     wallDeadline: episode.wall_deadline.toISOString(), acquisitionCalls: episode.acquisition_calls,
@@ -91,8 +92,9 @@ export async function handleInstitutionOperation(ctx: PeMutationContext, operati
           completionContracts:INSTITUTION_COMPLETION_CONTRACTS };
       }, true) };
     }
-    const { requestId } = id.parse(body), q = await compilerRow(ctx, requestId);
+    const { requestId } = id.parse(body);let q = await compilerRow(ctx, requestId);
     await authorizeInstitutionWork(ctx, q.work_id);
+    if(operation==='institution-resume')q=await reconcileInstitutionCompilerDelivery(ctx,q);
     if (["institution-read", "institution-status", "institution-witness"].includes(operation))
       return { status: 200, body: await readInstitutionCompiler(ctx, requestId) };
     if (operation === "institution-cancel") {
