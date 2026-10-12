@@ -1,7 +1,7 @@
 import { AsyncLocalStorage } from "node:async_hooks";
 import { randomUUID } from "node:crypto";
 import type { PeMutationContext } from "../types";
-import { persistEconomicRecord, listStoredWorkCompute } from "../economic-store";
+import { persistEconomicRecord, listStoredWorkCompute,listStoredWorkPreparationCompute } from "../economic-store";
 import { sha, tx, principal } from "../evidence-execution/store";
 
 type Scope = { sourceAttempt: (grantId: string) => Promise<void>;
@@ -46,6 +46,10 @@ export async function readInstitutionComputeCosts(ctx: PeMutationContext, workId
   const episodeIds = [...new Set([compilerEpisodeId, ...(native ? [native.id] : [])])];
   const history = await listStoredWorkCompute(ctx, { workId, episodeIds, schema: "finnor.x1.native-compute.v1" });
   const apiHistory=await listStoredWorkCompute(ctx,{workId,episodeIds:[compilerEpisodeId],schema:'finnor.x1.api-compute.v1'});
+  const preparationHistory=await listStoredWorkPreparationCompute(ctx,workId);
+  const originalParent=await tx(ctx,async c=>(await c.query<{parent_reservation:unknown}>(`SELECT parent_reservation
+    FROM finnor_os.x1_compiler_episodes WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3 AND id=$4`,
+    [ctx.auth.tenantId,principal(ctx),workId,compilerEpisodeId])).rows[0]?.parent_reservation??null,true);
   const seen = new Set<string>(), gaps: string[] = [], phases = new Map<string, { deliveries: number; attributedElapsedMs: number }>();
   const refs: Array<{ owner: "S7"; id: string; version: string; contentDigest: string }> = [];
   let attributedElapsedMs = 0, sampledProcessRssBytes = 0, rssSamples = 0;
@@ -95,15 +99,59 @@ export async function readInstitutionComputeCosts(ctx: PeMutationContext, workId
   }
   if(!apiHistory.complete)gaps.push(apiHistory.reason!);
   if(apiIdentities.size)phases.set('AUTHENTICATED_API',{deliveries:apiIdentities.size,attributedElapsedMs:apiElapsedMs});
+  const preparationIdentities=new Set<string>();let preparationElapsedMs=0;
+  for(const record of preparationHistory.records){
+    const p=record.payload;refs.push(record.ref);
+    if(p.workId!==workId||p.episodeId!==null||p.parentReservation!==null
+      ||p.phase!=='AUTHENTICATED_WORK_PREPARATION'||!physicalUuid.test(String(p.invocationId))
+      ||typeof p.elapsedMs!=='number'||!Number.isFinite(p.elapsedMs)||p.elapsedMs<0
+      ||typeof p.operation!=='string'||!Number.isInteger(p.statusCode)
+      ||preparationIdentities.has(String(p.invocationId))){
+      gaps.push('X1_WORK_PREPARATION_MEASUREMENT_INVALID:'+record.ref.id);continue;
+    }
+    preparationIdentities.add(String(p.invocationId));preparationElapsedMs+=p.elapsedMs;
+  }
+  if(!preparationHistory.complete)gaps.push(preparationHistory.reason!);
+  if(preparationIdentities.size)phases.set('AUTHENTICATED_WORK_PREPARATION',{
+    deliveries:preparationIdentities.size,attributedElapsedMs:preparationElapsedMs});
   if (meterGaps.length > 1024) gaps.push("X1_COMPUTE_METER_GAP_HISTORY_BOUND");
   return { basis: "EXISTING_S7_IMMUTABLE_PHYSICAL_DELIVERY_RECORDS", recordRefs: refs,
     registeredDeliveryPhases: seen.size, apiInvocations:apiIdentities.size,
-    attributedElapsedMs:attributedElapsedMs+apiElapsedMs, phases: Object.fromEntries(phases),
+    attributedElapsedMs:attributedElapsedMs+apiElapsedMs+preparationElapsedMs, phases: Object.fromEntries(phases),
+    preparationAllocation:{basis:'ALL_OWNED_WORK_PREPARATION_ONCE_TO_ITS_ORIGINAL_WORK_EPISODE',
+      originalEpisodeId:compilerEpisodeId,parentReservation:originalParent,
+      recordRefs:preparationHistory.records.map(record=>record.ref),
+      originalMeasurementsRewritten:false,resourceConsumptionClaimed:false,
+      monetaryConversion:'UNKNOWN_REQUIRES_NATIVE_PRICES'},
     sampledProcessRssBytes: rssSamples ? sampledProcessRssBytes : null,
     aggregatePeakMemoryBytes: null, monetaryCost: null, humanSeconds: null,
     coverage: "REGISTERED_NATIVE_COMPUTE_ONLY_OTHER_COSTS_UNKNOWN",
     status: "PARTIAL", gaps, meterGapEvents: meterGaps.slice(0, 1024),
     originalEpisodeIds: episodeIds, fullCostOrCapacityEstablished: false };
+}
+
+/** Physical preparation is observable before an episode/reservation exists.
+ * Work ownership is checked by the API and again by the economic owner reader. */
+export async function persistInstitutionWorkPreparationCompute(ctx:PeMutationContext,input:{workId:string;
+  rightsRevision:string;operation:string;statusCode:number;startedAt:string;elapsedMs:number}){
+  const invocationId=randomUUID();
+  if(!physicalUuid.test(input.workId)||input.operation.length>128||!Number.isInteger(input.statusCode)
+    ||input.statusCode<100||input.statusCode>599||!Number.isFinite(input.elapsedMs)||input.elapsedMs<0)
+    throw Error('X1_ACTUAL_WORK_PREPARATION_MEASUREMENT_REQUIRED');
+  const work=await tx(ctx,async c=>(await c.query('SELECT id FROM finnor_os.works WHERE tenant_id=$1 AND id=$2 AND created_by=$3',
+    [ctx.auth.tenantId,input.workId,principal(ctx)])).rows[0],true);
+  if(!work)throw Error('X1_OWNED_WORK_PREPARATION_SCOPE_REQUIRED');
+  return persistEconomicRecord(ctx,{kind:'COMPUTE',rightsRef:`authority:${ctx.auth.tenantId}:${input.rightsRevision}`,
+    idempotencyKey:'x1-work-preparation:'+invocationId,
+    semanticRequestDigest:sha(['x1-work-preparation-compute-v1',invocationId,input]),validAt:input.startedAt,
+    horizon:'H0',uncertainty:'Observed owned Work API preparation; original parent not yet accepted, dollars/human/aggregate costs unknown',
+    dependencies:[],payload:{schema:'finnor.x1.api-preparation-compute.v1',...input,invocationId,
+      episodeId:null,parentReservation:null,phase:'AUTHENTICATED_WORK_PREPARATION',
+      process:{pid:process.pid,node:process.version,rssBytesAtObservation:process.memoryUsage().rss},
+      money:null,humanSeconds:null,aggregatePeakMemoryBytes:null,businessWorkCredit:0,
+      meterWriterLatency:'UNOBSERVED_REQUIRES_EXTERNAL_LIFECYCLE_COLLECTOR',
+      costAllocation:'ONCE_PER_PHYSICAL_OWNED_WORK_PREPARATION_INVOCATION',
+      qualification:'COMPUTE_ATTRIBUTION_NOT_RESOURCE_CONSUMPTION_FINANCIAL_VALUE_OR_CAPACITY_PROOF'}});
 }
 
 /** Physical HTTP-owner work is distinct from a queue delivery. The caller never

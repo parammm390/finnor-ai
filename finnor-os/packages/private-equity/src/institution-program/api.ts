@@ -7,7 +7,7 @@ import { handleProgramOperation } from "../program-synthesis/api";
 import { InstitutionProgram } from "./contracts";
 import { configureInstitutionMandate,registerInstitutionCoreSource,readInstitutionInputs,setInstitutionSelfConsent } from './inputs';
 import { INSTITUTION_COMPLETION_CONTRACTS } from "./completion-contracts";
-import { readInstitutionComputeCosts,persistInstitutionApiCompute } from "./meter";
+import { readInstitutionComputeCosts,persistInstitutionApiCompute,persistInstitutionWorkPreparationCompute } from "./meter";
 import {releaseUntouchedInstitutionDemand} from "../allocation-store";
 import { authorizeInstitutionWork, assertInstitutionCompilerCurrent, compilerRow, compilerEvent,
   compilerEpisode, enqueueInstitutionCompiler, submitInstitutionCompiler,reconcileInstitutionCompilerDelivery } from "./store";
@@ -193,10 +193,12 @@ export async function handleInstitutionOperation(ctx:PeMutationContext,operation
   const handles=body&&typeof body==='object'&&!Array.isArray(body)?body as {workId?:unknown;requestId?:unknown}:{};
   const valid=(value:unknown):value is string=>typeof value==='string'&&z.string().uuid().safeParse(value).success;
   let attribution:Awaited<ReturnType<typeof compilerRow>>|null=null;
+  let preparationWorkId:string|null=null;
   try{
     if(valid(handles.requestId))attribution=await compilerRow(ctx,handles.requestId);
     else if(valid(handles.workId)){
       await authorizeInstitutionWork(ctx,handles.workId);
+      preparationWorkId=handles.workId;
       const latest=await tx(ctx,async c=>(await c.query<{id:string}>(`SELECT id::text FROM finnor_os.x1_compiler_requests
         WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3 ORDER BY revision DESC LIMIT 1`,
         [ctx.auth.tenantId,principal(ctx),handles.workId])).rows[0],true);
@@ -211,6 +213,12 @@ export async function handleInstitutionOperation(ctx:PeMutationContext,operation
       await persistInstitutionApiCompute(ctx,{workId:attribution.work_id,requestId:attribution.id,episodeId:episode.id,
         parentReservation:episode.parent_reservation,rightsRevision:rights?.revision??'UNKNOWN',operation,
         statusCode:response.status,startedAt,elapsedMs});
+    }else if(preparationWorkId){
+      const rights=await tx(ctx,async c=>(await c.query<{revision:string}>(
+        'SELECT revision::text FROM finnor_os.authority_states WHERE tenant_id=$1',[ctx.auth.tenantId])).rows[0],true);
+      elapsedMs=performance.now()-started;
+      await persistInstitutionWorkPreparationCompute(ctx,{workId:preparationWorkId,rightsRevision:rights?.revision??'UNKNOWN',
+        operation,statusCode:response.status,startedAt,elapsedMs});
     }
   }catch(error){
     // A revoked/unavailable principal cannot write a private meter. Retain a
