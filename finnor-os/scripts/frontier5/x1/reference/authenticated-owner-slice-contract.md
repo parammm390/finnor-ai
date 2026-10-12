@@ -134,3 +134,20 @@ Typed decoder work remains explicitly finite. Store full duties in immutable P1
 proposal/heads; events carry resolvable population digests rather than duplicating
 oversized action payloads. The 128-case oracle remains unchanged and must verify
 all 128 creations, every native link and the same original parent envelope.
+
+Run 019 retained the exact native refusal after the second same-population
+failure: `execution_ineligible_before_claim`, `pe_deal changed after effect
+compilation; recompile and renew authorization`, attempted:false. Drafting a
+whole same-Deal batch freezes each effect before its predecessor mutates the
+shared Deal graph. Dispatch one current action per Deal while reconciling all
+accepted actions; keep the native eligibility check. Distinct Deals may progress
+independently. A new action is prepared against current canonical state.
+
+Keep the original persisted P1 max_steps=1024 and S5 520-compute/900-human parent;
+do not alter those grants or deadlines. The typed RECOVERY charge coordinate
+must support that existing native step ordinal, rather than confusing the
+128-duty population bound with the native physical-step grant. All other phase
+coordinates retain their 128 bound, and S5 still refuses cumulative overspend.
+Wake promptly after real dispatch/observation progress; back off while no owner
+state changes. The 128-case independent observer polls every two seconds for
+the existing 240 observations inside the unchanged 840-second stack guard.

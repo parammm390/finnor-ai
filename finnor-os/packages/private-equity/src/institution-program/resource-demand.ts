@@ -58,7 +58,7 @@ export function planInstitutionDemandCharge(input: {
     return { status: "REFUSED", reason: "X1_CHARGE_RESPONSIBILITY_FOREIGN" };
   if (!["EXECUTION", "RECOVERY", "HUMAN", "ACQUISITION", "CHECK", "COMPILE"].includes(request.phase)
       || !Number.isSafeInteger(request.ordinal) || request.ordinal < 1
-      || request.ordinal > (demand.chargeScope ? 128 : 64))
+      || request.ordinal > (demand.chargeScope ? request.phase==='RECOVERY'?1024:128 : 64))
     return { status: "REFUSED", reason: "X1_CHARGE_PHASE_OR_ORDINAL_INVALID" };
   if (!Number.isSafeInteger(request.units) || request.units < 1 || request.units > 100000)
     return { status: "REFUSED", reason: "X1_CHARGE_UNITS_INVALID" };

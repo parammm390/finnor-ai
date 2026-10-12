@@ -220,7 +220,7 @@ try {
       await save('terminal-queue-observation.json',{at:new Date().toISOString(),terminal,
         originalFailureRetained:true,episodeRestarted:false});break;
     }
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise(resolve => setTimeout(resolve, dutyCount===128?2000:1000));
   }
   await save("compiler-ending-projection.json", reading);
   assert.equal(reading.status, "OBSERVED", "actual compiler/native progression: " + JSON.stringify({ status: reading.status, reason: reading.reason }));

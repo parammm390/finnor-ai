@@ -222,7 +222,11 @@ BEGIN
     WHERE e->>'resourceId'=p_body->>'resourceId' AND e->>'unit'=p_body->>'unit';
   IF v_limit IS NULL OR (p_body->>'units')::integer NOT BETWEEN 1 AND 100000
     OR (p_body->>'phase') NOT IN ('EXECUTION','RECOVERY','HUMAN','ACQUISITION','CHECK','COMPILE')
-    OR (p_body->>'ordinal')::integer NOT BETWEEN 1 AND (CASE WHEN v_origin->'demand'->'chargeScope' IS NULL THEN 64 ELSE 128 END)
+    OR (p_body->>'ordinal')::integer NOT BETWEEN 1 AND (CASE
+      WHEN v_origin->'demand'->'chargeScope' IS NULL THEN 64
+      WHEN p_body->>'phase'='RECOVERY' THEN LEAST(1024,coalesce((SELECT max_steps FROM finnor_os.p1_episodes
+        WHERE tenant_id=v_tenant AND principal_id=v_user AND work_id=(v_origin->>'workId')::uuid),128))
+      ELSE 128 END)
     OR v_used+(p_body->>'units')::integer>v_limit
     OR (p_body->>'phase'='HUMAN' AND p_body->>'unit'<>'seconds')
     OR (p_body->>'phase'<>'HUMAN' AND p_body->>'unit'<>'request')

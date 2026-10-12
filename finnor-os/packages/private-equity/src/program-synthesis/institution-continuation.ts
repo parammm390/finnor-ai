@@ -94,7 +94,7 @@ export async function continueInstitutionProgram(ctx: PeMutationContext, q: Inst
   const step=(await c.query<{steps_used:number}>(`UPDATE finnor_os.p1_episodes
     SET steps_used=steps_used+1 WHERE tenant_id=$1 AND principal_id=$2 AND id=$3
       AND steps_used+1<=LEAST(max_steps,$4) AND deadline_at>clock_timestamp() RETURNING steps_used`,
-    [q.tenant_id,q.principal_id,q.episode_id,q.request.institution.compilerRequestId?128:64])).rows[0];
+    [q.tenant_id,q.principal_id,q.episode_id,q.request.institution.compilerRequestId?1024:64])).rows[0];
   if(!step){
    await persistProgrammeHead(ctx,running,{...head,status:"PARTIAL"},"PARTIAL","X1_ORIGINAL_CONTINUATION_ENVELOPE_EXHAUSTED",c);
    await trace(ctx,locked,"X1_ORIGINAL_CONTINUATION_ENVELOPE_EXHAUSTED",{
@@ -131,6 +131,10 @@ export async function continueInstitutionProgram(ctx: PeMutationContext, q: Inst
   if(!Number.isSafeInteger(cursor)||cursor<0||cursor>executable.length)
    throw Error("X1_SAVED_BATCH_CURSOR_INVALID");
   const interventions=[...(head.interventions??[])];
+  // Native effects freeze the current Deal graph. Its next action is compiled
+  // after the accepted predecessor is observed, preserving native eligibility.
+  const activeRoots=new Set<string>();
+  let newlyDispatched=0;
   for(const node of chunk){
    await assertProgramCurrent(ctx,claimed);
    const expected=frozenDutyExpectation(q.tenant_id,node);
@@ -166,9 +170,14 @@ export async function continueInstitutionProgram(ctx: PeMutationContext, q: Inst
      predicate:'X1_NATIVE_ACTION_'+existing.status.toUpperCase()+'_REQUIRES_DECISION',possibleEffect:true});
     continue;
    }
+   if(existing&&['executing','approved','pending'].includes(existing.status)){
+    activeRoots.add(expected.dealId);
+    continue;
+   }
    // Accepted/possibly submitted actions are reconciled in place. The native
    // runtime owns their retry/receipt path; P1 never creates a replacement ID.
    if(!existing||existing.status==="draft"){
+    if(activeRoots.has(expected.dealId))continue;
     const planNodes=head.planGraph.nodes.filter(planNode=>planNode.kind==='action'
      &&planNode.actionType===node.operation&&sha(planNode.payload)===sha(node.action!.payload));
     const planNode=planNodes[0];
@@ -185,6 +194,7 @@ export async function continueInstitutionProgram(ctx: PeMutationContext, q: Inst
       stableIdentity:node.stableIdentity,workInputId:q.work_input_id},
      planRevisionId:q.plan_revision_id,planNodeId:planNode.id,reviewBeforeExecution:false,
     });
+    activeRoots.add(expected.dealId);newlyDispatched++;
    }
   }
   await tx(ctx,async(c,db)=>{
@@ -290,7 +300,8 @@ export async function continueInstitutionProgram(ctx: PeMutationContext, q: Inst
     // Exponential backoff reaches one minute. The final scheduled wake reaches
     // the original deadline; poll 60 is not a silent unscheduled WAITING state.
     const remaining=Date.parse(head.bounds.deadlineAt)-Date.now();
-    const delay=Math.max(1,Math.min(remaining,60000,2000*2**Math.min(q.poll_count,5)));
+    const progress=newlyDispatched>0||observed.length>head.observedPostconditions.length;
+    const delay=Math.max(1,Math.min(remaining,progress?200:60000,2000*2**Math.min(q.poll_count,5)));
     await enqueueProgram(ctx,advanced,"observe-"+(q.poll_count+1),c,delay);
    }
   });

@@ -212,7 +212,7 @@ export async function runInstitutionHarnessJob(ctx:PeMutationContext,q:Instituti
     attempts_used=attempts_used+1 WHERE id=$1 AND tenant_id=$2 AND principal_id=$3
     AND steps_used+1<=LEAST(max_steps,$4) AND attempts_used+1<=max_attempts
     AND deadline_at>clock_timestamp() RETURNING steps_used`,
-   [q.episode_id,q.tenant_id,q.principal_id,q.request.institution.compilerRequestId?128:64]);
+   [q.episode_id,q.tenant_id,q.principal_id,q.request.institution.compilerRequestId?1024:64]);
   if(!charged.rowCount)throw Error('ORIGINAL_EPISODE_GRANT_EXHAUSTED');
   nativeOrdinal=Number(charged.rows[0].steps_used);
   await c.query(`UPDATE finnor_os.p1_requests SET status='RUNNING',claim_token=$4,claim_fence=$5
