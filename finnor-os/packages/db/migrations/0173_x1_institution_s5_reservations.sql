@@ -177,8 +177,8 @@ DECLARE v_tenant uuid:=finnor_os.request_tenant_id();
   v_user uuid:=nullif(current_setting('app.user_id',true),'')::uuid;
 BEGIN
   IF v_tenant IS NULL OR v_user IS NULL OR NOT EXISTS(
-    SELECT 1 FROM finnor_os.users
-    WHERE tenant_id=v_tenant AND id=v_user AND role='owner' AND status='active'
+    SELECT 1 FROM finnor_os.users u
+    WHERE u.tenant_id=v_tenant AND u.id=v_user AND u.role='owner' AND u.status='active'
   ) THEN RAISE EXCEPTION 'S5 owner outstanding authority required'; END IF;
   RETURN QUERY SELECT o.body->'ref',o.body->'demandRef',s.envelopes,s.status
     FROM finnor_os.s5_reservations s

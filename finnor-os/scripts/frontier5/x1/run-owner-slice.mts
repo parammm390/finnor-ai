@@ -223,7 +223,9 @@ try {
     basis: "ACTUAL_LOCAL_AUTH_HTTP_SQL_PHYSICAL_WORKER_NATIVE_CREATE_AND_INDEPENDENT_SQL_OBSERVER" });
 } catch (error) {
   results.push({ id: "actual-owner-boundary", status: "FAIL", observed: { message: String((error as Error).message),
-    stack: (error as Error).stack, cause: (error as any).cause?.message ?? null } });
+    stack: (error as Error).stack, cause: (error as any).cause?.message ?? null,
+    sql: { code: (error as any).code ?? null, where: (error as any).where ?? null,
+      internalQuery: (error as any).internalQuery ?? null, position: (error as any).position ?? null } } });
 } finally {
   if (guard) clearInterval(guard);
   if (admin && workId) {
