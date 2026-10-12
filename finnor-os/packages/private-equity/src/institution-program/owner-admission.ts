@@ -583,16 +583,17 @@ async function admitCheckedInstitutionMappings(
         metadata: { documentId: source.coreDocumentId, documentVersionId: source.coreVersionId,
           originalSha256: source.originalSha256, protocol: source.protocol, sourceRevision: source.revision },
       });
+      const sourceQuantity=quantity?{schema:'finnor.x1.source-quantity-assertion.v1',...quantity,
+        sourceRevision:source.revision,knowledgeCut:original.knowledgeCut,
+        classification:'SOURCE_ASSERTION_ATTACHED_NOT_SETTLED_TRUTH',executionAuthorityGranted:false}:null;
       const evidenceVersion = await appendEvidenceVersionTx(db, ctx.auth.tenantId, evidence.id, {
         content: `Original source assertion ${mapping.recordId}; sha256:${source.originalSha256}`
-          +(quantity?'; quantity-context:'+JSON.stringify(quantity):''),
+          +(sourceQuantity?'; quantity-context:'+JSON.stringify(sourceQuantity):''),
         snapshot: { sourceId: source.id, objectId: mapping.recordId,
           documentId: source.coreDocumentId, documentVersionId: source.coreVersionId,
           originalSha256: source.originalSha256, canonicalCandidate: mapping.canonicalRef,
           disposition: "source_assertion_not_settled_truth",
-          ...(quantity?{sourceQuantity:{schema:'finnor.x1.source-quantity-assertion.v1',...quantity,
-            sourceRevision:source.revision,knowledgeCut:original.knowledgeCut,
-            classification:'SOURCE_ASSERTION_ATTACHED_NOT_SETTLED_TRUTH',executionAuthorityGranted:false}}:{}) },
+          ...(sourceQuantity?{sourceQuantity}:{}) },
         asOf: new Date(quantity?.occurredAt??original.knowledgeCut), retrievedAt: new Date(),
         entityRefs: [{ type: entityType, id: entityId }],
       });

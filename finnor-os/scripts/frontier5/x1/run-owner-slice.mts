@@ -648,7 +648,8 @@ try {
   }
   const quantityReceipts=admission.receipts.filter((receipt:any)=>receipt.assertionKind==='QUANTITY');
   assert.equal(quantityReceipts.length,expected.quantityAssertions.length);
-  const quantityOwnerProofs=[];
+  const quantityOwnerProofs:Array<{oracle:any;receipt:any;record:{snapshot:Record<string,any>;as_of:Date;
+    entity_refs:Array<{type:string;id:string}>}}> = [];
   for(const oracle of expected.quantityAssertions){
     const receipt=quantityReceipts.find((item:any)=>item.sourceId===oracle.sourceId&&item.recordId===oracle.recordId);
     assert.ok(receipt,'every original contextual quantity must reach its semantic evidence owner');
@@ -1053,6 +1054,30 @@ try {
           ON r.tenant_id=a.tenant_id AND r.artifact_id=a.id WHERE r.tenant_id=$1 AND r.id=$2`,[tenant,next.id])).rows[0];
       assert.equal(current.candidate.coverage.length,15);assert.equal(current.candidate.mappings.length,26);
       assert.equal(current.candidate.obligations.length,3);assert.equal(response.body.programme.program.observedPostconditions.length,3);
+      const assertions:Array<Record<string,any>>=(await admin.query(`SELECT a.receipts FROM finnor_os.x1_mapping_admissions a
+        JOIN finnor_os.x1_compiler_requests r ON r.tenant_id=a.tenant_id AND r.admission_id=a.id
+        WHERE r.tenant_id=$1 AND r.id=$2`,[tenant,next.id])).rows[0].receipts;
+      const originalQuantityVersions=[];
+      for(const initial of quantityOwnerProofs){
+        const retained:{snapshot:Record<string,any>;as_of:Date}=(await admin.query(`SELECT snapshot,as_of FROM finnor_os.evidence_source_versions
+          WHERE tenant_id=$1 AND id=$2`,[tenant,initial.receipt.evidenceVersionId])).rows[0];
+        assert.deepEqual(retained.snapshot,initial.record.snapshot,'original immutable quantity context retained');
+        assert.equal(new Date(retained.as_of).toISOString(),new Date(initial.record.as_of).toISOString());
+        originalQuantityVersions.push({id:initial.receipt.evidenceVersionId,snapshot:retained.snapshot});
+      }
+      const currentQuantityVersions=[];
+      const quantityOracles=expected.quantityAssertions.filter((oracle:any)=>!(change.lenderUnknown&&oracle.sourceId==='lender-original'))
+        .map((oracle:any)=>({...oracle,...(oracle.sourceId==='ledger-original'?{value:'25.00'}:{})}));
+      assert.equal(assertions.filter((receipt:any)=>receipt.assertionKind==='QUANTITY').length,quantityOracles.length);
+      for(const oracle of quantityOracles){
+        const receipt=assertions.find((item:any)=>item.assertionKind==='QUANTITY'&&item.sourceId===oracle.sourceId&&item.recordId===oracle.recordId);
+        assert.ok(receipt);const stored:{snapshot:Record<string,any>}=(await admin.query('SELECT snapshot FROM finnor_os.evidence_source_versions WHERE tenant_id=$1 AND id=$2',
+          [tenant,receipt.evidenceVersionId])).rows[0];const claim:Record<string,any>=stored.snapshot.sourceQuantity;
+        for(const field of ['sourceId','recordId','factKey','value','currency','unit','period','basis','occurredAt','availableAt'])assert.equal(claim[field],oracle[field]);
+        assert.equal(claim.knowledgeCut,current.body.envelope.knowledge_cut);
+        assert.equal(claim.classification,'SOURCE_ASSERTION_ATTACHED_NOT_SETTLED_TRUTH');
+        currentQuantityVersions.push({receipt,snapshot:stored.snapshot});
+      }
       const ledger=current.candidate.quantities.filter((q:any)=>q.sourceId==='ledger-original');assert.equal(ledger.length,1);
       assert.equal(ledger[0].value,'25.00');assert.equal(ledger[0].currency,'USD');assert.equal(ledger[0].basis,'outstanding');
       const lender=current.candidate.quantities.filter((q:any)=>q.sourceId==='lender-original');
@@ -1076,6 +1101,7 @@ try {
         [tenant,originalPlanId])).rows[0].completion_proof)),originalProof);
       assert.equal((await admin.query('SELECT count(*)::int n FROM finnor_os.domain_actions WHERE tenant_id=$1 AND work_id=$2',[tenant,workId])).rows[0].n,3);
       await save('reporting-change-'+change.id+'-independent-proof.json',{change,replacements,stale,next,response,current,update,ending,
+        originalQuantityVersions,currentQuantityVersions,
         originalEnvelope:originalEnvelopeBefore,initialObjective,finalObjective,originalCreationEffectsRetained:allEffects,
         newBusinessWorkCredit:0,exceptionApprovalSupplied:false});
       previousRequest=next.id;
