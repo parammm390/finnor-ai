@@ -960,10 +960,10 @@ try {
       if(change.lenderUnknown){assert.equal(unknown[0].reason,'DESCRIPTIVE_CROSS_REFERENCE_NOT_IDENTITY_OR_NORM');
         assert.deepEqual(unknown[0].alternatives,[`pe_deal:${String(first.row.id)}@v1`]);
         assert.ok(current.body.unresolved_interpretations.some((gap:any)=>gap.witnessRefs.includes(unknown[0].witness)));}
-      const update:{changedNodes:string[];affectedPreviousDutyIds:string[];affectedCurrentDutyIds:string[];preservedCurrentDutyIds:string[]}=(await admin.query(`SELECT body FROM finnor_os.x1_compiler_events
+      const update:{changedDependencyIds:string[];affectedPriorDutyIds:string[];affectedCurrentDutyIds:string[];preservedCurrentDutyIds:string[]}=(await admin.query(`SELECT body FROM finnor_os.x1_compiler_events
         WHERE tenant_id=$1 AND request_id=$2 AND kind='P7_EXACT_AFFECTED_UPDATE' ORDER BY created_at DESC LIMIT 1`,[tenant,next.id])).rows[0].body;
-      assert.deepEqual(update.changedNodes,[JSON.stringify(['source-semantics',change.expectedSemanticSource])]);
-      assert.equal(update.affectedPreviousDutyIds.length,0);assert.equal(update.affectedCurrentDutyIds.length,0);
+      assert.deepEqual(update.changedDependencyIds,[JSON.stringify(['source-semantics',change.expectedSemanticSource])]);
+      assert.equal(update.affectedPriorDutyIds.length,0);assert.equal(update.affectedCurrentDutyIds.length,0);
       assert.equal(update.preservedCurrentDutyIds.length,3);
       const finalObjective:Record<string,any>=(await admin.query('SELECT * FROM finnor_os.work_objective_loops WHERE tenant_id=$1 AND work_id=$2',[tenant,workId])).rows[0];
       for(const field of ['max_steps','max_actions','max_queries','max_waits','max_node_attempts','deadline_at'])
