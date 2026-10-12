@@ -44,6 +44,13 @@ try {
   tamper('compiled-checker-byte-refusal', manifest.entrypoints.checker);
   tamper('original-source-byte-refusal', 'finnor-os/packages/private-equity/src/institution-program/source-decoder.ts');
   tamper('dependency-byte-refusal', 'finnor-os/node_modules/zod/package.json');
+  const modePin=manifest.files.find(p=>p.path==='finnor-os/node_modules/zod/package.json');
+  try{chmodSync(join(installation,modePin.path),modePin.mode|0o4000);
+    run('special-file-mode-refusal','api','X1_INSTALLATION_FILE_MODE_MISMATCH:'+modePin.path);
+  }finally{chmodSync(join(installation,modePin.path),modePin.mode);}
+  try{renameSync(manifestPath,manifestPath+'.held');
+    run('compiled-checker-missing-manifest-refusal','checker','X1_COMPILED_INSTALLATION_MANIFEST_REQUIRED');
+  }finally{renameSync(manifestPath+'.held',manifestPath);}
   const link = manifest.links.find(p => p.path === 'finnor-os/node_modules/@finnor/db'); assert.ok(link);
   const full = join(installation, link.path), target = readlinkSync(full);
   try { unlinkSync(full); symlinkSync('../../packages/tools', full);

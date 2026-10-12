@@ -236,9 +236,13 @@ try {
     const before=await probe();assert.equal(before.status,401,'actual unauthenticated handler before tampering');
     let refused,changedCtimeNs:string|undefined;
     try{
-      await chmod(full,0o644);await writeFile(full,Buffer.concat([original,Buffer.from('\n ')]));await chmod(full,pin.mode);
+      const changedBytes=Buffer.from(original),at=changedBytes.indexOf(Buffer.from('zod'));
+      assert.ok(at>=0,'independently selected existing package identity byte');changedBytes[at]=121;
+      assert.notEqual(sha(changedBytes),pin.sha256);
+      await chmod(full,0o644);await writeFile(full,changedBytes);await chmod(full,pin.mode);
       await utimes(full,observed.atime,stableMtimeSeconds);
       const changed=await stat(full,{bigint:true});
+      assert.equal(changed.size,warmedMetadata.size);assert.equal(changed.ino,warmedMetadata.ino);
       assert.equal(changed.mtimeNs,warmedMetadata.mtimeNs,'mtime is restored exactly to the warmed measurement');
       assert.notEqual(changed.ctimeNs,warmedMetadata.ctimeNs,'actual kernel mutation witness changes');
       changedCtimeNs=changed.ctimeNs.toString();
@@ -250,7 +254,8 @@ try {
     await save('installed-live-byte-currentness.json',{before,refused,restored,compiledApiPid:service.compiledPid,
       expectedOriginalSha256:pin.sha256,actualRestoredSha256:sha(await readFile(full)),mtimeRestored:true,
       warmedMtimeNs:warmedMetadata.mtimeNs.toString(),warmedCtimeNs:warmedMetadata.ctimeNs.toString(),
-      changedCtimeNs,manifestNeverRewritten:true,hostileCustody:false});
+      changedCtimeNs,sameSize:warmedMetadata.size.toString(),sameInode:warmedMetadata.ino.toString(),
+      manifestNeverRewritten:true,hostileCustody:false});
     await utimes(full,observed.atime,observed.mtime);
     results.push({id:'G-installed-same-process-byte-currentness',status:'PASS',observed:{before,refused,restored},
       basis:'ACTUAL_RUNNING_COMPILED_API_REFUSAL_AFTER_BYTE_CHANGE_WITH_RESTORED_MTIME'});

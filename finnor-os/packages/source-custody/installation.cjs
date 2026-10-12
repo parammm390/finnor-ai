@@ -25,7 +25,7 @@ function safeFile(relative) {
 }
 function installedRuntime(required = false) {
   if (!existsSync(manifestPath)) {
-    if (required) throw Error("X1_COMPILED_INSTALLATION_MANIFEST_REQUIRED");
+    if (required || loadedDigest) throw Error("X1_COMPILED_INSTALLATION_MANIFEST_REQUIRED");
     return null;
   }
   const bytes = readFileSync(manifestPath), manifestDigest = sha(bytes);
@@ -61,7 +61,7 @@ function installedRuntime(required = false) {
     if (!/^[a-f0-9]{64}$/.test(pin.sha256) || declared.has(pin.path)) throw Error("X1_INSTALLATION_PIN_INVALID");
     const path = pathInRoot(pin.path), observed = lstatSync(path, { bigint: true });
     if (!observed.isFile()) throw Error('X1_INSTALLATION_FILE_OUTSIDE_CUSTODY');
-    if (!Number.isInteger(pin.mode) || Number(observed.mode & 0o777n) !== pin.mode)
+    if (!Number.isInteger(pin.mode) || Number(observed.mode & 0o7777n) !== pin.mode)
       throw Error('X1_INSTALLATION_FILE_MODE_MISMATCH:' + pin.path);
     const current = metadata(observed), previous = measured.get(path);
     let actual = previous?.metadata === current ? previous.sha256 : null;

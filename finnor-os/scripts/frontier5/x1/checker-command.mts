@@ -12,7 +12,7 @@ const files = [fileURLToPath(import.meta.url),
   fileURLToPath(new URL("../../../packages/private-equity/src/institution-program/canonical-json.ts", import.meta.url)),
   fileURLToPath(new URL("../../../node_modules/tsx/dist/cli.mjs", import.meta.url)),
   fileURLToPath(new URL("../../../package-lock.json", import.meta.url))];
-const installation = installedDevelopmentRuntime();
+const installation = installedDevelopmentRuntime(process.argv[1] !== fileURLToPath(import.meta.url));
 if(installation&&(process.env.NODE_ENV==='production'||process.env.FINNOR_ENVIRONMENT==='production'
     ||process.env.FINNOR_P4_PROFILE!=='ordinary_disposable'))throw Error('X1_COMPILED_DEVELOPMENT_PROFILE_REQUIRED');
 const pins = installation ? installation.checkerPins() : Object.fromEntries(files.map((file) => [file, sha(readFileSync(file))]));

@@ -460,3 +460,8 @@ then the SAME API process must return503 with the intended byte-pin refusal
 before route execution. Restore the original bytes/mode/time and observe401
 again. Retain actual server PID, hashes, statuses and refusal event. This checks
 ordinary filesystem mutation/currentness only, not privileged hostile custody.
+
+Keep size/inode unchanged during this live byte mutation and assert exact warmed
+mtime equality. A missing manifest must never turn a compiled checker into the
+source fallback, including after a prior verified load. Added special mode bits
+must fail the exact mode predicate without changing any byte or manifest hash.

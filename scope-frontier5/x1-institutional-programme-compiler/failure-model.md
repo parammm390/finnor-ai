@@ -420,3 +420,9 @@ again. A live same-process tamper with restored mtime must still refuse before
 the actual route handler. This is development integrity, not hostile filesystem
 or evaluator custody; privileged kernel/clock manipulation remains unqualified.
 No profile reduction, timeout increase, guessed digest or manifest rewrite.
+
+The narrow scan review also found that optional manifest lookup can fall back
+to source mode after a previously verified manifest disappears, and that mode
+comparison ignores special permission bits. Both must refuse. The live cache
+regression must replace one byte at the same size/inode and restore the exact
+warmed mtime, isolating the actual kernel ctime witness rather than a size change.
