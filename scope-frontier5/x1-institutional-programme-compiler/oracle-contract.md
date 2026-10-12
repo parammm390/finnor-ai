@@ -290,3 +290,15 @@ source-scoped identity bindings. Expected expense decimal/currency/unit/period/b
 and subject are retained, with no payment credit. Three original responsibilities
 execute the actual native owners and complete Work. Original bytes, hidden-field
 denominators and checker coverage stay frozen; this is development domain evidence.
+
+# Authenticated API lifecycle metering independent expectations
+
+Through the real authenticated endpoint, make one owned institution-status call
+and one owned institution-read call after native completion. Read immutable S7
+bodies independently from SQL: require distinct internal invocation identities,
+positive finite measured intervals, actual operation/status and the same original
+episode/reservation as the compiler. A repeated caller request still costs another
+physical read. An owned malformed request is a refused invocation with retained
+cost, not business-work credit. Unrelated tenant/principal requests must fail the
+original scope boundary without private attribution. The S7 owner preimage reader
+verifies stored hashes; API poll counts alone cannot establish measured compute.

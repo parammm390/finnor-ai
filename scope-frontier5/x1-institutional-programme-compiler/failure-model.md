@@ -218,6 +218,21 @@ cancellation lets a completed standing programme continue after the user stops i
 
 ### Publication compute attribution
 
+### Authenticated API lifecycle metering
+
+Physical compiler/P1 delivery meters omit repeated authenticated source/read/status
+and control work. Record each actual owned API invocation once through S7 with a
+fresh internal invocation identity, its original compiler episode/reservation,
+operation, observed interval and terminal disposition. Caller IDs cannot select
+or deduplicate this physical meter. Failed/refused calls for an existing owned Work
+remain measured work; unrelated/unauthenticated calls must not gain private episode
+access. Do not create another S5 parent or claim missing dollars, human supervision,
+build/validator costs or aggregate memory are zero. The response cannot include
+its own later meter-write latency; retain that gap and independently read the next
+canonical meter records.
+
+### Publication compute attribution continued
+
 The compiler's existing COMPILE measurement ends before baseline/catalog reads,
 parent verification, artifact construction and immutable publication. That is an
 avoidable physical-time omission. Split the real delivery at an observed clock

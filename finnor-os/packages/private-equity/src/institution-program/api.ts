@@ -6,7 +6,7 @@ import { readInstitutionHarnessProgram } from "../program-synthesis/institution"
 import { handleProgramOperation } from "../program-synthesis/api";
 import { InstitutionProgram } from "./contracts";
 import { INSTITUTION_COMPLETION_CONTRACTS } from "./completion-contracts";
-import { readInstitutionComputeCosts } from "./meter";
+import { readInstitutionComputeCosts,persistInstitutionApiCompute } from "./meter";
 import {releaseUntouchedInstitutionDemand} from "../allocation-store";
 import { authorizeInstitutionWork, assertInstitutionCompilerCurrent, compilerRow, compilerEvent,
   compilerEpisode, enqueueInstitutionCompiler, submitInstitutionCompiler,reconcileInstitutionCompilerDelivery } from "./store";
@@ -86,7 +86,7 @@ export async function readInstitutionCompiler(ctx: PeMutationContext, requestId:
     executionAuthorityGranted: false, protectedQualification: "UNAVAILABLE" };
 }
 
-export async function handleInstitutionOperation(ctx: PeMutationContext, operation: string, body: unknown) {
+async function handleInstitutionOperationBody(ctx: PeMutationContext, operation: string, body: unknown) {
   try {
     if (operation === "institution-submit") return { status: 202, body: await submitInstitutionCompiler(ctx, submit.parse(body)) };
     if (operation === "institution-revise") {
@@ -175,4 +175,39 @@ export async function handleInstitutionOperation(ctx: PeMutationContext, operati
       return { status: 404, body: { code: "PE_ENTITY_NOT_FOUND", error: "Institution responsibility is unavailable in the authenticated scope" } };
     return { status: 422, body: { code: "X1_PREDICATE_UNPASSED", predicate: safePredicate(error) } };
   }
+}
+
+export async function handleInstitutionOperation(ctx:PeMutationContext,operation:string,body:unknown){
+  const started=performance.now(),startedAt=new Date().toISOString();
+  const response=await handleInstitutionOperationBody(ctx,operation,body);let elapsedMs=performance.now()-started;
+  const handles=body&&typeof body==='object'&&!Array.isArray(body)?body as {workId?:unknown;requestId?:unknown}:{};
+  const valid=(value:unknown):value is string=>typeof value==='string'&&z.string().uuid().safeParse(value).success;
+  let attribution:Awaited<ReturnType<typeof compilerRow>>|null=null;
+  try{
+    if(valid(handles.requestId))attribution=await compilerRow(ctx,handles.requestId);
+    else if(valid(handles.workId)){
+      await authorizeInstitutionWork(ctx,handles.workId);
+      const latest=await tx(ctx,async c=>(await c.query<{id:string}>(`SELECT id::text FROM finnor_os.x1_compiler_requests
+        WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3 ORDER BY revision DESC LIMIT 1`,
+        [ctx.auth.tenantId,principal(ctx),handles.workId])).rows[0],true);
+      if(latest)attribution=await compilerRow(ctx,latest.id);
+    }
+    if(attribution){
+      await authorizeInstitutionWork(ctx,attribution.work_id);
+      const episode=await compilerEpisode(ctx,attribution.episode_id);
+      const rights=await tx(ctx,async c=>(await c.query<{revision:string}>('SELECT revision::text FROM finnor_os.authority_states WHERE tenant_id=$1',
+        [ctx.auth.tenantId])).rows[0],true);
+      elapsedMs=performance.now()-started;
+      await persistInstitutionApiCompute(ctx,{workId:attribution.work_id,requestId:attribution.id,episodeId:episode.id,
+        parentReservation:episode.parent_reservation,rightsRevision:rights?.revision??'UNKNOWN',operation,
+        statusCode:response.status,startedAt,elapsedMs});
+    }
+  }catch(error){
+    // A revoked/unavailable principal cannot write a private meter. Retain a
+    // failed writer for an otherwise available owner without replacing the
+    // real API disposition or erasing any observed effect.
+    if(attribution)await compilerEvent(ctx,attribution,'API_COMPUTE_METER_GAP',{operation,statusCode:response.status,
+      startedAt,elapsedMs,predicate:safePredicate(error),originalEpisode:attribution.episode_id}).catch(()=>undefined);
+  }
+  return response;
 }

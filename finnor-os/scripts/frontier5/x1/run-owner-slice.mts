@@ -789,6 +789,33 @@ try {
   }
   if(mounted)await save('mounted-canonical-completion.json',{compilerId,workId,completion,
     browserEvidenceRequired:true,mountedPassEstablished:false});
+  const meteredApiRows=async()=>JSON.parse(JSON.stringify((await admin!.query(`SELECT record_id,content_digest,body->'payload' payload
+    FROM finnor_os.s7_economic_records WHERE tenant_id=$1 AND principal_id=$2 AND kind='COMPUTE'
+      AND body->'payload'->>'schema'='finnor.x1.api-compute.v1' AND body->'payload'->>'workId'=$3
+      ORDER BY knowledge_at,record_id`,[tenant,actor,workId])).rows));
+  const apiMetersBefore=await meteredApiRows();
+  const statusRead=await api('institution-status',{requestId:compilerId});assert.equal(statusRead.status,200);
+  const repeatRead=await api('institution-read',{requestId:compilerId});assert.equal(repeatRead.status,200);
+  const refusedRead=await api('institution-status',{requestId:compilerId,unexpected:'actual refused invocation'});
+  assert.equal(refusedRead.status,400);
+  const priorApiIds=new Set(apiMetersBefore.map((row:any)=>row.record_id)),allApiMeters=await meteredApiRows();
+  const newApiMeters=allApiMeters.filter((row:any)=>!priorApiIds.has(row.record_id));assert.equal(newApiMeters.length,3);
+  assert.deepEqual(newApiMeters.map((row:any)=>row.payload.statusCode).sort(),[200,200,400]);
+  assert.equal(new Set(allApiMeters.map((row:any)=>row.payload.invocationId)).size,allApiMeters.length);
+  const compilerEpisode=(await admin.query('SELECT episode_id FROM finnor_os.x1_compiler_requests WHERE tenant_id=$1 AND id=$2',[tenant,compilerId])).rows[0].episode_id;
+  for(const row of newApiMeters){
+    const p=row.payload;assert.equal(p.episodeId,compilerEpisode);assert.equal(p.requestId,compilerId);
+    assert.ok(Number.isFinite(p.elapsedMs)&&p.elapsedMs>0);assert.equal(p.businessWorkCredit,0);
+    assert.deepEqual(p.parentReservation,reading.costs.parentReservation);
+    assert.equal(p.money,null);assert.equal(p.humanSeconds,null);assert.equal(p.aggregatePeakMemoryBytes,null);
+  }
+  assert.ok(repeatRead.body.costs.physicalCompute.phases.AUTHENTICATED_API.deliveries>=apiMetersBefore.length+1,
+    'actual S7 owner preimage consumer includes the preceding status call');
+  await save('authenticated-api-compute-independent-proof.json',{beforeCount:apiMetersBefore.length,
+    newRecords:newApiMeters,allInvocationCount:allApiMeters.length,
+    ownerReadback:repeatRead.body.costs.physicalCompute,rawFailureCostsRetained:true,originalParentRetained:true});
+  results.push({id:'G-authenticated-api-compute-attribution',status:'PASS',observed:{actualNewRecords:3,
+    statusCodes:[200,200,400],originalParentRetained:true},basis:'ACTUAL_AUTHENTICATED_API_DISPOSITIONS_IMMUTABLE_S7_SQL_AND_OWNER_PREIMAGE_READ'});
   if(legacyUpgrade){
     let compatible:any,retired:any;
     for(let poll=0;poll<60;poll++){

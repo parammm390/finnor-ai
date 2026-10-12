@@ -1,4 +1,5 @@
 import { AsyncLocalStorage } from "node:async_hooks";
+import { randomUUID } from "node:crypto";
 import type { PeMutationContext } from "../types";
 import { persistEconomicRecord, listStoredWorkCompute } from "../economic-store";
 import { sha, tx, principal } from "../evidence-execution/store";
@@ -44,6 +45,7 @@ export async function readInstitutionComputeCosts(ctx: PeMutationContext, workId
   [ctx.auth.tenantId, principal(ctx), workId])).rows[0], true);
   const episodeIds = [...new Set([compilerEpisodeId, ...(native ? [native.id] : [])])];
   const history = await listStoredWorkCompute(ctx, { workId, episodeIds, schema: "finnor.x1.native-compute.v1" });
+  const apiHistory=await listStoredWorkCompute(ctx,{workId,episodeIds:[compilerEpisodeId],schema:'finnor.x1.api-compute.v1'});
   const seen = new Set<string>(), gaps: string[] = [], phases = new Map<string, { deliveries: number; attributedElapsedMs: number }>();
   const refs: Array<{ owner: "S7"; id: string; version: string; contentDigest: string }> = [];
   let attributedElapsedMs = 0, sampledProcessRssBytes = 0, rssSamples = 0;
@@ -80,12 +82,46 @@ export async function readInstitutionComputeCosts(ctx: PeMutationContext, workId
         AND e.kind LIKE '%METER_GAP' LIMIT 1025`,
   [ctx.auth.tenantId, principal(ctx), workId, compilerEpisodeId, episodeIds])).rows, true);
   if (!history.complete) gaps.push(history.reason!);
+  const apiIdentities=new Set<string>();let apiElapsedMs=0;
+  for(const record of apiHistory.records){
+    const p=record.payload;
+    refs.push(record.ref);
+    if(p.workId!==workId||p.episodeId!==compilerEpisodeId||!physicalUuid.test(String(p.invocationId))
+      ||typeof p.elapsedMs!=='number'||!Number.isFinite(p.elapsedMs)||p.elapsedMs<0
+      ||typeof p.operation!=='string'||!Number.isInteger(p.statusCode)||apiIdentities.has(String(p.invocationId))){
+      gaps.push('X1_API_MEASUREMENT_INVALID:'+record.ref.id);continue;
+    }
+    apiIdentities.add(String(p.invocationId));apiElapsedMs+=p.elapsedMs;
+  }
+  if(!apiHistory.complete)gaps.push(apiHistory.reason!);
+  if(apiIdentities.size)phases.set('AUTHENTICATED_API',{deliveries:apiIdentities.size,attributedElapsedMs:apiElapsedMs});
   if (meterGaps.length > 1024) gaps.push("X1_COMPUTE_METER_GAP_HISTORY_BOUND");
   return { basis: "EXISTING_S7_IMMUTABLE_PHYSICAL_DELIVERY_RECORDS", recordRefs: refs,
-    registeredDeliveryPhases: seen.size, attributedElapsedMs, phases: Object.fromEntries(phases),
+    registeredDeliveryPhases: seen.size, apiInvocations:apiIdentities.size,
+    attributedElapsedMs:attributedElapsedMs+apiElapsedMs, phases: Object.fromEntries(phases),
     sampledProcessRssBytes: rssSamples ? sampledProcessRssBytes : null,
     aggregatePeakMemoryBytes: null, monetaryCost: null, humanSeconds: null,
     coverage: "REGISTERED_NATIVE_COMPUTE_ONLY_OTHER_COSTS_UNKNOWN",
     status: "PARTIAL", gaps, meterGapEvents: meterGaps.slice(0, 1024),
     originalEpisodeIds: episodeIds, fullCostOrCapacityEstablished: false };
+}
+
+/** Physical HTTP-owner work is distinct from a queue delivery. The caller never
+ * supplies an invocation identity and cannot reset the original compiler parent. */
+export async function persistInstitutionApiCompute(ctx:PeMutationContext,input:{workId:string;
+  requestId:string;episodeId:string;parentReservation:{owner:string;id:string;version:string;contentDigest:string}|null;
+  rightsRevision:string;operation:string;statusCode:number;startedAt:string;elapsedMs:number}){
+  const invocationId=randomUUID();
+  if(!physicalUuid.test(input.workId)||!physicalUuid.test(input.requestId)||!physicalUuid.test(input.episodeId)
+    ||input.operation.length>128||!Number.isInteger(input.statusCode)||input.statusCode<100||input.statusCode>599
+    ||!Number.isFinite(input.elapsedMs)||input.elapsedMs<0)throw Error('X1_ACTUAL_API_MEASUREMENT_REQUIRED');
+  return persistEconomicRecord(ctx,{kind:'COMPUTE',rightsRef:`authority:${ctx.auth.tenantId}:${input.rightsRevision}`,
+    idempotencyKey:'x1-api-compute:'+invocationId,semanticRequestDigest:sha(['x1-api-compute-v1',invocationId,input]),
+    validAt:input.startedAt,horizon:'H0',uncertainty:'Measured API work; prices, meter-writer, aggregate memory and human supervision incomplete',
+    dependencies:input.parentReservation?[input.parentReservation]:[],payload:{schema:'finnor.x1.api-compute.v1',
+      ...input,invocationId,phase:'AUTHENTICATED_API',process:{pid:process.pid,node:process.version,
+        rssBytesAtObservation:process.memoryUsage().rss},money:null,humanSeconds:null,aggregatePeakMemoryBytes:null,
+      meterWriterLatency:'UNOBSERVED_REQUIRES_EXTERNAL_LIFECYCLE_COLLECTOR',
+      businessWorkCredit:0,costAllocation:'ONCE_PER_PHYSICAL_API_INVOCATION_UNDER_ORIGINAL_WORK_PARENT',
+      qualification:'COMPUTE_ATTRIBUTION_NOT_FINANCIAL_VALUE_OR_CAPACITY_PROOF'}});
 }
