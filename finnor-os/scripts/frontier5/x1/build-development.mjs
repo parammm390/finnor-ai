@@ -19,7 +19,7 @@ const capacity = statfsSync(root, { bigint: true });
 if (capacity.bavail * capacity.bsize < BigInt(limits.finalBuildMinimumFreeBytes)) throw Error('X1_FINAL_BUILD_CAPACITY_REFUSED');
 const timer = setTimeout(() => { console.error('X1_FINAL_BUILD_WALL_BOUND'); process.exit(1); }, limits.finalBuildWallSeconds * 1000);
 const digest = value => createHash('sha256').update(value).digest('hex');
-const git = (...argv) => execFileSync('git', argv, { cwd: root, encoding: 'utf8', timeout: 10_000, maxBuffer: 16 * 1024 * 1024 }).trim();
+const git = (...argv) => execFileSync('git', argv, { cwd: root, encoding: 'utf8', timeout: 10_000, maxBuffer: 16 * 1024 * 1024 }).trimEnd();
 const frozen = { commit: git('rev-parse', 'HEAD'), tree: git('rev-parse', 'HEAD^{tree}'), dirty: git('status', '--porcelain=v1', '-uall') };
 if (frozen.dirty.split('\n').filter(Boolean).some(line => line.slice(3) !== 'AGENTS.md')) throw Error('X1_BUILD_REQUIRES_COMMITTED_PRODUCT_SOURCE');
 await mkdir(output, { mode: 0o700 });
