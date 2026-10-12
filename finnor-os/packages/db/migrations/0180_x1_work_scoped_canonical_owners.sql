@@ -37,6 +37,7 @@ BEGIN
     THEN RAISE EXCEPTION 'X1_CANONICAL_WORK_SCOPE_INVALID'; END IF;
     -- A real current Work link and its principal scope are owner evidence.
     -- Source text cannot select a Work or issue this immutable owner witness.
+    IF p_lock THEN
     PERFORM l.id FROM finnor_os.work_entity_links l JOIN finnor_os.works w
       ON w.tenant_id=l.tenant_id AND w.id=l.work_id
       JOIN finnor_os.users u ON u.tenant_id=w.tenant_id AND u.id=w.created_by
@@ -44,6 +45,15 @@ BEGIN
         AND l.entity_type=parts[1] AND l.entity_id=parts[2]::uuid
         AND w.created_by=nullif(current_setting('app.user_id',true),'')::uuid
         AND u.status='active' FOR SHARE OF l,w,u;
+    ELSE
+    PERFORM l.id FROM finnor_os.work_entity_links l JOIN finnor_os.works w
+      ON w.tenant_id=l.tenant_id AND w.id=l.work_id
+      JOIN finnor_os.users u ON u.tenant_id=w.tenant_id AND u.id=w.created_by
+      WHERE l.tenant_id=t AND l.work_id=(binding->'ownerWitness'->>'workScope')::uuid
+        AND l.entity_type=parts[1] AND l.entity_id=parts[2]::uuid
+        AND w.created_by=nullif(current_setting('app.user_id',true),'')::uuid
+        AND u.status='active';
+    END IF;
     IF NOT FOUND THEN RAISE EXCEPTION 'X1_CANONICAL_WORK_SCOPE_CHANGED'; END IF;
     query_text:='SELECT to_jsonb(o) FROM finnor_os.'||quote_ident(tab)||' o
       WHERE tenant_id=$1 AND id=$2 AND external_id=$3 AND '||predicate||lock_suffix;
