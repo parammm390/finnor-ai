@@ -44,6 +44,7 @@ type DutyPopulation = {
   dutyPopulationDigest: string;
   sourceCoverageGaps?: SourceCoverageGap[];
   sourceScopes?: OriginalInstitutionEvidence['current']['sourceScopes'];
+  responsiblePrincipals?:OriginalInstitutionEvidence['current']['responsiblePrincipals'];
 };
 export function verifyInstitutionDutyPopulation(
   programme: DutyPopulation, responsibilities: InstitutionResponsibility[],
@@ -51,6 +52,7 @@ export function verifyInstitutionDutyPopulation(
 ): string {
   const digest = hash(["x1-checked-duty-population-v1", programme.admission,
     responsibilities, unresolved,...(programme.sourceScopes?[{sourceScopes:programme.sourceScopes}]:[]),
+    ...(programme.responsiblePrincipals?[{responsiblePrincipals:programme.responsiblePrincipals}]:[]),
     ...(programme.sourceCoverageGaps?.length?[programme.sourceCoverageGaps]:[])]);
   if (programme.dutyPopulationDigest !== digest)
     throw new Error("X1_P1_CHECKED_DUTY_POPULATION_MISMATCH");
@@ -93,6 +95,8 @@ export function deriveInstitutionResponsibilities(input: Input) {
     const reason = unsupportedFields.length ? "X1_RULE_MEANING_UNSUPPORTED"
       : !admittedCanonicalRefs.includes(obligation.subjectRef)
       ? "X1_SUBJECT_NOT_ESTABLISHED_CANONICAL_FACT"
+      :original.current.responsiblePrincipals&&!original.current.responsiblePrincipals.some(p=>p.principalId===rule.principalId&&p.active)
+        ?'X1_RESPONSIBLE_PRINCIPAL_UNAVAILABLE'
       : !authorizedOperations.includes(rule.operation) || !profile.ordinaryOperations.includes(rule.operation)
         ? "X1_OPERATION_NOT_CURRENTLY_AUTHORIZED"
         : !(rule.operation in observerEntity)
@@ -152,12 +156,14 @@ export function deriveInstitutionResponsibilities(input: Input) {
     qualification: "TYPED_OWNER_PROGRESSION_NOT_NUMERIC_S4_NOT_S3_CAUSAL" as const,
     executionAuthorityGranted: false as const, protectedReceipt: null,
     ...(original.current.sourceScopes?{sourceScopes:original.current.sourceScopes}:{}),
+    ...(original.current.responsiblePrincipals?{responsiblePrincipals:original.current.responsiblePrincipals}:{}),
     ...(candidate.sourceCoverageGaps?.length?{sourceCoverageGaps:candidate.sourceCoverageGaps}:{}),
   };
   const programme = { ...programmeBody,
     dutyPopulationDigest: hash(["x1-checked-duty-population-v1",
       programmeBody.admission, responsibilities, unresolved,
       ...(original.current.sourceScopes?[{sourceScopes:original.current.sourceScopes}]:[]),
+      ...(original.current.responsiblePrincipals?[{responsiblePrincipals:original.current.responsiblePrincipals}]:[]),
       ...(candidate.sourceCoverageGaps?.length?[candidate.sourceCoverageGaps]:[])]) };
   return { programme, responsibilities, unresolved };
 }

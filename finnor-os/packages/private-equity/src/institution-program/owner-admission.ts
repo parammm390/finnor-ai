@@ -126,6 +126,9 @@ export async function loadInstitutionAdmissionOriginal(
       sourceRevisions: Object.fromEntries(retained.map((source) => [source.id, source.revision])),
       sourceDigests: Object.fromEntries(retained.map((source) => [source.id, source.originalSha256])),
       sourceScopes:retained.map(source=>source.sourceScopePin),
+      responsiblePrincipals:await withTenantTransaction(ctx.auth.tenantId,{userId:ctx.auth.userId,readOnly:true},
+        async(_db,c)=>(await c.query<{scope:OriginalInstitutionEvidence['current']['responsiblePrincipals']}>(
+          'SELECT finnor_os.x1_responsible_principal_scope($1) scope',[workId])).rows[0]!.scope),
       sensitiveSubjects:retained.filter(source=>source.sensitiveSubjectRegistrations).map(source=>({
         sourceId:source.id,institutionId:source.institutionId,sourceClass:source.sourceClass,
         purpose:source.purpose,registrations:source.sensitiveSubjectRegistrations!})),
@@ -345,7 +348,8 @@ async function admitCheckedInstitutionMappings(
       sources.map((source) => source.grantId), profile);
     if (current.original.current.rightsRevision !== original.current.rightsRevision
         || current.original.current.checkerRevision !== acceptedCheck.checkerRevision
-        || JSON.stringify(current.original.current.sourceScopes)!==JSON.stringify(original.current.sourceScopes)) {
+        || JSON.stringify(current.original.current.sourceScopes)!==JSON.stringify(original.current.sourceScopes)
+        || JSON.stringify(current.original.current.responsiblePrincipals)!==JSON.stringify(original.current.responsiblePrincipals)) {
       throw new Error("X1_ADMISSION_REPLAY_STALE_RIGHTS_OR_CHECKER");
     }
     await withTenantTransaction(ctx.auth.tenantId, { userId: ctx.auth.userId, readOnly: true }, async (_db, client) => {
@@ -427,6 +431,8 @@ async function admitCheckedInstitutionMappings(
   }
   return peTransaction(ctx, async (db, client) => {
     await lockInstitutionSourceAuthority(ctx,client,original.workId,sources.map(source=>source.grantId));
+    await client.query('SELECT finnor_os.x1_assert_responsible_principals($1,$2::jsonb)',
+      [original.workId,JSON.stringify(original.current.responsiblePrincipals)]);
     await client.query('SELECT finnor_os.x1_assert_source_scopes($1,$2::jsonb,$3::uuid[])',
       [original.workId,JSON.stringify(original.current.sourceScopes),sources.map(source=>source.grantId)]);
     const rights = await client.query<{ revision: number }>(

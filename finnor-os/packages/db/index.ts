@@ -1081,6 +1081,9 @@ export async function assertInstitutionPlanContinuationTx(db: Db, params: {
     q.input_manifest->'current'->'sourceScopes',ARRAY(SELECT jsonb_array_elements_text(q.grant_ids)::uuid))
     FROM finnor_os.x1_compiler_requests q WHERE q.tenant_id=${params.tenantId}::uuid
       AND q.work_id=${params.workId}::uuid AND q.id=${params.compilerRequestId}::uuid`);
+  await db.execute(sql`SELECT finnor_os.x1_assert_responsible_principals(${params.workId}::uuid,
+    q.input_manifest->'current'->'responsiblePrincipals') FROM finnor_os.x1_compiler_requests q
+    WHERE q.tenant_id=${params.tenantId}::uuid AND q.work_id=${params.workId}::uuid AND q.id=${params.compilerRequestId}::uuid`);
   const result=await db.execute(sql`SELECT q.id::text compiler_request_id,parent.id::text parent_request_id,
       q.episode_id::text episode_id,p.id::text prior_program_id
     FROM finnor_os.x1_compiler_requests q

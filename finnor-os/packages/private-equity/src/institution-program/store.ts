@@ -262,6 +262,8 @@ export async function assertInstitutionCompilerCurrent(ctx: PeMutationContext, q
       `, [q.tenant_id, q.principal_id, q.work_id, q.grant_ids])).rows;
     if (grants.length !== q.grant_ids.length) throw Error("X1_SOURCE_GRANT_REVOKED_OR_SUPERSEDED");
     if (manifest) {
+      await client.query('SELECT finnor_os.x1_assert_responsible_principals($1,$2::jsonb)',
+        [q.work_id,stable(manifest.responsiblePrincipals)]);
       await client.query('SELECT finnor_os.x1_assert_source_scopes($1,$2::jsonb,$3::uuid[])',
         [q.work_id,stable(manifest.sourceScopes),q.grant_ids]);
       await client.query("SELECT finnor_os.x1_assert_canonical_owner_cut($1::jsonb,$2)",

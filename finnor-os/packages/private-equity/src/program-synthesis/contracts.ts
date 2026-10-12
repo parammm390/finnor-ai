@@ -54,6 +54,8 @@ export const InstitutionHarnessRequestSchema=z.object({
     admission:z.object({originalDigest:z.string().regex(/^[a-f0-9]{64}$/),
       candidateDigest:z.string().regex(/^[a-f0-9]{64}$/),checkerDigest:z.string().min(1)}).passthrough(),
     dutyPopulationDigest:z.string().regex(/^[a-f0-9]{64}$/),
+    responsiblePrincipals:z.array(z.object({principalId:uuid,active:z.boolean(),status:z.string().nullable(),
+      role:z.string().nullable()}).strict()).min(1).max(128).optional(),
     sourceScopes:z.array(z.object({grantId:uuid,digest:z.string().regex(/^[a-f0-9]{64}$/),
       originalReadAllowed:z.boolean()}).strict()).min(1).max(16).optional(),
     sourceCoverageGaps:z.array(z.object({sourceId:z.string().min(1),grantId:uuid,

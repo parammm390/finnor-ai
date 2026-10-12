@@ -42,6 +42,7 @@ export type OriginalInstitutionEvidence = {
     authorizedOperations: string[];
     sourceDigests?: Record<string, string>;
     sourceScopes?: Array<{grantId:string;digest:string;originalReadAllowed:boolean}>;
+    responsiblePrincipals?: Array<{principalId:string;active:boolean;status:string|null;role:string|null}>;
     canonicalOwners?: OriginalInstitutionEvidence["canonical"]["entities"];
     methodCapability?: {schema:'finnor.s8.institution-consumer-binding.v1';
       revisionRef:{owner:string;id:string;version:string;contentDigest:string};
@@ -61,7 +62,7 @@ type Obligation = {
   trigger: string; sourceId: string; recordId: string; occurredAt: string; availableAt: string;
   subjectRef: string; ruleId: string; deadlineAt: string; principalId: string;
   operation: string; materiality: string; postconditionRef: string; observerRef: string;
-  nonExecutable?:'OUTSIDE_PROFILE'|'CURRENT_AUTHORITY_UNAVAILABLE';
+  nonExecutable?:'OUTSIDE_PROFILE'|'CURRENT_AUTHORITY_UNAVAILABLE'|'CURRENT_RESPONSIBLE_PRINCIPAL_UNAVAILABLE';
 };
 export type InstitutionCandidate = {
   tenantId: string; institutionId: string; workId: string; principalId: string;
@@ -488,6 +489,14 @@ export async function independentlyCheckInstitutionModel(
     return fail("CURRENTNESS", "Checker/source/mandate/owner/runtime dependency revision is stale");
   }
   const obligations = new Map(candidate.obligations.map((item) => [obligationKey(item.sourceId, item.recordId, item.ruleId), item]));
+  if(current.responsiblePrincipals){
+    const pins=current.responsiblePrincipals;
+    if(!Array.isArray(pins)||!unique(pins.map(p=>p.principalId))
+      ||!same(pins.map(p=>p.principalId).sort(),[...new Set(mandate.rules.map(r=>r.principalId))].sort())
+      ||pins.some(p=>typeof p.active!=='boolean'||p.active!==(p.status==='active')
+        ||p.status!==null&&typeof p.status!=='string'||p.role!==null&&typeof p.role!=='string'))
+      return fail('SOURCE_AUTHORITY','Native responsible-principal population is incomplete or inconsistent');
+  }
   if (obligations.size !== candidate.obligations.length) return fail("OBLIGATION", "Duplicate trigger obligation");
   const expected = new Map<string, Obligation>();
   for (const [key, { source, record }] of triggers) {
@@ -506,6 +515,8 @@ export async function independentlyCheckInstitutionModel(
       const trigger = witness(source.id, record.id);
       const identity = obligationKey(source.id, record.id, rule.id);
       const withheld=!profile.ordinaryOperations.includes(rule.operation)?'OUTSIDE_PROFILE'
+        :current.responsiblePrincipals&&!current.responsiblePrincipals.some(p=>p.principalId===rule.principalId&&p.active)
+          ?'CURRENT_RESPONSIBLE_PRINCIPAL_UNAVAILABLE'
         :!current.authorizedOperations.includes(rule.operation)?'CURRENT_AUTHORITY_UNAVAILABLE':null;
       expected.set(identity, { trigger, sourceId: source.id, recordId: record.id,
         occurredAt: record.occurredAt, availableAt: record.availableAt, subjectRef: ref, ruleId: rule.id,

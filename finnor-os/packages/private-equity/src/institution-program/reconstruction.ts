@@ -212,6 +212,8 @@ export async function proposeInstitutionModel(
     const triggerKind = item.data.triggerKind;
     for (const rule of original.mandate.rules.filter((entry) => entry.triggerKind === triggerKind)) {
       const withheld=!profile.ordinaryOperations.includes(rule.operation)?'OUTSIDE_PROFILE'
+        :original.current.responsiblePrincipals&&!original.current.responsiblePrincipals.some(p=>p.principalId===rule.principalId&&p.active)
+          ?'CURRENT_RESPONSIBLE_PRINCIPAL_UNAVAILABLE'
         :!original.current.authorizedOperations.includes(rule.operation)?'CURRENT_AUTHORITY_UNAVAILABLE':null;
       obligations.push({ trigger: key(item.row.sourceId, item.row.objectId),
         sourceId: item.row.sourceId, recordId: item.row.objectId, subjectRef: item.ref!,

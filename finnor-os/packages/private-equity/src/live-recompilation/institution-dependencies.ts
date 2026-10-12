@@ -50,7 +50,10 @@ export function buildInstitutionDependencyGraph(candidate: InstitutionCandidate,
         materiality: d.materiality, originalDeadline: d.originalDeadline, operation: d.permissibleOperationClass,
         principal: d.responsiblePrincipal, postcondition: d.postcondition.contractRef, observer: d.independentObserver.ref }),
       ...d.preconditions.map(p => add(key("canonical", p.ref), "CANONICAL", p)),
-      add(key("principal", d.responsiblePrincipal), "PRINCIPAL", d.responsiblePrincipal),
+      add(key("principal", d.responsiblePrincipal), "PRINCIPAL",
+        candidate.dependencies.responsiblePrincipals
+          ?(candidate.dependencies.responsiblePrincipals as Array<{principalId:string}>).find(p=>p.principalId===d.responsiblePrincipal)
+          :d.responsiblePrincipal),
       add(key("operation", d.permissibleOperationClass), "OPERATION", d.permissibleOperationClass),
     ];
     for (const from of dependencies) edges.set(key("edge", from, target), { from, to: target });
