@@ -38,7 +38,8 @@ const ClaimBase = z.object({
 export const ObservedClaim = ClaimBase.extend({ basis: z.literal("observed"), sourceRef: NonEmpty }).strict();
 export const InferredClaim = ClaimBase.extend({ basis: z.literal("inferred"), alternatives: z.array(NonEmpty), checkRef: Binding }).strict();
 export const PredictedClaim = ClaimBase.extend({ basis: z.literal("predicted"), modelRef: Binding, falsifier: NonEmpty }).strict();
-export const UnresolvedClaim = ClaimBase.extend({ basis: z.literal("unresolved"), reason: NonEmpty, requiredOwnerOrInput: NonEmpty, affectedRefs: z.array(NonEmpty) }).strict();
+export const UnresolvedClaim = ClaimBase.extend({ basis: z.literal("unresolved"), reason: NonEmpty,
+  requiredOwnerOrInput: NonEmpty, affectedRefs: z.array(NonEmpty),alternatives:z.array(NonEmpty).max(8).optional() }).strict();
 export const ExactQuantity = z.object({
   decimal: z.string().regex(/^-?(?:0|[1-9]\d*)(?:\.\d+)?$/),
   currency: NonEmpty,
