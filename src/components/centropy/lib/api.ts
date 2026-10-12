@@ -7,7 +7,7 @@
 // owner key from localStorage for repeated product testing without creating users; it
 // is disabled unless NEXT_PUBLIC_CENTROPY_TEST_MODE=1.
 
-import { getCurrentAccessToken } from "./centropy-auth"
+import { getCurrentAccessToken, getCurrentAccessGeneration, rejectCurrentWorkspaceAccess } from "./centropy-auth"
 import { mutationProjectionTags, publishBusinessInvalidation } from "./business-invalidation"
 import { resolveProductRoute } from "@/lib/centropy/capability-manifest"
 
@@ -116,6 +116,8 @@ async function centropyRequest<T>(method: CentropyMethod, path: string, body?: u
   const timeoutMs = method === "GET" ? CENTROPY_GET_TIMEOUT_MS : CENTROPY_MUTATION_TIMEOUT_MS
   const timeoutId = globalThis.setTimeout(() => controller.abort(), timeoutMs)
   const auth = authHeaders()
+  const accessGeneration = getCurrentAccessGeneration()
+  const credential = auth?.authorization?.replace(/^Bearer /, "")
   try {
     if (method !== "GET" && !auth) {
       status = 401
@@ -132,7 +134,11 @@ async function centropyRequest<T>(method: CentropyMethod, path: string, body?: u
       signal: controller.signal,
     })
     status = res.status
+    if (credential && (res.status === 401 || res.status === 403 && res.headers.get("x-finnor-identity-state") === "denied"))
+      rejectCurrentWorkspaceAccess(credential, accessGeneration)
     const value = await readJson<T>(res, method, path)
+    if (credential && (getCurrentAccessGeneration() !== accessGeneration || getCurrentAccessToken() !== credential))
+      throw new CentropyApiError("Response from an earlier authenticated workspace was discarded", 401, false)
     if (method !== "GET") {
       publishBusinessInvalidation({ tags: mutationProjectionTags(path, method), source: "mutation", path })
     }
@@ -156,7 +162,7 @@ const pendingReads = new Map<string, Promise<unknown>>()
 /** Share concurrent canonical reads within one exact authenticated session.
  * No resolved response is cached, and writes always retain their own request. */
 function sharedRead<T>(method: "GET" | "POST", path: string, body?: unknown, params?: Record<string, string>): Promise<T> {
-  const key = JSON.stringify([authHeaders(), method, path, body, params])
+  const key = JSON.stringify([getCurrentAccessGeneration(), authHeaders(), method, path, body, params])
   const existing = pendingReads.get(key)
   if (existing) return existing as Promise<T>
   const request = centropyRequest<T>(method, path, body, params)
@@ -189,13 +195,18 @@ export async function centropyDownload(path: string, fileName: string, params: R
   let status = 0
   const controller = new AbortController()
   const timer = globalThis.setTimeout(() => controller.abort(), CENTROPY_GET_TIMEOUT_MS)
+  const accessGeneration = getCurrentAccessGeneration(), credential = getCurrentAccessToken()
   try {
     const response = await fetch(`/api/centropy/${path}?${new URLSearchParams(params)}`, {
       headers: authHeaders(), cache: "no-store", signal: controller.signal,
     })
     status = response.status
+    if (credential && (response.status === 401 || response.status === 403 && response.headers.get("x-finnor-identity-state") === "denied"))
+      rejectCurrentWorkspaceAccess(credential, accessGeneration)
     if (!response.ok) await readJson(response, "GET", path)
     const bytes = await response.blob()
+    if (credential && (getCurrentAccessGeneration() !== accessGeneration || getCurrentAccessToken() !== credential))
+      throw new CentropyApiError("Download from an earlier authenticated workspace was discarded", 401, false)
     const href = URL.createObjectURL(bytes)
     const link = document.createElement("a")
     link.href = href

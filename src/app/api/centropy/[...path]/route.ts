@@ -142,6 +142,8 @@ async function doForward(
       headers: {
         "content-type": upstream.headers.get("content-type") ?? "application/json",
         "cache-control": "no-store",
+        ...([401,403].includes(upstream.status)&&upstream.headers.get("x-finnor-identity-state")==="denied"
+          ?{"x-finnor-identity-state":"denied"}:{}),
         ...(upstream.headers.get("content-disposition") ? { "content-disposition": upstream.headers.get("content-disposition")! } : {}),
         ...(upstream.headers.get("retry-after") ? { "retry-after": upstream.headers.get("retry-after")! } : {}),
       },

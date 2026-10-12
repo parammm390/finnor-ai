@@ -20,14 +20,32 @@ export type CentropyRole = "owner"
 // (api.ts isn't a component) that always reflects the latest session from the one
 // Supabase client instance's in-memory state.
 let currentSession: Session | null = null
+let rejectedCredential: string | null = null
+let accessGeneration = 0
+const rejectionListeners = new Set<(reason: string) => void>()
+function adoptSession(next: Session | null): void {
+  if (next?.access_token !== currentSession?.access_token || next?.user.id !== currentSession?.user.id) {
+    accessGeneration++
+    rejectedCredential = null
+  }
+  currentSession = next
+}
+export const getCurrentAccessGeneration = () => accessGeneration
+export function rejectCurrentWorkspaceAccess(credential: string, expectedGeneration: number): void {
+  if (currentSession?.access_token !== credential || accessGeneration !== expectedGeneration
+    || rejectedCredential === credential) return
+  rejectedCredential = credential
+  accessGeneration++
+  rejectionListeners.forEach(listener => listener("Your workspace access is no longer available. Retry verification or sign in again."))
+}
 export function getCurrentAccessToken(): string | null {
-  return currentSession?.access_token ?? null
+  return currentSession?.access_token && currentSession.access_token !== rejectedCredential ? currentSession.access_token : null
 }
 export function hasActiveSession(): boolean {
-  return currentSession !== null
+  return getCurrentAccessToken() !== null
 }
 export function getCurrentSessionKey(): string | null {
-  return currentSession ? `${currentSession.user.id}:${currentSession.access_token}` : null
+  return currentSession && getCurrentAccessToken() ? `${currentSession.user.id}:${accessGeneration}:${currentSession.access_token}` : null
 }
 
 export const CENTROPY_AUTH_BOOTSTRAP_TIMEOUT_MS = 10_000
@@ -80,6 +98,17 @@ export function CentropyAuthProvider({ children }: { children: React.ReactNode }
   const resolvedRoleUserIdRef = useRef<string | null>(null)
 
   useEffect(() => {
+    const rejected = (reason: string) => {
+      resolvedRoleUserIdRef.current = null
+      setRole(null)
+      setRoleLoading(false)
+      setRoleError(reason)
+    }
+    rejectionListeners.add(rejected)
+    return () => { rejectionListeners.delete(rejected) }
+  }, [])
+
+  useEffect(() => {
     let active = true
     let unsubscribe: (() => void) | null = null
     setLoading(true)
@@ -91,18 +120,18 @@ export function CentropyAuthProvider({ children }: { children: React.ReactNode }
         const { data, error } = await withTimeout(supabaseBrowser.auth.getSession())
         if (error) throw error
         if (!active) return
-        currentSession = data.session
+        adoptSession(data.session)
         setSession(data.session)
         const { data: sub } = supabaseBrowser.auth.onAuthStateChange((_event, next) => {
           if (!active) return
-          currentSession = next
+          adoptSession(next)
           setSession((previous) => previous?.user.id === next?.user.id && previous?.access_token === next?.access_token ? previous : next)
           setAuthError(null)
         })
         unsubscribe = () => sub.subscription.unsubscribe()
       } catch (error) {
         if (!active) return
-        currentSession = null
+        adoptSession(null)
         setSession(null)
         setAuthError(error instanceof Error ? error.message : "Authentication could not be restored.")
       } finally {
@@ -157,7 +186,16 @@ export function CentropyAuthProvider({ children }: { children: React.ReactNode }
     }
   }, [session, roleRetry])
 
-  const retryRole = useCallback(() => setRoleRetry((value) => value + 1), [])
+  const retryRole = useCallback(() => {
+    // A retry may revalidate restored rights, but cannot show old private data
+    // while that check is pending or reuse responses from the prior generation.
+    rejectedCredential = null
+    accessGeneration++
+    resolvedRoleUserIdRef.current = null
+    setRole(null)
+    setRoleLoading(true)
+    setRoleRetry(value => value + 1)
+  }, [])
   const retryAuth = useCallback(() => {
     setLoading(true)
     setAuthRetry((value) => value + 1)

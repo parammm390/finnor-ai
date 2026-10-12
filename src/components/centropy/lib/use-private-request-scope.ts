@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useRef } from "react"
-import { useCentropyAuth } from "./centropy-auth"
+import { getCurrentAccessToken, useCentropyAuth } from "./centropy-auth"
 
 /** Monotone browser cache identity. A→B→A gets a new generation; credentials
  * stay in memory and are never part of a rendered key or public projection. */
@@ -16,6 +16,7 @@ export function usePrivateRequestScope(resourceIdentity: string) {
     state.current = { credential, principal, resourceIdentity, allowed, serial: state.current.serial + 1, key: "" }
   }
   state.current.key = `${principal}:${state.current.serial}:${resourceIdentity}:${allowed ? "open" : "closed"}`
-  const isCurrent = useCallback((key: string) => state.current.key === key && state.current.allowed, [])
+  const isCurrent = useCallback((key: string) => state.current.key === key && state.current.allowed
+    && getCurrentAccessToken() === state.current.credential, [])
   return { key: state.current.key, isCurrent, allowed }
 }

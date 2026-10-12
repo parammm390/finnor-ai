@@ -96,3 +96,31 @@ this measurement alone does not attribute all shared growth. Use installed Next
 16's documented `turbopackFileSystemCacheForDev:false` to avoid retaining cache
 for each fresh disposable browser/auth origin. Keep build settings and the
 original heap, memory, disk and wall bounds intact. Retain that failed setup.
+
+Run 034 passed mounted initial/revision completion and Work switching. Actual
+principal suspension returned an access denial and cleared the institution panel,
+but the surrounding Canvas retained its private Work, receipt and source context.
+The held response was released after 72.8 seconds, beyond the unchanged 20-second
+proxy read budget, so late-successful-delivery protection was not proven.
+
+Identity rejection must invalidate the entire current authenticated workspace
+immediately, fence all older HTTP responses and in-flight private reads, and
+require current role verification before restoring a same-session retry. Use an
+explicit identity-denied header from actual bearer/principal resolution; ordinary
+capability refusals must retain their normal scope and must not sign out another
+valid session. A stale denial from another credential/generation cannot close the
+current one. Do not expose tokens in UI, logs or evidence.
+
+The affected mounted proof must release its real held 200 response within the
+existing 20-second proxy budget, after the actual fresh denial has rendered, and
+show the WHOLE workspace closed with no private old Canvas or late resurrection.
+Capture the actual held/released timestamps and response delivery state. Do not
+substitute a timeout or sign-out action for this revocation predicate.
+
+To avoid crossing that read deadline during tool round trips, the fixture's
+`delay-and-revoke` mode revokes only AFTER capturing the real successful read.
+The browser requests fresh metadata, saves its actual closed-workspace state and
+an exact source/Work acknowledgement; the existing observer releases the old read
+within its one-second loop after that acknowledgement. Independent timestamps
+must still establish delivery inside twenty seconds. The controller uses its own
+PostgreSQL connection so it cannot share the observer's in-flight query client.

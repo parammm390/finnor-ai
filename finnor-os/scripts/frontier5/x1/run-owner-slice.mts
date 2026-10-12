@@ -55,8 +55,10 @@ let service: Awaited<ReturnType<typeof authenticatedApiFixture>> | undefined, wo
 let frontend:ReturnType<typeof spawn>|undefined;
 let mountedControl:Server|undefined;
 let mountedRevisionVerified=false;
+let revokeOnHeldRead=false,heldReadReleased=false;
 let delayedRead:{entered:boolean;requestId:string|null;status:number|null;promise:Promise<void>;release:()=>void}|null=null;
 const releaseDelayedRead=()=>delayedRead?.release();
+const readDelayedRead=()=>delayedRead;
 let peakOwnedRssBytes = 0, guard: NodeJS.Timeout | undefined;
 const save = async (name: string, body: unknown) => writeFile(join(evidence, name), JSON.stringify(body, null, 2) + "\n", { mode: 0o600 });
 const tenant = randomUUID(), actor = randomUUID(), institutionId = "unseen-local-" + randomUUID();
@@ -133,12 +135,22 @@ try {
   await admin.query(`INSERT INTO finnor_os.x1_work_mandates(tenant_id,principal_id,work_id,institution_id,revision,rules,valid_from,expires_at)
     VALUES($1,$2,$3,$4,'r1',$5::jsonb,clock_timestamp()-interval '1 minute',clock_timestamp()+interval '1 hour')`, [tenant, actor, workId, institutionId, JSON.stringify([rule])]);
   const frontendPort=mounted?await freePort():null,frontendOrigin=frontendPort?'http://127.0.0.1:'+frontendPort:null;
+  const revokeFixturePrincipal=async()=>{
+    const controlDb=new pg.Client({connectionString:connection('x1_fixture',password)});
+    try{await controlDb.connect();const rows=(await controlDb.query(`UPDATE finnor_os.users SET status='suspended'
+      WHERE tenant_id=$1 AND id=$2 RETURNING id,status`,[tenant,actor])).rows;
+      await save('mounted-actual-principal-revocation.json',{at:new Date().toISOString(),rows,
+        authority:(await controlDb.query('SELECT revision FROM finnor_os.authority_states WHERE tenant_id=$1',[tenant])).rows});
+      return rows.length===1;
+    }finally{await controlDb.end();}
+  };
   service = await authenticatedApiFixture(repo, actor, entry => traffic.push(entry),
     frontendOrigin?{frontendOrigin,afterResponse:async(path,body,status)=>{
       if(path==='/api/company-brain/institution-read'&&mountedRevisionVerified&&delayedRead&&!delayedRead.entered){
         delayedRead.entered=true;delayedRead.requestId=JSON.parse(body).requestId;delayedRead.status=status;
         await save('mounted-delayed-response-entered.json',{at:new Date().toISOString(),
           requestId:delayedRead.requestId,status,actualHandlerCompleted:true});
+        if(revokeOnHeldRead)await revokeFixturePrincipal();
         await delayedRead.promise;
       }
     }}:{});
@@ -250,21 +262,18 @@ try {
       res.setHeader('content-type','application/json');
       if(req.headers.authorization!=='Bearer '+controlKey){res.writeHead(401);res.end('{}');return;}
       try{
-        if(req.method==='POST'&&req.url==='/delay'){
+        if(req.method==='POST'&&['/delay','/delay-and-revoke'].includes(req.url??'')){
           if(!mountedRevisionVerified){res.writeHead(409);res.end('{"predicate":"WAIT_FOR_CANONICAL_REVISION_COMPLETION"}');return;}
           if(delayedRead)throw Error('ONE_RETAINED_READ_ONLY');
           let release!:()=>void;const promise=new Promise<void>(resolve=>{release=resolve;});
+          revokeOnHeldRead=req.url==='/delay-and-revoke';
           delayedRead={entered:false,requestId:null,status:null,promise,release};res.end('{}');return;
         }
         if(req.url==='/delay-status'){res.end(JSON.stringify({entered:delayedRead?.entered??false,
           requestId:delayedRead?.requestId??null,status:delayedRead?.status??null}));return;}
         if(req.method==='POST'&&req.url==='/release'){delayedRead?.release();res.end('{}');return;}
         if(req.method==='POST'&&req.url==='/revoke'){
-          const rows=(await admin!.query(`UPDATE finnor_os.users SET status='suspended'
-            WHERE tenant_id=$1 AND id=$2 RETURNING id,status`,[tenant,actor])).rows;
-          await save('mounted-actual-principal-revocation.json',{at:new Date().toISOString(),rows,
-            authority:(await admin!.query('SELECT revision FROM finnor_os.authority_states WHERE tenant_id=$1',[tenant])).rows});
-          res.end(JSON.stringify({revoked:rows.length===1}));return;
+          res.end(JSON.stringify({revoked:await revokeFixturePrincipal()}));return;
         }
         res.writeHead(404);res.end('{}');
       }catch(error){await save('mounted-control-failure.json',{predicate:String((error as Error).message)});
@@ -471,6 +480,16 @@ try {
   }
   if(mounted){
     for(;;){if(guardFailure)throw Error(guardFailure);
+      const heldRead=readDelayedRead();
+      if(heldRead?.entered&&!heldReadReleased){
+        try{const rendered=JSON.parse(await readFile(join(evidence,'mounted-denial-rendered.json'),'utf8'));
+          if(rendered.sourceCommit!==freeze.source.commit||rendered.workId!==workId||rendered.workspaceClosed!==true)
+            throw Error('MOUNTED_DENIAL_OBSERVER_SCOPE_MISMATCH');
+          releaseDelayedRead();heldReadReleased=true;
+          await save('mounted-late-response-released.json',{at:new Date().toISOString(),
+            afterActualBrowserDenial:true,requestId:heldRead.requestId,status:heldRead.status});
+        }catch(error){if((error as NodeJS.ErrnoException).code!=='ENOENT')throw error;}
+      }
       try{const closed=JSON.parse(await readFile(join(evidence,'mounted-observer-close.json'),'utf8'));
         if(closed.sourceCommit!==freeze.source.commit||closed.workId!==workId)throw Error('MOUNTED_OBSERVER_SCOPE_MISMATCH');
         await save('mounted-observer-receipt.json',closed);

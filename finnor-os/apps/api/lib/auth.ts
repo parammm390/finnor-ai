@@ -4,10 +4,9 @@
 
 import { randomUUID } from "node:crypto";
 import type { TenantContext, Role } from "@finnor/shared-types";
-import { ensureSecretsLoaded, resolveTenantFromBearerToken, AuthVerificationError } from "@finnor/security";
+import { ensureSecretsLoaded, resolveTenantFromBearerToken, AuthVerificationError, redactText } from "@finnor/security";
 import { initObservability, Sentry, logWithTrace } from "@finnor/tools";
 import { checkRateLimit, secondsUntilWindowReset } from "./rate-limit";
-import { redactText } from "@finnor/security";
 import { canExerciseAuthority, evaluateAuthority } from "@finnor/authority";
 import { readProductRuntimeAuthority } from "@finnor/db";
 
@@ -77,7 +76,8 @@ export async function requireContext(req: Request): Promise<TenantContext> {
   try {
     ctx = await resolveTenantFromBearerToken(token);
   } catch (err) {
-    if (err instanceof AuthVerificationError) throw new AuthError(err.message, err.status);
+    if (err instanceof AuthVerificationError) throw new AuthError(err.message, err.status,
+      [401,403].includes(err.status)?{"x-finnor-identity-state":"denied"}:undefined);
     throw err;
   }
   await enforceRateLimit(`tenant:${ctx.tenantId}`);
