@@ -54,6 +54,7 @@ let database: EmbeddedPostgres | undefined, admin: pg.Client | undefined;
 let service: Awaited<ReturnType<typeof authenticatedApiFixture>> | undefined, worker: ReturnType<typeof spawn> | undefined;
 let frontend:ReturnType<typeof spawn>|undefined;
 let mountedControl:Server|undefined;
+let mountedRevisionVerified=false;
 let delayedRead:{entered:boolean;requestId:string|null;status:number|null;promise:Promise<void>;release:()=>void}|null=null;
 const releaseDelayedRead=()=>delayedRead?.release();
 let peakOwnedRssBytes = 0, guard: NodeJS.Timeout | undefined;
@@ -134,7 +135,7 @@ try {
   const frontendPort=mounted?await freePort():null,frontendOrigin=frontendPort?'http://127.0.0.1:'+frontendPort:null;
   service = await authenticatedApiFixture(repo, actor, entry => traffic.push(entry),
     frontendOrigin?{frontendOrigin,afterResponse:async(path,body,status)=>{
-      if(path==='/api/company-brain/institution-read'&&delayedRead&&!delayedRead.entered){
+      if(path==='/api/company-brain/institution-read'&&mountedRevisionVerified&&delayedRead&&!delayedRead.entered){
         delayedRead.entered=true;delayedRead.requestId=JSON.parse(body).requestId;delayedRead.status=status;
         await save('mounted-delayed-response-entered.json',{at:new Date().toISOString(),
           requestId:delayedRead.requestId,status,actualHandlerCompleted:true});
@@ -250,6 +251,7 @@ try {
       if(req.headers.authorization!=='Bearer '+controlKey){res.writeHead(401);res.end('{}');return;}
       try{
         if(req.method==='POST'&&req.url==='/delay'){
+          if(!mountedRevisionVerified){res.writeHead(409);res.end('{"predicate":"WAIT_FOR_CANONICAL_REVISION_COMPLETION"}');return;}
           if(delayedRead)throw Error('ONE_RETAINED_READ_ONLY');
           let release!:()=>void;const promise=new Promise<void>(resolve=>{release=resolve;});
           delayedRead={entered:false,requestId:null,status:null,promise,release};res.end('{}');return;
@@ -463,9 +465,9 @@ try {
     results.push({id:'B-same-standing-input-native-revision',status:'PASS',observed:{revised,current,
       initialObjective,finalObjective,priorCompletionProofDigest:initialProof},
       basis:'ACTUAL_AUTHENTICATED_OWNER_REVISION_SAME_OBJECTIVE_ORIGINAL_PARENT_NO_DUPLICATE_EFFECT'});
-    if(mounted)await save('mounted-revision-canonical-completion.json',{revised,current,
+    if(mounted){mountedRevisionVerified=true;await save('mounted-revision-canonical-completion.json',{revised,current,
       initialObjective,finalObjective,priorCompletionProofDigest:initialProof,
-      noDuplicateRequestsOrActions:true,originalEnvelope:await originalEnvelope(),fullEngineering:false});
+      noDuplicateRequestsOrActions:true,originalEnvelope:await originalEnvelope(),fullEngineering:false});}
   }
   if(mounted){
     for(;;){if(guardFailure)throw Error(guardFailure);

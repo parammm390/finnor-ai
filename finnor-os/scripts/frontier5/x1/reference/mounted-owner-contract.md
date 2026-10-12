@@ -82,3 +82,10 @@ old response may resurrect private programme, claims, duties, witnesses or costs
 Retain the real denial/old-response status, principal revision, browser states
 and ending rows. No product fault-injection API, fabricated effect or protected
 authority is created. Keep the same finite resource envelope.
+
+Run 032 accepted browser revision 2 and observed it, then the fixture was armed
+before independent native completion. It held the observer's next real read,
+which hit its unchanged transport timeout; this is an observer defect, not a
+product revision failure or privacy verdict. Guard delay arming with the actual
+completed canonical revision proof, returning 409 beforehand. Do not extend the
+timeout, restart the same episode or mark this failed observation passing.
