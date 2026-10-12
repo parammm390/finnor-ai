@@ -20,6 +20,8 @@ import { proposeInstitutionModel } from "./reconstruction";
 import type { DigitalInstitutionProfile } from "./contracts";
 import { acquireInstitutionOriginal, readInstitutionMandate, type OwnerOriginal } from "./source-authority";
 import { installedInstitutionCompilerIdentity } from "../../../capability-evolution/src/institution-port";
+import { currentInstitutionCompilerCapability } from '../../../capability-evolution/src/institution-consumer';
+import { digest as capabilityDigest } from '../../../capability-evolution/src/contracts';
 import { readAdditionalInstitutionOwners,parseInstitutionOwnerRef,lockAdditionalInstitutionOwner } from "./canonical-owners";
 import { institutionOwnerCutDigest } from "./canonical-json";
 
@@ -107,6 +109,8 @@ export async function loadInstitutionAdmissionOriginal(
   }
   const s5 = await readAllocationSnapshot(ctx);
   const method=await installedInstitutionCompilerIdentity();
+  const methodCapability=await currentInstitutionCompilerCapability({tenantId:ctx.auth.tenantId,
+    principalId:ctx.auth.userId,rightsRef:`authority:${ctx.auth.tenantId}:${rightsRevision}`,profileDigest:capabilityDigest(profile)});
   // The knowledge cut binds to the server-side retention facts (Core version
   // or acquisition receipt), so an identical owner state replays to an
   // identical digest and a caller can never supply or shift the cut.
@@ -125,6 +129,7 @@ export async function loadInstitutionAdmissionOriginal(
       mandateRevision: mandate.revision, canonicalRevision: "", rightsRevision,
       resourceRevision: s5.snapshotDigest,
       methodRevision: method.ref.contentDigest,
+      ...(methodCapability?{methodCapability}:{}),
       operationRevision: sha(JSON.stringify([rightsRevision, allowed])),
       checkerRevision: sha(Buffer.concat([readFileSync(checkerPath), readFileSync(checkerRawPath),readFileSync(canonicalJsonPath)])),
       profileRevision: profile.revision, schemaRevision: await withTenantTransaction(ctx.auth.tenantId,

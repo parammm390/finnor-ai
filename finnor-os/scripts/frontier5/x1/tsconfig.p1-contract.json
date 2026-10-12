@@ -10,6 +10,7 @@
     "./run-owner-slice.mts",
     "./physical-owner-worker.mts",
     "./qualification-admin.mts",
+    "./institution-method-plan.mts",
     "../../../packages/private-equity/src/institution-qualification/administration.ts",
     "../../../packages/private-equity/src/institution-program/api.ts",
     "../../../packages/private-equity/src/institution-program/worker.ts",

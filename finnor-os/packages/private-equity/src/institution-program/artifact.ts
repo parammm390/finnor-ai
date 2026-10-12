@@ -140,7 +140,10 @@ export function buildInstitutionArtifact(input: {
       input.reservation.version, input.reservation.contentDigest) : unknown("Original resource reservation unavailable", "S5"),
     source_refs: o.sources.map(s => source(s.id)), source_revision_vector: o.current.sourceRevisions,
     knowledge_cut: o.knowledgeCut,
-    admitted_domain_ref: unknown("Development profile has no protected domain qualification/admission", "S8 admission owner", ["pe-institution-responsibility-v1"]),
+    admitted_domain_ref: o.current.methodCapability?known('S8','DISPOSABLE_METHOD_ADMISSION_NOT_PROTECTED_DOMAIN_QUALIFICATION',
+      o.current.methodCapability.admissionRef.id,o.current.methodCapability.admissionRef.version,
+      o.current.methodCapability.admissionRef.contentDigest)
+      :unknown("Development profile has no protected domain qualification/admission", "S8 admission owner", ["pe-institution-responsibility-v1"]),
     application_fingerprints: [known("runtime", "actual_loaded_application", "FINNOR", input.producer.digest, input.producer.digest)],
     model_refs: [],
     dependency_lock_digest: known("runtime", "installed_dependency_lock", "finnor-os/package-lock.json", input.lockDigest, input.lockDigest),

@@ -39,6 +39,11 @@ export type OriginalInstitutionEvidence = {
     authorizedOperations: string[];
     sourceDigests?: Record<string, string>;
     canonicalOwners?: OriginalInstitutionEvidence["canonical"]["entities"];
+    methodCapability?: {schema:'finnor.s8.institution-consumer-binding.v1';
+      revisionRef:{owner:string;id:string;version:string;contentDigest:string};
+      admissionRef:{owner:string;id:string;version:string;contentDigest:string};
+      policyDigest:string;candidateDigest:string;profileDigest:string;runtimeDigest:string;
+      protectionDomain:'DISPOSABLE_TEST_AUTHORITY';protectedQualification:false;productionActive:false;executionAuthorityGranted:false};
     sensitiveSubjects?: Array<{sourceId:string;institutionId:string;sourceClass:string;purpose:string;registrations:string[]}>;
   };
 };

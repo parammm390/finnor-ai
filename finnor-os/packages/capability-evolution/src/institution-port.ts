@@ -1,4 +1,5 @@
 import { readFile } from "node:fs/promises";
+import { fileURLToPath } from 'node:url';
 import { z } from "zod";
 import { assertSignature, byteDigest, digest, fault, RefSchema, sameRef,
   type AuthorityKey, type CapabilityRef, type Signed } from "./contracts";
@@ -7,7 +8,7 @@ import type { JournalEntry } from "./journal";
 /** Actual installed intrinsic bytes are a proposal identity. Reading this
  * descriptor neither registers nor admits it through the signed lifecycle. */
 async function readInstalledInstitutionCompilerIdentity(){
-  const paths=["reconstruction.ts","source-decoder.ts","checker.ts","checker-raw.ts","responsibility.ts",
+  const paths=["contracts.ts","reconstruction.ts","source-decoder.ts","checker.ts","checker-raw.ts","responsibility.ts",
     "resource-demand.ts","completion-contracts.ts","action-resolution.ts","canonical-json.ts",
     "canonical-owners.ts","owner-admission.ts","source-authority.ts","checker-process.ts",
     "store.ts","worker.ts","api.ts","artifact.ts","baseline.ts","meter.ts","installed-source.ts"].map(path=>
@@ -20,7 +21,11 @@ async function readInstalledInstitutionCompilerIdentity(){
   for(const path of ["allocation-store.ts","economic-store.ts"])
     paths.push(new URL(`../../private-equity/src/${path}`,import.meta.url));
   paths.push(new URL("./institution-port.ts",import.meta.url));
-  const sources=await Promise.all(paths.map(async path=>({path:path.pathname,sha256:byteDigest(await readFile(path))})));
+  paths.push(new URL('./institution-consumer.ts',import.meta.url));
+  for(const path of ['finnor-os/package-lock.json','package-lock.json',
+    'scope-frontier5/x1-institutional-programme-compiler/profile.json','finnor-os/packages/db/migration-head.ts',
+    'finnor-os/packages/db/migrations-bundle.ts'])paths.push(new URL('../../../../'+path,import.meta.url));
+  const sources=await Promise.all(paths.map(async path=>({path:fileURLToPath(path),sha256:byteDigest(await readFile(path))})));
   const body={schema:"finnor.s8.installed-institution-compiler.v1",sources,
     runtime:{node:process.version,platform:process.platform,architecture:process.arch},
     state:"INSTALLED_PROPOSAL_UNADMITTED",protectedQualification:false,executionAuthorityGranted:false};

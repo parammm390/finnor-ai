@@ -19,3 +19,18 @@ The full ten environments × at least eight systems, 30-day replay and separate
 seven-day elapsed soak remain a distinct protected gate, never replaced by a
 development summary. Validate on existing authorized S8 custody when available;
 otherwise deliver an exact proposal/registration/signing/current-read packet.
+
+The installed compiler consumer must use a separately signed scoped configuration
+and the existing S8 /command endpoint. CURRENT rereads private token/config bytes,
+the actual installed module/profile/runtime closure and the registered candidate;
+the reply must bind that exact candidate/admission and retain all non-authorizing
+flags. Revocation, expiry, wrong owner/rights/profile/module, removed policy or
+changed source cannot downgrade a previously bound admission to an intrinsic
+unadmitted proposal. Missing configuration leaves ordinary disposable intrinsic
+development available and explicitly unadmitted; it is not protected admission.
+
+The current owned checkout/process has no configured lifecycle or consumer S8
+binding. Implement the consumer and a repeatable metadata proposal packet; do not
+create keys/policies/grants to manufacture positive registration/admission proof.
+The responsible existing S8 authority owner supplies its signed lifecycle,
+consumer, evaluator and promoter assets for the dependent actual service run.

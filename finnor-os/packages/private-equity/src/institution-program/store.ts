@@ -12,6 +12,8 @@ import type { InstitutionResourceDemand } from "./resource-demand";
 import type { OriginalInstitutionEvidence } from "./checker";
 import { institutionOwnerCutDigest } from "./canonical-json";
 import { installedInstitutionCompilerIdentity } from "../../../capability-evolution/src/institution-port";
+import { currentInstitutionCompilerCapability } from '../../../capability-evolution/src/institution-consumer';
+import { digest as capabilityDigest } from '../../../capability-evolution/src/contracts';
 
 export const loadInstitutionProfile = () => DigitalInstitutionProfile.parse(JSON.parse(readFileSync(
   fileURLToPath(new URL("../../../../../scope-frontier5/x1-institutional-programme-compiler/profile.json", import.meta.url)), "utf8")));
@@ -230,6 +232,10 @@ export async function assertInstitutionCompilerCurrent(ctx: PeMutationContext, q
       throw Error("X1_CANONICAL_OWNER_CUT_REQUIRED");
     if((await installedInstitutionCompilerIdentity()).ref.contentDigest!==manifest.methodRevision)
       throw Error("X1_INSTALLED_COMPILER_METHOD_CHANGED");
+    const capability=await currentInstitutionCompilerCapability({tenantId:ctx.auth.tenantId,
+      principalId:principal(ctx),rightsRef:`authority:${ctx.auth.tenantId}:${manifest.rightsRevision}`,
+      profileDigest:capabilityDigest(loadInstitutionProfile())},manifest.methodCapability);
+    if(!manifest.methodCapability&&capability)throw Error('X1_COMPILER_METHOD_ADMISSION_BINDING_CHANGED');
     if(manifest.operationRevision!==sha([manifest.rightsRevision,manifest.authorizedOperations]))
       throw Error("X1_OPERATION_REVISION_BINDING_CHANGED");
   }
