@@ -6,6 +6,8 @@
     "types": ["node"]
   },
   "files": [
+    "./qualification-admin.mts",
+    "../../../packages/private-equity/src/institution-qualification/administration.ts",
     "../../../packages/private-equity/src/institution-program/api.ts",
     "../../../packages/private-equity/src/institution-program/worker.ts",
     "../../../packages/private-equity/src/live-recompilation/institution-worker.ts",

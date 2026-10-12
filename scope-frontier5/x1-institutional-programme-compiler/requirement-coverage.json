@@ -28,10 +28,17 @@
         "x1-independent-contracts-and-checker"
       ],
       "status": "pending",
-      "sourceEvidence": ["finnor-os/packages/private-equity/src/institution-program/contracts.ts", "finnor-os/scripts/frontier5/x1/reference/contract.md"],
-      "runtimeEvidence": ["private:x1-control/evidence/verify-kernel-1791704207964-bb414f36-c569-438e-bdf0-5b4b154ac2a9 (14/34 offline schema acceptance only)"],
+      "sourceEvidence": [
+        "finnor-os/packages/private-equity/src/institution-program/contracts.ts",
+        "finnor-os/scripts/frontier5/x1/reference/contract.md"
+      ],
+      "runtimeEvidence": [
+        "private:x1-control/evidence/verify-kernel-1791704207964-bb414f36-c569-438e-bdf0-5b4b154ac2a9 (14/34 offline schema acceptance only)"
+      ],
       "failures": [],
-      "notRun": ["Canonical immutable persistence and authenticated readback; source schema-only acceptance is not full OUTPUT-001"]
+      "notRun": [
+        "Canonical immutable persistence and authenticated readback; source schema-only acceptance is not full OUTPUT-001"
+      ]
     },
     {
       "id": "VAL-X1-RAW-001",
@@ -61,10 +68,19 @@
         "x1-independent-contracts-and-checker"
       ],
       "status": "pending",
-      "sourceEvidence": ["finnor-os/packages/private-equity/src/institution-program/checker.ts", "finnor-os/scripts/frontier5/x1/reference/expected-ledger.json"],
-      "runtimeEvidence": ["private:x1-control/evidence/verify-kernel-1791704207964-bb414f36-c569-438e-bdf0-5b4b154ac2a9 (JSON-records development denominator only)"],
-      "failures": ["private:x1-control/evidence/oracle-precode-3697f0c2/missing-interface.log (initial pre-code expected failure)"],
-      "notRun": ["Other declared protocols and owner-provided independent snapshots; protected oracle custody not available"]
+      "sourceEvidence": [
+        "finnor-os/packages/private-equity/src/institution-program/checker.ts",
+        "finnor-os/scripts/frontier5/x1/reference/expected-ledger.json"
+      ],
+      "runtimeEvidence": [
+        "private:x1-control/evidence/verify-kernel-1791704207964-bb414f36-c569-438e-bdf0-5b4b154ac2a9 (JSON-records development denominator only)"
+      ],
+      "failures": [
+        "private:x1-control/evidence/oracle-precode-3697f0c2/missing-interface.log (initial pre-code expected failure)"
+      ],
+      "notRun": [
+        "Other declared protocols and owner-provided independent snapshots; protected oracle custody not available"
+      ]
     },
     {
       "id": "VAL-X1-CHECK-002",
@@ -72,10 +88,17 @@
         "x1-independent-contracts-and-checker"
       ],
       "status": "pending",
-      "sourceEvidence": ["finnor-os/scripts/frontier5/x1/reference/challenges.json", "finnor-os/scripts/frontier5/x1/kernel.mts"],
-      "runtimeEvidence": ["private:x1-control/evidence/verify-kernel-1791704207964-bb414f36-c569-438e-bdf0-5b4b154ac2a9 (named C mutations at intended offline guards only)"],
+      "sourceEvidence": [
+        "finnor-os/scripts/frontier5/x1/reference/challenges.json",
+        "finnor-os/scripts/frontier5/x1/kernel.mts"
+      ],
+      "runtimeEvidence": [
+        "private:x1-control/evidence/verify-kernel-1791704207964-bb414f36-c569-438e-bdf0-5b4b154ac2a9 (named C mutations at intended offline guards only)"
+      ],
       "failures": [],
-      "notRun": ["Owner-bound currentness and authorization challenges; offline cases do not prove live acceptance"]
+      "notRun": [
+        "Owner-bound currentness and authorization challenges; offline cases do not prove live acceptance"
+      ]
     },
     {
       "id": "VAL-X1-MAP-001",
@@ -248,10 +271,22 @@
         "x1-population-qualification-and-diagnostics"
       ],
       "status": "pending",
-      "sourceEvidence": [],
-      "runtimeEvidence": [],
-      "failures": [],
-      "notRun": []
+      "sourceEvidence": [
+        "finnor-os/packages/private-equity/src/institution-qualification/scoring.ts",
+        "finnor-os/packages/private-equity/src/institution-qualification/contracts.ts",
+        "finnor-os/packages/private-equity/src/institution-qualification/administration.ts",
+        "finnor-os/scripts/frontier5/x1/qualification-admin.mts",
+        "scope-frontier5/x1-institutional-programme-compiler/handoff/qualification-owner-packet.md"
+      ],
+      "runtimeEvidence": [
+        "private:x1-control/evidence/qualification-score-contract-002.json (seven hand-calculated scorer cases only; no protected authority or population)"
+      ],
+      "failures": [
+        "private:x1-control/evidence/qualification-precode-001.json (expected missing scorer before implementation)"
+      ],
+      "notRun": [
+        "Protected ten environments each >=8 classes, 30-day replay and separate 7-day elapsed live observation; authenticated candidate launch and independent custody/signature/provider qualification observations NOT RUN"
+      ]
     },
     {
       "id": "VAL-X1-QUALIFICATION-002",
@@ -259,10 +294,22 @@
         "x1-population-qualification-and-diagnostics"
       ],
       "status": "pending",
-      "sourceEvidence": [],
-      "runtimeEvidence": [],
-      "failures": [],
-      "notRun": []
+      "sourceEvidence": [
+        "finnor-os/packages/private-equity/src/institution-qualification/scoring.ts",
+        "finnor-os/packages/private-equity/src/institution-qualification/contracts.ts",
+        "finnor-os/packages/private-equity/src/institution-qualification/administration.ts",
+        "finnor-os/scripts/frontier5/x1/qualification-admin.mts",
+        "scope-frontier5/x1-institutional-programme-compiler/handoff/qualification-owner-packet.md"
+      ],
+      "runtimeEvidence": [
+        "private:x1-control/evidence/qualification-score-contract-002.json (seven hand-calculated scorer cases only; no protected authority or population)"
+      ],
+      "failures": [
+        "private:x1-control/evidence/qualification-precode-001.json (expected missing scorer before implementation)"
+      ],
+      "notRun": [
+        "Protected ten environments each >=8 classes, 30-day replay and separate 7-day elapsed live observation; authenticated candidate launch and independent custody/signature/provider qualification observations NOT RUN"
+      ]
     },
     {
       "id": "VAL-X1-DIAGNOSTIC-001",

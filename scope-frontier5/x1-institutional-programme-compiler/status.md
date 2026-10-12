@@ -1,5 +1,43 @@
 # FRONTIER5.X1 status
 
+## Current source checkpoint — qualification administration and capacity restored, 12 October 2026
+
+Engineering remains **INCOMPLETE**. The qualification software now validates a
+signed existing-custody registration, ten independently committed environments
+with at least eight supported heterogeneous classes each, withheld per-phase
+oracle ledgers and independently signed observation chains. Replay and live
+populations are scored separately per environment. Duplicate/omitted work stays
+in original denominators; false completion, forbidden effects and historical
+cost/resource violations cannot disappear on a later packet revision. The
+30-day replica and seven elapsed unattended live-day requirements remain separate.
+Unknown lifecycle costs remain gaps; original financial/preparation limits remain.
+
+Finite admin commands plan/launch/observe/resume/assess use pinned private inputs
+and existing authenticated local API handles. Candidate HTTP readback is not an
+independent completion observation. Resume binds the same accepted request/Work;
+uncertainty retains the same original idempotency key and grants. No key, protected
+receipt, S8 admission or activation is created. The owner packet records exact
+custody/service/observer/clock/cost assets still required.
+
+The seven hand-calculated scorer contract cases pass in the registered finite
+runner; the expected pre-code missing implementation is retained. Scoped types
+and source lint passed on recorded cuts. Two independent source-review history
+reset findings were repaired. Signed protected assets, actual candidate command
+execution and the full population are **NOT RUN**; coverage assertions stay pending.
+
+User-authorized cleanup removed four unused reinstallable dependency copies
+from clean old R4/R7 checkouts, preserving source, locks, history, evidence and
+shared dependencies. The private cleanup receipt reports 1,988,571,136 bytes
+reclaimed and 5,696,245,760 bytes free at completion. The frozen service/build
+capacity floors are now met. Recheck current capacity before actual startup.
+
+Next work is the authenticated installed owner-bound runtime slice and repairs
+from its actual failures, then remaining currentness/fallback/S5 integration,
+mounted and final installation/upgrade/A–H/reconstruction evidence. Migrations
+0174–0176 are still **UNAPPLIED**; 178 migration files are bundled. Protected
+qualification, S8 admission, activation, operational 100× and financial/H2 are
+separate, unestablished gates. The full goal remains active.
+
 ## Current source checkpoint — explicit unresolved rule meaning, 12 October 2026
 
 Engineering remains **INCOMPLETE**. The original/check/lowering regression first

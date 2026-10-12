@@ -42,6 +42,12 @@ const changed = git("status", "--porcelain=v1", "-uall").split("\n").filter(Bool
 const sourcePins = changed.filter((path) => existsSync(join(repo, path))).map((path) => pin(join(repo, path)));
 for (const path of [
   "finnor-os/packages/private-equity/src/institution-program/contracts.ts",
+  "finnor-os/packages/private-equity/src/institution-qualification/scoring.ts",
+  "finnor-os/packages/private-equity/src/institution-qualification/contracts.ts",
+  "finnor-os/packages/private-equity/src/institution-qualification/administration.ts",
+  "finnor-os/scripts/frontier5/x1/qualification-admin.mts",
+  "finnor-os/scripts/frontier5/x1/qualification-cases.mts",
+  "finnor-os/scripts/frontier5/x1/reference/qualification-contract.md",
   "finnor-os/packages/private-equity/src/institution-program/checker.ts",
   "finnor-os/packages/private-equity/src/institution-program/checker-process.ts",
   "finnor-os/packages/private-equity/src/institution-program/checker-raw.ts",
@@ -210,7 +216,11 @@ if (stage === "static" || stage === "scrutiny") {
       "finnor-os/scripts/frontier5/x1/checker-command.mts"], repo, manifest.limits.smallCheckNodeHeapMiB);
   }
 }
-if (stage !== "kernel" && stage !== "static" && stage !== "scrutiny") {
+if (stage === "qualification-contract") {
+  run("qualification-scorer-contract", process.execPath,
+    ["./node_modules/tsx/dist/cli.mjs", "scripts/frontier5/x1/qualification-cases.mts"], os, manifest.limits.kernelNodeHeapMiB);
+}
+if (stage !== "kernel" && stage !== "static" && stage !== "scrutiny" && stage !== "qualification-contract") {
   finish("NOT_IMPLEMENTED_NOT_RUN", 2, "This frozen stage has no implementation in this feature");
 }
 if (stage === "scrutiny") {
