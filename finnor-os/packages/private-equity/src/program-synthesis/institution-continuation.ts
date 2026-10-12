@@ -144,9 +144,16 @@ export async function continueInstitutionProgram(ctx: PeMutationContext, q: Inst
    if(!await noGovernedOrigin(id))throw Error("X1_GOVERNED_ORIGIN_REQUIRES_PROTOCOL3");
    const existing=await tx(ctx,async c=>(await c.query<{
     work_id:string|null;initiated_by:string|null;action_type:string;
-    payload:unknown;plan_revision_id:string|null;status:string;episode_id:string|null;authority_context:any
+    payload:unknown;plan_revision_id:string|null;status:string;episode_id:string|null;authority_context:any;
+    observation_pending:boolean
    }>(`SELECT a.work_id,a.initiated_by,a.action_type,a.payload,a.plan_revision_id,a.status,
-      p.episode_id,a.authority_context FROM finnor_os.domain_actions a
+      p.episode_id,a.authority_context,EXISTS(SELECT 1 FROM finnor_os.workflow_steps s
+        JOIN finnor_os.integration_operations o ON o.tenant_id=s.tenant_id AND o.workflow_step_id=s.id
+        JOIN finnor_os.jobs j ON j.tenant_id=o.tenant_id AND j.type='observe_external_effect'
+          AND j.payload->>'integrationOperationId'=o.id::text AND j.status IN('queued','running')
+        WHERE s.tenant_id=a.tenant_id AND s.domain_action_id=a.id AND s.status='waiting_observation'
+          AND o.provider='finnor_plugin_runtime' AND o.integration_id IS NULL
+          AND o.status='unknown') observation_pending FROM finnor_os.domain_actions a
      LEFT JOIN finnor_os.p1_requests p ON p.tenant_id=a.tenant_id
       AND p.id::text=a.authority_context->>'programId' AND p.principal_id=a.initiated_by
      WHERE a.tenant_id=$1 AND a.id=$2`,[q.tenant_id,id])).rows[0],true);
@@ -167,6 +174,9 @@ export async function continueInstitutionProgram(ctx: PeMutationContext, q: Inst
     continue;
    }
    if(existing&&['failed','rejected','needs_human_review','blocked_integration_unavailable'].includes(existing.status)){
+    if(existing.status==='needs_human_review'&&existing.observation_pending){
+     activeRoots.add(expected.dealId);continue;
+    }
     interventions.push({stableIdentity:node.stableIdentity,
      predicate:'X1_NATIVE_ACTION_'+existing.status.toUpperCase()+'_REQUIRES_DECISION',possibleEffect:true});
     continue;

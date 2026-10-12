@@ -776,6 +776,7 @@ export async function observeRecoveredAuthorizedAttempt(tenantId: string, operat
     ));
     if (canonicalRecovery && verification.state === "verified") {
       await db.update(reconciliationCases).set({ status: "resolved", resolvedAt: new Date(),
+        resolvedBy: "system:x1-canonical-creation-observer",
         resolutionOutcome: "happened_as_intended", resolutionProvider: "finnor_canonical_owner",
         resolutionEvidence: { operationId, canonicalRecovery, verification },
         version: sql`${reconciliationCases.version}+1`,
