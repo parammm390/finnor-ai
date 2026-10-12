@@ -879,8 +879,9 @@ export async function bindHarnessWorkObjective(params: {
 
 /** Transactional native delivery after the producer's immutable result commits. */
 export async function schedulePreparedHarnessObjectiveTx(db:Db,params:{tenantId:string;workId:string;planRevisionId:string}):Promise<void>{
-  const [plan]=await db.select({objectiveLoopId:workPlanRevisions.objectiveLoopId,status:workPlanRevisions.status}).from(workPlanRevisions).where(and(eq(workPlanRevisions.tenantId,params.tenantId),eq(workPlanRevisions.workId,params.workId),eq(workPlanRevisions.id,params.planRevisionId))).limit(1);
+  const [plan]=await db.select({objectiveLoopId:workPlanRevisions.objectiveLoopId,status:workPlanRevisions.status,workInputId:workPlanRevisions.workInputId}).from(workPlanRevisions).where(and(eq(workPlanRevisions.tenantId,params.tenantId),eq(workPlanRevisions.workId,params.workId),eq(workPlanRevisions.id,params.planRevisionId))).limit(1);
   if(!plan?.objectiveLoopId||plan.status!=="active")throw Error("HARNESS_NATIVE_ACTIVE_OBJECTIVE_PLAN_REQUIRED");
+  await db.execute(sql`SELECT id FROM ${workObjectiveLoops} WHERE ${workObjectiveLoops.tenantId}=${params.tenantId} AND ${workObjectiveLoops.id}=${plan.objectiveLoopId} FOR NO KEY UPDATE`);
   let [loop]=await db.select().from(workObjectiveLoops).where(and(eq(workObjectiveLoops.tenantId,params.tenantId),eq(workObjectiveLoops.id,plan.objectiveLoopId))).limit(1);
   if(loop?.state==='waiting'){
     const ready=await db.execute(sql`SELECT p.id FROM finnor_os.p1_requests p
@@ -891,6 +892,14 @@ export async function schedulePreparedHarnessObjectiveTx(db:Db,params:{tenantId:
         AND r.objective_loop_id=${loop.id}::uuid AND NOT EXISTS
           (SELECT 1 FROM jsonb_array_elements(r.plan_graph->'nodes') n WHERE n->>'kind'='action')`);
     if(ready.rows.length!==1)throw Error('X1_NATIVE_OBJECTIVE_INDEPENDENT_COMPLETION_REQUIRED');
+    await db.execute(sql`SELECT id FROM ${works} WHERE ${works.tenantId}=${params.tenantId} AND ${works.id}=${params.workId} FOR NO KEY UPDATE`);
+    const [work]=await db.select({status:works.status}).from(works).where(and(
+      eq(works.tenantId,params.tenantId),eq(works.id,params.workId))).limit(1);
+    if(!work||!['waiting','executing'].includes(work.status))throw Error('X1_NATIVE_OBJECTIVE_WORK_FENCED');
+    await transitionWorkTx(db,params.tenantId,params.workId,'executing','harness_observation_ready',{
+      objectiveLoopId:loop.id,planRevisionId:params.planRevisionId,
+      reason:'P1 independently observed the original duties; resume native goal verification.',
+    },{expectedStatus:work.status,expectedWorkInputId:plan.workInputId});
     [loop]=await db.update(workObjectiveLoops).set({state:'continue',revision:loop.revision+1,
       reason:'P1 canonical duties independently observed; verify the original Work goal.',updatedAt:new Date()})
       .where(and(eq(workObjectiveLoops.tenantId,params.tenantId),eq(workObjectiveLoops.id,loop.id),eq(workObjectiveLoops.state,'waiting'))).returning();

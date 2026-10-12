@@ -175,3 +175,14 @@ unchanged stack guard; retain blocked/failed/cancelled state and actual native
 steps/jobs. No producer summary or queued final Objective counts as Work completion.
 Use the existing one-duty affected owner case first; the 128 effect proof remains
 its exact prior-cut development evidence.
+
+Run 022 reached exact canonical effect and independent observation, then the
+native Objective tried new LLM planning. Its persisted inspection records Work
+`waiting` while the same Objective was `continue` and its selected three-node
+observation plan was active. The native frontier correctly refuses execution
+while Work is waiting. The final P1 handoff must resume that same Work atomically
+with the Objective wake, fenced to the selected plan's current original input;
+it must not revive cancelled/failed/blocked Work or refill any counters. Retain
+recovery decisions and Work events alongside the completion proof so a later
+failure identifies the actual native predicate. No provider configuration is
+required to execute a previously checked deterministic observation plan.

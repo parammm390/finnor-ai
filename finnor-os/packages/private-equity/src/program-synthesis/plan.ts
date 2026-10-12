@@ -1,5 +1,5 @@
 import {beginWorkPlannerAttempt,beginWorkPlannerAttemptTx,persistSelectedWorkPlan,persistSelectedWorkPlanTx,finishWorkPlannerAttempt,finishWorkPlannerAttemptTx,type Db} from '@finnor/db';
-import {buildGoalSpec,buildConstraintSet,buildPlanningWorldSnapshot,compileAndSelectPlans,DEFAULT_PLAN_BUDGETS,type CandidatePlan,type CandidatePlanNode,type CandidateCompilationFacts,type PlanningSnapshotCapability} from '@finnor/planning';
+import {buildGoalSpec,buildConstraintSet,buildPlanningWorldSnapshot,compileAndSelectPlans,DEFAULT_PLAN_BUDGETS,DETERMINISTIC_PLAN_COMPILER_VERSION,type CandidatePlan,type CandidatePlanNode,type CandidateCompilationFacts,type PlanningSnapshotCapability} from '@finnor/planning';
 import {PROGRAM_OPERATIONAL_QUERY_INTENTS} from '@finnor/shared-types';
 import type {PeMutationContext} from '../types';
 import {sha,principal} from '../evidence-execution/store';
@@ -128,7 +128,7 @@ export async function selectInstitutionPlan(ctx:PeMutationContext,request:Instit
   reason:binding.parentRevisionId?'observation' as const:'initial' as const,
   goalSpec:goal,constraintSet:constraints,planningSnapshot:snapshot,candidatePlans:[candidate],
   compilationResult:compiled,planGraph:compiled.selected.graph,score:compiled.selected.score,
-  semanticHash:compiled.selected.graph.semanticHash};
+  semanticHash:compiled.selected.graph.semanticHash,compilerVersion:DETERMINISTIC_PLAN_COMPILER_VERSION};
  const plan=db?await persistSelectedWorkPlanTx(db,params):await persistSelectedWorkPlan(params);
  await finish({tenantId:ctx.auth.tenantId,attemptId:attempt.id,status:'succeeded',plannerResult:{
   planRevisionId:plan.id,batchStart:cursor,batchEnd:cursor+batch.length,totalActions:actions.length,

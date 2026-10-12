@@ -339,6 +339,8 @@ try {
       ["work", "SELECT * FROM finnor_os.works WHERE tenant_id=$1"],
       ["objectives", "SELECT * FROM finnor_os.work_objective_loops WHERE tenant_id=$1"],
       ["objective-steps", "SELECT * FROM finnor_os.work_objective_steps WHERE tenant_id=$1 ORDER BY step_number"],
+      ["recovery-decisions", "SELECT * FROM finnor_os.work_recovery_decisions WHERE tenant_id=$1 ORDER BY created_at,id"],
+      ["work-events", "SELECT * FROM finnor_os.work_events WHERE tenant_id=$1 ORDER BY work_id,seq"],
     ]) { try { await save(name! + ".json", (await admin.query(sql!, [tenant])).rows); } catch (error) { await save(name! + "-read-gap.json", { predicate: String((error as Error).message) }); } }
   }
   if (worker && worker.exitCode === null && worker.signalCode === null) {
