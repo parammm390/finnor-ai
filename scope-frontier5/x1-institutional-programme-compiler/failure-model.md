@@ -37,4 +37,21 @@ Checker challenge set C contains separate correctly scoped candidates for wrong 
 
 Physical D/E faults use the actual worker and durable SQL/action boundaries. Test fixtures may coordinate locks/process death externally; no test-only production bypass. Original accepted children, grants, deadlines, costs and UNKNOWN effects survive.
 
+### Registered owner case B-ledger-correction
+
+Before adding this E2E case, freeze a correction from USD 20.00 to USD 25.00 for
+the same Deal, period, unit, accounting basis and ledger record. The standing
+Request-creation rule depends only on its separate work-tracking trigger and
+mandate. Credible regressions are a stale positive read, failure to queue the
+actual P7 update, replacing the original resource parent/deadline, failing to
+publish the independently checked correction, invalidating the unrelated duty,
+duplicating its already observed Request/effect, or rewriting its prior proof.
+
+Use actual Core version append and a superseding ordinary source-grant version;
+keep its purpose, principal, source class, validity interval and all other source
+handles. Observe the registered physical update/compiler/native workers and
+canonical ending rows. No direct call to the update handler or candidate edit
+is permitted. This case covers the ledger correction and unaffected continuation
+subset of B; the complete PRD fixture and remaining B variants stay required.
+
 The independent oracle contract defines expectations and preservation. Boundary bugs need a pre-fix failing regression at their owning boundary. No post-code unit tests. Source changes following a failed proof retain the original run and rerun only affected proof plus necessary regressions.

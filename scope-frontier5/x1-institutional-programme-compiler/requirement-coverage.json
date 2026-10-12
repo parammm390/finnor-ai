@@ -45,11 +45,15 @@
       "featureIds": [
         "x1-reconstruction-and-semantic-admission"
       ],
-      "status": "pending",
+      "status": "partial",
       "sourceEvidence": [],
-      "runtimeEvidence": [],
+      "runtimeEvidence": [
+        "private:x1-control/evidence/actual-owner-slice-026 (authorized immutable Core JSON originals; no supplied mapping; 3 classes only)"
+      ],
       "failures": [],
-      "notRun": []
+      "notRun": [
+        "Full declared source-class/protocol population and installed connector acquisition remain required."
+      ]
     },
     {
       "id": "VAL-X1-INFER-001",
@@ -105,22 +109,31 @@
       "featureIds": [
         "x1-reconstruction-and-semantic-admission"
       ],
-      "status": "pending",
+      "status": "partial",
       "sourceEvidence": [],
-      "runtimeEvidence": [],
+      "runtimeEvidence": [
+        "private:x1-control/evidence/actual-owner-slice-026 (two conflicting-name Deal identities, actual immutable S1 mapping admissions and evidence links)"
+      ],
       "failures": [],
-      "notRun": []
+      "notRun": [
+        "All declared canonical entity and relation kinds remain required."
+      ]
     },
     {
       "id": "VAL-X1-PROGRAM-001",
       "featureIds": [
         "x1-responsibility-lowering-and-s5"
       ],
-      "status": "pending",
+      "status": "partial",
       "sourceEvidence": [],
-      "runtimeEvidence": [],
+      "runtimeEvidence": [
+        "private:x1-control/evidence/actual-owner-slice-026/native-work-completion.json (same Work/Objective/final Plan completed with verified native proof)",
+        "private:x1-control/evidence/actual-owner-slice-031 (same standing-input revision 2, original Objective limits/deadline/counters and no duplicate effect)"
+      ],
       "failures": [],
-      "notRun": []
+      "notRun": [
+        "Full domain and material invalidation/continuation/fallback remain required."
+      ]
     },
     {
       "id": "VAL-X1-RESOURCE-001",
@@ -138,22 +151,30 @@
       "featureIds": [
         "x1-durable-work-native-continuation"
       ],
-      "status": "pending",
+      "status": "partial",
       "sourceEvidence": [],
-      "runtimeEvidence": [],
+      "runtimeEvidence": [
+        "private:x1-control/evidence/actual-owner-slice-026 (actual authenticated submit/read, registered queue/physical worker, restricted PostgreSQL roles)"
+      ],
       "failures": [],
-      "notRun": []
+      "notRun": [
+        "Interrupted delivery, old/new installed jobs and final built runtime remain required."
+      ]
     },
     {
       "id": "VAL-X1-EFFECT-001",
       "featureIds": [
         "x1-durable-work-native-continuation"
       ],
-      "status": "pending",
+      "status": "partial",
       "sourceEvidence": [],
-      "runtimeEvidence": [],
+      "runtimeEvidence": [
+        "private:x1-control/evidence/actual-owner-slice-026 (128 canonical Requests, completed native Actions, verified effects and independently checked Request fields)"
+      ],
       "failures": [],
-      "notRun": []
+      "notRun": [
+        "Other declared ordinary operations and physical lost-ack reconciliation remain required."
+      ]
     },
     {
       "id": "VAL-X1-PROTECTED-001",
@@ -237,22 +258,38 @@
       "featureIds": [
         "x1-mounted-work-and-privacy"
       ],
-      "status": "pending",
+      "status": "partial",
       "sourceEvidence": [],
-      "runtimeEvidence": [],
-      "failures": [],
-      "notRun": []
+      "runtimeEvidence": [
+        "private:x1-control/evidence/actual-owner-slice-039 (actual mounted LoginForm, compiler initiation, revision 2, independent native completion, current Work readback and Work switching)"
+      ],
+      "failures": [
+        "private:x1-control/evidence/actual-owner-slice-029 (native revision refusal and interrupted observer; partial ending only)",
+        "private:x1-control/evidence/actual-owner-slice-035",
+        "private:x1-control/evidence/actual-owner-slice-036 (finite browser acceptance-window gaps)"
+      ],
+      "notRun": [
+        "Mounted cancellation/intervention and additional principal/tenant switches remain required."
+      ]
     },
     {
       "id": "VAL-X1-PRIVACY-001",
       "featureIds": [
         "x1-mounted-work-and-privacy"
       ],
-      "status": "pending",
+      "status": "partial",
       "sourceEvidence": [],
-      "runtimeEvidence": [],
-      "failures": [],
-      "notRun": []
+      "runtimeEvidence": [
+        "private:x1-control/evidence/actual-owner-slice-039/mounted-late-response-delivery-proof.json (actual SQL principal suspension, whole workspace denial, actual proxy late 200 in 12.4 seconds, no private output restoration; Retry remains denied)"
+      ],
+      "failures": [
+        "private:x1-control/evidence/actual-owner-slice-034 (whole Canvas retained private output; product defect repaired)",
+        "private:x1-control/evidence/actual-owner-slice-037",
+        "private:x1-control/evidence/actual-owner-slice-038 (observer release after actual proxy timeout; excluded from late-success proof)"
+      ],
+      "notRun": [
+        "Additional same-ready principal/tenant switches and late mutation callbacks remain required."
+      ]
     },
     {
       "id": "VAL-X1-METERS-001",
@@ -16248,5 +16285,12 @@
       "integrationCoverageAssertion": "VAL-X1-ENDTOEND-001"
     }
   ],
-  "noPooledCompletionFraction": true
+  "noPooledCompletionFraction": true,
+  "currentRuntimeCheckpoint": {
+    "sourceCommit": "e405eebc63d2bd86264483c1db5cf0ec3b5cd1f4",
+    "sourceTree": "c6775a6691a3bd7ca5571745ea5705326e46303a",
+    "evidenceDomain": "DISPOSABLE_LOCAL_AUTHENTICATED_DEVELOPMENT_ONLY",
+    "fullEngineeringComplete": false,
+    "protectedQualification": false
+  }
 }

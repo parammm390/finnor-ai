@@ -95,6 +95,25 @@ First supported responsibility: create exactly one specified internal evidence R
 
 Lost acknowledgement retains same effect/obligation/grant/deadline and UNKNOWN. Read-only canonical observation can reconcile supported exact completion; absent/ambiguous state cannot authorize blind retry. No new effect ID is invented to “recover.”
 
+### B-ledger-correction independent expectations
+
+The frozen ledger record changes only its value from 20.00 to 25.00. The
+independent expected quantity retains USD, units, 2026-10, outstanding basis and
+the original Deal identity. Source population stays three, with only the ledger
+grant/version superseded. Its prior projection must return INVALIDATED and no
+artifact/programme before use. The actual owner-change trigger must queue P7 and
+accept revision 2 without the observer calling institution-revise.
+
+Expected change disposition is SEMANTIC, with exactly the ledger source-model
+dependency changed, zero affected creation duties and one preserved duty. The
+unrelated work-tracking trigger, mandate, operation, principal and deadline are
+identical. The original Request/action/effect IDs and prior CompletionProof must
+remain unchanged; the same Work and Objective must complete their checked
+successor. Original episode, reservation, resource revisions, limits and deadline
+remain identical, with only monotone charged counters allowed to advance.
+Expectations come from these frozen original inputs, never producer inference
+or candidate-selected duty populations. This is development evidence only.
+
 ## Qualification score specification
 
 Independently freeze material mapping set M, supported obligation set O, unique business assignment identities/weights/deadlines, critical subset K and actionable-change set C per environment before exposure. Candidate claims are CANDIDATE, not expectations. Match one-to-one only under independently defined equivalence; no duplicate credit.

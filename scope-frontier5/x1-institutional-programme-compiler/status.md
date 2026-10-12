@@ -1,5 +1,48 @@
 # FRONTIER5.X1 status
 
+## Current checkpoint — native completion and mounted revocation verified, 12 October 2026
+
+Engineering remains **INCOMPLETE**. This checkpoint supersedes older statements
+below that migration bootstrap, authenticated creation and mounted readback have
+not run. Those entries are retained as historical checkpoints.
+
+The disposable authenticated owner driver applied all 180 migrations. Run 026
+completed 128 independently specified Request creations through the actual queue,
+physical worker, S1 mapping admissions, original S5 parent, native Actions and
+verified business effects. The same Work and Objective and its final Plan reached
+completed with a verified native CompletionProof. Duration was 216,543 ms;
+sampled owned-process peak was 1,997,848,576 bytes. These measurements do not
+establish total money, human supervision or aggregate-memory qualification.
+
+Run 031 completed a second checked revision of the same standing input. It kept
+the same Objective, original limits/deadline, monotone counters, prior completion
+proof and one Request/effect. This is unchanged-input revision evidence, not the
+full material-change fixture.
+
+Run 039 on commit `e405eebc63d2bd86264483c1db5cf0ec3b5cd1f4`, tree
+`c6775a6691a3bd7ca5571745ea5705326e46303a`, passed mounted authenticated initiation,
+revision 2 completion, Work switching, actual principal revocation and late-response
+privacy. The existing LoginForm, proxy and Investigation Canvas were used. A real
+pre-revocation handler response was held, the ordinary disposable principal was
+suspended, the whole workspace rendered unavailable, and the actual proxy then
+delivered that old response as 200 in 12.4 seconds. Private output stayed absent,
+including after Retry. Source bytes were unchanged throughout this run; the only
+dirty file was the preserved user AGENTS.md. Its six browser checks and independent
+canonical completion observations are retained in the private evidence directory.
+
+Earlier real failures remain retained: native continuation after completion,
+full Canvas privacy, shared-volume guards, browser observer interruptions and
+late-response timeouts. Timed-out responses do not count as nonresurrection proof.
+The passing browser case supersedes none of those raw records.
+
+Required remaining engineering includes the full declared domain and envelope,
+material source/mandate/personnel changes and minimal closure, physical recovery,
+resource contention/cancellation, failure/fallback, actual S8 consumer behavior,
+complete avoidable cost instrumentation, final installation/upgrade/mixed jobs,
+matched diagnostic, scrutiny and standalone reconstruction/handoff. Protected
+population qualification, admission/activation, operational 100× and financial/H2
+remain separate unestablished gates. No push, PR or deployment is authorized.
+
 ## Current runtime checkpoint — fresh migration bootstrap observed, 12 October 2026
 
 The first real PostgreSQL bootstrap failed in 0175 with a syntax error inside the

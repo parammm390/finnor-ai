@@ -24,9 +24,10 @@ if (!evidence || !evidence.startsWith("/")) throw Error("FRESH_PRIVATE_X1_OWNER_
 const dutyCount=process.env.FINNOR_X1_OWNER_CASE==='128'?128:1;
 const mounted=process.env.FINNOR_X1_OWNER_MODE==='mounted';
 const revise=process.env.FINNOR_X1_OWNER_MODE==='revision';
-if(process.env.FINNOR_X1_OWNER_MODE&&!['api','mounted','revision'].includes(process.env.FINNOR_X1_OWNER_MODE))
+const material=process.env.FINNOR_X1_OWNER_MODE==='material';
+if(process.env.FINNOR_X1_OWNER_MODE&&!['api','mounted','revision','material'].includes(process.env.FINNOR_X1_OWNER_MODE))
   throw Error('EXACT_REGISTERED_OWNER_MODE_REQUIRED');
-if(mounted&&dutyCount!==1)throw Error('MOUNTED_NAMED_ONE_DUTY_SCENARIO_REQUIRED');
+if((mounted||material)&&dutyCount!==1)throw Error('NAMED_ONE_DUTY_SCENARIO_REQUIRED');
 if(process.env.FINNOR_X1_OWNER_CASE&&!['1','128'].includes(process.env.FINNOR_X1_OWNER_CASE))
   throw Error('EXACT_FROZEN_OWNER_CASE_REQUIRED');
 const limits = JSON.parse(await readFile(join(repo, "scope-frontier5/x1-institutional-programme-compiler/verification-plan.json"), "utf8")).limits;
@@ -46,7 +47,8 @@ const freeze = { source: { commit: git("rev-parse", "HEAD"), tree: git("rev-pars
   runtime: { node: process.version, platform: process.platform, arch: process.arch },
   profile: "DISPOSABLE_LOCAL_AUTH_SERVICE_ACTUAL_BEARER_AND_RLS", hostedSupabaseQualified: false,
   authDevBypass: false, expectedMigrations: 180, limits, freeBytesBefore: String(diskBefore), dutyCount,mounted,
-  cases: ["A-raw-two-identity-native-request", "C-unsigned-forged-input", "D-same-key-replay", "G-restricted-roles"],
+  cases: ["A-raw-two-identity-native-request", "C-unsigned-forged-input", "D-same-key-replay", "G-restricted-roles",
+    ...(material?['B-ledger-correction']:[])],
   omitted: "Full B–H, physical interruption, mounted browser, clean built installation/upgrade and protected qualification remain distinct required evidence" };
 await writeFile(join(evidence, "freeze.json"), JSON.stringify(freeze, null, 2) + "\n", { mode: 0o600, flag: "wx" });
 const results: any[] = [], traffic: unknown[] = [];
@@ -217,6 +219,9 @@ try {
       ownerPartyId: actor, requestText, requestedAt: occurredAt, dueAt: deadlineAt, requiresAcceptedDeliverable: true },
     requestTexts:Array.from({length:dutyCount},(_,index)=>dutyCount===1?requestText:requestText+' item '+index),
     expectedRequestCount: dutyCount, expectedCompletionMeaning: "CREATION_ONLY_NOT_FULFILLMENT_OR_APPROVAL" };
+  if(material)expected.correction={sourceId:'ledger-original',recordId:'balance-A',value:'25.00',
+    currency:'USD',unit:'units',period:'2026-10',basis:'outstanding',canonicalDealId:String(first.row.id),
+    affectedDutyCount:0,preservedDutyCount:1,newEffectCount:0,sourcePopulation:3};
   await save("inputs-and-independent-expectations.json", { tenant, actor, institutionId, workId, rule, sourceBindings, expected });
   await admin.query(`INSERT INTO finnor_os.compute_resource_policies(resource_key,capacity,per_tenant_capacity,interactive_reserve,lease_seconds,source)
     VALUES('native:p4',2,2,0,60,'explicit disposable X1 validation capacity; not protected funding')`);
@@ -421,21 +426,48 @@ try {
     basis: "ACTUAL_LOCAL_AUTH_HTTP_SQL_PHYSICAL_WORKER_NATIVE_CREATE_AND_INDEPENDENT_SQL_OBSERVER" });
   if(mounted)await save('mounted-canonical-completion.json',{compilerId,workId,completion,
     browserEvidenceRequired:true,mountedPassEstablished:false});
-  if(revise||mounted){
+  if(revise||mounted||material){
     const initialObjective=(await admin.query('SELECT * FROM finnor_os.work_objective_loops WHERE tenant_id=$1 AND work_id=$2',
       [tenant,workId])).rows[0];
     const initialProof=sha(JSON.stringify(completion.completion_proof)),initialPlanId=completion.plan_id;
     let revised:any;
     if(revise)revised=await api('institution-revise',{...input,parentRequestId:compilerId,idempotencyKey:'x1-revision:'+randomUUID()});
-    else for(let poll=0;poll<90;poll++){
+    if(material){
+      const ledger=(await admin.query<{id:string;document_id:string}>(`SELECT id::text,document_id::text
+        FROM finnor_os.x1_source_grants WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3
+          AND source_id='ledger-original' AND version=1`,[tenant,actor,workId])).rows[0]!;
+      assert.ok(ledger,'original authorized ledger grant');
+      const corrected=Buffer.from(JSON.stringify(sources.find(source=>source.id==='ledger-original')!.rows
+        .map(record=>({...record,value:expected.correction.value}))));
+      await writeFile(join(evidence,'originals/ledger-corrected.json'),corrected,{mode:0o600,flag:'wx'});
+      const version=await withTenantTransaction(tenant,{userId:actor},async db=>appendDocumentVersion(db,{
+        tenantId:tenant,documentId:ledger.document_id,bytes:corrected,mediaType:'application/json',format:'unknown',
+        origin:'manual_upload',actor,sourceSystem:'owner-export',sourceRef:'ledger-original',providerVersionId:'r2'}));
+      const replacement=(await admin.query(`INSERT INTO finnor_os.x1_source_grants
+        (tenant_id,principal_id,work_id,institution_id,source_id,source_class,purpose,acquisition_kind,
+          document_id,document_version_id,protocol,revision,original_sha256,expected_object_ids,version,valid_from,expires_at)
+        SELECT tenant_id,principal_id,work_id,institution_id,source_id,source_class,purpose,acquisition_kind,
+          document_id,$4,protocol,'r2',$5,expected_object_ids,version+1,valid_from,expires_at
+        FROM finnor_os.x1_source_grants WHERE tenant_id=$1 AND principal_id=$2 AND id=$3
+        RETURNING id::text,source_id,version,revision,valid_from,expires_at`,
+        [tenant,actor,ledger.id,version.id,sha(corrected)])).rows[0];
+      assert.ok(replacement);assert.equal(replacement.version,2);
+      const withdrawn=await api('institution-read',{requestId:compilerId});
+      assert.equal(withdrawn.status,200);assert.equal(withdrawn.body.status,'INVALIDATED');
+      assert.equal(withdrawn.body.artifact,null);assert.equal(withdrawn.body.programme,null);
+      await save('material-owner-correction.json',{at:new Date().toISOString(),originalGrantId:ledger.id,
+        replacement,coreVersionId:version.id,originalBytesRetained:true,independentExpectation:expected.correction,
+        withdrawn,automaticWorkerRequired:true,observerCalledRevise:false});
+    }
+    if(!revise)for(let poll=0;poll<90;poll++){
       if(guardFailure)throw Error(guardFailure);
       const q=(await admin.query(`SELECT id,revision,parent_request_id FROM finnor_os.x1_compiler_requests
         WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3 AND revision=2`,[tenant,actor,workId])).rows[0];
       if(q){assert.equal(q.parent_request_id,compilerId);revised={status:202,body:{requestId:q.id,revision:q.revision},
-        basis:'ACTUAL_MOUNTED_REVISION_DURABLE_SQL_ACCEPTANCE'};break;}
+        basis:material?'ACTUAL_OWNER_CHANGE_P7_AUTOMATIC_SQL_ACCEPTANCE':'ACTUAL_MOUNTED_REVISION_DURABLE_SQL_ACCEPTANCE'};break;}
       await new Promise(resolve=>setTimeout(resolve,1000));
     }
-    assert.ok(revised,'actual mounted revision must reach the owner');
+    assert.ok(revised,material?'actual P7 owner-change revision must reach the owner':'actual mounted revision must reach the owner');
     assert.equal(revised.status,202,JSON.stringify(revised));assert.equal(revised.body.revision,2);
     let current:any;
     for(let poll=0;poll<90;poll++){
@@ -471,9 +503,42 @@ try {
       [tenant,expected.requestTexts])).rows[0].n,dutyCount);
     assert.equal((await admin.query('SELECT count(*)::int n FROM finnor_os.domain_actions WHERE tenant_id=$1 AND work_id=$2',
       [tenant,workId])).rows[0].n,dutyCount);
-    results.push({id:'B-same-standing-input-native-revision',status:'PASS',observed:{revised,current,
+    results.push({id:material?'B-material-ledger-native-revision':'B-same-standing-input-native-revision',status:'PASS',observed:{revised,current,
       initialObjective,finalObjective,priorCompletionProofDigest:initialProof},
       basis:'ACTUAL_AUTHENTICATED_OWNER_REVISION_SAME_OBJECTIVE_ORIGINAL_PARENT_NO_DUPLICATE_EFFECT'});
+    if(material){
+      const artifacts=(await admin.query(`SELECT r.id request_id,r.revision,a.candidate,a.check_result,a.dependency_graph
+        FROM finnor_os.x1_compiler_requests r JOIN finnor_os.x1_compiler_artifacts a
+          ON a.tenant_id=r.tenant_id AND a.id=r.artifact_id
+        WHERE r.tenant_id=$1 AND r.principal_id=$2 AND r.work_id=$3 ORDER BY r.revision`,[tenant,actor,workId])).rows;
+      assert.equal(artifacts.length,2);const prior=artifacts[0],next=artifacts[1],oracle=expected.correction;
+      assert.equal(next.candidate.coverage.length,oracle.sourcePopulation);
+      const quantity=next.candidate.quantities.filter((q:any)=>q.sourceId===oracle.sourceId&&q.recordId===oracle.recordId);
+      assert.equal(quantity.length,1);for(const field of ['value','currency','unit','period','basis'])
+        assert.equal(quantity[0][field],oracle[field],'independent corrected '+field);
+      assert.match(quantity[0].canonicalRef,new RegExp(`^pe_deal:${oracle.canonicalDealId}@v[1-9][0-9]*$`));
+      assert.equal(prior.candidate.quantities.find((q:any)=>q.sourceId===oracle.sourceId&&q.recordId===oracle.recordId).value,'20.00');
+      assert.equal(next.check_result.disposition,'ACCEPTED_DEVELOPMENT');
+      const update=(await admin.query(`SELECT body FROM finnor_os.x1_compiler_events
+        WHERE tenant_id=$1 AND request_id=$2 AND kind='P7_EXACT_AFFECTED_UPDATE'`,[tenant,revised.body.requestId])).rows;
+      assert.equal(update.length,1);const closure=update[0].body;
+      assert.equal(closure.change,'SEMANTIC');assert.deepEqual(closure.changedDependencyIds,[JSON.stringify(['source-semantics','ledger-original'])]);
+      assert.equal(closure.affectedPriorDutyIds.length,oracle.affectedDutyCount);
+      assert.equal(closure.affectedCurrentDutyIds.length,oracle.affectedDutyCount);
+      assert.equal(closure.preservedCurrentDutyIds.length,oracle.preservedDutyCount);
+      assert.equal(closure.newDutyIds.length,0);assert.equal(closure.removedDutyIds.length,0);
+      assert.equal(closure.priorEffectsAndCostsRetained,true);assert.equal(closure.authorityGranted,false);
+      const updates=(await admin.query(`SELECT * FROM finnor_os.x1_compiler_updates
+        WHERE tenant_id=$1 AND trigger_request_id=$2 ORDER BY created_at,id`,[tenant,compilerId])).rows;
+      assert.ok(updates.some(u=>u.owner_table==='x1_source_grants'&&u.state==='SUBMITTED'
+        &&u.next_request_id===revised.body.requestId),'registered P7 owner-change handoff');
+      await save('material-correction-independent-proof.json',{revised,current,artifacts,closure,updates,
+        independentExpectation:oracle,originalEnvelope:await originalEnvelope(),priorCompletionProofDigest:initialProof,
+        noDuplicateRequestOrAction:true,observerCalledRevise:false,fullBFixtureEstablished:false});
+      results.push({id:'B-ledger-correction-minimal-closure',status:'PASS',observed:{closure,
+        correctedQuantity:quantity[0],sourcePopulation:next.candidate.coverage.length,priorEffectsRetained:true},
+        basis:'ACTUAL_CORE_OWNER_SOURCE_GRANT_TRIGGER_P7_COMPILER_CHECK_NATIVE_COMPLETION_AND_INDEPENDENT_SQL'});
+    }
     if(mounted){mountedRevisionVerified=true;await save('mounted-revision-canonical-completion.json',{revised,current,
       initialObjective,finalObjective,priorCompletionProofDigest:initialProof,
       noDuplicateRequestsOrActions:true,originalEnvelope:await originalEnvelope(),fullEngineering:false});}
