@@ -205,3 +205,9 @@ one canonical Request/completed action/verified effect remains, original S5 and
 compiler episode identities/envelopes are unchanged, and the previous completion
 proof remains byte-identical. Capture precise native failure rather than count a
 queued revision as success. The whole unchanged 840-second stack guard applies.
+
+Run 030 passed the original owner flow then its observer passed a SQL JSON object
+directly to the byte hash before submitting revision. Serialize that recorded
+proof explicitly, preserving the byte-identical prior-proof assertion. No
+revision request was exposed, so this failure supplies no product revision
+verdict. Retain it and rerun the same affected scenario.

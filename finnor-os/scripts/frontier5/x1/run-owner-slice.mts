@@ -373,7 +373,7 @@ try {
   if(revise){
     const initialObjective=(await admin.query('SELECT * FROM finnor_os.work_objective_loops WHERE tenant_id=$1 AND work_id=$2',
       [tenant,workId])).rows[0];
-    const initialProof=sha(completion.completion_proof),initialPlanId=completion.plan_id;
+    const initialProof=sha(JSON.stringify(completion.completion_proof)),initialPlanId=completion.plan_id;
     const revised=await api('institution-revise',{...input,parentRequestId:compilerId,idempotencyKey:'x1-revision:'+randomUUID()});
     assert.equal(revised.status,202,JSON.stringify(revised));assert.equal(revised.body.revision,2);
     let current:any;
@@ -403,8 +403,8 @@ try {
       assert.deepEqual(finalObjective[field],initialObjective[field],'original Objective '+field);
     for(const field of ['step_count','query_count','action_count','node_attempt_count'])
       assert.ok(finalObjective[field]>=initialObjective[field],'monotone original Objective '+field);
-    assert.equal(sha((await admin.query('SELECT completion_proof FROM finnor_os.work_plan_revisions WHERE tenant_id=$1 AND id=$2',
-      [tenant,initialPlanId])).rows[0].completion_proof),initialProof);
+    assert.equal(sha(JSON.stringify((await admin.query('SELECT completion_proof FROM finnor_os.work_plan_revisions WHERE tenant_id=$1 AND id=$2',
+      [tenant,initialPlanId])).rows[0].completion_proof)),initialProof);
     assert.deepEqual(await originalEnvelope(),beforeReplay,'same original episode/reservation/resources across revision');
     assert.equal((await admin.query('SELECT count(*)::int n FROM finnor_os.pe_requests WHERE tenant_id=$1 AND request_text=ANY($2::text[])',
       [tenant,expected.requestTexts])).rows[0].n,dutyCount);
