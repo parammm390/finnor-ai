@@ -56,6 +56,10 @@ export async function registerInstitutionCoreSource(ctx:PeMutationContext,body:u
       ON v.tenant_id=d.tenant_id AND v.document_id=d.id WHERE d.tenant_id=$1 AND d.id=$2 AND v.id=$3
       AND d.created_by=$4 AND v.created_by=$4`,[ctx.auth.tenantId,input.documentId,input.documentVersionId,ctx.auth.userId])).rows[0];
     if(!owned)throw Error('X1_INPUT_OWNED_CORE_ORIGINAL_REQUIRED');
+    const incompatible=(await c.query(`SELECT id FROM finnor_os.x1_source_grants
+      WHERE tenant_id=$1 AND document_id=$2 AND source_class<>$3 LIMIT 1`,
+      [ctx.auth.tenantId,input.documentId,input.sourceClass])).rows[0];
+    if(incompatible)throw Error('X1_SOURCE_NAMESPACE_CLASS_RECLASSIFICATION_DENIED');
     return loadDocumentVersion(db,ctx.auth.tenantId,input.documentId,input.documentVersionId);
   });
   if(!acquired||!acquired.bytes.length||acquired.bytes.length>profile.bounds.objectBytes)

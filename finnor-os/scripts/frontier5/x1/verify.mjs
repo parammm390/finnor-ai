@@ -93,6 +93,7 @@ for (const path of [
   'finnor-os/packages/db/migrations/0185_x1_original_s5_authority_currentness.sql',
   'finnor-os/packages/db/migrations/0186_x1_source_subject_scope.sql',
   'finnor-os/packages/db/migrations/0187_x1_responsible_principal_currentness.sql',
+  'finnor-os/packages/db/migrations/0188_x1_source_namespace_binding.sql',
   'finnor-os/packages/private-equity/src/institution-program/source-scope.ts',
   'finnor-os/packages/private-equity/src/institution-program/source-locks.ts',
   "finnor-os/packages/private-equity/src/institution-program/installed-source.ts",

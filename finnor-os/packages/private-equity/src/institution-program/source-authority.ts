@@ -80,6 +80,11 @@ export async function acquireInstitutionOriginal(
   if(sourceScope.body.sourceRevision!==row.revision||sourceScope.body.originalSha256!==row.original_sha256
     ||sourceScope.body.sourceId!==row.source_id||sourceScope.body.sourceClass!==row.source_class
     ||sourceScope.body.institutionId!==row.institution_id||sourceScope.body.purpose!==row.purpose
+    ||sourceScope.body.protocol!==row.protocol||sourceScope.body.acquisitionKind!==row.acquisition_kind
+    ||sourceScope.body.documentId!==row.document_id||sourceScope.body.documentVersionId!==row.document_version_id
+    ||sourceScope.body.integrationId!==row.integration_id||sourceScope.body.provider!==row.provider
+    ||sourceScope.body.adapterScope!==row.adapter_scope||sourceScope.body.externalObjectType!==row.external_object_type
+    ||sourceScope.body.externalId!==row.external_id
     ||JSON.stringify(sourceScope.body.expectedObjectIds)!==JSON.stringify(row.expected_object_ids))
     throw Error('X1_SOURCE_METADATA_CHANGED_BEFORE_READ');
   const unavailable=async(scope:InstitutionSourceScope):Promise<OwnerOriginal>=>{
