@@ -1,5 +1,19 @@
 # FRONTIER5.X1 status
 
+## Current core checkpoint — 13 October 2026
+
+Engineering **INCOMPLETE**, release **DESIGNED**. Checked source `bea8345033eebce54809a9db7806661f83ddffb4`, tree `649938e56b80c456f6c46b55a740c8fe9d84e883`, schema head0188/190 migrations. Exact private cuts remain recorded separately; no pooled completion fraction or final-install claim.
+
+Named development proofs now include combined overlapping personnel/reporting (56.46s; five known duties/four verified effects/one precise suspended duty, unchanged original frame); pre-episode preparation costs (85.40s; all51 actual Work API calls retained once in S7 with original parent allocation, money/human/aggregate stillunknown); new canonical creation properties (36.38s; exactEUR/parallel, missing type withheld with precise gap and independent Request completed); established source class safety (37.35s; API and legacy writer deny actual personnel-to-CRM consent bypass, full normal15-source/14-kind/three-operation completion retained). Exact proof cuts are in private `owner-progress-checkpoint-030.json`; they are EMPIRICALLY_VERIFIED only within these named cases.
+
+The namespace pre-fix actually returned200 and readAllowed=true after revoked consent when the same HR export was relabelled CRM. 0188 binds class across existing document/source identities, rejects installed-transport replacement, adds complete physical bindings to native source-scope.v2 and checks metadata before registered-original parsing. Earlier projected scope digests must be rechecked under the new schema. No new execution authority or protected source custody is supplied.
+
+All11 kernel commands, the existing worker/API imported closures, whole frontend types and existing workspace/capability/client/forms/authz generation checks pass on recorded cuts. The whole backend typecheck hit its frozen1536MiB heap limit and remains a retained FAIL; API's original checker-environment type failure is retained and repaired. These narrower checks do not substitute for a whole backend pass.
+
+Final supported packaging/clean installation/built old-database upgrade/restart, mounted new controls, remaining mandatory release/lifecycle/meter checks, equipped matched diagnostic, native final scrutiny/user testing and sealed reconstruction/handoff remain unfinished. Protected population/custody, S8 admission, production activation, qualified B_V/equipped comparators and operational/financial/H2 evidence remain separate and unestablished. Preparation attribution does not assert native request-unit consumption or full monetary cost coverage.
+
+The checkpoints below are historical.
+
 ## Current checkpoint — sensitive scope and lawful partial continuation
 
 Engineering remains **INCOMPLETE**, release **DESIGNED**. Migration head is 0186 with 188 immutable migration entries. Named development proofs: `verify-sensitive-coverage-fixed-003/owner` (58.78 s, 84872b4809299856e6bd0a8c2fab4d8341b4d0b8/tree c3324badf6eb447a19b953c6bbcc7aae330ea9d2), `verify-certified-source-owner-inputs-002/owner` (77.46 s, 23eb08ca40f48311c1e9af8a3cda0e9dbb1c7e3d/tree 6c1ac8220fbb645a1aa6eb3a9de797766920536c) and eleven kernel commands at the latter cut. These are **EMPIRICALLY_VERIFIED** within their named disposable development cases.
