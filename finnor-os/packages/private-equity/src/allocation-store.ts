@@ -9,6 +9,7 @@ import { enqueueOwnerDeliveryInTransaction } from '../../governed-execution/src/
 import type { PeMutationContext } from './types';
 import {planInstitutionDemandCharge,type InstitutionResourceDemand,type InstitutionChargeRequest} from './institution-program/resource-demand';
 import {validateBeliefViewPin} from './enterprise-beliefs';
+import {lockInstitutionSourceAuthority} from './institution-program/source-locks';
 
 const actor=(ctx:PeMutationContext)=>ctx.auth.employeeId??ctx.auth.userId;
 const denied=()=>new AllocationContractError('PERMITTED_CONTEXT_UNAVAILABLE','Permitted S5 context is unavailable');
@@ -98,10 +99,11 @@ async function institutionState(ctx:PeMutationContext,c:pg.PoolClient,ref:Experi
  return {...row.body,status:row.status,revision:row.revision,revocationReason:row.revocation_reason};
 }
 async function currentInstitutionMandate(ctx:PeMutationContext,c:pg.PoolClient,workId:string,institutionId:string,deadline:string){
+ await lockInstitutionSourceAuthority(ctx,c,workId);
  const rows=(await c.query(`SELECT institution_id,rules FROM finnor_os.x1_work_mandates
     WHERE tenant_id=$1 AND work_id=$2 AND principal_id=$3 AND revoked_at IS NULL
       AND valid_from<=clock_timestamp() AND expires_at>clock_timestamp()
-    ORDER BY valid_from DESC LIMIT 2 FOR SHARE`,[ctx.auth.tenantId,workId,actor(ctx)])).rows;
+    ORDER BY valid_from DESC LIMIT 2`,[ctx.auth.tenantId,workId,actor(ctx)])).rows;
  if(rows.length!==1||rows[0].institution_id!==institutionId
    ||!Array.isArray(rows[0].rules)||rows[0].rules.length<1
    ||deadline!==rows[0].rules.map((rule:{deadlineAt:string})=>rule.deadlineAt).sort()[0])

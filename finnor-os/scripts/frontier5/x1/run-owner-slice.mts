@@ -67,7 +67,7 @@ const freeze = { source: { commit: git("rev-parse", "HEAD"), tree: git("rev-pars
   dirty: git("status", "--porcelain=v1", "-uall"),dirtyDiffDigest:sha(git('diff','--binary')), pins: sourcePins }, startedAt,
   runtime: { node: process.version, platform: process.platform, arch: process.arch },
   profile: "DISPOSABLE_LOCAL_AUTH_SERVICE_ACTUAL_BEARER_AND_RLS", hostedSupabaseQualified: false,
-  authDevBypass: false, expectedMigrations: 185, limits, freeBytesBefore: String(diskBefore), dutyCount,mounted,
+  authDevBypass: false, expectedMigrations: 186, limits, freeBytesBefore: String(diskBefore), dutyCount,mounted,
   cases: ["A-raw-two-identity-native-request", "C-unsigned-forged-input", "D-same-key-replay", "G-restricted-roles",
     ...(material?['B-ledger-correction']:[]),...(heterogeneous?['A-eight-class-original-corpus']:[]),
     ...(canonical?['A-fourteen-canonical-kinds']:[]),...(recovery?['D-compiler-before-publication-death']:[]),

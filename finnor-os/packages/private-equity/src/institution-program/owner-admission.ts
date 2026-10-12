@@ -19,6 +19,7 @@ import { originalRawRecords } from "./checker-raw";
 import { proposeInstitutionModel } from "./reconstruction";
 import type { DigitalInstitutionProfile } from "./contracts";
 import { acquireInstitutionOriginal, readInstitutionMandate, type OwnerOriginal } from "./source-authority";
+import { lockInstitutionSourceAuthority } from './source-locks';
 import { installedInstitutionCompilerIdentity } from "../../../capability-evolution/src/institution-port";
 import { currentInstitutionCompilerCapability } from '../../../capability-evolution/src/institution-consumer';
 import { digest as capabilityDigest } from '../../../capability-evolution/src/contracts';
@@ -421,6 +422,7 @@ async function admitCheckedInstitutionMappings(
     if (integration.some(Boolean) && !integration.every(Boolean)) throw new Error("X1_PARTIAL_SOURCE_TRUTH_BINDING");
   }
   return peTransaction(ctx, async (db, client) => {
+    await lockInstitutionSourceAuthority(ctx,client,original.workId,sources.map(source=>source.grantId));
     const rights = await client.query<{ revision: number }>(
       "SELECT revision FROM finnor_os.authority_states WHERE tenant_id=$1 FOR SHARE",
       [ctx.auth.tenantId],
@@ -431,7 +433,7 @@ async function admitCheckedInstitutionMappings(
     const mandateLocked = await client.query<{ id: string }>(
       `SELECT id::text FROM finnor_os.x1_work_mandates
         WHERE tenant_id=$1 AND id=$2 AND work_id=$3 AND principal_id=$4
-          AND revision=$5 AND revoked_at IS NULL AND expires_at>clock_timestamp() FOR SHARE`,
+          AND revision=$5 AND revoked_at IS NULL AND expires_at>clock_timestamp()`,
       [ctx.auth.tenantId, original.mandate.id, original.workId, ctx.auth.userId, original.mandate.revision],
     );
     if (!mandateLocked.rows[0]) throw new Error("X1_MANDATE_CHANGED_DURING_PUBLICATION");
@@ -520,7 +522,7 @@ async function admitCheckedInstitutionMappings(
              WHERE newer.tenant_id=g.tenant_id AND newer.work_id=g.work_id
                AND newer.principal_id=g.principal_id AND newer.source_id=g.source_id
                AND newer.version>g.version)
-          FOR SHARE`,
+          `,
         [ctx.auth.tenantId, source.grantId, ctx.auth.userId, original.workId, source.grantVersion,
           source.revision, source.originalSha256],
       );
@@ -542,7 +544,7 @@ async function admitCheckedInstitutionMappings(
              AND b.valid_from<=clock_timestamp() AND b.expires_at>clock_timestamp()
              AND c.revoked_at IS NULL AND c.expires_at>clock_timestamp()
              AND u.status='active'
-           FOR SHARE OF b,c`,
+           `,
           [ctx.auth.tenantId, source.institutionId, source.id, source.sourceClass, source.purpose, subjects],
         );
         if (consent.rows.length !== subjects.length) throw new Error("X1_SENSITIVE_CONSENT_CHANGED");

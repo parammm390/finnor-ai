@@ -8,6 +8,7 @@ import { authorizeBeliefResources } from "../enterprise-beliefs";
 import { principal, sha, stable, tx, unavailable } from "../evidence-execution/store";
 import { DigitalInstitutionProfile } from "./contracts";
 import { readInstitutionMandate } from "./source-authority";
+import { lockInstitutionSourceAuthority } from './source-locks';
 import type { InstitutionResourceDemand } from "./resource-demand";
 import type { OriginalInstitutionEvidence } from "./checker";
 import { institutionOwnerCutDigest } from "./canonical-json";
@@ -188,9 +189,10 @@ export async function submitInstitutionCompiler(ctx: PeMutationContext, input: {
       FROM finnor_os.work_inputs w WHERE tenant_id=$1 AND work_id=$2
       ORDER BY created_at DESC,id DESC LIMIT 1 FOR SHARE`, [ctx.auth.tenantId, input.workId])).rows[0];
     if (work?.id !== input.workInputId) throw Error("X1_EXACT_WORK_REVISION_CHANGED");
+    await lockInstitutionSourceAuthority(ctx,c,input.workId,request.grantIds);
     const grants = await c.query(`SELECT id FROM finnor_os.x1_source_grants WHERE tenant_id=$1
       AND principal_id=$2 AND work_id=$3 AND id=ANY($4::uuid[]) AND institution_id=$5
-      AND revoked_at IS NULL AND valid_from<=clock_timestamp() AND expires_at>clock_timestamp() FOR SHARE`,
+      AND revoked_at IS NULL AND valid_from<=clock_timestamp() AND expires_at>clock_timestamp()`,
     [ctx.auth.tenantId, principal(ctx), input.workId, request.grantIds, mandate.institutionId]);
     if (grants.rowCount !== request.grantIds.length) throw unavailable();
     let episode = (await c.query<CompilerEpisodeRow>(`SELECT * FROM finnor_os.x1_compiler_episodes
@@ -240,6 +242,7 @@ export async function assertInstitutionCompilerCurrent(ctx: PeMutationContext, q
       throw Error("X1_OPERATION_REVISION_BINDING_CHANGED");
   }
   const read = async (client: PoolClient) => {
+    if(lock)await lockInstitutionSourceAuthority(ctx,client,q.work_id,q.grant_ids);
     if (lock) await client.query("SELECT id FROM finnor_os.works WHERE tenant_id=$1 AND id=$2 FOR SHARE", [q.tenant_id, q.work_id]);
     const latest = (await client.query<{ id: string; body: unknown }>(`SELECT id::text,to_jsonb(w) body
       FROM finnor_os.work_inputs w WHERE tenant_id=$1 AND work_id=$2 ORDER BY created_at DESC,id DESC LIMIT 1`,
@@ -255,7 +258,7 @@ export async function assertInstitutionCompilerCurrent(ctx: PeMutationContext, q
       AND g.valid_from<=clock_timestamp() AND g.expires_at>clock_timestamp()
       AND NOT EXISTS(SELECT 1 FROM finnor_os.x1_source_grants n WHERE n.tenant_id=g.tenant_id
         AND n.principal_id=g.principal_id AND n.work_id=g.work_id AND n.source_id=g.source_id AND n.version>g.version)
-      ${lock ? "FOR SHARE OF g" : ""}`, [q.tenant_id, q.principal_id, q.work_id, q.grant_ids])).rows;
+      `, [q.tenant_id, q.principal_id, q.work_id, q.grant_ids])).rows;
     if (grants.length !== q.grant_ids.length) throw Error("X1_SOURCE_GRANT_REVOKED_OR_SUPERSEDED");
     if (manifest) {
       await client.query("SELECT finnor_os.x1_assert_canonical_owner_cut($1::jsonb,$2)",
@@ -277,7 +280,7 @@ export async function assertInstitutionCompilerCurrent(ctx: PeMutationContext, q
           WHERE b.tenant_id=$1 AND b.institution_id=$2 AND b.source_id=$3 AND b.registration_id=ANY($6::text[])
             AND b.revoked_at IS NULL AND b.valid_from<=clock_timestamp() AND b.expires_at>clock_timestamp()
             AND co.revoked_at IS NULL AND co.granted_at<=clock_timestamp() AND co.expires_at>clock_timestamp()
-            AND u.status='active'${lock?" FOR SHARE OF b,co,u":""}`,
+            AND u.status='active'`,
         [q.tenant_id,subject.institutionId,subject.sourceId,subject.sourceClass,subject.purpose,subject.registrations]);
         if(consent.rows.length!==subject.registrations.length)throw Error("X1_SENSITIVE_CONSENT_CHANGED");
       }
