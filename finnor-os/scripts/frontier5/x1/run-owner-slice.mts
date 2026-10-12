@@ -435,8 +435,13 @@ try {
       JOIN finnor_os.x1_compiler_requests x ON x.tenant_id=p.tenant_id AND x.program_id=p.id
       WHERE x.tenant_id=$1 AND x.id=$2`,[tenant,compilerId])).rows[0];
     if(terminal?.failure&&terminal.active_jobs===0){
+      // The native owner can finish between the HTTP read and this independent
+      // queue cut. Re-read its actual authenticated projection before closing;
+      // never substitute the SQL status for an API response.
+      const finalRead=await api('institution-read',{requestId:compilerId});
+      assert.equal(finalRead.status,200);reading=finalRead.body;
       await save('terminal-queue-observation.json',{at:new Date().toISOString(),terminal,
-        originalFailureRetained:true,episodeRestarted:false});break;
+        finalAuthenticatedRead:finalRead,originalFailureRetained:true,episodeRestarted:false});break;
     }
     await new Promise(resolve => setTimeout(resolve, dutyCount===128?2000:1000));
   }
