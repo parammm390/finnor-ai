@@ -396,6 +396,20 @@
       "limits": "UNCHANGED",
       "acceptance": "oracle-contract.md#a-fourteen-canonical-kinds-independent-expectations",
       "protectedQualification": false
+    },
+    {
+      "id": "D-compiler-before-publication-death",
+      "mode": "recovery",
+      "dutyCount": 1,
+      "status": "FROZEN_BEFORE_CASE_IMPLEMENTATION",
+      "workerJobLeaseSeconds": 5,
+      "fault": "ACTUAL_SQL_MAPPING_ADMISSION_LOCK_THEN_OWNED_WORKER_SIGKILL",
+      "expectedInterruptedDisposition": "UNKNOWN",
+      "expectedQueueDisposition": "QUARANTINED_RECONCILIATION_REQUIRED",
+      "resumption": "AUTHENTICATED_SAME_COMPILER_ID_ORIGINAL_EPISODE",
+      "limits": "UNCHANGED",
+      "acceptance": "oracle-contract.md#d-compiler-before-publication-death-independent-expectations",
+      "effectLostAckEstablished": false
     }
   ]
 }

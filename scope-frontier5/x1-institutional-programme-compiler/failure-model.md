@@ -89,4 +89,23 @@ Independent SQL must verify each immutable admission's target, evidence entity
 reference and native/Memory attachment plus the same bounded creation proof.
 This is a development case; it does not establish protected domain qualification.
 
+### Registered owner case D-compiler-before-publication-death
+
+Freeze the real first compiler delivery blocked at immutable mapping admission
+by an external SQL table lock. Observe its actual SQL lock wait and claimed job,
+then SIGKILL that owned OS process. No product checkpoint or fake handler is
+used. The native queue's existing expired-lease recovery must quarantine the
+potentially consequential delivery; readback must retain UNKNOWN, never imply
+failure, completion or permission to replay an effect.
+
+Use the supported five-second test lease from the first worker launch, while
+retaining all original episode and host limits. Restart only the physical worker
+after observed death. Authenticated resume keeps the same compiler request,
+grants, Work input, original episode/reservation/deadline and monotone counters.
+Require one actual eventual Request/effect and completed native Work. Credible
+regressions are permanent RUNNING after death, blind queue replay, a fresh parent
+or action identity, lost cost history or a stale claim publishing afterward.
+This case covers pre-publication compiler death; lost effect acknowledgement and
+other registered interruption points remain separate required cases.
+
 The independent oracle contract defines expectations and preservation. Boundary bugs need a pre-fix failing regression at their owning boundary. No post-code unit tests. Source changes following a failed proof retain the original run and rerun only affected proof plus necessary regressions.

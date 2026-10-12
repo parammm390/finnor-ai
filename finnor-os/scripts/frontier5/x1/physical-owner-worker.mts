@@ -12,5 +12,15 @@ const controller = new AbortController(), queue = createWorker();
 const stop = () => controller.abort();
 process.once("SIGTERM", stop); process.once("SIGINT", stop);
 const timer = setTimeout(stop, 600000);
-try { await queue.runLoop(200, controller.signal, 1); }
-finally { clearTimeout(timer); await closePool(); }
+// The isolated environment has one worker. Reuse the production queue's actual
+// conservative lease recovery; reconcilable jobs remain quarantined, never
+// blindly replayed. This is the same recovery operation used by worker startup.
+let recovering=false;
+const recover=async()=>{if(recovering||controller.signal.aborted)return;recovering=true;
+  try{const count=await queue.recoverExpiredRunningJobs();if(count)console.log(JSON.stringify({
+    event:'X1_ACTUAL_EXPIRED_LEASE_RECOVERY',pid:process.pid,count}));}
+  finally{recovering=false;}
+};
+const recoveryTimer=setInterval(()=>{void recover().catch(error=>console.error('Actual queue recovery failed',error.message));},2000);
+try { await recover();await queue.runLoop(200, controller.signal, 1); }
+finally { clearInterval(recoveryTimer);clearTimeout(timer); await closePool(); }

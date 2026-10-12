@@ -29,9 +29,10 @@ const revise=process.env.FINNOR_X1_OWNER_MODE==='revision';
 const material=process.env.FINNOR_X1_OWNER_MODE==='material';
 const heterogeneous=process.env.FINNOR_X1_OWNER_MODE==='heterogeneous';
 const canonical=process.env.FINNOR_X1_OWNER_MODE==='canonical';
-if(process.env.FINNOR_X1_OWNER_MODE&&!['api','mounted','revision','material','heterogeneous','canonical'].includes(process.env.FINNOR_X1_OWNER_MODE))
+const recovery=process.env.FINNOR_X1_OWNER_MODE==='recovery';
+if(process.env.FINNOR_X1_OWNER_MODE&&!['api','mounted','revision','material','heterogeneous','canonical','recovery'].includes(process.env.FINNOR_X1_OWNER_MODE))
   throw Error('EXACT_REGISTERED_OWNER_MODE_REQUIRED');
-if((mounted||material||heterogeneous||canonical)&&dutyCount!==1)throw Error('NAMED_ONE_DUTY_SCENARIO_REQUIRED');
+if((mounted||material||heterogeneous||canonical||recovery)&&dutyCount!==1)throw Error('NAMED_ONE_DUTY_SCENARIO_REQUIRED');
 if(process.env.FINNOR_X1_OWNER_CASE&&!['1','128'].includes(process.env.FINNOR_X1_OWNER_CASE))
   throw Error('EXACT_FROZEN_OWNER_CASE_REQUIRED');
 const limits = JSON.parse(await readFile(join(repo, "scope-frontier5/x1-institutional-programme-compiler/verification-plan.json"), "utf8")).limits;
@@ -55,11 +56,12 @@ const freeze = { source: { commit: git("rev-parse", "HEAD"), tree: git("rev-pars
   authDevBypass: false, expectedMigrations: 181, limits, freeBytesBefore: String(diskBefore), dutyCount,mounted,
   cases: ["A-raw-two-identity-native-request", "C-unsigned-forged-input", "D-same-key-replay", "G-restricted-roles",
     ...(material?['B-ledger-correction']:[]),...(heterogeneous?['A-eight-class-original-corpus']:[]),
-    ...(canonical?['A-fourteen-canonical-kinds']:[])],
+    ...(canonical?['A-fourteen-canonical-kinds']:[]),...(recovery?['D-compiler-before-publication-death']:[])],
   omitted: "Full B–H, physical interruption, mounted browser, clean built installation/upgrade and protected qualification remain distinct required evidence" };
 await writeFile(join(evidence, "freeze.json"), JSON.stringify(freeze, null, 2) + "\n", { mode: 0o600, flag: "wx" });
 const results: any[] = [], traffic: unknown[] = [];
 let database: EmbeddedPostgres | undefined, admin: pg.Client | undefined;
+let publicationBlocker:pg.Client|undefined;
 let service: Awaited<ReturnType<typeof authenticatedApiFixture>> | undefined, worker: ReturnType<typeof spawn> | undefined;
 let frontend:ReturnType<typeof spawn>|undefined;
 let mountedControl:Server|undefined;
@@ -278,17 +280,74 @@ try {
   const env = { HOME: join(evidence, "home"), PATH: "/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin", TMPDIR: join(evidence, "tmp"),
     XDG_CACHE_HOME: join(evidence, "cache"), TSX_DISABLE_CACHE: "1", DOTENV_CONFIG_PATH: join(evidence, "empty.env"),
     NODE_ENV: "test", AUTH_DEV_BYPASS: "0", FINNOR_P4_PROFILE: "ordinary_disposable", FINNOR_TEST_MANAGED_EXTENSIONS: "omit",
-    DATABASE_URL: connection("finnor_worker", workerPassword), CI: "1", LOG_LEVEL: "silent", NEXT_TELEMETRY_DISABLED: "1" };
-  worker = spawn(process.execPath, ["--max-old-space-size=1536", "--import=tsx", "scripts/frontier5/x1/physical-owner-worker.mts"],
-    { cwd: join(repo, "finnor-os"), env, stdio: ["ignore", "pipe", "pipe"] });
-  let logBytes = 0; for (const stream of [worker.stdout!, worker.stderr!]) stream.on("data", b => {
-    logBytes += b.length; if (logBytes <= limits.smallCheckOutputBytes) void appendFile(join(evidence, "worker.log"), b, { mode: 0o600 });
-    else worker?.kill("SIGTERM");
-  });
+    DATABASE_URL: connection("finnor_worker", workerPassword), CI: "1", LOG_LEVEL: "silent", NEXT_TELEMETRY_DISABLED: "1",
+    ...(recovery?{WORKER_JOB_LEASE_SECONDS:'5'}:{}) };
+  if(recovery){publicationBlocker=new pg.Client({connectionString:connection('x1_fixture',password)});
+    await publicationBlocker.connect();await publicationBlocker.query('BEGIN');
+    await publicationBlocker.query('LOCK TABLE finnor_os.x1_mapping_admissions IN SHARE MODE');}
+  let logBytes=0;
+  const startWorker=()=>{
+    const child=spawn(process.execPath,["--max-old-space-size=1536","--import=tsx","scripts/frontier5/x1/physical-owner-worker.mts"],
+      {cwd:join(repo,'finnor-os'),env,stdio:['ignore','pipe','pipe']});
+    for(const stream of [child.stdout!,child.stderr!])stream.on('data',b=>{
+      logBytes+=b.length;if(logBytes<=limits.smallCheckOutputBytes)void appendFile(join(evidence,'worker.log'),b,{mode:0o600});
+      else child.kill('SIGTERM');
+    });return child;
+  };
+  worker=startWorker();
   await save("physical-worker.json", { pid: worker.pid, parentPid: process.pid, environmentNames: Object.keys(env),
     role: "finnor_worker", actualProductionRegistrations: true, credentialsPersisted: false });
   let guardFailure: string | null = null;
   guard = setInterval(() => { void take().catch(error => { guardFailure = String(error.message); worker?.kill("SIGTERM"); }); }, 2000);
+  if(recovery){
+    const originalRecoveryEnvelope=async()=>({episodes:(await admin!.query(`SELECT id,work_id,original_deadline,wall_deadline,parent_reservation,parent_demand
+      FROM finnor_os.x1_compiler_episodes WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3`,[tenant,actor,workId])).rows,
+      resources:(await admin!.query('SELECT resource_id,revision FROM finnor_os.s5_resource_heads WHERE tenant_id=$1 ORDER BY resource_id',[tenant])).rows});
+    let blocked:any,claimed:any;
+    for(let poll=0;poll<240;poll++){
+      if(guardFailure)throw Error(guardFailure);
+      blocked=(await admin.query(`SELECT pid,wait_event_type,wait_event,pg_blocking_pids(pid) blocking_pids
+        FROM pg_stat_activity WHERE usename='finnor_worker' AND wait_event_type='Lock'
+          AND (query LIKE '%x1_mapping_admissions%' OR query LIKE '%x1_publish_mapping_admission%')`,[])).rows[0];
+      claimed=(await admin.query(`SELECT j.id,j.status,j.claim_token,j.claim_fence,j.lease_expires_at,j.attempts,
+        q.status compiler_status,q.episode_id,q.work_input_id,q.grant_ids FROM finnor_os.jobs j
+        JOIN finnor_os.x1_compiler_requests q ON q.tenant_id=j.tenant_id AND q.id=(j.payload->>'requestId')::uuid
+        WHERE j.tenant_id=$1 AND q.id=$2 AND j.type='run_x1_institution_compiler_v1' AND j.status='running'`,[tenant,compilerId])).rows[0];
+      if(blocked&&claimed?.compiler_status==='RUNNING')break;
+      await new Promise(resolve=>setTimeout(resolve,250));
+    }
+    assert.ok(blocked&&claimed,'actual mapping-admission SQL lock and compiler physical claim');
+    const before=await originalRecoveryEnvelope(),firstPid=worker.pid;
+    const stopped=new Promise<void>(resolve=>worker!.once('close',()=>resolve()));worker.kill('SIGKILL');await stopped;
+    assert.equal(worker.signalCode,'SIGKILL');
+    await publicationBlocker!.query('ROLLBACK');await publicationBlocker!.end();publicationBlocker=undefined;
+    for(const table of ['x1_mapping_admissions','x1_compiler_artifacts','domain_actions','pe_requests'])
+      assert.equal((await admin.query(`SELECT count(*)::int n FROM finnor_os.${table} WHERE tenant_id=$1`,[tenant])).rows[0].n,0,
+        'independent pre-publication absence '+table);
+    await save('recovery-physical-interruption.json',{at:new Date().toISOString(),firstPid,signal:'SIGKILL',blocked,claimed,before,
+      ownerInsertionWasBlocked:true,actualProcessDeath:true,originalEpisodeNotRestarted:true});
+    worker=startWorker();await save('recovery-physical-worker.json',{pid:worker.pid,firstPid,originalEnvironmentNames:Object.keys(env),
+      actualQueueRecovery:true,originalEpisodeNotRestarted:true});
+    let quarantined:any;
+    for(let poll=0;poll<30;poll++){
+      if(guardFailure)throw Error(guardFailure);
+      quarantined=(await admin.query(`SELECT j.*,a.outcome delivery_outcome,a.failure_kind delivery_failure_kind
+        FROM finnor_os.jobs j JOIN finnor_os.job_delivery_attempts a ON a.job_id=j.id
+        WHERE j.tenant_id=$1 AND j.id=$2 ORDER BY a.started_at DESC LIMIT 1`,[tenant,claimed.id])).rows[0];
+      if(quarantined?.status==='quarantined')break;
+      await new Promise(resolve=>setTimeout(resolve,1000));
+    }
+    assert.equal(quarantined?.status,'quarantined');assert.equal(quarantined.delivery_outcome,'reconciliation_required');
+    const readback=await api('institution-read',{requestId:compilerId});
+    await save('recovery-orphaned-readback.json',{quarantined,readback,before,after:await originalRecoveryEnvelope()});
+    assert.equal(readback.status,200);assert.equal(readback.body.status,'UNKNOWN','actual orphaned compiler retains UNKNOWN after physical death');
+    assert.equal(readback.body.artifact,null);assert.equal(readback.body.programme,null);
+    const resumed=await api('institution-resume',{requestId:compilerId});
+    assert.equal(resumed.status,202,JSON.stringify(resumed));assert.equal(resumed.body.requestId,compilerId);
+    assert.equal(resumed.body.originalParentRetained,true);assert.deepEqual(await originalRecoveryEnvelope(),before);
+    await save('recovery-authenticated-same-parent-resume.json',{resumed,before,after:await originalRecoveryEnvelope(),
+      exactCompilerId:compilerId,previousPhysicalDeliveryRetained:true});
+  }
   if(mounted){
     const thread=await createEmployeeConversationThread({tenantId:tenant,ownerEmployeeId:actor,title:'X1 standing evidence responsibility'});
     const other=await createEmployeeConversationThread({tenantId:tenant,ownerEmployeeId:actor,title:'X1 separate empty Work scope'});
@@ -511,6 +570,16 @@ try {
   }
   if(mounted)await save('mounted-canonical-completion.json',{compilerId,workId,completion,
     browserEvidenceRequired:true,mountedPassEstablished:false});
+  if(recovery){
+    const history=(await admin.query(`SELECT e.id,e.attempts,e.acquisition_calls,r.id request_id,r.episode_id,r.grant_ids,r.work_input_id
+      FROM finnor_os.x1_compiler_episodes e JOIN finnor_os.x1_compiler_requests r ON r.tenant_id=e.tenant_id AND r.episode_id=e.id
+      WHERE r.tenant_id=$1 AND r.id=$2`,[tenant,compilerId])).rows[0];
+    assert.equal(history.attempts,2);assert.equal(history.request_id,compilerId);
+    await save('recovery-independent-native-completion.json',{history,completion,rows,effects:allEffects,
+      noDuplicateRequestOrAction:true,exactOneOriginalEpisode:true,effectLostAckEstablished:false});
+    results.push({id:'D-compiler-before-publication-death',status:'PASS',observed:{history,completion},
+      basis:'ACTUAL_WORKER_SIGKILL_SQL_LOCK_QUEUE_QUARANTINE_AUTHENTICATED_SAME_PARENT_RESUME_AND_INDEPENDENT_NATIVE_COMPLETION'});
+  }
   if(revise||mounted||material){
     const initialObjective=(await admin.query('SELECT * FROM finnor_os.work_objective_loops WHERE tenant_id=$1 AND work_id=$2',
       [tenant,workId])).rows[0];
@@ -659,6 +728,7 @@ try {
       internalQuery: (error as any).internalQuery ?? null, position: (error as any).position ?? null } } });
 } finally {
   if (guard) clearInterval(guard);
+  if(publicationBlocker){await publicationBlocker.query('ROLLBACK').catch(()=>{});await publicationBlocker.end().catch(()=>{});}
   releaseDelayedRead();
   if (admin && workId) {
     for (const [name, sql] of [

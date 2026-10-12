@@ -144,6 +144,24 @@ One current person identity has an explicit expiring source binding and actual
 self-issued consent. One additional work-tracking trigger creates one new Request;
 the preexisting Request and draft Decision are not counted as completed effects.
 
+### D-compiler-before-publication-death independent expectations
+
+The independent SQL lock must intercept a real mapping-admission insertion
+before publication. At the observed interruption no immutable mapping admission,
+InstitutionProgram or native effect exists for this Work. SIGKILL is followed
+by actual lease expiry and a retained reconciliation_required delivery and
+quarantined original job. The authenticated compiler read must return UNKNOWN
+with no positive artifact/programme claim. It may be resumed under current
+original authority; it must not silently start another institution episode.
+
+After explicit authenticated resume, expect the same compiler ID, Work input,
+original compiler episode, S5 parent, original resource versions and deadline.
+Attempt/acquisition/charge history is monotone and both physical deliveries are
+retained. The recovered owner chain must produce exactly one independently
+observed Request and effect, then complete the same native Work/Objective/Plan.
+An absence observed in this coordinated pre-publication case does not generalize
+to absence after an unobserved external submission.
+
 ## Qualification score specification
 
 Independently freeze material mapping set M, supported obligation set O, unique business assignment identities/weights/deadlines, critical subset K and actionable-change set C per environment before exposure. Candidate claims are CANDIDATE, not expectations. Match one-to-one only under independently defined equivalence; no duplicate credit.
