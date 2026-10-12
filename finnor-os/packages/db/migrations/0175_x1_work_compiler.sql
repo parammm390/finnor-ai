@@ -157,6 +157,13 @@ END IF; END $$;
 
 -- Preserve the original S5 serializer, charge identities and occupancy writer.
 -- Add original Work scope and compiler-attempt classifications only.
+ALTER TABLE finnor_os.s5_governed_resource_charges
+ DROP CONSTRAINT s5_governed_resource_charges_phase_check;
+ALTER TABLE finnor_os.s5_governed_resource_charges
+ ADD CONSTRAINT s5_governed_resource_charges_phase_check CHECK(
+  phase IN('EXECUTION','RECOVERY','HUMAN') OR
+  (body->>'schema' IS NOT DISTINCT FROM 'finnor.s5.institution-consumption.v1'
+   AND phase IN('ACQUISITION','CHECK','COMPILE')));
 CREATE OR REPLACE FUNCTION finnor_os.s5_consume_institution(p_reservation_id text,p_body jsonb)
 RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog,finnor_os AS $$
 DECLARE v_tenant uuid:=finnor_os.request_tenant_id();
@@ -205,7 +212,8 @@ BEGIN
     RETURN v_prior;
   END IF;
   IF (SELECT count(*) FROM finnor_os.s5_consumptions
-    WHERE tenant_id=v_tenant AND reservation_id=p_reservation_id)>=512
+    WHERE tenant_id=v_tenant AND reservation_id=p_reservation_id)>=(CASE
+      WHEN v_origin->'demand'->'chargeScope' IS NULL THEN 512 ELSE 1420 END)
     THEN RAISE EXCEPTION 'S5 institution original charge bound exhausted'; END IF;
   SELECT COALESCE(sum(units),0) INTO v_used FROM finnor_os.s5_governed_resource_charges
     WHERE tenant_id=v_tenant AND reservation_id=p_reservation_id AND resource_id=p_body->>'resourceId';

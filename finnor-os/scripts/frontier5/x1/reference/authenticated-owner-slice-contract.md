@@ -46,3 +46,10 @@ failure in the existing P2 analytical worker: unguarded acceptance/source access
 on the new institution request variant. Preserve the analytical boundary with an
 explicit typed refusal before module construction; X1 is not a P2 financial search
 request. Retain the first scoped-typecheck failure and rerun its actual closure.
+
+The actual authenticated worker reached S5 and retained UNKNOWN on its first
+COMPILE charge because the existing charge table admitted only three old phases.
+Add new phase labels only for typed institution consumption; preserve the old
+domain. The original 520 compute/900 human units may require 1,420 one-unit records;
+metadata capacity must not truncate that unchanged parent. The S5 unit envelope
+continues to refuse overspend. Retain the actual queue failure and charges.

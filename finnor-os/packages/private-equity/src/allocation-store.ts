@@ -203,11 +203,14 @@ export async function chargeInstitutionDemand(ctx:PeMutationContext,ref:Experime
     'SELECT finnor_os.x1_s5_charge_authorized($1::jsonb,$2) AS allowed',
     [JSON.stringify(r),request.responsibilityIdentity])).rows[0]?.allowed)
     throw new AllocationContractError('BLOCKED_AUTHORITY','X1 charge has no current checked duty in the original Work envelope');
+  // Original X1 Work reserves at most 520 compute + 900 human units. One-unit
+  // records can require 1,420 immutable charges without enlarging that grant.
+  const chargeLimit=r.demand.chargeScope?.kind==='ORIGINAL_WORK_EPISODE'?1420:512;
   const rows=(await c.query(`SELECT ch.body FROM finnor_os.s5_governed_resource_charges ch
     JOIN finnor_os.s5_consumptions co ON co.tenant_id=ch.tenant_id AND co.consumption_id=ch.consumption_id
-    WHERE ch.tenant_id=$1 AND ch.reservation_id=$2 AND co.principal_id=$3 ORDER BY ch.created_at,ch.charge_key LIMIT 513`,
-    [ctx.auth.tenantId,ref.id,actor(ctx)])).rows;
-  if(rows.length>512)throw new AllocationContractError('LIMIT_EXCEEDED','S5 institution charge population bound');
+    WHERE ch.tenant_id=$1 AND ch.reservation_id=$2 AND co.principal_id=$3 ORDER BY ch.created_at,ch.charge_key LIMIT $4`,
+    [ctx.auth.tenantId,ref.id,actor(ctx),chargeLimit+1])).rows;
+  if(rows.length>chargeLimit)throw new AllocationContractError('LIMIT_EXCEEDED','S5 institution charge population bound');
   const existing=rows.map(row=>row.body as {chargeKey:string;requestDigest:string;phase:string;ordinal:number;units:number;resourceId:string;unit:string});
   const plan=planInstitutionDemandCharge({demand:r.demand,envelope:r.envelopes,existingCharges:existing,request});
   if(plan.status==='REFUSED')throw new AllocationContractError('STALE_INPUT',plan.reason);
