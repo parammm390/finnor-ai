@@ -1,5 +1,25 @@
 # FRONTIER5.X1 status
 
+## Current runtime checkpoint — fresh migration bootstrap observed, 12 October 2026
+
+The first real PostgreSQL bootstrap failed in 0175 with a syntax error inside the
+unparenthesized CASE used by the original charge bound. That original failure is
+retained. Source commit `ebb460364` parenthesizes the SQL expression and regenerates
+the existing migration bundle. The affected fresh bootstrap then applied all
+178 migrations in 8.58 seconds on the unchanged recorded cut.
+
+This is actual disposable PostgreSQL migration/bootstrap evidence. It ran the
+existing P1 setup with a supported filter excluding every business case; zero
+business cases passed. Setup auth bypass was enabled, so this is **not** positive
+authenticated X1, worker/effect, mounted, clean built installation or upgrade
+evidence. The disposable instance was stopped and its temporary files cleaned
+by the existing driver. Installed persistent environments remain unmodified.
+
+Engineering remains **INCOMPLETE**. Capacity is available. Continue the actual
+authenticated owner-bound raw-source→S1→S5→queue/worker→native Request→independent
+observer slice, then full currentness/recovery/fallback/mounted/installation/A–H
+and reconstructible handoff. The full original goal remains active.
+
 ## Current source checkpoint — qualification administration and capacity restored, 12 October 2026
 
 Engineering remains **INCOMPLETE**. The qualification software now validates a
