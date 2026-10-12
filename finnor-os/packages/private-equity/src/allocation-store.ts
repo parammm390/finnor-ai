@@ -10,6 +10,7 @@ import type { PeMutationContext } from './types';
 import {planInstitutionDemandCharge,type InstitutionResourceDemand,type InstitutionChargeRequest} from './institution-program/resource-demand';
 import {validateBeliefViewPin} from './enterprise-beliefs';
 import {lockInstitutionSourceAuthority} from './institution-program/source-locks';
+import {evaluateAuthority} from '@finnor/authority';
 
 const actor=(ctx:PeMutationContext)=>ctx.auth.employeeId??ctx.auth.userId;
 const denied=()=>new AllocationContractError('PERMITTED_CONTEXT_UNAVAILABLE','Permitted S5 context is unavailable');
@@ -109,11 +110,16 @@ async function currentInstitutionMandate(ctx:PeMutationContext,c:pg.PoolClient,w
    ||deadline!==rows[0].rules.map((rule:{deadlineAt:string})=>rule.deadlineAt).sort()[0])
    throw new AllocationContractError('STALE_INPUT','S5 institution original mandate deadline unavailable');
 }
-async function currentInstitution(ctx:PeMutationContext,c:pg.PoolClient,r:InstitutionReservation):Promise<AllocationSnapshot>{
+async function currentInstitution(ctx:PeMutationContext,c:pg.PoolClient,r:InstitutionReservation){
  await currentInstitutionMandate(ctx,c,r.workId,r.demand.institutionId,r.originalDeadline);
- const rights=(await c.query('SELECT revision FROM finnor_os.authority_states WHERE tenant_id=$1 FOR SHARE',[ctx.auth.tenantId])).rows[0];
+ const decision=await evaluateAuthority(ctx.auth,{operation:'query',capability:'query:pe_world_state',risk:'low',
+   workId:r.workId,resources:[{type:'work',id:r.workId}]});
+ if(decision.outcome!=='allowed'||decision.reasonCode!=='grant_allows')
+   throw new AllocationContractError('STALE_INPUT','S5 original institution current read authority unavailable');
+ const currentness=(await c.query<{body:{authorityDecisionId:string;rightsRevision:string;executionAuthorityGranted:false}}>(
+   'SELECT finnor_os.s5_assert_institution_current($1,$2) AS body',[r.ref.id,decision.id])).rows[0]!.body;
  const current=await snapshot(c,ctx.auth.tenantId);
- if(String(rights?.revision)!==r.rightsRevision||Date.now()>=Date.parse(r.originalDeadline)
+ if(Date.now()>=Date.parse(r.originalDeadline)
    ||r.status==='RELEASED'||r.demand.tenantId!==ctx.auth.tenantId
    ||r.demand.principalId!==actor(ctx)||r.demand.workId!==r.workId
    ||r.resources.length!==current.resources.length
@@ -125,7 +131,7 @@ async function currentInstitution(ctx:PeMutationContext,c:pg.PoolClient,r:Instit
     ||(await validateBeliefViewPin(ctx,pin)).status!=='CURRENT')
     throw new AllocationContractError('STALE_INPUT','S5 institution resource source or rights changed');
  }
- return current;
+ return {snapshot:current,currentness};
 }
 /** Institution demand enters the same S5 portfolio serializer and resource
  * occupancy population as finite S5 clearings; it is not an X1 budget row. */
@@ -217,9 +223,10 @@ export async function chargeInstitutionDemand(ctx:PeMutationContext,ref:Experime
   const plan=planInstitutionDemandCharge({demand:r.demand,envelope:r.envelopes,existingCharges:existing,request});
   if(plan.status==='REFUSED')throw new AllocationContractError('STALE_INPUT',plan.reason);
   if(plan.status==='REPLAY')return {charge:existing.find(row=>row.chargeKey===plan.chargeKey)!,semanticReplay:true};
-  await currentInstitution(ctx,c,r);
+  const {currentness}=await currentInstitution(ctx,c,r);
   const preimage={schema:'finnor.s5.institution-consumption.v1',reservationRef:ref,
     originalDeadline:r.originalDeadline,parentWorkId:r.workId,chargeKey:plan.chargeKey,
+    currentAuthorityDecisionId:currentness.authorityDecisionId,currentRightsRevision:currentness.rightsRevision,
     requestDigest:plan.requestDigest,...request,resourceId:plan.resourceId,unit:plan.unit,
     usedAfter:plan.usedAfter,costs:{money:null,status:'UNMETERED',releaseSufficient:false},
     executionAuthorityGranted:false};
@@ -233,8 +240,8 @@ export async function validateInstitutionDemand(ctx:PeMutationContext,ref:Experi
  return locked(ctx,async c=>{
   const reservation=await institutionState(ctx,c,ref);
   try{
-   await currentInstitution(ctx,c,reservation);
-   return {status:'CURRENT' as const,reservation,executionAuthorityGranted:false as const};
+   const {currentness}=await currentInstitution(ctx,c,reservation);
+   return {status:'CURRENT' as const,reservation,currentness,executionAuthorityGranted:false as const};
   }catch(error){
    if(error instanceof AllocationContractError && error.code==='STALE_INPUT')
     return {status:'STALE_INPUT' as const,reservation,reason:error.message,

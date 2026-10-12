@@ -4,4 +4,4 @@
  * Keep this beside the migrations so readiness and worker heartbeats cannot drift
  * by carrying independent literals.
  */
-export const CURRENT_MIGRATION_HEAD = "0184_x1_scoped_source_authority_locks.sql";
+export const CURRENT_MIGRATION_HEAD = "0185_x1_original_s5_authority_currentness.sql";

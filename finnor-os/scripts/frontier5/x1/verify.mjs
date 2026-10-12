@@ -90,6 +90,7 @@ for (const path of [
   'finnor-os/packages/db/migrations/0182_x1_core_source_parameter_binding.sql',
   'finnor-os/packages/db/migrations/0183_x1_source_authority_role_isolation.sql',
   'finnor-os/packages/db/migrations/0184_x1_scoped_source_authority_locks.sql',
+  'finnor-os/packages/db/migrations/0185_x1_original_s5_authority_currentness.sql',
   'finnor-os/packages/private-equity/src/institution-program/source-locks.ts',
   "finnor-os/packages/private-equity/src/institution-program/installed-source.ts",
   "finnor-os/packages/private-equity/src/index.ts",

@@ -68,7 +68,7 @@ const freeze = { source: { commit: git("rev-parse", "HEAD"), tree: git("rev-pars
   dirty: git("status", "--porcelain=v1", "-uall"),dirtyDiffDigest:sha(git('diff','--binary')), pins: sourcePins }, startedAt,
   runtime: { node: process.version, platform: process.platform, arch: process.arch },
   profile: "DISPOSABLE_LOCAL_AUTH_SERVICE_ACTUAL_BEARER_AND_RLS", hostedSupabaseQualified: false,
-  authDevBypass: false, expectedMigrations: 186, limits, freeBytesBefore: String(diskBefore), dutyCount,mounted,
+  authDevBypass: false, expectedMigrations: 187, limits, freeBytesBefore: String(diskBefore), dutyCount,mounted,
   cases: ["A-raw-two-identity-native-request", "C-unsigned-forged-input", "D-same-key-replay", "G-restricted-roles",
     ...(material?['B-ledger-correction']:[]),...(heterogeneous?['A-eight-class-original-corpus']:[]),
     ...(canonical?['A-fourteen-canonical-kinds']:[]),...(recovery?['D-compiler-before-publication-death']:[]),
@@ -1141,6 +1141,8 @@ try {
     });
     const newRights=String((await admin.query('SELECT revision FROM finnor_os.authority_states WHERE tenant_id=$1',[tenant])).rows[0].revision);
     assert.notEqual(newRights,oldRights,'actual unrelated suspension must advance native tenant authority epoch');
+    await save('staff-epoch-owner-current-cut.json',{replacement,oldRights,newRights,originalFrame,
+      actualStatusChange:'UNRELATED_EMPLOYEE_SUSPENDED',responsiblePrincipalUnchanged:true});
     let next:Record<string,any>|undefined,response:any,ending:Record<string,any>|undefined;
     for(let poll=0;poll<180;poll++){
       if(guardFailure)throw Error(guardFailure);
