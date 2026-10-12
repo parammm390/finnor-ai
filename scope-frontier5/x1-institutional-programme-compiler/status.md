@@ -1,6 +1,68 @@
 # FRONTIER5.X1 status
 
-## Current checkpoint — owner recovery, full source domain and automatic revisions, 12 October 2026
+## Current checkpoint — authenticated inputs and precise unsupported continuation, 12 October 2026
+
+Engineering remains **INCOMPLETE**. The source implementation cut is
+`52743d499f62a98ab6edb1748570a33684a18531`, tree
+`687880b5491b0226faa68a80742cfeecadbe4951`. Each observation below binds its
+own recorded source and is **EMPIRICALLY_VERIFIED** development evidence.
+
+| Case | Duration | Private evidence |
+|---|---|---|
+| Three quantitative assertions through semantic owners | 25.24 s | verify-quantitative-owner-001/owner |
+| Quantity records preserved through three automatic revisions | 47.64 s | verify-quantitative-revisions-002/owner |
+| Authenticated input setup and full native completion | 38.74 s | verify-owner-inputs-006/owner |
+| Explicit unsupported operation with lawful continuation | 33.01 s | verify-unsupported-operation-fixed-001/owner |
+
+The ordinary Work operations now configure a standing mandate, bind owned Core
+originals, read configuration and grant/revoke the subject's own consent. Source
+coverage, hashes, source revisions and principal derive from actual owner records;
+completion meanings derive from the closed native registry. The full input run
+uses fifteen originals across ten classes and twelve direct protocols, fourteen
+canonical kinds, twenty-six identity mappings and three quantity assertions.
+It performs zero privileged source-grant or mandate fixture writes, checks actual
+registration replay and rejects supplied coverage/observer/subject fields. The
+physical registered worker creates Request, Workstream and Finding; independent
+SQL and native completion prove the final Work result. The existing mounted panel
+has input configuration controls; those new controls still require mounted proof.
+
+Quantity assertions now retain complete decimal/currency/unit/entity/period/basis,
+occurrence, availability, knowledge cut and original Core provenance in immutable
+Memory versions and applicable PE attachments. They remain source assertions,
+not settled financial truth. The retained first revision failure exposed an
+immutable identity/context collision; the complete context now participates in
+the content identity and earlier owner records remain unchanged.
+
+An explicit unsupported normative operation stays in the original denominator
+with a independently checked non-executable disposition. In the two-duty case,
+`approve_transaction` creates no action or effect while the permitted Request
+is observed. Programme is PARTIAL; full Work is not completed; the artifact names
+the missing operation, rule and original deadline. The pre-fix actual checker
+AUTHORITY refusal is retained. All eleven existing bounded kernel/protocol/
+checker/transport/responsibility commands pass at this cut; this is not final
+installation or protected qualification.
+
+There are now **184 migrations**, head `0182_x1_core_source_parameter_binding.sql`.
+0181 adds restricted authenticated input writers and stable mandate identity;
+0182 preserves it and repairs its ambiguous Core version parameter. Existing
+migrations are not rewritten. Old-schema/built restart compatibility at this
+new head remains required. The raw failed migration-count pin, source SQL error,
+disk-floor refusal and shared-volume-growth interruption remain retained. The
+last interruption still passed input setup but never claimed full native success.
+About 0.5 GB of the stopped owned development cache was safely removed; source,
+history, originals and evidence remain preserved.
+
+Remaining internal work: full personnel/source-grant/mandate currentness and
+unaffected continuation; original S5 authority revalidation without a new grant
+or budget; partial authorized source coverage; additional concurrency/cancellation
+and bounded-failure proofs; avoidable lifecycle meters; final supported built
+installation, reconstruction, mandatory source/auth/security/generated contracts,
+affected mounted controls/privacy, matched equipped diagnostic, native scrutiny
+and exact clean handoff. Protected custody/population/replay/live-soak admission,
+qualified comparators, activation and operational/financial outcomes remain
+separate gates. No pooled completion fraction or global PASS is claimed.
+
+## Earlier checkpoint — owner recovery, full source domain and automatic revisions, 12 October 2026
 
 Engineering remains **INCOMPLETE**. The following additional finite cases are
 **EMPIRICALLY_VERIFIED** in the authenticated disposable development profile.

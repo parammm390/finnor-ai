@@ -16341,62 +16341,324 @@
     }
   ],
   "noPooledCompletionFraction": true,
-  "currentRuntimeCheckpoint": {
-    "sourceCommit": "06e1c02a0",
-    "evidenceDomain": "DISPOSABLE_LOCAL_AUTHENTICATED_DEVELOPMENT_ONLY",
-    "fullEngineeringComplete": false,
-    "protectedQualification": false,
-    "finalInstalledCutVerified": false
-  },
-  "checkpointSourceCommit": "1053179bf3c921a9e8747ac68c19fb9d0f7746a3",
+  "currentRuntimeCheckpoint": "Authenticated owner inputs and explicit non-executable normative continuation; full engineering remains INCOMPLETE",
+  "checkpointSourceCommit": "52743d499f62a98ab6edb1748570a33684a18531",
   "latestEvidenceCuts": [
     {
-      "case": "Lost native acknowledgement",
-      "evidence": "verify-effect-recovery-002/owner",
-      "commit": "c52a1cbd6c5a0b52e1e200d8f30b38cafa1919e2",
-      "tree": "318da219f45c5fcfa3b2515f5589624f464ea545",
-      "durationMs": 29729.425666999996,
-      "sampledOwnedRssBytes": 2072920064
+      "evidence": "verify-quantitative-owner-001/owner",
+      "source": {
+        "commit": "5e8ef9c5f82db34eb82410e4b4adee7efabe6adb",
+        "tree": "50208f9d70427e193959ce79a5369d4aed422ff2",
+        "dirty": "M AGENTS.md",
+        "dirtyDiffDigest": "990ac443668b437009c48a8596b954578f12e980a982fd91c234a8107dabf1b3",
+        "pins": [
+          {
+            "path": "finnor-os/scripts/frontier5/x1/run-owner-slice.mts",
+            "sha256": "dfde1cc8448845e301ac92a48876f9289ef4fefa05815b6f9b91e64112b9ba3e"
+          },
+          {
+            "path": "finnor-os/scripts/frontier5/x1/authenticated-api-fixture.mts",
+            "sha256": "153b6911bc52dfe8e5ad6691ba8adacec723c3a2df0c724463c315182d36b561"
+          },
+          {
+            "path": "finnor-os/scripts/frontier5/x1/owner-source-corpus.mts",
+            "sha256": "9f8c8be21b18c9dfe60e79128e9241290d8b15d62ff82413996210e4f5ece1ba"
+          },
+          {
+            "path": "finnor-os/scripts/frontier5/x1/canonical-owner-corpus.mts",
+            "sha256": "10996a860488342e3474db016d35545879db67733a4b14872fec65ae3eb7f1f1"
+          },
+          {
+            "path": "finnor-os/scripts/frontier5/x1/upgrade-owner-fixture.mts",
+            "sha256": "9fcb6a7930f9e92dec3f3e6066a28f7d48cd718f1088475648bf7c68f8e4bdfb"
+          },
+          {
+            "path": "finnor-os/scripts/frontier5/x1/physical-owner-worker.mts",
+            "sha256": "f33c276c7fbc735e3c69c8eed374b6f7fb0cbcf64502fd3161667e0a8a10bfdb"
+          },
+          {
+            "path": "finnor-os/packages/db/migrations-bundle.ts",
+            "sha256": "dd40f18173ab77df71300d62569a36973a73c2a70cf5cb49c00db56b0391f9e3"
+          },
+          {
+            "path": "finnor-os/package-lock.json",
+            "sha256": "9a7b757ef717fbafa290c748d0faaedcb608afac1291c2fabe4d19c066d508b1"
+          },
+          {
+            "path": "scope-frontier5/x1-institutional-programme-compiler/profile.json",
+            "sha256": "2bd1d8d9fcf8115976aad5df14c5edd2bc7d28d105ec45dadd1e907f5ceaf9a6"
+          }
+        ]
+      },
+      "durationMs": 25236.572458000002,
+      "sampledOwnedRssBytes": 2232778752,
+      "cases": [
+        {
+          "id": "A-quantitative-semantic-owner-assertions",
+          "status": "PASS"
+        },
+        {
+          "id": "A-all-ordinary-operations",
+          "status": "PASS"
+        },
+        {
+          "id": "A-authenticated-owner-creation",
+          "status": "PASS"
+        },
+        {
+          "id": "A-eight-class-original-corpus",
+          "status": "PASS"
+        },
+        {
+          "id": "A-full-declared-source-and-owner-domain",
+          "status": "PASS"
+        },
+        {
+          "id": "A-fourteen-canonical-kinds",
+          "status": "PASS"
+        },
+        {
+          "id": "G-authenticated-api-compute-attribution",
+          "status": "PASS"
+        }
+      ],
+      "resultsSha256": "c3b5430f068c5543d1a8915149c015f6cc7caadcb3e6cddb29d7c10016112861"
     },
     {
-      "case": "Three ordinary operations",
-      "evidence": "verify-ordinary-001/owner",
-      "commit": "958172f8ffac0fdf140f5b88186b0f97705a3c7f",
-      "tree": "cd7048d6973586468b90065903fa0561eaafd668",
-      "durationMs": 25897.241875,
-      "sampledOwnedRssBytes": 1715372032
+      "evidence": "verify-quantitative-revisions-002/owner",
+      "source": {
+        "commit": "f0626daf0c51e6a171a1e3d4567b9293be0b23fb",
+        "tree": "c8396e122138e7c28f013a68958788289a805031",
+        "dirty": "M AGENTS.md",
+        "dirtyDiffDigest": "990ac443668b437009c48a8596b954578f12e980a982fd91c234a8107dabf1b3",
+        "pins": [
+          {
+            "path": "finnor-os/scripts/frontier5/x1/run-owner-slice.mts",
+            "sha256": "40ab6d70d35102d5bc52a4289a83fecb4ae8b228a703922302d1ea5701a51313"
+          },
+          {
+            "path": "finnor-os/scripts/frontier5/x1/authenticated-api-fixture.mts",
+            "sha256": "153b6911bc52dfe8e5ad6691ba8adacec723c3a2df0c724463c315182d36b561"
+          },
+          {
+            "path": "finnor-os/scripts/frontier5/x1/owner-source-corpus.mts",
+            "sha256": "9f8c8be21b18c9dfe60e79128e9241290d8b15d62ff82413996210e4f5ece1ba"
+          },
+          {
+            "path": "finnor-os/scripts/frontier5/x1/canonical-owner-corpus.mts",
+            "sha256": "10996a860488342e3474db016d35545879db67733a4b14872fec65ae3eb7f1f1"
+          },
+          {
+            "path": "finnor-os/scripts/frontier5/x1/upgrade-owner-fixture.mts",
+            "sha256": "9fcb6a7930f9e92dec3f3e6066a28f7d48cd718f1088475648bf7c68f8e4bdfb"
+          },
+          {
+            "path": "finnor-os/scripts/frontier5/x1/physical-owner-worker.mts",
+            "sha256": "f33c276c7fbc735e3c69c8eed374b6f7fb0cbcf64502fd3161667e0a8a10bfdb"
+          },
+          {
+            "path": "finnor-os/packages/db/migrations-bundle.ts",
+            "sha256": "dd40f18173ab77df71300d62569a36973a73c2a70cf5cb49c00db56b0391f9e3"
+          },
+          {
+            "path": "finnor-os/package-lock.json",
+            "sha256": "9a7b757ef717fbafa290c748d0faaedcb608afac1291c2fabe4d19c066d508b1"
+          },
+          {
+            "path": "scope-frontier5/x1-institutional-programme-compiler/profile.json",
+            "sha256": "2bd1d8d9fcf8115976aad5df14c5edd2bc7d28d105ec45dadd1e907f5ceaf9a6"
+          }
+        ]
+      },
+      "durationMs": 47636.423291,
+      "sampledOwnedRssBytes": 2870509568,
+      "cases": [
+        {
+          "id": "A-quantitative-semantic-owner-assertions",
+          "status": "PASS"
+        },
+        {
+          "id": "A-all-ordinary-operations",
+          "status": "PASS"
+        },
+        {
+          "id": "A-authenticated-owner-creation",
+          "status": "PASS"
+        },
+        {
+          "id": "A-eight-class-original-corpus",
+          "status": "PASS"
+        },
+        {
+          "id": "A-full-declared-source-and-owner-domain",
+          "status": "PASS"
+        },
+        {
+          "id": "A-fourteen-canonical-kinds",
+          "status": "PASS"
+        },
+        {
+          "id": "G-authenticated-api-compute-attribution",
+          "status": "PASS"
+        },
+        {
+          "id": "B-report-meaning-exception-and-cosmetic-change",
+          "status": "PASS"
+        }
+      ],
+      "resultsSha256": "435fe4cddbe60720b1b3f9f83c6b4d0f3f3d7f65416fc21629df3ea8d8d50478"
     },
     {
-      "case": "Existing schema plus API meters",
-      "evidence": "verify-schema-upgrade-004/owner",
-      "commit": "b59ee1c6ddac9aa38eeae2cdefb0e0fb8dfec418",
-      "tree": "340a8e61b1bf45a50f600405131f6aa3701abd56",
-      "durationMs": 52305.663791,
-      "sampledOwnedRssBytes": 1879293952
+      "evidence": "verify-owner-inputs-006/owner",
+      "source": {
+        "commit": "9c89eb477595ed3ed0485ed53536a008b8c8dd17",
+        "tree": "031a81a504db1fe5ad9e7471b8c30e14a3146d3d",
+        "dirty": "M AGENTS.md",
+        "dirtyDiffDigest": "990ac443668b437009c48a8596b954578f12e980a982fd91c234a8107dabf1b3",
+        "pins": [
+          {
+            "path": "finnor-os/scripts/frontier5/x1/run-owner-slice.mts",
+            "sha256": "3872a0199d86cc9886c3210191a0eb051f5d99ce50a842e5782b118a7041ede3"
+          },
+          {
+            "path": "finnor-os/scripts/frontier5/x1/authenticated-api-fixture.mts",
+            "sha256": "153b6911bc52dfe8e5ad6691ba8adacec723c3a2df0c724463c315182d36b561"
+          },
+          {
+            "path": "finnor-os/scripts/frontier5/x1/owner-source-corpus.mts",
+            "sha256": "9f8c8be21b18c9dfe60e79128e9241290d8b15d62ff82413996210e4f5ece1ba"
+          },
+          {
+            "path": "finnor-os/scripts/frontier5/x1/canonical-owner-corpus.mts",
+            "sha256": "10996a860488342e3474db016d35545879db67733a4b14872fec65ae3eb7f1f1"
+          },
+          {
+            "path": "finnor-os/scripts/frontier5/x1/upgrade-owner-fixture.mts",
+            "sha256": "9fcb6a7930f9e92dec3f3e6066a28f7d48cd718f1088475648bf7c68f8e4bdfb"
+          },
+          {
+            "path": "finnor-os/scripts/frontier5/x1/physical-owner-worker.mts",
+            "sha256": "f33c276c7fbc735e3c69c8eed374b6f7fb0cbcf64502fd3161667e0a8a10bfdb"
+          },
+          {
+            "path": "finnor-os/packages/db/migrations-bundle.ts",
+            "sha256": "699299118f54d9da3d6bc5e0b6b3afc61276e76efc18d6ff10d98bb69cfe22ed"
+          },
+          {
+            "path": "finnor-os/package-lock.json",
+            "sha256": "9a7b757ef717fbafa290c748d0faaedcb608afac1291c2fabe4d19c066d508b1"
+          },
+          {
+            "path": "scope-frontier5/x1-institutional-programme-compiler/profile.json",
+            "sha256": "2bd1d8d9fcf8115976aad5df14c5edd2bc7d28d105ec45dadd1e907f5ceaf9a6"
+          }
+        ]
+      },
+      "durationMs": 38735.68825,
+      "sampledOwnedRssBytes": 2676637696,
+      "cases": [
+        {
+          "id": "G-authenticated-owner-inputs",
+          "status": "PASS"
+        },
+        {
+          "id": "A-quantitative-semantic-owner-assertions",
+          "status": "PASS"
+        },
+        {
+          "id": "A-all-ordinary-operations",
+          "status": "PASS"
+        },
+        {
+          "id": "A-authenticated-owner-creation",
+          "status": "PASS"
+        },
+        {
+          "id": "A-eight-class-original-corpus",
+          "status": "PASS"
+        },
+        {
+          "id": "A-full-declared-source-and-owner-domain",
+          "status": "PASS"
+        },
+        {
+          "id": "A-fourteen-canonical-kinds",
+          "status": "PASS"
+        },
+        {
+          "id": "G-authenticated-api-compute-attribution",
+          "status": "PASS"
+        }
+      ],
+      "resultsSha256": "c366b8771fe9838b23a39f62767d03abdf4fc05575b17d8615155d2f6113dc94"
     },
     {
-      "case": "All source classes and canonical kinds",
-      "evidence": "verify-full-domain-003/owner",
-      "commit": "69be82dcd8ee84a1020118c6e5a60d27e2fb8b69",
-      "tree": "c259e5f63fd8e3cb1569c63483c1c6f06208c897",
-      "durationMs": 46825.173500000004,
-      "sampledOwnedRssBytes": 2226880512
-    },
-    {
-      "case": "Three automatic reporting revisions",
-      "evidence": "verify-reporting-changes-002/owner",
-      "commit": "d4decc6d17ecc9087c50695ea2bf72ccfc69ac96",
-      "tree": "009230f4cbdfb0c6b878dc474f1845cff377665d",
-      "durationMs": 48812.432041,
-      "sampledOwnedRssBytes": 2978054144
-    },
-    {
-      "case": "Physical checker crash and compatible resume",
-      "evidence": "verify-checker-crash-001/owner",
-      "commit": "1053179bf3c921a9e8747ac68c19fb9d0f7746a3",
-      "tree": "08fd7c4ecf997c64028d109608d6f3935a65ba12",
-      "durationMs": 20258.784,
-      "sampledOwnedRssBytes": 2162425856
+      "evidence": "verify-unsupported-operation-fixed-001/owner",
+      "source": {
+        "commit": "52743d499f62a98ab6edb1748570a33684a18531",
+        "tree": "687880b5491b0226faa68a80742cfeecadbe4951",
+        "dirty": "M AGENTS.md",
+        "dirtyDiffDigest": "990ac443668b437009c48a8596b954578f12e980a982fd91c234a8107dabf1b3",
+        "pins": [
+          {
+            "path": "finnor-os/scripts/frontier5/x1/run-owner-slice.mts",
+            "sha256": "07bb533798cbc0e6dc340221e0f81a93692898f4150c0d876083ded955ac9a4b"
+          },
+          {
+            "path": "finnor-os/scripts/frontier5/x1/authenticated-api-fixture.mts",
+            "sha256": "153b6911bc52dfe8e5ad6691ba8adacec723c3a2df0c724463c315182d36b561"
+          },
+          {
+            "path": "finnor-os/scripts/frontier5/x1/owner-source-corpus.mts",
+            "sha256": "9f8c8be21b18c9dfe60e79128e9241290d8b15d62ff82413996210e4f5ece1ba"
+          },
+          {
+            "path": "finnor-os/scripts/frontier5/x1/canonical-owner-corpus.mts",
+            "sha256": "10996a860488342e3474db016d35545879db67733a4b14872fec65ae3eb7f1f1"
+          },
+          {
+            "path": "finnor-os/scripts/frontier5/x1/upgrade-owner-fixture.mts",
+            "sha256": "9fcb6a7930f9e92dec3f3e6066a28f7d48cd718f1088475648bf7c68f8e4bdfb"
+          },
+          {
+            "path": "finnor-os/scripts/frontier5/x1/physical-owner-worker.mts",
+            "sha256": "f33c276c7fbc735e3c69c8eed374b6f7fb0cbcf64502fd3161667e0a8a10bfdb"
+          },
+          {
+            "path": "finnor-os/packages/db/migrations-bundle.ts",
+            "sha256": "699299118f54d9da3d6bc5e0b6b3afc61276e76efc18d6ff10d98bb69cfe22ed"
+          },
+          {
+            "path": "finnor-os/package-lock.json",
+            "sha256": "9a7b757ef717fbafa290c748d0faaedcb608afac1291c2fabe4d19c066d508b1"
+          },
+          {
+            "path": "scope-frontier5/x1-institutional-programme-compiler/profile.json",
+            "sha256": "2bd1d8d9fcf8115976aad5df14c5edd2bc7d28d105ec45dadd1e907f5ceaf9a6"
+          }
+        ]
+      },
+      "durationMs": 33008.158334,
+      "sampledOwnedRssBytes": 2007597056,
+      "cases": [
+        {
+          "id": "A-quantitative-semantic-owner-assertions",
+          "status": "PASS"
+        },
+        {
+          "id": "F-explicit-unsupported-operation",
+          "status": "PASS"
+        },
+        {
+          "id": "A-supported-independent-native-creation",
+          "status": "PASS"
+        },
+        {
+          "id": "G-authenticated-api-compute-attribution",
+          "status": "PASS"
+        }
+      ],
+      "resultsSha256": "9b1dd6cc1813509aaa70e438dbce5d04c02a1f42e9b21ebba516be7c5b931c34"
     }
   ]
 }
