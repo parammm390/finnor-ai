@@ -470,3 +470,9 @@ Actual installed peer imports must resolve to copied and pinned package bytes.
 The observed workforce/profiles import failure is retained; its repair is proved
 by the same native401, authenticated201 and full downstream owner flow, not by
 replacing the handler, peer module or expected status.
+
+Restart preservation reads actual pe_requests.state and pe_domain_actions.status.
+The expectation remains unchanged original IDs, states, reservation envelopes
+and deadlines plus new completed compiler-job processing. Bind installed source
+and independent verifier source separately; allow only exact observer/runner/
+failure/oracle deltas and independently compare all other installed preimages.

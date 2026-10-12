@@ -437,3 +437,14 @@ Include actual installed peer resolution in the same pinned closure; unavailable
 required peers refuse the build before serving. Preserve this failed run, all
 original pins and limits. Completion still requires actual authenticated owner
 flow, live same-size tamper refusal and post-restart queue processing.
+
+### Installed restart observer field error
+
+Installed delivery004 reaches OBSERVED, all three actual native operation proofs
+and completed Work, then the observer fails SQL42703 selecting pe_requests.status.
+Actual retained rows use pe_requests.state. Correct this observer only; preserve
+the original failure and unchanged expected identities, state and reservations.
+Verifier revision may differ from installed runtime solely for the declared
+driver/runner/oracle records, after comparing EVERY other installed original
+preimage with the current repository. Never rebuild unchanged passed runtime
+bytes or disguise verifier revision as installed source history.

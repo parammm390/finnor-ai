@@ -188,11 +188,24 @@ if (named.live || stage === "installed" || stage === "diagnostic") {
     if(installation){
       const path=join(realpathSync(installation),'finnor-os/x1-development-installation.json');
       const installed=JSON.parse(readFileSync(path,'utf8'));
-      if(installed.source.commit!==record.source.commit||installed.source.tree!==record.source.tree
-        ||installed.mode!=='DEVELOPMENT_ONLY'||installed.productionActive!==false)
-        finish('REFUSED',2,'Installed source does not equal this frozen engineering cut');
+      const observerPaths=new Set(['finnor-os/scripts/frontier5/x1/run-owner-slice.mts',
+        'finnor-os/scripts/frontier5/x1/verify.mjs',
+        'scope-frontier5/x1-institutional-programme-compiler/failure-model.md',
+        'scope-frontier5/x1-institutional-programme-compiler/oracle-contract.md']);
+      const differences=[];
+      for(const pin of installed.sourcePreimages){
+        const current=sha(readFileSync(join(repo,pin.path)));
+        if(current!==pin.sha256){
+          if(!observerPaths.has(pin.path))finish('REFUSED',2,'Installed runtime preimage differs from current source: '+pin.path);
+          differences.push({path:pin.path,installedSha256:pin.sha256,verifierSha256:current});
+        }
+      }
+      if(installed.mode!=='DEVELOPMENT_ONLY'||installed.productionActive!==false)
+        finish('REFUSED',2,'Installed runtime is not the declared development package');
       record.installation={root:realpathSync(installation),manifestPath:path,sha256:sha(readFileSync(path)),
-        source:installed.source,entrypoints:installed.entrypoints};
+        source:installed.source,entrypoints:installed.entrypoints,
+        comparedOriginalPreimages:installed.sourcePreimages.length,observerOnlyDelta:differences,
+        runtimeAndVerifierSourceRecordedSeparately:true};
     }
     const leaf=join(destination,'owner'),argv=['--max-old-space-size=1536','./node_modules/tsx/dist/cli.mjs','scripts/frontier5/x1/run-owner-slice.mts'];
     const started=Date.now();

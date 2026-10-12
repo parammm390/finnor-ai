@@ -883,8 +883,8 @@ try {
   assert.equal(actualBaseline.input_manifest.baseline.classification,'B_live');
   if(installedManifest){
     assert.equal(actualBaseline.input_manifest.baseline.source.git.status,'UNKNOWN','no invented Git history at relocated installation');
-    assert.equal(actualBaseline.input_manifest.baseline.source.installation.source.commit,freeze.source.commit);
-    assert.equal(actualBaseline.input_manifest.baseline.source.installation.source.tree,freeze.source.tree);
+    assert.equal(actualBaseline.input_manifest.baseline.source.installation.source.commit,installedManifest.source.commit);
+    assert.equal(actualBaseline.input_manifest.baseline.source.installation.source.tree,installedManifest.source.tree);
     assert.equal(actualBaseline.input_manifest.baseline.source.installation.manifestDigest,freeze.installation!.manifestDigest);
   }else{
     assert.equal(actualBaseline.input_manifest.baseline.source.git.commit,freeze.source.commit);
@@ -1984,7 +1984,7 @@ try {
         FROM finnor_os.x1_compiler_episodes WHERE tenant_id=$1 ORDER BY id`,[tenant])).rows,
       reservations:(await admin!.query(`SELECT reservation_id,envelopes FROM finnor_os.s5_reservations
         WHERE tenant_id=$1 ORDER BY reservation_id`,[tenant])).rows,
-      requests:(await admin!.query('SELECT id,status FROM finnor_os.pe_requests WHERE tenant_id=$1 ORDER BY id',[tenant])).rows,
+      requests:(await admin!.query('SELECT id,state FROM finnor_os.pe_requests WHERE tenant_id=$1 ORDER BY id',[tenant])).rows,
       actions:(await admin!.query('SELECT id,status FROM finnor_os.pe_domain_actions WHERE tenant_id=$1 ORDER BY id',[tenant])).rows,
     });
     const before=await preserved(),previousWorkerPid=worker!.pid;
