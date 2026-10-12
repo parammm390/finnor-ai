@@ -451,3 +451,12 @@ Use the actual source returned by the fifteen-source owner-input API. Keep owned
 ## G compiled local-development install — independent expectations
 
 The final package is a local development runtime, explicitly unqualified and without production admission. Its API dispatches compiled original route modules; worker runs actual createWorker/queue registrations; checker is a separate compiled process. Compare manifest hash preimages with independently read installed files and exact source/locks/profile/schema. No builder source path or substituted source digest may be required. First clean installed database accepts current190 migrations; existing173-migration fixture preserves original Work/users/Core and compatibility dispositions, adds original migrations without rewrite, and supports restart under the same accepted identities/parents. Normal authenticated raw inputs and native observers remain the source of completion evidence. Retained-source reflection is a current owner requirement and is packaged once; it is not an alternative execution result. The runtime must show which methods deliberately source-load under existing owners. NODE_ENV=production or a non-disposable profile cannot use the local entries. Tampered compiled/source bytes must refuse before effect use. Development evidence cannot become protected qualification or deployment authority.
+
+The observed startup timeout remains a failed original run. Its repair must keep
+the30-second startup limit and every original adverse check. Add a real running
+compiled API case: an unauthenticated native route first returns401; change a
+declared dependency byte without changing the manifest, restore its old mtime,
+then the SAME API process must return503 with the intended byte-pin refusal
+before route execution. Restore the original bytes/mode/time and observe401
+again. Retain actual server PID, hashes, statuses and refusal event. This checks
+ordinary filesystem mutation/currentness only, not privileged hostile custody.

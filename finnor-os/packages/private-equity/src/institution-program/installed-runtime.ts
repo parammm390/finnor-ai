@@ -14,8 +14,7 @@ const custody = createRequire(import.meta.url)("../../../source-custody/installa
 };
 export const installedDevelopmentRuntime = (required = false) => custody.installedRuntime(required);
 
-export function assertInstalledDevelopmentSchema(names: string[]) {
-  const installation = installedDevelopmentRuntime(true)!;
+export function assertInstalledDevelopmentSchema(names: string[], installation = installedDevelopmentRuntime(true)!) {
   const expected = installation.manifest.files.map(p => p.path)
     .filter(p => p.startsWith('finnor-os/packages/db/migrations/') && p.endsWith('.sql'))
     .map(p => p.slice('finnor-os/packages/db/migrations/'.length)).sort();

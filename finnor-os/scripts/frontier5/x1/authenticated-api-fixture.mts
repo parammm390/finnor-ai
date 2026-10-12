@@ -85,7 +85,15 @@ export async function authenticatedApiFixture(repo: string, actor: string, recor
             }}catch{/* Non-JSON owner logging is not an authority receipt. */}
         }
       });
-      compiled!.stderr!.on('data',chunk=>{diagnostics+=chunk.toString();if(diagnostics.length>65536)diagnostics=diagnostics.slice(-65536);});
+      let diagnosticLines='';
+      compiled!.stderr!.on('data',chunk=>{
+        diagnostics+=chunk.toString();if(diagnostics.length>65536)diagnostics=diagnostics.slice(-65536);
+        diagnosticLines+=chunk.toString();if(diagnosticLines.length>65536)diagnosticLines=diagnosticLines.slice(-65536);
+        while(diagnosticLines.includes('\n')){
+          const at=diagnosticLines.indexOf('\n'),line=diagnosticLines.slice(0,at);diagnosticLines=diagnosticLines.slice(at+1);
+          try{const event=JSON.parse(line);if(event.event==='X1_COMPILED_API_REFUSAL')record(event);}catch{/* Other diagnostics stay private. */}
+        }
+      });
       compiled!.once('error',error=>{clearTimeout(timer);reject(error);});
       compiled!.once('exit',code=>{clearTimeout(timer);reject(Error('X1_COMPILED_API_EARLY_EXIT:'+code+':'+diagnostics));});
     });}catch(error){compiled.kill('SIGKILL');auth.close();throw error;}

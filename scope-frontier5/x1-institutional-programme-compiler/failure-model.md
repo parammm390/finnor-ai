@@ -404,3 +404,19 @@ A registered source namespace must preserve its authoritative class across versi
 Next production builds inline NODE_ENV=production, where X1's unadmitted-production guard must continue refusing. Final development delivery therefore needs a genuine explicit compiled development entry through the same actual API handlers and registered worker, not a flipped production guard or renamed source runner. Package exact compiled API route modules, worker and independent checker, original source files required by current source-custody/owner fingerprint readers, pinned dependencies and profile/schema. Fixed canonical source URLs must resolve at the installed location, not to the builder checkout or an environment-supplied source tree. A changed/missing compiled asset or source preimage refuses use. The API binds loopback, verifies real bearer identity through its configured auth service and restricted app role; the worker uses the actual createWorker registrations under restricted worker role. The checker executes its actual compiled artifact with no database/app credentials. The package supplies no admission/production authority.
 
 Before the one bounded final build, freeze source/runtime/lock/schema/profile, supported entrypoints, limits and old-database/mixed-job/rollout contracts. Final positive verification uses installed bytes and actual auth/SQL/queue/worker/checker/native effects/Work, including restart and existing-database preservation. Production-mode invocation must still refuse before serving or executing X1. Compiled-byte/source/dependency tampering is an independent intended refusal. No build below the2.5GiB floor, no silently enlarged900s/1.5GiB output cap, no peer deletion or giant redundant runtime copies.
+
+### Actual compiled startup timeout (before repair)
+
+The first13 installed refusal cases pass, but a full scan takes about20 seconds
+and actual authenticated API startup fails X1_COMPILED_API_STARTUP_BOUND under
+the unchanged30-second limit. Retain this owning failure. Remove repeated
+startup scans and redundant per-file realpath/lstat calls. Verify every regular
+parent directory and internal link, and open changed files with O_NOFOLLOW/fstat.
+Each process must hash ALL declared bytes on its first scan. Subsequent scans
+may reuse only a digest actually measured by that process when current trusted
+kernel dev/inode/size/mtime-ns/ctime-ns/mode match; caller timestamps are never
+accepted. Every ordinary write, replacement or mode/link change must be checked
+again. A live same-process tamper with restored mtime must still refuse before
+the actual route handler. This is development integrity, not hostile filesystem
+or evaluator custody; privileged kernel/clock manipulation remains unqualified.
+No profile reduction, timeout increase, guessed digest or manifest rewrite.

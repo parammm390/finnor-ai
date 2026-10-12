@@ -5,7 +5,7 @@ import { randomUUID, randomBytes, createHash } from "node:crypto";
 import { createServer } from "node:net";
 import { createServer as createHttpServer,type Server } from 'node:http';
 import { spawn, execFileSync } from "node:child_process";
-import { mkdir, writeFile, appendFile, readFile, rm } from "node:fs/promises";
+import { mkdir, writeFile, appendFile, readFile, rm, chmod, stat, utimes } from "node:fs/promises";
 import { statfsSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -223,6 +223,38 @@ try {
         await delayedRead.promise;
       }
     },...(installation?{installation}:{})}:{...(installation?{installation}:{})});
+  if(installation){
+    const path='finnor-os/node_modules/zod/package.json',pin=installedManifest.files.find((p:{path:string})=>p.path===path);
+    assert.ok(pin,'original declared dependency preimage');
+    const full=join(installation,path),original=await readFile(full),observed=await stat(full);
+    const stableMtimeSeconds=Math.floor(observed.mtimeMs/1000);
+    await utimes(full,observed.atime,stableMtimeSeconds);
+    const warmedMetadata=await stat(full,{bigint:true});
+    const probe=async()=>{const result=await fetch(service!.origin+'/api/workforce/profiles',{
+      method:'POST',headers:{'content-type':'application/json'},body:'{}'});
+      return {status:result.status,body:await result.json()};};
+    const before=await probe();assert.equal(before.status,401,'actual unauthenticated handler before tampering');
+    let refused,changedCtimeNs:string|undefined;
+    try{
+      await chmod(full,0o644);await writeFile(full,Buffer.concat([original,Buffer.from('\n ')]));await chmod(full,pin.mode);
+      await utimes(full,observed.atime,stableMtimeSeconds);
+      const changed=await stat(full,{bigint:true});
+      assert.equal(changed.mtimeNs,warmedMetadata.mtimeNs,'mtime is restored exactly to the warmed measurement');
+      assert.notEqual(changed.ctimeNs,warmedMetadata.ctimeNs,'actual kernel mutation witness changes');
+      changedCtimeNs=changed.ctimeNs.toString();
+      refused=await probe();assert.equal(refused.status,503,'same running API refuses a changed dependency before handler');
+      assert.ok(traffic.some((entry:any)=>entry.event==='X1_COMPILED_API_REFUSAL'
+        &&entry.predicate==='X1_INSTALLATION_BYTE_PIN_MISMATCH:'+path),'intended actual server integrity refusal');
+    }finally{await chmod(full,0o644);await writeFile(full,original);await chmod(full,pin.mode);await utimes(full,observed.atime,stableMtimeSeconds);}
+    const restored=await probe();assert.equal(restored.status,401);
+    await save('installed-live-byte-currentness.json',{before,refused,restored,compiledApiPid:service.compiledPid,
+      expectedOriginalSha256:pin.sha256,actualRestoredSha256:sha(await readFile(full)),mtimeRestored:true,
+      warmedMtimeNs:warmedMetadata.mtimeNs.toString(),warmedCtimeNs:warmedMetadata.ctimeNs.toString(),
+      changedCtimeNs,manifestNeverRewritten:true,hostileCustody:false});
+    await utimes(full,observed.atime,observed.mtime);
+    results.push({id:'G-installed-same-process-byte-currentness',status:'PASS',observed:{before,refused,restored},
+      basis:'ACTUAL_RUNNING_COMPILED_API_REFUSAL_AFTER_BYTE_CHANGE_WITH_RESTORED_MTIME'});
+  }
   const profileResponse=await fetch(service.origin+'/api/workforce/profiles',{
     method:'POST',headers:{'content-type':'application/json',authorization:'Bearer '+service.token},
     body:JSON.stringify({key:'x1-disposable-native',name:'Disposable native responsibility query and check executor',

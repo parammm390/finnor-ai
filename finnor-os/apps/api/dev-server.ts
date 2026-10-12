@@ -10,7 +10,7 @@ export async function startDevelopmentApi(routes: DevelopmentRoute[]): Promise<S
   if (process.env.NODE_ENV === "production" || process.env.FINNOR_ENVIRONMENT === "production"
       || process.env.FINNOR_P4_PROFILE !== "ordinary_disposable" || process.env.AUTH_DEV_BYPASS !== "0")
     throw Error("X1_COMPILED_DEVELOPMENT_PROFILE_REQUIRED");
-  installedDevelopmentRuntime(true);
+  const installed = installedDevelopmentRuntime(true)!;
   const database = new URL(process.env.DATABASE_URL ?? "");
   if (!["127.0.0.1", "localhost", "[::1]"].includes(database.hostname)) throw Error("X1_LOOPBACK_DATABASE_REQUIRED");
   const auth = new URL(process.env.SUPABASE_URL ?? "");
@@ -22,8 +22,7 @@ export async function startDevelopmentApi(routes: DevelopmentRoute[]): Promise<S
     FROM pg_roles WHERE rolname=current_user`)).rows[0];
   if (!role || role.current_user !== "finnor_app" || role.rolsuper || role.rolbypassrls || role.app_inherits_worker)
     throw Error("X1_RESTRICTED_COMPILED_APP_ROLE_REQUIRED");
-  assertInstalledDevelopmentSchema((await getPool().query('SELECT name FROM finnor_os._migrations ORDER BY name')).rows.map(row => row.name));
-  const installed = installedDevelopmentRuntime(true)!;
+  assertInstalledDevelopmentSchema((await getPool().query('SELECT name FROM finnor_os._migrations ORDER BY name')).rows.map(row => row.name), installed);
   for (const route of routes) if (!installed.manifest.files.some(p => p.path === route.source && p.sha256 === route.sha256))
     throw Error("X1_COMPILED_ROUTE_SOURCE_MISMATCH");
   const api = createServer(async (request, response) => {
