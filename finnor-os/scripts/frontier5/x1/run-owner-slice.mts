@@ -30,6 +30,7 @@ const reportingChanges=process.env.FINNOR_X1_OWNER_MODE==='reporting_changes';
 const authorityEpoch=process.env.FINNOR_X1_OWNER_MODE==='authority_epoch';
 const sensitiveCoverage=process.env.FINNOR_X1_OWNER_MODE==='sensitive_coverage';
 const personnel=process.env.FINNOR_X1_OWNER_MODE==='personnel';
+const creation=process.env.FINNOR_X1_OWNER_MODE==='creation';
 const ownerInputs=process.env.FINNOR_X1_OWNER_MODE==='owner_inputs';
 const fullDomain=process.env.FINNOR_X1_OWNER_MODE==='domain'||reportingChanges||ownerInputs||sensitiveCoverage||personnel;
 const mounted=process.env.FINNOR_X1_OWNER_MODE==='mounted';
@@ -46,7 +47,7 @@ const contention=process.env.FINNOR_X1_OWNER_MODE==='contention';
 const unsupportedOperation=process.env.FINNOR_X1_OWNER_MODE==='unsupported_operation';
 const unsupported=process.env.FINNOR_X1_OWNER_MODE==='unsupported'||unsupportedOperation;
 const cancelObserved=process.env.FINNOR_X1_OWNER_MODE==='cancel_observed';
-if(process.env.FINNOR_X1_OWNER_MODE&&!['api','mounted','revision','material','heterogeneous','canonical','recovery','effect_recovery','ordinary','domain','owner_inputs','reporting_changes','authority_epoch','sensitive_coverage','personnel','upgrade','checker_crash','contention','unsupported','unsupported_operation','cancel_observed'].includes(process.env.FINNOR_X1_OWNER_MODE))
+if(process.env.FINNOR_X1_OWNER_MODE&&!['api','mounted','revision','material','heterogeneous','canonical','creation','recovery','effect_recovery','ordinary','domain','owner_inputs','reporting_changes','authority_epoch','sensitive_coverage','personnel','upgrade','checker_crash','contention','unsupported','unsupported_operation','cancel_observed'].includes(process.env.FINNOR_X1_OWNER_MODE))
   throw Error('EXACT_REGISTERED_OWNER_MODE_REQUIRED');
 if((mounted||material||heterogeneous||canonical||recovery||effectRecovery||ordinary||upgrade||checkerCrash||contention||unsupported||cancelObserved||authorityEpoch)&&dutyCount!==1)throw Error('NAMED_ONE_DUTY_SCENARIO_REQUIRED');
 if(process.env.FINNOR_X1_OWNER_CASE&&!['1','128'].includes(process.env.FINNOR_X1_OWNER_CASE))
@@ -82,6 +83,7 @@ const freeze = { source: { commit: git("rev-parse", "HEAD"), tree: git("rev-pars
     ...(authorityEpoch?['B-unrelated-personnel-epoch-original-parent']:[]),
     ...(sensitiveCoverage?['B-sensitive-consent-independent-continuation']:[]),
     ...(personnel?['B-overlapping-personnel-reporting-continuation']:[]),
+    ...(creation?['A-new-canonical-creation-properties']:[]),
     ...(checkerCrash?['F-physical-checker-crash-and-compatible-resume']:[]),
     ...(contention?['E-original-shared-parent-contention']:[]),...(unsupported?['F-mixed-unsupported-rule']:[]),
     ...(cancelObserved?['E-cancel-observed-standing-continuation']:[])],
@@ -271,6 +273,10 @@ try {
       findingSeverity:'high',requiredForWorkstreamCompletion:true});
   if(heterogeneous)sources=await heterogeneousOwnerSources({registrationA,registrationB,occurredAt,availableAt,
     workRecords:sources.find(source=>source.id==='work-original')!.rows});
+  const creationInputs=creation?{fund:{id:'new-fund',fundNumber:'FUND-'+randomUUID(),fundName:'Unseen new firm fund',baseCurrency:'EUR'},
+    typedVehicle:{id:'new-parallel-vehicle',vehicleNumber:'VEH-'+randomUUID(),vehicleName:'Unseen typed vehicle',vehicleType:'parallel'},
+    missingVehicle:{id:'new-type-less-vehicle',vehicleNumber:'VEH-'+randomUUID(),vehicleName:'Unseen vehicle requiring type'}}:null;
+  if(creationInputs)sources.find(source=>source.id==='crm-original')!.rows.push(...Object.values(creationInputs));
   const canonicalFixture=canonical?await canonicalOwnerSources({ctx,admin,institutionId,workId,
     dealId:String(first.row.id),companyId:companyIds[0]!,organizationKey:'org-'+companyIds[0]!,
     workstreamId:String(stream.row.id),requestedFromDealPartyId:String(party.row.id),occurredAt,availableAt,fullDomain,
@@ -306,6 +312,18 @@ try {
   expected.quantityAssertions=[{sourceId:'ledger-original',recordId:'balance-A',factKey:'facility_balance',value:'20.00',
     currency:'USD',unit:'units',period:'2026-10',basis:'outstanding',occurredAt,availableAt,
     nativeType:'pe_deal',canonicalId:String(first.row.id)}];
+  if(creationInputs){
+    const expectedId=(kind:string,registration:string)=>{
+      const value=sha(JSON.stringify([tenant,institutionId,kind,registration])).slice(0,32);
+      return `${value.slice(0,8)}-${value.slice(8,12)}-4${value.slice(13,16)}-8${value.slice(17,20)}-${value.slice(20)}`;
+    };
+    expected.mappings.push({sourceId:'crm-original',recordId:creationInputs.fund.id,
+      canonicalId:expectedId('fund',creationInputs.fund.fundNumber),nativeType:'pe_fund',kind:'fund'},
+      {sourceId:'crm-original',recordId:creationInputs.typedVehicle.id,
+        canonicalId:expectedId('vehicle',creationInputs.typedVehicle.vehicleNumber),nativeType:'pe_vehicle',kind:'vehicle'});
+    expected.creation={originalInputs:creationInputs,originalEntityPopulation:5,admittedMappings:4,unresolvedEntities:1,
+      originalExpectedCurrency:'EUR',originalExpectedVehicleType:'parallel',missingTypeCreatesNoRow:true};
+  }
   if(heterogeneous)expected.quantityAssertions.push({sourceId:'lender-original',recordId:'lender-A',factKey:'outstanding',value:'20.00',
     currency:'USD',unit:'units',period:'2026-10',basis:'outstanding',occurredAt,availableAt,
     nativeType:'pe_deal',canonicalId:String(first.row.id)});
@@ -771,6 +789,31 @@ try {
   assert.equal(actualBaseline.body.envelope.baseline_manifest_ref.digest,actualBaseline.input_manifest.baselineDigest);
   assert.equal(actualBaseline.body.envelope.parent_artifact_refs.length,0);
   await save('observed-installed-baseline.json',actualBaseline);
+  if(creationInputs){
+    const fund=(await admin.query('SELECT id,external_id,name,base_currency,status FROM finnor_os.pe_funds WHERE tenant_id=$1 AND external_id=$2',
+      [tenant,creationInputs.fund.fundNumber])).rows;
+    const typedVehicle=(await admin.query('SELECT id,external_id,name,vehicle_type,status FROM finnor_os.pe_vehicles WHERE tenant_id=$1 AND external_id=$2',
+      [tenant,creationInputs.typedVehicle.vehicleNumber])).rows;
+    const missingVehicle=(await admin.query('SELECT id,external_id,name,vehicle_type,status FROM finnor_os.pe_vehicles WHERE tenant_id=$1 AND external_id=$2',
+      [tenant,creationInputs.missingVehicle.vehicleNumber])).rows;
+    const artifact=(await admin.query(`SELECT a.candidate,a.body FROM finnor_os.x1_compiler_artifacts a
+      JOIN finnor_os.x1_compiler_requests r ON r.tenant_id=a.tenant_id AND r.artifact_id=a.id WHERE r.tenant_id=$1 AND r.id=$2`,
+      [tenant,compilerId])).rows[0];
+    await save('new-canonical-creation-native-observations.json',{originalInputs:creationInputs,fund,typedVehicle,missingVehicle,
+      candidate:artifact.candidate,expected:expected.creation,originalEntityPopulation:5,actualCanonicalReadsNotCandidateDerived:true});
+    assert.equal(fund.length,1);assert.equal(fund[0].base_currency,'EUR','X1_NEW_FUND_CURRENCY_FROM_ORIGINAL');
+    assert.equal(fund[0].status,'forming');assert.equal(fund[0].name,creationInputs.fund.fundName);
+    assert.equal(typedVehicle.length,1);assert.equal(typedVehicle[0].vehicle_type,'parallel','X1_NEW_VEHICLE_TYPE_FROM_ORIGINAL');
+    assert.equal(typedVehicle[0].status,'forming');assert.equal(typedVehicle[0].name,creationInputs.typedVehicle.vehicleName);
+    assert.equal(missingVehicle.length,0,'X1_MISSING_VEHICLE_TYPE_CANNOT_BE_GUESSED');
+    const gap=artifact.candidate.unresolved.filter((g:any)=>g.sourceId==='crm-original'&&g.recordId===creationInputs.missingVehicle.id);
+    assert.equal(gap.length,1);assert.equal(gap[0].reason,'VEHICLE_TYPE_REQUIRED_FOR_CANONICAL_CREATION');
+    assert.deepEqual(gap[0].alternatives,[]);assert.equal(artifact.candidate.mappings.length,4);
+    assert.equal(artifact.candidate.obligations.length,1);
+    results.push({id:'A-new-canonical-creation-properties',status:'PASS',observed:{newFundCurrency:'EUR',newVehicleType:'parallel',
+      unknownVehicleNotCreated:true,admittedIdentityAssertions:4,originalEntityPopulation:5},
+      basis:'ACTUAL_AUTHENTICATED_ORIGINAL_CRM_SEPARATE_CHECK_NATIVE_NEW_CANONICAL_ROWS_EXACT_PROPERTIES_NO_DEFAULT_TYPE'});
+  }
   for(const mapping of expected.mappings){
     const receipt=admission.receipts.find((r:any)=>r.sourceId===mapping.sourceId&&r.recordId===mapping.recordId);
     assert.ok(receipt,"independently expected original mapping must be admitted");

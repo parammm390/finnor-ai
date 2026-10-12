@@ -624,6 +624,20 @@
       "limits": "UNCHANGED",
       "acceptance": "oracle-contract.md#b-overlapping-personnel-and-reporting-inputs-independent-expectations",
       "protectedQualification": false
+    },
+    {
+      "id": "A-new-canonical-creation-properties",
+      "mode": "creation",
+      "dutyCount": 1,
+      "status": "FROZEN_BEFORE_CRITICAL_OWNER_IMPLEMENTATION",
+      "sourceInstances": 3,
+      "originalEntityPopulation": 5,
+      "admittedIdentityDenominator": 4,
+      "unresolvedEntities": 1,
+      "expectedTotalEffects": 1,
+      "limits": "UNCHANGED",
+      "acceptance": "oracle-contract.md#a-new-fundvehicle-properties-independent-original-inputs",
+      "protectedQualification": false
     }
   ]
 }
