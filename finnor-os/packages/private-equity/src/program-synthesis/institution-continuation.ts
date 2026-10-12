@@ -68,6 +68,9 @@ export async function continueInstitutionProgram(ctx: PeMutationContext, q: Inst
   throw Error("X1_P1_S5_PARENT_NOT_CURRENT");
  const executable=head.nodes.filter(node=>node.action);
  if(!executable.length)throw Error("X1_SUPPORTED_ACTION_POPULATION_REQUIRED");
+ // Reconcile expired native claims through their existing runtime before
+ // interpreting an uncertain action as an intervention. No executor replay.
+ await (await import("@finnor/workflow-runtime")).recoverStaleSteps(q.tenant_id);
  for(const node of executable){
   const expected=frozenDutyExpectation(q.tenant_id,node);
   const duty=q.request.institution.responsibilities.find(r=>r.obligation.stableIdentity===node.stableIdentity);

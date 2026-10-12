@@ -108,6 +108,26 @@ or action identity, lost cost history or a stale claim publishing afterward.
 This case covers pre-publication compiler death; lost effect acknowledgement and
 other registered interruption points remain separate required cases.
 
+### Registered owner case D-effect-submit-lost-ack
+
+Externally lock the actual PE Request owner table before the worker starts.
+Observe the real native effect commit journal and its SQL insert wait, then lock
+that exact integration operation on a second connection. Release the owner lock;
+require the canonical Request to commit while the original acknowledgement update
+waits on the second lock. SIGKILL only the owned physical worker and release the
+acknowledgement lock. Restart the same worker configuration with the original
+five-second step/job leases. Existing lease recovery must retain the unknown
+attempt and original action, command, effect, parent reservation and deadline.
+
+The only automatic settlement allowed is an independent read of the exact frozen
+X1 creation duty through its canonical owner. An absent, conflicting, late or
+unbound record remains UNKNOWN and must not be re-executed. A verified canonical
+record may settle the original workflow without fabricating a provider ack: the
+attempt status remains unknown, response remains null, and its separate observation
+records the proof. Require one canonical Request, one action/effect, one original
+episode/reservation, and actual native Work completion. An executor retry, new
+identity, lost uncertainty history or row-existence-only settlement is a failure.
+
 ### Installed baseline and immutable parent bindings
 
 The full output currently carries an avoidable unknown baseline and empty parent

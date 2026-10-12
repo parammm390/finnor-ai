@@ -21,7 +21,8 @@ const ownerCases={owners:{'one-duty':{count:'1',mode:'api'},'128-duty':{count:'1
   heterogeneous:{count:'1',mode:'heterogeneous'},canonical:{count:'1',mode:'canonical'}},
   lifecycle:{material:{count:'1',mode:'material'},recovery:{count:'1',mode:'recovery'},
     contention:{count:'1',mode:'contention'},unsupported:{count:'1',mode:'unsupported'},
-    'cancel-observed':{count:'1',mode:'cancel_observed'}},mounted:{mounted:{count:'1',mode:'mounted'}}};
+    'cancel-observed':{count:'1',mode:'cancel_observed'},
+    'effect-recovery':{count:'1',mode:'effect_recovery'}},mounted:{mounted:{count:'1',mode:'mounted'}}};
 const selectedOwnerCase=ownerCase?ownerCases[stage]?.[ownerCase]:null;
 const named = manifest.stages.find((entry) => entry.id === stage);
 if (!named || args.length%2!==0||new Set(args.filter((_,i)=>i%2===0)).size!==args.length/2

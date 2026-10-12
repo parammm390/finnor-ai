@@ -463,6 +463,20 @@
       "consumedParentReleased": false,
       "limits": "UNCHANGED",
       "acceptance": "oracle-contract.md#e-cancel-observed-standing-continuation-independent-expectations"
+    },
+    {
+      "id": "D-effect-submit-lost-ack",
+      "mode": "effect_recovery",
+      "dutyCount": 1,
+      "status": "FROZEN_BEFORE_CASE_IMPLEMENTATION",
+      "workerJobLeaseSeconds": 5,
+      "workflowStepLeaseSeconds": 5,
+      "fault": "ACTUAL_OWNER_COMMIT_ACK_ROW_LOCK_THEN_PHYSICAL_WORKER_SIGKILL",
+      "expectedAttemptDisposition": "UNKNOWN_RETAINED_NULL_RESPONSE",
+      "settlement": "READ_ONLY_EXACT_FROZEN_CANONICAL_DUTY",
+      "expectedExecutorReplays": 0,
+      "limits": "UNCHANGED",
+      "acceptance": "oracle-contract.md#d-effect-submit-lost-ack-independent-expectations"
     }
   ]
 }

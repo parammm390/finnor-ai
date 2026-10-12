@@ -30,12 +30,13 @@ const material=process.env.FINNOR_X1_OWNER_MODE==='material';
 const heterogeneous=process.env.FINNOR_X1_OWNER_MODE==='heterogeneous';
 const canonical=process.env.FINNOR_X1_OWNER_MODE==='canonical';
 const recovery=process.env.FINNOR_X1_OWNER_MODE==='recovery';
+const effectRecovery=process.env.FINNOR_X1_OWNER_MODE==='effect_recovery';
 const contention=process.env.FINNOR_X1_OWNER_MODE==='contention';
 const unsupported=process.env.FINNOR_X1_OWNER_MODE==='unsupported';
 const cancelObserved=process.env.FINNOR_X1_OWNER_MODE==='cancel_observed';
-if(process.env.FINNOR_X1_OWNER_MODE&&!['api','mounted','revision','material','heterogeneous','canonical','recovery','contention','unsupported','cancel_observed'].includes(process.env.FINNOR_X1_OWNER_MODE))
+if(process.env.FINNOR_X1_OWNER_MODE&&!['api','mounted','revision','material','heterogeneous','canonical','recovery','effect_recovery','contention','unsupported','cancel_observed'].includes(process.env.FINNOR_X1_OWNER_MODE))
   throw Error('EXACT_REGISTERED_OWNER_MODE_REQUIRED');
-if((mounted||material||heterogeneous||canonical||recovery||contention||unsupported||cancelObserved)&&dutyCount!==1)throw Error('NAMED_ONE_DUTY_SCENARIO_REQUIRED');
+if((mounted||material||heterogeneous||canonical||recovery||effectRecovery||contention||unsupported||cancelObserved)&&dutyCount!==1)throw Error('NAMED_ONE_DUTY_SCENARIO_REQUIRED');
 if(process.env.FINNOR_X1_OWNER_CASE&&!['1','128'].includes(process.env.FINNOR_X1_OWNER_CASE))
   throw Error('EXACT_FROZEN_OWNER_CASE_REQUIRED');
 const limits = JSON.parse(await readFile(join(repo, "scope-frontier5/x1-institutional-programme-compiler/verification-plan.json"), "utf8")).limits;
@@ -60,6 +61,7 @@ const freeze = { source: { commit: git("rev-parse", "HEAD"), tree: git("rev-pars
   cases: ["A-raw-two-identity-native-request", "C-unsigned-forged-input", "D-same-key-replay", "G-restricted-roles",
     ...(material?['B-ledger-correction']:[]),...(heterogeneous?['A-eight-class-original-corpus']:[]),
     ...(canonical?['A-fourteen-canonical-kinds']:[]),...(recovery?['D-compiler-before-publication-death']:[]),
+    ...(effectRecovery?['D-effect-submit-lost-ack']:[]),
     ...(contention?['E-original-shared-parent-contention']:[]),...(unsupported?['F-mixed-unsupported-rule']:[]),
     ...(cancelObserved?['E-cancel-observed-standing-continuation']:[])],
   omitted: "Full B–H, physical interruption, mounted browser, clean built installation/upgrade and protected qualification remain distinct required evidence" };
@@ -67,6 +69,7 @@ await writeFile(join(evidence, "freeze.json"), JSON.stringify(freeze, null, 2) +
 const results: any[] = [], traffic: unknown[] = [];
 let database: EmbeddedPostgres | undefined, admin: pg.Client | undefined;
 let publicationBlocker:pg.Client|undefined;
+let acknowledgementBlocker:pg.Client|undefined,effectRecoveryProof:any;
 let service: Awaited<ReturnType<typeof authenticatedApiFixture>> | undefined, worker: ReturnType<typeof spawn> | undefined;
 let frontend:ReturnType<typeof spawn>|undefined;
 let mountedControl:Server|undefined;
@@ -289,10 +292,12 @@ try {
     XDG_CACHE_HOME: join(evidence, "cache"), TSX_DISABLE_CACHE: "1", DOTENV_CONFIG_PATH: join(evidence, "empty.env"),
     NODE_ENV: "test", AUTH_DEV_BYPASS: "0", FINNOR_P4_PROFILE: "ordinary_disposable", FINNOR_TEST_MANAGED_EXTENSIONS: "omit",
     DATABASE_URL: connection("finnor_worker", workerPassword), CI: "1", LOG_LEVEL: "silent", NEXT_TELEMETRY_DISABLED: "1",
-    ...(recovery?{WORKER_JOB_LEASE_SECONDS:'5'}:{}) };
-  if(recovery){publicationBlocker=new pg.Client({connectionString:connection('x1_fixture',password)});
+    ...(recovery||effectRecovery?{WORKER_JOB_LEASE_SECONDS:'5'}:{}),
+    ...(effectRecovery?{FINNOR_STEP_LEASE_SECONDS:'5'}:{}) };
+  if(recovery||effectRecovery){publicationBlocker=new pg.Client({connectionString:connection('x1_fixture',password)});
     await publicationBlocker.connect();await publicationBlocker.query('BEGIN');
-    await publicationBlocker.query('LOCK TABLE finnor_os.x1_mapping_admissions IN SHARE MODE');}
+    await publicationBlocker.query(effectRecovery?'LOCK TABLE finnor_os.pe_requests IN SHARE MODE'
+      :'LOCK TABLE finnor_os.x1_mapping_admissions IN SHARE MODE');}
   let logBytes=0;
   const startWorker=()=>{
     const child=spawn(process.execPath,["--max-old-space-size=1536","--import=tsx","scripts/frontier5/x1/physical-owner-worker.mts"],
@@ -307,6 +312,57 @@ try {
     role: "finnor_worker", actualProductionRegistrations: true, credentialsPersisted: false });
   let guardFailure: string | null = null;
   guard = setInterval(() => { void take().catch(error => { guardFailure = String(error.message); worker?.kill("SIGTERM"); }); }, 2000);
+  if(effectRecovery){
+    const originalEnvelope=async()=>({episodes:(await admin!.query(`SELECT id,original_deadline,wall_deadline,
+      parent_reservation,parent_demand FROM finnor_os.x1_compiler_episodes WHERE tenant_id=$1 ORDER BY id`,[tenant])).rows,
+      reservations:(await admin!.query(`SELECT reservation_id,envelopes FROM finnor_os.s5_reservations
+        WHERE tenant_id=$1 ORDER BY reservation_id`,[tenant])).rows});
+    let ownerWait:any,attempt:any;
+    for(let poll=0;poll<240;poll++){
+      if(guardFailure)throw Error(guardFailure);
+      ownerWait=(await admin.query(`SELECT pid,wait_event_type,wait_event,query,pg_blocking_pids(pid) blocking_pids
+        FROM pg_stat_activity WHERE usename='finnor_worker' AND wait_event_type='Lock'
+          AND query ILIKE '%insert%pe_requests%'`)).rows[0];
+      attempt=(await admin.query(`SELECT o.id,o.workflow_step_id,o.business_effect_id,o.request_hash,o.status,o.response,
+        s.domain_action_id,s.claim_fence,s.dispatch_generation,s.effect_commit_at,s.execution_state,
+        e.status effect_status FROM finnor_os.integration_operations o
+        JOIN finnor_os.workflow_steps s ON s.tenant_id=o.tenant_id AND s.id=o.workflow_step_id
+        JOIN finnor_os.business_effects e ON e.tenant_id=o.tenant_id AND e.id=o.business_effect_id
+        WHERE o.tenant_id=$1 AND o.provider='finnor_plugin_runtime'`,[tenant])).rows[0];
+      if(ownerWait&&attempt?.status==='running')break;
+      await new Promise(resolve=>setTimeout(resolve,250));
+    }
+    assert.ok(ownerWait&&attempt,'actual native owner insert wait after effect commit journal');
+    assert.equal(attempt.response,null);assert.equal(attempt.effect_status,'executing');
+    const before=await originalEnvelope();
+    acknowledgementBlocker=new pg.Client({connectionString:connection('x1_fixture',password)});
+    await acknowledgementBlocker.connect();await acknowledgementBlocker.query('BEGIN');
+    await acknowledgementBlocker.query('SELECT id FROM finnor_os.integration_operations WHERE tenant_id=$1 AND id=$2 FOR UPDATE',[tenant,attempt.id]);
+    await publicationBlocker!.query('ROLLBACK');await publicationBlocker!.end();publicationBlocker=undefined;
+    let ackWait:any,created:any;
+    for(let poll=0;poll<80;poll++){
+      if(guardFailure)throw Error(guardFailure);
+      ackWait=(await admin.query(`SELECT pid,wait_event_type,wait_event,query,pg_blocking_pids(pid) blocking_pids
+        FROM pg_stat_activity WHERE usename='finnor_worker' AND wait_event_type='Lock'
+          AND query ILIKE '%update%integration_operations%'`)).rows[0];
+      created=(await admin.query(`SELECT * FROM finnor_os.pe_requests WHERE tenant_id=$1
+        AND request_text=$2`,[tenant,expected.requestTexts[0]])).rows;
+      if(ackWait&&created.length===1)break;
+      await new Promise(resolve=>setTimeout(resolve,250));
+    }
+    assert.ok(ackWait,'actual acknowledgement write blocked after canonical commit');assert.equal(created.length,1);
+    assert.equal(created[0].id,attempt.domain_action_id,'same preallocated original action identity');
+    const unacknowledged=(await admin.query('SELECT status,response,verification_status FROM finnor_os.integration_operations WHERE tenant_id=$1 AND id=$2',[tenant,attempt.id])).rows[0];
+    assert.equal(unacknowledged.status,'running');assert.equal(unacknowledged.response,null);
+    const firstPid=worker.pid,stopped=new Promise<void>(resolve=>worker!.once('close',()=>resolve()));
+    worker.kill('SIGKILL');await stopped;assert.equal(worker.signalCode,'SIGKILL');
+    await acknowledgementBlocker.query('ROLLBACK');await acknowledgementBlocker.end();acknowledgementBlocker=undefined;
+    effectRecoveryProof={before,attempt,ownerWait,ackWait,created,unacknowledged,firstPid,
+      actualProcessDeath:true,originalEpisodeNotRestarted:true};
+    await save('effect-recovery-physical-lost-ack.json',effectRecoveryProof);
+    worker=startWorker();await save('effect-recovery-physical-worker.json',{pid:worker.pid,firstPid,
+      environmentNames:Object.keys(env),sameOriginalStepAndJobLeases:true});
+  }
   if(recovery){
     const originalRecoveryEnvelope=async()=>({episodes:(await admin!.query(`SELECT id,work_id,original_deadline,wall_deadline,parent_reservation,parent_demand
       FROM finnor_os.x1_compiler_episodes WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3`,[tenant,actor,workId])).rows,
@@ -633,6 +689,31 @@ try {
     results.push({id:'D-compiler-before-publication-death',status:'PASS',observed:{history,completion},
       basis:'ACTUAL_WORKER_SIGKILL_SQL_LOCK_QUEUE_QUARANTINE_AUTHENTICATED_SAME_PARENT_RESUME_AND_INDEPENDENT_NATIVE_COMPLETION'});
   }
+  if(effectRecovery){
+    const operation=(await admin.query(`SELECT * FROM finnor_os.integration_operations
+      WHERE tenant_id=$1 AND id=$2`,[tenant,effectRecoveryProof.attempt.id])).rows[0];
+    assert.equal(operation.status,'unknown','executor acknowledgement uncertainty retained');
+    assert.equal(operation.response,null,'no invented executor response');assert.equal(operation.verification_status,'verified');
+    assert.equal(operation.workflow_step_id,effectRecoveryProof.attempt.workflow_step_id);
+    assert.equal(operation.business_effect_id,effectRecoveryProof.attempt.business_effect_id);
+    assert.equal(operation.request_hash,effectRecoveryProof.attempt.request_hash);
+    const after={episodes:(await admin.query(`SELECT id,original_deadline,wall_deadline,parent_reservation,parent_demand
+      FROM finnor_os.x1_compiler_episodes WHERE tenant_id=$1 ORDER BY id`,[tenant])).rows,
+      reservations:(await admin.query(`SELECT reservation_id,envelopes FROM finnor_os.s5_reservations
+        WHERE tenant_id=$1 ORDER BY reservation_id`,[tenant])).rows};
+    assert.deepEqual(after,effectRecoveryProof.before);
+    const step=(await admin.query(`SELECT s.*,c.outcome claim_outcome FROM finnor_os.workflow_steps s
+      JOIN finnor_os.workflow_step_claims c ON c.tenant_id=s.tenant_id AND c.workflow_step_id=s.id
+      WHERE s.tenant_id=$1 AND s.id=$2 ORDER BY c.claimed_at DESC LIMIT 1`,[tenant,operation.workflow_step_id])).rows[0];
+    assert.equal(step.claim_fence,effectRecoveryProof.attempt.claim_fence,'no new executor claim');
+    assert.equal(step.dispatch_generation,effectRecoveryProof.attempt.dispatch_generation);assert.equal(step.status,'completed');
+    const cases=(await admin.query('SELECT * FROM finnor_os.reconciliation_cases WHERE tenant_id=$1 AND related_step_id=$2',[tenant,step.id])).rows;
+    assert.equal(cases.length,1);assert.equal(cases[0].status,'resolved');assert.equal(cases[0].resolution_outcome,'happened_as_intended');
+    await save('effect-recovery-independent-native-completion.json',{...effectRecoveryProof,after,operation,step,cases,completion,
+      originalEffects:allEffects,canonicalRequests:rows,executorReplayCount:0,acknowledgementStillUnknown:true});
+    results.push({id:'D-effect-submit-lost-ack',status:'PASS',observed:{operationId:operation.id,step,completion},
+      basis:'ACTUAL_CANONICAL_COMMIT_LOST_ACK_SIGKILL_SAME_IDENTITY_UNKNOWN_JOURNAL_READ_ONLY_OWNER_SETTLEMENT'});
+  }
   if(contention){
     const firstProofDigest=sha(JSON.stringify(completion.completion_proof));
     const other=await receiveWork({tenantId:tenant,userId:actor,channel:'console',idempotencyKey:'x1-contending-work:'+randomUUID(),
@@ -877,6 +958,7 @@ try {
 } finally {
   if (guard) clearInterval(guard);
   if(publicationBlocker){await publicationBlocker.query('ROLLBACK').catch(()=>{});await publicationBlocker.end().catch(()=>{});}
+  if(acknowledgementBlocker){await acknowledgementBlocker.query('ROLLBACK').catch(()=>{});await acknowledgementBlocker.end().catch(()=>{});}
   releaseDelayedRead();
   if (admin && workId) {
     for (const [name, sql] of [

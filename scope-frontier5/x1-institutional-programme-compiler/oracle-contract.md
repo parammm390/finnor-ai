@@ -236,3 +236,17 @@ Any observed unauthorized effect, tenant disclosure, stale-grant execution, fals
 Ten environments each>=8 genuinely heterogeneous system classes; full30-day replay plus separate7-day live elapsed soak for each. Separate clocks/start/checkpoint/resume observations. No renamed known fixture, eight labels over one JSON object, shortened population/horizon or accelerated-live substitution.
 
 Original resource/generator/correctness/regret/calibration/downside/comparator and financialH2 contracts remain unchanged. X1 on/off is component development evidence, not qualifiedB_V or operational100x.
+# D-effect-submit-lost-ack independent expectations
+
+The pre-exposure raw source and standing mandate determine the same Request text,
+Deal, Workstream, recipient, owner, requested/due dates and creation-only meaning
+as case A. The external fixture observes the native operation identity before the
+effect commits; it does not choose an identity from a successful candidate.
+Before killing the worker, require one exact canonical record, a running operation
+with null response, a blocked acknowledgement UPDATE, and an unverified effect.
+After restart require the same operation still marked unknown with null response,
+separate verified canonical observation, no executor replay and one eventual native
+Work/Objective/Plan completion. Original reservations and deadlines remain equal;
+cost counters may only increase. Actual queue/claim, SQL wait, process death and
+canonical readbacks are retained. This establishes development recovery for the
+closed ordinary creation registry, not arbitrary external provider settlement.
