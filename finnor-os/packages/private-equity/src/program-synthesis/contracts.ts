@@ -118,9 +118,10 @@ export const isInstitutionProgram=(program:NativeHarnessProgram):program is Inst
 
 /** Bound shape before recursive schema decoding; even invalid input cannot exhaust the host stack. */
 export function parseHarnessRequest(value:unknown):HarnessRequest|InstitutionHarnessRequest {
- if(Buffer.byteLength(JSON.stringify(value)??'')>65536)throw Error('PROGRAM_REQUEST_BYTE_BOUND');
+ const institution=!!value&&typeof value==='object'&&'kind' in value&&value.kind==='institution_responsibility_v1';
+ if(Buffer.byteLength(JSON.stringify(value)??'')>(institution?8388608:65536))throw Error('PROGRAM_REQUEST_BYTE_BOUND');
  let count=0;const todo:Array<[unknown,number]>=[[value,0]];
- while(todo.length){const [v,d]=todo.pop()!;if(++count>4096||d>32)throw Error('PROGRAM_DECODE_BOUND');if(v&&typeof v==='object')for(const child of Object.values(v))todo.push([child,d+1]);}
+ while(todo.length){const [v,d]=todo.pop()!;if(++count>(institution?262144:4096)||d>32)throw Error('PROGRAM_DECODE_BOUND');if(v&&typeof v==='object')for(const child of Object.values(v))todo.push([child,d+1]);}
  return value&&typeof value==='object'&&'kind' in value
   ? InstitutionHarnessRequestSchema.parse(value) : HarnessRequestSchema.parse(value);
 }

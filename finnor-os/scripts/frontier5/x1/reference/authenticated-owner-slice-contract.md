@@ -125,3 +125,12 @@ verified BusinessEffect while P1 retained WAITING. SQL showed every requested
 field correct, but JSONB reordered the nested owner object; the observer compared
 its property insertion order. Normalize the expected owner's two named fields
 explicitly. Preserve all value/time/state comparisons and original evidence.
+
+Run 017's full 128-duty population reached checked admission and selected native
+action batching, but the legacy P1 64 KiB request CHECK refused its larger typed
+institution request. Add a bounded 8 MiB institution variant matching the existing
+programme-head capacity; keep legacy analytical request/proposal limits intact.
+Typed decoder work remains explicitly finite. Store full duties in immutable P1
+proposal/heads; events carry resolvable population digests rather than duplicating
+oversized action payloads. The 128-case oracle remains unchanged and must verify
+all 128 creations, every native link and the same original parent envelope.

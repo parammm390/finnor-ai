@@ -150,7 +150,10 @@ export async function submitInstitutionHarnessProgram(ctx:PeMutationContext,requ
    priorHead:carriedHistory.priorHead,update:carriedHistory.update,
    carriedDutyIds:head.observedPostconditions.map(item=>item.stableIdentity),
    originalEpisode:episodeId,authorityGranted:false},c);
-  await trace(ctx,row,'INSTITUTION_RESPONSIBILITY_BOUND',{work:head.work,nodes,unresolved,
+  await trace(ctx,row,'INSTITUTION_RESPONSIBILITY_BOUND',{work:head.work,
+   proposedDigest:sha(head),dutyPopulation:{count:nodes.length,digest:sha(nodes)},
+   unresolvedPopulation:{count:unresolved.length,digest:sha(unresolved)},
+   fullPopulationOwner:'P1_IMMUTABLE_PROPOSED_AND_PROGRAMME_HEAD',
    originalDeadline:demand.originalDeadline,reservationRef,admission:programme.admission,
    checkedAdmissionId:admission.id,completion:'INDEPENDENT_CANONICAL_OBSERVATION_REQUIRED'},c);
   await enqueueProgram(ctx,row,'initial',c);
