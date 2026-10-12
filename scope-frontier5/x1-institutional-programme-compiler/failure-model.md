@@ -121,4 +121,16 @@ Persist the actual baseline preimage with the immutable owner artifact, and veri
 it at authenticated readback. Original-source and signed qualification custody
 remain separate. Reuse the real material-correction E2E for parent lineage.
 
+### Registered owner case E-original-shared-parent-contention
+
+Keep the completed standing Work's original 520 compute/900 human reservation
+active. Submit a second actual Work with the same permitted Deal root and current
+ordinary source/mandate authority, using the same finite resource pool. Its
+compiler must refuse at S5 shared capacity without another reservation, effect
+or source population shortcut. Cancel that refused second compiler through the
+authenticated API. The first Work's reservation/envelopes, resource revisions,
+completion proof and one observed Request remain identical. No resource is
+refilled or released merely to make the second task succeed. This covers real
+S5 contention and cancellation before exposure, not every concurrency variant.
+
 The independent oracle contract defines expectations and preservation. Boundary bugs need a pre-fix failing regression at their owning boundary. No post-code unit tests. Source changes following a failed proof retain the original run and rerun only affected proof plus necessary regressions.

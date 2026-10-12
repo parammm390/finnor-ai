@@ -30,9 +30,10 @@ const material=process.env.FINNOR_X1_OWNER_MODE==='material';
 const heterogeneous=process.env.FINNOR_X1_OWNER_MODE==='heterogeneous';
 const canonical=process.env.FINNOR_X1_OWNER_MODE==='canonical';
 const recovery=process.env.FINNOR_X1_OWNER_MODE==='recovery';
-if(process.env.FINNOR_X1_OWNER_MODE&&!['api','mounted','revision','material','heterogeneous','canonical','recovery'].includes(process.env.FINNOR_X1_OWNER_MODE))
+const contention=process.env.FINNOR_X1_OWNER_MODE==='contention';
+if(process.env.FINNOR_X1_OWNER_MODE&&!['api','mounted','revision','material','heterogeneous','canonical','recovery','contention'].includes(process.env.FINNOR_X1_OWNER_MODE))
   throw Error('EXACT_REGISTERED_OWNER_MODE_REQUIRED');
-if((mounted||material||heterogeneous||canonical||recovery)&&dutyCount!==1)throw Error('NAMED_ONE_DUTY_SCENARIO_REQUIRED');
+if((mounted||material||heterogeneous||canonical||recovery||contention)&&dutyCount!==1)throw Error('NAMED_ONE_DUTY_SCENARIO_REQUIRED');
 if(process.env.FINNOR_X1_OWNER_CASE&&!['1','128'].includes(process.env.FINNOR_X1_OWNER_CASE))
   throw Error('EXACT_FROZEN_OWNER_CASE_REQUIRED');
 const limits = JSON.parse(await readFile(join(repo, "scope-frontier5/x1-institutional-programme-compiler/verification-plan.json"), "utf8")).limits;
@@ -56,7 +57,8 @@ const freeze = { source: { commit: git("rev-parse", "HEAD"), tree: git("rev-pars
   authDevBypass: false, expectedMigrations: 181, limits, freeBytesBefore: String(diskBefore), dutyCount,mounted,
   cases: ["A-raw-two-identity-native-request", "C-unsigned-forged-input", "D-same-key-replay", "G-restricted-roles",
     ...(material?['B-ledger-correction']:[]),...(heterogeneous?['A-eight-class-original-corpus']:[]),
-    ...(canonical?['A-fourteen-canonical-kinds']:[]),...(recovery?['D-compiler-before-publication-death']:[])],
+    ...(canonical?['A-fourteen-canonical-kinds']:[]),...(recovery?['D-compiler-before-publication-death']:[]),
+    ...(contention?['E-original-shared-parent-contention']:[])],
   omitted: "Full B–H, physical interruption, mounted browser, clean built installation/upgrade and protected qualification remain distinct required evidence" };
 await writeFile(join(evidence, "freeze.json"), JSON.stringify(freeze, null, 2) + "\n", { mode: 0o600, flag: "wx" });
 const results: any[] = [], traffic: unknown[] = [];
@@ -592,6 +594,56 @@ try {
       noDuplicateRequestOrAction:true,exactOneOriginalEpisode:true,effectLostAckEstablished:false});
     results.push({id:'D-compiler-before-publication-death',status:'PASS',observed:{history,completion},
       basis:'ACTUAL_WORKER_SIGKILL_SQL_LOCK_QUEUE_QUARANTINE_AUTHENTICATED_SAME_PARENT_RESUME_AND_INDEPENDENT_NATIVE_COMPLETION'});
+  }
+  if(contention){
+    const firstProofDigest=sha(JSON.stringify(completion.completion_proof));
+    const other=await receiveWork({tenantId:tenant,userId:actor,channel:'console',idempotencyKey:'x1-contending-work:'+randomUUID(),
+      instruction:'Maintain the same admitted evidence responsibility within the existing shared resource pool',
+      activeContext:{entityType:'pe_deal',entityId:String(first.row.id)},authorityContext:{principalId:actor,scope:'DISPOSABLE_INTERNAL_REQUEST_CREATION_ONLY'}});
+    await attachWorkEntity(tenant,other.workId,{entityType:'pe_deal',entityId:String(first.row.id),source:'X1:ordinary-contention-fixture'});
+    await admin.query(`INSERT INTO finnor_os.x1_work_mandates(tenant_id,principal_id,work_id,institution_id,revision,rules,valid_from,expires_at)
+      SELECT tenant_id,principal_id,$4,institution_id,revision,rules,valid_from,expires_at FROM finnor_os.x1_work_mandates
+      WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3`,[tenant,actor,workId,other.workId]);
+    const otherGrants=(await admin.query(`INSERT INTO finnor_os.x1_source_grants
+      (tenant_id,principal_id,work_id,institution_id,source_id,source_class,purpose,acquisition_kind,
+        document_id,document_version_id,protocol,revision,original_sha256,expected_object_ids,version,valid_from,expires_at)
+      SELECT tenant_id,principal_id,$4,institution_id,source_id,source_class,purpose,acquisition_kind,
+        document_id,document_version_id,protocol,revision,original_sha256,expected_object_ids,version,valid_from,expires_at
+      FROM finnor_os.x1_source_grants WHERE tenant_id=$1 AND principal_id=$2 AND id=ANY($3::uuid[]) RETURNING id::text`,
+      [tenant,actor,grantIds,other.workId])).rows.map(row=>row.id);
+    assert.equal(otherGrants.length,grantIds.length);
+    const sources=await api('institution-sources',{workId:other.workId});assert.equal(sources.status,200);
+    const submitted=await api('institution-submit',{workId:other.workId,workInputId:sources.body.workInputId,
+      grantIds:otherGrants,idempotencyKey:'x1-contending-compiler:'+randomUUID()});assert.equal(submitted.status,202);
+    let refused:any,job:any;
+    for(let poll=0;poll<90;poll++){
+      if(guardFailure)throw Error(guardFailure);
+      refused=await api('institution-read',{requestId:submitted.body.requestId});
+      job=(await admin.query(`SELECT type,status,last_error FROM finnor_os.jobs WHERE tenant_id=$1
+        AND payload->>'requestId'=$2 AND type='run_x1_institution_compiler_v1' ORDER BY created_at DESC LIMIT 1`,
+        [tenant,submitted.body.requestId])).rows[0];
+      if(['UNKNOWN','FAILED','INVALIDATED','PARTIAL','CHECK_REJECTED'].includes(refused.body.status))break;
+      await new Promise(resolve=>setTimeout(resolve,1000));
+    }
+    await save('shared-parent-capacity-refusal.json',{submitted,refused,job,firstOriginalEnvelope:beforeReplay,
+      secondWorkId:other.workId,sameExistingResourcePool:true,capacityRefilled:false});
+    assert.equal(refused.status,200);assert.equal(refused.body.status,'UNKNOWN');
+    assert.ok(String(job?.last_error).includes('S5 shared resource capacity exhausted'),'intended actual S5 shared-capacity boundary');
+    assert.equal((await admin.query('SELECT count(*)::int n FROM finnor_os.s5_reservations WHERE tenant_id=$1',[tenant])).rows[0].n,1);
+    const secondOwner=(await admin.query('SELECT program_id FROM finnor_os.x1_compiler_requests WHERE tenant_id=$1 AND id=$2',
+      [tenant,submitted.body.requestId])).rows[0];assert.equal(secondOwner.program_id,null);
+    const cancelled=await api('institution-cancel',{requestId:submitted.body.requestId});assert.equal(cancelled.status,200);
+    assert.equal(cancelled.body.status,'CANCELLED');assert.equal(cancelled.body.exposureRetained,false);
+    assert.deepEqual(await originalEnvelope(),beforeReplay,'first original S5 reservation/resources unaffected by refused cancellation');
+    assert.equal((await admin.query('SELECT count(*)::int n FROM finnor_os.domain_actions WHERE tenant_id=$1',[tenant])).rows[0].n,1);
+    assert.equal((await admin.query('SELECT count(*)::int n FROM finnor_os.pe_requests WHERE tenant_id=$1',[tenant])).rows[0].n,1);
+    const retained=(await admin.query('SELECT status,completion_proof FROM finnor_os.work_plan_revisions WHERE tenant_id=$1 AND id=$2',
+      [tenant,completion.plan_id])).rows[0];assert.equal(retained.status,'completed');assert.equal(sha(JSON.stringify(retained.completion_proof)),firstProofDigest);
+    await save('shared-parent-contention-independent-proof.json',{submitted,refused,job,cancelled,
+      before:beforeReplay,after:await originalEnvelope(),firstCompletionProofDigest:firstProofDigest,
+      additionalReservations:0,additionalEffects:0,fullConcurrencySuiteEstablished:false});
+    results.push({id:'E-original-shared-parent-contention',status:'PASS',observed:{submitted,refused,cancelled,originalEnvelope:beforeReplay},
+      basis:'ACTUAL_SECOND_AUTHENTICATED_WORK_PHYSICAL_COMPILER_S5_CAPACITY_REFUSAL_AND_CANCELLATION_FIRST_OWNER_UNCHANGED'});
   }
   if(revise||mounted||material){
     const initialObjective=(await admin.query('SELECT * FROM finnor_os.work_objective_loops WHERE tenant_id=$1 AND work_id=$2',

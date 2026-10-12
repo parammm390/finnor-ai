@@ -410,6 +410,31 @@
       "limits": "UNCHANGED",
       "acceptance": "oracle-contract.md#d-compiler-before-publication-death-independent-expectations",
       "effectLostAckEstablished": false
+    },
+    {
+      "id": "E-original-shared-parent-contention",
+      "mode": "contention",
+      "dutyCount": 1,
+      "status": "FROZEN_BEFORE_CASE_IMPLEMENTATION",
+      "resources": [
+        {
+          "class": "COMPUTE",
+          "availability": 520,
+          "unit": "request"
+        },
+        {
+          "class": "HUMAN_ATTENTION",
+          "availability": 900,
+          "unit": "seconds"
+        }
+      ],
+      "expectedAdditionalReservations": 0,
+      "expectedAdditionalEffects": 0,
+      "requiredBoundary": "S5_SHARED_RESOURCE_CAPACITY_EXHAUSTED",
+      "cancellation": "AUTHENTICATED_SECOND_COMPILER_BEFORE_EXPOSURE_FIRST_PARENT_UNCHANGED",
+      "limits": "UNCHANGED",
+      "acceptance": "oracle-contract.md#e-original-shared-parent-contention-independent-expectations",
+      "fullConcurrencySuiteEstablished": false
     }
   ]
 }

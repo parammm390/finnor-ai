@@ -177,6 +177,21 @@ rechecks stored body and baseline reference digests. No caller can supply those
 bindings. The real material-correction case independently compares Git/source,
 schema/profile, original source handles and parent ID/digest from owner storage.
 
+### E-original-shared-parent-contention independent expectations
+
+Freeze one shared COMPUTE request resource with availability 520 and one shared
+HUMAN_ATTENTION seconds resource with availability 900. The first standing Work
+already occupies both under its original parent. A second correctly authorized
+Work requests the same full envelope. Its real worker must reach the existing
+S5 capacity predicate, create zero additional reservations and execute zero
+effects. An unrelated authentication/currentness refusal does not pass.
+
+The second compiler retains the exact failed/unknown disposition and original
+deadline/cost gap. Authenticated cancellation returns CANCELLED and no retained
+exposure only because no parent, native programme or effect was ever created.
+The first parent remains ACTIVE with unchanged envelope/resource revisions and
+its exact Request/effect/native completion. This is no new authority or budget.
+
 ## Qualification score specification
 
 Independently freeze material mapping set M, supported obligation set O, unique business assignment identities/weights/deadlines, critical subset K and actionable-change set C per environment before exposure. Candidate claims are CANDIDATE, not expectations. Match one-to-one only under independently defined equivalence; no duplicate credit.
