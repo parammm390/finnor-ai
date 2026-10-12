@@ -16,7 +16,13 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "react-jsx",
-    "types": ["node", "react", "react-dom", "playwright", "vitest/globals"],
+    "types": [
+      "node",
+      "react",
+      "react-dom",
+      "playwright",
+      "vitest/globals"
+    ],
     "incremental": true,
     "plugins": [
       {
@@ -35,7 +41,9 @@
     "src/**/*.tsx",
     "e2e/**/*.ts",
     ".next/types/**/*.ts",
-    ".next/dev/types/**/*.ts"
+    ".next/dev/types/**/*.ts",
+    ".next-x1-install/types/**/*.ts",
+    ".next-x1-install/dev/types/**/*.ts"
   ],
   "exclude": [
     "finnor-os",

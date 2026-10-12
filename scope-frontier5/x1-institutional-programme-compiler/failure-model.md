@@ -518,3 +518,22 @@ mapping or normative rule is supplied beyond the original standing mandate.
 Original expectation fields remain pinned. Verify actual SQL/API transitions,
 mounted compile/revision/cancel and A→B→A/revoked late response behavior. Source
 and compiled frontend proofs remain separately pinned when their cuts differ.
+
+### Actual standalone packaging link refusal
+
+Next compiled/typechecked all original routes, but frontend build001 packaging
+refused an absolute import-in-the-middle link into the readonly dependency
+checkout. Preserve that actual refusal and successful compile/resource logs.
+Retarget only links whose physical original target lies in the declared tracing
+root AND whose byte-identical target is already copied at its corresponding
+installed tracing path. Otherwise refuse; never follow a builder link at runtime.
+Finalize these existing compiled bytes without another compilation. Independently
+compare every original source preimage with its build Git cut; accept only the
+observed Next-generated tsconfig include additions, with exact old/new hashes
+and separate framework-generated-input identity. No product-source change is
+silently accepted, and build/config/verifier source cuts remain distinct.
+
+The same successful build also changed next-env.d.ts's two generated route/root
+type imports from .next/dev/types/ to .next-x1-install/types/.
+Accept exactly those type-only framework substitutions with their old/new preimages;
+all other declarations must remain byte-identical after normalizing that line.

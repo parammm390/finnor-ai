@@ -520,3 +520,16 @@ remain independently read. UI must show revision2, retain original frame, cancel
 future continuation and prevent scope/identity/late-response resurrection.
 Record screenshots, DOM predicates, original HTTP/SQL transitions and exact
 frontend/source/runtime/manifest identities; a compiled page load is insufficient.
+
+Standalone finalization may change only link targets to already-copied exact
+dependency bytes and install its pinned transport launcher. Bind the original
+successful Next exit/resource record and source commit. Exact source equality
+is required except the two observed .next-x1-install type include additions;
+retain their original/final preimages and verify structural tsconfig equality
+after removing only those additions. Every final runtime link resolves within
+installation; the compiled static auth URL matches the supplied original origin.
+
+The observed generated next-env.d.ts route-type import may change to the compiled
+distDir type path only. Independently compare all remaining declaration bytes
+against the original build commit and retain both hashes. This is type generation,
+not a silent runtime-source repair or new compiled-source history.
