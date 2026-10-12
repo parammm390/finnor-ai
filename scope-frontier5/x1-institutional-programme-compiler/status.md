@@ -1,5 +1,15 @@
 # FRONTIER5.X1 status
 
+## Current checkpoint — sensitive scope and lawful partial continuation
+
+Engineering remains **INCOMPLETE**, release **DESIGNED**. Migration head is 0186 with 188 immutable migration entries. Named development proofs: `verify-sensitive-coverage-fixed-003/owner` (58.78 s, 84872b4809299856e6bd0a8c2fab4d8341b4d0b8/tree c3324badf6eb447a19b953c6bbcc7aae330ea9d2), `verify-certified-source-owner-inputs-002/owner` (77.46 s, 23eb08ca40f48311c1e9af8a3cda0e9dbb1c7e3d/tree 6c1ac8220fbb645a1aa6eb3a9de797766920536c) and eleven kernel commands at the latter cut. These are **EMPIRICALLY_VERIFIED** within their named disposable development cases.
+
+Actual consent revocation produces one metadata-only gap across the full fifteen-source population with zero private acquisition attempts, four verified known effects, overall normative population UNKNOWN and native Work waiting. Actual self-consent restoration completes the same Work without a fifth effect, a fresh reservation or original-deadline reset. Current source scopes are checked before acquisition, under native owner locks through byte acquisition/reuse, at admission/current consumer use and final mutation. Legacy sensitive grants without complete subject certification remain unreadable. Normal authenticated source registration derives certification from all original records; the firm supplies no mapping or coverage certificate. Restricted app/worker roles still deny all raw authority DML.
+
+The pre-fix read-after-consent defect, fixed-run observer errors, stale offline-lock observer and normal-input shared-disk guard stop remain retained failures. Final supported installation, mounted input controls, remaining lifecycle and meter requirements, matched diagnostic, native scrutiny and sealed handoff remain unfinished. Protected qualification/admission/activation and comparative/financial gates remain separate and unestablished.
+
+The following checkpoints are historical; their schema and source cuts are not the current runtime.
+
 ## Current checkpoint — source authority isolation and original S5 currentness, 12 October 2026
 
 Engineering remains **INCOMPLETE**. Source `f138c560b5acb88e38d54ac69a6888d2a1c10d77`,

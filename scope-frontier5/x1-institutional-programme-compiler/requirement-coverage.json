@@ -240,9 +240,17 @@
       "status": "partial",
       "sourceEvidence": [],
       "runtimeEvidence": [
-        "private:x1-control/evidence/verify-reporting-changes-002/owner (stale projection withdrawn before current revision, field meaning unresolved; personnel/mandate remain)"
+        "private:x1-control/evidence/verify-reporting-changes-002/owner (stale projection withdrawn before current revision, field meaning unresolved; personnel/mandate remain)",
+        "private:x1-control/evidence/verify-sensitive-coverage-fixed-003/owner (native subject-consent revocation, no private acquisition, exact source gap and four observed independent duties; consent restoration completes same Work/original frame)",
+        "private:x1-control/evidence/verify-certified-source-owner-inputs-002/owner (actual API-derived complete subject certification and restricted source-role DML)"
       ],
-      "failures": [],
+      "failures": [
+        "verify-sensitive-coverage-pre-fix-001",
+        "verify-sensitive-coverage-fixed-001",
+        "verify-sensitive-coverage-fixed-002",
+        "verify-sensitive-scope-kernel-001",
+        "verify-certified-source-owner-inputs-001"
+      ],
       "notRun": []
     },
     {
@@ -16341,8 +16349,8 @@
     }
   ],
   "noPooledCompletionFraction": true,
-  "currentRuntimeCheckpoint": "Restricted source authority and native S5 revalidation of an unchanged original frame; full engineering INCOMPLETE",
-  "checkpointSourceCommit": "f138c560b5acb88e38d54ac69a6888d2a1c10d77",
+  "currentRuntimeCheckpoint": "Certified current source scopes and metadata-only gaps; lawful independent native continuation with the original S5 frame; engineering INCOMPLETE",
+  "checkpointSourceCommit": "23eb08ca40f48311c1e9af8a3cda0e9dbb1c7e3d",
   "latestEvidenceCuts": [
     {
       "evidence": "verify-quantitative-owner-001/owner",
@@ -16979,6 +16987,174 @@
         }
       ],
       "resultsSha256": "7163257c1b219275812c60ec35ada77c0831752f0651170e0648317db10f09e2"
+    },
+    {
+      "evidence": "verify-sensitive-coverage-fixed-003/owner",
+      "source": {
+        "commit": "84872b4809299856e6bd0a8c2fab4d8341b4d0b8",
+        "tree": "c3324badf6eb447a19b953c6bbcc7aae330ea9d2",
+        "dirty": "M AGENTS.md",
+        "dirtyDiffDigest": "990ac443668b437009c48a8596b954578f12e980a982fd91c234a8107dabf1b3",
+        "pins": [
+          {
+            "path": "finnor-os/scripts/frontier5/x1/run-owner-slice.mts",
+            "sha256": "a94cf5bab0801ae1aec2099c35371e19f1be783f4c5c59e296a7b1722e072dc7"
+          },
+          {
+            "path": "finnor-os/scripts/frontier5/x1/authenticated-api-fixture.mts",
+            "sha256": "153b6911bc52dfe8e5ad6691ba8adacec723c3a2df0c724463c315182d36b561"
+          },
+          {
+            "path": "finnor-os/scripts/frontier5/x1/owner-source-corpus.mts",
+            "sha256": "9f8c8be21b18c9dfe60e79128e9241290d8b15d62ff82413996210e4f5ece1ba"
+          },
+          {
+            "path": "finnor-os/scripts/frontier5/x1/canonical-owner-corpus.mts",
+            "sha256": "10996a860488342e3474db016d35545879db67733a4b14872fec65ae3eb7f1f1"
+          },
+          {
+            "path": "finnor-os/scripts/frontier5/x1/upgrade-owner-fixture.mts",
+            "sha256": "9fcb6a7930f9e92dec3f3e6066a28f7d48cd718f1088475648bf7c68f8e4bdfb"
+          },
+          {
+            "path": "finnor-os/scripts/frontier5/x1/physical-owner-worker.mts",
+            "sha256": "f33c276c7fbc735e3c69c8eed374b6f7fb0cbcf64502fd3161667e0a8a10bfdb"
+          },
+          {
+            "path": "finnor-os/packages/db/migrations-bundle.ts",
+            "sha256": "785c90d76574a2c286b50013aaff8c4138c2c936345cd4582e231a256afae24e"
+          },
+          {
+            "path": "finnor-os/package-lock.json",
+            "sha256": "9a7b757ef717fbafa290c748d0faaedcb608afac1291c2fabe4d19c066d508b1"
+          },
+          {
+            "path": "scope-frontier5/x1-institutional-programme-compiler/profile.json",
+            "sha256": "2bd1d8d9fcf8115976aad5df14c5edd2bc7d28d105ec45dadd1e907f5ceaf9a6"
+          }
+        ]
+      },
+      "durationMs": 58775.16583300001,
+      "sampledOwnedRssBytes": 2012102656,
+      "cases": [
+        {
+          "id": "A-quantitative-semantic-owner-assertions",
+          "status": "PASS"
+        },
+        {
+          "id": "A-all-ordinary-operations",
+          "status": "PASS"
+        },
+        {
+          "id": "A-authenticated-owner-creation",
+          "status": "PASS"
+        },
+        {
+          "id": "A-eight-class-original-corpus",
+          "status": "PASS"
+        },
+        {
+          "id": "A-full-declared-source-and-owner-domain",
+          "status": "PASS"
+        },
+        {
+          "id": "A-fourteen-canonical-kinds",
+          "status": "PASS"
+        },
+        {
+          "id": "G-authenticated-api-compute-attribution",
+          "status": "PASS"
+        },
+        {
+          "id": "B-sensitive-consent-independent-continuation",
+          "status": "PASS"
+        }
+      ],
+      "resultsSha256": "d91e3c4afcebdfe7254cf1c27a070897265dd32854cd4418430789253fd643db"
+    },
+    {
+      "evidence": "verify-certified-source-owner-inputs-002/owner",
+      "source": {
+        "commit": "23eb08ca40f48311c1e9af8a3cda0e9dbb1c7e3d",
+        "tree": "6c1ac8220fbb645a1aa6eb3a9de797766920536c",
+        "dirty": "M AGENTS.md",
+        "dirtyDiffDigest": "990ac443668b437009c48a8596b954578f12e980a982fd91c234a8107dabf1b3",
+        "pins": [
+          {
+            "path": "finnor-os/scripts/frontier5/x1/run-owner-slice.mts",
+            "sha256": "a94cf5bab0801ae1aec2099c35371e19f1be783f4c5c59e296a7b1722e072dc7"
+          },
+          {
+            "path": "finnor-os/scripts/frontier5/x1/authenticated-api-fixture.mts",
+            "sha256": "153b6911bc52dfe8e5ad6691ba8adacec723c3a2df0c724463c315182d36b561"
+          },
+          {
+            "path": "finnor-os/scripts/frontier5/x1/owner-source-corpus.mts",
+            "sha256": "9f8c8be21b18c9dfe60e79128e9241290d8b15d62ff82413996210e4f5ece1ba"
+          },
+          {
+            "path": "finnor-os/scripts/frontier5/x1/canonical-owner-corpus.mts",
+            "sha256": "10996a860488342e3474db016d35545879db67733a4b14872fec65ae3eb7f1f1"
+          },
+          {
+            "path": "finnor-os/scripts/frontier5/x1/upgrade-owner-fixture.mts",
+            "sha256": "9fcb6a7930f9e92dec3f3e6066a28f7d48cd718f1088475648bf7c68f8e4bdfb"
+          },
+          {
+            "path": "finnor-os/scripts/frontier5/x1/physical-owner-worker.mts",
+            "sha256": "f33c276c7fbc735e3c69c8eed374b6f7fb0cbcf64502fd3161667e0a8a10bfdb"
+          },
+          {
+            "path": "finnor-os/packages/db/migrations-bundle.ts",
+            "sha256": "785c90d76574a2c286b50013aaff8c4138c2c936345cd4582e231a256afae24e"
+          },
+          {
+            "path": "finnor-os/package-lock.json",
+            "sha256": "9a7b757ef717fbafa290c748d0faaedcb608afac1291c2fabe4d19c066d508b1"
+          },
+          {
+            "path": "scope-frontier5/x1-institutional-programme-compiler/profile.json",
+            "sha256": "2bd1d8d9fcf8115976aad5df14c5edd2bc7d28d105ec45dadd1e907f5ceaf9a6"
+          }
+        ]
+      },
+      "durationMs": 77458.787959,
+      "sampledOwnedRssBytes": 1245102080,
+      "cases": [
+        {
+          "id": "G-authenticated-owner-inputs",
+          "status": "PASS"
+        },
+        {
+          "id": "A-quantitative-semantic-owner-assertions",
+          "status": "PASS"
+        },
+        {
+          "id": "A-all-ordinary-operations",
+          "status": "PASS"
+        },
+        {
+          "id": "A-authenticated-owner-creation",
+          "status": "PASS"
+        },
+        {
+          "id": "A-eight-class-original-corpus",
+          "status": "PASS"
+        },
+        {
+          "id": "A-full-declared-source-and-owner-domain",
+          "status": "PASS"
+        },
+        {
+          "id": "A-fourteen-canonical-kinds",
+          "status": "PASS"
+        },
+        {
+          "id": "G-authenticated-api-compute-attribution",
+          "status": "PASS"
+        }
+      ],
+      "resultsSha256": "6f3faea161fffe2ec123b58f1c58cb5b2e08ae1d3b970e07b96c5d999edbf64c"
     }
   ]
 }
