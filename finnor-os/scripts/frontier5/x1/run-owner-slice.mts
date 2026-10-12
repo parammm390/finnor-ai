@@ -88,6 +88,7 @@ const freeze = { source: { commit: git("rev-parse", "HEAD"), tree: git("rev-pars
   omitted: "Full B–H, physical interruption, mounted browser, clean built installation/upgrade and protected qualification remain distinct required evidence" };
 await writeFile(join(evidence, "freeze.json"), JSON.stringify(freeze, null, 2) + "\n", { mode: 0o600, flag: "wx" });
 const results: any[] = [], traffic: unknown[] = [];
+let preparationCostProof:Array<Record<string,any>>=[];
 let database: EmbeddedPostgres | undefined, admin: pg.Client | undefined;
 let publicationBlocker:pg.Client|undefined;
 let acknowledgementBlocker:pg.Client|undefined,effectRecoveryProof:any;
@@ -464,6 +465,23 @@ try {
   const input = { workId, workInputId: metadata.body.workInputId, grantIds, idempotencyKey: "x1-original:" + randomUUID() };
   assert.equal((await api("institution-submit", input, null)).status, 401);
   assert.equal((await api("institution-submit", { ...input, candidate: {} })).status, 400);
+  if(ownerInputs){
+    const paths=new Set(['institution-inputs','institution-mandate','institution-register-source','institution-sources','institution-submit']);
+    const calls=(traffic as Array<{path:string;status:number;bearer:boolean}>).filter(call=>call.bearer
+      &&paths.has(call.path.split('/').at(-1)!)&&![401,403,404].includes(call.status));
+    preparationCostProof=(await admin.query(`SELECT record_id,content_digest,body->'payload' payload FROM finnor_os.s7_economic_records
+      WHERE tenant_id=$1 AND principal_id=$2 AND kind='COMPUTE' AND body->'payload'->>'schema'='finnor.x1.api-preparation-compute.v1'
+        AND body->'payload'->>'workId'=$3 ORDER BY knowledge_at,record_id`,[tenant,actor,workId])).rows;
+    await save('work-preparation-original-api-cost-observations.json',{calls,measurements:preparationCostProof,
+      noEpisode:(await admin.query('SELECT count(*)::int n FROM finnor_os.x1_compiler_episodes WHERE tenant_id=$1',[tenant])).rows[0].n===0,
+      allocations:'MEASURE_ONCE_IN_S7_RETAIN_OBSERVED_NULL_PARENT_THEN_BIND_ACTUAL_ORIGINAL_WORK_PARENT',money:null,humanSeconds:null});
+    assert.equal(preparationCostProof.length,calls.length,'ACTUAL_WORK_PREPARATION_API_MEASUREMENT_MISSING');
+    assert.ok(calls.length>0);assert.equal(new Set(preparationCostProof.map(row=>row.payload.invocationId)).size,calls.length);
+    assert.deepEqual(preparationCostProof.map(row=>row.payload.statusCode).sort(),calls.map(call=>call.status).sort());
+    for(const row of preparationCostProof){assert.equal(row.payload.episodeId,null);assert.equal(row.payload.parentReservation,null);
+      assert.ok(Number.isFinite(row.payload.elapsedMs)&&row.payload.elapsedMs>0);assert.equal(row.payload.money,null);
+      assert.equal(row.payload.humanSeconds,null);assert.equal(row.payload.aggregatePeakMemoryBytes,null);assert.equal(row.payload.businessWorkCredit,0);}
+  }
   const accepted = mounted?null:await api("institution-submit", input);
   if(accepted){assert.equal(accepted.status, 202, JSON.stringify(accepted));compilerId=accepted.body.requestId;}
   await save("authenticated-submit.json", { identity, metadata, input, accepted, authDevBypass: false, tokenPersisted: false });
@@ -1016,6 +1034,21 @@ try {
       AND body->'payload'->>'schema'='finnor.x1.api-compute.v1' AND body->'payload'->>'workId'=$3
       ORDER BY knowledge_at,record_id`,[tenant,actor,workId])).rows));
   const apiMetersBefore=await meteredApiRows();
+  if(ownerInputs){
+    const cost=reading.costs.physicalCompute;
+    assert.equal(cost.phases.AUTHENTICATED_WORK_PREPARATION.deliveries,preparationCostProof.length);
+    for(const measurement of preparationCostProof)assert.equal(cost.recordRefs.filter((ref:any)=>ref.id===measurement.record_id).length,1);
+    assert.deepEqual(cost.preparationAllocation.parentReservation,reading.costs.parentReservation);
+    assert.equal(cost.preparationAllocation.originalEpisodeId,reading.costs.physicalCompute.originalEpisodeIds[0]);
+    const retained=(await admin.query(`SELECT record_id,content_digest,body->'payload' payload FROM finnor_os.s7_economic_records
+      WHERE tenant_id=$1 AND principal_id=$2 AND kind='COMPUTE' AND body->'payload'->>'schema'='finnor.x1.api-preparation-compute.v1'
+        AND body->'payload'->>'workId'=$3 ORDER BY knowledge_at,record_id`,[tenant,actor,workId])).rows;
+    assert.deepEqual(retained,preparationCostProof,'past physical measurements and observed null parents remain immutable');
+    await save('work-preparation-original-parent-independent-proof.json',{measurements:preparationCostProof,ownerRead:cost,
+      originalParent:reading.costs.parentReservation,nativeRequestUnitsAreSeparateFromMonetaryAttribution:true,fullCostQualification:false});
+    results.push({id:'G-work-preparation-api-compute-attribution',status:'PASS',observed:{invocations:preparationCostProof.length},
+      basis:'ACTUAL_PRE_EPISODE_HTTP_IMMUTABLE_S7_PHYSICAL_RECORDS_ONE_ORIGINAL_WORK_PARENT_CONSUMER_NO_BUDGET_RESET'});
+  }
   const statusRead=await api('institution-status',{requestId:compilerId});assert.equal(statusRead.status,200);
   const repeatRead=await api('institution-read',{requestId:compilerId});assert.equal(repeatRead.status,200);
   const refusedRead=await api('institution-status',{requestId:compilerId,unexpected:'actual refused invocation'});
