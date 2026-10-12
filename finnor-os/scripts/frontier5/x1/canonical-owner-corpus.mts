@@ -2,7 +2,7 @@
  * canonical creators, not direct lifecycle row inserts or producer outputs. */
 import { randomUUID } from 'node:crypto';
 import type { Client } from 'pg';
-import { withTenantTransaction } from '@finnor/db';
+import { withTenantTransaction,attachWorkEntity } from '@finnor/db';
 import { createEvidenceSourceTx,appendEvidenceVersionTx } from '@finnor/memory';
 import { createDocument,appendDocumentVersion } from '@finnor/data-platform';
 import { createFund,createVehicle,linkFundVehicle,createDebtFacility,createMetricSeries,
@@ -13,7 +13,7 @@ import type { OwnerSource } from './owner-source-corpus.mts';
 export type ExpectedOwnerMapping={sourceId:string;recordId:string;canonicalId:string;nativeType:string;kind:string};
 export async function canonicalOwnerSources(input:{ctx:PeMutationContext;admin:Client;institutionId:string;
   workId:string;dealId:string;companyId:string;organizationKey:string;workstreamId:string;
-  requestedFromDealPartyId:string;occurredAt:string;availableAt:string}){
+  requestedFromDealPartyId:string;occurredAt:string;availableAt:string;fullDomain?:boolean}){
   const {ctx,admin,institutionId,workId,dealId,companyId,workstreamId,requestedFromDealPartyId}=input;
   const tenant=ctx.auth.tenantId,actor=ctx.auth.userId;
   const sourceSystem=ctx.provenance?.sourceSystem;
@@ -38,15 +38,23 @@ export async function canonicalOwnerSources(input:{ctx:PeMutationContext;admin:C
   const funds=[],vehicles=[];
   for(let i=0;i<2;i++){
     const fundRegistration=registration('FUND'),vehicleRegistration=registration('VEHICLE');
-    const fund=await createFund(ownerContext(fundRegistration),{name:'Shared fund name',baseCurrency:'USD',status:'active'});
-    const vehicle=await createVehicle(ownerContext(vehicleRegistration),{name:'Shared vehicle name',vehicleType:'main',status:'active'});
+    const context=(id:string)=>input.fullDomain?{...ownerContext(id),provenance:{...ownerContext(id).provenance,
+      sourceSystem:'existing-crm-owner'}}:ownerContext(id);
+    const fund=await createFund(context(fundRegistration),{name:'Shared fund name',baseCurrency:'USD',status:'active'});
+    const vehicle=await createVehicle(context(vehicleRegistration),{name:'Shared vehicle name',vehicleType:'main',status:'active'});
     funds.push(String(fund.row.id));vehicles.push(String(vehicle.row.id));
-    add('fund-'+i,'fund','pe_fund',fundRegistration,String(fund.row.id));
-    add('vehicle-'+i,'vehicle','pe_vehicle',vehicleRegistration,String(vehicle.row.id));
+    const fundRecord=add('fund-'+i,'fund','pe_fund',fundRegistration,String(fund.row.id));
+    const vehicleRecord=add('vehicle-'+i,'vehicle','pe_vehicle',vehicleRegistration,String(vehicle.row.id));
+    if(input.fullDomain){
+      Object.assign(fundRecord,{name:'Shared fund name'});Object.assign(vehicleRecord,{name:'Shared vehicle name',
+        vehicleType:'main',relation:'fund_vehicle',relationRegistrationId:fundRegistration,effectiveFrom:input.occurredAt});
+      for(const [entityType,entityId] of [['pe_fund',String(fund.row.id)],['pe_vehicle',String(vehicle.row.id)]])
+        await attachWorkEntity(tenant,workId,{entityType:entityType!,entityId:entityId!,source:'ordinary-preexisting-owner-work-scope'});
+    }
   }
   const relationRegistration=registration('LINK');
   const relation=await linkFundVehicle(ownerContext(relationRegistration),{fundId:funds[0]!,vehicleId:vehicles[0]!,
-    relationshipKind:'master',validFrom,evidence});
+    relationshipKind:input.fullDomain?'other':'master',validFrom,evidence});
   add('relationship-A','relationship','pe_fund_vehicle_link',relationRegistration,String(relation.row.id));
   const investmentRegistration=registration('CASE');
   const investment=await createInvestmentCase(ownerContext(investmentRegistration),{dealId,title:'Evidence readiness case'});
@@ -95,6 +103,21 @@ export async function canonicalOwnerSources(input:{ctx:PeMutationContext;admin:C
   const person=add('person-A','person','user',personRegistration,actor,personSourceId);
   const sources:OwnerSource[]=[{id:sourceId,sourceClass:'crm_deals',rows},
     {id:personSourceId,sourceClass:'personnel_benefits',rows:[person]}];
-  return {sources,expected,evidence,existingRequestId:String(existingRequest.row.id),funds,vehicles,
+  if(input.fullDomain){
+    const expenseSourceId='expense-owner-original';
+    await admin.query(`INSERT INTO finnor_os.x1_subject_identity_bindings
+      (tenant_id,institution_id,source_id,registration_id,subject_user_id,evidence_source_id,evidence_version_id,valid_from,expires_at)
+      VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9)`,[tenant,institutionId,expenseSourceId,personRegistration,actor,
+      evidence.evidenceSourceId,evidence.evidenceVersionId,validFrom,expiresAt]);
+    await grantInstitutionSubjectConsent(ctx,{institutionId,sourceClass:'expense_administration',purpose:'standing evidence responsibility',expiresAt});
+    const expensePerson=add('expense-person-A','person','user',personRegistration,actor,expenseSourceId);
+    sources.push({id:expenseSourceId,sourceClass:'expense_administration',rows:[expensePerson,
+      {id:'expense-A',kind:'quantity',registrationId:personRegistration,entityType:'person',factKey:'travel_expense',
+        value:'17.50',currency:'USD',unit:'dollars',period:'2026-10',basis:'submitted_unapproved',
+        occurredAt:input.occurredAt,availableAt:input.availableAt}]});
+  }
+  const originalLink=JSON.parse(JSON.stringify((await admin.query('SELECT * FROM finnor_os.pe_fund_vehicle_links WHERE tenant_id=$1 AND id=$2',
+    [tenant,relation.row.id])).rows[0]));
+  return {sources,expected,evidence,existingRequestId:String(existingRequest.row.id),funds,vehicles,originalLink,
     fixturesArePreexistingOwnerState:true};
 }

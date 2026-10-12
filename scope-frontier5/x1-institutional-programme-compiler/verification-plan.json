@@ -509,6 +509,21 @@
       "limits": "UNCHANGED",
       "acceptance": "oracle-contract.md#g-existing-schema-upgrade-and-jobs-independent-expectations",
       "finalBuiltInstallationEstablished": false
+    },
+    {
+      "id": "A-full-declared-source-and-owner-domain",
+      "mode": "domain",
+      "dutyCount": 1,
+      "status": "FROZEN_BEFORE_CASE_IMPLEMENTATION",
+      "sourceInstances": 15,
+      "sourceClasses": 10,
+      "directProtocols": 12,
+      "canonicalKinds": 14,
+      "independentMappingDenominator": 26,
+      "independentObligationDenominator": 3,
+      "limits": "UNCHANGED",
+      "acceptance": "oracle-contract.md#a-full-declared-source-and-owner-domain-independent-expectations",
+      "protectedQualification": false
     }
   ]
 }

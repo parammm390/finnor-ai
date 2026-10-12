@@ -153,6 +153,23 @@ must be quarantined without execution; new jobs must retain their registered typ
 and protocol versions. Preserve the old Work/document/version after all new work.
 This case does not establish clean dependency installation or final built bytes.
 
+### Registered owner case A-full-declared-source-and-owner-domain
+
+Combine the original heterogeneous byte corpus with all fourteen canonical kinds,
+both sensitive source classes with real subject identity/consent, and all three
+ordinary operations within the unchanged 16-source limit. Retain two funds and
+vehicles with conflicting labels. Existing CRM Deal/Fund/Vehicle identities are
+bound by actual authorized Work roots and exact external registrations, not an X1
+source-system name or display-name equality. Multiple scoped matches remain
+ambiguous; unlinked legacy records do not acquire institutional scope.
+
+Raw vehicle records declare the fund relationship, explicit kind and valid-from
+time. One compatible owner link already exists with its real arbitrary ID; reuse
+that row without changing it. A second link must be created through the actual
+owner. A conflicting validity/kind is unresolved and never silently overwritten.
+Preserve original populations, all quantity context, sensitive permission checks,
+evidence attachments and actual native completion; no profile narrowing.
+
 ### Installed baseline and immutable parent bindings
 
 The full output currently carries an avoidable unknown baseline and empty parent

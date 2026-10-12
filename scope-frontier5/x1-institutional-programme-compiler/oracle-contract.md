@@ -275,3 +275,18 @@ delivery attempts, completed compatible probe, quarantined retired job, and one
 new independently observed Request with completed native Work. A copied tracker,
 renamed old row or a new identity cannot satisfy this case. It is schema/job
 compatibility evidence, with final build/install explicitly separate.
+
+# A-full-declared-source-and-owner-domain independent expectations
+
+Fifteen source instances cover all ten classes and twelve direct-byte protocols.
+The independent fixture owner ledger supplies the exact fourteen-kind identity
+population before compiler exposure; source data contains raw registrations and
+relationships, never canonical IDs or supplied mappings. Two distinct funds and
+vehicles retain conflicting names. Exact original owner IDs remain stable across
+legacy provenance. Require one existing compatible fund/vehicle link byte-identical
+and one new owner link with the declared kind/valid-from, no duplicate links.
+Sensitive personnel and expense sources require current subject self-consent and
+source-scoped identity bindings. Expected expense decimal/currency/unit/period/basis
+and subject are retained, with no payment credit. Three original responsibilities
+execute the actual native owners and complete Work. Original bytes, hidden-field
+denominators and checker coverage stay frozen; this is development domain evidence.

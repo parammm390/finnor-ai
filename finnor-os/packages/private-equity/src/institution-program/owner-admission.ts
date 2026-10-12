@@ -183,9 +183,11 @@ export async function loadInstitutionCanonicalOwnerSnapshot(
     readOnly: true, isolation: "repeatable read" }, async (_db, client) => {
     const result = await client.query<{ id: string; external_id: string;version:number }>(
       `SELECT id::text,external_id,version FROM finnor_os.pe_deals
-        WHERE tenant_id=$1 AND source_system=$4 AND external_id=ANY($2::text[]) AND archived_at IS NULL AND status='active'
+        WHERE tenant_id=$1 AND (source_system=$4 OR EXISTS(SELECT 1 FROM finnor_os.work_entity_links w
+          WHERE w.tenant_id=pe_deals.tenant_id AND w.work_id=$5 AND w.entity_type='pe_deal'
+            AND w.entity_id=pe_deals.id)) AND external_id=ANY($2::text[]) AND archived_at IS NULL AND status='active'
         ORDER BY external_id,id LIMIT $3`,
-      [ctx.auth.tenantId, [...identifiers], profile.bounds.deals + 1, `x1:${original.institutionId}`]);
+      [ctx.auth.tenantId, [...identifiers], profile.bounds.deals + 1, `x1:${original.institutionId}`,original.workId]);
     return result.rows;
   });
   if (matches.length > profile.bounds.deals) throw new Error("X1_DEAL_BOUND");
@@ -215,8 +217,12 @@ export async function loadInstitutionCanonicalOwnerSnapshot(
       const table = entry.entityType === "fund" ? "pe_funds" : "pe_vehicles";
       const row = await client.query<{ id: string; name: string; external_id: string; version: number }>(
         `SELECT id::text,name,external_id,version FROM finnor_os.${table}
-          WHERE tenant_id=$1 AND source_system=$2 AND external_id=$3 AND status<>'liquidated' LIMIT 1`,
-        [ctx.auth.tenantId, `x1:${original.institutionId}`, entry.registrationId]);
+          WHERE tenant_id=$1 AND (source_system=$2 OR EXISTS(SELECT 1 FROM finnor_os.work_entity_links w
+            WHERE w.tenant_id=${table}.tenant_id AND w.work_id=$4 AND w.entity_type=$5 AND w.entity_id=${table}.id))
+            AND external_id=$3 AND status<>'liquidated' ORDER BY id LIMIT 2`,
+        [ctx.auth.tenantId, `x1:${original.institutionId}`, entry.registrationId,original.workId,
+          entry.entityType==='fund'?'pe_fund':'pe_vehicle']);
+      if(row.rows.length>1)continue; // retained owner population below exposes the ambiguity
       const found = row.rows[0];
       if(!found&&entry.ambiguousName)continue;
       // Existing owners supply their actual ID. A display-label correction is
@@ -228,9 +234,12 @@ export async function loadInstitutionCanonicalOwnerSnapshot(
       const table=kind==="fund"?"pe_funds":"pe_vehicles";
       const rows=(await client.query<{id:string;name:string;external_id:string;version:number}>(
         `SELECT id::text,name,external_id,version FROM finnor_os.${table}
-          WHERE tenant_id=$1 AND source_system=$2 AND external_id=ANY($3::text[])
+          WHERE tenant_id=$1 AND (source_system=$2 OR EXISTS(SELECT 1 FROM finnor_os.work_entity_links w
+            WHERE w.tenant_id=${table}.tenant_id AND w.work_id=$5 AND w.entity_type=$6 AND w.entity_id=${table}.id))
+            AND external_id=ANY($3::text[])
             AND status<>'liquidated' ORDER BY external_id,id LIMIT $4`,
-        [ctx.auth.tenantId,`x1:${original.institutionId}`,[...identifiers],profile.bounds.canonicalReferences+1])).rows;
+        [ctx.auth.tenantId,`x1:${original.institutionId}`,[...identifiers],profile.bounds.canonicalReferences+1,
+          original.workId,kind==='fund'?'pe_fund':'pe_vehicle'])).rows;
       if(rows.length>profile.bounds.canonicalReferences)throw Error("X1_CANONICAL_REFERENCE_BOUND");
       for(const row of rows)if(!refs.some(ref=>ref.kind===kind&&ref.id===row.id))
         refs.push({kind,id:row.id,registration:row.external_id,name:row.name,version:row.version});
@@ -422,7 +431,7 @@ async function admitCheckedInstitutionMappings(
     );
     if (!mandateLocked.rows[0]) throw new Error("X1_MANDATE_CHANGED_DURING_PUBLICATION");
     const receipts: AcceptedInstitutionMappingRef[] = [];
-    const createdRelations = new Set<string>();
+    const createdRelations = new Map<string,string>();
     for (const mapping of [...candidate.mappings].sort((a, b) => {
       const rank = (ref: string) => ref.startsWith("pe_fund:") ? 0 : ref.startsWith("pe_vehicle:") ? 1 : 2;
       return rank(a.canonicalRef) - rank(b.canonicalRef);
@@ -449,8 +458,11 @@ async function admitCheckedInstitutionMappings(
         const table = kind === "fund" ? "pe_funds" : "pe_vehicles";
         const current = await client.query<typeof row>(
           `SELECT id::text,external_id,version,source_system FROM finnor_os.${table}
-            WHERE tenant_id=$1 AND source_system=$2 AND external_id=$3 FOR UPDATE`,
-          [ctx.auth.tenantId, `x1:${original.institutionId}`, mapping.registrationId],
+            WHERE tenant_id=$1 AND id=$4 AND external_id=$3 AND (source_system=$2 OR EXISTS
+              (SELECT 1 FROM finnor_os.work_entity_links w WHERE w.tenant_id=${table}.tenant_id
+                AND w.work_id=$5 AND w.entity_type=$6 AND w.entity_id=${table}.id)) FOR UPDATE`,
+          [ctx.auth.tenantId, `x1:${original.institutionId}`, mapping.registrationId,entityId,original.workId,
+            kind==='fund'?'pe_fund':'pe_vehicle'],
         );
         if (!current.rows[0]) {
           if(!native.name||native.name.length>256)throw Error("X1_NATIVE_CANONICAL_CREATION_EVIDENCE_MISSING");
@@ -468,9 +480,12 @@ async function admitCheckedInstitutionMappings(
             version: Number(result.row.version), source_system: String(result.row.sourceSystem) };
         } else row = current.rows[0];
       }
+      const linked=row.source_system===`x1:${original.institutionId}`||(await client.query(`SELECT 1
+        FROM finnor_os.work_entity_links WHERE tenant_id=$1 AND work_id=$2 AND entity_type=$3 AND entity_id=$4`,
+        [ctx.auth.tenantId,original.workId,entityType,entityId])).rowCount!==0;
       if (row.id !== entityId || row.external_id !== mapping.registrationId
           || entity.revision !== `v${row.version}`
-          || row.source_system !== `x1:${original.institutionId}`) {
+          || !linked) {
         throw new Error("X1_CANONICAL_ENTITY_CHANGED_DURING_ADMISSION", { cause: {
           kind: "X1_CANONICAL_OWNER_MISMATCH", canonicalRef: mapping.canonicalRef,
           registrationId: mapping.registrationId, expectedSourceSystem: `x1:${original.institutionId}`,
@@ -599,14 +614,16 @@ async function admitCheckedInstitutionMappings(
           JSON.stringify([relation.targetRegistrationId,mapping.registrationId]));
         const key = `${fund[1]}:${entityId}`;
         if (!createdRelations.has(key)) {
-          const existing = await client.query<{ id: string }>(
-            `SELECT id::text FROM finnor_os.pe_fund_vehicle_links
+          const existing = await client.query<{ id: string;valid_from:Date }>(
+            `SELECT id::text,valid_from FROM finnor_os.pe_fund_vehicle_links
                WHERE tenant_id=$1 AND fund_id=$2 AND vehicle_id=$3
                  AND relationship_kind=$4 AND superseded_at IS NULL
                  AND valid_to IS NULL FOR UPDATE`,
             [ctx.auth.tenantId, fund[1], entityId, relationshipKind],
           );
-          if (existing.rows[0] && existing.rows[0].id !== id) throw new Error("X1_RELATION_IDENTITY_CONFLICT");
+          if(existing.rows.length>1||existing.rows[0]
+            &&new Date(existing.rows[0].valid_from).toISOString()!==new Date(relation.validFrom!).toISOString())
+            throw Error('X1_RELATION_VALIDITY_CONFLICT_REQUIRES_DECISION');
           if (!existing.rows[0]) await linkFundVehicleTx(client, {
             ...ctx, provenance: { sourceSystem: `x1:${original.institutionId}`,
               externalId: `${relation.targetRegistrationId}:${mapping.registrationId}`,
@@ -614,9 +631,9 @@ async function admitCheckedInstitutionMappings(
           }, { id, fundId: fund[1]!, vehicleId: entityId!, validFrom: new Date(relation.validFrom!),
             relationshipKind,
             evidence: { evidenceSourceId: evidence.id, evidenceVersionId: evidenceVersion.versionId } });
-          createdRelations.add(key);
+          createdRelations.set(key,existing.rows[0]?.id??id);
         }
-        relationId = id;
+        relationId = createdRelations.get(key);
       }
       receipts.push({ sourceId: source.id, recordId: mapping.recordId, canonicalRef: mapping.canonicalRef,
         originalDocumentVersionId: source.coreVersionId, evidenceSourceId: evidence.id,

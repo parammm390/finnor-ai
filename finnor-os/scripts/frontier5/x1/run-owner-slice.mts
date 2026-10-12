@@ -25,19 +25,20 @@ const repo = fileURLToPath(new URL("../../../../", import.meta.url));
 const evidence = process.env.FINNOR_X1_OWNER_EVIDENCE;
 if (!evidence || !evidence.startsWith("/")) throw Error("FRESH_PRIVATE_X1_OWNER_EVIDENCE_REQUIRED");
 const dutyCount=process.env.FINNOR_X1_OWNER_CASE==='128'?128:1;
+const fullDomain=process.env.FINNOR_X1_OWNER_MODE==='domain';
 const mounted=process.env.FINNOR_X1_OWNER_MODE==='mounted';
 const revise=process.env.FINNOR_X1_OWNER_MODE==='revision';
 const material=process.env.FINNOR_X1_OWNER_MODE==='material';
-const heterogeneous=process.env.FINNOR_X1_OWNER_MODE==='heterogeneous';
-const canonical=process.env.FINNOR_X1_OWNER_MODE==='canonical';
+const heterogeneous=process.env.FINNOR_X1_OWNER_MODE==='heterogeneous'||fullDomain;
+const canonical=process.env.FINNOR_X1_OWNER_MODE==='canonical'||fullDomain;
 const recovery=process.env.FINNOR_X1_OWNER_MODE==='recovery';
 const effectRecovery=process.env.FINNOR_X1_OWNER_MODE==='effect_recovery';
-const ordinary=process.env.FINNOR_X1_OWNER_MODE==='ordinary';
+const ordinary=process.env.FINNOR_X1_OWNER_MODE==='ordinary'||fullDomain;
 const upgrade=process.env.FINNOR_X1_OWNER_MODE==='upgrade';
 const contention=process.env.FINNOR_X1_OWNER_MODE==='contention';
 const unsupported=process.env.FINNOR_X1_OWNER_MODE==='unsupported';
 const cancelObserved=process.env.FINNOR_X1_OWNER_MODE==='cancel_observed';
-if(process.env.FINNOR_X1_OWNER_MODE&&!['api','mounted','revision','material','heterogeneous','canonical','recovery','effect_recovery','ordinary','upgrade','contention','unsupported','cancel_observed'].includes(process.env.FINNOR_X1_OWNER_MODE))
+if(process.env.FINNOR_X1_OWNER_MODE&&!['api','mounted','revision','material','heterogeneous','canonical','recovery','effect_recovery','ordinary','domain','upgrade','contention','unsupported','cancel_observed'].includes(process.env.FINNOR_X1_OWNER_MODE))
   throw Error('EXACT_REGISTERED_OWNER_MODE_REQUIRED');
 if((mounted||material||heterogeneous||canonical||recovery||effectRecovery||ordinary||upgrade||contention||unsupported||cancelObserved)&&dutyCount!==1)throw Error('NAMED_ONE_DUTY_SCENARIO_REQUIRED');
 if(process.env.FINNOR_X1_OWNER_CASE&&!['1','128'].includes(process.env.FINNOR_X1_OWNER_CASE))
@@ -68,6 +69,7 @@ const freeze = { source: { commit: git("rev-parse", "HEAD"), tree: git("rev-pars
     ...(effectRecovery?['D-effect-submit-lost-ack']:[]),
     ...(ordinary?['A-all-ordinary-operations']:[]),
     ...(upgrade?['G-existing-schema-upgrade-and-jobs']:[]),
+    ...(fullDomain?['A-full-declared-source-and-owner-domain']:[]),
     ...(contention?['E-original-shared-parent-contention']:[]),...(unsupported?['F-mixed-unsupported-rule']:[]),
     ...(cancelObserved?['E-cancel-observed-standing-continuation']:[])],
   omitted: "Full B–H, physical interruption, mounted browser, clean built installation/upgrade and protected qualification remain distinct required evidence" };
@@ -148,7 +150,8 @@ try {
   await configureTenantVertical({ tenantId: tenant, verticalKey: "private_equity", expectedVersion: 0, createdBy: actor, sourceSystem: "X1:owner-e2e" });
   const companyIds = [randomUUID(), randomUUID()];
   for (const id of companyIds) await admin.query("INSERT INTO finnor_os.external_organizations(id,tenant_id,organization_key,name,kind) VALUES($1,$2,$3,'Conflicting Harbor','other')", [id, tenant, "org-" + id]);
-  const deal = async (index: number, registration: string) => createDeal({ ...ctx, provenance: { ...ctx.provenance, externalId: registration } },
+  const deal = async (index: number, registration: string) => createDeal({ ...ctx, provenance: { ...ctx.provenance,
+    ...(fullDomain?{sourceSystem:'existing-crm-owner'}:{}),externalId: registration } },
     { targetOrganizationId: companyIds[index]!, name: "Conflicting Harbor", dealLeadEmployeeId: actor,
       signedLoiAt: new Date(Date.now() - 86400000), targetClosingAt: new Date(Date.now() + 86400000) });
   const first = await deal(0, registrationA), second = await deal(1, registrationB);
@@ -250,7 +253,7 @@ try {
     workRecords:sources.find(source=>source.id==='work-original')!.rows});
   const canonicalFixture=canonical?await canonicalOwnerSources({ctx,admin,institutionId,workId,
     dealId:String(first.row.id),companyId:companyIds[0]!,organizationKey:'org-'+companyIds[0]!,
-    workstreamId:String(stream.row.id),requestedFromDealPartyId:String(party.row.id),occurredAt,availableAt}):null;
+    workstreamId:String(stream.row.id),requestedFromDealPartyId:String(party.row.id),occurredAt,availableAt,fullDomain}):null;
   if(canonicalFixture){sources.push(...canonicalFixture.sources);await save('canonical-owner-starting-state.json',canonicalFixture);}
   const grantIds: string[] = [], sourceBindings: unknown[] = [];
   for (const source of sources) {
@@ -284,22 +287,24 @@ try {
     currency:'USD',unit:'units',period:'2026-10',basis:'outstanding',canonicalDealId:String(first.row.id),
     affectedDutyCount:0,preservedDutyCount:1,newEffectCount:0,sourcePopulation:3};
   if(heterogeneous){
-    expected.mappings=sources.flatMap(source=>source.rows.filter(row=>row.kind==='entity').map(row=>{
+    const byteSources=sources.filter(source=>!canonicalFixture?.sources.some(canonical=>canonical.id===source.id));
+    expected.mappings=byteSources.flatMap(source=>source.rows.filter(row=>row.kind==='entity').map(row=>{
       assert.ok(row.registrationId===registrationA||row.registrationId===registrationB,'independent owner identity fixture');
       return {sourceId:source.id,recordId:row.id,canonicalId:row.registrationId===registrationA?String(first.row.id):String(second.row.id)};
     }));
-    assert.equal(expected.mappings.length,10);assert.equal(sources.length,12);
+    assert.equal(expected.mappings.length,10);assert.equal(byteSources.length,12);
     expected.sourceCorpus={sourceClasses:[...new Set(sources.map(s=>s.sourceClass))].sort(),
-      protocols:[...new Set(sources.map(s=>s.protocol??'json_records'))].sort(),sourceInstances:12,observationRecords:13,
+      protocols:[...new Set(sources.map(s=>s.protocol??'json_records'))].sort(),sourceInstances:sources.length,
+      observationRecords:sources.reduce((n,s)=>n+s.rows.length,0),
       quantities:[{sourceId:'ledger-original',recordId:'balance-A',factKey:'facility_balance',value:'20.00'},
         {sourceId:'lender-original',recordId:'lender-A',factKey:'outstanding',value:'20.00'}].map(q=>({...q,
           currency:'USD',unit:'units',period:'2026-10',basis:'outstanding',canonicalDealId:String(first.row.id)}))};
-    assert.equal(expected.sourceCorpus.sourceClasses.length,8);assert.equal(expected.sourceCorpus.protocols.length,12);
+    assert.equal(expected.sourceCorpus.sourceClasses.length,fullDomain?10:8);assert.equal(expected.sourceCorpus.protocols.length,12);
   }
   if(canonicalFixture){
     expected.mappings=[...expected.mappings.map((mapping:any)=>({...mapping,nativeType:'pe_deal',kind:'deal'})),
       ...canonicalFixture.expected];
-    assert.equal(expected.mappings.length,17);
+    assert.equal(expected.mappings.length,fullDomain?26:17);
     expected.canonicalKinds=JSON.parse(await readFile(join(repo,'scope-frontier5/x1-institutional-programme-compiler/profile.json'),'utf8')).canonicalTypes;
     assert.deepEqual([...new Set(expected.mappings.map((m:any)=>m.kind))].sort(),[...expected.canonicalKinds].sort());
   }
@@ -717,13 +722,13 @@ try {
       WHERE r.tenant_id=$1 AND r.id=$2`,[tenant,compilerId])).rows[0];
     assert.ok(actual);assert.equal(actual.check_result.disposition,'ACCEPTED_DEVELOPMENT');
     assert.equal(actual.candidate.coverage.length,expected.sourceCorpus.sourceInstances);
-    assert.equal(actual.candidate.mappings.length,expected.mappings.length);assert.equal(actual.candidate.quantities.length,2);
+    assert.equal(actual.candidate.mappings.length,expected.mappings.length);assert.equal(actual.candidate.quantities.length,fullDomain?3:2);
     for(const oracle of expected.sourceCorpus.quantities){
       const found=actual.candidate.quantities.filter((q:any)=>q.sourceId===oracle.sourceId&&q.recordId===oracle.recordId);
       assert.equal(found.length,1);for(const field of ['factKey','value','currency','unit','period','basis'])assert.equal(found[0][field],oracle[field]);
       assert.match(found[0].canonicalRef,new RegExp(`^pe_deal:${oracle.canonicalDealId}@v[1-9][0-9]*$`));
     }
-    assert.equal(actual.candidate.obligations.length,1);assert.equal(actual.candidate.unresolved.length,0);
+    assert.equal(actual.candidate.obligations.length,ordinary?3:1);assert.equal(actual.candidate.unresolved.length,0);
     assert.equal(Object.keys(actual.body).length,14);assert.equal(Object.keys(actual.body.envelope).length,34);
     assert.equal(actual.body.envelope.source_refs.length,expected.sourceCorpus.sourceInstances);
     assert.deepEqual(Object.keys(actual.body.envelope.source_revision_vector).sort(),sources.map(s=>s.id).sort());
@@ -738,7 +743,7 @@ try {
       fullFieldStructure:{program:14,envelope:34},completion},basis:'ACTUAL_AUTHENTICATED_CORE_ORIGINALS_SEPARATE_CHECK_S1_NATIVE_WORK_AND_INDEPENDENT_SQL'});
   }
   if(canonicalFixture){
-    assert.equal(admission.receipts.length,17);
+    assert.equal(admission.receipts.length,fullDomain?26:17);
     const currentConsent=(await admin.query(`SELECT b.registration_id,b.subject_user_id,c.revision,c.expires_at
       FROM finnor_os.x1_subject_identity_bindings b JOIN finnor_os.x1_subject_consents c
         ON c.tenant_id=b.tenant_id AND c.subject_user_id=b.subject_user_id AND c.institution_id=b.institution_id
@@ -746,6 +751,35 @@ try {
         AND b.revoked_at IS NULL AND c.revoked_at IS NULL`,[tenant])).rows;
     assert.equal(currentConsent.length,1);assert.equal(currentConsent[0].subject_user_id,actor);
     assert.equal((await admin.query('SELECT count(*)::int n FROM finnor_os.pe_requests WHERE tenant_id=$1',[tenant])).rows[0].n,2);
+    if(fullDomain){
+      const links=JSON.parse(JSON.stringify((await admin.query(`SELECT * FROM finnor_os.pe_fund_vehicle_links
+        WHERE tenant_id=$1 AND fund_id=ANY($2::uuid[]) AND vehicle_id=ANY($3::uuid[]) ORDER BY fund_id,vehicle_id`,
+        [tenant,canonicalFixture.funds,canonicalFixture.vehicles])).rows));
+      assert.equal(links.length,2);const original=links.find((link:any)=>link.id===canonicalFixture.originalLink.id);
+      assert.deepEqual(original,canonicalFixture.originalLink,'existing actual arbitrary relationship ID/preimage retained');
+      const created=links.find((link:any)=>link.id!==canonicalFixture.originalLink.id);
+      assert.equal(created.fund_id,canonicalFixture.funds[1]);assert.equal(created.vehicle_id,canonicalFixture.vehicles[1]);
+      assert.equal(created.relationship_kind,'other');assert.equal(new Date(created.valid_from).toISOString(),occurredAt);
+      assert.equal(created.valid_to,null);assert.equal(created.superseded_at,null);
+      const vehicleReceipts=admission.receipts.filter((receipt:any)=>/^pe_vehicle:/.test(receipt.canonicalRef));
+      assert.equal(vehicleReceipts.length,2);assert.deepEqual(vehicleReceipts.map((receipt:any)=>receipt.relationId).sort(),links.map((link:any)=>link.id).sort());
+      const artifact=(await admin.query(`SELECT a.candidate,a.body FROM finnor_os.x1_compiler_artifacts a
+        JOIN finnor_os.x1_compiler_requests r ON r.tenant_id=a.tenant_id AND r.artifact_id=a.id WHERE r.tenant_id=$1 AND r.id=$2`,
+        [tenant,compilerId])).rows[0];
+      assert.equal(artifact.candidate.relations.length,2);
+      const expense=artifact.candidate.quantities.filter((q:any)=>q.sourceId==='expense-owner-original');assert.equal(expense.length,1);
+      for(const [field,value] of Object.entries({recordId:'expense-A',factKey:'travel_expense',value:'17.50',currency:'USD',
+        unit:'dollars',period:'2026-10',basis:'submitted_unapproved'}))assert.equal(expense[0][field],value);
+      assert.match(expense[0].canonicalRef,new RegExp('^user:'+actor+'@s[a-f0-9]{64}$'));
+      for(const link of links)assert.ok(artifact.body.canonical_entity_and_relation_refs.some((ref:any)=>ref.ref===link.id));
+      await save('full-domain-independent-proof.json',{sourceClasses:expected.sourceCorpus.sourceClasses,protocols:expected.sourceCorpus.protocols,
+        sourceInstances:sources.length,mappingCount:26,canonicalKinds:expected.canonicalKinds,links,expense,completion,
+        originalLegacyOwnersReused:true,originalRelationshipPreserved:true,newRelationshipCreated:true,
+        ordinaryEffects:allEffects.length,protectedQualification:false});
+      results.push({id:'A-full-declared-source-and-owner-domain',status:'PASS',observed:{sourceClasses:10,directProtocols:12,
+        sourceInstances:15,mappingCount:26,canonicalKinds:14,ordinaryEffects:3,links,completion},
+        basis:'ACTUAL_RAW_ALL_CLASSES_SENSITIVE_CONSENT_LEGACY_WORK_SCOPED_IDENTITIES_RELATION_REUSE_AND_NEW_OWNER_LINK_NATIVE_OPERATIONS'});
+    }
     await save('fourteen-canonical-kind-independent-proof.json',{expectedKinds:expected.canonicalKinds,
       expectedMappings:expected.mappings,actualAdmission:admission,currentConsent,completion,
       actualPreexistingRequestId:canonicalFixture.existingRequestId,additionalNativeEffects:1,
