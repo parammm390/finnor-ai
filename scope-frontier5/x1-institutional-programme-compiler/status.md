@@ -1,5 +1,43 @@
 # FRONTIER5.X1 status
 
+## Current checkpoint — domain, recovery, partial continuation and cancellation, 12 October 2026
+
+Engineering remains **INCOMPLETE**. The following finite owner cases are
+**EMPIRICALLY_VERIFIED** in the disposable authenticated development profile.
+They do not establish a single final installed cut or protected qualification.
+
+| Case | Observed result | Private evidence |
+|---|---|---|
+| Eight source classes | Twelve real original-byte protocols, ten checked mappings, two contextual quantities, one native Request and completed Work; 32.33 s | actual-owner-slice-042 |
+| Fourteen canonical kinds | Seventeen exact owner mappings with actual evidence attachments, source-scoped person identity and self-consent, one additional native effect; 32.24 s | actual-owner-slice-044 |
+| Physical compiler death | Actual SQL admission lock and SIGKILL, expired delivery quarantined, UNKNOWN readback, same-request authenticated resume and native completion; 29.84 s | actual-owner-slice-046 |
+| Material correction and lineage | Actual Core/source-grant change, automatic P7 child, minimal closure, unchanged effect/proof/parent, observed B_live preimages and immutable parent references; 33.60 s | actual-owner-slice-047 |
+| Shared S5 contention | Second authorized Work refused at the actual shared-capacity predicate, cancellation without another reservation/effect, first parent/proof unchanged; 25.40 s | actual-owner-slice-049 |
+| Unsupported rule | Two original duties retained; one allowed Request observed, approvalCondition precisely unresolved, programme PARTIAL and Work/Objective waiting; 36.62 s | actual-owner-slice-053 |
+| Stop observed standing continuation | CANCELLED after native completion, subsequent source correction starts no child, original effect/proof/consumed envelope retained; 32.20 s | actual-owner-slice-055 |
+
+Latest product repair is commit `06e1c02a0`: cancelling an observed standing
+programme stops future continuation while preserving completed native owners.
+The existing Work exposes that control and specific unresolved choices. All 181
+migrations applied in these current owner runs, including additive 0179 restoring
+Request/Deliverable evidence compatibility. Relevant source checks passed on
+their recorded cuts; final mandatory checks/build/install remain required.
+
+Raw failures are retained: native mail/calendar metadata disagreement (041),
+native evidence allowlist regression (043), orphaned RUNNING after death (045),
+observer's nonexistent queue column (048), unresolved artifact metadata refusal
+(050), terminal-read races (051–052), and observed cancellation no-op (054).
+No failed delivery/assignment is removed or credited by a successor run.
+
+Remaining internal work includes complete relation creation/legacy-owner scope,
+the remaining material-change/personnel/mandate variants, physical effect lost
+acknowledgement and other recovery/concurrency cases, S8 consumer integration,
+avoidable lifecycle meter coverage, final installed compatibility, matched
+diagnostic, scrutiny and standalone handoff. Earlier full128 and mounted privacy
+proofs remain retained on their exact earlier cuts and require only genuinely
+affected final regressions. Protected population, admission/activation and
+comparative/financial gates remain separately unestablished.
+
 ## Current checkpoint — native completion and mounted revocation verified, 12 October 2026
 
 Engineering remains **INCOMPLETE**. This checkpoint supersedes older statements

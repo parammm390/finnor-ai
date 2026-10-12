@@ -27,17 +27,20 @@
       "featureIds": [
         "x1-independent-contracts-and-checker"
       ],
-      "status": "pending",
+      "status": "partial",
       "sourceEvidence": [
         "finnor-os/packages/private-equity/src/institution-program/contracts.ts",
         "finnor-os/scripts/frontier5/x1/reference/contract.md"
       ],
       "runtimeEvidence": [
-        "private:x1-control/evidence/verify-kernel-1791704207964-bb414f36-c569-438e-bdf0-5b4b154ac2a9 (14/34 offline schema acceptance only)"
+        "private:x1-control/evidence/verify-kernel-1791704207964-bb414f36-c569-438e-bdf0-5b4b154ac2a9 (14/34 offline schema acceptance only)",
+        "private:x1-control/evidence/actual-owner-slice-042 (persisted 14/34 field structure)",
+        "private:x1-control/evidence/actual-owner-slice-047 (actual immutable B_live preimages, exact Git/runtime/schema/profile/grants and successor parent artifact bindings)"
       ],
       "failures": [],
       "notRun": [
-        "Canonical immutable persistence and authenticated readback; source schema-only acceptance is not full OUTPUT-001"
+        "Canonical immutable persistence and authenticated readback; source schema-only acceptance is not full OUTPUT-001",
+        "Final installed source/runtime identity and complete semantic owner bindings remain required."
       ]
     },
     {
@@ -48,11 +51,13 @@
       "status": "partial",
       "sourceEvidence": [],
       "runtimeEvidence": [
-        "private:x1-control/evidence/actual-owner-slice-026 (authorized immutable Core JSON originals; no supplied mapping; 3 classes only)"
+        "private:x1-control/evidence/actual-owner-slice-026 (authorized immutable Core JSON originals; no supplied mapping; 3 classes only)",
+        "private:x1-control/evidence/actual-owner-slice-042 (12 actual original-byte protocols across 8 classes; Core retention, worker/checker/native completion)"
       ],
       "failures": [],
       "notRun": [
-        "Full declared source-class/protocol population and installed connector acquisition remain required."
+        "Full declared source-class/protocol population and installed connector acquisition remain required.",
+        "Remaining declared acquisition/source-class variants and installed provider authority remain required."
       ]
     },
     {
@@ -112,11 +117,15 @@
       "status": "partial",
       "sourceEvidence": [],
       "runtimeEvidence": [
-        "private:x1-control/evidence/actual-owner-slice-026 (two conflicting-name Deal identities, actual immutable S1 mapping admissions and evidence links)"
+        "private:x1-control/evidence/actual-owner-slice-026 (two conflicting-name Deal identities, actual immutable S1 mapping admissions and evidence links)",
+        "private:x1-control/evidence/actual-owner-slice-044 (17 exact canonical owner mappings covering all 14 declared kinds; actual Memory/PE attachments and sensitive self-consent)"
       ],
-      "failures": [],
+      "failures": [
+        "private:x1-control/evidence/actual-owner-slice-043 (0139 omitted previously supported Request evidence type; additive 0179 repair)"
+      ],
       "notRun": [
-        "All declared canonical entity and relation kinds remain required."
+        "All declared canonical entity and relation kinds remain required.",
+        "Complete relation reconstruction/creation and existing non-X1 import namespaces remain required."
       ]
     },
     {
@@ -203,11 +212,15 @@
       "featureIds": [
         "x1-invalidation-recovery-and-fallback"
       ],
-      "status": "pending",
+      "status": "partial",
       "sourceEvidence": [],
-      "runtimeEvidence": [],
+      "runtimeEvidence": [
+        "private:x1-control/evidence/actual-owner-slice-047 (automatic real ledger correction, exactly changed ledger source dependency, unaffected duty/effect/proof/original parent retained)"
+      ],
       "failures": [],
-      "notRun": []
+      "notRun": [
+        "Full B fixture and source-meaning/personnel/mandate/cosmetic variants remain required."
+      ]
     },
     {
       "id": "VAL-X1-CURRENT-001",
@@ -225,33 +238,55 @@
       "featureIds": [
         "x1-invalidation-recovery-and-fallback"
       ],
-      "status": "pending",
+      "status": "partial",
       "sourceEvidence": [],
-      "runtimeEvidence": [],
-      "failures": [],
-      "notRun": []
+      "runtimeEvidence": [
+        "private:x1-control/evidence/actual-owner-slice-046 (real pre-publication worker SIGKILL, queue quarantine, retained UNKNOWN, authenticated same-request/original-parent resume and completion)"
+      ],
+      "failures": [
+        "private:x1-control/evidence/actual-owner-slice-045 (orphan remained RUNNING after actual lease quarantine; repaired owner reconciliation)"
+      ],
+      "notRun": [
+        "Accepted-child/publication and actual effect lost-ack recovery remain required."
+      ]
     },
     {
       "id": "VAL-X1-CONCURRENCY-001",
       "featureIds": [
         "x1-invalidation-recovery-and-fallback"
       ],
-      "status": "pending",
+      "status": "partial",
       "sourceEvidence": [],
-      "runtimeEvidence": [],
-      "failures": [],
-      "notRun": []
+      "runtimeEvidence": [
+        "private:x1-control/evidence/actual-owner-slice-049 (actual shared S5 capacity exhaustion and second-Work cancellation, no extra reservation/effect)",
+        "private:x1-control/evidence/actual-owner-slice-055 (observed standing cancellation fences later source-triggered child; retained effects/proof/consumed parent)"
+      ],
+      "failures": [
+        "private:x1-control/evidence/actual-owner-slice-048 (observer used nonexistent queue timestamp)",
+        "private:x1-control/evidence/actual-owner-slice-054 (observed cancel was no-op; repaired)"
+      ],
+      "notRun": [
+        "Concurrent publication/revision, stale claim and cancellation during possible effect still require owning proofs."
+      ]
     },
     {
       "id": "VAL-X1-FALLBACK-001",
       "featureIds": [
         "x1-invalidation-recovery-and-fallback"
       ],
-      "status": "pending",
+      "status": "partial",
       "sourceEvidence": [],
-      "runtimeEvidence": [],
-      "failures": [],
-      "notRun": []
+      "runtimeEvidence": [
+        "private:x1-control/evidence/actual-owner-slice-053 (actual supported native Request beside precise unsupported approval condition; original denominator 2, PARTIAL, Work/Objective waiting, no invented approval/fallback credit)"
+      ],
+      "failures": [
+        "private:x1-control/evidence/actual-owner-slice-050 (artifact rejected unresolved choices)",
+        "private:x1-control/evidence/actual-owner-slice-051",
+        "private:x1-control/evidence/actual-owner-slice-052 (bounded terminal/native owner-read races)"
+      ],
+      "notRun": [
+        "Checker crash/exhaustion/ambiguity and available compatible fallback variants remain required."
+      ]
     },
     {
       "id": "VAL-X1-WORK-001",
@@ -16287,10 +16322,10 @@
   ],
   "noPooledCompletionFraction": true,
   "currentRuntimeCheckpoint": {
-    "sourceCommit": "e405eebc63d2bd86264483c1db5cf0ec3b5cd1f4",
-    "sourceTree": "c6775a6691a3bd7ca5571745ea5705326e46303a",
+    "sourceCommit": "06e1c02a0",
     "evidenceDomain": "DISPOSABLE_LOCAL_AUTHENTICATED_DEVELOPMENT_ONLY",
     "fullEngineeringComplete": false,
-    "protectedQualification": false
+    "protectedQualification": false,
+    "finalInstalledCutVerified": false
   }
 }
