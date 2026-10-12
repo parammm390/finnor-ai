@@ -9,7 +9,8 @@ import { statfsSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { migrate } from "../../../packages/db/migrate";
-import { closePool, withTenantTransaction, configureTenantVertical, receiveWork, attachWorkEntity } from "@finnor/db";
+import { closePool, withTenantTransaction, configureTenantVertical, receiveWork, attachWorkEntity,
+  createEmployeeConversationThread,updateEmployeeConversationThreadContext } from "@finnor/db";
 import { createDeal, createWorkstream, addDealParty, type PeMutationContext } from "@finnor/private-equity";
 import { createDocument, appendDocumentVersion } from "@finnor/data-platform";
 import { putAllocationResource } from "../../../packages/private-equity/src/allocation-store";
@@ -20,6 +21,10 @@ const repo = fileURLToPath(new URL("../../../../", import.meta.url));
 const evidence = process.env.FINNOR_X1_OWNER_EVIDENCE;
 if (!evidence || !evidence.startsWith("/")) throw Error("FRESH_PRIVATE_X1_OWNER_EVIDENCE_REQUIRED");
 const dutyCount=process.env.FINNOR_X1_OWNER_CASE==='128'?128:1;
+const mounted=process.env.FINNOR_X1_OWNER_MODE==='mounted';
+if(process.env.FINNOR_X1_OWNER_MODE&&!['api','mounted'].includes(process.env.FINNOR_X1_OWNER_MODE))
+  throw Error('EXACT_REGISTERED_OWNER_MODE_REQUIRED');
+if(mounted&&dutyCount!==1)throw Error('MOUNTED_NAMED_ONE_DUTY_SCENARIO_REQUIRED');
 if(process.env.FINNOR_X1_OWNER_CASE&&!['1','128'].includes(process.env.FINNOR_X1_OWNER_CASE))
   throw Error('EXACT_FROZEN_OWNER_CASE_REQUIRED');
 const limits = JSON.parse(await readFile(join(repo, "scope-frontier5/x1-institutional-programme-compiler/verification-plan.json"), "utf8")).limits;
@@ -35,16 +40,17 @@ const sourcePaths = ["finnor-os/scripts/frontier5/x1/run-owner-slice.mts", "finn
   "finnor-os/package-lock.json", "scope-frontier5/x1-institutional-programme-compiler/profile.json"];
 const sourcePins = await Promise.all(sourcePaths.map(async path => ({ path, sha256: sha(await readFile(join(repo, path))) })));
 const freeze = { source: { commit: git("rev-parse", "HEAD"), tree: git("rev-parse", "HEAD^{tree}"),
-  dirty: git("status", "--porcelain=v1", "-uall"), pins: sourcePins }, startedAt,
+  dirty: git("status", "--porcelain=v1", "-uall"),dirtyDiffDigest:sha(git('diff','--binary')), pins: sourcePins }, startedAt,
   runtime: { node: process.version, platform: process.platform, arch: process.arch },
   profile: "DISPOSABLE_LOCAL_AUTH_SERVICE_ACTUAL_BEARER_AND_RLS", hostedSupabaseQualified: false,
-  authDevBypass: false, expectedMigrations: 180, limits, freeBytesBefore: String(diskBefore), dutyCount,
+  authDevBypass: false, expectedMigrations: 180, limits, freeBytesBefore: String(diskBefore), dutyCount,mounted,
   cases: ["A-raw-two-identity-native-request", "C-unsigned-forged-input", "D-same-key-replay", "G-restricted-roles"],
   omitted: "Full B–H, physical interruption, mounted browser, clean built installation/upgrade and protected qualification remain distinct required evidence" };
 await writeFile(join(evidence, "freeze.json"), JSON.stringify(freeze, null, 2) + "\n", { mode: 0o600, flag: "wx" });
 const results: any[] = [], traffic: unknown[] = [];
 let database: EmbeddedPostgres | undefined, admin: pg.Client | undefined;
 let service: Awaited<ReturnType<typeof authenticatedApiFixture>> | undefined, worker: ReturnType<typeof spawn> | undefined;
+let frontend:ReturnType<typeof spawn>|undefined;
 let peakOwnedRssBytes = 0, guard: NodeJS.Timeout | undefined;
 const save = async (name: string, body: unknown) => writeFile(join(evidence, name), JSON.stringify(body, null, 2) + "\n", { mode: 0o600 });
 const tenant = randomUUID(), actor = randomUUID(), institutionId = "unseen-local-" + randomUUID();
@@ -70,6 +76,9 @@ const take = async () => {
       || rss > limits.localSampledProcessMemoryStopBytes || performance.now() - started > 840000)
     throw Error("X1_FROZEN_LIVE_RESOURCE_GUARD");
 };
+const freePort=()=>new Promise<number>((yes,no)=>{const socket=createServer();socket.once('error',no);
+  socket.listen(0,'127.0.0.1',()=>{const address=socket.address();if(!address||typeof address==='string')return no(Error('PORT_UNAVAILABLE'));
+    socket.close(()=>yes(address.port));});});
 try {
   process.env.NODE_ENV = "test"; process.env.AUTH_DEV_BYPASS = "0";
   process.env.FINNOR_P4_PROFILE = "ordinary_disposable"; process.env.FINNOR_TEST_MANAGED_EXTENSIONS = "omit";
@@ -117,7 +126,9 @@ try {
     deadlineAt, materiality: "material", postconditionRef: "x1:pe-request-created:v1", observerRef: "x1:pe-request-creation-observer:v1" };
   await admin.query(`INSERT INTO finnor_os.x1_work_mandates(tenant_id,principal_id,work_id,institution_id,revision,rules,valid_from,expires_at)
     VALUES($1,$2,$3,$4,'r1',$5::jsonb,clock_timestamp()-interval '1 minute',clock_timestamp()+interval '1 hour')`, [tenant, actor, workId, institutionId, JSON.stringify([rule])]);
-  service = await authenticatedApiFixture(repo, actor, entry => traffic.push(entry));
+  const frontendPort=mounted?await freePort():null,frontendOrigin=frontendPort?'http://127.0.0.1:'+frontendPort:null;
+  service = await authenticatedApiFixture(repo, actor, entry => traffic.push(entry),
+    frontendOrigin?{frontendOrigin}:{});
   const profileResponse=await fetch(service.origin+'/api/workforce/profiles',{
     method:'POST',headers:{'content-type':'application/json',authorization:'Bearer '+service.token},
     body:JSON.stringify({key:'x1-disposable-native',name:'Disposable native responsibility query and check executor',
@@ -196,7 +207,8 @@ try {
   const input = { workId, workInputId: metadata.body.workInputId, grantIds, idempotencyKey: "x1-original:" + randomUUID() };
   assert.equal((await api("institution-submit", input, null)).status, 401);
   assert.equal((await api("institution-submit", { ...input, candidate: {} })).status, 400);
-  const accepted = await api("institution-submit", input); assert.equal(accepted.status, 202, JSON.stringify(accepted)); compilerId = accepted.body.requestId;
+  const accepted = mounted?null:await api("institution-submit", input);
+  if(accepted){assert.equal(accepted.status, 202, JSON.stringify(accepted));compilerId=accepted.body.requestId;}
   await save("authenticated-submit.json", { identity, metadata, input, accepted, authDevBypass: false, tokenPersisted: false });
   await writeFile(join(evidence, "empty.env"), "", { mode: 0o600 });
   const env = { HOME: join(evidence, "home"), PATH: "/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin", TMPDIR: join(evidence, "tmp"),
@@ -213,6 +225,40 @@ try {
     role: "finnor_worker", actualProductionRegistrations: true, credentialsPersisted: false });
   let guardFailure: string | null = null;
   guard = setInterval(() => { void take().catch(error => { guardFailure = String(error.message); worker?.kill("SIGTERM"); }); }, 2000);
+  if(mounted){
+    const thread=await createEmployeeConversationThread({tenantId:tenant,ownerEmployeeId:actor,title:'X1 standing evidence responsibility'});
+    const other=await createEmployeeConversationThread({tenantId:tenant,ownerEmployeeId:actor,title:'X1 separate empty Work scope'});
+    const root={entityType:'pe_deal',entityId:String(first.row.id)};
+    await updateEmployeeConversationThreadContext({tenantId:tenant,ownerEmployeeId:actor,threadId:thread.id,
+      activeWorkId:workId,activeReferences:[root]});
+    await updateEmployeeConversationThreadContext({tenantId:tenant,ownerEmployeeId:actor,threadId:other.id,activeReferences:[root]});
+    const frontendEnv={HOME:join(evidence,'home'),PATH:env.PATH,TMPDIR:join(evidence,'tmp'),
+      NODE_ENV:'development',NODE_OPTIONS:'--max-old-space-size=1536',NEXT_TELEMETRY_DISABLED:'1',
+      NEXT_PUBLIC_CENTROPY_TEST_MODE:'0',CENTROPY_TEST_MODE:'0',FINNOR_OS_API_URL:service.origin,
+      NEXT_PUBLIC_OS_API_URL:service.origin,NEXT_PUBLIC_SUPABASE_URL:service.authOrigin,
+      NEXT_PUBLIC_SUPABASE_ANON_KEY:'disposable-local-auth'};
+    frontend=spawn(process.execPath,[join(repo,'node_modules/next/dist/bin/next'),'dev','--webpack',
+      '--hostname','127.0.0.1','--port',String(frontendPort)],{cwd:repo,env:frontendEnv,stdio:['ignore','pipe','pipe']});
+    let frontendLogBytes=0;for(const stream of [frontend.stdout!,frontend.stderr!])stream.on('data',b=>{
+      frontendLogBytes+=b.length;if(frontendLogBytes<=limits.smallCheckOutputBytes)
+        void appendFile(join(evidence,'frontend.log'),b,{mode:0o600});else frontend?.kill('SIGTERM');});
+    await save('mounted-private-fixture.json',{frontendOrigin,apiOrigin:service.origin,authOrigin:service.authOrigin,
+      email:service.email,password:service.password,workId,threadId:thread.id,
+      url:frontendOrigin+'/centropy/investigations/'+thread.id,
+      otherUrl:frontendOrigin+'/centropy/investigations/'+other.id,
+      actor,tenant,frontendPid:frontend.pid,originalEnvelope:'Same frozen owner scenario; no profile/grant reset',
+      credentials:'DISPOSABLE_LOCAL_ONLY_FILE_MODE_0600_NEVER_PUBLIC_EVIDENCE'});
+    for(let poll=0;poll<240;poll++){
+      if(guardFailure)throw Error(guardFailure);
+      if(frontend.exitCode!==null||frontend.signalCode!==null)throw Error('MOUNTED_FRONTEND_STOPPED');
+      const q=(await admin.query(`SELECT id,idempotency_key,grant_ids FROM finnor_os.x1_compiler_requests
+        WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3 ORDER BY revision DESC LIMIT 1`,[tenant,actor,workId])).rows[0];
+      if(q){compilerId=q.id;input.idempotencyKey=q.idempotency_key;input.grantIds=q.grant_ids;
+        await save('mounted-actual-submit.json',{compilerId,input,basis:'ACTUAL_UI_DURABLE_SQL_ACCEPTANCE'});break;}
+      await new Promise(resolve=>setTimeout(resolve,1000));
+    }
+    assert.ok(compilerId,'actual mounted compile control must reach durable acceptance');
+  }
   let reading: any;
   for (let poll = 0; poll < 240; poll++) {
     if (guardFailure) throw Error(guardFailure);
@@ -323,6 +369,17 @@ try {
   assert.equal(completion.plan_status,'completed');assert.equal(completion.completion_proof?.verified,true);
   results.push({ id: "A-authenticated-owner-creation", status: "PASS", observed: { compilerId, admission, rows, effects:allEffects,plans,linked,repeated, beforeReplay, afterReplay },
     basis: "ACTUAL_LOCAL_AUTH_HTTP_SQL_PHYSICAL_WORKER_NATIVE_CREATE_AND_INDEPENDENT_SQL_OBSERVER" });
+  if(mounted){
+    await save('mounted-canonical-completion.json',{compilerId,workId,completion,
+      browserEvidenceRequired:true,mountedPassEstablished:false});
+    for(;;){if(guardFailure)throw Error(guardFailure);
+      try{const closed=JSON.parse(await readFile(join(evidence,'mounted-observer-close.json'),'utf8'));
+        if(closed.sourceCommit!==freeze.source.commit||closed.workId!==workId)throw Error('MOUNTED_OBSERVER_SCOPE_MISMATCH');
+        await save('mounted-observer-receipt.json',closed);break;
+      }catch(error){if((error as NodeJS.ErrnoException).code!=='ENOENT')throw error;}
+      await new Promise(resolve=>setTimeout(resolve,1000));
+    }
+  }
 } catch (error) {
   results.push({ id: "actual-owner-boundary", status: "FAIL", observed: { message: String((error as Error).message),
     stack: (error as Error).stack, cause: (error as any).cause?.message ?? null,
@@ -361,11 +418,16 @@ try {
     const stopped = new Promise<void>(resolve => worker!.once("close", () => resolve())); worker.kill("SIGTERM");
     const timer = setTimeout(() => worker?.kill("SIGKILL"), 15000); await stopped; clearTimeout(timer);
   }
+  if(frontend&&frontend.exitCode===null&&frontend.signalCode===null){
+    const stopped=new Promise<void>(resolve=>frontend!.once('close',()=>resolve()));frontend.kill('SIGTERM');
+    const timer=setTimeout(()=>frontend?.kill('SIGKILL'),15000);await stopped;clearTimeout(timer);
+  }
   await save("traffic.json", traffic);
   await service?.close(); await closePool(); await admin?.end(); await database?.stop().catch(() => {});
   await rm(join(evidence, "tmp/database"), { recursive: true, force: true });
   const currentPins = await Promise.all(sourcePaths.map(async path => ({ path, sha256: sha(await readFile(join(repo, path))) })));
-  const sourceUnchanged = JSON.stringify(sourcePins) === JSON.stringify(currentPins) && freeze.source.commit === git("rev-parse", "HEAD");
+  const sourceUnchanged = JSON.stringify(sourcePins) === JSON.stringify(currentPins) && freeze.source.commit === git("rev-parse", "HEAD")
+    &&freeze.source.dirtyDiffDigest===sha(git('diff','--binary'));
   await save("results.json", { startedAt, completedAt: new Date().toISOString(), durationMs: performance.now() - started,
     status: results.length && results.every(r => r.status === "PASS") && sourceUnchanged ? "PASS_LOCAL_OWNER_SLICE" : "FAIL_OR_INCOMPLETE",
     results, expected, compilerId, workId, sourceUnchanged, peakSampledOwnedRssBytes: peakOwnedRssBytes,

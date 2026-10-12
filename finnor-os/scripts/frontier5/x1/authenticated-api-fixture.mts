@@ -6,8 +6,12 @@ import { readdir } from "node:fs/promises";
 import { join, relative } from "node:path";
 import { pathToFileURL } from "node:url";
 
-export async function authenticatedApiFixture(repo: string, actor: string, record: (entry: unknown) => void) {
+export async function authenticatedApiFixture(repo: string, actor: string, record: (entry: unknown) => void,
+  options: { frontendOrigin?: string } = {}) {
   const secret = randomBytes(32), password = randomBytes(24).toString("hex"), email = actor + "@test.invalid";
+  const refreshToken=randomBytes(32).toString('base64url');
+  if(options.frontendOrigin&&!/^http:\/\/127\.0\.0\.1:[0-9]{2,5}$/.test(options.frontendOrigin))
+    throw Error('X1_OWNED_LOOPBACK_FRONTEND_REQUIRED');
   const user = { id: actor, aud: "authenticated", role: "authenticated", email,
     app_metadata: { provider: "email", providers: ["email"] }, user_metadata: {},
     created_at: new Date().toISOString(), email_confirmed_at: new Date().toISOString() };
@@ -31,16 +35,27 @@ export async function authenticatedApiFixture(repo: string, actor: string, recor
   };
   const auth = createServer(async (req, res) => {
     res.setHeader("content-type", "application/json");
+    if(options.frontendOrigin){res.setHeader('access-control-allow-origin',options.frontendOrigin);
+      res.setHeader('access-control-allow-headers','authorization,apikey,content-type,x-client-info,x-supabase-api-version');
+      res.setHeader('access-control-allow-methods','GET,POST,OPTIONS');res.setHeader('vary','Origin');}
     try {
+      if(req.method==='OPTIONS'){res.writeHead(204);res.end();return;}
       let raw = ""; for await (const b of req) { raw += b; if (raw.length > 16384) throw Error("AUTH_BODY_BOUND"); }
       if (req.url?.startsWith("/auth/v1/token")) {
         const input = JSON.parse(raw || "{}");
-        if (input.email !== email || input.password !== password) { res.writeHead(400); res.end('{"error":"invalid_credentials"}'); return; }
-        res.end(JSON.stringify({ access_token: issue(), token_type: "bearer", expires_in: 3600, user })); return;
+        const grant=new URL(req.url,'http://127.0.0.1').searchParams.get('grant_type');
+        const allowed=grant==='password'&&input.email===email&&input.password===password
+          ||grant==='refresh_token'&&input.refresh_token===refreshToken;
+        if (!allowed) { res.writeHead(400); res.end('{"error":"invalid_credentials"}'); return; }
+        record({path:'/auth/v1/token',method:req.method,grant,status:200,credentialsRecorded:false});
+        res.end(JSON.stringify({ access_token: issue(), token_type: "bearer", expires_in: 3600,
+          expires_at:Math.floor(Date.now()/1000)+3600,refresh_token:refreshToken,user })); return;
       }
       if (req.url === "/auth/v1/user" && verify(String(req.headers.authorization ?? "").replace(/^Bearer /, ""))) {
         res.end(JSON.stringify(user)); return;
       }
+      if(req.url?.startsWith('/auth/v1/logout')&&verify(String(req.headers.authorization??'').replace(/^Bearer /,''))){
+        res.end('{}');return;}
       res.writeHead(401); res.end('{"error":"invalid_token"}');
     } catch { res.writeHead(400); res.end('{"error":"bad_request"}'); }
   });
@@ -86,6 +101,6 @@ export async function authenticatedApiFixture(repo: string, actor: string, recor
     headers: { "content-type": "application/json" }, body: JSON.stringify({ email, password }) });
   if (session.status !== 200) throw Error("REAL_LOCAL_PASSWORD_SIGNIN_FAILED");
   const token = (await session.json()).access_token as string;
-  return { origin, authOrigin, token, profile: "DISPOSABLE_LOCAL_AUTH_SERVICE_ACTUAL_BEARER_AND_RLS",
+  return { origin, authOrigin, token, email, password, profile: "DISPOSABLE_LOCAL_AUTH_SERVICE_ACTUAL_BEARER_AND_RLS",
     close: async () => { await Promise.all([auth, api].map(server => new Promise<void>(resolve => server.close(() => resolve())))); } };
 }
