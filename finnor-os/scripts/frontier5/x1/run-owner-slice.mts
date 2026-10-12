@@ -291,6 +291,26 @@ try {
   const repeated = await api("institution-submit", input); assert.equal(repeated.status, 202); assert.equal(repeated.body.requestId, compilerId);
   const afterReplay=await originalEnvelope();assert.deepEqual(afterReplay,beforeReplay,"same original episode/reservation/resources on replay");
   assert.equal((await admin.query("SELECT count(*)::int n FROM finnor_os.pe_requests WHERE tenant_id=$1 AND request_text=ANY($2::text[])", [tenant, expected.requestTexts])).rows[0].n,dutyCount);
+  let completion:any;
+  for(let poll=0;poll<60;poll++){
+    if(guardFailure)throw Error(guardFailure);
+    completion=(await admin.query(`SELECT w.status work_status,l.id objective_id,l.state objective_state,
+      l.success_verification,p.id plan_id,p.status plan_status,p.completion_proof
+      FROM finnor_os.works w JOIN finnor_os.work_objective_loops l ON l.tenant_id=w.tenant_id AND l.work_id=w.id
+      JOIN finnor_os.work_plan_revisions p ON p.tenant_id=l.tenant_id AND p.objective_loop_id=l.id
+      WHERE w.tenant_id=$1 AND w.id=$2 ORDER BY p.revision DESC LIMIT 1`,[tenant,workId])).rows[0];
+    await appendFile(join(evidence,'native-work-completion-observations.jsonl'),JSON.stringify({
+      at:new Date().toISOString(),completion})+'\n',{mode:0o600});
+    if(completion?.work_status==='completed'&&completion.objective_state==='completed'
+      &&completion.plan_status==='completed')break;
+    if(['failed','blocked','cancelled'].includes(completion?.objective_state))break;
+    await new Promise(resolve=>setTimeout(resolve,1000));
+  }
+  await save('native-work-completion.json',completion);
+  assert.equal(completion?.work_status,'completed','actual native Work completion');
+  assert.equal(completion.objective_state,'completed','same native Objective completes');
+  assert.equal(completion.success_verification?.state,'verified','actual native success-condition verification');
+  assert.equal(completion.plan_status,'completed');assert.equal(completion.completion_proof?.verified,true);
   results.push({ id: "A-authenticated-owner-creation", status: "PASS", observed: { compilerId, admission, rows, effects:allEffects,plans,linked,repeated, beforeReplay, afterReplay },
     basis: "ACTUAL_LOCAL_AUTH_HTTP_SQL_PHYSICAL_WORKER_NATIVE_CREATE_AND_INDEPENDENT_SQL_OBSERVER" });
 } catch (error) {
@@ -316,6 +336,9 @@ try {
       ["requests", "SELECT * FROM finnor_os.pe_requests WHERE tenant_id=$1 ORDER BY id"],
       ["native-events", "SELECT kind,body,created_at FROM finnor_os.p1_events WHERE tenant_id=$1 ORDER BY created_at,id"],
       ["plans", "SELECT id,revision,status,parent_revision_id,plan_graph,revision_transition FROM finnor_os.work_plan_revisions WHERE tenant_id=$1 ORDER BY revision"],
+      ["work", "SELECT * FROM finnor_os.works WHERE tenant_id=$1"],
+      ["objectives", "SELECT * FROM finnor_os.work_objective_loops WHERE tenant_id=$1"],
+      ["objective-steps", "SELECT * FROM finnor_os.work_objective_steps WHERE tenant_id=$1 ORDER BY step_number"],
     ]) { try { await save(name! + ".json", (await admin.query(sql!, [tenant])).rows); } catch (error) { await save(name! + "-read-gap.json", { predicate: String((error as Error).message) }); } }
   }
   if (worker && worker.exitCode === null && worker.signalCode === null) {

@@ -164,3 +164,14 @@ remain exact. Poll evidence stores a digest and bounded projection per response,
 retaining the complete final projection once; avoid redundant multi-megabyte
 copies of unchanged input/proposal fields on every background poll. Preserve the
 actual failed run, resource samples, SQL observation and timing evidence.
+
+Run 021 passed all 128 canonical creations, completed/verified native effects,
+bounded plan batches and original-envelope replay. Final selected plan was still
+active when the observer ended. Add the independently specified native Work
+completion predicate: actual Work completed, same original Objective loop completed
+with verified successVerification, final native PlanRevision completed with a
+verified completionProof. Observe up to sixty one-second samples within the
+unchanged stack guard; retain blocked/failed/cancelled state and actual native
+steps/jobs. No producer summary or queued final Objective counts as Work completion.
+Use the existing one-duty affected owner case first; the 128 effect proof remains
+its exact prior-cut development evidence.
