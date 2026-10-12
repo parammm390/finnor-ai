@@ -548,3 +548,11 @@ require the two distinct status invocations200/400 and at least one native200 re
 and validate every additional polling record's operation, status, principal,
 episode, parent and unique physical identity. The unmounted exact-three predicate
 stays unchanged. Do not stop real UI polling or discard its cost to obtain PASS.
+
+Compiled mounted003 retained ten passing owner predicates and actual HTTP202
+for UI revision2 before the cost observer stopped at its source/read-only
+operation whitelist. The additional revision is charged physical work, not an
+unrelated owner operation. Retain all before/after S7 records before assertions;
+validate at most one concurrent successful revision and each meter's actual
+same-Work child/episode/parent binding. Foreign requests, extra revisions, wrong
+parents, duplicate identities and unregistered operations must still fail.

@@ -546,3 +546,14 @@ invocation plus at least one successful read must be present; any additional
 record must be an actual200 source/read poll under the same original parent.
 All physical invocation IDs remain unique. Keep exact-three checking when no
 browser is mounted, and report actual mounted record counts without gain credit.
+
+Compiled mounted003 reached independently observed native completion and then
+accepted the real mounted revision while the separate cost observer was reading.
+Its retained HTTP202 is an additional physical invocation. Permit at most one
+such overlapping revision; independently join every child meter request to its
+actual tenant/principal/Work, revision2, original episode and exact original
+parent request. Preserve the original successful/refused status pair, at least
+one successful read, every original record and invocation uniqueness. Save raw
+before/after records before assertions, including failures. No new owner
+authority, changed budget, discarded polling or rewritten expected business
+completion is permitted.

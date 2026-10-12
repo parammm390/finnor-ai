@@ -1242,7 +1242,7 @@ try {
   }
   if(mounted)await save('mounted-canonical-completion.json',{compilerId,workId,completion,
     browserEvidenceRequired:true,mountedPassEstablished:false});
-  const meteredApiRows=async()=>JSON.parse(JSON.stringify((await admin!.query(`SELECT record_id,content_digest,body->'payload' payload
+  const meteredApiRows=async():Promise<Array<{record_id:string;content_digest:string;payload:any}>>=>JSON.parse(JSON.stringify((await admin!.query(`SELECT record_id,content_digest,body->'payload' payload
     FROM finnor_os.s7_economic_records WHERE tenant_id=$1 AND principal_id=$2 AND kind='COMPUTE'
       AND body->'payload'->>'schema'='finnor.x1.api-compute.v1' AND body->'payload'->>'workId'=$3
       ORDER BY knowledge_at,record_id`,[tenant,actor,workId])).rows));
@@ -1268,19 +1268,33 @@ try {
   assert.equal(refusedRead.status,400);
   const priorApiIds=new Set(apiMetersBefore.map((row:any)=>row.record_id)),allApiMeters=await meteredApiRows();
   const newApiMeters=allApiMeters.filter((row:any)=>!priorApiIds.has(row.record_id));
+  await save('authenticated-api-compute-original-observations.json',{before:apiMetersBefore,after:allApiMeters,
+    newRecords:newApiMeters,actualTraffic:traffic});
   if(mounted){
     const statusMeters=newApiMeters.filter(row=>row.payload.operation==='institution-status');
     assert.deepEqual(statusMeters.map(row=>row.payload.statusCode).sort(),[200,400]);
     assert.ok(newApiMeters.some(row=>row.payload.operation==='institution-read'&&row.payload.statusCode===200));
     assert.ok(newApiMeters.every(row=>row.payload.operation==='institution-status'
-      ||['institution-read','institution-sources'].includes(row.payload.operation)&&row.payload.statusCode===200));
+      ||['institution-read','institution-sources'].includes(row.payload.operation)&&row.payload.statusCode===200
+      ||row.payload.operation==='institution-revise'&&row.payload.statusCode===202));
+    const revisions=newApiMeters.filter(row=>row.payload.operation==='institution-revise');
+    assert.ok(revisions.length<=1,'only the registered mounted revision may overlap cost observation');
   }else{
     assert.equal(newApiMeters.length,3);assert.deepEqual(newApiMeters.map((row:any)=>row.payload.statusCode).sort(),[200,200,400]);
   }
   assert.equal(new Set(allApiMeters.map((row:any)=>row.payload.invocationId)).size,allApiMeters.length);
   const compilerEpisode=(await admin.query('SELECT episode_id FROM finnor_os.x1_compiler_requests WHERE tenant_id=$1 AND id=$2',[tenant,compilerId])).rows[0].episode_id;
+  const ownedMeterRequests=new Map((await admin.query(`SELECT id,episode_id,parent_request_id,revision
+    FROM finnor_os.x1_compiler_requests WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3`,
+    [tenant,actor,workId])).rows.map(row=>[row.id,row]));
   for(const row of newApiMeters){
-    const p=row.payload;assert.equal(p.episodeId,compilerEpisode);assert.equal(p.requestId,compilerId);
+    const p=row.payload;assert.equal(p.episodeId,compilerEpisode);
+    if(p.requestId!==compilerId){
+      const child=ownedMeterRequests.get(p.requestId);
+      assert.ok(mounted&&child,'physical meter belongs to the actual mounted owner');
+      assert.equal(child.episode_id,compilerEpisode);assert.equal(child.parent_request_id,compilerId);
+      assert.equal(child.revision,2,'only the registered same-parent second revision');
+    }
     assert.ok(Number.isFinite(p.elapsedMs)&&p.elapsedMs>0);assert.equal(p.businessWorkCredit,0);
     assert.deepEqual(p.parentReservation,reading.costs.parentReservation);
     assert.equal(p.money,null);assert.equal(p.humanSeconds,null);assert.equal(p.aggregatePeakMemoryBytes,null);
