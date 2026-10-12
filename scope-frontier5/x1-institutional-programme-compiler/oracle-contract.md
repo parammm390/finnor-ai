@@ -380,3 +380,27 @@ all fifteen supported originals through authenticated owner functions must still
 produce real canonical admissions, three native effects and completed Work. Do
 not change the API/worker connection to a privileged role to recover that result.
 
+## B-unrelated personnel epoch and original S5 continuation
+
+Frozen before the S5 predicate change. The original raw corpus has two distinct
+deal identities, one complete ledger assertion and one request trigger. The
+supplied rule names one current owner and one immutable deadline. Another actual
+employee, created before exposure with the same display name, has no responsibility
+or identity binding in those records.
+
+After initial native completion, the independent source owner atomically suspends
+the other employee and publishes a second literal request record. Original actor
+and native grants remain unchanged. Expect exactly two distinct native Requests
+with the original and newly registered literal text; no duplicate action/effect;
+current Work completion through the same objective; original completion proof
+unchanged; one original compiler episode/reservation/resource population/demand;
+unchanged objective limits and deadline; retained failure and compute history.
+The actual tenant epoch must advance. Record expectations and revised raw bytes
+before the change.
+
+The intended pre-fix failure is the original S5 rights comparison. A source ACL,
+SQL lock, timeout or unrelated refusal is not that regression. A repair binds fresh
+native authority readback to consumption and final dispatch under the original
+frame. No new grant is accepted. Report the actual dependency closure without
+crediting this case as full sensitive-personnel or minimum semantic closure proof.
+

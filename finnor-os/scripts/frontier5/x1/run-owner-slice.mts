@@ -11,7 +11,7 @@ import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { migrate } from "../../../packages/db/migrate";
 import { closePool, withTenantTransaction, configureTenantVertical, receiveWork, attachWorkEntity,
-  createEmployeeConversationThread,updateEmployeeConversationThreadContext } from "@finnor/db";
+  createEmployeeConversationThread,updateEmployeeConversationThreadContext,transactionDb } from "@finnor/db";
 import { createDeal, createWorkstream, addDealParty, type PeMutationContext } from "@finnor/private-equity";
 import { createDocument, appendDocumentVersion } from "@finnor/data-platform";
 import { putAllocationResource } from "../../../packages/private-equity/src/allocation-store";
@@ -27,6 +27,7 @@ const evidence = process.env.FINNOR_X1_OWNER_EVIDENCE;
 if (!evidence || !evidence.startsWith("/")) throw Error("FRESH_PRIVATE_X1_OWNER_EVIDENCE_REQUIRED");
 const dutyCount=process.env.FINNOR_X1_OWNER_CASE==='128'?128:1;
 const reportingChanges=process.env.FINNOR_X1_OWNER_MODE==='reporting_changes';
+const authorityEpoch=process.env.FINNOR_X1_OWNER_MODE==='authority_epoch';
 const ownerInputs=process.env.FINNOR_X1_OWNER_MODE==='owner_inputs';
 const fullDomain=process.env.FINNOR_X1_OWNER_MODE==='domain'||reportingChanges||ownerInputs;
 const mounted=process.env.FINNOR_X1_OWNER_MODE==='mounted';
@@ -43,9 +44,9 @@ const contention=process.env.FINNOR_X1_OWNER_MODE==='contention';
 const unsupportedOperation=process.env.FINNOR_X1_OWNER_MODE==='unsupported_operation';
 const unsupported=process.env.FINNOR_X1_OWNER_MODE==='unsupported'||unsupportedOperation;
 const cancelObserved=process.env.FINNOR_X1_OWNER_MODE==='cancel_observed';
-if(process.env.FINNOR_X1_OWNER_MODE&&!['api','mounted','revision','material','heterogeneous','canonical','recovery','effect_recovery','ordinary','domain','owner_inputs','reporting_changes','upgrade','checker_crash','contention','unsupported','unsupported_operation','cancel_observed'].includes(process.env.FINNOR_X1_OWNER_MODE))
+if(process.env.FINNOR_X1_OWNER_MODE&&!['api','mounted','revision','material','heterogeneous','canonical','recovery','effect_recovery','ordinary','domain','owner_inputs','reporting_changes','authority_epoch','upgrade','checker_crash','contention','unsupported','unsupported_operation','cancel_observed'].includes(process.env.FINNOR_X1_OWNER_MODE))
   throw Error('EXACT_REGISTERED_OWNER_MODE_REQUIRED');
-if((mounted||material||heterogeneous||canonical||recovery||effectRecovery||ordinary||upgrade||checkerCrash||contention||unsupported||cancelObserved)&&dutyCount!==1)throw Error('NAMED_ONE_DUTY_SCENARIO_REQUIRED');
+if((mounted||material||heterogeneous||canonical||recovery||effectRecovery||ordinary||upgrade||checkerCrash||contention||unsupported||cancelObserved||authorityEpoch)&&dutyCount!==1)throw Error('NAMED_ONE_DUTY_SCENARIO_REQUIRED');
 if(process.env.FINNOR_X1_OWNER_CASE&&!['1','128'].includes(process.env.FINNOR_X1_OWNER_CASE))
   throw Error('EXACT_FROZEN_OWNER_CASE_REQUIRED');
 const limits = JSON.parse(await readFile(join(repo, "scope-frontier5/x1-institutional-programme-compiler/verification-plan.json"), "utf8")).limits;
@@ -76,6 +77,7 @@ const freeze = { source: { commit: git("rev-parse", "HEAD"), tree: git("rev-pars
     ...(upgrade?['G-existing-schema-upgrade-and-jobs']:[]),
     ...(fullDomain?['A-full-declared-source-and-owner-domain']:[]),
     ...(reportingChanges?['B-report-meaning-exception-and-cosmetic-change']:[]),
+    ...(authorityEpoch?['B-unrelated-personnel-epoch-original-parent']:[]),
     ...(checkerCrash?['F-physical-checker-crash-and-compatible-resume']:[]),
     ...(contention?['E-original-shared-parent-contention']:[]),...(unsupported?['F-mixed-unsupported-rule']:[]),
     ...(cancelObserved?['E-cancel-observed-standing-continuation']:[])],
@@ -97,6 +99,7 @@ const readDelayedRead=()=>delayedRead;
 let peakOwnedRssBytes = 0, guard: NodeJS.Timeout | undefined;
 const save = async (name: string, body: unknown) => writeFile(join(evidence, name), JSON.stringify(body, null, 2) + "\n", { mode: 0o600 });
 const tenant = randomUUID(), actor = randomUUID(), institutionId = "unseen-local-" + randomUUID();
+const unrelatedEmployee=randomUUID();
 const ctx: PeMutationContext = { auth: { tenantId: tenant, userId: actor, employeeId: actor, role: "owner" },
   provenance: { sourceSystem: `x1:${institutionId}`, createdBy: actor } };
 const deadlineAt = new Date(Date.now() + 1200000).toISOString();
@@ -154,6 +157,7 @@ try {
   await admin.query("SET app.test_vertical_mode='explicit'");
   await admin.query("INSERT INTO finnor_os.tenants(id,client_key,name) VALUES($1,$2,'X1 raw owner slice')", [tenant, randomUUID()]);
   await admin.query("INSERT INTO finnor_os.users(id,tenant_id,email,role,status,display_name) VALUES($1,$2,$3,'owner','active','Unseen owner')", [actor, tenant, actor + "@test.invalid"]);
+  if(authorityEpoch)await admin.query("INSERT INTO finnor_os.users(id,tenant_id,email,role,status,display_name) VALUES($1,$2,$3,'technician','active','Unseen owner')",[unrelatedEmployee,tenant,unrelatedEmployee+'@test.invalid']);
   process.env.DATABASE_URL = connection("finnor_app", appPassword); await closePool();
   await configureTenantVertical({ tenantId: tenant, verticalKey: "private_equity", expectedVersion: 0, createdBy: actor, sourceSystem: "X1:owner-e2e" });
   const companyIds = [randomUUID(), randomUUID()];
@@ -340,6 +344,18 @@ try {
       headers: { "content-type": "application/json", ...(bearer ? { authorization: "Bearer " + bearer } : {}) },
       body: JSON.stringify(body), signal: AbortSignal.timeout(30000) });
     return { status: response.status, body: await response.json() as any };
+  };
+  // Independent fixture source/identity owner, separate from the restricted
+  // authenticated application and physical worker. Only external input changes
+  // use it; no compiler mapping, completion or effect is supplied here.
+  const independentSourceOwner=async<T,>(fn:(db:ReturnType<typeof transactionDb>,c:pg.Client)=>Promise<T>)=>{
+    await admin!.query('BEGIN');
+    try{
+      await admin!.query("SELECT set_config('app.tenant_id',$1,true),set_config('app.user_id',$2,true)",[tenant,actor]);
+      await admin!.query('SELECT pg_advisory_xact_lock(hashtextextended($1,5510))',[tenant]);
+      const result=await fn(transactionDb(admin! as unknown as pg.PoolClient),admin!);
+      await admin!.query('COMMIT');return result;
+    }catch(error){await admin!.query('ROLLBACK');throw error;}
   };
   const me = await fetch(service.origin + "/api/me", { headers: { authorization: "Bearer " + service.token } });
   const identity = await me.json(); assert.equal(me.status, 200); assert.equal(identity.tenantId, tenant); assert.equal(identity.userId, actor);
@@ -1092,11 +1108,87 @@ try {
     results.push({id:'F-physical-checker-crash-and-compatible-resume',status:'PASS',observed:{compilerJobs,history,completion},
       basis:'ACTUAL_CHECKER_SIGKILL_UNKNOWN_QUARANTINE_ORIGINAL_PARENT_AUTH_RESUME_SECOND_CHECKER_AND_NATIVE_COMPLETION'});
   }
+  if(authorityEpoch){
+    const oldProof=sha(JSON.stringify(completion.completion_proof));
+    const originalFrame=await originalEnvelope();
+    const originalObjective:Record<string,any>=(await admin.query('SELECT * FROM finnor_os.work_objective_loops WHERE tenant_id=$1 AND work_id=$2',[tenant,workId])).rows[0];
+    const oldRights=String((await admin.query('SELECT revision FROM finnor_os.authority_states WHERE tenant_id=$1',[tenant])).rows[0].revision);
+    const source=sources.find(item=>item.id==='work-original')!;
+    const newText='New evidence responsibility after unrelated personnel change '+randomUUID();
+    const newRecord={...source.rows[0],id:'request-after-staff-epoch',requestText:newText};
+    const revisedRows=[...source.rows,newRecord],bytes=Buffer.from(JSON.stringify(revisedRows));
+    await writeFile(join(evidence,'originals/work-after-staff-epoch.json'),bytes,{mode:0o600,flag:'wx'});
+    await save('staff-epoch-pre-exposure-independent-expectations.json',{unrelatedEmployee,originalActor:actor,
+      sameDisplayName:true,responsiblePrincipalUnchanged:true,expectedRequestTexts:[requestText,newText],
+      expectedNativeRequests:2,expectedNewEffects:1,originalFrame,originalObjective,oldRights,originalProof:oldProof,
+      deadlineAt,sourceSha256:sha(bytes),newRecord,protectedAuthorityIssued:false});
+    const replacement=await independentSourceOwner(async(db,c)=>{
+      const old=(await c.query<{id:string;document_id:string;version:number}>(`SELECT id::text,document_id::text,version
+        FROM finnor_os.x1_source_grants WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3 AND source_id='work-original'
+        ORDER BY version DESC LIMIT 1 FOR UPDATE`,[tenant,actor,workId])).rows[0]!;
+      await c.query("UPDATE finnor_os.users SET status='suspended' WHERE tenant_id=$1 AND id=$2",[tenant,unrelatedEmployee]);
+      const version=await appendDocumentVersion(db,{tenantId:tenant,documentId:old.document_id,bytes,
+        mediaType:'application/json',format:'unknown',origin:'manual_upload',actor,sourceSystem:'owner-export',
+        sourceRef:'work-original',providerVersionId:'r2'});
+      const grant=(await c.query(`INSERT INTO finnor_os.x1_source_grants
+        (tenant_id,principal_id,work_id,institution_id,source_id,source_class,purpose,acquisition_kind,
+          document_id,document_version_id,protocol,revision,original_sha256,expected_object_ids,version,valid_from,expires_at)
+        SELECT tenant_id,principal_id,work_id,institution_id,source_id,source_class,purpose,acquisition_kind,
+          document_id,$4,protocol,'r2',$5,$6::jsonb,version+1,valid_from,expires_at
+        FROM finnor_os.x1_source_grants WHERE tenant_id=$1 AND principal_id=$2 AND id=$3 RETURNING id::text,version`,
+        [tenant,actor,old.id,version.id,sha(bytes),JSON.stringify(revisedRows.map(row=>row.id))])).rows[0];
+      return {grant,versionId:version.id,oldGrantId:old.id};
+    });
+    const newRights=String((await admin.query('SELECT revision FROM finnor_os.authority_states WHERE tenant_id=$1',[tenant])).rows[0].revision);
+    assert.notEqual(newRights,oldRights,'actual unrelated suspension must advance native tenant authority epoch');
+    let next:Record<string,any>|undefined,response:any,ending:Record<string,any>|undefined;
+    for(let poll=0;poll<180;poll++){
+      if(guardFailure)throw Error(guardFailure);
+      next=(await admin.query(`SELECT id::text,parent_request_id,episode_id,revision,status FROM finnor_os.x1_compiler_requests
+        WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3 ORDER BY revision DESC LIMIT 1`,[tenant,actor,workId])).rows[0];
+      if(next&&next.id!==compilerId){
+        response=await api('institution-read',{requestId:next.id});assert.equal(response.status,200);
+        if(['UNKNOWN','FAILED','CHECK_REJECTED','INVALIDATED','CANCELLED'].includes(response.body.status)){
+          await save('staff-epoch-owner-refusal.json',{replacement,oldRights,newRights,next,response,originalFrame});
+          throw Error('ACTUAL_STAFF_EPOCH_CONTINUATION_REFUSAL:'+response.body.status+':'+response.body.reason);
+        }
+        ending=(await admin.query(`SELECT w.status work_status,l.id objective_id,l.state objective_state,
+          p.id plan_id,p.status plan_status,p.completion_proof FROM finnor_os.works w
+          JOIN finnor_os.work_objective_loops l ON l.tenant_id=w.tenant_id AND l.work_id=w.id
+          JOIN finnor_os.work_plan_revisions p ON p.tenant_id=l.tenant_id AND p.objective_loop_id=l.id
+          WHERE w.tenant_id=$1 AND w.id=$2 ORDER BY p.revision DESC LIMIT 1`,[tenant,workId])).rows[0];
+        if(response.body.status==='OBSERVED'&&ending?.work_status==='completed'&&ending.plan_status==='completed')break;
+      }
+      await new Promise(resolve=>setTimeout(resolve,1000));
+    }
+    assert.ok(next&&ending);assert.notEqual(next.id,compilerId);assert.equal(next.parent_request_id,compilerId);
+    assert.equal(response.body.status,'OBSERVED');assert.equal(ending.objective_id,originalObjective.id);
+    assert.equal(ending.objective_state,'completed');assert.equal(ending.completion_proof.verified,true);
+    const requests=(await admin.query('SELECT * FROM finnor_os.pe_requests WHERE tenant_id=$1 AND deal_id=$2 ORDER BY request_text',[tenant,String(first.row.id)])).rows;
+    assert.equal(requests.length,2);assert.deepEqual(requests.map(row=>row.request_text).sort(),[requestText,newText].sort());
+    for(const request of requests){assert.equal(request.owner_party_id,actor);assert.equal(new Date(request.due_at).toISOString(),deadlineAt);}
+    const effects=(await admin.query(`SELECT a.id,a.status,e.status effect_status FROM finnor_os.domain_actions a
+      JOIN finnor_os.business_effects e ON e.tenant_id=a.tenant_id AND e.domain_action_id=a.id
+      WHERE a.tenant_id=$1 AND a.work_id=$2 AND a.action_type='create_deal_request' ORDER BY a.id`,[tenant,workId])).rows;
+    assert.equal(effects.length,2);assert.ok(effects.every(row=>row.status==='completed'&&row.effect_status==='verified'));
+    assert.ok(effects.some(row=>row.id===allEffects[0].id));
+    assert.deepEqual(await originalEnvelope(),originalFrame,'original S5 resources, demand, deadlines and parent unchanged');
+    const retained=(await admin.query('SELECT completion_proof,status FROM finnor_os.work_plan_revisions WHERE tenant_id=$1 AND id=$2',[tenant,completion.plan_id])).rows[0];
+    assert.equal(retained.status,'completed');assert.equal(sha(JSON.stringify(retained.completion_proof)),oldProof);
+    const finalObjective:Record<string,any>=(await admin.query('SELECT * FROM finnor_os.work_objective_loops WHERE tenant_id=$1 AND work_id=$2',[tenant,workId])).rows[0];
+    for(const field of ['max_steps','max_actions','max_queries','max_waits','max_node_attempts','deadline_at'])assert.deepEqual(finalObjective[field],originalObjective[field]);
+    const update=(await admin.query(`SELECT body FROM finnor_os.x1_compiler_events WHERE tenant_id=$1 AND request_id=$2
+      AND kind='P7_EXACT_AFFECTED_UPDATE' ORDER BY created_at DESC LIMIT 1`,[tenant,next.id])).rows[0]?.body;
+    await save('staff-epoch-original-parent-independent-proof.json',{replacement,oldRights,newRights,next,response,ending,
+      requests,effects,originalFrame,oldProof,update,originalObjective,finalObjective,fullSensitivePersonnelCaseEstablished:false});
+    results.push({id:'B-unrelated-personnel-epoch-original-parent',status:'PASS',observed:{oldRights,newRights,requests:2,effects:2},
+      basis:'ACTUAL_UNRELATED_USER_SUSPENSION_NEW_RAW_TRIGGER_AUTOMATIC_P7_NATIVE_COMPLETION_UNCHANGED_ORIGINAL_S5_FRAME'});
+  }
   if(reportingChanges){
     const initialObjective=(await admin.query('SELECT * FROM finnor_os.work_objective_loops WHERE tenant_id=$1 AND work_id=$2',[tenant,workId])).rows[0];
     const originalProof=sha(JSON.stringify(completion.completion_proof)),originalPlanId=completion.plan_id;
     const originalEnvelopeBefore=await originalEnvelope();let previousRequest=compilerId;
-    const replaceSources=async(variants:Array<{sourceId:string;bytes:Buffer}>)=>withTenantTransaction(tenant,{userId:actor},async(db,c)=>{
+    const replaceSources=async(variants:Array<{sourceId:string;bytes:Buffer}>)=>independentSourceOwner(async(db,c)=>{
       const replacements=[];
       for(const variant of variants){
         const original=(await c.query<{id:string;document_id:string;version:number}>(`SELECT id::text,document_id::text,version

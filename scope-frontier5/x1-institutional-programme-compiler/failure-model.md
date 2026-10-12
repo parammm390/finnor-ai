@@ -342,4 +342,22 @@ completion proof must still pass after removing raw writes. External source-owne
 fixture updates use their explicit independent owner connection; API and worker
 connections remain restricted.
 
+### Original S5 frame after an unrelated personnel epoch
+
+The immutable S5 reservation records its initial tenant authority revision. An
+unrelated employee suspension advances that revision even while the original
+actor, Work read grant, mandate, resource heads and allowed operations remain
+current. A historical-revision comparison can falsely deny lawful continuation.
+Removing it without a fresh native decision can permit revoked authority to spend.
+
+Before changing this predicate, `authority_epoch` creates an actual unrelated
+employee before exposure, completes the original duty, then atomically suspends
+that employee and publishes one new raw trigger through the independent source
+owner. Observe a second native Request under the original parent, resources,
+objective limits and deadline; preserve the pre-fix refusal. Revalidation must use
+actual current grants and native decision references. It cannot rewrite origins,
+reset cost, extend deadlines, issue grants or weaken final mutation fencing.
+Actor/resource revocation still refuses use. This case does not prove all sensitive
+source/personnel or minimal-closure cases.
+
 The independent oracle contract defines expectations and preservation. Boundary bugs need a pre-fix failing regression at their owning boundary. No post-code unit tests. Source changes following a failed proof retain the original run and rerun only affected proof plus necessary regressions.
