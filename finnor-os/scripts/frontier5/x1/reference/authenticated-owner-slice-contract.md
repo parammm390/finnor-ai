@@ -53,3 +53,10 @@ Add new phase labels only for typed institution consumption; preserve the old
 domain. The original 520 compute/900 human units may require 1,420 one-unit records;
 metadata capacity must not truncate that unchanged parent. The S5 unit envelope
 continues to refuse overspend. Retain the actual queue failure and charges.
+
+Two admission runs retained the exact canonical-version refusal. The mismatch
+witness showed native Deal version1 versus S1 immutable history ordinal3, with
+identical ID/registration/source namespace. Those are different owner version
+domains. Use the actual native mutation version for PE references, preserving the
+history version/hash as provenance and requiring the selected native snapshots
+to agree. Do not remove the publication/currentness version comparison.

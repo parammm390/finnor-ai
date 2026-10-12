@@ -176,8 +176,8 @@ export async function loadInstitutionCanonicalOwnerSnapshot(
   if (identifiers.size > profile.bounds.canonicalReferences) throw new Error("X1_CANONICAL_REFERENCE_BOUND");
   const matches = await withTenantTransaction(ctx.auth.tenantId, { userId: ctx.auth.userId,
     readOnly: true, isolation: "repeatable read" }, async (_db, client) => {
-    const result = await client.query<{ id: string; external_id: string }>(
-      `SELECT id::text,external_id FROM finnor_os.pe_deals
+    const result = await client.query<{ id: string; external_id: string;version:number }>(
+      `SELECT id::text,external_id,version FROM finnor_os.pe_deals
         WHERE tenant_id=$1 AND source_system=$4 AND external_id=ANY($2::text[]) AND archived_at IS NULL AND status='active'
         ORDER BY external_id,id LIMIT $3`,
       [ctx.auth.tenantId, [...identifiers], profile.bounds.deals + 1, `x1:${original.institutionId}`]);
@@ -189,14 +189,19 @@ export async function loadInstitutionCanonicalOwnerSnapshot(
   for (const deal of matches) {
     const world = await loadPrivateEquityWorldState(ctx, { entityType: "pe_deal", entityId: deal.id });
     const owner = world.provenance.find((item) => item.entityType === "pe_deal" && item.entityId === deal.id);
-    if (!owner || world.deal?.externalId !== deal.external_id || !world.beliefView) {
+    const nativeVersion=Number(world.deal?.version);
+    if (!owner || world.deal?.externalId !== deal.external_id || !world.beliefView
+        ||!Number.isSafeInteger(nativeVersion)||nativeVersion<1||nativeVersion!==Number(deal.version)) {
       throw new Error("X1_CANONICAL_OWNER_SNAPSHOT_UNAVAILABLE");
     }
     const rights = String(world.beliefView.rights.revision);
     if (rightsRevision && rightsRevision !== rights) throw new Error("X1_RIGHTS_CHANGED_DURING_CANONICAL_READ");
     rightsRevision = rights;
-    entities.push({ ref: `pe_deal:${deal.id}@v${owner.entityVersion}`, entityType: "deal",
-      registrationId: deal.external_id, institutionId: original.institutionId });
+    // S1's immutable history ordinal can advance independently of the native
+    // mutation/CAS version. Do not use that ordinal as a PE API version.
+    entities.push({ ref: `pe_deal:${deal.id}@v${nativeVersion}`, entityType: "deal",
+      registrationId: deal.external_id, institutionId: original.institutionId,
+      ownerWitness:{historyVersion:owner.entityVersion,historySnapshotHash:owner.snapshotHash} });
   }
   const currentTwins = await withTenantTransaction(ctx.auth.tenantId, { userId: ctx.auth.userId,
     readOnly: true, isolation: "repeatable read" }, async (_db, client) => {
