@@ -476,3 +476,9 @@ The expectation remains unchanged original IDs, states, reservation envelopes
 and deadlines plus new completed compiler-job processing. Bind installed source
 and independent verifier source separately; allow only exact observer/runner/
 failure/oracle deltas and independently compare all other installed preimages.
+
+For installed upgrade, the native release witness's expected commit and worker
+release environment are the actual installed manifest source commit. The
+observer checkout commit remains separately recorded; equality of an invented
+verifier label is not installed release evidence. Preserve all173 original SQL
+preimages, seventeen additive migrations, historical owners and old/new jobs.

@@ -154,7 +154,7 @@ try {
   const connection = (user: string, pass: string) => `postgres://${user}:${pass}@127.0.0.1:${port}/x1_owner`;
   const legacyUpgrade=upgrade?await prepareExistingOwnerUpgrade({repo,databaseUrl:connection('x1_fixture',password),
     applicationUrl:connection('finnor_app',appPassword),appPassword,workerUrl:connection('finnor_worker',workerPassword),
-    workerPassword,commit:freeze.source.commit,
+    workerPassword,commit:installedManifest?.source.commit??freeze.source.commit,
     expectedMigrationCount:freeze.expectedMigrations,migrationOwner:nativeMigrate}):null;
   if(legacyUpgrade)await save('existing-schema-upgrade-starting-proof.json',legacyUpgrade);
   const migrated=await nativeMigrate(connection("x1_fixture", password));
@@ -586,7 +586,7 @@ try {
     XDG_CACHE_HOME: join(evidence, "cache"), TSX_DISABLE_CACHE: "1", DOTENV_CONFIG_PATH: join(evidence, "empty.env"),
     NODE_ENV: "test", AUTH_DEV_BYPASS: "0", FINNOR_P4_PROFILE: "ordinary_disposable", FINNOR_TEST_MANAGED_EXTENSIONS: "omit",
     DATABASE_URL: connection("finnor_worker", workerPassword), CI: "1", LOG_LEVEL: "silent", NEXT_TELEMETRY_DISABLED: "1",
-    ...(upgrade?{FINNOR_COMMIT_SHA:freeze.source.commit,FINNOR_RELEASE_SOURCE:installation
+    ...(upgrade?{FINNOR_COMMIT_SHA:installedManifest?.source.commit??freeze.source.commit,FINNOR_RELEASE_SOURCE:installation
       ?'x1-local-compiled-development':'x1-local-source-runner-not-built-release'}:{}),
     ...(recovery||effectRecovery?{WORKER_JOB_LEASE_SECONDS:'5'}:{}),
     ...(effectRecovery?{FINNOR_STEP_LEASE_SECONDS:'5'}:{}) };

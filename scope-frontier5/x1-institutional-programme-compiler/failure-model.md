@@ -448,3 +448,13 @@ Verifier revision may differ from installed runtime solely for the declared
 driver/runner/oracle records, after comparing EVERY other installed original
 preimage with the current repository. Never rebuild unchanged passed runtime
 bytes or disguise verifier revision as installed source history.
+
+### Installed upgrade release witness (pre-code observer correction)
+
+The upgrade driver currently labels the installed worker's release probe with
+the verifier checkout commit. These can differ after the declared observer-only
+repair. Before running upgrade, use the fixed installed manifest source commit
+for both the queued native release witness and its worker environment, and retain
+the independent verifier commit separately. Source-only proof keeps its existing
+checkout commit. This changes no runtime bytes, admission or expected migration,
+old Work/Core preservation, queue disposition or restart predicate.
