@@ -13,7 +13,7 @@ import type { OwnerSource } from './owner-source-corpus.mts';
 export type ExpectedOwnerMapping={sourceId:string;recordId:string;canonicalId:string;nativeType:string;kind:string};
 export async function canonicalOwnerSources(input:{ctx:PeMutationContext;admin:Client;institutionId:string;
   workId:string;dealId:string;companyId:string;organizationKey:string;workstreamId:string;
-  requestedFromDealPartyId:string;occurredAt:string;availableAt:string;fullDomain?:boolean}){
+  requestedFromDealPartyId:string;occurredAt:string;availableAt:string;fullDomain?:boolean;overlapUserId?:string}){
   const {ctx,admin,institutionId,workId,dealId,companyId,workstreamId,requestedFromDealPartyId}=input;
   const tenant=ctx.auth.tenantId,actor=ctx.auth.userId;
   const sourceSystem=ctx.provenance?.sourceSystem;
@@ -103,6 +103,18 @@ export async function canonicalOwnerSources(input:{ctx:PeMutationContext;admin:C
   const person=add('person-A','person','user',personRegistration,actor,personSourceId);
   const sources:OwnerSource[]=[{id:sourceId,sourceClass:'crm_deals',rows},
     {id:personSourceId,sourceClass:'personnel_benefits',rows:[person]}];
+  if(input.overlapUserId){
+    const registrationId=registration('EMPLOYEE');
+    await admin.query(`INSERT INTO finnor_os.x1_subject_identity_bindings
+      (tenant_id,institution_id,source_id,registration_id,subject_user_id,evidence_source_id,evidence_version_id,valid_from,expires_at)
+      VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9)`,[tenant,institutionId,personSourceId,registrationId,input.overlapUserId,
+      evidence.evidenceSourceId,evidence.evidenceVersionId,validFrom,expiresAt]);
+    await grantInstitutionSubjectConsent({...ctx,auth:{...ctx.auth,userId:input.overlapUserId,employeeId:input.overlapUserId}},
+      {institutionId,sourceClass:'personnel_benefits',purpose:'standing evidence responsibility',expiresAt});
+    Object.assign(person,{displayName:'Unseen owner',team:'Evidence operations'});
+    sources.find(s=>s.id===personSourceId)!.rows.push({...add('person-B','person','user',registrationId,input.overlapUserId,personSourceId),
+      displayName:'Unseen owner',team:'Evidence operations'});
+  }
   if(input.fullDomain){
     const expenseSourceId='expense-owner-original';
     await admin.query(`INSERT INTO finnor_os.x1_subject_identity_bindings

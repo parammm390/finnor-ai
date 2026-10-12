@@ -382,3 +382,7 @@ not create another effect or reset cost. Certification cannot come from names,
 caller mappings, supplied coverage fields or an invented permission.
 
 The independent oracle contract defines expectations and preservation. Boundary bugs need a pre-fix failing regression at their owning boundary. No post-code unit tests. Source changes following a failed proof retain the original run and rerun only affected proof plus necessary regressions.
+
+## Overlapping responsible employees and independent continuation (pre-code)
+
+Two actual employees with the same display name have distinct source-scoped registrations and standing responsibilities. After baseline creation, the independent owner suspends one employee while atomically publishing a corrected ledger amount, a lender field with changed business meaning, a cosmetic CRM label, an emailed exception and two new explicit request triggers. One new trigger has an active responsible principal; the other has the suspended principal. Historical creation remains historical evidence, not current permission. The compiler must retain both normative duties, mark exactly the suspended responsibility unavailable, and permit the independent active duty under the same original S5 frame. If a global planning or late dispatch refusal prevents that lawful continuation, preserve it as the intended pre-fix failure.

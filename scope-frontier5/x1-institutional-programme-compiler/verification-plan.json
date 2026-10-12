@@ -610,6 +610,20 @@
       "limits": "UNCHANGED",
       "acceptance": "oracle-contract.md#b-sensitive-consent-and-independent-continuation",
       "protectedQualification": false
+    },
+    {
+      "id": "B-overlapping-personnel-reporting-continuation",
+      "mode": "personnel",
+      "dutyCount": 1,
+      "status": "FROZEN_BEFORE_CRITICAL_OWNER_IMPLEMENTATION",
+      "sourceInstances": 15,
+      "independentInitialIdentityDenominator": 27,
+      "independentInitialDutyDenominator": 3,
+      "independentChangedKnownDutyDenominator": 5,
+      "expectedTotalEffects": 4,
+      "limits": "UNCHANGED",
+      "acceptance": "oracle-contract.md#b-overlapping-personnel-and-reporting-inputs-independent-expectations",
+      "protectedQualification": false
     }
   ]
 }
