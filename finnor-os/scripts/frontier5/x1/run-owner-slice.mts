@@ -14,7 +14,7 @@ import { closePool, withTenantTransaction, configureTenantVertical, receiveWork,
   createEmployeeConversationThread,updateEmployeeConversationThreadContext,transactionDb } from "@finnor/db";
 import { createDeal, createWorkstream, addDealParty, type PeMutationContext } from "@finnor/private-equity";
 import { createDocument, appendDocumentVersion } from "@finnor/data-platform";
-import { putAllocationResource } from "../../../packages/private-equity/src/allocation-store";
+import { putAllocationResource,validateInstitutionDemand } from "../../../packages/private-equity/src/allocation-store";
 import { parseAllocationResource } from "../../../packages/epistemic-runtime/src/allocation-contracts";
 import { authenticatedApiFixture } from "./authenticated-api-fixture.mts";
 import { heterogeneousOwnerSources,type OwnerSource } from './owner-source-corpus.mts';
@@ -1181,8 +1181,52 @@ try {
     for(const field of ['max_steps','max_actions','max_queries','max_waits','max_node_attempts','deadline_at'])assert.deepEqual(finalObjective[field],originalObjective[field]);
     const update=(await admin.query(`SELECT body FROM finnor_os.x1_compiler_events WHERE tenant_id=$1 AND request_id=$2
       AND kind='P7_EXACT_AFFECTED_UPDATE' ORDER BY created_at DESC LIMIT 1`,[tenant,next.id])).rows[0]?.body;
+    assert.equal(update.affectedPriorDutyIds.length,0);assert.equal(update.affectedCurrentDutyIds.length,1);
+    assert.equal(update.newDutyIds.length,1);assert.equal(update.preservedCurrentDutyIds.length,1);
+    const decisionProof=(await admin.query(`SELECT ch.charge_key,ch.phase,ch.body,a.id,a.authority_revision,
+      a.outcome,a.reason_code,a.capability,a.operation,a.employee_id,a.work_id,a.evidence
+      FROM finnor_os.s5_governed_resource_charges ch JOIN finnor_os.authority_decisions a
+       ON a.tenant_id=ch.tenant_id AND a.id=(ch.body->>'currentAuthorityDecisionId')::uuid
+      WHERE ch.tenant_id=$1 AND ch.body->>'currentRightsRevision'=$2`,[tenant,newRights])).rows;
+    assert.ok(decisionProof.length>0,'new epoch charges retain actual native decisions');
+    for(const receipt of decisionProof){assert.equal(receipt.employee_id,actor);assert.equal(receipt.work_id,workId);
+      assert.equal(String(receipt.authority_revision),newRights);assert.equal(receipt.outcome,'allowed');
+      assert.equal(receipt.reason_code,'grant_allows');assert.equal(receipt.operation,'query');
+      assert.equal(receipt.capability,'query:pe_world_state');assert.ok(receipt.evidence.selectedGrantId);
+      assert.deepEqual(receipt.evidence.resources,[{type:'work',id:workId}]);}
     await save('staff-epoch-original-parent-independent-proof.json',{replacement,oldRights,newRights,next,response,ending,
-      requests,effects,originalFrame,oldProof,update,originalObjective,finalObjective,fullSensitivePersonnelCaseEstablished:false});
+      requests,effects,originalFrame,oldProof,update,decisionProof,originalObjective,finalObjective,fullSensitivePersonnelCaseEstablished:false});
+    // Negative currentness controls occur after the scored continuation. They
+    // change genuine owner state and may not supply effects or reset the origin.
+    await independentSourceOwner(async(_db,c)=>{await c.query("UPDATE finnor_os.users SET status='suspended' WHERE tenant_id=$1 AND id=$2",[tenant,actor]);});
+    const revokedRead=await api('institution-read',{requestId:next.id});assert.equal(revokedRead.status,403);
+    let actorRefusal:string|null=null;
+    try{await validateInstitutionDemand(ctx,originalFrame.episodes[0].parent_reservation);}
+    catch(error){actorRefusal=(error as {code?:string}).code??(error as Error).message;}
+    assert.equal(actorRefusal,'PERMITTED_CONTEXT_UNAVAILABLE');
+    await independentSourceOwner(async(_db,c)=>{await c.query("UPDATE finnor_os.users SET status='active' WHERE tenant_id=$1 AND id=$2",[tenant,actor]);});
+    const restored=await validateInstitutionDemand(ctx,originalFrame.episodes[0].parent_reservation);
+    assert.equal(restored.status,'CURRENT');assert.equal(restored.executionAuthorityGranted,false);
+    const originalResource=(await admin.query(`SELECT r.body FROM finnor_os.s5_resources r JOIN finnor_os.s5_resource_heads h
+      USING(tenant_id,resource_id,revision) WHERE r.tenant_id=$1 AND r.resource_id='x1-compute'`,[tenant])).rows[0].body;
+    const {ref:resourceRef,revision:_resourceRevision,priorRef:_priorResource,...resourceInput}=originalResource;
+    const revokedResource=await putAllocationResource(ctx,{...resourceInput,revoked:true},resourceRef);
+    let resourceRefusal:string|null=null,resourceSqlState:string|null=null;
+    try{await withTenantTransaction(tenant,{userId:actor},async(_db,c)=>c.query('SELECT finnor_os.s5_assert_institution_current($1,NULL)',[originalFrame.episodes[0].parent_reservation.id]));}
+    catch(error){resourceRefusal=(error as Error).message;resourceSqlState=(error as {code?:string}).code??null;}
+    assert.equal(resourceSqlState,'P0001');assert.equal(resourceRefusal,'S5 immutable original institution frame unavailable');
+    const afterNegative=await originalEnvelope();
+    assert.deepEqual(afterNegative.episodes,originalFrame.episodes,'negative controls retain immutable episode, parent and demand');
+    assert.deepEqual(afterNegative.reservations,originalFrame.reservations,'revocation retains consumed exposure and envelopes');
+    assert.equal(afterNegative.resources.find(resource=>resource.resource_id==='x1-compute')!.revision,
+      originalFrame.resources.find(resource=>resource.resource_id==='x1-compute')!.revision+1);
+    const retainedOrigin=(await admin.query('SELECT body FROM finnor_os.s5_reservation_origins WHERE tenant_id=$1 AND reservation_id=$2',
+      [tenant,originalFrame.episodes[0].parent_reservation.id])).rows[0].body;
+    assert.ok(retainedOrigin.resources.some((ref:any)=>ref.id===resourceRef.id&&ref.contentDigest===resourceRef.contentDigest));
+    assert.equal((await admin.query("SELECT count(*)::int n FROM finnor_os.domain_actions WHERE tenant_id=$1 AND work_id=$2 AND action_type='create_deal_request'",[tenant,workId])).rows[0].n,2);
+    await save('original-s5-current-authority-negative-controls.json',{revokedRead,actorRefusal,restored,
+      revokedResource,resourceRefusal,resourceSqlState,immutableOriginalFrame:originalFrame,retainedOrigin,afterNegative,noExtraEffect:true,
+      inputChanges:'EXPLICIT_INDEPENDENT_OWNER_CONTROLS_AFTER_SCORED_CONTINUATION',resourceAuthorityGranted:false});
     results.push({id:'B-unrelated-personnel-epoch-original-parent',status:'PASS',observed:{oldRights,newRights,requests:2,effects:2},
       basis:'ACTUAL_UNRELATED_USER_SUSPENSION_NEW_RAW_TRIGGER_AUTOMATIC_P7_NATIVE_COMPLETION_UNCHANGED_ORIGINAL_S5_FRAME'});
   }
