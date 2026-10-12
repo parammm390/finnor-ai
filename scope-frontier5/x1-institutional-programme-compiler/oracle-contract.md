@@ -213,6 +213,16 @@ grant with the same scope, then observe the physical queue: no second compiler
 request or P7 update may be accepted for that cancelled parent. The first Request
 and verified effect stay unique, and consumed resources are not marked released.
 
+### Publication compute attribution expectations
+
+On a normal real compiler delivery, Work's existing S7 readback must include one
+COMPILE and one PUBLICATION record for the same actual job/delivery/episode and
+original reservation. The split timestamps and positive measured publication
+elapsed interval come from physical execution, not a declared constant. Both
+records are immutable and independently reread; neither grants business-work or
+financial-value credit. Missing monetary/human/aggregate-memory and meter-writer
+coverage remain unknown. Recovery before publication retains its interrupted gap.
+
 ## Qualification score specification
 
 Independently freeze material mapping set M, supported obligation set O, unique business assignment identities/weights/deadlines, critical subset K and actionable-change set C per environment before exposure. Candidate claims are CANDIDATE, not expectations. Match one-to-one only under independently defined equivalence; no duplicate credit.

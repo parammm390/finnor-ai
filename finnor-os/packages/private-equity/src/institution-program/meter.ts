@@ -7,7 +7,7 @@ type Scope = { sourceAttempt: (grantId: string) => Promise<void>;
   checkerAttempt: () => Promise<void> };
 const scope = new AsyncLocalStorage<Scope>();
 const physicalUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-const computePhases = ["COMPILE", "UPDATE_RECOGNITION", "PREPARATION", "RECOVERY"] as const;
+const computePhases = ["COMPILE", "PUBLICATION", "UPDATE_RECOGNITION", "PREPARATION", "RECOVERY"] as const;
 export const withInstitutionMeter = <T>(input: Scope, run: () => Promise<T>) => scope.run(input, run);
 export const recordInstitutionSourceAttempt = async (grantId: string) => { await scope.getStore()?.sourceAttempt(grantId); };
 export const recordInstitutionCheckerAttempt = async () => { await scope.getStore()?.checkerAttempt(); };
@@ -34,6 +34,7 @@ export async function persistInstitutionCompute(ctx: PeMutationContext, input: {
         rssBytesAtObservation: process.memoryUsage().rss },
       money: null, moneyBasis: "ACTUAL_PRICE_UNAVAILABLE", humanSeconds: null,
       aggregatePeakMemoryBytes: null, modelCalls: [], costAllocation: "ONCE_PER_PHYSICAL_DELIVERY_UNDER_ORIGINAL_WORK_PARENT",
+      meterWriterLatency:'UNOBSERVED_REQUIRES_EXTERNAL_LIFECYCLE_COLLECTOR',
       businessWorkCredit: 0, qualification: "COMPUTE_ATTRIBUTION_NOT_FINANCIAL_VALUE_OR_CAPACITY_PROOF" } });
 }
 

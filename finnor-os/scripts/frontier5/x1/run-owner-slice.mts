@@ -456,6 +456,9 @@ try {
     JOIN finnor_os.x1_compiler_requests r ON r.tenant_id=a.tenant_id AND r.admission_id=a.id
     WHERE r.tenant_id=$1 AND r.principal_id=$2 AND r.id=$3`,[tenant,actor,compilerId])).rows[0];
   assert.ok(admission,"actual S1 mapping admission required");
+  assert.equal(reading.costs.physicalCompute.phases.PUBLICATION?.deliveries,1,'one actual compiler publication measurement');
+  assert.ok(reading.costs.physicalCompute.phases.PUBLICATION.attributedElapsedMs>0);
+  await save('publication-compute-independent-readback.json',reading.costs.physicalCompute);
   const actualBaseline=(await admin.query(`SELECT a.id,a.body,a.input_manifest FROM finnor_os.x1_compiler_requests r
     JOIN finnor_os.x1_compiler_artifacts a ON a.tenant_id=r.tenant_id AND a.id=r.artifact_id
     WHERE r.tenant_id=$1 AND r.id=$2`,[tenant,compilerId])).rows[0];

@@ -154,4 +154,15 @@ No consumed reservation is released and no completion is interpreted as evidence
 fulfillment or settlement. Credible regression: treating OBSERVED as a no-op for
 cancellation lets a completed standing programme continue after the user stops it.
 
+### Publication compute attribution
+
+The compiler's existing COMPILE measurement ends before baseline/catalog reads,
+parent verification, artifact construction and immutable publication. That is an
+avoidable physical-time omission. Split the real delivery at an observed clock
+point and persist PUBLICATION once under the same delivery, episode and original
+S5 parent. Do not count overlapping elapsed intervals or create a fresh budget.
+Meter-writer latency, money, supervision and aggregate memory remain explicit
+coverage gaps. Failure to record the second phase must emit a retained METER_GAP
+and must not erase an already published artifact or observed effect.
+
 The independent oracle contract defines expectations and preservation. Boundary bugs need a pre-fix failing regression at their owning boundary. No post-code unit tests. Source changes following a failed proof retain the original run and rerun only affected proof plus necessary regressions.

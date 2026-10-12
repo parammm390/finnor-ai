@@ -175,9 +175,10 @@ export async function runInstitutionCompilerJob(payload: Record<string, unknown>
           unresolved: lowered.unresolved, demand: parentDemand, reservationRef: parentRef,
           actions: resolved.actions, compilerRequestId: q.id } });
     }
+    const publicationStarted=performance.now(),publicationStartedAt=new Date().toISOString();
     const compute = await persistInstitutionCompute(ctx,{requestId:q.id,workId:q.work_id,episodeId:q.episode_id,
       jobId:execution.jobId,deliveryAttemptId:execution.deliveryAttemptId,parentReservation:parentRef,
-      rightsRevision:result.original.current.rightsRevision,startedAt,elapsedMs:performance.now()-started,
+      rightsRevision:result.original.current.rightsRevision,startedAt,elapsedMs:publicationStarted-started,
       phase:"COMPILE",status:accepted?(native?"CHECKED_AND_NATIVE_SUBMITTED":"CHECKED_WITH_GAPS"):"CHECK_REJECTED",observedAcquisitionAttempts:sourceAttempts,
       observedCheckerAttempts:checkerAttempts});
     const code = await codeIdentity(), artifactId = randomUUID();
@@ -226,6 +227,19 @@ export async function runInstitutionCompilerJob(payload: Record<string, unknown>
         elapsedMs: performance.now() - started, jobId: execution.jobId, claimFence: execution.claimFence,
         parentReservation: parentRef, monetaryCost: null, independentCompletionRequired: true }, c);
     });
+    try{
+      const publication=await persistInstitutionCompute(ctx,{requestId:q.id,workId:q.work_id,episodeId:q.episode_id,
+        jobId:execution.jobId,deliveryAttemptId:execution.deliveryAttemptId,parentReservation:parentRef,
+        rightsRevision:result.original.current.rightsRevision,startedAt:publicationStartedAt,
+        elapsedMs:performance.now()-publicationStarted,phase:'PUBLICATION',status:'IMMUTABLE_ARTIFACT_PUBLISHED',
+        observedAcquisitionAttempts:0,observedCheckerAttempts:0});
+      await compilerEvent(ctx,q,'COMPILER_PUBLICATION_COMPUTE_ATTRIBUTED',{artifactId,compute:publication.record.ref,
+        originalEpisode:q.episode_id,parentReservation:parentRef,intervalOverlap:false});
+    }catch(error){
+      await compilerEvent(ctx,q,'COMPILER_PUBLICATION_METER_GAP',{artifactId,jobId:execution.jobId,
+        deliveryAttemptId:execution.deliveryAttemptId,originalEpisode:q.episode_id,predicate:safePredicate(error),
+        alreadyPublishedArtifactRetained:true,monetaryCost:null});
+    }
   } catch (error) {
     const predicate = safePredicate(error);
     let meterGap:string|null=null;
