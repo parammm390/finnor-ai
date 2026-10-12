@@ -67,7 +67,8 @@ export function deriveInstitutionResponsibilities(input: Input) {
     throw new Error("X1_CHECK_NOT_ACCEPTED_FOR_CANDIDATE");
   }
   const responsibilities: InstitutionResponsibility[] = [];
-  const unresolved: { stableIdentity: string; sourceId: string; recordId: string; reason: string; originalDeadline: string }[] = [];
+  const unresolved: { stableIdentity: string; sourceId: string; recordId: string; reason: string;
+    originalDeadline: string; ruleId?: string; unsupportedFields?: string[]; ruleDigest?: string }[] = [];
   const graphNodes = new Set<string>(), graphEdges = new Set<string>();
   let deadlineAt: string | null = null;
   for (const [rank, obligation] of candidate.obligations.entries()) {
@@ -82,7 +83,12 @@ export function deriveInstitutionResponsibilities(input: Input) {
       sourceId: row.sourceId, recordId: row.recordId, occurredAt: row.occurredAt,
     });
     if (deadlineAt === null || rule.deadlineAt < deadlineAt) deadlineAt = rule.deadlineAt;
-    const reason = !admittedCanonicalRefs.includes(obligation.subjectRef)
+    const ruleFields = new Set(["id", "triggerKind", "operation", "principalId", "deadlineAt",
+      "materiality", "postconditionRef", "observerRef", "operationInputs", "actionPayload",
+      "expectedEntityId", "postconditionDigest"]);
+    const unsupportedFields = Object.keys(rule).filter(field => !ruleFields.has(field)).sort();
+    const reason = unsupportedFields.length ? "X1_RULE_MEANING_UNSUPPORTED"
+      : !admittedCanonicalRefs.includes(obligation.subjectRef)
       ? "X1_SUBJECT_NOT_ESTABLISHED_CANONICAL_FACT"
       : !authorizedOperations.includes(rule.operation) || !profile.ordinaryOperations.includes(rule.operation)
         ? "X1_OPERATION_NOT_CURRENTLY_AUTHORIZED"
@@ -92,7 +98,8 @@ export function deriveInstitutionResponsibilities(input: Input) {
           ? "X1_OPERATION_SUBJECT_KIND_UNSUPPORTED" : null;
     if (reason) {
       unresolved.push({ stableIdentity: identity, sourceId: row.sourceId, recordId: row.recordId,
-        reason, originalDeadline: rule.deadlineAt });
+        reason, originalDeadline: rule.deadlineAt,
+        ...(unsupportedFields.length ? { ruleId: rule.id, unsupportedFields, ruleDigest: hash(rule) } : {}) });
       continue;
     }
     const match = /^pe_deal:([^@]+)@v\d+$/.exec(obligation.subjectRef)!;

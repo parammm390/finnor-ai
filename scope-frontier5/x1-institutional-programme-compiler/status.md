@@ -1,5 +1,21 @@
 # FRONTIER5.X1 status
 
+## Current source checkpoint — explicit unresolved rule meaning, 12 October 2026
+
+Engineering remains **INCOMPLETE**. The original/check/lowering regression first
+failed at the intended missing-approval-condition predicate. Lowering now retains
+unsupported standing-rule fields with the original duty identity, deadline, rule
+ID/digest and exact fields needing interpretation. Supported independent rules
+remain eligible. Unsupported operation inputs and disagreement with explicitly
+frozen mandate action/identity/postcondition produce exact gaps before preparation.
+The declared rule grammar is not expanded or qualified by this repair.
+
+The affected offline regression and scoped types/source lint passed on recorded
+cuts. The original failing output is retained. Actual authenticated mandate,
+queue, worker, effect, mounted and installation evidence remains **NOT RUN**.
+Prior automatic update, creation-history and cost checkpoints remain implemented
+source. The full remaining engineering/qualification/handoff scope remains active.
+
 ## Current source checkpoint — retained compute history and mounted refresh, 12 October 2026
 
 Engineering remains **INCOMPLETE**. The authenticated Work cost projection reads

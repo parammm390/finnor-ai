@@ -35,6 +35,17 @@ export async function resolveInstitutionActions(ctx: PeMutationContext, original
     }
     const raw = Object.fromEntries(Object.entries(row.fields).map(([key, value]) => [key.replace(/[^a-z0-9]/gi, "").toLowerCase(), value]));
     const inputs = rule.operationInputs ?? {};
+    const allowedInputs = d.permissibleOperationClass === "open_workstream"
+      ? ["workstreamKind", "workstreamName"]
+      : d.permissibleOperationClass === "create_deal_request"
+        ? ["workstreamExternalId", "workstreamKind", "requestedFromExternalId", "requestText", "requiresAcceptedDeliverable"]
+        : ["workstreamExternalId", "workstreamKind", "findingStatement", "findingSeverity", "requiredForWorkstreamCompletion"];
+    if (!inputs || typeof inputs !== "object" || Array.isArray(inputs)
+        || Object.keys(inputs).some(key => !allowedInputs.includes(key))
+        || Object.values(inputs).some(value => typeof value !== "string" && typeof value !== "boolean")) {
+      gaps.push({ stableIdentity: d.stableIdentity, reason: "X1_OPERATION_INPUT_MEANING_UNSUPPORTED", originalDeadline: d.originalDeadline });
+      continue;
+    }
     const value = (key: string): string | boolean | undefined => inputs[key] ?? raw[key.toLowerCase()];
     const string = (key: string): string | undefined => typeof value(key) === "string" && String(value(key)).trim()
       ? String(value(key)).trim() : undefined;
@@ -84,6 +95,13 @@ export async function resolveInstitutionActions(ctx: PeMutationContext, original
       expectedEntityId: id, postconditionDigest: institutionDigest({ operation: d.permissibleOperationClass,
         payload, expectedEntityId: id, deadlineAt: d.originalDeadline,
         contractRef: d.postcondition.contractRef, observerRef: d.independentObserver.ref }) };
+    const explicit = rule as typeof rule & { actionPayload?: unknown; expectedEntityId?: unknown; postconditionDigest?: unknown };
+    if (Object.hasOwn(explicit, "actionPayload") && institutionDigest(explicit.actionPayload) !== institutionDigest(payload)
+        || Object.hasOwn(explicit, "expectedEntityId") && explicit.expectedEntityId !== id
+        || Object.hasOwn(explicit, "postconditionDigest") && explicit.postconditionDigest !== action.postconditionDigest) {
+      gaps.push({ stableIdentity: d.stableIdentity, reason: "X1_EXPLICIT_MANDATE_INTENT_CONFLICT", originalDeadline: d.originalDeadline });
+      continue;
+    }
     try {
       frozenDutyExpectation(original.tenantId, { id: d.stableIdentity, stableIdentity: d.stableIdentity,
         derivationRevision: d.derivationRevision, operation: action.operation,

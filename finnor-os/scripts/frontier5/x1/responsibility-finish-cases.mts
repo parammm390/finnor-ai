@@ -18,6 +18,21 @@ const lowered = deriveInstitutionResponsibilities({
   authorizedOperations: original.current.authorizedOperations, profile,
 });
 const duty = lowered.responsibilities[0]!;
+// Original source/mandate → independent model check → native lowering must
+// retain an unsupported approval condition rather than preparing its effect.
+const conditionalOriginal = structuredClone(original);
+Object.assign(conditionalOriginal.mandate.rules[0]!, {
+  conditions: [{ field: "approvalGranted", equals: true }],
+});
+const conditionalCheck = await independentlyCheckInstitutionModel(conditionalOriginal, candidate, profile);
+assert.equal(conditionalCheck.disposition, "ACCEPTED_DEVELOPMENT", "reach the lowering boundary with an otherwise accepted source model");
+const conditional = deriveInstitutionResponsibilities({ original: conditionalOriginal, candidate,
+  check: conditionalCheck, admittedCanonicalRefs: candidate.mappings.map(m => m.canonicalRef),
+  authorizedOperations: original.current.authorizedOperations, profile });
+assert.ok(conditional.unresolved.some(item => item.reason === "X1_RULE_MEANING_UNSUPPORTED"),
+  "an unsupported standing approval condition must remain unresolved");
+assert.equal(conditional.responsibilities.some(item => item.obligation.rule.id === conditionalOriginal.mandate.rules[0]!.id),
+  false, "unsupported rule cannot prepare an effect");
 // The checked owner seal covers every persisted duty and unresolved liability.
 // Neither an altered observer/derivation nor an omitted unresolved entry can
 // keep a valid admission seal by merely recomputing the programme/demand hash.
