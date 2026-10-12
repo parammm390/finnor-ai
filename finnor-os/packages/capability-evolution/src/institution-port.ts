@@ -9,9 +9,14 @@ import type { JournalEntry } from "./journal";
 async function readInstalledInstitutionCompilerIdentity(){
   const paths=["reconstruction.ts","source-decoder.ts","checker.ts","checker-raw.ts","responsibility.ts",
     "resource-demand.ts","completion-contracts.ts","action-resolution.ts","canonical-json.ts",
-    "canonical-owners.ts","owner-admission.ts","source-authority.ts","checker-process.ts"].map(path=>
+    "canonical-owners.ts","owner-admission.ts","source-authority.ts","checker-process.ts",
+    "store.ts","worker.ts","api.ts","artifact.ts","meter.ts","installed-source.ts"].map(path=>
       new URL(`../../private-equity/src/institution-program/${path}`,import.meta.url));
-  paths.push(new URL("../../private-equity/src/live-recompilation/institution-dependencies.ts",import.meta.url));
+  for(const path of ["institution-dependencies.ts","institution-worker.ts"])
+    paths.push(new URL(`../../private-equity/src/live-recompilation/${path}`,import.meta.url));
+  for(const path of ["contracts.ts","plan.ts","owners.ts","store.ts","institution.ts",
+    "institution-history.ts","institution-continuation.ts","duty-observer.ts","request-observer.ts"])
+    paths.push(new URL(`../../private-equity/src/program-synthesis/${path}`,import.meta.url));
   paths.push(new URL("./institution-port.ts",import.meta.url));
   const sources=await Promise.all(paths.map(async path=>({path:path.pathname,sha256:byteDigest(await readFile(path))})));
   const body={schema:"finnor.s8.installed-institution-compiler.v1",sources,

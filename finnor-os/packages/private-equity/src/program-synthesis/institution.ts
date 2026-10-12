@@ -9,6 +9,7 @@ import { assertProgramCurrent, durableNode, enqueueProgram, episodeCosts, native
  type InstitutionProgramRow } from './store';
 import { executeOwnerOperation, resolveEconomicBindings } from './owners';
 import { continueInstitutionProgram } from './institution-continuation';
+import { readUnaffectedInstitutionHistory } from './institution-history';
 
 /** Admission checks existing owner receipts and the original S5 reservation,
  * rather than accepting a caller's `LOWERED` label as owner authority. */
@@ -128,6 +129,14 @@ export async function submitInstitutionHarnessProgram(ctx:PeMutationContext,requ
     WHERE tenant_id=$1 AND work_id=$2 ORDER BY created_at DESC,id DESC LIMIT 1`,
     [ctx.auth.tenantId,request.workId])).rows[0];
   if(current?.id!==work.id)throw Error('EXACT_WORK_REVISION_CHANGED');
+  let carriedHistory:Awaited<ReturnType<typeof readUnaffectedInstitutionHistory>>|null=null;
+  if(compilerRequestId){
+   const {compilerRow,assertInstitutionCompilerCurrent}=await import('../institution-program/store');
+   const compiler=await compilerRow(ctx,compilerRequestId,c,true);
+   await assertInstitutionCompilerCurrent(ctx,compiler,compiler.input_manifest?.current,c,true);
+   carriedHistory=await readUnaffectedInstitutionHistory(ctx,c,compilerRequestId,head);
+   head.observedPostconditions=carriedHistory.observations;
+  }
   await c.query(`INSERT INTO finnor_os.p1_requests
     (id,tenant_id,principal_id,work_id,work_input_id,work_input_digest,episode_id,
      plan_revision_id,idempotency_key,request_digest,request,proposed)
@@ -135,6 +144,10 @@ export async function submitInstitutionHarnessProgram(ctx:PeMutationContext,requ
     [id,ctx.auth.tenantId,principal(ctx),request.workId,work.id,inputDigest,episodeId,
      selected.planRevisionId,request.idempotencyKey,digest,stable(request),stable(head)]);
   const row=await nativeRequestRow(ctx,id,c);
+  if(carriedHistory)await trace(ctx,row,'X1_UNAFFECTED_CREATION_HISTORY_BOUND',{
+   priorHead:carriedHistory.priorHead,update:carriedHistory.update,
+   carriedDutyIds:head.observedPostconditions.map(item=>item.stableIdentity),
+   originalEpisode:episodeId,authorityGranted:false},c);
   await trace(ctx,row,'INSTITUTION_RESPONSIBILITY_BOUND',{work:head.work,nodes,unresolved,
    originalDeadline:demand.originalDeadline,reservationRef,admission:programme.admission,
    checkedAdmissionId:admission.id,completion:'INDEPENDENT_CANONICAL_OBSERVATION_REQUIRED'},c);

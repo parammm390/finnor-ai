@@ -106,7 +106,8 @@ export interface InstitutionHarnessProgram {
  costs:HarnessProgram['costs'];runtime:HarnessProgram['runtime'];
  status:'PROPOSED'|'WAITING'|'PARTIAL'|'FAILED'|'OBSERVED';
  observedPostconditions:Array<{stableIdentity:string;canonicalRef:string;observerDigest:string;
-   derivationRevision?:string;actionId?:string;frozenIntentDigest?:string}>;
+   derivationRevision?:string;actionId?:string;frozenIntentDigest?:string;
+   carriedFrom?:{programId:string;headId:string;headDigest:string;derivationRevision:string}}>;
  deliveryCursor?:number;
  interventions?:Array<{stableIdentity:string;predicate:string;possibleEffect:boolean}>;
  executionAuthorityGranted:false;

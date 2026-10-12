@@ -1,4 +1,9 @@
 -- P7 coordination metadata for accepted X1 Work. Existing owners remain truth.
+INSERT INTO finnor_os.compute_job_type_policies
+ (job_type,default_class,allowed_classes,classification_rule,tenant_scope,obligation_kind,policy_revision,rationale)
+ VALUES('run_x1_institution_update_v1','INTERACTIVE',ARRAY['INTERACTIVE'],
+  'fixed','tenant','required',1,
+  'P7 automatic X1 owner update under its existing Work episode and original resource parent.');
 ALTER TABLE finnor_os.x1_compiler_episodes ADD COLUMN coordination_calls integer NOT NULL DEFAULT 0
  CHECK(coordination_calls BETWEEN 0 AND 124);
 CREATE TABLE finnor_os.x1_compiler_updates (

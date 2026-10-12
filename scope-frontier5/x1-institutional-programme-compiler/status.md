@@ -1,5 +1,31 @@
 # FRONTIER5.X1 status
 
+## Current source checkpoint — preserved unaffected creation history, 12 October 2026
+
+Engineering remains **INCOMPLETE**. Native recompilation now reads the actual
+parent compiler's checked candidate and immutable native head, recomputes P7
+changed/preserved duties and carries only unchanged sealed creation observations.
+Each carried witness binds its prior head ID/digest and derivation. Work,
+principal, both episode identities, original reservation/deadline and full
+checked duty populations must match. Changed action intent, operation, deadline,
+postcondition or observer cannot inherit completion. The existing continuation
+still requires current verified native effects and records withdrawal as an
+intervention. Historical creation is not new execution authority.
+
+The installed source descriptor now reads 31 actual compiler, coordinator and
+native continuation source files. This is an unadmitted source/runtime descriptor,
+not a built installation or S8 admission. Migration 0176 now also registers the
+physical update job's database compute policy; all new migrations remain
+**UNAPPLIED**, with 178 bundled migration files.
+
+Finite independent source review found no blocker in the carry boundary.
+Scoped types/source lint passed on recorded cuts; the initial duplicate-import
+lint failure and descriptor entrypoint failure are retained. No live SQL, queue,
+mounted, installation, protected-population or A–H success is claimed.
+Disk remains below the frozen 1.5 GiB service and 2.5 GiB build floors.
+
+Remaining internal work and separate gates listed below retain their full scope.
+
 ## Current source checkpoint — automatic owner update coordination, 12 October 2026
 
 Engineering remains **INCOMPLETE**. Migration 0176 records relevant owner
