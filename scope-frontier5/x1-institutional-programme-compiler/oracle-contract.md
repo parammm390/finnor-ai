@@ -356,3 +356,16 @@ registered physical worker, canonical creators and completion observer must stil
 produce the same full-domain native effects; setup alone gives no PASS. Self-consent
 is subject-owned and renewal/revocation use the same authenticated owner boundary.
 
+## F-explicit-unsupported-operation independent expectations
+
+One raw trigger matches two pre-exposure rules: the existing permitted Request
+creation and an explicit `approve_transaction` responsibility. No approval or
+protected operation grant is installed. The original obligation denominator is
+two, with exactly one non-executable normative obligation and one native verified
+Request creation. The independent checker must preserve the unsupported rule's
+operation, principal and original deadline and require an exact OUTSIDE_PROFILE
+marker. A candidate that invents an operation or omits/forges this marker still
+fails authority or normative consistency. The resulting programme is PARTIAL,
+Work is not completed, no approval action/effect exists, original costs/deadline
+remain and the artifact names the missing operation in its exact intervention.
+

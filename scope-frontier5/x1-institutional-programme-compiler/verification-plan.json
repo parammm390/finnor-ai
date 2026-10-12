@@ -567,6 +567,20 @@
       "limits": "UNCHANGED",
       "acceptance": "oracle-contract.md#g-authenticated-owner-inputs-independent-expectations",
       "protectedQualification": false
+    },
+    {
+      "id": "F-explicit-unsupported-operation",
+      "mode": "unsupported_operation",
+      "dutyCount": 1,
+      "status": "FROZEN_BEFORE_PRODUCER_CHECKER_CHANGE",
+      "independentObligationDenominator": 2,
+      "expectedObservedNativeEffects": 1,
+      "unsupportedOperation": "approve_transaction",
+      "expectedProgramme": "PARTIAL",
+      "fullWorkCompletionAllowed": false,
+      "limits": "UNCHANGED",
+      "acceptance": "oracle-contract.md#f-explicit-unsupported-operation-independent-expectations",
+      "protectedQualification": false
     }
   ]
 }

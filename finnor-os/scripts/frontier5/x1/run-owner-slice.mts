@@ -40,9 +40,10 @@ const ordinary=process.env.FINNOR_X1_OWNER_MODE==='ordinary'||fullDomain;
 const upgrade=process.env.FINNOR_X1_OWNER_MODE==='upgrade';
 const checkerCrash=process.env.FINNOR_X1_OWNER_MODE==='checker_crash';
 const contention=process.env.FINNOR_X1_OWNER_MODE==='contention';
-const unsupported=process.env.FINNOR_X1_OWNER_MODE==='unsupported';
+const unsupportedOperation=process.env.FINNOR_X1_OWNER_MODE==='unsupported_operation';
+const unsupported=process.env.FINNOR_X1_OWNER_MODE==='unsupported'||unsupportedOperation;
 const cancelObserved=process.env.FINNOR_X1_OWNER_MODE==='cancel_observed';
-if(process.env.FINNOR_X1_OWNER_MODE&&!['api','mounted','revision','material','heterogeneous','canonical','recovery','effect_recovery','ordinary','domain','owner_inputs','reporting_changes','upgrade','checker_crash','contention','unsupported','cancel_observed'].includes(process.env.FINNOR_X1_OWNER_MODE))
+if(process.env.FINNOR_X1_OWNER_MODE&&!['api','mounted','revision','material','heterogeneous','canonical','recovery','effect_recovery','ordinary','domain','owner_inputs','reporting_changes','upgrade','checker_crash','contention','unsupported','unsupported_operation','cancel_observed'].includes(process.env.FINNOR_X1_OWNER_MODE))
   throw Error('EXACT_REGISTERED_OWNER_MODE_REQUIRED');
 if((mounted||material||heterogeneous||canonical||recovery||effectRecovery||ordinary||upgrade||checkerCrash||contention||unsupported||cancelObserved)&&dutyCount!==1)throw Error('NAMED_ONE_DUTY_SCENARIO_REQUIRED');
 if(process.env.FINNOR_X1_OWNER_CASE&&!['1','128'].includes(process.env.FINNOR_X1_OWNER_CASE))
@@ -174,7 +175,9 @@ try {
   for (const d of [first, second]) await attachWorkEntity(tenant, workId, { entityType: "pe_deal", entityId: String(d.row.id), source: "X1:original-owner-registration" });
   const rule = { id: "standing-request", triggerKind: "evidence_request_needed", operation: "create_deal_request", principalId: actor,
     deadlineAt, materiality: "material", postconditionRef: "x1:pe-request-created:v1", observerRef: "x1:pe-request-creation-observer:v1" };
-  const rules=unsupported?[rule,{...rule,id:'approval-conditioned-request',approvalCondition:'Current independent committee approval must be supplied; its meaning is not defined by this record'}]
+  const rules=unsupported?[rule,unsupportedOperation?{...rule,id:'standing-transaction-approval',operation:'approve_transaction',
+    postconditionRef:'unsupported:approve_transaction',observerRef:'unsupported:approve_transaction'}
+    :{...rule,id:'approval-conditioned-request',approvalCondition:'Current independent committee approval must be supplied; its meaning is not defined by this record'}]
     :ordinary?[rule,{...rule,id:'standing-workstream',triggerKind:'diligence_stream_needed',operation:'open_workstream',
       postconditionRef:'x1:pe-workstream-created:v1',observerRef:'x1:pe-workstream-creation-observer:v1'},
       {...rule,id:'standing-finding',triggerKind:'material_finding_observed',operation:'record_finding',
@@ -325,8 +328,10 @@ try {
     expected.canonicalKinds=JSON.parse(await readFile(join(repo,'scope-frontier5/x1-institutional-programme-compiler/profile.json'),'utf8')).canonicalTypes;
     assert.deepEqual([...new Set(expected.mappings.map((m:any)=>m.kind))].sort(),[...expected.canonicalKinds].sort());
   }
-  if(unsupported)expected.unsupported={matchingRules:2,unresolvedDuties:1,ruleId:'approval-conditioned-request',
-    reason:'X1_RULE_MEANING_UNSUPPORTED',unsupportedFields:['approvalCondition'],observedEffects:1,programme:'PARTIAL',fullWorkCompletionAllowed:false};
+  if(unsupported)expected.unsupported={matchingRules:2,unresolvedDuties:1,
+    ruleId:unsupportedOperation?'standing-transaction-approval':'approval-conditioned-request',
+    reason:unsupportedOperation?'X1_OPERATION_NOT_CURRENTLY_AUTHORIZED':'X1_RULE_MEANING_UNSUPPORTED',
+    unsupportedFields:unsupportedOperation?[]:['approvalCondition'],observedEffects:1,programme:'PARTIAL',fullWorkCompletionAllowed:false};
   await save("inputs-and-independent-expectations.json", { tenant, actor, institutionId, workId, rule,rules,sourceBindings, expected });
   await admin.query(`INSERT INTO finnor_os.compute_resource_policies(resource_key,capacity,per_tenant_capacity,interactive_reserve,lease_seconds,source)
     VALUES('native:p4',2,2,0,60,'explicit disposable X1 validation capacity; not protected funding')`);
@@ -857,12 +862,19 @@ try {
       JOIN finnor_os.x1_compiler_artifacts a ON a.tenant_id=r.tenant_id AND a.id=r.artifact_id
       WHERE r.tenant_id=$1 AND r.id=$2`,[tenant,compilerId])).rows[0];
     assert.equal(actual.candidate.obligations.length,2);assert.equal(actual.check_result.obligationDenominator,2);
-    assert.ok(reading.artifact.unresolved_interpretations.some((gap:any)=>gap.reason===expected.unsupported.reason
+    if(unsupportedOperation){
+      const withheld=actual.candidate.obligations.find((d:any)=>d.ruleId==='standing-transaction-approval');
+      assert.equal(withheld.operation,'approve_transaction');assert.equal(withheld.nonExecutable,'OUTSIDE_PROFILE');
+      assert.equal(withheld.deadlineAt,deadlineAt);assert.equal(withheld.principalId,actor);
+      assert.equal((await admin.query(`SELECT count(*)::int n FROM finnor_os.domain_actions WHERE tenant_id=$1 AND action_type='approve_transaction'`,[tenant])).rows[0].n,0);
+      assert.ok(reading.artifact.unresolved_interpretations.some((gap:any)=>gap.reason===expected.unsupported.reason
+        &&gap.alternatives?.includes('Supply a current admitted operation approve_transaction for standing rule standing-transaction-approval')));
+    }else assert.ok(reading.artifact.unresolved_interpretations.some((gap:any)=>gap.reason===expected.unsupported.reason
       &&gap.alternatives?.includes('Interpret approvalCondition in standing rule '+expected.unsupported.ruleId)));
     await save('mixed-unsupported-independent-proof.json',{expectation:expected.unsupported,actual,unresolved,
       completion,supportedCanonicalRequests:rows,effects:allEffects,originalEnvelope:beforeReplay,
       humanOrFallbackCredit:0,fullWorkCompleted:false,missingApprovalNotInvented:true});
-    results.push({id:'F-mixed-unsupported-rule',status:'PASS',observed:{unresolved,completion,obligationDenominator:2,observedEffects:1},
+    results.push({id:unsupportedOperation?'F-explicit-unsupported-operation':'F-mixed-unsupported-rule',status:'PASS',observed:{unresolved,completion,obligationDenominator:2,observedEffects:1},
       basis:'ACTUAL_INDEPENDENTLY_CHECKED_FULL_DUTY_POPULATION_SUPPORTED_NATIVE_EFFECT_AND_EXACT_PARTIAL_INTERVENTION'});
   }else{
     assert.equal(completion?.work_status,'completed','actual native Work completion');

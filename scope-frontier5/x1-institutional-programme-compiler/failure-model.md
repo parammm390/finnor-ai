@@ -316,4 +316,17 @@ with the non-superuser application role, normal Core creators and pre-exposure
 source/mandate expectations. Final completion remains native independently observed
 creation; input setup is not execution authority.
 
+### Explicit non-executable normative obligations
+
+A supplied responsibility can contain an operation outside the profile or without
+current authority. The current checker rejects the whole candidate, preventing an
+independent permitted responsibility from continuing. Retain every matched rule in
+the original denominator, with an explicit `nonExecutable` disposition for only
+the operation proven unsupported or unauthorized by the original profile/current
+owner snapshot. The checker independently derives this disposition and rejects
+missing/forged markers, changed normative operations and omitted responsibilities.
+Lowering must retain the exact operation/rule/deadline as an unresolved duty and
+produce no executable action for it. Native supported work must still complete;
+the full Work must remain incomplete while this material duty is unresolved.
+
 The independent oracle contract defines expectations and preservation. Boundary bugs need a pre-fix failing regression at their owning boundary. No post-code unit tests. Source changes following a failed proof retain the original run and rerun only affected proof plus necessary regressions.
