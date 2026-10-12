@@ -3,6 +3,7 @@ import pg from "pg";
 import assert from "node:assert/strict";
 import { randomUUID, randomBytes, createHash } from "node:crypto";
 import { createServer } from "node:net";
+import { createServer as createHttpServer,type Server } from 'node:http';
 import { spawn, execFileSync } from "node:child_process";
 import { mkdir, writeFile, appendFile, readFile, rm } from "node:fs/promises";
 import { statfsSync } from "node:fs";
@@ -52,6 +53,9 @@ const results: any[] = [], traffic: unknown[] = [];
 let database: EmbeddedPostgres | undefined, admin: pg.Client | undefined;
 let service: Awaited<ReturnType<typeof authenticatedApiFixture>> | undefined, worker: ReturnType<typeof spawn> | undefined;
 let frontend:ReturnType<typeof spawn>|undefined;
+let mountedControl:Server|undefined;
+let delayedRead:{entered:boolean;requestId:string|null;status:number|null;promise:Promise<void>;release:()=>void}|null=null;
+const releaseDelayedRead=()=>delayedRead?.release();
 let peakOwnedRssBytes = 0, guard: NodeJS.Timeout | undefined;
 const save = async (name: string, body: unknown) => writeFile(join(evidence, name), JSON.stringify(body, null, 2) + "\n", { mode: 0o600 });
 const tenant = randomUUID(), actor = randomUUID(), institutionId = "unseen-local-" + randomUUID();
@@ -129,7 +133,14 @@ try {
     VALUES($1,$2,$3,$4,'r1',$5::jsonb,clock_timestamp()-interval '1 minute',clock_timestamp()+interval '1 hour')`, [tenant, actor, workId, institutionId, JSON.stringify([rule])]);
   const frontendPort=mounted?await freePort():null,frontendOrigin=frontendPort?'http://127.0.0.1:'+frontendPort:null;
   service = await authenticatedApiFixture(repo, actor, entry => traffic.push(entry),
-    frontendOrigin?{frontendOrigin}:{});
+    frontendOrigin?{frontendOrigin,afterResponse:async(path,body,status)=>{
+      if(path==='/api/company-brain/institution-read'&&delayedRead&&!delayedRead.entered){
+        delayedRead.entered=true;delayedRead.requestId=JSON.parse(body).requestId;delayedRead.status=status;
+        await save('mounted-delayed-response-entered.json',{at:new Date().toISOString(),
+          requestId:delayedRead.requestId,status,actualHandlerCompleted:true});
+        await delayedRead.promise;
+      }
+    }}:{});
   const profileResponse=await fetch(service.origin+'/api/workforce/profiles',{
     method:'POST',headers:{'content-type':'application/json',authorization:'Bearer '+service.token},
     body:JSON.stringify({key:'x1-disposable-native',name:'Disposable native responsibility query and check executor',
@@ -233,6 +244,32 @@ try {
     await updateEmployeeConversationThreadContext({tenantId:tenant,ownerEmployeeId:actor,threadId:thread.id,
       activeWorkId:workId,activeReferences:[root]});
     await updateEmployeeConversationThreadContext({tenantId:tenant,ownerEmployeeId:actor,threadId:other.id,activeReferences:[root]});
+    const controlKey=randomBytes(32).toString('hex');
+    mountedControl=createHttpServer(async(req,res)=>{
+      res.setHeader('content-type','application/json');
+      if(req.headers.authorization!=='Bearer '+controlKey){res.writeHead(401);res.end('{}');return;}
+      try{
+        if(req.method==='POST'&&req.url==='/delay'){
+          if(delayedRead)throw Error('ONE_RETAINED_READ_ONLY');
+          let release!:()=>void;const promise=new Promise<void>(resolve=>{release=resolve;});
+          delayedRead={entered:false,requestId:null,status:null,promise,release};res.end('{}');return;
+        }
+        if(req.url==='/delay-status'){res.end(JSON.stringify({entered:delayedRead?.entered??false,
+          requestId:delayedRead?.requestId??null,status:delayedRead?.status??null}));return;}
+        if(req.method==='POST'&&req.url==='/release'){delayedRead?.release();res.end('{}');return;}
+        if(req.method==='POST'&&req.url==='/revoke'){
+          const rows=(await admin!.query(`UPDATE finnor_os.users SET status='suspended'
+            WHERE tenant_id=$1 AND id=$2 RETURNING id,status`,[tenant,actor])).rows;
+          await save('mounted-actual-principal-revocation.json',{at:new Date().toISOString(),rows,
+            authority:(await admin!.query('SELECT revision FROM finnor_os.authority_states WHERE tenant_id=$1',[tenant])).rows});
+          res.end(JSON.stringify({revoked:rows.length===1}));return;
+        }
+        res.writeHead(404);res.end('{}');
+      }catch(error){await save('mounted-control-failure.json',{predicate:String((error as Error).message)});
+        res.writeHead(500);res.end('{}');}
+    });
+    await new Promise<void>((resolve,reject)=>{mountedControl!.once('error',reject);mountedControl!.listen(0,'127.0.0.1',resolve);});
+    const controlAddress=mountedControl.address();if(!controlAddress||typeof controlAddress==='string')throw Error('LOCAL_CONTROL_PORT_UNAVAILABLE');
     const frontendEnv={HOME:join(evidence,'home'),PATH:env.PATH,TMPDIR:join(evidence,'tmp'),
       NODE_ENV:'development',NODE_OPTIONS:'--max-old-space-size=1536',NEXT_TELEMETRY_DISABLED:'1',
       NEXT_PUBLIC_CENTROPY_TEST_MODE:'0',CENTROPY_TEST_MODE:'0',FINNOR_OS_API_URL:service.origin,
@@ -247,6 +284,7 @@ try {
       email:service.email,password:service.password,workId,threadId:thread.id,
       url:frontendOrigin+'/centropy/investigations/'+thread.id,
       otherUrl:frontendOrigin+'/centropy/investigations/'+other.id,
+      controlOrigin:'http://127.0.0.1:'+controlAddress.port,controlKey,
       actor,tenant,frontendPid:frontend.pid,originalEnvelope:'Same frozen owner scenario; no profile/grant reset',
       credentials:'DISPOSABLE_LOCAL_ONLY_FILE_MODE_0600_NEVER_PUBLIC_EVIDENCE'});
     for(let poll=0;poll<240;poll++){
@@ -370,11 +408,23 @@ try {
   assert.equal(completion.plan_status,'completed');assert.equal(completion.completion_proof?.verified,true);
   results.push({ id: "A-authenticated-owner-creation", status: "PASS", observed: { compilerId, admission, rows, effects:allEffects,plans,linked,repeated, beforeReplay, afterReplay },
     basis: "ACTUAL_LOCAL_AUTH_HTTP_SQL_PHYSICAL_WORKER_NATIVE_CREATE_AND_INDEPENDENT_SQL_OBSERVER" });
-  if(revise){
+  if(mounted)await save('mounted-canonical-completion.json',{compilerId,workId,completion,
+    browserEvidenceRequired:true,mountedPassEstablished:false});
+  if(revise||mounted){
     const initialObjective=(await admin.query('SELECT * FROM finnor_os.work_objective_loops WHERE tenant_id=$1 AND work_id=$2',
       [tenant,workId])).rows[0];
     const initialProof=sha(JSON.stringify(completion.completion_proof)),initialPlanId=completion.plan_id;
-    const revised=await api('institution-revise',{...input,parentRequestId:compilerId,idempotencyKey:'x1-revision:'+randomUUID()});
+    let revised:any;
+    if(revise)revised=await api('institution-revise',{...input,parentRequestId:compilerId,idempotencyKey:'x1-revision:'+randomUUID()});
+    else for(let poll=0;poll<90;poll++){
+      if(guardFailure)throw Error(guardFailure);
+      const q=(await admin.query(`SELECT id,revision,parent_request_id FROM finnor_os.x1_compiler_requests
+        WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3 AND revision=2`,[tenant,actor,workId])).rows[0];
+      if(q){assert.equal(q.parent_request_id,compilerId);revised={status:202,body:{requestId:q.id,revision:q.revision},
+        basis:'ACTUAL_MOUNTED_REVISION_DURABLE_SQL_ACCEPTANCE'};break;}
+      await new Promise(resolve=>setTimeout(resolve,1000));
+    }
+    assert.ok(revised,'actual mounted revision must reach the owner');
     assert.equal(revised.status,202,JSON.stringify(revised));assert.equal(revised.body.revision,2);
     let current:any;
     for(let poll=0;poll<90;poll++){
@@ -413,14 +463,20 @@ try {
     results.push({id:'B-same-standing-input-native-revision',status:'PASS',observed:{revised,current,
       initialObjective,finalObjective,priorCompletionProofDigest:initialProof},
       basis:'ACTUAL_AUTHENTICATED_OWNER_REVISION_SAME_OBJECTIVE_ORIGINAL_PARENT_NO_DUPLICATE_EFFECT'});
+    if(mounted)await save('mounted-revision-canonical-completion.json',{revised,current,
+      initialObjective,finalObjective,priorCompletionProofDigest:initialProof,
+      noDuplicateRequestsOrActions:true,originalEnvelope:await originalEnvelope(),fullEngineering:false});
   }
   if(mounted){
-    await save('mounted-canonical-completion.json',{compilerId,workId,completion,
-      browserEvidenceRequired:true,mountedPassEstablished:false});
     for(;;){if(guardFailure)throw Error(guardFailure);
       try{const closed=JSON.parse(await readFile(join(evidence,'mounted-observer-close.json'),'utf8'));
         if(closed.sourceCommit!==freeze.source.commit||closed.workId!==workId)throw Error('MOUNTED_OBSERVER_SCOPE_MISMATCH');
-        await save('mounted-observer-receipt.json',closed);break;
+        await save('mounted-observer-receipt.json',closed);
+        assert.equal(closed.status,'PASS','actual mounted observer verdict');
+        assert.ok(Array.isArray(closed.checks)&&closed.checks.length>=4
+          &&closed.checks.every((check:any)=>check.status==='PASS'),'all registered mounted predicates');
+        results.push({id:'G-mounted-owner-observer',status:'PASS',observed:closed,
+          basis:'ACTUAL_BROWSER_WITH_SEPARATE_CANONICAL_OWNER_PROOF'});break;
       }catch(error){if((error as NodeJS.ErrnoException).code!=='ENOENT')throw error;}
       await new Promise(resolve=>setTimeout(resolve,1000));
     }
@@ -432,6 +488,7 @@ try {
       internalQuery: (error as any).internalQuery ?? null, position: (error as any).position ?? null } } });
 } finally {
   if (guard) clearInterval(guard);
+  releaseDelayedRead();
   if (admin && workId) {
     for (const [name, sql] of [
       ["jobs", "SELECT id,type,status,attempts,protocol_version,retry_safety,claim_token,claim_fence,lease_expires_at,last_error,payload FROM finnor_os.jobs WHERE tenant_id=$1 ORDER BY id"],
@@ -468,6 +525,7 @@ try {
     const timer=setTimeout(()=>frontend?.kill('SIGKILL'),15000);await stopped;clearTimeout(timer);
   }
   await save("traffic.json", traffic);
+  if(mountedControl){mountedControl.closeAllConnections();await new Promise<void>(resolve=>mountedControl!.close(()=>resolve()));}
   await service?.close(); await closePool(); await admin?.end(); await database?.stop().catch(() => {});
   await rm(join(evidence, "tmp/database"), { recursive: true, force: true });
   const currentPins = await Promise.all(sourcePaths.map(async path => ({ path, sha256: sha(await readFile(join(repo, path))) })));

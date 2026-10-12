@@ -7,7 +7,7 @@ import { join, relative } from "node:path";
 import { pathToFileURL } from "node:url";
 
 export async function authenticatedApiFixture(repo: string, actor: string, record: (entry: unknown) => void,
-  options: { frontendOrigin?: string } = {}) {
+  options: { frontendOrigin?: string; afterResponse?: (path:string,body:string,status:number)=>Promise<void> } = {}) {
   const secret = randomBytes(32), password = randomBytes(24).toString("hex"), email = actor + "@test.invalid";
   const refreshToken=randomBytes(32).toString('base64url');
   if(options.frontendOrigin&&!/^http:\/\/127\.0\.0\.1:[0-9]{2,5}$/.test(options.frontendOrigin))
@@ -91,7 +91,9 @@ export async function authenticatedApiFixture(repo: string, actor: string, recor
       const response: Response = await handler(new Request(url, { method: req.method, headers,
         ...(!["GET", "HEAD"].includes(req.method ?? "GET") ? { body } : {}) }), { params: Promise.resolve(selected.params) });
       const out: Record<string, string> = {}; response.headers.forEach((v, k) => { out[k] = v; });
-      res.writeHead(response.status, out); res.end(Buffer.from(await response.arrayBuffer()));
+      const responseBytes=Buffer.from(await response.arrayBuffer());
+      await options.afterResponse?.(url.pathname,body,response.status);
+      res.writeHead(response.status, out); res.end(responseBytes);
       record({ path: url.pathname, method: req.method, status: response.status, bearer: Boolean(req.headers.authorization), elapsedMs: performance.now() - started });
     } catch (error) { record({ path: req.url, status: 500, predicate: String((error as Error).message) });
       res.writeHead(500, { "content-type": "application/json" }); res.end('{"error":"local_route_host_failed"}'); }

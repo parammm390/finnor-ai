@@ -72,3 +72,13 @@ Work terminal continuation and cancelled Work retain their existing guards.
 The decisive rerun must show revision 2 observed/completed, one Request/effect
 total, identical original reservation and deadline, additional attributed costs,
 and current mounted readback. A completion proof for revision 1 is insufficient.
+
+Next exercise a late read at the real authenticated transport boundary. A
+fixture-only loopback control holds one institution-read response AFTER the real
+handler produced it, reports that it is held, revokes the actual SQL principal,
+then releases the old response. Before release, the browser requests fresh
+metadata and receives the actual access denial. Neither the denial nor the late
+old response may resurrect private programme, claims, duties, witnesses or costs.
+Retain the real denial/old-response status, principal revision, browser states
+and ending rows. No product fault-injection API, fabricated effect or protected
+authority is created. Keep the same finite resource envelope.
