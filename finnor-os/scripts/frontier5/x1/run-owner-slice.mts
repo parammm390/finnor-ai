@@ -1159,7 +1159,10 @@ try {
             JOIN finnor_os.business_effects e ON e.tenant_id=a.tenant_id AND e.domain_action_id=a.id
             WHERE a.tenant_id=$1 AND a.work_id=$2 ORDER BY a.id`,[tenant,workId])).rows;
           if(response.body.status===expectedStatus&&nativeEffects.length===4
-            &&nativeEffects.every(effect=>effect.status==='completed'&&effect.effect_status==='verified'))return;
+            &&nativeEffects.every(effect=>effect.status==='completed'&&effect.effect_status==='verified')){
+            const work=(await admin!.query('SELECT status FROM finnor_os.works WHERE tenant_id=$1 AND id=$2',[tenant,workId])).rows[0];
+            if(expectedStatus==='PARTIAL'||work?.status==='completed')return;
+          }
         }
         await new Promise(resolve=>setTimeout(resolve,1000));
       }
