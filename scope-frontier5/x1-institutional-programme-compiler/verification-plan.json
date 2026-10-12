@@ -328,6 +328,46 @@
       "acceptance": "oracle-contract.md#b-ledger-correction-independent-expectations",
       "limits": "UNCHANGED",
       "claimsOnlySubsetOfB": true
+    },
+    {
+      "id": "A-eight-class-original-corpus",
+      "mode": "heterogeneous",
+      "dutyCount": 1,
+      "status": "FROZEN_BEFORE_CASE_IMPLEMENTATION",
+      "sourceInstances": 12,
+      "observationRecords": 13,
+      "sourceClasses": [
+        "crm_deals",
+        "financial_ledger",
+        "work_tracking",
+        "document_dms",
+        "email",
+        "calendar",
+        "approval_records",
+        "lender_portal"
+      ],
+      "protocols": [
+        "csv",
+        "tsv",
+        "json_records",
+        "text",
+        "docx",
+        "xlsx",
+        "pdf_text",
+        "rfc822",
+        "icalendar",
+        "financial_xml",
+        "html",
+        "paginated_json"
+      ],
+      "expectedMappings": 10,
+      "expectedQuantities": 2,
+      "expectedDuties": 1,
+      "expectedEffects": 1,
+      "limits": "UNCHANGED",
+      "acceptance": "oracle-contract.md#a-eight-class-original-corpus-independent-expectations",
+      "protectedQualification": false,
+      "allCanonicalKindsEstablished": false
     }
   ]
 }

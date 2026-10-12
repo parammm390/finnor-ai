@@ -114,6 +114,22 @@ remain identical, with only monotone charged counters allowed to advance.
 Expectations come from these frozen original inputs, never producer inference
 or candidate-selected duty populations. This is development evidence only.
 
+### A-eight-class-original-corpus independent expectations
+
+Twelve complete sources contain thirteen independently enumerated records.
+Ten entity records resolve to the two existing scoped Deal identities despite
+their shared display name. Two quantity records carry USD 20.00, units, 2026-10,
+outstanding basis and their original occurrence/availability times; the ledger
+fact is facility_balance and the lender fact is outstanding. One separately
+specified work-tracking trigger and current mandate derive one Request creation.
+Mail/calendar/approval assertions create no additional commitment or permission.
+
+Freeze each source's protocol, original bytes and expected object IDs before
+candidate exposure. Observe actual Core retention, authenticated submit/read,
+separate checker, immutable S1 receipts, ordinary native creation and exact
+canonical completion. Native Work/Objective/Plan proof is required. Protected
+qualification and the other canonical types remain separate requirements.
+
 ## Qualification score specification
 
 Independently freeze material mapping set M, supported obligation set O, unique business assignment identities/weights/deadlines, critical subset K and actionable-change set C per environment before exposure. Candidate claims are CANDIDATE, not expectations. Match one-to-one only under independently defined equivalence; no duplicate credit.

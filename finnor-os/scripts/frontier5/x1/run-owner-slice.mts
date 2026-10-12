@@ -17,6 +17,7 @@ import { createDocument, appendDocumentVersion } from "@finnor/data-platform";
 import { putAllocationResource } from "../../../packages/private-equity/src/allocation-store";
 import { parseAllocationResource } from "../../../packages/epistemic-runtime/src/allocation-contracts";
 import { authenticatedApiFixture } from "./authenticated-api-fixture.mts";
+import { heterogeneousOwnerSources,type OwnerSource } from './owner-source-corpus.mts';
 
 const repo = fileURLToPath(new URL("../../../../", import.meta.url));
 const evidence = process.env.FINNOR_X1_OWNER_EVIDENCE;
@@ -25,9 +26,10 @@ const dutyCount=process.env.FINNOR_X1_OWNER_CASE==='128'?128:1;
 const mounted=process.env.FINNOR_X1_OWNER_MODE==='mounted';
 const revise=process.env.FINNOR_X1_OWNER_MODE==='revision';
 const material=process.env.FINNOR_X1_OWNER_MODE==='material';
-if(process.env.FINNOR_X1_OWNER_MODE&&!['api','mounted','revision','material'].includes(process.env.FINNOR_X1_OWNER_MODE))
+const heterogeneous=process.env.FINNOR_X1_OWNER_MODE==='heterogeneous';
+if(process.env.FINNOR_X1_OWNER_MODE&&!['api','mounted','revision','material','heterogeneous'].includes(process.env.FINNOR_X1_OWNER_MODE))
   throw Error('EXACT_REGISTERED_OWNER_MODE_REQUIRED');
-if((mounted||material)&&dutyCount!==1)throw Error('NAMED_ONE_DUTY_SCENARIO_REQUIRED');
+if((mounted||material||heterogeneous)&&dutyCount!==1)throw Error('NAMED_ONE_DUTY_SCENARIO_REQUIRED');
 if(process.env.FINNOR_X1_OWNER_CASE&&!['1','128'].includes(process.env.FINNOR_X1_OWNER_CASE))
   throw Error('EXACT_FROZEN_OWNER_CASE_REQUIRED');
 const limits = JSON.parse(await readFile(join(repo, "scope-frontier5/x1-institutional-programme-compiler/verification-plan.json"), "utf8")).limits;
@@ -39,6 +41,7 @@ const started = performance.now(), startedAt = new Date().toISOString(), diskBef
 const sha = (bytes: string | Buffer) => createHash("sha256").update(bytes).digest("hex");
 const git = (...args: string[]) => execFileSync("git", args, { cwd: repo, encoding: "utf8", timeout: 5000 }).trim();
 const sourcePaths = ["finnor-os/scripts/frontier5/x1/run-owner-slice.mts", "finnor-os/scripts/frontier5/x1/authenticated-api-fixture.mts",
+  'finnor-os/scripts/frontier5/x1/owner-source-corpus.mts',
   "finnor-os/scripts/frontier5/x1/physical-owner-worker.mts", "finnor-os/packages/db/migrations-bundle.ts",
   "finnor-os/package-lock.json", "scope-frontier5/x1-institutional-programme-compiler/profile.json"];
 const sourcePins = await Promise.all(sourcePaths.map(async path => ({ path, sha256: sha(await readFile(join(repo, path))) })));
@@ -48,7 +51,7 @@ const freeze = { source: { commit: git("rev-parse", "HEAD"), tree: git("rev-pars
   profile: "DISPOSABLE_LOCAL_AUTH_SERVICE_ACTUAL_BEARER_AND_RLS", hostedSupabaseQualified: false,
   authDevBypass: false, expectedMigrations: 180, limits, freeBytesBefore: String(diskBefore), dutyCount,mounted,
   cases: ["A-raw-two-identity-native-request", "C-unsigned-forged-input", "D-same-key-replay", "G-restricted-roles",
-    ...(material?['B-ledger-correction']:[])],
+    ...(material?['B-ledger-correction']:[]),...(heterogeneous?['A-eight-class-original-corpus']:[])],
   omitted: "Full B–H, physical interruption, mounted browser, clean built installation/upgrade and protected qualification remain distinct required evidence" };
 await writeFile(join(evidence, "freeze.json"), JSON.stringify(freeze, null, 2) + "\n", { mode: 0o600, flag: "wx" });
 const results: any[] = [], traffic: unknown[] = [];
@@ -186,7 +189,7 @@ try {
       existingUse: ["0", "0"], safetyMargin: "0", covenants: [], revoked: false, qualification: "AUTHENTICATED_OWNER_ASSERTION_UNADMITTED" });
     await putAllocationResource(ctx, input, null);
   }
-  const sources = [
+  let sources:OwnerSource[] = [
     { id: "crm-original", sourceClass: "crm_deals", rows: [
       { id: "deal-A", kind: "entity", entityType: "deal", registrationId: registrationA, name: "Conflicting Harbor" },
       { id: "deal-B", kind: "entity", entityType: "deal", registrationId: registrationB, name: "Conflicting Harbor" }] },
@@ -196,22 +199,25 @@ try {
       registrationId: registrationA, occurredAt, availableAt, workstreamExternalId, requestedFromExternalId: recipientExternalId,
       requestText:dutyCount===1?requestText:requestText+' item '+index, requiresAcceptedDeliverable: true })) },
   ];
+  if(heterogeneous)sources=await heterogeneousOwnerSources({registrationA,registrationB,occurredAt,availableAt,
+    workRecords:sources.find(source=>source.id==='work-original')!.rows});
   const grantIds: string[] = [], sourceBindings: unknown[] = [];
   for (const source of sources) {
-    const bytes = Buffer.from(JSON.stringify(source.rows)), grantId = randomUUID();
+    const bytes = source.bytes??Buffer.from(JSON.stringify(source.rows)), grantId = randomUUID(),protocol=source.protocol??'json_records';
     const version = await withTenantTransaction(tenant, { userId: actor }, async db => {
       const doc = await createDocument(db, { tenantId: tenant, kind: "source_export", title: source.id,
         provenance: { sourceSystem: "owner-export", externalId: source.id, createdBy: actor } });
-      return appendDocumentVersion(db, { tenantId: tenant, documentId: doc.documentId, bytes, mediaType: "application/json", format: "unknown",
+      return appendDocumentVersion(db, { tenantId: tenant, documentId: doc.documentId, bytes, mediaType: source.mediaType??"application/octet-stream", format: "unknown",
         origin: "manual_upload", actor, sourceSystem: "owner-export", sourceRef: source.id, providerVersionId: "r1" });
     });
     await admin.query(`INSERT INTO finnor_os.x1_source_grants(id,tenant_id,principal_id,work_id,institution_id,source_id,source_class,
       purpose,acquisition_kind,document_id,document_version_id,protocol,revision,original_sha256,expected_object_ids,valid_from,expires_at)
-      VALUES($1,$2,$3,$4,$5,$6,$7,'standing evidence responsibility','core_export',$8,$9,'json_records','r1',$10,$11::jsonb,
+      VALUES($1,$2,$3,$4,$5,$6,$7,'standing evidence responsibility','core_export',$8,$9,$10,'r1',$11,$12::jsonb,
         clock_timestamp()-interval '1 minute',clock_timestamp()+interval '1 hour')`,
-    [grantId, tenant, actor, workId, institutionId, source.id, source.sourceClass, version.document_id, version.id, sha(bytes), JSON.stringify(source.rows.map(r => r.id))]);
-    await writeFile(join(evidence, "originals", source.id + ".json"), bytes, { mode: 0o600, flag: "wx" });
-    grantIds.push(grantId); sourceBindings.push({ sourceId: source.id, sourceClass: source.sourceClass, grantId, versionId: version.id, documentId: version.document_id, sha256: sha(bytes) });
+    [grantId, tenant, actor, workId, institutionId, source.id, source.sourceClass, version.document_id, version.id,protocol,sha(bytes), JSON.stringify(source.rows.map(r => r.id))]);
+    await writeFile(join(evidence, "originals", source.id + '.'+(source.extension??'json')), bytes, { mode: 0o600, flag: "wx" });
+    grantIds.push(grantId); sourceBindings.push({ sourceId: source.id, sourceClass: source.sourceClass,protocol,
+      expectedObjectIds:source.rows.map(r=>r.id),grantId, versionId: version.id, documentId: version.document_id, sha256: sha(bytes) });
   }
   expected = { mappings: [{ sourceId: "crm-original", recordId: "deal-A", canonicalId: String(first.row.id) },
     { sourceId: "crm-original", recordId: "deal-B", canonicalId: String(second.row.id) }],
@@ -222,6 +228,19 @@ try {
   if(material)expected.correction={sourceId:'ledger-original',recordId:'balance-A',value:'25.00',
     currency:'USD',unit:'units',period:'2026-10',basis:'outstanding',canonicalDealId:String(first.row.id),
     affectedDutyCount:0,preservedDutyCount:1,newEffectCount:0,sourcePopulation:3};
+  if(heterogeneous){
+    expected.mappings=sources.flatMap(source=>source.rows.filter(row=>row.kind==='entity').map(row=>{
+      assert.ok(row.registrationId===registrationA||row.registrationId===registrationB,'independent owner identity fixture');
+      return {sourceId:source.id,recordId:row.id,canonicalId:row.registrationId===registrationA?String(first.row.id):String(second.row.id)};
+    }));
+    assert.equal(expected.mappings.length,10);assert.equal(sources.length,12);
+    expected.sourceCorpus={sourceClasses:[...new Set(sources.map(s=>s.sourceClass))].sort(),
+      protocols:[...new Set(sources.map(s=>s.protocol??'json_records'))].sort(),sourceInstances:12,observationRecords:13,
+      quantities:[{sourceId:'ledger-original',recordId:'balance-A',factKey:'facility_balance',value:'20.00'},
+        {sourceId:'lender-original',recordId:'lender-A',factKey:'outstanding',value:'20.00'}].map(q=>({...q,
+          currency:'USD',unit:'units',period:'2026-10',basis:'outstanding',canonicalDealId:String(first.row.id)}))};
+    assert.equal(expected.sourceCorpus.sourceClasses.length,8);assert.equal(expected.sourceCorpus.protocols.length,12);
+  }
   await save("inputs-and-independent-expectations.json", { tenant, actor, institutionId, workId, rule, sourceBindings, expected });
   await admin.query(`INSERT INTO finnor_os.compute_resource_policies(resource_key,capacity,per_tenant_capacity,interactive_reserve,lease_seconds,source)
     VALUES('native:p4',2,2,0,60,'explicit disposable X1 validation capacity; not protected funding')`);
@@ -424,6 +443,32 @@ try {
   assert.equal(completion.plan_status,'completed');assert.equal(completion.completion_proof?.verified,true);
   results.push({ id: "A-authenticated-owner-creation", status: "PASS", observed: { compilerId, admission, rows, effects:allEffects,plans,linked,repeated, beforeReplay, afterReplay },
     basis: "ACTUAL_LOCAL_AUTH_HTTP_SQL_PHYSICAL_WORKER_NATIVE_CREATE_AND_INDEPENDENT_SQL_OBSERVER" });
+  if(heterogeneous){
+    const actual=(await admin.query(`SELECT a.candidate,a.check_result,a.body,a.body_digest
+      FROM finnor_os.x1_compiler_requests r JOIN finnor_os.x1_compiler_artifacts a ON a.tenant_id=r.tenant_id AND a.id=r.artifact_id
+      WHERE r.tenant_id=$1 AND r.id=$2`,[tenant,compilerId])).rows[0];
+    assert.ok(actual);assert.equal(actual.check_result.disposition,'ACCEPTED_DEVELOPMENT');
+    assert.equal(actual.candidate.coverage.length,expected.sourceCorpus.sourceInstances);
+    assert.equal(actual.candidate.mappings.length,expected.mappings.length);assert.equal(actual.candidate.quantities.length,2);
+    for(const oracle of expected.sourceCorpus.quantities){
+      const found=actual.candidate.quantities.filter((q:any)=>q.sourceId===oracle.sourceId&&q.recordId===oracle.recordId);
+      assert.equal(found.length,1);for(const field of ['factKey','value','currency','unit','period','basis'])assert.equal(found[0][field],oracle[field]);
+      assert.match(found[0].canonicalRef,new RegExp(`^pe_deal:${oracle.canonicalDealId}@v[1-9][0-9]*$`));
+    }
+    assert.equal(actual.candidate.obligations.length,1);assert.equal(actual.candidate.unresolved.length,0);
+    assert.equal(Object.keys(actual.body).length,14);assert.equal(Object.keys(actual.body.envelope).length,34);
+    assert.equal(actual.body.envelope.source_refs.length,expected.sourceCorpus.sourceInstances);
+    assert.deepEqual(Object.keys(actual.body.envelope.source_revision_vector).sort(),sources.map(s=>s.id).sort());
+    assert.equal(actual.body.inferred_source_mapping_refs.length,expected.mappings.length);
+    await save('heterogeneous-original-corpus-independent-proof.json',{expectations:expected.sourceCorpus,
+      expectedMappings:expected.mappings,sourceBindings,actual,completion,
+      nativeRequestCount:rows.length,independentOracleNotCandidateDerived:true,
+      claimDomain:'EIGHT_CLASSES_TWELVE_DIRECT_BYTE_PROTOCOLS_AND_NATIVE_REQUEST_COMPLETION_ONLY',
+      allCanonicalKindsEstablished:false,protectedQualification:false});
+    results.push({id:'A-eight-class-original-corpus',status:'PASS',observed:{classes:expected.sourceCorpus.sourceClasses,
+      protocols:expected.sourceCorpus.protocols,mappingCount:10,quantityCount:2,dutyCount:1,
+      fullFieldStructure:{program:14,envelope:34},completion},basis:'ACTUAL_AUTHENTICATED_CORE_ORIGINALS_SEPARATE_CHECK_S1_NATIVE_WORK_AND_INDEPENDENT_SQL'});
+  }
   if(mounted)await save('mounted-canonical-completion.json',{compilerId,workId,completion,
     browserEvidenceRequired:true,mountedPassEstablished:false});
   if(revise||mounted||material){

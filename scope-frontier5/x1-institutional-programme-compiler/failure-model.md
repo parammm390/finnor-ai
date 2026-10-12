@@ -54,4 +54,22 @@ canonical ending rows. No direct call to the update handler or candidate edit
 is permitted. This case covers the ledger correction and unaffected continuation
 subset of B; the complete PRD fixture and remaining B variants stay required.
 
+### Registered owner case A-eight-class-original-corpus
+
+Before adding this E2E case, freeze twelve source instances across eight classes
+and twelve direct original-byte protocols. CRM identifiers have conflicting
+names; document/mail/calendar/approval records corroborate scoped identifiers
+without supplying approval authority. One work-tracking trigger requires one
+native Request. Two fully contextualized quantities retain their stated meanings.
+DOCX/XLSX/PDF are real binary originals; pagination, delimited tables, RFC822,
+iCalendar, XML and HTML use their actual framing and complete object populations.
+
+Credible regressions include producer/checker disagreement on native fields,
+forgotten metadata aliases, calendar entities misclassified as scheduled claims,
+silently omitted format records, accepting a source header as authority, losing
+byte identity or faking eight classes with JSON labels. Require ten independently
+specified mappings, two quantities, one original duty/effect and native Work
+completion. This is an engineering corpus; it supplies no protected unseen
+population, hosted connector, sensitive-access or complete fourteen-kind proof.
+
 The independent oracle contract defines expectations and preservation. Boundary bugs need a pre-fix failing regression at their owning boundary. No post-code unit tests. Source changes following a failed proof retain the original run and rerun only affected proof plus necessary regressions.
