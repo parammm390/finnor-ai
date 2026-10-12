@@ -128,6 +128,17 @@ records the proof. Require one canonical Request, one action/effect, one origina
 episode/reservation, and actual native Work completion. An executor retry, new
 identity, lost uncertainty history or row-existence-only settlement is a failure.
 
+### Registered owner case A-all-ordinary-operations
+
+Three independent original triggers and explicit standing rules require one
+Request, one Workstream and one Finding. Names, statements, kinds, severity,
+materiality, owner, existing workstream/recipient references and dates are fixed
+before exposure. Real authenticated ordinary policy APIs authorize only these
+three creation operations. The compiler must derive all three obligations from
+raw evidence, run the existing native owners and complete the same Work. A
+receipt, queue acceptance, unrelated preexisting row or candidate-derived expected
+field cannot count. Creation never establishes fulfillment, resolution or approval.
+
 ### Installed baseline and immutable parent bindings
 
 The full output currently carries an avoidable unknown baseline and empty parent

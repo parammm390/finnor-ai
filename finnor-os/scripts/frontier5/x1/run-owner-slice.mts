@@ -31,12 +31,13 @@ const heterogeneous=process.env.FINNOR_X1_OWNER_MODE==='heterogeneous';
 const canonical=process.env.FINNOR_X1_OWNER_MODE==='canonical';
 const recovery=process.env.FINNOR_X1_OWNER_MODE==='recovery';
 const effectRecovery=process.env.FINNOR_X1_OWNER_MODE==='effect_recovery';
+const ordinary=process.env.FINNOR_X1_OWNER_MODE==='ordinary';
 const contention=process.env.FINNOR_X1_OWNER_MODE==='contention';
 const unsupported=process.env.FINNOR_X1_OWNER_MODE==='unsupported';
 const cancelObserved=process.env.FINNOR_X1_OWNER_MODE==='cancel_observed';
-if(process.env.FINNOR_X1_OWNER_MODE&&!['api','mounted','revision','material','heterogeneous','canonical','recovery','effect_recovery','contention','unsupported','cancel_observed'].includes(process.env.FINNOR_X1_OWNER_MODE))
+if(process.env.FINNOR_X1_OWNER_MODE&&!['api','mounted','revision','material','heterogeneous','canonical','recovery','effect_recovery','ordinary','contention','unsupported','cancel_observed'].includes(process.env.FINNOR_X1_OWNER_MODE))
   throw Error('EXACT_REGISTERED_OWNER_MODE_REQUIRED');
-if((mounted||material||heterogeneous||canonical||recovery||effectRecovery||contention||unsupported||cancelObserved)&&dutyCount!==1)throw Error('NAMED_ONE_DUTY_SCENARIO_REQUIRED');
+if((mounted||material||heterogeneous||canonical||recovery||effectRecovery||ordinary||contention||unsupported||cancelObserved)&&dutyCount!==1)throw Error('NAMED_ONE_DUTY_SCENARIO_REQUIRED');
 if(process.env.FINNOR_X1_OWNER_CASE&&!['1','128'].includes(process.env.FINNOR_X1_OWNER_CASE))
   throw Error('EXACT_FROZEN_OWNER_CASE_REQUIRED');
 const limits = JSON.parse(await readFile(join(repo, "scope-frontier5/x1-institutional-programme-compiler/verification-plan.json"), "utf8")).limits;
@@ -62,6 +63,7 @@ const freeze = { source: { commit: git("rev-parse", "HEAD"), tree: git("rev-pars
     ...(material?['B-ledger-correction']:[]),...(heterogeneous?['A-eight-class-original-corpus']:[]),
     ...(canonical?['A-fourteen-canonical-kinds']:[]),...(recovery?['D-compiler-before-publication-death']:[]),
     ...(effectRecovery?['D-effect-submit-lost-ack']:[]),
+    ...(ordinary?['A-all-ordinary-operations']:[]),
     ...(contention?['E-original-shared-parent-contention']:[]),...(unsupported?['F-mixed-unsupported-rule']:[]),
     ...(cancelObserved?['E-cancel-observed-standing-continuation']:[])],
   omitted: "Full B–H, physical interruption, mounted browser, clean built installation/upgrade and protected qualification remain distinct required evidence" };
@@ -151,7 +153,11 @@ try {
   for (const d of [first, second]) await attachWorkEntity(tenant, workId, { entityType: "pe_deal", entityId: String(d.row.id), source: "X1:original-owner-registration" });
   const rule = { id: "standing-request", triggerKind: "evidence_request_needed", operation: "create_deal_request", principalId: actor,
     deadlineAt, materiality: "material", postconditionRef: "x1:pe-request-created:v1", observerRef: "x1:pe-request-creation-observer:v1" };
-  const rules=unsupported?[rule,{...rule,id:'approval-conditioned-request',approvalCondition:'Current independent committee approval must be supplied; its meaning is not defined by this record'}]:[rule];
+  const rules=unsupported?[rule,{...rule,id:'approval-conditioned-request',approvalCondition:'Current independent committee approval must be supplied; its meaning is not defined by this record'}]
+    :ordinary?[rule,{...rule,id:'standing-workstream',triggerKind:'diligence_stream_needed',operation:'open_workstream',
+      postconditionRef:'x1:pe-workstream-created:v1',observerRef:'x1:pe-workstream-creation-observer:v1'},
+      {...rule,id:'standing-finding',triggerKind:'material_finding_observed',operation:'record_finding',
+        postconditionRef:'x1:pe-finding-created:v1',observerRef:'x1:pe-finding-creation-observer:v1'}]:[rule];
   await admin.query(`INSERT INTO finnor_os.x1_work_mandates(tenant_id,principal_id,work_id,institution_id,revision,rules,valid_from,expires_at)
     VALUES($1,$2,$3,$4,'r1',$5::jsonb,clock_timestamp()-interval '1 minute',clock_timestamp()+interval '1 hour')`, [tenant, actor, workId, institutionId, JSON.stringify(rules)]);
   const frontendPort=mounted?await freePort():null,frontendOrigin=frontendPort?'http://127.0.0.1:'+frontendPort:null;
@@ -190,6 +196,14 @@ try {
   const policyBody=await policyResponse.json();assert.equal(policyResponse.status,200,JSON.stringify(policyBody));
   await save('authenticated-standing-native-policy.json',{status:policyResponse.status,body:policyBody,
     boundary:'ACTUAL_AUTHENTICATED_ORDINARY_OWNER_POLICY_API_BEFORE_COMPILER_EXPOSURE',protectedGrantCreated:false});
+  if(ordinary)for(const operation of ['open_workstream','record_finding']){
+    const response:Response=await fetch(service.origin+`/api/policies/${tenant}/${operation}`,{
+      method:'PUT',headers:{'content-type':'application/json',authorization:'Bearer '+service.token},
+      body:JSON.stringify({policy:{scope:'DISPOSABLE_INTERNAL_CREATION_ONLY'},requiresConfirmation:false})});
+    const body=await response.json();assert.equal(response.status,200,JSON.stringify(body));
+    await save('authenticated-standing-native-policy-'+operation+'.json',{status:response.status,body,
+      beforeCompilerExposure:true,protectedGrantCreated:false});
+  }
   const rights = String((await admin.query("SELECT revision FROM finnor_os.authority_states WHERE tenant_id=$1", [tenant])).rows[0].revision);
   const ref = (owner: string, id: string) => ({ owner, id, version: "owner-fixture-v1", contentDigest: sha(id) });
   const now = new Date().toISOString();
@@ -214,6 +228,13 @@ try {
       registrationId: registrationA, occurredAt, availableAt, workstreamExternalId, requestedFromExternalId: recipientExternalId,
       requestText:dutyCount===1?requestText:requestText+' item '+index, requiresAcceptedDeliverable: true })) },
   ];
+  const ordinaryFields={workstreamName:'Independent diligence '+randomUUID(),findingStatement:'Original material observation '+randomUUID()};
+  if(ordinary)sources.find(source=>source.id==='work-original')!.rows.push(
+    {id:'new-stream',kind:'trigger',triggerKind:'diligence_stream_needed',registrationId:registrationA,
+      occurredAt,availableAt,workstreamKind:'financial_diligence',workstreamName:ordinaryFields.workstreamName},
+    {id:'new-finding',kind:'trigger',triggerKind:'material_finding_observed',registrationId:registrationA,
+      occurredAt,availableAt,workstreamExternalId,findingStatement:ordinaryFields.findingStatement,
+      findingSeverity:'high',requiredForWorkstreamCompletion:true});
   if(heterogeneous)sources=await heterogeneousOwnerSources({registrationA,registrationB,occurredAt,availableAt,
     workRecords:sources.find(source=>source.id==='work-original')!.rows});
   const canonicalFixture=canonical?await canonicalOwnerSources({ctx,admin,institutionId,workId,
@@ -244,6 +265,10 @@ try {
       ownerPartyId: actor, requestText, requestedAt: occurredAt, dueAt: deadlineAt, requiresAcceptedDeliverable: true },
     requestTexts:Array.from({length:dutyCount},(_,index)=>dutyCount===1?requestText:requestText+' item '+index),
     expectedRequestCount: dutyCount, expectedCompletionMeaning: "CREATION_ONLY_NOT_FULFILLMENT_OR_APPROVAL" };
+  if(ordinary)expected.ordinary={...ordinaryFields,dealId:String(first.row.id),existingWorkstreamId:String(stream.row.id),
+    ownerPartyType:'employee',ownerPartyId:actor,workstreamKind:'financial_diligence',workstreamState:'not_started',
+    findingState:'open',severity:'high',materiality:'material',requiredForWorkstreamCompletion:true,
+    obligationDenominator:3,expectedNativeEffects:3};
   if(material)expected.correction={sourceId:'ledger-original',recordId:'balance-A',value:'25.00',
     currency:'USD',unit:'units',period:'2026-10',basis:'outstanding',canonicalDealId:String(first.row.id),
     affectedDutyCount:0,preservedDutyCount:1,newEffectCount:0,sourcePopulation:3};
@@ -565,6 +590,44 @@ try {
   assert.equal(origin.workInputId,input.workInputId);assert.ok(origin.stableIdentity);
   allEffects.push(...effects);
   }
+  if(ordinary){
+    const oracle=expected.ordinary;
+    const streams=(await admin.query(`SELECT * FROM finnor_os.pe_workstreams
+      WHERE tenant_id=$1 AND deal_id=$2 AND name=$3`,[tenant,oracle.dealId,oracle.workstreamName])).rows;
+    const findings=(await admin.query(`SELECT * FROM finnor_os.pe_findings
+      WHERE tenant_id=$1 AND deal_id=$2 AND statement=$3`,[tenant,oracle.dealId,oracle.findingStatement])).rows;
+    assert.equal(streams.length,1);assert.equal(findings.length,1);
+    const stream=streams[0],finding=findings[0];
+    assert.equal(stream.kind,oracle.workstreamKind);assert.equal(stream.state,oracle.workstreamState);
+    assert.equal(finding.state,oracle.findingState);assert.equal(finding.workstream_id,oracle.existingWorkstreamId);
+    for(const [key,value] of Object.entries({severity:oracle.severity,materiality:oracle.materiality,
+      required_for_workstream_completion:oracle.requiredForWorkstreamCompletion}))assert.equal(finding[key],value);
+    for(const row of [stream,finding]){
+      assert.equal(row.owner_party_type,oracle.ownerPartyType);assert.equal(row.owner_party_id,oracle.ownerPartyId);
+      assert.equal(row.archived_at,null);assert.ok(new Date(row.created_at).getTime()<=Date.parse(deadlineAt));
+    }
+    for(const field of ['completed_at','cancelled_at'])assert.equal(stream[field],null);
+    for(const field of ['disposition','resolved_at','accepted_at','superseded_at','related_request_id','related_deliverable_id'])assert.equal(finding[field],null);
+    const effects=(await admin.query(`SELECT a.id,a.action_type,a.status,a.authority_context,e.status effect_status
+      FROM finnor_os.domain_actions a JOIN finnor_os.business_effects e
+        ON e.tenant_id=a.tenant_id AND e.domain_action_id=a.id WHERE a.tenant_id=$1 AND a.work_id=$2
+        AND a.id=ANY($3::uuid[]) ORDER BY a.action_type`,[tenant,workId,[stream.id,finding.id]])).rows;
+    assert.deepEqual(effects.map(row=>row.action_type),['open_workstream','record_finding']);
+    for(const effect of effects){assert.equal(effect.status,'completed');assert.equal(effect.effect_status,'verified');
+      assert.equal(effect.authority_context.kind,'institution_duty');assert.equal(effect.authority_context.principal,actor);
+      assert.equal(effect.authority_context.compilerRequestId,compilerId);assert.equal(effect.authority_context.workInputId,input.workInputId);}
+    allEffects.push(...effects);
+    const actual=(await admin.query(`SELECT a.candidate,a.check_result FROM finnor_os.x1_compiler_requests r
+      JOIN finnor_os.x1_compiler_artifacts a ON a.tenant_id=r.tenant_id AND a.id=r.artifact_id
+      WHERE r.tenant_id=$1 AND r.id=$2`,[tenant,compilerId])).rows[0];
+    assert.equal(actual.candidate.obligations.length,3);assert.equal(actual.check_result.obligationDenominator,3);
+    assert.equal(allEffects.length,3);
+    await save('ordinary-three-operations-independent-proof.json',{oracle,streams,findings,effects:allEffects,actual,
+      originalExpectationsNotCandidateDerived:true,completionMeaning:'EXACT_CREATION_ONLY'});
+    results.push({id:'A-all-ordinary-operations',status:'PASS',observed:{nativeEffects:3,obligationDenominator:3,
+      operationClasses:['create_deal_request','open_workstream','record_finding']},
+      basis:'ACTUAL_AUTHENTICATED_POLICIES_RAW_TRIGGER_RULES_PHYSICAL_WORKER_THREE_NATIVE_OWNERS_INDEPENDENT_SQL'});
+  }
   const plans=(await admin.query(`SELECT id,revision,status,parent_revision_id,plan_graph FROM finnor_os.work_plan_revisions
     WHERE tenant_id=$1 AND work_id=$2 ORDER BY revision`,[tenant,workId])).rows;
   assert.ok(plans.length>=2,'native action batch followed by independent observation child');
@@ -575,8 +638,9 @@ try {
     n->>'kind' node_kind,n->>'actionType' node_action_type FROM finnor_os.domain_actions a
     JOIN finnor_os.work_plan_revisions p ON p.tenant_id=a.tenant_id AND p.id=a.plan_revision_id
     JOIN LATERAL jsonb_array_elements(p.plan_graph->'nodes') n ON n->>'id'=a.plan_node_id
-    WHERE a.tenant_id=$1 AND a.work_id=$2 AND a.id=ANY($3::uuid[])`,[tenant,workId,rows.map(row=>row.id)])).rows;
-  assert.equal(linked.length,dutyCount);assert.ok(linked.every(row=>row.node_kind==='action'&&row.node_action_type==='create_deal_request'));
+    WHERE a.tenant_id=$1 AND a.work_id=$2 AND a.id=ANY($3::uuid[])`,[tenant,workId,allEffects.map(row=>row.id)])).rows;
+  assert.equal(linked.length,ordinary?3:dutyCount);assert.ok(linked.every(row=>row.node_kind==='action'
+    &&(ordinary?['create_deal_request','open_workstream','record_finding']:['create_deal_request']).includes(row.node_action_type)));
   const immutableOrigin={tenantId:tenant,actionId:rows[0]!.id,predicate:'X1_ORIGINAL_ACTION_ORIGIN_IMMUTABLE'};
   await assert.rejects(admin.query(`UPDATE finnor_os.domain_actions SET authority_context=authority_context-'kind'
     WHERE tenant_id=$1 AND id=$2`,[tenant,immutableOrigin.actionId]),new RegExp(immutableOrigin.predicate));

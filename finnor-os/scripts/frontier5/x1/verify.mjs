@@ -18,7 +18,7 @@ const stage = option("--stage");
 const only = option("--check");
 const ownerCase=option('--case');
 const ownerCases={owners:{'one-duty':{count:'1',mode:'api'},'128-duty':{count:'128',mode:'api'},
-  heterogeneous:{count:'1',mode:'heterogeneous'},canonical:{count:'1',mode:'canonical'}},
+  heterogeneous:{count:'1',mode:'heterogeneous'},canonical:{count:'1',mode:'canonical'},ordinary:{count:'1',mode:'ordinary'}},
   lifecycle:{material:{count:'1',mode:'material'},recovery:{count:'1',mode:'recovery'},
     contention:{count:'1',mode:'contention'},unsupported:{count:'1',mode:'unsupported'},
     'cancel-observed':{count:'1',mode:'cancel_observed'},

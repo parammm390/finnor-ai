@@ -477,6 +477,20 @@
       "expectedExecutorReplays": 0,
       "limits": "UNCHANGED",
       "acceptance": "oracle-contract.md#d-effect-submit-lost-ack-independent-expectations"
+    },
+    {
+      "id": "A-all-ordinary-operations",
+      "mode": "ordinary",
+      "dutyCount": 1,
+      "status": "FROZEN_BEFORE_CASE_IMPLEMENTATION",
+      "independentObligationDenominator": 3,
+      "operations": [
+        "create_deal_request",
+        "open_workstream",
+        "record_finding"
+      ],
+      "limits": "UNCHANGED",
+      "acceptance": "oracle-contract.md#a-all-ordinary-operations-independent-expectations"
     }
   ]
 }

@@ -250,3 +250,16 @@ Work/Objective/Plan completion. Original reservations and deadlines remain equal
 cost counters may only increase. Actual queue/claim, SQL wait, process death and
 canonical readbacks are retained. This establishes development recovery for the
 closed ordinary creation registry, not arbitrary external provider settlement.
+
+# A-all-ordinary-operations independent expectations
+
+One evidence-request trigger preserves the existing A Request oracle. Two
+additional raw triggers require a financial_diligence Workstream in not_started
+state with the independently generated name, and a high-severity material Finding
+in open state with the independently generated statement, bound to the original
+existing Workstream and owner. All terminal/resolution fields remain null and the
+Finding is required for Workstream completion. Require exactly three independently
+checked original obligations and three actual completed/verified native effects,
+all attached to their real Plan action nodes, one original parent envelope and
+actual Work/Objective/Plan completion. Read fields from canonical owner SQL and
+retain the raw source, mandate, policy/API, queue and physical worker evidence.
