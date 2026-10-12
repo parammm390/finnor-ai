@@ -620,7 +620,7 @@ try {
       if(guardFailure)throw Error(guardFailure);
       refused=await api('institution-read',{requestId:submitted.body.requestId});
       job=(await admin.query(`SELECT type,status,last_error FROM finnor_os.jobs WHERE tenant_id=$1
-        AND payload->>'requestId'=$2 AND type='run_x1_institution_compiler_v1' ORDER BY created_at DESC LIMIT 1`,
+        AND payload->>'requestId'=$2 AND type='run_x1_institution_compiler_v1' LIMIT 1`,
         [tenant,submitted.body.requestId])).rows[0];
       if(['UNKNOWN','FAILED','INVALIDATED','PARTIAL','CHECK_REJECTED'].includes(refused.body.status))break;
       await new Promise(resolve=>setTimeout(resolve,1000));
