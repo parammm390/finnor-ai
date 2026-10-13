@@ -387,7 +387,7 @@ export async function collectIndependentOwnerRead(value:unknown,deadlineAt:numbe
   const projection=IndependentReadProjection.parse(value);assertReadOnly(projection.request);
   const identity=await authenticateOwner(projection.owner,deadlineAt);
   const response=projection.nativeSelector
-    ?await (await import('./qualification-native-observation.mts')).readNativeObservationSnapshot(projection.owner,projection.nativeSelector,deadlineAt)
+    ?await (await import('./qualification-native-observation.mjs')).readNativeObservationSnapshot(projection.owner,projection.nativeSelector,deadlineAt)
     :await callAuthenticatedOwner(projection.owner,projection.request,{deadlineAt,maxResponseBytes:6*1024*1024});
   if(projection.nativeSelector&&projection.nativeSelector.workId!==projection.request.expectedOwnerIdentity)
     throw Error('ORIGINAL_NATIVE_OBSERVER_WORK_IDENTITY_CHANGED');
@@ -496,7 +496,7 @@ export async function executeLiveObservationSlice(input:{projections:unknown[];c
         segment.observations.push(observationEntry);await saveState();
         try{
           const identity=await authenticate(projection.owner),response=projection.nativeSelector
-            ?await (await import('./qualification-native-observation.mts')).readNativeObservationSnapshot(
+            ?await (await import('./qualification-native-observation.mjs')).readNativeObservationSnapshot(
               projection.owner,projection.nativeSelector,deadlineAt,measureAcquisition)
             :await call(projection.owner,projection.request);
           const result=projectIndependentOwnerRead(projection,identity,response);

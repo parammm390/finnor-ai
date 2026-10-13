@@ -85,3 +85,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
 
 <!-- END:nextjs-agent-rules -->
+
+## Future FINNOR prompts
+
+User instruction (9 October 2026): use the reviewed R1 framework for future FINNOR prompts. Read `/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/future-prompt-blueprint.md` and its full user-supplied source before drafting. Verify facts against actual pinned sources; distinguish existing behavior from proposals; state unknowns explicitly; never invent facts or make unsupported assumptions. Preserve concrete owner integration, independent checks, finite verification, separate qualification gates and reconstructible handoff. Adapt each scope from its governing sources; publication and effect authority must come from the current request.

@@ -5,7 +5,7 @@ import {z} from 'zod';
 import {getPool,withTenantClientTransaction} from '@finnor/db';
 import type {JobQueue} from '../../../apps/worker/src/queue';
 import {digest} from '../../../packages/capability-evolution/src/contracts';
-import {NativeWorkerRegistration,executeNativeQueueSlice} from './qualification-runtime.mts';
+import {NativeWorkerRegistration,executeNativeQueueSlice} from './qualification-runtime.mjs';
 
 const hex=z.string().regex(/^[a-f0-9]{64}$/);
 export const NativeWorkerControl=z.object({schema:z.literal('finnor.x1.qualification-native-worker-control.v1'),

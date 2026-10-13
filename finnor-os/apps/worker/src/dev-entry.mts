@@ -25,7 +25,7 @@ console.log(JSON.stringify({ event: "X1_PHYSICAL_WORKER_READY", compiled: true, 
 let lastRecovery = 0;
 try {
   if(process.env.FINNOR_X1_QUAL_NATIVE_CONTROL){
-    const {runRegisteredNativeWorker}=await import('../../../scripts/frontier5/x1/qualification-native-worker.mts');
+    const {runRegisteredNativeWorker}=await import('../../../scripts/frontier5/x1/qualification-native-worker.mjs');
     await runRegisteredNativeWorker(queue,controller.signal,{mode:'COMPILED_DEVELOPMENT',digest:installed.manifestDigest},
       ()=>{installedDevelopmentRuntime(true);});
   }else while (!controller.signal.aborted) {

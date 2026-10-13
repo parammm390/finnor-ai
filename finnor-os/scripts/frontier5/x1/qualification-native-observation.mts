@@ -1,10 +1,10 @@
 /** Actual canonical/provider-owned rows. No compiler summary, inference or oracle. */
 import {createHash} from 'node:crypto';
 import {getPool,withTenantClientTransaction} from '@finnor/db';
-import {callAuthenticatedOwner,type OwnerEndpoint,type IndependentReadProjection} from './qualification-runtime.mts';
+import {callAuthenticatedOwner,type OwnerEndpoint,type IndependentReadProjection} from './qualification-runtime.mjs';
 import type {z} from 'zod';
 import {originalRawRecords} from '../../../packages/private-equity/src/institution-program/checker-raw';
-import {mappingMeaning,mappingIdentity,dutyIdentity,obligationMeaning,nativeCreationMeaning,normalizeCanonicalFields,normalizedInstant} from './qualification-meaning.mts';
+import {mappingMeaning,mappingIdentity,dutyIdentity,obligationMeaning,nativeCreationMeaning,normalizeCanonicalFields,normalizedInstant} from './qualification-meaning.mjs';
 import {loadInstitutionProfile} from '../../../packages/private-equity/src/institution-program/store';
 import {parseInstitutionOwnerRef} from '../../../packages/private-equity/src/institution-program/canonical-owners';
 import {institutionDigest} from '../../../packages/private-equity/src/institution-program/canonical-json';
