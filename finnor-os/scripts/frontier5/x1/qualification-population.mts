@@ -8,6 +8,7 @@ import {z} from 'zod';
 import {writeZip} from '@finnor/ooxml';
 import {QualificationExecutionEvent,QualificationExecutionJournal} from './qualification-runtime.mts';
 import {OracleLedger} from '../../../packages/private-equity/src/institution-qualification/contracts';
+import {ExpectedEnvironment} from '../../../packages/private-equity/src/institution-qualification/scoring';
 import {mappingMeaning,mappingIdentity,dutyIdentity,obligationMeaning,nativeCreationMeaning} from './qualification-meaning.mts';
 
 const hex=z.string().regex(/^[a-f0-9]{64}$/),uuid=z.string().uuid(),instant=z.string().datetime({offset:true});
@@ -37,12 +38,14 @@ export const PopulationGeneratorControl=z.object({schema:z.literal('finnor.x1.in
     existingOwnerSnapshotDigest:hex,custodyReceiptDigest:hex,nativeAssets:z.array(nativeAsset).min(2).max(1000),
     mandateRules:z.array(rules).min(1).max(3),sourceGrants:z.array(z.object({id:uuid,sourceId:z.string().min(1),sourceClass:z.string().min(1),
       rightsRevision:z.string().min(1),expiresAt:instant,ownerReceiptDigest:hex}).strict()).min(8).max(16),
-    publicOwnerHandles:pin,permissionEventRequests:pin,ownerEventBindings:pin}).strict()).length(10),
+    publicOwnerHandles:pin,permissionEventRequests:pin,ownerEventBindings:pin,soakExpectedEnvironment:pin,
+    originalEpisodeCatalog:z.array(z.object({workId:uuid,originalEpisodeId:uuid,originalGrantDigest:hex,originalDeadline:instant,
+      businessAssignmentRegistrationId:z.string().min(1),ownerReceiptDigest:hex}).strict()).min(1).max(3840)}).strict()).length(10),
 }).strict();
 export const InitialPopulationControl=PopulationGeneratorControl.extend({
   schema:z.literal('finnor.x1.independent-initial-population-control.v1'),
   ownerInputs:z.array(PopulationGeneratorControl.shape.ownerInputs.element.omit({
-    permissionEventRequests:true,ownerEventBindings:true})).length(10),
+    permissionEventRequests:true,ownerEventBindings:true,soakExpectedEnvironment:true,originalEpisodeCatalog:true})).length(10),
 });
 const sha=(bytes:Buffer|string)=>createHash('sha256').update(bytes).digest('hex');
 const canonical=(value:unknown):string=>{
@@ -55,6 +58,24 @@ const hash=(value:unknown)=>sha(canonical(value));
 const xml=(s:string)=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
   .replace(/"/g,'&quot;').replace(/'/g,'&apos;');
 type Row=Record<string,string>;
+function expectedDuty(record:Row,sourceId:string,rule:z.infer<typeof rules>,targetCanonicalRef:string,environmentId:string){
+  const boundFields=Object.fromEntries(Object.entries(rule.postconditionFields).map(([key,value])=>[key,
+    typeof value==='string'&&value.startsWith('GENERATED_FIELD:')?record[value.slice('GENERATED_FIELD:'.length)]
+      ??(()=>{throw Error('INDEPENDENT_POSTCONDITION_FIELD_ABSENT');})():value]));
+  const completionFields=nativeCreationMeaning(rule.operation,{dealId:targetCanonicalRef.split(':')[1]?.split('@')[0],
+    owner:{partyType:'employee',partyId:rule.principalId},workstreamId:boundFields.workstream_id,
+    requestedFromDealPartyId:boundFields.requested_from_deal_party_id,requestText:record.requestText,
+    requestedAt:record.occurredAt,dueAt:rule.deadlineAt,requiresAcceptedDeliverable:record.requiresAcceptedDeliverable==='true',
+    kind:record.workstreamKind,name:record.workstreamName,statement:record.findingStatement,severity:record.findingSeverity,
+    materiality:rule.materiality,requiredForWorkstreamCompletion:record.requiredForWorkstreamCompletion==='true'});
+  const meaning=obligationMeaning({sourceId,recordId:record.id!,ruleId:rule.id,canonicalRef:targetCanonicalRef,
+    operation:rule.operation,principalId:rule.principalId,deadlineAt:rule.deadlineAt,businessFields:completionFields});
+  return {identity:dutyIdentity(sourceId,record.id!,rule.id),sourceId,recordId:record.id!,ruleId:rule.id,
+    semanticDigest:hash(meaning),meaning,postconditionDigest:hash(completionFields),completionFields,
+    deadlineAt:rule.deadlineAt,critical:rule.critical,businessAssignmentId:environmentId+'/'+record.id+'/'+rule.id,
+    fixedBusinessWeight:rule.fixedBusinessWeight,targetCanonicalRef,operation:rule.operation,originalRecord:structuredClone(record),
+    postconditionRef:rule.postconditionRef,observerRef:rule.observerRef};
+}
 function seeded(seed:Buffer,label:string){
   let counter=0;
   const bytes=()=>createHmac('sha256',seed).update(label+'\0'+String(counter++)).digest();
@@ -130,7 +151,9 @@ async function generatePopulation(value:unknown,paths:{publicRoot:string;withhel
   const parsed=initialOnly?InitialPopulationControl.parse(value):PopulationGeneratorControl.parse(value);
   const control={...parsed,ownerInputs:parsed.ownerInputs.map(owner=>({...owner,
     permissionEventRequests:'permissionEventRequests' in owner?owner.permissionEventRequests:undefined,
-    ownerEventBindings:'ownerEventBindings' in owner?owner.ownerEventBindings:undefined}))};
+    ownerEventBindings:'ownerEventBindings' in owner?owner.ownerEventBindings:undefined,
+    soakExpectedEnvironment:'soakExpectedEnvironment' in owner?owner.soakExpectedEnvironment:undefined,
+    originalEpisodeCatalog:'originalEpisodeCatalog' in owner?owner.originalEpisodeCatalog:undefined}))};
   const seedText=process.env[control.seedEnvironmentVariable];
   if(!seedText||!/^[a-f0-9]{64}$/.test(seedText))throw Error('EXISTING_CUSTODIAN_256_BIT_SEED_BINDING_REQUIRED');
   const seed=Buffer.from(seedText,'hex');
@@ -180,6 +203,13 @@ async function generatePopulation(value:unknown,paths:{publicRoot:string;withhel
     const random=seeded(seed,owner.environmentId),envId=random.identifier(),sources:any[]=[],expectedMappings:any[]=[],expectedObligations:any[]=[],journal:any[]=[];
     const sourceRows=new Map<string,{rows:Row[];columns:string[];protocol:string;sourceId:string}>();
     const permissions=initialOnly?[]:permissionPatterns[random.integer(permissionPatterns.length)].events;
+    const catalog=initialOnly?[]:owner.originalEpisodeCatalog!;
+    if(!initialOnly&&(new Set(catalog.map(e=>e.workId)).size!==catalog.length
+      ||new Set(catalog.map(e=>e.originalEpisodeId)).size!==catalog.length
+      ||new Set(catalog.map(e=>e.businessAssignmentRegistrationId)).size!==catalog.length
+      ||!catalog.some(e=>e.workId===owner.workId&&e.originalEpisodeId===owner.originalEpisodeId
+        &&e.originalGrantDigest===owner.originalGrantDigest&&e.originalDeadline===owner.originalDeadline)))
+      throw Error('INDEPENDENT_ORIGINAL_ASSIGNMENT_CATALOG_REQUIRED');
     if(permissions.some((p:any)=>!Number.isInteger(p.day)||p.day<0||p.day>=30))
       throw Error('EVERY_SELECTED_PERMISSION_EVENT_REQUIRES_AN_ORIGINAL_REPLAY_DAY');
     const offset=[0,330,-240][ordinal%3]!,baseTime=Math.floor(Date.parse(frozenAt)/1000)*1000-30*86400000;
@@ -210,23 +240,7 @@ async function generatePopulation(value:unknown,paths:{publicRoot:string;withhel
           request:'Original material evidence '+random.identifier(),...Object.fromEntries(Object.entries(rule.triggerFields).map(([k,v])=>[k,String(v)]))};
         for(const field of ['requestText','workstreamName','findingStatement'])if(record[field])
           record[field]+=' '+random.identifier();
-        const boundFields=Object.fromEntries(Object.entries(rule.postconditionFields).map(([key,value])=>
-          [key,typeof value==='string'&&value.startsWith('GENERATED_FIELD:')
-            ?record[value.slice('GENERATED_FIELD:'.length)]??(()=>{throw Error('INDEPENDENT_POSTCONDITION_FIELD_ABSENT');})():value]));
-        const completionFields=nativeCreationMeaning(rule.operation,{dealId:target.canonicalRef.split(':')[1]?.split('@')[0],
-          owner:{partyType:'employee',partyId:rule.principalId},workstreamId:boundFields.workstream_id,
-          requestedFromDealPartyId:boundFields.requested_from_deal_party_id,requestText:record.requestText,
-          requestedAt:record.occurredAt,dueAt:rule.deadlineAt,requiresAcceptedDeliverable:record.requiresAcceptedDeliverable==='true',
-          kind:record.workstreamKind,name:record.workstreamName,statement:record.findingStatement,severity:record.findingSeverity,
-          materiality:rule.materiality,requiredForWorkstreamCompletion:record.requiredForWorkstreamCompletion==='true'});
-        const meaning=obligationMeaning({sourceId,recordId:id,ruleId:rule.id,canonicalRef:target.canonicalRef,
-          operation:rule.operation,principalId:rule.principalId,deadlineAt:rule.deadlineAt,businessFields:completionFields});
-        rows.push(record);expectedObligations.push({identity:dutyIdentity(sourceId,id,rule.id),sourceId,recordId:id,ruleId:rule.id,
-          semanticDigest:hash(meaning),meaning,
-          postconditionDigest:hash(completionFields),completionFields,
-          deadlineAt:rule.deadlineAt,critical:rule.critical,businessAssignmentId:envId+'/'+id,fixedBusinessWeight:rule.fixedBusinessWeight,
-          targetCanonicalRef:target.canonicalRef,operation:rule.operation,originalRecord:record,
-          postconditionRef:rule.postconditionRef,observerRef:rule.observerRef});
+        rows.push(record);expectedObligations.push(expectedDuty(record,sourceId,rule,target.canonicalRef,envId));
       }else if(sourceClass==='financial_ledger'||sourceClass==='lender_portal'){
         const count=1+(ordinal+index)%3;for(let i=0;i<count;i++){
           const target=deals[i%deals.length]!,id=random.identifier();
@@ -268,13 +282,14 @@ async function generatePopulation(value:unknown,paths:{publicRoot:string;withhel
       current[last]=value;
     };
     for(let day=0;day<(initialOnly?0:30);day++){
-      const binding=bindings[day];if(binding.day!==day||!binding.originalIdempotencyKey||binding.originalEpisodeId!==owner.originalEpisodeId
-        ||binding.originalGrantDigest!==owner.originalGrantDigest||binding.originalDeadline!==owner.originalDeadline)
+      const binding=bindings[day],originalOwner=catalog.find(e=>e.originalEpisodeId===binding.originalEpisodeId);
+      if(binding.day!==day||!binding.originalIdempotencyKey||!originalOwner
+        ||binding.originalGrantDigest!==originalOwner.originalGrantDigest||binding.originalDeadline!==originalOwner.originalDeadline)
         throw Error('ACTUAL_REPLAY_OWNER_BINDING_OR_ORIGINAL_ENVELOPE_CHANGED');
       const eventKind=faultKinds[(day+ordinal)%faultKinds.length]!,replicaAt=dated(baseTime+day*86400000,offset);
       const originalEvent=QualificationExecutionEvent.parse(binding.event),event=structuredClone(originalEvent);
-      if(event.originalEpisodeId!==owner.originalEpisodeId||event.originalGrantDigest!==owner.originalGrantDigest
-        ||event.originalDeadline!==owner.originalDeadline||event.workId!==owner.workId||event.owner.tenantId!==owner.tenantId
+      if(event.originalEpisodeId!==originalOwner.originalEpisodeId||event.originalGrantDigest!==originalOwner.originalGrantDigest
+        ||event.originalDeadline!==originalOwner.originalDeadline||event.workId!==originalOwner.workId||event.owner.tenantId!==owner.tenantId
         ||event.owner.principalId!==owner.principalId)throw Error('ACTUAL_EVENT_OWNER_OR_ORIGINAL_IDENTITY_CHANGED');
       event.replicaAt=replicaAt;
       if(!event.clockRequest.body||!Array.isArray(binding.clockReplicaWritePath))throw Error('EXISTING_ADMITTED_CLOCK_WRITE_BINDING_REQUIRED');
@@ -304,11 +319,20 @@ async function generatePopulation(value:unknown,paths:{publicRoot:string;withhel
           for(const row of source.rows)if(row.kind==='quantity'){
             row.factKey=row.factKey==='total_drawn'?'facility_balance':'total_drawn';
             row.basis=row.factKey==='total_drawn'?'total_drawn':'outstanding';}
-        if(eventKind==='DELAYED_AVAILABILITY')for(const row of source.rows)
+        if(eventKind==='DELAYED_AVAILABILITY')for(const row of source.rows.filter(r=>r.kind==='quantity'))
           row.availableAt=dated(Date.parse(availableAt)+(day+1)*1000,offset);
         if(eventKind==='PROCESS_BRANCH_CHANGE'&&payload.sourceClass==='work_tracking'){
           const row=structuredClone(source.rows[0]!);row.id=random.identifier();
-          row.request='Original additional branch evidence '+random.identifier();source.rows.push(row);
+          row.request='Original additional branch evidence '+random.identifier();
+          for(const field of ['requestText','workstreamName','findingStatement'])if(row[field])row[field]+=' '+random.identifier();
+          const applicable=owner.mandateRules.filter(rule=>rule.triggerKind===row.triggerKind);
+          const target=deals.find(a=>a.registrationId===row.registrationId);if(!target||!applicable.length)
+            throw Error('INDEPENDENT_PROCESS_BRANCH_RULE_AND_TARGET_REQUIRED');
+          for(const rule of applicable){
+            if(!rule.targetRegistrationIds.includes(target.registrationId))throw Error('ORIGINAL_BRANCH_TARGET_NOT_ELIGIBLE');
+            expectedObligations.push(expectedDuty(row,source.sourceId,rule,target.canonicalRef,envId));
+          }
+          source.rows.push(row);
         }
         if(eventKind==='REQUESTED_EXCEPTION_WITHOUT_APPROVAL'&&payload.sourceClass==='email'){
           const row=source.rows[0]!;row.id=random.identifier();
@@ -320,6 +344,16 @@ async function generatePopulation(value:unknown,paths:{publicRoot:string;withhel
           throw Error('ORIGINAL_REPLAY_SOURCE_OBJECT_BOUND');
         sourceMutations.push({sourceId:source.sourceId,sourceClass:payload.sourceClass,beforeSha256,afterSha256:sha(bytes),
           rows:structuredClone(source.rows)});
+        for(const row of source.rows.filter(r=>r.kind==='entity'||r.kind==='quantity')){
+          const identity=mappingIdentity(source.sourceId,row.id!,sha(bytes));
+          if(expectedMappings.some(m=>m.identity===identity))continue;
+          const targets=assets.filter(a=>a.registrationId===row.registrationId&&(row.kind==='quantity'?a.kind==='deal':a.kind===row.entityType));
+          if(targets.length!==1)throw Error('INDEPENDENT_REPLAY_MAPPING_TARGET_REQUIRED');
+          const target=targets[0]!,meaning=mappingMeaning({sourceId:source.sourceId,recordId:row.id!,originalSha256:sha(bytes),
+            canonicalRef:target.canonicalRef,record:row});
+          expectedMappings.push({identity,sourceId:source.sourceId,recordId:row.id,originalSha256:sha(bytes),kind:row.kind,
+            targetCanonicalRef:target.canonicalRef,originalFields:structuredClone(row),meaning,semanticDigest:hash(meaning)});
+        }
         assign(event.request.body,payload.bodyPath,bytes.toString('base64'),'GENERATED_ORIGINAL_BASE64');
       }
       if(eventKind==='DUPLICATE_OBSERVATION'){
@@ -336,9 +370,10 @@ async function generatePopulation(value:unknown,paths:{publicRoot:string;withhel
       if(eventKind!=='DUPLICATE_OBSERVATION')executionEvents.push(QualificationExecutionEvent.parse(event));
       for(const permission of dayPermissions){
         const permissionEvent=QualificationExecutionEvent.parse(permission.event);
-        if(permissionEvent.workId!==owner.workId||permissionEvent.owner.tenantId!==owner.tenantId
-          ||permissionEvent.originalEpisodeId!==owner.originalEpisodeId||permissionEvent.originalGrantDigest!==owner.originalGrantDigest
-          ||permissionEvent.originalDeadline!==owner.originalDeadline||!permissionEvent.clockRequest.body
+        const originalPermissionOwner=catalog.find(e=>e.originalEpisodeId===permissionEvent.originalEpisodeId);
+        if(!originalPermissionOwner||permissionEvent.workId!==originalPermissionOwner.workId||permissionEvent.owner.tenantId!==owner.tenantId
+          ||permissionEvent.owner.principalId!==owner.principalId||permissionEvent.originalGrantDigest!==originalPermissionOwner.originalGrantDigest
+          ||permissionEvent.originalDeadline!==originalPermissionOwner.originalDeadline||!permissionEvent.clockRequest.body
           ||!Array.isArray(permission.clockReplicaWritePath))throw Error('ACTUAL_REGISTERED_PERMISSION_EVENT_BINDING_REQUIRED');
         permissionEvent.replicaAt=replicaAt;
         assign(permissionEvent.clockRequest.body,permission.clockReplicaWritePath,replicaAt,'GENERATED_REPLICA_INSTANT');
@@ -351,8 +386,8 @@ async function generatePopulation(value:unknown,paths:{publicRoot:string;withhel
       journal.push({day,replicaAt,ownerBinding:binding,eventDigest:hash(event),
         eventKind,permissionEvents:dayPermissions,sourceMutations,
         affectedSourceIds:sourceMutations.filter(s=>s.beforeSha256!==s.afterSha256).map(s=>s.sourceId),
-        originalEpisodeId:owner.originalEpisodeId,
-        originalGrantDigest:owner.originalGrantDigest,originalDeadline:owner.originalDeadline,
+        originalEpisodeId:originalOwner.originalEpisodeId,
+        originalGrantDigest:originalOwner.originalGrantDigest,originalDeadline:originalOwner.originalDeadline,
         newEffectIdentityIssued:false,candidateHumanPatchPermitted:false});
     }
     if(!initialOnly&&classes.some(c=>!coveredClasses.has(c)))throw Error('EACH_ORIGINAL_SYSTEM_CLASS_REQUIRES_ACTUAL_REPLAY_OWNER_BINDING');
@@ -385,7 +420,8 @@ async function generatePopulation(value:unknown,paths:{publicRoot:string;withhel
     const publicPin=await write(publicRoot,envId+'-inputs.json',publicPacket);
     const oracle={schema:'finnor.x1.generated-withheld-institution-ledger.v1',protocolId:control.protocolId,environmentId:owner.environmentId,
       frozenAt,ownerSnapshotDigest:owner.existingOwnerSnapshotDigest,custodyReceiptDigest:owner.custodyReceiptDigest,
-      expectedMappings,expectedObligations,journal,structure,structuralDigest,criticalCasesFrozenBeforeExposure:true,
+      expectedMappings,expectedObligations,journal,structure,structuralDigest,originalEpisodeCatalog:catalog,
+      criticalCasesFrozenBeforeExposure:true,
       semanticDigestDefinition:'CANONICAL_JSON_SHA256_OF_INDEPENDENT_SOURCE_AND_NATIVE_TARGET_FIELDS',
       expectedValuesIndependentOfCandidate:true,signature:null,protectedCustodyEstablished:false};
     const oraclePin=await write(withheldRoot,envId+'-ledger.json',oracle);
@@ -393,12 +429,17 @@ async function generatePopulation(value:unknown,paths:{publicRoot:string;withhel
       obligations:expectedObligations.map(({identity,semanticDigest,postconditionDigest,deadlineAt,critical,businessAssignmentId,fixedBusinessWeight})=>
         ({identity,semanticDigest,postconditionDigest,deadlineAt,critical,businessAssignmentId,fixedBusinessWeight})),
       changes:orderedEvents.map(e=>({identity:e.id,occurredAt:e.occurredAt,availableAt:e.availableAt}))};
+    const soakExpected=initialOnly?null:ExpectedEnvironment.parse(await pinnedJson(owner.soakExpectedEnvironment!));
     const scoringBody=initialOnly?null:OracleLedger.parse({schema:'finnor.x1.protected-oracle-ledger.v1',protocolId:control.protocolId,
-      environmentId:owner.environmentId,frozenAt,expected:{replay:expected,soak:structuredClone(expected)},
+      environmentId:owner.environmentId,frozenAt,expected:{replay:expected,soak:soakExpected},
       criticalCasesFrozen:true,unseenCustodyCommitment:owner.custodyReceiptDigest,replayJournalCommitment:hash(executionEnvironment)});
     const scoringOraclePin=await write(withheldRoot,envId+'-scoring-oracle-draft.json',{
       schema:'finnor.x1.unsigned-oracle-ledger-draft.v1',body:scoringBody,signature:null,
       independentSignatureAndUnseenCustodyRequired:true,protectedCustodyEstablished:false});
+    if(!initialOnly)await write(withheldRoot,envId+'-phase-expectation-custody.json',{
+      replayExpectedDigest:hash(expected),soakExpectedPin:owner.soakExpectedEnvironment,soakExpectedDigest:hash(soakExpected),
+      replayDerivedFromIndependentOriginalVersions:true,soakReadFromIndependentPinnedInput:true,candidateOutputRead:false,
+      originalEpisodeCatalog:catalog});
     manifest.push({environmentId:owner.environmentId,publicPin,oraclePin,scoringOraclePin,structuralDigest,
       systemClasses:sources.map(s=>s.sourceClass),replayDays:initialOnly?0:30,separateElapsedLiveDaysRequired:7,
       randomizationCommitments:{identifiers:hash(sources.map(s=>[s.sourceId,s.sha256])),schemaOrganization:hash(sources.map(s=>s.columnOrder)),
@@ -422,6 +463,13 @@ async function generatePopulation(value:unknown,paths:{publicRoot:string;withhel
   await write(withheldRoot,'execution-journal-draft.json',{schema:'finnor.x1.qualification-execution-journal-draft.v1',
     candidateCutDigest:control.candidateCutDigest,allocationConventionDigest:control.allocationConventionDigest,
     environments:executionEnvironments,registrationProtocolDigestRequired:true,protectedQualificationEstablished:false});
+  if(!initialOnly)await write(publicRoot,'public-original-episode-catalogue-draft.json',{
+    schema:'finnor.x1.original-episode-catalogue-draft.v1',candidateCutDigest:control.candidateCutDigest,
+    allocationConventionDigest:control.allocationConventionDigest,
+    environments:control.ownerInputs.map(owner=>({environmentId:owner.environmentId,
+      originalEpisodes:owner.originalEpisodeCatalog!.map(({workId,originalEpisodeId,originalGrantDigest,originalDeadline})=>({
+        tenantId:owner.tenantId,principalId:owner.principalId,workId,originalEpisodeId,originalGrantDigest,originalDeadline}))})),
+    includeInSignedPublicInputEnvironmentBeforeExposure:true,signature:null,protectedQualificationEstablished:false});
   await write(publicRoot,'public-generation-manifest.json',{...result,environments:manifest.map(({oraclePin,scoringOraclePin,...e})=>e)});
   return result;
 }

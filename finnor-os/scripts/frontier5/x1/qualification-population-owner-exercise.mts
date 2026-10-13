@@ -11,6 +11,7 @@ import {normalizeCanonicalFields} from './qualification-meaning.mts';
 import {withTenantClientTransaction} from '@finnor/db';
 import {collectQualificationObservation} from './qualification-observation-collection.mts';
 import {scoreEnvironment} from '../../../packages/private-equity/src/institution-qualification/scoring';
+import {bindOriginalNativeWorker,assertPreregisteredOriginals,recordNativeAdministrationLifecycle} from './qualification-native-administration.mts';
 
 const sha=(bytes:Buffer|string)=>createHash('sha256').update(bytes).digest('hex');
 type SourceBinding={sourceId:string;sourceClass:string;grantId:string;versionId:string;documentId:string};
@@ -74,6 +75,19 @@ export async function exerciseGeneratedPopulation(input:{repo:string;evidenceRoo
   await save('generation-control.json',control);
   process.env[seedVariable]=seed.toString('hex');process.env[input.owner.tokenEnvironmentVariable]=input.token;
   try{
+    const declaredOriginal={tenantId:tenant,principalId:principal,workId:input.workId,originalEpisodeId:original.id,
+      originalGrantDigest:sha(JSON.stringify(original.parent_reservation)),originalDeadline:original.original_deadline.toISOString()};
+    const bound=await bindOriginalNativeWorker({protocolDigest:sha(control.protocolId),candidateCutDigest:control.candidateCutDigest,
+      allocationConventionDigest:control.allocationConventionDigest,runtime:{mode:'SOURCE_DEVELOPMENT',
+        digest:sha(await readFile(join(input.repo,'finnor-os/scripts/frontier5/x1/physical-owner-worker.mts')))},phase:'replay',
+      envelope:{ref:'original-development-source-setup',registrationDigest:sha('ACTUAL_ORIGINAL_SOURCE_SETUP'),
+        maxNativeDeliveries:160,maxAggregateWallMs:180000,maxOutputBytes:64*1024*1024},
+      owners:[{owner:input.owner,workId:input.workId}],deadlineAt:Date.now()+30000});
+    assertPreregisteredOriginals(bound.originalEpisodes,[declaredOriginal]);
+    assert.throws(()=>assertPreregisteredOriginals(bound.originalEpisodes,[{...declaredOriginal,
+      originalGrantDigest:sha('DELIBERATE_WRONG_PREREGISTERED_PARENT')}]),/PREREGISTERED_ORIGINAL_NATIVE_EPISODE_OR_PARENT_CHANGED/);
+    await save('actual-original-catalogue-binding.json',{bound,declaredOriginal,
+      deliberateWrongParentRefused:true,newResourceParentIssued:false});
     const publicRoot=join(root,'public'),withheldRoot=join(root,'withheld');
     const generated=await generateIndependentInitialPopulation(control,{publicRoot,withheldRoot});
     assert.equal(generated.environments.length,10);assert.equal(new Set(generated.environments.map(e=>e.structuralDigest)).size,10);
@@ -86,10 +100,39 @@ export async function exerciseGeneratedPopulation(input:{repo:string;evidenceRoo
     const mandate=await input.api('institution-mandate',{workId:input.workId,institutionId:input.institutionId,
       rules:packet.mandateRules,expiresAt:sourceExpiry});
     assert.equal(mandate.status,200,JSON.stringify(mandate));
-    const instantiated=await instantiateGeneratedOriginals({control:{schema:'finnor.x1.generated-original-instantiation.v1',
+    const instantiationControl={schema:'finnor.x1.generated-original-instantiation.v1',
       publicPacket:{path:packetPath,sha256:selected.publicPin.sha256},workId:input.workId,purpose:'standing evidence responsibility',
       expiresAt:sourceExpiry,originals:originals.map(s=>({sourceId:s.sourceId,grantId:s.grantId,
-        documentId:s.documentId,parentVersionId:s.versionId,sourceClass:s.sourceClass}))},owner:input.owner,deadlineAt:Date.now()+60000});
+        documentId:s.documentId,parentVersionId:s.versionId,sourceClass:s.sourceClass}))};
+    const setupStartedAt=new Date().toISOString(),setupStarted=performance.now(),setupInvocationId=randomUUID();
+    let setupExposure=0;const partialRegistered:Array<{sourceId:string;versionId:string;grantId:string}>=[];
+    await assert.rejects(()=>instantiateGeneratedOriginals({control:instantiationControl,owner:input.owner,deadlineAt:Date.now()+60000,
+      onObservation:async observation=>{
+        await save('actual-source-setup-'+(++setupExposure)+'.json',observation);
+        if(observation.status==='SOURCE_REGISTERED'){
+          const actual=observation as {sourceId:string;version:{id:string};grant:{id:string}};
+          partialRegistered.push({sourceId:actual.sourceId,versionId:actual.version.id,grantId:actual.grant.id});
+          if(partialRegistered.length===4)throw Error('DISPOSABLE_SETUP_STOP_AFTER_ACTUAL_FOURTH_SOURCE_REGISTRATION');
+        }
+      }}),/DISPOSABLE_SETUP_STOP_AFTER_ACTUAL_FOURTH_SOURCE_REGISTRATION/);
+    assert.equal(partialRegistered.length,4);assert.deepEqual(await episode(),original);
+    const instantiated=await instantiateGeneratedOriginals({control:instantiationControl,owner:input.owner,deadlineAt:Date.now()+60000,
+      onObservation:async observation=>{await save('actual-source-setup-'+(++setupExposure)+'.json',observation);}});
+    for(const prior of partialRegistered){const resumed=instantiated.observations.find(o=>o.sourceId===prior.sourceId);assert.ok(resumed);
+      assert.equal(resumed.version.id,prior.versionId);assert.equal(resumed.grant.id,prior.grantId);}
+    await save('actual-source-setup-partial-resume.json',{partialRegistered,setupExposure,
+      resumedSameVersionAndGrantIds:true,originalEpisode:original,endingEpisode:await episode(),newResourceParentIssued:false});
+    const setupMeasurements={setupExposure,partialSources:partialRegistered.length,resumedSources:instantiated.observations.length,
+      intervalsContainComponents:true,moneyUsd:null,humanSeconds:null,aggregatePeakMemoryBytes:null};
+    const setupLifecycle=await recordNativeAdministrationLifecycle({owner:input.owner,original:declaredOriginal,
+      invocationId:setupInvocationId,startedAt:setupStartedAt,elapsedMs:performance.now()-setupStarted,
+      operation:'SETUP',status:'ACTUAL_PARTIAL_SETUP_RESUMED',receiptDigest:sha(JSON.stringify(setupMeasurements)),measurements:setupMeasurements});
+    const charges=(await input.admin.query(`SELECT body FROM finnor_os.s5_governed_resource_charges
+      WHERE tenant_id=$1 AND principal_id=$2 AND reservation_id=$3 AND phase='LIFECYCLE'`,
+      [tenant,principal,original.parent_reservation.id])).rows.map(r=>r.body).filter(b=>b.physicalInvocationId===setupInvocationId);
+    assert.equal(charges.length,1);assert.equal(charges[0].units,1);
+    await save('actual-source-setup-s5-s7-lifecycle.json',{setupLifecycle,charges,setupMeasurements,
+      originalParentRetained:true,additionalElapsedCredit:0});
     await save('native-original-instantiation.json',instantiated);
     for(const observation of instantiated.observations){
       assert.notEqual(observation.grant.id,observation.originalGrantId);assert.equal(observation.grant.original_sha256,observation.byteSha256);

@@ -3,8 +3,36 @@ import {createHash} from 'node:crypto';
 import {getPool,withTenantClientTransaction} from '@finnor/db';
 import {NativeWorkerRegistration,authenticateOwner,callAuthenticatedOwner,type OwnerEndpoint} from './qualification-runtime.mts';
 import {digest} from '../../../packages/capability-evolution/src/contracts';
+import {persistInstitutionLifecycleCompute} from '../../../packages/private-equity/src/institution-program/meter';
+import {employeeAuthoritySnapshot} from '@finnor/authority';
 
 const sha=(value:string)=>createHash('sha256').update(value).digest('hex');
+export const OriginalNativeEpisodeCatalog=NativeWorkerRegistration.shape.originalEpisodes;
+export function assertPreregisteredOriginals(actual:typeof NativeWorkerRegistration._type.originalEpisodes,registered:unknown){
+  const catalogue=OriginalNativeEpisodeCatalog.parse(registered);
+  if(!actual.length||new Set(catalogue.map(e=>e.tenantId+'/'+e.workId)).size!==catalogue.length
+    ||actual.some(a=>!catalogue.some(e=>digest(e)===digest(a))))throw Error('PREREGISTERED_ORIGINAL_NATIVE_EPISODE_OR_PARENT_CHANGED');
+}
+
+/** One real command interval under its preregistered original S5/S7 owner. */
+export async function recordNativeAdministrationLifecycle(input:{owner:OwnerEndpoint;
+  original:typeof NativeWorkerRegistration._type.originalEpisodes[number];invocationId:string;startedAt:string;elapsedMs:number;
+  operation:'SETUP'|'VALIDATION'|'REPLAY'|'LIVE_SLICE';status:string;receiptDigest:string;measurements:Record<string,unknown>}){
+  if(input.owner.tenantId!==input.original.tenantId||input.owner.principalId!==input.original.principalId)
+    throw Error('ORIGINAL_LIFECYCLE_OWNER_BINDING_CHANGED');
+  const parent=await withTenantClientTransaction(input.owner.tenantId,{userId:input.owner.principalId,readOnly:true},async c=>
+    (await c.query(`SELECT parent_reservation,original_deadline FROM finnor_os.x1_compiler_episodes
+      WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3 AND id=$4`,
+      [input.owner.tenantId,input.owner.principalId,input.original.workId,input.original.originalEpisodeId])).rows[0]);
+  if(!parent||sha(JSON.stringify(parent.parent_reservation))!==input.original.originalGrantDigest
+    ||parent.original_deadline.toISOString()!==input.original.originalDeadline)throw Error('ORIGINAL_LIFECYCLE_PARENT_OR_DEADLINE_CHANGED');
+  const ctx={auth:{tenantId:input.owner.tenantId,userId:input.owner.principalId,employeeId:input.owner.principalId,role:'owner' as const}};
+  const rights=await employeeAuthoritySnapshot(ctx.auth);
+  return persistInstitutionLifecycleCompute(ctx,{workId:input.original.workId,episodeId:input.original.originalEpisodeId,
+    parentReservation:parent.parent_reservation,rightsRevision:String(rights.revision),invocationId:input.invocationId,
+    startedAt:input.startedAt,elapsedMs:input.elapsedMs,operation:input.operation,status:input.status,
+    receiptDigest:input.receiptDigest,measurements:input.measurements});
+}
 export async function bindOriginalNativeWorker(input:{
   protocolDigest:string;candidateCutDigest:string;allocationConventionDigest:string;
   runtime:{mode:'SOURCE_DEVELOPMENT'|'COMPILED_DEVELOPMENT';digest:string};phase:'replay'|'soak';

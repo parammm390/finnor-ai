@@ -1,9 +1,71 @@
 # X1 protected population owner packet
 
 Software entry: `finnor-os/scripts/frontier5/x1/qualification-admin.mts`.
-Its supported commands are `plan`, `launch`, `observe`, `resume`, `assess`.
-No command creates keys, source grants, protected receipts or production authority.
+Its supported commands are `plan`, `instantiate`, `launch`, `observe`, `resume`,
+`replay`, `live`, `native-control`, `collect`, and `assess`.
+`instantiate` appends authorized immutable Core originals and narrows existing
+read rights through the ordinary source owner. No command creates protected
+keys, protected grants, admission receipts or production authority.
 The current packet is **NOT RUN** without the existing authorized custody assets.
+
+The full generator control now requires each environment's independently
+pinned `soakExpectedEnvironment` and `originalEpisodeCatalog`. Replay truth is
+generated from every original byte version and newly frozen business branch;
+soak truth is read from its separate custodian input. The generator emits
+`public-original-episode-catalogue-draft.json`. Include each environment's
+`originalEpisodes` in its public Work-input environment BEFORE the custodian
+signs `publicInputDigest`. Each entry contains `tenantId`, `principalId`,
+`workId`, `originalEpisodeId`, `originalGrantDigest`, and `originalDeadline`.
+Native worker control and source setup compare these preregistered values with
+actual authenticated Work/restricted SQL owners before starting. New original
+business assignments may use their own preregistered parents; retrying keeps
+the original assignment's parent and deadline. Missing or different catalogue
+entries are refused, rather than adopted from current state.
+
+For `instantiate`, add a `generatedInstantiations` pin to the private control.
+Its file is an array of exactly ten objects `{environmentId, owner, control}`.
+The owner is the registered local API origin/tenant/principal and existing token
+environment-variable name. The control uses
+`finnor.x1.generated-original-instantiation.v1`, with `publicPacket:{path,sha256}`,
+`workId`, `purpose`, `expiresAt`, and `originals`. Each original contains the
+existing `sourceId`, `grantId`, `documentId`, `parentVersionId`, and `sourceClass`.
+The current source must be that original or the exact already-installed child
+with its original parent, actor, bytes and installation metadata. Each step
+retains an exposure/version/registration receipt. Repeating the exact control
+after partial setup reuses its immutable version and ordinary grant IDs.
+
+Source setup also requires an `allocationConvention` pin. The canonical digest
+of its body must equal the signed protocol's `allocationConventionDigest`:
+
+```json
+{
+  "schema": "finnor.x1.command-lifecycle-allocation.v1",
+  "lifecycleOwner": { "tenantId": "EXISTING_TENANT_UUID", "workId": "PREREGISTERED_WORK_UUID" },
+  "intervalAccounting": "CONTAINS_COMMAND_COMPONENTS_DO_NOT_SUM_ELAPSED"
+}
+```
+
+Those UUID labels are required owner inputs, not issued identities. The chosen
+owner must be in the signed original population. Successful and failed setup
+write one physical command UUID through the existing S5/S7 lifecycle writer;
+the containing interval is not added to its component elapsed time. The setup
+cost receipt retains money, human time and aggregate memory as unknown. If no
+valid preregistered owner exists, the command retains the precise meter gap
+without creating a parent. Complete priced lifecycle custody remains required
+for qualification.
+
+`collect` reads all original durable cursor segments. It retains raw receipts,
+folds repeated polling by maximum within-snapshot claim multiplicity, and keeps
+refused claims in the denominator with zero matching credit. Native S1 readers
+verify actual current canonical ownership and exact live evidence attachment;
+native completion readers compare current/origin intent and actual canonical
+fields. Snapshot collection remains unsigned and grants no qualification.
+
+Development evidence: source setup interrupted after four actual registrations
+and resumed with the same version/grant IDs; actual preregistered parent binding
+and deliberate wrong-parent refusal; twelve normalized mappings, one native
+Request completion, archived-attachment refusal and one S5/S7 setup charge.
+These are local owner proofs, not ten unseen institutions or complete horizons.
 
 The independent qualification custodian supplies an existing trust policy and
 its separately trusted SHA256, signed preregistration and ten signed oracle

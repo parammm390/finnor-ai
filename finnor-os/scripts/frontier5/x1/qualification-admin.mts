@@ -1,13 +1,14 @@
 import { readFileSync, writeFileSync, mkdirSync, realpathSync, statSync, statfsSync } from "node:fs";
-import { createHash } from "node:crypto";
+import { createHash,randomUUID } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { join, isAbsolute } from "node:path";
 import { z } from "zod";
 import { digest } from "../../../packages/capability-evolution/src/contracts";
 import { validateQualificationRegistration, assessInstitutionQualification } from "../../../packages/private-equity/src/institution-qualification/administration";
-import {executeReplaySlice,executeLiveObservationSlice,validateExecutionJournal,IndependentReadProjection} from './qualification-runtime.mts';
-import {bindOriginalNativeWorker} from './qualification-native-administration.mts';
+import {executeReplaySlice,executeLiveObservationSlice,validateExecutionJournal,IndependentReadProjection,OwnerEndpointSchema} from './qualification-runtime.mts';
+import {GeneratedOriginalInstantiation,instantiateGeneratedOriginals} from './qualification-native-inputs.mts';
+import {bindOriginalNativeWorker,OriginalNativeEpisodeCatalog,assertPreregisteredOriginals,recordNativeAdministrationLifecycle} from './qualification-native-administration.mts';
 import {NativeWorkerControl} from './qualification-native-worker.mts';
 import {installedDevelopmentRuntime} from '../../../packages/private-equity/src/institution-program/installed-runtime';
 import {installedInstitutionCompilerIdentity} from '../../../packages/capability-evolution/src/institution-port';
@@ -17,7 +18,7 @@ import {collectQualificationObservation} from './qualification-observation-colle
 const repo = fileURLToPath(new URL("../../../../", import.meta.url));
 const args = process.argv.slice(2), command = args[0];
 const value = (key: string) => { const i = args.indexOf(key); return i < 0 ? undefined : args[i + 1]; };
-if (!["plan", "launch", "observe", "resume", "assess",'replay','live','native-control','collect'].includes(command ?? ""))
+if (!["plan", "launch", "observe", "resume", "assess",'replay','live','native-control','collect','instantiate'].includes(command ?? ""))
   throw Error("USE_REGISTERED_PLAN_LAUNCH_OBSERVE_RESUME_ASSESS_REPLAY_LIVE_NATIVE_CONTROL_COMMAND");
 const controlPath = value("--control"), destination = value("--evidence"), trustedHash = value("--trust-sha256");
 if (!controlPath || !isAbsolute(controlPath) || !destination || !isAbsolute(destination)
@@ -34,6 +35,8 @@ const Control = z.object({ schema: z.literal("finnor.x1.qualification-control.v1
   lifecycleCostPacket: pin.optional(), privateEvidenceRoot: z.string(),
   deliveryReceipts: z.array(pin).max(1280).optional(),
   executionJournal:pin.optional(),independentReadProjections:pin.optional(),
+  generatedInstantiations:pin.optional(),
+  allocationConvention:pin.optional(),
   executionEvidenceRoot:z.string().optional(),executionCursorPath:z.string().optional(),
 }).strict();
 const controlBytes = read(controlPath, 1024 * 1024), control = Control.parse(JSON.parse(controlBytes.toString("utf8")));
@@ -64,13 +67,99 @@ save("freeze.json", { schema: "finnor.x1.qualification-command-freeze.v1", comma
   tree: execFileSync("git", ["rev-parse", "HEAD^{tree}"], { cwd: repo, encoding: "utf8" }).trim(),
   runtime: { node: process.version, platform: process.platform, architecture: process.arch },
   authority: "EXISTING_OWNER_SUPPLIED_POLICY_NO_NEW_KEYS_GRANTS_OR_QUALIFICATION_RECEIPTS" });
-if(['launch','observe','resume','replay','live','native-control','collect'].includes(command??'')){
+if(['launch','observe','resume','replay','live','native-control','collect','instantiate'].includes(command??'')){
   const limits=JSON.parse(readFileSync(join(repo,'scope-frontier5/x1-institutional-programme-compiler/verification-plan.json'),'utf8')).limits;
   const disk=statfsSync(repo,{bigint:true});
   if(disk.bavail*disk.bsize<BigInt(limits.liveMinimumFreeBytes))throw Error('X1_FROZEN_LIVE_CAPACITY_REFUSED');
 }
 
-if(command==='collect'){
+if(command==='instantiate'){
+  let lifecycleOwner:undefined|{owner:z.infer<typeof OwnerEndpointSchema>;original:z.infer<typeof OriginalNativeEpisodeCatalog>[number]};
+  const invocationId=randomUUID(),physicalStartedAt=new Date().toISOString(),physicalStarted=performance.now();
+  let setupStatus='FAILED_OR_UNACKNOWLEDGED';
+  try{
+  if(!control.generatedInstantiations)throw Error('EXACT_REGISTERED_GENERATED_SOURCE_CONTROLS_REQUIRED');
+  if(!control.allocationConvention)throw Error('REGISTERED_SETUP_LIFECYCLE_ALLOCATION_CONVENTION_REQUIRED');
+  const allocation=z.object({schema:z.literal('finnor.x1.command-lifecycle-allocation.v1'),
+    lifecycleOwner:z.object({tenantId:z.string().uuid(),workId:z.string().uuid()}).strict(),
+    intervalAccounting:z.literal('CONTAINS_COMMAND_COMPONENTS_DO_NOT_SUM_ELAPSED')}).strict().parse(pinned(control.allocationConvention));
+  if(digest(allocation)!==registered.protocol.allocationConventionDigest)throw Error('REGISTERED_SETUP_ALLOCATION_CONVENTION_CHANGED');
+  const specs=z.array(z.object({environmentId:z.string().min(1),owner:OwnerEndpointSchema,
+    control:GeneratedOriginalInstantiation}).strict()).length(10).parse(pinned(control.generatedInstantiations));
+  if(new Set(specs.map(s=>s.environmentId)).size!==10||new Set(specs.map(s=>s.owner.tenantId+'/'+s.control.workId)).size!==10
+    ||specs.some(s=>!registered.protocol.environments.some(e=>e.id===s.environmentId)
+      ||s.owner.principalId!==registered.protocol.candidatePrincipalId))throw Error('EXACT_TEN_REGISTERED_SOURCE_OWNERS_REQUIRED');
+  const publicHandles=z.object({schema:z.literal('finnor.x1.qualification-public-inputs.v1'),
+    environments:z.array(z.object({environmentId:z.string(),originalEpisodes:OriginalNativeEpisodeCatalog,
+      inputs:z.array(z.object({workId:z.string().uuid(),tenantId:z.string().uuid(),principalId:z.string().uuid(),
+        origin:z.string(),tokenEnvironmentVariable:z.string()}).passthrough())})).length(10)
+  }).parse(pinned(control.publicInputs));
+  for(const spec of specs){
+    const registeredEnvironment=registered.protocol.environments.find(e=>e.id===spec.environmentId)!,
+      handles=publicHandles.environments.find(e=>e.environmentId===spec.environmentId);
+    if(!handles||digest(handles)!==registeredEnvironment.publicInputDigest||!handles.inputs.some(i=>i.workId===spec.control.workId
+      &&i.tenantId===spec.owner.tenantId&&i.principalId===spec.owner.principalId&&i.origin===spec.owner.origin
+      &&i.tokenEnvironmentVariable===spec.owner.tokenEnvironmentVariable))throw Error('REGISTERED_SOURCE_SETUP_WORK_HANDLES_CHANGED');
+  }
+  const seconds=Number(value('--seconds')??180);
+  if(!Number.isInteger(seconds)||seconds<1||seconds>840)throw Error('FINITE_SOURCE_SETUP_COMMAND_QUANTUM_REQUIRED');
+  const deadlineAt=Date.now()+seconds*1000,results=[];let exposure=0;
+  const installed=installedDevelopmentRuntime(),method=await installedInstitutionCompilerIdentity();
+  const runtime=installed?{mode:'COMPILED_DEVELOPMENT' as const,digest:installed.manifestDigest}
+    :{mode:'SOURCE_DEVELOPMENT' as const,digest:sha(readFileSync(join(repo,'finnor-os/scripts/frontier5/x1/physical-owner-worker.mts')))};
+  const cut=installed?.manifest.source??{commit:execFileSync('git',['rev-parse','HEAD'],{cwd:repo,encoding:'utf8'}).trim(),
+    tree:execFileSync('git',['rev-parse','HEAD^{tree}'],{cwd:repo,encoding:'utf8'}).trim()};
+  if(cut.commit!==registered.protocol.candidateCut.commit||cut.tree!==registered.protocol.candidateCut.tree
+    ||runtime.digest!==registered.protocol.candidateCut.runtimeDigest||method.ref.contentDigest!==registered.protocol.candidateCut.compilerMethodDigest
+    ||sha(readFileSync(join(repo,'finnor-os/package-lock.json')))!==registered.protocol.candidateCut.dependencyLockDigest)
+    throw Error('REGISTERED_SOURCE_SETUP_CUT_METHOD_LOCK_OR_RUNTIME_CHANGED');
+  const originalBinding=await bindOriginalNativeWorker({protocolDigest:registered.protocolDigest,
+    candidateCutDigest:digest(registered.protocol.candidateCut),allocationConventionDigest:registered.protocol.allocationConventionDigest,
+    runtime,phase:'replay',envelope:{ref:registered.protocol.envelopes.setup.ref,registrationDigest:digest(registered.protocol.envelopes.setup),
+      maxNativeDeliveries:registered.protocol.envelopes.setup.maxAcquisitionCalls,
+      maxAggregateWallMs:registered.protocol.envelopes.setup.maxWallSeconds*1000,maxOutputBytes:64*1024*1024},
+    owners:specs.map(s=>({owner:s.owner,workId:s.control.workId})),deadlineAt});
+  for(const spec of specs)assertPreregisteredOriginals(originalBinding.originalEpisodes.filter(e=>e.tenantId===spec.owner.tenantId
+    &&e.workId===spec.control.workId),publicHandles.environments.find(e=>e.environmentId===spec.environmentId)!.originalEpisodes);
+  const allocated=specs.find(s=>s.owner.tenantId===allocation.lifecycleOwner.tenantId&&s.control.workId===allocation.lifecycleOwner.workId),
+    allocatedOriginal=originalBinding.originalEpisodes.find(e=>e.tenantId===allocation.lifecycleOwner.tenantId&&e.workId===allocation.lifecycleOwner.workId);
+  if(!allocated||!allocatedOriginal)throw Error('REGISTERED_SETUP_LIFECYCLE_OWNER_NOT_IN_ORIGINAL_POPULATION');
+  lifecycleOwner={owner:allocated.owner,original:allocatedOriginal};
+  save('source-setup-original-binding.json',originalBinding);
+  for(const spec of specs){
+    const packet=pinned(spec.control.publicPacket);
+    if(packet.environmentId!==spec.environmentId)throw Error('PUBLIC_SOURCE_ENVIRONMENT_BINDING_CHANGED');
+    const result=await instantiateGeneratedOriginals({control:spec.control,owner:spec.owner,deadlineAt,
+      onObservation:observation=>save('source-setup-'+(exposure++)+'.json',{environmentId:spec.environmentId,
+        inputDigest:digest(spec),observation,newResourceParentIssuedBySetup:false})});
+    results.push({environmentId:spec.environmentId,result});save('source-setup-result-'+results.length+'.json',results.at(-1));
+  }
+  const endingBinding=await bindOriginalNativeWorker({protocolDigest:originalBinding.protocolDigest,
+    candidateCutDigest:originalBinding.candidateCutDigest,allocationConventionDigest:originalBinding.allocationConventionDigest,
+    runtime:originalBinding.runtime,phase:originalBinding.phase,envelope:originalBinding.envelope,
+    owners:specs.map(s=>({owner:s.owner,workId:s.control.workId})),deadlineAt});
+  if(digest(endingBinding.originalEpisodes)!==digest(originalBinding.originalEpisodes))throw Error('SOURCE_SETUP_ORIGINAL_PARENTS_CHANGED');
+  save('source-setup-outcomes.json',{results,originalBinding,endingBinding,
+    exactImmutableInputsRetained:true,setupReceiptsPersistedBeforeMutation:true,
+    originalKeysAndParentsRetained:true,protectedQualificationEstablished:false,moneyUsd:null,humanSeconds:null,aggregatePeakMemoryBytes:null});
+  console.log(JSON.stringify({status:'ACTUAL_GENERATED_SOURCE_OWNERS_INSTALLED',evidence:out,environments:results.length,
+    protectedQualificationEstablished:false}));
+  setupStatus='ACTUAL_GENERATED_SOURCE_OWNERS_INSTALLED';
+  }finally{
+    try{
+      const measured={invocationId,startedAt:physicalStartedAt,elapsedMs:performance.now()-physicalStarted,status:setupStatus,
+        allocationConventionDigest:registered.protocol.allocationConventionDigest,outputBytes,
+        intervalsContainComponents:true,moneyUsd:null,humanSeconds:null,aggregatePeakMemoryBytes:null};
+      save('source-setup-physical-lifecycle.json',measured);
+      if(lifecycleOwner){
+        const receipt=await recordNativeAdministrationLifecycle({...lifecycleOwner,invocationId,startedAt:physicalStartedAt,
+          elapsedMs:measured.elapsedMs,operation:'SETUP',status:setupStatus,receiptDigest:digest(measured),measurements:measured});
+        save('source-setup-s5-s7-lifecycle.json',receipt);
+      }else save('source-setup-lifecycle-gap.json',{status:'NO_VALID_PREREGISTERED_LIFECYCLE_OWNER',measured,
+        newResourceParentIssued:false,financialOrQualificationEstablished:false});
+    }finally{await closePool();}
+  }
+}else if(command==='collect'){
   if(!control.independentReadProjections||!control.executionEvidenceRoot||!control.executionCursorPath)
     throw Error('ORIGINAL_PINNED_NATIVE_OWNER_SELECTORS_AND_CURSOR_REQUIRED');
   const executionRoot=realpathSync(control.executionEvidenceRoot);
@@ -150,7 +239,8 @@ if(command==='collect'){
     idempotencyKey: z.string().min(1).max(160),
   }).strict();
   const PublicInputs = z.object({ schema: z.literal("finnor.x1.qualification-public-inputs.v1"),
-    environments: z.array(z.object({ environmentId: z.string(), inputs: z.array(Input).min(1).max(128) }).strict()).length(10),
+    environments: z.array(z.object({ environmentId: z.string(), inputs: z.array(Input).min(1).max(128),
+      originalEpisodes:OriginalNativeEpisodeCatalog.optional() }).strict()).length(10),
   }).strict();
   const publicInputs = PublicInputs.parse(pinned(control.publicInputs));
   if (new Set(publicInputs.environments.map(e => e.environmentId)).size !== 10)
@@ -186,6 +276,7 @@ if(command==='collect'){
         ||method.ref.contentDigest!==registered.protocol.candidateCut.compilerMethodDigest
         ||sha(readFileSync(join(repo,'finnor-os/package-lock.json')))!==registered.protocol.candidateCut.dependencyLockDigest)
         throw Error('REGISTERED_ACTUAL_NATIVE_SOURCE_METHOD_LOCK_OR_RUNTIME_CHANGED');
+      if(publicInputs.environments.some(e=>!e.originalEpisodes))throw Error('SIGNED_PUBLIC_INPUT_ORIGINAL_EPISODE_CATALOG_REQUIRED');
       const registration=await bindOriginalNativeWorker({protocolDigest:registered.protocolDigest,candidateCutDigest:digest(registered.protocol.candidateCut),
         allocationConventionDigest:registered.protocol.allocationConventionDigest,runtime,phase,
         envelope:{ref:envelope.ref,registrationDigest:digest(envelope),maxNativeDeliveries:envelope.maxNativeDeliveries,
@@ -193,6 +284,8 @@ if(command==='collect'){
         owners:all.map(input=>({owner:{origin:input.origin,tenantId:input.tenantId,principalId:input.principalId,
           tokenEnvironmentVariable:input.tokenEnvironmentVariable},workId:input.workId})),
         deadlineAt:Date.now()+Math.min(180,envelope.maxWallSeconds)*1000});
+      for(const environment of publicInputs.environments)assertPreregisteredOriginals(registration.originalEpisodes.filter(e=>
+        environment.inputs.some(i=>i.tenantId===e.tenantId&&i.workId===e.workId)),environment.originalEpisodes!);
       const workerControl=NativeWorkerControl.parse({schema:'finnor.x1.qualification-native-worker-control.v1',registration,
         evidenceRoot:executionRoot,cursorPath:control.executionCursorPath,durationSeconds:Number(value('--seconds')??30)});
       save('native-worker-control.json',workerControl);

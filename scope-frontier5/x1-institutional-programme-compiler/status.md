@@ -2,6 +2,18 @@
 
 ## Current native meaning and history milestone — 14 October 2026
 
+The source-administration continuation is verified by
+`verify-qualification-source-lifecycle-017/owner`, PASS51.298s, unchanged source.
+Partial setup resumes the same immutable child and ordinary grant IDs. Actual
+original-parent catalogue binding rejects a deliberate wrong parent; exact
+lineage/metadata checks reject a different child. Setup records one real S5
+request-unit lifecycle charge and immutable S7 receipt under the original
+parent. Source admin and native worker control bind signed public catalogue
+entries before mutation or control issuance. Full replay ledger versions/new
+branches and independently pinned soak expectations are implemented; genuine
+full population/custody assets and their complete execution remain unavailable.
+Scoped types/lint031 PASS21.749s/1.356s. Final installation and handoff still pending.
+
 Engineering remains INCOMPLETE. Goal ACTIVE. The source milestone is locally
 implemented and verified through actual owners; the final installation and
 reconstructible delivery gate remains unpassed.

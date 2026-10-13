@@ -38,6 +38,7 @@ export const QualificationExecutionJournal=z.object({schema:z.literal('finnor.x1
   environments:z.array(z.object({id:z.string().min(1),replicaStart:instant,replicaEnd:instant,
     events:z.array(QualificationExecutionEvent).min(1).max(50000)}).strict()).length(10)}).strict();
 export type OwnerEndpoint=z.infer<typeof endpoint>;
+export const OwnerEndpointSchema=endpoint;
 export type OwnerRequest=z.infer<typeof request>;
 export const ExecutionLimits=z.object({ref:z.string().min(1).max(256),registrationDigest:hex,
   maxAcquisitionCalls:z.number().int().positive(),maxOutputBytes:z.number().int().positive().max(64*1024*1024),
