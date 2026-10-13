@@ -22,7 +22,8 @@ const frontendInstallation=option('--frontend-installation');
 const ownerCases={owners:{'one-duty':{count:'1',mode:'api'},'128-duty':{count:'128',mode:'api'},
   heterogeneous:{count:'1',mode:'heterogeneous'},canonical:{count:'1',mode:'canonical'},creation:{count:'1',mode:'creation'},ordinary:{count:'1',mode:'ordinary'},
   domain:{count:'1',mode:'domain'},'owner-inputs':{count:'1',mode:'owner_inputs'},'source-namespace':{count:'1',mode:'source_namespace'},
-  'qualification-execution':{count:'1',mode:'qualification_execution'}},
+  'qualification-execution':{count:'1',mode:'qualification_execution'},
+  'qualification-population':{count:'1',mode:'qualification_population'}},
   lifecycle:{material:{count:'1',mode:'material'},'reporting-changes':{count:'1',mode:'reporting_changes'},'staff-epoch':{count:'1',mode:'authority_epoch'},'sensitive-coverage':{count:'1',mode:'sensitive_coverage'},personnel:{count:'1',mode:'personnel'},recovery:{count:'1',mode:'recovery'},
     contention:{count:'1',mode:'contention'},unsupported:{count:'1',mode:'unsupported'},'unsupported-operation':{count:'1',mode:'unsupported_operation'},'checker-crash':{count:'1',mode:'checker_crash'},
     'cancel-observed':{count:'1',mode:'cancel_observed'},'publication-meter':{count:'1',mode:'publication_meter'},
@@ -67,6 +68,8 @@ for (const path of [
   "finnor-os/packages/private-equity/src/institution-qualification/administration.ts",
   "finnor-os/scripts/frontier5/x1/qualification-admin.mts",
   'finnor-os/scripts/frontier5/x1/qualification-runtime.mts','finnor-os/scripts/frontier5/x1/qualification-owner-exercise.mts',
+  'finnor-os/scripts/frontier5/x1/qualification-native-inputs.mts','finnor-os/scripts/frontier5/x1/qualification-population.mts',
+  'finnor-os/scripts/frontier5/x1/qualification-population-owner-exercise.mts','finnor-os/scripts/frontier5/x1/qualification-native-worker.mts',
   "finnor-os/scripts/frontier5/x1/qualification-cases.mts",
   "finnor-os/scripts/frontier5/x1/reference/qualification-contract.md",
   "finnor-os/packages/private-equity/src/institution-program/checker.ts",
@@ -239,6 +242,8 @@ if (named.live || stage === "installed" || stage === "diagnostic") {
       killSignal:'SIGTERM',env:{PATH:'/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin',HOME:join(leaf,'home'),TMPDIR:'/tmp',
         LANG:'en_US.UTF-8',CI:'1',LOG_LEVEL:'silent',TSX_DISABLE_CACHE:'1',NEXT_TELEMETRY_DISABLED:'1',
         FINNOR_X1_OWNER_EVIDENCE:leaf,FINNOR_X1_OWNER_CASE:selectedOwnerCase.count,FINNOR_X1_OWNER_MODE:selectedOwnerCase.mode,
+        ...(selectedOwnerCase.mode==='qualification_population'&&process.env.FINNOR_X1_LOCKED_SPECIFICATION
+          ?{FINNOR_X1_LOCKED_SPECIFICATION:process.env.FINNOR_X1_LOCKED_SPECIFICATION}:{}),
         ...(selectedOwnerCase.mode==='diagnostic'&&process.env.FINNOR_X1_DIAGNOSTIC_BINDING_FILE
           ?{FINNOR_X1_DIAGNOSTIC_BINDING_FILE:process.env.FINNOR_X1_DIAGNOSTIC_BINDING_FILE}:{}),
         ...(installation?{FINNOR_X1_INSTALLED_ROOT:realpathSync(installation)}:{}),

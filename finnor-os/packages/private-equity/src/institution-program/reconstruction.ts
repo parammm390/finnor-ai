@@ -203,10 +203,12 @@ export async function proposeInstitutionModel(
       && !fields(a.row).transactionid && !fields(b.row).transactionid
       && !fields(a.row).balancerole && !fields(b.row).balancerole
       && !equalAmount(a.data.value, b.data.value)) {
-      const [left, right] = [key(a.row.sourceId, a.row.objectId), key(b.row.sourceId, b.row.objectId)].sort();
-      contradictions.push({ left: left!, right: right!,
-        leftRef: { sourceId: a.row.sourceId, recordId: a.row.objectId },
-        rightRef: { sourceId: b.row.sourceId, recordId: b.row.objectId }, disposition: "unresolved" });
+      const [left, right] = [
+        {witness:key(a.row.sourceId,a.row.objectId),ref:{sourceId:a.row.sourceId,recordId:a.row.objectId}},
+        {witness:key(b.row.sourceId,b.row.objectId),ref:{sourceId:b.row.sourceId,recordId:b.row.objectId}},
+      ].sort((a,b)=>a.witness<b.witness?-1:a.witness>b.witness?1:0);
+      contradictions.push({ left: left!.witness, right: right!.witness,
+        leftRef: left!.ref, rightRef: right!.ref, disposition: "unresolved" });
     }
   }
   for (const item of claimed.filter((record) => record.kind === "trigger" && record.ref)) {

@@ -13,6 +13,8 @@
     "./qualification-runtime.mts",
     "./qualification-population.mts",
     "./qualification-native-worker.mts",
+    "./qualification-native-inputs.mts",
+    "./qualification-population-owner-exercise.mts",
     "../../../apps/worker/src/dev-entry.mts",
     "../../../apps/api/dev-server.ts",
     "./qualification-admin.mts",

@@ -2,6 +2,30 @@
 
 ## Current execution checkpoint — 13 October 2026
 
+14 October generated-source milestone: `verify-qualification-population-owner-007/owner`
+passes six actual owner predicates in55.379s with unchanged source. The same
+generator kernel produces ten structurally distinct initial packets, each with
+all eight system classes. One packet installs eight immutable Core source
+versions/current grants, independently verifies twelve generated mappings and
+one material Request creation through authenticated revision, native standing
+continuation, separate checker, S1 evidence and canonical effect readback.
+The original episode,520/900 S5 parent and deadline remain unchanged. Existing
+source population is preserved; superseded requests and owner-selected current
+revision are retained rather than mistaken for completion of the original child.
+Ten format partitions over one development institution do not establish ten
+unseen institutions, thirty executed days, seven elapsed days or protected custody.
+
+Runs001–006 remain failed evidence: exact-input hash, source/mandate expiry,
+superseded revision, native party-state column, contradiction-reference pairing
+and a stale owner read. The real producer defect sorted contradiction witnesses
+without their source references; witness/reference pairs now sort together.
+Contradictory source amounts remain original assertions with unresolved
+counterevidence; the checker and independent expectations were unchanged.
+Scoped source types/lint018 pass37.243s/1.412s. This milestone builds on committed
+source `a842dde39571048667bdf2aef6ddab14304ffbdc`; resulting local commit is in Git.
+Full journal oracle version/phase semantics and native administration/observation
+integration still require completion before the final installation and handoff.
+
 14 October continuation: `verify-qualification-native-recovery-005/owner` passes
 all five owner predicates in61.327s with unchanged source. An actual controller
 is SIGKILLed after the original API202 and before acknowledgement. Its exposed
@@ -26,7 +50,7 @@ roots and manual source aliases. Their Git/source/lockfiles and existing dirty
 source edits remain intact. Shared free bytes rose by2,206,789,632 in that receipt;
 other shared-host disk changes are not isolated by the measurement.
 
-Engineering **INCOMPLETE**, release **DESIGNED**. Latest committed source is
+Engineering **INCOMPLETE**, release **DESIGNED**. Earlier committed source was
 `8acb56730a8f086bdc89cf3df6e0ee6648cf9dab`, tree
 `46a0d8d1e998c200d38d80d15adbcfe4f950d278`; schema head0189/191 migrations.
 Population generation and its registration binding have further uncommitted

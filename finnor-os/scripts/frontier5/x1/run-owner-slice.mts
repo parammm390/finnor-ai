@@ -30,6 +30,7 @@ import {parse as parseDotenv} from 'dotenv';
 import {startQualificationOwnerExercise,finishQualificationOwnerExercise,createNativeWorkerExerciseControl} from './qualification-owner-exercise.mts';
 import {digest as qualificationDigest} from '../../../packages/capability-evolution/src/contracts';
 import {institutionDigest} from '../../../packages/private-equity/src/institution-program/canonical-json';
+import {exerciseGeneratedPopulation} from './qualification-population-owner-exercise.mts';
 
 const repo = fileURLToPath(new URL("../../../../", import.meta.url));
 const installation=process.env.FINNOR_X1_INSTALLED_ROOT;
@@ -52,7 +53,8 @@ const fullDomain=process.env.FINNOR_X1_OWNER_MODE==='domain'||reportingChanges||
 const mounted=process.env.FINNOR_X1_OWNER_MODE==='mounted';
 const revise=process.env.FINNOR_X1_OWNER_MODE==='revision';
 const material=process.env.FINNOR_X1_OWNER_MODE==='material';
-const heterogeneous=process.env.FINNOR_X1_OWNER_MODE==='heterogeneous'||fullDomain;
+const qualificationPopulation=process.env.FINNOR_X1_OWNER_MODE==='qualification_population';
+const heterogeneous=process.env.FINNOR_X1_OWNER_MODE==='heterogeneous'||fullDomain||qualificationPopulation;
 const canonical=process.env.FINNOR_X1_OWNER_MODE==='canonical'||fullDomain;
 const recovery=process.env.FINNOR_X1_OWNER_MODE==='recovery';
 const effectRecovery=process.env.FINNOR_X1_OWNER_MODE==='effect_recovery';
@@ -66,7 +68,7 @@ const cancelObserved=process.env.FINNOR_X1_OWNER_MODE==='cancel_observed';
 const publicationMeter=process.env.FINNOR_X1_OWNER_MODE==='publication_meter';
 const diagnostic=process.env.FINNOR_X1_OWNER_MODE==='diagnostic';
 const qualificationExecution=process.env.FINNOR_X1_OWNER_MODE==='qualification_execution';
-if(process.env.FINNOR_X1_OWNER_MODE&&!['api','mounted','revision','material','heterogeneous','canonical','creation','recovery','effect_recovery','ordinary','domain','owner_inputs','reporting_changes','authority_epoch','sensitive_coverage','personnel','source_namespace','upgrade','checker_crash','contention','unsupported','unsupported_operation','cancel_observed','publication_meter','diagnostic','qualification_execution'].includes(process.env.FINNOR_X1_OWNER_MODE))
+if(process.env.FINNOR_X1_OWNER_MODE&&!['api','mounted','revision','material','heterogeneous','canonical','creation','recovery','effect_recovery','ordinary','domain','owner_inputs','reporting_changes','authority_epoch','sensitive_coverage','personnel','source_namespace','upgrade','checker_crash','contention','unsupported','unsupported_operation','cancel_observed','publication_meter','diagnostic','qualification_execution','qualification_population'].includes(process.env.FINNOR_X1_OWNER_MODE))
   throw Error('EXACT_REGISTERED_OWNER_MODE_REQUIRED');
 if((mounted||material||heterogeneous||canonical||recovery||effectRecovery||ordinary||upgrade||checkerCrash||contention||unsupported||cancelObserved||authorityEpoch)&&dutyCount!==1)throw Error('NAMED_ONE_DUTY_SCENARIO_REQUIRED');
 if(process.env.FINNOR_X1_OWNER_CASE&&!['1','128'].includes(process.env.FINNOR_X1_OWNER_CASE))
@@ -85,6 +87,7 @@ const sourcePaths = ["finnor-os/scripts/frontier5/x1/run-owner-slice.mts", "finn
   'finnor-os/scripts/frontier5/x1/upgrade-owner-fixture.mts',
   'finnor-os/scripts/frontier5/x1/qualification-runtime.mts','finnor-os/scripts/frontier5/x1/qualification-owner-exercise.mts',
   'finnor-os/scripts/frontier5/x1/qualification-native-worker.mts','finnor-os/scripts/frontier5/x1/qualification-population.mts',
+  'finnor-os/scripts/frontier5/x1/qualification-native-inputs.mts','finnor-os/scripts/frontier5/x1/qualification-population-owner-exercise.mts',
   "finnor-os/scripts/frontier5/x1/physical-owner-worker.mts", "finnor-os/scripts/frontier5/x1/native-diagnostic-worker.mts", "finnor-os/packages/db/migrations-bundle.ts",
   "finnor-os/package-lock.json", "scope-frontier5/x1-institutional-programme-compiler/profile.json"];
 const sourcePins = await Promise.all(sourcePaths.map(async path => ({ path, sha256: sha(await readFile(join(repo, path))) })));
@@ -111,7 +114,8 @@ const freeze = { installation:installedManifest?{root:installation,manifestDiges
     ...(contention?['E-original-shared-parent-contention']:[]),...(unsupported?['F-mixed-unsupported-rule']:[]),
     ...(cancelObserved?['E-cancel-observed-standing-continuation']:[]),
     ...(publicationMeter?['F-post-compile-publication-failure-meter']:[]),...(diagnostic?['H-matched-equipped-native-originals']:[]),
-    ...(qualificationExecution?['G-finite-qualification-owner-execution']:[])],
+    ...(qualificationExecution?['G-finite-qualification-owner-execution']:[]),
+    ...(qualificationPopulation?['G-generated-original-population-owner-execution']:[])],
   omitted: "Full B–H, physical interruption, mounted browser, clean built installation/upgrade and protected qualification remain distinct required evidence" };
 await writeFile(join(evidence, "freeze.json"), JSON.stringify(freeze, null, 2) + "\n", { mode: 0o600, flag: "wx" });
 const results: any[] = [], traffic: unknown[] = [];
@@ -2427,6 +2431,25 @@ try {
       offAccepted:receipt.off.acceptedBusinessWeight,originalDenominator:3,totalOriginalRequestUnits:totalRequestUnits},
       basis:'ACTUAL_IDENTICAL_PREEXPOSURE_OWNER_DATABASE_RAW_SOURCE_EQUIPMENT_NATIVE_OBJECTIVE_PLANNER_QUEUE_EFFECT_OBSERVER_AND_ORIGINAL_PARENT_COST_FOLD'});
     await diagnosticOff!.end();diagnosticOff=undefined;
+  }
+  if(qualificationPopulation){
+    const generated=await exerciseGeneratedPopulation({repo,evidenceRoot:evidence,admin,workId:workId!,parentRequestId:compilerId!,
+      institutionId,rule,sourceBindings,targetRegistrationId:registrationA,workstreamExternalId,recipientExternalId,
+      requestPrefix:'Original independently generated evidence assignment',token:service.token,
+      owner:{origin:service.origin,tenantId:tenant,principalId:actor,tokenEnvironmentVariable:'FINNOR_X1_QUAL_TOKEN_GENERATED_OWNER'},api,
+      pauseWorker:async()=>{
+        const child=worker!;await new Promise<void>(resolve=>{const timer=setTimeout(()=>child.kill('SIGKILL'),5000);
+          child.once('exit',()=>{clearTimeout(timer);resolve();});child.kill('SIGTERM');});
+        await save('generated-input-actual-worker-pause.json',{pid:child.pid,exitCode:child.exitCode,signal:child.signalCode,
+          originalEpisodeRetained:true,sourcePopulationPreserved:true});
+      },
+      resumeWorker:async()=>{worker=startWorker();await save('generated-input-actual-worker-resume.json',await workerReadiness.get(worker));},
+      assertWorker:()=>{if(guardFailure)throw Error(guardFailure);assert.equal(worker!.exitCode,null);assert.equal(worker!.signalCode,null);}});
+    results.push({id:'G-generated-original-population-owner-execution',status:'PASS',
+      observed:{formatPartitions:generated.formatPartitions,actualInstitutions:generated.actualIndependentInstitutions,
+        sourcesInstalled:generated.originalsInstalled,mappings:generated.independentlyExpectedMappingCount,
+        obligations:generated.independentlyExpectedObligationCount,originalEpisodeRetained:true},
+      basis:'ACTUAL_GENERATOR_ORIGINAL_BYTES_CORE_VERSIONS_AUTHENTICATED_CURRENT_GRANTS_NATIVE_REVISION_SEPARATE_CHECKER_AND_CANONICAL_EFFECT_READ'});
   }
   if(installation&&!mounted){
     const preserved=installedPreservation;
