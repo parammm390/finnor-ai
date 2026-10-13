@@ -6,7 +6,11 @@ import {randomBytes,randomUUID,createHash} from 'node:crypto';
 import type pg from 'pg';
 import {generateIndependentInitialPopulation} from './qualification-population.mts';
 import {instantiateGeneratedOriginals} from './qualification-native-inputs.mts';
-import type {OwnerEndpoint} from './qualification-runtime.mts';
+import {collectIndependentOwnerRead,type OwnerEndpoint} from './qualification-runtime.mts';
+import {normalizeCanonicalFields} from './qualification-meaning.mts';
+import {withTenantClientTransaction} from '@finnor/db';
+import {collectQualificationObservation} from './qualification-observation-collection.mts';
+import {scoreEnvironment} from '../../../packages/private-equity/src/institution-qualification/scoring';
 
 const sha=(bytes:Buffer|string)=>createHash('sha256').update(bytes).digest('hex');
 type SourceBinding={sourceId:string;sourceClass:string;grantId:string;versionId:string;documentId:string};
@@ -61,7 +65,7 @@ export async function exerciseGeneratedPopulation(input:{repo:string;evidenceRoo
         ownerSnapshotDigest:snapshotDigest})),
       mandateRules:[{...input.rule,targetRegistrationIds:[input.targetRegistrationId],fixedBusinessWeight:1,critical:true,
         triggerFields:{workstreamExternalId:input.workstreamExternalId,requestedFromExternalId:input.recipientExternalId,
-          requestText:input.requestPrefix,requiresAcceptedDeliverable:true},
+          requestText:'  '+input.requestPrefix+'  ',requiresAcceptedDeliverable:true},
         postconditionFields:{request_text:'GENERATED_FIELD:requestText',state:'open',fulfilled_at:null,
           deal_id:target.id,workstream_id:stream.id,requested_from_deal_party_id:party.id,
           owner_party_type:'employee',owner_party_id:principal,requires_accepted_deliverable:true}}],
@@ -128,7 +132,7 @@ export async function exerciseGeneratedPopulation(input:{repo:string;evidenceRoo
       JOIN finnor_os.x1_compiler_requests r ON r.tenant_id=a.tenant_id AND r.admission_id=a.id WHERE r.tenant_id=$1 AND r.id=$2`,
       [tenant,observedRequestId])).rows[0];assert.ok(actual);
     for(const mapping of oracle.expectedMappings){
-      const [sourceId,recordId]=mapping.identity.split('/'),receipt=actual.receipts.find((r:any)=>r.sourceId===sourceId&&r.recordId===recordId);
+      const {sourceId,recordId}=mapping,receipt=actual.receipts.find((r:any)=>r.sourceId===sourceId&&r.recordId===recordId);
       assert.ok(receipt,'independent generated original mapping '+mapping.identity);assert.equal(receipt.canonicalRef,mapping.targetCanonicalRef);
       if(mapping.kind==='quantity'){
         const version=(await input.admin.query('SELECT snapshot FROM finnor_os.evidence_source_versions WHERE tenant_id=$1 AND id=$2',
@@ -140,16 +144,83 @@ export async function exerciseGeneratedPopulation(input:{repo:string;evidenceRoo
     const duty=oracle.expectedObligations[0],nativeRows=(await input.admin.query(`SELECT r.*,a.status action_status,e.status effect_status
       FROM finnor_os.pe_requests r JOIN finnor_os.domain_actions a ON a.tenant_id=r.tenant_id AND a.id=r.id
       JOIN finnor_os.business_effects e ON e.tenant_id=a.tenant_id AND e.domain_action_id=a.id
-      WHERE r.tenant_id=$1 AND r.request_text=$2 AND a.work_id=$3`,[tenant,duty.originalRecord.requestText,input.workId])).rows;
-    assert.equal(nativeRows.length,1);for(const [key,value]of Object.entries(duty.completionFields))assert.equal(nativeRows[0][key],value);
+      WHERE r.tenant_id=$1 AND r.request_text=$2 AND a.work_id=$3`,[tenant,duty.completionFields.request_text,input.workId])).rows;
+    assert.equal(nativeRows.length,1);const actualFields=normalizeCanonicalFields(Object.fromEntries(
+      Object.keys(duty.completionFields).map(key=>[key,nativeRows[0][key] instanceof Date?nativeRows[0][key].toISOString():nativeRows[0][key]])));
+    assert.deepEqual(actualFields,duty.completionFields);
     assert.equal(nativeRows[0].action_status,'completed');assert.equal(nativeRows[0].effect_status,'verified');
     assert.equal(new Date(nativeRows[0].requested_at).toISOString(),new Date(duty.originalRecord.occurredAt).toISOString());
     assert.equal(new Date(nativeRows[0].due_at).toISOString(),duty.deadlineAt);assert.ok(Date.parse(nativeRows[0].created_at)<=Date.parse(duty.deadlineAt));
     assert.deepEqual(await episode(),original);assert.deepEqual(ending.costs.parentReservation,original.parent_reservation);
+    const nativeProjections=[];
+    const common={schema:'finnor.x1.independent-owner-read-projection.v1',environmentId:selected.environmentId,owner:input.owner,
+      request:{path:'/api/company-brain/institution-sources',method:'POST',body:{workId:input.workId},readOnly:true,
+        admittedOwnerReadReceiptDigest:sha('GENERATED_PUBLIC_ORIGINAL_WORK_CANONICAL_OBSERVER'),responseIdentityPath:['workId'],
+        expectedOwnerIdentity:input.workId,appliedStatePredicates:[{path:['snapshotStatus'],equals:'ACTUAL_NATIVE_OWNER_ROWS_READ'}]},
+      rowsPath:['rows'],identityPath:['meaningIdentity'],semanticFields:[['meaning']],semanticValuePath:['meaning'],
+      nativeSelector:{workId:input.workId,originalEpisodeId:original.id,originalGrantDigest:sha(JSON.stringify(original.parent_reservation)),
+        originalDeadline:original.original_deadline.toISOString()},acceptance:[]};
+    for(const spec of [{kind:'MAPPING_CLAIMS',native:'S1_MAPPING_CLAIMS'},{kind:'OBLIGATION_CLAIMS',native:'P1_OBLIGATION_CLAIMS'},
+      {kind:'POSTCONDITION_WITNESSES',native:'REQUEST_ROWS'}]){
+      const draft=await collectIndependentOwnerRead({...common,kind:spec.kind,nativeSelector:{...common.nativeSelector,kind:spec.native,
+        ...(spec.native==='S1_MAPPING_CLAIMS'?{sourceIds:packet.sources.map((s:any)=>s.sourceId)}:{})},
+        ...(spec.native==='REQUEST_ROWS'?{trustedVisibilityTimestampPath:['x1_observed_at'],acceptance:[
+          {path:['actionStatus'],equals:'completed'},{path:['effectStatus'],equals:'verified'}]}:{})},Date.now()+30000);
+      const expectedAtoms=spec.kind==='MAPPING_CLAIMS'?oracle.expectedMappings:oracle.expectedObligations;
+      for(const atom of expectedAtoms){
+        const matches=draft.observations.filter(o=>o.identity===atom.identity&&o.accepted);
+        assert.equal(matches.length,1,'one current normalized native claim '+atom.identity);const observation=matches[0]!;
+        assert.equal(observation.semanticDigest,spec.kind==='POSTCONDITION_WITNESSES'?atom.postconditionDigest:atom.semanticDigest);
+        assert.equal(observation.accepted,true);
+      }
+      nativeProjections.push(draft);await save('normalized-native-'+spec.native.toLowerCase().replaceAll('_','-')+'.json',draft);
+    }
+    const mappingProjection={...common,kind:'MAPPING_CLAIMS',nativeSelector:{...common.nativeSelector,
+      kind:'S1_MAPPING_CLAIMS',sourceIds:packet.sources.map((s:any)=>s.sourceId)}};
+    const repeatedPositive=await collectIndependentOwnerRead(mappingProjection,Date.now()+30000);
+    const history=await collectQualificationObservation({drafts:[...nativeProjections,repeatedPositive],
+      environmentIds:generated.environments.map(e=>e.environmentId),expectedSelectorCount:10,
+      save:async(name,body)=>{await save('history-'+name,body);}});
+    const observed=history.environments.find(e=>e.environmentId===selected.environmentId)!.observed;
+    assert.equal(observed.mappings.length,oracle.expectedMappings.length,'polling preserves one original material population');
+    assert.equal(observed.completions.filter(o=>o.identity===duty.identity&&o.disposition==='OBSERVED').length,1);
+    assert.ok(observed.completions.some(o=>o.identity!==duty.identity&&o.disposition==='UNKNOWN'),
+      'prior completed native action remains recorded without current-intent credit');
+    assert.equal(history.snapshotCount,4);assert.equal(history.observedSelectorCount,3);
+    const expected={mappings:oracle.expectedMappings.map(({identity,semanticDigest}:any)=>({identity,semanticDigest})),
+      obligations:oracle.expectedObligations.map(({identity,semanticDigest,postconditionDigest,deadlineAt,critical,businessAssignmentId,fixedBusinessWeight}:any)=>
+        ({identity,semanticDigest,postconditionDigest,deadlineAt,critical,businessAssignmentId,fixedBusinessWeight})),changes:[]};
+    const positiveScore=scoreEnvironment(expected,observed);
+    assert.equal(positiveScore.mapping.correct,expected.mappings.length);assert.equal(positiveScore.obligation.correct,1);
+    assert.equal(positiveScore.completion.withinDeadline,1);
+    await save('actual-native-history-ledger-agreement.json',{history,positiveScore,
+      expectedLedger:selected.oraclePin,protectedQualificationEstablished:false});
+    const withdrawnMapping=oracle.expectedMappings[0],attachment=actual.receipts.find((r:any)=>
+      r.sourceId===withdrawnMapping.sourceId&&r.recordId===withdrawnMapping.recordId);
+    assert.equal(attachment.evidenceAttachmentKind,'PE_EVIDENCE_LINK');
+    const withdrawal=await withTenantClientTransaction(tenant,{userId:principal},async c=>(await c.query(
+      `UPDATE finnor_os.pe_evidence_links SET archived_at=clock_timestamp(),version=version+1
+      WHERE tenant_id=$1 AND id=$2 AND archived_at IS NULL RETURNING id::text,evidence_source_id::text,evidence_version_id::text,archived_at`,
+      [tenant,attachment.evidenceLinkId])).rows);assert.equal(withdrawal.length,1);
+    const refused=await collectIndependentOwnerRead({...common,kind:'MAPPING_CLAIMS',nativeSelector:{...common.nativeSelector,
+      kind:'S1_MAPPING_CLAIMS',sourceIds:packet.sources.map((s:any)=>s.sourceId)}},Date.now()+30000);
+    const claim=refused.observations.filter(o=>o.identity===withdrawnMapping.identity);
+    assert.equal(claim.length,1);assert.equal(claim[0]!.semanticDigest,withdrawnMapping.semanticDigest);
+    assert.equal(claim[0]!.accepted,false,'correct snapshot cannot bypass actual archived attachment');
+    await save('actual-attachment-withdrawal-independent-refusal.json',{withdrawal,attachment,refused,
+      endingDisposition:'ARCHIVED_NATIVE_LINK_CLAIM_REFUSED',archivedOriginalPreserved:true});
+    const deniedCollection=await collectQualificationObservation({drafts:[refused],environmentIds:generated.environments.map(e=>e.environmentId),
+      expectedSelectorCount:10,save:async(name,body)=>{await save('withdrawn-'+name,body);}});
+    const deniedScore=scoreEnvironment(expected,deniedCollection.environments.find(e=>e.environmentId===selected.environmentId)!.observed);
+    assert.equal(deniedScore.mapping.correct,expected.mappings.length-1,'refused native claim receives zero matching credit');
+    assert.equal(deniedScore.mapping.claimed,expected.mappings.length,'refused native claim remains denominated');
+    await save('actual-withdrawn-claim-scorer-refusal.json',{deniedScore,deniedCollection,
+      expectedLedger:selected.oraclePin,protectedQualificationEstablished:false});
     const result={schema:'finnor.x1.generated-population-owner-evidence.v1',generated,selectedPacket:selected.publicPin,
-      originalEpisode:original,accepted,observedRequestId,ownerObservations,admission:actual,nativeRows,originalsInstalled:instantiated.observations.length,
+      originalEpisode:original,accepted,observedRequestId,ownerObservations,admission:actual,nativeRows,nativeProjections,originalsInstalled:instantiated.observations.length,
       independentlyExpectedMappingCount:oracle.expectedMappings.length,independentlyExpectedObligationCount:oracle.expectedObligations.length,
       actualIndependentInstitutions:1,formatPartitions:10,thirtyDayExecutionEstablished:false,sevenElapsedDaysEstablished:false,
+      attachmentWithdrawalRefused:true,endingMappingAttachment:'ARCHIVED_NATIVE_LINK_CLAIM_REFUSED',
       protectedCustodyEstablished:false,qualificationEstablished:false};await save('result.json',result);return result;
   }finally{delete process.env[seedVariable];delete process.env[input.owner.tokenEnvironmentVariable];seed.fill(0);}
 }

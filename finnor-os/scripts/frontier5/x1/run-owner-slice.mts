@@ -90,6 +90,7 @@ const sourcePaths = ["finnor-os/scripts/frontier5/x1/run-owner-slice.mts", "finn
   'finnor-os/scripts/frontier5/x1/qualification-native-inputs.mts','finnor-os/scripts/frontier5/x1/qualification-population-owner-exercise.mts',
   'finnor-os/scripts/frontier5/x1/qualification-native-administration.mts','finnor-os/scripts/frontier5/x1/qualification-native-observation.mts',
   'finnor-os/scripts/frontier5/x1/qualification-observation-collection.mts',
+  'finnor-os/scripts/frontier5/x1/qualification-meaning.mts',
   "finnor-os/scripts/frontier5/x1/physical-owner-worker.mts", "finnor-os/scripts/frontier5/x1/native-diagnostic-worker.mts", "finnor-os/packages/db/migrations-bundle.ts",
   "finnor-os/package-lock.json", "scope-frontier5/x1-institutional-programme-compiler/profile.json"];
 const sourcePins = await Promise.all(sourcePaths.map(async path => ({ path, sha256: sha(await readFile(join(repo, path))) })));

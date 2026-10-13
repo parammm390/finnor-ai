@@ -1,5 +1,48 @@
 # FRONTIER5.X1 status
 
+## Current native meaning and history milestone — 14 October 2026
+
+Engineering remains INCOMPLETE. Goal ACTIVE. The source milestone is locally
+implemented and verified through actual owners; the final installation and
+reconstructible delivery gate remains unpassed.
+
+`verify-qualification-history-agreement-014/owner` passes all six named owner
+predicates in50.352s with unchanged source. Twelve generated original mappings,
+one current P1 responsibility and its native Request creation agree exactly
+with the independently frozen original-byte/native-contract ledger. Native
+Request whitespace follows the existing creation normalization. Every mapping
+requires the actual current canonical owner and exact live PE attachment or
+Core entity reference. Caller predicates cannot bypass those checks. Completion
+requires matching current/origin operation, deadline and full native creation
+intent; the prior action remains recorded without credit for absent current
+intent. Workstream/Finding selectors still need their final installed positive
+case.
+
+The collector retains all original cursor segments and immutable receipts.
+Repeated polls preserve the material population and within-snapshot claim
+multiplicity. An actual archived PE evidence link leaves its snapshot meaning
+unchanged but the independent claim refused. Its original denominator remains
+twelve and matching credit falls from twelve to eleven. The immutable archived
+ending state is retained. This is development evidence over one institution,
+ten format partitions, eight source classes, and no protected custody or full
+thirty-day/seven-day qualification claim.
+
+Earlier008 normalized owner PASS,013 attachment PASS49.230s and009–012 fixture
+failures remain retained. Those failures reached native version, authenticated
+tenant, immutable-archive and identity-key constraints; expectations and
+production guards were preserved. Scoped types/lint025 PASS21.851s/1.521s.
+
+Remaining internal work: complete full-journal version/business-branch and
+separate phase expectations, original assignment catalog and administration
+launch wiring; then finite final mandatory checks, native Factory scrutiny/user
+testing, same-cut backend/frontend installation, schema191 upgrade/restart and
+mounted late-response denial, source seal, standalone reconstruction and handoff.
+Protected custody/population, S8 admission, protected effect authority,
+production activation, qualified comparators, operational100× and financial/H2
+remain separate unavailable gates. No push, public PR, merge or deployment.
+
+## Historical checkpoints — superseded by the current milestone
+
 ## Current execution checkpoint — 13 October 2026
 
 14 October native-administration/observation milestone:

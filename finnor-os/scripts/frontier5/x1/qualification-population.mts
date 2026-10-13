@@ -8,6 +8,7 @@ import {z} from 'zod';
 import {writeZip} from '@finnor/ooxml';
 import {QualificationExecutionEvent,QualificationExecutionJournal} from './qualification-runtime.mts';
 import {OracleLedger} from '../../../packages/private-equity/src/institution-qualification/contracts';
+import {mappingMeaning,mappingIdentity,dutyIdentity,obligationMeaning,nativeCreationMeaning} from './qualification-meaning.mts';
 
 const hex=z.string().regex(/^[a-f0-9]{64}$/),uuid=z.string().uuid(),instant=z.string().datetime({offset:true});
 const pin=z.object({path:z.string().startsWith('/'),sha256:hex}).strict();
@@ -209,11 +210,19 @@ async function generatePopulation(value:unknown,paths:{publicRoot:string;withhel
           request:'Original material evidence '+random.identifier(),...Object.fromEntries(Object.entries(rule.triggerFields).map(([k,v])=>[k,String(v)]))};
         for(const field of ['requestText','workstreamName','findingStatement'])if(record[field])
           record[field]+=' '+random.identifier();
-        const completionFields=Object.fromEntries(Object.entries(rule.postconditionFields).map(([key,value])=>
+        const boundFields=Object.fromEntries(Object.entries(rule.postconditionFields).map(([key,value])=>
           [key,typeof value==='string'&&value.startsWith('GENERATED_FIELD:')
             ?record[value.slice('GENERATED_FIELD:'.length)]??(()=>{throw Error('INDEPENDENT_POSTCONDITION_FIELD_ABSENT');})():value]));
-        rows.push(record);expectedObligations.push({identity:sourceId+'/'+id+'/'+rule.id,
-          semanticDigest:hash([target.canonicalRef,rule.operation,rule.principalId,rule.deadlineAt,record]),
+        const completionFields=nativeCreationMeaning(rule.operation,{dealId:target.canonicalRef.split(':')[1]?.split('@')[0],
+          owner:{partyType:'employee',partyId:rule.principalId},workstreamId:boundFields.workstream_id,
+          requestedFromDealPartyId:boundFields.requested_from_deal_party_id,requestText:record.requestText,
+          requestedAt:record.occurredAt,dueAt:rule.deadlineAt,requiresAcceptedDeliverable:record.requiresAcceptedDeliverable==='true',
+          kind:record.workstreamKind,name:record.workstreamName,statement:record.findingStatement,severity:record.findingSeverity,
+          materiality:rule.materiality,requiredForWorkstreamCompletion:record.requiredForWorkstreamCompletion==='true'});
+        const meaning=obligationMeaning({sourceId,recordId:id,ruleId:rule.id,canonicalRef:target.canonicalRef,
+          operation:rule.operation,principalId:rule.principalId,deadlineAt:rule.deadlineAt,businessFields:completionFields});
+        rows.push(record);expectedObligations.push({identity:dutyIdentity(sourceId,id,rule.id),sourceId,recordId:id,ruleId:rule.id,
+          semanticDigest:hash(meaning),meaning,
           postconditionDigest:hash(completionFields),completionFields,
           deadlineAt:rule.deadlineAt,critical:rule.critical,businessAssignmentId:envId+'/'+id,fixedBusinessWeight:rule.fixedBusinessWeight,
           targetCanonicalRef:target.canonicalRef,operation:rule.operation,originalRecord:record,
@@ -223,13 +232,13 @@ async function generatePopulation(value:unknown,paths:{publicRoot:string;withhel
           const target=deals[i%deals.length]!,id=random.identifier();
           rows.push({id,kind:'quantity',registrationId:target.registrationId,factKey:'facility_balance',value:String(20+random.integer(980))+'.00',
             currency:'USD',unit:'units',period:new Date(baseTime).toISOString().slice(0,7),basis:'outstanding',occurredAt,availableAt});
-          expectedMappings.push({identity:sourceId+'/'+id,targetCanonicalRef:target.canonicalRef,kind:'quantity',originalFields:rows.at(-1)});
+          expectedMappings.push({identity:sourceId+'/'+id,sourceId,recordId:id,targetCanonicalRef:target.canonicalRef,kind:'quantity',originalFields:rows.at(-1)});
         }
       }else{
         const selected=sourceClass==='email'?[deals[ordinal%deals.length]!]:assets.slice(0,Math.min(assets.length,branches+(index%2)));
         rows=selected.map(a=>({id:random.identifier(),kind:'entity',entityType:a.kind,registrationId:a.registrationId,
           displayName:'Overlapping institutional name',occurredAt,availableAt}));
-        rows.forEach((row,i)=>expectedMappings.push({identity:sourceId+'/'+row.id,targetCanonicalRef:selected[i]!.canonicalRef,
+        rows.forEach((row,i)=>expectedMappings.push({identity:sourceId+'/'+row.id,sourceId,recordId:row.id,targetCanonicalRef:selected[i]!.canonicalRef,
           kind:'entity',originalFields:row}));
       }
       const columns=random.shuffle([...new Set(rows.flatMap(r=>Object.keys(r)))]);
@@ -239,6 +248,11 @@ async function generatePopulation(value:unknown,paths:{publicRoot:string;withhel
       sources.push({sourceId,sourceClass,protocol,originalFile:name,sha256:sha(bytes),bytes:bytes.length,grantId:grant[0]!.id,
         rightsRevision:grant[0]!.rightsRevision,columnOrder:columns,objectCount:1,rowCount:rows.length});
       sourceRows.set(sourceClass,{rows:structuredClone(orderedRows),columns,protocol,sourceId});
+      for(const mapping of expectedMappings.filter(m=>m.sourceId===sourceId)){
+        mapping.originalSha256=sha(bytes);mapping.identity=mappingIdentity(sourceId,mapping.recordId,sha(bytes));
+        mapping.meaning=mappingMeaning({sourceId,recordId:mapping.recordId,originalSha256:sha(bytes),
+          canonicalRef:mapping.targetCanonicalRef,record:mapping.originalFields});mapping.semanticDigest=hash(mapping.meaning);
+      }
     }
     if(sources.reduce((n,s)=>n+s.bytes,0)>profile.bounds.rawBytes||sources.length>profile.bounds.sourceInstances)
       throw Error('ORIGINAL_GENERATOR_SOURCE_OR_RAW_BYTE_BOUND');
@@ -375,7 +389,7 @@ async function generatePopulation(value:unknown,paths:{publicRoot:string;withhel
       semanticDigestDefinition:'CANONICAL_JSON_SHA256_OF_INDEPENDENT_SOURCE_AND_NATIVE_TARGET_FIELDS',
       expectedValuesIndependentOfCandidate:true,signature:null,protectedCustodyEstablished:false};
     const oraclePin=await write(withheldRoot,envId+'-ledger.json',oracle);
-    const expected={mappings:expectedMappings.map(m=>({identity:m.identity,semanticDigest:hash([m.targetCanonicalRef,m.originalFields])})),
+    const expected={mappings:expectedMappings.map(m=>({identity:m.identity,semanticDigest:m.semanticDigest})),
       obligations:expectedObligations.map(({identity,semanticDigest,postconditionDigest,deadlineAt,critical,businessAssignmentId,fixedBusinessWeight})=>
         ({identity,semanticDigest,postconditionDigest,deadlineAt,critical,businessAssignmentId,fixedBusinessWeight})),
       changes:orderedEvents.map(e=>({identity:e.id,occurredAt:e.occurredAt,availableAt:e.availableAt}))};

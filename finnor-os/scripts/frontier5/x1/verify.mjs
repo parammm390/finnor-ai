@@ -72,6 +72,7 @@ for (const path of [
   'finnor-os/scripts/frontier5/x1/qualification-population-owner-exercise.mts','finnor-os/scripts/frontier5/x1/qualification-native-worker.mts',
   'finnor-os/scripts/frontier5/x1/qualification-native-administration.mts','finnor-os/scripts/frontier5/x1/qualification-native-observation.mts',
   'finnor-os/scripts/frontier5/x1/qualification-observation-collection.mts',
+  'finnor-os/scripts/frontier5/x1/qualification-meaning.mts',
   "finnor-os/scripts/frontier5/x1/qualification-cases.mts",
   "finnor-os/scripts/frontier5/x1/reference/qualification-contract.md",
   "finnor-os/packages/private-equity/src/institution-program/checker.ts",

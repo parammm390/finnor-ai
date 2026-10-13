@@ -369,6 +369,7 @@ export async function executeReplaySlice(input:{journal:z.infer<typeof Qualifica
 export const IndependentReadProjection=z.object({schema:z.literal('finnor.x1.independent-owner-read-projection.v1'),
   environmentId:z.string().min(1),owner:endpoint,request:observation,
   rowsPath:path,identityPath:path,semanticFields:z.array(path).min(1).max(64),
+  semanticValuePath:path.optional(),
   semanticObjectFields:z.array(z.object({name:z.string().regex(/^[A-Za-z][A-Za-z0-9_]{0,127}$/),path,
     normalization:z.enum(['EXACT','ISO_INSTANT']).optional()}).strict())
     .min(1).max(64).refine(fields=>new Set(fields.map(f=>f.name)).size===fields.length,'INDEPENDENT_OBJECT_FIELD_DUPLICATE').optional(),
@@ -412,8 +413,11 @@ function projectIndependentOwnerRead(projection:z.infer<typeof IndependentReadPr
     const visible=projection.trustedVisibilityTimestampPath?get(row,projection.trustedVisibilityTimestampPath):response.observedAt;
     if(typeof visible!=='string'||!Number.isFinite(Date.parse(visible))||Date.parse(visible)>Date.parse(response.observedAt))
       throw Error('ACTUAL_OWNER_TRUSTED_VISIBILITY_TIMESTAMP_REQUIRED');
-    const preimage=object??values;
-    return {identity:id,semanticDigest:digest(preimage),accepted:appliedStatePredicatesSatisfied&&projection.acceptance.every(p=>{
+    const preimage=projection.semanticValuePath?get(row,projection.semanticValuePath):object??values;
+    if(preimage===undefined)throw Error('ACTUAL_NATIVE_SEMANTIC_PREIMAGE_ABSENT');
+    return {identity:id,semanticDigest:digest(preimage),accepted:appliedStatePredicatesSatisfied
+      &&(!projection.nativeSelector||(row as {nativePredicatesSatisfied?:unknown}).nativePredicatesSatisfied===true)
+      &&projection.acceptance.every(p=>{
       const value=get(row,p.path);return value!==undefined&&digest(value)===digest(p.equals);}),
       witnessDigest:digest({ownerIdentity:identity.responseDigest,ownerResponse:response.responseDigest,identity:id,preimage,visible}),
       observedAt:visible,independentReadAt:response.observedAt};

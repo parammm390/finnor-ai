@@ -83,12 +83,12 @@ if(command==='collect'){
     allocationConventionDigest:registered.protocol.allocationConventionDigest,durationSeconds:Number(value('--seconds')??30),pollIntervalMs:1000,
     limits:{ref:envelope.ref,registrationDigest:digest(envelope),maxAcquisitionCalls:envelope.maxAcquisitionCalls,
       maxAggregateWallMs:envelope.maxWallSeconds*1000,maxOutputBytes:64*1024*1024}});
-  const latest=new Map<string,Awaited<ReturnType<typeof import('./qualification-runtime.mts').collectIndependentOwnerRead>>>();
-  for(const ref of collection.segment.receiptRefs.filter(ref=>ref.path.startsWith('live-owner-'))){
-    const draft=pinned({path:join(executionRoot,ref.path),sha256:ref.sha256});latest.set(draft.projectionDigest,draft);
+  const history:Array<Awaited<ReturnType<typeof import('./qualification-runtime.mts').collectIndependentOwnerRead>>>=[];
+  for(const ref of collection.state.segments.flatMap(segment=>segment.receiptRefs).filter(ref=>ref.path.startsWith('live-owner-'))){
+    const draft=pinned({path:join(executionRoot,ref.path),sha256:ref.sha256});history.push(draft);
   }
   outputBytes+=collection.state.resources.outputBytes;
-  const result=await collectQualificationObservation({drafts:[...latest.values()],environmentIds:registered.protocol.environments.map(e=>e.id),
+  const result=await collectQualificationObservation({drafts:history,environmentIds:registered.protocol.environments.map(e=>e.id),
     expectedSelectorCount:projections.length,save});
   save('native-observation-execution.json',{resources:collection.state.resources,segment:collection.segment,
     originalCursorPath:control.executionCursorPath,aggregateAllowanceRetained:true,sevenElapsedDaysEstablished:false,signature:null});

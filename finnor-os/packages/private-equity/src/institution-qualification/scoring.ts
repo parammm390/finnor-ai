@@ -3,6 +3,7 @@ import { z } from "zod";
 const text = z.string().min(1).max(4096), digest = z.string().regex(/^[a-f0-9]{64}$/);
 const instant = z.string().datetime({ offset: true });
 const atom = z.object({ identity: text, semanticDigest: digest }).strict();
+const observedAtom=atom.extend({accepted:z.boolean().optional()}).strict();
 export const ExpectedEnvironment = z.object({
   mappings: z.array(atom).max(150000),
   obligations: z.array(atom.extend({ postconditionDigest: digest, deadlineAt: instant,
@@ -10,7 +11,7 @@ export const ExpectedEnvironment = z.object({
   changes: z.array(z.object({ identity: text, occurredAt: instant, availableAt: instant }).strict()).max(150000),
 }).strict();
 export const ObservedEnvironment = z.object({
-  mappings: z.array(atom).max(150000), obligations: z.array(atom).max(3840),
+  mappings: z.array(observedAtom).max(150000), obligations: z.array(observedAtom).max(3840),
   completions: z.array(z.object({ identity: text,
     disposition: z.enum(["OBSERVED", "MISSED", "BLOCKED", "UNKNOWN", "REFUSED", "EXPIRED", "OVERRIDDEN"]),
     postconditionDigest: digest.nullable(), observedAt: instant.nullable(), witnessDigest: digest.nullable(),
@@ -27,7 +28,7 @@ function unique(items: Array<{ identity: string }>, predicate: string) {
 }
 function matches(expected: Expected["mappings"], actual: Observed["mappings"]) {
   const truth = new Map(expected.map(item => [item.identity, item.semanticDigest])), credited = new Set<string>();
-  for (const claim of actual) if (!credited.has(claim.identity) && truth.get(claim.identity) === claim.semanticDigest)
+  for (const claim of actual) if (claim.accepted!==false&&!credited.has(claim.identity) && truth.get(claim.identity) === claim.semanticDigest)
     credited.add(claim.identity);
   return { expected: expected.length, claimed: actual.length, correct: credited.size,
     precision: actual.length ? credited.size / actual.length : null,
@@ -51,7 +52,8 @@ export function scoreEnvironment(expectedValue: unknown, observedValue: unknown)
   const timely = new Set<string>(), completionGaps: Array<{ identity: string; reason: string }> = [];
   const falseCompletions = new Set<string>();
   const duties = new Map(expected.obligations.map(item => [item.identity, item]));
-  const claimedDuties = new Set(observed.obligations.map(item => JSON.stringify([item.identity, item.semanticDigest])));
+  const claimedDuties = new Set(observed.obligations.filter(item=>item.accepted!==false)
+    .map(item => JSON.stringify([item.identity, item.semanticDigest])));
   const firstCompletion = new Map(observed.completions.map(item => [item.identity, item]));
   for (const actual of observed.completions) {
     const truth = duties.get(actual.identity);

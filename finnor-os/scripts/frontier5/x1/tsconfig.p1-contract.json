@@ -17,6 +17,7 @@
     "./qualification-native-administration.mts",
     "./qualification-observation-collection.mts",
     "./qualification-native-observation.mts",
+    "./qualification-meaning.mts",
     "./qualification-population-owner-exercise.mts",
     "../../../apps/worker/src/dev-entry.mts",
     "../../../apps/api/dev-server.ts",
