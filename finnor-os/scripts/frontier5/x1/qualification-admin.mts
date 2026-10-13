@@ -6,12 +6,13 @@ import { join, isAbsolute } from "node:path";
 import { z } from "zod";
 import { digest } from "../../../packages/capability-evolution/src/contracts";
 import { validateQualificationRegistration, assessInstitutionQualification } from "../../../packages/private-equity/src/institution-qualification/administration";
+import {executeReplaySlice,executeLiveObservationSlice,validateExecutionJournal,IndependentReadProjection} from './qualification-runtime.mts';
 
 const repo = fileURLToPath(new URL("../../../../", import.meta.url));
 const args = process.argv.slice(2), command = args[0];
 const value = (key: string) => { const i = args.indexOf(key); return i < 0 ? undefined : args[i + 1]; };
-if (!["plan", "launch", "observe", "resume", "assess"].includes(command ?? ""))
-  throw Error("USE_PLAN_LAUNCH_OBSERVE_RESUME_ASSESS_WITH_PINNED_CONTROL");
+if (!["plan", "launch", "observe", "resume", "assess",'replay','live'].includes(command ?? ""))
+  throw Error("USE_PLAN_LAUNCH_OBSERVE_RESUME_ASSESS_REPLAY_LIVE_WITH_PINNED_CONTROL");
 const controlPath = value("--control"), destination = value("--evidence"), trustedHash = value("--trust-sha256");
 if (!controlPath || !isAbsolute(controlPath) || !destination || !isAbsolute(destination)
     || !/^[a-f0-9]{64}$/.test(trustedHash ?? "")) throw Error("PINNED_ABSOLUTE_CONTROL_EVIDENCE_AND_OWNER_TRUST_HASH_REQUIRED");
@@ -26,6 +27,8 @@ const Control = z.object({ schema: z.literal("finnor.x1.qualification-control.v1
   oracleLedgers: z.array(pin).length(10), observationPackets: z.array(pin).max(10000),
   lifecycleCostPacket: pin.optional(), privateEvidenceRoot: z.string(),
   deliveryReceipts: z.array(pin).max(1280).optional(),
+  executionJournal:pin.optional(),independentReadProjections:pin.optional(),
+  executionEvidenceRoot:z.string().optional(),executionCursorPath:z.string().optional(),
 }).strict();
 const controlBytes = read(controlPath, 1024 * 1024), control = Control.parse(JSON.parse(controlBytes.toString("utf8")));
 if (control.trustPolicy.sha256 !== trustedHash) throw Error("INDEPENDENT_OWNER_TRUST_POLICY_PIN_CHANGED");
@@ -55,8 +58,50 @@ save("freeze.json", { schema: "finnor.x1.qualification-command-freeze.v1", comma
   tree: execFileSync("git", ["rev-parse", "HEAD^{tree}"], { cwd: repo, encoding: "utf8" }).trim(),
   runtime: { node: process.version, platform: process.platform, architecture: process.arch },
   authority: "EXISTING_OWNER_SUPPLIED_POLICY_NO_NEW_KEYS_GRANTS_OR_QUALIFICATION_RECEIPTS" });
+if(['launch','observe','resume','replay','live'].includes(command??'')){
+  const limits=JSON.parse(readFileSync(join(repo,'scope-frontier5/x1-institutional-programme-compiler/verification-plan.json'),'utf8')).limits;
+  const disk=statfsSync(repo,{bigint:true});
+  if(disk.bavail*disk.bsize<BigInt(limits.liveMinimumFreeBytes))throw Error('X1_FROZEN_LIVE_CAPACITY_REFUSED');
+}
 
-if (command === "assess") {
+if(command==='replay'||command==='live'){
+  if(!control.executionEvidenceRoot||!control.executionCursorPath)throw Error('ORIGINAL_REGISTERED_EXECUTION_PATHS_REQUIRED');
+  const executionRoot=realpathSync(control.executionEvidenceRoot);
+  if(!executionRoot.startsWith(root+'/')||!control.executionCursorPath.startsWith(executionRoot+'/'))
+    throw Error('PRIVATE_ORIGINAL_EXECUTION_CURSOR_REQUIRED');
+  const envelope=registered.protocol.envelopes[command==='replay'?'replay':'soak'];
+  const limits={ref:envelope.ref,registrationDigest:digest(envelope),maxAcquisitionCalls:envelope.maxAcquisitionCalls,
+    maxAggregateWallMs:envelope.maxWallSeconds*1000,maxOutputBytes:64*1024*1024};
+  const recoveryDigest=value('--recover-lock-sha256');
+  const recovery=recoveryDigest?{expectedLockDigest:z.string().regex(/^[a-f0-9]{64}$/).parse(recoveryDigest)}:undefined;
+  if(command==='replay'){
+    if(!control.executionJournal)throw Error('INDEPENDENT_PINNED_EXECUTION_JOURNAL_REQUIRED');
+    const journal=validateExecutionJournal(pinned(control.executionJournal),{
+      protocolDigest:registered.protocolDigest,candidateCutDigest:digest(registered.protocol.candidateCut),
+      allocationConventionDigest:registered.protocol.allocationConventionDigest,environments:registered.protocol.environments});
+    const seconds=Number(value('--seconds')??180),maxEvents=Number(value('--max-events')??128);
+    if(!Number.isInteger(seconds)||seconds<1||seconds>840)throw Error('FINITE_REPLAY_COMMAND_QUANTUM_REQUIRED');
+    const result=await executeReplaySlice({journal,cursorPath:control.executionCursorPath,evidenceRoot:executionRoot,
+      deadlineAt:Date.now()+seconds*1000,limits,maxEvents,...(recovery?{recovery}:{})});
+    save('execution-result.json',{command,submitted:result.submitted,
+      completeExpectedEventCoverage:result.completeExpectedEventCoverage,resources:result.cursor.resources,
+      cursorPath:control.executionCursorPath,replicaTimeIsNotElapsedLiveTime:true,protectedQualificationEstablished:false});
+  }else{
+    if(!control.independentReadProjections)throw Error('REGISTERED_INDEPENDENT_OWNER_SELECTORS_REQUIRED');
+    const raw=pinned(control.independentReadProjections);
+    const projections=z.array(IndependentReadProjection).min(10).max(160).parse(raw);
+    if(projections.some(p=>!registered.protocol.environments.some(e=>e.id===p.environmentId)))
+      throw Error('REGISTERED_OBSERVER_ENVIRONMENT_CHANGED');
+    const result=await executeLiveObservationSlice({projections,cursorPath:control.executionCursorPath,evidenceRoot:executionRoot,
+      protocolDigest:registered.protocolDigest,candidateCutDigest:digest(registered.protocol.candidateCut),
+      allocationConventionDigest:registered.protocol.allocationConventionDigest,durationSeconds:Number(value('--seconds')??30),
+      pollIntervalMs:1000,limits,...(recovery?{recovery}:{})});
+    save('execution-result.json',{command,segment:result.segment,resources:result.state.resources,
+      cursorPath:control.executionCursorPath,sevenElapsedDaysEstablished:false,protectedQualificationEstablished:false});
+  }
+  console.log(JSON.stringify({status:'FINITE_AUTHENTICATED_EXECUTION_RECORDED',command,evidence:out,
+    cursorPath:control.executionCursorPath,protectedQualificationEstablished:false}));
+}else if (command === "assess") {
   const assessment = assessInstitutionQualification({ protocol: registration, trustPolicy: policy, profile,
     oracles: control.oracleLedgers.map(pinned), observationPackets: control.observationPackets.map(pinned),
     ...(control.lifecycleCostPacket ? { lifecycleCostPacket: pinned(control.lifecycleCostPacket) } : {}) });

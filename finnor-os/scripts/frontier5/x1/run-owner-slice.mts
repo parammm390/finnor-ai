@@ -27,6 +27,7 @@ import {buildInstitutionResourceDemand} from '../../../packages/private-equity/s
 import {loadInstitutionProfile} from '../../../packages/private-equity/src/institution-program/store';
 import {readInstitutionMandate} from '../../../packages/private-equity/src/institution-program/source-authority';
 import {parse as parseDotenv} from 'dotenv';
+import {startQualificationOwnerExercise,finishQualificationOwnerExercise} from './qualification-owner-exercise.mts';
 
 const repo = fileURLToPath(new URL("../../../../", import.meta.url));
 const installation=process.env.FINNOR_X1_INSTALLED_ROOT;
@@ -62,7 +63,8 @@ const unsupported=process.env.FINNOR_X1_OWNER_MODE==='unsupported'||unsupportedO
 const cancelObserved=process.env.FINNOR_X1_OWNER_MODE==='cancel_observed';
 const publicationMeter=process.env.FINNOR_X1_OWNER_MODE==='publication_meter';
 const diagnostic=process.env.FINNOR_X1_OWNER_MODE==='diagnostic';
-if(process.env.FINNOR_X1_OWNER_MODE&&!['api','mounted','revision','material','heterogeneous','canonical','creation','recovery','effect_recovery','ordinary','domain','owner_inputs','reporting_changes','authority_epoch','sensitive_coverage','personnel','source_namespace','upgrade','checker_crash','contention','unsupported','unsupported_operation','cancel_observed','publication_meter','diagnostic'].includes(process.env.FINNOR_X1_OWNER_MODE))
+const qualificationExecution=process.env.FINNOR_X1_OWNER_MODE==='qualification_execution';
+if(process.env.FINNOR_X1_OWNER_MODE&&!['api','mounted','revision','material','heterogeneous','canonical','creation','recovery','effect_recovery','ordinary','domain','owner_inputs','reporting_changes','authority_epoch','sensitive_coverage','personnel','source_namespace','upgrade','checker_crash','contention','unsupported','unsupported_operation','cancel_observed','publication_meter','diagnostic','qualification_execution'].includes(process.env.FINNOR_X1_OWNER_MODE))
   throw Error('EXACT_REGISTERED_OWNER_MODE_REQUIRED');
 if((mounted||material||heterogeneous||canonical||recovery||effectRecovery||ordinary||upgrade||checkerCrash||contention||unsupported||cancelObserved||authorityEpoch)&&dutyCount!==1)throw Error('NAMED_ONE_DUTY_SCENARIO_REQUIRED');
 if(process.env.FINNOR_X1_OWNER_CASE&&!['1','128'].includes(process.env.FINNOR_X1_OWNER_CASE))
@@ -79,6 +81,7 @@ const sourcePaths = ["finnor-os/scripts/frontier5/x1/run-owner-slice.mts", "finn
   'finnor-os/scripts/frontier5/x1/owner-source-corpus.mts',
   'finnor-os/scripts/frontier5/x1/canonical-owner-corpus.mts',
   'finnor-os/scripts/frontier5/x1/upgrade-owner-fixture.mts',
+  'finnor-os/scripts/frontier5/x1/qualification-runtime.mts','finnor-os/scripts/frontier5/x1/qualification-owner-exercise.mts',
   "finnor-os/scripts/frontier5/x1/physical-owner-worker.mts", "finnor-os/scripts/frontier5/x1/native-diagnostic-worker.mts", "finnor-os/packages/db/migrations-bundle.ts",
   "finnor-os/package-lock.json", "scope-frontier5/x1-institutional-programme-compiler/profile.json"];
 const sourcePins = await Promise.all(sourcePaths.map(async path => ({ path, sha256: sha(await readFile(join(repo, path))) })));
@@ -104,7 +107,8 @@ const freeze = { installation:installedManifest?{root:installation,manifestDiges
     ...(checkerCrash?['F-physical-checker-crash-and-compatible-resume']:[]),
     ...(contention?['E-original-shared-parent-contention']:[]),...(unsupported?['F-mixed-unsupported-rule']:[]),
     ...(cancelObserved?['E-cancel-observed-standing-continuation']:[]),
-    ...(publicationMeter?['F-post-compile-publication-failure-meter']:[]),...(diagnostic?['H-matched-equipped-native-originals']:[])],
+    ...(publicationMeter?['F-post-compile-publication-failure-meter']:[]),...(diagnostic?['H-matched-equipped-native-originals']:[]),
+    ...(qualificationExecution?['G-finite-qualification-owner-execution']:[])],
   omitted: "Full B–H, physical interruption, mounted browser, clean built installation/upgrade and protected qualification remain distinct required evidence" };
 await writeFile(join(evidence, "freeze.json"), JSON.stringify(freeze, null, 2) + "\n", { mode: 0o600, flag: "wx" });
 const results: any[] = [], traffic: unknown[] = [];
@@ -115,6 +119,7 @@ let acknowledgementBlocker:pg.Client|undefined,effectRecoveryProof:any;
 let checkerCrashProof:any;
 let service: Awaited<ReturnType<typeof authenticatedApiFixture>> | undefined, worker: ReturnType<typeof spawn> | undefined;
 let diagnosticOff:pg.Client|undefined;
+let qualificationExercise:Awaited<ReturnType<typeof startQualificationOwnerExercise>>|undefined;
 let frontend:ReturnType<typeof spawn>|undefined;
 let mountedControl:Server|undefined;
 let mountedRevisionVerified=false;
@@ -764,6 +769,15 @@ try {
     await publicationBlocker.query(effectRecovery?'LOCK TABLE finnor_os.pe_requests IN SHARE MODE'
       :'LOCK TABLE finnor_os.x1_mapping_admissions IN SHARE MODE');}
   let logBytes=0;
+  if(qualificationExecution){
+    const episode=(await admin.query('SELECT e.* FROM finnor_os.x1_compiler_episodes e JOIN finnor_os.x1_compiler_requests r ON r.tenant_id=e.tenant_id AND r.episode_id=e.id WHERE r.tenant_id=$1 AND r.id=$2',
+      [tenant,compilerId])).rows[0];
+    qualificationExercise=await startQualificationOwnerExercise({evidenceRoot:evidence,
+      owner:{origin:service.origin,tenantId:tenant,principalId:actor,tokenEnvironmentVariable:'FINNOR_X1_QUAL_TOKEN_OWNER_EXERCISE'},
+      token:service.token,workId:workId!,compilerId:compilerId!,submitBody:input,episodeId:episode.id,
+      grantDigest:sha(JSON.stringify(episode.parent_reservation)),originalDeadline:episode.original_deadline.toISOString(),
+      candidateCutDigest:sha(JSON.stringify(freeze.source)),allocationConventionDigest:sha('ORIGINAL_VALIDATOR_INTERVAL_CONTAINS_COMPONENTS')});
+  }
   const workerReadiness=new WeakMap<ReturnType<typeof spawn>,Promise<Record<string,unknown>>>();
   const startWorker=()=>{
     const child=spawn(process.execPath,installation
@@ -1317,6 +1331,13 @@ try {
   }
   results.push({ id: unsupported?'A-supported-independent-native-creation':"A-authenticated-owner-creation", status: "PASS", observed: { compilerId, admission, rows, effects:allEffects,plans,linked,repeated, beforeReplay, afterReplay },
     basis: "ACTUAL_LOCAL_AUTH_HTTP_SQL_PHYSICAL_WORKER_NATIVE_CREATE_AND_INDEPENDENT_SQL_OBSERVER" });
+  if(qualificationExecution){
+    const proof=await finishQualificationOwnerExercise(qualificationExercise!);
+    assert.equal((await admin.query('SELECT count(*)::int n FROM finnor_os.pe_requests WHERE tenant_id=$1',[tenant])).rows[0].n,1);
+    results.push({id:'G-finite-qualification-owner-execution',status:'PASS',observed:{entries:proof.resumed.cursor.entries.length,
+      acquisitions:proof.resumed.cursor.resources.acquisitionExposures,liveOwnerDrafts:proof.drafts.length},
+      basis:'ACTUAL_QUEUED_BEFORE_WORKER_APPLIED_RECONCILIATION_ORIGINAL_KEY_CAPS_AND_INDEPENDENT_NATIVE_WORK_READ'});
+  }
   if(heterogeneous){
     const actual=(await admin.query(`SELECT a.candidate,a.check_result,a.body,a.body_digest
       FROM finnor_os.x1_compiler_requests r JOIN finnor_os.x1_compiler_artifacts a ON a.tenant_id=r.tenant_id AND a.id=r.artifact_id
@@ -2442,7 +2463,7 @@ try {
   }
   await save("traffic.json", traffic);
   if(mountedControl){mountedControl.closeAllConnections();await new Promise<void>(resolve=>mountedControl!.close(()=>resolve()));}
-  await service?.close(); await closePool(); await diagnosticOff?.end().catch(()=>{}); await admin?.end(); await database?.stop().catch(() => {});
+  await qualificationExercise?.close();await service?.close(); await closePool(); await diagnosticOff?.end().catch(()=>{}); await admin?.end(); await database?.stop().catch(() => {});
   await rm(join(evidence, "tmp/database"), { recursive: true, force: true });
   const currentPins = await Promise.all(sourcePaths.map(async path => ({ path, sha256: sha(await readFile(join(repo, path))) })));
   const sourceUnchanged = JSON.stringify(sourcePins) === JSON.stringify(currentPins) && freeze.source.commit === git("rev-parse", "HEAD")

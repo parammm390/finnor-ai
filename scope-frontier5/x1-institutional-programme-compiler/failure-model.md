@@ -584,6 +584,34 @@ release in one browser-tool operation. Validate exact source/Work/control key;
 no production fault interface, changed read deadline or manufactured denial.
 # Physical lifecycle and matched diagnostic boundaries
 
+## Independently administered execution tools: pre-code failure contract
+
+Finite execution E2E uses the existing disposable authenticated Work/compiler,
+physical native worker and independent canonical SQL observer. A separate
+authenticated replica-clock fixture persists only clock transitions; it cannot
+write business state or issue completion. Exercise original-key replay,
+applied-state reconciliation, chained refusal, resumed cap enlargement refusal,
+immutable receipt preimages and actual independent owner read. Ten journal
+partitions exercise the runner format over the original development Work;
+they are explicitly not ten independently qualified institutional environments.
+No replay-duration or seven-day qualification credit comes from this case.
+The generated population and external custody are separate required artifacts.
+
+Before implementation, the intended runtime regression is that an HTTP202 with
+non-applied owner state unlocks a dependent event; only a subsequent actual
+authenticated owner read matching all frozen applied predicates may unlock it.
+Interrupted entries and live segments must survive a real child exit. Resume
+never enlarges aggregate calls/output/wall limits or redelivers a possible effect.
+Every saved receipt must retain its original digest after cursor advancement.
+All observer execution is inside the measured original validation interval and
+must join that interval's original S5/S7 parent, without extra elapsed credit.
+
+Population generation can leak withheld expected values into public packets, reuse a familiar fixture under renamed identifiers, omit an environment/class, remove a critical duty, reorder causally dependent owner events, or change locked generator coordinates. Generator inputs and existing owner templates/seeds must be pinned; public/withheld products remain separate. Structural/schema/date/permission/process variants are committed before exposure. No generated packet establishes genuine unseen custody or service authority by itself.
+
+Replay/live execution can forget an in-flight mutation on crash, retry a possible effect under a new key, advance replica time using only timestamps, reset a Work/episode/grant/deadline, overlap two controllers, lose unknown responses, silently skip failed/refused entries, overrun aggregate budgets, accept substituted source/trust/profile bytes, or mislabel accelerated time as elapsed live time. Persist exposure before HTTP. Resume uncertain mutations only through frozen independent read/reconciliation; preserve the original identity. Native service authentication and real owner state transitions are required. Replica-clock authority/receipts are distinct from local wall/monotonic intervals. A finite live slice cannot establish seven elapsed days.
+
+Observation can copy candidate completion summaries as truth, synthesize atoms from expected digests, read another tenant, issue writes from a read selector, suppress duplicate claims/false completion, sign with a candidate key, or turn unknown prices/human/aggregate memory into zero. Read actual frozen canonical/provider selectors; project only actual response fields through declarative bounded paths. Retain raw response digests/statuses and missing witnesses. Produce unsigned observation drafts until an existing independently administered registered observer signs them. No key generation, promotion, qualification, new operation authority or S8 admission is implemented by these tools.
+
 The existing native PE Objective inspector ignored the original persisted Work focus when multiple Deal links existed. Actual diagnostic 003 reached that inspector and failed before model invocation. Diagnostic 004 removed the second Work link and then failed an independently expected X1 mapping; retain both failures. Restore the complete original Work scope. A supported inspector repair may select only one explicit persisted Deal focus that is also a current direct canonical link on the same Work; ambiguous, absent, unlinked or cross-tenant focus must still use the existing conservative resolver/refusal. Existing authority evaluation and canonical query execution remain mandatory. Closing an owned second-database client before stopping the disposable cluster is necessary to retain a failed run's result; otherwise a real PostgreSQL FATAL client event can interrupt final evidence.
 
 The lifecycle collector can fail before an original parent exists, after authority is revoked, while S5 refuses remaining occupancy, or after a successful S5 charge but before immutable S7 persistence. Preserve the real measurement and exact gap; never replace it with zero or a fresh parent. A retry of the same physical invocation must retain the original UUID and semantic preimage. Whole-run elapsed time includes API/compiler/checker intervals and must not be summed with those component intervals. Source returned/reused bytes are owner observations, not storage or network savings. A process RSS sample cannot establish aggregate peak memory. Unobserved prices and human work remain unknown.
