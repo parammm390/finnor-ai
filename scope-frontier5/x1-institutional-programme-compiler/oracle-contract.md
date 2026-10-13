@@ -583,3 +583,15 @@ The native focus repair must be reached through the real Objective queue on the 
 Independently join every lifecycle invocation to its immutable S7 payload, unique S5 LIFECYCLE physical UUID and original episode/reservation. Require one request-unit allocation, unchanged envelopes and retained elapsed/components with explicit unknown prices, supervision and aggregate memory. A whole-run interval is a containing observation, not additional component elapsed time. A late-response proof captures actual private response bytes before the hold, original request/status/digest and real HTTP finish/close, releases within the original 20-second transport bound after mounted denial, then observes no private resurrection through the mounted UI. Server finish alone is not proof of client rendering.
 
 For the matched diagnostic, freeze independent literal expected duties and material mappings before either arm runs. Clone actual pre-exposure owner state and compare source/mandate/grant/task/canonical preimages. Run actual native Objective planning and dispatch in the off arm with generic decoded authorized originals and the existing configured provider. Score only independent canonical/provider readback against the pre-exposure denominator. Record failed attempts and unknown costs; preserve a no-gain or unresolved result without manufacturing completion.
+
+## Installed ordinary completion selector coverage
+
+Reuse A-all-ordinary-operations and its original three literal creation expectations.
+After the physical native worker creates the Request, Workstream and Finding,
+read each through the qualification observer using authenticated Work access and
+restricted finnor_app SQL. Each selector must return exactly the independently
+observed native action, with current/origin intent and verified creation predicates
+satisfied under the same original episode, parent digest and deadline. Compare
+the Workstream name and Finding statement with the pre-exposure oracle. This
+adds readback coverage to the existing installed scenario; it introduces no new
+business assignments, effect authority or protected qualification claim.

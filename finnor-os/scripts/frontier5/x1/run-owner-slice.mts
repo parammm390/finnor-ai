@@ -31,6 +31,7 @@ import {startQualificationOwnerExercise,finishQualificationOwnerExercise,createN
 import {digest as qualificationDigest} from '../../../packages/capability-evolution/src/contracts';
 import {institutionDigest} from '../../../packages/private-equity/src/institution-program/canonical-json';
 import {exerciseGeneratedPopulation} from './qualification-population-owner-exercise.mts';
+import {readNativeObservationSnapshot} from './qualification-native-observation.mjs';
 
 const repo = fileURLToPath(new URL("../../../../", import.meta.url));
 const installation=process.env.FINNOR_X1_INSTALLED_ROOT;
@@ -1284,8 +1285,36 @@ try {
     assert.equal(allEffects.length,3);
     await save('ordinary-three-operations-independent-proof.json',{oracle,streams,findings,effects:allEffects,actual,
       originalExpectationsNotCandidateDerived:true,completionMeaning:'EXACT_CREATION_ONLY'});
+    const observerOriginal=(await admin.query(`SELECT e.id::text,e.original_deadline,e.parent_reservation
+      FROM finnor_os.x1_compiler_episodes e JOIN finnor_os.x1_compiler_requests r
+        ON r.tenant_id=e.tenant_id AND r.episode_id=e.id
+      WHERE r.tenant_id=$1 AND r.principal_id=$2 AND r.id=$3`,[tenant,actor,compilerId])).rows[0];
+    assert.ok(observerOriginal?.parent_reservation);
+    const observerVariable='FINNOR_X1_QUAL_TOKEN_ORDINARY_NATIVE_READBACK';
+    assert.equal(process.env[observerVariable],undefined);
+    process.env[observerVariable]=service.token;
+    const snapshots=[];
+    try{
+      for(const [kind,operation] of [['REQUEST_ROWS','create_deal_request'],['WORKSTREAM_ROWS','open_workstream'],
+        ['FINDING_ROWS','record_finding']] as const){
+        const snapshot=await readNativeObservationSnapshot({origin:service.origin,tenantId:tenant,principalId:actor,
+          tokenEnvironmentVariable:observerVariable},{kind,workId,originalEpisodeId:observerOriginal.id,
+          originalGrantDigest:sha(JSON.stringify(observerOriginal.parent_reservation)),
+          originalDeadline:observerOriginal.original_deadline.toISOString()},Date.now()+30000);
+        snapshots.push(snapshot);await save('ordinary-native-selector-'+kind+'.json',snapshot);
+        assert.equal(snapshot.body.rows.length,1);
+        const row=snapshot.body.rows[0]!;
+        assert.equal(row.actionId,allEffects.find(effect=>effect.action_type===operation)!.id);
+        assert.equal(row.nativePredicatesSatisfied,true,JSON.stringify(row));
+        if(kind==='WORKSTREAM_ROWS')assert.equal(row.fields.name,oracle.workstreamName);
+        if(kind==='FINDING_ROWS')assert.equal(row.fields.statement,oracle.findingStatement);
+      }
+    }finally{delete process.env[observerVariable];}
+    await save('ordinary-three-native-selectors-independent-proof.json',{original:observerOriginal,snapshots,
+      independentlyExpectedOperations:['create_deal_request','open_workstream','record_finding'],
+      originalExpectationsNotCandidateDerived:true,protectedQualification:false});
     results.push({id:'A-all-ordinary-operations',status:'PASS',observed:{nativeEffects:3,obligationDenominator:3,
-      operationClasses:['create_deal_request','open_workstream','record_finding']},
+      operationClasses:['create_deal_request','open_workstream','record_finding'],nativeCompletionSelectors:3},
       basis:'ACTUAL_AUTHENTICATED_POLICIES_RAW_TRIGGER_RULES_PHYSICAL_WORKER_THREE_NATIVE_OWNERS_INDEPENDENT_SQL'});
   }
   const plans=(await admin.query(`SELECT id,revision,status,parent_revision_id,plan_graph FROM finnor_os.work_plan_revisions
