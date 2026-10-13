@@ -43,8 +43,8 @@ export function buildInstitutionResourceDemand(input: {
 type Envelope = { resourceId: string; unit: string; kind: string; quantities: string[] };
 type Charge = { chargeKey: string; requestDigest: string; phase: string; ordinal: number; units: number; resourceId: string; unit: string };
 export type InstitutionChargeRequest = { responsibilityIdentity: string;
-  phase: "EXECUTION" | "RECOVERY" | "HUMAN" | "ACQUISITION" | "CHECK" | "COMPILE";
-  ordinal: number; units: number };
+  phase: "EXECUTION" | "RECOVERY" | "HUMAN" | "ACQUISITION" | "CHECK" | "COMPILE" | "PREPARATION" | "CONTROL" | "LIFECYCLE";
+  ordinal: number; units: number;physicalInvocationId?:string };
 type Request = InstitutionChargeRequest;
 type Result = { status: "REFUSED"; reason: string } | { status: "REPLAY"; chargeKey: string }
   | { status: "PLANNED"; chargeKey: string; requestDigest: string; resourceId: string; unit: string; usedAfter: string };
@@ -56,7 +56,12 @@ export function planInstitutionDemandCharge(input: {
       && !(demand.chargeScope?.kind === "ORIGINAL_WORK_EPISODE"
         && /^x1-obligation:[a-f0-9]{64}$/.test(request.responsibilityIdentity)))
     return { status: "REFUSED", reason: "X1_CHARGE_RESPONSIBILITY_FOREIGN" };
-  if (!["EXECUTION", "RECOVERY", "HUMAN", "ACQUISITION", "CHECK", "COMPILE"].includes(request.phase)
+  const physicalPhase=['PREPARATION','CONTROL','LIFECYCLE'].includes(request.phase);
+  if(physicalPhase&&(!demand.chargeScope||request.ordinal!==1
+    ||!request.physicalInvocationId||! /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(request.physicalInvocationId))
+    ||!physicalPhase&&request.physicalInvocationId!==undefined)
+    return {status:'REFUSED',reason:'X1_ACTUAL_PHYSICAL_CHARGE_IDENTITY_REQUIRED'};
+  if (!["EXECUTION", "RECOVERY", "HUMAN", "ACQUISITION", "CHECK", "COMPILE", "PREPARATION", "CONTROL", "LIFECYCLE"].includes(request.phase)
       || !Number.isSafeInteger(request.ordinal) || request.ordinal < 1
       || request.ordinal > (demand.chargeScope ? request.phase==='RECOVERY'?1024:128 : 64))
     return { status: "REFUSED", reason: "X1_CHARGE_PHASE_OR_ORDINAL_INVALID" };
@@ -64,9 +69,9 @@ export function planInstitutionDemandCharge(input: {
     return { status: "REFUSED", reason: "X1_CHARGE_UNITS_INVALID" };
   if (!envelope) return { status: "REFUSED", reason: "X1_DEMAND_UNFUNDED" };
   const chargeKey = `x1-charge:${hash([demand.demandDigest, request.responsibilityIdentity,
-    request.phase, request.ordinal])}`;
+    request.phase, physicalPhase?request.physicalInvocationId:request.ordinal])}`;
   const requestDigest = hash(["institution-charge-request-v1", demand.demandDigest,
-    request.responsibilityIdentity, request.phase, request.ordinal, request.units]);
+    request.responsibilityIdentity, request.phase, physicalPhase?request.physicalInvocationId:request.ordinal, request.units]);
   const previous = existingCharges.find((charge) => charge.chargeKey === chargeKey);
   if (previous) return previous.requestDigest === requestDigest
     ? { status: "REPLAY", chargeKey }

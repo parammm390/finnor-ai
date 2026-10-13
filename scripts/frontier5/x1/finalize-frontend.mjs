@@ -5,6 +5,7 @@ import { createReadStream, existsSync } from 'node:fs';
 import { readFile, writeFile, readdir, lstat, realpath, readlink, unlink, symlink } from 'node:fs/promises';
 import { dirname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import {frontendTracingLayout} from './frontend-tracing-root.mjs';
 
 const repo=fileURLToPath(new URL('../../../',import.meta.url)),args=process.argv.slice(2);
 if(args.length!==4||args[0]!=='--output'||args[2]!=='--origin'||!args[1].startsWith('/'))throw Error('X1_EXISTING_FRONTEND_PACKAGE_ARGUMENTS_REQUIRED');
@@ -18,6 +19,7 @@ assert.equal(build.ending.code,0);assert.equal(build.ending.signal,null);assert.
 const sha=bytes=>createHash('sha256').update(bytes).digest('hex');
 const git=(...argv)=>execFileSync('git',argv,{cwd:repo,timeout:5000,maxBuffer:32*1024*1024});
 const source=build.source,sourcePreimages=[],generatedInputDeltas=[];
+assert.equal(git('rev-parse','HEAD').toString().trim(),source.commit,'original frontend source commit retained');
 const paths=git('ls-tree','-r','--name-only','-z',source.commit).toString().split('\0').filter(Boolean);
 for(const path of paths){
   if(!/^(?:src\/|scripts\/centropy\/|scripts\/frontier5\/|public\/)/.test(path)
@@ -41,7 +43,8 @@ const buildId='x1-'+source.commit,files=[],links=[],linkRepairs=[];let outputByt
 const limits=JSON.parse(await readFile(join(repo,'scope-frontier5/x1-institutional-programme-compiler/verification-plan.json'),'utf8')).limits;
 assert.ok(build.elapsedMs<=limits.finalBuildWallSeconds*1000);
 async function fileHash(path){const h=createHash('sha256');for await(const bytes of createReadStream(path))h.update(bytes);return h.digest('hex');}
-const tracingRoot='/Users/paramdave';
+const layout=frontendTracingLayout(repo),{tracingRoot,projectPath}=layout;
+if(build.tracingLayout)assert.deepEqual(build.tracingLayout,layout,'actual original build tracing layout');
 async function sameCopiedBytes(copied,original){for(const item of await readdir(copied,{withFileTypes:true})){
   const a=join(copied,item.name),b=join(original,item.name),s=await lstat(a);
   if(s.isDirectory())await sameCopiedBytes(a,b);
@@ -73,7 +76,7 @@ async function scan(directory){for(const item of await readdir(directory,{withFi
   }else throw Error('X1_FRONTEND_SPECIAL_FILE_REFUSED');
 }}
 await scan(runtime);assert.ok(authUrlFound,'actual compiled public auth URL matches original supplied origin');
-const entry=files.find(row=>row.path.endsWith('/FINNOR/server.js'));
+const entry=files.find(row=>row.path===join('runtime',projectPath,'server.js'));
 assert.ok(entry,'actual compiled standalone server');
 assert.equal((await readFile(join(dirname(join(output,entry.path)),'.next-x1-install/BUILD_ID'),'utf8')).trim(),buildId);
 const hostBytes=git('show',source.commit+':scripts/frontier5/x1/frontend-host.mjs');
@@ -83,12 +86,18 @@ const nextPath=files.find(row=>/\/node_modules\/next\/package.json$/.test(row.pa
 const manifest={schema:'finnor.x1.frontend-installation.v1',mode:'DEVELOPMENT_ONLY',source,sourcePreimages,generatedInputDeltas,
   runtime:{node:process.version,platform:process.platform,arch:process.arch,nodeBinarySha256:await fileHash(process.execPath)},
   nextVersion:JSON.parse(await readFile(join(output,nextPath.path),'utf8')).version,buildId,frontendOrigin:origin.origin,
+  tracingLayout:layout,
   entrypoint:entry.path,files,links,outputBytes,elapsedMs:build.elapsedMs,limits,linkRepairs,
   buildReceipt:{path:'build-resources.json',sha256:sha(buildBytes),ending:build.ending},
   originalCompileRetainedWithoutRebuild:true,authTransport:'SAME_ORIGIN_AUTH_V1_TO_EXISTING_DISPOSABLE_AUTH_OWNER',
   finalizerSource:{commit:git('rev-parse','HEAD').toString().trim()},productionActive:false,
   protectedQualification:false,executionAuthorityGranted:false,monetaryCost:null,humanSeconds:null,aggregatePeakMemoryBytes:null};
 assert.ok(outputBytes<=limits.finalBuildOutputBytes);
+assert.equal(git('rev-parse','HEAD').toString().trim(),source.commit,'frontend source unchanged during finalization');
+const permittedDirty=new Set([...source.dirty.split('\n').filter(Boolean).map(line=>line.slice(3)),
+  ...generatedInputDeltas.map(delta=>delta.path)]);
+assert.ok(git('status','--porcelain=v1','-uall').toString().trimEnd().split('\n').filter(Boolean)
+  .every(line=>permittedDirty.has(line.slice(3))),'only observed original dirty paths and exact Next generated type inputs');
 await writeFile(manifestPath,JSON.stringify(manifest,null,2)+'\n',{flag:'wx',mode:0o444});
 console.log(JSON.stringify({event:'X1_FRONTEND_FINALIZED',output,source,buildId,entrypoint:entry.path,
   actualFiles:files.length,links:links.length,linkRepairs:linkRepairs.length,outputBytes,generatedInputDeltas,

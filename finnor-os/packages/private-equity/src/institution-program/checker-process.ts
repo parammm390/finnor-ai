@@ -5,7 +5,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { DigitalInstitutionProfile } from "./contracts";
 import type { InstitutionCandidate, InstitutionCheck, OriginalInstitutionEvidence } from "./checker";
-import { recordInstitutionCheckerAttempt } from "./meter";
+import { recordInstitutionCheckerAttempt,recordInstitutionPhysicalObservation } from "./meter";
 import { installedDevelopmentRuntime } from "./installed-runtime";
 
 const sha = (data: Buffer | string) => createHash("sha256").update(data).digest("hex");
@@ -32,30 +32,39 @@ const transportLimit = 384 * 1024 * 1024;
 export async function checkInstitutionInSeparateProcessAsync(
   original: OriginalInstitutionEvidence, candidate: InstitutionCandidate, profile: DigitalInstitutionProfile,
 ): Promise<InstitutionCheck> {
+  const began=performance.now(),startedAt=new Date().toISOString();
+  let childPid:number|null=null,exitCode:number|null=null,exitSignal:string|null=null;
+  let inputBytesScheduled=0,inputWriteCompleted=false,stdoutBytes=0,stderrBytes=0,outcome='REFUSED';
+  try{
   await recordInstitutionCheckerAttempt();
   const { pins, args, cwd } = invocation();
   const input = JSON.stringify({ schema: "finnor.x1.checker-process.v1", pins, original, candidate, profile });
+  inputBytesScheduled=Buffer.byteLength(input);
   if (Buffer.byteLength(input) > transportLimit) throw Error("X1_CHECKER_TRANSPORT_BOUND");
   const stdout = await new Promise<string>((resolve, reject) => {
     const child = spawn(process.execPath, ["--max-old-space-size=512", ...args], {
       cwd, stdio: ["pipe", "pipe", "pipe"],
       env: { PATH: process.env.PATH, NODE_ENV: "test", NODE_OPTIONS: "", FINNOR_P4_PROFILE: 'ordinary_disposable' },
     });
+    childPid=child.pid??null;
     let output = "", bytes = 0, failed = false;
-    const refuse = () => { if (!failed) { failed = true; child.kill("SIGKILL"); reject(Error("X1_CHECKER_PROCESS_REFUSED")); } };
+    const refuse = () => { if (!failed) { failed = true; child.kill("SIGKILL"); } };
     const timer = setTimeout(refuse, 180_000);
     child.stdout.on("data", chunk => {
       bytes += chunk.length;
+      stdoutBytes+=chunk.length;
       if (bytes > 16 * 1024 * 1024) refuse(); else output += chunk.toString();
     });
     // Drain diagnostics without putting original/private bytes in a public error.
-    child.stderr.on("data", () => undefined);
-    child.on("error", refuse);
+    child.stderr.on("data", chunk => {stderrBytes+=chunk.length;});
+    child.on("error", () => {clearTimeout(timer);refuse();reject(Error("X1_CHECKER_PROCESS_REFUSED"));});
     child.stdin.on("error", refuse);
     child.on("close", (code, signal) => {
       clearTimeout(timer);
-      if (!failed) { if (code !== 0 || signal) refuse(); else resolve(output); }
+      exitCode=code;exitSignal=signal;
+      if (failed||code!==0||signal)reject(Error("X1_CHECKER_PROCESS_REFUSED"));else resolve(output);
     });
+    child.stdin.once('finish',()=>{inputWriteCompleted=true;});
     child.stdin.end(input);
   });
   let reply: { schema: string; pins: Record<string, string>; inputDigest: string; check: InstitutionCheck };
@@ -70,7 +79,11 @@ export async function checkInstitutionInSeparateProcessAsync(
           || reply.check.checkerRevision !== original.current.checkerRevision))) {
     throw Error("X1_CHECKER_PIN_OR_RESULT_MISMATCH");
   }
-  return reply.check;
+  outcome='CHECKER_RESULT_VALIDATED';return reply.check;
+  }finally{recordInstitutionPhysicalObservation({kind:'CHECKER',startedAt,elapsedMs:performance.now()-began,
+    outcome,includedWithin:'COMPILE',mode:'ASYNC_LEASE_HEARTBEAT_SAFE',childPid,exitCode,exitSignal,
+    inputBytesScheduled,inputWriteCompleted,stdoutBytes,stderrBytes,childInputConsumedBytes:outcome==='CHECKER_RESULT_VALIDATED'
+      ?inputBytesScheduled:null,monetaryCost:null});}
 }
 
 /** A local development process boundary, not protected checker custody or
@@ -78,13 +91,20 @@ export async function checkInstitutionInSeparateProcessAsync(
 export function checkInstitutionInSeparateProcess(
   original: OriginalInstitutionEvidence, candidate: InstitutionCandidate, profile: DigitalInstitutionProfile,
 ): InstitutionCheck {
+  const began=performance.now(),startedAt=new Date().toISOString();
+  let childPid:number|null=null,exitCode:number|null=null,exitSignal:string|null=null;
+  let inputBytesScheduled=0,stdoutBytes=0,stderrBytes=0,outcome='REFUSED';
+  try{
   const { pins, args, cwd } = invocation();
   const input = JSON.stringify({ schema: "finnor.x1.checker-process.v1", pins, original, candidate, profile });
+  inputBytesScheduled=Buffer.byteLength(input);
   if (Buffer.byteLength(input) > transportLimit) throw new Error("X1_CHECKER_TRANSPORT_BOUND");
   const result = spawnSync(process.execPath, ["--max-old-space-size=512", ...args], {
     cwd, encoding: "utf8", input, timeout: 180_000, maxBuffer: 16 * 1024 * 1024,
     env: { PATH: process.env.PATH, NODE_ENV: "test", NODE_OPTIONS: "", FINNOR_P4_PROFILE: 'ordinary_disposable' },
   });
+  childPid=result.pid??null;exitCode=result.status;exitSignal=result.signal;
+  stdoutBytes=Buffer.byteLength(result.stdout??'');stderrBytes=Buffer.byteLength(result.stderr??'');
   if (result.error || result.status !== 0 || result.signal) throw new Error("X1_CHECKER_PROCESS_REFUSED");
   let reply: { schema: string; pins: Record<string, string>; inputDigest: string; check: InstitutionCheck };
   try { reply = JSON.parse(result.stdout); } catch { throw new Error("X1_CHECKER_RESPONSE_INVALID"); }
@@ -98,5 +118,9 @@ export function checkInstitutionInSeparateProcess(
           || reply.check.checkerRevision !== original.current.checkerRevision))) {
     throw new Error("X1_CHECKER_PIN_OR_RESULT_MISMATCH");
   }
-  return reply.check;
+  outcome='CHECKER_RESULT_VALIDATED';return reply.check;
+  }finally{recordInstitutionPhysicalObservation({kind:'CHECKER',startedAt,elapsedMs:performance.now()-began,
+    outcome,includedWithin:'COMPILE',mode:'SYNC_DEVELOPMENT_VALIDATOR',childPid,exitCode,exitSignal,
+    inputBytesScheduled,stdoutBytes,stderrBytes,childInputConsumedBytes:outcome==='CHECKER_RESULT_VALIDATED'
+      ?inputBytesScheduled:null,monetaryCost:null});}
 }

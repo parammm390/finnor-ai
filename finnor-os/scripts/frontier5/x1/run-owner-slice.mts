@@ -14,14 +14,19 @@ import { closePool, withTenantTransaction, configureTenantVertical, receiveWork,
   createEmployeeConversationThread,updateEmployeeConversationThreadContext,transactionDb } from "@finnor/db";
 import { createDeal, createWorkstream, addDealParty, type PeMutationContext } from "@finnor/private-equity";
 import { createDocument, appendDocumentVersion } from "@finnor/data-platform";
-import { putAllocationResource,validateInstitutionDemand } from "../../../packages/private-equity/src/allocation-store";
+import { putAllocationResource,validateInstitutionDemand,reserveInstitutionDemand,chargeInstitutionDemand } from "../../../packages/private-equity/src/allocation-store";
 import { parseAllocationResource } from "../../../packages/epistemic-runtime/src/allocation-contracts";
 import { authenticatedApiFixture } from "./authenticated-api-fixture.mts";
 import { heterogeneousOwnerSources,type OwnerSource } from './owner-source-corpus.mts';
 import { canonicalOwnerSources } from './canonical-owner-corpus.mts';
 import { prepareExistingOwnerUpgrade,observePreservedUpgradeOwners } from './upgrade-owner-fixture.mts';
 import { registerInstitutionCoreSource } from '../../../packages/private-equity/src/institution-program/inputs';
-import { evaluateAuthority } from '@finnor/authority';
+import { evaluateAuthority,employeeAuthoritySnapshot } from '@finnor/authority';
+import {persistInstitutionLifecycleCompute} from '../../../packages/private-equity/src/institution-program/meter';
+import {buildInstitutionResourceDemand} from '../../../packages/private-equity/src/institution-program/resource-demand';
+import {loadInstitutionProfile} from '../../../packages/private-equity/src/institution-program/store';
+import {readInstitutionMandate} from '../../../packages/private-equity/src/institution-program/source-authority';
+import {parse as parseDotenv} from 'dotenv';
 
 const repo = fileURLToPath(new URL("../../../../", import.meta.url));
 const installation=process.env.FINNOR_X1_INSTALLED_ROOT;
@@ -39,7 +44,7 @@ const personnel=process.env.FINNOR_X1_OWNER_MODE==='personnel';
 const creation=process.env.FINNOR_X1_OWNER_MODE==='creation';
 const sourceNamespace=process.env.FINNOR_X1_OWNER_MODE==='source_namespace';
 const ownerInputs=process.env.FINNOR_X1_OWNER_MODE==='owner_inputs'||sourceNamespace
-  ||process.env.FINNOR_X1_OWNER_MODE==='mounted';
+  ||process.env.FINNOR_X1_OWNER_MODE==='mounted'||process.env.FINNOR_X1_OWNER_MODE==='diagnostic';
 const fullDomain=process.env.FINNOR_X1_OWNER_MODE==='domain'||reportingChanges||ownerInputs||sensitiveCoverage||personnel;
 const mounted=process.env.FINNOR_X1_OWNER_MODE==='mounted';
 const revise=process.env.FINNOR_X1_OWNER_MODE==='revision';
@@ -55,7 +60,9 @@ const contention=process.env.FINNOR_X1_OWNER_MODE==='contention';
 const unsupportedOperation=process.env.FINNOR_X1_OWNER_MODE==='unsupported_operation';
 const unsupported=process.env.FINNOR_X1_OWNER_MODE==='unsupported'||unsupportedOperation;
 const cancelObserved=process.env.FINNOR_X1_OWNER_MODE==='cancel_observed';
-if(process.env.FINNOR_X1_OWNER_MODE&&!['api','mounted','revision','material','heterogeneous','canonical','creation','recovery','effect_recovery','ordinary','domain','owner_inputs','reporting_changes','authority_epoch','sensitive_coverage','personnel','source_namespace','upgrade','checker_crash','contention','unsupported','unsupported_operation','cancel_observed'].includes(process.env.FINNOR_X1_OWNER_MODE))
+const publicationMeter=process.env.FINNOR_X1_OWNER_MODE==='publication_meter';
+const diagnostic=process.env.FINNOR_X1_OWNER_MODE==='diagnostic';
+if(process.env.FINNOR_X1_OWNER_MODE&&!['api','mounted','revision','material','heterogeneous','canonical','creation','recovery','effect_recovery','ordinary','domain','owner_inputs','reporting_changes','authority_epoch','sensitive_coverage','personnel','source_namespace','upgrade','checker_crash','contention','unsupported','unsupported_operation','cancel_observed','publication_meter','diagnostic'].includes(process.env.FINNOR_X1_OWNER_MODE))
   throw Error('EXACT_REGISTERED_OWNER_MODE_REQUIRED');
 if((mounted||material||heterogeneous||canonical||recovery||effectRecovery||ordinary||upgrade||checkerCrash||contention||unsupported||cancelObserved||authorityEpoch)&&dutyCount!==1)throw Error('NAMED_ONE_DUTY_SCENARIO_REQUIRED');
 if(process.env.FINNOR_X1_OWNER_CASE&&!['1','128'].includes(process.env.FINNOR_X1_OWNER_CASE))
@@ -72,7 +79,7 @@ const sourcePaths = ["finnor-os/scripts/frontier5/x1/run-owner-slice.mts", "finn
   'finnor-os/scripts/frontier5/x1/owner-source-corpus.mts',
   'finnor-os/scripts/frontier5/x1/canonical-owner-corpus.mts',
   'finnor-os/scripts/frontier5/x1/upgrade-owner-fixture.mts',
-  "finnor-os/scripts/frontier5/x1/physical-owner-worker.mts", "finnor-os/packages/db/migrations-bundle.ts",
+  "finnor-os/scripts/frontier5/x1/physical-owner-worker.mts", "finnor-os/scripts/frontier5/x1/native-diagnostic-worker.mts", "finnor-os/packages/db/migrations-bundle.ts",
   "finnor-os/package-lock.json", "scope-frontier5/x1-institutional-programme-compiler/profile.json"];
 const sourcePins = await Promise.all(sourcePaths.map(async path => ({ path, sha256: sha(await readFile(join(repo, path))) })));
 const freeze = { installation:installedManifest?{root:installation,manifestDigest:sha(await readFile(join(installation!,'finnor-os/x1-development-installation.json'))),
@@ -81,7 +88,7 @@ const freeze = { installation:installedManifest?{root:installation,manifestDiges
   dirty: git("status", "--porcelain=v1", "-uall"),dirtyDiffDigest:sha(git('diff','--binary')), pins: sourcePins }, startedAt,
   runtime: { node: process.version, platform: process.platform, arch: process.arch },
   profile: "DISPOSABLE_LOCAL_AUTH_SERVICE_ACTUAL_BEARER_AND_RLS", hostedSupabaseQualified: false,
-  authDevBypass: false, expectedMigrations: 190, limits, freeBytesBefore: String(diskBefore), dutyCount,mounted,
+  authDevBypass: false, expectedMigrations: 191, limits, freeBytesBefore: String(diskBefore), dutyCount,mounted,
   cases: ["A-raw-two-identity-native-request", "C-unsigned-forged-input", "D-same-key-replay", "G-restricted-roles",
     ...(material?['B-ledger-correction']:[]),...(heterogeneous?['A-eight-class-original-corpus']:[]),
     ...(canonical?['A-fourteen-canonical-kinds']:[]),...(recovery?['D-compiler-before-publication-death']:[]),
@@ -96,7 +103,8 @@ const freeze = { installation:installedManifest?{root:installation,manifestDiges
     ...(creation?['A-new-canonical-creation-properties']:[]),
     ...(checkerCrash?['F-physical-checker-crash-and-compatible-resume']:[]),
     ...(contention?['E-original-shared-parent-contention']:[]),...(unsupported?['F-mixed-unsupported-rule']:[]),
-    ...(cancelObserved?['E-cancel-observed-standing-continuation']:[])],
+    ...(cancelObserved?['E-cancel-observed-standing-continuation']:[]),
+    ...(publicationMeter?['F-post-compile-publication-failure-meter']:[]),...(diagnostic?['H-matched-equipped-native-originals']:[])],
   omitted: "Full B–H, physical interruption, mounted browser, clean built installation/upgrade and protected qualification remain distinct required evidence" };
 await writeFile(join(evidence, "freeze.json"), JSON.stringify(freeze, null, 2) + "\n", { mode: 0o600, flag: "wx" });
 const results: any[] = [], traffic: unknown[] = [];
@@ -106,9 +114,11 @@ let publicationBlocker:pg.Client|undefined;
 let acknowledgementBlocker:pg.Client|undefined,effectRecoveryProof:any;
 let checkerCrashProof:any;
 let service: Awaited<ReturnType<typeof authenticatedApiFixture>> | undefined, worker: ReturnType<typeof spawn> | undefined;
+let diagnosticOff:pg.Client|undefined;
 let frontend:ReturnType<typeof spawn>|undefined;
 let mountedControl:Server|undefined;
 let mountedRevisionVerified=false;
+let mountedControlKey:string|null=null,mountedFileControlStage=0;
 let revokeOnHeldRead=false,heldReadReleased=false;
 let delayedRead:{entered:boolean;requestId:string|null;status:number|null;promise:Promise<void>;release:()=>void}|null=null;
 const releaseDelayedRead=()=>delayedRead?.release();
@@ -124,6 +134,36 @@ const occurredAt = new Date(Date.now() - 120000).toISOString(), availableAt = ne
 const registrationA = "DEAL-" + randomUUID(), registrationB = "DEAL-" + randomUUID();
 const requestText = "Provide the original signed evidence schedule " + randomUUID();
 let workId: string | null = null, compilerId: string | null = null, expected: any = null;
+const lifecycleInvocationId=randomUUID();let lifecycleCollected=false;
+const collectLifecycle=async(status:string)=>{
+  if(lifecycleCollected||!admin||!workId||!compilerId)return;
+  const episode=(await admin.query(`SELECT e.id::text,e.parent_reservation FROM finnor_os.x1_compiler_episodes e
+    JOIN finnor_os.x1_compiler_requests r ON r.tenant_id=e.tenant_id AND r.episode_id=e.id
+    WHERE r.tenant_id=$1 AND r.principal_id=$2 AND r.id=$3`,[tenant,actor,compilerId])).rows[0];
+  if(!episode?.parent_reservation)return;
+  const observations={status,startedAt,elapsedMs:performance.now()-started,originalEpisodeId:episode.id,
+    source:freeze.source,trafficInvocations:traffic.length,passedPredicates:results.filter(r=>r.status==='PASS').map(r=>r.id),
+    failedPredicates:results.filter(r=>r.status==='FAIL').map(r=>r.id),peakSampledOwnedRssBytes:peakOwnedRssBytes,
+    aggregatePeakMemoryBytes:null,moneyUsd:null,humanSeconds:null,
+    intervalAccounting:'CONTAINS_SETUP_API_COMPILER_CHECKER_VALIDATOR_DO_NOT_ADD_COMPONENT_ELAPSED',
+    sharedBuildAllocation:'UNKNOWN_REQUIRES_EXISTING_BUILD_RECEIPT_AND_REGISTERED_ALLOCATION',cleanupTailIncluded:false};
+  await save('lifecycle-original-observations.json',observations);
+  const record=await persistInstitutionLifecycleCompute(ctx,{workId,episodeId:episode.id,parentReservation:episode.parent_reservation,
+    rightsRevision:String((await employeeAuthoritySnapshot(ctx.auth)).revision),invocationId:lifecycleInvocationId,
+    startedAt,elapsedMs:observations.elapsedMs,operation:'VALIDATION',status,receiptDigest:sha(JSON.stringify(observations)),
+    measurements:{trafficInvocations:traffic.length,peakSampledOwnedRssBytes:peakOwnedRssBytes,
+      intervalsContainComponents:true,moneyUsd:null,humanSeconds:null,aggregatePeakMemoryBytes:null}});
+  const charges=(await admin.query(`SELECT body FROM finnor_os.s5_governed_resource_charges
+    WHERE tenant_id=$1 AND principal_id=$2 AND reservation_id=$3 AND phase='LIFECYCLE'`,
+    [tenant,actor,episode.parent_reservation.id])).rows.map(r=>r.body)
+    .filter(r=>r.physicalInvocationId===lifecycleInvocationId);
+  assert.equal(charges.length,1);assert.equal(charges[0].units,1);
+  assert.deepEqual(charges[0].reservationRef,episode.parent_reservation);
+  await save('lifecycle-original-parent-independent-proof.json',{observations,record,charges,
+    elapsedDoubleCounted:false,fullMonetaryHumanOrAggregateQualification:false});lifecycleCollected=true;
+  results.push({id:'G-physical-validation-lifecycle-original-parent',status:'PASS',
+    basis:'ACTUAL_CONTAINING_VALIDATOR_INTERVAL_IMMUTABLE_S7_ONE_PHYSICAL_S5_REQUEST_UNIT',observed:{invocationId:lifecycleInvocationId}});
+};
 const installedPreservation = async () => ({
   episodes:(await admin!.query(`SELECT id,original_deadline,wall_deadline,parent_reservation,parent_demand
     FROM finnor_os.x1_compiler_episodes WHERE tenant_id=$1 ORDER BY id`,[tenant])).rows,
@@ -204,6 +244,11 @@ try {
     activeContext: { entityType: "pe_deal", entityId: String(first.row.id) }, authorityContext: { principalId: actor, scope: "DISPOSABLE_INTERNAL_REQUEST_CREATION_ONLY" } });
   workId = intake.workId;
   for (const d of [first, second]) await attachWorkEntity(tenant, workId, { entityType: "pe_deal", entityId: String(d.row.id), source: "X1:original-owner-registration" });
+  if(diagnostic)await save('matched-original-native-work-scope.json',{primaryDealId:String(first.row.id),
+    originalIntakeFocus: {entityType:'pe_deal',entityId:String(first.row.id)},
+    sameScopeBothArms:true,secondCanonicalDealRetained:String(second.row.id),bothOriginalCrmRecordsRetained:true,
+    nativeControllerDomain:'EXPLICIT_ORIGINAL_WORK_FOCUS_AND_BOTH_CURRENT_CANONICAL_DEAL_LINKS',
+    independentDutyDenominatorUnchanged:3,protectedPopulationSubstitution:false});
   const rule = { id: "standing-request", triggerKind: "evidence_request_needed", operation: "create_deal_request", principalId: actor,
     deadlineAt, materiality: "material", postconditionRef: "x1:pe-request-created:v1", observerRef: "x1:pe-request-creation-observer:v1" };
   const rules=unsupported?[rule,unsupportedOperation?{...rule,id:'standing-transaction-approval',operation:'approve_transaction',
@@ -230,9 +275,13 @@ try {
   service = await authenticatedApiFixture(repo, actor, entry => traffic.push(entry),
     frontendOrigin?{frontendOrigin,afterResponse:async(path,body,status)=>{
       if(path==='/api/company-brain/institution-read'&&mountedRevisionVerified&&delayedRead&&!delayedRead.entered){
-        delayedRead.entered=true;delayedRead.requestId=JSON.parse(body).requestId;delayedRead.status=status;
+        const response=JSON.parse(body);
+        if(status!==200||response.workId!==workId)return;
+        delayedRead.entered=true;delayedRead.requestId=response.requestId;delayedRead.status=status;
         await save('mounted-delayed-response-entered.json',{at:new Date().toISOString(),
-          requestId:delayedRead.requestId,status,actualHandlerCompleted:true});
+          requestId:delayedRead.requestId,status,actualHandlerCompleted:true,responseDigest:sha(body),
+          capturedArtifact:Boolean(response.artifact),capturedProgramme:Boolean(response.programme),
+          capturedStatus:response.status});
         if(revokeOnHeldRead)await revokeFixturePrincipal();
         await delayedRead.promise;
       }
@@ -618,11 +667,86 @@ try {
       assert.ok(Number.isFinite(row.payload.elapsedMs)&&row.payload.elapsedMs>0);assert.equal(row.payload.money,null);
       assert.equal(row.payload.humanSeconds,null);assert.equal(row.payload.aggregatePeakMemoryBytes,null);assert.equal(row.payload.businessWorkCredit,0);}
   }
+  if(publicationMeter)await admin.query(`CREATE FUNCTION finnor_os.x1_fixture_publication_fault() RETURNS trigger
+    LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'X1_TEST_POST_COMPILE_PUBLICATION_FAULT'; END $$;
+    CREATE TRIGGER x1_fixture_publication_fault BEFORE INSERT ON finnor_os.x1_compiler_artifacts
+    FOR EACH ROW EXECUTE FUNCTION finnor_os.x1_fixture_publication_fault()`);
   const accepted = mounted?null:await api("institution-submit", input);
   if(accepted){assert.equal(accepted.status, 202, JSON.stringify(accepted));compilerId=accepted.body.requestId;}
   await save("authenticated-submit.json", { identity, metadata, input, accepted, authDevBypass: false, tokenPersisted: false });
+  let diagnosticControls:{on:string;off:string}|undefined,diagnosticKey:string|undefined;
+  const diagnosticSnapshot=async(client:pg.Client)=>{
+    const state:Record<string,unknown>={};
+    for(const table of ['users','works','work_inputs','work_entity_links','x1_work_mandates','x1_source_grants',
+      'x1_compiler_requests','x1_compiler_episodes','s5_reservations','pe_deals','pe_workstreams','pe_requests','pe_findings']){
+      state[table]=(await client.query(`SELECT to_jsonb(t) body FROM finnor_os.${table} t WHERE tenant_id=$1 ORDER BY to_jsonb(t)::text`,[tenant])).rows;
+    }
+    state.computePolicies=(await client.query('SELECT * FROM finnor_os.compute_resource_policies ORDER BY resource_key')).rows;
+    return state;
+  };
+  if(diagnostic){
+    if(installation||mounted)throw Error('MATCHED_NATIVE_DIAGNOSTIC_REQUIRES_ITS_FROZEN_SOURCE_SLICE');
+    const bindingFile=process.env.FINNOR_X1_DIAGNOSTIC_BINDING_FILE;
+    if(!bindingFile?.startsWith('/'))throw Error('EXPLICIT_EXISTING_PRIVATE_DIAGNOSTIC_BINDING_FILE_REQUIRED');
+    const bindingBytes=await readFile(bindingFile);
+    diagnosticKey=parseDotenv(bindingBytes.toString()).GROQ_API_KEY;
+    if(!diagnosticKey)throw Error('EXISTING_GROQ_BINDING_UNAVAILABLE');
+    await save('matched-provider-equipment.json',{bindingSourceSha256:sha(bindingBytes),secretValuesPersisted:false,
+      selectedProvider:'groq',selectedModel:'openai/gpt-oss-120b',perCallDeadlineMs:8000,outputTokens:4096,
+      modelCallBound:12,sameEquipmentBothArms:true,actualPriceUsd:null,providerInvoiceUnavailable:true});
+    const episode=(await admin.query(`SELECT e.* FROM finnor_os.x1_compiler_episodes e JOIN finnor_os.x1_compiler_requests r
+      ON r.tenant_id=e.tenant_id AND r.episode_id=e.id WHERE r.tenant_id=$1 AND r.id=$2`,[tenant,compilerId])).rows[0];
+    const mandate=await readInstitutionMandate(ctx,workId!),profile=loadInstitutionProfile();
+    const demand=buildInstitutionResourceDemand({tenantId:tenant,workId:workId!,principalId:actor,institutionId:mandate.institutionId,
+      programmeDigest:sha(JSON.stringify(['x1-original-work-envelope-v1',episode.id,episode.profile_digest])),
+      responsibilityIdentities:['x1-compiler-episode:'+episode.id],
+      computeRequests:profile.bounds.authorizedAcquisitionCalls+profile.bounds.derivedObligations*3+8,
+      humanSeconds:profile.bounds.episodeHumanSeconds,originalDeadline:episode.original_deadline.toISOString(),
+      chargeScope:{kind:'ORIGINAL_WORK_EPISODE',episodeId:episode.id},profile});
+    const reservation=await reserveInstitutionDemand(ctx,demand,String((await employeeAuthoritySnapshot(ctx.auth)).revision));
+    await withTenantTransaction(tenant,{userId:actor},async(_db,c)=>c.query(`UPDATE finnor_os.x1_compiler_episodes
+      SET parent_reservation=$3::jsonb,parent_demand=$4::jsonb WHERE tenant_id=$1 AND id=$2 AND parent_reservation IS NULL`,
+      [tenant,episode.id,JSON.stringify(reservation.reservation.ref),JSON.stringify(demand)]));
+    const originalState=await diagnosticSnapshot(admin);
+    await closePool();await admin.end();
+    const maintenance=new pg.Client({connectionString:connection('x1_fixture',password).replace('/x1_owner','/postgres')});
+    try{
+      await maintenance.connect();
+      const sessions=(await maintenance.query(`SELECT pid,datname,usename,state,host(client_addr) client_addr,application_name,query
+        FROM pg_stat_activity WHERE datname='x1_owner' ORDER BY pid`)).rows;
+      await save('matched-starting-database-owned-connection-preflight.json',{sessions,ownedClusterPort:port,
+        ownedDatabaseDirectory:directory,peerClusterConnectionsTouched:false,nativeCopyRequiresQuiescence:true,
+        bundledDumpRestoreBinariesAvailable:false});
+      assert.ok(sessions.length<=32&&sessions.every(s=>['finnor_app','finnor_worker','x1_fixture'].includes(s.usename)
+        &&s.state==='idle'&&['127.0.0.1','::1',null].includes(s.client_addr)),'only idle connections in this actual owned disposable cluster may close');
+      const closed=[];for(const session of sessions)closed.push((await maintenance.query(
+        "SELECT pid,pg_terminate_backend(pid) stopped FROM pg_stat_activity WHERE pid=$1 AND datname='x1_owner' AND state='idle'",[session.pid])).rows[0]);
+      await save('matched-starting-database-owned-idle-connections-closed.json',{closed,sourceStateChanged:false,
+        authorization:'OWNED_DISPOSABLE_FIXTURE_CLEANUP_ONLY_NO_PEER_PROCESS_OR_DATABASE'});
+      await maintenance.query('CREATE DATABASE x1_native_off TEMPLATE x1_owner');
+    }finally{
+      await maintenance.end();admin=new pg.Client({connectionString:connection('x1_fixture',password)});await admin.connect();
+    }
+    diagnosticOff=new pg.Client({connectionString:connection('x1_fixture',password).replace('/x1_owner','/x1_native_off')});
+    await diagnosticOff.connect();const offState=await diagnosticSnapshot(diagnosticOff);assert.deepEqual(offState,originalState);
+    await save('matched-pre-exposure-independent-starting-state.json',{on:originalState,off:offState,
+      onDigest:sha(JSON.stringify(originalState)),offDigest:sha(JSON.stringify(offState)),
+      sourceBytePins:sourceBindings.map(s=>({sourceId:s.sourceId,sha256:s.sha256,grantId:s.grantId})),
+      identicalActualOwnerDatabaseCopy:true,hiddenExpectedLedgerSuppliedToWorker:false,originalParent:reservation.reservation.ref,
+      preparationAllocation:'SHARED_PRE_EXPOSURE_PREPARATION_RECORDED_ONCE_IN_AGGREGATE_NOT_NEW_PREPARATION_PER_ARM'});
+    await diagnosticOff.query(`UPDATE finnor_os.jobs SET status='quarantined',last_error='X1_FEATURE_DISABLED_MATCHED_OFF_ARM'
+      WHERE tenant_id=$1 AND type='run_x1_institution_compiler_v1' AND status='queued'`,[tenant]);
+    const workInput=(await admin.query('SELECT instruction_id,instruction_text FROM finnor_os.work_inputs WHERE tenant_id=$1 AND id=$2',
+      [tenant,input.workInputId])).rows[0];
+    diagnosticControls={on:join(evidence,'diagnostic-on-private-control.json'),off:join(evidence,'diagnostic-off-private-control.json')};
+    for(const arm of ['on','off'] as const)await writeFile(diagnosticControls[arm],JSON.stringify({
+      schema:'finnor.x1.native-diagnostic-control.v1',arm,tenantId:tenant,principalId:actor,workId,
+      workInputId:input.workInputId,instructionId:workInput.instruction_id,instruction:workInput.instruction_text,
+      originalIdempotencyKey:input.idempotencyKey,episodeId:episode.id,parentReservation:reservation.reservation.ref,
+      originalDeadline:episode.original_deadline.toISOString(),grantIds,outputPath:join(evidence,'native-diagnostic-'+arm+'.jsonl')}),{mode:0o600,flag:'wx'});
+  }
   await writeFile(join(evidence, "empty.env"), "", { mode: 0o600 });
-  const env = { HOME: join(evidence, "home"), PATH: "/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin", TMPDIR: join(evidence, "tmp"),
+  const env:NodeJS.ProcessEnv = { HOME: join(evidence, "home"), PATH: "/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin", TMPDIR: join(evidence, "tmp"),
     XDG_CACHE_HOME: join(evidence, "cache"), TSX_DISABLE_CACHE: "1", DOTENV_CONFIG_PATH: join(evidence, "empty.env"),
     NODE_ENV: "test", AUTH_DEV_BYPASS: "0", FINNOR_P4_PROFILE: "ordinary_disposable", FINNOR_TEST_MANAGED_EXTENSIONS: "omit",
     DATABASE_URL: connection("finnor_worker", workerPassword), CI: "1", LOG_LEVEL: "silent", NEXT_TELEMETRY_DISABLED: "1",
@@ -630,6 +754,7 @@ try {
       ?'x1-local-compiled-development':'x1-local-source-runner-not-built-release'}:{}),
     ...(recovery||effectRecovery?{WORKER_JOB_LEASE_SECONDS:'5'}:{}),
     ...(effectRecovery?{FINNOR_STEP_LEASE_SECONDS:'5'}:{}) };
+  if(diagnostic){env.FINNOR_X1_DIAGNOSTIC_CONTROL=diagnosticControls!.on;env.GROQ_API_KEY=diagnosticKey;env.P3_GOVERNORS='1';}
   if(recovery||effectRecovery){publicationBlocker=new pg.Client({connectionString:connection('x1_fixture',password)});
     await publicationBlocker.connect();await publicationBlocker.query('BEGIN');
     await publicationBlocker.query(effectRecovery?'LOCK TABLE finnor_os.pe_requests IN SHARE MODE'
@@ -639,7 +764,7 @@ try {
   const startWorker=()=>{
     const child=spawn(process.execPath,installation
       ?["--max-old-space-size=1536",join(installation,installedManifest.entrypoints.worker)]
-      :["--max-old-space-size=1536","--import=tsx","scripts/frontier5/x1/physical-owner-worker.mts"],
+      :["--max-old-space-size=1536","--import=tsx",diagnostic?'scripts/frontier5/x1/native-diagnostic-worker.mts':'scripts/frontier5/x1/physical-owner-worker.mts'],
       {cwd:join(installation??repo,'finnor-os'),env,stdio:['ignore','pipe','pipe']});
     const ready=new Promise<Record<string,unknown>>((resolve,reject)=>{
       let buffer='';const timer=setTimeout(()=>reject(Error('X1_PHYSICAL_WORKER_STARTUP_BOUND')),30_000);
@@ -821,6 +946,7 @@ try {
       activeWorkId:workId,activeReferences:[root]});
     await updateEmployeeConversationThreadContext({tenantId:tenant,ownerEmployeeId:actor,threadId:other.id,activeReferences:[root]});
     const controlKey=randomBytes(32).toString('hex');
+    mountedControlKey=controlKey;
     mountedControl=createHttpServer(async(req,res)=>{
       res.setHeader('content-type','application/json');
       if(req.headers.authorization!=='Bearer '+controlKey){res.writeHead(401);res.end('{}');return;}
@@ -928,6 +1054,25 @@ try {
     await new Promise(resolve => setTimeout(resolve, dutyCount===128?2000:1000));
   }
   await save("compiler-ending-projection.json", reading);
+  if(publicationMeter){
+    assert.equal(reading.status,'UNKNOWN','actual failed immutable publication retains uncertainty');
+    assert.equal(reading.reason,'X1_TEST_POST_COMPILE_PUBLICATION_FAULT');
+    const rows=(await admin.query(`SELECT record_id,content_digest,body->'payload' payload FROM finnor_os.s7_economic_records
+      WHERE tenant_id=$1 AND principal_id=$2 AND body->'payload'->>'schema'='finnor.x1.native-compute.v1'
+        AND body->'payload'->>'requestId'=$3 ORDER BY knowledge_at,record_id`,[tenant,actor,compilerId])).rows;
+    const compile=rows.filter(row=>row.payload.phase==='COMPILE'),publication=rows.filter(row=>row.payload.phase==='PUBLICATION');
+    await save('post-compile-publication-meter-original-observations.json',{reading,rows,
+      actualFault:'DISPOSABLE_SQL_TRIGGER_AFTER_SUCCESSFUL_COMPILE_BEFORE_IMMUTABLE_ARTIFACT',possibleNativeEffectsRetained:true});
+    assert.equal(compile.length,1,'successful original COMPILE preimage retained');
+    assert.equal(compile[0].payload.status,'CHECKED_AND_NATIVE_SUBMITTED');
+    assert.equal(publication.length,1,'actual failed PUBLICATION tail must have a distinct S7 record');
+    const tail=publication[0].payload,first=compile[0].payload;
+    assert.notEqual(publication[0].record_id,compile[0].record_id);assert.equal(tail.status,reading.reason);
+    assert.ok(tail.elapsedMs>0);assert.notEqual(tail.startedAt,first.startedAt);
+    for(const field of ['deliveryAttemptId','jobId','episodeId','requestId','parentReservation'])assert.deepEqual(tail[field],first[field]);
+    results.push({id:'F-post-compile-publication-failure-meter',status:'PASS',observed:{compile:compile[0],publication:publication[0]},
+      basis:'ACTUAL_AUTHENTICATED_COMPILER_SQL_PUBLICATION_FAILURE_IMMUTABLE_S7_AND_RETAINED_NATIVE_CHILD'});
+  }else{
   assert.equal(reading.status,unsupported?'PARTIAL':"OBSERVED", "actual compiler/native progression: " + JSON.stringify({ status: reading.status, reason: reading.reason }));
   assert.equal((await admin.query(`SELECT count(*)::int n FROM finnor_os.x1_compiler_requests
     WHERE tenant_id=$1 AND work_id=$2`,[tenant,workId])).rows[0].n,1,
@@ -2046,7 +2191,37 @@ try {
   }
   if(mounted){
     for(;;){if(guardFailure)throw Error(guardFailure);
+      const fileControl=async(name:string)=>{
+        try{
+          const bytes=await readFile(join(evidence,name));if(bytes.length>2048)throw Error('MOUNTED_FILE_CONTROL_BOUND');
+          const packet=JSON.parse(bytes.toString());
+          if(packet.sourceCommit!==freeze.source.commit||packet.workId!==workId||packet.controlKey!==mountedControlKey)
+            throw Error('MOUNTED_FILE_CONTROL_SCOPE_MISMATCH');
+          return packet;
+        }catch(error){if((error as NodeJS.ErrnoException).code==='ENOENT')return null;throw error;}
+      };
+      if(mountedFileControlStage===0){
+        const packet=await fileControl('mounted-control-arm.json');
+        if(packet){
+          if(packet.mode!=='DELAY_READ'||delayedRead)throw Error('MOUNTED_FILE_CONTROL_ARM_STATE');
+          await collectLifecycle('OBSERVED_BEFORE_EXPECTED_PRINCIPAL_REVOCATION_PARTIAL_TAIL');
+          let release!:()=>void;const promise=new Promise<void>(resolve=>{release=resolve;});
+          delayedRead={entered:false,requestId:null,status:null,promise,release};
+          mountedFileControlStage=1;
+          await save('mounted-control-arm-ready.json',{at:new Date().toISOString(),sourceCommit:freeze.source.commit,workId});
+        }
+      }
       const heldRead=readDelayedRead();
+      if(mountedFileControlStage===1){
+        const packet=await fileControl('mounted-control-revoke.json');
+        if(packet){
+          if(packet.mode!=='REVOKE_PRINCIPAL'||!heldRead?.entered||heldRead.status!==200
+            ||packet.expectedHeldRequestId!==heldRead.requestId)throw Error('MOUNTED_FILE_CONTROL_REVOKE_STATE');
+          assert.equal(await revokeFixturePrincipal(),true);mountedFileControlStage=2;
+          await save('mounted-control-revoke-ready.json',{at:new Date().toISOString(),sourceCommit:freeze.source.commit,workId,
+            actualPrincipalSuspended:true,heldRequestId:heldRead.requestId});
+        }
+      }
       if(heldRead?.entered&&!heldReadReleased){
         try{const rendered=JSON.parse(await readFile(join(evidence,'mounted-denial-rendered.json'),'utf8'));
           if(rendered.sourceCommit!==freeze.source.commit||rendered.workId!==workId||rendered.workspaceClosed!==true)
@@ -2062,11 +2237,121 @@ try {
         assert.equal(closed.status,'PASS','actual mounted observer verdict');
         assert.ok(Array.isArray(closed.checks)&&closed.checks.length>=4
           &&closed.checks.every((check:any)=>check.status==='PASS'),'all registered mounted predicates');
+        const entered=JSON.parse(await readFile(join(evidence,'mounted-delayed-response-entered.json'),'utf8'));
+        const released=JSON.parse(await readFile(join(evidence,'mounted-late-response-released.json'),'utf8'));
+        assert.equal(entered.status,200);assert.equal(entered.capturedArtifact,true);assert.equal(entered.capturedProgramme,true);
+        assert.ok(Date.parse(released.at)-Date.parse(entered.at)<20000,'original twenty-second successful-read window');
+        const wire=(traffic as any[]).filter(event=>event.event==='X1_ACTUAL_HTTP_RESPONSE_FINISH'
+          &&event.responsePath==='/api/company-brain/institution-read'&&event.responseStatus===200
+          &&event.responseDigest===entered.responseDigest&&Date.parse(event.at)>=Date.parse(released.at));
+        assert.ok(wire.length>=1,'actual held private HTTP response physically finished after mounted denial');
+        await save('mounted-late-response-wire-proof.json',{entered,released,wire,clientRenderingProof:closed,
+          qualification:'ACTUAL_WIRE_FINISH_AND_MOUNTED_NO_RESURRECTION_NOT_SERVER_FINISH_ALONE'});
         results.push({id:'G-mounted-owner-observer',status:'PASS',observed:closed,
           basis:'ACTUAL_BROWSER_WITH_SEPARATE_CANONICAL_OWNER_PROOF'});break;
       }catch(error){if((error as NodeJS.ErrnoException).code!=='ENOENT')throw error;}
       await new Promise(resolve=>setTimeout(resolve,1000));
     }
+  }
+  if(diagnostic){
+    const onEnd={at:new Date().toISOString(),completion,physicalCompute:reading.costs.physicalCompute,
+      acceptedBusinessWeight:3,originalDutyDenominator:3,effects:allEffects,materialMappings:expected.mappings.length};
+    const child=worker!;
+    if(child.exitCode===null&&child.signalCode===null){const ended=new Promise<void>(resolve=>child.once('close',()=>resolve()));
+      child.kill('SIGTERM');const timer=setTimeout(()=>child.kill('SIGKILL'),15000);await ended;clearTimeout(timer);}
+    await save('matched-on-owner-result.json',onEnd);
+    env.DATABASE_URL=connection('finnor_worker',workerPassword).replace('/x1_owner','/x1_native_off');
+    env.FINNOR_X1_DIAGNOSTIC_CONTROL=diagnosticControls!.off;
+    const offStarted=performance.now(),offStartedAt=new Date().toISOString();worker=startWorker();
+    const offReady=await workerReadiness.get(worker);await save('matched-off-worker-readiness.json',offReady);
+    let offWork:any,offJobs:any[],offLoops:any[];
+    for(let poll=0;poll<600;poll++){
+      if(guardFailure)throw Error(guardFailure);
+      if(worker.exitCode!==null||worker.signalCode!==null)throw Error('NATIVE_OFF_WORKER_STOPPED_BEFORE_OBSERVATION');
+      offWork=(await diagnosticOff!.query('SELECT status,final_outcome FROM finnor_os.works WHERE tenant_id=$1 AND id=$2',[tenant,workId])).rows[0];
+      offLoops=(await diagnosticOff!.query('SELECT * FROM finnor_os.work_objective_loops WHERE tenant_id=$1 AND work_id=$2',[tenant,workId])).rows;
+      offJobs=(await diagnosticOff!.query(`SELECT id,type,status,attempts,last_error,payload FROM finnor_os.jobs
+        WHERE tenant_id=$1 AND type IN('run_objective_iteration','run_workforce_assignment','repair_plan_after_terminal_failure') ORDER BY id`,[tenant])).rows;
+      await appendFile(join(evidence,'matched-off-native-observations.jsonl'),JSON.stringify({at:new Date().toISOString(),work:offWork,
+        loops:offLoops.map(r=>({id:r.id,state:r.state,reason:r.reason,step:r.step_number})),jobs:offJobs})+'\n',{mode:0o600});
+      if(['completed','failed','cancelled','needs_input','blocked'].includes(offWork?.status)
+        ||offLoops.some(r=>['completed','failed','cancelled','blocked','needs_input'].includes(r.state)))break;
+      if(poll>20&&!offJobs.some(r=>['queued','running','retry'].includes(r.status)))break;
+      await new Promise(resolve=>setTimeout(resolve,200));
+    }
+    const offChild=worker;
+    if(offChild.exitCode===null&&offChild.signalCode===null){const ended=new Promise<void>(resolve=>offChild.once('close',()=>resolve()));
+      offChild.kill('SIGTERM');const timer=setTimeout(()=>offChild.kill('SIGKILL'),15000);await ended;clearTimeout(timer);}
+    const requestRows=(await diagnosticOff!.query(`SELECT * FROM finnor_os.pe_requests WHERE tenant_id=$1
+      AND deal_id=$2 AND request_text=ANY($3::text[])`,[tenant,expected.request.dealId,expected.requestTexts])).rows;
+    const streamRows=(await diagnosticOff!.query('SELECT * FROM finnor_os.pe_workstreams WHERE tenant_id=$1 AND deal_id=$2 AND name=$3',
+      [tenant,expected.ordinary.dealId,expected.ordinary.workstreamName])).rows;
+    const findingRows=(await diagnosticOff!.query('SELECT * FROM finnor_os.pe_findings WHERE tenant_id=$1 AND deal_id=$2 AND statement=$3',
+      [tenant,expected.ordinary.dealId,expected.ordinary.findingStatement])).rows;
+    const effects=(await diagnosticOff!.query(`SELECT a.id,a.status,a.action_type,a.authority_context,e.status effect_status
+      FROM finnor_os.domain_actions a LEFT JOIN finnor_os.business_effects e
+      ON e.tenant_id=a.tenant_id AND e.domain_action_id=a.id WHERE a.tenant_id=$1 AND a.work_id=$2 ORDER BY a.id`,[tenant,workId])).rows;
+    const verified=(row:any)=>row&&new Date(row.created_at).getTime()<=Date.parse(deadlineAt)
+      &&effects.some(e=>e.id===row.id&&e.status==='completed'&&e.effect_status==='verified');
+    const requestAccepted=requestRows.length===1&&verified(requestRows[0])&&requestRows[0].workstream_id===expected.request.workstreamId
+      &&requestRows[0].requested_from_deal_party_id===expected.request.requestedFromDealPartyId
+      &&requestRows[0].owner_party_id===actor&&requestRows[0].owner_party_type==='employee'
+      &&requestRows[0].requires_accepted_deliverable===true&&requestRows[0].state==='open'
+      &&new Date(requestRows[0].requested_at).toISOString()===occurredAt&&new Date(requestRows[0].due_at).toISOString()===deadlineAt;
+    const streamAccepted=streamRows.length===1&&verified(streamRows[0])&&streamRows[0].kind==='financial_diligence'
+      &&streamRows[0].state==='not_started'&&streamRows[0].owner_party_id===actor&&streamRows[0].owner_party_type==='employee'
+      &&streamRows[0].archived_at===null&&streamRows[0].completed_at===null&&streamRows[0].cancelled_at===null;
+    const findingAccepted=findingRows.length===1&&verified(findingRows[0])&&findingRows[0].workstream_id===expected.ordinary.existingWorkstreamId
+      &&findingRows[0].severity==='high'&&findingRows[0].materiality==='material'&&findingRows[0].state==='open'
+      &&findingRows[0].required_for_workstream_completion===true&&findingRows[0].owner_party_id===actor
+      &&findingRows[0].archived_at===null&&findingRows[0].disposition===null&&findingRows[0].resolved_at===null;
+    const nativeEvents=await readFile(join(evidence,'native-diagnostic-off.jsonl'),'utf8');
+    const events=nativeEvents.trim().split('\n').filter(Boolean).map(line=>JSON.parse(line));
+    assert.ok(events.some(e=>e.event==='ACTUAL_NATIVE_OBJECTIVE_STARTED'),'strong native incumbent was actually entered');
+    assert.ok(events.some(e=>e.event==='ACTUAL_NATIVE_MODEL_AND_SOURCE_INVOCATION'),'existing equipped model adapter was actually entered');
+    const offCharges=(await diagnosticOff!.query('SELECT body FROM finnor_os.s5_governed_resource_charges WHERE tenant_id=$1 AND principal_id=$2',
+      [tenant,actor])).rows.map(r=>r.body);
+    const offEconomic=(await diagnosticOff!.query('SELECT record_id,kind,body FROM finnor_os.s7_economic_records WHERE tenant_id=$1 AND principal_id=$2',
+      [tenant,actor])).rows;
+    const control=JSON.parse(await readFile(diagnosticControls!.off,'utf8'));
+    const actualFold=[];
+    for(const charge of offCharges){
+      assert.deepEqual(charge.reservationRef,control.parentReservation);
+      const folded=await chargeInstitutionDemand(ctx,control.parentReservation,{responsibilityIdentity:charge.responsibilityIdentity,
+        phase:charge.phase,ordinal:charge.ordinal,units:charge.units,
+        ...(charge.physicalInvocationId?{physicalInvocationId:charge.physicalInvocationId}:{})});
+      actualFold.push({offCharge:charge,originalPhysicalOwnerCharge:folded.charge});
+    }
+    const allOriginalCharges=(await admin.query('SELECT body FROM finnor_os.s5_governed_resource_charges WHERE tenant_id=$1 AND principal_id=$2 AND reservation_id=$3',
+      [tenant,actor,control.parentReservation.id])).rows.map(r=>r.body);
+    const totalRequestUnits=allOriginalCharges.filter(c=>c.unit==='request').reduce((sum,c)=>sum+c.units,0);
+    assert.ok(totalRequestUnits<=520,'both serial physical arms plus shared preparation retain original total compute envelope');
+    const receipt={on:onEnd,off:{startedAt:offStartedAt,elapsedMs:performance.now()-offStarted,work:offWork,loops:offLoops!,jobs:offJobs!,
+      requestRows,streamRows,findingRows,effects,accepted:[requestAccepted,streamAccepted,findingAccepted],
+      acceptedBusinessWeight:[requestAccepted,streamAccepted,findingAccepted].filter(Boolean).length,
+      originalDutyDenominator:3,modelEvents:events.filter(e=>e.event==='ACTUAL_NATIVE_MODEL_AND_SOURCE_INVOCATION'),
+      materialMappingsPublished:null,materialMappingQuality:'UNKNOWN_NATIVE_CONTROLLER_DOES_NOT_PUBLISH_INSTITUTION_MAPPING_ARTIFACT'},
+      originalIndependentExpectedDuties:expected.ordinary,originalRequest:expected.request,
+      actualOriginalParentCostFold:actualFold,totalOriginalRequestUnits:totalRequestUnits,
+      modelCostUsd:null,humanSeconds:null,aggregatePeakMemoryBytes:null,sharedPreparationCountedOnce:true,
+      comparison:'DEVELOPMENT_COMPONENT_DIAGNOSTIC_PRESERVE_REFUSAL_NO_CAPACITY_RATIO_OR_IMPROVEMENT_PRESUMED',
+      comparatorQualification:events.some(e=>e.physicalModelAttempts?.some((a:any)=>a.status==='COMPLETED'))
+        ?'PARTIAL_FINITE_DEVELOPMENT_NATIVE_MODEL_RUN':'PARTIAL_NATIVE_PROVIDER_REFUSED_NO_COMPLETED_MODEL_INTERPRETATION',
+      protectedQualification:false,operational100xEstablished:false,sourceUnchangedRequired:true};
+    await save('matched-native-independent-owner-diagnostic.json',receipt);
+    await save('matched-native-off-economic-records.json',offEconomic);
+    const invocationId=randomUUID();
+    await persistInstitutionLifecycleCompute(ctx,{workId:workId!,episodeId:control.episodeId,parentReservation:control.parentReservation,
+      rightsRevision:String((await employeeAuthoritySnapshot(ctx.auth)).revision),invocationId,startedAt:offStartedAt,
+      elapsedMs:performance.now()-offStarted,operation:'DIAGNOSTIC',status:'MATCHED_NATIVE_OBSERVATIONS_RETAINED',
+      receiptDigest:sha(JSON.stringify(receipt)),measurements:{sameOriginalOwnerState:true,originalDutyDenominator:3,
+        candidateAcceptedBusinessWeight:3,nativeAcceptedBusinessWeight:receipt.off.acceptedBusinessWeight,
+        physicalModelCalls:receipt.off.modelEvents.length,totalOriginalRequestUnits:totalRequestUnits,
+        moneyUsd:null,humanSeconds:null,aggregatePeakMemoryBytes:null}});
+    results.push({id:'H-matched-equipped-native-original-inputs',status:'PASS',observed:{onAccepted:3,
+      offAccepted:receipt.off.acceptedBusinessWeight,originalDenominator:3,totalOriginalRequestUnits:totalRequestUnits},
+      basis:'ACTUAL_IDENTICAL_PREEXPOSURE_OWNER_DATABASE_RAW_SOURCE_EQUIPMENT_NATIVE_OBJECTIVE_PLANNER_QUEUE_EFFECT_OBSERVER_AND_ORIGINAL_PARENT_COST_FOLD'});
+    await diagnosticOff!.end();diagnosticOff=undefined;
   }
   if(installation&&!mounted){
     const preserved=installedPreservation;
@@ -2100,6 +2385,7 @@ try {
         apiRestart,originalReservationPreserved:true},
       basis:'ACTUAL_RELOCATED_COMPILED_API_WORKER_CHECKER_NATIVE_EFFECTS_AND_AUTHENTICATED_READBACK'});
   }
+  }
 } catch (error) {
   results.push({ id: "actual-owner-boundary", status: "FAIL", observed: { message: String((error as Error).message),
     stack: (error as Error).stack, cause: (error as any).cause?.message ?? null,
@@ -2107,6 +2393,10 @@ try {
       internalQuery: (error as any).internalQuery ?? null, position: (error as any).position ?? null } } });
 } finally {
   if (guard) clearInterval(guard);
+  try{await collectLifecycle(results.some(r=>r.status==='FAIL')?'FAILED_WITH_COSTS_RETAINED':'OBSERVED_FINITE_OWNER_VALIDATION');}
+  catch(error){await save('lifecycle-cost-gap.json',{predicate:String((error as Error).message),
+    originalInvocationId:lifecycleInvocationId,newParentIssued:false,moneyUsd:null,humanSeconds:null});
+    results.push({id:'G-physical-validation-lifecycle-original-parent',status:'FAIL',observed:{predicate:String((error as Error).message)}});}
   if(publicationBlocker){await publicationBlocker.query('ROLLBACK').catch(()=>{});await publicationBlocker.end().catch(()=>{});}
   if(acknowledgementBlocker){await acknowledgementBlocker.query('ROLLBACK').catch(()=>{});await acknowledgementBlocker.end().catch(()=>{});}
   releaseDelayedRead();
@@ -2116,6 +2406,7 @@ try {
       ["deliveries", "SELECT a.* FROM finnor_os.job_delivery_attempts a WHERE a.tenant_id=$1 ORDER BY started_at"],
       ["compiler", "SELECT * FROM finnor_os.x1_compiler_requests WHERE tenant_id=$1 ORDER BY revision"],
       ["compiler-events", "SELECT kind,body,created_at FROM finnor_os.x1_compiler_events WHERE tenant_id=$1 ORDER BY created_at,id"],
+      ["economic-records", "SELECT record_id,kind,content_digest,body,event FROM finnor_os.s7_economic_records WHERE tenant_id=$1 ORDER BY knowledge_at,record_id"],
       ["compiler-updates", "SELECT * FROM finnor_os.x1_compiler_updates WHERE tenant_id=$1 ORDER BY created_at,id"],
       ["native", "SELECT id,status,failure,proposed,request,head_id FROM finnor_os.p1_requests WHERE tenant_id=$1"],
       ["resource-charges", "SELECT * FROM finnor_os.s5_governed_resource_charges WHERE tenant_id=$1"],
@@ -2147,7 +2438,7 @@ try {
   }
   await save("traffic.json", traffic);
   if(mountedControl){mountedControl.closeAllConnections();await new Promise<void>(resolve=>mountedControl!.close(()=>resolve()));}
-  await service?.close(); await closePool(); await admin?.end(); await database?.stop().catch(() => {});
+  await service?.close(); await closePool(); await diagnosticOff?.end().catch(()=>{}); await admin?.end(); await database?.stop().catch(() => {});
   await rm(join(evidence, "tmp/database"), { recursive: true, force: true });
   const currentPins = await Promise.all(sourcePaths.map(async path => ({ path, sha256: sha(await readFile(join(repo, path))) })));
   const sourceUnchanged = JSON.stringify(sourcePins) === JSON.stringify(currentPins) && freeze.source.commit === git("rev-parse", "HEAD")

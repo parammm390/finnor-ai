@@ -219,7 +219,8 @@ export async function chargeInstitutionDemand(ctx:PeMutationContext,ref:Experime
     WHERE ch.tenant_id=$1 AND ch.reservation_id=$2 AND co.principal_id=$3 ORDER BY ch.created_at,ch.charge_key LIMIT $4`,
     [ctx.auth.tenantId,ref.id,actor(ctx),chargeLimit+1])).rows;
   if(rows.length>chargeLimit)throw new AllocationContractError('LIMIT_EXCEEDED','S5 institution charge population bound');
-  const existing=rows.map(row=>row.body as {chargeKey:string;requestDigest:string;phase:string;ordinal:number;units:number;resourceId:string;unit:string});
+  const existing=rows.map(row=>row.body as {ref:ExperimentRef;reservationRef:ExperimentRef;
+    chargeKey:string;requestDigest:string;phase:string;ordinal:number;units:number;resourceId:string;unit:string;physicalInvocationId?:string});
   const plan=planInstitutionDemandCharge({demand:r.demand,envelope:r.envelopes,existingCharges:existing,request});
   if(plan.status==='REFUSED')throw new AllocationContractError('STALE_INPUT',plan.reason);
   if(plan.status==='REPLAY')return {charge:existing.find(row=>row.chargeKey===plan.chargeKey)!,semanticReplay:true};

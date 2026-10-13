@@ -1076,12 +1076,18 @@ async function inspectCanonicalState(tenantId: string, workId: string, loop: typ
     // a deal-free company objective is never treated as IC readiness.
     businessRequest=harnessRequest;
   } else if (vertical.verticalKey === "private_equity") {
-    const resolution = await resolvePrivateEquityDealReference(tenantId, loop.objective, { workId, userId: ctx.userId });
-    if (resolution.status !== "resolved") throw new Error("Objective PE inspection requires one exact Work-anchored Deal");
+    const contextDeals=privateEquityRefsFromContext((aggregate.work as {activeContext:unknown}).activeContext)
+      .filter(ref=>ref.entityType==='pe_deal');
+    const focusedDeal=contextDeals.length===1&&aggregate.read.complete
+      &&aggregate.entityLinks.some(link=>link.entityType==='pe_deal'&&link.entityId===contextDeals[0]!.entityId)
+      ?contextDeals[0]!.entityId:null;
+    const resolution=focusedDeal?null:await resolvePrivateEquityDealReference(tenantId, loop.objective, { workId, userId: ctx.userId });
+    const dealId=focusedDeal??(resolution?.status==='resolved'?resolution.dealId:null);
+    if(!dealId)throw new Error("Objective PE inspection requires one exact Work-anchored Deal");
     // The close-readiness composition includes PE2 eligibility plus P3 decision
     // readiness/acquisition options. Other bounded PE reads remain available as
     // one-step query decisions when the objective needs requests/workstreams.
-    businessRequest = { intent: "closing_readiness", dealId: resolution.dealId };
+    businessRequest = { intent: "closing_readiness", dealId };
   } else {
     businessRequest = { intent: "work_list", recordId: workId };
   }

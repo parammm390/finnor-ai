@@ -4,4 +4,4 @@
  * Keep this beside the migrations so readiness and worker heartbeats cannot drift
  * by carrying independent literals.
  */
-export const CURRENT_MIGRATION_HEAD = "0188_x1_source_namespace_binding.sql";
+export const CURRENT_MIGRATION_HEAD = "0189_x1_physical_cost_allocation.sql";

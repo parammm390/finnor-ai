@@ -24,8 +24,9 @@ const ownerCases={owners:{'one-duty':{count:'1',mode:'api'},'128-duty':{count:'1
   domain:{count:'1',mode:'domain'},'owner-inputs':{count:'1',mode:'owner_inputs'},'source-namespace':{count:'1',mode:'source_namespace'}},
   lifecycle:{material:{count:'1',mode:'material'},'reporting-changes':{count:'1',mode:'reporting_changes'},'staff-epoch':{count:'1',mode:'authority_epoch'},'sensitive-coverage':{count:'1',mode:'sensitive_coverage'},personnel:{count:'1',mode:'personnel'},recovery:{count:'1',mode:'recovery'},
     contention:{count:'1',mode:'contention'},unsupported:{count:'1',mode:'unsupported'},'unsupported-operation':{count:'1',mode:'unsupported_operation'},'checker-crash':{count:'1',mode:'checker_crash'},
-    'cancel-observed':{count:'1',mode:'cancel_observed'},
+    'cancel-observed':{count:'1',mode:'cancel_observed'},'publication-meter':{count:'1',mode:'publication_meter'},
     'effect-recovery':{count:'1',mode:'effect_recovery'}},mounted:{mounted:{count:'1',mode:'mounted'}},
+  diagnostic:{'matched-native':{count:'1',mode:'diagnostic'}},
   installed:{'schema-upgrade':{count:'1',mode:'upgrade'},delivery:{count:'1',mode:'owner_inputs'},
     'upgrade-installed':{count:'1',mode:'upgrade'}}};
 const selectedOwnerCase=ownerCase?ownerCases[stage]?.[ownerCase]:null;
@@ -100,6 +101,8 @@ for (const path of [
   'finnor-os/packages/db/migrations/0186_x1_source_subject_scope.sql',
   'finnor-os/packages/db/migrations/0187_x1_responsible_principal_currentness.sql',
   'finnor-os/packages/db/migrations/0188_x1_source_namespace_binding.sql',
+  'finnor-os/packages/db/migrations/0189_x1_physical_cost_allocation.sql',
+  'finnor-os/packages/db/migration-head.ts',
   'finnor-os/packages/private-equity/src/institution-program/source-scope.ts',
   'finnor-os/packages/private-equity/src/institution-program/source-locks.ts',
   "finnor-os/packages/private-equity/src/institution-program/installed-source.ts",
@@ -234,6 +237,8 @@ if (named.live || stage === "installed" || stage === "diagnostic") {
       killSignal:'SIGTERM',env:{PATH:'/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin',HOME:join(leaf,'home'),TMPDIR:'/tmp',
         LANG:'en_US.UTF-8',CI:'1',LOG_LEVEL:'silent',TSX_DISABLE_CACHE:'1',NEXT_TELEMETRY_DISABLED:'1',
         FINNOR_X1_OWNER_EVIDENCE:leaf,FINNOR_X1_OWNER_CASE:selectedOwnerCase.count,FINNOR_X1_OWNER_MODE:selectedOwnerCase.mode,
+        ...(selectedOwnerCase.mode==='diagnostic'&&process.env.FINNOR_X1_DIAGNOSTIC_BINDING_FILE
+          ?{FINNOR_X1_DIAGNOSTIC_BINDING_FILE:process.env.FINNOR_X1_DIAGNOSTIC_BINDING_FILE}:{}),
         ...(installation?{FINNOR_X1_INSTALLED_ROOT:realpathSync(installation)}:{}),
         ...(frontendInstallation?{FINNOR_X1_FRONTEND_ROOT:realpathSync(frontendInstallation)}:{})}});
     const output=(child.stdout??'')+(child.stderr??'');

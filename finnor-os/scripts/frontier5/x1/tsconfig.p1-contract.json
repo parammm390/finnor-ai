@@ -9,6 +9,7 @@
   "files": [
     "./run-owner-slice.mts",
     "./physical-owner-worker.mts",
+    "./native-diagnostic-worker.mts",
     "../../../apps/worker/src/dev-entry.mts",
     "../../../apps/api/dev-server.ts",
     "./qualification-admin.mts",

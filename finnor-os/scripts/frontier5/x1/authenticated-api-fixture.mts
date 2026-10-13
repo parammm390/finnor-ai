@@ -1,7 +1,7 @@
 /** Established LOCAL_AUTH_SERVICE transport from P1: actual handlers and bearer
  * verification, no reconstructed business API/owner/queue or completion mock. */
 import { createServer } from "node:http";
-import { randomBytes, createHmac, timingSafeEqual } from "node:crypto";
+import { randomBytes, createHmac, timingSafeEqual,createHash } from "node:crypto";
 import { readdir, readFile } from "node:fs/promises";
 import { join, relative } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -107,6 +107,17 @@ export async function authenticatedApiFixture(repo: string, actor: string, recor
   await scan(apiRoot); routes.sort((a, b) => a.parts.filter(p => p.startsWith("[")).length - b.parts.filter(p => p.startsWith("[")).length);
   const api = createServer(async (req, res) => {
     const started = performance.now();
+    const finish=(path:string,status:number,headers:Record<string,string>,bytes:Buffer)=>{
+      const responseDigest=createHash('sha256').update(bytes).digest('hex');let finished=false;
+      res.once('finish',()=>{finished=true;record({event:'X1_ACTUAL_HTTP_RESPONSE_FINISH',responsePath:path,
+        responseStatus:status,responseDigest,responseBytes:bytes.length,at:new Date().toISOString(),
+        elapsedMs:performance.now()-started,socketDestroyed:res.socket?.destroyed??null,
+        clientRenderingEstablished:false});});
+      res.once('close',()=>record({event:'X1_ACTUAL_HTTP_RESPONSE_CLOSE',responsePath:path,responseStatus:status,
+        responseDigest,at:new Date().toISOString(),finished,writableFinished:res.writableFinished,
+        clientRenderingEstablished:false}));
+      res.writeHead(status,headers);res.end(bytes);
+    };
     try {
       const url = new URL(req.url ?? "/", "http://localhost"), parts = url.pathname.replace(/^\/api\//, "").split("/").map(decodeURIComponent);
       if(compiledOrigin){
@@ -115,8 +126,8 @@ export async function authenticatedApiFixture(repo: string, actor: string, recor
         const response=await fetch(compiledOrigin+url.pathname+url.search,{method:req.method,headers,
           ...(!['GET','HEAD'].includes(req.method??'GET')?{body}:{})});
         const bytes=Buffer.from(await response.arrayBuffer()),out:Record<string,string>={};response.headers.forEach((v,k)=>{out[k]=v;});
-        await options.afterResponse?.(url.pathname,body,response.status);
-        res.writeHead(response.status,out);res.end(bytes);
+        await options.afterResponse?.(url.pathname,bytes.toString('utf8'),response.status);
+        finish(url.pathname,response.status,out,bytes);
         record({path:url.pathname,method:req.method,status:response.status,bearer:Boolean(req.headers.authorization),
           elapsedMs:performance.now()-started,compiledApi:true});return;
       }
@@ -140,8 +151,8 @@ export async function authenticatedApiFixture(repo: string, actor: string, recor
         ...(!["GET", "HEAD"].includes(req.method ?? "GET") ? { body } : {}) }), { params: Promise.resolve(selected.params) });
       const out: Record<string, string> = {}; response.headers.forEach((v, k) => { out[k] = v; });
       const responseBytes=Buffer.from(await response.arrayBuffer());
-      await options.afterResponse?.(url.pathname,body,response.status);
-      res.writeHead(response.status, out); res.end(responseBytes);
+      await options.afterResponse?.(url.pathname,responseBytes.toString('utf8'),response.status);
+      finish(url.pathname,response.status,out,responseBytes);
       record({ path: url.pathname, method: req.method, status: response.status, bearer: Boolean(req.headers.authorization), elapsedMs: performance.now() - started });
     } catch (error) { record({ path: req.url, status: 500, predicate: String((error as Error).message) });
       res.writeHead(500, { "content-type": "application/json" }); res.end('{"error":"local_route_host_failed"}'); }

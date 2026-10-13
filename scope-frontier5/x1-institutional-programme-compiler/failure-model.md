@@ -556,3 +556,36 @@ unrelated owner operation. Retain all before/after S7 records before assertions;
 validate at most one concurrent successful revision and each meter's actual
 same-Work child/episode/parent binding. Foreign requests, extra revisions, wrong
 parents, duplicate identities and unregistered operations must still fail.
+
+### Physical compute lifecycle repair: preimplementation failure model
+
+A successful COMPILE record followed by a failed immutable artifact publication
+must not replay the successful record as if it measured the failed tail. The
+registered E2E installs a disposable SQL trigger on x1_compiler_artifacts that
+raises X1_TEST_POST_COMPILE_PUBLICATION_FAULT. It runs the real authenticated
+compiler, worker and separate checker. The intended defective boundary is a
+committed successful COMPILE record plus an UNKNOWN request and missing failed
+PUBLICATION record. Preserve admitted children and possible native effects.
+
+Also retain physical entry/currentness/claim refusals, source byte reads/reuse,
+decode duration, checker PID/exit/signal/transport and meter-write gaps. Missing
+rights forbid private S7 writes and require a retained gap, not invented current
+authority. Original preparation records stay immutable; their once-only original
+parent allocation must be durable and enforced through S5/S7 without enlarging
+the original520 request/900 human envelopes. Build/setup/integration/validation
+measurements must use the existing economic owner; unobserved money, human work
+and aggregate memory remain explicit unknowns. Child observations are included
+within their measured parent interval and cannot be summed twice.
+
+The mounted004 late-success timing predicate failed because manual tool round
+trips exceeded twenty seconds. A private fixture control-file handshake may
+serialize arm, actual cancellation, principal suspension, rendered denial and
+release in one browser-tool operation. Validate exact source/Work/control key;
+no production fault interface, changed read deadline or manufactured denial.
+# Physical lifecycle and matched diagnostic boundaries
+
+The existing native PE Objective inspector ignored the original persisted Work focus when multiple Deal links existed. Actual diagnostic 003 reached that inspector and failed before model invocation. Diagnostic 004 removed the second Work link and then failed an independently expected X1 mapping; retain both failures. Restore the complete original Work scope. A supported inspector repair may select only one explicit persisted Deal focus that is also a current direct canonical link on the same Work; ambiguous, absent, unlinked or cross-tenant focus must still use the existing conservative resolver/refusal. Existing authority evaluation and canonical query execution remain mandatory. Closing an owned second-database client before stopping the disposable cluster is necessary to retain a failed run's result; otherwise a real PostgreSQL FATAL client event can interrupt final evidence.
+
+The lifecycle collector can fail before an original parent exists, after authority is revoked, while S5 refuses remaining occupancy, or after a successful S5 charge but before immutable S7 persistence. Preserve the real measurement and exact gap; never replace it with zero or a fresh parent. A retry of the same physical invocation must retain the original UUID and semantic preimage. Whole-run elapsed time includes API/compiler/checker intervals and must not be summed with those component intervals. Source returned/reused bytes are owner observations, not storage or network savings. A process RSS sample cannot establish aggregate peak memory. Unobserved prices and human work remain unknown.
+
+The matched diagnostic can fail through provider availability, capacity policy, source currentness, native planner refusal, unsupported actions, original budget exhaustion or observer gaps. Both arms retain identical pre-exposure raw sources, mandate, identities, canonical starting state, rights and resource envelope. The X1-off arm uses the existing native Objective planner/controller/executor with the same authorized originals supplied through the existing provider seam, never producer-derived mappings or hidden reference obligations. Refusal and unfinished duties stay in the frozen denominator. Model attempts, source reads, native actions, startup and reuse are recorded separately. No development result establishes qualification or capacity gain.

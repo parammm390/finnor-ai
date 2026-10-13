@@ -9,7 +9,7 @@ import { originalRawRecords } from "./checker-raw";
 import { acquireInstalledMailOriginal } from "./installed-source";
 import type { OriginalInstitutionEvidence } from "./checker";
 import type { DigitalInstitutionProfile } from "./contracts";
-import { recordInstitutionSourceAttempt } from "./meter";
+import { recordInstitutionSourceAttempt,recordInstitutionPhysicalObservation } from "./meter";
 import { lockInstitutionSourceAuthority } from './source-locks';
 import { readInstitutionSourceScope,type InstitutionSourceScope } from './source-scope';
 
@@ -44,6 +44,9 @@ type Grant = {
 export async function acquireInstitutionOriginal(
   ctx: PeMutationContext, workId: string, grantId: string, profile: DigitalInstitutionProfile,
 ): Promise<OwnerOriginal> {
+  const sourceStarted=performance.now(),sourceStartedAt=new Date().toISOString();
+  let originalBytesRead=0,reusedBytes=0,decodedObjects=0,outcome='REFUSED';
+  try{
   const principal = ctx.auth.userId;
   await authorizeBeliefResources(ctx, [{ type: "tenant", id: ctx.auth.tenantId }, { type: "work", id: workId }]);
   const grant = await withTenantTransaction(ctx.auth.tenantId, {
@@ -88,6 +91,7 @@ export async function acquireInstitutionOriginal(
     ||JSON.stringify(sourceScope.body.expectedObjectIds)!==JSON.stringify(row.expected_object_ids))
     throw Error('X1_SOURCE_METADATA_CHANGED_BEFORE_READ');
   const unavailable=async(scope:InstitutionSourceScope):Promise<OwnerOriginal>=>{
+    outcome='AUTHORIZED_SOURCE_GAP';
     if(scope.body.originalReadAllowed||!scope.body.gap)throw Error('X1_SOURCE_GAP_REQUIRES_NATIVE_REFUSAL');
     const metadata=row.document_id&&row.document_version_id?await withTenantTransaction(ctx.auth.tenantId,
       {userId:principal,readOnly:true},async(_db,c)=>(await c.query<{created_at:Date}>(
@@ -130,9 +134,11 @@ export async function acquireInstitutionOriginal(
           ||current.content_size!==reused.bytes.length||current.physical_size!==reused.bytes.length
           ||(current.provider_version_id??current.id)!==row.revision||digest(reused.bytes)!==row.original_sha256)
           throw Error('X1_RETAINED_IMMUTABLE_ORIGINAL_OWNER_CHANGED');
+        reusedBytes=reused.bytes.length;
         return {scope,core:reused};
       }
       const acquired=await loadDocumentVersion(db,ctx.auth.tenantId,row.document_id!,row.document_version_id!);
+      originalBytesRead=acquired?.bytes.length??0;
       if(!acquired||acquired.version.byte_sha256!==row.original_sha256||digest(acquired.bytes)!==row.original_sha256
         ||(acquired.version.provider_version_id??acquired.version.id)!==row.revision
         ||!acquired.bytes.length||acquired.bytes.length>profile.bounds.objectBytes)throw Error('X1_ORIGINAL_VERSION_OR_DIGEST_CHANGED');
@@ -163,6 +169,7 @@ export async function acquireInstitutionOriginal(
       provider: row.provider, revision: row.revision, original_sha256: row.original_sha256,
     }, profile);
     bytes = acquired.bytes; documentId = acquired.documentId; versionId = acquired.versionId;
+    originalBytesRead=acquired.bytes.length;
     retainedAt = acquired.retainedAt;
   } else {
     throw new Error("X1_ACQUISITION_KIND_UNSUPPORTED");
@@ -189,6 +196,7 @@ export async function acquireInstitutionOriginal(
     ...(row.external_object_type ? { externalObjectType: row.external_object_type } : {}),
   };
   const rows = await originalRawRecords(source, profile.bounds.tabularRowsPerObject, profile.bounds.objectBytes);
+  decodedObjects=rows.length;
   source.coverage.readObjectIds = rows.map((item) => item.id);
   source.coverage.complete = source.coverage.expectedObjectIds.length === rows.length
     && new Set(rows.map((item) => item.id)).size === rows.length
@@ -207,7 +215,14 @@ export async function acquireInstitutionOriginal(
   }
   const currentRights = await employeeAuthoritySnapshot(ctx.auth);
   if (String(currentRights.revision) !== rightsRevision) throw new Error("X1_SOURCE_RIGHTS_CHANGED");
+  outcome='COMPLETE';
   return source;
+  }finally{
+    recordInstitutionPhysicalObservation({kind:'SOURCE',grantId,startedAt:sourceStartedAt,
+      elapsedMs:performance.now()-sourceStarted,outcome,includedWithin:'COMPILE',originalBytesRead,reusedBytes,
+      decodedObjects,byteBasis:'BYTES_RETURNED_BY_CANONICAL_CORE_OR_INSTALLED_SOURCE_OWNER',
+      storageBlockBytes:null,networkWireBytes:null,monetaryCost:null});
+  }
 }
 
 async function verifySubjectConsent(

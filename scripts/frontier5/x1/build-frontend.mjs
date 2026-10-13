@@ -1,11 +1,10 @@
-import { createHash } from 'node:crypto';
-import { spawn, execFileSync } from 'node:child_process';
+import { spawn,spawnSync, execFileSync } from 'node:child_process';
 import { createServer } from 'node:net';
-import { createReadStream, existsSync, statfsSync } from 'node:fs';
-import { mkdir, readFile, writeFile, readdir, lstat, readlink, rename, cp } from 'node:fs/promises';
-import { createRequire } from 'node:module';
-import { dirname, join, relative, resolve, sep } from 'node:path';
+import { existsSync, statfsSync } from 'node:fs';
+import { mkdir, readFile, writeFile, rename, cp } from 'node:fs/promises';
+import { join,resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import {frontendTracingLayout} from './frontend-tracing-root.mjs';
 
 const repo=fileURLToPath(new URL('../../../',import.meta.url)),args=process.argv.slice(2);
 if(args.length!==4||args[0]!=='--output'||args[2]!=='--origin'||!args[1].startsWith('/')||existsSync(args[1]))
@@ -25,14 +24,7 @@ if(source.dirty.split('\n').filter(Boolean).some(line=>line.slice(3)!=='AGENTS.m
 const buildDir=join(repo,'.next-x1-install');
 if(existsSync(buildDir))throw Error('X1_FRONTEND_BUILD_DIRECTORY_ALREADY_EXISTS');
 await mkdir(output,{mode:0o700});
-const sha=bytes=>createHash('sha256').update(bytes).digest('hex');
-async function fileHash(path){const h=createHash('sha256');for await(const bytes of createReadStream(path))h.update(bytes);return h.digest('hex');}
-const sourcePreimages=[];
-for(const path of git('ls-files','-z').split('\0').filter(Boolean)){
-  if(/^(?:src\/|scripts\/centropy\/|scripts\/frontier5\/|public\/)/.test(path)
-    ||['package.json','package-lock.json','next.config.mjs','tsconfig.json','tailwind.config.ts','postcss.config.mjs'].includes(path))
-    sourcePreimages.push({path,sha256:await fileHash(join(repo,path))});
-}
+const layout=frontendTracingLayout(repo);
 const started=Date.now(),cpuBefore=process.cpuUsage(),resources=[];
 const child=spawn(process.execPath,['--max-old-space-size=1536',join(repo,'node_modules/next/dist/bin/next'),'build','--webpack'],{
   cwd:repo,stdio:['ignore','pipe','pipe'],env:{PATH:'/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin',
@@ -60,45 +52,25 @@ const guard=setInterval(()=>{
 const ending=await new Promise((yes,no)=>{child.once('error',no);child.once('exit',(code,signal)=>yes({code,signal}));});
 clearTimeout(timer);clearInterval(guard);
 await writeFile(join(output,'build-resources.json'),JSON.stringify({source,resources,ending,guardFailure,logBytes,
+  tracingLayout:layout,
   elapsedMs:Date.now()-started,coordinatorCpuMicros:process.cpuUsage(cpuBefore),humanSeconds:null,
   monetaryCost:null,aggregatePeakMemoryBytes:null},null,2)+'\n',{flag:'wx',mode:0o600});
 if(guardFailure||ending.code!==0||ending.signal)throw Error(guardFailure??'X1_FRONTEND_BUILD_FAILED');
-let tracingRoot=repo;
-const nextRoot=dirname(createRequire(import.meta.url).resolve('next/package.json'));
-while(relative(tracingRoot,nextRoot)==='..'||relative(tracingRoot,nextRoot).startsWith('..'+sep))tracingRoot=dirname(tracingRoot);
-const projectPath=relative(tracingRoot,repo),runtime=join(output,'runtime');
+const {projectPath}=layout,runtime=join(output,'runtime');
 await rename(join(buildDir,'standalone'),runtime);
 await cp(join(buildDir,'static'),join(runtime,projectPath,'.next-x1-install/static'),{recursive:true,errorOnExist:true,force:false});
 await cp(join(repo,'public'),join(runtime,projectPath,'public'),{recursive:true,errorOnExist:true,force:false});
-const files=[],links=[];let outputBytes=0;
-async function scan(directory){for(const item of await readdir(directory,{withFileTypes:true})){
-  const path=join(directory,item.name),r=relative(output,path),s=await lstat(path);
-  if(s.isSymbolicLink()){
-    const target=await readlink(path),actual=resolve(dirname(path),target);
-    if(!actual.startsWith(runtime+sep))throw Error('X1_FRONTEND_LINK_OUTSIDE_INSTALLATION:'+r);
-    links.push({path:r,target});
-  }else if(s.isDirectory())await scan(path);
-  else if(s.isFile()){
-    outputBytes+=s.size;if(outputBytes>limits.finalBuildOutputBytes)throw Error('X1_FINAL_BUILD_OUTPUT_BOUND');
-    files.push({path:r,bytes:s.size,mode:s.mode&0o7777,sha256:await fileHash(path)});
-  }else throw Error('X1_FRONTEND_SPECIAL_FILE_REFUSED');
-}}
-await scan(runtime);
-const hostBytes=await readFile(join(repo,'scripts/frontier5/x1/frontend-host.mjs'));
-await writeFile(join(output,'frontend-host.mjs'),hostBytes,{flag:'wx',mode:0o444});
-files.push({path:'frontend-host.mjs',bytes:hostBytes.length,mode:0o444,sha256:sha(hostBytes)});outputBytes+=hostBytes.length;
-const server=join('runtime',projectPath,'server.js');
-if(!files.some(row=>row.path===server))throw Error('X1_ACTUAL_STANDALONE_SERVER_REQUIRED');
-const buildId=(await readFile(join(runtime,projectPath,'.next-x1-install/BUILD_ID'),'utf8')).trim();
-if(buildId!=='x1-'+source.commit)throw Error('X1_FRONTEND_BUILD_ID_MISMATCH');
-if(git('rev-parse','HEAD')!==source.commit||git('status','--porcelain=v1','-uall')!==source.dirty)
-  throw Error('X1_FRONTEND_BUILD_SOURCE_CHANGED');
-const manifest={schema:'finnor.x1.frontend-installation.v1',mode:'DEVELOPMENT_ONLY',source,sourcePreimages,
-  runtime:{node:process.version,platform:process.platform,arch:process.arch,nodeBinarySha256:await fileHash(process.execPath)},
-  nextVersion:JSON.parse(await readFile(createRequire(import.meta.url).resolve('next/package.json'),'utf8')).version,
-  buildId,frontendOrigin:origin.origin,entrypoint:server,files,links,outputBytes,elapsedMs:Date.now()-started,limits,
-  authTransport:'SAME_ORIGIN_AUTH_V1_TO_EXISTING_DISPOSABLE_AUTH_OWNER',productionActive:false,
-  protectedQualification:false,executionAuthorityGranted:false,monetaryCost:null,humanSeconds:null,aggregatePeakMemoryBytes:null};
-await writeFile(join(output,'x1-frontend-installation.json'),JSON.stringify(manifest,null,2)+'\n',{flag:'wx',mode:0o444});
-console.log(JSON.stringify({event:'X1_FRONTEND_COMPILED',output,source,buildId,entrypoint:server,
-  actualFiles:files.length,links:links.length,outputBytes,elapsedMs:manifest.elapsedMs,productionActive:false}));
+// Finalization verifies copied dependency bytes, normalizes only internal links,
+// checks the actual compiled public auth origin and accepts only Next's exact
+// generated type-input changes. The original successful compile is retained.
+const remainingMs=limits.finalBuildWallSeconds*1000-(Date.now()-started);
+if(remainingMs<=0)throw Error('X1_FINAL_BUILD_WALL_BOUND');
+const finalized=spawnSync(process.execPath,['--max-old-space-size=512',join(repo,'scripts/frontier5/x1/finalize-frontend.mjs'),
+  '--output',output,'--origin',origin.origin],{cwd:repo,stdio:'inherit',timeout:remainingMs,
+  env:{...process.env,NODE_OPTIONS:''}});
+if(finalized.error||finalized.signal||finalized.status!==0)throw Error('X1_FRONTEND_FINALIZATION_FAILED');
+const manifest=JSON.parse(await readFile(join(output,'x1-frontend-installation.json'),'utf8'));
+if(manifest.source.commit!==source.commit||manifest.source.tree!==source.tree)throw Error('X1_FRONTEND_BUILD_CUT_CHANGED');
+console.log(JSON.stringify({event:'X1_FRONTEND_COMPILED_AND_FINALIZED',output,source,buildId:manifest.buildId,
+  actualFiles:manifest.files.length,links:manifest.links.length,outputBytes:manifest.outputBytes,
+  elapsedMs:Date.now()-started,productionActive:false}));

@@ -557,3 +557,29 @@ one successful read, every original record and invocation uniqueness. Save raw
 before/after records before assertions, including failures. No new owner
 authority, changed budget, discarded polling or rewritten expected business
 completion is permitted.
+
+## Lifecycle meter failure oracle, registered before production repair
+
+The disposable publication trigger must be reached after successful COMPILE
+attribution. Independently read original S7 rows and actual request/event/queue
+state. Require exactly one unchanged successful COMPILE and one distinct failed
+PUBLICATION for the same physical delivery, job, request, episode and original
+parent. The tail has positive measured duration and the actual SQL fault status;
+it cannot reuse COMPILE's idempotency key or erase the successful preimage.
+Request UNKNOWN and any accepted native child/effect remain retained. Run this
+oracle on defective bytes before the worker repair and preserve its actual
+missing-tail failure; then rerun only the affected physical boundary.
+
+Source/checker observations carry actual read/reused/input/output bytes, measured
+duration, outcome and checker PID/exit/signal. Mark them includedWithin COMPILE
+when that parent covers their interval. Once-only preparation allocation binds
+the unchanged original measurements to its actual S5 parent with real consumption
+under the same original envelope. Retrying or revising must not charge earlier
+measurements twice. Actual price coverage is distinct from observed CPU/bytes.
+# Physical lifecycle oracle
+
+The native focus repair must be reached through the real Objective queue on the original two-Deal Work. The original explicit focus equals one current direct Work Deal link. Preserve both links, 15 original sources, 26 mapping expectations, three duties and every authority/resource/deadline predicate. Actual diagnostic 003 supplies the pre-fix inspector failure, and 004 supplies the intended missing mapping failure when scope was reduced. Successful comparison requires model/source invocation after the repaired inspection, independent native effect readback and complete original denominator. Do not count the earlier failure as X1 capacity gain.
+
+Independently join every lifecycle invocation to its immutable S7 payload, unique S5 LIFECYCLE physical UUID and original episode/reservation. Require one request-unit allocation, unchanged envelopes and retained elapsed/components with explicit unknown prices, supervision and aggregate memory. A whole-run interval is a containing observation, not additional component elapsed time. A late-response proof captures actual private response bytes before the hold, original request/status/digest and real HTTP finish/close, releases within the original 20-second transport bound after mounted denial, then observes no private resurrection through the mounted UI. Server finish alone is not proof of client rendering.
+
+For the matched diagnostic, freeze independent literal expected duties and material mappings before either arm runs. Clone actual pre-exposure owner state and compare source/mandate/grant/task/canonical preimages. Run actual native Objective planning and dispatch in the off arm with generic decoded authorized originals and the existing configured provider. Score only independent canonical/provider readback against the pre-exposure denominator. Record failed attempts and unknown costs; preserve a no-gain or unresolved result without manufacturing completion.

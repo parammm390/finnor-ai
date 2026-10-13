@@ -14,7 +14,7 @@ import { readInstitutionMandate,withInstitutionOriginalReuse } from "./source-au
 import { deriveInstitutionResponsibilities } from "./responsibility";
 import { resolveInstitutionActions } from "./action-resolution";
 import { buildInstitutionArtifact } from "./artifact";
-import { withInstitutionMeter, persistInstitutionCompute } from "./meter";
+import { withInstitutionMeter, persistInstitutionCompute, allocateInstitutionPreparation, type InstitutionPhysicalObservation } from "./meter";
 import { observedInstitutionBaseline } from './baseline';
 import type { Binding } from './contracts';
 import { buildInstitutionDependencyGraph, compareInstitutionDependencies,
@@ -45,10 +45,25 @@ export async function runInstitutionCompilerJob(payload: Record<string, unknown>
   const ctx: PeMutationContext = { auth: { tenantId: payload.tenantId, userId: payload.principalId,
     employeeId: payload.principalId, role: "owner" },
     provenance: { sourceSystem: "X1:institution-compiler", createdBy: payload.principalId } };
+  const started = performance.now(), startedAt = new Date().toISOString();
   let q = await compilerRow(ctx, payload.requestId);
-  if (q.generation !== payload.generation || ["WAITING", "PARTIAL", "OBSERVED", "CHECK_REJECTED", "CANCELLED", "INVALIDATED"].includes(q.status)) return;
-  const profile = loadInstitutionProfile(), started = performance.now(), startedAt = new Date().toISOString();
+  const profile = loadInstitutionProfile();
+  const physicalObservations:InstitutionPhysicalObservation[]=[];
+  let publicationBoundary:{startedAt:string;started:number}|null=null;
   let sourceAttempts=0,checkerAttempts=0;
+  try {
+  if (q.generation !== payload.generation || ["WAITING", "PARTIAL", "OBSERVED", "CHECK_REJECTED", "CANCELLED", "INVALIDATED"].includes(q.status)) {
+    try{
+      const episode=await compilerEpisode(ctx,q.episode_id),rights=await employeeAuthoritySnapshot(ctx.auth);
+      await persistInstitutionCompute(ctx,{requestId:q.id,workId:q.work_id,episodeId:q.episode_id,
+        jobId:execution.jobId,deliveryAttemptId:execution.deliveryAttemptId,parentReservation:episode.parent_reservation,
+        rightsRevision:String(rights.revision),startedAt,elapsedMs:performance.now()-started,phase:'COMPILE',
+        status:'PHYSICAL_DELIVERY_CURRENTLY_INAPPLICABLE',observedAcquisitionAttempts:0,observedCheckerAttempts:0});
+    }catch(error){await compilerEvent(ctx,q,'COMPILER_ENTRY_METER_GAP',{jobId:execution.jobId,
+      deliveryAttemptId:execution.deliveryAttemptId,predicate:safePredicate(error),originalEpisode:q.episode_id,
+      startedAt,elapsedMs:performance.now()-started,currentPrivateMeterAuthorityNotManufactured:true});}
+    return;
+  }
   await assertInstitutionCompilerCurrent(ctx, q);
   q = await tx(ctx, async c => {
     const current = await liveClaim(ctx, q, execution, c), episode = await compilerEpisode(ctx, q.episode_id, c, true);
@@ -64,7 +79,6 @@ export async function runInstitutionCompilerJob(payload: Record<string, unknown>
       costs: { usd: null, aggregateMemory: null } }, c);
     return { ...current, status: "RUNNING", claim_token: execution.claimToken, claim_fence: execution.claimFence };
   });
-  try {
     let episode = await compilerEpisode(ctx, q.episode_id);
     if (!episode.parent_reservation || !episode.parent_demand) {
       const mandate = await readInstitutionMandate(ctx, q.work_id), rights = await employeeAuthoritySnapshot(ctx.auth);
@@ -93,7 +107,10 @@ export async function runInstitutionCompilerJob(payload: Record<string, unknown>
     if ((await validateInstitutionDemand(ctx, parentRef)).status !== "CURRENT") throw Error("X1_ORIGINAL_S5_PARENT_NOT_CURRENT");
     await chargeInstitutionDemand(ctx,parentRef,{responsibilityIdentity:`x1-compiler-episode:${episode.id}`,
       phase:"COMPILE",ordinal:episode.attempts,units:1});
+    await allocateInstitutionPreparation(ctx,{workId:q.work_id,episodeId:q.episode_id,parentReservation:parentRef,
+      rightsRevision:String((await employeeAuthoritySnapshot(ctx.auth)).revision)});
     const result = await withInstitutionMeter({
+      physicalObservations,
       sourceAttempt: async grantId => {
         if (!q.grant_ids.includes(grantId)) throw Error("X1_METER_SOURCE_OUTSIDE_ORIGINAL_REQUEST");
         const ordinal = await tx(ctx, async c => {
@@ -182,7 +199,8 @@ export async function runInstitutionCompilerJob(payload: Record<string, unknown>
       jobId:execution.jobId,deliveryAttemptId:execution.deliveryAttemptId,parentReservation:parentRef,
       rightsRevision:result.original.current.rightsRevision,startedAt,elapsedMs:publicationStarted-started,
       phase:"COMPILE",status:accepted?(native?"CHECKED_AND_NATIVE_SUBMITTED":"CHECKED_WITH_GAPS"):"CHECK_REJECTED",observedAcquisitionAttempts:sourceAttempts,
-      observedCheckerAttempts:checkerAttempts});
+      observedCheckerAttempts:checkerAttempts,physicalObservations});
+    publicationBoundary={startedAt:publicationStartedAt,started:publicationStarted};
     const code = await codeIdentity(), artifactId = randomUUID();
     const baseline=await observedInstitutionBaseline(ctx,{compilerId:q.id,workInputId:q.work_input_id,
       episodeId:q.episode_id,original:result.original,profile,producer:code,parentReservation:parentRef});
@@ -249,8 +267,12 @@ export async function runInstitutionCompilerJob(payload: Record<string, unknown>
       const parent=await compilerEpisode(ctx,q.episode_id),rights=await employeeAuthoritySnapshot(ctx.auth);
       await persistInstitutionCompute(ctx,{requestId:q.id,workId:q.work_id,episodeId:q.episode_id,
         jobId:execution.jobId,deliveryAttemptId:execution.deliveryAttemptId,parentReservation:parent.parent_reservation,
-        rightsRevision:String(rights.revision),startedAt,elapsedMs:performance.now()-started,
-        phase:"COMPILE",status:predicate,observedAcquisitionAttempts:sourceAttempts,observedCheckerAttempts:checkerAttempts});
+        rightsRevision:String(rights.revision),startedAt:publicationBoundary?.startedAt??startedAt,
+        elapsedMs:performance.now()-(publicationBoundary?.started??started),
+        phase:publicationBoundary?'PUBLICATION':'COMPILE',status:predicate,
+        observedAcquisitionAttempts:publicationBoundary?0:sourceAttempts,
+        observedCheckerAttempts:publicationBoundary?0:checkerAttempts,
+        physicalObservations:publicationBoundary?[]:physicalObservations});
     } catch (meterError) { meterGap=safePredicate(meterError); }
     await tx(ctx, async c => {
       const current = await compilerRow(ctx, q.id, c, true);
@@ -260,7 +282,8 @@ export async function runInstitutionCompilerJob(payload: Record<string, unknown>
           ?{ownerMismatch:(error as Error).cause}:{}),
         jobId: execution.jobId, claimFence: execution.claimFence, elapsedMs: performance.now() - started,
         originalEpisode: q.episode_id, possibleAdmissionsOrEffectsRetained: true, monetaryCost: null,
-        physicalComputeAttribution:meterGap?"METER_GAP":"S7_ATTEMPT_RECORDED",meterGap }, c);
+        physicalComputeAttribution:meterGap?"METER_GAP":"S7_ATTEMPT_RECORDED",meterGap,
+        failedPhase:publicationBoundary?'PUBLICATION':'COMPILE',physicalObservations }, c);
       if (current.generation === q.generation && current.status === "RUNNING"
           && current.claim_token === execution.claimToken) await c.query(`UPDATE finnor_os.x1_compiler_requests
         SET status=$4,failure=$5,updated_at=clock_timestamp() WHERE tenant_id=$1 AND principal_id=$2 AND id=$3`,
