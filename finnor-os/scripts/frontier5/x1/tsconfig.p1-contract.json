@@ -11,6 +11,8 @@
     "./physical-owner-worker.mts",
     "./native-diagnostic-worker.mts",
     "./qualification-runtime.mts",
+    "./qualification-population.mts",
+    "./qualification-native-worker.mts",
     "../../../apps/worker/src/dev-entry.mts",
     "../../../apps/api/dev-server.ts",
     "./qualification-admin.mts",

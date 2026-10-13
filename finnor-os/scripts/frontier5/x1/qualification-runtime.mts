@@ -27,7 +27,7 @@ const assertReadOnly=(input:z.infer<typeof observation>)=>{
     '/api/company-brain/institution-sources','/api/company-brain/institution-inputs']);
   if(input.method!=='GET'&&!knownPostReads.has(input.path))throw Error('INDEPENDENT_SELECTOR_MUST_USE_AN_EXISTING_READ_ONLY_OWNER');
 };
-const event=z.object({id:z.string().min(1).max(256),workId:z.string().uuid(),replicaAt:instant,
+export const QualificationExecutionEvent=z.object({id:z.string().min(1).max(256),workId:z.string().uuid(),replicaAt:instant,
   occurredAt:instant,availableAt:instant,dependsOn:z.array(z.string().min(1).max(256)).max(64),
   originalIdempotencyKey:z.string().min(1).max(160),owner:endpoint,request,
   reconciliation:observation,clockOwner:endpoint,clockRequest:request,
@@ -36,12 +36,21 @@ const event=z.object({id:z.string().min(1).max(256),workId:z.string().uuid(),rep
 export const QualificationExecutionJournal=z.object({schema:z.literal('finnor.x1.qualification-execution-journal.v1'),
   protocolDigest:hex,candidateCutDigest:hex,allocationConventionDigest:hex,
   environments:z.array(z.object({id:z.string().min(1),replicaStart:instant,replicaEnd:instant,
-    events:z.array(event).min(1).max(50000)}).strict()).length(10)}).strict();
+    events:z.array(QualificationExecutionEvent).min(1).max(50000)}).strict()).length(10)}).strict();
 export type OwnerEndpoint=z.infer<typeof endpoint>;
 export type OwnerRequest=z.infer<typeof request>;
 export const ExecutionLimits=z.object({ref:z.string().min(1).max(256),registrationDigest:hex,
   maxAcquisitionCalls:z.number().int().positive(),maxOutputBytes:z.number().int().positive().max(64*1024*1024),
   maxAggregateWallMs:z.number().positive().finite()}).strict();
+export const NativeWorkerRegistration=z.object({schema:z.literal('finnor.x1.qualification-native-worker-registration.v1'),
+  protocolDigest:hex,candidateCutDigest:hex,allocationConventionDigest:hex,
+  runtime:z.object({mode:z.enum(['SOURCE_DEVELOPMENT','COMPILED_DEVELOPMENT']),digest:hex}).strict(),
+  databaseIdentityDigest:hex,phase:z.enum(['replay','soak']),
+  originalEpisodes:z.array(z.object({tenantId:z.string().uuid(),principalId:z.string().uuid(),workId:z.string().uuid(),
+    originalEpisodeId:z.string().uuid(),originalGrantDigest:hex,originalDeadline:instant}).strict()).min(1).max(3840),
+  envelope:z.object({ref:z.string().min(1),registrationDigest:hex,maxNativeDeliveries:z.number().int().positive(),
+    maxAggregateWallMs:z.number().positive().finite(),maxOutputBytes:z.number().int().positive().max(64*1024*1024)}).strict(),
+}).strict();
 type ExecutionSlice={id:string;pid:number;startedAt:string;lastObservedAt:string;reservedWallMs:number;
   observedElapsedMs:number;status:'STARTED'|'FINISHED'|'FAILED'|'INTERRUPTED';endedAt?:string;
   unobservedTail:boolean;predicate?:string};
@@ -313,6 +322,9 @@ export async function executeReplaySlice(input:{journal:z.infer<typeof Qualifica
         status:'EXPOSED',exposedAt:new Date().toISOString(),originalIdempotencyKey:item.originalIdempotencyKey,
         originalEpisodeId:item.originalEpisodeId,originalGrantDigest:item.originalGrantDigest,originalDeadline:item.originalDeadline,receiptRefs:[]};
       cursor.entries.push(entry);await saveState();submitted++;
+      if(Date.now()>Date.parse(item.originalDeadline)){
+        entry.status='REFUSED';entry.predicate='ORIGINAL_EVENT_DEADLINE_EXPIRED_BEFORE_EXPOSURE';await saveState();continue;
+      }
       try{
         assertReadOnly(item.clockObservation);assertReadOnly(item.reconciliation);
         const identity=await authenticate(item.owner),clockIdentity=await authenticate(item.clockOwner);
@@ -454,6 +466,7 @@ export async function executeLiveObservationSlice(input:{projections:unknown[];c
           observationEntry.status=result.appliedStatePredicatesSatisfied?'OBSERVED':'UNRESOLVED';
         }catch(error){observationEntry.status='UNKNOWN';observationEntry.predicate=String((error as Error).message);
           await saveState();
+          if(observationEntry.predicate==='ORIGINAL_EXECUTION_DEADLINE_EXHAUSTED'&&Date.now()>=deadlineAt)break;
           if(['ORIGINAL_AGGREGATE_OUTPUT_BOUND','ORIGINAL_AGGREGATE_ACQUISITION_BOUND',
             'ORIGINAL_EXECUTION_DEADLINE_EXHAUSTED'].includes(observationEntry.predicate))throw error;}
         segment.monotonicElapsedMs=performance.now()-began;segment.localWallElapsedMs=Date.now()-Date.parse(startedAt);
@@ -470,5 +483,79 @@ export async function executeLiveObservationSlice(input:{projections:unknown[];c
     return {segment,state,protectedQualificationEstablished:false};
   }catch(error){failure=error;if(segment){segment.status='FAILED';segment.endedAt=new Date().toISOString();
       segment.monotonicElapsedMs=performance.now()-began;segment.localWallElapsedMs=Date.parse(segment.endedAt)-Date.parse(startedAt);}throw error;}
+  finally{try{await managed?.finish(failure);}catch(error){await release(true);throw error;}await release();}
+}
+
+/** The caller supplies the actual production JobQueue and independently reads
+ * its native delivery ledger. Possible ticks and actual attempts stay distinct. */
+export async function executeNativeQueueSlice(input:{registration:unknown;cursorPath:string;evidenceRoot:string;
+  durationSeconds:number;signal:AbortSignal;runtime:z.infer<typeof NativeWorkerRegistration>['runtime'];
+  databaseIdentityDigest:string;originalEpisodes:z.infer<typeof NativeWorkerRegistration>['originalEpisodes'];
+  queue:Pick<import('../../../apps/worker/src/queue').JobQueue,'instanceId'|'tick'|'recoverExpiredRunningJobs'>;
+  assertRuntime:()=>void|Promise<void>;
+  readDeliveryAttempts:()=>Promise<Array<Record<string,unknown>>>;recovery?:{expectedLockDigest:string}}){
+  const registration=NativeWorkerRegistration.parse(input.registration);
+  if(digest(registration.runtime)!==digest(input.runtime)||registration.databaseIdentityDigest!==input.databaseIdentityDigest
+    ||digest(registration.originalEpisodes)!==digest(input.originalEpisodes))throw Error('ACTUAL_NATIVE_RUNTIME_DATABASE_OR_ORIGINAL_EPISODES_CHANGED');
+  if(!Number.isInteger(input.durationSeconds)||input.durationSeconds<1||input.durationSeconds>600)
+    throw Error('ORIGINAL_SIX_HUNDRED_SECOND_WORKER_SLICE_BOUND');
+  const {root,cursorPath}=await privatePaths(input.evidenceRoot,input.cursorPath),pinDigest=digest(registration);
+  const limits=ExecutionLimits.parse({ref:registration.envelope.ref,registrationDigest:registration.envelope.registrationDigest,
+    maxAcquisitionCalls:registration.envelope.maxNativeDeliveries,maxOutputBytes:registration.envelope.maxOutputBytes,
+    maxAggregateWallMs:registration.envelope.maxAggregateWallMs});
+  const release=await acquireCursorLock(cursorPath,digest({pinDigest,limits}),input.recovery);
+  type Tick={id:string;ordinal:number;exposedAt:string;status:'EXPOSED'|'RETURNED'|'UNKNOWN';didWork?:boolean};
+  type Segment={id:string;workerId:string;pid:number;status:'STARTED'|'FINISHED'|'FAILED'|'INTERRUPTED';
+    ticks:Tick[];receiptRefs:ReceiptRef[];actualDeliveryAttempts:Array<Record<string,unknown>>;predicate?:string};
+  type State={schema:'finnor.x1.native-worker-cursor.v1';pinDigest:string;registration:z.infer<typeof NativeWorkerRegistration>;
+    resources:Resources;revision:number;segments:Segment[];counterMeaning:'CONSERVATIVE_NATIVE_TICK_EXPOSURES_NOT_HTTP_CALLS_OR_BUSINESS_WORK'};
+  let managed:ReturnType<typeof managedState<State>>|undefined,segment:Segment|undefined,failure:unknown;
+  try{
+    let state:State;
+    try{state=JSON.parse(await readFile(cursorPath,'utf8'));}
+    catch(error){if((error as NodeJS.ErrnoException).code!=='ENOENT')throw error;
+      state={schema:'finnor.x1.native-worker-cursor.v1',pinDigest,registration,resources:newResources(limits),revision:0,segments:[],
+        counterMeaning:'CONSERVATIVE_NATIVE_TICK_EXPOSURES_NOT_HTTP_CALLS_OR_BUSINESS_WORK'};}
+    if(state.schema!=='finnor.x1.native-worker-cursor.v1'||state.pinDigest!==pinDigest||digest(state.registration)!==pinDigest
+      ||!Number.isSafeInteger(state.revision)||state.revision<0||!Array.isArray(state.segments)
+      ||state.counterMeaning!=='CONSERVATIVE_NATIVE_TICK_EXPOSURES_NOT_HTTP_CALLS_OR_BUSINESS_WORK')
+      throw Error('ORIGINAL_NATIVE_WORKER_CURSOR_CHANGED');
+    for(const previous of state.segments){
+      if(!Array.isArray(previous.ticks)||!Array.isArray(previous.receiptRefs)||!Array.isArray(previous.actualDeliveryAttempts))
+        throw Error('NATIVE_WORKER_SEGMENT_INVALID');
+      if(previous.status==='STARTED')previous.status='INTERRUPTED';
+      for(const ref of previous.receiptRefs){
+        if(!/^[a-z][a-z0-9-]+\.json$/.test(ref.path)||ref.bytes<1||ref.bytes>limits.maxOutputBytes)throw Error('NATIVE_RECEIPT_REFERENCE_INVALID');
+        const bytes=await readFile(join(root,ref.path));if(bytes.length!==ref.bytes||sha(bytes)!==ref.sha256)
+          throw Error('NATIVE_DELIVERY_RECEIPT_PREIMAGE_CHANGED');
+      }
+    }
+    const deadlineAt=Date.now()+input.durationSeconds*1000;
+    managed=managedState(state,cursorPath,root,deadlineAt,limits);
+    segment={id:managed.slice.id,workerId:input.queue.instanceId,pid:process.pid,status:'STARTED',ticks:[],receiptRefs:[],actualDeliveryAttempts:[]};
+    state.segments.push(segment);await managed.saveState();let lastRecovery=0;
+    while(Date.now()<deadlineAt&&!input.signal.aborted&&state.resources.acquisitionExposures<limits.maxAcquisitionCalls){
+      await input.assertRuntime();
+      if(Date.now()-lastRecovery>=2000){await input.queue.recoverExpiredRunningJobs();lastRecovery=Date.now();}
+      const tick:Tick={id:randomUUID(),ordinal:state.resources.acquisitionExposures+1,exposedAt:new Date().toISOString(),status:'EXPOSED'};
+      segment.ticks.push(tick);state.resources.acquisitionExposures++;await managed.saveState();
+      try{
+        tick.didWork=await input.queue.tick(input.signal);tick.status='RETURNED';state.resources.acknowledgedAcquisitions++;
+        const attempts=await input.readDeliveryAttempts();
+        if(attempts.length>limits.maxAcquisitionCalls||attempts.some(a=>a.worker_id!==input.queue.instanceId))
+          throw Error('ACTUAL_NATIVE_DELIVERY_OWNER_OR_BOUND_CHANGED');
+        segment.actualDeliveryAttempts=attempts;await managed.saveState();
+      }catch(error){tick.status='UNKNOWN';await managed.saveState();throw error;}
+      if(!tick.didWork&&Date.now()<deadlineAt&&!input.signal.aborted)
+        await new Promise(resolve=>setTimeout(resolve,Math.min(200,deadlineAt-Date.now())));
+    }
+    segment.status='FINISHED';segment.receiptRefs.push(await managed.saveReceipt('native-segment-'+segment.id+'.json',{
+      segment:structuredClone(segment),registrationDigest:pinDigest,originalEpisodes:registration.originalEpisodes,
+      possibleNativeDeliveryExposures:state.resources.acquisitionExposures,actualNativeDeliveryAttempts:segment.actualDeliveryAttempts.length,
+      conservativeIdleTicksReceiveNoBusinessCredit:true,protectedQualificationEstablished:false,sevenElapsedDaysEstablished:false,
+      moneyUsd:null,humanSeconds:null,aggregatePeakMemoryBytes:null}));
+    await managed.saveState();return {state,segment,deliveryAllowanceExhausted:state.resources.acquisitionExposures>=limits.maxAcquisitionCalls,
+      independentlyObservedUnattended:false,protectedQualificationEstablished:false,sevenElapsedDaysEstablished:false};
+  }catch(error){failure=error;if(segment){segment.status='FAILED';segment.predicate=String((error as Error).message);}throw error;}
   finally{try{await managed?.finish(failure);}catch(error){await release(true);throw error;}await release();}
 }

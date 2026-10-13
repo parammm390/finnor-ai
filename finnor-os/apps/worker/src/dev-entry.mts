@@ -24,7 +24,11 @@ console.log(JSON.stringify({ event: "X1_PHYSICAL_WORKER_READY", compiled: true, 
   authDevBypass: false, registration: "ACTUAL_PRODUCTION_CREATE_WORKER" }));
 let lastRecovery = 0;
 try {
-  while (!controller.signal.aborted) {
+  if(process.env.FINNOR_X1_QUAL_NATIVE_CONTROL){
+    const {runRegisteredNativeWorker}=await import('../../../scripts/frontier5/x1/qualification-native-worker.mts');
+    await runRegisteredNativeWorker(queue,controller.signal,{mode:'COMPILED_DEVELOPMENT',digest:installed.manifestDigest},
+      ()=>{installedDevelopmentRuntime(true);});
+  }else while (!controller.signal.aborted) {
     installedDevelopmentRuntime(true);
     if (Date.now() - lastRecovery >= 2000) {
       const count = await queue.recoverExpiredRunningJobs(); lastRecovery = Date.now();

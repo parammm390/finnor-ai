@@ -76,7 +76,12 @@ if(command==='replay'||command==='live'){
   const recovery=recoveryDigest?{expectedLockDigest:z.string().regex(/^[a-f0-9]{64}$/).parse(recoveryDigest)}:undefined;
   if(command==='replay'){
     if(!control.executionJournal)throw Error('INDEPENDENT_PINNED_EXECUTION_JOURNAL_REQUIRED');
-    const journal=validateExecutionJournal(pinned(control.executionJournal),{
+    const rawJournal=pinned(control.executionJournal);
+    const executionJournal=rawJournal.schema==='finnor.x1.qualification-execution-journal-draft.v1'
+      ?{schema:'finnor.x1.qualification-execution-journal.v1',protocolDigest:registered.protocolDigest,
+        candidateCutDigest:rawJournal.candidateCutDigest,allocationConventionDigest:rawJournal.allocationConventionDigest,
+        environments:rawJournal.environments}:rawJournal;
+    const journal=validateExecutionJournal(executionJournal,{
       protocolDigest:registered.protocolDigest,candidateCutDigest:digest(registered.protocol.candidateCut),
       allocationConventionDigest:registered.protocol.allocationConventionDigest,environments:registered.protocol.environments});
     const seconds=Number(value('--seconds')??180),maxEvents=Number(value('--max-events')??128);

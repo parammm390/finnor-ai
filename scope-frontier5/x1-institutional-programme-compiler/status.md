@@ -1,5 +1,81 @@
 # FRONTIER5.X1 status
 
+## Current execution checkpoint — 13 October 2026
+
+14 October continuation: `verify-qualification-native-recovery-005/owner` passes
+all five owner predicates in61.327s with unchanged source. An actual controller
+is SIGKILLed after the original API202 and before acknowledgement. Its exposed
+entry/reserved interrupted slice remain; exact-lock recovery reconciles20 entries
+without mutation redelivery. The actual registered worker runs and resumes under
+one real canonical S5 parent, with no new native business delivery on idle resume.
+Actual S5/S7 validation lifecycle and owner readback pass. Earlier003 finite
+observer-horizon failure and004 missing initial parent binding remain retained.
+The fixture now obtains the same520-request/900-second original parent from S5
+before journal exposure; no protected operation authority is created.
+
+Scoped types/lint011–013 passed at their recorded preimages. Generator work now
+protects identity/chronology fields, refuses invalid selected causal graphs and
+emits an unsigned scorer-schema oracle draft. Its complete native population
+execution and independent ledger semantics remain internal unfinished work.
+Native worker supervision is wired into source and compiled development entrypoints;
+the compiled path still requires final installed verification.
+
+Safe dependency cleanup007 removed only reinstallable root/backend dependencies
+from inactive pm-completion-b and pm-m3 checkouts after inspecting44 dependency
+roots and manual source aliases. Their Git/source/lockfiles and existing dirty
+source edits remain intact. Shared free bytes rose by2,206,789,632 in that receipt;
+other shared-host disk changes are not isolated by the measurement.
+
+Engineering **INCOMPLETE**, release **DESIGNED**. Latest committed source is
+`8acb56730a8f086bdc89cf3df6e0ee6648cf9dab`, tree
+`46a0d8d1e998c200d38d80d15adbcfe4f950d278`; schema head0189/191 migrations.
+Population generation and its registration binding have further uncommitted
+work. No final installed, protected qualification, admission or deployment
+state is asserted.
+
+`verify-qualification-owner-execution-002/owner` passes five named development
+predicates through real authenticated API, native queue/worker, canonical
+Request/Work observations and actual original-parent S5/S7 lifecycle readback.
+Queued202 responses leave dependent events unexposed. The actual worker then
+completes the original Request; reconciliation advances20 event entries under
+the same original key/frame. The cursor retains140 acquisition exposures,
+immutable receipt preimages and refusal to enlarge resume limits. A short live
+owner read retains a timed-out read as UNKNOWN. Ten journal partitions over
+this development Work are explicitly not ten qualified institutions,30 days of
+completed replay or seven elapsed days.
+
+The first execution run failed at the strict transport request schema, which
+rejected observation-only metadata; its ten UNKNOWN entries and raw failure
+remain retained. The transport adapter now sends only validated HTTP fields
+while reconciliation retains frozen identities and applied-state predicates.
+Scoped types/lint pass at the recorded007 cut. Read-only scrutiny also identified
+and prompted repairs to finalization reserves, live predicate disposition,
+immutable live summary hashes and live-command disk preflight.
+
+Earlier exact-cut evidence includes full15-source/26-mapping/three-native-effect
+development completion; actual same-obligation interruption/reconciliation;
+source/consent/personnel/currentness checks; and physical publication/lifecycle
+meter checks. The equipped diagnostic reached the normal native planner and
+model but retained provider413/404 refusals and zero accepted incumbent duties.
+Its observation checks passed; incumbent interpretation and comparative gain
+remain PARTIAL/UNKNOWN. No ratio is established.
+
+The obsolete005 installation is preserved in a verified archive (all39179
+original pinned entries), with its unpacked copy removed. The inactive owned
+Next development cache was also removed. These receipts preserve original
+source/runtime evidence. Free space remains below the final-build floor at the
+last sample; live/source work continues within its original limits.
+
+Remaining internal work: finish and exercise generation/replay/live supervision
+and independent canonical/provider observation/cost integration; final required
+checks and native Factory scrutiny/user testing; final backend/frontend packages
+and191-migration installed upgrade/restart; mounted late-response/privacy proof;
+sealed clean reconstruction, coverage, draft body and owner packets. Protected
+custody, genuine unseen population, actual seven-day observations, S8 admission,
+activation, qualified comparators and financial/H2 outcomes remain separate gates.
+
+All checkpoints below are historical and bind their own recorded cuts.
+
 ## Current core checkpoint — 13 October 2026
 
 Engineering **INCOMPLETE**, release **DESIGNED**. Checked source `bea8345033eebce54809a9db7806661f83ddffb4`, tree `649938e56b80c456f6c46b55a740c8fe9d84e883`, schema head0188/190 migrations. Exact private cuts remain recorded separately; no pooled completion fraction or final-install claim.

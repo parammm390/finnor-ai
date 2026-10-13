@@ -1,6 +1,8 @@
 /** Physical delivery uses the production worker's actual registration function. */
 import { createWorker } from "../../../apps/worker/src/index";
 import { closePool, getPool } from "@finnor/db";
+import {readFile} from 'node:fs/promises';
+import {createHash} from 'node:crypto';
 const role = (await getPool().query(`SELECT current_user,rolsuper,rolbypassrls,
   pg_has_role('finnor_app','finnor_worker','MEMBER') app_inherits_worker
   FROM pg_roles WHERE rolname=current_user`)).rows[0];
@@ -22,5 +24,15 @@ const recover=async()=>{if(recovering||controller.signal.aborted)return;recoveri
   finally{recovering=false;}
 };
 const recoveryTimer=setInterval(()=>{void recover().catch(error=>console.error('Actual queue recovery failed',error.message));},2000);
-try { await recover();await queue.runLoop(200, controller.signal, 1); }
+try {
+  if(process.env.FINNOR_X1_QUAL_NATIVE_CONTROL){
+    clearInterval(recoveryTimer);
+    const {runRegisteredNativeWorker}=await import('./qualification-native-worker.mts');
+    const measuredDigest=createHash('sha256').update(await readFile(new URL(import.meta.url))).digest('hex');
+    await runRegisteredNativeWorker(queue,controller.signal,{mode:'SOURCE_DEVELOPMENT',digest:measuredDigest},async()=>{
+      if(createHash('sha256').update(await readFile(new URL(import.meta.url))).digest('hex')!==measuredDigest)
+        throw Error('ORIGINAL_SOURCE_WORKER_BYTES_CHANGED');
+    });
+  }else {await recover();await queue.runLoop(200, controller.signal, 1);}
+}
 finally { clearInterval(recoveryTimer);clearTimeout(timer); await closePool(); }

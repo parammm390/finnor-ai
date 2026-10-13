@@ -27,7 +27,9 @@ import {buildInstitutionResourceDemand} from '../../../packages/private-equity/s
 import {loadInstitutionProfile} from '../../../packages/private-equity/src/institution-program/store';
 import {readInstitutionMandate} from '../../../packages/private-equity/src/institution-program/source-authority';
 import {parse as parseDotenv} from 'dotenv';
-import {startQualificationOwnerExercise,finishQualificationOwnerExercise} from './qualification-owner-exercise.mts';
+import {startQualificationOwnerExercise,finishQualificationOwnerExercise,createNativeWorkerExerciseControl} from './qualification-owner-exercise.mts';
+import {digest as qualificationDigest} from '../../../packages/capability-evolution/src/contracts';
+import {institutionDigest} from '../../../packages/private-equity/src/institution-program/canonical-json';
 
 const repo = fileURLToPath(new URL("../../../../", import.meta.url));
 const installation=process.env.FINNOR_X1_INSTALLED_ROOT;
@@ -82,6 +84,7 @@ const sourcePaths = ["finnor-os/scripts/frontier5/x1/run-owner-slice.mts", "finn
   'finnor-os/scripts/frontier5/x1/canonical-owner-corpus.mts',
   'finnor-os/scripts/frontier5/x1/upgrade-owner-fixture.mts',
   'finnor-os/scripts/frontier5/x1/qualification-runtime.mts','finnor-os/scripts/frontier5/x1/qualification-owner-exercise.mts',
+  'finnor-os/scripts/frontier5/x1/qualification-native-worker.mts','finnor-os/scripts/frontier5/x1/qualification-population.mts',
   "finnor-os/scripts/frontier5/x1/physical-owner-worker.mts", "finnor-os/scripts/frontier5/x1/native-diagnostic-worker.mts", "finnor-os/packages/db/migrations-bundle.ts",
   "finnor-os/package-lock.json", "scope-frontier5/x1-institutional-programme-compiler/profile.json"];
 const sourcePins = await Promise.all(sourcePaths.map(async path => ({ path, sha256: sha(await readFile(join(repo, path))) })));
@@ -120,6 +123,7 @@ let checkerCrashProof:any;
 let service: Awaited<ReturnType<typeof authenticatedApiFixture>> | undefined, worker: ReturnType<typeof spawn> | undefined;
 let diagnosticOff:pg.Client|undefined;
 let qualificationExercise:Awaited<ReturnType<typeof startQualificationOwnerExercise>>|undefined;
+let nativeWorkerExercise:Awaited<ReturnType<typeof createNativeWorkerExerciseControl>>|undefined;
 let frontend:ReturnType<typeof spawn>|undefined;
 let mountedControl:Server|undefined;
 let mountedRevisionVerified=false;
@@ -770,13 +774,37 @@ try {
       :'LOCK TABLE finnor_os.x1_mapping_admissions IN SHARE MODE');}
   let logBytes=0;
   if(qualificationExecution){
-    const episode=(await admin.query('SELECT e.* FROM finnor_os.x1_compiler_episodes e JOIN finnor_os.x1_compiler_requests r ON r.tenant_id=e.tenant_id AND r.episode_id=e.id WHERE r.tenant_id=$1 AND r.id=$2',
+    let episode=(await admin.query('SELECT e.* FROM finnor_os.x1_compiler_episodes e JOIN finnor_os.x1_compiler_requests r ON r.tenant_id=e.tenant_id AND r.episode_id=e.id WHERE r.tenant_id=$1 AND r.id=$2',
       [tenant,compilerId])).rows[0];
+    if(!episode.parent_reservation){
+      const originalProfile=loadInstitutionProfile(),mandate=await readInstitutionMandate(ctx,workId!),rights=await employeeAuthoritySnapshot(ctx.auth);
+      const originalDemand=buildInstitutionResourceDemand({tenantId:tenant,workId:workId!,principalId:actor,institutionId:mandate.institutionId,
+        programmeDigest:institutionDigest(['x1-original-work-envelope-v1',episode.id,episode.profile_digest]),
+        responsibilityIdentities:['x1-compiler-episode:'+episode.id],
+        computeRequests:originalProfile.bounds.authorizedAcquisitionCalls+originalProfile.bounds.derivedObligations*3+8,
+        humanSeconds:originalProfile.bounds.episodeHumanSeconds,originalDeadline:episode.original_deadline.toISOString(),
+        chargeScope:{kind:'ORIGINAL_WORK_EPISODE',episodeId:episode.id},profile:originalProfile});
+      const prepared=await reserveInstitutionDemand(ctx,originalDemand,String(rights.revision));
+      const actualValidation=await validateInstitutionDemand(ctx,prepared.reservation.ref);assert.equal(actualValidation.status,'CURRENT');
+      await admin.query(`UPDATE finnor_os.x1_compiler_episodes SET parent_reservation=$4::jsonb,parent_demand=$5::jsonb
+        WHERE tenant_id=$1 AND principal_id=$2 AND id=$3 AND parent_reservation IS NULL`,
+      [tenant,actor,episode.id,JSON.stringify(prepared.reservation.ref),JSON.stringify(originalDemand)]);
+      await save('qualification-preexposure-real-original-parent.json',{originalDemand,prepared,actualValidation,
+        existingCanonicalS5Owner:true,disposablePreExposureGrantBinding:true,executionAuthorityGranted:false,extraAllowanceIssued:false});
+      episode=(await admin.query('SELECT * FROM finnor_os.x1_compiler_episodes WHERE tenant_id=$1 AND principal_id=$2 AND id=$3',
+        [tenant,actor,episode.id])).rows[0];
+    }
     qualificationExercise=await startQualificationOwnerExercise({evidenceRoot:evidence,
       owner:{origin:service.origin,tenantId:tenant,principalId:actor,tokenEnvironmentVariable:'FINNOR_X1_QUAL_TOKEN_OWNER_EXERCISE'},
       token:service.token,workId:workId!,compilerId:compilerId!,submitBody:input,episodeId:episode.id,
       grantDigest:sha(JSON.stringify(episode.parent_reservation)),originalDeadline:episode.original_deadline.toISOString(),
       candidateCutDigest:sha(JSON.stringify(freeze.source)),allocationConventionDigest:sha('ORIGINAL_VALIDATOR_INTERVAL_CONTAINS_COMPONENTS')});
+    nativeWorkerExercise=await createNativeWorkerExerciseControl(qualificationExercise,{
+      databaseIdentityDigest:qualificationDigest((await admin.query(`SELECT current_database() database,inet_server_addr()::text host,
+        inet_server_port() port`)).rows[0]),runtime:installation?{mode:'COMPILED_DEVELOPMENT',digest:freeze.installation!.manifestDigest}
+        :{mode:'SOURCE_DEVELOPMENT',digest:sha(await readFile(join(repo,'finnor-os/scripts/frontier5/x1/physical-owner-worker.mts')))}});
+    env.FINNOR_X1_QUAL_NATIVE_CONTROL=nativeWorkerExercise.path;
+    env.FINNOR_X1_QUAL_NATIVE_CONTROL_SHA256=nativeWorkerExercise.sha256;
   }
   const workerReadiness=new WeakMap<ReturnType<typeof spawn>,Promise<Record<string,unknown>>>();
   const startWorker=()=>{
@@ -1333,6 +1361,28 @@ try {
     basis: "ACTUAL_LOCAL_AUTH_HTTP_SQL_PHYSICAL_WORKER_NATIVE_CREATE_AND_INDEPENDENT_SQL_OBSERVER" });
   if(qualificationExecution){
     const proof=await finishQualificationOwnerExercise(qualificationExercise!);
+    if(worker!.exitCode===null&&worker!.signalCode===null)await new Promise<void>((resolve,reject)=>{
+      const timer=setTimeout(()=>reject(Error('ORIGINAL_QUALIFIED_WORKER_SLICE_DID_NOT_EXIT')),30000);
+      worker!.once('close',()=>{clearTimeout(timer);resolve();});});
+    assert.equal(worker!.exitCode,0,'actual supervised native worker exits under its original finite slice');
+    const nativeBefore=JSON.parse(await readFile(nativeWorkerExercise!.control.cursorPath,'utf8'));
+    assert.equal(nativeBefore.segments.length,1);assert.equal(nativeBefore.segments[0].status,'FINISHED');
+    assert.ok(nativeBefore.segments[0].actualDeliveryAttempts.length>0);
+    const resumedPath=join(qualificationExercise!.root,'native-worker-control-002.json');
+    const resumedControl={...nativeWorkerExercise!.control,durationSeconds:3},resumedBytes=Buffer.from(JSON.stringify(resumedControl,null,2)+'\n');
+    await writeFile(resumedPath,resumedBytes,{flag:'wx',mode:0o600});env.FINNOR_X1_QUAL_NATIVE_CONTROL=resumedPath;
+    env.FINNOR_X1_QUAL_NATIVE_CONTROL_SHA256=sha(resumedBytes);
+    worker=startWorker();await workerReadiness.get(worker);
+    if(worker.exitCode===null&&worker.signalCode===null)await new Promise<void>((resolve,reject)=>{
+      const timer=setTimeout(()=>reject(Error('ORIGINAL_RESUMED_NATIVE_WORKER_SLICE_DID_NOT_EXIT')),15000);
+      worker!.once('close',()=>{clearTimeout(timer);resolve();});});
+    assert.equal(worker.exitCode,0);
+    const nativeAfter=JSON.parse(await readFile(nativeWorkerExercise!.control.cursorPath,'utf8'));
+    assert.equal(nativeAfter.segments.length,2);assert.deepEqual(nativeAfter.registration,nativeBefore.registration);
+    assert.ok(nativeAfter.resources.acquisitionExposures>nativeBefore.resources.acquisitionExposures);
+    assert.equal(nativeAfter.segments[1].actualDeliveryAttempts.length,0,'idle resume creates no fresh native business delivery');
+    await save('qualification-native-worker-independent-proof.json',{before:nativeBefore,after:nativeAfter,
+      installation:freeze.installation,source:freeze.source,originalParentRetained:true,unattendedQualificationEstablished:false});
     assert.equal((await admin.query('SELECT count(*)::int n FROM finnor_os.pe_requests WHERE tenant_id=$1',[tenant])).rows[0].n,1);
     results.push({id:'G-finite-qualification-owner-execution',status:'PASS',observed:{entries:proof.resumed.cursor.entries.length,
       acquisitions:proof.resumed.cursor.resources.acquisitionExposures,liveOwnerDrafts:proof.drafts.length},
