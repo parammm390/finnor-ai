@@ -22,7 +22,7 @@ import { canonicalOwnerSources } from './canonical-owner-corpus.mts';
 import { prepareExistingOwnerUpgrade,observePreservedUpgradeOwners } from './upgrade-owner-fixture.mts';
 import { registerInstitutionCoreSource } from '../../../packages/private-equity/src/institution-program/inputs';
 import { evaluateAuthority,employeeAuthoritySnapshot } from '@finnor/authority';
-import {persistInstitutionLifecycleCompute} from '../../../packages/private-equity/src/institution-program/meter';
+import {persistInstitutionLifecycleCompute,readInstitutionComputeCosts} from '../../../packages/private-equity/src/institution-program/meter';
 import {buildInstitutionResourceDemand} from '../../../packages/private-equity/src/institution-program/resource-demand';
 import {loadInstitutionProfile} from '../../../packages/private-equity/src/institution-program/store';
 import {readInstitutionMandate} from '../../../packages/private-equity/src/institution-program/source-authority';
@@ -159,7 +159,11 @@ const collectLifecycle=async(status:string)=>{
     .filter(r=>r.physicalInvocationId===lifecycleInvocationId);
   assert.equal(charges.length,1);assert.equal(charges[0].units,1);
   assert.deepEqual(charges[0].reservationRef,episode.parent_reservation);
-  await save('lifecycle-original-parent-independent-proof.json',{observations,record,charges,
+  const consumer=await readInstitutionComputeCosts(ctx,workId,episode.id);
+  assert.ok(consumer.lifecycle.invocations>=1);assert.ok(!consumer.gaps.some(gap=>gap.startsWith('X1_LIFECYCLE_MEASUREMENT_INVALID')));
+  assert.ok(consumer.lifecycle.containingIntervals.some(p=>p.invocationId===lifecycleInvocationId));
+  assert.equal(consumer.lifecycle.additionalElapsedCredit,0);
+  await save('lifecycle-original-parent-independent-proof.json',{observations,record,charges,consumer,
     elapsedDoubleCounted:false,fullMonetaryHumanOrAggregateQualification:false});lifecycleCollected=true;
   results.push({id:'G-physical-validation-lifecycle-original-parent',status:'PASS',
     basis:'ACTUAL_CONTAINING_VALIDATOR_INTERVAL_IMMUTABLE_S7_ONE_PHYSICAL_S5_REQUEST_UNIT',observed:{invocationId:lifecycleInvocationId}});
