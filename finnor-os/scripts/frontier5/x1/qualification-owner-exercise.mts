@@ -7,8 +7,10 @@ import {randomUUID,createHash} from 'node:crypto';
 import {spawn} from 'node:child_process';
 import {digest} from '../../../packages/capability-evolution/src/contracts';
 import {QualificationExecutionJournal,executeReplaySlice,executeLiveObservationSlice,
-  validateExecutionJournal,type OwnerEndpoint} from './qualification-runtime.mts';
+  validateExecutionJournal,collectIndependentOwnerRead,type OwnerEndpoint} from './qualification-runtime.mts';
 import {NativeWorkerControl} from './qualification-native-worker.mts';
+import {bindOriginalNativeWorker} from './qualification-native-administration.mts';
+import {collectQualificationObservation} from './qualification-observation-collection.mts';
 
 const sha=(bytes:Buffer|string)=>createHash('sha256').update(bytes).digest('hex');
 export async function startQualificationOwnerExercise(input:{evidenceRoot:string;owner:OwnerEndpoint;token:string;
@@ -146,13 +148,14 @@ export async function startQualificationOwnerExercise(input:{evidenceRoot:string
 export async function createNativeWorkerExerciseControl(exercise:Awaited<ReturnType<typeof startQualificationOwnerExercise>>,
   input:{databaseIdentityDigest:string;runtime:{mode:'SOURCE_DEVELOPMENT'|'COMPILED_DEVELOPMENT';digest:string}}){
   const event=exercise.journal.environments[0]!.events[0]!,cursorPath=join(exercise.root,'native-worker-cursor.json');
-  const registration={schema:'finnor.x1.qualification-native-worker-registration.v1',protocolDigest:exercise.journal.protocolDigest,
+  const registration=await bindOriginalNativeWorker({protocolDigest:exercise.journal.protocolDigest,
     candidateCutDigest:exercise.journal.candidateCutDigest,allocationConventionDigest:exercise.journal.allocationConventionDigest,
-    runtime:input.runtime,databaseIdentityDigest:input.databaseIdentityDigest,phase:'soak',
-    originalEpisodes:[{tenantId:event.owner.tenantId,principalId:event.owner.principalId,workId:event.workId,
-      originalEpisodeId:event.originalEpisodeId,originalGrantDigest:event.originalGrantDigest,originalDeadline:event.originalDeadline}],
+    runtime:input.runtime,phase:'soak',owners:[{owner:event.owner,workId:event.workId}],deadlineAt:Date.now()+30000,
     envelope:{ref:'original-development-native-worker-validation',registrationDigest:digest(exercise.journal),
-      maxNativeDeliveries:160,maxAggregateWallMs:180000,maxOutputBytes:64*1024*1024}};
+      maxNativeDeliveries:160,maxAggregateWallMs:180000,maxOutputBytes:64*1024*1024}});
+  assert.equal(registration.databaseIdentityDigest,input.databaseIdentityDigest);
+  assert.deepEqual(registration.originalEpisodes,[{tenantId:event.owner.tenantId,principalId:event.owner.principalId,workId:event.workId,
+    originalEpisodeId:event.originalEpisodeId,originalGrantDigest:event.originalGrantDigest,originalDeadline:event.originalDeadline}]);
   const control=NativeWorkerControl.parse({schema:'finnor.x1.qualification-native-worker-control.v1',registration,
     evidenceRoot:exercise.root,cursorPath,durationSeconds:20});
   const path=join(exercise.root,'native-worker-control-001.json'),bytes=Buffer.from(JSON.stringify(control,null,2)+'\n');
@@ -177,6 +180,31 @@ export async function finishQualificationOwnerExercise(exercise:Awaited<ReturnTy
     if(event){const raw=await readFile(join(root,event.path)),receipt=JSON.parse(raw.toString('utf8'));
       assert.equal(sha(raw),event.sha256);assert.equal(digest(receipt),entry.receiptDigest,'immutable receipt digest survives cursor advancement');}
   }
+  const originalEvent=journal.environments[0]!.events[0]!;
+  const nativeBase={schema:'finnor.x1.independent-owner-read-projection.v1',environmentId:journal.environments[0]!.id,
+    owner:originalEvent.owner,request:{path:'/api/company-brain/institution-sources',method:'POST',body:{workId:originalEvent.workId},
+      readOnly:true,admittedOwnerReadReceiptDigest:digest({owner:originalEvent.owner,path:'native-canonical-snapshot'}),
+      responseIdentityPath:['workId'],expectedOwnerIdentity:originalEvent.workId,
+      appliedStatePredicates:[{path:['snapshotStatus'],equals:'ACTUAL_NATIVE_OWNER_ROWS_READ'}]},rowsPath:['rows'],
+    nativeSelector:{workId:originalEvent.workId,originalEpisodeId:originalEvent.originalEpisodeId,
+      originalGrantDigest:originalEvent.originalGrantDigest,originalDeadline:originalEvent.originalDeadline}};
+  const nativeProbes=[];
+  for(const spec of [
+    {selector:'S1_MAPPING_CLAIMS',kind:'MAPPING_CLAIMS',identityPath:['objectId'],semanticFields:[['canonicalCandidate']],
+      sourceIds:['crm-original','ledger-original','work-original'],acceptance:[]},
+    {selector:'P1_OBLIGATION_CLAIMS',kind:'OBLIGATION_CLAIMS',identityPath:['stableIdentity'],semanticFields:[['operation'],['deadlineAt']],acceptance:[]},
+    {selector:'REQUEST_ROWS',kind:'POSTCONDITION_WITNESSES',identityPath:['identity'],semanticFields:[['fields','request_text']],
+      semanticObjectFields:[{name:'state',path:['fields','state']},{name:'request_text',path:['fields','request_text']}],
+      trustedVisibilityTimestampPath:['x1_observed_at'],acceptance:[{path:['actionStatus'],equals:'completed'},
+        {path:['effectStatus'],equals:'verified'},{path:['fields','state'],equals:'open'}]},
+  ]){
+    const {selector,sourceIds,...projection}=spec;
+    const draft=await collectIndependentOwnerRead({...nativeBase,...projection,
+      nativeSelector:{...nativeBase.nativeSelector,kind:selector,...(sourceIds?{sourceIds}:{})}},Date.now()+30000);
+    assert.ok(draft.observations.length>0,'actual native selector '+selector);assert.ok(draft.observations.every(o=>o.accepted));
+    await writeFile(join(root,'native-canonical-'+selector.toLowerCase().replaceAll('_','-')+'.json'),JSON.stringify(draft,null,2)+'\n',{mode:0o600});
+    nativeProbes.push(draft);
+  }
   const projections=journal.environments.map(e=>({schema:'finnor.x1.independent-owner-read-projection.v1',environmentId:e.id,
     owner:e.events[0]!.owner,request:{path:'/api/works',method:'GET',readOnly:true,
       admittedOwnerReadReceiptDigest:digest({owner:e.events[0]!.owner,path:'works'}),responseIdentityPath:['works',0,'tenantId'],
@@ -194,8 +222,25 @@ export async function finishQualificationOwnerExercise(exercise:Awaited<ReturnTy
     const draft=JSON.parse(await readFile(join(root,ref.path),'utf8'));assert.equal(draft.signature,null);
     assert.equal(draft.protectedQualificationEstablished,false);assert.ok(draft.observations.some((o:any)=>o.accepted));drafts.push(ref);
   }
+  const collectionDrafts=[];
+  for(const projection of projections)collectionDrafts.push(await collectIndependentOwnerRead(projection,Date.now()+30000));
+  const collection=await collectQualificationObservation({drafts:collectionDrafts,environmentIds:journal.environments.map(e=>e.id),
+    expectedSelectorCount:projections.length,save:async(name,body)=>{await writeFile(join(root,name),JSON.stringify(body,null,2)+'\n',{mode:0o600,flag:'wx'});}});
+  assert.equal(collection.allSelectorsObserved,true);assert.ok(collection.environments.every(e=>e.observed.completions.length===1));
+  const nativeLive=await executeLiveObservationSlice({projections:journal.environments.map(environment=>({...nativeBase,
+    environmentId:environment.id,nativeSelector:{...nativeBase.nativeSelector,kind:'REQUEST_ROWS'},
+    identityPath:['identity'],semanticFields:[['fields','request_text']],kind:'POSTCONDITION_WITNESSES',
+    semanticObjectFields:[{name:'state',path:['fields','state']},{name:'due_at',path:['fields','due_at'],normalization:'ISO_INSTANT'}],
+    trustedVisibilityTimestampPath:['x1_observed_at'],acceptance:[{path:['actionStatus'],equals:'completed'},
+      {path:['effectStatus'],equals:'verified'},{path:['fields','state'],equals:'open'}]})),
+    evidenceRoot:root,cursorPath:join(root,'native-observer-live-cursor.json'),protocolDigest:journal.protocolDigest,
+    candidateCutDigest:journal.candidateCutDigest,allocationConventionDigest:journal.allocationConventionDigest,
+    durationSeconds:3,pollIntervalMs:1000,limits:{...limits,ref:'original-development-native-observer-exercise',
+      registrationDigest:digest(nativeBase)}});
+  assert.equal(nativeLive.segment.status,'FINISHED');assert.ok(nativeLive.segment.observations.some(o=>o.status==='OBSERVED'));
+  assert.ok(nativeLive.state.resources.acquisitionExposures>=5,'authentication, native metadata and SQL reads retain durable exposures');
   const proof={schema:'finnor.x1.real-owner-execution-exercise.v1',beforeWorker:exercise.first.cursor.entries.map(e=>({
-    environmentId:e.environmentId,eventId:e.eventId,status:e.status})),resumed,live,drafts,
+    environmentId:e.environmentId,eventId:e.eventId,status:e.status})),resumed,live,drafts,nativeProbes,collection,nativeLive,
     clockCalls:exercise.clockCalls,originalWorkAndEffectPreserved:true,completionBasis:'ACTUAL_NATIVE_OWNER_AND_SEPARATE_CANONICAL_OBSERVER',
     tenProtectedEnvironmentsEstablished:false,thirtyDayCoverageEstablished:false,sevenDayCoverageEstablished:false,
     protectedQualificationEstablished:false,moneyUsd:null,humanSeconds:null,aggregatePeakMemoryBytes:null};

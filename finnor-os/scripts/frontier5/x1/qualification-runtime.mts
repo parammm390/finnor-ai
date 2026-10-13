@@ -254,7 +254,13 @@ function managedState<T extends {resources:Resources;revision:number}>(state:T,c
       throw Error('ACTUAL_REGISTERED_OWNER_IDENTITY_REQUIRED');
     return result;
   };
-  return {slice,saveState,saveReceipt,call,authenticate,
+  const measureAcquisition=async<T,>(read:()=>Promise<T>)=>{
+    if(Date.now()>=deadlineAt)throw Error('ORIGINAL_EXECUTION_DEADLINE_EXHAUSTED');
+    if(state.resources.acquisitionExposures>=limits.maxAcquisitionCalls)throw Error('ORIGINAL_AGGREGATE_ACQUISITION_BOUND');
+    state.resources.acquisitionExposures++;await saveState();
+    const result=await read();state.resources.acknowledgedAcquisitions++;await saveState();return result;
+  };
+  return {slice,saveState,saveReceipt,call,authenticate,measureAcquisition,
     finish:async(error?:unknown)=>{slice.status=error?'FAILED':'FINISHED';slice.endedAt=new Date().toISOString();
       if(error)slice.predicate=String((error as Error).message);finalizing=true;await saveState();}};
 }
@@ -363,6 +369,14 @@ export async function executeReplaySlice(input:{journal:z.infer<typeof Qualifica
 export const IndependentReadProjection=z.object({schema:z.literal('finnor.x1.independent-owner-read-projection.v1'),
   environmentId:z.string().min(1),owner:endpoint,request:observation,
   rowsPath:path,identityPath:path,semanticFields:z.array(path).min(1).max(64),
+  semanticObjectFields:z.array(z.object({name:z.string().regex(/^[A-Za-z][A-Za-z0-9_]{0,127}$/),path,
+    normalization:z.enum(['EXACT','ISO_INSTANT']).optional()}).strict())
+    .min(1).max(64).refine(fields=>new Set(fields.map(f=>f.name)).size===fields.length,'INDEPENDENT_OBJECT_FIELD_DUPLICATE').optional(),
+  trustedVisibilityTimestampPath:path.refine(p=>['x1_committed_at','committedAt','x1_observed_at','observedAt'].includes(String(p.at(-1))),
+    'CANONICAL_COMMIT_OR_INDEPENDENT_READ_TIMESTAMP_REQUIRED').optional(),
+  nativeSelector:z.object({kind:z.enum(['S1_MAPPING_CLAIMS','P1_OBLIGATION_CLAIMS','REQUEST_ROWS','WORKSTREAM_ROWS','FINDING_ROWS']),
+    workId:z.string().uuid(),originalEpisodeId:z.string().uuid(),originalGrantDigest:hex,originalDeadline:instant,
+    sourceIds:z.array(z.string().min(1)).min(1).max(16).optional()}).strict().optional(),
   kind:z.enum(['MAPPING_CLAIMS','OBLIGATION_CLAIMS','POSTCONDITION_WITNESSES','CHANGE_WITNESSES']),
   acceptance:z.array(z.object({path,equals:scalar}).strict()).max(64)}).strict();
 /** Uses actual independently pinned owner response rows. It receives neither
@@ -370,7 +384,11 @@ export const IndependentReadProjection=z.object({schema:z.literal('finnor.x1.ind
 export async function collectIndependentOwnerRead(value:unknown,deadlineAt:number){
   const projection=IndependentReadProjection.parse(value);assertReadOnly(projection.request);
   const identity=await authenticateOwner(projection.owner,deadlineAt);
-  const response=await callAuthenticatedOwner(projection.owner,projection.request,{deadlineAt,maxResponseBytes:6*1024*1024});
+  const response=projection.nativeSelector
+    ?await (await import('./qualification-native-observation.mts')).readNativeObservationSnapshot(projection.owner,projection.nativeSelector,deadlineAt)
+    :await callAuthenticatedOwner(projection.owner,projection.request,{deadlineAt,maxResponseBytes:6*1024*1024});
+  if(projection.nativeSelector&&projection.nativeSelector.workId!==projection.request.expectedOwnerIdentity)
+    throw Error('ORIGINAL_NATIVE_OBSERVER_WORK_IDENTITY_CHANGED');
   return projectIndependentOwnerRead(projection,identity,response);
 }
 function projectIndependentOwnerRead(projection:z.infer<typeof IndependentReadProjection>,
@@ -382,10 +400,23 @@ function projectIndependentOwnerRead(projection:z.infer<typeof IndependentReadPr
   const observations=rows.map(row=>{
     const id=get(row,projection.identityPath),values=projection.semanticFields.map(p=>get(row,p));
     if(typeof id!=='string'||!id||values.some(v=>v===undefined))throw Error('ACTUAL_OWNER_OBSERVATION_FIELD_MISSING');
-    return {identity:id,semanticDigest:digest(values),accepted:appliedStatePredicatesSatisfied&&projection.acceptance.every(p=>{
+    const object=projection.semanticObjectFields?Object.fromEntries(projection.semanticObjectFields.map(f=>{
+      const value=get(row,f.path);
+      if(f.normalization==='ISO_INSTANT'&&value!==null){
+        if(typeof value!=='string'||!Number.isFinite(Date.parse(value)))throw Error('ACTUAL_NATIVE_INSTANT_FIELD_REQUIRED');
+        return [f.name,new Date(value).toISOString()];
+      }
+      return [f.name,value];
+    })):null;
+    if(object&&Object.values(object).some(value=>value===undefined))throw Error('ACTUAL_OWNER_OBJECT_OBSERVATION_FIELD_MISSING');
+    const visible=projection.trustedVisibilityTimestampPath?get(row,projection.trustedVisibilityTimestampPath):response.observedAt;
+    if(typeof visible!=='string'||!Number.isFinite(Date.parse(visible))||Date.parse(visible)>Date.parse(response.observedAt))
+      throw Error('ACTUAL_OWNER_TRUSTED_VISIBILITY_TIMESTAMP_REQUIRED');
+    const preimage=object??values;
+    return {identity:id,semanticDigest:digest(preimage),accepted:appliedStatePredicatesSatisfied&&projection.acceptance.every(p=>{
       const value=get(row,p.path);return value!==undefined&&digest(value)===digest(p.equals);}),
-      witnessDigest:digest({ownerIdentity:identity.responseDigest,ownerResponse:response.responseDigest,identity:id,values}),
-      observedAt:response.observedAt};
+      witnessDigest:digest({ownerIdentity:identity.responseDigest,ownerResponse:response.responseDigest,identity:id,preimage,visible}),
+      observedAt:visible,independentReadAt:response.observedAt};
   });
   return {schema:'finnor.x1.independent-owner-observation-draft.v1',environmentId:projection.environmentId,
     kind:projection.kind,projectionDigest:digest(projection),identity,response,observations,
@@ -442,7 +473,7 @@ export async function executeLiveObservationSlice(input:{projections:unknown[];c
       }
     }
     managed=managedState(state,cursorPath,root,deadlineAt,limits);
-    const {saveState,saveReceipt,authenticate,call}=managed;
+    const {saveState,saveReceipt,authenticate,call,measureAcquisition}=managed;
     const previous=state.segments.at(-1),gapMs=previous?.endedAt?Date.parse(startedAt)-Date.parse(previous.endedAt):null;
     segment={id:managed.slice.id,status:'STARTED',startedAt,monotonicElapsedMs:0,localWallElapsedMs:0,
       continuityGapMs:gapMs,continuousWithPrevious:previous?previous.status==='FINISHED'&&gapMs!==null&&gapMs>=0&&gapMs<=1000:null,
@@ -459,7 +490,10 @@ export async function executeLiveObservationSlice(input:{projections:unknown[];c
           at:new Date().toISOString(),status:'EXPOSED'};
         segment.observations.push(observationEntry);await saveState();
         try{
-          const identity=await authenticate(projection.owner),response=await call(projection.owner,projection.request);
+          const identity=await authenticate(projection.owner),response=projection.nativeSelector
+            ?await (await import('./qualification-native-observation.mts')).readNativeObservationSnapshot(
+              projection.owner,projection.nativeSelector,deadlineAt,measureAcquisition)
+            :await call(projection.owner,projection.request);
           const result=projectIndependentOwnerRead(projection,identity,response);
           observationEntry.receiptRef=await saveReceipt('live-owner-'+invocationId+'.json',result);
           segment.receiptRefs.push(observationEntry.receiptRef);

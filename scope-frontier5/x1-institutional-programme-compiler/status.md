@@ -2,6 +2,24 @@
 
 ## Current execution checkpoint — 13 October 2026
 
+14 October native-administration/observation milestone:
+`verify-qualification-native-observation-007/owner` passes five owner predicates
+in54.363s with unchanged source. Original owner binding now reads the real
+authenticated Work, restricted app role and persisted episode/S5 parent/deadline.
+Native worker controls can be prepared from a validated signed protocol and
+exact source/method/lock/runtime cut; no parent, key or authority is created.
+The canonical collector reads S1 evidence claims, current P1 obligation claims
+and closed native creation tables under the original owner/episode. Three S1
+claims, one P1 claim and one Request witness are observed through actual rows.
+Its separate three-second native live slice observes ten snapshots with fifty
+durable read exposures and zero unknown probes. Object postcondition hashes,
+explicit instant normalization and trusted read/commit timestamps preserve
+actual observed fields; missing fields remain refused/unknown. Unsigned snapshot
+collection retains native claim multiplicities and qualification/cost gaps.
+Workstream/Finding SQL selectors require their final positive installed case;
+full oracle phase/version normalization remains unfinished. Types/lint021 pass
+22.800s/1.910s. Earlier006 native read/collection exercise passes55.516s.
+
 14 October generated-source milestone: `verify-qualification-population-owner-007/owner`
 passes six actual owner predicates in55.379s with unchanged source. The same
 generator kernel produces ten structurally distinct initial packets, each with

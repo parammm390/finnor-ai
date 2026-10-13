@@ -7,12 +7,18 @@ import { z } from "zod";
 import { digest } from "../../../packages/capability-evolution/src/contracts";
 import { validateQualificationRegistration, assessInstitutionQualification } from "../../../packages/private-equity/src/institution-qualification/administration";
 import {executeReplaySlice,executeLiveObservationSlice,validateExecutionJournal,IndependentReadProjection} from './qualification-runtime.mts';
+import {bindOriginalNativeWorker} from './qualification-native-administration.mts';
+import {NativeWorkerControl} from './qualification-native-worker.mts';
+import {installedDevelopmentRuntime} from '../../../packages/private-equity/src/institution-program/installed-runtime';
+import {installedInstitutionCompilerIdentity} from '../../../packages/capability-evolution/src/institution-port';
+import {closePool} from '@finnor/db';
+import {collectQualificationObservation} from './qualification-observation-collection.mts';
 
 const repo = fileURLToPath(new URL("../../../../", import.meta.url));
 const args = process.argv.slice(2), command = args[0];
 const value = (key: string) => { const i = args.indexOf(key); return i < 0 ? undefined : args[i + 1]; };
-if (!["plan", "launch", "observe", "resume", "assess",'replay','live'].includes(command ?? ""))
-  throw Error("USE_PLAN_LAUNCH_OBSERVE_RESUME_ASSESS_REPLAY_LIVE_WITH_PINNED_CONTROL");
+if (!["plan", "launch", "observe", "resume", "assess",'replay','live','native-control','collect'].includes(command ?? ""))
+  throw Error("USE_REGISTERED_PLAN_LAUNCH_OBSERVE_RESUME_ASSESS_REPLAY_LIVE_NATIVE_CONTROL_COMMAND");
 const controlPath = value("--control"), destination = value("--evidence"), trustedHash = value("--trust-sha256");
 if (!controlPath || !isAbsolute(controlPath) || !destination || !isAbsolute(destination)
     || !/^[a-f0-9]{64}$/.test(trustedHash ?? "")) throw Error("PINNED_ABSOLUTE_CONTROL_EVIDENCE_AND_OWNER_TRUST_HASH_REQUIRED");
@@ -58,13 +64,37 @@ save("freeze.json", { schema: "finnor.x1.qualification-command-freeze.v1", comma
   tree: execFileSync("git", ["rev-parse", "HEAD^{tree}"], { cwd: repo, encoding: "utf8" }).trim(),
   runtime: { node: process.version, platform: process.platform, architecture: process.arch },
   authority: "EXISTING_OWNER_SUPPLIED_POLICY_NO_NEW_KEYS_GRANTS_OR_QUALIFICATION_RECEIPTS" });
-if(['launch','observe','resume','replay','live'].includes(command??'')){
+if(['launch','observe','resume','replay','live','native-control','collect'].includes(command??'')){
   const limits=JSON.parse(readFileSync(join(repo,'scope-frontier5/x1-institutional-programme-compiler/verification-plan.json'),'utf8')).limits;
   const disk=statfsSync(repo,{bigint:true});
   if(disk.bavail*disk.bsize<BigInt(limits.liveMinimumFreeBytes))throw Error('X1_FROZEN_LIVE_CAPACITY_REFUSED');
 }
 
-if(command==='replay'||command==='live'){
+if(command==='collect'){
+  if(!control.independentReadProjections||!control.executionEvidenceRoot||!control.executionCursorPath)
+    throw Error('ORIGINAL_PINNED_NATIVE_OWNER_SELECTORS_AND_CURSOR_REQUIRED');
+  const executionRoot=realpathSync(control.executionEvidenceRoot);
+  if(!executionRoot.startsWith(root+'/')||!control.executionCursorPath.startsWith(executionRoot+'/'))
+    throw Error('PRIVATE_ORIGINAL_OBSERVATION_CURSOR_REQUIRED');
+  const envelope=registered.protocol.envelopes.validation;
+  const projections=z.array(IndependentReadProjection).min(10).max(160).parse(pinned(control.independentReadProjections));
+  const collection=await executeLiveObservationSlice({projections,evidenceRoot:executionRoot,cursorPath:control.executionCursorPath,
+    protocolDigest:registered.protocolDigest,candidateCutDigest:digest(registered.protocol.candidateCut),
+    allocationConventionDigest:registered.protocol.allocationConventionDigest,durationSeconds:Number(value('--seconds')??30),pollIntervalMs:1000,
+    limits:{ref:envelope.ref,registrationDigest:digest(envelope),maxAcquisitionCalls:envelope.maxAcquisitionCalls,
+      maxAggregateWallMs:envelope.maxWallSeconds*1000,maxOutputBytes:64*1024*1024}});
+  const latest=new Map<string,Awaited<ReturnType<typeof import('./qualification-runtime.mts').collectIndependentOwnerRead>>>();
+  for(const ref of collection.segment.receiptRefs.filter(ref=>ref.path.startsWith('live-owner-'))){
+    const draft=pinned({path:join(executionRoot,ref.path),sha256:ref.sha256});latest.set(draft.projectionDigest,draft);
+  }
+  outputBytes+=collection.state.resources.outputBytes;
+  const result=await collectQualificationObservation({drafts:[...latest.values()],environmentIds:registered.protocol.environments.map(e=>e.id),
+    expectedSelectorCount:projections.length,save});
+  save('native-observation-execution.json',{resources:collection.state.resources,segment:collection.segment,
+    originalCursorPath:control.executionCursorPath,aggregateAllowanceRetained:true,sevenElapsedDaysEstablished:false,signature:null});
+  console.log(JSON.stringify({status:'NATIVE_OWNER_OBSERVATION_DRAFT_RECORDED',evidence:out,snapshotCount:result.snapshotCount,
+    allSelectorsObserved:result.allSelectorsObserved,qualificationEstablished:false}));
+}else if(command==='replay'||command==='live'){
   if(!control.executionEvidenceRoot||!control.executionCursorPath)throw Error('ORIGINAL_REGISTERED_EXECUTION_PATHS_REQUIRED');
   const executionRoot=realpathSync(control.executionEvidenceRoot);
   if(!executionRoot.startsWith(root+'/')||!control.executionCursorPath.startsWith(executionRoot+'/'))
@@ -139,7 +169,43 @@ if(command==='replay'||command==='live'){
   });
   if (new Set(all.map(i => JSON.stringify([i.tenantId, i.workId]))).size !== all.length)
     throw Error("X1_ORIGINAL_QUALIFICATION_WORK_DUPLICATE");
-  if (command === "plan") {
+  if(command==='native-control'){
+    try{
+      if(!control.executionEvidenceRoot||!control.executionCursorPath)throw Error('ORIGINAL_REGISTERED_NATIVE_EXECUTION_PATHS_REQUIRED');
+      const executionRoot=realpathSync(control.executionEvidenceRoot);
+      if(!executionRoot.startsWith(root+'/')||!control.executionCursorPath.startsWith(executionRoot+'/'))
+        throw Error('PRIVATE_ORIGINAL_NATIVE_WORKER_CURSOR_REQUIRED');
+      const phase=z.enum(['replay','soak']).parse(value('--phase')),envelope=registered.protocol.envelopes[phase];
+      const installed=installedDevelopmentRuntime(),method=await installedInstitutionCompilerIdentity();
+      const runtime=installed?{mode:'COMPILED_DEVELOPMENT' as const,digest:installed.manifestDigest}
+        :{mode:'SOURCE_DEVELOPMENT' as const,digest:sha(readFileSync(join(repo,'finnor-os/scripts/frontier5/x1/physical-owner-worker.mts')))};
+      const cut=installed?.manifest.source??{commit:execFileSync('git',['rev-parse','HEAD'],{cwd:repo,encoding:'utf8'}).trim(),
+        tree:execFileSync('git',['rev-parse','HEAD^{tree}'],{cwd:repo,encoding:'utf8'}).trim()};
+      if(cut.commit!==registered.protocol.candidateCut.commit||cut.tree!==registered.protocol.candidateCut.tree
+        ||runtime.digest!==registered.protocol.candidateCut.runtimeDigest
+        ||method.ref.contentDigest!==registered.protocol.candidateCut.compilerMethodDigest
+        ||sha(readFileSync(join(repo,'finnor-os/package-lock.json')))!==registered.protocol.candidateCut.dependencyLockDigest)
+        throw Error('REGISTERED_ACTUAL_NATIVE_SOURCE_METHOD_LOCK_OR_RUNTIME_CHANGED');
+      const registration=await bindOriginalNativeWorker({protocolDigest:registered.protocolDigest,candidateCutDigest:digest(registered.protocol.candidateCut),
+        allocationConventionDigest:registered.protocol.allocationConventionDigest,runtime,phase,
+        envelope:{ref:envelope.ref,registrationDigest:digest(envelope),maxNativeDeliveries:envelope.maxNativeDeliveries,
+          maxAggregateWallMs:envelope.maxWallSeconds*1000,maxOutputBytes:64*1024*1024},
+        owners:all.map(input=>({owner:{origin:input.origin,tenantId:input.tenantId,principalId:input.principalId,
+          tokenEnvironmentVariable:input.tokenEnvironmentVariable},workId:input.workId})),
+        deadlineAt:Date.now()+Math.min(180,envelope.maxWallSeconds)*1000});
+      const workerControl=NativeWorkerControl.parse({schema:'finnor.x1.qualification-native-worker-control.v1',registration,
+        evidenceRoot:executionRoot,cursorPath:control.executionCursorPath,durationSeconds:Number(value('--seconds')??30)});
+      save('native-worker-control.json',workerControl);
+      save('native-worker-launch-packet.json',{controlPath:join(out,'native-worker-control.json'),
+        controlSha256:sha(readFileSync(join(out,'native-worker-control.json'))),runtime,phase,
+        workerEntrypoint:installed?installed.entrypoint('worker'):join(repo,'finnor-os/scripts/frontier5/x1/physical-owner-worker.mts'),
+        environmentNames:['DATABASE_URL','AUTH_DEV_BYPASS','FINNOR_P4_PROFILE','FINNOR_X1_QUAL_NATIVE_CONTROL','FINNOR_X1_QUAL_NATIVE_CONTROL_SHA256'],
+        authority:'REUSE_EXISTING_RESTRICTED_WORKER_DATABASE_BINDING_AND_ORIGINAL_NATIVE_QUEUE',
+        originalCursorRetained:true,admissionOrQualificationIssued:false,moneyUsd:null,humanSeconds:null,aggregatePeakMemoryBytes:null});
+      console.log(JSON.stringify({status:'PINNED_ACTUAL_NATIVE_WORKER_CONTROL_WRITTEN',evidence:out,phase,launched:false,
+        originalEpisodes:registration.originalEpisodes.length,qualificationEstablished:false}));
+    }finally{await closePool();}
+  }else if (command === "plan") {
     save("launch-observe-resume.json", { status: "READY_FOR_OWNER_AUTHORIZED_TEST_SERVICES_NOT_RUN",
       protocolId: registered.protocol.id, environments: registered.protocol.environments.map(e => ({ id: e.id,
         sourceClasses: e.systems.map(s => s.sourceClass), oracleDigest: e.oracleDigest,
