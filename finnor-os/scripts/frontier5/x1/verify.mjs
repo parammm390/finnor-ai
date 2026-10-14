@@ -206,6 +206,7 @@ if (named.live || stage === "installed" || stage === "diagnostic") {
       const installed=JSON.parse(readFileSync(path,'utf8'));
       const observerPaths=new Set(['finnor-os/scripts/frontier5/x1/run-owner-slice.mts',
         'finnor-os/scripts/frontier5/x1/verify.mjs',
+        'finnor-os/scripts/frontier5/x1/review-cases.mts',
         'scope-frontier5/x1-institutional-programme-compiler/failure-model.md',
         'scope-frontier5/x1-institutional-programme-compiler/oracle-contract.md']);
       const differences=[];
