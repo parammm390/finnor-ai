@@ -150,7 +150,7 @@ export function auditScrutinyEvidence({ repo, controlRoot, source, ledgerPath })
     if (role === 'upgrade') {
       const observed = rows.get('G-existing-schema-upgrade-and-jobs').observed;
       requireThat(observed.oldHead === '0171_runtime_database_role_isolation.sql' && observed.applied?.length === 18
-        && observed.applied.at(-1) === '0189_x1_physical_cost_allocation.sql'
+        && observed.applied.at(-1) === '0190_x1_final_compiler_head_fence.sql'
         && observed.secondPassApplied === 0 && observed.oldRowsAndBytesPreserved === true
         && observed.newJobs.some(job => job.type === 'run_x1_institution_compiler_v1' && job.status === 'completed')
         && observed.newJobs.some(job => job.type === 'run_workflow_step_v2' && job.status === 'completed'), 'OWNER', 'Upgrade/old data/mixed jobs missing');

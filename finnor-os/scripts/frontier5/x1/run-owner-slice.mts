@@ -111,7 +111,7 @@ const freeze = { installation:installedManifest?{root:installation,manifestDiges
   dirty: git("status", "--porcelain=v1", "-uall"),dirtyDiffDigest:sha(git('diff','--binary')), pins: sourcePins }, startedAt,
   runtime: { node: process.version, platform: process.platform, arch: process.arch },
   profile: "DISPOSABLE_LOCAL_AUTH_SERVICE_ACTUAL_BEARER_AND_RLS", hostedSupabaseQualified: false,
-  authDevBypass: false, expectedMigrations: 191, limits, freeBytesBefore: String(diskBefore), dutyCount,mounted,
+  authDevBypass: false, expectedMigrations: 192, limits, freeBytesBefore: String(diskBefore), dutyCount,mounted,
   cases: headFenceReview?["E-final-mutation-requires-latest-accepted-compiler-head","G-physical-validation-lifecycle-original-parent"]:admissionReview?["C-owner-concurrent-grant-publication-serialization","C-owner-mapped-intact-admission-replay","C-owner-ambiguous-source-truth-replay","C-owner-source-truth-restored-control","C-owner-remapped-source-truth-replay"]:["A-raw-two-identity-native-request", "C-unsigned-forged-input", "D-same-key-replay", "G-restricted-roles",
     ...(material?['B-ledger-correction']:[]),...(heterogeneous?['A-eight-class-original-corpus']:[]),
     ...(canonical?['A-fourteen-canonical-kinds']:[]),...(recovery?['D-compiler-before-publication-death']:[]),
@@ -865,6 +865,12 @@ try {
   };
   worker=startWorker();
   await save('physical-worker-readiness.json',await workerReadiness.get(worker));
+
+  await save("physical-worker.json", { pid: worker.pid, parentPid: process.pid, environmentNames: Object.keys(env),
+    role: "finnor_worker", actualProductionRegistrations: true, compiledInstallation:Boolean(installation),
+    compiledEntrypoint:installedManifest?.entrypoints.worker??null, credentialsPersisted: false });
+  let guardFailure: string | null = null;
+  guard = setInterval(() => { void take().catch(error => { guardFailure = String(error.message); worker?.kill("SIGTERM"); }); }, 2000);
   if(headFenceReview){
     await reviewFinalHeadFence({admin,adminUrl:connection('x1_fixture',password),ctx,workId,save,gate:headFenceGate!,worker,
       requestId:compilerId!,submit:input,alternateGrantIds:sourceBindings.filter(source=>source.sourceId!=='ledger-original').map(source=>source.grantId),results,api,
@@ -872,11 +878,6 @@ try {
     throw new OwnerAdmissionReviewFinished('Only the frozen final-head mutation guard was selected; no canonical mutation performed by the guard probe');
   }
 
-  await save("physical-worker.json", { pid: worker.pid, parentPid: process.pid, environmentNames: Object.keys(env),
-    role: "finnor_worker", actualProductionRegistrations: true, compiledInstallation:Boolean(installation),
-    compiledEntrypoint:installedManifest?.entrypoints.worker??null, credentialsPersisted: false });
-  let guardFailure: string | null = null;
-  guard = setInterval(() => { void take().catch(error => { guardFailure = String(error.message); worker?.kill("SIGTERM"); }); }, 2000);
   if(checkerCrash){
     const exactEnvelope=async()=>({episodes:(await admin!.query(`SELECT id,original_deadline,wall_deadline,parent_reservation,parent_demand
       FROM finnor_os.x1_compiler_episodes WHERE tenant_id=$1 ORDER BY id`,[tenant])).rows,

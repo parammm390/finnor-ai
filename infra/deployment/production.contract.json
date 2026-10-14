@@ -10,7 +10,7 @@
     "requireCleanWorktree": true
   },
   "release": {
-    "requiredMigrationHead": "0189_x1_physical_cost_allocation.sql",
+    "requiredMigrationHead": "0190_x1_final_compiler_head_fence.sql",
     "metadata": [
       "FINNOR_COMMIT_SHA",
       "FINNOR_BUILD_ID",

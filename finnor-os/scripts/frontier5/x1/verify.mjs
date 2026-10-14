@@ -111,6 +111,7 @@ for (const path of [
   'finnor-os/packages/db/migrations/0187_x1_responsible_principal_currentness.sql',
   'finnor-os/packages/db/migrations/0188_x1_source_namespace_binding.sql',
   'finnor-os/packages/db/migrations/0189_x1_physical_cost_allocation.sql',
+  'finnor-os/packages/db/migrations/0190_x1_final_compiler_head_fence.sql',
   'finnor-os/packages/db/migration-head.ts',
   'finnor-os/packages/private-equity/src/institution-program/source-scope.ts',
   'finnor-os/packages/private-equity/src/institution-program/source-locks.ts',

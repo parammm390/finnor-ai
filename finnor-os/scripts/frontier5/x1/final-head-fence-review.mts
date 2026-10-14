@@ -11,15 +11,18 @@ type Input={admin:pg.Client;adminUrl:string;ctx:PeMutationContext;workId:string;
 export async function installFinalHeadFenceGate(input:Input){
  const gate=new pg.Client({connectionString:input.adminUrl});await gate.connect();
  await gate.query("SET statement_timeout='5s'");await gate.query('SELECT pg_advisory_lock(77151,1)');
- await input.admin.query(`CREATE FUNCTION finnor_os.x1_review_action_claim() RETURNS trigger LANGUAGE plpgsql AS $$
-  BEGIN PERFORM pg_catalog.pg_advisory_xact_lock(77151,1);RETURN NEW;END $$;
-  CREATE TRIGGER x1_review_action_claim BEFORE UPDATE OF status ON finnor_os.domain_actions
-  FOR EACH ROW WHEN(NEW.status='executing' AND OLD.status='approved' AND NEW.authority_context->>'kind'='institution_duty')
-  EXECUTE FUNCTION finnor_os.x1_review_action_claim()`);
+ await input.admin.query(`CREATE FUNCTION finnor_os.x1_review_effect_commit() RETURNS trigger LANGUAGE plpgsql AS $$
+  BEGIN
+   IF EXISTS(SELECT 1 FROM finnor_os.domain_actions a WHERE a.tenant_id=NEW.tenant_id AND a.id=NEW.domain_action_id
+    AND a.authority_context->>'kind'='institution_duty') THEN PERFORM pg_catalog.pg_advisory_xact_lock(77151,1);END IF;
+   RETURN NEW;
+  END $$;
+  CREATE TRIGGER x1_review_effect_commit BEFORE INSERT ON finnor_os.action_log
+  FOR EACH ROW WHEN(NEW.step='effect_commit_started') EXECUTE FUNCTION finnor_os.x1_review_effect_commit()`);
  const gatePid=(await gate.query('SELECT pg_backend_pid() pid')).rows[0].pid;
  return {gate,gatePid,close:async()=>{
   await gate.query('SELECT pg_advisory_unlock_all()').catch(()=>{});await gate.end();
-  await input.admin.query('DROP TRIGGER IF EXISTS x1_review_action_claim ON finnor_os.domain_actions; DROP FUNCTION IF EXISTS finnor_os.x1_review_action_claim()').catch(()=>{});
+  await input.admin.query('DROP TRIGGER IF EXISTS x1_review_effect_commit ON finnor_os.action_log; DROP FUNCTION IF EXISTS finnor_os.x1_review_effect_commit()').catch(()=>{});
  }};
 }
 export async function reviewFinalHeadFence(input:Input&{
@@ -32,7 +35,7 @@ export async function reviewFinalHeadFence(input:Input&{
    await new Promise(resolve=>setTimeout(resolve,50));}throw Error('PHYSICAL_FINAL_HEAD_BOUNDARY_NOT_REACHED:'+label);};
  const claim=await wait(async()=>(await admin.query(`SELECT a.pid,a.query,a.wait_event,pg_blocking_pids(a.pid) blockers
   FROM pg_locks l JOIN pg_stat_activity a USING(pid) WHERE l.locktype='advisory' AND l.classid=77151 AND l.objid=1
-   AND NOT l.granted AND a.datname=current_database() AND a.usename='finnor_worker'`)).rows[0],'approved-action-claim');
+   AND NOT l.granted AND a.datname=current_database() AND a.usename='finnor_worker'`)).rows[0],'durable-effect-commit-before-canonical-mutation');
  await gate.gate.query('SELECT pg_advisory_lock(hashtextextended($1,0))',['s5-portfolio:'+tenant]);
  await gate.gate.query('SELECT pg_advisory_unlock(77151,1)');
  const finalWait=await wait(async()=>(await admin.query(`SELECT pid,query,wait_event,pg_blocking_pids(pid) blockers FROM pg_stat_activity
