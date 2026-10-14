@@ -1,6 +1,7 @@
 /** Pre-repair frozen resource/meter oracle; every unit below is an actual HTTP
  * owner invocation under the original 520-request Work reservation. */
 import assert from 'node:assert/strict';
+import {randomUUID} from 'node:crypto';
 import type pg from 'pg';
 import type {PeMutationContext} from '../../../packages/private-equity/src/types';
 import {readStoredAllocation,readAllocationConsumptions} from '../../../packages/private-equity/src/allocation-store';
@@ -47,4 +48,28 @@ export async function reviewResourceOwners(input:{ctx:PeMutationContext;admin:pg
   &&ending.used===520&&ending.records===exhausted.records;
  results.push({id:'F-exhausted-parent-retains-actual-api-cost',status:passed?'PASS':'FAIL',observed:{newMeters,exhausted,ending},
   basis:'KNOWN_PHYSICAL_HTTP_WORK_SURVIVES_S5_REFUSAL_IN_S7_ORIGINAL_PARENT_NO_RESOURCE_AUTHORITY_OR_VALUE_CREDIT'});
+ const q=(await admin.query('SELECT * FROM finnor_os.x1_compiler_requests WHERE tenant_id=$1 AND id=$2',[tenant,requestId])).rows[0];
+ const existingChildren=(await admin.query('SELECT id FROM finnor_os.p1_requests WHERE tenant_id=$1 AND work_id=$2 ORDER BY id',[tenant,workId])).rows;
+ const existingEffects=(await admin.query('SELECT id FROM finnor_os.domain_actions WHERE tenant_id=$1 AND work_id=$2 ORDER BY id',[tenant,workId])).rows;
+ const revision=await api('institution-revise',{workId,workInputId:q.work_input_id,grantIds:q.grant_ids,
+  parentRequestId:requestId,idempotencyKey:'x1-exhausted-original-parent:'+randomUUID()});assert.equal(revision.status,202);
+ let blocked:any,job:any;
+ for(let poll=0;poll<120;poll++){
+  blocked=await api('institution-read',{requestId:revision.body.requestId});
+  job=(await admin.query(`SELECT id,status,last_error,attempts FROM finnor_os.jobs WHERE tenant_id=$1
+    AND type='run_x1_institution_compiler_v1' AND payload->>'requestId'=$2`,[tenant,revision.body.requestId])).rows[0];
+  if(blocked.body.status==='UNKNOWN'&&job?.status==='quarantined')break;await new Promise(resolve=>setTimeout(resolve,250));
+ }
+ assert.equal(blocked.status,200);assert.equal(blocked.body.status,'UNKNOWN');assert.equal(blocked.body.reason,'X1_CHARGE_BUDGET_EXHAUSTED');
+ assert.equal(job.status,'quarantined');assert.ok(String(job.last_error).includes('X1_CHARGE_BUDGET_EXHAUSTED'));
+ const parentAfter=(await admin.query('SELECT * FROM finnor_os.x1_compiler_episodes WHERE tenant_id=$1 AND id=$2',[tenant,original.id])).rows[0];
+ for(const field of ['parent_reservation','parent_demand','original_deadline','wall_deadline'])assert.deepEqual(parentAfter[field],original[field]);
+ assert.equal(parentAfter.acquisition_calls,original.acquisition_calls);assert.equal((await charges()).used,520);
+ assert.deepEqual((await admin.query('SELECT id FROM finnor_os.p1_requests WHERE tenant_id=$1 AND work_id=$2 ORDER BY id',[tenant,workId])).rows,existingChildren);
+ assert.deepEqual((await admin.query('SELECT id FROM finnor_os.domain_actions WHERE tenant_id=$1 AND work_id=$2 ORDER BY id',[tenant,workId])).rows,existingEffects);
+ await save('resource-exhausted-actual-compiler-disposition.json',{original,q,revision,blocked,job,parentAfter,
+  endingCharges:await charges(),existingChildren,existingEffects,acceptedAdditionalBusinessWork:0,newAllowanceIssued:false});
+ results.push({id:'F-exhausted-original-parent-compiler-disposition',status:'PASS',observed:{revision,blockedStatus:blocked.body.status,
+  exactReason:blocked.body.reason,job,retainedOriginalParent:true,acceptedAdditionalBusinessWork:0},
+  basis:'ACTUAL_AUTHENTICATED_SAME_PARENT_REVISION_PHYSICAL_COMPILER_S5_REFUSAL_NO_NEW_CHILD_OR_EFFECT'});
 }

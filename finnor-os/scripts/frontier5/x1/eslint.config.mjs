@@ -14,7 +14,9 @@ export default [{
     "finnor-os/scripts/frontier5/x1/**/*.mts",
     "finnor-os/scripts/frontier5/x1/qualification-full-*.mjs",
     "finnor-os/scripts/frontier5/x1/qualification-public-assessment-cases.mjs",
-    "finnor-os/scripts/frontier5/x1/qualification-*-cases.mjs"],
+    "finnor-os/scripts/frontier5/x1/qualification-*-cases.mjs",
+    "finnor-os/scripts/frontier5/x1/reconstruction-timing-cases.mjs",
+    "finnor-os/scripts/frontier5/x1/canvas-effect-cases.mjs"],
   languageOptions: { parser, parserOptions: { ecmaVersion: "latest", sourceType: "module" } },
   rules: { "no-debugger": "error", "no-constant-condition": "error", "no-duplicate-imports": "error" },
 }];

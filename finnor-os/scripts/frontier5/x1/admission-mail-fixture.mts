@@ -41,6 +41,6 @@ export async function admissionMailFixture(input:{ctx:PeMutationContext;admin:pg
   setMicrosoftIdentityTestOverrides({stsSender:async()=> 'LOCAL_TRANSPORT_FIXTURE_NO_EXTERNAL_IDENTITY',fetch:async()=>fetchOriginal(origin+'/token')});
   await input.save('admission-mail-original-input.json',{grantId,integrationId,rawUtf8:bytes.toString('utf8'),originalSha256:createHash('sha256').update(bytes).digest('hex'),
    boundary:'LOCAL_STATEFUL_AUTHENTICATED_HTTP_ORIGINAL_BYTE_TRANSPORT_THROUGH_EXISTING_TEST_IDENTITY_SEAM',externalMicrosoftOrAwsAuthority:false,canonicalMappingSupplied:false,businessOutcomeSupplied:false});
-  return {grantId,close:async()=>{globalThis.fetch=fetchOriginal;setMicrosoftIdentityTestOverrides({stsSender:null,fetch:null});clearMicrosoftGraphTokenCache();await input.save('admission-mail-physical-transport.json',{calls,externalProviderQualification:false});await new Promise<void>(resolve=>server.close(()=>resolve()));}};
+  return {grantId,sourceScope:scope,close:async()=>{globalThis.fetch=fetchOriginal;setMicrosoftIdentityTestOverrides({stsSender:null,fetch:null});clearMicrosoftGraphTokenCache();await input.save('admission-mail-physical-transport.json',{calls,externalProviderQualification:false});await new Promise<void>(resolve=>server.close(()=>resolve()));}};
  }catch(error){globalThis.fetch=fetchOriginal;setMicrosoftIdentityTestOverrides({stsSender:null,fetch:null});await new Promise<void>(resolve=>server.close(()=>resolve()));throw error;}
 }

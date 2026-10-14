@@ -24,11 +24,11 @@ const ownerCases={owners:{'one-duty':{count:'1',mode:'api'},'128-duty':{count:'1
   domain:{count:'1',mode:'domain'},'owner-inputs':{count:'1',mode:'owner_inputs'},'source-namespace':{count:'1',mode:'source_namespace'},
   'qualification-execution':{count:'1',mode:'qualification_execution'},
   'qualification-population':{count:'1',mode:'qualification_population'},
-  'admission-review':{count:'1',mode:'admission_review'}},
+  'admission-review':{count:'1',mode:'admission_review'},'raw-instructions':{count:'1',mode:'raw_instructions'},'protected-guards':{count:'1',mode:'protected_guards'}},
   lifecycle:{material:{count:'1',mode:'material'},'reporting-changes':{count:'1',mode:'reporting_changes'},'staff-epoch':{count:'1',mode:'authority_epoch'},'sensitive-coverage':{count:'1',mode:'sensitive_coverage'},personnel:{count:'1',mode:'personnel'},recovery:{count:'1',mode:'recovery'},'accepted-child-recovery':{count:'1',mode:'child_recovery'},
-    contention:{count:'1',mode:'contention'},unsupported:{count:'1',mode:'unsupported'},'unsupported-operation':{count:'1',mode:'unsupported_operation'},'checker-crash':{count:'1',mode:'checker_crash'},
+    contention:{count:'1',mode:'contention'},'active-contention':{count:'1',mode:'active_contention'},unsupported:{count:'1',mode:'unsupported'},'unsupported-operation':{count:'1',mode:'unsupported_operation'},'checker-crash':{count:'1',mode:'checker_crash'},
     'cancel-observed':{count:'1',mode:'cancel_observed'},'publication-meter':{count:'1',mode:'publication_meter'},
-    'effect-recovery':{count:'1',mode:'effect_recovery'},'resource-review':{count:'1',mode:'resource_review'},'head-fence-review':{count:'1',mode:'head_fence_review'}},mounted:{mounted:{count:'1',mode:'mounted'},'ui-review':{count:'1',mode:'ui_review'}},
+    'effect-recovery':{count:'1',mode:'effect_recovery'},'cancel-possible':{count:'1',mode:'cancel_possible'},'resource-review':{count:'1',mode:'resource_review'},'head-fence-review':{count:'1',mode:'head_fence_review'}},mounted:{mounted:{count:'1',mode:'mounted'},'ui-review':{count:'1',mode:'ui_review'}},
   diagnostic:{'matched-native':{count:'1',mode:'diagnostic'}},
   installed:{'schema-upgrade':{count:'1',mode:'upgrade'},delivery:{count:'1',mode:'owner_inputs'},
     'upgrade-installed':{count:'1',mode:'upgrade'}}};
@@ -76,6 +76,8 @@ for (const path of [
   'finnor-os/scripts/frontier5/x1/qualification-observation-collection.mts',
   'finnor-os/scripts/frontier5/x1/qualification-meaning.mts',
   "finnor-os/scripts/frontier5/x1/qualification-cases.mts",
+  'finnor-os/scripts/frontier5/x1/reconstruction-timing-cases.mjs',
+  'finnor-os/scripts/frontier5/x1/reference/reconstruction-timing-native-review-contract.md',
   "finnor-os/scripts/frontier5/x1/reference/qualification-contract.md",
   "finnor-os/packages/private-equity/src/institution-program/checker.ts",
   "finnor-os/packages/private-equity/src/institution-program/checker-process.ts",
@@ -127,6 +129,8 @@ for (const path of [
   'finnor-os/scripts/frontier5/x1/reference/scrutiny-evidence-contract.json',
   'finnor-os/scripts/frontier5/x1/reference/scrutiny-evidence-contract.md',
   'finnor-os/scripts/frontier5/x1/run-owner-slice.mts',
+  'finnor-os/scripts/frontier5/x1/s6-guard-review.mts',
+  'finnor-os/scripts/s6/run-obligation-e2e.mts',
   'finnor-os/scripts/frontier5/x1/mounted-race-review.mts',
   'finnor-os/scripts/frontier5/x1/qualification-full-contract-cases.mjs',
   'finnor-os/scripts/frontier5/x1/qualification-full-population-cases.mjs',
@@ -313,6 +317,7 @@ if (stage === "kernel" || stage === "scrutiny") {
   run("kernel", process.execPath, ["./node_modules/tsx/dist/cli.mjs", "scripts/frontier5/x1/kernel.mts"], os, manifest.limits.kernelNodeHeapMiB);
   run("protocols", process.execPath, ["./node_modules/tsx/dist/cli.mjs", "scripts/frontier5/x1/protocol-cases.mts"], os, manifest.limits.kernelNodeHeapMiB);
   run("reconstruction", process.execPath, ["./node_modules/tsx/dist/cli.mjs", "scripts/frontier5/x1/reconstruction-cases.mts"], os, manifest.limits.kernelNodeHeapMiB);
+  run('reconstruction-replay-timing',process.execPath,['--import=tsx','scripts/frontier5/x1/reconstruction-timing-cases.mjs',join(destination,'reconstruction-replay-timing')],os,manifest.limits.kernelNodeHeapMiB);
   run("checker-review", process.execPath, ["./node_modules/tsx/dist/cli.mjs", "scripts/frontier5/x1/review-cases.mts"], os, manifest.limits.kernelNodeHeapMiB);
   run("native-corpus", process.execPath, ["./node_modules/tsx/dist/cli.mjs", "scripts/frontier5/x1/native-cases.mts"], os, manifest.limits.kernelNodeHeapMiB);
   run("native-finish", process.execPath, ["./node_modules/tsx/dist/cli.mjs", "scripts/frontier5/x1/native-finish-cases.mts"], os, manifest.limits.kernelNodeHeapMiB);
