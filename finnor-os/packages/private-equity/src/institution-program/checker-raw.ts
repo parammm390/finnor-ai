@@ -19,6 +19,33 @@ type RecordRow = {
   observationKind?: string; balanceRole?: string; accountingRelationId?: string;
 };
 
+// Independent original-format reader. No producer normalization/inference is
+// imported: the raw token, not IEEE-754's rounded result, fixes its decimal.
+function originalJson(raw: string): unknown {
+  return JSON.parse(raw, (_key, parsed: unknown, context?: { source?: string }) => {
+    if (typeof parsed !== "number") return parsed;
+    const token = context?.source;
+    const parts = typeof token === "string"
+      ? /^(-?)(\d+)(?:\.(\d+))?(?:[Ee]([+-]?\d+))?$/.exec(token) : null;
+    if (!parts) throw new Error("Original JSON number token required");
+    let digits = parts[2]! + (parts[3] ?? "");
+    if (!/[1-9]/.test(digits)) return "0";
+    const power = Number(parts[4] ?? "0");
+    if (!Number.isSafeInteger(power)) throw new Error("Original numeric decimal bound");
+    let decimalAt = parts[2]!.length + power;
+    const leading = /^0+/.exec(digits)?.[0].length ?? 0;
+    digits = digits.slice(leading).replace(/0+$/, ""); decimalAt -= leading;
+    const length = parts[1]!.length + (decimalAt <= 0 ? 2 - decimalAt + digits.length
+      : decimalAt < digits.length ? digits.length + 1 : decimalAt);
+    if (length > 128) throw new Error("Original numeric decimal bound");
+    let decimal: string;
+    if (decimalAt <= 0) decimal = "0." + "0".repeat(-decimalAt) + digits;
+    else if (decimalAt < digits.length) decimal = digits.slice(0, decimalAt) + "." + digits.slice(decimalAt);
+    else decimal = digits + "0".repeat(decimalAt - digits.length);
+    return parts[1] + decimal;
+  });
+}
+
 function requireRows(value: unknown, limit: number, sourceClass: string): RecordRow[] {
   if (!Array.isArray(value) || value.length > limit
       || value.some((row) => !row || typeof row !== "object" || Array.isArray(row))) {
@@ -263,9 +290,9 @@ export async function originalRawRecords(source: OriginalSource, limit: number, 
   }
   let value: unknown;
   switch (source.protocol) {
-    case "json_records": value = JSON.parse(source.rawUtf8); break;
+    case "json_records": value = originalJson(source.rawUtf8); break;
     case "paginated_json": {
-      const doc = JSON.parse(source.rawUtf8) as { pages?: { cursor: string; nextCursor: string | null; records: unknown[] }[] };
+      const doc = originalJson(source.rawUtf8) as { pages?: { cursor: string; nextCursor: string | null; records: unknown[] }[] };
       if (!Array.isArray(doc.pages) || !doc.pages.length || doc.pages.length > limit) throw new Error("Invalid page count");
       const seen = new Set<string>(); let next = "start";
       value = doc.pages.flatMap((page) => {

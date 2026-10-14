@@ -2,22 +2,33 @@ import type { DigitalInstitutionProfile } from "../institution-program/contracts
 import type { InstitutionCandidate } from "../institution-program/checker";
 import type { InstitutionResponsibility } from "../institution-program/responsibility";
 import { institutionDigest } from "../institution-program/canonical-json";
+import type { InstitutionHarnessRequest } from "../program-synthesis/contracts";
 
-export type InstitutionDependencyGraph = { schema: "finnor.p7.institution-dependencies.v1";
-  nodes: Array<{ id: string; kind: "ORIGINAL" | "RULE" | "CANONICAL" | "PRINCIPAL" | "OPERATION" | "DUTY";
+export type InstitutionDependencyGraph = { schema: "finnor.p7.institution-dependencies.v1" | "finnor.p7.institution-dependencies.v2";
+  nodes: Array<{ id: string; kind: "ORIGINAL" | "RULE" | "CANONICAL" | "PRINCIPAL" | "OPERATION" | "DUTY" | "ACTION" | "OWNER_DEPENDENCY";
     semanticDigest: string }>; edges: Array<{ from: string; to: string }> };
 const key = (kind: string, ...identity: string[]) => JSON.stringify([kind, ...identity]);
 
 /** Versioned P7 domain: dependencies point toward affected duties. It does not
  * pass an arbitrary institution graph through the old 256-node analytical port. */
 export function buildInstitutionDependencyGraph(candidate: InstitutionCandidate,
-  duties: InstitutionResponsibility[], profile: DigitalInstitutionProfile): InstitutionDependencyGraph {
+  duties: InstitutionResponsibility[], profile: DigitalInstitutionProfile,
+  actions: NonNullable<InstitutionHarnessRequest["institution"]["actions"]>): InstitutionDependencyGraph {
   const nodes = new Map<string, InstitutionDependencyGraph["nodes"][number]>(), edges = new Map<string, { from: string; to: string }>();
   const add = (id: string, kind: InstitutionDependencyGraph["nodes"][number]["kind"], value: unknown) => {
     const next = { id, kind, semanticDigest: institutionDigest(value) }, old = nodes.get(id);
     if (old && old.semanticDigest !== next.semanticDigest) throw Error("X1_P7_DEPENDENCY_IDENTITY_COLLISION");
     nodes.set(id, next); return id;
   };
+  const dutyIds = new Set(duties.map(duty => duty.obligation.stableIdentity));
+  if (new Set(actions.map(action => action.responsibilityIdentity)).size !== actions.length
+      || actions.some(action => !dutyIds.has(action.responsibilityIdentity)))
+    throw Error("X1_P7_ACTION_POPULATION_CHANGED");
+  const ownerDependencies = ["rightsRevision", "resourceRevision", "methodRevision", "operationRevision",
+    "checkerRevision", "profileRevision", "schemaRevision", "runtimeRevision"].map(name => {
+    if (candidate.dependencies[name] === undefined) throw Error("X1_P7_OWNER_DEPENDENCY_REQUIRED");
+    return add(key("owner-dependency", name), "OWNER_DEPENDENCY", { name, value: candidate.dependencies[name] });
+  });
   // Material model changes remain semantic even if no creation duty depends
   // on that quantity/relation. Grouped source nodes keep the declared graph
   // bound while preserving their complete checked original-record population.
@@ -45,6 +56,9 @@ export function buildInstitutionDependencyGraph(candidate: InstitutionCandidate,
     const target = add(key("duty", d.stableIdentity), "DUTY", { ...d, derivationRevision: undefined,
       trigger: { ...d.trigger, availableAt: undefined }, rule: { ...d.rule, mandateRevision: undefined } });
     const dependencies = [
+      ...ownerDependencies,
+      add(key("action", d.stableIdentity), "ACTION",
+        actions.find(action => action.responsibilityIdentity === d.stableIdentity) ?? { status: "UNRESOLVED_ACTION" }),
       add(key("original", d.trigger.sourceId, d.trigger.recordId), "ORIGINAL", record),
       add(key("rule", d.rule.mandateId, d.rule.id), "RULE", { id: d.rule.id, triggerKind: d.rule.triggerKind,
         materiality: d.materiality, originalDeadline: d.originalDeadline, operation: d.permissibleOperationClass,
@@ -60,7 +74,7 @@ export function buildInstitutionDependencyGraph(candidate: InstitutionCandidate,
   }
   if (nodes.size > profile.bounds.institutionDependencyNodes || edges.size > profile.bounds.institutionDependencyEdges)
     throw Error("X1_P7_INSTITUTION_GRAPH_BOUND");
-  return { schema: "finnor.p7.institution-dependencies.v1", nodes: [...nodes.values()].sort((a,b)=>a.id.localeCompare(b.id)),
+  return { schema: "finnor.p7.institution-dependencies.v2", nodes: [...nodes.values()].sort((a,b)=>a.id.localeCompare(b.id)),
     edges: [...edges.values()].sort((a,b)=>key(a.from,a.to).localeCompare(key(b.from,b.to))) };
 }
 
@@ -85,6 +99,11 @@ export function compareInstitutionDependencies(previous: InstitutionDependencyGr
   profile: DigitalInstitutionProfile) {
   const old = new Map(previous.nodes.map(n=>[n.id,n])), current = new Map(next.nodes.map(n=>[n.id,n]));
   const changed = [...new Set([...old.keys(),...current.keys()])].filter(id=>old.get(id)?.semanticDigest!==current.get(id)?.semanticDigest);
+  // A legacy persisted graph did not encode effect semantics or owner cuts.
+  // Reading it is supported; absence cannot certify cosmetic/unchanged duties.
+  if (previous.schema !== "finnor.p7.institution-dependencies.v2" || next.schema !== "finnor.p7.institution-dependencies.v2")
+    for (const graph of [previous, next]) for (const node of graph.nodes)
+      if (node.kind === "DUTY" && !changed.includes(node.id)) changed.push(node.id);
   const before = institutionAffectedClosure(previous, changed.filter(id=>old.has(id)), profile);
   const after = institutionAffectedClosure(next, changed.filter(id=>current.has(id)), profile);
   return { schema: "finnor.p7.institution-affected-update.v1", change: changed.length ? "SEMANTIC" : "COSMETIC_OR_TRANSPORT",

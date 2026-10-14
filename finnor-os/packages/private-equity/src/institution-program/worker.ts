@@ -160,8 +160,8 @@ export async function runInstitutionCompilerJob(payload: Record<string, unknown>
     }
     const resolved = lowered ? await resolveInstitutionActions(ctx, result.original, lowered.responsibilities, profile)
       : { actions: [], gaps: [] };
-    const graph = lowered ? buildInstitutionDependencyGraph(result.candidate, lowered.responsibilities, profile)
-      : { schema:"finnor.p7.institution-dependencies.v1" as const,nodes:[],edges:[] };
+    const graph = lowered ? buildInstitutionDependencyGraph(result.candidate, lowered.responsibilities, profile, resolved.actions)
+      : { schema:"finnor.p7.institution-dependencies.v2" as const,nodes:[],edges:[] };
     const previousGraph = q.parent_request_id ? await tx(ctx, async c => (await c.query<{dependency_graph:InstitutionDependencyGraph}>(
       `SELECT a.dependency_graph FROM finnor_os.x1_compiler_artifacts a
        JOIN finnor_os.x1_compiler_requests r ON r.tenant_id=a.tenant_id AND r.artifact_id=a.id

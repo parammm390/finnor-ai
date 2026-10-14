@@ -83,18 +83,21 @@ export async function proposeInstitutionModel(
     existing.push(entity); byRegistration.set(entity.registrationId, existing);
   }
   const claimed: Array<{ row: Observation; data: ReturnType<typeof interpret>; kind: string; ref: string | null }> = [];
-  const addUnresolved = (row: Observation, reason: string, alternatives: string[] = []) => {
+  const addUnresolved = (row: Observation, reason: string, alternatives: string[] = [],
+    interpretation: "identity" | "relationship" = "identity") => {
     if (alternatives.length > bounds.alternativesPerInterpretation
         || unresolved.length >= bounds.unresolvedInterpretations) {
       throw new Error("X1_RECONSTRUCTION_BOUND: unresolved/alternative limit exceeded");
     }
-    const existing = unresolved.find((item) => item.sourceId === row.sourceId && item.recordId === row.objectId);
+    const existing = unresolved.find((item) => item.sourceId === row.sourceId && item.recordId === row.objectId
+      && (item.interpretation ?? "identity") === interpretation);
     if (existing) {
       existing.reason += `;${reason}`;
       existing.alternatives = [...new Set([...existing.alternatives, ...alternatives])];
       if (existing.alternatives.length > bounds.alternativesPerInterpretation) throw new Error("X1_RECONSTRUCTION_BOUND: alternatives exceeded");
     } else unresolved.push({ witness: key(row.sourceId, row.objectId),
-      sourceId: row.sourceId, recordId: row.objectId, reason, alternatives });
+      sourceId: row.sourceId, recordId: row.objectId, reason, alternatives,
+      ...(interpretation === "relationship" ? { interpretation } : {}) });
   };
   for (const row of decoded.observations) {
     const raw = fields(row), data = interpret(row, raw), { kind, registrationId, entityType } = data;
@@ -121,21 +124,24 @@ export async function proposeInstitutionModel(
     }
     if (kind === "entity" && ref) mappings.push({
       sourceId: row.sourceId, recordId: row.objectId, canonicalRef: ref, registrationId });
-    if (data.relationTarget && ref) {
+    if (data.relationTarget) {
       const related = (byRegistration.get(data.relationTarget) ?? [])
         .filter((entity) => entity.institutionId === original.institutionId
           &&(!entity.sourceId||entity.sourceId===row.sourceId)
           && entity.entityType === (data.entityType === "vehicle" ? "fund" : "counterparty"));
-      if (related.length === 1 && (data.entityType !== "vehicle"
+      const relationSemanticsCurrent = data.entityType !== "vehicle"
           || data.effectiveFrom && Number.isFinite(Date.parse(data.effectiveFrom))
             && data.effectiveFrom <= original.knowledgeCut
-            && ["feeder", "main"].includes(data.vehicleType ?? ""))) {
+            && ["feeder", "main"].includes(data.vehicleType ?? "");
+      if (ref && related.length === 1 && relationSemanticsCurrent) {
         relations.push({ sourceId: row.sourceId, recordId: row.objectId,
           canonicalRef: ref, registrationId, relation: data.entityType === "vehicle" ? "fund_vehicle" : "counterparty",
           targetRef: related[0]!.ref, targetRegistrationId: data.relationTarget,
           ...(data.entityType === "vehicle" ? { validFrom: data.effectiveFrom } : {}) });
-      } else if (related.length === 1) addUnresolved(row, "FUND_VEHICLE_VALID_FROM_MISSING", related.map((item) => item.ref));
-      else addUnresolved(row, "CROSS_REFERENCE_IDENTITY_NOT_ESTABLISHED", related.map((item) => item.ref));
+      } else if (related.length === 1 && !relationSemanticsCurrent)
+        addUnresolved(row, "FUND_VEHICLE_VALID_FROM_MISSING", related.map((item) => item.ref), "relationship");
+      else if (related.length !== 1)
+        addUnresolved(row, "CROSS_REFERENCE_IDENTITY_NOT_ESTABLISHED", related.map((item) => item.ref), "relationship");
     }
     if (kind === "quantity") {
       const { value, currency, unit, period, basis, factKey, occurredAt, availableAt } = data;

@@ -76,7 +76,7 @@ export type InstitutionCandidate = {
   obligations: Obligation[];
   dependencies: Record<string, unknown> & { sourceRevisions: Record<string, string> };
   limits: Record<string, number | null>;
-  unresolved?: { witness: string; sourceId?: string; recordId?: string;
+  unresolved?: { witness: string; sourceId?: string; recordId?: string; interpretation?: "identity" | "relationship";
     accountingContext?: string[]; recordRefs?: { sourceId: string; recordId: string }[];
     reason: string; alternatives: string[] }[];
   processHypotheses?: { witness: string; sourceId: string; recordId: string; interpretation: string; normative: false }[];
@@ -249,7 +249,9 @@ export async function independentlyCheckInstitutionModel(
   if (candidate.processHypotheses?.some((item) =>
     !records.has(recordKey(item.sourceId, item.recordId))
       || item.witness !== witness(item.sourceId, item.recordId))
-      || candidate.unresolved?.some((item) => item.sourceId !== undefined
+      || candidate.unresolved?.some((item) => item.interpretation !== undefined
+        && !["identity", "relationship"].includes(item.interpretation)
+        || item.sourceId !== undefined
         && (!records.has(recordKey(item.sourceId, item.recordId ?? ""))
           || item.witness !== witness(item.sourceId, item.recordId ?? "")))) {
     return fail("COVERAGE", "Descriptive or unresolved reference lacks a typed original identity");
@@ -290,7 +292,8 @@ export async function independentlyCheckInstitutionModel(
   };
   const unresolvedFor = (sourceId: string, record: RawRecord, options: string[]): InstitutionCheck | null => {
     const key = witness(sourceId, record.id);
-    const basis = candidate.unresolved?.find((item) => item.sourceId === sourceId && item.recordId === record.id);
+    const basis = candidate.unresolved?.find((item) => item.sourceId === sourceId && item.recordId === record.id
+      && (item.interpretation ?? "identity") === "identity");
     if (!basis || typeof basis.reason !== "string" || !basis.reason
         || basis.witness !== key || !Array.isArray(basis.alternatives)) return fail("COVERAGE", `Unresolved original omitted ${key}`, [recordKey(sourceId, record.id)]);
     if (options.length > profile.bounds.alternativesPerInterpretation
@@ -318,7 +321,8 @@ export async function independentlyCheckInstitutionModel(
       const invalid = unresolvedFor(source.id, record, optionsFor(record,source.id));
       if (invalid) return invalid;
       if(record.entityType==='vehicle'&&!record.vehicleType&&optionsFor(record,source.id).length===0
-        &&candidate.unresolved?.find(g=>g.sourceId===source.id&&g.recordId===record.id)?.reason
+        &&candidate.unresolved?.find(g=>g.sourceId===source.id&&g.recordId===record.id
+          &&(g.interpretation??"identity")==="identity")?.reason
           !=='VEHICLE_TYPE_REQUIRED_FOR_CANONICAL_CREATION')
         return fail('IDENTITY','Missing native Vehicle type requires an exact creation gap',[key]);
       if (proposal) return fail("IDENTITY", `Ambiguous original cannot support mapping ${key}`, [key]);
@@ -349,7 +353,9 @@ export async function independentlyCheckInstitutionModel(
       &&entity.entityType===(record.relation==="fund_vehicle"?"fund":"counterparty")
       && entity.registrationId === record.relationRegistrationId).map((entity) => entity.ref);
     const gap = candidate.unresolved?.find((item) => item.sourceId === source.id && item.recordId === record.id
-      && item.witness === witness(source.id, record.id));
+      && item.witness === witness(source.id, record.id)
+      && (item.interpretation === "relationship" || item.interpretation === undefined
+        && canonicalRef(record.registrationId, record.entityType, source.id) !== null));
     if (!gap || alternatives.length > profile.bounds.alternativesPerInterpretation
         || !same([...alternatives].sort(), [...gap.alternatives].sort())) {
       return fail("IDENTITY", `Cross-reference alternatives differ ${source.id}/${record.id}`);

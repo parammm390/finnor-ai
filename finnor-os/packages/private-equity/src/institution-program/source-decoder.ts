@@ -22,6 +22,31 @@ export interface DecodedInstitutionSource {
 }
 
 const fail = (reason: string): never => { throw new Error(`X1_SOURCE_BOUND_OR_COVERAGE: ${reason}`); };
+/** JSON numeric tokens are decimal source evidence. Never materialize their
+ * meaning from the already rounded Number passed to a JSON reviver. */
+function sourceJson(raw: string): unknown {
+  return JSON.parse(raw, (_key, value: unknown, context?: { source?: string }) => {
+    if (typeof value !== "number") return value;
+    const match = /^(-?)(0|[1-9]\d*)(?:\.(\d+))?(?:[eE]([+-]?\d+))?$/.exec(context?.source ?? "");
+    if (!match) return fail("original JSON numeric lexeme unavailable");
+    const fraction = match[3] ?? "";
+    let coefficient = (match[2]! + fraction).replace(/^0+/, "");
+    if (!coefficient) return "0";
+    const exponent = Number(match[4] ?? "0");
+    if (!Number.isSafeInteger(exponent)) return fail("numeric decimal representation bound");
+    let shift = exponent - fraction.length;
+    const trailing = /0+$/.exec(coefficient)?.[0].length ?? 0;
+    if (trailing) { coefficient = coefficient.slice(0, -trailing); shift += trailing; }
+    const point = coefficient.length + shift;
+    const width = match[1]!.length + (shift >= 0 ? point : point > 0
+      ? coefficient.length + 1 : 2 - point + coefficient.length);
+    if (width > 128) return fail("numeric decimal representation bound");
+    const decimal = shift >= 0 ? coefficient + "0".repeat(shift)
+      : point > 0 ? coefficient.slice(0, point) + "." + coefficient.slice(point)
+        : "0." + "0".repeat(-point) + coefficient;
+    return match[1] + decimal;
+  });
+}
 function asFields(value: unknown): Record<string, string> {
   if (!value || typeof value !== "object" || Array.isArray(value)) return fail("record must be an object");
   return Object.fromEntries(Object.entries(value).filter(([, item]) => item !== null && item !== undefined).map(([key, item]) => {
@@ -146,12 +171,12 @@ function workbook(bytes: Buffer): Record<string, string>[] {
 async function decode(protocol: string, raw: string, bytes: Buffer): Promise<Record<string, string>[]> {
   switch (protocol) {
     case "json_records": {
-      const data: unknown = JSON.parse(raw);
+      const data: unknown = sourceJson(raw);
       if (!Array.isArray(data)) return fail("JSON records array required");
       return data.map(asFields);
     }
     case "paginated_json": {
-      const data = JSON.parse(raw) as { pages?: { cursor: string; nextCursor: string | null; records: unknown[] }[] };
+      const data = sourceJson(raw) as { pages?: { cursor: string; nextCursor: string | null; records: unknown[] }[] };
       if (!Array.isArray(data.pages) || !data.pages.length) return fail("paginated JSON pages absent");
       let cursor = "start"; const seen = new Set<string>();
       const rows = data.pages.flatMap((page) => {

@@ -69,8 +69,8 @@ export async function readUnaffectedInstitutionHistory(ctx: PeMutationContext, c
     prior.institution.responsibilities, prior.institution.unresolved);
   const profile = loadInstitutionProfile();
   const update = compareInstitutionDependencies(
-    buildInstitutionDependencyGraph(row.prior_candidate, prior.institution.responsibilities, profile),
-    buildInstitutionDependencyGraph(row.current_candidate, head.institution.responsibilities, profile), profile);
+    buildInstitutionDependencyGraph(row.prior_candidate, prior.institution.responsibilities, profile, prior.institution.actions ?? []),
+    buildInstitutionDependencyGraph(row.current_candidate, head.institution.responsibilities, profile, head.institution.actions ?? []), profile);
   const preserved = new Set(update.preservedCurrentDutyIds);
   const priorHead = { programId: prior.id, headId: row.prior_head_id, headDigest: row.prior_head_digest! };
   const observations: InstitutionHarnessProgram["observedPostconditions"] = [];
