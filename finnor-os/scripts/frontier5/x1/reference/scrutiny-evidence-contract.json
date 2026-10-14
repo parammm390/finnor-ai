@@ -175,5 +175,15 @@
     "missing-source-reconstruction",
     "unaccounted-checker-case"
   ],
-  "scope": "DEVELOPMENT_EVIDENCE_INTEGRITY_ONLY; native independent acceptance, protected custody and admission remain separate; historical diagnostic is PARTIAL and original FAILs remain FAIL."
+  "scope": "DEVELOPMENT_EVIDENCE_INTEGRITY_ONLY; native independent acceptance, protected custody and admission remain separate; historical diagnostic is PARTIAL and original FAILs remain FAIL.",
+  "historicalObserverDirty": {
+    "role": "upgrade",
+    "sourceCommit": "08c215c6bce94ebb1cf578bdca863ad706684a0c",
+    "dirty": "M finnor-os/scripts/frontier5/x1/run-owner-slice.mts",
+    "dirtyDiffDigest": "4fcd67dab3feb3c74dbc52f32c074538cdd1c0ff38a5bbc91abfa8f9efdbfb07",
+    "committedObserverCut": "f4b51a00b0d911f34a77b31ab0a27a3350c368b0",
+    "path": "finnor-os/scripts/frontier5/x1/run-owner-slice.mts",
+    "sha256": "f61a94fafc61c865cf937178243af8c7a8a0d0dcffee609215f52962f8463119",
+    "reason": "Upgrade executed exact installed006 product source08c with the one observer SQL projection fix later committed verbatimf4b. All actual driver source preimages are pinned; no compiled owner, schema, checker or application product change."
+  }
 }

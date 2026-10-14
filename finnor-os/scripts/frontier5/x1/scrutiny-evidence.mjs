@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 
 // Development custody and finite evidence integrity, not a business-truth oracle.
 export function auditScrutinyEvidence({ repo, controlRoot, source, ledgerPath }) {
+  repo = realpathSync(repo);
   const checked = [], compatibility = [], root = realpathSync(controlRoot);
   const refuse = (code, detail) => { const error = new Error(`${code}: ${detail}`); error.code = code; throw error; };
   const requireThat = (condition, code, detail) => { if (!condition) refuse(code, detail); };
@@ -81,8 +82,14 @@ export function auditScrutinyEvidence({ repo, controlRoot, source, ledgerPath })
     const binding = ledger.owners?.[role];
     requireThat(binding?.run && binding?.results && binding?.worker, 'REQUIRED_ROLE', role);
     const result = pinned(binding.results), run = pinned(binding.run), worker = pinned(binding.worker);
+    const observer = contract.historicalObserverDirty;
+    const observedDirty = role === observer.role && result.source?.commit === observer.sourceCommit
+      && result.source.dirty === observer.dirty && result.source.dirtyDiffDigest === observer.dirtyDiffDigest
+      && sha(git('diff', '--binary', observer.sourceCommit, observer.committedObserverCut).toString().trim()) === observer.dirtyDiffDigest
+      && result.source.pins?.some(pin => pin.path === observer.path && pin.sha256 === observer.sha256)
+      && sha(git('show', `${observer.committedObserverCut}:${observer.path}`)) === observer.sha256;
     requireThat(result.status === 'PASS_LOCAL_OWNER_SLICE' && result.sourceUnchanged === true
-      && result.source?.dirty === '' && acceptedCuts.has(result.source.commit)
+      && (result.source?.dirty === '' || observedDirty) && acceptedCuts.has(result.source.commit)
       && run.source?.commit === result.source.commit && run.ownerResult?.sha256 === binding.results.sha256
       && run.status === 'DEVELOPMENT_NAMED_OWNER_CASE_PASS'
       && run.commands?.length > 0 && run.commands.every(c => c.exitCode === 0 && !c.signal), 'OWNER', `${role}: raw owner run failed or substituted`);
