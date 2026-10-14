@@ -89,7 +89,11 @@ type State={candidate:InstitutionCompilerCandidate;protocol:Signed<z.infer<typeo
 export class InstitutionCapabilityPort {
   private states=new Map<string,State>();
   private consumedCases=new Set<string>();
-  constructor(private policy:Policy){}
+  constructor(private policy:Policy){
+    if(policy.institutionCompiler&&policy.evaluatorKeys.some(evaluator=>
+      policy.promotionKeys.some(promoter=>promoter.principalId===evaluator.principalId)))
+      fault("S8_X1_AUTHORITY_NOT_SEPARATED",503);
+  }
   replay(entry:JournalEntry){
     if(entry.operation==="INSTITUTION_PROPOSE"){
       const candidate=parseInstitutionCompilerCandidate(entry.body);
