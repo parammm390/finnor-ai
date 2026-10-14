@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import type { DigitalInstitutionProfile } from "./contracts";
-import { originalRawRecords } from "./checker-raw";
+import { originalRawRecords, OriginalQuantityContextError } from "./checker-raw";
 import { institutionOwnerCutDigest,canonicalInstitutionJson } from "./canonical-json";
 
 type Source = {
@@ -225,7 +225,8 @@ export async function independentlyCheckInstitutionModel(
     try {
       rows = await originalRawRecords(source, profile.bounds.tabularRowsPerObject, profile.bounds.objectBytes);
     } catch (error) {
-      return fail("COVERAGE", `Invalid or unsupported original ${source.id}: ${error instanceof Error ? error.message : "parse failure"}`, [source.id]);
+      return fail(error instanceof OriginalQuantityContextError ? "QUANTITY" : "COVERAGE",
+        `Invalid or unsupported original ${source.id}: ${error instanceof Error ? error.message : "parse failure"}`, [source.id]);
     }
     if (!source.coverage.complete || !unique(source.coverage.expectedObjectIds)
         || !unique(source.coverage.readObjectIds)

@@ -78,6 +78,8 @@ for (const path of [
   "finnor-os/scripts/frontier5/x1/qualification-cases.mts",
   'finnor-os/scripts/frontier5/x1/reconstruction-timing-cases.mjs',
   'finnor-os/scripts/frontier5/x1/reference/reconstruction-timing-native-review-contract.md',
+  'finnor-os/scripts/frontier5/x1/numeric-context-cases.mjs',
+  'finnor-os/scripts/frontier5/x1/reference/numeric-context-native-review-contract.md',
   "finnor-os/scripts/frontier5/x1/reference/qualification-contract.md",
   "finnor-os/packages/private-equity/src/institution-program/checker.ts",
   "finnor-os/packages/private-equity/src/institution-program/checker-process.ts",
@@ -319,6 +321,7 @@ if (stage === "kernel" || stage === "scrutiny") {
   run("reconstruction", process.execPath, ["./node_modules/tsx/dist/cli.mjs", "scripts/frontier5/x1/reconstruction-cases.mts"], os, manifest.limits.kernelNodeHeapMiB);
   run('reconstruction-replay-timing',process.execPath,['--import=tsx','scripts/frontier5/x1/reconstruction-timing-cases.mjs',join(destination,'reconstruction-replay-timing')],os,manifest.limits.kernelNodeHeapMiB);
   run("checker-review", process.execPath, ["./node_modules/tsx/dist/cli.mjs", "scripts/frontier5/x1/review-cases.mts"], os, manifest.limits.kernelNodeHeapMiB);
+  run('checker-original-nominal-types',process.execPath,['--import=tsx','scripts/frontier5/x1/numeric-context-cases.mjs',join(destination,'checker-original-nominal-types')],os,manifest.limits.kernelNodeHeapMiB);
   run("native-corpus", process.execPath, ["./node_modules/tsx/dist/cli.mjs", "scripts/frontier5/x1/native-cases.mts"], os, manifest.limits.kernelNodeHeapMiB);
   run("native-finish", process.execPath, ["./node_modules/tsx/dist/cli.mjs", "scripts/frontier5/x1/native-finish-cases.mts"], os, manifest.limits.kernelNodeHeapMiB);
   run("native-creation", process.execPath, ["./node_modules/tsx/dist/cli.mjs", "scripts/frontier5/x1/creation-native-cases.mts"], os, manifest.limits.kernelNodeHeapMiB);

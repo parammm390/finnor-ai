@@ -21,9 +21,18 @@ type RecordRow = {
 
 // Independent original-format reader. No producer normalization/inference is
 // imported: the raw token, not IEEE-754's rounded result, fixes its decimal.
+const quantityTextFields = new Set([
+  "factkey", "currency", "unit", "period", "basis", "occurredat", "availableat",
+  "account", "description", "accountingbasis", "postedat", "asof",
+]);
+export class OriginalQuantityContextError extends Error {}
+
 function originalJson(raw: string): unknown {
-  return JSON.parse(raw, (_key, parsed: unknown, context?: { source?: string }) => {
+  return JSON.parse(raw, (key, parsed: unknown, context?: { source?: string }) => {
     if (typeof parsed !== "number") return parsed;
+    // Nominal context must retain its original scalar type. Exact decimal
+    // normalization applies to amounts/identities, never currency/unit labels.
+    if (quantityTextFields.has(key.replace(/[^a-z0-9]/gi, "").toLowerCase())) return parsed;
     const token = context?.source;
     const parts = typeof token === "string"
       ? /^(-?)(\d+)(?:\.(\d+))?(?:[Ee]([+-]?\d+))?$/.exec(token) : null;
@@ -104,6 +113,10 @@ function requireRows(value: unknown, limit: number, sourceClass: string): Record
       result.availableAt = string("availableat");
     }
     if (kind === "quantity") {
+      if (Object.entries(attributes).some(([key, value]) => quantityTextFields.has(key)
+          && value !== undefined && typeof value !== "string")) {
+        throw new OriginalQuantityContextError(`Malformed original quantity context ${id}`);
+      }
       result.value = string("amount", "balance", "outstanding");
       result.factKey = string("account", "description")?.toLowerCase().replace(/\s+/g, "_")
         ?? (sourceClass === "lender_portal" ? "outstanding" : undefined);
