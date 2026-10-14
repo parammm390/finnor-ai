@@ -31,6 +31,7 @@ import {reviewOwnerAdmission,OwnerAdmissionReviewFinished} from './owner-admissi
 import {reviewResourceOwners} from './resource-owner-review.mts';
 import {installFinalHeadFenceGate,reviewFinalHeadFence} from './final-head-fence-review.mts';
 import {reviewS6Guards} from './s6-guard-review.mts';
+import {reviewPublicationRace} from './publication-race-review.mts';
 
 import {mountedRaceReview} from './mounted-race-review.mts';
 import {readQualificationCursor} from './qualification-state-journal.mts';
@@ -54,6 +55,7 @@ const hostileOriginal=process.env.FINNOR_X1_OWNER_MODE==='raw_instructions';
 const protectedGuardReview=process.env.FINNOR_X1_OWNER_MODE==='protected_guards';
 const resourceReview=process.env.FINNOR_X1_OWNER_MODE==='resource_review';
 const headFenceReview=process.env.FINNOR_X1_OWNER_MODE==='head_fence_review';
+const publicationRace=process.env.FINNOR_X1_OWNER_MODE==='publication_race';
 const reportingChanges=process.env.FINNOR_X1_OWNER_MODE==='reporting_changes';
 const authorityEpoch=process.env.FINNOR_X1_OWNER_MODE==='authority_epoch';
 const sensitiveCoverage=process.env.FINNOR_X1_OWNER_MODE==='sensitive_coverage';
@@ -85,7 +87,7 @@ const cancelObserved=process.env.FINNOR_X1_OWNER_MODE==='cancel_observed';
 const publicationMeter=process.env.FINNOR_X1_OWNER_MODE==='publication_meter';
 const diagnostic=process.env.FINNOR_X1_OWNER_MODE==='diagnostic';
 const qualificationExecution=process.env.FINNOR_X1_OWNER_MODE==='qualification_execution';
-if(process.env.FINNOR_X1_OWNER_MODE&&!['api','mounted','ui_review','revision','material','heterogeneous','canonical','creation','recovery','child_recovery','effect_recovery','cancel_possible','ordinary','domain','owner_inputs','reporting_changes','authority_epoch','sensitive_coverage','personnel','source_namespace','upgrade','checker_crash','contention','active_contention','unsupported','unsupported_operation','cancel_observed','publication_meter','diagnostic','qualification_execution','qualification_population','admission_review','raw_instructions','protected_guards','resource_review','head_fence_review'].includes(process.env.FINNOR_X1_OWNER_MODE))
+if(process.env.FINNOR_X1_OWNER_MODE&&!['api','mounted','ui_review','revision','material','heterogeneous','canonical','creation','recovery','child_recovery','effect_recovery','cancel_possible','ordinary','domain','owner_inputs','reporting_changes','authority_epoch','sensitive_coverage','personnel','source_namespace','upgrade','checker_crash','contention','active_contention','unsupported','unsupported_operation','cancel_observed','publication_meter','diagnostic','qualification_execution','qualification_population','admission_review','raw_instructions','protected_guards','resource_review','head_fence_review','publication_race'].includes(process.env.FINNOR_X1_OWNER_MODE))
   throw Error('EXACT_REGISTERED_OWNER_MODE_REQUIRED');
 if((hostileOriginal||protectedGuardReview||mounted||material||heterogeneous||canonical||recovery||effectRecovery||ordinary||upgrade||checkerCrash||contention||activeContention||unsupported||cancelObserved||authorityEpoch)&&dutyCount!==1)throw Error('NAMED_ONE_DUTY_SCENARIO_REQUIRED');
 if(process.env.FINNOR_X1_OWNER_CASE&&!['1','128'].includes(process.env.FINNOR_X1_OWNER_CASE))
@@ -116,6 +118,7 @@ const sourcePaths = ["finnor-os/scripts/frontier5/x1/run-owner-slice.mts", "finn
   'finnor-os/scripts/frontier5/x1/admission-mail-fixture.mts',
   'finnor-os/scripts/frontier5/x1/resource-owner-review.mts',
   'finnor-os/scripts/frontier5/x1/final-head-fence-review.mts',
+  'finnor-os/scripts/frontier5/x1/publication-race-review.mts',
   'finnor-os/scripts/frontier5/x1/qualification-runtime.mts',
   'finnor-os/scripts/frontier5/x1/qualification-state-journal.mts','finnor-os/scripts/frontier5/x1/qualification-owner-exercise.mts',
   'finnor-os/scripts/frontier5/x1/qualification-native-worker.mts','finnor-os/scripts/frontier5/x1/qualification-population.mts',
@@ -133,7 +136,7 @@ const freeze = { installation:installedManifest?{root:installation,manifestDiges
   runtime: { node: process.version, platform: process.platform, arch: process.arch },
   profile: "DISPOSABLE_LOCAL_AUTH_SERVICE_ACTUAL_BEARER_AND_RLS", hostedSupabaseQualified: false,
   authDevBypass: false, expectedMigrations: 192, limits, freeBytesBefore: String(diskBefore), dutyCount,mounted,
-  cases: cancelPossible?["E-cancel-possible-effect-and-stale-generation-delivery","G-physical-validation-lifecycle-original-parent"]:uiReview?["A-quantitative-semantic-owner-assertions","A-authenticated-owner-creation","G-authenticated-api-compute-attribution",
+  cases: publicationRace?["E-concurrent-initial-publication-and-authenticated-revision","G-physical-validation-lifecycle-original-parent"]:cancelPossible?["E-cancel-possible-effect-and-stale-generation-delivery","G-physical-validation-lifecycle-original-parent"]:uiReview?["A-quantitative-semantic-owner-assertions","A-authenticated-owner-creation","G-authenticated-api-compute-attribution",
     "U1-returned-Work-requires-new-owner-read","U2-older-refresh-cannot-replace-newer-programme","U3-navigation-fences-accepted-creation","G-physical-validation-lifecycle-original-parent"]:headFenceReview?["E-final-mutation-requires-latest-accepted-compiler-head","G-physical-validation-lifecycle-original-parent"]:admissionReview?["C-owner-concurrent-grant-publication-serialization","C-owner-mapped-intact-admission-replay","C-owner-ambiguous-source-truth-replay","C-owner-source-truth-restored-control","C-owner-remapped-source-truth-replay","C-owner-changed-digest-admission-replay","C-owner-tombstoned-source-truth-replay"]:["A-raw-two-identity-native-request", "C-unsigned-forged-input", "D-same-key-replay", "G-restricted-roles",
     ...(material?['B-ledger-correction']:[]),...(heterogeneous?['A-eight-class-original-corpus']:[]),
     ...(canonical?['A-fourteen-canonical-kinds']:[]),...(recovery?[childRecovery?'D-accepted-native-child-before-parent-publication-death':'D-compiler-before-publication-death']:[]),
@@ -877,7 +880,7 @@ try {
     ...(recovery||effectRecovery?{WORKER_JOB_LEASE_SECONDS:'5'}:{}),
     ...(effectRecovery?{FINNOR_STEP_LEASE_SECONDS:'5'}:{}) };
   if(diagnostic){env.FINNOR_X1_DIAGNOSTIC_CONTROL=diagnosticControls!.on;env.GROQ_API_KEY=diagnosticKey;env.P3_GOVERNORS='1';}
-  if(recovery||effectRecovery||activeContention){publicationBlocker=new pg.Client({connectionString:connection('x1_fixture',password)});
+  if(recovery||effectRecovery||activeContention||publicationRace){publicationBlocker=new pg.Client({connectionString:connection('x1_fixture',password)});
     await publicationBlocker.connect();
     if(activeContention){
       await publicationBlocker.query('SELECT pg_advisory_lock(77152,1)');
@@ -889,7 +892,7 @@ try {
     }else{
     await publicationBlocker.query('BEGIN');
     await publicationBlocker.query(effectRecovery?'LOCK TABLE finnor_os.pe_requests IN SHARE MODE'
-      :childRecovery?'LOCK TABLE finnor_os.x1_compiler_artifacts IN SHARE MODE'
+      :childRecovery||publicationRace?'LOCK TABLE finnor_os.x1_compiler_artifacts IN SHARE MODE'
       :'LOCK TABLE finnor_os.x1_mapping_admissions IN SHARE MODE');}}
   let logBytes=0;
   if(qualificationExecution){
@@ -966,6 +969,13 @@ try {
   }
   let guardFailure: string | null = null;
   guard = setInterval(() => { void take().catch(error => { guardFailure = String(error.message); worker?.kill("SIGTERM"); }); }, 2000);
+  if(publicationRace){
+    await reviewPublicationRace({admin,tenant,principal:actor,requestId:compilerId!,workId,submit:input,
+      expectedRequestText:expected.requestTexts[0],save,api,results,
+      release:async()=>{await publicationBlocker!.query('ROLLBACK');await publicationBlocker!.end();publicationBlocker=undefined;},
+      assertLive:()=>{if(guardFailure)throw Error(guardFailure);if(worker!.exitCode!==null||worker!.signalCode!==null)throw Error('OWNED_WORKER_STOPPED_BEFORE_PUBLICATION_RACE');}});
+    throw new OwnerAdmissionReviewFinished('Frozen initial publication and authenticated concurrent revision completed');
+  }
   if(activeContention){
     let firstWait:any,firstClaim:any;
     for(let poll=0;poll<240;poll++){

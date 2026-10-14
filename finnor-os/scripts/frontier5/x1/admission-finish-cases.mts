@@ -50,7 +50,7 @@ check("rehydrated-write-inputs", () => {
   const start = admission.indexOf("function admitCheckedInstitutionMappings");
   assert.notEqual(start, -1, "admission function missing");
   const body = admission.slice(start);
-  assert.equal(body.includes("retained"), false,
+  assert.equal(/\bretained\b/.test(body), false,
     `caller retained array still read inside admission: ${excerpt(body, "retained")}`);
   assert.ok(body.includes("rereadSources"), "admission does not rehydrate owner sources");
   assert.ok(body.includes("sources.find("), "write inputs do not resolve from rehydrated sources");
@@ -92,9 +92,14 @@ check("owner-knowledge-cut", () => {
 check("replay-source-truth-readback", () => {
   const replay = admission.slice(admission.indexOf("X1_ADMISSION_REPLAY_DIGEST_MISMATCH"),
     admission.indexOf("X1_ORIGINAL_OR_CURRENT_OWNER_CUT_MISMATCH"));
-  assert.ok(replay.includes("receipt.sourceTruthLinkId"), "replay never re-reads the Source Truth link");
-  assert.ok(replay.includes("external_refs"), "replay Source Truth check does not read the owner link table");
-  assert.ok(replay.includes("X1_ADMISSION_REPLAY_SOURCE_TRUTH_CHANGED"),
+  const helperStart=admission.indexOf('export async function assertInstitutionMappingReceiptsCurrent(');
+  assert.ok(helperStart>=0,'shared receipt verifier missing');
+  const verifier=admission.slice(helperStart,admission.indexOf('async function admitCheckedInstitutionMappings'));
+  assert.ok(replay.includes('await assertInstitutionMappingReceiptsCurrent(ctx, current.original.canonical.entities.map(entity => entity.ref), prior.rows[0].receipts)'),
+    'replay must await the shared verifier on current owner refs and stored receipts');
+  assert.ok(verifier.includes("receipt.sourceTruthLinkId"), "replay never re-reads the Source Truth link");
+  assert.ok(verifier.includes("external_refs"), "replay Source Truth check does not read the owner link table");
+  assert.ok(verifier.includes("X1_ADMISSION_REPLAY_SOURCE_TRUTH_CHANGED"),
     "replay Source Truth mismatch has no named refusal");
 });
 

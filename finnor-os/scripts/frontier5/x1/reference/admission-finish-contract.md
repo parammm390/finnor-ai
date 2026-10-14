@@ -69,3 +69,15 @@ deterministic tenant-sealed IDs, no invented Deal prerequisites, idempotent
 digest-bound replay, Graph pin enforcement, forced tenant RLS, and fail-closed
 unsupported provider families (frozen profile declares
 `installed_source_adapter` only under email).
+
+Repair-cut observer clarification (1bf61cc): kernel002 retains two source-text
+observer failures after the actual Microsoft owner and publication recovery
+repairs. `retainedAt` is a server retention timestamp, not the caller's
+`retained` array. Match the exact array identifier. Receipt readback was
+extracted into `assertInstitutionMappingReceiptsCurrent`, shared by original
+replay and accepted-child recovery. Trace the awaited replay call with the
+current canonical owner refs and stored receipts, then inspect that helper's
+unchanged Source Truth predicates. Do not remove either invariant or change
+its expectation. Actual owner admission-complete004 already independently
+exercised intact, ambiguous, remapped and tombstoned receipts; source-text
+inspection itself remains component evidence only.

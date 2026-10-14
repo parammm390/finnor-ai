@@ -28,7 +28,7 @@ const ownerCases={owners:{'one-duty':{count:'1',mode:'api'},'128-duty':{count:'1
   lifecycle:{material:{count:'1',mode:'material'},'reporting-changes':{count:'1',mode:'reporting_changes'},'staff-epoch':{count:'1',mode:'authority_epoch'},'sensitive-coverage':{count:'1',mode:'sensitive_coverage'},personnel:{count:'1',mode:'personnel'},recovery:{count:'1',mode:'recovery'},'accepted-child-recovery':{count:'1',mode:'child_recovery'},
     contention:{count:'1',mode:'contention'},'active-contention':{count:'1',mode:'active_contention'},unsupported:{count:'1',mode:'unsupported'},'unsupported-operation':{count:'1',mode:'unsupported_operation'},'checker-crash':{count:'1',mode:'checker_crash'},
     'cancel-observed':{count:'1',mode:'cancel_observed'},'publication-meter':{count:'1',mode:'publication_meter'},
-    'effect-recovery':{count:'1',mode:'effect_recovery'},'cancel-possible':{count:'1',mode:'cancel_possible'},'resource-review':{count:'1',mode:'resource_review'},'head-fence-review':{count:'1',mode:'head_fence_review'}},mounted:{mounted:{count:'1',mode:'mounted'},'ui-review':{count:'1',mode:'ui_review'}},
+    'effect-recovery':{count:'1',mode:'effect_recovery'},'cancel-possible':{count:'1',mode:'cancel_possible'},'resource-review':{count:'1',mode:'resource_review'},'head-fence-review':{count:'1',mode:'head_fence_review'},'publication-race':{count:'1',mode:'publication_race'}},mounted:{mounted:{count:'1',mode:'mounted'},'ui-review':{count:'1',mode:'ui_review'}},
   diagnostic:{'matched-native':{count:'1',mode:'diagnostic'}},
   installed:{'schema-upgrade':{count:'1',mode:'upgrade'},delivery:{count:'1',mode:'owner_inputs'},
     'upgrade-installed':{count:'1',mode:'upgrade'}}};
@@ -132,6 +132,8 @@ for (const path of [
   'finnor-os/scripts/frontier5/x1/reference/scrutiny-evidence-contract.md',
   'finnor-os/scripts/frontier5/x1/run-owner-slice.mts',
   'finnor-os/scripts/frontier5/x1/s6-guard-review.mts',
+  'finnor-os/scripts/frontier5/x1/publication-race-review.mts',
+  'finnor-os/scripts/frontier5/x1/reference/publication-race-native-review-contract.md',
   'finnor-os/scripts/s6/run-obligation-e2e.mts',
   'finnor-os/scripts/frontier5/x1/mounted-race-review.mts',
   'finnor-os/scripts/frontier5/x1/qualification-full-contract-cases.mjs',
