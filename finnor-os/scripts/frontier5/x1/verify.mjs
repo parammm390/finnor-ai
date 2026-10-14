@@ -120,6 +120,9 @@ for (const path of [
   "finnor-os/packages/private-equity/package.json",
   "finnor-os/package-lock.json",
   "finnor-os/scripts/frontier5/x1/verify.mjs",
+  'finnor-os/scripts/frontier5/x1/scrutiny-evidence.mjs',
+  'finnor-os/scripts/frontier5/x1/reference/scrutiny-evidence-contract.json',
+  'finnor-os/scripts/frontier5/x1/reference/scrutiny-evidence-contract.md',
   'finnor-os/scripts/frontier5/x1/run-owner-slice.mts',
   'finnor-os/scripts/frontier5/x1/authenticated-api-fixture.mts',
   'finnor-os/scripts/frontier5/x1/physical-owner-worker.mts',
@@ -276,6 +279,7 @@ const run = (label, binary, argv, cwd, heapMiB) => {
     elapsedMs: Date.now() - started, outputSha256: sha(text), outputBytes: Buffer.byteLength(text) };
   record.commands.push(step);
   if (child.error || child.status !== 0) finish("FAIL", 1, `${label} failed; original output retained in ${label}.log`);
+  return text;
 };
 if (stage === "kernel" || stage === "scrutiny") {
   run("kernel", process.execPath, ["./node_modules/tsx/dist/cli.mjs", "scripts/frontier5/x1/kernel.mts"], os, manifest.limits.kernelNodeHeapMiB);
@@ -295,6 +299,7 @@ if (stage === "static" || stage === "scrutiny") {
     run("x1-owner-typecheck", process.execPath, ["./node_modules/typescript/bin/tsc", "-p", "scripts/frontier5/x1/tsconfig.oracle.json",
       "--noUnusedLocals", "false", "--noUnusedParameters", "false"], os, manifest.limits.smallCheckNodeHeapMiB);
     run("runner-syntax", process.execPath, ["--check", "finnor-os/scripts/frontier5/x1/verify.mjs"], repo, manifest.limits.smallCheckNodeHeapMiB);
+    run("scrutiny-audit-syntax", process.execPath, ["--check", "finnor-os/scripts/frontier5/x1/scrutiny-evidence.mjs"], repo, manifest.limits.smallCheckNodeHeapMiB);
   }
   if (!only || only === "lint") {
     run("oracle-lint", process.execPath, ["node_modules/eslint/bin/eslint.js", "--config",
@@ -345,7 +350,13 @@ if (stage !== "kernel" && stage !== "static" && stage !== "scrutiny" && stage !=
   finish("NOT_IMPLEMENTED_NOT_RUN", 2, "This frozen stage has no implementation in this feature");
 }
 if (stage === "scrutiny") {
-  finish("INCOMPLETE_NOT_RUN", 2, "Offline kernel/static passed; required owner, mounted, installed and protected stages have no evidence");
+  const output = run('retained-development-evidence-audit', process.execPath,
+    ['finnor-os/scripts/frontier5/x1/scrutiny-evidence.mjs'], repo, manifest.limits.smallCheckNodeHeapMiB);
+  record.evidenceAudit = JSON.parse(output);
+  record.pending = ['native-independent-acceptance', 'protected-population-qualification', 'existing-S8-signed-admission',
+    'protected-S6-operation-authority', 'production-activation', 'operational-and-financial-100x', 'H2'];
+  finish('DEVELOPMENT_EVIDENCE_AUDIT_PASS', 0,
+    'Bounded offline checks and pinned development evidence audit passed; native independent acceptance and external qualification remain separate');
 }
 finish("DEVELOPMENT_OFFLINE_PASS", 0,
   "Selected bounded offline commands passed; owner persistence, installed bytes and protected qualification remain NOT RUN");

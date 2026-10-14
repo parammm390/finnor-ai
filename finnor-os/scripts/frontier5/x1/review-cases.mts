@@ -82,6 +82,27 @@ const cases: Record<string, ReturnType<typeof copy>> = {};
 }
 
 const observations: Record<string, string> = {};
+{
+  const test = copy();
+  // Original frozen RULE expectation: an exception request supplies no mandate.
+  test.original.sources.push({ ...test.original.sources[0]!, id: 'mail-exception', sourceClass: 'email', protocol: 'rfc822',
+    revision: 'mail-r1', rawUtf8: 'Message-ID: <exception-request@firm.invalid>\nFrom: analyst@firm.invalid\nTo: approver@firm.invalid\nDate: Sat, 10 Oct 2026 10:00:00 +0000\nSubject: Exception requested\nX-Institution-Available-At: 2026-10-10T10:01:00.000Z\n\nPlease approve an exception for Harbor; this is a request, no approval has been granted.',
+    coverage: { complete: true, expectedObjectIds: ['exception-request'], readObjectIds: ['exception-request'] } });
+  test.original.current.sourceRevisions['mail-exception'] = 'mail-r1';
+  test.candidate.dependencies.sourceRevisions['mail-exception'] = 'mail-r1';
+  test.candidate.coverage.push('mail-exception');
+  test.candidate.obligations[0]!.ruleId = 'emailed-exception-request';
+  test.candidate.processHypotheses = [{ sourceId: 'mail-exception', recordId: 'exception-request',
+    witness: 'mail-exception/exception-request', interpretation: 'Email exception request constitutes approval', normative: true as false }];
+  cases.emailExceptionNotApproval = test;
+}
+{
+  const test = copy();
+  // Both originals are named Harbor; their different registrations remain binding.
+  test.candidate.mappings[1]!.canonicalRef = test.candidate.mappings[0]!.canonicalRef;
+  cases.unscopedNameCollision = test;
+}
+assert.deepEqual(Object.keys(cases).sort(), Object.keys(frozen).sort(), 'Every frozen checker challenge must execute');
 for (const [name, { original, candidate }] of Object.entries(cases)) {
   const check = await independentlyCheckInstitutionModel(original, candidate, profile);
   observations[name] = check.disposition === "REJECTED" ? check.guard : "ACCEPTED";

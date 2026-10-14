@@ -1,0 +1,179 @@
+{
+  "schema": "finnor.x1.scrutiny-evidence-contract.v1",
+  "frozenBeforeImplementationAt": "2026-10-14T02:50:35.925980+00:00",
+  "runtimeAnchor": "ebf4e6c4f5f1fc72368ccebaf44bb4c9fc71025a",
+  "verificationOnlyPaths": [
+    "finnor-os/scripts/frontier5/x1/verify.mjs",
+    "finnor-os/scripts/frontier5/x1/scrutiny-evidence.mjs",
+    "finnor-os/scripts/frontier5/x1/review-cases.mts",
+    "finnor-os/scripts/frontier5/x1/reference/scrutiny-evidence-contract.json",
+    "finnor-os/scripts/frontier5/x1/reference/scrutiny-evidence-contract.md",
+    "scope-frontier5/x1-institutional-programme-compiler/failure-model.md"
+  ],
+  "ownerPredicates": {
+    "installed": [
+      "G-installed-same-process-byte-currentness",
+      "G-installed-same-process-manifest-custody",
+      "G-authenticated-owner-inputs",
+      "A-all-ordinary-operations",
+      "A-authenticated-owner-creation",
+      "A-full-declared-source-and-owner-domain",
+      "A-fourteen-canonical-kinds",
+      "G-authenticated-api-compute-attribution",
+      "G-compiled-installed-api-worker-checker-and-restart",
+      "G-physical-validation-lifecycle-original-parent"
+    ],
+    "mounted": [
+      "B-same-standing-input-native-revision",
+      "G-mounted-owner-observer"
+    ],
+    "upgrade": [
+      "G-existing-schema-upgrade-and-jobs"
+    ],
+    "personnel": [
+      "B-overlapping-personnel-reporting-continuation"
+    ],
+    "reporting": [
+      "B-report-meaning-exception-and-cosmetic-change"
+    ],
+    "sensitive": [
+      "B-sensitive-consent-independent-continuation"
+    ],
+    "recovery": [
+      "D-compiler-before-publication-death"
+    ],
+    "effectRecovery": [
+      "D-effect-submit-lost-ack"
+    ],
+    "contention": [
+      "E-original-shared-parent-contention"
+    ],
+    "checkerCrash": [
+      "F-physical-checker-crash-and-compatible-resume"
+    ],
+    "unsupported": [
+      "F-explicit-unsupported-operation"
+    ]
+  },
+  "historicalTransitions": [
+    {
+      "from": "08c215c6bce94ebb1cf578bdca863ad706684a0c",
+      "to": "ebf4e6c4f5f1fc72368ccebaf44bb4c9fc71025a",
+      "changes": [
+        {
+          "path": "docs/release/generated/action-manifest.json",
+          "before": "77691387de00373cbcb6e8937fc11a2efbd1eb307c5314be43ec0a0e16d8ff72",
+          "after": "ef033c2874e9c71bec4f5a67d969d598f65d5867639c8cf87b0f6b378c3b8483"
+        },
+        {
+          "path": "docs/release/generated/action-manifest.md",
+          "before": "3c2d99b17134229807a63c825aa01e9293ce1b89830e153998b732a2164b3a59",
+          "after": "62ba3688da624cbec5b965ebeec372f427ff266dfe4b6fa90790eecfa1bdc6b7"
+        },
+        {
+          "path": "finnor-os/apps/supplier-canary/api/index.mjs",
+          "before": "3a1d1284d88f017688227cf76d472656e700d710ad078881e86bb25e490aaff7",
+          "after": "b207d5eef71ea1ebbef01c22a2a45c96a4ea827938f2a8152624096a05f00197"
+        },
+        {
+          "path": "finnor-os/packages/capability-evolution/src/institution-port.ts",
+          "before": "2985362704ab07b802fa6622a1bf01d664f1fe3fcbf02803dbb2657a2b353ad0",
+          "after": "81c2ff2313fff246a9693ba45fe355c335654959d7746f20e1ed2abbb159641c"
+        },
+        {
+          "path": "finnor-os/scripts/frontier5/x1/run-owner-slice.mts",
+          "before": "179428dd28899117348ae35cff0607b7b0a4b6c932d086de912bd76ff504bdec",
+          "after": "f61a94fafc61c865cf937178243af8c7a8a0d0dcffee609215f52962f8463119"
+        },
+        {
+          "path": "infra/deployment/production.contract.json",
+          "before": "dc96d0a398936acadd26e576ea172fea5ebec515a454378cb1f81606a8ed1da6",
+          "after": "5dcfa57525a7a366ca01036ef5bbc6bcdce10851e43bd263f8e35bcc380683f9"
+        },
+        {
+          "path": "scope-frontier5/x1-institutional-programme-compiler/failure-model.md",
+          "before": "3b2b984c13aaedf39224b992aa9fc54eb48ab0fc9919261025d047aa6fed2f49",
+          "after": "b353cb65913b928b76717fd799f5874544d4bcfde369ff89bb0ef08b5a2aaad8"
+        }
+      ]
+    },
+    {
+      "from": "f4b51a00b0d911f34a77b31ab0a27a3350c368b0",
+      "to": "ebf4e6c4f5f1fc72368ccebaf44bb4c9fc71025a",
+      "changes": [
+        {
+          "path": "docs/release/generated/action-manifest.json",
+          "before": "77691387de00373cbcb6e8937fc11a2efbd1eb307c5314be43ec0a0e16d8ff72",
+          "after": "ef033c2874e9c71bec4f5a67d969d598f65d5867639c8cf87b0f6b378c3b8483"
+        },
+        {
+          "path": "docs/release/generated/action-manifest.md",
+          "before": "3c2d99b17134229807a63c825aa01e9293ce1b89830e153998b732a2164b3a59",
+          "after": "62ba3688da624cbec5b965ebeec372f427ff266dfe4b6fa90790eecfa1bdc6b7"
+        },
+        {
+          "path": "finnor-os/apps/supplier-canary/api/index.mjs",
+          "before": "3a1d1284d88f017688227cf76d472656e700d710ad078881e86bb25e490aaff7",
+          "after": "b207d5eef71ea1ebbef01c22a2a45c96a4ea827938f2a8152624096a05f00197"
+        },
+        {
+          "path": "finnor-os/packages/capability-evolution/src/institution-port.ts",
+          "before": "2985362704ab07b802fa6622a1bf01d664f1fe3fcbf02803dbb2657a2b353ad0",
+          "after": "81c2ff2313fff246a9693ba45fe355c335654959d7746f20e1ed2abbb159641c"
+        },
+        {
+          "path": "infra/deployment/production.contract.json",
+          "before": "dc96d0a398936acadd26e576ea172fea5ebec515a454378cb1f81606a8ed1da6",
+          "after": "5dcfa57525a7a366ca01036ef5bbc6bcdce10851e43bd263f8e35bcc380683f9"
+        },
+        {
+          "path": "scope-frontier5/x1-institutional-programme-compiler/failure-model.md",
+          "before": "3b2b984c13aaedf39224b992aa9fc54eb48ab0fc9919261025d047aa6fed2f49",
+          "after": "b353cb65913b928b76717fd799f5874544d4bcfde369ff89bb0ef08b5a2aaad8"
+        }
+      ]
+    },
+    {
+      "from": "3c491d82d9bd6e7118f5f6741adae8f7551246ef",
+      "to": "ebf4e6c4f5f1fc72368ccebaf44bb4c9fc71025a",
+      "changes": [
+        {
+          "path": "finnor-os/packages/capability-evolution/src/institution-port.ts",
+          "before": "2985362704ab07b802fa6622a1bf01d664f1fe3fcbf02803dbb2657a2b353ad0",
+          "after": "81c2ff2313fff246a9693ba45fe355c335654959d7746f20e1ed2abbb159641c"
+        },
+        {
+          "path": "scope-frontier5/x1-institutional-programme-compiler/failure-model.md",
+          "before": "3b2b984c13aaedf39224b992aa9fc54eb48ab0fc9919261025d047aa6fed2f49",
+          "after": "b353cb65913b928b76717fd799f5874544d4bcfde369ff89bb0ef08b5a2aaad8"
+        }
+      ]
+    }
+  ],
+  "compatibilityReason": "Only exact retained transitions are accepted. Metadata updates current migration-head labels and generated source-line locations; owner observer adds action_type to an existing SQL read; configured-X1-only S8 constructor principal guard has its own current compiled proof. Historical receipts retain original cuts. Their unconfigured owner paths do not exercise protected S8. No newer product change is permitted by this audit.",
+  "externalGates": [
+    "protectedPopulationQualification",
+    "existingS8SignedMethodAdmissionAndServiceProof",
+    "protectedS6OperationAuthority",
+    "productionDeployment",
+    "operational100x",
+    "financial100xAnd100MillionAdditionalNetOwnerValue",
+    "H0Settlement",
+    "H1Provisional",
+    "H2Registered36Month"
+  ],
+  "faultCases": [
+    "missing-ledger",
+    "missing-required-role",
+    "changed-receipt-bytes",
+    "failed-required-predicate",
+    "stale-verifier-cut",
+    "unlisted-product-drift",
+    "substituted-installed-manifest",
+    "missing-wire-finish",
+    "promotion-claim",
+    "missing-source-reconstruction",
+    "unaccounted-checker-case"
+  ],
+  "scope": "DEVELOPMENT_EVIDENCE_INTEGRITY_ONLY; native independent acceptance, protected custody and admission remain separate; historical diagnostic is PARTIAL and original FAILs remain FAIL."
+}
