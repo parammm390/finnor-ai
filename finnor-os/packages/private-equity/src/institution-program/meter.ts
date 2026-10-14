@@ -4,6 +4,7 @@ import type { PeMutationContext } from "../types";
 import { persistEconomicRecord, listStoredWorkCompute,listStoredWorkPreparationCompute } from "../economic-store";
 import { sha, tx, principal } from "../evidence-execution/store";
 import {chargeInstitutionDemand} from '../allocation-store';
+import {AllocationContractError} from '../../../epistemic-runtime/src/allocation-contracts';
 
 export type InstitutionPhysicalObservation={kind:'SOURCE'|'CHECKER';startedAt:string;elapsedMs:number;
   outcome:string;includedWithin:'COMPILE';[key:string]:unknown};
@@ -14,6 +15,24 @@ const scope = new AsyncLocalStorage<Scope>();
 const physicalUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const computePhases = ["COMPILE", "PUBLICATION", "UPDATE_RECOGNITION", "PREPARATION", "RECOVERY"] as const;
 type ParentRef={owner:string;id:string;version:string;contentDigest:string};
+/** A refused or uncertain resource debit cannot erase already observed work.
+ * The S7 writer still independently requires its current authorized principal.
+ * Charge is attempted once per physical ID; a replay retains S5's own identity. */
+async function physicalResourceCharge(ctx:PeMutationContext,parent:ParentRef|null,
+ request:Parameters<typeof chargeInstitutionDemand>[2]){
+ if(!parent)return {charge:null,resourceAllocation:{status:'NO_PARENT' as const,reason:null,
+  resourceConsumptionConfirmed:false,executionAuthorityGranted:false}};
+ try{
+  const consumption=await chargeInstitutionDemand(ctx,parent,request);
+  return {charge:consumption.charge,resourceAllocation:{status:'CHARGED' as const,reason:null,
+   resourceConsumptionConfirmed:true,executionAuthorityGranted:false}};
+ }catch(error){
+  const refused=error instanceof AllocationContractError||(error as {code?:string})?.code==='P0001';
+  return {charge:null,resourceAllocation:{status:refused?'REFUSED' as const:'UNKNOWN' as const,
+   reason:refused?String((error as Error).message).slice(0,512):'S5_CHARGE_OUTCOME_UNAVAILABLE',
+   resourceConsumptionConfirmed:refused?false:null,executionAuthorityGranted:false}};
+ }
+}
 export const withInstitutionMeter = <T>(input: Scope, run: () => Promise<T>) => scope.run(input, run);
 export const recordInstitutionSourceAttempt = async (grantId: string) => { await scope.getStore()?.sourceAttempt(grantId); };
 export const recordInstitutionCheckerAttempt = async () => { await scope.getStore()?.checkerAttempt(); };
@@ -166,16 +185,23 @@ export async function readInstitutionComputeCosts(ctx: PeMutationContext, workId
     WHERE tenant_id=$1 AND principal_id=$2 AND reservation_id=$3 AND phase='LIFECYCLE' LIMIT 1025`,
     [ctx.auth.tenantId,principal(ctx),(originalParent as ParentRef|null)?.id??''])).rows.map(r=>r.body),true);
   const lifecycleIds=new Set<string>();
+  const lifecycleAllocations:Array<{invocationId:string;status:string;reason:string|null}>=[];
   for(const record of lifecycle.records){
     refs.push(record.ref);const p=record.payload;
     if(p.workId!==workId||p.episodeId!==compilerEpisodeId||sha(p.parentReservation)!==sha(originalParent)
       ||!physicalUuid.test(String(p.invocationId))||lifecycleIds.has(String(p.invocationId))
-      ||typeof p.elapsedMs!=='number'||!Number.isFinite(p.elapsedMs)||p.elapsedMs<0
-      ||lifecycleCharges.filter(charge=>charge.physicalInvocationId===p.invocationId
-        &&charge.ref?.id===(p.resourceCharge as {ref?:{id?:string}}|undefined)?.ref?.id
-        &&charge.units===1&&sha(charge.reservationRef)===sha(originalParent)).length!==1)
+      ||typeof p.elapsedMs!=='number'||!Number.isFinite(p.elapsedMs)||p.elapsedMs<0)
       gaps.push('X1_LIFECYCLE_MEASUREMENT_INVALID:'+record.ref.id);
     else lifecycleIds.add(String(p.invocationId));
+    const allocation=p.resourceAllocation as {status?:string;reason?:string|null;resourceConsumptionConfirmed?:boolean|null}|undefined;
+    const matching=lifecycleCharges.filter(charge=>charge.physicalInvocationId===p.invocationId);
+    const charged=matching.filter(charge=>charge.ref?.id===(p.resourceCharge as {ref?:{id?:string}}|null)?.ref?.id
+      &&charge.units===1&&sha(charge.reservationRef)===sha(originalParent)).length===1;
+    const refused=allocation?.status==='REFUSED'&&allocation.resourceConsumptionConfirmed===false
+      &&typeof allocation.reason==='string'&&allocation.reason.length>0&&p.resourceCharge===null&&matching.length===0;
+    const unknown=allocation?.status==='UNKNOWN'&&allocation.resourceConsumptionConfirmed===null&&p.resourceCharge===null;
+    if(!charged&&!refused&&!unknown)gaps.push('X1_LIFECYCLE_RESOURCE_ALLOCATION_INVALID:'+record.ref.id);
+    lifecycleAllocations.push({invocationId:String(p.invocationId),status:charged?'CHARGED':refused?'REFUSED':'UNKNOWN',reason:allocation?.reason??null});
   }
   if(!lifecycle.complete)gaps.push(lifecycle.reason!);
   const sources=physicalObservations.filter(o=>o.kind==='SOURCE'),checkers=physicalObservations.filter(o=>o.kind==='CHECKER');
@@ -197,6 +223,7 @@ export async function readInstitutionComputeCosts(ctx: PeMutationContext, workId
       rawObservationCount:physicalObservations.length},
     lifecycle:{recordRefs:lifecycle.records.map(r=>r.ref),invocations:lifecycleIds.size,
       containingIntervals:lifecycle.records.map(r=>r.payload),additionalElapsedCredit:0,
+      resourceAllocations:lifecycleAllocations,
       allocation:'CONTAINING_INTERVALS_RETAIN_COMPONENTS_NEVER_ADD_WALL_TIME_TWICE'},
     aggregatePeakMemoryBytes: null, monetaryCost: null, humanSeconds: null,
     coverage: "REGISTERED_NATIVE_COMPUTE_ONLY_OTHER_COSTS_UNKNOWN",
@@ -220,15 +247,16 @@ export async function persistInstitutionLifecycleCompute(ctx:PeMutationContext,i
     [ctx.auth.tenantId,principal(ctx),input.workId,input.episodeId])).rows[0],true);
   if(!episode?.parent_reservation||sha(episode.parent_reservation)!==sha(input.parentReservation))
     throw Error('X1_ORIGINAL_LIFECYCLE_PARENT_REQUIRED');
-  const consumption=await chargeInstitutionDemand(ctx,input.parentReservation,{
+  const consumption=await physicalResourceCharge(ctx,input.parentReservation,{
     responsibilityIdentity:'x1-compiler-episode:'+input.episodeId,phase:'LIFECYCLE',ordinal:1,units:1,
     physicalInvocationId:input.invocationId});
   return persistEconomicRecord(ctx,{kind:'COMPUTE',rightsRef:`authority:${ctx.auth.tenantId}:${input.rightsRevision}`,
     idempotencyKey:'x1-lifecycle:'+input.invocationId,
     semanticRequestDigest:sha(['x1-lifecycle-v1',input]),validAt:input.startedAt,horizon:'H0',
-    dependencies:[input.parentReservation,consumption.charge.ref],
+    dependencies:[input.parentReservation,...(consumption.charge?[consumption.charge.ref]:[])],
     uncertainty:'Containing physical interval; monetary, human and aggregate memory costs remain unknown',
     payload:{schema:'finnor.x1.lifecycle-compute.v1',...input,phase:'LIFECYCLE',resourceCharge:consumption.charge,
+      resourceAllocation:consumption.resourceAllocation,
       process:{pid:process.pid,node:process.version,rssBytesAtObservation:process.memoryUsage().rss},
       intervalAccounting:'CONTAINS_COMPONENTS_DO_NOT_SUM_WITH_API_COMPILER_CHECKER_INTERVALS',
       money:null,humanSeconds:null,aggregatePeakMemoryBytes:null,businessWorkCredit:0,
@@ -268,13 +296,14 @@ export async function persistInstitutionApiCompute(ctx:PeMutationContext,input:{
   if(!physicalUuid.test(input.workId)||!physicalUuid.test(input.requestId)||!physicalUuid.test(input.episodeId)
     ||input.operation.length>128||!Number.isInteger(input.statusCode)||input.statusCode<100||input.statusCode>599
     ||!Number.isFinite(input.elapsedMs)||input.elapsedMs<0)throw Error('X1_ACTUAL_API_MEASUREMENT_REQUIRED');
-  const consumption=input.parentReservation?await chargeInstitutionDemand(ctx,input.parentReservation,{
-    responsibilityIdentity:'x1-compiler-episode:'+input.episodeId,phase:'CONTROL',ordinal:1,units:1,physicalInvocationId:invocationId}):null;
+  const consumption=await physicalResourceCharge(ctx,input.parentReservation,{
+    responsibilityIdentity:'x1-compiler-episode:'+input.episodeId,phase:'CONTROL',ordinal:1,units:1,physicalInvocationId:invocationId});
   const result=await persistEconomicRecord(ctx,{kind:'COMPUTE',rightsRef:`authority:${ctx.auth.tenantId}:${input.rightsRevision}`,
     idempotencyKey:'x1-api-compute:'+invocationId,semanticRequestDigest:sha(['x1-api-compute-v1',invocationId,input]),
     validAt:input.startedAt,horizon:'H0',uncertainty:'Measured API work; prices, meter-writer, aggregate memory and human supervision incomplete',
     dependencies:input.parentReservation?[input.parentReservation]:[],payload:{schema:'finnor.x1.api-compute.v1',
-      ...input,invocationId,resourceCharge:consumption?.charge??null,phase:'AUTHENTICATED_API',process:{pid:process.pid,node:process.version,
+      ...input,invocationId,resourceCharge:consumption.charge,resourceAllocation:consumption.resourceAllocation,
+      phase:'AUTHENTICATED_API',process:{pid:process.pid,node:process.version,
         rssBytesAtObservation:process.memoryUsage().rss},money:null,humanSeconds:null,aggregatePeakMemoryBytes:null,
       meterWriterLatency:'UNOBSERVED_REQUIRES_EXTERNAL_LIFECYCLE_COLLECTOR',
       businessWorkCredit:0,costAllocation:'ONCE_PER_PHYSICAL_API_INVOCATION_UNDER_ORIGINAL_WORK_PARENT',

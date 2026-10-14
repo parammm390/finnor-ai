@@ -28,6 +28,8 @@ import {loadInstitutionProfile} from '../../../packages/private-equity/src/insti
 import {readInstitutionMandate} from '../../../packages/private-equity/src/institution-program/source-authority';
 import {parse as parseDotenv} from 'dotenv';
 import {reviewOwnerAdmission,OwnerAdmissionReviewFinished} from './owner-admission-review.mts';
+import {reviewResourceOwners} from './resource-owner-review.mts';
+import {installFinalHeadFenceGate,reviewFinalHeadFence} from './final-head-fence-review.mts';
 import {startQualificationOwnerExercise,finishQualificationOwnerExercise,createNativeWorkerExerciseControl} from './qualification-owner-exercise.mts';
 import {digest as qualificationDigest} from '../../../packages/capability-evolution/src/contracts';
 import {institutionDigest} from '../../../packages/private-equity/src/institution-program/canonical-json';
@@ -44,6 +46,8 @@ const evidence = process.env.FINNOR_X1_OWNER_EVIDENCE;
 if (!evidence || !evidence.startsWith("/")) throw Error("FRESH_PRIVATE_X1_OWNER_EVIDENCE_REQUIRED");
 const dutyCount=process.env.FINNOR_X1_OWNER_CASE==='128'?128:1;
 const admissionReview=process.env.FINNOR_X1_OWNER_MODE==='admission_review';
+const resourceReview=process.env.FINNOR_X1_OWNER_MODE==='resource_review';
+const headFenceReview=process.env.FINNOR_X1_OWNER_MODE==='head_fence_review';
 const reportingChanges=process.env.FINNOR_X1_OWNER_MODE==='reporting_changes';
 const authorityEpoch=process.env.FINNOR_X1_OWNER_MODE==='authority_epoch';
 const sensitiveCoverage=process.env.FINNOR_X1_OWNER_MODE==='sensitive_coverage';
@@ -71,7 +75,7 @@ const cancelObserved=process.env.FINNOR_X1_OWNER_MODE==='cancel_observed';
 const publicationMeter=process.env.FINNOR_X1_OWNER_MODE==='publication_meter';
 const diagnostic=process.env.FINNOR_X1_OWNER_MODE==='diagnostic';
 const qualificationExecution=process.env.FINNOR_X1_OWNER_MODE==='qualification_execution';
-if(process.env.FINNOR_X1_OWNER_MODE&&!['api','mounted','revision','material','heterogeneous','canonical','creation','recovery','effect_recovery','ordinary','domain','owner_inputs','reporting_changes','authority_epoch','sensitive_coverage','personnel','source_namespace','upgrade','checker_crash','contention','unsupported','unsupported_operation','cancel_observed','publication_meter','diagnostic','qualification_execution','qualification_population','admission_review'].includes(process.env.FINNOR_X1_OWNER_MODE))
+if(process.env.FINNOR_X1_OWNER_MODE&&!['api','mounted','revision','material','heterogeneous','canonical','creation','recovery','effect_recovery','ordinary','domain','owner_inputs','reporting_changes','authority_epoch','sensitive_coverage','personnel','source_namespace','upgrade','checker_crash','contention','unsupported','unsupported_operation','cancel_observed','publication_meter','diagnostic','qualification_execution','qualification_population','admission_review','resource_review','head_fence_review'].includes(process.env.FINNOR_X1_OWNER_MODE))
   throw Error('EXACT_REGISTERED_OWNER_MODE_REQUIRED');
 if((mounted||material||heterogeneous||canonical||recovery||effectRecovery||ordinary||upgrade||checkerCrash||contention||unsupported||cancelObserved||authorityEpoch)&&dutyCount!==1)throw Error('NAMED_ONE_DUTY_SCENARIO_REQUIRED');
 if(process.env.FINNOR_X1_OWNER_CASE&&!['1','128'].includes(process.env.FINNOR_X1_OWNER_CASE))
@@ -90,6 +94,8 @@ const sourcePaths = ["finnor-os/scripts/frontier5/x1/run-owner-slice.mts", "finn
   'finnor-os/scripts/frontier5/x1/upgrade-owner-fixture.mts',
   'finnor-os/scripts/frontier5/x1/owner-admission-review.mts',
   'finnor-os/scripts/frontier5/x1/admission-mail-fixture.mts',
+  'finnor-os/scripts/frontier5/x1/resource-owner-review.mts',
+  'finnor-os/scripts/frontier5/x1/final-head-fence-review.mts',
   'finnor-os/scripts/frontier5/x1/qualification-runtime.mts','finnor-os/scripts/frontier5/x1/qualification-owner-exercise.mts',
   'finnor-os/scripts/frontier5/x1/qualification-native-worker.mts','finnor-os/scripts/frontier5/x1/qualification-population.mts',
   'finnor-os/scripts/frontier5/x1/qualification-native-inputs.mts','finnor-os/scripts/frontier5/x1/qualification-population-owner-exercise.mts',
@@ -106,7 +112,7 @@ const freeze = { installation:installedManifest?{root:installation,manifestDiges
   runtime: { node: process.version, platform: process.platform, arch: process.arch },
   profile: "DISPOSABLE_LOCAL_AUTH_SERVICE_ACTUAL_BEARER_AND_RLS", hostedSupabaseQualified: false,
   authDevBypass: false, expectedMigrations: 191, limits, freeBytesBefore: String(diskBefore), dutyCount,mounted,
-  cases: admissionReview?["C-owner-concurrent-grant-publication-serialization","C-owner-mapped-intact-admission-replay","C-owner-ambiguous-source-truth-replay","C-owner-source-truth-restored-control","C-owner-remapped-source-truth-replay"]:["A-raw-two-identity-native-request", "C-unsigned-forged-input", "D-same-key-replay", "G-restricted-roles",
+  cases: headFenceReview?["E-final-mutation-requires-latest-accepted-compiler-head","G-physical-validation-lifecycle-original-parent"]:admissionReview?["C-owner-concurrent-grant-publication-serialization","C-owner-mapped-intact-admission-replay","C-owner-ambiguous-source-truth-replay","C-owner-source-truth-restored-control","C-owner-remapped-source-truth-replay"]:["A-raw-two-identity-native-request", "C-unsigned-forged-input", "D-same-key-replay", "G-restricted-roles",
     ...(material?['B-ledger-correction']:[]),...(heterogeneous?['A-eight-class-original-corpus']:[]),
     ...(canonical?['A-fourteen-canonical-kinds']:[]),...(recovery?['D-compiler-before-publication-death']:[]),
     ...(effectRecovery?['D-effect-submit-lost-ack']:[]),
@@ -123,13 +129,15 @@ const freeze = { installation:installedManifest?{root:installation,manifestDiges
     ...(cancelObserved?['E-cancel-observed-standing-continuation']:[]),
     ...(publicationMeter?['F-post-compile-publication-failure-meter']:[]),...(diagnostic?['H-matched-equipped-native-originals']:[]),
     ...(qualificationExecution?['G-finite-qualification-owner-execution']:[]),
-    ...(qualificationPopulation?['G-generated-original-population-owner-execution']:[])],
+    ...(qualificationPopulation?['G-generated-original-population-owner-execution']:[]),
+    ...(resourceReview?['F-original-parent-513-consumption-readback','F-exhausted-parent-retains-actual-api-cost','F-exhausted-parent-retains-lifecycle-cost']:[])],
   omitted: "Full B–H, physical interruption, mounted browser, clean built installation/upgrade and protected qualification remain distinct required evidence" };
 await writeFile(join(evidence, "freeze.json"), JSON.stringify(freeze, null, 2) + "\n", { mode: 0o600, flag: "wx" });
 const results: any[] = [], traffic: unknown[] = [];
 let preparationCostProof:Array<Record<string,any>>=[];
 let database: EmbeddedPostgres | undefined, admin: pg.Client | undefined;
 let publicationBlocker:pg.Client|undefined;
+let headFenceGate:Awaited<ReturnType<typeof installFinalHeadFenceGate>>|undefined;
 let acknowledgementBlocker:pg.Client|undefined,effectRecoveryProof:any;
 let checkerCrashProof:any;
 let service: Awaited<ReturnType<typeof authenticatedApiFixture>> | undefined, worker: ReturnType<typeof spawn> | undefined;
@@ -178,16 +186,24 @@ const collectLifecycle=async(status:string)=>{
     WHERE tenant_id=$1 AND principal_id=$2 AND reservation_id=$3 AND phase='LIFECYCLE'`,
     [tenant,actor,episode.parent_reservation.id])).rows.map(r=>r.body)
     .filter(r=>r.physicalInvocationId===lifecycleInvocationId);
-  assert.equal(charges.length,1);assert.equal(charges[0].units,1);
-  assert.deepEqual(charges[0].reservationRef,episode.parent_reservation);
+  const resourceExhausted=resourceReview&&Number((await admin.query("SELECT coalesce(sum(units),0) used FROM finnor_os.s5_governed_resource_charges WHERE tenant_id=$1 AND reservation_id=$2 AND unit='request'",[tenant,episode.parent_reservation.id])).rows[0].used)>=520;
+  if(resourceExhausted){
+    assert.equal(charges.length,0,'Exhausted parent grants no containing-interval resource unit');
+    assert.equal((record.record.payload.resourceAllocation as any)?.status,'REFUSED');
+    assert.equal((record.record.payload.resourceAllocation as any)?.reason,'X1_CHARGE_BUDGET_EXHAUSTED');
+    assert.equal(record.record.payload.resourceCharge,null);
+  }else{
+    assert.equal(charges.length,1);assert.equal(charges[0].units,1);
+    assert.deepEqual(charges[0].reservationRef,episode.parent_reservation);
+  }
   const consumer=await readInstitutionComputeCosts(ctx,workId,episode.id);
   assert.ok(consumer.lifecycle.invocations>=1);assert.ok(!consumer.gaps.some(gap=>gap.startsWith('X1_LIFECYCLE_MEASUREMENT_INVALID')));
   assert.ok(consumer.lifecycle.containingIntervals.some(p=>p.invocationId===lifecycleInvocationId));
   assert.equal(consumer.lifecycle.additionalElapsedCredit,0);
   await save('lifecycle-original-parent-independent-proof.json',{observations,record,charges,consumer,
     elapsedDoubleCounted:false,fullMonetaryHumanOrAggregateQualification:false});lifecycleCollected=true;
-  results.push({id:'G-physical-validation-lifecycle-original-parent',status:'PASS',
-    basis:'ACTUAL_CONTAINING_VALIDATOR_INTERVAL_IMMUTABLE_S7_ONE_PHYSICAL_S5_REQUEST_UNIT',observed:{invocationId:lifecycleInvocationId}});
+  results.push({id:resourceExhausted?'F-exhausted-parent-retains-lifecycle-cost':'G-physical-validation-lifecycle-original-parent',status:'PASS',
+    basis:resourceExhausted?'ACTUAL_S7_CONTAINING_INTERVAL_RETAINED_AFTER_S5_REFUSAL_NO_RESOURCE_GRANT':'ACTUAL_CONTAINING_VALIDATOR_INTERVAL_IMMUTABLE_S7_ONE_PHYSICAL_S5_REQUEST_UNIT',observed:{invocationId:lifecycleInvocationId}});
 };
 const installedPreservation = async () => ({
   episodes:(await admin!.query(`SELECT id,original_deadline,wall_deadline,parent_reservation,parent_demand
@@ -697,6 +713,7 @@ try {
     LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'X1_TEST_POST_COMPILE_PUBLICATION_FAULT'; END $$;
     CREATE TRIGGER x1_fixture_publication_fault BEFORE INSERT ON finnor_os.x1_compiler_artifacts
     FOR EACH ROW EXECUTE FUNCTION finnor_os.x1_fixture_publication_fault()`);
+  if(headFenceReview)headFenceGate=await installFinalHeadFenceGate({admin,adminUrl:connection('x1_fixture',password),ctx,workId,save});
   const accepted = mounted?null:await api("institution-submit", input);
   if(accepted){assert.equal(accepted.status, 202, JSON.stringify(accepted));compilerId=accepted.body.requestId;}
   await save("authenticated-submit.json", { identity, metadata, input, accepted, authDevBypass: false, tokenPersisted: false });
@@ -848,6 +865,13 @@ try {
   };
   worker=startWorker();
   await save('physical-worker-readiness.json',await workerReadiness.get(worker));
+  if(headFenceReview){
+    await reviewFinalHeadFence({admin,adminUrl:connection('x1_fixture',password),ctx,workId,save,gate:headFenceGate!,worker,
+      requestId:compilerId!,submit:input,alternateGrantIds:sourceBindings.filter(source=>source.sourceId!=='ledger-original').map(source=>source.grantId),results,api,
+      assertWithinEnvelope:()=>{if(guardFailure)throw Error(guardFailure);if(worker!.exitCode!==null||worker!.signalCode!==null)throw Error('OWNED_WORKER_STOPPED_BEFORE_FINAL_HEAD_BOUNDARY');}});
+    throw new OwnerAdmissionReviewFinished('Only the frozen final-head mutation guard was selected; no canonical mutation performed by the guard probe');
+  }
+
   await save("physical-worker.json", { pid: worker.pid, parentPid: process.pid, environmentNames: Object.keys(env),
     role: "finnor_worker", actualProductionRegistrations: true, compiledInstallation:Boolean(installation),
     compiledEntrypoint:installedManifest?.entrypoints.worker??null, credentialsPersisted: false });
@@ -1568,6 +1592,14 @@ try {
   results.push({id:'G-authenticated-api-compute-attribution',status:'PASS',observed:{actualNewRecords:newApiMeters.length,
     statusCodes:newApiMeters.map(row=>row.payload.statusCode),mountedBackgroundPollingRetained:mounted,
     originalParentRetained:true},basis:'ACTUAL_AUTHENTICATED_API_DISPOSITIONS_IMMUTABLE_S7_SQL_AND_OWNER_PREIMAGE_READ'});
+  if(resourceReview){
+    if(worker&&worker.exitCode===null&&worker.signalCode===null){
+      const stopped=new Promise<void>(resolve=>worker!.once('close',()=>resolve()));worker.kill('SIGTERM');
+      const timer=setTimeout(()=>worker?.kill('SIGKILL'),15000);await stopped;clearTimeout(timer);
+    }
+    await reviewResourceOwners({ctx,admin,workId,requestId:compilerId!,api,save,results});
+    throw new OwnerAdmissionReviewFinished('Frozen original-resource and physical-cost review completed; unrelated lifecycle variants not selected');
+  }
   if(legacyUpgrade){
     let compatible:any,retired:any;
     for(let poll=0;poll<60;poll++){
@@ -2528,6 +2560,10 @@ try {
       internalQuery: (error as any).internalQuery ?? null, position: (error as any).position ?? null } } });
 } finally {
   if (guard) clearInterval(guard);
+  if(headFenceReview&&worker&&worker.exitCode===null&&worker.signalCode===null){
+    const stopped=new Promise<void>(resolve=>worker!.once('close',()=>resolve()));worker.kill('SIGKILL');await stopped;
+  }
+  if(headFenceGate)await headFenceGate.close();
   try{await collectLifecycle(results.some(r=>r.status==='FAIL')?'FAILED_WITH_COSTS_RETAINED':'OBSERVED_FINITE_OWNER_VALIDATION');}
   catch(error){await save('lifecycle-cost-gap.json',{predicate:String((error as Error).message),
     originalInvocationId:lifecycleInvocationId,newParentIssued:false,moneyUsd:null,humanSeconds:null});

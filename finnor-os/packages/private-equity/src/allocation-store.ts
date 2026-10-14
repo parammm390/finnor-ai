@@ -307,7 +307,7 @@ async function stored(ctx:PeMutationContext,c:pg.PoolClient,value:ExperimentRef)
  if(value.id.startsWith('institution-reservation:')){
   const reservation=await institutionState(ctx,c,value);
   return {kind:'institution_responsibility_v1' as const,demand:reservation.demand,
-    reservation,consumptions:await institutionConsumptions(ctx,c,value)};
+    reservation,consumptions:await institutionConsumptions(ctx,c,reservation)};
  }
  return {kind:'finite_allocation_v1' as const,...await finiteStored(ctx,c,value)};
 }
@@ -351,17 +351,18 @@ async function consumptions(ctx:PeMutationContext,c:pg.PoolClient,ref:Experiment
   for(const row of rows){const {ref,...body}=row.body as AllocationConsumption;if(!sameAllocationRef(ref,allocationRef('S5','allocation-consumption',body)))throw denied();await enqueueAllocationOrigin(ctx,c,row.body,issued.certificate.rightsRef);result.push({...row.body,status:row.status,effectRef:row.effect_ref});}
   return result;
 }
-async function institutionConsumptions(ctx:PeMutationContext,c:pg.PoolClient,ref:ExperimentRef){
+async function institutionConsumptions(ctx:PeMutationContext,c:pg.PoolClient,reservation:InstitutionReservation){
+ const limit=reservation.demand.chargeScope?.kind==='ORIGINAL_WORK_EPISODE'?1420:512;
  const rows=(await c.query(`SELECT co.body,st.status,st.effect_ref
    FROM finnor_os.s5_consumptions co JOIN finnor_os.s5_consumption_states st USING(tenant_id,consumption_id)
    WHERE co.tenant_id=$1 AND co.principal_id=$2 AND co.reservation_id=$3
-   ORDER BY co.consumption_id LIMIT 513`,[ctx.auth.tenantId,actor(ctx),ref.id])).rows;
- if(rows.length>512)throw new AllocationContractError('LIMIT_EXCEEDED','S5 institution consumption bound exceeded');
+   ORDER BY co.consumption_id LIMIT $4`,[ctx.auth.tenantId,actor(ctx),reservation.ref.id,limit+1])).rows;
+ if(rows.length>limit)throw new AllocationContractError('LIMIT_EXCEEDED','S5 institution consumption bound exceeded');
  return rows.map(row=>({...row.body,status:row.status,effectRef:row.effect_ref}));
 }
 export async function readAllocationConsumptions(ctx:PeMutationContext,ref:ExperimentRef){
  return locked(ctx,async c=>ref.id.startsWith('institution-reservation:')
-   ? institutionConsumptions(ctx,c,(await institutionState(ctx,c,ref)).ref)
+   ? institutionConsumptions(ctx,c,await institutionState(ctx,c,ref))
    : consumptions(ctx,c,ref));
 }
 export function recordAllocationConsumption(ctx:PeMutationContext,reservationRef:ExperimentRef,
