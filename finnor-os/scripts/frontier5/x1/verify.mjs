@@ -134,6 +134,7 @@ for (const path of [
   'finnor-os/scripts/frontier5/x1/s6-guard-review.mts',
   'finnor-os/scripts/frontier5/x1/publication-race-review.mts',
   'finnor-os/scripts/frontier5/x1/reference/publication-race-native-review-contract.md',
+  'finnor-os/scripts/frontier5/x1/reference/mounted-identity-native-review-contract.md',
   'finnor-os/scripts/s6/run-obligation-e2e.mts',
   'finnor-os/scripts/frontier5/x1/mounted-race-review.mts',
   'finnor-os/scripts/frontier5/x1/qualification-full-contract-cases.mjs',

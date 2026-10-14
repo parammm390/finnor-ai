@@ -57,7 +57,7 @@ export function mountedRaceReview(input:{evidence:string;sourceCommit:string;wor
       observations:observations.slice(-100)}));return true;
     }
     if(path==='/review/arm'&&req.method==='POST'){
-     assert.ok(cases.includes(body.caseId));
+     assert.ok([...cases,'U4-ready-principal-and-tenant-switch'].includes(body.caseId));
      assert.ok(['/api/company-brain/institution-read','/api/company-brain/institution-sources','/api/threads','/api/actions','/api/outcome-packs'].includes(body.path));
      assert.equal(body.method,'POST');assert.ok(!gate||gate.releasedAt,'one bounded physical barrier');
      let done!:()=>void;const promise=new Promise<void>(resolve=>{done=resolve;});

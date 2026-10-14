@@ -184,6 +184,7 @@ let peakOwnedRssBytes = 0, guard: NodeJS.Timeout | undefined;
 const save = async (name: string, body: unknown) => writeFile(join(evidence, name), JSON.stringify(body, null, 2) + "\n", { mode: 0o600 });
 const tenant = randomUUID(), actor = randomUUID(), institutionId = "unseen-local-" + randomUUID();
 const unrelatedEmployee=randomUUID();
+const alternateIdentity=mounted&&!uiReview?{actor:randomUUID(),tenant:randomUUID()}:null;
 const ctx: PeMutationContext = { auth: { tenantId: tenant, userId: actor, employeeId: actor, role: "owner" },
   provenance: { sourceSystem: `x1:${institutionId}`, createdBy: actor } };
 const deadlineAt = new Date(Date.now() + 1200000).toISOString();
@@ -293,6 +294,11 @@ try {
   await admin.query("SET app.test_vertical_mode='explicit'");
   await admin.query("INSERT INTO finnor_os.tenants(id,client_key,name) VALUES($1,$2,'X1 raw owner slice')", [tenant, randomUUID()]);
   await admin.query("INSERT INTO finnor_os.users(id,tenant_id,email,role,status,display_name) VALUES($1,$2,$3,'owner','active','Unseen owner')", [actor, tenant, actor + "@test.invalid"]);
+  if(alternateIdentity){
+    await admin.query("INSERT INTO finnor_os.tenants(id,client_key,name) VALUES($1,$2,'Separate mounted tenant')",[alternateIdentity.tenant,randomUUID()]);
+    await admin.query("INSERT INTO finnor_os.users(id,tenant_id,email,role,status,display_name) VALUES($1,$2,$3,'owner','active','Separate mounted owner')",
+      [alternateIdentity.actor,alternateIdentity.tenant,alternateIdentity.actor+'@test.invalid']);
+  }
   if(authorityEpoch||personnel)await admin.query("INSERT INTO finnor_os.users(id,tenant_id,email,role,status,display_name) VALUES($1,$2,$3,$4,'active','Unseen owner')",[unrelatedEmployee,tenant,unrelatedEmployee+'@test.invalid',personnel?'owner':'technician']);
   process.env.DATABASE_URL = connection("finnor_app", appPassword); await closePool();
   await configureTenantVertical({ tenantId: tenant, verticalKey: "private_equity", expectedVersion: 0, createdBy: actor, sourceSystem: "X1:owner-e2e" });
@@ -342,7 +348,7 @@ try {
     }finally{await controlDb.end();}
   };
   service = await authenticatedApiFixture(repo, actor, entry => traffic.push(entry),
-    frontendOrigin?{frontendOrigin,afterResponse:async(path,body,status,request)=>{
+    frontendOrigin?{frontendOrigin,...(alternateIdentity?{additionalActors:[alternateIdentity.actor]}:{}),afterResponse:async(path,body,status,request)=>{
       await raceReview?.afterResponse(path,body,status,request);
       if(path==='/api/company-brain/institution-read'&&mountedRevisionVerified&&delayedRead&&!delayedRead.entered){
         const response=JSON.parse(body);
@@ -1251,7 +1257,7 @@ try {
     await updateEmployeeConversationThreadContext({tenantId:tenant,ownerEmployeeId:actor,threadId:other.id,activeReferences:[root]});
     const controlKey=randomBytes(32).toString('hex');
     mountedControlKey=controlKey;
-    if(uiReview)raceReview=mountedRaceReview({evidence,sourceCommit:freeze.source.commit,workId:workId!,
+    raceReview=mountedRaceReview({evidence,sourceCommit:freeze.source.commit,workId:workId!,
       origin:service.origin,token:service.token,guard:()=>{if(guardFailure)throw Error(guardFailure);},
       pauseWorker:async()=>{const child=worker!;if(child.exitCode===null&&child.signalCode===null){
         const closed=new Promise<void>(resolve=>child.once('close',()=>resolve()));child.kill('SIGTERM');
@@ -1294,12 +1300,30 @@ try {
     let frontendLogBytes=0;for(const stream of [frontend.stdout!,frontend.stderr!])stream.on('data',b=>{
       frontendLogBytes+=b.length;if(frontendLogBytes<=limits.smallCheckOutputBytes)
         void appendFile(join(evidence,'frontend.log'),b,{mode:0o600});else frontend?.kill('SIGTERM');});
+    let alternateThread:Awaited<ReturnType<typeof createEmployeeConversationThread>>|null=null;
+    if(alternateIdentity){
+      await configureTenantVertical({tenantId:alternateIdentity.tenant,verticalKey:'private_equity',expectedVersion:0,
+        createdBy:alternateIdentity.actor,sourceSystem:'X1:mounted-isolation-fixture'});
+      const organization=randomUUID();
+      await admin.query("INSERT INTO finnor_os.external_organizations(id,tenant_id,organization_key,name,kind) VALUES($1,$2,$3,'Separate tenant organization','other')",
+        [organization,alternateIdentity.tenant,'org-'+organization]);
+      const otherDeal=await createDeal({auth:{tenantId:alternateIdentity.tenant,userId:alternateIdentity.actor,employeeId:alternateIdentity.actor,role:'owner'},
+        provenance:{sourceSystem:'X1:mounted-isolation-fixture',createdBy:alternateIdentity.actor,externalId:'separate-'+randomUUID()}},
+        {targetOrganizationId:organization,name:'Separate tenant private deal',dealLeadEmployeeId:alternateIdentity.actor,
+          signedLoiAt:new Date(Date.now()-86400000),targetClosingAt:new Date(Date.now()+86400000)});
+      alternateThread=await createEmployeeConversationThread({tenantId:alternateIdentity.tenant,
+        ownerEmployeeId:alternateIdentity.actor,title:'Separate tenant private context'});
+      await updateEmployeeConversationThreadContext({tenantId:alternateIdentity.tenant,ownerEmployeeId:alternateIdentity.actor,
+        threadId:alternateThread.id,activeReferences:[{entityType:'pe_deal',entityId:String(otherDeal.row.id)}]});
+    }
     await save('mounted-private-fixture.json',{frontendOrigin,apiOrigin:service.origin,authOrigin:service.authOrigin,
       email:service.email,password:service.password,workId,threadId:thread.id,
       url:frontendOrigin+'/centropy/investigations/'+thread.id,
       otherUrl:frontendOrigin+'/centropy/investigations/'+other.id,
       controlOrigin:'http://127.0.0.1:'+controlAddress.port,controlKey,
       actor,tenant,frontendPid:frontend.pid,frontendInstallation:frontendInstallation??null,
+      alternateIdentity:alternateIdentity?{...alternateIdentity,...service.additionalIdentities[0],
+        threadId:alternateThread!.id,url:frontendOrigin+'/centropy/investigations/'+alternateThread!.id}:null,
       frontendManifestDigest:frontendManifest?sha(await readFile(join(frontendInstallation!,'x1-frontend-installation.json'))):null,
       sourceInputs:ownerInputs?{institutionId,sourceBindings,purpose:'standing evidence responsibility',rules}:null,
       originalEnvelope:'Same frozen owner scenario; no profile/grant reset',
@@ -2658,6 +2682,16 @@ try {
           &&event.responsePath==='/api/company-brain/institution-read'&&event.responseStatus===200
           &&event.responseDigest===entered.responseDigest&&Date.parse(event.at)>=Date.parse(released.at));
         assert.ok(wire.length>=1,'actual held private HTTP response physically finished after mounted denial');
+        const identityGates=JSON.parse(await readFile(join(evidence,'mounted-race-gates.json'),'utf8'));
+        const identityEnter=identityGates.find((event:any)=>event.event==='ENTER'&&event.caseId==='U4-ready-principal-and-tenant-switch');
+        const identityRelease=identityGates.find((event:any)=>event.event==='RELEASE'&&event.caseId==='U4-ready-principal-and-tenant-switch');
+        assert.ok(identityEnter&&identityRelease&&Date.parse(identityRelease.at)-Date.parse(identityEnter.at)<=20000,
+          'actual bounded successful A response held across a ready principal and tenant switch');
+        const identityWire=(traffic as any[]).filter(event=>event.event==='X1_ACTUAL_HTTP_RESPONSE_FINISH'
+          &&event.responseDigest===identityEnter.digest&&Date.parse(event.at)>=Date.parse(identityRelease.at));
+        assert.ok(identityWire.length);assert.ok(closed.checks.some((check:any)=>check.id==='U4-ready-principal-and-tenant-switch'&&check.status==='PASS'));
+        await save('mounted-identity-switch-wire-proof.json',{identityEnter,identityRelease,identityWire,alternateIdentity,
+          browserReceipt:closed,protectedQualification:false});
         await save('mounted-late-response-wire-proof.json',{entered,released,wire,clientRenderingProof:closed,
           qualification:'ACTUAL_WIRE_FINISH_AND_MOUNTED_NO_RESURRECTION_NOT_SERVER_FINISH_ALONE'});
         results.push({id:'G-mounted-owner-observer',status:'PASS',observed:closed,

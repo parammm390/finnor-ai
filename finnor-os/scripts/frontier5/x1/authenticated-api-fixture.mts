@@ -9,17 +9,20 @@ import { spawn } from 'node:child_process';
 
 export async function authenticatedApiFixture(repo: string, actor: string, record: (entry: unknown) => void,
   options: { frontendOrigin?: string; installation?: string;
+    additionalActors?:string[];
     afterResponse?: (path:string,body:string,status:number,request:{method:string;observer:boolean})=>Promise<void> } = {}) {
   const secret = randomBytes(32), password = randomBytes(24).toString("hex"), email = actor + "@test.invalid";
-  const refreshToken=randomBytes(32).toString('base64url');
+  const actors=[actor,...(options.additionalActors??[])];
+  if(actors.length>2||new Set(actors).size!==actors.length)throw Error('X1_LOCAL_AUTH_IDENTITY_BOUND');
+  const refreshTokens=new Map(actors.map(subject=>[subject,randomBytes(32).toString('base64url')]));
   if(options.frontendOrigin&&!/^http:\/\/127\.0\.0\.1:[0-9]{2,5}$/.test(options.frontendOrigin))
     throw Error('X1_OWNED_LOOPBACK_FRONTEND_REQUIRED');
-  const user = { id: actor, aud: "authenticated", role: "authenticated", email,
+  const userFor = (subject:string) => ({ id: subject, aud: "authenticated", role: "authenticated", email:subject+'@test.invalid',
     app_metadata: { provider: "email", providers: ["email"] }, user_metadata: {},
-    created_at: new Date().toISOString(), email_confirmed_at: new Date().toISOString() };
-  const issue = () => {
+    created_at: new Date().toISOString(), email_confirmed_at: new Date().toISOString() });
+  const issue = (subject=actor) => {
     const encode = (v: unknown) => Buffer.from(JSON.stringify(v)).toString("base64url"), now = Math.floor(Date.now() / 1000);
-    const body = encode({ alg: "HS256", typ: "JWT" }) + "." + encode({ sub: actor, email,
+    const body = encode({ alg: "HS256", typ: "JWT" }) + "." + encode({ sub: subject, email:subject+'@test.invalid',
       aud: "authenticated", role: "authenticated", iat: now, exp: now + 3600 });
     return body + "." + createHmac("sha256", secret).update(body).digest("base64url");
   };
@@ -27,7 +30,8 @@ export async function authenticatedApiFixture(repo: string, actor: string, recor
     try { const [h, p, s] = token.split("."); if (!h || !p || !s) return false;
       const expected = createHmac("sha256", secret).update(h + "." + p).digest(), actual = Buffer.from(s, "base64url");
       const claims = JSON.parse(Buffer.from(p, "base64url").toString());
-      return actual.length === expected.length && timingSafeEqual(actual, expected) && claims.sub === actor && claims.exp > Date.now() / 1000;
+      return actual.length === expected.length && timingSafeEqual(actual, expected) && actors.includes(claims.sub) && claims.exp > Date.now() / 1000
+        ? claims.sub as string : false;
     } catch { return false; }
   };
   const listen = async (server: ReturnType<typeof createServer>) => {
@@ -46,15 +50,15 @@ export async function authenticatedApiFixture(repo: string, actor: string, recor
       if (req.url?.startsWith("/auth/v1/token")) {
         const input = JSON.parse(raw || "{}");
         const grant=new URL(req.url,'http://127.0.0.1').searchParams.get('grant_type');
-        const allowed=grant==='password'&&input.email===email&&input.password===password
-          ||grant==='refresh_token'&&input.refresh_token===refreshToken;
-        if (!allowed) { res.writeHead(400); res.end('{"error":"invalid_credentials"}'); return; }
-        record({path:'/auth/v1/token',method:req.method,grant,status:200,credentialsRecorded:false});
-        res.end(JSON.stringify({ access_token: issue(), token_type: "bearer", expires_in: 3600,
-          expires_at:Math.floor(Date.now()/1000)+3600,refresh_token:refreshToken,user })); return;
+        const subject=actors.find(subject=>grant==='password'&&input.email===subject+'@test.invalid'&&input.password===password
+          ||grant==='refresh_token'&&input.refresh_token===refreshTokens.get(subject));
+        if (!subject) { res.writeHead(400); res.end('{"error":"invalid_credentials"}'); return; }
+        record({path:'/auth/v1/token',method:req.method,grant,status:200,subject,credentialsRecorded:false});
+        res.end(JSON.stringify({ access_token: issue(subject), token_type: "bearer", expires_in: 3600,
+          expires_at:Math.floor(Date.now()/1000)+3600,refresh_token:refreshTokens.get(subject),user:userFor(subject) })); return;
       }
       if (req.url === "/auth/v1/user" && verify(String(req.headers.authorization ?? "").replace(/^Bearer /, ""))) {
-        res.end(JSON.stringify(user)); return;
+        res.end(JSON.stringify(userFor(verify(String(req.headers.authorization).replace(/^Bearer /,'')) as string))); return;
       }
       if(req.url?.startsWith('/auth/v1/logout')&&verify(String(req.headers.authorization??'').replace(/^Bearer /,''))){
         res.end('{}');return;}
@@ -165,6 +169,7 @@ export async function authenticatedApiFixture(repo: string, actor: string, recor
   if (session.status !== 200) throw Error("REAL_LOCAL_PASSWORD_SIGNIN_FAILED");
   const token = (await session.json()).access_token as string;
   return { origin, authOrigin, token, email, password, compiledPid:compiled?.pid,
+    additionalIdentities:actors.slice(1).map(subject=>({actor:subject,email:subject+'@test.invalid',password})),
     profile: "DISPOSABLE_LOCAL_AUTH_SERVICE_ACTUAL_BEARER_AND_RLS",
     restartCompiled:async()=>{
       if(!compiled||compiled.exitCode!==null||compiled.signalCode!==null)throw Error('X1_INSTALLED_API_NOT_RUNNING');
