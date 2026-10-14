@@ -28,7 +28,7 @@ const ownerCases={owners:{'one-duty':{count:'1',mode:'api'},'128-duty':{count:'1
   lifecycle:{material:{count:'1',mode:'material'},'reporting-changes':{count:'1',mode:'reporting_changes'},'staff-epoch':{count:'1',mode:'authority_epoch'},'sensitive-coverage':{count:'1',mode:'sensitive_coverage'},personnel:{count:'1',mode:'personnel'},recovery:{count:'1',mode:'recovery'},
     contention:{count:'1',mode:'contention'},unsupported:{count:'1',mode:'unsupported'},'unsupported-operation':{count:'1',mode:'unsupported_operation'},'checker-crash':{count:'1',mode:'checker_crash'},
     'cancel-observed':{count:'1',mode:'cancel_observed'},'publication-meter':{count:'1',mode:'publication_meter'},
-    'effect-recovery':{count:'1',mode:'effect_recovery'},'resource-review':{count:'1',mode:'resource_review'},'head-fence-review':{count:'1',mode:'head_fence_review'}},mounted:{mounted:{count:'1',mode:'mounted'}},
+    'effect-recovery':{count:'1',mode:'effect_recovery'},'resource-review':{count:'1',mode:'resource_review'},'head-fence-review':{count:'1',mode:'head_fence_review'}},mounted:{mounted:{count:'1',mode:'mounted'},'ui-review':{count:'1',mode:'ui_review'}},
   diagnostic:{'matched-native':{count:'1',mode:'diagnostic'}},
   installed:{'schema-upgrade':{count:'1',mode:'upgrade'},delivery:{count:'1',mode:'owner_inputs'},
     'upgrade-installed':{count:'1',mode:'upgrade'}}};
@@ -39,7 +39,7 @@ if (!named || args.length%2!==0||new Set(args.filter((_,i)=>i%2===0)).size!==arg
     || (only && !["typecheck", "lint"].includes(only))||ownerCase&&!selectedOwnerCase
     ||selectedOwnerCase&&only||ownerCases[stage]&&!selectedOwnerCase
     ||installation&&(!selectedOwnerCase||!installation.startsWith('/'))
-    ||frontendInstallation&&(stage!=='mounted'||!installation||!frontendInstallation.startsWith('/'))
+    ||frontendInstallation&&(stage!=='mounted'||!installation&&ownerCase!=='ui-review'||!frontendInstallation.startsWith('/'))
     ||['delivery','upgrade-installed'].includes(ownerCase)&&!installation) {
   console.error("Use --stage <frozen-stage> [--case <registered-owner-case>] [--check typecheck|lint] [--evidence <fresh-private-directory>]");
   process.exit(2);
@@ -126,6 +126,13 @@ for (const path of [
   'finnor-os/scripts/frontier5/x1/reference/scrutiny-evidence-contract.json',
   'finnor-os/scripts/frontier5/x1/reference/scrutiny-evidence-contract.md',
   'finnor-os/scripts/frontier5/x1/run-owner-slice.mts',
+  'finnor-os/scripts/frontier5/x1/mounted-race-review.mts',
+  'src/components/centropy/lib/private-read-generation.ts',
+  'src/components/centropy/lib/use-private-request-scope.ts',
+  'src/components/centropy/lib/api.ts',
+  'src/components/centropy/canvas/InstitutionProgramPanel.tsx',
+  'src/components/centropy/shell/CentropyWorkspace.tsx',
+
   'finnor-os/scripts/frontier5/x1/authenticated-api-fixture.mts',
   'finnor-os/scripts/frontier5/x1/physical-owner-worker.mts',
   'finnor-os/scripts/frontier5/x1/owner-source-corpus.mts',

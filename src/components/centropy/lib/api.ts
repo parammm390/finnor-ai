@@ -10,6 +10,7 @@
 import { getCurrentAccessToken, getCurrentAccessGeneration, rejectCurrentWorkspaceAccess } from "./centropy-auth"
 import { mutationProjectionTags, publishBusinessInvalidation } from "./business-invalidation"
 import { resolveProductRoute } from "@/lib/centropy/capability-manifest"
+import { advancePrivateReadGeneration, getPrivateReadGeneration } from "./private-read-generation"
 
 const TEST_KEY_STORAGE = "centropy_admin_key"
 const LEGACY_TEST_KEY_STORAGE = "jarvis_admin_key"
@@ -140,6 +141,8 @@ async function centropyRequest<T>(method: CentropyMethod, path: string, body?: u
     if (credential && (getCurrentAccessGeneration() !== accessGeneration || getCurrentAccessToken() !== credential))
       throw new CentropyApiError("Response from an earlier authenticated workspace was discarded", 401, false)
     if (method !== "GET") {
+      if (resolveProductRoute(method, path.replace(/^\/+/, "").split("/"))?.classification !== "READ")
+        advancePrivateReadGeneration()
       publishBusinessInvalidation({ tags: mutationProjectionTags(path, method), source: "mutation", path })
     }
     return value
@@ -159,10 +162,10 @@ async function centropyRequest<T>(method: CentropyMethod, path: string, body?: u
 
 const pendingReads = new Map<string, Promise<unknown>>()
 
-/** Share concurrent canonical reads within one exact authenticated session.
+/** Share concurrent canonical reads within one exact authenticated scope epoch.
  * No resolved response is cached, and writes always retain their own request. */
 function sharedRead<T>(method: "GET" | "POST", path: string, body?: unknown, params?: Record<string, string>): Promise<T> {
-  const key = JSON.stringify([getCurrentAccessGeneration(), authHeaders(), method, path, body, params])
+  const key = JSON.stringify([getCurrentAccessGeneration(), getPrivateReadGeneration(), authHeaders(), method, path, body, params])
   const existing = pendingReads.get(key)
   if (existing) return existing as Promise<T>
   const request = centropyRequest<T>(method, path, body, params)

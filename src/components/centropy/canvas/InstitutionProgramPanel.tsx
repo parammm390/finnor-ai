@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { centropyPost } from "../lib/api"
 import { usePrivateRequestScope } from "../lib/use-private-request-scope"
 import { InstitutionInputForm } from "./InstitutionInputForm"
@@ -52,25 +52,40 @@ export function InstitutionProgramPanel({ workId }: { workId: string }) {
   const [message, setMessage] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [configure, setConfigure] = useState(false)
+  const refreshGeneration = useRef(0)
+  const head = useRef<{ key: string; inputId: string | null; revision: number; requestId: string } | null>(null)
+  if (head.current?.key !== scopeKey) head.current = null
   const visibleSources = allowed && sources?.key === scopeKey ? sources.value : null
-  const visible = allowed && reading?.key === scopeKey ? reading.value : null
+  const visible = allowed && reading?.key === scopeKey
+    && reading.value.workRevision === visibleSources?.workInputId
+    && reading.value.requestId === visibleSources?.request?.id
+    && reading.value.revision === visibleSources?.request?.revision ? reading.value : null
   const refresh = useCallback(async () => {
-    const key = scopeKey
+    const key = scopeKey, generation = ++refreshGeneration.current
+    const current = () => isCurrent(key) && refreshGeneration.current === generation
     if (!allowed) return
     try {
       const next = await centropyPost<Sources>("company-brain/institution-sources", { workId })
-      if (!isCurrent(key)) return
+      if (!current()) return
       if (next.workId !== workId) throw Error("Responsibility sources returned another Work")
+      const prior = head.current
+      if (prior?.key === key && prior.inputId === next.workInputId
+          && (!next.request || next.request.revision < prior.revision
+            || next.request.revision === prior.revision && next.request.id !== prior.requestId)) return
+      head.current = next.request ? { key, inputId: next.workInputId,
+        revision: next.request.revision, requestId: next.request.id } : null
       setSources({ key, value: next })
       if (next.request) {
         const result = await centropyPost<Read>("company-brain/institution-read", { requestId: next.request.id })
-        if (!isCurrent(key)) return
-        if (result.workId !== workId) throw Error("Responsibility returned another Work")
+        if (!current()) return
+        if (result.workId !== workId || result.workRevision !== next.workInputId
+          || result.requestId !== next.request.id || result.revision !== next.request.revision)
+          throw Error("Responsibility returned a different Work input or programme revision")
         setReading({ key, value: result })
       } else setReading(null)
       setMessage(null)
     } catch (error) {
-      if (!isCurrent(key)) return
+      if (!current()) return
       setSources(null); setReading(null)
       setMessage(error instanceof Error ? error.message : "Responsibility is unavailable in this scope")
     }
@@ -89,6 +104,8 @@ export function InstitutionProgramPanel({ workId }: { workId: string }) {
   async function compile() {
     const key = scopeKey, metadata = visibleSources
     if (!metadata?.workInputId || !metadata.grants.length || metadata.grants.length > 16 || busy) return
+    refreshGeneration.current += 1
+    setSources(null); setReading(null)
     setBusy(true); setMessage("Reconstructing authorized sources against the standing responsibility…")
     try {
       await centropyPost(`company-brain/${metadata.request ? "institution-revise" : "institution-submit"}`, {
@@ -104,6 +121,8 @@ export function InstitutionProgramPanel({ workId }: { workId: string }) {
   async function control(command: "cancel" | "resume") {
     const key = scopeKey, requestId = visible?.requestId
     if (!requestId || busy) return
+    refreshGeneration.current += 1
+    setSources(null); setReading(null)
     setBusy(true)
     try {
       await centropyPost(`company-brain/institution-${command}`, { requestId })
