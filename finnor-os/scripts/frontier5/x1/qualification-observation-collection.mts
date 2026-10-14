@@ -4,6 +4,7 @@ import type {collectIndependentOwnerRead} from './qualification-runtime.mts';
 
 export async function collectQualificationObservation(input:{drafts:Array<Awaited<ReturnType<typeof collectIndependentOwnerRead>>>;
   environmentIds:string[];expectedSelectorCount:number;
+  retainDraftCopies?:boolean;executionReceiptCursor?:string;
   save:(name:string,body:unknown)=>void|Promise<void>}){
   if(input.environmentIds.length!==10||new Set(input.environmentIds).size!==10||input.expectedSelectorCount<10||input.expectedSelectorCount>160
     ||input.drafts.some(p=>!input.environmentIds.includes(p.environmentId)))throw Error('ORIGINAL_TEN_OBSERVER_ENVIRONMENTS_REQUIRED');
@@ -11,7 +12,7 @@ export async function collectQualificationObservation(input:{drafts:Array<Awaite
   const gaps=[],groups=new Map<string,{draft:typeof input.drafts[number];rows:typeof input.drafts[number]['observations']}>();
   const selectors=new Set<string>();
   for(const [ordinal,draft]of input.drafts.entries()){
-      await input.save('native-observation-'+ordinal+'.json',draft);
+      if(input.retainDraftCopies!==false)await input.save('native-observation-'+ordinal+'.json',draft);
       selectors.add(draft.projectionDigest);
       const inSnapshot=new Map<string,typeof draft.observations>();
       for(const row of draft.observations){
@@ -45,7 +46,9 @@ export async function collectQualificationObservation(input:{drafts:Array<Awaite
     gaps,snapshotCount:input.drafts.length,observedSelectorCount:selectors.size,
     allSelectorsObserved:selectors.size===input.expectedSelectorCount&&gaps.length===0,
     expectedValuesRead:false,duplicateNativeClaimsRetained:true,maximumWithinSnapshotMultiplicityRetained:true,
-    repeatedPollsRetainedAsReceipts:true,signature:null,
+    repeatedPollsRetainedAsReceipts:input.retainDraftCopies!==false,
+    immutableSemanticSnapshotsReferencedWithoutCopies:input.retainDraftCopies===false,
+    executionReceiptCursor:input.executionReceiptCursor??null,signature:null,
     violationsCoverageEstablished:false,completeLifecycleCostsEstablished:false,protectedQualificationEstablished:false,
     signingAndClockCustodyRequired:true,moneyUsd:null,humanSeconds:null,aggregatePeakMemoryBytes:null};
   await input.save('native-observation-collection-draft.json',result);return result;

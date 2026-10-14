@@ -8,6 +8,7 @@ import {spawn} from 'node:child_process';
 import {digest} from '../../../packages/capability-evolution/src/contracts';
 import {QualificationExecutionJournal,executeReplaySlice,executeLiveObservationSlice,
   validateExecutionJournal,collectIndependentOwnerRead,type OwnerEndpoint} from './qualification-runtime.mts';
+import {readQualificationCursor} from './qualification-state-journal.mts';
 import {NativeWorkerControl} from './qualification-native-worker.mts';
 import {bindOriginalNativeWorker} from './qualification-native-administration.mts';
 import {collectQualificationObservation} from './qualification-observation-collection.mts';
@@ -124,7 +125,7 @@ export async function startQualificationOwnerExercise(input:{evidenceRoot:string
     try{accepted=await Promise.race([acceptance,terminal.then(result=>{throw Error('REPLAY_CHILD_EXITED_BEFORE_REAL_ACCEPTANCE:'+JSON.stringify(result)+':'+childLogs);})]);
       assert.equal(accepted.status,202);child.kill('SIGKILL');const exit=await terminal;assert.equal(exit.signal,'SIGKILL');
       heldResponse?.destroy();
-      const interrupted=JSON.parse(await readFile(cursorPath,'utf8'));assert.equal(interrupted.entries.length,1);
+      const interrupted=await readQualificationCursor(cursorPath);assert.equal(interrupted.entries.length,1);
       assert.equal(interrupted.entries[0].status,'EXPOSED');assert.equal(interrupted.entries[0].originalIdempotencyKey,input.submitBody.idempotencyKey);
       await writeFile(join(root,'physical-controller-interruption.json'),JSON.stringify({childPid:child.pid,exit,accepted,
         childCodeDigest:sha(childCode),childLogs,interrupted,noMutationAcknowledgementReceived:true},null,2)+'\n',{flag:'wx',mode:0o600});

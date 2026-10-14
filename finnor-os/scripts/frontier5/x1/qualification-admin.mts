@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync, mkdirSync, realpathSync, statSync, statfsSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync, realpathSync, statSync, statfsSync, existsSync } from "node:fs";
 import { createHash,randomUUID } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
@@ -6,7 +6,7 @@ import { join, isAbsolute } from "node:path";
 import { z } from "zod";
 import { digest } from "../../../packages/capability-evolution/src/contracts";
 import { validateQualificationRegistration, assessInstitutionQualification } from "../../../packages/private-equity/src/institution-qualification/administration";
-import {executeReplaySlice,executeLiveObservationSlice,validateExecutionJournal,IndependentReadProjection,OwnerEndpointSchema} from './qualification-runtime.mts';
+import {executeReplaySlice,executeLiveObservationSlice,reserveQualificationEvidenceOutput,validateExecutionJournal,IndependentReadProjection,OwnerEndpointSchema} from './qualification-runtime.mts';
 import {GeneratedOriginalInstantiation,instantiateGeneratedOriginals} from './qualification-native-inputs.mts';
 import {bindOriginalNativeWorker,OriginalNativeEpisodeCatalog,assertPreregisteredOriginals,recordNativeAdministrationLifecycle} from './qualification-native-administration.mts';
 import {NativeWorkerControl} from './qualification-native-worker.mts';
@@ -53,14 +53,42 @@ if (!destination.startsWith(root + "/")) throw Error("PRIVATE_QUALIFICATION_EVID
 mkdirSync(destination, { mode: 0o700 });
 const out = realpathSync(destination);
 if (!out.startsWith(root + "/")) throw Error("PRIVATE_EVIDENCE_REALPATH_ESCAPED");
-let outputBytes = 0;
-const save = (name: string, body: unknown) => {
-  const bytes = Buffer.from(JSON.stringify(body, null, 2) + "\n"); outputBytes += bytes.length;
-  if (outputBytes > 64 * 1024 * 1024) throw Error("ORIGINAL_QUALIFICATION_OUTPUT_BOUND_EXHAUSTED");
-  writeFileSync(join(out, name), bytes, { flag: "wx", mode: 0o600 });
+const executionCommand=['collect','replay','live'].includes(command??'');
+const executionEnvelope=registered.protocol.envelopes[command==='replay'?'replay':command==='live'?'soak':'validation'];
+const executionLimits={ref:executionEnvelope.ref,registrationDigest:digest(executionEnvelope),
+  maxAcquisitionCalls:executionEnvelope.maxAcquisitionCalls,maxAggregateWallMs:executionEnvelope.maxWallSeconds*1000,
+  maxOutputBytes:64*1024*1024};
+if(executionCommand&&(!control.executionEvidenceRoot||!control.executionCursorPath
+  ||!realpathSync(control.executionEvidenceRoot).startsWith(root+'/')
+  ||!control.executionCursorPath.startsWith(realpathSync(control.executionEvidenceRoot)+'/')))
+  throw Error('PRIVATE_ORIGINAL_EXECUTION_CURSOR_REQUIRED');
+let outputBytes=0,pendingExecutionOutputBytes=0;
+const save=async(name:string,body:unknown)=>{
+  if(!/^[a-z][a-z0-9-]*\.json$/.test(name))throw Error('PRIVATE_COMMAND_REPORT_NAME_REQUIRED');
+  const bytes=Buffer.from(JSON.stringify(body,null,2)+'\n');outputBytes+=bytes.length;
+  if(outputBytes>64*1024*1024)throw Error('ORIGINAL_QUALIFICATION_OUTPUT_BOUND_EXHAUSTED');
+  const path=join(out,name);if(existsSync(path))throw Error('PRIVATE_COMMAND_REPORT_ALREADY_EXISTS');
+  if(executionCommand){
+    if(existsSync(control.executionCursorPath!)){
+      await reserveQualificationEvidenceOutput({evidenceRoot:root,cursorPath:control.executionCursorPath!,
+        protocolDigest:registered.protocolDigest,candidateCutDigest:digest(registered.protocol.candidateCut),
+        allocationConventionDigest:registered.protocol.allocationConventionDigest,limits:executionLimits,
+        report:{path,bytes:bytes.length,sha256:sha(bytes)}});
+    }else pendingExecutionOutputBytes+=bytes.length;
+  }
+  writeFileSync(path,bytes,{flag:'wx',mode:0o600});
 };
+const resourceSummary=(resources:any)=>({limits:resources.limits,limitsDigest:resources.limitsDigest,
+  cut:'EXECUTION_RETURN_BEFORE_COMMAND_REPORT_RESERVATIONS_READ_ORIGINAL_CURSOR_FOR_CURRENT_TOTAL',
+  outputBytes:resources.outputBytes,acquisitionExposures:resources.acquisitionExposures,
+  acknowledgedAcquisitions:resources.acknowledgedAcquisitions,sliceCount:resources.slices.length,
+  lastSlice:resources.slices.at(-1),countersAreDurableExposureUpperBounds:true,
+  moneyUsd:resources.moneyUsd,humanSeconds:resources.humanSeconds,aggregatePeakMemoryBytes:resources.aggregatePeakMemoryBytes});
+const segmentSummary=(segment:any)=>{const {observations,receiptRefs,...fields}=segment;
+  return {...fields,physicalObservationCount:observations.length,uniqueReceiptCount:receiptRefs.length,
+    completePhysicalHistoryRetainedInOriginalExecutionJournal:true};};
 const profileDigest = digest(profile), started = performance.now();
-save("freeze.json", { schema: "finnor.x1.qualification-command-freeze.v1", command,
+await save("freeze.json", { schema: "finnor.x1.qualification-command-freeze.v1", command,
   at: new Date().toISOString(), controlSha256: sha(controlBytes), profileDigest,
   protocolDigest: registered.protocolDigest, custodyPolicyDigest: registered.custodyPolicyDigest,
   commit: execFileSync("git", ["rev-parse", "HEAD"], { cwd: repo, encoding: "utf8" }).trim(),
@@ -125,21 +153,21 @@ if(command==='instantiate'){
     allocatedOriginal=originalBinding.originalEpisodes.find(e=>e.tenantId===allocation.lifecycleOwner.tenantId&&e.workId===allocation.lifecycleOwner.workId);
   if(!allocated||!allocatedOriginal)throw Error('REGISTERED_SETUP_LIFECYCLE_OWNER_NOT_IN_ORIGINAL_POPULATION');
   lifecycleOwner={owner:allocated.owner,original:allocatedOriginal};
-  save('source-setup-original-binding.json',originalBinding);
+  await save('source-setup-original-binding.json',originalBinding);
   for(const spec of specs){
     const packet=pinned(spec.control.publicPacket);
     if(packet.environmentId!==spec.environmentId)throw Error('PUBLIC_SOURCE_ENVIRONMENT_BINDING_CHANGED');
     const result=await instantiateGeneratedOriginals({control:spec.control,owner:spec.owner,deadlineAt,
-      onObservation:observation=>save('source-setup-'+(exposure++)+'.json',{environmentId:spec.environmentId,
+      onObservation:async observation=>await save('source-setup-'+(exposure++)+'.json',{environmentId:spec.environmentId,
         inputDigest:digest(spec),observation,newResourceParentIssuedBySetup:false})});
-    results.push({environmentId:spec.environmentId,result});save('source-setup-result-'+results.length+'.json',results.at(-1));
+    results.push({environmentId:spec.environmentId,result});await save('source-setup-result-'+results.length+'.json',results.at(-1));
   }
   const endingBinding=await bindOriginalNativeWorker({protocolDigest:originalBinding.protocolDigest,
     candidateCutDigest:originalBinding.candidateCutDigest,allocationConventionDigest:originalBinding.allocationConventionDigest,
     runtime:originalBinding.runtime,phase:originalBinding.phase,envelope:originalBinding.envelope,
     owners:specs.map(s=>({owner:s.owner,workId:s.control.workId})),deadlineAt});
   if(digest(endingBinding.originalEpisodes)!==digest(originalBinding.originalEpisodes))throw Error('SOURCE_SETUP_ORIGINAL_PARENTS_CHANGED');
-  save('source-setup-outcomes.json',{results,originalBinding,endingBinding,
+  await save('source-setup-outcomes.json',{results,originalBinding,endingBinding,
     exactImmutableInputsRetained:true,setupReceiptsPersistedBeforeMutation:true,
     originalKeysAndParentsRetained:true,protectedQualificationEstablished:false,moneyUsd:null,humanSeconds:null,aggregatePeakMemoryBytes:null});
   console.log(JSON.stringify({status:'ACTUAL_GENERATED_SOURCE_OWNERS_INSTALLED',evidence:out,environments:results.length,
@@ -150,12 +178,12 @@ if(command==='instantiate'){
       const measured={invocationId,startedAt:physicalStartedAt,elapsedMs:performance.now()-physicalStarted,status:setupStatus,
         allocationConventionDigest:registered.protocol.allocationConventionDigest,outputBytes,
         intervalsContainComponents:true,moneyUsd:null,humanSeconds:null,aggregatePeakMemoryBytes:null};
-      save('source-setup-physical-lifecycle.json',measured);
+      await save('source-setup-physical-lifecycle.json',measured);
       if(lifecycleOwner){
         const receipt=await recordNativeAdministrationLifecycle({...lifecycleOwner,invocationId,startedAt:physicalStartedAt,
           elapsedMs:measured.elapsedMs,operation:'SETUP',status:setupStatus,receiptDigest:digest(measured),measurements:measured});
-        save('source-setup-s5-s7-lifecycle.json',receipt);
-      }else save('source-setup-lifecycle-gap.json',{status:'NO_VALID_PREREGISTERED_LIFECYCLE_OWNER',measured,
+        await save('source-setup-s5-s7-lifecycle.json',receipt);
+      }else await save('source-setup-lifecycle-gap.json',{status:'NO_VALID_PREREGISTERED_LIFECYCLE_OWNER',measured,
         newResourceParentIssued:false,financialOrQualificationEstablished:false});
     }finally{await closePool();}
   }
@@ -169,17 +197,21 @@ if(command==='instantiate'){
   const projections=z.array(IndependentReadProjection).min(10).max(160).parse(pinned(control.independentReadProjections));
   const collection=await executeLiveObservationSlice({projections,evidenceRoot:executionRoot,cursorPath:control.executionCursorPath,
     protocolDigest:registered.protocolDigest,candidateCutDigest:digest(registered.protocol.candidateCut),
-    allocationConventionDigest:registered.protocol.allocationConventionDigest,durationSeconds:Number(value('--seconds')??30),pollIntervalMs:1000,
+    allocationConventionDigest:registered.protocol.allocationConventionDigest,durationSeconds:Number(value('--seconds')??30),pollIntervalMs:60000,
     limits:{ref:envelope.ref,registrationDigest:digest(envelope),maxAcquisitionCalls:envelope.maxAcquisitionCalls,
-      maxAggregateWallMs:envelope.maxWallSeconds*1000,maxOutputBytes:64*1024*1024}});
+      maxAggregateWallMs:envelope.maxWallSeconds*1000,maxOutputBytes:64*1024*1024},externalEvidenceBytes:pendingExecutionOutputBytes});
   const history:Array<Awaited<ReturnType<typeof import('./qualification-runtime.mts').collectIndependentOwnerRead>>>=[];
-  for(const ref of collection.state.segments.flatMap(segment=>segment.receiptRefs).filter(ref=>ref.path.startsWith('live-owner-'))){
+  const snapshotRefs=[...new Map(collection.state.segments.flatMap(segment=>segment.receiptRefs)
+    .filter(ref=>ref.path.startsWith('live-owner-')).map(ref=>[ref.path,ref])).values()];
+  for(const ref of snapshotRefs){
     const draft=pinned({path:join(executionRoot,ref.path),sha256:ref.sha256});history.push(draft);
   }
-  outputBytes+=collection.state.resources.outputBytes;
+  pendingExecutionOutputBytes=0;
+  await save('native-observation-snapshot-refs.json',{refs:snapshotRefs,executionReceiptCursor:control.executionCursorPath,
+    historicalSnapshotsNotCopied:true,physicalPollHistoryRetainedInExecutionJournal:true});
   const result=await collectQualificationObservation({drafts:history,environmentIds:registered.protocol.environments.map(e=>e.id),
-    expectedSelectorCount:projections.length,save});
-  save('native-observation-execution.json',{resources:collection.state.resources,segment:collection.segment,
+    expectedSelectorCount:projections.length,save,retainDraftCopies:false,executionReceiptCursor:control.executionCursorPath});
+  await save('native-observation-execution.json',{resources:resourceSummary(collection.state.resources),segment:segmentSummary(collection.segment),
     originalCursorPath:control.executionCursorPath,aggregateAllowanceRetained:true,sevenElapsedDaysEstablished:false,signature:null});
   console.log(JSON.stringify({status:'NATIVE_OWNER_OBSERVATION_DRAFT_RECORDED',evidence:out,snapshotCount:result.snapshotCount,
     allSelectorsObserved:result.allSelectorsObserved,qualificationEstablished:false}));
@@ -206,9 +238,10 @@ if(command==='instantiate'){
     const seconds=Number(value('--seconds')??180),maxEvents=Number(value('--max-events')??128);
     if(!Number.isInteger(seconds)||seconds<1||seconds>840)throw Error('FINITE_REPLAY_COMMAND_QUANTUM_REQUIRED');
     const result=await executeReplaySlice({journal,cursorPath:control.executionCursorPath,evidenceRoot:executionRoot,
-      deadlineAt:Date.now()+seconds*1000,limits,maxEvents,...(recovery?{recovery}:{})});
-    save('execution-result.json',{command,submitted:result.submitted,
-      completeExpectedEventCoverage:result.completeExpectedEventCoverage,resources:result.cursor.resources,
+      deadlineAt:Date.now()+seconds*1000,limits,maxEvents,externalEvidenceBytes:pendingExecutionOutputBytes,...(recovery?{recovery}:{})});
+    pendingExecutionOutputBytes=0;
+    await save('execution-result.json',{command,submitted:result.submitted,
+      completeExpectedEventCoverage:result.completeExpectedEventCoverage,resources:resourceSummary(result.cursor.resources),
       cursorPath:control.executionCursorPath,replicaTimeIsNotElapsedLiveTime:true,protectedQualificationEstablished:false});
   }else{
     if(!control.independentReadProjections)throw Error('REGISTERED_INDEPENDENT_OWNER_SELECTORS_REQUIRED');
@@ -219,8 +252,9 @@ if(command==='instantiate'){
     const result=await executeLiveObservationSlice({projections,cursorPath:control.executionCursorPath,evidenceRoot:executionRoot,
       protocolDigest:registered.protocolDigest,candidateCutDigest:digest(registered.protocol.candidateCut),
       allocationConventionDigest:registered.protocol.allocationConventionDigest,durationSeconds:Number(value('--seconds')??30),
-      pollIntervalMs:1000,limits,...(recovery?{recovery}:{})});
-    save('execution-result.json',{command,segment:result.segment,resources:result.state.resources,
+      pollIntervalMs:60000,limits,externalEvidenceBytes:pendingExecutionOutputBytes,...(recovery?{recovery}:{})});
+    pendingExecutionOutputBytes=0;
+    await save('execution-result.json',{command,segment:segmentSummary(result.segment),resources:resourceSummary(result.state.resources),
       cursorPath:control.executionCursorPath,sevenElapsedDaysEstablished:false,protectedQualificationEstablished:false});
   }
   console.log(JSON.stringify({status:'FINITE_AUTHENTICATED_EXECUTION_RECORDED',command,evidence:out,
@@ -229,7 +263,7 @@ if(command==='instantiate'){
   const assessment = assessInstitutionQualification({ protocol: registration, trustPolicy: policy, profile,
     oracles: control.oracleLedgers.map(pinned), observationPackets: control.observationPackets.map(pinned),
     ...(control.lifecycleCostPacket ? { lifecycleCostPacket: pinned(control.lifecycleCostPacket) } : {}) });
-  save("assessment.json", assessment);
+  await save("assessment.json", assessment);
   console.log(JSON.stringify({ disposition: assessment.disposition, registeredGatesPassed: assessment.registeredGatesPassed,
     evidence: out, s8AdmissionIssued: false, productionActive: false }));
 } else {
@@ -288,8 +322,8 @@ if(command==='instantiate'){
         environment.inputs.some(i=>i.tenantId===e.tenantId&&i.workId===e.workId)),environment.originalEpisodes!);
       const workerControl=NativeWorkerControl.parse({schema:'finnor.x1.qualification-native-worker-control.v1',registration,
         evidenceRoot:executionRoot,cursorPath:control.executionCursorPath,durationSeconds:Number(value('--seconds')??30)});
-      save('native-worker-control.json',workerControl);
-      save('native-worker-launch-packet.json',{controlPath:join(out,'native-worker-control.json'),
+      await save('native-worker-control.json',workerControl);
+      await save('native-worker-launch-packet.json',{controlPath:join(out,'native-worker-control.json'),
         controlSha256:sha(readFileSync(join(out,'native-worker-control.json'))),runtime,phase,
         workerEntrypoint:installed?installed.entrypoint('worker'):join(repo,'finnor-os/scripts/frontier5/x1/physical-owner-worker.mts'),
         environmentNames:['DATABASE_URL','AUTH_DEV_BYPASS','FINNOR_P4_PROFILE','FINNOR_X1_QUAL_NATIVE_CONTROL','FINNOR_X1_QUAL_NATIVE_CONTROL_SHA256'],
@@ -299,7 +333,7 @@ if(command==='instantiate'){
         originalEpisodes:registration.originalEpisodes.length,qualificationEstablished:false}));
     }finally{await closePool();}
   }else if (command === "plan") {
-    save("launch-observe-resume.json", { status: "READY_FOR_OWNER_AUTHORIZED_TEST_SERVICES_NOT_RUN",
+    await save("launch-observe-resume.json", { status: "READY_FOR_OWNER_AUTHORIZED_TEST_SERVICES_NOT_RUN",
       protocolId: registered.protocol.id, environments: registered.protocol.environments.map(e => ({ id: e.id,
         sourceClasses: e.systems.map(s => s.sourceClass), oracleDigest: e.oracleDigest,
         replayJournalCommitment: e.replayJournalCommitment })),
@@ -352,7 +386,7 @@ if(command==='instantiate'){
         const response = await call(`/api/company-brain/${operation}`, body);
         if (response.status < 300 && response.body.workId !== undefined && response.body.workId !== input.workId)
           throw Error("X1_CANDIDATE_RETURNED_DIFFERENT_WORK");
-        save(`candidate-${ordinal}.json`, { input, operation, response,
+        await save(`candidate-${ordinal}.json`, { input, operation, response,
           elapsedMs: performance.now() - begin, oracleExposed: false, independentPostconditionEstablished: false });
         outcomes.push({ environmentId: input.environmentId, workId: input.workId,
           requestId: response.body.requestId ?? requestId ?? null, status: response.status,
@@ -360,10 +394,10 @@ if(command==='instantiate'){
       } catch (error) {
         outcomes.push({ environmentId: input.environmentId, workId: input.workId, requestId: requestId ?? null,
           disposition: "UNKNOWN_RETAIN_ORIGINAL_KEY_NO_FRESH_GRANT", predicate: String((error as Error).message) });
-        save(`uncertain-${ordinal}.json`, { input, operation, originalKeyRetained: true, elapsedMs: performance.now() - begin });
+        await save(`uncertain-${ordinal}.json`, { input, operation, originalKeyRetained: true, elapsedMs: performance.now() - begin });
       }
     }
-    save("outcomes.json", { command, outcomes, elapsedMs: performance.now() - started,
+    await save("outcomes.json", { command, outcomes, elapsedMs: performance.now() - started,
       validatorCostUsd: null, validatorHumanSeconds: null, aggregatePeakMemoryBytes: null,
       qualification: "CANDIDATE_HTTP_COLLECTION_NOT_INDEPENDENT_OBSERVATION", oracleExposed: false });
     console.log(JSON.stringify({ status: "FINITE_CANDIDATE_COMMAND_RECORDED", evidence: out,

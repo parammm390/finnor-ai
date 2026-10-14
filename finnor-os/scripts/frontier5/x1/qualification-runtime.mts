@@ -5,6 +5,7 @@ import {dirname,join,resolve} from 'node:path';
 import {randomUUID,createHash} from 'node:crypto';
 import {z} from 'zod';
 import {digest} from '../../../packages/capability-evolution/src/contracts';
+import {openQualificationStateJournal,readQualificationCursor} from './qualification-state-journal.mts';
 
 const hex=z.string().regex(/^[a-f0-9]{64}$/),instant=z.string().datetime({offset:true});
 const scalar=z.union([z.string(),z.number().finite(),z.boolean(),z.null()]);
@@ -57,6 +58,7 @@ type ExecutionSlice={id:string;pid:number;startedAt:string;lastObservedAt:string
   unobservedTail:boolean;predicate?:string};
 type Resources={limits:z.infer<typeof ExecutionLimits>;limitsDigest:string;outputBytes:number;
   acquisitionExposures:number;acknowledgedAcquisitions:number;slices:ExecutionSlice[];
+  reportWrites?:Array<{path:string;bytes:number;sha256:string;reservedAt:string;disposition:'RESERVED_WRITE_EXPOSURE'}>;
   countersAreDurableExposureUpperBounds:true;moneyUsd:null;humanSeconds:null;aggregatePeakMemoryBytes:null};
 type ReceiptRef={path:string;sha256:string;bytes:number};
 type Cursor={schema:'finnor.x1.qualification-execution-cursor.v2';journalDigest:string;protocolDigest:string;
@@ -72,6 +74,7 @@ const get=(value:unknown,segments:Array<string|number>):unknown=>{
   }return current;
 };
 const sha=(bytes:Buffer|string)=>createHash('sha256').update(bytes).digest('hex');
+const copyJson=<T,>(value:T):T=>JSON.parse(JSON.stringify(value));
 const transportRequest=(input:OwnerRequest)=>request.parse({path:input.path,method:input.method,
   ...(input.body!==undefined?{body:input.body}:{})});
 const verifiedOwnerRead=(result:{status:number;body:unknown},spec:z.infer<typeof observation>)=>{
@@ -129,12 +132,6 @@ export function validateExecutionJournal(value:unknown,registration:{protocolDig
 async function durableWrite(path:string,bytes:Buffer){
   const file=await open(path,'wx',0o600);
   try{await file.writeFile(bytes);await file.sync();}finally{await file.close();}
-}
-async function atomicCursor(path:string,body:unknown){
-  const temporary=path+'.'+randomUUID()+'.tmp';
-  try{await durableWrite(temporary,Buffer.from(JSON.stringify(body,null,2)+'\n'));await rename(temporary,path);
-    const directory=await open(dirname(path),'r');try{await directory.sync();}finally{await directory.close();}}
-  finally{await unlink(temporary).catch(error=>{if(error.code!=='ENOENT')throw error;});}
 }
 async function privatePaths(evidenceRoot:string,cursor:string){
   const root=await realpath(resolve(evidenceRoot)),cursorPath=resolve(cursor);
@@ -203,53 +200,49 @@ function validateResources(resources:Resources,limits:z.infer<typeof ExecutionLi
 }
 const chargedWallMs=(resources:Resources)=>resources.slices.reduce((n,s)=>n+
   (s.status==='STARTED'||s.status==='INTERRUPTED'?Math.max(s.reservedWallMs,s.observedElapsedMs):s.observedElapsedMs),0);
-function managedState<T extends {resources:Resources;revision:number}>(state:T,cursorPath:string,root:string,
-  deadlineAt:number,limits:z.infer<typeof ExecutionLimits>){
-  validateResources(state.resources,limits);
+async function managedState<T extends {resources:Resources;revision:number}>(original:T,cursorPath:string,root:string,
+  deadlineAt:number,limits:z.infer<typeof ExecutionLimits>,initialEvidenceBytes=0){
+  validateResources(original.resources,limits);
+  if(!Number.isSafeInteger(initialEvidenceBytes)||initialEvidenceBytes<0)throw Error('ORIGINAL_EXTERNAL_EVIDENCE_BYTES_INVALID');
+  const began=performance.now(),reservedWallMs=deadlineAt-Date.now();
+  if(reservedWallMs<=0||reservedWallMs>840000||chargedWallMs(original.resources)+reservedWallMs>limits.maxAggregateWallMs)
+    throw Error('ORIGINAL_AGGREGATE_WALL_BOUND');
+  const journal=await openQualificationStateJournal(original,cursorPath,limits.maxOutputBytes),state=journal.state;
   for(const previous of state.resources.slices)if(previous.status==='STARTED'){
     if(!processHasExited(previous.pid))throw Error('PREVIOUS_EXECUTION_PROCESS_STILL_LIVE');
     previous.status='INTERRUPTED';previous.unobservedTail=true;
   }
-  const began=performance.now(),reservedWallMs=deadlineAt-Date.now();
-  if(reservedWallMs<=0||reservedWallMs>840000||chargedWallMs(state.resources)+reservedWallMs>limits.maxAggregateWallMs)
-    throw Error('ORIGINAL_AGGREGATE_WALL_BOUND');
-  const slice:ExecutionSlice={id:randomUUID(),pid:process.pid,startedAt:new Date().toISOString(),
+  const nextSlice:ExecutionSlice={id:randomUUID(),pid:process.pid,startedAt:new Date().toISOString(),
     lastObservedAt:new Date().toISOString(),reservedWallMs,observedElapsedMs:0,status:'STARTED',unobservedTail:false};
-  state.resources.slices.push(slice);
-  let finalizing=false;
-  const saveState=async()=>{
+  state.resources.slices.push(nextSlice);
+  const slice=state.resources.slices.at(-1)!;
+  let finalizing=false,pendingEvidenceBytes=initialEvidenceBytes;
+  const saveState=async(externalBytes=0)=>{
     slice.observedElapsedMs=performance.now()-began;slice.lastObservedAt=new Date().toISOString();state.revision++;
-    const base=state.resources.outputBytes;let bytes=Buffer.from(JSON.stringify(state,null,2)+'\n');
-    // Charge the cursor's temporary write as well as immutable owner receipts.
-    for(let i=0;i<8;i++){
-      state.resources.outputBytes=base+bytes.length;const next=Buffer.from(JSON.stringify(state,null,2)+'\n');
-      if(next.length===bytes.length){bytes=next;break;}bytes=next;
-    }
-    // Preserve room for one final cursor and bounded status/error growth before
-    // exposing any request. An exhausted payload budget still records the stop.
-    const finalizationReserve=finalizing?0:bytes.length+65536;
-    if(state.resources.outputBytes+finalizationReserve>limits.maxOutputBytes){
-      state.resources.outputBytes=base;throw Error('ORIGINAL_AGGREGATE_OUTPUT_BOUND');}
-    await atomicCursor(cursorPath,state);
+    await journal.save(externalBytes+pendingEvidenceBytes,finalizing);pendingEvidenceBytes=0;
   };
   const saveReceipt=async(name:string,body:unknown):Promise<ReceiptRef>=>{
     if(!/^[a-z][a-z0-9-]+\.json$/.test(name))throw Error('PRIVATE_RECEIPT_NAME_REQUIRED');
     const bytes=Buffer.from(JSON.stringify(body,null,2)+'\n');
     if(state.resources.outputBytes+bytes.length>limits.maxOutputBytes)throw Error('ORIGINAL_AGGREGATE_OUTPUT_BOUND');
-    state.resources.outputBytes+=bytes.length;await saveState();
+    await saveState(bytes.length);
     await durableWrite(join(root,name),bytes);return {path:name,sha256:sha(bytes),bytes:bytes.length};
   };
-  const call=async(owner:OwnerEndpoint,req:OwnerRequest)=>{
+  const call=async(owner:OwnerEndpoint,req:OwnerRequest,acknowledgement='SYNC')=>{
     endpoint.parse(owner);transportRequest(req);
     if(!process.env[owner.tokenEnvironmentVariable])throw Error('EXISTING_OWNER_SERVICE_CREDENTIAL_REQUIRED');
     if(Date.now()>=deadlineAt)throw Error('ORIGINAL_EXECUTION_DEADLINE_EXHAUSTED');
     if(state.resources.acquisitionExposures>=limits.maxAcquisitionCalls)throw Error('ORIGINAL_AGGREGATE_ACQUISITION_BOUND');
     state.resources.acquisitionExposures++;await saveState();
     const result=await callAuthenticatedOwner(owner,req,{deadlineAt,maxResponseBytes:req.path==='/api/me'?65536:6*1024*1024});
-    state.resources.acknowledgedAcquisitions++;await saveState();return result;
+    state.resources.acknowledgedAcquisitions++;
+    // Read-only observation pipelines may persist the acknowledgement together
+    // with the next exposure or final projection. The exposure itself was
+    // already synced, so interruption conservatively retains UNKNOWN.
+    if(acknowledgement==='SYNC')await saveState();return result;
   };
-  const authenticate=async(owner:OwnerEndpoint)=>{
-    const result=await call(owner,{method:'GET',path:'/api/me'});
+  const authenticate=async(owner:OwnerEndpoint,acknowledgement='SYNC')=>{
+    const result=await call(owner,{method:'GET',path:'/api/me'},acknowledgement);
     if(result.status!==200||result.body.tenantId!==owner.tenantId
       ||(result.body.employeeId??result.body.userId)!==owner.principalId||result.body.role!=='owner')
       throw Error('ACTUAL_REGISTERED_OWNER_IDENTITY_REQUIRED');
@@ -261,25 +254,26 @@ function managedState<T extends {resources:Resources;revision:number}>(state:T,c
     state.resources.acquisitionExposures++;await saveState();
     const result=await read();state.resources.acknowledgedAcquisitions++;await saveState();return result;
   };
-  return {slice,saveState,saveReceipt,call,authenticate,measureAcquisition,
+  return {state,slice,saveState,saveReceipt,call,authenticate,measureAcquisition,seal:journal.seal,
     finish:async(error?:unknown)=>{slice.status=error?'FAILED':'FINISHED';slice.endedAt=new Date().toISOString();
-      if(error)slice.predicate=String((error as Error).message);finalizing=true;await saveState();}};
+      if(error)slice.predicate=String((error as Error).message);finalizing=true;
+      try{await saveState();}finally{await journal.close();}}};
 }
 /** One finite command keeps all prior uncertain/refused entries. An uncertain
  * mutation is never redelivered by this function, including after a crash. */
 export async function executeReplaySlice(input:{journal:z.infer<typeof QualificationExecutionJournal>;cursorPath:string;
   evidenceRoot:string;deadlineAt:number;limits:z.infer<typeof ExecutionLimits>;maxEvents:number;
-  recovery?:{expectedLockDigest:string}}){
+  externalEvidenceBytes?:number;recovery?:{expectedLockDigest:string}}){
   const journal=QualificationExecutionJournal.parse(input.journal),limits=ExecutionLimits.parse(input.limits);
   const {root,cursorPath}=await privatePaths(input.evidenceRoot,input.cursorPath);
   if(!Number.isSafeInteger(input.maxEvents)||input.maxEvents<1||input.maxEvents>50000
     ||!Number.isFinite(input.deadlineAt)||input.deadlineAt<=Date.now()||input.deadlineAt-Date.now()>840000)
     throw Error('REGISTERED_FINITE_REPLAY_ENVELOPE_REQUIRED');
   const release=await acquireCursorLock(cursorPath,digest({journalDigest:digest(journal),limits}),input.recovery);
-  let managed:ReturnType<typeof managedState<Cursor>>|undefined,failure:unknown;
+  let managed:Awaited<ReturnType<typeof managedState<Cursor>>>|undefined,failure:unknown;
   try{
     let cursor:Cursor;
-    try{cursor=JSON.parse(await readFile(cursorPath,'utf8'));}
+    try{cursor=await readQualificationCursor(cursorPath);}
     catch(error){if((error as NodeJS.ErrnoException).code!=='ENOENT')throw error;
       cursor={schema:'finnor.x1.qualification-execution-cursor.v2',journalDigest:digest(journal),protocolDigest:journal.protocolDigest,
         candidateCutDigest:journal.candidateCutDigest,allocationConventionDigest:journal.allocationConventionDigest,
@@ -304,7 +298,8 @@ export async function executeReplaySlice(input:{journal:z.infer<typeof Qualifica
         if(bytes.length!==receipt.bytes||sha(bytes)!==receipt.sha256)throw Error('DURABLE_OWNER_RECEIPT_PREIMAGE_CHANGED');
       }
     }
-    managed=managedState(cursor,cursorPath,root,input.deadlineAt,limits);
+    managed=await managedState(cursor,cursorPath,root,input.deadlineAt,limits,input.externalEvidenceBytes);
+    cursor=managed.state;
     const {call,authenticate,saveReceipt,saveState}=managed;await saveState();
     let submitted=0;
     for(const environment of journal.environments)for(const item of environment.events){
@@ -319,16 +314,16 @@ export async function executeReplaySlice(input:{journal:z.infer<typeof Qualifica
         const witness=await call(item.owner,item.reconciliation);
         const applied=verifiedOwnerRead(witness,item.reconciliation);
         existing.receiptRefs.push(await saveReceipt('reconciliation-'+existing.invocationId+'-'+randomUUID()+'.json',
-          {existing:structuredClone(existing),witness,applied,
+          {existing:copyJson(existing),witness,applied,
             qualification:'ACTUAL_OWNER_READ_NO_AUTOMATIC_EFFECT_RETRY_OR_COMPLETION_CREDIT'}));
         existing.status=applied?'APPLIED':'RECONCILIATION_REQUIRED';await saveState();
         continue;
       }
       if(item.dependsOn.some(id=>!cursor.entries.some(e=>e.environmentId===environment.id&&e.eventId===id&&e.status==='APPLIED')))continue;
-      const entry:Cursor['entries'][number]={environmentId:environment.id,eventId:item.id,invocationId:randomUUID(),
+      let entry:Cursor['entries'][number]={environmentId:environment.id,eventId:item.id,invocationId:randomUUID(),
         status:'EXPOSED',exposedAt:new Date().toISOString(),originalIdempotencyKey:item.originalIdempotencyKey,
         originalEpisodeId:item.originalEpisodeId,originalGrantDigest:item.originalGrantDigest,originalDeadline:item.originalDeadline,receiptRefs:[]};
-      cursor.entries.push(entry);await saveState();submitted++;
+      cursor.entries.push(entry);entry=cursor.entries.at(-1)!;await saveState();submitted++;
       if(Date.now()>Date.parse(item.originalDeadline)){
         entry.status='REFUSED';entry.predicate='ORIGINAL_EVENT_DEADLINE_EXPIRED_BEFORE_EXPOSURE';await saveState();continue;
       }
@@ -342,7 +337,7 @@ export async function executeReplaySlice(input:{journal:z.infer<typeof Qualifica
           throw Error('ACTUAL_ADMITTED_REPLICA_CLOCK_RECEIPT_REQUIRED');
         const result=await call(item.owner,item.request);entry.responseDigest=result.responseDigest;entry.responseStatus=result.status;
         entry.status=result.status>=200&&result.status<300?'ACCEPTED':'REFUSED';
-        const receipt={environmentId:environment.id,entry:structuredClone(entry),identity,clockIdentity,clockSet,clockWitness,result,
+        const receipt={environmentId:environment.id,entry:copyJson(entry),identity,clockIdentity,clockSet,clockWitness,result,
           replicaAt:item.replicaAt,localObservedAt:result.observedAt,completionEstablished:false,
           moneyUsd:null,humanSeconds:null,aggregatePeakMemoryBytes:null,protectedQualificationEstablished:false};
         entry.receiptDigest=digest(receipt);entry.receiptRefs.push(await saveReceipt('event-'+entry.invocationId+'.json',receipt));
@@ -356,7 +351,7 @@ export async function executeReplaySlice(input:{journal:z.infer<typeof Qualifica
       }catch(error){entry.status='UNKNOWN';entry.predicate=String((error as Error).message);
         await saveState();
         entry.receiptRefs.push(await saveReceipt('uncertain-'+entry.invocationId+'.json',
-          {entry:structuredClone(entry),possibleEffectRetained:true,newIdentityIssued:false,protectedQualificationEstablished:false}));}
+          {entry:copyJson(entry),possibleEffectRetained:true,newIdentityIssued:false,protectedQualificationEstablished:false}));}
       await saveState();
     }
     return {cursor,submitted,observedElapsedMs:managed.slice.observedElapsedMs,
@@ -435,7 +430,7 @@ function projectIndependentOwnerRead(projection:z.infer<typeof IndependentReadPr
  * deliberately not issued by this collector. */
 export async function executeLiveObservationSlice(input:{projections:unknown[];cursorPath:string;evidenceRoot:string;
   protocolDigest:string;candidateCutDigest:string;allocationConventionDigest:string;durationSeconds:number;
-  limits:z.infer<typeof ExecutionLimits>;pollIntervalMs:number;recovery?:{expectedLockDigest:string}}){
+  limits:z.infer<typeof ExecutionLimits>;pollIntervalMs:number;externalEvidenceBytes?:number;recovery?:{expectedLockDigest:string}}){
   const projections=input.projections.map(p=>IndependentReadProjection.parse(p));
   const limits=ExecutionLimits.parse(input.limits),{root,cursorPath}=await privatePaths(input.evidenceRoot,input.cursorPath);
   if(!Number.isInteger(input.durationSeconds)||input.durationSeconds<1||input.durationSeconds>840
@@ -450,16 +445,18 @@ export async function executeLiveObservationSlice(input:{projections:unknown[];c
   type Segment={id:string;status:'STARTED'|'FINISHED'|'FAILED'|'INTERRUPTED';startedAt:string;endedAt?:string;
     monotonicElapsedMs:number;localWallElapsedMs:number;continuityGapMs:number|null;continuousWithPrevious:boolean|null;
     polls:number;receiptRefs:ReceiptRef[];observations:Array<{invocationId:string;environmentId:string;at:string;
-      status:'EXPOSED'|'OBSERVED'|'UNRESOLVED'|'UNKNOWN';receiptRef?:ReceiptRef;predicate?:string}>;
+      status:'EXPOSED'|'OBSERVED'|'UNRESOLVED'|'UNKNOWN';receiptRef?:ReceiptRef;predicate?:string;
+      ownerIdentityDigest?:string;ownerResponseDigest?:string;independentReadAt?:string;semanticSnapshotDigest?:string;
+      visibilityWitnesses?:Array<{identity:string;observedAt:string}>}>;
     independentlyObservedUnattended:false;serviceFingerprint:string;fingerprintBasis:string;moneyUsd:null;humanSeconds:null;
     aggregatePeakMemoryBytes:null;sevenElapsedDaysEstablished:false;replicaTimeSubstituted:false;
     protectedQualificationEstablished:false;receiptDigest?:string};
   type State={schema:'finnor.x1.live-observation-cursor.v2';phasePin:typeof phasePin;
     resources:Resources;segments:Segment[];revision:number};
-  let managed:ReturnType<typeof managedState<State>>|undefined,failure:unknown,segment:Segment|undefined;
+  let managed:Awaited<ReturnType<typeof managedState<State>>>|undefined,failure:unknown,segment:Segment|undefined;
   try{
     let state:State;
-    try{state=JSON.parse(await readFile(cursorPath,'utf8'));}
+    try{state=await readQualificationCursor(cursorPath);}
     catch(error){if((error as NodeJS.ErrnoException).code!=='ENOENT')throw error;
       state={schema:'finnor.x1.live-observation-cursor.v2',phasePin,resources:newResources(limits),segments:[],revision:0};}
     if(state.schema!=='finnor.x1.live-observation-cursor.v2'||digest(state.phasePin)!==digest(phasePin)
@@ -469,7 +466,6 @@ export async function executeLiveObservationSlice(input:{projections:unknown[];c
     for(const previous of state.segments){
       if(!Array.isArray(previous.receiptRefs)||!Array.isArray(previous.observations)
         ||!['STARTED','FINISHED','FAILED','INTERRUPTED'].includes(previous.status))throw Error('ORIGINAL_LIVE_SEGMENT_INVALID');
-      if(previous.status==='STARTED')previous.status='INTERRUPTED';
       for(const receipt of previous.receiptRefs){
         if(!/^[a-z][a-z0-9-]+\.json$/.test(receipt.path)||receipt.bytes<1||receipt.bytes>limits.maxOutputBytes)
           throw Error('LIVE_RECEIPT_REFERENCE_INVALID');
@@ -477,8 +473,11 @@ export async function executeLiveObservationSlice(input:{projections:unknown[];c
         if(bytes.length!==receipt.bytes||sha(bytes)!==receipt.sha256)throw Error('LIVE_OWNER_RECEIPT_PREIMAGE_CHANGED');
       }
     }
-    managed=managedState(state,cursorPath,root,deadlineAt,limits);
+    managed=await managedState(state,cursorPath,root,deadlineAt,limits,input.externalEvidenceBytes);
+    state=managed.state;
+    for(const previous of state.segments)if(previous.status==='STARTED')previous.status='INTERRUPTED';
     const {saveState,saveReceipt,authenticate,call,measureAcquisition}=managed;
+    const snapshots=new Map(state.segments.flatMap(s=>s.receiptRefs).filter(r=>r.path.startsWith('live-owner-')).map(r=>[r.path,r]));
     const previous=state.segments.at(-1),gapMs=previous?.endedAt?Date.parse(startedAt)-Date.parse(previous.endedAt):null;
     segment={id:managed.slice.id,status:'STARTED',startedAt,monotonicElapsedMs:0,localWallElapsedMs:0,
       continuityGapMs:gapMs,continuousWithPrevious:previous?previous.status==='FINISHED'&&gapMs!==null&&gapMs>=0&&gapMs<=1000:null,
@@ -486,22 +485,39 @@ export async function executeLiveObservationSlice(input:{projections:unknown[];c
       fingerprintBasis:'PINNED_ENDPOINT_AND_CUT_REQUIRES_INDEPENDENT_INSTALLED_SERVICE_ATTESTATION',
       moneyUsd:null,humanSeconds:null,aggregatePeakMemoryBytes:null,sevenElapsedDaysEstablished:false,
       replicaTimeSubstituted:false,protectedQualificationEstablished:false};
-    state.segments.push(segment);await saveState();
+    state.segments.push(segment);segment=state.segments.at(-1)!;await saveState();
     while(Date.now()<deadlineAt){
       for(const projection of projections){
         if(Date.now()>=deadlineAt)break;
-        const invocationId=randomUUID();
-        const observationEntry:Segment['observations'][number]={invocationId,environmentId:projection.environmentId,
+        const invocationId=segment.id+':'+(segment.observations.length+1);
+        let observationEntry:Segment['observations'][number]={invocationId,environmentId:projection.environmentId,
           at:new Date().toISOString(),status:'EXPOSED'};
-        segment.observations.push(observationEntry);await saveState();
+        segment.observations.push(observationEntry);observationEntry=segment.observations.at(-1)!;
         try{
-          const identity=await authenticate(projection.owner),response=projection.nativeSelector
+          const identity=await authenticate(projection.owner,'WITH_NEXT_EXPOSURE_OR_PROJECTION'),response=projection.nativeSelector
             ?await (await import('./qualification-native-observation.mjs')).readNativeObservationSnapshot(
               projection.owner,projection.nativeSelector,deadlineAt,measureAcquisition)
-            :await call(projection.owner,projection.request);
+            :await call(projection.owner,projection.request,'WITH_NEXT_EXPOSURE_OR_PROJECTION');
           const result=projectIndependentOwnerRead(projection,identity,response);
-          observationEntry.receiptRef=await saveReceipt('live-owner-'+invocationId+'.json',result);
-          segment.receiptRefs.push(observationEntry.receiptRef);
+          // The native selector's x1_observed_at is clock_timestamp() for this
+          // physical read. Preserve every timestamp below while storing the
+          // unchanged semantic snapshot once. Genuine owner commit times remain
+          // part of the semantic key, as do row order and duplicate multiplicity.
+          const nativeReadClock=projection.nativeSelector&&projection.trustedVisibilityTimestampPath?.at(-1)==='x1_observed_at';
+          const snapshotDigest=digest({environmentId:projection.environmentId,projectionDigest:result.projectionDigest,
+            kind:result.kind,appliedStatePredicatesSatisfied:result.appliedStatePredicatesSatisfied,
+            observations:result.observations.map(o=>({identity:o.identity,semanticDigest:o.semanticDigest,accepted:o.accepted,
+              ...(projection.trustedVisibilityTimestampPath&&!nativeReadClock?{observedAt:o.observedAt}:{})}))});
+          const name='live-owner-'+snapshotDigest+'.json';
+          let receipt=snapshots.get(name);
+          if(!receipt){receipt=await saveReceipt(name,result);snapshots.set(name,receipt);}
+          observationEntry.receiptRef=receipt;
+          observationEntry.ownerIdentityDigest=identity.responseDigest;
+          observationEntry.ownerResponseDigest=response.responseDigest;
+          observationEntry.independentReadAt=response.observedAt;
+          observationEntry.semanticSnapshotDigest=snapshotDigest;
+          observationEntry.visibilityWitnesses=result.observations.map(o=>({identity:o.identity,observedAt:o.observedAt}));
+          if(!segment.receiptRefs.some(r=>r.path===receipt!.path))segment.receiptRefs.push(receipt);
           observationEntry.status=result.appliedStatePredicatesSatisfied?'OBSERVED':'UNRESOLVED';
         }catch(error){observationEntry.status='UNKNOWN';observationEntry.predicate=String((error as Error).message);
           await saveState();
@@ -516,13 +532,50 @@ export async function executeLiveObservationSlice(input:{projections:unknown[];c
     }
     segment.status='FINISHED';segment.endedAt=new Date().toISOString();segment.monotonicElapsedMs=performance.now()-began;
     segment.localWallElapsedMs=Date.parse(segment.endedAt)-Date.parse(startedAt);
-    const summaryPreimage=structuredClone(segment);segment.receiptDigest=digest(summaryPreimage);
+    const {observations:physicalObservations,...summaryFields}=segment;
+    const summaryPreimage={...copyJson(summaryFields),physicalObservationCount:physicalObservations.length,
+      physicalObservationsDigest:digest(physicalObservations),journal:managed.seal(),
+      completePhysicalObservationHistoryRetainedInJournal:true};segment.receiptDigest=digest(summaryPreimage);
     const summary=await saveReceipt('live-segment-'+segment.id+'.json',summaryPreimage);
     segment.receiptRefs.push(summary);await saveState();
     return {segment,state,protectedQualificationEstablished:false};
   }catch(error){failure=error;if(segment){segment.status='FAILED';segment.endedAt=new Date().toISOString();
       segment.monotonicElapsedMs=performance.now()-began;segment.localWallElapsedMs=Date.parse(segment.endedAt)-Date.parse(startedAt);}throw error;}
   finally{try{await managed?.finish(failure);}catch(error){await release(true);throw error;}await release();}
+}
+
+/** The real administrator reserves each new command file before writing it.
+ * Existing cursor bytes are never charged again. A failed write retains its
+ * conservative exposure; the original registration and limits cannot change. */
+export async function reserveQualificationEvidenceOutput(input:{evidenceRoot:string;cursorPath:string;
+ protocolDigest:string;candidateCutDigest:string;allocationConventionDigest:string;
+ limits:z.infer<typeof ExecutionLimits>;report:{path:string;bytes:number;sha256:string}}){
+ const {root,cursorPath}=await privatePaths(input.evidenceRoot,input.cursorPath),limits=ExecutionLimits.parse(input.limits);
+ const report=input.report;
+ if(!report.path.startsWith(root+'/')||!Number.isSafeInteger(report.bytes)||report.bytes<1||!hex.safeParse(report.sha256).success)
+  throw Error('PRIVATE_ORIGINAL_COMMAND_REPORT_REQUIRED');
+ const observed=await readQualificationCursor(cursorPath),isLive=observed.schema==='finnor.x1.live-observation-cursor.v2';
+ if(!isLive&&observed.schema!=='finnor.x1.qualification-execution-cursor.v2')throw Error('ORIGINAL_ADMIN_EXECUTION_CURSOR_REQUIRED');
+ const current=isLive?observed.phasePin:observed;
+ if(current.protocolDigest!==input.protocolDigest||current.candidateCutDigest!==input.candidateCutDigest
+  ||current.allocationConventionDigest!==input.allocationConventionDigest)throw Error('ORIGINAL_EXECUTION_REGISTRATION_CHANGED');
+ validateResources(observed.resources,limits);
+ const lockPin=isLive?{phasePin:observed.phasePin,limits}:{journalDigest:observed.journalDigest,limits};
+ const release=await acquireCursorLock(cursorPath,digest(lockPin));
+ let journal:Awaited<ReturnType<typeof openQualificationStateJournal<any>>>|undefined;
+ try{
+  const state=await readQualificationCursor(cursorPath);validateResources(state.resources,limits);
+  if(digest(isLive?state.phasePin:{journalDigest:state.journalDigest})!==digest(isLive?observed.phasePin:{journalDigest:observed.journalDigest}))
+   throw Error('ORIGINAL_EXECUTION_REGISTRATION_CHANGED');
+  journal=await openQualificationStateJournal(state,cursorPath,limits.maxOutputBytes);
+  const tracked=journal.state;
+  tracked.resources.reportWrites??=[];
+  if(tracked.resources.reportWrites.some((r:{path:string})=>r.path===report.path))throw Error('ORIGINAL_COMMAND_REPORT_ALREADY_RESERVED');
+  tracked.resources.reportWrites.push({...report,reservedAt:new Date().toISOString(),disposition:'RESERVED_WRITE_EXPOSURE'});
+  tracked.revision++;
+  await journal.save(report.bytes);
+  return journal.seal();
+ }finally{await journal?.close();await release();}
 }
 
 /** The caller supplies the actual production JobQueue and independently reads
@@ -548,10 +601,10 @@ export async function executeNativeQueueSlice(input:{registration:unknown;cursor
     ticks:Tick[];receiptRefs:ReceiptRef[];actualDeliveryAttempts:Array<Record<string,unknown>>;predicate?:string};
   type State={schema:'finnor.x1.native-worker-cursor.v1';pinDigest:string;registration:z.infer<typeof NativeWorkerRegistration>;
     resources:Resources;revision:number;segments:Segment[];counterMeaning:'CONSERVATIVE_NATIVE_TICK_EXPOSURES_NOT_HTTP_CALLS_OR_BUSINESS_WORK'};
-  let managed:ReturnType<typeof managedState<State>>|undefined,segment:Segment|undefined,failure:unknown;
+  let managed:Awaited<ReturnType<typeof managedState<State>>>|undefined,segment:Segment|undefined,failure:unknown;
   try{
     let state:State;
-    try{state=JSON.parse(await readFile(cursorPath,'utf8'));}
+    try{state=await readQualificationCursor(cursorPath);}
     catch(error){if((error as NodeJS.ErrnoException).code!=='ENOENT')throw error;
       state={schema:'finnor.x1.native-worker-cursor.v1',pinDigest,registration,resources:newResources(limits),revision:0,segments:[],
         counterMeaning:'CONSERVATIVE_NATIVE_TICK_EXPOSURES_NOT_HTTP_CALLS_OR_BUSINESS_WORK'};}
@@ -562,7 +615,6 @@ export async function executeNativeQueueSlice(input:{registration:unknown;cursor
     for(const previous of state.segments){
       if(!Array.isArray(previous.ticks)||!Array.isArray(previous.receiptRefs)||!Array.isArray(previous.actualDeliveryAttempts))
         throw Error('NATIVE_WORKER_SEGMENT_INVALID');
-      if(previous.status==='STARTED')previous.status='INTERRUPTED';
       for(const ref of previous.receiptRefs){
         if(!/^[a-z][a-z0-9-]+\.json$/.test(ref.path)||ref.bytes<1||ref.bytes>limits.maxOutputBytes)throw Error('NATIVE_RECEIPT_REFERENCE_INVALID');
         const bytes=await readFile(join(root,ref.path));if(bytes.length!==ref.bytes||sha(bytes)!==ref.sha256)
@@ -570,26 +622,31 @@ export async function executeNativeQueueSlice(input:{registration:unknown;cursor
       }
     }
     const deadlineAt=Date.now()+input.durationSeconds*1000;
-    managed=managedState(state,cursorPath,root,deadlineAt,limits);
+    managed=await managedState(state,cursorPath,root,deadlineAt,limits);
+    state=managed.state;
+    for(const previous of state.segments)if(previous.status==='STARTED')previous.status='INTERRUPTED';
     segment={id:managed.slice.id,workerId:input.queue.instanceId,pid:process.pid,status:'STARTED',ticks:[],receiptRefs:[],actualDeliveryAttempts:[]};
-    state.segments.push(segment);await managed.saveState();let lastRecovery=0;
+    state.segments.push(segment);segment=state.segments.at(-1)!;await managed.saveState();let lastRecovery=0;
     while(Date.now()<deadlineAt&&!input.signal.aborted&&state.resources.acquisitionExposures<limits.maxAcquisitionCalls){
       await input.assertRuntime();
       if(Date.now()-lastRecovery>=2000){await input.queue.recoverExpiredRunningJobs();lastRecovery=Date.now();}
-      const tick:Tick={id:randomUUID(),ordinal:state.resources.acquisitionExposures+1,exposedAt:new Date().toISOString(),status:'EXPOSED'};
-      segment.ticks.push(tick);state.resources.acquisitionExposures++;await managed.saveState();
+      let tick:Tick={id:segment.id+':'+(state.resources.acquisitionExposures+1),ordinal:state.resources.acquisitionExposures+1,
+        exposedAt:new Date().toISOString(),status:'EXPOSED'};
+      segment.ticks.push(tick);tick=segment.ticks.at(-1)!;state.resources.acquisitionExposures++;await managed.saveState();
       try{
         tick.didWork=await input.queue.tick(input.signal);tick.status='RETURNED';state.resources.acknowledgedAcquisitions++;
         const attempts=await input.readDeliveryAttempts();
         if(attempts.length>limits.maxAcquisitionCalls||attempts.some(a=>a.worker_id!==input.queue.instanceId))
           throw Error('ACTUAL_NATIVE_DELIVERY_OWNER_OR_BOUND_CHANGED');
-        segment.actualDeliveryAttempts=attempts;await managed.saveState();
+        segment.actualDeliveryAttempts=attempts;
+        if(tick.didWork)await managed.saveState();
       }catch(error){tick.status='UNKNOWN';await managed.saveState();throw error;}
       if(!tick.didWork&&Date.now()<deadlineAt&&!input.signal.aborted)
-        await new Promise(resolve=>setTimeout(resolve,Math.min(200,deadlineAt-Date.now())));
+        await new Promise(resolve=>setTimeout(resolve,Math.min(1000,deadlineAt-Date.now())));
     }
     segment.status='FINISHED';segment.receiptRefs.push(await managed.saveReceipt('native-segment-'+segment.id+'.json',{
-      segment:structuredClone(segment),registrationDigest:pinDigest,originalEpisodes:registration.originalEpisodes,
+      segment:{...copyJson(segment),ticks:undefined,tickCount:segment.ticks.length,ticksDigest:digest(segment.ticks),
+        completeTickHistoryRetainedInJournal:true,journal:managed.seal()},registrationDigest:pinDigest,originalEpisodes:registration.originalEpisodes,
       possibleNativeDeliveryExposures:state.resources.acquisitionExposures,actualNativeDeliveryAttempts:segment.actualDeliveryAttempts.length,
       conservativeIdleTicksReceiveNoBusinessCredit:true,protectedQualificationEstablished:false,sevenElapsedDaysEstablished:false,
       moneyUsd:null,humanSeconds:null,aggregatePeakMemoryBytes:null}));

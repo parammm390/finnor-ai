@@ -13,7 +13,8 @@ export default [{
     "finnor-os/scripts/p5/run-crash-e2e.mts",
     "finnor-os/scripts/frontier5/x1/**/*.mts",
     "finnor-os/scripts/frontier5/x1/qualification-full-*.mjs",
-    "finnor-os/scripts/frontier5/x1/qualification-public-assessment-cases.mjs"],
+    "finnor-os/scripts/frontier5/x1/qualification-public-assessment-cases.mjs",
+    "finnor-os/scripts/frontier5/x1/qualification-*-cases.mjs"],
   languageOptions: { parser, parserOptions: { ecmaVersion: "latest", sourceType: "module" } },
   rules: { "no-debugger": "error", "no-constant-condition": "error", "no-duplicate-imports": "error" },
 }];

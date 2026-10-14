@@ -31,6 +31,7 @@ import {reviewOwnerAdmission,OwnerAdmissionReviewFinished} from './owner-admissi
 import {reviewResourceOwners} from './resource-owner-review.mts';
 import {installFinalHeadFenceGate,reviewFinalHeadFence} from './final-head-fence-review.mts';
 import {mountedRaceReview} from './mounted-race-review.mts';
+import {readQualificationCursor} from './qualification-state-journal.mts';
 import {startQualificationOwnerExercise,finishQualificationOwnerExercise,createNativeWorkerExerciseControl} from './qualification-owner-exercise.mts';
 import {digest as qualificationDigest} from '../../../packages/capability-evolution/src/contracts';
 import {institutionDigest} from '../../../packages/private-equity/src/institution-program/canonical-json';
@@ -104,7 +105,8 @@ const sourcePaths = ["finnor-os/scripts/frontier5/x1/run-owner-slice.mts", "finn
   'finnor-os/scripts/frontier5/x1/admission-mail-fixture.mts',
   'finnor-os/scripts/frontier5/x1/resource-owner-review.mts',
   'finnor-os/scripts/frontier5/x1/final-head-fence-review.mts',
-  'finnor-os/scripts/frontier5/x1/qualification-runtime.mts','finnor-os/scripts/frontier5/x1/qualification-owner-exercise.mts',
+  'finnor-os/scripts/frontier5/x1/qualification-runtime.mts',
+  'finnor-os/scripts/frontier5/x1/qualification-state-journal.mts','finnor-os/scripts/frontier5/x1/qualification-owner-exercise.mts',
   'finnor-os/scripts/frontier5/x1/qualification-native-worker.mts','finnor-os/scripts/frontier5/x1/qualification-population.mts',
   'finnor-os/scripts/frontier5/x1/qualification-native-inputs.mts','finnor-os/scripts/frontier5/x1/qualification-population-owner-exercise.mts',
   'finnor-os/scripts/frontier5/x1/qualification-native-administration.mts','finnor-os/scripts/frontier5/x1/qualification-native-observation.mts',
@@ -1449,7 +1451,7 @@ try {
       const timer=setTimeout(()=>reject(Error('ORIGINAL_QUALIFIED_WORKER_SLICE_DID_NOT_EXIT')),30000);
       worker!.once('close',()=>{clearTimeout(timer);resolve();});});
     assert.equal(worker!.exitCode,0,'actual supervised native worker exits under its original finite slice');
-    const nativeBefore=JSON.parse(await readFile(nativeWorkerExercise!.control.cursorPath,'utf8'));
+    const nativeBefore=await readQualificationCursor(nativeWorkerExercise!.control.cursorPath);
     assert.equal(nativeBefore.segments.length,1);assert.equal(nativeBefore.segments[0].status,'FINISHED');
     assert.ok(nativeBefore.segments[0].actualDeliveryAttempts.length>0);
     const resumedPath=join(qualificationExercise!.root,'native-worker-control-002.json');
@@ -1461,7 +1463,7 @@ try {
       const timer=setTimeout(()=>reject(Error('ORIGINAL_RESUMED_NATIVE_WORKER_SLICE_DID_NOT_EXIT')),15000);
       worker!.once('close',()=>{clearTimeout(timer);resolve();});});
     assert.equal(worker.exitCode,0);
-    const nativeAfter=JSON.parse(await readFile(nativeWorkerExercise!.control.cursorPath,'utf8'));
+    const nativeAfter=await readQualificationCursor(nativeWorkerExercise!.control.cursorPath);
     assert.equal(nativeAfter.segments.length,2);assert.deepEqual(nativeAfter.registration,nativeBefore.registration);
     assert.ok(nativeAfter.resources.acquisitionExposures>nativeBefore.resources.acquisitionExposures);
     assert.equal(nativeAfter.segments[1].actualDeliveryAttempts.length,0,'idle resume creates no fresh native business delivery');
