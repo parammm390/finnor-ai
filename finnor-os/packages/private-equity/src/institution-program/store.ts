@@ -24,7 +24,7 @@ export type CompilerRequestRow = {
   generation: number; status: string; grant_ids: string[]; request_digest: string;
   claim_token: string | null; claim_fence: number | null; admission_id: string | null;
   program_id: string | null; artifact_id: string | null; failure: string | null;
-  input_manifest: { current: OriginalInstitutionEvidence["current"] } | null;
+  input_manifest: { current: OriginalInstitutionEvidence["current"]; publication?: unknown } | null;
   programme_digest: string | null; intent_digest: string | null;
 };
 export type CompilerEpisodeRow = { id: string; tenant_id: string; principal_id: string; work_id: string;

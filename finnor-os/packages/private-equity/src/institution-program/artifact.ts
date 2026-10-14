@@ -6,11 +6,14 @@ import { institutionDigest as hash } from "./canonical-json";
 
 type Lowered = ReturnType<typeof deriveInstitutionResponsibilities>;
 type OwnerRef = { owner: string; id: string; version: string; contentDigest: string };
+export type InstitutionArtifactEvidence = Omit<OriginalInstitutionEvidence, "sources"> & {
+  sources: Array<Omit<OriginalInstitutionEvidence["sources"][number], "rawUtf8" | "rawBase64">>;
+};
 
 /** A complete immutable projection. Every known binding has an actual owner
  * input/receipt. A requested contract or unavailable receipt stays unknown. */
 export function buildInstitutionArtifact(input: {
-  id: string; revision: string; workInput: {id:string;digest:string}; original: OriginalInstitutionEvidence; candidate: InstitutionCandidate;
+  id: string; revision: string; workInput: {id:string;digest:string}; original: InstitutionArtifactEvidence; candidate: InstitutionCandidate;
   check: InstitutionCheck; mappings: AcceptedInstitutionMappingRef[]; lowered: Lowered | null;
   admissionId: string | null; programme: { id: string; revision: string; digest: string } | null;
   reservation: OwnerRef | null; producer: { digest: string; files: unknown[]; node: string };

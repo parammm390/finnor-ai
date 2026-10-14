@@ -317,6 +317,52 @@ export interface AcceptedInstitutionMappingRef {
   workAttachmentKind?:"CANONICAL_WORK_LINK"|"MEMORY_ENTITY_REF_ONLY";
 }
 
+/** Revalidate retained S1 attachment witnesses before idempotent publication or recovery. */
+export async function assertInstitutionMappingReceiptsCurrent(
+  ctx: PeMutationContext, canonicalRefs: string[], receipts: AcceptedInstitutionMappingRef[],
+) {
+    await withTenantTransaction(ctx.auth.tenantId, { userId: ctx.auth.userId, readOnly: true }, async (_db, client) => {
+      for (const receipt of receipts) {
+        if (!canonicalRefs.includes(receipt.canonicalRef)) {
+          throw new Error("X1_ADMISSION_REPLAY_CANONICAL_CHANGED");
+        }
+        const entity = parseInstitutionOwnerRef(receipt.canonicalRef);
+        if (!entity) throw new Error("X1_ADMISSION_REPLAY_CANONICAL_CHANGED");
+        const evidence = receipt.evidenceAttachmentKind === "CORE_EVIDENCE_ENTITY_REF"
+          ? await client.query(
+            `SELECT 1 FROM finnor_os.evidence_source_versions v
+               JOIN finnor_os.evidence_chunks ch ON ch.tenant_id=v.tenant_id
+                 AND ch.source_id=v.source_id AND ch.version_id=v.id
+              WHERE v.tenant_id=$1 AND v.id=$2 AND v.source_id=$3 AND v.id=$4
+                AND ch.entity_refs @> $5::jsonb`,
+            [ctx.auth.tenantId,receipt.evidenceVersionId,receipt.evidenceSourceId,receipt.evidenceLinkId,
+              JSON.stringify([{type:entity.entityType,id:entity.entityId}])])
+          : await client.query(
+          `SELECT 1 FROM finnor_os.evidence_source_versions v
+             JOIN finnor_os.pe_evidence_links l ON l.tenant_id=v.tenant_id
+               AND l.evidence_source_id=v.source_id AND l.evidence_version_id=v.id
+            WHERE v.tenant_id=$1 AND v.id=$2 AND v.source_id=$3
+              AND l.id=$4 AND l.entity_type=$5 AND l.entity_id=$6 AND l.archived_at IS NULL`,
+          [ctx.auth.tenantId, receipt.evidenceVersionId, receipt.evidenceSourceId, receipt.evidenceLinkId,
+            entity.entityType,entity.entityId],
+        );
+        if (!evidence.rows[0]) throw new Error("X1_ADMISSION_REPLAY_EVIDENCE_CHANGED");
+        // Readback also re-verifies the Source Truth link: a later re-map or
+        // tombstone of the observed provider object refuses the replay.
+        if (receipt.sourceTruthLinkId) {
+          const truth = await client.query(
+            `SELECT 1 FROM finnor_os.external_refs
+              WHERE tenant_id=$1 AND id=$2 AND entity=$3
+                AND internal_id=$4::uuid AND mapping_status='mapped'
+                AND tombstoned_at IS NULL`,
+            [ctx.auth.tenantId, receipt.sourceTruthLinkId, entity.entityType, entity.entityId],
+          );
+          if (!truth.rows[0]) throw new Error("X1_ADMISSION_REPLAY_SOURCE_TRUTH_CHANGED");
+        }
+      }
+    });
+}
+
 /** Authenticated source handles are the only input to the production proposal.
  * An accepted development checker receipt never itself publishes canonical truth. */
 export async function reconstructAndAdmitInstitutionSources(
@@ -385,46 +431,7 @@ async function admitCheckedInstitutionMappings(
         || JSON.stringify(current.original.current.responsiblePrincipals)!==JSON.stringify(original.current.responsiblePrincipals)) {
       throw new Error("X1_ADMISSION_REPLAY_STALE_RIGHTS_OR_CHECKER");
     }
-    await withTenantTransaction(ctx.auth.tenantId, { userId: ctx.auth.userId, readOnly: true }, async (_db, client) => {
-      for (const receipt of prior.rows[0]!.receipts) {
-        if (!current.original.canonical.entities.some((entity) => entity.ref === receipt.canonicalRef)) {
-          throw new Error("X1_ADMISSION_REPLAY_CANONICAL_CHANGED");
-        }
-        const entity = parseInstitutionOwnerRef(receipt.canonicalRef);
-        if (!entity) throw new Error("X1_ADMISSION_REPLAY_CANONICAL_CHANGED");
-        const evidence = receipt.evidenceAttachmentKind === "CORE_EVIDENCE_ENTITY_REF"
-          ? await client.query(
-            `SELECT 1 FROM finnor_os.evidence_source_versions v
-               JOIN finnor_os.evidence_chunks ch ON ch.tenant_id=v.tenant_id
-                 AND ch.source_id=v.source_id AND ch.version_id=v.id
-              WHERE v.tenant_id=$1 AND v.id=$2 AND v.source_id=$3 AND v.id=$4
-                AND ch.entity_refs @> $5::jsonb`,
-            [ctx.auth.tenantId,receipt.evidenceVersionId,receipt.evidenceSourceId,receipt.evidenceLinkId,
-              JSON.stringify([{type:entity.entityType,id:entity.entityId}])])
-          : await client.query(
-          `SELECT 1 FROM finnor_os.evidence_source_versions v
-             JOIN finnor_os.pe_evidence_links l ON l.tenant_id=v.tenant_id
-               AND l.evidence_source_id=v.source_id AND l.evidence_version_id=v.id
-            WHERE v.tenant_id=$1 AND v.id=$2 AND v.source_id=$3
-              AND l.id=$4 AND l.entity_type=$5 AND l.entity_id=$6 AND l.archived_at IS NULL`,
-          [ctx.auth.tenantId, receipt.evidenceVersionId, receipt.evidenceSourceId, receipt.evidenceLinkId,
-            entity.entityType,entity.entityId],
-        );
-        if (!evidence.rows[0]) throw new Error("X1_ADMISSION_REPLAY_EVIDENCE_CHANGED");
-        // Readback also re-verifies the Source Truth link: a later re-map or
-        // tombstone of the observed provider object refuses the replay.
-        if (receipt.sourceTruthLinkId) {
-          const truth = await client.query(
-            `SELECT 1 FROM finnor_os.external_refs
-              WHERE tenant_id=$1 AND id=$2 AND entity=$3
-                AND internal_id=$4::uuid AND mapping_status='mapped'
-                AND tombstoned_at IS NULL`,
-            [ctx.auth.tenantId, receipt.sourceTruthLinkId, entity.entityType, entity.entityId],
-          );
-          if (!truth.rows[0]) throw new Error("X1_ADMISSION_REPLAY_SOURCE_TRUTH_CHANGED");
-        }
-      }
-    });
+    await assertInstitutionMappingReceiptsCurrent(ctx, current.original.canonical.entities.map(entity => entity.ref), prior.rows[0].receipts);
     return prior.rows[0].receipts;
   }
   const currentOwner = await loadInstitutionAdmissionOriginal(ctx, original.workId,

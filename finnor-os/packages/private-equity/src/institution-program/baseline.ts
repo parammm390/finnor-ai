@@ -3,7 +3,7 @@ import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import type { PeMutationContext } from '../types';
 import { tx,sha,schemaIdentity,principal } from '../evidence-execution/store';
-import type { OriginalInstitutionEvidence } from './checker';
+import type { InstitutionArtifactEvidence } from './artifact';
 import type { DigitalInstitutionProfile } from './contracts';
 import { installedDevelopmentRuntime } from './installed-runtime';
 
@@ -11,7 +11,7 @@ const root=fileURLToPath(new URL('../../../../../',import.meta.url));
 /** Observed installation identity, not predecessor qualification or promotion.
  * Preimages live in the existing immutable artifact's input_manifest. */
 export async function observedInstitutionBaseline(ctx:PeMutationContext,input:{
-  compilerId:string;workInputId:string;episodeId:string;original:OriginalInstitutionEvidence;
+  compilerId:string;workInputId:string;episodeId:string;original:InstitutionArtifactEvidence;
   profile:DigitalInstitutionProfile;producer:{digest:string;files:unknown[];node:string};
   parentReservation:{owner:string;id:string;version:string;contentDigest:string};
 }){

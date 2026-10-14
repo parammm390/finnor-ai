@@ -66,7 +66,8 @@ const material=process.env.FINNOR_X1_OWNER_MODE==='material';
 const qualificationPopulation=process.env.FINNOR_X1_OWNER_MODE==='qualification_population';
 const heterogeneous=process.env.FINNOR_X1_OWNER_MODE==='heterogeneous'||fullDomain||qualificationPopulation;
 const canonical=process.env.FINNOR_X1_OWNER_MODE==='canonical'||fullDomain;
-const recovery=process.env.FINNOR_X1_OWNER_MODE==='recovery';
+const childRecovery=process.env.FINNOR_X1_OWNER_MODE==='child_recovery';
+const recovery=process.env.FINNOR_X1_OWNER_MODE==='recovery'||childRecovery;
 const effectRecovery=process.env.FINNOR_X1_OWNER_MODE==='effect_recovery';
 const ordinary=process.env.FINNOR_X1_OWNER_MODE==='ordinary'||fullDomain;
 const upgrade=process.env.FINNOR_X1_OWNER_MODE==='upgrade';
@@ -78,7 +79,7 @@ const cancelObserved=process.env.FINNOR_X1_OWNER_MODE==='cancel_observed';
 const publicationMeter=process.env.FINNOR_X1_OWNER_MODE==='publication_meter';
 const diagnostic=process.env.FINNOR_X1_OWNER_MODE==='diagnostic';
 const qualificationExecution=process.env.FINNOR_X1_OWNER_MODE==='qualification_execution';
-if(process.env.FINNOR_X1_OWNER_MODE&&!['api','mounted','ui_review','revision','material','heterogeneous','canonical','creation','recovery','effect_recovery','ordinary','domain','owner_inputs','reporting_changes','authority_epoch','sensitive_coverage','personnel','source_namespace','upgrade','checker_crash','contention','unsupported','unsupported_operation','cancel_observed','publication_meter','diagnostic','qualification_execution','qualification_population','admission_review','resource_review','head_fence_review'].includes(process.env.FINNOR_X1_OWNER_MODE))
+if(process.env.FINNOR_X1_OWNER_MODE&&!['api','mounted','ui_review','revision','material','heterogeneous','canonical','creation','recovery','child_recovery','effect_recovery','ordinary','domain','owner_inputs','reporting_changes','authority_epoch','sensitive_coverage','personnel','source_namespace','upgrade','checker_crash','contention','unsupported','unsupported_operation','cancel_observed','publication_meter','diagnostic','qualification_execution','qualification_population','admission_review','resource_review','head_fence_review'].includes(process.env.FINNOR_X1_OWNER_MODE))
   throw Error('EXACT_REGISTERED_OWNER_MODE_REQUIRED');
 if((mounted||material||heterogeneous||canonical||recovery||effectRecovery||ordinary||upgrade||checkerCrash||contention||unsupported||cancelObserved||authorityEpoch)&&dutyCount!==1)throw Error('NAMED_ONE_DUTY_SCENARIO_REQUIRED');
 if(process.env.FINNOR_X1_OWNER_CASE&&!['1','128'].includes(process.env.FINNOR_X1_OWNER_CASE))
@@ -92,6 +93,8 @@ const started = performance.now(), startedAt = new Date().toISOString(), diskBef
 const sha = (bytes: string | Buffer) => createHash("sha256").update(bytes).digest("hex");
 const git = (...args: string[]) => execFileSync("git", args, { cwd: repo, encoding: "utf8", timeout: 5000 }).trim();
 const sourcePaths = ["finnor-os/scripts/frontier5/x1/run-owner-slice.mts", "finnor-os/scripts/frontier5/x1/mounted-race-review.mts", "finnor-os/scripts/frontier5/x1/authenticated-api-fixture.mts",
+  'finnor-os/packages/private-equity/src/institution-program/publication-checkpoint.ts',
+  'src/components/centropy/canvas/canvas-compose.ts',
   'finnor-os/scripts/frontier5/x1/owner-source-corpus.mts',
   'src/components/centropy/lib/private-read-generation.ts',
   'src/components/centropy/lib/use-private-request-scope.ts',
@@ -125,7 +128,7 @@ const freeze = { installation:installedManifest?{root:installation,manifestDiges
   cases: uiReview?["A-quantitative-semantic-owner-assertions","A-authenticated-owner-creation","G-authenticated-api-compute-attribution",
     "U1-returned-Work-requires-new-owner-read","U2-older-refresh-cannot-replace-newer-programme","U3-navigation-fences-accepted-creation","G-physical-validation-lifecycle-original-parent"]:headFenceReview?["E-final-mutation-requires-latest-accepted-compiler-head","G-physical-validation-lifecycle-original-parent"]:admissionReview?["C-owner-concurrent-grant-publication-serialization","C-owner-mapped-intact-admission-replay","C-owner-ambiguous-source-truth-replay","C-owner-source-truth-restored-control","C-owner-remapped-source-truth-replay"]:["A-raw-two-identity-native-request", "C-unsigned-forged-input", "D-same-key-replay", "G-restricted-roles",
     ...(material?['B-ledger-correction']:[]),...(heterogeneous?['A-eight-class-original-corpus']:[]),
-    ...(canonical?['A-fourteen-canonical-kinds']:[]),...(recovery?['D-compiler-before-publication-death']:[]),
+    ...(canonical?['A-fourteen-canonical-kinds']:[]),...(recovery?[childRecovery?'D-accepted-native-child-before-parent-publication-death':'D-compiler-before-publication-death']:[]),
     ...(effectRecovery?['D-effect-submit-lost-ack']:[]),
     ...(ordinary?['A-all-ordinary-operations']:[]),
     ...(upgrade?['G-existing-schema-upgrade-and-jobs']:[]),
@@ -149,7 +152,7 @@ let preparationCostProof:Array<Record<string,any>>=[];
 let database: EmbeddedPostgres | undefined, admin: pg.Client | undefined;
 let publicationBlocker:pg.Client|undefined;
 let headFenceGate:Awaited<ReturnType<typeof installFinalHeadFenceGate>>|undefined;
-let acknowledgementBlocker:pg.Client|undefined,effectRecoveryProof:any;
+let acknowledgementBlocker:pg.Client|undefined,effectRecoveryProof:any,childRecoveryProof:any;
 let checkerCrashProof:any;
 let service: Awaited<ReturnType<typeof authenticatedApiFixture>> | undefined, worker: ReturnType<typeof spawn> | undefined;
 let diagnosticOff:pg.Client|undefined;
@@ -814,6 +817,7 @@ try {
   if(recovery||effectRecovery){publicationBlocker=new pg.Client({connectionString:connection('x1_fixture',password)});
     await publicationBlocker.connect();await publicationBlocker.query('BEGIN');
     await publicationBlocker.query(effectRecovery?'LOCK TABLE finnor_os.pe_requests IN SHARE MODE'
+      :childRecovery?'LOCK TABLE finnor_os.x1_compiler_artifacts IN SHARE MODE'
       :'LOCK TABLE finnor_os.x1_mapping_admissions IN SHARE MODE');}
   let logBytes=0;
   if(qualificationExecution){
@@ -995,7 +999,8 @@ try {
       if(guardFailure)throw Error(guardFailure);
       blocked=(await admin.query(`SELECT pid,wait_event_type,wait_event,pg_blocking_pids(pid) blocking_pids
         FROM pg_stat_activity WHERE usename='finnor_worker' AND wait_event_type='Lock'
-          AND (query LIKE '%x1_mapping_admissions%' OR query LIKE '%x1_publish_mapping_admission%')`,[])).rows[0];
+          AND (CASE WHEN $1 THEN query LIKE '%INSERT INTO finnor_os.x1_compiler_artifacts%'
+            ELSE query LIKE '%x1_mapping_admissions%' OR query LIKE '%x1_publish_mapping_admission%' END)`,[childRecovery])).rows[0];
       claimed=(await admin.query(`SELECT j.id,j.status,j.claim_token,j.claim_fence,j.lease_expires_at,j.attempts,
         q.status compiler_status,q.episode_id,q.work_input_id,q.grant_ids FROM finnor_os.jobs j
         JOIN finnor_os.x1_compiler_requests q ON q.tenant_id=j.tenant_id AND q.id=(j.payload->>'requestId')::uuid
@@ -1003,16 +1008,29 @@ try {
       if(blocked&&claimed?.compiler_status==='RUNNING')break;
       await new Promise(resolve=>setTimeout(resolve,250));
     }
-    assert.ok(blocked&&claimed,'actual mapping-admission SQL lock and compiler physical claim');
+    assert.ok(blocked&&claimed,childRecovery?'actual parent artifact INSERT after native child acceptance':'actual mapping-admission SQL lock and compiler physical claim');
     const before=await originalRecoveryEnvelope(),firstPid=worker.pid;
+    if(childRecovery){
+      const child=(await admin.query(`SELECT * FROM finnor_os.p1_requests WHERE tenant_id=$1 AND work_id=$2
+        AND request->'institution'->>'compilerRequestId'=$3`,[tenant,workId,compilerId])).rows;
+      assert.equal(child.length,1,'Exactly one production-accepted native child before parent publication');
+      const childJobs=(await admin.query(`SELECT * FROM finnor_os.jobs WHERE tenant_id=$1
+        AND type='run_x1_institution_continuation_v1' AND payload->>'programId'=$2`,[tenant,child[0].id])).rows;
+      assert.equal(childJobs.length,1);assert.equal(childJobs[0].status,'queued');assert.equal(childJobs[0].attempts,0);
+      const parent=(await admin.query('SELECT * FROM finnor_os.x1_compiler_requests WHERE tenant_id=$1 AND id=$2',[tenant,compilerId])).rows[0];
+      assert.ok(parent.admission_id);assert.equal(parent.artifact_id,null);assert.equal(parent.program_id,null);
+      childRecoveryProof={child:child[0],childJobs,parent,before,blocked,claimed,firstPid};
+      await save('accepted-child-before-parent-publication.json',childRecoveryProof);
+    }
     const stopped=new Promise<void>(resolve=>worker!.once('close',()=>resolve()));worker.kill('SIGKILL');await stopped;
     assert.equal(worker.signalCode,'SIGKILL');
     await publicationBlocker!.query('ROLLBACK');await publicationBlocker!.end();publicationBlocker=undefined;
-    for(const table of ['x1_mapping_admissions','x1_compiler_artifacts','domain_actions','pe_requests'])
+    for(const table of [...(childRecovery?[]:['x1_mapping_admissions']),'x1_compiler_artifacts','domain_actions','pe_requests'])
       assert.equal((await admin.query(`SELECT count(*)::int n FROM finnor_os.${table} WHERE tenant_id=$1`,[tenant])).rows[0].n,0,
         'independent pre-publication absence '+table);
     await save('recovery-physical-interruption.json',{at:new Date().toISOString(),firstPid,signal:'SIGKILL',blocked,claimed,before,
-      ownerInsertionWasBlocked:true,actualProcessDeath:true,originalEpisodeNotRestarted:true});
+      ownerInsertionWasBlocked:true,acceptedChildBeforeParentPublication:childRecovery,
+      actualProcessDeath:true,originalEpisodeNotRestarted:true});
     worker=startWorker();await save('recovery-physical-worker.json',{pid:worker.pid,firstPid,originalEnvironmentNames:Object.keys(env),
       actualQueueRecovery:true,originalEpisodeNotRestarted:true});
     let quarantined:any;
@@ -1140,12 +1158,13 @@ try {
       completeResponseSha256:sha(JSON.stringify(response.body)),
       completeEndingProjectionDestination:'compiler-ending-projection.json'}) + "\n", {mode:0o600});
     assert.equal(response.status, 200, JSON.stringify(response)); reading = response.body;
-    if (["OBSERVED", "CHECK_REJECTED", "FAILED", "UNKNOWN", "INVALIDATED", "PARTIAL"].includes(reading.status)) break;
     const terminal=(await admin.query(`SELECT p.status,p.failure,
       (SELECT count(*)::int FROM finnor_os.jobs j WHERE j.tenant_id=p.tenant_id
         AND j.status IN('queued','running')) active_jobs FROM finnor_os.p1_requests p
       JOIN finnor_os.x1_compiler_requests x ON x.tenant_id=p.tenant_id AND x.program_id=p.id
       WHERE x.tenant_id=$1 AND x.id=$2`,[tenant,compilerId])).rows[0];
+    if (["OBSERVED", "CHECK_REJECTED", "FAILED", "UNKNOWN", "INVALIDATED", "PARTIAL"].includes(reading.status)
+        && (reading.status !== 'FAILED' || !terminal?.active_jobs)) break;
     if(terminal?.failure&&terminal.active_jobs===0){
       // The native owner can finish between the HTTP read and this independent
       // queue cut. Re-read its actual authenticated projection before closing;
@@ -1656,7 +1675,17 @@ try {
     assert.equal(history.attempts,2);assert.equal(history.request_id,compilerId);
     await save('recovery-independent-native-completion.json',{history,completion,rows,effects:allEffects,
       noDuplicateRequestOrAction:true,exactOneOriginalEpisode:true,effectLostAckEstablished:false});
-    results.push({id:'D-compiler-before-publication-death',status:'PASS',observed:{history,completion},
+    if(childRecovery){
+      const children=(await admin.query(`SELECT id,status,request,episode_id FROM finnor_os.p1_requests
+        WHERE tenant_id=$1 AND work_id=$2 AND request->'institution'->>'compilerRequestId'=$3`,[tenant,workId,compilerId])).rows;
+      const parent=(await admin.query('SELECT program_id,artifact_id,episode_id FROM finnor_os.x1_compiler_requests WHERE tenant_id=$1 AND id=$2',[tenant,compilerId])).rows[0];
+      assert.equal(children.length,1);assert.equal(children[0].id,childRecoveryProof.child.id);
+      assert.equal(children[0].episode_id,childRecoveryProof.child.episode_id);
+      assert.equal(parent.program_id,childRecoveryProof.child.id);assert.ok(parent.artifact_id);
+      await save('accepted-child-same-parent-independent-completion.json',{...childRecoveryProof,history,children,parent,
+        completion,canonicalRequests:rows,effects:allEffects,nativeChildReused:true,noDuplicateEffect:true});
+    }
+    results.push({id:childRecovery?'D-accepted-native-child-before-parent-publication-death':'D-compiler-before-publication-death',status:'PASS',observed:{history,completion,...(childRecovery?{originalChildId:childRecoveryProof.child.id}:{})},
       basis:'ACTUAL_WORKER_SIGKILL_SQL_LOCK_QUEUE_QUARANTINE_AUTHENTICATED_SAME_PARENT_RESUME_AND_INDEPENDENT_NATIVE_COMPLETION'});
   }
   if(effectRecovery){

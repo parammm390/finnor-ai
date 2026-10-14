@@ -5,7 +5,7 @@ import { employeeAuthoritySnapshot } from "@finnor/authority";
 import type { JobExecutionContext } from "../../../../apps/worker/src/queue";
 import type { PeMutationContext } from "../types";
 import { codeIdentity, principal, sha, stable, tx } from "../evidence-execution/store";
-import { safePredicate } from "../program-synthesis/store";
+import { safePredicate, nativeRequestRow } from "../program-synthesis/store";
 import { submitInstitutionHarnessProgram } from "../program-synthesis/institution";
 import { reserveInstitutionDemand, chargeInstitutionDemand, validateInstitutionDemand } from "../allocation-store";
 import { buildInstitutionResourceDemand } from "./resource-demand";
@@ -14,6 +14,8 @@ import { readInstitutionMandate,withInstitutionOriginalReuse } from "./source-au
 import { deriveInstitutionResponsibilities } from "./responsibility";
 import { resolveInstitutionActions } from "./action-resolution";
 import { buildInstitutionArtifact } from "./artifact";
+import { compilerPublicationCheckpoint, publicationResult, readCompilerPublicationCheckpoint, type PreparedInstitutionPublication } from "./publication-checkpoint";
+import type { InstitutionHarnessRequest } from "../program-synthesis/contracts";
 import { withInstitutionMeter, persistInstitutionCompute, allocateInstitutionPreparation, type InstitutionPhysicalObservation } from "./meter";
 import { observedInstitutionBaseline } from './baseline';
 import type { Binding } from './contracts';
@@ -109,6 +111,8 @@ export async function runInstitutionCompilerJob(payload: Record<string, unknown>
       phase:"COMPILE",ordinal:episode.attempts,units:1});
     await allocateInstitutionPreparation(ctx,{workId:q.work_id,episodeId:q.episode_id,parentReservation:parentRef,
       rightsRevision:String((await employeeAuthoritySnapshot(ctx.auth)).revision)});
+    const recovered = await readCompilerPublicationCheckpoint(ctx,q);
+    const prepared: PreparedInstitutionPublication = recovered ?? await (async () => {
     const result = await withInstitutionMeter({
       physicalObservations,
       sourceAttempt: async grantId => {
@@ -176,6 +180,10 @@ export async function runInstitutionCompilerJob(payload: Record<string, unknown>
         WHERE tenant_id=$1 AND principal_id=$2 AND id=$3`,
       [q.tenant_id, q.principal_id, q.id, sha(lowered.programme), sha(resolved.actions)]);
     });
+    return { result:publicationResult(result),lowered,resolved,graph,updatePlan,admissionId };
+    })();
+    const {result,lowered,resolved,graph,updatePlan,admissionId}=prepared;
+    const accepted=result.check.disposition==="ACCEPTED_DEVELOPMENT";
     let native: { programId: string; workRevision: string } | null = null;
     if (lowered?.responsibilities.length) {
       const rootRef = lowered.responsibilities[0]!.obligation.preconditions[0]!.ref;
@@ -186,13 +194,22 @@ export async function runInstitutionCompilerJob(payload: Record<string, unknown>
         WHERE i.tenant_id=$1 AND i.work_id=$2 AND i.id=$3 AND w.created_by=$4`,
         [q.tenant_id,q.work_id,q.work_input_id,q.principal_id])).rows[0]?.instruction_text??null,true);
       if(!instruction)throw Error("X1_EXACT_NATIVE_WORK_INSTRUCTION_REQUIRED");
-      native = await submitInstitutionHarnessProgram(ctx, { schema: "finnor.harness-request.v1",
+      const nativeRequest: InstitutionHarnessRequest = recovered?.nativeRequest ?? { schema: "finnor.harness-request.v1",
         kind: "institution_responsibility_v1", instruction,
         root: { entityType: "pe_deal", entityId: match[1]! }, workId: q.work_id, workInputId: q.work_input_id,
         idempotencyKey: `x1-compiler:${q.id}`, validAt: result.original.knowledgeCut, mode: "ordinary_disposable",
         institution: { programme: lowered.programme as any, responsibilities: lowered.responsibilities,
           unresolved: lowered.unresolved, demand: parentDemand, reservationRef: parentRef,
-          actions: resolved.actions, compilerRequestId: q.id } });
+          actions: resolved.actions, compilerRequestId: q.id } };
+      if (!recovered) await tx(ctx,async c=>{
+        await liveClaim(ctx,q,execution,c);
+        await assertInstitutionCompilerCurrent(ctx,q,result.original.current,c,true);
+        const publication=compilerPublicationCheckpoint(q,prepared,nativeRequest);
+        await c.query(`UPDATE finnor_os.x1_compiler_requests SET input_manifest=$4::jsonb
+          WHERE tenant_id=$1 AND principal_id=$2 AND id=$3`,
+        [q.tenant_id,q.principal_id,q.id,stable({current:result.original.current,publication})]);
+      });
+      native = await submitInstitutionHarnessProgram(ctx,nativeRequest);
     }
     const publicationStarted=performance.now(),publicationStartedAt=new Date().toISOString();
     const compute = await persistInstitutionCompute(ctx,{requestId:q.id,workId:q.work_id,episodeId:q.episode_id,
@@ -238,15 +255,28 @@ export async function runInstitutionCompilerJob(payload: Record<string, unknown>
           originalDigest: accepted
           ? (result.check as { inputDigest: string }).inputDigest : null }), stable(graph)]);
       await c.query(`UPDATE finnor_os.x1_compiler_requests SET status=$4,artifact_id=$5,program_id=$6,
-        failure=$7,updated_at=clock_timestamp() WHERE tenant_id=$1 AND principal_id=$2 AND id=$3`,
+        failure=$7,input_manifest=$8::jsonb,updated_at=clock_timestamp() WHERE tenant_id=$1 AND principal_id=$2 AND id=$3`,
       [q.tenant_id, q.principal_id, q.id, status, artifactId, native?.programId ?? null,
-        accepted ? resolved.gaps.length ? "X1_EXACT_OPERATION_INTERPRETATION_REQUIRED" : null : "X1_INDEPENDENT_CHECK_REJECTED"]);
+        accepted ? resolved.gaps.length ? "X1_EXACT_OPERATION_INTERPRETATION_REQUIRED" : null : "X1_INDEPENDENT_CHECK_REJECTED",stable({current:result.original.current})]);
       await compilerEvent(ctx, q, "IMMUTABLE_INSTITUTION_PROGRAM_PUBLISHED", { artifactId, admissionId,
         programId: native?.programId ?? null, check: result.check, status, supportedDuties: resolved.actions.length,
         unresolvedDuties: (lowered?.unresolved.length ?? 0) + resolved.gaps.length,
         elapsedMs: performance.now() - started, jobId: execution.jobId, claimFence: execution.claimFence,
         parentReservation: parentRef, monetaryCost: null, independentCompletionRequired: true }, c);
     });
+    if (recovered && native) {
+      const child = await nativeRequestRow(ctx,native.programId);
+      if (child.status === "FAILED") {
+        const {handleProgramOperation} = await import("../program-synthesis/api");
+        const resumed = await handleProgramOperation(ctx,"program-resume",{programId:child.id});
+        if (resumed.status !== 202) throw Error("X1_RETAINED_NATIVE_CHILD_RESUME_REFUSED");
+        await compilerEvent(ctx,q,"RETAINED_NATIVE_CHILD_RESUME_ACCEPTED",{
+          programId:child.id,originalNativeEpisode:child.episode_id,originalCompilerEpisode:q.episode_id,
+          priorStatus:child.status,priorFailure:child.failure,priorPhysicalAttemptsRetained:true,
+          originalParentRetained:true,newChildCreated:false,
+        });
+      }
+    }
     try{
       const publication=await persistInstitutionCompute(ctx,{requestId:q.id,workId:q.work_id,episodeId:q.episode_id,
         jobId:execution.jobId,deliveryAttemptId:execution.deliveryAttemptId,parentReservation:parentRef,
