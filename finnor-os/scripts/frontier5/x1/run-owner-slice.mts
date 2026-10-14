@@ -27,6 +27,7 @@ import {buildInstitutionResourceDemand} from '../../../packages/private-equity/s
 import {loadInstitutionProfile} from '../../../packages/private-equity/src/institution-program/store';
 import {readInstitutionMandate} from '../../../packages/private-equity/src/institution-program/source-authority';
 import {parse as parseDotenv} from 'dotenv';
+import {reviewOwnerAdmission,OwnerAdmissionReviewFinished} from './owner-admission-review.mts';
 import {startQualificationOwnerExercise,finishQualificationOwnerExercise,createNativeWorkerExerciseControl} from './qualification-owner-exercise.mts';
 import {digest as qualificationDigest} from '../../../packages/capability-evolution/src/contracts';
 import {institutionDigest} from '../../../packages/private-equity/src/institution-program/canonical-json';
@@ -42,6 +43,7 @@ const nativeMigrate:typeof migrate=installation?(await import(pathToFileURL(join
 const evidence = process.env.FINNOR_X1_OWNER_EVIDENCE;
 if (!evidence || !evidence.startsWith("/")) throw Error("FRESH_PRIVATE_X1_OWNER_EVIDENCE_REQUIRED");
 const dutyCount=process.env.FINNOR_X1_OWNER_CASE==='128'?128:1;
+const admissionReview=process.env.FINNOR_X1_OWNER_MODE==='admission_review';
 const reportingChanges=process.env.FINNOR_X1_OWNER_MODE==='reporting_changes';
 const authorityEpoch=process.env.FINNOR_X1_OWNER_MODE==='authority_epoch';
 const sensitiveCoverage=process.env.FINNOR_X1_OWNER_MODE==='sensitive_coverage';
@@ -69,7 +71,7 @@ const cancelObserved=process.env.FINNOR_X1_OWNER_MODE==='cancel_observed';
 const publicationMeter=process.env.FINNOR_X1_OWNER_MODE==='publication_meter';
 const diagnostic=process.env.FINNOR_X1_OWNER_MODE==='diagnostic';
 const qualificationExecution=process.env.FINNOR_X1_OWNER_MODE==='qualification_execution';
-if(process.env.FINNOR_X1_OWNER_MODE&&!['api','mounted','revision','material','heterogeneous','canonical','creation','recovery','effect_recovery','ordinary','domain','owner_inputs','reporting_changes','authority_epoch','sensitive_coverage','personnel','source_namespace','upgrade','checker_crash','contention','unsupported','unsupported_operation','cancel_observed','publication_meter','diagnostic','qualification_execution','qualification_population'].includes(process.env.FINNOR_X1_OWNER_MODE))
+if(process.env.FINNOR_X1_OWNER_MODE&&!['api','mounted','revision','material','heterogeneous','canonical','creation','recovery','effect_recovery','ordinary','domain','owner_inputs','reporting_changes','authority_epoch','sensitive_coverage','personnel','source_namespace','upgrade','checker_crash','contention','unsupported','unsupported_operation','cancel_observed','publication_meter','diagnostic','qualification_execution','qualification_population','admission_review'].includes(process.env.FINNOR_X1_OWNER_MODE))
   throw Error('EXACT_REGISTERED_OWNER_MODE_REQUIRED');
 if((mounted||material||heterogeneous||canonical||recovery||effectRecovery||ordinary||upgrade||checkerCrash||contention||unsupported||cancelObserved||authorityEpoch)&&dutyCount!==1)throw Error('NAMED_ONE_DUTY_SCENARIO_REQUIRED');
 if(process.env.FINNOR_X1_OWNER_CASE&&!['1','128'].includes(process.env.FINNOR_X1_OWNER_CASE))
@@ -86,6 +88,8 @@ const sourcePaths = ["finnor-os/scripts/frontier5/x1/run-owner-slice.mts", "finn
   'finnor-os/scripts/frontier5/x1/owner-source-corpus.mts',
   'finnor-os/scripts/frontier5/x1/canonical-owner-corpus.mts',
   'finnor-os/scripts/frontier5/x1/upgrade-owner-fixture.mts',
+  'finnor-os/scripts/frontier5/x1/owner-admission-review.mts',
+  'finnor-os/scripts/frontier5/x1/admission-mail-fixture.mts',
   'finnor-os/scripts/frontier5/x1/qualification-runtime.mts','finnor-os/scripts/frontier5/x1/qualification-owner-exercise.mts',
   'finnor-os/scripts/frontier5/x1/qualification-native-worker.mts','finnor-os/scripts/frontier5/x1/qualification-population.mts',
   'finnor-os/scripts/frontier5/x1/qualification-native-inputs.mts','finnor-os/scripts/frontier5/x1/qualification-population-owner-exercise.mts',
@@ -102,7 +106,7 @@ const freeze = { installation:installedManifest?{root:installation,manifestDiges
   runtime: { node: process.version, platform: process.platform, arch: process.arch },
   profile: "DISPOSABLE_LOCAL_AUTH_SERVICE_ACTUAL_BEARER_AND_RLS", hostedSupabaseQualified: false,
   authDevBypass: false, expectedMigrations: 191, limits, freeBytesBefore: String(diskBefore), dutyCount,mounted,
-  cases: ["A-raw-two-identity-native-request", "C-unsigned-forged-input", "D-same-key-replay", "G-restricted-roles",
+  cases: admissionReview?["C-owner-concurrent-grant-publication-serialization","C-owner-mapped-intact-admission-replay","C-owner-ambiguous-source-truth-replay","C-owner-source-truth-restored-control","C-owner-remapped-source-truth-replay"]:["A-raw-two-identity-native-request", "C-unsigned-forged-input", "D-same-key-replay", "G-restricted-roles",
     ...(material?['B-ledger-correction']:[]),...(heterogeneous?['A-eight-class-original-corpus']:[]),
     ...(canonical?['A-fourteen-canonical-kinds']:[]),...(recovery?['D-compiler-before-publication-death']:[]),
     ...(effectRecovery?['D-effect-submit-lost-ack']:[]),
@@ -667,6 +671,7 @@ try {
         basis:'ACTUAL_SELF_CONSENT_REVOCATION_AUTHENTICATED_SAME_ORIGINAL_RECLASSIFICATION_NATIVE_DENIAL_NO_GRANT_CHANGE'});
     }
   }
+  if(admissionReview)await reviewOwnerAdmission({ctx,admin,adminUrl:connection('x1_fixture',password),origin:service.origin,token:service.token,workId,institutionId,registrationA,occurredAt,grantIds,firstDealId:String(first.row.id),secondDealId:String(second.row.id),save,results});
   const metadata = await api("institution-sources", { workId }); assert.equal(metadata.status, 200, JSON.stringify(metadata));
   const input = { workId, workInputId: metadata.body.workInputId, grantIds, idempotencyKey: "x1-original:" + randomUUID() };
   assert.equal((await api("institution-submit", input, null)).status, 401);
@@ -2517,7 +2522,7 @@ try {
   }
   }
 } catch (error) {
-  results.push({ id: "actual-owner-boundary", status: "FAIL", observed: { message: String((error as Error).message),
+  if (!(error instanceof OwnerAdmissionReviewFinished)) results.push({ id: "actual-owner-boundary", status: "FAIL", observed: { message: String((error as Error).message),
     stack: (error as Error).stack, cause: (error as any).cause?.message ?? null,
     sql: { code: (error as any).code ?? null, where: (error as any).where ?? null,
       internalQuery: (error as any).internalQuery ?? null, position: (error as any).position ?? null } } });

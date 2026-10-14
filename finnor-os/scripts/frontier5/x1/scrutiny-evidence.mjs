@@ -1,6 +1,6 @@
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { closeSync, constants, fstatSync, lstatSync, openSync, readFileSync, readlinkSync, readSync, realpathSync } from 'node:fs';
+import { closeSync, constants, existsSync, fstatSync, lstatSync, openSync, readFileSync, readlinkSync, readSync, realpathSync } from 'node:fs';
 import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -9,6 +9,11 @@ export function auditScrutinyEvidence({ repo, controlRoot, source, ledgerPath })
   repo = realpathSync(repo);
   const checked = [], compatibility = [], root = realpathSync(controlRoot);
   const refuse = (code, detail) => { const error = new Error(`${code}: ${detail}`); error.code = code; throw error; };
+  const incomplete = stages => {
+    const missingStages = [...new Set(stages)].sort();
+    const error = new Error(`Missing development evidence: ${missingStages.join(', ')}`);
+    error.code = 'INCOMPLETE_NOT_RUN'; error.missingStages = missingStages; throw error;
+  };
   const requireThat = (condition, code, detail) => { if (!condition) refuse(code, detail); };
   const sha = bytes => createHash('sha256').update(bytes).digest('hex');
   const git = (...args) => {
@@ -21,6 +26,19 @@ export function auditScrutinyEvidence({ repo, controlRoot, source, ledgerPath })
     const path = resolve(base, name);
     requireThat(path.startsWith(base + sep) && realpathSync(path) === path, 'PATH', 'Evidence outside real custody root');
     return path;
+  };
+  const absentPath = name => {
+    requireThat(typeof name === 'string' && !name.includes('\\') && !name.split('/').includes('..'), 'PATH', 'Invalid absent-evidence path');
+    const path = resolve(root, name);
+    requireThat(path.startsWith(root + sep), 'PATH', 'Absent-evidence reference outside root');
+    let existing = path;
+    while (!existsSync(existing)) {
+      try { lstatSync(existing); refuse('PATH', 'Dangling evidence alias'); }
+      catch (error) { if (error.code !== 'ENOENT') throw error; }
+      existing = dirname(existing);
+    }
+    requireThat(realpathSync(existing) === existing, 'PATH', 'Evidence alias in absent namespace');
+    return existing !== path;
   };
   const metadata = s => [s.dev, s.ino, s.size, s.mode, s.mtimeNs, s.ctimeNs].join(':');
   const buffer = Buffer.allocUnsafe(1024 * 1024);
@@ -52,11 +70,27 @@ export function auditScrutinyEvidence({ repo, controlRoot, source, ledgerPath })
   const contractPath = join(repo, 'finnor-os/scripts/frontier5/x1/reference/scrutiny-evidence-contract.json');
   const contract = jsonFile(contractPath);
   requireThat(contract.schema === 'finnor.x1.scrutiny-evidence-contract.v1', 'CONTRACT', 'Wrong contract schema');
-  const ledgerFile = pathWithin(root, ledgerPath ?? join(root, 'delivery/scrutiny-ledger.json'));
+  const requestedLedger = resolve(ledgerPath ?? join(root, 'delivery/scrutiny-ledger.json'));
+  requireThat(requestedLedger.startsWith(root + sep), 'PATH', 'Ledger outside evidence root');
+  if (absentPath(requestedLedger)) incomplete(['evidence-ledger']);
+  const ledgerFile = pathWithin(root, requestedLedger);
   const ledgerDigest = hashFile(ledgerFile, 32 * 1024 * 1024), ledger = jsonFile(ledgerFile);
   requireThat(ledger.schema === 'finnor.x1.scrutiny-ledger.v1', 'CONTRACT', 'Wrong ledger schema');
   requireThat(ledger.protectedQualification === false && ledger.productionActive === false
     && ledger.executionAuthorityGranted === false, 'AUTHORITY', 'Development audit cannot issue authority');
+  const missing = [];
+  const absent = ref => {
+    if (!ref || typeof ref.path !== 'string') return true;
+    return absentPath(ref.path);
+  };
+  for (const role of Object.keys(contract.ownerPredicates)) {
+    const binding = ledger.owners?.[role];
+    if (!binding || ['run', 'results', 'worker'].some(name => absent(binding[name]))) missing.push(`owners.${role}`);
+  }
+  for (const role of ['backend', 'frontend', 'wire', 'guard', 'reconstruction', 'sourcePackage',
+    'rawVerdicts', 'releaseGates', 'diagnostic', 'wholeTypes'])
+    if (absent(ledger.pins?.[role])) missing.push(`pins.${role}`);
+  if (missing.length) incomplete(missing);
   requireThat(ledger.source?.commit === source.commit && ledger.source?.tree === source.tree
     && git('rev-parse', 'HEAD').toString().trim() === source.commit
     && git('rev-parse', 'HEAD^{tree}').toString().trim() === source.tree
@@ -212,7 +246,10 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
     process.stdout.write(JSON.stringify(auditScrutinyEvidence({ repo, controlRoot: dirname(plan.privateEvidenceRoot),
       source: { commit: git('HEAD'), tree: git('HEAD^{tree}') } })) + '\n');
   } catch (error) {
-    process.stdout.write(JSON.stringify({ status: 'FAIL', code: error.code ?? 'EVIDENCE_ERROR', reason: error.message }) + '\n');
-    process.exitCode = 1;
+    const incomplete = error.code === 'INCOMPLETE_NOT_RUN';
+    process.stdout.write(JSON.stringify({ status: incomplete ? 'INCOMPLETE_NOT_RUN' : 'FAIL',
+      code: error.code ?? 'EVIDENCE_ERROR', reason: error.message,
+      ...(incomplete ? { missingStages: error.missingStages } : {}) }) + '\n');
+    process.exitCode = incomplete ? 2 : 1;
   }
 }

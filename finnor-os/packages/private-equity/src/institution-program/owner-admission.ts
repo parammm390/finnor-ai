@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { attachWorkEntityTx, CURRENT_MIGRATION_HEAD, withTenantTransaction } from "@finnor/db";
 import { employeeAuthoritySnapshot, canExerciseAuthority } from "@finnor/authority";
-import { loadDocumentVersion, materializeSourceRecord } from "@finnor/data-platform";
+import { loadDocumentVersion, materializeSourceRecord, persistProviderObservationTx, sourceTruthHash } from "@finnor/data-platform";
 import { appendEvidenceVersionTx, createEvidenceSourceTx } from "@finnor/memory";
 import { attachEvidenceTx, lockPeDeal, peTransaction, requireActivePeDeal } from "../repository";
 import { authorizeBeliefResources, authorizeBeliefCandidateCut } from "../enterprise-beliefs";
@@ -417,8 +417,8 @@ async function admitCheckedInstitutionMappings(
           const truth = await client.query(
             `SELECT 1 FROM finnor_os.external_refs
               WHERE tenant_id=$1 AND id=$2 AND entity=$3
-                AND (internal_id=$4::uuid OR candidate_canonical_ids @> ARRAY[$4::uuid])
-                AND mapping_status<>'tombstoned' AND tombstoned_at IS NULL`,
+                AND internal_id=$4::uuid AND mapping_status='mapped'
+                AND tombstoned_at IS NULL`,
             [ctx.auth.tenantId, receipt.sourceTruthLinkId, entity.entityType, entity.entityId],
           );
           if (!truth.rows[0]) throw new Error("X1_ADMISSION_REPLAY_SOURCE_TRUTH_CHANGED");
@@ -595,8 +595,53 @@ async function admitCheckedInstitutionMappings(
         );
         if (consent.rows.length !== subjects.length) throw new Error("X1_SENSITIVE_CONSENT_CHANGED");
       }
+      const evidence = await createEvidenceSourceTx(db, ctx.auth.tenantId, {
+        sourceKey: `x1:${source.coreDocumentId}:${source.coreVersionId}:${mapping.recordId}`,
+        sourceType: "x1_original_source_assertion",
+        title: `Original ${source.sourceClass} observation ${mapping.recordId}`,
+        metadata: { documentId: source.coreDocumentId, documentVersionId: source.coreVersionId,
+          originalSha256: source.originalSha256, protocol: source.protocol, sourceRevision: source.revision },
+      });
+      const sourceQuantity=quantity?{schema:'finnor.x1.source-quantity-assertion.v1',...quantity,
+        sourceRevision:source.revision,knowledgeCut:original.knowledgeCut,
+        classification:'SOURCE_ASSERTION_ATTACHED_NOT_SETTLED_TRUTH',executionAuthorityGranted:false}:null;
+      const evidenceVersion = await appendEvidenceVersionTx(db, ctx.auth.tenantId, evidence.id, {
+        content: `Original source assertion ${mapping.recordId}; sha256:${source.originalSha256}`
+          +(sourceQuantity?'; quantity-context:'+JSON.stringify(sourceQuantity):''),
+        snapshot: { sourceId: source.id, objectId: mapping.recordId,
+          documentId: source.coreDocumentId, documentVersionId: source.coreVersionId,
+          originalSha256: source.originalSha256, canonicalCandidate: mapping.canonicalRef,
+          disposition: "source_assertion_not_settled_truth",
+          ...(sourceQuantity?{sourceQuantity}:{}) },
+        asOf: new Date(quantity?.occurredAt??original.knowledgeCut), retrievedAt: new Date(),
+        entityRefs: [{ type: entityType, id: entityId }],
+      });
       let sourceTruthLinkId: string | null = null;
-      if (source.integrationId && source.provider && source.sourceScope && source.externalObjectType) {
+      if (source.provider === 'microsoft_graph') {
+        // Installed mail is an immutable provider observation, with the exact
+        // authorized scope and acquisition receipt. The generic legacy record
+        // writer cannot satisfy this owner's mandatory provenance contract.
+        const provider = source.providerOriginal;
+        if (!provider || !source.integrationId || !source.externalObjectType)
+          throw new Error('X1_INSTALLED_PROVIDER_OBSERVATION_CONTEXT_REQUIRED');
+        const payload = { originalDocumentId:source.coreDocumentId, originalVersionId:source.coreVersionId,
+          originalSha256:source.originalSha256, sourceId:source.id, objectId:mapping.recordId };
+        const observed = await persistProviderObservationTx(db, {
+          observation:{tenantId:ctx.auth.tenantId,integrationId:source.integrationId,
+            sourceScopeId:provider.sourceScopeId,provider:source.provider,resourceKind:'outlook_mail',
+            externalObjectType:source.externalObjectType,externalObjectId:provider.externalId,
+            providerParentRefs:[],providerVersion:source.revision,observedAt:source.retainedAt,
+            retrievedAt:provider.retrievedAt,deleted:false,payload,payloadHash:sourceTruthHash(payload),
+            providerMetadata:{checkedCandidateDigest:check.candidateDigest,epistemicOnly:true,
+              retrievalClock:'IMMUTABLE_POST_READ_ORIGINAL_ACQUISITION_RECEIPT'},
+            ingestionMode:'exact_read',traceId:'x1-original:'+source.grantId+':'+source.coreVersionId},
+          evidenceSourceId:evidence.id,evidenceVersionId:evidenceVersion.versionId,
+          canonicalTarget:{entityType,entityId},rootMappingStatus:'mapped',
+        });
+        if (!['observed','duplicate'].includes(observed.status) || !observed.sourceLinkId)
+          throw new Error(`X1_SOURCE_TRUTH_${observed.status.toUpperCase()}`);
+        sourceTruthLinkId=observed.sourceLinkId;
+      } else if (source.integrationId && source.provider && source.sourceScope && source.externalObjectType) {
         const record = kind === "deal" ? mapPrivateEquitySourceObservation({
           tenantId: ctx.auth.tenantId, integrationId: source.integrationId, provider: source.provider,
           sourceScope: source.sourceScope, externalObjectType: source.externalObjectType,
@@ -624,27 +669,6 @@ async function admitCheckedInstitutionMappings(
         }
         sourceTruthLinkId = observed.sourceLinkId;
       }
-      const evidence = await createEvidenceSourceTx(db, ctx.auth.tenantId, {
-        sourceKey: `x1:${source.coreDocumentId}:${source.coreVersionId}:${mapping.recordId}`,
-        sourceType: "x1_original_source_assertion",
-        title: `Original ${source.sourceClass} observation ${mapping.recordId}`,
-        metadata: { documentId: source.coreDocumentId, documentVersionId: source.coreVersionId,
-          originalSha256: source.originalSha256, protocol: source.protocol, sourceRevision: source.revision },
-      });
-      const sourceQuantity=quantity?{schema:'finnor.x1.source-quantity-assertion.v1',...quantity,
-        sourceRevision:source.revision,knowledgeCut:original.knowledgeCut,
-        classification:'SOURCE_ASSERTION_ATTACHED_NOT_SETTLED_TRUTH',executionAuthorityGranted:false}:null;
-      const evidenceVersion = await appendEvidenceVersionTx(db, ctx.auth.tenantId, evidence.id, {
-        content: `Original source assertion ${mapping.recordId}; sha256:${source.originalSha256}`
-          +(sourceQuantity?'; quantity-context:'+JSON.stringify(sourceQuantity):''),
-        snapshot: { sourceId: source.id, objectId: mapping.recordId,
-          documentId: source.coreDocumentId, documentVersionId: source.coreVersionId,
-          originalSha256: source.originalSha256, canonicalCandidate: mapping.canonicalRef,
-          disposition: "source_assertion_not_settled_truth",
-          ...(sourceQuantity?{sourceQuantity}:{}) },
-        asOf: new Date(quantity?.occurredAt??original.knowledgeCut), retrievedAt: new Date(),
-        entityRefs: [{ type: entityType, id: entityId }],
-      });
       const peEntity=PE_ENTITY_TYPES.find(type=>type===entityType) as PeEntityType|undefined;
       const link = peEntity && (dealId || kind==="fund" || kind==="vehicle")
         ? await attachEvidenceTx(client,ctx,{

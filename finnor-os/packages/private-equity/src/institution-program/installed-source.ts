@@ -17,7 +17,8 @@ const digest = (bytes: Buffer) => createHash("sha256").update(bytes).digest("hex
 /** One exact installed source, not a generic caller-supplied URL or authority. */
 export async function acquireInstalledMailOriginal(
   ctx: PeMutationContext, workId: string, grant: InstalledMailGrant, profile: DigitalInstitutionProfile,
-): Promise<{ documentId: string; versionId: string; bytes: Buffer; retainedAt: string }> {
+): Promise<{ documentId: string; versionId: string; bytes: Buffer; retainedAt: string;
+  providerOriginal:{sourceScopeId:string;externalId:string;retrievedAt:string} }> {
   if (grant.provider !== "microsoft_graph" || grant.source_class !== "email"
       || grant.external_object_type !== "message" || !['rfc822','installed_source_adapter'].includes(grant.protocol)
       || !grant.integration_id || !grant.adapter_scope || !grant.external_id
@@ -64,8 +65,8 @@ export async function acquireInstalledMailOriginal(
   };
   await metadata();
   const prior = await withTenantTransaction(ctx.auth.tenantId, { userId: ctx.auth.userId, readOnly: true },
-    async (_db, sql) => sql.query<{ document_id: string; document_version_id: string; byte_sha256: string }>(
-      `SELECT document_id::text,document_version_id::text,byte_sha256
+    async (_db, sql) => sql.query<{ document_id: string; document_version_id: string; byte_sha256: string; acquired_at:Date }>(
+      `SELECT document_id::text,document_version_id::text,byte_sha256,acquired_at
          FROM finnor_os.x1_source_acquisitions WHERE tenant_id=$1 AND grant_id=$2`,
       [ctx.auth.tenantId, grant.id],
     ));
@@ -79,7 +80,8 @@ export async function acquireInstalledMailOriginal(
       throw new Error("X1_INSTALLED_ORIGINAL_RECEIPT_CHANGED");
     }
     return { documentId: prior.rows[0].document_id, versionId: prior.rows[0].document_version_id,
-      bytes: known.bytes, retainedAt: new Date(known.version.created_at).toISOString() };
+      bytes: known.bytes, retainedAt: new Date(prior.rows[0].acquired_at).toISOString(),
+      providerOriginal:{sourceScopeId:installed.id,externalId:grant.external_id,retrievedAt:new Date(prior.rows[0].acquired_at).toISOString()} };
   }
   const response = await client.requestBytes({
     operation: "x1.mail.original.mime.read", pathOrUrl: `${path}/$value`, headers,
@@ -122,13 +124,14 @@ export async function acquireInstalledMailOriginal(
       // Raw INSERT is revoked from finnor_app; the SECURITY DEFINER owner
       // function re-derives tenant/principal from the request GUCs and
       // cross-checks the referenced grant and document version digests.
-      const inserted = await sql.query<{ document_id: string; document_version_id: string; byte_sha256: string }>(
-        `SELECT document_id::text,document_version_id::text,byte_sha256
+      const inserted = await sql.query<{ document_id: string; document_version_id: string; byte_sha256: string; acquired_at:Date }>(
+        `SELECT document_id::text,document_version_id::text,byte_sha256,acquired_at
            FROM finnor_os.x1_record_source_acquisition($1,$2,$3,$4,$5)`,
         [grant.id, document.documentId, version.id, digest(bytes), grant.revision],
       );
       if (!inserted.rows[0]) throw new Error("X1_CONCURRENT_SOURCE_ACQUISITION_RETRY");
       return { documentId: document.documentId, versionId: version.id, bytes,
-        retainedAt: new Date(version.created_at).toISOString() };
+        retainedAt: new Date(inserted.rows[0].acquired_at).toISOString(),
+        providerOriginal:{sourceScopeId:installed.id,externalId:grant.external_id,retrievedAt:new Date(inserted.rows[0].acquired_at).toISOString()} };
     });
 }

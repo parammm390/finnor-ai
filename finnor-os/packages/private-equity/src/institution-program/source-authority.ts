@@ -22,6 +22,7 @@ export type OwnerOriginal = Source & {
   retainedAt: string;
   sensitiveSubjectRegistrations?:string[];
   sourceScopePin:{grantId:string;digest:string;originalReadAllowed:boolean};
+  providerOriginal?:{sourceScopeId:string;externalId:string;retrievedAt:string};
 };
 const digest = (bytes: Buffer) => createHash("sha256").update(bytes).digest("hex");
 const sensitive = (sourceClass: string) =>
@@ -109,6 +110,7 @@ export async function acquireInstitutionOriginal(
   };
   if(!sourceScope.body.originalReadAllowed)return unavailable(sourceScope);
   let bytes: Buffer; let documentId: string; let versionId: string; let retainedAt: string;
+  let providerOriginal:OwnerOriginal['providerOriginal'];
   if (row.acquisition_kind === "core_export") {
     // Immutable Core versions are retained before X1 sees the source. A grant
     // to a version does not confer authority to a newer document head.
@@ -171,6 +173,7 @@ export async function acquireInstitutionOriginal(
     bytes = acquired.bytes; documentId = acquired.documentId; versionId = acquired.versionId;
     originalBytesRead=acquired.bytes.length;
     retainedAt = acquired.retainedAt;
+    providerOriginal = acquired.providerOriginal;
   } else {
     throw new Error("X1_ACQUISITION_KIND_UNSUPPORTED");
   }
@@ -190,6 +193,7 @@ export async function acquireInstitutionOriginal(
     grantId: row.id, grantVersion: row.version, coreDocumentId: documentId,
     sourceScopePin:{grantId,digest:sourceScope.digest,originalReadAllowed:true},
     coreVersionId: versionId, originalSha256: digest(bytes), purpose: row.purpose, retainedAt,
+    ...(providerOriginal?{providerOriginal}:{}),
     ...(row.integration_id ? { integrationId: row.integration_id } : {}),
     ...(row.provider ? { provider: row.provider } : {}),
     ...(row.adapter_scope ? { sourceScope: row.adapter_scope } : {}),

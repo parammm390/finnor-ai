@@ -23,7 +23,8 @@ const ownerCases={owners:{'one-duty':{count:'1',mode:'api'},'128-duty':{count:'1
   heterogeneous:{count:'1',mode:'heterogeneous'},canonical:{count:'1',mode:'canonical'},creation:{count:'1',mode:'creation'},ordinary:{count:'1',mode:'ordinary'},
   domain:{count:'1',mode:'domain'},'owner-inputs':{count:'1',mode:'owner_inputs'},'source-namespace':{count:'1',mode:'source_namespace'},
   'qualification-execution':{count:'1',mode:'qualification_execution'},
-  'qualification-population':{count:'1',mode:'qualification_population'}},
+  'qualification-population':{count:'1',mode:'qualification_population'},
+  'admission-review':{count:'1',mode:'admission_review'}},
   lifecycle:{material:{count:'1',mode:'material'},'reporting-changes':{count:'1',mode:'reporting_changes'},'staff-epoch':{count:'1',mode:'authority_epoch'},'sensitive-coverage':{count:'1',mode:'sensitive_coverage'},personnel:{count:'1',mode:'personnel'},recovery:{count:'1',mode:'recovery'},
     contention:{count:'1',mode:'contention'},unsupported:{count:'1',mode:'unsupported'},'unsupported-operation':{count:'1',mode:'unsupported_operation'},'checker-crash':{count:'1',mode:'checker_crash'},
     'cancel-observed':{count:'1',mode:'cancel_observed'},'publication-meter':{count:'1',mode:'publication_meter'},
@@ -279,6 +280,15 @@ const run = (label, binary, argv, cwd, heapMiB) => {
   const step = { label, argv: [binary, ...argv], exitCode: child.status, signal: child.signal,
     elapsedMs: Date.now() - started, outputSha256: sha(text), outputBytes: Buffer.byteLength(text) };
   record.commands.push(step);
+  if (label === 'retained-development-evidence-audit' && !child.error && !child.signal && child.status === 2) {
+    let audit; try { audit = JSON.parse(text); } catch { /* Invalid child output remains a failed check. */ }
+    if (audit?.status === 'INCOMPLETE_NOT_RUN' && audit.code === 'INCOMPLETE_NOT_RUN'
+        && Array.isArray(audit.missingStages) && audit.missingStages.length > 0 && audit.missingStages.length <= 64
+        && audit.missingStages.every(name => typeof name === 'string' && /^[a-zA-Z0-9._-]{1,128}$/.test(name))) {
+      record.evidenceAudit = audit; record.pending = [...new Set(audit.missingStages)].sort();
+      finish('INCOMPLETE_NOT_RUN', 2, `Missing development evidence: ${record.pending.join(', ')}`);
+    }
+  }
   if (child.error || child.status !== 0) finish("FAIL", 1, `${label} failed; original output retained in ${label}.log`);
   return text;
 };
