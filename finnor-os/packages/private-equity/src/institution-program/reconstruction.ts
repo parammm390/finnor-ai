@@ -1,6 +1,7 @@
 import { decodeInstitutionSources } from "./source-decoder";
 import type { OriginalInstitutionEvidence, InstitutionCandidate } from "./checker";
 import type { DigitalInstitutionProfile } from "./contracts";
+import { recordInstitutionPhysicalObservation } from "./meter";
 
 type Observation = Awaited<ReturnType<typeof decodeInstitutionSources>>["observations"][number];
 const key = (source: string, record: string) => `${source}/${record}`;
@@ -68,7 +69,9 @@ function interpret(row: Observation, data: Record<string, string>) {
 export async function proposeInstitutionModel(
   original: OriginalInstitutionEvidence, profile: DigitalInstitutionProfile,
 ): Promise<InstitutionCandidate> {
-  const start = Date.now();
+  const start = Date.now(), physicalStart = performance.now(), startedAt = new Date().toISOString();
+  let outcome = 'RECONSTRUCTION_REFUSED';
+  try {
   const decoded = await decodeInstitutionSources(original, profile);
   const { bounds } = profile;
   const unresolved: NonNullable<InstitutionCandidate["unresolved"]> = [];
@@ -238,6 +241,11 @@ export async function proposeInstitutionModel(
     unresolved.push({ witness: gap.sourceId, reason: gap.reason, alternatives: gap.affectedObjectIds });
   }
   const elapsed = Math.ceil((Date.now() - start) / 1000);
+  for (const name of ['initialResponseSeconds', 'episodeWallSeconds'] as const) {
+    if (!Number.isSafeInteger(elapsed) || elapsed < 0 || elapsed > bounds[name]) {
+      throw new Error(`X1_RECONSTRUCTION_BOUND: ${name}=${elapsed} exceeds frozen ${bounds[name]}`);
+    }
+  }
   const measured: InstitutionCandidate["limits"] = Object.fromEntries(Object.keys(bounds).map((name) => [name, null]));
   Object.assign(measured, {
     sourceInstances: original.sources.length, observationReferences: decoded.observations.length,
@@ -252,17 +260,24 @@ export async function proposeInstitutionModel(
     derivedObligations: obligations.length,
     alternativesPerInterpretation: Math.max(0, ...unresolved.map((item) => item.alternatives.length)),
     unresolvedInterpretations: unresolved.length,
-    initialResponseSeconds: elapsed, episodeWallSeconds: elapsed,
+    // Configured ceiling witnesses are stable; physical timing is retained in S7.
+    initialResponseSeconds: bounds.initialResponseSeconds, episodeWallSeconds: bounds.episodeWallSeconds,
   });
   for (const [name, count] of Object.entries(measured)) {
     if (count !== null && (!Number.isSafeInteger(count) || count > bounds[name as keyof typeof bounds]!)) {
       throw new Error(`X1_RECONSTRUCTION_BOUND: ${name}=${count} exceeds frozen ${bounds[name as keyof typeof bounds]}`);
     }
   }
+  outcome = 'PROPOSED_WITH_ORIGINAL_CONFIGURED_TIMING_CEILINGS';
   return { tenantId: original.tenantId, institutionId: original.institutionId,
     workId: original.workId, principalId: original.principalId,
     coverage: original.sources.map((source) => source.id), mappings, quantities, relations, temporalLinks,
     contradictions, obligations, dependencies: { ...original.current }, limits: measured,
     ...(original.sources.some(s=>s.ownerCoverageGap)?{sourceCoverageGaps:original.sources.flatMap(s=>s.ownerCoverageGap?[s.ownerCoverageGap]:[])}:{}),
     unresolved, processHypotheses, receipt: null };
+  } finally {
+    recordInstitutionPhysicalObservation({kind:'RECONSTRUCTION',startedAt,elapsedMs:performance.now()-physicalStart,
+      outcome,includedWithin:'COMPILE',timingCeilings: {initialResponseSeconds:profile.bounds.initialResponseSeconds,
+        episodeWallSeconds:profile.bounds.episodeWallSeconds},candidateTimingFields:'CONFIGURED_UPPER_BOUNDS_NOT_OBSERVED_LATENCY'});
+  }
 }

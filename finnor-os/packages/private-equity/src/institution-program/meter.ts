@@ -6,7 +6,7 @@ import { sha, tx, principal } from "../evidence-execution/store";
 import {chargeInstitutionDemand} from '../allocation-store';
 import {AllocationContractError} from '../../../epistemic-runtime/src/allocation-contracts';
 
-export type InstitutionPhysicalObservation={kind:'SOURCE'|'CHECKER';startedAt:string;elapsedMs:number;
+export type InstitutionPhysicalObservation={kind:'SOURCE'|'CHECKER'|'RECONSTRUCTION';startedAt:string;elapsedMs:number;
   outcome:string;includedWithin:'COMPILE';[key:string]:unknown};
 type Scope = { sourceAttempt: (grantId: string) => Promise<void>;
   physicalObservations:InstitutionPhysicalObservation[];
@@ -113,7 +113,7 @@ export async function readInstitutionComputeCosts(ctx: PeMutationContext, workId
       if(p.phase!=='COMPILE'||!Array.isArray(p.physicalObservations)||p.physicalObservations.length>1024)
         gaps.push('X1_PHYSICAL_COMPONENT_OBSERVATIONS_INVALID:'+record.ref.id);
       else for(const observation of p.physicalObservations){
-        if(!observation||!['SOURCE','CHECKER'].includes(observation.kind)
+        if(!observation||!['SOURCE','CHECKER','RECONSTRUCTION'].includes(observation.kind)
           ||observation.includedWithin!=='COMPILE'||typeof observation.elapsedMs!=='number'
           ||!Number.isFinite(observation.elapsedMs)||observation.elapsedMs<0)
           gaps.push('X1_PHYSICAL_COMPONENT_OBSERVATION_INVALID:'+record.ref.id);
@@ -220,6 +220,7 @@ export async function readInstitutionComputeCosts(ctx: PeMutationContext, workId
     physicalComponents:{includedWithin:'COMPILE',additionalElapsedCredit:0,sourceObservations:sources.length,
       ownerReturnedBytes:sources.length?bytes('originalBytesRead'):null,ownerReusedBytes:sources.length?bytes('reusedBytes'):null,
       storageBytesSaved:null,networkBytesSaved:null,checkerObservations:checkers,
+      reconstructionObservations:physicalObservations.filter(o=>o.kind==='RECONSTRUCTION'),
       rawObservationCount:physicalObservations.length},
     lifecycle:{recordRefs:lifecycle.records.map(r=>r.ref),invocations:lifecycleIds.size,
       containingIntervals:lifecycle.records.map(r=>r.payload),additionalElapsedCredit:0,
