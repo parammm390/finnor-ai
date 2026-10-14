@@ -1055,3 +1055,30 @@ The shared disk is below the frozen 1.5 GiB live floor and 2.5 GiB final-build
 floor. No peer data is deleted and no live/build loop is started below the floor.
 Protected qualification, admission, activation, operational 100× and financial/H2
 remain separate and unavailable. The goal remains active.
+
+
+### Native review repair: full public qualification contracts (14 October 2026)
+
+The registered `qualification-contract` stage now exercises the full generator
+with `initialOnly=false`: ten public fixture environments, eight source classes
+each, all thirty replay days, 938 events and 91 independently specified fixture
+obligations. Seventeen generator/registration cases and twenty-four actual
+assessment cases cover source/parent/permission/clock/causal substitutions,
+original history, counter resets, signature failures and retained false
+completion. The original seven hand-calculated scorer cases remain required.
+The named development run retained 26,007,280 output bytes under the original
+64 MiB allowance; the complete public corpus took 1,926.07 ms. Its secure rerun
+uses the pinned locked specification documented in `handoff/named-owner-verification.md`.
+Missing source configuration returns `INCOMPLETE_NOT_RUN`, without claiming a
+partial scorer-only run as full validation.
+
+This is **DETERMINISTICALLY_VERIFIED public software-contract evidence**. The
+public RFC 8032 test-vector material is used only in in-memory fixture inputs;
+no service trust policy, protected signer, grant or S8 binding changes. Synthetic
+clock inputs are not actual elapsed live days. Known synthetic clock/scoring
+checks can pass while missing monetary/human/memory and custody evidence keep
+the assessment incomplete. The protected population, independently controlled
+custody, actual thirty-day replay and seven-day unattended live gate remain
+unestablished. Engineering delivery remains **INCOMPLETE**: the polling cursor
+output-budget defect, remaining physical proofs and final installation/native
+acceptance still require completion.

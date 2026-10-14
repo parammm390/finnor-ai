@@ -1,0 +1,19 @@
+{
+  "schema": "finnor.x1.public-cryptographic-test-vectors.v1",
+  "source": "https://www.rfc-editor.org/rfc/rfc8032.html#section-7.1",
+  "sourceDocumentSha256": "ed63657ff389301282b169b0abde9b5dd2c7e4d524fdfa5da6ff3094fc93c4c3",
+  "publicNonAuthoritativeTestMaterial": true,
+  "mustNeverBeInstalledAsAuthority": true,
+  "vectors": [
+    {
+      "id": "RFC8032_7_1_TEST_1",
+      "seedHex": "9d61b19deffd5a60ba844af492ec2cc44449c5697b326919703bac031cae7f60",
+      "publicHex": "d75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a"
+    },
+    {
+      "id": "RFC8032_7_1_TEST_2",
+      "seedHex": "4ccd089b28ff96da9db6c346ec114e0f5b8a319f35aba624da8cf6ed4fb8a6fb",
+      "publicHex": "3d4017c3e843895a92b70aa74d1b7ebc9c982ccf2ec4968cc0cd55f12af4660c"
+    }
+  ]
+}

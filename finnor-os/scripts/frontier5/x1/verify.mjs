@@ -127,6 +127,13 @@ for (const path of [
   'finnor-os/scripts/frontier5/x1/reference/scrutiny-evidence-contract.md',
   'finnor-os/scripts/frontier5/x1/run-owner-slice.mts',
   'finnor-os/scripts/frontier5/x1/mounted-race-review.mts',
+  'finnor-os/scripts/frontier5/x1/qualification-full-contract-cases.mjs',
+  'finnor-os/scripts/frontier5/x1/qualification-full-population-cases.mjs',
+  'finnor-os/scripts/frontier5/x1/qualification-public-assessment-cases.mjs',
+  'finnor-os/scripts/frontier5/x1/reference/public-ed25519-test-vectors.json',
+  'finnor-os/scripts/frontier5/x1/reference/qualification-full-native-review-contract.md',
+  'finnor-os/scripts/frontier5/x1/reference/qualification-public-assessment-native-review-contract.md',
+
   'src/components/centropy/lib/private-read-generation.ts',
   'src/components/centropy/lib/use-private-request-scope.ts',
   'src/components/centropy/lib/api.ts',
@@ -362,8 +369,15 @@ if (stage === "static" || stage === "scrutiny") {
   }
 }
 if (stage === "qualification-contract") {
+  const locked=process.env.FINNOR_X1_LOCKED_SPECIFICATION;
+  if(!locked?.startsWith('/')||!existsSync(locked))finish('INCOMPLETE_NOT_RUN',2,
+    'Full contract requires FINNOR_X1_LOCKED_SPECIFICATION pointing to the retained pinned original source');
+  record.qualificationOriginalSource={path:resolve(locked),sha256:sha(readFileSync(locked))};
   run("qualification-scorer-contract", process.execPath,
     ["./node_modules/tsx/dist/cli.mjs", "scripts/frontier5/x1/qualification-cases.mts"], os, manifest.limits.kernelNodeHeapMiB);
+  run('qualification-full-public-contract',process.execPath,['--import=tsx','scripts/frontier5/x1/qualification-full-contract-cases.mjs',
+    join(destination,'full-contract'),resolve(locked)],os,manifest.limits.smallCheckNodeHeapMiB);
+  record.qualificationBasis='FULL_PUBLIC_NONAUTHORITATIVE_FIXTURES_NO_ACTUAL_LIVE_TIME_OR_PROTECTED_CUSTODY';
 }
 if (stage !== "kernel" && stage !== "static" && stage !== "scrutiny" && stage !== "qualification-contract") {
   finish("NOT_IMPLEMENTED_NOT_RUN", 2, "This frozen stage has no implementation in this feature");

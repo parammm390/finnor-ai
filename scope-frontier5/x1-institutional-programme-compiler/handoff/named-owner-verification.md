@@ -36,7 +36,25 @@ canonical completion markers, capture AX/screenshots, and submit the exact
 scope-bound observer receipt. A timeout, queued request or incomplete observation
 must not be called a mounted pass. The observer does not reset any deadline.
 
-Offline kernel/static/qualification-contract commands retain their original
-scope. Final installed, diagnostic, handoff and complete scrutiny stages remain
+Kernel and static commands retain their original scope. The qualification
+contract command includes the original scorer corpus, full ten-environment
+generator with all thirty replay days, and public clock/history/signature
+counterexamples through the actual qualification owner functions:
+
+```sh
+FINNOR_X1_LOCKED_SPECIFICATION=/absolute/path/to/retained-locked-specification.md \
+node finnor-os/scripts/frontier5/x1/verify.mjs --stage qualification-contract \
+  --evidence /absolute/private/evidence/fresh-directory
+```
+
+The retained source must have SHA256
+`2288bb54a3f6a91ed2673c220e7d844842ace9de5f6ee1b6674e8a48980ff415`.
+Absent configuration returns `INCOMPLETE_NOT_RUN`. The public cryptographic
+fixtures reuse [RFC 8032 section 7.1](https://www.rfc-editor.org/rfc/rfc8032.html#section-7.1)
+test vectors in memory. They never enter a service trust store or create a
+protected signer, grant, custody claim or live observation. Synthetic clock
+inputs test the validation rules; actual elapsed live days remain zero.
+
+Final installed, diagnostic, handoff and complete scrutiny stages remain
 required until their own drivers/evidence exist. The verifier refuses unsupported
 stage/case combinations and never converts a missing live stage into a pass.
