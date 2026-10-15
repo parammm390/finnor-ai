@@ -44,7 +44,7 @@ export function ElicitationProtocolReview({ workId, root }: { workId: string; ro
     } catch {
       if (active(generation)) { clear(); setNotice("Current permitted rule could not be verified. Private values cleared.") }
     }
-  }, [active, scope, workId, auth.session?.user.id, clear])
+  }, [active, scope, workId, auth.session, clear])
   useEffect(() => {
     epoch.current++; clear(); setContext(null); setDeclarationId(""); setGrantId(""); setPartyId(""); setTypeId("")
     setObservationSource(""); setObservationVersion(""); setObservationDigest(""); writing.current = null; setBusy(false)
@@ -130,7 +130,7 @@ export function ElicitationProtocolReview({ workId, root }: { workId: string; ro
         <dt>Complete coverage</dt><dd>81 profiles, 648 deviations, 324 participation checks</dd>
         <dt>Minimum incentive / participation margin</dt><dd>{exact(protocol.check.minimumIncentiveMargin)} / {exact(protocol.check.minimumParticipationMargin)}. Weak ties do not predict consent.</dd>
         <dt>Maximum deviation gain</dt><dd>{exact(protocol.check.maximumDeviationGain)}</dd>
-        <dt>Reports / acceptance</dt><dd>{closed ? "Reports closed" : "Reports open"}; {current.reportState?.noAgreement ? "No agreement" : `${current.reportState?.acceptedParties.length ?? 0}/4 separately observed disposable declarations`}. Protected agreement UNKNOWN.</dd></dl>
+        <dt>Reports / acceptance</dt><dd>{closed ? "Reports closed" : "Reports open"}; {current.reportState?.noAgreement ? "No agreement" : current.reportState?.acceptedParties ? `${current.reportState.acceptedParties.length}/4 separately observed disposable declarations` : "Acceptance UNKNOWN"}. Protected agreement UNKNOWN.</dd></dl>
       <ul>{protocol.envelope.gaps.map(g => <li key={g.reason}>{g.reason}: {g.status}</li>)}</ul>
       <button type="button" disabled={busy} onClick={() => void perform("review", { requestId, decision: "PROPOSE_USE", reason: "Review this checked proposed mechanism under the existing owner mandate" })}>Review proposed use and reserve contingent resources</button>
       {(["INQUIRE", "WAIT", "STOP"] as const).map(decision => <button type="button" key={decision} disabled={busy} onClick={() => void perform("review", { requestId, decision, reason: "Use the original owner fallback within remaining resources" })}>{decision.toLowerCase()} via existing owner fallback</button>)}
