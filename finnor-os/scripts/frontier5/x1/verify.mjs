@@ -238,6 +238,7 @@ if (named.live || stage === "installed" || stage === "diagnostic") {
         'finnor-os/scripts/frontier5/x1/scrutiny-evidence.mjs',
         'finnor-os/scripts/frontier5/x1/reference/scrutiny-evidence-contract.json',
         'finnor-os/scripts/frontier5/x1/reference/scrutiny-evidence-contract.md',
+        'finnor-os/scripts/frontier5/x1/reference/admission-cursor-native-review-contract.md',
         'finnor-os/scripts/frontier5/x1/review-cases.mts',
         'scope-frontier5/x1-institutional-programme-compiler/failure-model.md',
         'scope-frontier5/x1-institutional-programme-compiler/oracle-contract.md']);
