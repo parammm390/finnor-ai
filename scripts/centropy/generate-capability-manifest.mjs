@@ -103,7 +103,7 @@ const ownerLeafOperations=new Map([
 for(const [family,operations] of ownerLeafOperations){
  const source=readFileSync(join(apiRoot,`${family}/[operation]/route.ts`),"utf8")
  for(const operation of operations)
-  if(!new RegExp(`case\s+['"]${operation}['"]\s*:`).test(source))
+  if(!new RegExp(`case\\s+['"]${operation}['"]\\s*:`).test(source))
    throw new Error(`Missing delegated R3 owner operation ${family}/${operation}`)
 }
 const ownerLeafReads=new Set(["query","validate","finite-preference","experiment-projection","read","read-mechanism",
