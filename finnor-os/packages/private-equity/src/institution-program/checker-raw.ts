@@ -23,7 +23,7 @@ type RecordRow = {
 // imported: the raw token, not IEEE-754's rounded result, fixes its decimal.
 const quantityTextFields = new Set([
   "factkey", "currency", "unit", "period", "basis", "occurredat", "availableat",
-  "account", "description", "accountingbasis", "postedat", "asof",
+  "accountingbasis", "postedat", "asof",
 ]);
 export class OriginalQuantityContextError extends Error {}
 

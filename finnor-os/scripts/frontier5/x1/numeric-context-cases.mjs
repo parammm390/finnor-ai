@@ -13,11 +13,14 @@ const cases=[{id:'numeric-unit-is-not-text',field:'unit',value:1,expected:'QUANT
  {id:'numeric-currency-is-not-text',field:'currency',value:123,expected:'QUANTITY'},
  {id:'literal-supported-text-unit-control',field:'unit',value:'units',expected:'ACCEPTED'},
  {id:'literal-unsupported-text-unit-remains-unresolved',field:'unit',value:'1',expected:'COVERAGE'},
- {id:'native-financial-numeric-unit-is-not-text',field:'unit',value:1,native:true,expected:'QUANTITY'}];
+ {id:'native-financial-numeric-unit-is-not-text',field:'unit',value:1,native:true,expected:'QUANTITY'},
+ {id:'native-supported-numeric-account-identity',field:'factKey',value:'123',native:true,account:123,expected:'ACCEPTED'},
+ {id:'native-supported-numeric-fallback-identity',field:'factKey',value:'123',native:true,description:123,expected:'ACCEPTED'}];
 const results=[];
 for(const spec of cases){
  const o=structuredClone(original),c=structuredClone(candidate),rows=JSON.parse(o.sources[1].rawUtf8);
- for(const row of rows){row[spec.field]=spec.value;if(spec.native){row.amount=row.value;row.account=row.factKey;row.accountingBasis=row.basis;
+ for(const row of rows){row[spec.field]=spec.value;if(spec.native){row.amount=row.value;row.account=spec.account??row.factKey;row.accountingBasis=row.basis;
+  if(spec.description!==undefined){delete row.account;row.description=spec.description;}
   delete row.kind;delete row.value;delete row.factKey;delete row.basis;}}
  o.sources[1].rawUtf8=JSON.stringify(rows);for(const q of c.quantities)q[spec.field]=spec.value;
  const check=await independentlyCheckInstitutionModel(o,c,profile),observed=check.disposition==='REJECTED'?check.guard:'ACCEPTED';
