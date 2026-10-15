@@ -2851,10 +2851,16 @@ try {
       originalDependencySha256:sha(originalDependency),restoredDependencySha256:sha(await readFile(dependency)),
       noNewCompilerChildOrEffect:true,protectedMethodAdmissionEstablished:false});
     const before=await preserved(),previousWorkerPid=worker!.pid;
-    await new Promise<void>(resolve=>{
+    const priorWorkerEnding={exitCode:worker!.exitCode,signalCode:worker!.signalCode};
+    if(worker!.exitCode===null&&worker!.signalCode===null)await new Promise<void>(resolve=>{
       const child=worker!,timer=setTimeout(()=>child.kill('SIGKILL'),5000);
       child.once('exit',()=>{clearTimeout(timer);resolve();});child.kill('SIGTERM');
     });
+    else {
+      assert.equal(worker!.exitCode,1,'Only the actual intended integrity refusal explains an already-stopped installed worker');
+      assert.ok((await readFile(join(evidence,'worker.log'),'utf8')).includes(
+        'Error: X1_INSTALLATION_BYTE_PIN_MISMATCH:finnor-os/node_modules/zod/package.json'));
+    }
     const apiRestart=await service!.restartCompiled();worker=startWorker();
     const readiness=await workerReadiness.get(worker);
     assert.equal(worker.exitCode,null);assert.equal(worker.signalCode,null);
@@ -2872,7 +2878,7 @@ try {
       [tenant,revision.body.requestId])).rows;
     assert.equal(delivered.length,1);assert.equal(delivered[0].status,'completed');assert.equal(delivered[0].attempts,1);
     assert.deepEqual(await preserved(),before,'installed restart preserves original identities, envelopes and effects');
-    await save('installed-restart-owner-proof.json',{before,after:await preserved(),apiRestart,readiness,revision,delivered,
+    await save('installed-restart-owner-proof.json',{before,after:await preserved(),apiRestart,readiness,revision,delivered,priorWorkerEnding,
       previousWorkerPid,currentWorkerPid:worker.pid,manifestDigest:freeze.installation!.manifestDigest,
       compilerId,readStatus:after.status,programmeStatus:after.body.status,source:installedManifest.source});
     results.push({id:'F-installed-method-unavailable-compatible-original-parent-recovery',status:'PASS',observed:{unavailableStatus:unavailable.status,compatibleRevisionStatus:after.body.status,originalParentRetained:true},
