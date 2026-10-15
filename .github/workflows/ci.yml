@@ -141,6 +141,7 @@ jobs:
           name: worker-image-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
             ${{ runner.temp }}/finnor-worker-image-smoke/*
+            ${{ runner.temp }}/finnor-worker-image-smoke/linux-r3-runtime/**
             ${{ runner.temp }}/finnor-worker-layout/*.json
           if-no-files-found: warn
           retention-days: 7
