@@ -329,11 +329,15 @@ try {
   }
   await story('queued-original-and-r3-physical-restart', async () => {
     const f = await owner('r3-queued-restart'), item = await submit(f, 'queued-restart');
-    const commit = spawnSync('git', ['-C', repo, 'rev-parse', 'HEAD'], { encoding: 'utf8' }).stdout.trim();
-    assert(/^[0-9a-f]{40}$/.test(commit));
+    const commit = process.env.FINNOR_COMMIT_SHA ?? '';
+    const buildId = process.env.FINNOR_BUILD_ID ?? '';
+    const version = process.env.FINNOR_VERSION ?? '';
+    assert(/^[0-9a-f]{40}$/.test(commit), 'FINNOR_COMMIT_SHA must be the exact 40-character image commit');
+    assert.equal(buildId, 'finnor-' + commit.slice(0, 12));
+    assert.equal(version, '0.1.0+' + commit.slice(0, 12));
     process.env.FINNOR_COMMIT_SHA = commit;
-    process.env.FINNOR_BUILD_ID = 'finnor-' + commit.slice(0, 12);
-    process.env.FINNOR_VERSION = '0.1.0+' + commit.slice(0, 12);
+    process.env.FINNOR_BUILD_ID = buildId;
+    process.env.FINNOR_VERSION = version;
     process.env.FINNOR_RELEASE_SOURCE = 'R3_DISPOSABLE_SOURCE_CUT_NOT_PROTECTED_RELEASE';
     const apiUrl = process.env.DATABASE_URL;
     process.env.DATABASE_URL = workerUrl; await closePool();

@@ -223,6 +223,9 @@ if [[ -f finnor-os/scripts/r3/run-owner-e2e.mts ]]; then
   if docker run --rm --network none --user 1000:1000 --group-add "$(id -g)" \
     --env HOME=/tmp --env TMPDIR=/tmp --env NODE_ENV=test --env CI=1 --env LOG_LEVEL=silent \
     --env AUTH_DEV_BYPASS=0 --env FINNOR_TEST_MANAGED_EXTENSIONS=omit \
+    --env FINNOR_COMMIT_SHA="$FINNOR_COMMIT_SHA" \
+    --env FINNOR_BUILD_ID="$FINNOR_BUILD_ID" \
+    --env FINNOR_VERSION="$FINNOR_VERSION" \
     --env FINNOR_R3_PROFILE=ordinary_disposable \
     --env FINNOR_R3_RUNTIME_MANIFEST=/opt/r3-runtime/manifest.json \
     --env FINNOR_R3_UPSTREAM_PYTHON=/opt/r3-upstream-runtime/bin/python \
