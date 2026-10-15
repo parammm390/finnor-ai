@@ -30,7 +30,7 @@ const ownerCases={owners:{'one-duty':{count:'1',mode:'api'},'128-duty':{count:'1
     'cancel-observed':{count:'1',mode:'cancel_observed'},'publication-meter':{count:'1',mode:'publication_meter'},
     'effect-recovery':{count:'1',mode:'effect_recovery'},'cancel-possible':{count:'1',mode:'cancel_possible'},'resource-review':{count:'1',mode:'resource_review'},'head-fence-review':{count:'1',mode:'head_fence_review'},'publication-race':{count:'1',mode:'publication_race'}},mounted:{mounted:{count:'1',mode:'mounted'},'ui-review':{count:'1',mode:'ui_review'}},
   diagnostic:{'matched-native':{count:'1',mode:'diagnostic'}},
-  installed:{'schema-upgrade':{count:'1',mode:'upgrade'},delivery:{count:'1',mode:'owner_inputs'},
+  installed:{'schema-upgrade':{count:'1',mode:'upgrade'},delivery:{count:'1',mode:'owner_inputs'},'admission-cursor':{count:'1',mode:'admission_cursor'},
     'upgrade-installed':{count:'1',mode:'upgrade'}}};
 const selectedOwnerCase=ownerCase?ownerCases[stage]?.[ownerCase]:null;
 const named = manifest.stages.find((entry) => entry.id === stage);
@@ -131,6 +131,8 @@ for (const path of [
   'finnor-os/scripts/frontier5/x1/reference/scrutiny-evidence-contract.json',
   'finnor-os/scripts/frontier5/x1/reference/scrutiny-evidence-contract.md',
   'finnor-os/scripts/frontier5/x1/run-owner-slice.mts',
+  'finnor-os/scripts/frontier5/x1/admission-cursor-review.mts',
+  'finnor-os/scripts/frontier5/x1/reference/admission-cursor-native-review-contract.md',
   'finnor-os/scripts/frontier5/x1/s6-guard-review.mts',
   'finnor-os/scripts/frontier5/x1/publication-race-review.mts',
   'finnor-os/scripts/frontier5/x1/reference/publication-race-native-review-contract.md',
