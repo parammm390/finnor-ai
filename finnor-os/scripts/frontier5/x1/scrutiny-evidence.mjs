@@ -98,12 +98,16 @@ export function auditScrutinyEvidence({ repo, controlRoot, source, ledgerPath })
   const currentChanges = git('diff', '--name-only', contract.runtimeAnchor, source.commit).toString().trim().split('\n').filter(Boolean);
   requireThat(currentChanges.every(path => contract.verificationOnlyPaths.includes(path)), 'SOURCE', 'Unlisted runtime-producing source drift');
   const acceptedCuts = new Set([contract.runtimeAnchor]);
+  const hashAt = (cut,path) => {
+    const result=spawnSync('git',['-C',repo,'show',`${cut}:${path}`],{timeout:5000,maxBuffer:4*1024*1024});
+    return result.status===0?sha(result.stdout):null;
+  };
   for (const transition of contract.historicalTransitions) {
     const paths = git('diff', '--name-only', transition.from, transition.to).toString().trim().split('\n').filter(Boolean);
     requireThat(transition.to === contract.runtimeAnchor
       && JSON.stringify(paths) === JSON.stringify(transition.changes.map(c => c.path)), 'SOURCE', 'Historical transition differs');
-    for (const pin of transition.changes) requireThat(sha(git('show', `${transition.from}:${pin.path}`)) === pin.before
-      && sha(git('show', `${transition.to}:${pin.path}`)) === pin.after, 'SOURCE', 'Historical transition preimage differs');
+    for (const pin of transition.changes) requireThat(hashAt(transition.from,pin.path) === pin.before
+      && hashAt(transition.to,pin.path) === pin.after, 'SOURCE', 'Historical transition preimage differs');
     acceptedCuts.add(transition.from); compatibility.push({ from: transition.from, to: transition.to, exactChangedPaths: paths });
   }
   const backend = pinned(ledger.pins?.backend), frontend = pinned(ledger.pins?.frontend);
@@ -117,11 +121,17 @@ export function auditScrutinyEvidence({ repo, controlRoot, source, ledgerPath })
     requireThat(binding?.run && binding?.results && binding?.worker, 'REQUIRED_ROLE', role);
     const result = pinned(binding.results), run = pinned(binding.run), worker = pinned(binding.worker);
     const observer = contract.historicalObserverDirty;
-    const observedDirty = role === observer.role && result.source?.commit === observer.sourceCommit
+    const observedDirty = observer && role === observer.role && result.source?.commit === observer.sourceCommit
       && result.source.dirty === observer.dirty && result.source.dirtyDiffDigest === observer.dirtyDiffDigest
       && sha(git('diff', '--binary', observer.sourceCommit, observer.committedObserverCut).toString().trim()) === observer.dirtyDiffDigest
       && result.source.pins?.some(pin => pin.path === observer.path && pin.sha256 === observer.sha256)
       && sha(git('show', `${observer.committedObserverCut}:${observer.path}`)) === observer.sha256;
+    const cut=result.source?.commit;
+    const measuredChanges=typeof cut==='string'?git('diff','--name-only',contract.runtimeAnchor,cut).toString().trim().split('\n').filter(Boolean):[];
+    const currentCompatible=typeof cut==='string'&&measuredChanges.every(path=>contract.verificationOnlyPaths.includes(path));
+    if(currentCompatible)acceptedCuts.add(cut);
+    const transition=contract.historicalTransitions.find(entry=>entry.from===cut&&entry.roles?.includes(role));
+    requireThat(currentCompatible||transition,'SOURCE',`${role}: no role-specific complete historical transition`);
     requireThat(result.status === 'PASS_LOCAL_OWNER_SLICE' && result.sourceUnchanged === true
       && (result.source?.dirty === '' || observedDirty) && acceptedCuts.has(result.source.commit)
       && run.source?.commit === result.source.commit && run.ownerResult?.sha256 === binding.results.sha256
@@ -130,8 +140,17 @@ export function auditScrutinyEvidence({ repo, controlRoot, source, ledgerPath })
     const rows = new Map(result.results?.map(row => [row.id, row]));
     requireThat(rows.size === result.results?.length && result.results.every(row => row.status === 'PASS')
       && ids.every(id => rows.get(id)?.status === 'PASS'), 'OWNER', `${role}: missing/failed predicate`);
-    for (const pin of result.source.pins ?? []) requireThat(hashFile(pathWithin(repo, pin.path)) === pin.sha256,
-      'SOURCE', `${role}: original measured input changed`);
+    for (const pin of result.source.pins ?? []) {
+      const actual=hashFile(pathWithin(repo,pin.path));
+      requireThat(hashAt(cut,pin.path)===pin.sha256,'SOURCE',`${role}: measured input differs from original clean cut`);
+      if(actual!==pin.sha256)requireThat((currentCompatible&&contract.verificationOnlyPaths.includes(pin.path))
+        ||transition?.changes.some(change=>change.path===pin.path&&change.before===pin.sha256
+          &&change.after===hashAt(contract.runtimeAnchor,pin.path)),
+      'SOURCE',`${role}: changed measured input lacks exact transition`);
+    }
+    if(contract.currentRuntimeRoles.includes(role))requireThat(currentCompatible
+      &&run.installation?.source?.commit===contract.runtimeAnchor
+      &&run.installation.sha256===ledger.pins.backend.sha256,'RUNTIME',`${role}: current installed affected proof required`);
     requireThat(Array.isArray(worker.environmentNames)
       && !worker.environmentNames.some(name => name.startsWith('FINNOR_S8_')), 'OWNER', `${role}: historical S8 compatibility cannot be assumed`);
     if (role === 'installed') {
@@ -149,7 +168,7 @@ export function auditScrutinyEvidence({ repo, controlRoot, source, ledgerPath })
     }
     if (role === 'upgrade') {
       const observed = rows.get('G-existing-schema-upgrade-and-jobs').observed;
-      requireThat(observed.oldHead === '0171_runtime_database_role_isolation.sql' && observed.applied?.length === 18
+      requireThat(observed.oldHead === '0171_runtime_database_role_isolation.sql' && observed.applied?.length === contract.upgradeMigrationCount
         && observed.applied.at(-1) === '0190_x1_final_compiler_head_fence.sql'
         && observed.secondPassApplied === 0 && observed.oldRowsAndBytesPreserved === true
         && observed.newJobs.some(job => job.type === 'run_x1_institution_compiler_v1' && job.status === 'completed')

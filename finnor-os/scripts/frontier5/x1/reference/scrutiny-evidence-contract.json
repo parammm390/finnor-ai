@@ -1,14 +1,15 @@
 {
   "schema": "finnor.x1.scrutiny-evidence-contract.v1",
   "frozenBeforeImplementationAt": "2026-10-14T02:50:35.925980+00:00",
-  "runtimeAnchor": "ebf4e6c4f5f1fc72368ccebaf44bb4c9fc71025a",
+  "runtimeAnchor": "a1840556093a40c975b4b5fba149b52a3da4e374",
   "verificationOnlyPaths": [
     "finnor-os/scripts/frontier5/x1/verify.mjs",
     "finnor-os/scripts/frontier5/x1/scrutiny-evidence.mjs",
     "finnor-os/scripts/frontier5/x1/review-cases.mts",
     "finnor-os/scripts/frontier5/x1/reference/scrutiny-evidence-contract.json",
     "finnor-os/scripts/frontier5/x1/reference/scrutiny-evidence-contract.md",
-    "scope-frontier5/x1-institutional-programme-compiler/failure-model.md"
+    "scope-frontier5/x1-institutional-programme-compiler/failure-model.md",
+    "finnor-os/scripts/frontier5/x1/reference/admission-cursor-native-review-contract.md"
   ],
   "ownerPredicates": {
     "installed": [
@@ -21,11 +22,13 @@
       "A-fourteen-canonical-kinds",
       "G-authenticated-api-compute-attribution",
       "G-compiled-installed-api-worker-checker-and-restart",
-      "G-physical-validation-lifecycle-original-parent"
+      "G-physical-validation-lifecycle-original-parent",
+      "G-fresh-company-brain-original-request-evidence"
     ],
     "mounted": [
       "B-same-standing-input-native-revision",
-      "G-mounted-owner-observer"
+      "G-mounted-owner-observer",
+      "G-fresh-company-brain-original-request-evidence"
     ],
     "upgrade": [
       "G-existing-schema-upgrade-and-jobs"
@@ -53,104 +56,766 @@
     ],
     "unsupported": [
       "F-explicit-unsupported-operation"
+    ],
+    "acceptedChild": [
+      "D-accepted-native-child-before-parent-publication-death",
+      "G-compiled-installed-api-worker-checker-and-restart"
+    ],
+    "cursor": [
+      "E-finite-cursor-write-burst-original-three-transactions",
+      "A-full-declared-source-and-owner-domain",
+      "A-all-ordinary-operations",
+      "G-fresh-company-brain-original-request-evidence"
     ]
   },
   "historicalTransitions": [
     {
-      "from": "08c215c6bce94ebb1cf578bdca863ad706684a0c",
-      "to": "ebf4e6c4f5f1fc72368ccebaf44bb4c9fc71025a",
+      "from": "3c491d82d9bd6e7118f5f6741adae8f7551246ef",
+      "to": "a1840556093a40c975b4b5fba149b52a3da4e374",
+      "roles": [
+        "recovery",
+        "contention"
+      ],
       "changes": [
         {
-          "path": "docs/release/generated/action-manifest.json",
-          "before": "77691387de00373cbcb6e8937fc11a2efbd1eb307c5314be43ec0a0e16d8ff72",
-          "after": "ef033c2874e9c71bec4f5a67d969d598f65d5867639c8cf87b0f6b378c3b8483"
-        },
-        {
-          "path": "docs/release/generated/action-manifest.md",
-          "before": "3c2d99b17134229807a63c825aa01e9293ce1b89830e153998b732a2164b3a59",
-          "after": "62ba3688da624cbec5b965ebeec372f427ff266dfe4b6fa90790eecfa1bdc6b7"
-        },
-        {
           "path": "finnor-os/apps/supplier-canary/api/index.mjs",
-          "before": "3a1d1284d88f017688227cf76d472656e700d710ad078881e86bb25e490aaff7",
-          "after": "b207d5eef71ea1ebbef01c22a2a45c96a4ea827938f2a8152624096a05f00197"
+          "before": "b207d5eef71ea1ebbef01c22a2a45c96a4ea827938f2a8152624096a05f00197",
+          "after": "895971e8239d35380b05b5e665aa2ff560e8f6c8f67e11f08c73ecb4f49cc3eb"
         },
         {
           "path": "finnor-os/packages/capability-evolution/src/institution-port.ts",
           "before": "2985362704ab07b802fa6622a1bf01d664f1fe3fcbf02803dbb2657a2b353ad0",
-          "after": "81c2ff2313fff246a9693ba45fe355c335654959d7746f20e1ed2abbb159641c"
+          "after": "74153a8c7c44b82e636c24b4354ea5e666f4d6c44bcdd5a02f830d814a0b7d73"
+        },
+        {
+          "path": "finnor-os/packages/db/migration-head.ts",
+          "before": "b924a6f2cf227c02abebfe81bd7f0070e9c1939ef15488ec473b241d0aba48df",
+          "after": "cb5aafedc1e94abd26d850117cca4d7172fc6829e3c8c58f6df42f4da3b63c7f"
+        },
+        {
+          "path": "finnor-os/packages/db/migrations-bundle.ts",
+          "before": "d8e37df08be7a550e15e221d3e5cad496193803818076e4834c267ab88551ed0",
+          "after": "82b293310eae692d614b6521897e3fe9292f5dff324c54783c4f2f8f38dd2d52"
+        },
+        {
+          "path": "finnor-os/packages/db/migrations/0190_x1_final_compiler_head_fence.sql",
+          "before": null,
+          "after": "e4b879e5d33030a451ec274c14c49edfa0e91a92678c60658b5259a565696a40"
+        },
+        {
+          "path": "finnor-os/packages/private-equity/src/allocation-store.ts",
+          "before": "a7f70e9969e4b0b5907a0eba06d0ce28435df2a3f549a7fa47acb0456ae514e5",
+          "after": "54eb0f3365ed8070e5a6cc69c275f77d3860bd6437966d093de7e3926d061778"
+        },
+        {
+          "path": "finnor-os/packages/private-equity/src/company-brain-relationships.ts",
+          "before": "69d22f8bd81d72f77f8b8ab7ad1e48f042ccace310c3953ec5e19d1321d78cd3",
+          "after": "be2dc0bdfd3d9cb4630008fa2df3af095becb1d1c0351ff26e843890f66b7a15"
+        },
+        {
+          "path": "finnor-os/packages/private-equity/src/institution-program/artifact.ts",
+          "before": "8c0670808bef23a8eac04813e9752ee35b225a233cbf5b5805fd6dba59bf98e1",
+          "after": "7204c8fc8e2b39481e6a8218026264640f73514398da39b6f0891b3eb4534654"
+        },
+        {
+          "path": "finnor-os/packages/private-equity/src/institution-program/baseline.ts",
+          "before": "6fd7911573983230ef0c5345fad336081ce9daea20186178141cab8155ae5e5e",
+          "after": "1669b7205f758d6589be6cb305c566087202089f014fd2820479b7dc2ab2c0df"
+        },
+        {
+          "path": "finnor-os/packages/private-equity/src/institution-program/checker-raw.ts",
+          "before": "1e1f2dff4188a32315254341556249cbebbb6dafc49514f0c035ea224b91e8bd",
+          "after": "07758a4fe37b8c172131b9f5b70289d8a732283835eb68bbc71616a47abdda70"
+        },
+        {
+          "path": "finnor-os/packages/private-equity/src/institution-program/checker.ts",
+          "before": "dd364489e7f03b7bd819200631423d3f53744af5e4d098c72076ec610d15ea0a",
+          "after": "3ae05752753436451d090eb8e7224fa9128a48fa5fc6515c54883b28337f6b23"
+        },
+        {
+          "path": "finnor-os/packages/private-equity/src/institution-program/installed-source.ts",
+          "before": "b98e0c1a0918480493295ba362484c797fd04fbf9abd91860076a7a13ee283e0",
+          "after": "033401525edc089e531fde8fb6c945b092a4aa80a6b76ce4f83820e707fee9cd"
+        },
+        {
+          "path": "finnor-os/packages/private-equity/src/institution-program/meter.ts",
+          "before": "21eeccd432beec32c659fb57abcf4ab7aecd1988593b45bd83794487fffcafd1",
+          "after": "3f31a44e82acc620bf3d0f12d934724ea240e5eeb2c3d875b687fe6d4e5d4416"
+        },
+        {
+          "path": "finnor-os/packages/private-equity/src/institution-program/owner-admission.ts",
+          "before": "4fb09f08bd879a782f9879bd0bd2aabb3f01e91c3e49e9c7f766eee352dc531a",
+          "after": "ba8f517f3bfe863028cc10a06a607ee1275279684ccd581e1ba41406cca5cec8"
+        },
+        {
+          "path": "finnor-os/packages/private-equity/src/institution-program/publication-checkpoint.ts",
+          "before": null,
+          "after": "62b1f54705d3638cbc33415905f49b1ed665ef999d708af10bc2c56fbf1ab542"
+        },
+        {
+          "path": "finnor-os/packages/private-equity/src/institution-program/reconstruction.ts",
+          "before": "8eafbe7702adec434e199b3a430f3a970c635e7193e7f86c9dd9cb05a0f3d732",
+          "after": "88fb5b183924a2c7066477289a4486c48ab1f7b5eeb15b5464bb3d3e0d01dd58"
+        },
+        {
+          "path": "finnor-os/packages/private-equity/src/institution-program/source-authority.ts",
+          "before": "cfe05785bf7c3db2e75f016417cc5aa7d8240449420f1957a9437235b73f4040",
+          "after": "0bbab179055e816d4a80f94329f093e39d2880827fa8df51bc6edb896595ec9f"
+        },
+        {
+          "path": "finnor-os/packages/private-equity/src/institution-program/source-decoder.ts",
+          "before": "8653216e42bd9685583df26ca812e5195ae054fd32fd6b6f4556b723d495c64e",
+          "after": "d1bcd597d9e25fbb93fc419c716eaf3e9d4e0acadb0348c5775cb3b63c8017fc"
+        },
+        {
+          "path": "finnor-os/packages/private-equity/src/institution-program/store.ts",
+          "before": "f4a6ceb1eb2a0b9b638415258a496544e814bfde2a33df05e297ea75342b2193",
+          "after": "ff7f9979aa25c1b7c8f7381e50c58243b718794aa7553f864c8a68e43dbde363"
+        },
+        {
+          "path": "finnor-os/packages/private-equity/src/institution-program/worker.ts",
+          "before": "ca9f70a0f28c57cccb1e5ffb2029d16d2dfdb663dac5dea0e64dc66daaf754cf",
+          "after": "f609071fdb5b4443cde246030e5fe17bbbc5a97403e713772c787bb2e4e4bf9e"
+        },
+        {
+          "path": "finnor-os/packages/private-equity/src/live-recompilation/institution-dependencies.ts",
+          "before": "b18263e7b5a13491fb0cb7ffcc0bc34d81921dcd344e669993a3df08010e441c",
+          "after": "f2af61ac58d9008822aaeaf369ed50cb9f4224aebbe4ba4b3298f0650b065af3"
+        },
+        {
+          "path": "finnor-os/packages/private-equity/src/program-synthesis/institution-history.ts",
+          "before": "1a90551400034b35accd15d52428f5c6a25017f8552a0a3a7e6be05b79d2a813",
+          "after": "6c5254aff05b2b2c49c4d2bb6a7e5daa2b0167a7ac39c05089ec9a43c9e41e38"
+        },
+        {
+          "path": "finnor-os/packages/private-equity/src/program-synthesis/institution.ts",
+          "before": "4f26f788977cbde4e650bad4d2b030f8bd33791b120e1e0520b8aff9c0624f81",
+          "after": "e5cbfa05da2f6a1ac6b5c5d91d0b3c10805ed56b96e8ac9a5a17058479b38d69"
+        },
+        {
+          "path": "finnor-os/packages/private-equity/src/repository.ts",
+          "before": "af3f1d9d4fe51c82e985bc537b4a0d2d2035908c95f710eb59592ad869589b6e",
+          "after": "14b608e7e6f2696e7e1e20a6966c5e392c87e30de3182d93af8b78f3ad23dcae"
+        },
+        {
+          "path": "finnor-os/scripts/frontier5/x1/admission-cursor-review.mts",
+          "before": null,
+          "after": "d28877cd976866f631d8d94d700f248de50c08e84930c511ca8859d04a8c3963"
+        },
+        {
+          "path": "finnor-os/scripts/frontier5/x1/admission-finish-cases.mts",
+          "before": "36b40b41fd43c82b4397066f2dbd36dbd99a365b1ac35028a036c0b7afe60cd5",
+          "after": "809993a0b408bccb2354c47eee0d44d8f51df37f5a7478b23d9d3efa06eab7b6"
+        },
+        {
+          "path": "finnor-os/scripts/frontier5/x1/admission-mail-fixture.mts",
+          "before": null,
+          "after": "cf6097c54eb76228f58a75a2aaec80f23d1ab65a3c6de01265ed3e81bbc8232f"
+        },
+        {
+          "path": "finnor-os/scripts/frontier5/x1/authenticated-api-fixture.mts",
+          "before": "3d3838a1c11376ae6c577d843b1761d93768264297cfc80da20cf17e8e397277",
+          "after": "28a67c2254bc0dc17a2d6b33f021b948d495ecea35a0dc643e3596d3ea6e215b"
+        },
+        {
+          "path": "finnor-os/scripts/frontier5/x1/canvas-effect-cases.mjs",
+          "before": null,
+          "after": "fc6dfa8fc4449fa9eebbc3dee67d08ed39e31a143ab96604706ab9369062c48f"
+        },
+        {
+          "path": "finnor-os/scripts/frontier5/x1/eslint.config.mjs",
+          "before": "86a444aea6aefb6f07eee489ddbca0be389e389b0b55799880f4b9ee91f381f1",
+          "after": "d5a6c2d82bc6708a386eb3bc4724c7763af73e88a36e3165d5a3543065ed6705"
+        },
+        {
+          "path": "finnor-os/scripts/frontier5/x1/final-head-fence-review.mts",
+          "before": null,
+          "after": "807d3b0b3d02905f54e2330e4330919db65bbbbcf7ff3721f9f5352a96282f4f"
+        },
+        {
+          "path": "finnor-os/scripts/frontier5/x1/mounted-race-review.mts",
+          "before": null,
+          "after": "3918d70d5079d753f32c7f4b0507d1ee7665416abb18ac218abf8c6bfeaf3d41"
+        },
+        {
+          "path": "finnor-os/scripts/frontier5/x1/numeric-context-cases.mjs",
+          "before": null,
+          "after": "5622da04428778f63c0445dc6448e01f32dd32971c74563b367264953a376490"
+        },
+        {
+          "path": "finnor-os/scripts/frontier5/x1/owner-admission-review.mts",
+          "before": null,
+          "after": "ffd88029905f41119ba420ba53be361209ad437e03b36b939a7c9c5642d61a4a"
+        },
+        {
+          "path": "finnor-os/scripts/frontier5/x1/publication-race-review.mts",
+          "before": null,
+          "after": "56f392c4487576bd7b58cc8a5d5ddb677a83d4486572b49b6b7b774edb811cde"
+        },
+        {
+          "path": "finnor-os/scripts/frontier5/x1/qualification-admin-output-cases.mjs",
+          "before": null,
+          "after": "c28adc06cac569ae22e1bb001a40d3bb0ed809b7ef4482c19ec32eeb0b5cf67c"
+        },
+        {
+          "path": "finnor-os/scripts/frontier5/x1/qualification-admin.mts",
+          "before": "f57f1b186a00d717ad470b39882212e585ac95480e95d21928789625ba7fa29e",
+          "after": "b32d674d75f2b7403bfd81a2e800a73843c385792dc79c944da63166f7f8444c"
+        },
+        {
+          "path": "finnor-os/scripts/frontier5/x1/qualification-full-contract-cases.mjs",
+          "before": null,
+          "after": "28671a005ac5f70ab20da62ffd5e0311599f2b841ecc28f54d0b40501c9a6de5"
+        },
+        {
+          "path": "finnor-os/scripts/frontier5/x1/qualification-full-population-cases.mjs",
+          "before": null,
+          "after": "704fee50f535d6376e7425691410ee5eca14cecf7c770bc8cfcca21be84ed79e"
+        },
+        {
+          "path": "finnor-os/scripts/frontier5/x1/qualification-journal-horizon-cases.mjs",
+          "before": null,
+          "after": "1c307586b688b064604dc21b17658a1bb594fea92a742d1b621cdc027cf57ccd"
+        },
+        {
+          "path": "finnor-os/scripts/frontier5/x1/qualification-live-storage-cases.mjs",
+          "before": null,
+          "after": "ad53a7c8054c1528dbeb328fba24b9072819d0c1a4f6ebfd8c41be496228a6fc"
+        },
+        {
+          "path": "finnor-os/scripts/frontier5/x1/qualification-observation-collection.mts",
+          "before": "8be493fa1623574d4be021bd610009f6ca72ab863d3083732e02e0f3dd113d88",
+          "after": "524b15b14b8671766cd49a4a01678cf85848b8c6416f26a3d7a993fb3a8eed7c"
+        },
+        {
+          "path": "finnor-os/scripts/frontier5/x1/qualification-owner-exercise.mts",
+          "before": "a2f1032c11336939753bbc5e9614815211ba0dd871883691b243d7d8976216e1",
+          "after": "9d2f34ec30f5dee2da9e6726f632e2a783acd11a69382c3a95edf68a80b550d6"
+        },
+        {
+          "path": "finnor-os/scripts/frontier5/x1/qualification-public-assessment-cases.mjs",
+          "before": null,
+          "after": "7844cbc3b2fbd704a310fbf680ebecf58880f3430df2d38745013aa0fac46b2c"
+        },
+        {
+          "path": "finnor-os/scripts/frontier5/x1/qualification-runtime.mts",
+          "before": "89795c0e12f690b4a045ef9a8942a85a044e941f384209c6c210adff265ab6a7",
+          "after": "07d2d9408cbcbb59f5edfac75107ab3fefd8cb4cf5ceeb756722c4c3237b7bd3"
+        },
+        {
+          "path": "finnor-os/scripts/frontier5/x1/qualification-state-journal.mts",
+          "before": null,
+          "after": "62ec7397abbea2d1b1007e744fe7c91f3613af849e5deb8c741ac56fa0a09d9c"
+        },
+        {
+          "path": "finnor-os/scripts/frontier5/x1/qualification-storage-cases.mjs",
+          "before": null,
+          "after": "b46e50f36e3d65161ed2a2dc783e258e19beb81b49aa453f4478ca568256745f"
+        },
+        {
+          "path": "finnor-os/scripts/frontier5/x1/qualification-storage-resume-cases.mjs",
+          "before": null,
+          "after": "27bfd032d7c41a5f41f1b9be04a15c1ee7d36a8ddb48b62f4d50ce518e983aea"
+        },
+        {
+          "path": "finnor-os/scripts/frontier5/x1/reconstruction-timing-cases.mjs",
+          "before": null,
+          "after": "eabc5493f26bf59a4c87579a9aa04aef2749c9acbc1940d48587420a215b4368"
+        },
+        {
+          "path": "finnor-os/scripts/frontier5/x1/reference/accepted-child-observer-clarification.md",
+          "before": null,
+          "after": "fcb495269fbc4813e2a66ec4d414bbb025f11a8c275e769e02b406f8b9e3ba8e"
+        },
+        {
+          "path": "finnor-os/scripts/frontier5/x1/reference/accepted-child-recovery-native-review-contract.md",
+          "before": null,
+          "after": "72b67b69e9a7d00453d8b56da215b9d76293bd032102647bf892a7f80da2f5af"
+        },
+        {
+          "path": "finnor-os/scripts/frontier5/x1/reference/admission-cursor-native-review-contract.md",
+          "before": null,
+          "after": "4b170bbe5c55c832c0e41583a7929dca9ee83b3c84cfb098a13cf94928add444"
+        },
+        {
+          "path": "finnor-os/scripts/frontier5/x1/reference/admission-finish-contract.md",
+          "before": "dc7f9d815a2190c933bba1da2a4d27cbab26e153219f84ff654d021e6756cff6",
+          "after": "41e8aa0c34c96c3b112db2e062a45352d97ad5d8447a40d161fa876b4b5086cb"
+        },
+        {
+          "path": "finnor-os/scripts/frontier5/x1/reference/canvas-effect-native-review-contract.md",
+          "before": null,
+          "after": "b8f9ab83d529b37b5e11aee33c99dde0bfaf6d9d780c9c97f02ecaf5b2a1b286"
+        },
+        {
+          "path": "finnor-os/scripts/frontier5/x1/reference/company-brain-evidence-native-review-contract.md",
+          "before": null,
+          "after": "6a426ce5e17f78d748926f6fe2b131f0460a2fb8f97ed842a4e15f061c82aa75"
+        },
+        {
+          "path": "finnor-os/scripts/frontier5/x1/reference/compiler-publication-checkpoint-contract.md",
+          "before": null,
+          "after": "e599485d094abbb5ae0694b434f9cf5dd1281b66c56be62406794f2974eaa5a1"
+        },
+        {
+          "path": "finnor-os/scripts/frontier5/x1/reference/final-head-fence-native-review-clarification.md",
+          "before": null,
+          "after": "32a8699bf9e9521eda50bfbba32a77bbf4dbbdce8263df2585946e658fc2b0d5"
+        },
+        {
+          "path": "finnor-os/scripts/frontier5/x1/reference/final-head-fence-native-review-contract.md",
+          "before": null,
+          "after": "090867e4b36478901ec874f33007084679caac09bba91e3028b3a3b9fb0a02ee"
+        },
+        {
+          "path": "finnor-os/scripts/frontier5/x1/reference/final-physical-owner-proof-contract.md",
+          "before": null,
+          "after": "fb1d34bf6849635d2153f45826f8443b960490d581f56ea8b3d20c45df96c28a"
+        },
+        {
+          "path": "finnor-os/scripts/frontier5/x1/reference/installed-source-native-review-contract.md",
+          "before": null,
+          "after": "bfb45d497ae387f4d3ae80fe25d51427d1d5e7895799ac53ce8de09414168743"
+        },
+        {
+          "path": "finnor-os/scripts/frontier5/x1/reference/missing-evidence-native-review-contract.md",
+          "before": null,
+          "after": "2dd5455b66471a3d4d429097e7ab36dedc68c2ad31668d7065b0a0146ffcfd11"
+        },
+        {
+          "path": "finnor-os/scripts/frontier5/x1/reference/mounted-identity-native-review-contract.md",
+          "before": null,
+          "after": "ef3bc81f88c336c08b547e6e5a3bc3908ca37bad4c6c1adaf78bfd8b7c5a06e2"
+        },
+        {
+          "path": "finnor-os/scripts/frontier5/x1/reference/mounted-races-native-review-clarification.md",
+          "before": null,
+          "after": "9d05feae0952c180af3a12a0d56ab3870ace1c58fba546f0f3656527ef461dff"
+        },
+        {
+          "path": "finnor-os/scripts/frontier5/x1/reference/mounted-races-native-review-contract.md",
+          "before": null,
+          "after": "a808ef0ba2eaf5d3775014eeddad65a2549af8dfd495d437a86c0efbdb1e9d69"
+        },
+        {
+          "path": "finnor-os/scripts/frontier5/x1/reference/mounted-sql-concurrency-native-review-contract.md",
+          "before": null,
+          "after": "10c843e0eb07ad217a09e863fbf6d05d8f7006b6b06fd18ce0505ef6717cea5d"
+        },
+        {
+          "path": "finnor-os/scripts/frontier5/x1/reference/native-review-proof-gaps.md",
+          "before": null,
+          "after": "d09c328adf6467f6c060c10ebf052ce1eb88e34e8176716e444c12f16f1bec57"
+        },
+        {
+          "path": "finnor-os/scripts/frontier5/x1/reference/native-review-repair-contract.md",
+          "before": null,
+          "after": "e82116de5ebf918bcb3c14e0f3b4905cc9efa138ef9bd5783082bbd646320eaa"
+        },
+        {
+          "path": "finnor-os/scripts/frontier5/x1/reference/numeric-context-native-review-contract.md",
+          "before": null,
+          "after": "fbc98bf2229d63b4de68d76b0d8dacd7c1e376ba88f2cddf00b487b13f5380e2"
+        },
+        {
+          "path": "finnor-os/scripts/frontier5/x1/reference/p7-native-review-contract.md",
+          "before": null,
+          "after": "47108054aa6fc4e5abb7491fbffb17e620fe8c6ab9397bee6f660e507c6ad70e"
+        },
+        {
+          "path": "finnor-os/scripts/frontier5/x1/reference/personnel-closure-native-review-contract.md",
+          "before": null,
+          "after": "fa0507e1031f758e052f74c2c2bc5c5a1ed0a1ef5ca4ba516fb29528b440d5ef"
+        },
+        {
+          "path": "finnor-os/scripts/frontier5/x1/reference/public-ed25519-test-vectors.json",
+          "before": null,
+          "after": "0778724a7606d346bb0f13360948dfd602ef7550c061838d9800fe271e3f39ed"
+        },
+        {
+          "path": "finnor-os/scripts/frontier5/x1/reference/publication-race-native-review-contract.md",
+          "before": null,
+          "after": "34dafdd198e0f95a641ad355805efd15890698c720004a614c4a11373aa859e7"
+        },
+        {
+          "path": "finnor-os/scripts/frontier5/x1/reference/qualification-admin-output-native-review-contract.md",
+          "before": null,
+          "after": "c1e3b1a871975af9800bcc45b896394400698a5c4b27886b9267bb07f7000199"
+        },
+        {
+          "path": "finnor-os/scripts/frontier5/x1/reference/qualification-full-native-review-contract.md",
+          "before": null,
+          "after": "ed9c0f412453f739a7c3e5aecf615d68e8535b423c9474bf3c09dcb20361a295"
+        },
+        {
+          "path": "finnor-os/scripts/frontier5/x1/reference/qualification-journal-native-review-contract.md",
+          "before": null,
+          "after": "fe1a47e8fc26538dceb7468cfd4edb9db819cfd66600ded70ab366dc5fb96fc6"
+        },
+        {
+          "path": "finnor-os/scripts/frontier5/x1/reference/qualification-public-assessment-native-review-contract.md",
+          "before": null,
+          "after": "b0dce80bc36446b1a970c40e15012767b1122d070aaa55359bcb63dc86a14c0f"
+        },
+        {
+          "path": "finnor-os/scripts/frontier5/x1/reference/reconstruction-timing-native-review-contract.md",
+          "before": null,
+          "after": "4a239d67dcaa59b66e6b29deabf3f02ce51d99e2aa9f9162c17a50d2cd076273"
+        },
+        {
+          "path": "finnor-os/scripts/frontier5/x1/reference/remaining-owner-negative-contract.md",
+          "before": null,
+          "after": "5e960e0294604e5a3ddbbfc6fba6fb10705723f37a8fad65e25ba126b319cbe0"
+        },
+        {
+          "path": "finnor-os/scripts/frontier5/x1/reference/s6-guard-native-review-contract.md",
+          "before": null,
+          "after": "2dfb5a632e7bc1567235f3665d4a8a1ddd4d092177d427d5afebb946d9931d93"
+        },
+        {
+          "path": "finnor-os/scripts/frontier5/x1/reference/scrutiny-evidence-contract.json",
+          "before": null,
+          "after": "f9dd739bf38175ba08639fbeb1139d6a078247ac4c814124a7b3a43c8c171127"
+        },
+        {
+          "path": "finnor-os/scripts/frontier5/x1/reference/scrutiny-evidence-contract.md",
+          "before": null,
+          "after": "c49774fcd05beaf138d3fd1a1088326411ebdb8676ff6c3d9975ec2c6fbed177"
+        },
+        {
+          "path": "finnor-os/scripts/frontier5/x1/reference/ui-qualification-native-review-contract.md",
+          "before": null,
+          "after": "f62453dc009581dbb06dbccaa1b9f2273443e253be364078dd0766fe8120368e"
+        },
+        {
+          "path": "finnor-os/scripts/frontier5/x1/resource-owner-review.mts",
+          "before": null,
+          "after": "c063321ada787e4ef3c43f61b6123716861c3813a0d22bca7083b86e18b3fe20"
+        },
+        {
+          "path": "finnor-os/scripts/frontier5/x1/review-cases.mts",
+          "before": "73c1cc75fa4e8d16c5e82f82f4664e948e2d2c721a7ba0f96dab3f079db1b993",
+          "after": "798782bcf8ce37638ea67c4ad02803c77d714cfb504cbeb0168a8ed6686a3781"
         },
         {
           "path": "finnor-os/scripts/frontier5/x1/run-owner-slice.mts",
-          "before": "179428dd28899117348ae35cff0607b7b0a4b6c932d086de912bd76ff504bdec",
-          "after": "f61a94fafc61c865cf937178243af8c7a8a0d0dcffee609215f52962f8463119"
+          "before": "f61a94fafc61c865cf937178243af8c7a8a0d0dcffee609215f52962f8463119",
+          "after": "45d0524e779e28704eae7dcff780c19ff8f55d6f5b426f6f804944bdfa6c1357"
+        },
+        {
+          "path": "finnor-os/scripts/frontier5/x1/s6-guard-review.mts",
+          "before": null,
+          "after": "2b2f66b847a71c33c3d39a15d3d59f3bb0337eb6c22d3ca5d9b383da862174e1"
+        },
+        {
+          "path": "finnor-os/scripts/frontier5/x1/scrutiny-evidence.mjs",
+          "before": null,
+          "after": "ff4e1750fb66dd2eb799ea8d949c6d987fde537cdfc619c6d7b9fb35dd2223e7"
+        },
+        {
+          "path": "finnor-os/scripts/frontier5/x1/verify.mjs",
+          "before": "9688ce08381e50d87accaffa8e29f869f201e7cbfd34010149e9a3383d26c835",
+          "after": "0ba5346ecba35d41b15803436a32fe597d4a0a48ca8d1b2e07b0f6376e0c9cea"
+        },
+        {
+          "path": "finnor-os/scripts/p5/native-fixture.mts",
+          "before": "b74cdb59a4655a0d9bba3e4344759b7c753f6231857586cb6fbf3a81d6e96236",
+          "after": "dfe06de9e4cc62926a02d4ad7643aabec62a3d29a1a3d1cc196444d92fdb7c11"
+        },
+        {
+          "path": "finnor-os/scripts/p5/native-worker-client.mts",
+          "before": null,
+          "after": "f9f8266ea7d523d2e3e2050212b4ac9ecf294bd73a1710ae6fea2447fd83e651"
+        },
+        {
+          "path": "finnor-os/scripts/p5/physical-worker.mts",
+          "before": "fb323f5e9b32f3fe7ff2e49dd1613f62941c116c286d23d2a6f557a3a89eef10",
+          "after": "028c1edb279cd1d72398886959c9fa6dd49bf9c948b332c6052ffad7e3c12fd8"
+        },
+        {
+          "path": "finnor-os/scripts/p5/run-crash-e2e.mts",
+          "before": "0e4009886e1f1082540dcf409c48409fce947adf8a4d26cf7583c35225856628",
+          "after": "cd19e4c3a969e0447101eb946bb416f7f4e504763c9e1c7524936f1dc7dbb8fe"
+        },
+        {
+          "path": "finnor-os/scripts/s6/run-obligation-e2e.mts",
+          "before": "ea8559677b6013fb35dac46197c5dcba348aeb4fb0bd34fc433eeb67fea4b887",
+          "after": "0d3fbdee22ce419f59fad8297da5519608230d4ac86fb4d174eb119779bf5742"
         },
         {
           "path": "infra/deployment/production.contract.json",
-          "before": "dc96d0a398936acadd26e576ea172fea5ebec515a454378cb1f81606a8ed1da6",
-          "after": "5dcfa57525a7a366ca01036ef5bbc6bcdce10851e43bd263f8e35bcc380683f9"
+          "before": "5dcfa57525a7a366ca01036ef5bbc6bcdce10851e43bd263f8e35bcc380683f9",
+          "after": "ffbff0fa3b8fe97bc28867295e68f5d6daa43b480c44fbc74081b97111e0a2c5"
         },
         {
           "path": "scope-frontier5/x1-institutional-programme-compiler/failure-model.md",
           "before": "3b2b984c13aaedf39224b992aa9fc54eb48ab0fc9919261025d047aa6fed2f49",
-          "after": "b353cb65913b928b76717fd799f5874544d4bcfde369ff89bb0ef08b5a2aaad8"
+          "after": "9f47b2f5d758b3dcfced8e11b80f6cd92204c1609cda0c8df468c377ab664016"
+        },
+        {
+          "path": "scope-frontier5/x1-institutional-programme-compiler/handoff/compiler-publication-recovery.md",
+          "before": null,
+          "after": "f688add0be760eb4e3f3d46dacc1faab96350aa5ead1aba320bd5ccbce177d8b"
+        },
+        {
+          "path": "scope-frontier5/x1-institutional-programme-compiler/handoff/named-owner-verification.md",
+          "before": "83d19427466809e6a4afbfca926e5cd22a3b01abca79b37f9e50689e25e33ba9",
+          "after": "494fa2ca4903cf28b362b94b2bec80edadb1bb75def8496694992f857d94b933"
+        },
+        {
+          "path": "scope-frontier5/x1-institutional-programme-compiler/handoff/qualification-storage.md",
+          "before": null,
+          "after": "dd59d7c5986f1d0086c00e3c231e2d6ad9de9040294d54859694dd209cc14218"
+        },
+        {
+          "path": "scope-frontier5/x1-institutional-programme-compiler/status.md",
+          "before": "e1888506522f3b3ff77b04148c2ec24b0e485efae00c84f40ed55b1d2a812ece",
+          "after": "57190c4715784e1d9c53e05daeb0f129a39d83a97decc068c28c0c6fa9a66343"
+        },
+        {
+          "path": "src/components/centropy/canvas/InstitutionProgramPanel.tsx",
+          "before": "0d53ceb4567c85141409145b05dc06e5dad13a0352d6eccc1a211a1d1f4cb70e",
+          "after": "0088fe4661f837fe3d2646273b5c98c86d7b0797a9300134ac8389822bc366cf"
+        },
+        {
+          "path": "src/components/centropy/canvas/canvas-compose.ts",
+          "before": "9296c190076cbd1ed2ec3483df2f08ceee08751475419ab814485696d4ef410c",
+          "after": "73c208d005a8c4cfcd8e0580aaeced75bcd053efca3f28328385c13e2a9b6410"
+        },
+        {
+          "path": "src/components/centropy/lib/api.ts",
+          "before": "0b18915c2051c8ac5573b8e71262f436ab43146ada9f6d132c3840a7665e096b",
+          "after": "af5c042ee3b7d7e956b41584376578fac05246c607956ce80d496f7be6d7d761"
+        },
+        {
+          "path": "src/components/centropy/lib/private-read-generation.ts",
+          "before": null,
+          "after": "9137a91257226c3b9cce39ad5aca33742d1d6ef0ec81aff2f6812dd4a44657e3"
+        },
+        {
+          "path": "src/components/centropy/lib/use-private-request-scope.ts",
+          "before": "58d9dde092e210057e46bf8385be79e32f807225d3b2d625b810f10d8bac3a1b",
+          "after": "9eb45345f9f0b5e6fb9cb1f0075f04cfdbe19c9a1b2100f7fc5955a9cd8daa56"
+        },
+        {
+          "path": "src/components/centropy/shell/CentropyWorkspace.tsx",
+          "before": "9dfafbf71d3e21de6f1f3ea8407840e9822c7aec240c34b3bdb97cfbc6a8c8d5",
+          "after": "15526e4240ab22cb6db53ab12851196bbb59fb8050a166a386da978f2d88fa83"
         }
-      ]
+      ],
+      "basis": "Exact complete changed-source population; historical receipts are supporting owner evidence only. The current backend full-domain, mounted and accepted-child proofs close changed common owner/reader/acceptance paths; native independent scrutiny still adjudicates semantic sufficiency."
     },
     {
-      "from": "f4b51a00b0d911f34a77b31ab0a27a3350c368b0",
-      "to": "ebf4e6c4f5f1fc72368ccebaf44bb4c9fc71025a",
+      "from": "bf3eb8834cc27293fbc47dbb64ca350f8114db26",
+      "to": "a1840556093a40c975b4b5fba149b52a3da4e374",
+      "roles": [
+        "reporting",
+        "sensitive",
+        "effectRecovery",
+        "checkerCrash",
+        "unsupported"
+      ],
       "changes": [
         {
-          "path": "docs/release/generated/action-manifest.json",
-          "before": "77691387de00373cbcb6e8937fc11a2efbd1eb307c5314be43ec0a0e16d8ff72",
-          "after": "ef033c2874e9c71bec4f5a67d969d598f65d5867639c8cf87b0f6b378c3b8483"
+          "path": "finnor-os/packages/private-equity/src/company-brain-relationships.ts",
+          "before": "69d22f8bd81d72f77f8b8ab7ad1e48f042ccace310c3953ec5e19d1321d78cd3",
+          "after": "be2dc0bdfd3d9cb4630008fa2df3af095becb1d1c0351ff26e843890f66b7a15"
         },
         {
-          "path": "docs/release/generated/action-manifest.md",
-          "before": "3c2d99b17134229807a63c825aa01e9293ce1b89830e153998b732a2164b3a59",
-          "after": "62ba3688da624cbec5b965ebeec372f427ff266dfe4b6fa90790eecfa1bdc6b7"
+          "path": "finnor-os/packages/private-equity/src/institution-program/checker-raw.ts",
+          "before": "7b718a9434a9e1b981ae78660ca0119518bc9aaceea11d8ea9054a47fa2f9b82",
+          "after": "07758a4fe37b8c172131b9f5b70289d8a732283835eb68bbc71616a47abdda70"
         },
         {
-          "path": "finnor-os/apps/supplier-canary/api/index.mjs",
-          "before": "3a1d1284d88f017688227cf76d472656e700d710ad078881e86bb25e490aaff7",
-          "after": "b207d5eef71ea1ebbef01c22a2a45c96a4ea827938f2a8152624096a05f00197"
+          "path": "finnor-os/packages/private-equity/src/institution-program/owner-admission.ts",
+          "before": "8aaaa063f535356ba7844d45ea82e800f4b194f7c47f8ae0942100ef0104b4ab",
+          "after": "ba8f517f3bfe863028cc10a06a607ee1275279684ccd581e1ba41406cca5cec8"
         },
         {
-          "path": "finnor-os/packages/capability-evolution/src/institution-port.ts",
-          "before": "2985362704ab07b802fa6622a1bf01d664f1fe3fcbf02803dbb2657a2b353ad0",
-          "after": "81c2ff2313fff246a9693ba45fe355c335654959d7746f20e1ed2abbb159641c"
+          "path": "finnor-os/packages/private-equity/src/program-synthesis/institution.ts",
+          "before": "4f26f788977cbde4e650bad4d2b030f8bd33791b120e1e0520b8aff9c0624f81",
+          "after": "e5cbfa05da2f6a1ac6b5c5d91d0b3c10805ed56b96e8ac9a5a17058479b38d69"
         },
         {
-          "path": "infra/deployment/production.contract.json",
-          "before": "dc96d0a398936acadd26e576ea172fea5ebec515a454378cb1f81606a8ed1da6",
-          "after": "5dcfa57525a7a366ca01036ef5bbc6bcdce10851e43bd263f8e35bcc380683f9"
+          "path": "finnor-os/packages/private-equity/src/repository.ts",
+          "before": "af3f1d9d4fe51c82e985bc537b4a0d2d2035908c95f710eb59592ad869589b6e",
+          "after": "14b608e7e6f2696e7e1e20a6966c5e392c87e30de3182d93af8b78f3ad23dcae"
         },
         {
-          "path": "scope-frontier5/x1-institutional-programme-compiler/failure-model.md",
-          "before": "3b2b984c13aaedf39224b992aa9fc54eb48ab0fc9919261025d047aa6fed2f49",
-          "after": "b353cb65913b928b76717fd799f5874544d4bcfde369ff89bb0ef08b5a2aaad8"
+          "path": "finnor-os/scripts/frontier5/x1/admission-cursor-review.mts",
+          "before": null,
+          "after": "d28877cd976866f631d8d94d700f248de50c08e84930c511ca8859d04a8c3963"
+        },
+        {
+          "path": "finnor-os/scripts/frontier5/x1/eslint.config.mjs",
+          "before": "9bc09148f6f6d634c82eaa776ad14a1b6fb333c26d904010d8f0d129caec92fb",
+          "after": "d5a6c2d82bc6708a386eb3bc4724c7763af73e88a36e3165d5a3543065ed6705"
+        },
+        {
+          "path": "finnor-os/scripts/frontier5/x1/numeric-context-cases.mjs",
+          "before": "21977046b2f7a4a2688121193a4ad8ec285527e878d29ebaa4b2fb1478009611",
+          "after": "5622da04428778f63c0445dc6448e01f32dd32971c74563b367264953a376490"
+        },
+        {
+          "path": "finnor-os/scripts/frontier5/x1/reference/admission-cursor-native-review-contract.md",
+          "before": null,
+          "after": "4b170bbe5c55c832c0e41583a7929dca9ee83b3c84cfb098a13cf94928add444"
+        },
+        {
+          "path": "finnor-os/scripts/frontier5/x1/reference/company-brain-evidence-native-review-contract.md",
+          "before": null,
+          "after": "6a426ce5e17f78d748926f6fe2b131f0460a2fb8f97ed842a4e15f061c82aa75"
+        },
+        {
+          "path": "finnor-os/scripts/frontier5/x1/reference/mounted-sql-concurrency-native-review-contract.md",
+          "before": null,
+          "after": "10c843e0eb07ad217a09e863fbf6d05d8f7006b6b06fd18ce0505ef6717cea5d"
+        },
+        {
+          "path": "finnor-os/scripts/frontier5/x1/reference/numeric-context-native-review-contract.md",
+          "before": "980076bd498c528e495bb2495eb854a4f8df997b63d52469fac69bf075b30a33",
+          "after": "fbc98bf2229d63b4de68d76b0d8dacd7c1e376ba88f2cddf00b487b13f5380e2"
+        },
+        {
+          "path": "finnor-os/scripts/frontier5/x1/reference/personnel-closure-native-review-contract.md",
+          "before": null,
+          "after": "fa0507e1031f758e052f74c2c2bc5c5a1ed0a1ef5ca4ba516fb29528b440d5ef"
+        },
+        {
+          "path": "finnor-os/scripts/frontier5/x1/run-owner-slice.mts",
+          "before": "5408790b18af453924ac34afb58c240742a83afece5afe479c033a191265c25b",
+          "after": "45d0524e779e28704eae7dcff780c19ff8f55d6f5b426f6f804944bdfa6c1357"
+        },
+        {
+          "path": "finnor-os/scripts/frontier5/x1/verify.mjs",
+          "before": "073586c190f0a19ae9a4251640dced5093c3597684c1d81c5297dea4fde25a4e",
+          "after": "0ba5346ecba35d41b15803436a32fe597d4a0a48ca8d1b2e07b0f6376e0c9cea"
         }
-      ]
+      ],
+      "basis": "Exact complete changed-source population; historical receipts are supporting owner evidence only. The current backend full-domain, mounted and accepted-child proofs close changed common owner/reader/acceptance paths; native independent scrutiny still adjudicates semantic sufficiency."
     },
     {
-      "from": "3c491d82d9bd6e7118f5f6741adae8f7551246ef",
-      "to": "ebf4e6c4f5f1fc72368ccebaf44bb4c9fc71025a",
+      "from": "e415751ac00f13b7843e83ca05c8b1665a9c65e0",
+      "to": "a1840556093a40c975b4b5fba149b52a3da4e374",
+      "roles": [
+        "personnel"
+      ],
       "changes": [
         {
-          "path": "finnor-os/packages/capability-evolution/src/institution-port.ts",
-          "before": "2985362704ab07b802fa6622a1bf01d664f1fe3fcbf02803dbb2657a2b353ad0",
-          "after": "81c2ff2313fff246a9693ba45fe355c335654959d7746f20e1ed2abbb159641c"
+          "path": "finnor-os/packages/private-equity/src/company-brain-relationships.ts",
+          "before": "69d22f8bd81d72f77f8b8ab7ad1e48f042ccace310c3953ec5e19d1321d78cd3",
+          "after": "be2dc0bdfd3d9cb4630008fa2df3af095becb1d1c0351ff26e843890f66b7a15"
         },
         {
-          "path": "scope-frontier5/x1-institutional-programme-compiler/failure-model.md",
-          "before": "3b2b984c13aaedf39224b992aa9fc54eb48ab0fc9919261025d047aa6fed2f49",
-          "after": "b353cb65913b928b76717fd799f5874544d4bcfde369ff89bb0ef08b5a2aaad8"
+          "path": "finnor-os/packages/private-equity/src/institution-program/owner-admission.ts",
+          "before": "8aaaa063f535356ba7844d45ea82e800f4b194f7c47f8ae0942100ef0104b4ab",
+          "after": "ba8f517f3bfe863028cc10a06a607ee1275279684ccd581e1ba41406cca5cec8"
+        },
+        {
+          "path": "finnor-os/packages/private-equity/src/program-synthesis/institution.ts",
+          "before": "4f26f788977cbde4e650bad4d2b030f8bd33791b120e1e0520b8aff9c0624f81",
+          "after": "e5cbfa05da2f6a1ac6b5c5d91d0b3c10805ed56b96e8ac9a5a17058479b38d69"
+        },
+        {
+          "path": "finnor-os/packages/private-equity/src/repository.ts",
+          "before": "af3f1d9d4fe51c82e985bc537b4a0d2d2035908c95f710eb59592ad869589b6e",
+          "after": "14b608e7e6f2696e7e1e20a6966c5e392c87e30de3182d93af8b78f3ad23dcae"
+        },
+        {
+          "path": "finnor-os/scripts/frontier5/x1/admission-cursor-review.mts",
+          "before": null,
+          "after": "d28877cd976866f631d8d94d700f248de50c08e84930c511ca8859d04a8c3963"
+        },
+        {
+          "path": "finnor-os/scripts/frontier5/x1/eslint.config.mjs",
+          "before": "9bc09148f6f6d634c82eaa776ad14a1b6fb333c26d904010d8f0d129caec92fb",
+          "after": "d5a6c2d82bc6708a386eb3bc4724c7763af73e88a36e3165d5a3543065ed6705"
+        },
+        {
+          "path": "finnor-os/scripts/frontier5/x1/reference/admission-cursor-native-review-contract.md",
+          "before": null,
+          "after": "4b170bbe5c55c832c0e41583a7929dca9ee83b3c84cfb098a13cf94928add444"
+        },
+        {
+          "path": "finnor-os/scripts/frontier5/x1/reference/company-brain-evidence-native-review-contract.md",
+          "before": null,
+          "after": "6a426ce5e17f78d748926f6fe2b131f0460a2fb8f97ed842a4e15f061c82aa75"
+        },
+        {
+          "path": "finnor-os/scripts/frontier5/x1/reference/mounted-sql-concurrency-native-review-contract.md",
+          "before": null,
+          "after": "10c843e0eb07ad217a09e863fbf6d05d8f7006b6b06fd18ce0505ef6717cea5d"
+        },
+        {
+          "path": "finnor-os/scripts/frontier5/x1/run-owner-slice.mts",
+          "before": "bcff4bb33d088de09d225461374fe84cdd1841822474ce462e0880997276b042",
+          "after": "45d0524e779e28704eae7dcff780c19ff8f55d6f5b426f6f804944bdfa6c1357"
+        },
+        {
+          "path": "finnor-os/scripts/frontier5/x1/verify.mjs",
+          "before": "073586c190f0a19ae9a4251640dced5093c3597684c1d81c5297dea4fde25a4e",
+          "after": "0ba5346ecba35d41b15803436a32fe597d4a0a48ca8d1b2e07b0f6376e0c9cea"
         }
-      ]
+      ],
+      "basis": "Exact complete changed-source population; historical receipts are supporting owner evidence only. The current backend full-domain, mounted and accepted-child proofs close changed common owner/reader/acceptance paths; native independent scrutiny still adjudicates semantic sufficiency."
+    },
+    {
+      "from": "408772ae594413b9e2b7728b5bebc16a1c584aa7",
+      "to": "a1840556093a40c975b4b5fba149b52a3da4e374",
+      "roles": [
+        "upgrade"
+      ],
+      "changes": [
+        {
+          "path": "finnor-os/packages/private-equity/src/company-brain-relationships.ts",
+          "before": "69d22f8bd81d72f77f8b8ab7ad1e48f042ccace310c3953ec5e19d1321d78cd3",
+          "after": "be2dc0bdfd3d9cb4630008fa2df3af095becb1d1c0351ff26e843890f66b7a15"
+        },
+        {
+          "path": "finnor-os/packages/private-equity/src/institution-program/owner-admission.ts",
+          "before": "8aaaa063f535356ba7844d45ea82e800f4b194f7c47f8ae0942100ef0104b4ab",
+          "after": "ba8f517f3bfe863028cc10a06a607ee1275279684ccd581e1ba41406cca5cec8"
+        },
+        {
+          "path": "finnor-os/packages/private-equity/src/repository.ts",
+          "before": "af3f1d9d4fe51c82e985bc537b4a0d2d2035908c95f710eb59592ad869589b6e",
+          "after": "14b608e7e6f2696e7e1e20a6966c5e392c87e30de3182d93af8b78f3ad23dcae"
+        },
+        {
+          "path": "finnor-os/scripts/frontier5/x1/admission-cursor-review.mts",
+          "before": null,
+          "after": "d28877cd976866f631d8d94d700f248de50c08e84930c511ca8859d04a8c3963"
+        },
+        {
+          "path": "finnor-os/scripts/frontier5/x1/eslint.config.mjs",
+          "before": "9bc09148f6f6d634c82eaa776ad14a1b6fb333c26d904010d8f0d129caec92fb",
+          "after": "d5a6c2d82bc6708a386eb3bc4724c7763af73e88a36e3165d5a3543065ed6705"
+        },
+        {
+          "path": "finnor-os/scripts/frontier5/x1/reference/admission-cursor-native-review-contract.md",
+          "before": null,
+          "after": "4b170bbe5c55c832c0e41583a7929dca9ee83b3c84cfb098a13cf94928add444"
+        },
+        {
+          "path": "finnor-os/scripts/frontier5/x1/reference/company-brain-evidence-native-review-contract.md",
+          "before": null,
+          "after": "6a426ce5e17f78d748926f6fe2b131f0460a2fb8f97ed842a4e15f061c82aa75"
+        },
+        {
+          "path": "finnor-os/scripts/frontier5/x1/run-owner-slice.mts",
+          "before": "dff47e1c4816a6f7afec7403b676ed5632e8960324dd30b76c76c5c8ca4ec826",
+          "after": "45d0524e779e28704eae7dcff780c19ff8f55d6f5b426f6f804944bdfa6c1357"
+        },
+        {
+          "path": "finnor-os/scripts/frontier5/x1/verify.mjs",
+          "before": "073586c190f0a19ae9a4251640dced5093c3597684c1d81c5297dea4fde25a4e",
+          "after": "0ba5346ecba35d41b15803436a32fe597d4a0a48ca8d1b2e07b0f6376e0c9cea"
+        }
+      ],
+      "basis": "Exact complete changed-source population; historical receipts are supporting owner evidence only. The current backend full-domain, mounted and accepted-child proofs close changed common owner/reader/acceptance paths; native independent scrutiny still adjudicates semantic sufficiency."
     }
   ],
-  "compatibilityReason": "Only exact retained transitions are accepted. Metadata updates current migration-head labels and generated source-line locations; owner observer adds action_type to an existing SQL read; configured-X1-only S8 constructor principal guard has its own current compiled proof. Historical receipts retain original cuts. Their unconfigured owner paths do not exercise protected S8. No newer product change is permitted by this audit.",
+  "compatibilityReason": "Historical receipts retain their exact measured cuts. Every total before/after Git path and byte transition is explicit; this is source compatibility documentation, never a new-cut rerun or native/global acceptance. Current installed full-domain/cursor, mounted fresh evidence/privacy and accepted-child recovery must use the current backend. Currentness/qualification/checker/authority-specific proofs retain their own named predicates and raw failures.",
   "externalGates": [
     "protectedPopulationQualification",
     "existingS8SignedMethodAdmissionAndServiceProof",
@@ -175,15 +840,14 @@
     "missing-source-reconstruction",
     "unaccounted-checker-case"
   ],
-  "scope": "DEVELOPMENT_EVIDENCE_INTEGRITY_ONLY; native independent acceptance, protected custody and admission remain separate; historical diagnostic is PARTIAL and original FAILs remain FAIL.",
-  "historicalObserverDirty": {
-    "role": "upgrade",
-    "sourceCommit": "08c215c6bce94ebb1cf578bdca863ad706684a0c",
-    "dirty": "M finnor-os/scripts/frontier5/x1/run-owner-slice.mts",
-    "dirtyDiffDigest": "4fcd67dab3feb3c74dbc52f32c074538cdd1c0ff38a5bbc91abfa8f9efdbfb07",
-    "committedObserverCut": "f4b51a00b0d911f34a77b31ab0a27a3350c368b0",
-    "path": "finnor-os/scripts/frontier5/x1/run-owner-slice.mts",
-    "sha256": "f61a94fafc61c865cf937178243af8c7a8a0d0dcffee609215f52962f8463119",
-    "reason": "Upgrade executed exact installed006 product source08c with the one observer SQL projection fix later committed verbatimf4b. All actual driver source preimages are pinned; no compiled owner, schema, checker or application product change."
-  }
+  "scope": "DEVELOPMENT_EVIDENCE_INTEGRITY_ONLY; finite recomposition with exact historical source provenance. Independent native acceptance/protected custody/admission remain separate. No global PASS or re-labeling of original runs.",
+  "historicalObserverDirty": null,
+  "refreshPreEditContract": "delivery/current-runtime-scrutiny-refresh-contract-001.md",
+  "currentRuntimeRoles": [
+    "installed",
+    "mounted",
+    "acceptedChild",
+    "cursor"
+  ],
+  "upgradeMigrationCount": 19
 }
