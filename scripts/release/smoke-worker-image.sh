@@ -200,8 +200,8 @@ NODE
 # unchanged job/deadline identity. Browser evidence remains a separate Work
 # surface gate because this minimal worker image has no browser binary.
 if [[ -f finnor-os/scripts/r3/run-owner-e2e.mts ]]; then
-  mkdir -p "$evidence/linux-r3-runtime/installed" "$evidence/linux-r3-runtime/owner"
-  chmod 2770 "$evidence/linux-r3-runtime" "$evidence/linux-r3-runtime/installed" "$evidence/linux-r3-runtime/owner"
+  mkdir -p "$evidence/linux-r3-runtime"
+  chmod 2770 "$evidence/linux-r3-runtime"
   if docker run --rm --network none --user 1000:1000 --group-add "$(id -g)" \
     --env HOME=/tmp --env TMPDIR=/tmp --env NODE_ENV=test --env CI=1 --env LOG_LEVEL=silent \
     --env AUTH_DEV_BYPASS=0 --env FINNOR_TEST_MANAGED_EXTENSIONS=omit \
