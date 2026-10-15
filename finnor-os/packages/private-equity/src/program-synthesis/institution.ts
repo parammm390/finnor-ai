@@ -81,6 +81,9 @@ export async function submitInstitutionHarnessProgram(ctx:PeMutationContext,requ
    })))throw Error('X1_P1_FROZEN_MANDATE_ACTION_NOT_ESTABLISHED');
  const digest=sha(request),code=await codeIdentity(),schemaDigest=await schemaIdentity(ctx);
  return tx(ctx,async(c,db)=>{
+  // Source publication locks this mutex before Work rows. Plan selection also
+  // mutates Work, so compiler-bound children must preserve that same order.
+  if(compilerRequestId)await c.query('SELECT pg_advisory_xact_lock(hashtextextended($1,5510))',[ctx.auth.tenantId]);
   await c.query('SELECT pg_advisory_xact_lock(hashtextextended($1,4401))',
    [ctx.auth.tenantId+':'+principal(ctx)+':'+request.idempotencyKey]);
   const old=(await c.query<InstitutionProgramRow>(`SELECT * FROM finnor_os.p1_requests
