@@ -4,6 +4,7 @@ import {compileUnderwritingModel,type ResolvedInput,type UnderwritingInputSnapsh
 import {FinancialSemanticsSchema,EvidenceUnderwritingBindingSchema,type EvidenceUnderwritingBinding,type EvidenceDerivation,type ExperimentRef} from '@finnor/shared-types';
 import type {PoolClient} from 'pg';
 import {createUnderwritingRun} from '../underwriting-repository';
+import {assertPrimarySnapshotCurrent} from '../primary-diligence/consumer';
 import type {PeMutationContext} from '../types';
 import {authorizeBeliefResources} from '../enterprise-beliefs';
 import {assertDependencies,authorize,currentDerivation,sha,stable,tx} from './store';
@@ -37,8 +38,9 @@ export async function resolveEvidenceUnderwritingInputs(ctx:PeMutationContext,in
  return resolved;
 }
 export async function assertEvidenceSnapshotCurrent(ctx:PeMutationContext,snapshot:UnderwritingInputSnapshot,client?:PoolClient,lock=false){
+ await assertPrimarySnapshotCurrent(ctx,snapshot,client,lock);
  for(const input of Object.values(snapshot.values))for(const ref of input.provenance.filter(r=>r.kind==='evidence_derivation')){
-  const derivation=await currentDerivation(ctx,ref.id),output=derivation.result?.outputs[ref.anchorId??''];if(!output||output.kind!=='scalar'||output.value!==input.value||input.truthClass!=='DERIVED_VALUE'||input.status!=='KNOWN'||ref.semanticHash!==derivation.result?.digest)throw Error('DERIVATION_CONSUMER_PROVENANCE_OR_CURRENTNESS_FAILED');
+  const derivation=await currentDerivation(ctx,ref.id,client),output=derivation.result?.outputs[ref.anchorId??''];if(!output||output.kind!=='scalar'||output.value!==input.value||input.truthClass!=='DERIVED_VALUE'||input.status!=='KNOWN'||ref.semanticHash!==derivation.result?.digest)throw Error('DERIVATION_CONSUMER_PROVENANCE_OR_CURRENTNESS_FAILED');
   if(client)await assertDependencies(ctx,derivation.invalidationKeys,client,lock);
  }
 }
@@ -47,10 +49,11 @@ export async function assertEvidenceSnapshotCurrent(ctx:PeMutationContext,snapsh
  * no P4 dependency and keep their existing behavior. */
 export async function assertEvidenceRunTransactionCurrent(client:PoolClient,tenantId:string,runId:string){
  const row=(await client.query<{input_snapshot:UnderwritingInputSnapshot}>('SELECT input_snapshot FROM finnor_os.underwriting_runs WHERE tenant_id=$1 AND id=$2',[tenantId,runId])).rows[0];
- if(!row||!Object.values(row.input_snapshot.values).some(v=>v.provenance.some(p=>p.kind==='evidence_derivation')))return false;
- const identity=(await client.query<{id:string;role:string;status:string}>("SELECT id::text,role,status FROM finnor_os.users WHERE tenant_id=$1 AND id=NULLIF(current_setting('app.user_id',true),'')::uuid",[tenantId])).rows[0];
+ if(!row||!Object.values(row.input_snapshot.values).some(v=>v.provenance.some(p=>p.kind==='evidence_derivation'||p.kind==='primary_finding')))return false;
+ const identity=(await client.query<{id:string;role:string;status:string;transaction_read_only:string}>("SELECT id::text,role,status,current_setting('transaction_read_only') transaction_read_only FROM finnor_os.users WHERE tenant_id=$1 AND id=NULLIF(current_setting('app.user_id',true),'')::uuid",[tenantId])).rows[0];
  if(!identity||identity.status!=='active'||identity.role!=='owner')throw Error('CURRENT_AUTHENTICATED_PRINCIPAL_UNAVAILABLE');
- await assertEvidenceSnapshotCurrent({auth:{tenantId,userId:identity.id,employeeId:identity.id,role:'owner'},provenance:{sourceSystem:'P4:existing-consumer-currentness',createdBy:identity.id}},row.input_snapshot,client,true);return true;
+ if(!['on','off'].includes(identity.transaction_read_only))throw Error('CURRENT_TRANSACTION_MODE_UNAVAILABLE');
+ await assertEvidenceSnapshotCurrent({auth:{tenantId,userId:identity.id,employeeId:identity.id,role:'owner'},provenance:{sourceSystem:'P4:existing-consumer-currentness',createdBy:identity.id}},row.input_snapshot,client,identity.transaction_read_only==='off');return true;
 }
 export const EvidenceConsumeRequestSchema=z.object({investmentCaseId:z.string().uuid(),modelVersionId:z.string().uuid(),worldAt:z.string().datetime({offset:true}),idempotencyKey:z.string().min(1).max(200),workId:z.string().uuid().optional(),bindings:z.record(EvidenceUnderwritingBindingSchema)}).strict();
 export async function consumeEvidenceUnderwriting(ctx:PeMutationContext,body:unknown){const request=EvidenceConsumeRequestSchema.parse(body);

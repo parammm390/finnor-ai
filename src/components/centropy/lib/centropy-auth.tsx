@@ -164,6 +164,15 @@ export function CentropyAuthProvider({ children }: { children: React.ReactNode }
   }, [])
 
   async function signOut(): Promise<void> {
+    const token = currentSession?.access_token
+    // Close the local scope synchronously. A late response cannot resurrect
+    // private state while provider logout or the delivery tombstone is pending.
+    currentSession = null
+    setSession(null); setRole(null); resolvedRoleUserIdRef.current = null
+    if (token) await fetch("/api/centropy/live-controls", {
+      method: "POST", cache: "no-store", headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
+      body: JSON.stringify({ operation: "end-delivery", input: {} }), signal: AbortSignal.timeout(3000),
+    }).catch(() => undefined)
     const supabaseBrowser = await getSupabaseBrowser()
     await supabaseBrowser.auth.signOut()
   }

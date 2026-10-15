@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import type { ProductResource } from "./contracts"
 import { unavailableState, type ProductTruthState } from "./source-health"
+import { useCentropyAuth, getCurrentSessionKey } from "../lib/centropy-auth"
+import { CentropyApiError } from "../lib/api"
 
 export function useProductRequest<T>(options: {
   enabled: boolean
@@ -12,6 +14,9 @@ export function useProductRequest<T>(options: {
   confirmedAt?: (data: T) => string | null
 }): ProductResource<T> {
   const { enabled, key, load, stateFor, confirmedAt } = options
+  const auth = useCentropyAuth()
+  const authorityKey = `${auth.session?.user.id ?? "anonymous"}:${getCurrentSessionKey() ?? ""}`
+  const scopedKey = `${authorityKey}:${key}`
   const retained = useRef<{ key: string; data: T } | null>(null)
   const [revision, setRevision] = useState(0)
   const [data, setData] = useState<T | null>(null)
@@ -30,10 +35,11 @@ export function useProductRequest<T>(options: {
 
   useEffect(() => {
     if (!enabled) {
+      retained.current = null
       setData(null); setStatus("idle"); setError(null); setErrorValue(null); setTruthState("UNKNOWN"); setLastConfirmedAt(null)
       return
     }
-    const cached = retained.current?.key === key ? retained.current.data : null
+    const cached = retained.current?.key === scopedKey ? retained.current.data : null
     if (!cached) {
       setData(null)
       setTruthState("UNKNOWN")
@@ -43,16 +49,19 @@ export function useProductRequest<T>(options: {
     setStatus("loading"); setError(null); setErrorValue(null)
     void loadRef.current().then((value) => {
       if (!active) return
-      retained.current = { key, data: value }
+      retained.current = { key: scopedKey, data: value }
       setData(value); setStatus("ready"); setTruthState(stateForRef.current?.(value) ?? "KNOWN"); setLastConfirmedAt(confirmedAtRef.current?.(value) ?? new Date().toISOString())
     }).catch((cause) => {
       if (!active) return
-      const fallback = retained.current?.key === key ? retained.current.data : null
+      const forbidden = cause instanceof CentropyApiError && [401, 403, 404, 410].includes(cause.status)
+      if (forbidden) retained.current = null
+      const fallback = !forbidden && retained.current?.key === scopedKey ? retained.current.data : null
       setData(fallback); setStatus("error"); setError(cause instanceof Error ? cause.message : "Canonical source request failed."); setErrorValue(cause); setTruthState(unavailableState(cause, Boolean(fallback)))
       if (!fallback) setLastConfirmedAt(null)
     })
     return () => { active = false }
-  }, [enabled, key, revision])
+  }, [enabled, scopedKey, revision])
 
-  return useMemo(() => ({ data, status, error, errorValue, truthState, lastConfirmedAt, reload }), [data, error, errorValue, lastConfirmedAt, reload, status, truthState])
+  const currentData = retained.current?.key === scopedKey ? data : null
+  return useMemo(() => ({ data: currentData, status, error, errorValue, truthState: currentData ? truthState : "UNKNOWN", lastConfirmedAt: currentData ? lastConfirmedAt : null, reload }), [currentData, error, errorValue, lastConfirmedAt, reload, status, truthState])
 }

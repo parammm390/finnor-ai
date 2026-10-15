@@ -4,4 +4,5 @@ export * from "./tenant-credentials";
 export * from "./identity-access";
 export * from "./connections";
 export * from "./auth";
+export * from "./delivery";
 export * from "./provider-auth";

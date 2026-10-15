@@ -1066,6 +1066,9 @@ export class FinnorOrchestrator implements Orchestrator {
       planRevisionId?: string;
       planNodeId?: string;
       reviewBeforeExecution?: boolean;
+      /** Trusted owner binding, committed before gating or possible execution.
+       * This callback is internal and is never accepted from an HTTP payload. */
+      onActionPersisted?: (action: DomainAction) => Promise<void>;
     } = {},
   ): Promise<{ action: DomainAction; result: ExecutionResult }> {
     if (isRetiredWaterAction(actionType)) throw new RetiredVerticalError("water");
@@ -1099,9 +1102,14 @@ export class FinnorOrchestrator implements Orchestrator {
     // PostgreSQL jsonb canonicalizes object key order. Compare semantic JSON so a
     // crash/retry can safely reclaim the same objective step after the executor has
     // read the row back in a different key order.
-    if (row.actionType !== actionType || canonicalPayload(row.payload) !== canonicalPayload(payload)
-      || (opts.planRevisionId !== undefined && row.planRevisionId !== opts.planRevisionId)
-      || (opts.planNodeId !== undefined && row.planNodeId !== opts.planNodeId)) {
+    if ((opts.workId !== undefined && row.workId !== opts.workId)
+        || (opts.initiatedBy !== undefined && row.initiatedBy !== opts.initiatedBy)
+        || (opts.objectiveStepId !== undefined && row.objectiveStepId !== opts.objectiveStepId)
+        || (opts.planRevisionId !== undefined && row.planRevisionId !== opts.planRevisionId)
+        || (opts.planNodeId !== undefined && row.planNodeId !== opts.planNodeId)) {
+      throw new Error("Objective action replay changes its original Work, actor or execution generation");
+    }
+    if (row.actionType !== actionType || canonicalPayload(row.payload) !== canonicalPayload(payload)) {
       const [boundStep] = row.objectiveStepId
         ? await withTenant(tenantId, (db) => db.select({ decision: workObjectiveSteps.decision }).from(workObjectiveSteps).where(and(eq(workObjectiveSteps.tenantId, tenantId), eq(workObjectiveSteps.id, row.objectiveStepId!))).limit(1))
         : [];
@@ -1131,13 +1139,16 @@ export class FinnorOrchestrator implements Orchestrator {
       authorityContext: row.authorityContext as Record<string, unknown>,
       objectiveStepId: row.objectiveStepId,
     };
-    if (["pending", "approved", "completed", "rejected", "failed", "needs_human_review", "blocked_integration_unavailable"].includes(row.status)) {
+    await opts.onActionPersisted?.(action);
+    if (["pending", "approved", "executing", "completed", "rejected", "failed", "needs_human_review", "blocked_integration_unavailable"].includes(row.status)) {
       return {
         action,
         result: row.status === "completed"
           ? { status: "success", output: { idempotent: true, status: row.status } }
-          : row.status === "pending" || row.status === "needs_human_review" || row.status === "approved"
-            ? { status: "success", output: { idempotent: true, status: row.status, gated: row.status !== "approved", pendingConfirmation: row.status !== "approved" } }
+          : row.status === "pending" || row.status === "needs_human_review" || row.status === "approved" || row.status === "executing"
+            ? { status: "success", output: { idempotent: true, status: row.status,
+              gated: row.status === "pending" || row.status === "needs_human_review",
+              pendingConfirmation: row.status === "pending" || row.status === "needs_human_review" } }
             : { status: "failure", output: { idempotent: true, status: row.status }, error: `Action is ${row.status}` },
       };
     }
@@ -1578,13 +1589,14 @@ export class FinnorOrchestrator implements Orchestrator {
     decidedBy: string,
     opts?: { role?: string; note?: string | null; reason?: string | null; typedConfirmation?: boolean; expectedEffectHash?: string },
   ): Promise<ExecutionResult> {
-    if (decision === "approve" && opts?.expectedEffectHash) {
+    if (decision === "approve") {
       const [reviewed] = await withTenant(tenantId, (db) => db.select({ semanticHash: businessEffects.semanticHash })
         .from(domainActions)
-        .innerJoin(businessEffects, and(eq(businessEffects.tenantId, tenantId), eq(businessEffects.id, domainActions.businessEffectId)))
+        .leftJoin(businessEffects, and(eq(businessEffects.tenantId, tenantId), eq(businessEffects.id, domainActions.businessEffectId)))
         .where(and(eq(domainActions.tenantId, tenantId), eq(domainActions.id, actionId)))
         .limit(1));
-      if (reviewed?.semanticHash !== opts.expectedEffectHash) {
+      if ((reviewed?.semanticHash && !opts?.expectedEffectHash)
+          || (opts?.expectedEffectHash && reviewed?.semanticHash !== opts.expectedEffectHash)) {
         return { status: "failure", output: { effectMismatch: true }, error: "The Business Effect differs from the reviewed version. Refresh and review again." };
       }
     }
@@ -1674,7 +1686,8 @@ export class FinnorOrchestrator implements Orchestrator {
       const [effect] = before?.businessEffectId
         ? await db.select().from(businessEffects).where(and(eq(businessEffects.tenantId, tenantId), eq(businessEffects.id, before.businessEffectId))).limit(1)
         : [];
-      if (decision === "approve" && opts?.expectedEffectHash && effect?.semanticHash !== opts.expectedEffectHash) {
+      if (decision === "approve" && ((effect && !opts?.expectedEffectHash)
+          || (opts?.expectedEffectHash && effect?.semanticHash !== opts.expectedEffectHash))) {
         return { claimed: null, current: before ?? null, effectMismatch: true as const };
       }
       if (decision === "approve" && before && isConsequentialAction(before.actionType, before.payload as Record<string, unknown>) && !effect) {

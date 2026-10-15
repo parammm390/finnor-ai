@@ -1,6 +1,7 @@
 import type { IcWorkspace, UnderwritingValue, UnderwritingWorkspace, WorkAggregateView } from "@/components/centropy/product/contracts"
 import type { CompanyBrainNode, CompanyBrainProjection } from "@/components/centropy/pe/contracts"
 import type { LoadedConversationThread } from "../thread/thread-contract"
+import type { BeliefView } from "../../../../finnor-os/packages/shared-types/src/enterprise-beliefs"
 import { CanvasDocumentSchema, type CanvasBlock, type CanvasDocument, type CanvasEntityRef, type CanvasSourceRef, type CanvasTruthState } from "./canvas-contract"
 
 const stateOf = (value: string): "verified" | "active" | "waiting" | "blocked" => /fail|block|reject|cancel/i.test(value) ? "blocked" : /complete|final|succeed|verif|pass/i.test(value) ? "verified" : /active|running|progress|pending|queued/i.test(value) ? "active" : "waiting"
@@ -61,8 +62,40 @@ export function composeCanvasDocument(params: { thread: LoadedConversationThread
   }
   if (projection) {
     const nodes = projection.nodes
+    if(["external_organization","pe_strategy","pe_fund","pe_vehicle"].includes(projection.root.entityType)){
+      blocks.push({id:"bilateral-opportunity:"+projection.root.entityId,type:"bilateral_opportunity",schemaVersion:1,sourceKind:"company_brain",title:"Private market opportunity creation",
+        payload:{root:projection.root,workId:work?.work.id??thread.activeWorkId??null,investigation:{threadId:thread.id,expectedRevision:thread.revision}},entityRefs:[],sourceRefs:[],workRefs:work?[{workId:work.work.id,recordType:"bilateral_opportunity"}]:[],
+        truthState:"UNKNOWN",asOf:projection.asOf,createdAt:projection.asOf,updatedAt:projection.asOf})
+    }
+    if(["pe_opportunity","pe_deal"].includes(projection.root.entityType)){
+      blocks.push({id:"primary-diligence:"+projection.root.entityId,type:"primary_diligence",schemaVersion:1,sourceKind:"company_brain",title:"Primary reality due diligence",
+        payload:{root:projection.root,workId:work?.work.id??thread.activeWorkId??null,investigation:{threadId:thread.id,expectedRevision:thread.revision}},entityRefs:[],sourceRefs:[],workRefs:work?[{workId:work.work.id,recordType:"primary_diligence"}]:[],
+        truthState:"UNKNOWN",asOf:projection.asOf,createdAt:projection.asOf,updatedAt:projection.asOf})
+    }
     const companyEdge=projection.edges.find(edge=>edge.fromRef.id===projection.root.entityId&&["deal_company","opportunity_company"].includes(edge.relationship))
     const programRoot=companyEdge&&/^[0-9a-f-]{36}$/i.test(companyEdge.toRef.id)?{entityType:"external_organization",entityId:companyEdge.toRef.id}:projection.root
+    // The bounded graph omits edges when their company node is absent. S1's
+    // same-root canonical assertion still carries the exact owner relationship.
+    const belief = (projection as CompanyBrainProjection & { beliefView?: BeliefView }).beliefView
+    const claims = belief?.schema === "finnor.belief-view.v1" && belief.semanticOwner === "S1"
+      && belief.root.entityType === projection.root.entityType && belief.root.entityId === projection.root.entityId
+      && ["pe_opportunity", "pe_deal"].includes(projection.root.entityType)
+      ? belief.claims.filter(claim => claim.kind === "CANONICAL_ASSERTION" && claim.ownerRef.owner === "@finnor/private-equity"
+        && claim.ownerRef.entityType === projection.root.entityType && claim.ownerRef.id === projection.root.entityId) : []
+    const claim = claims.length === 1 ? claims[0] : undefined
+    const value = claim?.value && typeof claim.value === "object" && !Array.isArray(claim.value) ? claim.value as Record<string, unknown> : null
+    const companyId = typeof value?.targetOrganizationId === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value.targetOrganizationId) ? value.targetOrganizationId : null
+    const financingRoot = companyId ? { entityType: "external_organization", entityId: companyId } : programRoot
+    const financingSources: CanvasSourceRef[] = claim && companyId
+      ? [{ owner: claim.ownerRef.owner, table: projection.root.entityType === "pe_deal" ? "pe_deals" : "pe_opportunities", id: claim.ownerRef.id, fieldPath: "targetOrganizationId" }]
+      : companyEdge ? [{ owner: companyEdge.sourceRef.owner, table: companyEdge.sourceRef.table, id: companyEdge.sourceRef.id }] : []
+    if(work){
+      blocks.push({id:"capital-formation:"+financingRoot.entityId,type:"capital_formation",schemaVersion:1,sourceKind:"company_brain",
+        title:"Autonomous capital formation",payload:{root:financingRoot,workId:work.work.id},
+        entityRefs:[],sourceRefs:financingSources,
+        workRefs:[{workId:work.work.id,recordType:"work"}],truthState:"UNKNOWN",
+        asOf:projection.asOf,createdAt:projection.asOf,updatedAt:projection.asOf})
+    }
     if(work&&programRoot.entityType==="external_organization"){
       const ownerBasis={schemaVersion:1 as const,sourceKind:"company_brain" as const,
         entityRefs:[],sourceRefs:companyEdge?[{owner:companyEdge.sourceRef.owner,table:companyEdge.sourceRef.table,id:companyEdge.sourceRef.id}]:[],
@@ -84,9 +117,9 @@ export function composeCanvasDocument(params: { thread: LoadedConversationThread
     const questions = select("pe_ic_question", "pe_ic_dissent")
     const decisions = select("pe_ic_decision_proposal", "pe_ic_decision", "pe_decision")
     const evidence = select("pe_evidence_link", "evidence_source", "source_coverage", "source_conflict")
-    const isClosing = /clos|readiness|terminal/i.test(thread.title ?? "") || conditions.length > 0
+    const isClosing = projection.root.entityType === "pe_deal" || /clos|readiness|terminal/i.test(thread.title ?? "") || conditions.length > 0
     const makeBlock = (id: string, type: CanvasBlock["type"], title: string, group: CompanyBrainNode[], payload: CanvasBlock["payload"]): CanvasBlock => ({ id, type, schemaVersion: 1, sourceKind: "company_brain", title, payload, entityRefs: entityRefs(group), sourceRefs: sourceRefs(group), workRefs: group.flatMap((node) => node.workRefs.map((ref) => ({ workId: ref.workId, recordType: "company_brain" }))), truthState: projectionTruth(projection, group), asOf: projection.asOf, createdAt: projection.asOf, updatedAt: projection.asOf } as CanvasBlock)
-    if (isClosing) blocks.push(makeBlock("closing", "closing_readiness", "Closing conditions", conditions, { conditions: rows(conditions), openRisks: risks.filter((node) => !/clos|resolv|complete|final/i.test(node.state ?? "")).length, sourceCoverage: projection.sourceStatus.every((source) => source.status === "complete") ? "Complete for supported sources" : "Partial source coverage" }))
+    if (isClosing) blocks.push(makeBlock("closing", "closing_readiness", "Closing conditions and verified transaction", conditions, { ...(projection.root.entityType === "pe_deal" ? { transactionId: projection.root.entityId } : {}), conditions: rows(conditions), openRisks: risks.filter((node) => !/clos|resolv|complete|final/i.test(node.state ?? "")).length, sourceCoverage: projection.sourceStatus.every((source) => source.status === "complete") ? "Complete for supported sources" : "Partial source coverage" }))
     if (risks.length) blocks.push(makeBlock("risks", "risk_register", "Risks and findings", risks, { risks: rows(risks) }))
     if (questions.length || decisions.length) blocks.push(makeBlock("ic", "ic_readiness", "Investment committee", [...questions, ...decisions], { questions: rows(questions), decisions: rows(decisions) }))
     if (evidence.length) blocks.push(makeBlock("evidence", "evidence_matrix", "Evidence and source coverage", evidence, { items: rows(evidence), conflicts: evidence.filter((node) => node.type === "source_conflict").length }))

@@ -669,6 +669,8 @@ export function projectCompanyBrain(
   for (const row of world.investmentCases) {
     const child = peNode("pe_investment_case", row.id); const deal = peNode("pe_deal", row.dealId);
     if (child && deal) addEdge("deal_investment_case", deal, child, sourceRef("@finnor/private-equity", "pe_investment_cases", child.id), iso(row.updatedAt, asOf));
+    const opportunity=peNode("pe_opportunity",row.opportunityId);
+    if(child&&opportunity)addEdge("opportunity_investment_case",opportunity,child,sourceRef("@finnor/private-equity","pe_investment_cases",child.id),iso(row.updatedAt,asOf));
   }
   for (const [kind, type, collection, table] of [
     ["investment_case_thesis", "pe_thesis", world.theses, "pe_theses"],

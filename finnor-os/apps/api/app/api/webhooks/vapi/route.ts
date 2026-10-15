@@ -201,9 +201,19 @@ async function handleTools(
           tenantId,
           decision === "approve" || decision === "yes" ? "approve" : "reject",
           employee.id,
-          { role: "owner", note: `voice:${call?.id ?? "unknown"}` },
+          {
+            role: employee.role,
+            note: `voice:${call?.id ?? "unknown"}`,
+            ...(typeof args.expectedEffectHash === "string"
+              ? { expectedEffectHash: args.expectedEffectHash } : {}),
+          },
         );
-        results.push({ toolCallId: tool.id, result: `The action is now ${resolved.status.replaceAll("_", " ")}.` });
+        results.push({
+          toolCallId: tool.id,
+          result: resolved.status === "failure"
+            ? resolved.error ?? "Approval failed safely. Review the exact effect in the control desk."
+            : `The action is now ${resolved.status.replaceAll("_", " ")}.`,
+        });
         continue;
       }
       results.push({ toolCallId: tool.id, result: `Unknown tool ${name}.` });

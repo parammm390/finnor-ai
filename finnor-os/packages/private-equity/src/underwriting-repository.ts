@@ -37,6 +37,8 @@ import { PeDomainError, type PeMutationContext } from "./types";
 import { assertPeText, assertPeUuid, peProvenance, peTransaction, type PeClient } from "./repository";
 import { recordUnderwritingMetric } from "./underwriting-telemetry";
 import {resolveEvidenceUnderwritingInputs,assertEvidenceSnapshotCurrent,type EvidenceUnderwritingBinding} from './evidence-execution/consumer';
+import {resolvePrimaryUnderwritingInputs,bindPrimaryConsumerDependencies} from './primary-diligence/consumer';
+import type {PrimaryFindingBinding} from '@finnor/shared-types';
 import {
   boundUnderwritingCells,
   observedUnderwritingCell,
@@ -96,6 +98,7 @@ export interface CreateUnderwritingRunInput {
   workId?: string;
   explicitInputs?: Readonly<Record<string, ExplicitUnderwritingInput>>;
   evidenceDerivationInputs?: Readonly<Record<string,EvidenceUnderwritingBinding>>;
+  primaryFindingInputs?: Readonly<Record<string,PrimaryFindingBinding>>;
 }
 
 function asIso(value: Date | string): string {
@@ -465,6 +468,7 @@ async function resolveArtifactInput(client: PeClient, tenantId: string, worldAt:
 
 function explicitResolved(node: InputNode, input: ExplicitUnderwritingInput | undefined): ResolvedInput {
   if (!input) return unknownInput(node, "EXPLICIT_INPUT_NOT_SUPPLIED");
+  if(input.provenance?.some(ref=>ref.kind==="primary_finding"))fail("MODEL_SCHEMA_INVALID","Primary provenance requires the exact scoped primary-finding owner binding",{nodeId:node.id});
   if (input.truthClass === "DERIVED_VALUE" || input.truthClass === "EXTERNAL_CALCULATED_COMPARISON" || input.truthClass === "UNKNOWN" || input.truthClass === "SCENARIO_OVERRIDE") {
     fail("MODEL_SCHEMA_INVALID", "Explicit base input has an invalid truth class", { nodeId: node.id, truthClass: input.truthClass });
   }
@@ -644,7 +648,11 @@ export async function prepareUnderwritingRun(ctx: PeMutationContext, input: Omit
   if (input.baseRunId && input.explicitInputs) fail("MODEL_SCHEMA_INVALID", "A pinned base Run cannot be combined with newly resolved explicit inputs");
   const worldAt = normalizedWorldAt(input.worldAt);
   if(input.baseRunId&&input.evidenceDerivationInputs)fail("MODEL_SCHEMA_INVALID","Pinned base Run cannot combine newly resolved derivations");
+  if(input.baseRunId&&input.primaryFindingInputs)fail("MODEL_SCHEMA_INVALID","Pinned base Run cannot combine newly resolved primary findings");
   const derivedInputs=await resolveEvidenceUnderwritingInputs(ctx,input.investmentCaseId,input.modelVersionId,input.evidenceDerivationInputs??{});
+  const primaryInputs=await resolvePrimaryUnderwritingInputs(ctx,input.investmentCaseId,input.modelVersionId,input.primaryFindingInputs??{});
+  if(Object.keys(primaryInputs).some(id=>derivedInputs[id]))fail("MODEL_SCHEMA_INVALID","One model input cannot bind a derived value and a primary finding");
+  Object.assign(derivedInputs,primaryInputs);
   return peTransaction(ctx, async (_db, client) => {
     const { row, compiled } = await loadModelVersion(client, ctx.auth.tenantId, input.modelVersionId);
     if (row.investment_case_id !== input.investmentCaseId) fail("MODEL_VERSION_NOT_FOUND", "ModelVersion is not attached to the requested InvestmentCase");
@@ -716,6 +724,7 @@ export async function persistPreparedUnderwritingRun(ctx: PeMutationContext, inp
         input.prepared.effectiveSnapshot.semanticHash, JSON.stringify(input.prepared.effectiveSnapshot), input.result.resultSemanticHash,
         JSON.stringify(input.result), input.result.status, input.result.validity, input.result.failure?.code ?? null, input.idempotencyKey, createdBy(ctx)],
     );
+    await bindPrimaryConsumerDependencies(ctx,client,id,input.prepared.effectiveSnapshot);
     await recordBusinessEvent(db, {
       tenantId: ctx.auth.tenantId,
       entityType: "underwriting_run",

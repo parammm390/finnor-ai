@@ -1,4 +1,4 @@
-import type { AuthorityRequest, AuthorityResource, AuthorityRisk, DomainAction, DomainPolicy, DraftAction, TenantContext } from "@finnor/shared-types";
+import { ClosingMoneySchema, type AuthorityRequest, type AuthorityResource, type AuthorityRisk, type DomainAction, type DomainPolicy, type DraftAction, type TenantContext } from "@finnor/shared-types";
 import { evaluateAuthority, recordActionAuthority, revalidateActionExecution } from "@finnor/authority";
 import type { OperationalQueryRequest } from "./fast-read-lane";
 import { ACTION_HARDENING_SPEC_BY_ACTION, approvalRequirementForAction } from "../../../scripts/release/action-hardening-spec";
@@ -121,11 +121,35 @@ export function actionAuthorityRequest(action: DomainAction, policy: DomainPolic
   const orderedResources = primaryType
     ? [...resources].sort((left, right) => Number(right.type === primaryType) - Number(left.type === primaryType))
     : resources;
+  let amountUsd = draft.businessEffect?.exposure?.currency === "USD" ? draft.businessEffect.exposure.amount
+    : authorityAmountFromPayload(draft.payload ?? action.payload);
+  if (action.actionType === "execute_closing_operation") {
+    const payload = draft.businessEffect?.delta.values ?? draft.payload ?? action.payload, step = payload.closingStep as { kind?: string } | undefined;
+    if (!step?.kind || !["REQUEST_SIGNATURE", "DRAW_FUNDS", "PAY_FUNDS", "TRANSFER_RIGHTS", "FILE"].includes(step.kind)) {
+      throw Error("CLOSING_ORIGINAL_GROUNDED_AUTHORITY_INPUT_REQUIRED");
+    }
+    const requirement = payload.closingRequirement as { money?: unknown } | undefined;
+    if (step?.kind === "DRAW_FUNDS" || step?.kind === "PAY_FUNDS") {
+      const money = ClosingMoneySchema.parse(requirement?.money);
+      amountUsd = undefined; // A non-USD amount is not an invented USD conversion.
+      if (money.currency === "USD") {
+        const [whole, fraction = ""] = money.amount.split(".");
+        const scale = 10n ** 18n, exact = BigInt(whole!) * scale + BigInt(fraction.padEnd(18, "0"));
+        const cents = (exact + scale / 100n - 1n) / (scale / 100n);
+        if (cents > 99999999999999n) throw Error("CLOSING_NATIVE_USD_AUTHORITY_RANGE_UNSUPPORTED");
+        // Core's existing decision amount is cent precision. A ceiling is a
+        // conservative authorization bound, never the signed settlement amount.
+        amountUsd = Number(cents) / 100;
+      }
+    } else {
+      amountUsd = 0;
+    }
+  }
   return {
     operation: alreadyApproved ? "execution" : "action",
     capability: `action:${action.actionType}`,
     resources: orderedResources,
-    amountUsd: draft.businessEffect?.exposure?.currency === "USD" ? draft.businessEffect.exposure.amount : authorityAmountFromPayload(draft.payload ?? action.payload),
+    amountUsd,
     risk: draft.businessEffect?.authority.risk ?? authorityRiskForAction(action.actionType),
     policyRequiresApproval: approval.requiresConfirmation && !alreadyApproved,
     workId: action.workId ?? undefined,

@@ -1,3 +1,4 @@
+export * from "./closing";
 // Shared type contracts for the Finnor AI Operating System.
 // Every subsystem (orchestration, plugins, memory, tools, workers) compiles against these.
 
@@ -19,6 +20,8 @@ export * from "./outcome-packs";
 export * from "./vertical-runtime";
 export * from "./retired-water";
 export * from "./private-equity";
+export * from "./primary-diligence";
+export * from "./bilateral-opportunities";
 
 export type Role = "owner";
 
@@ -33,6 +36,9 @@ export interface TenantContext {
    * tenant revision before producing an effect. */
   authorityRevision?: number;
   authorityRoles?: string[];
+  /** Cryptographically verified bearer-session facts, not a grant. Absent for
+   * service and legacy development-header contexts. Never contains a token. */
+  deliverySession?: { subject: string; sessionId: string; expiresAt: string };
   /** Phase 16(e): per-request trace id, generated (or forwarded from an inbound
    *  `x-correlation-id` header) in requireContext. Threaded through enqueueJob's
    *  payload and worker breadcrumbs so one instruction's effects are greppable across
@@ -56,6 +62,15 @@ export interface AuthorityRequest {
   /** Exact resources for a cohort/batch. Every member must be in scope. */
   resources?: AuthorityResource[];
   amountUsd?: number;
+  /** Exact nonnegative finite decimal. Financial controls must not round their
+   * authorization amount through the legacy binary floating-point field. */
+  exactAmountUsd?: string;
+  /** Exact review binding. The authority owner persists this with the decision;
+   * callers still need present capabilities and any configured approval chain. */
+  controlBinding?: {
+    proposalId: string; proposalDigest: string; dependencyDigest: string;
+    requestDigest: string; expiresAt: string;
+  };
   risk: AuthorityRisk;
   policyRequiresApproval?: boolean;
   workId?: string;
@@ -399,3 +414,4 @@ export * from "./durable-obligations";
 export * from "./economic-attribution";
 export * from './evidence-execution';
 export * from './capital-program';
+export * from './capital-formation';

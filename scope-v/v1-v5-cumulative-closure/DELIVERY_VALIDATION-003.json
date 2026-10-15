@@ -1,0 +1,11 @@
+{
+  "status": "PASS",
+  "checkedAt": "2026-10-15T18:46:49.311Z",
+  "sourceFiles": 3492,
+  "rootFiles": 22,
+  "elapsedMs": 39924,
+  "diagnostics": [],
+  "integrationSourceLeaks": 0,
+  "noEmit": true,
+  "qualification": "LINKED_DEPENDENCIES_NOT_INSTALLED_ACCEPTANCE"
+}

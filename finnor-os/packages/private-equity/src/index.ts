@@ -27,6 +27,10 @@ export * from "./enterprise-control";
 export * from "./enterprise-allocation";
 export * from './enterprise-obligations';
 export * from './obligation-contracts';
+export { CLOSING_OPERATIONS, handleClosingOperation, submitClosingProgramme } from "./closing/api";
+export { ClosingError, ClosingIntakeSchema, ClosingProfileSchema } from "./closing/contracts";
+export { closingDigest, compileClosingGraph } from "./closing/compiler";
+export { closingProgrammesFor, readClosingProgramme } from "./closing/store";
 
 export * from "./enterprise-economic-attribution";
 export * from "./enterprise-economic-assignments";

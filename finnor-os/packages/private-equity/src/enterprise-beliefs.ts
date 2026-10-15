@@ -1,5 +1,6 @@
 import type { BeliefClaim, BeliefDecisionContext, BeliefView, BeliefViewPin, BeliefViewPinValidation } from "@finnor/shared-types";
-import { canExerciseAuthority, employeeAuthoritySnapshot } from "@finnor/authority";
+import { canExerciseAuthority, canExerciseAuthorityTx, employeeAuthoritySnapshot, employeeAuthoritySnapshotTx } from "@finnor/authority";
+import type { PoolClient } from "pg";
 import { withTenantTransaction } from "@finnor/db";
 import { beliefOwnerRef, boundBeliefView, createBeliefView, epistemicHash, prepareS1ExperienceEvent } from "@finnor/epistemic-runtime";
 import { loadPrivateEquityWorldState } from "./world-state";
@@ -7,27 +8,32 @@ import { PeDomainError, type PeMutationContext, type PeWorldRootRef, type PeWorl
 import {enqueueNativeBelief,enqueueNativeReferences,enqueueNativePreparedEvents,nativeReference} from './native-experience-transport';
 
 export type WorldReadAuthorization = { revision: number; evaluatedAt: string };
-export async function authorizeBeliefResources(ctx: PeMutationContext, resources: Array<{ type: string; id: string }>): Promise<WorldReadAuthorization> {
+export async function authorizeBeliefResources(ctx: PeMutationContext, resources: Array<{ type: string; id: string }>, client?: PoolClient): Promise<WorldReadAuthorization> {
   // The authenticated runtime supplies ctx. A service-name prefix or claimed
   // role is insufficient; the existing authority owner must resolve the actor.
   try {
-    const snapshot = await employeeAuthoritySnapshot(ctx.auth);
+    const lock = client ? (await client.query('SHOW transaction_read_only')).rows[0]?.transaction_read_only !== 'on' : false;
+    const snapshot = client ? await employeeAuthoritySnapshotTx(ctx.auth, client, lock) : await employeeAuthoritySnapshot(ctx.auth);
     // Reject query policies containing any active deny before grouping. The
     // verifier applies one grant to a whole list; homogeneous resource groups
     // then reduce repeated I/O without hiding a narrower deny. Requiring a grant
     // for each entire group is conservative for disjoint scoped allow grants.
-    await authorizeBeliefCandidateCut(ctx);
+    await authorizeBeliefCandidateCut(ctx, client);
     const unique = [...new Map(resources.map(resource => [`${resource.type}:${resource.id}`, resource])).values()];
     const groups = new Map<string, Array<{ type: string; id: string }>>();
     for (const resource of unique) groups.set(resource.type, [...(groups.get(resource.type) ?? []), resource]);
     const grouped = [...groups.values()];
     for (let offset = 0; offset < grouped.length; offset += 16) {
-      const allowed = await Promise.all(grouped.slice(offset, offset + 16).map(group => canExerciseAuthority(ctx.auth,
-        { operation: "query", capability: "query:pe_world_state", resources: group, risk: "low" })));
+      const allowed: boolean[] = [];
+      if (client) {
+        for (const group of grouped.slice(offset, offset + 16)) allowed.push(await canExerciseAuthorityTx(ctx.auth,
+          { operation: "query", capability: "query:pe_world_state", resources: group, risk: "low" }, client, lock));
+      } else allowed.push(...await Promise.all(grouped.slice(offset, offset + 16).map(group => canExerciseAuthority(ctx.auth,
+        { operation: "query", capability: "query:pe_world_state", resources: group, risk: "low" }))));
       if (allowed.some(value => !value)) throw new Error("Unavailable");
     }
-    await authorizeBeliefCandidateCut(ctx);
-    const after = await employeeAuthoritySnapshot(ctx.auth);
+    await authorizeBeliefCandidateCut(ctx, client);
+    const after = client ? await employeeAuthoritySnapshotTx(ctx.auth, client, lock) : await employeeAuthoritySnapshot(ctx.auth);
     if (after.revision !== snapshot.revision) throw new Error("Rights changed");
     return { revision: after.revision, evaluatedAt: new Date().toISOString() };
   } catch {
@@ -39,27 +45,29 @@ export async function authorizeBeliefResources(ctx: PeMutationContext, resources
 /** A tenant-wide scan cannot safely quantify omission outside a resource-denied
  * subset. Reject this query class based on policy alone, before reading facts.
  * This is conservative S1 query eligibility, not a replacement authorizer. */
-export async function authorizeBeliefCandidateCut(ctx: PeMutationContext): Promise<void> {
-  const result = await withTenantTransaction(ctx.auth.tenantId, { userId: ctx.auth.userId, readOnly: true }, (_db, client) => client.query<{ restricted: boolean }>(
+export async function authorizeBeliefCandidateCut(ctx: PeMutationContext, client?: PoolClient): Promise<void> {
+  const read = (c: PoolClient) => c.query<{ restricted: boolean }>(
     `SELECT EXISTS (SELECT 1 FROM finnor_os.employee_role_assignments a
        JOIN finnor_os.employee_roles r ON r.tenant_id=a.tenant_id AND r.id=a.role_id AND r.active
        JOIN finnor_os.role_authority_grants g ON g.tenant_id=a.tenant_id AND g.role_id=a.role_id
        WHERE a.tenant_id=$1 AND a.employee_id=$2 AND a.active AND a.effective_from<=clock_timestamp()
          AND (a.expires_at IS NULL OR a.expires_at>clock_timestamp())
          AND g.effect='deny' AND (g.capability='*' OR g.capability LIKE 'query:%')) AS restricted`,
-    [ctx.auth.tenantId, ctx.auth.employeeId ?? ctx.auth.userId]));
+    [ctx.auth.tenantId, ctx.auth.employeeId ?? ctx.auth.userId]);
+  const result = client ? await read(client) : await withTenantTransaction(ctx.auth.tenantId, { userId: ctx.auth.userId, readOnly: true }, (_db, c) => read(c));
   if (result.rows[0]?.restricted) throw new PeDomainError("PE_ENTITY_NOT_FOUND", "PE world root was not found in the authenticated tenant");
 }
 
 /** Recheck current provider permissions in a fresh transaction after the world
  * snapshot. Revocation changes access, including access to historical records. */
-export async function authorizeBeliefSourceScopes(ctx: PeMutationContext, root: PeWorldRootRef, evidenceSourceIds: string[]): Promise<void> {
-  const result = await withTenantTransaction(ctx.auth.tenantId, { userId: ctx.auth.userId, readOnly: true }, (_db, client) => client.query<{ revoked: boolean }>(
+export async function authorizeBeliefSourceScopes(ctx: PeMutationContext, root: PeWorldRootRef, evidenceSourceIds: string[], client?: PoolClient): Promise<void> {
+  const read = (c: PoolClient) => c.query<{ revoked: boolean }>(
     `SELECT EXISTS (SELECT 1 FROM finnor_os.integration_source_scopes s
        WHERE s.tenant_id=$1 AND (NOT s.enabled OR NOT s.effective_permissions @> s.required_permissions)
          AND ((s.root_binding_type=$2 AND s.root_binding_id=$3::uuid) OR EXISTS (
            SELECT 1 FROM finnor_os.external_ref_observations o WHERE o.tenant_id=s.tenant_id AND o.source_scope_id=s.id AND o.evidence_source_id=ANY($4::uuid[])
-         ))) AS revoked`, [ctx.auth.tenantId, root.entityType, root.entityId, evidenceSourceIds]));
+         ))) AS revoked`, [ctx.auth.tenantId, root.entityType, root.entityId, evidenceSourceIds]);
+  const result = client ? await read(client) : await withTenantTransaction(ctx.auth.tenantId, { userId: ctx.auth.userId, readOnly: true }, (_db, c) => read(c));
   if (result.rows[0]?.revoked) throw new PeDomainError("PE_ENTITY_NOT_FOUND", "PE world root was not found in the authenticated tenant");
 }
 

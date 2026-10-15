@@ -359,7 +359,10 @@ function canonicalDefinitions(input: BuildPrivateEquityEpistemicInput, asOf: str
   rows.push(definition(dealId,"pe_deal",dealId,"deal.close_eligible",asOf,undefined,eligibilityDeps,
     booleanDerivation("pe.deal.close-eligible",{
       op:"all",terms:[
-        requireValue(pePropositionId(dealId,"pe_deal",dealId,"deal.lifecycle_state"),["active"]),
+        // A retained physical close is not new authority. Only the fresh
+        // canonical owner conjunction can admit its superseding qualification.
+        requireValue(pePropositionId(dealId,"pe_deal",dealId,"deal.lifecycle_state"),
+          eligibility.eligible ? ["active","closed"] : ["active"]),
         requireValue(pePropositionId(dealId,"pe_deal",dealId,"deal.loi_signed"),[true]),
         ...eligibilityDeps.slice(2).map((id) => requireValue(id,[true])),
       ],

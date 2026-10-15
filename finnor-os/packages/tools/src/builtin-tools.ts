@@ -6,6 +6,7 @@ import { exaSearch } from "./exa";
 import { firecrawlScrape } from "./firecrawl";
 import { placeVapiCall } from "./vapi-rest";
 import { ToolRegistry, type ToolRuntimeContext } from "./registry";
+import { ClosingBrokerRequestSchema, dispatchClosingProvider } from "../../governed-execution/src/closing-provider";
 
 function actor(runtime: Readonly<ToolRuntimeContext> | undefined): string {
   return runtime?.actorId ?? "system:tool-runtime";
@@ -21,6 +22,19 @@ function purpose(runtime: Readonly<ToolRuntimeContext> | undefined, fallback: st
  * these governed transports.
  */
 export function registerBuiltinTools(registry: ToolRegistry): void {
+  registry.register({
+    name: "execute_closing_provider_operation",
+    description: "Dispatch one exact original-spec S6 closing operation through separately held provider credentials",
+    integration: "finnor_closing_provider",
+    execution: { effect: "consequential", retrySafety: "readback_required", idempotency: { mode: "readback", scope: "tenant-account/original-closing-effect" }, verification: "readback" },
+    retryPolicy: { attempts: 1, baseDelayMs: 0, timeoutMs: 12000 },
+    inputSchema: ClosingBrokerRequestSchema.omit({ providerOperationAttemptId: true }),
+    piiAllowlist: ["tenantId", "programmeId", "nodeKey", "domainActionId", "businessEffectId", "businessEffectHash"],
+    async run(input, runtime) {
+      if (!runtime?.providerOperationAttemptId) throw new IntegrationError("finnor_closing_provider", "Original native provider attempt required", false, "auth", "definite_pre_dispatch");
+      return dispatchClosingProvider(ClosingBrokerRequestSchema.parse({ ...input, providerOperationAttemptId: runtime.providerOperationAttemptId }));
+    },
+  });
   registry.register({
     name: "web_search",
     description: "Real-time, read-only web search with citation metadata",

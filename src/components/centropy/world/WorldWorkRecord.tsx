@@ -7,6 +7,10 @@ import type { WorkAggregateView } from "@/components/centropy/product/contracts"
 import { CausalReplayPanel } from "../canvas/CausalReplayPanel"
 import { PendingEffects } from "../thread/PendingEffects"
 import { HumanControlDesk } from "../controls/HumanControlDesk"
+import { ClosingProgrammePanel } from "../closing/ClosingProgrammePanel"
+import { LiveInstitutionalControl } from "../controls/LiveInstitutionalControl"
+import type { PeWorldRootRef } from "../pe/contracts"
+import { canonicalRootFocus } from "./world-context"
 
 const label = (value: string) => value.replaceAll("_", " ").replace(/([a-z0-9])([A-Z])/g, "$1 $2").toLowerCase()
 const record = (value: unknown): Record<string, unknown> | null => value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : null
@@ -24,7 +28,7 @@ function summary(value: unknown): string | null {
   return fields.length ? fields.slice(0, 4).map(([key, entry]) => `${label(key)}: ${displayValue(entry as string | boolean | number)}`).join(" · ") : null
 }
 
-export function WorldWorkRecord({ workId, onChanged }: { workId: string; onChanged: () => void }) {
+export function WorldWorkRecord({ workId, root, onChanged }: { workId: string; root?: PeWorldRootRef | null; onChanged: () => void }) {
   const [aggregate, setAggregate] = useState<WorkAggregateView | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -52,8 +56,10 @@ export function WorldWorkRecord({ workId, onChanged }: { workId: string; onChang
     {loading ? <p role="status">Reading the exact Work record…</p> : null}
     {error ? <p className="ct-world__error" role="alert">{error} <button type="button" onClick={() => setRevision((value) => value + 1)}>Retry</button></p> : null}
     {aggregate ? <>
+      {root ? <LiveInstitutionalControl root={root} focus={canonicalRootFocus(root)} workId={workId} label="This Work's canonical investment context" onChanged={onChanged} /> : null}
       <div className="ct-world-work__metrics"><div><span>Work</span><strong>{label(aggregate.work.status)}</strong></div><div><span>Verified effects</span><strong>{verified.length} / {aggregate.businessEffects.length}</strong></div><div><span>Finalized receipts</span><strong>{finalized.length} / {aggregate.receipts.length}</strong></div></div>
       <p className="ct-world-work__objective">{aggregate.work.initialInstruction}</p>
+      <ClosingProgrammePanel key={workId} workId={workId} onChanged={onChanged} />
       {summary(aggregate.work.finalOutcome) ? <p className="ct-world-work__outcome"><ShieldCheck size={16} /> {summary(aggregate.work.finalOutcome)}</p> : null}
       {aggregate.read?.complete === false ? <p className="ct-world-work__caveat">This bounded Work read is incomplete. The counts below cover only returned rows.</p> : null}
       <div className="ct-world-work__section"><h4>Recorded actions and verification</h4>{aggregate.actions.map((action) => {

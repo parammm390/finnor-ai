@@ -60,17 +60,23 @@ import { WorkflowRunControlSchema } from "../apps/api/lib/run-control-route";
 import { DeletePushSubscriptionSchema, EmptyProductControlSchema, GoogleConnectionStartSchema, HumanClosingActionSchema, InitiateCompensationSchema, PushSubscriptionSchema, ResolveReconciliationSchema, SubmitCorrectionSchema } from "../apps/api/lib/product-control-schemas";
 import { PE_ENTITY_TYPES, PE_WORLD_ROOT_TYPES } from "@finnor/private-equity";
 import { EVIDENCE_OPERATIONS, EvidenceOperationSchemas } from "../packages/private-equity/src/evidence-execution/api";
+import { PRIMARY_OPERATIONS, PrimaryOperationSchemas } from "../packages/private-equity/src/primary-diligence/api";
+import { BilateralOperationSchemas } from "../packages/private-equity/src/bilateral-opportunities/api";
 import { PROGRAM_OPERATIONS } from "../packages/private-equity/src/program-synthesis/api";
 import { COMPUTE_SEARCH_OPERATIONS } from "../packages/private-equity/src/compute-search/api";
 import { INTERFACE_OPERATIONS } from "../packages/private-equity/src/interface-synthesis/api";
 import { M1_OPERATIONS, M1OperationSchemas } from "../packages/private-equity/src/decision-slice/handler";
 import { CapitalProgramV2Operations } from "@finnor/shared-types";
 import { M4Operations } from "../packages/private-equity/src/counterexample-search/handler";
+import { CAPITAL_FORMATION_OPERATIONS } from "../packages/private-equity/src/capital-formation/contracts";
 import { CONTINUATION_OPERATIONS } from "../packages/private-equity/src/live-recompilation/api";
+import { ClosingOperationSchemas } from "../packages/private-equity/src/closing/contracts";
+import { OpportunityHandoffSchema } from "../packages/private-equity/src/opportunity-handoff";
 import { PROCEDURE_OPERATIONS, PROCEDURE_OPERATION_SCHEMAS } from "../packages/private-equity/src/procedure-induction/api";
 import { DELIBERATION_OPERATIONS } from "../packages/private-equity/src/deliberation/api";
 import { ComputeSearchRequestSchema, SearchIdSchema, SearchProjectionSchema } from "../packages/private-equity/src/compute-search/contracts";
 import { CalibrationRequestSchema, DeliberationRequestSchema, DeliberationEvidenceReadSchema, DeliberationCurrentReaderSchema, DeliberationProjectionSchema, DeliberationModuleReaderSchema } from "../packages/private-equity/src/deliberation/contracts";
+import { LIVE_CONTROL_OPERATION_SCHEMAS } from "../packages/private-equity/src/live-controls/contracts";
 
 const page = z.object({ limit: z.number().int().min(1).max(100).optional(), cursor: z.string().min(1).max(4096).optional() }).strict();
 const workforcePage = z.object({ limit: z.number().int().min(1).max(100).optional(), cursor: z.string().uuid().optional() }).strict();
@@ -300,6 +306,18 @@ const icMutation = (schema: z.ZodTypeAny, description: string, parameters: reado
   },
 });
 const paths = {
+  "/api/live-controls": {
+    post: { security: secured, requestBody: json(z.union([
+      z.object({ operation: z.literal("begin"), input: LIVE_CONTROL_OPERATION_SCHEMAS.open.omit({ workId: true }).extend({ idempotencyKey: z.string().uuid() }).strict() }).strict(),
+      z.object({ operation: z.literal("end-delivery"), input: z.object({}).strict() }).strict(),
+      ...Object.entries(LIVE_CONTROL_OPERATION_SCHEMAS).map(([operation, schema]) => z.object({ operation: z.literal(operation), input: schema }).strict()),
+    ])), responses: {
+      "200": { description: "Recipient-bound control snapshot or original owner disposition. A preview is hypothetical and reserves nothing; delivery termination never cancels effects." },
+      "401": { description: "A verified current provider session is required." }, "403": { description: "Current native S1 authority or actor profile denied." },
+      "404": { description: "The permitted control context is unavailable." }, "409": { description: "Material version, exact approval, recipient cut or idempotency conflict." },
+      "413": { description: "Finite input bound exceeded." }, "422": { description: "Native semantics, current model or original grant unavailable." },
+    } },
+  },
   "/api/outcome-packs/control": {
     post: { security: secured, requestBody: json(SetOutcomePackEnabledSchema), responses: { "200": { description: "Owner recorded exact mission enablement; runtime authority remains enforced for every effect" }, "403": { description: "Only a human owner can change mission enablement" } } },
   },
@@ -364,7 +382,7 @@ const paths = {
   "/api/vitals": { get: { security: secured, responses: { "200": { description: "Queue and runtime vitals" } } } },
   "/api/activity": { get: { security: secured, responses: { "200": { description: "Tenant-scoped raw diagnostic activity", ...json(RawActivityPageSchema) } } } },
   "/api/semantic-activity": { post: { security: secured, requestBody: json(SemanticActivityInputSchema), responses: { "200": { description: "Deterministic tenant-scoped PE semantic activity from P1-P7 canonical records" }, "400": { description: "Strict request schema rejected unknown or invalid input" }, "404": { description: "PE root absent from the authenticated tenant" } } } },
-  "/api/company-brain/{operation}": { post: { security: secured, parameters: [{ name: "operation", in: "path", required: true, schema: { type: "string", enum: ["belief-view", "belief-pin", "roots", "projection", "search", "object", "traverse", "provenance", "history", "evidence-lineage", "decision-lineage", "available-actions", "context", ...EVIDENCE_OPERATIONS, ...PROGRAM_OPERATIONS, ...COMPUTE_SEARCH_OPERATIONS, ...INTERFACE_OPERATIONS, ...M1_OPERATIONS, ...CONTINUATION_OPERATIONS, ...PROCEDURE_OPERATIONS, ...DELIBERATION_OPERATIONS] } }], responses: { "200": { description: "Tenant-scoped Company Brain operation. Owner request schemas and current authority are checked by each delegated handler." }, "400": { description: "Strict request schema rejected unknown or invalid input" }, "404": { description: "Root or object absent from the authenticated tenant" } } } },
+  "/api/company-brain/{operation}": { post: { security: secured, parameters: [{ name: "operation", in: "path", required: true, schema: { type: "string", enum: ["opportunity-promote", "belief-view", "belief-pin", "roots", "projection", "search", "object", "traverse", "provenance", "history", "evidence-lineage", "decision-lineage", "available-actions", "context", ...EVIDENCE_OPERATIONS, ...PROGRAM_OPERATIONS, ...COMPUTE_SEARCH_OPERATIONS, ...INTERFACE_OPERATIONS, ...M1_OPERATIONS, ...CONTINUATION_OPERATIONS, ...PROCEDURE_OPERATIONS, ...DELIBERATION_OPERATIONS, ...Object.keys(CAPITAL_FORMATION_OPERATIONS)] } }], responses: { "200": { description: "Tenant-scoped Company Brain operation. Owner request schemas and current authority are checked by each delegated handler." }, "400": { description: "Strict request schema rejected unknown or invalid input" }, "404": { description: "Root or object absent from the authenticated tenant" } } } },
   "/api/private-equity/digital-twin": { post: { security: secured, requestBody: json(PeDigitalTwinRequestSchema), responses: { "200": { description: "Tenant-scoped PE Digital Twin query or transition" }, "201": { description: "Evidence-backed canonical PE fact, identity, observation, or exact relation created" }, "400": { description: "Strict request schema rejected unknown or invalid input" }, "404": { description: "Canonical reference absent from the authenticated tenant" }, "409": { description: "Expected version or concurrent canonical truth conflict" }, "422": { description: "Canonical invariant rejected the requested fact" } } } },
   "/api/workflows/runs": { get: { security: secured, responses: { "200": { description: "Tenant-scoped workflow runs" } } } },
   "/api/workflows/runs/{id}/pause": { post: { security: secured, parameters: [documentIdParameter], requestBody: json(WorkflowRunControlSchema), responses: { "200": { description: "Authorized workflow pause" } } } },
@@ -709,7 +727,11 @@ for (const operation of DELIBERATION_OPERATIONS) {
 
 for (const [operation,schema] of [
   ...Object.entries(M1OperationSchemas),...Object.entries(EvidenceOperationSchemas),
+  ...Object.entries(PrimaryOperationSchemas),
+  ...Object.entries(BilateralOperationSchemas),
   ...Object.entries(CapitalProgramV2Operations),
+  ...Object.entries(CAPITAL_FORMATION_OPERATIONS),
+  ["opportunity-promote", OpportunityHandoffSchema] as const,
 ]) {
   Object.assign(paths,{["/api/company-brain/"+operation]:{post:{
     security:secured,requestBody:json(schema),responses:{
@@ -736,6 +758,25 @@ for (const [operation,{schema}] of Object.entries(M4Operations)) {
       "503":{description:"Required authentic runtime configuration unavailable."},
     },
   }}});
+}
+
+for (const [operation, schema] of Object.entries(ClosingOperationSchemas)) {
+  Object.assign(paths, { [`/api/closing/${operation}`]: { post: {
+    security: secured, requestBody: json(schema),
+    responses: {
+      "200": { description: "Exact canonical closing projection, retained control result or qualified-port status. Development is excluded from live counts." },
+      "201": { description: "Legally accepted ClosingSpec bound to original Work, authority, terms, finite grant and durable recovery intent." },
+      "202": { description: "Accepted original Work remains in an explicit recoverable native-owner phase." },
+      "400": { description: "Strict operation schema rejected invalid or unknown input." },
+      "401": { description: "Authenticated identity required." },
+      "403": { description: "Exact principal or activity authority denied." },
+      "404": { description: "Programme, Deal or Work absent from the authenticated scope." },
+      "409": { description: "Original idempotency, authority, effect or currentness binding changed." },
+      "413": { description: "Bounded request or read history exceeded." },
+      "422": { description: "Exact independent acceptance, qualified interface or original owner predicate failed." },
+      "503": { description: "Required canonical runtime unavailable; no qualification or external effect claimed." },
+    },
+  } } });
 }
 
 const document = {

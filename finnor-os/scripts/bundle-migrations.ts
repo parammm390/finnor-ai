@@ -8,11 +8,13 @@ import { fileURLToPath } from "node:url";
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const dir = join(root, "packages/db/migrations");
 const files = readdirSync(dir).filter((f) => f.endsWith(".sql")).sort();
-// These exact historical filename pairs are already deployed. They are not
-// permission to allocate another file at either ordinal.
+// Complete filenames are persisted migration identities. Preserve the two
+// historical deployed pairs and the explicitly reconciled V2/V3 candidate pair;
+// this does not allocate another migration at any of these ordinals.
 const historicalPairs = new Map([
   ["0131",new Set(["0131_egress_bounded_read_indexes.sql","0131_private_equity_release_baseline.sql"])],
   ["0141",new Set(["0141_private_equity_outcome_pack_ids.sql","0141_restricted_digest_projection_access.sql"])],
+  ["0173",new Set(["0173_v2_primary_privacy.sql","0173_v3_autonomous_transaction_closure.sql"])],
 ]);
 const ids = new Map<string,string>();
 for (const name of files) {

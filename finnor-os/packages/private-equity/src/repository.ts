@@ -99,6 +99,21 @@ function pgCode(error: unknown): string | undefined {
 }
 
 type PeTransactionOptions = { readOnly?: boolean; isolation?: "read committed" | "repeatable read" | "serializable" };
+const mutationClients = new WeakMap<PeMutationContext, Client>();
+
+/** Compose one original mutation and its required Work result under the same
+ * checked owner transaction. The context/client cannot outlive its callback. */
+export async function withPeMutationTransaction<T>(
+  ctx: PeMutationContext,
+  fn: () => Promise<T>,
+  options: Pick<PeTransactionOptions, "isolation"> = {},
+): Promise<T> {
+  if (mutationClients.has(ctx)) return fn();
+  return scopedPeTransaction(ctx, async client => {
+    mutationClients.set(ctx, client);
+    try { return await fn(); } finally { mutationClients.delete(ctx); }
+  }, options);
+}
 
 export async function peTransaction<T>(
   ctx: PeMutationContext,
@@ -121,6 +136,8 @@ async function scopedPeTransaction<T>(
   fn: (client: Client) => Promise<T>,
   options: PeTransactionOptions,
 ): Promise<T> {
+  const mutationClient = mutationClients.get(ctx);
+  if (mutationClient) return fn(mutationClient);
   const source = peProvenance(ctx);
   const maxAttempts = options.readOnly ? 1 : 3;
   for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
@@ -144,6 +161,13 @@ async function scopedPeTransaction<T>(
             `Private Equity is not the authenticated tenant's active vertical`,
             { activeVertical: active.rows[0]?.vertical_key ?? null },
           );
+        }
+        if (!options.readOnly && ctx.provenance?.sourceSystem === "@finnor/plugin-private-equity"
+          && ctx.provenance.externalId && UUID.test(ctx.provenance.externalId)) {
+          // The actual canonical mutation transaction rechecks the original
+          // V5 proof. A service-level preflight cannot authorize a later effect.
+          const { assertNativeControlActionTx } = await import("./live-controls/service");
+          await assertNativeControlActionTx(ctx, ctx.provenance.externalId, client);
         }
         return fn(client);
       });
@@ -299,21 +323,24 @@ async function createChild(
   dealId: string,
   values: Record<string, unknown>,
 ): Promise<PeMutationResult> {
-  return peTransaction(ctx, async (_db, client) => {
-    requireActivePeDeal(await lockPeDeal(client, ctx.auth.tenantId, dealId));
-    const source = peProvenance(ctx);
-    const row = await insertPeRow(client, table, {
-      id: values.id ?? randomUUID(),
-      tenant_id: ctx.auth.tenantId,
-      deal_id: dealId,
-      ...values,
-      source_system: source.sourceSystem,
-      external_id: source.externalId,
-      created_by: source.createdBy,
-      observed_at: source.observedAt,
-    });
-    return { row: shapePeRow(row), changed: true, idempotent: false };
+  return peTransaction(ctx, (_db, client) => createChildTx(client, ctx, table, dealId, values));
+}
+
+async function createChildTx(client: Client, ctx: PeMutationContext, table: string, dealId: string,
+  values: Record<string, unknown>): Promise<PeMutationResult> {
+  requireActivePeDeal(await lockPeDeal(client, ctx.auth.tenantId, dealId));
+  const source = peProvenance(ctx);
+  const row = await insertPeRow(client, table, {
+    id: values.id ?? randomUUID(),
+    tenant_id: ctx.auth.tenantId,
+    deal_id: dealId,
+    ...values,
+    source_system: source.sourceSystem,
+    external_id: source.externalId,
+    created_by: source.createdBy,
+    observed_at: source.observedAt,
   });
+  return { row: shapePeRow(row), changed: true, idempotent: false };
 }
 
 async function ensureParty(ctx: PeMutationContext, ref: PartyRef, allowed: readonly string[]): Promise<void> {
@@ -509,12 +536,21 @@ export const removeDealParty = (ctx: PeMutationContext, input: { dealPartyId: st
 
 export async function createWorkstream(ctx: PeMutationContext, input: {
   id?: string; dealId: string; kind: WorkstreamKind; name: string; owner: InternalPartyRef;
-}): Promise<PeMutationResult> {
+}, attachment?: { workId: string }): Promise<PeMutationResult> {
   if (!WORKSTREAM_KIND_SET.has(input.kind)) throw new PeDomainError("PE_INVALID_WORKSTREAM_KIND", `Unsupported Workstream kind ${input.kind}`);
   assertPeText(input.name, "Workstream name");
-  return createChild(ctx, "pe_workstreams", input.dealId, {
+  const values = {
     id: input.id, kind: input.kind, name: input.name.trim(),
     owner_party_type: input.owner.partyType, owner_party_id: input.owner.partyId,
+  };
+  if (!attachment) return createChild(ctx, "pe_workstreams", input.dealId, values);
+  // Creation changes the graph cut itself. The result attachment belongs to
+  // this same fenced owner transaction, not a newly authorized second effect.
+  return peTransaction(ctx, async (db, client) => {
+    const result = await createChildTx(client, ctx, "pe_workstreams", input.dealId, values);
+    await attachWorkToDealGraphTx(db, client, ctx, { dealId: input.dealId, workId: attachment.workId,
+      entities: [{ entityType: "pe_workstream", entityId: String(result.row.id), relationship: "result" }] });
+    return result;
   });
 }
 
@@ -929,25 +965,28 @@ export async function attachWorkToDealGraph(ctx: PeMutationContext, input: {
   entities: Array<PeEntityRef & { relationship?: "about" | "target" | "result" }>;
 }): Promise<void> {
   if (input.entities.length === 0) throw new PeDomainError("PE_WORK_LINK_EMPTY", "At least one PE Work attachment is required");
-  await peTransaction(ctx, async (db, client) => {
-    requireActivePeDeal(await lockPeDeal(client, ctx.auth.tenantId, input.dealId));
-    const work = await client.query("SELECT 1 FROM finnor_os.works WHERE tenant_id=$1 AND id=$2", [ctx.auth.tenantId, input.workId]);
-    if (!work.rows[0]) throw new PeDomainError("PE_WORK_NOT_FOUND", "Work was not found in the authenticated tenant");
-    for (const entity of input.entities) {
-      const result = await client.query<{ deal_id: string | null }>(
-        "SELECT finnor_os.pe_entity_deal($1,$2::uuid) AS deal_id",
-        [entity.entityType, entity.entityId],
-      );
-      if (result.rows[0]?.deal_id !== input.dealId) {
-        throw new PeDomainError("PE_WORK_CROSS_DEAL", "All Work attachments must belong to the exact Deal");
-      }
-      await attachWorkEntityTx(db, {
-        tenantId: ctx.auth.tenantId, workId: input.workId,
-        entity: { entityType: entity.entityType, entityId: entity.entityId,
-          relationship: entity.relationship ?? "about", source: peProvenance(ctx).sourceSystem },
-      });
+  await peTransaction(ctx, (db, client) => attachWorkToDealGraphTx(db, client, ctx, input));
+}
+
+async function attachWorkToDealGraphTx(db: Db, client: Client, ctx: PeMutationContext,
+  input: Parameters<typeof attachWorkToDealGraph>[1]): Promise<void> {
+  requireActivePeDeal(await lockPeDeal(client, ctx.auth.tenantId, input.dealId));
+  const work = await client.query("SELECT 1 FROM finnor_os.works WHERE tenant_id=$1 AND id=$2", [ctx.auth.tenantId, input.workId]);
+  if (!work.rows[0]) throw new PeDomainError("PE_WORK_NOT_FOUND", "Work was not found in the authenticated tenant");
+  for (const entity of input.entities) {
+    const result = await client.query<{ deal_id: string | null }>(
+      "SELECT finnor_os.pe_entity_deal($1,$2::uuid) AS deal_id",
+      [entity.entityType, entity.entityId],
+    );
+    if (result.rows[0]?.deal_id !== input.dealId) {
+      throw new PeDomainError("PE_WORK_CROSS_DEAL", "All Work attachments must belong to the exact Deal");
     }
-  });
+    await attachWorkEntityTx(db, {
+      tenantId: ctx.auth.tenantId, workId: input.workId,
+      entity: { entityType: entity.entityType, entityId: entity.entityId,
+        relationship: entity.relationship ?? "about", source: peProvenance(ctx).sourceSystem },
+    });
+  }
 }
 
 function eligibilityShape(value: unknown): DealCloseEligibility {
@@ -978,8 +1017,11 @@ export async function declareDealClosed(ctx: PeMutationContext, input: {
 }): Promise<PeMutationResult & { eligibility: DealCloseEligibility }> {
   const before = await getDeal(ctx, input.dealId);
   if (before.status === "closed") {
-    const eligibility = await evaluateDealCloseEligibility(ctx, input.dealId);
-    return { row: before, changed: false, idempotent: true, eligibility };
+    const current = await (await import("./closing/store")).readVerifiedClosing(ctx, input.dealId);
+    if (["CLOSED", "NOT_REGISTERED", "UNAVAILABLE"].includes(current.status)) {
+      const eligibility = await evaluateDealCloseEligibility(ctx, input.dealId);
+      return { row: before, changed: false, idempotent: true, eligibility };
+    }
   }
   const eligibility = await evaluateDealCloseEligibility(ctx, input.dealId);
   if (!eligibility.eligible) throw new DealCloseRejectedError(eligibility);

@@ -34,6 +34,7 @@ import { loadTemporalBasisComparison } from "./temporal-basis";
 import { isPositiveDependencyResolution } from "./state-machines";
 import { loadPrivateEquityAssertions } from "./source-mapping";
 import { PeDomainError, type DealCloseEligibility, type DealExecutionGraph, type PeMutationContext } from "./types";
+import { readVerifiedClosing } from "./closing/store";
 
 export type PrivateEquityOperationalQueryRequest = Extract<CanonicalOperationalQueryRequest, { intent: PrivateEquityOperationalQueryIntent }>;
 type DealScopedPrivateEquityOperationalQueryRequest = Exclude<PrivateEquityOperationalQueryRequest, { intent: "pe_world_state" }>;
@@ -508,6 +509,7 @@ async function runQuery(
       "pe_deal_risks", "pe_evidence_links", "evidence_source_versions",
     ], asOf, singleton.page),
     dealId: request.dealId,
+    verifiedClosing: await readVerifiedClosing(ctx, request.dealId),
     eligible: eligibility.eligible,
     eligibility: asRecord(eligibility),
     blockingConditions: eligibility.blockingConditions.slice(0, MAX_ROWS).map((row) => ({ ...row })),

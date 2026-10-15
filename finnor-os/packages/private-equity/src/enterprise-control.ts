@@ -13,6 +13,45 @@ import { PeDomainError, type PeMutationContext, type PeWorldRootRef } from './ty
 import {enqueueNativeReferences,enqueueNativePreparedEvents,enqueueNativeMandate,nativeRecordReference,nativeReference,nativeOwnerTransportConfigured} from './native-experience-transport';
 
 const actor=(ctx:PeMutationContext)=>ctx.auth.employeeId??ctx.auth.userId;
+/** S4-owned finite sourcing policy. The score is registered mandate coverage per
+ * remaining cost, never an inferred seller propensity or a causal value claim. */
+export function chooseBilateralNext(input:{
+ candidates:Array<{id:string;activity:'INQUIRE'|'APPROACH'|'CONFIRM'|'CHECK'|'RECONCILE';
+  eligible:boolean;requiredInformation:number;costMicroUsd:string;delayMs:number|null}>;
+ remainingContacts:number;remainingMicroUsd:string;deadline:string;at:string;cancelled:boolean;
+}){
+ if(input.cancelled)return {status:'STOPPED' as const,selected:null,reason:'CANCELLED_FUTURE_WORK_RETIRED',executionAuthorityGranted:false};
+ if(Date.parse(input.at)>=Date.parse(input.deadline))return {status:'STOPPED' as const,selected:null,reason:'ORIGINAL_BILATERAL_DEADLINE_EXHAUSTED',executionAuthorityGranted:false};
+ const candidates=input.candidates.filter(c=>c.eligible&&Number.isSafeInteger(c.requiredInformation)&&c.requiredInformation>0&&
+  /^(0|[1-9]\d{0,95})$/.test(c.costMicroUsd)&&BigInt(c.costMicroUsd)<=BigInt(input.remainingMicroUsd)&&
+  (['CHECK','RECONCILE'].includes(c.activity)||input.remainingContacts>0));
+ candidates.sort((a,b)=>{
+  if(a.activity==='RECONCILE'&&b.activity!=='RECONCILE')return -1;
+  if(b.activity==='RECONCILE'&&a.activity!=='RECONCILE')return 1;
+  const left=BigInt(a.requiredInformation)*(BigInt(b.costMicroUsd)||1n),right=BigInt(b.requiredInformation)*(BigInt(a.costMicroUsd)||1n);
+  if(left!==right)return left>right?-1:1;
+  if(a.delayMs!==b.delayMs)return a.delayMs===null?1:b.delayMs===null?-1:a.delayMs-b.delayMs;
+  return a.id<b.id?-1:a.id>b.id?1:0;
+ });
+ return candidates.length?{status:'PROGRESS' as const,selected:candidates[0]!,reason:'REGISTERED_COVERAGE_COST_DELAY_CHOICE',executionAuthorityGranted:false}:
+ {status:input.remainingContacts<=0?'STOPPED' as const:'WAITING' as const,selected:null,reason:input.remainingContacts<=0?'ORIGINAL_CONTACT_GRANT_EXHAUSTED':'NO_CURRENT_PERMITTED_INFORMATION_OR_CONTACT',executionAuthorityGranted:false};
+}
+/** S4's narrow factual-acquisition choice. Scores cover frozen material
+ * obligations only; this is not expected revenue, causal value or measured gain. */
+export function choosePrimaryAcquisition(input:{
+ candidates:Array<{assertionId:string;sourceProfileId:string;eligible:boolean;materialObligations:number;reservedMicroUsd:string;revalidation:boolean}>;
+ remainingRequests:number;deadline:string;at:string;
+}){
+ if(input.remainingRequests<=0||Date.parse(input.at)>=Date.parse(input.deadline))return {status:'STOPPED' as const,selected:null,reason:'ORIGINAL_REQUEST_OR_DEADLINE_EXHAUSTED',executionAuthorityGranted:false};
+ const candidates=input.candidates.filter(c=>c.eligible&&Number.isSafeInteger(c.materialObligations)&&c.materialObligations>0&&/^(0|[1-9]\d{0,95})$/.test(c.reservedMicroUsd));
+ candidates.sort((a,b)=>{
+  if(a.revalidation!==b.revalidation)return a.revalidation?-1:1;
+  const left=BigInt(a.materialObligations)*(BigInt(b.reservedMicroUsd)||1n),right=BigInt(b.materialObligations)*(BigInt(a.reservedMicroUsd)||1n);
+  return left===right?(a.assertionId+':'+a.sourceProfileId).localeCompare(b.assertionId+':'+b.sourceProfileId):left>right?-1:1;
+ });
+ return candidates.length?{status:'PROGRESS' as const,selected:candidates[0]!,reason:'MATERIAL_COVERAGE_PER_RESERVED_COST_DELAY_UNKNOWN_STABLE_TIE',executionAuthorityGranted:false}:
+ {status:'WAITING' as const,selected:null,reason:'NO_NEW_PERMITTED_PRIMARY_COVERAGE_OPPORTUNITY',executionAuthorityGranted:false};
+}
 const unavailable=()=>new PeDomainError('PE_ENTITY_NOT_FOUND','Permitted S4 context is unavailable');
 function storeRoot():string {if(!process.env.FINNOR_S4_POLICY_STORE)throw new ControlContractError('INVALID_REQUEST','S4 private proposal store is not configured');return resolve(process.env.FINNOR_S4_POLICY_STORE);}
 function directory(ctx:PeMutationContext):string {if(![ctx.auth.tenantId,actor(ctx)].every(id=>/^[a-f0-9-]{36}$/i.test(id)))throw unavailable();return join(storeRoot(),ctx.auth.tenantId,actor(ctx));}

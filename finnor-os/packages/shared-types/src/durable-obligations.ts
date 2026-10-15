@@ -12,6 +12,7 @@ export interface DurableObligation {
  policyRef:ExperimentRef;decisionRef:ExperimentRef;nodeId:string;demandDigest:string;
  allocationRef:ExperimentRef;reservationRef:ExperimentRef;consumptionRef:ExperimentRef;
  effectRef:BusinessEffectRef;domainActionId:string;interventionRef:ExperimentRef;
+ workLineage?:{workId:string;workInputId:string|null;planRevisionId:string|null;planDigest:string|null};
  intervention:InterventionSpecification;resourceEnvelope:AllocationEnvelope[];
  preconditions:{beliefPins:BeliefViewPin[];reservationRevision:number;allocationValidUntil:string;policyValidUntil:string;interventionDigest:string};
  deadline:{businessStartAt:string;businessPeriodEndAt:string;authorityExpiresAt:string};

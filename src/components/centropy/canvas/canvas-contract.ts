@@ -27,6 +27,7 @@ const UnderwritingOutputSchema = z.object({ nodeId: z.string(), label: z.string(
 const UnderwritingCheckSchema = z.object({ nodeId: z.string(), code: z.string(), message: z.string(), severity: z.string() }).strict()
 
 export const CanvasBlockSchema = z.discriminatedUnion("type", [
+  BaseBlockSchema.extend({type:z.literal("capital_formation"),payload:z.object({root:z.object({entityType:z.string().min(1),entityId:z.string().uuid()}).strict(),workId:z.string().uuid()}).strict()}).strict(),
   BaseBlockSchema.extend({type:z.literal("capital_program"),payload:z.object({root:z.object({entityType:z.literal("external_organization"),entityId:z.string().uuid()}).strict(),workId:z.string().uuid()}).strict()}).strict(),
   BaseBlockSchema.extend({type:z.literal("branch_fabric"),payload:z.object({rootId:z.string().uuid(),workId:z.string().uuid()}).strict()}).strict(),
   BaseBlockSchema.extend({type:z.literal("interface_synthesis"),payload:z.object({root:z.object({entityType:z.string(),entityId:z.string().uuid()}).strict(),workId:z.string().uuid().nullable(),threadId:z.string().uuid()}).strict()}).strict(),
@@ -34,8 +35,10 @@ export const CanvasBlockSchema = z.discriminatedUnion("type", [
   BaseBlockSchema.extend({type:z.literal("compute_search"),payload:z.object({root:z.object({entityType:z.string(),entityId:z.string().uuid()}).strict(),workId:z.string().uuid().nullable(),threadId:z.string().uuid()}).strict()}).strict(),
   BaseBlockSchema.extend({type:z.literal("program_synthesis"),payload:z.object({root:z.object({entityType:z.string(),entityId:z.string().uuid()}).strict(),workId:z.string().uuid().nullable(),threadId:z.string().uuid()}).strict()}).strict(),
   BaseBlockSchema.extend({type:z.literal("evidence_execution"),payload:z.object({root:z.object({entityType:z.string(),entityId:z.string().uuid()}).strict(),workId:z.string().uuid().nullable()}).strict()}).strict(),
+  BaseBlockSchema.extend({type:z.literal("primary_diligence"),payload:z.object({root:z.object({entityType:z.string(),entityId:z.string().uuid()}).strict(),workId:z.string().uuid().nullable(),investigation:z.object({threadId:z.string().uuid(),expectedRevision:z.number().int().nonnegative()}).strict()}).strict()}).strict(),
+  BaseBlockSchema.extend({type:z.literal("bilateral_opportunity"),payload:z.object({root:z.object({entityType:z.string(),entityId:z.string().uuid()}).strict(),workId:z.string().uuid().nullable(),investigation:z.object({threadId:z.string().uuid(),expectedRevision:z.number().int().nonnegative()}).strict()}).strict()}).strict(),
   BaseBlockSchema.extend({ type: z.literal("work_execution"), payload: z.object({ objective: z.string(), status: z.string(), stages: z.array(StageSchema), finalOutcome: z.string().nullable(), failure: z.string().nullable() }).strict() }).strict(),
-  BaseBlockSchema.extend({ type: z.literal("closing_readiness"), payload: z.object({ conditions: z.array(RowSchema), openRisks: z.number().int().nonnegative(), sourceCoverage: z.string() }).strict() }).strict(),
+  BaseBlockSchema.extend({ type: z.literal("closing_readiness"), payload: z.object({ transactionId: z.string().uuid().optional(), conditions: z.array(RowSchema), openRisks: z.number().int().nonnegative(), sourceCoverage: z.string() }).strict() }).strict(),
   BaseBlockSchema.extend({ type: z.literal("risk_register"), payload: z.object({ risks: z.array(RowSchema) }).strict() }).strict(),
   BaseBlockSchema.extend({ type: z.literal("ic_readiness"), payload: z.object({ questions: z.array(RowSchema), decisions: z.array(RowSchema) }).strict() }).strict(),
   BaseBlockSchema.extend({ type: z.literal("evidence_matrix"), payload: z.object({ items: z.array(RowSchema), conflicts: z.number().int().nonnegative() }).strict() }).strict(),

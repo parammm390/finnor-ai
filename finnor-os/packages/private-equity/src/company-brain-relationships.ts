@@ -97,6 +97,10 @@ const definitions: RelationshipDefinition[] = [
     sourceOwner: "@finnor/private-equity", persistedSources: [{ table: "pe_investment_cases", columns: ["id", "deal_id"] }], resolver: "PeWorldState.investmentCases.dealId", tenantRule: "authenticated_tenant_only", historyBehavior: "canonical_as_of", inspectionBehavior: "source_row",
   },
   {
+    kind:"opportunity_investment_case",fromTypes:[q("private_equity:pe_opportunity")],toTypes:[q("private_equity:pe_investment_case")],direction:"outbound",
+    sourceOwner:"@finnor/private-equity",persistedSources:[{table:"pe_investment_cases",columns:["id","opportunity_id"]}],resolver:"PeWorldState.investmentCases.opportunityId",tenantRule:"authenticated_tenant_only",historyBehavior:"canonical_as_of",inspectionBehavior:"source_row",
+  },
+  {
     kind: "investment_case_thesis", fromTypes: [q("private_equity:pe_investment_case")], toTypes: [q("private_equity:pe_thesis")], direction: "outbound",
     sourceOwner: "@finnor/private-equity", persistedSources: [{ table: "pe_theses", columns: ["id", "investment_case_id"] }], resolver: "PeWorldState.theses.investmentCaseId", tenantRule: "authenticated_tenant_only", historyBehavior: "canonical_as_of", inspectionBehavior: "source_row",
   },

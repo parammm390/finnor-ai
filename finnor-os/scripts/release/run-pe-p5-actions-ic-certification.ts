@@ -236,7 +236,7 @@ async function inspectArchitecture(): Promise<Record<string, unknown>> {
     "historical release:pe5 command was changed");
   assert(routeFiles.length === 30 && apiPaths.length === 30, `P5 API route count is source=${routeFiles.length}, OpenAPI=${apiPaths.length}`);
   assert(apiPaths.every((path) => authz.includes(path.replace(/\{([^}]+)\}/g, ":$1"))), "authorization matrix lacks a P5 route");
-  assert(PRIVATE_EQUITY_ACTION_COUNT === 28 && EXECUTABLE_ACTION_COUNT === 45 && p5Actions.length === 9,
+  assert(PRIVATE_EQUITY_ACTION_COUNT === 29 && EXECUTABLE_ACTION_COUNT === 46 && p5Actions.length === 9,
     `action counts are PE=${PRIVATE_EQUITY_ACTION_COUNT}, global=${EXECUTABLE_ACTION_COUNT}, P5=${p5Actions.length}`);
   assert(IC_METRICS.length === 21 && new Set(IC_METRICS).size === 21, "P5 telemetry catalog is not exactly 21 unique metrics");
   assert(!/CREATE\s+TABLE[^;]*\bic_evidence\b/i.test(privateEquity + p5Surface), "P5 created a duplicate ic_evidence owner");

@@ -1,0 +1,24 @@
+.control { margin: 18px 0; padding: 18px; border: 1px solid var(--ct-border, #34404b); border-radius: 12px; background: var(--ct-panel, #111820); color: var(--ct-text, #e9edf3); }
+.control header > span { font: 600 11px ui-monospace, monospace; letter-spacing: .1em; color: #9fbad0; }
+.control h3 { margin: 8px 0; font-size: 19px; }
+.control h4 { margin: 0 0 12px; font-size: 15px; }
+.control p { font-size: 13px; line-height: 1.6; }
+.states { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin: 16px 0; }
+.states > section { min-width: 0; padding: 14px; border: 1px solid #34404b; border-radius: 8px; }
+.control label { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; margin: 12px 0; font-size: 13px; }
+.control label:has(input[type="checkbox"]) { flex-wrap: nowrap; }
+.control fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
+.control legend { font-size: 12px; line-height: 1.6; }
+.control select, .control textarea, .control input:not([type="checkbox"]) { width: 100%; min-width: 0; padding: 9px; border: 1px solid #566575; border-radius: 5px; background: #0a1118; color: #edf4fa; font: inherit; }
+.control textarea { resize: vertical; }
+.control button { padding: 9px 12px; border: 1px solid #6687a0; border-radius: 5px; background: #172b3b; color: #edf4fa; font: inherit; font-size: 12px; cursor: pointer; }
+.control button:disabled { opacity: .55; cursor: not-allowed; }
+.control :is(button,input,textarea,select,summary):focus-visible { outline: 2px solid #c5e2ff; outline-offset: 3px; }
+.control pre { max-height: 280px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; font: 11px/1.6 ui-monospace, monospace; }
+.control summary { cursor: pointer; font-size: 12px; line-height: 1.6; }
+.control article { margin: 15px 0; padding-top: 12px; border-top: 1px solid #34404b; }
+.identity, .actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.identity { font-size: 12px; }
+.error { color: #ffc7bf; }
+@media (max-width: 1400px) { .states { grid-template-columns: 1fr; } }
+@media (prefers-reduced-motion: reduce) { .control * { scroll-behavior: auto; } }

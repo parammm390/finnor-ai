@@ -2,7 +2,7 @@ import { resolveProductRoute, type ProductMethod } from "@/lib/centropy/capabili
 
 export type ProjectionTag = "preferences" | "company-brain" | "semantic-activity" | "work" | "agents" | "authority" |
   "underwriting" | "ic" | "artifact" | "source" | "thread" | "canvas" | "objective" | "workflow" | "workforce" |
-  "workspace" | "preference" | "operating-profile" | "outcome-pack" | "receipt" | "m365" | "corrections" | "connections"
+  "workspace" | "preference" | "operating-profile" | "outcome-pack" | "receipt" | "m365" | "corrections" | "connections" | "closing"
 
 export interface BusinessInvalidationSignal {
   tags: readonly ProjectionTag[]
@@ -37,5 +37,6 @@ export function businessEventProjectionTags(eventType: string, entityType: strin
   if (/(work|plan|action|effect|receipt|proof)/.test(value)) tags.add("work")
   if (/(agent|assignment|learning)/.test(value)) tags.add("agents")
   if (/(approval|authority|decision)/.test(value)) tags.add("authority")
+  if (/(closing|settlement|pe_deal)/.test(value)) tags.add("closing")
   return [...tags]
 }
