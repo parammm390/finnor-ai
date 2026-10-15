@@ -1,7 +1,7 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 
 const FULL_COMMIT_SHA = /^[0-9a-f]{40}$/i;
-const CURRENT_MIGRATION_HEAD = "0189_x1_physical_cost_allocation.sql";
+const CURRENT_MIGRATION_HEAD = "0190_x1_final_compiler_head_fence.sql";
 const CUTOVER_PROTOCOL = 5;
 
 const DILIGENCE_RECORD = Object.freeze({

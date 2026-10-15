@@ -1867,7 +1867,10 @@ try {
       const stopped=new Promise<void>(resolve=>worker!.once('close',()=>resolve()));worker.kill('SIGTERM');
       const timer=setTimeout(()=>worker?.kill('SIGKILL'),15000);await stopped;clearTimeout(timer);
     }
-    await reviewResourceOwners({ctx,admin,workId,requestId:compilerId!,api,save,results});
+    await reviewResourceOwners({ctx,admin,workId,requestId:compilerId!,api,save,results,
+      resumePhysicalWorker:async()=>{const previousPid=worker!.pid;worker=startWorker();
+        const readiness=await workerReadiness.get(worker);return {previousPid,currentPid:worker.pid,readiness,
+          originalEpisodeAndBudgetRetained:true};}});
     throw new OwnerAdmissionReviewFinished('Frozen original-resource and physical-cost review completed; unrelated lifecycle variants not selected');
   }
   if(legacyUpgrade){

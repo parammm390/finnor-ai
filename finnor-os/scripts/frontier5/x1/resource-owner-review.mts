@@ -7,6 +7,7 @@ import type {PeMutationContext} from '../../../packages/private-equity/src/types
 import {readStoredAllocation,readAllocationConsumptions} from '../../../packages/private-equity/src/allocation-store';
 export async function reviewResourceOwners(input:{ctx:PeMutationContext;admin:pg.Client;workId:string;requestId:string;
  api:(operation:string,body:unknown)=>Promise<{status:number;body:any}>;
+ resumePhysicalWorker:()=>Promise<unknown>;
  save:(name:string,value:unknown)=>Promise<unknown>;results:any[]}){
  const {ctx,admin,workId,requestId,api,save,results}=input,tenant=ctx.auth.tenantId,principal=ctx.auth.userId;
  const original=(await admin.query(`SELECT e.* FROM finnor_os.x1_compiler_episodes e JOIN finnor_os.x1_compiler_requests q
@@ -49,6 +50,9 @@ export async function reviewResourceOwners(input:{ctx:PeMutationContext;admin:pg
  results.push({id:'F-exhausted-parent-retains-actual-api-cost',status:passed?'PASS':'FAIL',observed:{newMeters,exhausted,ending},
   basis:'KNOWN_PHYSICAL_HTTP_WORK_SURVIVES_S5_REFUSAL_IN_S7_ORIGINAL_PARENT_NO_RESOURCE_AUTHORITY_OR_VALUE_CREDIT'});
  const q=(await admin.query('SELECT * FROM finnor_os.x1_compiler_requests WHERE tenant_id=$1 AND id=$2',[tenant,requestId])).rows[0];
+ const worker=await input.resumePhysicalWorker();
+ await save('resource-exhausted-compiler-physical-worker-readiness.json',{worker,exhausted,originalEpisodeId:original.id,
+  parent,originalDeadline:original.original_deadline,allowanceReset:false});
  const existingChildren=(await admin.query('SELECT id FROM finnor_os.p1_requests WHERE tenant_id=$1 AND work_id=$2 ORDER BY id',[tenant,workId])).rows;
  const existingEffects=(await admin.query('SELECT id FROM finnor_os.domain_actions WHERE tenant_id=$1 AND work_id=$2 ORDER BY id',[tenant,workId])).rows;
  const revision=await api('institution-revise',{workId,workInputId:q.work_input_id,grantIds:q.grant_ids,
