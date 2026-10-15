@@ -19,6 +19,7 @@ import {readEnterpriseExactControlPolicy} from './enterprise-control';
 import {R2NativeSession,r2Ref} from './capital-program/r2-native';
 export {proposeEnterpriseSameDealAlternatives,readEnterpriseAllocationCandidateProblem} from './allocation-proposal';
 export {clearEnterpriseCoalitionAllocation,readEnterpriseCoalitionAllocation,consumeEnterpriseCoalitionAllocation,releaseEnterpriseCoalitionAllocation} from './capital-program/r5-allocation-owner';
+export interface R3AllocationClearingInput {schema:'finnor.s5.r3-clearing-request.v1';requestId:string;idempotencyKey:string}
 
 const actor=(ctx:PeMutationContext)=>ctx.auth.employeeId??ctx.auth.userId;
 const denied=()=>new AllocationContractError('PERMITTED_CONTEXT_UNAVAILABLE','Permitted S5 context is unavailable');
@@ -80,7 +81,17 @@ async function unaccountedNativeEffects(ctx:PeMutationContext):Promise<number>{
     const rows=await c.query("SELECT count(*)::int AS n FROM finnor_os.business_effects WHERE tenant_id=$1 AND status NOT IN ('verified','cancelled','compensated')",[ctx.auth.tenantId]);return rows.rows[0].n;
   });
 }
-export async function clearEnterprisePortfolio(ctx:PeMutationContext,input:AllocationClearingInput):Promise<AllocationClearingResult>{
+export async function clearEnterprisePortfolio(ctx:PeMutationContext,input:R3AllocationClearingInput):Promise<Awaited<ReturnType<typeof import('./r3/allocation').clearR3Portfolio>>>;
+export async function clearEnterprisePortfolio(ctx:PeMutationContext,input:AllocationClearingInput):Promise<AllocationClearingResult>;
+export async function clearEnterprisePortfolio(ctx:PeMutationContext,input:R3AllocationClearingInput|AllocationClearingInput){
+ if('schema' in input&&input.schema==='finnor.s5.r3-clearing-request.v1'){
+  if(await unaccountedNativeEffects(ctx))throw Error('R3_NATIVE_UNRECONCILED_EFFECTS_REQUIRE_S6_ACCOUNTING');
+  const {r3Request}=await import('./r3/store');
+  return (await import('./r3/allocation')).clearR3Portfolio(ctx,await r3Request(ctx,input.requestId),input.idempotencyKey);
+ }
+ return clearNumericEnterprisePortfolio(ctx,input as AllocationClearingInput);
+}
+async function clearNumericEnterprisePortfolio(ctx:PeMutationContext,input:AllocationClearingInput):Promise<AllocationClearingResult>{
   const started=performance.now(),m=parseEconomicMandate(input.mandate),joint=parseJointAllocationModel(input.jointModel);
   if(ctx.auth.role!=='owner'||m.tenantId!==ctx.auth.tenantId||m.principalId!==actor(ctx)||m.businessOwnerRef.id!==actor(ctx))throw denied();
   const requestDigest=epistemicHash(input),previous=await readAllocationReplay(ctx,input.idempotencyKey,requestDigest);
@@ -127,8 +138,15 @@ export async function clearEnterprisePortfolio(ctx:PeMutationContext,input:Alloc
     return immutableControl({schema:'finnor.s5.clearing-result.v1',status:'FEASIBLE',reasons:produced.status==='SEARCH_EXHAUSTED'?['CHECKED_INCUMBENT_WITH_SUPPORTED_REMAINING_GAP']:[],certificate,reservation,experience,compute:produced.compute,decisionUsage:decisionUsage(),executionAuthorityGranted:false,protectedReceipt:null});
   }catch(e){if(e instanceof AllocationContractError&&e.code==='LIMIT_EXCEEDED')return failure('SEARCH_EXHAUSTED',[e.message],produced.compute);if(e instanceof AllocationContractError&&e.code==='STALE_INPUT')return failure('STALE_INPUT',[e.message,'RECLEAR_CURRENT_REVISIONS_WITHIN_OWNER_BUDGET'],produced.compute);throw e;}
 }
+export async function readEnterpriseAllocation(ctx:PeMutationContext,value:ExperimentRef&{version:'s5-r3-contingent-v1'}):Promise<Awaited<ReturnType<typeof import('./r3/allocation').readR3Allocation>>>;
+export async function readEnterpriseAllocation(ctx:PeMutationContext,value:unknown):Promise<Awaited<ReturnType<typeof readNumericEnterpriseAllocation>>>;
 export async function readEnterpriseAllocation(ctx:PeMutationContext,value:unknown){
-  const ref=ExperimentRefSchema.parse(value),issued=await readStoredAllocation(ctx,ref);await verifyAllocationCertificateAsync(issued.problem,issued.certificate);
+  const ref=ExperimentRefSchema.parse(value);
+  if(ref.version==='s5-r3-contingent-v1')return (await import('./r3/allocation')).readR3Allocation(ctx,ref);
+  return readNumericEnterpriseAllocation(ctx,ref);
+}
+async function readNumericEnterpriseAllocation(ctx:PeMutationContext,ref:ExperimentRef){
+  const issued=await readStoredAllocation(ctx,ref);await verifyAllocationCertificateAsync(issued.problem,issued.certificate);
   return immutableControl({...issued,consumptions:await readAllocationConsumptions(ctx,ref),executionAuthorityGranted:false,protectedReceipt:null});
 }
 /** Read S5's original qualified settlement and its independently protected S6
@@ -164,6 +182,8 @@ async function validateAllocationState(ctx:PeMutationContext,value:unknown){
   return {issued,validation};
 }
 export async function validateEnterpriseAllocation(ctx:PeMutationContext,value:unknown){
+  const ref=ExperimentRefSchema.parse(value);
+  if(ref.version==='s5-r3-contingent-v1')return (await import('./r3/allocation')).validateR3Allocation(ctx,ref);
   return (await validateAllocationState(ctx,value)).validation;
 }
 export async function resolveEnterprisePolicyAllocation(ctx:PeMutationContext,value:unknown,policy:ContingentPolicy,knowledgeAt:string):Promise<ResolvedPolicyAllocation|null>{
@@ -174,7 +194,18 @@ export async function resolveEnterprisePolicyAllocation(ctx:PeMutationContext,va
   if(validation.status!=='CURRENT'||Date.parse(knowledgeAt)<Date.parse(issued.certificate.validFrom)||Date.parse(knowledgeAt)>Date.now()+1000||!issued.certificate.policyBindings.some(p=>sameAllocationRef(p.policyRef,policy.ref)&&p.demandDigest===policy.demand.contentDigest)||!sameAllocationRef(issued.certificate.mandateRef,policy.mandateRef)||issued.certificate.rightsRef!==policy.bindings.rightsRef)return null;
   return immutableControl({owner:'S5',ref,policyRef:policy.ref,mandateRef:policy.mandateRef,demandDigest:policy.demand.contentDigest,rightsRef:policy.bindings.rightsRef,validUntil:issued.certificate.validUntil,revoked:false});
 }
-export async function consumeEnterpriseAllocation(ctx:PeMutationContext,input:{allocationRef:ExperimentRef;policyRef:ExperimentRef;decision?:unknown;measurements?:Array<{protocol?:unknown;events:unknown[]}>;idempotencyKey:string}){
+export interface R3AllocationConsumptionInput {schema:'finnor.s5.r3-consumption-request.v1';requestId:string;idempotencyKey:string}
+type NumericAllocationConsumption={allocationRef:ExperimentRef;policyRef:ExperimentRef;decision?:unknown;measurements?:Array<{protocol?:unknown;events:unknown[]}>;idempotencyKey:string};
+export async function consumeEnterpriseAllocation(ctx:PeMutationContext,input:R3AllocationConsumptionInput):Promise<Awaited<ReturnType<typeof import('./r3/allocation').consumeR3Allocation>>>;
+export async function consumeEnterpriseAllocation(ctx:PeMutationContext,input:NumericAllocationConsumption):Promise<Awaited<ReturnType<typeof consumeNumericEnterpriseAllocation>>>;
+export async function consumeEnterpriseAllocation(ctx:PeMutationContext,input:R3AllocationConsumptionInput|NumericAllocationConsumption){
+ if('schema' in input&&input.schema==='finnor.s5.r3-consumption-request.v1'){
+  const {r3Request}=await import('./r3/store');
+  return (await import('./r3/allocation')).consumeR3Allocation(ctx,await r3Request(ctx,input.requestId),input.idempotencyKey);
+ }
+ return consumeNumericEnterpriseAllocation(ctx,input as NumericAllocationConsumption);
+}
+async function consumeNumericEnterpriseAllocation(ctx:PeMutationContext,input:NumericAllocationConsumption){
   const issued=await readEnterpriseAllocation(ctx,input.allocationRef),requestDigest=epistemicHash(input),previous=issued.consumptions.find(c=>c.idempotencyKey===input.idempotencyKey);
   if(previous){if(previous.requestDigest!==requestDigest)throw new AllocationContractError('IDEMPOTENCY_CONFLICT','S5 consumption retry changed semantic payload');return immutableControl({consumption:previous,choice:null,semanticReplay:true,executionAuthorityGranted:false,protectedReceipt:null});}
   const policy=await readEnterpriseContingentPolicy(ctx,input.policyRef),decision=parseControlDecision(input.decision,policy);

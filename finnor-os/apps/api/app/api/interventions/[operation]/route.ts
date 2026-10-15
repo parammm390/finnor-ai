@@ -3,6 +3,8 @@ import { PE_WORLD_ROOT_TYPES, PeDomainError, fitEnterpriseInterventionModel, que
   prepareEnterpriseExactControlModel, projectEnterpriseInterventionExperiment, designEnterpriseInterventionExperiment, recordEnterpriseInterventionAssessment } from '@finnor/private-equity';
 import { ExactControlError, ExperimentRefSchema, InterventionContractError, ExperimentContractError } from '@finnor/epistemic-runtime';
 import { errorResponse, requireContext } from '../../../../lib/auth';
+import {resolveEnterpriseInterventionModelForControl} from '@finnor/private-equity';
+import {R3OwnerOperationSchemas} from '../../../../../../packages/epistemic-runtime/src/incentive-rule-synthesis/output-contracts';
 
 export const runtime = 'nodejs';
 const fit = z.object({ request: z.unknown() }).strict();
@@ -43,6 +45,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ operati
       case 'refit': { const input = refit.parse(body); return response(await fitEnterpriseInterventionModel(ctx, input.request, input.priorRef)); }
       case 'query': { const input = query.parse(body); return response(await queryEnterpriseInterventionModel(ctx, { modelRef: input.modelRef, query: input.query })); }
       case 'validate': return response(await validateEnterpriseInterventionModel(ctx, model.parse(body).modelRef));
+      case 'finite-preference': return response(await resolveEnterpriseInterventionModelForControl(ctx,{schema:'finnor.s3.r3-finite-model-read.v1',modelRef:R3OwnerOperationSchemas.interventions['finite-preference'].parse(body).modelRef}));
       case 'experiment-projection': return response(await projectEnterpriseInterventionExperiment(ctx, model.parse(body).modelRef));
       case 'design-experiment': { const input = experiment.parse(body); return response(await designEnterpriseInterventionExperiment(ctx, { modelRef: input.modelRef, root: input.root, request: input.request })); }
       case 'assessment': { const input = assessment.parse(body); return response(await recordEnterpriseInterventionAssessment(ctx, { ...input, modelRef: input.modelRef })); }

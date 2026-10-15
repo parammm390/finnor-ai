@@ -1,0 +1,1429 @@
+{
+  "schema": "finnor.r3.shared-patch-contracts.v1",
+  "selectedBase": "517003a4396bc8101a90be4b425ee01de9446740",
+  "patchOrder": [
+    "01-r3-owned.patch",
+    "02-shared-integration.patch"
+  ],
+  "patches": [
+    {
+      "path": ".gitignore",
+      "ownerBoundary": "SHARED_EXPORT_OR_PRIVATE_ARTIFACT_EXCLUSION",
+      "preimageSha256": "7625ca78b3b4372b239db198867dee8cc704fe7254c9415b998eb600b7750d70",
+      "postimageSha256": "6b9e245d40f1ed6ba97473098924fa068dfac6c906e03612ec3325227021b6c3",
+      "contractRevisions": [
+        "LOCAL_ARTIFACT_BOUNDARY"
+      ],
+      "changedReadersWritersJobs": [
+        "local runtime/scratch/private-evidence exclusion",
+        "unpublished bundle/patch/release exclusion"
+      ],
+      "dependencyOrder": [
+        "R3_OWNED_GROUP",
+        "THIS_SHARED_INTEGRATION_GROUP"
+      ],
+      "decisiveEvidence": [
+        {
+          "path": "owner-2026-10-09T22-45-55/results.json",
+          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+        },
+        {
+          "path": "owner-2026-10-09T22-55-59/results.json",
+          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140"
+        },
+        {
+          "path": "owner-2026-10-09T23-22-42/results.json",
+          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787"
+        },
+        {
+          "path": "owner-2026-10-09T23-28-33/results.json",
+          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1"
+        },
+        {
+          "path": "owner-2026-10-10T00-51-10/results.json",
+          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335"
+        },
+        {
+          "path": "installed-runtime-01/results.json",
+          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4"
+        }
+      ],
+      "compatibilityLimit": "RECORDED_BASE_LOCAL_OWNER_CUTS; FINAL_LINUX_AND_JOINED_R_NOT_VERIFIED"
+    },
+    {
+      "path": "finnor-os/Dockerfile.worker",
+      "ownerBoundary": "SERIAL_RUNTIME_AND_JOBS",
+      "preimageSha256": "f0674e675e08b231556d8bd71dc71d6431b49798f0bd1ddec9c64b3163766109",
+      "postimageSha256": "163dd7c34739af7e79f4e523056d4c02c70e3dca215fa8322313d600fd0e1198",
+      "contractRevisions": [
+        "finnor.r3.native-runtime.v1",
+        "FINAL_LINUX_BUILD_NOT_VERIFIED"
+      ],
+      "changedReadersWritersJobs": [
+        "dependencies npm ci",
+        "r3-scientific hash-locked Python environments",
+        "runtime non-root seal",
+        "api target",
+        "worker target"
+      ],
+      "dependencyOrder": [
+        "R3_OWNED_GROUP",
+        "THIS_SHARED_INTEGRATION_GROUP"
+      ],
+      "decisiveEvidence": [
+        {
+          "path": "owner-2026-10-09T22-45-55/results.json",
+          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+        },
+        {
+          "path": "owner-2026-10-09T22-55-59/results.json",
+          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140"
+        },
+        {
+          "path": "owner-2026-10-09T23-22-42/results.json",
+          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787"
+        },
+        {
+          "path": "owner-2026-10-09T23-28-33/results.json",
+          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1"
+        },
+        {
+          "path": "owner-2026-10-10T00-51-10/results.json",
+          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335"
+        },
+        {
+          "path": "installed-runtime-01/results.json",
+          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4"
+        }
+      ],
+      "compatibilityLimit": "RECORDED_BASE_LOCAL_OWNER_CUTS; FINAL_LINUX_AND_JOINED_R_NOT_VERIFIED"
+    },
+    {
+      "path": "finnor-os/Dockerfile.worker.dockerignore",
+      "ownerBoundary": "SERIAL_RUNTIME_AND_JOBS",
+      "preimageSha256": "8f9103c22ea85b6d84a1eb63af7d2ca5812d22f66bb8a7ec48500d659d521e4c",
+      "postimageSha256": "c20948c77c6a3c0fbb683dd73ce1327bd612c90944caba5ffe0b5ad48735aa9d",
+      "contractRevisions": [
+        "EXISTING_WORKER_SPECIFIC_BUILD_CONTEXT"
+      ],
+      "changedReadersWritersJobs": [
+        "Dockerfile.worker root-context inclusion",
+        "existing hidden/evidence/key exclusion",
+        "R3 generated Python cache exclusion"
+      ],
+      "dependencyOrder": [
+        "R3_OWNED_GROUP",
+        "THIS_SHARED_INTEGRATION_GROUP"
+      ],
+      "decisiveEvidence": [
+        {
+          "path": "owner-2026-10-09T22-45-55/results.json",
+          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+        },
+        {
+          "path": "owner-2026-10-09T22-55-59/results.json",
+          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140"
+        },
+        {
+          "path": "owner-2026-10-09T23-22-42/results.json",
+          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787"
+        },
+        {
+          "path": "owner-2026-10-09T23-28-33/results.json",
+          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1"
+        },
+        {
+          "path": "owner-2026-10-10T00-51-10/results.json",
+          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335"
+        },
+        {
+          "path": "installed-runtime-01/results.json",
+          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4"
+        }
+      ],
+      "compatibilityLimit": "RECORDED_BASE_LOCAL_OWNER_CUTS; FINAL_LINUX_AND_JOINED_R_NOT_VERIFIED"
+    },
+    {
+      "path": "finnor-os/apps/api/app/api/allocations/[operation]/route.ts",
+      "ownerBoundary": "S5",
+      "preimageSha256": "8700b0ec39b6c69ab3a5cba94a7f1435a039f4445c43bc608fa03fcbb9fae97d",
+      "postimageSha256": "97a3c280f8ead27270a4bba399af9d374553fc67c8b495a02b07960b1c3b2fbc",
+      "contractRevisions": [
+        "R3OwnerOperationSchemas.allocations"
+      ],
+      "changedReadersWritersJobs": [
+        "POST clear-mechanism",
+        "POST consume-mechanism",
+        "existing POST read/validate/consume"
+      ],
+      "dependencyOrder": [
+        "R3_OWNED_GROUP",
+        "THIS_SHARED_INTEGRATION_GROUP"
+      ],
+      "decisiveEvidence": [
+        {
+          "path": "owner-2026-10-09T22-45-55/results.json",
+          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+        },
+        {
+          "path": "owner-2026-10-09T22-55-59/results.json",
+          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140"
+        },
+        {
+          "path": "owner-2026-10-09T23-22-42/results.json",
+          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787"
+        },
+        {
+          "path": "owner-2026-10-09T23-28-33/results.json",
+          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1"
+        },
+        {
+          "path": "owner-2026-10-10T00-51-10/results.json",
+          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335"
+        },
+        {
+          "path": "installed-runtime-01/results.json",
+          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4"
+        }
+      ],
+      "compatibilityLimit": "RECORDED_BASE_LOCAL_OWNER_CUTS; FINAL_LINUX_AND_JOINED_R_NOT_VERIFIED"
+    },
+    {
+      "path": "finnor-os/apps/api/app/api/interventions/[operation]/route.ts",
+      "ownerBoundary": "SHARED_EXPORT_OR_PRIVATE_ARTIFACT_EXCLUSION",
+      "preimageSha256": "57ef31900194135c9f2ca691b2b00cca17b8202d0c06382b35119bcafbe96c96",
+      "postimageSha256": "616fe09dee8c3fa9dae6b583a6548c86b8c588f8d2cbc3e88df21730fad515b3",
+      "contractRevisions": [
+        "R3OwnerOperationSchemas.interventions"
+      ],
+      "changedReadersWritersJobs": [
+        "POST finite-preference",
+        "existing numeric intervention operations"
+      ],
+      "dependencyOrder": [
+        "R3_OWNED_GROUP",
+        "THIS_SHARED_INTEGRATION_GROUP"
+      ],
+      "decisiveEvidence": [
+        {
+          "path": "owner-2026-10-09T22-45-55/results.json",
+          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+        },
+        {
+          "path": "owner-2026-10-09T22-55-59/results.json",
+          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140"
+        },
+        {
+          "path": "owner-2026-10-09T23-22-42/results.json",
+          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787"
+        },
+        {
+          "path": "owner-2026-10-09T23-28-33/results.json",
+          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1"
+        },
+        {
+          "path": "owner-2026-10-10T00-51-10/results.json",
+          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335"
+        },
+        {
+          "path": "installed-runtime-01/results.json",
+          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4"
+        }
+      ],
+      "compatibilityLimit": "RECORDED_BASE_LOCAL_OWNER_CUTS; FINAL_LINUX_AND_JOINED_R_NOT_VERIFIED"
+    },
+    {
+      "path": "finnor-os/apps/api/app/api/obligations/[operation]/route.ts",
+      "ownerBoundary": "S6",
+      "preimageSha256": "79adcfe62715fda3fb205afb930fc2f48289edb4c37c32b0a3d85764a4cecdd4",
+      "postimageSha256": "200e26d2618e7b14958690d93bd2f7961497a01de3287cc5db2f529504dae013",
+      "contractRevisions": [
+        "finnor.s6.r3-owner-handoff.v1"
+      ],
+      "changedReadersWritersJobs": [
+        "POST prepare-elicitation",
+        "existing compile/schedule/execute/reconcile/cancel operations"
+      ],
+      "dependencyOrder": [
+        "R3_OWNED_GROUP",
+        "THIS_SHARED_INTEGRATION_GROUP"
+      ],
+      "decisiveEvidence": [
+        {
+          "path": "owner-2026-10-09T22-45-55/results.json",
+          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+        },
+        {
+          "path": "owner-2026-10-09T22-55-59/results.json",
+          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140"
+        },
+        {
+          "path": "owner-2026-10-09T23-22-42/results.json",
+          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787"
+        },
+        {
+          "path": "owner-2026-10-09T23-28-33/results.json",
+          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1"
+        },
+        {
+          "path": "owner-2026-10-10T00-51-10/results.json",
+          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335"
+        },
+        {
+          "path": "installed-runtime-01/results.json",
+          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4"
+        }
+      ],
+      "compatibilityLimit": "RECORDED_BASE_LOCAL_OWNER_CUTS; FINAL_LINUX_AND_JOINED_R_NOT_VERIFIED"
+    },
+    {
+      "path": "finnor-os/apps/api/app/api/policies/[operation]/route.ts",
+      "ownerBoundary": "SHARED_EXPORT_OR_PRIVATE_ARTIFACT_EXCLUSION",
+      "preimageSha256": "22bc609867fe7829915553a2d03812f26471b4487356bd2578b0655a7028f56f",
+      "postimageSha256": "bba04d4f72c65a2468a7b1420600be77de4560730ac75b2bd96996f96a6964d7",
+      "contractRevisions": [
+        "R3OwnerOperationSchemas.policies"
+      ],
+      "changedReadersWritersJobs": [
+        "POST read-mechanism",
+        "POST decide-mechanism",
+        "existing numeric control operations"
+      ],
+      "dependencyOrder": [
+        "R3_OWNED_GROUP",
+        "THIS_SHARED_INTEGRATION_GROUP"
+      ],
+      "decisiveEvidence": [
+        {
+          "path": "owner-2026-10-09T22-45-55/results.json",
+          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+        },
+        {
+          "path": "owner-2026-10-09T22-55-59/results.json",
+          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140"
+        },
+        {
+          "path": "owner-2026-10-09T23-22-42/results.json",
+          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787"
+        },
+        {
+          "path": "owner-2026-10-09T23-28-33/results.json",
+          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1"
+        },
+        {
+          "path": "owner-2026-10-10T00-51-10/results.json",
+          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335"
+        },
+        {
+          "path": "installed-runtime-01/results.json",
+          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4"
+        }
+      ],
+      "compatibilityLimit": "RECORDED_BASE_LOCAL_OWNER_CUTS; FINAL_LINUX_AND_JOINED_R_NOT_VERIFIED"
+    },
+    {
+      "path": "finnor-os/apps/worker/src/index.ts",
+      "ownerBoundary": "SERIAL_RUNTIME_AND_JOBS",
+      "preimageSha256": "b296d14ed4afc261cc6cac9b6a12b911df25a96546a688f30361b4e43d763ba0",
+      "postimageSha256": "feabba730fc4f4511dffd521872ac57c6af82393eae07a0ec15bd02a7cb0275c",
+      "contractRevisions": [
+        "run_incentive_rule_synthesis_v1",
+        "ORIGINAL_JOB_PROTOCOLS_RETAINED"
+      ],
+      "changedReadersWritersJobs": [
+        "createWorker",
+        "WorkerQueue.tick",
+        "runIncentiveRuleSynthesisJob",
+        "original registered handlers"
+      ],
+      "dependencyOrder": [
+        "R3_OWNED_GROUP",
+        "THIS_SHARED_INTEGRATION_GROUP"
+      ],
+      "decisiveEvidence": [
+        {
+          "path": "owner-2026-10-09T22-45-55/results.json",
+          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+        },
+        {
+          "path": "owner-2026-10-09T22-55-59/results.json",
+          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140"
+        },
+        {
+          "path": "owner-2026-10-09T23-22-42/results.json",
+          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787"
+        },
+        {
+          "path": "owner-2026-10-09T23-28-33/results.json",
+          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1"
+        },
+        {
+          "path": "owner-2026-10-10T00-51-10/results.json",
+          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335"
+        },
+        {
+          "path": "installed-runtime-01/results.json",
+          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4"
+        }
+      ],
+      "compatibilityLimit": "RECORDED_BASE_LOCAL_OWNER_CUTS; FINAL_LINUX_AND_JOINED_R_NOT_VERIFIED"
+    },
+    {
+      "path": "finnor-os/openapi.json",
+      "ownerBoundary": "GENERATED_INTERFACE_CONTRACT",
+      "preimageSha256": "4f3300fbd63508cc6daedecab6a3b66ab84c9dbaaa9597a017323a2c221d1f96",
+      "postimageSha256": "ce7dcaf9e6b3623b7e693d9a0099243e0fbce613f4f7cdd8086418cb1cd62798",
+      "contractRevisions": [
+        "finnor.elicitation-protocol.v1",
+        "R3OwnerOperationSchemas",
+        "357_HTTP_68_PLANNER_OPERATIONS"
+      ],
+      "changedReadersWritersJobs": [
+        "generate-openapi.ts R3 exact output/owner leaves",
+        "generate-capability-manifest.mjs owner operation inventory",
+        "generate-openapi-client.mjs source-derived clients"
+      ],
+      "dependencyOrder": [
+        "R3_OWNED_GROUP",
+        "THIS_SHARED_INTEGRATION_GROUP"
+      ],
+      "decisiveEvidence": [
+        {
+          "path": "owner-2026-10-09T22-45-55/results.json",
+          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+        },
+        {
+          "path": "owner-2026-10-09T22-55-59/results.json",
+          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140"
+        },
+        {
+          "path": "owner-2026-10-09T23-22-42/results.json",
+          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787"
+        },
+        {
+          "path": "owner-2026-10-09T23-28-33/results.json",
+          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1"
+        },
+        {
+          "path": "owner-2026-10-10T00-51-10/results.json",
+          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335"
+        },
+        {
+          "path": "installed-runtime-01/results.json",
+          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4"
+        }
+      ],
+      "compatibilityLimit": "RECORDED_BASE_LOCAL_OWNER_CUTS; FINAL_LINUX_AND_JOINED_R_NOT_VERIFIED"
+    },
+    {
+      "path": "finnor-os/packages/db/compute-contract.ts",
+      "ownerBoundary": "SERIAL_SCHEMA_AND_QUEUE",
+      "preimageSha256": "cb47275d73a580828473dfc67df01ae0bfd499f6565fe2f23ec2f910267bb151",
+      "postimageSha256": "1ea9468fe6192130a87553fee14aa3f87767c8e0023b825df01c6358dcbe2c30",
+      "contractRevisions": [
+        "run_incentive_rule_synthesis_v1"
+      ],
+      "changedReadersWritersJobs": [
+        "COMPUTE_BOUND_JOB_TYPES",
+        "run_incentive_rule_synthesis_v1"
+      ],
+      "dependencyOrder": [
+        "R3_OWNED_GROUP",
+        "THIS_SHARED_INTEGRATION_GROUP"
+      ],
+      "decisiveEvidence": [
+        {
+          "path": "owner-2026-10-09T22-45-55/results.json",
+          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+        },
+        {
+          "path": "owner-2026-10-09T22-55-59/results.json",
+          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140"
+        },
+        {
+          "path": "owner-2026-10-09T23-22-42/results.json",
+          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787"
+        },
+        {
+          "path": "owner-2026-10-09T23-28-33/results.json",
+          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1"
+        },
+        {
+          "path": "owner-2026-10-10T00-51-10/results.json",
+          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335"
+        },
+        {
+          "path": "installed-runtime-01/results.json",
+          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4"
+        }
+      ],
+      "compatibilityLimit": "RECORDED_BASE_LOCAL_OWNER_CUTS; FINAL_LINUX_AND_JOINED_R_NOT_VERIFIED"
+    },
+    {
+      "path": "finnor-os/packages/db/migration-head.ts",
+      "ownerBoundary": "SERIAL_SCHEMA_AND_QUEUE",
+      "preimageSha256": "5e9c6f73fe7012e23d67aa6486921127ebd73e637bd6f3952dfa12ffb4c60cd2",
+      "postimageSha256": "4ccce5646b3aaa26e5cdcef9ae489777b2fb7b217c704fb196f1987e5a3711bb",
+      "contractRevisions": [
+        "0172_r3_incentive_rule_synthesis.sql_BASE_LOCAL_ONLY"
+      ],
+      "changedReadersWritersJobs": [
+        "migrate",
+        "CURRENT_MIGRATION_HEAD",
+        "MIGRATIONS",
+        "WorkerQueue.assertReady",
+        "R3 SQL attempts/events/objects"
+      ],
+      "dependencyOrder": [
+        "R3_OWNED_GROUP",
+        "THIS_SHARED_INTEGRATION_GROUP"
+      ],
+      "decisiveEvidence": [
+        {
+          "path": "owner-2026-10-09T22-45-55/results.json",
+          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+        },
+        {
+          "path": "owner-2026-10-09T22-55-59/results.json",
+          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140"
+        },
+        {
+          "path": "owner-2026-10-09T23-22-42/results.json",
+          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787"
+        },
+        {
+          "path": "owner-2026-10-09T23-28-33/results.json",
+          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1"
+        },
+        {
+          "path": "owner-2026-10-10T00-51-10/results.json",
+          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335"
+        },
+        {
+          "path": "installed-runtime-01/results.json",
+          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4"
+        }
+      ],
+      "compatibilityLimit": "RECORDED_BASE_LOCAL_OWNER_CUTS; FINAL_LINUX_AND_JOINED_R_NOT_VERIFIED"
+    },
+    {
+      "path": "finnor-os/packages/db/migrations-bundle.ts",
+      "ownerBoundary": "SERIAL_SCHEMA_AND_QUEUE",
+      "preimageSha256": "313ca6baef9a44b219ae042b3524bce69d181f844868948ac771ad00353cb633",
+      "postimageSha256": "177c629b5c02c4fae086d6be11c60560d21040f9b13936a1c1ad1657b01458a1",
+      "contractRevisions": [
+        "0172_r3_incentive_rule_synthesis.sql_BASE_LOCAL_ONLY"
+      ],
+      "changedReadersWritersJobs": [
+        "migrate",
+        "CURRENT_MIGRATION_HEAD",
+        "MIGRATIONS",
+        "WorkerQueue.assertReady",
+        "R3 SQL attempts/events/objects"
+      ],
+      "dependencyOrder": [
+        "R3_OWNED_GROUP",
+        "THIS_SHARED_INTEGRATION_GROUP"
+      ],
+      "decisiveEvidence": [
+        {
+          "path": "owner-2026-10-09T22-45-55/results.json",
+          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+        },
+        {
+          "path": "owner-2026-10-09T22-55-59/results.json",
+          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140"
+        },
+        {
+          "path": "owner-2026-10-09T23-22-42/results.json",
+          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787"
+        },
+        {
+          "path": "owner-2026-10-09T23-28-33/results.json",
+          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1"
+        },
+        {
+          "path": "owner-2026-10-10T00-51-10/results.json",
+          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335"
+        },
+        {
+          "path": "installed-runtime-01/results.json",
+          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4"
+        }
+      ],
+      "compatibilityLimit": "RECORDED_BASE_LOCAL_OWNER_CUTS; FINAL_LINUX_AND_JOINED_R_NOT_VERIFIED"
+    },
+    {
+      "path": "finnor-os/packages/db/migrations/0172_r3_incentive_rule_synthesis.sql",
+      "ownerBoundary": "SERIAL_SCHEMA_AND_QUEUE",
+      "preimageSha256": null,
+      "postimageSha256": "61749dea7a78cbde76e8ac7936afa49ab9893ffa56d334a067c934223870cfe3",
+      "contractRevisions": [
+        "0172_r3_incentive_rule_synthesis.sql_BASE_LOCAL_ONLY"
+      ],
+      "changedReadersWritersJobs": [
+        "migrate",
+        "CURRENT_MIGRATION_HEAD",
+        "MIGRATIONS",
+        "WorkerQueue.assertReady",
+        "R3 SQL attempts/events/objects"
+      ],
+      "dependencyOrder": [
+        "R3_OWNED_GROUP",
+        "THIS_SHARED_INTEGRATION_GROUP"
+      ],
+      "decisiveEvidence": [
+        {
+          "path": "owner-2026-10-09T22-45-55/results.json",
+          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+        },
+        {
+          "path": "owner-2026-10-09T22-55-59/results.json",
+          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140"
+        },
+        {
+          "path": "owner-2026-10-09T23-22-42/results.json",
+          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787"
+        },
+        {
+          "path": "owner-2026-10-09T23-28-33/results.json",
+          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1"
+        },
+        {
+          "path": "owner-2026-10-10T00-51-10/results.json",
+          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335"
+        },
+        {
+          "path": "installed-runtime-01/results.json",
+          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4"
+        }
+      ],
+      "compatibilityLimit": "RECORDED_BASE_LOCAL_OWNER_CUTS; FINAL_LINUX_AND_JOINED_R_NOT_VERIFIED"
+    },
+    {
+      "path": "finnor-os/packages/epistemic-runtime/src/allocation-checker.ts",
+      "ownerBoundary": "S5",
+      "preimageSha256": "072908588b2d9efae14fb1f9c11f7f9bc0ec7503d2b6b0dca4a014f051504849",
+      "postimageSha256": "b930d0961c4c6b61c1954027fd5aa26559ec11481de2deecfab86c22a1cad2c0",
+      "contractRevisions": [
+        "CANONICAL_INTERNAL_r3q_EXACT_DERIVED_QUANTITY"
+      ],
+      "changedReadersWritersJobs": [
+        "verifyCanonicalAllocation",
+        "allocationQuantity"
+      ],
+      "dependencyOrder": [
+        "R3_OWNED_GROUP",
+        "THIS_SHARED_INTEGRATION_GROUP"
+      ],
+      "decisiveEvidence": [
+        {
+          "path": "owner-2026-10-09T22-45-55/results.json",
+          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+        },
+        {
+          "path": "owner-2026-10-09T22-55-59/results.json",
+          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140"
+        },
+        {
+          "path": "owner-2026-10-09T23-22-42/results.json",
+          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787"
+        },
+        {
+          "path": "owner-2026-10-09T23-28-33/results.json",
+          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1"
+        },
+        {
+          "path": "owner-2026-10-10T00-51-10/results.json",
+          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335"
+        },
+        {
+          "path": "installed-runtime-01/results.json",
+          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4"
+        }
+      ],
+      "compatibilityLimit": "RECORDED_BASE_LOCAL_OWNER_CUTS; FINAL_LINUX_AND_JOINED_R_NOT_VERIFIED"
+    },
+    {
+      "path": "finnor-os/packages/epistemic-runtime/src/allocation-contracts.ts",
+      "ownerBoundary": "S5",
+      "preimageSha256": "49905de9c7afdabbcb39aaa745d56c3a1b29d75a73d80286af7c7298036be08c",
+      "postimageSha256": "676d2a51eb4e8cf69776c8a39a5e13dd34e8e4b6fe6b26ccb20e62e92101cffc",
+      "contractRevisions": [
+        "FINITE_DECIMAL_OR_CANONICAL_DERIVED_r3q"
+      ],
+      "changedReadersWritersJobs": [
+        "allocationQuantity",
+        "allocationDecimal",
+        "canonical S5 quantity readers/writers"
+      ],
+      "dependencyOrder": [
+        "R3_OWNED_GROUP",
+        "THIS_SHARED_INTEGRATION_GROUP"
+      ],
+      "decisiveEvidence": [
+        {
+          "path": "owner-2026-10-09T22-45-55/results.json",
+          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+        },
+        {
+          "path": "owner-2026-10-09T22-55-59/results.json",
+          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140"
+        },
+        {
+          "path": "owner-2026-10-09T23-22-42/results.json",
+          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787"
+        },
+        {
+          "path": "owner-2026-10-09T23-28-33/results.json",
+          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1"
+        },
+        {
+          "path": "owner-2026-10-10T00-51-10/results.json",
+          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335"
+        },
+        {
+          "path": "installed-runtime-01/results.json",
+          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4"
+        }
+      ],
+      "compatibilityLimit": "RECORDED_BASE_LOCAL_OWNER_CUTS; FINAL_LINUX_AND_JOINED_R_NOT_VERIFIED"
+    },
+    {
+      "path": "finnor-os/packages/epistemic-runtime/src/index.ts",
+      "ownerBoundary": "SHARED_EXPORT_OR_PRIVATE_ARTIFACT_EXCLUSION",
+      "preimageSha256": "2ae6153e823fb8051c274cfed4b0aeb4ad6fae775e83afa0933e0c6bc875fcd3",
+      "postimageSha256": "9187f691074de9366008bea4ff45c2e566bb85f43488819716e56426d73a7133",
+      "contractRevisions": [
+        "finnor.elicitation-protocol.v1"
+      ],
+      "changedReadersWritersJobs": [
+        "shared-types or epistemic-runtime exports",
+        "ElicitationProtocol exact quantity consumers"
+      ],
+      "dependencyOrder": [
+        "R3_OWNED_GROUP",
+        "THIS_SHARED_INTEGRATION_GROUP"
+      ],
+      "decisiveEvidence": [
+        {
+          "path": "owner-2026-10-09T22-45-55/results.json",
+          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+        },
+        {
+          "path": "owner-2026-10-09T22-55-59/results.json",
+          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140"
+        },
+        {
+          "path": "owner-2026-10-09T23-22-42/results.json",
+          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787"
+        },
+        {
+          "path": "owner-2026-10-09T23-28-33/results.json",
+          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1"
+        },
+        {
+          "path": "owner-2026-10-10T00-51-10/results.json",
+          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335"
+        },
+        {
+          "path": "installed-runtime-01/results.json",
+          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4"
+        }
+      ],
+      "compatibilityLimit": "RECORDED_BASE_LOCAL_OWNER_CUTS; FINAL_LINUX_AND_JOINED_R_NOT_VERIFIED"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/enterprise-allocation.ts",
+      "ownerBoundary": "S5",
+      "preimageSha256": "64a584dcfe61d7666f15966cebec2572d0a51e4db4c06c975f6f306e1eba7138",
+      "postimageSha256": "75dc105868433686ed2d9115441c56952a0b2e20ee6630c57f3e9a54f77688fc",
+      "contractRevisions": [
+        "CANONICAL_S5_DERIVED_r3q_NUMERATOR_DENOMINATOR"
+      ],
+      "changedReadersWritersJobs": [
+        "clearEnterprisePortfolio",
+        "validateEnterpriseAllocation",
+        "consumeEnterpriseAllocation",
+        "readR3Allocation",
+        "validateR3Allocation",
+        "consumeR3Allocation"
+      ],
+      "dependencyOrder": [
+        "R3_OWNED_GROUP",
+        "THIS_SHARED_INTEGRATION_GROUP"
+      ],
+      "decisiveEvidence": [
+        {
+          "path": "owner-2026-10-09T22-45-55/results.json",
+          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+        },
+        {
+          "path": "owner-2026-10-09T22-55-59/results.json",
+          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140"
+        },
+        {
+          "path": "owner-2026-10-09T23-22-42/results.json",
+          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787"
+        },
+        {
+          "path": "owner-2026-10-09T23-28-33/results.json",
+          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1"
+        },
+        {
+          "path": "owner-2026-10-10T00-51-10/results.json",
+          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335"
+        },
+        {
+          "path": "installed-runtime-01/results.json",
+          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4"
+        }
+      ],
+      "compatibilityLimit": "RECORDED_BASE_LOCAL_OWNER_CUTS; FINAL_LINUX_AND_JOINED_R_NOT_VERIFIED"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/enterprise-control.ts",
+      "ownerBoundary": "S4",
+      "preimageSha256": "1ad8e4afe110b39cdeb5c7d1bc3d6568b3d3da3a7cfbce71c176e0ab051efab6",
+      "postimageSha256": "2560534a788a37be4c88125fe5f6641ef2fbf646d120b501d1bf9976653714cb",
+      "contractRevisions": [
+        "r3-elicitation-use-v1"
+      ],
+      "changedReadersWritersJobs": [
+        "readEnterpriseContingentPolicy",
+        "chooseEnterpriseControlBranch",
+        "readR3UsePolicy",
+        "chooseR3ControlBranch"
+      ],
+      "dependencyOrder": [
+        "R3_OWNED_GROUP",
+        "THIS_SHARED_INTEGRATION_GROUP"
+      ],
+      "decisiveEvidence": [
+        {
+          "path": "owner-2026-10-09T22-45-55/results.json",
+          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+        },
+        {
+          "path": "owner-2026-10-09T22-55-59/results.json",
+          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140"
+        },
+        {
+          "path": "owner-2026-10-09T23-22-42/results.json",
+          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787"
+        },
+        {
+          "path": "owner-2026-10-09T23-28-33/results.json",
+          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1"
+        },
+        {
+          "path": "owner-2026-10-10T00-51-10/results.json",
+          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335"
+        },
+        {
+          "path": "installed-runtime-01/results.json",
+          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4"
+        }
+      ],
+      "compatibilityLimit": "RECORDED_BASE_LOCAL_OWNER_CUTS; FINAL_LINUX_AND_JOINED_R_NOT_VERIFIED"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/enterprise-interventions.ts",
+      "ownerBoundary": "S3",
+      "preimageSha256": "75a8e46c8543ae494268b28fb65240d5d6b6420fd024183a0782d4a4774c63f3",
+      "postimageSha256": "37c8761644dcc6cc40e49d57a56ce78061d8611997510db1c815b09d0b684b26",
+      "contractRevisions": [
+        "s3-finite-preference-v1"
+      ],
+      "changedReadersWritersJobs": [
+        "resolveEnterpriseInterventionModelForControl",
+        "resolveR3FinitePreferenceModel"
+      ],
+      "dependencyOrder": [
+        "R3_OWNED_GROUP",
+        "THIS_SHARED_INTEGRATION_GROUP"
+      ],
+      "decisiveEvidence": [
+        {
+          "path": "owner-2026-10-09T22-45-55/results.json",
+          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+        },
+        {
+          "path": "owner-2026-10-09T22-55-59/results.json",
+          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140"
+        },
+        {
+          "path": "owner-2026-10-09T23-22-42/results.json",
+          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787"
+        },
+        {
+          "path": "owner-2026-10-09T23-28-33/results.json",
+          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1"
+        },
+        {
+          "path": "owner-2026-10-10T00-51-10/results.json",
+          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335"
+        },
+        {
+          "path": "installed-runtime-01/results.json",
+          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4"
+        }
+      ],
+      "compatibilityLimit": "RECORDED_BASE_LOCAL_OWNER_CUTS; FINAL_LINUX_AND_JOINED_R_NOT_VERIFIED"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/enterprise-obligations.ts",
+      "ownerBoundary": "S6",
+      "preimageSha256": "a9b73f6e3ee16928ad994fed2ae935955c32f27b7af717a1c456e19c96a2ea6d",
+      "postimageSha256": "a1c3cf807424edaf313af7aed86af59bc78d274b98fc4012b4afb34a623ab9c0",
+      "contractRevisions": [
+        "finnor.s6.r3-owner-handoff.v1",
+        "finnor.s6.r3-operation-admission-packet.v1"
+      ],
+      "changedReadersWritersJobs": [
+        "prepareEnterpriseDurableObligation",
+        "prepareR3OwnerHandoff",
+        "compileR3OperationPacket"
+      ],
+      "dependencyOrder": [
+        "R3_OWNED_GROUP",
+        "THIS_SHARED_INTEGRATION_GROUP"
+      ],
+      "decisiveEvidence": [
+        {
+          "path": "owner-2026-10-09T22-45-55/results.json",
+          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+        },
+        {
+          "path": "owner-2026-10-09T22-55-59/results.json",
+          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140"
+        },
+        {
+          "path": "owner-2026-10-09T23-22-42/results.json",
+          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787"
+        },
+        {
+          "path": "owner-2026-10-09T23-28-33/results.json",
+          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1"
+        },
+        {
+          "path": "owner-2026-10-10T00-51-10/results.json",
+          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335"
+        },
+        {
+          "path": "installed-runtime-01/results.json",
+          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4"
+        }
+      ],
+      "compatibilityLimit": "RECORDED_BASE_LOCAL_OWNER_CUTS; FINAL_LINUX_AND_JOINED_R_NOT_VERIFIED"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/native-experience-transport.ts",
+      "ownerBoundary": "CANONICAL_EXPERIENCE_LEDGER_ORIGIN_TRANSPORT",
+      "preimageSha256": "7ca59e3a7ce6734d8d0d020a56397b1efbfa0b4ef4aee8f0d2bd125d58a235be",
+      "postimageSha256": "0b4b1e629eed531ea12c5571a26bca64d934c94685df1f41e87c26bfd11a1b67",
+      "contractRevisions": [
+        "EXISTING_SIGNED_ORIGIN_CUT_PAYLOAD_AND_MEMBER_PREIMAGE"
+      ],
+      "changedReadersWritersJobs": [
+        "enqueueNativeReferences",
+        "signed-origin verification",
+        "enqueueNativePreparedEvents"
+      ],
+      "dependencyOrder": [
+        "R3_OWNED_GROUP",
+        "THIS_SHARED_INTEGRATION_GROUP"
+      ],
+      "decisiveEvidence": [
+        {
+          "path": "owner-2026-10-09T22-45-55/results.json",
+          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+        },
+        {
+          "path": "owner-2026-10-09T22-55-59/results.json",
+          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140"
+        },
+        {
+          "path": "owner-2026-10-09T23-22-42/results.json",
+          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787"
+        },
+        {
+          "path": "owner-2026-10-09T23-28-33/results.json",
+          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1"
+        },
+        {
+          "path": "owner-2026-10-10T00-51-10/results.json",
+          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335"
+        },
+        {
+          "path": "installed-runtime-01/results.json",
+          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4"
+        }
+      ],
+      "compatibilityLimit": "RECORDED_BASE_LOCAL_OWNER_CUTS; FINAL_LINUX_AND_JOINED_R_NOT_VERIFIED"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/obligation-contracts.ts",
+      "ownerBoundary": "S6",
+      "preimageSha256": "0ab6d79e726a39eac06bf68541ee84650b47e4e2d813e83bf38add0a690660b8",
+      "postimageSha256": "de422e06fca67aec657fe1697517f0c8a1a262d20f938a87ca15c21146d57ab8",
+      "contractRevisions": [
+        "finnor.s6.r3-owner-handoff.v1",
+        "finnor.s6.r3-operation-admission-packet.v1"
+      ],
+      "changedReadersWritersJobs": [
+        "prepareEnterpriseDurableObligation",
+        "prepareR3OwnerHandoff",
+        "compileR3OperationPacket"
+      ],
+      "dependencyOrder": [
+        "R3_OWNED_GROUP",
+        "THIS_SHARED_INTEGRATION_GROUP"
+      ],
+      "decisiveEvidence": [
+        {
+          "path": "owner-2026-10-09T22-45-55/results.json",
+          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+        },
+        {
+          "path": "owner-2026-10-09T22-55-59/results.json",
+          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140"
+        },
+        {
+          "path": "owner-2026-10-09T23-22-42/results.json",
+          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787"
+        },
+        {
+          "path": "owner-2026-10-09T23-28-33/results.json",
+          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1"
+        },
+        {
+          "path": "owner-2026-10-10T00-51-10/results.json",
+          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335"
+        },
+        {
+          "path": "installed-runtime-01/results.json",
+          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4"
+        }
+      ],
+      "compatibilityLimit": "RECORDED_BASE_LOCAL_OWNER_CUTS; FINAL_LINUX_AND_JOINED_R_NOT_VERIFIED"
+    },
+    {
+      "path": "finnor-os/packages/shared-types/src/allocation.ts",
+      "ownerBoundary": "S5",
+      "preimageSha256": "17b69fa05eeab40f2b5d844634e4d03583f557f9a1fcafd0b6e27294dc53477c",
+      "postimageSha256": "1166ab206a807b532c77a52ddb5ba48392a66c3e29d804b17e239c992be6d4f7",
+      "contractRevisions": [
+        "FINITE_DECIMAL_OR_CANONICAL_DERIVED_r3q"
+      ],
+      "changedReadersWritersJobs": [
+        "allocationQuantity",
+        "allocationDecimal",
+        "canonical S5 quantity readers/writers"
+      ],
+      "dependencyOrder": [
+        "R3_OWNED_GROUP",
+        "THIS_SHARED_INTEGRATION_GROUP"
+      ],
+      "decisiveEvidence": [
+        {
+          "path": "owner-2026-10-09T22-45-55/results.json",
+          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+        },
+        {
+          "path": "owner-2026-10-09T22-55-59/results.json",
+          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140"
+        },
+        {
+          "path": "owner-2026-10-09T23-22-42/results.json",
+          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787"
+        },
+        {
+          "path": "owner-2026-10-09T23-28-33/results.json",
+          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1"
+        },
+        {
+          "path": "owner-2026-10-10T00-51-10/results.json",
+          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335"
+        },
+        {
+          "path": "installed-runtime-01/results.json",
+          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4"
+        }
+      ],
+      "compatibilityLimit": "RECORDED_BASE_LOCAL_OWNER_CUTS; FINAL_LINUX_AND_JOINED_R_NOT_VERIFIED"
+    },
+    {
+      "path": "finnor-os/packages/shared-types/src/index.ts",
+      "ownerBoundary": "SHARED_EXPORT_OR_PRIVATE_ARTIFACT_EXCLUSION",
+      "preimageSha256": "bd58a6c67a633cb52442db71a7668d767e82111e742563c5b675da8a4be05c25",
+      "postimageSha256": "5c50a3178cf6a2d68177eb2d1a9ccb96e56627c0f2e8c71b64eabf85ba165f7a",
+      "contractRevisions": [
+        "finnor.elicitation-protocol.v1"
+      ],
+      "changedReadersWritersJobs": [
+        "shared-types or epistemic-runtime exports",
+        "ElicitationProtocol exact quantity consumers"
+      ],
+      "dependencyOrder": [
+        "R3_OWNED_GROUP",
+        "THIS_SHARED_INTEGRATION_GROUP"
+      ],
+      "decisiveEvidence": [
+        {
+          "path": "owner-2026-10-09T22-45-55/results.json",
+          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+        },
+        {
+          "path": "owner-2026-10-09T22-55-59/results.json",
+          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140"
+        },
+        {
+          "path": "owner-2026-10-09T23-22-42/results.json",
+          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787"
+        },
+        {
+          "path": "owner-2026-10-09T23-28-33/results.json",
+          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1"
+        },
+        {
+          "path": "owner-2026-10-10T00-51-10/results.json",
+          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335"
+        },
+        {
+          "path": "installed-runtime-01/results.json",
+          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4"
+        }
+      ],
+      "compatibilityLimit": "RECORDED_BASE_LOCAL_OWNER_CUTS; FINAL_LINUX_AND_JOINED_R_NOT_VERIFIED"
+    },
+    {
+      "path": "finnor-os/scripts/generate-openapi.ts",
+      "ownerBoundary": "GENERATED_INTERFACE_CONTRACT",
+      "preimageSha256": "e4530cf4b4c608d97be41ec987b963a00c7d4044632ad5bd443b30ccfef2d584",
+      "postimageSha256": "0ade6d7a0e81188c4902f896b2d27009fcbff2e1476b15196d44edaa06babba8",
+      "contractRevisions": [
+        "finnor.elicitation-protocol.v1",
+        "R3OwnerOperationSchemas",
+        "357_HTTP_68_PLANNER_OPERATIONS"
+      ],
+      "changedReadersWritersJobs": [
+        "generate-openapi.ts R3 exact output/owner leaves",
+        "generate-capability-manifest.mjs owner operation inventory",
+        "generate-openapi-client.mjs source-derived clients"
+      ],
+      "dependencyOrder": [
+        "R3_OWNED_GROUP",
+        "THIS_SHARED_INTEGRATION_GROUP"
+      ],
+      "decisiveEvidence": [
+        {
+          "path": "owner-2026-10-09T22-45-55/results.json",
+          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+        },
+        {
+          "path": "owner-2026-10-09T22-55-59/results.json",
+          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140"
+        },
+        {
+          "path": "owner-2026-10-09T23-22-42/results.json",
+          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787"
+        },
+        {
+          "path": "owner-2026-10-09T23-28-33/results.json",
+          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1"
+        },
+        {
+          "path": "owner-2026-10-10T00-51-10/results.json",
+          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335"
+        },
+        {
+          "path": "installed-runtime-01/results.json",
+          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4"
+        }
+      ],
+      "compatibilityLimit": "RECORDED_BASE_LOCAL_OWNER_CUTS; FINAL_LINUX_AND_JOINED_R_NOT_VERIFIED"
+    },
+    {
+      "path": "finnor-os/scripts/s6/governed-dispatch-proof.mts",
+      "ownerBoundary": "S6",
+      "preimageSha256": "429d4f49cfd5ae0690f22df3cec08511166e845f9edb4e52b9129477537d7c21",
+      "postimageSha256": "6aeb7f319204639c3c02f1b727cacdb2a7b9939cbe6264d0eccf5f8c8ff33a6c",
+      "contractRevisions": [
+        "UNCHANGED_json-field-replace-v1"
+      ],
+      "changedReadersWritersJobs": [
+        "disposable signed authority callback",
+        "ordinary worker URL override",
+        "governed-dispatch proof"
+      ],
+      "dependencyOrder": [
+        "R3_OWNED_GROUP",
+        "THIS_SHARED_INTEGRATION_GROUP"
+      ],
+      "decisiveEvidence": [
+        {
+          "path": "owner-2026-10-09T22-45-55/results.json",
+          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+        },
+        {
+          "path": "owner-2026-10-09T22-55-59/results.json",
+          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140"
+        },
+        {
+          "path": "owner-2026-10-09T23-22-42/results.json",
+          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787"
+        },
+        {
+          "path": "owner-2026-10-09T23-28-33/results.json",
+          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1"
+        },
+        {
+          "path": "owner-2026-10-10T00-51-10/results.json",
+          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335"
+        },
+        {
+          "path": "installed-runtime-01/results.json",
+          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4"
+        }
+      ],
+      "compatibilityLimit": "RECORDED_BASE_LOCAL_OWNER_CUTS; FINAL_LINUX_AND_JOINED_R_NOT_VERIFIED"
+    },
+    {
+      "path": "scripts/centropy/generate-capability-manifest.mjs",
+      "ownerBoundary": "GENERATED_INTERFACE_CONTRACT",
+      "preimageSha256": "3e0b0d6a791a4662a63e423a288d6b99dff2b573cc0cac497ad2e01117eab842",
+      "postimageSha256": "6e6cb19723929dd0eb69b04ec3f0a83649baa51f9d28c9dd4bd582ca9b4fc3f8",
+      "contractRevisions": [
+        "finnor.elicitation-protocol.v1",
+        "R3OwnerOperationSchemas",
+        "357_HTTP_68_PLANNER_OPERATIONS"
+      ],
+      "changedReadersWritersJobs": [
+        "generate-openapi.ts R3 exact output/owner leaves",
+        "generate-capability-manifest.mjs owner operation inventory",
+        "generate-openapi-client.mjs source-derived clients"
+      ],
+      "dependencyOrder": [
+        "R3_OWNED_GROUP",
+        "THIS_SHARED_INTEGRATION_GROUP"
+      ],
+      "decisiveEvidence": [
+        {
+          "path": "owner-2026-10-09T22-45-55/results.json",
+          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+        },
+        {
+          "path": "owner-2026-10-09T22-55-59/results.json",
+          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140"
+        },
+        {
+          "path": "owner-2026-10-09T23-22-42/results.json",
+          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787"
+        },
+        {
+          "path": "owner-2026-10-09T23-28-33/results.json",
+          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1"
+        },
+        {
+          "path": "owner-2026-10-10T00-51-10/results.json",
+          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335"
+        },
+        {
+          "path": "installed-runtime-01/results.json",
+          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4"
+        }
+      ],
+      "compatibilityLimit": "RECORDED_BASE_LOCAL_OWNER_CUTS; FINAL_LINUX_AND_JOINED_R_NOT_VERIFIED"
+    },
+    {
+      "path": "src/components/centropy/canvas/CapitalProgramPanel.tsx",
+      "ownerBoundary": "CAPITAL_WORK",
+      "preimageSha256": "e2b4f5d03b2ed1705807c2f2f81fb2c5ca09daec08c1c592ce100ad1ee91370e",
+      "postimageSha256": "98b6694b0da8ac66f5704ce3286464456be7f5bf63fc46ff927de97eb26add84",
+      "contractRevisions": [
+        "finnor.r3.work-review.v1"
+      ],
+      "changedReadersWritersJobs": [
+        "CapitalProgramPanel",
+        "ElicitationProtocolReview",
+        "existing Capital controls"
+      ],
+      "dependencyOrder": [
+        "R3_OWNED_GROUP",
+        "THIS_SHARED_INTEGRATION_GROUP"
+      ],
+      "decisiveEvidence": [
+        {
+          "path": "owner-2026-10-09T22-45-55/results.json",
+          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+        },
+        {
+          "path": "owner-2026-10-09T22-55-59/results.json",
+          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140"
+        },
+        {
+          "path": "owner-2026-10-09T23-22-42/results.json",
+          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787"
+        },
+        {
+          "path": "owner-2026-10-09T23-28-33/results.json",
+          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1"
+        },
+        {
+          "path": "owner-2026-10-10T00-51-10/results.json",
+          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335"
+        },
+        {
+          "path": "installed-runtime-01/results.json",
+          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4"
+        }
+      ],
+      "compatibilityLimit": "RECORDED_BASE_LOCAL_OWNER_CUTS; FINAL_LINUX_AND_JOINED_R_NOT_VERIFIED"
+    },
+    {
+      "path": "src/lib/centropy/capability-manifest.generated.json",
+      "ownerBoundary": "GENERATED_INTERFACE_CONTRACT",
+      "preimageSha256": "60d1cbc34d4d5a928ee88274452a404b2f96f636d40087e4edc4891e7333ff52",
+      "postimageSha256": "387ab5a39d8bf08472a1b635203cb34abb24c82dbb3c787931879a2d8c1e9862",
+      "contractRevisions": [
+        "finnor.elicitation-protocol.v1",
+        "R3OwnerOperationSchemas",
+        "357_HTTP_68_PLANNER_OPERATIONS"
+      ],
+      "changedReadersWritersJobs": [
+        "generate-openapi.ts R3 exact output/owner leaves",
+        "generate-capability-manifest.mjs owner operation inventory",
+        "generate-openapi-client.mjs source-derived clients"
+      ],
+      "dependencyOrder": [
+        "R3_OWNED_GROUP",
+        "THIS_SHARED_INTEGRATION_GROUP"
+      ],
+      "decisiveEvidence": [
+        {
+          "path": "owner-2026-10-09T22-45-55/results.json",
+          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+        },
+        {
+          "path": "owner-2026-10-09T22-55-59/results.json",
+          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140"
+        },
+        {
+          "path": "owner-2026-10-09T23-22-42/results.json",
+          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787"
+        },
+        {
+          "path": "owner-2026-10-09T23-28-33/results.json",
+          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1"
+        },
+        {
+          "path": "owner-2026-10-10T00-51-10/results.json",
+          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335"
+        },
+        {
+          "path": "installed-runtime-01/results.json",
+          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4"
+        }
+      ],
+      "compatibilityLimit": "RECORDED_BASE_LOCAL_OWNER_CUTS; FINAL_LINUX_AND_JOINED_R_NOT_VERIFIED"
+    },
+    {
+      "path": "src/lib/centropy/openapi-types.ts",
+      "ownerBoundary": "GENERATED_INTERFACE_CONTRACT",
+      "preimageSha256": "f5eb415cff242782e52eac4caa758812e10fc166b73f22ea9a23e7a822c0727f",
+      "postimageSha256": "ddb9f8b423c7d0e67c818c20b3d16791dbced11a4e1b7cbeee984af3857bb26a",
+      "contractRevisions": [
+        "finnor.elicitation-protocol.v1",
+        "R3OwnerOperationSchemas",
+        "357_HTTP_68_PLANNER_OPERATIONS"
+      ],
+      "changedReadersWritersJobs": [
+        "generate-openapi.ts R3 exact output/owner leaves",
+        "generate-capability-manifest.mjs owner operation inventory",
+        "generate-openapi-client.mjs source-derived clients"
+      ],
+      "dependencyOrder": [
+        "R3_OWNED_GROUP",
+        "THIS_SHARED_INTEGRATION_GROUP"
+      ],
+      "decisiveEvidence": [
+        {
+          "path": "owner-2026-10-09T22-45-55/results.json",
+          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+        },
+        {
+          "path": "owner-2026-10-09T22-55-59/results.json",
+          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140"
+        },
+        {
+          "path": "owner-2026-10-09T23-22-42/results.json",
+          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787"
+        },
+        {
+          "path": "owner-2026-10-09T23-28-33/results.json",
+          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1"
+        },
+        {
+          "path": "owner-2026-10-10T00-51-10/results.json",
+          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335"
+        },
+        {
+          "path": "installed-runtime-01/results.json",
+          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4"
+        }
+      ],
+      "compatibilityLimit": "RECORDED_BASE_LOCAL_OWNER_CUTS; FINAL_LINUX_AND_JOINED_R_NOT_VERIFIED"
+    },
+    {
+      "path": "src/lib/jarvis/openapi-types.ts",
+      "ownerBoundary": "GENERATED_INTERFACE_CONTRACT",
+      "preimageSha256": "f5eb415cff242782e52eac4caa758812e10fc166b73f22ea9a23e7a822c0727f",
+      "postimageSha256": "ddb9f8b423c7d0e67c818c20b3d16791dbced11a4e1b7cbeee984af3857bb26a",
+      "contractRevisions": [
+        "finnor.elicitation-protocol.v1",
+        "R3OwnerOperationSchemas",
+        "357_HTTP_68_PLANNER_OPERATIONS"
+      ],
+      "changedReadersWritersJobs": [
+        "generate-openapi.ts R3 exact output/owner leaves",
+        "generate-capability-manifest.mjs owner operation inventory",
+        "generate-openapi-client.mjs source-derived clients"
+      ],
+      "dependencyOrder": [
+        "R3_OWNED_GROUP",
+        "THIS_SHARED_INTEGRATION_GROUP"
+      ],
+      "decisiveEvidence": [
+        {
+          "path": "owner-2026-10-09T22-45-55/results.json",
+          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+        },
+        {
+          "path": "owner-2026-10-09T22-55-59/results.json",
+          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140"
+        },
+        {
+          "path": "owner-2026-10-09T23-22-42/results.json",
+          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787"
+        },
+        {
+          "path": "owner-2026-10-09T23-28-33/results.json",
+          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1"
+        },
+        {
+          "path": "owner-2026-10-10T00-51-10/results.json",
+          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335"
+        },
+        {
+          "path": "installed-runtime-01/results.json",
+          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4"
+        }
+      ],
+      "compatibilityLimit": "RECORDED_BASE_LOCAL_OWNER_CUTS; FINAL_LINUX_AND_JOINED_R_NOT_VERIFIED"
+    }
+  ],
+  "regenerateFromSource": true,
+  "adoptDirtyPeerBytes": false,
+  "unresolvedJoinedMigrationNumber": true
+}

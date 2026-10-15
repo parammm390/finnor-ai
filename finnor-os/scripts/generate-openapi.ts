@@ -69,6 +69,9 @@ import { M4Operations } from "../packages/private-equity/src/counterexample-sear
 import { CONTINUATION_OPERATIONS } from "../packages/private-equity/src/live-recompilation/api";
 import { PROCEDURE_OPERATIONS, PROCEDURE_OPERATION_SCHEMAS } from "../packages/private-equity/src/procedure-induction/api";
 import { DELIBERATION_OPERATIONS } from "../packages/private-equity/src/deliberation/api";
+import { ElicitationOperationSchemas } from "../packages/epistemic-runtime/src/incentive-rule-synthesis/contracts";
+import { R3OwnerOperationSchemas, R3WorkReviewSchema } from "../packages/epistemic-runtime/src/incentive-rule-synthesis/output-contracts";
+import { ObligationOperationSchemas } from "../packages/private-equity/src/obligation-contracts";
 import { ComputeSearchRequestSchema, SearchIdSchema, SearchProjectionSchema } from "../packages/private-equity/src/compute-search/contracts";
 import { R4_OPERATIONS, R4_OPERATION_SCHEMAS } from "../packages/private-equity/src/r4/contracts";
 import { OperationSchemas as DecisionAtlasOperationSchemas } from "../packages/private-equity/src/r7/contracts";
@@ -769,6 +772,25 @@ for (const [operation,{schema}] of Object.entries(M4Operations)) {
   }}});
 }
 
+for (const [operation,schema] of Object.entries(ElicitationOperationSchemas)) {
+ Object.assign(paths,{["/api/elicitation-protocols/"+operation]:{post:{security:secured,requestBody:json(schema),
+  responses:{"200":{description:"Current exact proposed finite mechanism, owner receipt or historical responsibility. Not private truth, consent, admission or settlement.",
+    ...(["read","status"].includes(operation)?json(R3WorkReviewSchema):{})},
+   "400":{description:"Strict bounded input rejected"},"401":{description:"Bearer identity required"},
+   "403":{description:"Exact reporting or owner principal unavailable"},"404":{description:"Permitted Work/reference unavailable"},
+   "409":{description:"Original revision, deadline, grant, closure or idempotency fenced"},"413":{description:"Byte/resource bound"},
+   "422":{description:"Precise unsupported domain or required protected authority unavailable"}}}}});
+}
+for (const [family,operations] of Object.entries({...R3OwnerOperationSchemas,obligations:ObligationOperationSchemas})) {
+ for (const [operation,schema] of Object.entries(operations)) Object.assign(paths,{["/api/"+family+"/"+operation]:{post:{
+  security:secured,requestBody:json(schema),responses:{
+   "200":{description:"Original semantic-owner result under its current authority. Exact proposed R3 schedules do not grant agreement or settlement."},
+   "400":{description:"Strict owner request rejected"},"401":{description:"Real bearer identity required"},
+   "403":{description:"Current owner authority absent"},"404":{description:"Permitted original reference unavailable"},
+   "409":{description:"Currentness, immutable identity, resource or attempt responsibility fenced"},
+   "413":{description:"Original byte/resource bound"},"422":{description:"Unsupported operation or required protected admission absent"}
+  }}}});
+}
 const document = {
   openapi: "3.1.0",
   info: { title: "FINNOR Private Equity API", version: "6.0.0", description: "Private Equity is the only active product vertical. P1 owns temporal InvestmentCase, Assumption, and canonical investment Decision truth; P2 owns Microsoft Source Truth; P3 owns immutable artifacts; P4 owns deterministic underwriting math; P5 owns governed Investment Committee truth; P6 adds deterministic selected PlanGraphs and authenticated employee-specific causal attention without duplicating Core Work, Authority, DomainAction, BusinessEffect, DecisionReceipt, ObjectiveLoop, or prior truth owners. Historical Water payloads remain receipt-only quarantine inputs." },

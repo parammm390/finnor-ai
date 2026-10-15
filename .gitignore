@@ -38,6 +38,15 @@ vercel_output.txt
 /vapi_call_transcripts.md
 /coverage/
 /artifacts/
+/.r3-runtime/
+/.r3-upstream-runtime/
+/.r3-scratch
+/scope-r/r3-incentive-rule-synthesis/evidence/
+/scope-r/r3-incentive-rule-synthesis/handoff/*.bundle
+/scope-r/r3-incentive-rule-synthesis/handoff/*.patch
+/scope-r/r3-incentive-rule-synthesis/handoff/release.json
+/finnor-os/packages/epistemic-runtime/src/incentive-rule-synthesis/__pycache__/
+/finnor-os/scripts/r3/__pycache__/
 
 # Private R2 native/owner evidence: retained in immutable hashed handoff archives.
 /scope-r/r2-robust-programme-search/evidence/

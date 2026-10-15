@@ -32,3 +32,6 @@
 **/*.log
 **/*.pem
 **/*.key
+**/__pycache__
+**/*.pyc
+**/*.tsbuildinfo

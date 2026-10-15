@@ -46,6 +46,7 @@ import { processEpistemicChange, recoverEpistemicChanges, refreshEpistemicGraph,
 import { PRODUCTION_JOB_CONTRACTS } from "./job-contracts";
 import {runEvidenceDerivationJob} from '@finnor/private-equity/src/evidence-execution/worker';
 import {runCertifiedStateReductionJob} from '@finnor/private-equity/src/r1/worker';
+import {runIncentiveRuleSynthesisJob} from '@finnor/private-equity/src/r3/worker';
 import { getPool, parseWorkloadClass, startComputeControlLeadership, type WorkloadClass } from "@finnor/db";
 import { startClassHealthServer } from "./class-health";
 import { startComputeTelemetry } from "./telemetry";
@@ -59,6 +60,7 @@ export function createWorker(): JobQueue {
   queue.register('run_capital_program_v2',runCapitalProgramJob,PRODUCTION_JOB_CONTRACTS.run_capital_program_v2);
   queue.register('run_capital_program_r2_v1',runRobustCapitalProgramJob,PRODUCTION_JOB_CONTRACTS.run_capital_program_r2_v1);
   queue.register('run_coalition_programme_v1',runCoalitionProgrammeJob,PRODUCTION_JOB_CONTRACTS.run_coalition_programme_v1);
+  queue.register('run_incentive_rule_synthesis_v1',runIncentiveRuleSynthesisJob,PRODUCTION_JOB_CONTRACTS.run_incentive_rule_synthesis_v1);
   queue.register('run_counterexample_search_v1',runCounterexampleSearchJob,PRODUCTION_JOB_CONTRACTS.run_counterexample_search_v1);
   queue.register('run_procedure_induction_v1',runProcedureInductionJob,PRODUCTION_JOB_CONTRACTS.run_procedure_induction_v1);
   queue.register('run_programme_continuation_v1',runProgrammeContinuationJob,PRODUCTION_JOB_CONTRACTS.run_programme_continuation_v1);

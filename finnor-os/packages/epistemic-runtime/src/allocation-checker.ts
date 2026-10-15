@@ -84,7 +84,8 @@ function evaluate(prepared:Prepared,selected:string[],withWitnesses=true):Alloca
   }
   const envelopes:AllocationEnvelope[]=allocationResourceEnvelopes(p.resources,increments,h);
   const feasible=reasons.length===0,objective=feasible?decimal(scenarioValues.map(s=>quantity(s.value)).reduce(min)):null;
-  return {schema:'finnor.allocation-check.v1',problemRef:p.ref,selectedPolicyIds:[...selected].sort(),feasible,reasons:[...new Set(reasons)],objective,scenarioValues,envelopes,witnesses,numericalSemantics:'EXACT_DECIMAL_RATIONAL_ZERO_FEASIBILITY_TOLERANCE',executionAuthorityGranted:false};
+  const rationalLedger=p.outstanding.some(o=>o.envelopes.some(e=>[...e.quantities,...e.minimumQuantities].some(q=>q.startsWith('r3q:'))));
+  return {schema:'finnor.allocation-check.v1',problemRef:p.ref,selectedPolicyIds:[...selected].sort(),feasible,reasons:[...new Set(reasons)],objective,scenarioValues,envelopes,witnesses,numericalSemantics:rationalLedger?'EXACT_RATIONAL_LEDGER_V1_ZERO_FEASIBILITY_TOLERANCE':'EXACT_DECIMAL_RATIONAL_ZERO_FEASIBILITY_TOLERANCE',executionAuthorityGranted:false};
 }
 export function verifyCanonicalAllocation(problem:CanonicalAllocationProblem,selectedPolicyIds:string[]):AllocationCheck {
   return immutableControl(evaluate(prepare(problem),selectedPolicyIds));

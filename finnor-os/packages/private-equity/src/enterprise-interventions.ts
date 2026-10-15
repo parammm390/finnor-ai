@@ -94,7 +94,13 @@ async function readableHistory(ctx: PeMutationContext, model: InterventionModel)
   await recoverModelExperience(ctx,model);
 }
 /** Minimal S3-owned reference resolver for S4. Callers never submit model tensors. */
-export async function resolveEnterpriseInterventionModelForControl(ctx: PeMutationContext, value: unknown): Promise<InterventionModel> {
+export async function resolveEnterpriseInterventionModelForControl(ctx: PeMutationContext, value: import('./r3/model').R3FiniteModelRead): Promise<Awaited<ReturnType<typeof import('./r3/model').resolveR3FinitePreferenceModel>>>;
+export async function resolveEnterpriseInterventionModelForControl(ctx: PeMutationContext, value: unknown): Promise<InterventionModel>;
+export async function resolveEnterpriseInterventionModelForControl(ctx: PeMutationContext, value: unknown) {
+  if (value && typeof value === 'object' && 'schema' in value && value.schema === 'finnor.s3.r3-finite-model-read.v1') {
+    const input = value as import('./r3/model').R3FiniteModelRead;
+    return (await import('./r3/model')).resolveR3FinitePreferenceModel(ctx, ExperimentRefSchema.parse(input.modelRef));
+  }
   const model = await readModel(ctx, value); await readableHistory(ctx, model);
   if (await current(ctx, model)) throw unavailable();
   await recoverModelExperience(ctx,model);

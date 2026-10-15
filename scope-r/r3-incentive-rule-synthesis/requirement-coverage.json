@@ -1,0 +1,983 @@
+{
+  "schema": "finnor.r3.implementation-coverage.v1",
+  "goalSha256": "ba601fe1d072aefa66ac866a68f34921e7d818d7189195c877d98c6a7b5ca7d3",
+  "baseCommit": "517003a4396bc8101a90be4b425ee01de9446740",
+  "basis": "Implementation audit, not inherited authoring coverage",
+  "requirements": [
+    {
+      "id": "R3-C01",
+      "sourceClause": "R3.1",
+      "requirement": "Eligible parties and rights; full finite outcome/type/valuation/outside-option/payment/resource/S4 input",
+      "goalSections": "5.A",
+      "implementation": [
+        "finnor-os/packages/private-equity/src/r3/owners.ts",
+        "finnor-os/packages/private-equity/src/r3/model.ts",
+        "finnor-os/packages/epistemic-runtime/src/incentive-rule-synthesis/contracts.ts"
+      ],
+      "cases": [
+        "authenticated-owner-positive"
+      ],
+      "status": "VERIFIED_SUPPORTED_DEVELOPMENT_DOMAIN",
+      "evidence": [
+        {
+          "path": "owner-2026-10-09T22-45-55/results.json",
+          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+        },
+        {
+          "path": "owner-2026-10-09T23-22-42/results.json",
+          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787"
+        }
+      ],
+      "evidenceClass": "EMPIRICALLY_VERIFIED",
+      "limitation": "Permissioned original declarations and party sources; behavioral truth remains UNQUALIFIED."
+    },
+    {
+      "id": "R3-C02",
+      "sourceClause": "R3.1",
+      "requirement": "Four parties three types three outcomes deterministic full development profile",
+      "goalSections": "5.A/B;7",
+      "implementation": [
+        "finnor-os/packages/epistemic-runtime/src/incentive-rule-synthesis/producer.py",
+        "finnor-os/packages/epistemic-runtime/src/incentive-rule-synthesis/checker.py"
+      ],
+      "cases": [
+        "full-interacting-81"
+      ],
+      "status": "VERIFIED_SUPPORTED_DEVELOPMENT_DOMAIN",
+      "evidence": [
+        {
+          "path": "native-02/results.json",
+          "sha256": "91162e3d89ad4a71a4d3ce86c13f028f39034deae2442d18697549b7c0692373"
+        }
+      ],
+      "evidenceClass": "DETERMINISTICALLY_VERIFIED",
+      "limitation": "81 deterministic profiles; four parties, three types and three outcomes."
+    },
+    {
+      "id": "R3-C03",
+      "sourceClause": "R3.1",
+      "requirement": "Quasilinear utility and payment-to-party sign",
+      "goalSections": "5.A/B",
+      "implementation": [
+        "finnor-os/packages/epistemic-runtime/src/incentive-rule-synthesis/producer.py",
+        "finnor-os/packages/epistemic-runtime/src/incentive-rule-synthesis/checker.py"
+      ],
+      "cases": [
+        "posted-price-and-beneficial-lie",
+        "rational-boundary-nonzero-outside-option-tie"
+      ],
+      "status": "VERIFIED_SUPPORTED_DEVELOPMENT_DOMAIN",
+      "evidence": [
+        {
+          "path": "native-02/results.json",
+          "sha256": "91162e3d89ad4a71a4d3ce86c13f028f39034deae2442d18697549b7c0692373"
+        }
+      ],
+      "evidenceClass": "DETERMINISTICALLY_VERIFIED",
+      "limitation": "Positive transfers pay parties; original dated quasilinear convention checked exactly."
+    },
+    {
+      "id": "R3-C04",
+      "sourceClause": "R3.1",
+      "requirement": "Hypothetical values and unsupported preferences/strategic dependencies; individual DSIC only",
+      "goalSections": "5.A",
+      "implementation": [
+        "finnor-os/packages/epistemic-runtime/src/incentive-rule-synthesis/contracts.ts",
+        "finnor-os/packages/epistemic-runtime/src/incentive-rule-synthesis/checker.py"
+      ],
+      "cases": [
+        "collusive-guarantee",
+        "expected-event",
+        "hidden-type"
+      ],
+      "status": "VERIFIED_SUPPORTED_DEVELOPMENT_DOMAIN",
+      "evidence": [
+        {
+          "path": "native-02/results.json",
+          "sha256": "91162e3d89ad4a71a4d3ce86c13f028f39034deae2442d18697549b7c0692373"
+        }
+      ],
+      "evidenceClass": "DETERMINISTICALLY_VERIFIED",
+      "limitation": "Unsupported preference/event/collusive claims refuse; individual DSIC only."
+    },
+    {
+      "id": "R3-C05",
+      "sourceClause": "R3.2",
+      "requirement": "Full report-to-outcome/payment rule and MILP",
+      "goalSections": "5.A/B",
+      "implementation": [
+        "finnor-os/packages/epistemic-runtime/src/incentive-rule-synthesis/producer.py",
+        "finnor-os/packages/epistemic-runtime/src/incentive-rule-synthesis/checker.py"
+      ],
+      "cases": [
+        "full-interacting-81"
+      ],
+      "status": "VERIFIED_SUPPORTED_DEVELOPMENT_DOMAIN",
+      "evidence": [
+        {
+          "path": "native-02/results.json",
+          "sha256": "91162e3d89ad4a71a4d3ce86c13f028f39034deae2442d18697549b7c0692373"
+        }
+      ],
+      "evidenceClass": "DETERMINISTICALLY_VERIFIED",
+      "limitation": "Complete MILP family: 243 binaries and 324 scalar transfers; not global optimality proof."
+    },
+    {
+      "id": "R3-C06",
+      "sourceClause": "R3.2",
+      "requirement": "Every true type alternative report and arbitrary others report; true-type utility unchanged",
+      "goalSections": "5.B/C",
+      "implementation": [
+        "finnor-os/packages/epistemic-runtime/src/incentive-rule-synthesis/checker.py"
+      ],
+      "cases": [
+        "full-interacting-81",
+        "posted-price-and-beneficial-lie"
+      ],
+      "status": "VERIFIED_SUPPORTED_DEVELOPMENT_DOMAIN",
+      "evidence": [
+        {
+          "path": "native-02/results.json",
+          "sha256": "91162e3d89ad4a71a4d3ce86c13f028f39034deae2442d18697549b7c0692373"
+        }
+      ],
+      "evidenceClass": "DETERMINISTICALLY_VERIFIED",
+      "limitation": "All 648 nonidentity deviations use the same true type and arbitrary other reports."
+    },
+    {
+      "id": "R3-C07",
+      "sourceClause": "R3.2",
+      "requirement": "Outside options individual rationality; payments/liabilities/timing/resources/subsidy",
+      "goalSections": "5.B/C",
+      "implementation": [
+        "finnor-os/packages/epistemic-runtime/src/incentive-rule-synthesis/checker.py",
+        "finnor-os/packages/private-equity/src/r3/allocation.ts"
+      ],
+      "cases": [
+        "outside-option",
+        "gross-liquidity-earlier-outgoing",
+        "hard-covenant",
+        "rational-original-owner-compatibility"
+      ],
+      "status": "VERIFIED_SUPPORTED_DEVELOPMENT_DOMAIN",
+      "evidence": [
+        {
+          "path": "native-02/results.json",
+          "sha256": "91162e3d89ad4a71a4d3ce86c13f028f39034deae2442d18697549b7c0692373"
+        },
+        {
+          "path": "owner-2026-10-09T22-45-55/results.json",
+          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+        }
+      ],
+      "evidenceClass": "DETERMINISTICALLY_VERIFIED",
+      "limitation": "All 324 participation conditions and dated payment/funding/resource inequalities; no future incoming liquidity."
+    },
+    {
+      "id": "R3-C08",
+      "sourceClause": "R3.2",
+      "requirement": "S4 objective/uncertainty; no assumed distribution",
+      "goalSections": "5.B",
+      "implementation": [
+        "finnor-os/packages/epistemic-runtime/src/incentive-rule-synthesis/producer.py",
+        "finnor-os/packages/epistemic-runtime/src/incentive-rule-synthesis/checker.py",
+        "finnor-os/packages/private-equity/src/r3/model.ts"
+      ],
+      "cases": [
+        "full-interacting-81",
+        "owner-value-floor"
+      ],
+      "status": "VERIFIED_SUPPORTED_DEVELOPMENT_DOMAIN",
+      "evidence": [
+        {
+          "path": "native-02/results.json",
+          "sha256": "91162e3d89ad4a71a4d3ce86c13f028f39034deae2442d18697549b7c0692373"
+        },
+        {
+          "path": "owner-2026-10-09T22-45-55/results.json",
+          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+        }
+      ],
+      "evidenceClass": "DETERMINISTICALLY_VERIFIED",
+      "limitation": "Supplied robust/maximin basis retained, no guessed report distribution; general optimum UNKNOWN."
+    },
+    {
+      "id": "R3-C09",
+      "sourceClause": "R3.2",
+      "requirement": "Independent complete deviation and participation enumeration",
+      "goalSections": "5.C;7",
+      "implementation": [
+        "finnor-os/packages/epistemic-runtime/src/incentive-rule-synthesis/checker.py",
+        "finnor-os/scripts/r3/reference.py"
+      ],
+      "cases": [
+        "full-interacting-81",
+        "small-complete-reference"
+      ],
+      "status": "VERIFIED_SUPPORTED_DEVELOPMENT_DOMAIN",
+      "evidence": [
+        {
+          "path": "native-02/results.json",
+          "sha256": "91162e3d89ad4a71a4d3ce86c13f028f39034deae2442d18697549b7c0692373"
+        }
+      ],
+      "evidenceClass": "DETERMINISTICALLY_VERIFIED",
+      "limitation": "Independent stdlib Fraction checker plus 4,096-rule registered-grid synthesis reference."
+    },
+    {
+      "id": "R3-C10",
+      "sourceClause": "R3.2",
+      "requirement": "Observable reports/contract events; no hidden true type payment",
+      "goalSections": "5.A/B;6",
+      "implementation": [
+        "finnor-os/packages/epistemic-runtime/src/incentive-rule-synthesis/contracts.ts",
+        "finnor-os/packages/private-equity/src/r3/events.ts",
+        "finnor-os/packages/private-equity/src/r3/obligations.ts"
+      ],
+      "cases": [
+        "report-correction-close",
+        "separate-acceptance-exact-choice-consumption"
+      ],
+      "status": "VERIFIED_SUPPORTED_DEVELOPMENT_DOMAIN",
+      "evidence": [
+        {
+          "path": "native-02/results.json",
+          "sha256": "91162e3d89ad4a71a4d3ce86c13f028f39034deae2442d18697549b7c0692373"
+        },
+        {
+          "path": "owner-2026-10-09T22-45-55/results.json",
+          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+        }
+      ],
+      "evidenceClass": "EMPIRICALLY_VERIFIED",
+      "limitation": "Observable authorized reports and separate source observations; hidden-type predicates rejected."
+    },
+    {
+      "id": "R3-C11",
+      "sourceClause": "R3.3",
+      "requirement": "Complete ElicitationProtocol fields and common envelope",
+      "goalSections": "5.D",
+      "implementation": [
+        "finnor-os/packages/private-equity/src/r3/store.ts",
+        "finnor-os/packages/private-equity/src/r3/worker.ts",
+        "finnor-os/packages/shared-types/src/elicitation-protocol.ts",
+        "finnor-os/packages/epistemic-runtime/src/incentive-rule-synthesis/output-contracts.ts"
+      ],
+      "cases": [
+        "authenticated-owner-positive"
+      ],
+      "status": "VERIFIED_SUPPORTED_DEVELOPMENT_DOMAIN",
+      "evidence": [
+        {
+          "path": "owner-2026-10-09T22-45-55/results.json",
+          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+        },
+        {
+          "path": "installed-runtime-01/results.json",
+          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4"
+        }
+      ],
+      "evidenceClass": "EMPIRICALLY_VERIFIED",
+      "limitation": "Protocol/common envelope, claims/gaps/lifecycle/custody and actual output-schema parsing."
+    },
+    {
+      "id": "R3-C12",
+      "sourceClause": "R3.3",
+      "requirement": "Proposed rule not agreement/truth; S3/S4/S5/S6/S7 retained owners",
+      "goalSections": "1;5.D;6",
+      "implementation": [
+        "finnor-os/packages/private-equity/src/r3/model.ts",
+        "finnor-os/packages/private-equity/src/r3/control.ts",
+        "finnor-os/packages/private-equity/src/r3/allocation.ts",
+        "finnor-os/packages/private-equity/src/r3/obligations.ts"
+      ],
+      "cases": [
+        "authenticated-owner-positive",
+        "separate-acceptance-exact-choice-consumption"
+      ],
+      "status": "VERIFIED_SUPPORTED_DEVELOPMENT_DOMAIN",
+      "evidence": [
+        {
+          "path": "owner-2026-10-09T22-45-55/results.json",
+          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+        },
+        {
+          "path": "owner-2026-10-09T23-28-33/results.json",
+          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1"
+        }
+      ],
+      "evidenceClass": "EMPIRICALLY_VERIFIED",
+      "limitation": "Original semantic owners retained; no protected agreement, payment or realized S7 value."
+    },
+    {
+      "id": "R3-C13",
+      "sourceClause": "R3.3",
+      "requirement": "SCIP/Gurobi and optional qualified OpenSpiel limitations",
+      "goalSections": "4",
+      "implementation": [
+        "finnor-os/scripts/r3/requirements.lock",
+        "finnor-os/scripts/r3/seal-runtime.py"
+      ],
+      "cases": [
+        "installed-Node-launcher-producer-independent-checker"
+      ],
+      "status": "PARTIAL",
+      "evidence": [
+        {
+          "path": "installed-runtime-01/results.json",
+          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4"
+        }
+      ],
+      "evidenceClass": "EMPIRICALLY_VERIFIED",
+      "limitation": "Installed FLOAT64 SCIP verified; exact mode/proof/source build and Linux image unverified. OpenSpiel not adopted."
+    },
+    {
+      "id": "R3-C14",
+      "sourceClause": "R3.4",
+      "requirement": "M3 term search distinguished from complete mechanism",
+      "goalSections": "2;5.A/B",
+      "implementation": [
+        "finnor-os/packages/epistemic-runtime/src/incentive-rule-synthesis/producer.py",
+        "finnor-os/packages/private-equity/src/r3/control.ts",
+        "finnor-os/packages/private-equity/src/r3/fallback.ts"
+      ],
+      "cases": [
+        "full-interacting-81",
+        "actual-fallback-matched-off-on"
+      ],
+      "status": "VERIFIED_SUPPORTED_DEVELOPMENT_DOMAIN",
+      "evidence": [
+        {
+          "path": "native-02/results.json",
+          "sha256": "91162e3d89ad4a71a4d3ce86c13f028f39034deae2442d18697549b7c0692373"
+        },
+        {
+          "path": "owner-2026-10-09T22-45-55/results.json",
+          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+        }
+      ],
+      "evidenceClass": "DETERMINISTICALLY_VERIFIED",
+      "limitation": "Full report rule is distinct from fixed programme terms; M3/P1 grammar not silently requalified."
+    },
+    {
+      "id": "R3-C15",
+      "sourceClause": "R3.4",
+      "requirement": "All81 profiles648 nonidentity deviations324 participation exact plus payment/resources",
+      "goalSections": "5.B/C;7",
+      "implementation": [
+        "finnor-os/packages/epistemic-runtime/src/incentive-rule-synthesis/producer.py",
+        "finnor-os/packages/epistemic-runtime/src/incentive-rule-synthesis/checker.py"
+      ],
+      "cases": [
+        "full-interacting-81"
+      ],
+      "status": "VERIFIED_SUPPORTED_DEVELOPMENT_DOMAIN",
+      "evidence": [
+        {
+          "path": "native-02/results.json",
+          "sha256": "91162e3d89ad4a71a4d3ce86c13f028f39034deae2442d18697549b7c0692373"
+        }
+      ],
+      "evidenceClass": "DETERMINISTICALLY_VERIFIED",
+      "limitation": "81/648/324 exact coverage is deterministic, not 1,053 independent statistical samples."
+    },
+    {
+      "id": "R3-C16",
+      "sourceClause": "R3.4",
+      "requirement": "Beneficial lie negative; no-rule checked infeasibility or UNKNOWN",
+      "goalSections": "5.B/C;7",
+      "implementation": [
+        "finnor-os/packages/epistemic-runtime/src/incentive-rule-synthesis/checker.py"
+      ],
+      "cases": [
+        "posted-price-and-beneficial-lie",
+        "infeasible-and-unknown",
+        "solver-timeout-not-infeasibility"
+      ],
+      "status": "VERIFIED_SUPPORTED_DEVELOPMENT_DOMAIN",
+      "evidence": [
+        {
+          "path": "native-02/results.json",
+          "sha256": "91162e3d89ad4a71a4d3ce86c13f028f39034deae2442d18697549b7c0692373"
+        }
+      ],
+      "evidenceClass": "DETERMINISTICALLY_VERIFIED",
+      "limitation": "27 exact gain-1 rebate lies; checked narrow original IR contradiction; missing proof/timeout UNKNOWN."
+    },
+    {
+      "id": "R3-C17",
+      "sourceClause": "R3.4",
+      "requirement": "Matched strongest X bidding/negotiation; acceptance/rejection/value/deviation costs",
+      "goalSections": "7;8",
+      "implementation": [
+        "finnor-os/packages/private-equity/src/r3/fallback.ts",
+        "finnor-os/scripts/r3/run-owner-e2e.mts"
+      ],
+      "cases": [
+        "actual-fallback-matched-off-on"
+      ],
+      "status": "PARTIAL",
+      "evidence": [
+        {
+          "path": "owner-2026-10-09T22-45-55/results.json",
+          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+        }
+      ],
+      "evidenceClass": "PARTIAL",
+      "limitation": "Actual native S4 fallback executed under same request/grant/deadline. Strongest equipped completed-X, full cost and adapter ablation NOT RUN."
+    },
+    {
+      "id": "R3-C18",
+      "sourceClause": "R3.5",
+      "requirement": "Failed inequality witness and no truthfulness claim",
+      "goalSections": "5.C",
+      "implementation": [
+        "finnor-os/packages/epistemic-runtime/src/incentive-rule-synthesis/checker.py"
+      ],
+      "cases": [
+        "posted-price-and-beneficial-lie",
+        "encoding-coefficient"
+      ],
+      "status": "VERIFIED_SUPPORTED_DEVELOPMENT_DOMAIN",
+      "evidence": [
+        {
+          "path": "native-02/results.json",
+          "sha256": "91162e3d89ad4a71a4d3ce86c13f028f39034deae2442d18697549b7c0692373"
+        }
+      ],
+      "evidenceClass": "DETERMINISTICALLY_VERIFIED",
+      "limitation": "Exact violating party/type/report/utility/source witnesses; false rule not accepted."
+    },
+    {
+      "id": "R3-C19",
+      "sourceClause": "R3.5",
+      "requirement": "Behavior out of domain invalidates; accepted agreement/payment/liability history retained",
+      "goalSections": "6;7",
+      "implementation": [
+        "finnor-os/packages/private-equity/src/r3/events.ts",
+        "finnor-os/packages/private-equity/src/r3/owners.ts",
+        "finnor-os/packages/private-equity/src/r3/obligations.ts"
+      ],
+      "cases": [
+        "currentness-and-p7"
+      ],
+      "status": "VERIFIED_SUPPORTED_DEVELOPMENT_DOMAIN",
+      "evidence": [
+        {
+          "path": "owner-2026-10-09T22-55-59/results.json",
+          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140"
+        }
+      ],
+      "evidenceClass": "EMPIRICALLY_VERIFIED",
+      "limitation": "Out-of-domain invalidation retains four disposable acceptances and pending canonical S5 envelope; no protected agreement claim."
+    },
+    {
+      "id": "R3-C20",
+      "sourceClause": "Common2",
+      "requirement": "Canonical refs exact quantities UNKNOWN envelopes run statuses lifecycle",
+      "goalSections": "5.D",
+      "implementation": [
+        "finnor-os/packages/epistemic-runtime/src/incentive-rule-synthesis/contracts.ts",
+        "finnor-os/packages/private-equity/src/r3/store.ts",
+        "finnor-os/packages/private-equity/src/r3/allocation.ts",
+        "finnor-os/packages/epistemic-runtime/src/allocation-contracts.ts"
+      ],
+      "cases": [
+        "rational-original-owner-compatibility",
+        "currentness-and-p7"
+      ],
+      "status": "VERIFIED_SUPPORTED_DEVELOPMENT_DOMAIN",
+      "evidence": [
+        {
+          "path": "owner-2026-10-09T22-45-55/results.json",
+          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+        },
+        {
+          "path": "owner-2026-10-09T22-55-59/results.json",
+          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140"
+        }
+      ],
+      "evidenceClass": "EMPIRICALLY_VERIFIED",
+      "limitation": "Canonical rational quantities and derived r3q schedules persist through original S5 readers; absent bounds remain UNKNOWN."
+    },
+    {
+      "id": "R3-C21",
+      "sourceClause": "Common3",
+      "requirement": "Pi optional complete actual-adoption conformance",
+      "goalSections": "4;7",
+      "implementation": [],
+      "cases": [],
+      "status": "INAPPLICABLE",
+      "evidence": [],
+      "evidenceClass": "INAPPLICABLE",
+      "limitation": "Pi was not adopted; no conversation runtime was added."
+    },
+    {
+      "id": "R3-C22",
+      "sourceClause": "Common12",
+      "requirement": "One Work realowners not mandatory eight-stage chain revised grammar",
+      "goalSections": "1;2;5.D;6",
+      "implementation": [
+        "finnor-os/packages/private-equity/src/r3/api.ts",
+        "finnor-os/packages/private-equity/src/r3/model.ts",
+        "finnor-os/packages/private-equity/src/r3/control.ts",
+        "finnor-os/packages/private-equity/src/r3/allocation.ts",
+        "finnor-os/packages/private-equity/src/r3/obligations.ts",
+        "src/components/centropy/canvas/ElicitationProtocolReview.tsx"
+      ],
+      "cases": [
+        "authenticated-owner-positive",
+        "mounted-work-reload-switch"
+      ],
+      "status": "VERIFIED_SUPPORTED_DEVELOPMENT_DOMAIN",
+      "evidence": [
+        {
+          "path": "owner-2026-10-09T22-45-55/results.json",
+          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+        },
+        {
+          "path": "owner-2026-10-10T00-51-10/results.json",
+          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335"
+        }
+      ],
+      "evidenceClass": "EMPIRICALLY_VERIFIED",
+      "limitation": "One authentic durable Work, versioned explicit owner leaves and additive mounted Capital child."
+    },
+    {
+      "id": "R3-C23",
+      "sourceClause": "Common12.1",
+      "requirement": "Revocation/concurrent grants/physical attempts/Pi/provisional common cases",
+      "goalSections": "6;7",
+      "implementation": [
+        "finnor-os/packages/private-equity/src/r3/worker.ts",
+        "finnor-os/packages/private-equity/src/r3/events.ts",
+        "finnor-os/packages/private-equity/src/r3/owners.ts"
+      ],
+      "cases": [
+        "shared-grant-concurrency",
+        "cancel-and-partial",
+        "sigkill-after-child-acceptance",
+        "publication-row-lock-race",
+        "s6-supported-recovery"
+      ],
+      "status": "VERIFIED_SUPPORTED_DEVELOPMENT_DOMAIN",
+      "evidence": [
+        {
+          "path": "owner-2026-10-09T22-45-55/results.json",
+          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+        },
+        {
+          "path": "owner-2026-10-09T23-28-33/results.json",
+          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1"
+        }
+      ],
+      "evidenceClass": "EMPIRICALLY_VERIFIED",
+      "limitation": "Physical processes, original grant charges, immutable deadlines, provisional output and UNKNOWN responsibility retained."
+    },
+    {
+      "id": "R3-C24",
+      "sourceClause": "Common12.2",
+      "requirement": "No private-preference fabrication from R2 matrix",
+      "goalSections": "2",
+      "implementation": [
+        "finnor-os/packages/private-equity/src/r3/model.ts",
+        "finnor-os/scripts/r3/fixtures.py"
+      ],
+      "cases": [
+        "full-interacting-81"
+      ],
+      "status": "VERIFIED_SUPPORTED_DEVELOPMENT_DOMAIN",
+      "evidence": [
+        {
+          "path": "native-02/results.json",
+          "sha256": "91162e3d89ad4a71a4d3ce86c13f028f39034deae2442d18697549b7c0692373"
+        }
+      ],
+      "evidenceClass": "DETERMINISTICALLY_VERIFIED",
+      "limitation": "Explicit synthetic owner-supplied hypotheses, not R2 payoff matrix or inferred private preferences."
+    },
+    {
+      "id": "R3-C25",
+      "sourceClause": "Common13.1",
+      "requirement": "Functional vs Post-X vs economic; protected paired simultaneous positive bound",
+      "goalSections": "8",
+      "implementation": [
+        "scope-r/r3-incentive-rule-synthesis/status.md"
+      ],
+      "cases": [],
+      "status": "NOT_RUN",
+      "evidence": [],
+      "evidenceClass": "UNKNOWN",
+      "limitation": "Protected paired comparator distribution/evaluator custody and simultaneous gain bounds unavailable; no gain claim."
+    },
+    {
+      "id": "R3-C26",
+      "sourceClause": "Common13.2",
+      "requirement": "All original floors workload grids reach horizons",
+      "goalSections": "8",
+      "implementation": [
+        "scope-r/r3-incentive-rule-synthesis/verification-plan.json"
+      ],
+      "cases": [],
+      "status": "UNQUALIFIED",
+      "evidence": [],
+      "evidenceClass": "UNKNOWN",
+      "limitation": "Original correctness/regret/calibration/resource/workload-grid/reach/horizon floors retained but not qualified by development corpus."
+    },
+    {
+      "id": "R3-C27",
+      "sourceClause": "Common13.3",
+      "requirement": "Complete compute/preparation/failure/license/data/human costs aggregate",
+      "goalSections": "7;8",
+      "implementation": [
+        "finnor-os/packages/private-equity/src/r3/worker.ts",
+        "finnor-os/packages/private-equity/src/r3/store.ts",
+        "finnor-os/scripts/r3/run-local.py"
+      ],
+      "cases": [
+        "sigkill-after-child-acceptance",
+        "shared-grant-concurrency"
+      ],
+      "status": "PARTIAL",
+      "evidence": [
+        {
+          "path": "owner-2026-10-09T22-45-55/results.json",
+          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+        },
+        {
+          "path": "installed-runtime-01/results.json",
+          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4"
+        }
+      ],
+      "evidenceClass": "PARTIAL",
+      "limitation": "Per-child CPU/RSS, elapsed, attempts and charges observed. Dollars, human and aggregate simultaneous memory UNKNOWN; acquisition exceeded local-generation cap."
+    },
+    {
+      "id": "R3-C28",
+      "sourceClause": "Common13.4",
+      "requirement": "Owner value100xpositive denominator10xMuse/dots100million risk H2",
+      "goalSections": "8",
+      "implementation": [
+        "scope-r/r3-incentive-rule-synthesis/status.md"
+      ],
+      "cases": [],
+      "status": "NOT_RUN",
+      "evidence": [],
+      "evidenceClass": "UNKNOWN",
+      "limitation": "S7/H2 incremental owner wealth, attribution, denominator, tail-risk and 100x/10x/100-million obligations not evaluated."
+    },
+    {
+      "id": "R3-C29",
+      "sourceClause": "Common14",
+      "requirement": "Phase5R3R3optionalR5nounfinishedR1R2dependency",
+      "goalSections": "1;3",
+      "implementation": [
+        "scope-r/r3-incentive-rule-synthesis/plan.md"
+      ],
+      "cases": [],
+      "status": "VERIFIED_SUPPORTED_DEVELOPMENT_DOMAIN",
+      "evidence": [],
+      "evidenceClass": "DETERMINISTICALLY_VERIFIED",
+      "limitation": "Scope3/R3 Phase5 only; R1/R2/R4 not mathematical prerequisites and no peer adopted."
+    },
+    {
+      "id": "R3-C30",
+      "sourceClause": "Common14.1",
+      "requirement": "Actual schema/runtime/dependency/checker/rights/fallback/admission manifest",
+      "goalSections": "9",
+      "implementation": [
+        "finnor-os/Dockerfile.worker",
+        "finnor-os/Dockerfile.worker.dockerignore",
+        "finnor-os/packages/db/migration-head.ts",
+        "scope-r/r3-incentive-rule-synthesis/handoff/source-seal.json"
+      ],
+      "cases": [
+        "queued-original-and-r3-physical-restart"
+      ],
+      "status": "INCOMPLETE",
+      "evidence": [
+        {
+          "path": "owner-2026-10-10T00-51-10/results.json",
+          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335"
+        },
+        {
+          "path": "installed-runtime-01/results.json",
+          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4"
+        },
+        {
+          "path": "final-linux-build-01.log",
+          "sha256": "46e014c8fea9fa38cf9a6b9ebde8f1448f575427f035ca969af1966ee3f31d5c"
+        }
+      ],
+      "evidenceClass": "PARTIAL",
+      "limitation": "Local runtime/schema/jobs verified; final Linux image/digest and joined seal absent."
+    },
+    {
+      "id": "R3-C31",
+      "sourceClause": "Blueprint",
+      "requirement": "Source authority and date/currentpins existingvsproposals",
+      "goalSections": "1;2;3",
+      "implementation": [
+        "scope-r/r3-incentive-rule-synthesis/plan.md",
+        "scope-r/r3-incentive-rule-synthesis/handoff/shared-patch-contracts.json"
+      ],
+      "cases": [],
+      "status": "VERIFIED_SUPPORTED_DEVELOPMENT_DOMAIN",
+      "evidence": [
+        {
+          "path": "preregistration.json",
+          "sha256": "0bb715c0f0cf008b254a4264c4a4122a4b4f5951008c242684d6b859157ea38c"
+        }
+      ],
+      "evidenceClass": "DETERMINISTICALLY_VERIFIED",
+      "limitation": "Selected base, governing goal hash and dated peers explicit; existing behavior distinguished from R3 proposals."
+    },
+    {
+      "id": "R3-C32",
+      "sourceClause": "Blueprint",
+      "requirement": "Separately specified independentchecker original consumer exact semantics",
+      "goalSections": "4;5.C/D",
+      "implementation": [
+        "finnor-os/packages/epistemic-runtime/src/incentive-rule-synthesis/checker.py",
+        "finnor-os/scripts/r3/reference.py",
+        "finnor-os/packages/private-equity/src/r3/allocation.ts"
+      ],
+      "cases": [
+        "small-complete-reference",
+        "rational-original-owner-compatibility"
+      ],
+      "status": "VERIFIED_SUPPORTED_DEVELOPMENT_DOMAIN",
+      "evidence": [
+        {
+          "path": "native-02/results.json",
+          "sha256": "91162e3d89ad4a71a4d3ce86c13f028f39034deae2442d18697549b7c0692373"
+        },
+        {
+          "path": "owner-2026-10-09T22-45-55/results.json",
+          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+        }
+      ],
+      "evidenceClass": "DETERMINISTICALLY_VERIFIED",
+      "limitation": "Failure-first independent original-input math acceptance and authentic original exact consumer checks."
+    },
+    {
+      "id": "R3-C33",
+      "sourceClause": "Blueprint",
+      "requirement": "Actual authenticatedAPISQLqueueworkerownerpersistmountedWork",
+      "goalSections": "6;7",
+      "implementation": [
+        "finnor-os/packages/private-equity/src/r3/api.ts",
+        "finnor-os/packages/private-equity/src/r3/worker.ts",
+        "finnor-os/packages/private-equity/src/r3/store.ts",
+        "src/components/centropy/canvas/ElicitationProtocolReview.tsx"
+      ],
+      "cases": [
+        "authenticated-owner-positive",
+        "mounted-work-reload-switch",
+        "queued-original-and-r3-physical-restart"
+      ],
+      "status": "VERIFIED_SUPPORTED_DEVELOPMENT_DOMAIN",
+      "evidence": [
+        {
+          "path": "owner-2026-10-09T22-45-55/results.json",
+          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+        },
+        {
+          "path": "owner-2026-10-10T00-51-10/results.json",
+          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335"
+        }
+      ],
+      "evidenceClass": "EMPIRICALLY_VERIFIED",
+      "limitation": "Real signed HTTP/auth/SQL queue/native worker/persistence/owner/Canvas flow; no mocked business owners."
+    },
+    {
+      "id": "R3-C34",
+      "sourceClause": "Blueprint",
+      "requirement": "Invalidation responsibility faults actual compatible fallback originalgrant",
+      "goalSections": "6;7",
+      "implementation": [
+        "finnor-os/packages/private-equity/src/r3/worker.ts",
+        "finnor-os/packages/private-equity/src/r3/owners.ts",
+        "finnor-os/packages/private-equity/src/r3/fallback.ts"
+      ],
+      "cases": [
+        "currentness-and-p7",
+        "sigkill-after-child-acceptance",
+        "publication-row-lock-race",
+        "actual-fallback-matched-off-on"
+      ],
+      "status": "VERIFIED_SUPPORTED_DEVELOPMENT_DOMAIN",
+      "evidence": [
+        {
+          "path": "owner-2026-10-09T22-45-55/results.json",
+          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+        },
+        {
+          "path": "owner-2026-10-09T22-55-59/results.json",
+          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140"
+        },
+        {
+          "path": "owner-2026-10-09T23-28-33/results.json",
+          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1"
+        }
+      ],
+      "evidenceClass": "EMPIRICALLY_VERIFIED",
+      "limitation": "Typed invalidation and physical responsibility faults; actual original S4 fallback, no new grant or inherited DSIC."
+    },
+    {
+      "id": "R3-C35",
+      "sourceClause": "Blueprint",
+      "requirement": "Matched onoff allcosts adapterablation honestnogain",
+      "goalSections": "7;8",
+      "implementation": [
+        "finnor-os/packages/private-equity/src/r3/fallback.ts"
+      ],
+      "cases": [
+        "actual-fallback-matched-off-on"
+      ],
+      "status": "PARTIAL",
+      "evidence": [
+        {
+          "path": "owner-2026-10-09T22-45-55/results.json",
+          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+        }
+      ],
+      "evidenceClass": "PARTIAL",
+      "limitation": "Off/on diagnostic is not strongest completed-X or adapter-ablation/full-cost comparison."
+    },
+    {
+      "id": "R3-C36",
+      "sourceClause": "Blueprint",
+      "requirement": "Finitemanifest preregisterlimits andcausalrerun before expensive",
+      "goalSections": "7",
+      "implementation": [
+        "scope-r/r3-incentive-rule-synthesis/failure-model.md",
+        "scope-r/r3-incentive-rule-synthesis/verification-plan.json"
+      ],
+      "cases": [],
+      "status": "PARTIAL",
+      "evidence": [
+        {
+          "path": "preregistration.json",
+          "sha256": "0bb715c0f0cf008b254a4264c4a4122a4b4f5951008c242684d6b859157ea38c"
+        },
+        {
+          "path": "cut-native-02.json",
+          "sha256": "89127fc9bc816fc559c9318314da11c99b763a2e8d85b5abfb9dd3b265e0a21b"
+        }
+      ],
+      "evidenceClass": "PARTIAL",
+      "limitation": "Finite cases and causal repairs preregistered. Internal acquisition exceeded local generated-byte budget; whole-session cost qualification absent."
+    },
+    {
+      "id": "R3-C37",
+      "sourceClause": "Blueprint",
+      "requirement": "Reconstructible sealed handoff explicitexternalpackets internalincomplete",
+      "goalSections": "9",
+      "implementation": [
+        "finnor-os/scripts/r3/pack-handoff.py",
+        "scope-r/r3-incentive-rule-synthesis/handoff/README.md"
+      ],
+      "cases": [
+        "standalone-and-ordered-patch-reconstruction"
+      ],
+      "status": "VERIFIED_HANDOFF_ONLY",
+      "evidence": [],
+      "evidenceClass": "DETERMINISTICALLY_VERIFIED",
+      "limitation": "Final release.json records actual reconstruction result; it does not close internal Linux gate."
+    },
+    {
+      "id": "R3-C38",
+      "sourceClause": "Blueprint",
+      "requirement": "Current publication/effectauthorization no inheritedR1permission",
+      "goalSections": "1;9",
+      "implementation": [
+        "scope-r/r3-incentive-rule-synthesis/status.md",
+        "scope-r/r3-incentive-rule-synthesis/handoff/draft-pr.md"
+      ],
+      "cases": [],
+      "status": "VERIFIED_SUPPORTED_DEVELOPMENT_DOMAIN",
+      "evidence": [],
+      "evidenceClass": "DETERMINISTICALLY_VERIFIED",
+      "limitation": "Only local commits and unpublished handoff authorized; no outward-facing/protected effect performed."
+    },
+    {
+      "id": "R3-C39",
+      "sourceClause": "Concurrent",
+      "requirement": "ActualR1committeddelta andR2dirtypaths read-only noadoption",
+      "goalSections": "1;3",
+      "implementation": [
+        "scope-r/r3-incentive-rule-synthesis/handoff/peer-integration.json"
+      ],
+      "cases": [],
+      "status": "VERIFIED_SUPPORTED_DEVELOPMENT_DOMAIN",
+      "evidence": [],
+      "evidenceClass": "DETERMINISTICALLY_VERIFIED",
+      "limitation": "Dated R1/R2/R4 pointers inspected read-only and unadopted; dirty R2 not copied."
+    },
+    {
+      "id": "R3-C40",
+      "sourceClause": "Concurrent",
+      "requirement": "Serial0172collision runtime/jobs Work/generated/P7 quantityownerobligations",
+      "goalSections": "3;7",
+      "implementation": [
+        "scope-r/r3-incentive-rule-synthesis/handoff/shared-patch-contracts.json",
+        "finnor-os/packages/db/migrations/0172_r3_incentive_rule_synthesis.sql"
+      ],
+      "cases": [
+        "queued-original-and-r3-physical-restart"
+      ],
+      "status": "NOT_RUN",
+      "evidence": [
+        {
+          "path": "owner-2026-10-10T00-51-10/results.json",
+          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335"
+        }
+      ],
+      "evidenceClass": "PARTIAL",
+      "limitation": "Base-local 0172/fresh/upgrade/restart proven; unique joined numbering, peer jobs/P7/Work/runtime cut still NOT RUN."
+    },
+    {
+      "id": "R3-C41",
+      "sourceClause": "Concurrent",
+      "requirement": "Base-localfullfunction vsactualjoinedcut compatibility",
+      "goalSections": "3;8;9",
+      "implementation": [
+        "scope-r/r3-incentive-rule-synthesis/status.md"
+      ],
+      "cases": [
+        "mounted-work-reload-switch",
+        "queued-original-and-r3-physical-restart"
+      ],
+      "status": "INCOMPLETE",
+      "evidence": [
+        {
+          "path": "owner-2026-10-10T00-51-10/results.json",
+          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335"
+        },
+        {
+          "path": "installed-runtime-01/results.json",
+          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4"
+        },
+        {
+          "path": "final-linux-build-01.log",
+          "sha256": "46e014c8fea9fa38cf9a6b9ebde8f1448f575427f035ca969af1966ee3f31d5c"
+        }
+      ],
+      "evidenceClass": "PARTIAL",
+      "limitation": "Base-local product evidence positive; functional gate incomplete for Linux image; combined-R NOT RUN."
+    }
+  ],
+  "auditedAt": "2026-10-10T01:02:13.985106+00:00",
+  "functionalGate": "INCOMPLETE_FINAL_LINUX_IMAGE",
+  "blanketPassClaim": false,
+  "summary": {
+    "INAPPLICABLE": 1,
+    "INCOMPLETE": 2,
+    "NOT_RUN": 3,
+    "PARTIAL": 5,
+    "UNQUALIFIED": 1,
+    "VERIFIED_HANDOFF_ONLY": 1,
+    "VERIFIED_SUPPORTED_DEVELOPMENT_DOMAIN": 28
+  }
+}

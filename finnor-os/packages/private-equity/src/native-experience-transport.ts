@@ -37,20 +37,24 @@ export async function enqueueNativeReferences(ctx:PeMutationContext,references:r
    // Reuse the exact original signed preimage, including its original access
    // labels. A later rights revision must not relabel an immutable reference.
    await c.query('SELECT pg_advisory_xact_lock(hashtextextended($1,0))',[JSON.stringify(['s6-owner-transport',identity])]);
-   const prior=await c.query(`SELECT DISTINCT ON (r.reference->>'id') r.reference,o.envelope,o.signature,o.payload_digest
+   // Read each signed cut once. Expanding a cut into one SQL row per reference
+   // repeats its full preimage and signature validation quadratically on replay.
+   const prior=await c.query(`SELECT o.envelope,o.signature,o.payload_digest
     FROM finnor_os.s6_owner_delivery_origins o
-    CROSS JOIN LATERAL (SELECT o.envelope #> '{payload,reference}' AS reference
-     UNION ALL SELECT value FROM jsonb_array_elements(COALESCE(o.envelope #> '{payload,relatedReferences}','[]'::jsonb))) r
     WHERE o.tenant_id=$1 AND o.principal_id=$2 AND o.semantic_owner=$3 AND o.kind='REFERENCE'
-     AND r.reference->>'id'=ANY($4::text[])
-    ORDER BY r.reference->>'id',o.created_at,o.identity`,[identity.tenantId,identity.principalId,owner,candidates.map(r=>r.id)]);
+     AND (o.envelope #>> '{payload,reference,id}'=ANY($4::text[]) OR EXISTS (
+       SELECT 1 FROM jsonb_array_elements(COALESCE(o.envelope #> '{payload,relatedReferences}','[]'::jsonb)) r
+       WHERE r->>'id'=ANY($4::text[])))
+    ORDER BY o.created_at,o.identity`,[identity.tenantId,identity.principalId,owner,candidates.map(r=>r.id)]);
    const known=new Set<string>();
    for(const row of prior.rows){
     verifyOwnerDeliveryOrigin(route,row.envelope,row.signature);
     if(ownerTransportHash(row.envelope.payload)!==row.payload_digest)throw new LedgerFault(503,'OWNER_ORIGIN_STORAGE_BINDING_INVALID');
-    const candidate=group.get(row.reference.id);
-    if(!candidate||ownerTransportHash(candidate)!==ownerTransportHash(row.reference))throw new LedgerFault(503,'NATIVE_OWNER_REFERENCE_CONFLICT');
-    known.add(candidate.id);
+    for(const reference of [row.envelope.payload.reference,...(row.envelope.payload.relatedReferences??[])]){
+     const candidate=group.get(reference.id);if(!candidate)continue;
+     if(ownerTransportHash(candidate)!==ownerTransportHash(reference))throw new LedgerFault(503,'NATIVE_OWNER_REFERENCE_CONFLICT');
+     known.add(candidate.id);
+    }
    }
    const original=candidates.filter(r=>!known.has(r.id));
    for(let offset=0;offset<original.length;offset+=255){

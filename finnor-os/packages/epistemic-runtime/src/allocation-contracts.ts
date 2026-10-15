@@ -41,6 +41,7 @@ export function allocationRef(owner:string,prefix:string,body:unknown,version:st
   const digest=epistemicHash(body);return {owner,id:`${prefix}:${digest}`,version,contentDigest:digest};
 }
 export function allocationQuantity(s:string):ExperimentRational {
+  if(typeof s==='string'&&s.startsWith('r3q:'))return allocationRationalLedgerQuantity(s);
   if(!quantity.safeParse(s).success)throw new AllocationContractError('INVALID_REQUEST','Unsupported exact finite quantity');
   if(s.includes('/')){const [n,d]=s.split('/');const value=new ExperimentRational(BigInt(n!),BigInt(d!));if((value.n<0n?-value.n:value.n)>1000000000000n*value.d)throw new AllocationContractError('LIMIT_EXCEEDED','Quantity magnitude exceeds registered domain');return value;}
   const negative=s.startsWith('-'),[w,f='']=s.replace('-','').split('.');
@@ -49,15 +50,29 @@ export function allocationQuantity(s:string):ExperimentRational {
 }
 /** Derived sums/products keep separate limits from external supplied quantities. */
 export function allocationDerivedQuantity(s:string):ExperimentRational {
+  if(typeof s==='string'&&s.startsWith('r3q:'))return allocationRationalLedgerQuantity(s);
   if(typeof s!=='string'||s.length>1026||!/^[-]?(?:0|[1-9]\d*)(?:(?:\.\d{1,48})|(?:\/[1-9]\d{0,511}))?$/.test(s))throw new AllocationContractError('INVALID_CANDIDATE','Unsupported derived exact quantity');
   if(s.includes('/')){const [n,d]=s.split('/');const v=new ExperimentRational(BigInt(n!),BigInt(d!));if((v.n<0n?-v.n:v.n)>10n**30n*v.d)throw new AllocationContractError('LIMIT_EXCEEDED','Derived accounting magnitude exceeds domain');return v;}
   const negative=s.startsWith('-'),[whole,fraction='']=s.replace('-','').split('.');const q=new ExperimentRational((negative?-1n:1n)*BigInt(whole!+fraction),10n**BigInt(fraction.length));
   if((q.n<0n?-q.n:q.n)>10n**30n*q.d)throw new AllocationContractError('LIMIT_EXCEEDED','Derived accounting magnitude exceeds domain');return q;
 }
+/** Versioned derived-ledger codec. External v1 resource/model schemas retain
+ * their finite-decimal domain. No numerical conversion or tolerance is used. */
+export function allocationRationalLedgerQuantity(s:string):ExperimentRational {
+  const match=typeof s==='string'&&s.length<=264?/^r3q:(-?(?:0|[1-9]\d{0,127}))\/([1-9]\d{0,127})$/.exec(s):null;
+  if(!match||match[1]!.length>128)throw new AllocationContractError('INVALID_CANDIDATE','Unsupported rational ledger encoding');
+  const q=new ExperimentRational(BigInt(match[1]!),BigInt(match[2]!));
+  if(`r3q:${q.n}/${q.d}`!==s)throw new AllocationContractError('INVALID_CANDIDATE','Noncanonical rational ledger encoding');
+  if((q.n<0n?-q.n:q.n)>10n**30n*q.d)throw new AllocationContractError('LIMIT_EXCEEDED','Rational ledger magnitude exceeds domain');
+  return q;
+}
 export function allocationDecimal(v:ExperimentRational):string {
   let d=v.d,two=0,five=0;while(d%2n===0n){d/=2n;two++;}while(d%5n===0n){d/=5n;five++;}
   const digits=Math.max(two,five);
-  if(d!==1n||digits>48){if((v.n<0n?-v.n:v.n).toString().length>512||v.d.toString().length>512)throw new AllocationContractError('LIMIT_EXCEEDED','Rational accounting integer bound');return v.n+'/'+v.d;}
+  if(d!==1n){
+    const encoded=`r3q:${v.n}/${v.d}`;allocationRationalLedgerQuantity(encoded);return encoded;
+  }
+  if(digits>48){if((v.n<0n?-v.n:v.n).toString().length>512||v.d.toString().length>512)throw new AllocationContractError('LIMIT_EXCEEDED','Rational accounting integer bound');return v.n+'/'+v.d;}
   const scale=10n**BigInt(digits),n=(v.n<0n?-v.n:v.n)*(scale/v.d),s=n.toString().padStart(digits+1,'0');
   const f=digits?s.slice(-digits).replace(/0+$/,''):'';return `${v.n<0n&&n?'-':''}${digits?s.slice(0,-digits):s}${f?`.${f}`:''}`;
 }

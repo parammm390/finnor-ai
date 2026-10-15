@@ -1,0 +1,116 @@
+{
+  "schema": "finnor.r3.owner-request-packets.v1",
+  "immutableBindings": {
+    "codeSeal": "source-seal.json",
+    "codeSealSha256": "2a386c06def52002f113e04d7bbba121dd29ef450983e7e317b615a2195936af",
+    "checkerSourceSha256": "6f44bb6c5dc4dd71d29f70c230247f39a7c8a25f7e723fde73e194e934e4a8ae",
+    "backendIdentityDigest": "87bb8fefe4e9c08fd1e0bb1bd6a6b6faee908f8c69da06b668588bad0d76490a",
+    "originalProblemDigest": "170c9bcdddf3cb6078937119835f1163f5b9dc8cbd1b97475b822cdf38559523",
+    "modelRef": {
+      "owner": "S3",
+      "id": "r3-finite-model:cfaad94393597cfc1824b16c9d9b6b5851ae347f8c0388e6fb577c703dadb98e",
+      "version": "s3-finite-preference-v1",
+      "contentDigest": "cfaad94393597cfc1824b16c9d9b6b5851ae347f8c0388e6fb577c703dadb98e"
+    },
+    "protocolRef": {
+      "id": "elicitation-protocol:d897f8e7951214b7c74ee51644df8b8e2f39222bbfa33622751da02e6b9070b1",
+      "owner": "S3",
+      "version": "r3-elicitation-protocol-v1",
+      "contentDigest": "d897f8e7951214b7c74ee51644df8b8e2f39222bbfa33622751da02e6b9070b1"
+    },
+    "privateInputEvidence": {
+      "path": "owner-2026-10-09T22-45-55/positive/boundaries.json",
+      "sha256": "23374b8ce3abed3599bacc7c9c09e8d273cd5cadd4261bae816033b7783c8c1a"
+    },
+    "profile": "FOUR_PARTIES_THREE_TYPES_THREE_OUTCOMES_81_648_324",
+    "receiptDestination": "EXISTING_WORK_CANONICAL_OWNER_HISTORY_AND_EXPERIENCE_LEDGER",
+    "authorityGranted": false,
+    "domainRef": {
+      "id": "r3-hypothetical-quasilinear-four-party",
+      "owner": "S3",
+      "version": "r3-disposable-declared-v1",
+      "contentDigest": "1bd7347031b34b93f5006074bae1cd7a23ff9d56bc8a268592dc2d6ce683b66f"
+    }
+  },
+  "requests": [
+    {
+      "id": "S3-behavioral-domain",
+      "owner": "S3",
+      "status": "BLOCKED_EXTERNAL",
+      "requiredAsset": "INDEPENDENT_QUALIFIED_DECLARED_PREFERENCE_APPLICABILITY_EVIDENCE",
+      "protocol": "ORIGINAL_S3_DOMAIN_QUALIFICATION_AND_REFUTATION",
+      "predicate": "Validate supplied valuations/outside options/time/transport/strategic applicability; do not infer private truth from exact DSIC.",
+      "evidenceClassRequired": "INDEPENDENT_DOMAIN_QUALIFICATION"
+    },
+    {
+      "id": "S8-method-checker",
+      "owner": "S8",
+      "status": "BLOCKED_EXTERNAL",
+      "requiredAsset": "INDEPENDENT_ADMISSION_OF_EXACT_METHOD_CHECKER_LOCK_RUNTIME_AND_DOMAIN",
+      "protocol": "EXISTING_S8_ADMISSION_AND_REVOCATION",
+      "predicate": "Authenticate immutable method/checker/output/domain and authorized claims; execute original-input independent predicates; no producer self-promotion.",
+      "evidenceClassRequired": "PROTECTED_ADMISSION_RECEIPT"
+    },
+    {
+      "id": "S6-exact-operation",
+      "owner": "S6/S8/BUSINESS_OWNER",
+      "status": "BLOCKED_EXTERNAL",
+      "requiredAsset": "QUALIFIED_SOLICITATION_SIGNER_CASH_TRANSFER_COLLECTION_AND_SETTLEMENT_OBSERVATION_CONTRACT",
+      "protocol": "finnor.s6.r3-operation-admission-packet.v1",
+      "predicate": "Every beneficiary/amount/currency/date/event and current funding/consent/authority must match; preserve UNKNOWN and reconcile before retry. json-field-replace-v1 is not banking.",
+      "evidenceClassRequired": "INDEPENDENT_OPERATION_AND_OBSERVATION_ADMISSION",
+      "rerun": "python3 finnor-os/scripts/r3/run-local.py authenticated-owner-positive,separate-acceptance-exact-choice-consumption"
+    },
+    {
+      "id": "completed-X-protected-comparison",
+      "owner": "INDEPENDENT_EVALUATOR_AND_COMPLETED_X_RELEASE_OWNER",
+      "status": "BLOCKED_EXTERNAL",
+      "requiredAsset": "IMMUTABLE_COMPLETED_X_RELEASE_STRONGEST_PERMITTED_METHOD_INVENTORY_AND_PROTECTED_EVALUATOR_DISTRIBUTION",
+      "protocol": "LOCKED_MATCHED_PAIRED_GAIN_WITH_SIMULTANEOUS_95_PERCENT_BOUNDS",
+      "predicate": "Identical owner inputs/rights/resources/consent/deadlines, adapter ablation, all costs and original floors; qualified gain lower bound strictly positive.",
+      "evidenceClassRequired": "INDEPENDENT_PROTECTED_COMPARISON",
+      "distributionDigest": null,
+      "powerStoppingMultiplicityRegistration": "NOT_RUN_CUSTODY_UNAVAILABLE",
+      "localDiagnosticRerun": "python3 finnor-os/scripts/r3/run-local.py authenticated-owner-positive,actual-fallback-matched-off-on"
+    },
+    {
+      "id": "S7-H2-owner-outcomes",
+      "owner": "S7",
+      "status": "BLOCKED_EXTERNAL",
+      "requiredAsset": "INDEPENDENT_VALUATION_ATTRIBUTION_COLLECTED_OWNER_OUTCOMES_AND_CANONICAL_COST_RECONCILIATION",
+      "protocol": "LOCKED_S7_H2_36_MONTH_INCREMENTAL_NET_OWNER_WEALTH",
+      "predicate": "Qualified BAU, ownership/capital/debt/liability/cost reconciliation, rejection/default/override coverage and simultaneous intervals; preserve 100x/10x and material denominator/risk/absolute floors.",
+      "evidenceClassRequired": "INDEPENDENT_H2_OWNER_OUTCOME_RECEIPTS"
+    },
+    {
+      "id": "sealed-peer-join",
+      "owner": "SERIAL_INTEGRATION_ROLE_AND_S3_S4_S5_RUNTIME_WORK_P7_OWNERS",
+      "status": "BLOCKED_EXTERNAL",
+      "requiredAsset": "IMMUTABLE_PEER_INTERFACE_SEALS_AND_ACTUAL_JOINED_CUT",
+      "protocol": "PREIMAGE_BOUND_SERIAL_PATCH_INTEGRATION",
+      "predicate": "Assign unique migration order, retain all peer/original jobs/readers/Work mounts/P7 and run affected proofs on one actual joined runtime.",
+      "evidenceClassRequired": "SEALED_JOINED_COMPATIBILITY_RECEIPT"
+    },
+    {
+      "id": "final-Linux-runtime",
+      "owner": "R3_ENGINEERING_AND_SERIAL_RUNTIME_INTEGRATOR",
+      "status": "INCOMPLETE_INTERNAL_ENGINEERING",
+      "requiredAsset": "SUCCESSFULLY_BUILT_IMMUTABLE_API_AND_WORKER_IMAGES",
+      "protocol": "FINAL_INSTALLED_BYTE_AND_QUEUE_SCHEMA_OWNER_PROOF",
+      "predicate": "Non-root immutable runtime access, locks/licences, separate producer/checker, fresh/upgrade/restart and original/R3 queued dispatch on final built bytes.",
+      "evidenceClassRequired": "ACTUAL_FINAL_IMAGE_RUNTIME_PROOF",
+      "failureArtifact": "final-linux-build-01.log"
+    },
+    {
+      "id": "material-cost-meters",
+      "owner": "R3_ENGINEERING_AND_EVALUATION_COST_OWNER",
+      "status": "INCOMPLETE_INTERNAL_AND_EVALUATION_ACCOUNTING",
+      "requiredAsset": "MONETARY_HUMAN_AND_SIMULTANEOUS_AGGREGATE_MEMORY_METERS",
+      "protocol": "ORIGINAL_COST_PREPARATION_EPISODE_AND_EVALUATOR_ALLOCATION_CONVENTION",
+      "predicate": "Charge successful/failed/cancelled/recovery/build/licence/data/human/storage work exactly once without erasing missing scopes.",
+      "evidenceClassRequired": "COMPLETE_RESOURCE_AND_COST_RECEIPTS"
+    }
+  ],
+  "internalEngineeringNotRelabeledExternal": true,
+  "protectedBusinessEffectsAuthorized": false
+}

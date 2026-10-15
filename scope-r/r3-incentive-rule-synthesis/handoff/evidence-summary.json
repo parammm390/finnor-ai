@@ -1,0 +1,621 @@
+{
+  "schema": "finnor.r3.evidence-summary.v1",
+  "decisiveCuts": [
+    {
+      "path": "native-02/results.json",
+      "sha256": "91162e3d89ad4a71a4d3ce86c13f028f39034deae2442d18697549b7c0692373"
+    },
+    {
+      "path": "owner-2026-10-09T22-45-55/results.json",
+      "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+    },
+    {
+      "path": "owner-2026-10-09T22-55-59/results.json",
+      "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140"
+    },
+    {
+      "path": "owner-2026-10-09T23-22-42/results.json",
+      "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787"
+    },
+    {
+      "path": "owner-2026-10-09T23-28-33/results.json",
+      "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1"
+    },
+    {
+      "path": "owner-2026-10-10T00-51-10/results.json",
+      "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335"
+    },
+    {
+      "path": "installed-runtime-01/results.json",
+      "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4"
+    }
+  ],
+  "nativeCases": 30,
+  "nativePasses": 30,
+  "fullCoverage": {
+    "profiles": 81,
+    "deviations": 648,
+    "participation": 324
+  },
+  "math": {
+    "generalOptimum": "UNKNOWN",
+    "nativeFixtureObjective": {
+      "denominator": "1",
+      "numerator": "10"
+    },
+    "nativeFixtureGap": {
+      "denominator": "1",
+      "numerator": "8"
+    },
+    "smallReference": "4096_GRID_RULES_16_FEASIBLE_OPTIMUM_1"
+  },
+  "finalMountedAndRestartCases": [
+    {
+      "id": "base-local-migration-upgrade-restart",
+      "status": "PASS",
+      "elapsedMs": 3940.6944169999997
+    },
+    {
+      "id": "queued-original-and-r3-physical-restart",
+      "status": "PASS",
+      "elapsedMs": 15766.610667
+    },
+    {
+      "id": "mounted-work-reload-switch",
+      "status": "PASS",
+      "elapsedMs": 134249.265125
+    }
+  ],
+  "preservedFailures": [
+    {
+      "cut": "owner-2026-10-09T21-51-52",
+      "cases": [
+        {
+          "id": "base-local-migration-upgrade-restart",
+          "status": "FAIL",
+          "elapsedMs": 2632.7222500000007
+        }
+      ],
+      "exitCode": 0,
+      "status": "FAIL",
+      "artifact": "owner-2026-10-09T21-51-52/failure.json"
+    },
+    {
+      "cut": "owner-2026-10-09T21-55-41",
+      "cases": [
+        {
+          "id": "base-local-migration-upgrade-restart",
+          "status": "PASS",
+          "elapsedMs": 2458.038917
+        },
+        {
+          "id": "authenticated-owner-positive",
+          "status": "FAIL",
+          "elapsedMs": 20872.462291999997
+        }
+      ],
+      "exitCode": 1,
+      "status": "FAIL",
+      "artifact": "owner-2026-10-09T21-55-41/failure.json"
+    },
+    {
+      "cut": "owner-2026-10-09T21-58-42",
+      "cases": [
+        {
+          "id": "base-local-migration-upgrade-restart",
+          "status": "PASS",
+          "elapsedMs": 3908.360290999999
+        },
+        {
+          "id": "authenticated-owner-positive",
+          "status": "FAIL",
+          "elapsedMs": 11898.482166999998
+        }
+      ],
+      "exitCode": 1,
+      "status": "FAIL",
+      "artifact": "owner-2026-10-09T21-58-42/failure.json"
+    },
+    {
+      "cut": "owner-2026-10-09T22-01-13",
+      "cases": [
+        {
+          "id": "base-local-migration-upgrade-restart",
+          "status": "PASS",
+          "elapsedMs": 3128.4608329999974
+        }
+      ],
+      "exitCode": 1,
+      "status": "FAIL",
+      "artifact": "owner-2026-10-09T22-01-13/failure.json"
+    },
+    {
+      "cut": "owner-2026-10-09T22-05-10",
+      "cases": [
+        {
+          "id": "base-local-migration-upgrade-restart",
+          "status": "PASS",
+          "elapsedMs": 3330.265125
+        },
+        {
+          "id": "authenticated-owner-positive",
+          "status": "FAIL",
+          "elapsedMs": 7144.687333999998
+        }
+      ],
+      "exitCode": 1,
+      "status": "FAIL",
+      "artifact": "owner-2026-10-09T22-05-10/failure.json"
+    },
+    {
+      "cut": "owner-2026-10-09T22-07-27",
+      "cases": [
+        {
+          "id": "base-local-migration-upgrade-restart",
+          "status": "PASS",
+          "elapsedMs": 1956.5986669999993
+        },
+        {
+          "id": "authenticated-owner-positive",
+          "status": "FAIL",
+          "elapsedMs": 6745.852624999998
+        }
+      ],
+      "exitCode": 1,
+      "status": "FAIL",
+      "artifact": "owner-2026-10-09T22-07-27/failure.json"
+    },
+    {
+      "cut": "owner-2026-10-09T22-09-00",
+      "cases": [
+        {
+          "id": "base-local-migration-upgrade-restart",
+          "status": "PASS",
+          "elapsedMs": 2598.557417
+        },
+        {
+          "id": "authenticated-owner-positive",
+          "status": "FAIL",
+          "elapsedMs": 6947.132208000001
+        }
+      ],
+      "exitCode": 1,
+      "status": "FAIL",
+      "artifact": "owner-2026-10-09T22-09-00/failure.json"
+    },
+    {
+      "cut": "owner-2026-10-09T22-10-40",
+      "cases": [
+        {
+          "id": "base-local-migration-upgrade-restart",
+          "status": "PASS",
+          "elapsedMs": 2318.2351249999992
+        },
+        {
+          "id": "authenticated-owner-positive",
+          "status": "FAIL",
+          "elapsedMs": 7065.261916000001
+        }
+      ],
+      "exitCode": 1,
+      "status": "FAIL",
+      "artifact": "owner-2026-10-09T22-10-40/failure.json"
+    },
+    {
+      "cut": "owner-2026-10-09T22-12-44",
+      "cases": [
+        {
+          "id": "base-local-migration-upgrade-restart",
+          "status": "PASS",
+          "elapsedMs": 2296.2835829999995
+        },
+        {
+          "id": "authenticated-owner-positive",
+          "status": "FAIL",
+          "elapsedMs": 7185.423167000001
+        }
+      ],
+      "exitCode": 1,
+      "status": "FAIL",
+      "artifact": "owner-2026-10-09T22-12-44/failure.json"
+    },
+    {
+      "cut": "owner-2026-10-09T22-14-10",
+      "cases": [
+        {
+          "id": "base-local-migration-upgrade-restart",
+          "status": "PASS",
+          "elapsedMs": 1950.2236249999987
+        },
+        {
+          "id": "authenticated-owner-positive",
+          "status": "FAIL",
+          "elapsedMs": 7491.729125000002
+        }
+      ],
+      "exitCode": 1,
+      "status": "FAIL",
+      "artifact": "owner-2026-10-09T22-14-10/failure.json"
+    },
+    {
+      "cut": "owner-2026-10-09T22-17-35",
+      "cases": [
+        {
+          "id": "base-local-migration-upgrade-restart",
+          "status": "PASS",
+          "elapsedMs": 2739.726999999999
+        },
+        {
+          "id": "authenticated-owner-positive",
+          "status": "FAIL",
+          "elapsedMs": 18852.911833
+        }
+      ],
+      "exitCode": 1,
+      "status": "FAIL",
+      "artifact": "owner-2026-10-09T22-17-35/failure.json"
+    },
+    {
+      "cut": "owner-2026-10-09T22-24-22",
+      "cases": [
+        {
+          "id": "base-local-migration-upgrade-restart",
+          "status": "PASS",
+          "elapsedMs": 2511.8672909999987
+        },
+        {
+          "id": "authenticated-owner-positive",
+          "status": "PASS",
+          "elapsedMs": 25052.939749999998
+        },
+        {
+          "id": "report-correction-close",
+          "status": "FAIL",
+          "elapsedMs": 634.8427080000038
+        }
+      ],
+      "exitCode": 1,
+      "status": "FAIL",
+      "artifact": "owner-2026-10-09T22-24-22/failure.json"
+    },
+    {
+      "cut": "owner-2026-10-09T22-29-02",
+      "cases": [
+        {
+          "id": "base-local-migration-upgrade-restart",
+          "status": "PASS",
+          "elapsedMs": 2730.5257920000004
+        },
+        {
+          "id": "authenticated-owner-positive",
+          "status": "PASS",
+          "elapsedMs": 25036.713083
+        },
+        {
+          "id": "report-correction-close",
+          "status": "PASS",
+          "elapsedMs": 3996.393207999994
+        },
+        {
+          "id": "separate-acceptance-exact-choice-consumption",
+          "status": "PASS",
+          "elapsedMs": 9550.494416999994
+        },
+        {
+          "id": "actual-fallback-matched-off-on",
+          "status": "PASS",
+          "elapsedMs": 2684.469207999995
+        },
+        {
+          "id": "decline-no-response",
+          "status": "FAIL",
+          "elapsedMs": 10323.966417000003
+        }
+      ],
+      "exitCode": 1,
+      "status": "FAIL",
+      "artifact": "owner-2026-10-09T22-29-02/failure.json"
+    },
+    {
+      "cut": "owner-2026-10-09T22-31-04",
+      "cases": [
+        {
+          "id": "base-local-migration-upgrade-restart",
+          "status": "PASS",
+          "elapsedMs": 2812.9015830000008
+        },
+        {
+          "id": "authenticated-owner-positive",
+          "status": "PASS",
+          "elapsedMs": 23981.7345
+        },
+        {
+          "id": "report-correction-close",
+          "status": "PASS",
+          "elapsedMs": 4061.3919160000005
+        },
+        {
+          "id": "separate-acceptance-exact-choice-consumption",
+          "status": "PASS",
+          "elapsedMs": 9649.626083000003
+        },
+        {
+          "id": "actual-fallback-matched-off-on",
+          "status": "PASS",
+          "elapsedMs": 2718.196167000002
+        },
+        {
+          "id": "decline-no-response",
+          "status": "PASS",
+          "elapsedMs": 27125.778000000006
+        },
+        {
+          "id": "rational-original-owner-compatibility",
+          "status": "FAIL",
+          "elapsedMs": 19528.007625
+        }
+      ],
+      "exitCode": 1,
+      "status": "FAIL",
+      "artifact": "owner-2026-10-09T22-31-04/failure.json"
+    },
+    {
+      "cut": "owner-2026-10-09T22-38-24",
+      "cases": [
+        {
+          "id": "base-local-migration-upgrade-restart",
+          "status": "PASS",
+          "elapsedMs": 2798.3944170000004
+        },
+        {
+          "id": "authenticated-owner-positive",
+          "status": "PASS",
+          "elapsedMs": 29017.233291999997
+        },
+        {
+          "id": "report-correction-close",
+          "status": "PASS",
+          "elapsedMs": 4011.5064159999965
+        },
+        {
+          "id": "separate-acceptance-exact-choice-consumption",
+          "status": "PASS",
+          "elapsedMs": 14813.819415999998
+        },
+        {
+          "id": "sigkill-after-child-acceptance",
+          "status": "FAIL",
+          "elapsedMs": 28981.880124999996
+        }
+      ],
+      "exitCode": 1,
+      "status": "FAIL",
+      "artifact": "owner-2026-10-09T22-38-24/failure.json"
+    },
+    {
+      "cut": "owner-2026-10-09T22-41-25",
+      "cases": [
+        {
+          "id": "base-local-migration-upgrade-restart",
+          "status": "PASS",
+          "elapsedMs": 3188.831583000001
+        },
+        {
+          "id": "sigkill-after-child-acceptance",
+          "status": "FAIL",
+          "elapsedMs": 91590.916208
+        }
+      ],
+      "exitCode": 1,
+      "status": "FAIL",
+      "artifact": "owner-2026-10-09T22-41-25/failure.json"
+    },
+    {
+      "cut": "owner-2026-10-09T22-53-08",
+      "cases": [
+        {
+          "id": "base-local-migration-upgrade-restart",
+          "status": "PASS",
+          "elapsedMs": 2766.018791999999
+        },
+        {
+          "id": "currentness-and-p7",
+          "status": "FAIL",
+          "elapsedMs": 24713.481416
+        }
+      ],
+      "exitCode": 1,
+      "status": "FAIL",
+      "artifact": "owner-2026-10-09T22-53-08/failure.json"
+    },
+    {
+      "cut": "owner-2026-10-09T23-06-46",
+      "cases": [
+        {
+          "id": "base-local-migration-upgrade-restart",
+          "status": "PASS",
+          "elapsedMs": 5734.583791999999
+        },
+        {
+          "id": "native-experience-delivery",
+          "status": "FAIL",
+          "elapsedMs": 14243.185624999998
+        }
+      ],
+      "exitCode": 1,
+      "status": "FAIL",
+      "artifact": "owner-2026-10-09T23-06-46/failure.json"
+    },
+    {
+      "cut": "owner-2026-10-09T23-12-31",
+      "cases": [
+        {
+          "id": "base-local-migration-upgrade-restart",
+          "status": "PASS",
+          "elapsedMs": 6909.72925
+        },
+        {
+          "id": "native-experience-delivery",
+          "status": "FAIL",
+          "elapsedMs": 66497.882125
+        }
+      ],
+      "exitCode": 1,
+      "status": "FAIL",
+      "artifact": "owner-2026-10-09T23-12-31/failure.json"
+    },
+    {
+      "cut": "owner-2026-10-09T23-16-07",
+      "cases": [
+        {
+          "id": "base-local-migration-upgrade-restart",
+          "status": "PASS",
+          "elapsedMs": 4886.259208000001
+        },
+        {
+          "id": "native-experience-delivery",
+          "status": "FAIL",
+          "elapsedMs": 59871.696916
+        }
+      ],
+      "exitCode": 1,
+      "status": "FAIL",
+      "artifact": "owner-2026-10-09T23-16-07/failure.json"
+    },
+    {
+      "cut": "owner-2026-10-09T23-20-00",
+      "cases": [
+        {
+          "id": "base-local-migration-upgrade-restart",
+          "status": "PASS",
+          "elapsedMs": 4844.473833
+        },
+        {
+          "id": "native-experience-delivery",
+          "status": "FAIL",
+          "elapsedMs": 66910.677083
+        }
+      ],
+      "exitCode": 1,
+      "status": "FAIL",
+      "artifact": "owner-2026-10-09T23-20-00/failure.json"
+    },
+    {
+      "cut": "owner-2026-10-09T23-36-16",
+      "cases": [
+        {
+          "id": "base-local-migration-upgrade-restart",
+          "status": "PASS",
+          "elapsedMs": 1993.7000000000007
+        },
+        {
+          "id": "mounted-work-reload-switch",
+          "status": "FAIL",
+          "elapsedMs": 94258.101333
+        }
+      ],
+      "exitCode": 1,
+      "status": "FAIL",
+      "artifact": "owner-2026-10-09T23-36-16/failure.json"
+    },
+    {
+      "cut": "owner-2026-10-09T23-43-47",
+      "cases": [
+        {
+          "id": "base-local-migration-upgrade-restart",
+          "status": "PASS",
+          "elapsedMs": 3246.746665999999
+        }
+      ],
+      "status": "INTERRUPTED",
+      "artifact": "owner-2026-10-09T23-43-47/interruption.json"
+    },
+    {
+      "cut": "owner-2026-10-10T00-24-17",
+      "cases": [
+        {
+          "id": "base-local-migration-upgrade-restart",
+          "status": "PASS",
+          "elapsedMs": 1524.9524580000016
+        },
+        {
+          "id": "mounted-work-reload-switch",
+          "status": "FAIL",
+          "elapsedMs": 106365.654667
+        }
+      ],
+      "exitCode": 1,
+      "status": "FAIL",
+      "artifact": "owner-2026-10-10T00-24-17/failure.json"
+    },
+    {
+      "cut": "owner-2026-10-10T00-30-20",
+      "cases": [
+        {
+          "id": "base-local-migration-upgrade-restart",
+          "status": "PASS",
+          "elapsedMs": 2199.19125
+        },
+        {
+          "id": "mounted-work-reload-switch",
+          "status": "FAIL",
+          "elapsedMs": 117484.41508300001
+        }
+      ],
+      "exitCode": 1,
+      "status": "FAIL",
+      "artifact": "owner-2026-10-10T00-30-20/failure.json"
+    },
+    {
+      "cut": "owner-2026-10-10T00-37-35",
+      "cases": [],
+      "exitCode": 1,
+      "status": "FAIL",
+      "artifact": "owner-2026-10-10T00-37-35/runner.log"
+    },
+    {
+      "cut": "owner-2026-10-10T00-44-25",
+      "cases": [
+        {
+          "id": "base-local-migration-upgrade-restart",
+          "status": "PASS",
+          "elapsedMs": 3371.576583
+        },
+        {
+          "id": "mounted-work-reload-switch",
+          "status": "FAIL",
+          "elapsedMs": 136106.81020900002
+        }
+      ],
+      "exitCode": 1,
+      "status": "FAIL",
+      "artifact": "owner-2026-10-10T00-44-25/failure.json"
+    }
+  ],
+  "LinuxBuild": {
+    "status": "FAIL_RECORDED_PREDECESSOR_FINAL_PACKAGING_NOT_BUILT",
+    "path": "final-linux-build-01.log",
+    "sha256": "46e014c8fea9fa38cf9a6b9ebde8f1448f575427f035ca969af1966ee3f31d5c",
+    "imageDigest": null
+  },
+  "screenshots": "UNAVAILABLE_RETAINED_CDP_TIMEOUTS_DOM_ACCESSIBILITY_PASSED",
+  "meters": {
+    "nativeCPU": "OBSERVED",
+    "perChildPeakRSS": "OBSERVED_NOT_AGGREGATE",
+    "elapsedAndCharges": "OBSERVED",
+    "usd": null,
+    "humanSeconds": null,
+    "aggregateSimultaneousPeakMemoryBytes": null,
+    "localAcquisitionGenerationCap": "EXCEEDED",
+    "wholeSessionEpisodeFloor": "NOT_QUALIFIED"
+  },
+  "gates": {
+    "functional": "INCOMPLETE",
+    "combinedR": "NOT_RUN",
+    "S3": "UNQUALIFIED",
+    "S8": "NOT_RUN",
+    "activation": "NOT_AUTHORIZED",
+    "PostX": "NOT_RUN",
+    "S7H2": "NOT_RUN"
+  }
+}

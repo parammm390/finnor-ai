@@ -1,4 +1,4 @@
-// Generated from finnor-os/openapi.json, SHA-256 1b4157f4d11785db9b6a8d13f564b3502a67bbab6b4a7c0fe231f22c23ed52f9.
+// Generated from finnor-os/openapi.json, SHA-256 733f985c145c22d7e34287eac9547ea73898fdf6e813e0ecdfaeec30395f6899
 export interface paths {
     "/api/outcome-packs/control": {
         parameters: {
@@ -20200,6 +20200,2959 @@ export interface paths {
                 };
                 /** @description Required authentic runtime configuration unavailable. */
                 503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/elicitation-protocols/submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        envelope_inputs: {
+                            /** @constant */
+                            mode: "ordinary_disposable";
+                        };
+                        problem_ref: {
+                            /** Format: uuid */
+                            sourceId: string;
+                            /** Format: uuid */
+                            versionId: string;
+                            contentDigest: string;
+                        };
+                        existing_work_revision: {
+                            /** Format: uuid */
+                            workId: string;
+                            /** Format: uuid */
+                            revision: string;
+                            root: {
+                                entityType: string;
+                                /** Format: uuid */
+                                entityId: string;
+                            };
+                        };
+                        domain_profile_ref: {
+                            owner: string;
+                            id: string;
+                            version: string;
+                            contentDigest: string;
+                        };
+                        budget_grant_ref: {
+                            owner: string;
+                            id: string;
+                            version: string;
+                            contentDigest: string;
+                        };
+                        cancellation_ref: string;
+                        incumbentPolicyRef: {
+                            owner: string;
+                            id: string;
+                            version: string;
+                            contentDigest: string;
+                        };
+                        idempotencyKey: string;
+                        limits: {
+                            /** Format: date-time */
+                            deadlineAt: string;
+                            maxAttempts: number;
+                            childSeconds: number;
+                        };
+                    };
+                };
+            };
+            responses: {
+                /** @description Current exact proposed finite mechanism, owner receipt or historical responsibility. Not private truth, consent, admission or settlement. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded input rejected */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Bearer identity required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact reporting or owner principal unavailable */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Permitted Work/reference unavailable */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original revision, deadline, grant, closure or idempotency fenced */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Byte/resource bound */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Precise unsupported domain or required protected authority unavailable */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/elicitation-protocols/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        requestId: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Current exact proposed finite mechanism, owner receipt or historical responsibility. Not private truth, consent, admission or settlement. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @constant */
+                            schema: "finnor.r3.work-review.v1";
+                            /** Format: uuid */
+                            requestId: string;
+                            /** Format: uuid */
+                            workId: string;
+                            /** Format: uuid */
+                            workRevision: string;
+                            /** Format: uuid */
+                            tenantId: string;
+                            /** Format: uuid */
+                            principalId: string;
+                            /** @enum {string} */
+                            status: "QUEUED" | "RUNNING" | "COMPLETE" | "INCOMPLETE" | "INFEASIBLE" | "UNSUPPORTED" | "INVALIDATED" | "CANCELLED" | "UNKNOWN";
+                            /** Format: date-time */
+                            deadlineAt: string;
+                            protocol: {
+                                /** @constant */
+                                schema: "finnor.elicitation-protocol.v1";
+                                ref: {
+                                    owner: string;
+                                    id: string;
+                                    version: string;
+                                    contentDigest: string;
+                                };
+                                envelope: {
+                                    id: string;
+                                    /** @constant */
+                                    kind: "ElicitationProtocol";
+                                    /** @constant */
+                                    schemaRevision: 1;
+                                    /** Format: uuid */
+                                    tenantId: string;
+                                    /** Format: uuid */
+                                    principalId: string;
+                                    work: {
+                                        /** Format: uuid */
+                                        id: string;
+                                        /** Format: uuid */
+                                        revision: string;
+                                        digest: string;
+                                    };
+                                    baseline: {
+                                        commit: string;
+                                        tree: string;
+                                        manifestDigest: string;
+                                    };
+                                    producer: {
+                                        codeDigest: string;
+                                        lockDigest: string;
+                                        admissionRef: null;
+                                    };
+                                    ownerInputs: {
+                                        ref: {
+                                            owner: string;
+                                            id: string;
+                                            version: string;
+                                            contentDigest: string;
+                                        };
+                                        /** Format: date-time */
+                                        asOf: string;
+                                        rightsRef: string;
+                                    }[];
+                                    domainRef: {
+                                        owner: string;
+                                        id: string;
+                                        version: string;
+                                        contentDigest: string;
+                                    };
+                                    /** @constant */
+                                    grammar: "r3-elicitation-use-v1";
+                                    /** @constant */
+                                    checkBasis: "MODEL_RELATIVE_EXACT";
+                                    claims: {
+                                        statement: string;
+                                        domainRef: {
+                                            owner: string;
+                                            id: string;
+                                            version: string;
+                                            contentDigest: string;
+                                        };
+                                        checkerReceipt: {
+                                            owner: string;
+                                            id: string;
+                                            version: string;
+                                            contentDigest: string;
+                                        };
+                                    }[];
+                                    gaps: {
+                                        reason: string;
+                                        affectedClaims: string[];
+                                        /** @enum {string} */
+                                        status: "UNKNOWN" | "BLOCKED_EXTERNAL";
+                                    }[];
+                                    budgetGrantRef: {
+                                        owner: string;
+                                        id: string;
+                                        version: string;
+                                        contentDigest: string;
+                                    };
+                                    resourceReceipts: {
+                                        [key: string]: unknown;
+                                    }[];
+                                    invalidationDependencies: {
+                                        key: string;
+                                        revision: number;
+                                        nodeIds: string[];
+                                        digest: string | null;
+                                    }[];
+                                    lifecycle: {
+                                        /** @constant */
+                                        state: "development-verified";
+                                        historyRefs: {
+                                            owner: string;
+                                            id: string;
+                                            version: string;
+                                            contentDigest: string;
+                                        }[];
+                                        /** @constant */
+                                        domainQualified: false;
+                                        /** @constant */
+                                        s8Admitted: false;
+                                        /** @constant */
+                                        active: false;
+                                    };
+                                };
+                                problem: {
+                                    /** @constant */
+                                    schema: "finnor.r3.problem.v1";
+                                    binding: {
+                                        /** Format: uuid */
+                                        tenantId: string;
+                                        /** Format: uuid */
+                                        principalId: string;
+                                        /** Format: uuid */
+                                        workId: string;
+                                        /** Format: uuid */
+                                        workRevision: string;
+                                        workDigest: string;
+                                        root: {
+                                            entityType: string;
+                                            /** Format: uuid */
+                                            entityId: string;
+                                        };
+                                        preferenceRef: {
+                                            owner: string;
+                                            id: string;
+                                            version: string;
+                                            contentDigest: string;
+                                        };
+                                        mandateRef: {
+                                            owner: string;
+                                            id: string;
+                                            version: string;
+                                            contentDigest: string;
+                                        };
+                                        domainRef: {
+                                            owner: string;
+                                            id: string;
+                                            version: string;
+                                            contentDigest: string;
+                                        };
+                                        paymentContractRef: {
+                                            owner: string;
+                                            id: string;
+                                            version: string;
+                                            contentDigest: string;
+                                        };
+                                        rightsRef: string;
+                                        backendDigest: string;
+                                        checkerDigest: string;
+                                        producerDigest: string;
+                                        schemaDigest: string;
+                                        sourceManifestDigest: string;
+                                    };
+                                    model: {
+                                        /** @constant */
+                                        utility: "SUPPLIED_QUASILINEAR";
+                                        /** @constant */
+                                        participation: "EX_POST_ALL_OTHER_REPORTS";
+                                        /** @constant */
+                                        events: "UNCONDITIONAL_DUE_TIME";
+                                        /** @constant */
+                                        guarantee: "INDIVIDUAL_WEAK_DSIC";
+                                    };
+                                    money: {
+                                        currency: string;
+                                        unit: string;
+                                        /** Format: date-time */
+                                        valuationDate: string;
+                                        /** Format: uuid */
+                                        ownerId: string;
+                                        timeConvention: string;
+                                        discountConvention: string;
+                                        ownerDateMultipliers: {
+                                            [key: string]: {
+                                                numerator: string;
+                                                denominator: string;
+                                            };
+                                        };
+                                        ownerPeriodMultipliers: {
+                                            numerator: string;
+                                            denominator: string;
+                                        }[];
+                                    };
+                                    parties: {
+                                        id: string;
+                                        entityType: string;
+                                        /** Format: uuid */
+                                        entityId: string;
+                                        /** Format: uuid */
+                                        reportingPrincipalId: string;
+                                        rightsRef: string;
+                                        sourceRef: {
+                                            owner: string;
+                                            id: string;
+                                            version: string;
+                                            contentDigest: string;
+                                        };
+                                        assumptionRef: {
+                                            owner: string;
+                                            id: string;
+                                            version: string;
+                                            contentDigest: string;
+                                        };
+                                        types: {
+                                            id: string;
+                                            values: {
+                                                [key: string]: {
+                                                    numerator: string;
+                                                    denominator: string;
+                                                };
+                                            };
+                                            dateMultipliers: {
+                                                [key: string]: {
+                                                    numerator: string;
+                                                    denominator: string;
+                                                };
+                                            };
+                                            outsideOptions: {
+                                                otherReports: string[];
+                                                utility: {
+                                                    numerator: string;
+                                                    denominator: string;
+                                                };
+                                            }[];
+                                        }[];
+                                        payments: {
+                                            dateId: string;
+                                            minimum: {
+                                                numerator: string;
+                                                denominator: string;
+                                            };
+                                            maximum: {
+                                                numerator: string;
+                                                denominator: string;
+                                            };
+                                        }[];
+                                        liabilityCap: {
+                                            numerator: string;
+                                            denominator: string;
+                                        };
+                                    }[];
+                                    dates: {
+                                        id: string;
+                                        /** Format: date-time */
+                                        at: string;
+                                        period: number;
+                                        /** @constant */
+                                        trigger: "DUE_TIME";
+                                        /** @constant */
+                                        observableBy: "OWNER_CLOCK";
+                                        contractRef: {
+                                            owner: string;
+                                            id: string;
+                                            version: string;
+                                            contentDigest: string;
+                                        };
+                                        /** @constant */
+                                        defaultCondition: "RETAIN_OUTSTANDING_LIABILITY";
+                                        grossOutflowCap: {
+                                            numerator: string;
+                                            denominator: string;
+                                        };
+                                        escrowCap: {
+                                            numerator: string;
+                                            denominator: string;
+                                        };
+                                    }[];
+                                    outcomes: {
+                                        id: string;
+                                        meaningRef: {
+                                            owner: string;
+                                            id: string;
+                                            version: string;
+                                            contentDigest: string;
+                                        };
+                                        eligibility: "ALL_REPORTS" | string[][];
+                                        demands: {
+                                            [key: string]: {
+                                                numerator: string;
+                                                denominator: string;
+                                            }[];
+                                        };
+                                        costs: {
+                                            numerator: string;
+                                            denominator: string;
+                                        }[];
+                                        liabilities: {
+                                            numerator: string;
+                                            denominator: string;
+                                        }[];
+                                    }[];
+                                    resources: {
+                                        ref: {
+                                            owner: string;
+                                            id: string;
+                                            version: string;
+                                            contentDigest: string;
+                                        };
+                                        resourceId: string;
+                                        unit: string;
+                                        /** @enum {string} */
+                                        kind: "STOCK" | "FLOW" | "OCCUPANCY" | "CUMULATIVE_EXPENDITURE" | "EXPOSURE";
+                                        horizon: {
+                                            /** Format: date-time */
+                                            startAt: string;
+                                            periodMs: number;
+                                            periods: number;
+                                        };
+                                        availability: {
+                                            numerator: string;
+                                            denominator: string;
+                                        }[];
+                                        baseline: {
+                                            numerator: string;
+                                            denominator: string;
+                                        }[];
+                                        minimumBaseline: {
+                                            numerator: string;
+                                            denominator: string;
+                                        }[];
+                                        safetyMargin: {
+                                            numerator: string;
+                                            denominator: string;
+                                        };
+                                    }[];
+                                    covenants: {
+                                        id: string;
+                                        sourceRef: {
+                                            owner: string;
+                                            id: string;
+                                            version: string;
+                                            contentDigest: string;
+                                        };
+                                        unit: string;
+                                        periods: number[];
+                                        terms: {
+                                            resourceId: string;
+                                            coefficient: {
+                                                numerator: string;
+                                                denominator: string;
+                                            };
+                                        }[];
+                                        maximum: {
+                                            numerator: string;
+                                            denominator: string;
+                                        };
+                                        safetyMargin: {
+                                            numerator: string;
+                                            denominator: string;
+                                        };
+                                    }[];
+                                    constraints: {
+                                        cashResourceId: string;
+                                        netTransferMinimum: {
+                                            numerator: string;
+                                            denominator: string;
+                                        };
+                                        netTransferMaximum: {
+                                            numerator: string;
+                                            denominator: string;
+                                        };
+                                        /** @constant */
+                                        incomingPromisesMayFund: false;
+                                        ownerLiabilityCap: {
+                                            numerator: string;
+                                            denominator: string;
+                                        };
+                                    };
+                                    mandateLimits: {
+                                        dimensions: {
+                                            resourceId: string;
+                                            unit: string;
+                                            totalLimit: {
+                                                numerator: string;
+                                                denominator: string;
+                                            };
+                                            capacity: {
+                                                numerator: string;
+                                                denominator: string;
+                                            };
+                                        }[];
+                                        couplings: {
+                                            id: string;
+                                            weights: {
+                                                [key: string]: {
+                                                    numerator: string;
+                                                    denominator: string;
+                                                };
+                                            };
+                                            maximum: {
+                                                numerator: string;
+                                                denominator: string;
+                                            };
+                                        }[];
+                                    };
+                                    objective: {
+                                        /** @enum {string} */
+                                        kind: "MAXIMIN" | "EXPECTED_QUALIFIED_JOINT";
+                                        valueByProfile: {
+                                            [key: string]: {
+                                                [key: string]: {
+                                                    numerator: string;
+                                                    denominator: string;
+                                                };
+                                            };
+                                        };
+                                        weights: {
+                                            numerator: string;
+                                            denominator: string;
+                                        }[] | null;
+                                        distributionRef: {
+                                            owner: string;
+                                            id: string;
+                                            version: string;
+                                            contentDigest: string;
+                                        } | null;
+                                        range: [
+                                            {
+                                                numerator: string;
+                                                denominator: string;
+                                            },
+                                            {
+                                                numerator: string;
+                                                denominator: string;
+                                            }
+                                        ];
+                                        normalization: {
+                                            numerator: string;
+                                            denominator: string;
+                                        };
+                                        minimumValue: {
+                                            numerator: string;
+                                            denominator: string;
+                                        };
+                                        /** @constant */
+                                        tieConvention: "NO_STRICT_TRUTH_OR_CONSENT_FROM_TIES";
+                                    };
+                                    assumptions: string[];
+                                    referenceGrid?: {
+                                        numerator: string;
+                                        denominator: string;
+                                    }[];
+                                };
+                                rule: {
+                                    /** @constant */
+                                    schema: "finnor.r3.rule.v1";
+                                    inputDigest: string;
+                                    binding: {
+                                        /** Format: uuid */
+                                        tenantId: string;
+                                        /** Format: uuid */
+                                        principalId: string;
+                                        /** Format: uuid */
+                                        workId: string;
+                                        /** Format: uuid */
+                                        workRevision: string;
+                                        workDigest: string;
+                                        root: {
+                                            entityType: string;
+                                            /** Format: uuid */
+                                            entityId: string;
+                                        };
+                                        preferenceRef: {
+                                            owner: string;
+                                            id: string;
+                                            version: string;
+                                            contentDigest: string;
+                                        };
+                                        mandateRef: {
+                                            owner: string;
+                                            id: string;
+                                            version: string;
+                                            contentDigest: string;
+                                        };
+                                        domainRef: {
+                                            owner: string;
+                                            id: string;
+                                            version: string;
+                                            contentDigest: string;
+                                        };
+                                        paymentContractRef: {
+                                            owner: string;
+                                            id: string;
+                                            version: string;
+                                            contentDigest: string;
+                                        };
+                                        rightsRef: string;
+                                        backendDigest: string;
+                                        checkerDigest: string;
+                                        producerDigest: string;
+                                        schemaDigest: string;
+                                        sourceManifestDigest: string;
+                                    };
+                                    table: {
+                                        reports: string[];
+                                        outcomeId: string;
+                                        schedule: {
+                                            partyId: string;
+                                            dateId: string;
+                                            amount: {
+                                                numerator: string;
+                                                denominator: string;
+                                            };
+                                            eventId: string;
+                                            currency: string;
+                                            unit: string;
+                                            /** Format: date-time */
+                                            dueAt: string;
+                                        }[];
+                                    }[];
+                                    search: {
+                                        status: string;
+                                        /** @constant */
+                                        numericalSemantics: "SCIP_FLOAT64_PROPOSAL";
+                                        /** @enum {string} */
+                                        optimum: "UNKNOWN" | "ORIGINAL_ANALYTIC_BOUND_ATTAINED";
+                                        claimedObjective: {
+                                            numerator: string;
+                                            denominator: string;
+                                        };
+                                        claimedUpper: {
+                                            numerator: string;
+                                            denominator: string;
+                                        } | null;
+                                        proof: null;
+                                        trace: {
+                                            [key: string]: unknown;
+                                        };
+                                    };
+                                };
+                                check: {
+                                    /** @constant */
+                                    schema: "finnor.r3.check.v1";
+                                    /** @constant */
+                                    accepted: true;
+                                    inputDigest: string;
+                                    ruleDigest: string;
+                                    checker: {
+                                        sourceDigest: string;
+                                        pythonVersion: string;
+                                        /** @constant */
+                                        implementation: "INDEPENDENT_FRACTION_V1";
+                                    };
+                                    /** @constant */
+                                    basis: "MODEL_RELATIVE_EXACT";
+                                    counts: {
+                                        /** @constant */
+                                        profiles: 81;
+                                        /** @constant */
+                                        deviations: 648;
+                                        /** @constant */
+                                        participation: 324;
+                                    };
+                                    failures: {
+                                        [key: string]: unknown;
+                                    }[];
+                                    objective: {
+                                        numerator: string;
+                                        denominator: string;
+                                    };
+                                    upper: {
+                                        numerator: string;
+                                        denominator: string;
+                                    } | null;
+                                    optimizationGap: {
+                                        numerator: string;
+                                        denominator: string;
+                                    } | null;
+                                    /** @enum {string} */
+                                    optimum: "CHECKED_ANALYTIC" | "UNKNOWN";
+                                    minimumIncentiveMargin: {
+                                        numerator: string;
+                                        denominator: string;
+                                    };
+                                    minimumParticipationMargin: {
+                                        numerator: string;
+                                        denominator: string;
+                                    };
+                                    maximumDeviationGain: {
+                                        numerator: string;
+                                        denominator: string;
+                                    };
+                                    envelopes: {
+                                        [key: string]: unknown;
+                                    }[];
+                                    assumptions: string[];
+                                    /** @constant */
+                                    consentEstablished: false;
+                                    /** @constant */
+                                    executionAuthorityGranted: false;
+                                    /** @constant */
+                                    behavioralTruthEstablished: false;
+                                } & {
+                                    [key: string]: unknown;
+                                };
+                                reporting: {
+                                    /** @constant */
+                                    schema: "r3-authorized-report-v1";
+                                    /** @constant */
+                                    corrections: "BEFORE_CLOSE_ONLY";
+                                    /** @constant */
+                                    closing: "ALL_REPORTS_OR_NO_AGREEMENT";
+                                    /** @constant */
+                                    tableFixedBeforeReports: true;
+                                };
+                                usePolicyRef: {
+                                    owner: string;
+                                    id: string;
+                                    version: string;
+                                    contentDigest: string;
+                                } | null;
+                                reservation: {
+                                    [key: string]: unknown;
+                                } | null;
+                                proposedSchedulesRef: {
+                                    owner: string;
+                                    id: string;
+                                    version: string;
+                                    contentDigest: string;
+                                } | null;
+                                /** @constant */
+                                agreementEstablished: false;
+                                /** @constant */
+                                settlementEstablished: false;
+                                /** @constant */
+                                executionAuthorityGranted: false;
+                            } | null;
+                            usePolicy: {
+                                [key: string]: unknown;
+                            } | null;
+                            allocation: {
+                                [key: string]: unknown;
+                            } | null;
+                            schedules: {
+                                [key: string]: unknown;
+                            } | null;
+                            reportState: {
+                                [key: string]: unknown;
+                            } | null;
+                            costs: {
+                                [key: string]: unknown;
+                            };
+                            reason: string | null;
+                            provisional: boolean;
+                            /** @constant */
+                            agreementEstablished: false;
+                            /** @constant */
+                            settlementEstablished: false;
+                            /** @constant */
+                            executionAuthorityGranted: false;
+                        };
+                    };
+                };
+                /** @description Strict bounded input rejected */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Bearer identity required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact reporting or owner principal unavailable */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Permitted Work/reference unavailable */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original revision, deadline, grant, closure or idempotency fenced */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Byte/resource bound */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Precise unsupported domain or required protected authority unavailable */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/elicitation-protocols/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        requestId: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Current exact proposed finite mechanism, owner receipt or historical responsibility. Not private truth, consent, admission or settlement. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @constant */
+                            schema: "finnor.r3.work-review.v1";
+                            /** Format: uuid */
+                            requestId: string;
+                            /** Format: uuid */
+                            workId: string;
+                            /** Format: uuid */
+                            workRevision: string;
+                            /** Format: uuid */
+                            tenantId: string;
+                            /** Format: uuid */
+                            principalId: string;
+                            /** @enum {string} */
+                            status: "QUEUED" | "RUNNING" | "COMPLETE" | "INCOMPLETE" | "INFEASIBLE" | "UNSUPPORTED" | "INVALIDATED" | "CANCELLED" | "UNKNOWN";
+                            /** Format: date-time */
+                            deadlineAt: string;
+                            protocol: {
+                                /** @constant */
+                                schema: "finnor.elicitation-protocol.v1";
+                                ref: {
+                                    owner: string;
+                                    id: string;
+                                    version: string;
+                                    contentDigest: string;
+                                };
+                                envelope: {
+                                    id: string;
+                                    /** @constant */
+                                    kind: "ElicitationProtocol";
+                                    /** @constant */
+                                    schemaRevision: 1;
+                                    /** Format: uuid */
+                                    tenantId: string;
+                                    /** Format: uuid */
+                                    principalId: string;
+                                    work: {
+                                        /** Format: uuid */
+                                        id: string;
+                                        /** Format: uuid */
+                                        revision: string;
+                                        digest: string;
+                                    };
+                                    baseline: {
+                                        commit: string;
+                                        tree: string;
+                                        manifestDigest: string;
+                                    };
+                                    producer: {
+                                        codeDigest: string;
+                                        lockDigest: string;
+                                        admissionRef: null;
+                                    };
+                                    ownerInputs: {
+                                        ref: {
+                                            owner: string;
+                                            id: string;
+                                            version: string;
+                                            contentDigest: string;
+                                        };
+                                        /** Format: date-time */
+                                        asOf: string;
+                                        rightsRef: string;
+                                    }[];
+                                    domainRef: {
+                                        owner: string;
+                                        id: string;
+                                        version: string;
+                                        contentDigest: string;
+                                    };
+                                    /** @constant */
+                                    grammar: "r3-elicitation-use-v1";
+                                    /** @constant */
+                                    checkBasis: "MODEL_RELATIVE_EXACT";
+                                    claims: {
+                                        statement: string;
+                                        domainRef: {
+                                            owner: string;
+                                            id: string;
+                                            version: string;
+                                            contentDigest: string;
+                                        };
+                                        checkerReceipt: {
+                                            owner: string;
+                                            id: string;
+                                            version: string;
+                                            contentDigest: string;
+                                        };
+                                    }[];
+                                    gaps: {
+                                        reason: string;
+                                        affectedClaims: string[];
+                                        /** @enum {string} */
+                                        status: "UNKNOWN" | "BLOCKED_EXTERNAL";
+                                    }[];
+                                    budgetGrantRef: {
+                                        owner: string;
+                                        id: string;
+                                        version: string;
+                                        contentDigest: string;
+                                    };
+                                    resourceReceipts: {
+                                        [key: string]: unknown;
+                                    }[];
+                                    invalidationDependencies: {
+                                        key: string;
+                                        revision: number;
+                                        nodeIds: string[];
+                                        digest: string | null;
+                                    }[];
+                                    lifecycle: {
+                                        /** @constant */
+                                        state: "development-verified";
+                                        historyRefs: {
+                                            owner: string;
+                                            id: string;
+                                            version: string;
+                                            contentDigest: string;
+                                        }[];
+                                        /** @constant */
+                                        domainQualified: false;
+                                        /** @constant */
+                                        s8Admitted: false;
+                                        /** @constant */
+                                        active: false;
+                                    };
+                                };
+                                problem: {
+                                    /** @constant */
+                                    schema: "finnor.r3.problem.v1";
+                                    binding: {
+                                        /** Format: uuid */
+                                        tenantId: string;
+                                        /** Format: uuid */
+                                        principalId: string;
+                                        /** Format: uuid */
+                                        workId: string;
+                                        /** Format: uuid */
+                                        workRevision: string;
+                                        workDigest: string;
+                                        root: {
+                                            entityType: string;
+                                            /** Format: uuid */
+                                            entityId: string;
+                                        };
+                                        preferenceRef: {
+                                            owner: string;
+                                            id: string;
+                                            version: string;
+                                            contentDigest: string;
+                                        };
+                                        mandateRef: {
+                                            owner: string;
+                                            id: string;
+                                            version: string;
+                                            contentDigest: string;
+                                        };
+                                        domainRef: {
+                                            owner: string;
+                                            id: string;
+                                            version: string;
+                                            contentDigest: string;
+                                        };
+                                        paymentContractRef: {
+                                            owner: string;
+                                            id: string;
+                                            version: string;
+                                            contentDigest: string;
+                                        };
+                                        rightsRef: string;
+                                        backendDigest: string;
+                                        checkerDigest: string;
+                                        producerDigest: string;
+                                        schemaDigest: string;
+                                        sourceManifestDigest: string;
+                                    };
+                                    model: {
+                                        /** @constant */
+                                        utility: "SUPPLIED_QUASILINEAR";
+                                        /** @constant */
+                                        participation: "EX_POST_ALL_OTHER_REPORTS";
+                                        /** @constant */
+                                        events: "UNCONDITIONAL_DUE_TIME";
+                                        /** @constant */
+                                        guarantee: "INDIVIDUAL_WEAK_DSIC";
+                                    };
+                                    money: {
+                                        currency: string;
+                                        unit: string;
+                                        /** Format: date-time */
+                                        valuationDate: string;
+                                        /** Format: uuid */
+                                        ownerId: string;
+                                        timeConvention: string;
+                                        discountConvention: string;
+                                        ownerDateMultipliers: {
+                                            [key: string]: {
+                                                numerator: string;
+                                                denominator: string;
+                                            };
+                                        };
+                                        ownerPeriodMultipliers: {
+                                            numerator: string;
+                                            denominator: string;
+                                        }[];
+                                    };
+                                    parties: {
+                                        id: string;
+                                        entityType: string;
+                                        /** Format: uuid */
+                                        entityId: string;
+                                        /** Format: uuid */
+                                        reportingPrincipalId: string;
+                                        rightsRef: string;
+                                        sourceRef: {
+                                            owner: string;
+                                            id: string;
+                                            version: string;
+                                            contentDigest: string;
+                                        };
+                                        assumptionRef: {
+                                            owner: string;
+                                            id: string;
+                                            version: string;
+                                            contentDigest: string;
+                                        };
+                                        types: {
+                                            id: string;
+                                            values: {
+                                                [key: string]: {
+                                                    numerator: string;
+                                                    denominator: string;
+                                                };
+                                            };
+                                            dateMultipliers: {
+                                                [key: string]: {
+                                                    numerator: string;
+                                                    denominator: string;
+                                                };
+                                            };
+                                            outsideOptions: {
+                                                otherReports: string[];
+                                                utility: {
+                                                    numerator: string;
+                                                    denominator: string;
+                                                };
+                                            }[];
+                                        }[];
+                                        payments: {
+                                            dateId: string;
+                                            minimum: {
+                                                numerator: string;
+                                                denominator: string;
+                                            };
+                                            maximum: {
+                                                numerator: string;
+                                                denominator: string;
+                                            };
+                                        }[];
+                                        liabilityCap: {
+                                            numerator: string;
+                                            denominator: string;
+                                        };
+                                    }[];
+                                    dates: {
+                                        id: string;
+                                        /** Format: date-time */
+                                        at: string;
+                                        period: number;
+                                        /** @constant */
+                                        trigger: "DUE_TIME";
+                                        /** @constant */
+                                        observableBy: "OWNER_CLOCK";
+                                        contractRef: {
+                                            owner: string;
+                                            id: string;
+                                            version: string;
+                                            contentDigest: string;
+                                        };
+                                        /** @constant */
+                                        defaultCondition: "RETAIN_OUTSTANDING_LIABILITY";
+                                        grossOutflowCap: {
+                                            numerator: string;
+                                            denominator: string;
+                                        };
+                                        escrowCap: {
+                                            numerator: string;
+                                            denominator: string;
+                                        };
+                                    }[];
+                                    outcomes: {
+                                        id: string;
+                                        meaningRef: {
+                                            owner: string;
+                                            id: string;
+                                            version: string;
+                                            contentDigest: string;
+                                        };
+                                        eligibility: "ALL_REPORTS" | string[][];
+                                        demands: {
+                                            [key: string]: {
+                                                numerator: string;
+                                                denominator: string;
+                                            }[];
+                                        };
+                                        costs: {
+                                            numerator: string;
+                                            denominator: string;
+                                        }[];
+                                        liabilities: {
+                                            numerator: string;
+                                            denominator: string;
+                                        }[];
+                                    }[];
+                                    resources: {
+                                        ref: {
+                                            owner: string;
+                                            id: string;
+                                            version: string;
+                                            contentDigest: string;
+                                        };
+                                        resourceId: string;
+                                        unit: string;
+                                        /** @enum {string} */
+                                        kind: "STOCK" | "FLOW" | "OCCUPANCY" | "CUMULATIVE_EXPENDITURE" | "EXPOSURE";
+                                        horizon: {
+                                            /** Format: date-time */
+                                            startAt: string;
+                                            periodMs: number;
+                                            periods: number;
+                                        };
+                                        availability: {
+                                            numerator: string;
+                                            denominator: string;
+                                        }[];
+                                        baseline: {
+                                            numerator: string;
+                                            denominator: string;
+                                        }[];
+                                        minimumBaseline: {
+                                            numerator: string;
+                                            denominator: string;
+                                        }[];
+                                        safetyMargin: {
+                                            numerator: string;
+                                            denominator: string;
+                                        };
+                                    }[];
+                                    covenants: {
+                                        id: string;
+                                        sourceRef: {
+                                            owner: string;
+                                            id: string;
+                                            version: string;
+                                            contentDigest: string;
+                                        };
+                                        unit: string;
+                                        periods: number[];
+                                        terms: {
+                                            resourceId: string;
+                                            coefficient: {
+                                                numerator: string;
+                                                denominator: string;
+                                            };
+                                        }[];
+                                        maximum: {
+                                            numerator: string;
+                                            denominator: string;
+                                        };
+                                        safetyMargin: {
+                                            numerator: string;
+                                            denominator: string;
+                                        };
+                                    }[];
+                                    constraints: {
+                                        cashResourceId: string;
+                                        netTransferMinimum: {
+                                            numerator: string;
+                                            denominator: string;
+                                        };
+                                        netTransferMaximum: {
+                                            numerator: string;
+                                            denominator: string;
+                                        };
+                                        /** @constant */
+                                        incomingPromisesMayFund: false;
+                                        ownerLiabilityCap: {
+                                            numerator: string;
+                                            denominator: string;
+                                        };
+                                    };
+                                    mandateLimits: {
+                                        dimensions: {
+                                            resourceId: string;
+                                            unit: string;
+                                            totalLimit: {
+                                                numerator: string;
+                                                denominator: string;
+                                            };
+                                            capacity: {
+                                                numerator: string;
+                                                denominator: string;
+                                            };
+                                        }[];
+                                        couplings: {
+                                            id: string;
+                                            weights: {
+                                                [key: string]: {
+                                                    numerator: string;
+                                                    denominator: string;
+                                                };
+                                            };
+                                            maximum: {
+                                                numerator: string;
+                                                denominator: string;
+                                            };
+                                        }[];
+                                    };
+                                    objective: {
+                                        /** @enum {string} */
+                                        kind: "MAXIMIN" | "EXPECTED_QUALIFIED_JOINT";
+                                        valueByProfile: {
+                                            [key: string]: {
+                                                [key: string]: {
+                                                    numerator: string;
+                                                    denominator: string;
+                                                };
+                                            };
+                                        };
+                                        weights: {
+                                            numerator: string;
+                                            denominator: string;
+                                        }[] | null;
+                                        distributionRef: {
+                                            owner: string;
+                                            id: string;
+                                            version: string;
+                                            contentDigest: string;
+                                        } | null;
+                                        range: [
+                                            {
+                                                numerator: string;
+                                                denominator: string;
+                                            },
+                                            {
+                                                numerator: string;
+                                                denominator: string;
+                                            }
+                                        ];
+                                        normalization: {
+                                            numerator: string;
+                                            denominator: string;
+                                        };
+                                        minimumValue: {
+                                            numerator: string;
+                                            denominator: string;
+                                        };
+                                        /** @constant */
+                                        tieConvention: "NO_STRICT_TRUTH_OR_CONSENT_FROM_TIES";
+                                    };
+                                    assumptions: string[];
+                                    referenceGrid?: {
+                                        numerator: string;
+                                        denominator: string;
+                                    }[];
+                                };
+                                rule: {
+                                    /** @constant */
+                                    schema: "finnor.r3.rule.v1";
+                                    inputDigest: string;
+                                    binding: {
+                                        /** Format: uuid */
+                                        tenantId: string;
+                                        /** Format: uuid */
+                                        principalId: string;
+                                        /** Format: uuid */
+                                        workId: string;
+                                        /** Format: uuid */
+                                        workRevision: string;
+                                        workDigest: string;
+                                        root: {
+                                            entityType: string;
+                                            /** Format: uuid */
+                                            entityId: string;
+                                        };
+                                        preferenceRef: {
+                                            owner: string;
+                                            id: string;
+                                            version: string;
+                                            contentDigest: string;
+                                        };
+                                        mandateRef: {
+                                            owner: string;
+                                            id: string;
+                                            version: string;
+                                            contentDigest: string;
+                                        };
+                                        domainRef: {
+                                            owner: string;
+                                            id: string;
+                                            version: string;
+                                            contentDigest: string;
+                                        };
+                                        paymentContractRef: {
+                                            owner: string;
+                                            id: string;
+                                            version: string;
+                                            contentDigest: string;
+                                        };
+                                        rightsRef: string;
+                                        backendDigest: string;
+                                        checkerDigest: string;
+                                        producerDigest: string;
+                                        schemaDigest: string;
+                                        sourceManifestDigest: string;
+                                    };
+                                    table: {
+                                        reports: string[];
+                                        outcomeId: string;
+                                        schedule: {
+                                            partyId: string;
+                                            dateId: string;
+                                            amount: {
+                                                numerator: string;
+                                                denominator: string;
+                                            };
+                                            eventId: string;
+                                            currency: string;
+                                            unit: string;
+                                            /** Format: date-time */
+                                            dueAt: string;
+                                        }[];
+                                    }[];
+                                    search: {
+                                        status: string;
+                                        /** @constant */
+                                        numericalSemantics: "SCIP_FLOAT64_PROPOSAL";
+                                        /** @enum {string} */
+                                        optimum: "UNKNOWN" | "ORIGINAL_ANALYTIC_BOUND_ATTAINED";
+                                        claimedObjective: {
+                                            numerator: string;
+                                            denominator: string;
+                                        };
+                                        claimedUpper: {
+                                            numerator: string;
+                                            denominator: string;
+                                        } | null;
+                                        proof: null;
+                                        trace: {
+                                            [key: string]: unknown;
+                                        };
+                                    };
+                                };
+                                check: {
+                                    /** @constant */
+                                    schema: "finnor.r3.check.v1";
+                                    /** @constant */
+                                    accepted: true;
+                                    inputDigest: string;
+                                    ruleDigest: string;
+                                    checker: {
+                                        sourceDigest: string;
+                                        pythonVersion: string;
+                                        /** @constant */
+                                        implementation: "INDEPENDENT_FRACTION_V1";
+                                    };
+                                    /** @constant */
+                                    basis: "MODEL_RELATIVE_EXACT";
+                                    counts: {
+                                        /** @constant */
+                                        profiles: 81;
+                                        /** @constant */
+                                        deviations: 648;
+                                        /** @constant */
+                                        participation: 324;
+                                    };
+                                    failures: {
+                                        [key: string]: unknown;
+                                    }[];
+                                    objective: {
+                                        numerator: string;
+                                        denominator: string;
+                                    };
+                                    upper: {
+                                        numerator: string;
+                                        denominator: string;
+                                    } | null;
+                                    optimizationGap: {
+                                        numerator: string;
+                                        denominator: string;
+                                    } | null;
+                                    /** @enum {string} */
+                                    optimum: "CHECKED_ANALYTIC" | "UNKNOWN";
+                                    minimumIncentiveMargin: {
+                                        numerator: string;
+                                        denominator: string;
+                                    };
+                                    minimumParticipationMargin: {
+                                        numerator: string;
+                                        denominator: string;
+                                    };
+                                    maximumDeviationGain: {
+                                        numerator: string;
+                                        denominator: string;
+                                    };
+                                    envelopes: {
+                                        [key: string]: unknown;
+                                    }[];
+                                    assumptions: string[];
+                                    /** @constant */
+                                    consentEstablished: false;
+                                    /** @constant */
+                                    executionAuthorityGranted: false;
+                                    /** @constant */
+                                    behavioralTruthEstablished: false;
+                                } & {
+                                    [key: string]: unknown;
+                                };
+                                reporting: {
+                                    /** @constant */
+                                    schema: "r3-authorized-report-v1";
+                                    /** @constant */
+                                    corrections: "BEFORE_CLOSE_ONLY";
+                                    /** @constant */
+                                    closing: "ALL_REPORTS_OR_NO_AGREEMENT";
+                                    /** @constant */
+                                    tableFixedBeforeReports: true;
+                                };
+                                usePolicyRef: {
+                                    owner: string;
+                                    id: string;
+                                    version: string;
+                                    contentDigest: string;
+                                } | null;
+                                reservation: {
+                                    [key: string]: unknown;
+                                } | null;
+                                proposedSchedulesRef: {
+                                    owner: string;
+                                    id: string;
+                                    version: string;
+                                    contentDigest: string;
+                                } | null;
+                                /** @constant */
+                                agreementEstablished: false;
+                                /** @constant */
+                                settlementEstablished: false;
+                                /** @constant */
+                                executionAuthorityGranted: false;
+                            } | null;
+                            usePolicy: {
+                                [key: string]: unknown;
+                            } | null;
+                            allocation: {
+                                [key: string]: unknown;
+                            } | null;
+                            schedules: {
+                                [key: string]: unknown;
+                            } | null;
+                            reportState: {
+                                [key: string]: unknown;
+                            } | null;
+                            costs: {
+                                [key: string]: unknown;
+                            };
+                            reason: string | null;
+                            provisional: boolean;
+                            /** @constant */
+                            agreementEstablished: false;
+                            /** @constant */
+                            settlementEstablished: false;
+                            /** @constant */
+                            executionAuthorityGranted: false;
+                        };
+                    };
+                };
+                /** @description Strict bounded input rejected */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Bearer identity required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact reporting or owner principal unavailable */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Permitted Work/reference unavailable */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original revision, deadline, grant, closure or idempotency fenced */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Byte/resource bound */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Precise unsupported domain or required protected authority unavailable */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/elicitation-protocols/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        requestId: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Current exact proposed finite mechanism, owner receipt or historical responsibility. Not private truth, consent, admission or settlement. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded input rejected */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Bearer identity required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact reporting or owner principal unavailable */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Permitted Work/reference unavailable */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original revision, deadline, grant, closure or idempotency fenced */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Byte/resource bound */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Precise unsupported domain or required protected authority unavailable */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/elicitation-protocols/context": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        workId: string;
+                        root: {
+                            entityType: string;
+                            /** Format: uuid */
+                            entityId: string;
+                        };
+                    };
+                };
+            };
+            responses: {
+                /** @description Current exact proposed finite mechanism, owner receipt or historical responsibility. Not private truth, consent, admission or settlement. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded input rejected */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Bearer identity required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact reporting or owner principal unavailable */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Permitted Work/reference unavailable */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original revision, deadline, grant, closure or idempotency fenced */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Byte/resource bound */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Precise unsupported domain or required protected authority unavailable */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/elicitation-protocols/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        requestId: string;
+                        /** @enum {string} */
+                        decision: "PROPOSE_USE" | "INQUIRE" | "WAIT" | "STOP";
+                        reason: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Current exact proposed finite mechanism, owner receipt or historical responsibility. Not private truth, consent, admission or settlement. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded input rejected */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Bearer identity required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact reporting or owner principal unavailable */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Permitted Work/reference unavailable */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original revision, deadline, grant, closure or idempotency fenced */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Byte/resource bound */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Precise unsupported domain or required protected authority unavailable */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/elicitation-protocols/report": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        requestId: string;
+                        partyId: string;
+                        typeId: string;
+                        replacesEventId: string | null;
+                        idempotencyKey: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Current exact proposed finite mechanism, owner receipt or historical responsibility. Not private truth, consent, admission or settlement. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded input rejected */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Bearer identity required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact reporting or owner principal unavailable */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Permitted Work/reference unavailable */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original revision, deadline, grant, closure or idempotency fenced */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Byte/resource bound */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Precise unsupported domain or required protected authority unavailable */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/elicitation-protocols/close": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        requestId: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Current exact proposed finite mechanism, owner receipt or historical responsibility. Not private truth, consent, admission or settlement. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded input rejected */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Bearer identity required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact reporting or owner principal unavailable */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Permitted Work/reference unavailable */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original revision, deadline, grant, closure or idempotency fenced */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Byte/resource bound */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Precise unsupported domain or required protected authority unavailable */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/elicitation-protocols/event": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        requestId: string;
+                        partyId: string;
+                        /** @enum {string} */
+                        kind: "DECLINE" | "NO_RESPONSE" | "OBSERVED_ACCEPTANCE" | "OUT_OF_DOMAIN";
+                        observation: {
+                            /** Format: uuid */
+                            sourceId: string;
+                            /** Format: uuid */
+                            versionId: string;
+                            contentDigest: string;
+                        };
+                        idempotencyKey: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Current exact proposed finite mechanism, owner receipt or historical responsibility. Not private truth, consent, admission or settlement. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded input rejected */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Bearer identity required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact reporting or owner principal unavailable */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Permitted Work/reference unavailable */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original revision, deadline, grant, closure or idempotency fenced */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Byte/resource bound */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Precise unsupported domain or required protected authority unavailable */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/elicitation-protocols/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        requestId: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Current exact proposed finite mechanism, owner receipt or historical responsibility. Not private truth, consent, admission or settlement. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded input rejected */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Bearer identity required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact reporting or owner principal unavailable */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Permitted Work/reference unavailable */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original revision, deadline, grant, closure or idempotency fenced */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Byte/resource bound */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Precise unsupported domain or required protected authority unavailable */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/elicitation-protocols/use": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        requestId: string;
+                        idempotencyKey: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Current exact proposed finite mechanism, owner receipt or historical responsibility. Not private truth, consent, admission or settlement. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded input rejected */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Bearer identity required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact reporting or owner principal unavailable */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Permitted Work/reference unavailable */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original revision, deadline, grant, closure or idempotency fenced */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Byte/resource bound */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Precise unsupported domain or required protected authority unavailable */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/interventions/finite-preference": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        modelRef: {
+                            owner: string;
+                            id: string;
+                            version: string;
+                            contentDigest: string;
+                        };
+                    };
+                };
+            };
+            responses: {
+                /** @description Original semantic-owner result under its current authority. Exact proposed R3 schedules do not grant agreement or settlement. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict owner request rejected */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Real bearer identity required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current owner authority absent */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Permitted original reference unavailable */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Currentness, immutable identity, resource or attempt responsibility fenced */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original byte/resource bound */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unsupported operation or required protected admission absent */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/policies/read-mechanism": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        policyRef: {
+                            owner: string;
+                            id: string;
+                            version: string;
+                            contentDigest: string;
+                        };
+                    };
+                };
+            };
+            responses: {
+                /** @description Original semantic-owner result under its current authority. Exact proposed R3 schedules do not grant agreement or settlement. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict owner request rejected */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Real bearer identity required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current owner authority absent */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Permitted original reference unavailable */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Currentness, immutable identity, resource or attempt responsibility fenced */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original byte/resource bound */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unsupported operation or required protected admission absent */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/policies/decide-mechanism": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        policyRef: {
+                            owner: string;
+                            id: string;
+                            version: string;
+                            contentDigest: string;
+                        };
+                    };
+                };
+            };
+            responses: {
+                /** @description Original semantic-owner result under its current authority. Exact proposed R3 schedules do not grant agreement or settlement. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict owner request rejected */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Real bearer identity required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current owner authority absent */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Permitted original reference unavailable */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Currentness, immutable identity, resource or attempt responsibility fenced */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original byte/resource bound */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unsupported operation or required protected admission absent */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/allocations/clear-mechanism": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        requestId: string;
+                        idempotencyKey: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Original semantic-owner result under its current authority. Exact proposed R3 schedules do not grant agreement or settlement. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict owner request rejected */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Real bearer identity required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current owner authority absent */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Permitted original reference unavailable */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Currentness, immutable identity, resource or attempt responsibility fenced */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original byte/resource bound */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unsupported operation or required protected admission absent */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/allocations/consume-mechanism": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        requestId: string;
+                        idempotencyKey: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Original semantic-owner result under its current authority. Exact proposed R3 schedules do not grant agreement or settlement. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict owner request rejected */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Real bearer identity required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current owner authority absent */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Permitted original reference unavailable */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Currentness, immutable identity, resource or attempt responsibility fenced */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original byte/resource bound */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unsupported operation or required protected admission absent */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/obligations/prepare-elicitation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        requestId: string;
+                        consumptionRef?: {
+                            owner: string;
+                            id: string;
+                            version: string;
+                            contentDigest: string;
+                        };
+                    };
+                };
+            };
+            responses: {
+                /** @description Original semantic-owner result under its current authority. Exact proposed R3 schedules do not grant agreement or settlement. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict owner request rejected */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Real bearer identity required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current owner authority absent */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Permitted original reference unavailable */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Currentness, immutable identity, resource or attempt responsibility fenced */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original byte/resource bound */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unsupported operation or required protected admission absent */
+                422: {
                     headers: {
                         [name: string]: unknown;
                     };

@@ -116,7 +116,14 @@ export async function synthesizeEnterpriseControl(ctx:PeMutationContext,input:{m
  if(result.policy){await saveArtifact(ctx,'mandates',m.ref.contentDigest,m);await saveArtifact(ctx,'demands',result.policy.demand.contentDigest,result.policy.demand);await saveArtifact(ctx,'kernels',kernel.snapshot!.ref.contentDigest,kernel.snapshot);await saveArtifact(ctx,'inputs',inputDigest,artifact);await saveArtifact(ctx,'policies',result.policy.ref.contentDigest,result.policy);if(await current(ctx,result.policy))throw unavailable();}
  return {...result,experience:events};
 }
-export async function readEnterpriseContingentPolicy(ctx:PeMutationContext,value:unknown):Promise<ContingentPolicy>{const policy=await readPolicy(ctx,value);await readable(ctx,policy);if(await current(ctx,policy))throw unavailable();await recoverPolicyExperience(ctx,policy);return immutableControl(policy);}
+export interface R3ControlPolicyRead {schema:'finnor.s4.r3-policy-read.v1';policyRef:ExperimentRef}
+export async function readEnterpriseContingentPolicy(ctx:PeMutationContext,value:R3ControlPolicyRead):Promise<Awaited<ReturnType<typeof import('./r3/control').readR3UsePolicy>>>;
+export async function readEnterpriseContingentPolicy(ctx:PeMutationContext,value:unknown):Promise<ContingentPolicy>;
+export async function readEnterpriseContingentPolicy(ctx:PeMutationContext,value:unknown){
+ if(value&&typeof value==='object'&&'schema' in value&&value.schema==='finnor.s4.r3-policy-read.v1')
+  return (await import('./r3/control')).readR3UsePolicy(ctx,ExperimentRefSchema.parse((value as R3ControlPolicyRead).policyRef));
+ const policy=await readPolicy(ctx,value);await readable(ctx,policy);if(await current(ctx,policy))throw unavailable();await recoverPolicyExperience(ctx,policy);return immutableControl(policy);
+}
 /** Narrow current S4-owned reader. A caller cannot add terms to a P2 request
  * or mistake supplied utility conversion for independently reconciled money. */
 export async function readEnterpriseDeliberationConversion(ctx:PeMutationContext,value:unknown){
@@ -157,7 +164,18 @@ export async function recordEnterpriseControlAssessment(ctx:PeMutationContext,in
  const event=prepareS4Experience(policy.mandate,input.type==='HUMAN_OVERRIDE'?'OVERRIDE':'INVALIDATION',policy.ref.id,{reason:input.reason,requestedActionId:input.requestedActionId,evidenceRefs:input.evidenceRefs,humanBudgetDemand:input.humanSeconds,actualHumanCost:null,qualification:'SUPPLIED_AUTHENTICATED_ASSERTION_NOT_PROTECTED_OVERRIDE_OR_METERED_COST',requiresLinkedReplanAndS5HumanBudgetClearance:true,changesMandateOrPolicy:false},[policy.ref.id]);await saveEvents(ctx,[event]);
  return {event,humanBudgetDemand:input.humanSeconds,protectedReceipt:null,policyChanged:false,executionAuthorityGranted:false};
 }
-export async function chooseEnterpriseControlBranch(ctx:PeMutationContext,input:{policyRef:unknown;decision?:unknown;allocationRef?:unknown;measurements?:Array<{protocol?:unknown;events:unknown[]}>}):Promise<ReturnType<typeof decideContingentPolicy>>{
+export interface R3ControlChoice {schema:'finnor.s4.r3-choice-request.v1';policyRef:ExperimentRef}
+type NumericControlChoice={policyRef:unknown;decision?:unknown;allocationRef?:unknown;measurements?:Array<{protocol?:unknown;events:unknown[]}>};
+export async function chooseEnterpriseControlBranch(ctx:PeMutationContext,input:R3ControlChoice):Promise<Awaited<ReturnType<typeof import('./r3/control').chooseR3ControlBranch>>>;
+export async function chooseEnterpriseControlBranch(ctx:PeMutationContext,input:NumericControlChoice):Promise<ReturnType<typeof decideContingentPolicy>>;
+export async function chooseEnterpriseControlBranch(ctx:PeMutationContext,input:R3ControlChoice|NumericControlChoice){
+ if('schema' in input&&input.schema==='finnor.s4.r3-choice-request.v1'){
+  if(await unresolvedEffects(ctx))throw Error('R3_OUTSTANDING_NATIVE_EFFECTS_REQUIRE_S6_ACCOUNTING');
+  return (await import('./r3/control')).chooseR3ControlBranch(ctx,{policyRef:ExperimentRefSchema.parse(input.policyRef)});
+ }
+ return chooseNumericEnterpriseControlBranch(ctx,input);
+}
+async function chooseNumericEnterpriseControlBranch(ctx:PeMutationContext,input:NumericControlChoice):Promise<ReturnType<typeof decideContingentPolicy>>{
  const policy=await readEnterpriseContingentPolicy(ctx,input.policyRef),decision=parseControlDecision(input.decision,policy);
  if(Date.parse(decision.knowledgeAt)>Date.now())throw new ControlContractError('INVALID_REQUEST','Future knowledge time cannot supply a current branch');
  // Reference observations are accepted only through the actual S2 realization

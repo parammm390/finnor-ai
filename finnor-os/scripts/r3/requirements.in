@@ -1,0 +1,3 @@
+# R3-local numerical proposer only. Fraction checker has no third-party imports.
+pyscipopt==6.0.0
+numpy==2.2.6
