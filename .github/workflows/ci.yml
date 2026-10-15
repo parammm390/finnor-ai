@@ -29,7 +29,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
-          node-version: 22
+          node-version: 22.22.3
       - run: npm run release:truth
       - run: npm run test:release
 
@@ -43,7 +43,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
-          node-version: 22
+          node-version: 22.22.3
           cache: npm
           cache-dependency-path: |
             package-lock.json
@@ -74,7 +74,7 @@ jobs:
         working-directory: .
     services:
       postgres:
-        image: pgvector/pgvector:pg16
+        image: pgvector/pgvector:pg16@sha256:7b822b0aac60967beb1ea5e576b8602c94c300a157d187f385ae3e0da199b90a
         env:
           POSTGRES_USER: finnor
           POSTGRES_PASSWORD: finnor
@@ -87,7 +87,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
-          node-version: 22
+          node-version: 22.22.3
           cache: npm
           cache-dependency-path: finnor-os/package-lock.json
       - run: npm ci --prefix finnor-os
@@ -149,7 +149,7 @@ jobs:
     runs-on: ubuntu-latest
     services:
       postgres:
-        image: pgvector/pgvector:pg16
+        image: pgvector/pgvector:pg16@sha256:7b822b0aac60967beb1ea5e576b8602c94c300a157d187f385ae3e0da199b90a
         env:
           POSTGRES_USER: finnor
           POSTGRES_PASSWORD: finnor
@@ -159,7 +159,7 @@ jobs:
           --health-cmd "pg_isready -U finnor" --health-interval 5s
           --health-timeout 5s --health-retries 10
       redis:
-        image: redis:7-alpine
+        image: redis:7-alpine@sha256:858f009f9709ce576febc734aa78b8f6d624b82571f9ddb6bda4377c833b3499
         ports: ["6379:6379"]
     env:
       DATABASE_URL: postgres://finnor:finnor@localhost:5432/finnor
@@ -172,7 +172,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
-          node-version: 22
+          node-version: 22.22.3
           cache: npm
           cache-dependency-path: finnor-os/package-lock.json
       - run: npm --prefix .. run workspace:check

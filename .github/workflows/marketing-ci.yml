@@ -36,7 +36,7 @@ jobs:
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
           # Match the Node runtime used by the repository's other CI workflows.
-          node-version: 22
+          node-version: 22.22.3
       - name: Install dependencies
         run: npm ci --no-audit --no-fund
       # The root app's typed Centropy client imports the canonical Work projection
