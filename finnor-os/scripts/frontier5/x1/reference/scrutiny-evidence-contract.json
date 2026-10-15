@@ -10,7 +10,10 @@
     "finnor-os/scripts/frontier5/x1/reference/scrutiny-evidence-contract.md",
     "scope-frontier5/x1-institutional-programme-compiler/failure-model.md",
     "finnor-os/scripts/frontier5/x1/reference/admission-cursor-native-review-contract.md",
-    "finnor-os/scripts/frontier5/x1/run-owner-slice.mts"
+    "finnor-os/scripts/frontier5/x1/run-owner-slice.mts",
+    "scope-frontier5/x1-institutional-programme-compiler/status.md",
+    "scope-frontier5/x1-institutional-programme-compiler/requirement-coverage.json",
+    "scope-frontier5/x1-institutional-programme-compiler/handoff/development-installation.md"
   ],
   "ownerPredicates": {
     "installed": [
@@ -850,5 +853,25 @@
     "acceptedChild",
     "cursor"
   ],
-  "upgradeMigrationCount": 19
+  "upgradeMigrationCount": 19,
+  "checkerReviewOutcomes": {
+    "sourceRecordCollision": "IDENTITY",
+    "triggerRuleCollisionWithFourthDutyOmitted": "OMISSION",
+    "numericCurrencyAndUnit": "QUANTITY",
+    "canonical101Deals": "BOUND",
+    "semanticKeyOrder": "ACCEPTED",
+    "staleOriginalWithRefreshedLabels": "CURRENTNESS",
+    "emailExceptionNotApproval": "RULE",
+    "unscopedNameCollision": "IDENTITY"
+  },
+  "numericContextOutcomes": {
+    "numeric-unit-is-not-text": "QUANTITY",
+    "numeric-currency-is-not-text": "QUANTITY",
+    "literal-supported-text-unit-control": "ACCEPTED",
+    "literal-unsupported-text-unit-remains-unresolved": "COVERAGE",
+    "native-financial-numeric-unit-is-not-text": "QUANTITY",
+    "native-supported-numeric-account-identity": "ACCEPTED",
+    "native-supported-numeric-fallback-identity": "ACCEPTED"
+  },
+  "checkerReviewSource": "ebf4e6c4f5f1fc72368ccebaf44bb4c9fc71025a"
 }

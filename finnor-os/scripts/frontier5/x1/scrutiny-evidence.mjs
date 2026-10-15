@@ -88,7 +88,7 @@ export function auditScrutinyEvidence({ repo, controlRoot, source, ledgerPath })
     if (!binding || ['run', 'results', 'worker'].some(name => absent(binding[name]))) missing.push(`owners.${role}`);
   }
   for (const role of ['backend', 'frontend', 'wire', 'guard', 'reconstruction', 'sourcePackage',
-    'rawVerdicts', 'releaseGates', 'diagnostic', 'wholeTypes'])
+    'rawVerdicts', 'releaseGates', 'diagnostic', 'wholeTypes', 'checkerReview', 'checkerReviewReceipt', 'checkerNumeric'])
     if (absent(ledger.pins?.[role])) missing.push(`pins.${role}`);
   if (missing.length) incomplete(missing);
   requireThat(ledger.source?.commit === source.commit && ledger.source?.tree === source.tree
@@ -175,6 +175,25 @@ export function auditScrutinyEvidence({ repo, controlRoot, source, ledgerPath })
         && observed.newJobs.some(job => job.type === 'run_workflow_step_v2' && job.status === 'completed'), 'OWNER', 'Upgrade/old data/mixed jobs missing');
     }
   }
+  const checkerReview = pinned(ledger.pins.checkerReview), checkerReceipt = pinned(ledger.pins.checkerReviewReceipt);
+  const sameOutcomeMap = (actual, expected) => actual && expected
+    && JSON.stringify(Object.entries(actual).sort()) === JSON.stringify(Object.entries(expected).sort());
+  requireThat(checkerReceipt.status === 'PASS' && checkerReceipt.exitCode === 0
+    && checkerReceipt.sourceCommit === contract.checkerReviewSource
+    && checkerReceipt.outputSha256 === ledger.pins.checkerReview.sha256
+    && sameOutcomeMap(checkerReview.expected, contract.checkerReviewOutcomes)
+    && sameOutcomeMap(checkerReview.observed, contract.checkerReviewOutcomes),
+  'CHECKER_CASES', 'Every original independently specified checker outcome must be retained at its measured cut');
+  const numeric = pinned(ledger.pins.checkerNumeric), numericRows = new Map(numeric.results?.map(row => [row.id, row]));
+  requireThat(numeric.status === 'PASS' && numericRows.size === Object.keys(contract.numericContextOutcomes).length
+    && numericRows.size === numeric.results?.length
+    && Object.entries(contract.numericContextOutcomes).every(([id, expected]) => {
+      const row = numericRows.get(id); return row?.passed === true && row.expected === expected && row.observed === expected;
+    }) && numeric.sourcePins?.length === 2 && new Set(numeric.sourcePins.map(pin => pin.path)).size === 2
+    && numeric.sourcePins.every(pin =>
+      ['checker.ts', 'checker-raw.ts'].includes(pin.path)
+      && hashFile(join(repo, 'finnor-os/packages/private-equity/src/institution-program', pin.path)) === pin.sha256),
+  'CHECKER_CASES', 'Current numeric context guard cases or exact checker preimages differ');
   const wire = pinned(ledger.pins.wire), finish = wire.wire?.find(row => row.event === 'X1_ACTUAL_HTTP_RESPONSE_FINISH');
   requireThat(wire.entered?.actualHandlerCompleted === true && wire.entered.capturedArtifact === true
     && wire.entered.capturedProgramme === true && wire.entered.status === 200

@@ -1,3 +1,13 @@
+# Current installed handoff — 15 October 2026
+
+Use backend015 at product commit `a1840556093a40c975b4b5fba149b52a3da4e374` / tree `e10d4c1e220d057c100e8ee719173c74388a458a`, manifest SHA256 `83234230dea1bf8e82da51f90f028d32854a57abde762ab8a49bf60d344e5b72`, and frontend004 manifest SHA256 `6546b706030eba3731ee00cb4f9eeed5f082dbe0eaebcc6d2055adbbac3da03d`. They contain719,681,113 and104,594,649 measured file bytes respectively. The supported platform is pinned Node22.18.0 Darwin arm64; no production deployment or relocation is qualified. Source/verifier metadata and the installed product remain separately pinned.
+
+The complete lineage is192 SQL files:173 base files plus19 additive0172..0190, ending `0190_x1_final_compiler_head_fence.sql`. Earlier counts190/191 or head0189 below are historical. Current installed cursor005, mounted007 and accepted-child-recovery002 prove the affected015 paths. Upgrade003 retains its actual012 cut; exact complete Git before/after compatibility is required, not an old-binary rolling-deployment claim.
+
+The finite interrupted-child check is `node finnor-os/scripts/frontier5/x1/verify.mjs --stage lifecycle --case accepted-child-recovery --installation <installation> --evidence <fresh-private-directory>`. Fresh mounted flows require the existing authenticated browser path and saved DOM plus matching actual HTTP FINISH. Do not repeat unchanged passing runs; use the sealed delivery ledger, standalone source reconstruction and native independent acceptance. Existing generic launch/security/rollback instructions follow.
+
+---
+
 # Compiled local development installation
 
 This entry uses the existing API route handlers, `createWorker()` registrations,

@@ -1,6 +1,6 @@
 {
   "schema": "finnor.frontier5.x1.requirement-coverage.v1",
-  "status": "PARTIAL_DEVELOPMENT_EVIDENCE_ENGINEERING_INCOMPLETE",
+  "status": "CODE_COMPLETE_CURRENT_INSTALLED_AFFECTED_PROOFS_PASS_NATIVE_INDEPENDENT_ACCEPTANCE_PENDING",
   "originalInventory": {
     "path": "/Users/paramdave/.codex/visualizations/2026/10/11/01a12960-fabc-7b31-8d1a-fa67a0be7117/x1-control/requirements-audit.json",
     "sha256": "565a88716b09d999162b6bcba314dca4fe971dd241f0f9b90c534d7e74a83ccd",
@@ -17508,5 +17508,94 @@
     "generatedEvidencePrefix": "final-core-generated-001",
     "wholeBackend": "final-core-backend-types-001 FAIL/SIGABRT heap1536MiB; not substituted by project passes",
     "apiOriginalFailure": "final-api-project-types-001 missing NODE_ENV in isolated checker environment; repaired without credentials"
+  },
+  "historicalAssertionsRemainAtMeasuredCuts": true,
+  "currentDeliveryEvidence": {
+    "runtimeAnchor": "a1840556093a40c975b4b5fba149b52a3da4e374",
+    "backendManifestSha256": "83234230dea1bf8e82da51f90f028d32854a57abde762ab8a49bf60d344e5b72",
+    "frontendManifestSha256": "6546b706030eba3731ee00cb4f9eeed5f082dbe0eaebcc6d2055adbbac3da03d",
+    "receipts": {
+      "native-review-admission-cursor-green-005": {
+        "path": "private:x1-control/evidence/native-review-admission-cursor-green-005/owner/results.json",
+        "sha256": "1f7f24c4dae186cb8e589954b9f025b8cf4789b6141b3788fdcdbabb9695d282",
+        "status": "PASS_LOCAL_OWNER_SLICE",
+        "source": {
+          "commit": "b7382a29af5459c79559cacd76ff29423dc1bc40",
+          "tree": "9c4aaa042cf077f2e1e8a1d82895a80f36af9fff",
+          "dirty": ""
+        },
+        "predicateIds": [
+          "G-installed-same-process-byte-currentness",
+          "G-installed-same-process-manifest-custody",
+          "G-authenticated-owner-inputs",
+          "E-finite-cursor-write-burst-original-three-transactions",
+          "A-quantitative-semantic-owner-assertions",
+          "A-all-ordinary-operations",
+          "A-authenticated-owner-creation",
+          "A-eight-class-original-corpus",
+          "A-full-declared-source-and-owner-domain",
+          "A-fourteen-canonical-kinds",
+          "G-fresh-company-brain-original-request-evidence",
+          "G-work-preparation-api-compute-attribution",
+          "G-authenticated-api-compute-attribution",
+          "F-installed-method-unavailable-compatible-original-parent-recovery",
+          "G-compiled-installed-api-worker-checker-and-restart",
+          "G-physical-validation-lifecycle-original-parent"
+        ]
+      },
+      "native-review-final-mounted-007": {
+        "path": "private:x1-control/evidence/native-review-final-mounted-007/owner/results.json",
+        "sha256": "7ef9801c6ac9ebca710b97ada6d0dbe09ffbb8f1909fae3747133893eef69162",
+        "status": "PASS_LOCAL_OWNER_SLICE",
+        "source": {
+          "commit": "b7382a29af5459c79559cacd76ff29423dc1bc40",
+          "tree": "9c4aaa042cf077f2e1e8a1d82895a80f36af9fff",
+          "dirty": ""
+        },
+        "predicateIds": [
+          "G-installed-same-process-byte-currentness",
+          "G-installed-same-process-manifest-custody",
+          "G-authenticated-owner-inputs",
+          "A-quantitative-semantic-owner-assertions",
+          "A-all-ordinary-operations",
+          "A-authenticated-owner-creation",
+          "A-eight-class-original-corpus",
+          "A-full-declared-source-and-owner-domain",
+          "A-fourteen-canonical-kinds",
+          "G-fresh-company-brain-original-request-evidence",
+          "G-work-preparation-api-compute-attribution",
+          "G-authenticated-api-compute-attribution",
+          "B-same-standing-input-native-revision",
+          "G-physical-validation-lifecycle-original-parent",
+          "G-mounted-owner-observer"
+        ]
+      },
+      "native-review-final-accepted-child-recovery-002": {
+        "path": "private:x1-control/evidence/native-review-final-accepted-child-recovery-002/owner/results.json",
+        "sha256": "7421c9aaf4bfd15eba4f4d68db8025e592f0c304f11cbcd3e69c4d99cb5cc03f",
+        "status": "PASS_LOCAL_OWNER_SLICE",
+        "source": {
+          "commit": "b7382a29af5459c79559cacd76ff29423dc1bc40",
+          "tree": "9c4aaa042cf077f2e1e8a1d82895a80f36af9fff",
+          "dirty": ""
+        },
+        "predicateIds": [
+          "G-installed-same-process-byte-currentness",
+          "G-installed-same-process-manifest-custody",
+          "A-quantitative-semantic-owner-assertions",
+          "A-authenticated-owner-creation",
+          "G-authenticated-api-compute-attribution",
+          "D-accepted-native-child-before-parent-publication-death",
+          "F-installed-method-unavailable-compatible-original-parent-recovery",
+          "G-compiled-installed-api-worker-checker-and-restart",
+          "G-physical-validation-lifecycle-original-parent"
+        ]
+      }
+    },
+    "sourcePackage": "private:x1-control/delivery/source-package-manifest-006.json",
+    "finalCoverage": "private:x1-control/delivery/requirement-coverage.json",
+    "nativeAcceptance": "PENDING",
+    "protectedQualification": false,
+    "producerIssuedGlobalPass": false
   }
 }

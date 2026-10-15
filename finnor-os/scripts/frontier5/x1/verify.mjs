@@ -241,6 +241,9 @@ if (named.live || stage === "installed" || stage === "diagnostic") {
         'finnor-os/scripts/frontier5/x1/reference/admission-cursor-native-review-contract.md',
         'finnor-os/scripts/frontier5/x1/review-cases.mts',
         'scope-frontier5/x1-institutional-programme-compiler/failure-model.md',
+        'scope-frontier5/x1-institutional-programme-compiler/status.md',
+        'scope-frontier5/x1-institutional-programme-compiler/requirement-coverage.json',
+        'scope-frontier5/x1-institutional-programme-compiler/handoff/development-installation.md',
         'scope-frontier5/x1-institutional-programme-compiler/oracle-contract.md']);
       const differences=[];
       for(const pin of installed.sourcePreimages){

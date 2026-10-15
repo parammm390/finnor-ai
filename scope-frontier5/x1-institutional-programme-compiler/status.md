@@ -1,3 +1,17 @@
+# Current delivery closure — 15 October 2026
+
+Product/runtime anchor: `a1840556093a40c975b4b5fba149b52a3da4e374`, tree `e10d4c1e220d057c100e8ee719173c74388a458a`, installed backend015. Its manifest SHA256 is `83234230dea1bf8e82da51f90f028d32854a57abde762ab8a49bf60d344e5b72`. Frontend004 manifest SHA256 is `6546b706030eba3731ee00cb4f9eeed5f082dbe0eaebcc6d2055adbbac3da03d`. Final source/verifier identity is sealed separately in the delivery source package; metadata changes do not claim new compiled product bytes.
+
+Current installed cursor005 passes all16 named predicates, including all10 source classes,15 original sources,26 mappings,14 canonical kinds,14/34 output/envelope fields, three real ordinary operations, independent native completion, exact original Request evidence readback, installed byte/custody guards, same-parent continuation and physical API/worker restart. Final mounted007 passes actual submit/revision, Work and tenant/principal switching, truthful three-effect counts, principal suspension, physical late-success release after denial and Retry. The current accepted-child-recovery002 passes actual worker interruption after durable child acceptance, same-child recovery under the original parent/deadline and installed restart. These are development observations, not protected qualification.
+
+Engineering source is CODE_COMPLETE. Native independent scrutiny/user-testing and final package integrity remain the delivery gate; no producer-issued global PASS or E2E_DEV_VERIFIED is asserted here. The final private delivery evidence index and requirement coverage retain every historical receipt at its actual source cut and all raw failures, including mounted006's26.841-second observer hold and the original scanner/whole-backend type failures. Earlier dated sections below are historical and do not supersede this paragraph.
+
+All192 packaged migrations are retained:173 unchanged base files plus19 additive0172..0190. Existing-database upgrade/restart proof retains its actual012 runtime cut with an explicit complete source transition to015. Runtime014's first cursor green has a195ms transaction-start limitation; only015 cursor005 establishes the frozen post200ms predicate. No disk guard or original episode bound was relaxed.
+
+Protected full10-environment qualification, separate seven actual live days, signed S8 admission/service proof, protected S6 authority, production activation, qualified B_V/equipped comparisons, operational100×, financial100×/$100M and H0/H1/H2 remain separate unestablished gates. Monetary/human/aggregate simultaneous peak cost gaps remain UNKNOWN.
+
+---
+
 # FRONTIER5.X1 status
 
 ## Current native meaning and history milestone — 14 October 2026
