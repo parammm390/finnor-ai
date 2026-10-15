@@ -124,9 +124,9 @@ RUN ldconfig \
        --python /opt/finnor/r4/bin/python --output /app/finnor-os/r4-runtime-inventory.json
 
 RUN mkdir -p /tmp/r3-runtime-seal \
-    && chown finnor-runtime:finor-runtime /tmp/r3-runtime-seal \
+    && chown 1000:1000 /tmp/r3-runtime-seal \
     && chmod 700 /tmp/r3-runtime-seal
-USER finnor-runtime
+USER 1000:1000
 RUN /opt/r3-runtime/bin/python -I scripts/r3/seal-runtime.py \
       --output /tmp/r3-runtime-seal/manifest.json --scip-license scripts/r3/licenses/scip-Apache-2.0.txt
 USER root
@@ -144,5 +144,5 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
 # production worker entrypoint is TypeScript and retains its current signal handling.
 # Invoke the binary directly so the worker receives ECS SIGTERM as PID 1 instead
 # of placing npm/npx between the runtime and the container signal.
-USER finnor-runtime
+USER 1000:1000
 CMD ["node_modules/.bin/tsx", "apps/worker/src/index.ts"]
