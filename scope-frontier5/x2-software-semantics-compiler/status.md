@@ -1,0 +1,444 @@
+# FRONTIER5.X2 status
+
+Started 14 October 2026. The recoverable local checkpoint is described in
+`checkpoint.md`. Current native 049 passes UI-only acquisition, canonical
+independent checking and four-operation/nine-field model freezing, then fails
+fresh Work at `X2_TARGET_ENTITY_OUTSIDE_OBSERVED_CONTEXT` (6 PASS/1 FAIL/exit 1).
+Prior-cut native 042–045 pass configured API/cancellation/backlog/final-lock
+proofs. Full finite engineering remains incomplete and unsealed.
+
+- DESIGNED: architecture/ownership, pre-code failure specification and finite verification contract recorded. The independent portal specification and oracle are frozen. The independent finite predicate reference passed a 12-state readiness case, false-valid and false-invalid mutations, and an incomplete-truth UNKNOWN case. That is reference readiness, not application acceptance.
+- CODE_COMPLETE: NOT ACHIEVED.
+- E2E_DEV_VERIFIED: NOT ACHIEVED.
+- DOMAIN_QUALIFIED: NOT RUN, independent protected population/custody required.
+- PRODUCTION_ACTIVE: NOT AUTHORIZED.
+- OPERATIONAL_100X_PASSED: BLOCKED, all-five qualification/B_V/comparators/integrated operational evidence absent.
+- Financial qualification: BLOCKED, separate S7 comparison and mature H2 evidence absent.
+
+No X1 or ORIGINAL V1 completion percentage, cumulative compatibility, admission or deployment is inferred. The startup peer source report is read-only.
+
+## Executed development checks
+
+- Unchanged backend `npm run typecheck`: PASS.
+- Unchanged P5 native baseline: 3 PASS, 4 FAIL. The queued acquisitions and
+  physical-crash story did not reach their intended boundary. A read-only
+  diagnostic established that the legacy fixture claims the global queue as
+  `finnor_app` after migration 0171. The job remains queued; application-role
+  global visibility is correctly empty. This is a fixture identity defect,
+  not an X2 pass and not authority to weaken production role isolation.
+- Pre-change Steel SDK/adapter isolation: 3 PASS, 5 FAIL. Missing, null,
+  negative, string and overflowing usage did not remain UNKNOWN.
+- Post-change Steel SDK/adapter isolation: 8 PASS, 0 FAIL, one actual loopback
+  SDK request per case. This proves only the adapter boundary, not vendor
+  billing or durable runner accounting.
+- Full backend typecheck through native check 011: PASS. Explicit
+  backend-inclusive native lint 005–010: PASS. Lint 004 ignored the backend
+  and is not accepted evidence.
+
+Raw artifacts are retained under the task-owned directory
+`/Users/paramdave/.factory/worktrees/frontier5-x2-software-semantics-compiler/`.
+`baseline-p5-native`, `baseline-queue-diagnostic.json`,
+`provider-usage-before/result.json`, `provider-usage-after/result.json` and
+`kernel-reference-readiness.json` have separate qualifications. They are not
+native Factory validator verdicts.
+
+## Current changed source
+
+Shared `ApplicationActionModel`, exact quantities, typed transition evidence,
+`FrontierArtifactEnvelope`, independent-check results and composition contracts
+are present, with production codecs, learner, independent checker and bounded
+composition. Native S4/P1 planning, original S5 accounting, exact S6
+request/observer boundaries, authenticated Company Brain routes, physical worker
+registration and P7 validity are implemented in source. Their business
+acceptance is not inferred from static checks.
+
+Steel usage now returns null for missing/invalid usage and throws an explicit
+UNKNOWN error when retrieval fails. The runner checks before navigation and
+each decision; generic WRITE refusal remains. Its physical-worker UNKNOWN
+case is not yet executed.
+
+S8 policy validation now requires evaluator/promoter separation by principal
+as well as public key, including separate actor tokens for one principal.
+The additive application S8 worker delivered its adapter and strict contracts.
+Its six-root static closure passed with zero diagnostics; existing P5/S8 E2E
+  reported 2 PASS, 0 FAIL. Native X2 publication, consumer use and egress wiring
+are verified in the configured API development profile by native 023. The
+signed lifecycle is development-only, with independent original-evidence
+grading and distinct evaluator/promoter principals. No protected admission or
+production activation is claimed.
+
+The read-only effect integration trace confirmed that arbitrary application
+operations require additive native S4/P1 selection, S5 demand/consumption,
+S6 request/observer, origin and physical-worker variants. Existing numeric
+conditional-JSON, legacy doses and single-field P5 meanings will not be
+relabelled. Reporting quantities are not automatically cash consumption.
+
+Disk and shared-Git failures are retained in the session. Task-owned copy-on-write installed dependencies avoid deleting peer/user data. The initial Git-identity failure is historical: the existing author and committer identities resolve without configuration changes. Checkpoint Git provenance is recorded separately from the still-missing final release seal.
+
+## Latest native and maintained Work checks
+
+- Backend native typecheck 006: FAIL, one missing observation narrowing.
+  Repaired; full native typecheck 007: PASS.
+- Explicit backend-inclusive native lint 001 and 002: PASS, zero warnings.
+- Model publication now initializes P7 validity in the same transaction.
+  Worker continuation adopts the actual canonical session/composition.
+- The application panel is wired into the maintained authenticated
+  `work_execution` canvas. Its scoped frontend type/lint checks passed.
+  Mounted interaction and lifecycle acceptance remain NOT_RUN.
+- Native run 001: actual predecessor installation, 0191 upgrade, migration
+  replay and ordinary non-superuser/non-BYPASSRLS roles PASS. The driver then
+  failed before registration because it read the oracle snapshot wrapper as
+  the state. Raw failure is retained; the driver has been corrected.
+- Native run 002: migration/role isolation and signed acquisition registration
+  PASS. The real worker claimed the job and performed authorized metered reads.
+  Acquisition FAIL with `P0001` before a retained mutation request. The effect
+  compiler's external target was replaced by the actual canonical application
+  account reference; the external identity remains bound in the effect delta.
+  Missing S5 reservation transitions were repaired. Static cut 008 passed.
+- Native run 003: the same migration/auth/queue/read boundaries PASS, but the
+  first prepared request failed with `X2_MUTATION_UNAVAILABLE` and no possible
+  egress. Its beginning/ending source and runtime manifests match exactly.
+  The provider obscured the original owner refusal; trusted pre-wire refusal
+  evidence subsequently exposed the missing `execution_started_at` column.
+- Native 005–007 reached actual mutations. Repairs preserve legal action
+  statuses, exact opaque external correlation, declared optional absence and
+  request-before-record asynchronous observation ordering. Their raw failures
+  remain; none completed a fresh assignment.
+- Native 008 reached MODEL_READY but the driver checked nonexistent
+  `check.accepted`. Native 009–010 use the actual acceptance disposition and
+  pass physical acquisition/independent freezing: four operations, eight
+  verified mutations, eight denied attempts, zero observed predicate errors.
+- Other-principal registration now returns exact sanitized 404; anonymous and
+  bad-signature inputs return 401. Strict negatives pass from native 005 onward.
+- Native 009 fresh registration failed on the handoff's incorrect scalar
+  principal codec. The real S1 principal is `{type,id}`; corrected and compared
+  canonically. Native 010 retains a current immutable fresh-role handoff and
+  executes one fresh draft through S6. Its composition incorrectly skips
+  validation/submission and stops before approval at
+  `X2_FRESH_DEPENDENCY_IDENTITY_UNAVAILABLE`. Fresh completion still FAIL.
+- Native 010 consumes 255 physical reads. The bound stays 256. Kernel repair
+  and removal of redundant acquisition reads are specified before changes in
+  `composition-support-contract.md`. No budget renewal or coverage reduction.
+- Native 011: all four registered native cases PASS. The real worker learns
+  four operations, freezes the model before objective release, and S4/P1
+  composes draft → validation → submission → approval on a fresh record under
+  the immutable current-role handoff and original S5 parent/deadline. Native
+  S6 requests settle through independent readback; the separately frozen portal
+  evaluator grades the fresh business result PASS, including exact
+  `9007199254740993.01`, EUR/thousands/2027-06-30/accrual and one submission.
+  Beginning/ending code/runtime manifests are equal. Aggregate physical reads:
+  192 acquisition + 63 fresh = 255 of the unchanged 256 bound.
+  This is one API development flow, not E2E_DEV_VERIFIED for the full scope.
+- Stopped owned databases 001–010 are preserved as byte-verified private
+  `stopped-db.tar.gz` plus per-file custody manifests. Only their verified raw
+  database copies were reclaimed; source, portal data, credentials, JSON/log
+  evidence and peers remain untouched. Free disk increased to about 2 GiB.
+- Backend typecheck 013: FAIL, missing `retainApplicationArtifact` import in
+  the model publisher. Repaired. Backend typecheck 014 and explicit lint 013:
+  PASS, verified process exit 0 for both. This checks the newer S8/currentness
+  source, not configured physical use.
+- Actual application route schemas now feed OpenAPI generation. The maintained
+  capability manifest includes all five routes and classifies projection as a
+  read, cancel/resume as controls. Workspace, capability manifest, OpenAPI
+  clients, human forms, authorization matrix and action manifest parity checks
+  all PASS. These are generated-contract checks, not mounted proof.
+- The root lint configuration ignores `finnor-os`. The initial lint 004 launch
+  used that configuration without overriding its ignore and is not accepted
+  as backend lint evidence; an explicit included invocation is required.
+- API/worker business acceptance is verified for the stated development
+  profile. API/UI/hybrid completeness, physical SIGKILL, drift, remaining
+  concurrency/resource cases, mounted, installed and reconstruction gates
+  remain unproved.
+  Local checkpoint custody does not establish a final release. The source has
+  not been deployed or activated.
+
+## Current UI structural checkpoint
+
+- Passive provider 001: 0 PASS/33 FAIL against the old unavailable document
+  path. Provider 002: 33 PASS. Pre-repair placement regressions 003:
+  33 PASS/4 FAIL. Provider 004: 37 PASS/0 FAIL after the intended placement
+  refusals. These are isolated transport proofs, not mounted Work.
+- Native 046: 2 PASS/2 FAIL at the earlier nonempty-documentation profile guard.
+  Documentation alone now permits an empty list; authority/target/entity
+  requirements remain unchanged.
+- Native 047: 4 PASS/1 FAIL, actual null-to-object schema drift after the first
+  UI draft, original UNKNOWN retained.
+- New snapshots retain versioned structural witnesses and stable observer/
+  published-schema identity. Learner/checker derive explicitly separate
+  views, preserve original references and collect evidence-backed fields.
+  Fresh model field contracts are materialized before new snapshot retention.
+- Structural finite reference 001 and 002: 16 PASS/0 FAIL; immutable originals,
+  covered null, optional absence, negative/required/unknown/type/quantity and
+  legacy cases. This is finite reference evidence, not external identification.
+- Backend 032: FAIL at a nonexistent size-limit member; repaired without
+  changing the bound. Backend 033/driver 034 PASS. Explicit lint 039:
+  nine included files, zero errors/warnings; repaired learner lint 040 PASS.
+- Native 048: 4 PASS/1 FAIL after eight VERIFIED UI transitions. Offline
+  immutable replay matches the actual ZodError diagnostic: seven new field
+  facts lacked initial source references. References now start from the actual
+  original non-null leaf source; the minimum-reference guard stays intact.
+- Native 049: 6 PASS/1 FAIL/exit 1. Actual UI acquisition/checker/model freeze
+  and ordinary-role deletion custody pass. Fresh Work fails the current
+  entity-context guard before composition; maintained fresh projection is
+  not reached. All 046–049 databases stopped, ending source custody passes.
+- Independent checkpoint review retains an unresolved STALE-session/canonical
+  Work transition defect and missing ending executable-oracle pin comparison.
+  See `checkpoint.md`. API current-cut, UI/hybrid fresh completion, emitted
+  installation, mounted lifecycle and final seal remain unproved.
+
+## Native 012–023 owner regressions
+
+- Native 012 repeats the unconfigured fresh API business result under the
+  unchanged 256-read limit, using 215 reads.
+- Inclusive S5 terminal availability, ordinary-role request deletion refusal
+  and durable pre-dispatch compute contention are repaired and proven by the
+  native owner/queue cases. Migration 0192 adds immutable request custody;
+  the cumulative bundle contains 175 migrations.
+- Native 016–023 exercise independently graded signed S8 development
+  lifecycle. The inspector performs 345 checks against original native
+  discovery and the frozen independent provider journal.
+- Native 017 completes actual configured business execution but its driver
+  fails obsolete event names. Its aggregate remains FAIL.
+- Native 018 fails an actual 30,001 ms currentness stamp against the unchanged
+  30,000 ms limit. One captured clock value repairs that defect.
+- Native 019 completes fresh business execution and the maintained client
+  codec, then reproduces S8's wrong-effect reconciliation acceptance.
+  Its aggregate remains FAIL.
+- Native 020 fails the first new reconciliation with `REFERENCE_NOT_FOUND`.
+  Canonical S4 preparation/operation originals are now delivered through the
+  existing scoped owner outbox rather than supplied as replacement claims.
+- Native 021 reproduces possible egress after target removal commits at the
+  actual final S6 row lock, following a genuine S8 recheck. Its failure and
+  application snapshots remain retained.
+- Native 022 passes that race after the final locked comparison binds the
+  immutable private request's profile/account authority metadata. No possible
+  egress or independent application mutation occurs. New private requests
+  use v2; older possible originals retain observation-only recovery.
+- Native 023: all ten required native cases PASS, exit 0. The independently
+  graded draft → validate → submit → approve result has four canonical
+  verified effects/actions/receipts, four real S8 use/recheck/reconciliation
+  sequences, and the exact `9007199254740993.01` EUR reporting terms.
+  Changed exact parameters retaining the original effect/obligation are
+  refused with 409 at `S8_APPLICATION_RECONCILIATION_EVIDENCE`.
+  The actual authenticated response passes the maintained client codec and
+  its parent/principal/grant controls; private profile binding is absent.
+  This is not mounted UI or emitted installed-runtime proof.
+- Latest backend typecheck 021, driver typecheck 016 and included lint 023
+  PASS. Lint 019 used a missing executable and is not accepted coverage;
+  its corrected included invocation 020 passed.
+- Stopped databases 001–023 have byte/mode/link/inventory-verified private
+  archives. Only redundant raw copies were reclaimed. Original logs, portal
+  journals, private evidence, code, secrets and peer work remain untouched.
+
+## Native 024–029 owner regressions
+
+- Native 024 fails resource-pin setup before the intended invalidation.
+  The fixture now uses a separate real resource-reporting root and requires
+  CURRENT before registration and the controlled owner restatement.
+- Native 025 reproduces invalidated-belief forward spending: S1 INVALIDATED,
+  unchanged S5 head, yet four physical mutations and fresh Work COMPLETED.
+- Native 026 correctly fences at `X2_S5_CURRENT_RESOURCE_SOURCE`, with no
+  requests/charges or provider change. Its aggregate remains FAIL because the
+  driver expected FAILED instead of the existing STALE classification.
+- Native 027 passes all eight required cases, exit 0. Every original resource
+  belief pin is revalidated for forward use; original observation-only recovery
+  retains its separately bounded original allowance.
+- Native 028 reproduces `REFERENCE_NOT_FOUND` with 96 independently recorded
+  pending S4 originals. The first fresh request remains prepared.
+- Native 029 passes all eleven required cases, exit 0. All 96 originals are
+  ACCEPTED with unchanged digests and one attempt each. No unresolved S4
+  originals remain. Fresh business completion, four verified native effects,
+  four S8 use/recheck/reconciliation sequences, exact parameter refusal and the
+  maintained response codec pass. Transport batches remain at most 32 and
+  delivery remains bounded/funded by the original parent.
+- Backend typecheck 023, driver typecheck 019 and included lint 028 PASS.
+- Stopped databases 024–029 have verified byte/mode/link/inventory archives.
+  Only verified redundant raw copies were reclaimed. Original failed runs,
+  private journals, evidence, source, secrets and peer work remain untouched.
+
+Current internal work: physical recovery, UI nullable structure and
+rendering-independent operation identity, remaining mandatory development
+cases and final installed/reconstruction proofs. The isolated browser-context
+substrate remains an explicit execution constraint, not successful proof.
+
+## Native 030–031 physical recovery attempts
+
+- Native 030 reaches exact independent submission acceptance and SIGKILL of
+  the actual queue-owning worker. The user interrupts the natural lease wait.
+  Its explicit disposition is INCOMPLETE_NOT_PASS; original raw database,
+  partial results and journals remain retained. Clean database shutdown,
+  natural recovery and ending-source custody are not established.
+- Native 031 exits 1 with ending-source/runtime custody PASS. Its first two
+  fresh requests are VERIFIED, but submission stops before physical egress
+  with `X2_NATIVE_BEFORE_WIRE_UNAVAILABLE`. It never reaches the intended
+  crash point and does not establish a recovery defect or recovery success.
+- Ordinary event/charge chronology identifies unrelated owner-reference
+  draining inside the unchanged five-second physical pre-wire callback.
+  The new currentness delivery finishes too late; the genuine S8 recheck
+  and ended-claim refusal arrive after the session has failed.
+- The coordinator now binds a recheck to its exact original committed use
+  lease/evidence and delivers a new S4 currentness stamp without draining
+  unrelated post-read references in that physical fence. Initial use retains
+  the full bounded delivery. Native checks, S8 recheck, final SQL authority
+  lock, original deadline/resources and freshness limits are unchanged.
+  Native 032 subsequently verifies the full physical recovery case.
+- Backend typecheck 024, explicitly included lint 031 and diff checks PASS.
+  Driver typecheck 022 and included lint 030 cover the unchanged strengthened
+  physical-fault driver. At that checkpoint full/opaque/deadline/cancellation
+  recovery and affected backlog/final-lock proofs remained pending; subsequent
+  physical results are recorded below.
+
+## Native 032–033 physical recovery
+
+- Native 032: twelve required cases PASS, exit 0. Actual worker PID 4396 is
+  killed 221 ms after independent exact submission acceptance, before response
+  or settlement. Original queue/compute leases expire naturally; the original
+  job is quarantined without replay. Restarted S6/S8 use the same keys, ports
+  and journals. The exact original request/effect/obligation is observed, with
+  byte-identical parent/allocation/reservation/deadline and no new allowance.
+- The independent business grade requires exactly one physical, accepted and
+  durable submission, and one separately authorized approval. Four original
+  native effects/actions/receipts and four S8 use/recheck/reconciliation chains
+  pass. The assignment uses 227 of 256 reads. Authenticated maintained-client
+  privacy/codec and wrong-parameter reconciliation refusal also pass.
+- Native 033: aggregate FAIL, exit 1, ten cases PASS and one FAIL. Physical
+  kill/quarantine and first opaque continuation correctly remain UNKNOWN,
+  with three requests, no approval or resubmission, unresolved S8 exposure and
+  no release. After lawful visibility returns, the same original is observed
+  and the canonical Work completes; the independent business grade is PASS.
+  Its driver then incorrectly expects four reconciliation events instead of
+  five. The extra event is the same original lease/request's UNKNOWN before
+  OBSERVED, not another effect. The pre-code assertion repair is recorded.
+- Source/runtime custody passes for both runs. Nonfatal pooled shutdown logs
+  are retained. Their databases and 031 are stopped with no `postmaster.pid`;
+  030's unverified raw interrupted database remains untouched.
+- Assigned browser doctor passes, but target creation is restricted at
+  `Target.createTarget`. No inherited-context or alternate-browser bypass is
+  used. Mounted Work and emitted installed-runtime execution remain NOT_RUN.
+- Opaque aggregate rerun, deadline/cancellation and affected backlog/final-lock
+  proofs remain pending. No source was changed during 032 or 033.
+- Native 034: FAIL before the intended physical fault. Draft is verified, but
+  validation reaches no possible egress because its real S8 recheck returns
+  after the unchanged five-second pre-wire timeout. Source/runtime custody
+  passes; no opaque-recovery verdict is inferred. The exact ordinary timeline
+  is recorded in the regression contract.
+- Driver typecheck 023 times out at its command limit with no diagnostics;
+  retained as unpassed. Its serial rerun 024 passes in 121.192 seconds.
+  Explicit included driver lint 032 and ledger JSON/diff checks pass.
+  Host load was separately observed above 100; that is not a proven cause of
+  any particular owner failure. No peer process or system service is changed.
+- Native 035: eight cases PASS, expired-parent observation FAIL, exit 1.
+  The real SIGKILL (175 ms after acceptance), natural expiry/quarantine and
+  source/runtime custody pass. The observation is blocked before runtime
+  construction by the forward deadline check; the original submission stays
+  POSSIBLE_EGRESS/executing with no recovery charge. The pre-code worker repair
+  preserves current read authority and fences all expired forward use.
+
+## Native 036 repair proof and current source
+
+Native 036 passes all nine required cases, exit 0, after the worker repair.
+Its original possible submission becomes VERIFIED through lawful readback
+after the registered deadline. The session is BLOCKED with
+`X2_ORIGINAL_BUSINESS_DEADLINE_EXPIRED`; canonical Work is blocked. Exactly
+three original requests are verified, with six RECOVERY charges and no
+approval, resubmission, renewed allowance, release or completed-business claim.
+Beginning/ending source/runtime custody passes.
+
+The configured S8 callback now uses its complete native currentness coordinator
+once. Fixed independent owner/consumer reference reads use bounded parallel
+groups, with every original scope/binding/receipt validation still awaited.
+Backend and driver typechecks 025, explicitly included owner lint 033 and ledger
+JSON/diff checks PASS. Configured opaque, backlog and final-lock proofs for
+this newer ordering remain pending.
+
+Stopped database images 031–036 now have byte/mode/link/inventory-verified
+private archives. Only their redundant raw copies were reclaimed; raw evidence,
+journals, source, secrets, peers and interrupted 030 are preserved. Free disk
+is about 4.7 GiB.
+
+## Native 037 configured opaque recovery
+
+Native 037 passes all thirteen required configured opaque-recovery cases,
+exit 0. The actual queue-owning worker is killed 126 ms after independent
+acceptance. Natural quarantine and same-key/journal owner restart pass.
+The first continuation retains UNKNOWN with three requests and no approval,
+replay or release. Later lawful readback verifies the same original submission
+and the independent fresh-business result passes. Four exact S8 uses/rechecks
+and five reconciliations include the original UNKNOWN → OBSERVED progression.
+The maintained authenticated codec, wrong-parameter 409 and ending custody
+also pass. Native 033/034 remain separate failed attempts. This is not mounted
+or emitted installed proof; cancellation/backlog/final-lock remain pending.
+
+## Native 038–041 cancellation and remaining callback defect
+
+Native 038 reaches genuine accepted-submission cancellation after physical
+loss and natural quarantine: original observation passes, but canonical Work
+stays executing. Nine PASS/one FAIL, exit 1. Native 039 separately reproduces
+COMPLETED native history being rewritten by cancellation; eight PASS/one FAIL.
+Both original failed runs and ending custody remain retained.
+
+The API repair uses the real transaction-scoped Work transition, selects the
+current original input, validates actor/rights/input, atomically stops intent
+and enqueues observation, and preserves completed/terminal history and all
+resources/effects. Backend typecheck 026, driver 028 and included lint 035 pass.
+Native 041 passes all nine required unconfigured cases, including completed
+canonical/native history, four unchanged verified originals and repeat
+idempotency. This is not configured or accepted-submission cancellation proof.
+
+Configured native 040 fails before cancellation: seven PASS/one FAIL, exit 1.
+Its genuine S8 recheck completes, but the final locked ATTEMPT arrives after
+the unchanged physical callback deadline. No submission reaches the independent
+application; native exposure remains conservatively UNKNOWN. Preserve this
+failure, not as a cancellation verdict or inferred host-sleep cause.
+
+The subsequent source cut shares owner/consumer original-source validation,
+uses fixed groups of eight no-follow file reads and overlaps only independent
+immutable reference checks after synchronous admission/activation/generation
+checks. Every check and final SQL remains. Callback stage meters are added.
+Backend typecheck 028, driver 029, included six-file lint 036 and diff checks
+PASS. Typecheck 027's missing path import is retained and fixed, not relabeled.
+Native 042 passes all eleven configured cases, exit 0, including fresh business,
+maintained codec, exact wrong-parameter reconciliation refusal, completed-history
+cancellation and ending custody. The four configured native callbacks record
+S8 rechecks of 0.691–1.559 seconds and complete model-currentness stages of
+1.197–2.216 seconds; the final locked SQL still runs. These are measured local
+stages, not financial or programme qualification. Accepted cancellation,
+backlog and final-lock proofs remain pending. No timeout, currentness, resource
+or deadline grows.
+
+Stopped databases 037–041 now have byte/mode/link/inventory-verified archives;
+only their proven redundant raw copies were reclaimed. Interrupted 030 remains
+untouched. Raw logs, original JSON evidence and failed-attempt journals remain.
+
+Native 043 passes all ten configured accepted-cancellation cases, exit 0.
+The actual worker is killed 132 ms after independent submission acceptance.
+The real leases expire and quarantine; same-key/journal owner restart retains
+the exact originals. Authenticated cancellation reaches both native CANCELLED
+and canonical cancelled Work. Three original requests become VERIFIED, with
+eight additional charges, all RECOVERY, and no approval, resubmission, new
+allowance, rollback, release or completed-business claim. Ending custody and
+database shutdown pass. Failures 038/039 remain separate retained evidence.
+
+Native 044 passes all eleven configured backlog cases, exit 0. All 96
+pre-existing truthful, nonauthorizing S4 references arrive unchanged, with
+exact original digests and one attempt each, no unresolved S4 record, no new
+allowance and unchanged batch/backlog limits. Independent fresh-business,
+maintained codec, wrong-parameter reconciliation and ending custody pass.
+
+Native 045 passes all eight configured final-lock cases, exit 0. A genuine
+S8 recheck precedes the blocked final S6 SQL. Committed native grant revocation
+then refuses the original prepared request: zero possible egress and no
+independent application change. The original deadline/occupation remain.
+The owning database stops cleanly. This is an actual intended-lock refusal,
+not an earlier currentness error. These passes are not the final sealed cut.
+
+Independent read-only packaging review is retained in the task-owned
+`installed-runtime-packet.md`. The current HTTP driver is source-imported, not
+an emitted installation. Actual build/installed/reconstruction work and the
+explicit production-packaging/staging-authority guard probe remain pending.
+
+## Native execution limitation
+
+The installed Droid 0.232.0 CLI documents `exec --mission`, available `gpt-6-sol` and `claude-opus-5-5` models, per-run worker/validator settings and automatic headless proposal approval. The task-owned launch configuration retains `skipScrutiny:false` and `skipUserTesting:false`.
+
+On the actual attempt, this chat's Execute boundary refused mission launch: “Do not try to launch a mission through Execute or another shell wrapper.” It requires manual Mission Control or chat Mission mode, and no corresponding callable launch tool is exposed here. No native mission, plan approval or validator verdict occurred. The denied call is not retried or routed through another wrapper. Ordinary authorized engineering continues using the available tools with separately recorded independent checking. This is an exact native-harness limitation, not a waiver of any software proof.

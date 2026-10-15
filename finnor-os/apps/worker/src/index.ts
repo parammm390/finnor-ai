@@ -2,6 +2,7 @@ import {handleBranch} from '@finnor/private-equity/src/branch-fabric/worker';
 import {runComputeSearchUnitJob} from '@finnor/private-equity/src/compute-search/worker';
 import {runHarnessProgramJob} from '@finnor/private-equity/src/program-synthesis/worker';
 import {runInterfaceAcquisitionJob} from '@finnor/private-equity/src/interface-synthesis/worker';
+import {runApplicationSemanticsJob} from '@finnor/private-equity/src/application-semantics/worker';
 import {runProgrammeContinuationJob} from '@finnor/private-equity/src/live-recompilation/worker';
 import {runProcedureInductionJob} from '@finnor/private-equity/src/procedure-induction/worker';
 import {runCapitalProgramJob} from '@finnor/private-equity/src/capital-program/worker';
@@ -50,6 +51,7 @@ import { installWorkerDrainSignals } from "./drain-signals";
 
 export function createWorker(): JobQueue {
   const queue = new JobQueue();
+  queue.register('run_application_semantics_v1',runApplicationSemanticsJob,PRODUCTION_JOB_CONTRACTS.run_application_semantics_v1);
   queue.register('run_capital_program_v2',runCapitalProgramJob,PRODUCTION_JOB_CONTRACTS.run_capital_program_v2);
   queue.register('run_counterexample_search_v1',runCounterexampleSearchJob,PRODUCTION_JOB_CONTRACTS.run_counterexample_search_v1);
   queue.register('run_procedure_induction_v1',runProcedureInductionJob,PRODUCTION_JOB_CONTRACTS.run_procedure_induction_v1);

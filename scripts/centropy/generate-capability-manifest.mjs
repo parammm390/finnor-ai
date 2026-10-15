@@ -38,6 +38,7 @@ const delegatedRegistries = [
   ["CONTINUATION_OPERATIONS", "live-recompilation/api.ts"],
   ["PROCEDURE_OPERATIONS", "procedure-induction/api.ts"],
   ["DELIBERATION_OPERATIONS", "deliberation/api.ts"],
+  ["APPLICATION_OPERATIONS", "application-semantics/api.ts"],
 ]
 const capitalSource = readFileSync(join(project,"finnor-os/packages/shared-types/src/capital-program.ts"),"utf8")
 const capitalOperations = [...block(capitalSource,"export const CapitalProgramV2Operations=","} as const;")
@@ -72,6 +73,7 @@ const companyBrainReads = new Set([
   "continuation-read", "continuation-projection",
   "procedure-experience", "procedure-induction-read", "procedure-read", "procedure-component", "procedure-projection", "procedure-admission-request", "procedure-interface", "procedure-costs",
   "deliberation-read", "deliberation-projection", "deliberation-module-read", "deliberation-evidence-read",
+  "application-projection",
   "capital-program-read","capital-program-list","capital-program-context","capital-program-ports","capital-program-witness","capital-program-module",
 ])
 const readModelsSource = readFileSync(join(apiRoot, "read-models/[view]/route.ts"), "utf8")
@@ -164,7 +166,7 @@ function routeEntry(method, path, source) {
   const read = method === "GET" || ownerClassification==="READ" || (family === "company-brain" && companyBrainReads.has(path.slice("company-brain/".length))) || ["query", "semantic-activity"].includes(family)
   const adminOnly = denyPrefixes.some((prefix) => `${path}/`.startsWith(prefix)) ||
     (family === "read-model" && /read-models\/(reliability|readiness|readiness-slo|failure-injections)/.test(path))
-  const control = controls.test(path) || path === "company-brain/procedure-induction-cancel" || /^company-brain\/(?:evidence|program|compute-search|interface|decision-slice|deliberation|capital-program)-(?:cancel|resume|reconcile)$/.test(path)
+  const control = controls.test(path) || path === "company-brain/procedure-induction-cancel" || /^company-brain\/(?:evidence|program|compute-search|interface|decision-slice|deliberation|capital-program|application)-(?:cancel|resume|reconcile)$/.test(path)
   const classification = adminOnly ? "ADMIN" : stream ? "STREAM" : ownerClassification ?? (read ? "READ" : control ? "CONTROL" : "MUTATION")
   const systemOnly = path.startsWith("webhooks/") || ["ready", "release", "vitals", "health"].includes(path)
   const humanOnly = humanOnlyPatterns.some((pattern) => pattern.test(path))

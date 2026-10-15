@@ -6,3 +6,4 @@ export * from "./broker";
 export * from "./steel-provider";
 export * from "./repository";
 export * from "./runner";
+export * from "./application-provider";

@@ -1298,3 +1298,47 @@ export function compileContingentInterventionIntent(input:{actionId:string;effec
  return {id:input.effectId,schemaVersion:1,semanticHash:hash({source,...scope,expected}),scopeHash:hash(scope),source,mode:'consequential',operation:{name:actionType,class:'operational_change',external:true},targets,bindings:[],preconditions:[],before:[],delta:scope.delta,expected,exposure:null,
  authority:{capability:`action:${actionType}`,risk:'high',policyId:null,policyVersion:null},approval:{required:true,typedConfirmation:true,summary:'Exact S4 intervention intent; provider method and independent admission required before dispatch'},reversibility:{classification:'unknown_provider_dependent',compensationCapability:null},uncertainty:{unknownOutcome:'reconcile_before_retry',stalePrecondition:'block_and_recompile'},provenance:{compiler:'finnor_effect_compiler',compilerVersion:1,compiledAt:input.compiledAt,replacementForEffectId:null,compensationForEffectId:null}};
 }
+
+/** Exact application-domain intent. Provider routes, CSRF and credentials remain
+ * private lowering data. This compiler issues neither authority nor settlement. */
+export function compileApplicationOperationIntent(input: {
+  actionId: string; effectId: string; workId: string; compiledAt: string;
+  target: import("@finnor/shared-types").ScopedApplicationIdentity;
+  parameters: import("@finnor/shared-types").ApplicationState;
+  before: import("@finnor/shared-types").ApplicationSnapshot;
+  originalParentRef: import("@finnor/shared-types").ExperimentRef;
+  preparationRef: import("@finnor/shared-types").ExperimentRef;
+  consumptionRef: import("@finnor/shared-types").ExperimentRef;
+  operationRef: import("@finnor/shared-types").ExperimentRef;
+  applicationAccountId: string; authProfileId: string; authProfileRef: string;
+}): BusinessEffectSet {
+  const actionType = "execute_application_operation_v1";
+  // An external record identity is not a native canonical-entity UUID. The
+  // canonical account scopes the resource; exact record identity stays frozen
+  // in the semantic delta, predecessor and S6 obligation.
+  const target: BusinessEffectTarget = { kind: "resource", type: "application_account",
+    id: input.applicationAccountId, sourcePath: "applicationOperation.applicationAccountId" };
+  const bindings: BusinessEffectBinding[] = [{ selection: "fixed", application: input.target.application,
+    applicationAccountId: input.applicationAccountId, authProfileId: input.authProfileId, authProfileRef: input.authProfileRef }];
+  const source = { domainActionId: input.actionId, actionType, workId: input.workId, objectiveStepId: null };
+  const delta = { operation: actionType, values: { target: input.target, parameters: input.parameters,
+    originalParentRef: input.originalParentRef, preparationRef: input.preparationRef,
+    consumptionRef: input.consumptionRef, operationRef: input.operationRef } };
+  const expected = { observation: "computer_state" as const, state: null };
+  const before = [{ target: { kind: target.kind, type: target.type, id: target.id },
+    values: { target: input.target, scope: input.before.scope, state: input.before.state, recordRevision: input.before.recordRevision },
+    versionHash: hash(input.before), observedAt: input.before.observedAt }];
+  const scope = { actionType, operationClass: "operational_change", targets: [target], bindings, delta, exposure: null };
+  return { id: input.effectId, schemaVersion: 1, semanticHash: hash({ source, ...scope, before, expected }),
+    scopeHash: hash(scope), source, mode: "consequential",
+    operation: { name: actionType, class: "operational_change", external: true }, targets: [target], bindings,
+    preconditions: [{ kind: "state_version", target, expectedHash: hash(input.before),
+      description: "Exact lawful application/account/record/pre-state and current native/external authority at wire" }],
+    before, delta, expected, exposure: null,
+    authority: { capability: "action:execute_application_operation_v1", risk: "high", policyId: null, policyVersion: null },
+    approval: { required: true, typedConfirmation: true, summary: "Current native profile and independently authorized application principal required" },
+    reversibility: { classification: "unknown_provider_dependent", compensationCapability: null },
+    uncertainty: { unknownOutcome: "reconcile_before_retry", stalePrecondition: "block_and_recompile" },
+    provenance: { compiler: "finnor_effect_compiler", compilerVersion: 1, compiledAt: input.compiledAt,
+      replacementForEffectId: null, compensationForEffectId: null } };
+}

@@ -31,3 +31,38 @@ export async function executeOwnerOperation(ctx:PeMutationContext,q:ProgramRow,o
  if(waiting&&['timed_out','cancelled'].includes(waiting.status))return {status:'STOP',value:{waitId:waiting.id,status:waiting.status,remainingPredicate:operation.key,deadlineAt:operation.deadlineAt,goalSuccess:false}};
  return {status:'WAITING',value:{waitId:waiting?.id??null,status:waiting?.status??'NATIVE_WAIT_INSTALL_PENDING',remainingPredicate:operation.key,planNodeId:planNode.id,deadlineAt:operation.deadlineAt,goalSuccess:false}};
 }
+
+/** P1 consumes the application algebra through the real S4/S6 owners. The
+ * analytical Harness path above neither dispatches nor changes qualification. */
+export async function executeApplicationOwnerOperation(ctx:PeMutationContext,
+ input:import('./contracts').ApplicationOwnerOperation,
+ execution:Readonly<import('../../../../apps/worker/src/queue').JobExecutionContext>,
+ runtime:import('../application-semantics/runtime').NativeApplicationRuntime){
+ const operation=(await import('./contracts')).ApplicationOwnerOperationSchema.parse(input);
+ const store=await import('../application-semantics/store'),contracts=await import('../application-semantics/contracts');
+ const row=await store.applicationSession(ctx,operation.sessionId);
+ if(runtime.session.id!==row.id||runtime.execution.deliveryAttemptId!==execution.deliveryAttemptId)
+  contracts.x2Fault('X2_P1_ACTUAL_APPLICATION_CONSUMER_REQUIRED');
+ await (await import('../application-semantics/obligations')).assertApplicationClaim(ctx,row,execution);
+ await store.currentApplicationWork(ctx,row);
+ const started=performance.now();
+ if(operation.op==='compose_application_operations'){
+  const initial=await store.applicationArtifact<import('@finnor/shared-types').ApplicationSnapshot>(ctx,operation.inputRef);
+  if(!contracts.sameX2Ref(operation.inputRef,contracts.x2Ref('COMPUTER','application-observation',initial)))
+   contracts.x2Fault('X2_P1_ORIGINAL_OBSERVATION_REFERENCE_REQUIRED');
+  const composition=await (await import('../enterprise-control')).composeEnterpriseApplicationOperations(ctx,{sessionId:row.id,initial});
+  await store.applicationEvent(ctx,row,'P1_TYPED_S4_OWNER_INVOCATION',{operation,inputRef:operation.inputRef,
+   outputRef:composition.ref,elapsedMs:performance.now()-started,selectionOwner:'S4',p1AuthorityGranted:false});
+  return {status:composition.disposition==='COMPOSED_WITH_REQUIRED_OBSERVATIONS'?'DONE':'STOP',
+   reference:composition.ref,composition} as const;
+ }
+ if(!row.composition_ref||!contracts.sameX2Ref(operation.inputRef,row.composition_ref))
+  contracts.x2Fault('X2_P1_CANONICAL_COMPOSITION_REQUIRED');
+ const body=await store.applicationArtifact<Omit<import('@finnor/shared-types').CheckedApplicationComposition,'ref'>>(ctx,operation.inputRef);
+ const composition=contracts.parseApplicationComposition({...body,ref:operation.inputRef});
+ const observation=await (await import('../application-semantics/runtime')).continueNativeApplicationComposition(ctx,row.id,composition,execution,runtime);
+ const reference=contracts.x2Ref('COMPUTER','application-observation',observation);
+ await store.applicationEvent(ctx,row,'P1_TYPED_S6_OWNER_INVOCATION',{operation,outputRef:reference,
+  elapsedMs:performance.now()-started,effectOwner:'S6',p1AuthorityGranted:false,acknowledgmentSufficient:false});
+ return {status:'DONE',reference,observation} as const;
+}

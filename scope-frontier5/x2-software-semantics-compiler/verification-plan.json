@@ -1,0 +1,441 @@
+{
+  "schema": "FRONTIER5.X2.DEVELOPMENT_VERIFICATION_PLAN.v1",
+  "scope": "FRONTIER5.X2 SoftwareSemanticsCompiler",
+  "createdAt": "2026-10-14",
+  "authority": "Current original X2 request, local disposable engineering only",
+  "sourceCut": {
+    "branch": "codex/frontier5-x2-software-semantics-compiler",
+    "parentCommit": "517003a4396bc8101a90be4b425ee01de9446740",
+    "parentTree": "07ba69b8e96f05944c2f9f14a74b2c400eb89e42",
+    "adoptedPeerDeltas": [],
+    "finalCommit": null,
+    "finalTree": null
+  },
+  "status": "PARTIAL_NATIVE_API_DEVELOPMENT_VERIFIED_NOT_SEALED",
+  "recoverableCheckpoint": {
+    "date": "2026-10-15",
+    "description": "checkpoint.md",
+    "finalReleaseSeal": false,
+    "currentNativeRun": "native-e2e-049",
+    "currentNativeStatus": "FAIL",
+    "pass": 6,
+    "fail": 1,
+    "exitCode": 1,
+    "uiAcquisitionAndCanonicalCheck": "PASS",
+    "learnedOperations": 4,
+    "learnedFields": 9,
+    "freshWork": "FAIL_X2_TARGET_ENTITY_OUTSIDE_OBSERVED_CONTEXT",
+    "maintainedFreshProjection": "NOT_REACHED",
+    "endingSourceCustody": "PASS_NOT_ENDING_EXECUTABLE_ORACLE_CUSTODY",
+    "databaseStopped": true,
+    "passiveTransport": {"artifact": "passive-provider-004/result.json", "pass": 37, "fail": 0, "nativeOrMounted": false},
+    "structuralReference": {"artifact": "structural-projection-002/result.json", "pass": 16, "fail": 0, "externalLaw": false},
+    "static": {"backend": "native-typecheck-033.log", "driver": "native-driver-typecheck-034.log", "explicitLint": ["native-lint-039.log", "native-lint-040.log"], "retainedFailure": "native-typecheck-032.log"},
+    "retainedFailures": [
+      {"run": "native-e2e-046", "pass": 2, "fail": 2, "boundary": "EARLIER_EMPTY_DOCUMENTATION_PROFILE_GUARD"},
+      {"run": "native-e2e-047", "pass": 4, "fail": 1, "boundary": "ACTUAL_NULL_TO_OBJECT_SCHEMA_DRIFT_ORIGINAL_UNKNOWN"},
+      {"run": "native-e2e-048", "pass": 4, "fail": 1, "boundary": "EIGHT_VERIFIED_UI_TRANSITIONS_THEN_MISSING_INITIAL_FIELD_SOURCE_REFS"},
+      {"run": "native-e2e-049", "pass": 6, "fail": 1, "boundary": "FROZEN_CHECKED_UI_MODEL_THEN_FRESH_ENTITY_CONTEXT_REFUSAL"}
+    ],
+    "independentReviewOpenFindings": [
+      {"priority": "P1", "boundary": "STALE_SESSION_CANONICAL_WORK_TRANSITION"},
+      {"priority": "P2", "boundary": "ENDING_EXECUTABLE_ORACLE_PINS"}
+    ],
+    "installed": "NOT_RUN",
+    "mounted": "NOT_RUN",
+    "codeComplete": false,
+    "e2eDevVerified": false
+  },
+  "evidenceRoot": "/Users/paramdave/.factory/worktrees/frontier5-x2-software-semantics-compiler",
+  "nativeExecutor": {
+    "cwd": "finnor-os",
+    "argv": ["node", "node_modules/tsx/dist/cli.mjs", "scripts/x2/run-native-e2e.mts"],
+    "environment": {
+      "FINNOR_X2_EVIDENCE_DIR": "NEW_ABSOLUTE_PRIVATE_DIRECTORY_REQUIRED",
+      "FINNOR_X2_TEST_SURFACE": "api",
+      "FINNOR_X2_TEST_S8": "1"
+    },
+    "qualification": "ORDINARY_AUTHENTICATED_DEVELOPMENT_NOT_PROTECTED",
+    "executedConfiguredPositive": "native-e2e-023/results.json",
+    "executedBacklogPositive": {
+      "additionalEnvironment": {"FINNOR_X2_TEST_REFERENCE_BACKLOG": "1"},
+      "artifact": "native-e2e-029/results.json",
+      "exitArtifact": "native-e2e-029/driver-exit.json",
+      "requiredCases": 11,
+      "status": "PASS"
+    },
+    "executedBeliefInvalidation": {
+      "environment": {"FINNOR_X2_TEST_S8": "0", "FINNOR_X2_TEST_RESOURCE_BELIEF_CHANGE": "1"},
+      "artifact": "native-e2e-027/results.json",
+      "exitArtifact": "native-e2e-027/driver-exit.json",
+      "requiredCases": 8,
+      "status": "PASS"
+    },
+    "retainedFailures": [
+      {"run": "native-e2e-019", "predicate": "wrong original reconciliation accepted", "status": "FAIL"},
+      {"run": "native-e2e-020", "predicate": "unpublished original reference", "status": "FAIL"},
+      {"run": "native-e2e-021", "predicate": "revoked prepared profile reached physical egress", "status": "FAIL"},
+      {"run": "native-e2e-024", "predicate": "resource belief fixture precondition", "status": "FAIL"},
+      {"run": "native-e2e-025", "predicate": "invalidated belief allowed forward spending", "status": "FAIL"},
+      {"run": "native-e2e-026", "predicate": "driver expected FAILED instead of correct STALE", "status": "FAIL"},
+      {"run": "native-e2e-028", "predicate": "bounded backlog hid required original", "status": "FAIL"},
+      {"run": "native-e2e-031", "predicate": "unrelated reference draining exceeded pre-wire fence before intended physical crash", "status": "FAIL"},
+      {"run": "native-e2e-033", "predicate": "driver expected four reconciliation events despite required same-original UNKNOWN then OBSERVED", "status": "FAIL"},
+      {"run": "native-e2e-034", "predicate": "actual S8 recheck exceeded unchanged pre-wire fence before intended submission fault", "status": "FAIL"},
+      {"run": "native-e2e-035", "predicate": "forward deadline precheck blocked lawful original possible-effect observation", "status": "FAIL"}
+    ],
+    "physicalRecovery": {
+      "driverImplemented": true,
+      "variantEnvironment": "FINNOR_X2_TEST_RECOVERY",
+      "variants": ["full", "opaque", "deadline", "cancel"],
+      "configuredS8": ["full", "opaque", "cancel"],
+      "unconfiguredS8": ["deadline"],
+      "originalLeasesExpireNaturally": true,
+      "recheckRepairStatus": "042_TERMINAL_043_CANCEL_044_BACKLOG_045_FINAL_LOCK_PASS_NOT_FINAL_SEALED",
+      "executedCurrentBacklog": {
+        "run": "native-e2e-044", "artifact": "native-e2e-044/results.json",
+        "status": "PASS", "exitCode": 0, "requiredCases": 11,
+        "originalRecordsAccepted": 96, "maximumAttemptsPerRecord": 1,
+        "originalDigestsRetained": true, "unresolvedS4Records": 0,
+        "nativeFreshBusiness": "PASS", "batchAndBacklogLimitsChanged": false,
+        "newAllowance": false, "sourceCustody": "PASS", "finalSealedCut": false
+      },
+      "executedCurrentFinalLock": {
+        "run": "native-e2e-045", "artifact": "native-e2e-045/results.json",
+        "status": "PASS", "exitCode": 0, "requiredCases": 8,
+        "genuineS8RecheckBeforeRevocation": true, "actualFinalSqlLockReached": true,
+        "nativeRequests": 1, "possibleEgress": false, "independentApplicationChanged": false,
+        "originalDeadlineRetained": true, "newAllowance": false,
+        "sourceCustody": "PASS", "finalSealedCut": false
+      },
+      "executedAcceptedCancellation": {
+        "run": "native-e2e-043",
+        "artifact": "native-e2e-043/results.json",
+        "exitArtifact": "native-e2e-043/driver-exit.json",
+        "status": "PASS",
+        "requiredCases": 10,
+        "configuredS8": true,
+        "acceptanceToKillMs": 132,
+        "naturalLeaseExpiryAndOriginalQuarantine": true,
+        "nativeStatus": "CANCELLED",
+        "canonicalWorkStatus": "cancelled",
+        "originalVerifiedRequests": 3,
+        "additionalChargePhases": {"RECOVERY": 8},
+        "newAllowance": false,
+        "externalRollbackClaimed": false,
+        "resourceReleaseGranted": false,
+        "businessCompletedClaimed": false,
+        "sourceCustody": "PASS",
+        "finalSealedCut": false
+      },
+      "executedCompletedCancellation": {
+        "run": "native-e2e-042",
+        "artifact": "native-e2e-042/results.json",
+        "exitArtifact": "native-e2e-042/driver-exit.json",
+        "status": "PASS",
+        "requiredCases": 11,
+        "configuredS8": true,
+        "canonicalAndNativeHistory": "COMPLETED_PRESERVED",
+        "originalVerifiedRequests": 4,
+        "repeatCreatesGeneration": false,
+        "resourceReleaseGranted": false,
+        "finalSealedCut": false,
+        "earlierUnconfiguredPass": "native-e2e-041"
+      },
+      "boundedCallbackStatic": {
+        "status": "PASS",
+        "backendTypecheck": "native-typecheck-028.log",
+        "driverTypecheck": "native-driver-typecheck-029.log",
+        "explicitAffectedLint": "native-lint-036.log",
+        "retainedImportFailure": "native-typecheck-027.log",
+        "dependencyFileConcurrency": 8,
+        "authorityCache": false,
+        "physicalTimeoutChanged": false,
+        "nativeMeterArtifact": "native-e2e-042/private/native-events.json",
+        "maximumConfiguredModelCurrentnessMs": 2216.216,
+        "maximumConfiguredS8RecheckMs": 1558.993,
+        "meterIsFinancialOrProgrammeQualification": false
+      },
+      "retainedCancellationFailures": [
+        {"run": "native-e2e-038", "exitCode": 1, "pass": 9, "fail": 1, "reached": "ACCEPTED_ORIGINAL_OBSERVED_NATIVE_CANCELLED_CANONICAL_WORK_EXECUTING"},
+        {"run": "native-e2e-039", "exitCode": 1, "pass": 8, "fail": 1, "reached": "COMPLETED_NATIVE_HISTORY_REWRITTEN_BY_CANCEL"}
+      ],
+      "retainedEarlierCallbackFailure": {
+        "run": "native-e2e-040",
+        "exitCode": 1,
+        "pass": 7,
+        "fail": 1,
+        "reached": "GENUINE_S8_RECHECK_THEN_FINAL_NATIVE_ATTEMPT_AFTER_PHYSICAL_CALLBACK_TIMEOUT",
+        "acceptedSubmissionInIndependentApplication": false,
+        "stickyPossibleEgressRetained": true,
+        "cancellationCase": "NOT_REACHED",
+        "sourceCustody": "PASS"
+      },
+      "executedOpaque": {
+        "run": "native-e2e-037",
+        "artifact": "native-e2e-037/results.json",
+        "exitArtifact": "native-e2e-037/driver-exit.json",
+        "requiredCases": 13,
+        "status": "PASS",
+        "acceptanceToKillMs": 126,
+        "opaqueDisposition": "UNKNOWN_NO_APPROVAL_NO_REPLAY_NO_RELEASE",
+        "laterDisposition": "SAME_ORIGINAL_OBSERVED_INDEPENDENT_BUSINESS_PASS",
+        "S8Uses": 4,
+        "S8EgressRechecks": 4,
+        "S8Reconciliations": 5,
+        "originalSubmissionReconciliations": ["UNKNOWN", "OBSERVED"],
+        "exactParameterReconciliationMutant": "409_S8_APPLICATION_RECONCILIATION_EVIDENCE",
+        "mounted": false
+      },
+      "executedDeadline": {
+        "run": "native-e2e-036",
+        "artifact": "native-e2e-036/results.json",
+        "exitArtifact": "native-e2e-036/driver-exit.json",
+        "requiredCases": 9,
+        "status": "PASS",
+        "originalSubmission": "VERIFIED_AFTER_ACTUAL_DEADLINE",
+        "canonicalWork": "blocked",
+        "sessionReason": "X2_ORIGINAL_BUSINESS_DEADLINE_EXPIRED",
+        "requests": 3,
+        "recoveryCharges": 6,
+        "forwardChargesAfterRecovery": 0,
+        "approvalOrResubmission": false,
+        "newAllowanceOrRelease": false
+      },
+      "executedFull": {
+        "run": "native-e2e-032",
+        "artifact": "native-e2e-032/results.json",
+        "exitArtifact": "native-e2e-032/driver-exit.json",
+        "requiredCases": 12,
+        "status": "PASS",
+        "acceptanceToKillMs": 221,
+        "physicalReads": 227,
+        "physicalReadLimit": 256,
+        "sameOriginalLineage": true,
+        "nativeOwnerRestartSameKeysAndJournals": true
+      },
+      "retainedOpaque": {
+        "run": "native-e2e-033",
+        "artifact": "native-e2e-033/results.json",
+        "exitArtifact": "native-e2e-033/driver-exit.json",
+        "status": "FAIL_DRIVER_EXPECTATION",
+        "opaqueBoundary": "PASS_UNKNOWN_NO_APPROVAL_NO_REPLAY_NO_RELEASE",
+        "laterIndependentBusinessGrade": "PASS",
+        "originalSubmissionReconciliations": ["UNKNOWN", "OBSERVED"],
+        "aggregateRerun": "native-e2e-037_PASS_OLD_FAILURE_RETAINED"
+      },
+      "retainedInterrupted": {
+        "run": "native-e2e-030",
+        "dispositionArtifact": "native-e2e-030/interrupted-disposition.json",
+        "status": "INCOMPLETE_NOT_PASS",
+        "reached": "actual queue-owning worker SIGKILL after exact independently observed submission acceptance",
+        "notEstablished": ["natural lease expiry and recovery", "ending-source custody", "clean database shutdown"]
+      }
+    },
+    "notEstablished": ["UI-only and hybrid native completion", "mounted Work lifecycle", "emitted installed execution", "full declared development profile"]
+  },
+  "frozenObligations": {
+    "requestSnapshot": "../request.md outside source checkout",
+    "failureModel": "failure-model.md",
+    "shrinkAfterFailure": false,
+    "postCodeUnitTests": false,
+    "candidateExpectedTruthSource": "independent original evidence and external owner state",
+    "rejectionMustReachIntendedBoundary": true,
+    "unsupportedUnknownTimeoutIncluded": true
+  },
+  "profile": {
+    "revision": "development-v1",
+    "status": "FROZEN_DEVELOPMENT_DOMAIN_PARTIALLY_VERIFIED",
+    "applicationFamilies": ["API-rich", "accessible UI-only", "hybrid"],
+    "operationFamilies": ["read", "preparation", "persisted draft", "validation", "async submission", "separately authorized commitment"],
+    "ceilings": {
+      "operations": 16,
+      "observableStateFields": 16,
+      "parametersPerOperation": 8,
+      "explorationInteractions": 64,
+      "transitionObservations": 256,
+      "operationsPerComposition": 8,
+      "compositionSearchNodes": 64,
+      "conditionalBranches": 8,
+      "unresolvedConsequentialEffectsPerOriginalAssignment": 1
+    },
+    "financialSemantics": "exact admitted strings/integers, currency/entity/unit/time/accounting basis; never display-rounded or JS-number-coerced",
+    "unsupported": ["MFA requiring ungranted assistance", "inaccessible state", "prohibited exploration", "unknown confirmation semantics", "insufficient independent observation", "unsupported quantity conversion"],
+    "measurementClaim": "engineering ceilings, not demonstrated mastery"
+  },
+  "resources": {
+    "originalEpisode": {
+      "computeDataIntegrationUsd": "100",
+      "humanSeconds": 900,
+      "aggregateSimultaneousPeakBytes": 17179869184,
+      "initialResponseSeconds": 30,
+      "wallSeconds": 3600,
+      "descendantsChargeOriginalParent": true,
+      "unknownMaterialCostsAreZero": false
+    },
+    "engineering": {
+      "heavyBuildsAndInstalledStacksConcurrent": 1,
+      "ownedDisposableDatabaseClusters": 1,
+      "ports": "dynamic loopback, exclude peer 19073",
+      "latestFreeDiskGiB": 4.7,
+      "stoppedDatabaseArchives": "001–029 and 031–036 byte/mode/link/inventory verified; interrupted 030 raw preserved",
+      "peerOrUncommittedCleanup": false,
+      "cleanup": "proven X2-created stopped regenerable scratch only, preserve raw evidence and final assets"
+    }
+  },
+  "custody": {
+    "developmentBusinessRules": "independent fixture/evaluator fixed before learner exposure",
+    "candidateInputs": ["authorized mandate", "current grants", "lawful visible structures", "permitted interactions"],
+    "privilegedEvaluatorStateAvailableToCandidate": false,
+    "protectedPopulation": "not supplied or generated by this development run",
+    "publicArtifactSecretsOrSessionHandles": false,
+    "evaluatorPromoterPrincipalsDistinct": true
+  },
+  "cases": [
+    {
+      "id": "A",
+      "requirement": "general acquisition and fresh reuse",
+      "ownerConsumer": "ComputerBroker/provider -> learner -> full model -> S4/P1 composition -> physical executor",
+      "input": "independently administered API/UI/hybrid applications; frozen model before fresh objective",
+      "expected": "fresh target and composition execute from learned algebra without app-specific engineer code",
+      "command": "nativeExecutor",
+      "artifact": "native-e2e-029/results.json",
+      "status": "PARTIAL_API_ONLY",
+      "remaining": ["native UI-only and hybrid positive reuse"]
+    },
+    {
+      "id": "B",
+      "requirement": "independent predicate and composition checking",
+      "ownerConsumer": "separate checker -> canonical planner and dispatch consumer",
+      "input": "original observations, current owner state, deliberate typed candidate mutations",
+      "expected": "positive candidates pass; intended invalid mutations fail; unknown coverage remains unknown; false-valid and false-invalid separate",
+      "command": "nativeExecutor",
+      "artifact": ["kernel-reference-readiness.json", "native-e2e-029/private/independent-discovery-grade.json", "native-e2e-029/results.json"],
+      "status": "PARTIAL",
+      "remaining": ["complete candidate mutation families and external coverage"]
+    },
+    {
+      "id": "C",
+      "requirement": "exact effects, authority and privacy",
+      "ownerConsumer": "S5 reservation -> S6 physical dispatch -> lawful independent readback",
+      "input": "positive current grant plus wrong actor/role/account/record/request; grant revocation and prompt injection",
+      "expected": "positive physical effect/readback settles exact identity; wrong or revoked dispatch has no wire effect; no leakage",
+      "command": "nativeExecutor",
+      "artifact": ["native-e2e-022/results.json", "native-e2e-029/results.json"],
+      "status": "PARTIAL",
+      "remaining": ["all access-change phases, deception and injection cases"]
+    },
+    {
+      "id": "D",
+      "requirement": "semantic and rendering drift",
+      "ownerConsumer": "X2 validity -> P7 dependency closure -> planner/executor/Work",
+      "input": "independent rendering-preserving and same-label semantic revisions",
+      "expected": "lawful rendering revalidation; all affected semantics fenced; independent unrelated operations remain valid; history retained",
+      "command": null,
+      "artifact": null,
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "E",
+      "requirement": "recovery, concurrency and original parent accounting",
+      "ownerConsumer": "durable queue/physical worker -> S5/S6 reconciliation -> canonical result",
+      "input": "SIGKILL after accepted egress before acknowledgement; duplicate jobs, competing Work, session loss, delay, cancellation and exhaustion",
+      "expected": "same original effect/obligation/parent/deadline; no duplicate dispatch or false release; unreconciled exposure and costs UNKNOWN",
+      "command": "nativeExecutor",
+      "artifact": ["native-e2e-015/results.json", "native-e2e-027/results.json", "native-e2e-030/interrupted-disposition.json", "native-e2e-031/results.json", "native-e2e-032/results.json", "native-e2e-033/results.json", "native-e2e-035/results.json", "native-e2e-036/results.json", "native-e2e-037/results.json", "native-e2e-038/results.json", "native-e2e-039/results.json", "native-e2e-040/results.json", "native-e2e-041/results.json", "native-e2e-042/results.json", "native-e2e-043/results.json"],
+      "status": "PARTIAL",
+      "remaining": ["sibling concurrency", "final sealed-cut regression after remaining engineering"]
+    },
+    {
+      "id": "F",
+      "requirement": "actual canonical planning and owner consumer",
+      "ownerConsumer": "authenticated Work/API -> canonical state -> durable queue -> physical worker -> app -> observer -> action/effect/receipt/Work",
+      "input": "fresh withheld permissions-portal reporting assignment",
+      "expected": "typed model consumed; draft/validation/submission/commitment distinct; toast cannot complete Work; exact durable result reaches mounted Work",
+      "command": "nativeExecutor",
+      "artifact": "native-e2e-029/results.json",
+      "status": "PARTIAL_API",
+      "remaining": ["native UI-only/hybrid and mounted completion"]
+    },
+    {
+      "id": "G",
+      "requirement": "executable fallback",
+      "ownerConsumer": "actual existing compatible callee under remaining original authority/resources",
+      "input": "unsupported/drift/checker/budget outcome",
+      "expected": "lawful admitted fallback actually executes and is independently checked; unavailable fallback remains blocked/UNKNOWN",
+      "command": null,
+      "artifact": null,
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "H",
+      "requirement": "maintained mounted Work experience and identity non-resurrection",
+      "ownerConsumer": "canonical API readers -> Work/WorldExplorer/focus",
+      "input": "keyboard/pointer/accessibility; reload, Work/root/principal changes, refresh, genuine fresh sign-in, offline/reconnect, revocation, delayed response",
+      "expected": "model/operations/evidence/authority/drift/effects/costs visible; no prior-principal data resurrection; complete only from canonical independent observation",
+      "command": "nativeExecutor",
+      "artifact": "native-e2e-029/maintained-client-projection.json",
+      "status": "PARTIAL_AUTHENTICATED_CODEC_NOT_MOUNTED",
+      "remaining": ["all mounted lifecycle and interaction predicates"]
+    },
+    {
+      "id": "I",
+      "requirement": "final installed bytes, migrations, compatibility and reconstruction",
+      "ownerConsumer": "actual emitted API/worker/compiler/checker/provider; migration/job/generated/static/security/release",
+      "input": "fresh/upgrade/replay/restart/old-inflight jobs, ordinary roles, exact resolved locks, independent reconstruction",
+      "expected": "positive final installed chain and compatible legacy consumers; source/runtime/schema parity without hidden donor/peer links",
+      "command": "nativeExecutor",
+      "artifact": ["native-e2e-029/results.json", "native-typecheck-023.log", "native-driver-typecheck-019.log", "native-lint-028.log"],
+      "status": "PARTIAL_MIGRATION_ROLES_AND_STATIC",
+      "remaining": ["emitted installed positive, reconstruction, restart/inflight, final static/generated/security/compatibility cut"]
+    },
+    {
+      "id": "J",
+      "requirement": "matched X2-on/off/equipped comparator diagnostic and lifecycle costs",
+      "ownerConsumer": "registered diagnostic -> independent business oracle -> canonical resource/cost observations",
+      "input": "same application/version/fresh objectives/rights/models/resource envelope; fixed cold/mature reuse horizon and demand",
+      "expected": "complete acquisition/check/execution/recovery/invalidation/maintenance costs or named gaps; no gain from incumbent WRITE refusal",
+      "command": null,
+      "artifact": null,
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "S8",
+      "requirement": "additive typed ApplicationActionModel domain and independent admission",
+      "ownerConsumer": "existing S8 journal/evaluator/promoter -> exact versioned operation consumer",
+      "input": "typed model/producer/checker/observer/transport/runtime/domain/current grant; legacy contracts",
+      "expected": "implemented development candidate path preserves legacy domains; protected admission impossible without real independent authority/custody; admission never execution permission",
+      "command": "nativeExecutor",
+      "artifact": "native-e2e-029/results.json",
+      "status": "PARTIAL_SIGNED_INDEPENDENT_DEVELOPMENT",
+      "remaining": ["legacy-domain final compatibility", "protected population and actual protected authority"]
+    }
+  ],
+  "existingStaticCommands": [
+    {"cwd": "finnor-os", "argv": ["node", "node_modules/typescript/bin/tsc", "--noEmit", "--pretty", "false", "-p", "tsconfig.json"], "status": "PASS", "artifact": "native-typecheck-025.log", "finalSealedCut": false},
+    {"cwd": "finnor-os", "argv": ["node", "node_modules/typescript/bin/tsc", "--noEmit", "--pretty", "false", "-p", "scripts/x2/tsconfig.json"], "status": "PASS", "artifact": "native-driver-typecheck-025.log", "retainedPriorTimeout": "native-driver-typecheck-023.log", "finalSealedCut": false},
+    {"cwd": "finnor-os", "argv": ["node", "../node_modules/eslint/bin/eslint.js", "--no-ignore", "--max-warnings=0", "packages/private-equity/src/application-semantics/worker.ts", "packages/private-equity/src/application-semantics/runtime.ts", "packages/capability-evolution/src/application-port.ts", "packages/capability-evolution/src/application-consumer.ts"], "status": "PASS_AFFECTED_OWNERS", "artifact": "native-lint-033.log", "finalSealedCut": false},
+    {"cwd": ".", "argv": ["node", "node_modules/eslint/bin/eslint.js", "--no-ignore", "--max-warnings=0", "finnor-os/scripts/x2/run-native-e2e.mts"], "status": "PASS_AFFECTED_DRIVER", "artifact": "native-lint-032.log", "finalSealedCut": false},
+    {"cwd": ".", "argv": ["node", "node_modules/eslint/bin/eslint.js", "--no-ignore", "--max-warnings=0", "finnor-os/packages/private-equity/src/application-semantics/validity.ts", "finnor-os/packages/private-equity/src/application-semantics/runtime.ts"], "status": "PASS_AFFECTED_FILES", "artifact": "native-lint-031.log", "finalSealedCut": false},
+    {"cwd": ".", "argv": ["npm", "run", "lint"], "status": "NOT_RUN", "limitation": "root command covers src/scripts only; backend changed files need explicit affected lint command"},
+    {"cwd": ".", "argv": ["npm", "run", "workspace:check"], "status": "PASS_EARLIER_COMPATIBLE_CUT_FINAL_REFRESH_PENDING"},
+    {"cwd": ".", "argv": ["npm", "run", "centropy:manifest:check"], "status": "PASS_EARLIER_COMPATIBLE_CUT_FINAL_REFRESH_PENDING"},
+    {"cwd": ".", "argv": ["npm", "run", "centropy:client:check"], "status": "PASS_EARLIER_COMPATIBLE_CUT_FINAL_REFRESH_PENDING"},
+    {"cwd": ".", "argv": ["npm", "run", "centropy:forms:check"], "status": "PASS_EARLIER_COMPATIBLE_CUT_FINAL_REFRESH_PENDING"},
+    {"cwd": "finnor-os", "argv": ["npm", "run", "authz:matrix:check"], "status": "PASS_EARLIER_COMPATIBLE_CUT_FINAL_REFRESH_PENDING"},
+    {"cwd": "finnor-os", "argv": ["npm", "run", "release:manifest"], "status": "PASS_EARLIER_COMPATIBLE_CUT_FINAL_REFRESH_PENDING"}
+  ],
+  "rerunRules": [
+    "Freeze actual candidate source/dirty hashes/runtime/locks/schema/oracle/grants before each costly run.",
+    "Keep raw failed and interrupted attempts; diagnose live process/queue/lease/SQL/build/rights/browser after repeated failure.",
+    "Repair actual cause and rerun affected predicates only; reuse evidence solely when input/source/consumer/custody compatibility is demonstrated.",
+    "Do not extend original deadlines, shrink registered domain or replace missing positive boundaries with refusal/source proof."
+  ],
+  "separateExternalGates": {
+    "DOMAIN_QUALIFIED": "NOT_RUN: independently administered 20 unseen applications/200 withheld workflows, >=10 each, two revisions each and protected custody/admission",
+    "PRODUCTION_ACTIVE": "NOT_AUTHORIZED",
+    "OPERATIONAL_100X_PASSED": "BLOCKED: all-five qualification, B_V, mandatory equipped comparators, >=30 independent blocks and simultaneous intervals absent",
+    "FINANCIAL_QUALIFIED": "BLOCKED: canonical S7 attribution/comparators/downside/net owner value and H2 36-month evidence absent",
+    "CUMULATIVE_PEER_ADOPTION": "BLOCKED: X1 repair and ORIGINAL V1 overlays unsealed; migration reservations collide"
+  }
+}

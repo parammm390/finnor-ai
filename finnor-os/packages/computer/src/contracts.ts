@@ -85,7 +85,8 @@ export interface ComputerPrimitiveResult {
 }
 
 export interface ComputerProviderCost {
-  creditsUsed: number;
+  /** null is UNKNOWN, never a reported zero or released exposure. */
+  creditsUsed: number | null;
 }
 
 export interface ComputerProvider {
@@ -123,7 +124,7 @@ export type ComputerRunTerminal =
 
 export class ComputerProviderError extends Error {
   constructor(
-    readonly code: "provider_unavailable" | "session_lost" | "origin_blocked" | "read_only_mutation" | "limit_exceeded" | "capability_unavailable" | "provider_failure",
+    readonly code: "provider_unavailable" | "session_lost" | "origin_blocked" | "read_only_mutation" | "limit_exceeded" | "capability_unavailable" | "provider_failure" | "usage_unknown",
     message: string,
   ) {
     super(message);

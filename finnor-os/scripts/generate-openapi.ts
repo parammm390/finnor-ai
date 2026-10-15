@@ -68,6 +68,7 @@ import { CapitalProgramV2Operations } from "@finnor/shared-types";
 import { M4Operations } from "../packages/private-equity/src/counterexample-search/handler";
 import { CONTINUATION_OPERATIONS } from "../packages/private-equity/src/live-recompilation/api";
 import { PROCEDURE_OPERATIONS, PROCEDURE_OPERATION_SCHEMAS } from "../packages/private-equity/src/procedure-induction/api";
+import { APPLICATION_OPERATIONS, APPLICATION_OPERATION_SCHEMAS } from "../packages/private-equity/src/application-semantics/api";
 import { DELIBERATION_OPERATIONS } from "../packages/private-equity/src/deliberation/api";
 import { ComputeSearchRequestSchema, SearchIdSchema, SearchProjectionSchema } from "../packages/private-equity/src/compute-search/contracts";
 import { CalibrationRequestSchema, DeliberationRequestSchema, DeliberationEvidenceReadSchema, DeliberationCurrentReaderSchema, DeliberationProjectionSchema, DeliberationModuleReaderSchema } from "../packages/private-equity/src/deliberation/contracts";
@@ -364,7 +365,7 @@ const paths = {
   "/api/vitals": { get: { security: secured, responses: { "200": { description: "Queue and runtime vitals" } } } },
   "/api/activity": { get: { security: secured, responses: { "200": { description: "Tenant-scoped raw diagnostic activity", ...json(RawActivityPageSchema) } } } },
   "/api/semantic-activity": { post: { security: secured, requestBody: json(SemanticActivityInputSchema), responses: { "200": { description: "Deterministic tenant-scoped PE semantic activity from P1-P7 canonical records" }, "400": { description: "Strict request schema rejected unknown or invalid input" }, "404": { description: "PE root absent from the authenticated tenant" } } } },
-  "/api/company-brain/{operation}": { post: { security: secured, parameters: [{ name: "operation", in: "path", required: true, schema: { type: "string", enum: ["belief-view", "belief-pin", "roots", "projection", "search", "object", "traverse", "provenance", "history", "evidence-lineage", "decision-lineage", "available-actions", "context", ...EVIDENCE_OPERATIONS, ...PROGRAM_OPERATIONS, ...COMPUTE_SEARCH_OPERATIONS, ...INTERFACE_OPERATIONS, ...M1_OPERATIONS, ...CONTINUATION_OPERATIONS, ...PROCEDURE_OPERATIONS, ...DELIBERATION_OPERATIONS] } }], responses: { "200": { description: "Tenant-scoped Company Brain operation. Owner request schemas and current authority are checked by each delegated handler." }, "400": { description: "Strict request schema rejected unknown or invalid input" }, "404": { description: "Root or object absent from the authenticated tenant" } } } },
+  "/api/company-brain/{operation}": { post: { security: secured, parameters: [{ name: "operation", in: "path", required: true, schema: { type: "string", enum: ["belief-view", "belief-pin", "roots", "projection", "search", "object", "traverse", "provenance", "history", "evidence-lineage", "decision-lineage", "available-actions", "context", ...EVIDENCE_OPERATIONS, ...PROGRAM_OPERATIONS, ...COMPUTE_SEARCH_OPERATIONS, ...INTERFACE_OPERATIONS, ...M1_OPERATIONS, ...CONTINUATION_OPERATIONS, ...PROCEDURE_OPERATIONS, ...DELIBERATION_OPERATIONS, ...APPLICATION_OPERATIONS] } }], responses: { "200": { description: "Tenant-scoped Company Brain operation. Owner request schemas and current authority are checked by each delegated handler." }, "400": { description: "Strict request schema rejected unknown or invalid input" }, "404": { description: "Root or object absent from the authenticated tenant" } } } },
   "/api/private-equity/digital-twin": { post: { security: secured, requestBody: json(PeDigitalTwinRequestSchema), responses: { "200": { description: "Tenant-scoped PE Digital Twin query or transition" }, "201": { description: "Evidence-backed canonical PE fact, identity, observation, or exact relation created" }, "400": { description: "Strict request schema rejected unknown or invalid input" }, "404": { description: "Canonical reference absent from the authenticated tenant" }, "409": { description: "Expected version or concurrent canonical truth conflict" }, "422": { description: "Canonical invariant rejected the requested fact" } } } },
   "/api/workflows/runs": { get: { security: secured, responses: { "200": { description: "Tenant-scoped workflow runs" } } } },
   "/api/workflows/runs/{id}/pause": { post: { security: secured, parameters: [documentIdParameter], requestBody: json(WorkflowRunControlSchema), responses: { "200": { description: "Authorized workflow pause" } } } },
@@ -710,6 +711,7 @@ for (const operation of DELIBERATION_OPERATIONS) {
 for (const [operation,schema] of [
   ...Object.entries(M1OperationSchemas),...Object.entries(EvidenceOperationSchemas),
   ...Object.entries(CapitalProgramV2Operations),
+  ...Object.entries(APPLICATION_OPERATION_SCHEMAS),
 ]) {
   Object.assign(paths,{["/api/company-brain/"+operation]:{post:{
     security:secured,requestBody:json(schema),responses:{

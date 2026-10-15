@@ -588,7 +588,27 @@ export class JobQueue {
           [job!.tenantId,job!.payload.principalId,job!.payload.unitId,job!.payload.searchId,job!.payload.generation,job!.deliveryAttemptId]);
           return proof.rowCount === 1;
         }).catch(() => false);
-      if (capacityDeferred && (safelyReplayable || p2Unsubmitted)) {
+      const x2Undispatched = capacityDeferred && job.type === "run_application_semantics_v1"
+        && job.retrySafety === "reconcilable" && job.protocolVersion === 1
+        && !!job.tenantId && typeof job.payload.principalId === "string"
+        && await withTenantTransaction(job.tenantId!, { userId: job.payload.principalId as string, readOnly: true }, async (_db, c) => {
+          const proof = await c.query(`SELECT s.id FROM finnor_os.application_semantics_sessions s
+            JOIN finnor_os.job_delivery_attempts a ON a.tenant_id=s.tenant_id AND a.id=$6 AND a.job_id=$7
+            WHERE s.tenant_id=$1 AND s.principal_id=$2 AND s.id=$3 AND s.generation=$4
+              AND s.claim_token=$5 AND s.claim_fence=$8 AND s.deadline_at>clock_timestamp()
+              AND a.claim_token=s.claim_token AND a.claim_fence=s.claim_fence AND a.finished_at IS NULL
+              AND EXISTS(SELECT 1 FROM finnor_os.application_semantics_events e
+                WHERE e.tenant_id=s.tenant_id AND e.principal_id=s.principal_id AND e.session_id=s.id
+                  AND e.kind='PHYSICAL_PREPARATION_CAPACITY_DEFERRED'
+                  AND e.body->'detail'->>'deliveryAttemptId'=a.id::text)
+              AND NOT EXISTS(SELECT 1 FROM finnor_os.application_semantics_requests r
+                WHERE r.tenant_id=s.tenant_id AND r.principal_id=s.principal_id AND r.session_id=s.id
+                  AND r.created_at>=a.started_at)`,
+          [job!.tenantId, job!.payload.principalId, job!.payload.sessionId, job!.payload.generation,
+            job!.claimToken, job!.deliveryAttemptId, job!.id, job!.claimFence]);
+          return proof.rowCount === 1;
+        }).catch(() => false);
+      if (capacityDeferred && (safelyReplayable || p2Unsubmitted || x2Undispatched)) {
         // No provider request was made: capacity contention is not a business
         // failure or an exhausted retry.  Keep an audit row for the physical
         // delivery but restore the logical attempt and defer durably.

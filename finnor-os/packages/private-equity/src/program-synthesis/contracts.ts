@@ -2,6 +2,7 @@ import { z } from 'zod';
 import {ProcedureUseSchema} from '../procedure-induction/use-contracts';
 import { EvidenceRootSchema, EvidenceSourceSchema, FinancialSemanticsSchema, type EvidenceDependency, type EvidenceWitness, type FinancialSemantics } from '@finnor/shared-types';
 import type { GoalSpec, PlanGraph } from '@finnor/planning';
+import {X2RefSchema} from '../application-semantics/contracts';
 
 export const P1_VERSION = 'p1-bounded-native-v1';
 export const OPERATIONS = ['derive','propose_model','design_inquiry','search','simulate','solve','compose_artifact','await_observation','propose_effect','stop'] as const;
@@ -40,6 +41,14 @@ export const HarnessRequestSchema=z.object({schema:z.literal('finnor.harness-req
 }).strict();
 export type HarnessRequest=z.infer<typeof HarnessRequestSchema>;
 export type OwnerOperation=z.infer<typeof OwnerOperationSchema>;
+/** Additive native application grammar. No URL, locator, program, authority or
+ * replacement budget can enter through a generated owner operation. */
+export const ApplicationOwnerOperationSchema=z.object({
+ schema:z.literal('finnor.p1.application-owner-operation.v1'),
+ op:z.enum(['compose_application_operations','continue_application_operations']),
+ sessionId:uuid,inputRef:X2RefSchema,
+}).strict();
+export type ApplicationOwnerOperation=z.infer<typeof ApplicationOwnerOperationSchema>;
 export type Instruction={op:'input';key:string}|{op:'literal';value:string}|{op:'add'|'subtract'|'multiply'|'ratio'|'min'|'max'}|{op:'branch';comparison:Comparison;left:Instruction[];right:Instruction[];whenTrue:Instruction[];whenFalse:Instruction[]};
 export interface TypeScriptModule {source:string;sourceDigest:string;emitted:string;emittedDigest:string;irDigest:string;compiler:{name:'typescript';version:string;optionsDigest:string;libraries:Array<{file:string;sha256:string}>;librariesDigest:string};diagnostics:Array<{code:number;category:string;file:string|null;start:number|null;message:string}>}
 export interface NativeModule {typescript:TypeScriptModule;schema:'finnor.harness-module.v1';id:string;sourceDigest:string;compiledDigest:string;structureDigest:string;source:string;compiled:string;format:'BOUNDED_SSA'|'BOUNDED_STACK';entrypoint:'compute';inputKeys:string[];outputs:Array<{key:string;unit:string;currencyCode:string|null}>;bounds:{steps:number;depth:number;bytes:number};runtime:{kind:'REGISTERED_NATIVE_IR';version:typeof P1_VERSION;closureDigest:string};checks:string[];admission:null}

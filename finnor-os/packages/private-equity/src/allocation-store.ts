@@ -55,6 +55,7 @@ async function locked<T>(ctx:PeMutationContext,fn:(c:pg.PoolClient)=>Promise<T>)
     await c.query('SELECT pg_advisory_xact_lock(hashtextextended($1,0))',[`s5-portfolio:${ctx.auth.tenantId}`]);await authorize(ctx,c);return fn(c);
   });}catch(e){if(attempt<2&&['40001','40P01'].includes((e as {code?:string}).code??''))continue;throw e;}
 }
+export { locked as withS5PortfolioTransaction };
 export interface AllocationSnapshot {resources:AllocationResource[];outstanding:AllocationOutstandingCommitment[];snapshotDigest:string}
 async function snapshot(c:pg.PoolClient,tenantId:string):Promise<AllocationSnapshot>{
   const resources=(await c.query('SELECT r.body FROM finnor_os.s5_resources r JOIN finnor_os.s5_resource_heads h USING(tenant_id,resource_id,revision) WHERE r.tenant_id=$1 ORDER BY r.resource_id LIMIT 17',[tenantId])).rows.map(r=>r.body as AllocationResource);
@@ -81,8 +82,20 @@ export async function putAllocationResource(ctx:PeMutationContext,input:Allocati
     await enqueueAllocationOrigin(ctx,c,resource,resource.rightsRef);
     // Invalidates clearance but never erases its durable accountable envelope.
     if(current){const invalidated=(await c.query("UPDATE finnor_os.s5_reservations SET revocation_reason='RESOURCE_REVISION_CHANGED',revision=revision+1,updated_at=clock_timestamp() WHERE tenant_id=$1 AND status<>'RELEASED' AND envelopes @> $2::jsonb RETURNING allocation_digest,reservation_id,revision",[ctx.auth.tenantId,JSON.stringify([{resourceId:input.resourceId}])])).rows;
-      for(const old of invalidated){const proposal=(await c.query('SELECT problem FROM finnor_os.s5_proposals WHERE tenant_id=$1 AND content_digest=$2',[ctx.auth.tenantId,old.allocation_digest])).rows[0];
-        await appendExperience(ctx,c,[prepareS5Experience(proposal.problem.mandate,'REVISION',ref.id,{resourceRef:ref,priorRef:current.ref,reservationRef:old.reservation_id,reservationRevision:old.revision,clearanceInvalidated:true,exposureRetained:true},[current.ref.id,old.reservation_id],'H0')]);}}
+      for(const old of invalidated){const proposal=(await c.query('SELECT problem,certificate FROM finnor_os.s5_proposals WHERE tenant_id=$1 AND content_digest=$2',[ctx.auth.tenantId,old.allocation_digest])).rows[0];
+        const detail={resourceRef:ref,priorRef:current.ref,reservationRef:old.reservation_id,reservationRevision:old.revision,clearanceInvalidated:true,exposureRetained:true};
+        if(proposal?.problem.schema==='finnor.s5.application-resource-problem.v1'&&proposal.certificate.schema==='finnor.s5.application-allocation.v1'){
+          const content={schema:'finnor.s5.application-resource-invalidation.v1',tenantId:ctx.auth.tenantId,
+            principalId:proposal.certificate.principalId,changedBy:actor(ctx),allocationRef:proposal.certificate.ref,...detail};
+          const reference=allocationRef('S5','application-resource-invalidation',content);
+          await c.query("INSERT INTO finnor_os.s5_history(tenant_id,subject_id,revision,operation,body) VALUES($1,$2,$3,'APPLICATION_RESOURCE_REVISION',$4::jsonb)",
+            [ctx.auth.tenantId,old.reservation_id,old.revision,JSON.stringify({...content,ref:reference})]);
+          await enqueueOwnerDeliveryInTransaction(c,{semanticOwner:'S5',tenantId:ctx.auth.tenantId,principalId:proposal.certificate.principalId},
+            {kind:'REFERENCE',identity:reference.id,payload:{reference:{...reference,content},rightsRefs:[proposal.certificate.rightsRef]}});
+        }else{
+          if(!proposal?.problem.mandate)throw denied();
+          await appendExperience(ctx,c,[prepareS5Experience(proposal.problem.mandate,'REVISION',ref.id,detail,[current.ref.id,old.reservation_id],'H0')]);
+        }}}
     await c.query('INSERT INTO finnor_os.s5_history(tenant_id,subject_id,revision,operation,body) VALUES($1,$2,$3,\'RESOURCE_REVISION\',$4::jsonb)',[ctx.auth.tenantId,ref.id,body.revision,JSON.stringify(resource)]);return resource;
   });
 }

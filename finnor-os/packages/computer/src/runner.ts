@@ -39,6 +39,27 @@ class ComputerRunLimitError extends Error {
   }
 }
 
+class ComputerRunCostError extends Error {
+  constructor(
+    readonly code: "provider_usage_unknown" | "provider_budget",
+    readonly creditsUsed: number | null,
+    readonly maxProviderCredits: number,
+    message: string,
+  ) {
+    super(message);
+    this.name = "ComputerRunCostError";
+  }
+}
+
+function assertProviderCost(creditsUsed: number | null, maxProviderCredits: number): void {
+  if (typeof creditsUsed !== "number" || !Number.isFinite(creditsUsed) || creditsUsed < 0) {
+    throw new ComputerRunCostError("provider_usage_unknown", null, maxProviderCredits, "Provider usage is UNKNOWN; no new application interaction is permitted");
+  }
+  if (creditsUsed >= maxProviderCredits) {
+    throw new ComputerRunCostError("provider_budget", creditsUsed, maxProviderCredits, "Computer run reached its provider credit budget");
+  }
+}
+
 export interface ComputerRunnerOptions {
   broker: ComputerBroker;
   decisionEngine: ComputerDecisionEngine;
@@ -213,6 +234,11 @@ export class ComputerRunner {
         await finishComputerStep(tenantId, recoverStep.id, "succeeded", { provider: provider.name });
       }
 
+      // Provisioning can itself consume credits. Check before application
+      // navigation, not only after the first page interaction.
+      const initialCost = await provider.cost(session);
+      assertProviderCost(initialCost.creditsUsed, limits.maxProviderCredits);
+
       let initialObservation: StructuredPageObservation;
       if (recoveredSession && run.mode === "WRITE" && (run.effectStatus === "dispatching" || run.effectStatus === "unknown")) {
         // Preserve the page that may contain post-submit state. Navigating home first
@@ -253,11 +279,7 @@ export class ComputerRunner {
           break;
         }
         const cost = await provider.cost(session);
-        if (cost.creditsUsed >= limits.maxProviderCredits) {
-          terminal = { status: "timed_out", code: "provider_budget", reason: "Computer run reached its provider credit budget" };
-          await terminalStep(run, "timed_out", "budget", "Stopped at the governed provider-cost limit", { creditsUsed: cost.creditsUsed, maxProviderCredits: limits.maxProviderCredits });
-          break;
-        }
+        assertProviderCost(cost.creditsUsed, limits.maxProviderCredits);
 
         run = (await getComputerRunInternal(tenantId, runId)) ?? run;
         const authorizedEffect = run.authorizedEffect as ComputerAuthorizedEffect | null;
@@ -359,17 +381,22 @@ export class ComputerRunner {
       }
     } catch (error) {
       const providerError = error instanceof ComputerProviderError ? error : null;
-      const limitError = error instanceof ComputerRunLimitError || providerError?.code === "limit_exceeded";
+      const costError = error instanceof ComputerRunCostError ? error : null;
+      const limitError = error instanceof ComputerRunLimitError || providerError?.code === "limit_exceeded" || costError?.code === "provider_budget";
       const originBlocked = (error as { code?: string })?.code === "origin_blocked" || providerError?.code === "origin_blocked";
       const readOnlyMutation = providerError?.code === "read_only_mutation";
-      const configurationBlocked = providerError?.code === "provider_unavailable" || providerError?.code === "capability_unavailable";
+      const configurationBlocked = providerError?.code === "provider_unavailable" || providerError?.code === "capability_unavailable" || providerError?.code === "usage_unknown" || costError?.code === "provider_usage_unknown";
       const authorityBlocked = /authority|auth profile|application\/auth profile|origin policy/i.test(error instanceof Error ? error.message : "");
       terminal = {
         status: limitError ? "timed_out" : originBlocked || readOnlyMutation || authorityBlocked || configurationBlocked ? "blocked" : "failed",
-        code: limitError ? (error instanceof ComputerRunLimitError ? error.code : "provider_limit") : originBlocked ? "origin_blocked" : readOnlyMutation ? "read_only_mutation" : authorityBlocked ? "authorization_changed" : configurationBlocked ? "blocked_config" : providerError?.code ?? "computer_failure",
+        code: costError?.code ?? (providerError?.code === "usage_unknown" ? "provider_usage_unknown" : limitError ? (error instanceof ComputerRunLimitError ? error.code : "provider_limit") : originBlocked ? "origin_blocked" : readOnlyMutation ? "read_only_mutation" : authorityBlocked ? "authorization_changed" : configurationBlocked ? "blocked_config" : providerError?.code ?? "computer_failure"),
         reason: error instanceof Error ? error.message.slice(0, 2000) : "Computer execution failed",
       };
-      await terminalStep(run, terminal.status, "terminal_failure", terminal.reason, { code: terminal.code }).catch(() => undefined);
+      await terminalStep(run, terminal.status, "terminal_failure", terminal.reason, {
+        code: terminal.code,
+        ...(costError ? { creditsUsed: costError.creditsUsed, maxProviderCredits: costError.maxProviderCredits } : {}),
+        ...(terminal.code === "provider_usage_unknown" ? { usageQualification: "UNKNOWN", releasedExposure: false } : {}),
+      }).catch(() => undefined);
     } finally {
       if (session && provider) {
         const cleanup = await beginComputerStep({ tenantId, runId, phase: terminal?.status ?? "failed", operation: "release_session", summary: "Releasing the ephemeral provider session" }).catch(() => null);

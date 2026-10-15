@@ -15,10 +15,11 @@ import { canonical } from '../../governed-execution/src/protocol';
 import { readOwnerTransportReference, ownerTransportRoute, signOwnerDeliveryOrigin, deliverOwnerTransportIntent, resolveEconomicOwnerReference } from '../../governed-execution/src/owner-transport';
 import { CapabilityJournal, privateFile, type JournalEntry } from './journal';
 import { InterfaceCapabilityPort } from './interface-port';
+import { ApplicationCapabilityPort, ApplicationPortConfigurationSchema } from './application-port';
 import { digest, byteDigest, fault, parseRevision, makeRef, sameRef, RefSchema, ProtocolSchema, EvaluationSummarySchema, AllocationMethodAdmissionSchema, assertSignature, S8_VERSION, type Signed, type AuthorityKey, type CapabilityRevision, type EvaluationProtocol, type EvaluationSummary, type CapabilityRef, type AllocationMethodAdmission } from './contracts';
 const Text = z.string().min(1).max(4096), Instant = z.string().datetime({ offset: true });
 const KeySchema = z.object({ id: Text, principalId: Text, publicKey: Text, validAfter: Instant, validUntil: Instant, revoked: z.boolean() }).strict();
-const PolicySchema = z.object({ schema: z.literal('finnor.s8.lifecycle-policy.v1'), domain: z.enum(['DISPOSABLE_TEST_AUTHORITY', 'REVIEWED_PROTECTED_DOMAIN']), tenantId: Text, principalId: Text, rightsRef: Text, responsibilityHandoff: z.object({ reference: RefSchema, previousSignedPolicy: z.object({ body: z.unknown(), keyId: Text, signature: Text }).strict(), previousReleaseRoot: Text }).strict().optional(), protectedEvents: z.object({ contract: z.literal('S8_CAPABILITY_EVENTS_V1'), maxRecoveryEvents: z.number().int().min(1).max(256) }).strict().optional(), validAfter: Instant, validUntil: Instant, actors: z.array(z.object({ id: Text, principalId: Text, tokenHash: z.string().regex(/^[a-f0-9]{64}$/), roles: z.array(z.enum(['PROPOSER', 'EVALUATOR', 'PROMOTER', 'CONSUMER', 'READER'])).min(1).max(2) }).strict()).min(4).max(64), evaluatorKeys: z.array(KeySchema).min(1).max(16), promotionKeys: z.array(KeySchema).min(1).max(16), costAuthorityPrincipalIds: z.array(Text).max(16), journalPublicKey: Text, allowedStrata: z.array(Text).min(1).max(64), maxEntries: z.number().int().min(1).max(100000), maxQueue: z.number().int().min(1).max(64), maxTotalCost: z.number().finite().min(0).max(1000000), maxTotalLoss: z.number().finite().min(0).max(1000000000), maxTotalUses: z.number().int().min(1).max(100000), sourcePins: z.array(z.object({ path: Text, sha256: z.string().regex(/^[a-f0-9]{64}$/) }).strict()).min(1).max(64) }).strict();
+const PolicySchema = z.object({ schema: z.literal('finnor.s8.lifecycle-policy.v1'), domain: z.enum(['DISPOSABLE_TEST_AUTHORITY', 'REVIEWED_PROTECTED_DOMAIN']), tenantId: Text, principalId: Text, rightsRef: Text, responsibilityHandoff: z.object({ reference: RefSchema, previousSignedPolicy: z.object({ body: z.unknown(), keyId: Text, signature: Text }).strict(), previousReleaseRoot: Text }).strict().optional(), protectedEvents: z.object({ contract: z.literal('S8_CAPABILITY_EVENTS_V1'), maxRecoveryEvents: z.number().int().min(1).max(256) }).strict().optional(), application: ApplicationPortConfigurationSchema.optional(), validAfter: Instant, validUntil: Instant, actors: z.array(z.object({ id: Text, principalId: Text, tokenHash: z.string().regex(/^[a-f0-9]{64}$/), roles: z.array(z.enum(['PROPOSER', 'EVALUATOR', 'PROMOTER', 'CONSUMER', 'READER'])).min(1).max(2) }).strict()).min(4).max(64), evaluatorKeys: z.array(KeySchema).min(1).max(16), promotionKeys: z.array(KeySchema).min(1).max(16), costAuthorityPrincipalIds: z.array(Text).max(16), journalPublicKey: Text, allowedStrata: z.array(Text).min(1).max(64), maxEntries: z.number().int().min(1).max(100000), maxQueue: z.number().int().min(1).max(64), maxTotalCost: z.number().finite().min(0).max(1000000), maxTotalLoss: z.number().finite().min(0).max(1000000000), maxTotalUses: z.number().int().min(1).max(100000), sourcePins: z.array(z.object({ path: Text, sha256: z.string().regex(/^[a-f0-9]{64}$/) }).strict()).min(1).max(128) }).strict();
 type Policy = z.infer<typeof PolicySchema>;
 type Actor = Policy['actors'][number];
 interface Config {
@@ -55,6 +56,7 @@ export interface CapabilityUseLease {
 }
 export class CapabilityEvolution {
     private interfaces: InterfaceCapabilityPort;
+    private applications: ApplicationCapabilityPort;
     private states = new Map<string, RevisionState>();
     private active: string | null = null;
     private generation = 0;
@@ -73,6 +75,7 @@ export class CapabilityEvolution {
     private inheritedHandoff: any = null;
     private constructor(readonly policy: Policy, private journal: CapabilityJournal) {
         this.interfaces = new InterfaceCapabilityPort(policy);
+        this.applications = new ApplicationCapabilityPort(policy);
         this.protectedEvents = policy.protectedEvents ? new ProtectedCapabilityEvents({ ...policy, protectedEvents: policy.protectedEvents }, journal.policyDigest) : null;
         for (const e of journal.entries)
             this.replay(e);
@@ -92,7 +95,12 @@ export class CapabilityEvolution {
             return byteDigest(key.export({ type: 'spki', format: 'der' }));
         };
         const evaluatorFingerprints = new Set(policy.evaluatorKeys.map(k => fingerprint(k.publicKey)));
-        if (policy.promotionKeys.some(k => evaluatorFingerprints.has(fingerprint(k.publicKey))))
+        const evaluatorPrincipals = new Set(policy.evaluatorKeys.map(k => k.principalId)
+            .concat(policy.actors.filter(a => a.roles.includes('EVALUATOR')).map(a => a.principalId)));
+        const promoterPrincipals = new Set(policy.promotionKeys.map(k => k.principalId)
+            .concat(policy.actors.filter(a => a.roles.includes('PROMOTER')).map(a => a.principalId)));
+        if (policy.promotionKeys.some(k => evaluatorFingerprints.has(fingerprint(k.publicKey))) ||
+            [...promoterPrincipals].some(id => evaluatorPrincipals.has(id)))
             fault('S8_AUTHORITY_NOT_SEPARATED', 503);
         const principals = new Set<string>(), tokens = new Set<string>();
         for (const a of policy.actors) {
@@ -400,6 +408,14 @@ export class CapabilityEvolution {
     }
     private replay(entry: JournalEntry) {
         if (entry.operation.startsWith('INTERFACE_')) { this.interfaces.replay(entry); return; }
+        if (entry.operation.startsWith('APPLICATION_')) {
+            this.applications.replay(entry);
+            if (entry.operation === 'APPLICATION_USE') {
+                this.totalCost += entry.result.lease.reservedCost;
+                this.useCount++;
+            }
+            return;
+        }
         const b = entry.body, r = entry.result;
         if (entry.operation === 'JOURNAL_RECOVERY' && r.responsibilityImport === true) {
             const capsule = r.capsule;
@@ -506,6 +522,10 @@ export class CapabilityEvolution {
                 // replayed from a cached admission. Every serve checks current use.
                 if (input.operation.startsWith('INTERFACE_'))
                     await CapabilityEvolution.sources(this.policy.sourcePins);
+                if (input.operation.startsWith('APPLICATION_')) {
+                    await CapabilityEvolution.sources(this.policy.sourcePins);
+                    await this.applications.revalidateReplay(a, input.operation, input.body, prior.result);
+                }
                 if (input.operation === 'USE') {
                     const use = this.uses.get(prior.result.lease.useId);
                     if (!use)
@@ -520,6 +540,15 @@ export class CapabilityEvolution {
             if (this.policy.responsibilityHandoff) await this.resolveResponsibilityHandoff();
             const b = input.body;
             let result: any, journalOperation = input.operation;
+            if (input.operation.startsWith('APPLICATION_')) {
+                const answer = await this.applications.command(a, input.operation, b, input.requestId,
+                    { totalCost: this.totalCost, useCount: this.useCount },
+                    (ref, content) => this.commitNamedReference(ref, content));
+                if (!answer.readOnly)
+                    await this.persist({ requestId: input.requestId, requestDigest, actorId: a.id,
+                        operation: input.operation, body: b, result: answer.result });
+                return answer.result;
+            }
             if (input.operation.startsWith('INTERFACE_')) {
                 const answer = await this.interfaces.command(a, input.operation, b,
                     (ref, content) => this.commitNamedReference(ref, content));
@@ -535,7 +564,7 @@ export class CapabilityEvolution {
                     if (page.atSequence !== undefined && page.atSequence !== sequence)
                         fault('S8_READ_SNAPSHOT_CHANGED');
                     const take = <T>(items: T[]) => items.slice(page.offset, page.offset + page.limit), count = Math.max(this.states.size, this.attempts.length, this.uses.size, this.journal.entries.length), nextOffset = page.offset + page.limit < count ? page.offset + page.limit : null;
-                    return { ...(this.handedOff || this.inheritedHandoff ? { responsibilityContinuity: { transferred: this.handedOff, inheritedHandoff: this.inheritedHandoff, actionableActivationTransferred: false } } : {}), active: this.active, generation: this.generation, revisions: take([...this.states.values()]).map(s => ({ ref: s.revision.ref, state: s.state, evaluation: s.evaluation, activation: s.activation })), attempts: take(this.attempts), uses: take([...this.uses.values()]), accounting: { totalCost: this.totalCost, totalLoss: this.totalLoss, useCount: this.useCount }, history: take(this.journal.entries).map(e => ({ sequence: e.sequence, operation: e.operation, requestId: e.requestId, digest: e.digest, knowledgeAt: e.knowledgeAt })), page: { offset: page.offset, limit: page.limit, sequence, nextOffset, complete: page.offset === 0 && nextOffset === null }, counts: { revisions: this.states.size, attempts: this.attempts.length, uses: this.uses.size, history: this.journal.entries.length }, protectedHistory: this.protectedEvents?.snapshot() ?? null, qualification: this.protectedEvents ? 'SIGNED_JOURNAL_AND_AUTHENTICATED_CONSECUTIVE_S6_EVENTS_NO_VALUE_OR_EFFECT_AUTHORITY' : 'ORDINARY_SIGNED_HISTORY_AND_S6_REFERENCE_COMMITMENTS_NO_PROTECTED_S8_EVENT_APPEND' };
+                    return { ...(this.applications.hasHistory() ? { applications: this.applications.snapshot(page.offset, page.limit) } : {}), ...(this.handedOff || this.inheritedHandoff ? { responsibilityContinuity: { transferred: this.handedOff, inheritedHandoff: this.inheritedHandoff, actionableActivationTransferred: false } } : {}), active: this.active, generation: this.generation, revisions: take([...this.states.values()]).map(s => ({ ref: s.revision.ref, state: s.state, evaluation: s.evaluation, activation: s.activation })), attempts: take(this.attempts), uses: take([...this.uses.values()]), accounting: { totalCost: this.totalCost, totalLoss: this.totalLoss, useCount: this.useCount }, history: take(this.journal.entries).map(e => ({ sequence: e.sequence, operation: e.operation, requestId: e.requestId, digest: e.digest, knowledgeAt: e.knowledgeAt })), page: { offset: page.offset, limit: page.limit, sequence, nextOffset, complete: page.offset === 0 && nextOffset === null }, counts: { revisions: this.states.size, attempts: this.attempts.length, uses: this.uses.size, history: this.journal.entries.length }, protectedHistory: this.protectedEvents?.snapshot() ?? null, qualification: this.protectedEvents ? 'SIGNED_JOURNAL_AND_AUTHENTICATED_CONSECUTIVE_S6_EVENTS_NO_VALUE_OR_EFFECT_AUTHORITY' : 'ORDINARY_SIGNED_HISTORY_AND_S6_REFERENCE_COMMITMENTS_NO_PROTECTED_S8_EVENT_APPEND' };
                 }
                 case 'PROPOSE': {
                     this.role(a, 'PROPOSER');
@@ -778,6 +807,8 @@ export class CapabilityEvolution {
                 }
                 case 'HANDOFF': {
                     this.role(a, 'PROMOTER'); assertSignature(b, this.policy.promotionKeys, a.principalId);
+                    // An S5-only capsule must never discard application liabilities/history.
+                    if (this.applications.hasHistory()) fault('S8_APPLICATION_RESPONSIBILITY_HANDOFF_UNSUPPORTED', 503);
                     const request = z.object({ runtimeHandoff: z.literal(true), expectedGeneration: z.number().int().min(0), successorPolicyDigest: z.string().regex(/^[a-f0-9]{64}$/), successorPolicy: z.unknown(), reason: Text }).strict().parse(b.body);
                     if (request.expectedGeneration !== this.generation || request.successorPolicyDigest === CapabilityEvolution.handoffTargetDigest(this.policy) || request.successorPolicyDigest !== CapabilityEvolution.handoffTargetDigest(request.successorPolicy)) fault('S8_HANDOFF_GENERATION_OR_TARGET_INVALID');
                     const successor = PolicySchema.parse(request.successorPolicy);

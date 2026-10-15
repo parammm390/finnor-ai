@@ -4,4 +4,4 @@
  * Keep this beside the migrations so readiness and worker heartbeats cannot drift
  * by carrying independent literals.
  */
-export const CURRENT_MIGRATION_HEAD = "0171_runtime_database_role_isolation.sql";
+export const CURRENT_MIGRATION_HEAD = "0192_frontier5_x2_request_custody.sql";
