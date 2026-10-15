@@ -2053,6 +2053,24 @@ try {
   }
   if(personnel){
     const originalFrame=await originalEnvelope(),oldProof=sha(JSON.stringify(completion.completion_proof));
+    const effectRows=async()=>(await admin!.query(`SELECT a.id,a.action_type,a.status,a.payload,a.authority_context,
+      e.id effect_id,e.status effect_status FROM finnor_os.domain_actions a
+      JOIN finnor_os.business_effects e ON e.tenant_id=a.tenant_id AND e.domain_action_id=a.id
+      WHERE a.tenant_id=$1 AND a.work_id=$2 ORDER BY a.id`,[tenant,workId])).rows;
+    const priorEffects=await effectRows(),priorDutyIds:string[]=priorEffects.map(effect=>effect.authority_context.stableIdentity).sort();
+    assert.equal(priorEffects.length,3);assert.equal(new Set(priorDutyIds).size,3);
+    assert.deepEqual(priorEffects.map(effect=>effect.id).sort(),allEffects.map(effect=>effect.id).sort());
+    assert.deepEqual(priorDutyIds,reading.programme.program.institution.responsibilities
+      .map((item:any)=>item.obligation.stableIdentity).sort());
+    assert.ok(priorEffects.every(effect=>effect.status==='completed'&&effect.effect_status==='verified'
+      &&effect.authority_context.principal===actor));
+    const priorOwner=(await admin.query(`SELECT a.candidate->'dependencies' dependencies FROM finnor_os.x1_compiler_artifacts a
+      JOIN finnor_os.x1_compiler_requests r ON r.tenant_id=a.tenant_id AND r.artifact_id=a.id
+      WHERE r.tenant_id=$1 AND r.id=$2`,[tenant,compilerId])).rows[0].dependencies;
+    const priorAuthorityRevision=String((await employeeAuthoritySnapshot(ctx.auth)).revision);
+    assert.equal(priorOwner.rightsRevision,priorAuthorityRevision);
+    await save('personnel-pre-change-canonical-duty-identities.json',{priorEffects,priorDutyIds,priorOwner,priorAuthorityRevision,
+      basis:'COMPLETED_CANONICAL_EFFECT_BINDINGS_AND_CHECKED_NATIVE_RESPONSIBILITIES_BEFORE_INPUT_CHANGE'});
     const objectiveBefore=(await admin.query('SELECT * FROM finnor_os.work_objective_loops WHERE tenant_id=$1 AND work_id=$2',[tenant,workId])).rows[0];
     const workSource=sources.find(source=>source.id==='work-original')!;
     const activeText='Independent active duty after personnel and reporting changes '+randomUUID();
@@ -2143,11 +2161,35 @@ try {
     assert.equal(sha(JSON.stringify(retained.completion_proof)),oldProof);
     const update=(await admin.query(`SELECT body FROM finnor_os.x1_compiler_events WHERE tenant_id=$1 AND request_id=$2
       AND kind='P7_EXACT_AFFECTED_UPDATE' ORDER BY created_at DESC LIMIT 1`,[tenant,latest.id])).rows[0].body;
-    assert.equal(update.affectedPriorDutyIds.length,0);assert.equal(update.preservedCurrentDutyIds.length,3);assert.equal(update.newDutyIds.length,1);
+    const endingEffects=await effectRows(),priorIds=new Set(priorEffects.map(effect=>effect.id));
+    assert.deepEqual(endingEffects.filter(effect=>priorIds.has(effect.id)),priorEffects,
+      'Revalidation preserves original canonical effect identities, payloads, authority and observed state');
+    const freshEffects=endingEffects.filter(effect=>!priorIds.has(effect.id));assert.equal(freshEffects.length,1);
+    assert.equal(freshEffects[0].action_type,'create_deal_request');assert.equal(freshEffects[0].payload.requestText,activeText);
+    const newDuties=response.body.programme.program.institution.responsibilities.filter((item:any)=>
+      item.obligation.trigger.sourceId==='work-original'&&item.obligation.trigger.recordId==='active-after-staff-change');
+    assert.equal(newDuties.length,1);assert.equal(newDuties[0].obligation.responsiblePrincipal,actor);
+    assert.equal(newDuties[0].obligation.rule.id,'standing-request');
+    const newDutyId:string=freshEffects[0].authority_context.stableIdentity;
+    assert.equal(newDutyId,newDuties[0].obligation.stableIdentity);assert.ok(!priorDutyIds.includes(newDutyId));
+    const currentAuthorityRevision=String((await employeeAuthoritySnapshot(ctx.auth)).revision);
+    assert.notEqual(currentAuthorityRevision,priorAuthorityRevision);
+    assert.equal(artifact.candidate.dependencies.rightsRevision,currentAuthorityRevision);
+    assert.notEqual(artifact.candidate.dependencies.operationRevision,priorOwner.operationRevision);
+    assert.equal(update.change,'SEMANTIC');assert.equal(update.authorityGranted,false);
+    for(const name of ['rightsRevision','operationRevision'])assert.ok(
+      update.changedDependencyIds.includes(JSON.stringify(['owner-dependency',name])));
+    const exactSets={affectedPriorDutyIds:priorDutyIds,affectedCurrentDutyIds:[...priorDutyIds,newDutyId].sort(),
+      preservedCurrentDutyIds:[],newDutyIds:[newDutyId],removedDutyIds:[]};
+    for(const [name,expectedIds] of Object.entries(exactSets)){
+      assert.equal(new Set(update[name]).size,update[name].length,'duplicate-free '+name);
+      assert.deepEqual([...update[name]].sort(),expectedIds,'independently bound '+name);
+    }
     const objectiveAfter=(await admin.query('SELECT * FROM finnor_os.work_objective_loops WHERE tenant_id=$1 AND work_id=$2',[tenant,workId])).rows[0];
     assert.equal(objectiveAfter.id,objectiveBefore.id);
     for(const field of ['max_steps','max_actions','max_queries','max_waits','max_node_attempts','deadline_at'])assert.deepEqual(objectiveAfter[field],objectiveBefore[field]);
     await save('personnel-reporting-partial-independent-proof.json',{latest,response,artifact,requests,effects,nativeWork,update,
+      priorEffects,endingEffects,priorDutyIds,newDutyId,exactSets,priorOwner,priorAuthorityRevision,currentAuthorityRevision,
       originalFrame,objectiveBefore,objectiveAfter,oldProof,employeeNamesAreNotIdentity:true,noApprovalInferred:true,
       knownDutyDenominator:5,observedDuties:4,suspendedDutyCount:1,unknownNormativePopulation:true});
     results.push({id:'B-overlapping-personnel-reporting-continuation',status:'PASS',observed:{sourcePopulation:15,
