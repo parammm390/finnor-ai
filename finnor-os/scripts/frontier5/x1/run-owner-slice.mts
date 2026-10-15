@@ -1413,7 +1413,7 @@ try {
     const burstEnd=Date.parse(cursor.events[0].enteredAt)+200;
     assert.ok(cursor.events.filter(event=>event.forceConflict).every(event=>Date.parse(event.releasedAt)<=burstEnd),
       'actual independent cursor commits stay within the original fixed burst');
-    assert.ok(Date.parse(cursor.events.at(-1)!.blocked.xact_start)>=burstEnd,
+    assert.ok(new Date(cursor.events.at(-1)!.blocked.xact_start).getTime()>=burstEnd,
       'actual successful transaction starts after the fixed burst, not merely its later barrier arrival');
     assert.equal(new Set(cursor.events.map(event=>event.blocked.backend_xid)).size,cursor.events.length,
       'every retry is an independently observed complete physical transaction');

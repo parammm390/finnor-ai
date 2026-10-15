@@ -9,7 +9,8 @@
     "finnor-os/scripts/frontier5/x1/reference/scrutiny-evidence-contract.json",
     "finnor-os/scripts/frontier5/x1/reference/scrutiny-evidence-contract.md",
     "scope-frontier5/x1-institutional-programme-compiler/failure-model.md",
-    "finnor-os/scripts/frontier5/x1/reference/admission-cursor-native-review-contract.md"
+    "finnor-os/scripts/frontier5/x1/reference/admission-cursor-native-review-contract.md",
+    "finnor-os/scripts/frontier5/x1/run-owner-slice.mts"
   ],
   "ownerPredicates": {
     "installed": [
