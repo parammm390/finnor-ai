@@ -278,6 +278,7 @@ for (const file of files(apiRoot)) {
       for (const operation of identificationOperations) routes.push(routeEntry(method, `identification-plans/${operation}`, source))
     } else if(ownerLeafOperations.has(path.split("/")[0])&&path.endsWith("/:operation")){
       for(const operation of ownerLeafOperations.get(path.split("/")[0]))routes.push(routeEntry(method,`${path.split("/")[0]}/${operation}`,source))
+      routes.push(routeEntry(method,path,source))
     } else if (path === "read-models/:view") {
       for (const view of readModels) routes.push(routeEntry(method, `read-models/${view}`, source))
     } else if (path === "documents/:id/artifact/[...action]") {
