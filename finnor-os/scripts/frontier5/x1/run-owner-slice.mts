@@ -1410,6 +1410,13 @@ try {
     assert.equal(cursor.failure,null);assert.ok(cursor.events.length>=2&&cursor.events.length<=3);
     assert.equal(cursor.events[0].forceConflict,true);
     assert.equal(cursor.events.at(-1).forceConflict,false,'the original final attempt must outlive the finite cursor write burst');
+    const burstEnd=Date.parse(cursor.events[0].enteredAt)+200;
+    assert.ok(cursor.events.filter(event=>event.forceConflict).every(event=>Date.parse(event.releasedAt)<=burstEnd),
+      'actual independent cursor commits stay within the original fixed burst');
+    assert.ok(Date.parse(cursor.events.at(-1)!.blocked.xact_start)>=burstEnd,
+      'actual successful transaction starts after the fixed burst, not merely its later barrier arrival');
+    assert.equal(new Set(cursor.events.map(event=>event.blocked.backend_xid)).size,cursor.events.length,
+      'every retry is an independently observed complete physical transaction');
     assert.equal(reading.status,'OBSERVED','full real owner continuation after physical serialization contention');
     results.push({id:'E-finite-cursor-write-burst-original-three-transactions',status:'PASS',observed:cursor,
       basis:'PHYSICAL_RESTRICTED_WORKER_SQL_SNAPSHOT_ACTUAL_SHARED_CURSOR_COMMITS_COMPLETE_OWNER_RETRY'});
@@ -3029,7 +3036,7 @@ try {
       ["agent-profiles", "SELECT * FROM finnor_os.agent_profiles WHERE tenant_id=$1 ORDER BY id"],
       ["agent-profile-revisions", "SELECT * FROM finnor_os.agent_profile_revisions WHERE tenant_id=$1 ORDER BY agent_profile_id,revision"],
       ["workforce-assignments", "SELECT * FROM finnor_os.workforce_assignments WHERE tenant_id=$1 ORDER BY created_at,id"],
-      ["query-executions", "SELECT * FROM finnor_os.work_query_executions WHERE tenant_id=$1 ORDER BY created_at,id"],
+      ["query-executions", "SELECT * FROM finnor_os.work_query_executions WHERE tenant_id=$1 ORDER BY started_at,id"],
     ]) { try { await save(name! + ".json", (await admin.query(sql!, [tenant])).rows); } catch (error) { await save(name! + "-read-gap.json", { predicate: String((error as Error).message) }); } }
   }
   if(competingWorker&&competingWorker.exitCode===null&&competingWorker.signalCode===null){

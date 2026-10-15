@@ -163,7 +163,7 @@ async function scopedPeTransaction<T>(
       if (attempt < maxAttempts && (pgCode(error) === "40001" || pgCode(error) === "40P01")) {
         // X1 admission shares the live operational cursor. Pace only its
         // existing rolled-back attempts; no new attempt or effect retry.
-        if (options.contentionBackoff) await new Promise(resolve => setTimeout(resolve, 100 * attempt + randomInt(100)));
+        if (options.contentionBackoff) await new Promise(resolve => setTimeout(resolve, 200 * attempt + randomInt(100)));
         continue;
       }
       throw error;
