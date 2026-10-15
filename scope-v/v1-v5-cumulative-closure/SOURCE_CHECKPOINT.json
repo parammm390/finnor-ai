@@ -54,9 +54,9 @@
     },
     {
       "path": "finnor-os/apps/supplier-canary/api/index.mjs",
-      "sha256": "f7a1b6d0fbfeeab1cba0d1252e2504be50eabf7d84c9beb14c6286019225a0a8",
-      "bytes": 8711,
-      "source": "validated-ci-repair"
+      "sha256": "6cfbd1796bdbb6b3e6475587028822dff77b5b05f4fadbaa3bb1be2b055caf31",
+      "bytes": 8699,
+      "source": "validated-backend-ci-repair"
     },
     {
       "path": "finnor-os/apps/worker/src/handlers/observe-external-effect.ts",
@@ -144,15 +144,15 @@
     },
     {
       "path": "finnor-os/packages/db/migration-head.ts",
-      "sha256": "d83faf665bef4b14c343c95067b87e577e6d61040261cf626e3eea4feb842066",
-      "bytes": 291,
-      "source": "validated-ci-repair"
+      "sha256": "ad8d5db05bd3b56807a3f23a4088ed2abb6a605c3043fd2acdbe760846e9a5ee",
+      "bytes": 279,
+      "source": "validated-backend-ci-repair"
     },
     {
       "path": "finnor-os/packages/db/migrations-bundle.ts",
-      "sha256": "7a28fd04fbfd32f8b3b7c540355d75913c3865a714b4e19ad0ba6eb89f6967c2",
-      "bytes": 1773366,
-      "source": "integration-source"
+      "sha256": "d0eea1536917b04b3bf0767662a780f6e0e6a38757d11907305364cf18f71a42",
+      "bytes": 1780297,
+      "source": "validated-backend-ci-repair"
     },
     {
       "path": "finnor-os/packages/db/migrations/0172_v2_primary_diligence.sql",
@@ -213,6 +213,12 @@
       "sha256": "cea48521082b4ea0cb30804dd3abdc715762f63f5f34e4cff23bebdad83b0fd9",
       "bytes": 2387,
       "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/db/migrations/0181_native_system_actor_scope.sql",
+      "sha256": "755c7028a83bdeda0c97262ae1f0f58814d82d226517b26f682b4586cb7cca8f",
+      "bytes": 6762,
+      "source": "validated-backend-ci-repair"
     },
     {
       "path": "finnor-os/packages/db/schema.ts",
@@ -678,9 +684,9 @@
     },
     {
       "path": "finnor-os/packages/private-equity/src/operational-queries.ts",
-      "sha256": "bd58e6c741ede1f930516e8891d82ab3e4232d35c3fa1d50ef6b73ee80ae9250",
-      "bytes": 38651,
-      "source": "integration-source"
+      "sha256": "d6124c9dccc1cda4602793490f0e12eb9b3d1676f6c6c8b84aaaf17aac2f647c",
+      "bytes": 39206,
+      "source": "validated-backend-ci-repair"
     },
     {
       "path": "finnor-os/packages/private-equity/src/opportunity-handoff.ts",
@@ -1175,6 +1181,72 @@
       "source": "validated-ci-repair"
     },
     {
+      "path": "finnor-os/tests/historical-pe-database.ts",
+      "sha256": "33b56a064c25de73907d611a558be98f49cc105c1da11821483c6296a7fca2f5",
+      "bytes": 1383,
+      "source": "validated-backend-ci-repair"
+    },
+    {
+      "path": "finnor-os/tests/integration/computer-execution-fabric.test.ts",
+      "sha256": "95cc14797992a713b3843ebd04f70b98a7cf01db9a6763f407a5c9d4731ef887",
+      "bytes": 51813,
+      "source": "validated-backend-ci-repair"
+    },
+    {
+      "path": "finnor-os/tests/integration/microsoft365-sync-worker.test.ts",
+      "sha256": "0c5ad1d736b445a4791b7bd1848095e685528ce986f9756db0957a0990d5b03d",
+      "bytes": 23392,
+      "source": "validated-backend-ci-repair"
+    },
+    {
+      "path": "finnor-os/tests/integration/private-equity-p5-upgrade.test.ts",
+      "sha256": "51d3d92a5f6713635e2797e59e702d5b0e504d2bf460eb9dddd01998bee4e6f8",
+      "bytes": 16875,
+      "source": "validated-backend-ci-repair"
+    },
+    {
+      "path": "finnor-os/tests/integration/private-equity-phase2.test.ts",
+      "sha256": "7d22308b26c0fe09c88f5c585fd5653f4fac2c5bcece3cfc61d2f424593ad23e",
+      "bytes": 50581,
+      "source": "validated-backend-ci-repair"
+    },
+    {
+      "path": "finnor-os/tests/integration/private-equity-phase4.test.ts",
+      "sha256": "5287b7d3bf4b571e9270637a4504a5dd973359d7e5e171c73d350e88e13ea1df",
+      "bytes": 51590,
+      "source": "validated-backend-ci-repair"
+    },
+    {
+      "path": "finnor-os/tests/integration/private-equity-scope4-digital-twin.test.ts",
+      "sha256": "d71eb76b5cd451ec7a974e168e4a8d8c7d2957381b7ebc0feff380d636ce11a3",
+      "bytes": 25316,
+      "source": "validated-backend-ci-repair"
+    },
+    {
+      "path": "finnor-os/tests/integration/production-manifest-readonly.test.ts",
+      "sha256": "2cb5bfc26005f4f64690639e3a1d1f062ac7ea7cba237a01f2c59eb3fb1da4fb",
+      "bytes": 2144,
+      "source": "validated-backend-ci-repair"
+    },
+    {
+      "path": "finnor-os/tests/integration/production-query-surface.test.ts",
+      "sha256": "e7e36f205b9fa7f881900d8493e2cf7dfa914bceed7baeb4c8a336e91ae1702e",
+      "bytes": 4740,
+      "source": "validated-backend-ci-repair"
+    },
+    {
+      "path": "finnor-os/tests/integration/single-action-runtime-bridge.test.ts",
+      "sha256": "a23ac0e71869f18a2ec081de756a1245e4e1a52eb961f17f540f8b2735d5d1eb",
+      "bytes": 43116,
+      "source": "validated-backend-ci-repair"
+    },
+    {
+      "path": "finnor-os/tests/reviewed-effect.ts",
+      "sha256": "4b0f6e30d5472489a05d414933ab236c8f86853211e846372e8c1d9a51678b23",
+      "bytes": 696,
+      "source": "validated-backend-ci-repair"
+    },
+    {
       "path": "finnor-os/tsconfig.json",
       "sha256": "585fc6c66ccd7701c40ac683c6a353693e906fc8e71d8a2cac8ae9f23bf49031",
       "bytes": 480,
@@ -1194,15 +1266,27 @@
     },
     {
       "path": "infra/deployment/production.contract.json",
-      "sha256": "9284c9df4c007b1f68a4aa2ed09557e031cd5c3583842b8a5cdcbc584c3e6b16",
-      "bytes": 7275,
-      "source": "validated-ci-repair"
+      "sha256": "ee1e773a309c752c347cef15bb7c2158eaa0c5de9e408c1c010cf3bca8b91b6a",
+      "bytes": 7263,
+      "source": "validated-backend-ci-repair"
     },
     {
       "path": "next.config.mjs",
       "sha256": "a7cac529be72c16c0e7058bc130238cc837504a830365b28da7497790ac24632",
       "bytes": 5834,
       "source": "integration-source"
+    },
+    {
+      "path": "scope-v/v1-v5-cumulative-closure/CI_REPAIR_PLAN.md",
+      "sha256": "04e411b0233ddad299adfa424c89d0582c688cd0f85fedc3ab4f0b5e5b6a0017",
+      "bytes": 1271,
+      "source": "validated-backend-ci-repair"
+    },
+    {
+      "path": "scope-v/v1-v5-cumulative-closure/CI_REPAIR_VALIDATION-004.json",
+      "sha256": "014668101713ba8e301cca58e7a0fabbacb278ebd912a159cbae1729a9a568c4",
+      "bytes": 1665,
+      "source": "validated-backend-ci-repair"
     },
     {
       "path": "scope-v/v1-v5-cumulative-closure/DELIVERY_VALIDATION-002.json",
@@ -1218,9 +1302,9 @@
     },
     {
       "path": "scope-v/v1-v5-cumulative-closure/PULL_REQUEST.md",
-      "sha256": "17fcefd89eb3081e77ddfda8ea588d7450c5a8eff4d5ecca9a7f089fc99fbd7f",
-      "bytes": 6482,
-      "source": "validated-ci-repair"
+      "sha256": "fc079b8c9ce6f1a89c0465d82e4d951d8a1a307647753957fe9889c280169f4b",
+      "bytes": 7795,
+      "source": "validated-backend-ci-repair"
     },
     {
       "path": "scripts/centropy/generate-capability-manifest.mjs",
@@ -1380,5 +1464,5 @@
     }
   ],
   "initialPublishedCommitRetainedLocally": "954c897a3b1ec5a0e0c35d3fbb89ced73aaac356",
-  "ciStatus": "RERUN_REQUIRED_AFTER_CORRECTION"
+  "ciStatus": "REPAIR_91_LOCAL_TESTS_PASS_FULL_GITHUB_RERUN_REQUIRED"
 }

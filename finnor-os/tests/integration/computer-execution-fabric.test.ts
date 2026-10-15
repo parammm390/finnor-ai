@@ -1,3 +1,4 @@
+import { reviewedEffectHash } from "../reviewed-effect";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import pg from "pg";
 import { createHash, randomUUID } from "node:crypto";
@@ -329,7 +330,7 @@ describe.skipIf(!available)("Phase 3 Computer Execution Fabric", () => {
     const orchestrator = new FinnorOrchestrator();
     const authorizedEffect = { operation: "update_delivery_note", target: { kind: "supplier_order", identifier: "WS-48" }, changes: { deliveryNote: "Call warehouse before delivery" } };
     const drafted = await orchestrator.draftKnownAction("computer_task", { application: "supplier_portal", authProfileRef: "supplier-west", task: "Update the delivery note for WS-48", target: authorizedEffect.target, mode: "WRITE", successCriteria: ["Exact delivery note observed"], authorizedEffect }, tenantId, { initiatedBy: actorId, source: "s6_child_lifecycle" });
-    await orchestrator.decide(drafted.action.id, tenantId, "approve", actorId, { role: "owner" });
+    await orchestrator.decide(drafted.action.id, tenantId, "approve", actorId, { role: "owner", expectedEffectHash: await reviewedEffectHash(tenantId, drafted.action.id) });
     const before = (await admin.query("SELECT * FROM finnor_os.workflow_steps WHERE tenant_id=$1 AND domain_action_id=$2", [tenantId, drafted.action.id])).rows[0];
     expect(before).toBeTruthy();
     let crashEvidence: Record<string, unknown> | null = null;

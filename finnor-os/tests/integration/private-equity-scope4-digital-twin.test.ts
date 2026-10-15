@@ -1,3 +1,4 @@
+import { historicalPeDatabase } from "../historical-pe-database";
 import { randomUUID } from "node:crypto";
 import pg from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
@@ -30,8 +31,9 @@ import {
 } from "@finnor/private-equity";
 import { migrate } from "../../packages/db/migrate";
 
-const SUPER_URL = process.env.DATABASE_URL ?? "postgres://finnor:finnor@localhost:5432/finnor";
-const APP_URL = SUPER_URL.replace(/\/\/[^@]+@/, "//finnor_app:finnor_app@");
+const SOURCE_URL = process.env.DATABASE_URL ?? "postgres://finnor:finnor@localhost:5432/finnor";
+let SUPER_URL = SOURCE_URL;
+let APP_URL = SUPER_URL.replace(/\/\/[^@]+@/, "//finnor_app:finnor_app@");
 
 async function canConnect(url: string): Promise<boolean> {
   const client = new pg.Client({ connectionString: url, connectionTimeoutMillis: 2_000 });
@@ -71,6 +73,7 @@ describe.skipIf(!databaseAvailable)("Scope 4 institutional PE Digital Twin", () 
   };
 
   let admin: pg.Client;
+  let historical: Awaited<ReturnType<typeof historicalPeDatabase>>;
   let fundId: string;
   let vehicleId: string;
   let holdingId: string;
@@ -98,8 +101,9 @@ describe.skipIf(!databaseAvailable)("Scope 4 institutional PE Digital Twin", () 
   }
 
   beforeAll(async () => {
+    historical = await historicalPeDatabase(SOURCE_URL);
+    SUPER_URL = historical.adminUrl; APP_URL = historical.appUrl;
     process.env.DATABASE_URL = SUPER_URL;
-    await migrate(SUPER_URL);
     admin = new pg.Client({ connectionString: SUPER_URL });
     await admin.connect();
     await admin.query("ALTER ROLE finnor_app LOGIN PASSWORD 'finnor_app'");
@@ -174,6 +178,10 @@ describe.skipIf(!databaseAvailable)("Scope 4 institutional PE Digital Twin", () 
     closedDealId = String(closedDeal.row.id);
     const closed = await declareDealClosed(ctxA, { dealId: closedDealId, governance: await allowedProof(closedDealId) });
     const entryDate = String(closed.row.actualCloseAt).slice(0, 10);
+    // Preserve a genuinely pre-V3 close through the complete forward upgrade.
+    await closePool();
+    await migrate(SUPER_URL);
+    await admin.query("ALTER ROLE finnor_app LOGIN PASSWORD 'finnor_app'");
     holdingId = String((await createPortfolioHolding(ctxA, {
       fundId, companyId: targetA, originDealId: closedDealId, entryDate, completeness: "complete", evidence,
     })).row.id);
@@ -188,7 +196,8 @@ describe.skipIf(!databaseAvailable)("Scope 4 institutional PE Digital Twin", () 
   afterAll(async () => {
     await closePool();
     await admin?.end();
-    process.env.DATABASE_URL = SUPER_URL;
+    await historical?.close();
+    process.env.DATABASE_URL = SOURCE_URL;
   });
 
   it("registers one canonical owner per new type with forced tenant isolation and append-only history", async () => {

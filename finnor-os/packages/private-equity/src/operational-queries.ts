@@ -36,6 +36,18 @@ import { loadPrivateEquityAssertions } from "./source-mapping";
 import { PeDomainError, type DealCloseEligibility, type DealExecutionGraph, type PeMutationContext } from "./types";
 import { readVerifiedClosing } from "./closing/store";
 
+async function closingProjection(ctx: PeMutationContext, dealId: string) {
+  try {
+    return await readVerifiedClosing(ctx, dealId);
+  } catch (error) {
+    if (!(error instanceof PeDomainError) || error.code !== "PE_ENTITY_NOT_FOUND") throw error;
+    // Existing tenant-scoped graph queries do not confer V3 evidence rights.
+    // Return no programme, digest or proof when that independent scope is absent.
+    return { status: "UNAVAILABLE" as const, specDigest: null, programme: null,
+      reasons: ["AUTHENTICATED_CLOSING_SCOPE_REQUIRED"] };
+  }
+}
+
 export type PrivateEquityOperationalQueryRequest = Extract<CanonicalOperationalQueryRequest, { intent: PrivateEquityOperationalQueryIntent }>;
 type DealScopedPrivateEquityOperationalQueryRequest = Exclude<PrivateEquityOperationalQueryRequest, { intent: "pe_world_state" }>;
 export type PrivateEquityOperationalQueryResult =
@@ -509,7 +521,7 @@ async function runQuery(
       "pe_deal_risks", "pe_evidence_links", "evidence_source_versions",
     ], asOf, singleton.page),
     dealId: request.dealId,
-    verifiedClosing: await readVerifiedClosing(ctx, request.dealId),
+    verifiedClosing: await closingProjection(ctx, request.dealId),
     eligible: eligibility.eligible,
     eligibility: asRecord(eligibility),
     blockingConditions: eligibility.blockingConditions.slice(0, MAX_ROWS).map((row) => ({ ...row })),

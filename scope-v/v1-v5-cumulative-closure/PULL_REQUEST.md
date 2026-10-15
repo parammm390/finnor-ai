@@ -17,7 +17,7 @@ LIVE/professional admission, activation or field-economic qualification.
 - V5 canonical investment-control sessions and typed intents, role/privacy
   boundaries, revision checks and observed effect state.
 - Shared authority, Work/input, queue, generated contracts and additive schema
-  integration. Historical migrations remain unchanged; the bundle has 183 entries.
+  integration. Historical migrations remain unchanged; the bundle has 184 entries.
 - DEVELOPMENT-only authenticated signed-LOI promotion, atomic attachment of the
   original InvestmentCase and Work, independent purpose-specific signatures,
   retained-byte digest checks, refusal, rollback and replay fences.
@@ -107,3 +107,25 @@ manifest, domain ownership and retirement policy. The additional harness compile
 in `DELIVERY_VALIDATION-003.json` covers 3,492 files with zero diagnostics and
 no imports from integration source. GitHub CI must independently rerun; these
 checks do not establish full V1–V5 acceptance or rerun the historical native cases.
+
+## Backend integration repair
+
+The subsequent full backend run exposed 38 failing tests in ten files.
+Forward migration 0181 removes unsafe UUID casts for textual system actors,
+while capital-private evidence and world scope still deny those actors.
+The three negative controls explicitly check the denial at the app-role RLS
+boundary. No historical migration or production approval check is weakened.
+
+Approval fixtures now submit the exact reviewed persisted effect hash.
+Historical close fixtures use isolated pre-V3 databases and then migrate
+forward; an additional assertion rejects unqualified current-schema closing.
+The current worker test also refuses typed-approved closing without independent
+V3 acceptance rather than fabricating a successful close. The upgrade hash
+compares all legacy fields and separately checks the new null Opportunity link.
+Action inventories are derived from the executable 46-action contract.
+Legacy graph queries expose no V3 programme or digest without its own rights.
+
+`CI_REPAIR_VALIDATION-004.json`: all ten repaired files pass locally, 91 tests,
+zero failures/skips. Backend typecheck, deployment truth and manifest checks
+pass. Full GitHub CI is still required on the repair commit. This does not
+complete the integrated V1–V5 chain or authorize production release.

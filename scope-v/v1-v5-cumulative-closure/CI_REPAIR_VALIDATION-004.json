@@ -1,0 +1,36 @@
+{
+  "schema": "finnor.ci-backend-repair.v1",
+  "status": "PASS_SELECTED_REGRESSION_NOT_FULL_ACCEPTANCE",
+  "baseCommit": "f9ca7cf8ba663f881c16e9b9418a4479f34df407",
+  "checkedAt": "2026-10-15T21:04:19.085743+00:00",
+  "passedTests": 91,
+  "failedTests": 0,
+  "pendingTests": 0,
+  "testFiles": [
+    "finnor-os/tests/integration/computer-execution-fabric.test.ts",
+    "finnor-os/tests/integration/microsoft365-sync-worker.test.ts",
+    "finnor-os/tests/integration/private-equity-p5-upgrade.test.ts",
+    "finnor-os/tests/integration/private-equity-phase2.test.ts",
+    "finnor-os/tests/integration/private-equity-phase3.test.ts",
+    "finnor-os/tests/integration/private-equity-phase4.test.ts",
+    "finnor-os/tests/integration/private-equity-scope4-digital-twin.test.ts",
+    "finnor-os/tests/integration/production-manifest-readonly.test.ts",
+    "finnor-os/tests/integration/production-query-surface.test.ts",
+    "finnor-os/tests/integration/single-action-runtime-bridge.test.ts"
+  ],
+  "privateReportSha256": "c4c96e78f3b049558a12ea7e3310fc94205353f99a05946558b426fb01dc1fbd",
+  "checks": {
+    "backendTypecheck": "PASS",
+    "deploymentTruth": "PASS",
+    "actionManifest": "PASS_46_OF_46",
+    "whitespace": "PASS",
+    "fullGitHubCI": "RERUN_REQUIRED"
+  },
+  "limits": [
+    "Local linked dependencies, not installed acceptance",
+    "Historical close fixtures run before V3 and are then upgraded; they do not manufacture V3 certificates",
+    "Current-schema close remains blocked without independent V3 acceptance",
+    "Disposable CI databases are not retained custody of qualified native runs",
+    "No production deployment or R-phase changes"
+  ]
+}

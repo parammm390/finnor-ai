@@ -1,3 +1,4 @@
+import { ACTION_HARDENING_SPEC } from "../../scripts/release/action-hardening-spec";
 import { readFile, mkdir, mkdtemp, writeFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
@@ -21,7 +22,7 @@ it("executes the production manifest verifier twice without changing committed s
   for (const execution of executions) {
     expect(execution.error).toBeUndefined();
     expect(execution.status).toBe(0);
-    expect(execution.stdout).toContain("45/45");
+    expect(execution.stdout).toContain(`${ACTION_HARDENING_SPEC.length}/${ACTION_HARDENING_SPEC.length}`);
   }
   expect(await digest()).toEqual(before);
   const directory = process.env.FINNOR_PRODUCTION_PREFLIGHT_EVIDENCE_DIR

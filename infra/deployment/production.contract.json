@@ -10,7 +10,7 @@
     "requireCleanWorktree": true
   },
   "release": {
-    "requiredMigrationHead": "0180_investment_case_signed_loi_transition.sql",
+    "requiredMigrationHead": "0181_native_system_actor_scope.sql",
     "metadata": [
       "FINNOR_COMMIT_SHA",
       "FINNOR_BUILD_ID",
