@@ -34,6 +34,14 @@ cleanup() {
       status=1
     fi
   fi
+  if [[ -d "$evidence/linux-r3-runtime" ]]; then
+    if ! docker run --rm --network none --user 0:0 --entrypoint chown \
+      --mount "type=bind,source=$evidence/linux-r3-runtime,target=/r3-evidence" \
+      "$image" -R "$(id -u):$(id -g)" /r3-evidence; then
+      echo "::error::failed to return disposable R3 evidence to its host owner"
+      status=1
+    fi
+  fi
   if [[ -d "$evidence/linux-r4-runtime" ]]; then
     if ! docker run --rm --network none --user 0:0 --entrypoint chown \
       --mount "type=bind,source=$evidence/linux-r4-runtime,target=/r4-evidence" \
@@ -49,18 +57,22 @@ const crypto = require("node:crypto");
 const directory = process.env.FINNOR_SMOKE_EVIDENCE;
 const classes = ["REALTIME", "INTERACTIVE", "BACKGROUND", "HEAVY"];
 const successfulClasses = classes.filter(c => fs.existsSync(path.join(directory, `${c}-shutdown.json`)));
+const r3Required = fs.existsSync("finnor-os/scripts/r3/run-owner-e2e.mts");
+const r3Receipt = r3Required && fs.existsSync(path.join(directory, "linux-r3-runtime", "receipt.json"))
+  ? JSON.parse(fs.readFileSync(path.join(directory, "linux-r3-runtime", "receipt.json"), "utf8")) : null;
+const r3Passed = !r3Required || r3Receipt?.status === "PASS";
 const r4Required = fs.existsSync("finnor-os/scripts/r4/run-integrated.mts");
 const r4Passed = !r4Required || fs.existsSync(path.join(directory, "linux-r4-runtime", "results.json"));
 fs.writeFileSync(path.join(directory, "receipt.json"), JSON.stringify({
   schema: "finnor.worker-image-smoke.v1",
-  status: process.env.FINNOR_SMOKE_EXIT === "0" && successfulClasses.length === 4 && fs.existsSync(path.join(directory, "linux-r1-runtime", "results.json")) && r4Passed ? "PASS" : "FAIL",
+  status: process.env.FINNOR_SMOKE_EXIT === "0" && successfulClasses.length === 4 && fs.existsSync(path.join(directory, "linux-r1-runtime", "results.json")) && r3Passed && r4Passed ? "PASS" : "FAIL",
   commitSha: process.env.FINNOR_COMMIT_SHA,
   buildId: process.env.FINNOR_BUILD_ID,
   version: process.env.FINNOR_VERSION,
   dockerfileSha256: crypto.createHash("sha256").update(fs.readFileSync("finnor-os/Dockerfile.worker")).digest("hex"),
   successfulClasses,
   r4Required,
-  steps: ["Build locked Linux image from canonical layout", "Start each of four compute classes against disposable PostgreSQL", "Verify exact release and class health", "SIGTERM each container and require exit zero", "Run actual compiled API / authenticated R1 / independent checker / S4 / S5 with migration and protocol compatibility from that image", ...(r4Required ? ["Run the separate installed R4 scientific runtime and authenticated migration / worker / checker / S4 / S5 owner flow with exact image identity"] : [])],
+  steps: ["Build locked Linux image from canonical layout", "Start each of four compute classes against disposable PostgreSQL", "Verify exact release and class health", "SIGTERM each container and require exit zero", "Run actual compiled API / authenticated R1 / independent checker / S4 / S5 with migration and protocol compatibility from that image", ...(r3Required ? ["Run installed R3 runtime identity/checker and finite authenticated R3 owner queue/restart cases from the exact image"] : []), ...(r4Required ? ["Run the separate installed R4 scientific runtime and authenticated migration / worker / checker / S4 / S5 owner flow with exact image identity"] : [])],
   rerun: "bash scripts/release/smoke-worker-image.sh",
   providerDeploymentProof: false,
 }, null, 2) + "\n");
@@ -180,6 +192,73 @@ const fs = require("node:fs");
 const receipt = JSON.parse(fs.readFileSync(process.argv[2], "utf8"));
 if (receipt.status !== "PASS_LOCAL" || receipt.results.length !== 1 || receipt.results[0].status !== "PASS") process.exit(1);
 NODE
+
+
+# R3 must execute its installed runtime and finite authenticated owner/queue
+# cases from the exact final image. The selected cases are preregistered in the
+# R3 handoff: owner HTTP/auth, durable queue/worker, physical restart and
+# unchanged job/deadline identity. Browser evidence remains a separate Work
+# surface gate because this minimal worker image has no browser binary.
+if [[ -f finnor-os/scripts/r3/run-owner-e2e.mts ]]; then
+  mkdir -p "$evidence/linux-r3-runtime/installed" "$evidence/linux-r3-runtime/owner"
+  chmod 2770 "$evidence/linux-r3-runtime" "$evidence/linux-r3-runtime/installed" "$evidence/linux-r3-runtime/owner"
+  if docker run --rm --network none --user 1000:1000 --group-add "$(id -g)" \
+    --env HOME=/tmp --env TMPDIR=/tmp --env NODE_ENV=test --env CI=1 --env LOG_LEVEL=silent \
+    --env AUTH_DEV_BYPASS=0 --env FINNOR_TEST_MANAGED_EXTENSIONS=omit \
+    --env FINNOR_R3_PROFILE=ordinary_disposable \
+    --env FINNOR_R3_RUNTIME_MANIFEST=/opt/r3-runtime/manifest.json \
+    --env FINNOR_R3_UPSTREAM_PYTHON=/opt/r3-upstream-runtime/bin/python \
+    --env FINNOR_S3_PYTHON=/opt/r3-upstream-runtime/bin/python \
+    --env FINNOR_S5_PYTHON=/opt/r3-upstream-runtime/bin/python \
+    --env FINNOR_R3_EVIDENCE_DIR=/r3-evidence/installed \
+    --mount "type=bind,source=$evidence/linux-r3-runtime,target=/r3-evidence" \
+    "$image" node --import=tsx scripts/r3/check-runtime.mts /r3-evidence/installed \
+    > "$evidence/linux-r3-runtime/runtime.log" 2>&1; then
+    :
+  else
+    runtime_status=$?
+    cat "$evidence/linux-r3-runtime/runtime.log"
+    exit "$runtime_status"
+  fi
+  if docker run --rm --network none --user 1000:1000 --group-add "$(id -g)" \
+    --env HOME=/tmp --env TMPDIR=/tmp --env NODE_ENV=test --env CI=1 --env LOG_LEVEL=silent \
+    --env AUTH_DEV_BYPASS=0 --env FINNOR_TEST_MANAGED_EXTENSIONS=omit \
+    --env FINNOR_R3_PROFILE=ordinary_disposable \
+    --env FINNOR_R3_RUNTIME_MANIFEST=/opt/r3-runtime/manifest.json \
+    --env FINNOR_R3_UPSTREAM_PYTHON=/opt/r3-upstream-runtime/bin/python \
+    --env FINNOR_S3_PYTHON=/opt/r3-upstream-runtime/bin/python \
+    --env FINNOR_S5_PYTHON=/opt/r3-upstream-runtime/bin/python \
+    --env FINNOR_S3_MODEL_STORE=/tmp/r3-models \
+    --env FINNOR_S4_POLICY_STORE=/tmp/r3-policies \
+    --env WORKER_JOB_LEASE_SECONDS=3 --env OPENBLAS_NUM_THREADS=1 --env OMP_NUM_THREADS=1 \
+    --env FINNOR_R3_CASES=authenticated-owner-positive,queued-original-and-r3-physical-restart \
+    --env FINNOR_R3_EVIDENCE_DIR=/r3-evidence/owner \
+    --mount "type=bind,source=$evidence/linux-r3-runtime,target=/r3-evidence" \
+    "$image" node --import=tsx scripts/r3/run-owner-e2e.mts \
+    > "$evidence/linux-r3-runtime/owner.log" 2>&1; then
+    :
+  else
+    owner_status=$?
+    cat "$evidence/linux-r3-runtime/owner.log"
+    exit "$owner_status"
+  fi
+  node - "$evidence/linux-r3-runtime/installed/results.json" "$evidence/linux-r3-runtime/owner/results.json" "$image_id" "$source_tree" <<'NODE'
+const fs = require("node:fs");
+const installed = JSON.parse(fs.readFileSync(process.argv[2], "utf8"));
+const owner = JSON.parse(fs.readFileSync(process.argv[3], "utf8"));
+if (!installed.results?.length || installed.results.some(r => r.status !== "PASS") ||
+    !owner.cases?.length || owner.cases.some(r => r.status !== "PASS") ||
+    owner.qualification !== "SYNTHETIC_ORIGINALS_REAL_HTTP_AUTH_SQL_WORKER_ORDINARY_OWNERS" ||
+    owner.protectedAgreement !== false || owner.protectedEffect !== false) process.exit(1);
+fs.writeFileSync("`$RUNNER_TEMP`/finnor-worker-image-smoke/linux-r3-runtime/receipt.json", JSON.stringify({
+  schema: "finnor.r3.image-owner-proof.v1", status: "PASS",
+  imageId: process.argv[4], sourceTree: process.argv[5],
+  installedResults: installed.results, ownerCases: owner.cases,
+  qualification: owner.qualification, protectedAgreement: owner.protectedAgreement,
+  protectedEffect: owner.protectedEffect
+}, null, 2) + "\n");
+NODE
+fi
 
 # R4 must execute its installed separate runtime and real owners too. Its
 # absence on the isolated R1 cut is not permission to skip it on joined cuts.
