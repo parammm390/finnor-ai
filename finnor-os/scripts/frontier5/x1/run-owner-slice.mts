@@ -268,8 +268,13 @@ try {
     socket.listen(0, "127.0.0.1", () => { const address = socket.address(); if (!address || typeof address === "string") return no(Error("PORT_UNAVAILABLE")); socket.close(() => yes(address.port)); }); });
   const password = randomBytes(32).toString("hex"), appPassword = randomBytes(32).toString("hex"), workerPassword = randomBytes(32).toString("hex");
   const directory = join(evidence, "tmp/database");
+  let postgresLogBytes=0;
   database = new EmbeddedPostgres({ databaseDir: directory, user: "x1_fixture", password, port, persistent: false,
-    postgresFlags: ["-c", "listen_addresses=127.0.0.1", "-c", "unix_socket_directories="], onLog: () => {} });
+    postgresFlags: ["-c", "listen_addresses=127.0.0.1", "-c", "unix_socket_directories="], onLog: message => {
+      postgresLogBytes+=Buffer.byteLength(message);
+      if(postgresLogBytes<=limits.smallCheckOutputBytes)
+        void appendFile(join(evidence,'postgres-diagnostic.log'),message+'\n',{mode:0o600});
+    } });
   await database.initialise(); await appendFile(join(directory, "postgresql.conf"), "\ntrack_commit_timestamp=on\n");
   await database.start(); await database.createDatabase("x1_owner");
   const connection = (user: string, pass: string) => `postgres://${user}:${pass}@127.0.0.1:${port}/x1_owner`;
