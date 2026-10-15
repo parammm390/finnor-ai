@@ -1803,6 +1803,7 @@ try {
       mappings:17,additionalEffects:1,currentConsent,completion},basis:'ACTUAL_PREEXPOSURE_CANONICAL_OWNERS_SENSITIVE_CONSENT_S1_ADMISSIONS_AND_NATIVE_COMPLETION'});
   }
   if(fullDomain){
+    assert.ok(canonicalFixture,'full declared domain requires its original canonical owner fixture');
     const expectedLinks=(await admin.query<{id:string;entity_id:string;evidence_source_id:string;evidence_version_id:string|null}>(
       `SELECT id::text,entity_id::text,evidence_source_id::text,evidence_version_id::text
        FROM finnor_os.pe_evidence_links WHERE tenant_id=$1 AND deal_id=$2 AND entity_type='pe_request'
