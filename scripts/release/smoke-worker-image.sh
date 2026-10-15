@@ -242,15 +242,16 @@ if [[ -f finnor-os/scripts/r3/run-owner-e2e.mts ]]; then
     cat "$evidence/linux-r3-runtime/owner.log"
     exit "$owner_status"
   fi
-  node - "$evidence/linux-r3-runtime/installed/results.json" "$evidence/linux-r3-runtime/owner/results.json" "$image_id" "$source_tree" <<'NODE'
+  node - "$evidence/linux-r3-runtime/installed/results.json" "$evidence/linux-r3-runtime/owner/results.json" "$image_id" "$source_tree" "$evidence/linux-r3-runtime" <<'NODE'
 const fs = require("node:fs");
+const path = require("node:path");
 const installed = JSON.parse(fs.readFileSync(process.argv[2], "utf8"));
 const owner = JSON.parse(fs.readFileSync(process.argv[3], "utf8"));
 if (!installed.results?.length || installed.results.some(r => r.status !== "PASS") ||
     !owner.cases?.length || owner.cases.some(r => r.status !== "PASS") ||
     owner.qualification !== "SYNTHETIC_ORIGINALS_REAL_HTTP_AUTH_SQL_WORKER_ORDINARY_OWNERS" ||
     owner.protectedAgreement !== false || owner.protectedEffect !== false) process.exit(1);
-fs.writeFileSync("`$RUNNER_TEMP`/finnor-worker-image-smoke/linux-r3-runtime/receipt.json", JSON.stringify({
+fs.writeFileSync(path.join(process.argv[6], "receipt.json"), JSON.stringify({
   schema: "finnor.r3.image-owner-proof.v1", status: "PASS",
   imageId: process.argv[4], sourceTree: process.argv[5],
   installedResults: installed.results, ownerCases: owner.cases,
