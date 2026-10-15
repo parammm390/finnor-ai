@@ -1,5 +1,15 @@
 **
 !package-lock.json
+!src/
+!src/components/
+!src/components/centropy/
+!src/components/centropy/canvas/
+!src/components/centropy/canvas/ElicitationProtocolReview.tsx
+!src/components/centropy/canvas/elicitation-protocol-view.ts
+!src/components/centropy/canvas/CapitalProgramPanel.tsx
+!scope-r/
+!scope-r/r3-incentive-rule-synthesis/
+!scope-r/r3-incentive-rule-synthesis/verification-plan.json
 !scripts/
 !scripts/release/
 !scripts/release/production-mutation-guard.mjs
