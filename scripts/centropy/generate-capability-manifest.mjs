@@ -94,10 +94,17 @@ const companyBrainReads = new Set([
 ])
 const elicitationOperations=registeredOperations("finnor-os/packages/epistemic-runtime/src/incentive-rule-synthesis/contracts.ts","ELICITATION_OPERATIONS")
 const elicitationReads=new Set(["context","read","status","history"])
-const ownerLeafOperations=new Map()
-for(const family of ["interventions","policies","allocations","obligations"]){
+const ownerLeafOperations=new Map([
+ ["interventions",["finite-preference"]],
+ ["policies",["read-mechanism","decide-mechanism"]],
+ ["allocations",["clear-mechanism","consume-mechanism"]],
+ ["obligations",["prepare-elicitation"]],
+])
+for(const [family,operations] of ownerLeafOperations){
  const source=readFileSync(join(apiRoot,`${family}/[operation]/route.ts`),"utf8")
- ownerLeafOperations.set(family,[...source.matchAll(/case\s+['"]([a-z][a-z0-9-]*)['"]\s*:/g)].map(m=>m[1]))
+ for(const operation of operations)
+  if(!new RegExp(`case\s+['"]${operation}['"]\s*:`).test(source))
+   throw new Error(`Missing delegated R3 owner operation ${family}/${operation}`)
 }
 const ownerLeafReads=new Set(["query","validate","finite-preference","experiment-projection","read","read-mechanism",
  "resources","budget-status","read-commitment","read-execution-handoff","check-budget","check-dispatch"])
