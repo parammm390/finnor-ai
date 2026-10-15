@@ -241,7 +241,10 @@ try {
     const before = (await admin.query('SELECT name FROM finnor_os._migrations ORDER BY name')).rows;
     assert.equal(before.at(-1).name, '0171_runtime_database_role_isolation.sql');
     const applied = await migrate(url, MIGRATIONS), replay = await migrate(url, MIGRATIONS);
-    assert.deepEqual(applied, ['0172_r3_incentive_rule_synthesis.sql']); assert.deepEqual(replay, []);
+    // This is the cumulative release bundle: every migration after the asserted
+    // 0171 baseline must apply before the R3 owner flow is exercised.
+    const expectedPostBaseline = MIGRATIONS.filter(m => m.name > '0171_runtime_database_role_isolation.sql').map(m => m.name);
+    assert.deepEqual(applied, expectedPostBaseline); assert.deepEqual(replay, []);
     await postgres.createDatabase('r3_fresh');
     const fresh = await migrate(url.replace(/r3_e2e$/, 'r3_fresh'), MIGRATIONS);
     assert.equal(fresh.length, MIGRATIONS.length);
