@@ -206,14 +206,14 @@ function routeEntry(method, path, source) {
     ? { family: "coalition-programme", owner: "@finnor/private-equity", presentationTargets: ["CANVAS"] }
     : familyFor(path)
   const stream = path === "stream"
+  const r1 = path.startsWith("policies/") && r1Operations.includes(path.slice("policies/".length))
   // Digital Twin POST includes evidence-backed canonical mutations.
   const ownerClassification=coalitionClassification??(path.startsWith("decision-atlases/")?atlasOperations.get(path.slice("decision-atlases/".length)):
     path.startsWith("branches/")?branchOperations.get(path.slice("branches/".length)):
     path.startsWith("company-brain/")?m4Operations.get(path.slice("company-brain/".length)):
     path.startsWith("elicitation-protocols/")?(elicitationReads.has(path.slice("elicitation-protocols/".length))?"READ":path.endsWith("/cancel")?"CONTROL":"MUTATION"):
-    ownerLeafOperations.has(path.split("/")[0])?(ownerLeafReads.has(path.split("/")[1])?"READ":
+    !r1 && ownerLeafOperations.has(path.split("/")[0])?(ownerLeafReads.has(path.split("/")[1])?"READ":
       ["cancel-delivery","reconcile-request","reconcile"].includes(path.split("/")[1])?"CONTROL":"MUTATION"):undefined)
-  const r1=path.startsWith("policies/")&&r1Operations.includes(path.slice("policies/".length))
   const read = method === "GET" || ownerClassification==="READ" || r1&&r1Reads.has(path.slice("policies/".length)) || (family === "identification-plan" && identificationReads.has(path.slice("identification-plans/".length))) || (family === "company-brain" && companyBrainReads.has(path.slice("company-brain/".length))) || ["query", "semantic-activity"].includes(family)
   const ownerLeaf = ownerLeafOperations.get(path.split("/")[0])?.includes(path.split("/")[1]) ?? false
   const adminOnly = denyPrefixes.some((prefix) => `${path}/`.startsWith(prefix)&&!(prefix==="policies/"&&(r1||coalitionClassification||ownerLeaf))) ||
