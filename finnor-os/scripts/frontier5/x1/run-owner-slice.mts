@@ -101,6 +101,8 @@ const started = performance.now(), startedAt = new Date().toISOString(), diskBef
 const sha = (bytes: string | Buffer) => createHash("sha256").update(bytes).digest("hex");
 const git = (...args: string[]) => execFileSync("git", args, { cwd: repo, encoding: "utf8", timeout: 5000 }).trim();
 const sourcePaths = ["finnor-os/scripts/frontier5/x1/run-owner-slice.mts", "finnor-os/scripts/frontier5/x1/mounted-race-review.mts", "finnor-os/scripts/frontier5/x1/authenticated-api-fixture.mts",
+  'finnor-os/packages/private-equity/src/company-brain.ts',
+  'finnor-os/packages/private-equity/src/company-brain-relationships.ts',
   'finnor-os/packages/private-equity/src/institution-program/publication-checkpoint.ts',
   'src/components/centropy/canvas/canvas-compose.ts',
   'finnor-os/scripts/frontier5/x1/s6-guard-review.mts',
@@ -1799,6 +1801,32 @@ try {
       allExpectedEvidenceReferencesChecked:true,protectedQualification:false});
     results.push({id:'A-fourteen-canonical-kinds',status:'PASS',observed:{kinds:expected.canonicalKinds,
       mappings:17,additionalEffects:1,currentConsent,completion},basis:'ACTUAL_PREEXPOSURE_CANONICAL_OWNERS_SENSITIVE_CONSENT_S1_ADMISSIONS_AND_NATIVE_COMPLETION'});
+  }
+  if(fullDomain){
+    const expectedLinks=(await admin.query<{id:string;entity_id:string;evidence_source_id:string;evidence_version_id:string|null}>(
+      `SELECT id::text,entity_id::text,evidence_source_id::text,evidence_version_id::text
+       FROM finnor_os.pe_evidence_links WHERE tenant_id=$1 AND deal_id=$2 AND entity_type='pe_request'
+        AND entity_id=$3 AND relationship='supports' AND archived_at IS NULL ORDER BY id`,
+      [tenant,String(first.row.id),canonicalFixture.existingRequestId])).rows;
+    assert.ok(expectedLinks.length,'original canonical Request has actual independently persisted evidence links');
+    const projection=await api('projection',{root:{entityType:'pe_deal',entityId:String(first.row.id)}});
+    await save('company-brain-current-request-evidence-readback.json',{expectedLinks,projection,
+      basis:'ACTUAL_AUTHENTICATED_PROJECTION_MATCHED_TO_ORIGINAL_CANONICAL_SQL_LINK_AND_EVIDENCE_VERSION',
+      qualification:'SOURCE_ASSERTION_WITNESS_NOT_BUSINESS_SETTLEMENT'});
+    assert.equal(projection.status,200,JSON.stringify(projection));
+    assert.ok(Array.isArray(projection.body.edges));
+    for(const expected of expectedLinks)assert.equal(projection.body.edges.filter((edge:any)=>
+      edge.relationship==='evidence_link'&&edge.sourceRef?.owner==='@finnor/private-equity'
+      &&edge.sourceRef?.table==='pe_evidence_links'&&edge.sourceRef?.id===expected.id
+      &&edge.fromRef?.namespace==='private_equity'&&edge.fromRef?.type==='pe_request'
+      &&edge.fromRef?.id===expected.entity_id&&edge.toRef?.namespace==='core'
+      &&edge.toRef?.type===(expected.evidence_version_id?'evidence_version':'evidence_source')
+      &&edge.toRef?.id===(expected.evidence_version_id??expected.evidence_source_id)).length,1,
+      'fresh Company Brain projection retains each exact canonical Request evidence witness');
+    results.push({id:'G-fresh-company-brain-original-request-evidence',status:'PASS',observed:{
+      root:String(first.row.id),originalRequest:canonicalFixture.existingRequestId,
+      originalPersistedLinks:expectedLinks,projectionNodes:projection.body.nodes.length,
+      projectionEdges:projection.body.edges.length},basis:'ACTUAL_BEARER_HTTP_CANONICAL_PE_EVIDENCE_ROW_AND_EXACT_TYPED_PROJECTION_EDGE'});
   }
   if(mounted)await save('mounted-canonical-completion.json',{compilerId,workId,completion,
     browserEvidenceRequired:true,mountedPassEstablished:false});

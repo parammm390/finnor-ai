@@ -49,7 +49,7 @@ const DOCUMENT_LINK_SOURCE_TYPES = [
 ].map(q);
 
 const EVIDENCE_LINK_SOURCE_TYPES = [
-  "private_equity:pe_deal", "private_equity:pe_finding", "private_equity:pe_deal_risk",
+  "private_equity:pe_deal", "private_equity:pe_request", "private_equity:pe_deliverable", "private_equity:pe_finding", "private_equity:pe_deal_risk",
   "private_equity:pe_closing_condition", "private_equity:pe_closing_item", "private_equity:pe_strategy",
   "private_equity:pe_opportunity", "private_equity:pe_investment_case", "private_equity:pe_thesis",
   "private_equity:pe_assumption", "private_equity:pe_decision",
