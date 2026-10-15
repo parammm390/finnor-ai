@@ -147,3 +147,22 @@ paths = [
 ]
 regexTarget = "match"
 regexes = ['''^token semantics, observed/available/known $''']
+
+# This is the SHA-256 of the R3 source-seal OpenAPI artifact, not a credential.
+# Keep the path and field exact; all other hashes and credential-shaped fields
+# remain covered by the default detector.
+[[rules.allowlists]]
+description = "Exact R3 source-seal OpenAPI SHA-256 metadata"
+condition = "AND"
+paths = ['''(^|/)scope-r/r3-incentive-rule-synthesis/handoff/source-seal\.json$''']
+regexTarget = "match"
+regexes = ['''^openapiSha256": "[0-9a-f]{64}"$''']
+
+# This is a literal disposable key for the local R3 browser fixture. It is
+# never a hosted credential; keep every other auth-key value fully scanned.
+[[rules.allowlists]]
+description = "Exact R3 disposable browser-auth placeholder"
+condition = "AND"
+paths = ['''(^|/)finnor-os/scripts/r3/browser-proof\.mts$''']
+regexTarget = "match"
+regexes = ['''^NEXT_PUBLIC_SUPABASE_ANON_KEY:\s*'r3-disposable-publishable-key'$''']
