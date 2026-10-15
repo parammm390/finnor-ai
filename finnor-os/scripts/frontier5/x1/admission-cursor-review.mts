@@ -48,10 +48,10 @@ export async function startAdmissionCursorReview(input:{connectionString:string;
       events.push({ordinal,blocked,enteredAt,elapsedMs,forceConflict,eventId,before,after,releasedAt:new Date().toISOString()});
       await input.save('admission-cursor-physical-observations.json',{holder,scope,burstMs:200,maxOriginalAttempts:3,events});
     }
-  }catch(error){failure=String((error as Error).message);}})();
+  }catch(error){failure=String((error as Error).message);await c.query('SELECT pg_advisory_unlock_all()');}})();
   const finish=async()=>{stopped=true;await run;await c.query('SELECT pg_advisory_unlock_all()');
     const receipt={holder,scope,burstMs:200,maxOriginalAttempts:3,events,failure,
-      actualSeparateSqlWrites:true,productCodeOrCompletionManufactured:false};
+      actualSeparateSqlWrites:events.some(event=>event.forceConflict&&event.eventId),productCodeOrCompletionManufactured:false};
     await input.save('admission-cursor-physical-receipt.json',receipt);return receipt;};
   return {finish,async close(){await finish();await c.query(`DROP TRIGGER IF EXISTS x1_cursor_review ON finnor_os.pe_evidence_links;
     DROP FUNCTION IF EXISTS finnor_os.x1_cursor_review_barrier();DROP SEQUENCE IF EXISTS finnor_os.x1_cursor_review_attempt`);

@@ -972,6 +972,7 @@ try {
       else child.kill('SIGTERM');
     });return child;
   };
+  let guardFailure: string | null = null;
   if(admissionCursorReview)admissionCursor=await startAdmissionCursorReview({
     connectionString:connection('x1_fixture',password),tenant,save,
     assertLive:()=>{if(guardFailure)throw Error(guardFailure);}});
@@ -987,7 +988,6 @@ try {
       originalQueuedJobNotYetReleased:true});
     await queueStartGate!.query('ROLLBACK');await queueStartGate!.end();queueStartGate=undefined;
   }
-  let guardFailure: string | null = null;
   guard = setInterval(() => { void take().catch(error => { guardFailure = String(error.message); worker?.kill("SIGTERM"); }); }, 2000);
   if(publicationRace){
     await reviewPublicationRace({admin,tenant,principal:actor,requestId:compilerId!,workId,submit:input,
