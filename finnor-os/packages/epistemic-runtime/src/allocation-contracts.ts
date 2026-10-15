@@ -69,10 +69,7 @@ export function allocationRationalLedgerQuantity(s:string):ExperimentRational {
 export function allocationDecimal(v:ExperimentRational):string {
   let d=v.d,two=0,five=0;while(d%2n===0n){d/=2n;two++;}while(d%5n===0n){d/=5n;five++;}
   const digits=Math.max(two,five);
-  if(d!==1n){
-    const encoded=`r3q:${v.n}/${v.d}`;allocationRationalLedgerQuantity(encoded);return encoded;
-  }
-  if(digits>48){if((v.n<0n?-v.n:v.n).toString().length>512||v.d.toString().length>512)throw new AllocationContractError('LIMIT_EXCEEDED','Rational accounting integer bound');return v.n+'/'+v.d;}
+  if(d!==1n||digits>48){if((v.n<0n?-v.n:v.n).toString().length>512||v.d.toString().length>512)throw new AllocationContractError('LIMIT_EXCEEDED','Rational accounting integer bound');return v.n+'/'+v.d;}
   const scale=10n**BigInt(digits),n=(v.n<0n?-v.n:v.n)*(scale/v.d),s=n.toString().padStart(digits+1,'0');
   const f=digits?s.slice(-digits).replace(/0+$/,''):'';return `${v.n<0n&&n?'-':''}${digits?s.slice(0,-digits):s}${f?`.${f}`:''}`;
 }
