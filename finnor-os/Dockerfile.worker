@@ -95,7 +95,7 @@ COPY --from=r4-scientific /opt/finnor/r4 /opt/finnor/r4
 WORKDIR /app/finnor-os
 COPY --from=node-runtime /usr/local/bin/node /usr/local/bin/node
 COPY --from=dependencies /app /app
-# Existing S3/S5/S2 numerical callees use their ordinary configured interpreter.
+# The R3 owner smoke uses a disposable embedded-Postgres directory under the\n# image's canonical repository root. Provision it before dropping privileges.\nRUN mkdir -p /app/.r3-scratch \\\n    && chown 1000:1000 /app/.r3-scratch \\\n    && chmod 700 /app/.r3-scratch\n# Existing S3/S5/S2 numerical callees use their ordinary configured interpreter.
 RUN /opt/finnor-python/bin/python -m pip freeze --all > /opt/finnor-python/installed-versions.txt
 COPY --from=r2-scientific-build /opt/r2-build/runtime /opt/finnor-r2/runtime
 COPY --from=r3-scientific /opt/r3-python /opt/r3-python
