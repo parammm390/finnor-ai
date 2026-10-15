@@ -3,6 +3,7 @@ import parser from "@typescript-eslint/parser";
 export default [{
   files: ["finnor-os/packages/private-equity/src/institution-program/**/*.ts",
     "finnor-os/packages/private-equity/src/company-brain-relationships.ts",
+    "finnor-os/packages/private-equity/src/repository.ts",
     "finnor-os/packages/db/migration-head.ts",
     "finnor-os/packages/private-equity/src/allocation-store.ts",
     "finnor-os/packages/private-equity/src/program-synthesis/**/*.ts",

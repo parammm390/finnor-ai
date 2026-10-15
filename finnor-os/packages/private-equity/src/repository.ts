@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+import { randomInt, randomUUID } from "node:crypto";
 import type pg from "pg";
 import { evaluateAuthority } from "@finnor/authority";
 import { attachWorkEntityTx, withTenantClientTransaction, transactionDb, type Db } from "@finnor/db";
@@ -98,7 +98,8 @@ function pgCode(error: unknown): string | undefined {
   return "cause" in error ? pgCode((error as { cause?: unknown }).cause) : undefined;
 }
 
-type PeTransactionOptions = { readOnly?: boolean; isolation?: "read committed" | "repeatable read" | "serializable" };
+type PeTransactionOptions = { readOnly?: boolean; isolation?: "read committed" | "repeatable read" | "serializable";
+  contentionBackoff?: true };
 
 export async function peTransaction<T>(
   ctx: PeMutationContext,
@@ -159,7 +160,12 @@ async function scopedPeTransaction<T>(
         return fn(client);
       });
     } catch (error) {
-      if (attempt < maxAttempts && (pgCode(error) === "40001" || pgCode(error) === "40P01")) continue;
+      if (attempt < maxAttempts && (pgCode(error) === "40001" || pgCode(error) === "40P01")) {
+        // X1 admission shares the live operational cursor. Pace only its
+        // existing rolled-back attempts; no new attempt or effect retry.
+        if (options.contentionBackoff) await new Promise(resolve => setTimeout(resolve, 100 * attempt + randomInt(100)));
+        continue;
+      }
       throw error;
     }
   }

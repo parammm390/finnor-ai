@@ -745,5 +745,5 @@ async function admitCheckedInstitutionMappings(
     );
     if (publication.rowCount !== 1) throw new Error("X1_ADMISSION_PUBLICATION_FAILED");
     return receipts;
-  }, { isolation: "serializable" });
+  }, { isolation: "serializable", contentionBackoff: true });
 }
