@@ -1,6 +1,9 @@
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import pg from "pg";
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   applicationAccounts,
   authProfiles,
@@ -44,6 +47,22 @@ describe.skipIf(!available)("P2 Microsoft Graph webhook", () => {
 
   function tenantQueueQuery(statement: string) {
     return withTenantTransaction(tenantId, { readOnly: true }, (_db, client) => client.query(statement, [tenantId]));
+  }
+
+  function retainMinuteEvidence(name: string, timestamps: string[], rows: unknown[], elapsedMs: number, pairElapsedMs: number[]) {
+    const directory = join(process.env.RUNNER_TEMP ?? tmpdir(), "finnor-production-query-evidence");
+    mkdirSync(directory, { recursive: true });
+    writeFileSync(join(directory, `m365-webhook-${name}-${tenantId}.json`), JSON.stringify({
+      schema: "finnor.m365-webhook-minute-e2e.v1",
+      qualification: "DISPOSABLE_DATABASE_REAL_ROUTE_QUEUE",
+      case: name, node: process.version, tenantId, subscriptionId, sourceScopeId,
+      timestamps, elapsedMs, pairElapsedMs, realResponseLimitMs: 3_000, responseLimitScope: "two-sequential-deliveries-per-minute", rows,
+      sourceSha256: Object.fromEntries([
+        ["route", new URL("../../apps/api/app/api/webhooks/microsoft-graph/route.ts", import.meta.url)],
+        ["integrationTest", new URL(import.meta.url)],
+      ].map(([name, path]) => [String(name), createHash("sha256").update(readFileSync(path as URL)).digest("hex")])),
+      rerun: "DATABASE_URL=<guarded-disposable-db> npm exec -- vitest run tests/integration/microsoft365-webhook.test.ts",
+    }, null, 2));
   }
 
   function request(overrides: Record<string, unknown> = {}): Request {
@@ -171,15 +190,46 @@ describe.skipIf(!available)("P2 Microsoft Graph webhook", () => {
   });
 
   it("validates the registered subscription and durably deduplicates a fast-path wake before returning 202", async () => {
-    const started = Date.now();
-    expect((await POST(request())).status).toBe(202);
-    expect((await POST(request())).status).toBe(202);
-    expect(Date.now() - started).toBeLessThan(3_000);
-    const queued = await tenantQueueQuery("SELECT type,payload,status FROM finnor_os.jobs WHERE payload->>'tenantId'=$1");
-    expect(queued.rows).toHaveLength(1);
-    expect(queued.rows[0]).toMatchObject({ type: "sync_source", status: "queued", payload: { tenantId, sourceScopeId } });
-    const [subscription] = await withTenant(tenantId, (db) => db.select().from(integrationSubscriptions).where(eq(integrationSubscriptions.id, subscriptionId)));
-    expect(subscription?.lastNotificationAt).toBeInstanceOf(Date);
+    const receivedAt = new Date(Math.floor(Date.now() / 60_000) * 60_000 + 30_000);
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(receivedAt);
+    const started = performance.now();
+    try {
+      expect((await POST(request())).status).toBe(202);
+      expect((await POST(request())).status).toBe(202);
+      const elapsedMs = performance.now() - started;
+      const queued = await tenantQueueQuery("SELECT type,payload,status,idempotency_key FROM finnor_os.jobs WHERE payload->>'tenantId'=$1");
+      retainMinuteEvidence("same-minute", [receivedAt.toISOString(), receivedAt.toISOString()], queued.rows, elapsedMs, [elapsedMs]);
+      expect(elapsedMs).toBeLessThan(3_000);
+      expect(queued.rows).toHaveLength(1);
+      expect(queued.rows[0]).toMatchObject({ type: "sync_source", status: "queued", payload: { tenantId, sourceScopeId }, idempotency_key: `m365-wake:${subscriptionId}:${receivedAt.toISOString().slice(0, 16)}` });
+      const [subscription] = await withTenant(tenantId, (db) => db.select().from(integrationSubscriptions).where(eq(integrationSubscriptions.id, subscriptionId)));
+      expect(subscription?.lastNotificationAt).toBeInstanceOf(Date);
+    } finally { vi.useRealTimers(); }
+  });
+
+  it("coalesces within each minute but preserves a new wake across the exact UTC minute edge", async () => {
+    const minute = Math.floor(Date.now() / 60_000) * 60_000;
+    const timestamps = [new Date(minute + 59_999), new Date(minute + 60_000)];
+    vi.useFakeTimers({ toFake: ["Date"] });
+    const started = performance.now();
+    const pairElapsedMs: number[] = [];
+    try {
+      for (const timestamp of timestamps) {
+        vi.setSystemTime(timestamp);
+        const pairStarted = performance.now();
+        expect((await POST(request())).status).toBe(202);
+        expect((await POST(request())).status).toBe(202);
+        pairElapsedMs.push(performance.now() - pairStarted);
+        expect(pairElapsedMs.at(-1)).toBeLessThan(3_000);
+      }
+      const elapsedMs = performance.now() - started;
+      const queued = await tenantQueueQuery("SELECT type,payload,status,idempotency_key FROM finnor_os.jobs WHERE payload->>'tenantId'=$1 ORDER BY idempotency_key");
+      retainMinuteEvidence("minute-edge", timestamps.map(timestamp => timestamp.toISOString()), queued.rows, elapsedMs, pairElapsedMs);
+      expect(queued.rows).toHaveLength(2);
+      expect(queued.rows.map(row => row.idempotency_key)).toEqual(timestamps.map(timestamp => `m365-wake:${subscriptionId}:${timestamp.toISOString().slice(0, 16)}`));
+      for (const row of queued.rows) expect(row).toMatchObject({ type: "sync_source", status: "queued", payload: { tenantId, sourceScopeId } });
+    } finally { vi.useRealTimers(); }
   });
 
   it("fails closed for unknown subscription, clientState, provider resource, and directory mismatch", async () => {
