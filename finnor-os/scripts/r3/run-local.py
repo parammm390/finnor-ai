@@ -2,6 +2,7 @@
 import json
 import os
 import pathlib
+import re
 import subprocess
 import sys
 from datetime import datetime, timezone
@@ -14,6 +15,8 @@ scratch = repo / ".r3-scratch"
 scratch.mkdir(exist_ok=True)
 env = {k: v for k, v in os.environ.items() if k in (
     "PATH", "HOME", "FACTORY_DESKTOP_CDP_PORT", "AGENT_BROWSER_CDP", "AGENT_BROWSER_SESSION")}
+if os.environ.get("FINNOR_R3_BROWSER_DRIVER") == "tools":
+    env["FINNOR_R3_BROWSER_DRIVER"] = "tools"
 env.update(NODE_ENV="test", CI="1", LOG_LEVEL="warn", AUTH_DEV_BYPASS="0",
            FINNOR_TEST_MANAGED_EXTENSIONS="omit", FINNOR_R3_PROFILE="ordinary_disposable",
            RATE_LIMIT_PER_MINUTE="100000", RATE_LIMIT_IP_PER_MINUTE="100000",
@@ -26,19 +29,29 @@ env.update(NODE_ENV="test", CI="1", LOG_LEVEL="warn", AUTH_DEV_BYPASS="0",
            WORKER_JOB_LEASE_SECONDS="3", OPENBLAS_NUM_THREADS="1", OMP_NUM_THREADS="1")
 if len(sys.argv) > 1:
     env["FINNOR_R3_CASES"] = sys.argv[1]
+registered = set(re.findall(r"await story\('([^']+)'", (repo / "finnor-os/scripts/r3/run-owner-e2e.mts").read_text()))
+requested = set(sys.argv[1].split(",")) if len(sys.argv) > 1 else registered
+unknown = requested - registered
+if unknown:
+    (out / "run-command.json").write_text(json.dumps({"exitCode": 1,
+        "reason": "UNREGISTERED_CASE_SELECTION", "unknownCases": sorted(unknown),
+        "fixtureStarted": False}, indent=2) + "\n")
+    raise SystemExit("R3_UNREGISTERED_CASE_SELECTION: " + ",".join(sorted(unknown)))
 start = datetime.now(timezone.utc)
 with (out / "runner.log").open("w") as log:
     run = subprocess.run(["node", "--import=tsx", "scripts/r3/run-owner-e2e.mts"],
                          cwd=repo / "finnor-os", env=env, stdout=log, stderr=subprocess.STDOUT,
                          timeout=3600)
 status = run.returncode
+missing = sorted(requested)
 if (out / "results.json").exists():
     observed = json.loads((out / "results.json").read_text())
+    missing = sorted(requested - {c["id"] for c in observed.get("cases", [])})
     if not observed.get("cases") or any(c["status"] != "PASS" for c in observed["cases"]):
         status = 1
 else:
     status = 1
-if (out / "failure.json").exists():
+if missing or (out / "failure.json").exists():
     status = 1
 (out / "run-command.json").write_text(json.dumps({
     "command": "python3 finnor-os/scripts/r3/run-local.py" + (" " + sys.argv[1] if len(sys.argv) > 1 else ""),
@@ -46,6 +59,7 @@ if (out / "failure.json").exists():
     "finishedAt": datetime.now(timezone.utc).isoformat(),
     "env": {k: v for k, v in env.items() if k not in (
         "PATH", "HOME", "FACTORY_DESKTOP_CDP_PORT", "AGENT_BROWSER_CDP", "AGENT_BROWSER_SESSION")},
+    "requestedCases": sorted(requested), "notRunRequestedCases": missing,
     "usd": None, "aggregateSimultaneousPeakMemoryBytes": None,
     "qualification": "ACTUAL_DISPOSABLE_HTTP_DATABASE_WORKER_NOT_PROTECTED_ADMISSION"
 }, indent=2) + "\n")

@@ -1,0 +1,14 @@
+{
+  "schema": "finnor.r3.readiness-preparation-repair.v1",
+  "at": "2026-10-10T22:52:02.948397+00:00",
+  "sourcePreimage": "f231e5bfc860f75c5ab9b723f90d7fda7cbf7715cae2ca8dbb1360d61caf8805",
+  "observedFailure": "installed-final-v17-ledger-s6-01 fails before upstream preparation or any authenticated owner call, while draining unsigned R3 startup read; base migration restart and installed source/runtime/bytecode checks PASS. Diagnostic02 first release failed finite30s allowance with actual Next ready10.4s. Exact product cause not inferred.",
+  "failureModes": [
+    "Cold compiled route/tsx dependencies do not finish startup30s on shared host",
+    "Startup allowance incorrectly counted as signed owner response slack",
+    "Missing readiness or unsigned response could falsely pass",
+    "Failure before fixture returns could lose phase observation"
+  ],
+  "repair": "QA-only pre-admission preparation bound120s. Keep original signed response30s, owner callback29s, S3 child20s, M1 validity/grants/episode deadlines unchanged; every preparation second charged. Log actual startup phase, original bounds and failure separately. No algorithm/compiled API/frontend/owner/schema dependency bytes change.",
+  "decisiveProof": "Actual current installed owner stories must still pass all original response deadlines; source readback binds changed QA fixture. No unit tests added."
+}

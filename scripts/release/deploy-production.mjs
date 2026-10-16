@@ -42,17 +42,8 @@ function git(args) {
   return execFileSync("git", args, { cwd: repoRoot, encoding: "utf8" }).trim()
 }
 
-function redactCommandArgs(args) {
-  return args.map((arg, index) => {
-    const previous = args[index - 1]
-    if (previous === "--token") return "***"
-    if (arg.startsWith("--token=")) return "--token=***"
-    return arg
-  })
-}
-
 function run(command, args, cwd, env) {
-  console.log(`$ ${command} ${redactCommandArgs(args).join(" ")}`)
+  console.log(`$ ${command} ${args.join(" ")}`)
   const result = spawnSync(command, args, {
     cwd,
     env,
@@ -82,8 +73,8 @@ if (!version.endsWith(`+${commitSha.slice(0, 12)}`)) throw new Error(`FINNOR_VER
 if (!prepareOnly && source !== "github-actions") throw new Error("Production deployment is restricted to the certified GitHub Actions release")
 if (source === "github-actions" && !vercelToken) throw new Error("VERCEL_TOKEN is required by the certified GitHub Actions release")
 
-function withVercelToken(args) {
-  return vercelToken ? [...args, "--token", vercelToken] : args
+function withVercelToken(sourceEnv) {
+  return vercelToken ? { ...sourceEnv, VERCEL_TOKEN: vercelToken } : sourceEnv
 }
 
 const appDir = resolve(repoRoot, app.directory)
@@ -278,7 +269,7 @@ if (!deployOnly && !reuseCanary) {
   const pullDir = mkdtempSync(join(tmpdir(), "finnor-vercel-pull-"))
   let buildEnvironment
   try {
-    run("vercel", withVercelToken(["pull", "--yes", "--environment=production"]), pullDir, withoutSecrets(env))
+    run("vercel", ["pull", "--yes", "--environment=production"], pullDir, withVercelToken(withoutSecrets(env)))
     buildEnvironment = sanitizeVercelBuildEnvironment(join(pullDir, ".vercel", ".env.production.local"), {
       FINNOR_COMMIT_SHA: commitSha,
       FINNOR_BUILD_ID: buildId,
@@ -382,7 +373,7 @@ const deployArgs = [
   "--env", `FINNOR_ENVIRONMENT=${environment}`,
   "--env", `FINNOR_RELEASE_SOURCE=${source}`,
 ]
-const deployOutput = run("vercel", withVercelToken(deployArgs), buildDir, withoutSecrets(env))
+const deployOutput = run("vercel", deployArgs, buildDir, withVercelToken(withoutSecrets(env)))
 const urls = [...deployOutput.matchAll(/https:\/\/[^\s)]+/g)].map((match) => match[0].replace(/[.,]+$/, ""))
 const productionUrls = [...deployOutput.matchAll(/^\s*Production:\s+(https:\/\/[^\s)]+)/gm)].map((match) => match[1].replace(/[.,]+$/, ""))
 const deploymentUrl = productionUrls.at(-1) ?? urls.findLast((url) => url.includes(".vercel.app"))

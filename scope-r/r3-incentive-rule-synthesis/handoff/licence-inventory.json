@@ -243,5 +243,148 @@
     "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
   },
   "npmTransitives": "UNMODIFIED_PINNED_ROOT_AND_FINNOR_OS_LOCKS_AND_EXISTING_THIRD_PARTY_NOTICES",
-  "licenceAdmissionGranted": false
+  "licenceAdmissionGranted": false,
+  "installedLinuxPredecessor": {
+    "identityEvidence": {
+      "rootId": "completion",
+      "path": "linux-installed/api-runtime-02/installed-identity.json",
+      "sha256": "4f4999294ce94f8d6da9f493dcbe8511c9129f1e6018c907e7ecfc15c34ae9d6"
+    },
+    "runtimeDigest": "5210a802c144fe824ca8ff93b568126789ef84d6a68f3f91112869f64d2bc319",
+    "licensePreimages": [
+      {
+        "component": "pyscipopt",
+        "license": "MIT",
+        "source": "/opt/r3-runtime/lib/python3.11/site-packages/pyscipopt-6.0.0.dist-info/licenses/LICENSE",
+        "evidenceDigest": "3dff0342b8204e7164b72980caabfa03a7bd5c692db9145eafaec3c80f935429",
+        "path": "/opt/r3-runtime/lib/python3.11/site-packages/pyscipopt-6.0.0.dist-info/licenses/LICENSE",
+        "sha256": "3dff0342b8204e7164b72980caabfa03a7bd5c692db9145eafaec3c80f935429"
+      },
+      {
+        "component": "numpy",
+        "license": "BSD-3-Clause and bundled notices",
+        "source": "/opt/r3-runtime/lib/python3.11/site-packages/numpy-2.2.6.dist-info/LICENSE.txt",
+        "evidenceDigest": "c002bd26de7dc7aa464250a0de063d58fe55974452e4389e5c21c350a820bf06",
+        "path": "/opt/r3-runtime/lib/python3.11/site-packages/numpy-2.2.6.dist-info/LICENSE.txt",
+        "sha256": "c002bd26de7dc7aa464250a0de063d58fe55974452e4389e5c21c350a820bf06"
+      },
+      {
+        "component": "numpy",
+        "license": "BSD-3-Clause and bundled notices",
+        "source": "/opt/r3-runtime/lib/python3.11/site-packages/numpy/_core/include/numpy/random/LICENSE.txt",
+        "evidenceDigest": "fbc539f47d0cf83bc61378080fb873d5c14630126cacbfe754035c3926daa5ec",
+        "path": "/opt/r3-runtime/lib/python3.11/site-packages/numpy/_core/include/numpy/random/LICENSE.txt",
+        "sha256": "fbc539f47d0cf83bc61378080fb873d5c14630126cacbfe754035c3926daa5ec"
+      },
+      {
+        "component": "numpy",
+        "license": "BSD-3-Clause and bundled notices",
+        "source": "/opt/r3-runtime/lib/python3.11/site-packages/numpy/ma/LICENSE",
+        "evidenceDigest": "05f3b88351988ecfad10abe92c0c50e5875c6452d5009a0084cc291551ffcca6",
+        "path": "/opt/r3-runtime/lib/python3.11/site-packages/numpy/ma/LICENSE",
+        "sha256": "05f3b88351988ecfad10abe92c0c50e5875c6452d5009a0084cc291551ffcca6"
+      },
+      {
+        "component": "SCIP 10.0.0",
+        "license": "Apache-2.0",
+        "source": "/app/finnor-os/scripts/r3/licenses/scip-Apache-2.0.txt",
+        "evidenceDigest": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+        "path": "/app/finnor-os/scripts/r3/licenses/scip-Apache-2.0.txt",
+        "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+      },
+      {
+        "component": "GCC libgcc/libgfortran/libquadmath (wheel libraries)",
+        "license": "GPL-3.0 with GCC Runtime Library Exception; retain bundled NumPy notices",
+        "source": "numpy-2.2.6.dist-info/LICENSE.txt",
+        "evidenceDigest": "c002bd26de7dc7aa464250a0de063d58fe55974452e4389e5c21c350a820bf06",
+        "path": "/opt/r3-runtime/lib/python3.11/site-packages/numpy-2.2.6.dist-info/LICENSE.txt",
+        "sha256": "c002bd26de7dc7aa464250a0de063d58fe55974452e4389e5c21c350a820bf06"
+      }
+    ],
+    "runtimeFilesAndTransitiveNativeLibraryHashes": "Refer to the full installed-identity.json identity.runtime.files; no copied executable tree.",
+    "r3LockSha256": "f57aedec12842fac1863bd5dfee06cb11e92cbe66720d3c7ddcf18c1c2990aac",
+    "upstreamLockSha256": "de8fcb749f68380bf6c473902a28db10d047edb4f88486bcad92537b83c256f8",
+    "exactMode": false,
+    "finalCurrentPackageAdmitted": false,
+    "image": "sha256:d4b2628e831b0c8efda98fe74a22171ead916187978f8ba6eed28adc73eae716"
+  },
+  "currentLinuxNativeCalleeSupplement": {
+    "supplier": "Same pinned official Node22.23.3 ARM64 image, Debian bubblewrap 0.8.0-2+deb12u1; no scientific dependency upgrade",
+    "graftEvidence": {
+      "rootId": "completion",
+      "path": "repair-start/native-callee-graft.json",
+      "sha256": "3a3de0b8fa583abdc5a7611a2630d4028e2be0775c4f4090d562b09e7c5a09ce"
+    },
+    "manifest": {
+      "path": "/Users/paramdave/.codex/visualizations/2026/10/10/01a12373-f681-7640-ac3e-f6a8aff51346/r3-delivery/.r3-scratch/installed-supplier-reuse/native-callee-manifest.json",
+      "sha256": "647bc8c5e92fa931d1a49a9b7f0a0f94eb80dda0e4034158a1d79dc8bcf1c9df"
+    },
+    "licenses": "Installed Node and Debian package copyright/notices retained inside exact graft and final archive; ordinary supporting binaries only. Protected admission NOT_RUN.",
+    "archives": [
+      {
+        "path": "/Users/paramdave/.codex/visualizations/2026/10/10/01a12373-f681-7640-ac3e-f6a8aff51346/r3-delivery/.r3-scratch/installed-native-error-v21/r3-final-api.oci.tar",
+        "role": "api",
+        "bytes": 701931520,
+        "sha256": "4c92c0bc499310ce2f5391feea38b3b0759767ba5194ab32642838d491dd89fb",
+        "access": "LOCAL_PRIVATE_ARTIFACT_NO_UPLOAD_OR_DEPLOY_AUTHORITY",
+        "manifests": [
+          "sha256:f9eca7a45b49e45c064dd4d99c56a91be4f07443e0fa24bd3a326769d78d6bbd"
+        ]
+      },
+      {
+        "path": "/Users/paramdave/.codex/visualizations/2026/10/10/01a12373-f681-7640-ac3e-f6a8aff51346/r3-delivery/.r3-scratch/installed-native-error-v21/r3-final-worker.oci.tar",
+        "role": "worker",
+        "bytes": 701931520,
+        "sha256": "77612ce46fdd3fc53a025052025f67afa371bf8335a0e66f6e51fea9e74d29c0",
+        "access": "LOCAL_PRIVATE_ARTIFACT_NO_UPLOAD_OR_DEPLOY_AUTHORITY",
+        "manifests": [
+          "sha256:156b60596b357cdfc9be04ca67ad277aae062d343b6e8930639f01c489c6b2d2"
+        ]
+      }
+    ]
+  },
+  "currentSystemTLS": {
+    "components": [
+      {
+        "name": "openssl",
+        "version": "3.0.22-1~deb12u1",
+        "file": "openssl_3.0.22-1~deb12u1_amd64.deb",
+        "sha256": "6f43fb5e9f3ceb0e36c91d0a148282a8eaf174b441c17d3665b6ba049b33d2c2",
+        "bytes": 1442052
+      },
+      {
+        "name": "libssl3",
+        "version": "3.0.22-1~deb12u1",
+        "file": "libssl3_3.0.22-1~deb12u1_amd64.deb",
+        "sha256": "f0a8aa8429209e556c278a9936bbd5f7d2cdb9f7e4e23b1e43ed399217ba80c1",
+        "bytes": 2039240
+      }
+    ],
+    "scope": "Official Debian OpenSSL/libssl3 3.0.22 tooling; upstream Apache-2.0 and bundled Artistic/GPL-1+ notices retained, no new admission inferred.",
+    "copyrights": [
+      {
+        "rootId": "completion",
+        "path": "openssl-supplier-02/openssl-copyright.txt",
+        "sha256": "6a7da622fe0637a334d2a8fc470852d2ffb77d9a2b2f930f854e32a41ad6ef35"
+      },
+      {
+        "rootId": "completion",
+        "path": "openssl-supplier-02/libssl3-copyright.txt",
+        "sha256": "6a7da622fe0637a334d2a8fc470852d2ffb77d9a2b2f930f854e32a41ad6ef35"
+      }
+    ],
+    "installedFileReadbacks": [
+      {
+        "rootId": "completion",
+        "path": "installed-final-v21-s6-recovery-01/system-tls-readback.json",
+        "sha256": "1c63fa3bfaa3eaf60d5b9d8f5f4775300569fd4975b4100666d7a56dff501c12"
+      },
+      {
+        "rootId": "completion",
+        "path": "installed-final-v21-worker-owners-01/system-tls-readback.json",
+        "sha256": "1c63fa3bfaa3eaf60d5b9d8f5f4775300569fd4975b4100666d7a56dff501c12"
+      }
+    ],
+    "licenceAdmissionGranted": false
+  }
 }

@@ -21,15 +21,63 @@
       "evidence": [
         {
           "path": "owner-2026-10-09T22-45-55/results.json",
-          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T23-22-42/results.json",
-          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787"
+          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787",
+          "rootId": "prior"
+        },
+        {
+          "rootId": "completion",
+          "path": "host-final-owners-07/results.json",
+          "sha256": "a67e0e75df0b1ecb63abddefee9935ec8578db92d0d31d3efc45631897481ced",
+          "originalRecordedRootId": "prior",
+          "custody": "EXACT_HASH_PRESERVED_HISTORICAL_COPY; source execution scope unchanged, not a new test"
+        },
+        {
+          "rootId": "completion",
+          "path": "host-final-owners-07/results.json",
+          "sha256": "a67e0e75df0b1ecb63abddefee9935ec8578db92d0d31d3efc45631897481ced"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/results.json",
+          "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/results.json",
+          "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/results.json",
+          "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/results.json",
+          "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
         }
       ],
       "evidenceClass": "EMPIRICALLY_VERIFIED",
-      "limitation": "Permissioned original declarations and party sources; behavioral truth remains UNQUALIFIED."
+      "limitation": "Permissioned original declarations and party sources; behavioral truth remains UNQUALIFIED.",
+      "proofScope": "Exact named current ordinary finite-model/installed-owner/Work scope. All original protected and combined floors stay separate.",
+      "currentInstalledNamedCases": {
+        "authenticated-owner-positive": "PASS"
+      }
     },
     {
       "id": "R3-C02",
@@ -47,11 +95,25 @@
       "evidence": [
         {
           "path": "native-02/results.json",
-          "sha256": "91162e3d89ad4a71a4d3ce86c13f028f39034deae2442d18697549b7c0692373"
+          "sha256": "91162e3d89ad4a71a4d3ce86c13f028f39034deae2442d18697549b7c0692373",
+          "rootId": "prior"
+        },
+        {
+          "rootId": "completion",
+          "path": "linux-installed/native-01/results.json",
+          "sha256": "af56a86de2d9c1af851966668841b8d8795a5e21a3b7eb315a6b39d67b35c5b1",
+          "originalRecordedRootId": "prior",
+          "custody": "EXACT_HASH_PRESERVED_HISTORICAL_COPY; source execution scope unchanged, not a new test"
+        },
+        {
+          "rootId": "completion",
+          "path": "linux-installed/native-01/results.json",
+          "sha256": "af56a86de2d9c1af851966668841b8d8795a5e21a3b7eb315a6b39d67b35c5b1"
         }
       ],
       "evidenceClass": "DETERMINISTICALLY_VERIFIED",
-      "limitation": "81 deterministic profiles; four parties, three types and three outcomes."
+      "limitation": "81 deterministic profiles; four parties, three types and three outcomes.",
+      "proofScope": "Exact named current ordinary finite-model/installed-owner/Work scope. All original protected and combined floors stay separate."
     },
     {
       "id": "R3-C03",
@@ -70,11 +132,25 @@
       "evidence": [
         {
           "path": "native-02/results.json",
-          "sha256": "91162e3d89ad4a71a4d3ce86c13f028f39034deae2442d18697549b7c0692373"
+          "sha256": "91162e3d89ad4a71a4d3ce86c13f028f39034deae2442d18697549b7c0692373",
+          "rootId": "prior"
+        },
+        {
+          "rootId": "completion",
+          "path": "linux-installed/native-01/results.json",
+          "sha256": "af56a86de2d9c1af851966668841b8d8795a5e21a3b7eb315a6b39d67b35c5b1",
+          "originalRecordedRootId": "prior",
+          "custody": "EXACT_HASH_PRESERVED_HISTORICAL_COPY; source execution scope unchanged, not a new test"
+        },
+        {
+          "rootId": "completion",
+          "path": "linux-installed/native-01/results.json",
+          "sha256": "af56a86de2d9c1af851966668841b8d8795a5e21a3b7eb315a6b39d67b35c5b1"
         }
       ],
       "evidenceClass": "DETERMINISTICALLY_VERIFIED",
-      "limitation": "Positive transfers pay parties; original dated quasilinear convention checked exactly."
+      "limitation": "Positive transfers pay parties; original dated quasilinear convention checked exactly.",
+      "proofScope": "Exact named current ordinary finite-model/installed-owner/Work scope. All original protected and combined floors stay separate."
     },
     {
       "id": "R3-C04",
@@ -94,11 +170,25 @@
       "evidence": [
         {
           "path": "native-02/results.json",
-          "sha256": "91162e3d89ad4a71a4d3ce86c13f028f39034deae2442d18697549b7c0692373"
+          "sha256": "91162e3d89ad4a71a4d3ce86c13f028f39034deae2442d18697549b7c0692373",
+          "rootId": "prior"
+        },
+        {
+          "rootId": "completion",
+          "path": "linux-installed/native-01/results.json",
+          "sha256": "af56a86de2d9c1af851966668841b8d8795a5e21a3b7eb315a6b39d67b35c5b1",
+          "originalRecordedRootId": "prior",
+          "custody": "EXACT_HASH_PRESERVED_HISTORICAL_COPY; source execution scope unchanged, not a new test"
+        },
+        {
+          "rootId": "completion",
+          "path": "linux-installed/native-01/results.json",
+          "sha256": "af56a86de2d9c1af851966668841b8d8795a5e21a3b7eb315a6b39d67b35c5b1"
         }
       ],
       "evidenceClass": "DETERMINISTICALLY_VERIFIED",
-      "limitation": "Unsupported preference/event/collusive claims refuse; individual DSIC only."
+      "limitation": "Unsupported preference/event/collusive claims refuse; individual DSIC only.",
+      "proofScope": "Exact named current ordinary finite-model/installed-owner/Work scope. All original protected and combined floors stay separate."
     },
     {
       "id": "R3-C05",
@@ -116,11 +206,25 @@
       "evidence": [
         {
           "path": "native-02/results.json",
-          "sha256": "91162e3d89ad4a71a4d3ce86c13f028f39034deae2442d18697549b7c0692373"
+          "sha256": "91162e3d89ad4a71a4d3ce86c13f028f39034deae2442d18697549b7c0692373",
+          "rootId": "prior"
+        },
+        {
+          "rootId": "completion",
+          "path": "linux-installed/native-01/results.json",
+          "sha256": "af56a86de2d9c1af851966668841b8d8795a5e21a3b7eb315a6b39d67b35c5b1",
+          "originalRecordedRootId": "prior",
+          "custody": "EXACT_HASH_PRESERVED_HISTORICAL_COPY; source execution scope unchanged, not a new test"
+        },
+        {
+          "rootId": "completion",
+          "path": "linux-installed/native-01/results.json",
+          "sha256": "af56a86de2d9c1af851966668841b8d8795a5e21a3b7eb315a6b39d67b35c5b1"
         }
       ],
       "evidenceClass": "DETERMINISTICALLY_VERIFIED",
-      "limitation": "Complete MILP family: 243 binaries and 324 scalar transfers; not global optimality proof."
+      "limitation": "Complete MILP family: 243 binaries and 324 scalar transfers; not global optimality proof.",
+      "proofScope": "Exact named current ordinary finite-model/installed-owner/Work scope. All original protected and combined floors stay separate."
     },
     {
       "id": "R3-C06",
@@ -138,11 +242,25 @@
       "evidence": [
         {
           "path": "native-02/results.json",
-          "sha256": "91162e3d89ad4a71a4d3ce86c13f028f39034deae2442d18697549b7c0692373"
+          "sha256": "91162e3d89ad4a71a4d3ce86c13f028f39034deae2442d18697549b7c0692373",
+          "rootId": "prior"
+        },
+        {
+          "rootId": "completion",
+          "path": "linux-installed/native-01/results.json",
+          "sha256": "af56a86de2d9c1af851966668841b8d8795a5e21a3b7eb315a6b39d67b35c5b1",
+          "originalRecordedRootId": "prior",
+          "custody": "EXACT_HASH_PRESERVED_HISTORICAL_COPY; source execution scope unchanged, not a new test"
+        },
+        {
+          "rootId": "completion",
+          "path": "linux-installed/native-01/results.json",
+          "sha256": "af56a86de2d9c1af851966668841b8d8795a5e21a3b7eb315a6b39d67b35c5b1"
         }
       ],
       "evidenceClass": "DETERMINISTICALLY_VERIFIED",
-      "limitation": "All 648 nonidentity deviations use the same true type and arbitrary other reports."
+      "limitation": "All 648 nonidentity deviations use the same true type and arbitrary other reports.",
+      "proofScope": "Exact named current ordinary finite-model/installed-owner/Work scope. All original protected and combined floors stay separate."
     },
     {
       "id": "R3-C07",
@@ -163,15 +281,75 @@
       "evidence": [
         {
           "path": "native-02/results.json",
-          "sha256": "91162e3d89ad4a71a4d3ce86c13f028f39034deae2442d18697549b7c0692373"
+          "sha256": "91162e3d89ad4a71a4d3ce86c13f028f39034deae2442d18697549b7c0692373",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T22-45-55/results.json",
-          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108",
+          "rootId": "prior"
+        },
+        {
+          "rootId": "completion",
+          "path": "linux-installed/native-01/results.json",
+          "sha256": "af56a86de2d9c1af851966668841b8d8795a5e21a3b7eb315a6b39d67b35c5b1",
+          "originalRecordedRootId": "prior",
+          "custody": "EXACT_HASH_PRESERVED_HISTORICAL_COPY; source execution scope unchanged, not a new test"
+        },
+        {
+          "rootId": "completion",
+          "path": "host-final-owners-08/results.json",
+          "sha256": "bcac763ecc8fc23c2383071740d0ca9c5348a1fa16905735d1b2b289c4879053",
+          "originalRecordedRootId": "prior",
+          "custody": "EXACT_HASH_PRESERVED_HISTORICAL_COPY; source execution scope unchanged, not a new test"
+        },
+        {
+          "rootId": "completion",
+          "path": "linux-installed/native-01/results.json",
+          "sha256": "af56a86de2d9c1af851966668841b8d8795a5e21a3b7eb315a6b39d67b35c5b1"
+        },
+        {
+          "rootId": "completion",
+          "path": "host-final-owners-08/results.json",
+          "sha256": "bcac763ecc8fc23c2383071740d0ca9c5348a1fa16905735d1b2b289c4879053"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/results.json",
+          "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/results.json",
+          "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/results.json",
+          "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/results.json",
+          "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
         }
       ],
       "evidenceClass": "DETERMINISTICALLY_VERIFIED",
-      "limitation": "All 324 participation conditions and dated payment/funding/resource inequalities; no future incoming liquidity."
+      "limitation": "All 324 participation conditions and dated payment/funding/resource inequalities; no future incoming liquidity.",
+      "proofScope": "Exact named current ordinary finite-model/installed-owner/Work scope. All original protected and combined floors stay separate.",
+      "currentInstalledNamedCases": {
+        "rational-original-owner-compatibility": "PASS"
+      }
     },
     {
       "id": "R3-C08",
@@ -191,15 +369,30 @@
       "evidence": [
         {
           "path": "native-02/results.json",
-          "sha256": "91162e3d89ad4a71a4d3ce86c13f028f39034deae2442d18697549b7c0692373"
+          "sha256": "91162e3d89ad4a71a4d3ce86c13f028f39034deae2442d18697549b7c0692373",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T22-45-55/results.json",
-          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108",
+          "rootId": "prior"
+        },
+        {
+          "rootId": "completion",
+          "path": "linux-installed/native-01/results.json",
+          "sha256": "af56a86de2d9c1af851966668841b8d8795a5e21a3b7eb315a6b39d67b35c5b1",
+          "originalRecordedRootId": "prior",
+          "custody": "EXACT_HASH_PRESERVED_HISTORICAL_COPY; source execution scope unchanged, not a new test"
+        },
+        {
+          "rootId": "completion",
+          "path": "linux-installed/native-01/results.json",
+          "sha256": "af56a86de2d9c1af851966668841b8d8795a5e21a3b7eb315a6b39d67b35c5b1"
         }
       ],
       "evidenceClass": "DETERMINISTICALLY_VERIFIED",
-      "limitation": "Supplied robust/maximin basis retained, no guessed report distribution; general optimum UNKNOWN."
+      "limitation": "Supplied robust/maximin basis retained, no guessed report distribution; general optimum UNKNOWN.",
+      "proofScope": "Exact named current ordinary finite-model/installed-owner/Work scope. All original protected and combined floors stay separate."
     },
     {
       "id": "R3-C09",
@@ -218,11 +411,25 @@
       "evidence": [
         {
           "path": "native-02/results.json",
-          "sha256": "91162e3d89ad4a71a4d3ce86c13f028f39034deae2442d18697549b7c0692373"
+          "sha256": "91162e3d89ad4a71a4d3ce86c13f028f39034deae2442d18697549b7c0692373",
+          "rootId": "prior"
+        },
+        {
+          "rootId": "completion",
+          "path": "linux-installed/native-01/results.json",
+          "sha256": "af56a86de2d9c1af851966668841b8d8795a5e21a3b7eb315a6b39d67b35c5b1",
+          "originalRecordedRootId": "prior",
+          "custody": "EXACT_HASH_PRESERVED_HISTORICAL_COPY; source execution scope unchanged, not a new test"
+        },
+        {
+          "rootId": "completion",
+          "path": "linux-installed/native-01/results.json",
+          "sha256": "af56a86de2d9c1af851966668841b8d8795a5e21a3b7eb315a6b39d67b35c5b1"
         }
       ],
       "evidenceClass": "DETERMINISTICALLY_VERIFIED",
-      "limitation": "Independent stdlib Fraction checker plus 4,096-rule registered-grid synthesis reference."
+      "limitation": "Independent stdlib Fraction checker plus 4,096-rule registered-grid synthesis reference.",
+      "proofScope": "Exact named current ordinary finite-model/installed-owner/Work scope. All original protected and combined floors stay separate."
     },
     {
       "id": "R3-C10",
@@ -242,15 +449,76 @@
       "evidence": [
         {
           "path": "native-02/results.json",
-          "sha256": "91162e3d89ad4a71a4d3ce86c13f028f39034deae2442d18697549b7c0692373"
+          "sha256": "91162e3d89ad4a71a4d3ce86c13f028f39034deae2442d18697549b7c0692373",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T22-45-55/results.json",
-          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108",
+          "rootId": "prior"
+        },
+        {
+          "rootId": "completion",
+          "path": "linux-installed/native-01/results.json",
+          "sha256": "af56a86de2d9c1af851966668841b8d8795a5e21a3b7eb315a6b39d67b35c5b1",
+          "originalRecordedRootId": "prior",
+          "custody": "EXACT_HASH_PRESERVED_HISTORICAL_COPY; source execution scope unchanged, not a new test"
+        },
+        {
+          "rootId": "completion",
+          "path": "host-final-owners-07/results.json",
+          "sha256": "a67e0e75df0b1ecb63abddefee9935ec8578db92d0d31d3efc45631897481ced",
+          "originalRecordedRootId": "prior",
+          "custody": "EXACT_HASH_PRESERVED_HISTORICAL_COPY; source execution scope unchanged, not a new test"
+        },
+        {
+          "rootId": "completion",
+          "path": "linux-installed/native-01/results.json",
+          "sha256": "af56a86de2d9c1af851966668841b8d8795a5e21a3b7eb315a6b39d67b35c5b1"
+        },
+        {
+          "rootId": "completion",
+          "path": "host-final-owners-07/results.json",
+          "sha256": "a67e0e75df0b1ecb63abddefee9935ec8578db92d0d31d3efc45631897481ced"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/results.json",
+          "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/results.json",
+          "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/results.json",
+          "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/results.json",
+          "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
         }
       ],
       "evidenceClass": "EMPIRICALLY_VERIFIED",
-      "limitation": "Observable authorized reports and separate source observations; hidden-type predicates rejected."
+      "limitation": "Observable authorized reports and separate source observations; hidden-type predicates rejected.",
+      "proofScope": "Exact named current ordinary finite-model/installed-owner/Work scope. All original protected and combined floors stay separate.",
+      "currentInstalledNamedCases": {
+        "report-correction-close": "PASS",
+        "separate-acceptance-exact-choice-consumption": "PASS"
+      }
     },
     {
       "id": "R3-C11",
@@ -270,15 +538,63 @@
       "evidence": [
         {
           "path": "owner-2026-10-09T22-45-55/results.json",
-          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108",
+          "rootId": "prior"
         },
         {
           "path": "installed-runtime-01/results.json",
-          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4"
+          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4",
+          "rootId": "prior"
+        },
+        {
+          "rootId": "completion",
+          "path": "host-final-owners-07/results.json",
+          "sha256": "a67e0e75df0b1ecb63abddefee9935ec8578db92d0d31d3efc45631897481ced",
+          "originalRecordedRootId": "prior",
+          "custody": "EXACT_HASH_PRESERVED_HISTORICAL_COPY; source execution scope unchanged, not a new test"
+        },
+        {
+          "rootId": "completion",
+          "path": "host-final-owners-07/results.json",
+          "sha256": "a67e0e75df0b1ecb63abddefee9935ec8578db92d0d31d3efc45631897481ced"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/results.json",
+          "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/results.json",
+          "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/results.json",
+          "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/results.json",
+          "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
         }
       ],
       "evidenceClass": "EMPIRICALLY_VERIFIED",
-      "limitation": "Protocol/common envelope, claims/gaps/lifecycle/custody and actual output-schema parsing."
+      "limitation": "Protocol/common envelope, claims/gaps/lifecycle/custody and actual output-schema parsing.",
+      "proofScope": "Exact named current ordinary finite-model/installed-owner/Work scope. All original protected and combined floors stay separate.",
+      "currentInstalledNamedCases": {
+        "authenticated-owner-positive": "PASS"
+      }
     },
     {
       "id": "R3-C12",
@@ -299,15 +615,64 @@
       "evidence": [
         {
           "path": "owner-2026-10-09T22-45-55/results.json",
-          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T23-28-33/results.json",
-          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1"
+          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1",
+          "rootId": "prior"
+        },
+        {
+          "rootId": "completion",
+          "path": "host-final-owners-07/results.json",
+          "sha256": "a67e0e75df0b1ecb63abddefee9935ec8578db92d0d31d3efc45631897481ced",
+          "originalRecordedRootId": "prior",
+          "custody": "EXACT_HASH_PRESERVED_HISTORICAL_COPY; source execution scope unchanged, not a new test"
+        },
+        {
+          "rootId": "completion",
+          "path": "host-final-owners-07/results.json",
+          "sha256": "a67e0e75df0b1ecb63abddefee9935ec8578db92d0d31d3efc45631897481ced"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/results.json",
+          "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/results.json",
+          "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/results.json",
+          "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/results.json",
+          "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
         }
       ],
       "evidenceClass": "EMPIRICALLY_VERIFIED",
-      "limitation": "Original semantic owners retained; no protected agreement, payment or realized S7 value."
+      "limitation": "Original semantic owners retained; no protected agreement, payment or realized S7 value.",
+      "proofScope": "Exact named current ordinary finite-model/installed-owner/Work scope. All original protected and combined floors stay separate.",
+      "currentInstalledNamedCases": {
+        "authenticated-owner-positive": "PASS",
+        "separate-acceptance-exact-choice-consumption": "PASS"
+      }
     },
     {
       "id": "R3-C13",
@@ -321,15 +686,169 @@
       "cases": [
         "installed-Node-launcher-producer-independent-checker"
       ],
-      "status": "PARTIAL",
+      "status": "VERIFIED_CURRENT_PINNED_BASE_FUNCTIONAL_DELIVERY",
       "evidence": [
         {
           "path": "installed-runtime-01/results.json",
-          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4"
+          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4",
+          "rootId": "prior"
+        },
+        {
+          "rootId": "completion",
+          "path": "linux-installed/api-runtime-02/installed-identity.json",
+          "sha256": "4f4999294ce94f8d6da9f493dcbe8511c9129f1e6018c907e7ecfc15c34ae9d6",
+          "originalRecordedRootId": "prior",
+          "custody": "EXACT_HASH_PRESERVED_HISTORICAL_COPY; source execution scope unchanged, not a new test"
+        },
+        {
+          "rootId": "completion",
+          "path": "linux-installed/api-runtime-02/installed-identity.json",
+          "sha256": "4f4999294ce94f8d6da9f493dcbe8511c9129f1e6018c907e7ecfc15c34ae9d6"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-start/installed-source-api-build-05.log",
+          "sha256": "c6633abc643c1017ad09b47513f06d7259982e0889d6c20cfda7f621f5f2fc7d"
+        },
+        {
+          "rootId": "completion",
+          "path": "native-isolation-current-source/results.json",
+          "sha256": "42bd5ed7a1830d37167d75e509d71896d37044cc0d62cf66f09d165077faba01"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-start/final-source-overlay-image-manifest.json",
+          "sha256": "75a80f642fa3f976ebff76d831ff5d3467214a81769954032caa2e8e95bc2632"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-candidate-work-03/resumption-observation.json",
+          "sha256": "52625254c54bdde015265bd1218f61565c6efbe23527d1c66c115ec52887aa8a"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-start/installed-source-api-build-05.log",
+          "sha256": "c6633abc643c1017ad09b47513f06d7259982e0889d6c20cfda7f621f5f2fc7d"
+        },
+        {
+          "rootId": "completion",
+          "path": "native-isolation-current-source/results.json",
+          "sha256": "42bd5ed7a1830d37167d75e509d71896d37044cc0d62cf66f09d165077faba01"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-start/final-source-overlay-image-manifest-v2.json",
+          "sha256": "8851eab25410127e644a028b54095d301ae00ea993f21bd0e854dd4499b3f83f"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-candidate-work-03/resumption-observation.json",
+          "sha256": "52625254c54bdde015265bd1218f61565c6efbe23527d1c66c115ec52887aa8a"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-start/installed-source-api-build-05.log",
+          "sha256": "c6633abc643c1017ad09b47513f06d7259982e0889d6c20cfda7f621f5f2fc7d"
+        },
+        {
+          "rootId": "completion",
+          "path": "native-isolation-current-source/results.json",
+          "sha256": "42bd5ed7a1830d37167d75e509d71896d37044cc0d62cf66f09d165077faba01"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-start/final-source-overlay-image-manifest-v21.json",
+          "sha256": "75f7bbe4c956c20c3e1755e205fa86cc5710882329c9048f3a06f7b678a8bb72"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-candidate-work-03/resumption-observation.json",
+          "sha256": "52625254c54bdde015265bd1218f61565c6efbe23527d1c66c115ec52887aa8a"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-start/installed-source-api-build-05.log",
+          "sha256": "c6633abc643c1017ad09b47513f06d7259982e0889d6c20cfda7f621f5f2fc7d"
+        },
+        {
+          "rootId": "completion",
+          "path": "native-isolation-current-source/results.json",
+          "sha256": "42bd5ed7a1830d37167d75e509d71896d37044cc0d62cf66f09d165077faba01"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-start/final-source-overlay-image-manifest-v21.json",
+          "sha256": "75f7bbe4c956c20c3e1755e205fa86cc5710882329c9048f3a06f7b678a8bb72"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-candidate-work-03/resumption-observation.json",
+          "sha256": "52625254c54bdde015265bd1218f61565c6efbe23527d1c66c115ec52887aa8a"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/results.json",
+          "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/results.json",
+          "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
+        },
+        {
+          "rootId": "completion",
+          "path": "final-staged-mounted-custody.json",
+          "sha256": "0d20318cfdcab8f2cba67fcbb03f37a2f21171926458594168cacf9a9c4712ba"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-start/installed-source-api-build-05.log",
+          "sha256": "c6633abc643c1017ad09b47513f06d7259982e0889d6c20cfda7f621f5f2fc7d"
+        },
+        {
+          "rootId": "completion",
+          "path": "native-isolation-current-source/results.json",
+          "sha256": "42bd5ed7a1830d37167d75e509d71896d37044cc0d62cf66f09d165077faba01"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-start/final-source-overlay-image-manifest-v21.json",
+          "sha256": "75f7bbe4c956c20c3e1755e205fa86cc5710882329c9048f3a06f7b678a8bb72"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-candidate-work-03/resumption-observation.json",
+          "sha256": "52625254c54bdde015265bd1218f61565c6efbe23527d1c66c115ec52887aa8a"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/results.json",
+          "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/results.json",
+          "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
+        },
+        {
+          "rootId": "completion",
+          "path": "final-staged-mounted-custody.json",
+          "sha256": "0d20318cfdcab8f2cba67fcbb03f37a2f21171926458594168cacf9a9c4712ba"
         }
       ],
       "evidenceClass": "EMPIRICALLY_VERIFIED",
-      "limitation": "Installed FLOAT64 SCIP verified; exact mode/proof/source build and Linux image unverified. OpenSpiel not adopted."
+      "limitation": "Current digest-matched API and worker images; all installed source bytes, nonroot runtime, actual signed owner graph, original/new queued jobs and physical restart verified across fresh final-source case cuts. Combined and protected qualification NOT_RUN.",
+      "proofScope": "Exact named current ordinary finite-model/installed-owner/Work scope. All original protected and combined floors stay separate."
     },
     {
       "id": "R3-C14",
@@ -339,7 +858,9 @@
       "implementation": [
         "finnor-os/packages/epistemic-runtime/src/incentive-rule-synthesis/producer.py",
         "finnor-os/packages/private-equity/src/r3/control.ts",
-        "finnor-os/packages/private-equity/src/r3/fallback.ts"
+        "finnor-os/packages/private-equity/src/r3/fallback.ts",
+        "finnor-os/packages/private-equity/src/r3/program-target.ts",
+        "finnor-os/packages/private-equity/src/r3/program-target.ts"
       ],
       "cases": [
         "full-interacting-81",
@@ -349,15 +870,87 @@
       "evidence": [
         {
           "path": "native-02/results.json",
-          "sha256": "91162e3d89ad4a71a4d3ce86c13f028f39034deae2442d18697549b7c0692373"
+          "sha256": "91162e3d89ad4a71a4d3ce86c13f028f39034deae2442d18697549b7c0692373",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T22-45-55/results.json",
-          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108",
+          "rootId": "prior"
+        },
+        {
+          "rootId": "completion",
+          "path": "linux-installed/native-01/results.json",
+          "sha256": "af56a86de2d9c1af851966668841b8d8795a5e21a3b7eb315a6b39d67b35c5b1",
+          "originalRecordedRootId": "prior",
+          "custody": "EXACT_HASH_PRESERVED_HISTORICAL_COPY; source execution scope unchanged, not a new test"
+        },
+        {
+          "rootId": "completion",
+          "path": "host-final-owners-07/results.json",
+          "sha256": "a67e0e75df0b1ecb63abddefee9935ec8578db92d0d31d3efc45631897481ced",
+          "originalRecordedRootId": "prior",
+          "custody": "EXACT_HASH_PRESERVED_HISTORICAL_COPY; source execution scope unchanged, not a new test"
+        },
+        {
+          "rootId": "completion",
+          "path": "host-final-owners-07/positive/boundaries.json",
+          "sha256": "774cadb5d7398b39746dd707434ad1b515c2229e880f7b8ec7fb69553ff09f48",
+          "originalRecordedRootId": "prior",
+          "custody": "EXACT_HASH_PRESERVED_HISTORICAL_COPY; source execution scope unchanged, not a new test"
+        },
+        {
+          "rootId": "completion",
+          "path": "linux-installed/native-01/results.json",
+          "sha256": "af56a86de2d9c1af851966668841b8d8795a5e21a3b7eb315a6b39d67b35c5b1"
+        },
+        {
+          "rootId": "completion",
+          "path": "host-final-owners-07/results.json",
+          "sha256": "a67e0e75df0b1ecb63abddefee9935ec8578db92d0d31d3efc45631897481ced"
+        },
+        {
+          "rootId": "completion",
+          "path": "host-final-owners-07/positive/boundaries.json",
+          "sha256": "774cadb5d7398b39746dd707434ad1b515c2229e880f7b8ec7fb69553ff09f48"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/results.json",
+          "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/results.json",
+          "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/results.json",
+          "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/results.json",
+          "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
         }
       ],
       "evidenceClass": "DETERMINISTICALLY_VERIFIED",
-      "limitation": "Full report rule is distinct from fixed programme terms; M3/P1 grammar not silently requalified."
+      "limitation": "Actual immutable M3 publication/candidate and S4 policy are bound into new r3-m3-report-extension-v1. R3 independently checks S5/S6 after its own reservation invalidates old resource proof; cancellation and all other dependencies remain fenced. No earlier R2 certificate changes. Final Linux M3 substrate and candidate browser selection remain unverified.",
+      "proofScope": "Exact named current ordinary finite-model/installed-owner/Work scope. All original protected and combined floors stay separate.",
+      "currentInstalledNamedCases": {
+        "actual-fallback-matched-off-on": "PASS"
+      }
     },
     {
       "id": "R3-C15",
@@ -375,11 +968,25 @@
       "evidence": [
         {
           "path": "native-02/results.json",
-          "sha256": "91162e3d89ad4a71a4d3ce86c13f028f39034deae2442d18697549b7c0692373"
+          "sha256": "91162e3d89ad4a71a4d3ce86c13f028f39034deae2442d18697549b7c0692373",
+          "rootId": "prior"
+        },
+        {
+          "rootId": "completion",
+          "path": "linux-installed/native-01/results.json",
+          "sha256": "af56a86de2d9c1af851966668841b8d8795a5e21a3b7eb315a6b39d67b35c5b1",
+          "originalRecordedRootId": "prior",
+          "custody": "EXACT_HASH_PRESERVED_HISTORICAL_COPY; source execution scope unchanged, not a new test"
+        },
+        {
+          "rootId": "completion",
+          "path": "linux-installed/native-01/results.json",
+          "sha256": "af56a86de2d9c1af851966668841b8d8795a5e21a3b7eb315a6b39d67b35c5b1"
         }
       ],
       "evidenceClass": "DETERMINISTICALLY_VERIFIED",
-      "limitation": "81/648/324 exact coverage is deterministic, not 1,053 independent statistical samples."
+      "limitation": "81/648/324 exact coverage is deterministic, not 1,053 independent statistical samples.",
+      "proofScope": "Exact named current ordinary finite-model/installed-owner/Work scope. All original protected and combined floors stay separate."
     },
     {
       "id": "R3-C16",
@@ -398,11 +1005,25 @@
       "evidence": [
         {
           "path": "native-02/results.json",
-          "sha256": "91162e3d89ad4a71a4d3ce86c13f028f39034deae2442d18697549b7c0692373"
+          "sha256": "91162e3d89ad4a71a4d3ce86c13f028f39034deae2442d18697549b7c0692373",
+          "rootId": "prior"
+        },
+        {
+          "rootId": "completion",
+          "path": "linux-installed/native-01/results.json",
+          "sha256": "af56a86de2d9c1af851966668841b8d8795a5e21a3b7eb315a6b39d67b35c5b1",
+          "originalRecordedRootId": "prior",
+          "custody": "EXACT_HASH_PRESERVED_HISTORICAL_COPY; source execution scope unchanged, not a new test"
+        },
+        {
+          "rootId": "completion",
+          "path": "linux-installed/native-01/results.json",
+          "sha256": "af56a86de2d9c1af851966668841b8d8795a5e21a3b7eb315a6b39d67b35c5b1"
         }
       ],
       "evidenceClass": "DETERMINISTICALLY_VERIFIED",
-      "limitation": "27 exact gain-1 rebate lies; checked narrow original IR contradiction; missing proof/timeout UNKNOWN."
+      "limitation": "27 exact gain-1 rebate lies; checked narrow original IR contradiction; missing proof/timeout UNKNOWN.",
+      "proofScope": "Exact named current ordinary finite-model/installed-owner/Work scope. All original protected and combined floors stay separate."
     },
     {
       "id": "R3-C17",
@@ -420,11 +1041,58 @@
       "evidence": [
         {
           "path": "owner-2026-10-09T22-45-55/results.json",
-          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108",
+          "rootId": "prior"
+        },
+        {
+          "rootId": "completion",
+          "path": "host-final-owners-07/results.json",
+          "sha256": "a67e0e75df0b1ecb63abddefee9935ec8578db92d0d31d3efc45631897481ced",
+          "originalRecordedRootId": "prior",
+          "custody": "EXACT_HASH_PRESERVED_HISTORICAL_COPY; source execution scope unchanged, not a new test"
+        },
+        {
+          "rootId": "completion",
+          "path": "host-final-owners-07/results.json",
+          "sha256": "a67e0e75df0b1ecb63abddefee9935ec8578db92d0d31d3efc45631897481ced"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/results.json",
+          "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/results.json",
+          "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/results.json",
+          "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/results.json",
+          "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
         }
       ],
       "evidenceClass": "PARTIAL",
-      "limitation": "Actual native S4 fallback executed under same request/grant/deadline. Strongest equipped completed-X, full cost and adapter ablation NOT RUN."
+      "limitation": "Actual native S4 fallback executed under same request/grant/deadline. Strongest equipped completed-X, full cost and adapter ablation NOT RUN.",
+      "proofScope": "Exact named current ordinary finite-model/installed-owner/Work scope. All original protected and combined floors stay separate.",
+      "currentInstalledNamedCases": {
+        "actual-fallback-matched-off-on": "PASS"
+      }
     },
     {
       "id": "R3-C18",
@@ -442,11 +1110,25 @@
       "evidence": [
         {
           "path": "native-02/results.json",
-          "sha256": "91162e3d89ad4a71a4d3ce86c13f028f39034deae2442d18697549b7c0692373"
+          "sha256": "91162e3d89ad4a71a4d3ce86c13f028f39034deae2442d18697549b7c0692373",
+          "rootId": "prior"
+        },
+        {
+          "rootId": "completion",
+          "path": "linux-installed/native-01/results.json",
+          "sha256": "af56a86de2d9c1af851966668841b8d8795a5e21a3b7eb315a6b39d67b35c5b1",
+          "originalRecordedRootId": "prior",
+          "custody": "EXACT_HASH_PRESERVED_HISTORICAL_COPY; source execution scope unchanged, not a new test"
+        },
+        {
+          "rootId": "completion",
+          "path": "linux-installed/native-01/results.json",
+          "sha256": "af56a86de2d9c1af851966668841b8d8795a5e21a3b7eb315a6b39d67b35c5b1"
         }
       ],
       "evidenceClass": "DETERMINISTICALLY_VERIFIED",
-      "limitation": "Exact violating party/type/report/utility/source witnesses; false rule not accepted."
+      "limitation": "Exact violating party/type/report/utility/source witnesses; false rule not accepted.",
+      "proofScope": "Exact named current ordinary finite-model/installed-owner/Work scope. All original protected and combined floors stay separate."
     },
     {
       "id": "R3-C19",
@@ -465,11 +1147,58 @@
       "evidence": [
         {
           "path": "owner-2026-10-09T22-55-59/results.json",
-          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140"
+          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140",
+          "rootId": "prior"
+        },
+        {
+          "rootId": "completion",
+          "path": "host-final-owners-08/results.json",
+          "sha256": "bcac763ecc8fc23c2383071740d0ca9c5348a1fa16905735d1b2b289c4879053",
+          "originalRecordedRootId": "prior",
+          "custody": "EXACT_HASH_PRESERVED_HISTORICAL_COPY; source execution scope unchanged, not a new test"
+        },
+        {
+          "rootId": "completion",
+          "path": "host-final-owners-08/results.json",
+          "sha256": "bcac763ecc8fc23c2383071740d0ca9c5348a1fa16905735d1b2b289c4879053"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/results.json",
+          "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/results.json",
+          "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/results.json",
+          "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/results.json",
+          "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
         }
       ],
       "evidenceClass": "EMPIRICALLY_VERIFIED",
-      "limitation": "Out-of-domain invalidation retains four disposable acceptances and pending canonical S5 envelope; no protected agreement claim."
+      "limitation": "Out-of-domain invalidation retains four disposable acceptances and pending canonical S5 envelope; no protected agreement claim.",
+      "proofScope": "Exact named current ordinary finite-model/installed-owner/Work scope. All original protected and combined floors stay separate.",
+      "currentInstalledNamedCases": {
+        "currentness-and-p7": "PASS"
+      }
     },
     {
       "id": "R3-C20",
@@ -490,15 +1219,64 @@
       "evidence": [
         {
           "path": "owner-2026-10-09T22-45-55/results.json",
-          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T22-55-59/results.json",
-          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140"
+          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140",
+          "rootId": "prior"
+        },
+        {
+          "rootId": "completion",
+          "path": "host-final-owners-08/results.json",
+          "sha256": "bcac763ecc8fc23c2383071740d0ca9c5348a1fa16905735d1b2b289c4879053",
+          "originalRecordedRootId": "prior",
+          "custody": "EXACT_HASH_PRESERVED_HISTORICAL_COPY; source execution scope unchanged, not a new test"
+        },
+        {
+          "rootId": "completion",
+          "path": "host-final-owners-08/results.json",
+          "sha256": "bcac763ecc8fc23c2383071740d0ca9c5348a1fa16905735d1b2b289c4879053"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/results.json",
+          "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/results.json",
+          "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/results.json",
+          "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/results.json",
+          "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
         }
       ],
       "evidenceClass": "EMPIRICALLY_VERIFIED",
-      "limitation": "Canonical rational quantities and derived r3q schedules persist through original S5 readers; absent bounds remain UNKNOWN."
+      "limitation": "Canonical rational quantities and derived r3q schedules persist through original S5 readers; absent bounds remain UNKNOWN.",
+      "proofScope": "Exact named current ordinary finite-model/installed-owner/Work scope. All original protected and combined floors stay separate.",
+      "currentInstalledNamedCases": {
+        "rational-original-owner-compatibility": "PASS",
+        "currentness-and-p7": "PASS"
+      }
     },
     {
       "id": "R3-C21",
@@ -510,7 +1288,8 @@
       "status": "INAPPLICABLE",
       "evidence": [],
       "evidenceClass": "INAPPLICABLE",
-      "limitation": "Pi was not adopted; no conversation runtime was added."
+      "limitation": "Pi was not adopted; no conversation runtime was added.",
+      "proofScope": "Exact named current ordinary finite-model/installed-owner/Work scope. All original protected and combined floors stay separate."
     },
     {
       "id": "R3-C22",
@@ -523,25 +1302,147 @@
         "finnor-os/packages/private-equity/src/r3/control.ts",
         "finnor-os/packages/private-equity/src/r3/allocation.ts",
         "finnor-os/packages/private-equity/src/r3/obligations.ts",
-        "src/components/centropy/canvas/ElicitationProtocolReview.tsx"
+        "src/components/centropy/canvas/ElicitationProtocolReview.tsx",
+        "finnor-os/packages/private-equity/src/r3/program-target.ts",
+        "finnor-os/packages/private-equity/src/r3/program-target.ts"
       ],
       "cases": [
         "authenticated-owner-positive",
         "mounted-work-reload-switch"
       ],
-      "status": "VERIFIED_SUPPORTED_DEVELOPMENT_DOMAIN",
+      "status": "VERIFIED_CURRENT_MOUNTED_CANDIDATE_RELOAD_PRIVACY_REVISION",
       "evidence": [
         {
           "path": "owner-2026-10-09T22-45-55/results.json",
-          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-10T00-51-10/results.json",
-          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335"
+          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335",
+          "rootId": "prior"
+        },
+        {
+          "rootId": "completion",
+          "path": "host-final-owners-07/results.json",
+          "sha256": "a67e0e75df0b1ecb63abddefee9935ec8578db92d0d31d3efc45631897481ced",
+          "originalRecordedRootId": "prior",
+          "custody": "EXACT_HASH_PRESERVED_HISTORICAL_COPY; source execution scope unchanged, not a new test"
+        },
+        {
+          "rootId": "completion",
+          "path": "host-final-owners-07/positive/boundaries.json",
+          "sha256": "774cadb5d7398b39746dd707434ad1b515c2229e880f7b8ec7fb69553ff09f48",
+          "originalRecordedRootId": "prior",
+          "custody": "EXACT_HASH_PRESERVED_HISTORICAL_COPY; source execution scope unchanged, not a new test"
+        },
+        {
+          "rootId": "completion",
+          "path": "host-final-owners-07/results.json",
+          "sha256": "a67e0e75df0b1ecb63abddefee9935ec8578db92d0d31d3efc45631897481ced"
+        },
+        {
+          "rootId": "completion",
+          "path": "host-final-owners-07/positive/boundaries.json",
+          "sha256": "774cadb5d7398b39746dd707434ad1b515c2229e880f7b8ec7fb69553ff09f48"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-candidate-work-02/results.json",
+          "sha256": "a6a17c84a8c83caa6eb1dca3e77af2541593969256b7d15f50e587a4286ee20b"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-candidate-work-03/resumption-observation.json",
+          "sha256": "52625254c54bdde015265bd1218f61565c6efbe23527d1c66c115ec52887aa8a"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-candidate-work-02/results.json",
+          "sha256": "a6a17c84a8c83caa6eb1dca3e77af2541593969256b7d15f50e587a4286ee20b"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-candidate-work-03/resumption-observation.json",
+          "sha256": "52625254c54bdde015265bd1218f61565c6efbe23527d1c66c115ec52887aa8a"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-candidate-work-02/results.json",
+          "sha256": "a6a17c84a8c83caa6eb1dca3e77af2541593969256b7d15f50e587a4286ee20b"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-candidate-work-03/resumption-observation.json",
+          "sha256": "52625254c54bdde015265bd1218f61565c6efbe23527d1c66c115ec52887aa8a"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-candidate-work-02/results.json",
+          "sha256": "a6a17c84a8c83caa6eb1dca3e77af2541593969256b7d15f50e587a4286ee20b"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-candidate-work-03/resumption-observation.json",
+          "sha256": "52625254c54bdde015265bd1218f61565c6efbe23527d1c66c115ec52887aa8a"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/results.json",
+          "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/results.json",
+          "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
+        },
+        {
+          "rootId": "completion",
+          "path": "final-staged-mounted-custody.json",
+          "sha256": "0d20318cfdcab8f2cba67fcbb03f37a2f21171926458594168cacf9a9c4712ba"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-candidate-work-02/results.json",
+          "sha256": "a6a17c84a8c83caa6eb1dca3e77af2541593969256b7d15f50e587a4286ee20b"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-candidate-work-03/resumption-observation.json",
+          "sha256": "52625254c54bdde015265bd1218f61565c6efbe23527d1c66c115ec52887aa8a"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/results.json",
+          "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/results.json",
+          "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
+        },
+        {
+          "rootId": "completion",
+          "path": "final-staged-mounted-custody.json",
+          "sha256": "0d20318cfdcab8f2cba67fcbb03f37a2f21171926458594168cacf9a9c4712ba"
         }
       ],
       "evidenceClass": "EMPIRICALLY_VERIFIED",
-      "limitation": "One authentic durable Work, versioned explicit owner leaves and additive mounted Capital child."
+      "limitation": "All required actual mounted oracles verified on the current staged source; preceding whole finite-window failure retained. No consent or effect authority established.",
+      "proofScope": "Exact named current ordinary finite-model/installed-owner/Work scope. All original protected and combined floors stay separate.",
+      "currentInstalledNamedCases": {
+        "authenticated-owner-positive": "PASS"
+      }
     },
     {
       "id": "R3-C23",
@@ -564,15 +1465,92 @@
       "evidence": [
         {
           "path": "owner-2026-10-09T22-45-55/results.json",
-          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T23-28-33/results.json",
-          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1"
+          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1",
+          "rootId": "prior"
+        },
+        {
+          "rootId": "completion",
+          "path": "host-final-owners-08/results.json",
+          "sha256": "bcac763ecc8fc23c2383071740d0ca9c5348a1fa16905735d1b2b289c4879053",
+          "originalRecordedRootId": "prior",
+          "custody": "EXACT_HASH_PRESERVED_HISTORICAL_COPY; source execution scope unchanged, not a new test"
+        },
+        {
+          "rootId": "completion",
+          "path": "host-final-owners-08/results.json",
+          "sha256": "bcac763ecc8fc23c2383071740d0ca9c5348a1fa16905735d1b2b289c4879053"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-s6-01/results.json",
+          "sha256": "e52dd939abbf6b38320d17f1ca0e6dc200e96d2b534488443624159bf4f555f5"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-s6-01/results.json",
+          "sha256": "e52dd939abbf6b38320d17f1ca0e6dc200e96d2b534488443624159bf4f555f5"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-s6-01/results.json",
+          "sha256": "e52dd939abbf6b38320d17f1ca0e6dc200e96d2b534488443624159bf4f555f5"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-s6-01/results.json",
+          "sha256": "e52dd939abbf6b38320d17f1ca0e6dc200e96d2b534488443624159bf4f555f5"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/results.json",
+          "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/results.json",
+          "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-s6-01/results.json",
+          "sha256": "e52dd939abbf6b38320d17f1ca0e6dc200e96d2b534488443624159bf4f555f5"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/results.json",
+          "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/results.json",
+          "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
         }
       ],
       "evidenceClass": "EMPIRICALLY_VERIFIED",
-      "limitation": "Physical processes, original grant charges, immutable deadlines, provisional output and UNKNOWN responsibility retained."
+      "limitation": "Physical processes, original grant charges, immutable deadlines, provisional output and UNKNOWN responsibility retained.",
+      "proofScope": "Exact named current ordinary finite-model/installed-owner/Work scope. All original protected and combined floors stay separate.",
+      "currentInstalledNamedCases": {
+        "shared-grant-concurrency": "PASS",
+        "cancel-and-partial": "PASS",
+        "sigkill-after-child-acceptance": "PASS",
+        "publication-row-lock-race": "PASS",
+        "s6-supported-recovery": "PASS"
+      }
     },
     {
       "id": "R3-C24",
@@ -590,11 +1568,25 @@
       "evidence": [
         {
           "path": "native-02/results.json",
-          "sha256": "91162e3d89ad4a71a4d3ce86c13f028f39034deae2442d18697549b7c0692373"
+          "sha256": "91162e3d89ad4a71a4d3ce86c13f028f39034deae2442d18697549b7c0692373",
+          "rootId": "prior"
+        },
+        {
+          "rootId": "completion",
+          "path": "linux-installed/native-01/results.json",
+          "sha256": "af56a86de2d9c1af851966668841b8d8795a5e21a3b7eb315a6b39d67b35c5b1",
+          "originalRecordedRootId": "prior",
+          "custody": "EXACT_HASH_PRESERVED_HISTORICAL_COPY; source execution scope unchanged, not a new test"
+        },
+        {
+          "rootId": "completion",
+          "path": "linux-installed/native-01/results.json",
+          "sha256": "af56a86de2d9c1af851966668841b8d8795a5e21a3b7eb315a6b39d67b35c5b1"
         }
       ],
       "evidenceClass": "DETERMINISTICALLY_VERIFIED",
-      "limitation": "Explicit synthetic owner-supplied hypotheses, not R2 payoff matrix or inferred private preferences."
+      "limitation": "Explicit synthetic owner-supplied hypotheses, not R2 payoff matrix or inferred private preferences.",
+      "proofScope": "Exact named current ordinary finite-model/installed-owner/Work scope. All original protected and combined floors stay separate."
     },
     {
       "id": "R3-C25",
@@ -608,7 +1600,8 @@
       "status": "NOT_RUN",
       "evidence": [],
       "evidenceClass": "UNKNOWN",
-      "limitation": "Protected paired comparator distribution/evaluator custody and simultaneous gain bounds unavailable; no gain claim."
+      "limitation": "Protected paired comparator distribution/evaluator custody and simultaneous gain bounds unavailable; no gain claim.",
+      "proofScope": "Exact named current ordinary finite-model/installed-owner/Work scope. All original protected and combined floors stay separate."
     },
     {
       "id": "R3-C26",
@@ -622,7 +1615,8 @@
       "status": "UNQUALIFIED",
       "evidence": [],
       "evidenceClass": "UNKNOWN",
-      "limitation": "Original correctness/regret/calibration/resource/workload-grid/reach/horizon floors retained but not qualified by development corpus."
+      "limitation": "Original correctness/regret/calibration/resource/workload-grid/reach/horizon floors retained but not qualified by development corpus.",
+      "proofScope": "Exact named current ordinary finite-model/installed-owner/Work scope. All original protected and combined floors stay separate."
     },
     {
       "id": "R3-C27",
@@ -642,15 +1636,64 @@
       "evidence": [
         {
           "path": "owner-2026-10-09T22-45-55/results.json",
-          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108",
+          "rootId": "prior"
         },
         {
           "path": "installed-runtime-01/results.json",
-          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4"
+          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4",
+          "rootId": "prior"
+        },
+        {
+          "rootId": "completion",
+          "path": "host-final-owners-08/results.json",
+          "sha256": "bcac763ecc8fc23c2383071740d0ca9c5348a1fa16905735d1b2b289c4879053",
+          "originalRecordedRootId": "prior",
+          "custody": "EXACT_HASH_PRESERVED_HISTORICAL_COPY; source execution scope unchanged, not a new test"
+        },
+        {
+          "rootId": "completion",
+          "path": "host-final-owners-08/results.json",
+          "sha256": "bcac763ecc8fc23c2383071740d0ca9c5348a1fa16905735d1b2b289c4879053"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/results.json",
+          "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/results.json",
+          "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/results.json",
+          "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/results.json",
+          "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
         }
       ],
       "evidenceClass": "PARTIAL",
-      "limitation": "Per-child CPU/RSS, elapsed, attempts and charges observed. Dollars, human and aggregate simultaneous memory UNKNOWN; acquisition exceeded local-generation cap."
+      "limitation": "Per-child CPU/RSS, elapsed, attempts and charges observed. Dollars, human and aggregate simultaneous memory UNKNOWN; acquisition exceeded local-generation cap.",
+      "proofScope": "Exact named current ordinary finite-model/installed-owner/Work scope. All original protected and combined floors stay separate.",
+      "currentInstalledNamedCases": {
+        "sigkill-after-child-acceptance": "PASS",
+        "shared-grant-concurrency": "PASS"
+      }
     },
     {
       "id": "R3-C28",
@@ -664,7 +1707,8 @@
       "status": "NOT_RUN",
       "evidence": [],
       "evidenceClass": "UNKNOWN",
-      "limitation": "S7/H2 incremental owner wealth, attribution, denominator, tail-risk and 100x/10x/100-million obligations not evaluated."
+      "limitation": "S7/H2 incremental owner wealth, attribution, denominator, tail-risk and 100x/10x/100-million obligations not evaluated.",
+      "proofScope": "Exact named current ordinary finite-model/installed-owner/Work scope. All original protected and combined floors stay separate."
     },
     {
       "id": "R3-C29",
@@ -678,7 +1722,8 @@
       "status": "VERIFIED_SUPPORTED_DEVELOPMENT_DOMAIN",
       "evidence": [],
       "evidenceClass": "DETERMINISTICALLY_VERIFIED",
-      "limitation": "Scope3/R3 Phase5 only; R1/R2/R4 not mathematical prerequisites and no peer adopted."
+      "limitation": "Scope3/R3 Phase5 only; R1/R2/R4 not mathematical prerequisites and no peer adopted.",
+      "proofScope": "Exact named current ordinary finite-model/installed-owner/Work scope. All original protected and combined floors stay separate."
     },
     {
       "id": "R3-C30",
@@ -694,23 +1739,236 @@
       "cases": [
         "queued-original-and-r3-physical-restart"
       ],
-      "status": "INCOMPLETE",
+      "status": "VERIFIED_CURRENT_PINNED_BASE_FUNCTIONAL_DELIVERY",
       "evidence": [
         {
           "path": "owner-2026-10-10T00-51-10/results.json",
-          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335"
+          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335",
+          "rootId": "prior"
         },
         {
           "path": "installed-runtime-01/results.json",
-          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4"
+          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4",
+          "rootId": "prior"
         },
         {
           "path": "final-linux-build-01.log",
-          "sha256": "46e014c8fea9fa38cf9a6b9ebde8f1448f575427f035ca969af1966ee3f31d5c"
+          "sha256": "46e014c8fea9fa38cf9a6b9ebde8f1448f575427f035ca969af1966ee3f31d5c",
+          "rootId": "prior"
+        },
+        {
+          "rootId": "completion",
+          "path": "linux-installed/api-runtime-02/results.json",
+          "sha256": "72de565ebe9a150c91067c87eeb97c75a1ca4fde18ed0cbb6ff371f6d2a31943",
+          "originalRecordedRootId": "prior",
+          "custody": "EXACT_HASH_PRESERVED_HISTORICAL_COPY; source execution scope unchanged, not a new test"
+        },
+        {
+          "rootId": "completion",
+          "path": "linux-installed/owner-04/results.json",
+          "sha256": "8a06d141c7415ce224470f27d2bcf3ad01f1741c087688f244949d1eea256ad7",
+          "originalRecordedRootId": "prior",
+          "custody": "EXACT_HASH_PRESERVED_HISTORICAL_COPY; source execution scope unchanged, not a new test"
+        },
+        {
+          "rootId": "completion",
+          "path": "mounted-completion-06/results.json",
+          "sha256": "929eb4db025b0951bf1588aeab2995a2b0e11d79c256d143953c91ed7d3fcef5",
+          "originalRecordedRootId": "prior",
+          "custody": "EXACT_HASH_PRESERVED_HISTORICAL_COPY; source execution scope unchanged, not a new test"
+        },
+        {
+          "rootId": "completion",
+          "path": "linux-installed/api-runtime-02/results.json",
+          "sha256": "72de565ebe9a150c91067c87eeb97c75a1ca4fde18ed0cbb6ff371f6d2a31943"
+        },
+        {
+          "rootId": "completion",
+          "path": "linux-installed/owner-04/results.json",
+          "sha256": "8a06d141c7415ce224470f27d2bcf3ad01f1741c087688f244949d1eea256ad7"
+        },
+        {
+          "rootId": "completion",
+          "path": "mounted-completion-06/results.json",
+          "sha256": "929eb4db025b0951bf1588aeab2995a2b0e11d79c256d143953c91ed7d3fcef5"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-start/installed-source-api-build-05.log",
+          "sha256": "c6633abc643c1017ad09b47513f06d7259982e0889d6c20cfda7f621f5f2fc7d"
+        },
+        {
+          "rootId": "completion",
+          "path": "native-isolation-current-source/results.json",
+          "sha256": "42bd5ed7a1830d37167d75e509d71896d37044cc0d62cf66f09d165077faba01"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-start/final-source-overlay-image-manifest.json",
+          "sha256": "75a80f642fa3f976ebff76d831ff5d3467214a81769954032caa2e8e95bc2632"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-candidate-work-03/resumption-observation.json",
+          "sha256": "52625254c54bdde015265bd1218f61565c6efbe23527d1c66c115ec52887aa8a"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-start/installed-source-api-build-05.log",
+          "sha256": "c6633abc643c1017ad09b47513f06d7259982e0889d6c20cfda7f621f5f2fc7d"
+        },
+        {
+          "rootId": "completion",
+          "path": "native-isolation-current-source/results.json",
+          "sha256": "42bd5ed7a1830d37167d75e509d71896d37044cc0d62cf66f09d165077faba01"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-start/final-source-overlay-image-manifest-v2.json",
+          "sha256": "8851eab25410127e644a028b54095d301ae00ea993f21bd0e854dd4499b3f83f"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-candidate-work-03/resumption-observation.json",
+          "sha256": "52625254c54bdde015265bd1218f61565c6efbe23527d1c66c115ec52887aa8a"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-start/installed-source-api-build-05.log",
+          "sha256": "c6633abc643c1017ad09b47513f06d7259982e0889d6c20cfda7f621f5f2fc7d"
+        },
+        {
+          "rootId": "completion",
+          "path": "native-isolation-current-source/results.json",
+          "sha256": "42bd5ed7a1830d37167d75e509d71896d37044cc0d62cf66f09d165077faba01"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-start/final-source-overlay-image-manifest-v21.json",
+          "sha256": "75f7bbe4c956c20c3e1755e205fa86cc5710882329c9048f3a06f7b678a8bb72"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-candidate-work-03/resumption-observation.json",
+          "sha256": "52625254c54bdde015265bd1218f61565c6efbe23527d1c66c115ec52887aa8a"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-start/installed-source-api-build-05.log",
+          "sha256": "c6633abc643c1017ad09b47513f06d7259982e0889d6c20cfda7f621f5f2fc7d"
+        },
+        {
+          "rootId": "completion",
+          "path": "native-isolation-current-source/results.json",
+          "sha256": "42bd5ed7a1830d37167d75e509d71896d37044cc0d62cf66f09d165077faba01"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-start/final-source-overlay-image-manifest-v21.json",
+          "sha256": "75f7bbe4c956c20c3e1755e205fa86cc5710882329c9048f3a06f7b678a8bb72"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-candidate-work-03/resumption-observation.json",
+          "sha256": "52625254c54bdde015265bd1218f61565c6efbe23527d1c66c115ec52887aa8a"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/results.json",
+          "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/results.json",
+          "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/results.json",
+          "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/results.json",
+          "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
+        },
+        {
+          "rootId": "completion",
+          "path": "final-staged-mounted-custody.json",
+          "sha256": "0d20318cfdcab8f2cba67fcbb03f37a2f21171926458594168cacf9a9c4712ba"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-start/installed-source-api-build-05.log",
+          "sha256": "c6633abc643c1017ad09b47513f06d7259982e0889d6c20cfda7f621f5f2fc7d"
+        },
+        {
+          "rootId": "completion",
+          "path": "native-isolation-current-source/results.json",
+          "sha256": "42bd5ed7a1830d37167d75e509d71896d37044cc0d62cf66f09d165077faba01"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-start/final-source-overlay-image-manifest-v21.json",
+          "sha256": "75f7bbe4c956c20c3e1755e205fa86cc5710882329c9048f3a06f7b678a8bb72"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-candidate-work-03/resumption-observation.json",
+          "sha256": "52625254c54bdde015265bd1218f61565c6efbe23527d1c66c115ec52887aa8a"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/results.json",
+          "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/results.json",
+          "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/results.json",
+          "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/results.json",
+          "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
+        },
+        {
+          "rootId": "completion",
+          "path": "final-staged-mounted-custody.json",
+          "sha256": "0d20318cfdcab8f2cba67fcbb03f37a2f21171926458594168cacf9a9c4712ba"
         }
       ],
-      "evidenceClass": "PARTIAL",
-      "limitation": "Local runtime/schema/jobs verified; final Linux image/digest and joined seal absent."
+      "evidenceClass": "EMPIRICALLY_VERIFIED",
+      "limitation": "Current digest-matched API and worker images; all installed source bytes, nonroot runtime, actual signed owner graph, original/new queued jobs and physical restart verified across fresh final-source case cuts. Combined and protected qualification NOT_RUN.",
+      "proofScope": "Exact named current ordinary finite-model/installed-owner/Work scope. All original protected and combined floors stay separate.",
+      "currentInstalledNamedCases": {
+        "queued-original-and-r3-physical-restart": "PASS"
+      }
     },
     {
       "id": "R3-C31",
@@ -726,11 +1984,13 @@
       "evidence": [
         {
           "path": "preregistration.json",
-          "sha256": "0bb715c0f0cf008b254a4264c4a4122a4b4f5951008c242684d6b859157ea38c"
+          "sha256": "0bb715c0f0cf008b254a4264c4a4122a4b4f5951008c242684d6b859157ea38c",
+          "rootId": "prior"
         }
       ],
       "evidenceClass": "DETERMINISTICALLY_VERIFIED",
-      "limitation": "Selected base, governing goal hash and dated peers explicit; existing behavior distinguished from R3 proposals."
+      "limitation": "Selected base, governing goal hash and dated peers explicit; existing behavior distinguished from R3 proposals.",
+      "proofScope": "Exact named current ordinary finite-model/installed-owner/Work scope. All original protected and combined floors stay separate."
     },
     {
       "id": "R3-C32",
@@ -750,15 +2010,75 @@
       "evidence": [
         {
           "path": "native-02/results.json",
-          "sha256": "91162e3d89ad4a71a4d3ce86c13f028f39034deae2442d18697549b7c0692373"
+          "sha256": "91162e3d89ad4a71a4d3ce86c13f028f39034deae2442d18697549b7c0692373",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T22-45-55/results.json",
-          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108",
+          "rootId": "prior"
+        },
+        {
+          "rootId": "completion",
+          "path": "linux-installed/native-01/results.json",
+          "sha256": "af56a86de2d9c1af851966668841b8d8795a5e21a3b7eb315a6b39d67b35c5b1",
+          "originalRecordedRootId": "prior",
+          "custody": "EXACT_HASH_PRESERVED_HISTORICAL_COPY; source execution scope unchanged, not a new test"
+        },
+        {
+          "rootId": "completion",
+          "path": "host-final-owners-08/results.json",
+          "sha256": "bcac763ecc8fc23c2383071740d0ca9c5348a1fa16905735d1b2b289c4879053",
+          "originalRecordedRootId": "prior",
+          "custody": "EXACT_HASH_PRESERVED_HISTORICAL_COPY; source execution scope unchanged, not a new test"
+        },
+        {
+          "rootId": "completion",
+          "path": "linux-installed/native-01/results.json",
+          "sha256": "af56a86de2d9c1af851966668841b8d8795a5e21a3b7eb315a6b39d67b35c5b1"
+        },
+        {
+          "rootId": "completion",
+          "path": "host-final-owners-08/results.json",
+          "sha256": "bcac763ecc8fc23c2383071740d0ca9c5348a1fa16905735d1b2b289c4879053"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/results.json",
+          "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/results.json",
+          "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/results.json",
+          "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/results.json",
+          "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
         }
       ],
       "evidenceClass": "DETERMINISTICALLY_VERIFIED",
-      "limitation": "Failure-first independent original-input math acceptance and authentic original exact consumer checks."
+      "limitation": "Failure-first independent original-input math acceptance and authentic original exact consumer checks.",
+      "proofScope": "Exact named current ordinary finite-model/installed-owner/Work scope. All original protected and combined floors stay separate.",
+      "currentInstalledNamedCases": {
+        "rational-original-owner-compatibility": "PASS"
+      }
     },
     {
       "id": "R3-C33",
@@ -776,19 +2096,244 @@
         "mounted-work-reload-switch",
         "queued-original-and-r3-physical-restart"
       ],
-      "status": "VERIFIED_SUPPORTED_DEVELOPMENT_DOMAIN",
+      "status": "VERIFIED_CURRENT_PINNED_BASE_FUNCTIONAL_DELIVERY",
       "evidence": [
         {
           "path": "owner-2026-10-09T22-45-55/results.json",
-          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-10T00-51-10/results.json",
-          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335"
+          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335",
+          "rootId": "prior"
+        },
+        {
+          "rootId": "completion",
+          "path": "host-final-owners-07/results.json",
+          "sha256": "a67e0e75df0b1ecb63abddefee9935ec8578db92d0d31d3efc45631897481ced",
+          "originalRecordedRootId": "prior",
+          "custody": "EXACT_HASH_PRESERVED_HISTORICAL_COPY; source execution scope unchanged, not a new test"
+        },
+        {
+          "rootId": "completion",
+          "path": "linux-installed/api-runtime-02/results.json",
+          "sha256": "72de565ebe9a150c91067c87eeb97c75a1ca4fde18ed0cbb6ff371f6d2a31943",
+          "originalRecordedRootId": "prior",
+          "custody": "EXACT_HASH_PRESERVED_HISTORICAL_COPY; source execution scope unchanged, not a new test"
+        },
+        {
+          "rootId": "completion",
+          "path": "linux-installed/owner-04/results.json",
+          "sha256": "8a06d141c7415ce224470f27d2bcf3ad01f1741c087688f244949d1eea256ad7",
+          "originalRecordedRootId": "prior",
+          "custody": "EXACT_HASH_PRESERVED_HISTORICAL_COPY; source execution scope unchanged, not a new test"
+        },
+        {
+          "rootId": "completion",
+          "path": "mounted-completion-06/results.json",
+          "sha256": "929eb4db025b0951bf1588aeab2995a2b0e11d79c256d143953c91ed7d3fcef5",
+          "originalRecordedRootId": "prior",
+          "custody": "EXACT_HASH_PRESERVED_HISTORICAL_COPY; source execution scope unchanged, not a new test"
+        },
+        {
+          "rootId": "completion",
+          "path": "host-final-owners-07/results.json",
+          "sha256": "a67e0e75df0b1ecb63abddefee9935ec8578db92d0d31d3efc45631897481ced"
+        },
+        {
+          "rootId": "completion",
+          "path": "linux-installed/api-runtime-02/results.json",
+          "sha256": "72de565ebe9a150c91067c87eeb97c75a1ca4fde18ed0cbb6ff371f6d2a31943"
+        },
+        {
+          "rootId": "completion",
+          "path": "linux-installed/owner-04/results.json",
+          "sha256": "8a06d141c7415ce224470f27d2bcf3ad01f1741c087688f244949d1eea256ad7"
+        },
+        {
+          "rootId": "completion",
+          "path": "mounted-completion-06/results.json",
+          "sha256": "929eb4db025b0951bf1588aeab2995a2b0e11d79c256d143953c91ed7d3fcef5"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-start/installed-source-api-build-05.log",
+          "sha256": "c6633abc643c1017ad09b47513f06d7259982e0889d6c20cfda7f621f5f2fc7d"
+        },
+        {
+          "rootId": "completion",
+          "path": "native-isolation-current-source/results.json",
+          "sha256": "42bd5ed7a1830d37167d75e509d71896d37044cc0d62cf66f09d165077faba01"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-start/final-source-overlay-image-manifest.json",
+          "sha256": "75a80f642fa3f976ebff76d831ff5d3467214a81769954032caa2e8e95bc2632"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-candidate-work-03/resumption-observation.json",
+          "sha256": "52625254c54bdde015265bd1218f61565c6efbe23527d1c66c115ec52887aa8a"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-start/installed-source-api-build-05.log",
+          "sha256": "c6633abc643c1017ad09b47513f06d7259982e0889d6c20cfda7f621f5f2fc7d"
+        },
+        {
+          "rootId": "completion",
+          "path": "native-isolation-current-source/results.json",
+          "sha256": "42bd5ed7a1830d37167d75e509d71896d37044cc0d62cf66f09d165077faba01"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-start/final-source-overlay-image-manifest-v2.json",
+          "sha256": "8851eab25410127e644a028b54095d301ae00ea993f21bd0e854dd4499b3f83f"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-candidate-work-03/resumption-observation.json",
+          "sha256": "52625254c54bdde015265bd1218f61565c6efbe23527d1c66c115ec52887aa8a"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-start/installed-source-api-build-05.log",
+          "sha256": "c6633abc643c1017ad09b47513f06d7259982e0889d6c20cfda7f621f5f2fc7d"
+        },
+        {
+          "rootId": "completion",
+          "path": "native-isolation-current-source/results.json",
+          "sha256": "42bd5ed7a1830d37167d75e509d71896d37044cc0d62cf66f09d165077faba01"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-start/final-source-overlay-image-manifest-v21.json",
+          "sha256": "75f7bbe4c956c20c3e1755e205fa86cc5710882329c9048f3a06f7b678a8bb72"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-candidate-work-03/resumption-observation.json",
+          "sha256": "52625254c54bdde015265bd1218f61565c6efbe23527d1c66c115ec52887aa8a"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-start/installed-source-api-build-05.log",
+          "sha256": "c6633abc643c1017ad09b47513f06d7259982e0889d6c20cfda7f621f5f2fc7d"
+        },
+        {
+          "rootId": "completion",
+          "path": "native-isolation-current-source/results.json",
+          "sha256": "42bd5ed7a1830d37167d75e509d71896d37044cc0d62cf66f09d165077faba01"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-start/final-source-overlay-image-manifest-v21.json",
+          "sha256": "75f7bbe4c956c20c3e1755e205fa86cc5710882329c9048f3a06f7b678a8bb72"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-candidate-work-03/resumption-observation.json",
+          "sha256": "52625254c54bdde015265bd1218f61565c6efbe23527d1c66c115ec52887aa8a"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/results.json",
+          "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/results.json",
+          "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/results.json",
+          "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/results.json",
+          "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
+        },
+        {
+          "rootId": "completion",
+          "path": "final-staged-mounted-custody.json",
+          "sha256": "0d20318cfdcab8f2cba67fcbb03f37a2f21171926458594168cacf9a9c4712ba"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-start/installed-source-api-build-05.log",
+          "sha256": "c6633abc643c1017ad09b47513f06d7259982e0889d6c20cfda7f621f5f2fc7d"
+        },
+        {
+          "rootId": "completion",
+          "path": "native-isolation-current-source/results.json",
+          "sha256": "42bd5ed7a1830d37167d75e509d71896d37044cc0d62cf66f09d165077faba01"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-start/final-source-overlay-image-manifest-v21.json",
+          "sha256": "75f7bbe4c956c20c3e1755e205fa86cc5710882329c9048f3a06f7b678a8bb72"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-candidate-work-03/resumption-observation.json",
+          "sha256": "52625254c54bdde015265bd1218f61565c6efbe23527d1c66c115ec52887aa8a"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/results.json",
+          "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/results.json",
+          "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/results.json",
+          "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/results.json",
+          "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
+        },
+        {
+          "rootId": "completion",
+          "path": "final-staged-mounted-custody.json",
+          "sha256": "0d20318cfdcab8f2cba67fcbb03f37a2f21171926458594168cacf9a9c4712ba"
         }
       ],
       "evidenceClass": "EMPIRICALLY_VERIFIED",
-      "limitation": "Real signed HTTP/auth/SQL queue/native worker/persistence/owner/Canvas flow; no mocked business owners."
+      "limitation": "Current digest-matched API and worker images; all installed source bytes, nonroot runtime, actual signed owner graph, original/new queued jobs and physical restart verified across fresh final-source case cuts. Combined and protected qualification NOT_RUN.",
+      "proofScope": "Exact named current ordinary finite-model/installed-owner/Work scope. All original protected and combined floors stay separate.",
+      "currentInstalledNamedCases": {
+        "authenticated-owner-positive": "PASS",
+        "queued-original-and-r3-physical-restart": "PASS"
+      }
     },
     {
       "id": "R3-C34",
@@ -810,19 +2355,83 @@
       "evidence": [
         {
           "path": "owner-2026-10-09T22-45-55/results.json",
-          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T22-55-59/results.json",
-          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140"
+          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T23-28-33/results.json",
-          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1"
+          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1",
+          "rootId": "prior"
+        },
+        {
+          "rootId": "completion",
+          "path": "host-final-owners-07/results.json",
+          "sha256": "a67e0e75df0b1ecb63abddefee9935ec8578db92d0d31d3efc45631897481ced",
+          "originalRecordedRootId": "prior",
+          "custody": "EXACT_HASH_PRESERVED_HISTORICAL_COPY; source execution scope unchanged, not a new test"
+        },
+        {
+          "rootId": "completion",
+          "path": "host-final-owners-08/results.json",
+          "sha256": "bcac763ecc8fc23c2383071740d0ca9c5348a1fa16905735d1b2b289c4879053",
+          "originalRecordedRootId": "prior",
+          "custody": "EXACT_HASH_PRESERVED_HISTORICAL_COPY; source execution scope unchanged, not a new test"
+        },
+        {
+          "rootId": "completion",
+          "path": "host-final-owners-07/results.json",
+          "sha256": "a67e0e75df0b1ecb63abddefee9935ec8578db92d0d31d3efc45631897481ced"
+        },
+        {
+          "rootId": "completion",
+          "path": "host-final-owners-08/results.json",
+          "sha256": "bcac763ecc8fc23c2383071740d0ca9c5348a1fa16905735d1b2b289c4879053"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/results.json",
+          "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/results.json",
+          "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/results.json",
+          "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/results.json",
+          "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
         }
       ],
       "evidenceClass": "EMPIRICALLY_VERIFIED",
-      "limitation": "Typed invalidation and physical responsibility faults; actual original S4 fallback, no new grant or inherited DSIC."
+      "limitation": "Typed invalidation and physical responsibility faults; actual original S4 fallback, no new grant or inherited DSIC.",
+      "proofScope": "Exact named current ordinary finite-model/installed-owner/Work scope. All original protected and combined floors stay separate.",
+      "currentInstalledNamedCases": {
+        "currentness-and-p7": "PASS",
+        "sigkill-after-child-acceptance": "PASS",
+        "publication-row-lock-race": "PASS",
+        "actual-fallback-matched-off-on": "PASS"
+      }
     },
     {
       "id": "R3-C35",
@@ -839,11 +2448,58 @@
       "evidence": [
         {
           "path": "owner-2026-10-09T22-45-55/results.json",
-          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108",
+          "rootId": "prior"
+        },
+        {
+          "rootId": "completion",
+          "path": "host-final-owners-07/results.json",
+          "sha256": "a67e0e75df0b1ecb63abddefee9935ec8578db92d0d31d3efc45631897481ced",
+          "originalRecordedRootId": "prior",
+          "custody": "EXACT_HASH_PRESERVED_HISTORICAL_COPY; source execution scope unchanged, not a new test"
+        },
+        {
+          "rootId": "completion",
+          "path": "host-final-owners-07/results.json",
+          "sha256": "a67e0e75df0b1ecb63abddefee9935ec8578db92d0d31d3efc45631897481ced"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/results.json",
+          "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/results.json",
+          "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/results.json",
+          "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/results.json",
+          "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
         }
       ],
       "evidenceClass": "PARTIAL",
-      "limitation": "Off/on diagnostic is not strongest completed-X or adapter-ablation/full-cost comparison."
+      "limitation": "Off/on diagnostic is not strongest completed-X or adapter-ablation/full-cost comparison.",
+      "proofScope": "Exact named current ordinary finite-model/installed-owner/Work scope. All original protected and combined floors stay separate.",
+      "currentInstalledNamedCases": {
+        "actual-fallback-matched-off-on": "PASS"
+      }
     },
     {
       "id": "R3-C36",
@@ -855,19 +2511,46 @@
         "scope-r/r3-incentive-rule-synthesis/verification-plan.json"
       ],
       "cases": [],
-      "status": "PARTIAL",
+      "status": "PARTIAL_RESOURCE_LIMIT_EXCEEDED",
       "evidence": [
         {
           "path": "preregistration.json",
-          "sha256": "0bb715c0f0cf008b254a4264c4a4122a4b4f5951008c242684d6b859157ea38c"
+          "sha256": "0bb715c0f0cf008b254a4264c4a4122a4b4f5951008c242684d6b859157ea38c",
+          "rootId": "prior"
         },
         {
           "path": "cut-native-02.json",
-          "sha256": "89127fc9bc816fc559c9318314da11c99b763a2e8d85b5abfb9dd3b265e0a21b"
+          "sha256": "89127fc9bc816fc559c9318314da11c99b763a2e8d85b5abfb9dd3b265e0a21b",
+          "rootId": "prior"
+        },
+        {
+          "rootId": "completion",
+          "path": "linux-installed/native-01/results.json",
+          "sha256": "af56a86de2d9c1af851966668841b8d8795a5e21a3b7eb315a6b39d67b35c5b1",
+          "originalRecordedRootId": "prior",
+          "custody": "EXACT_HASH_PRESERVED_HISTORICAL_COPY; source execution scope unchanged, not a new test"
+        },
+        {
+          "rootId": "completion",
+          "path": "completion-start/resource-boundary.json",
+          "sha256": "9ba55ea7827d29c415f8b506d81b7638624c5caba1e68bdda69f53775987abac",
+          "originalRecordedRootId": "prior",
+          "custody": "EXACT_HASH_PRESERVED_HISTORICAL_COPY; source execution scope unchanged, not a new test"
+        },
+        {
+          "rootId": "completion",
+          "path": "linux-installed/native-01/results.json",
+          "sha256": "af56a86de2d9c1af851966668841b8d8795a5e21a3b7eb315a6b39d67b35c5b1"
+        },
+        {
+          "rootId": "completion",
+          "path": "completion-start/resource-boundary.json",
+          "sha256": "9ba55ea7827d29c415f8b506d81b7638624c5caba1e68bdda69f53775987abac"
         }
       ],
       "evidenceClass": "PARTIAL",
-      "limitation": "Finite cases and causal repairs preregistered. Internal acquisition exceeded local generated-byte budget; whole-session cost qualification absent."
+      "limitation": "Completion manifest registered before runs. Disk and campaign wall caps exceeded; build repair cap reached; all failures retained. Unknown browser story previously produced migration-only green; corrected runner rejects unknown/missing requested cases. No episode/cost qualification.",
+      "proofScope": "Exact named current ordinary finite-model/installed-owner/Work scope. All original protected and combined floors stay separate."
     },
     {
       "id": "R3-C37",
@@ -881,10 +2564,11 @@
       "cases": [
         "standalone-and-ordered-patch-reconstruction"
       ],
-      "status": "VERIFIED_HANDOFF_ONLY",
+      "status": "SEALED_SOURCE_RECONSTRUCTION_VERIFIED_BY_RELEASE_JSON",
       "evidence": [],
-      "evidenceClass": "DETERMINISTICALLY_VERIFIED",
-      "limitation": "Final release.json records actual reconstruction result; it does not close internal Linux gate."
+      "evidenceClass": "PARTIAL",
+      "limitation": "Post-freeze pack-handoff.py independently verifies full-history bundle and ordered two-patch exact-tree replay. Its ignored release.json is the authority for success; this source record alone is not a completed runtime proof.",
+      "proofScope": "Exact named current ordinary finite-model/installed-owner/Work scope. All original protected and combined floors stay separate."
     },
     {
       "id": "R3-C38",
@@ -899,7 +2583,8 @@
       "status": "VERIFIED_SUPPORTED_DEVELOPMENT_DOMAIN",
       "evidence": [],
       "evidenceClass": "DETERMINISTICALLY_VERIFIED",
-      "limitation": "Only local commits and unpublished handoff authorized; no outward-facing/protected effect performed."
+      "limitation": "Only local commits and unpublished handoff authorized; no outward-facing/protected effect performed.",
+      "proofScope": "Exact named current ordinary finite-model/installed-owner/Work scope. All original protected and combined floors stay separate."
     },
     {
       "id": "R3-C39",
@@ -911,9 +2596,23 @@
       ],
       "cases": [],
       "status": "VERIFIED_SUPPORTED_DEVELOPMENT_DOMAIN",
-      "evidence": [],
+      "evidence": [
+        {
+          "rootId": "completion",
+          "path": "completion-start/peer-refresh.json",
+          "sha256": "97a8f7b80008f8fa4887aa2d275d3fa1c3a09db387e31228440ab3fd76c4b102",
+          "originalRecordedRootId": "prior",
+          "custody": "EXACT_HASH_PRESERVED_HISTORICAL_COPY; source execution scope unchanged, not a new test"
+        },
+        {
+          "rootId": "completion",
+          "path": "completion-start/peer-refresh.json",
+          "sha256": "97a8f7b80008f8fa4887aa2d275d3fa1c3a09db387e31228440ab3fd76c4b102"
+        }
+      ],
       "evidenceClass": "DETERMINISTICALLY_VERIFIED",
-      "limitation": "Dated R1/R2/R4 pointers inspected read-only and unadopted; dirty R2 not copied."
+      "limitation": "Current read-only refresh: R1/R2/R4 sealed clean; R2 5c874720c473aedc9d6545e748ecbf2d55afcddf. Earlier dirty R2 observation is historical. No peer code adopted or combined compatibility inherited.",
+      "proofScope": "Exact named current ordinary finite-model/installed-owner/Work scope. All original protected and combined floors stay separate."
     },
     {
       "id": "R3-C40",
@@ -931,11 +2630,47 @@
       "evidence": [
         {
           "path": "owner-2026-10-10T00-51-10/results.json",
-          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335"
+          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335",
+          "rootId": "prior"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/results.json",
+          "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/results.json",
+          "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/results.json",
+          "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/results.json",
+          "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
         }
       ],
       "evidenceClass": "PARTIAL",
-      "limitation": "Base-local 0172/fresh/upgrade/restart proven; unique joined numbering, peer jobs/P7/Work/runtime cut still NOT RUN."
+      "limitation": "Provisional pinned-base-only 0172 R3 migration fresh/upgrade/physical restart verified; no final joined numbering is reserved. R1/R2 0172 collision and full joined runtime/jobs/P7/Work remain NOT_RUN; serial integrator must assign unique actual joined order.",
+      "proofScope": "Exact named current ordinary finite-model/installed-owner/Work scope. All original protected and combined floors stay separate.",
+      "currentInstalledNamedCases": {
+        "queued-original-and-r3-physical-restart": "PASS"
+      },
+      "baseLocalMigrationNumberProvisional": true
     },
     {
       "id": "R3-C41",
@@ -949,23 +2684,236 @@
         "mounted-work-reload-switch",
         "queued-original-and-r3-physical-restart"
       ],
-      "status": "INCOMPLETE",
+      "status": "VERIFIED_CURRENT_PINNED_BASE_FUNCTIONAL_DELIVERY",
       "evidence": [
         {
           "path": "owner-2026-10-10T00-51-10/results.json",
-          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335"
+          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335",
+          "rootId": "prior"
         },
         {
           "path": "installed-runtime-01/results.json",
-          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4"
+          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4",
+          "rootId": "prior"
         },
         {
           "path": "final-linux-build-01.log",
-          "sha256": "46e014c8fea9fa38cf9a6b9ebde8f1448f575427f035ca969af1966ee3f31d5c"
+          "sha256": "46e014c8fea9fa38cf9a6b9ebde8f1448f575427f035ca969af1966ee3f31d5c",
+          "rootId": "prior"
+        },
+        {
+          "rootId": "completion",
+          "path": "linux-installed/api-runtime-02/results.json",
+          "sha256": "72de565ebe9a150c91067c87eeb97c75a1ca4fde18ed0cbb6ff371f6d2a31943",
+          "originalRecordedRootId": "prior",
+          "custody": "EXACT_HASH_PRESERVED_HISTORICAL_COPY; source execution scope unchanged, not a new test"
+        },
+        {
+          "rootId": "completion",
+          "path": "linux-installed/owner-04/results.json",
+          "sha256": "8a06d141c7415ce224470f27d2bcf3ad01f1741c087688f244949d1eea256ad7",
+          "originalRecordedRootId": "prior",
+          "custody": "EXACT_HASH_PRESERVED_HISTORICAL_COPY; source execution scope unchanged, not a new test"
+        },
+        {
+          "rootId": "completion",
+          "path": "mounted-completion-06/results.json",
+          "sha256": "929eb4db025b0951bf1588aeab2995a2b0e11d79c256d143953c91ed7d3fcef5",
+          "originalRecordedRootId": "prior",
+          "custody": "EXACT_HASH_PRESERVED_HISTORICAL_COPY; source execution scope unchanged, not a new test"
+        },
+        {
+          "rootId": "completion",
+          "path": "linux-installed/api-runtime-02/results.json",
+          "sha256": "72de565ebe9a150c91067c87eeb97c75a1ca4fde18ed0cbb6ff371f6d2a31943"
+        },
+        {
+          "rootId": "completion",
+          "path": "linux-installed/owner-04/results.json",
+          "sha256": "8a06d141c7415ce224470f27d2bcf3ad01f1741c087688f244949d1eea256ad7"
+        },
+        {
+          "rootId": "completion",
+          "path": "mounted-completion-06/results.json",
+          "sha256": "929eb4db025b0951bf1588aeab2995a2b0e11d79c256d143953c91ed7d3fcef5"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-start/installed-source-api-build-05.log",
+          "sha256": "c6633abc643c1017ad09b47513f06d7259982e0889d6c20cfda7f621f5f2fc7d"
+        },
+        {
+          "rootId": "completion",
+          "path": "native-isolation-current-source/results.json",
+          "sha256": "42bd5ed7a1830d37167d75e509d71896d37044cc0d62cf66f09d165077faba01"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-start/final-source-overlay-image-manifest.json",
+          "sha256": "75a80f642fa3f976ebff76d831ff5d3467214a81769954032caa2e8e95bc2632"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-candidate-work-03/resumption-observation.json",
+          "sha256": "52625254c54bdde015265bd1218f61565c6efbe23527d1c66c115ec52887aa8a"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-start/installed-source-api-build-05.log",
+          "sha256": "c6633abc643c1017ad09b47513f06d7259982e0889d6c20cfda7f621f5f2fc7d"
+        },
+        {
+          "rootId": "completion",
+          "path": "native-isolation-current-source/results.json",
+          "sha256": "42bd5ed7a1830d37167d75e509d71896d37044cc0d62cf66f09d165077faba01"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-start/final-source-overlay-image-manifest-v2.json",
+          "sha256": "8851eab25410127e644a028b54095d301ae00ea993f21bd0e854dd4499b3f83f"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-candidate-work-03/resumption-observation.json",
+          "sha256": "52625254c54bdde015265bd1218f61565c6efbe23527d1c66c115ec52887aa8a"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-start/installed-source-api-build-05.log",
+          "sha256": "c6633abc643c1017ad09b47513f06d7259982e0889d6c20cfda7f621f5f2fc7d"
+        },
+        {
+          "rootId": "completion",
+          "path": "native-isolation-current-source/results.json",
+          "sha256": "42bd5ed7a1830d37167d75e509d71896d37044cc0d62cf66f09d165077faba01"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-start/final-source-overlay-image-manifest-v21.json",
+          "sha256": "75f7bbe4c956c20c3e1755e205fa86cc5710882329c9048f3a06f7b678a8bb72"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-candidate-work-03/resumption-observation.json",
+          "sha256": "52625254c54bdde015265bd1218f61565c6efbe23527d1c66c115ec52887aa8a"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-start/installed-source-api-build-05.log",
+          "sha256": "c6633abc643c1017ad09b47513f06d7259982e0889d6c20cfda7f621f5f2fc7d"
+        },
+        {
+          "rootId": "completion",
+          "path": "native-isolation-current-source/results.json",
+          "sha256": "42bd5ed7a1830d37167d75e509d71896d37044cc0d62cf66f09d165077faba01"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-start/final-source-overlay-image-manifest-v21.json",
+          "sha256": "75f7bbe4c956c20c3e1755e205fa86cc5710882329c9048f3a06f7b678a8bb72"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-candidate-work-03/resumption-observation.json",
+          "sha256": "52625254c54bdde015265bd1218f61565c6efbe23527d1c66c115ec52887aa8a"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/results.json",
+          "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/results.json",
+          "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/results.json",
+          "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/results.json",
+          "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
+        },
+        {
+          "rootId": "completion",
+          "path": "final-staged-mounted-custody.json",
+          "sha256": "0d20318cfdcab8f2cba67fcbb03f37a2f21171926458594168cacf9a9c4712ba"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-start/installed-source-api-build-05.log",
+          "sha256": "c6633abc643c1017ad09b47513f06d7259982e0889d6c20cfda7f621f5f2fc7d"
+        },
+        {
+          "rootId": "completion",
+          "path": "native-isolation-current-source/results.json",
+          "sha256": "42bd5ed7a1830d37167d75e509d71896d37044cc0d62cf66f09d165077faba01"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-start/final-source-overlay-image-manifest-v21.json",
+          "sha256": "75f7bbe4c956c20c3e1755e205fa86cc5710882329c9048f3a06f7b678a8bb72"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-candidate-work-03/resumption-observation.json",
+          "sha256": "52625254c54bdde015265bd1218f61565c6efbe23527d1c66c115ec52887aa8a"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/results.json",
+          "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/results.json",
+          "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/results.json",
+          "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/results.json",
+          "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
+        },
+        {
+          "rootId": "completion",
+          "path": "final-staged-mounted-custody.json",
+          "sha256": "0d20318cfdcab8f2cba67fcbb03f37a2f21171926458594168cacf9a9c4712ba"
         }
       ],
-      "evidenceClass": "PARTIAL",
-      "limitation": "Base-local product evidence positive; functional gate incomplete for Linux image; combined-R NOT RUN."
+      "evidenceClass": "EMPIRICALLY_VERIFIED",
+      "limitation": "Current digest-matched API and worker images; all installed source bytes, nonroot runtime, actual signed owner graph, original/new queued jobs and physical restart verified across fresh final-source case cuts. Combined and protected qualification NOT_RUN.",
+      "proofScope": "Exact named current ordinary finite-model/installed-owner/Work scope. All original protected and combined floors stay separate.",
+      "currentInstalledNamedCases": {
+        "queued-original-and-r3-physical-restart": "PASS"
+      }
     }
   ],
   "auditedAt": "2026-10-10T01:02:13.985106+00:00",
@@ -979,5 +2927,31 @@
     "UNQUALIFIED": 1,
     "VERIFIED_HANDOFF_ONLY": 1,
     "VERIFIED_SUPPORTED_DEVELOPMENT_DOMAIN": 28
+  },
+  "completionAudit": {
+    "registeredManifest": "completion-verification-plan.json",
+    "currentSourceAndRuntimeGate": "COMPLETE_R3_ON_PINNED_BASE",
+    "allOriginalGatesRetained": true,
+    "repairEvidenceSummary": "handoff/evidence-summary.json#repairResults",
+    "currentApiProof": {
+      "rootId": "completion",
+      "path": "installed-final-v21-s6-recovery-01/results.json",
+      "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
+    },
+    "currentWorkerProof": {
+      "rootId": "completion",
+      "path": "installed-final-v21-worker-owners-01/results.json",
+      "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+    },
+    "currentMountedProof": {
+      "rootId": "completion",
+      "path": "final-staged-mounted-custody.json",
+      "sha256": "0d20318cfdcab8f2cba67fcbb03f37a2f21171926458594168cacf9a9c4712ba"
+    },
+    "historicalReceiptRootCorrection": {
+      "rootId": "completion",
+      "path": "repair-start/final-receipt-root-resolution.json",
+      "sha256": "46c7c1a80b833a0093e4ee233698f4013a89e5236a19c725c0fe45c2079259b0"
+    }
   }
 }

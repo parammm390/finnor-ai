@@ -165,9 +165,13 @@ export class ExperienceLedger {
  private signed<T extends ObjectValue>(body:T):T&{signature:string}{return {...body,signature:sign(null,Buffer.from(canonical(body)),this.privateKey).toString('base64')};}
  private verifiedSignature(value:ObjectValue){const {signature,...body}=value;if(!verify(null,Buffer.from(canonical(body)),this.publicKey,Buffer.from(text(signature),'base64')))deny(503,'COMMITMENT_SIGNATURE_INVALID');return body;}
  private async persistAnchor(){this.anchor=this.signed({schema:'finnor.s6.ledger-head.v1',sequence:this.last?.sequence??0,checkpointDigest:this.last?.checkpointDigest??null});await atomic(this.anchorPath,canonical(this.anchor));}
- private async loadContent(receipt:Receipt):Promise<ObjectValue>{
+ private async verifiedContentBytes(receipt:Receipt):Promise<Buffer>{
   if(receipt.contentFile!==bytesHash(canonical([receipt.kind,receipt.tenantId,receipt.identity]))+'.json')deny(503,'CONTENT_PATH_INVALID');
   const bytes=await safeRead(join(this.config.contentDirectory,receipt.contentFile));if(bytesHash(bytes)!==receipt.storedDigest)deny(503,'COMMITTED_CONTENT_CHANGED');
+  return bytes;
+ }
+ private async loadContent(receipt:Receipt):Promise<ObjectValue>{
+  const bytes=await this.verifiedContentBytes(receipt);
   let content:any=JSON.parse(bytes.toString());
   if(receipt.sealed){if(!this.sealedKey)deny(503,'SEALED_KEY_UNAVAILABLE');const envelope=object(content);const dec=createDecipheriv('aes-256-gcm',this.sealedKey,Buffer.from(envelope.iv,'base64'));dec.setAAD(Buffer.from(receipt.requestDigest));dec.setAuthTag(Buffer.from(envelope.tag,'base64'));content=JSON.parse(Buffer.concat([dec.update(Buffer.from(envelope.ciphertext,'base64')),dec.final()]).toString());}
   if(hash(content)!==receipt.requestDigest)deny(503,'CONTENT_PREIMAGE_MISMATCH');return object(content);
@@ -225,7 +229,12 @@ export class ExperienceLedger {
   }
   if(head.sequence!==localSequence||head.checkpointDigest!==localCheckpoint)deny(503,'WITNESS_HISTORY_CONFLICT');
  }
- private async integrity(){await this.verifyRelease();const journal=await safeRead(this.journalPath,true),anchor=JSON.parse((await safeRead(this.anchorPath,true)).toString());if(bytesHash(journal)!==this.journalHash||hash(anchor)!==hash(this.anchor))deny(503,'PROTECTED_HISTORY_CHANGED');for(const state of this.states.values())await this.loadContent(state.receipt);await this.ensureWitness();}
+ private async integrity(){await this.verifyRelease();const journal=await safeRead(this.journalPath,true),anchor=JSON.parse((await safeRead(this.anchorPath,true)).toString());if(bytesHash(journal)!==this.journalHash||hash(anchor)!==hash(this.anchor))deny(503,'PROTECTED_HISTORY_CHANGED');
+  // install receives a canonical-verified preimage from recover or commit.
+  // Every request still verifies every ordinary file's exact committed bytes.
+  // Identical SHA256-bound bytes retain that verified preimage; decoding all
+  // historical requests again adds no acceptance condition. Reads decode again.
+  for(const state of this.states.values())await this.verifiedContentBytes(state.receipt);await this.ensureWitness();}
  private serialized<T>(fn:()=>Promise<T>):Promise<T>{if(this.queued>=256)return Promise.reject(new LedgerFault(429,'APPEND_BACKLOG_LIMIT'));this.queued++;const next=this.queue.then(fn,fn);this.queue=next.catch(()=>undefined);return next.finally(()=>{this.queued--;});}
  async health(owner:Owner){if(!owner.read)deny(403,'READ_NOT_AUTHORIZED');return this.serialized(async()=>{await this.integrity();return {status:'AVAILABLE',sequence:this.last?.sequence??0,checkpointDigest:this.last?.checkpointDigest??null,domain:this.config.policy.domain,nonrollbackableWitness:this.config.policy.witness?'PINNED_PROTOCOL_VERIFIED_DEPLOYMENT_QUALIFICATION_EXTERNAL':'REQUIRED_EXTERNAL_DEPENDENCY',witness:this.witnessedHead};});}
  async verifyRequest(owner:Owner,input:unknown){

@@ -1,0 +1,17 @@
+{
+  "schema": "finnor.r3.submit-route-profile.v1",
+  "image": "sha256:1a19bbca214532738f9916c1a232444058b25a1082b71ed628df66dd0ef76bce",
+  "sourceVector": "99fae551e81706dd810075fd1648290521c9b23729b8fc5307b325070e28a91a",
+  "observation": "v18 actual signed R3 submit aborts30s before requests/attempts/jobs; liveSQL has no lock blockers, distinct complete belief/source validations occupy early and later request. Stage reviews not reached.",
+  "failureModes": [
+    "Repeated owner graph replay dominates",
+    "Scientific runtime file hashing dominates",
+    "Canonical copy/allocation dominates",
+    "Rosetta/host variation dominates; unknown until measurement",
+    "Sampling process profiler must identify actual compiled Next PID rather than proxy"
+  ],
+  "command": "R3_QA_CPU_PROFILE=1 python3 .r3-scratch/run-installed-submit-profile.py installed-v18-submit-profile-02 native-experience-delivery api",
+  "repairChosen": null,
+  "originalTimersAndChecksUnchanged": true,
+  "qualification": "CAUSAL_DIAGNOSTIC_ONLY_NOT_COMPLETION_OR_REPLACEMENT_SUITE"
+}

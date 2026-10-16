@@ -1,0 +1,20 @@
+{
+  "schema": "finnor.r3.causal-m3-currentness-diagnosis.v1",
+  "registeredAt": "2026-10-10T17:18:17.649938+00:00",
+  "bound": {
+    "runs": 1,
+    "outerSeconds": 900,
+    "browserStarted": false
+  },
+  "failureModel": [
+    "R3 native execution changes original M1 evidence or S5 resource preimages",
+    "Foreign fixture creation changes source, shared resources, permissions or method bindings",
+    "Work/plan/validity/source/schema original binding changes",
+    "Original M1 publication generation changes",
+    "Original method/episode/permission/cache custody refuses",
+    "Owner read itself invalidates a changed material witness; never restore q status or weaken guards"
+  ],
+  "acceptance": "Collect exact original M1 read and original M3 owner replay exception plus old/new owner vectors at before R3 job, after R3 job and after foreign fixture. Stop without browser. Diagnostic is not functional PASS and creates no new product hook.",
+  "originalFloorsAndGrantsUnchanged": true,
+  "earlierHypothesesNotEstablished": true
+}

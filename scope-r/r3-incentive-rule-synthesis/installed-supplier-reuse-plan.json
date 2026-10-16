@@ -1,0 +1,35 @@
+{
+  "schema": "finnor.r3.installed-supplier-reuse.v1",
+  "registeredAt": "2026-10-10T14:28:11.337441+00:00",
+  "predecessors": "All prior failed image builds and expired/interrupted fixtures remain FAIL/INCOMPLETE; no prior budget or qualification reset.",
+  "strategy": "Reuse own digest-verified immutable dependency/scientific image with identical npm/Python locks. Copy current product source into a disposable compiler, compile actual Next there, export stopped filesystem and package standards-compliant OCI API/worker images. No product source mounts in final verification.",
+  "supplierArchiveSha256": "ae878156295fe11dcb6c1ddde31587128d99468a5ac62bd6716703c5870d23df",
+  "limits": {
+    "campaignWallSeconds": 3600,
+    "imageAssemblies": 2,
+    "apiCompilationAttempts": 1,
+    "compilerSeconds": 900,
+    "installedOwnerSeconds": 1800,
+    "runtimeMemoryBytes": 4294967296,
+    "compilerMemoryBytes": 2147483648,
+    "aggregateTaskMemoryLimitBytes": 17179869184,
+    "incrementalDiskBytes": 7516192768,
+    "nativeInitialResponseSeconds": 30,
+    "ledgerRequestMilliseconds": 2000
+  },
+  "cases": [
+    "final non-root installed solver/checker and registration",
+    "native ordinary Linux isolation existing physical fault E2E",
+    "actual compiled signed API old/new jobs and physical migration restart, M3-bound positive",
+    "fresh mounted candidate submission with separate worker and privacy checks"
+  ],
+  "failureModel": [
+    "Supplier archive/lock/source mismatch refuses",
+    "Wrong/missing source, stale compiled API, incompatible ELF/library, wrong UID/permissions, missing licence or guard fails",
+    "OCI digest/diffID/config/layer mismatch refuses loading",
+    "Source mount or handler-only proof cannot qualify final image",
+    "Disk/compilation/owner/isolation failure retains INCOMPLETE; no timeout or oracle weakening",
+    "Shared engine foreign containers must remain untouched"
+  ],
+  "qualification": "ORDINARY_FUNCTIONAL_ENGINEERING_ONLY_PROTECTED_AND_COMBINED_GATES_SEPARATE"
+}

@@ -1,0 +1,31 @@
+{
+  "registeredAt": "2026-10-10T16:02:53.662734+00:00",
+  "failure": "context request generated schema lacked actual optional programTarget",
+  "repair": "Regenerate existing OpenAPI, both clients and capability registry from actual source. No hand-edit. Validate actual context schema includes optional target and generated clients match.",
+  "bound": {
+    "runs": 1,
+    "wallSeconds": 120
+  },
+  "preimages": {
+    "finnor-os/openapi.json": "1b49ed1a0399cbc66f93738bac37d0cac19f03f91f66dfd45b9af8f233bfc2c6",
+    "src/lib/centropy/openapi-types.ts": "e7210bf4e2e4d252807c0767933af774d5af60885c36d168f0fbd14db5a57c07",
+    "src/lib/jarvis/openapi-types.ts": "e7210bf4e2e4d252807c0767933af774d5af60885c36d168f0fbd14db5a57c07",
+    "src/lib/centropy/capability-manifest.generated.json": "387ab5a39d8bf08472a1b635203cb34abb24c82dbb3c787931879a2d8c1e9862"
+  },
+  "priorImagesRetained": true,
+  "originalEpisodeFloorsChanged": false,
+  "packaging": {
+    "registeredAt": "2026-10-10T16:04:32.007491+00:00",
+    "runs": 1,
+    "wallSeconds": 300,
+    "configuredOutputBoundBytes": 1073741824,
+    "actualCompiledNextReuse": "/Users/paramdave/.codex/visualizations/2026/10/10/01a12373-f681-7640-ac3e-f6a8aff51346/r3-delivery/.r3-scratch/installed-supplier-reuse/final-next",
+    "changedImageSourcePaths": [
+      "finnor-os/openapi.json"
+    ],
+    "compiledAPIReaderSearch": "NO_OPENAPI_OR_CLIENT_OR_CAPABILITY_SOURCE_READERS",
+    "nativeTraceReferences": [],
+    "reason": "Only generated OpenAPI artifact changed inside installed source vector; API compiler/product sources, lockfiles, native callee and actual compiled Next output remain byte-identical. Client generation is outside the API image. This is archive reconstruction, not runtime proof.",
+    "priorArchivePreserved": true
+  }
+}

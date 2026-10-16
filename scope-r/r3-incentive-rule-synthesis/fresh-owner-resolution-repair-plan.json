@@ -1,0 +1,23 @@
+{
+  "at": "2026-10-10T23:09:28.202238+00:00",
+  "scope": "R3 initial owner binding and additive S5 numeric state reader",
+  "sourcePreimages": {
+    "finnor-os/packages/private-equity/src/r3/owners.ts": "1d0c1c061a3966c0a34a1a307192fb84b6782912ca65d28fda938444e9a50ebe",
+    "finnor-os/packages/private-equity/src/enterprise-allocation.ts": "75dc105868433686ed2d9115441c56952a0b2e20ee6630c57f3e9a54f77688fc"
+  },
+  "observed": "v18 signed submit exceeded30s before row/job; live SQL6/11/16/21s shows fresh original source reads, no blocking locks. Source confirms readEnterpriseAllocation then validateEnterpriseAllocation calls it again, repeating independent certificate checking. Actual Next CPU profile pending.",
+  "failureModes": [
+    "Skipping independent S5 certificate/rights/currentness checks would falsely admit revoked or changed grant",
+    "Reusing a cross-request snapshot would miss current resources/outstanding liabilities",
+    "Wrong version or principal must still refuse",
+    "Concurrent owner failure must publish no rule, new allocation or execution authority",
+    "Every original final permission/dependency/Work/grant/resource-head/method/schema/runtime fence must remain",
+    "Source/profile proof must distinguish installed original source from future repair"
+  ],
+  "proposedRepair": "Add an internal original-S5-owned numeric version reader returning the existing validateAllocationState issued and validation from one full validation. R3 consumes that exact state instead of duplicate read+validate. After original declaration/incumbent/rights authorization, perform independent complete resource, party-source, grant-state and code/schema/runtime reads together. Preserve all comparisons, final original transaction/currentness locks, original29s callback30s wire20s S3 and episode/grant bounds. No source/global cache or synthetic cold-start warmup.",
+  "acceptance": "Profile actual installed failure before changing source; current digest-matched API and worker complementary mandatory owner/fault/queued cases, current mounted UI and handoff still required; no units.",
+  "qualificationInherited": false,
+  "actualProfile": "evidence/installed-v18-submit-profile-02/actual-r3-submit-profile-summary.json",
+  "profileObservation": "Actual final Next PID176:45.17s sampled readiness+submit, idle7.86s, crypto update4.04s, governed encode2.89s+canonical0.95s, GC2.25s. Actual signed submit50430334ms. No uniquely attributable sole cause claimed.",
+  "additionalScopedRepair": "Original S5 currentPins still checks every resource tenant/owner and every pin tenant/principal. Validate every distinct COMPLETE pin once per invocation, without cross-request cache. Different root/source/version/method/rights keys cannot share a check. Original S5 source/capability/constraint/envelope and final publication checks remain. This removes duplicated original-source replay and signing rather than skipping any semantic witness."
+}

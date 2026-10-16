@@ -176,7 +176,7 @@ export async function chooseEnterpriseControlBranch(ctx:PeMutationContext,input:
  return chooseNumericEnterpriseControlBranch(ctx,input);
 }
 async function chooseNumericEnterpriseControlBranch(ctx:PeMutationContext,input:NumericControlChoice):Promise<ReturnType<typeof decideContingentPolicy>>{
- const policy=await readEnterpriseContingentPolicy(ctx,input.policyRef),decision=parseControlDecision(input.decision,policy);
+ const policy=await readEnterpriseContingentPolicy(ctx,input.policyRef),decision=parseControlDecision(input.decision);
  if(Date.parse(decision.knowledgeAt)>Date.now())throw new ControlContractError('INVALID_REQUEST','Future knowledge time cannot supply a current branch');
  // Reference observations are accepted only through the actual S2 realization
  // projection. Its unauthenticated telemetry qualification remains visible.

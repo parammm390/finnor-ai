@@ -12,6 +12,10 @@ const ref = ExperimentRefSchema, quantity = R3QuantitySchema;
 const root = z.object({ entityType: text, entityId: z.string().uuid() }).strict();
 const horizon = z.object({ startAt: time, periodMs: z.number().int().positive().max(31536000000), periods: z.number().int().min(1).max(24) }).strict();
 const digest = z.string().regex(/^[a-f0-9]{64}$/);
+export const R3ProgramTargetSchema = z.object({
+  grammar: z.literal('r3-m3-report-extension-v1'), queryId: z.string().uuid(),
+  programRef: ref, candidateDigest: digest, policyRef: ref,
+}).strict();
 const party = z.object({
   id: text, entityType: text, entityId: z.string().uuid(), reportingPrincipalId: z.string().uuid(),
   rightsRef: text, sourceRef: ref, assumptionRef: ref,
@@ -25,7 +29,8 @@ export const R3ProblemSchema = z.object({
   binding: z.object({ tenantId: z.string().uuid(), principalId: z.string().uuid(), workId: z.string().uuid(),
     workRevision: z.string().uuid(), workDigest: digest, root, preferenceRef: ref, mandateRef: ref,
     domainRef: ref, paymentContractRef: ref, rightsRef: text, backendDigest: digest, checkerDigest: digest,
-    producerDigest: digest, schemaDigest: digest, sourceManifestDigest: digest }).strict(),
+    producerDigest: digest, schemaDigest: digest, sourceManifestDigest: digest,
+    programTarget: R3ProgramTargetSchema.optional() }).strict(),
   model: z.object({ utility: z.literal('SUPPLIED_QUASILINEAR'), participation: z.literal('EX_POST_ALL_OTHER_REPORTS'),
     events: z.literal('UNCONDITIONAL_DUE_TIME'), guarantee: z.literal('INDIVIDUAL_WEAK_DSIC') }).strict(),
   money: z.object({ currency: z.string().regex(/^[A-Z]{3}$/), unit: text, valuationDate: time, ownerId: z.string().uuid(),
@@ -69,16 +74,18 @@ export const R3PreferenceDeclarationSchema = R3ProblemSchema.omit({ binding: tru
 }).strict();
 const source = z.object({ sourceId: z.string().uuid(), versionId: z.string().uuid(), contentDigest: digest }).strict();
 const requestId = z.object({ requestId: z.string().uuid() }).strict();
-export const ELICITATION_OPERATIONS = ['submit','read','status','cancel','context','review','report','close','event','history','use'] as const;
+export const ELICITATION_OPERATIONS = ['submit','read','status','cancel','context','review','reserve','schedules','report','close','event','history','use'] as const;
 export const ElicitationOperationSchemas = {
   submit: z.object({ envelope_inputs: z.object({ mode: z.literal('ordinary_disposable') }).strict(),
     problem_ref: source, existing_work_revision: z.object({ workId: z.string().uuid(), revision: z.string().uuid(), root }).strict(),
     domain_profile_ref: ref, budget_grant_ref: ref, cancellation_ref: text, incumbentPolicyRef: ref,
+    programTarget: R3ProgramTargetSchema.optional(),
     idempotencyKey: text, limits: z.object({ deadlineAt: time, maxAttempts: z.number().int().min(2).max(32),
       childSeconds: z.number().int().min(1).max(25) }).strict() }).strict(),
   read: requestId, status: requestId, cancel: requestId,
-  context: z.object({ workId: z.string().uuid(), root }).strict(),
+  context: z.object({ workId: z.string().uuid(), root, programTarget: R3ProgramTargetSchema.optional() }).strict(),
   review: requestId.extend({ decision: z.enum(['PROPOSE_USE', 'INQUIRE', 'WAIT', 'STOP']), reason: z.string().min(1).max(2048) }),
+  reserve: requestId, schedules: requestId,
   report: requestId.extend({ partyId: text, typeId: text, replacesEventId: text.nullable(), idempotencyKey: text }),
   close: requestId,
   event: requestId.extend({ partyId: text, kind: z.enum(['DECLINE', 'NO_RESPONSE', 'OBSERVED_ACCEPTANCE', 'OUT_OF_DOMAIN']),

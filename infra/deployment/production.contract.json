@@ -34,9 +34,7 @@
         "database-migrate",
         "aws-compute-stack-deploy",
         "compute-cutover-activate",
-        "compute-cutover-finalize",
-        "product-authority-update",
-        "epistemic-impact-activate"
+        "compute-cutover-finalize"
       ]
     }
   },

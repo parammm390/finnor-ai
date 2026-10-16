@@ -1,46 +1,13 @@
-# Add R3 finite incentive-rule synthesis and owner-integrated elicitation review
+# Add complete finite R3 mechanisms to existing Capital Work
 
-**Unpublished draft. Do not push or create a PR without a new instruction.**
+Unpublished draft on 517003a4396bc8101a90be4b425ee01de9446740; exact two local commit groups/head/tree in release.json. Publishing requires a current explicit instruction.
 
-Base: `517003a4396bc8101a90be4b425ee01de9446740`.
-Branch: `codex/r3-incentive-rule-synthesis`.
-Actual head/tree and ordered commit groups: `release.json`.
+Capital Work can synthesize and review a complete four-party report-to-outcome/payment rule under supplied preferences, bound to an actual M3 candidate or standalone declared context. An independent exact Fraction checker verifies all 81 profiles, 648 deviations and 324 participation conditions, complete dated schedules, funding and resources. Reports remain distinct from acceptance; no agreement, private truth or settled transfer is inferred. SCIP floating proposals are rationally reconstructed; general optimum UNKNOWN, fixture value 10 / upper 18 / gap 8.
 
-## Scope
+Versioned original S3/S4/S5/S6 adapters, signed compiled HTTP, restricted SQL, existing durable workers, original grants, publication locks, P7 and ExperienceLedger retain actual owner boundaries. The revised r3-m3-report-extension-v1 grammar preserves earlier R2 certificate meanings and independently checks current S5/S6 after its own reservation. Exact one-third quantities and original fallback operate through the existing owners. Mounted Work adds review and candidate controls, clearing private values on Work/identity/source changes.
 
-- Complete four-party/three-type/three-outcome deterministic MILP, exact
-  rational reconstruction/repair, independent Fraction checker and small
-  exhaustive registered reference. No general optimum or SCIP exact-mode claim.
-- Versioned authentic S3 finite inputs, S4 rule-use, canonical exact S5
-  contingent reservations/consumption and complete S6 proposal/event schedules.
-  Original numeric routes remain; no second ledger or new financial operation.
-- Signed authenticated API, durable SQL worker, grants/attempts/deadlines,
-  currentness/publication fences, typed P7, original native ExperienceLedger.
-- Private scope-owned child mounted additively in existing Capital Work.
-  Output-schema/OpenAPI/client/capability generation from source.
-- Isolated scientific API/worker packaging and its existing worker-specific
-  context, role-isolated base-local migration,
-  licences, finite raw evidence index and reconstructible two-group handoff.
+Validation: unchanged 30/30 native corpus and independent 4,096-rule grid; final digest-matched installed API sha256:f9eca7a45b49e45c064dd4d99c56a91be4f07443e0fa24bd3a326769d78d6bbd and worker sha256:156b60596b357cdfc9be04ca67ad277aae062d343b6e8930639f01c489c6b2d2, all 1716 source files read back, nonroot scientific execution, original/new queued jobs and physical database restart. All selected owner/fault scopes pass across final v21 API and worker named case custody (thirteen worker cases before retained ENOSPC interruption plus the terminal same-image ledger rerun); v4's whole story remains FAIL after its missing-ps observer. Actual browser checks all 243 cells, real UI candidate dispatch/physical checking, current reload and delayed/foreign/revision clearing on the current staged source. Previous full-story failures remain failed.
 
-## Evidence and limitations
+The ledger checks every exact receipt-bound content byte without repeatedly decoding identical committed history. Physical tamper/refusal/restoration/replay and supported S6 lost-response/UNKNOWN recovery pass original 2s/5s transport bounds. Ordinary Linux native execution enforces root-owned digest-bound callees, namespaces/seccomp and finite process/output/wall limits; original four physical challenges pass, protected and hard aggregate quota modes retain refusal. QA proxy decodes HTTP bytes consistently; fresh preparation and original-validity-clamped browser/worker observers add no product test hooks. R3 validates every distinct complete resource pin freshly and reads independent original party sources concurrently within each request; no deadline or grant is widened.
 
-Native 30/30; recorded owner 11/11; P7 11 subcases; signed ledger delivery;
-supported S6 recovery; installed macOS runtime; final mounted 81-row/reload/
-identity/revision proof; physical fresh/upgrade/restart and original/R3 queued
-dispatch. Final product/UI/driver typechecks and generated checks pass.
-See `evidence-summary.json` for exact source cuts, hashes and all failures.
-
-**Functional gate remains INCOMPLETE.** Linux image build failed with archive
-code -30, then acquisition hit ENOSPC. Final packaging is statically checked
-but unbuilt. Screenshots are unavailable after retained CDP capture timeouts;
-rendered DOM and accessibility evidence passed. Complete monetary/human/
-aggregate-memory meters and strongest equipped-X adapter ablation are missing.
-
-COMBINED_R NOT RUN; no peer adoption. 0172 is base-local and must be assigned
-serially. S3 behavioral qualification UNQUALIFIED; S8 admission NOT RUN;
-activation NOT AUTHORIZED; protected Post-X gain and S7/H2 NOT RUN.
-Supplied preferences are hypotheses. Reports/review are not protected consent.
-JSON-field replacement is not payment or signing. No economic gain is claimed.
-
-No push, publication, merge, deployment, provisioning, activation, live
-counterparty message, signed agreement or bank transfer was performed.
+Functional COMPLETE for R3_ON_PINNED_BASE. Independent two-group bundle and ordered-patch reconstruction verify the final exact tree. All prior build/OOM/import/transport/proxy/timeout/cancellation/interruption failures and NOT_RUN cases are retained privately. Resource preparation caps exceeded; USD/human/aggregate-memory meters UNKNOWN. COMBINED_R NOT_RUN, S3 UNQUALIFIED, S8 NOT_RUN, activation NOT_AUTHORIZED, Post-X/S7H2 NOT_RUN. No push, merge, deployment, activation or real business effect.

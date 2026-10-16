@@ -1,10 +1,16 @@
 import { z } from "zod"
 const id = z.string().uuid(), text = z.string().min(1).max(2048)
 const ref = z.object({ owner: text, id: text, version: text, contentDigest: z.string().regex(/^[a-f0-9]{64}$/) })
+export const ElicitationProgramTargetViewSchema = z.object({
+  grammar: z.literal("r3-m3-report-extension-v1"), queryId: id,
+  programRef: ref, candidateDigest: z.string().regex(/^[a-f0-9]{64}$/), policyRef: ref,
+}).strict()
+export type ElicitationProgramTargetView = z.infer<typeof ElicitationProgramTargetViewSchema>
 const quantity = z.object({ numerator: z.string().max(128).regex(/^(?:0|-?[1-9]\d*)$/), denominator: z.string().max(128).regex(/^[1-9]\d*$/) })
 const source = z.object({ sourceId: id, versionId: id, contentDigest: z.string() })
 export const ElicitationContextViewSchema = z.object({
-  schema: z.literal("finnor.r3.work-context.v1"), workId: id, workRevision: id,
+  schema: z.literal("finnor.r3.work-context.v2"), workId: id, workRevision: id,
+  root: z.object({ entityType: text, entityId: id }),
   declarations: z.array(z.object({ problem_ref: source, domain_profile_ref: ref, mandateRef: ref,
     supportedParties: z.number().int(), qualification: z.literal("UNQUALIFIED") })).max(16),
   incumbentPolicies: z.array(z.object({ ref, mandateRef: ref })).max(16),
@@ -20,7 +26,8 @@ export const ElicitationReviewViewSchema = z.object({
   protocol: z.object({
     ref, envelope: z.object({ work: z.object({ id, revision: id }), gaps: z.array(z.object({ reason: text, status: text })),
       lifecycle: z.object({ domainQualified: z.literal(false), s8Admitted: z.literal(false), active: z.literal(false) }) }).passthrough(),
-    problem: z.object({ parties: z.array(z.object({ id: text, reportingPrincipalId: id, types: z.array(z.object({ id: text })).length(3) })).length(4),
+    problem: z.object({ binding: z.object({ root: z.object({ entityType: text, entityId: id }), programTarget: ElicitationProgramTargetViewSchema.optional() }).passthrough(),
+      parties: z.array(z.object({ id: text, reportingPrincipalId: id, types: z.array(z.object({ id: text })).length(3) })).length(4),
       dates: z.array(z.object({ id: text, at: text, grossOutflowCap: quantity, escrowCap: quantity })),
       assumptions: z.array(text), constraints: z.object({ netTransferMinimum: quantity, netTransferMaximum: quantity, ownerLiabilityCap: quantity }).passthrough(),
       resources: z.array(z.object({ resourceId: text, unit: text, availability: z.array(quantity), baseline: z.array(quantity) }).passthrough()),

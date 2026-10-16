@@ -1,0 +1,13 @@
+{
+  "schema": "finnor.r3.mounted-observer-storage-retry.v1",
+  "registeredAt": "2026-10-10T18:07:49.675940+00:00",
+  "runs": 1,
+  "outerSeconds": 900,
+  "browserSeconds": 600,
+  "causalFailure": "repair-mounted-m3-catch-02 failed ENOSPC before browser startup; stale postmaster process confirmed missing; stopped own DB/cache reclaimed 649306112 bytes",
+  "observedFreeBytes": 993222656,
+  "observerSource": "finnor-os/scripts/r3/.repair-mounted-m3-catch-02.mts",
+  "predicate": "Original mounted workflow under same registered bounds with actual catch observer; no functional claim from setup or diagnostics alone",
+  "precedingFailuresRetained": true,
+  "originalFloorsUnchanged": true
+}

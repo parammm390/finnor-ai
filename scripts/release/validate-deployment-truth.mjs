@@ -112,7 +112,8 @@ function scanWorker(path) {
 }
 scanWorker(join(repoRoot, "finnor-os/apps/worker/src"))
 
-for (const marker of ["aws-actions/configure-aws-credentials@cbe3b392738ccf3f987d68400dafcf4b0624a56c", "bash scripts/release/smoke-worker-image.sh", "docker push", "preflight-production.mjs", "--image-digest", "configure-vercel-realtime.mjs --apply", "deploy-aws-compute-plane.mjs", "deploy_stage preparing", "deploy_stage routing", "deploy_stage finalized", "deploy_stage rollout", "verify-production-parity.mjs", "deploy-production.mjs supplierCanaryApp", "deploy-production.mjs supplierCanaryAuth", "run-p8-production-water-retirement.mjs", "release:scope5:rollout", "phase5-readiness", "npm run release:scope4-digital-twin", "npm run release:scope5-epistemic-impact"]) required(workflow.includes(marker), `production workflow omits required release marker: ${marker}`)
+for (const marker of ["aws-actions/configure-aws-credentials@cbe3b392738ccf3f987d68400dafcf4b0624a56c", "bash scripts/release/smoke-worker-image.sh", "docker push", "preflight-production.mjs", "--image-digest", "configure-vercel-realtime.mjs --apply", "deploy-aws-compute-plane.mjs", "deploy_stage preparing", "deploy_stage routing", "deploy_stage finalized", "deploy_stage rollout", "verify-production-parity.mjs", "deploy-production.mjs supplierCanaryApp", "deploy-production.mjs supplierCanaryAuth", "Verify final PE product authority readiness", "phase5-readiness", "npm run release:scope4-digital-twin", "npm run release:scope5-epistemic-impact"]) required(workflow.includes(marker), `production workflow omits required release marker: ${marker}`)
+required(!workflow.includes("run-p8-production-water-retirement.mjs") && !workflow.includes("release:scope5:rollout"), "software-only production release contains a separately protected product-authority or Scope-5 effect")
 const workerSmoke = read("scripts/release/smoke-worker-image.sh")
 for (const marker of ['docker build --file finnor-os/Dockerfile.worker --tag "$image" .', "REALTIME INTERACTIVE BACKGROUND HEAVY", "/healthz", "SIGTERM", '[[ "$exit_code" == "0" ]]']) required(workerSmoke.includes(marker), `shared worker image gate lost ${marker}`)
 for (const argument of ['--preflight-evidence="$FINNOR_PREFLIGHT_EVIDENCE"', '--database-env="$FINNOR_PROTECTED_DATABASE_ENV"', '--image-digest="$FINNOR_ECR_IMAGE_DIGEST"']) required(workflow.includes(argument), `compute deploy argument does not match the exact --key=value parser: ${argument}`)
@@ -133,10 +134,8 @@ const workerAt = workflow.indexOf("deploy-aws-compute-plane.mjs")
 const parityAt = workflow.indexOf("verify-production-parity.mjs")
 const canaryAppAt = workflow.indexOf("deploy-production.mjs supplierCanaryApp --output-file")
 const canaryAuthAt = workflow.indexOf("deploy-production.mjs supplierCanaryAuth --output-file")
-const cutoverAt = workflow.indexOf("run-p8-production-water-retirement.mjs")
 const readinessAt = workflow.indexOf("verify-production-readiness.mjs")
-const scope5At = workflow.indexOf("release:scope5:rollout")
-required(oidcAt >= 0 && oidcAt < pushAt && pushAt < preflightAt && preflightAt < canaryAppAt && canaryAppAt < canaryAuthAt && canaryAuthAt < migrationAt && migrationAt < workerAt && workerAt < parityAt && parityAt < cutoverAt && cutoverAt < readinessAt && readinessAt < scope5At, "production workflow ordering is not OIDC -> image -> preflight -> supplier canaries -> migration -> four-class compute -> parity -> governed Water retirement -> readiness -> Scope-5 activation")
+required(oidcAt >= 0 && oidcAt < pushAt && pushAt < preflightAt && preflightAt < canaryAppAt && canaryAppAt < canaryAuthAt && canaryAuthAt < migrationAt && migrationAt < workerAt && workerAt < parityAt && parityAt < readinessAt, "production workflow ordering is not OIDC -> image -> preflight -> supplier canaries -> migration -> four-class compute -> parity -> read-only readiness")
 
 if (failures.length) {
   console.error(`Deployment truth validation failed:\n- ${failures.join("\n- ")}`)

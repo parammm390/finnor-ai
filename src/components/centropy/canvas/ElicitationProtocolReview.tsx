@@ -5,19 +5,24 @@ import { centropyPost } from "@/components/centropy/lib/api"
 import { useCentropyAuth } from "@/components/centropy/lib/centropy-auth"
 import { onBusinessInvalidation } from "@/components/centropy/lib/business-invalidation"
 import { ElicitationContextViewSchema, ElicitationReviewViewSchema, exactElicitationText as exact,
-  type ElicitationContextView, type ElicitationReviewView } from "./elicitation-protocol-view"
+  type ElicitationContextView, type ElicitationReviewView, type ElicitationProgramTargetView } from "./elicitation-protocol-view"
 type Scoped<T> = { scope: string; value: T }
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
-export function ElicitationProtocolReview({ workId, root }: { workId: string; root: { entityType: string; entityId: string } }) {
+export function ElicitationProtocolReview({ workId, root, programTargets = [] }: {
+  workId: string; root: { entityType: string; entityId: string }; programTargets?: ElicitationProgramTargetView[]
+}) {
   const auth = useCentropyAuth(), router = useRouter(), pathname = usePathname(), search = useSearchParams()
+  const principalId = auth.session?.user.id
   const tokenScope = useRef({ token: auth.session?.access_token, version: 0 })
   if (tokenScope.current.token !== auth.session?.access_token)
     tokenScope.current = { token: auth.session?.access_token, version: tokenScope.current.version + 1 }
-  const scope = `${auth.session?.user.id ?? "signed-out"}:${tokenScope.current.version}:${workId}:${root.entityType}:${root.entityId}`
+  const scope = `${principalId ?? "signed-out"}:${tokenScope.current.version}:${workId}:${root.entityType}:${root.entityId}`
   const authorized = Boolean(auth.session && auth.role === "owner" && !auth.roleError && !auth.loading && !auth.roleLoading)
   const [context, setContext] = useState<Scoped<ElicitationContextView> | null>(null)
   const [review, setReview] = useState<Scoped<ElicitationReviewView> | null>(null)
   const [declarationId, setDeclarationId] = useState(""), [grantId, setGrantId] = useState("")
+  const [targetId, setTargetId] = useState("")
+  const selectedTarget = programTargets.find(target => `${target.queryId}:${target.candidateDigest}` === targetId)
   const [busy, setBusy] = useState(false), [notice, setNotice] = useState("Load supplied preferences and an existing compute grant.")
   const [witnesses, setWitnesses] = useState(false), [partyId, setPartyId] = useState(""), [typeId, setTypeId] = useState("")
   const [observationSource, setObservationSource] = useState(""), [observationVersion, setObservationVersion] = useState(""), [observationDigest, setObservationDigest] = useState("")
@@ -34,7 +39,7 @@ export function ElicitationProtocolReview({ workId, root }: { workId: string; ro
     try {
       const next = ElicitationReviewViewSchema.parse(await centropyPost("elicitation-protocols/read", { requestId: id }))
       if (!active(generation)) return
-      if (next.workId !== workId || next.principalId !== auth.session?.user.id || next.protocol &&
+      if (next.workId !== workId || next.principalId !== principalId || next.protocol &&
         (next.protocol.envelope.work.id !== workId || next.protocol.envelope.work.revision !== next.workRevision))
         throw Error("Exact Work or principal binding differs.")
       setReview({ scope, value: next })
@@ -44,9 +49,9 @@ export function ElicitationProtocolReview({ workId, root }: { workId: string; ro
     } catch {
       if (active(generation)) { clear(); setNotice("Current permitted rule could not be verified. Private values cleared.") }
     }
-  }, [active, scope, workId, auth.session, clear])
+  }, [active, scope, workId, principalId, clear])
   useEffect(() => {
-    epoch.current++; clear(); setContext(null); setDeclarationId(""); setGrantId(""); setPartyId(""); setTypeId("")
+    epoch.current++; clear(); setContext(null); setDeclarationId(""); setGrantId(""); setTargetId(""); setPartyId(""); setTypeId("")
     setObservationSource(""); setObservationVersion(""); setObservationDigest(""); writing.current = null; setBusy(false)
   }, [scope, authorized, clear])
   useEffect(() => {
@@ -79,6 +84,17 @@ export function ElicitationProtocolReview({ workId, root }: { workId: string; ro
     try {
       const result = await centropyPost<Record<string, unknown>>(`elicitation-protocols/${operation}`, input)
       if (!active(generation)) return
+      if (operation === "review" && (input as { decision?: string }).decision === "PROPOSE_USE") {
+        if (result.schema !== "finnor.r3.review-stage.v2" || result.requestId !== requestId ||
+          result.status !== "S4_REVIEWED_OWNER_CONTINUATION_REQUIRED") throw Error("Current owner review is unavailable.")
+        const allocation = await centropyPost<Record<string, unknown>>("elicitation-protocols/reserve", { requestId })
+        if (!active(generation)) return
+        if (allocation.status !== "FEASIBLE" || !allocation.reservation) throw Error("Current contingent resources could not be reserved.")
+        const prepared = await centropyPost<Record<string, unknown>>("elicitation-protocols/schedules", { requestId })
+        if (!active(generation)) return
+        if (prepared.schema !== "finnor.r3.schedule-stage.v1" || prepared.requestId !== requestId)
+          throw Error("Current proposed schedules are unavailable.")
+      }
       if (operation === "context") {
         const parsed = ElicitationContextViewSchema.parse(result)
         if (parsed.workId !== workId) throw Error("Owner returned another Work.")
@@ -94,21 +110,30 @@ export function ElicitationProtocolReview({ workId, root }: { workId: string; ro
   function submit() {
     const declared = currentContext?.declarations.find(d => d.problem_ref.versionId === declarationId)
     const grant = currentContext?.budgetGrants.find(g => g.ref.id === grantId)
-    const incumbent = currentContext?.incumbentPolicies.find(p => p.mandateRef.contentDigest === declared?.mandateRef.contentDigest)
+    const incumbent = currentContext?.incumbentPolicies.find(p => p.mandateRef.contentDigest === declared?.mandateRef.contentDigest &&
+      (!targetId || selectedTarget?.policyRef.contentDigest === p.ref.contentDigest))
     if (!declared || !grant || !incumbent || !currentContext) return
     const deadline = Math.min(Date.now() + 300000, Date.parse(grant.validUntil))
     void perform("submit", { envelope_inputs: { mode: "ordinary_disposable" }, problem_ref: declared.problem_ref,
-      existing_work_revision: { workId, revision: currentContext.workRevision, root }, domain_profile_ref: declared.domain_profile_ref,
+      existing_work_revision: { workId, revision: currentContext.workRevision, root: currentContext.root }, domain_profile_ref: declared.domain_profile_ref,
       budget_grant_ref: grant.ref, cancellation_ref: `work:${workId}:r3-user-cancel`, incumbentPolicyRef: incumbent.ref,
+      ...(selectedTarget ? { programTarget: selectedTarget } : {}),
       idempotencyKey: crypto.randomUUID(), limits: { deadlineAt: new Date(deadline).toISOString(), maxAttempts: 8, childSeconds: 25 } })
   }
   const party = protocol?.problem.parties.find(p => p.id === partyId)
-  const ownParty = party?.reportingPrincipalId === auth.session?.user.id
+  const ownParty = party?.reportingPrincipalId === principalId
   const closed = current?.reportState?.closed
   return <section aria-label="Proposed elicitation rule" className="ct-capital-program" aria-busy={busy}>
     <h4>Proposed elicitation rule</h4>
     <p>A complete report-to-outcome/payment mechanism under supplied preferences. Not private truth, consent, a signed agreement or a settled payment.</p>
-    <button type="button" disabled={!authorized || busy} onClick={() => void perform("context", { workId, root })}>Load supplied preference context</button>
+    <label>Programme candidate<select aria-label="Programme candidate" value={targetId} disabled={busy} onChange={e => {
+      epoch.current++; setContext(null); setDeclarationId(""); setGrantId(""); setTargetId(e.target.value)
+    }}>
+      <option value="">Standalone supplied rule</option>{programTargets.map(target => <option key={`${target.queryId}:${target.candidateDigest}`} value={`${target.queryId}:${target.candidateDigest}`}>{target.candidateDigest.slice(0, 12)} · current checked candidate</option>)}
+    </select></label>
+    <button type="button" disabled={!authorized || busy || Boolean(targetId && !selectedTarget)} onClick={() => void perform("context", {
+      workId, root: protocol?.problem.binding.root ?? root, ...(selectedTarget ? { programTarget: selectedTarget } : {}),
+    })}>Load supplied preference context</button>
     {currentContext ? <div>
       <label>Preference declaration<select aria-label="Preference declaration" value={declarationId} onChange={e => setDeclarationId(e.target.value)}>
         <option value="">Choose a current declaration</option>{currentContext.declarations.map(d => <option key={d.problem_ref.versionId} value={d.problem_ref.versionId}>{d.problem_ref.versionId}, four parties, unqualified preferences</option>)}
@@ -116,7 +141,7 @@ export function ElicitationProtocolReview({ workId, root }: { workId: string; ro
       <label>Existing compute grant<select aria-label="Existing compute grant" value={grantId} onChange={e => setGrantId(e.target.value)}>
         <option value="">Choose an existing grant</option>{currentContext.budgetGrants.map(g => <option key={g.ref.id} value={g.ref.id}>{g.ref.id}</option>)}
       </select></label>
-      <button type="button" disabled={busy || !declarationId || !grantId} onClick={submit}>Synthesize complete proposed rule</button>
+      <button type="button" disabled={busy || !declarationId || !grantId || Boolean(targetId && !selectedTarget)} onClick={submit}>Synthesize complete proposed rule</button>
       <label>Durable rule review<select aria-label="Durable rule review" value={requestId ?? ""} onChange={e => {
         epoch.current++; clear(); const params = new URLSearchParams(search.toString()); params.set("elicitationRequest", e.target.value)
         router.replace(`${pathname}?${params}`, { scroll: false })
@@ -126,11 +151,14 @@ export function ElicitationProtocolReview({ workId, root }: { workId: string; ro
     {current ? <p>Request {current.requestId}. {current.status}. Original deadline {current.deadlineAt}. {current.provisional ? "Provisional, no checked rule." : "Development-verified mathematical claims only."}</p> : null}
     {current && ["QUEUED", "RUNNING"].includes(current.status) ? <button type="button" disabled={busy} onClick={() => void perform("cancel", { requestId })}>Cancel search, retain costs and responsibilities</button> : null}
     {protocol ? <div>
+      {protocol.problem.binding.programTarget ? <p>Report extension of programme {protocol.problem.binding.programTarget.programRef.id}, candidate {protocol.problem.binding.programTarget.candidateDigest}. Original programme certificates retain their meaning.</p> : null}
       <dl><dt>Exact owner modeled value</dt><dd>{exact(protocol.check.objective)}</dd><dt>Accepted box upper / unresolved gap</dt><dd>{exact(protocol.check.upper)} / {exact(protocol.check.optimizationGap)}, optimum UNKNOWN</dd>
         <dt>Complete coverage</dt><dd>81 profiles, 648 deviations, 324 participation checks</dd>
         <dt>Minimum incentive / participation margin</dt><dd>{exact(protocol.check.minimumIncentiveMargin)} / {exact(protocol.check.minimumParticipationMargin)}. Weak ties do not predict consent.</dd>
         <dt>Maximum deviation gain</dt><dd>{exact(protocol.check.maximumDeviationGain)}</dd>
-        <dt>Reports / acceptance</dt><dd>{closed ? "Reports closed" : "Reports open"}; {current.reportState?.noAgreement ? "No agreement" : current.reportState?.acceptedParties ? `${current.reportState.acceptedParties.length}/4 separately observed disposable declarations` : "Acceptance UNKNOWN"}. Protected agreement UNKNOWN.</dd></dl>
+        <dt>Reports / acceptance</dt><dd>{current.reportState ? closed ? "Reports closed" : "Reports open" : "Report state UNKNOWN"}; {current.reportState
+          ? current.reportState.noAgreement ? "No agreement" : `${current.reportState.acceptedParties.length}/4 separately observed disposable declarations`
+          : "Separately observed acceptance UNKNOWN"}. Protected agreement UNKNOWN.</dd></dl>
       <ul>{protocol.envelope.gaps.map(g => <li key={g.reason}>{g.reason}: {g.status}</li>)}</ul>
       <button type="button" disabled={busy} onClick={() => void perform("review", { requestId, decision: "PROPOSE_USE", reason: "Review this checked proposed mechanism under the existing owner mandate" })}>Review proposed use and reserve contingent resources</button>
       {(["INQUIRE", "WAIT", "STOP"] as const).map(decision => <button type="button" key={decision} disabled={busy} onClick={() => void perform("review", { requestId, decision, reason: "Use the original owner fallback within remaining resources" })}>{decision.toLowerCase()} via existing owner fallback</button>)}

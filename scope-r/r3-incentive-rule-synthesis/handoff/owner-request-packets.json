@@ -2,6 +2,315 @@
   "schema": "finnor.r3.owner-request-packets.v1",
   "immutableBindings": {
     "codeSeal": "source-seal.json",
+    "codeSealSha256": "1607b1922340a6593ae37522a0488953bd8b391680f25a1c715fede100fe9d0b",
+    "checkerSourceSha256": "6f44bb6c5dc4dd71d29f70c230247f39a7c8a25f7e723fde73e194e934e4a8ae",
+    "backendIdentityDigest": "6f55304c149c31610b4c70cd1daa472e615efe11c0b0b957429aa662b35f2ec4",
+    "originalProblemDigest": "7232d1b3cfb719faf14277d5f2699cc0ed08a2e701e7483d96069317db0b7e25",
+    "modelRef": {
+      "owner": "S3",
+      "id": "r3-finite-model:7c4a49673564ced9c32cc8270ea8b86459cb079bcf9e14de7bb9a1f8e68516b0",
+      "version": "s3-finite-preference-v1",
+      "contentDigest": "7c4a49673564ced9c32cc8270ea8b86459cb079bcf9e14de7bb9a1f8e68516b0"
+    },
+    "protocolRef": {
+      "id": "elicitation-protocol:6a7a703f593b55d4d55866d0dd545fb0459882fe16ba2c1269ecf27b6a051187",
+      "owner": "S3",
+      "version": "r3-elicitation-protocol-v1",
+      "contentDigest": "6a7a703f593b55d4d55866d0dd545fb0459882fe16ba2c1269ecf27b6a051187"
+    },
+    "privateInputEvidence": {
+      "rootId": "completion",
+      "path": "host-final-owners-07/positive/boundaries.json",
+      "sha256": "774cadb5d7398b39746dd707434ad1b515c2229e880f7b8ec7fb69553ff09f48"
+    },
+    "profile": "FOUR_PARTIES_THREE_TYPES_THREE_OUTCOMES_81_648_324",
+    "receiptDestination": "EXISTING_WORK_CANONICAL_OWNER_HISTORY_AND_EXPERIENCE_LEDGER",
+    "authorityGranted": false,
+    "domainRef": {
+      "id": "r3-hypothetical-quasilinear-four-party",
+      "owner": "S3",
+      "version": "r3-disposable-declared-v1",
+      "contentDigest": "1bd7347031b34b93f5006074bae1cd7a23ff9d56bc8a268592dc2d6ce683b66f"
+    },
+    "actualM3ProgramTarget": {
+      "grammar": "r3-m3-report-extension-v1",
+      "queryId": "9f1d0602-6f6d-4805-ace2-518983401fd3",
+      "policyRef": {
+        "id": "contingent-policy:6ddf5a9c1ceed48da534450c40a77cec1a218b7de8decf58ab222f9e94fd74a0",
+        "owner": "S4",
+        "version": "s4-finite-contingent-v1",
+        "contentDigest": "6ddf5a9c1ceed48da534450c40a77cec1a218b7de8decf58ab222f9e94fd74a0"
+      },
+      "programRef": {
+        "id": "capital-program:d169715498ec0683b2de15929ec1f3ccf80f786d35d6c8e4562b2e08b2f05448",
+        "owner": "M3",
+        "version": "m3-owner-economic-v2",
+        "contentDigest": "d169715498ec0683b2de15929ec1f3ccf80f786d35d6c8e4562b2e08b2f05448"
+      },
+      "candidateDigest": "4859e5732324d1d305da228259a4452f6e0bd4099013bf9d3e4d77e8bc77c3e3"
+    },
+    "installedLinuxPredecessorBackendIdentityDigest": "5210a802c144fe824ca8ff93b568126789ef84d6a68f3f91112869f64d2bc319",
+    "finalLinuxPackageQualified": false,
+    "finalLinuxApiManifestDigest": "sha256:f9eca7a45b49e45c064dd4d99c56a91be4f07443e0fa24bd3a326769d78d6bbd",
+    "finalLinuxWorkerManifestDigest": "sha256:156b60596b357cdfc9be04ca67ad277aae062d343b6e8930639f01c489c6b2d2",
+    "finalLinuxInstalledAndOwnerVerified": true,
+    "currentImageSourceVectorDigest": "8726eaedb80d21a4fbe3b2fc4364e08ff8f135e442b09d7086bb413d119583fa"
+  },
+  "requests": [
+    {
+      "id": "S3-behavioral-domain",
+      "owner": "S3",
+      "status": "BLOCKED_EXTERNAL",
+      "requiredAsset": "INDEPENDENT_QUALIFIED_DECLARED_PREFERENCE_APPLICABILITY_EVIDENCE",
+      "protocol": "ORIGINAL_S3_DOMAIN_QUALIFICATION_AND_REFUTATION",
+      "predicate": "Validate supplied valuations/outside options/time/transport/strategic applicability; do not infer private truth from exact DSIC.",
+      "evidenceClassRequired": "INDEPENDENT_DOMAIN_QUALIFICATION",
+      "immutableCodeBinding": "source-seal.json SHA256 1607b1922340a6593ae37522a0488953bd8b391680f25a1c715fede100fe9d0b",
+      "qualifiedStatusNotInheritedFromLocalEngineering": true
+    },
+    {
+      "id": "S8-method-checker",
+      "owner": "S8",
+      "status": "BLOCKED_EXTERNAL",
+      "requiredAsset": "INDEPENDENT_ADMISSION_OF_EXACT_METHOD_CHECKER_LOCK_RUNTIME_AND_DOMAIN",
+      "protocol": "EXISTING_S8_ADMISSION_AND_REVOCATION",
+      "predicate": "Authenticate immutable method/checker/output/domain and authorized claims; execute original-input independent predicates; no producer self-promotion.",
+      "evidenceClassRequired": "PROTECTED_ADMISSION_RECEIPT",
+      "immutableCodeBinding": "source-seal.json SHA256 1607b1922340a6593ae37522a0488953bd8b391680f25a1c715fede100fe9d0b",
+      "qualifiedStatusNotInheritedFromLocalEngineering": true
+    },
+    {
+      "id": "S6-exact-operation",
+      "owner": "S6/S8/BUSINESS_OWNER",
+      "status": "BLOCKED_EXTERNAL",
+      "requiredAsset": "QUALIFIED_SOLICITATION_SIGNER_CASH_TRANSFER_COLLECTION_AND_SETTLEMENT_OBSERVATION_CONTRACT",
+      "protocol": "finnor.s6.r3-operation-admission-packet.v1",
+      "predicate": "Every beneficiary/amount/currency/date/event and current funding/consent/authority must match; preserve UNKNOWN and reconcile before retry. json-field-replace-v1 is not banking.",
+      "evidenceClassRequired": "INDEPENDENT_OPERATION_AND_OBSERVATION_ADMISSION",
+      "rerun": "python3 finnor-os/scripts/r3/run-local.py authenticated-owner-positive,separate-acceptance-exact-choice-consumption",
+      "immutableCodeBinding": "source-seal.json SHA256 1607b1922340a6593ae37522a0488953bd8b391680f25a1c715fede100fe9d0b",
+      "qualifiedStatusNotInheritedFromLocalEngineering": true
+    },
+    {
+      "id": "completed-X-protected-comparison",
+      "owner": "INDEPENDENT_EVALUATOR_AND_COMPLETED_X_RELEASE_OWNER",
+      "status": "BLOCKED_EXTERNAL",
+      "requiredAsset": "IMMUTABLE_COMPLETED_X_RELEASE_STRONGEST_PERMITTED_METHOD_INVENTORY_AND_PROTECTED_EVALUATOR_DISTRIBUTION",
+      "protocol": "LOCKED_MATCHED_PAIRED_GAIN_WITH_SIMULTANEOUS_95_PERCENT_BOUNDS",
+      "predicate": "Identical owner inputs/rights/resources/consent/deadlines, adapter ablation, all costs and original floors; qualified gain lower bound strictly positive.",
+      "evidenceClassRequired": "INDEPENDENT_PROTECTED_COMPARISON",
+      "distributionDigest": null,
+      "powerStoppingMultiplicityRegistration": "NOT_RUN_CUSTODY_UNAVAILABLE",
+      "localDiagnosticRerun": "python3 finnor-os/scripts/r3/run-local.py authenticated-owner-positive,actual-fallback-matched-off-on",
+      "immutableCodeBinding": "source-seal.json SHA256 1607b1922340a6593ae37522a0488953bd8b391680f25a1c715fede100fe9d0b",
+      "qualifiedStatusNotInheritedFromLocalEngineering": true
+    },
+    {
+      "id": "S7-H2-owner-outcomes",
+      "owner": "S7",
+      "status": "BLOCKED_EXTERNAL",
+      "requiredAsset": "INDEPENDENT_VALUATION_ATTRIBUTION_COLLECTED_OWNER_OUTCOMES_AND_CANONICAL_COST_RECONCILIATION",
+      "protocol": "LOCKED_S7_H2_36_MONTH_INCREMENTAL_NET_OWNER_WEALTH",
+      "predicate": "Qualified BAU, ownership/capital/debt/liability/cost reconciliation, rejection/default/override coverage and simultaneous intervals; preserve 100x/10x and material denominator/risk/absolute floors.",
+      "evidenceClassRequired": "INDEPENDENT_H2_OWNER_OUTCOME_RECEIPTS",
+      "immutableCodeBinding": "source-seal.json SHA256 1607b1922340a6593ae37522a0488953bd8b391680f25a1c715fede100fe9d0b",
+      "qualifiedStatusNotInheritedFromLocalEngineering": true
+    },
+    {
+      "id": "sealed-peer-join",
+      "owner": "SERIAL_INTEGRATION_ROLE_AND_S3_S4_S5_RUNTIME_WORK_P7_OWNERS",
+      "status": "NOT_RUN_SERIAL_INTEGRATION_PENDING",
+      "requiredAsset": "EXACT_SERIAL_MERGE_OF_AVAILABLE_SEALED_INTERFACE_DELTAS_AND_UNIQUE_MIGRATION_ORDER_PLUS_ACTUAL_JOINED_RUNTIME_PROOF",
+      "protocol": "PREIMAGE_BOUND_SERIAL_PATCH_INTEGRATION",
+      "predicate": "Assign unique migration order, retain all peer/original jobs/readers/Work mounts/P7 and run affected proofs on one actual joined runtime.",
+      "evidenceClassRequired": "SEALED_JOINED_COMPATIBILITY_RECEIPT",
+      "immutableCodeBinding": "source-seal.json SHA256 1607b1922340a6593ae37522a0488953bd8b391680f25a1c715fede100fe9d0b",
+      "qualifiedStatusNotInheritedFromLocalEngineering": true,
+      "observedPeerSeals": [
+        {
+          "scope": "R1",
+          "commit": "24154e827ea5392e6e47e9873fa0a21d85d82f07",
+          "tree": "afc21ffe8046f766174fc9dc9f7149f12a5f9778",
+          "cleanAtReadOnlyInspection": true,
+          "adopted": false,
+          "readOnly": true,
+          "qualification": "NO_JOINED_COMPATIBILITY_INHERITED"
+        },
+        {
+          "scope": "R2",
+          "commit": "5c874720c473aedc9d6545e748ecbf2d55afcddf",
+          "tree": "59c8ef5afbb4b1a8dde35051cb65a38b2d929c6d",
+          "cleanAtReadOnlyInspection": true,
+          "adopted": false,
+          "readOnly": true,
+          "qualification": "NO_JOINED_COMPATIBILITY_INHERITED"
+        },
+        {
+          "scope": "R4",
+          "commit": "42939e7f2243c1534af5ec462fb718489ab3f0e3",
+          "tree": "dd2f6e4b24a8385992ae4248232b6c2753299e0b",
+          "cleanAtReadOnlyInspection": true,
+          "adopted": false,
+          "readOnly": true,
+          "qualification": "NO_JOINED_COMPATIBILITY_INHERITED"
+        },
+        {
+          "scope": "M5",
+          "commit": "8f50df369b2f5b498b0a2b8d36880bf84860a4c9",
+          "tree": "7a7f3fe5c3287c844003b38bd6e298b23998cce8",
+          "cleanAtReadOnlyInspection": null,
+          "adopted": false,
+          "readOnly": true,
+          "qualification": "ORDINARY_CUMULATIVE_ENGINEERING_DELIVERY_NOT_ORIGINAL_GATES"
+        }
+      ],
+      "availableSealsNotIntegrated": true
+    },
+    {
+      "id": "final-Linux-runtime",
+      "owner": "R3_ENGINEERING_AND_SERIAL_RUNTIME_INTEGRATOR",
+      "status": "PASS_PINNED_BASE_CURRENT_INSTALLED_API_AND_WORKER",
+      "requiredAsset": null,
+      "protocol": "FINAL_INSTALLED_BYTE_AND_QUEUE_SCHEMA_OWNER_PROOF",
+      "predicate": "Non-root immutable runtime access, locks/licences, separate producer/checker, fresh/upgrade/restart and original/R3 queued dispatch on final built bytes.",
+      "evidenceClassRequired": "ACTUAL_FINAL_IMAGE_RUNTIME_PROOF",
+      "failureArtifact": {
+        "rootId": "completion",
+        "path": "linux-installed/owner-04/failure.json",
+        "sha256": "b4dae9f3758c8b0be511460d34a7ff6456dc3a870c35b1d9eb6c14bef42dd057"
+      },
+      "immutableCodeBinding": "source-seal.json SHA256 1607b1922340a6593ae37522a0488953bd8b391680f25a1c715fede100fe9d0b",
+      "qualifiedStatusNotInheritedFromLocalEngineering": true,
+      "failedImage": "sha256:d4b2628e831b0c8efda98fe74a22171ead916187978f8ba6eed28adc73eae716",
+      "resources": {
+        "rootId": "completion",
+        "path": "completion-start/resource-boundary.json",
+        "sha256": "9ba55ea7827d29c415f8b506d81b7638624c5caba1e68bdda69f53775987abac"
+      },
+      "pendingCorrection": null,
+      "acceptanceRequires": "Final source image execution, native solver/checker, real M3-bound positive owners, old/new queued dispatch and physical migration restart; no product source mounts, relaxed guards or widened original limits.",
+      "finalApiManifest": "sha256:f9eca7a45b49e45c064dd4d99c56a91be4f07443e0fa24bd3a326769d78d6bbd",
+      "finalWorkerManifest": "sha256:156b60596b357cdfc9be04ca67ad277aae062d343b6e8930639f01c489c6b2d2",
+      "buildEvidence": {
+        "rootId": "completion",
+        "path": "repair-start/installed-source-api-build-05.log",
+        "sha256": "c6633abc643c1017ad09b47513f06d7259982e0889d6c20cfda7f621f5f2fc7d"
+      },
+      "imageEvidence": {
+        "rootId": "completion",
+        "path": "repair-start/final-source-overlay-image-manifest-v21.json",
+        "sha256": "75f7bbe4c956c20c3e1755e205fa86cc5710882329c9048f3a06f7b678a8bb72"
+      },
+      "currentInternalFailure": null,
+      "currentEvidence": [
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/results.json",
+          "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/results.json",
+          "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
+        }
+      ]
+    },
+    {
+      "id": "material-cost-meters",
+      "owner": "R3_ENGINEERING_AND_EVALUATION_COST_OWNER",
+      "status": "UNQUALIFIED_HISTORICAL_MATERIAL_METERS_UNKNOWN",
+      "requiredAsset": "ACTUAL_COMPLETE_HISTORICAL_AND_REGISTERED_EVALUATION_COST_CUSTODY",
+      "protocol": "ORIGINAL_COST_PREPARATION_EPISODE_AND_EVALUATOR_ALLOCATION_CONVENTION",
+      "predicate": "Charge successful/failed/cancelled/recovery/build/licence/data/human/storage work exactly once without erasing missing scopes.",
+      "evidenceClassRequired": "COMPLETE_RESOURCE_AND_COST_RECEIPTS",
+      "immutableCodeBinding": "source-seal.json SHA256 1607b1922340a6593ae37522a0488953bd8b391680f25a1c715fede100fe9d0b",
+      "qualifiedStatusNotInheritedFromLocalEngineering": true,
+      "internalEngineeringNotRelabeledExternal": true,
+      "qualification": "Original preparation limits exceeded; monetary/human/aggregate simultaneous peak coverage UNKNOWN. Actual commands, wall bounds, limits and observations remain recorded; no missing historical measurement is invented, cost/frontier qualification withheld.",
+      "externalQualificationExcuse": false
+    },
+    {
+      "id": "current-ledger-readback",
+      "owner": "R3_ENGINEERING_AND_ORIGINAL_EXPERIENCE_LEDGER_OWNER",
+      "status": "PASS_NAMED_CURRENT_REPAIR_CUT",
+      "requiredAsset": "BOUNDED_ACTUAL_OWNER_REFERENCE_READBACK_ON_CURRENT_SOURCE_CUT",
+      "protocol": "ORIGINAL_SIGNED_S6_OWNER_TRANSPORT_AND_PHYSICAL_EXPERIENCE_LEDGER",
+      "predicate": "All exact object and canonical event preimages/receipts are read after accepted delivery; replay and foreign tenant refusals verified within unchanged per-request/episode limits; no widening transport policy to hide failure.",
+      "evidenceClassRequired": "EMPIRICALLY_VERIFIED_CURRENT_SOURCE_OWNER_TRANSPORT",
+      "failure": {
+        "rootId": "completion",
+        "path": "host-final-owners-08/failure.json",
+        "sha256": "5cdbba19458f98d60e9f31861a34b9b3247286ef84b55f19e11fa05e4416b8ec"
+      },
+      "diagnosis": {
+        "rootId": "completion",
+        "path": "host-final-owners-08/native-ledger/readback-diagnosis.json",
+        "sha256": "1ab39f887244c45a1e1ec11563ddd12c81fc84134190bb19ab1f29a14aca76a9"
+      },
+      "rerunCases": [
+        "native-experience-delivery",
+        "s6-supported-recovery"
+      ],
+      "immutableCodeBinding": "source-seal.json SHA256 1607b1922340a6593ae37522a0488953bd8b391680f25a1c715fede100fe9d0b",
+      "externalQualificationExcuse": false,
+      "evidenceClass": "EMPIRICALLY_VERIFIED",
+      "currentEvidence": [
+        {
+          "rootId": "completion",
+          "path": "repair-ledger-04/results.json",
+          "sha256": "5746656904f07768199d2da01c743658e37fb08d5413b8d25d9e689b3563914b"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-ledger-storage-02/results.json",
+          "sha256": "17566aab91654f2547ba035ec83dc1e681e7d472067c47cf32429c56b2b2ed92"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-s6-01/results.json",
+          "sha256": "e52dd939abbf6b38320d17f1ca0e6dc200e96d2b534488443624159bf4f555f5"
+        }
+      ]
+    },
+    {
+      "id": "final-mounted-candidate-work",
+      "owner": "R3_ENGINEERING_AND_EXISTING_CAPITAL_WORK",
+      "status": "PASS_ALL_REQUIRED_NAMED_CURRENT_ORACLES",
+      "requiredAsset": null,
+      "protocol": "EXISTING_MOUNTED_WORK_AUTHENTICATED_DURABLE_CANDIDATE_FLOW",
+      "predicate": "Actual selected M3 candidate, root v2, signed submit, physical restricted worker, checked 243 cells, reload and delayed Work/foreign/source-revision clearing within original bounds.",
+      "immutableCodeBinding": "source-seal.json SHA256 1607b1922340a6593ae37522a0488953bd8b391680f25a1c715fede100fe9d0b",
+      "failure": {
+        "rootId": "completion",
+        "path": "repair-candidate-work-02/results.json",
+        "sha256": "a6a17c84a8c83caa6eb1dca3e77af2541593969256b7d15f50e587a4286ee20b"
+      },
+      "interruption": {
+        "rootId": "completion",
+        "path": "repair-candidate-work-03/resumption-observation.json",
+        "sha256": "52625254c54bdde015265bd1218f61565c6efbe23527d1c66c115ec52887aa8a"
+      },
+      "rerun": "Retained candidate generator --primary and --complement --minimal-preparation variants with prepublication SDK preparation; original M1 validity and all grants remain unchanged.",
+      "externalQualificationExcuse": false,
+      "noOwnerRequestDispatched": true,
+      "currentEvidence": [
+        {
+          "rootId": "completion",
+          "path": "final-staged-mounted-custody.json",
+          "sha256": "0d20318cfdcab8f2cba67fcbb03f37a2f21171926458594168cacf9a9c4712ba"
+        }
+      ]
+    }
+  ],
+  "internalEngineeringNotRelabeledExternal": true,
+  "protectedBusinessEffectsAuthorized": false,
+  "historicalImmutableBindings": {
+    "codeSeal": "source-seal.json",
     "codeSealSha256": "2a386c06def52002f113e04d7bbba121dd29ef450983e7e317b615a2195936af",
     "checkerSourceSha256": "6f44bb6c5dc4dd71d29f70c230247f39a7c8a25f7e723fde73e194e934e4a8ae",
     "backendIdentityDigest": "87bb8fefe4e9c08fd1e0bb1bd6a6b6faee908f8c69da06b668588bad0d76490a",
@@ -32,85 +341,5 @@
       "contentDigest": "1bd7347031b34b93f5006074bae1cd7a23ff9d56bc8a268592dc2d6ce683b66f"
     }
   },
-  "requests": [
-    {
-      "id": "S3-behavioral-domain",
-      "owner": "S3",
-      "status": "BLOCKED_EXTERNAL",
-      "requiredAsset": "INDEPENDENT_QUALIFIED_DECLARED_PREFERENCE_APPLICABILITY_EVIDENCE",
-      "protocol": "ORIGINAL_S3_DOMAIN_QUALIFICATION_AND_REFUTATION",
-      "predicate": "Validate supplied valuations/outside options/time/transport/strategic applicability; do not infer private truth from exact DSIC.",
-      "evidenceClassRequired": "INDEPENDENT_DOMAIN_QUALIFICATION"
-    },
-    {
-      "id": "S8-method-checker",
-      "owner": "S8",
-      "status": "BLOCKED_EXTERNAL",
-      "requiredAsset": "INDEPENDENT_ADMISSION_OF_EXACT_METHOD_CHECKER_LOCK_RUNTIME_AND_DOMAIN",
-      "protocol": "EXISTING_S8_ADMISSION_AND_REVOCATION",
-      "predicate": "Authenticate immutable method/checker/output/domain and authorized claims; execute original-input independent predicates; no producer self-promotion.",
-      "evidenceClassRequired": "PROTECTED_ADMISSION_RECEIPT"
-    },
-    {
-      "id": "S6-exact-operation",
-      "owner": "S6/S8/BUSINESS_OWNER",
-      "status": "BLOCKED_EXTERNAL",
-      "requiredAsset": "QUALIFIED_SOLICITATION_SIGNER_CASH_TRANSFER_COLLECTION_AND_SETTLEMENT_OBSERVATION_CONTRACT",
-      "protocol": "finnor.s6.r3-operation-admission-packet.v1",
-      "predicate": "Every beneficiary/amount/currency/date/event and current funding/consent/authority must match; preserve UNKNOWN and reconcile before retry. json-field-replace-v1 is not banking.",
-      "evidenceClassRequired": "INDEPENDENT_OPERATION_AND_OBSERVATION_ADMISSION",
-      "rerun": "python3 finnor-os/scripts/r3/run-local.py authenticated-owner-positive,separate-acceptance-exact-choice-consumption"
-    },
-    {
-      "id": "completed-X-protected-comparison",
-      "owner": "INDEPENDENT_EVALUATOR_AND_COMPLETED_X_RELEASE_OWNER",
-      "status": "BLOCKED_EXTERNAL",
-      "requiredAsset": "IMMUTABLE_COMPLETED_X_RELEASE_STRONGEST_PERMITTED_METHOD_INVENTORY_AND_PROTECTED_EVALUATOR_DISTRIBUTION",
-      "protocol": "LOCKED_MATCHED_PAIRED_GAIN_WITH_SIMULTANEOUS_95_PERCENT_BOUNDS",
-      "predicate": "Identical owner inputs/rights/resources/consent/deadlines, adapter ablation, all costs and original floors; qualified gain lower bound strictly positive.",
-      "evidenceClassRequired": "INDEPENDENT_PROTECTED_COMPARISON",
-      "distributionDigest": null,
-      "powerStoppingMultiplicityRegistration": "NOT_RUN_CUSTODY_UNAVAILABLE",
-      "localDiagnosticRerun": "python3 finnor-os/scripts/r3/run-local.py authenticated-owner-positive,actual-fallback-matched-off-on"
-    },
-    {
-      "id": "S7-H2-owner-outcomes",
-      "owner": "S7",
-      "status": "BLOCKED_EXTERNAL",
-      "requiredAsset": "INDEPENDENT_VALUATION_ATTRIBUTION_COLLECTED_OWNER_OUTCOMES_AND_CANONICAL_COST_RECONCILIATION",
-      "protocol": "LOCKED_S7_H2_36_MONTH_INCREMENTAL_NET_OWNER_WEALTH",
-      "predicate": "Qualified BAU, ownership/capital/debt/liability/cost reconciliation, rejection/default/override coverage and simultaneous intervals; preserve 100x/10x and material denominator/risk/absolute floors.",
-      "evidenceClassRequired": "INDEPENDENT_H2_OWNER_OUTCOME_RECEIPTS"
-    },
-    {
-      "id": "sealed-peer-join",
-      "owner": "SERIAL_INTEGRATION_ROLE_AND_S3_S4_S5_RUNTIME_WORK_P7_OWNERS",
-      "status": "BLOCKED_EXTERNAL",
-      "requiredAsset": "IMMUTABLE_PEER_INTERFACE_SEALS_AND_ACTUAL_JOINED_CUT",
-      "protocol": "PREIMAGE_BOUND_SERIAL_PATCH_INTEGRATION",
-      "predicate": "Assign unique migration order, retain all peer/original jobs/readers/Work mounts/P7 and run affected proofs on one actual joined runtime.",
-      "evidenceClassRequired": "SEALED_JOINED_COMPATIBILITY_RECEIPT"
-    },
-    {
-      "id": "final-Linux-runtime",
-      "owner": "R3_ENGINEERING_AND_SERIAL_RUNTIME_INTEGRATOR",
-      "status": "INCOMPLETE_INTERNAL_ENGINEERING",
-      "requiredAsset": "SUCCESSFULLY_BUILT_IMMUTABLE_API_AND_WORKER_IMAGES",
-      "protocol": "FINAL_INSTALLED_BYTE_AND_QUEUE_SCHEMA_OWNER_PROOF",
-      "predicate": "Non-root immutable runtime access, locks/licences, separate producer/checker, fresh/upgrade/restart and original/R3 queued dispatch on final built bytes.",
-      "evidenceClassRequired": "ACTUAL_FINAL_IMAGE_RUNTIME_PROOF",
-      "failureArtifact": "final-linux-build-01.log"
-    },
-    {
-      "id": "material-cost-meters",
-      "owner": "R3_ENGINEERING_AND_EVALUATION_COST_OWNER",
-      "status": "INCOMPLETE_INTERNAL_AND_EVALUATION_ACCOUNTING",
-      "requiredAsset": "MONETARY_HUMAN_AND_SIMULTANEOUS_AGGREGATE_MEMORY_METERS",
-      "protocol": "ORIGINAL_COST_PREPARATION_EPISODE_AND_EVALUATOR_ALLOCATION_CONVENTION",
-      "predicate": "Charge successful/failed/cancelled/recovery/build/licence/data/human/storage work exactly once without erasing missing scopes.",
-      "evidenceClassRequired": "COMPLETE_RESOURCE_AND_COST_RECEIPTS"
-    }
-  ],
-  "internalEngineeringNotRelabeledExternal": true,
-  "protectedBusinessEffectsAuthorized": false
+  "noOwnerRequestsDispatched": true
 }

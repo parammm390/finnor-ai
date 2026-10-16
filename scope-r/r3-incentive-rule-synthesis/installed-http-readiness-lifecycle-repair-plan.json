@@ -1,0 +1,20 @@
+{
+  "schema": "finnor.r3.installed-http-readiness-lifecycle.v1",
+  "registeredAt": "2026-10-10T21:31:44.058941+00:00",
+  "observed": "New transport configuration restarts actual Next inside first proxy request, so request timer includes process/module preparation. v10 real submit aborted30s before admission afterpreviouscutPGinitENOSPC; allFAIL retained.",
+  "repair": "In internal fixture call, synchronize actual transport config before sending request; installed readiness requires actual unsigned R3 read401 after /api/release. Real compiled handlers/signed authentication unchanged.",
+  "failureModel": [
+    "An API release GET is not readiness of runtime-external R3 owner route",
+    "Moving application computation or accepted work outside request deadline would hide a defect and is forbidden",
+    "Restart/readiness may not extend original grant/M1/R3 deadline",
+    "Unsigned readiness must actually refuse401 with no effects",
+    "Failed auth import/preparation must refuse readiness inside original30s lifecycle bound",
+    "Preparation elapsed must be recorded rather than omitted from resource evidence"
+  ],
+  "acceptance": "Actual startup/protected auth401 recorded before exact signed HTTP timer; unchanged30s callback/wire timer and2s/5s ledger bounds; all affected required cases verified on installed source; all preparations/failures charged.",
+  "qaOnly": true,
+  "productTestHooksOrAuthBypass": false,
+  "originalFloorsReset": false,
+  "runs": 1,
+  "runSeconds": 1800
+}

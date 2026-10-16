@@ -1,86 +1,91 @@
-# FINNOR R cumulative release verification manifest
+# FINNOR cumulative R1–R8 release verification
 
 Schema: `finnor.r.release-verification.v1`
 
-This manifest records the cumulative R1–R8 candidate after the exact R3 owner
-integration and before the remaining hosted image and authenticated end-to-end
-checks. It is a finite engineering verification record, not an admission,
-deployment, post-X gain result, or economic qualification.
+This is a finite software-release audit record. It is not an admission,
+business qualification, economic result, or claim that a draft is live.
 
-## Frozen source cut
+## Observed release state — 2026-10-16
 
-- Repository: `parammm390/finnor-ai`
-- R8 base commit: `f70d71f5194cdb28c8bb293f9a538ebc205ef5df`
-- R8 base tree: `1dadcfe3f03c110223615a837d2ae91c967d6d33`
-- Acquisition: public GitHub codeload archive, isolated checkout
-- Current release worktree: `/Users/paramdave/.codex/worktrees/finnor-r-release-e5a590`
-- Production mutation: prohibited for this verification; merge and deployment
-  require separate explicit authorization.
-- Candidate branch: `codex/r3-on-r8-cumulative-2026-10-16` (published head is
-  recorded by the reviewable draft PR).
+- Production `/api/release` reports commit
+  `517003a4396bc8101a90be4b425ee01de9446740` (the current `main` base).
+- Production `/api/ready` reports migration `0171_runtime_database_role_isolation.sql`
+  and four compatible worker classes. R1–R8 candidate code is **not live**.
+- Existing production state reports Water retired and Private Equity active;
+  this release does not reapply or change that state. Scope-5 is not activated.
+- Authorization for this release is software-only. Production Water/P8 and
+  Scope-5 effects remain excluded.
 
-## Scope map and current inclusion
+## Candidate and source inputs
 
-| R scope | Current implementation evidence | Current status |
+- Repository: `parammm390/finnor-ai`; release base: `main` at
+  `517003a4396bc8101a90be4b425ee01de9446740`.
+- PR #126 is open/draft at R8 commit
+  `f70d71f5194cdb28c8bb293f9a538ebc205ef5df`.
+- Existing cumulative PR #129 is open/draft at
+  `5e8769eb7287deaffa9c79729e7f34476f5fec17`. Its history contains the R8
+  commit above and the R3 delivery; it is the single intended release PR.
+- R3 owner source: `3113d354f6b70369ee2f1b72b96820353d56f99f`.
+  The in-progress local integration input is
+  `a307e9df50ad603e7be59ab077f115e4bf914044`.
+- Isolated working checkout:
+  `/Users/paramdave/.codex/worktrees/finnor-release-candidate-5e8769e`.
+- The local candidate merge/repairs are not yet published. No new PR or push,
+  GitHub PR merge, or production deployment has been made for them. Do not
+  treat old checks on `5e8769e` as checks on these local repairs.
+- The PR #129 description still needs to be reconciled with the actual source
+  input and explicit software-only authorization before it is marked ready.
+
+## Included scope
+
+| Scope | Candidate implementation | Release status |
 | --- | --- | --- |
-| R1 CertifiedStateReduction | `finnor-os/packages/epistemic-runtime/src/certified-state-reduction/`, `finnor-os/packages/private-equity/src/r1/`, migration `0172_r1_certified_state_reduction.sql` | present in source cut |
-| R2 RobustProgrammeSearch | `finnor-os/packages/epistemic-runtime/src/r2-*`, `finnor-os/packages/private-equity/src/capital-program/r2-*`, migration `0173_r2_robust_programme_search.sql` | present in source cut |
-| R3 IncentiveRuleSynthesis | `finnor-os/packages/epistemic-runtime/src/incentive-rule-synthesis/`, `finnor-os/packages/private-equity/src/r3/`, authenticated owner route `/api/elicitation-protocols/[operation]`, migration `0177_r3_incentive_rule_synthesis.sql`, installed-runtime and owner-e2e scripts, and `scope-r/r3-incentive-rule-synthesis/` handoff | present in candidate, hosted qualification pending |
-| R4 IdentificationPlanCompiler | `finnor-os/packages/epistemic-runtime/src/identification-plan/`, `finnor-os/packages/private-equity/src/r4/`, migration `0174` | present, joined qualification incomplete |
-| R5 CoalitionProgrammeSearch | `finnor-os/packages/epistemic-runtime/src/coalition-programme-search/`, `finnor-os/packages/private-equity/src/capital-program/r5-*`, migration `0175_coalition_programme_search.sql` | present, joined qualification incomplete |
-| R6 VerifiedCapitalCompiler | `finnor-os/packages/epistemic-runtime/src/verified-capital-compiler/`, `finnor-os/packages/private-equity/src/r6/` | present, joined qualification incomplete |
-| R7 PolicyAtlasCompiler | `finnor-os/packages/epistemic-runtime/src/policy-atlas/`, `finnor-os/packages/private-equity/src/r7/`, migration `0176_r7_policy_atlas.sql` | present, joined qualification incomplete |
-| R8 CounterexampleGuidedSolverSynthesis | `finnor-os/packages/epistemic-runtime/src/solver-synthesis/`, `finnor-os/packages/private-equity/src/r8/`, `scope-r/r8-repaired-adoption/`, existing cumulative draft PR #126 | present in existing cumulative R8 candidate |
+| R1 CertifiedStateReduction | Existing cumulative owner/runtime and migration | Candidate only |
+| R2 RobustProgrammeSearch | Existing cumulative owner/runtime and migration | Candidate only |
+| R3 IncentiveRuleSynthesis | R3 authenticated owner/API/worker, migration `0177`, installed runtime, and Work surface | Candidate only; exact mounted Work acceptance not run |
+| R4 IdentificationPlanCompiler | Existing cumulative owner/runtime and migration | Candidate only |
+| R5 CoalitionProgrammeSearch | Existing cumulative owner/runtime and migration | Candidate only |
+| R6 VerifiedCapitalCompiler | Existing cumulative owner/runtime | Candidate only |
+| R7 PolicyAtlasCompiler | Existing cumulative owner/runtime and migration `0176` | Candidate only |
+| R8 CounterexampleGuidedSolverSynthesis | Existing R8 candidate, commit `f70d71f` | Candidate only |
 
-R3 was recovered from the exact local owner worktree at commit
-`3113d354f6b70369ee2f1b72b96820353d56f99f` and integrated additively into the
-existing R8 candidate. R8 application behavior was not rebuilt or replaced.
-The candidate still cannot claim production qualification until the hosted
-Linux image, authenticated database/queue/owner flow, and finite acceptance
-checks pass on the published branch head.
+## Bounded local verification
 
-## Finite checks
+Passed on the isolated local candidate after the listed repairs:
 
-### Already executed on this source cut
+- `npm run test:release`: 80 passed, 0 failed, 0 skipped; mutation inventory
+  `ok: true`, break-glass false.
+- `npm run release:truth` and the static production-mutation inventory.
+- P8 zero-resurrection static/import-reachability check.
+- Generated OpenAPI client parity and capability-manifest parity.
+- Authz matrix check, migration bundle generation (179 migrations), TOML
+  parsing for the Gitleaks config, and whitespace check.
+- Previously observed CI defects have targeted repairs in the candidate:
+  duplicate R3 migration identity, missing ARM64 QEMU setup, stale authz and
+  generated artifacts, the P8 static false positive, R3 lockfile scan
+  classification, Vercel token exposure through CLI arguments, and the
+  production artifact tracing regression.
 
-1. Parse all active GitHub workflow YAML files with Ruby YAML parser.
-2. Confirm every GitHub Action reference uses a full 40-hex commit SHA.
-3. Run `npm run release:truth`.
-4. Run `npm run test:release` and retain the complete stdout. Expected result:
-   80 passed, 0 failed, 0 skipped; production mutation inventory `ok: true`.
-5. Recover and integrate the exact R3 owner source; verify Python syntax, the
-   registered small complete-grid reference (`4096` allocations, `16` feasible),
-   the four-party/three-type/81-profile fixture shape, shared contracts, route
-   registration, migration bundle, and capability/OpenAPI generation.
+These local checks do not establish hosted image or production acceptance.
 
-### Remaining engineering checks
+## Required gates still open
 
-1. Run `bash -n scripts/release/smoke-worker-image.sh` and the changed workflow
-   static checks.
-2. On a Linux runner with Docker, install the locked `finnor-os` workspace,
-   bundle/migrate a disposable PostgreSQL database, build the exact worker
-   image from `finnor-os/Dockerfile.worker`, and run
-   `scripts/release/smoke-worker-image.sh` with no production credentials.
-3. Retain the image ID, image labels, Dockerfile digest, four class health and
-   SIGTERM receipts, R1 owner/checker receipt, and installed R4 receipt when
-   the source cut contains R4's integrated runtime.
-4. Run the repository's applicable hosted backend/root/security checks on the
-   exact published branch head. A green PR check is evidence for that exact
-   head only.
+1. Freeze and publish one repaired source cut to the existing PR #129 branch;
+   do not create another PR or separately merge #126.
+2. On that exact commit, complete the hosted universal PR verdict and its
+   constituent repository/security gates, including the Linux multi-arch
+   worker build, migration compatibility, and installed authenticated API →
+   durable queue → worker/checker → persisted result path.
+3. Run and retain the exact `mounted-work-reload-switch` browser proof. The
+   current worker-image smoke selects only authenticated-owner-positive and
+   queued-original-and-R3-physical-restart; it explicitly does not run the
+   browser/Work story. No result from another source cut substitutes for it.
+4. Merge only after the exact source cut passes its required gates. Then verify
+   production component SHAs, migration readiness, worker compatibility, and
+   the deployed user journey. Keep protected production effects off.
 
-### Explicitly not run or not authorized
-
-- Authenticated protected owner/admission activation, production AWS/Vercel
-  mutation, live financial effects, protected comparative gain, and S7 H2
-  economics.
-- Authenticated R3 owner/database/queue/worker E2E and installed runtime proof
-  on Linux have not yet been run on this candidate.
-- Any claim that the older Scope-3 compute-plane certification satisfies R3.
-
-## Completion interpretation
-
-`PASS` on the finite engineering checks means only that the named source,
-runtime, workflow, and release-boundary checks passed. It does not upgrade
-`UNKNOWN`, `UNQUALIFIED`, `NOT_RUN`, or `MISSING` owner/admission/economic
-states into completion. The release gate remains closed while the joined
-installed owner qualification and authenticated R3 acceptance are incomplete.
+The mounted Work story was **NOT RUN** for the repaired local candidate. This
+host currently has no Docker, `psql`, or `agent-browser` executable, so the
+local runner cannot establish that proof. Do not report R3 fully live or the
+release complete until the exact candidate is accepted and production is
+verified.

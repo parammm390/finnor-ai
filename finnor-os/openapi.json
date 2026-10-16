@@ -41124,6 +41124,93 @@
                     ],
                     "additionalProperties": false
                   },
+                  "programTarget": {
+                    "type": "object",
+                    "properties": {
+                      "grammar": {
+                        "type": "string",
+                        "const": "r3-m3-report-extension-v1"
+                      },
+                      "queryId": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "programRef": {
+                        "type": "object",
+                        "properties": {
+                          "owner": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 256
+                          },
+                          "id": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 256
+                          },
+                          "version": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 256
+                          },
+                          "contentDigest": {
+                            "type": "string",
+                            "pattern": "^[a-f0-9]{64}$"
+                          }
+                        },
+                        "required": [
+                          "owner",
+                          "id",
+                          "version",
+                          "contentDigest"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "candidateDigest": {
+                        "type": "string",
+                        "pattern": "^[a-f0-9]{64}$"
+                      },
+                      "policyRef": {
+                        "type": "object",
+                        "properties": {
+                          "owner": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 256
+                          },
+                          "id": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 256
+                          },
+                          "version": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 256
+                          },
+                          "contentDigest": {
+                            "type": "string",
+                            "pattern": "^[a-f0-9]{64}$"
+                          }
+                        },
+                        "required": [
+                          "owner",
+                          "id",
+                          "version",
+                          "contentDigest"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "required": [
+                      "grammar",
+                      "queryId",
+                      "programRef",
+                      "candidateDigest",
+                      "policyRef"
+                    ],
+                    "additionalProperties": false
+                  },
                   "idempotencyKey": {
                     "type": "string",
                     "minLength": 1,
@@ -41988,6 +42075,93 @@
                                     "sourceManifestDigest": {
                                       "type": "string",
                                       "pattern": "^[a-f0-9]{64}$"
+                                    },
+                                    "programTarget": {
+                                      "type": "object",
+                                      "properties": {
+                                        "grammar": {
+                                          "type": "string",
+                                          "const": "r3-m3-report-extension-v1"
+                                        },
+                                        "queryId": {
+                                          "type": "string",
+                                          "format": "uuid"
+                                        },
+                                        "programRef": {
+                                          "type": "object",
+                                          "properties": {
+                                            "owner": {
+                                              "type": "string",
+                                              "minLength": 1,
+                                              "maxLength": 256
+                                            },
+                                            "id": {
+                                              "type": "string",
+                                              "minLength": 1,
+                                              "maxLength": 256
+                                            },
+                                            "version": {
+                                              "type": "string",
+                                              "minLength": 1,
+                                              "maxLength": 256
+                                            },
+                                            "contentDigest": {
+                                              "type": "string",
+                                              "pattern": "^[a-f0-9]{64}$"
+                                            }
+                                          },
+                                          "required": [
+                                            "owner",
+                                            "id",
+                                            "version",
+                                            "contentDigest"
+                                          ],
+                                          "additionalProperties": false
+                                        },
+                                        "candidateDigest": {
+                                          "type": "string",
+                                          "pattern": "^[a-f0-9]{64}$"
+                                        },
+                                        "policyRef": {
+                                          "type": "object",
+                                          "properties": {
+                                            "owner": {
+                                              "type": "string",
+                                              "minLength": 1,
+                                              "maxLength": 256
+                                            },
+                                            "id": {
+                                              "type": "string",
+                                              "minLength": 1,
+                                              "maxLength": 256
+                                            },
+                                            "version": {
+                                              "type": "string",
+                                              "minLength": 1,
+                                              "maxLength": 256
+                                            },
+                                            "contentDigest": {
+                                              "type": "string",
+                                              "pattern": "^[a-f0-9]{64}$"
+                                            }
+                                          },
+                                          "required": [
+                                            "owner",
+                                            "id",
+                                            "version",
+                                            "contentDigest"
+                                          ],
+                                          "additionalProperties": false
+                                        }
+                                      },
+                                      "required": [
+                                        "grammar",
+                                        "queryId",
+                                        "programRef",
+                                        "candidateDigest",
+                                        "policyRef"
+                                      ],
+                                      "additionalProperties": false
                                     }
                                   },
                                   "required": [
@@ -43759,6 +43933,93 @@
                                     "sourceManifestDigest": {
                                       "type": "string",
                                       "pattern": "^[a-f0-9]{64}$"
+                                    },
+                                    "programTarget": {
+                                      "type": "object",
+                                      "properties": {
+                                        "grammar": {
+                                          "type": "string",
+                                          "const": "r3-m3-report-extension-v1"
+                                        },
+                                        "queryId": {
+                                          "type": "string",
+                                          "format": "uuid"
+                                        },
+                                        "programRef": {
+                                          "type": "object",
+                                          "properties": {
+                                            "owner": {
+                                              "type": "string",
+                                              "minLength": 1,
+                                              "maxLength": 256
+                                            },
+                                            "id": {
+                                              "type": "string",
+                                              "minLength": 1,
+                                              "maxLength": 256
+                                            },
+                                            "version": {
+                                              "type": "string",
+                                              "minLength": 1,
+                                              "maxLength": 256
+                                            },
+                                            "contentDigest": {
+                                              "type": "string",
+                                              "pattern": "^[a-f0-9]{64}$"
+                                            }
+                                          },
+                                          "required": [
+                                            "owner",
+                                            "id",
+                                            "version",
+                                            "contentDigest"
+                                          ],
+                                          "additionalProperties": false
+                                        },
+                                        "candidateDigest": {
+                                          "type": "string",
+                                          "pattern": "^[a-f0-9]{64}$"
+                                        },
+                                        "policyRef": {
+                                          "type": "object",
+                                          "properties": {
+                                            "owner": {
+                                              "type": "string",
+                                              "minLength": 1,
+                                              "maxLength": 256
+                                            },
+                                            "id": {
+                                              "type": "string",
+                                              "minLength": 1,
+                                              "maxLength": 256
+                                            },
+                                            "version": {
+                                              "type": "string",
+                                              "minLength": 1,
+                                              "maxLength": 256
+                                            },
+                                            "contentDigest": {
+                                              "type": "string",
+                                              "pattern": "^[a-f0-9]{64}$"
+                                            }
+                                          },
+                                          "required": [
+                                            "owner",
+                                            "id",
+                                            "version",
+                                            "contentDigest"
+                                          ],
+                                          "additionalProperties": false
+                                        }
+                                      },
+                                      "required": [
+                                        "grammar",
+                                        "queryId",
+                                        "programRef",
+                                        "candidateDigest",
+                                        "policyRef"
+                                      ],
+                                      "additionalProperties": false
                                     }
                                   },
                                   "required": [
@@ -45307,6 +45568,93 @@
                                     "sourceManifestDigest": {
                                       "type": "string",
                                       "pattern": "^[a-f0-9]{64}$"
+                                    },
+                                    "programTarget": {
+                                      "type": "object",
+                                      "properties": {
+                                        "grammar": {
+                                          "type": "string",
+                                          "const": "r3-m3-report-extension-v1"
+                                        },
+                                        "queryId": {
+                                          "type": "string",
+                                          "format": "uuid"
+                                        },
+                                        "programRef": {
+                                          "type": "object",
+                                          "properties": {
+                                            "owner": {
+                                              "type": "string",
+                                              "minLength": 1,
+                                              "maxLength": 256
+                                            },
+                                            "id": {
+                                              "type": "string",
+                                              "minLength": 1,
+                                              "maxLength": 256
+                                            },
+                                            "version": {
+                                              "type": "string",
+                                              "minLength": 1,
+                                              "maxLength": 256
+                                            },
+                                            "contentDigest": {
+                                              "type": "string",
+                                              "pattern": "^[a-f0-9]{64}$"
+                                            }
+                                          },
+                                          "required": [
+                                            "owner",
+                                            "id",
+                                            "version",
+                                            "contentDigest"
+                                          ],
+                                          "additionalProperties": false
+                                        },
+                                        "candidateDigest": {
+                                          "type": "string",
+                                          "pattern": "^[a-f0-9]{64}$"
+                                        },
+                                        "policyRef": {
+                                          "type": "object",
+                                          "properties": {
+                                            "owner": {
+                                              "type": "string",
+                                              "minLength": 1,
+                                              "maxLength": 256
+                                            },
+                                            "id": {
+                                              "type": "string",
+                                              "minLength": 1,
+                                              "maxLength": 256
+                                            },
+                                            "version": {
+                                              "type": "string",
+                                              "minLength": 1,
+                                              "maxLength": 256
+                                            },
+                                            "contentDigest": {
+                                              "type": "string",
+                                              "pattern": "^[a-f0-9]{64}$"
+                                            }
+                                          },
+                                          "required": [
+                                            "owner",
+                                            "id",
+                                            "version",
+                                            "contentDigest"
+                                          ],
+                                          "additionalProperties": false
+                                        }
+                                      },
+                                      "required": [
+                                        "grammar",
+                                        "queryId",
+                                        "programRef",
+                                        "candidateDigest",
+                                        "policyRef"
+                                      ],
+                                      "additionalProperties": false
                                     }
                                   },
                                   "required": [
@@ -47078,6 +47426,93 @@
                                     "sourceManifestDigest": {
                                       "type": "string",
                                       "pattern": "^[a-f0-9]{64}$"
+                                    },
+                                    "programTarget": {
+                                      "type": "object",
+                                      "properties": {
+                                        "grammar": {
+                                          "type": "string",
+                                          "const": "r3-m3-report-extension-v1"
+                                        },
+                                        "queryId": {
+                                          "type": "string",
+                                          "format": "uuid"
+                                        },
+                                        "programRef": {
+                                          "type": "object",
+                                          "properties": {
+                                            "owner": {
+                                              "type": "string",
+                                              "minLength": 1,
+                                              "maxLength": 256
+                                            },
+                                            "id": {
+                                              "type": "string",
+                                              "minLength": 1,
+                                              "maxLength": 256
+                                            },
+                                            "version": {
+                                              "type": "string",
+                                              "minLength": 1,
+                                              "maxLength": 256
+                                            },
+                                            "contentDigest": {
+                                              "type": "string",
+                                              "pattern": "^[a-f0-9]{64}$"
+                                            }
+                                          },
+                                          "required": [
+                                            "owner",
+                                            "id",
+                                            "version",
+                                            "contentDigest"
+                                          ],
+                                          "additionalProperties": false
+                                        },
+                                        "candidateDigest": {
+                                          "type": "string",
+                                          "pattern": "^[a-f0-9]{64}$"
+                                        },
+                                        "policyRef": {
+                                          "type": "object",
+                                          "properties": {
+                                            "owner": {
+                                              "type": "string",
+                                              "minLength": 1,
+                                              "maxLength": 256
+                                            },
+                                            "id": {
+                                              "type": "string",
+                                              "minLength": 1,
+                                              "maxLength": 256
+                                            },
+                                            "version": {
+                                              "type": "string",
+                                              "minLength": 1,
+                                              "maxLength": 256
+                                            },
+                                            "contentDigest": {
+                                              "type": "string",
+                                              "pattern": "^[a-f0-9]{64}$"
+                                            }
+                                          },
+                                          "required": [
+                                            "owner",
+                                            "id",
+                                            "version",
+                                            "contentDigest"
+                                          ],
+                                          "additionalProperties": false
+                                        }
+                                      },
+                                      "required": [
+                                        "grammar",
+                                        "queryId",
+                                        "programRef",
+                                        "candidateDigest",
+                                        "policyRef"
+                                      ],
+                                      "additionalProperties": false
                                     }
                                   },
                                   "required": [
@@ -47928,6 +48363,93 @@
                       "entityId"
                     ],
                     "additionalProperties": false
+                  },
+                  "programTarget": {
+                    "type": "object",
+                    "properties": {
+                      "grammar": {
+                        "type": "string",
+                        "const": "r3-m3-report-extension-v1"
+                      },
+                      "queryId": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "programRef": {
+                        "type": "object",
+                        "properties": {
+                          "owner": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 256
+                          },
+                          "id": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 256
+                          },
+                          "version": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 256
+                          },
+                          "contentDigest": {
+                            "type": "string",
+                            "pattern": "^[a-f0-9]{64}$"
+                          }
+                        },
+                        "required": [
+                          "owner",
+                          "id",
+                          "version",
+                          "contentDigest"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "candidateDigest": {
+                        "type": "string",
+                        "pattern": "^[a-f0-9]{64}$"
+                      },
+                      "policyRef": {
+                        "type": "object",
+                        "properties": {
+                          "owner": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 256
+                          },
+                          "id": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 256
+                          },
+                          "version": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 256
+                          },
+                          "contentDigest": {
+                            "type": "string",
+                            "pattern": "^[a-f0-9]{64}$"
+                          }
+                        },
+                        "required": [
+                          "owner",
+                          "id",
+                          "version",
+                          "contentDigest"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "required": [
+                      "grammar",
+                      "queryId",
+                      "programRef",
+                      "candidateDigest",
+                      "policyRef"
+                    ],
+                    "additionalProperties": false
                   }
                 },
                 "required": [
@@ -48004,6 +48526,116 @@
                   "requestId",
                   "decision",
                   "reason"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current exact proposed finite mechanism, owner receipt or historical responsibility. Not private truth, consent, admission or settlement."
+          },
+          "400": {
+            "description": "Strict bounded input rejected"
+          },
+          "401": {
+            "description": "Bearer identity required"
+          },
+          "403": {
+            "description": "Exact reporting or owner principal unavailable"
+          },
+          "404": {
+            "description": "Permitted Work/reference unavailable"
+          },
+          "409": {
+            "description": "Original revision, deadline, grant, closure or idempotency fenced"
+          },
+          "413": {
+            "description": "Byte/resource bound"
+          },
+          "422": {
+            "description": "Precise unsupported domain or required protected authority unavailable"
+          }
+        }
+      }
+    },
+    "/api/elicitation-protocols/reserve": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "requestId": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                },
+                "required": [
+                  "requestId"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current exact proposed finite mechanism, owner receipt or historical responsibility. Not private truth, consent, admission or settlement."
+          },
+          "400": {
+            "description": "Strict bounded input rejected"
+          },
+          "401": {
+            "description": "Bearer identity required"
+          },
+          "403": {
+            "description": "Exact reporting or owner principal unavailable"
+          },
+          "404": {
+            "description": "Permitted Work/reference unavailable"
+          },
+          "409": {
+            "description": "Original revision, deadline, grant, closure or idempotency fenced"
+          },
+          "413": {
+            "description": "Byte/resource bound"
+          },
+          "422": {
+            "description": "Precise unsupported domain or required protected authority unavailable"
+          }
+        }
+      }
+    },
+    "/api/elicitation-protocols/schedules": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "requestId": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                },
+                "required": [
+                  "requestId"
                 ],
                 "additionalProperties": false,
                 "$schema": "http://json-schema.org/draft-07/schema#"
@@ -48765,6 +49397,398 @@
         }
       }
     },
+    "/api/obligations/prepare": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "preparationRef": {
+                    "type": "object",
+                    "properties": {
+                      "owner": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "id": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "version": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "contentDigest": {
+                        "type": "string",
+                        "pattern": "^[a-f0-9]{64}$"
+                      }
+                    },
+                    "required": [
+                      "owner",
+                      "id",
+                      "version",
+                      "contentDigest"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "allocationRef": {
+                    "type": "object",
+                    "properties": {
+                      "owner": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "id": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "version": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "contentDigest": {
+                        "type": "string",
+                        "pattern": "^[a-f0-9]{64}$"
+                      }
+                    },
+                    "required": [
+                      "owner",
+                      "id",
+                      "version",
+                      "contentDigest"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "consumptionRef": {
+                    "type": "object",
+                    "properties": {
+                      "owner": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "id": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "version": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "contentDigest": {
+                        "type": "string",
+                        "pattern": "^[a-f0-9]{64}$"
+                      }
+                    },
+                    "required": [
+                      "owner",
+                      "id",
+                      "version",
+                      "contentDigest"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "preparationRef",
+                  "allocationRef",
+                  "consumptionRef"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Original semantic-owner result under its current authority. Exact proposed R3 schedules do not grant agreement or settlement."
+          },
+          "400": {
+            "description": "Strict owner request rejected"
+          },
+          "401": {
+            "description": "Real bearer identity required"
+          },
+          "403": {
+            "description": "Current owner authority absent"
+          },
+          "404": {
+            "description": "Permitted original reference unavailable"
+          },
+          "409": {
+            "description": "Currentness, immutable identity, resource or attempt responsibility fenced"
+          },
+          "413": {
+            "description": "Original byte/resource bound"
+          },
+          "422": {
+            "description": "Unsupported operation or required protected admission absent"
+          }
+        }
+      }
+    },
+    "/api/obligations/read": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "obligationRef": {
+                    "type": "object",
+                    "properties": {
+                      "owner": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "id": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "version": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "contentDigest": {
+                        "type": "string",
+                        "pattern": "^[a-f0-9]{64}$"
+                      }
+                    },
+                    "required": [
+                      "owner",
+                      "id",
+                      "version",
+                      "contentDigest"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "obligationRef"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Original semantic-owner result under its current authority. Exact proposed R3 schedules do not grant agreement or settlement."
+          },
+          "400": {
+            "description": "Strict owner request rejected"
+          },
+          "401": {
+            "description": "Real bearer identity required"
+          },
+          "403": {
+            "description": "Current owner authority absent"
+          },
+          "404": {
+            "description": "Permitted original reference unavailable"
+          },
+          "409": {
+            "description": "Currentness, immutable identity, resource or attempt responsibility fenced"
+          },
+          "413": {
+            "description": "Original byte/resource bound"
+          },
+          "422": {
+            "description": "Unsupported operation or required protected admission absent"
+          }
+        }
+      }
+    },
+    "/api/obligations/validate": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "obligationRef": {
+                    "type": "object",
+                    "properties": {
+                      "owner": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "id": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "version": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "contentDigest": {
+                        "type": "string",
+                        "pattern": "^[a-f0-9]{64}$"
+                      }
+                    },
+                    "required": [
+                      "owner",
+                      "id",
+                      "version",
+                      "contentDigest"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "obligationRef"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Original semantic-owner result under its current authority. Exact proposed R3 schedules do not grant agreement or settlement."
+          },
+          "400": {
+            "description": "Strict owner request rejected"
+          },
+          "401": {
+            "description": "Real bearer identity required"
+          },
+          "403": {
+            "description": "Current owner authority absent"
+          },
+          "404": {
+            "description": "Permitted original reference unavailable"
+          },
+          "409": {
+            "description": "Currentness, immutable identity, resource or attempt responsibility fenced"
+          },
+          "413": {
+            "description": "Original byte/resource bound"
+          },
+          "422": {
+            "description": "Unsupported operation or required protected admission absent"
+          }
+        }
+      }
+    },
+    "/api/obligations/read-commitment": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "obligationRef": {
+                    "type": "object",
+                    "properties": {
+                      "owner": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "id": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "version": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "contentDigest": {
+                        "type": "string",
+                        "pattern": "^[a-f0-9]{64}$"
+                      }
+                    },
+                    "required": [
+                      "owner",
+                      "id",
+                      "version",
+                      "contentDigest"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "obligationRef"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Original semantic-owner result under its current authority. Exact proposed R3 schedules do not grant agreement or settlement."
+          },
+          "400": {
+            "description": "Strict owner request rejected"
+          },
+          "401": {
+            "description": "Real bearer identity required"
+          },
+          "403": {
+            "description": "Current owner authority absent"
+          },
+          "404": {
+            "description": "Permitted original reference unavailable"
+          },
+          "409": {
+            "description": "Currentness, immutable identity, resource or attempt responsibility fenced"
+          },
+          "413": {
+            "description": "Original byte/resource bound"
+          },
+          "422": {
+            "description": "Unsupported operation or required protected admission absent"
+          }
+        }
+      }
+    },
     "/api/obligations/prepare-elicitation": {
       "post": {
         "security": [
@@ -48816,6 +49840,1255 @@
                 },
                 "required": [
                   "requestId"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Original semantic-owner result under its current authority. Exact proposed R3 schedules do not grant agreement or settlement."
+          },
+          "400": {
+            "description": "Strict owner request rejected"
+          },
+          "401": {
+            "description": "Real bearer identity required"
+          },
+          "403": {
+            "description": "Current owner authority absent"
+          },
+          "404": {
+            "description": "Permitted original reference unavailable"
+          },
+          "409": {
+            "description": "Currentness, immutable identity, resource or attempt responsibility fenced"
+          },
+          "413": {
+            "description": "Original byte/resource bound"
+          },
+          "422": {
+            "description": "Unsupported operation or required protected admission absent"
+          }
+        }
+      }
+    },
+    "/api/obligations/budget-status": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "obligationRef": {
+                    "type": "object",
+                    "properties": {
+                      "owner": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "id": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "version": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "contentDigest": {
+                        "type": "string",
+                        "pattern": "^[a-f0-9]{64}$"
+                      }
+                    },
+                    "required": [
+                      "owner",
+                      "id",
+                      "version",
+                      "contentDigest"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "obligationRef"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Original semantic-owner result under its current authority. Exact proposed R3 schedules do not grant agreement or settlement."
+          },
+          "400": {
+            "description": "Strict owner request rejected"
+          },
+          "401": {
+            "description": "Real bearer identity required"
+          },
+          "403": {
+            "description": "Current owner authority absent"
+          },
+          "404": {
+            "description": "Permitted original reference unavailable"
+          },
+          "409": {
+            "description": "Currentness, immutable identity, resource or attempt responsibility fenced"
+          },
+          "413": {
+            "description": "Original byte/resource bound"
+          },
+          "422": {
+            "description": "Unsupported operation or required protected admission absent"
+          }
+        }
+      }
+    },
+    "/api/obligations/read-execution-handoff": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "obligationRef": {
+                    "type": "object",
+                    "properties": {
+                      "owner": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "id": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "version": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "contentDigest": {
+                        "type": "string",
+                        "pattern": "^[a-f0-9]{64}$"
+                      }
+                    },
+                    "required": [
+                      "owner",
+                      "id",
+                      "version",
+                      "contentDigest"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "obligationRef"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Original semantic-owner result under its current authority. Exact proposed R3 schedules do not grant agreement or settlement."
+          },
+          "400": {
+            "description": "Strict owner request rejected"
+          },
+          "401": {
+            "description": "Real bearer identity required"
+          },
+          "403": {
+            "description": "Current owner authority absent"
+          },
+          "404": {
+            "description": "Permitted original reference unavailable"
+          },
+          "409": {
+            "description": "Currentness, immutable identity, resource or attempt responsibility fenced"
+          },
+          "413": {
+            "description": "Original byte/resource bound"
+          },
+          "422": {
+            "description": "Unsupported operation or required protected admission absent"
+          }
+        }
+      }
+    },
+    "/api/obligations/check-budget": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "obligationRef": {
+                    "type": "object",
+                    "properties": {
+                      "owner": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "id": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "version": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "contentDigest": {
+                        "type": "string",
+                        "pattern": "^[a-f0-9]{64}$"
+                      }
+                    },
+                    "required": [
+                      "owner",
+                      "id",
+                      "version",
+                      "contentDigest"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "requestRef": {
+                    "type": "object",
+                    "properties": {
+                      "owner": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "id": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "version": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "contentDigest": {
+                        "type": "string",
+                        "pattern": "^[a-f0-9]{64}$"
+                      }
+                    },
+                    "required": [
+                      "owner",
+                      "id",
+                      "version",
+                      "contentDigest"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "memberId": {
+                    "type": "string",
+                    "pattern": "^request-member:[a-f0-9]{64}$"
+                  },
+                  "phase": {
+                    "type": "string",
+                    "enum": [
+                      "EXECUTION",
+                      "RECOVERY",
+                      "HUMAN"
+                    ]
+                  },
+                  "ordinal": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 64
+                  },
+                  "units": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 100000
+                  },
+                  "nonce": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                },
+                "required": [
+                  "obligationRef",
+                  "requestRef",
+                  "memberId",
+                  "phase",
+                  "ordinal",
+                  "units",
+                  "nonce"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Original semantic-owner result under its current authority. Exact proposed R3 schedules do not grant agreement or settlement."
+          },
+          "400": {
+            "description": "Strict owner request rejected"
+          },
+          "401": {
+            "description": "Real bearer identity required"
+          },
+          "403": {
+            "description": "Current owner authority absent"
+          },
+          "404": {
+            "description": "Permitted original reference unavailable"
+          },
+          "409": {
+            "description": "Currentness, immutable identity, resource or attempt responsibility fenced"
+          },
+          "413": {
+            "description": "Original byte/resource bound"
+          },
+          "422": {
+            "description": "Unsupported operation or required protected admission absent"
+          }
+        }
+      }
+    },
+    "/api/obligations/check-dispatch": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "obligationRef": {
+                    "type": "object",
+                    "properties": {
+                      "owner": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "id": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "version": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "contentDigest": {
+                        "type": "string",
+                        "pattern": "^[a-f0-9]{64}$"
+                      }
+                    },
+                    "required": [
+                      "owner",
+                      "id",
+                      "version",
+                      "contentDigest"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "requestRef": {
+                    "type": "object",
+                    "properties": {
+                      "owner": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "id": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "version": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "contentDigest": {
+                        "type": "string",
+                        "pattern": "^[a-f0-9]{64}$"
+                      }
+                    },
+                    "required": [
+                      "owner",
+                      "id",
+                      "version",
+                      "contentDigest"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "memberId": {
+                    "type": "string",
+                    "pattern": "^request-member:[a-f0-9]{64}$"
+                  },
+                  "nonce": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "delivery": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "workflowStepId": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "claimFence": {
+                            "type": "integer",
+                            "exclusiveMinimum": 0,
+                            "maximum": 9007199254740991
+                          },
+                          "dispatchGeneration": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991
+                          },
+                          "runVersion": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991
+                          },
+                          "claimToken": {
+                            "type": "string",
+                            "format": "uuid"
+                          }
+                        },
+                        "required": [
+                          "workflowStepId",
+                          "claimFence",
+                          "dispatchGeneration",
+                          "runVersion",
+                          "claimToken"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "workflowStepId": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "claimFence": {
+                            "type": "integer",
+                            "exclusiveMinimum": 0,
+                            "maximum": 9007199254740991
+                          },
+                          "dispatchGeneration": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991
+                          },
+                          "runVersion": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991
+                          },
+                          "kind": {
+                            "type": "string",
+                            "const": "RECOVERY"
+                          },
+                          "jobId": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "jobDeliveryAttemptId": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "jobClaimToken": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "jobClaimFence": {
+                            "type": "integer",
+                            "exclusiveMinimum": 0,
+                            "maximum": 9007199254740991
+                          }
+                        },
+                        "required": [
+                          "workflowStepId",
+                          "claimFence",
+                          "dispatchGeneration",
+                          "runVersion",
+                          "kind",
+                          "jobId",
+                          "jobDeliveryAttemptId",
+                          "jobClaimToken",
+                          "jobClaimFence"
+                        ],
+                        "additionalProperties": false
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "obligationRef",
+                  "requestRef",
+                  "memberId",
+                  "nonce"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Original semantic-owner result under its current authority. Exact proposed R3 schedules do not grant agreement or settlement."
+          },
+          "400": {
+            "description": "Strict owner request rejected"
+          },
+          "401": {
+            "description": "Real bearer identity required"
+          },
+          "403": {
+            "description": "Current owner authority absent"
+          },
+          "404": {
+            "description": "Permitted original reference unavailable"
+          },
+          "409": {
+            "description": "Currentness, immutable identity, resource or attempt responsibility fenced"
+          },
+          "413": {
+            "description": "Original byte/resource bound"
+          },
+          "422": {
+            "description": "Unsupported operation or required protected admission absent"
+          }
+        }
+      }
+    },
+    "/api/obligations/execute-request": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "request": {
+                    "type": "object",
+                    "properties": {
+                      "ref": {
+                        "type": "object",
+                        "properties": {
+                          "owner": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 256
+                          },
+                          "id": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 256
+                          },
+                          "version": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 256
+                          },
+                          "contentDigest": {
+                            "type": "string",
+                            "pattern": "^[a-f0-9]{64}$"
+                          }
+                        },
+                        "required": [
+                          "owner",
+                          "id",
+                          "version",
+                          "contentDigest"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "ir": {
+                        "type": "object",
+                        "additionalProperties": {}
+                      },
+                      "admissions": {
+                        "type": "array",
+                        "items": {},
+                        "minItems": 1,
+                        "maxItems": 64
+                      }
+                    },
+                    "required": [
+                      "ref",
+                      "ir",
+                      "admissions"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "authorization": {
+                    "type": "object",
+                    "properties": {
+                      "body": {
+                        "type": "object",
+                        "additionalProperties": {}
+                      },
+                      "signature": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      }
+                    },
+                    "required": [
+                      "body",
+                      "signature"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "delivery": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "workflowStepId": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "claimFence": {
+                            "type": "integer",
+                            "exclusiveMinimum": 0,
+                            "maximum": 9007199254740991
+                          },
+                          "dispatchGeneration": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991
+                          },
+                          "runVersion": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991
+                          },
+                          "claimToken": {
+                            "type": "string",
+                            "format": "uuid"
+                          }
+                        },
+                        "required": [
+                          "workflowStepId",
+                          "claimFence",
+                          "dispatchGeneration",
+                          "runVersion",
+                          "claimToken"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "workflowStepId": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "claimFence": {
+                            "type": "integer",
+                            "exclusiveMinimum": 0,
+                            "maximum": 9007199254740991
+                          },
+                          "dispatchGeneration": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991
+                          },
+                          "runVersion": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991
+                          },
+                          "kind": {
+                            "type": "string",
+                            "const": "RECOVERY"
+                          },
+                          "jobId": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "jobDeliveryAttemptId": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "jobClaimToken": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "jobClaimFence": {
+                            "type": "integer",
+                            "exclusiveMinimum": 0,
+                            "maximum": 9007199254740991
+                          }
+                        },
+                        "required": [
+                          "workflowStepId",
+                          "claimFence",
+                          "dispatchGeneration",
+                          "runVersion",
+                          "kind",
+                          "jobId",
+                          "jobDeliveryAttemptId",
+                          "jobClaimToken",
+                          "jobClaimFence"
+                        ],
+                        "additionalProperties": false
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "request",
+                  "authorization"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Original semantic-owner result under its current authority. Exact proposed R3 schedules do not grant agreement or settlement."
+          },
+          "400": {
+            "description": "Strict owner request rejected"
+          },
+          "401": {
+            "description": "Real bearer identity required"
+          },
+          "403": {
+            "description": "Current owner authority absent"
+          },
+          "404": {
+            "description": "Permitted original reference unavailable"
+          },
+          "409": {
+            "description": "Currentness, immutable identity, resource or attempt responsibility fenced"
+          },
+          "413": {
+            "description": "Original byte/resource bound"
+          },
+          "422": {
+            "description": "Unsupported operation or required protected admission absent"
+          }
+        }
+      }
+    },
+    "/api/obligations/reconcile-request": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "request": {
+                    "type": "object",
+                    "properties": {
+                      "ref": {
+                        "type": "object",
+                        "properties": {
+                          "owner": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 256
+                          },
+                          "id": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 256
+                          },
+                          "version": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 256
+                          },
+                          "contentDigest": {
+                            "type": "string",
+                            "pattern": "^[a-f0-9]{64}$"
+                          }
+                        },
+                        "required": [
+                          "owner",
+                          "id",
+                          "version",
+                          "contentDigest"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "ir": {
+                        "type": "object",
+                        "additionalProperties": {}
+                      },
+                      "admissions": {
+                        "type": "array",
+                        "items": {},
+                        "minItems": 1,
+                        "maxItems": 64
+                      }
+                    },
+                    "required": [
+                      "ref",
+                      "ir",
+                      "admissions"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "authorization": {
+                    "type": "object",
+                    "properties": {
+                      "body": {
+                        "type": "object",
+                        "additionalProperties": {}
+                      },
+                      "signature": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      }
+                    },
+                    "required": [
+                      "body",
+                      "signature"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "request",
+                  "authorization"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Original semantic-owner result under its current authority. Exact proposed R3 schedules do not grant agreement or settlement."
+          },
+          "400": {
+            "description": "Strict owner request rejected"
+          },
+          "401": {
+            "description": "Real bearer identity required"
+          },
+          "403": {
+            "description": "Current owner authority absent"
+          },
+          "404": {
+            "description": "Permitted original reference unavailable"
+          },
+          "409": {
+            "description": "Currentness, immutable identity, resource or attempt responsibility fenced"
+          },
+          "413": {
+            "description": "Original byte/resource bound"
+          },
+          "422": {
+            "description": "Unsupported operation or required protected admission absent"
+          }
+        }
+      }
+    },
+    "/api/obligations/schedule-request": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "request": {
+                    "type": "object",
+                    "properties": {
+                      "ref": {
+                        "type": "object",
+                        "properties": {
+                          "owner": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 256
+                          },
+                          "id": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 256
+                          },
+                          "version": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 256
+                          },
+                          "contentDigest": {
+                            "type": "string",
+                            "pattern": "^[a-f0-9]{64}$"
+                          }
+                        },
+                        "required": [
+                          "owner",
+                          "id",
+                          "version",
+                          "contentDigest"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "ir": {
+                        "type": "object",
+                        "additionalProperties": {}
+                      },
+                      "admissions": {
+                        "type": "array",
+                        "items": {},
+                        "minItems": 1,
+                        "maxItems": 64
+                      }
+                    },
+                    "required": [
+                      "ref",
+                      "ir",
+                      "admissions"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "authorization": {
+                    "type": "object",
+                    "properties": {
+                      "body": {
+                        "type": "object",
+                        "additionalProperties": {}
+                      },
+                      "signature": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      }
+                    },
+                    "required": [
+                      "body",
+                      "signature"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "request",
+                  "authorization"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Original semantic-owner result under its current authority. Exact proposed R3 schedules do not grant agreement or settlement."
+          },
+          "400": {
+            "description": "Strict owner request rejected"
+          },
+          "401": {
+            "description": "Real bearer identity required"
+          },
+          "403": {
+            "description": "Current owner authority absent"
+          },
+          "404": {
+            "description": "Permitted original reference unavailable"
+          },
+          "409": {
+            "description": "Currentness, immutable identity, resource or attempt responsibility fenced"
+          },
+          "413": {
+            "description": "Original byte/resource bound"
+          },
+          "422": {
+            "description": "Unsupported operation or required protected admission absent"
+          }
+        }
+      }
+    },
+    "/api/obligations/cancel-delivery": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "obligationRef": {
+                    "type": "object",
+                    "properties": {
+                      "owner": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "id": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "version": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "contentDigest": {
+                        "type": "string",
+                        "pattern": "^[a-f0-9]{64}$"
+                      }
+                    },
+                    "required": [
+                      "owner",
+                      "id",
+                      "version",
+                      "contentDigest"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "workflowRunId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "expectedVersion": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                },
+                "required": [
+                  "obligationRef",
+                  "workflowRunId",
+                  "expectedVersion"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Original semantic-owner result under its current authority. Exact proposed R3 schedules do not grant agreement or settlement."
+          },
+          "400": {
+            "description": "Strict owner request rejected"
+          },
+          "401": {
+            "description": "Real bearer identity required"
+          },
+          "403": {
+            "description": "Current owner authority absent"
+          },
+          "404": {
+            "description": "Permitted original reference unavailable"
+          },
+          "409": {
+            "description": "Currentness, immutable identity, resource or attempt responsibility fenced"
+          },
+          "413": {
+            "description": "Original byte/resource bound"
+          },
+          "422": {
+            "description": "Unsupported operation or required protected admission absent"
+          }
+        }
+      }
+    },
+    "/api/obligations/compile-request": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "obligationRef": {
+                    "type": "object",
+                    "properties": {
+                      "owner": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "id": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "version": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "contentDigest": {
+                        "type": "string",
+                        "pattern": "^[a-f0-9]{64}$"
+                      }
+                    },
+                    "required": [
+                      "owner",
+                      "id",
+                      "version",
+                      "contentDigest"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "bindings": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "exposureId": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 256
+                        },
+                        "methodRef": {
+                          "type": "object",
+                          "properties": {
+                            "owner": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 256
+                            },
+                            "id": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 256
+                            },
+                            "version": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 256
+                            },
+                            "contentDigest": {
+                              "type": "string",
+                              "pattern": "^[a-f0-9]{64}$"
+                            }
+                          },
+                          "required": [
+                            "owner",
+                            "id",
+                            "version",
+                            "contentDigest"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "providerOrigin": {
+                          "type": "string",
+                          "maxLength": 2048
+                        },
+                        "applicationAccountId": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "recordKey": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 1024
+                        },
+                        "field": {
+                          "type": "string",
+                          "pattern": "^[A-Za-z][A-Za-z0-9_]{0,63}$"
+                        },
+                        "expectedVersion": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 512
+                        }
+                      },
+                      "required": [
+                        "exposureId",
+                        "methodRef",
+                        "providerOrigin",
+                        "applicationAccountId",
+                        "recordKey",
+                        "field",
+                        "expectedVersion"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "minItems": 1,
+                    "maxItems": 64
+                  }
+                },
+                "required": [
+                  "obligationRef",
+                  "bindings"
                 ],
                 "additionalProperties": false,
                 "$schema": "http://json-schema.org/draft-07/schema#"

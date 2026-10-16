@@ -319,6 +319,10 @@ jobs:
           DATABASE_URL: postgres://finnor:finnor@127.0.0.1:5432/finnor
           FINNOR_TEST_MANAGED_EXTENSIONS: omit
 
+      - name: Set up pinned QEMU for ARM64 image stages
+        uses: docker/setup-qemu-action@96fe6ef7f33517b61c61be40b68a1882f3264fb8
+        with:
+          platforms: arm64
       - name: Set up pinned cached image builder
         uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f
         env:
@@ -362,8 +366,9 @@ jobs:
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: production-worker-image-${{ github.run_id }}-${{ github.run_attempt }}
-          path: ${{ runner.temp }}/finnor-worker-image-smoke/*
-          path: ${{ runner.temp }}/finnor-worker-image-smoke/linux-r3-runtime/**
+          path: |
+            ${{ runner.temp }}/finnor-worker-image-smoke/*
+            ${{ runner.temp }}/finnor-worker-image-smoke/linux-r3-runtime/**
           if-no-files-found: warn
           retention-days: 7
         env:
@@ -449,7 +454,7 @@ jobs:
           VERCEL_ORG_ID="$(node -p "require('./infra/deployment/production.contract.json').topology.api.organizationId")"
           VERCEL_PROJECT_ID="$(node -p "require('./infra/deployment/production.contract.json').topology.api.projectId")"
           export VERCEL_ORG_ID VERCEL_PROJECT_ID
-          (cd "$config_dir" && vercel pull --yes --environment=production --token "$VERCEL_TOKEN")
+          (cd "$config_dir" && vercel pull --yes --environment=production)
           protected_env="$config_dir/.vercel/.env.production.local"
           test -s "$protected_env"
           chmod 600 "$protected_env"
@@ -585,7 +590,6 @@ jobs:
           ACTIONS_ID_TOKEN_REQUEST_TOKEN: ""
           ACTIONS_ID_TOKEN_REQUEST_URL: ""
           VERCEL_API_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_API_AUTOMATION_BYPASS_SECRET }}
-
       - name: Authenticate exact AWS project with GitHub OIDC for fresh compute preflight
         uses: aws-actions/configure-aws-credentials@cbe3b392738ccf3f987d68400dafcf4b0624a56c
         with:
@@ -654,18 +658,6 @@ jobs:
           VERCEL_SUPPLIER_CANARY_APP_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_SUPPLIER_CANARY_APP_AUTOMATION_BYPASS_SECRET }}
           VERCEL_SUPPLIER_CANARY_AUTH_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_SUPPLIER_CANARY_AUTH_AUTOMATION_BYPASS_SECRET }}
 
-      - name: Execute governed Phase 8 Water retirement protocol
-        run: |
-          node scripts/release/run-p8-production-water-retirement.mjs \
-            --database-env "$FINNOR_PROTECTED_DATABASE_ENV" \
-            --apply \
-            --authorization-ref "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
-        env:
-          GH_TOKEN: ${{ github.token }}
-          VERCEL_API_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_API_AUTOMATION_BYPASS_SECRET }}
-          VERCEL_SUPPLIER_CANARY_APP_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_SUPPLIER_CANARY_APP_AUTOMATION_BYPASS_SECRET }}
-          VERCEL_SUPPLIER_CANARY_AUTH_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_SUPPLIER_CANARY_AUTH_AUTOMATION_BYPASS_SECRET }}
-
       - name: Verify final PE product authority readiness
         run: |
           node scripts/release/verify-production-readiness.mjs "${{ steps.api.outputs.url }}" "$FINNOR_COMMIT_SHA" api
@@ -675,9 +667,3 @@ jobs:
           ACTIONS_ID_TOKEN_REQUEST_TOKEN: ""
           ACTIONS_ID_TOKEN_REQUEST_URL: ""
           VERCEL_API_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_API_AUTOMATION_BYPASS_SECRET }}
-
-      - name: Baseline, shadow-compare, and activate Scope-5 impact per eligible PE tenant
-        run: npm run release:scope5:rollout -- "$FINNOR_PROTECTED_DATABASE_ENV"
-        working-directory: finnor-os
-        env:
-          GH_TOKEN: ${{ github.token }}

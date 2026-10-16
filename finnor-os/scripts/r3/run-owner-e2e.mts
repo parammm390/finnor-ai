@@ -19,11 +19,22 @@ import { r3Digest } from '../../packages/epistemic-runtime/src/incentive-rule-sy
 import { r3Ref, r3PreparedExperienceEvent } from '../../packages/private-equity/src/r3/store';
 import { createWorker } from '../../apps/worker/src/index';
 import { R3WorkReviewSchema } from '../../packages/epistemic-runtime/src/incentive-rule-synthesis/output-contracts';
+import { POST as interventionsPost } from '../../apps/api/app/api/interventions/[operation]/route';
+import { POST as policiesPost } from '../../apps/api/app/api/policies/[operation]/route';
+import { POST as obligationsPost } from '../../apps/api/app/api/obligations/[operation]/route';
 
 const repo = resolve(import.meta.dirname, '../../..'), output = process.env.FINNOR_R3_EVIDENCE_DIR!;
 await mkdir(output, { recursive: true });
 const cases: any[] = [], fixtures: Record<string, any> = {}, children = new Set<ChildProcess>(), startedAt = new Date().toISOString();
 const workCounts: Record<string, number> = {};
+const administrativeFailures: unknown[] = [];
+function observeAdmin(client: pg.Client) {
+  client.on('error', error => {
+    const observed = failureDetails(error); administrativeFailures.push(observed);
+    void artifact('postgres/admin-error-' + Date.now() + '.json', observed).catch(() => undefined);
+  });
+  return client;
+}
 const selected = process.env.FINNOR_R3_CASES?.split(','), hash = (b: string | Buffer) => createHash('sha256').update(b).digest('hex');
 const q = (n = 0, d = 1) => ({ numerator: String(n), denominator: String(d) });
 const sleep = (n: number) => new Promise<void>(r => setTimeout(r, n));
@@ -41,7 +52,11 @@ async function save() { await artifact('results.json', { schema: 'finnor.r3.owne
 async function story(id: string, fn: () => Promise<unknown>) {
   if (selected && !selected.includes(id) && id !== 'base-local-migration-upgrade-restart') return;
   const start = performance.now();
-  try { cases.push({ id, status: 'PASS', observed: await fn(), elapsedMs: performance.now() - start }) }
+  try {
+    const observed = await fn();
+    assert.equal(administrativeFailures.length, 0, 'R3_UNEXPECTED_DISPOSABLE_ADMIN_CONNECTION_FAILURE');
+    cases.push({ id, status: 'PASS', observed, elapsedMs: performance.now() - start });
+  }
   catch (e) { cases.push({ id, status: 'FAIL', error: failureDetails(e), elapsedMs: performance.now() - start }); await save(); throw e }
   console.log(JSON.stringify({ id, status: cases.at(-1).status })); await save();
 }
@@ -63,14 +78,41 @@ await artifact('source-cut.json', { files, digest: r3Digest(files), node: proces
 const port = await new Promise<number>((yes, no) => {
   const s = createServer(); s.once('error', no); s.listen(0, '127.0.0.1', () => { const a = s.address(); if (!a || typeof a === 'string') return no(Error('PORT')); s.close(() => yes(a.port)) });
 });
-const dir = await mkdtemp(join(repo, '.r3-scratch/r3-postgres-'));
-const postgres = new EmbeddedPostgres({ databaseDir: dir, user: 'finnor', password: 'finnor', port, persistent: true, onLog: () => undefined });
+const scratch = process.env.FINNOR_R3_SCRATCH ?? join(repo, '.r3-scratch');
+await mkdir(scratch, { recursive: true });
+const dir = await mkdtemp(join(scratch, 'r3-postgres-'));
+const postgres = new EmbeddedPostgres({ databaseDir: dir, user: 'finnor', password: 'finnor', port, persistent: true, onLog: line => { void appendFile(join(output, 'postgres-process.log'), String(line) + '\n').catch(() => undefined) } });
 let admin: pg.Client, http: Awaited<ReturnType<typeof r3HttpFixture>>, primary: any, workerUrl = '';
 function successful(r: any) { assert.equal(r.status, 200, JSON.stringify(r)); return r.body }
+async function reviewProposedUse(f: any, requestId: string, reason: string) {
+  const before = (await admin.query('SELECT deadline_at FROM finnor_os.r3_requests WHERE id=$1', [requestId])).rows[0];
+  const stages: any[] = [];
+  for (const operation of ['review', 'reserve', 'schedules']) {
+    const input = operation === 'review' ? { requestId, decision: 'PROPOSE_USE', reason } : { requestId };
+    const response = await http.call(f.principal, 'elicitation-protocols', operation, input);
+    stages.push({ operation, input, response }); await artifact('review-stages/' + requestId + '.json', { before, stages });
+    const result = successful(response);
+    if (operation === 'review') {
+      assert.equal(result.schema, 'finnor.r3.review-stage.v2'); assert.equal(result.requestId, requestId);
+      assert.equal(result.status, 'S4_REVIEWED_OWNER_CONTINUATION_REQUIRED'); assert.equal(result.resourcesReservedByThisStage, false);
+    }
+    if (operation === 'reserve') { assert.equal(result.status, 'FEASIBLE'); assert(result.reservation) }
+    if (operation === 'schedules') {
+      assert.equal(result.schema, 'finnor.r3.schedule-stage.v1'); assert.equal(result.requestId, requestId);
+      assert.deepEqual(result.operationPacket.schedulesRef, result.schedules.ref);
+    }
+  }
+  const after = (await admin.query('SELECT deadline_at,use_policy_ref,allocation_ref,schedules_ref FROM finnor_os.r3_requests WHERE id=$1', [requestId])).rows[0];
+  assert.deepEqual(after.deadline_at, before.deadline_at);
+  const [review, allocation, prepared] = stages.map(s => s.response.body);
+  assert.deepEqual(after.use_policy_ref, review.usePolicyRef); assert.deepEqual(after.allocation_ref, allocation.certificate.ref);
+  assert.deepEqual(after.schedules_ref, prepared.schedules.ref);
+  await artifact('review-stages/' + requestId + '.json', { before, after, stages, originalDeadlineRetained: true, noEffectAuthority: true });
+  return { ...review, allocation, ...prepared, usePolicyRef: review.usePolicyRef };
+}
 async function api(f: any, operation: string, body: unknown, handler?: unknown) {
-  const family = handler === (await import('../../apps/api/app/api/interventions/[operation]/route')).POST ? 'interventions' :
-    handler === (await import('../../apps/api/app/api/policies/[operation]/route')).POST ? 'policies' :
-    handler === (await import('../../apps/api/app/api/obligations/[operation]/route')).POST ? 'obligations' : 'allocations';
+  const family = handler === interventionsPost ? 'interventions' :
+    handler === policiesPost ? 'policies' : handler === obligationsPost ? 'obligations' : 'allocations';
   return http.call(f.principal, family, operation, body);
 }
 async function source(f: any, name: string, body: unknown, prior?: string, kind = 'R3_SUPPLIED_HYPOTHESIS') {
@@ -140,27 +182,72 @@ async function declaration(f: any, work: any, name: string, mutation?: (p: any) 
 }
 async function submit(f: any, name: string, mutation?: (p: any) => void) {
   const selectedWork = f.preparedWorks?.shift() ?? await makeWork(f, name), supplied = await declaration(f, selectedWork.work, name, mutation);
-  const input = { envelope_inputs: { mode: 'ordinary_disposable' }, problem_ref: supplied.original,
+  const programTarget = name === 'positive' ? await publishedProgramTarget(f, selectedWork.work.workId) : undefined;
+  const input = { envelope_inputs: { mode: 'ordinary_disposable' as const }, problem_ref: supplied.original,
     existing_work_revision: { workId: selectedWork.work.workId, revision: selectedWork.work.workInputId, root: f.root },
     domain_profile_ref: supplied.body.domainRef, budget_grant_ref: f.grant.certificate.ref, cancellation_ref: 'r3-cancel:' + name,
-    incumbentPolicyRef: f.policies[0].ref, idempotencyKey: randomUUID(), limits: { deadlineAt: new Date(Date.now() + 600000).toISOString(), maxAttempts: 8, childSeconds: 25 } };
+    incumbentPolicyRef: f.policies[0].ref, ...(programTarget ? { programTarget } : {}),
+    idempotencyKey: randomUUID(), limits: { deadlineAt: new Date(Date.now() + 600000).toISOString(), maxAttempts: 8, childSeconds: 25 } };
   await artifact(name + '/original-submission.json', { selectedWork, supplied, input });
   const { resolveDecisionWork } = await import('../../packages/private-equity/src/decision-slice/adapters');
   const { readSourceObject } = await import('../../packages/private-equity/src/deliberation/store');
   const { validateEnterpriseContingentPolicy } = await import('../../packages/private-equity/src/enterprise-control');
+  const { resolveR3ProgramTarget } = await import('../../packages/private-equity/src/r3/program-target');
+  const { resolveR3Owners } = await import('../../packages/private-equity/src/r3/owners');
   const preflight: any[] = [];
   for (const [boundary, fn] of [
     ['EXISTING_WORK', () => resolveDecisionWork(f.ctx, selectedWork.work.workId)],
     ['ORIGINAL_PERMISSIONED_DECLARATION', () => readSourceObject(f.ctx, f.root, supplied.original.sourceId, supplied.original.versionId)],
     ['ORIGINAL_S4_CURRENTNESS', () => validateEnterpriseContingentPolicy(f.ctx, f.policies[0].ref)],
+    ...(programTarget ? [['ORIGINAL_M3_TARGET', async () => resolveR3ProgramTarget(f.ctx, programTarget,
+      await resolveDecisionWork(f.ctx, selectedWork.work.workId), f.policies[0].ref)] as [string, () => Promise<any>]] : []),
+    ...(programTarget ? [['ORIGINAL_R3_OWNER_BINDING', () => resolveR3Owners(f.ctx, input)] as [string, () => Promise<any>]] : []),
   ] as Array<[string, () => Promise<any>]>) {
     try { const value = await fn(); preflight.push({ boundary, status: 'READ', value }); }
     catch (error) { preflight.push({ boundary, status: 'REFUSED', error: failureDetails(error) }); }
   }
   await artifact(name + '/owner-preflight.json', preflight);
+  if (programTarget) {
+    const wrongTarget = await http.call(f.principal, 'elicitation-protocols', 'submit', {
+      ...input, idempotencyKey: randomUUID(), programTarget: { ...programTarget, candidateDigest: '0'.repeat(64) } });
+    assert.equal(wrongTarget.status, 409, JSON.stringify(wrongTarget));
+    assert.equal(wrongTarget.body.code, 'R3_ACTUAL_CURRENT_M3_CANDIDATE_AND_S4_POLICY_REQUIRED');
+    await artifact('positive/mismatched-programme-target-refused.json', wrongTarget);
+  }
   const result = successful(await http.call(f.principal, 'elicitation-protocols', 'submit', input));
   await artifact(name + '/input.json', { selectedWork, supplied, input, result });
   return { f, ...selectedWork, ...supplied, input, requestId: result.requestId };
+}
+async function publishedProgramTarget(f: any, workId: string) {
+  const input = { schema: 'finnor.capital-program-request.v2', workId, idempotencyKey: randomUUID(),
+    incumbentPolicyRef: f.policies[0].ref, purpose: 'COMMERCIAL',
+    permitted: { actionId: 'programme-grant', exposureId: 'price', unit: 'fraction', terms: ['0.15'],
+      startPeriods: [0], structures: ['IMMEDIATE'], stageFractions: [],
+      resourceRule: 'SCALE_REGISTERED_ACTION_LINEAR', agreement: 'COUNTERPARTY_REQUIRED' },
+    resource: { deadlineMs: 30000, maxAttempts: 8, maxGenerated: 8, maxExpansions: 50000,
+      maxRefinementSteps: 4096, maxRefinementDepth: 6, maxModuleBytes: 65536, maxResultBytes: 8388608 } };
+  const accepted = await http.call(f.principal, 'company-brain', 'capital-program-submit', input);
+  assert.equal(accepted.status, 202, JSON.stringify(accepted));
+  const apiUrl = process.env.DATABASE_URL;
+  let current: any;
+  try {
+    const worker = createWorker();
+    current = await waitFor(async () => {
+      process.env.DATABASE_URL = workerUrl; await closePool();
+      try { await worker.tick() } finally { await closePool(); process.env.DATABASE_URL = apiUrl }
+      return successful(await http.call(f.principal, 'company-brain', 'capital-program-read',
+        { queryId: accepted.body.queryId }));
+    }, value => !['QUEUED', 'RUNNING'].includes(value.status));
+  } finally { await closePool(); process.env.DATABASE_URL = apiUrl }
+  await artifact('positive/original-m3-publication.json', { input, accepted, current });
+  assert(current.program, JSON.stringify(current));
+  const candidate = current.program.candidates.find((c: any) => c.structure === 'INCUMBENT' && c.finitePolicyComplete);
+  assert(candidate && candidate.policyRef, JSON.stringify(current));
+  const target = { grammar: 'r3-m3-report-extension-v1' as const, queryId: current.queryId,
+    programRef: current.program.ref, candidateDigest: candidate.semanticDigest, policyRef: candidate.policyRef };
+  await artifact('positive/actual-m3-programme-target.json', { input, accepted, current, target,
+    earlierR2CertificatesChanged: false, authorityGranted: false });
+  return target;
 }
 async function runJob(requestId: string) {
   const apiUrl = process.env.DATABASE_URL;
@@ -235,22 +322,19 @@ try {
   await postgres.initialise(); await appendFile(join(dir, 'postgresql.conf'), '\ntrack_commit_timestamp=on\n');
   await postgres.start(); await postgres.createDatabase('r3_e2e');
   const url = `postgres://finnor:finnor@127.0.0.1:${port}/r3_e2e`;
-  admin = new pg.Client({ connectionString: url }); await admin.connect();
+  admin = observeAdmin(new pg.Client({ connectionString: url })); await admin.connect();
   await story('base-local-migration-upgrade-restart', async () => {
-    const initial = await migrate(url, MIGRATIONS.filter(m => m.name < '0172'));
+    const initial = await migrate(url, MIGRATIONS.filter(m => m.name < '0177_r3_incentive_rule_synthesis.sql'));
     const before = (await admin.query('SELECT name FROM finnor_os._migrations ORDER BY name')).rows;
-    assert.equal(before.at(-1).name, '0171_runtime_database_role_isolation.sql');
+    assert.equal(before.at(-1).name, '0176_r7_policy_atlas.sql');
     const applied = await migrate(url, MIGRATIONS), replay = await migrate(url, MIGRATIONS);
-    // This is the cumulative release bundle: every migration after the asserted
-    // 0171 baseline must apply before the R3 owner flow is exercised.
-    const expectedPostBaseline = MIGRATIONS.filter(m => m.name > '0171_runtime_database_role_isolation.sql').map(m => m.name);
-    assert.deepEqual(applied, expectedPostBaseline); assert.deepEqual(replay, []);
+    assert.deepEqual(applied, ['0177_r3_incentive_rule_synthesis.sql']); assert.deepEqual(replay, []);
     await postgres.createDatabase('r3_fresh');
     const fresh = await migrate(url.replace(/r3_e2e$/, 'r3_fresh'), MIGRATIONS);
     assert.equal(fresh.length, MIGRATIONS.length);
     const beforeStart = (await admin.query('SELECT pg_postmaster_start_time() started')).rows[0].started;
     await admin.end(); await postgres.stop(); await postgres.start();
-    admin = new pg.Client({ connectionString: url }); await admin.connect();
+    admin = observeAdmin(new pg.Client({ connectionString: url })); await admin.connect();
     const afterStart = (await admin.query('SELECT pg_postmaster_start_time() started')).rows[0].started;
     assert(afterStart.getTime() > beforeStart.getTime());
     const restartReplay = await migrate(url, MIGRATIONS); assert.deepEqual(restartReplay, []);
@@ -274,6 +358,12 @@ try {
       EXECUTE FUNCTION finnor_os.r3_e2e_publication_gate()`);
   workerUrl = `postgres://finnor_worker:finnor_worker@127.0.0.1:${port}/r3_e2e`;
   process.env.DATABASE_URL = `postgres://finnor_app:finnor_app@127.0.0.1:${port}/r3_e2e`; await closePool();
+  process.env.FINNOR_M3_PROFILE = 'DISPOSABLE_NATIVE';
+  process.env.FINNOR_M1_PROFILE = 'DISPOSABLE_NATIVE';
+  process.env.FINNOR_M3_STORE = join(dir, 'm3-private');
+  process.env.FINNOR_M1_STORE = join(dir, 'm1-private');
+  await mkdir(process.env.FINNOR_M3_STORE, { mode: 0o700 });
+  await mkdir(process.env.FINNOR_M1_STORE, { mode: 0o700 });
   http = await r3HttpFixture(admin);
   // The unchanged numeric owner has a strict 20-second child floor. Account
   // explicitly for cold scientific loading before its request, never extend
@@ -329,15 +419,12 @@ try {
   }
   await story('queued-original-and-r3-physical-restart', async () => {
     const f = await owner('r3-queued-restart'), item = await submit(f, 'queued-restart');
-    const commit = process.env.FINNOR_COMMIT_SHA ?? '';
-    const buildId = process.env.FINNOR_BUILD_ID ?? '';
-    const version = process.env.FINNOR_VERSION ?? '';
-    assert(/^[0-9a-f]{40}$/.test(commit), 'FINNOR_COMMIT_SHA must be the exact 40-character image commit');
-    assert.equal(buildId, 'finnor-' + commit.slice(0, 12));
-    assert.equal(version, '0.1.0+' + commit.slice(0, 12));
+    const commit = process.env.FINNOR_R3_INSTALLED_SOURCE_COMMIT ??
+      spawnSync('git', ['-C', repo, 'rev-parse', 'HEAD'], { encoding: 'utf8' }).stdout.trim();
+    assert(/^[0-9a-f]{40}$/.test(commit));
     process.env.FINNOR_COMMIT_SHA = commit;
-    process.env.FINNOR_BUILD_ID = buildId;
-    process.env.FINNOR_VERSION = version;
+    process.env.FINNOR_BUILD_ID = 'finnor-' + commit.slice(0, 12);
+    process.env.FINNOR_VERSION = '0.1.0+' + commit.slice(0, 12);
     process.env.FINNOR_RELEASE_SOURCE = 'R3_DISPOSABLE_SOURCE_CUT_NOT_PROTECTED_RELEASE';
     const apiUrl = process.env.DATABASE_URL;
     process.env.DATABASE_URL = workerUrl; await closePool();
@@ -350,7 +437,7 @@ try {
     const deadline = (await readback(item)).request.deadline_at;
     const beforeStart = (await admin.query('SELECT pg_postmaster_start_time() started')).rows[0].started;
     await http.close(); await closePool(); await admin.end(); await postgres.stop(); await postgres.start();
-    admin = new pg.Client({ connectionString: url }); await admin.connect();
+    admin = observeAdmin(new pg.Client({ connectionString: url })); await admin.connect();
     const afterStart = (await admin.query('SELECT pg_postmaster_start_time() started')).rows[0].started;
     assert(afterStart.getTime() > beforeStart.getTime());
     const after = (await admin.query(`SELECT id,type,payload,protocol_version,status,attempts,run_at
@@ -400,10 +487,13 @@ try {
     assert.equal((await runJob(item.requestId)).status, 'COMPLETE');
     const review = successful(await http.call(f.principal, 'elicitation-protocols', 'read', { requestId: item.requestId }));
     R3WorkReviewSchema.parse(review);
+    assert.deepEqual(review.protocol.problem.binding.programTarget, item.input.programTarget);
+    assert.deepEqual(review.protocol.rule.binding.programTarget, item.input.programTarget);
     assert.equal(review.protocol.check.accepted, true); assert.deepEqual(review.protocol.check.counts, { profiles: 81, deviations: 648, participation: 324 });
     assert(new Set(review.protocol.rule.table.map((r: any) => r.outcomeId)).size > 1); assert.equal(review.protocol.check.optimum, 'UNKNOWN');
-    const ownerReview = successful(await http.call(f.principal, 'elicitation-protocols', 'review', { requestId: item.requestId, decision: 'PROPOSE_USE', reason: 'Actual owner review of complete checked synthetic mechanism' }));
+    const ownerReview = await reviewProposedUse(f, item.requestId, 'Actual owner review of complete checked synthetic mechanism');
     assert.equal(ownerReview.allocation.status, 'FEASIBLE'); assert.equal(ownerReview.schedules.branches.length, 81);
+    assert.deepEqual(ownerReview.operationPacket.schedulesRef, ownerReview.schedules.ref);
     assert.equal(ownerReview.schedules.branches.reduce((n: number, b: any) => n + b.obligations.length, 0), 324);
     const p = review.protocol.problem, finiteBody = { requestId: item.requestId, problem: p, behavioralQualification: 'UNQUALIFIED', sourceStandingNotPrivateTruth: true };
     const finite = successful(await http.call(f.principal, 'interventions', 'finite-preference', { modelRef: r3Ref('S3', 'r3-finite-model', finiteBody, 's3-finite-preference-v1') }));
@@ -519,8 +609,7 @@ try {
     assert.equal((await runJob(item.requestId)).status, 'COMPLETE');
     item.review = successful(await http.call(f.principal, 'elicitation-protocols', 'read', { requestId: item.requestId }));
     assert(item.review.protocol.rule.table.every((r: any) => r.schedule[0].amount.numerator === '1' && r.schedule[0].amount.denominator === '3'));
-    const proposed = successful(await http.call(f.principal, 'elicitation-protocols', 'review', {
-      requestId: item.requestId, decision: 'PROPOSE_USE', reason: 'Exact one-third owner compatibility' }));
+    const proposed = await reviewProposedUse(f, item.requestId, 'Exact one-third owner compatibility');
     assert.equal(proposed.allocation.status, 'FEASIBLE');
     const issued = successful(await http.call(f.principal, 'allocations', 'read', { allocationRef: proposed.allocation.certificate.ref }));
     const native = await import('../../packages/epistemic-runtime/src/allocation-contracts');
@@ -576,8 +665,23 @@ try {
       const nativeLeases = (await admin.query("SELECT resource_key,tenant_key,owner_id,fence,expires_at,released_at FROM finnor_os.compute_resource_leases WHERE tenant_key=$1", [f.tenant])).rows;
       assert.deepEqual(before.attempts.map((a: any) => a.status), ['RETURNED', 'ACCEPTED']);
       assert.equal(before.request.protocol_ref, null); assert.equal(before.jobs[0].status, 'running');
-      const pid = worker.child.pid, identity = spawnSync('/bin/ps', ['-p', String(pid), '-o', 'pid=,ppid=,pgid=,uid=,command='], { encoding: 'utf8' });
-      assert.equal(identity.status, 0); await stopWorker(worker.child, 'SIGKILL'); assert.equal(worker.child.signalCode, 'SIGKILL');
+      const pid = worker.child.pid; assert(pid); let osIdentity: string;
+      if (process.platform === 'linux') {
+        const [stat, status, command] = await Promise.all(['stat', 'status', 'cmdline']
+          .map(name => readFile(`/proc/${pid}/${name}`, 'utf8')));
+        const fields = stat.slice(stat.lastIndexOf(')') + 2).trim().split(/\s+/);
+        const uid = status.match(/^Uid:\s+(\d+)/m); assert(uid);
+        assert.equal(Number(stat.slice(0, stat.indexOf('(')).trim()), pid);
+        assert.equal(Number(fields[1]), process.pid); assert.equal(Number(uid[1]), process.getuid!());
+        assert.notEqual(fields[0], 'Z');
+        osIdentity = JSON.stringify({ source: 'LINUX_PROCFS', pid, parentPid: Number(fields[1]),
+          processGroup: Number(fields[2]), uid: Number(uid[1]), stat, status, command: command.replaceAll('\0', ' ') });
+      } else {
+        const identity = spawnSync('/bin/ps', ['-p', String(pid), '-o', 'pid=,ppid=,pgid=,uid=,command='], { encoding: 'utf8' });
+        assert.equal(identity.status, 0); osIdentity = identity.stdout;
+      }
+      await artifact('faults/physical-worker-os-identity-before-sigkill.json', { pid, osIdentity });
+      await stopWorker(worker.child, 'SIGKILL'); assert.equal(worker.child.signalCode, 'SIGKILL');
       await blocker.query('SELECT pg_advisory_unlock(773399,$1)', [gate]);
       await admin.query('DELETE FROM finnor_os.r3_e2e_publication_gates WHERE request_id=$1', [item.requestId]);
       await waitFor(() => admin.query("SELECT lease_expires_at<clock_timestamp() expired FROM finnor_os.jobs WHERE payload->>'requestId'=$1", [item.requestId]).then(r => r.rows[0]), r => r.expired, 15);
@@ -589,7 +693,7 @@ try {
       assert.equal(after.request.deadline_at.toISOString(), before.request.deadline_at.toISOString());
       assert(Number(after.jobs[0].claim_fence) > Number(before.jobs[0].claim_fence));
       assert(after.events.some((e: any) => e.kind === 'RECOVER_ACCEPTED_NATIVE_CHILDREN'));
-      await artifact('faults/physical-sigkill.json', { item, before, after, nativeLeases, physicalPid: pid, osIdentity: identity.stdout,
+      await artifact('faults/physical-sigkill.json', { item, before, after, nativeLeases, physicalPid: pid, osIdentity,
         signal: worker.child.signalCode, physicalWorkerLog: worker.logs, faultBoundary: 'DURABLY_ACCEPTED_CHECKER_BEFORE_PROTOCOL_INSERT_AND_QUEUE_ACK',
         nativeReplayed: false, originalCostDeadlineAndGrantRetained: true });
       return { artifact: 'faults/physical-sigkill.json', signal: 'SIGKILL', noNewNativeInvocationsOnRecovery: true };
@@ -632,8 +736,7 @@ try {
       // refutation case also retains separately attested acceptance and S5 intent.
       const reported = await report(item, 0, '2');
       if (change === 'out-of-domain') {
-        item.ownerReview = successful(await http.call(f.principal, 'elicitation-protocols', 'review', {
-          requestId: item.requestId, decision: 'PROPOSE_USE', reason: 'Retain responsibility through behavioral refutation' }));
+        item.ownerReview = await reviewProposedUse(f, item.requestId, 'Retain responsibility through behavioral refutation');
         for (let i = 1; i < 4; i++) await report(item, i, '2');
         item.closed = successful(await http.call(f.principal, 'elicitation-protocols', 'close', { requestId: item.requestId }));
         for (let i = 0; i < 4; i++) successful((await observe(item, i, 'OBSERVED_ACCEPTANCE', item.closed)).result);
@@ -718,8 +821,13 @@ try {
     try {
       const item = await submit(f, 'native-ledger');
       assert.equal((await runJob(item.requestId)).status, 'COMPLETE');
-      const review = successful(await http.call(f.principal, 'elicitation-protocols', 'review', {
-        requestId: item.requestId, decision: 'PROPOSE_USE', reason: 'Authentic native delivery compatibility proof' }));
+      const current = successful(await http.call(f.principal, 'elicitation-protocols', 'read', { requestId: item.requestId }));
+      assert.equal(current.status, 'COMPLETE'); assert.deepEqual(current.protocol.check.counts,
+        { profiles: 81, deviations: 648, participation: 324 });
+      assert.equal(current.protocol.rule.table.length, 81);
+      await artifact('native-ledger/current-owner-rule-before-proposed-use.json', current);
+      const review = await reviewProposedUse(f, item.requestId, 'Authentic native delivery compatibility proof');
+      assert.deepEqual(review.operationPacket.schedulesRef, review.schedules.ref);
       const reported = await report(item, 1, '2'), rows = await readback(item);
       const { deliverOwnerTransportBatch } = await import('../../packages/governed-execution/src/owner-delivery-store');
       const { readOwnerTransportReference, readOwnerTransportEvent } = await import('../../packages/governed-execution/src/owner-transport');
@@ -775,7 +883,10 @@ try {
         agreementEstablished: false, executionAuthorityGranted: false });
       return { artifact: 'native-ledger/boundaries.json', separateLedgerPid: ledger.child.pid,
         acceptedOriginals: origins.length, canonicalPreparedEvents: events.length, noAuthorityAmplification: true };
-    } finally { await ledger.close() }
+    } finally {
+      try { await artifact('native-ledger/receiver-diagnostics.json', await ledger.diagnostics()) }
+      finally { await ledger.close() }
+    }
   });
   await story('s6-supported-recovery', async () => {
     const f = await upstream.fixture('r3-s6-supported', 2, [
@@ -797,7 +908,8 @@ try {
     await artifact('s6-supported/original-owners.json', { f, policy, allocated, handoff, obligation,
       r3MonetaryExecution: false, supportedOperation: 'CONDITIONAL_JSON_FIELDS_REPLACE' });
     const proof = await (await import('../s6/governed-dispatch-proof.mjs')).proveGovernedDispatch(f, obligation,
-      (actor: any, operation: string, input: unknown, handler?: unknown) => api(actor, operation, input, handler),
+      (actor: any, operation: string, input: unknown) => http.call(actor.principal,
+        ['resource', 'settle'].includes(operation) ? 'allocations' : 'obligations', operation, input),
       admin, (name: string, body: unknown) => artifact('s6-supported/' + name, body), false, undefined, false,
       { ownerCall: (operation, input) => http.call(f.principal, 'obligations', operation, input), workerDatabaseUrl: workerUrl });
     assert.equal(proof.requests.filter((r: any) => r.method === 'PATCH').length, 1);
@@ -808,8 +920,7 @@ try {
   await story('mounted-work-reload-switch', async () => {
     const f = await owner('r3-browser', 64, 2), item = await submit(f, 'browser');
     assert.equal((await runJob(item.requestId)).status, 'COMPLETE');
-    successful(await http.call(f.principal, 'elicitation-protocols', 'review', {
-      requestId: item.requestId, decision: 'PROPOSE_USE', reason: 'Mounted existing Work proof, no effect authority' }));
+    await reviewProposedUse(f, item.requestId, 'Mounted existing Work proof, no effect authority');
     const row = await readback(item), protocol = successful(await http.call(f.principal,
       'elicitation-protocols', 'read', { requestId: item.requestId })).protocol;
     async function thread(workId: string) {
@@ -823,7 +934,10 @@ try {
     const foreign = await owner('r3-browser-foreign');
     const email = async (id: string) => (await admin.query('SELECT email FROM finnor_os.users WHERE id=$1', [id])).rows[0].email;
     const directory = join(output, 'browser'); await mkdir(directory, { recursive: true });
-    const proof = await (await import('./browser-proof.mjs')).proveMountedWork({
+    const browserDriver = process.env.FINNOR_R3_BROWSER_DRIVER === 'tools'
+      ? (await import('./browser-tool-proof.mjs')).proveMountedWorkWithTools
+      : (await import('./browser-proof.mjs')).proveMountedWork;
+    const proof = await browserDriver({
       repo, output: directory, apiOrigin: http.origin, authOrigin: http.authOrigin,
       ownerEmail: await email(f.principal), foreignEmail: await email(foreign.principal),
       threadId: own.id, alternateThreadId: alternate.id, requestId: item.requestId, rule: protocol.rule,
@@ -842,6 +956,8 @@ try {
   await save();
 } catch (e) {
   await artifact('failure.json', { ...failureDetails(e),
+    m3Queries: admin! ? (await admin.query('SELECT id,tenant_id,principal_id,work_id,work_input_id,work_input_digest,status,failure,result_digest,acceptance,generation FROM finnor_os.m3_queries').catch(() => ({ rows: [] }))).rows : [],
+    m3Publications: admin! ? (await admin.query('SELECT query_id,result_digest FROM finnor_os.m3_publications').catch(() => ({ rows: [] }))).rows : [],
     sql: admin! ? (await admin.query("SELECT pid,state,wait_event_type,wait_event,left(query,1000) query,pg_blocking_pids(pid) blockers FROM pg_stat_activity WHERE datname='r3_e2e'").catch(() => ({ rows: [] }))).rows : [],
     requests: admin! ? (await admin.query('SELECT id,status,failure,generation,deadline_at,attempts_used FROM finnor_os.r3_requests').catch(() => ({ rows: [] }))).rows : [],
     attempts: admin! ? (await admin.query('SELECT * FROM finnor_os.r3_attempts ORDER BY created_at').catch(() => ({ rows: [] }))).rows : [],

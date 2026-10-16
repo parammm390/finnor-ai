@@ -80,6 +80,11 @@ with tempfile.TemporaryDirectory(prefix="r3-reconstruction-", dir=scratch) as di
     if git("write-tree", cwd=clone, env=env).decode().strip() != tree:
         raise SystemExit("R3_ORDERED_PATCH_TREE_RECONSTRUCTION_MISMATCH")
 
+summary = json.loads((handoff / "evidence-summary.json").read_text())
+functional_gate = summary["gates"]["functional"]
+linux_runtime = summary.get("LinuxRuntime", {})
+if functional_gate == "COMPLETE" and not linux_runtime.get("finalSourceInstalledAndOwnerVerified", False):
+    raise SystemExit("R3_COMPLETE_REQUIRES_FINAL_INSTALLED_SOURCE_AND_OWNER_PROOF")
 manifest = {
     "schema": "finnor.r3.unpublished-release-handoff.v1",
     "baseCommit": BASE, "branch": BRANCH, "commitGroups": commits,
@@ -88,14 +93,16 @@ manifest = {
                    "sha256": digest(path)} for path in targets[:3]],
     "standaloneReconstruction": "PASS", "orderedPatchReconstruction": "PASS",
     "bundleVerification": verification,
-    "functionalGate": "INCOMPLETE_FINAL_LINUX_IMAGE_NOT_VERIFIED",
+    "functionalGate": functional_gate,
     "combinedR": "NOT_RUN", "S3Qualification": "UNQUALIFIED",
     "S8Admission": "NOT_RUN", "activation": "NOT_AUTHORIZED",
     "PostXGain": "NOT_RUN", "economicReleaseH2": "NOT_RUN",
     "privateEvidence": "private-evidence-index.json",
     "privateEvidenceIndexSha256": digest(handoff / "private-evidence-index.json"),
     "sourceSealSha256": digest(handoff / "source-seal.json"),
-    "linuxImageDigest": None,
+    "linuxImageDigest": linux_runtime.get("finalImageDigest"),
+    "predecessorLinuxImageDigests": linux_runtime.get("executedPredecessorImages", []),
+    "evidenceSummarySha256": digest(handoff / "evidence-summary.json"),
     "publicationPerformed": False,
 }
 create(targets[3], (json.dumps(manifest, indent=2) + "\n").encode())

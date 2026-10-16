@@ -4,6 +4,7 @@ import { mkdtemp, readFile, realpath, writeFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
 import { spawn } from 'node:child_process';
+import { channel } from 'node:diagnostics_channel';
 import { canonical } from '../../packages/governed-execution/src/protocol';
 import type { OwnerTransportScope } from '../../packages/governed-execution/src/owner-transport';
 
@@ -72,11 +73,42 @@ export async function nativeLedgerFixture(repo: string, scopes: OwnerTransportSc
     signature: sign(null, Buffer.from(canonical(ownerPolicy)), reviewer.privateKey).toString('base64') }), { mode: 0o600 });
   process.env.FINNOR_S6_OWNER_TRANSPORT_CONFIG = ownerPath;
   process.env.FINNOR_S6_OWNER_TRANSPORT_ROOT = publicPem(reviewer);
+  // Observe the real client; no proxy, request mutation, headers or bodies.
+  const requests: Record<string, unknown>[] = [], begun = new WeakMap<object, number>();
+  let dropped = 0;
+  const subscriptions = ['create', 'headers', 'trailers', 'error'].map(stage => {
+    const source = channel('undici:request:' + stage);
+    const observe = (raw: unknown) => {
+      const value = raw as { request?: { origin?: string; method?: string; path?: string }; response?: { statusCode?: number }; error?: { name?: string; code?: string; message?: string } };
+      const request = value.request;
+      if (!request || String(request.origin) !== origin) return;
+      if (stage === 'create') begun.set(request, performance.now());
+      if (requests.length >= 8192) { dropped++; return }
+      requests.push({ stage, at: new Date().toISOString(), method: request.method,
+        path: request.path?.split('?')[0], elapsedMs: performance.now() - (begun.get(request) ?? performance.now()),
+        status: value.response?.statusCode ?? null,
+        error: value.error ? { name: value.error.name, code: value.error.code ?? null,
+          message: String(value.error.message ?? '').slice(0, 256) } : null });
+    };
+    source.subscribe(observe);
+    return { source, observe };
+  });
   return { child, scopes, publicEvidence: { sources, release, ledgerPolicyDigest: hash(policy), ownerPolicyDigest: hash(ownerPolicy),
     signerPublicKey: publicPem(signer), reviewerPublicKey: publicPem(reviewer), processId: child.pid,
     qualification: 'SEPARATE_PHYSICAL_PROCESS_DISPOSABLE_AUTHORITY_NOT_PRODUCTION_ADMISSION' },
     journal: async () => (await readFile(join(root, 'protected/commitments.jsonl'), 'utf8')).trim().split('\n').filter(Boolean).map(line => JSON.parse(line)),
+    diagnostics: async () => {
+      const journalPath = join(root, 'protected/commitments.jsonl');
+      const journal = await readFile(journalPath);
+      return { schema: 'finnor.r3.ledger-receiver-diagnostics.v1', requestTimeoutMs: 2000, leaseMs: 5000,
+        observer: 'NODE_UNDICI_DIAGNOSTICS_CHANNEL_NO_REQUEST_INTERCEPTION', requests, dropped,
+        receiver: { processId: child.pid, exitCode: child.exitCode, signalCode: child.signalCode, logs: logs.slice(-16384) },
+        journal: { path: journalPath, bytes: journal.length, sha256: bytesHash(journal),
+          records: journal.toString().trim().split('\n').filter(Boolean).length },
+        qualification: 'DISPOSABLE_SIGNED_RECEIVER_DIAGNOSIS_NOT_PROTECTED_ADMISSION' };
+    },
     close: async () => {
+      for (const { source, observe } of subscriptions) source.unsubscribe(observe);
       if (child.exitCode === null && child.signalCode === null) await new Promise<void>(yes => {
         const timer = setTimeout(() => child.kill('SIGKILL'), 10000);
         child.once('exit', () => { clearTimeout(timer); yes() }); child.kill('SIGTERM');

@@ -51,8 +51,7 @@ export function allocationQuantity(s:string):ExperimentRational {
 /** Derived sums/products keep separate limits from external supplied quantities. */
 export function allocationDerivedQuantity(s:string):ExperimentRational {
   if(typeof s==='string'&&s.startsWith('r3q:'))return allocationRationalLedgerQuantity(s);
-  if(typeof s!=='string'||s.length>1026||!/^[-]?(?:0|[1-9]\d*)(?:(?:\.\d{1,48})|(?:\/[1-9]\d{0,511}))?$/.test(s))throw new AllocationContractError('INVALID_CANDIDATE','Unsupported derived exact quantity');
-  if(s.includes('/')){const [n,d]=s.split('/');const v=new ExperimentRational(BigInt(n!),BigInt(d!));if((v.n<0n?-v.n:v.n)>10n**30n*v.d)throw new AllocationContractError('LIMIT_EXCEEDED','Derived accounting magnitude exceeds domain');return v;}
+  if(typeof s!=='string'||s.length>96||!/^[-]?(?:0|[1-9]\d*)(?:\.\d{1,48})?$/.test(s))throw new AllocationContractError('INVALID_CANDIDATE','Unsupported derived exact quantity');
   const negative=s.startsWith('-'),[whole,fraction='']=s.replace('-','').split('.');const q=new ExperimentRational((negative?-1n:1n)*BigInt(whole!+fraction),10n**BigInt(fraction.length));
   if((q.n<0n?-q.n:q.n)>10n**30n*q.d)throw new AllocationContractError('LIMIT_EXCEEDED','Derived accounting magnitude exceeds domain');return q;
 }
@@ -68,8 +67,10 @@ export function allocationRationalLedgerQuantity(s:string):ExperimentRational {
 }
 export function allocationDecimal(v:ExperimentRational):string {
   let d=v.d,two=0,five=0;while(d%2n===0n){d/=2n;two++;}while(d%5n===0n){d/=5n;five++;}
-  const digits=Math.max(two,five);
-  if(d!==1n||digits>48){if((v.n<0n?-v.n:v.n).toString().length>512||v.d.toString().length>512)throw new AllocationContractError('LIMIT_EXCEEDED','Rational accounting integer bound');return v.n+'/'+v.d;}
+  if(d!==1n){
+    const encoded=`r3q:${v.n}/${v.d}`;allocationRationalLedgerQuantity(encoded);return encoded;
+  }
+  const digits=Math.max(two,five);if(digits>48)throw new AllocationContractError('LIMIT_EXCEEDED','Accounting precision exceeds bounded checker');
   const scale=10n**BigInt(digits),n=(v.n<0n?-v.n:v.n)*(scale/v.d),s=n.toString().padStart(digits+1,'0');
   const f=digits?s.slice(-digits).replace(/0+$/,''):'';return `${v.n<0n&&n?'-':''}${digits?s.slice(0,-digits):s}${f?`.${f}`:''}`;
 }

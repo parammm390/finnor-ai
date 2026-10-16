@@ -13,17 +13,33 @@ export function referencePreimageDigest(reference:{content:unknown;digestEncodin
 }
 export function canonical(value: unknown): string {
   let nodes = 0;
-  function encode(v: unknown, depth: number): string {
+  const parts: string[] = [];
+  function encode(v: unknown, depth: number): void {
     if (++nodes > 100000 || depth > 64) throw new LedgerFault(413, 'JSON_COMPLEXITY_LIMIT');
-    if (v === null) return 'null';
-    if (typeof v === 'string' || typeof v === 'boolean') return JSON.stringify(v);
-    if (typeof v === 'number' && Number.isFinite(v)) return JSON.stringify(v);
-    if (Array.isArray(v)) return '[' + v.map(x => encode(x, depth + 1)).join(',') + ']';
+    if (v === null) { parts.push('null'); return; }
+    if (typeof v === 'string' || typeof v === 'boolean' || typeof v === 'number' && Number.isFinite(v)) {
+      parts.push(JSON.stringify(v)); return;
+    }
+    if (Array.isArray(v)) {
+      parts.push('[');
+      for (let i = 0, length = v.length; i < length; i++) {
+        if (i) parts.push(',');
+        if (i in v) encode(v[i], depth + 1);
+      }
+      parts.push(']'); return;
+    }
     if (v && typeof v === 'object' && (Object.getPrototypeOf(v) === Object.prototype || Object.getPrototypeOf(v) === null)) {
       const record = v as Record<string, unknown>;
-      return '{' + Object.keys(record).sort((a, b) => a.localeCompare(b)).map(k => JSON.stringify(k) + ':' + encode(record[k], depth + 1)).join(',') + '}';
+      parts.push('{');
+      const keys = Object.keys(record).sort((a, b) => a.localeCompare(b));
+      for (let i = 0; i < keys.length; i++) {
+        if (i) parts.push(',');
+        const key = keys[i]!; parts.push(JSON.stringify(key), ':'); encode(record[key], depth + 1);
+      }
+      parts.push('}'); return;
     }
     throw new LedgerFault(400, 'NON_CANONICAL_JSON');
   }
-  return encode(value, 0);
+  encode(value, 0);
+  return parts.join('');
 }

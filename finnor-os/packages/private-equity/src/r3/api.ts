@@ -13,6 +13,8 @@ import { clearR3Portfolio, validateR3Allocation } from './allocation';
 import { prepareR3Schedules, compileR3OperationPacket } from './obligations';
 import { submitR3Report, closeR3Reports, recordR3ObservedEvent, currentR3Reports } from './events';
 import { executeR3Fallback, R3_FALLBACK_CONTRACT } from './fallback';
+import { resolveR3ProgramTarget } from './program-target';
+import { readEnterpriseContingentPolicy } from '../enterprise-control';
 
 export async function submitElicitationProtocol(ctx: PeMutationContext, raw: unknown) {
   const input = ElicitationOperationSchemas.submit.parse(raw), digest = r3Digest(input);
@@ -107,12 +109,10 @@ export async function reviewElicitationProtocol(ctx: PeMutationContext, raw: unk
     await c.query('UPDATE finnor_os.r3_requests SET use_policy_ref=$3::jsonb WHERE tenant_id=$1 AND id=$2', [row.tenant_id, row.id, JSON.stringify(ref)]);
     await r3Event(ctx, locked, 'S4_PROPOSED_USE_REVIEWED', { usePolicyRef: ref, reason: input.reason, ownerReviewNotPartyConsent: true }, c);
   });
-  const {clearEnterprisePortfolio}=await import('../enterprise-allocation');
-  const allocation = await clearEnterprisePortfolio(ctx,{schema:'finnor.s5.r3-clearing-request.v1',requestId:row.id,idempotencyKey:'r3-reserve:'+row.id});
-  if (!allocation.reservation) return allocation;
-  const current = await r3Request(ctx, row.id), schedules = await prepareR3Schedules(ctx, current);
-  return { usePolicyRef: current.use_policy_ref, allocation, schedules, operationPacket: await compileR3OperationPacket(ctx, current),
-    agreementEstablished: false, executionAuthorityGranted: false };
+  const reviewed = await r3Request(ctx, row.id);
+  return { schema: 'finnor.r3.review-stage.v2', requestId: row.id, usePolicyRef: reviewed.use_policy_ref,
+    status: 'S4_REVIEWED_OWNER_CONTINUATION_REQUIRED', nextOperation: 'reserve', resourcesReservedByThisStage: false,
+    schedulesPreparedByThisStage: false, agreementEstablished: false, executionAuthorityGranted: false };
 }
 export async function cancelElicitationProtocol(ctx: PeMutationContext, raw: unknown) {
   const input = ElicitationOperationSchemas.cancel.parse(raw);
@@ -129,14 +129,23 @@ export async function cancelElicitationProtocol(ctx: PeMutationContext, raw: unk
 }
 async function contextElicitationProtocol(ctx: PeMutationContext, raw: unknown) {
   const input = ElicitationOperationSchemas.context.parse(raw), work = await resolveDecisionWork(ctx, input.workId);
-  await authorizeBeliefResources(ctx, [{ type: input.root.entityType, id: input.root.entityId }]);
+  let contextRoot = input.root;
+  if (input.programTarget) {
+    await resolveR3ProgramTarget(ctx, input.programTarget, work, input.programTarget.policyRef);
+    const policy = await readEnterpriseContingentPolicy(ctx, input.programTarget.policyRef);
+    const roots = [...new Map(policy.bindings.beliefPins.map(pin => [r3Digest(pin.root), pin.root])).values()];
+    const matched = roots.find(value => r3Digest(value) === r3Digest(input.root));
+    if (!matched && roots.length !== 1) throw Error('R3_ORIGINAL_PROGRAMME_CONTEXT_ROOT_AMBIGUOUS');
+    contextRoot = matched ?? roots[0]!;
+  }
+  await authorizeBeliefResources(ctx, [{ type: contextRoot.entityType, id: contextRoot.entityId }]);
   const sources = await tx(ctx, async c => (await c.query(`SELECT DISTINCT ON(source_id) source_id,id,content_hash,version_number
     FROM finnor_os.evidence_source_versions WHERE tenant_id=$1 AND snapshot->'worldRoot'=$2::jsonb
-    AND snapshot->>'r3Kind'='PREFERENCE_DECLARATION' ORDER BY source_id,version_number DESC LIMIT 17`, [ctx.auth.tenantId, JSON.stringify(input.root)])).rows, true);
+    AND snapshot->>'r3Kind'='PREFERENCE_DECLARATION' ORDER BY source_id,version_number DESC LIMIT 17`, [ctx.auth.tenantId, JSON.stringify(contextRoot)])).rows, true);
   if (sources.length > 16) throw Error('R3_CURRENT_PREFERENCE_CONTEXT_BOUND');
   const declarations = [];
   for (const s of sources) {
-    const source = await readSourceObject(ctx, input.root, s.source_id, s.id), declared = R3PreferenceDeclarationSchema.parse(JSON.parse(source.content));
+    const source = await readSourceObject(ctx, contextRoot, s.source_id, s.id), declared = R3PreferenceDeclarationSchema.parse(JSON.parse(source.content));
     if (declared.workId !== work.id || declared.workRevision !== work.inputId) continue;
     declarations.push({ problem_ref: { sourceId: s.source_id, versionId: s.id, contentDigest: s.content_hash },
       domain_profile_ref: declared.domainRef, mandateRef: declared.mandateRef, supportedParties: declared.parties.length,
@@ -146,7 +155,7 @@ async function contextElicitationProtocol(ctx: PeMutationContext, raw: unknown) 
     [ctx.auth.tenantId, principal(ctx), work.id])).rows, true);
   if (requests.length > 16) throw Error('R3_WORK_REVIEW_HISTORY_BOUND');
   const {listEnterpriseControlPolicies}=await import('../enterprise-control');
-  const policies=await listEnterpriseControlPolicies(ctx,input.root as import('../types').PeWorldRootRef);
+  const policies=await listEnterpriseControlPolicies(ctx,contextRoot as import('../types').PeWorldRootRef);
   const grants=await tx(ctx,async c=>(await c.query(`SELECT p.certificate
     FROM finnor_os.s5_proposals p JOIN finnor_os.s5_reservations s ON p.tenant_id=s.tenant_id AND p.content_digest=s.allocation_digest
     WHERE p.tenant_id=$1 AND p.principal_id=$2 AND p.certificate->>'version'='s5-joint-finite-v1'
@@ -154,7 +163,7 @@ async function contextElicitationProtocol(ctx: PeMutationContext, raw: unknown) 
     AND EXISTS(SELECT 1 FROM jsonb_array_elements(p.problem->'resources') r WHERE r->>'unit'='invocation' AND r->>'resourceClass'='COMPUTE')
     ORDER BY p.content_digest LIMIT 17`,[ctx.auth.tenantId,principal(ctx)])).rows,true);
   if(grants.length>16)throw Error('R3_CONTEXT_ORIGINAL_GRANT_BOUND');
-  return { schema: 'finnor.r3.work-context.v1', workId: work.id, workRevision: work.inputId, declarations,
+  return { schema: 'finnor.r3.work-context.v2', workId: work.id, workRevision: work.inputId, root: contextRoot, declarations,
     incumbentPolicies:policies.map(p=>({ref:p.ref,mandateRef:p.mandateRef})),
     budgetGrants:grants.map(g=>({ref:g.certificate.ref,validUntil:g.certificate.validUntil})),
     requests: requests.map(r => ({ requestId: r.id, status: r.status, workRevision: r.work_input_id })), fallback: R3_FALLBACK_CONTRACT,
@@ -166,6 +175,21 @@ export async function elicitationOperation(ctx: PeMutationContext, operation: st
     case 'context': return contextElicitationProtocol(ctx, input);
     case 'read': case 'status': return readElicitationProtocol(ctx, input);
     case 'review': return reviewElicitationProtocol(ctx, input);
+    case 'reserve': {
+      const parsed = ElicitationOperationSchemas.reserve.parse(input), row = await r3Request(ctx, parsed.requestId);
+      const { clearEnterprisePortfolio } = await import('../enterprise-allocation');
+      return clearEnterprisePortfolio(ctx, { schema: 'finnor.s5.r3-clearing-request.v1', requestId: row.id,
+        idempotencyKey: 'r3-reserve:' + row.id });
+    }
+    case 'schedules': {
+      const parsed = ElicitationOperationSchemas.schedules.parse(input), row = await r3Request(ctx, parsed.requestId);
+      const schedules = await prepareR3Schedules(ctx, row), prepared = await r3Request(ctx, row.id);
+      await assertR3Current(ctx, prepared, undefined, false, true);
+      if (r3Digest(prepared.schedules_ref) !== r3Digest(schedules.ref)) throw Error('R3_DURABLE_ORIGINAL_SCHEDULE_PACKET_BINDING_REQUIRED');
+      return { schema: 'finnor.r3.schedule-stage.v1', requestId: row.id, schedules,
+        operationPacket: await compileR3OperationPacket(ctx, prepared), agreementEstablished: false,
+        executionAuthorityGranted: false };
+    }
     case 'cancel': return cancelElicitationProtocol(ctx, input);
     case 'report': return submitR3Report(ctx, input);
     case 'close': return closeR3Reports(ctx, input);

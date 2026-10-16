@@ -7,7 +7,7 @@ import {runProgrammeContinuationJob} from '@finnor/private-equity/src/live-recom
 import {runProcedureInductionJob} from '@finnor/private-equity/src/procedure-induction/worker';
 import {runCapitalProgramJob,runRobustCapitalProgramJob,runCoalitionProgrammeJob} from '@finnor/private-equity/src/capital-program/worker';
 import {runCounterexampleSearchJob} from '@finnor/private-equity/src/counterexample-search/worker';
-import {runIdentificationPlan} from '@finnor/private-equity/src/r4/worker';
+import {runIncentiveRuleSynthesisJob} from '@finnor/private-equity/src/r3/worker';
 // Worker service (§16): one process, multiple job-type handlers registered by string key.
 
 import "dotenv/config";
@@ -54,9 +54,7 @@ import { installWorkerDrainSignals } from "./drain-signals";
 
 export function createWorker(): JobQueue {
   const queue = new JobQueue();
-  queue.register('run_decision_atlas_v1',runDecisionAtlasJob,PRODUCTION_JOB_CONTRACTS.run_decision_atlas_v1);
-  queue.register('run_certified_state_reduction_v1',runCertifiedStateReductionJob,PRODUCTION_JOB_CONTRACTS.run_certified_state_reduction_v1);
-  queue.register('run_identification_plan_v1',runIdentificationPlan,PRODUCTION_JOB_CONTRACTS.run_identification_plan_v1);
+  queue.register('run_incentive_rule_synthesis_v1',runIncentiveRuleSynthesisJob,PRODUCTION_JOB_CONTRACTS.run_incentive_rule_synthesis_v1);
   queue.register('run_capital_program_v2',runCapitalProgramJob,PRODUCTION_JOB_CONTRACTS.run_capital_program_v2);
   queue.register('run_capital_program_r2_v1',runRobustCapitalProgramJob,PRODUCTION_JOB_CONTRACTS.run_capital_program_r2_v1);
   queue.register('run_coalition_programme_v1',runCoalitionProgrammeJob,PRODUCTION_JOB_CONTRACTS.run_coalition_programme_v1);

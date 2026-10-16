@@ -9,12 +9,13 @@ import { resolveDecisionWork } from '../decision-slice/adapters';
 import type { WorkBinding } from '../decision-slice/contracts';
 import { readSourceObject } from '../deliberation/store';
 import { readEnterpriseContingentPolicy } from '../enterprise-control';
-import { readEnterpriseAllocation, validateEnterpriseAllocation } from '../enterprise-allocation';
+import { readValidatedNumericEnterpriseAllocation } from '../enterprise-allocation';
 import { readAllocationSnapshot } from '../allocation-store';
 import { authorizeBeliefResources, validateBeliefViewPin } from '../enterprise-beliefs';
 import { assertDependencies, codeIdentity, revisions, schemaIdentity, tx, principal, unavailable } from '../evidence-execution/store';
 import type { PeMutationContext } from '../types';
 import { r3Authorize, type R3RequestRow } from './store';
+import { resolveR3ProgramTarget, assertR3ProgramTarget } from './program-target';
 
 export interface R3OwnerBinding {
   work: WorkBinding; source: { sourceId: string; versionId: string; contentDigest: string; versionNumber: number };
@@ -29,11 +30,12 @@ const same = (a: unknown, b: unknown) => r3Digest(a) === r3Digest(b);
 const ledger = (s: string) => s.startsWith('r3q:') ? readR3LedgerQuantity(s) : r3FromDecimal(s);
 export async function r3ResourceInput(ctx: PeMutationContext, mandate: EconomicMandate) {
   const snapshot = await readAllocationSnapshot(ctx), resources: ElicitationResource[] = [];
+  const pins = new Map<string, AllocationResource['beliefPins'][number]>();
   for (const r of snapshot.resources) {
     if (r.revoked || r.rightsRef !== mandate.rightsRef || !same(r.horizon, mandate.horizon) ||
       r.ownerRef.id !== principal(ctx) || r.availability.some(v => v.amount === null || v.basis !== 'REPORTED_AVAILABLE') ||
       Date.now() >= Date.parse(r.validUntil)) throw Error('R3_CURRENT_COMPLETE_RESOURCE_SEMANTICS_REQUIRED');
-    for (const pin of r.beliefPins) if ((await validateBeliefViewPin(ctx, pin)).status !== 'CURRENT') throw Error('R3_RESOURCE_SOURCE_OR_RIGHTS_CHANGED');
+    for (const pin of r.beliefPins) pins.set(r3Digest(pin), pin);
     const upper = r.existingUse.map(ledger), lower = r.existingUse.map(ledger);
     for (const commitment of snapshot.outstanding) for (const e of commitment.envelopes.filter(e => e.resourceId === r.resourceId)) {
       if (e.unit !== r.unit || e.kind !== r.kind || !same(e.horizon, r.horizon) || e.quantities.length !== upper.length ||
@@ -44,6 +46,11 @@ export async function r3ResourceInput(ctx: PeMutationContext, mandate: EconomicM
       availability: r.availability.map(v => ledger(v.amount!).json()), baseline: upper.map(v => v.json()),
       minimumBaseline: lower.map(v => v.json()), safetyMargin: ledger(r.safetyMargin).json() });
   }
+  // Identical complete pins share one fresh replay in this invocation. A distinct
+  // source, rights, root or method pin always gets its own owner validation.
+  await Promise.all([...pins.values()].map(async pin => {
+    if ((await validateBeliefViewPin(ctx, pin)).status !== 'CURRENT') throw Error('R3_RESOURCE_SOURCE_OR_RIGHTS_CHANGED');
+  }));
   const definitions = new Map(snapshot.resources.flatMap(r => r.covenants).map(c => [c.id, c]));
   for (const c of snapshot.resources.flatMap(r => r.covenants)) if (!same(c, definitions.get(c.id))) throw Error('R3_CONFLICTING_SHARED_COVENANT');
   const covenants: ElicitationProblem['covenants'] = [...definitions.values()].map(c => ({
@@ -82,28 +89,31 @@ export async function resolveR3Owners(ctx: PeMutationContext, request: R3Submit)
     !same(declared.objective.normalization, r3FromDecimal(String(incumbent.mandate.scoring.normalization)).json()))
     throw Error('R3_ORIGINAL_OWNER_OBJECTIVE_RISK_AND_NORMALIZATION_REQUIRED');
   await authorizeBeliefResources(ctx, declared.parties.map(p => ({ type: p.entityType, id: p.entityId })));
-  const resource = await r3ResourceInput(ctx, incumbent.mandate);
-  if(resource.snapshot.resources.some(r=>!r.permittedRoots.some(root=>same(root,declared.root))))
-    throw Error('R3_ORIGINAL_S5_PERMITTED_ROOT_REQUIRED');
   const unresolved=await tx(ctx,async c=>(await c.query("SELECT count(*)::int n FROM finnor_os.business_effects WHERE tenant_id=$1 AND status NOT IN('verified','cancelled','compensated')",[ctx.auth.tenantId])).rows[0].n,true);
   if(unresolved)throw Error('R3_NATIVE_UNKNOWN_OBLIGATION_REQUIRES_S6_EXACT_RESOURCE_ACCOUNTING');
-  const partySourceIds: string[] = [];
-  for (const p of declared.parties) {
+  const [resource, partySourceIds, allocationState, [runtime, code, schemaDigest]] = await Promise.all([
+    r3ResourceInput(ctx, incumbent.mandate),
+Promise.all(declared.parties.map(async p => {
     if (p.sourceRef.owner !== 'S1' || p.rightsRef !== declared.rightsRef)
       throw Error('R3_PARTY_VALUATION_OUTSIDE_OPTION_SOURCE_AND_RIGHTS_REQUIRED');
     const parent = await tx(ctx, async c => (await c.query(
       'SELECT source_id FROM finnor_os.evidence_source_versions WHERE tenant_id=$1 AND id=$2',
       [ctx.auth.tenantId, p.sourceRef.id])).rows[0], true);
     if (!parent) throw Error('R3_PARTY_ORIGINAL_PREFERENCE_SOURCE_UNAVAILABLE');
-    partySourceIds.push(parent.source_id);
     const original = await readSourceObject(ctx, declared.root, parent.source_id, p.sourceRef.id);
     const { sourceRef: _source, assumptionRef: _assumption, rightsRef: _rights, ...partyMeaning } = p;
     if (original.content_hash !== p.sourceRef.contentDigest ||
       !same(JSON.parse(original.content), { schema: 'finnor.r3.party-preference.v1', party: partyMeaning }))
       throw Error('R3_PARTY_ORIGINAL_VALUATION_OUTSIDE_OPTION_BYTES_MISMATCH');
-  }
-  const grant = await readEnterpriseAllocation(ctx, request.budget_grant_ref);
-  if (!grant.reservation || (await validateEnterpriseAllocation(ctx, request.budget_grant_ref)).status !== 'CURRENT' ||
+    return parent.source_id as string;
+  })),
+    readValidatedNumericEnterpriseAllocation(ctx, request.budget_grant_ref),
+    Promise.all([r3RuntimeIdentity(), codeIdentity(), schemaIdentity(ctx)]),
+  ]);
+  if(resource.snapshot.resources.some(r=>!r.permittedRoots.some(root=>same(root,declared.root))))
+    throw Error('R3_ORIGINAL_S5_PERMITTED_ROOT_REQUIRED');
+  const grant = allocationState.issued;
+  if (!grant.reservation || allocationState.validation.status !== 'CURRENT' ||
     grant.certificate.principalId !== principal(ctx)) throw Error('R3_ACTUAL_CURRENT_S5_COMPUTE_GRANT_REQUIRED');
   const options = grant.problem.resources.filter(r => r.resourceClass === 'COMPUTE' && r.unit === 'invocation' && r.kind === 'CUMULATIVE_EXPENDITURE');
   if (options.length !== 1) throw Error('R3_EXACT_COMPUTE_INVOCATION_RESOURCE_REQUIRED');
@@ -114,7 +124,6 @@ export async function resolveR3Owners(ctx: PeMutationContext, request: R3Submit)
   if (Date.parse(request.limits.deadlineAt) > Date.now() + 3600000 ||
     Date.parse(request.limits.deadlineAt) > Date.parse(grant.certificate.validUntil) || Date.parse(request.limits.deadlineAt) <= Date.now())
     throw Error('R3_ORIGINAL_GRANT_DEADLINE_CANNOT_BE_EXTENDED');
-  const runtime = await r3RuntimeIdentity(), code = await codeIdentity(), schemaDigest = await schemaIdentity(ctx);
   const keys = ['rights:tenant', `work-inputs:${work.id}`, `evidence:${source.source_id}`, `source-version:${source.id}`,
     `r3:plan:${work.id}`, `r3:reservation:${grant.reservation.ref.id}`,
     `r3:preference:${source.source_id}`, `r3:outside-option:${source.source_id}`, `r3:domain:${declared.domainRef.id}`,
@@ -123,7 +132,15 @@ export async function resolveR3Owners(ctx: PeMutationContext, request: R3Submit)
     ...declared.parties.flatMap(p => [`canonical:${p.entityType}:${p.entityId}`, `source-version:${p.sourceRef.id}`]),
     ...partySourceIds.map(id => `evidence:${id}`),
     ...resource.snapshot.resources.map(r => `r3:resource:${r.resourceId}`)];
-  const dependencies = await revisions(ctx, keys), validUntil = new Date(Math.min(Date.parse(declared.validUntil),
+  const programDependencies = request.programTarget
+    ? await resolveR3ProgramTarget(ctx, request.programTarget, work, request.incumbentPolicyRef) : [];
+  const dependencyMap = new Map<string, EvidenceDependency>();
+  for (const dependency of [...programDependencies, ...await revisions(ctx, keys)]) {
+    const previous = dependencyMap.get(dependency.key);
+    if (previous && previous.revision !== dependency.revision) throw Error('R3_PROGRAMME_AND_RULE_DEPENDENCY_CUT_MISMATCH');
+    dependencyMap.set(dependency.key, dependency);
+  }
+  const dependencies = [...dependencyMap.values()].sort((a, b) => a.key.localeCompare(b.key)), validUntil = new Date(Math.min(Date.parse(declared.validUntil),
     Date.parse(incumbent.validUntil), Date.parse(grant.certificate.validUntil), ...resource.snapshot.resources.map(r => Date.parse(r.validUntil)))).toISOString();
   const { schema: _schema, workId: _workId, workRevision: _revision, root: _root, mandateRef: _mandate,
     domainRef: _domain, paymentContractRef: _payment, rightsRef: _rights, asOf: _asOf, validUntil: _until,
@@ -139,7 +156,8 @@ export async function resolveR3Owners(ctx: PeMutationContext, request: R3Submit)
       root: declared.root, preferenceRef: { owner: 'S1', id: source.id, version: 'evidence-source-version-v1', contentDigest: source.content_hash },
       mandateRef: declared.mandateRef, domainRef: declared.domainRef, paymentContractRef: declared.paymentContractRef, rightsRef: declared.rightsRef,
       backendDigest: runtime.digest, checkerDigest: runtime.checkerDigest, producerDigest: runtime.producerDigest,
-      schemaDigest, sourceManifestDigest: code.digest } });
+      schemaDigest, sourceManifestDigest: code.digest,
+      ...(request.programTarget ? { programTarget: request.programTarget } : {}) } });
   // Supplied outcome/resource schedules must fit the ORIGINAL S4 authorization,
   // not merely the shared capacity registry. No float projection is installed.
   for (const outcome of problem.outcomes) for (const dimension of incumbent.mandate.resources.dimensions) {
@@ -161,7 +179,7 @@ export async function assertR3Current(ctx: PeMutationContext, row: R3RequestRow,
   await assertDependencies(ctx, binding.dependencies, c, lock);
   const source = await readSourceObject(ctx, row.problem.binding.root, binding.source.sourceId, binding.source.versionId);
   if (source.content_hash !== binding.source.contentDigest) throw Error('R3_PREFERENCE_OUTSIDE_OPTION_OR_EVENT_SOURCE_CHANGED');
-  for (const party of row.problem.parties) {
+  await Promise.all(row.problem.parties.map(async party => {
     const sourceId = await tx(ctx, async client => (await client.query(
       'SELECT source_id FROM finnor_os.evidence_source_versions WHERE tenant_id=$1 AND id=$2',
       [row.tenant_id, party.sourceRef.id])).rows[0]?.source_id, true);
@@ -169,21 +187,24 @@ export async function assertR3Current(ctx: PeMutationContext, row: R3RequestRow,
     const original = await readSourceObject(ctx, row.problem.binding.root, sourceId, party.sourceRef.id);
     if (original.content_hash !== party.sourceRef.contentDigest)
       throw Error('R3_PARTY_VALUATION_OR_OUTSIDE_OPTION_SOURCE_CHANGED');
-  }
-  const work = await resolveDecisionWork(ctx, row.work_id);
+  }));
+  const [work, plan, incumbent, code, schema, runtime] = await Promise.all([
+    resolveDecisionWork(ctx, row.work_id), activeWorkPlanRevision(ctx.auth.tenantId, row.work_id),
+    readEnterpriseContingentPolicy(ctx, binding.incumbentPolicyRef), codeIdentity(), schemaIdentity(ctx), r3RuntimeIdentity(),
+  ]);
   if (!same(work, binding.work)) throw Error('R3_CURRENT_WORK_IDENTITY_OR_REVISION_CHANGED');
-  const plan = await activeWorkPlanRevision(ctx.auth.tenantId, row.work_id);
   if (!plan || plan.id !== binding.plan.id || plan.workInputId !== binding.plan.workInputId || plan.semanticHash !== binding.plan.semanticHash)
     throw Error('R3_CURRENT_ORIGINAL_WORK_PLAN_CHANGED');
-  const incumbent = await readEnterpriseContingentPolicy(ctx, binding.incumbentPolicyRef);
   if (!same(incumbent.mandate, binding.mandate)) throw Error('R3_ORIGINAL_OWNER_MANDATE_CHANGED');
-  if ((await codeIdentity()).digest !== binding.codeDigest || (await schemaIdentity(ctx)) !== binding.schemaDigest ||
-    (await r3RuntimeIdentity()).digest !== binding.runtimeDigest) throw Error('R3_METHOD_CHECKER_SCHEMA_OR_RUNTIME_CHANGED');
+  if (code.digest !== binding.codeDigest || schema !== binding.schemaDigest ||
+    runtime.digest !== binding.runtimeDigest) throw Error('R3_METHOD_CHECKER_SCHEMA_OR_RUNTIME_CHANGED');
   if (Date.now() >= Date.parse(binding.validUntil)) throw Error('R3_ORIGINAL_OWNER_VALIDITY_EXPIRED');
   if (!c && !allowOwnReservation && (await readAllocationSnapshot(ctx)).snapshotDigest !== binding.resourceSnapshotDigest)
     throw Error('R3_SHARED_RESOURCE_OR_OUTSTANDING_RESERVATION_CHANGED');
   const check = async (client: PoolClient) => {
     await r3Authorize(ctx, client, lock);
+    if (row.problem.binding.programTarget)
+      await assertR3ProgramTarget(ctx, row.problem.binding.programTarget, binding.work, client, lock);
     if (lock) await client.query('SELECT id FROM finnor_os.works WHERE tenant_id=$1 AND id=$2 FOR SHARE', [row.tenant_id, row.work_id]);
     const latest = (await client.query('SELECT id::text FROM finnor_os.work_inputs WHERE tenant_id=$1 AND work_id=$2 ORDER BY created_at DESC,id DESC LIMIT 1',
       [row.tenant_id, row.work_id])).rows[0];

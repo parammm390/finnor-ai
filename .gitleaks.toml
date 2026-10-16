@@ -149,20 +149,49 @@ regexTarget = "match"
 regexes = ['''^token semantics, observed/available/known $''']
 
 # This is the SHA-256 of the R3 source-seal OpenAPI artifact, not a credential.
-# Keep the path and field exact; all other hashes and credential-shaped fields
-# remain covered by the default detector.
+# Match the exact JSON field on this exact path; other hashes and credential-shaped
+# fields remain covered by the default detector.
 [[rules.allowlists]]
 description = "Exact R3 source-seal OpenAPI SHA-256 metadata"
 condition = "AND"
 paths = ['''(^|/)scope-r/r3-incentive-rule-synthesis/handoff/source-seal\.json$''']
-regexTarget = "match"
-regexes = ['''^openapiSha256": "[0-9a-f]{64}"$''']
+regexTarget = "line"
+regexes = ['''"openapiSha256": "[0-9a-f]{64}"''']
 
-# This is a literal disposable key for the local R3 browser fixture. It is
-# never a hosted credential; keep every other auth-key value fully scanned.
+# This is a literal disposable key for local R3 browser fixtures. It is never a
+# hosted credential; every other auth-key value remains fully scanned.
 [[rules.allowlists]]
-description = "Exact R3 disposable browser-auth placeholder"
+description = "Exact R3 disposable browser-auth placeholders"
 condition = "AND"
-paths = ['''(^|/)finnor-os/scripts/r3/browser-proof\.mts$''']
-regexTarget = "match"
-regexes = ['''^NEXT_PUBLIC_SUPABASE_ANON_KEY:\s*'r3-disposable-publishable-key'$''']
+paths = [
+  '''(^|/)finnor-os/scripts/r3/browser-proof\.mts$''',
+  '''(^|/)finnor-os/scripts/r3/browser-tool-proof\.mts$''',
+]
+regexTarget = "line"
+regexes = ["""NEXT_PUBLIC_SUPABASE_ANON_KEY: 'r3-disposable-publishable-key'"""]
+
+# These lines record verified public source digests in the unpublished R3
+# handoff. Match only the paired API/worker digest fields on these exact paths.
+[[rules.allowlists]]
+description = "Exact R3 public API and worker source digest pairs"
+condition = "AND"
+paths = [
+  '''(^|/)scope-r/r3-incentive-rule-synthesis/handoff/draft-pr\.md$''',
+  '''(^|/)scope-r/r3-incentive-rule-synthesis/handoff/README\.md$''',
+  '''(^|/)scope-r/r3-incentive-rule-synthesis/status\.md$''',
+]
+regexTarget = "line"
+regexes = ['''API sha256:[0-9a-f]{64} and worker sha256:[0-9a-f]{64}''']
+
+# The generated repair plan records exact public preimage hashes, not secrets.
+# Keep the field names and owning plan path exact.
+[[rules.allowlists]]
+description = "Exact R3 generated-context OpenAPI/client preimage hashes"
+condition = "AND"
+paths = ['''(^|/)scope-r/r3-incentive-rule-synthesis/generated-context-contract-repair-plan\.json$''']
+regexTarget = "line"
+regexes = [
+  '''"finnor-os/openapi\.json": "[0-9a-f]{64}"''',
+  '''"src/lib/centropy/openapi-types\.ts": "[0-9a-f]{64}"''',
+  '''"src/lib/jarvis/openapi-types\.ts": "[0-9a-f]{64}"''',
+]

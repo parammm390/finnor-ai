@@ -1,0 +1,17 @@
+{
+  "schema": "finnor.r3.physical-worker-observation-repair.v1",
+  "registeredAt": "2026-10-10T19:18:14.365559+00:00",
+  "causalEvidence": "latency-current-workflow-01: UI request admitted; physical worker had PRODUCER RETURNED and CHECKER SUBMITTED, request RUNNING, job lease live when default 40-second waitFor ended. Fixture finally then terminated the worker. This is not terminal work before that observation bound.",
+  "failureModel": [
+    "Worker imports/startup occur only after UI request has already consumed original M1 validity",
+    "Default observer 40 seconds is shorter than registered worker 120-second envelope",
+    "Observer kills a live job merely because an earlier observation bound elapsed",
+    "Waiting past original M1/request validity accepts stale output"
+  ],
+  "repair": "Start the physical worker immediately before announcing the functional tool session; its existing 120-second duration is unchanged. Observe candidate completion for at most the existing 90-second runJob observation envelope, clamped to remaining original M1 and accepted UI request validity. Never restart the same delivery on a timeout or extend accepted resources. Retain terminal/failure/unfinished receipts.",
+  "runs": 1,
+  "outerSeconds": 900,
+  "workerSeconds": 120,
+  "maxCandidateObservationSeconds": 90,
+  "originalFloorsUnchanged": true
+}

@@ -159,7 +159,9 @@ export async function runIncentiveRuleSynthesisJob(payload: Record<string, unkno
         envelope: { id: 'elicitation:' + r3Digest([row.id, accepted.rule, accepted.check]), kind: 'ElicitationProtocol', schemaRevision: 1,
           tenantId: row.tenant_id, principalId: row.principal_id, work: { id: row.work_id, revision: row.work_input_id, digest: row.binding.work.inputDigest },
           baseline: { ...R3_BASE, manifestDigest: row.binding.codeDigest }, producer: { codeDigest: row.binding.codeDigest, lockDigest: runtime.digest, admissionRef: null },
-          ownerInputs: [row.problem.binding.preferenceRef, row.problem.binding.mandateRef, ...row.binding.resourceRefs].map(ref => ({ ref, asOf: row.problem.money.valuationDate, rightsRef: row.problem.binding.rightsRef })),
+          ownerInputs: [row.problem.binding.preferenceRef, row.problem.binding.mandateRef, ...row.binding.resourceRefs,
+            ...(row.problem.binding.programTarget ? [row.problem.binding.programTarget.programRef, row.problem.binding.programTarget.policyRef] : [])]
+            .map(ref => ({ ref, asOf: row.problem.money.valuationDate, rightsRef: row.problem.binding.rightsRef })),
           domainRef: row.problem.binding.domainRef, grammar: 'r3-elicitation-use-v1', checkBasis: 'MODEL_RELATIVE_EXACT',
           claims: [{ statement: 'Complete original finite individual weak DSIC and ex-post participation under supplied preferences', domainRef: row.problem.binding.domainRef, checkerReceipt: checkerRef }],
           gaps: [{ reason: 'GENERAL_OPTIMIZATION_PROOF_UNKNOWN', affectedClaims: ['OPTIMUM'], status: 'UNKNOWN' },

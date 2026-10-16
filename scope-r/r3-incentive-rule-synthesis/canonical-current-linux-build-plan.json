@@ -1,0 +1,16 @@
+{
+  "schema": "finnor.r3.canonical-current-linux-rebuild.v1",
+  "registeredAt": "2026-10-10T20:56:58.731442+00:00",
+  "reason": "Actual compiler closure contains canonical encoder in chunks1521/4262 as well as runtime-external owners. Changed protected-format code requires a fresh actual full Linux build; old chunks must not be presented as current.",
+  "sourceVector": "1d578f4c5ea3b53b95dceb7447923e9dda164aa76d9208a7faf445b37e340ef0",
+  "image": "BUILDER_ONLY_V8_SOURCE_OVERLAY",
+  "cpus": 3,
+  "memoryBytes": 4294967296,
+  "v8OldSpaceMiB": 3072,
+  "runSeconds": 900,
+  "typescriptDisabled": false,
+  "finalSourceOrDependenciesMounted": false,
+  "compiledOutputExportOnly": true,
+  "originalPreparationCapsExceededNoReset": true,
+  "finalVerification": "Current API ledger/S6 plus final worker positive/original-new-queue graph; exact byte-compatible historical proofs retain only their explicitly bridged scope, whole failed cuts remainFAIL."
+}

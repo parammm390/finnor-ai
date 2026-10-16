@@ -195,3 +195,187 @@ Assigned-pane screenshot capture has repeatedly timed out. The next cut retains
 full accessibility snapshots and exact rendered table assertions, explicitly
 records screenshots NOT REATTEMPTED, and references those raw capture failures.
 This is not a visual screenshot PASS.
+
+## Installed Linux completion predicate, registered before fixture changes
+
+The prior host HTTP driver executes original route functions, so it cannot
+detect a broken bundled Next route, absent final-image interpreter/library,
+wrong source-custody path or final non-root permission. The installed case must
+forward the same signed requests to an actual built Next server, execute the
+unchanged durable worker against restricted SQL roles and inspect the original
+owner transitions. The proxy may delay an already-computed reply for the
+existing privacy race, but must neither manufacture nor modify owner responses.
+This is the primary test for bundling and installed runtime regressions; existing
+mathematical mutations remain owned by the independent native corpus.
+
+Only the disposable fixture may choose its installed server and writable scratch
+directory. No product fault flag, alternate authority, auth bypass or test export
+is required. The image's production guards remain enforced; this run uses the
+explicit ordinary-disposable profile with separately recorded test configuration.
+Built API readiness must be observed over HTTP. Server exit, unavailable native
+bytes or a refused owner must fail at its actual boundary and retain logs.
+Physical restart must recreate the server's disposable auth binding and retain
+original queued jobs, grant and deadlines. Installed output never inherits the
+old host-runtime PASS or pretends to qualify protected production activation.
+
+The completion lint run independently found two R3 Work errors: the refresh
+callback captures the whole auth session while declaring a narrower dependency,
+and missing acceptance data is displayed as zero. Keep the existing scope/token
+and generation fences, capture the exact principal scalar, and display missing
+report/acceptance state as UNKNOWN. The mounted Work proof owns the observable
+identity/reload/report display contract; no implementation-copying unit test or
+production injection seam is needed. The original failing lint output is retained.
+# Completion audit: actual programme binding
+
+Registered before the additive programme adapter: a Work graph and policy reference alone do not identify an M3 candidate. A supplied programme target must bind the current authenticated M3 query, its immutable published programme digest, exact candidate digest and original S4 policy. Foreign, mismatched, cancelled, invalidated or unpublished targets must fail; a later request cannot relabel an earlier R2 certificate. The exact rule/check input must retain the target bytes. Current Work, source, method, principal and resource fences remain mandatory, and an R3-owned contingent reservation cannot erase the original M3 history. The existing authenticated owner story will exercise real M3 submission, durable queue publication, exact target readback and a mismatched target refusal before the successful R3 submission. Report/acceptance continuation remains in the original R3 event protocol and grants no M3 effect authority.
+
+The actual owner run exposed two integration defects. The API cannot lock an
+immutable M3 publication with `FOR SHARE`, because the original owner grants
+SELECT only. The mutable query remains locked and the immutable publication
+is read without adding privileges. The original M3 trigger also correctly
+invalidates its resource certificate after an R3 S5 reservation. A new request
+still requires a current published M3 candidate. An already accepted R3
+extension may retain that immutable construction input only for the exact
+`DEPENDENCY_REVISED` S5/S6 disposition, with every other original dependency
+checked again and full R3 resource/liability checks retained. This does not
+revive or change the original M3 certificate. Cancellation and all other
+invalidation reasons refuse future R3 use. Original failures remain recorded.
+
+The audit also found a fixture orchestration gap: an unknown selected story
+could run only migration setup. The local runner must reject unknown names
+before starting the fixture and treat every missing requested case as NOT RUN
+and a failing command. A zero process exit cannot override failed predicates.
+## Targeted repair: receiver diagnostics
+
+The current ledger case may fail after accepting original commitments. Before
+changing any verifier or timeout, retain actual Undici create/header/trailer/error
+timings for only the fixture ledger origin, the original receiver identity and
+its committed journal digest/count. Never record authorization headers, tokens,
+private keys or request bodies. A client abort, socket failure, receiver exit,
+HTTP refusal and exact-preimage rejection must remain distinguishable. An
+accepted append cannot replace complete reference/event readback; unchanged
+2,000 ms requests and 5,000 ms leases remain mandatory. The existing native
+ExperienceLedger E2E is the primary owner of this proof; no new unit test or
+product fault hook is introduced.
+
+## Targeted repair: ordinary Linux M3 callee
+
+The original M3 lowering executes untrusted JavaScript through the S6 commodity
+executor. Its Linux refusal prevents current-image programme binding. Before
+adding the adapter, require the existing executor E2E to observe actual scratch
+computation, inaccessible host/secret paths, denied symlink escape, zero host
+network connections, denied child creation, no surviving marked descendant,
+wall/output termination and refusal of protected execution or unsupported hard
+quotas. Reuse these physical cases; do not add a duplicate unit oracle.
+
+The additive Linux/x64 or Linux/arm64 profile uses the fixed Debian Bubblewrap executable,
+private user/mount/PID/network/IPC/UTS namespaces, an empty root with only Node,
+read-only system libraries and private scratch, no inherited environment,
+capabilities or authority, and a fixed architecture-checked seccomp filter.
+Only same-process pthread clones are allowed; fork/vfork/clone3, sockets,
+namespace/mount changes, ptrace and external-process access refuse. Unsupported
+architecture, setuid binary, missing user namespaces or filter installation
+must fail closed. Parent death and process-group cancellation must reap the
+callee. Original 10-second/128-KiB/128-MiB-old-space/concurrency envelopes stay
+unchanged; total CPU/memory/thread/disk quotas stay explicitly unsupported.
+Ordinary isolation is not P3 protected admission or permission for effects.
+
+Decisive proof is the existing executor E2E followed by the actual original M3
+candidate and R3 binding inside the final installed image. A host source mount,
+an unfiltered Node invocation or a static profile check cannot satisfy it.
+
+## Targeted repair: repeat content verification
+
+The frozen receiver run records genuine 2,000 ms client aborts. Its 203 ordinary
+content files total 74,235,350 bytes; a read-only profile attributes most repeat
+integrity time to JSON decoding/canonicalization. The receiver already commits
+both exact stored-byte and canonical-request digests, verifies every recovered
+preimage, and retains the receipt in private process state. Separate unchanged
+byte verification from decoding: every integrity operation still opens every
+file with O_NOFOLLOW, enforces the existing size/type bounds and compares SHA256
+with the protected receipt. Parse/decrypt/canonical-verify when recovering or
+returning content. New commits establish both digests from the original accepted
+request before installing its protected state. No file-metadata cache, admission,
+grant, signing, digest algorithm, request deadline or acceptance predicate changes.
+
+Under the existing SHA256 binding assumption, identical bytes retain the already
+verified canonical preimage. Mutated, missing, symlinked or oversized content
+must still refuse immediately, including an unrelated previously committed file.
+Existing ledger corruption/restart/replay cases and the full authenticated R3
+ExperienceLedger story own the proof. Protected deployments still need the actual
+new source/runtime admission; local disposable proof cannot upgrade that status.
+
+The actual Apple x64 translation probe refused proc mounting and seccomp before
+the callee ran. Use an empty proc directory (no host process view), explicit
+mandatory user namespaces and the native arm64 image/ABI; retain x64 failures.
+The arm64 syscall table is pinned from the actual Linux v6.18 primary source.
+No translated/no-filter fallback is permitted.
+
+The native arm64 scientific build fails because pinned PySCIPOpt 6.0.0 has no
+Linux arm64 wheel. Preserve the existing x64 numerical supplier, versions and
+locks. Package a separate ordinary native arm64 Node/Bubblewrap callee plus
+its system libraries in the x64 image. On an arm64 kernel, an immutable native
+uname identifies that ABI; the actual callee executes natively with the arm64
+filter. On a native x64 kernel, that ELF refuses with ENOEXEC and the original
+x64 runtime/filter applies. Every bundled callee and library is root-owned,
+non-writable and digest-bound in a fixed-path manifest. Tampering, an unexpected
+ABI or failure to execute the selected native callee fails closed. No caller
+configuration chooses the runtime, profile or syscall policy. Provenance must
+identify the actual callee bytes separately from the supervisor. Existing Linux
+executor faults plus the final installed M3/R3 owner story remain decisive.
+
+## Affected mounted candidate flow
+
+Extend the existing mounted Work story, using fixture-only generated variants
+whose exact bytes/diffs are retained. Publish the actual original M3 candidate
+before the R3 submission and display it through CapitalProgramPanel's existing
+capitalQuery binding. Do not reserve R3 use before selecting a new candidate:
+that would correctly invalidate the earlier M3 resource certificate. Through
+the actual UI, load context, choose declaration/grant/candidate and submit.
+The original authenticated API must persist precisely that M3 query/program/
+candidate/policy in both request and checked rule; the actual restricted worker
+must complete it. Retain the visible bound-rule screenshot and exact owner
+readback. Then revisit the original durable rule for the unchanged 243-cell,
+reload, delayed Work switch, foreign principal and source revision proof.
+No fabricated programme, response interception, business effect or product test
+hook is permitted. The existing ten-minute browser bound remains unchanged.
+
+The remaining S6 story reached its actual compile-request but the R3 fixture
+routed it to allocations: dynamic/static route-function identity is not a
+stable family selector. Its S6 proof callback must select the original obligations
+route explicitly, with only the helper's original resource/settle calls routed
+to allocations. Retain signed HTTP and all real responses; no status rewriting,
+auth bypass or product dispatch change is necessary. The existing supported S6
+story is the decisive check.
+
+The signed context diagnosis proves both wire bodies pass the actual view
+schema: the Canvas deal root has no declaration/policy, while the supplied
+mechanism's organisation root has both. The route manifest classifies programme
+reads as READ with no invalidation tags; a polling-mutation race is unproved and
+must not be installed as a workaround. Let a candidate be selected before
+loading context. A supplied current M3 target is checked through the original
+adapter; its original S4 belief pins identify a unique context root (or the
+explicit supplied root must match a pin). Ambiguous roots refuse. Return that
+root in a versioned context response and use it in the actual submission.
+Existing checked rules also supply their exact bound root for context loading.
+Root/Work/principal changes and genuine invalidations still clear private values.
+The same mounted candidate story must verify actual choices and persisted binding.
+
+The corrected UI accepted the exact target and the worker published its checked
+rule, then the original M3 owner invalidated during live polling. Do not relax
+the original disposition or report the full mounted proof PASS. The fixture's
+in-process runJob changes the process-wide DATABASE_URL to the worker role while
+the real API is serving background reads. That violates API/worker responsibility
+separation, even though publication itself passed. Use the already-existing
+physical restricted worker child for the mounted continuation and keep the API
+process environment stable. This is a supported fixture repair; its causality
+for the observed M3 invalidation remains unproved until the actual rerun. Retain
+M3 query status/failure/acceptance and publication rows before fixture teardown
+on any future failure, rather than losing the original owner disposition.
+
+The installed native callee executes successfully as arm64 with no credential.
+The original Linux fixture image has no /bin/ps. Its independent lifecycle oracle
+must read actual outer-namespace procfs on Linux, retaining exact PID/command/state
+and a marked-process census; Darwin keeps its existing ps observer. Missing or
+unreadable procfs and an excessive census fail, while a raced-away PID is recorded
+as absent. Never accept producer stdout as a substitute for OS observation.

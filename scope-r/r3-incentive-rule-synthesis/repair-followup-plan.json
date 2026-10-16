@@ -1,0 +1,30 @@
+{
+  "schema": "finnor.r3.internal-repair-followup.v1",
+  "registeredAt": "2026-10-10T05:08:48.154000+00:00",
+  "predecessorPlan": "repair-verification-plan.json",
+  "predecessorDisposition": "Both two permitted image builds failed; that envelope does not PASS. Every failure and cost remains counted.",
+  "necessity": "Actual API compilation exposed required NODE_ENV ambient typing absent from worker-only typecheck. Repair it, verify actual API types, then one final installed build. Active full goal authorizes necessary ordinary repair; no protected cap, episode or qualification is changed.",
+  "finiteLimits": {
+    "additionalImageBuilds": 1,
+    "imageBuildSeconds": 900,
+    "installedOwnerRunSeconds": 1800,
+    "builderMemoryBytes": 4294967296,
+    "runtimeMemoryBytes": 4294967296,
+    "ledgerRequestMilliseconds": 2000,
+    "originalInitialResponseSeconds": 30,
+    "previousCampaignEndsAt": "2026-10-10T05:28:42.177031+00:00"
+  },
+  "cumulativeImageBuildsThisRepairMaximum": 3,
+  "cases": [
+    "actual-api-typecheck",
+    "final-installed-native-isolation-original-M3-and-R3-owner-dispatch",
+    "current-ledger-and-supported-S6",
+    "affected-candidate-mounted-flow"
+  ],
+  "stopPolicy": "No further image rebuilds in this follow-up. Missing/failing predicates remain engineering incomplete; no previous failed finite envelope is relabelled PASS.",
+  "qualification": "ORDINARY_INTERNAL_ENGINEERING_NOT_COMBINED_R_S3_S8_POST_X_H2_OR_ACTIVATION",
+  "followupCampaignWallSeconds": 2700,
+  "followupCampaignEndsAt": "2026-10-10T05:53:48.154000+00:00",
+  "predecessorCampaignStatus": "FAILED_OR_INCOMPLETE_NO_RESET_OF_PREVIOUS_LIMIT_OR_QUALIFICATION",
+  "thirdImageBuildDisposition": "FAILED_READ_ONLY_FILESYSTEM_AND_HOST_NO_SPACE_PRESERVED_NO_FURTHER_BUILDS_IN_THIS_FOLLOWUP"
+}

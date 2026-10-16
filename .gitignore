@@ -45,17 +45,6 @@ vercel_output.txt
 /scope-r/r3-incentive-rule-synthesis/handoff/*.bundle
 /scope-r/r3-incentive-rule-synthesis/handoff/*.patch
 /scope-r/r3-incentive-rule-synthesis/handoff/release.json
+/scope-r/r3-incentive-rule-synthesis/handoff/draft-pr-final.md
 /finnor-os/packages/epistemic-runtime/src/incentive-rule-synthesis/__pycache__/
 /finnor-os/scripts/r3/__pycache__/
-
-# Private R2 native/owner evidence: retained in immutable hashed handoff archives.
-/scope-r/r2-robust-programme-search/evidence/
-/scope-r/completion/handoff/r1-owner-accounting-*/
-/scope-r/completion/handoff/r2-cumulative-owner-*/
-/scope-r/completion/handoff/r2-cumulative-compatibility-*/
-/scope-r/completion/handoff/ci-failure-audit-*/
-/scope-r/completion/handoff/r4-cumulative-*/
-/scope-r/r2-robust-programme-search/handoff/
-
-# Generated Python bytecode is runtime scratch, never a checker source pin.
-**/__pycache__/

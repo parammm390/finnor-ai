@@ -1,0 +1,34 @@
+{
+  "schema": "finnor.r3.installed-disposable-tls-runtime-repair-plan.v1",
+  "at": "2026-10-11T00:40:20.348759+00:00",
+  "observedFailure": "installed-final-v19-ledger-s6-01: native-experience-delivery PASS; S6 recovery stops before provider setup at spawnSync openssl certificate generation, status null, no actual provider attempt. Whole run FAIL retained.",
+  "hypothesis": "The slim installed runtime lacks the openssl CLI; confirm actual spawn error and installed libssl3 version before changing packaging.",
+  "failureModel": [
+    "Missing CLI must be diagnosed with actual ENOENT, not inferred from null status.",
+    "Mismatched package/libssl ABI or version must fail actual openssl version/certificate generation.",
+    "Unverified package hash or unofficial acquisition must refuse packaging.",
+    "Writable/non-root-owned runtime CLI must fail installed permission/readback.",
+    "Adding TLS fixture packaging must not change product algorithm, code, grants, owner/currentness/attempt/recovery predicates or scientific locks.",
+    "Ledger named PASS remains scoped to v19 exact product bytes; failed whole run remains FAIL.",
+    "S6 actual HTTPS lost-response/UNKNOWN readback/no-duplicate attempt must still pass; certificate generation alone is not the case."
+  ],
+  "repair": "Acquire the official signed-index OpenSSL CLI and matching libssl3 package pair; the slim supplier has neither. Add only their exact root-owned files and pinned Docker dependency. Preserve existing product/scientific/native-callee bytes and original predicates.",
+  "verification": [
+    "actual binary spawn/error and libssl3 package version",
+    "matching official apt package acquisition and hash",
+    "installed binary/library certificate generation",
+    "existing s6-supported-recovery E2E with original owner protocol and timers"
+  ],
+  "finiteBounds": {
+    "supplierSeconds": 300,
+    "S6CaseDriverSeconds": 1800
+  },
+  "newUnitTests": false,
+  "qualificationInherited": false,
+  "causalReadback": {
+    "source": "evidence/openssl-supplier-01/binary-observation.json",
+    "actualOpenSSLSpawnError": "ENOENT",
+    "libssl3Installed": false
+  },
+  "revisedAt": "2026-10-11T00:41:27.168676+00:00"
+}

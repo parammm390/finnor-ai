@@ -54,6 +54,7 @@ export const CapitalContextViewSchema = z.object({
   executionAuthorityGranted: z.literal(false),
 })
 const candidate = z.object({
+  finitePolicyComplete: z.boolean(),
   semanticDigest: digest, structure: z.string(), disposition: z.string(), reason: z.string().nullable(),
   terms: z.array(z.object({ exposureId: z.string(), unit: z.string(), before: z.string(), after: z.string(), period: z.number().int() })),
   agreement: z.object({ status: z.literal("PROPOSED"), requiredStanding: z.string(), liveAgreementRef: z.null() }),

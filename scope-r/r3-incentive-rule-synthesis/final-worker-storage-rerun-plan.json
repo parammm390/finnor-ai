@@ -1,0 +1,24 @@
+{
+  "schema": "finnor.r3.final-worker-storage-rerun-plan.v1",
+  "at": "2026-10-11T01:52:34.589812+00:00",
+  "sourceVector": "8726eaedb80d21a4fbe3b2fc4364e08ff8f135e442b09d7086bb413d119583fa",
+  "workerManifest": "sha256:156b60596b357cdfc9be04ca67ad277aae062d343b6e8930639f01c489c6b2d2",
+  "originalCut": "installed-final-v21-worker-owners-01",
+  "originalWholeStatus": "INTERRUPTED_INCOMPLETE_ENOSPC",
+  "completedNamedCases": 13,
+  "wholeOriginalRunPromotedToPass": false,
+  "remainingCase": "native-experience-delivery",
+  "rerunCut": "installed-final-v21-worker-ledger-03",
+  "command": "python3 .r3-scratch/run-installed-repair.py installed-final-v21-worker-ledger-03 native-experience-delivery worker",
+  "acceptance": [
+    "All current source, compiled API, scientific bytecode and TLS file hashes/permissions match original executed v21 role.",
+    "Original thirteen named PASS cases remain individually verified; interrupted whole run remains incomplete.",
+    "Final ledger case must independently PASS with its full current native input/owner/transport/tamper/replay evidence.",
+    "No application/QA/runtime/source code or registered response/grant/lease/deadline changes.",
+    "All previous failed/interrupted preparation costs remain charged and qualification remains separate."
+  ],
+  "perRunSeconds": 1800,
+  "cleanup": "Exact inactive private-task Node/build-supplier cache aliases; all image archives, project/source/installed environments/raw evidence/keys/profiles preserved.",
+  "retainedSecondCut": "installed-final-v21-worker-ledger-02",
+  "secondCutNamedAssertions": "PASS; outer terminal process exit UNKNOWN, whole run not promoted"
+}

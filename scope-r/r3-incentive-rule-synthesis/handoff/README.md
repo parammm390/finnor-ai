@@ -1,93 +1,36 @@
 # Unpublished R3 handoff
 
-The branch is a reviewable implementation on main
-`517003a4396bc8101a90be4b425ee01de9446740`, tree
-`07ba69b8e96f05944c2f9f14a74b2c400eb89e42`. No peer code was adopted.
-Functional completion is **INCOMPLETE** because the final Linux API/worker
-image has not been built and executed. Protected and combined gates are separate.
+Functional **COMPLETE — R3_ON_PINNED_BASE**, within the supported finite ordinary disposable scope. Base 517003a4396bc8101a90be4b425ee01de9446740, tree 07ba69b8e96f05944c2f9f14a74b2c400eb89e42. No peer code adopted; no publication or real business effect authorized.
 
-`release.json` names the two actual commits, final tree and SHA256/size of
-`r3-standalone.bundle`, `01-r3-owned.patch` and `02-shared-integration.patch`.
-It is generated only from a clean branch after both commit groups. Its
-standalone bare clone and independent ordered-patch replay must produce the
-same exact final tree. No commit identifier is self-embedded in its own source.
-
-## Reconstruct
-
-From a new directory, using absolute paths to the supplied handoff:
+`release.json` records exactly two commits, the final tree, bundle/patch sizes and hashes, and independent reconstruction. `shared-patch-contracts.json` records exact original preimages, proposed postimages, changed readers/writers/jobs, owner boundaries, contract revisions and dependency order. Apply owned then shared; the first group is not a separately runnable release.
 
 ```sh
 git clone /absolute/handoff/r3-standalone.bundle /absolute/new-r3-checkout
 git -C /absolute/new-r3-checkout rev-parse HEAD HEAD^{tree}
 ```
 
-Alternatively check out the named base in an isolated clean repository and
-apply `01-r3-owned.patch` then `02-shared-integration.patch` with `git am`.
-Do not apply shared patches over dirty peer edits. `shared-patch-contracts.json`
-records exact selected-base preimages and proposed postimages, affected
-readers/writers/jobs, contract versions, owner boundaries and compatibility
-evidence. The first commit is deliberately not a separately runnable release.
+Alternatively start at the named base and apply `01-r3-owned.patch` then `02-shared-integration.patch`. The packer independently verifies a standalone bare clone, Git object connectivity, and ordered patch replay through a fresh index against the exact tree.
 
-`source-seal.json` binds product, locks, schemas, jobs, runtime/licences and
-generated outputs. `private-evidence-index.json` binds raw evidence by hash.
-Raw preferences, reports, browser state, native origins, installed environments
-and credentials are not in the patches or bundle's R3 delta.
+`source-seal.json` binds code, contracts, schema, generated output, jobs, scientific dependencies, licences and runtime. Final API sha256:f9eca7a45b49e45c064dd4d99c56a91be4f07443e0fa24bd3a326769d78d6bbd; worker sha256:156b60596b357cdfc9be04ca67ad277aae062d343b6e8930639f01c489c6b2d2; exact installed source vector 8726eaedb80d21a4fbe3b2fc4364e08ff8f135e442b09d7086bb413d119583fa / 1716 files. Both actual role images execute nonroot native producer/checker and actual queued workers; current API and worker receipts cover complementary named owner/fault cases. The thirteen completed worker assertions and separate terminal ledger rerun have identical final bytes; the interrupted worker run stays incomplete as a whole. Proof driver overrides the image command; default daemon startup is not claimed by that receipt. Compiled Next output is rebuilt from the exact final source including the original canonical encoding, versioned owner stages, and native LedgerFault/epistemic-runtime identity correction. The final installed roles retain exact source and compiled-file custody, upstream build-only bytecode, and pinned disposable TLS tooling. Full actual Linux compile/types/pages/tracing and current installed proofs are bound. All changed R3 and original owner paths are verified on the current source; canonical byte compatibility is separately proved on450 legacy/actual signed observations.
 
-## Private evidence access
+The complete model has four parties, three types each and three outcomes: 81 profiles, 648 deviations, 324 participation comparisons and dated transfers/resources/covenants. Independent Fraction checking is distinct from SCIP floating proposals and rational reconstruction. General optimum remains UNKNOWN: fixture value 10, upper 18, gap 8. Actual reports are separate from consent; modeled transfers are not settled payments.
 
-The evidence owner can inspect
-`/Users/paramdave/.codex/worktrees/r3-incentive-rule-synthesis/FINNOR/scope-r/r3-incentive-rule-synthesis/evidence/`.
-Resolve each index entry relative to that directory and check its SHA256 before
-using it. Access is local, not a published URL or permission to upload it.
-Credentials and private-key material are excluded from the index and handoff.
-Keep any authorized transfer private and preserve original hashes.
+Real SDK mounted existing Work verifies the complete table, actual M3-selected candidate UI submission, physical worker checking, current new-rule reload, delayed response/Work clearing, foreign identity refusal and preference revision invalidation. All required oracles are covered by two complete current-source mounted scenarios, including the three real owner review calls; no single uninterrupted passing episode is asserted. The preceding whole-story deadline FAIL is preserved. M1 validity, grant deadlines, attempt charges and history were not reset.
 
-`evidence-summary.json` names decisive PASS cuts, every retained failure or
-interruption, unresolved meters and skipped gates. Older source cuts remain
-older source cuts. There is no consolidated final-image or combined-R receipt.
+## Private evidence and reconstruction custody
 
-## Reproduce verification
+Completion raw evidence: `/Users/paramdave/.codex/visualizations/2026/10/10/01a12373-f681-7640-ac3e-f6a8aff51346/r3-delivery/scope-r/r3-incentive-rule-synthesis/evidence`. Prior raw evidence: `/Users/paramdave/.codex/worktrees/r3-incentive-rule-synthesis/FINNOR/scope-r/r3-incentive-rule-synthesis/evidence/`. The private index binds every included file's bytes/hash. `rootId=completion` uses the completion root; `rootId=prior`, or a historical reference with no rootId, uses the prior root. Credentials/private keys are excluded. No permission to publish raw preferences, reports or browser state is implied.
 
-Install root and `finnor-os` npm dependencies from their existing lockfiles.
-Use isolated Python 3.11.15 and 3.12.13 environments, never a shared upgrade:
+`finalImageArchives` identifies the immutable self-contained OCI archive and API/worker manifests. All blobs and source files were verified before actual image execution. Redundant packaging intermediates can be recovered from their preserved OCI overlay; cleanup did not delete evidence, source, installed environments or archives. `archivedInputResolution` records original ledger input restoration and exact archive/file hashes.
 
-```sh
-uv venv --python 3.11.15 /absolute/new-r3-checkout/.r3-runtime
-uv pip sync --require-hashes --python /absolute/new-r3-checkout/.r3-runtime/bin/python /absolute/new-r3-checkout/finnor-os/scripts/r3/requirements.lock
-uv venv --python 3.12.13 /absolute/new-r3-checkout/.r3-upstream-runtime
-uv pip sync --require-hashes --python /absolute/new-r3-checkout/.r3-upstream-runtime/bin/python /absolute/new-r3-checkout/finnor-os/scripts/r3/upstream-requirements.lock
-/absolute/new-r3-checkout/.r3-runtime/bin/python -I /absolute/new-r3-checkout/finnor-os/scripts/r3/seal-runtime.py --output /absolute/new-r3-checkout/.r3-runtime/manifest.json --scip-license /absolute/new-r3-checkout/finnor-os/scripts/r3/licenses/scip-Apache-2.0.txt
-```
+`evidence-summary.json` records current decisive receipts, all historical FAIL/interruption and requested NOT_RUN cases, cost meters and gaps. Installed reruns use the retained `run-installed-repair.py` and command JSON with only proof/scratch mounts; product/runtime/QA sources are inside the image. The selected existing owner cases cover original/new queues, fresh/upgrade/physical restart, signed owners, report correction, separate acceptance, exact consumption, fallback, decline, one-third quantities, shared grants, cancellation, SIGKILL, principal lock, 11 P7 revisions, original ledger and supported S6 recovery.
 
-Run `run-native.py --python <absolute-runtime-python> --output <new-absolute-dir>`.
-For real owner/worker stories, from that checkout run
-`python3 finnor-os/scripts/r3/run-local.py`. The final selective command was
-`python3 finnor-os/scripts/r3/run-local.py queued-original-and-r3-physical-restart,mounted-work-reload-switch`.
-It uses disposable auth/SQL/owners, not production credentials or auth bypass.
-The browser uses Factory's assigned pane when available and never closes it.
+Mounted rerun: run `prepare-candidate-browser.py <new-evidence-dir>` and the retained owner variant with `FINNOR_R3_CASES=mounted-work-reload-switch` / `FINNOR_R3_BROWSER_DRIVER=tools`. Prepare the actual SDK Work before publication; follow command-bound tool receipts within original M1 validity. `--complement` runs only the missing foreign/revision oracles; it cannot relabel a preceding failed whole story.
 
-The remaining image gate is internal engineering. With a functioning local
-container engine, build both explicit `api` and `worker` targets from the
-repository root using `finnor-os/Dockerfile.worker`, record immutable image
-digests, and execute `scripts/r3/check-runtime.mts` inside each installed image.
-Then run real queued-job/owner/migration proofs on those bytes. This recipe is
-NOT RUN and is not permission to deploy, provision or activate anything.
+Native rerun: isolated Python 3.11.15/3.12.13 environments synced from the two hash-pinned lockfiles; seal runtime before invoking `run-native.py`. No global scientific upgrade. Licence inventory includes SCIP/PySCIPOpt, NumPy, Python, pinned Node and Debian namespace/seccomp native support; original installed licence bytes are retained.
 
-## Serial integration order
+## Qualification boundaries
 
-1. Start with the exact selected committed main.
-2. Integrate any independently sealed peer interface in actual dependency
-   order, never copy dirty R2 bytes or inherit its old grammar certificate.
-3. Apply the R3-owned group, then merge the minimum shared group from its
-   exact preimages. S3/S4/S5 leaf versions preserve original numeric routes.
-4. One serial integrator assigns unique ordered migration numbers, regenerates
-   bundle/head and preserves 0171 runtime-role isolation. R3's base-local
-   0172 collides with observed R1/R2 proposals and is not a joined reservation.
-5. Seal installed runtimes, all original/peer/R3 job schemas, exact S5 readers,
-   typed P7 closures, native signed transport and all Capital mounts together.
-   Regenerate OpenAPI, clients and capabilities from that integrated source.
-6. Run affected owner, fault, Work, fresh/upgrade/restart and old/new job
-   proofs on the same joined build. Only then record COMBINED_R_CUT_CHECKED.
+COMBINED_R NOT_RUN; S3 behavior UNQUALIFIED; S8 admission NOT_RUN; protected activation NOT_AUTHORIZED; Post-X and S7/H2 NOT_RUN. Original economic, risk, workload/reach/horizon and resource floors remain binding. Preparation disk/acquisition/wall/build-repair caps exceeded and all failed work is charged; USD, human and aggregate simultaneous peak memory UNKNOWN. Passing local engineering gives no protected comparative/economic gain.
 
-`owner-request-packets.json` names concrete S3/S8/operation/comparator/S7 and
-peer dependencies. It grants none of their authorities.
+Base-local R3 migration is 0172 over actual main through 0171. R1/R2's inspected 0172 collision and joined readers/jobs/P7/Work/runtime require serial assignment and affected checks. Owner packets specify independent behavioral/admission/operation/comparator/S7 evidence without inventing an approval stop or dispatching external requests.

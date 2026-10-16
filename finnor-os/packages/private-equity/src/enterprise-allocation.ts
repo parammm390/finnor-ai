@@ -18,7 +18,6 @@ import type {ExactContingentPolicy} from '@finnor/shared-types/src/robust-progra
 import {readEnterpriseExactControlPolicy} from './enterprise-control';
 import {R2NativeSession,r2Ref} from './capital-program/r2-native';
 export {proposeEnterpriseSameDealAlternatives,readEnterpriseAllocationCandidateProblem} from './allocation-proposal';
-export {clearEnterpriseCoalitionAllocation,readEnterpriseCoalitionAllocation,consumeEnterpriseCoalitionAllocation,releaseEnterpriseCoalitionAllocation} from './capital-program/r5-allocation-owner';
 export interface R3AllocationClearingInput {schema:'finnor.s5.r3-clearing-request.v1';requestId:string;idempotencyKey:string}
 
 const actor=(ctx:PeMutationContext)=>ctx.auth.employeeId??ctx.auth.userId;
@@ -36,8 +35,18 @@ function rebuilt(problem:CanonicalAllocationProblem,resources:AllocationResource
   const updated={...body,resources,outstanding,knowledgeAt,snapshotDigest:epistemicHash({resources,outstanding}),...(exactEncoding?{quantityEncoding:'DECIMAL_OR_RATIONAL_V2' as const}:{})};return {...updated,ref:allocationRef('S5','allocation-problem',updated)};
 }
 async function currentPins(ctx:PeMutationContext,resources:AllocationResource[]):Promise<void>{
-  for(const resource of resources){if(resource.tenantId!==ctx.auth.tenantId||resource.ownerRef.id!==actor(ctx))throw denied();
-    for(const pin of resource.beliefPins)if(pin.tenantId!==ctx.auth.tenantId||pin.principalId!==actor(ctx)||(await validateBeliefViewPin(ctx,pin)).status!=='CURRENT')throw new AllocationContractError('STALE_INPUT','Resource source or rights witness is no longer current');}
+  const pins=new Map<string,AllocationResource['beliefPins'][number]>();
+  for(const resource of resources){
+    if(resource.tenantId!==ctx.auth.tenantId||resource.ownerRef.id!==actor(ctx))throw denied();
+    for(const pin of resource.beliefPins){
+      if(pin.tenantId!==ctx.auth.tenantId||pin.principalId!==actor(ctx))throw new AllocationContractError('STALE_INPUT','Resource source or rights witness is no longer current');
+      pins.set(epistemicHash(pin),pin);
+    }
+  }
+  // One fresh replay for each complete witness in this invocation. Resource
+  // ownership remains checked separately; distinct source/rights pins never share.
+  for(const pin of pins.values())if((await validateBeliefViewPin(ctx,pin)).status!=='CURRENT')
+    throw new AllocationContractError('STALE_INPUT','Resource source or rights witness is no longer current');
 }
 export async function registerEnterpriseAllocationResource(ctx:PeMutationContext,input:{resource:unknown;expectedRef?:ExperimentRef|null}){
   const resource=parseAllocationResource(input.resource);if(resource.tenantId!==ctx.auth.tenantId||resource.ownerRef.id!==actor(ctx)||Date.parse(resource.knowledgeAt)>Date.now())throw denied();await currentPins(ctx,[resource as AllocationResource]);
@@ -180,6 +189,13 @@ async function validateAllocationState(ctx:PeMutationContext,value:unknown){
   if(reasons.length)await persistAllocationExperience(ctx,[prepareS5Experience(issued.problem.mandate,'INVALIDATION',ref.id,{reasons,reservationRef:issued.reservation?.ref??null,exposureRetained:true},[ref.id])]);
   const validation=immutableControl({status:reasons.length?'STALE_INPUT' as const:'CURRENT' as const,reasons,allocationRef:ref,reservationRef:issued.reservation?.ref??null,conditionalClearance:!reasons.length,executionAuthorityGranted:false as const,protectedReceipt:null});
   return {issued,validation};
+}
+/** Return the original numeric S5 owner's single complete validation/readback.
+ * This internal reader supplies no admission or execution authority. */
+export async function readValidatedNumericEnterpriseAllocation(ctx:PeMutationContext,value:unknown){
+  const ref=ExperimentRefSchema.parse(value);
+  if(ref.owner!=='S5'||ref.version!==S5_VERSION)throw denied();
+  return validateAllocationState(ctx,ref);
 }
 export async function validateEnterpriseAllocation(ctx:PeMutationContext,value:unknown){
   const ref=ExperimentRefSchema.parse(value);

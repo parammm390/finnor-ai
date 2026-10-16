@@ -1,0 +1,31 @@
+{
+  "schema": "finnor.r3.fresh-currentness-read-parallel-repair.v1",
+  "registeredAt": "2026-10-10T21:07:47.925603+00:00",
+  "sourcePreimageSHA256": "a7fa981155595cfcafbc69ce031ba8a347cdcd67d5645a32fde86e7796052bc4",
+  "observedFailures": [
+    "v6 mixed and isolated review504",
+    "v7 real readbefore reviewPASS then review504",
+    "v9 byte-equivalent encoder fresh build, current rulePASS thenreview50429053ms"
+  ],
+  "evidence": "Actual SQL samples show repeated originalowner/schema/source checks without blockers; profiler has substantial idle awaiting owner IO and native crypto/encoding. No unique bottleneck is claimed.",
+  "change": "Within assertR3Current, all4original party source reads are freshly awaited concurrently; independent Work/plan/incumbent/method/schema/runtime reads are freshly awaited together. Validate every result, same comparisons and same original final lock/currentness/publication fences. No cross-call cache.",
+  "failureModel": [
+    "Skipped original party source or hash would falsely keep revised private preferences current",
+    "Different original Work/plan/mandate must still refuse",
+    "Method/checker/schema/runtime changes must still refuse",
+    "Permission/dependency locks and original current publication/compute grant/validity must remain final prerequisites",
+    "Parallel rejection must grant no reservation/effect or skip any final currentness fence",
+    "Shared owner nativeoutbox can serialize writes; original caps and signed origins stay unchanged"
+  ],
+  "acceptance": [
+    "Actual final signed compiled owner/queue/rational/report/acceptance/consumption/fallback/grant/cancellation/physicalSIGKILL/lockedpublication/P7/ledger/S6 graph",
+    "Original response30s, grant deadline and ledger2s/5s retained",
+    "Exact R3 source in new immutable images, actual worker role and original/new queued restart",
+    "Mounted proof only reused for unchanged frontend; currentnessbackend affected proof explicitly assessed"
+  ],
+  "unitTestsAdded": false,
+  "runSeconds": 1800,
+  "memoryBytes": 4294967296,
+  "cpus": 3,
+  "originalFloorsReset": false
+}

@@ -45,6 +45,8 @@ export interface ElicitationProblem {
     paymentContractRef: ExperimentRef; rightsRef: string;
     backendDigest: string; checkerDigest: string; producerDigest: string;
     schemaDigest: string; sourceManifestDigest: string;
+    programTarget?: { grammar: 'r3-m3-report-extension-v1'; queryId: string;
+      programRef: ExperimentRef; candidateDigest: string; policyRef: ExperimentRef };
   };
   model: { utility: 'SUPPLIED_QUASILINEAR'; participation: 'EX_POST_ALL_OTHER_REPORTS';
     events: 'UNCONDITIONAL_DUE_TIME'; guarantee: 'INDIVIDUAL_WEAK_DSIC' };

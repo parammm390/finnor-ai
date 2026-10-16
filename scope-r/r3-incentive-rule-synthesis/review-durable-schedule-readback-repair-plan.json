@@ -1,0 +1,26 @@
+{
+  "schema": "finnor.r3.review-durable-schedule-readback.v1",
+  "registeredAt": "2026-10-10T21:51:21.070337+00:00",
+  "sourceFinding": "review captures current row before prepareR3Schedules commits schedules_ref, then calls compileR3OperationPacket with that stale row. Packet helper sees no ref and invokes complete schedule preparation again, repeating original currentness/funding/lock checks.",
+  "repair": "Read authentic current r3_requests row after schedule commit and pass its persisted schedules_ref to packet compilation. Retain all original entry/currentness/funding/S6 lockchecks and original HTTP/grant/deadline limits.",
+  "failureModel": [
+    "Stale null schedules_ref causes redundant full S6 preparation and response deadline failure",
+    "Passing callerinvented ref would weaken original ownerbinding and is forbidden",
+    "Returned packet must reference exact durable schedule, original allocation/funding/checker/domain",
+    "Source revision/cancel between stages must still fence original owner paths; no original responsibilities erased",
+    "Source trace may not explain every latency; actual final signed installed review/delivery remains oracle"
+  ],
+  "decisiveChecks": [
+    "Exact ownerReview operationPacket.schedulesRef equals returned schedules.ref and durable original SQL/ref readback",
+    "Full81profiles324schedule members648DSIC324IR retained",
+    "Current installed ledger/S6, remaining owner/fault/queue/Work graph before completion"
+  ],
+  "newApiOperationsOrResponseShapes": false,
+  "qaAndProductScope": "R3_LEAF_EXISTING_API_AND_PRIMARY_E2E_ONLY",
+  "originalFloorsReset": false,
+  "runSeconds": 1800,
+  "cpus": 3,
+  "memoryBytes": 4294967296,
+  "earlierStagedFlowProposal": "Superseded before code; authentic durable re-read fixes the discovered duplicate while retaining existing contract.",
+  "finalPacketFence": "After reloading durable row, recheck every original currentness predicate and exact schedules_ref equality before compiling blocked operation packet. Removing duplicate preparation never removes a final currentness fence."
+}

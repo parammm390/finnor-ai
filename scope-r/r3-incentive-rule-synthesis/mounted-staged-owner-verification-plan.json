@@ -1,0 +1,13 @@
+{
+  "schema": "finnor.r3.mounted-staged-owner-verification.v1",
+  "scope": "Extend existing single mounted M3/candidate/privacy story with the changed three-stage review button; no separate suite or product test hook.",
+  "failureModel": [
+    "wrong candidate or stale rule",
+    "stage fails or grants/deadline expanded",
+    "UI dispatch continues after identity/Work changes",
+    "schedule absent or incorrect branch/obligation coverage",
+    "private cells survive Work/foreign/preference revision"
+  ],
+  "oracle": "Actual UI action; independently inspect signed original owner readback, actual committed S4/S5/S6 refs, original candidate deadline captured before action, three authenticated HTTP results under unchanged30s bound, all81 branches and324 obligations; retain full story failures.",
+  "originalEvidenceRetained": true
+}

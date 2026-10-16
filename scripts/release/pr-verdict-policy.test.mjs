@@ -33,6 +33,9 @@ test("backend, root, workflow, and dependency scopes select only their applicabl
   assert.deepEqual(classifyPullRequestFiles(["src/app/page.tsx"]), { backend: false, root: true, dependencies: false })
   assert.deepEqual(classifyPullRequestFiles([".github/workflows/new.yml"]), { backend: true, root: true, dependencies: false })
   assert.deepEqual(classifyPullRequestFiles(["package-lock.json"]), { backend: true, root: true, dependencies: true })
+  for (const path of ["finnor-os/scripts/r3/requirements.lock", "finnor-os/scripts/r3/upstream-requirements.lock"]) {
+    assert.deepEqual(classifyPullRequestFiles([path]), { backend: true, root: false, dependencies: true })
+  }
 })
 
 test("an applicable failure or universal secret-scan failure fails the stable verdict", () => {

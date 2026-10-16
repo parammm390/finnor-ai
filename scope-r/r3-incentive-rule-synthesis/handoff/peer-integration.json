@@ -6,6 +6,53 @@
     {
       "scope": "R1",
       "commit": "24154e827ea5392e6e47e9873fa0a21d85d82f07",
+      "tree": "afc21ffe8046f766174fc9dc9f7149f12a5f9778",
+      "cleanAtReadOnlyInspection": true,
+      "adopted": false,
+      "readOnly": true,
+      "qualification": "NO_JOINED_COMPATIBILITY_INHERITED"
+    },
+    {
+      "scope": "R2",
+      "commit": "5c874720c473aedc9d6545e748ecbf2d55afcddf",
+      "tree": "59c8ef5afbb4b1a8dde35051cb65a38b2d929c6d",
+      "cleanAtReadOnlyInspection": true,
+      "adopted": false,
+      "readOnly": true,
+      "qualification": "NO_JOINED_COMPATIBILITY_INHERITED"
+    },
+    {
+      "scope": "R4",
+      "commit": "42939e7f2243c1534af5ec462fb718489ab3f0e3",
+      "tree": "dd2f6e4b24a8385992ae4248232b6c2753299e0b",
+      "cleanAtReadOnlyInspection": true,
+      "adopted": false,
+      "readOnly": true,
+      "qualification": "NO_JOINED_COMPATIBILITY_INHERITED"
+    },
+    {
+      "scope": "M5",
+      "commit": "8f50df369b2f5b498b0a2b8d36880bf84860a4c9",
+      "tree": "7a7f3fe5c3287c844003b38bd6e298b23998cce8",
+      "cleanAtReadOnlyInspection": null,
+      "adopted": false,
+      "readOnly": true,
+      "qualification": "ORDINARY_CUMULATIVE_ENGINEERING_DELIVERY_NOT_ORIGINAL_GATES"
+    }
+  ],
+  "serialOrder": [
+    "PINNED_COMMITTED_MAIN",
+    "SEALED_PEER_INTERFACES_IN_ACTUAL_DEPENDENCY_ORDER_IF_ADOPTED",
+    "R3_OWNED_PATCH",
+    "MINIMUM_PREIMAGE_BOUND_SHARED_MERGE",
+    "UNIQUE_ORDERED_MIGRATIONS_AND_REGENERATED_OUTPUTS",
+    "ACTUAL_JOINED_RUNTIME_OWNER_JOB_P7_WORK_PROOF"
+  ],
+  "migrationCollision": "HISTORICAL_R1_AND_SEALED_R2_0172_COLLISION; PROVISIONAL_BASE_LOCAL_R3_0172; JOINED_ORDER_NOT_ADOPTED_OR_VERIFIED",
+  "historicalObservedNotAdopted": [
+    {
+      "scope": "R1",
+      "commit": "24154e827ea5392e6e47e9873fa0a21d85d82f07",
       "tree": "afc21ffe8046f766174fc9dc9f7149f12a5f9778"
     },
     {
@@ -32,13 +79,12 @@
       "qualification": "ORDINARY_CUMULATIVE_ENGINEERING_NOT_COMPLETED_X"
     }
   ],
-  "serialOrder": [
-    "PINNED_COMMITTED_MAIN",
-    "SEALED_PEER_INTERFACES_IN_ACTUAL_DEPENDENCY_ORDER_IF_ADOPTED",
-    "R3_OWNED_PATCH",
-    "MINIMUM_PREIMAGE_BOUND_SHARED_MERGE",
-    "UNIQUE_ORDERED_MIGRATIONS_AND_REGENERATED_OUTPUTS",
-    "ACTUAL_JOINED_RUNTIME_OWNER_JOB_P7_WORK_PROOF"
-  ],
-  "migrationCollision": "R1_COMMITTED_0172_R2_DIRTY_0172_R3_BASE_LOCAL_0172_REQUIRE_ONE_SERIAL_ASSIGNMENT"
+  "currentRefresh": {
+    "rootId": "completion",
+    "path": "completion-start/peer-refresh.json",
+    "sha256": "97a8f7b80008f8fa4887aa2d275d3fa1c3a09db387e31228440ab3fd76c4b102"
+  },
+  "oldDirtyR2Observation": "HISTORICAL_ONLY_CURRENT_R2_SEALED_CLEAN_AT_REFRESH",
+  "currentR3Migration": "0172_r3_incentive_rule_synthesis.sql",
+  "migrationNumberScope": "PROVISIONAL_PINNED_BASE_ONLY; no final joined number is reserved until serial integration fixes the actual order."
 }

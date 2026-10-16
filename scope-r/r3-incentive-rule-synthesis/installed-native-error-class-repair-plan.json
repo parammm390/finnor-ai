@@ -1,0 +1,33 @@
+{
+  "schema": "finnor.r3.installed-native-error-class-repair-plan.v1",
+  "at": "2026-10-11T00:52:44.353129+00:00",
+  "failure": "installed-final-v20-s6-recovery-01: original S5 overdraw throws native LedgerFault(409,S5_EXECUTION_RESOURCE_BUDGET_EXHAUSTED). Compiled obligations route bundles its own LedgerFault, instanceof fails, resulting500 instead409 before any provider request.",
+  "evidence": [
+    "evidence/installed-final-v20-s6-recovery-01/failure.json",
+    "evidence/installed-final-v20-s6-recovery-01/installed-next-api.log"
+  ],
+  "failureModel": [
+    "Typed owner refusal must retain exact status/code across the compiled/native boundary.",
+    "Lookalike objects or arbitrary error status fields must not gain typed-refusal authority.",
+    "Authentication and unexpected failures retain existing semantics.",
+    "Existing allocations and obligations routes must share the actual native LedgerFault constructor.",
+    "Original allocation/control/intervention error classes must remain single native identities across API and owner imports.",
+    "No provider egress on overdraw; actual valid execution and UNKNOWN reconciliation must still work.",
+    "Prior ledger PASS may be reused only when every relevant product/dependency/compiled path remains identical; otherwise rerun affected scope."
+  ],
+  "repair": [
+    "Export original LedgerFault constructor through existing native private-equity package; import it in allocations/obligations routes.",
+    "Keep epistemic-runtime root/subpaths native through the existing webpack externals boundary.",
+    "Actually compile the changed API source and typecheck before installed proof."
+  ],
+  "cases": [
+    "s6-supported-recovery",
+    "original numeric allocation and error/refusal boundaries reached by that signed S6 graph",
+    "all current required owner/fault cases on final worker role"
+  ],
+  "newUnitTests": false,
+  "typecheckRequired": true,
+  "classDuckTypingUsed": false,
+  "ownerBudgetRefusalWeakened": false,
+  "perCompilerSeconds": 900
+}

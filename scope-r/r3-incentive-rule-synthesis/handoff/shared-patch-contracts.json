@@ -10,7 +10,7 @@
       "path": ".gitignore",
       "ownerBoundary": "SHARED_EXPORT_OR_PRIVATE_ARTIFACT_EXCLUSION",
       "preimageSha256": "7625ca78b3b4372b239db198867dee8cc704fe7254c9415b998eb600b7750d70",
-      "postimageSha256": "6b9e245d40f1ed6ba97473098924fa068dfac6c906e03612ec3325227021b6c3",
+      "postimageSha256": "312a52ac3f28812acc96f013ac4131d81e6e342569c74733a2736f294644234d",
       "contractRevisions": [
         "LOCAL_ARTIFACT_BOUNDARY"
       ],
@@ -25,39 +25,66 @@
       "decisiveEvidence": [
         {
           "path": "owner-2026-10-09T22-45-55/results.json",
-          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T22-55-59/results.json",
-          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140"
+          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T23-22-42/results.json",
-          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787"
+          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T23-28-33/results.json",
-          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1"
+          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-10T00-51-10/results.json",
-          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335"
+          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335",
+          "rootId": "prior"
         },
         {
           "path": "installed-runtime-01/results.json",
-          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4"
+          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4",
+          "rootId": "prior"
+        },
+        {
+          "rootId": "completion",
+          "path": "host-final-owners-08/results.json",
+          "sha256": "bcac763ecc8fc23c2383071740d0ca9c5348a1fa16905735d1b2b289c4879053"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/results.json",
+          "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/results.json",
+          "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
         }
       ],
-      "compatibilityLimit": "RECORDED_BASE_LOCAL_OWNER_CUTS; FINAL_LINUX_AND_JOINED_R_NOT_VERIFIED"
+      "compatibilityLimit": "Current pinned-base ordinary API/worker graph verified through exact final-image named case custody, with failed and interrupted whole runs retained. Exact original preimages/postimages retained; joined peer/protected compatibility NOT_RUN."
     },
     {
       "path": "finnor-os/Dockerfile.worker",
       "ownerBoundary": "SERIAL_RUNTIME_AND_JOBS",
       "preimageSha256": "f0674e675e08b231556d8bd71dc71d6431b49798f0bd1ddec9c64b3163766109",
-      "postimageSha256": "163dd7c34739af7e79f4e523056d4c02c70e3dca215fa8322313d600fd0e1198",
+      "postimageSha256": "310bd6648ebe5171524d66ab6a2bf71ef70a3cee826699020714f3fb24bb978a",
       "contractRevisions": [
         "finnor.r3.native-runtime.v1",
-        "FINAL_LINUX_BUILD_NOT_VERIFIED"
+        "LOCAL_LINUX_BUBBLEWRAP_V1",
+        "PINNED_SUPPLIER_LOCKS_UNCHANGED"
       ],
       "changedReadersWritersJobs": [
         "dependencies npm ci",
@@ -72,37 +99,38 @@
       ],
       "decisiveEvidence": [
         {
-          "path": "owner-2026-10-09T22-45-55/results.json",
-          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+          "rootId": "completion",
+          "path": "repair-start/installed-source-api-build-05.log",
+          "sha256": "c6633abc643c1017ad09b47513f06d7259982e0889d6c20cfda7f621f5f2fc7d"
         },
         {
-          "path": "owner-2026-10-09T22-55-59/results.json",
-          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140"
+          "rootId": "completion",
+          "path": "repair-start/final-source-overlay-image-manifest-v21.json",
+          "sha256": "75f7bbe4c956c20c3e1755e205fa86cc5710882329c9048f3a06f7b678a8bb72"
         },
         {
-          "path": "owner-2026-10-09T23-22-42/results.json",
-          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787"
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/results.json",
+          "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
         },
         {
-          "path": "owner-2026-10-09T23-28-33/results.json",
-          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1"
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
         },
         {
-          "path": "owner-2026-10-10T00-51-10/results.json",
-          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335"
-        },
-        {
-          "path": "installed-runtime-01/results.json",
-          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4"
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/results.json",
+          "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
         }
       ],
-      "compatibilityLimit": "RECORDED_BASE_LOCAL_OWNER_CUTS; FINAL_LINUX_AND_JOINED_R_NOT_VERIFIED"
+      "compatibilityLimit": "Current pinned-base ordinary API/worker graph verified through exact final-image named case custody, with failed and interrupted whole runs retained. Exact original preimages/postimages retained; joined peer/protected compatibility NOT_RUN."
     },
     {
       "path": "finnor-os/Dockerfile.worker.dockerignore",
       "ownerBoundary": "SERIAL_RUNTIME_AND_JOBS",
       "preimageSha256": "8f9103c22ea85b6d84a1eb63af7d2ca5812d22f66bb8a7ec48500d659d521e4c",
-      "postimageSha256": "c20948c77c6a3c0fbb683dd73ce1327bd612c90944caba5ffe0b5ad48735aa9d",
+      "postimageSha256": "e61e205bc9e090d5bacaeb2f52a0ba27453e46406744524ba52d20bc3d81171c",
       "contractRevisions": [
         "EXISTING_WORKER_SPECIFIC_BUILD_CONTEXT"
       ],
@@ -117,39 +145,41 @@
       ],
       "decisiveEvidence": [
         {
-          "path": "owner-2026-10-09T22-45-55/results.json",
-          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+          "rootId": "completion",
+          "path": "repair-start/installed-source-api-build-05.log",
+          "sha256": "c6633abc643c1017ad09b47513f06d7259982e0889d6c20cfda7f621f5f2fc7d"
         },
         {
-          "path": "owner-2026-10-09T22-55-59/results.json",
-          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140"
+          "rootId": "completion",
+          "path": "repair-start/final-source-overlay-image-manifest-v21.json",
+          "sha256": "75f7bbe4c956c20c3e1755e205fa86cc5710882329c9048f3a06f7b678a8bb72"
         },
         {
-          "path": "owner-2026-10-09T23-22-42/results.json",
-          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787"
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/results.json",
+          "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
         },
         {
-          "path": "owner-2026-10-09T23-28-33/results.json",
-          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1"
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
         },
         {
-          "path": "owner-2026-10-10T00-51-10/results.json",
-          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335"
-        },
-        {
-          "path": "installed-runtime-01/results.json",
-          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4"
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/results.json",
+          "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
         }
       ],
-      "compatibilityLimit": "RECORDED_BASE_LOCAL_OWNER_CUTS; FINAL_LINUX_AND_JOINED_R_NOT_VERIFIED"
+      "compatibilityLimit": "Current pinned-base ordinary API/worker graph verified through exact final-image named case custody, with failed and interrupted whole runs retained. Exact original preimages/postimages retained; joined peer/protected compatibility NOT_RUN."
     },
     {
       "path": "finnor-os/apps/api/app/api/allocations/[operation]/route.ts",
       "ownerBoundary": "S5",
       "preimageSha256": "8700b0ec39b6c69ab3a5cba94a7f1435a039f4445c43bc608fa03fcbb9fae97d",
-      "postimageSha256": "97a3c280f8ead27270a4bba399af9d374553fc67c8b495a02b07960b1c3b2fbc",
+      "postimageSha256": "6da329b6aff1ea45ac0eeeb3775172b5a18dd3e2bdfeef8a032efb3a88055aa0",
       "contractRevisions": [
-        "R3OwnerOperationSchemas.allocations"
+        "R3OwnerOperationSchemas.allocations",
+        "API_NATIVE_OWNER_ERROR_IDENTITY_V1"
       ],
       "changedReadersWritersJobs": [
         "POST clear-mechanism",
@@ -163,30 +193,72 @@
       "decisiveEvidence": [
         {
           "path": "owner-2026-10-09T22-45-55/results.json",
-          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T22-55-59/results.json",
-          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140"
+          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T23-22-42/results.json",
-          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787"
+          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T23-28-33/results.json",
-          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1"
+          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-10T00-51-10/results.json",
-          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335"
+          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335",
+          "rootId": "prior"
         },
         {
           "path": "installed-runtime-01/results.json",
-          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4"
+          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4",
+          "rootId": "prior"
+        },
+        {
+          "rootId": "completion",
+          "path": "host-final-owners-08/results.json",
+          "sha256": "bcac763ecc8fc23c2383071740d0ca9c5348a1fa16905735d1b2b289c4879053"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/results.json",
+          "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/results.json",
+          "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-start/native-error-static-verification.json",
+          "sha256": "9de1060339fe6a7412feab32f46f003f01d64934cea84c100df2aa4bcf96baab"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-start/native-error-linux-build-command.json",
+          "sha256": "9abc615cdda15b64c1bb300643abeb0d0afe77e6ffa0af89b203ca3da8cefc7d"
         }
       ],
-      "compatibilityLimit": "RECORDED_BASE_LOCAL_OWNER_CUTS; FINAL_LINUX_AND_JOINED_R_NOT_VERIFIED"
+      "compatibilityLimit": "Current pinned-base ordinary API/worker graph verified through exact final-image named case custody, with failed and interrupted whole runs retained. Exact original preimages/postimages retained; joined peer/protected compatibility NOT_RUN.",
+      "nativeErrorIdentityContract": "API and source owners share the original native LedgerFault constructor; original epistemic allocation/control/intervention types stay native across root/subpath imports. Exact original refusal status/code and unexpected-error semantics retained, no object duck typing or altered authority."
     },
     {
       "path": "finnor-os/apps/api/app/api/interventions/[operation]/route.ts",
@@ -207,38 +279,65 @@
       "decisiveEvidence": [
         {
           "path": "owner-2026-10-09T22-45-55/results.json",
-          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T22-55-59/results.json",
-          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140"
+          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T23-22-42/results.json",
-          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787"
+          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T23-28-33/results.json",
-          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1"
+          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-10T00-51-10/results.json",
-          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335"
+          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335",
+          "rootId": "prior"
         },
         {
           "path": "installed-runtime-01/results.json",
-          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4"
+          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4",
+          "rootId": "prior"
+        },
+        {
+          "rootId": "completion",
+          "path": "host-final-owners-08/results.json",
+          "sha256": "bcac763ecc8fc23c2383071740d0ca9c5348a1fa16905735d1b2b289c4879053"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/results.json",
+          "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/results.json",
+          "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
         }
       ],
-      "compatibilityLimit": "RECORDED_BASE_LOCAL_OWNER_CUTS; FINAL_LINUX_AND_JOINED_R_NOT_VERIFIED"
+      "compatibilityLimit": "Current pinned-base ordinary API/worker graph verified through exact final-image named case custody, with failed and interrupted whole runs retained. Exact original preimages/postimages retained; joined peer/protected compatibility NOT_RUN."
     },
     {
       "path": "finnor-os/apps/api/app/api/obligations/[operation]/route.ts",
       "ownerBoundary": "S6",
       "preimageSha256": "79adcfe62715fda3fb205afb930fc2f48289edb4c37c32b0a3d85764a4cecdd4",
-      "postimageSha256": "200e26d2618e7b14958690d93bd2f7961497a01de3287cc5db2f529504dae013",
+      "postimageSha256": "2f9d48b8f1eb6c67418dac9f59e7f9a3c78a58f6d7d3b29165f002c6822ee30b",
       "contractRevisions": [
-        "finnor.s6.r3-owner-handoff.v1"
+        "finnor.s6.r3-owner-handoff.v1",
+        "API_NATIVE_OWNER_ERROR_IDENTITY_V1"
       ],
       "changedReadersWritersJobs": [
         "POST prepare-elicitation",
@@ -251,30 +350,72 @@
       "decisiveEvidence": [
         {
           "path": "owner-2026-10-09T22-45-55/results.json",
-          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T22-55-59/results.json",
-          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140"
+          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T23-22-42/results.json",
-          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787"
+          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T23-28-33/results.json",
-          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1"
+          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-10T00-51-10/results.json",
-          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335"
+          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335",
+          "rootId": "prior"
         },
         {
           "path": "installed-runtime-01/results.json",
-          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4"
+          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4",
+          "rootId": "prior"
+        },
+        {
+          "rootId": "completion",
+          "path": "host-final-owners-08/results.json",
+          "sha256": "bcac763ecc8fc23c2383071740d0ca9c5348a1fa16905735d1b2b289c4879053"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/results.json",
+          "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/results.json",
+          "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-start/native-error-static-verification.json",
+          "sha256": "9de1060339fe6a7412feab32f46f003f01d64934cea84c100df2aa4bcf96baab"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-start/native-error-linux-build-command.json",
+          "sha256": "9abc615cdda15b64c1bb300643abeb0d0afe77e6ffa0af89b203ca3da8cefc7d"
         }
       ],
-      "compatibilityLimit": "RECORDED_BASE_LOCAL_OWNER_CUTS; FINAL_LINUX_AND_JOINED_R_NOT_VERIFIED"
+      "compatibilityLimit": "Current pinned-base ordinary API/worker graph verified through exact final-image named case custody, with failed and interrupted whole runs retained. Exact original preimages/postimages retained; joined peer/protected compatibility NOT_RUN.",
+      "nativeErrorIdentityContract": "API and source owners share the original native LedgerFault constructor; original epistemic allocation/control/intervention types stay native across root/subpath imports. Exact original refusal status/code and unexpected-error semantics retained, no object duck typing or altered authority."
     },
     {
       "path": "finnor-os/apps/api/app/api/policies/[operation]/route.ts",
@@ -296,30 +437,159 @@
       "decisiveEvidence": [
         {
           "path": "owner-2026-10-09T22-45-55/results.json",
-          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T22-55-59/results.json",
-          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140"
+          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T23-22-42/results.json",
-          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787"
+          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T23-28-33/results.json",
-          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1"
+          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-10T00-51-10/results.json",
-          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335"
+          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335",
+          "rootId": "prior"
         },
         {
           "path": "installed-runtime-01/results.json",
-          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4"
+          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4",
+          "rootId": "prior"
+        },
+        {
+          "rootId": "completion",
+          "path": "host-final-owners-08/results.json",
+          "sha256": "bcac763ecc8fc23c2383071740d0ca9c5348a1fa16905735d1b2b289c4879053"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/results.json",
+          "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/results.json",
+          "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
         }
       ],
-      "compatibilityLimit": "RECORDED_BASE_LOCAL_OWNER_CUTS; FINAL_LINUX_AND_JOINED_R_NOT_VERIFIED"
+      "compatibilityLimit": "Current pinned-base ordinary API/worker graph verified through exact final-image named case custody, with failed and interrupted whole runs retained. Exact original preimages/postimages retained; joined peer/protected compatibility NOT_RUN."
+    },
+    {
+      "path": "finnor-os/apps/api/next.config.mjs",
+      "ownerBoundary": "API_RUNTIME_SOURCE_CUSTODY_AND_SECURITY_OWNERS",
+      "changedReadersWritersJobs": [
+        "Next15 webpack compiled HTTP",
+        "native TS security/private-equity/db source imports",
+        "runtime NODE_ENV/admission checks",
+        "source-custody import.meta"
+      ],
+      "contractRevisions": [
+        "ORIGINAL_OWNER_RUNTIME_EXPLICIT_EXTERNALS",
+        "API_NATIVE_OWNER_ERROR_IDENTITY_V1"
+      ],
+      "dependencyOrder": [
+        "R3_OWNED_GROUP",
+        "THIS_SHARED_INTEGRATION_GROUP"
+      ],
+      "preimageSha256": "bda3b3f9381bcc5ba561fd621a28e24fbe381b9aa881de1c5c451dcd4eb88436",
+      "postimageSha256": "2f55c8b7924864ca35bbf14f873a22894166e4ad6214aaecc37125417fb83fb2",
+      "decisiveEvidence": [
+        {
+          "rootId": "completion",
+          "path": "repair-start/installed-source-api-build-05.log",
+          "sha256": "c6633abc643c1017ad09b47513f06d7259982e0889d6c20cfda7f621f5f2fc7d"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-start/final-source-overlay-image-manifest-v21.json",
+          "sha256": "75f7bbe4c956c20c3e1755e205fa86cc5710882329c9048f3a06f7b678a8bb72"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/results.json",
+          "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/results.json",
+          "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-start/native-error-static-verification.json",
+          "sha256": "9de1060339fe6a7412feab32f46f003f01d64934cea84c100df2aa4bcf96baab"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-start/native-error-linux-build-command.json",
+          "sha256": "9abc615cdda15b64c1bb300643abeb0d0afe77e6ffa0af89b203ca3da8cefc7d"
+        }
+      ],
+      "compatibilityLimit": "Current pinned-base ordinary API/worker graph verified through exact final-image named case custody, with failed and interrupted whole runs retained. Exact original preimages/postimages retained; joined peer/protected compatibility NOT_RUN.",
+      "nativeErrorIdentityContract": "API and source owners share the original native LedgerFault constructor; original epistemic allocation/control/intervention types stay native across root/subpath imports. Exact original refusal status/code and unexpected-error semantics retained, no object duck typing or altered authority."
+    },
+    {
+      "path": "finnor-os/apps/supplier-canary/api/index.mjs",
+      "ownerBoundary": "RELEASE_READINESS_MIGRATION_READER",
+      "changedReadersWritersJobs": [
+        "canary exact migration-head metadata"
+      ],
+      "contractRevisions": [
+        "0172_BASE_LOCAL_HEAD"
+      ],
+      "dependencyOrder": [
+        "R3_OWNED_GROUP",
+        "THIS_SHARED_INTEGRATION_GROUP"
+      ],
+      "preimageSha256": "3a1d1284d88f017688227cf76d472656e700d710ad078881e86bb25e490aaff7",
+      "postimageSha256": "6abd43a5508bb3bec96fb3b546391c0fbcd95ffbd8e116bc55ed4e4f67b82408",
+      "decisiveEvidence": [
+        {
+          "rootId": "completion",
+          "path": "completion-start/release-truth-repair.log",
+          "sha256": "ae1ffe8b5b1941449a1bc8e890bcc27d4d07d69388bd2902335fdd4aad65ced0"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/results.json",
+          "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/results.json",
+          "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
+        }
+      ],
+      "compatibilityLimit": "Current pinned-base ordinary API/worker graph verified through exact final-image named case custody, with failed and interrupted whole runs retained. Exact original preimages/postimages retained; joined peer/protected compatibility NOT_RUN."
     },
     {
       "path": "finnor-os/apps/worker/src/index.ts",
@@ -343,36 +613,62 @@
       "decisiveEvidence": [
         {
           "path": "owner-2026-10-09T22-45-55/results.json",
-          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T22-55-59/results.json",
-          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140"
+          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T23-22-42/results.json",
-          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787"
+          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T23-28-33/results.json",
-          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1"
+          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-10T00-51-10/results.json",
-          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335"
+          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335",
+          "rootId": "prior"
         },
         {
           "path": "installed-runtime-01/results.json",
-          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4"
+          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4",
+          "rootId": "prior"
+        },
+        {
+          "rootId": "completion",
+          "path": "host-final-owners-08/results.json",
+          "sha256": "bcac763ecc8fc23c2383071740d0ca9c5348a1fa16905735d1b2b289c4879053"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/results.json",
+          "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/results.json",
+          "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
         }
       ],
-      "compatibilityLimit": "RECORDED_BASE_LOCAL_OWNER_CUTS; FINAL_LINUX_AND_JOINED_R_NOT_VERIFIED"
+      "compatibilityLimit": "Current pinned-base ordinary API/worker graph verified through exact final-image named case custody, with failed and interrupted whole runs retained. Exact original preimages/postimages retained; joined peer/protected compatibility NOT_RUN."
     },
     {
       "path": "finnor-os/openapi.json",
       "ownerBoundary": "GENERATED_INTERFACE_CONTRACT",
       "preimageSha256": "4f3300fbd63508cc6daedecab6a3b66ab84c9dbaaa9597a017323a2c221d1f96",
-      "postimageSha256": "ce7dcaf9e6b3623b7e693d9a0099243e0fbce613f4f7cdd8086418cb1cd62798",
+      "postimageSha256": "ff1e7baafd8f70b10e7d5454f6f5572148b17696d6d6fbde8dfd9c3d84bb1ada",
       "contractRevisions": [
         "finnor.elicitation-protocol.v1",
         "R3OwnerOperationSchemas",
@@ -390,30 +686,56 @@
       "decisiveEvidence": [
         {
           "path": "owner-2026-10-09T22-45-55/results.json",
-          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T22-55-59/results.json",
-          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140"
+          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T23-22-42/results.json",
-          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787"
+          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T23-28-33/results.json",
-          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1"
+          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-10T00-51-10/results.json",
-          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335"
+          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335",
+          "rootId": "prior"
         },
         {
           "path": "installed-runtime-01/results.json",
-          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4"
+          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4",
+          "rootId": "prior"
+        },
+        {
+          "rootId": "completion",
+          "path": "host-final-owners-08/results.json",
+          "sha256": "bcac763ecc8fc23c2383071740d0ca9c5348a1fa16905735d1b2b289c4879053"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/results.json",
+          "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/results.json",
+          "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
         }
       ],
-      "compatibilityLimit": "RECORDED_BASE_LOCAL_OWNER_CUTS; FINAL_LINUX_AND_JOINED_R_NOT_VERIFIED"
+      "compatibilityLimit": "Current pinned-base ordinary API/worker graph verified through exact final-image named case custody, with failed and interrupted whole runs retained. Exact original preimages/postimages retained; joined peer/protected compatibility NOT_RUN."
     },
     {
       "path": "finnor-os/packages/db/compute-contract.ts",
@@ -434,30 +756,56 @@
       "decisiveEvidence": [
         {
           "path": "owner-2026-10-09T22-45-55/results.json",
-          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T22-55-59/results.json",
-          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140"
+          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T23-22-42/results.json",
-          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787"
+          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T23-28-33/results.json",
-          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1"
+          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-10T00-51-10/results.json",
-          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335"
+          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335",
+          "rootId": "prior"
         },
         {
           "path": "installed-runtime-01/results.json",
-          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4"
+          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4",
+          "rootId": "prior"
+        },
+        {
+          "rootId": "completion",
+          "path": "host-final-owners-08/results.json",
+          "sha256": "bcac763ecc8fc23c2383071740d0ca9c5348a1fa16905735d1b2b289c4879053"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/results.json",
+          "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/results.json",
+          "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
         }
       ],
-      "compatibilityLimit": "RECORDED_BASE_LOCAL_OWNER_CUTS; FINAL_LINUX_AND_JOINED_R_NOT_VERIFIED"
+      "compatibilityLimit": "Current pinned-base ordinary API/worker graph verified through exact final-image named case custody, with failed and interrupted whole runs retained. Exact original preimages/postimages retained; joined peer/protected compatibility NOT_RUN."
     },
     {
       "path": "finnor-os/packages/db/migration-head.ts",
@@ -481,30 +829,56 @@
       "decisiveEvidence": [
         {
           "path": "owner-2026-10-09T22-45-55/results.json",
-          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T22-55-59/results.json",
-          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140"
+          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T23-22-42/results.json",
-          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787"
+          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T23-28-33/results.json",
-          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1"
+          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-10T00-51-10/results.json",
-          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335"
+          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335",
+          "rootId": "prior"
         },
         {
           "path": "installed-runtime-01/results.json",
-          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4"
+          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4",
+          "rootId": "prior"
+        },
+        {
+          "rootId": "completion",
+          "path": "host-final-owners-08/results.json",
+          "sha256": "bcac763ecc8fc23c2383071740d0ca9c5348a1fa16905735d1b2b289c4879053"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/results.json",
+          "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/results.json",
+          "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
         }
       ],
-      "compatibilityLimit": "RECORDED_BASE_LOCAL_OWNER_CUTS; FINAL_LINUX_AND_JOINED_R_NOT_VERIFIED"
+      "compatibilityLimit": "Current pinned-base ordinary API/worker graph verified through exact final-image named case custody, with failed and interrupted whole runs retained. Exact original preimages/postimages retained; joined peer/protected compatibility NOT_RUN."
     },
     {
       "path": "finnor-os/packages/db/migrations-bundle.ts",
@@ -528,30 +902,56 @@
       "decisiveEvidence": [
         {
           "path": "owner-2026-10-09T22-45-55/results.json",
-          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T22-55-59/results.json",
-          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140"
+          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T23-22-42/results.json",
-          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787"
+          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T23-28-33/results.json",
-          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1"
+          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-10T00-51-10/results.json",
-          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335"
+          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335",
+          "rootId": "prior"
         },
         {
           "path": "installed-runtime-01/results.json",
-          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4"
+          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4",
+          "rootId": "prior"
+        },
+        {
+          "rootId": "completion",
+          "path": "host-final-owners-08/results.json",
+          "sha256": "bcac763ecc8fc23c2383071740d0ca9c5348a1fa16905735d1b2b289c4879053"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/results.json",
+          "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/results.json",
+          "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
         }
       ],
-      "compatibilityLimit": "RECORDED_BASE_LOCAL_OWNER_CUTS; FINAL_LINUX_AND_JOINED_R_NOT_VERIFIED"
+      "compatibilityLimit": "Current pinned-base ordinary API/worker graph verified through exact final-image named case custody, with failed and interrupted whole runs retained. Exact original preimages/postimages retained; joined peer/protected compatibility NOT_RUN."
     },
     {
       "path": "finnor-os/packages/db/migrations/0172_r3_incentive_rule_synthesis.sql",
@@ -575,30 +975,56 @@
       "decisiveEvidence": [
         {
           "path": "owner-2026-10-09T22-45-55/results.json",
-          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T22-55-59/results.json",
-          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140"
+          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T23-22-42/results.json",
-          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787"
+          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T23-28-33/results.json",
-          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1"
+          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-10T00-51-10/results.json",
-          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335"
+          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335",
+          "rootId": "prior"
         },
         {
           "path": "installed-runtime-01/results.json",
-          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4"
+          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4",
+          "rootId": "prior"
+        },
+        {
+          "rootId": "completion",
+          "path": "host-final-owners-08/results.json",
+          "sha256": "bcac763ecc8fc23c2383071740d0ca9c5348a1fa16905735d1b2b289c4879053"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/results.json",
+          "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/results.json",
+          "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
         }
       ],
-      "compatibilityLimit": "RECORDED_BASE_LOCAL_OWNER_CUTS; FINAL_LINUX_AND_JOINED_R_NOT_VERIFIED"
+      "compatibilityLimit": "Current pinned-base ordinary API/worker graph verified through exact final-image named case custody, with failed and interrupted whole runs retained. Exact original preimages/postimages retained; joined peer/protected compatibility NOT_RUN."
     },
     {
       "path": "finnor-os/packages/epistemic-runtime/src/allocation-checker.ts",
@@ -619,30 +1045,56 @@
       "decisiveEvidence": [
         {
           "path": "owner-2026-10-09T22-45-55/results.json",
-          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T22-55-59/results.json",
-          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140"
+          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T23-22-42/results.json",
-          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787"
+          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T23-28-33/results.json",
-          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1"
+          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-10T00-51-10/results.json",
-          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335"
+          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335",
+          "rootId": "prior"
         },
         {
           "path": "installed-runtime-01/results.json",
-          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4"
+          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4",
+          "rootId": "prior"
+        },
+        {
+          "rootId": "completion",
+          "path": "host-final-owners-08/results.json",
+          "sha256": "bcac763ecc8fc23c2383071740d0ca9c5348a1fa16905735d1b2b289c4879053"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/results.json",
+          "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/results.json",
+          "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
         }
       ],
-      "compatibilityLimit": "RECORDED_BASE_LOCAL_OWNER_CUTS; FINAL_LINUX_AND_JOINED_R_NOT_VERIFIED"
+      "compatibilityLimit": "Current pinned-base ordinary API/worker graph verified through exact final-image named case custody, with failed and interrupted whole runs retained. Exact original preimages/postimages retained; joined peer/protected compatibility NOT_RUN."
     },
     {
       "path": "finnor-os/packages/epistemic-runtime/src/allocation-contracts.ts",
@@ -664,30 +1116,56 @@
       "decisiveEvidence": [
         {
           "path": "owner-2026-10-09T22-45-55/results.json",
-          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T22-55-59/results.json",
-          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140"
+          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T23-22-42/results.json",
-          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787"
+          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T23-28-33/results.json",
-          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1"
+          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-10T00-51-10/results.json",
-          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335"
+          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335",
+          "rootId": "prior"
         },
         {
           "path": "installed-runtime-01/results.json",
-          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4"
+          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4",
+          "rootId": "prior"
+        },
+        {
+          "rootId": "completion",
+          "path": "host-final-owners-08/results.json",
+          "sha256": "bcac763ecc8fc23c2383071740d0ca9c5348a1fa16905735d1b2b289c4879053"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/results.json",
+          "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/results.json",
+          "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
         }
       ],
-      "compatibilityLimit": "RECORDED_BASE_LOCAL_OWNER_CUTS; FINAL_LINUX_AND_JOINED_R_NOT_VERIFIED"
+      "compatibilityLimit": "Current pinned-base ordinary API/worker graph verified through exact final-image named case custody, with failed and interrupted whole runs retained. Exact original preimages/postimages retained; joined peer/protected compatibility NOT_RUN."
     },
     {
       "path": "finnor-os/packages/epistemic-runtime/src/index.ts",
@@ -708,38 +1186,287 @@
       "decisiveEvidence": [
         {
           "path": "owner-2026-10-09T22-45-55/results.json",
-          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T22-55-59/results.json",
-          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140"
+          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T23-22-42/results.json",
-          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787"
+          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T23-28-33/results.json",
-          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1"
+          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-10T00-51-10/results.json",
-          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335"
+          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335",
+          "rootId": "prior"
         },
         {
           "path": "installed-runtime-01/results.json",
-          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4"
+          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4",
+          "rootId": "prior"
+        },
+        {
+          "rootId": "completion",
+          "path": "host-final-owners-08/results.json",
+          "sha256": "bcac763ecc8fc23c2383071740d0ca9c5348a1fa16905735d1b2b289c4879053"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/results.json",
+          "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/results.json",
+          "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
         }
       ],
-      "compatibilityLimit": "RECORDED_BASE_LOCAL_OWNER_CUTS; FINAL_LINUX_AND_JOINED_R_NOT_VERIFIED"
+      "compatibilityLimit": "Current pinned-base ordinary API/worker graph verified through exact final-image named case custody, with failed and interrupted whole runs retained. Exact original preimages/postimages retained; joined peer/protected compatibility NOT_RUN."
+    },
+    {
+      "path": "finnor-os/packages/governed-execution/src/adapter-contract.ts",
+      "ownerBoundary": "S6_ISOLATION_ADAPTER_CLAIMS",
+      "changedReadersWritersJobs": [
+        "ordinary adapter taxonomy",
+        "protected adapter and hard-quota selection retain refusal"
+      ],
+      "contractRevisions": [
+        "LOCAL_LINUX_BUBBLEWRAP_V1"
+      ],
+      "preimageSha256": "c233be2fd1f576fd55683ad257d6f1691ded8a432e0fec5fc8955d9892fff877",
+      "postimageSha256": "d76877b21bbcc07a69b4199839d28b8205b4536f57e495ef5506ef74b0ff4f09",
+      "dependencyOrder": [
+        "R3_OWNED_GROUP",
+        "THIS_SHARED_INTEGRATION_GROUP"
+      ],
+      "decisiveEvidence": [
+        {
+          "rootId": "completion",
+          "path": "native-isolation-current-source/results.json",
+          "sha256": "42bd5ed7a1830d37167d75e509d71896d37044cc0d62cf66f09d165077faba01"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/results.json",
+          "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/results.json",
+          "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
+        }
+      ],
+      "compatibilityLimit": "Current pinned-base ordinary API/worker graph verified through exact final-image named case custody, with failed and interrupted whole runs retained. Exact original preimages/postimages retained; joined peer/protected compatibility NOT_RUN."
+    },
+    {
+      "path": "finnor-os/packages/governed-execution/src/executor-linux.ts",
+      "ownerBoundary": "ORIGINAL_S6_ORDINARY_EXECUTION",
+      "changedReadersWritersJobs": [
+        "Root-owned digest-bound native callee",
+        "mandatory Linux namespaces/seccomp/process/output/wall limits"
+      ],
+      "contractRevisions": [
+        "LOCAL_LINUX_BUBBLEWRAP_V1"
+      ],
+      "preimageSha256": null,
+      "postimageSha256": "8062fe3a0e13a01dc55e9b7efcec9542fe1927344cd71238923f2060b38c93ef",
+      "dependencyOrder": [
+        "R3_OWNED_GROUP",
+        "THIS_SHARED_INTEGRATION_GROUP"
+      ],
+      "decisiveEvidence": [
+        {
+          "rootId": "completion",
+          "path": "native-isolation-current-source/results.json",
+          "sha256": "42bd5ed7a1830d37167d75e509d71896d37044cc0d62cf66f09d165077faba01"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/results.json",
+          "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/results.json",
+          "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
+        }
+      ],
+      "compatibilityLimit": "Current pinned-base ordinary API/worker graph verified through exact final-image named case custody, with failed and interrupted whole runs retained. Exact original preimages/postimages retained; joined peer/protected compatibility NOT_RUN."
+    },
+    {
+      "path": "finnor-os/packages/governed-execution/src/executor.ts",
+      "ownerBoundary": "ORIGINAL_S6_ORDINARY_EXECUTION",
+      "changedReadersWritersJobs": [
+        "Ordinary M3 Node callee platform dispatch",
+        "original Darwin and protected adapter refusal"
+      ],
+      "contractRevisions": [
+        "LOCAL_LINUX_BUBBLEWRAP_V1"
+      ],
+      "preimageSha256": "9c881eff0274ea58ef08fc4c1dfcf4c53180bd442ab204d7d3e96f6065faf5d3",
+      "postimageSha256": "ac1f3c8d9a5c5c48b1d79741a9483718ed4969bbea7a8424b8acfa981b67f79b",
+      "dependencyOrder": [
+        "R3_OWNED_GROUP",
+        "THIS_SHARED_INTEGRATION_GROUP"
+      ],
+      "decisiveEvidence": [
+        {
+          "rootId": "completion",
+          "path": "native-isolation-current-source/results.json",
+          "sha256": "42bd5ed7a1830d37167d75e509d71896d37044cc0d62cf66f09d165077faba01"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/results.json",
+          "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/results.json",
+          "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
+        }
+      ],
+      "compatibilityLimit": "Current pinned-base ordinary API/worker graph verified through exact final-image named case custody, with failed and interrupted whole runs retained. Exact original preimages/postimages retained; joined peer/protected compatibility NOT_RUN."
+    },
+    {
+      "path": "finnor-os/packages/governed-execution/src/ledger.ts",
+      "ownerBoundary": "CANONICAL_EXPERIENCE_LEDGER_AND_S6_DELIVERY",
+      "changedReadersWritersJobs": [
+        "Exact receipt-bound all-content integrity traversal",
+        "signed read/append recovery and replay"
+      ],
+      "contractRevisions": [
+        "CONTENT_BYTES_SHA256_RETAINED_CANONICAL_PREIMAGE_UNCHANGED"
+      ],
+      "preimageSha256": "73a544ed9f97109b936428d28da0865af50305deb40b7570018cff1800d469c4",
+      "postimageSha256": "c48920d3403b0c0e3f1a84b37ce9b8ec050635cd7150caa8eb86cbf6ffff59eb",
+      "dependencyOrder": [
+        "R3_OWNED_GROUP",
+        "THIS_SHARED_INTEGRATION_GROUP"
+      ],
+      "decisiveEvidence": [
+        {
+          "rootId": "completion",
+          "path": "repair-ledger-04/results.json",
+          "sha256": "5746656904f07768199d2da01c743658e37fb08d5413b8d25d9e689b3563914b"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-ledger-storage-02/results.json",
+          "sha256": "17566aab91654f2547ba035ec83dc1e681e7d472067c47cf32429c56b2b2ed92"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/results.json",
+          "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/results.json",
+          "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
+        }
+      ],
+      "compatibilityLimit": "Current pinned-base ordinary API/worker graph verified through exact final-image named case custody, with failed and interrupted whole runs retained. Exact original preimages/postimages retained; joined peer/protected compatibility NOT_RUN."
+    },
+    {
+      "path": "finnor-os/packages/governed-execution/src/protocol.ts",
+      "ownerBoundary": "CANONICAL_EXPERIENCE_LEDGER_ENCODING",
+      "changedReadersWritersJobs": [
+        "canonical JSON signed/hash preimages",
+        "original owner transport request/reference/event encoding",
+        "all existing ledger and governed callers retain original caps and error semantics"
+      ],
+      "contractRevisions": [
+        "CANONICAL_JSON_ORIGINAL_BYTES_LIMITS_ERRORS_UNCHANGED_ALLOCATION_REPAIR",
+        "CANONICAL_JSON_ORIGINAL_BYTES_LIMITS_ERRORS_UNCHANGED_ALLOCATION_REPAIR"
+      ],
+      "preimageSha256": "40f07163c570c00d405b15148580144bbb09f0d4c12060e9e6c7e2c9c6221efa",
+      "postimageSha256": "96d1be8a37d35235308c90fa1458efa794f401d30744ae6e5839e1e424ee62bd",
+      "dependencyOrder": [
+        "R3_OWNED_GROUP",
+        "THIS_SHARED_INTEGRATION_GROUP"
+      ],
+      "decisiveEvidence": [
+        {
+          "rootId": "completion",
+          "path": "canonical-stream-compatibility-01/results.json",
+          "sha256": "af38102c17a2103d5342a349b3d3989711089585e420e507d62e4cb0f3a8d703"
+        },
+        {
+          "rootId": "completion",
+          "path": "canonical-stream-compatibility-01/structural-equivalence-audit.json",
+          "sha256": "27442ce398c3f458114e8ea315893e536fec5bc4416705a45e27550040b323a7"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/results.json",
+          "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/results.json",
+          "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
+        },
+        {
+          "rootId": "completion",
+          "path": "canonical-stream-compatibility-01/results.json",
+          "sha256": "af38102c17a2103d5342a349b3d3989711089585e420e507d62e4cb0f3a8d703"
+        },
+        {
+          "rootId": "completion",
+          "path": "canonical-stream-compatibility-01/structural-equivalence-audit.json",
+          "sha256": "27442ce398c3f458114e8ea315893e536fec5bc4416705a45e27550040b323a7"
+        }
+      ],
+      "compatibilityLimit": "Current pinned-base ordinary API/worker graph verified through exact final-image named case custody, with failed and interrupted whole runs retained. Exact original preimages/postimages retained; joined peer/protected compatibility NOT_RUN."
     },
     {
       "path": "finnor-os/packages/private-equity/src/enterprise-allocation.ts",
       "ownerBoundary": "S5",
       "preimageSha256": "64a584dcfe61d7666f15966cebec2572d0a51e4db4c06c975f6f306e1eba7138",
-      "postimageSha256": "75dc105868433686ed2d9115441c56952a0b2e20ee6630c57f3e9a54f77688fc",
+      "postimageSha256": "28ef63480c32920ae84feeefeb15bbff8ff1048be3672e52f4609a13a828ea30",
       "contractRevisions": [
-        "CANONICAL_S5_DERIVED_r3q_NUMERATOR_DENOMINATOR"
+        "CANONICAL_S5_DERIVED_r3q_NUMERATOR_DENOMINATOR",
+        "S5_INTERNAL_VALIDATED_NUMERIC_STATE_SINGLE_FRESH_READ_COMPLETE_WITNESS_DEDUPLICATION"
       ],
       "changedReadersWritersJobs": [
         "clearEnterprisePortfolio",
@@ -756,30 +1483,72 @@
       "decisiveEvidence": [
         {
           "path": "owner-2026-10-09T22-45-55/results.json",
-          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T22-55-59/results.json",
-          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140"
+          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T23-22-42/results.json",
-          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787"
+          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T23-28-33/results.json",
-          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1"
+          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-10T00-51-10/results.json",
-          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335"
+          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335",
+          "rootId": "prior"
         },
         {
           "path": "installed-runtime-01/results.json",
-          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4"
+          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4",
+          "rootId": "prior"
+        },
+        {
+          "rootId": "completion",
+          "path": "host-final-owners-08/results.json",
+          "sha256": "bcac763ecc8fc23c2383071740d0ca9c5348a1fa16905735d1b2b289c4879053"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/results.json",
+          "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/results.json",
+          "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-start/fresh-owner-resolution-static-verification.json",
+          "sha256": "5df7e22c108bde1f08776d835f748cfcdca2a78e1ac9d1610db04eb06b9a7d4e"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-start/owner-resolution-native-external-custody.json",
+          "sha256": "9f47af5ae2b680726c9ea35e7a79bb11c1d2cc1085881a083edceff8121771b0"
         }
       ],
-      "compatibilityLimit": "RECORDED_BASE_LOCAL_OWNER_CUTS; FINAL_LINUX_AND_JOINED_R_NOT_VERIFIED"
+      "compatibilityLimit": "Current pinned-base ordinary API/worker graph verified through exact final-image named case custody, with failed and interrupted whole runs retained. Exact original preimages/postimages retained; joined peer/protected compatibility NOT_RUN.",
+      "freshOwnerResolutionContract": "Every resource owner/tenant and pin principal/tenant checked; each distinct complete witness freshly validated once per invocation. R3 uses existing numeric S5 validated state through an internal source API. Original constraints, currentness, grants, final locks and effects authority remain unchanged; no cross-call cache or added HTTP operation."
     },
     {
       "path": "finnor-os/packages/private-equity/src/enterprise-control.ts",
@@ -802,30 +1571,56 @@
       "decisiveEvidence": [
         {
           "path": "owner-2026-10-09T22-45-55/results.json",
-          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T22-55-59/results.json",
-          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140"
+          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T23-22-42/results.json",
-          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787"
+          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T23-28-33/results.json",
-          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1"
+          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-10T00-51-10/results.json",
-          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335"
+          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335",
+          "rootId": "prior"
         },
         {
           "path": "installed-runtime-01/results.json",
-          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4"
+          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4",
+          "rootId": "prior"
+        },
+        {
+          "rootId": "completion",
+          "path": "host-final-owners-08/results.json",
+          "sha256": "bcac763ecc8fc23c2383071740d0ca9c5348a1fa16905735d1b2b289c4879053"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/results.json",
+          "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/results.json",
+          "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
         }
       ],
-      "compatibilityLimit": "RECORDED_BASE_LOCAL_OWNER_CUTS; FINAL_LINUX_AND_JOINED_R_NOT_VERIFIED"
+      "compatibilityLimit": "Current pinned-base ordinary API/worker graph verified through exact final-image named case custody, with failed and interrupted whole runs retained. Exact original preimages/postimages retained; joined peer/protected compatibility NOT_RUN."
     },
     {
       "path": "finnor-os/packages/private-equity/src/enterprise-interventions.ts",
@@ -846,30 +1641,56 @@
       "decisiveEvidence": [
         {
           "path": "owner-2026-10-09T22-45-55/results.json",
-          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T22-55-59/results.json",
-          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140"
+          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T23-22-42/results.json",
-          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787"
+          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T23-28-33/results.json",
-          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1"
+          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-10T00-51-10/results.json",
-          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335"
+          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335",
+          "rootId": "prior"
         },
         {
           "path": "installed-runtime-01/results.json",
-          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4"
+          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4",
+          "rootId": "prior"
+        },
+        {
+          "rootId": "completion",
+          "path": "host-final-owners-08/results.json",
+          "sha256": "bcac763ecc8fc23c2383071740d0ca9c5348a1fa16905735d1b2b289c4879053"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/results.json",
+          "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/results.json",
+          "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
         }
       ],
-      "compatibilityLimit": "RECORDED_BASE_LOCAL_OWNER_CUTS; FINAL_LINUX_AND_JOINED_R_NOT_VERIFIED"
+      "compatibilityLimit": "Current pinned-base ordinary API/worker graph verified through exact final-image named case custody, with failed and interrupted whole runs retained. Exact original preimages/postimages retained; joined peer/protected compatibility NOT_RUN."
     },
     {
       "path": "finnor-os/packages/private-equity/src/enterprise-obligations.ts",
@@ -892,30 +1713,118 @@
       "decisiveEvidence": [
         {
           "path": "owner-2026-10-09T22-45-55/results.json",
-          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T22-55-59/results.json",
-          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140"
+          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T23-22-42/results.json",
-          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787"
+          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T23-28-33/results.json",
-          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1"
+          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-10T00-51-10/results.json",
-          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335"
+          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335",
+          "rootId": "prior"
         },
         {
           "path": "installed-runtime-01/results.json",
-          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4"
+          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4",
+          "rootId": "prior"
+        },
+        {
+          "rootId": "completion",
+          "path": "host-final-owners-08/results.json",
+          "sha256": "bcac763ecc8fc23c2383071740d0ca9c5348a1fa16905735d1b2b289c4879053"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/results.json",
+          "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/results.json",
+          "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
         }
       ],
-      "compatibilityLimit": "RECORDED_BASE_LOCAL_OWNER_CUTS; FINAL_LINUX_AND_JOINED_R_NOT_VERIFIED"
+      "compatibilityLimit": "Current pinned-base ordinary API/worker graph verified through exact final-image named case custody, with failed and interrupted whole runs retained. Exact original preimages/postimages retained; joined peer/protected compatibility NOT_RUN."
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/index.ts",
+      "ownerBoundary": "ORIGINAL_OWNER_TYPED_ERROR_TRANSPORT",
+      "changedReadersWritersJobs": [
+        "Native S5 LedgerFault constructor export",
+        "compiled allocations/obligations error classification; no owner guard or status/code change"
+      ],
+      "contractRevisions": [
+        "API_NATIVE_OWNER_ERROR_IDENTITY_V1",
+        "API_NATIVE_OWNER_ERROR_IDENTITY_V1"
+      ],
+      "preimageSha256": "61ace113aaae5b89069afed3ce07b8e934eaa7b04639ac51ef2a9dc70d65cda7",
+      "postimageSha256": "942cd6ae16c46da40e9c757f8f63f86826c366025fdac1106107dc1cbc0a3bb6",
+      "dependencyOrder": [
+        "R3_OWNED_GROUP",
+        "THIS_SHARED_INTEGRATION_GROUP"
+      ],
+      "decisiveEvidence": [
+        {
+          "rootId": "completion",
+          "path": "repair-start/native-error-static-verification.json",
+          "sha256": "9de1060339fe6a7412feab32f46f003f01d64934cea84c100df2aa4bcf96baab"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-start/native-error-linux-build-command.json",
+          "sha256": "9abc615cdda15b64c1bb300643abeb0d0afe77e6ffa0af89b203ca3da8cefc7d"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/results.json",
+          "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/results.json",
+          "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-start/native-error-static-verification.json",
+          "sha256": "9de1060339fe6a7412feab32f46f003f01d64934cea84c100df2aa4bcf96baab"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-start/native-error-linux-build-command.json",
+          "sha256": "9abc615cdda15b64c1bb300643abeb0d0afe77e6ffa0af89b203ca3da8cefc7d"
+        }
+      ],
+      "compatibilityLimit": "Current pinned-base ordinary API/worker graph verified through exact final-image named case custody, with failed and interrupted whole runs retained. Exact original preimages/postimages retained; joined peer/protected compatibility NOT_RUN.",
+      "nativeErrorIdentityContract": "API and source owners share the original native LedgerFault constructor; original epistemic allocation/control/intervention types stay native across root/subpath imports. Exact original refusal status/code and unexpected-error semantics retained, no object duck typing or altered authority."
     },
     {
       "path": "finnor-os/packages/private-equity/src/native-experience-transport.ts",
@@ -937,30 +1846,56 @@
       "decisiveEvidence": [
         {
           "path": "owner-2026-10-09T22-45-55/results.json",
-          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T22-55-59/results.json",
-          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140"
+          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T23-22-42/results.json",
-          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787"
+          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T23-28-33/results.json",
-          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1"
+          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-10T00-51-10/results.json",
-          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335"
+          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335",
+          "rootId": "prior"
         },
         {
           "path": "installed-runtime-01/results.json",
-          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4"
+          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4",
+          "rootId": "prior"
+        },
+        {
+          "rootId": "completion",
+          "path": "host-final-owners-08/results.json",
+          "sha256": "bcac763ecc8fc23c2383071740d0ca9c5348a1fa16905735d1b2b289c4879053"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/results.json",
+          "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/results.json",
+          "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
         }
       ],
-      "compatibilityLimit": "RECORDED_BASE_LOCAL_OWNER_CUTS; FINAL_LINUX_AND_JOINED_R_NOT_VERIFIED"
+      "compatibilityLimit": "Current pinned-base ordinary API/worker graph verified through exact final-image named case custody, with failed and interrupted whole runs retained. Exact original preimages/postimages retained; joined peer/protected compatibility NOT_RUN."
     },
     {
       "path": "finnor-os/packages/private-equity/src/obligation-contracts.ts",
@@ -983,30 +1918,56 @@
       "decisiveEvidence": [
         {
           "path": "owner-2026-10-09T22-45-55/results.json",
-          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T22-55-59/results.json",
-          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140"
+          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T23-22-42/results.json",
-          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787"
+          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T23-28-33/results.json",
-          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1"
+          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-10T00-51-10/results.json",
-          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335"
+          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335",
+          "rootId": "prior"
         },
         {
           "path": "installed-runtime-01/results.json",
-          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4"
+          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4",
+          "rootId": "prior"
+        },
+        {
+          "rootId": "completion",
+          "path": "host-final-owners-08/results.json",
+          "sha256": "bcac763ecc8fc23c2383071740d0ca9c5348a1fa16905735d1b2b289c4879053"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/results.json",
+          "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/results.json",
+          "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
         }
       ],
-      "compatibilityLimit": "RECORDED_BASE_LOCAL_OWNER_CUTS; FINAL_LINUX_AND_JOINED_R_NOT_VERIFIED"
+      "compatibilityLimit": "Current pinned-base ordinary API/worker graph verified through exact final-image named case custody, with failed and interrupted whole runs retained. Exact original preimages/postimages retained; joined peer/protected compatibility NOT_RUN."
     },
     {
       "path": "finnor-os/packages/shared-types/src/allocation.ts",
@@ -1028,30 +1989,56 @@
       "decisiveEvidence": [
         {
           "path": "owner-2026-10-09T22-45-55/results.json",
-          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T22-55-59/results.json",
-          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140"
+          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T23-22-42/results.json",
-          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787"
+          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T23-28-33/results.json",
-          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1"
+          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-10T00-51-10/results.json",
-          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335"
+          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335",
+          "rootId": "prior"
         },
         {
           "path": "installed-runtime-01/results.json",
-          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4"
+          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4",
+          "rootId": "prior"
+        },
+        {
+          "rootId": "completion",
+          "path": "host-final-owners-08/results.json",
+          "sha256": "bcac763ecc8fc23c2383071740d0ca9c5348a1fa16905735d1b2b289c4879053"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/results.json",
+          "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/results.json",
+          "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
         }
       ],
-      "compatibilityLimit": "RECORDED_BASE_LOCAL_OWNER_CUTS; FINAL_LINUX_AND_JOINED_R_NOT_VERIFIED"
+      "compatibilityLimit": "Current pinned-base ordinary API/worker graph verified through exact final-image named case custody, with failed and interrupted whole runs retained. Exact original preimages/postimages retained; joined peer/protected compatibility NOT_RUN."
     },
     {
       "path": "finnor-os/packages/shared-types/src/index.ts",
@@ -1072,30 +2059,56 @@
       "decisiveEvidence": [
         {
           "path": "owner-2026-10-09T22-45-55/results.json",
-          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T22-55-59/results.json",
-          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140"
+          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T23-22-42/results.json",
-          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787"
+          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T23-28-33/results.json",
-          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1"
+          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-10T00-51-10/results.json",
-          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335"
+          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335",
+          "rootId": "prior"
         },
         {
           "path": "installed-runtime-01/results.json",
-          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4"
+          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4",
+          "rootId": "prior"
+        },
+        {
+          "rootId": "completion",
+          "path": "host-final-owners-08/results.json",
+          "sha256": "bcac763ecc8fc23c2383071740d0ca9c5348a1fa16905735d1b2b289c4879053"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/results.json",
+          "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/results.json",
+          "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
         }
       ],
-      "compatibilityLimit": "RECORDED_BASE_LOCAL_OWNER_CUTS; FINAL_LINUX_AND_JOINED_R_NOT_VERIFIED"
+      "compatibilityLimit": "Current pinned-base ordinary API/worker graph verified through exact final-image named case custody, with failed and interrupted whole runs retained. Exact original preimages/postimages retained; joined peer/protected compatibility NOT_RUN."
     },
     {
       "path": "finnor-os/scripts/generate-openapi.ts",
@@ -1119,36 +2132,62 @@
       "decisiveEvidence": [
         {
           "path": "owner-2026-10-09T22-45-55/results.json",
-          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T22-55-59/results.json",
-          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140"
+          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T23-22-42/results.json",
-          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787"
+          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T23-28-33/results.json",
-          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1"
+          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-10T00-51-10/results.json",
-          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335"
+          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335",
+          "rootId": "prior"
         },
         {
           "path": "installed-runtime-01/results.json",
-          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4"
+          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4",
+          "rootId": "prior"
+        },
+        {
+          "rootId": "completion",
+          "path": "host-final-owners-08/results.json",
+          "sha256": "bcac763ecc8fc23c2383071740d0ca9c5348a1fa16905735d1b2b289c4879053"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/results.json",
+          "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/results.json",
+          "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
         }
       ],
-      "compatibilityLimit": "RECORDED_BASE_LOCAL_OWNER_CUTS; FINAL_LINUX_AND_JOINED_R_NOT_VERIFIED"
+      "compatibilityLimit": "Current pinned-base ordinary API/worker graph verified through exact final-image named case custody, with failed and interrupted whole runs retained. Exact original preimages/postimages retained; joined peer/protected compatibility NOT_RUN."
     },
     {
       "path": "finnor-os/scripts/s6/governed-dispatch-proof.mts",
       "ownerBoundary": "S6",
       "preimageSha256": "429d4f49cfd5ae0690f22df3cec08511166e845f9edb4e52b9129477537d7c21",
-      "postimageSha256": "6aeb7f319204639c3c02f1b727cacdb2a7b9939cbe6264d0eccf5f8c8ff33a6c",
+      "postimageSha256": "70f55ba8d16bacb999b46ef7c3285d5aa51f5f7d8211538506dd90f69244753b",
       "contractRevisions": [
         "UNCHANGED_json-field-replace-v1"
       ],
@@ -1164,30 +2203,136 @@
       "decisiveEvidence": [
         {
           "path": "owner-2026-10-09T22-45-55/results.json",
-          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T22-55-59/results.json",
-          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140"
+          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T23-22-42/results.json",
-          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787"
+          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T23-28-33/results.json",
-          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1"
+          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-10T00-51-10/results.json",
-          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335"
+          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335",
+          "rootId": "prior"
         },
         {
           "path": "installed-runtime-01/results.json",
-          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4"
+          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4",
+          "rootId": "prior"
+        },
+        {
+          "rootId": "completion",
+          "path": "host-final-owners-08/results.json",
+          "sha256": "bcac763ecc8fc23c2383071740d0ca9c5348a1fa16905735d1b2b289c4879053"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/results.json",
+          "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/results.json",
+          "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
         }
       ],
-      "compatibilityLimit": "RECORDED_BASE_LOCAL_OWNER_CUTS; FINAL_LINUX_AND_JOINED_R_NOT_VERIFIED"
+      "compatibilityLimit": "Current pinned-base ordinary API/worker graph verified through exact final-image named case custody, with failed and interrupted whole runs retained. Exact original preimages/postimages retained; joined peer/protected compatibility NOT_RUN."
+    },
+    {
+      "path": "finnor-os/scripts/s6/run-executor-e2e.mts",
+      "ownerBoundary": "S6_EXISTING_PHYSICAL_EXECUTOR_E2E",
+      "changedReadersWritersJobs": [
+        "Linux trusted outer procfs observer",
+        "original detached-child census and four challenges"
+      ],
+      "contractRevisions": [
+        "FINITE_LINUX_PHYSICAL_PROCESS_OBSERVER"
+      ],
+      "preimageSha256": "e323a7fdcd037ff59eed3fdf4c72dc8fc89c2eac3ecf74ebe71cdeb6baca80d1",
+      "postimageSha256": "d00c612f7158ef216b493ab57f7da49e6e5902baf7f1203092c3a04ad3c5546f",
+      "dependencyOrder": [
+        "R3_OWNED_GROUP",
+        "THIS_SHARED_INTEGRATION_GROUP"
+      ],
+      "decisiveEvidence": [
+        {
+          "rootId": "completion",
+          "path": "native-isolation-current-source/results.json",
+          "sha256": "42bd5ed7a1830d37167d75e509d71896d37044cc0d62cf66f09d165077faba01"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/results.json",
+          "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/results.json",
+          "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
+        }
+      ],
+      "compatibilityLimit": "Current pinned-base ordinary API/worker graph verified through exact final-image named case custody, with failed and interrupted whole runs retained. Exact original preimages/postimages retained; joined peer/protected compatibility NOT_RUN."
+    },
+    {
+      "path": "infra/deployment/production.contract.json",
+      "ownerBoundary": "RELEASE_TRUTH_MIGRATION_READER",
+      "changedReadersWritersJobs": [
+        "deployment truth requiredMigrationHead",
+        "original 0171 role isolation retained"
+      ],
+      "contractRevisions": [
+        "0172_BASE_LOCAL_HEAD"
+      ],
+      "dependencyOrder": [
+        "R3_OWNED_GROUP",
+        "THIS_SHARED_INTEGRATION_GROUP"
+      ],
+      "preimageSha256": "dc96d0a398936acadd26e576ea172fea5ebec515a454378cb1f81606a8ed1da6",
+      "postimageSha256": "037d61bf9fe88747d623eb1ca812e5e4a8bdb2875dfa3a5c64fdb2decb5cc6d3",
+      "decisiveEvidence": [
+        {
+          "rootId": "completion",
+          "path": "completion-start/release-truth-repair.log",
+          "sha256": "ae1ffe8b5b1941449a1bc8e890bcc27d4d07d69388bd2902335fdd4aad65ced0"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/results.json",
+          "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/results.json",
+          "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
+        }
+      ],
+      "compatibilityLimit": "Current pinned-base ordinary API/worker graph verified through exact final-image named case custody, with failed and interrupted whole runs retained. Exact original preimages/postimages retained; joined peer/protected compatibility NOT_RUN."
     },
     {
       "path": "scripts/centropy/generate-capability-manifest.mjs",
@@ -1211,36 +2356,62 @@
       "decisiveEvidence": [
         {
           "path": "owner-2026-10-09T22-45-55/results.json",
-          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T22-55-59/results.json",
-          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140"
+          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T23-22-42/results.json",
-          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787"
+          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T23-28-33/results.json",
-          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1"
+          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-10T00-51-10/results.json",
-          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335"
+          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335",
+          "rootId": "prior"
         },
         {
           "path": "installed-runtime-01/results.json",
-          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4"
+          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4",
+          "rootId": "prior"
+        },
+        {
+          "rootId": "completion",
+          "path": "host-final-owners-08/results.json",
+          "sha256": "bcac763ecc8fc23c2383071740d0ca9c5348a1fa16905735d1b2b289c4879053"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/results.json",
+          "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/results.json",
+          "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
         }
       ],
-      "compatibilityLimit": "RECORDED_BASE_LOCAL_OWNER_CUTS; FINAL_LINUX_AND_JOINED_R_NOT_VERIFIED"
+      "compatibilityLimit": "Current pinned-base ordinary API/worker graph verified through exact final-image named case custody, with failed and interrupted whole runs retained. Exact original preimages/postimages retained; joined peer/protected compatibility NOT_RUN."
     },
     {
       "path": "src/components/centropy/canvas/CapitalProgramPanel.tsx",
       "ownerBoundary": "CAPITAL_WORK",
       "preimageSha256": "e2b4f5d03b2ed1705807c2f2f81fb2c5ca09daec08c1c592ce100ad1ee91370e",
-      "postimageSha256": "98b6694b0da8ac66f5704ce3286464456be7f5bf63fc46ff927de97eb26add84",
+      "postimageSha256": "29d17bab16d1bfb94cb93e3c9f284d21d9356f2d2b7b78c0007d0b31fe91ecd1",
       "contractRevisions": [
         "finnor.r3.work-review.v1"
       ],
@@ -1255,37 +2426,103 @@
       ],
       "decisiveEvidence": [
         {
-          "path": "owner-2026-10-09T22-45-55/results.json",
-          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+          "rootId": "completion",
+          "path": "mounted-completion-06/results.json",
+          "sha256": "929eb4db025b0951bf1588aeab2995a2b0e11d79c256d143953c91ed7d3fcef5"
         },
         {
-          "path": "owner-2026-10-09T22-55-59/results.json",
-          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140"
+          "rootId": "completion",
+          "path": "repair-candidate-work-02/results.json",
+          "sha256": "a6a17c84a8c83caa6eb1dca3e77af2541593969256b7d15f50e587a4286ee20b"
         },
         {
-          "path": "owner-2026-10-09T23-22-42/results.json",
-          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787"
+          "rootId": "completion",
+          "path": "repair-candidate-work-03/resumption-observation.json",
+          "sha256": "52625254c54bdde015265bd1218f61565c6efbe23527d1c66c115ec52887aa8a"
         },
         {
-          "path": "owner-2026-10-09T23-28-33/results.json",
-          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1"
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/results.json",
+          "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
         },
         {
-          "path": "owner-2026-10-10T00-51-10/results.json",
-          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335"
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
         },
         {
-          "path": "installed-runtime-01/results.json",
-          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4"
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/results.json",
+          "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
+        },
+        {
+          "rootId": "completion",
+          "path": "final-staged-mounted-custody.json",
+          "sha256": "0d20318cfdcab8f2cba67fcbb03f37a2f21171926458594168cacf9a9c4712ba"
         }
       ],
-      "compatibilityLimit": "RECORDED_BASE_LOCAL_OWNER_CUTS; FINAL_LINUX_AND_JOINED_R_NOT_VERIFIED"
+      "compatibilityLimit": "Current pinned-base ordinary API/worker graph verified through exact final-image named case custody, with failed and interrupted whole runs retained. Exact original preimages/postimages retained; joined peer/protected compatibility NOT_RUN."
+    },
+    {
+      "path": "src/components/centropy/canvas/capital-program-view.ts",
+      "ownerBoundary": "EXISTING_M3_WORK_READ_MODEL",
+      "changedReadersWritersJobs": [
+        "actual M3 candidate finitePolicyComplete eligibility reader"
+      ],
+      "contractRevisions": [
+        "M3_OWNER_ECONOMIC_V2_RETAINED",
+        "R3_M3_REPORT_EXTENSION_V1"
+      ],
+      "dependencyOrder": [
+        "R3_OWNED_GROUP",
+        "THIS_SHARED_INTEGRATION_GROUP"
+      ],
+      "preimageSha256": "9482868815eba0632966eb63258bd2baa366b789de9e3075b839eee4870ab883",
+      "postimageSha256": "9c1db0a4576c3645b2b754bc4b649a7eb4a51673a6ea6ac07972ac0b6e8f18ff",
+      "decisiveEvidence": [
+        {
+          "rootId": "completion",
+          "path": "mounted-completion-06/results.json",
+          "sha256": "929eb4db025b0951bf1588aeab2995a2b0e11d79c256d143953c91ed7d3fcef5"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-candidate-work-02/results.json",
+          "sha256": "a6a17c84a8c83caa6eb1dca3e77af2541593969256b7d15f50e587a4286ee20b"
+        },
+        {
+          "rootId": "completion",
+          "path": "repair-candidate-work-03/resumption-observation.json",
+          "sha256": "52625254c54bdde015265bd1218f61565c6efbe23527d1c66c115ec52887aa8a"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/results.json",
+          "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/results.json",
+          "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
+        },
+        {
+          "rootId": "completion",
+          "path": "final-staged-mounted-custody.json",
+          "sha256": "0d20318cfdcab8f2cba67fcbb03f37a2f21171926458594168cacf9a9c4712ba"
+        }
+      ],
+      "compatibilityLimit": "Current pinned-base ordinary API/worker graph verified through exact final-image named case custody, with failed and interrupted whole runs retained. Exact original preimages/postimages retained; joined peer/protected compatibility NOT_RUN."
     },
     {
       "path": "src/lib/centropy/capability-manifest.generated.json",
       "ownerBoundary": "GENERATED_INTERFACE_CONTRACT",
       "preimageSha256": "60d1cbc34d4d5a928ee88274452a404b2f96f636d40087e4edc4891e7333ff52",
-      "postimageSha256": "387ab5a39d8bf08472a1b635203cb34abb24c82dbb3c787931879a2d8c1e9862",
+      "postimageSha256": "df03bbca859d8bed5f8b74a5717e330a947f641ffc782fa356205408b58269a4",
       "contractRevisions": [
         "finnor.elicitation-protocol.v1",
         "R3OwnerOperationSchemas",
@@ -1303,36 +2540,62 @@
       "decisiveEvidence": [
         {
           "path": "owner-2026-10-09T22-45-55/results.json",
-          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T22-55-59/results.json",
-          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140"
+          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T23-22-42/results.json",
-          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787"
+          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T23-28-33/results.json",
-          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1"
+          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-10T00-51-10/results.json",
-          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335"
+          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335",
+          "rootId": "prior"
         },
         {
           "path": "installed-runtime-01/results.json",
-          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4"
+          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4",
+          "rootId": "prior"
+        },
+        {
+          "rootId": "completion",
+          "path": "host-final-owners-08/results.json",
+          "sha256": "bcac763ecc8fc23c2383071740d0ca9c5348a1fa16905735d1b2b289c4879053"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/results.json",
+          "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/results.json",
+          "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
         }
       ],
-      "compatibilityLimit": "RECORDED_BASE_LOCAL_OWNER_CUTS; FINAL_LINUX_AND_JOINED_R_NOT_VERIFIED"
+      "compatibilityLimit": "Current pinned-base ordinary API/worker graph verified through exact final-image named case custody, with failed and interrupted whole runs retained. Exact original preimages/postimages retained; joined peer/protected compatibility NOT_RUN."
     },
     {
       "path": "src/lib/centropy/openapi-types.ts",
       "ownerBoundary": "GENERATED_INTERFACE_CONTRACT",
       "preimageSha256": "f5eb415cff242782e52eac4caa758812e10fc166b73f22ea9a23e7a822c0727f",
-      "postimageSha256": "ddb9f8b423c7d0e67c818c20b3d16791dbced11a4e1b7cbeee984af3857bb26a",
+      "postimageSha256": "2cdc9d63779416c67efb0c14a64720b3a85aad3d7b0d5f9c5baac50e7aa86974",
       "contractRevisions": [
         "finnor.elicitation-protocol.v1",
         "R3OwnerOperationSchemas",
@@ -1350,36 +2613,62 @@
       "decisiveEvidence": [
         {
           "path": "owner-2026-10-09T22-45-55/results.json",
-          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T22-55-59/results.json",
-          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140"
+          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T23-22-42/results.json",
-          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787"
+          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T23-28-33/results.json",
-          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1"
+          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-10T00-51-10/results.json",
-          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335"
+          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335",
+          "rootId": "prior"
         },
         {
           "path": "installed-runtime-01/results.json",
-          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4"
+          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4",
+          "rootId": "prior"
+        },
+        {
+          "rootId": "completion",
+          "path": "host-final-owners-08/results.json",
+          "sha256": "bcac763ecc8fc23c2383071740d0ca9c5348a1fa16905735d1b2b289c4879053"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/results.json",
+          "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/results.json",
+          "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
         }
       ],
-      "compatibilityLimit": "RECORDED_BASE_LOCAL_OWNER_CUTS; FINAL_LINUX_AND_JOINED_R_NOT_VERIFIED"
+      "compatibilityLimit": "Current pinned-base ordinary API/worker graph verified through exact final-image named case custody, with failed and interrupted whole runs retained. Exact original preimages/postimages retained; joined peer/protected compatibility NOT_RUN."
     },
     {
       "path": "src/lib/jarvis/openapi-types.ts",
       "ownerBoundary": "GENERATED_INTERFACE_CONTRACT",
       "preimageSha256": "f5eb415cff242782e52eac4caa758812e10fc166b73f22ea9a23e7a822c0727f",
-      "postimageSha256": "ddb9f8b423c7d0e67c818c20b3d16791dbced11a4e1b7cbeee984af3857bb26a",
+      "postimageSha256": "2cdc9d63779416c67efb0c14a64720b3a85aad3d7b0d5f9c5baac50e7aa86974",
       "contractRevisions": [
         "finnor.elicitation-protocol.v1",
         "R3OwnerOperationSchemas",
@@ -1397,33 +2686,61 @@
       "decisiveEvidence": [
         {
           "path": "owner-2026-10-09T22-45-55/results.json",
-          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108"
+          "sha256": "04e8f01b18c757e3653b241817e3c5677410aef0b8fe9731c47cf66043934108",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T22-55-59/results.json",
-          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140"
+          "sha256": "f4938bdd4fc44ea8bc7df27c8bea55d66890175b4c904f54e208b609e7649140",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T23-22-42/results.json",
-          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787"
+          "sha256": "ee7bdfb37cacd013b8cb550e1dedd2c3c4e04d361cfd278661a2f13a9e4bf787",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-09T23-28-33/results.json",
-          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1"
+          "sha256": "21b1f96e1455926a16d96d407e6532b113ce181ed63bd9f5b12fefcc6234fdc1",
+          "rootId": "prior"
         },
         {
           "path": "owner-2026-10-10T00-51-10/results.json",
-          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335"
+          "sha256": "c96eadc2137462bc71fc1a127cf7ef8b0f5b33e67137eaa24326f6222b633335",
+          "rootId": "prior"
         },
         {
           "path": "installed-runtime-01/results.json",
-          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4"
+          "sha256": "242079b3b96df7ac8b76a5f1c850accd41bdc050ea85b9f63d89db1a823aabb4",
+          "rootId": "prior"
+        },
+        {
+          "rootId": "completion",
+          "path": "host-final-owners-08/results.json",
+          "sha256": "bcac763ecc8fc23c2383071740d0ca9c5348a1fa16905735d1b2b289c4879053"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/results.json",
+          "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/results.json",
+          "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
         }
       ],
-      "compatibilityLimit": "RECORDED_BASE_LOCAL_OWNER_CUTS; FINAL_LINUX_AND_JOINED_R_NOT_VERIFIED"
+      "compatibilityLimit": "Current pinned-base ordinary API/worker graph verified through exact final-image named case custody, with failed and interrupted whole runs retained. Exact original preimages/postimages retained; joined peer/protected compatibility NOT_RUN."
     }
   ],
   "regenerateFromSource": true,
   "adoptDirtyPeerBytes": false,
-  "unresolvedJoinedMigrationNumber": true
+  "unresolvedJoinedMigrationNumber": true,
+  "currentFinalInstalledRuntimeVerified": true,
+  "minimumSharedPaths": 42
 }

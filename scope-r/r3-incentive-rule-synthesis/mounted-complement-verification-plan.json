@@ -1,0 +1,19 @@
+{
+  "schema": "finnor.r3.finite-mounted-complement.v1",
+  "registeredAt": "2026-10-10T19:30:28.257092+00:00",
+  "purpose": "Complete the two missing Work privacy/currentness oracles on the identical current product source; reuse actual already-passed candidate/table/reload/delayed Work proofs without rerunning them. Preserve full preceding story FAIL.",
+  "runs": 1,
+  "outerSeconds": 900,
+  "prepareSeconds": 240,
+  "maxBrowserSeconds": 600,
+  "originalM1ValidityClamped": true,
+  "requirementsUnchanged": [
+    "real SDK login and actual current M3-bound initial rule",
+    "actual foreign identity must receive 404 and zero private table values",
+    "return original authenticated owner and current rule before original M1 expiry",
+    "actual original preference source revision invalidates future current rule while original deadlines/attempt/history retained"
+  ],
+  "domain": "four parties / three types each / three outcomes / 81 profiles / 648 deviations / 324 participation",
+  "splitIsEvidenceCustodyNotReducedProductScope": true,
+  "noFreshGrantAfterAcceptance": true
+}
