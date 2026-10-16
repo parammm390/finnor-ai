@@ -1,8 +1,11 @@
 /** S6 delivery on the existing command/workflow/job substrate. The worker carries
  * references and signatures; protected provider credentials remain in the broker. */
 import {withTenantTransaction} from '@finnor/db';
-import {claimStep,stepFence,heartbeatStepClaim,awaitStepObservation,completeStep,advanceWorkflow,redriveStepTx,type StepFence} from '@finnor/workflow-runtime';
-import {readEnterpriseDurableObligation,executeEnterpriseDurableObligationRequest,settleEnterpriseAllocation,ObligationOperationSchemas,governedScheduledDelegation,type PeMutationContext} from '@finnor/private-equity';
+import {claimStep,stepFence,heartbeatStepClaim,awaitStepObservation,completeStep,advanceWorkflow,redriveStepTx,type StepFence} from '@finnor/workflow-runtime/steps';
+import {readEnterpriseDurableObligation,executeEnterpriseDurableObligationRequest,governedScheduledDelegation} from '@finnor/private-equity/src/enterprise-obligations';
+import {settleEnterpriseAllocation} from '@finnor/private-equity/src/enterprise-allocation';
+import {ObligationOperationSchemas} from '@finnor/private-equity/src/obligation-contracts';
+import type {PeMutationContext} from '@finnor/private-equity/src/types';
 import {epistemicHash} from '@finnor/epistemic-runtime';
 import {RetryableJobError,type JobExecutionContext} from '../queue';
 const same=(a:unknown,b:unknown)=>epistemicHash(a)===epistemicHash(b);

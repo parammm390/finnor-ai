@@ -7,12 +7,15 @@ function evaluate(files, results = {}) {
   return evaluateRequiredPrVerdict({
     files,
     classifyResult: "success",
+    sourceResult: scope.backend || scope.root ? "success" : "skipped",
     backendApplicable: scope.backend,
     backendResult: scope.backend ? "success" : "skipped",
     rootApplicable: scope.root,
     rootResult: scope.root ? "success" : "skipped",
     dependencyApplicable: scope.dependencies,
     securityResult: "success",
+    replayResult: scope.backend ? "success" : "skipped",
+    readinessResult: scope.backend ? "success" : "skipped",
     ...results,
   })
 }
@@ -33,6 +36,9 @@ test("backend, root, workflow, and dependency scopes select only their applicabl
   assert.deepEqual(classifyPullRequestFiles(["src/app/page.tsx"]), { backend: false, root: true, dependencies: false })
   assert.deepEqual(classifyPullRequestFiles([".github/workflows/new.yml"]), { backend: true, root: true, dependencies: false })
   assert.deepEqual(classifyPullRequestFiles(["package-lock.json"]), { backend: true, root: true, dependencies: true })
+  for (const path of ["finnor-os/scripts/r3/requirements.lock", "finnor-os/scripts/r3/upstream-requirements.lock"]) {
+    assert.deepEqual(classifyPullRequestFiles([path]), { backend: true, root: false, dependencies: true })
+  }
 })
 
 test("an applicable failure or universal secret-scan failure fails the stable verdict", () => {

@@ -36,7 +36,11 @@ jobs:
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
           # Match the Node runtime used by the repository's other CI workflows.
-          node-version: 22
+          node-version: 22.22.3
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            finnor-os/package-lock.json
       - name: Install dependencies
         run: npm ci --no-audit --no-fund
       # The root app's typed Centropy client imports the canonical Work projection
@@ -50,19 +54,9 @@ jobs:
       # centropy and src/app/centropy, defined in eslint.config.mjs — this is what actually
       # enforces it; running lint in CI is what makes that enforcement real instead
       # of just a local convention.
-      - run: npm run lint
-      - run: npm run workspace:check
-      - run: npm run centropy:manifest:check
-      - run: npm run centropy:forms:check
+      # Both callers require source-checks.yml before entering this build job.
       - run: npm run test:unit
-      - run: npx tsc --noEmit -p tsconfig.json
-      # Run every credential-free release policy before merge. The production-only
-      # workflow used to be the first place the P8 reachability verifier ran, which
-      # allowed a stale renamed entrypoint to merge and waste a release attempt.
-      - name: Verify static production release policy
-        run: |
-          npm run test:release
-          npm run release:p8-zero-resurrection
+      # Static release policy and P8 reachability already passed the source gate.
       # Committed, reproducible WCAG contrast audit of the actual palette pairs.
       - run: node scripts/contrast-audit.mjs
       - run: npm run build
@@ -92,7 +86,17 @@ jobs:
           set -e
           node node_modules/next/dist/bin/next start > server.log 2>&1 & server_pid=$!
           trap 'kill "$server_pid" 2>/dev/null || true' EXIT
-          npx wait-on http://localhost:3000 --timeout 60000
+          node --input-type=module <<'NODE'
+          const until = Date.now() + 60_000
+          while (true) {
+            try {
+              const response = await fetch("http://localhost:3000", { signal: AbortSignal.timeout(2_000) })
+              if (response.ok) break
+            } catch {}
+            if (Date.now() >= until) throw new Error("Production-build server did not become ready")
+            await new Promise(resolve => setTimeout(resolve, 500))
+          }
+          NODE
           set +e
           chrome_path="$(node -e 'const { chromium } = require("@playwright/test"); process.stdout.write(chromium.executablePath())')"
           # Playwright's downloaded Chromium needs the no-sandbox launch mode on

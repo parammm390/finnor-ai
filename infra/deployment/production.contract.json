@@ -10,7 +10,7 @@
     "requireCleanWorktree": true
   },
   "release": {
-    "requiredMigrationHead": "0181_native_system_actor_scope.sql",
+    "requiredMigrationHead": "0188_observation_source_version_binding.sql",
     "metadata": [
       "FINNOR_COMMIT_SHA",
       "FINNOR_BUILD_ID",
@@ -34,9 +34,7 @@
         "database-migrate",
         "aws-compute-stack-deploy",
         "compute-cutover-activate",
-        "compute-cutover-finalize",
-        "product-authority-update",
-        "epistemic-impact-activate"
+        "compute-cutover-finalize"
       ]
     }
   },

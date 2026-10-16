@@ -1,6 +1,7 @@
 import {createHash,randomUUID} from 'node:crypto';
 import {readFile,readdir} from 'node:fs/promises';
-import {resolve} from 'node:path';
+import {resolve,dirname} from 'node:path';
+import {fileURLToPath} from 'node:url';
 import type {PoolClient} from 'pg';
 import type {EvidenceDerivation} from '@finnor/shared-types';
 import type {PeMutationContext,PeWorldRootRef} from '../types';
@@ -8,9 +9,11 @@ import {principal,unavailable,tx,authorize,assertDependencies} from '../owner-co
 export {principal,unavailable,tx,authorize,revisions,sameRevisions,assertDependencies} from '../owner-context';
 export function stable(value:unknown):string{if(value===null||typeof value!=='object')return JSON.stringify(value);if(Array.isArray(value))return '['+value.map(stable).join(',')+']';return '{'+Object.entries(value as Record<string,unknown>).filter(([,v])=>v!==undefined).sort(([a],[b])=>a.localeCompare(b)).map(([k,v])=>JSON.stringify(k)+':'+stable(v)).join(',')+'}';}
 export const sha=(value:unknown)=>createHash('sha256').update(typeof value==='string'||Buffer.isBuffer(value)?value:stable(value)).digest('hex');
-const base=resolve(import.meta.dirname,'../../../../..');
+const base=resolve(dirname(fileURLToPath(import.meta.url)),'../../../../..');
 export const CODE_FILES=['contracts.ts','store.ts','exact.ts','operators.ts','sources.ts','documents.ts','documents-parser.ts','vision-ocr.m','backend.ts','native-child.mts','checks.ts','api.ts','worker.ts','consumer.ts'].map(p=>'finnor-os/packages/private-equity/src/evidence-execution/'+p).concat(['finnor-os/packages/shared-types/src/evidence-execution.ts','finnor-os/packages/private-equity/src/enterprise-beliefs.ts','finnor-os/packages/private-equity/src/world-state.ts','finnor-os/packages/authority/src/index.ts','finnor-os/packages/private-equity/src/underwriting-repository.ts','finnor-os/packages/underwriting/src/types.ts','finnor-os/packages/underwriting/src/compiler.ts','finnor-os/packages/underwriting/src/executor.ts','finnor-os/packages/underwriting/src/decimal.ts','finnor-os/packages/underwriting/src/canonical.ts','finnor-os/packages/spreadsheet-ir/src/formula.ts','finnor-os/apps/api/app/api/company-brain/[operation]/route.ts','finnor-os/packages/db/compute-governor.ts','finnor-os/packages/db/compute-contract.ts','finnor-os/apps/worker/src/queue.ts','finnor-os/packages/ooxml/src/index.ts','finnor-os/packages/spreadsheet-ir/src/index.ts','finnor-os/packages/artifacts/src/service.ts','package-lock.json','finnor-os/package-lock.json']);
 CODE_FILES.push('finnor-os/packages/source-custody/index.cjs');
+CODE_FILES.push(...['r2_check.py','r2_complete.py','r2_supervise.py'].map(name=>'finnor-os/packages/epistemic-runtime/python/'+name));
+CODE_FILES.push(...['coalition-programmes','allocations','obligations','policies'].map(name=>'finnor-os/apps/api/app/api/'+name+'/[operation]/route.ts'));
 async function productionFiles(directory:string):Promise<string[]>{const found:string[]=[];for(const entry of await readdir(resolve(base,directory),{withFileTypes:true})){if(entry.name==='node_modules'||entry.name.startsWith('.'))continue;const path=directory+'/'+entry.name;if(entry.isDirectory())found.push(...await productionFiles(path));else if(/\.(?:ts|mts|m|sql)$/.test(entry.name)&&!entry.name.includes('.test.')||entry.name==='package.json')found.push(path);}return found;}
 export async function currentCodeIdentity(){const paths=[...new Set([...CODE_FILES,...await productionFiles('finnor-os/packages')])].sort();const files:Array<{path:string;sha256:string}>=[];
  for(let offset=0;offset<paths.length;offset+=16)files.push(...await Promise.all(paths.slice(offset,offset+16).map(async path=>({path,sha256:sha(await readFile(resolve(base,path)))}))));

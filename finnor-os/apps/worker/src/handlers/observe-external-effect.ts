@@ -9,7 +9,8 @@ import {
 } from "@finnor/db";
 import { materializeSourceRecord, observeExternalEffect } from "@finnor/data-platform";
 import { createSourceAdapterRegistry, IntegrationError } from "@finnor/tools";
-import { observeRecoveredAuthorizedAttempt, settleExternalEffectObservation } from "@finnor/orchestration";
+import { observeRecoveredAuthorizedAttempt } from "@finnor/orchestration/durable-execution";
+import { settleExternalEffectObservation } from "@finnor/orchestration/external-observation";
 import type { BusinessEffectSet, ExternalEffectObservation } from "@finnor/shared-types";
 import { and, eq } from "drizzle-orm";
 import type { JobHandler } from "../queue";

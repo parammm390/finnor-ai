@@ -1,0 +1,40 @@
+{
+  "schema": "finnor.ci-process.v1",
+  "status": "FAIL",
+  "startedAt": "2026-10-16T03:22:40.714Z",
+  "commands": [
+    {
+      "command": "actionlint 1.7.12",
+      "args": [
+        "-shellcheck=",
+        "-pyflakes=",
+        ".github/workflows/ci.yml",
+        ".github/workflows/dealer-zero-replay.yml",
+        ".github/workflows/marketing-ci.yml",
+        ".github/workflows/pr-verdict.yml",
+        ".github/workflows/production-release.yml",
+        ".github/workflows/security.yml",
+        ".github/workflows/source-checks.yml",
+        ".github/workflows/tenant-isolation-nightly.yml"
+      ],
+      "exitCode": 1,
+      "output": ".github/workflows/source-checks.yml:18:43: context \"runner\" is not allowed here. available contexts are \"github\", \"inputs\", \"matrix\", \"needs\", \"secrets\", \"strategy\", \"vars\". see https://docs.github.com/en/actions/learn-github-actions/contexts#context-availability for more details [expression]\n   |\n18 |       FINNOR_CI_PROCESS_EVIDENCE_DIR: ${{ runner.temp }}/finnor-ci-process\n   |                                           ^~~~~~~~~~~\n"
+    }
+  ],
+  "inputs": {
+    ".github/workflows/ci.yml": "6905a218923f6c68784315aa787f74c6b263521f7df93bcc19dc15926a2fdbd2",
+    ".github/workflows/dealer-zero-replay.yml": "f61cb55b4bfa4a8ee7d1a0d0b892971c6ce83f45f52d8f2b2dad77915df307ea",
+    ".github/workflows/marketing-ci.yml": "374bda9aeb370c62be288ca9fc7507633f273779f08838c63ee7c48815f11ae7",
+    ".github/workflows/pr-verdict.yml": "d3efefaefbfc769cf99bfcc31cb4e5ad941ed977866c9d84771e193ab3b75396",
+    ".github/workflows/production-release.yml": "21389de5b915d890d712871e953621d038e7a89e4518aae573f49c07042ecdc7",
+    ".github/workflows/security.yml": "79e0547c58487904ca78d780af4fcbb34695a09fe06caa96ad94d06096039afd",
+    ".github/workflows/source-checks.yml": "eb05aa905b34cfdbb7be2ab9b550194ed1a4a1c53894da8e9ae28cc9c1dbc82d",
+    ".github/workflows/tenant-isolation-nightly.yml": "dc582e6cbf07319b39212935140b379b1fbff89fbc406ff54adcef81c96fc6d4"
+  },
+  "rerun": "FINNOR_CI_PROCESS_EVIDENCE_DIR=/absolute/new/evidence node scripts/release/verify-ci-workflows.mjs",
+  "hostedExecutionClaimed": false,
+  "archiveSha256": "aba9ced2dee8d27fecca3dc7feb1a7f9a52caefa1eb46f3271ea66b6e0e6953f",
+  "binarySha256": "8db11704dc296f096216db4db65d86cd7f0ebfdf4c38453a1da276b137b88388",
+  "finishedAt": "2026-10-16T03:22:41.669Z",
+  "durationMs": 955
+}

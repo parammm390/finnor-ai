@@ -1,0 +1,17 @@
+{
+  "schema": "finnor.r3.mounted-m3-catch-diagnosis.v1",
+  "registeredAt": "2026-10-10T18:03:18.155478+00:00",
+  "runs": 1,
+  "outerSeconds": 900,
+  "browserSeconds": 600,
+  "priorDiagnostic": "repair-m3-full-read-diagnosis-02: original M1, owner replay, allocation candidate and module current at all three stages; full signed M3 read PARTIAL after foreign fixture",
+  "failureModel": [
+    "A mounted owner request introduces a real changed witness",
+    "A concurrent reader sees an operational exception and converts it to permanent material invalidation",
+    "Actual signed API context differs from fixture context",
+    "Work mounted path creates an unobserved original-owner change"
+  ],
+  "acceptance": "A fixture-only Node inspector breakpoint at the existing M3 material-invalidating catch retains only the actual exception and stack, then immediately resumes; no product bytes or response interception/owner replay is changed. Original budgets/deadlines retained. Run full original mounted/candidate workflow if checks stay current. On failure preserve exact evidence.",
+  "protectedAdmission": false,
+  "productHooks": false
+}

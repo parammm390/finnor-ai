@@ -1,0 +1,32 @@
+{
+  "schema": "finnor.r3.final-worker-role-finite-proof.v1",
+  "registeredAt": "2026-10-10T20:51:29.268807+00:00",
+  "cases": [
+    "base-local-migration-upgrade-restart",
+    "queued-original-and-r3-physical-restart",
+    "authenticated-owner-positive",
+    "report-correction-close",
+    "separate-acceptance-exact-choice-consumption",
+    "actual-fallback-matched-off-on",
+    "decline-no-response",
+    "rational-original-owner-compatibility",
+    "shared-grant-concurrency",
+    "cancel-and-partial",
+    "sigkill-after-child-acceptance",
+    "publication-row-lock-race",
+    "currentness-and-p7"
+  ],
+  "runtimeProbe": "installed nonroot scientific interpreter, producer/Fraction checker, old/new actual job registration, source/digest/licence/read-only root permissions",
+  "whyRepeat": "Distinct final worker OCI role/configuration; prior API or archive validation cannot prove execution of worker image",
+  "wholePreviousFailuresPromotedToPass": false,
+  "frozenProductAndDependencies": true,
+  "memoryBytes": 4294967296,
+  "cpus": 3,
+  "seconds": 1800,
+  "sourceOrQAMounts": false,
+  "grantsOrDeadlinesExtended": false,
+  "admission": "ORDINARY_DISPOSABLE_ONLY",
+  "serviceDefaultDaemonStartupClaimed": false,
+  "originalFloorsReset": false,
+  "updatedScopeReason": "Fresh currentness concurrency changed an original R3 predicate path; reverify every affected owner/fault case on actual final worker role after final API ledger/S6 proof."
+}

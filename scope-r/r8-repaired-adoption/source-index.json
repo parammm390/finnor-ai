@@ -1,0 +1,981 @@
+{
+  "schema": "finnor.r8.sealed-source-index.v1",
+  "sourceCommit": "2a7a22edf71be8caddde1e29a98403b0eeda1a4f",
+  "sourceTree": "ba57567a01c052363b3a438e18ca045057a6a3f8",
+  "baseCommit": "4a90ed33ca96afa252c51f511fea279e0034cddb",
+  "baseTree": "310a43fa2b7983bf33afc321795461c9678ce7f9",
+  "leadCommit": "e4a8f1a6f80733fe6bfe4e9f3c072c46c560fec4",
+  "leadTree": "cdf857a6f8c122d4c6ba4edb6177b4cdd44b761c",
+  "leadParent": "517003a4396bc8101a90be4b425ee01de9446740",
+  "branch": "factory/r8-repaired-adoption-producer-2026-10-11",
+  "exclusiveAdditions": [
+    {
+      "path": "finnor-os/packages/epistemic-runtime/src/solver-synthesis/checker.ts",
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/packages/epistemic-runtime/src/solver-synthesis/checker.ts",
+      "blob": "f9efa8af9fb912f73787ccdfd159fbf4cda4f311",
+      "sha256": "87c390993931729d2909edfe66f19c146b1316176374e0806e581fddae4caf38",
+      "bytes": 12477,
+      "origin": "finnor-os/packages/epistemic-runtime/src/solver-synthesis/checker.ts",
+      "leadBlob": "34125f632a8f14d008ac1571922c8d3e389ee0b5",
+      "initialSha256": "1a5ba71b28499c0098267dec93c31b7233c832e2653da5b85b0de7ffc42a2f90",
+      "state": "REPAIRED_OR_RELOCATED"
+    },
+    {
+      "path": "finnor-os/packages/epistemic-runtime/src/solver-synthesis/contracts.ts",
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/packages/epistemic-runtime/src/solver-synthesis/contracts.ts",
+      "blob": "0e08d50f4fc5709864027f8b5f7979d10448554b",
+      "sha256": "2bacd8bb5b056563512f85e9d9b1d6f64bb4d66012c8538d14b77fcb0a06f6d9",
+      "bytes": 4736,
+      "origin": "finnor-os/packages/epistemic-runtime/src/solver-synthesis/contracts.ts",
+      "leadBlob": "0e08d50f4fc5709864027f8b5f7979d10448554b",
+      "initialSha256": "2bacd8bb5b056563512f85e9d9b1d6f64bb4d66012c8538d14b77fcb0a06f6d9",
+      "state": "UNCHANGED_ADOPTED_BYTES"
+    },
+    {
+      "path": "finnor-os/packages/epistemic-runtime/src/solver-synthesis/emitted.ts",
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/packages/epistemic-runtime/src/solver-synthesis/emitted.ts",
+      "blob": "0780754c7c114e17668c198bcca1430693a317d1",
+      "sha256": "90211790a03de20b840aff4c54b21dba328bf19cb9b8d96d3eb922048d4372ef",
+      "bytes": 4763,
+      "origin": null,
+      "leadBlob": null,
+      "initialSha256": null,
+      "state": "NEW_EXCLUSIVE_OR_PROPOSAL_DATA"
+    },
+    {
+      "path": "finnor-os/packages/epistemic-runtime/src/solver-synthesis/engine.rkt",
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/packages/epistemic-runtime/src/solver-synthesis/engine.rkt",
+      "blob": "67e1a12d032ef5f3c1c483a06a42c2c99f4298a1",
+      "sha256": "e16c01ca21046c376e00862de611fbd6c55bf0cdaf824a64a05f916d054330c9",
+      "bytes": 4930,
+      "origin": "finnor-os/packages/epistemic-runtime/src/solver-synthesis/engine.rkt",
+      "leadBlob": "67e1a12d032ef5f3c1c483a06a42c2c99f4298a1",
+      "initialSha256": "e16c01ca21046c376e00862de611fbd6c55bf0cdaf824a64a05f916d054330c9",
+      "state": "UNCHANGED_ADOPTED_BYTES"
+    },
+    {
+      "path": "finnor-os/packages/epistemic-runtime/src/solver-synthesis/grammar.ts",
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/packages/epistemic-runtime/src/solver-synthesis/grammar.ts",
+      "blob": "d21ae581b3ebcf76062c201bc8b6ee23c6c17724",
+      "sha256": "dd0df2d05d10399ad5b249ee6b856714d94a42683329153c820ff4ddc2e38af3",
+      "bytes": 7409,
+      "origin": "finnor-os/packages/epistemic-runtime/src/solver-synthesis/grammar.ts",
+      "leadBlob": "d21ae581b3ebcf76062c201bc8b6ee23c6c17724",
+      "initialSha256": "dd0df2d05d10399ad5b249ee6b856714d94a42683329153c820ff4ddc2e38af3",
+      "state": "UNCHANGED_ADOPTED_BYTES"
+    },
+    {
+      "path": "finnor-os/packages/epistemic-runtime/src/solver-synthesis/lowering.ts",
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/packages/epistemic-runtime/src/solver-synthesis/lowering.ts",
+      "blob": "e5556cb2a0198de3686492822003ab71446ab656",
+      "sha256": "83026ed82cd36328f3f417b2c5b8094cb3aa4659adf781d70a5df56c30d9035c",
+      "bytes": 5640,
+      "origin": "finnor-os/packages/epistemic-runtime/src/solver-synthesis/lowering.ts",
+      "leadBlob": "e5556cb2a0198de3686492822003ab71446ab656",
+      "initialSha256": "83026ed82cd36328f3f417b2c5b8094cb3aa4659adf781d70a5df56c30d9035c",
+      "state": "UNCHANGED_ADOPTED_BYTES"
+    },
+    {
+      "path": "finnor-os/packages/epistemic-runtime/src/solver-synthesis/process.ts",
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/packages/epistemic-runtime/src/solver-synthesis/process.ts",
+      "blob": "e96175671223f93ddcf71b90c04b47bcaee03e21",
+      "sha256": "49d7570df82b3e4c29da6b386c044579ca3d13439be242452589fb0a9965b4e2",
+      "bytes": 10978,
+      "origin": "finnor-os/packages/governed-execution/src/stream-executor.ts",
+      "leadBlob": "3e68ec10b13bf183c5ccd9b4f669f41fdd7882c6",
+      "initialSha256": "871f1fcefe385b2acb902b6223c0187ea14461f7e34c9fce1df313df7d4d066d",
+      "state": "REPAIRED_OR_RELOCATED"
+    },
+    {
+      "path": "finnor-os/packages/epistemic-runtime/src/solver-synthesis/producer.ts",
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/packages/epistemic-runtime/src/solver-synthesis/producer.ts",
+      "blob": "799a8aa8c911f4339d2d6020fff6ec8b77e53869",
+      "sha256": "4ccef81680857be65701e63f02abae7b6489e04b8d0f02d8cd1f3e1fa71580ab",
+      "bytes": 15642,
+      "origin": "finnor-os/packages/epistemic-runtime/src/solver-synthesis/producer.ts",
+      "leadBlob": "d4897d8a37a1a1469806d376472698aee3cbd01c",
+      "initialSha256": "832dd01c1b2b891c63ef3fd62cee782a4cbd54e9c23bedc4b054d1a1eabd2355",
+      "state": "REPAIRED_OR_RELOCATED"
+    },
+    {
+      "path": "finnor-os/packages/epistemic-runtime/src/solver-synthesis/reference.py",
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/packages/epistemic-runtime/src/solver-synthesis/reference.py",
+      "blob": "71e4aa2b6889f8853dd6bafdace39f1f9b6c3ca8",
+      "sha256": "7e664bec1ed3087507bfbb8057b4d826eb0813504801325cdd1d546eb23cffac",
+      "bytes": 15264,
+      "origin": "finnor-os/packages/epistemic-runtime/src/solver-synthesis/reference.py",
+      "leadBlob": "71e4aa2b6889f8853dd6bafdace39f1f9b6c3ca8",
+      "initialSha256": "7e664bec1ed3087507bfbb8057b4d826eb0813504801325cdd1d546eb23cffac",
+      "state": "UNCHANGED_ADOPTED_BYTES"
+    },
+    {
+      "path": "finnor-os/packages/epistemic-runtime/src/solver-synthesis/runtime.ts",
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/packages/epistemic-runtime/src/solver-synthesis/runtime.ts",
+      "blob": "4dedfcc0eba6bf356839b02c01d8ed5439f3e77f",
+      "sha256": "05fdb23397f7e90b7bee5712bbb345b3fde3f1d2fb621a1f1eb4905dcc93fe15",
+      "bytes": 3805,
+      "origin": "finnor-os/packages/epistemic-runtime/src/solver-synthesis/runtime.ts",
+      "leadBlob": "62eb8f63a7a340b3b595588ceb49aa0591dc7b64",
+      "initialSha256": "9a16c86eeacd83041ea60a3ddb46ab3f601dc0ee7b73e0281d11dde6209f0ee9",
+      "state": "REPAIRED_OR_RELOCATED"
+    },
+    {
+      "path": "finnor-os/packages/epistemic-runtime/src/solver-synthesis/supervise.py",
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/packages/epistemic-runtime/src/solver-synthesis/supervise.py",
+      "blob": "c8b51b8db86bcb4952cdc1ba5d75970928fafeb6",
+      "sha256": "a11d83c3c4460d229b70a5fe99cc66425589c766088ae03bc2448138c5a02edb",
+      "bytes": 1878,
+      "origin": "finnor-os/packages/epistemic-runtime/src/solver-synthesis/supervise.py",
+      "leadBlob": "c8b51b8db86bcb4952cdc1ba5d75970928fafeb6",
+      "initialSha256": "a11d83c3c4460d229b70a5fe99cc66425589c766088ae03bc2448138c5a02edb",
+      "state": "UNCHANGED_ADOPTED_BYTES"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/r8/api.ts",
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/packages/private-equity/src/r8/api.ts",
+      "blob": "9d198f683d957d4cf21bffd169fb1d8d77dfde9f",
+      "sha256": "453483e51d01b95d05335872ef81c936178f0b8346f3d38ae3656408604acd86",
+      "bytes": 11216,
+      "origin": "finnor-os/packages/private-equity/src/r8/api.ts",
+      "leadBlob": "9d198f683d957d4cf21bffd169fb1d8d77dfde9f",
+      "initialSha256": "453483e51d01b95d05335872ef81c936178f0b8346f3d38ae3656408604acd86",
+      "state": "UNCHANGED_ADOPTED_BYTES"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/r8/capsule.ts",
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/packages/private-equity/src/r8/capsule.ts",
+      "blob": "5ee796fff41eb8c7196947fcab803e6a208462f2",
+      "sha256": "c723498fd76307e80cd402a214bfdc6c360e00d5167a5319fec37fc3c1480462",
+      "bytes": 6511,
+      "origin": "finnor-os/packages/private-equity/src/r8/capsule.ts",
+      "leadBlob": "5ee796fff41eb8c7196947fcab803e6a208462f2",
+      "initialSha256": "c723498fd76307e80cd402a214bfdc6c360e00d5167a5319fec37fc3c1480462",
+      "state": "UNCHANGED_ADOPTED_BYTES"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/r8/owners.ts",
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/packages/private-equity/src/r8/owners.ts",
+      "blob": "fb3c45eae7152e2beb1bdc2533764018cb529c19",
+      "sha256": "372a5502a5d65479f20e43589bdb61ee46808c090d7f89b40fe9a34410567ebb",
+      "bytes": 6390,
+      "origin": "finnor-os/packages/private-equity/src/r8/owners.ts",
+      "leadBlob": "12313d68a92bbf6a21a7eb1d837e95553b41818a",
+      "initialSha256": "a3b7ee743df4b7b25098524884b168ac6e59705aa97e64452cacb6d8ec8550bf",
+      "state": "REPAIRED_OR_RELOCATED"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/r8/projection.ts",
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/packages/private-equity/src/r8/projection.ts",
+      "blob": "a4a4fdb2c09b360ee07e0d0f507a22764302c669",
+      "sha256": "54ab1b4f72a863cd857f9eb8bb224d211702b450e0a78ebf0a1028c3c51fc571",
+      "bytes": 7497,
+      "origin": "finnor-os/packages/private-equity/src/r8/projection.ts",
+      "leadBlob": "a4a4fdb2c09b360ee07e0d0f507a22764302c669",
+      "initialSha256": "54ab1b4f72a863cd857f9eb8bb224d211702b450e0a78ebf0a1028c3c51fc571",
+      "state": "UNCHANGED_ADOPTED_BYTES"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/r8/s8/consumer.ts",
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/packages/private-equity/src/r8/s8/consumer.ts",
+      "blob": "e79645ad38218f1bb6bc571d4ece6fe791d7ff60",
+      "sha256": "39868d2b1a7182d858b4768f788f8ec582b1d04a1580949d0e61a5c0e72bd173",
+      "bytes": 5571,
+      "origin": "finnor-os/packages/capability-evolution/src/solver-consumer.ts",
+      "leadBlob": "6bc60329d975ec1a39b8b04decf0188776ba937d",
+      "initialSha256": "82f482684f37709d07308fa9013d944e45695c8c7d4bff4ee004a6b43d9407fb",
+      "state": "REPAIRED_OR_RELOCATED"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/r8/s8/contracts.ts",
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/packages/private-equity/src/r8/s8/contracts.ts",
+      "blob": "ba9b113a5b402e83040ca6ecbcd8c32ab638838c",
+      "sha256": "802ce86475721ebe329e93b4a87d4200d2b016fd6b79a7f1a7ca6827eb75ea91",
+      "bytes": 4798,
+      "origin": "finnor-os/packages/capability-evolution/src/solver-contracts.ts",
+      "leadBlob": "4bfc1934cc9738b2452366bf59e0ecd657c9f6c5",
+      "initialSha256": "1c912f44b673440985b125bb4006e3a12833b0c134c277a9623da6b19f4fbbea",
+      "state": "REPAIRED_OR_RELOCATED"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/r8/s8/port.ts",
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/packages/private-equity/src/r8/s8/port.ts",
+      "blob": "2cc5710268ddc676ff9348d4934202aa7c907a52",
+      "sha256": "55a0f72246debee5acc893138c85b5cc35718006b9633fa3ce01c037d1864aa0",
+      "bytes": 13316,
+      "origin": "finnor-os/packages/capability-evolution/src/solver-port.ts",
+      "leadBlob": "9b23ee2cae08cf36fe800c8f532fbb8ed4ca41f5",
+      "initialSha256": "01a9065f2fa7d8ef845af21a6dfbf706bbb3e3a05259b6c82295227174593266",
+      "state": "REPAIRED_OR_RELOCATED"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/r8/s8/source-closure.ts",
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/packages/private-equity/src/r8/s8/source-closure.ts",
+      "blob": "055404b761cd9c95cb92f572300e3a35c37e1b9d",
+      "sha256": "809b9030f71af2ffa1c87e43fb4a3eb2f7363ed78f662b68348c30abf0bcdd29",
+      "bytes": 1654,
+      "origin": null,
+      "leadBlob": null,
+      "initialSha256": null,
+      "state": "NEW_EXCLUSIVE_OR_PROPOSAL_DATA"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/r8/selection.ts",
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/packages/private-equity/src/r8/selection.ts",
+      "blob": "070f458f9f8cc6ec86b5f0d8d9f757de3fac42cc",
+      "sha256": "fbf58d04f7b27bb7fea580e5b92685fb05c456215486292e390ea5444c447ff0",
+      "bytes": 9145,
+      "origin": "finnor-os/packages/private-equity/src/r8/selection.ts",
+      "leadBlob": "e1ada7699a97ba8a616d94b24a22c66c66c478e6",
+      "initialSha256": "54d6dc1d22d305adbe625f04e7a493d733306a81899dd9560af0ccdf64ab83b1",
+      "state": "REPAIRED_OR_RELOCATED"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/r8/store.ts",
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/packages/private-equity/src/r8/store.ts",
+      "blob": "deae729ad1efa5df7535ced85f8fb854aee504ad",
+      "sha256": "b8fbf7193465e91d96151b62f99d05d2a05a88a5072f6c6d1027add4b1ea835c",
+      "bytes": 3521,
+      "origin": "finnor-os/packages/private-equity/src/r8/store.ts",
+      "leadBlob": "deae729ad1efa5df7535ced85f8fb854aee504ad",
+      "initialSha256": "b8fbf7193465e91d96151b62f99d05d2a05a88a5072f6c6d1027add4b1ea835c",
+      "state": "UNCHANGED_ADOPTED_BYTES"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/r8/worker.ts",
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/packages/private-equity/src/r8/worker.ts",
+      "blob": "4e140279f72cba2edc24189adcf7ffb967e528ed",
+      "sha256": "0930ba9e0a62a9c42e8722009813962f69cd597a00d17b6eb1d638a894fb55d0",
+      "bytes": 17353,
+      "origin": "finnor-os/packages/private-equity/src/r8/worker.ts",
+      "leadBlob": "a904acbfa1885af5869bb08c49307a9425fddad8",
+      "initialSha256": "4201167cbb4fa9fdd042e54f58957ce3b0416700e1006a93d54410bfea705000",
+      "state": "REPAIRED_OR_RELOCATED"
+    },
+    {
+      "path": "finnor-os/packages/shared-types/src/solver-capsule.ts",
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/packages/shared-types/src/solver-capsule.ts",
+      "blob": "f211fb4b4538d432fc7f1c6d8e0cb8f65a206ee6",
+      "sha256": "e9c146a48cc1eb1e7306f9d273bf92baa3cff419f6af8068f3988cdbfba851c8",
+      "bytes": 3668,
+      "origin": "finnor-os/packages/shared-types/src/solver-capsule.ts",
+      "leadBlob": "f211fb4b4538d432fc7f1c6d8e0cb8f65a206ee6",
+      "initialSha256": "e9c146a48cc1eb1e7306f9d273bf92baa3cff419f6af8068f3988cdbfba851c8",
+      "state": "UNCHANGED_ADOPTED_BYTES"
+    },
+    {
+      "path": "finnor-os/scripts/r8/browser-fixture.mts",
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/scripts/r8/browser-fixture.mts",
+      "blob": "72587d9c80b9a5ada458baccd06c6dc59d1cf2da",
+      "sha256": "c1f90ab5a0e3476dbe4a51197aea4c027c17d80fcec462bc12a5c2b68ef7655f",
+      "bytes": 8763,
+      "origin": "finnor-os/scripts/r8/browser-fixture.mts",
+      "leadBlob": "72587d9c80b9a5ada458baccd06c6dc59d1cf2da",
+      "initialSha256": "c1f90ab5a0e3476dbe4a51197aea4c027c17d80fcec462bc12a5c2b68ef7655f",
+      "state": "UNCHANGED_ADOPTED_BYTES"
+    },
+    {
+      "path": "finnor-os/scripts/r8/custody-child.mjs",
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/scripts/r8/custody-child.mjs",
+      "blob": "6d69e32d16773a3ee5416cbd27b07fb9a60b5980",
+      "sha256": "7d2bc5acf7cff968c6f4a8f0821b05398c201eb923c6b6858e87f3b549b2a03e",
+      "bytes": 469,
+      "origin": null,
+      "leadBlob": null,
+      "initialSha256": null,
+      "state": "NEW_EXCLUSIVE_OR_PROPOSAL_DATA"
+    },
+    {
+      "path": "finnor-os/scripts/r8/lifecycle-fixture.mts",
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/scripts/r8/lifecycle-fixture.mts",
+      "blob": "25828bcec514cff8ccbc07140f7582cbca0a5084",
+      "sha256": "41df4523251554b4cf10d393e4fb719f933dc21a1a626d6aea711a3a8e008b6c",
+      "bytes": 6079,
+      "origin": "finnor-os/scripts/s8/lifecycle-fixture.mts",
+      "leadBlob": "f8505c4cb6dbc16ca0869227f87f4ae9c30a6da4",
+      "initialSha256": "b31990407dd59024eca40b00c9b303fb8b53870acba8f982aee9a59d29ea1a44",
+      "state": "REPAIRED_OR_RELOCATED"
+    },
+    {
+      "path": "finnor-os/scripts/r8/package-runtime.py",
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/scripts/r8/package-runtime.py",
+      "blob": "38fd7f667ebc89b2ff1c04b1af1855a12832cb59",
+      "sha256": "42bfd263d283b60ef5916ca99869e0933830ffd5c203e6cac38871e0b96efc6b",
+      "bytes": 5374,
+      "origin": "finnor-os/scripts/r8/package-runtime.py",
+      "leadBlob": "38fd7f667ebc89b2ff1c04b1af1855a12832cb59",
+      "initialSha256": "42bfd263d283b60ef5916ca99869e0933830ffd5c203e6cac38871e0b96efc6b",
+      "state": "UNCHANGED_ADOPTED_BYTES"
+    },
+    {
+      "path": "finnor-os/scripts/r8/run-capsule.mts",
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/scripts/r8/run-capsule.mts",
+      "blob": "5f2e78e4ab20cb2841cef1cbdbebe0d8ae01dd52",
+      "sha256": "cc75b37bd0b9a521cbbbb4fc16323707475d9c522c4bbd30d2f63c91fd9bb05f",
+      "bytes": 4123,
+      "origin": "finnor-os/scripts/r8/run-capsule.mts",
+      "leadBlob": "5f2e78e4ab20cb2841cef1cbdbebe0d8ae01dd52",
+      "initialSha256": "cc75b37bd0b9a521cbbbb4fc16323707475d9c522c4bbd30d2f63c91fd9bb05f",
+      "state": "UNCHANGED_ADOPTED_BYTES"
+    },
+    {
+      "path": "finnor-os/scripts/r8/run-custody.mts",
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/scripts/r8/run-custody.mts",
+      "blob": "7f8ff140b4e908e6260a44be2283e452cf17bb44",
+      "sha256": "b142852f656b4aebea43bfdc8812c20130d76ac9537e090e610930a46676a573",
+      "bytes": 11846,
+      "origin": null,
+      "leadBlob": null,
+      "initialSha256": null,
+      "state": "NEW_EXCLUSIVE_OR_PROPOSAL_DATA"
+    },
+    {
+      "path": "finnor-os/scripts/r8/run-local.py",
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/scripts/r8/run-local.py",
+      "blob": "020ba337fc256fe43215bef30a5383de54288b36",
+      "sha256": "4b7ef7dd270344582f009b0411b6ab46357378d6add16132e0a7726993b39167",
+      "bytes": 2005,
+      "origin": "finnor-os/scripts/r8/run-local.py",
+      "leadBlob": "7d4b0160ce6482d8a504ffb6cdeedddc1973d22d",
+      "initialSha256": "01edaa3dd23ba414f9ac52fd52a24a4dfa8e600fcc67249d4a2fd58285371d41",
+      "state": "REPAIRED_OR_RELOCATED"
+    },
+    {
+      "path": "finnor-os/scripts/r8/run-owner.mts",
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/scripts/r8/run-owner.mts",
+      "blob": "94f14592e07127b29b4da90e12117abfd615ec67",
+      "sha256": "2b900f9ed7fb8b1a89276c7d4b5bca80cb5d3726d68b3502e287155d42757cfb",
+      "bytes": 34637,
+      "origin": "finnor-os/scripts/r8/run-owner.mts",
+      "leadBlob": "874c223d9a2c1f70f8f9b530cde5ec7809a290bd",
+      "initialSha256": "ec4c0c2ff96086acd68f4e7a59bbc2d467f6f19f13690c6658d87b22fd7c1167",
+      "state": "REPAIRED_OR_RELOCATED"
+    },
+    {
+      "path": "finnor-os/scripts/r8/run-semantic.mts",
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/scripts/r8/run-semantic.mts",
+      "blob": "00091c57e2e9f2b60799a46ab74dd9945f556bae",
+      "sha256": "160a2b71257999ee3becd9d3cf6b6d646064f035dac065d52ebe1204725dd9ba",
+      "bytes": 9625,
+      "origin": "finnor-os/scripts/r8/run-semantic.mts",
+      "leadBlob": "1dbd689d7d5f514dbbb5f2e1265c9796d280356c",
+      "initialSha256": "6acfb6d85fa700e391a5b0343ef36fcd0c8cdbf24913ccd7b3213209d83078ea",
+      "state": "REPAIRED_OR_RELOCATED"
+    },
+    {
+      "path": "finnor-os/scripts/r8/runtime-lock.json",
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/scripts/r8/runtime-lock.json",
+      "blob": "5bb66765020200cc6a378b85d9fbbc5ef5d85a48",
+      "sha256": "fa74bb6fd531f3f6d8a93b31324a9560380a4283b77d530583db25ce054715fd",
+      "bytes": 1041,
+      "origin": "finnor-os/scripts/r8/runtime-lock.json",
+      "leadBlob": "5bb66765020200cc6a378b85d9fbbc5ef5d85a48",
+      "initialSha256": "fa74bb6fd531f3f6d8a93b31324a9560380a4283b77d530583db25ce054715fd",
+      "state": "UNCHANGED_ADOPTED_BYTES"
+    },
+    {
+      "path": "finnor-os/scripts/r8/seal-runtime.py",
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/scripts/r8/seal-runtime.py",
+      "blob": "348f0198a7030c8d6af5decee7e2c8d31f0e94de",
+      "sha256": "05cac1e5d0599355d02330dee14fb1eb4ea89c585da7ce705b6a07b7998d9055",
+      "bytes": 3086,
+      "origin": "finnor-os/scripts/r8/seal-runtime.py",
+      "leadBlob": "348f0198a7030c8d6af5decee7e2c8d31f0e94de",
+      "initialSha256": "05cac1e5d0599355d02330dee14fb1eb4ea89c585da7ce705b6a07b7998d9055",
+      "state": "UNCHANGED_ADOPTED_BYTES"
+    },
+    {
+      "path": "finnor-os/scripts/r8/solver-review.mts",
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/scripts/r8/solver-review.mts",
+      "blob": "3dc77de9a115ca7a1fa7143b56ff89d8ddd509da",
+      "sha256": "a118d1724a42176ff9e759d6fe679a51fa12dcea4322701447cc18c71773f74a",
+      "bytes": 10948,
+      "origin": "finnor-os/scripts/r8/solver-review.mts",
+      "leadBlob": "05858ee6237f12943015a00c85de7314904e845a",
+      "initialSha256": "3a696530b8cfaac75965529a01631f4d40edfb8749fedd6e1355c549d572387e",
+      "state": "REPAIRED_OR_RELOCATED"
+    },
+    {
+      "path": "finnor-os/scripts/r8/worker-entry.mts",
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/scripts/r8/worker-entry.mts",
+      "blob": "c309c82290ad1c30a9ba4d44bd4c55674189e0a6",
+      "sha256": "ae20ee2b3c7eaafd7a0b4de56ef095d7ced94a244ae10412ef9bc5b9dae0f9d6",
+      "bytes": 1592,
+      "origin": "finnor-os/scripts/r8/worker-entry.mts",
+      "leadBlob": "1f153049f512c084d2fa2bb7e1b463b6004bf7c4",
+      "initialSha256": "fd88ab7287ca017c247a6387dd38e7b958dcaa813201dfd18144b54db3aef043",
+      "state": "REPAIRED_OR_RELOCATED"
+    },
+    {
+      "path": "scope-r/r8-repaired-adoption/adoption-map.json",
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/scope-r/r8-repaired-adoption/adoption-map.json",
+      "blob": "654caf7e02848c1edd6c3a3a3de207174183acdf",
+      "sha256": "10de9241239814dfeef191072f656c7691aceed213192935aedb7fef2e221614",
+      "bytes": 33980,
+      "origin": null,
+      "leadBlob": null,
+      "initialSha256": null,
+      "state": "NEW_EXCLUSIVE_OR_PROPOSAL_DATA"
+    },
+    {
+      "path": "scope-r/r8-repaired-adoption/close-bound-addendum.json",
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/scope-r/r8-repaired-adoption/close-bound-addendum.json",
+      "blob": "7e105b9ab7168e6411ab952703eaa11600f29390",
+      "sha256": "5feeeb7f76f37eee4cc3de9052503dcb1e33aeb9d9f0bd3e0b3035131d2a1ab6",
+      "bytes": 2571,
+      "origin": null,
+      "leadBlob": null,
+      "initialSha256": null,
+      "state": "NEW_EXCLUSIVE_OR_PROPOSAL_DATA"
+    },
+    {
+      "path": "scope-r/r8-repaired-adoption/failure-model.md",
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/scope-r/r8-repaired-adoption/failure-model.md",
+      "blob": "2a9f7f4a2b55e10d87fce3216ce4a9deec4ca5c2",
+      "sha256": "c4d737d73860f485a2409a1ff0a01aa922793b64301605e962d21f5b0c096871",
+      "bytes": 5479,
+      "origin": null,
+      "leadBlob": null,
+      "initialSha256": null,
+      "state": "NEW_EXCLUSIVE_OR_PROPOSAL_DATA"
+    },
+    {
+      "path": "scope-r/r8-repaired-adoption/helper-inventory.json",
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/scope-r/r8-repaired-adoption/helper-inventory.json",
+      "blob": "3cf775a172b965e35dd18ee43c86f5e14042b926",
+      "sha256": "2cd38425d4c39c11fff01493f12216fd7a5a09df00954eb40ec7a784b633ab41",
+      "bytes": 56306,
+      "origin": null,
+      "leadBlob": null,
+      "initialSha256": null,
+      "state": "NEW_EXCLUSIVE_OR_PROPOSAL_DATA"
+    },
+    {
+      "path": "scope-r/r8-repaired-adoption/integration/check-preimages.py",
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/scope-r/r8-repaired-adoption/integration/check-preimages.py",
+      "blob": "d1dfce35560bc155430150d2b8d8168b9d92a9fc",
+      "sha256": "885bda58c548cc428506d9b337f8f7a669f35b8689257a703476da552ab0565d",
+      "bytes": 2598,
+      "origin": null,
+      "leadBlob": null,
+      "initialSha256": null,
+      "state": "NEW_EXCLUSIVE_OR_PROPOSAL_DATA"
+    },
+    {
+      "path": "scope-r/r8-repaired-adoption/integration/packet.json",
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/scope-r/r8-repaired-adoption/integration/packet.json",
+      "blob": "cc1a43df173d9f0dee3a669fc16fac7e6b7149a4",
+      "sha256": "8fdaec81947693f6a943a70c9e49c91b0ed229e71251095f1449993e47222618",
+      "bytes": 22084,
+      "origin": null,
+      "leadBlob": null,
+      "initialSha256": null,
+      "state": "NEW_EXCLUSIVE_OR_PROPOSAL_DATA"
+    },
+    {
+      "path": "scope-r/r8-repaired-adoption/integration/shared-seams.patch",
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/scope-r/r8-repaired-adoption/integration/shared-seams.patch",
+      "blob": "61b58dfcb81da63f5d82e30b6dd7ed14118f96ef",
+      "sha256": "b1fdf7a2b37d282b9464aa9d6cb6beff74a859d8acc466a37dcacd1dc40c75fb",
+      "bytes": 29215,
+      "origin": null,
+      "leadBlob": null,
+      "initialSha256": null,
+      "state": "NEW_EXCLUSIVE_OR_PROPOSAL_DATA"
+    },
+    {
+      "path": "scope-r/r8-repaired-adoption/integration/solver-capsules.sql",
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/scope-r/r8-repaired-adoption/integration/solver-capsules.sql",
+      "blob": "53789e7940b50c5fa501a00973dfce1182799bba",
+      "sha256": "692f7e53800bdd3a856238b5a54c6e607d0651f070a2b2605da2d54646b01896",
+      "bytes": 8896,
+      "origin": "finnor-os/packages/db/migrations/0172_r8_solver_capsules.sql",
+      "leadBlob": "53789e7940b50c5fa501a00973dfce1182799bba",
+      "initialSha256": "692f7e53800bdd3a856238b5a54c6e607d0651f070a2b2605da2d54646b01896",
+      "state": "UNCHANGED_ADOPTED_BYTES"
+    },
+    {
+      "path": "scope-r/r8-repaired-adoption/original-grammar.md",
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/scope-r/r8-repaired-adoption/original-grammar.md",
+      "blob": "2aefa1fb22ac083eed0f1a0ad855cf22506f056c",
+      "sha256": "05056784d01fb2242de2ce8d75f801daa97da720bc7226ac06d3cb5cb8682751",
+      "bytes": 2886,
+      "origin": "scope-r/r8-counterexample-guided-solver-synthesis/grammar.md",
+      "leadBlob": "2aefa1fb22ac083eed0f1a0ad855cf22506f056c",
+      "initialSha256": "05056784d01fb2242de2ce8d75f801daa97da720bc7226ac06d3cb5cb8682751",
+      "state": "UNCHANGED_ADOPTED_BYTES"
+    },
+    {
+      "path": "scope-r/r8-repaired-adoption/original-preservation-argument.md",
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/scope-r/r8-repaired-adoption/original-preservation-argument.md",
+      "blob": "250fd6b97769deb5781d8e299e0aad9299b8233c",
+      "sha256": "0facd4ed795e0acfbe4cee818f7cc8e4e54082bef464e4777fec94d120fe76db",
+      "bytes": 1823,
+      "origin": "scope-r/r8-counterexample-guided-solver-synthesis/preservation-argument.md",
+      "leadBlob": "250fd6b97769deb5781d8e299e0aad9299b8233c",
+      "initialSha256": "0facd4ed795e0acfbe4cee818f7cc8e4e54082bef464e4777fec94d120fe76db",
+      "state": "UNCHANGED_ADOPTED_BYTES"
+    },
+    {
+      "path": "scope-r/r8-repaired-adoption/original-specification.md",
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/scope-r/r8-repaired-adoption/original-specification.md",
+      "blob": "e5c675e7002720b6c7944e50b9e430c78ff6e91d",
+      "sha256": "655498fb8af45b710a32be67c186bbc9b9d5b50243aa1507c792e0fbfb0d6ab0",
+      "bytes": 4332,
+      "origin": "scope-r/r8-counterexample-guided-solver-synthesis/specification.md",
+      "leadBlob": "e5c675e7002720b6c7944e50b9e430c78ff6e91d",
+      "initialSha256": "655498fb8af45b710a32be67c186bbc9b9d5b50243aa1507c792e0fbfb0d6ab0",
+      "state": "UNCHANGED_ADOPTED_BYTES"
+    },
+    {
+      "path": "scope-r/r8-repaired-adoption/plan.md",
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/scope-r/r8-repaired-adoption/plan.md",
+      "blob": "8ce924585090933e02549cf6a9f55d5f12f4d03c",
+      "sha256": "b2575ab8777ef2bc70b7afd6456f5288aa9305c3d46798a2a0e916ab7d7c2e01",
+      "bytes": 2414,
+      "origin": null,
+      "leadBlob": null,
+      "initialSha256": null,
+      "state": "NEW_EXCLUSIVE_OR_PROPOSAL_DATA"
+    },
+    {
+      "path": "scope-r/r8-repaired-adoption/registration.json",
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/scope-r/r8-repaired-adoption/registration.json",
+      "blob": "0f2dfa2597d26ca52ac76ebd8926726faf824b12",
+      "sha256": "01111a69b4311b89d40e82ecd4a968aca278a67213d8a59da332731ba209fe4c",
+      "bytes": 709,
+      "origin": null,
+      "leadBlob": null,
+      "initialSha256": null,
+      "state": "NEW_EXCLUSIVE_OR_PROPOSAL_DATA"
+    },
+    {
+      "path": "scope-r/r8-repaired-adoption/relocation-addendum.json",
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/scope-r/r8-repaired-adoption/relocation-addendum.json",
+      "blob": "8e0f3cf307b8b48bc6ee51a0581b7d1cb287aaea",
+      "sha256": "fecc3806d8c26875b43b369730b51ef3a181fa990df92a6b3bc57a87d3523f53",
+      "bytes": 3574,
+      "origin": null,
+      "leadBlob": null,
+      "initialSha256": null,
+      "state": "NEW_EXCLUSIVE_OR_PROPOSAL_DATA"
+    },
+    {
+      "path": "scope-r/r8-repaired-adoption/repair-addendum.json",
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/scope-r/r8-repaired-adoption/repair-addendum.json",
+      "blob": "7142a778b356ce60d9a5ddacba03da15c9ee5e3d",
+      "sha256": "d939cf2447a4abfe3614e451413fc2a61c6c5dadbb487122ea16dce6bd974b30",
+      "bytes": 2239,
+      "origin": null,
+      "leadBlob": null,
+      "initialSha256": null,
+      "state": "NEW_EXCLUSIVE_OR_PROPOSAL_DATA"
+    },
+    {
+      "path": "scope-r/r8-repaired-adoption/verification-plan.json",
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/scope-r/r8-repaired-adoption/verification-plan.json",
+      "blob": "63b527506e5c5eb09877bc6f2ba0fea30112b523",
+      "sha256": "7d49e08888597377a29226188e7e11f84e4edacb0d10a63edfeb8edcf5b57268",
+      "bytes": 3045,
+      "origin": null,
+      "leadBlob": null,
+      "initialSha256": null,
+      "state": "NEW_EXCLUSIVE_OR_PROPOSAL_DATA"
+    },
+    {
+      "path": "src/components/centropy/canvas/SolverCapsuleReview.tsx",
+      "absolutePath": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/src/components/centropy/canvas/SolverCapsuleReview.tsx",
+      "blob": "3c42f6c7832e5764a72d4443e039c3c152feb360",
+      "sha256": "b70b07b14ca64f2155eac11b12bd547f5d71ec6c5a9680949c0f0b6e13319ddb",
+      "bytes": 11766,
+      "origin": "src/components/centropy/canvas/SolverCapsuleReview.tsx",
+      "leadBlob": "23f87f8bdfc9557d0e5760756420ce8e93c6a63a",
+      "initialSha256": "604ddea90c05e6e4ac4416756929573dfc8c4c307f962b2a98e84ee1bee367bc",
+      "state": "REPAIRED_OR_RELOCATED"
+    }
+  ],
+  "all53CommitBlobsMatchReviewedWorkingBytes": true,
+  "all74AdoptionOriginsVerified": true,
+  "registeredSourceHashesMatched": true,
+  "finalScientificSourcePinsMatched": [
+    {
+      "path": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/packages/epistemic-runtime/src/solver-synthesis/contracts.ts",
+      "sha256": "2bacd8bb5b056563512f85e9d9b1d6f64bb4d66012c8538d14b77fcb0a06f6d9"
+    },
+    {
+      "path": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/packages/epistemic-runtime/src/solver-synthesis/grammar.ts",
+      "sha256": "dd0df2d05d10399ad5b249ee6b856714d94a42683329153c820ff4ddc2e38af3"
+    },
+    {
+      "path": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/packages/epistemic-runtime/src/solver-synthesis/lowering.ts",
+      "sha256": "83026ed82cd36328f3f417b2c5b8094cb3aa4659adf781d70a5df56c30d9035c"
+    },
+    {
+      "path": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/packages/epistemic-runtime/src/solver-synthesis/runtime.ts",
+      "sha256": "05fdb23397f7e90b7bee5712bbb345b3fde3f1d2fb621a1f1eb4905dcc93fe15"
+    },
+    {
+      "path": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/packages/epistemic-runtime/src/solver-synthesis/checker.ts",
+      "sha256": "87c390993931729d2909edfe66f19c146b1316176374e0806e581fddae4caf38"
+    },
+    {
+      "path": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/packages/epistemic-runtime/src/solver-synthesis/producer.ts",
+      "sha256": "4ccef81680857be65701e63f02abae7b6489e04b8d0f02d8cd1f3e1fa71580ab"
+    },
+    {
+      "path": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/packages/epistemic-runtime/src/solver-synthesis/engine.rkt",
+      "sha256": "e16c01ca21046c376e00862de611fbd6c55bf0cdaf824a64a05f916d054330c9"
+    },
+    {
+      "path": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/packages/epistemic-runtime/src/solver-synthesis/reference.py",
+      "sha256": "7e664bec1ed3087507bfbb8057b4d826eb0813504801325cdd1d546eb23cffac"
+    },
+    {
+      "path": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/packages/epistemic-runtime/src/solver-synthesis/supervise.py",
+      "sha256": "a11d83c3c4460d229b70a5fe99cc66425589c766088ae03bc2448138c5a02edb"
+    },
+    {
+      "path": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/packages/epistemic-runtime/src/solver-synthesis/process.ts",
+      "sha256": "49d7570df82b3e4c29da6b386c044579ca3d13439be242452589fb0a9965b4e2"
+    },
+    {
+      "path": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/packages/epistemic-runtime/src/solver-synthesis/emitted.ts",
+      "sha256": "90211790a03de20b840aff4c54b21dba328bf19cb9b8d96d3eb922048d4372ef"
+    },
+    {
+      "path": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/packages/private-equity/src/program-synthesis/contracts.ts",
+      "sha256": "996a93a0aa8e74bd99222e45d5f0bc14f3148928fb62af4ac00c821d3df81eec"
+    },
+    {
+      "path": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/packages/private-equity/src/program-synthesis/typescript.ts",
+      "sha256": "56006008685bafb28cd7e595bae6409ad4e974c9ea9806b976c41c67f1055ac7"
+    },
+    {
+      "path": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/packages/private-equity/src/program-synthesis/native.ts",
+      "sha256": "a19a1ed58d8fbaa00451f6420a6f0bf083146ff8326ded90c0bf8aa396f2bbcb"
+    },
+    {
+      "path": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/packages/private-equity/src/evidence-execution/exact.ts",
+      "sha256": "6626b317e52f0397e0ecb3e4cdd79e92c892bfc568c325f13ef4f21574f3df37"
+    },
+    {
+      "path": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/packages/private-equity/src/evidence-execution/store.ts",
+      "sha256": "20184764b5041514ca6456b571fcf72d52201b4aa198b70c061f3da54c8a0de2"
+    },
+    {
+      "path": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/packages/governed-execution/src/protocol.ts",
+      "sha256": "40f07163c570c00d405b15148580144bbb09f0d4c12060e9e6c7e2c9c6221efa"
+    },
+    {
+      "path": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/package-lock.json",
+      "sha256": "aebbbac3741b6cf7f2424447bf2bc12524eab526e041b6baada5d167003855c5"
+    },
+    {
+      "path": "/Users/paramdave/.factory/worktrees/r8-counterexample-guided-solver-synthesis/FINNOR/finnor-os/node_modules/typescript/lib/typescript.js",
+      "sha256": "3ae902c92cc44dace175c0e69e13a4b0899f6983c6121d76b9ab8dd5795e7675"
+    }
+  ],
+  "currentDeclarationLibrariesMatched": [
+    {
+      "file": "lib.decorators.d.ts",
+      "sha256": "8e7f8264d0fb4c5339605a15daadb037bf238c10b654bb3eee14208f860a32ea"
+    },
+    {
+      "file": "lib.decorators.legacy.d.ts",
+      "sha256": "782dec38049b92d4e85c1585fbea5474a219c6984a35b004963b00beb1aab538"
+    },
+    {
+      "file": "lib.es2015.collection.d.ts",
+      "sha256": "dc2df20b1bcdc8c2d34af4926e2c3ab15ffe1160a63e58b7e09833f616efff44"
+    },
+    {
+      "file": "lib.es2015.core.d.ts",
+      "sha256": "c57796738e7f83dbc4b8e65132f11a377649c00dd3eee333f672b8f0a6bea671"
+    },
+    {
+      "file": "lib.es2015.d.ts",
+      "sha256": "45b7ab580deca34ae9729e97c13cfd999df04416a79116c3bfb483804f85ded4"
+    },
+    {
+      "file": "lib.es2015.generator.d.ts",
+      "sha256": "515d0b7b9bea2e31ea4ec968e9edd2c39d3eebf4a2d5cbd04e88639819ae3b71"
+    },
+    {
+      "file": "lib.es2015.iterable.d.ts",
+      "sha256": "0559b1f683ac7505ae451f9a96ce4c3c92bdc71411651ca6ddb0e88baaaad6a3"
+    },
+    {
+      "file": "lib.es2015.promise.d.ts",
+      "sha256": "0dc1e7ceda9b8b9b455c3a2d67b0412feab00bd2f66656cd8850e8831b08b537"
+    },
+    {
+      "file": "lib.es2015.proxy.d.ts",
+      "sha256": "ce691fb9e5c64efb9547083e4a34091bcbe5bdb41027e310ebba8f7d96a98671"
+    },
+    {
+      "file": "lib.es2015.reflect.d.ts",
+      "sha256": "8d697a2a929a5fcb38b7a65594020fcef05ec1630804a33748829c5ff53640d0"
+    },
+    {
+      "file": "lib.es2015.symbol.d.ts",
+      "sha256": "4ff2a353abf8a80ee399af572debb8faab2d33ad38c4b4474cff7f26e7653b8d"
+    },
+    {
+      "file": "lib.es2015.symbol.wellknown.d.ts",
+      "sha256": "fb0f136d372979348d59b3f5020b4cdb81b5504192b1cacff5d1fbba29378aa1"
+    },
+    {
+      "file": "lib.es2016.array.include.d.ts",
+      "sha256": "d15bea3d62cbbdb9797079416b8ac375ae99162a7fba5de2c6c505446486ac0a"
+    },
+    {
+      "file": "lib.es2016.d.ts",
+      "sha256": "3facaf05f0c5fc569c5649dd359892c98a85557e3e0c847964caeb67076f4d75"
+    },
+    {
+      "file": "lib.es2016.intl.d.ts",
+      "sha256": "68d18b664c9d32a7336a70235958b8997ebc1c3b8505f4f1ae2b7e7753b87618"
+    },
+    {
+      "file": "lib.es2017.arraybuffer.d.ts",
+      "sha256": "eb3d66c8327153d8fa7dd03f9c58d351107fe824c79e9b56b462935176cdf12a"
+    },
+    {
+      "file": "lib.es2017.d.ts",
+      "sha256": "e44bb8bbac7f10ecc786703fe0a6a4b952189f908707980ba8f3c8975a760962"
+    },
+    {
+      "file": "lib.es2017.date.d.ts",
+      "sha256": "38f0219c9e23c915ef9790ab1d680440d95419ad264816fa15009a8851e79119"
+    },
+    {
+      "file": "lib.es2017.intl.d.ts",
+      "sha256": "4de680d5bb41c17f7f68e0419412ca23c98d5749dcaaea1896172f06435891fc"
+    },
+    {
+      "file": "lib.es2017.object.d.ts",
+      "sha256": "69ab18c3b76cd9b1be3d188eaf8bba06112ebbe2f47f6c322b5105a6fbc45a2e"
+    },
+    {
+      "file": "lib.es2017.sharedmemory.d.ts",
+      "sha256": "a680117f487a4d2f30ea46f1b4b7f58bef1480456e18ba53ee85c2746eeca012"
+    },
+    {
+      "file": "lib.es2017.string.d.ts",
+      "sha256": "2f11ff796926e0832f9ae148008138ad583bd181899ab7dd768a2666700b1893"
+    },
+    {
+      "file": "lib.es2017.typedarrays.d.ts",
+      "sha256": "954296b30da6d508a104a3a0b5d96b76495c709785c1d11610908e63481ee667"
+    },
+    {
+      "file": "lib.es2018.asyncgenerator.d.ts",
+      "sha256": "ac9538681b19688c8eae65811b329d3744af679e0bdfa5d842d0e32524c73e1c"
+    },
+    {
+      "file": "lib.es2018.asynciterable.d.ts",
+      "sha256": "0a969edff4bd52585473d24995c5ef223f6652d6ef46193309b3921d65dd4376"
+    },
+    {
+      "file": "lib.es2018.d.ts",
+      "sha256": "5e1c4c362065a6b95ff952c0eab010f04dcd2c3494e813b493ecfd4fcb9fc0d8"
+    },
+    {
+      "file": "lib.es2018.intl.d.ts",
+      "sha256": "9e9fbd7030c440b33d021da145d3232984c8bb7916f277e8ffd3dc2e3eae2bdb"
+    },
+    {
+      "file": "lib.es2018.promise.d.ts",
+      "sha256": "811ec78f7fefcabbda4bfa93b3eb67d9ae166ef95f9bff989d964061cbf81a0c"
+    },
+    {
+      "file": "lib.es2018.regexp.d.ts",
+      "sha256": "717937616a17072082152a2ef351cb51f98802fb4b2fdabd32399843875974ca"
+    },
+    {
+      "file": "lib.es2019.array.d.ts",
+      "sha256": "d7e7d9b7b50e5f22c915b525acc5a49a7a6584cf8f62d0569e557c5cfc4b2ac2"
+    },
+    {
+      "file": "lib.es2019.d.ts",
+      "sha256": "68d73b4a11549f9c0b7d352d10e91e5dca8faa3322bfb77b661839c42b1ddec7"
+    },
+    {
+      "file": "lib.es2019.intl.d.ts",
+      "sha256": "74f7fa2d027d5b33eb0471c8e82a6c87216223181ec31247c357a3e8e2fddc5b"
+    },
+    {
+      "file": "lib.es2019.object.d.ts",
+      "sha256": "71c37f4c9543f31dfced6c7840e068c5a5aacb7b89111a4364b1d5276b852557"
+    },
+    {
+      "file": "lib.es2019.string.d.ts",
+      "sha256": "576711e016cf4f1804676043e6a0a5414252560eb57de9faceee34d79798c850"
+    },
+    {
+      "file": "lib.es2019.symbol.d.ts",
+      "sha256": "89c1b1281ba7b8a96efc676b11b264de7a8374c5ea1e6617f11880a13fc56dc6"
+    },
+    {
+      "file": "lib.es2020.bigint.d.ts",
+      "sha256": "d6d7ae4d1f1f3772e2a3cde568ed08991a8ae34a080ff1151af28b7f798e22ca"
+    },
+    {
+      "file": "lib.es2020.d.ts",
+      "sha256": "5efce4fc3c29ea84e8928f97adec086e3dc876365e0982cc8479a07954a3efd4"
+    },
+    {
+      "file": "lib.es2020.date.d.ts",
+      "sha256": "063600664504610fe3e99b717a1223f8b1900087fab0b4cad1496a114744f8df"
+    },
+    {
+      "file": "lib.es2020.intl.d.ts",
+      "sha256": "639e512c0dfc3fad96a84caad71b8834d66329a1f28dc95e3946c9b58176c73a"
+    },
+    {
+      "file": "lib.es2020.number.d.ts",
+      "sha256": "368af93f74c9c932edd84c58883e736c9e3d53cec1fe24c0b0ff451f529ceab1"
+    },
+    {
+      "file": "lib.es2020.promise.d.ts",
+      "sha256": "934019d7e3c81950f9a8426d093458b65d5aff2c7c1511233c0fd5b941e608ab"
+    },
+    {
+      "file": "lib.es2020.sharedmemory.d.ts",
+      "sha256": "52ada8e0b6e0482b728070b7639ee42e83a9b1c22d205992756fe020fd9f4a47"
+    },
+    {
+      "file": "lib.es2020.string.d.ts",
+      "sha256": "3bdefe1bfd4d6dee0e26f928f93ccc128f1b64d5d501ff4a8cf3c6371200e5e6"
+    },
+    {
+      "file": "lib.es2020.symbol.wellknown.d.ts",
+      "sha256": "59fb2c069260b4ba00b5643b907ef5d5341b167e7d1dbf58dfd895658bda2867"
+    },
+    {
+      "file": "lib.es2021.d.ts",
+      "sha256": "feecb1be483ed332fad555aff858affd90a48ab19ba7272ee084704eb7167569"
+    },
+    {
+      "file": "lib.es2021.intl.d.ts",
+      "sha256": "965f36eae237dd74e6cca203a43e9ca801ce38824ead814728a2807b1910117d"
+    },
+    {
+      "file": "lib.es2021.promise.d.ts",
+      "sha256": "af3dd424cf267428f30ccfc376f47a2c0114546b55c44d8c0f1d57d841e28d74"
+    },
+    {
+      "file": "lib.es2021.string.d.ts",
+      "sha256": "995c005ab91a498455ea8dfb63aa9f83fa2ea793c3d8aa344be4a1678d06d399"
+    },
+    {
+      "file": "lib.es2021.weakref.d.ts",
+      "sha256": "959d36cddf5e7d572a65045b876f2956c973a586da58e5d26cde519184fd9b8a"
+    },
+    {
+      "file": "lib.es2022.array.d.ts",
+      "sha256": "3925a6c820dcb1a06506c90b1577db1fdbf7705d65b62b99dce4be75c637e26b"
+    },
+    {
+      "file": "lib.es2022.d.ts",
+      "sha256": "ee7bad0c15b58988daa84371e0b89d313b762ab83cb5b31b8a2d1162e8eb41c2"
+    },
+    {
+      "file": "lib.es2022.error.d.ts",
+      "sha256": "0a3d63ef2b853447ec4f749d3f368ce642264246e02911fcb1590d8c161b8005"
+    },
+    {
+      "file": "lib.es2022.intl.d.ts",
+      "sha256": "8cdf8847677ac7d20486e54dd3fcf09eda95812ac8ace44b4418da1bbbab6eb8"
+    },
+    {
+      "file": "lib.es2022.object.d.ts",
+      "sha256": "8444af78980e3b20b49324f4a16ba35024fef3ee069a0eb67616ea6ca821c47a"
+    },
+    {
+      "file": "lib.es2022.regexp.d.ts",
+      "sha256": "b4b67b1a91182421f5df999988c690f14d813b9850b40acd06ed44691f6727ad"
+    },
+    {
+      "file": "lib.es2022.string.d.ts",
+      "sha256": "3287d9d085fbd618c3971944b65b4be57859f5415f495b33a6adc994edd2f004"
+    },
+    {
+      "file": "lib.es5.d.ts",
+      "sha256": "c430d44666289dae81f30fa7b2edebf186ecc91a2d4c71266ea6ae76388792e1"
+    }
+  ],
+  "runtimeManifest": {
+    "path": "/Users/paramdave/.cache/finnor-r8-runtime/runtime.json",
+    "sha256": "e07522c33a8bf57fc25fd2b713004a8e403f3013b7b903b9e698f22c7ffe67db",
+    "identityDigest": "fa8e2e106ef52339867dfd6bf20a39f882b684542797cafc4a7acd6ef44cbe0f",
+    "inventoryFiles": 22530,
+    "allInventoryBytesRecheckedAtSeal": true,
+    "node": {
+      "path": "/Users/paramdave/.hermes/node/bin/node",
+      "sha256": "5d9d3872911e2340a43b707962e68143de8a4e8d54628845c0c4f2de1fb7cd5c",
+      "version": "v22.22.3"
+    },
+    "racket": {
+      "path": "/Users/paramdave/.cache/finnor-r8-runtime/racket/bin/racket",
+      "sha256": "b6164e4cf7f7f15576b397c7ee12a35910bc34c034eb93237e814059b0877cc0",
+      "version": "Welcome to Racket v8.16 [cs]."
+    },
+    "python": {
+      "path": "/Users/paramdave/.cache/finnor-r8-runtime/python/bin/python",
+      "sha256": "eecb5f80bb58cf0411c91d17437d923fc95de6e9fe0d070e86f9a4280cc72bae",
+      "version": "Python 3.11.15"
+    },
+    "solver": {
+      "path": "/Users/paramdave/.cache/finnor-r8-runtime/python/bin/z3",
+      "sha256": "046245e47c007a442d456a4b8b6dcdfac3af8851b1466dfa7c56d56184c044ff",
+      "version": "Z3 version 4.13.0 - 64 bit",
+      "options": [
+        "-smt2",
+        "-in",
+        ":timeout=40000",
+        ":random-seed=0",
+        "current-bitwidth=#f"
+      ]
+    },
+    "rosette": {
+      "commit": "373c8c35e4a7667f38fce10cf0b74ae17de07f1d",
+      "treeDigest": "6b2984fb0ccd2cacb7bb9878cce4c99c6c7930e2a9a2873b412f1852bcafa2a9"
+    },
+    "installedLayoutQualification": "NOT_RUN",
+    "linux": "REFUSED_UNQUALIFIED"
+  },
+  "workspaceAliases": [
+    {
+      "package": "@finnor/epistemic-runtime",
+      "path": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/node_modules/@finnor/epistemic-runtime",
+      "resolved": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/packages/epistemic-runtime",
+      "currentCheckout": true
+    },
+    {
+      "package": "@finnor/private-equity",
+      "path": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/node_modules/@finnor/private-equity",
+      "resolved": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/packages/private-equity",
+      "currentCheckout": true
+    },
+    {
+      "package": "@finnor/shared-types",
+      "path": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/node_modules/@finnor/shared-types",
+      "resolved": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/packages/shared-types",
+      "currentCheckout": true
+    },
+    {
+      "package": "@finnor/db",
+      "path": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/node_modules/@finnor/db",
+      "resolved": "/Users/paramdave/.factory/worktrees/r8-repaired-adoption-producer-2026-10-11/FINNOR/finnor-os/packages/db",
+      "currentCheckout": true
+    }
+  ],
+  "thirdPartyTypeScript": {
+    "path": "/Users/paramdave/.factory/worktrees/r8-counterexample-guided-solver-synthesis/FINNOR/finnor-os/node_modules/typescript/lib/typescript.js",
+    "sha256": "3ae902c92cc44dace175c0e69e13a4b0899f6983c6121d76b9ab8dd5795e7675",
+    "borrowedReadOnly": true
+  },
+  "sharedTrackedModifications": 0,
+  "generatedArtifactsDependenciesRuntimeArchivesOrCredentialsCommitted": false,
+  "reconstructionRule": "Import the pinned source commit and verify these blobs/hashes. Shared patch/schema are data only. Do not replace cumulative shared owner preimages or inherit a receipt after a changed scientific/compiler/dependency closure."
+}

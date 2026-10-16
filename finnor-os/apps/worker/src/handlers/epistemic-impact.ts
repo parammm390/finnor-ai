@@ -1,6 +1,6 @@
 import { withTenantTransaction } from "@finnor/db";
 import { compareDurableShadowWithOracle, processDurableEpistemicChange, recoverAcceptedEpistemicChanges, scanDueEpistemicFreshness } from "@finnor/epistemic-runtime";
-import { prepareTenantPrivateEquityEpistemicGraph } from "@finnor/private-equity";
+import { prepareTenantPrivateEquityEpistemicGraph } from "@finnor/private-equity/src/durable-epistemic";
 import { RetryableJobError, type JobHandler } from "../queue";
 
 export const processEpistemicChange: JobHandler = async (payload, context) => {

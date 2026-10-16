@@ -25,7 +25,8 @@ import type {
   ComputerTaskInput,
 } from "@finnor/shared-types";
 import type { ToolRuntimeContext } from "@finnor/tools";
-import { advanceWorkflow, completeStep, failStep, finalizeLatestReceiptForAction } from "@finnor/workflow-runtime";
+import { advanceWorkflow, completeStep, failStep } from "@finnor/workflow-runtime/steps";
+import { finalizeLatestReceiptForAction } from "@finnor/workflow-runtime/receipts";
 import { and, asc, desc, eq, max, sql } from "drizzle-orm";
 import { deriveComputerOriginPolicy } from "./origins";
 import { assertNoComputerSecrets, redactComputerValue } from "./redaction";

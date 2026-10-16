@@ -1,0 +1,351 @@
+{
+  "schema": "finnor.combined-r-v-repair-evidence.v1",
+  "publishedParent": "14e71d59057e79ff15c3c8091764a7ed0fc73de6",
+  "mainAncestor": "938c9fe3380d7ddce6b78594bbed0755c72634ae",
+  "scope": "Existing R1-R8 candidate reconciled with canonical merged V1-V5; no protected activation",
+  "checks": {
+    "backendTypes": "PASS; Node 22.22.3; locked steel-sdk/undici declaration overlay; explicit candidate workspace paths",
+    "frontendTypes": "PASS",
+    "releaseTests": {
+      "passed": 80,
+      "failed": 0,
+      "skipped": 0
+    },
+    "mutationInventory": "PASS after classifying disposable benchmark driver; earlier failure retained in audit",
+    "workflowActionlint": "PASS: all nine",
+    "workerRelocation": "PASS: actual combined owners and source custody, 5177ms; not Linux image proof",
+    "contracts": "PASS: workspace, client, manifest, forms, deployment truth"
+  },
+  "limitations": [
+    "R1 positive owner evidence is on parent 14e71d59 with 190 migrations, not final exact-image acceptance; two unselected owner cases NOT_RUN",
+    "Benchmark metrics at 191 migrations passed, but combined verification harness receipts correctly remain FAIL; separate final FK probe passed",
+    "Installed Linux image, hosted full verdict, mounted Work and production journey remain required",
+    "Live IAM narrowing and live migration-owner FORCE-RLS compatibility remain open"
+  ],
+  "receipts": [
+    {
+      "path": "/tmp/finnor-image-failure.xbKCba/r1-final-owners/results.json",
+      "sha256": "47af478250174938914e8cff6d3663ed9c3942454f7912639b309d298c040632",
+      "status": "PASS_LOCAL",
+      "error": null,
+      "startedAt": "2026-10-16T05:20:47.718Z",
+      "finishedAt": "2026-10-16T05:22:09.498Z",
+      "results": [
+        {
+          "id": "co-funded-cost-tail",
+          "status": "NOT_RUN",
+          "predicate": "One canonical cash resource includes action cost2, terminal debt3 and original resource one-third exactly once; the 5 USD pool cannot select that policy"
+        },
+        {
+          "id": "positive-owner-reduction",
+          "status": "PASS",
+          "predicate": "Authenticated real owners, actual durable queue/worker/checker, positive S4 representation reuse, original policy aliases and S5 exact rational demand with authority blocked",
+          "observed": {
+            "runId": "420efee6-4be8-4b49-bec7-fe75802f9b68",
+            "original": 13,
+            "quotient": 8,
+            "stats": {
+              "steps": 6251,
+              "reuseHits": 4,
+              "classesEvaluated": 8,
+              "policyAlternatives": 9,
+              "continuationEvaluations": 8
+            },
+            "originalStats": {
+              "steps": 6251,
+              "continuationEvaluations": 13,
+              "reuseHits": 0,
+              "classesEvaluated": 0,
+              "policyAlternatives": 12
+            },
+            "physicalStages": [
+              {
+                "stage": "S4_EVALUATE",
+                "pid": 31991,
+                "status": "RETURNED"
+              },
+              {
+                "stage": "PRODUCE",
+                "pid": 31988,
+                "status": "RETURNED"
+              },
+              {
+                "stage": "CHECK",
+                "pid": 31990,
+                "status": "RETURNED"
+              }
+            ],
+            "s5": "FEASIBLE",
+            "originalEpisode": "59b343c8-0217-47df-bd01-18dbe8e706b1",
+            "authorityGranted": false
+          },
+          "durationMs": 79211.63625
+        },
+        {
+          "id": "upper-owner-128-8-12",
+          "status": "NOT_RUN",
+          "predicate": "Authenticated real owners, actual durable queue/worker/checker, positive S4 representation reuse, original policy aliases and S5 exact rational demand with authority blocked"
+        }
+      ],
+      "migrationCount": 190,
+      "rerun": "python3 finnor-os/scripts/r1/run-native.py owners"
+    },
+    {
+      "path": "/tmp/finnor-image-failure.xbKCba/scope4-final-plan-proof.json",
+      "sha256": "7249fc9e942b8251ea6d2d4cced29e80104bdb010c4e610c3c9f34522574aefa",
+      "status": "PASS",
+      "error": null,
+      "startedAt": "2026-10-16T05:18:53.761Z",
+      "finishedAt": "2026-10-16T05:19:06.189Z",
+      "metrics": [
+        {
+          "operation": "company lookup/search",
+          "samples": 12,
+          "p50Ms": 16.1,
+          "p95Ms": 30,
+          "maxMs": 30,
+          "thresholdMs": 1000
+        },
+        {
+          "operation": "Company projection",
+          "samples": 12,
+          "p50Ms": 202.6,
+          "p95Ms": 238.89,
+          "maxMs": 238.89,
+          "thresholdMs": 3500
+        },
+        {
+          "operation": "Fund/portfolio projection",
+          "samples": 12,
+          "p50Ms": 178.06,
+          "p95Ms": 231.99,
+          "maxMs": 231.99,
+          "thresholdMs": 4000
+        },
+        {
+          "operation": "bounded traversal",
+          "samples": 12,
+          "p50Ms": 0.52,
+          "p95Ms": 1.59,
+          "maxMs": 1.59,
+          "thresholdMs": 100
+        },
+        {
+          "operation": "historical/as-of projection",
+          "samples": 12,
+          "p50Ms": 175.5,
+          "p95Ms": 234.93,
+          "maxMs": 234.93,
+          "thresholdMs": 4000
+        },
+        {
+          "operation": "ownership closed-world as-of",
+          "samples": 12,
+          "p50Ms": 0.82,
+          "p95Ms": 0.98,
+          "maxMs": 0.98,
+          "thresholdMs": 1000
+        }
+      ],
+      "sourceSha256": "2c7ff7388377ddb2d1418fbe79b4b7ba0e68bbc4fbe5faf8a0af339d0e1bc7a3",
+      "migrationCount": 190,
+      "qualification": "HISTORICAL_CORPUS_CURRENT_SCHEMA_QUERY_BENCHMARK_NOT_V3_CLOSE_ACCEPTANCE",
+      "rerun": "NODE_ENV=test FINNOR_BENCHMARK_PROOF=<fresh-file> node --import=tsx scripts/release/verify-scope4-benchmark.mts"
+    },
+    {
+      "path": "/tmp/finnor-image-failure.xbKCba/combined-review-database.json",
+      "sha256": "015dc63dc0f5da8802ba07352318da65a2810943c31154866ada3aa92da1cebd",
+      "status": "FAIL",
+      "error": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ 's1_primary_observations_tenant_id_principal_id_request_id_fkey'\n- 's1_primary_observation_source_version_fk'\n",
+      "startedAt": "2026-10-16T05:30:54.900Z",
+      "finishedAt": "2026-10-16T05:31:07.997Z",
+      "metrics": [
+        {
+          "operation": "company lookup/search",
+          "samples": 12,
+          "p50Ms": 15.57,
+          "p95Ms": 19.95,
+          "maxMs": 19.95,
+          "thresholdMs": 1000
+        },
+        {
+          "operation": "Company projection",
+          "samples": 12,
+          "p50Ms": 185.16,
+          "p95Ms": 216.24,
+          "maxMs": 216.24,
+          "thresholdMs": 3500
+        },
+        {
+          "operation": "Fund/portfolio projection",
+          "samples": 12,
+          "p50Ms": 183.73,
+          "p95Ms": 269.8,
+          "maxMs": 269.8,
+          "thresholdMs": 4000
+        },
+        {
+          "operation": "bounded traversal",
+          "samples": 12,
+          "p50Ms": 0.79,
+          "p95Ms": 6.3,
+          "maxMs": 6.3,
+          "thresholdMs": 100
+        },
+        {
+          "operation": "historical/as-of projection",
+          "samples": 12,
+          "p50Ms": 204.81,
+          "p95Ms": 247.37,
+          "maxMs": 247.37,
+          "thresholdMs": 4000
+        },
+        {
+          "operation": "ownership closed-world as-of",
+          "samples": 12,
+          "p50Ms": 1.21,
+          "p95Ms": 2.21,
+          "maxMs": 2.21,
+          "thresholdMs": 1000
+        }
+      ],
+      "sourceSha256": "2c7ff7388377ddb2d1418fbe79b4b7ba0e68bbc4fbe5faf8a0af339d0e1bc7a3",
+      "migrationCount": 191,
+      "qualification": "HISTORICAL_CORPUS_CURRENT_SCHEMA_QUERY_BENCHMARK_NOT_V3_CLOSE_ACCEPTANCE",
+      "rerun": "NODE_ENV=test FINNOR_BENCHMARK_PROOF=<fresh-file> node --import=tsx scripts/release/verify-scope4-benchmark.mts"
+    },
+    {
+      "path": "/tmp/finnor-image-failure.xbKCba/combined-review-database-corrected.json",
+      "sha256": "9be7972df69cdb06f3797c6e1df3b8dc24b1d3f58821024916b0e42ba72979b9",
+      "status": "FAIL",
+      "error": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ 'FOREIGN KEY (tenant_id, evidence_source_id, evidence_version_id) REFERENCES evidence_source_versions(tenant_id, source_id, id)'\n- 'FOREIGN KEY (tenant_id, evidence_source_id, evidence_version_id) REFERENCES finnor_os.evidence_source_versions(tenant_id, source_id, id)'\n",
+      "startedAt": "2026-10-16T05:31:44.685Z",
+      "finishedAt": "2026-10-16T05:31:56.231Z",
+      "metrics": [
+        {
+          "operation": "company lookup/search",
+          "samples": 12,
+          "p50Ms": 16.87,
+          "p95Ms": 27.09,
+          "maxMs": 27.09,
+          "thresholdMs": 1000
+        },
+        {
+          "operation": "Company projection",
+          "samples": 12,
+          "p50Ms": 179.01,
+          "p95Ms": 196.11,
+          "maxMs": 196.11,
+          "thresholdMs": 3500
+        },
+        {
+          "operation": "Fund/portfolio projection",
+          "samples": 12,
+          "p50Ms": 176.88,
+          "p95Ms": 194.92,
+          "maxMs": 194.92,
+          "thresholdMs": 4000
+        },
+        {
+          "operation": "bounded traversal",
+          "samples": 12,
+          "p50Ms": 0.5,
+          "p95Ms": 1.27,
+          "maxMs": 1.27,
+          "thresholdMs": 100
+        },
+        {
+          "operation": "historical/as-of projection",
+          "samples": 12,
+          "p50Ms": 170.19,
+          "p95Ms": 178.92,
+          "maxMs": 178.92,
+          "thresholdMs": 4000
+        },
+        {
+          "operation": "ownership closed-world as-of",
+          "samples": 12,
+          "p50Ms": 0.8,
+          "p95Ms": 0.89,
+          "maxMs": 0.89,
+          "thresholdMs": 1000
+        }
+      ],
+      "sourceSha256": "2c7ff7388377ddb2d1418fbe79b4b7ba0e68bbc4fbe5faf8a0af339d0e1bc7a3",
+      "migrationCount": 191,
+      "qualification": "HISTORICAL_CORPUS_CURRENT_SCHEMA_QUERY_BENCHMARK_NOT_V3_CLOSE_ACCEPTANCE",
+      "rerun": "NODE_ENV=test FINNOR_BENCHMARK_PROOF=<fresh-file> node --import=tsx scripts/release/verify-scope4-benchmark.mts"
+    },
+    {
+      "path": "/tmp/finnor-image-failure.xbKCba/source-pair-probe-final.json",
+      "sha256": "05506c39c38987831605fe29c56451535e62d9c6543aa315a18738866444f240",
+      "status": "FAIL",
+      "error": "error: constraints on temporary tables may reference only temporary tables",
+      "startedAt": "2026-10-16T05:33:06.466Z",
+      "finishedAt": "2026-10-16T05:33:08.679Z",
+      "sourceSha256": "2c7ff7388377ddb2d1418fbe79b4b7ba0e68bbc4fbe5faf8a0af339d0e1bc7a3",
+      "migrationCount": 191,
+      "qualification": "SOURCE_VERSION_FK_DATABASE_PROBE_ONLY_NO_BENCHMARK",
+      "rerun": "NODE_ENV=test FINNOR_BENCHMARK_PROOF=<fresh-file> node --import=tsx scripts/release/verify-scope4-benchmark.mts"
+    },
+    {
+      "path": "/tmp/finnor-image-failure.xbKCba/source-pair-probe-regular-table.json",
+      "sha256": "a1c30fd01cb887d2f15c03d2c200b287fc7dc1d58f3f8bb8dc902292c94b56ae",
+      "status": "PASS",
+      "error": null,
+      "startedAt": "2026-10-16T05:34:04.211Z",
+      "finishedAt": "2026-10-16T05:34:06.419Z",
+      "sourceVersionBinding": [
+        {
+          "owner": "primary",
+          "mismatch": false,
+          "accepted": true,
+          "code": null,
+          "installedConstraint": "s1_primary_observation_source_version_fk",
+          "validated": true,
+          "qualification": "EXACT_INSTALLED_FK_ON_REAL_SOURCE_ROWS_ISOLATED_DATABASE_PROBE_NOT_V_OWNER_ACCEPTANCE"
+        },
+        {
+          "owner": "primary",
+          "mismatch": true,
+          "accepted": false,
+          "code": "23503",
+          "installedConstraint": "s1_primary_observation_source_version_fk",
+          "validated": true,
+          "qualification": "EXACT_INSTALLED_FK_ON_REAL_SOURCE_ROWS_ISOLATED_DATABASE_PROBE_NOT_V_OWNER_ACCEPTANCE"
+        },
+        {
+          "owner": "bilateral",
+          "mismatch": false,
+          "accepted": true,
+          "code": null,
+          "installedConstraint": "s1_bilateral_observation_source_version_fk",
+          "validated": true,
+          "qualification": "EXACT_INSTALLED_FK_ON_REAL_SOURCE_ROWS_ISOLATED_DATABASE_PROBE_NOT_V_OWNER_ACCEPTANCE"
+        },
+        {
+          "owner": "bilateral",
+          "mismatch": true,
+          "accepted": false,
+          "code": "23503",
+          "installedConstraint": "s1_bilateral_observation_source_version_fk",
+          "validated": true,
+          "qualification": "EXACT_INSTALLED_FK_ON_REAL_SOURCE_ROWS_ISOLATED_DATABASE_PROBE_NOT_V_OWNER_ACCEPTANCE"
+        }
+      ],
+      "sourceSha256": "2c7ff7388377ddb2d1418fbe79b4b7ba0e68bbc4fbe5faf8a0af339d0e1bc7a3",
+      "migrationCount": 191,
+      "qualification": "SOURCE_VERSION_FK_DATABASE_PROBE_ONLY_NO_BENCHMARK",
+      "rerun": "NODE_ENV=test FINNOR_BENCHMARK_PROOF=<fresh-file> node --import=tsx scripts/release/verify-scope4-benchmark.mts"
+    },
+    {
+      "path": "/tmp/finnor-image-failure.xbKCba/combined-final-process/process-e2e.json",
+      "sha256": "e1a6d57baeb0b577e3db2226d333703bbdfef812cad02f9d637cee236549e067",
+      "status": "PASS",
+      "error": null,
+      "startedAt": "2026-10-16T05:29:18.058Z",
+      "finishedAt": "2026-10-16T05:29:18.720Z",
+      "rerun": "FINNOR_CI_PROCESS_EVIDENCE_DIR=/absolute/new/evidence node --test scripts/release/ci-process.e2e.test.mjs"
+    }
+  ]
+}

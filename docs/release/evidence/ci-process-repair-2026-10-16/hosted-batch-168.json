@@ -1,0 +1,128 @@
+{
+  "schema": "finnor.hosted-batch-168-boundary.v1",
+  "head": "330b0a310497c484396b53dfd676ae72a5cce5de",
+  "run": 38859973372,
+  "jobs": [
+    {
+      "id": 116839799360,
+      "name": "classify-required-scope",
+      "conclusion": "success"
+    },
+    {
+      "id": 116839909502,
+      "name": "universal-security-gates / gitleaks",
+      "conclusion": "success"
+    },
+    {
+      "id": 116839909540,
+      "name": "early-source-gates / validate",
+      "conclusion": "success"
+    },
+    {
+      "id": 116839909659,
+      "name": "universal-security-gates / osv-scanner / osv-scan",
+      "conclusion": "success"
+    },
+    {
+      "id": 116839986299,
+      "name": "early-source-gates / governance",
+      "conclusion": "success"
+    },
+    {
+      "id": 116839986348,
+      "name": "early-source-gates / source",
+      "conclusion": "success"
+    },
+    {
+      "id": 116840800392,
+      "name": "applicable-release-readiness / canonical-graph-gate",
+      "conclusion": "success"
+    },
+    {
+      "id": 116840800442,
+      "name": "applicable-backend-gates / test (3)",
+      "conclusion": "success"
+    },
+    {
+      "id": 116840800475,
+      "name": "applicable-release-readiness / phase5-readiness (scope4)",
+      "conclusion": "success"
+    },
+    {
+      "id": 116840800496,
+      "name": "applicable-release-readiness / phase5-readiness (scope5)",
+      "conclusion": "success"
+    },
+    {
+      "id": 116840800502,
+      "name": "applicable-backend-gates / worker-image",
+      "conclusion": "failure"
+    },
+    {
+      "id": 116840800518,
+      "name": "applicable-backend-gates / test (1)",
+      "conclusion": "success"
+    },
+    {
+      "id": 116840800562,
+      "name": "applicable-backend-gates / phase7",
+      "conclusion": "success"
+    },
+    {
+      "id": 116840800570,
+      "name": "applicable-backend-gates / production-artifacts",
+      "conclusion": "success"
+    },
+    {
+      "id": 116840800593,
+      "name": "applicable-backend-gates / test (2)",
+      "conclusion": "success"
+    },
+    {
+      "id": 116840800709,
+      "name": "applicable-root-gates / lint-typecheck-e2e",
+      "conclusion": "success"
+    },
+    {
+      "id": 116840800730,
+      "name": "applicable-dealer-zero / receipt-diff",
+      "conclusion": "success"
+    },
+    {
+      "id": 116840802154,
+      "name": "applicable-dealer-zero / database-role-qa",
+      "conclusion": "skipped"
+    },
+    {
+      "id": 116844156651,
+      "name": "required-pr-verdict",
+      "conclusion": "failure"
+    }
+  ],
+  "artifact": {
+    "id": 12028954224,
+    "bytes": 1447472,
+    "sha256": "2c43639260bea328162d2998cd625d03de08b64663c0c2ea1c18ec7dc80d194e",
+    "retained": "/Users/paramdave/.codex/visualizations/2026/10/15/01a1404a-0156-7020-915c-9b2c9f148554/hosted-batch-168-failure"
+  },
+  "r3": {
+    "installedRuntime": "PASS",
+    "migrationReplayRestart": "PASS",
+    "queuedOriginalAndR3Restart": "PASS",
+    "authenticatedPositive": "FAIL",
+    "failureBoundary": "M3 emitted constructor rejected: ISOLATED_ECONOMIC_MODULE_REFUSED: EXITED; exact process stderr was omitted by the preexisting owner error",
+    "cause": "UNKNOWN_PENDING_EXACT_LINUX_PROCESS_DIAGNOSTIC"
+  },
+  "r4": "NOT_REACHED",
+  "local": {
+    "mountedWork": "PASS_SOURCE_WITH_HOST_DEPENDENCIES_NOT_DEPLOYED",
+    "positiveAndRestart": "PASS_MACOS_NOT_LINUX",
+    "evidence": "/Users/paramdave/.codex/visualizations/2026/10/15/01a1404a-0156-7020-915c-9b2c9f148554/r3-positive-source-zf4X3o",
+    "processControlScenarios": 5,
+    "transportSubstituted": true,
+    "criteriaWeakened": false
+  },
+  "productionReleased": false,
+  "protectedEffectsApplied": false,
+  "sandboxPermissionsExpanded": false
+}

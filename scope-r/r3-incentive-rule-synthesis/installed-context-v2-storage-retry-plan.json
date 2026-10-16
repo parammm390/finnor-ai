@@ -1,0 +1,16 @@
+{
+  "schema": "finnor.r3.current-image-storage-retry.v1",
+  "registeredAt": "2026-10-10T17:55:07.819550+00:00",
+  "reason": "User confirmed freeing disk; current df provides 4.4 GiB free. Current generated OpenAPI included in v2 image. Earlier import/start ENOSPC retained.",
+  "runs": 1,
+  "importLimitSeconds": 300,
+  "runtimeProbeLimitSeconds": 240,
+  "runtimeMemoryBytes": 2147483648,
+  "sourceMounts": false,
+  "acceptance": "Exact API manifest registers and actual nonroot installed runtime/checker executes complete check-runtime without any product, dependency or QA source mount. Registration alone is not PASS.",
+  "sourceVector": "1477bdc724e5c444fb4bcab4349c8f6d42959fea52d2ff7d3e5bc0bafa25585a",
+  "apiManifest": "sha256:f0f67774398116af92e8cfe86d109729a5401d1c89269edb35f765c7961e6f63",
+  "workerManifest": "sha256:73b81785fb4a8d23b6201046bb9bcbb48268f88c2868308443f3fc7097d530a3",
+  "originalFloorsUnchanged": true,
+  "protectedAdmission": false
+}

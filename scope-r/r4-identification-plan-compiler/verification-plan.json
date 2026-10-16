@@ -1,0 +1,322 @@
+{
+  "schema": "finnor.r4.verification-plan.v1",
+  "frozenBeforeProducer": true,
+  "baseCommit": "517003a4396bc8101a90be4b425ee01de9446740",
+  "baseTree": "07ba69b8e96f05944c2f9f14a74b2c400eb89e42",
+  "evidenceRoot": "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence",
+  "bounds": {
+    "bundles": 8,
+    "graphs": 8,
+    "masks": 256,
+    "pairs": 2048,
+    "nodesPerGraph": 12,
+    "edgesPerGraph": 132,
+    "laws": 32,
+    "costItems": 64,
+    "resources": 64,
+    "inputBytes": 524288,
+    "outputBytes": 67108864,
+    "astNodesPerProof": 65536,
+    "traceNodesPerProof": 4096,
+    "recursionDepth": 96,
+    "quantityDigits": 256,
+    "nativeSubcallMs": 20000,
+    "initialResponseMs": 30000,
+    "originalEpisodeWallMs": 3600000,
+    "aggregateMemoryBytes": 17179869184
+  },
+  "campaign": {
+    "scientificWallSeconds": 600,
+    "integratedWallSeconds": 1800,
+    "buildWallSeconds": 900,
+    "maximumExpensivePassesPerCut": 2,
+    "maximumSamePredicateFailuresBeforeDiagnosis": 2,
+    "monetaryCeilingUSD": 100,
+    "monetaryQualification": "UNKNOWN_WITHOUT_COMPLETE_METERS",
+    "humanCeilingSeconds": 900,
+    "rerunTriggers": [
+      "changed owning dependency",
+      "failed mandatory predicate after causal repair",
+      "unresolved material evidence"
+    ],
+    "failureRetention": "Every run gets a new immutable directory; never overwrite a failed run.",
+    "serial": [
+      "installed-byte builds",
+      "mounted flow",
+      "physical faults"
+    ],
+    "notRelaxable": [
+      "complete finite menu",
+      "independent graph/data/support/failure checks",
+      "owner fences",
+      "original deadlines"
+    ]
+  },
+  "cases": [
+    {
+      "id": "y0-release-diagnosis",
+      "requirements": [
+        "R4.backend",
+        "R4.trace",
+        "independence"
+      ],
+      "boundary": "Pinned wheel and recursive kernel semantics",
+      "command": "python3 finnor-os/scripts/r4/diagnose-y0.py --python /Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/runtime/y0/bin/python --output /Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/y0-diagnosis",
+      "oracle": "Independent exact binary SCM enumeration and custom current-kernel reference, not y0 output",
+      "limitSeconds": 180,
+      "maximumGraphReferences": 1024,
+      "artifact": "results.json",
+      "pass": "Actual installed source hashes match the pin; any release discrepancy is reproduced, retained and explicitly fenced or repaired by the checked adapter"
+    },
+    {
+      "id": "scientific",
+      "requirements": [
+        "R4.1",
+        "R4.2",
+        "R4.3",
+        "R4.4",
+        "R4.5",
+        "common.2"
+      ],
+      "boundary": "Native producer to separate stdlib checker on original bytes",
+      "command": "python3 finnor-os/scripts/r4/run-scientific.py --python /Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/runtime/y0/bin/python --output /Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/scientific",
+      "caseGroups": {
+        "reference": [
+          "unconfounded",
+          "backdoor",
+          "frontdoor",
+          "recursive-kernel",
+          "idc-exchange",
+          "idc-normalization",
+          "hedge",
+          "opposed-graphs",
+          "equivalent-functionals"
+        ],
+        "menu": [
+          "empty-baseline",
+          "necessary-affordable",
+          "cheaper-insufficient",
+          "delay-tie",
+          "resource-tie",
+          "irrelevant-expensive",
+          "joint-exposure",
+          "joint-resource",
+          "shared-cost",
+          "unknown-cost",
+          "incomparable-cost",
+          "eight-by-eight"
+        ],
+        "data": [
+          "unavailable-law",
+          "population",
+          "time",
+          "intervention",
+          "missing-joint-linkage",
+          "overlapping-marginals",
+          "positivity-unknown",
+          "positivity-contradicted",
+          "idc-zero-denominator",
+          "selection",
+          "missingness",
+          "measurement",
+          "experimental",
+          "transport",
+          "unobserved-confounder",
+          "unqualified-projection",
+          "prospective"
+        ],
+        "invalid": [
+          "cycle",
+          "unknown-node",
+          "unit",
+          "bidirected-misuse",
+          "duplicate-cost",
+          "oversized-menu"
+        ],
+        "mutation": [
+          "graph",
+          "query",
+          "conditioning",
+          "intervention",
+          "district",
+          "ancestor",
+          "decomposition",
+          "idc-mutilation",
+          "separation",
+          "kernel",
+          "source",
+          "bound-variable",
+          "marginalization",
+          "denominator",
+          "support",
+          "cost",
+          "tie",
+          "mask",
+          "omitted-cheaper",
+          "backend",
+          "checker",
+          "domain"
+        ]
+      },
+      "oracle": "Preregistered classic functionals and independent exact SCM evaluator; checker independently derives every rule, law premise, mask, schedule and rank",
+      "limitSeconds": 600,
+      "maximumProducerInvocations": 64,
+      "maximumCheckerInvocations": 96,
+      "artifact": "results.json and input/candidate/check files",
+      "pass": "All expected references accepted; intended mutations reach and fail the named checker boundary; exactly 256 masks and 2048 pairs checked at bound"
+    },
+    {
+      "id": "integrated",
+      "requirements": [
+        "owners",
+        "durability",
+        "currentness",
+        "common.12.1",
+        "fallback"
+      ],
+      "boundary": "Authenticated HTTP to real disposable Postgres, JobQueue, physical Python producer/checker, immutable plan and real S consumers",
+      "command": "cd finnor-os && node_modules/.bin/tsx scripts/r4/run-integrated.mts --output /Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/integrated",
+      "caseGroups": {
+        "positive": [
+          "actual-owner-registration",
+          "http-sql-native-checked-plan",
+          "s2-proposal",
+          "s3-assessment",
+          "s4-accept-decline-wait",
+          "s5-current-grant"
+        ],
+        "privacy": [
+          "cross-tenant",
+          "cross-principal",
+          "bounded-json",
+          "rights-publication-fence"
+        ],
+        "revision": [
+          "work",
+          "input",
+          "source",
+          "population",
+          "support",
+          "graph",
+          "menu",
+          "method-checker",
+          "resource",
+          "historical-access"
+        ],
+        "fault": [
+          "two-works-one-grant",
+          "sigkill-producer",
+          "sigkill-checker",
+          "publication-lock-revocation",
+          "duplicate",
+          "stale-lease",
+          "cancel",
+          "restart"
+        ],
+        "responsibility": [
+          "s6-retained-unknown",
+          "no-physical-retry",
+          "unsupported-fallback",
+          "checker-fallback",
+          "invalidation-fallback",
+          "budget-fallback",
+          "method-replacement"
+        ]
+      },
+      "oracle": "Actual owner records and exact expected two-bundle selection; SQL claims/fences/leases/attempts and process termination, no effect/credit authority",
+      "limitSeconds": 1800,
+      "maximumOwnerFixtures": 8,
+      "maximumPhysicalDeliveries": 32,
+      "artifact": "results.json, HTTP transcript, SQL/process snapshots, append-only histories",
+      "pass": "Scientific checking is reached before later authority refusal; no stale publication, fresh grant, cross-principal exposure or duplicate physical acquisition"
+    },
+    {
+      "id": "mounted-work",
+      "requirements": [
+        "existing-Work",
+        "privacy",
+        "conditional-labels"
+      ],
+      "boundary": "CanvasDocument evidence_execution mounts EvidenceWorkbench and IdentificationPlanPanel",
+      "command": "cd /Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/FINNOR/finnor-os && node_modules/.bin/tsx scripts/r4/run-integrated.mts --mounted --output /Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/integrated-mounted-1",
+      "oracle": "Rendered selected bundle, exact price/delay, per-graph functional, required future conditions and full coverage match independent fixture; session/Work/source changes clear private output including delayed responses",
+      "limitSeconds": 300,
+      "maximumBrowsers": 1,
+      "artifact": "mounted-results.json and screenshots",
+      "pass": "Real persisted plan visible in the existing Work surface; no generic COMPLETE to financial VERIFIED promotion",
+      "runnerResolution": "Mounted driver shares the same real SQL/issuer/owners as the integrated story; no exported fixture or substitute application is used. Registered before this first mounted run."
+    },
+    {
+      "id": "local-package",
+      "requirements": [
+        "runtime",
+        "schema",
+        "jobs",
+        "source-custody"
+      ],
+      "boundary": "Built API/worker and scientific staging package",
+      "commands": [
+        "npm --prefix finnor-os run typecheck",
+        "npm run lint",
+        "npm run workspace:check",
+        "npm run build",
+        "npm --prefix finnor-os run build --workspace @finnor/api",
+        "npm --prefix finnor-os run build --workspace @finnor/worker",
+        "npm --prefix finnor-os run authz:matrix:check",
+        "npm run release:truth",
+        "python3 finnor-os/scripts/r4/package-runtime.py --verify"
+      ],
+      "oracle": "Exact source/lock/executable/checker digests; replay candidate migration from 0171 and restart; old/new protocol SQL dispatch and refusal; no R1 imports",
+      "limitSeconds": 900,
+      "artifact": "package-results.json and logs",
+      "pass": "All selected available local checks pass; unavailable container/deployment checks remain NOT_RUN, never installed-image claims"
+    },
+    {
+      "id": "affected-inherited",
+      "requirements": [
+        "S1",
+        "S2",
+        "S3",
+        "S4",
+        "S5",
+        "S7",
+        "P7",
+        "auth",
+        "queue",
+        "transport"
+      ],
+      "boundary": "Pinned owner and transport contracts",
+      "commands": [
+        "cd finnor-os && node_modules/.bin/vitest run tests/unit/compute-contract.test.ts tests/integration/job-queue.test.ts",
+        "python3 finnor-os/scripts/r4/run-affected.py"
+      ],
+      "oracle": "Select actual existing paths/runner support before invoking; reuse unchanged proofs with explicit dependency justification",
+      "limitSeconds": 600,
+      "artifact": "affected-results.json",
+      "pass": "Selected changed-boundary cases pass, and all unrun or inapplicable inherited cases are named"
+    },
+    {
+      "id": "matched-diagnostic",
+      "requirements": [
+        "R4.comparative",
+        "common.13.1",
+        "common.13.3"
+      ],
+      "boundary": "Same owner-equipped query/menu/graphs/data/rights/grant and deadline",
+      "command": "python3 finnor-os/scripts/r4/run-scientific.py --comparison-only --python /Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/runtime/y0/bin/python --output /Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/evidence/comparison",
+      "oracle": "R4-off equipped backend evaluates an explicitly supplied plan; R4-on searches the same finite menu. Planned acquisition saving only; no actual collection or protected gain credit",
+      "limitSeconds": 120,
+      "artifact": "comparison.json",
+      "pass": "Retain both outcomes and complete costs/gaps; economic and protected comparator gates remain unqualified"
+    }
+  ],
+  "externalOnly": [
+    "sealed immutable R1 head/tree/interface and serial cumulative checks",
+    "independent S3 graph/data/support domain qualification and S8 admission",
+    "actual permitted future collection and mature support readback",
+    "protected completed-X/evaluator custody and preregistered matched trials",
+    "approved production activation and image/schema readback",
+    "original 90-day/36-month operational and economic outcomes"
+  ],
+  "qualification": "A local ordinary-role reference PASS is not scientific graph truth, protected admission, activation, comparative gain or economic release."
+}

@@ -1,0 +1,134 @@
+{
+  "schema": "finnor.r3.mounted-linked-scenarios-plan.v1",
+  "at": "2026-10-10T23:40:37.538693+00:00",
+  "sourceVector": "bd4a1be1571ba21a520ae99e896fadd0514e05c5fd6b002dafbe8e2c6b6f9ca2",
+  "observedFailure": "final-staged-mounted-03-run: original M1 five-minute validity exhausted; mounted, candidate-bound and reload PASS, whole FAIL. Actual review200 10.616s and reserve200 6.986s; schedules unfinished when owned server closed.",
+  "actualStages": [
+    {
+      "family": "elicitation-protocols",
+      "operation": "review",
+      "status": 200,
+      "elapsedMs": 10616.096416999993,
+      "boundary": "REAL_HTTP_ROUTE"
+    },
+    {
+      "family": "elicitation-protocols",
+      "operation": "reserve",
+      "status": 200,
+      "elapsedMs": 6985.541542000021,
+      "boundary": "REAL_HTTP_ROUTE"
+    }
+  ],
+  "failureModel": [
+    "Missing candidate or false bound target must fail independent SQL and exact protocol readback.",
+    "Missing any real review/reserve/schedules response or durable ref must fail owner review.",
+    "Wrong243cells or reload request must fail independent exact rule comparison.",
+    "Delayed response leaking across Work must fail clear oracle.",
+    "Foreign identity exposing private rule must fail tenant refusal and zero-table oracle.",
+    "Preference revision permitting old future use must fail independent original owner invalidation.",
+    "Partial or failed cut must never be promoted to whole-flow PASS.",
+    "Changed source or expired original grants must fail; no deadline extension."
+  ],
+  "scenarios": [
+    {
+      "cut": "final-staged-mounted-04-primary",
+      "fixtureMode": "--primary",
+      "requiredOracles": [
+        "mounted",
+        "candidate-bound",
+        "owner-review",
+        "reload",
+        "work-cleared"
+      ],
+      "entry": "same actual SDK, UI synthesis, registered physical worker, and three signed bounded owner routes"
+    },
+    {
+      "cut": "final-staged-mounted-05-complement",
+      "fixtureMode": "--complement",
+      "requiredOracles": [
+        "mounted",
+        "foreign-cleared",
+        "revision-cleared"
+      ],
+      "entry": "fresh actual original M3/R3 proposal, same current product source, actual SDK identity switch and actual preference invalidation"
+    }
+  ],
+  "semantics": "All required mounted behaviors are checked; composition claims these independently named current-source scenarios, not one uninterrupted passing episode. Every failed whole run remains FAIL.",
+  "perRunSeconds": 900,
+  "browserBoundSeconds": 600,
+  "clampedToOriginalM1": true,
+  "originalM1AndR3GrantsExtended": false,
+  "imagesOrProductCodeChanged": false,
+  "rerunCondition": "Only an unmet named predicate or actual relevant source change; stop local browser verification once both scoped runs pass.",
+  "revisedAt": "2026-10-10T23:51:00.910178+00:00",
+  "retainedCurrentNamedOracles": [
+    {
+      "cut": "final-staged-mounted-03-run",
+      "whole": "FAIL",
+      "oracles": [
+        "mounted",
+        "candidate-bound",
+        "reload"
+      ]
+    },
+    {
+      "cut": "final-staged-mounted-04-primary",
+      "whole": "FAIL",
+      "oracles": [
+        "mounted",
+        "candidate-bound",
+        "owner-review"
+      ],
+      "actualOwnerStageMs": [
+        4993.900625,
+        4037.318583,
+        8236.3505
+      ]
+    }
+  ],
+  "remainingScenario": {
+    "cut": "final-staged-mounted-06-tail",
+    "fixtureMode": "--tail",
+    "oracles": [
+      "mounted",
+      "work-cleared",
+      "foreign-cleared",
+      "revision-cleared"
+    ],
+    "optionalRepeatedDiagnosticsOmitted": [
+      "nonasserting owner-preflight before actual submit",
+      "duplicate wrong-programme negative; decisive current installed positive corpus retains it"
+    ],
+    "actualGuardOrOracleRemoved": false
+  },
+  "composition": "Only individually passed named oracles are reused with exact current-product source custody. Both whole failures remain FAIL; no single uninterrupted passing episode claimed. The fresh remaining tail must fully pass.",
+  "finalCurrentRerun": {
+    "reason": "Final native error-class transport repair changes shared API packaging; rerun both current staged mounted scopes rather than assert whole-source equality to old named observations.",
+    "sourceVector": "8726eaedb80d21a4fbe3b2fc4364e08ff8f135e442b09d7086bb413d119583fa",
+    "primary": "final-staged-v21-primary-01",
+    "tail": "final-staged-v21-complement-01",
+    "requiredPrimaryOracles": [
+      "mounted",
+      "candidate-bound",
+      "owner-review",
+      "reload",
+      "work-cleared"
+    ],
+    "requiredTailOracles": [
+      "mounted",
+      "foreign-cleared",
+      "revision-cleared"
+    ],
+    "fixtureArguments": [
+      "--primary",
+      "--minimal-preparation"
+    ],
+    "duplicateDiagnosticReadsOmitted": true,
+    "productionGuardsAndIndependentOraclesRetained": true,
+    "originalFiveMinuteM1Unchanged": true,
+    "complementArguments": [
+      "--complement",
+      "--minimal-preparation"
+    ]
+  }
+}

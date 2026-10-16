@@ -1,0 +1,10 @@
+{
+  "provider": "CodeRabbit CLI 0.9.0",
+  "command": "coderabbit review --agent -t uncommitted -c AGENTS.md",
+  "outcome": "completed",
+  "issues": 1,
+  "severity": "minor",
+  "issue": "Export oracle accepted expected targets outside the owner package",
+  "disposition": "Fixed lexical and physical containment; traversal, absolute, backslash and escaping-symlink controls pass",
+  "runtimeCorrectnessProven": false
+}

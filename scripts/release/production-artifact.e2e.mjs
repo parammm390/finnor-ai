@@ -7,6 +7,7 @@ import { tmpdir } from "node:os"
 import { join, resolve, dirname } from "node:path"
 import { fileURLToPath } from "node:url"
 import { apiBuildContext, normalizeApiProjectRoot, vercelBuildConfiguration, materializeApiFunctions } from "./vercel-build-context.mjs"
+import { readGit } from "./worktree-state.mjs"
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../..")
 const evidence = process.env.FINNOR_ARTIFACT_EVIDENCE_DIR
@@ -16,9 +17,7 @@ for (const key of ["AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_SESSION_TO
   assert.ok(!process.env[key], `Artifact E2E must not receive ${key}`)
 }
 const git = (...args) => {
-  const result = spawnSync("git", ["-C", root, ...args], { encoding: "utf8" })
-  assert.equal(result.status, 0, result.stderr)
-  return result.stdout.trim()
+  return readGit(args, root).trim()
 }
 const sha = git("rev-parse", "HEAD")
 const metadata = {

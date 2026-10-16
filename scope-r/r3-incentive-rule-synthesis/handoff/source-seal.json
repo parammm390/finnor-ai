@@ -1,0 +1,1175 @@
+{
+  "schema": "finnor.r3.source-runtime-seal.v1",
+  "baseCommit": "517003a4396bc8101a90be4b425ee01de9446740",
+  "baseTree": "07ba69b8e96f05944c2f9f14a74b2c400eb89e42",
+  "files": [
+    {
+      "path": ".gitignore",
+      "bytes": 1334,
+      "sha256": "312a52ac3f28812acc96f013ac4131d81e6e342569c74733a2736f294644234d"
+    },
+    {
+      "path": "finnor-os/Dockerfile.worker",
+      "bytes": 6061,
+      "sha256": "310bd6648ebe5171524d66ab6a2bf71ef70a3cee826699020714f3fb24bb978a"
+    },
+    {
+      "path": "finnor-os/Dockerfile.worker.dockerignore",
+      "bytes": 649,
+      "sha256": "e61e205bc9e090d5bacaeb2f52a0ba27453e46406744524ba52d20bc3d81171c"
+    },
+    {
+      "path": "finnor-os/apps/api/app/api/allocations/[operation]/route.ts",
+      "bytes": 5133,
+      "sha256": "6da329b6aff1ea45ac0eeeb3775172b5a18dd3e2bdfeef8a032efb3a88055aa0"
+    },
+    {
+      "path": "finnor-os/apps/api/app/api/elicitation-protocols/[operation]/route.ts",
+      "bytes": 3114,
+      "sha256": "35f5f5084a5e54c7a8972bbf44db5b1ac7f7911c69891435e4029c4029f91edd"
+    },
+    {
+      "path": "finnor-os/apps/api/app/api/interventions/[operation]/route.ts",
+      "bytes": 5163,
+      "sha256": "616fe09dee8c3fa9dae6b583a6548c86b8c588f8d2cbc3e88df21730fad515b3"
+    },
+    {
+      "path": "finnor-os/apps/api/app/api/obligations/[operation]/route.ts",
+      "bytes": 4816,
+      "sha256": "2f9d48b8f1eb6c67418dac9f59e7f9a3c78a58f6d7d3b29165f002c6822ee30b"
+    },
+    {
+      "path": "finnor-os/apps/api/app/api/policies/[operation]/route.ts",
+      "bytes": 5559,
+      "sha256": "bba04d4f72c65a2468a7b1420600be77de4560730ac75b2bd96996f96a6964d7"
+    },
+    {
+      "path": "finnor-os/apps/api/next.config.mjs",
+      "bytes": 5757,
+      "sha256": "2f55c8b7924864ca35bbf14f873a22894166e4ad6214aaecc37125417fb83fb2"
+    },
+    {
+      "path": "finnor-os/apps/supplier-canary/api/index.mjs",
+      "bytes": 8701,
+      "sha256": "6abd43a5508bb3bec96fb3b546391c0fbcd95ffbd8e116bc55ed4e4f67b82408"
+    },
+    {
+      "path": "finnor-os/apps/worker/src/index.ts",
+      "bytes": 16352,
+      "sha256": "feabba730fc4f4511dffd521872ac57c6af82393eae07a0ec15bd02a7cb0275c"
+    },
+    {
+      "path": "finnor-os/openapi.json",
+      "bytes": 1979691,
+      "sha256": "ff1e7baafd8f70b10e7d5454f6f5572148b17696d6d6fbde8dfd9c3d84bb1ada"
+    },
+    {
+      "path": "finnor-os/packages/db/compute-contract.ts",
+      "bytes": 12947,
+      "sha256": "1ea9468fe6192130a87553fee14aa3f87767c8e0023b825df01c6358dcbe2c30"
+    },
+    {
+      "path": "finnor-os/packages/db/migration-head.ts",
+      "bytes": 281,
+      "sha256": "4ccce5646b3aaa26e5cdcef9ae489777b2fb7b217c704fb196f1987e5a3711bb"
+    },
+    {
+      "path": "finnor-os/packages/db/migrations-bundle.ts",
+      "bytes": 1612629,
+      "sha256": "177c629b5c02c4fae086d6be11c60560d21040f9b13936a1c1ad1657b01458a1"
+    },
+    {
+      "path": "finnor-os/packages/db/migrations/0172_r3_incentive_rule_synthesis.sql",
+      "bytes": 9309,
+      "sha256": "61749dea7a78cbde76e8ac7936afa49ab9893ffa56d334a067c934223870cfe3"
+    },
+    {
+      "path": "finnor-os/packages/epistemic-runtime/src/allocation-checker.ts",
+      "bytes": 31282,
+      "sha256": "b930d0961c4c6b61c1954027fd5aa26559ec11481de2deecfab86c22a1cad2c0"
+    },
+    {
+      "path": "finnor-os/packages/epistemic-runtime/src/allocation-contracts.ts",
+      "bytes": 26948,
+      "sha256": "676d2a51eb4e8cf69776c8a39a5e13dd34e8e4b6fe6b26ccb20e62e92101cffc"
+    },
+    {
+      "path": "finnor-os/packages/epistemic-runtime/src/incentive-rule-synthesis/checker.py",
+      "bytes": 29008,
+      "sha256": "6f44bb6c5dc4dd71d29f70c230247f39a7c8a25f7e723fde73e194e934e4a8ae"
+    },
+    {
+      "path": "finnor-os/packages/epistemic-runtime/src/incentive-rule-synthesis/contracts.ts",
+      "bytes": 7897,
+      "sha256": "babc3e570d59d9dd5001ed8d37132554a16531ea74dee04be88b8b7888ad9aa7"
+    },
+    {
+      "path": "finnor-os/packages/epistemic-runtime/src/incentive-rule-synthesis/exact.ts",
+      "bytes": 2611,
+      "sha256": "0044152866437cc0f3d9cd8d3fc4a11ee8f475b14a45d7d7e87a85b5fe522f83"
+    },
+    {
+      "path": "finnor-os/packages/epistemic-runtime/src/incentive-rule-synthesis/launcher.ts",
+      "bytes": 9258,
+      "sha256": "d96d384fdb90139e1c69dd5f0d84aea100f643b7e95aa7bec673e8593c52b34a"
+    },
+    {
+      "path": "finnor-os/packages/epistemic-runtime/src/incentive-rule-synthesis/output-contracts.ts",
+      "bytes": 5952,
+      "sha256": "c943629d875319148fa7dd287e580ee8a9124a424c77ae35cb460884dedd0428"
+    },
+    {
+      "path": "finnor-os/packages/epistemic-runtime/src/incentive-rule-synthesis/producer.py",
+      "bytes": 20002,
+      "sha256": "562288abaf59ac568ece66f4f12804cc942ee5fcecb290e47c43e96b05a1cf21"
+    },
+    {
+      "path": "finnor-os/packages/epistemic-runtime/src/incentive-rule-synthesis/repair.py",
+      "bytes": 3723,
+      "sha256": "7920c90c946935037d1713800df4d8cbc3908c433bc43012f18e43c60ac412c5"
+    },
+    {
+      "path": "finnor-os/packages/epistemic-runtime/src/index.ts",
+      "bytes": 1063,
+      "sha256": "9187f691074de9366008bea4ff45c2e566bb85f43488819716e56426d73a7133"
+    },
+    {
+      "path": "finnor-os/packages/governed-execution/src/adapter-contract.ts",
+      "bytes": 4778,
+      "sha256": "d76877b21bbcc07a69b4199839d28b8205b4536f57e495ef5506ef74b0ff4f09"
+    },
+    {
+      "path": "finnor-os/packages/governed-execution/src/executor-linux.ts",
+      "bytes": 7393,
+      "sha256": "8062fe3a0e13a01dc55e9b7efcec9542fe1927344cd71238923f2060b38c93ef"
+    },
+    {
+      "path": "finnor-os/packages/governed-execution/src/executor.ts",
+      "bytes": 8034,
+      "sha256": "ac1f3c8d9a5c5c48b1d79741a9483718ed4969bbea7a8424b8acfa981b67f79b"
+    },
+    {
+      "path": "finnor-os/packages/governed-execution/src/ledger.ts",
+      "bytes": 45622,
+      "sha256": "c48920d3403b0c0e3f1a84b37ce9b8ec050635cd7150caa8eb86cbf6ffff59eb"
+    },
+    {
+      "path": "finnor-os/packages/governed-execution/src/protocol.ts",
+      "bytes": 2278,
+      "sha256": "96d1be8a37d35235308c90fa1458efa794f401d30744ae6e5839e1e424ee62bd"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/enterprise-allocation.ts",
+      "bytes": 38402,
+      "sha256": "28ef63480c32920ae84feeefeb15bbff8ff1048be3672e52f4609a13a828ea30"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/enterprise-control.ts",
+      "bytes": 41934,
+      "sha256": "2560534a788a37be4c88125fe5f6641ef2fbf646d120b501d1bf9976653714cb"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/enterprise-interventions.ts",
+      "bytes": 17686,
+      "sha256": "37c8761644dcc6cc40e49d57a56ce78061d8611997510db1c815b09d0b684b26"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/enterprise-obligations.ts",
+      "bytes": 34050,
+      "sha256": "a1c3cf807424edaf313af7aed86af59bc78d274b98fc4012b4afb34a623ab9c0"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/index.ts",
+      "bytes": 3328,
+      "sha256": "942cd6ae16c46da40e9c757f8f63f86826c366025fdac1106107dc1cbc0a3bb6"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/native-experience-transport.ts",
+      "bytes": 10574,
+      "sha256": "0b4b1e629eed531ea12c5571a26bca64d934c94685df1f41e87c26bfd11a1b67"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/obligation-contracts.ts",
+      "bytes": 3669,
+      "sha256": "de422e06fca67aec657fe1697517f0c8a1a262d20f938a87ca15c21146d57ab8"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/r3/allocation.ts",
+      "bytes": 22262,
+      "sha256": "9b618dab30d2f07c6573a6aeb3d434452b2aece2e823372e9b2faa51c4f76fbd"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/r3/api.ts",
+      "bytes": 17517,
+      "sha256": "0ed5ea0cd9a5b43abcd66b7c4c31978b00c3e99673b6907fb32bf4c51de223ec"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/r3/control.ts",
+      "bytes": 5726,
+      "sha256": "6314bc689ce513a29e1046c27c8260431259e297b631c569a406819601e85f83"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/r3/events.ts",
+      "bytes": 11836,
+      "sha256": "05332b4396a09b373141962c7e1fd5445ed82803d36a67a05af1a4b4932ed4fa"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/r3/fallback.ts",
+      "bytes": 6533,
+      "sha256": "08a548ea170f7ef7124aa23572892f39cb103e365c06ab24f68d9a61db880700"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/r3/model.ts",
+      "bytes": 1679,
+      "sha256": "b969c9b0e77746d4482a54ec0028eb8755c36ac714279808513347c52de246b2"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/r3/obligations.ts",
+      "bytes": 8912,
+      "sha256": "c34c3877b249f05935c686634e473341cc4f44a8e96065f68751e69dc7bc79a5"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/r3/owners.ts",
+      "bytes": 20376,
+      "sha256": "6c0483baf1890c3d8bb4445628309eb83816ff522c92bb915245ca8a6fa620e8"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/r3/program-target.ts",
+      "bytes": 4220,
+      "sha256": "c8bad1b22194e31f3a4804ae63be9ae241b120fa9a6d553adc7a95afafd13c6f"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/r3/store.ts",
+      "bytes": 9684,
+      "sha256": "432955377df8c3984d6643e03a3e090912f5724a934b12d546b5399bf524a2d1"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/r3/worker.ts",
+      "bytes": 19541,
+      "sha256": "ef0e24005c7a60c388e0db5ddf305e28ad7c92b8af5fa03aee1d4dfd6547c98e"
+    },
+    {
+      "path": "finnor-os/packages/shared-types/src/allocation.ts",
+      "bytes": 11824,
+      "sha256": "1166ab206a807b532c77a52ddb5ba48392a66c3e29d804b17e239c992be6d4f7"
+    },
+    {
+      "path": "finnor-os/packages/shared-types/src/elicitation-protocol.ts",
+      "bytes": 7532,
+      "sha256": "1b94d8cf6af4aeb862f3db14ae9050f9cfd2848791e52ac420642471778c030f"
+    },
+    {
+      "path": "finnor-os/packages/shared-types/src/index.ts",
+      "bytes": 15912,
+      "sha256": "5c50a3178cf6a2d68177eb2d1a9ccb96e56627c0f2e8c71b64eabf85ba165f7a"
+    },
+    {
+      "path": "finnor-os/scripts/generate-openapi.ts",
+      "bytes": 65589,
+      "sha256": "0ade6d7a0e81188c4902f896b2d27009fcbff2e1476b15196d44edaa06babba8"
+    },
+    {
+      "path": "finnor-os/scripts/r3/README.md",
+      "bytes": 1015,
+      "sha256": "a944c3dbd686b8fae63fb6b66417208f3cbad6c5c4cb8c4a1b0e783f1fbb02e3"
+    },
+    {
+      "path": "finnor-os/scripts/r3/browser-proof.mts",
+      "bytes": 11662,
+      "sha256": "ea129175859fa7f88f3c385bb4624989fabd3eb929d8e37b535ed2d323f1ea20"
+    },
+    {
+      "path": "finnor-os/scripts/r3/browser-tool-proof.mts",
+      "bytes": 9226,
+      "sha256": "e174a618002ef59ee7fa19c116042320d9403d5863f5afb8e56d593e185660d6"
+    },
+    {
+      "path": "finnor-os/scripts/r3/check-runtime.mts",
+      "bytes": 6309,
+      "sha256": "35499fb35ffcac7bd20e5481cb26cbdc27331628f444d88dd18e5145ad54111e"
+    },
+    {
+      "path": "finnor-os/scripts/r3/fixtures.py",
+      "bytes": 8139,
+      "sha256": "9664fe1b0cc081110c4f7790adea6b6b7d8340c0f0871f49ee3eff569a919d14"
+    },
+    {
+      "path": "finnor-os/scripts/r3/http-fixture.mts",
+      "bytes": 16709,
+      "sha256": "7e9bdb80049acd7ce2ba6400866bea1bc8fa0436686efbbfc8193de516935cbf"
+    },
+    {
+      "path": "finnor-os/scripts/r3/licenses/scip-Apache-2.0.txt",
+      "bytes": 11358,
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+    },
+    {
+      "path": "finnor-os/scripts/r3/native-ledger-fixture.mts",
+      "bytes": 8926,
+      "sha256": "90dc4338345dfb16d14b54f3d4d45f96a9e437c696e8d6ea3681579165fd32c7"
+    },
+    {
+      "path": "finnor-os/scripts/r3/pack-handoff.py",
+      "bytes": 5214,
+      "sha256": "a6e9a17f9e20499e980416617af44f125a5522f3d0e5b3ec4dbd4c091e0ea421"
+    },
+    {
+      "path": "finnor-os/scripts/r3/reference.py",
+      "bytes": 3796,
+      "sha256": "f41737d401a45ea7c483d044fa103c0c7ba01b28dbf91626a7ef851257e64470"
+    },
+    {
+      "path": "finnor-os/scripts/r3/requirements.in",
+      "bytes": 111,
+      "sha256": "04133c782d6b0a44fa7317214a12113cc538f17c1dcf18260278591b06b5ee79"
+    },
+    {
+      "path": "finnor-os/scripts/r3/requirements.lock",
+      "bytes": 7871,
+      "sha256": "f57aedec12842fac1863bd5dfee06cb11e92cbe66720d3c7ddcf18c1c2990aac"
+    },
+    {
+      "path": "finnor-os/scripts/r3/run-local.py",
+      "bytes": 3587,
+      "sha256": "579dddd66c23c2fae234493181b37d15632cb9bb74fe57c185a064f5a65d2f15"
+    },
+    {
+      "path": "finnor-os/scripts/r3/run-native.py",
+      "bytes": 13544,
+      "sha256": "dfd37b718aba713225ffe3a5f476f8c6054e4e24b31ba93969c2001b67aa72d0"
+    },
+    {
+      "path": "finnor-os/scripts/r3/run-owner-e2e.mts",
+      "bytes": 81501,
+      "sha256": "93988bbfd02986ad843825dd4809b73f45c15f591616f21194d435b0feaed768"
+    },
+    {
+      "path": "finnor-os/scripts/r3/seal-linux-callee.mjs",
+      "bytes": 1335,
+      "sha256": "7a54a1d2b6c39d5f4fea392ede05f177d234217e54034e6b2ab0252f8813310f"
+    },
+    {
+      "path": "finnor-os/scripts/r3/seal-runtime.py",
+      "bytes": 3989,
+      "sha256": "e6b6585a0c15f6a7ddee5f3c6f1e83c269d563d87815a8991bee90f404772a67"
+    },
+    {
+      "path": "finnor-os/scripts/r3/tsconfig.json",
+      "bytes": 125,
+      "sha256": "1a06a58609ad3d84b0a9d488e6d486f3463db3f536ca775c443bc4bbf56e0632"
+    },
+    {
+      "path": "finnor-os/scripts/r3/upstream-requirements.in",
+      "bytes": 216,
+      "sha256": "bff63504a75f837942a0e62226a3c6b0c8107c96d418557b4a48e6d500721b55"
+    },
+    {
+      "path": "finnor-os/scripts/r3/upstream-requirements.lock",
+      "bytes": 22808,
+      "sha256": "de8fcb749f68380bf6c473902a28db10d047edb4f88486bcad92537b83c256f8"
+    },
+    {
+      "path": "finnor-os/scripts/r3/worker-child.mts",
+      "bytes": 482,
+      "sha256": "708894a47a981f12fa96d81942348175fc944b9b82c8bc2f8518532fd0da8386"
+    },
+    {
+      "path": "finnor-os/scripts/s6/governed-dispatch-proof.mts",
+      "bytes": 52455,
+      "sha256": "70f55ba8d16bacb999b46ef7c3285d5aa51f5f7d8211538506dd90f69244753b"
+    },
+    {
+      "path": "finnor-os/scripts/s6/run-executor-e2e.mts",
+      "bytes": 10923,
+      "sha256": "d00c612f7158ef216b493ab57f7da49e6e5902baf7f1203092c3a04ad3c5546f"
+    },
+    {
+      "path": "infra/deployment/production.contract.json",
+      "bytes": 7265,
+      "sha256": "037d61bf9fe88747d623eb1ca812e5e4a8bdb2875dfa3a5c64fdb2decb5cc6d3"
+    },
+    {
+      "path": "scripts/centropy/generate-capability-manifest.mjs",
+      "bytes": 19476,
+      "sha256": "6e6cb19723929dd0eb69b04ec3f0a83649baa51f9d28c9dd4bd582ca9b4fc3f8"
+    },
+    {
+      "path": "src/components/centropy/canvas/CapitalProgramPanel.tsx",
+      "bytes": 37610,
+      "sha256": "29d17bab16d1bfb94cb93e3c9f284d21d9356f2d2b7b78c0007d0b31fe91ecd1"
+    },
+    {
+      "path": "src/components/centropy/canvas/ElicitationProtocolReview.tsx",
+      "bytes": 19177,
+      "sha256": "7b77accd518c3d09a1b7306cdf00201a9d0782309b76571c5de55056e3e93fd6"
+    },
+    {
+      "path": "src/components/centropy/canvas/capital-program-view.ts",
+      "bytes": 7740,
+      "sha256": "9c1db0a4576c3645b2b754bc4b649a7eb4a51673a6ea6ac07972ac0b6e8f18ff"
+    },
+    {
+      "path": "src/components/centropy/canvas/elicitation-protocol-view.ts",
+      "bytes": 4729,
+      "sha256": "2585d5edab8cb33b94042ead4af73521836504f2f7325f5c8298e4a1865c27d8"
+    },
+    {
+      "path": "src/lib/centropy/capability-manifest.generated.json",
+      "bytes": 379697,
+      "sha256": "df03bbca859d8bed5f8b74a5717e330a947f641ffc782fa356205408b58269a4"
+    },
+    {
+      "path": "src/lib/centropy/openapi-types.ts",
+      "bytes": 910322,
+      "sha256": "2cdc9d63779416c67efb0c14a64720b3a85aad3d7b0d5f9c5baac50e7aa86974"
+    },
+    {
+      "path": "src/lib/jarvis/openapi-types.ts",
+      "bytes": 910322,
+      "sha256": "2cdc9d63779416c67efb0c14a64720b3a85aad3d7b0d5f9c5baac50e7aa86974"
+    }
+  ],
+  "installedRuntime": {
+    "manifestSha256": "913b157e623ffcd9ed7e4aa2a5c3d0628969ebaca889e7c34e210786884e42a7",
+    "identityDigest": "8da8294b5dc08ac50757cda45ad2c0ebbdd36d3b5ffe861387e852d23ba0065f",
+    "producerDigest": "562288abaf59ac568ece66f4f12804cc942ee5fcecb290e47c43e96b05a1cf21",
+    "checkerDigest": "6f44bb6c5dc4dd71d29f70c230247f39a7c8a25f7e723fde73e194e934e4a8ae",
+    "platform": "linux",
+    "Python": "3.11.15",
+    "SCIP": "10.0.0",
+    "PySCIPOpt": "6.0.0",
+    "NumPy": "2.2.6",
+    "numericalSemantics": "FLOAT64_PROPOSALS_EXACT_RECONSTRUCTION_INDEPENDENT_FRACTION_ACCEPTANCE",
+    "exactMode": false,
+    "LinuxImageDigest": "sha256:f9eca7a45b49e45c064dd4d99c56a91be4f07443e0fa24bd3a326769d78d6bbd",
+    "successfulLinuxPredecessor": {
+      "rootId": "completion",
+      "path": "linux-installed/api-runtime-02/installed-identity.json",
+      "sha256": "4f4999294ce94f8d6da9f493dcbe8511c9129f1e6018c907e7ecfc15c34ae9d6"
+    },
+    "LinuxWorkerManifestDigest": "sha256:156b60596b357cdfc9be04ca67ad277aae062d343b6e8930639f01c489c6b2d2",
+    "LinuxFinalInstalledAndOwnerVerified": true,
+    "LinuxImageSourceVector": {
+      "rootId": "completion",
+      "path": "repair-start/final-source-overlay-image-manifest-v21.json",
+      "sha256": "75f7bbe4c956c20c3e1755e205fa86cc5710882329c9048f3a06f7b678a8bb72"
+    },
+    "currentApiInstalledProof": {
+      "status": "PASS",
+      "evidenceClass": "EMPIRICALLY_VERIFIED",
+      "role": "api",
+      "manifestDigest": "sha256:f9eca7a45b49e45c064dd4d99c56a91be4f07443e0fa24bd3a326769d78d6bbd",
+      "sourceVector": "8726eaedb80d21a4fbe3b2fc4364e08ff8f135e442b09d7086bb413d119583fa",
+      "command": {
+        "rootId": "completion",
+        "path": "installed-final-v21-s6-recovery-01/run-command.json",
+        "sha256": "d541845c3eb0a6b44039f9906a7161c49fea8ae212a15181d8596847ceb37151"
+      },
+      "results": {
+        "rootId": "completion",
+        "path": "installed-final-v21-s6-recovery-01/results.json",
+        "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
+      },
+      "installedSourceReadback": {
+        "rootId": "completion",
+        "path": "installed-final-v21-s6-recovery-01/installed-source-readback.json",
+        "sha256": "4744b1d93ae55163784777c5251cf6a5575d368d152272633315090e60369a08"
+      },
+      "upstreamBytecode": {
+        "rootId": "completion",
+        "path": "installed-final-v21-s6-recovery-01/upstream-bytecode-readback.json",
+        "sha256": "877045cc44f3e2a0fecd9b1e81cec7aa8427d74a5cb01a9ba7038235284def68"
+      },
+      "systemTLS": {
+        "rootId": "completion",
+        "path": "installed-final-v21-s6-recovery-01/system-tls-readback.json",
+        "sha256": "1c63fa3bfaa3eaf60d5b9d8f5f4775300569fd4975b4100666d7a56dff501c12"
+      },
+      "compiledAPI": {
+        "rootId": "completion",
+        "path": "installed-final-v21-s6-recovery-01/compiled-api-readback.json",
+        "sha256": "c07ff86ca72226e22200b611e59bd1db7e7f365e49adfdbba3ca46cb4dd2f1f9"
+      },
+      "runtime": {
+        "rootId": "completion",
+        "path": "installed-final-v21-s6-recovery-01/runtime/results.json",
+        "sha256": "e7fae8d57492f9f621d0bd0af2965163ac4065927e05364ad9a00ba512c6577d"
+      },
+      "permissions": {
+        "rootId": "completion",
+        "path": "installed-final-v21-s6-recovery-01/permissions-readback.json",
+        "sha256": "e13e7a026febcebf9c62033de2bd168f9e202f139be2acdc1ca2759984042cf8"
+      },
+      "cases": {
+        "base-local-migration-upgrade-restart": "PASS",
+        "s6-supported-recovery": "PASS"
+      },
+      "defaultServiceCmdStartupClaimed": false,
+      "proofDriverOverridesImageCommand": true,
+      "actualPhysicalRegisteredWorkerDispatchVerified": false,
+      "allCurrentFunctionalCasesAcrossFinalRoles": {
+        "base-local-migration-upgrade-restart": "PASS",
+        "s6-supported-recovery": "PASS",
+        "queued-original-and-r3-physical-restart": "PASS",
+        "authenticated-owner-positive": "PASS",
+        "report-correction-close": "PASS",
+        "separate-acceptance-exact-choice-consumption": "PASS",
+        "actual-fallback-matched-off-on": "PASS",
+        "decline-no-response": "PASS",
+        "rational-original-owner-compatibility": "PASS",
+        "shared-grant-concurrency": "PASS",
+        "cancel-and-partial": "PASS",
+        "sigkill-after-child-acceptance": "PASS",
+        "publication-row-lock-race": "PASS",
+        "currentness-and-p7": "PASS",
+        "native-experience-delivery": "PASS"
+      }
+    },
+    "currentWorkerInstalledProof": {
+      "status": "PASS_CURRENT_NAMED_CASE_CUSTODY",
+      "evidenceClass": "EMPIRICALLY_VERIFIED",
+      "role": "worker",
+      "manifestDigest": "sha256:156b60596b357cdfc9be04ca67ad277aae062d343b6e8930639f01c489c6b2d2",
+      "sourceVector": "8726eaedb80d21a4fbe3b2fc4364e08ff8f135e442b09d7086bb413d119583fa",
+      "command": {
+        "rootId": "completion",
+        "path": "installed-final-v21-worker-owners-01/run-command.json",
+        "sha256": "0feeb282ec20ba38b1a70cb036beb65f44272a2fdb58f2ac0811f0321e5789d2"
+      },
+      "results": {
+        "rootId": "completion",
+        "path": "installed-final-v21-worker-owners-01/results.json",
+        "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+      },
+      "installedSourceReadback": {
+        "rootId": "completion",
+        "path": "installed-final-v21-worker-owners-01/installed-source-readback.json",
+        "sha256": "4744b1d93ae55163784777c5251cf6a5575d368d152272633315090e60369a08"
+      },
+      "upstreamBytecode": {
+        "rootId": "completion",
+        "path": "installed-final-v21-worker-owners-01/upstream-bytecode-readback.json",
+        "sha256": "877045cc44f3e2a0fecd9b1e81cec7aa8427d74a5cb01a9ba7038235284def68"
+      },
+      "systemTLS": {
+        "rootId": "completion",
+        "path": "installed-final-v21-worker-owners-01/system-tls-readback.json",
+        "sha256": "1c63fa3bfaa3eaf60d5b9d8f5f4775300569fd4975b4100666d7a56dff501c12"
+      },
+      "compiledAPI": {
+        "rootId": "completion",
+        "path": "installed-final-v21-worker-owners-01/compiled-api-readback.json",
+        "sha256": "c07ff86ca72226e22200b611e59bd1db7e7f365e49adfdbba3ca46cb4dd2f1f9"
+      },
+      "runtime": {
+        "rootId": "completion",
+        "path": "installed-final-v21-worker-owners-01/runtime/results.json",
+        "sha256": "dc31325b9365142d8563976047bc0ae4773571d1c675970cee12fcdbd5c8ed57"
+      },
+      "permissions": {
+        "rootId": "completion",
+        "path": "installed-final-v21-worker-owners-01/permissions-readback.json",
+        "sha256": "e13e7a026febcebf9c62033de2bd168f9e202f139be2acdc1ca2759984042cf8"
+      },
+      "cases": {
+        "base-local-migration-upgrade-restart": "PASS",
+        "queued-original-and-r3-physical-restart": "PASS",
+        "authenticated-owner-positive": "PASS",
+        "report-correction-close": "PASS",
+        "separate-acceptance-exact-choice-consumption": "PASS",
+        "actual-fallback-matched-off-on": "PASS",
+        "decline-no-response": "PASS",
+        "rational-original-owner-compatibility": "PASS",
+        "shared-grant-concurrency": "PASS",
+        "cancel-and-partial": "PASS",
+        "sigkill-after-child-acceptance": "PASS",
+        "publication-row-lock-race": "PASS",
+        "currentness-and-p7": "PASS",
+        "native-experience-delivery": "PASS"
+      },
+      "defaultServiceCmdStartupClaimed": false,
+      "proofDriverOverridesImageCommand": true,
+      "actualPhysicalRegisteredWorkerDispatchVerified": true,
+      "wholeRunStatus": "INTERRUPTED_INCOMPLETE",
+      "wholeRunPromotedToPass": false,
+      "processExitCode": null,
+      "terminalObservation": {
+        "rootId": "completion",
+        "path": "installed-final-v21-worker-owners-01/resumption-observation.json",
+        "sha256": "763eba8eaaad8637869710f8b8f6930823557189e1095ed16c7aa45cd50f85a0"
+      },
+      "scope": "All required worker named cases on identical final source, compiled API, runtime and image bytes: thirteen complete named cases from the interrupted storage run plus the complete terminal ledger rerun. No single whole worker story is promoted to PASS.",
+      "completedNamedCaseRun": {
+        "status": "PASS_NAMED_CASES_IN_INTERRUPTED_RUN",
+        "evidenceClass": "EMPIRICALLY_VERIFIED",
+        "role": "worker",
+        "manifestDigest": "sha256:156b60596b357cdfc9be04ca67ad277aae062d343b6e8930639f01c489c6b2d2",
+        "sourceVector": "8726eaedb80d21a4fbe3b2fc4364e08ff8f135e442b09d7086bb413d119583fa",
+        "command": {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/run-command.json",
+          "sha256": "0feeb282ec20ba38b1a70cb036beb65f44272a2fdb58f2ac0811f0321e5789d2"
+        },
+        "results": {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        "installedSourceReadback": {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/installed-source-readback.json",
+          "sha256": "4744b1d93ae55163784777c5251cf6a5575d368d152272633315090e60369a08"
+        },
+        "upstreamBytecode": {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/upstream-bytecode-readback.json",
+          "sha256": "877045cc44f3e2a0fecd9b1e81cec7aa8427d74a5cb01a9ba7038235284def68"
+        },
+        "systemTLS": {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/system-tls-readback.json",
+          "sha256": "1c63fa3bfaa3eaf60d5b9d8f5f4775300569fd4975b4100666d7a56dff501c12"
+        },
+        "compiledAPI": {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/compiled-api-readback.json",
+          "sha256": "c07ff86ca72226e22200b611e59bd1db7e7f365e49adfdbba3ca46cb4dd2f1f9"
+        },
+        "runtime": {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/runtime/results.json",
+          "sha256": "dc31325b9365142d8563976047bc0ae4773571d1c675970cee12fcdbd5c8ed57"
+        },
+        "permissions": {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/permissions-readback.json",
+          "sha256": "e13e7a026febcebf9c62033de2bd168f9e202f139be2acdc1ca2759984042cf8"
+        },
+        "cases": {
+          "base-local-migration-upgrade-restart": "PASS",
+          "queued-original-and-r3-physical-restart": "PASS",
+          "authenticated-owner-positive": "PASS",
+          "report-correction-close": "PASS",
+          "separate-acceptance-exact-choice-consumption": "PASS",
+          "actual-fallback-matched-off-on": "PASS",
+          "decline-no-response": "PASS",
+          "rational-original-owner-compatibility": "PASS",
+          "shared-grant-concurrency": "PASS",
+          "cancel-and-partial": "PASS",
+          "sigkill-after-child-acceptance": "PASS",
+          "publication-row-lock-race": "PASS",
+          "currentness-and-p7": "PASS"
+        },
+        "defaultServiceCmdStartupClaimed": false,
+        "proofDriverOverridesImageCommand": true,
+        "actualPhysicalRegisteredWorkerDispatchVerified": true,
+        "wholeRunStatus": "INTERRUPTED_INCOMPLETE",
+        "wholeRunPromotedToPass": false,
+        "processExitCode": null,
+        "terminalObservation": {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/resumption-observation.json",
+          "sha256": "763eba8eaaad8637869710f8b8f6930823557189e1095ed16c7aa45cd50f85a0"
+        },
+        "scope": "Only the thirteen fully recorded named case assertions; the interrupted whole run is not PASS."
+      },
+      "ledgerCompletionRun": {
+        "status": "PASS",
+        "evidenceClass": "EMPIRICALLY_VERIFIED",
+        "role": "worker",
+        "manifestDigest": "sha256:156b60596b357cdfc9be04ca67ad277aae062d343b6e8930639f01c489c6b2d2",
+        "sourceVector": "8726eaedb80d21a4fbe3b2fc4364e08ff8f135e442b09d7086bb413d119583fa",
+        "command": {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/run-command.json",
+          "sha256": "90d829902ed13ccbe05515701dfb1a8d5313a9f74f049a8f399d8502ba2d7340"
+        },
+        "results": {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/results.json",
+          "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
+        },
+        "installedSourceReadback": {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/installed-source-readback.json",
+          "sha256": "4744b1d93ae55163784777c5251cf6a5575d368d152272633315090e60369a08"
+        },
+        "upstreamBytecode": {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/upstream-bytecode-readback.json",
+          "sha256": "877045cc44f3e2a0fecd9b1e81cec7aa8427d74a5cb01a9ba7038235284def68"
+        },
+        "systemTLS": {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/system-tls-readback.json",
+          "sha256": "1c63fa3bfaa3eaf60d5b9d8f5f4775300569fd4975b4100666d7a56dff501c12"
+        },
+        "compiledAPI": {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/compiled-api-readback.json",
+          "sha256": "c07ff86ca72226e22200b611e59bd1db7e7f365e49adfdbba3ca46cb4dd2f1f9"
+        },
+        "runtime": {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/runtime/results.json",
+          "sha256": "e3494cb92d905ae4f6fc69c4dbe14caaa6193946fbf32201d75bc3a8b1311943"
+        },
+        "permissions": {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/permissions-readback.json",
+          "sha256": "e13e7a026febcebf9c62033de2bd168f9e202f139be2acdc1ca2759984042cf8"
+        },
+        "cases": {
+          "base-local-migration-upgrade-restart": "PASS",
+          "native-experience-delivery": "PASS"
+        },
+        "defaultServiceCmdStartupClaimed": false,
+        "proofDriverOverridesImageCommand": true,
+        "actualPhysicalRegisteredWorkerDispatchVerified": false
+      },
+      "decisiveResultReceipts": [
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/results.json",
+          "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
+        }
+      ],
+      "nativeLedgerBoundary": {
+        "rootId": "completion",
+        "path": "installed-final-v21-worker-ledger-03/native-ledger/boundaries.json",
+        "sha256": "30a404381790286b8a8f75973b55d202b1b406eb77570d5c2ca15ecb1262fb6d"
+      },
+      "nativeLedgerCounts": {
+        "origins": 187,
+        "journal": 187,
+        "events": 13,
+        "references": 6
+      }
+    },
+    "retainedHostRuntimeIdentity": {
+      "manifestSha256": "fb0457277e41c6d4d7205b629c43df510887db73aa916e585929c9cacfabb99d",
+      "identityDigest": "87bb8fefe4e9c08fd1e0bb1bd6a6b6faee908f8c69da06b668588bad0d76490a",
+      "producerDigest": "562288abaf59ac568ece66f4f12804cc942ee5fcecb290e47c43e96b05a1cf21",
+      "checkerDigest": "6f44bb6c5dc4dd71d29f70c230247f39a7c8a25f7e723fde73e194e934e4a8ae",
+      "platform": "darwin-arm64",
+      "Python": "3.11.15",
+      "SCIP": "10.0.0",
+      "PySCIPOpt": "6.0.0",
+      "NumPy": "2.2.6"
+    },
+    "currentInstalledIdentity": {
+      "rootId": "completion",
+      "path": "installed-final-v21-s6-recovery-01/runtime/installed-identity.json",
+      "sha256": "4e21994468614de1c86913683728f1a53975c1c8b786f53b17a49cbedc7806eb"
+    }
+  },
+  "generated": {
+    "openapiSha256": "ff1e7baafd8f70b10e7d5454f6f5572148b17696d6d6fbde8dfd9c3d84bb1ada",
+    "capabilitySha256": "df03bbca859d8bed5f8b74a5717e330a947f641ffc782fa356205408b58269a4",
+    "paths": 234,
+    "httpOperations": 357,
+    "plannerOperations": 68,
+    "clientSha256": "2cdc9d63779416c67efb0c14a64720b3a85aad3d7b0d5f9c5baac50e7aa86974",
+    "contributionOnly": "R3_ELICITATION_PROTOCOL_NOT_FULL_EIGHT_ARTIFACT_RELEASE"
+  },
+  "licences": [
+    {
+      "component": "pyscipopt",
+      "license": "MIT",
+      "source": "/Users/paramdave/.codex/worktrees/r3-incentive-rule-synthesis/FINNOR/.r3-runtime/lib/python3.11/site-packages/pyscipopt-6.0.0.dist-info/licenses/LICENSE",
+      "evidenceDigest": "3dff0342b8204e7164b72980caabfa03a7bd5c692db9145eafaec3c80f935429",
+      "path": "/Users/paramdave/.codex/worktrees/r3-incentive-rule-synthesis/FINNOR/.r3-runtime/lib/python3.11/site-packages/pyscipopt-6.0.0.dist-info/licenses/LICENSE",
+      "sha256": "3dff0342b8204e7164b72980caabfa03a7bd5c692db9145eafaec3c80f935429"
+    },
+    {
+      "component": "numpy",
+      "license": "BSD-3-Clause and bundled notices",
+      "source": "/Users/paramdave/.codex/worktrees/r3-incentive-rule-synthesis/FINNOR/.r3-runtime/lib/python3.11/site-packages/numpy-2.2.6.dist-info/LICENSE.txt",
+      "evidenceDigest": "b4ae62887f4dd6e9430b1a8d7017a3ba84c5d7aa630b9d17ed6f25c21b0ec5b4",
+      "path": "/Users/paramdave/.codex/worktrees/r3-incentive-rule-synthesis/FINNOR/.r3-runtime/lib/python3.11/site-packages/numpy-2.2.6.dist-info/LICENSE.txt",
+      "sha256": "b4ae62887f4dd6e9430b1a8d7017a3ba84c5d7aa630b9d17ed6f25c21b0ec5b4"
+    },
+    {
+      "component": "numpy",
+      "license": "BSD-3-Clause and bundled notices",
+      "source": "/Users/paramdave/.codex/worktrees/r3-incentive-rule-synthesis/FINNOR/.r3-runtime/lib/python3.11/site-packages/numpy/_core/include/numpy/random/LICENSE.txt",
+      "evidenceDigest": "fbc539f47d0cf83bc61378080fb873d5c14630126cacbfe754035c3926daa5ec",
+      "path": "/Users/paramdave/.codex/worktrees/r3-incentive-rule-synthesis/FINNOR/.r3-runtime/lib/python3.11/site-packages/numpy/_core/include/numpy/random/LICENSE.txt",
+      "sha256": "fbc539f47d0cf83bc61378080fb873d5c14630126cacbfe754035c3926daa5ec"
+    },
+    {
+      "component": "numpy",
+      "license": "BSD-3-Clause and bundled notices",
+      "source": "/Users/paramdave/.codex/worktrees/r3-incentive-rule-synthesis/FINNOR/.r3-runtime/lib/python3.11/site-packages/numpy/ma/LICENSE",
+      "evidenceDigest": "05f3b88351988ecfad10abe92c0c50e5875c6452d5009a0084cc291551ffcca6",
+      "path": "/Users/paramdave/.codex/worktrees/r3-incentive-rule-synthesis/FINNOR/.r3-runtime/lib/python3.11/site-packages/numpy/ma/LICENSE",
+      "sha256": "05f3b88351988ecfad10abe92c0c50e5875c6452d5009a0084cc291551ffcca6"
+    },
+    {
+      "component": "SCIP 10.0.0",
+      "license": "Apache-2.0",
+      "source": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/r2-authoring/public-research/scip-license.txt",
+      "evidenceDigest": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "path": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/r2-authoring/public-research/scip-license.txt",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+    },
+    {
+      "component": "GCC libgcc/libgfortran/libquadmath (wheel libraries)",
+      "license": "GPL-3.0 with GCC Runtime Library Exception; retain bundled NumPy notices",
+      "source": "numpy-2.2.6.dist-info/LICENSE.txt",
+      "evidenceDigest": "b4ae62887f4dd6e9430b1a8d7017a3ba84c5d7aa630b9d17ed6f25c21b0ec5b4",
+      "path": "/Users/paramdave/.codex/worktrees/r3-incentive-rule-synthesis/FINNOR/.r3-runtime/lib/python3.11/site-packages/numpy-2.2.6.dist-info/LICENSE.txt",
+      "sha256": "b4ae62887f4dd6e9430b1a8d7017a3ba84c5d7aa630b9d17ed6f25c21b0ec5b4"
+    }
+  ],
+  "immutableOutputContribution": "finnor-os/packages/epistemic-runtime/src/incentive-rule-synthesis/output-contracts.ts",
+  "finalHeadAndTree": "release.json; generated from clean two-commit freeze, never self-embedded",
+  "databaseSchema": {
+    "head": "0172_r3_incentive_rule_synthesis.sql",
+    "migrations": 174,
+    "roleIsolation": "0171_RUNTIME_ROLE_ISOLATION_RETAINED",
+    "joinedNumberReserved": false
+  },
+  "completionProductCut": {
+    "adoptedCommit": "3113d354f6b70369ee2f1b72b96820353d56f99f",
+    "finalSourceInstalledAndOwnerVerified": true,
+    "manifest": "completion-verification-plan.json",
+    "actualM3Grammar": "r3-m3-report-extension-v1",
+    "preservedOriginalR2CertificateSemantics": true,
+    "installedLinuxPredecessorIdentity": "5210a802c144fe824ca8ff93b568126789ef84d6a68f3f91112869f64d2bc319",
+    "finalImageDigest": "sha256:f9eca7a45b49e45c064dd4d99c56a91be4f07443e0fa24bd3a326769d78d6bbd",
+    "release": "release.json",
+    "packageGap": null,
+    "predecessorCommit": "370264ae3eb6a56fa98b677a9f857d60e98f53e6",
+    "finalWorkerManifestDigest": "sha256:156b60596b357cdfc9be04ca67ad277aae062d343b6e8930639f01c489c6b2d2",
+    "currentFullImageSourceVectorDigest": "8726eaedb80d21a4fbe3b2fc4364e08ff8f135e442b09d7086bb413d119583fa",
+    "finalImageDigestMeaning": "ACTUALLY_EXECUTED_CURRENT_API_AND_WORKER_MANIFESTS",
+    "originalM3LinuxOrdinaryIsolation": "EMPIRICALLY_VERIFIED_COMPILER_CUT",
+    "finalMountedCandidateFlow": "PASS_ALL_REQUIRED_NAMED_ORACLES",
+    "actualContextSchema": "work-context.v2",
+    "currentGenerationEvidence": {
+      "at": "2026-10-11T03:41:14.682020+00:00",
+      "sourceVector": "8726eaedb80d21a4fbe3b2fc4364e08ff8f135e442b09d7086bb413d119583fa",
+      "sourceFileCount": 1716,
+      "api": {
+        "status": "PASS",
+        "evidenceClass": "EMPIRICALLY_VERIFIED",
+        "role": "api",
+        "manifestDigest": "sha256:f9eca7a45b49e45c064dd4d99c56a91be4f07443e0fa24bd3a326769d78d6bbd",
+        "sourceVector": "8726eaedb80d21a4fbe3b2fc4364e08ff8f135e442b09d7086bb413d119583fa",
+        "command": {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/run-command.json",
+          "sha256": "d541845c3eb0a6b44039f9906a7161c49fea8ae212a15181d8596847ceb37151"
+        },
+        "results": {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/results.json",
+          "sha256": "3da33db3922fc03e27d3a4d9baf7af38f7cfb65166857a660259527110394c15"
+        },
+        "installedSourceReadback": {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/installed-source-readback.json",
+          "sha256": "4744b1d93ae55163784777c5251cf6a5575d368d152272633315090e60369a08"
+        },
+        "upstreamBytecode": {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/upstream-bytecode-readback.json",
+          "sha256": "877045cc44f3e2a0fecd9b1e81cec7aa8427d74a5cb01a9ba7038235284def68"
+        },
+        "systemTLS": {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/system-tls-readback.json",
+          "sha256": "1c63fa3bfaa3eaf60d5b9d8f5f4775300569fd4975b4100666d7a56dff501c12"
+        },
+        "compiledAPI": {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/compiled-api-readback.json",
+          "sha256": "c07ff86ca72226e22200b611e59bd1db7e7f365e49adfdbba3ca46cb4dd2f1f9"
+        },
+        "runtime": {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/runtime/results.json",
+          "sha256": "e7fae8d57492f9f621d0bd0af2965163ac4065927e05364ad9a00ba512c6577d"
+        },
+        "permissions": {
+          "rootId": "completion",
+          "path": "installed-final-v21-s6-recovery-01/permissions-readback.json",
+          "sha256": "e13e7a026febcebf9c62033de2bd168f9e202f139be2acdc1ca2759984042cf8"
+        },
+        "cases": {
+          "base-local-migration-upgrade-restart": "PASS",
+          "s6-supported-recovery": "PASS"
+        },
+        "defaultServiceCmdStartupClaimed": false,
+        "proofDriverOverridesImageCommand": true,
+        "actualPhysicalRegisteredWorkerDispatchVerified": false,
+        "allCurrentFunctionalCasesAcrossFinalRoles": {
+          "base-local-migration-upgrade-restart": "PASS",
+          "s6-supported-recovery": "PASS",
+          "queued-original-and-r3-physical-restart": "PASS",
+          "authenticated-owner-positive": "PASS",
+          "report-correction-close": "PASS",
+          "separate-acceptance-exact-choice-consumption": "PASS",
+          "actual-fallback-matched-off-on": "PASS",
+          "decline-no-response": "PASS",
+          "rational-original-owner-compatibility": "PASS",
+          "shared-grant-concurrency": "PASS",
+          "cancel-and-partial": "PASS",
+          "sigkill-after-child-acceptance": "PASS",
+          "publication-row-lock-race": "PASS",
+          "currentness-and-p7": "PASS",
+          "native-experience-delivery": "PASS"
+        }
+      },
+      "worker": {
+        "status": "PASS_CURRENT_NAMED_CASE_CUSTODY",
+        "evidenceClass": "EMPIRICALLY_VERIFIED",
+        "role": "worker",
+        "manifestDigest": "sha256:156b60596b357cdfc9be04ca67ad277aae062d343b6e8930639f01c489c6b2d2",
+        "sourceVector": "8726eaedb80d21a4fbe3b2fc4364e08ff8f135e442b09d7086bb413d119583fa",
+        "command": {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/run-command.json",
+          "sha256": "0feeb282ec20ba38b1a70cb036beb65f44272a2fdb58f2ac0811f0321e5789d2"
+        },
+        "results": {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/results.json",
+          "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+        },
+        "installedSourceReadback": {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/installed-source-readback.json",
+          "sha256": "4744b1d93ae55163784777c5251cf6a5575d368d152272633315090e60369a08"
+        },
+        "upstreamBytecode": {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/upstream-bytecode-readback.json",
+          "sha256": "877045cc44f3e2a0fecd9b1e81cec7aa8427d74a5cb01a9ba7038235284def68"
+        },
+        "systemTLS": {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/system-tls-readback.json",
+          "sha256": "1c63fa3bfaa3eaf60d5b9d8f5f4775300569fd4975b4100666d7a56dff501c12"
+        },
+        "compiledAPI": {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/compiled-api-readback.json",
+          "sha256": "c07ff86ca72226e22200b611e59bd1db7e7f365e49adfdbba3ca46cb4dd2f1f9"
+        },
+        "runtime": {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/runtime/results.json",
+          "sha256": "dc31325b9365142d8563976047bc0ae4773571d1c675970cee12fcdbd5c8ed57"
+        },
+        "permissions": {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/permissions-readback.json",
+          "sha256": "e13e7a026febcebf9c62033de2bd168f9e202f139be2acdc1ca2759984042cf8"
+        },
+        "cases": {
+          "base-local-migration-upgrade-restart": "PASS",
+          "queued-original-and-r3-physical-restart": "PASS",
+          "authenticated-owner-positive": "PASS",
+          "report-correction-close": "PASS",
+          "separate-acceptance-exact-choice-consumption": "PASS",
+          "actual-fallback-matched-off-on": "PASS",
+          "decline-no-response": "PASS",
+          "rational-original-owner-compatibility": "PASS",
+          "shared-grant-concurrency": "PASS",
+          "cancel-and-partial": "PASS",
+          "sigkill-after-child-acceptance": "PASS",
+          "publication-row-lock-race": "PASS",
+          "currentness-and-p7": "PASS",
+          "native-experience-delivery": "PASS"
+        },
+        "defaultServiceCmdStartupClaimed": false,
+        "proofDriverOverridesImageCommand": true,
+        "actualPhysicalRegisteredWorkerDispatchVerified": true,
+        "wholeRunStatus": "INTERRUPTED_INCOMPLETE",
+        "wholeRunPromotedToPass": false,
+        "processExitCode": null,
+        "terminalObservation": {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-owners-01/resumption-observation.json",
+          "sha256": "763eba8eaaad8637869710f8b8f6930823557189e1095ed16c7aa45cd50f85a0"
+        },
+        "scope": "All required worker named cases on identical final source, compiled API, runtime and image bytes: thirteen complete named cases from the interrupted storage run plus the complete terminal ledger rerun. No single whole worker story is promoted to PASS.",
+        "completedNamedCaseRun": {
+          "status": "PASS_NAMED_CASES_IN_INTERRUPTED_RUN",
+          "evidenceClass": "EMPIRICALLY_VERIFIED",
+          "role": "worker",
+          "manifestDigest": "sha256:156b60596b357cdfc9be04ca67ad277aae062d343b6e8930639f01c489c6b2d2",
+          "sourceVector": "8726eaedb80d21a4fbe3b2fc4364e08ff8f135e442b09d7086bb413d119583fa",
+          "command": {
+            "rootId": "completion",
+            "path": "installed-final-v21-worker-owners-01/run-command.json",
+            "sha256": "0feeb282ec20ba38b1a70cb036beb65f44272a2fdb58f2ac0811f0321e5789d2"
+          },
+          "results": {
+            "rootId": "completion",
+            "path": "installed-final-v21-worker-owners-01/results.json",
+            "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+          },
+          "installedSourceReadback": {
+            "rootId": "completion",
+            "path": "installed-final-v21-worker-owners-01/installed-source-readback.json",
+            "sha256": "4744b1d93ae55163784777c5251cf6a5575d368d152272633315090e60369a08"
+          },
+          "upstreamBytecode": {
+            "rootId": "completion",
+            "path": "installed-final-v21-worker-owners-01/upstream-bytecode-readback.json",
+            "sha256": "877045cc44f3e2a0fecd9b1e81cec7aa8427d74a5cb01a9ba7038235284def68"
+          },
+          "systemTLS": {
+            "rootId": "completion",
+            "path": "installed-final-v21-worker-owners-01/system-tls-readback.json",
+            "sha256": "1c63fa3bfaa3eaf60d5b9d8f5f4775300569fd4975b4100666d7a56dff501c12"
+          },
+          "compiledAPI": {
+            "rootId": "completion",
+            "path": "installed-final-v21-worker-owners-01/compiled-api-readback.json",
+            "sha256": "c07ff86ca72226e22200b611e59bd1db7e7f365e49adfdbba3ca46cb4dd2f1f9"
+          },
+          "runtime": {
+            "rootId": "completion",
+            "path": "installed-final-v21-worker-owners-01/runtime/results.json",
+            "sha256": "dc31325b9365142d8563976047bc0ae4773571d1c675970cee12fcdbd5c8ed57"
+          },
+          "permissions": {
+            "rootId": "completion",
+            "path": "installed-final-v21-worker-owners-01/permissions-readback.json",
+            "sha256": "e13e7a026febcebf9c62033de2bd168f9e202f139be2acdc1ca2759984042cf8"
+          },
+          "cases": {
+            "base-local-migration-upgrade-restart": "PASS",
+            "queued-original-and-r3-physical-restart": "PASS",
+            "authenticated-owner-positive": "PASS",
+            "report-correction-close": "PASS",
+            "separate-acceptance-exact-choice-consumption": "PASS",
+            "actual-fallback-matched-off-on": "PASS",
+            "decline-no-response": "PASS",
+            "rational-original-owner-compatibility": "PASS",
+            "shared-grant-concurrency": "PASS",
+            "cancel-and-partial": "PASS",
+            "sigkill-after-child-acceptance": "PASS",
+            "publication-row-lock-race": "PASS",
+            "currentness-and-p7": "PASS"
+          },
+          "defaultServiceCmdStartupClaimed": false,
+          "proofDriverOverridesImageCommand": true,
+          "actualPhysicalRegisteredWorkerDispatchVerified": true,
+          "wholeRunStatus": "INTERRUPTED_INCOMPLETE",
+          "wholeRunPromotedToPass": false,
+          "processExitCode": null,
+          "terminalObservation": {
+            "rootId": "completion",
+            "path": "installed-final-v21-worker-owners-01/resumption-observation.json",
+            "sha256": "763eba8eaaad8637869710f8b8f6930823557189e1095ed16c7aa45cd50f85a0"
+          },
+          "scope": "Only the thirteen fully recorded named case assertions; the interrupted whole run is not PASS."
+        },
+        "ledgerCompletionRun": {
+          "status": "PASS",
+          "evidenceClass": "EMPIRICALLY_VERIFIED",
+          "role": "worker",
+          "manifestDigest": "sha256:156b60596b357cdfc9be04ca67ad277aae062d343b6e8930639f01c489c6b2d2",
+          "sourceVector": "8726eaedb80d21a4fbe3b2fc4364e08ff8f135e442b09d7086bb413d119583fa",
+          "command": {
+            "rootId": "completion",
+            "path": "installed-final-v21-worker-ledger-03/run-command.json",
+            "sha256": "90d829902ed13ccbe05515701dfb1a8d5313a9f74f049a8f399d8502ba2d7340"
+          },
+          "results": {
+            "rootId": "completion",
+            "path": "installed-final-v21-worker-ledger-03/results.json",
+            "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
+          },
+          "installedSourceReadback": {
+            "rootId": "completion",
+            "path": "installed-final-v21-worker-ledger-03/installed-source-readback.json",
+            "sha256": "4744b1d93ae55163784777c5251cf6a5575d368d152272633315090e60369a08"
+          },
+          "upstreamBytecode": {
+            "rootId": "completion",
+            "path": "installed-final-v21-worker-ledger-03/upstream-bytecode-readback.json",
+            "sha256": "877045cc44f3e2a0fecd9b1e81cec7aa8427d74a5cb01a9ba7038235284def68"
+          },
+          "systemTLS": {
+            "rootId": "completion",
+            "path": "installed-final-v21-worker-ledger-03/system-tls-readback.json",
+            "sha256": "1c63fa3bfaa3eaf60d5b9d8f5f4775300569fd4975b4100666d7a56dff501c12"
+          },
+          "compiledAPI": {
+            "rootId": "completion",
+            "path": "installed-final-v21-worker-ledger-03/compiled-api-readback.json",
+            "sha256": "c07ff86ca72226e22200b611e59bd1db7e7f365e49adfdbba3ca46cb4dd2f1f9"
+          },
+          "runtime": {
+            "rootId": "completion",
+            "path": "installed-final-v21-worker-ledger-03/runtime/results.json",
+            "sha256": "e3494cb92d905ae4f6fc69c4dbe14caaa6193946fbf32201d75bc3a8b1311943"
+          },
+          "permissions": {
+            "rootId": "completion",
+            "path": "installed-final-v21-worker-ledger-03/permissions-readback.json",
+            "sha256": "e13e7a026febcebf9c62033de2bd168f9e202f139be2acdc1ca2759984042cf8"
+          },
+          "cases": {
+            "base-local-migration-upgrade-restart": "PASS",
+            "native-experience-delivery": "PASS"
+          },
+          "defaultServiceCmdStartupClaimed": false,
+          "proofDriverOverridesImageCommand": true,
+          "actualPhysicalRegisteredWorkerDispatchVerified": false
+        },
+        "decisiveResultReceipts": [
+          {
+            "rootId": "completion",
+            "path": "installed-final-v21-worker-owners-01/results.json",
+            "sha256": "5373a769a69539dd7f40d9be31e422db08f688dea5b52babdc13c797d8eb850f"
+          },
+          {
+            "rootId": "completion",
+            "path": "installed-final-v21-worker-ledger-03/results.json",
+            "sha256": "ff5b09b85719231dc10f04cb8237591caefc1376d4063e5d088693936ccb5411"
+          }
+        ],
+        "nativeLedgerBoundary": {
+          "rootId": "completion",
+          "path": "installed-final-v21-worker-ledger-03/native-ledger/boundaries.json",
+          "sha256": "30a404381790286b8a8f75973b55d202b1b406eb77570d5c2ca15ecb1262fb6d"
+        },
+        "nativeLedgerCounts": {
+          "origins": 187,
+          "journal": 187,
+          "events": 13,
+          "references": 6
+        }
+      },
+      "mounted": {
+        "rootId": "completion",
+        "path": "final-staged-mounted-custody.json",
+        "sha256": "0d20318cfdcab8f2cba67fcbb03f37a2f21171926458594168cacf9a9c4712ba"
+      },
+      "canonicalByteCompatibility": {
+        "rootId": "completion",
+        "path": "canonical-stream-compatibility-01/results.json",
+        "sha256": "af38102c17a2103d5342a349b3d3989711089585e420e507d62e4cb0f3a8d703"
+      },
+      "freshLinuxBuild": {
+        "rootId": "completion",
+        "path": "repair-start/native-error-linux-build-command.json",
+        "sha256": "9abc615cdda15b64c1bb300643abeb0d0afe77e6ffa0af89b203ca3da8cefc7d"
+      },
+      "engineeringScope": "R3_ON_PINNED_BASE_ORDINARY_DISPOSABLE_FULL_FOUR_PARTY_MODEL",
+      "protectedOrCombinedQualificationInherited": false
+    }
+  }
+}

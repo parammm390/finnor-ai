@@ -1,6 +1,7 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs"
 import { join, relative, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
+import { verifyCiProcess } from "./ci-process-policy.mjs"
 
 const repoRoot = resolve(fileURLToPath(new URL("../..", import.meta.url)))
 const read = (path) => readFileSync(resolve(repoRoot, path), "utf8")
@@ -8,6 +9,8 @@ const inventory = JSON.parse(read("infra/deployment/production-mutation-inventor
 const contract = JSON.parse(read("infra/deployment/production.contract.json"))
 const fail = (message) => { throw new Error(message) }
 const requireInvariant = (condition, message) => { if (!condition) fail(message) }
+const processFailures = verifyCiProcess(repoRoot).failures
+requireInvariant(processFailures.length === 0, processFailures.join("\n"))
 
 requireInvariant(inventory.schema === "finnor-production-mutation-inventory.v1", "unsupported production mutation inventory schema")
 requireInvariant(inventory.breakGlassRetained === false, "an unreviewed BREAK_GLASS path is retained")
@@ -65,12 +68,11 @@ for (const file of ["deploy-production.mjs", "configure-vercel-realtime.mjs", "d
 requireInvariant(!workflow.includes("codex-governed-release"), "silent local production release source remains")
 requireInvariant(!read("scripts/release/deploy-production.mjs").includes("codex-governed-release"), "local Vercel production deployment fallback remains")
 const vercelDeploy = read("scripts/release/deploy-production.mjs")
-requireInvariant(vercelDeploy.includes('if (previous === "--token") return "***"') && vercelDeploy.includes('if (arg.startsWith("--token=")) return "--token=***"'), "authenticated Vercel command logging does not redact the token")
-requireInvariant(vercelDeploy.includes('return vercelToken ? [...args, "--token", vercelToken] : args'), "Vercel CLI authentication does not use its supported explicit token option")
-requireInvariant(vercelDeploy.includes('run("vercel", withVercelToken(["pull", "--yes", "--environment=production"]), pullDir, withoutSecrets(env))'), "Vercel pull receives unrelated release credentials or writes full secrets into the build workspace")
-requireInvariant(vercelDeploy.includes('run("vercel", withVercelToken(deployArgs), buildDir, withoutSecrets(env))'), "Vercel deploy lacks explicit authenticated authority or leaks unrelated release credentials")
-requireInvariant(!vercelDeploy.includes('withoutSecrets(env, ["VERCEL_TOKEN"])'), "Vercel token remains in a child-process environment after explicit CLI authentication")
-requireInvariant(workflow.includes('vercel pull --yes --environment=production --token "$VERCEL_TOKEN"'), "protected database configuration pull lacks explicit Vercel CLI authentication")
+requireInvariant(vercelDeploy.includes("function withVercelToken(sourceEnv)") && vercelDeploy.includes("VERCEL_TOKEN: vercelToken") && !vercelDeploy.includes("--token"), "Vercel authentication must use a child-process environment variable, never process arguments")
+requireInvariant(vercelDeploy.includes('run("vercel", ["pull", "--yes", "--environment=production"], pullDir, withVercelToken(withoutSecrets(env)))'), "Vercel pull receives unrelated release credentials or writes full secrets into the build workspace")
+requireInvariant(vercelDeploy.includes('run("vercel", deployArgs, buildDir, withVercelToken(withoutSecrets(env)))'), "Vercel deploy lacks isolated environment authentication or leaks unrelated release credentials")
+requireInvariant(!vercelDeploy.includes('withoutSecrets(env, ["VERCEL_TOKEN"])'), "Vercel token remains in a child-process environment outside an authenticated CLI call")
+requireInvariant(workflow.includes("vercel pull --yes --environment=production") && !/vercel pull[^\\n]*--token/.test(workflow), "protected database configuration pull must not expose the Vercel token in process arguments")
 requireInvariant(vercelDeploy.includes('sanitizeVercelBuildEnvironment(join(pullDir, ".vercel", ".env.production.local")') && vercelDeploy.includes('cpSync(join(pullDir, ".vercel"), join(buildDir, ".vercel"), { recursive: true })'), "Vercel build configuration is copied before production secrets are sanitized")
 requireInvariant(workflow.includes('docker logout "$registry"'), "ECR registry credentials are not removed before unrelated release steps")
 requireInvariant((workflow.match(/inline-session-policy:/g) ?? []).length === 4, "AWS ECR, two read-only preflights, and compute mutation sessions are not independently scoped")
@@ -127,7 +129,7 @@ const releaseStepBlock = (stepName) => {
   const next = workflow.indexOf("\n      - ", at + 1)
   return workflow.slice(at, next < 0 ? undefined : next)
 }
-for (const installOrBuild of ["Install pinned Vercel CLI", "Install frontend dependencies", "Install API/workspace dependencies", "Frontend quality gate", "API typecheck gate"]) {
+for (const installOrBuild of ["Install pinned Vercel CLI", "Install frontend dependencies", "Install API/workspace dependencies"]) {
   const block = releaseStepBlock(installOrBuild)
   requireInvariant(!block.includes("${{ secrets."), `${installOrBuild} receives production secrets`)
 }
@@ -140,8 +142,6 @@ for (const unprivilegedStep of [
   "Release governance regression tests",
   "Derive commit-locked release metadata",
   "Verify clean canonical Git source",
-  "Frontend quality gate",
-  "API typecheck gate",
   "Prepare disposable worker smoke database",
   "Build and smoke-test exact worker image without production credentials",
   "Verify product-runtime release policy without production credentials",

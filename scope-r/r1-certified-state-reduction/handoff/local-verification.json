@@ -1,0 +1,297 @@
+{
+  "schema": "finnor.r1.selected-local-verification.v1",
+  "at": "2026-10-09T17:30:06.243648+00:00",
+  "status": "PASS_SELECTED_LOCAL",
+  "checks": [
+    {
+      "id": "exact-reference",
+      "run": "mathematical-05-final",
+      "requiredDriverCases": 42,
+      "driverReceiptSha256": "6c5748e7302cbdb647fdb00399346c7fe99502d70e8eb509b378f678a6a9cd0b",
+      "sourceFreezeSha256": "78e89c1eb761596fb17c8893b9ce2c2fa94dae3c096d5982ff758bef5203da8b",
+      "actualDriverStatus": "PASS_LOCAL",
+      "actualCounts": {
+        "PASS": 42,
+        "FAIL": 0,
+        "NOT_RUN": 0
+      },
+      "actualRelevantSourceMatched": true
+    },
+    {
+      "id": "authenticated-durable-owners",
+      "run": "owners-10-common-final",
+      "requiredDriverCases": 3,
+      "driverReceiptSha256": "08eb1560fbb65829230eb270b1c3d7672f8adcdf47c08b9a49c7874d514eb3fd",
+      "sourceFreezeSha256": "d3035be4ce50078a9f4fa04ed1d99d07f234c02fb22da1793229e36bc86bcd84",
+      "actualDriverStatus": "PASS_LOCAL",
+      "actualCounts": {
+        "PASS": 3,
+        "FAIL": 0,
+        "NOT_RUN": 0
+      },
+      "actualRelevantSourceMatched": true
+    },
+    {
+      "id": "lifecycle-security",
+      "run": "lifecycle-18-owned-worker-final",
+      "requiredDriverCases": 17,
+      "driverReceiptSha256": "c63825ddfc1b55821f1724fe37fd53f55155e012857a5373a7aaab6b389df85a",
+      "sourceFreezeSha256": "a90567f4e986b093925d991d41fddd8ac7bd631b07a4b7a39d88774537a87992",
+      "actualDriverStatus": "PASS_LOCAL",
+      "actualCounts": {
+        "PASS": 17,
+        "FAIL": 0,
+        "NOT_RUN": 0
+      },
+      "actualRelevantSourceMatched": true
+    },
+    {
+      "id": "mounted-capital-work",
+      "run": "browser-11-final",
+      "requiredDriverCases": 1,
+      "mountedUiSteps": 8,
+      "driverReceiptSha256": "1db39c364412d71ae73039e2d0c4aa19bcb33576ec2e9bbeffbd0c19e1f4207f",
+      "sourceFreezeSha256": "fdead37c68571cca254786dcb89034354146277bcbc879bc50ed7e57652ff17d",
+      "actualDriverStatus": "PASS_LOCAL",
+      "actualCounts": {
+        "PASS": 1,
+        "FAIL": 0,
+        "NOT_RUN": 0
+      },
+      "actualRelevantSourceMatched": true
+    },
+    {
+      "id": "affected-s4-s5-p7",
+      "run": "inherited-01",
+      "requiredDriverCases": 3,
+      "nativeCases": 58,
+      "qualification": "Full S4 38 and S5 14; selected P7 six, not all34. Inherited S4/S5 auth bypass stays explicit, not an R1 auth proof.",
+      "driverReceiptSha256": "26bdcb664c8d036e54d00088a740a73e6645d05f70acbae1e37e68af1a214c72",
+      "sourceFreezeSha256": "9258ca1fcc8aa5c41c201fa06450e5e89f37c5c104e8663c4a96c09a3706356b",
+      "actualDriverStatus": "PASS_LOCAL",
+      "actualCounts": {
+        "PASS": 3,
+        "FAIL": 0,
+        "NOT_RUN": 0
+      },
+      "actualRelevantSourceMatched": true,
+      "unchangedInheritedOwnerPins": [
+        {
+          "path": "finnor-os/packages/db/compute-contract.ts",
+          "sha256": "9dfd3a1eb4aa91c57a659aeda66f8737ae9e703d14dd793b41235dff47069bd9",
+          "bytes": 13119
+        },
+        {
+          "path": "finnor-os/packages/db/migration-head.ts",
+          "sha256": "ed9480712c68c0dc0f925d777afcda9a66ebb790f74091d2120f7e899a45b257",
+          "bytes": 282
+        },
+        {
+          "path": "finnor-os/packages/db/migrations-bundle.ts",
+          "sha256": "07ff31e7ba8192fec95f3e0ef2812332deed7d4df97bee9374e96e15f105adc2",
+          "bytes": 1605730
+        },
+        {
+          "path": "finnor-os/packages/db/migrations/0171_r1_certified_state_reduction.sql",
+          "sha256": "2f242bb329384796fc29a768b0aff63d4782ce0efcee5e70bc6a8cd6396e3a68",
+          "bytes": 6552
+        },
+        {
+          "path": "finnor-os/packages/epistemic-runtime/src/allocation-checker.ts",
+          "sha256": "b8bf2fdca05991a919641e41d1799c73c55dc52fd67d7c8f9cee806988fb72fa",
+          "bytes": 31828
+        },
+        {
+          "path": "finnor-os/packages/epistemic-runtime/src/allocation-contracts.ts",
+          "sha256": "0c4c11b1f968adf4775604391c212de3e8c2764ac178229764131b51d8925f97",
+          "bytes": 27589
+        },
+        {
+          "path": "finnor-os/packages/epistemic-runtime/src/allocation-producer.ts",
+          "sha256": "f0ae6527bb77dc4c562c06428b931eca28d374a1bfc0e1a26624dacfee0947f0",
+          "bytes": 19531
+        },
+        {
+          "path": "finnor-os/packages/epistemic-runtime/src/allocation-solver.py",
+          "sha256": "4a199da439c633a1da28eeae9bf1c0faa7ef813c67812732d3cd9f4102d9a653",
+          "bytes": 11283
+        },
+        {
+          "path": "finnor-os/packages/epistemic-runtime/src/allocation-verifier.ts",
+          "sha256": "59c450764a56c6609cdc18a1521a2ad89d85c3a9b6b2a7d57d45ee57e262ecc5",
+          "bytes": 6402
+        },
+        {
+          "path": "finnor-os/packages/epistemic-runtime/src/certified-state-reduction/checker.py",
+          "sha256": "ebeb56bf650e1386f50bf06f857e2b8b24030879426b26f70b02d09c1b75a3f8",
+          "bytes": 27884
+        },
+        {
+          "path": "finnor-os/packages/epistemic-runtime/src/certified-state-reduction/checker.ts",
+          "sha256": "aec6c86e6d5b7acd264364710dbb73b792cb866480f7b710a25e933b3168bf16",
+          "bytes": 4294
+        },
+        {
+          "path": "finnor-os/packages/epistemic-runtime/src/certified-state-reduction/exact.ts",
+          "sha256": "fb13c240829d0941f6db5cfe74a623bc2e3b2680e00ace0fd6e2e71bfda55404",
+          "bytes": 3651
+        },
+        {
+          "path": "finnor-os/packages/epistemic-runtime/src/certified-state-reduction/index.ts",
+          "sha256": "a9bece6350658d81b0c3f471d3c8ff119e7a11e871782e92c4c3061501de7abe",
+          "bytes": 105
+        },
+        {
+          "path": "finnor-os/packages/epistemic-runtime/src/certified-state-reduction/model.ts",
+          "sha256": "8fc5dcd62f49020d50e707d76fcd97f47cef2edc74daedb929998335aca0d198",
+          "bytes": 21318
+        },
+        {
+          "path": "finnor-os/packages/epistemic-runtime/src/certified-state-reduction/producer.ts",
+          "sha256": "75cfa0c84ee6ee574f5e8e8e65a60ee5bbe14ea3243e933b9e0718bf146b63f9",
+          "bytes": 3225
+        },
+        {
+          "path": "finnor-os/packages/epistemic-runtime/src/certified-state-reduction/source-json.ts",
+          "sha256": "766e31da29aa772185448a46a309269970320f31909e2d42d2d390919aff92e3",
+          "bytes": 1985
+        },
+        {
+          "path": "finnor-os/packages/epistemic-runtime/src/contingent-control.ts",
+          "sha256": "a210c8ba22020918612338e47a80cbf5522a905adbad8f9a7089d6f66db0fc1f",
+          "bytes": 30780
+        },
+        {
+          "path": "finnor-os/packages/epistemic-runtime/src/control-contracts.ts",
+          "sha256": "00f0bfe77a4082a62e50b87ad9975c88518e56f3bfb1c849c829748387614be8",
+          "bytes": 15493
+        },
+        {
+          "path": "finnor-os/packages/epistemic-runtime/src/exact-allocation-adapter.ts",
+          "sha256": "7bc87ec6945f161764b16acab13e04548139e7f9041bdd48d94e545c8ef54b56",
+          "bytes": 3871
+        },
+        {
+          "path": "finnor-os/packages/epistemic-runtime/src/exact-continuation.ts",
+          "sha256": "126fce9b11f898edfe765cb9c7a6c755210ed4a13d8aecfdfb7b05ad8e192170",
+          "bytes": 9514
+        },
+        {
+          "path": "finnor-os/packages/epistemic-runtime/src/exact-control-policy.ts",
+          "sha256": "306c71e1ab9810f339e31d0eba17b2c32fb43f3fbcaa878c564202c1e1daf9c4",
+          "bytes": 9384
+        },
+        {
+          "path": "finnor-os/packages/epistemic-runtime/src/index.ts",
+          "sha256": "b4bdc88a7a69a045c3d8f3b906d7ac9d85b9a35effd7d7274804273e806eb346",
+          "bytes": 1094
+        },
+        {
+          "path": "finnor-os/packages/epistemic-runtime/src/intervention-numerics.py",
+          "sha256": "9830e9c3ff39c4789b429d84329784d8e78dcb8f1c571e9020d7d2fddf81d644",
+          "bytes": 18609
+        },
+        {
+          "path": "finnor-os/packages/private-equity/src/enterprise-allocation.ts",
+          "sha256": "c0b6d2f498e4ebddba2a19471943725252651dbf6e85e731de2945a94de6eeb1",
+          "bytes": 35296
+        },
+        {
+          "path": "finnor-os/packages/private-equity/src/enterprise-control.ts",
+          "sha256": "9ac6caf9bb074597f2fad38eacd1aee4838875b9e7533eaf8fb39df66afe73a7",
+          "bytes": 47111
+        },
+        {
+          "path": "finnor-os/packages/private-equity/src/live-recompilation/contracts.ts",
+          "sha256": "af296efae10af32be2bba2486352d34d650ebf7a736163cb2d1ce2591edd29af",
+          "bytes": 3118
+        },
+        {
+          "path": "finnor-os/packages/private-equity/src/live-recompilation/worker.ts",
+          "sha256": "5a9405bcad0fefb5493bc97723c967cc6f90d45ee81bc2e48178c836db97d8c2",
+          "bytes": 11558
+        },
+        {
+          "path": "finnor-os/scripts/s5/owner-fixture.mts",
+          "sha256": "3a538199a4fa71806216b074dfaa5d673f8c4270af0adc4e7d50f63af6f5d498",
+          "bytes": 16442
+        }
+      ],
+      "inheritanceBasis": "Actual unchanged affected owner source/driver hashes and pinned integration parent; R1/common changes proved through final owner/lifecycle/runtime/mounted selections."
+    },
+    {
+      "id": "runtime-migration",
+      "run": "runtime-built-api-07-final",
+      "requiredDriverCases": 1,
+      "qualification": "Actual rebuilt optimized macOS API, physical children, migration and protocol restart; production refusal checks. Linux image separately NOT_RUN locally.",
+      "driverReceiptSha256": "bc0dd0098ce8005c87519788ad6a454f48a81bf51a86101de7236e31613c9a5e",
+      "sourceFreezeSha256": "b89a65f679f991ee06cdaf3162927a94c18843c3b54bda9483ff8dcc983018d0",
+      "actualDriverStatus": "PASS_LOCAL",
+      "actualCounts": {
+        "PASS": 1,
+        "FAIL": 0,
+        "NOT_RUN": 0
+      },
+      "actualRelevantSourceMatched": true
+    },
+    {
+      "id": "release-static-unaffected",
+      "boundary": "release-static",
+      "run": "release-01-final",
+      "requiredCaseIds": [
+        "api-build",
+        "backend-typecheck",
+        "root-lint",
+        "root-workspace",
+        "capability-manifest",
+        "openapi-client",
+        "human-forms",
+        "authz-matrix",
+        "active-action-manifest",
+        "pe-domain-boundary",
+        "native-production-secrets",
+        "root-existing-tests"
+      ],
+      "driverReceiptSha256": "39fc73377448b0767f64ad7b343c6bc7af765d627860445545debbcdc8ee0278",
+      "sourceFreezeSha256": "cd61c90d7091afdfa04845a347a83f3db5a7d53ff28304b9fbb01b9c38585b90",
+      "actualDriverStatus": "FAIL",
+      "actualCounts": {
+        "PASS": 13,
+        "FAIL": 2,
+        "NOT_RUN": 0
+      },
+      "actualRelevantSourceMatched": true
+    },
+    {
+      "id": "release-static-affected-after",
+      "boundary": "release-static",
+      "run": "release-02-affected-final",
+      "requiredCaseIds": [
+        "release-truth",
+        "release-security-policy",
+        "root-build"
+      ],
+      "driverReceiptSha256": "e9bbc856b2258cac39936debea879f1f2b582b48dc07d903055e43f85371ddf5",
+      "sourceFreezeSha256": "c17ff24f382fa06c3044e452600f3bbe584242f30671df0057fa410a4b8c662d",
+      "actualDriverStatus": "PASS_LOCAL",
+      "actualCounts": {
+        "PASS": 3,
+        "FAIL": 0,
+        "NOT_RUN": 12
+      },
+      "actualRelevantSourceMatched": true
+    }
+  ],
+  "privateEvidenceRoot": "/Users/paramdave/.codex/visualizations/2026/10/09/01a11e37-c820-7b10-ad98-b8ffb9ee4bf9/r1-evidence",
+  "protectedQualification": false,
+  "notRun": [
+    "Linux worker-image smoke locally: Docker runtime unavailable",
+    "Hosted mandatory universal CI/gitleaks/OSV: requires published draft head",
+    "Omitted P7 28 of34 cases remain NOT_RUN",
+    "Protected completed-X comparison",
+    "Independent S8 admission/activation",
+    "Mature independently valued S7 H2 field outcome",
+    "All seven other R algorithm implementations"
+  ],
+  "failureRetention": "Initial failures remain actual FAIL/INTERRUPTED; after proof selected only for affected requirement."
+}

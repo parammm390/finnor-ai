@@ -7,9 +7,6 @@ on:
         required: false
         type: boolean
         default: true
-  push:
-    branches: [main]
-    paths: ["package.json", "package-lock.json", "finnor-os/**", ".gitleaks.toml", ".github/workflows/security.yml", "infra/deployment/release-toolchain.json", "scripts/centropy/verify-secret-scan-policy.mjs"]
 permissions:
   actions: read
   contents: read
@@ -18,6 +15,7 @@ jobs:
   gitleaks:
     name: gitleaks
     runs-on: ubuntu-latest
+    timeout-minutes: 8
     permissions:
       contents: read
     steps:
@@ -26,15 +24,9 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
-      - uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITLEAKS_ENABLE_COMMENTS: "false"
-      # The original action only requests the first page of PR commits.
-      # Independently scan all local base-to-head history, including side parents
-      # and a merge's diff against each parent. Never rely on that API page.
+      # One pinned scanner covers the complete history, including side parents
+      # and each merge parent; the overlapping first-page action is unnecessary.
       - name: Scan complete base-to-head history
-        if: ${{ !cancelled() }}
         shell: bash
         env:
           EVENT_NAME: ${{ github.event_name }}
@@ -86,7 +78,16 @@ jobs:
           printf 'Complete history range: %s; reachable commits: %s\n' "$scan_range" "$count"
           "$scanner" git . --config=.gitleaks.toml --redact=100 --no-banner \
             --ignore-gitleaks-allow --gitleaks-ignore-path="${tooling}/no-ignore-file" \
+            --report-format=json --report-path="${RUNNER_TEMP}/finnor-secret-history-redacted.json" \
             --log-opts="-m ${scan_range}"
+      - name: Retain redacted complete-history findings
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: secret-history-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/finnor-secret-history-redacted.json
+          if-no-files-found: warn
+          retention-days: 7
   osv:
     name: osv-scanner
     if: ${{ github.event_name == 'push' || inputs.run_dependency_scan }}
@@ -100,3 +101,8 @@ jobs:
         --lockfile=finnor-os/package-lock.json
         --lockfile=finnor-os/apps/supplier-canary/package-lock.json
         --lockfile=requirements.txt:finnor-os/packages/epistemic-runtime/src/requirements-s5.txt
+        --lockfile=requirements.txt:finnor-os/packages/epistemic-runtime/src/intervention-requirements.txt
+        --lockfile=requirements.txt:finnor-os/scripts/r3/requirements.lock
+        --lockfile=requirements.txt:finnor-os/scripts/r3/upstream-requirements.lock
+        --lockfile=finnor-os/scripts/r3/requirements.lock
+        --lockfile=finnor-os/scripts/r3/upstream-requirements.lock

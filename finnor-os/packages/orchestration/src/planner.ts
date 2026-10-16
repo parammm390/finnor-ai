@@ -46,7 +46,7 @@ import { resolveProviderForPurpose } from "./llm";
 import { groundEntitiesWithDb } from "./compiler";
 import { validateOperationalQueryRequest } from "./fast-read-lane";
 import { authorityResourcesFromPayload, queryAuthorityRequest } from "./authority-runtime";
-import { plannerActionTypesForVertical, planningCapabilitiesForVertical, type PluginRegistry } from "./plugin-registry";
+import type { PluginRegistry } from "./plugin-registry";
 import { plannerContinuationInstruction, plannerMemoryContext, plannerShortTermContext } from "./planner-memory";
 import { clarificationContinuationAction, enforceExternalResearchRoute, safeReadFallbackForInstruction } from "./read-routing";
 import { resolveCompetitorResearch } from "./research-context";
@@ -871,8 +871,9 @@ export class LLMPlanner implements Planner {
     });
   }
 
-  private constraints(tenantContext: TenantContext, verticalKey: string, opts: PlannerOptions): ConstraintSet {
+  private async constraints(tenantContext: TenantContext, verticalKey: string, opts: PlannerOptions): Promise<ConstraintSet> {
     if (opts.constraints) return opts.constraints;
+    const { planningCapabilitiesForVertical } = await import("./plugin-registry");
     const manifest = planningCapabilitiesForVertical(this.plugins, verticalKey);
     return buildConstraintSet({
       tenantId: tenantContext.tenantId,
@@ -890,6 +891,7 @@ export class LLMPlanner implements Planner {
 
   private async snapshot(tenantContext: TenantContext, verticalKey: string, opts: PlannerOptions): Promise<PlanningWorldSnapshot> {
     if (opts.planningSnapshot) return opts.planningSnapshot;
+    const { planningCapabilitiesForVertical } = await import("./plugin-registry");
     const context = opts.operatingContext;
     const manifest = planningCapabilitiesForVertical(this.plugins, verticalKey);
     const policyRows = opts.workId && opts.workInputId && opts.plannerAttemptId
@@ -1114,6 +1116,7 @@ export class LLMPlanner implements Planner {
       return result.success ? [result.data as CandidatePlan] : [];
     });
     const policies = await this.policies(params.tenantContext.tenantId, parsed, params.useDatabase);
+    const { planningCapabilitiesForVertical } = await import("./plugin-registry");
     const manifest = new Map(planningCapabilitiesForVertical(this.plugins, params.verticalKey).map((entry) => [entry.capability, entry]));
 
     const facts: CandidateCompilationFacts[] = [];
@@ -1324,8 +1327,9 @@ export class LLMPlanner implements Planner {
     const verticalKey = await this.verticalKey(tenantContext, opts);
     if (isRetiredWaterAction(instruction)) throw new RetiredVerticalError("water");
     const goal = this.goal(instruction, opts);
-    const constraints = this.constraints(tenantContext, verticalKey, opts);
+    const constraints = await this.constraints(tenantContext, verticalKey, opts);
     const snapshot = await this.snapshot(tenantContext, verticalKey, opts);
+    const { plannerActionTypesForVertical } = await import("./plugin-registry");
     const allActionTypes = plannerActionTypesForVertical(this.plugins, verticalKey);
     // An IC objective has a typed capability path. Keep the proposer focused on
     // that path so a long unrelated action catalog cannot crowd out its exact

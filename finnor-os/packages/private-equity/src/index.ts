@@ -27,6 +27,8 @@ export * from "./enterprise-control";
 export * from "./enterprise-allocation";
 export * from './enterprise-obligations';
 export * from './obligation-contracts';
+// API adapters and native owners must classify the same ledger fault instance.
+export { LedgerFault } from '../../governed-execution/src/protocol';
 export { CLOSING_OPERATIONS, handleClosingOperation, submitClosingProgramme } from "./closing/api";
 export { ClosingError, ClosingIntakeSchema, ClosingProfileSchema } from "./closing/contracts";
 export { closingDigest, compileClosingGraph } from "./closing/compiler";
@@ -57,3 +59,4 @@ export type {ContinuationPatch,ContinuationRef} from './live-recompilation/contr
 // Ordinary P6 consumer port. Admission remains S8-owned and unavailable here.
 export {PROCEDURE_OPERATIONS,PROCEDURE_OPERATION_SCHEMAS,submitProcedureInduction,handleProcedureOperation} from './procedure-induction/api';
 export type {ProcedureCapsule,EpisodeCut} from './procedure-induction/contracts';
+export * from "./r6/verified-capital-compiler";

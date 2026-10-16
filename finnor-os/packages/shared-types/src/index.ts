@@ -20,6 +20,7 @@ export * from "./outcome-packs";
 export * from "./vertical-runtime";
 export * from "./retired-water";
 export * from "./private-equity";
+export * from "./elicitation-protocol";
 export * from "./primary-diligence";
 export * from "./bilateral-opportunities";
 
@@ -62,8 +63,8 @@ export interface AuthorityRequest {
   /** Exact resources for a cohort/batch. Every member must be in scope. */
   resources?: AuthorityResource[];
   amountUsd?: number;
-  /** Exact nonnegative finite decimal. Financial controls must not round their
-   * authorization amount through the legacy binary floating-point field. */
+  /** Exact nonnegative finite decimal, or S5 allocate_resource's canonical
+   * r3q:n/d ledger codec. Financial controls must never round through float. */
   exactAmountUsd?: string;
   /** Exact review binding. The authority owner persists this with the decision;
    * callers still need present capabilities and any configured approval chain. */
@@ -414,4 +415,6 @@ export * from "./durable-obligations";
 export * from "./economic-attribution";
 export * from './evidence-execution';
 export * from './capital-program';
+export * from './certified-state-reduction';
+export * from "./decision-proof";
 export * from './capital-formation';

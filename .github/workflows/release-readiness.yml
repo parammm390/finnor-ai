@@ -1,0 +1,182 @@
+name: release-readiness
+on:
+  workflow_call:
+    inputs:
+      gate:
+        type: string
+        default: all
+      canonical_source:
+        type: boolean
+        default: false
+permissions:
+  contents: read
+jobs:
+  canonical-graph-gate:
+    if: ${{ inputs.gate == 'all' || inputs.gate == 'canonical' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16@sha256:7b822b0aac60967beb1ea5e576b8602c94c300a157d187f385ae3e0da199b90a
+        env:
+          POSTGRES_USER: finnor
+          POSTGRES_PASSWORD: finnor
+          POSTGRES_DB: finnor
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U finnor" --health-interval 5s
+          --health-timeout 5s --health-retries 10
+    env:
+      CI: "true"
+      DATABASE_URL: postgres://finnor:finnor@localhost:5432/finnor
+      FINNOR_CHAOS_TEST_CONTEXT: "1"
+      FINNOR_TEST_MANAGED_EXTENSIONS: omit
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 22.22.3
+          cache: npm
+          cache-dependency-path: finnor-os/package-lock.json
+
+      - name: Install API/workspace dependencies
+        run: npm ci
+        working-directory: finnor-os
+
+      - name: Verify migration bundle parity
+        run: |
+          npm run db:bundle
+          git diff --exit-code packages/db/migrations-bundle.ts
+        working-directory: finnor-os
+
+      - name: Rehearse historical production database upgrade
+        timeout-minutes: 5
+        run: npx tsx scripts/release/rehearse-historical-upgrade.ts
+        working-directory: finnor-os
+
+      - name: Apply schema and checkpointer migrations
+        run: |
+          npm run db:migrate
+          npm run setup:langgraph
+        working-directory: finnor-os
+
+      - name: Seed canonical Private Equity fixture
+        run: npm run db:seed
+        working-directory: finnor-os
+
+      - name: Verify canonical traversal and tenant isolation
+        run: npm test -- --run tests/integration/canonical-company-graph.test.ts tests/integration/tenant-isolation.test.ts tests/integration/restricted-digest-projection.test.ts
+        working-directory: finnor-os
+
+  phase5-readiness:
+    name: phase5-readiness (${{ matrix.certification }})
+    if: ${{ inputs.gate == 'all' || inputs.gate == 'phase5' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        certification: [scope4, scope5]
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16@sha256:7b822b0aac60967beb1ea5e576b8602c94c300a157d187f385ae3e0da199b90a
+        env:
+          POSTGRES_USER: finnor
+          POSTGRES_PASSWORD: finnor
+          POSTGRES_DB: finnor
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U finnor" --health-interval 5s
+          --health-timeout 5s --health-retries 10
+    env:
+      CI: "true"
+      DATABASE_URL: postgres://finnor:finnor@localhost:5432/finnor
+      FINNOR_CHAOS_TEST_CONTEXT: "1"
+      FINNOR_TEST_MANAGED_EXTENSIONS: omit
+      FINNOR_SCOPE2_FORCE_EMBEDDED: "1"
+      FINNOR_RELEASE_SOURCE: github-actions
+      NODE_ENV: test
+      AUTH_DEV_BYPASS: "1"
+      CERTIFICATION_SEED_ALLOWED: "1"
+      CERTIFICATION_TEST_EMAILS: certification@example.invalid
+      CERTIFICATION_TEST_PHONES: "+15550000001"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+        env:
+          ACTIONS_ID_TOKEN_REQUEST_TOKEN: ""
+          ACTIONS_ID_TOKEN_REQUEST_URL: ""
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 22.22.3
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            finnor-os/package-lock.json
+        env:
+          ACTIONS_ID_TOKEN_REQUEST_TOKEN: ""
+          ACTIONS_ID_TOKEN_REQUEST_URL: ""
+
+      - name: Install API/workspace dependencies
+        run: npm ci
+        working-directory: finnor-os
+
+      - name: Derive commit-locked release metadata
+        run: |
+          sha="$(git rev-parse HEAD)"
+          short="${sha:0:12}"
+          echo "RELEASE_COMMIT_SHA=$sha" >> "$GITHUB_ENV"
+          echo "FINNOR_COMMIT_SHA=$sha" >> "$GITHUB_ENV"
+          echo "FINNOR_BUILD_ID=finnor-$short" >> "$GITHUB_ENV"
+          echo "FINNOR_VERSION=0.1.0+$short" >> "$GITHUB_ENV"
+
+      - name: Verify clean canonical release source
+        if: ${{ inputs.canonical_source }}
+        run: npm run release:verify
+        env:
+          FINNOR_ENVIRONMENT: production
+
+      - name: Apply migrations from an empty database
+        run: |
+          npm run db:bundle
+          git diff --exit-code packages/db/migrations-bundle.ts
+          npm run db:migrate
+          npm run setup:langgraph
+        working-directory: finnor-os
+
+      - name: Seed Phase 5 certification fixture
+        run: npm run db:seed
+        working-directory: finnor-os
+
+      - name: Install disposable legacy fixture seam
+        run: npx tsx scripts/install-vertical-fixture-seam.ts
+        working-directory: finnor-os
+
+      # The required source workflow already checks this exact source's types,
+      # generated contracts and ownership. Each standalone certification also
+      # retains all of its own independent predicates.
+      - name: Phase-4 PE Digital Twin certification
+        if: ${{ matrix.certification == 'scope4' }}
+        run: npm run release:scope4-digital-twin
+        working-directory: finnor-os
+        env:
+          FINNOR_CERTIFICATION_OUTPUT_DIR: ${{ runner.temp }}/finnor-readiness-reports
+
+      - name: Scope-5 epistemic impact certification
+        if: ${{ matrix.certification == 'scope5' }}
+        run: npm run release:scope5-epistemic-impact
+        working-directory: finnor-os
+        env:
+          FINNOR_CERTIFICATION_OUTPUT_DIR: ${{ runner.temp }}/finnor-readiness-reports
+
+      - name: Retain disposable readiness certification reports
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: release-readiness-${{ github.run_id }}-${{ github.run_attempt }}-${{ inputs.gate }}-${{ matrix.certification }}
+          path: ${{ runner.temp }}/finnor-readiness-reports/*
+          if-no-files-found: warn
+          retention-days: 7

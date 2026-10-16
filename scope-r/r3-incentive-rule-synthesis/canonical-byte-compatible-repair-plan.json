@@ -1,0 +1,25 @@
+{
+  "schema": "finnor.r3.canonical-byte-compatible-repair.v1",
+  "at": "2026-10-10T20:53:30.299904+00:00",
+  "sourcePreimageSHA256": "40f07163c570c00d405b15148580144bbb09f0d4c12060e9e6c7e2c9c6221efa",
+  "evidence": "Isolated actual installed profile: protocol encode and crypto dominate active CPU; mixed, isolated and actual-read-before-review cuts all review504 at unchanged29s callback limit. All remain FAIL.",
+  "repair": "Accumulate canonical tokens in one buffer and join once, preserving existing lexical locale key order, allowed values, sparse-array behavior,100000-node/64-depth caps and errors. No cross-call cache, normalization, signature or grant change.",
+  "failureModel": [
+    "Different key ordering or integer-key native reorder changes signed bytes",
+    "Changed string escaping, negative zero or array holes changes commitments",
+    "Skipped depth/node counts or unsupported prototypes weakens accepted domain",
+    "Caching mutable content could falsely accept revised values",
+    "Different old signed owner payload/reference/history digests break recovery",
+    "Faster encoding alone may not fix other overhead; actual installed original bounds remain decisive"
+  ],
+  "acceptance": [
+    "Exact old/new bytes or same status/code on all retained source original JSON artifacts and every supported edge/cap failure",
+    "Exact old/new reference preimage digests including native UTF8 strings",
+    "Original raw upstream source copy hashed, independent expected function retained",
+    "Actual final installed owner review/delivery/readback and S6 cold recovery under original timers; runtime/worker positive and old/new restart",
+    "S8 protected admission remains NOT_RUN"
+  ],
+  "unitTestsAdded": false,
+  "independentIsolatedCompatibilityBeforeCode": true,
+  "runSeconds": 900
+}

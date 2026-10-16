@@ -27,7 +27,8 @@ import {
   type Microsoft365SourceScope,
   type MicrosoftSourceCursor,
 } from "@finnor/provider-microsoft365";
-import { recordPrivateEquityProviderEvidenceObservation, type PeMutationContext } from "@finnor/private-equity";
+import { recordPrivateEquityProviderEvidenceObservation } from "@finnor/private-equity/src/microsoft365-mapping";
+import type { PeMutationContext } from "@finnor/private-equity/src/types";
 import { createSourceAdapterRegistry, IntegrationError, logWithTrace } from "@finnor/tools";
 import type { Microsoft365SourceKind, SourceCoverageState, SourceSyncCursor } from "@finnor/shared-types";
 import { and, eq, inArray, sql } from "drizzle-orm";

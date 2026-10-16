@@ -19,7 +19,8 @@ async function exactRecord(c: PoolClient, tenantId: string, ref: VReference) {
       row.digest !== ref.contentDigest || digest(row.body) !== row.digest) throw Error("S6_CURRENT_ACTIVITY_OWNER_BINDING_UNAVAILABLE");
   if (row.body.environment !== "DEVELOPMENT" || process.env.NODE_ENV === "production" ||
       process.env.FINNOR_V1_PROFILE !== "ordinary_disposable") throw Error("S6_BILATERAL_LIVE_PROFILE_NOT_ADMITTED");
-  if (Date.now() < Date.parse(row.body.validFrom ?? "1970-01-01") || Date.now() >= Date.parse(row.body.expiresAt)) throw Error("S6_ACTIVITY_AUTHORITY_EXPIRED");
+  const from=Date.parse(row.body.validFrom ?? "1970-01-01"),until=Date.parse(row.body.expiresAt);
+  if (!Number.isFinite(from) || !Number.isFinite(until) || Date.now() < from || Date.now() >= until) throw Error("S6_ACTIVITY_AUTHORITY_EXPIRED");
   return row.body;
 }
 

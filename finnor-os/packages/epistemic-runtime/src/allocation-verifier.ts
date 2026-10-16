@@ -1,5 +1,5 @@
 import { Worker } from 'node:worker_threads';
-import { createRequire } from 'node:module';
+import * as nativeModule from 'node:module';
 import type { AllocationCertificate, AllocationDualProposal, CanonicalAllocationProblem } from '@finnor/shared-types';
 import { AllocationContractError } from './allocation-contracts';
 
@@ -28,7 +28,7 @@ function createSlot(): Slot {
     resourceLimits: { maxOldGenerationSizeMb: 256 },
     workerData: {
       checkerModule: new URL(source ? './allocation-checker.ts' : './allocation-checker.js', import.meta.url).href,
-      tsxRuntime: source ? createRequire(import.meta.url).resolve('tsx/esm/api') : null,
+      tsxRuntime: source ? Reflect.apply(nativeModule.createRequire, undefined, [import.meta.url]).resolve('tsx/esm/api') : null,
     },
   });
   const slot: Slot = { worker, retiring: false };

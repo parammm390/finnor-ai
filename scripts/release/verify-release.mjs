@@ -1,10 +1,9 @@
-import { execFileSync } from "node:child_process"
-import { worktreeStatus } from "./worktree-state.mjs"
+import { readGit, worktreeStatus } from "./worktree-state.mjs"
 
 const FULL_COMMIT_SHA = /^[0-9a-f]{40}$/i
 
 function git(args) {
-  return execFileSync("git", args, { encoding: "utf8" }).trim()
+  return readGit(args).trim()
 }
 
 function fail(message) {

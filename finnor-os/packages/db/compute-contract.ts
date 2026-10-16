@@ -80,11 +80,18 @@ const tenantLaneClassified = (
 
 /** Exhaustive registry for every production handler registered by the worker. */
 export const PRODUCTION_JOB_CONTRACTS = {
+  run_decision_atlas_v1: tenantFixed("INTERACTIVE", "locally_idempotent", "R7 exact named-family atlas under original episode; independent checker, retained physical costs, no effects or protected admission.", {leaseRecovery:"immediate_after_expiry"}),
+  run_r1_dependency_continuation_v1: tenantFixed("INTERACTIVE", "locally_idempotent", "P7 versioned R1 dependency invalidation patch. Retains original episode, grant and S6 responsibility; no effect or fresh search budget."),
+  run_certified_state_reduction_v1: tenantFixed("INTERACTIVE", "reconcilable", "R1 exact continuation reuse under the original Work/P1 episode and S5 grant; unknown physical work reconciles without automatic resubmission."),
+  run_identification_plan_v1: tenantFixed("INTERACTIVE", "locally_idempotent", "R4 finite causal acquisition-menu search and independent checking under one original S4/S5 grant; no physical acquisition retry."),
   advance_closing_programme_v1: tenantFixed("INTERACTIVE", "durably_effect_guarded", "V3 exact original-spec maintained closing controller; native S6 children and retained S5 exposure."),
   run_capital_formation_v1: tenantFixed("INTERACTIVE", "durably_effect_guarded", "Original bounded financing programme; canonical provider identities, status-only possible-delivery recovery and independent source classification. No live admission."),
   evaluate_live_control_v1: tenantFixed("INTERACTIVE", "locally_idempotent", "Finite current native V5 consequences under the original S5/P1 grant; no reservation or effect authority.", { leaseRecovery: "immediate_after_expiry" }),
   run_counterexample_search_v1: tenantFixed("INTERACTIVE", "locally_idempotent", "Frozen bounded current candidate/owner search for accepted Work. No live effects or protected admission.", {leaseRecovery:"immediate_after_expiry"}),
   run_capital_program_v2: tenantFixed("INTERACTIVE", "locally_idempotent", "Bounded nonconsequential economic proposals under exact Work/Plan; no allocation or admission granted.", {protocolVersions:[2],leaseRecovery:"immediate_after_expiry"}),
+  run_capital_program_r2_v1: tenantFixed("INTERACTIVE", "locally_idempotent", "R2 complete exact finite programme search; original deadline, shared serial native grant, no effect or admission authority.", {protocolVersions:[2],leaseRecovery:"immediate_after_expiry"}),
+  run_coalition_programme_v1: tenantFixed("INTERACTIVE", "locally_idempotent", "R5 complete joint coalition/programme/grant/division search under the original shared serial native permit; no effect, consent or admission authority.", {protocolVersions:[2],leaseRecovery:"immediate_after_expiry"}),
+  run_incentive_rule_synthesis_v1: tenantFixed("INTERACTIVE", "locally_idempotent", "R3 complete finite proposed mechanism and independent checker under the original grant/deadline with accepted-child recovery; no consent, effect or admission authority.", {leaseRecovery:"immediate_after_expiry"}),
   run_procedure_induction_v1: tenantFixed("INTERACTIVE", "locally_idempotent", "P6 ordinary structural induction, no custody/admission grant."),
   run_programme_continuation_v1: tenantFixed("INTERACTIVE", "locally_idempotent", "P7 ordinary source-bound continuation under the original P1 episode; no effect or resource authority."),
   run_interface_acquisition_v1: tenantFixed("INTERACTIVE", "reconcilable", "P5 bounded disposable acquisition; possible egress retains original identity and read-only recovery."),

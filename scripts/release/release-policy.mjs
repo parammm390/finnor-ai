@@ -1,8 +1,7 @@
-import { execFileSync } from "node:child_process"
 import { readFileSync } from "node:fs"
 import { resolve } from "node:path"
 import { fileURLToPath } from "node:url"
-import { worktreeStatus } from "./worktree-state.mjs"
+import { readGit, worktreeStatus } from "./worktree-state.mjs"
 
 export const FULL_COMMIT_SHA = /^[0-9a-f]{40}$/
 export const CONTRACT_PATH = resolve(fileURLToPath(new URL("../../infra/deployment/production.contract.json", import.meta.url)))
@@ -157,7 +156,7 @@ export function assertRuntimeParity(contract, expected, observed) {
 }
 
 export function readGitRelease(repoRoot = process.cwd(), contract = loadContract()) {
-  const git = (args) => execFileSync("git", args, { cwd: repoRoot, encoding: "utf8" }).trim()
+  const git = (args) => readGit(args, repoRoot).trim()
   const head = git(["rev-parse", "HEAD"]).toLowerCase()
   const dirty = worktreeStatus(repoRoot)
   const { remote, branch } = contract.canonicalGit

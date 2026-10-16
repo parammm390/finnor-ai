@@ -1,0 +1,9 @@
+{
+  "provider": "CodeRabbit CLI 0.8.2",
+  "baseCommit": "3ee2c8f51fff9d48caafb8599252ab059548a3bd",
+  "command": "coderabbit review --agent --base-commit 3ee2c8f51fff9d48caafb8599252ab059548a3bd",
+  "scope": "committed and tracked uncommitted changes",
+  "outcome": "completed",
+  "issues": 0,
+  "runtimeCorrectnessProven": false
+}

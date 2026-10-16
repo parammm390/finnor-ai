@@ -134,7 +134,7 @@ const doctrinePatterns = [
   ["retired_workflow", /\b(?:lead_to_water_test|invoice_to_cash|maintenance_agreement(?:_renewal)?|proposal_to_installation)\b/i],
   ["retired_query", /\b(?:customer_lookup|customer_cohort|schedule_range|money_summary|inventory_status|party_availability)\b/i],
   ["retired_action", /\b(?:schedule_water_test|assign_lead_to_technician|assign_technician_to_visit|size_equipment_for_household|call_overdue_invoices|answer_water_question)\b/i],
-  ["field_dispatch", /(?:technician|field service|route|homeowner|household).{0,60}\bdispatch(?:er|ing)?\b|\bdispatch(?:er|ing)?\b.{0,60}(?:technician|field service|route|homeowner|household)/i],
+  ["field_dispatch", /(?:technician|field service|homeowner|household).{0,60}\bdispatch(?:er|ing)?\b|\bdispatch(?:er|ing)?\b.{0,60}(?:technician|field service|homeowner|household)|\b(?:route[-_ ]technician|technician[-_ ]route)\b/i],
 ]
 
 const matchedAllowlist = new Set()

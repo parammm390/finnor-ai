@@ -1,0 +1,16 @@
+{
+  "schema": "finnor.r3.mounted-native-browser-followup.v1",
+  "registeredAt": "2026-10-10T16:52:33.463582+00:00",
+  "precondition": "User confirmed Mac unlocked; native Chrome control works, extension tab binding still times out",
+  "runCount": 1,
+  "outerSeconds": 900,
+  "browserSeconds": 600,
+  "case": "mounted-work-reload-switch",
+  "fixture": "Actual root-v2 programme target and separate physical restricted worker from retained prepare-candidate-browser.py variant",
+  "oracle": "243 exact independently specified table cells; candidate-bound signed request/SQL/readback; actual reload and delayed Work, foreign tenant, source revision clearing",
+  "oldFailedInterruptedCutsRetained": true,
+  "expiredGrantsResumed": false,
+  "originalEpisodeFloorsChanged": false,
+  "businessEffectsAuthorized": false,
+  "uiSurface": "Native Chrome through cua_repl only"
+}

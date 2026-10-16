@@ -1,7 +1,7 @@
 // process_instruction job: the async entry point for Vapi transcripts — runs the full
 // Planner → gate → Executor → Reflection pipeline under the tenant's context.
 
-import { FinnorOrchestrator } from "@finnor/orchestration";
+import type { FinnorOrchestrator } from "@finnor/orchestration";
 import { PLACEHOLDER_NEEDS_REAL_VALUE } from "@finnor/shared-types";
 import type { JobHandler } from "../queue";
 
@@ -14,7 +14,10 @@ export const processInstruction: JobHandler = async (payload) => {
     throw new Error("process_instruction: tenantId is missing from the durable Work/job payload");
   }
   if (!instruction) throw new Error("process_instruction requires an instruction");
-  orchestrator ??= new FinnorOrchestrator();
+  if (!orchestrator) {
+    const { FinnorOrchestrator } = await import("@finnor/orchestration");
+    orchestrator = new FinnorOrchestrator();
+  }
   // A2.T1: forward the trace id the webhook route minted at intake (queue.ts's own
   // convention, payload._correlationId) into the orchestrator's ctx — otherwise the
   // thread that runs live in Sentry/receipts for the synchronous vapi tool-calls path

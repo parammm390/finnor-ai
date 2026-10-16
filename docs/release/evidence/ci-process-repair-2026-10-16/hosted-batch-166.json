@@ -1,0 +1,40 @@
+{
+  "schema": "finnor.hosted-source-failure.v1",
+  "runId": 38856669688,
+  "head": "ba0835cee9eab7d59e7fb93b2bca6b46a905850a",
+  "testedMerge": "3a705c4369cd8313551f5bf9efccfad8c92e61b2",
+  "result": "FAIL",
+  "originalEvidence": [
+    "2026-10-16T05:38:31.9440906Z Generated openapi.json with 294 active/quarantine paths.",
+    "2026-10-16T05:39:17.2684885Z Error: Committed action manifest does not match current source; regenerate with npm run release:manifest -- --write.",
+    "2026-10-16T05:40:05.3034475Z \u001b[36;1mif (failures.length) throw new Error(\"Source checks failed: \" + failures.join(\", \"))\u001b[0m",
+    "2026-10-16T05:40:05.3097904Z   SHARDS_OUTCOME: success",
+    "2026-10-16T05:40:05.3098138Z   WORKSPACE_OUTCOME: success",
+    "2026-10-16T05:40:05.3098381Z   BACKEND_OUTCOME: failure",
+    "2026-10-16T05:40:05.3098617Z   TYPES_OUTCOME: success",
+    "2026-10-16T05:40:05.3098842Z   INVENTORY_OUTCOME: success",
+    "2026-10-16T05:40:05.3099072Z   LINT_OUTCOME: success",
+    "2026-10-16T05:40:05.3099289Z   DRIFT_OUTCOME: success",
+    "2026-10-16T05:40:05.3457664Z if (failures.length) throw new Error(\"Source checks failed: \" + failures.join(\", \"))",
+    "2026-10-16T05:40:05.3459659Z Error: Source checks failed: backend"
+  ],
+  "artifact": {
+    "id": 12027293025,
+    "sha256": "2b0a5ec3091550247c40b962a23fca5bb8b4404347e1e7beae52b46dc0086dbe"
+  },
+  "correction": "Regenerate action manifest exact source-line references; preserve 46 action semantics. Add every existing generated-source contract to ordinary local release:preflight before release fixture work.",
+  "localAffectedCommand": "npm run release:generated-preflight",
+  "localAffectedResult": "PASS",
+  "productionMutationInventory": "PASS",
+  "runtimeSourceChangedByCorrection": false,
+  "liveRoleRestriction": {
+    "applied": true,
+    "oneInlinePolicy": true,
+    "twoBootstrapPoliciesRemoved": true,
+    "preimagesRecoverable": true,
+    "policySource": "deduplicated union of four candidate production workflow session policies",
+    "validationFindings": 0,
+    "allowDenyCases": 13,
+    "cloudformationTemplateUnchanged": true
+  }
+}

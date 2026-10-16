@@ -1,8 +1,9 @@
 import {randomUUID,createPrivateKey,sign} from 'node:crypto';
 import {fileURLToPath} from 'node:url';
 import {withTenantTransaction} from '@finnor/db';
+import {submitCommand} from '@finnor/workflow-runtime/commands';
+import {cancelRun} from '@finnor/workflow-runtime/run-controls';
 import {canExerciseAuthorityTx} from '@finnor/authority';
-import {submitCommand,cancelRun} from '@finnor/workflow-runtime';
 import type pg from 'pg';
 import type {DurableObligation,ExperimentRef,BusinessEffectSet} from '@finnor/shared-types';
 import {epistemicHash,immutableControl,ExperimentRefSchema} from '@finnor/epistemic-runtime';
@@ -19,7 +20,13 @@ import {brokerPrivateFile,brokerSourceDigests} from '../../governed-execution/sr
 import {canonical} from '../../governed-execution/src/protocol';
 import {s6AdapterContract} from '../../governed-execution/src/adapter-contract';
 import {readS5GovernedBudgets,recordS5GovernedResourceUnits} from './allocation-store';
+export {prepareEnterpriseCoalitionSchedule,readEnterpriseCoalitionSchedule,recordEnterpriseCoalitionConsent,readEnterpriseCoalitionConsentHistory} from './capital-program/r5-obligations';
 const actor=(ctx:PeMutationContext)=>ctx.auth.employeeId??ctx.auth.userId;
+/** Versioned ordinary proposed schedules, never mapped to the JSON effect method. */
+export async function prepareEnterpriseElicitationHandoff(ctx:PeMutationContext,input:unknown){
+ const parsed=ObligationOperationSchemas['prepare-elicitation'].parse(input);
+ return (await import('./r3/obligations')).prepareR3OwnerHandoff(ctx,parsed);
+}
 const denied=()=>new PeDomainError('PE_ENTITY_NOT_FOUND','Permitted S6 obligation context is unavailable');
 const same=(a:unknown,b:unknown)=>epistemicHash(a)===epistemicHash(b);
 const authoritySourcePaths=()=>['enterprise-obligations.ts','enterprise-allocation.ts','enterprise-control.ts','enterprise-beliefs.ts','allocation-store.ts','obligation-contracts.ts'].map(name=>fileURLToPath(new URL(name,import.meta.url))).concat(fileURLToPath(new URL('../../../apps/api/app/api/obligations/[operation]/route.ts',import.meta.url)));

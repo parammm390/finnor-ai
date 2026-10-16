@@ -1,0 +1,50 @@
+{
+  "schema": "finnor.ci-batch-source-checks.v1",
+  "scope": "local candidate before consolidated PR update",
+  "hostedAcceptance": false,
+  "unitSuites": [
+    {
+      "name": "root-unit-results.json",
+      "sha256": "9807d57e264b667f75bf9d9c4acdaee3b2c4cd0ac4ff87a627ef1c9c7c45f010",
+      "success": true,
+      "total": 11,
+      "passed": 11,
+      "failed": 0,
+      "pending": 0
+    },
+    {
+      "name": "api-intake-unit-results.json",
+      "sha256": "321b53b58e01dea4c734d9d01bb357541638f9bea98db6cc519e53c8deff5828",
+      "success": true,
+      "total": 12,
+      "passed": 12,
+      "failed": 0,
+      "pending": 0
+    }
+  ],
+  "checks": [
+    "workspace contract",
+    "OpenAPI client",
+    "capability manifest",
+    "human forms",
+    "deployment truth",
+    "production mutation inventory",
+    "contrast palette",
+    "23 process/release/verdict cases, including six invalid owner-export targets",
+    "29 owner resolutions and complete 219-file shard inventory"
+  ],
+  "allListedChecksPassed": true,
+  "rerun": [
+    "npm run test:unit",
+    "cd finnor-os && node node_modules/vitest/vitest.mjs run tests/unit/action-route-operational-controls.test.ts tests/unit/production-correctness-intake.test.ts",
+    "node scripts/release/verify-test-shards.mjs",
+    "node --test scripts/release/ci-process.e2e.test.mjs scripts/release/release-policy.test.mjs scripts/release/pr-verdict-policy.test.mjs"
+  ],
+  "unverified": [
+    "actual Linux worker image",
+    "complete database-backed suite",
+    "compiled production artifact runtime",
+    "readiness certificates",
+    "mounted Work"
+  ]
+}

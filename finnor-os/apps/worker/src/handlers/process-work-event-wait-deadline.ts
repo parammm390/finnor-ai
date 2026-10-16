@@ -1,4 +1,4 @@
-import { processWorkEventWaitDeadline } from "@finnor/orchestration";
+import { processWorkEventWaitDeadline } from "@finnor/orchestration/event-waits";
 import type { JobHandler } from "../queue";
 
 /** Targeted durable timer. It can only persist deadline.reached, atomically time out

@@ -1,5 +1,6 @@
 import {resumeHarnessFromNativeWake} from '@finnor/private-equity/src/program-synthesis/wake';
-import { FinnorOrchestrator, recoverRunnableObjectives } from "@finnor/orchestration";
+import type { FinnorOrchestrator } from "@finnor/orchestration";
+import { recoverRunnableObjectives } from "@finnor/orchestration/objective-loop";
 import type { JobHandler } from "../queue";
 
 let orchestrator: FinnorOrchestrator | null = null;
@@ -10,7 +11,10 @@ export const runObjectiveIteration: JobHandler = async (payload, execution) => {
   const objectiveLoopId = String(payload.objectiveLoopId ?? "");
   if (!tenantId || !workId || !objectiveLoopId) throw new Error("run_objective_iteration requires tenantId, workId, and objectiveLoopId");
   await resumeHarnessFromNativeWake(payload,execution);
-  orchestrator ??= new FinnorOrchestrator();
+  if (!orchestrator) {
+    const { FinnorOrchestrator } = await import("@finnor/orchestration");
+    orchestrator = new FinnorOrchestrator();
+  }
   await orchestrator.runObjectiveIteration({
     tenantId,
     workId,

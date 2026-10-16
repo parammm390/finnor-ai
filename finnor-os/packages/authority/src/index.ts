@@ -113,6 +113,21 @@ function withinAmount(request: AuthorityRequest, ceiling: string | null): boolea
   if (exact === undefined && request.amountUsd === undefined && ceiling !== null &&
     request.capability.endsWith(":execute_closing_operation")) return false;
   if (exact === undefined) return request.amountUsd === undefined || ceiling === null || request.amountUsd <= Number(ceiling);
+  // S5's checked ledger has a versioned exact rational codec. Other financial
+  // capabilities retain their finite-decimal domain; no permission is inferred.
+  if (exact.startsWith('r3q:')) {
+    if (request.capability !== 'action:allocate_resource') return false;
+    const match = /^r3q:(0|[1-9]\d{0,127})\/([1-9]\d{0,127})$/.exec(exact);
+    if (!match) return false;
+    const numerator = BigInt(match[1]!), denominator = BigInt(match[2]!);
+    let a = numerator, b = denominator;
+    while (b) { const remainder = a % b; a = b; b = remainder; }
+    if (a !== 1n || numerator > 10n ** 30n * denominator) return false;
+    if (ceiling === null) return true;
+    if (!/^\d+(?:\.\d+)?$/.test(ceiling) || ceiling.length > 160) return false;
+    const [whole, fraction = ''] = ceiling.split('.');
+    return numerator * 10n ** BigInt(fraction.length) <= BigInt(whole! + fraction) * denominator;
+  }
   if (!/^(?:0|[1-9]\d*)(?:\.\d+)?$/.test(exact) || exact.length > 160) return false;
   if (ceiling === null) return true;
   if (!/^\d+(?:\.\d+)?$/.test(ceiling) || ceiling.length > 160) return false;
@@ -125,6 +140,8 @@ function withinAmount(request: AuthorityRequest, ceiling: string | null): boolea
 /** Share the actual revision/employee fence with a reader or writer's existing
  * transaction. Do not open another hosted-pool connection while holding it. */
 export async function lockCurrentAuthorityTx(ctx: TenantContext, client: PoolClient, lock = true): Promise<number> {
+  if (!UUID.test(ctx.employeeId ?? ctx.userId) || ctx.employeeId && ctx.employeeId !== ctx.userId)
+    throw new Error("CURRENT_CANONICAL_AUTHORITY_UNAVAILABLE");
   const result = await client.query<{ revision: number }>(
     `SELECT a.revision FROM finnor_os.authority_states a
        JOIN finnor_os.users u ON u.tenant_id=a.tenant_id

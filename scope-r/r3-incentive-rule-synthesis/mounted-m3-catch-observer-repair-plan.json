@@ -1,0 +1,10 @@
+{
+  "schema": "finnor.r3.mounted-catch-observer-initialization-fix.v1",
+  "registeredAt": "2026-10-10T18:04:25.043789+00:00",
+  "causalFailure": "Previous observer accessed later hash constant while enabling debugger before fixture startup. Actual runtime/owner source untouched; prior failing initialization retained.",
+  "runs": 1,
+  "outerSeconds": 900,
+  "browserSeconds": 600,
+  "inheritedPlan": "mounted-m3-catch-diagnosis-plan.json",
+  "acceptance": "Initialize observer fingerprint directly with imported createHash; retain actual catch breakpoint before any owner/browser request. Original workflow and budgets unchanged."
+}

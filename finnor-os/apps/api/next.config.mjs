@@ -90,6 +90,7 @@ const nextConfig = {
       "../../packages/private-equity/src/capital-formation/method-files.json",
       "../../packages/**/package.json", "../../packages/source-custody/index.cjs",
       "../../packages/**/fixtures/*.json", "../../scripts/p3/**/*.{ts,mts,cjs,mjs}",
+      "../../scripts/r4/requirements.lock",
       "../../scripts/release/action-hardening-spec.ts",
       "../../../scripts/release/production-mutation-guard.mjs",
       "../../apps/worker/src/**/*.ts", "./app/api/**/*.ts",

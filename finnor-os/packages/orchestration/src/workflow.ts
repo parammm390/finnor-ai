@@ -1,5 +1,5 @@
 import { domainActions, withTenant } from "@finnor/db";
-import { appendEpisode } from "@finnor/memory";
+import { appendEpisode } from "@finnor/memory/episodic";
 import { isRetiredWaterAction, RetiredVerticalError } from "@finnor/shared-types";
 import { and, eq } from "drizzle-orm";
 

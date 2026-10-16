@@ -1,0 +1,171 @@
+{
+  "schema": "finnor.r7.serial-proposals.v1",
+  "base": "4a90ed33ca96afa252c51f511fea279e0034cddb",
+  "lead": "99ae926e0e4487e6d24fe23a4f11463d87191318",
+  "orderedPatches": [
+    "010-canonical-s5-ports.patch",
+    "020-canonical-resource-kernel.patch",
+    "030-durable-job.patch",
+    "040-api-dispatch.patch",
+    "050-capital-work-mount.patch",
+    "060-api-catalog-sources.patch"
+  ],
+  "records": [
+    {
+      "path": "finnor-os/packages/private-equity/src/allocation-store.ts",
+      "baseBlob": "abed6106566c86931a6416552f99a8b998f81c3a",
+      "baseSha256": "571cdc2d4cf8b5ec2c570c5245851b6f1a8fe6b2f8a2a61c05fc6889c7e3fa8b",
+      "postBlob": "95b8293e6ed790c8dd5291ce4d3576aa25746e13",
+      "postSha256": "045f6d41070cdc230d844ac80141b08062e14303fa1bd9d21889020b7994b275",
+      "postBytes": 45133,
+      "patch": "010-canonical-s5-ports.patch",
+      "status": "PROPOSED_NOT_APPLIED_TO_CANONICAL_WORKTREE"
+    },
+    {
+      "path": "finnor-os/packages/epistemic-runtime/src/allocation-contracts.ts",
+      "baseBlob": "e03d77b1a45f7232865848255e76b76a93e37ef6",
+      "baseSha256": "0c4c11b1f968adf4775604391c212de3e8c2764ac178229764131b51d8925f97",
+      "postBlob": "36aca7ea6ff541e4543aa3bddda94e89ee7d29fe",
+      "postSha256": "2f4675c2f859cf93f441472c4552e1c9ede7325f304e6470d7e26cb71d8cd849",
+      "postBytes": 27726,
+      "patch": "010-canonical-s5-ports.patch",
+      "status": "PROPOSED_NOT_APPLIED_TO_CANONICAL_WORKTREE"
+    },
+    {
+      "path": "finnor-os/packages/epistemic-runtime/src/allocation-checker.ts",
+      "baseBlob": "42f615a1ca7d793d93ae6a6ddb04808782500124",
+      "baseSha256": "b8bf2fdca05991a919641e41d1799c73c55dc52fd67d7c8f9cee806988fb72fa",
+      "postBlob": "deecd178c7f366a3c59f7726e7050cd7e11d97fc",
+      "postSha256": "9078e65bbc68b565a764555e6d0672179350a9c1a79a3402a9be03f3af878914",
+      "postBytes": 36758,
+      "patch": "020-canonical-resource-kernel.patch",
+      "status": "PROPOSED_NOT_APPLIED_TO_CANONICAL_WORKTREE"
+    },
+    {
+      "path": "finnor-os/packages/db/compute-contract.ts",
+      "baseBlob": "496bc49a23c847e76b836d8d88ad1a12c9b42395",
+      "baseSha256": "51a3c7415e6a1845cde3104cce03c7cef40de27cd58d37601755fa2305fda92b",
+      "postBlob": "a51be6a20ea9e9c0fc9e4abb74f152536f4e8c2f",
+      "postSha256": "0ea5302fafbcb7b5f1436a362497b8627a0a85ddc8c3cf25f7f68eaefb2ca31d",
+      "postBytes": 13853,
+      "patch": "030-durable-job.patch",
+      "status": "PROPOSED_NOT_APPLIED_TO_CANONICAL_WORKTREE"
+    },
+    {
+      "path": "finnor-os/apps/worker/src/index.ts",
+      "baseBlob": "ba8cb16c482ff1a4cb05a547cd29a3480c85c66f",
+      "baseSha256": "504bf0fee1f15f501900b55da5e8f46e89531e7797ec902bbe734f530c3fa6bc",
+      "postBlob": "5aa1158dda7d6d54fa43674ac32728240e8ad486",
+      "postSha256": "053a8cfdb5837c6426ea1dc3422bea5fde97b1173a706ba16a6a47ccecac8739",
+      "postBytes": 17042,
+      "patch": "030-durable-job.patch",
+      "status": "PROPOSED_NOT_APPLIED_TO_CANONICAL_WORKTREE"
+    },
+    {
+      "path": "finnor-os/apps/api/app/api/allocations/[operation]/route.ts",
+      "baseBlob": "ac6e3d406fdc0ac6589b7c5051c59ea595fb4dea",
+      "baseSha256": "8700b0ec39b6c69ab3a5cba94a7f1435a039f4445c43bc608fa03fcbb9fae97d",
+      "postBlob": "d8ab1832315c4810ff34ddd21205f2a4b5aa6318",
+      "postSha256": "6b0774d4cd19c81fcd4a6ff38f1d033f8656abdc1ab1d584b5004ce4d866d2a5",
+      "postBytes": 5523,
+      "patch": "040-api-dispatch.patch",
+      "status": "PROPOSED_NOT_APPLIED_TO_CANONICAL_WORKTREE"
+    },
+    {
+      "path": "finnor-os/apps/api/app/api/decision-atlases/[operation]/route.ts",
+      "baseBlob": null,
+      "baseSha256": null,
+      "postBlob": "fa7500f9944121eb5c096c6338d99e07aa7c0e80",
+      "postSha256": "0f5f13a1ed6e5f4508081972ce1fb6defb5db024e752a5a65dff734267a8b32a",
+      "postBytes": 4074,
+      "patch": "040-api-dispatch.patch",
+      "status": "PROPOSED_NOT_APPLIED_TO_CANONICAL_WORKTREE"
+    },
+    {
+      "path": "src/components/centropy/canvas/CapitalProgramPanel.tsx",
+      "baseBlob": "bf43b95b608eae528f47796d5e98b0c9f75d5395",
+      "baseSha256": "5eed082e1796efb738e8d9cbe56f6c8d69873f96c36067757bd8feb272169350",
+      "postBlob": "7241f16dad8f1dcb49d61c3b04a593d26d7e13ab",
+      "postSha256": "ff84b31ce1dfb3ba8ae913c36f344523076e9b9c89751cbe4a9c4afefc7f33a6",
+      "postBytes": 41745,
+      "patch": "050-capital-work-mount.patch",
+      "status": "PROPOSED_NOT_APPLIED_TO_CANONICAL_WORKTREE"
+    },
+    {
+      "path": "scripts/centropy/generate-capability-manifest.mjs",
+      "baseBlob": "966a1179caf079d3dd8b9a0ac35570e295a71452",
+      "baseSha256": "8716bb816ebff46ea4dcf184f653f6fabf650bea505b8693c761d68a75992880",
+      "postBlob": "76dc8a0014c59bfd4bdbc52622bc77d119a811de",
+      "postSha256": "3c2a4832d5aa67d2fc7503a522b620fa011dc65bdd46d54140b02035c5d100fd",
+      "postBytes": 20339,
+      "patch": "060-api-catalog-sources.patch",
+      "status": "PROPOSED_NOT_APPLIED_TO_CANONICAL_WORKTREE"
+    },
+    {
+      "path": "finnor-os/scripts/generate-openapi.ts",
+      "baseBlob": "88d2675f039bdf97348af9cb3a6af1b0bc3ce054",
+      "baseSha256": "daa24f75ecd8a48a792febb28edf2c1431ec2da342b502e3b12a8b4fded96c95",
+      "postBlob": "12568b59779464c89d8e5170a78aa68c55c45918",
+      "postSha256": "9498e9e6b4d622ffe908ee24b681cb8a9baef9484d812bbe1c3ed2685706ccf3",
+      "postBytes": 65780,
+      "patch": "060-api-catalog-sources.patch",
+      "status": "PROPOSED_NOT_APPLIED_TO_CANONICAL_WORKTREE"
+    }
+  ],
+  "ddl": {
+    "proposal": "r7-policy-atlas.sql",
+    "leadPath": "finnor-os/packages/db/migrations/0172_r7_policy_atlas.sql",
+    "leadBlob": "ee56f91838bd90c50e2711061703b664210508c0",
+    "sha256": "69e7b988a47b430705ebee1dfc9b687d29e502edf3fc3b43bff4b9ac8488a0cd",
+    "bytes": 7351,
+    "ordinal": null,
+    "status": "UNNUMBERED_PROPOSAL_INTEGRATOR_ASSIGNS_ORDER"
+  },
+  "notApplied": [
+    "All shared files in records",
+    "Migration head/bundle/guards",
+    "Generated API manifests",
+    "Common Capital Work mount",
+    "P7 notification dispatch",
+    "Docker/locks/installed runtime"
+  ],
+  "commonFilesModifiedInCanonicalWorktree": [],
+  "generatorContract": {
+    "capability": "Read actual R7OperationClasses, preserve every preexisting capability, expand all 10 operations, READ/MUTATION/CONTROL and real Work/company-brain invalidation metadata",
+    "openapi": "Read actual strict OperationSchemas and regenerate all 10 request bodies from cumulative integrated sources",
+    "testedPrivateCut": "serial-cut-v7",
+    "canonicalGeneratedOutputsApplied": false
+  },
+  "patchDigests": [
+    {
+      "path": "010-canonical-s5-ports.patch",
+      "sha256": "4b190b06a44236e95c68b3aca1ceb3eddef7923ccac73e652c550e623db2199e",
+      "bytes": 3064
+    },
+    {
+      "path": "020-canonical-resource-kernel.patch",
+      "sha256": "6ae4432d609fee1b57ed2af9f6ed6a74d288c2b30633c77385e8a530b4068fe3",
+      "bytes": 13738
+    },
+    {
+      "path": "030-durable-job.patch",
+      "sha256": "a5cb0cbc929b264b3cf1dfe2b7158b6da31e3803a3258e9fd3d25fd7a55613a1",
+      "bytes": 2570
+    },
+    {
+      "path": "040-api-dispatch.patch",
+      "sha256": "75d7faf1670fb04ab8f5b37ae9b8cecc7c2074293949da96e4fee532bee5c3ff",
+      "bytes": 8601
+    },
+    {
+      "path": "050-capital-work-mount.patch",
+      "sha256": "9ce3785b1509b88dce879d5f81dddb8378f0a4989f44a024726b3651bba390ce",
+      "bytes": 1339
+    },
+    {
+      "path": "060-api-catalog-sources.patch",
+      "sha256": "9816bc0fb3b0bbad317e632e861aad1c5ff6a5b79a74a5b673f21f66f160ee37",
+      "bytes": 6002
+    }
+  ]
+}

@@ -13,7 +13,7 @@ import {
   workflowSteps,
 } from "@finnor/db";
 import type { ExternalEffectObservation } from "@finnor/shared-types";
-import { advanceWorkflow, completeStep, failStep, type StepObservationFence } from "@finnor/workflow-runtime";
+import { advanceWorkflow, completeStep, failStep, type StepObservationFence } from "@finnor/workflow-runtime/steps";
 import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { resumeObjectiveForAction } from "./objective-loop";
 import { ingestIntegrationEvent } from "./event-waits";

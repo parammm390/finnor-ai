@@ -43,11 +43,9 @@ import {
 } from "@finnor/workforce";
 import { isProviderConfigured } from "./llm";
 import type { PluginRegistry } from "./plugin-registry";
-import { HUMAN_ONLY_PLANNING_CAPABILITIES, planningCapabilitiesForVertical } from "./plugin-registry";
 
 const ACTIVE_ASSIGNMENT_STATES = ["queued", "claimed", "running", "waiting"] as const;
 const RUNNING_ASSIGNMENT_STATES = ["queued", "claimed", "running"] as const;
-const HUMAN_ONLY = new Set<string>(HUMAN_ONLY_PLANNING_CAPABILITIES);
 export const WORKFORCE_LEASE_MS = 30_000;
 
 export const WORKFORCE_REASSIGNMENT_REASONS = [
@@ -164,6 +162,8 @@ export async function configureAgentProfile(
   plugins: PluginRegistry,
   input: ConfigureAgentProfileInput,
 ): Promise<{ profile: typeof agentProfiles.$inferSelect; revision: typeof agentProfileRevisions.$inferSelect }> {
+  const { HUMAN_ONLY_PLANNING_CAPABILITIES, planningCapabilitiesForVertical } = await import("./plugin-registry");
+  const humanOnly = new Set<string>(HUMAN_ONLY_PLANNING_CAPABILITIES);
   if (!input.actor.employeeId || input.actor.employeeId !== input.actor.userId || input.actor.tenantId !== tenantId) {
     throw new Error("Agent configuration requires an authenticated human employee in the same tenant");
   }
@@ -184,7 +184,7 @@ export async function configureAgentProfile(
     const key = `${grant.kind}:${grant.capability}`;
     const capability = registry.get(key);
     if (!capability) throw new Error(`Unknown P6/Core capability grant ${key}`);
-    if (HUMAN_ONLY.has(grant.capability) || capability.authorityRequirement === "human_attestation") {
+    if (humanOnly.has(grant.capability) || capability.authorityRequirement === "human_attestation") {
       throw new Error(`Human-only capability ${grant.capability} cannot be granted to an AI worker`);
     }
     if (seen.has(key)) throw new Error(`Duplicate capability grant ${key}`);
@@ -271,11 +271,13 @@ export async function requestWorkforceAssignment(params: {
   objectiveStepId: string;
   plugins: PluginRegistry;
 }): Promise<WorkforceAssignmentRequestResult> {
+  const { HUMAN_ONLY_PLANNING_CAPABILITIES, planningCapabilitiesForVertical } = await import("./plugin-registry");
+  const humanOnly = new Set<string>(HUMAN_ONLY_PLANNING_CAPABILITIES);
   const capability = capabilityForPlanNode(params.node);
   const vertical = await resolveTenantVertical(params.tenantId);
   const manifest = planningCapabilitiesForVertical(params.plugins, vertical.verticalKey);
   const metadata = manifest.find((item) => item.kind === params.node.kind && item.capability === capability);
-  const explicitlyHumanOnly = HUMAN_ONLY.has(capability) || metadata?.authorityRequirement === "human_attestation";
+  const explicitlyHumanOnly = humanOnly.has(capability) || metadata?.authorityRequirement === "human_attestation";
   const boundary: PlanExecutionBoundary = {
     tenantId: params.tenantId,
     workId: params.workId,

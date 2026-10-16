@@ -1,0 +1,21 @@
+{
+  "schema": "finnor.r3.installed-proxy-decoded-representation-repair.v1",
+  "registeredAt": "2026-10-10T18:10:30.304402+00:00",
+  "causalEvidence": "installed-context-v2-owners-01/failure.json: signed owner submit returns 200, invalid-signature read returns 401, proxy client fails Z_DATA_ERROR incorrect header check; fixture copies Next content-encoding while Node fetch already returns decoded bytes",
+  "failureModel": [
+    "Decoded bytes forwarded with gzip header trigger second decompression",
+    "Compressed upstream content-length truncates decoded response or hangs client",
+    "Hop-by-hop transfer-encoding is forwarded across a different Node response",
+    "Repair hides actual status/auth refusal or changes owner response body",
+    "Repair modifies original owner budgets/grants or compiled product/API source"
+  ],
+  "repair": "Read actual upstream body completely; preserve status/body/content type and end-to-end owner headers, omit content-encoding/content-length/transfer-encoding for the decoded outgoing body, retain upstream encoding and decoded byte count as observation. Applies only to disposable HTTP proof transport.",
+  "predicate": "Run original installed authenticated-owner-positive with invalid signed token, cross-tenant controls, actual M3 target and exact checker, then selected original owner/fault/ledger/S6 cases. Unchanged compiled API is reused only with exact trace/source hashes.",
+  "runs": 1,
+  "outerSeconds": 1800,
+  "memoryBytes": 4294967296,
+  "originalFloorsUnchanged": true,
+  "doNotMutateRunningMountedSource": true,
+  "noProductHook": true,
+  "noUnitTests": true
+}

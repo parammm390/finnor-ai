@@ -1,0 +1,20 @@
+{
+  "schema": "finnor.r3.build-loader-repair.v1",
+  "registeredAt": "2026-10-10T15:03:24.587421+00:00",
+  "trigger": "Actual 4 GiB build passes compilation/typechecking then page collection cannot resolve extensionless native @finnor/db schema import. Runtime already uses same locked tsx loader.",
+  "repair": "Use --import=tsx during build only; preserve native owner modules, original production checks and all type checks",
+  "limits": {
+    "additionalCompilationAttempts": 1,
+    "compilerSeconds": 900,
+    "compilerMemoryBytes": 4294967296,
+    "nodeOldSpaceMiB": 3072,
+    "imageAssemblies": 0
+  },
+  "previousFailuresRetained": true,
+  "noProtectedAdmissionOrEpisodeLimitChange": true,
+  "prerequisiteFailure": "Loader invocation failed before Next starts because transient /tmp cache creation/storage I/O failed",
+  "storageRevalidated": "compiler-filesystem-diagnosis.jsonl WRITABLE_STORAGE_PASS after stop/restart",
+  "retryRegisteredAt": "2026-10-10T15:12:31.432728+00:00",
+  "remainingActualNextBuildAttempts": 1,
+  "noPreviousFailurePromoted": true
+}

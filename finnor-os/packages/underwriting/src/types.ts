@@ -204,6 +204,8 @@ export interface CircularBlock {
 
 export interface StandardLboRuntimeDefinition {
   kind: "standard_lbo_v1";
+  /** Absent means the original immutable v1 return operation. */
+  returnMethod?: "decimal34_horner_npv_v2";
   currency: string;
   entryValuationMethod: "direct_enterprise_value" | "metric_multiple";
   revenueMethod: "explicit" | "growth";
@@ -290,6 +292,20 @@ export interface SponsorCashFlow {
   periodId?: string;
 }
 
+export interface NativeReturnTrace {
+  method: "decimal34_horner_npv_v2";
+  mode: "PERIODIC" | "ACT365F_DAILY";
+  gaps: number[];
+  dailyBrackets: Array<{
+    target: string; left: string; right: string;
+    steps: Array<{ left: string; right: string; midpoint: string; power: string; side: "LEFT" | "RIGHT" }>;
+  }>;
+  npvs: Array<{ base: string; powers: string[]; partials: string[] }>;
+  iterations: Array<{ left: string; right: string; midpoint: string; value: string; width: string; terminate: boolean }>;
+  finalBase: string | null;
+  rate: DecimalString | null;
+}
+
 export type UnderwritingRunValidity = "VALID" | "INVALID" | "INCOMPLETE" | "NON_CONVERGENT";
 
 export interface UnderwritingRunResult {
@@ -305,6 +321,8 @@ export interface UnderwritingRunResult {
   checks: readonly CheckResult[];
   solverDiagnostics: readonly SolverDiagnostic[];
   sponsorCashFlows?: readonly SponsorCashFlow[];
+  /** Present only for the explicitly selected native v2 operation. */
+  returnSolverTraces?: readonly NativeReturnTrace[];
   failure?: {
     code: UnderwritingFailureCode;
     message: string;

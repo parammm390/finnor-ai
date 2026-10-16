@@ -1,0 +1,159 @@
+name: source-checks
+on:
+  workflow_call:
+    inputs:
+      backend:
+        type: boolean
+        default: true
+      root:
+        type: boolean
+        default: true
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 22.22.3
+      - name: Validate workflows before dependency or image work
+        run: node scripts/release/verify-ci-workflows.mjs
+        env:
+          FINNOR_CI_PROCESS_EVIDENCE_DIR: ${{ runner.temp }}/finnor-ci-process
+      - name: Retain workflow evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: ci-workflow-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/finnor-ci-process/*
+          if-no-files-found: warn
+          retention-days: 7
+
+  governance:
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 22.22.3
+      - name: Verify release and Git process contracts in parallel with source checks
+        env:
+          FINNOR_CI_PROCESS_EVIDENCE_DIR: ${{ runner.temp }}/finnor-ci-process
+        run: |
+          npm run release:truth
+          npm run test:release
+          node --test scripts/release/ci-process.e2e.test.mjs
+      - name: Retain governance evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: ci-governance-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/finnor-ci-process/*
+          if-no-files-found: warn
+          retention-days: 7
+
+  source:
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 22.22.3
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            finnor-os/package-lock.json
+      # Root types import the workspace, so both locked graphs are required even
+      # for a UI-only change. No dependency directories are shared between jobs.
+      - run: npm ci --no-audit --no-fund
+      - run: npm ci --prefix finnor-os --no-audit --no-fund
+      - name: Verify the actual backend inventory is partitioned exactly once
+        id: shards
+        continue-on-error: true
+        if: ${{ inputs.backend }}
+        run: node scripts/release/verify-test-shards.mjs
+        env:
+          FINNOR_CI_PROCESS_EVIDENCE_DIR: ${{ runner.temp }}/finnor-ci-process
+      - id: workspace
+        continue-on-error: true
+        run: npm run workspace:check
+      - name: Check backend contracts and types
+        id: backend
+        continue-on-error: true
+        if: ${{ inputs.backend }}
+        working-directory: finnor-os
+        run: |
+          status=0
+          npm run authz:matrix:check || status=1
+          npm run openapi || status=1
+          npm run typecheck || status=1
+          npm run release:manifest || status=1
+          npm run release:pe-domain-boundary || status=1
+          exit "$status"
+      - name: Check all root types against the workspace
+        id: types
+        continue-on-error: true
+        run: npx --no-install tsc --noEmit -p tsconfig.json
+      - name: Check shared frontend inventories and retirement boundary
+        id: inventory
+        continue-on-error: true
+        run: |
+          status=0
+          npm run centropy:client:check || status=1
+          npm run centropy:manifest:check || status=1
+          npm run centropy:forms:check || status=1
+          npm run release:p8-zero-resurrection || status=1
+          exit "$status"
+      - name: Lint changed root sources and scripts
+        id: lint
+        continue-on-error: true
+        if: ${{ inputs.root }}
+        run: npm run lint
+      - name: Reject generated source drift
+        id: drift
+        continue-on-error: true
+        run: git diff --exit-code
+      - name: Fail closed after collecting independent source diagnostics
+        id: aggregate
+        if: ${{ always() }}
+        env:
+          BACKEND_REQUIRED: ${{ inputs.backend }}
+          ROOT_REQUIRED: ${{ inputs.root }}
+          SHARDS_OUTCOME: ${{ steps.shards.outcome }}
+          WORKSPACE_OUTCOME: ${{ steps.workspace.outcome }}
+          BACKEND_OUTCOME: ${{ steps.backend.outcome }}
+          TYPES_OUTCOME: ${{ steps.types.outcome }}
+          INVENTORY_OUTCOME: ${{ steps.inventory.outcome }}
+          LINT_OUTCOME: ${{ steps.lint.outcome }}
+          DRIFT_OUTCOME: ${{ steps.drift.outcome }}
+        run: |
+          node --input-type=module <<'NODE'
+          import { appendFileSync } from "node:fs"
+          import { sourceCheckFailures } from "./scripts/release/ci-process-policy.mjs"
+          const names = ["shards", "workspace", "backend", "types", "inventory", "lint", "drift"]
+          const outcomes = Object.fromEntries(names.map(name => [name, process.env[name.toUpperCase() + "_OUTCOME"]]))
+          const failures = sourceCheckFailures({ backend: process.env.BACKEND_REQUIRED === "true", root: process.env.ROOT_REQUIRED === "true", outcomes })
+          appendFileSync(process.env.GITHUB_STEP_SUMMARY, "\nSource diagnostics: " + JSON.stringify({ outcomes, failures }) + "\n")
+          if (failures.length) throw new Error("Source checks failed: " + failures.join(", "))
+          NODE
+      - name: Retain workflow and source diagnostics
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: ci-source-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/finnor-ci-process/*
+          if-no-files-found: warn
+          retention-days: 7

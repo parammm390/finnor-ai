@@ -761,8 +761,9 @@ async function groundPrivateEquityAction(draft: DraftAction, action: DomainActio
   }
   payload.workId = workId;
   if (actionType === "execute_closing_operation") {
+    if (!action.initiatedBy) throw new ActionGroundingError("CLOSING_CURRENT_ACTOR_REQUIRED", "Closing actor is unavailable");
     const actor = await peTransaction(ctx, async (_db, c) =>
-      (await c.query("SELECT role,status FROM finnor_os.users WHERE tenant_id=$1 AND id=$2", [action.tenantId, actorId])).rows[0], { readOnly: true });
+      (await c.query("SELECT role,status FROM finnor_os.users WHERE tenant_id=$1 AND id=$2", [action.tenantId, action.initiatedBy])).rows[0], { readOnly: true });
     if (!actor || actor.status !== "active") throw new ActionGroundingError("CLOSING_CURRENT_ACTOR_REQUIRED", "Closing actor is unavailable");
     ctx.auth.role = actor.role;
     const values = await groundClosingOperation(ctx, action, { ...draft, payload });

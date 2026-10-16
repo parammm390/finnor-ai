@@ -1,0 +1,185 @@
+{
+  "schema": "finnor.r7.bounded-adoption-verification.v1",
+  "registeredBeforeNewCode": true,
+  "base": "4a90ed33ca96afa252c51f511fea279e0034cddb",
+  "lead": "99ae926e0e4487e6d24fe23a4f11463d87191318",
+  "oracle": "acceptance.md; separate original-input Fraction checker plus distinct determinant arrangement/direct original-family reference",
+  "limits": {
+    "campaignSeconds": 3600,
+    "exactDriverSeconds": 600,
+    "informationDriverSeconds": 180,
+    "ownerDriverSeconds": 1200,
+    "childDeadlineMs": 30000,
+    "maxGeneratedEvidenceBytes": 268435456,
+    "ownerMinimumFreeBytes": 268435456,
+    "serialCostlyRuns": true,
+    "rule": "Operational limits never shrink the 4/32/64/12 profile or original gates; exhaustion is INCOMPLETE"
+  },
+  "cases": [
+    {
+      "id": "exact-reference-corpus",
+      "command": "cd finnor-os && FINNOR_R7_EVIDENCE_DIR=<private>/exact node --import=tsx scripts/r7/run-exact.mts",
+      "inputs": "Immutable lead corpus blob 670150dfd0da911e608c8ae192f46a491abba41e: 14 original registered cases including tractable 4/32/64/12, strict/narrow/point/line, full-horizon worlds and partial coverage",
+      "observableInvariant": "Every accepted cell has original-input whole-cell feasibility/worst-world/ranking/tie/coverage proof",
+      "credibleRegression": "Missing equality/worst-world/feasibility boundary or policy feasible away from centroid",
+      "strongerMissingCoverage": "Arbitrary maximal arrangements, real authenticated owner consumption and installed/mounted qualification remain separate",
+      "testOnlyProductSeam": false,
+      "artifact": "exact/results.json plus exact original inputs/proposals/checks"
+    },
+    {
+      "id": "certificate-mutations",
+      "command": "Same registered run-exact.mts invocation",
+      "inputs": "15 original mutations: vertices/hull/empty/coverage/family/ties/world/coefficient/policy/checker/proof basis",
+      "observableInvariant": "A false original-input certificate loses its dependent claim at the intended predicate",
+      "credibleRegression": "Producer assertions or a digest masquerade as independent verification",
+      "strongerMissingCoverage": "Malformed supplied Farkas proof is rejected as unsupported; no Farkas producer is claimed",
+      "testOnlyProductSeam": false,
+      "artifact": "exact/results.json#mutations"
+    },
+    {
+      "id": "original-information",
+      "command": "cd finnor-os && FINNOR_R7_EVIDENCE_DIR=<private>/information node --import=tsx scripts/r7/run-information.mts",
+      "inputs": "Positive two-token inquiry; unobserved-world siblings; reordered duplicate information; conflicting event tokens",
+      "observableInvariant": "Original policy uses only lawful available information, not hidden world identity",
+      "credibleRegression": "A structurally lawful tree smuggles private simulator state into selection",
+      "strongerMissingCoverage": "Actual S2/S6 continuation remains a separate owner gate",
+      "testOnlyProductSeam": false,
+      "artifact": "information/results.json and original source/proposals"
+    },
+    {
+      "id": "owned-owner-boundaries",
+      "command": "cd <private-serial-projection>/finnor-os && TMPDIR=/tmp TSX_TSCONFIG_PATH=<projection>/finnor-os/scripts/r7/tsconfig.json FINNOR_R7_SERIAL_SCHEMA=<projection>/scope-r/r7-policy-atlas-compiler/handoff/proposals/r7-policy-atlas.sql FINNOR_R7_CASE_FILTER=<selectedCases> FINNOR_R7_EVIDENCE_DIR=<private>/owners node --import=tsx scripts/r7/run-owner.mts",
+      "inputs": "Selected original owner driver cases supported by its actual selection flags; real bearer/SQL/S1/Work/queue/children/current S5 and actual fallback",
+      "observableInvariant": "Checked covered lookup reaches original owner selection without a full optimizer; currentness and UNKNOWN commitments are retained",
+      "credibleRegression": "Mock reader, rounded rational demand, stale publication or fake fallback",
+      "strongerMissingCoverage": "This command requires exact shared serial proposals; no base-only, joined, installed or mounted PASS can be inferred",
+      "testOnlyProductSeam": false,
+      "artifact": "owners/results.json with projection manifest and exact shared preimages",
+      "initialStatus": "NOT_RUN_SHARED_PORTS_NOT_PRESENT",
+      "selectionFrozenBeforeOwnerExecution": true,
+      "selectedCases": [
+        "owner-full-profile",
+        "original-policy-information",
+        "authenticated-owner-runtime",
+        "typed-boundary-reuse",
+        "actual-s4-s5-intent",
+        "current-s5-and-fallback",
+        "partial-and-outside-fallback",
+        "strict-auth-private-storage",
+        "queued-cancel-original-grant",
+        "structural-and-work-invalidation",
+        "world-and-tie-invalidation",
+        "native-obligation-invalidation",
+        "original-continuation",
+        "s5-owned-parameter-reuse",
+        "current-s5-query-publication-race",
+        "shared-work-reservation-race",
+        "physical-accepted-recovery",
+        "actual-principal-publication-race",
+        "physical-cancel-and-original-deadline",
+        "actual-compute-capacity",
+        "physical-parent-loss-watchdog"
+      ],
+      "notSelected": {
+        "runtime-schema-compatibility": "Unique ordinal/head/bundle is serial integrator-owned; unnumbered disposable DDL cannot qualify release migration",
+        "method-runtime-invalidation": "Separate affected original case uses the discovered sealed R2 Python binary read-only, not a copied runtime",
+        "mounted-capital-work": "Separate attempted original case requires exact common Work/catalog proposals and owned review leaves",
+        "matched-reuse": "Do not rerun the historical red/no-gain sequence as new proof"
+      }
+    },
+    {
+      "id": "method-runtime-invalidation",
+      "command": "Same private owner command with FINNOR_R7_CASE_FILTER=method-runtime-invalidation FINNOR_R7_ALT_PYTHON=<sealed-R2>/python/bin/python3.12",
+      "inputs": "Existing original E2E case; actual distinct /usr/bin/python3 and sealed R2 Python 3.12.14 executable bytes",
+      "observableInvariant": "Changing the configured real checker interpreter refuses old lookup and selection at the loaded method predicate without new query, S5 intent, child, grant or deadline",
+      "credibleRegression": "Unchanged version text or a synthetic digest hides a real runtime change",
+      "strongerMissingCoverage": "Does not qualify installed Linux image or every interpreter/stdlib/transitive byte",
+      "testOnlyProductSeam": false,
+      "artifact": "method/results.json and exact configured binary hashes",
+      "selectionFrozenBeforeExecution": true
+    },
+    {
+      "id": "exclusive-review-type-compatibility",
+      "command": "<borrowed-root-typescript>/bin/tsc -p <private>/ui-tsconfig.json --noEmit --incremental false",
+      "inputs": "Immutable original DecisionAtlasReview.tsx and decision-atlas-view.ts; actual cumulative auth/API/invalidation interfaces and root Next 16.3.8",
+      "observableInvariant": "Scope-owned review binds actual current transport/types without replacing common Work or fabricating client authority",
+      "credibleRegression": "Lead-only viewer compiles only with obsolete shared types or unbound response casts",
+      "strongerMissingCoverage": "Static types do not prove mounted privacy, reload, native interaction or installed release",
+      "testOnlyProductSeam": false,
+      "artifact": "ui-typecheck.log"
+    },
+    {
+      "id": "mounted-capital-work",
+      "command": "Same private owner command with --browser FINNOR_R7_CASE_FILTER=mounted-capital-work FINNOR_R7_BROWSER_TAB=<fresh assigned tab> FINNOR_R7_BROWSER_TARGET=<fresh assigned target>",
+      "inputs": "Original mounted driver, actual existing Capital Work child and exact preimage-bound common Work/catalog proposals",
+      "observableInvariant": "Native browser parameter revisions cross exact boundaries, reload durable values and clear delayed old Work/principal responses",
+      "credibleRegression": "Rendered prose or stale private response substitutes for actual typed owner revision and current Work",
+      "strongerMissingCoverage": "Source-native disposable browser is not final installed image or joined protected release",
+      "testOnlyProductSeam": false,
+      "artifact": "mounted/results.json, native browser traces and raw actual API/SQL",
+      "browserBinding": "Supplied Factory session and endpoint preserved; fresh tab list confirms t1 / 66276A19B07BCE2AD330FE079A973AD2. Explicit FINNOR_R7_BROWSER_TAB/TARGET required; sticky pane pin verified before navigation/input. No new target/headless substitute.",
+      "selectionFrozenBeforeExecution": true
+    },
+    {
+      "id": "retained-canonical-s5-e2e",
+      "command": "cd <private-serial-projection>/finnor-os && FINNOR_S5_EVIDENCE_DIR=<private>/s5 FINNOR_S3_PYTHON=<existing-scientific-interpreter> FINNOR_S5_PYTHON=<same> node --import=tsx scripts/s5/run-s5-e2e.mts",
+      "inputs": "Existing original real S3/S4/S5 coupled/covenant/signed-bound/stock-flow/UNKNOWN/concurrency/cold-owner-I/O E2E",
+      "observableInvariant": "Canonical kernel extraction preserves actual retained numeric owner behavior and complete lower/upper responsibility",
+      "credibleRegression": "A second resource checker or per-subset preparation changes old feasible outcomes or blocks owner I/O",
+      "strongerMissingCoverage": "Full retained check requires existing NumPy/SciPy S3/S5 interpreter; source equivalence and R7 owner PASS do not substitute",
+      "testOnlyProductSeam": false,
+      "artifact": "s5/results.json or exact missing-runtime preflight",
+      "preflightStatus": "NOT_RUN_EXISTING_NUMPY_SCIPY_INTERPRETER_NOT_FOUND_NO_INSTALL"
+    },
+    {
+      "id": "focused-type-compatibility",
+      "command": "cd finnor-os && <borrowed-read-only-typescript>/bin/tsc -p scripts/r7/tsconfig.json --noEmit",
+      "observableInvariant": "Owned exports bind actual cumulative owner interfaces without replacing R1/R2/R4",
+      "credibleRegression": "Lead-only or guessed ports accepted through casts",
+      "strongerMissingCoverage": "Typecheck is structural evidence, never behavioral proof",
+      "testOnlyProductSeam": false,
+      "artifact": "typecheck.log"
+    },
+    {
+      "id": "terminal-build-current-context",
+      "command": "Same private owner command with FINNOR_R7_CASE_FILTER=terminal-build-current-context",
+      "inputs": "Real signed bearer and ordinary SQL: build/check original family, retain covered query, cancel the completed build through the actual control route; parameters and S5 snapshot are deliberately unchanged",
+      "observableInvariant": "Current context drops the canceled historical recommendation, while exact immutable query/atlas history, original child count, episode grant and deadline remain; selection is refused at the current canceled build",
+      "credibleRegression": "r7Context only compares parameter/resource digests and republishes the historical choice after CANCELLED; UI displays it as current despite atlas=null",
+      "strongerMissingCoverage": "Native mounted presentation remains blocked at the retained pane hit/focus predicate; static review and real HTTP are not native UI proof",
+      "testOnlyProductSeam": false,
+      "artifact": "terminal-red/results.json, terminal-context/observed.json, then owners-final/results.json",
+      "selectionFrozenBeforeExecution": true,
+      "registeredBeforeRepair": true
+    }
+  ],
+  "notRunGates": [
+    "Actual combined cumulative R cut and shared integration",
+    "Mounted case attempted and failed before Canvas activation; original native parameter interaction/reload/privacy remainder NOT RUN",
+    "Final installed Linux/non-root builder/checker/API/worker bytes",
+    "Full release fresh/upgrade/restart migration and retained job compatibility",
+    "Independent family/model adequacy and S8 method/checker/fallback admission",
+    "Protected completed-X strongest-specialization comparison",
+    "Original reach, calibration/regret, resource and mature S7 economic gates"
+  ],
+  "costPolicy": "Do not rerun or relabel the historical OFF 174.600458365 s / ON 278.228829247 s sequence; no observed crossing or improvement. New local timings are scoped diagnostics with money/human/aggregate-peak gaps, not protected gain.",
+  "rerunTriggers": [
+    "Relevant owned source, exact shared proposal, runtime or schema change",
+    "Actual failed predicate",
+    "Concrete unresolved structural/test-value concern"
+  ],
+  "pi": "NOT_ADOPTED_INAPPLICABLE",
+  "r3": "ALREADY_DONE_NOT_ADOPTED_OR_REQUIRED",
+  "observedFinalAccounting": {
+    "registeredCampaignSecondsUnchanged": 3600,
+    "firstActualRunStartedAt": "2026-10-11T06:25:10.534Z",
+    "finalOwnerFinishedAt": "2026-10-11T07:59:24.348Z",
+    "elapsedIncludingInspectionRepairAndWaitSeconds": 5653.814,
+    "globalCampaignClockEnforced": false,
+    "campaignQualification": "INCOMPLETE_REGISTERED_GLOBAL_WALL_EXCEEDED",
+    "rule": "Per-case PASS and per-driver null guard do not establish complete campaign qualification. No more costly runs in this exhausted campaign; limits and original evidence are not relabeled.",
+    "rawEvidenceBytes": 248566710,
+    "completeMoneyHumanAggregatePeakMemoryMeters": false,
+    "evidence": "handoff/evidence-index.json; external final-campaign-accounting.json"
+  }
+}

@@ -350,6 +350,11 @@ export async function retainAllocationReconciliation(ctx:PeMutationContext,ref:E
 }
 export async function persistAllocationExperience(ctx:PeMutationContext,events:S5ExperienceEvent[]):Promise<void>{await locked(ctx,c=>appendExperience(ctx,c,events));}
 
+/** Versioned owner adapters share the canonical lock/snapshot/history, not
+ * another allocation ledger. Their own schema validators remain mandatory. */
+export const withAllocationPortfolio=locked;
+export const allocationSnapshotInTransaction=snapshot;
+export const appendAllocationExperienceInTransaction=appendExperience;
 /** Native closing binding, under the same aggregate lock and original S5
  * consumption. This is not the old numeric-field protected receipt class. */
 export async function bindClosingAllocationAttempt(ctx:PeMutationContext,input:{
@@ -544,4 +549,13 @@ export async function recordS5GovernedResourceUnits(ctx:PeMutationContext,obliga
   await appendExperience(ctx,c,[prepareS5Experience(row.problem.mandate,'COST',charge.ref.id,{chargeRef:charge.ref,charge,conservativeOccupation:true,releaseGranted:false},[obligation.allocationRef.id,obligation.consumptionRef.id])]);
   return {charge,semanticReplay:false};
  });
+}
+
+/** Versioned original owners use the canonical portfolio lock and SQL snapshot. */
+export async function withCanonicalAllocationSnapshot<T>(ctx:PeMutationContext,fn:(client:pg.PoolClient,value:AllocationSnapshot)=>Promise<T>):Promise<T>{
+ return locked(ctx,async c=>fn(c,await snapshot(c,ctx.auth.tenantId)));
+}
+/** Same transaction and immutable canonical S5 event/outbox; no shadow ledger. */
+export async function appendCanonicalAllocationExperience(ctx:PeMutationContext,c:pg.PoolClient,events:S5ExperienceEvent[]):Promise<void>{
+ await authorize(ctx,c);await appendExperience(ctx,c,events);
 }

@@ -1,0 +1,142 @@
+{
+  "schema": "finnor.hosted-ci-batch.v1",
+  "candidateHead": "a598606bcb602b68cba0c53034451e1fbb9afa29",
+  "checkedMergeSha": "12954f187833bd8cd612a7ee7b683145ce4deb3e",
+  "runUrl": "https://github.com/parammm390/finnor-ai/actions/runs/38849750897",
+  "aggregate": "FAIL",
+  "rootCause": "Docker FromPlatformFlagConstDisallowed at intentional ARM64 S6 helper stage; required verdict failed as a consequence",
+  "jobs": [
+    {
+      "id": 116808115641,
+      "name": "classify-required-scope",
+      "conclusion": "success",
+      "durationSeconds": 31
+    },
+    {
+      "id": 116808263792,
+      "name": "universal-security-gates / gitleaks",
+      "conclusion": "success",
+      "durationSeconds": 18
+    },
+    {
+      "id": 116808263833,
+      "name": "early-source-gates / validate",
+      "conclusion": "success",
+      "durationSeconds": 13
+    },
+    {
+      "id": 116808263892,
+      "name": "universal-security-gates / osv-scanner / osv-scan",
+      "conclusion": "success",
+      "durationSeconds": 41
+    },
+    {
+      "id": 116808334882,
+      "name": "early-source-gates / source",
+      "conclusion": "success",
+      "durationSeconds": 154
+    },
+    {
+      "id": 116808334938,
+      "name": "early-source-gates / governance",
+      "conclusion": "success",
+      "durationSeconds": 32
+    },
+    {
+      "id": 116809018699,
+      "name": "applicable-release-readiness / phase5-readiness (scope4)",
+      "conclusion": "success",
+      "durationSeconds": 282
+    },
+    {
+      "id": 116809018710,
+      "name": "applicable-release-readiness / phase5-readiness (scope5)",
+      "conclusion": "success",
+      "durationSeconds": 98
+    },
+    {
+      "id": 116809018741,
+      "name": "applicable-release-readiness / canonical-graph-gate",
+      "conclusion": "success",
+      "durationSeconds": 82
+    },
+    {
+      "id": 116809018776,
+      "name": "applicable-backend-gates / production-artifacts",
+      "conclusion": "success",
+      "durationSeconds": 251
+    },
+    {
+      "id": 116809018790,
+      "name": "applicable-backend-gates / test (1)",
+      "conclusion": "success",
+      "durationSeconds": 283
+    },
+    {
+      "id": 116809018831,
+      "name": "applicable-backend-gates / phase7",
+      "conclusion": "success",
+      "durationSeconds": 254
+    },
+    {
+      "id": 116809018858,
+      "name": "applicable-backend-gates / test (3)",
+      "conclusion": "success",
+      "durationSeconds": 596
+    },
+    {
+      "id": 116809018863,
+      "name": "applicable-backend-gates / test (2)",
+      "conclusion": "success",
+      "durationSeconds": 235
+    },
+    {
+      "id": 116809018983,
+      "name": "applicable-backend-gates / worker-image",
+      "conclusion": "failure",
+      "durationSeconds": 85
+    },
+    {
+      "id": 116809019040,
+      "name": "applicable-dealer-zero / receipt-diff",
+      "conclusion": "success",
+      "durationSeconds": 47
+    },
+    {
+      "id": 116809019053,
+      "name": "applicable-root-gates / lint-typecheck-e2e",
+      "conclusion": "success",
+      "durationSeconds": 209
+    },
+    {
+      "id": 116809020104,
+      "name": "applicable-dealer-zero / database-role-qa",
+      "conclusion": "skipped",
+      "durationSeconds": 0
+    },
+    {
+      "id": 116811644158,
+      "name": "required-pr-verdict",
+      "conclusion": "failure",
+      "durationSeconds": 20
+    }
+  ],
+  "defaultBackendSuite": {
+    "filesPassed": 213,
+    "filesSkipped": 6,
+    "testsPassed": 1285,
+    "testsSkipped": 27,
+    "skippedFiles": [
+      "tests/integration/scope3-compute-load.test.ts",
+      "tests/live/microsoft-artifact-os.live.test.ts",
+      "tests/integration/p2-postgres-transient.test.ts",
+      "tests/integration/scope3-compute-plane.test.ts",
+      "tests/live/microsoft365-nervous-system.live.test.ts",
+      "tests/live/steel-provider.live.test.ts"
+    ],
+    "omissionsNotCountedAsPass": true
+  },
+  "linuxWorkerImageBuilt": false,
+  "productionChanged": false,
+  "protectedEffectsActivated": false
+}

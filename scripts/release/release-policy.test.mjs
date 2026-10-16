@@ -66,6 +66,9 @@ test("the Phase 8 production contract adds four independently required compute s
   assert.equal(worker.clusterName, "finnor-production")
   assert.equal(worker.serviceName, "finnor-worker")
   assert.equal(worker.sseGatewayUrl, "https://realtime.finnorai.com")
+  assert.equal(contract.release.requiredMigrationHead, "0188_observation_source_version_binding.sql")
+  assert.ok(!contract.release.mutationAuthorization.allowedOperations.includes("product-authority-update"))
+  assert.ok(!contract.release.mutationAuthorization.allowedOperations.includes("epistemic-impact-activate"))
   assert.deepEqual(contract.release.requiredComponents, ["frontend", "api", "computeRealtime", "computeInteractive", "computeBackground", "computeHeavy", "supplierCanaryApp", "supplierCanaryAuth"])
   assert.equal(new Set(Object.values(contract.topology.computePlane.classes).map((profile) => profile.serviceName)).size, 4)
   assert.equal(contract.topology.supplierCanaryApp.portalRole, "app")
@@ -115,8 +118,34 @@ test("active release workflow uses the governed four-class AWS compute cutover",
   assert.match(workflow, /deploy-aws-compute-plane\.mjs/)
   const computeSessionPolicy = workflow.match(/- name: Authenticate exact AWS project with GitHub OIDC for ECS[\s\S]*?inline-session-policy: >-\s*([^\n]+)/)?.[1]
   assert.ok(computeSessionPolicy, "compute deployment must use a scoped AWS session")
-  assert.match(computeSessionPolicy, /ecr:DescribeRepositories/, "CloudFormation resolves the ECR repository ARN while updating worker roles")
-  assert.match(computeSessionPolicy, /logs:DescribeLogGroups/, "CloudFormation resolves the log group ARN while updating worker roles")
+  assert.ok(computeSessionPolicy.length <= 2048, "the inline STS session policy must fit AWS's 2,048-character limit")
+  const computePolicy = JSON.parse(computeSessionPolicy)
+  const computeStatements = computePolicy.Statement
+  const computeActions = computeStatements.flatMap((statement) => Array.isArray(statement.Action) ? statement.Action : [statement.Action])
+  assert.ok(computeActions.length > 0)
+  assert.ok(computeActions.every((action) => typeof action === "string" && !action.endsWith(":*")), "the deploy session must enumerate every AWS action")
+  for (const statement of computeStatements.filter((entry) => entry.Resource === "*")) {
+    const actions = Array.isArray(statement.Action) ? statement.Action : [statement.Action]
+    if (actions.length === 1 && actions[0] === "ecs:DeregisterTaskDefinition") {
+      assert.deepEqual(statement.Condition, { StringEquals: { "aws:CalledViaFirst": "cloudformation.amazonaws.com", "aws:CalledViaLast": "cloudformation.amazonaws.com" } }, "unscopable task cleanup is allowed only through CloudFormation")
+      continue
+    }
+    assert.ok(actions.every((action) => action === "ecr:GetAuthorizationToken" || /:(?:Describe|List)[A-Za-z]+$/.test(action)), `wildcard resource is restricted to read-only discovery actions: ${actions.join(", ")}`)
+  }
+  const computeResources = computeStatements.flatMap((statement) => Array.isArray(statement.Resource) ? statement.Resource : [statement.Resource])
+  assert.ok(computeResources.some((resource) => resource?.endsWith(":stack/finnor-production/*")), "CloudFormation is restricted to the production stack")
+  assert.match(JSON.stringify(computePolicy), /"ecs:cluster":"arn:aws:ecs:us-east-1:601804670058:cluster\/finnor-production"/, "task listing is restricted to the production cluster")
+  assert.ok(computeResources.some((resource) => resource?.includes(":service/finnor-production/finnor-")), "ECS services are restricted to FINNOR services")
+  assert.ok(computeResources.some((resource) => resource?.endsWith(":repository/finnor-worker")), "ECR writes are restricted to the worker repository")
+  const iamActions = computeActions.filter((action) => action.startsWith("iam:"))
+  assert.ok(iamActions.every((action) => action === "iam:PassRole" || action === "iam:GetRole"), "the deployment session can only look up/pass ECS task roles, not mutate IAM")
+  assert.ok(computeStatements.filter(entry => [entry.Action].flat().includes("iam:GetRole")).every(entry => entry.Resource === "arn:aws:iam::601804670058:role/finnor-*"), "role lookup remains scoped to FINNOR roles and intersects the five exact base-policy roles")
+  const ecrSessionPolicy = workflow.match(/- name: Authenticate exact AWS project with GitHub OIDC for ECR[\s\S]*?inline-session-policy: >-\s*([^\n]+)/)?.[1]
+  assert.ok(ecrSessionPolicy, "worker image publication must use a scoped AWS session")
+  const ecrPolicy = JSON.parse(ecrSessionPolicy)
+  assert.ok(ecrSessionPolicy.length <= 2048)
+  assert.ok(ecrPolicy.Statement.some((statement) => statement.Action === "ecr:GetAuthorizationToken" && statement.Resource === "*"))
+  assert.ok(ecrPolicy.Statement.some((statement) => Array.isArray(statement.Action) && statement.Action.includes("ecr:PutImage") && statement.Resource === "arn:aws:ecr:us-east-1:601804670058:repository/finnor-worker"))
   const computeTemplate = readFileSync(new URL("../../infra/aws/finnor-production.yaml", import.meta.url), "utf8")
   assert.match(computeTemplate, /Sid: LogGroupLookup, Effect: Allow, Action: logs:DescribeLogGroups, Resource: '\*'/)
   assert.match(computeTemplate, /Sid: ComputeScalingTags[\s\S]{0,240}application-autoscaling:TagResource[\s\S]{0,120}application-autoscaling:UntagResource[\s\S]{0,180}scalable-target\/\*/)
@@ -130,14 +159,15 @@ test("active release workflow uses the governed four-class AWS compute cutover",
     assert.match(deployStage, new RegExp(`--${argument}=\\"\\$FINNOR_[A-Z_]+\\"`))
   }
   assert.doesNotMatch(workflow, /deploy-aws-worker\.mjs/)
-  assert.match(workflow, /release:scope4-digital-twin\b/)
-  assert.match(workflow, /release:scope5-epistemic-impact\b/)
+  const readinessWorkflow = readFileSync(new URL("../../.github/workflows/release-readiness.yml", import.meta.url), "utf8")
+  assert.match(workflow, /uses: \.\/\.github\/workflows\/release-readiness\.yml/)
+  assert.match(readinessWorkflow, /release:scope4-digital-twin\b/)
+  assert.match(readinessWorkflow, /release:scope5-epistemic-impact\b/)
   assert.match(workflow, /deploy-production\.mjs supplierCanaryApp/)
   assert.match(workflow, /deploy-production\.mjs supplierCanaryAuth/)
-  assert.match(workflow, /run-p8-production-water-retirement\.mjs/)
-  assert.match(workflow, /release:scope5:rollout/)
-  assert.ok(workflow.indexOf("Verify final PE product authority readiness") < workflow.indexOf("release:scope5:rollout"))
-  assert.match(workflow, /phase5-readiness/)
+  assert.doesNotMatch(workflow, /run-p8-production-water-retirement\.mjs|release:scope5:rollout/)
+  assert.match(workflow, /Verify final PE product authority readiness/)
+  assert.match(readinessWorkflow, /phase5-readiness/)
   for (const envName of [
     "VERCEL_FRONTEND_AUTOMATION_BYPASS_SECRET",
     "VERCEL_API_AUTOMATION_BYPASS_SECRET",
@@ -154,19 +184,19 @@ test("supplier canary builds are isolated from the finnor-os workspace lockfile"
   assert.match(deployScript, /cpSync\(appDir, buildDir, \{\s*recursive: true/)
   assert.match(deployScript, /worktreeStatus\(repoRoot\)/)
   assert.match(deployScript, /vercel", \["build"[\s\S]*buildDir/)
-  assert.match(deployScript, /vercel", withVercelToken\(deployArgs\), buildDir/)
+  assert.match(deployScript, /vercel", deployArgs, buildDir, withVercelToken\(withoutSecrets\(env\)\)/)
 })
 
 test("Vercel release authentication is explicit and redacted", () => {
   const deployScript = readFileSync(new URL("./deploy-production.mjs", import.meta.url), "utf8")
   const workflow = readFileSync(new URL("../../.github/workflows/production-release.yml", import.meta.url), "utf8")
-  assert.match(deployScript, /return vercelToken \? \[\.\.\.args, "--token", vercelToken\] : args/)
-  assert.match(deployScript, /if \(previous === "--token"\) return "\*\*\*"/)
-  assert.match(deployScript, /if \(arg\.startsWith\("--token="\)\) return "--token=\*\*\*"/)
-  assert.match(deployScript, /withVercelToken\(\["pull", "--yes", "--environment=production"\]\)/)
-  assert.match(deployScript, /withVercelToken\(deployArgs\)/)
-  assert.doesNotMatch(deployScript, /withoutSecrets\(env, \["VERCEL_TOKEN"\]\)/)
-  assert.match(workflow, /vercel pull --yes --environment=production --token "\$VERCEL_TOKEN"/)
+  assert.match(deployScript, /function withVercelToken\(sourceEnv\)/)
+  assert.match(deployScript, /VERCEL_TOKEN: vercelToken/)
+  assert.match(deployScript, /run\("vercel", \["pull", "--yes", "--environment=production"\], pullDir, withVercelToken\(withoutSecrets\(env\)\)\)/)
+  assert.match(deployScript, /run\("vercel", deployArgs, buildDir, withVercelToken\(withoutSecrets\(env\)\)\)/)
+  assert.doesNotMatch(deployScript, /--token/)
+  assert.match(workflow, /vercel pull --yes --environment=production/)
+  assert.doesNotMatch(workflow, /vercel pull[^\n]*--token/)
   assert.match(workflow, /deploy-production\.mjs supplierCanaryApp --prepare-only/)
   assert.match(workflow, /deploy-production\.mjs supplierCanaryAuth --prepare-only/)
 })

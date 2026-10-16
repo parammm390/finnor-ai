@@ -1,0 +1,195 @@
+{
+  "schema": "finnor.s5.image-allocation-replay.v1",
+  "status": "PASS",
+  "qualification": "SAVED_ISSUED_INPUT_REPLAY_NOT_NEW_HTTP_SQL_OR_IMAGE_ACCEPTANCE",
+  "inputSha256": "1dd55b122cb8bb5f287224bfe86a4f8d6998daec53ff82a3910044e17afb892c",
+  "startedAt": "2026-10-16T04:59:54.869Z",
+  "sourceDigests": [
+    {
+      "path": "finnor-os/packages/epistemic-runtime/src/allocation-producer.ts",
+      "sha256": "e678b82f7442c343d63df67f4e454b9d940058b0deb8b39e441eb19144f77c2e"
+    },
+    {
+      "path": "finnor-os/packages/epistemic-runtime/src/allocation-solver.py",
+      "sha256": "4a199da439c633a1da28eeae9bf1c0faa7ef813c67812732d3cd9f4102d9a653"
+    },
+    {
+      "path": "finnor-os/packages/epistemic-runtime/src/allocation-contracts.ts",
+      "sha256": "412db1950c77678c553e637776922fa8a3cd2c0466333072693f334a284ec5ca"
+    },
+    {
+      "path": "finnor-os/packages/epistemic-runtime/src/allocation-checker.ts",
+      "sha256": "bac79130b24041945e04db89a4f6caef4d008610a4b476fb0e85c379a3e5c55e"
+    },
+    {
+      "path": "finnor-os/packages/epistemic-runtime/src/allocation-resource-check.ts",
+      "sha256": "a6f194568acbdc814c68734cb7c2f66d117f38cf0a29991aced1c9b7c42513d6"
+    },
+    {
+      "path": "finnor-os/packages/epistemic-runtime/src/exact-allocation-adapter.ts",
+      "sha256": "7bc87ec6945f161764b16acab13e04548139e7f9041bdd48d94e545c8ef54b56"
+    },
+    {
+      "path": "finnor-os/packages/epistemic-runtime/src/experiment-numerics.ts",
+      "sha256": "7ad3c704d23a6f0d2976217f2302d5f5dbd45e3ccd2436266fed55a488a78941"
+    }
+  ],
+  "nodeVersion": "v22.18.0",
+  "originalProblemRef": {
+    "owner": "S5",
+    "id": "allocation-problem:21bab16f08e2c2ab4bba1d77c7b6b35f02155de19119e6d350ae5420b6a21e6f",
+    "version": "s5-joint-finite-v1",
+    "contentDigest": "21bab16f08e2c2ab4bba1d77c7b6b35f02155de19119e6d350ae5420b6a21e6f"
+  },
+  "reconstructedOriginalProblemCommitment": true,
+  "rerun": "FINNOR_S5_PYTHON=<pinned-python> node --import=tsx scripts/s5/replay-image-allocation.mts <saved-http.jsonl> <fresh-output>",
+  "checked": {
+    "schema": "finnor.allocation-check.v1",
+    "problemRef": {
+      "owner": "S5",
+      "id": "allocation-problem:21bab16f08e2c2ab4bba1d77c7b6b35f02155de19119e6d350ae5420b6a21e6f",
+      "version": "s5-joint-finite-v1",
+      "contentDigest": "21bab16f08e2c2ab4bba1d77c7b6b35f02155de19119e6d350ae5420b6a21e6f"
+    },
+    "selectedPolicyIds": [
+      "contingent-policy:003ed5b9aacc5c18e055c8cac05ffbf9ceb84ab09a0d9b923c79d34bad5f68ae"
+    ],
+    "feasible": true,
+    "reasons": [],
+    "objective": "7",
+    "scenarioValues": [
+      {
+        "scenarioId": "common-0",
+        "value": "7"
+      }
+    ],
+    "envelopes": [
+      {
+        "resourceId": "capital",
+        "unit": "USD",
+        "kind": "STOCK",
+        "horizon": {
+          "startAt": "2026-10-16T04:47:48.990Z",
+          "periodMs": 60000,
+          "periods": 3
+        },
+        "quantities": [
+          "r3q:1/3",
+          "0",
+          "0",
+          "0"
+        ],
+        "minimumQuantities": [
+          "r3q:1/3",
+          "0",
+          "0",
+          "0"
+        ]
+      },
+      {
+        "resourceId": "compute",
+        "unit": "native-attempt",
+        "kind": "CUMULATIVE_EXPENDITURE",
+        "horizon": {
+          "startAt": "2026-10-16T04:47:48.990Z",
+          "periodMs": 60000,
+          "periods": 3
+        },
+        "quantities": [
+          "8",
+          "0",
+          "0",
+          "0"
+        ],
+        "minimumQuantities": [
+          "8",
+          "0",
+          "0",
+          "0"
+        ]
+      }
+    ],
+    "witnesses": [
+      {
+        "constraintId": "resource:capital",
+        "scenarioId": "common-0",
+        "period": 0,
+        "used": "r3q:1/3",
+        "maximum": "2",
+        "margin": "r3q:5/3"
+      },
+      {
+        "constraintId": "resource:capital",
+        "scenarioId": "common-0",
+        "period": 1,
+        "used": "r3q:1/3",
+        "maximum": "2",
+        "margin": "r3q:5/3"
+      },
+      {
+        "constraintId": "resource:capital",
+        "scenarioId": "common-0",
+        "period": 2,
+        "used": "r3q:1/3",
+        "maximum": "2",
+        "margin": "r3q:5/3"
+      },
+      {
+        "constraintId": "resource:capital",
+        "scenarioId": "common-0",
+        "period": 3,
+        "used": "r3q:1/3",
+        "maximum": "2",
+        "margin": "r3q:5/3"
+      },
+      {
+        "constraintId": "resource:compute",
+        "scenarioId": "common-0",
+        "period": 0,
+        "used": "8",
+        "maximum": "16",
+        "margin": "8"
+      },
+      {
+        "constraintId": "resource:compute",
+        "scenarioId": "common-0",
+        "period": 1,
+        "used": "8",
+        "maximum": "16",
+        "margin": "8"
+      },
+      {
+        "constraintId": "resource:compute",
+        "scenarioId": "common-0",
+        "period": 2,
+        "used": "8",
+        "maximum": "16",
+        "margin": "8"
+      },
+      {
+        "constraintId": "resource:compute",
+        "scenarioId": "common-0",
+        "period": 3,
+        "used": "8",
+        "maximum": "16",
+        "margin": "8"
+      }
+    ],
+    "numericalSemantics": "EXACT_DECIMAL_RATIONAL_ZERO_FEASIBILITY_TOLERANCE",
+    "executionAuthorityGranted": false
+  },
+  "backend": {
+    "pythonVersion": "3.12.14",
+    "scipyVersion": "1.16.2",
+    "numpyVersion": "2.3.3",
+    "highsVersion": "1.8.0"
+  },
+  "negativeCases": [
+    "missing-v2-binding",
+    "unreduced-ledger",
+    "zero-denominator",
+    "negative-zero",
+    "leading-zero"
+  ],
+  "finishedAt": "2026-10-16T04:59:55.554Z"
+}

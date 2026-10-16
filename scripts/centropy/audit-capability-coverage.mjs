@@ -30,6 +30,15 @@ function visit(file) {
 function readdirIsDirectory(file) { try { readFileSync(join(root, file)); return false } catch { return true } }
 entries.forEach(visit)
 const calls = []
+function literalRoute(node) {
+  if (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node)) return node.text
+  if (ts.isTemplateExpression(node)) return node.head.text + node.templateSpans.map((span) => ":ref" + span.literal.text).join("")
+  if (ts.isBinaryExpression(node) && node.operatorToken.kind === ts.SyntaxKind.PlusToken) {
+    const left = literalRoute(node.left), right = literalRoute(node.right)
+    return left !== null || right !== null ? (left ?? ":ref") + (right ?? ":ref") : null
+  }
+  return null
+}
 for (const [file, text] of source) {
   if (!/\.(ts|tsx)$/.test(file)) continue
   const tree = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true, file.endsWith(".tsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS)
@@ -38,8 +47,20 @@ for (const [file, text] of source) {
       const match = /^centropy(Get|Post|Put|Delete|Patch|Download)$/.exec(node.expression.text)
       const first = node.arguments[0]
       if (match && first) {
-        const route = ts.isStringLiteral(first) || ts.isNoSubstitutionTemplateLiteral(first) ? first.text : ts.isTemplateExpression(first) ? first.head.text + first.templateSpans.map((span) => ":ref" + span.literal.text).join("") : null
+        const route = literalRoute(first)
         if (route) calls.push({ file, route: route.split("?")[0], method: match[1] === "Download" ? "GET" : match[1].toUpperCase(), line: tree.getLineAndCharacterOfPosition(node.getStart(tree)).line + 1 })
+      }
+      if (node.expression.text === "fetch" && first) {
+        const options = node.arguments[1]
+        const methodProperty = options && ts.isObjectLiteralExpression(options)
+          ? options.properties.find((property) => ts.isPropertyAssignment(property) && property.name.getText(tree) === "method")
+          : null
+        const method = methodProperty && ts.isStringLiteral(methodProperty.initializer) ? methodProperty.initializer.text : null
+        const route = ts.isStringLiteral(first) || ts.isNoSubstitutionTemplateLiteral(first) ? first.text
+          : ts.isTemplateExpression(first) ? first.head.text + first.templateSpans.map((span) => ":ref" + span.literal.text).join("") : null
+        if (route?.startsWith("/api/") && method && /^(GET|POST|PUT|PATCH|DELETE)$/.test(method)) {
+          calls.push({ file, route: route.slice(5).split("?")[0], method, line: tree.getLineAndCharacterOfPosition(node.getStart(tree)).line + 1, binding: "Native fetch with explicit HTTP method; source reachability only" })
+        }
       }
     }
     ts.forEachChild(node, collect)
@@ -48,7 +69,11 @@ for (const [file, text] of source) {
 }
 const matchesRoute = (pattern, route) => {
   const left = pattern.split("/"), right = route.split("/")
-  return left.length === right.length && left.every((part, index) => part.startsWith(":") || right[index]?.startsWith(":") || part === right[index])
+  const segmentMatches = (part, value) => {
+    const expression = part.split(/:[A-Za-z]+/).map((literal) => literal.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("[^/]+")
+    return new RegExp(`^${expression}$`).test(value)
+  }
+  return left.length === right.length && left.every((part, index) => segmentMatches(part, right[index]) || segmentMatches(right[index], part))
 }
 // Dynamic reads must be registered in a reached, explicit GET-only control.
 // A family renderer reference alone is never enough to prove reachability.
@@ -74,6 +99,14 @@ const compatibility = new Map([
   ["read-models/work-cases", "Retained compatibility projection; active product uses exact Work and Outcome Pack aggregates."],
   ["objectives", "Alternate canonical Objective intake API. CENTROPY starts the same Objective owner through actions intake, preserving its employee Thread and client instruction ID."],
   ["queries", "Alternate canonical read intake API. CENTROPY submits ordinary questions through actions intake and renders the canonical query answer in the employee Thread."],
+  ["economic-outcomes", "Native S7 economic outcome owner API; no direct CENTROPY control or executed economic qualification is claimed."],
+  ["experiments", "Native S2 experiment owner API; the active Work review uses identification plans rather than a generic experiment control."],
+  ["interventions", "Native S3 intervention owner API; generic model mutation is not an active CENTROPY control."],
+  ["identification-plans/read", "Native R4 artifact read API. The active Work panel reads the authorized work aggregate instead."],
+  ["identification-plans/status", "Native R4 run status API. The active Work panel reads the authorized work aggregate instead."],
+  ["identification-plans/register", "Native R4 input registration API. The active Work panel submits existing owner-resolved inputs and does not register arbitrary models."],
+  ["decision-atlases/status", "Native R7 status alias. The active Work panel rereads the authenticated build through decision-atlases/read."],
+  ["decision-atlases/continue", "Native R7 original-policy continuation API. Authenticated owner execution is checked separately; no direct CENTROPY continuation control is claimed."],
 ])
 const humanRoutes = {
   configure_ic_committee: "private-equity/ic/committee-configurations",
@@ -111,6 +144,7 @@ const familyRenderers = {
 }
 const tests = walk("e2e").filter((path) => path.endsWith(".spec.ts")).concat(walk("finnor-os/tests/integration").filter((path) => path.endsWith(".test.ts")))
 const testSources = tests.map((path) => [path, read(path)])
+const unclassified = []
 const capabilities = manifest.capabilities.map((capability) => {
   const c = capability
   const direct = c.transport === "http" ? calls.filter((call) => call.method === c.method && matchesRoute(c.routePattern, call.route)) : []
@@ -125,7 +159,7 @@ const capabilities = manifest.capabilities.map((capability) => {
   else if (c.transport === "planner") disposition = c.humanOnly ? "HUMAN_ONLY_CANONICAL_DECISION" : "CANONICAL_AGENT_CAPABILITY"
   else if (direct.length) disposition = "ACTIVE_DIRECT_FRONTEND_PATH"
   else if (humanForms.length) disposition = "ACTIVE_TYPED_HUMAN_CONTROL"
-  else throw new Error(`Unclassified capability: ${c.capabilityId}`)
+  else { unclassified.push(c.capabilityId); disposition = "UNCLASSIFIED" }
   const humanRoute = c.transport === "planner" && c.humanOnly ? humanRoutes[name] : null
   if (c.transport === "planner" && c.humanOnly && !humanRoute) throw new Error(`Human-only capability lacks an explicit canonical human route: ${name}`)
   const renderers = (familyRenderers[c.family] ?? (c.transport === "planner" ? ["src/components/centropy/thread/RecordedValue.tsx", "src/components/centropy/thread/PendingEffects.tsx", "src/components/centropy/world/WorldWorkRecord.tsx"] : direct.map((call) => call.file))).filter((file) => source.has(file))
@@ -142,6 +176,7 @@ const capabilities = manifest.capabilities.map((capability) => {
     externalConfiguration: c.family === "m365" || c.family === "connection" || /artifact\/(publish|publish-new|publications|provider-creations)/.test(c.routePattern ?? "") ? "Provider credentials/scopes/destination and independent provider readback required; M365 publication BLOCKED_EXTERNAL" : null,
   }
 })
+if (unclassified.length) throw new Error(`Unclassified capabilities: ${unclassified.join(", ")}`)
 const counts = Object.fromEntries([...new Set(capabilities.map((c) => c.disposition))].map((key) => [key, capabilities.filter((c) => c.disposition === key).length]))
 const proofFiles = walk("docs/centropy/evidence").filter((file) => /release-candidate-/.test(file) && /(proof|summary)\.json$/.test(file)).map((file) => {
   const bytes = read(file), proof = JSON.parse(bytes)

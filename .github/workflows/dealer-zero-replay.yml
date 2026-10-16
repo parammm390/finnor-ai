@@ -1,12 +1,23 @@
 name: dealer-zero-replay
 on:
-  pull_request:
-    paths: ["finnor-os/**"]
+  workflow_call:
+    secrets:
+      DEALER_ZERO_REPLAY_BASELINE:
+        required: false
+      DEALER_ZERO_REPLAY_CANDIDATE:
+        required: false
   schedule:
     - cron: "29 4 * * *"
   workflow_dispatch:
 permissions:
   contents: read
+
+# A PR head update supersedes older replay work for that same PR. Scheduled
+# and manually dispatched main-branch runs stay serialized and are not canceled.
+concurrency:
+  group: dealer-zero-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 defaults:
   run:
     working-directory: finnor-os
@@ -17,7 +28,7 @@ jobs:
     timeout-minutes: 15
     services:
       postgres:
-        image: pgvector/pgvector:pg16
+        image: pgvector/pgvector:pg16@sha256:7b822b0aac60967beb1ea5e576b8602c94c300a157d187f385ae3e0da199b90a
         env:
           POSTGRES_USER: finnor
           POSTGRES_PASSWORD: finnor
@@ -30,7 +41,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
-          node-version: 22
+          node-version: 22.22.3
           cache: npm
           cache-dependency-path: finnor-os/package-lock.json
       - run: npm ci
@@ -72,11 +83,12 @@ jobs:
     # candidate (the build under review). Missing artifacts fail closed rather than
     # pretending staging was compared.
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
-          node-version: 22
+          node-version: 22.22.3
           cache: npm
           cache-dependency-path: finnor-os/package-lock.json
       - run: npm ci

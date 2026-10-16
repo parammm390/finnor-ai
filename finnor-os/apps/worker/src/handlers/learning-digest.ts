@@ -9,7 +9,8 @@
 
 import { withTenant, scanFindings } from "@finnor/db";
 import { and, eq, isNull } from "drizzle-orm";
-import { computeLearningDigest, generateWorkforceLearningProposals, MIN_SAMPLE, CONCERN_THRESHOLD } from "@finnor/orchestration";
+import { computeLearningDigest, MIN_SAMPLE, CONCERN_THRESHOLD } from "@finnor/orchestration/learning";
+import { generateWorkforceLearningProposals } from "@finnor/orchestration/workforce-learning";
 import type { JobHandler } from "../queue";
 
 export const learningDigest: JobHandler = async (payload) => {

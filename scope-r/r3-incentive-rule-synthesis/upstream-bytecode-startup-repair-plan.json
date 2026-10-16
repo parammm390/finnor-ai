@@ -1,0 +1,14 @@
+{
+  "schema": "finnor.r3.original-upstream-bytecode-build-plan.v1",
+  "failure": "Final v16 original S3 fit BACKEND_TIMEOUT at unchanged20s; current actual pinned imports alone take22.2-22.7s. Older same-source locked imports took5-14s; cold/warm and host conditions separately recorded.",
+  "failureModel": [
+    "pyc compiled from mismatched original source",
+    "source/versions or scientific algorithm changed",
+    "runtime writable bytecode trusted",
+    "partial cache output declared success",
+    "cold original20s budget silently enlarged"
+  ],
+  "oracle": "Root build prepares CPython3.12 bytecode from exact unchanged pinned original sources. Nonroot separate interpreter measures identical original imports and full original S3 fit must retain20s; actual final image graph must still pass. Runtime source SHA and lock versions unchanged; build cache not protected qualification.",
+  "purpose": "Check measurable startup allocation before another complete owner run; no package/version upgrade, source mount, guard/timer relaxation.",
+  "maxSeconds": 180
+}

@@ -1,0 +1,126 @@
+{
+  "schema": "finnor.r6.versioned-lbo-adoption-proposal.v1",
+  "status": "UNAPPLIED_PROPOSAL_ONLY_NO_SHARED_EFFECT",
+  "warning": "NOT pushed, applied, admitted or approved anywhere outside the owned local branch. Any shared adoption requires, in order: (1) independent human review/approval of the new native semantics as business reference; (2) independent checker admission review of lbo-v2-checker.py and its pinned helpers; (3) serial integration review; (4) the protected comparison and fresh economics gates with equal data, hardware, telemetry and bounds. Until then mechanical acceptance remains DISPOSITION INCOMPLETE and grants nothing.",
+  "source": {
+    "repository": "https://github.com/parammm390/finnor-ai",
+    "branch": "factory/r6-verified-capital-producer-2026-10-11",
+    "sealedCommit": "479f787d80c69e85a7fad977a2527249ebf99a57",
+    "sealedTree": "98bb70c1514b3a1a763a497cc753756381cb5c69",
+    "preregistrationCommit": "96182c6606d874ca24c32e5d75d014c3dc333d6a"
+  },
+  "baseCommit": "4acb14f3399858b1cdf707479e0975bf3afc763a",
+  "exactPreimageBoundChanges": [
+    {
+      "change": "M",
+      "path": "finnor-os/packages/epistemic-runtime/src/verified-capital-compiler/checker.py",
+      "oldSha256": "58ab3b567e7487c9a150feeaacd4c8b4db70bc0a81736bc26c3970d9ab3043a9",
+      "newSha256": "01a8f9c988b75882453077bca8277fcf051ec9a1c4be48830a93840d535cfa03"
+    },
+    {
+      "change": "M",
+      "path": "finnor-os/packages/epistemic-runtime/src/verified-capital-compiler/checker.ts",
+      "oldSha256": "c5b49d541fc59e9e4093d49f46bcbebfd7a79f481f15124494e8d66f6702069d",
+      "newSha256": "9adf40247c6ebb1c3d0e8f1dba51cca359459089f178d0c27ababb8bdbab9acc"
+    },
+    {
+      "change": "M",
+      "path": "finnor-os/packages/epistemic-runtime/src/verified-capital-compiler/compiler.ts",
+      "oldSha256": "bc33469b35eb5f1eb42de6ca220e071688ddb0842287aeabbb202f59bbf470dd",
+      "newSha256": "4011301e2bd5719a505c4641f6b9b4f68791fa0ccc23bf27e68ae0f3d528a1e7"
+    },
+    {
+      "change": "M",
+      "path": "finnor-os/packages/epistemic-runtime/src/verified-capital-compiler/native.ts",
+      "oldSha256": "4391a759bcd538b7d8aeb7b78ea0746e44f905ff370f959f27c862e97bc88ed3",
+      "newSha256": "f3e96d7a694b19a1c4d8d4825c00f7d30471947a87e9b90bd38d931bdfe5bb88"
+    },
+    {
+      "change": "A",
+      "path": "finnor-os/packages/epistemic-runtime/src/verified-capital-compiler/lbo-v2-checker.py",
+      "oldSha256": null,
+      "newSha256": "f48f67a47bd3953c5719e55290df2e5555d7766e584aed0e788504f3a5fd6bef"
+    },
+    {
+      "change": "M",
+      "path": "finnor-os/packages/shared-types/src/decision-proof.ts",
+      "oldSha256": "a0071bf1eb7568a6b990e050ceb5682bd58ba95f5467a36fd01b9e060f746a0b",
+      "newSha256": "81ca499d8cf02e97ab1f44acc7be77222c1d92b85f044751e2927d311d14fa61"
+    },
+    {
+      "change": "M",
+      "path": "finnor-os/packages/underwriting/src/compiler.ts",
+      "oldSha256": "3264e28a68402a99efebc7f7edf55b3990f3137bbc244b6ba71aaf220170d2a9",
+      "newSha256": "6081ce910199002bcc5a23c3e09c403a1f2a2a9c36d8c016d138ea06c968989c"
+    },
+    {
+      "change": "M",
+      "path": "finnor-os/packages/underwriting/src/index.ts",
+      "oldSha256": "5f455c208b795f3e23f0e99c308c9ea39ae43360b0f4cfb9e2717c4d2e0704bb",
+      "newSha256": "90d626a09a62cf063ced2e793653d7d0d31ba406d49f5090d71a2229a65a3cda"
+    },
+    {
+      "change": "M",
+      "path": "finnor-os/packages/underwriting/src/result.ts",
+      "oldSha256": "0eaffc27a917987a900bed05b1be1e1726cf45d8b8b8d95c1521e2bfb98dbd17",
+      "newSha256": "57d0ccf43a5c258075f28af9004ce75d7eaab411033f07b313ec8549afdc6114"
+    },
+    {
+      "change": "A",
+      "path": "finnor-os/packages/underwriting/src/returns-v2.ts",
+      "oldSha256": null,
+      "newSha256": "5325e6a13c3e2002e3fb0c881fcd0d762246961f4b850dd29fa51cb2735fee55"
+    },
+    {
+      "change": "M",
+      "path": "finnor-os/packages/underwriting/src/standard-lbo.ts",
+      "oldSha256": "702f47aa8640923a4f25637a9df1ac59dbaf4c6ecef7d6e607677b8d11a32cd9",
+      "newSha256": "f990b82d97adc194663eaa763d778521840ac26e8f9772d8e8e07fce9c4e33de"
+    },
+    {
+      "change": "M",
+      "path": "finnor-os/packages/underwriting/src/types.ts",
+      "oldSha256": "3f348ee5defc8d629e599cce917b21acde194bde46ead15e5e265d7251494f3f",
+      "newSha256": "8ab50ed904cbd10c6b8006f72979fd5a237b5e691576744012a1d51bf8ef506c"
+    },
+    {
+      "change": "A",
+      "path": "finnor-os/scripts/r6/lbo-v2-e2e.mts",
+      "oldSha256": null,
+      "newSha256": "78594e56ece247bfe5fa06f60b8615cecfc47f9b1248e4e7087e093bd040ce4a"
+    },
+    {
+      "change": "A",
+      "path": "finnor-os/scripts/r6/lbo-v2-native.mts",
+      "oldSha256": null,
+      "newSha256": "b158296af44ca1c20955d46052b0c9c51e0baa1a0fdc55cd70b88c2e21af9387"
+    },
+    {
+      "change": "M",
+      "path": "finnor-os/scripts/r6/run-local.py",
+      "oldSha256": "191010a4ac8a997f4466f89071cfcec9ca909492c7c6849201bc710d19288fa0",
+      "newSha256": "8dc95deeefd55baf6e5778da3b88c1c5b350db996cac6929d5e4a6a9fc2d6bdc"
+    }
+  ],
+  "unchangedV1Preimages": {
+    "finnor-os/packages/underwriting/src/returns.ts": "9e82a4316ccddfaa360fc80996f572d5ad26d6401d21611c97777f72938e89de",
+    "finnor-os/packages/underwriting/src/decimal.ts": "301604f5f53b92b1908db00e12d600716bc8f3ab1e5233fb7516e8630282b572"
+  },
+  "semanticIdentity": "native return method decimal34_horner_npv_v2 is bound into the native model semantic identity; the absent selector reproduces v1 model bytes, semantic hashes and results exactly (verified against retained lbo-probe-002 records)",
+  "checkerEnrollment": "exactly two fixed enrolled checkers selected by the bound method; specialized checker helper dependencies (checker.py, lbo-obligation-checker.py) are pinned in R6NativeIdentity.checkerDependencyPins and enforced before spawn",
+  "evidenceIndex": "scope-r/r6-verified-capital-compiler/versioned-lbo-evidence-index.json",
+  "requiredGatesBeforeAdoption": [
+    "independent-reference-approval",
+    "independent-checker-admission",
+    "serial-integration-review",
+    "protected-comparison-and-economics"
+  ],
+  "grants": {
+    "authority": false,
+    "reservation": false,
+    "publication": false,
+    "admission": false,
+    "businessTruth": false,
+    "settlement": false
+  }
+}

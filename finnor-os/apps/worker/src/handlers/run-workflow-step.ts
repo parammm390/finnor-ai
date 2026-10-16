@@ -1,11 +1,11 @@
-import { claimStep, failStep, heartbeatStepClaim, recoverStaleSteps, stepFence } from "@finnor/workflow-runtime";
+import { claimStep, failStep, heartbeatStepClaim, recoverStaleSteps, stepFence } from "@finnor/workflow-runtime/steps";
 import {
   executeAuthorizedEffectStep,
-  FinnorOrchestrator,
   recordAuthorizedEffectIneligibility,
   revalidateAuthorizedEffectEligibility,
-  resumeObjectiveForAction,
-} from "@finnor/orchestration";
+} from "@finnor/orchestration/durable-execution";
+import { resumeObjectiveForAction } from "@finnor/orchestration/objective-loop";
+import type { FinnorOrchestrator } from "@finnor/orchestration";
 import { domainActions, reconcileWorkStatus, resolveTenantVertical, withTenant, workflowSteps } from "@finnor/db";
 import { and, eq } from "drizzle-orm";
 import type { JobHandler } from "../queue";
@@ -25,6 +25,7 @@ async function resumeBusinessControllers(
   );
   if (action?.workId) await reconcileWorkStatus(tenantId, action.workId);
   await resumeObjectiveForAction(tenantId, domainActionId).catch(() => false);
+  const { FinnorOrchestrator } = await import("@finnor/orchestration");
   await new FinnorOrchestrator().resumePlanForAction(domainActionId, tenantId).catch(() => false);
 }
 

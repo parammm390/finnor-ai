@@ -1,0 +1,68 @@
+{
+  "schema": "finnor.ci-session-policy-validation.v1",
+  "status": "success",
+  "readOnly": true,
+  "region": "us-east-1",
+  "policies": [
+    {
+      "index": 0,
+      "response": {
+        "findings": []
+      }
+    },
+    {
+      "index": 1,
+      "response": {
+        "findings": []
+      }
+    },
+    {
+      "index": 2,
+      "response": {
+        "findings": []
+      }
+    },
+    {
+      "index": 3,
+      "response": {
+        "findings": []
+      }
+    }
+  ],
+  "apiCalls": [
+    {
+      "service": "accessanalyzer",
+      "operation": "ValidatePolicy",
+      "status": "success",
+      "n_items": {
+        "findings": 0
+      }
+    },
+    {
+      "service": "accessanalyzer",
+      "operation": "ValidatePolicy",
+      "status": "success",
+      "n_items": {
+        "findings": 0
+      }
+    },
+    {
+      "service": "accessanalyzer",
+      "operation": "ValidatePolicy",
+      "status": "success",
+      "n_items": {
+        "findings": 0
+      }
+    },
+    {
+      "service": "accessanalyzer",
+      "operation": "ValidatePolicy",
+      "status": "success",
+      "n_items": {
+        "findings": 0
+      }
+    }
+  ],
+  "effectiveLivePermissionsProven": false,
+  "livePolicyChanged": false
+}

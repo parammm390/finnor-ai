@@ -1,0 +1,36 @@
+{
+  "schema": "finnor.r7.corpus.v1",
+  "frozenBeforeProducer": true,
+  "origin": "SYNTHETIC_DEVELOPMENT_NOT_PRD_OR_FIELD_EVIDENCE",
+  "cases": [
+    {"id": "authoring-diagnostic", "kind": "diagnostic", "parameters": 1, "policies": 3, "worlds": 2, "periods": 1, "points": [
+      {"x": "0/1", "winner": "B", "ties": ["B"]},
+      {"x": "1/4", "winner": "A", "ties": ["A", "B"]},
+      {"x": "1/2", "winner": "A", "ties": ["A"], "worst": ["w0", "w1"]},
+      {"x": "2/3", "winner": "A", "ties": ["A"]},
+      {"x": "666666666666666667/1000000000000000000", "winner": "B", "ties": ["B"]}
+    ]},
+    {"id": "two-parameter-correlation", "kind": "multi", "parameters": 2, "policies": 4, "worlds": 3, "periods": 2},
+    {"id": "tractable-full-profile", "kind": "maximal", "parameters": 4, "policies": 32, "worlds": 64, "periods": 12, "expectedWinner": "p31", "expectedWorstWorlds": 64},
+    {"id": "sub-epsilon-positive-cell", "kind": "narrow", "parameters": 1, "policies": 3, "worlds": 2, "periods": 1, "width": "1/1000000000000000000000000000000"},
+    {"id": "lower-dimensional-line", "kind": "line", "parameters": 2, "policies": 3, "worlds": 2, "periods": 1},
+    {"id": "point-and-all-ties", "kind": "point", "parameters": 1, "policies": 3, "worlds": 2, "periods": 1},
+    {"id": "competitor-feasible-off-centroid", "kind": "competitor", "parameters": 1, "policies": 2, "worlds": 2, "periods": 1, "expectedAtThreeQuarters": "C"},
+    {"id": "non-minimizing-world-hard-violation", "kind": "nonmin", "parameters": 1, "policies": 2, "worlds": 2, "periods": 1, "expectedWinner": "WAIT"},
+    {"id": "whole-horizon-fixed-adversary", "kind": "horizon", "parameters": 1, "policies": 2, "worlds": 2, "periods": 2, "expectedWinner": "A", "expectedValue": "10/1"},
+    {"id": "named-family-infeasible", "kind": "infeasible", "parameters": 1, "policies": 2, "worlds": 2, "periods": 1, "expectedWinner": null},
+    {"id": "strict-domain-and-redundant-facets", "kind": "strict", "parameters": 1, "policies": 3, "worlds": 2, "periods": 1},
+    {"id": "deliberately-partial", "kind": "diagnostic", "parameters": 1, "policies": 3, "worlds": 2, "periods": 1, "maxNodes": 4, "expectedCoverage": "PARTIAL"},
+    {"id": "invalid-empty-domain", "kind": "empty", "parameters": 1, "policies": 3, "worlds": 2, "periods": 1, "expectedError": "DOMAIN_EMPTY"},
+    {"id": "unsupported-nonlinear-or-interval", "kind": "unsupported", "expectedError": "UNSUPPORTED"}
+  ],
+  "mutations": [
+    "wrong-vertex", "missing-vertex", "wrong-hull", "empty-cell-lie", "dropped-zero-child",
+    "conflicting-overlap", "coverage-by-samples", "narrowed-family", "wrong-tie-order",
+    "missing-worst-world", "swapped-coefficient", "swapped-policy-ref", "swapped-checker-digest",
+    "unsupported-farkas-proof", "wrong-input-digest"
+  ],
+  "costSequence": {"coldBuilds": 1, "coveredQueries": 128, "gapFallbacks": 1, "structuralRebuilds": 1,
+    "order": "128 exact evenly spaced rational points, one out-of-domain fallback, one compatible structural rebuild",
+    "comparison": "Identical owner adapter/evaluator/S5 and original resources. No completed-X claim."}
+}

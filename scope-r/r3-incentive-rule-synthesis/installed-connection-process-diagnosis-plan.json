@@ -1,0 +1,14 @@
+{
+  "schema": "finnor.r3.installed-connection-process-observation.v1",
+  "registeredAt": "2026-10-10T21:40:40.974285+00:00",
+  "observed": "v11 actual initial13.18s and restarted3.90s readiness401 pass, then actual signed submit proxyfetch fails6316ms, no R3 request/job admitted. Cause currentlyUNKNOWN; no budget/end-state change.",
+  "observer": "Record nested error message/code and exact installedNext PID/exitCode/signalCode on proxyfailure and process exit. Drain actual readiness response body before reporting ready.",
+  "qaOnly": true,
+  "noResponseReplacementOrAuthorityBypass": true,
+  "noRetryInsideAcceptedEpisode": true,
+  "runSeconds": 1800,
+  "cpus": 3,
+  "memoryBytes": 4294967296,
+  "originalWireAndCallbackAndStartupBoundsUnchanged": true,
+  "acceptance": "Cause evidence or actual full ledger/S6 PASS; unknown connectionfailure cannot be mislabeled healthy or external admission."
+}

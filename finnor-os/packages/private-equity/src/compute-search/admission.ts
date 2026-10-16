@@ -1,3 +1,4 @@
+import {chargeOriginalNativeGrant} from './native-grant';
 import {randomUUID} from 'node:crypto';
 import type {PoolClient} from 'pg';
 import {ComputeCapacityUnavailableError} from '@finnor/db';
@@ -13,12 +14,8 @@ import {currentModule} from '../deliberation/module';
  * Caller holds S5's aggregate lock and validates the original owner envelope.
  * Debit never decreases after cancellation, timeout or uncertain execution. */
 export async function debitNativeComputeAttemptTx(client:PoolClient,scope:{tenantId:string;principalId:string;grantDigest:string;resourceId:string;capacity:number}){
- await client.query('INSERT INTO finnor_os.p2_grant_usage(tenant_id,principal_id,grant_digest,resource_id) VALUES($1,$2,$3,$4) ON CONFLICT DO NOTHING',
-  [scope.tenantId,scope.principalId,scope.grantDigest,scope.resourceId]);
- const debit=await client.query('UPDATE finnor_os.p2_grant_usage SET spent=spent+1 WHERE tenant_id=$1 AND principal_id=$2 AND grant_digest=$3 AND resource_id=$4 AND spent+1<=$5 RETURNING spent',
-  [scope.tenantId,scope.principalId,scope.grantDigest,scope.resourceId,scope.capacity]);
- if(!debit.rowCount)throw Error('P2_ORIGINAL_S5_COMPUTE_ENVELOPE_EXHAUSTED');
- return {owner:'P2/S5',grantDigest:scope.grantDigest,resourceId:scope.resourceId,spent:String(debit.rows[0].spent),unit:'native-attempt',refundGranted:false};
+ const spent=await chargeOriginalNativeGrant(client,{...scope,predicate:'P2_ORIGINAL_S5_COMPUTE_ENVELOPE_EXHAUSTED'});
+ return {owner:'P2/S5',grantDigest:scope.grantDigest,resourceId:scope.resourceId,spent:String(spent),unit:'native-attempt',refundGranted:false};
 }
 /** One transaction admits all dimensions and original parent counters. A failed
  * quota admission commits no debit or physical intent. Submission is a separate

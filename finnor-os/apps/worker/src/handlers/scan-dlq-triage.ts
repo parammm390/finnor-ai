@@ -2,7 +2,7 @@
 // row for a tenant. Thin wiring only — the actual rule lives in
 // packages/workflow-runtime/src/dlq-triage.ts (pure, unit-tested there).
 
-import { triageOpenDeadLetters } from "@finnor/workflow-runtime";
+import { triageOpenDeadLetters } from "@finnor/workflow-runtime/dlq-triage";
 import type { JobHandler } from "../queue";
 
 export const scanDlqTriage: JobHandler = async (payload) => {

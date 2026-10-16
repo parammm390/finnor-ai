@@ -41,6 +41,12 @@ import { withSentryConfig } from "@sentry/nextjs"
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Keep cache in memory so local and release builds do not consume a second
+  // artifact-sized disk tree beside their actual server/client output.
+  webpack(config) {
+    config.cache = { type: "memory", maxGenerations: 1 }
+    return config
+  },
   allowedDevOrigins: ["127.0.0.1"],
   ...(process.env.FINNOR_V4_PROFILE === "DISPOSABLE" && process.env.FINNOR_V4_NO_PERSISTENT_BUILD_CACHE === "1" ? {
     webpack(config) {

@@ -1,0 +1,7 @@
+# Disposable verification of unchanged numeric S3/S4/S5 owners.
+# Separate environment: this does NOT change R3's NumPy/SCIP proposal runtime.
+numpy==2.3.3
+scipy==1.16.2
+statsmodels==0.14.5
+arch==8.0.0
+pandas==2.3.2

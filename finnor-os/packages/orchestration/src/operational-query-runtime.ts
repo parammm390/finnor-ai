@@ -2,8 +2,8 @@ import { resolveTenantVertical } from "@finnor/db";
 import {
   executePrivateEquityOperationalQuery,
   isPrivateEquityOperationalQuery,
-  executeHarnessProgramQuery,
-} from "@finnor/private-equity";
+} from "@finnor/private-equity/src/operational-queries";
+import { executeHarnessProgramQuery } from "@finnor/private-equity/src/program-synthesis/operational-query";
 import {
   executeOperationalQuery as executeCoreOperationalQuery,
   type OperationalQueryOptions,

@@ -21,6 +21,11 @@ function block(source, start, end) {
 }
 
 const companyBrainSource = readFileSync(join(apiRoot, "company-brain/[operation]/route.ts"), "utf8")
+const r1Source=readFileSync(join(project,"finnor-os/packages/private-equity/src/r1/api.ts"),"utf8")
+const r1Registry=r1Source.match(/export const R1_OPERATIONS=\[([^\]]+)\]/)
+if(!r1Registry)throw new Error("Missing delegated R1 operations")
+const r1Operations=[...r1Registry[1].matchAll(/'([^']+)'/g)].map(match=>match[1])
+const r1Reads=new Set(["r1-read","r1-review","r1-projection","r1-history","r1-record"])
 function registeredOperations(path, name) {
   const source = readFileSync(join(project, path), "utf8")
   const match = source.match(new RegExp(`export\\s+const\\s+${name}\\s*=\\s*(?:new\\s+Set\\s*\\(\\s*)?\\[([\\s\\S]*?)\\]`))
@@ -41,6 +46,8 @@ const delegatedRegistries = [
   ["PROCEDURE_OPERATIONS", "procedure-induction/api.ts"],
   ["DELIBERATION_OPERATIONS", "deliberation/api.ts"],
 ]
+const identificationOperations = registeredOperations("finnor-os/packages/private-equity/src/r4/contracts.ts", "R4_OPERATIONS")
+const identificationReads = new Set(registeredOperations("finnor-os/packages/private-equity/src/r4/contracts.ts", "R4_READ_OPERATIONS"))
 const capitalSource = readFileSync(join(project,"finnor-os/packages/shared-types/src/capital-program.ts"),"utf8")
 const capitalOperations = [...block(capitalSource,"export const CapitalProgramV2Operations=","} as const;")
   .matchAll(/["'](capital-program-[a-z]+)["']\s*:/g)].map(match=>match[1])
@@ -59,6 +66,17 @@ const branchOperations = new Map([...block(branchSource,"export const BranchOper
 if(!capitalOperations.length||!m4Operations.size||!branchOperations.size||
   !companyBrainSource.includes("CAPITAL_PROGRAM_V2_OPERATIONS")||!companyBrainSource.includes("M4_OPERATIONS"))
   throw new Error("Completed owner operation registries must be present and actually delegated")
+// Only the stagewise Work leaf's actual POST owners are added. Generic policies,
+// release/consent/effect routes and unknown operations remain unchanged/denied.
+const coalitionOperations = new Map([
+  ["policies/coalition-read", "READ"],
+  ["allocations/coalition-read", "READ"],
+  ["allocations/coalition-clear", "MUTATION"],
+  ["allocations/coalition-consume", "MUTATION"],
+  ["obligations/coalition-read", "READ"],
+  ["obligations/coalition-consent-history", "READ"],
+  ["obligations/coalition-prepare", "MUTATION"],
+])
 const companyBrainOperations = [...new Set([
   ...capitalOperations,...formationOperations,...m4Operations.keys(),
   ...[...companyBrainSource.matchAll(/case "([a-z-]+)":/g)].map((match) => match[1]),
@@ -84,6 +102,15 @@ const companyBrainReads = new Set([
   "capital-program-read","capital-program-list","capital-program-context","capital-program-ports","capital-program-witness","capital-program-module",
   "capital-formation-read","capital-formation-list","capital-formation-profiles",
 ])
+const elicitationOperations=registeredOperations("finnor-os/packages/epistemic-runtime/src/incentive-rule-synthesis/contracts.ts","ELICITATION_OPERATIONS")
+const elicitationReads=new Set(["context","read","status","history"])
+const ownerLeafOperations=new Map()
+for(const family of ["interventions","policies","allocations","obligations"]){
+ const source=readFileSync(join(apiRoot,`${family}/[operation]/route.ts`),"utf8")
+ ownerLeafOperations.set(family,[...source.matchAll(/case\s+['"]([a-z][a-z0-9-]*)['"]\s*:/g)].map(m=>m[1]))
+}
+const ownerLeafReads=new Set(["query","validate","finite-preference","experiment-projection","read","read-mechanism",
+ "resources","budget-status","read-commitment","read-execution-handoff","check-budget","check-dispatch"])
 const readModelsSource = readFileSync(join(apiRoot, "read-models/[view]/route.ts"), "utf8")
 const readModels = ["attention", ...[...block(readModelsSource, "const VIEWS:", "export async function GET").matchAll(/^[ \t]+"([a-z-]+)":/gm)].map((match) => match[1])]
 const artifactOperations = {
@@ -94,7 +121,13 @@ const artifactOperations = {
   POST: ["drafts", "patches", "comments", "reviews", "bindings", "lineage", "publish", "publish-new", "recalculate"],
 }
 
+const atlasSource = readFileSync(join(project, "finnor-os/packages/private-equity/src/r7/contracts.ts"), "utf8")
+const atlasOperations = new Map([...block(atlasSource, "export const R7OperationClasses={", "} as const;")
+  .matchAll(/([a-z]+):'(READ|CONTROL|MUTATION)'/g)].map(match => [match[1], match[2]]))
+if (!atlasOperations.size) throw new Error("Missing versioned R7 operation classes")
+
 const familyRules = [
+  [/^elicitation-protocols\//,"elicitation-protocol","@finnor/private-equity",["CANVAS"]],
   [/^closing\//, "closing", "@finnor/private-equity", ["WORLD", "CANVAS"]],
   [/^live-controls$/, "live-control", "@finnor/private-equity", ["WORLD", "CANVAS"]],
   [/^branches\//,"branch-fabric","@finnor/private-equity",["CANVAS"]],
@@ -130,9 +163,10 @@ const familyRules = [
 
 const denyPrefixes = [
   "admin/", "webhooks/", "dlq/", "policies/", "audit/", "ready/", "release/", "vitals/",
-  "setup/", "events/", "private-equity/calibration/",
+  "setup/", "events/", "private-equity/calibration/", "coalition-programmes/",
 ]
 const humanOnlyPatterns = [
+  /^elicitation-protocols\/(?:report|event|review|close|use)$/,
   /^closing\/(submit|stop|resume|observe)$/,
   /^private-equity\/ic\/committee-configurations$/,
   /^private-equity\/ic\/cases\/:id\/(votes|dissents|finalize)$/,
@@ -157,6 +191,8 @@ function familyFor(path) {
 
 function tags(family) {
   const byFamily = {
+    "decision-atlas": ["work", "company-brain"],
+    "identification-plan": ["work", "company-brain"],
     closing: ["closing", "work", "objective", "company-brain", "semantic-activity"],
     "live-control": ["work", "company-brain", "underwriting", "authority"],
     "company-brain": ["company-brain"], "digital-twin": ["company-brain"], ic: ["ic", "company-brain", "semantic-activity"],
@@ -171,15 +207,22 @@ function tags(family) {
 }
 
 function routeEntry(method, path, source) {
-  const { family, owner, presentationTargets } = familyFor(path)
+  const coalitionClassification = method === "POST" ? coalitionOperations.get(path) : undefined
+  const { family, owner, presentationTargets } = coalitionClassification
+    ? { family: "coalition-programme", owner: "@finnor/private-equity", presentationTargets: ["CANVAS"] }
+    : familyFor(path)
   const stream = path === "stream"
+  const r1 = path.startsWith("policies/") && r1Operations.includes(path.slice("policies/".length))
   // Digital Twin POST includes evidence-backed canonical mutations.
   const ownerClassification=path.startsWith("branches/")?branchOperations.get(path.slice("branches/".length)):
-    path.startsWith("company-brain/")?m4Operations.get(path.slice("company-brain/".length)):undefined
+    path.startsWith("company-brain/")?m4Operations.get(path.slice("company-brain/".length)):
+    path.startsWith("elicitation-protocols/")?(elicitationReads.has(path.slice("elicitation-protocols/".length))?"READ":path.endsWith("/cancel")?"CONTROL":"MUTATION"):
+    ownerLeafOperations.has(path.split("/")[0])?(ownerLeafReads.has(path.split("/")[1])?"READ":
+      ["cancel-delivery","reconcile-request","reconcile"].includes(path.split("/")[1])?"CONTROL":"MUTATION"):undefined
   const read = method === "GET" || ownerClassification==="READ" || (family === "company-brain" && companyBrainReads.has(path.slice("company-brain/".length))) || ["query", "semantic-activity"].includes(family) || family === "closing" && ["read", "projection", "ports"].includes(path.slice("closing/".length))
   const adminOnly = denyPrefixes.some((prefix) => `${path}/`.startsWith(prefix)) ||
     (family === "read-model" && /read-models\/(reliability|readiness|readiness-slo|failure-injections)/.test(path))
-  const control = path === "live-controls" || controls.test(path) || path === "closing/stop" || path === "company-brain/procedure-induction-cancel" || /^company-brain\/(?:evidence|program|compute-search|interface|decision-slice|deliberation|capital-program|capital-formation)-(?:cancel|resume|reconcile|advance)$/.test(path)
+  const control = r1&&["r1-cancel","r1-reconcile"].includes(path.slice("policies/".length)) || path === "live-controls" || path === "closing/stop" || controls.test(path) || path === "company-brain/procedure-induction-cancel" || /^company-brain\/(?:evidence|program|compute-search|interface|decision-slice|deliberation|capital-program|capital-formation)-(?:cancel|resume|reconcile|advance)$/.test(path)
   const classification = adminOnly ? "ADMIN" : stream ? "STREAM" : ownerClassification ?? (read ? "READ" : control ? "CONTROL" : "MUTATION")
   const systemOnly = path.startsWith("webhooks/") || ["ready", "release", "vitals", "health"].includes(path)
   const humanOnly = humanOnlyPatterns.some((pattern) => pattern.test(path))
@@ -194,7 +237,7 @@ function routeEntry(method, path, source) {
     effectClass: read ? null : classification === "CONTROL" ? "runtime_control" : "domain_mutation",
     verificationClass: read ? "canonical_read" : "canonical_reread",
     presentationTargets: userProduct ? presentationTargets : [],
-    invalidationTags: read ? [] : family==="branch-fabric"?["work","branch-fabric"]:
+    invalidationTags: read ? [] : family==="elicitation-protocol"?["work","company-brain","elicitation-protocol"]:family==="branch-fabric"?["work","branch-fabric"]:
       path.startsWith("company-brain/capital-formation-")?["work","company-brain","authority","source"]:
       path.startsWith("company-brain/capital-program-")||m4Operations.has(path.slice("company-brain/".length))?["work","company-brain"]:tags(family),
     timeoutClass: stream ? "STREAM" : read ? "READ" : "WRITE",
@@ -212,13 +255,20 @@ for (const file of files(apiRoot)) {
   ])
   const path = relative(apiRoot, file).replace(/\/route\.ts$/, "").replaceAll("\\", "/")
     .replaceAll(/\[([^\].]+)\]/g, ":$1")
+    // Next shares the segment name with S4; existing nested clients still
+    // supply a tenant reference and the backend aliases it before enforcing it.
+    .replace(/^policies\/:operation\/:actionType(?=\/|$)/, "policies/:tenantId/:actionType")
   for (const method of methods) {
     if (path === "company-brain/:operation") {
       for (const operation of companyBrainOperations) routes.push(routeEntry(method, `company-brain/${operation}`, source))
+    } else if(path==="elicitation-protocols/:operation"){
+      for(const operation of elicitationOperations)routes.push(routeEntry(method,`elicitation-protocols/${operation}`,source))
     } else if (path === "closing/:operation") {
       for (const operation of closingOperations) routes.push(routeEntry(method, `closing/${operation}`, source))
     } else if(path==="branches/:operation"){
       for(const operation of branchOperations.keys())routes.push(routeEntry(method,`branches/${operation}`,source))
+    } else if(ownerLeafOperations.has(path.split("/")[0])&&path.endsWith("/:operation")){
+      for(const operation of ownerLeafOperations.get(path.split("/")[0]))routes.push(routeEntry(method,`${path.split("/")[0]}/${operation}`,source))
     } else if (path === "read-models/:view") {
       for (const view of readModels) routes.push(routeEntry(method, `read-models/${view}`, source))
     } else if (path === "documents/:id/artifact/[...action]") {

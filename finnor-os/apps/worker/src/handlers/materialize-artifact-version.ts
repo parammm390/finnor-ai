@@ -3,7 +3,7 @@ import { sql } from "drizzle-orm";
 import { ingestArtifact, interpret, recordArtifactMetric, saveArtifactIRSnapshot } from "@finnor/artifacts";
 import { enqueueJob, withTenant } from "@finnor/db";
 import { recordBusinessEvent, setDocumentVersionHead } from "@finnor/data-platform";
-import { ingestMemory } from "@finnor/memory";
+import { ingestMemory } from "@finnor/memory/ingest";
 import { MicrosoftDriveArtifactTransport, MicrosoftGraphClient, MicrosoftGraphError } from "@finnor/provider-microsoft365";
 import { resolveMicrosoftProviderAuthContext } from "@finnor/security";
 import { logWithTrace } from "@finnor/tools";
