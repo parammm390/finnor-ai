@@ -235,11 +235,6 @@ export async function benchmark(url: string, files: MigrationFile[]): Promise<{ 
 
     const root = (await admin.query<{ id: string }>("SELECT id::text FROM finnor_os.external_organizations WHERE tenant_id=$1 AND organization_key='bench-company-0199'", [tenantId])).rows[0]!.id;
     const fund = (await admin.query<{ id: string }>("SELECT id::text FROM finnor_os.pe_funds WHERE tenant_id=$1 ORDER BY name LIMIT 1", [tenantId])).rows[0]!.id;
-    await admin.query("ANALYZE finnor_os.canonical_entity_versions; ANALYZE finnor_os.pe_metric_observations; ANALYZE finnor_os.external_organizations");
-    const planResult = await admin.query<{ plan: unknown }>(`EXPLAIN (ANALYZE,BUFFERS,FORMAT JSON)
-      SELECT DISTINCT ON(entity_type,entity_id) entity_type,entity_id,snapshot FROM finnor_os.canonical_entity_versions
-       WHERE tenant_id=$1 AND recorded_at<=now() AND entity_type=ANY($2::text[])
-       ORDER BY entity_type,entity_id,recorded_at DESC,entity_version DESC`, [tenantId, ["external_organization", "pe_portfolio_holding", "pe_ownership_interest", "pe_metric_series", "pe_metric_observation"]]);
 
     process.env.DATABASE_URL = url.replace(/\/\/[^@]+@/, "//finnor_app:finnor_app@");
     await closePool();
@@ -251,6 +246,11 @@ export async function benchmark(url: string, files: MigrationFile[]): Promise<{ 
     assert(JSON.stringify(originalHoldings) === JSON.stringify((await admin.query("SELECT id,company_id,origin_deal_id,entry_date FROM finnor_os.pe_portfolio_holdings WHERE tenant_id=$1 ORDER BY id", [tenantId])).rows), "current-schema upgrade changed historical holdings");
     assert(JSON.stringify(originalDeals) === JSON.stringify((await admin.query("SELECT id,status,actual_close_at FROM finnor_os.pe_deals WHERE tenant_id=$1 ORDER BY id", [tenantId])).rows), "current-schema upgrade changed historical Deal closure");
     assert((await admin.query("SELECT name FROM finnor_os._migrations ORDER BY name DESC LIMIT 1")).rows[0]?.name === CURRENT_MIGRATION_HEAD, "benchmark must run on the complete current schema");
+    await admin.query("ANALYZE finnor_os.canonical_entity_versions; ANALYZE finnor_os.pe_metric_observations; ANALYZE finnor_os.external_organizations");
+    const planResult = await admin.query<{ plan: unknown }>(`EXPLAIN (ANALYZE,BUFFERS,FORMAT JSON)
+      SELECT DISTINCT ON(entity_type,entity_id) entity_type,entity_id,snapshot FROM finnor_os.canonical_entity_versions
+       WHERE tenant_id=$1 AND recorded_at<=now() AND entity_type=ANY($2::text[])
+       ORDER BY entity_type,entity_id,recorded_at DESC,entity_version DESC`, [tenantId, ["external_organization", "pe_portfolio_holding", "pe_ownership_interest", "pe_metric_series", "pe_metric_observation"]]);
     const currentValidAt = new Date().toISOString();
     let companyProjection = await loadCompanyBrainProjection(ctx, { root: { entityType: "external_organization", entityId: root }, validAt: currentValidAt });
     const metrics: Metric[] = [];

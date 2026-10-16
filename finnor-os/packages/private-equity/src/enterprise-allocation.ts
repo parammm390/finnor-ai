@@ -160,7 +160,7 @@ export function constrainEnterpriseAllocationSelection(ctx:PeMutationContext,inp
   minimum:selected.has(id)?1:0,maximum:selected.has(id)?1:0,sourceRef:m.businessOwnerRef}))];
  if(choiceConstraints.length>128)throw new AllocationContractError('LIMIT_EXCEEDED','Exact selection exceeds the canonical choice bound');
  const exact={...body,choiceConstraints};
- return {...input,jointModel:{...exact,ref:allocationRef('BUSINESS_OWNER','joint-allocation-model',exact,'s5-joint-model-v1')}};
+ return {...input,jointModel:{...exact,ref:allocationRef('BUSINESS_OWNER','joint-allocation-model',exact,exact.schema==='finnor.joint-allocation-model.exact.v2'?'s5-joint-model-exact-v2':'s5-joint-model-v1')}};
 }
 
 /** Uses the actual S4/S5 contracts and exact checker, but never clears, persists
@@ -177,9 +177,10 @@ export async function previewEnterprisePortfolio(ctx:PeMutationContext,input:All
  const policies=await readCurrentPolicies(ctx,exact.policyRefs),knowledgeAt=new Date().toISOString();
  const validUntil=new Date(Math.min(Date.parse(m.validUntil),Date.parse(joint.validUntil),
   ...policies.map(p=>Date.parse(p.validUntil)),...snapshot.resources.map(r=>Date.parse(r.validUntil)))).toISOString();
+ const exactEncoding=policies.some(p=>p.exactProfile)||joint.schema==='finnor.joint-allocation-model.exact.v2'||snapshot.outstanding.some(row=>row.envelopes.some(e=>[...e.quantities,...e.minimumQuantities].some(q=>q.includes('/'))));
  const body:Omit<CanonicalAllocationProblem,'ref'>={schema:'finnor.allocation-problem.v1',tenantId:ctx.auth.tenantId,principalId:actor(ctx),
   episodeId:m.episodeId,mandate:m,policies,resources:snapshot.resources,jointModel:joint,demandBindings:exact.demandBindings,
-  funding:exact.funding,outstanding:snapshot.outstanding,snapshotDigest:snapshot.snapshotDigest,knowledgeAt,validUntil,methodVersion:S5_VERSION};
+  funding:exact.funding,outstanding:snapshot.outstanding,snapshotDigest:snapshot.snapshotDigest,knowledgeAt,validUntil,methodVersion:S5_VERSION,...(exactEncoding?{quantityEncoding:'DECIMAL_OR_RATIONAL_V2' as const}:{})};
  const problem={...body,ref:allocationRef('S5','allocation-problem',body)};assertAllocationProblem(problem);
  const check=verifyCanonicalAllocation(problem,selectedPolicyIds);
  await currentPins(ctx,snapshot.resources);await readCurrentPolicies(ctx,exact.policyRefs);
