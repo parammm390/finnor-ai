@@ -508,3 +508,36 @@ live verification. Live role inspection confirms PAID/ACTIVE project us-east-1,
 production-only immutable repository OIDC, three inline policies, no attached
 managed policies, and a CloudFormation-managed deployment role. No IAM mutation
 or production deployment has occurred at this publication point.
+
+### Hosted batch 166 and final generation boundary
+
+Batch 166 on ba0835ce passed workflow validation, release governance, Gitleaks,
+OSV, both semantic typechecks, shard inventory, authz/OpenAPI, frontend generated
+inventories, PE boundary, retirement checks, lint (six non-blocking warnings),
+and source drift. The backend aggregate failed because the final one-line closing
+initiator guard shifted private-equity registry/schema source-line references in
+the action manifest. Local verification had omitted that separate backend action
+manifest after the final edit; that omission was an engineering error. The full
+batch is complete, expensive jobs were skipped, and no failing job was rerun.
+
+Regenerate both action-manifest files from actual source. Add all generated-source
+contracts, including this manifest, to the ordinary release:preflight entry point
+before its expensive release fixtures. This closes the local prepublication
+omission without weakening the hosted independent source aggregate. No owner code
+or acceptance criterion changed in this correction.
+
+The previously authorized live deployment-role narrowing is now applied. The role
+has exactly one inline policy: the deduplicated union of the current workflow's
+four session policies. Two obsolete bootstrap inline policies were removed. Full
+preimages and applied API/readback receipts are retained in the task artifact
+directory (ci-release-iam-preimage-20261016.json and
+ci-release-iam-applied-20261016.json), allowing administrator recovery. No runtime
+resource was deleted or deployed. ValidatePolicy returned zero findings; thirteen
+explicit positive/negative permission cases passed. IAM policy edits (including
+self/worker escalation), unrelated ECR/ECS/CloudFormation targets, network writes
+and passing an administrator role are no longer granted. The production repository
+OIDC trust remains unchanged. The candidate template is byte-identical to deployed
+template; its eight-resource-only finalized ECS rollout forbids IAM changes.
+This intentionally restricts the live role beyond its historical provisioning
+template: a future IAM/infrastructure change requires separately reviewed admin
+authority and cannot restore broad permissions through the deployment role itself.
