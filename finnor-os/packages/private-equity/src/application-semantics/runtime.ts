@@ -211,6 +211,9 @@ export class NativeApplicationRuntime implements ApplicationLearningPort {
         const readId = randomUUID();
         await withS5PortfolioTransaction(this.ctx, async (c) => {
           const actual = await assertApplicationClaim(this.ctx, this.session, this.execution, c, this.recovery);
+          await currentApplicationWork(this.ctx, actual, c, this.recovery);
+          const admittedProfile = await nativeApplicationProfile(this.ctx, profile.profile.id);
+          if (admittedProfile.bindingDigest !== profile.bindingDigest) x2Fault("X2_CURRENT_READ_PROFILE_CHANGED");
           const count = (await c.query<{ n: string }>("SELECT count(*)::text n FROM finnor_os.application_semantics_events"
             + " WHERE tenant_id=$1 AND principal_id=$2 AND kind='PHYSICAL_READ_STARTED' AND body->'originalParentRef'=$3::jsonb",
           [this.ctx.auth.tenantId, principal(this.ctx), JSON.stringify(this.session.original_parent_ref)])).rows[0]!;

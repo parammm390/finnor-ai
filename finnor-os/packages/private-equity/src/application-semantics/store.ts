@@ -40,7 +40,7 @@ export interface NativeApplicationProfile {
 export const APPLICATION_SOURCE_FILES = [
   "finnor-os/packages/shared-types/src/application-semantics.ts",
   ...["contracts", "native-contracts", "ports", "envelope", "learner", "checker", "composition",
-    "source", "observation", "store", "allocation", "obligations", "runtime", "worker", "api", "validity", "fresh-authority"]
+    "source", "schema-pattern", "observation", "store", "allocation", "obligations", "runtime", "worker", "api", "validity", "fresh-authority"]
     .map((name) => `finnor-os/packages/private-equity/src/application-semantics/${name}.ts`),
   "finnor-os/packages/computer/src/application-provider.ts",
   "finnor-os/packages/computer/src/application-passive-document.ts",
@@ -68,6 +68,7 @@ export const APPLICATION_SOURCE_FILES = [
   "finnor-os/packages/private-equity/src/enterprise-beliefs.ts",
   "finnor-os/packages/db/migrations/0191_frontier5_x2_application_semantics.sql",
   "finnor-os/packages/db/migrations/0192_frontier5_x2_request_custody.sql",
+  "finnor-os/packages/db/migrations/0193_frontier5_x2_authority_custody.sql",
   "package-lock.json", "finnor-os/package-lock.json",
 ] as const;
 const sourceRoot = () => process.env.FINNOR_X2_SOURCE_ROOT
@@ -149,13 +150,16 @@ export async function currentApplicationWork(ctx: PeMutationContext, row: Applic
   const read = async (c: PoolClient) => {
     const actor = await c.query("SELECT id FROM finnor_os.users WHERE tenant_id=$1 AND id=$2 AND status='active' AND role='owner' FOR SHARE",
       [ctx.auth.tenantId, principal(ctx)]);
-    const input = (await c.query<{ id: string; body: unknown }>(
-      "SELECT id::text,to_jsonb(w) body FROM finnor_os.work_inputs w WHERE tenant_id=$1 AND work_id=$2 ORDER BY created_at DESC,id DESC LIMIT 1",
-      [ctx.auth.tenantId, row.work_id])).rows[0];
-    if (actor.rowCount !== 1 || input?.id !== row.work_input_id || x2Digest(input.body) !== row.work_input_digest) x2Fault("X2_CURRENT_ACTOR_OR_WORK_INPUT_CHANGED");
+    if (actor.rowCount !== 1) x2Fault("X2_CURRENT_ACTOR_OR_WORK_INPUT_CHANGED");
+    // Intake inserts its new input before locking Work. Read inputs only after
+    // this lock so a writer that committed while we waited cannot be missed.
     const work = (await c.query<{ status: string }>(
       "SELECT status FROM finnor_os.works WHERE tenant_id=$1 AND id=$2 FOR SHARE",
       [ctx.auth.tenantId, row.work_id])).rows[0];
+    const input = (await c.query<{ id: string; body: unknown }>(
+      "SELECT id::text,to_jsonb(w) body FROM finnor_os.work_inputs w WHERE tenant_id=$1 AND work_id=$2 ORDER BY created_at DESC,id DESC LIMIT 1",
+      [ctx.auth.tenantId, row.work_id])).rows[0];
+    if (input?.id !== row.work_input_id || x2Digest(input.body) !== row.work_input_digest) x2Fault("X2_CURRENT_ACTOR_OR_WORK_INPUT_CHANGED");
     if (!work || !recovery && ["cancelled", "failed"].includes(work.status)) x2Fault("X2_CURRENT_WORK_CANCELLED_OR_FAILED");
     if (!recovery && (row.cancel_requested_at || ["CANCELLED", "STALE", "BLOCKED"].includes(row.status)
       || row.deadline_at.getTime() <= Date.now())) x2Fault("X2_ORIGINAL_CANCELLED_STALE_OR_EXPIRED");

@@ -1,4 +1,6 @@
 import { createHash } from "node:crypto";
+import { closeSync, constants, existsSync, fstatSync, openSync, readFileSync, realpathSync } from "node:fs";
+import { resolve } from "node:path";
 import { z } from "zod";
 import type {
   ApplicationActionModel, ApplicationModelCheck, ApplicationScalar,
@@ -17,11 +19,55 @@ export const X2_LIMITS = Object.freeze({
 });
 export const x2Digest = (body: unknown) => createHash("sha256").update(canonical(body)).digest("hex");
 export const x2ByteDigest = (body: string | Uint8Array) => createHash("sha256").update(body).digest("hex");
-export const applicationRuntimeIdentity = () => ({
-  node: process.version, platform: process.platform, architecture: process.arch,
-  authorityEnvironment: process.env.FINNOR_ENVIRONMENT ?? null,
-  applicationProfile: process.env.FINNOR_X2_PROFILE ?? null,
-});
+let installedNodeDigest: string | undefined;
+function installedRuntimeDigest(): string | null {
+  const root = resolve(import.meta.dirname, "../../../../.."), directory = resolve(root, "finnor-os/x2-runtime");
+  if (!existsSync(directory) && !existsSync(resolve(root, "../build-manifest.json"))) return null;
+  const read = (path: string, maximum: number): Buffer => {
+    if (realpathSync(path) !== path) x2Fault("X2_INSTALLED_RUNTIME_PATH_CHANGED");
+    const fd = openSync(path, constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK);
+    try {
+      const before = fstatSync(fd);
+      if (!before.isFile() || before.size > maximum || before.uid !== process.getuid?.()
+        || before.mode & 0o222) x2Fault("X2_INSTALLED_RUNTIME_UNSAFE_ASSET");
+      const bytes = readFileSync(fd), after = fstatSync(fd);
+      if (bytes.length !== before.size || after.size !== before.size || after.mtimeMs !== before.mtimeMs)
+        x2Fault("X2_INSTALLED_RUNTIME_ASSET_CHANGED");
+      return bytes;
+    } finally { closeSync(fd); }
+  };
+  const bytes = read(resolve(directory, "identity.json"), 1024 * 1024);
+  const identity = z.object({
+    schema: z.literal("finnor.x2.installed-asset-identity.v1"),
+    node: z.literal(process.version), platform: z.literal(process.platform), architecture: z.literal(process.arch),
+    nodeBinarySha256: z.string().regex(/^[a-f0-9]{64}$/),
+    emittedFiles: z.array(z.object({
+      path: z.string().regex(/^finnor-os\/x2-runtime\/(?:worker\/)?[A-Za-z0-9-]+\.js$/),
+      bytes: z.number().int().nonnegative().max(16 * 1024 * 1024),
+      sha256: z.string().regex(/^[a-f0-9]{64}$/),
+    }).strict()).min(1).max(8),
+  }).passthrough().parse(JSON.parse(bytes.toString()));
+  const paths = new Set(identity.emittedFiles.map(file => file.path));
+  if (paths.size !== identity.emittedFiles.length)
+    x2Fault("X2_INSTALLED_RUNTIME_AMBIGUOUS_ASSET");
+  if (["physical-worker.js", "worker/index.js", "ledger-server.js", "s8-server.js", "application-consumer.js"]
+    .some(file => !paths.has("finnor-os/x2-runtime/" + file))) x2Fault("X2_INSTALLED_RUNTIME_REQUIRED_ASSET_MISSING");
+  installedNodeDigest ??= x2ByteDigest(readFileSync(process.execPath));
+  if (identity.nodeBinarySha256 !== installedNodeDigest) x2Fault("X2_INSTALLED_NODE_IDENTITY_CHANGED");
+  for (const file of identity.emittedFiles) {
+    const asset = read(resolve(root, file.path), 16 * 1024 * 1024);
+    if (asset.length !== file.bytes || x2ByteDigest(asset) !== file.sha256) x2Fault("X2_INSTALLED_RUNTIME_ASSET_CHANGED");
+  }
+  return x2ByteDigest(bytes);
+}
+export const applicationRuntimeIdentity = () => {
+  const installedAssetDigest = installedRuntimeDigest();
+  return { node: process.version, platform: process.platform, architecture: process.arch,
+    authorityEnvironment: process.env.FINNOR_ENVIRONMENT ?? null,
+    applicationProfile: process.env.FINNOR_X2_PROFILE ?? null,
+    ...(installedAssetDigest ? { installedAssetDigest } : {}),
+  };
+};
 export function x2Fault(code: string, status = 409): never { throw new LedgerFault(status, code); }
 export function applicationFailureReason(error: unknown) {
   const value = error && typeof error === "object" && "code" in error ? String(error.code)

@@ -1,11 +1,28 @@
 # FRONTIER5.X2 status
 
 Started 14 October 2026. The recoverable local checkpoint is described in
-`checkpoint.md`. Current native 049 passes UI-only acquisition, canonical
-independent checking and four-operation/nine-field model freezing, then fails
-fresh Work at `X2_TARGET_ENTITY_OUTSIDE_OBSERVED_CONTEXT` (6 PASS/1 FAIL/exit 1).
-Prior-cut native 042–045 pass configured API/cancellation/backlog/final-lock
-proofs. Full finite engineering remains incomplete and unsealed.
+`checkpoint.md`; its native 049 failure is historical, not current status.
+Native 068 passes all 12 required source/native review gates, exit 0, after
+native 067 reproduces all six intended remaining failures. Source-contract
+004 passes 15 cases for bounded pattern matching and boolean domains.
+Migration 0193 repairs existing request UUID custody and header-connection
+revocation without rewriting 0191/0192. Runtime and composition repairs preserve
+observed identity dependencies and recheck authority after real lock waits.
+
+Installed 001–005 build successfully. Installation 005 includes the review
+repairs and completes the real backend build in 308,783.329 ms. Native 069
+reaches the maintained signed-in panel but fails on an incorrect fixture SQL
+column; that callback is repaired. Native 070 and 071 each report 8 PASS/1 FAIL
+and exit 1. Actual login, canonical Work display and persisted focus/reload
+pass. Native 070 encounters frontend ENOSPC during WORLD navigation. With
+7.5 GiB free, unchanged installation 005 in native 071 navigates from WORLD
+through explicit no-context back to Canvas, then fails inside that stage
+before its final assertions. The current failure is not established as a
+product defect or attributed to disk. Fresh business, later lifecycle and
+API restart are NOT_REACHED; beginning/ending installed custody passes.
+Prior API/UI/hybrid, recovery, cancellation, drift, backlog and final-lock
+evidence remains prior-cut evidence. Full finite engineering remains
+incomplete and unsealed.
 
 - DESIGNED: architecture/ownership, pre-code failure specification and finite verification contract recorded. The independent portal specification and oracle are frozen. The independent finite predicate reference passed a 12-state readiness case, false-valid and false-invalid mutations, and an incomplete-truth UNKNOWN case. That is reference readiness, not application acceptance.
 - CODE_COMPLETE: NOT ACHIEVED.
@@ -19,6 +36,28 @@ No X1 or ORIGINAL V1 completion percentage, cumulative compatibility, admission 
 
 ## Executed development checks
 
+- Full backend typecheck 038, explicit backend-inclusive lint 046 and focused
+  native-driver closure 055: PASS. These do not establish mounted acceptance.
+- Installed 005/native 071: 8 PASS/1 FAIL/exit 1. The first two mounted stages
+  pass; the root-boundary stage fails. Remaining mounted stages and fresh
+  business/API restart are not executed. Ending source/oracle and installed
+  custody pass. The first 071 launcher used an absent root-level tsx path and
+  exited before creating an episode; that error log is retained separately
+  from the corrected backend-tsx execution log.
+- Native 068: 12 PASS/0 FAIL/exit 0. Real scoped UUID-update refusal, existing
+  connection-owner credential clearing, known observed-identity composition,
+  canonical `receiveWork` contention and physical account/profile read
+  revocation pass. Fresh/upgrade/no-op migration and ending custody pass.
+  This review-only variant does not release the held-out fresh business case.
+- Native 065 retains its relay Origin 403 bootstrap failure. Native 066 reaches
+  five intended failures and one wrong controller-lock boundary. Native 067
+  reaches all six intended failures, with actual blocked-SQL and subsequent
+  physical-read evidence retained. These are not successful engineering runs.
+- Source-contract 004: 15 PASS/0 FAIL. The child-bounded pre-repair regex stall
+  and boolean failures remain in 001/002; unsupported patterns refuse.
+- Passive-provider 009: 38 PASS/0 FAIL; structural projection 004:
+  17 PASS/0 FAIL. Native 062 semantic-drift/Work preservation: 8 PASS/exit 0.
+  These are earlier source-cut proofs, not installed/mounted qualification.
 - Unchanged backend `npm run typecheck`: PASS.
 - Unchanged P5 native baseline: 3 PASS, 4 FAIL. The queued acquisitions and
   physical-crash story did not reach their intended boundary. A read-only
@@ -75,7 +114,7 @@ relabelled. Reporting quantities are not automatically cash consumption.
 
 Disk and shared-Git failures are retained in the session. Task-owned copy-on-write installed dependencies avoid deleting peer/user data. The initial Git-identity failure is historical: the existing author and committer identities resolve without configuration changes. Checkpoint Git provenance is recorded separately from the still-missing final release seal.
 
-## Latest native and maintained Work checks
+## Earlier native and maintained Work checks (historical)
 
 - Backend native typecheck 006: FAIL, one missing observation narrowing.
   Repaired; full native typecheck 007: PASS.

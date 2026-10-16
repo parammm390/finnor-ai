@@ -5,6 +5,7 @@ import type { ApplicationActionModel, ApplicationSnapshot, ApplicationState, Che
   ExperimentRef, LearnedApplicationOperation } from "@finnor/shared-types";
 import type { PeMutationContext } from "../types";
 import type { PoolClient } from "pg";
+import { transitionWorkTx } from "@finnor/db";
 import { principal, tx } from "../evidence-execution/store";
 import { affectedClosure } from "../live-recompilation/contracts";
 import type { HarnessNode } from "../program-synthesis/contracts";
@@ -59,7 +60,7 @@ export async function invalidateApplicationOperation(ctx: PeMutationContext, row
   if (!operation) x2Fault("X2_P7_OPERATION_NOT_IN_MODEL");
   const observationRef = observation ? x2Ref("COMPUTER", "application-observation", observation) : null;
   if (observationRef) await retainApplicationArtifact(ctx, observationRef, observation, true);
-  await tx(ctx, async (c) => {
+  await tx(ctx, async (c, db) => {
     const evidence = await applicationEvent(ctx, row, "P7_OPERATION_FALSIFIED_OR_REVOKED", {
       modelRef: row.model_ref, operationId, observationRef, reason, priorEvidenceRetained: true,
       effectCancellationClaimed: false, resourcesReleased: false,
@@ -80,9 +81,31 @@ export async function invalidateApplicationOperation(ctx: PeMutationContext, row
       const composition = parseApplicationComposition({ ...stored, ref: child.composition_ref });
       const closure = applicationCompositionClosure(composition, operationId);
       if (!closure.affectedNodes.length) continue;
-      if (!["CANCELLED", "FAILED", "STALE", "BLOCKED"].includes(child.status)) await c.query(
-        "UPDATE finnor_os.application_semantics_sessions SET status='STALE',reason=$3,updated_at=clock_timestamp() WHERE tenant_id=$1 AND id=$2",
-        [ctx.auth.tenantId, child.id, reason]);
+      if (!["COMPLETED", "MODEL_READY", "CANCELLED", "FAILED"].includes(child.status)) {
+        if (!["BLOCKED", "STALE"].includes(child.status)) await c.query(
+            "UPDATE finnor_os.application_semantics_sessions SET status='STALE',reason=$3,updated_at=clock_timestamp() WHERE tenant_id=$1 AND id=$2",
+            [ctx.auth.tenantId, child.id, reason]);
+        const work = (await c.query<{ status: string }>(
+          "SELECT status FROM finnor_os.works WHERE tenant_id=$1 AND id=$2 FOR UPDATE",
+          [ctx.auth.tenantId, child.work_id])).rows[0];
+        const latestInput = (await c.query<{ id: string }>(
+          "SELECT id FROM finnor_os.work_inputs WHERE tenant_id=$1 AND work_id=$2 ORDER BY created_at DESC,id DESC LIMIT 1 FOR SHARE",
+          [ctx.auth.tenantId, child.work_id])).rows[0];
+        // Invalidation stops this intent, not a replacement instruction or
+        // independently completed history. Possible effects remain waiting.
+        if (work && !["completed", "cancelled", "failed"].includes(work.status) && latestInput?.id === child.work_input_id) {
+          const possible = await c.query(
+            "SELECT r.id FROM finnor_os.application_semantics_requests r JOIN finnor_os.application_semantics_sessions s"
+            + " ON s.tenant_id=r.tenant_id AND s.id=r.session_id"
+            + " WHERE r.tenant_id=$1 AND r.principal_id=$2 AND s.work_id=$3 AND s.work_input_id=$4"
+            + " AND r.possible_egress AND r.status NOT IN ('VERIFIED','DENIED') LIMIT 1",
+            [ctx.auth.tenantId, principal(ctx), child.work_id, child.work_input_id]);
+          await transitionWorkTx(db, child.tenant_id, child.work_id, possible.rowCount ? "waiting" : "blocked",
+            "application_operation_invalidated", { sessionId: child.id, workInputId: child.work_input_id,
+              operationId, reason, triggerRef: evidence, originalObservationRequired: Boolean(possible.rowCount),
+              resourcesReleased: false, newAllowance: false }, { expectedWorkInputId: child.work_input_id });
+        }
+      }
       await applicationEvent(ctx, child, "P7_MINIMAL_SOUND_COMPOSITION_CLOSURE", {
         triggerRef: evidence, operationId, compositionRef: child.composition_ref,
         affectedStepIds: closure.affectedNodes.map((node) => node.id), keptStepIds: closure.keptNodes.map((node) => node.id),
@@ -104,7 +127,9 @@ export async function revalidateApplicationOperation(ctx: PeMutationContext, row
   const old = await applicationArtifact<Omit<PrivateApplicationBinding, "ref">>(ctx, operation.privateBindingRef);
   if (old.semanticDigest !== fresh.semanticDigest || operation.semanticRevision !== description.semanticRevision
     || operation.authorization.role !== description.role || old.profileId !== fresh.profileId
-    || old.method !== fresh.method || x2Digest(old.parameterPaths) !== x2Digest(fresh.parameterPaths)
+    || old.substrate !== fresh.substrate || old.method !== fresh.method
+    || old.substrate === "API" && (old.pathTemplate !== fresh.pathTemplate
+      || x2Digest(old.parameterPaths) !== x2Digest(fresh.parameterPaths))
     || !sameX2Ref(operation.observerContractRef, description.observerContractRef)) {
     await invalidateApplicationOperation(ctx, row, operation.id, null, "X2_MATERIAL_OPERATION_OR_OBSERVER_DRIFT");
     x2Fault("X2_MATERIAL_OPERATION_OR_OBSERVER_DRIFT");

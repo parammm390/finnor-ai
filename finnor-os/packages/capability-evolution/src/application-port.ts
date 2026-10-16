@@ -487,7 +487,8 @@ export class ApplicationCapabilityPort {
     }
     private domain(state: State) { return this.domains.get(domainKey(state.candidate)) ?? { generation: 0, active: null }; }
     private configured(): ApplicationPortConfiguration {
-        if (this.policy.domain !== 'DISPOSABLE_TEST_AUTHORITY' || process.env.NODE_ENV === 'production')
+        if (this.policy.domain !== 'DISPOSABLE_TEST_AUTHORITY' || process.env.FINNOR_ENVIRONMENT !== 'staging'
+            || process.env.FINNOR_X2_PROFILE !== 'ordinary_disposable')
             fault('S8_PROTECTED_APPLICATION_DOMAIN_UNADMITTED', 403);
         if (!this.policy.application) fault('S8_APPLICATION_PORT_UNCONFIGURED', 503);
         return this.policy.application;

@@ -14,6 +14,7 @@ import type {
   AuthorizedApplicationProfile, PreparedApplicationWire,
 } from "../../packages/private-equity/src/application-semantics/ports";
 import type { ScopedApplicationIdentity } from "@finnor/shared-types";
+import { ApplicationSourceSession } from "../../packages/private-equity/src/application-semantics/source";
 
 const destination = process.argv[2];
 if (!destination?.startsWith("/")) throw Error("FRESH_ABSOLUTE_OUTPUT_DIRECTORY_REQUIRED");
@@ -27,6 +28,27 @@ const valid = document(`<section><h2>Change value</h2><form action="/change" met
 <label for="note">Note</label><textarea id="note" name="note">A &amp; B</textarea>
 <button type="submit">Change value</button></form></section>
 <article aria-label="Observed record"><dl><dt>status</dt><dd>READY</dd><dt>absent</dt><dd></dd></dl></article>`);
+const escape = (value: unknown) => String(value).replaceAll("&", "&amp;").replaceAll('"', "&quot;")
+  .replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+const collisionBinding = {
+  applicationId: "passive-fixture", accountId: "ordinary-account", recordId: "collision",
+  principalId: "ordinary-actor", grantId: "public-fixture-grant", applicationVersion: "fixture-v1",
+  schemaRevision: "1", semanticRevision: 1, renderingRevision: 1, authorityRevision: 1, grantRevision: 1,
+};
+const collisionRecord = { ...collisionBinding, version: 1, phase: "READY", reporting: {
+  amount: "1.00", currency: "USD", entity: "ordinary-entity", unit: "ones", date: "2027-06-30", basis: "cash",
+}, observation: { available: ["phase", "reporting"], unavailable: [] } };
+const collisionForm = (unsupported: boolean) => `<form aria-label="Change value" method="post"
+action="/records/collision/change"${unsupported ? ' target="_blank"' : ""}>
+<input type="hidden" name="context" value="${escape(JSON.stringify(collisionBinding))}">
+<input type="hidden" name="request" value="${escape(JSON.stringify({
+  requestId: "request", effectId: "effect", obligationId: "obligation", idempotencyKey: "key",
+  parentId: "original-parent", deadline: "2027-06-30T00:00:00.000Z",
+}))}"><input type="hidden" name="expectedVersion" value="1"><input name="next" value="READY" required>
+<button type="submit">Change value</button></form>`;
+const collisionDocument = document(`<article><dl>${Object.entries(collisionRecord).map(([name, value]) =>
+  `<dt>${escape(name)}</dt><dd>${escape(typeof value === "object" ? JSON.stringify(value) : value)}</dd>`).join("")}
+</dl></article>${collisionForm(false)}${collisionForm(true)}`);
 const malformed = [
   { id: "script", html: document("<script>alert(1)</script>"), code: "X2_PASSIVE_ACTIVE_DOCUMENT" },
   { id: "frame", html: document('<iframe src="/secret"></iframe>'), code: "X2_PASSIVE_ACTIVE_DOCUMENT" },
@@ -73,7 +95,8 @@ const server = createServer(async (request, response) => {
     response.writeHead(403).end(); return;
   }
   if (request.method === "GET" && path.startsWith("/records/")) {
-    const html = malformed.find(item => path === `/records/${item.id}`)?.html ?? valid;
+    const html = path === "/records/collision" ? collisionDocument
+      : malformed.find(item => path === `/records/${item.id}`)?.html ?? valid;
     journal.push({ method: "GET", path, bodyDigest: null, outcome: "SOURCE" });
     response.writeHead(200, { "content-type": "text/html; charset=utf-8" }).end(html); return;
   }
@@ -159,6 +182,31 @@ try {
     await refusal(() => s.execute(w, fence), "X2_ONE_USE_WIRE_REQUIRED");
     return { physicalReads: 1, accepted: 1, replayRefused: true, mounted: false };
   });
+  await test("logical-label-collision-includes-unsupported-form", async () => {
+    const before = journal.length;
+    const source = new ApplicationSourceSession({
+      ...profile, allowedTargets: ["collision"],
+      credentials: { headers: { cookie: authCookie!, "x-portal-grant": collisionBinding.grantId } },
+    }, async () => {}, { documentTransport: "PASSIVE_HTML", readFence: {
+      beforeRead: async input => { reads.push({ stage: "START", kind: input.kind }); },
+      afterRead: async input => { reads.push({ stage: "FINISH", kind: input.kind }); },
+    } });
+    try {
+      let actualCode: string | null = null, publishedOperations: string[] = [];
+      try { publishedOperations = (await source.discover()).operations.map(operation => operation.id); }
+      catch (error) { actualCode = error instanceof ApplicationProviderFault ? error.code : "UNCLASSIFIED"; }
+      await writeFile(resolve(destination, "collision-discovery.json"), JSON.stringify({
+        expectedPublishedOperations: 0, publishedOperations, actualCode,
+        gaps: source.unsupported.map(gap => gap.code), inputDigest: applicationByteDigest(collisionDocument),
+      }, null, 2) + "\n", { mode: 0o600, flag: "wx" });
+      assert.equal(actualCode, "X2_UNSUPPORTED_EMPTY_APPLICATION_DOMAIN", "INTENDED_DISCOVERY_AMBIGUITY_REQUIRED");
+      assert.equal(publishedOperations.length, 0);
+      assert(source.unsupported.some(gap => gap.code === "X2_UI_LOGICAL_LABEL_COLLISION"),
+        "EXPOSED_FORM_AMBIGUITY_MUST_NOT_DISAPPEAR_AFTER_FILTERING");
+      assert(journal.slice(before).every(entry => entry.method === "GET"), "DISCOVERY_MUST_NOT_MUTATE");
+      return { actualCode, publishedOperations: 0, noMutation: true };
+    } finally { await source.close(); }
+  });
   for (const input of malformed) await test(`document-${input.id}`, async () => {
     const s = session(input.id), before = journal.length;
     const result = await refusal(() => s.document("record", target(input.id)), input.code);
@@ -210,7 +258,10 @@ try {
   await new Promise<void>((yes, no) => server.close(error => error ? no(error) : yes()));
 }
 const root = resolve(import.meta.dirname, "../../.."), pins: Record<string, string> = {};
-for (const path of ["finnor-os/packages/computer/src/application-provider.ts", "finnor-os/scripts/x2/verify-passive-provider.mts", "finnor-os/package-lock.json"]) {
+for (const path of ["finnor-os/packages/computer/src/application-provider.ts",
+  "finnor-os/packages/computer/src/application-passive-document.ts",
+  "finnor-os/packages/private-equity/src/application-semantics/source.ts",
+  "finnor-os/scripts/x2/verify-passive-provider.mts", "finnor-os/package-lock.json"]) {
   pins[path] = createHash("sha256").update(await readFile(resolve(root, path))).digest("hex");
 }
 const failed = results.filter(row => !row.pass).length;
@@ -221,6 +272,7 @@ await writeFile(resolve(destination, "result.json"), JSON.stringify({
     id, html: html.replaceAll(csrf, "<SYNTHETIC_CSRF>"), inputDigest: applicationByteDigest(html), code,
   })),
   validInputDigest: applicationByteDigest(valid), expectedWireDigest: applicationByteDigest(expectedBody),
+  logicalLabelCollisionInputDigest: applicationByteDigest(collisionDocument),
   journal, reads, sources, results, passed: results.length - failed, failed,
   rerun: "cd <absolute-checkout>/finnor-os && node --import=tsx scripts/x2/verify-passive-provider.mts <fresh-absolute-output>",
 }, null, 2) + "\n", { mode: 0o600, flag: "wx" });

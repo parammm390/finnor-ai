@@ -45,7 +45,8 @@ export function parameterBindingCode(schema: ApplicationParameter[], parameters:
     if (parameter.kind === "boolean" && typeof value !== "boolean") return "BOOLEAN_PARAMETER_TYPE";
     if (["text", "enum"].includes(parameter.kind) && typeof value !== "string") return "TEXT_PARAMETER_TYPE";
     if (typeof value === "string" && value.length > parameter.maxLength) return "PARAMETER_LENGTH";
-    if (parameter.kind === "enum" && !parameter.values.some((allowed) => equal(allowed, value))) return "ENUM_PARAMETER_DOMAIN";
+    if ((parameter.kind === "enum" || parameter.kind === "boolean" && parameter.values.length > 0)
+      && !parameter.values.some((allowed) => equal(allowed, value))) return "ENUM_PARAMETER_DOMAIN";
     if (parameter.kind === "identity" && (!value || typeof value !== "object" || value.kind !== "identity")) return "SCOPED_IDENTITY_PARAMETER_TYPE";
     if (parameter.kind === "quantity") {
       if (!value || typeof value !== "object" || value.kind !== "quantity" || !parameter.quantityContext) return "EXACT_QUANTITY_PARAMETER_TYPE";

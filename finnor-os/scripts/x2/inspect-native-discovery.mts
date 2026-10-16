@@ -3,7 +3,7 @@
 import { createHash } from "node:crypto";
 import type {
   ApplicationActionModel, ApplicationField, ApplicationPredicate, ApplicationScalar,
-  ApplicationState, ApplicationTransitionEvidence, ExperimentRef,
+  ApplicationSnapshot, ApplicationState, ApplicationTransitionEvidence, ExperimentRef,
 } from "@finnor/shared-types";
 import type { AuthorizedApplicationProfile } from "../../packages/private-equity/src/application-semantics/ports";
 import type { ApplicationRequestRow } from "../../packages/private-equity/src/application-semantics/obligations";
@@ -14,6 +14,34 @@ const normalize = (value: any): any => Array.isArray(value) ? value.map(normaliz
 const same = (left: unknown, right: unknown) => JSON.stringify(normalize(left)) === JSON.stringify(normalize(right));
 const hash = (value: unknown) => createHash("sha256").update(JSON.stringify(normalize(value))).digest("hex");
 const own = (value: object, key: string) => Object.prototype.hasOwnProperty.call(value, key);
+type ObservedField = Pick<ApplicationField, "path" | "kind">;
+const below = (path: string, prefix: string) => path === prefix || path.startsWith(prefix + ".");
+const compatibleValue = (value: unknown, kind: ObservedField["kind"]): boolean => value === null
+  || (kind === "boolean" ? typeof value === "boolean"
+    : kind === "text" || kind === "enum" ? typeof value === "string"
+      : value !== null && typeof value === "object" && !Array.isArray(value) && "kind" in value && value.kind === kind);
+function originalView(snapshot: ApplicationSnapshot, fields: ObservedField[]): ApplicationState {
+  const state: ApplicationState = {}, witness = snapshot.structuralWitness;
+  for (const field of fields) {
+    if (witness) {
+      if (witness.unavailablePaths.some(prefix => below(field.path, prefix))
+        || !witness.availablePaths.some(prefix => below(field.path, prefix))) continue;
+      if (witness.leafKinds[field.path] === field.kind && own(witness.leaves, field.path)
+        && witness.leaves[field.path] !== null) {
+        const value = witness.leaves[field.path];
+        if (compatibleValue(value, field.kind)) state[field.path] = structuredClone(value) as ApplicationScalar;
+      } else if (witness.nullPrefixes.some(prefix => below(field.path, prefix))
+        || witness.publishedSchemaDigest && witness.optionalAbsentPaths.some(prefix => below(field.path, prefix))) {
+        state[field.path] = null;
+      }
+    } else if (own(snapshot.state, field.path)
+      && !snapshot.unavailableFields.some(prefix => below(field.path, prefix))
+      && compatibleValue(snapshot.state[field.path], field.kind)) {
+      state[field.path] = snapshot.state[field.path]!;
+    }
+  }
+  return state;
+}
 export function nativeDiscoveryCaseCommitment(evidenceRef: ExperimentRef, requestRef: ExperimentRef | null, journalDigest: string) {
   return hash({ evidenceRef, requestRef, journalDigest });
 }
@@ -33,7 +61,7 @@ function prediction(guard: ApplicationPredicate, state: ApplicationState, parame
   }
   return unknown ? "UNKNOWN" : true;
 }
-function publicValue(record: Json, field: ApplicationField, target: ApplicationTransitionEvidence["before"]["target"]) {
+function publicValue(record: Json, field: ObservedField, target: ApplicationTransitionEvidence["before"]["target"]) {
   let raw: any = record;
   for (const segment of field.path.split(".")) {
     if (raw === null || raw === undefined) { raw = null; break; }
@@ -77,6 +105,29 @@ export function inspectNativeDiscovery(input: {
   const positiveTargets = new Map<string, Set<string>>();
   const seenEffects = new Set<string>();
   check("original-evidence-population", input.evidence.length > 0 && input.evidence.length <= 256, input.evidence.length);
+  const declared = new Map<string, ObservedField>(input.fields.map(({ path, kind }) => [path, { path, kind }]));
+  for (const evidence of input.evidence) for (const snapshot of [evidence.before, evidence.after]) {
+    if (!snapshot) continue;
+    for (const [path, value] of Object.entries(snapshot.structuralWitness?.leaves ?? snapshot.state)) {
+      if (value === null) continue;
+      const kind = snapshot.structuralWitness?.leafKinds[path] ?? declared.get(path)?.kind
+        ?? (typeof value === "boolean" ? "boolean"
+          : value && typeof value === "object" && "kind" in value ? value.kind : "text");
+      const valid = ["text", "boolean", "enum", "quantity", "identity"].includes(String(kind))
+        && compatibleValue(value, kind as ObservedField["kind"])
+        && (!declared.has(path) || declared.get(path)!.kind === kind);
+      check(evidence.ref.id + ":original-field-kind:" + path, valid, { kind });
+      if (valid) declared.set(path, { path, kind: kind as ObservedField["kind"] });
+    }
+  }
+  const fields = [...declared.values()].sort((left, right) => left.path.localeCompare(right.path));
+  check("bounded-original-field-domain", fields.length > 0 && fields.length <= 16, fields.length);
+  check("candidate-original-field-domain", same(fields, input.model.stateSchema.map(({ path, kind }) => ({ path, kind }))
+    .sort((left, right) => left.path.localeCompare(right.path))), { comparison: "ORIGINAL_TYPED_LEAVES_NOT_CANDIDATE_TYPES" });
+  if (!fields.length || fields.length > 16 || !input.evidence.length || input.evidence.length > 256) {
+    result.verdict = "REFUSED";
+    return result;
+  }
   for (const evidence of input.evidence) {
     const request = input.requests.find(row => row.body.wire.identity.effectId === evidence.effectRef?.id);
     const prefix = evidence.ref.id;
@@ -122,9 +173,10 @@ export function inspectNativeDiscovery(input: {
     }
     const originalRecord = input.journal.rows.find(row => row.sequence < dispatched.sequence
       && String(row.state.records[evidence.before.target.id]?.version) === evidence.before.recordRevision)?.state.records[evidence.before.target.id];
+    const beforeView = originalView(evidence.before, fields);
     check(prefix + ":before-durable-record-revision", Boolean(originalRecord), evidence.before.recordRevision);
-    if (originalRecord) for (const field of input.fields) check(prefix + ":before:" + field.path,
-      own(evidence.before.state, field.path) && same(evidence.before.state[field.path], publicValue(originalRecord, field, evidence.before.target)),
+    if (originalRecord) for (const field of fields) check(prefix + ":before:" + field.path,
+      own(beforeView, field.path) && same(beforeView[field.path], publicValue(originalRecord, field, evidence.before.target)),
       { kind: field.kind, comparison: "NATIVE_AGAINST_ORIGINAL_PROVIDER_REVISION" });
     if (accepted) {
       result.positives++;
@@ -136,9 +188,12 @@ export function inspectNativeDiscovery(input: {
       check(prefix + ":independently-observed-completion", evidence.disposition === "OBSERVED"
         && evidence.independentOutcome === "ESTABLISHED" && Boolean(after && durable), { disposition: evidence.disposition });
       if (evidence.disposition !== "OBSERVED" || !after || !durable) result.falseCompletions++;
-      if (after && durable) for (const field of input.fields) check(prefix + ":after:" + field.path,
-        own(after.state, field.path) && same(after.state[field.path], publicValue(durable, field, after.target)),
-        { kind: field.kind, comparison: "NATIVE_AGAINST_DURABLE_PROVIDER_REVISION" });
+      if (after && durable) {
+        const afterView = originalView(after, fields);
+        for (const field of fields) check(prefix + ":after:" + field.path,
+          own(afterView, field.path) && same(afterView[field.path], publicValue(durable, field, after.target)),
+          { kind: field.kind, comparison: "NATIVE_AGAINST_DURABLE_PROVIDER_REVISION" });
+      }
       if (dispatched.operation === "submit") {
         const completed = input.journal.events.filter(event => event.type === "submission.completed" && event.requestId === identity.requestId);
         const completion = completed[0];
@@ -160,10 +215,10 @@ export function inspectNativeDiscovery(input: {
       result.denied++;
       check(prefix + ":independent-denial-not-success", evidence.disposition === "REJECTED"
         && evidence.independentOutcome === "DENIED" && evidence.after?.recordRevision === evidence.before.recordRevision
-        && same(evidence.after?.state, evidence.before.state), evidence.disposition);
+        && Boolean(evidence.after && same(originalView(evidence.after, fields), beforeView)), evidence.disposition);
     } else result.unknown++;
     const operation = input.model.operations.find(value => value.id === evidence.operationId);
-    const predicted = operation ? prediction(operation.precondition, evidence.before.state, evidence.parameters) : "OUTSIDE_MODEL_ROLE_DOMAIN";
+    const predicted = operation ? prediction(operation.precondition, beforeView, evidence.parameters) : "OUTSIDE_MODEL_ROLE_DOMAIN";
     if (operation && accepted && predicted === false) result.falseInvalid++;
     if (operation && denied && predicted === true) result.falseValid++;
     if (operation && predicted === "UNKNOWN") result.unknown++;

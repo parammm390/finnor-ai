@@ -3,7 +3,7 @@
  * No currentness, protected qualification or execution authority is fabricated. */
 import { spawn, type ChildProcess } from "node:child_process";
 import { generateKeyPairSync, randomBytes, randomUUID, sign } from "node:crypto";
-import { constants } from "node:fs";
+import { constants, existsSync } from "node:fs";
 import { lstat, mkdir, open, realpath } from "node:fs/promises";
 import { createRequire } from "node:module";
 import { createServer } from "node:net";
@@ -265,7 +265,7 @@ async function launch(input: {
   script: string; cwd: string; env: NodeJS.ProcessEnv; port: number; logPath: string;
 }): Promise<ManagedProcess> {
   const log = await open(input.logPath, constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | constants.O_NOFOLLOW, 0o600);
-  const child = spawn(process.execPath, ["--import=tsx", input.script], {
+  const child = spawn(process.execPath, [...(input.script.endsWith(".mts") ? ["--import=tsx"] : []), input.script], {
     cwd: input.cwd, env: input.env, stdio: ["ignore", "pipe", "pipe"],
   });
   let writes: Promise<unknown> = Promise.resolve(), bytes = 0, line = "", logFailed = false;
@@ -328,7 +328,11 @@ export async function bootstrapNativeS8Fixture(input: NativeS8FixtureInput): Pro
   const repoRoot = await realpath(input.repoRoot);
   if (repoRoot !== await realpath(loadedRepo) || repoRoot !== resolve(input.repoRoot)) failure("X2_S8_FIXTURE_WRONG_CHECKOUT");
   if (!relative(repoRoot, resolve(input.privateDir)).startsWith("../")) failure("X2_S8_FIXTURE_PRIVATE_CUSTODY_OUTSIDE_SOURCE_REQUIRED");
-  if (process.env.NODE_ENV !== "development" || process.env.FINNOR_ENVIRONMENT !== "staging"
+  const backend = join(repoRoot, "finnor-os"), installed = existsSync(join(backend, "x2-runtime/identity.json"));
+  const nodeMode = installed ? "production" : "development";
+  const ledgerEntry = join(backend, installed ? "x2-runtime/ledger-server.js" : "packages/governed-execution/src/ledger-server.mts");
+  const s8Entry = join(backend, installed ? "x2-runtime/s8-server.js" : "packages/capability-evolution/src/server.mts");
+  if (process.env.NODE_ENV !== nodeMode || process.env.FINNOR_ENVIRONMENT !== "staging"
     || process.env.FINNOR_X2_PROFILE !== "ordinary_disposable"
     || resolve(process.env.FINNOR_X2_SOURCE_ROOT ?? "") !== repoRoot
     || envKeys.some((key) => process.env[key] !== undefined)) failure("X2_S8_FIXTURE_DISPOSABLE_UNCONFIGURED_ENV_REQUIRED");
@@ -380,7 +384,7 @@ export async function bootstrapNativeS8Fixture(input: NativeS8FixtureInput): Pro
   const validAfter = parent.validAfter, validUntil = parent.deadlineAt;
   if (Date.parse(validUntil) <= Date.now() || Date.parse(validAfter) > Date.now()
     || parent.runtimeDigest !== digest(applicationRuntimeIdentity())) failure("X2_S8_FIXTURE_ORIGINAL_RUNTIME_OR_DEADLINE_CHANGED");
-  const backend = join(repoRoot, "finnor-os"), require = createRequire(join(backend, "packages/governed-execution/src/ledger.ts"));
+  const require = createRequire(join(backend, "packages/governed-execution/src/ledger.ts"));
   const fsExt = dirname(require.resolve("fs-ext/package.json"));
   const ledgerSources = ["ledger.ts", "ledger-server.mts", "protocol.ts", "request-verifier.ts", "adapter-contract.ts"]
     .map((name) => join(backend, "packages/governed-execution/src", name))
@@ -390,7 +394,10 @@ export async function bootstrapNativeS8Fixture(input: NativeS8FixtureInput): Pro
     if (isAbsolute(pin.path) || relative(repoRoot, path) !== pin.path || pin.path.startsWith("../")) failure("X2_S8_FIXTURE_NATIVE_PIN_PATH_ESCAPE");
     return path;
   });
-  const sourcePaths = [...new Set([...requiredCapabilitySourcePaths, ...nativePaths, join(import.meta.dirname, "native-s8-fixture.mts")])].sort();
+  const installedPaths = installed ? ["identity.json", "physical-worker.js", "worker/index.js",
+    "ledger-server.js", "s8-server.js", "application-consumer.js"].map(name => join(backend, "x2-runtime", name)) : [];
+  const sourcePaths = [...new Set([...requiredCapabilitySourcePaths, ...nativePaths, ...installedPaths,
+    join(import.meta.dirname, "native-s8-fixture.mts")])].sort();
   if (sourcePaths.length > 128) failure("X2_S8_FIXTURE_S8_SOURCE_PIN_CAPACITY");
   const snapshot = (paths: readonly string[]) => Promise.all(paths.map(async (path) => ({
     path, sha256: byteDigest(await boundedFile(path)),
@@ -542,7 +549,7 @@ export async function bootstrapNativeS8Fixture(input: NativeS8FixtureInput): Pro
     }
   };
   const childEnvironment: NodeJS.ProcessEnv = {
-    PATH: process.env.PATH, HOME: privateDir, TMPDIR: privateDir, LANG: "C", TZ: "UTC", NODE_ENV: "development",
+    PATH: process.env.PATH, HOME: privateDir, TMPDIR: privateDir, LANG: "C", TZ: "UTC", NODE_ENV: nodeMode,
     FINNOR_ENVIRONMENT: "staging", FINNOR_X2_PROFILE: "ordinary_disposable", FINNOR_X2_SOURCE_ROOT: repoRoot,
   };
   const commandAs = async (role: NativeS8FixtureRole, operation: NativeS8FixtureOperation, body: unknown,
@@ -574,7 +581,7 @@ export async function bootstrapNativeS8Fixture(input: NativeS8FixtureInput): Pro
   const startServices = async (startLedger: boolean) => {
     await assertSourceCut(); ++generation;
     if (startLedger) {
-      s6 = await launch({ cwd: backend, script: join(backend, "packages/governed-execution/src/ledger-server.mts"),
+      s6 = await launch({ cwd: backend, script: ledgerEntry,
         env: { ...childEnvironment, FINNOR_S6_LEDGER_CONFIG: paths.ledgerConfig, FINNOR_S6_LEDGER_RELEASE_ROOT: publicPem(keys.ledgerRelease) },
         port: ledgerPort, logPath: join(privateDir, "s6-process-" + generation + ".log") });
       const health = await fetch(endpoints.s6 + "/health", {
@@ -583,15 +590,17 @@ export async function bootstrapNativeS8Fixture(input: NativeS8FixtureInput): Pro
       });
       if (health.status !== 200) failure("X2_S8_FIXTURE_LEDGER_AUTHENTICATED_READINESS_FAILED");
       await jsonResponse(health, 8 * 1024 * 1024);
-      await appendPrivate(paths.processes, { event: "READY", service: "S6", pid: s6.child.pid, port: ledgerPort, logPath: s6.logPath });
+      await appendPrivate(paths.processes, { event: "READY", service: "S6", pid: s6.child.pid, port: ledgerPort,
+        entry: ledgerEntry, argv: s6.child.spawnargs, nodeMode, logPath: s6.logPath });
     }
-    s8 = await launch({ cwd: backend, script: join(backend, "packages/capability-evolution/src/server.mts"),
+    s8 = await launch({ cwd: backend, script: s8Entry,
       env: { ...childEnvironment, FINNOR_S8_PORT: String(lifecyclePort),
         FINNOR_S8_LIFECYCLE_CONFIG: paths.lifecycleConfig, FINNOR_S8_RELEASE_ROOT: publicPem(keys.lifecycleRelease),
         FINNOR_S6_OWNER_TRANSPORT_CONFIG: paths.transportConfig, FINNOR_S6_OWNER_TRANSPORT_ROOT: publicPem(keys.transportRoot) },
       port: lifecyclePort, logPath: join(privateDir, "s8-process-" + generation + ".log") });
     successful(await commandAs("reader", "READ", { offset: 0, limit: 1 }));
-    await appendPrivate(paths.processes, { event: "READY", service: "S8", pid: s8.child.pid, port: lifecyclePort, logPath: s8.logPath });
+    await appendPrivate(paths.processes, { event: "READY", service: "S8", pid: s8.child.pid, port: lifecyclePort,
+      entry: s8Entry, argv: s8.child.spawnargs, nodeMode, logPath: s8.logPath });
   };
   const stop = async (service: "S6" | "S8") => {
     const managed = service === "S6" ? s6 : s8;

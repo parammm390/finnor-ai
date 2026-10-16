@@ -22,7 +22,7 @@ function scalar(value: unknown, kind: ApplicationField["kind"], scope: Applicati
   if (kind === "boolean") return { available: typeof value === "boolean", value: typeof value === "boolean" ? value : null };
   if (kind === "quantity") {
     const parsed = ExactApplicationQuantitySchema.safeParse(value);
-    return { available: parsed.success && parsed.data.entity === target.entity, value: parsed.success ? parsed.data : null };
+    return { available: parsed.success, value: parsed.success ? parsed.data : null };
   }
   const parsed = ScopedApplicationIdentitySchema.safeParse(value);
   return { available: parsed.success && parsed.data.application === scope.application

@@ -18,6 +18,7 @@ import {
   ExactApplicationQuantitySchema, ScopedApplicationIdentitySchema, X2_LIMITS, boundedX2, x2Digest,
 } from "./contracts";
 import { projectApplicationSnapshot } from "./observation";
+import { matchesApplicationSchemaPattern } from "./schema-pattern";
 
 /**
  * A structural source, not a business/transition planner. Operation signatures
@@ -48,6 +49,7 @@ interface ContextObservation {
   binding: ObjectValue;
   refs: ExperimentRef[];
   entities: Map<string, string>;
+  entitiesComplete: boolean;
   permissions: string[] | null;
   deadline: string | null;
 }
@@ -313,21 +315,16 @@ function validateSchema(value: unknown, input: ObjectValue, depth = 0): void {
     }
   } else if (schema.type === "string") {
     if (typeof value !== "string") applicationProviderFault("X2_PARAMETER_TYPE_MISMATCH");
-    if (value.length > (typeof schema.maxLength === "number" ? schema.maxLength : X2_LIMITS.maxTextLength)
+    if (value.length > X2_LIMITS.maxTextLength
+      || value.length > (typeof schema.maxLength === "number" ? schema.maxLength : X2_LIMITS.maxTextLength)
       || value.length < (typeof schema.minLength === "number" ? schema.minLength : 0)) {
       applicationProviderFault("X2_PARAMETER_TEXT_BOUND");
     }
     if (schema.pattern !== undefined) {
-      // Conservative regular-expression fragment; reject backreferences,
-      // lookarounds and nested/grouped quantifiers rather than run untrusted code.
       const pattern = stringValue(schema.pattern);
-      if (pattern.length > 256 || /\\[1-9]|\(\?/.test(pattern) || /\)[*+{]/.test(pattern)) {
-        applicationProviderFault("X2_UNSUPPORTED_SCHEMA_PATTERN");
-      }
-      let expression: RegExp;
-      try { expression = new RegExp(pattern, "u"); }
-      catch { return applicationProviderFault("X2_UNSUPPORTED_SCHEMA_PATTERN"); }
-      if (!expression.test(value)) applicationProviderFault("X2_PARAMETER_PATTERN_MISMATCH");
+      const matched = matchesApplicationSchemaPattern(pattern, value);
+      if (matched === null) applicationProviderFault("X2_UNSUPPORTED_SCHEMA_PATTERN");
+      if (!matched) applicationProviderFault("X2_PARAMETER_PATTERN_MISMATCH");
     }
     if (schema.format === "date") {
       if (!/^\d{4}-\d{2}-\d{2}$/.test(value) || !Number.isFinite(Date.parse(`${value}T00:00:00Z`))
@@ -571,7 +568,7 @@ export class ApplicationSourceSession {
     if (deadline && (!Number.isFinite(Date.parse(deadline)) || Date.parse(deadline) <= Date.now())) {
       applicationProviderFault("X2_EXTERNAL_GRANT_DEADLINE");
     }
-    return { body, binding, refs, entities, permissions, deadline };
+    return { body, binding, refs, entities, entitiesComplete: body.entities !== undefined, permissions, deadline };
   }
 
   private async capture(target: ScopedApplicationIdentity): Promise<Capture> {
@@ -593,12 +590,12 @@ export class ApplicationSourceSession {
       if (raw[key] !== context.binding[key]) applicationProviderFault("X2_RECORD_CONTEXT_REVISION_MISMATCH");
     }
     this.noCredentials(raw);
-    // A complete observed tuple proves this entity/currency pair. Independent
-    // select lists alone do not prove which currency belongs to which entity.
+    // A tuple proves its own observed pair, not an exhaustive input domain or
+    // authorization. Never extend an explicitly published domain with it.
     for (const tuple of this.quantities(raw)) {
       const known = context.entities.get(tuple.entity);
       if (known && known !== tuple.currency) applicationProviderFault("X2_OBSERVED_ENTITY_CURRENCY_MISMATCH");
-      context.entities.set(tuple.entity, tuple.currency);
+      if (!context.entitiesComplete) context.entities.set(tuple.entity, tuple.currency);
     }
     return { raw, context, source: document?.source ?? source, document };
   }
@@ -844,7 +841,7 @@ export class ApplicationSourceSession {
     })();
     if (nullable && !choices.includes(null) && type.enum !== undefined) choices.push(null);
     return ApplicationParameterSchema.parse({
-      name: fieldName(name), kind: identity ? "identity" : type.enum ? "enum" : type.type === "boolean" ? "boolean" : "text",
+      name: fieldName(name), kind: identity ? "identity" : type.type === "boolean" ? "boolean" : type.enum ? "enum" : "text",
       required, values: identity ? [] : choices,
       maxLength: typeof type.maxLength === "number" ? type.maxLength : X2_LIMITS.maxTextLength,
       quantityContext: null, schemaEvidence: [ref],
@@ -877,7 +874,7 @@ export class ApplicationSourceSession {
       parameters: input.lowerings.map(({ parameter, schema }) => {
         const { schemaEvidence: _evidence, ...type } = parameter;
         return { parameter: type, schema };
-      }),
+      }).sort((left, right) => left.parameter.name.localeCompare(right.parameter.name)),
       applicationVersion: input.context.binding.applicationVersion,
       schemaRevision: input.context.binding.schemaRevision, semanticRevision: input.context.binding.semanticRevision,
       // No effect/precondition/desired outcome is inferred from these structures.
@@ -1000,7 +997,17 @@ export class ApplicationSourceSession {
 
   private async uiCandidates(document: ApplicationDocument, capture: Capture, target: ScopedApplicationIdentity): Promise<Candidate[]> {
     const result: Candidate[] = [];
-    for (const form of document.forms) {
+    const seen = new Set<string>(), ambiguous = new Set<string>();
+    const logicalForms = document.forms.map(form => {
+      const label = form.label.normalize("NFKC").trim().replace(/\s+/g, " ").toLowerCase();
+      const id = `ui.${x2Digest({ application: this.profile.application, label, method: form.method })}`;
+      if (seen.has(id)) ambiguous.add(id);
+      seen.add(id);
+      return { form, label, id };
+    });
+    if (ambiguous.size) this.gap("X2_UI_LOGICAL_LABEL_COLLISION", document.source.ref, "form");
+    for (const { form, label, id } of logicalForms) {
+      if (ambiguous.has(id)) continue;
       const slots = this.formSlots(form, document.source.ref);
       if (!slots) continue;
       try {
@@ -1057,7 +1064,7 @@ export class ApplicationSourceSession {
             path: [control.name], schema: definition, quantityNames: null, control,
           });
         }
-        const id = `ui.${x2Digest({ template, method: form.method })}`;
+        if (!label) applicationProviderFault("X2_UI_LOGICAL_LABEL_REQUIRED");
         result.push(await this.candidate({
           id, label: form.label || id, substrate: "UI", method: form.method, pathTemplate: template,
           bodySchema: null, lowerings, sourceRef: document.source.ref, context: capture.context,
@@ -1156,7 +1163,7 @@ export class ApplicationSourceSession {
     if (!this.discovered && !this.discovering) await this.discover();
     const capture = await this.capture(target);
     try {
-      if (capture.context.entities.size && !capture.context.entities.has(target.entity)) {
+      if (capture.context.entitiesComplete && !capture.context.entities.has(target.entity)) {
         applicationProviderFault("X2_TARGET_ENTITY_OUTSIDE_OBSERVED_CONTEXT");
       }
       const snapshot = await this.snapshot(capture, target);
@@ -1266,6 +1273,7 @@ export class ApplicationSourceSession {
     return x2Digest({
       binding: context.binding, permissions: context.permissions,
       entities: [...context.entities.entries()].sort(([left], [right]) => left.localeCompare(right)),
+      entitiesComplete: context.entitiesComplete,
       deadline: context.deadline,
     });
   }
@@ -1333,7 +1341,8 @@ export class ApplicationSourceSession {
         }
         if (lowering.parameter.kind !== "quantity") continue;
         const tuple = quantity(parameters[lowering.parameter.name]);
-        if (capture.context.entities.get(tuple.entity) !== tuple.currency) {
+        const known = capture.context.entities.get(tuple.entity);
+        if (known !== undefined && known !== tuple.currency || capture.context.entitiesComplete && known === undefined) {
           applicationProviderFault("X2_CURRENT_ENTITY_CURRENCY_BINDING_MISMATCH");
         }
       }

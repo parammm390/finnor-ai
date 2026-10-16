@@ -13,6 +13,13 @@ type Path = CheckedApplicationComposition["steps"];
 type Gap = CheckedApplicationComposition["gaps"][number];
 interface Node { state: ApplicationState; path: Path; gaps: Gap[]; pendingIdentities: Set<string> }
 const own = (value: object, key: string) => Object.prototype.hasOwnProperty.call(value, key);
+function observedParameters(operation: LearnedApplicationOperation, state: ApplicationState, parameters: ApplicationState): ApplicationState {
+  const resolved = { ...parameters };
+  for (const [name, field] of Object.entries(operation.observedParameterBindings)) {
+    if (own(state, field)) resolved[name] = state[field]!;
+  }
+  return resolved;
+}
 export function applicationGoalEstablished(goal: ApplicationState, observed: ApplicationState): boolean {
   return Object.keys(goal).length > 0 && Object.entries(goal).every(([field, value]) =>
     own(observed, field) && sameApplicationScalar(value, observed[field]));
@@ -40,6 +47,7 @@ function bindingFor(operation: LearnedApplicationOperation, supplied: Applicatio
 }
 export function predictedApplicationSuccessors(operation: LearnedApplicationOperation, state: ApplicationState,
   parameters: ApplicationState, model: ApplicationActionModel): Array<{ predicted: ApplicationState; requiresObservation: boolean }> {
+  parameters = observedParameters(operation, state, parameters);
   const next = { ...state };
   for (const assignment of operation.postcondition.assignments) {
     const value = assignment.value.kind === "literal" ? assignment.value.value
@@ -91,7 +99,8 @@ export function composeApplicationActions(input: {
       if (!check.acceptedOperationIds.includes(operation.id) || !input.authorizedRoles.includes(operation.authorization.role)) continue;
       const binding = bindingFor(operation, parameters, node.state, node.pendingIdentities);
       if (!binding) continue;
-      if (evaluateApplicationGuard(operation.precondition, node.state, binding.parameters) !== true) continue;
+      if (evaluateApplicationGuard(operation.precondition, node.state,
+        observedParameters(operation, node.state, binding.parameters)) !== true) continue;
       const successors = predictedApplicationSuccessors(operation, node.state, binding.parameters, model);
       if (!successors.length) { overflow = true; continue; }
       for (const successor of successors) {
@@ -155,7 +164,8 @@ export function assertApplicationComposition(input: {
     const operation = model.operations.find((item) => item.id === step.operationId);
     if (!operation || !check.acceptedOperationIds.includes(operation.id)
       || parameterBindingCode(operation.parameters.filter((parameter) => !step.parameterObservations[parameter.name]), step.parameters)
-      || evaluateApplicationGuard(operation.precondition, state, step.parameters) !== true) x2Fault("X2_COMPOSITION_GUARD_OR_PARAMETER");
+      || evaluateApplicationGuard(operation.precondition, state,
+        observedParameters(operation, state, step.parameters)) !== true) x2Fault("X2_COMPOSITION_GUARD_OR_PARAMETER");
     // Validate dependency availability separately from the search's binding
     // selection. A declared observation gap cannot create a missing identity.
     for (const [name, field] of Object.entries(step.parameterObservations)) {

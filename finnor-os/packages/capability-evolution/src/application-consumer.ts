@@ -60,7 +60,8 @@ const signedPolicySchema = z.object({
 export async function applicationConsumerPolicy(scope: ApplicationConsumerScope): Promise<ApplicationConsumerPolicy | null> {
     const file = process.env.FINNOR_S8_APPLICATION_CONSUMER_CONFIG;
     if (!file) return null;
-    if (process.env.NODE_ENV === 'production') fault('S8_PROTECTED_APPLICATION_DOMAIN_UNADMITTED', 403);
+    if (process.env.FINNOR_ENVIRONMENT !== 'staging' || process.env.FINNOR_X2_PROFILE !== 'ordinary_disposable')
+        fault('S8_PROTECTED_APPLICATION_DOMAIN_UNADMITTED', 403);
     const root = process.env.FINNOR_S8_APPLICATION_CONSUMER_ROOT;
     if (!root) fault('S8_APPLICATION_CONSUMER_ROOT_UNAVAILABLE', 503);
     const signed = signedPolicySchema.parse(JSON.parse((await privateFile(file)).toString())), policy = signed.body;

@@ -5,6 +5,7 @@ import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { appendFile, mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { createServer } from "node:net";
+import { existsSync } from "node:fs";
 import { spawn, execFile, type ChildProcess } from "node:child_process";
 import { promisify } from "node:util";
 import EmbeddedPostgres from "embedded-postgres";
@@ -16,17 +17,23 @@ import {
 } from "@finnor/db";
 import { putAllocationResource } from "../../packages/private-equity/src/allocation-store";
 import { nativeHttpFixture } from "../p7/native-http-fixture.mjs";
+import { installedHttpFixture } from "./installed-http-fixture.mts";
+import { inspectInstalledRuntime } from "./installed-runtime-custody.mts";
+import { runMountedNativeIntegration } from "./mounted-native-integration.mts";
+import { startAuthenticatedHttpFixture, type AuthenticatedHttpFixture, type AuthSessionHandle } from "./authenticated-http-fixture.mts";
 import { configure, initialize, releaseHeldOut } from "./fixtures/admin.mjs";
 import { snapshot } from "./fixtures/store.mjs";
 import { bootstrapNativeS8Fixture, NATIVE_S8_FIXTURE_FLAGS, type NativeS8Fixture } from "./native-s8-fixture.mts";
 import { inspectNativeDiscovery, nativeDiscoveryCaseCommitment } from "./inspect-native-discovery.mts";
-import { applicationSession, nativeApplicationProfile, retainApplicationArtifact,
+import { NATIVE_REVIEW_CASES, nativeReadRelay, runNativeReviewGates } from "./native-review-gates.mts";
+import { applicationArtifact, applicationSession, nativeApplicationProfile, retainApplicationArtifact,
   type ApplicationSessionRow } from "../../packages/private-equity/src/application-semantics/store";
 import { x2Digest, x2Ref } from "../../packages/private-equity/src/application-semantics/contracts";
 import { enqueueOwnerDeliveryInTransaction } from "../../packages/governed-execution/src/owner-delivery-store";
 import type { ApplicationField, ApplicationTransitionEvidence, BeliefViewPin, ExperimentRef } from "@finnor/shared-types";
 import type { ApplicationRequestRow } from "../../packages/private-equity/src/application-semantics/obligations";
 import type { ApplicationCapabilityUseLease } from "../../packages/capability-evolution/src/application-port";
+import type { PrivateApplicationBinding } from "../../packages/private-equity/src/application-semantics/ports";
 
 const out = process.env.FINNOR_X2_EVIDENCE_DIR;
 if (!out?.startsWith("/")) throw Error("NEW_ABSOLUTE_X2_EVIDENCE_DIRECTORY_REQUIRED");
@@ -34,14 +41,22 @@ await mkdir(out, { mode: 0o700 }); // Do not adopt or overwrite an earlier run.
 const privateDir = join(out, "private");
 await mkdir(privateDir, { mode: 0o700 });
 const repo = resolve(import.meta.dirname, "../../..");
+const installed = existsSync(join(repo, "../build-manifest.json"));
+const nodeMode = installed ? "production" : "development";
+const mounted = process.env.FINNOR_X2_TEST_MOUNTED === "1";
+assert(!mounted || installed, "MOUNTED_PROOF_REQUIRES_EMITTED_INSTALLED_OWNERS");
 const surface = process.env.FINNOR_X2_TEST_SURFACE ?? "api";
 assert(["api", "ui", "hybrid"].includes(surface));
 const configuredS8 = process.env.FINNOR_X2_TEST_S8 === "1";
+const reviewGates = process.env.FINNOR_X2_TEST_REVIEW_GATES === "1";
+assert(!reviewGates || surface === "api" && !configuredS8 && !mounted, "REVIEW_GATES_HAVE_THEIR_OWN_API_OWNER_CUT");
 const computeContention = process.env.FINNOR_X2_TEST_COMPUTE_CONTENTION === "1";
 const finalEgressRevocation = process.env.FINNOR_X2_TEST_FINAL_EGRESS_REVOCATION === "1";
 const resourceBeliefChange = process.env.FINNOR_X2_TEST_RESOURCE_BELIEF_CHANGE === "1";
 const referenceBacklog = process.env.FINNOR_X2_TEST_REFERENCE_BACKLOG === "1";
 const terminalCancellation = process.env.FINNOR_X2_TEST_TERMINAL_CANCELLATION === "1";
+const semanticDrift = process.env.FINNOR_X2_TEST_SEMANTIC_DRIFT === "1";
+const renderingDrift = process.env.FINNOR_X2_TEST_RENDERING_DRIFT === "1";
 const recoveryMode = process.env.FINNOR_X2_TEST_RECOVERY ?? "none";
 assert(["none", "full", "opaque", "deadline", "cancel"].includes(recoveryMode));
 assert(!(resourceBeliefChange && (configuredS8 || finalEgressRevocation)), "RESOURCE_BELIEF_VARIANT_HAS_ITS_OWN_NATIVE_OWNER_CUT");
@@ -52,6 +67,18 @@ assert(!["full", "opaque", "cancel"].includes(recoveryMode) || configuredS8, "OR
 assert(recoveryMode !== "deadline" || !configuredS8, "EXPIRED_PARENT_CASE_RETAINS_CURRENT_APPLICATION_OBSERVATION_AUTHORITY");
 assert(!terminalCancellation || recoveryMode === "none" && !computeContention && !finalEgressRevocation
   && !resourceBeliefChange && !referenceBacklog, "COMPLETED_HISTORY_REQUIRES_ITS_OWN_POSITIVE_CUT");
+assert(!semanticDrift || recoveryMode === "none" && !computeContention && !finalEgressRevocation
+  && !resourceBeliefChange && !referenceBacklog && !terminalCancellation,
+  "SEMANTIC_DRIFT_REQUIRES_ITS_OWN_CURRENTNESS_CUT");
+assert(!renderingDrift || surface !== "api" && !semanticDrift && recoveryMode === "none" && !computeContention
+  && !finalEgressRevocation && !resourceBeliefChange && !referenceBacklog && !terminalCancellation,
+  "RENDERING_RELOCATION_REQUIRES_ITS_OWN_UI_OR_HYBRID_CUT");
+assert(!mounted || configuredS8 && recoveryMode === "none" && !semanticDrift && !renderingDrift && !computeContention
+  && !finalEgressRevocation && !resourceBeliefChange && !referenceBacklog && !terminalCancellation,
+  "MOUNTED_LIFECYCLE_OWNS_THE_CONFIGURED_POSITIVE_CUT");
+assert(!reviewGates || recoveryMode === "none" && !semanticDrift && !renderingDrift && !computeContention
+  && !finalEgressRevocation && !resourceBeliefChange && !referenceBacklog && !terminalCancellation,
+  "REVIEW_GATES_REQUIRE_THEIR_OWN_OWNER_CUT");
 const results: Array<Record<string, unknown>> = [];
 const owned: ChildProcess[] = [];
 const flushLogs: Array<() => Promise<void>> = [];
@@ -85,18 +112,26 @@ const port = await new Promise<number>((yes, no) => {
 const databasePassword = randomBytes(24).toString("hex");
 const database = new EmbeddedPostgres({ databaseDir: join(privateDir, "db"), user: "x2_owner",
   password: databasePassword, port, persistent: true, onLog: () => undefined });
-let admin: pg.Client | undefined, http: Awaited<ReturnType<typeof nativeHttpFixture>> | undefined;
+let admin: pg.Client | undefined, http: Awaited<ReturnType<typeof nativeHttpFixture>>
+  | Awaited<ReturnType<typeof installedHttpFixture>> | undefined;
+let identity: AuthenticatedHttpFixture | undefined;
+let actorAccess: AuthSessionHandle | undefined, otherAccess: AuthSessionHandle | undefined;
+let frontendOrigin = "";
 let s8: NativeS8Fixture | undefined;
+let readRelay: Awaited<ReturnType<typeof nativeReadRelay>> | undefined;
 let driverFailed = false;
 let beginningSource: Awaited<ReturnType<typeof import("../../packages/private-equity/src/application-semantics/store").applicationCodeIdentity>> | undefined;
 let beginningDriver: Array<{ path: string; sha256: string }> | undefined;
+let beginningOracle: Array<{ path: string; sha256: string }> | undefined;
 let adminUrl = "", workerUrl = "", portalOrigin = "";
 const tenant = randomUUID(), actor = randomUUID(), other = randomUUID(), company = randomUUID();
-const root = { entityType: "external_organization" as const, entityId: company };
+const root = { entityType: installed ? "pe_deal" as const : "external_organization" as const,
+  entityId: installed ? randomUUID() : company };
 const resourceSourceRoot = { entityType: "external_organization" as const, entityId: randomUUID() };
 const ctx = { auth: { tenantId: tenant, userId: actor, employeeId: actor, role: "owner" as const },
   provenance: { sourceSystem: "FRONTIER5.X2:ordinary-development", createdBy: actor } };
 const portalDir = join(privateDir, "portal");
+const secretRoot = join(privateDir, "secrets");
 const profiles: string[] = [];
 let credentials: any, model: any, check: any, sessionId = "", deadlineAt = "";
 let resourcePin: BeliefViewPin | null = null, resourceSource: ExperimentRef | null = null;
@@ -128,8 +163,11 @@ const logChild = async (child: ChildProcess, name: string) => {
   flushLogs.push(() => pending);
 };
 const driverIdentity = async () => Promise.all((await readdir(import.meta.dirname, { withFileTypes: true }))
-  .filter(file => file.isFile() && /\.(mts|json)$/.test(file.name)).sort((a, b) => a.name.localeCompare(b.name))
+  .filter(file => file.isFile() && /\.(mts|mjs|json)$/.test(file.name)).sort((a, b) => a.name.localeCompare(b.name))
   .map(async file => ({ path: "finnor-os/scripts/x2/" + file.name, sha256: sha(await readFile(join(import.meta.dirname, file.name))) })));
+const oracleIdentity = async () => Promise.all((await readdir(join(import.meta.dirname, "fixtures")))
+  .filter(name => /\.(mjs|json)$/.test(name)).sort()
+  .map(async name => ({ path: "fixtures/" + name, sha256: sha(await readFile(join(import.meta.dirname, "fixtures", name))) })));
 const createWork = async (instruction: string) => {
   const work = await receiveWork({ tenantId: tenant, userId: actor, instruction,
     channel: "console", idempotencyKey: "x2-e2e:" + randomUUID(), activeContext: root,
@@ -141,9 +179,10 @@ type WorkerSession = Pick<ApplicationSessionRow, "status" | "reason" | "generati
 let workerOrdinal = 0;
 const startWorker = async (id: string, mode?: "ONE_DELIVERY" | "RECOVER_ONLY", killed = false) => {
   const launch = ++workerOrdinal;
-  const child = spawn(process.execPath, ["--import=tsx",
-    join(import.meta.dirname, "physical-worker.mts"), tenant, actor, id, ...(mode ? [mode] : [])], { cwd: join(repo, "finnor-os"),
-    env: { PATH: process.env.PATH, HOME: privateDir, LANG: "C", TZ: "UTC", NODE_ENV: "development",
+  const entry = installed ? join(repo, "finnor-os/x2-runtime/physical-worker.js") : join(import.meta.dirname, "physical-worker.mts");
+  const arguments_ = [...(installed ? [] : ["--import=tsx"]), entry, tenant, actor, id, ...(mode ? [mode] : [])];
+  const child = spawn(process.execPath, arguments_, { cwd: join(repo, "finnor-os"),
+    env: { PATH: process.env.PATH, HOME: privateDir, LANG: "C", TZ: "UTC", NODE_ENV: nodeMode,
       DATABASE_URL: workerUrl, FINNOR_ENVIRONMENT: "staging", FINNOR_X2_PROFILE: "ordinary_disposable",
       FINNOR_X2_DISPOSABLE_SECRET_ROOT: process.env.FINNOR_X2_DISPOSABLE_SECRET_ROOT,
       FINNOR_X2_SOURCE_ROOT: repo, FINNOR_TEST_MANAGED_EXTENSIONS: "omit",
@@ -158,7 +197,8 @@ const startWorker = async (id: string, mode?: "ONE_DELIVERY" | "RECOVER_ONLY", k
   const completed = exit.then(async result => {
     const row = (await admin!.query<WorkerSession>("SELECT status,reason,generation,model_ref,check_ref,composition_ref FROM finnor_os.application_semantics_sessions WHERE id=$1", [id])).rows[0];
     assert(row, "NATIVE_CANONICAL_SESSION_MISSING_AFTER_DELIVERY");
-    await save(`worker-${id}-${launch}.json`, { pid: child.pid, launch, mode: mode ?? "RUN", exit: result, session: row,
+    await save(`worker-${id}-${launch}.json`, { pid: child.pid, launch, mode: mode ?? "RUN",
+      entry, argv: arguments_, nodeMode, execution: installed ? "EMITTED" : "SOURCE_TSX", exit: result, session: row,
       jobs: (await admin!.query("SELECT id,type,status,attempts,claim_fence,last_error,payload FROM finnor_os.jobs WHERE payload->>'sessionId'=$1 ORDER BY id", [id])).rows });
     if (killed) {
       assert.equal(result.signal, "SIGKILL", "ACTUAL_PHYSICAL_WORKER_SIGKILL_REQUIRED");
@@ -175,20 +215,20 @@ const runWorker = async (id: string, oneDelivery = false) =>
 try {
   process.env.FINNOR_ENVIRONMENT = "staging";
   process.env.FINNOR_X2_PROFILE = "ordinary_disposable";
-  process.env.NODE_ENV = "development";
+  process.env.NODE_ENV = nodeMode;
+  if (installed) assert.equal(process.env.AUTH_DEV_BYPASS, undefined, "INSTALLED_AUTH_BYPASS_MUST_BE_ABSENT");
   process.env.FINNOR_TEST_MANAGED_EXTENSIONS = "omit";
   process.env.FINNOR_X2_SOURCE_ROOT = repo;
   const { applicationCodeIdentity } = await import("../../packages/private-equity/src/application-semantics/store");
   const sourceCut = await applicationCodeIdentity();
+  if (installed) await save("installed-beginning.json", await inspectInstalledRuntime(repo));
   beginningSource = sourceCut;
   beginningDriver = await driverIdentity();
-  const oraclePins = await Promise.all((await readdir(join(import.meta.dirname, "fixtures")))
-    .filter((name) => /\.(mjs|json)$/.test(name)).sort().map(async (name) => ({
-      path: "fixtures/" + name, sha256: sha(await readFile(join(import.meta.dirname, "fixtures", name))),
-    })));
+  const oraclePins = await oracleIdentity();
+  beginningOracle = oraclePins;
   await save("freeze.json", { startedAt: new Date().toISOString(), sourceCut, driverPins: beginningDriver,
-    oraclePins, surface, configuredS8, computeContention, finalEgressRevocation, resourceBeliefChange, referenceBacklog,
-    terminalCancellation, recoveryMode,
+    oraclePins, surface, configuredS8, reviewGates, computeContention, finalEgressRevocation, resourceBeliefChange, referenceBacklog,
+    terminalCancellation, semanticDrift, renderingDrift, recoveryMode, installed, mounted, nodeMode,
     oracleCustody: "SEPARATE_DRIVER_PRIVATE_DIRECTORY_NOT_OS_SANDBOX", protectedAdmission: false });
   const migrated = await record("fresh-upgrade-replay-and-runtime-role-isolation", async () => {
     await database.initialise();
@@ -203,7 +243,8 @@ try {
       })));
     const baseline = await migrate(adminUrl, files.filter((file) => file.name < "0191"));
     const upgrade = await migrate(adminUrl);
-    assert.deepEqual(upgrade, ["0191_frontier5_x2_application_semantics.sql", "0192_frontier5_x2_request_custody.sql"]);
+    assert.deepEqual(upgrade, ["0191_frontier5_x2_application_semantics.sql", "0192_frontier5_x2_request_custody.sql",
+      "0193_frontier5_x2_authority_custody.sql"]);
     assert.deepEqual(await migrate(adminUrl), []);
     admin = new pg.Client({ connectionString: adminUrl }); await admin.connect();
     const appPassword = randomBytes(24).toString("hex"), workerPassword = randomBytes(24).toString("hex");
@@ -230,7 +271,48 @@ try {
   await admin!.query("INSERT INTO finnor_os.external_organizations(id,tenant_id,organization_key,name,kind) VALUES($1,$2,'x2-native-company','X2 development company','other')", [company, tenant]);
   await configureTenantVertical({ tenantId: tenant, verticalKey: "private_equity", expectedVersion: 0, createdBy: actor,
     sourceSystem: "FRONTIER5.X2:ordinary-development" });
-  http = await nativeHttpFixture(admin!, tenant, actor, other);
+  await mkdir(secretRoot, { mode: 0o700 }); await mkdir(join(secretRoot, tenant), { mode: 0o700 });
+  process.env.FINNOR_X2_DISPOSABLE_SECRET_ROOT = secretRoot;
+  if (installed) {
+    const { createDeal } = await import("../../packages/private-equity/src/repository");
+    const deal = await createDeal(ctx, { id: root.entityId, targetOrganizationId: company,
+      name: "X2 disposable installed Deal", dealLeadEmployeeId: actor, signedLoiAt: new Date(),
+      targetClosingAt: new Date(Date.now() + 86400000) });
+    assert.equal(deal.row.id, root.entityId);
+    await save("installed-deal-root.json", { root, deal: deal.row });
+    const frontendPort = await new Promise<number>((yes, no) => {
+      const server = createServer(); server.once("error", no);
+      server.listen(0, "127.0.0.1", () => {
+        const address = server.address();
+        if (!address || typeof address === "string") return no(Error("OWNED_FRONTEND_PORT_REQUIRED"));
+        server.close(() => yes(address.port));
+      });
+    });
+    frontendOrigin = "http://127.0.0.1:" + frontendPort;
+    identity = await startAuthenticatedHttpFixture({ frontendOrigin, identities: [
+      { userId: actor, email: actor + "@test.invalid", password: randomBytes(24).toString("hex") },
+      { userId: other, email: other + "@test.invalid", password: randomBytes(24).toString("hex") },
+    ] });
+    actorAccess = await identity.private.passwordSignIn(actor); otherAccess = await identity.private.passwordSignIn(other);
+    const installedApi = await installedHttpFixture({ runtimeRoot: repo, privateDir: join(privateDir, "installed-api"),
+      tenantId: tenant, actorId: actor, databaseUrl: process.env.DATABASE_URL!, disposableSecretRoot: secretRoot,
+      ownerEnvironment: () => s8?.environment() ?? {},
+      auth: { origin: identity.origin, serviceRoleKey: identity.publicAnonKey, observations: () => identity!.observations(),
+        token: async principal => {
+          let current = principal === "actor" ? actorAccess! : otherAccess!;
+          if (current.expiresAt <= Math.floor(Date.now() / 1000) + 30) {
+            current = await identity!.private.refresh(current);
+            if (principal === "actor") actorAccess = current; else otherAccess = current;
+          }
+          return identity!.private.accessToken(current);
+        } },
+    });
+    http = installedApi;
+    identity.private.allowApiOrigin(installedApi.origin);
+    await save("installed-auth-runtime.json", { fixture: "SIGNED_DISPOSABLE_GOTRUE_COMPATIBLE_NOT_HOSTED_SUPABASE",
+      authBypassPresent: false, authOrigin: identity.origin, apiOrigin: installedApi.origin, frontendOrigin,
+      nodeMode, api: "ACTUAL_BUILT_NEXT_API", worker: "ACTUAL_EMITTED_REGISTRY" });
+  } else http = await nativeHttpFixture(admin!, tenant, actor, other);
   await initialize(portalDir, surface);
   credentials = JSON.parse(await readFile(join(portalDir, "credentials.json"), "utf8"));
   const portal = spawn(process.execPath, [join(import.meta.dirname, "fixtures/server.mjs"), "--private-dir", portalDir, "--port", "0"],
@@ -242,12 +324,10 @@ try {
     portal.stdout!.once("data", (bytes) => { clearTimeout(timer); yes(JSON.parse(bytes.toString()).origin); });
   });
   assert(portalOrigin?.startsWith("http://127.0.0.1:"));
+  if (reviewGates) { readRelay = await nativeReadRelay(portalOrigin); portalOrigin = readRelay.origin; }
   const initialState = (await snapshot(portalDir)).state;
   deadlineAt = new Date(Date.now() + (recoveryMode === "deadline" ? 300000 : 900000)).toISOString();
   assert(Date.parse(deadlineAt) < Date.parse(initialState.expiresAt));
-  const secretRoot = join(privateDir, "secrets");
-  await mkdir(secretRoot, { mode: 0o700 }); await mkdir(join(secretRoot, tenant), { mode: 0o700 });
-  process.env.FINNOR_X2_DISPOSABLE_SECRET_ROOT = secretRoot;
   for (const [role, name, grantName] of [["editor", "editor", "discovery"], ["approver", "approver", "approval"]]) {
     const accountId = randomUUID(), profileId = randomUUID();
     const config = { sourceContract: "BOUNDED_CONDITIONAL_APPLICATION_V1", protectionDomain: "DISPOSABLE_TEST_AUTHORITY",
@@ -313,7 +393,8 @@ try {
     horizon: { startAt: new Date().toISOString(), periodMs: 3600000, periods: 1 },
     sourceRef: resourceSource ?? ownerRef, asOf: new Date().toISOString(), knowledgeAt: new Date().toISOString(),
     validUntil: initialState.expiresAt, beliefPins: resourcePin ? [resourcePin] : [], availability: [
-      { amount: "2048", basis: "REPORTED_AVAILABLE" }, { amount: "2048", basis: "REPORTED_AVAILABLE" },
+      { amount: reviewGates ? "8192" : "2048", basis: "REPORTED_AVAILABLE" },
+      { amount: reviewGates ? "8192" : "2048", basis: "REPORTED_AVAILABLE" },
     ],
     existingUse: ["0", "0"], safetyMargin: "0", covenants: [], revoked: false, qualification: "AUTHENTICATED_OWNER_ASSERTION_UNADMITTED",
   }, null);
@@ -517,18 +598,35 @@ try {
     });
     if (!admitted) throw Error("NATIVE_CONFIGURED_S8_PREREQUISITE_FAILED");
   }
+  if (reviewGates) {
+    assert(readRelay);
+    await runNativeReviewGates({ ctx, sql: admin!, adminUrl, sessionId, profiles, model, check, relay: readRelay,
+      call: body => http!.call("application-acquire", body), startWorker, record });
+  } else {
   await releaseHeldOut(portalDir);
   let freshSessionId = "";
   let freshProjection: unknown;
   let freshWorkId = "";
   let freshExactQuantity = "";
-  const freshCase = finalEgressRevocation ? "canonical-S6-locked-prepared-profile-revocation"
+  const freshCase = semanticDrift ? "canonical-P7-semantic-drift-and-Work-invalidation"
+    : finalEgressRevocation ? "canonical-S6-locked-prepared-profile-revocation"
     : resourceBeliefChange ? "canonical-S5-pinned-belief-dependency-currentness"
     : recoveryMode === "deadline" ? "canonical-S6-expired-parent-original-observation"
     : recoveryMode === "cancel" ? "canonical-cancelled-Work-retains-original-observation"
     : "fresh-Work-model-composition-and-independent-business-outcome";
   const completed = await record(freshCase, async () => {
     const objective = JSON.parse(await readFile(join(portalDir, "held-out-objective.json"), "utf8"));
+    if (renderingDrift) {
+      const before = await snapshot(portalDir);
+      assert.equal(before.state.config.renderingRevision, 1);
+      await configure(portalDir, { renderingRevision: 2 });
+      const after = await snapshot(portalDir);
+      assert.equal(after.state.config.renderingRevision, 2);
+      assert.equal(after.state.config.semanticRevision, before.state.config.semanticRevision);
+      assert.equal(after.state.config.schemaRevision, before.state.config.schemaRevision);
+      assert.deepEqual(after.state.records, before.state.records, "RENDERING_REVISION_MUST_NOT_CHANGE_BUSINESS_STATE");
+      await save("private/independent-rendering-revision.json", { before, after, objectiveNotAltered: true });
+    }
     for (const [index, name, grantKey] of [[0, "editor", "submittingGrantId"], [1, "approver", "approvingGrantId"]] as const) {
       const old = (await admin!.query("SELECT restrictions FROM finnor_os.auth_profiles WHERE id=$1", [profiles[index]])).rows[0].restrictions;
       old.applicationSemantics.allowedTargets = [objective.recordId];
@@ -540,13 +638,62 @@ try {
     }
     const quantity = { kind: "quantity", decimal: objective.reporting.amount, currency: objective.reporting.currency,
       entity: objective.reporting.entity, unit: objective.reporting.unit, time: objective.reporting.date, basis: objective.reporting.basis };
+    const quantityParameterNames = new Set<string>();
+    for (const operation of model.operations) for (const parameter of operation.parameters) {
+      if (parameter.kind === "quantity") quantityParameterNames.add(parameter.name);
+    }
+    assert.equal(quantityParameterNames.size, 1, "FROZEN_MODEL_UNAMBIGUOUS_QUANTITY_SIGNATURE_REQUIRED");
+    const parameters = { [[...quantityParameterNames][0]!]: quantity };
     const workId = await createWork("Use the frozen model on the freshly authorized reporting configuration and obtain distinct test approval.");
     freshWorkId = workId;
     freshExactQuantity = objective.reporting.amount;
-    const execution = await http!.call("application-execute", { root, workId, sessionId,
-      executionProfileId: profiles[0], targetId: objective.recordId,
-      goal: { phase: "APPROVED", reporting: quantity }, parameters: { reporting: quantity },
-      idempotencyKey: "x2-execute-" + randomUUID() });
+    let execution: { status: number; body: any };
+    if (mounted) {
+      assert(root.entityType === "pe_deal" && identity && http && "origin" in http);
+      const observed = await runMountedNativeIntegration({
+        runtimeRoot: repo, evidenceDirectory: out, privateDirectory: privateDir, frontendOrigin,
+        apiOrigin: http.origin, auth: identity, sql: admin!, tenantId: tenant, actorId: actor, otherId: other,
+        root: { entityType: "pe_deal", entityId: root.entityId },
+        acquisitionWorkId: acquisitionWork, acquisitionSessionId: sessionId, freshWorkId: workId,
+        executionProfileId: profiles[0]!, targetId: objective.recordId,
+        goal: { phase: "APPROVED", reporting: quantity }, parameters,
+        businessExpectation: { recordId: objective.recordId, reporting: objective.reporting, phase: "APPROVED",
+          submissionCount: 1, approvalDistinctFromSubmission: true },
+        settleFresh: async (id, signal) => {
+          freshSessionId = id;
+          await s8!.writeConsumerConfig({
+            profiles: await Promise.all(profiles.map(async profileId => (await nativeApplicationProfile(ctx, profileId)).profile)),
+            freshSessionId: id,
+          });
+          const worker = await startWorker(id);
+          const abort = () => { worker.child.kill("SIGTERM"); };
+          signal.addEventListener("abort", abort, { once: true });
+          try {
+            if (signal.aborted) abort();
+            const row = await worker.completed;
+            assert.equal(row.status, "COMPLETED", JSON.stringify(row));
+          } finally { signal.removeEventListener("abort", abort); }
+        },
+        assertBusiness: async (checkpoint, signal) => {
+          const path = join(portalDir, "mounted-grade-" + randomUUID() + ".json");
+          await promisify(execFile)(process.execPath, [join(import.meta.dirname, "fixtures/evaluate.mjs"),
+            "grade", "--private-dir", portalDir, "--objective", join(portalDir, "held-out-objective.json"),
+            "--output", path], { signal });
+          const grade = JSON.parse(await readFile(path, "utf8"));
+          assert.equal(grade.verdict, "PASS", JSON.stringify(grade));
+          await save("mounted-business-" + randomUUID() + ".json", { checkpoint, grade, originalDeadline: deadlineAt,
+            newAllowance: false, source: "UNCHANGED_INDEPENDENT_EXTERNAL_EVALUATOR" });
+          return path;
+        },
+      });
+      await save("mounted-native-result.json", observed);
+      await record("actual-maintained-mounted-Work-lifecycle", async () => observed);
+      execution = observed.execution; // The actual browser-observed HTTP response.
+      actorAccess = await identity.private.passwordSignIn(actor);
+    } else execution = await http!.call("application-execute", { root, workId, sessionId,
+        executionProfileId: profiles[0], targetId: objective.recordId,
+        goal: { phase: "APPROVED", reporting: quantity }, parameters,
+        idempotencyKey: "x2-execute-" + randomUUID() });
     assert.equal(execution.status, 202, JSON.stringify(execution));
     freshSessionId = execution.body.sessionId;
     if (resourceBeliefChange) {
@@ -590,10 +737,55 @@ try {
       assert.equal(retained.parent.deadlineAt, deadlineAt);
       return { pin, unchangedResourceHead: currentHead, requests: 0, charges: 0, originalDeadline: deadlineAt, newAllowance: false };
     }
-    if (s8) await s8.writeConsumerConfig({
+    if (s8 && !mounted) await s8.writeConsumerConfig({
       profiles: await Promise.all(profiles.map(async id => (await nativeApplicationProfile(ctx, id)).profile)),
       freshSessionId: execution.body.sessionId,
     });
+    if (semanticDrift) {
+      const original = await snapshot(portalDir);
+      await configure(portalDir, { semanticRevision: original.state.config.semanticRevision + 1 });
+      const changed = await snapshot(portalDir);
+      assert.equal(changed.state.config.renderingRevision, original.state.config.renderingRevision);
+      const row = await runWorker(freshSessionId);
+      const work = (await admin!.query("SELECT status FROM finnor_os.works WHERE id=$1", [workId])).rows[0];
+      const requests = (await admin!.query("SELECT status,possible_egress FROM finnor_os.application_semantics_requests WHERE session_id=$1", [freshSessionId])).rows;
+      const events = (await admin!.query("SELECT kind,body FROM finnor_os.application_semantics_events"
+        + " WHERE session_id=$1 AND kind IN ('P7_OPERATION_FALSIFIED_OR_REVOKED','P7_MINIMAL_SOUND_COMPOSITION_CLOSURE')"
+        + " ORDER BY created_at,event_id", [freshSessionId])).rows;
+      const final = await snapshot(portalDir);
+      await save("private/semantic-drift-Work-outcome.json", { original, changed, row, work, requests, events, final });
+      assert(row.composition_ref, "SEMANTIC_DRIFT_MUST_REACH_RETAINED_COMPOSITION");
+      assert(events.some(event => event.kind === "P7_OPERATION_FALSIFIED_OR_REVOKED"), "ACTUAL_P7_INVALIDATION_REQUIRED");
+      assert.equal(row.status, "STALE");
+      assert.equal(row.reason, "X2_MATERIAL_OPERATION_OR_OBSERVER_DRIFT");
+      assert.equal(work.status, "blocked", "P7_INVALIDATION_MUST_REACH_CANONICAL_WORK");
+      assert.equal(requests.length, 0, "MATERIAL_DRIFT_MUST_FENCE_ALL_NEW_REQUESTS");
+      assert.deepEqual(final.state.records[objective.recordId], original.state.records[objective.recordId]);
+      // Arrange a legal stopped sibling, not a receipt or external outcome.
+      // Its actual checked composition and immutable original input are reused.
+      const blockedId = randomUUID();
+      await withTenantTransaction(tenant, { userId: actor }, async (_db, c) => {
+        await c.query("INSERT INTO finnor_os.application_semantics_sessions SELECT"
+          + " (jsonb_populate_record(NULL::finnor_os.application_semantics_sessions,to_jsonb(s)"
+          + " || jsonb_build_object('id',$2::uuid,'idempotency_key',$3::text,'status','BLOCKED',"
+          + " 'reason','X2_ORIGINAL_BUSINESS_DEADLINE_EXPIRED','claim_token',NULL,'claim_fence',NULL))).*"
+          + " FROM finnor_os.application_semantics_sessions s WHERE s.tenant_id=$4 AND s.id=$1",
+        [freshSessionId, blockedId, "x2-stopped-sibling-" + randomUUID(), tenant]);
+      });
+      const { invalidateApplicationOperation } = await import("../../packages/private-equity/src/application-semantics/validity");
+      const current = await applicationSession(ctx, freshSessionId);
+      const composition = await applicationArtifact<{ steps: Array<{ operationId: string }> }>(ctx, current.composition_ref!);
+      await invalidateApplicationOperation(ctx, current, composition.steps[0]!.operationId, null,
+        "X2_MATERIAL_OPERATION_OR_OBSERVER_DRIFT");
+      const blocked = await applicationSession(ctx, blockedId);
+      const repeatedWork = (await admin!.query("SELECT status FROM finnor_os.works WHERE id=$1", [workId])).rows[0];
+      await save("private/stopped-sibling-invalidation.json", { blockedId, status: blocked.status,
+        repeatedWork, originalDeadline: blocked.parent.deadlineAt, newAllowance: false });
+      assert.equal(blocked.status, "BLOCKED", "P7_MUST_PRESERVE_STOPPED_NATIVE_HISTORY");
+      assert.equal(repeatedWork.status, "blocked");
+      return { nativeStatus: row.status, workStatus: work.status, requests: 0,
+        compositionRef: row.composition_ref, blockedSiblingPreserved: true, originalDeadline: deadlineAt, newAllowance: false };
+    }
     if (referenceBacklog) {
       const current = await applicationSession(ctx, freshSessionId);
       await withTenantTransaction(tenant, { userId: actor }, async (_db, c) => {
@@ -826,7 +1018,7 @@ try {
         && value.effect_id === lostRequest!.body.wire.identity.effectId), "ORIGINAL_POSSIBLE_EFFECT_IDENTITY_MUST_SURVIVE_RECOVERY");
       await save("private/full-original-recovery.json", { row, originals, quarantine,
         originalParent: retained.parent, originalAllocation: retained.allocation_ref, originalReservation: retained.reservation_ref });
-    } else row = await runWorker(execution.body.sessionId);
+    } else row = mounted ? await applicationSession(ctx, freshSessionId) : await runWorker(execution.body.sessionId);
     assert.equal(row.status, "COMPLETED", JSON.stringify(row));
     const gradePath = join(portalDir, "native-grade.json");
     await promisify(execFile)(process.execPath, [join(import.meta.dirname, "fixtures/evaluate.mjs"),
@@ -868,7 +1060,31 @@ try {
       originalDeadline: projection.body.sessions[0].deadlineAt, newAllowance: false };
   });
   if (!completed) throw Error("NATIVE_HELD_OUT_BOUNDARY_PREREQUISITE_FAILED");
-  if (!finalEgressRevocation && !resourceBeliefChange && !["deadline", "cancel"].includes(recoveryMode)) {
+  if (renderingDrift) await record("canonical-P7-current-rendering-binding-lineage", async () => {
+    const requests = (await admin!.query<ApplicationRequestRow>(
+      "SELECT * FROM finnor_os.application_semantics_requests WHERE session_id=$1 ORDER BY created_at,id", [freshSessionId])).rows;
+    const events = (await admin!.query("SELECT body FROM finnor_os.application_semantics_events WHERE session_id=$1"
+      + " AND kind='P7_LAWFUL_RENDERING_REVALIDATION' ORDER BY created_at,event_id", [freshSessionId])).rows;
+    let relocated = 0;
+    for (const request of requests) {
+      const binding = await applicationArtifact<Omit<PrivateApplicationBinding, "ref">>(ctx, request.binding_ref);
+      if (binding.substrate !== "UI") continue;
+      const operation = model.operations.find((value: { id: string }) => value.id === request.body.operationId);
+      assert(operation, "ORIGINAL_LOGICAL_OPERATION_REQUIRED");
+      assert.equal(request.body.wire.context.renderingRevision, 2);
+      assert.deepEqual(request.body.wire.bindingRef, request.binding_ref, "WIRE_MUST_USE_CURRENT_STORED_BINDING");
+      assert.notEqual(binding.renderingDigest, operation.renderingDigest, "CHANGED_UI_RENDERING_MUST_RELOCATE");
+      assert.notDeepEqual(request.binding_ref, operation.privateBindingRef, "OLD_MODEL_BINDING_MUST_NOT_BE_REUSED");
+      assert(events.some(event => event.body.detail.operationId === operation.id
+        && x2Digest(event.body.detail.currentBindingRef) === x2Digest(request.binding_ref)),
+      "ACTUAL_P7_REVALIDATION_MUST_BIND_ORIGINAL_S6_REQUEST");
+      relocated++;
+    }
+    assert.equal(relocated, surface === "ui" ? 4 : 2);
+    await save("private/current-rendering-bindings.json", { requests, events, relocated, originalDeadline: deadlineAt });
+    return { relocated, renderingRevision: 2, originalDeadline: deadlineAt, newAllowance: false };
+  });
+  if (!semanticDrift && !finalEgressRevocation && !resourceBeliefChange && !["deadline", "cancel"].includes(recoveryMode)) {
   if (referenceBacklog) await record("native-S8-bounded-original-reference-delivery", async () => {
     const rows = (await admin!.query("SELECT s.identity,s.status,s.attempts,o.envelope FROM finnor_os.s6_owner_delivery_states s"
       + " JOIN finnor_os.s6_owner_delivery_origins o USING(tenant_id,principal_id,semantic_owner,kind,identity)"
@@ -974,6 +1190,25 @@ try {
       externalRollbackClaimed: false, resourceReleaseGranted: false };
   });
   }
+  }
+  if (installed && !reviewGates) await record("installed-runtime-restart-and-byte-custody", async () => {
+    assert(http && "restart" in http, "ACTUAL_BUILT_API_RESTART_OWNER_REQUIRED");
+    const original = await applicationSession(ctx, sessionId);
+    await http.restart();
+    const projection = await http.call("application-projection", { root, workId: acquisitionWork });
+    assert.equal(projection.status, 200);
+    assert(projection.body.sessions.some((value: { sessionId?: string; id?: string }) =>
+      (value.sessionId ?? value.id) === sessionId), "RESTART_MUST_READ_ORIGINAL_CANONICAL_SESSION");
+    const retained = await applicationSession(ctx, sessionId);
+    assert.deepEqual(retained.parent, original.parent);
+    assert.deepEqual(retained.original_parent_ref, original.original_parent_ref);
+    assert.deepEqual(retained.reservation_ref, original.reservation_ref);
+    const continuity = { originalSessionId: sessionId, originalDeadline: retained.parent.deadlineAt,
+      originalParent: retained.original_parent_ref, originalReservation: retained.reservation_ref,
+      apiRestart: "ACTUAL_BUILT_NEXT_PROCESS", endingAssetInspection: "SEPARATE_REQUIRED_ENDING_CUSTODY_CASE", newAllowance: false };
+    await save("installed-post-restart.json", continuity);
+    return continuity;
+  });
 } catch (error) {
   driverFailed = true;
   await save("driver-disposition.json", { status: "BLOCKED_OR_FAILED", predicate: (error as Error).message });
@@ -982,6 +1217,10 @@ try {
     await new Promise<void>((yes) => { child.once("close", () => yes()); child.kill("SIGTERM"); });
   }
   await s8?.close();
+  if (readRelay) {
+    await save("native-read-relay.json", { trace: readRelay.trace, responseSubstitution: false });
+    await readRelay.close();
+  }
   if (admin) {
     await save("private/native-sessions.json", (await admin.query("SELECT * FROM finnor_os.application_semantics_sessions ORDER BY created_at,id")).rows);
     await save("private/native-events.json", (await admin.query("SELECT * FROM finnor_os.application_semantics_events ORDER BY created_at,event_id")).rows);
@@ -990,7 +1229,9 @@ try {
     await save("private/native-artifacts.json", (await admin.query("SELECT * FROM finnor_os.application_semantics_artifacts ORDER BY created_at,artifact_id")).rows);
     await save("private/independent-final-state.json", await snapshot(portalDir).catch(() => null));
   }
-  await http?.close(); await closePool(); await admin?.end();
+  await http?.close();
+  if (identity) await save("private/installed-auth-observations.json", { summary: identity.summary(), observations: identity.observations() });
+  await identity?.close(); await closePool(); await admin?.end();
   await database.stop().catch(async () => {
     driverFailed = true;
     await save("cleanup-disposition.json", { status: "OWNED_DATABASE_STOP_UNPASSED" });
@@ -1007,19 +1248,32 @@ try {
     assert(beginningSource && x2Digest(beginningSource) === x2Digest(endingSource), "SOURCE_OR_RUNTIME_CHANGED_DURING_NATIVE_PROOF");
     const endingDriver = await driverIdentity();
     assert(beginningDriver && x2Digest(beginningDriver) === x2Digest(endingDriver), "DRIVER_CHANGED_DURING_NATIVE_PROOF");
-    return { beginningDigest: x2Digest(beginningSource), endingDigest: x2Digest(endingSource), driverDigest: x2Digest(endingDriver) };
+    const endingOracle = await oracleIdentity();
+    await save("ending-oracle.json", endingOracle);
+    assert(beginningOracle && x2Digest(beginningOracle) === x2Digest(endingOracle), "ORACLE_CHANGED_DURING_NATIVE_PROOF");
+    return { beginningDigest: x2Digest(beginningSource), endingDigest: x2Digest(endingSource),
+      driverDigest: x2Digest(endingDriver), oracleDigest: x2Digest(endingOracle) };
+  });
+  if (installed) await record("installed-ending-asset-custody", async () => {
+    const actual = await inspectInstalledRuntime(repo);
+    await save("installed-ending.json", actual);
+    return actual;
   });
   await save("unexecuted-families.json", { status: "NOT_RUN", families: [
     "API_UI_HYBRID_COMPLETE_PROFILE", "CANDIDATE_MUTATIONS",
     ...(recoveryMode === "none" ? ["PHYSICAL_SIGKILL_BEFORE_ACK"] : []),
     ...(recoveryMode !== "opaque" ? ["OPAQUE_SAME_EFFECT_RECOVERY"] : []),
     "RENDERING_AND_SEMANTIC_DRIFT", "CURRENT_GRANT_AND_CANCELLATION",
-    "SIBLING_CONCURRENCY_AND_BUDGET", "MOUNTED_LIFECYCLE", "EMITTED_INSTALLED_RUNTIME", "MATCHED_FULL_COST_DIAGNOSTIC",
+    "SIBLING_CONCURRENCY_AND_BUDGET", ...(!mounted ? ["MOUNTED_LIFECYCLE"] : []),
+    ...(!installed ? ["EMITTED_INSTALLED_RUNTIME"] : []), "MATCHED_FULL_COST_DIAGNOSTIC",
   ], noInferenceFromPositiveRun: true });
   const required = ["fresh-upgrade-replay-and-runtime-role-isolation", "canonical-S5-terminal-resource-floor",
     "authenticated-original-registration-and-idempotency", "physical-acquisition-and-independent-frozen-model",
     "ordinary-role-original-request-deletion-refusal", "unchanged-source-and-runtime-custody",
-    ...(finalEgressRevocation ? ["canonical-S6-locked-prepared-profile-revocation"]
+    ...(installed ? [...(!reviewGates ? ["installed-runtime-restart-and-byte-custody"] : []), "installed-ending-asset-custody"] : []),
+    ...(mounted ? ["actual-maintained-mounted-Work-lifecycle"] : []),
+    ...(reviewGates ? [...NATIVE_REVIEW_CASES] : semanticDrift ? ["canonical-P7-semantic-drift-and-Work-invalidation"]
+      : finalEgressRevocation ? ["canonical-S6-locked-prepared-profile-revocation"]
       : resourceBeliefChange ? ["canonical-S5-resource-belief-initial-owner-cut", "canonical-S5-pinned-belief-dependency-currentness"]
       : recoveryMode === "deadline" ? ["canonical-S6-expired-parent-original-observation"]
       : recoveryMode === "cancel" ? ["canonical-cancelled-Work-retains-original-observation"]
@@ -1029,8 +1283,9 @@ try {
     ...(computeContention ? ["canonical-compute-contention-durable-pre-dispatch-deferral"] : []),
     ...(referenceBacklog ? ["native-S8-bounded-original-reference-delivery"] : []),
     ...(terminalCancellation ? ["canonical-completed-X2-history-preserved-on-cancel"] : []),
+    ...(renderingDrift ? ["canonical-P7-current-rendering-binding-lineage"] : []),
     ...(configuredS8 ? ["native-S8-independent-discovery-and-signed-development-lifecycle",
-      ...(!finalEgressRevocation && recoveryMode !== "cancel" ? ["native-S8-exact-original-reconciliation-evidence-refusal"] : [])] : [])];
+      ...(!semanticDrift && !finalEgressRevocation && recoveryMode !== "cancel" ? ["native-S8-exact-original-reconciliation-evidence-refusal"] : [])] : [])];
   const exitCode = !driverFailed && required.every(id => results.some(value => value.id === id && value.status === "PASS"))
     && results.every(value => value.status === "PASS") ? 0 : 1;
   await save("driver-exit.json", { exitCode, required, driverFailed });

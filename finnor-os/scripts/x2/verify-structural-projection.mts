@@ -32,6 +32,7 @@ const cases = [
   { id: "actual-text", fields: [field("name")], patch: { leaves: { name: "VALUE" }, leafKinds: { name: "text" } }, expected: { name: "VALUE" }, unavailable: [] },
   { id: "actual-boolean", fields: [field("flag", "boolean")], patch: { leaves: { flag: false }, leafKinds: { flag: "boolean" } }, expected: { flag: false }, unavailable: [] },
   { id: "actual-exact-quantity", fields: [field("draft.reporting", "quantity")], patch: { leaves: { "draft.reporting": quantity }, leafKinds: { "draft.reporting": "quantity" } }, expected: { "draft.reporting": quantity }, unavailable: [] },
+  { id: "observed-quantity-retains-its-own-entity", fields: [field("draft.reporting", "quantity")], patch: { leaves: { "draft.reporting": { ...quantity, entity: "another-observed-entity" } }, leafKinds: { "draft.reporting": "quantity" } }, expected: { "draft.reporting": { ...quantity, entity: "another-observed-entity" } }, unavailable: [] },
   { id: "actual-identity", fields: [field("reference", "identity")], patch: { leaves: { reference: identity }, leafKinds: { reference: "identity" } }, expected: { reference: identity }, unavailable: [] },
   { id: "covered-null-ancestor", fields: [field("draft.reporting", "quantity")], patch: { nullPrefixes: ["draft"] }, expected: { "draft.reporting": null }, unavailable: [] },
   { id: "schema-optional-absence", fields: [field("draft.reporting", "quantity")], patch: { publishedSchemaDigest: "c".repeat(64), optionalAbsentPaths: ["draft"] }, expected: { "draft.reporting": null }, unavailable: [] },
