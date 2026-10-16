@@ -1,11 +1,10 @@
 /** Ordinary output-only isolation. This profile cannot grant protected authority. */
 import { createHash } from 'node:crypto';
-import { open, readFile, realpath, stat, writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
-import { execFileSync } from 'node:child_process';
+import { open, readFile, realpath, stat, writeFile, mkdtemp, rm, chmod } from 'node:fs/promises';
+import { constants } from 'node:fs';
+import { basename, join } from 'node:path';
 
 const sha256 = (bytes: Uint8Array | string) => createHash('sha256').update(bytes).digest('hex');
-const requiredVersion = 'bubblewrap 0.8.0';
 
 /** procfs describes the host kernel ABI; an executable uname can be translated
  * by binfmt_misc/QEMU and report its own ABI instead. Unknown hosts fail shut. */
@@ -71,8 +70,21 @@ function nodeFilter(architecture: string): Buffer {
     106, 104, 217, 218, 219, 97, 265, 268, 270, 271, 280, 282, 425, 438]
     : [41, 53, 57, 58, 101, 133, 155, 165, 166, 167, 168, 169,
       175, 176, 246, 248, 249, 250, 259, 272, 304, 308, 310, 311, 313, 321, 323, 425, 438];
+  // Landlock ABI 2 cannot mediate truncation, xattrs or chmod/utime. A fixed
+  // root hides host metadata; these syscall denials protect sibling jobs too.
+  denied.push(...(arm ? [45,46,52,53,54,55,88,129,130,131,154,157,...Array.from({length:12},(_,i)=>5+i)]
+    : [76,77,90,91,92,93,94,132,235,261,268,260,280,62,200,234,109,112,...Array.from({length:12},(_,i)=>188+i)]),424,434,437,452);
   for (const syscall of denied)
     instructions.push([0x15, 0, 1, syscall], [0x06, 0, 0, 0x00050001]);
+  // O_RDONLY|O_TRUNC bypasses ABI-2 write mediation. Ordinary writable opens
+  // remain available only where Landlock grants WRITE_FILE (private scratch).
+  for (const [syscall,flagsOffset] of (arm ? [[56,32]] : [[2,24],[257,32]]))
+    instructions.push([0x15,0,6,syscall!],[0x20,0,0,flagsOffset!],[0x45,0,3,0x200],
+      [0x54,0,0,3],[0x15,0,1,0],[0x06,0,0,0x00050001],[0x20,0,0,0]);
+  // Do not let a callee remove its parent-death guard. Thread naming and
+  // harmless privilege queries still use prctl during Node initialization.
+  instructions.push([0x15,0,4,arm?167:157],[0x20,0,0,16],[0x15,0,1,1],
+    [0x06,0,0,0x00050001],[0x20,0,0,0]);
   const threadFlags = 0x01000000 | 0x00200000 | 0x00100000 | 0x00080000 | 0x00040000
     | 0x00010000 | 0x00000800 | 0x00000400 | 0x00000200 | 0x00000100;
   instructions.push(
@@ -93,30 +105,48 @@ function nodeFilter(architecture: string): Buffer {
 export async function prepareLinuxNodeIsolation(scratch: string, node: string, options: { readOnlyScratch?: boolean } = {}) {
   if (process.platform !== 'linux' || !['x64', 'arm64'].includes(process.arch)) throw Error('ISOLATION_LINUX_ABI_UNSUPPORTED');
   if (process.getuid?.() === 0) throw Error('ISOLATION_NONROOT_REQUIRED');
-  const runtime = await runtimeForKernel(node), bwrap = runtime.bwrap;
-  node = runtime.node;
-  const binary = await realpath(bwrap), metadata = await stat(binary);
-  if (binary !== bwrap || metadata.uid !== 0 || (metadata.mode & 0o6022) !== 0)
-    throw Error('ISOLATION_BINARY_CUSTODY_INVALID');
-  const version = execFileSync(bwrap, ['--version'], { encoding: 'utf8', timeout: 2000,
-    maxBuffer: 4096, env: { LANG: 'C', TZ: 'UTC', NODE_ENV: 'production' }, stdio: ['ignore', 'pipe', 'pipe'] }).trim();
-  if (version !== requiredVersion) throw Error('ISOLATION_BINARY_VERSION_UNSUPPORTED');
+  const runtime = await runtimeForKernel(node), base = '/opt/finnor-s6-jail-'+runtime.architecture;
+  const manifestPath=base+'/manifest.json',raw=await readFile(manifestPath),metadata=await stat(manifestPath);
+  if(await realpath(manifestPath)!==manifestPath||metadata.uid!==0||(metadata.mode&0o6022))throw Error('ISOLATION_JAIL_MANIFEST_CUSTODY');
+  const manifest=JSON.parse(raw.toString()) as {schema:string;architecture:string;files:Array<{path:string;sha256:string}>};
+  if(manifest.schema!=='finnor.s6.fixed-jail.v1'||manifest.architecture!==runtime.architecture||!Array.isArray(manifest.files)||manifest.files.length>128)throw Error('ISOLATION_JAIL_MANIFEST_INVALID');
+  const known=new Set<string>();
+  for(const pin of manifest.files){
+    if(typeof pin.path!=='string'||!(pin.path==='launcher'||pin.path.startsWith('root/'))||pin.path.split('/').some(x=>x==='..'||x==='.')||!/^[a-f0-9]{64}$/.test(pin.sha256)||known.has(pin.path))throw Error('ISOLATION_JAIL_PIN_INVALID');
+    const path=base+'/'+pin.path,actual=await realpath(path),st=await stat(actual);
+    if(actual!==path||!st.isFile()||st.uid!==0||(st.mode&0o6022)||sha256(await readFile(actual))!==pin.sha256)throw Error('ISOLATION_JAIL_PIN_CHANGED');
+    known.add(pin.path);
+  }
+  if(!known.has('launcher')||!known.has('root/node'))throw Error('ISOLATION_JAIL_RUNTIME_MISSING');
+  for(const path of [base,base+'/root']){const st=await stat(path);if(await realpath(path)!==path||!st.isDirectory()||st.uid!==0||(st.mode&0o022))throw Error('ISOLATION_JAIL_ROOT_CUSTODY');}
+  node=base+'/root/node';const binary=base+'/launcher';
   const filter = nodeFilter(runtime.architecture), filterPath = join(scratch, 'enforced.bpf');
-  await writeFile(filterPath, filter, { mode: 0o400 });
-  const args = ['--unshare-all', '--unshare-user', '--die-with-parent', '--new-session', '--cap-drop', 'ALL',
-    '--clearenv', '--setenv', 'HOME', '/scratch', '--setenv', 'TMPDIR', '/scratch',
-    '--setenv', 'LANG', 'C', '--setenv', 'TZ', 'UTC', '--setenv', 'NODE_ENV', 'production',
-    '--ro-bind', node, '/node', '--ro-bind', '/usr/lib', '/usr/lib', '--symlink', 'usr/lib', '/lib',
-    ...(runtime.architecture === 'x64' ? ['--ro-bind', '/usr/lib64', '/usr/lib64', '--symlink', 'usr/lib64', '/lib64'] : []),
-    '--dir', '/proc', '--dev', '/dev', options.readOnlyScratch ? '--ro-bind' : '--bind', scratch, '/scratch', '--remount-ro', '/',
-    '--chdir', '/scratch', '--seccomp', '3', '/node', '--max-old-space-size=128', '/scratch/worker.mjs'];
-  const profile = { schema: 'finnor.s6.ordinary-linux-node-profile.v1', abi: 'linux-' + runtime.architecture,
-    binary, binarySha256: sha256(await readFile(binary)), version, args,
+  await writeFile(filterPath, filter, { mode: 0o400,flag:'wx' });
+  const isolatedScratch=await mkdtemp(base+'/root/jobs/job-');
+  let fd:Awaited<ReturnType<typeof open>>|undefined,bootstrapFd:Awaited<ReturnType<typeof open>>|undefined;
+  const bootstrapPath=join(scratch,'linux-bootstrap.json');
+  const cleanup=async()=>{const failures=[];for(const operation of [()=>fd?.close(),()=>bootstrapFd?.close(),()=>rm(isolatedScratch,{recursive:true,force:true})]){try{await operation();}catch(error){failures.push(error);}}if(failures.length)throw new AggregateError(failures,'ISOLATION_CLEANUP_FAILED');};
+  try{
+  await chmod(isolatedScratch,0o700);
+  await writeFile(join(isolatedScratch,'worker.mjs'),await readFile(join(scratch,'worker.mjs')),{mode:0o400,flag:'wx'});
+  fd=await open(filterPath,'r');bootstrapFd=await open(bootstrapPath,'wx',0o600);
+  const args = [basename(isolatedScratch),options.readOnlyScratch?'ro':'rw'];
+  const profile = { schema: 'finnor.s6.ordinary-linux-fixed-jail.v1', abi: 'linux-' + runtime.architecture,
+    binary, binarySha256: sha256(await readFile(binary)), manifestDigest:sha256(raw),args,
     filterSha256: sha256(filter), filterEncoding: runtime.architecture === 'arm64' ? 'LINUX_AARCH64_CBPF_V1' : 'LINUX_X86_64_CBPF_V1',
     supplementalManifestDigest: runtime.supplementalManifestDigest, supervisorArchitecture: process.arch,
     scratchAccess: options.readOnlyScratch ? 'READ_ONLY' : 'READ_WRITE',
-    inheritedDescriptors: 'STDIN_STDOUT_STDERR_ONLY_SECCOMP_FD_CONSUMED_BY_BWRAP',
+    inheritedDescriptors: 'STDIN_STDOUT_STDERR_ONLY_FILTER_AND_BOOTSTRAP_FDS_CONSUMED_BEFORE_NODE',
     authority: 'NONE_OUTPUT_UNTRUSTED', protectedExecution: 'UNADMITTED' };
-  const fd = await open(filterPath, 'r');
-  return { command: bwrap, node, args, fd, profile, profileText: JSON.stringify(profile) };
+  return { command: binary, node, args, fd, bootstrapFd,bootstrapPath,isolatedScratch,cleanup,profile, profileText: JSON.stringify(profile) };
+  }catch(error){await cleanup();throw error;}
+}
+
+export async function readLinuxBootstrap(path:string,pid:number|undefined,filterSha256:string){
+ const fd=await open(path,constants.O_RDONLY|constants.O_NOFOLLOW);
+ try{const st=await fd.stat();if(!st.isFile()||st.size>4096||st.uid!==process.getuid?.()||st.nlink!==1)throw Error('ISOLATION_BOOTSTRAP_RECEIPT_CUSTODY');
+  const value=JSON.parse(await fd.readFile('utf8'));
+  if(value.schema!=='finnor.s6.linux-bootstrap.v1'||value.pid!==pid||value.uid!==process.getuid?.()||value.capabilities!==0||value.noNewPrivileges!==1||value.fixedJail!==true||value.landlockAbi<2||value.filterSha256!==filterSha256||!/^[a-f0-9]{64}$/.test(filterSha256))throw Error('ISOLATION_BOOTSTRAP_RECEIPT_INVALID');
+  return value as {schema:string;pid:number;uid:number;capabilities:0;noNewPrivileges:1;fixedJail:true;landlockAbi:number;filterSha256:string};
+ }finally{await fd.close();}
 }

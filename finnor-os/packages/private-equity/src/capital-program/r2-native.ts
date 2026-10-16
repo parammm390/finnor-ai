@@ -11,7 +11,7 @@ import {canonicalJson} from '../../../epistemic-runtime/src/source-precedence';
 import {r2Lp} from '../../../epistemic-runtime/src/r2-encoding';
 import {m3Hash,CapitalProgramV2Error} from './v2-contracts';
 import {m3Remaining} from './v2-budget';
-import {prepareLinuxNodeIsolation} from '../../../governed-execution/src/executor-linux.js';
+import {prepareLinuxNodeIsolation,readLinuxBootstrap} from '../../../governed-execution/src/executor-linux.js';
 
 export const r2Repository=resolve(dirname(fileURLToPath(import.meta.url)),'../../../../..');
 const checkerPath=join(r2Repository,'finnor-os/packages/epistemic-runtime/python/r2_check.py');
@@ -84,16 +84,16 @@ export class R2NativeSession {
     readonly onPhysical?:(event:{state:'INTENT'|'STARTED'|'EXITED'|'UNKNOWN';phase:string;invocationId:string;supervisorPid:number|null;receipt:PhysicalReceipt|null})=>Promise<void>,
     readonly heartbeat:()=>Promise<void>=checkpoint,readonly initialCpuMs=0,readonly upstreamMemoryReservationBytes=0){this.cpuUsed=initialCpuMs;}
  async cancel():Promise<void>{const child=this.live;if(!child)return;child.kill('SIGTERM');await new Promise<void>(yes=>{if(child.exitCode!==null||child.signalCode!==null)return yes();child.once('close',()=>yes());});}
- private async run(phase:string,argv:string[],input='',node=false,workingDirectory=this.directory,seccompDescriptor?:number):Promise<{stdout:string;stdoutPath:string;receipt:PhysicalReceipt;ref:ExperimentRef}>{
+ private async run(phase:string,argv:string[],input='',node=false,workingDirectory=this.directory,seccompDescriptor?:number,bootstrapDescriptor?:number):Promise<{stdout:string;stdoutPath:string;receipt:PhysicalReceipt;ref:ExperimentRef}>{
   await this.heartbeat();if(this.calls>=this.caps.maxNativeCalls||this.chargedCpuMs>=this.caps.cpuMs)throw new CapitalProgramV2Error('LIMIT_EXCEEDED','R2 original aggregate native/parent CPU/call grant exhausted');
   if(process.memoryUsage().rss+this.upstreamMemoryReservationBytes>=this.caps.memoryMiB*1048576)
    throw new CapitalProgramV2Error('LIMIT_EXCEEDED','R2 original aggregate owner/native memory grant exhausted');
   const id=randomUUID(),base=join(workingDirectory,`${this.calls++}-${phase}-${id}`),stdoutPath=base+'.stdout',stderrPath=base+'.stderr',receiptPath=base+'.receipt.json';
   await this.onPhysical?.({state:'INTENT',phase,invocationId:id,supervisorPid:null,receipt:null});
-  const config={argv,cwd:workingDirectory,env:{PATH:'/usr/bin:/bin',LANG:'C',LC_ALL:'C',TZ:'UTC',HOME:workingDirectory,TMPDIR:workingDirectory},input,node,seccompFd:seccompDescriptor===undefined?null:3,
+  const config={argv,cwd:workingDirectory,env:{PATH:'/usr/bin:/bin',LANG:'C',LC_ALL:'C',TZ:'UTC',HOME:workingDirectory,TMPDIR:workingDirectory},input,node,seccompFd:seccompDescriptor===undefined?null:3,bootstrapFd:bootstrapDescriptor===undefined?null:4,
     deadlineAtMs:Math.min(this.deadlineAt,Date.now()+m3Remaining()),cpuMs:Math.max(1,Math.floor(this.caps.cpuMs-this.chargedCpuMs)),memoryMiB:this.caps.memoryMiB,
     outputBytes:this.caps.maxProofBytes,stdoutPath,stderrPath,receiptPath,upstreamMemoryReservationBytes:this.upstreamMemoryReservationBytes};
-  const child=spawn(this.runtime.python,[supervisorPath],{cwd:this.directory,stdio:seccompDescriptor===undefined?['pipe','pipe','pipe']:['pipe','pipe','pipe',seccompDescriptor],env:{PATH:'/usr/bin:/bin',LANG:'C',TZ:'UTC',NODE_ENV:'development'}});this.live=child;
+  const child=spawn(this.runtime.python,[supervisorPath],{cwd:this.directory,stdio:seccompDescriptor===undefined?['pipe','pipe','pipe']:['pipe','pipe','pipe',seccompDescriptor,bootstrapDescriptor!],env:{PATH:'/usr/bin:/bin',LANG:'C',TZ:'UTC',NODE_ENV:'development'}});this.live=child;
   const exited=new Promise<void>((yes,no)=>{child.once('error',no);child.once('close',()=>yes());});
   let supervisorError=Buffer.alloc(0);
   child.stdout!.resume();child.stderr!.on('data',(bytes:Buffer)=>{if(supervisorError.length<16384)supervisorError=Buffer.concat([supervisorError,bytes.subarray(0,16384-supervisorError.length)]);});child.stdin!.on('error',()=>undefined);child.stdin!.end(JSON.stringify(config));
@@ -121,11 +121,12 @@ export class R2NativeSession {
    await writeFile(join(scratch,'worker.mjs'),javascript,{flag:'wx',mode:0o400});
    const isolated=await prepareLinuxNodeIsolation(scratch,await realpath(process.execPath),{readOnlyScratch:true});
    try{
-    const run=await this.run('p1-programme',[isolated.command,...isolated.args],JSON.stringify({histories}),true,scratch,isolated.fd.fd);
+    const run=await this.run('p1-programme',[isolated.command,...isolated.args],JSON.stringify({histories}),true,scratch,isolated.fd.fd,isolated.bootstrapFd.fd);
+    const linuxBootstrap=await readLinuxBootstrap(isolated.bootstrapPath,run.receipt.pid,isolated.profile.filterSha256);
     await this.checkpoint();
     return {outputs:JSON.parse(run.stdout),physicalRef:run.ref,profileSha256:sha(isolated.profileText),nodeSha256:sha(await readFile(isolated.node)),dyldProfileSha256:null,
-     linuxProfile:isolated.profile,authority:'NONE_OUTPUT_UNTRUSTED' as const,substrate:'LOCAL_LINUX_BUBBLEWRAP_V1' as const};
-   }finally{await isolated.fd.close();}
+     linuxProfile:isolated.profile,linuxBootstrap,authority:'NONE_OUTPUT_UNTRUSTED' as const,substrate:'LOCAL_LINUX_FIXED_JAIL_V1' as const};
+   }finally{await isolated.cleanup();}
   }
   const node=await realpath(process.execPath),script=join(scratch,'programme.mjs'),profilePath=join(scratch,'enforced.sb'),quote=(v:string)=>JSON.stringify(v),
    ancestors=[...new Set([node,scratch].flatMap(path=>{const result=[];for(let parent=dirname(path);;parent=dirname(parent)){result.push(parent);if(parent==='/')break;}return result;}))],

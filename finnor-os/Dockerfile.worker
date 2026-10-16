@@ -63,6 +63,15 @@ RUN test -s /etc/ssl/certs/ca-certificates.crt \
     && command -v m4 \
     && python3 /opt/finnor-r2-build.py --build-root /opt/r2-build
 
+# Compile trusted setup separately from the scientific runtime. The only file
+# capability installed in the final image is SYS_CHROOT, dropped before Node.
+FROM node-runtime AS s6-launcher-build
+RUN apt-get update && apt-get install --yes --no-install-recommends gcc libc6-dev libssl-dev \
+    && rm -rf /var/lib/apt/lists/*
+COPY finnor-os/packages/governed-execution/native/linux-launcher.c /opt/linux-launcher.c
+RUN cc -std=c11 -O2 -Wall -Wextra -Werror -fstack-protector-strong -D_FORTIFY_SOURCE=2 \
+    -Wl,-z,relro,-z,now -o /opt/linux-launcher /opt/linux-launcher.c -lcrypto
+
 FROM ghcr.io/astral-sh/uv:0.10.9@sha256:10902f58a1606787602f303954cea099626a4adb02acbac4c69920fe9d278f82 AS r3-installer
 
 # A translated x64 supervisor may run on an arm64 kernel. Its ordinary M3
@@ -70,8 +79,13 @@ FROM ghcr.io/astral-sh/uv:0.10.9@sha256:10902f58a1606787602f303954cea099626a4adb
 FROM --platform=${FINNOR_S6_NATIVE_PLATFORM} node:22.22.3-bookworm-slim@sha256:e21fc383b50d5347dc7a9f1cae45b8f4e2f0d39f7ade28e4eef7d2934522b752 AS s6-native-callee
 RUN test "$(uname -m)" = aarch64 \
     && apt-get update \
-    && apt-get install --yes --no-install-recommends bubblewrap=0.8.0-2+deb12u1 \
+    && apt-get install --yes --no-install-recommends bubblewrap=0.8.0-2+deb12u1 gcc libc6-dev libssl-dev \
     && rm -rf /var/lib/apt/lists/*
+COPY finnor-os/packages/governed-execution/native/linux-launcher.c /app/finnor-os/packages/governed-execution/native/linux-launcher.c
+COPY finnor-os/scripts/r3/package-linux-jail.mjs /app/finnor-os/scripts/r3/package-linux-jail.mjs
+RUN cc -std=c11 -O2 -Wall -Wextra -Werror -fstack-protector-strong -D_FORTIFY_SOURCE=2 \
+      -Wl,-z,relro,-z,now -o /opt/linux-launcher /app/finnor-os/packages/governed-execution/native/linux-launcher.c -lcrypto \
+    && node /app/finnor-os/scripts/r3/package-linux-jail.mjs /usr/local/bin/node /opt/linux-launcher /opt/finnor-s6-jail-arm64 stage
 
 FROM node-runtime AS r3-scientific
 COPY --from=r3-installer /uv /usr/local/bin/uv
@@ -93,7 +107,7 @@ RUN apt-get update \
     && apt-get install --yes --no-install-recommends \
        libexpat1 zlib1g libffi8 libsqlite3-0 libbz2-1.0 liblzma5 libgomp1 \
        libssl3 libreadline8 libncursesw6 libuuid1 libgfortran5 procps \
-       bubblewrap=0.8.0-2+deb12u1 openssl=3.0.22-1~deb12u1 libssl3=3.0.22-1~deb12u1 \
+       bubblewrap=0.8.0-2+deb12u1 libcap2-bin openssl=3.0.22-1~deb12u1 libssl3=3.0.22-1~deb12u1 \
     && rm -rf /var/lib/apt/lists/*
 COPY --from=r4-scientific /usr/local/bin/python3.11 /usr/local/bin/python3.11
 COPY --from=r4-scientific /usr/local/lib/libpython3.11.so.1.0 /usr/local/lib/libpython3.11.so.1.0
@@ -110,9 +124,16 @@ COPY --from=s6-native-callee /usr/bin/bwrap /opt/finnor-s6-linux-native/bwrap
 COPY --from=s6-native-callee /usr/bin/uname /opt/finnor-s6-linux-native/uname
 COPY --from=s6-native-callee /usr/lib/aarch64-linux-gnu /usr/lib/aarch64-linux-gnu
 COPY --from=s6-native-callee /usr/lib/aarch64-linux-gnu/ld-linux-aarch64.so.1 /usr/lib/ld-linux-aarch64.so.1
+COPY --from=s6-native-callee /opt/finnor-s6-jail-arm64 /opt/finnor-s6-jail-arm64
+COPY --from=s6-launcher-build /opt/linux-launcher /opt/linux-launcher
 COPY --from=r2-scientific-build /opt/r2-build/gmp.tar.xz /opt/finnor-r2/sources/gmp.tar.xz
 COPY --from=r2-scientific-build /opt/r2-build/mpfr.tar.xz /opt/finnor-r2/sources/mpfr.tar.xz
 RUN node scripts/r3/seal-linux-callee.mjs
+RUN if [ "$(node -p process.arch)" = x64 ]; then node scripts/r3/package-linux-jail.mjs /usr/local/bin/node /opt/linux-launcher /opt/finnor-s6-jail-x64; fi \
+    && mknod -m 666 /opt/finnor-s6-jail-arm64/root/dev/null c 1 3 \
+    && mknod -m 666 /opt/finnor-s6-jail-arm64/root/dev/random c 1 8 \
+    && mknod -m 666 /opt/finnor-s6-jail-arm64/root/dev/urandom c 1 9 \
+    && setcap cap_sys_chroot=ep /opt/finnor-s6-jail-arm64/launcher
 
 ENV FINNOR_R2_RUNTIME=/opt/finnor-r2/runtime \
     FINNOR_R2_PYTHON=/opt/finnor-python/bin/python \

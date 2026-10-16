@@ -58,6 +58,14 @@ cleanup() {
       status=1
     fi
   fi
+  if [[ -d "$evidence/linux-s6-runtime" ]]; then
+    if ! docker run --rm --network none --user 0:0 --entrypoint chown \
+      --mount "type=bind,source=$evidence/linux-s6-runtime,target=/s6-evidence" \
+      "$image" -R "$(id -u):$(id -g)" /s6-evidence; then
+      echo "::error::failed to return disposable executor evidence to its host owner"
+      status=1
+    fi
+  fi
   FINNOR_SMOKE_EXIT="$status" FINNOR_SMOKE_EVIDENCE="$evidence" node <<'NODE'
 const fs = require("node:fs");
 const path = require("node:path");
@@ -71,15 +79,19 @@ const r3Receipt = r3Required && fs.existsSync(path.join(directory, "linux-r3-run
 const r3Passed = !r3Required || r3Receipt?.status === "PASS";
 const r4Required = fs.existsSync("finnor-os/scripts/r4/run-integrated.mts");
 const r4Passed = !r4Required || fs.existsSync(path.join(directory, "linux-r4-runtime", "results.json"));
+const s6Path = path.join(directory, "linux-s6-runtime", "executor", "results.json");
+const s6 = fs.existsSync(s6Path) ? JSON.parse(fs.readFileSync(s6Path, "utf8")) : null;
+const s6Passed = s6?.results?.length === 5 && s6.results.every(r => r.status === "PASS");
 fs.writeFileSync(path.join(directory, "receipt.json"), JSON.stringify({
   schema: "finnor.worker-image-smoke.v1",
-  status: process.env.FINNOR_SMOKE_EXIT === "0" && successfulClasses.length === 4 && fs.existsSync(path.join(directory, "linux-r1-runtime", "results.json")) && r3Passed && r4Passed ? "PASS" : "FAIL",
+  status: process.env.FINNOR_SMOKE_EXIT === "0" && successfulClasses.length === 4 && fs.existsSync(path.join(directory, "linux-r1-runtime", "results.json")) && s6Passed && r3Passed && r4Passed ? "PASS" : "FAIL",
   commitSha: process.env.FINNOR_COMMIT_SHA,
   buildId: process.env.FINNOR_BUILD_ID,
   version: process.env.FINNOR_VERSION,
   dockerfileSha256: crypto.createHash("sha256").update(fs.readFileSync("finnor-os/Dockerfile.worker")).digest("hex"),
   successfulClasses,
   r4Required,
+  s6Passed,
   steps: ["Build locked Linux image from canonical layout", "Start each of four compute classes against disposable PostgreSQL", "Verify exact release and class health", "SIGTERM each container and require exit zero", "Run actual compiled API / authenticated R1 / independent checker / S4 / S5 with migration and protocol compatibility from that image", ...(r3Required ? ["Run installed R3 runtime identity/checker and finite authenticated R3 owner queue/restart cases from the exact image"] : []), ...(r4Required ? ["Run the separate installed R4 scientific runtime and authenticated migration / worker / checker / S4 / S5 owner flow with exact image identity"] : [])],
   rerun: "bash scripts/release/smoke-worker-image.sh",
   providerDeploymentProof: false,
@@ -169,6 +181,23 @@ NODE
   docker rm "$container_id" >/dev/null
   container_id=""
 done
+
+# Fail at the exact installed isolation boundary before starting costly owner
+# campaigns. This uses the final image's default outer security profile/caps.
+mkdir -p "$evidence/linux-s6-runtime"
+chmod 2770 "$evidence/linux-s6-runtime"
+if docker run --rm --network none --user 1000:1000 --group-add "$(id -g)" \
+  --env HOME=/tmp --env NODE_ENV=test --env CI=1 \
+  --env FINNOR_S6_EXECUTOR_EVIDENCE_DIR=/s6-evidence/executor \
+  --mount "type=bind,source=$evidence/linux-s6-runtime,target=/s6-evidence" \
+  "$image" node --import=tsx scripts/s6/run-executor-e2e.mts \
+  > "$evidence/linux-s6-runtime/runner.log" 2>&1; then
+  :
+else
+  executor_status=$?
+  cat "$evidence/linux-s6-runtime/runner.log"
+  exit "$executor_status"
+fi
 
 # The same final image, including its Python environment and compiled API, must
 # execute the owning flow. This is isolated ordinary development, with no network

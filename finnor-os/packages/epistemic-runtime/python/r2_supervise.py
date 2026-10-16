@@ -65,15 +65,17 @@ signal.signal(signal.SIGTERM, cancelled)
 signal.signal(signal.SIGINT, cancelled)
 try:
     with open(config['stdoutPath'], 'xb') as stdout, open(config['stderrPath'], 'xb') as stderr:
-        # Node maps the trusted filter to descriptor 3 in this supervisor.
-        # Preserve only that descriptor until bubblewrap consumes it; all
+        # Node maps the trusted filter and bootstrap receipt to descriptors 3/4.
+        # The fixed launcher consumes both before generated Node executes; all
         # scientific/non-isolated children retain their three-descriptor ABI.
         seccomp_fd = config.get('seccompFd')
-        if seccomp_fd is not None and (sys.platform != 'linux' or seccomp_fd != 3):
+        bootstrap_fd = config.get('bootstrapFd')
+        if (seccomp_fd is None) != (bootstrap_fd is None) or (seccomp_fd is not None and
+                (sys.platform != 'linux' or seccomp_fd != 3 or bootstrap_fd != 4)):
             raise ValueError('PHYSICAL_SECCOMP_DESCRIPTOR_INVALID')
         child = subprocess.Popen(config['argv'], cwd=config['cwd'], env=config['env'], stdin=subprocess.PIPE,
                                  stdout=stdout, stderr=stderr, start_new_session=True, preexec_fn=limits,
-                                 pass_fds=() if seccomp_fd is None else (seccomp_fd,))
+                                 pass_fds=() if seccomp_fd is None else (seccomp_fd, bootstrap_fd))
         # Input transfer must not block the deadline/orphan guardian if a
         # checker is stopped before draining its pipe.
         pending_input = memoryview(config.get('input', '').encode())

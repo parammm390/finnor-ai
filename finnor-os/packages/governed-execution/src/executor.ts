@@ -5,7 +5,7 @@ import {mkdtemp,realpath,writeFile,readFile,rm,readdir,lstat} from 'node:fs/prom
 import {tmpdir,release} from 'node:os';
 import {join,dirname} from 'node:path';
 import {s6AdapterContract} from './adapter-contract.js';
-import {prepareLinuxNodeIsolation} from './executor-linux.js';
+import {prepareLinuxNodeIsolation,readLinuxBootstrap} from './executor-linux.js';
 export interface IsolatedNodeRequest {script:string;input:unknown;wallTimeMs:number;protectedExecution?:boolean;requiredLimits?:{cpuTimeMs?:number;totalMemoryBytes?:number;threads?:number;diskBytes?:number}}
 export interface IsolatedNodeResult {stdout:string;stderr:string;exitCode:number|null;signal:string|null;termination:'EXITED'|'WALL_TIME_LIMIT'|'OUTPUT_LIMIT';provenance:Record<string,unknown>}
 let active=0;
@@ -32,16 +32,23 @@ export async function launchIsolatedNodeExecutor(request:IsolatedNodeRequest):Pr
   ].join('\n');
   const profilePath=join(scratch,'enforced.sb');await writeFile(scriptPath,request.script,{mode:0o400});await writeFile(profilePath,profile,{mode:0o400});
   if(process.platform==='linux'){linux=await prepareLinuxNodeIsolation(scratch,node);node=linux.node;profile=linux.profileText;}
-  const substrate=linux?'LOCAL_LINUX_BUBBLEWRAP_V1':'LOCAL_MACOS_SEATBELT';
+  const substrate=linux?'LOCAL_LINUX_FIXED_JAIL_V1':'LOCAL_MACOS_SEATBELT';
   const begun=performance.now(),startedAt=new Date().toISOString(),cpu=process.cpuUsage();const chunks:{stdout:Buffer[];stderr:Buffer[]}={stdout:[],stderr:[]};let total=0,termination:IsolatedNodeResult['termination']='EXITED';
-  const child=spawn(linux?.command??'/usr/bin/sandbox-exec',linux?.args??['-f',profilePath,node,'--max-old-space-size=128',scriptPath],{cwd:scratch,env:{HOME:scratch,TMPDIR:scratch,LANG:'C',TZ:'UTC',NODE_ENV:'production'},stdio:linux?['pipe','pipe','pipe',linux.fd.fd]:['pipe','pipe','pipe'],detached:true});
+  const child=spawn(linux?.command??'/usr/bin/sandbox-exec',linux?.args??['-f',profilePath,node,'--max-old-space-size=128',scriptPath],{cwd:scratch,env:{HOME:scratch,TMPDIR:scratch,LANG:'C',TZ:'UTC',NODE_ENV:'production'},stdio:linux?['pipe','pipe','pipe',linux.fd.fd,linux.bootstrapFd.fd]:['pipe','pipe','pipe'],detached:true});
   const kill=()=>{if(child.pid)try{process.kill(-child.pid,'SIGKILL');}catch(e){if((e as NodeJS.ErrnoException).code!=='ESRCH')throw e;}};
   const timer=setTimeout(()=>{termination='WALL_TIME_LIMIT';kill();},request.wallTimeMs);
   function consume(stream:'stdout'|'stderr',chunk:Buffer){const take=Math.min(chunk.length,131072-total);if(take>0){chunks[stream].push(chunk.subarray(0,take));total+=take;}if(take<chunk.length&&termination==='EXITED'){termination='OUTPUT_LIMIT';kill();}}
   child.stdout!.on('data',b=>consume('stdout',Buffer.from(b)));child.stderr!.on('data',b=>consume('stderr',Buffer.from(b)));child.stdin!.on('error',()=>undefined);child.stdin!.end(input);
   const finished=await new Promise<{code:number|null;signal:NodeJS.Signals|null}>((yes,no)=>{child.once('error',no);child.once('close',(code,signal)=>yes({code,signal}));}).finally(()=>{clearTimeout(timer);kill();});
-  const elapsedMs=performance.now()-begun,usage=process.cpuUsage(cpu),disk=await scratchUsage(scratch);
+  const elapsedMs=performance.now()-begun,usage=process.cpuUsage(cpu),disk=await scratchUsage(linux?.isolatedScratch??scratch);
+  const linuxBootstrap=linux?await readLinuxBootstrap(linux.bootstrapPath,child.pid,linux.profile.filterSha256).catch(error=>{if(finished.code===0)throw error;return null;}):null;
   const compute={schema:'finnor.model-compute-invocation.v1',semanticOwner:'S6',id:'model-compute:'+digest(JSON.stringify({startedAt,input:digest(input),script:digest(request.script),output:digest(Buffer.concat(chunks.stdout)),exitCode:finished.code})),tenantId:null,principalId:null,rightsRef:null,identityQualification:'CALLER_IDENTITY_UNATTESTED_NO_CONSEQUENTIAL_AUTHORITY',inputRef:digest(input),outputRefs:[digest(Buffer.concat(chunks.stdout)),digest(Buffer.concat(chunks.stderr))],requestedRoute:substrate,actualRoute:substrate,fallbacks:[],model:null,backend:{name:'node',version:process.version,runtimeDigest:digest(await readFile(node))},harness:{platform:process.platform,architecture:process.arch,scriptDigest:digest(request.script),profileDigest:digest(profile),deterministicReplayClaimed:false},attempts:[{startedAt,finishedAt:new Date().toISOString(),status:termination,exitCode:finished.code,signal:finished.signal}],usage:{elapsedMs,supervisorCpuUserMicros:usage.user,supervisorCpuSystemMicros:usage.system,scratch:disk,outputBytes:total,accountingScope:'SUPERVISOR_INTERVAL_NOT_CHILD_OR_CONTAINER_PEAK'},cost:{money:null,pricebookRef:null,status:'UNMETERED',externalCalls:0},admission:{status:'UNADMITTED_PROTECTED_EXECUTION',receipt:null}};
-  return {stdout:Buffer.concat(chunks.stdout).toString(),stderr:Buffer.concat(chunks.stderr).toString(),exitCode:finished.code,signal:finished.signal,termination,provenance:{schema:'finnor.s6.executor-provenance.v1',compute,contract:s6AdapterContract(substrate),substrate,platform:process.platform,osRelease:release(),node:process.version,nodeDigest:digest(await readFile(node)),scriptDigest:digest(request.script),inputDigest:digest(input),profile,profileDigest:digest(profile),...(linux?{linuxProfile:linux.profile}:{inheritedDyldProfileDigest:digest(await readFile('/System/Library/Sandbox/Profiles/dyld-support.sb'))}),elapsedMs,supervisorCpuMicros:usage.user+usage.system,accountingScope:'SUPERVISOR_INTERVAL_NOT_CHILD_OR_CONTAINER_USAGE',scratch:disk,cost:{money:null,status:'UNMETERED'},limits:{wallTimeMs:request.wallTimeMs,outputBytes:131072,nodeOldSpaceMiB:128,totalMemory:'UNENFORCED',cpu:'UNENFORCED',pids:'PROCESS_CREATION_DENIED_THREADS_AND_GLOBAL_PIDS_UNENFORCED',diskBytes:'UNENFORCED'},authority:'NONE_OUTPUT_UNTRUSTED',productionAdmission:'UNSUPPORTED_PENDING_RESOURCE_AND_RELEASE_QUALIFICATION'}};
- }finally{active--;if(linux)await linux.fd.close();if(scratch)await rm(scratch,{recursive:true,force:true});}
+  return {stdout:Buffer.concat(chunks.stdout).toString(),stderr:Buffer.concat(chunks.stderr).toString(),exitCode:finished.code,signal:finished.signal,termination,
+   provenance:{schema:'finnor.s6.executor-provenance.v1',compute,contract:s6AdapterContract(substrate),substrate,platform:process.platform,osRelease:release(),node:process.version,
+    nodeDigest:digest(await readFile(node)),scriptDigest:digest(request.script),inputDigest:digest(input),profile,profileDigest:digest(profile),
+    ...(linux?{linuxProfile:linux.profile,linuxBootstrap}:{inheritedDyldProfileDigest:digest(await readFile('/System/Library/Sandbox/Profiles/dyld-support.sb'))}),
+    elapsedMs,supervisorCpuMicros:usage.user+usage.system,accountingScope:'SUPERVISOR_INTERVAL_NOT_CHILD_OR_CONTAINER_USAGE',scratch:disk,cost:{money:null,status:'UNMETERED'},
+    limits:{wallTimeMs:request.wallTimeMs,outputBytes:131072,nodeOldSpaceMiB:128,totalMemory:'UNENFORCED',cpu:'UNENFORCED',pids:'PROCESS_CREATION_DENIED_THREADS_AND_GLOBAL_PIDS_UNENFORCED',diskBytes:'UNENFORCED'},
+    authority:'NONE_OUTPUT_UNTRUSTED',productionAdmission:'UNSUPPORTED_PENDING_RESOURCE_AND_RELEASE_QUALIFICATION'}};
+ }finally{active--;if(linux)await linux.cleanup();if(scratch)await rm(scratch,{recursive:true,force:true});}
 }
