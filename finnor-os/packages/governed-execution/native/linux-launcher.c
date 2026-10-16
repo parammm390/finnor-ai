@@ -8,6 +8,7 @@
 #include <linux/filter.h>
 #include <linux/landlock.h>
 #include <linux/seccomp.h>
+#include <limits.h>
 #include <openssl/sha.h>
 #include <signal.h>
 #include <stdint.h>
@@ -45,7 +46,11 @@ static void allow_path(int rules,const char *path,uint64_t rights) {
 }
 int main(int argc,char **argv) {
   uid_t uid=getuid();gid_t gid=getgid();pid_t parent=getppid();
-  if(argc!=3||uid==0||getegid()!=gid||geteuid()!=uid||parent<=1)refuse("CALLER");
+  /* PID 1 is a valid supervisor when Node is the container entrypoint. Its
+   * death tears down the namespace; ordinary parents retain PDEATHSIG below. */
+  if(argc!=4||uid==0||getegid()!=gid||geteuid()!=uid||parent<=0)refuse("CALLER");
+  char *end=NULL;errno=0;long expected_parent=strtol(argv[3],&end,10);
+  if(errno||!argv[3][0]||*end||expected_parent<1||expected_parent>INT_MAX||parent!=(pid_t)expected_parent)refuse("ORIGINAL_PARENT");
   if(strlen(argv[1])<5||strlen(argv[1])>80||strncmp(argv[1],"job-",4)||strspn(argv[1],"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_")!=strlen(argv[1]))refuse("JOB");
   int writable=!strcmp(argv[2],"rw");
   if(!writable&&strcmp(argv[2],"ro"))refuse("ACCESS");
@@ -99,7 +104,7 @@ int main(int argc,char **argv) {
   struct sock_fprog program={.len=(unsigned short)(bytes/sizeof(struct sock_filter)),.filter=instructions};
   if(prctl(PR_SET_SECCOMP,SECCOMP_MODE_FILTER,&program))refuse("SECCOMP");
   if(prctl(PR_GET_NO_NEW_PRIVS,0,0,0,0)!=1)refuse("PRIVILEGE_RECHECK");
-  if(dprintf(4,"{\"schema\":\"finnor.s6.linux-bootstrap.v1\",\"pid\":%ld,\"uid\":%lu,\"capabilities\":0,\"noNewPrivileges\":1,\"fixedJail\":true,\"landlockAbi\":%d,\"filterSha256\":\"%s\"}\n",(long)getpid(),(unsigned long)uid,abi,filter_hash)<0||close(4))refuse("BOOTSTRAP_RECEIPT");
+  if(dprintf(4,"{\"schema\":\"finnor.s6.linux-bootstrap.v1\",\"pid\":%ld,\"parentPid\":%ld,\"uid\":%lu,\"capabilities\":0,\"noNewPrivileges\":1,\"fixedJail\":true,\"landlockAbi\":%d,\"filterSha256\":\"%s\"}\n",(long)getpid(),(long)parent,(unsigned long)uid,abi,filter_hash)<0||close(4))refuse("BOOTSTRAP_RECEIPT");
   if(snprintf(script,sizeof(script),"%s/worker.mjs",job)>=(int)sizeof(script)||snprintf(home,sizeof(home),"HOME=%s",job)>=(int)sizeof(home)||snprintf(temporary,sizeof(temporary),"TMPDIR=%s",job)>=(int)sizeof(temporary))refuse("PATH_LENGTH");
   char *const arguments[]={"/node","--max-old-space-size=128","--no-addons",script,NULL};
   char *const environment[]={home,temporary,"LANG=C","TZ=UTC","NODE_ENV=production",NULL};

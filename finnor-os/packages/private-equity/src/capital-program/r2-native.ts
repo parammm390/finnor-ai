@@ -84,7 +84,7 @@ export class R2NativeSession {
     readonly onPhysical?:(event:{state:'INTENT'|'STARTED'|'EXITED'|'UNKNOWN';phase:string;invocationId:string;supervisorPid:number|null;receipt:PhysicalReceipt|null})=>Promise<void>,
     readonly heartbeat:()=>Promise<void>=checkpoint,readonly initialCpuMs=0,readonly upstreamMemoryReservationBytes=0){this.cpuUsed=initialCpuMs;}
  async cancel():Promise<void>{const child=this.live;if(!child)return;child.kill('SIGTERM');await new Promise<void>(yes=>{if(child.exitCode!==null||child.signalCode!==null)return yes();child.once('close',()=>yes());});}
- private async run(phase:string,argv:string[],input='',node=false,workingDirectory=this.directory,seccompDescriptor?:number,bootstrapDescriptor?:number):Promise<{stdout:string;stdoutPath:string;receipt:PhysicalReceipt;ref:ExperimentRef}>{
+ private async run(phase:string,argv:string[],input='',node=false,workingDirectory=this.directory,seccompDescriptor?:number,bootstrapDescriptor?:number):Promise<{stdout:string;stdoutPath:string;receipt:PhysicalReceipt;ref:ExperimentRef;supervisorPid:number|null}>{
   await this.heartbeat();if(this.calls>=this.caps.maxNativeCalls||this.chargedCpuMs>=this.caps.cpuMs)throw new CapitalProgramV2Error('LIMIT_EXCEEDED','R2 original aggregate native/parent CPU/call grant exhausted');
   if(process.memoryUsage().rss+this.upstreamMemoryReservationBytes>=this.caps.memoryMiB*1048576)
    throw new CapitalProgramV2Error('LIMIT_EXCEEDED','R2 original aggregate owner/native memory grant exhausted');
@@ -110,7 +110,7 @@ export class R2NativeSession {
    if(phase.startsWith('check-')){try{const rejected=JSON.parse(await boundedFile(stdoutPath,this.caps.maxProofBytes));if(rejected.disposition==='REJECTED'&&typeof rejected.reason==='string')reason+=':'+rejected.reason.slice(0,1024);}catch{}}
    throw new CapitalProgramV2Error(receipt.termination==='ORIGINAL_DEADLINE'?'LIMIT_EXCEEDED':'CHECK_FAILED',`R2 ${phase} rejected or stopped: ${reason}`);
   }
-  await this.heartbeat();return {stdout:await boundedFile(stdoutPath,this.caps.maxProofBytes),stdoutPath,receipt,ref};
+  await this.heartbeat();return {stdout:await boundedFile(stdoutPath,this.caps.maxProofBytes),stdoutPath,receipt,ref,supervisorPid:child.pid??null};
  }
  async executeProgramme(javascript:string,histories:unknown[],maximumBytes:number){
   await this.checkpoint();
@@ -123,9 +123,10 @@ export class R2NativeSession {
    try{
     const run=await this.run('p1-programme',[isolated.command,...isolated.args],JSON.stringify({histories}),true,scratch,isolated.fd.fd,isolated.bootstrapFd.fd);
     const linuxBootstrap=await readLinuxBootstrap(isolated.bootstrapPath,run.receipt.pid,isolated.profile.filterSha256);
+    if(linuxBootstrap.parentPid!==run.supervisorPid)refuse('P1 bootstrap parent differs from the observed physical supervisor');
     await this.checkpoint();
     return {outputs:JSON.parse(run.stdout),physicalRef:run.ref,profileSha256:sha(isolated.profileText),nodeSha256:sha(await readFile(isolated.node)),dyldProfileSha256:null,
-     linuxProfile:isolated.profile,linuxBootstrap,authority:'NONE_OUTPUT_UNTRUSTED' as const,substrate:'LOCAL_LINUX_FIXED_JAIL_V1' as const};
+     linuxProfile:isolated.profile,linuxBootstrap,parentBinding:{ownerPid:process.pid,supervisorPid:run.supervisorPid},authority:'NONE_OUTPUT_UNTRUSTED' as const,substrate:'LOCAL_LINUX_FIXED_JAIL_V1' as const};
    }finally{await isolated.cleanup();}
   }
   const node=await realpath(process.execPath),script=join(scratch,'programme.mjs'),profilePath=join(scratch,'enforced.sb'),quote=(v:string)=>JSON.stringify(v),

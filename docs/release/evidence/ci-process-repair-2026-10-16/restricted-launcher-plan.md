@@ -38,3 +38,14 @@ Use one credential-free bounded native Fargate verification of the actual
 launcher before publishing a consolidated candidate. No production service or
 database mutation for that verification. Keep software installation distinct
 from protected effects, admission, economic and comparative-gain qualifications.
+
+## Observed installed-context repair (batch 171)
+
+All five installed S6 cases refuse CALLER before bootstrap: the direct Node
+test supervisor is container PID 1. A live namespace init is a legitimate
+parent, not an orphaned child; its exit tears down the PID namespace. Preserve
+nonroot UID/GID, exact capability, unchanged-parent and PDEATHSIG checks while
+accepting a positive parent PID including 1. Verify both child-supervisor and
+PID-1-supervisor contexts using the same five actual E2E cases, explicitly
+binding the helper's observed parent to the driver PID. No floor increase,
+extra capability, init/security override or omitted case is justified.

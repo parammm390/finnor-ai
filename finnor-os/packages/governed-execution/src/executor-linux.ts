@@ -130,7 +130,7 @@ export async function prepareLinuxNodeIsolation(scratch: string, node: string, o
   await chmod(isolatedScratch,0o700);
   await writeFile(join(isolatedScratch,'worker.mjs'),await readFile(join(scratch,'worker.mjs')),{mode:0o400,flag:'wx'});
   fd=await open(filterPath,'r');bootstrapFd=await open(bootstrapPath,'wx',0o600);
-  const args = [basename(isolatedScratch),options.readOnlyScratch?'ro':'rw'];
+  const args = [basename(isolatedScratch),options.readOnlyScratch?'ro':'rw',String(process.pid)];
   const profile = { schema: 'finnor.s6.ordinary-linux-fixed-jail.v1', abi: 'linux-' + runtime.architecture,
     binary, binarySha256: sha256(await readFile(binary)), manifestDigest:sha256(raw),args,
     filterSha256: sha256(filter), filterEncoding: runtime.architecture === 'arm64' ? 'LINUX_AARCH64_CBPF_V1' : 'LINUX_X86_64_CBPF_V1',
@@ -146,7 +146,7 @@ export async function readLinuxBootstrap(path:string,pid:number|undefined,filter
  const fd=await open(path,constants.O_RDONLY|constants.O_NOFOLLOW);
  try{const st=await fd.stat();if(!st.isFile()||st.size>4096||st.uid!==process.getuid?.()||st.nlink!==1)throw Error('ISOLATION_BOOTSTRAP_RECEIPT_CUSTODY');
   const value=JSON.parse(await fd.readFile('utf8'));
-  if(value.schema!=='finnor.s6.linux-bootstrap.v1'||value.pid!==pid||value.uid!==process.getuid?.()||value.capabilities!==0||value.noNewPrivileges!==1||value.fixedJail!==true||value.landlockAbi<2||value.filterSha256!==filterSha256||!/^[a-f0-9]{64}$/.test(filterSha256))throw Error('ISOLATION_BOOTSTRAP_RECEIPT_INVALID');
-  return value as {schema:string;pid:number;uid:number;capabilities:0;noNewPrivileges:1;fixedJail:true;landlockAbi:number;filterSha256:string};
+  if(value.schema!=='finnor.s6.linux-bootstrap.v1'||value.pid!==pid||!Number.isSafeInteger(value.parentPid)||value.parentPid<1||value.uid!==process.getuid?.()||value.capabilities!==0||value.noNewPrivileges!==1||value.fixedJail!==true||value.landlockAbi<2||value.filterSha256!==filterSha256||!/^[a-f0-9]{64}$/.test(filterSha256))throw Error('ISOLATION_BOOTSTRAP_RECEIPT_INVALID');
+  return value as {schema:string;pid:number;parentPid:number;uid:number;capabilities:0;noNewPrivileges:1;fixedJail:true;landlockAbi:number;filterSha256:string};
  }finally{await fd.close();}
 }

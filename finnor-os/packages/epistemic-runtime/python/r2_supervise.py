@@ -73,6 +73,13 @@ try:
         if (seccomp_fd is None) != (bootstrap_fd is None) or (seccomp_fd is not None and
                 (sys.platform != 'linux' or seccomp_fd != 3 or bootstrap_fd != 4)):
             raise ValueError('PHYSICAL_SECCOMP_DESCRIPTOR_INVALID')
+        if seccomp_fd is not None:
+            # Bind the fixed launcher to this physical supervisor, not a PID
+            # guessed by its owner before this process existed. Retain the
+            # original owner fence if it died before supervision began.
+            if len(config['argv']) != 4 or config['argv'][3] != str(parent):
+                raise ValueError('PHYSICAL_ORIGINAL_PARENT_INVALID')
+            config['argv'][3] = str(os.getpid())
         child = subprocess.Popen(config['argv'], cwd=config['cwd'], env=config['env'], stdin=subprocess.PIPE,
                                  stdout=stdout, stderr=stderr, start_new_session=True, preexec_fn=limits,
                                  pass_fds=() if seccomp_fd is None else (seccomp_fd, bootstrap_fd))
