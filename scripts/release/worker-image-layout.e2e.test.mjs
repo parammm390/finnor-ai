@@ -14,8 +14,12 @@ const workerImportSpecifiers = [...readFileSync(join(backend, "apps/worker/src/i
   .map((match) => match[1])
 
 test("the actual image layout imports every worker owner and rechecks source custody outside the checkout", () => {
-  const fixture = mkdtempSync(join(tmpdir(), "finnor-worker-image-layout-"))
   const dockerfile = readFileSync(join(backend, "Dockerfile.worker"), "utf8")
+  assert.match(dockerfile, /^ARG FINNOR_S6_NATIVE_PLATFORM=linux\/arm64$/m)
+  assert.match(dockerfile, /^FROM --platform=\$\{FINNOR_S6_NATIVE_PLATFORM\} .* AS s6-native-callee$/m)
+  assert.match(dockerfile, /RUN test "\$\(uname -m\)" = aarch64/)
+  assert.doesNotMatch(dockerfile, /^FROM --platform=linux\//m)
+  const fixture = mkdtempSync(join(tmpdir(), "finnor-worker-image-layout-"))
   const workdir = [...dockerfile.matchAll(/^WORKDIR (\S+)$/gm)].at(-1)?.[1]
   assert.ok(workdir?.startsWith("/app"))
   const deployed = join(fixture, workdir.slice(1))

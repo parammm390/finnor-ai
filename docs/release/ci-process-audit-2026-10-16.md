@@ -299,3 +299,38 @@ No further code change is being justified by an assumed clean review. The next
 publication is the combined known-failure repair on the existing release branch,
 followed by its existing hosted gates, not a new isolated diagnostic run. Exact
 Linux/database/artifact acceptance and production completion remain unclaimed.
+
+## Full hosted batch 163: Docker boundary
+
+The complete source aggregate passed on a598606b, and all independent expensive
+jobs began. The worker job passed relocated owner imports, QEMU and builder setup,
+then failed Docker buildx --check with FromPlatformFlagConstDisallowed at the
+intentionally ARM64 S6 native-callee stage. No image compilation or smoke pass is
+inferred. Preserve that fixed native ABI and the x86_64 scientific/runtime image;
+do not skip the check or remove QEMU. Before editing, require the layout E2E to
+check a default-ARM64 platform argument and an actual aarch64 build-stage assertion,
+with no literal FROM platform flags. Collect remaining batch results before push.
+
+The completed batch passed every other applicable job: source/governance/security,
+all three backend shards, P7, canonical upgrade/isolation, both readiness certificates,
+compiled production artifacts, public build/browser and Dealer Zero receipt diff.
+The default suite reported 1,285 passing and 27 explicitly skipped tests across
+213 passing / six skipped files. Skips and per-job timings are preserved in
+hosted-batch-163.json, not silently represented as passed coverage. Separate Scope-3
+focused cases ran within Scope-4; no live-provider acceptance is inferred.
+
+The S7 native proof file, not a stuck Git command, dominated the final shard:
+416.263 seconds total, including a 342.193-second statistical owner proof and
+66.666-second integrated proof. All five native families passed. Logs retained
+their generated/disposable qualification; this is not field economic gain.
+
+The Docker correction expresses the ARM64 helper through a default-ARM64 build
+argument and asserts uname=aarch64 inside that stage; pins, QEMU, other stages,
+source custody, image checks and smoke predicates remain. Docker's documented
+variable-platform form is used, not a skipped build rule:
+https://docs.docker.com/reference/build-checks/from-platform-flag-const-disallowed/
+Read-only current Debian package indexes confirmed both pinned OpenSSL packages
+3.0.22-1~deb12u1 and bubblewrap 0.8.0-2+deb12u1, including ARM64 bubblewrap.
+Relocated worker E2E passed after the edit in 4.057 seconds. CodeRabbit raised
+zero issues on the Docker/test correction. The actual Docker check/build/smoke
+still requires execution on the corrected source; no pass is inferred from review.

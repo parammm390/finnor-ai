@@ -1,0 +1,22 @@
+{
+  "schema": "finnor.worker-image-layout-proof.v1",
+  "inputs": {
+    "workdir": "/app/finnor-os",
+    "dockerfileSha256": "e8f39471274ea9ed031d59490f3b5b5c1e94f5c648e3d91c68de19a67fa95dbd"
+  },
+  "steps": [
+    "Copy production source into image WORKDIR outside checkout",
+    "Reuse host third-party dependencies while mapping workspace packages to relocated candidate source",
+    "Import actual worker owners",
+    "Recheck P4/M4 canonical source identities"
+  ],
+  "observed": {
+    "exitCode": 0,
+    "signal": null,
+    "error": null,
+    "stdout": "{\"workerImported\":true,\"p4Sources\":868,\"m4Sources\":870,\"projectionResolution\":\"file:///private/var/folders/qp/j_yc8vfs6pd0mrx0xrb722640000gn/T/finnor-worker-image-layout-zR4eG8/app/finnor-os/packages/projections/src/index.ts\"}\n",
+    "stderr": "IMPORT_START decision-slice\nIMPORT_DONE decision-slice\nIMPORT_START evidence-store\nIMPORT_DONE evidence-store\nIMPORT_START counterexample-search\nIMPORT_DONE counterexample-search\nIMPORT_START worker-index\n(node:24882) ExperimentalWarning: SQLite is an experimental feature and might change at any time\n(Use `node --trace-warnings ...` to show where the warning was created)\nIMPORT_DONE worker-index\n"
+  },
+  "rerun": "node --test scripts/release/worker-image-layout.e2e.test.mjs",
+  "actualLinuxImageProof": false
+}
