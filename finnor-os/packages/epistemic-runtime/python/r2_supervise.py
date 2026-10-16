@@ -47,6 +47,12 @@ def stop(sig=signal.SIGKILL):
             os.killpg(child.pid, sig)
         except ProcessLookupError:
             pass
+        except PermissionError:
+            # Darwin may refuse a signal to an already exited group. This
+            # proves nothing about descendants: the independent group census
+            # below must still observe release before a receipt can pass.
+            if child.poll() is None:
+                raise
 
 
 def cancelled(signum, frame):
@@ -59,8 +65,15 @@ signal.signal(signal.SIGTERM, cancelled)
 signal.signal(signal.SIGINT, cancelled)
 try:
     with open(config['stdoutPath'], 'xb') as stdout, open(config['stderrPath'], 'xb') as stderr:
+        # Node maps the trusted filter to descriptor 3 in this supervisor.
+        # Preserve only that descriptor until bubblewrap consumes it; all
+        # scientific/non-isolated children retain their three-descriptor ABI.
+        seccomp_fd = config.get('seccompFd')
+        if seccomp_fd is not None and (sys.platform != 'linux' or seccomp_fd != 3):
+            raise ValueError('PHYSICAL_SECCOMP_DESCRIPTOR_INVALID')
         child = subprocess.Popen(config['argv'], cwd=config['cwd'], env=config['env'], stdin=subprocess.PIPE,
-                                 stdout=stdout, stderr=stderr, start_new_session=True, preexec_fn=limits)
+                                 stdout=stdout, stderr=stderr, start_new_session=True, preexec_fn=limits,
+                                 pass_fds=() if seccomp_fd is None else (seccomp_fd,))
         # Input transfer must not block the deadline/orphan guardian if a
         # checker is stopped before draining its pipe.
         pending_input = memoryview(config.get('input', '').encode())

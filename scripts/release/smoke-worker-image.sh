@@ -50,6 +50,14 @@ cleanup() {
       status=1
     fi
   fi
+  if [[ -d "$evidence/linux-programme-runtime" ]]; then
+    if ! docker run --rm --network none --user 0:0 --entrypoint chown \
+      --mount "type=bind,source=$evidence/linux-programme-runtime,target=/programme-evidence" \
+      "$image" -R "$(id -u):$(id -g)" /programme-evidence; then
+      echo "::error::failed to return disposable programme evidence to its host owner"
+      status=1
+    fi
+  fi
   FINNOR_SMOKE_EXIT="$status" FINNOR_SMOKE_EVIDENCE="$evidence" node <<'NODE'
 const fs = require("node:fs");
 const path = require("node:path");
@@ -197,6 +205,25 @@ if (receipt.status !== "PASS_LOCAL" || receipt.results.length !== 1 || receipt.r
 }
 NODE
 
+
+# Exercise the actual P1 isolation/physical-supervisor boundary before expensive
+# owner campaigns. No privileged mode, extra capabilities or security overrides.
+# A platform refusal fails closed and retains the precise physical receipts.
+if [[ -f finnor-os/scripts/r5/run-programme-isolation-e2e.mts ]]; then
+  mkdir -p "$evidence/linux-programme-runtime"
+  chmod 2770 "$evidence/linux-programme-runtime"
+  if docker run --rm --network none --user 1000:1000 --group-add "$(id -g)" \
+    --env HOME=/tmp --env NODE_ENV=test --env CI=1 --env LOG_LEVEL=silent \
+    --mount "type=bind,source=$evidence/linux-programme-runtime,target=/programme-evidence" \
+    "$image" node --import=tsx scripts/r5/run-programme-isolation-e2e.mts /programme-evidence/physical \
+    > "$evidence/linux-programme-runtime/runner.log" 2>&1; then
+    :
+  else
+    programme_status=$?
+    cat "$evidence/linux-programme-runtime/runner.log"
+    exit "$programme_status"
+  fi
+fi
 
 # R3 must execute its installed runtime and finite authenticated owner/queue
 # cases from the exact final image. The selected cases are preregistered in the

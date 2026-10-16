@@ -11,6 +11,7 @@ import {canonicalJson} from '../../../epistemic-runtime/src/source-precedence';
 import {r2Lp} from '../../../epistemic-runtime/src/r2-encoding';
 import {m3Hash,CapitalProgramV2Error} from './v2-contracts';
 import {m3Remaining} from './v2-budget';
+import {prepareLinuxNodeIsolation} from '../../../governed-execution/src/executor-linux.js';
 
 export const r2Repository=resolve(dirname(fileURLToPath(import.meta.url)),'../../../../..');
 const checkerPath=join(r2Repository,'finnor-os/packages/epistemic-runtime/python/r2_check.py');
@@ -83,24 +84,25 @@ export class R2NativeSession {
     readonly onPhysical?:(event:{state:'INTENT'|'STARTED'|'EXITED'|'UNKNOWN';phase:string;invocationId:string;supervisorPid:number|null;receipt:PhysicalReceipt|null})=>Promise<void>,
     readonly heartbeat:()=>Promise<void>=checkpoint,readonly initialCpuMs=0,readonly upstreamMemoryReservationBytes=0){this.cpuUsed=initialCpuMs;}
  async cancel():Promise<void>{const child=this.live;if(!child)return;child.kill('SIGTERM');await new Promise<void>(yes=>{if(child.exitCode!==null||child.signalCode!==null)return yes();child.once('close',()=>yes());});}
- private async run(phase:string,argv:string[],input='',node=false,workingDirectory=this.directory):Promise<{stdout:string;stdoutPath:string;receipt:PhysicalReceipt;ref:ExperimentRef}>{
+ private async run(phase:string,argv:string[],input='',node=false,workingDirectory=this.directory,seccompDescriptor?:number):Promise<{stdout:string;stdoutPath:string;receipt:PhysicalReceipt;ref:ExperimentRef}>{
   await this.heartbeat();if(this.calls>=this.caps.maxNativeCalls||this.chargedCpuMs>=this.caps.cpuMs)throw new CapitalProgramV2Error('LIMIT_EXCEEDED','R2 original aggregate native/parent CPU/call grant exhausted');
   if(process.memoryUsage().rss+this.upstreamMemoryReservationBytes>=this.caps.memoryMiB*1048576)
    throw new CapitalProgramV2Error('LIMIT_EXCEEDED','R2 original aggregate owner/native memory grant exhausted');
   const id=randomUUID(),base=join(workingDirectory,`${this.calls++}-${phase}-${id}`),stdoutPath=base+'.stdout',stderrPath=base+'.stderr',receiptPath=base+'.receipt.json';
   await this.onPhysical?.({state:'INTENT',phase,invocationId:id,supervisorPid:null,receipt:null});
-  const config={argv,cwd:workingDirectory,env:{PATH:'/usr/bin:/bin',LANG:'C',LC_ALL:'C',TZ:'UTC',HOME:workingDirectory,TMPDIR:workingDirectory},input,node,
+  const config={argv,cwd:workingDirectory,env:{PATH:'/usr/bin:/bin',LANG:'C',LC_ALL:'C',TZ:'UTC',HOME:workingDirectory,TMPDIR:workingDirectory},input,node,seccompFd:seccompDescriptor===undefined?null:3,
     deadlineAtMs:Math.min(this.deadlineAt,Date.now()+m3Remaining()),cpuMs:Math.max(1,Math.floor(this.caps.cpuMs-this.chargedCpuMs)),memoryMiB:this.caps.memoryMiB,
     outputBytes:this.caps.maxProofBytes,stdoutPath,stderrPath,receiptPath,upstreamMemoryReservationBytes:this.upstreamMemoryReservationBytes};
-  const child=spawn(this.runtime.python,[supervisorPath],{cwd:this.directory,stdio:['pipe','pipe','pipe'],env:{PATH:'/usr/bin:/bin',LANG:'C',TZ:'UTC',NODE_ENV:'development'}});this.live=child;
+  const child=spawn(this.runtime.python,[supervisorPath],{cwd:this.directory,stdio:seccompDescriptor===undefined?['pipe','pipe','pipe']:['pipe','pipe','pipe',seccompDescriptor],env:{PATH:'/usr/bin:/bin',LANG:'C',TZ:'UTC',NODE_ENV:'development'}});this.live=child;
   const exited=new Promise<void>((yes,no)=>{child.once('error',no);child.once('close',()=>yes());});
-  child.stdout.resume();child.stderr.resume();child.stdin.on('error',()=>undefined);child.stdin.end(JSON.stringify(config));
+  let supervisorError=Buffer.alloc(0);
+  child.stdout!.resume();child.stderr!.on('data',(bytes:Buffer)=>{if(supervisorError.length<16384)supervisorError=Buffer.concat([supervisorError,bytes.subarray(0,16384-supervisorError.length)]);});child.stdin!.on('error',()=>undefined);child.stdin!.end(JSON.stringify(config));
   await this.onPhysical?.({state:'STARTED',phase,invocationId:id,supervisorPid:child.pid??null,receipt:null});
   let timer:ReturnType<typeof setInterval>|undefined,busy=false;
   timer=setInterval(()=>{this.parentPeak=Math.max(this.parentPeak,process.memoryUsage().rss);if(busy)return;busy=true;void this.heartbeat().catch(()=>child.kill('SIGTERM')).finally(()=>{busy=false;});},100);
   try{await exited;}finally{clearInterval(timer);this.live=null;}
   let receipt:PhysicalReceipt;try{receipt=JSON.parse(await boundedFile(receiptPath,16384)) as PhysicalReceipt;}
-  catch{await this.onPhysical?.({state:'UNKNOWN',phase,invocationId:id,supervisorPid:child.pid??null,receipt:null});throw new CapitalProgramV2Error('CHECK_FAILED','Physical child exit/meter receipt is absent; liability remains UNKNOWN');}
+  catch{await this.onPhysical?.({state:'UNKNOWN',phase,invocationId:id,supervisorPid:child.pid??null,receipt:null});await writeFile(base+'.supervisor-failure.json',JSON.stringify({pid:child.pid,exitCode:child.exitCode,signal:child.signalCode,stderr:supervisorError.toString('utf8')}),{flag:'wx',mode:0o600}).catch(()=>undefined);throw new CapitalProgramV2Error('CHECK_FAILED','Physical child exit/meter receipt is absent; liability remains UNKNOWN');}
   const ref=r2Ref('physical-child',{phase,invocationId:id,receipt});this.receipts.push({...receipt,phase,ref});this.cpuUsed+=receipt.cpuMs;
   await this.onPhysical?.({state:'EXITED',phase,invocationId:id,supervisorPid:child.pid??null,receipt});
   if(!receipt.physicalExitObserved)refuse('Physical child release was not observed');
@@ -112,9 +114,19 @@ export class R2NativeSession {
  }
  async executeProgramme(javascript:string,histories:unknown[],maximumBytes:number){
   await this.checkpoint();
-  if(process.platform!=='darwin')throw new CapitalProgramV2Error('CONFIGURATION_REQUIRED','P1 exact programme isolation profile requires qualified macOS Seatbelt; other substrates are unqualified');
+  if(process.platform!=='darwin'&&process.platform!=='linux')throw new CapitalProgramV2Error('CONFIGURATION_REQUIRED','P1 exact programme requires a supported OS isolation profile');
   if(Buffer.byteLength(javascript)>maximumBytes)throw new CapitalProgramV2Error('LIMIT_EXCEEDED','Original P1 module byte grant exhausted');
   const scratch=join(this.directory,'programme-'+randomUUID());await mkdir(scratch,{mode:0o700});
+  if(process.platform==='linux'){
+   await writeFile(join(scratch,'worker.mjs'),javascript,{flag:'wx',mode:0o400});
+   const isolated=await prepareLinuxNodeIsolation(scratch,await realpath(process.execPath),{readOnlyScratch:true});
+   try{
+    const run=await this.run('p1-programme',[isolated.command,...isolated.args],JSON.stringify({histories}),true,scratch,isolated.fd.fd);
+    await this.checkpoint();
+    return {outputs:JSON.parse(run.stdout),physicalRef:run.ref,profileSha256:sha(isolated.profileText),nodeSha256:sha(await readFile(isolated.node)),dyldProfileSha256:null,
+     linuxProfile:isolated.profile,authority:'NONE_OUTPUT_UNTRUSTED' as const,substrate:'LOCAL_LINUX_BUBBLEWRAP_V1' as const};
+   }finally{await isolated.fd.close();}
+  }
   const node=await realpath(process.execPath),script=join(scratch,'programme.mjs'),profilePath=join(scratch,'enforced.sb'),quote=(v:string)=>JSON.stringify(v),
    ancestors=[...new Set([node,scratch].flatMap(path=>{const result=[];for(let parent=dirname(path);;parent=dirname(parent)){result.push(parent);if(parent==='/')break;}return result;}))],
    profile=['(version 1)','(deny default)','(import "dyld-support.sb")','(allow syscall*)',`(allow process-exec (literal ${quote(node)}))`,'(deny process-fork)','(allow sysctl-read)',

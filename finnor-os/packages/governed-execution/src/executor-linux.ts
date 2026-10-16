@@ -7,13 +7,31 @@ import { execFileSync } from 'node:child_process';
 const sha256 = (bytes: Uint8Array | string) => createHash('sha256').update(bytes).digest('hex');
 const requiredVersion = 'bubblewrap 0.8.0';
 
+/** procfs describes the host kernel ABI; an executable uname can be translated
+ * by binfmt_misc/QEMU and report its own ABI instead. Unknown hosts fail shut. */
+export function linuxKernelArchitecture(cpuinfo: string): 'x64' | 'arm64' {
+  const x64 = /^vendor_id\s*:/m.test(cpuinfo) && /^flags\s*:/m.test(cpuinfo);
+  const arm64 = /^CPU architecture\s*:\s*8\s*$/m.test(cpuinfo) && /^Features\s*:/m.test(cpuinfo);
+  if (x64 === arm64) throw Error('ISOLATION_NATIVE_KERNEL_ABI_UNKNOWN');
+  return x64 ? 'x64' : 'arm64';
+}
+
 async function runtimeForKernel(supervisorNode: string) {
+  const cpu = await open('/proc/cpuinfo', 'r');
+  let architecture: 'x64' | 'arm64';
+  try {
+    const buffer = Buffer.alloc(65536), { bytesRead } = await cpu.read(buffer, 0, buffer.length, 0);
+    architecture = linuxKernelArchitecture(buffer.subarray(0, bytesRead).toString('utf8'));
+  } finally { await cpu.close() }
+  if (architecture === process.arch)
+    return { node: supervisorNode, bwrap: '/usr/bin/bwrap', architecture, supplementalManifestDigest: null };
+  if (architecture !== 'arm64' || process.arch !== 'x64') throw Error('ISOLATION_NATIVE_KERNEL_ABI_MISMATCH');
   const root = '/opt/finnor-s6-linux-native', manifestPath = root + '/manifest.json';
   let raw: Buffer;
   try { raw = await readFile(manifestPath) }
   catch (error) {
     if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
-    return { node: supervisorNode, bwrap: '/usr/bin/bwrap', architecture: process.arch, supplementalManifestDigest: null };
+    throw Error('ISOLATION_NATIVE_CALLEE_REQUIRED', { cause: error });
   }
   const manifestMetadata = await stat(manifestPath);
   if (await realpath(manifestPath) !== manifestPath || manifestMetadata.uid !== 0 || (manifestMetadata.mode & 0o6022))
@@ -35,15 +53,6 @@ async function runtimeForKernel(supervisorNode: string) {
   }
   if (![value.node, value.bwrap, value.uname, '/usr/lib/ld-linux-aarch64.so.1'].every(path => known.has(path)))
     throw Error('ISOLATION_CALLEE_FILE_SET_INCOMPLETE');
-  let machine: string;
-  try { machine = execFileSync(value.uname, ['-m'], { encoding: 'utf8', timeout: 2000,
-    maxBuffer: 4096, env: { LANG: 'C', NODE_ENV: 'production' }, stdio: ['ignore', 'pipe', 'pipe'] }).trim() }
-  catch (error) {
-    if (process.arch === 'x64' && (error as NodeJS.ErrnoException).code === 'ENOEXEC')
-      return { node: supervisorNode, bwrap: '/usr/bin/bwrap', architecture: 'x64', supplementalManifestDigest: sha256(raw) };
-    throw Error('ISOLATION_NATIVE_KERNEL_PROBE_FAILED', { cause: error });
-  }
-  if (machine !== value.kernelMachine) throw Error('ISOLATION_NATIVE_KERNEL_ABI_MISMATCH');
   return { node: value.node, bwrap: value.bwrap, architecture: value.architecture as string,
     supplementalManifestDigest: sha256(raw) };
 }
@@ -81,7 +90,7 @@ function nodeFilter(architecture: string): Buffer {
   return bytes;
 }
 
-export async function prepareLinuxNodeIsolation(scratch: string, node: string) {
+export async function prepareLinuxNodeIsolation(scratch: string, node: string, options: { readOnlyScratch?: boolean } = {}) {
   if (process.platform !== 'linux' || !['x64', 'arm64'].includes(process.arch)) throw Error('ISOLATION_LINUX_ABI_UNSUPPORTED');
   if (process.getuid?.() === 0) throw Error('ISOLATION_NONROOT_REQUIRED');
   const runtime = await runtimeForKernel(node), bwrap = runtime.bwrap;
@@ -99,12 +108,13 @@ export async function prepareLinuxNodeIsolation(scratch: string, node: string) {
     '--setenv', 'LANG', 'C', '--setenv', 'TZ', 'UTC', '--setenv', 'NODE_ENV', 'production',
     '--ro-bind', node, '/node', '--ro-bind', '/usr/lib', '/usr/lib', '--symlink', 'usr/lib', '/lib',
     ...(runtime.architecture === 'x64' ? ['--ro-bind', '/usr/lib64', '/usr/lib64', '--symlink', 'usr/lib64', '/lib64'] : []),
-    '--dir', '/proc', '--dev', '/dev', '--bind', scratch, '/scratch', '--remount-ro', '/',
+    '--dir', '/proc', '--dev', '/dev', options.readOnlyScratch ? '--ro-bind' : '--bind', scratch, '/scratch', '--remount-ro', '/',
     '--chdir', '/scratch', '--seccomp', '3', '/node', '--max-old-space-size=128', '/scratch/worker.mjs'];
   const profile = { schema: 'finnor.s6.ordinary-linux-node-profile.v1', abi: 'linux-' + runtime.architecture,
     binary, binarySha256: sha256(await readFile(binary)), version, args,
     filterSha256: sha256(filter), filterEncoding: runtime.architecture === 'arm64' ? 'LINUX_AARCH64_CBPF_V1' : 'LINUX_X86_64_CBPF_V1',
     supplementalManifestDigest: runtime.supplementalManifestDigest, supervisorArchitecture: process.arch,
+    scratchAccess: options.readOnlyScratch ? 'READ_ONLY' : 'READ_WRITE',
     inheritedDescriptors: 'STDIN_STDOUT_STDERR_ONLY_SECCOMP_FD_CONSUMED_BY_BWRAP',
     authority: 'NONE_OUTPUT_UNTRUSTED', protectedExecution: 'UNADMITTED' };
   const fd = await open(filterPath, 'r');
