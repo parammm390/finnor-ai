@@ -139,7 +139,14 @@ test("active release workflow uses the governed four-class AWS compute cutover",
   assert.ok(computeResources.some((resource) => resource?.endsWith(":repository/finnor-worker")), "ECR writes are restricted to the worker repository")
   const iamActions = computeActions.filter((action) => action.startsWith("iam:"))
   assert.ok(iamActions.every((action) => action === "iam:PassRole" || action === "iam:GetRole"), "the deployment session can only look up/pass ECS task roles, not mutate IAM")
-  assert.ok(computeStatements.filter(entry => [entry.Action].flat().includes("iam:GetRole")).every(entry => entry.Resource === "arn:aws:iam::601804670058:role/finnor-*"), "role lookup remains scoped to FINNOR roles and intersects the five exact base-policy roles")
+  assert.ok(computeStatements.filter(entry => [entry.Action].flat().includes("iam:GetRole")).every(entry => [entry.Resource].flat().includes("arn:aws:iam::601804670058:role/finnor-*")), "role lookup remains scoped to FINNOR roles and intersects the five exact base-policy roles")
+  const changeRead = computeStatements.find(entry => [entry.Action].flat().includes("cloudformation:DescribeChangeSet"))
+  assert.ok(changeRead && !changeRead.Condition && [changeRead.Resource].flat().includes("arn:aws:cloudformation:us-east-1:601804670058:stack/finnor-production/*"), "change-set inspection is an independently stack-scoped read")
+  for (const action of ["cloudformation:CreateChangeSet", "cloudformation:ExecuteChangeSet"]) {
+    const entry = computeStatements.find(statement => [statement.Action].flat().includes(action))
+    assert.deepEqual(entry.Condition, { StringLike: { "cloudformation:ChangeSetName": ["finnor-compute-*", "arn:aws:cloudformation:us-east-1:601804670058:changeSet/finnor-compute-*/*"] } })
+    assert.equal(entry.Resource, "arn:aws:cloudformation:us-east-1:601804670058:stack/finnor-production/*")
+  }
   const ecrSessionPolicy = workflow.match(/- name: Authenticate exact AWS project with GitHub OIDC for ECR[\s\S]*?inline-session-policy: >-\s*([^\n]+)/)?.[1]
   assert.ok(ecrSessionPolicy, "worker image publication must use a scoped AWS session")
   const ecrPolicy = JSON.parse(ecrSessionPolicy)
