@@ -10,8 +10,14 @@ import type {ComputeSearchRequest} from './contracts';
 export async function resolveSearchOwners(ctx:PeMutationContext,q:ProgramRow,r:ComputeSearchRequest) {
  await assertProgramCurrent(ctx,q);
  if(stable(q.request.ownerBindings?.policyRef)!==stable(r.policyRequest)||stable(q.request.ownerBindings?.allocationRef)!==stable(r.computeGrant))throw Error('P2_EXACT_P1_OWNER_BINDINGS_REQUIRED');
- const policy=await readEnterpriseContingentPolicy(ctx,r.policyRequest);
- const issued=await readEnterpriseAllocation(ctx,r.computeGrant),state=await validateEnterpriseAllocation(ctx,r.computeGrant);
+ return resolveNativeComputeGrant(ctx,r.policyRequest,r.computeGrant,!!r.deliberation);
+}
+
+/** Shared S5 native-attempt grant resolver. A direct native producer has no
+ * permission to invent a P1 episode, dollar/token conversion or new allowance. */
+export async function resolveNativeComputeGrant(ctx:PeMutationContext,policyRequest:import('@finnor/shared-types').ExperimentRef,computeGrant:import('@finnor/shared-types').ExperimentRef,deliberation=false) {
+ const policy=await readEnterpriseContingentPolicy(ctx,policyRequest);
+ const issued=await readEnterpriseAllocation(ctx,computeGrant),state=await validateEnterpriseAllocation(ctx,computeGrant);
  if(state.status!=='CURRENT'||!issued.reservation)throw Error('P2_CURRENT_S4_S5_OWNERS_REQUIRED');
  if(!issued.certificate.check.selectedPolicyIds.includes(policy.ref.id)||!issued.certificate.policyBindings.some(b=>stable(b.policyRef)===stable(policy.ref)&&b.demandDigest===policy.demand.contentDigest))throw Error('P2_SELECTED_COMPUTE_POLICY_BINDING_REQUIRED');
  if(stable(issued.certificate.mandateRef)!==stable(policy.mandateRef)||issued.certificate.rightsRef!==policy.bindings.rightsRef)throw Error('P2_OWNER_MANDATE_OR_RIGHTS_MISMATCH');
@@ -24,7 +30,7 @@ export async function resolveSearchOwners(ctx:PeMutationContext,q:ProgramRow,r:C
  const quantities=envelope.quantities.slice(0,period+1);
  if(quantities.some(n=>!/^\d+$/.test(n)))throw Error('P2_INTEGER_NATIVE_ATTEMPT_ENVELOPE_REQUIRED');
  const capacity=quantities.reduce((s,n)=>s+Number(n),0);if(!Number.isSafeInteger(capacity)||capacity<1)throw Error('P2_COMPUTE_ENVELOPE_EMPTY');
- const deliberationConversion=r.deliberation?deriveEnterpriseDeliberationConversion(policy):null;
+ const deliberationConversion=deliberation?deriveEnterpriseDeliberationConversion(policy):null;
  return {policyRequest:policy.ref,computeGrant:issued.certificate.ref,mandateRef:policy.mandateRef,utilityRef:policy.mandate.utilityRef,deliberationConversion,
   loss:{unit:policy.mandate.utility.unit,horizon:policy.mandate.horizon,risk:policy.mandate.risk,discountFactors:policy.mandate.utility.discountFactors,tail:policy.mandate.utility.tail,marginalLossConversion:null,delayLossConversion:null,qualification:'S4_OWNED_UTILITY_MARGINAL_COMPUTE_CONVERSION_UNAVAILABLE'},
   resourceId:resource.resourceId,resourceRef:resource.ref,reservationRef:issued.reservation.ref,capacity,

@@ -964,6 +964,8 @@ async function reconstructPrivateEquityWorldState(
       ? await latestBySnapshotField(client, ctx.auth.tenantId, clock, DEAL_CHILD_TYPES, "deal_id", dealIds)
       : connectedRows.filter((row) => DEAL_CHILD_TYPES.includes(row.entity_type as PeEntityType));
     addHistory(history, childRows);
+    const opportunityCases = await latestBySnapshotField(client, ctx.auth.tenantId, clock, ["pe_investment_case"], "opportunity_id", opportunityRows.map(row=>row.entity_id));
+    addHistory(history, opportunityCases);
     const linkRows = await latestLinks(client, ctx.auth.tenantId, clock, root, dealIds);
     addHistory(history, linkRows);
 

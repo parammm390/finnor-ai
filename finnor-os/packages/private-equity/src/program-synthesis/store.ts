@@ -8,7 +8,7 @@ import type {HarnessProgram,HarnessRequest} from './contracts';
 export interface ProgramRow {id:string;tenant_id:string;principal_id:string;work_id:string;work_input_id:string;work_input_digest:string;episode_id:string;plan_revision_id:string;request_digest:string;request:HarnessRequest;proposed:HarnessProgram;generation:number;status:string;evidence_query_id:string|null;head_id:string|null;claim_token:string|null;claim_fence:number|null;poll_count:number;failure:string|null}
 export async function requestRow(ctx:PeMutationContext,id:string,c?:PoolClient,lock=false):Promise<ProgramRow>{const read=async(client:PoolClient)=>{const r=(await client.query<ProgramRow>('SELECT * FROM finnor_os.p1_requests WHERE tenant_id=$1 AND principal_id=$2 AND id=$3'+(lock?' FOR UPDATE':''),[ctx.auth.tenantId,principal(ctx),id])).rows[0];if(!r)throw unavailable();return r;};return c?read(c):tx(ctx,read,true);}
 export async function assertProgramCurrent(ctx:PeMutationContext,q:ProgramRow,c?:PoolClient,lock=false,stoppedSnapshot=false){
- await authorize(ctx,q.request.root,[{type:'work',id:q.work_id}]);for(const s of q.request.sources)if(s.source.kind!=='derivation')await authorize(ctx,s.source.subject,s.source.kind==='artifact'?[{type:'document',id:s.source.documentId}]:[]);
+ await authorize(ctx,q.request.root,[{type:'work',id:q.work_id}],[],c);for(const s of q.request.sources)if(s.source.kind!=='derivation')await authorize(ctx,s.source.subject,s.source.kind==='artifact'?[{type:'document',id:s.source.documentId}]:[],[],c);
  const read=async(client:PoolClient)=>{
   if(lock)await client.query('SELECT id FROM finnor_os.works WHERE tenant_id=$1 AND id=$2 FOR SHARE',[q.tenant_id,q.work_id]);
   const user=(await client.query('SELECT role,status FROM finnor_os.users WHERE tenant_id=$1 AND id=$2',[q.tenant_id,q.principal_id])).rows[0];if(user?.status!=='active'||user.role!=='owner')throw unavailable();
@@ -19,7 +19,7 @@ export async function assertProgramCurrent(ctx:PeMutationContext,q:ProgramRow,c?
  };
  if(c)await read(c);else await tx(ctx,read,true);
  await assertProcedureProgrammeCurrent(ctx,q,c,lock);
- if(q.proposed.producer.codeDigest!==(await codeIdentity()).digest)throw Error('PROGRAM_RUNTIME_SOURCE_CHANGED');if(q.proposed.producer.schemaDigest!==await schemaIdentity(ctx))throw Error('PROGRAM_SCHEMA_CHANGED');
+ if(q.proposed.producer.codeDigest!==(await codeIdentity()).digest)throw Error('PROGRAM_RUNTIME_SOURCE_CHANGED');if(q.proposed.producer.schemaDigest!==await schemaIdentity(ctx,c))throw Error('PROGRAM_SCHEMA_CHANGED');
 }
 export async function trace(ctx:PeMutationContext,q:ProgramRow,kind:string,body:unknown,c?:PoolClient){const write=(client:PoolClient)=>client.query('INSERT INTO finnor_os.p1_events(tenant_id,principal_id,request_id,generation,kind,body) VALUES($1,$2,$3,$4,$5,$6::jsonb)',[q.tenant_id,q.principal_id,q.id,q.generation,kind,stable(body)]);return c?write(c):tx(ctx,write);}
 export async function reserveCandidate(ctx:PeMutationContext,q:ProgramRow){await tx(ctx,async c=>{const charged=await c.query('UPDATE finnor_os.p1_episodes SET candidates_used=candidates_used+1 WHERE id=$1 AND tenant_id=$2 AND principal_id=$3 AND candidates_used<max_candidates AND deadline_at>clock_timestamp() RETURNING candidates_used,max_candidates',[q.episode_id,q.tenant_id,q.principal_id]);if(!charged.rowCount)throw Error('ORIGINAL_CANDIDATE_BOUND_EXHAUSTED');await trace(ctx,q,'CANDIDATE_GRANT_CHARGED',{episodeId:q.episode_id,...charged.rows[0]},c);});}

@@ -1,0 +1,32 @@
+{
+  "schema": "finnor.v4.review-boundary-plan.v1",
+  "registeredBeforeBoundaryCampaign": true,
+  "custody": "RUNNER_ADMINISTERED_DEVELOPMENT_NOT_BLIND_S8",
+  "sourceReview": "review-scope.json",
+  "limits": { "programmeWallMsUnchanged": 600000, "campaignWallMs": 5400000, "proposalBound": 64, "noParallelExpensiveBuilds": true,
+    "minimumFreeDiskKiB": 3145728, "sourceEvidenceBytesCap": 33554432, "disposableFrontendPersistentWebpackCache": false,
+    "sourceMinorDigits": 38, "derivedMinorDigits": 41, "checkerOutputBytesUnchanged": 1048576,
+    "displayDiagnosticItems": 262144, "browserMaximumTimerIntervalMs": 2147483647,
+    "readinessRequestMsMaximum": 5000, "originalProfileDigestPreparationBound": 64 },
+  "cases": [
+    { "id": "H_E_STOP_AND_WRITE_BOUNDS", "predicate": "64 genuine signed/metered proposal ingresses accepted while physical queue is paused; exact replay does not charge; 65th and new post-stop proposal rejected before evidence, charge or job; original grant/deadline/history retained" },
+    { "id": "D_CONCURRENT_SIBLING_GRANTS", "predicate": "Three concurrent exact S4 approvals each requesting half of the same native S5 grant admit exactly two and reject the third under the canonical portfolio lock; no fresh grant or new Work input" },
+    { "id": "D_SCOPED_SOURCES_AND_CYCLES", "predicate": "Issuer-local equal event/receipt IDs and valid long composite identities survive publication and native wire display validation; an earlier-sorted revoked unselected profile cannot replace the independently selected current instrument profile in either artifact reference; three professionally classified commitments with real S5 capacity are suppressed for a three-node cycle; an acyclic correction has exact nonzero capacity; current tranche membership, permitted-ID guarantee exposure and current covenant amendments are checked without promoting superseded terms; shared resources and aliases stop unsupported availability; 17 authenticated pending offers with 64 distinct conditions and 38-digit source amounts retain over-1024 aggregate conditions and exact over-38-digit face totals through native wire parsing, still incomplete with zero funding; scoped duties reach native S7" },
+    { "id": "C_PROFESSIONAL_ACTIVITY_INDEPENDENCE", "predicate": "Current exact professional activity review admits an independent positive and rejects provider representative/shared signing key substitutions before any provider POST or disclosure" },
+    { "id": "E_EXACT_PROVIDER_COST_CEILING", "predicate": "Authenticated final provider costs above the frozen original operation ceiling, including late source-port receipts after delivery reconciliation and two distinct 38-digit charges with an exact over-38-digit derived total, remain in source/history, original SQL charge and native wire projection; 128 distinct 512-character receipt IDs preserve exact facts in immutable Evidence, with transition/S7 UUID references below the existing 65536-byte transition bound and no source/charge rollback; original delivery reconciles but further mutation and grant replenishment stop" },
+    { "id": "G_ORIGINAL_RECOVERY_AFTER_STOP", "predicate": "Physical process death followed by original programme cancellation and disclosure revocation permits only GET observation of the original operation; no fresh POST, no new authority, no stale current package, and terminal status/cost/duties survive" },
+    { "id": "E_UNRESOLVED_COST_RECEIPT", "predicate": "Original nonfinal or conflicting issuer-scoped receipts, including final/nonfinal/final disagreements, cannot be promoted to final cost or new budget; verified artifact trace retains every original receipt fact rather than last-write-deduplicating contradictory same-ID amounts; unchanged GET responses do not duplicate publications/notices; a concurrent late receipt around native delivery reconciliation cannot be overwritten; late exact finality clears only its own uncertainty" },
+    { "id": "F_ACTUAL_CORPUS_READER", "predicate": "Nonempty private raw, chunk and saved-excerpt records are denied through ordinary corpus readers, lexical SQL and native Company Brain" },
+    { "id": "F_ENROLLED_WRITER_GUARDS", "predicate": "Application and worker lock-only revision privilege cannot mutate independently enrolled inputs" },
+    { "id": "RUNTIME_INSTALLED_SOURCE_CHANGE", "predicate": "An explicitly bounded, reversible edit to an owned pinned method manifest invalidates actual installed API output; original bytes restore exactly; no stale package or egress" },
+    { "id": "S7_ATOMIC_NOTICE", "predicate": "Every final native V4 publication has its same-digest canonical S7 record and native delivery origins from the same transaction; owner notice failure cannot commit publication alone" }
+  ],
+  "qualification": {
+    "screenshotLayout": "UNAVAILABLE_IN_ASSIGNED_EMBEDDED_PANE",
+    "positiveV3S6FinancingHandoff": "BLOCKED_NO_IMMUTABLE_ADMITTED_ADAPTER",
+    "protectedAdmission": "BLOCKED_EXTERNAL_CUSTODY_AND_QUALIFIED_PROFILES",
+    "activation": "DISABLED",
+    "componentGain": "NOT_EVALUATED",
+    "fieldEconomics": "NOT_EVALUATED"
+  }
+}

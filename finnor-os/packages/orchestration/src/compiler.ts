@@ -380,7 +380,7 @@ function hash(value: unknown): string {
   return createHash("sha256").update(stable(value)).digest("hex");
 }
 
-function semanticValue(value: unknown): unknown {
+export function semanticValue(value: unknown): unknown {
   if (Array.isArray(value)) return value.map(semanticValue);
   if (!value || typeof value !== "object") return value;
   const result: Record<string, unknown> = {};
@@ -600,9 +600,21 @@ function preconditionSnapshot(actionType: string, target: Pick<BusinessEffectTar
   return values;
 }
 
-async function resolveBindings(db: Db, tenantId: string, payload: Record<string, unknown>, external: boolean): Promise<{ bindings: BusinessEffectBinding[]; targets: BusinessEffectTarget[] }> {
+async function resolveBindings(db: Db, tenantId: string, payload: Record<string, unknown>, external: boolean, actionType: string): Promise<{ bindings: BusinessEffectBinding[]; targets: BusinessEffectTarget[] }> {
   const bindings: BusinessEffectBinding[] = [];
   const targets: BusinessEffectTarget[] = [];
+  if (actionType === "execute_closing_operation") {
+    const provider = payload.closingProvider as { integrationId?: unknown } | undefined;
+    if (!external || typeof provider?.integrationId !== "string" || !UUID_RE.test(provider.integrationId)) {
+      throw new BusinessEffectBoundaryError("effect_missing", "Closing requires its exact grounded tenant integration");
+    }
+    const [integration] = await db.select({ id: tenantIntegrations.id, binding: tenantIntegrations.binding })
+      .from(tenantIntegrations).where(and(eq(tenantIntegrations.tenantId, tenantId),
+        eq(tenantIntegrations.id, provider.integrationId), eq(tenantIntegrations.binding, "finnor_closing_provider"))).limit(1);
+    if (!integration) throw new BusinessEffectBoundaryError("effect_missing", "Closing provider is not bound in this tenant");
+    bindings.push({ selection: "fixed", provider: integration.binding, tenantIntegrationId: integration.id });
+    return { bindings, targets };
+  }
   const identityRef = payload.communicationIdentityRef && typeof payload.communicationIdentityRef === "object" ? payload.communicationIdentityRef as Record<string, unknown> : {};
   const identityId = typeof payload.communicationIdentityId === "string" ? payload.communicationIdentityId : typeof identityRef.communicationIdentityId === "string" ? identityRef.communicationIdentityId : undefined;
   if (identityId && UUID_RE.test(identityId)) {
@@ -793,7 +805,7 @@ async function compileBusinessEffectWithDb(params: {
       && ["underwriting_run", "underwriting_scenario", "underwriting_model_version"].includes(target.type)) return false;
     return true;
   });
-  const resolved = await resolveBindings(params.db, params.action.tenantId, payload, Boolean(spec?.external));
+  const resolved = await resolveBindings(params.db, params.action.tenantId, payload, Boolean(spec?.external), params.action.actionType);
   if (resolved.bindings.some((binding) => binding.selection === "fixed" && binding.authProfileRef && !binding.authProfileId)) {
     throw new BusinessEffectBoundaryError("effect_missing", "The requested governed authentication profile does not exist in this tenant");
   }
@@ -918,7 +930,7 @@ export async function verifyBusinessEffectPreconditions(tenantId: string, effect
   await withTenant(tenantId, async (db) => {
     if (effect.operation.external) {
       if (vertical.verticalKey === "private_equity") {
-        const binding = effect.bindings.find((candidate) => candidate.provider || candidate.applicationAccountId);
+        const binding = effect.bindings.find((candidate) => candidate.provider || candidate.applicationAccountId || candidate.tenantIntegrationId);
         const capabilityByAction: Record<string, Array<typeof tenantIntegrations.$inferSelect["capability"]>> = {
           send_message: ["communications"], place_call: ["communications"], notify_group: ["communications"],
           share_document: ["documents", "communications"], computer_task: ["communications", "documents", "crm"],
@@ -932,10 +944,11 @@ export async function verifyBusinessEffectPreconditions(tenantId: string, effect
           applicationAccountId: tenantIntegrations.applicationAccountId,
         }).from(tenantIntegrations).where(and(
           eq(tenantIntegrations.tenantId, tenantId),
+          ...(binding?.tenantIntegrationId ? [eq(tenantIntegrations.id, binding.tenantIntegrationId)] : []),
           ...(binding?.provider ? [eq(tenantIntegrations.binding, binding.provider)] : []),
           ...(binding?.applicationAccountId ? [eq(tenantIntegrations.applicationAccountId, binding.applicationAccountId)] : []),
         ));
-        const relevant = binding?.provider || binding?.applicationAccountId
+        const relevant = binding?.provider || binding?.applicationAccountId || binding?.tenantIntegrationId
           ? candidates
           : candidates.filter((row) => capabilities.includes(row.capability));
         if (relevant.length === 0 || relevant.some((row) => row.mode === "real")) {
@@ -945,11 +958,12 @@ export async function verifyBusinessEffectPreconditions(tenantId: string, effect
           );
         }
       }
-      const binding = effect.bindings.find((candidate) => candidate.provider || candidate.applicationAccountId);
+      const binding = effect.bindings.find((candidate) => candidate.provider || candidate.applicationAccountId || candidate.tenantIntegrationId);
       if (binding?.provider) {
         const rows = await db.select().from(tenantIntegrations).where(and(
           eq(tenantIntegrations.tenantId, tenantId),
           eq(tenantIntegrations.binding, binding.provider),
+          ...(binding.tenantIntegrationId ? [eq(tenantIntegrations.id, binding.tenantIntegrationId)] : []),
           ...(binding.applicationAccountId ? [eq(tenantIntegrations.applicationAccountId, binding.applicationAccountId)] : []),
         )).limit(2);
         if (rows.length !== 1) {
@@ -1289,11 +1303,11 @@ export async function recordBusinessEffectOutcome(tenantId: string, effect: Busi
 
 /** Evolvable producer of native intent from exact owner-resolved S4 meaning.
  * No provider binding, verification witness, execution authority or admission is issued. */
-export function compileContingentInterventionIntent(input:{actionId:string;effectId:string;intervention:import('@finnor/shared-types').InterventionSpecification;preparationRef:import('@finnor/shared-types').ExperimentRef;consumptionRef:import('@finnor/shared-types').ExperimentRef;compiledAt:string}):BusinessEffectSet {
+export function compileContingentInterventionIntent(input:{actionId:string;effectId:string;intervention:import('@finnor/shared-types').InterventionSpecification;preparationRef:import('@finnor/shared-types').ExperimentRef;consumptionRef:import('@finnor/shared-types').ExperimentRef;compiledAt:string;workLineage?:import('@finnor/shared-types').DurableObligation['workLineage']}):BusinessEffectSet {
  const actionType='execute_contingent_intervention';
  const targets:BusinessEffectTarget[]=input.intervention.targets.map((r,index)=>({kind:'entity',type:r.entityType,id:r.entityId,sourcePath:`intervention.targets[${index}]`}));
- const scope={actionType,operationClass:'operational_change',targets,bindings:[],delta:{operation:actionType,values:{intervention:input.intervention,preparationRef:input.preparationRef,consumptionRef:input.consumptionRef}},exposure:null};
- const source={domainActionId:input.actionId,actionType,workId:null,objectiveStepId:null};
+ const scope={actionType,operationClass:'operational_change',targets,bindings:[],delta:{operation:actionType,values:{intervention:input.intervention,preparationRef:input.preparationRef,consumptionRef:input.consumptionRef,...(input.workLineage?{workLineage:input.workLineage}:{})}},exposure:null};
+ const source={domainActionId:input.actionId,actionType,workId:input.workLineage?.workId??null,objectiveStepId:null};
  const expected={observation:'provider_delivery' as const,state:null};
  return {id:input.effectId,schemaVersion:1,semanticHash:hash({source,...scope,expected}),scopeHash:hash(scope),source,mode:'consequential',operation:{name:actionType,class:'operational_change',external:true},targets,bindings:[],preconditions:[],before:[],delta:scope.delta,expected,exposure:null,
  authority:{capability:`action:${actionType}`,risk:'high',policyId:null,policyVersion:null},approval:{required:true,typedConfirmation:true,summary:'Exact S4 intervention intent; provider method and independent admission required before dispatch'},reversibility:{classification:'unknown_provider_dependent',compensationCapability:null},uncertainty:{unknownOutcome:'reconcile_before_retry',stalePrecondition:'block_and_recompile'},provenance:{compiler:'finnor_effect_compiler',compilerVersion:1,compiledAt:input.compiledAt,replacementForEffectId:null,compensationForEffectId:null}};

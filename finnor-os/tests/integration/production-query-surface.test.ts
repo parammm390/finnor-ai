@@ -1,3 +1,4 @@
+import { ACTION_HARDENING_SPEC } from "../../scripts/release/action-hardening-spec";
 import { mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
 import { createHash, randomUUID } from "node:crypto";
 import { tmpdir } from "node:os";
@@ -46,7 +47,7 @@ describe("production query surface and native-only authority boundary", () => {
     const result = await verifyPeDomainBoundary();
     expect(result).toMatchObject({
       negativeControl: true,
-      actions: 45,
+      actions: ACTION_HARDENING_SPEC.length,
       publicQueries: 16,
       nativeQueries: 1,
     });

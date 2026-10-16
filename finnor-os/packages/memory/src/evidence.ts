@@ -516,7 +516,7 @@ function baseEvidenceSelect(scope: EvidenceSearchScope): string {
     FROM finnor_os.evidence_chunks c
     JOIN finnor_os.evidence_sources s ON s.id = c.source_id
     JOIN finnor_os.evidence_source_versions v ON v.id = c.version_id
-    WHERE ${scopeSql(scope)} AND ${latestAsOfSql()}`;
+    WHERE ${scopeSql(scope)} AND s.source_type <> 'primary_record' AND ${latestAsOfSql()}`;
 }
 
 /** Reciprocal-rank fusion keeps lexical matches useful when embeddings are absent,

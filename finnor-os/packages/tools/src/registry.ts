@@ -35,6 +35,7 @@ export interface ToolRuntimeContext {
   businessEffectId?: string;
   businessEffectHash?: string;
   workflowStepClaimId?: string;
+  providerIntegrationId?: string;
   providerOperationAttemptId?: string;
   providerOperationRequestHash?: string;
   providerIdempotencyKey?: string;
@@ -43,6 +44,9 @@ export interface ToolRuntimeContext {
   /** Trusted worker verifier, invoked before every physical adapter entry.
    * Same-process validation is bounded to trusted plugins, not hostile isolation. */
   beforeConsequentialDispatch?: (request: ConsequentialDispatchRequest) => Promise<void>;
+  /** Trusted owner fence spanning actual adapter IO. The request is the same
+   * frozen request verified above, never a planner-provided permission callback. */
+  withConsequentialDispatch?: (request: ConsequentialDispatchRequest, dispatch: () => Promise<Record<string, unknown>>) => Promise<Record<string, unknown>>;
   semanticMemberKey?: string;
 }
 
@@ -177,6 +181,7 @@ export class ToolRegistry {
           tenantId: runtime.tenantId!,
           providerOperationAttemptId: runtime.providerOperationAttemptId!,
           provider: tool.integration,
+          ...(runtime.providerIntegrationId ? { integrationId: runtime.providerIntegrationId } : {}),
           requestHash: runtime.providerOperationRequestHash!,
           ...(runtime.providerIdempotencyKey ? { providerIdempotencyKey: runtime.providerIdempotencyKey } : {}),
           ...(runtime.providerIdempotencyScope ? { providerIdempotencyScope: runtime.providerIdempotencyScope } : {}),
@@ -191,7 +196,9 @@ export class ToolRegistry {
         && runtime.providerIdempotencyExpiresAt.getTime() > Date.now());
     const result = await wrappedCall(
       tool.integration,
-      () => Object.keys(runtime).length > 0 ? tool.run(safeInput, runtime) : tool.run(safeInput),
+      () => executionContract.effect==="consequential"&&runtime.withConsequentialDispatch
+        ? runtime.withConsequentialDispatch({toolName:name,provider:tool.integration,input:safeInput,runtime},()=>tool.run(safeInput,runtime))
+        : Object.keys(runtime).length > 0 ? tool.run(safeInput, runtime) : tool.run(safeInput),
       tool.retryPolicy ?? DEFAULT_RETRY,
       {
         consequential: executionContract.effect === "consequential",
@@ -232,9 +239,11 @@ export interface ToolCallContext {
   businessEffectId?: string;
   businessEffectHash?: string;
   workflowStepClaimId?: string;
+  providerIntegrationId?: string;
   /** Deterministic namespace for independently queued targets/batches of one action. */
   operationKeyPrefix?: string;
   beforeConsequentialDispatch?: ToolRuntimeContext["beforeConsequentialDispatch"];
+  withConsequentialDispatch?: ToolRuntimeContext["withConsequentialDispatch"];
 }
 
 /**
@@ -289,6 +298,7 @@ export class ScopedToolRegistry extends ToolRegistry {
       ...(this.ctx.businessEffectId ? { businessEffectId: this.ctx.businessEffectId } : {}),
       ...(this.ctx.businessEffectHash ? { businessEffectHash: this.ctx.businessEffectHash } : {}),
       ...(this.ctx.workflowStepClaimId ? { workflowStepClaimId: this.ctx.workflowStepClaimId } : {}),
+      ...(this.ctx.providerIntegrationId ? { providerIntegrationId: this.ctx.providerIntegrationId } : {}),
     });
   }
 
@@ -341,6 +351,7 @@ export class ScopedToolRegistry extends ToolRegistry {
         retrySafety: executionContract.retrySafety,
         idempotency: executionContract.idempotency,
         verification: executionContract.verification,
+        ...(this.ctx.providerIntegrationId ? { integrationId: this.ctx.providerIntegrationId } : {}),
       },
     );
     if (!claim.claimed) {
@@ -372,6 +383,7 @@ export class ScopedToolRegistry extends ToolRegistry {
     const result = await this.base.callWithRuntimeContext(name, input, {
       tenantId: this.ctx.tenantId,
       domainActionId: this.ctx.domainActionId,
+      ...(this.ctx.providerIntegrationId ? { providerIntegrationId: this.ctx.providerIntegrationId } : {}),
       ...(this.ctx.actorId ? { actorId: this.ctx.actorId } : {}),
       ...(this.ctx.purpose ? { purpose: this.ctx.purpose } : {}),
       ...(this.ctx.communicationIdentityId ? { communicationIdentityId: this.ctx.communicationIdentityId } : {}),
@@ -382,6 +394,7 @@ export class ScopedToolRegistry extends ToolRegistry {
       providerOperationAttemptId: claim.providerOperationAttemptId,
       providerOperationRequestHash: requestHash,
       ...(this.ctx.beforeConsequentialDispatch ? { beforeConsequentialDispatch: this.ctx.beforeConsequentialDispatch } : {}),
+      ...(this.ctx.withConsequentialDispatch ? { withConsequentialDispatch: this.ctx.withConsequentialDispatch } : {}),
       ...(semanticMemberKey ? { semanticMemberKey } : {}),
       ...(claim.operation.providerIdempotencyKey ? { providerIdempotencyKey: claim.operation.providerIdempotencyKey } : {}),
       ...(claim.operation.providerIdempotencyScope ? { providerIdempotencyScope: claim.operation.providerIdempotencyScope } : {}),

@@ -622,6 +622,10 @@ export interface CriticalDependenciesResult extends OperationalQueryResultBase<"
 }
 export interface ClosingReadinessResult extends OperationalQueryResultBase<"closing_readiness"> {
   dealId: string;
+  verifiedClosing: {
+    status: import("./closing").ClosingDisposition | "NOT_REGISTERED" | "UNAVAILABLE";
+    specDigest: string | null; programme: import("./closing").ClosingProjection | null; reasons: string[];
+  };
   eligible: boolean;
   eligibility: Record<string, unknown> | null;
   blockingConditions: Record<string, unknown>[];

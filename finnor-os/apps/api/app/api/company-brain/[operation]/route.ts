@@ -28,6 +28,8 @@ import {
 import { z } from "zod";
 import { errorResponse, requireContext } from "../../../../lib/auth";
 import {handleEvidenceOperation,EVIDENCE_OPERATIONS} from '@finnor/private-equity/src/evidence-execution/api';
+import {handlePrimaryOperation,PRIMARY_OPERATIONS} from '@finnor/private-equity/src/primary-diligence/api';
+import {handleBilateralOperation,BILATERAL_OPERATIONS} from '@finnor/private-equity/src/bilateral-opportunities/api';
 import {handleComputeSearchOperation,COMPUTE_SEARCH_OPERATIONS} from '@finnor/private-equity/src/compute-search/api';
 import {handleDeliberationOperation,DELIBERATION_OPERATIONS} from '@finnor/private-equity/src/deliberation/api';
 import {DeliberationDeadlineError,deliberationTransportDeadline,inDeliberationDeadline} from '@finnor/private-equity/src/deliberation/deadline';
@@ -40,6 +42,9 @@ import {inM3Episode,m3TransportDeadline,readM3Body} from '@finnor/private-equity
 import {M4_OPERATIONS,handleCounterexampleOperation} from '@finnor/private-equity/src/counterexample-search/handler';
 import {ChallengeError} from '@finnor/private-equity/src/counterexample-search/contracts';
 import {inChallengeEpisode,transportDeadline,readChallengeBody} from '@finnor/private-equity/src/counterexample-search/budget';
+import {handleCapitalFormationOperation,CAPITAL_FORMATION_OPERATION_NAMES} from '@finnor/private-equity/src/capital-formation/service';
+import {CapitalFormationError} from '@finnor/private-equity/src/capital-formation/contracts';
+import {promoteAttestedOpportunity} from '@finnor/private-equity/src/opportunity-handoff';
 
 export const runtime = "nodejs";
 
@@ -132,6 +137,12 @@ function response(value: unknown, status = 200): Response {
 }
 
 function requestError(error: unknown): Response {
+  if (error instanceof PeDomainError && error.code.startsWith("PE_HANDOFF_")) {
+    const status = /AUTHORITY_NOT_GRANTED|DISPOSABLE_DEVELOPMENT_ONLY/.test(error.code) ? 403
+      : /REPLAY_CONFLICT|REVISED|CURRENT_ORIGINAL_WORK|ORIGINAL_AUTHORITY_EXPIRED/.test(error.code) ? 409 : 422;
+    return response({ error: error.message, code: error.code }, status);
+  }
+  if(error instanceof CapitalFormationError)return response({error:error.message,code:error.code},error.status);
   if(error instanceof ChallengeError){const status=error.code==='UNAVAILABLE'?404:['STALE_INPUT','CONFLICT','CANCELLED','PENDING_M3_READER'].includes(error.code)?409:error.code==='LIMIT_EXCEEDED'?413:error.code==='INVALID_REQUEST'?400:error.code==='CONFIGURATION_REQUIRED'?503:422;return response({error:error.message,code:error.code},status);}
   if(error instanceof DeliberationDeadlineError)return response({code:'M2_LIMIT_EXCEEDED',predicate:error.message},413);
   if(error instanceof Error&&error.message==='M2_INVALID_TRANSPORT_DEADLINE')return response({code:'M2_SCHEMA_INVALID',predicate:error.message},400);
@@ -213,6 +224,7 @@ async function dispatchPost(req:Request,route:{operation:string}):Promise<Respon
     const prepared=await Promise.allSettled([requireContext(req),json(req)]);const failed=prepared.find(p=>p.status==='rejected');if(failed?.status==='rejected')throw failed.reason;
     const auth=(prepared[0] as PromiseFulfilledResult<Awaited<ReturnType<typeof requireContext>>>).value,body=(prepared[1] as PromiseFulfilledResult<unknown>).value;
     const ctx: PeMutationContext = { auth };
+    if(CAPITAL_FORMATION_OPERATION_NAMES.has(route.operation)){const result=await handleCapitalFormationOperation(ctx,route.operation,body);return response(result.body,result.status);}
     if((CONTINUATION_OPERATIONS as readonly string[]).includes(route.operation)){const result=await handleContinuationOperation(ctx,route.operation,body);return response(result.body,result.status);}
     if ((PROCEDURE_OPERATIONS as readonly string[]).includes(route.operation)) { const result=await handleProcedureOperation(ctx,route.operation,body);return response(result.body,result.status); }
     if(M1_OPERATIONS.has(route.operation))return response(await handleDecisionSliceOperation(ctx,route.operation,body));
@@ -221,7 +233,12 @@ async function dispatchPost(req:Request,route:{operation:string}):Promise<Respon
     if((COMPUTE_SEARCH_OPERATIONS as readonly string[]).includes(route.operation)){const result=await handleComputeSearchOperation(ctx,route.operation,body);return response(result.body,result.status);}
     if((PROGRAM_OPERATIONS as readonly string[]).includes(route.operation)){const result=await handleProgramOperation(ctx,route.operation,body);return response(result.body,result.status);}
     if((EVIDENCE_OPERATIONS as readonly string[]).includes(route.operation)){const result=await handleEvidenceOperation(ctx,route.operation,body);return response(result.body,result.status);}
+    if((PRIMARY_OPERATIONS as readonly string[]).includes(route.operation)){const result=await handlePrimaryOperation(ctx,route.operation,body);return response(result.body,result.status);}
+    if((BILATERAL_OPERATIONS as readonly string[]).includes(route.operation)){const result=await handleBilateralOperation(ctx,route.operation,body);return response(result.body,result.status);}
     switch (route.operation) {
+      case "opportunity-promote": {
+        return response(await promoteAttestedOpportunity(ctx, body));
+      }
       case "belief-view": {
         const input = BeliefViewSchema.parse(body);
         return response(await loadEnterpriseBeliefView(ctx, input));

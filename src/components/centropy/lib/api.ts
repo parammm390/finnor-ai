@@ -7,7 +7,7 @@
 // owner key from localStorage for repeated product testing without creating users; it
 // is disabled unless NEXT_PUBLIC_CENTROPY_TEST_MODE=1.
 
-import { getCurrentAccessToken } from "./centropy-auth"
+import { getCurrentAccessToken, getCurrentSessionKey } from "./centropy-auth"
 import { mutationProjectionTags, publishBusinessInvalidation } from "./business-invalidation"
 import { resolveProductRoute } from "@/lib/centropy/capability-manifest"
 
@@ -108,7 +108,7 @@ async function readJson<T>(res: Response, method: CentropyMethod, path: string):
   return json as T
 }
 
-async function centropyRequest<T>(method: CentropyMethod, path: string, body?: unknown, params?: Record<string, string>): Promise<T> {
+async function centropyRequest<T>(method: CentropyMethod, path: string, body?: unknown, params?: Record<string, string>, invalidate = true): Promise<T> {
   const qs = params ? `?${new URLSearchParams(params).toString()}` : ""
   const started = performance.now()
   let status = 0
@@ -116,6 +116,7 @@ async function centropyRequest<T>(method: CentropyMethod, path: string, body?: u
   const timeoutMs = method === "GET" ? CENTROPY_GET_TIMEOUT_MS : CENTROPY_MUTATION_TIMEOUT_MS
   const timeoutId = globalThis.setTimeout(() => controller.abort(), timeoutMs)
   const auth = authHeaders()
+  const sessionKey = getCurrentSessionKey()
   try {
     if (method !== "GET" && !auth) {
       status = 401
@@ -133,7 +134,11 @@ async function centropyRequest<T>(method: CentropyMethod, path: string, body?: u
     })
     status = res.status
     const value = await readJson<T>(res, method, path)
-    if (method !== "GET") {
+    if (sessionKey !== getCurrentSessionKey()) {
+      status = 401
+      throw new CentropyApiError("The authenticated session changed. Reload the current authorized state.", 401, false, { code: "AUTHENTICATED_SCOPE_CHANGED" })
+    }
+    if (method !== "GET" && invalidate) {
       publishBusinessInvalidation({ tags: mutationProjectionTags(path, method), source: "mutation", path })
     }
     return value
@@ -149,6 +154,11 @@ async function centropyRequest<T>(method: CentropyMethod, path: string, body?: u
     globalThis.clearTimeout(timeoutId)
     publish({ method, path: `/${path}`, status, ms: Math.round(performance.now() - started), at: Date.now() })
   }
+}
+/** These reads replace authorized state; they are not financial mutations and
+ * must not recursively invalidate every WORLD poll. Never retry a write here. */
+export function centropyControl<T>(operation: string, input: unknown): Promise<T> {
+  return centropyRequest<T>("POST", "live-controls", { operation, input }, undefined, operation === "dispatch")
 }
 
 const pendingReads = new Map<string, Promise<unknown>>()
@@ -189,6 +199,7 @@ export async function centropyDownload(path: string, fileName: string, params: R
   let status = 0
   const controller = new AbortController()
   const timer = globalThis.setTimeout(() => controller.abort(), CENTROPY_GET_TIMEOUT_MS)
+  const sessionKey = getCurrentSessionKey()
   try {
     const response = await fetch(`/api/centropy/${path}?${new URLSearchParams(params)}`, {
       headers: authHeaders(), cache: "no-store", signal: controller.signal,
@@ -196,6 +207,7 @@ export async function centropyDownload(path: string, fileName: string, params: R
     status = response.status
     if (!response.ok) await readJson(response, "GET", path)
     const bytes = await response.blob()
+    if (sessionKey !== getCurrentSessionKey()) throw new CentropyApiError("The authenticated session changed. Download discarded.", 401, false)
     const href = URL.createObjectURL(bytes)
     const link = document.createElement("a")
     link.href = href

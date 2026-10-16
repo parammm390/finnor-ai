@@ -1,4 +1,4 @@
-export const PE_WORLD_ROOT_TYPES = ["pe_strategy", "pe_opportunity", "pe_deal"] as const
+export const PE_WORLD_ROOT_TYPES = ["pe_strategy", "pe_opportunity", "pe_deal", "pe_fund", "pe_vehicle", "external_organization", "pe_portfolio_holding"] as const
 export type PeWorldRootType = (typeof PE_WORLD_ROOT_TYPES)[number]
 
 export interface PeWorldRootRef {
@@ -14,10 +14,15 @@ export const PE_ENTITY_TYPES = [
   "pe_finding_risk_link", "pe_ic_case", "pe_ic_memo", "pe_ic_question",
   "pe_ic_recommendation", "pe_ic_vote", "pe_ic_dissent", "pe_ic_condition",
   "pe_ic_decision_proposal",
+  "pe_fund", "pe_vehicle", "pe_fund_vehicle_link", "pe_strategy_mandate", "pe_portfolio_holding",
+  "pe_company_hierarchy", "pe_company_party_role", "pe_security", "pe_debt_facility", "pe_debt_facility_lender",
+  "pe_ownership_interest", "pe_metric_series", "pe_metric_observation", "pe_benchmark", "pe_benchmark_observation",
+  "pe_outcome", "pe_exit", "pe_fact_coverage",
 ] as const
 export type PeEntityType = (typeof PE_ENTITY_TYPES)[number]
 
 export const CORE_BRAIN_OBJECT_TYPES = [
+  "external_organization", "external_contact",
   "document", "document_version", "evidence_source", "evidence_version", "source_observation",
   "source_coverage", "source_conflict", "work", "domain_action", "business_effect",
   "decision_receipt", "attention",
@@ -35,9 +40,10 @@ export type CompanyBrainObjectRef =
   | { namespace: "underwriting"; owner: "@finnor/private-equity"; type: (typeof UNDERWRITING_BRAIN_OBJECT_TYPES)[number]; id: string; revisionId?: string }
   | { namespace: "planning"; owner: "@finnor/db"; type: (typeof PLANNING_BRAIN_OBJECT_TYPES)[number]; id: string; revisionId?: string }
   | { namespace: "workforce"; owner: "@finnor/db" | "@finnor/read-models"; type: (typeof WORKFORCE_BRAIN_OBJECT_TYPES)[number]; id: string; revisionId?: string }
+  | { namespace: "epistemic"; owner: "@finnor/epistemic-runtime"; type: "claim"; id: string; revisionId?: string }
 
 export interface CompanyBrainSourceRef {
-  owner: "@finnor/private-equity" | "@finnor/db" | "@finnor/read-models"
+  owner: "@finnor/private-equity" | "@finnor/db" | "@finnor/read-models" | "@finnor/epistemic-runtime"
   table: string
   id: string
   revisionId?: string
@@ -299,6 +305,7 @@ export function isCompanyBrainObjectRef(value: unknown): value is CompanyBrainOb
   if (row.namespace === "underwriting") return row.owner === "@finnor/private-equity" && UNDERWRITING_TYPES.has(row.type) && UUID.test(row.id)
   if (row.namespace === "planning") return row.owner === "@finnor/db" && PLANNING_TYPES.has(row.type)
   if (row.namespace === "workforce") return (row.owner === "@finnor/db" || row.owner === "@finnor/read-models") && WORKFORCE_TYPES.has(row.type) && UUID.test(row.id)
+  if (row.namespace === "epistemic") return row.owner === "@finnor/epistemic-runtime" && row.type === "claim"
   return false
 }
 

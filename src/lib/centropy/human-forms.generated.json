@@ -314,6 +314,2230 @@
       "generatedFrom": "finnor-os/openapi.json#paths//api/artifacts/post"
     },
     {
+      "id": "http.post.closing.observe",
+      "capabilityId": "http.post.closing.observe",
+      "group": "closing-programmes",
+      "title": "Record independently signed closing evidence",
+      "method": "POST",
+      "routePattern": "closing/observe",
+      "operation": null,
+      "readOnly": false,
+      "owner": "@finnor/private-equity",
+      "humanOnly": true,
+      "pathFields": [],
+      "schema": {
+        "type": "object",
+        "properties": {
+          "programmeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "observation": {
+            "type": "object",
+            "properties": {
+              "schema": {
+                "type": "string",
+                "const": "finnor.closing-observation.v1"
+              },
+              "factId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "tenantId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "transactionId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "specDigest": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "approvedTermsRevision": {
+                "type": "string",
+                "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._-]{0,159}$"
+              },
+              "requirementKey": {
+                "type": "string",
+                "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._-]{0,159}$"
+              },
+              "predicateDigest": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "LEGAL_SPEC_ACCEPTANCE",
+                  "DOCUMENT_EXECUTION",
+                  "OBSERVABLE_CONDITION",
+                  "PROFESSIONAL_CONDITION",
+                  "RECEIVING_SETTLEMENT",
+                  "RIGHTS_TRANSFER",
+                  "LEGAL_EFFECTIVENESS",
+                  "FUNDING_AVAILABLE",
+                  "BENEFICIARY_VALIDATED",
+                  "WAIVER",
+                  "OPERATION_ABSENT"
+                ]
+              },
+              "issuerId": {
+                "type": "string",
+                "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._-]{0,159}$"
+              },
+              "channel": {
+                "type": "string",
+                "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._-]{0,159}$"
+              },
+              "actorId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "professionalScope": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._-]{0,159}$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "CONFIRMED",
+                  "FAILED",
+                  "PARTIAL",
+                  "UNKNOWN",
+                  "REVOKED",
+                  "ABSENT"
+                ]
+              },
+              "observedAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "validUntil": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "claims": {
+                "allOf": [
+                  {
+                    "type": "object",
+                    "additionalProperties": {}
+                  },
+                  {}
+                ]
+              },
+              "supersedesFactIds": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "maxItems": 128
+              },
+              "signature": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9+/]{86}==$"
+              }
+            },
+            "required": [
+              "schema",
+              "factId",
+              "tenantId",
+              "transactionId",
+              "specDigest",
+              "approvedTermsRevision",
+              "requirementKey",
+              "predicateDigest",
+              "kind",
+              "issuerId",
+              "channel",
+              "actorId",
+              "professionalScope",
+              "status",
+              "observedAt",
+              "validUntil",
+              "claims",
+              "supersedesFactIds",
+              "signature"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "programmeId",
+          "observation"
+        ],
+        "additionalProperties": false
+      },
+      "source": "finnor-os/apps/api/app/api/closing/[operation]/route.ts",
+      "generatedFrom": "finnor-os/openapi.json#paths//api/closing/observe/post"
+    },
+    {
+      "id": "http.post.closing.resume",
+      "capabilityId": "http.post.closing.resume",
+      "group": "closing-programmes",
+      "title": "Continue under the original closing grant",
+      "method": "POST",
+      "routePattern": "closing/resume",
+      "operation": null,
+      "readOnly": false,
+      "owner": "@finnor/private-equity",
+      "humanOnly": true,
+      "pathFields": [],
+      "schema": {
+        "type": "object",
+        "properties": {
+          "programmeId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "programmeId"
+        ],
+        "additionalProperties": false
+      },
+      "source": "finnor-os/apps/api/app/api/closing/[operation]/route.ts",
+      "generatedFrom": "finnor-os/openapi.json#paths//api/closing/resume/post"
+    },
+    {
+      "id": "http.post.closing.stop",
+      "capabilityId": "http.post.closing.stop",
+      "group": "closing-programmes",
+      "title": "Stop future closing effects, retain responsibility",
+      "method": "POST",
+      "routePattern": "closing/stop",
+      "operation": null,
+      "readOnly": false,
+      "owner": "@finnor/private-equity",
+      "humanOnly": true,
+      "pathFields": [],
+      "schema": {
+        "type": "object",
+        "properties": {
+          "programmeId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "programmeId"
+        ],
+        "additionalProperties": false
+      },
+      "source": "finnor-os/apps/api/app/api/closing/[operation]/route.ts",
+      "generatedFrom": "finnor-os/openapi.json#paths//api/closing/stop/post"
+    },
+    {
+      "id": "http.post.closing.submit",
+      "capabilityId": "http.post.closing.submit",
+      "group": "closing-programmes",
+      "title": "Submit legally accepted ClosingSpec",
+      "method": "POST",
+      "routePattern": "closing/submit",
+      "operation": null,
+      "readOnly": false,
+      "owner": "@finnor/private-equity",
+      "humanOnly": true,
+      "pathFields": [],
+      "schema": {
+        "type": "object",
+        "properties": {
+          "spec": {
+            "type": "object",
+            "properties": {
+              "schema": {
+                "type": "string",
+                "const": "finnor.closing-spec.v1"
+              },
+              "transactionId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "tenantId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "approvedTermsRevision": {
+                "type": "string",
+                "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._-]{0,159}$"
+              },
+              "approvedTermsDigest": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "profileId": {
+                "type": "string",
+                "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._-]{0,159}$"
+              },
+              "environment": {
+                "type": "string",
+                "enum": [
+                  "DEVELOPMENT",
+                  "REHEARSAL",
+                  "LIVE"
+                ]
+              },
+              "originalGrant": {
+                "type": "object",
+                "properties": {
+                  "episodeRef": {
+                    "type": "object",
+                    "properties": {
+                      "owner": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 128
+                      },
+                      "kind": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 128
+                      },
+                      "id": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 512
+                      },
+                      "version": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 128
+                      },
+                      "contentDigest": {
+                        "type": "string",
+                        "pattern": "^[a-f0-9]{64}$"
+                      }
+                    },
+                    "required": [
+                      "owner",
+                      "kind",
+                      "id",
+                      "version",
+                      "contentDigest"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "deadlineAt": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "maxSteps": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 4096
+                  },
+                  "maxHumanSeconds": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 900
+                  },
+                  "maxComputeDataIntegrationUsd": {
+                    "type": "string",
+                    "pattern": "^(?:0|[1-9]\\d{0,29})(?:\\.\\d{1,18})?$"
+                  }
+                },
+                "required": [
+                  "episodeRef",
+                  "deadlineAt",
+                  "maxSteps",
+                  "maxHumanSeconds",
+                  "maxComputeDataIntegrationUsd"
+                ],
+                "additionalProperties": false
+              },
+              "documents": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "key": {
+                      "type": "string",
+                      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._-]{0,159}$"
+                    },
+                    "required": {
+                      "type": "boolean"
+                    },
+                    "dependsOn": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._-]{0,159}$"
+                      },
+                      "maxItems": 256
+                    },
+                    "evidence": {
+                      "type": "object",
+                      "properties": {
+                        "kind": {
+                          "type": "string",
+                          "enum": [
+                            "DOCUMENT_EXECUTION",
+                            "OBSERVABLE_CONDITION",
+                            "PROFESSIONAL_CONDITION",
+                            "RECEIVING_SETTLEMENT",
+                            "RIGHTS_TRANSFER",
+                            "LEGAL_EFFECTIVENESS",
+                            "FUNDING_AVAILABLE",
+                            "BENEFICIARY_VALIDATED"
+                          ]
+                        },
+                        "predicateDigest": {
+                          "type": "string",
+                          "pattern": "^[a-f0-9]{64}$"
+                        },
+                        "issuerIds": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._-]{0,159}$"
+                          },
+                          "minItems": 1,
+                          "maxItems": 16
+                        },
+                        "channels": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._-]{0,159}$"
+                          },
+                          "minItems": 1,
+                          "maxItems": 16
+                        },
+                        "maxAgeMs": {
+                          "type": "integer",
+                          "exclusiveMinimum": 0,
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        }
+                      },
+                      "required": [
+                        "kind",
+                        "predicateDigest",
+                        "issuerIds",
+                        "channels",
+                        "maxAgeMs"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "documentId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "documentVersionId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "documentDigest": {
+                      "type": "string",
+                      "pattern": "^[a-f0-9]{64}$"
+                    },
+                    "approvedTermsRevision": {
+                      "type": "string",
+                      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._-]{0,159}$"
+                    },
+                    "signers": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "principalId": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "legalEntityId": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "roleRef": {
+                            "type": "object",
+                            "properties": {
+                              "owner": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 128
+                              },
+                              "kind": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 128
+                              },
+                              "id": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 512
+                              },
+                              "version": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 128
+                              },
+                              "contentDigest": {
+                                "type": "string",
+                                "pattern": "^[a-f0-9]{64}$"
+                              }
+                            },
+                            "required": [
+                              "owner",
+                              "kind",
+                              "id",
+                              "version",
+                              "contentDigest"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "required": [
+                          "principalId",
+                          "legalEntityId",
+                          "roleRef"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "minItems": 1,
+                      "maxItems": 64
+                    }
+                  },
+                  "required": [
+                    "key",
+                    "required",
+                    "dependsOn",
+                    "evidence",
+                    "documentId",
+                    "documentVersionId",
+                    "documentDigest",
+                    "approvedTermsRevision",
+                    "signers"
+                  ],
+                  "additionalProperties": false
+                },
+                "minItems": 1,
+                "maxItems": 64
+              },
+              "conditions": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "key": {
+                      "type": "string",
+                      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._-]{0,159}$"
+                    },
+                    "required": {
+                      "type": "boolean"
+                    },
+                    "dependsOn": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._-]{0,159}$"
+                      },
+                      "maxItems": 256
+                    },
+                    "evidence": {
+                      "type": "object",
+                      "properties": {
+                        "kind": {
+                          "type": "string",
+                          "enum": [
+                            "DOCUMENT_EXECUTION",
+                            "OBSERVABLE_CONDITION",
+                            "PROFESSIONAL_CONDITION",
+                            "RECEIVING_SETTLEMENT",
+                            "RIGHTS_TRANSFER",
+                            "LEGAL_EFFECTIVENESS",
+                            "FUNDING_AVAILABLE",
+                            "BENEFICIARY_VALIDATED"
+                          ]
+                        },
+                        "predicateDigest": {
+                          "type": "string",
+                          "pattern": "^[a-f0-9]{64}$"
+                        },
+                        "issuerIds": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._-]{0,159}$"
+                          },
+                          "minItems": 1,
+                          "maxItems": 16
+                        },
+                        "channels": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._-]{0,159}$"
+                          },
+                          "minItems": 1,
+                          "maxItems": 16
+                        },
+                        "maxAgeMs": {
+                          "type": "integer",
+                          "exclusiveMinimum": 0,
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        }
+                      },
+                      "required": [
+                        "kind",
+                        "predicateDigest",
+                        "issuerIds",
+                        "channels",
+                        "maxAgeMs"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "canonicalConditionId": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "statement": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 8000
+                    },
+                    "evidenceClass": {
+                      "type": "string",
+                      "enum": [
+                        "OBSERVABLE",
+                        "PROFESSIONALLY_ATTESTED",
+                        "UNRESOLVED"
+                      ]
+                    },
+                    "professionalScope": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._-]{0,159}$"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "waiver": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "actorIds": {
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "format": "uuid"
+                              },
+                              "minItems": 1,
+                              "maxItems": 32
+                            },
+                            "authorityRef": {
+                              "type": "object",
+                              "properties": {
+                                "owner": {
+                                  "type": "string",
+                                  "minLength": 1,
+                                  "maxLength": 128
+                                },
+                                "kind": {
+                                  "type": "string",
+                                  "minLength": 1,
+                                  "maxLength": 128
+                                },
+                                "id": {
+                                  "type": "string",
+                                  "minLength": 1,
+                                  "maxLength": 512
+                                },
+                                "version": {
+                                  "type": "string",
+                                  "minLength": 1,
+                                  "maxLength": 128
+                                },
+                                "contentDigest": {
+                                  "type": "string",
+                                  "pattern": "^[a-f0-9]{64}$"
+                                }
+                              },
+                              "required": [
+                                "owner",
+                                "kind",
+                                "id",
+                                "version",
+                                "contentDigest"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "expiresAt": {
+                              "type": "string",
+                              "format": "date-time"
+                            },
+                            "maximumAmount": {
+                              "anyOf": [
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "amount": {
+                                      "type": "string",
+                                      "pattern": "^(?:0|[1-9]\\d{0,29})(?:\\.\\d{1,18})?$"
+                                    },
+                                    "currency": {
+                                      "type": "string",
+                                      "pattern": "^[A-Z]{3}$"
+                                    },
+                                    "unit": {
+                                      "type": "string",
+                                      "const": "currency"
+                                    },
+                                    "entityId": {
+                                      "type": "string",
+                                      "format": "uuid"
+                                    },
+                                    "asOf": {
+                                      "type": "string",
+                                      "format": "date-time"
+                                    },
+                                    "timeBasis": {
+                                      "type": "string",
+                                      "enum": [
+                                        "INSTANT",
+                                        "CUMULATIVE"
+                                      ]
+                                    },
+                                    "periodEnd": {
+                                      "type": "string",
+                                      "format": "date-time"
+                                    },
+                                    "rounding": {
+                                      "type": "string",
+                                      "const": "EXACT"
+                                    }
+                                  },
+                                  "required": [
+                                    "amount",
+                                    "currency",
+                                    "unit",
+                                    "entityId",
+                                    "asOf",
+                                    "timeBasis",
+                                    "periodEnd",
+                                    "rounding"
+                                  ],
+                                  "additionalProperties": false
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "allowedReasonCodes": {
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._-]{0,159}$"
+                              },
+                              "minItems": 1,
+                              "maxItems": 32
+                            }
+                          },
+                          "required": [
+                            "actorIds",
+                            "authorityRef",
+                            "expiresAt",
+                            "maximumAmount",
+                            "allowedReasonCodes"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "key",
+                    "required",
+                    "dependsOn",
+                    "evidence",
+                    "canonicalConditionId",
+                    "statement",
+                    "evidenceClass",
+                    "professionalScope",
+                    "waiver"
+                  ],
+                  "additionalProperties": false
+                },
+                "maxItems": 128
+              },
+              "fundsFlows": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "key": {
+                      "type": "string",
+                      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._-]{0,159}$"
+                    },
+                    "required": {
+                      "type": "boolean"
+                    },
+                    "dependsOn": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._-]{0,159}$"
+                      },
+                      "maxItems": 256
+                    },
+                    "evidence": {
+                      "type": "object",
+                      "properties": {
+                        "kind": {
+                          "type": "string",
+                          "enum": [
+                            "DOCUMENT_EXECUTION",
+                            "OBSERVABLE_CONDITION",
+                            "PROFESSIONAL_CONDITION",
+                            "RECEIVING_SETTLEMENT",
+                            "RIGHTS_TRANSFER",
+                            "LEGAL_EFFECTIVENESS",
+                            "FUNDING_AVAILABLE",
+                            "BENEFICIARY_VALIDATED"
+                          ]
+                        },
+                        "predicateDigest": {
+                          "type": "string",
+                          "pattern": "^[a-f0-9]{64}$"
+                        },
+                        "issuerIds": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._-]{0,159}$"
+                          },
+                          "minItems": 1,
+                          "maxItems": 16
+                        },
+                        "channels": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._-]{0,159}$"
+                          },
+                          "minItems": 1,
+                          "maxItems": 16
+                        },
+                        "maxAgeMs": {
+                          "type": "integer",
+                          "exclusiveMinimum": 0,
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        }
+                      },
+                      "required": [
+                        "kind",
+                        "predicateDigest",
+                        "issuerIds",
+                        "channels",
+                        "maxAgeMs"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "money": {
+                      "type": "object",
+                      "properties": {
+                        "amount": {
+                          "type": "string",
+                          "pattern": "^(?:0|[1-9]\\d{0,29})(?:\\.\\d{1,18})?$"
+                        },
+                        "currency": {
+                          "type": "string",
+                          "pattern": "^[A-Z]{3}$"
+                        },
+                        "unit": {
+                          "type": "string",
+                          "const": "currency"
+                        },
+                        "entityId": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "asOf": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "timeBasis": {
+                          "type": "string",
+                          "enum": [
+                            "INSTANT",
+                            "CUMULATIVE"
+                          ]
+                        },
+                        "periodEnd": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "rounding": {
+                          "type": "string",
+                          "const": "EXACT"
+                        }
+                      },
+                      "required": [
+                        "amount",
+                        "currency",
+                        "unit",
+                        "entityId",
+                        "asOf",
+                        "timeBasis",
+                        "periodEnd",
+                        "rounding"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "payerEntityId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "receivingEntityId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "receivingAccountDigest": {
+                      "type": "string",
+                      "pattern": "^[a-f0-9]{64}$"
+                    },
+                    "beneficiaryRequirementKey": {
+                      "type": "string",
+                      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._-]{0,159}$"
+                    },
+                    "fundingKeys": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._-]{0,159}$"
+                      },
+                      "minItems": 1,
+                      "maxItems": 32
+                    },
+                    "purpose": {
+                      "type": "string",
+                      "enum": [
+                        "PURCHASE_PRICE",
+                        "DEBT_PAYOFF",
+                        "FEE",
+                        "TAX",
+                        "ESCROW",
+                        "RELEASE"
+                      ]
+                    },
+                    "operationKey": {
+                      "type": "string",
+                      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._-]{0,159}$"
+                    }
+                  },
+                  "required": [
+                    "key",
+                    "required",
+                    "dependsOn",
+                    "evidence",
+                    "money",
+                    "payerEntityId",
+                    "receivingEntityId",
+                    "receivingAccountDigest",
+                    "beneficiaryRequirementKey",
+                    "fundingKeys",
+                    "purpose",
+                    "operationKey"
+                  ],
+                  "additionalProperties": false
+                },
+                "maxItems": 64
+              },
+              "rightsTransfers": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "key": {
+                      "type": "string",
+                      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._-]{0,159}$"
+                    },
+                    "required": {
+                      "type": "boolean"
+                    },
+                    "dependsOn": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._-]{0,159}$"
+                      },
+                      "maxItems": 256
+                    },
+                    "evidence": {
+                      "type": "object",
+                      "properties": {
+                        "kind": {
+                          "type": "string",
+                          "enum": [
+                            "DOCUMENT_EXECUTION",
+                            "OBSERVABLE_CONDITION",
+                            "PROFESSIONAL_CONDITION",
+                            "RECEIVING_SETTLEMENT",
+                            "RIGHTS_TRANSFER",
+                            "LEGAL_EFFECTIVENESS",
+                            "FUNDING_AVAILABLE",
+                            "BENEFICIARY_VALIDATED"
+                          ]
+                        },
+                        "predicateDigest": {
+                          "type": "string",
+                          "pattern": "^[a-f0-9]{64}$"
+                        },
+                        "issuerIds": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._-]{0,159}$"
+                          },
+                          "minItems": 1,
+                          "maxItems": 16
+                        },
+                        "channels": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._-]{0,159}$"
+                          },
+                          "minItems": 1,
+                          "maxItems": 16
+                        },
+                        "maxAgeMs": {
+                          "type": "integer",
+                          "exclusiveMinimum": 0,
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        }
+                      },
+                      "required": [
+                        "kind",
+                        "predicateDigest",
+                        "issuerIds",
+                        "channels",
+                        "maxAgeMs"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "fromEntityId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "toEntityId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "rightsDigest": {
+                      "type": "string",
+                      "pattern": "^[a-f0-9]{64}$"
+                    },
+                    "quantity": {
+                      "type": "string",
+                      "pattern": "^(?:0|[1-9]\\d{0,29})(?:\\.\\d{1,18})?$"
+                    },
+                    "unit": {
+                      "type": "string",
+                      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._-]{0,159}$"
+                    },
+                    "operationKey": {
+                      "type": "string",
+                      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._-]{0,159}$"
+                    }
+                  },
+                  "required": [
+                    "key",
+                    "required",
+                    "dependsOn",
+                    "evidence",
+                    "fromEntityId",
+                    "toEntityId",
+                    "rightsDigest",
+                    "quantity",
+                    "unit",
+                    "operationKey"
+                  ],
+                  "additionalProperties": false
+                },
+                "maxItems": 64
+              },
+              "legalEffectiveness": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "key": {
+                      "type": "string",
+                      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._-]{0,159}$"
+                    },
+                    "required": {
+                      "type": "boolean"
+                    },
+                    "dependsOn": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._-]{0,159}$"
+                      },
+                      "maxItems": 256
+                    },
+                    "evidence": {
+                      "type": "object",
+                      "properties": {
+                        "kind": {
+                          "type": "string",
+                          "enum": [
+                            "DOCUMENT_EXECUTION",
+                            "OBSERVABLE_CONDITION",
+                            "PROFESSIONAL_CONDITION",
+                            "RECEIVING_SETTLEMENT",
+                            "RIGHTS_TRANSFER",
+                            "LEGAL_EFFECTIVENESS",
+                            "FUNDING_AVAILABLE",
+                            "BENEFICIARY_VALIDATED"
+                          ]
+                        },
+                        "predicateDigest": {
+                          "type": "string",
+                          "pattern": "^[a-f0-9]{64}$"
+                        },
+                        "issuerIds": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._-]{0,159}$"
+                          },
+                          "minItems": 1,
+                          "maxItems": 16
+                        },
+                        "channels": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._-]{0,159}$"
+                          },
+                          "minItems": 1,
+                          "maxItems": 16
+                        },
+                        "maxAgeMs": {
+                          "type": "integer",
+                          "exclusiveMinimum": 0,
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        }
+                      },
+                      "required": [
+                        "kind",
+                        "predicateDigest",
+                        "issuerIds",
+                        "channels",
+                        "maxAgeMs"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "jurisdiction": {
+                      "type": "string",
+                      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._-]{0,159}$"
+                    },
+                    "legalBasisDigest": {
+                      "type": "string",
+                      "pattern": "^[a-f0-9]{64}$"
+                    },
+                    "professionalScope": {
+                      "type": "string",
+                      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._-]{0,159}$"
+                    },
+                    "operationKey": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._-]{0,159}$"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "key",
+                    "required",
+                    "dependsOn",
+                    "evidence",
+                    "jurisdiction",
+                    "legalBasisDigest",
+                    "professionalScope",
+                    "operationKey"
+                  ],
+                  "additionalProperties": false
+                },
+                "minItems": 1,
+                "maxItems": 64
+              },
+              "funding": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "key": {
+                      "type": "string",
+                      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._-]{0,159}$"
+                    },
+                    "required": {
+                      "type": "boolean"
+                    },
+                    "dependsOn": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._-]{0,159}$"
+                      },
+                      "maxItems": 256
+                    },
+                    "evidence": {
+                      "type": "object",
+                      "properties": {
+                        "kind": {
+                          "type": "string",
+                          "enum": [
+                            "DOCUMENT_EXECUTION",
+                            "OBSERVABLE_CONDITION",
+                            "PROFESSIONAL_CONDITION",
+                            "RECEIVING_SETTLEMENT",
+                            "RIGHTS_TRANSFER",
+                            "LEGAL_EFFECTIVENESS",
+                            "FUNDING_AVAILABLE",
+                            "BENEFICIARY_VALIDATED"
+                          ]
+                        },
+                        "predicateDigest": {
+                          "type": "string",
+                          "pattern": "^[a-f0-9]{64}$"
+                        },
+                        "issuerIds": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._-]{0,159}$"
+                          },
+                          "minItems": 1,
+                          "maxItems": 16
+                        },
+                        "channels": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._-]{0,159}$"
+                          },
+                          "minItems": 1,
+                          "maxItems": 16
+                        },
+                        "maxAgeMs": {
+                          "type": "integer",
+                          "exclusiveMinimum": 0,
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        }
+                      },
+                      "required": [
+                        "kind",
+                        "predicateDigest",
+                        "issuerIds",
+                        "channels",
+                        "maxAgeMs"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "money": {
+                      "type": "object",
+                      "properties": {
+                        "amount": {
+                          "type": "string",
+                          "pattern": "^(?:0|[1-9]\\d{0,29})(?:\\.\\d{1,18})?$"
+                        },
+                        "currency": {
+                          "type": "string",
+                          "pattern": "^[A-Z]{3}$"
+                        },
+                        "unit": {
+                          "type": "string",
+                          "const": "currency"
+                        },
+                        "entityId": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "asOf": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "timeBasis": {
+                          "type": "string",
+                          "enum": [
+                            "INSTANT",
+                            "CUMULATIVE"
+                          ]
+                        },
+                        "periodEnd": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "rounding": {
+                          "type": "string",
+                          "const": "EXACT"
+                        }
+                      },
+                      "required": [
+                        "amount",
+                        "currency",
+                        "unit",
+                        "entityId",
+                        "asOf",
+                        "timeBasis",
+                        "periodEnd",
+                        "rounding"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "facilityDigest": {
+                      "type": "string",
+                      "pattern": "^[a-f0-9]{64}$"
+                    },
+                    "providerEntityId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "sourceClass": {
+                      "type": "string",
+                      "enum": [
+                        "DEBT_FACILITY",
+                        "EQUITY_CAPITAL",
+                        "EXISTING_CASH",
+                        "THIRD_PARTY_FUNDS"
+                      ]
+                    },
+                    "continuingDutyKeys": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._-]{0,159}$"
+                      },
+                      "maxItems": 128
+                    },
+                    "requiredState": {
+                      "type": "string",
+                      "const": "EFFECTIVE_AVAILABLE"
+                    },
+                    "drawOperationKey": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._-]{0,159}$"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "key",
+                    "required",
+                    "dependsOn",
+                    "evidence",
+                    "money",
+                    "facilityDigest",
+                    "providerEntityId",
+                    "sourceClass",
+                    "continuingDutyKeys",
+                    "requiredState",
+                    "drawOperationKey"
+                  ],
+                  "additionalProperties": false
+                },
+                "maxItems": 64
+              },
+              "beneficiaries": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "key": {
+                      "type": "string",
+                      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._-]{0,159}$"
+                    },
+                    "required": {
+                      "type": "boolean"
+                    },
+                    "dependsOn": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._-]{0,159}$"
+                      },
+                      "maxItems": 256
+                    },
+                    "evidence": {
+                      "type": "object",
+                      "properties": {
+                        "kind": {
+                          "type": "string",
+                          "enum": [
+                            "DOCUMENT_EXECUTION",
+                            "OBSERVABLE_CONDITION",
+                            "PROFESSIONAL_CONDITION",
+                            "RECEIVING_SETTLEMENT",
+                            "RIGHTS_TRANSFER",
+                            "LEGAL_EFFECTIVENESS",
+                            "FUNDING_AVAILABLE",
+                            "BENEFICIARY_VALIDATED"
+                          ]
+                        },
+                        "predicateDigest": {
+                          "type": "string",
+                          "pattern": "^[a-f0-9]{64}$"
+                        },
+                        "issuerIds": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._-]{0,159}$"
+                          },
+                          "minItems": 1,
+                          "maxItems": 16
+                        },
+                        "channels": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._-]{0,159}$"
+                          },
+                          "minItems": 1,
+                          "maxItems": 16
+                        },
+                        "maxAgeMs": {
+                          "type": "integer",
+                          "exclusiveMinimum": 0,
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        }
+                      },
+                      "required": [
+                        "kind",
+                        "predicateDigest",
+                        "issuerIds",
+                        "channels",
+                        "maxAgeMs"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "legalEntityId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "accountDigest": {
+                      "type": "string",
+                      "pattern": "^[a-f0-9]{64}$"
+                    },
+                    "independentValidationChannel": {
+                      "type": "string",
+                      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._-]{0,159}$"
+                    }
+                  },
+                  "required": [
+                    "key",
+                    "required",
+                    "dependsOn",
+                    "evidence",
+                    "legalEntityId",
+                    "accountDigest",
+                    "independentValidationChannel"
+                  ],
+                  "additionalProperties": false
+                },
+                "maxItems": 64
+              },
+              "continuingDuties": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "key": {
+                      "type": "string",
+                      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._-]{0,159}$"
+                    },
+                    "ownerPrincipalId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "statement": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 8000
+                    },
+                    "dueAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "dependencyKeys": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._-]{0,159}$"
+                      },
+                      "maxItems": 256
+                    },
+                    "liability": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "amount": {
+                              "type": "string",
+                              "pattern": "^(?:0|[1-9]\\d{0,29})(?:\\.\\d{1,18})?$"
+                            },
+                            "currency": {
+                              "type": "string",
+                              "pattern": "^[A-Z]{3}$"
+                            },
+                            "unit": {
+                              "type": "string",
+                              "const": "currency"
+                            },
+                            "entityId": {
+                              "type": "string",
+                              "format": "uuid"
+                            },
+                            "asOf": {
+                              "type": "string",
+                              "format": "date-time"
+                            },
+                            "timeBasis": {
+                              "type": "string",
+                              "enum": [
+                                "INSTANT",
+                                "CUMULATIVE"
+                              ]
+                            },
+                            "periodEnd": {
+                              "type": "string",
+                              "format": "date-time"
+                            },
+                            "rounding": {
+                              "type": "string",
+                              "const": "EXACT"
+                            }
+                          },
+                          "required": [
+                            "amount",
+                            "currency",
+                            "unit",
+                            "entityId",
+                            "asOf",
+                            "timeBasis",
+                            "periodEnd",
+                            "rounding"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "obligationRef": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "owner": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 128
+                            },
+                            "kind": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 128
+                            },
+                            "id": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 512
+                            },
+                            "version": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 128
+                            },
+                            "contentDigest": {
+                              "type": "string",
+                              "pattern": "^[a-f0-9]{64}$"
+                            }
+                          },
+                          "required": [
+                            "owner",
+                            "kind",
+                            "id",
+                            "version",
+                            "contentDigest"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "key",
+                    "ownerPrincipalId",
+                    "statement",
+                    "dueAt",
+                    "dependencyKeys",
+                    "liability",
+                    "obligationRef"
+                  ],
+                  "additionalProperties": false
+                },
+                "maxItems": 128
+              },
+              "steps": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "key": {
+                      "type": "string",
+                      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._-]{0,159}$"
+                    },
+                    "kind": {
+                      "type": "string",
+                      "enum": [
+                        "REQUEST_SIGNATURE",
+                        "DRAW_FUNDS",
+                        "PAY_FUNDS",
+                        "TRANSFER_RIGHTS",
+                        "FILE",
+                        "ACQUIRE_EVIDENCE",
+                        "REQUEST_PROFESSIONAL",
+                        "WAIT",
+                        "RECONCILE",
+                        "STOP"
+                      ]
+                    },
+                    "requirementKey": {
+                      "type": "string",
+                      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._-]{0,159}$"
+                    },
+                    "dependsOn": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._-]{0,159}$"
+                      },
+                      "maxItems": 256
+                    },
+                    "actor": {
+                      "type": "object",
+                      "properties": {
+                        "principalId": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "legalEntityId": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "roleRef": {
+                          "type": "object",
+                          "properties": {
+                            "owner": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 128
+                            },
+                            "kind": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 128
+                            },
+                            "id": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 512
+                            },
+                            "version": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 128
+                            },
+                            "contentDigest": {
+                              "type": "string",
+                              "pattern": "^[a-f0-9]{64}$"
+                            }
+                          },
+                          "required": [
+                            "owner",
+                            "kind",
+                            "id",
+                            "version",
+                            "contentDigest"
+                          ],
+                          "additionalProperties": false
+                        }
+                      },
+                      "required": [
+                        "principalId",
+                        "legalEntityId",
+                        "roleRef"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "irreversible": {
+                      "type": "boolean"
+                    },
+                    "providerProfileId": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._-]{0,159}$"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "policyRef": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "owner": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 128
+                            },
+                            "kind": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 128
+                            },
+                            "id": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 512
+                            },
+                            "version": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 128
+                            },
+                            "contentDigest": {
+                              "type": "string",
+                              "pattern": "^[a-f0-9]{64}$"
+                            }
+                          },
+                          "required": [
+                            "owner",
+                            "kind",
+                            "id",
+                            "version",
+                            "contentDigest"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "allocationRef": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "owner": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 128
+                            },
+                            "kind": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 128
+                            },
+                            "id": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 512
+                            },
+                            "version": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 128
+                            },
+                            "contentDigest": {
+                              "type": "string",
+                              "pattern": "^[a-f0-9]{64}$"
+                            }
+                          },
+                          "required": [
+                            "owner",
+                            "kind",
+                            "id",
+                            "version",
+                            "contentDigest"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "decision": {
+                      "anyOf": [
+                        {},
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "failureDisposition": {
+                      "type": "string",
+                      "enum": [
+                        "WAITING",
+                        "BLOCKED",
+                        "STOPPED",
+                        "RECONCILING"
+                      ]
+                    },
+                    "exposureCap": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "amount": {
+                              "type": "string",
+                              "pattern": "^(?:0|[1-9]\\d{0,29})(?:\\.\\d{1,18})?$"
+                            },
+                            "currency": {
+                              "type": "string",
+                              "pattern": "^[A-Z]{3}$"
+                            },
+                            "unit": {
+                              "type": "string",
+                              "const": "currency"
+                            },
+                            "entityId": {
+                              "type": "string",
+                              "format": "uuid"
+                            },
+                            "asOf": {
+                              "type": "string",
+                              "format": "date-time"
+                            },
+                            "timeBasis": {
+                              "type": "string",
+                              "enum": [
+                                "INSTANT",
+                                "CUMULATIVE"
+                              ]
+                            },
+                            "periodEnd": {
+                              "type": "string",
+                              "format": "date-time"
+                            },
+                            "rounding": {
+                              "type": "string",
+                              "const": "EXACT"
+                            }
+                          },
+                          "required": [
+                            "amount",
+                            "currency",
+                            "unit",
+                            "entityId",
+                            "asOf",
+                            "timeBasis",
+                            "periodEnd",
+                            "rounding"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "resourceBindings": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "resourceRef": {
+                            "type": "object",
+                            "properties": {
+                              "owner": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 128
+                              },
+                              "kind": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 128
+                              },
+                              "id": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 512
+                              },
+                              "version": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 128
+                              },
+                              "contentDigest": {
+                                "type": "string",
+                                "pattern": "^[a-f0-9]{64}$"
+                              }
+                            },
+                            "required": [
+                              "owner",
+                              "kind",
+                              "id",
+                              "version",
+                              "contentDigest"
+                            ],
+                            "additionalProperties": false
+                          },
+                          "quantity": {
+                            "type": "string",
+                            "pattern": "^(?:0|[1-9]\\d{0,29})(?:\\.\\d{1,18})?$"
+                          },
+                          "unit": {
+                            "type": "string",
+                            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._-]{0,159}$"
+                          }
+                        },
+                        "required": [
+                          "resourceRef",
+                          "quantity",
+                          "unit"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "maxItems": 16
+                    }
+                  },
+                  "required": [
+                    "key",
+                    "kind",
+                    "requirementKey",
+                    "dependsOn",
+                    "actor",
+                    "irreversible",
+                    "providerProfileId",
+                    "policyRef",
+                    "allocationRef",
+                    "decision",
+                    "failureDisposition",
+                    "exposureCap",
+                    "resourceBindings"
+                  ],
+                  "additionalProperties": false
+                },
+                "maxItems": 256
+              },
+              "dependencyKeys": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._-]{0,159}$"
+                },
+                "minItems": 1,
+                "maxItems": 512
+              },
+              "assumptions": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 2000
+                },
+                "maxItems": 64
+              },
+              "unsupportedPredicates": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._-]{0,159}$"
+                },
+                "maxItems": 128
+              }
+            },
+            "required": [
+              "schema",
+              "transactionId",
+              "tenantId",
+              "approvedTermsRevision",
+              "approvedTermsDigest",
+              "profileId",
+              "environment",
+              "originalGrant",
+              "documents",
+              "conditions",
+              "fundsFlows",
+              "rightsTransfers",
+              "legalEffectiveness",
+              "funding",
+              "beneficiaries",
+              "continuingDuties",
+              "steps",
+              "dependencyKeys",
+              "assumptions",
+              "unsupportedPredicates"
+            ],
+            "additionalProperties": false
+          },
+          "expectedSpecDigest": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "acceptedTermsEvidence": {
+            "type": "object",
+            "properties": {
+              "sourceId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "versionId": {
+                "type": "string",
+                "format": "uuid"
+              }
+            },
+            "required": [
+              "sourceId",
+              "versionId"
+            ],
+            "additionalProperties": false
+          },
+          "legalAcceptance": {
+            "type": "object",
+            "properties": {
+              "schema": {
+                "type": "string",
+                "const": "finnor.closing-observation.v1"
+              },
+              "factId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "tenantId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "transactionId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "specDigest": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "approvedTermsRevision": {
+                "type": "string",
+                "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._-]{0,159}$"
+              },
+              "requirementKey": {
+                "type": "string",
+                "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._-]{0,159}$"
+              },
+              "predicateDigest": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "LEGAL_SPEC_ACCEPTANCE",
+                  "DOCUMENT_EXECUTION",
+                  "OBSERVABLE_CONDITION",
+                  "PROFESSIONAL_CONDITION",
+                  "RECEIVING_SETTLEMENT",
+                  "RIGHTS_TRANSFER",
+                  "LEGAL_EFFECTIVENESS",
+                  "FUNDING_AVAILABLE",
+                  "BENEFICIARY_VALIDATED",
+                  "WAIVER",
+                  "OPERATION_ABSENT"
+                ]
+              },
+              "issuerId": {
+                "type": "string",
+                "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._-]{0,159}$"
+              },
+              "channel": {
+                "type": "string",
+                "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._-]{0,159}$"
+              },
+              "actorId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "professionalScope": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._-]{0,159}$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "CONFIRMED",
+                  "FAILED",
+                  "PARTIAL",
+                  "UNKNOWN",
+                  "REVOKED",
+                  "ABSENT"
+                ]
+              },
+              "observedAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "validUntil": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "claims": {
+                "allOf": [
+                  {
+                    "type": "object",
+                    "additionalProperties": {}
+                  },
+                  {}
+                ]
+              },
+              "supersedesFactIds": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "maxItems": 128
+              },
+              "signature": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9+/]{86}==$"
+              }
+            },
+            "required": [
+              "schema",
+              "factId",
+              "tenantId",
+              "transactionId",
+              "specDigest",
+              "approvedTermsRevision",
+              "requirementKey",
+              "predicateDigest",
+              "kind",
+              "issuerId",
+              "channel",
+              "actorId",
+              "professionalScope",
+              "status",
+              "observedAt",
+              "validUntil",
+              "claims",
+              "supersedesFactIds",
+              "signature"
+            ],
+            "additionalProperties": false
+          },
+          "workId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "continuation": {
+            "type": "object",
+            "properties": {
+              "workInputId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "objectiveLoopId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "objectiveRevision": {
+                "type": "integer",
+                "exclusiveMinimum": 0,
+                "maximum": 2147483647
+              },
+              "objectiveDigest": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            },
+            "required": [
+              "workInputId",
+              "objectiveLoopId",
+              "objectiveRevision",
+              "objectiveDigest"
+            ],
+            "additionalProperties": false,
+            "description": "Exact original full-Work binding; requires workId and does not append an input or replace the goal"
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          }
+        },
+        "required": [
+          "spec",
+          "expectedSpecDigest",
+          "acceptedTermsEvidence",
+          "legalAcceptance",
+          "idempotencyKey"
+        ],
+        "additionalProperties": false
+      },
+      "source": "finnor-os/apps/api/app/api/closing/[operation]/route.ts",
+      "generatedFrom": "finnor-os/openapi.json#paths//api/closing/submit/post"
+    },
+    {
       "id": "http.post.computer.runs.$id.cancel",
       "capabilityId": "http.post.computer.runs.$id.cancel",
       "group": "computer-controls",

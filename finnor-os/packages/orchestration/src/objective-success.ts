@@ -535,11 +535,11 @@ async function queryCriterion(params: {
   executionKey: string;
   loopId:string;
 }): Promise<{ satisfied: boolean; basis: string; evidenceRefs: Array<{ type: string; id: string }>; observed: unknown; queryExecutionId?: string }> {
-  const identity = params.request.intent === "harness_program_v1" ? await withTenant(params.tenantId,async db=>{
+  const identity = params.request.intent === "harness_program_v1" || params.request.intent === "closing_readiness" ? await withTenant(params.tenantId,async db=>{
     const [loop]=await db.select({createdBy:workObjectiveLoops.createdBy}).from(workObjectiveLoops).where(and(eq(workObjectiveLoops.tenantId,params.tenantId),eq(workObjectiveLoops.workId,params.workId),eq(workObjectiveLoops.id,params.loopId))).limit(1);
     const [input]=await db.select({id:workInputs.id}).from(workInputs).where(and(eq(workInputs.tenantId,params.tenantId),eq(workInputs.workId,params.workId))).orderBy(sql`${workInputs.createdAt} DESC`,sql`${workInputs.id} DESC`).limit(1);
-    if(!loop?.createdBy||!input)throw Error("HARNESS_NATIVE_VERIFIER_PRINCIPAL_INPUT_REQUIRED");
-    return {userId:loop.createdBy,employeeId:loop.createdBy,workInputId:input.id};
+    if(!loop?.createdBy||!input)throw Error("NATIVE_VERIFIER_PRINCIPAL_INPUT_REQUIRED");
+    return {userId:loop.createdBy,employeeId:loop.createdBy,...(params.request.intent==="harness_program_v1"?{workInputId:input.id}:{})};
   }):{};
   const result = await executeTenantOperationalQuery(params.tenantId, params.request as CanonicalOperationalQueryRequest, { workId: params.workId, executionKey: params.executionKey,...identity });
   const assertion = evaluateObjectiveAssertion(result, params.assertion);

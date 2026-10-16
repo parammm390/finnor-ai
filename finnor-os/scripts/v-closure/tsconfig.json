@@ -1,0 +1,16 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "module": "ESNext",
+    "moduleResolution": "Bundler"
+  },
+  "include": [
+    "./*.mts",
+    "../v1/*.mts",
+    "../v5/*.mts",
+    "../../packages/private-equity/src/bilateral-opportunities/checker-service.mts"
+  ],
+  "exclude": ["../../node_modules", "**/.next"]
+}

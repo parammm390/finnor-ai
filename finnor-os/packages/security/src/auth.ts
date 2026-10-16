@@ -55,7 +55,7 @@ function supabaseAuthClient(url: string, key: string): SupabaseClient {
 /** Verifies a Supabase-issued bearer token and returns the caller's email. Throws
  *  AuthVerificationError (never a bare Error) so every caller can map it to the right
  *  HTTP status without knowing anything about Supabase's own error shape. */
-export async function verifyBearerToken(token: string): Promise<{ email: string }> {
+export async function verifyBearerToken(token: string): Promise<{ email: string; deliverySession?: TenantContext["deliverySession"] }> {
   const url = process.env.SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !key) throw new AuthVerificationError("Auth is not configured (SUPABASE_URL / key missing)", 500);
@@ -66,7 +66,16 @@ export async function verifyBearerToken(token: string): Promise<{ email: string 
   const { data, error } = await supabase.auth.getClaims(token);
   const email = data?.claims.email;
   if (error || typeof email !== "string" || !email) throw new AuthVerificationError("Invalid or expired token", 401);
-  return { email };
+  const claims = data!.claims;
+  const subject = claims.sub;
+  const sessionId = claims.session_id;
+  const expires = claims.exp;
+  const deliverySession = typeof subject === "string" && subject.length <= 256
+    && typeof sessionId === "string" && /^[a-f0-9-]{36}$/i.test(sessionId)
+    && typeof expires === "number" && Number.isSafeInteger(expires)
+    && expires * 1000 > Date.now()
+    ? { subject, sessionId, expiresAt: new Date(expires * 1000).toISOString() } : undefined;
+  return { email, ...(deliverySession ? { deliverySession } : {}) };
 }
 
 /** Identity → tenant lookup. Outside any withTenant() scope deliberately — tenant
@@ -96,8 +105,8 @@ export async function resolveTenantContextByEmail(email: string): Promise<Identi
 /** Bearer token → tenant context in one call. No Next.js Request dependency, so any
  *  Node HTTP surface (Next.js route handlers, apps/worker's SSE gateway) can use it. */
 export async function resolveTenantFromBearerToken(token: string): Promise<IdentityContext> {
-  const { email } = await verifyBearerToken(token);
+  const { email, deliverySession } = await verifyBearerToken(token);
   const ctx = await resolveTenantContextByEmail(email);
   if (!ctx) throw new AuthVerificationError("User has no tenant — contact your administrator", 403);
-  return ctx;
+  return { ...ctx, ...(deliverySession ? { deliverySession } : {}) };
 }

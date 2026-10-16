@@ -1,6 +1,7 @@
 import {randomUUID,createPrivateKey,sign} from 'node:crypto';
 import {fileURLToPath} from 'node:url';
 import {withTenantTransaction} from '@finnor/db';
+import {canExerciseAuthorityTx} from '@finnor/authority';
 import {submitCommand,cancelRun} from '@finnor/workflow-runtime';
 import type pg from 'pg';
 import type {DurableObligation,ExperimentRef,BusinessEffectSet} from '@finnor/shared-types';
@@ -29,6 +30,13 @@ async function signOwnerAssessment(body:Record<string,unknown>){
 async function authorize(ctx:PeMutationContext,c:pg.PoolClient){if(ctx.auth.role!=='owner'||actor(ctx)!==ctx.auth.userId)throw denied();const rows=await c.query("SELECT id FROM finnor_os.users WHERE id=$1 AND tenant_id=$2 AND role='owner' AND status='active' FOR SHARE",[ctx.auth.userId,ctx.auth.tenantId]);if(rows.rowCount!==1)throw denied();}
 function parsedInput(input:unknown){if(!input||typeof input!=='object'||Array.isArray(input)||Object.keys(input).length!==3||Object.keys(input).some(k=>!['preparationRef','allocationRef','consumptionRef'].includes(k)))throw denied();const i=input as Record<string,unknown>;return {preparationRef:ExperimentRefSchema.parse(i.preparationRef),allocationRef:ExperimentRefSchema.parse(i.allocationRef),consumptionRef:ExperimentRefSchema.parse(i.consumptionRef)};}
 function verifyBody(ctx:PeMutationContext,body:DurableObligation){const {ref,...origin}=body;if(body.schema!=='finnor.durable-obligation.v1'||body.tenantId!==ctx.auth.tenantId||body.principalId!==actor(ctx)||ref.owner!=='S6'||ref.version!=='s6-obligation-v1'||ref.id!==`durable-obligation:${ref.contentDigest}`||epistemicHash(origin)!==ref.contentDigest||body.protectedReceipt!==null||body.executionAuthorityGranted!==false)throw denied();}
+async function resolveWorkLineage(ctx:PeMutationContext,c:pg.PoolClient,workId:string):Promise<NonNullable<DurableObligation['workLineage']>>{
+ if(!/^[a-f0-9-]{36}$/i.test(workId)||!await canExerciseAuthorityTx(ctx.auth,{operation:'query',capability:'query:pe_world_state',resource:{type:'work',id:workId},risk:'low'},c))throw denied();
+ const work=(await c.query('SELECT id FROM finnor_os.works WHERE tenant_id=$1 AND id=$2 FOR SHARE',[ctx.auth.tenantId,workId])).rows[0];if(!work)throw denied();
+ const input=(await c.query('SELECT id FROM finnor_os.work_inputs WHERE tenant_id=$1 AND work_id=$2 ORDER BY created_at DESC,id DESC LIMIT 1',[ctx.auth.tenantId,workId])).rows[0];
+ const plan=(await c.query("SELECT id,revision,semantic_hash,status FROM finnor_os.work_plan_revisions WHERE tenant_id=$1 AND work_id=$2 AND status IN('active','completed') ORDER BY revision DESC LIMIT 1",[ctx.auth.tenantId,workId])).rows[0];
+ return {workId,workInputId:input?.id??null,planRevisionId:plan?.id??null,planDigest:plan?epistemicHash(plan):null};
+}
 async function enqueueObligation(ctx:PeMutationContext,c:pg.PoolClient,body:DurableObligation){
  const {ref,...content}=body;
  await enqueueOwnerDeliveryInTransaction(c,{semanticOwner:'S6',tenantId:ctx.auth.tenantId,principalId:actor(ctx)},
@@ -38,19 +46,20 @@ async function enqueueObligation(ctx:PeMutationContext,c:pg.PoolClient,body:Dura
 const pendingPreparations=new Map<string,{inputDigest:string;promise:Promise<DurableObligation>}>();
 /** Coalesce identical local deliveries inside the existing checker concurrency budget.
  * Every caller authenticates independently; SQL remains the cross-process identity owner. */
-export async function prepareEnterpriseDurableObligation(ctx:PeMutationContext,input:unknown):Promise<DurableObligation>{
- const refs=parsedInput(input),inputDigest=epistemicHash(refs);
- await withTenantTransaction(ctx.auth.tenantId,{userId:actor(ctx)},async(_db,c)=>authorize(ctx,c));
+export async function prepareEnterpriseDurableObligation(ctx:PeMutationContext,input:unknown,lineage?:{workId:string}):Promise<DurableObligation>{
+ const refs=parsedInput(input);
+ const workLineage=await withTenantTransaction(ctx.auth.tenantId,{userId:actor(ctx)},async(_db,c)=>{await authorize(ctx,c);return lineage?resolveWorkLineage(ctx,c,lineage.workId):undefined;});
+ const inputDigest=epistemicHash({...refs,...(workLineage?{workLineage}:{})});
  const key=JSON.stringify([ctx.auth.tenantId,actor(ctx),refs.consumptionRef.id]);const pending=pendingPreparations.get(key);
  if(pending){if(pending.inputDigest!==inputDigest)throw denied();return pending.promise;}
  if(pendingPreparations.size>=64)throw new Error('S6_PREPARATION_CONCURRENCY_BOUND');
- const promise=prepareOwnedObligation(ctx,refs);pendingPreparations.set(key,{inputDigest,promise});
+ const promise=prepareOwnedObligation(ctx,refs,workLineage);pendingPreparations.set(key,{inputDigest,promise});
  try{return await promise;}finally{if(pendingPreparations.get(key)?.promise===promise)pendingPreparations.delete(key);}
 }
 
 /** No lifecycle ledger is created: native effect/workflow/provider owners keep attempts and settlement. */
-async function prepareOwnedObligation(ctx:PeMutationContext,input:unknown):Promise<DurableObligation>{
- const refs=parsedInput(input),inputDigest=epistemicHash(refs);
+async function prepareOwnedObligation(ctx:PeMutationContext,input:unknown,workLineage?:DurableObligation['workLineage']):Promise<DurableObligation>{
+ const refs=parsedInput(input),inputDigest=epistemicHash({...refs,...(workLineage?{workLineage}:{})});
  const retry=await withTenantTransaction(ctx.auth.tenantId,{userId:actor(ctx)},async(_db,c)=>{await authorize(ctx,c);const row=(await c.query('SELECT body,input_digest FROM finnor_os.s6_obligation_origins WHERE tenant_id=$1 AND principal_id=$2 AND consumption_id=$3',[ctx.auth.tenantId,actor(ctx),refs.consumptionRef.id])).rows[0];if(row){if(row.input_digest!==inputDigest)throw denied();verifyBody(ctx,row.body);await enqueueObligation(ctx,c,row.body);return row.body as DurableObligation;}return null;});if(retry)return immutableControl(retry);
  const preparation=await readEnterpriseContingentHandoffPreparation(ctx,refs.preparationRef),handoff=preparation.handoff,policy=await readEnterpriseContingentPolicy(ctx,handoff.policyRef);
  const issued=await readEnterpriseAllocation(ctx,refs.allocationRef),validation=await validateEnterpriseAllocation(ctx,refs.allocationRef),consumption=issued.consumptions.find(c=>same(c.ref,refs.consumptionRef));
@@ -58,19 +67,21 @@ async function prepareOwnedObligation(ctx:PeMutationContext,input:unknown):Promi
  if(validation.status!=='CURRENT'||!issued.reservation||!consumption||consumption.status!=='INTENDED_PENDING_S6'||consumption.effectRef!==null||!handoff.intervention||!handoff.interventionRef||!same(handoff.allocationRef,refs.allocationRef)||!same(consumption.policyRef,handoff.policyRef)||!same(consumption.reservationRef,issued.reservation.ref)||consumption.nodeId!==handoff.decision.nodeId||!same(consumption.decisionRef,handoff.decision.ref)||consumption.demandDigest!==handoff.demandDigest||consumption.idempotencyKey!==preparation.plannedConsumptionKey)throw denied();
  const node=policy.nodes.find(n=>n.id===consumption.nodeId);if(!node||handoff.intervention.channels.length<1||handoff.intervention.channels.length>64||handoff.intervention.channels.some(channel=>channel.permittedRefinements.length!==0)||!same(policy.mandateRef,issued.certificate.mandateRef)||policy.bindings.rightsRef!==issued.certificate.rightsRef)throw denied();
  const actionId=randomUUID(),effectId=randomUUID(),preparedAt=new Date().toISOString();
- const effect=compileContingentInterventionIntent({actionId,effectId,intervention:handoff.intervention,preparationRef:refs.preparationRef,consumptionRef:refs.consumptionRef,compiledAt:preparedAt});
+ const effect=compileContingentInterventionIntent({actionId,effectId,intervention:handoff.intervention,preparationRef:refs.preparationRef,consumptionRef:refs.consumptionRef,compiledAt:preparedAt,workLineage});
  const body:Omit<DurableObligation,'ref'>={schema:'finnor.durable-obligation.v1',semanticOwner:'S6',tenantId:ctx.auth.tenantId,principalId:actor(ctx),episodeId:policy.episodeId,preparedAt,...refs,mandateRef:policy.mandateRef,rightsRef:policy.bindings.rightsRef,policyRef:policy.ref,decisionRef:handoff.decision.ref,nodeId:node.id,demandDigest:policy.demand.contentDigest,reservationRef:issued.reservation.ref,effectRef:{id:effect.id,semanticHash:effect.semanticHash,schemaVersion:1},domainActionId:actionId,interventionRef:handoff.interventionRef,intervention:handoff.intervention,resourceEnvelope:consumption.envelope,preconditions:{beliefPins:policy.bindings.beliefPins,reservationRevision:issued.reservation.revision,allocationValidUntil:issued.certificate.validUntil,policyValidUntil:policy.validUntil,interventionDigest:epistemicHash(handoff.intervention)},deadline:{businessStartAt:handoff.intervention.timing.startAt,businessPeriodEndAt:new Date(Date.parse(handoff.intervention.timing.startAt)+handoff.intervention.timing.periodMs).toISOString(),authorityExpiresAt:new Date(Math.min(Date.parse(policy.validUntil),Date.parse(issued.certificate.validUntil))).toISOString()},method:{status:'UNADMITTED',requestIRVersion:'s6-intervention-intent-v1',providerBinding:null,admissionReceipt:null},settlement:{kind:'INDEPENDENT_EXACT_TARGET_CHANNEL_DOSE_OBSERVATION',memberCount:handoff.intervention.channels.length,providerAcknowledgmentSufficient:false,executorSuccessSufficient:false},responsibility:{unknownOutcome:'RECONCILE_BEFORE_RETRY',cancellation:'RETAIN_POSSIBLE_EFFECTS_AND_S5_LIABILITIES',resourceReleaseOwner:'S5'},executionAuthorityGranted:false,protectedReceipt:null,status:'PREPARED_UNADMITTED'};
+ if(workLineage)body.workLineage=workLineage;
  const digest=epistemicHash(body),obligation:DurableObligation={...body,ref:{owner:'S6',id:`durable-obligation:${digest}`,version:'s6-obligation-v1',contentDigest:digest}};
  if(Buffer.byteLength(JSON.stringify(obligation))>8*1024*1024)throw denied();
  return withTenantTransaction(ctx.auth.tenantId,{userId:actor(ctx)},async(_db,c)=>{
   // Joins participate in the existing S5 portfolio serialization boundary.
   await c.query('SELECT pg_advisory_xact_lock(hashtextextended($1,0))',[`s5-portfolio:${ctx.auth.tenantId}`]);await authorize(ctx,c);
+  if(workLineage&&!same(workLineage,await resolveWorkLineage(ctx,c,workLineage.workId)))throw denied();
   const prior=(await c.query('SELECT body,input_digest FROM finnor_os.s6_obligation_origins WHERE tenant_id=$1 AND consumption_id=$2',[ctx.auth.tenantId,refs.consumptionRef.id])).rows[0];if(prior){if(prior.input_digest!==inputDigest)throw denied();verifyBody(ctx,prior.body);await enqueueObligation(ctx,c,prior.body);return immutableControl(prior.body as DurableObligation);}
   const held=(await c.query('SELECT revision,status,revocation_reason FROM finnor_os.s5_reservations WHERE tenant_id=$1 AND reservation_id=$2 FOR SHARE',[ctx.auth.tenantId,issued.reservation!.ref.id])).rows[0];
   const consumed=(await c.query('SELECT co.body,st.status,st.effect_ref FROM finnor_os.s5_consumptions co JOIN finnor_os.s5_consumption_states st USING(tenant_id,consumption_id) WHERE co.tenant_id=$1 AND co.consumption_id=$2 FOR SHARE',[ctx.auth.tenantId,refs.consumptionRef.id])).rows[0];
   if(!held||held.revision!==issued.reservation!.revision||held.revocation_reason||held.status==='RELEASED'||!consumed||consumed.status!=='INTENDED_PENDING_S6'||consumed.effect_ref!==null||!same(consumed.body.ref,refs.consumptionRef)||Date.now()>=Date.parse(body.deadline.authorityExpiresAt))throw denied();
   const count=(await c.query('SELECT count(*)::int n FROM finnor_os.s6_obligation_origins WHERE tenant_id=$1',[ctx.auth.tenantId])).rows[0].n;if(count>=256)throw new Error('S6_OBLIGATION_BOUND_REQUIRES_ACCOUNTABLE_ARCHIVAL');
-  await c.query("INSERT INTO finnor_os.domain_actions(id,tenant_id,action_type,payload,status,summary,initiated_by) VALUES($1,$2,'execute_contingent_intervention',$3::jsonb,'draft',$4,$5)",[actionId,ctx.auth.tenantId,JSON.stringify(effect.delta.values),'S4 exact intervention intent; method/IR/admission unresolved',actor(ctx)]);
+  await c.query("INSERT INTO finnor_os.domain_actions(id,tenant_id,action_type,payload,status,summary,initiated_by,work_id,plan_revision_id) VALUES($1,$2,'execute_contingent_intervention',$3::jsonb,'draft',$4,$5,$6,$7)",[actionId,ctx.auth.tenantId,JSON.stringify(effect.delta.values),'S4 exact intervention intent; method/IR/admission unresolved',actor(ctx),workLineage?.workId??null,workLineage?.planRevisionId??null]);
   await c.query("INSERT INTO finnor_os.business_effects(id,tenant_id,domain_action_id,semantic_hash,scope_hash,operation_class,effect,status) VALUES($1,$2,$3,$4,$5,'operational_change',$6::jsonb,'compiled')",[effectId,ctx.auth.tenantId,actionId,effect.semanticHash,effect.scopeHash,JSON.stringify(effect)]);
   await c.query('UPDATE finnor_os.domain_actions SET business_effect_id=$1 WHERE tenant_id=$2 AND id=$3',[effectId,ctx.auth.tenantId,actionId]);
   await c.query('INSERT INTO finnor_os.s6_obligation_origins(tenant_id,principal_id,obligation_id,consumption_id,effect_id,domain_action_id,input_digest,body) VALUES($1,$2,$3,$4,$5,$6,$7,$8::jsonb)',[ctx.auth.tenantId,actor(ctx),obligation.ref.id,refs.consumptionRef.id,effectId,actionId,inputDigest,JSON.stringify(obligation)]);
@@ -81,7 +92,7 @@ async function prepareOwnedObligation(ctx:PeMutationContext,input:unknown):Promi
  });
 }
 export async function readEnterpriseDurableObligation(ctx:PeMutationContext,value:unknown):Promise<DurableObligation>{
- const ref=ExperimentRefSchema.parse(value);return withTenantTransaction(ctx.auth.tenantId,{userId:actor(ctx)},async(_db,c)=>{await authorize(ctx,c);const row=(await c.query('SELECT o.body,e.effect,e.semantic_hash,e.domain_action_id FROM finnor_os.s6_obligation_origins o JOIN finnor_os.business_effects e ON e.tenant_id=o.tenant_id AND e.id=o.effect_id WHERE o.tenant_id=$1 AND o.principal_id=$2 AND o.obligation_id=$3',[ctx.auth.tenantId,actor(ctx),ref.id])).rows[0];if(!row||!same(row.body.ref,ref))throw denied();verifyBody(ctx,row.body);const effect=row.effect as BusinessEffectSet;if(effect.id!==row.body.effectRef.id||effect.semanticHash!==row.body.effectRef.semanticHash||effect.semanticHash!==row.semantic_hash||effect.source.domainActionId!==row.body.domainActionId||row.domain_action_id!==row.body.domainActionId||!same(effect.delta.values.intervention,row.body.intervention))throw denied();return immutableControl(row.body as DurableObligation);});
+ const ref=ExperimentRefSchema.parse(value);return withTenantTransaction(ctx.auth.tenantId,{userId:actor(ctx)},async(_db,c)=>{await authorize(ctx,c);const row=(await c.query('SELECT o.body,e.effect,e.semantic_hash,e.domain_action_id FROM finnor_os.s6_obligation_origins o JOIN finnor_os.business_effects e ON e.tenant_id=o.tenant_id AND e.id=o.effect_id WHERE o.tenant_id=$1 AND o.principal_id=$2 AND o.obligation_id=$3',[ctx.auth.tenantId,actor(ctx),ref.id])).rows[0];if(!row||!same(row.body.ref,ref))throw denied();verifyBody(ctx,row.body);const effect=row.effect as BusinessEffectSet;if(effect.id!==row.body.effectRef.id||effect.semanticHash!==row.body.effectRef.semanticHash||effect.semanticHash!==row.semantic_hash||effect.source.domainActionId!==row.body.domainActionId||row.domain_action_id!==row.body.domainActionId||!same(effect.delta.values.intervention,row.body.intervention)||row.body.workLineage&&(!same(effect.delta.values.workLineage,row.body.workLineage)||effect.source.workId!==row.body.workLineage.workId))throw denied();return immutableControl(row.body as DurableObligation);});
 }
 /** Resolve the authenticated native origin before obtaining its separate content commitment. */
 export async function readEnterpriseDurableObligationCommitment(ctx:PeMutationContext,value:unknown){

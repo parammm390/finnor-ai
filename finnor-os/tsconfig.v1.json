@@ -1,0 +1,16 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "allowImportingTsExtensions": true
+  },
+  "include": [
+    "packages/private-equity/src/bilateral-opportunities/**/*.mts",
+    "scripts/v1/**/*.mts"
+  ],
+  "exclude": [
+    "node_modules",
+    "**/node_modules",
+    "**/.next"
+  ]
+}

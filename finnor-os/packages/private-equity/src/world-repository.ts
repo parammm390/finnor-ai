@@ -64,14 +64,13 @@ export async function worldRowForUpdate(
   return row;
 }
 
-async function transitionWorld(ctx: PeMutationContext, input: {
+async function transitionWorldTx(client: PeClient, ctx: PeMutationContext, input: {
   lifecycle: WorldLifecycle;
   id: string;
   expectedVersion: number;
   targetState: string;
   updates?: Record<string, unknown>;
 }): Promise<PeMutationResult> {
-  return peTransaction(ctx, async (_db, client) => {
     const current = await worldRowForUpdate(client, ctx, input.lifecycle, input.id);
     if (current.state === input.targetState) {
       return { row: shapePeRow(current), changed: false, idempotent: true };
@@ -101,7 +100,9 @@ async function transitionWorld(ctx: PeMutationContext, input: {
     );
     if (!updated.rows[0]) throw new PeDomainError("PE_STALE_VERSION", "PE world entity changed concurrently");
     return { row: shapePeRow(updated.rows[0]), changed: true, idempotent: false };
-  });
+}
+async function transitionWorld(ctx: PeMutationContext, input: Parameters<typeof transitionWorldTx>[2]): Promise<PeMutationResult> {
+  return peTransaction(ctx, (_db, client) => transitionWorldTx(client, ctx, input));
 }
 
 export function creationValues(ctx: PeMutationContext): Record<string, unknown> {
@@ -161,16 +162,39 @@ export async function createOpportunity(ctx: PeMutationContext, input: {
   targetOrganizationId: string;
   name: string;
   summary?: string;
+  buyerEntityId?: string;
+}): Promise<PeMutationResult> {
+  return peTransaction(ctx, (_db, client) => createOpportunityTx(client, ctx, input));
+}
+/** Transaction seam owned by the canonical Opportunity lifecycle, not a V1 copy. */
+export async function createOpportunityTx(client: PeClient, ctx: PeMutationContext, input: {
+  id?: string; strategyId: string; targetOrganizationId: string; buyerEntityId?: string; name: string; summary?: string;
 }): Promise<PeMutationResult> {
   assertPeUuid(input.strategyId, "strategyId");
   assertPeUuid(input.targetOrganizationId, "targetOrganizationId");
   assertPeText(input.name, "Opportunity name");
-  return createWorldRow(ctx, "pe_opportunities", {
+  if (input.buyerEntityId) assertPeUuid(input.buyerEntityId, "buyerEntityId");
+  const row = await insertPeRow(client, "pe_opportunities", {
     id: input.id,
+    ...creationValues(ctx),
     strategy_id: input.strategyId,
     target_organization_id: input.targetOrganizationId,
+    ...(input.buyerEntityId ? { buyer_entity_id: input.buyerEntityId } : {}),
     name: input.name.trim(),
     summary: input.summary?.trim() || null,
+  });
+  return { row: shapePeRow(row), changed: true, idempotent: false };
+}
+export async function qualifyOpportunityTx(client: PeClient, ctx: PeMutationContext, opportunityId: string) {
+  const row = await worldRowForUpdate(client, ctx, "opportunity", opportunityId);
+  if (row.state === "identified") await transitionWorldTx(client, ctx, {
+    lifecycle: "opportunity", id: opportunityId, expectedVersion: Number(row.version),
+    targetState: "screening", updates: { screening_started_at: new Date() },
+  });
+  const current = await worldRowForUpdate(client, ctx, "opportunity", opportunityId);
+  return transitionWorldTx(client, ctx, {
+    lifecycle: "opportunity", id: opportunityId, expectedVersion: Number(current.version),
+    targetState: "qualified", updates: { qualified_at: new Date() },
   });
 }
 
@@ -269,6 +293,24 @@ export async function createInvestmentCase(ctx: PeMutationContext, input: {
     deal_id: input.dealId,
     title: input.title.trim(),
     summary: input.summary?.trim() || null,
+  });
+}
+export async function createOpportunityInvestmentCase(ctx:PeMutationContext,input:{id?:string;opportunityId:string;title:string;summary?:string}):Promise<PeMutationResult>{
+  assertPeUuid(input.opportunityId,"opportunityId");assertPeText(input.title,"InvestmentCase title");
+  return createWorldRow(ctx,"pe_investment_cases",{id:input.id,deal_id:null,opportunity_id:input.opportunityId,title:input.title.trim(),summary:input.summary?.trim()||null});
+}
+export async function attachInvestmentCaseToPromotedDeal(ctx:PeMutationContext,input:{investmentCaseId:string;dealId:string;expectedVersion:number}):Promise<PeMutationResult>{
+  assertPeUuid(input.dealId,"dealId");
+  return peTransaction(ctx,async(_db,c)=>{
+    const current=await worldRowForUpdate(c,ctx,"investment_case",input.investmentCaseId);
+    if(current.deal_id===input.dealId)return {row:shapePeRow(current),changed:false,idempotent:true};
+    if(current.version!==input.expectedVersion||current.deal_id!==null||!current.opportunity_id)throw new PeDomainError("PE_STALE_VERSION","Exact pre-LOI InvestmentCase revision required");
+    const deal=(await c.query("SELECT id FROM finnor_os.pe_deals WHERE tenant_id=$1 AND id=$2 AND opportunity_id=$3 AND status='active'",[ctx.auth.tenantId,input.dealId,current.opportunity_id])).rows[0];
+    if(!deal)throw new PeDomainError("PE_ENTITY_NOT_FOUND","Actual promoted signed-LOI Deal required");
+    await c.query("SELECT set_config('app.pe_case_transition','attach_signed_loi_deal',true)");
+    const row=(await c.query("UPDATE finnor_os.pe_investment_cases SET deal_id=$3,version=version+1,updated_at=now() WHERE tenant_id=$1 AND id=$2 AND version=$4 RETURNING *",[ctx.auth.tenantId,input.investmentCaseId,input.dealId,input.expectedVersion])).rows[0];
+    if(!row)throw new PeDomainError("PE_STALE_VERSION","InvestmentCase changed concurrently");
+    return {row:shapePeRow(row),changed:true,idempotent:false};
   });
 }
 

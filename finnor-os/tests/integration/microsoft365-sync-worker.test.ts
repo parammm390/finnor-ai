@@ -50,6 +50,37 @@ describe.skipIf(!available)("P2 Microsoft 365 sync/checkpoint runtime", () => {
   const replayScopeId = randomUUID();
   let admin: pg.Client;
 
+  it.each(["system:microsoft-graph-worker", "malformed-principal", ""])(
+    "denies capital-private evidence without UUID-cast errors for principal %s",
+    async principal => {
+      const sourceId = randomUUID();
+      await admin.query(
+        `INSERT INTO finnor_os.evidence_sources(id,scope,tenant_id,source_key,source_type,title,metadata)
+         VALUES($1,'tenant',$2,$3,'test_fixture','Capital-private negative control',$4::jsonb)`,
+        [sourceId, tenantId, `v4:system-actor-negative:${sourceId}`,
+          JSON.stringify({ capitalPrivateScope: { principalId: ownerId, workId: randomUUID() } })],
+      );
+      const app = new pg.Client({ connectionString: APP_URL });
+      await app.connect();
+      try {
+        await app.query("BEGIN");
+        await app.query("SELECT set_config('app.tenant_id',$1,true),set_config('app.user_id',$2,true)",
+          [tenantId, principal]);
+        const permitted = await app.query(
+          `SELECT finnor_os.request_authenticated_user_uuid() actor,
+             finnor_os.v4_evidence_permitted($1) permitted,
+             finnor_os.may_query_resource('pe_deal',$2) world_permitted`,
+          [sourceId, randomUUID()],
+        );
+        expect(permitted.rows).toEqual([{ actor: null, permitted: false, world_permitted: false }]);
+        expect((await app.query("SELECT id FROM finnor_os.evidence_sources WHERE id=$1", [sourceId])).rows).toEqual([]);
+      } finally {
+        await app.query("ROLLBACK");
+        await app.end();
+      }
+    },
+  );
+
   beforeAll(async () => {
     process.env.DATABASE_URL = SUPER_URL;
     process.env.AWS_REGION = "us-east-1";

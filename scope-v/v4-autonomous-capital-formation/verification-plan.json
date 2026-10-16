@@ -1,0 +1,79 @@
+{
+  "schema": "finnor.v4.verification-plan.v1",
+  "registeredBeforeImplementation": true,
+  "baseCommit": "517003a4396bc8101a90be4b425ee01de9446740",
+  "sourceCutRule": "Each run freezes changed source/runtime/schema/migration/checker hashes before execution. Material changes require an affected-case rerun with the original failure retained.",
+  "environment": "Owned loopback disposable PostgreSQL, real bearer-authenticated API, separate physical worker and independently administered provider/professional processes. No live business effects.",
+  "oracle": "Original mandate and signed independently administered provider/professional events plus separate integer/Fraction reconstruction. No producer expected-value imports.",
+  "assignmentUnit": "Original financing programme, related provider/facility events remain dependent",
+  "limits": {
+    "campaignWallSeconds": 5400,
+    "singleProgrammeWallSeconds": 3600,
+    "initialResponseSeconds": 30,
+    "humanSecondsPerEpisode": 900,
+    "computeDataIntegrationUSDPerEpisode": 100,
+    "aggregateMemoryBytes": 17179869184,
+    "ownedRuntimeTargetMemoryBytes": 4294967296,
+    "newDiskBytesCap": 2147483648,
+    "minimumFreeDiskKiB": 3145728,
+    "preflightFreeDiskKiB": 9247212,
+    "parallelExpensiveBuilds": false,
+    "retainedEvidenceBytesCap": 33554432,
+    "meterGaps": ["aggregate peer memory", "engineering labour", "attributable preparation", "idle capacity price", "cloud cost"]
+  },
+  "entryPoint": "Existing authenticated company-brain operation dispatch, canonical Work/intake, registered physical production queue/worker and existing Canvas",
+  "driver": "finnor-os/scripts/v4/run-local.mts (to implement), plus actual manifest-discovered static/build/generated checks",
+  "evidenceDirectory": "scope-v/v4-autonomous-capital-formation/evidence",
+  "operationalCorrections": [
+    {
+      "registrationPhase": "After the retained failure and owner-policy diagnosis; before the next campaign",
+      "affectedCase": "G",
+      "preservedFailure": "evidence/run-2026-10-12T14-03-47.906Z-795563ab/results.json",
+      "diagnosis": "Actual canonical queue uses a 15-second fixture physical lease then a 60-second first expired-lease recovery backoff for durably_effect_guarded jobs. The original 60-second post-kill observation window ended before that recovery was due; the original predicate remains failed.",
+      "nextObservationWindowMs": 100000,
+      "programmeDeadlineMsUnchanged": 600000,
+      "unchangedOwners": ["queue expired-lease policy", "original Work/input", "S5 grant", "mandate/authority validity", "original effect/operation identity"],
+      "noFreshBudgetNoPhysicalReplayNoSilentDeadlineExtension": true
+    },
+    {
+      "registrationPhase": "After retained mounted failures and native DOM/S1 projection diagnosis; before the next campaign",
+      "affectedCase": "F",
+      "preservedFailures": [
+        "evidence/run-2026-10-12T15-04-53.897Z-9228e5b2/results.json",
+        "evidence/run-2026-10-12T15-13-35.028Z-e1f34ee3/results.json"
+      ],
+      "diagnosis": "Embedded desktop pane capture times out despite exact native DOM and accessibility evidence. A native account-summary click does not expand under the pane's synthetic click command. The bounded Company Brain graph omits the company edge when its endpoint node is absent, while S1's current canonical assertion retains the owner targetOrganizationId.",
+      "captureBoundary": "Retain actual DOM and accessibility evidence for functional display and lifecycle. Screenshot/layout qualification remains unavailable; no synthetic capture or headless bypass.",
+      "implementationCorrection": "Resolve financing company from the same-root S1 canonical assertion, retain its owner provenance, expose original mandate root in the financing view and reject mismatched Work/root/programme before display. Exercise an additional actual same-Work wrong-root negative.",
+      "accountAction": "Click the actual account summary through DOM, observe its open state, then invoke the ordinary Sign out button.",
+      "observationDeadlineMsUnchanged": 180000,
+      "programmeDeadlineMsUnchanged": 600000,
+      "originalFailuresRetained": true
+    }
+  ],
+  "cases": [
+    { "id": "A", "predicate": "Authenticated approved mandate reaches independently checked real test-provider commitment and current API/Work/Canvas result", "owners": ["S1", "S4", "S5", "S6", "P1", "P7"], "defect": "Disconnected handler/artifact or self-issued receipt", "coverageGap": "No V4 exists on this base", "status": "NOT RUN" },
+    { "id": "B", "predicate": "120m need, 80m conditional debt, 40m indicative equity, 0 received, incomplete readiness; effective-undrawn revision still is not cash", "owners": ["S4", "S5", "S7"], "defect": "Headline total or principal credited as profit", "coverageGap": "M3 modelling is not financing evidence", "status": "NOT RUN" },
+    { "id": "C", "predicate": "Identity, act authority, title, expiry, committee/discretionary conditions, terms/entity substitution, forged/replayed and absent professional evidence rejected at intended boundary", "owners": ["S1", "S6", "S8"], "defect": "Cryptographic integrity conflated with commitment/legal truth", "coverageGap": "Generic source/mail readback has weaker domain", "status": "NOT RUN" },
+    { "id": "D", "predicate": "Actual concurrent canonical S5 facility capacity, aliases, syndication, collateral/cross-default/covenant/ownership/FX/timing conflicts", "owners": ["S5"], "defect": "Syntactic records manufacture capacity or unknown draws free it", "coverageGap": "V4 ingress and package binding are new", "status": "NOT RUN" },
+    { "id": "E", "predicate": "Exact negotiation inside grant; changed price/guarantee/exposure/recipient/activity needs current authority; refusals retain costs and bounded re-search/stop", "owners": ["S2", "S4", "S6"], "defect": "Successful contact widens authority or budget", "coverageGap": "Financing activity profile not owned by existing mail transport", "status": "NOT RUN" },
+    { "id": "F", "predicate": "All evidence reader/disclosure boundaries used by V4 enforce principal, purpose, consent, retention, provider and current Work scope; mounted switch/signout/refresh/reconnect/asynchronous responses clear private state", "owners": ["S1", "P4"], "defect": "Scoped finding denial hides raw/chunk/search/citation leak", "coverageGap": "V2 old checkpoint privacy proof not inherited", "status": "NOT RUN" },
+    { "id": "G", "predicate": "Physical kill after external acceptance preserves original S6 operation, cost and UNKNOWN; status-only reconciliation, no duplicate effect", "owners": ["S6", "P5"], "defect": "Response loss causes fresh economic request", "coverageGap": "New provider operation must reach actual queue claim fence", "status": "NOT RUN" },
+    { "id": "H", "predicate": "Contended owner-row revocation/expiry/withdrawal fences publication/dispatch; late funding retained under original obligation without current availability credit", "owners": ["S1", "S5", "S6", "P7"], "defect": "Historical state erased or stale exact approval accepted", "coverageGap": "New commitment currentness reader/writer path", "status": "NOT RUN" },
+    { "id": "I", "predicate": "Actual compatible fallback/child executes under unchanged programme/grant/deadline or explicit unsupported stop", "owners": ["S4", "S5"], "defect": "Fallback flag or new Work replenishes budget", "coverageGap": "V4 re-search controller is new", "status": "NOT RUN" },
+    { "id": "J", "predicate": "Same current commitment/capacity refs and conditions consumed by exact V3/S6 handoff; independent receiving predicate only for observed funding", "owners": ["S5", "S6", "S7"], "defect": "Indicative/expired/unknown or record write permits draw/close", "coverageGap": "No immutable qualified V3 handoff established", "status": "NOT RUN" },
+    { "id": "RUNTIME", "predicate": "Migration/reapplication/RLS/generated API/client/real worker/final installed checker/mixed old job compatibility and mounted surface", "owners": ["P1", "P3", "P5"], "defect": "Build succeeds without runnable installed assets", "coverageGap": "V4 adds schema and physical job contract", "status": "NOT RUN" },
+    { "id": "ON_OFF", "predicate": "Finite matched component diagnostic on same mandates, data, provider/professional access, adapters, capacities and grants", "owners": ["S7"], "defect": "Adapter or new introductions credited to orchestration", "coverageGap": "No V4 comparison exists", "status": "NOT RUN" },
+    { "id": "PROTECTED", "predicate": "40 blind mandates, >=2 separately qualified profiles, >=200 distinct authenticated events, all traps, >=95% frozen supported correctness and zero observed specified violations", "owners": ["S8"], "defect": "Development fixtures or duplicated events claimed blind admission", "coverageGap": "Independent sealed custody and current admission absent", "status": "BLOCKED" },
+    { "id": "JOINT_V1_V2_V3", "predicate": "Actual immutable compatible predecessor implementations exercise integrated liability/change/unknown/late funding sequence", "owners": ["V1", "V2", "V3"], "defect": "Synthetic peer events claimed completed delivery", "coverageGap": "Peers ongoing; immutable compatible qualified receipts missing", "status": "NOT RUN" },
+    { "id": "FIELD_H0_H1_H2", "predicate": "Admitted consented field comparison, preregistered material gain, mature independently reconciled S7 wealth and locked economic gates", "owners": ["S7", "S8"], "defect": "Raised capital or simulation called owner-value gain", "coverageGap": "Live authority, matched field assignment and mature outcomes not supplied", "status": "NOT RUN" }
+  ],
+  "rerunRules": [
+    "Run only the selected finite cases. Reuse unchanged owner evidence on an explicitly compatible cut.",
+    "Preserve every original failure/interruption and assignment deadline; do not silently extend a running programme.",
+    "A changed implementation, schema, checker or runtime requires the affected proof again with its reason recorded.",
+    "After two failures inspect actual process, SQL waits/blocking PIDs, queue lease/fence and observation method before another run.",
+    "Operational limit exhaustion is incomplete evidence, never PASS or a narrowed acceptance contract.",
+    "No indefinite coding wait for protected trials, 90-day operation or 36-month follow-up."
+  ]
+}

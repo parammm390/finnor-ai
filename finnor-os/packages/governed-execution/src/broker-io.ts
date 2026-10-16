@@ -8,11 +8,39 @@ import {LedgerFault,canonical} from './protocol.js';
 
 export const brokerHash=(value:unknown)=>createHash('sha256').update(canonical(value)).digest('hex');
 export const brokerBytesHash=(value:string|Buffer)=>createHash('sha256').update(value).digest('hex');
-export async function brokerPrivateFile(path:string,expectedDigest?:string){
+export async function brokerPrivateFile(path:string,expectedDigest?:string,maximumBytes=2*1024*1024){
  if(typeof path!=='string'||path.length<1||path.length>4096)throw new LedgerFault(503,'BROKER_FILE_PATH_INVALID');
- const fd=await open(path,constants.O_RDONLY|constants.O_NOFOLLOW);
- try{const st=await fd.stat();if(!st.isFile()||st.size>2*1024*1024||(st.mode&0o077)!==0||st.uid!==process.getuid?.())throw new LedgerFault(503,'BROKER_PRIVATE_FILE_UNSAFE');const bytes=await fd.readFile();if(expectedDigest!==undefined&&brokerBytesHash(bytes)!==expectedDigest)throw new LedgerFault(503,'BROKER_PRIVATE_FILE_CHANGED');return bytes;}
+ if(!Number.isSafeInteger(maximumBytes)||maximumBytes<1||maximumBytes>2*1024*1024)throw new LedgerFault(503,'BROKER_FILE_BOUND_INVALID');
+ const fd=await open(path,constants.O_RDONLY|constants.O_NOFOLLOW|constants.O_NONBLOCK);
+ try{
+  const st=await fd.stat({bigint:true});
+  if(!st.isFile()||st.size>BigInt(maximumBytes)||(st.mode&0o077n)!==0n||st.uid!==BigInt(process.getuid?.()??-1))throw new LedgerFault(503,'BROKER_PRIVATE_FILE_UNSAFE');
+  // A file can grow after stat. Read at most the original cap plus a sentinel
+  // byte from this descriptor; never reopen its pathname or buffer to EOF.
+  const buffer=Buffer.alloc(maximumBytes+1);let count=0;
+  while(count<buffer.length){const read=await fd.read(buffer,count,buffer.length-count,count);if(!read.bytesRead)break;count+=read.bytesRead;}
+  const after=await fd.stat({bigint:true});
+  if(count>maximumBytes||count!==Number(st.size)||['dev','ino','size','mode','uid','mtimeNs','ctimeNs'].some(key=>st[key as keyof typeof st]!==after[key as keyof typeof after]))throw new LedgerFault(503,'BROKER_PRIVATE_FILE_CHANGED');
+  const bytes=Buffer.from(buffer.subarray(0,count));
+  if(expectedDigest!==undefined&&brokerBytesHash(bytes)!==expectedDigest)throw new LedgerFault(503,'BROKER_PRIVATE_FILE_CHANGED');
+  return bytes;
+ }
  finally{await fd.close();}
+}
+
+/** Bound decoded actual bytes even when Content-Length is absent or untrusted. */
+export async function brokerResponseBytes(response:Response,maximumBytes:number):Promise<Buffer>{
+ if(!Number.isSafeInteger(maximumBytes)||maximumBytes<1||maximumBytes>1024*1024)throw new LedgerFault(503,'BROKER_RESPONSE_BOUND_INVALID');
+ const reader=response.body?.getReader();if(!reader)return Buffer.alloc(0);
+ const chunks:Buffer[]=[];let count=0;
+ try{
+  while(true){const chunk=await reader.read();if(chunk.done)break;
+   count+=chunk.value.byteLength;if(count>maximumBytes)throw new LedgerFault(503,'BROKER_RESPONSE_BOUND');
+   chunks.push(Buffer.from(chunk.value));
+  }
+  return Buffer.concat(chunks,count);
+ }catch(error){await reader.cancel().catch(()=>undefined);throw error;}
+ finally{reader.releaseLock();}
 }
 export async function brokerSourceDigests(paths:string[]){return Promise.all(paths.map(async path=>{const fd=await open(path,constants.O_RDONLY|constants.O_NOFOLLOW);try{const st=await fd.stat();if(!st.isFile()||st.size>2*1024*1024)throw new LedgerFault(503,'BROKER_SOURCE_UNAVAILABLE');return {path,sha256:brokerBytesHash(await fd.readFile())};}finally{await fd.close();}}));}
 export function brokerOrigin(value:unknown,domain:string){

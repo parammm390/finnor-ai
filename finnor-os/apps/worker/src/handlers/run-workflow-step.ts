@@ -67,7 +67,9 @@ export const runWorkflowStep: JobHandler = async (payload, jobContext) => {
   )).limit(1));
   if (!candidate) return;
   if(candidate.stepType==='execute_governed_obligation'){
-    await runGovernedObligationStep(tenantId,stepId,requestedGeneration,jobContext);return;
+    await runGovernedObligationStep(tenantId,stepId,requestedGeneration,jobContext);
+    await resumeBusinessControllers(tenantId,candidate.domainActionId);
+    return;
   }
   await recoverStaleSteps(tenantId);
   let eligibilityEvidence: Record<string, unknown> = {

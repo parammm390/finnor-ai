@@ -1,3 +1,4 @@
+import { historicalPeDatabase } from "../historical-pe-database";
 import { randomUUID } from "node:crypto";
 import pg from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
@@ -43,8 +44,9 @@ import {
 } from "@finnor/private-equity";
 import type { PeMutationContext } from "@finnor/private-equity";
 
-const SUPER_URL = process.env.DATABASE_URL ?? "postgres://finnor:finnor@localhost:5432/finnor";
-const APP_URL = SUPER_URL.replace(/\/\/[^@]+@/, "//finnor_app:finnor_app@");
+const SOURCE_URL = process.env.DATABASE_URL ?? "postgres://finnor:finnor@localhost:5432/finnor";
+let SUPER_URL = SOURCE_URL;
+let APP_URL = SUPER_URL.replace(/\/\/[^@]+@/, "//finnor_app:finnor_app@");
 
 async function canConnect(url: string): Promise<boolean> {
   const client = new pg.Client({ connectionString: url, connectionTimeoutMillis: 2_000 });
@@ -110,10 +112,12 @@ describe.skipIf(!databaseAvailable)("Private Equity Phase 2 canonical execution 
     provenance: { sourceSystem: "integration:pe2", createdBy: leadB },
   };
   let admin: pg.Client;
+  let historical: Awaited<ReturnType<typeof historicalPeDatabase>>;
 
   beforeAll(async () => {
+    historical = await historicalPeDatabase(SOURCE_URL);
+    SUPER_URL = historical.adminUrl; APP_URL = historical.appUrl;
     process.env.DATABASE_URL = SUPER_URL;
-    await migrate(SUPER_URL);
     admin = new pg.Client({ connectionString: SUPER_URL });
     await admin.connect();
     await admin.query("ALTER ROLE finnor_app LOGIN PASSWORD 'finnor_app'");
@@ -180,12 +184,13 @@ describe.skipIf(!databaseAvailable)("Private Equity Phase 2 canonical execution 
     await configureTenantVertical({ tenantId: tenantA, verticalKey: "private_equity", expectedVersion: 0, createdBy: leadA, sourceSystem: "integration:pe2" });
     await configureTenantVertical({ tenantId: tenantB, verticalKey: "private_equity", expectedVersion: 0, createdBy: leadB, sourceSystem: "integration:pe2" });
     await configureTenantVertical({ tenantId: retirementBoundaryTenant, verticalKey: "private_equity", expectedVersion: 0, createdBy: leadA, sourceSystem: "integration:pe2" });
-  });
+  }, 120_000);
 
   afterAll(async () => {
     await closePool();
     await admin?.end();
-    process.env.DATABASE_URL = SUPER_URL;
+    await historical?.close();
+    process.env.DATABASE_URL = SOURCE_URL;
   });
 
   async function allowedProof(tenantId: string, employeeId: string, capability: string, resourceType: string, resourceId: string) {
@@ -765,4 +770,22 @@ describe.skipIf(!databaseAvailable)("Private Equity Phase 2 canonical execution 
       event.entityId === condition.row.id && ["pe_closing_condition_satisfied", "pe_closing_condition_failed"].includes(String(event.eventType)));
     expect(transitions).toHaveLength(1);
   });
+  it("requires independent V3 acceptance after upgrading the historical execution graph", async () => {
+    const deal = await createDeal(ctxA, {
+      targetOrganizationId: targetA, name: "Post-upgrade independent close required",
+      dealLeadEmployeeId: leadA, signedLoiAt: new Date("2026-09-04T12:00:00Z"),
+      targetClosingAt: new Date("2026-10-01T12:00:00Z"),
+    });
+    expect((await evaluateDealCloseEligibility(ctxA, String(deal.row.id))).eligible).toBe(true);
+    await closePool();
+    await migrate(SUPER_URL);
+    await admin.query("ALTER ROLE finnor_app LOGIN PASSWORD 'finnor_app'");
+    const eligibility = await evaluateDealCloseEligibility(ctxA, String(deal.row.id));
+    expect(eligibility).toMatchObject({ eligible: false,
+      v3: { independentlyAccepted: false, reasons: ["ACCEPTED_CLOSING_SPEC_REQUIRED"] } });
+    await expect(declareDealClosed(ctxA, { dealId: String(deal.row.id) }))
+      .rejects.toBeInstanceOf(DealCloseRejectedError);
+    expect((await getDeal(ctxA, String(deal.row.id))).status).toBe("active");
+  }, 120_000);
+
 });

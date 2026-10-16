@@ -5,6 +5,8 @@
   },
   "include": [
     "packages/**/*.ts",
+    "packages/epistemic-runtime/src/closing-checker-service.mts",
+    "packages/governed-execution/src/closing-provider-broker.mts",
     "apps/**/*.ts",
     "apps/**/*.tsx",
     "tests/**/*.ts",

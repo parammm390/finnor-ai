@@ -18,6 +18,7 @@ function dereference(value, seen = new Set()) {
 }
 const words = (s) => s.replace(/([a-z])([A-Z])/g, "$1 $2").replaceAll(/[_-]/g, " ")
 function group(c) {
+  if (c.family === "closing" && c.classification !== "READ") return "closing-programmes"
   if (c.routePattern === "artifacts") return "artifact-creation"
   if (c.routePattern === "artifact-templates" || c.family === "artifact" && /\/(bindings|lineage|recalculate|publish)$/.test(c.routePattern)) return "artifact-records"
   if (c.family === "digital-twin") return "institutional-records"
@@ -62,6 +63,10 @@ for (const c of manifest.capabilities) {
     if ((c.family === "digital-twin" || family === "closing-decisions") && typeof selector !== "string") throw new Error("Every discriminated control needs its exact selector")
     const suffix = c.routePattern.split("/").filter((part) => !part.startsWith(":"))
     let title = words(selector ?? suffix.slice(-2).join(" "))
+    if (c.routePattern === "closing/submit") title = "Submit legally accepted ClosingSpec"
+    if (c.routePattern === "closing/observe") title = "Record independently signed closing evidence"
+    if (c.routePattern === "closing/stop") title = "Stop future closing effects, retain responsibility"
+    if (c.routePattern === "closing/resume") title = "Continue under the original closing grant"
     if (c.routePattern === "operating-profile") title = "Edit operating profile"
     if (c.routePattern === "user-prefs") title = c.method === "DELETE" ? "Reset my preferences" : "Edit my preferences"
     if (c.routePattern === "workforce/profiles") title = "Configure a specialist profile"

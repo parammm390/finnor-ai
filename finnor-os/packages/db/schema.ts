@@ -1128,6 +1128,20 @@ export const workQueryExecutions = pgTable(
 // Upgrade 9: one governed controller per durable Work objective. Business effects
 // remain in domain_actions/workflows/operations/receipts; this row only owns the
 // recoverable loop cursor and explicit autonomy budgets.
+export const workProgrammeOccupations = pgTable(
+  "work_programme_occupations",
+  {
+    tenantId: uuid("tenant_id").notNull().references(() => tenants.id),
+    workId: uuid("work_id").notNull().references(() => works.id),
+    owner: text("owner").notNull(),
+    programmeId: uuid("programme_id").notNull(),
+    status: text("status", { enum: ["PROGRESS", "WAITING", "BLOCKED", "STOPPED", "RECONCILING", "FAILED", "COMPLETE"] }).notNull(),
+    revision: integer("revision").notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.tenantId, t.owner, t.programmeId] })],
+);
+
 export const workObjectiveLoops = pgTable(
   "work_objective_loops",
   {
@@ -5187,6 +5201,7 @@ export const peOpportunities = pgTable(
     tenantId: uuid("tenant_id").notNull().references(() => tenants.id),
     strategyId: uuid("strategy_id").notNull().references(() => peStrategies.id),
     targetOrganizationId: uuid("target_organization_id").notNull().references(() => externalOrganizations.id),
+    buyerEntityId: uuid("buyer_entity_id").references(() => externalOrganizations.id),
     name: text("name").notNull(),
     summary: text("summary"),
     state: text("state", { enum: ["identified", "screening", "qualified", "promoted", "rejected"] }).notNull().default("identified"),
@@ -5215,7 +5230,8 @@ export const peInvestmentCases = pgTable(
   {
     id: uuid("id").primaryKey().defaultRandom(),
     tenantId: uuid("tenant_id").notNull().references(() => tenants.id),
-    dealId: uuid("deal_id").notNull(),
+    dealId: uuid("deal_id"),
+    opportunityId: uuid("opportunity_id"),
     title: text("title").notNull(),
     summary: text("summary"),
     state: text("state", { enum: ["draft", "active", "superseded", "archived"] }).notNull().default("draft"),
@@ -5231,9 +5247,11 @@ export const peInvestmentCases = pgTable(
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
+    check("investment_case_real_anchor", sql`${t.dealId} IS NOT NULL OR ${t.opportunityId} IS NOT NULL`),
     unique("pe_investment_cases_tenant_deal_id_key").on(t.tenantId, t.dealId, t.id),
     unique("pe_investment_cases_source_identity_key").on(t.tenantId, t.sourceSystem, t.externalId),
     uniqueIndex("pe_investment_cases_one_active_idx").on(t.dealId).where(sql`${t.state}='active'`),
+    uniqueIndex("investment_case_one_active_opportunity").on(t.opportunityId).where(sql`${t.state}='active' AND ${t.opportunityId} IS NOT NULL`),
     index("pe_investment_cases_tenant_deal_state_idx").on(t.tenantId, t.dealId, t.state, t.createdAt, t.id),
   ],
 );
@@ -5598,3 +5616,86 @@ export const peFactCoverage = pgTable("pe_fact_coverage", {
   revision: integer("revision").notNull().default(1), supersedesCoverageId: uuid("supersedes_coverage_id"),
   supersededAt: timestamp("superseded_at", { withTimezone: true }), ...peTwinEvidenceColumns(), observedAt: timestamp("observed_at", { withTimezone: true }),
 });
+
+// V5 custody contains only control/projection evidence. Original institutional
+// rights, financial quantities and effects remain in their native owner tables.
+const v5Tenant = () => uuid("tenant_id").notNull().references(() => tenants.id);
+const v5Actor = () => uuid("principal_id").notNull().references(() => users.id);
+const v5Created = () => timestamp("created_at", { withTimezone: true }).notNull().default(sql`clock_timestamp()`);
+const v5SessionIdentity = () => ({ tenantId: v5Tenant(), sessionId: uuid("session_id").notNull() });
+export const authDeliverySessions = pgTable("auth_delivery_sessions", {
+  tenantId: v5Tenant(), sessionId: uuid("session_id").notNull(), principalId: v5Actor(), subject: text("subject").notNull(),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(), revokedAt: timestamp("revoked_at", { withTimezone: true }), createdAt: v5Created(),
+}, t => [primaryKey({ columns: [t.tenantId, t.sessionId] })]);
+export const employeeActorProfiles = pgTable("employee_actor_profiles", {
+  tenantId: v5Tenant(), principalId: v5Actor(), actorKind: text("actor_kind", { enum: ["HUMAN", "AGENT", "SERVICE"] }).notNull(),
+  delegatedBy: uuid("delegated_by").references(() => users.id), authorityAssignmentId: uuid("authority_assignment_id").references(() => employeeRoleAssignments.id),
+  delegationId: uuid("delegation_id").references(() => delegations.id), version: integer("version").notNull().default(1),
+}, t => [primaryKey({ columns: [t.tenantId, t.principalId] })]);
+export const v5Sessions = pgTable("v5_sessions", {
+  id: uuid("id").primaryKey().defaultRandom(), tenantId: v5Tenant(), workId: uuid("work_id").notNull().references(() => works.id),
+  root: jsonb("root").notNull(), focus: jsonb("focus").notNull(), createdBy: uuid("created_by").notNull().references(() => users.id), createdAt: v5Created(),
+}, t => [unique().on(t.tenantId, t.id), unique().on(t.tenantId, t.workId, t.root, t.focus)]);
+export const v5Participants = pgTable("v5_participants", {
+  ...v5SessionIdentity(), principalId: v5Actor(), deliverySessionId: uuid("delivery_session_id").notNull(),
+  joinedAt: timestamp("joined_at", { withTimezone: true }).notNull().default(sql`clock_timestamp()`),
+}, t => [primaryKey({ columns: [t.tenantId, t.sessionId, t.principalId, t.deliverySessionId] })]);
+export const v5Branches = pgTable("v5_branches", {
+  id: uuid("id").primaryKey().defaultRandom(), ...v5SessionIdentity(), principalId: v5Actor(), parentId: uuid("parent_id"),
+  visibility: text("visibility", { enum: ["PRIVATE", "SHARED"] }).notNull(), currentVisibility: text("current_visibility", { enum: ["PRIVATE", "SHARED"] }).notNull().default("PRIVATE"),
+  intent: jsonb("intent").notNull(), ownerVector: jsonb("owner_vector").notNull(), resources: jsonb("resources").notNull(),
+  intentDigest: text("intent_digest").notNull(), reason: text("reason"), createdAt: v5Created(),
+}, t => [unique().on(t.tenantId, t.id), unique().on(t.tenantId, t.sessionId, t.id), index("v5_branch_session").on(t.tenantId, t.sessionId, t.createdAt, t.id)]);
+export const v5ConsequenceGrants = pgTable("v5_consequence_grants", {
+  ...v5SessionIdentity(), branchId: uuid("branch_id").notNull(), principalId: v5Actor(), grantBody: jsonb("grant_body").notNull(),
+}, t => [primaryKey({ columns: [t.tenantId, t.branchId] })]);
+export const v5BranchCustody = pgTable("v5_branch_custody", {
+  ...v5SessionIdentity(), branchId: uuid("branch_id").notNull(), principalId: v5Actor(),
+  intent: jsonb("intent").notNull(), intentDigest: text("intent_digest").notNull(), ownerVector: jsonb("owner_vector").notNull(),
+}, t => [primaryKey({ columns: [t.tenantId, t.branchId] })]);
+export const v5Evaluations = pgTable("v5_evaluations", {
+  id: uuid("id").primaryKey().defaultRandom(), ...v5SessionIdentity(), principalId: v5Actor(), branchId: uuid("branch_id").notNull(),
+  requestDigest: text("request_digest").notNull(), ownerVector: jsonb("owner_vector").notNull(), status: text("status").notNull(),
+  result: jsonb("result"), jobId: uuid("job_id"), createdAt: v5Created(), updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().default(sql`clock_timestamp()`),
+}, t => [unique().on(t.tenantId, t.id), unique().on(t.tenantId, t.sessionId, t.branchId, t.id), index("v5_evaluation_branch").on(t.tenantId, t.branchId, t.createdAt, t.id)]);
+export const v5EvaluationCustody = pgTable("v5_evaluation_custody", {
+  ...v5SessionIdentity(), branchId: uuid("branch_id").notNull(), evaluationId: uuid("evaluation_id").notNull(), principalId: v5Actor(),
+  deliverySessionId: uuid("delivery_session_id").notNull(), originalBudget: jsonb("original_budget"), resultPrivate: jsonb("result_private"),
+  ownerVector: jsonb("owner_vector").notNull(), costRefs: jsonb("cost_refs").notNull().default([]), charged: boolean("charged").notNull().default(false),
+  claimToken: uuid("claim_token"), claimFence: bigint("claim_fence", { mode: "bigint" }),
+}, t => [primaryKey({ columns: [t.tenantId, t.evaluationId] })]);
+export const v5Proposals = pgTable("v5_proposals", {
+  id: uuid("id").primaryKey().defaultRandom(), ...v5SessionIdentity(), principalId: v5Actor(), branchId: uuid("branch_id").notNull(),
+  evaluationId: uuid("evaluation_id").notNull(), proposalDigest: text("proposal_digest").notNull(), requestDigest: text("request_digest").notNull(),
+  ownerVector: jsonb("owner_vector").notNull(), nativeRequest: jsonb("native_request").notNull(), authorityRequest: jsonb("authority_request").notNull(),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(), createdAt: v5Created(),
+}, t => [unique().on(t.tenantId, t.id), unique().on(t.tenantId, t.sessionId, t.id), index("v5_proposal_session").on(t.tenantId, t.sessionId, t.createdAt, t.id)]);
+export const v5ProposalCustody = pgTable("v5_proposal_custody", {
+  ...v5SessionIdentity(), proposalId: uuid("proposal_id").notNull(), principalId: v5Actor(), nativeRequest: jsonb("native_request").notNull(),
+  ownerVector: jsonb("owner_vector").notNull(), proposalDigest: text("proposal_digest").notNull(), requestDigest: text("request_digest").notNull(),
+}, t => [primaryKey({ columns: [t.tenantId, t.proposalId] })]);
+export const v5ApprovalRefs = pgTable("v5_approval_refs", {
+  ...v5SessionIdentity(), proposalId: uuid("proposal_id").notNull(), principalId: v5Actor(),
+  decisionId: uuid("decision_id").notNull().references(() => authorityDecisions.id), createdAt: v5Created(),
+}, t => [primaryKey({ columns: [t.tenantId, t.proposalId, t.decisionId] })]);
+export const v5DispatchRefs = pgTable("v5_dispatch_refs", {
+  ...v5SessionIdentity(), proposalId: uuid("proposal_id").notNull(), principalId: v5Actor(), status: text("status").notNull(),
+  refs: jsonb("refs").notNull().default({}), reason: text("reason"), createdAt: v5Created(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().default(sql`clock_timestamp()`),
+}, t => [primaryKey({ columns: [t.tenantId, t.proposalId] })]);
+export const v5DispatchCustody = pgTable("v5_dispatch_custody", {
+  ...v5SessionIdentity(), proposalId: uuid("proposal_id").notNull(), principalId: v5Actor(), refs: jsonb("refs").notNull().default({}),
+}, t => [primaryKey({ columns: [t.tenantId, t.proposalId] })]);
+export const v5History = pgTable("v5_history", {
+  id: bigint("id", { mode: "bigint" }).primaryKey().generatedAlwaysAsIdentity(), ...v5SessionIdentity(), principalId: v5Actor(), branchId: uuid("branch_id"),
+  visibility: text("visibility").notNull(), resources: jsonb("resources").notNull(), kind: text("kind").notNull(), body: jsonb("body").notNull(), createdAt: v5Created(),
+}, t => [index("v5_history_session").on(t.tenantId, t.sessionId, t.createdAt, t.id)]);
+export const v5Commands = pgTable("v5_commands", {
+  ...v5SessionIdentity(), principalId: v5Actor(), operation: text("operation").notNull(), idempotencyKey: text("idempotency_key").notNull(),
+  requestDigest: text("request_digest").notNull(), result: jsonb("result").notNull(), createdAt: v5Created(),
+}, t => [primaryKey({ columns: [t.tenantId, t.principalId, t.operation, t.idempotencyKey] })]);
+export const v5Cursors = pgTable("v5_cursors", {
+  id: uuid("id").primaryKey().defaultRandom(), ...v5SessionIdentity(), principalId: v5Actor(), deliverySessionId: uuid("delivery_session_id").notNull(),
+  projectionDigest: text("projection_digest").notNull(), ownerVectorDigest: text("owner_vector_digest").notNull(), ownerVectors: jsonb("owner_vectors").notNull().default({}),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+}, t => [index("v5_cursor_delivery").on(t.tenantId, t.principalId, t.deliverySessionId, t.expiresAt)]);
