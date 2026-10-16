@@ -242,6 +242,35 @@ async function publishedProgramTarget(f: any, workId: string) {
   await artifact('positive/original-m3-publication.json', { input, accepted, current });
   assert(current.program, JSON.stringify(current));
   const candidate = current.program.candidates.find((c: any) => c.structure === 'INCUMBENT' && c.finitePolicyComplete);
+  if (!candidate?.policyRef) {
+    // Separate capability diagnostic, never an owner retry or acceptance substitute.
+    const { launchIsolatedNodeExecutor } = await import('../../packages/governed-execution/src/executor');
+    const observed = await launchIsolatedNodeExecutor({ script: 'console.log(JSON.stringify({value:6*7}))', input: {}, wallTimeMs: 10000 })
+      .catch(error => {
+        const processFailures = [];
+        for (let cause: any = error; cause && processFailures.length < 8; cause = cause.cause)
+          processFailures.push({ exitCode: cause.status ?? cause.exitCode ?? null,
+            signal: cause.signal ?? null, code: cause.code ?? null,
+            stdout: cause.stdout == null ? null : String(cause.stdout).slice(0,4096),
+            stderr: cause.stderr == null ? null : String(cause.stderr).slice(0,4096),
+            profile: cause.profile ?? null });
+        return { diagnosticError: failureDetails(error), processFailures,
+          absentFields: 'null means unavailable before the adapter returned a process result' };
+      });
+    await artifact('positive/isolated-constructor-diagnostic.json', {
+      schema: 'finnor.r3.m3-isolation-diagnostic.v1', observed,
+      supervisor: { platform: process.platform, architecture: process.arch },
+      linuxKernel: process.platform === 'linux' ? {
+        processSecurity: (await readFile('/proc/self/status','utf8')).split('\n')
+          .filter(line => /^(?:Seccomp|NoNewPrivs|CapEff|Seccomp_filters):/.test(line)),
+        cpuInfoFields: (await readFile('/proc/cpuinfo','utf8')).split('\n')
+          .map(line => line.split(':')[0]?.trim()).filter(name => ['vendor_id','CPU architecture','CPU implementer','flags','Features'].includes(name!))
+          .filter((name,index,all) => all.indexOf(name) === index),
+      } : null,
+      ownerAcceptanceEstablished: false, originalOwnerResultChanged: false,
+      scope: 'SEPARATE_CREDENTIAL_FREE_ARITHMETIC_CAPABILITY_NOT_ORIGINAL_GRANT',
+    });
+  }
   assert(candidate && candidate.policyRef, JSON.stringify(current));
   const target = { grammar: 'r3-m3-report-extension-v1' as const, queryId: current.queryId,
     programRef: current.program.ref, candidateDigest: candidate.semanticDigest, policyRef: candidate.policyRef };

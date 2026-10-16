@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import test from "node:test"
-import { execFileSync } from "node:child_process"
+import { execFileSync, spawnSync } from "node:child_process"
 import { cpSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, symlinkSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { dirname, join } from "node:path"
@@ -18,7 +18,7 @@ test.after(() => {
   if (!evidence) return
   const files = ["scripts/release/ci-process.e2e.test.mjs", "scripts/release/pr-verdict-policy.mjs", "scripts/release/ci-process-policy.mjs", "scripts/release/worktree-state.mjs", ".github/workflows/production-release.yml"]
   const inputs = Object.fromEntries(files.map(path => [path, createHash("sha256").update(readFileSync(join(root, path))).digest("hex")]))
-  const receipt = { schema: "finnor.ci-process-e2e.v1", status: records.length === 7 ? "PASS" : "FAIL", startedAt, finishedAt: new Date().toISOString(), inputs, records, rerun: "FINNOR_CI_PROCESS_EVIDENCE_DIR=/absolute/new/evidence node --test scripts/release/ci-process.e2e.test.mjs", applicationTestsExecuted: false }
+  const receipt = { schema: "finnor.ci-process-e2e.v1", status: records.length === 8 ? "PASS" : "FAIL", startedAt, finishedAt: new Date().toISOString(), inputs, records, rerun: "FINNOR_CI_PROCESS_EVIDENCE_DIR=/absolute/new/evidence node --test scripts/release/ci-process.e2e.test.mjs", applicationTestsExecuted: false }
   mkdirSync(evidence, { recursive: true })
   writeFileSync(join(evidence, "process-e2e.json"), `${JSON.stringify(receipt, null, 2)}\n`)
 })
@@ -38,6 +38,39 @@ test("actual release sessions fit STS and cover CloudFormation ECS replacement h
   assert.deepEqual(cleanup[0].Condition, { StringEquals: { "aws:CalledViaFirst": "cloudformation.amazonaws.com", "aws:CalledViaLast": "cloudformation.amazonaws.com" } })
   assert.ok(!actions.some(action => /^(iam:(?:Put|Create|Attach|Update|Delete)|ec2:(?!Describe)|ecs:\*)/.test(action)))
   records.push({ case: "actual-release-session-handler-closure", sessionLengths: serialized.map(policy => policy.length), requiredActions: required, directDeregistrationNotGranted: true, actualCloudFormationExecutionProven: false })
+})
+
+test("actual image-owner shell collects independent R4 evidence and fails closed", () => {
+  const smoke = readFileSync(join(root, "scripts/release/smoke-worker-image.sh"), "utf8")
+  const start = smoke.indexOf("owner_failures=0\n(\n")
+  assert.ok(start > 0)
+  const scenarios = ["pass", "r3-case-fails", "r3-case-omitted", "r3-process-fails", "r4-process-fails"]
+  const observations = []
+  for (const scenario of scenarios) {
+    const directory = mkdtempSync(join(tmpdir(), "finnor-image-owner-process-"))
+    const put = (path, value) => { const target = join(directory, path); mkdirSync(dirname(target), { recursive: true }); writeFileSync(target, JSON.stringify(value)) }
+    const commit = "a".repeat(40), tree = "c".repeat(40), image = `sha256:${"b".repeat(64)}`
+    try {
+      put("finnor-os/scripts/r3/run-owner-e2e.mts", {})
+      put("finnor-os/scripts/r4/run-integrated.mts", {})
+      const cases = ["base-local-migration-upgrade-restart", "authenticated-owner-positive", "queued-original-and-r3-physical-restart"].map(id => ({ id, status: "PASS" }))
+      if (scenario === "r3-case-fails") cases[1].status = "FAIL"
+      if (scenario === "r3-case-omitted") cases.pop()
+      put("evidence/linux-r3-runtime/installed/results.json", { results: [{ status: "PASS" }] })
+      put("evidence/linux-r3-runtime/owner/results.json", { cases, qualification: "SYNTHETIC_ORIGINALS_REAL_HTTP_AUTH_SQL_WORKER_ORDINARY_OWNERS", protectedAgreement: false, protectedEffect: false })
+      put("evidence/linux-r4-runtime/owner/results.json", { results: Array.from({ length: 5 }, () => ({ status: "PASS" })) })
+      put("evidence/linux-r4-runtime/owner/freeze.json", { packagedSource: true, head: commit, tree, imageId: image })
+      // Only the container transport is substituted. The checked-in shell,
+      // subprocess exits, JSON acceptance and independent sequencing are real.
+      const prefix = `set -euo pipefail\nevidence=${JSON.stringify(join(directory, "evidence"))}\nimage=fixture-image\nimage_id=${image}\nsource_tree=${tree}\ndocker() {\ncase "$*" in\n*scripts/r3/run-owner-e2e.mts*) if [[ "$SCENARIO" == r3-process-fails ]]; then return 23; fi ;;\n*scripts/r4/run-integrated.mts*) echo R4_REACHED >> "$evidence/transport.log"; if [[ "$SCENARIO" == r4-process-fails ]]; then return 24; fi ;;\nesac\nreturn 0\n}\n`
+      const run = spawnSync("bash", ["-c", prefix + smoke.slice(start)], { cwd: directory, env: { ...process.env, SCENARIO: scenario, FINNOR_COMMIT_SHA: commit, FINNOR_BUILD_ID: "finnor-aaaaaaaaaaaa", FINNOR_VERSION: "0.1.0+aaaaaaaaaaaa" }, encoding: "utf8", timeout: 10000 })
+      assert.equal(run.status, scenario === "pass" ? 0 : 1, `${scenario}: ${run.stderr}`)
+      assert.match(readFileSync(join(directory, "evidence/transport.log"), "utf8"), /R4_REACHED/)
+      assert.doesNotMatch(run.stdout, /INVALID_CONTINUATION/)
+      observations.push({ scenario, exitCode: run.status, independentR4Reached: true, output: run.stderr })
+    } finally { rmSync(directory, { recursive: true, force: true }) }
+  }
+  records.push({ case: "actual-image-owner-process-collection", smokeSha256: createHash("sha256").update(smoke).digest("hex"), observations, dockerTransportSubstituted: true, actualLinuxImageProven: false })
 })
 
 test("actual Git PR diff excludes base drift and retains deleted and renamed code paths", () => {

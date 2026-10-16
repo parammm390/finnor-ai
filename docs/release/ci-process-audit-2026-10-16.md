@@ -596,3 +596,48 @@ After the final policy refinement, all 80 release fixtures pass, as do mutation
 inventory (19 mechanisms, seven governed writers, no break-glass), all generated
 contracts, seven process E2E scenarios and the relocated actual-worker proof.
 This is local repair evidence, not deployed-owner or Linux scientific execution.
+
+### Batch 168: isolated M3 dependency and missing independent diagnostics
+
+All applicable jobs except the worker image passed on 330b0a31. R3 installed
+runtime, migration/replay and queued original/R3 physical restart now pass. The
+positive case reaches its real M3 programme dependency, which rejects the emitted
+constructor with ISOLATED_ECONOMIC_MODULE_REFUSED: EXITED. The existing M3 error
+does not retain exit code/stderr; it cannot establish a namespace, ABI or source
+cause. R4 is still unobserved because the parent shell stops at the R3 aggregate.
+Artifact 12028954224 (1447472 bytes) was downloaded, its paths checked and SHA256
+2c43639260bea328162d2998cd625d03de08b64663c0c2ea1c18ec7dc80d194e verified.
+
+Before changing this diagnostic boundary, register failure modes: a rejected M3
+constructor must still reject the positive case; the same isolated adapter must
+retain a separate credential-free arithmetic probe's exit/stdout/stderr/profile;
+probe success must not stand in for M3 acceptance; a failed R3 subprocess must
+not prevent independent R4 execution; missing preregistered R3 cases must fail;
+the final image receipt and shell exit must fail on any owner failure. No sandbox,
+seccomp, namespace, privilege or production admission setting may be weakened.
+
+The same three R3 cases pass on the locked macOS runtime and candidate source,
+including the original M3 publication; this does not clear the Linux refusal.
+The first local comparison refused a symbolic /tmp ancestor in its private store;
+retain that failure and use a new canonical scratch/evidence root, without changing
+the store's custody checks. The mounted source proof also passes with all 243
+observed cells compared, reload, delayed reply/Work switch, foreign tenant and
+source-revision clearing; production/locked-Linux acceptance remains separate.
+CodeRabbit raised one valid diagnostic issue: rejected adapter invocations could
+lose nested process stderr. The probe now retains available process fields across
+the bounded cause chain; unavailable fields are explicitly null, not fabricated.
+The shared image shell now collects R3 and R4 serially in separately fail-fast
+subprocesses, then returns failure if either failed. Required R3 case omissions
+also fail. Five actual-shell process scenarios exercise success, failed/omitted R3
+cases, R3 process refusal and R4 process refusal; Docker transport is substituted,
+so this is process-control evidence, not a Linux runtime pass. The first fixture
+omitted release build/version variables; the corrected process fixture retains
+that diagnosed failure separately. No production deployment has occurred.
+
+Final backend typecheck, eight process E2E cases, relocated worker proof, root
+lint, pinned actionlint/Bash and whitespace checks pass. Follow-up CodeRabbit
+review raised zero issues. This publication is a diagnosed Linux-boundary
+investigation, not a claim that the M3 refusal is fixed or a production attempt.
+The separate probe records observed process security and CPU-info field names,
+not hardware identifiers. Its arithmetic result cannot promote original M3/R3
+acceptance. All original failed artifacts remain retained.

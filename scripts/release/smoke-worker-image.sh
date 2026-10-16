@@ -203,6 +203,8 @@ NODE
 # R3 handoff: owner HTTP/auth, durable queue/worker, physical restart and
 # unchanged job/deadline identity. Browser evidence remains a separate Work
 # surface gate because this minimal worker image has no browser binary.
+owner_failures=0
+(
 if [[ -f finnor-os/scripts/r3/run-owner-e2e.mts ]]; then
   mkdir -p "$evidence/linux-r3-runtime"
   chmod 2770 "$evidence/linux-r3-runtime"
@@ -255,11 +257,14 @@ const fs = require("node:fs");
 const path = require("node:path");
 const installed = JSON.parse(fs.readFileSync(process.argv[2], "utf8"));
 const owner = JSON.parse(fs.readFileSync(process.argv[3], "utf8"));
+const required = ['base-local-migration-upgrade-restart', 'authenticated-owner-positive', 'queued-original-and-r3-physical-restart'];
 if (!installed.results?.length || installed.results.some(r => r.status !== "PASS") ||
     !owner.cases?.length || owner.cases.some(r => r.status !== "PASS") ||
+    required.some(id => !owner.cases.some(r => r.id === id && r.status === 'PASS')) ||
     owner.qualification !== "SYNTHETIC_ORIGINALS_REAL_HTTP_AUTH_SQL_WORKER_ORDINARY_OWNERS" ||
     owner.protectedAgreement !== false || owner.protectedEffect !== false) {
   console.error("::error::R3 installed runtime/owner proof failed; inspect retained linux-r3-runtime results.json files");
+  console.error(JSON.stringify({ cases: owner.cases?.map(r => ({id:r.id,status:r.status})), missing: required.filter(id => !owner.cases?.some(r => r.id === id)) }));
   process.exit(1);
 }
 fs.writeFileSync(path.join(process.argv[6], "receipt.json"), JSON.stringify({
@@ -271,9 +276,13 @@ fs.writeFileSync(path.join(process.argv[6], "receipt.json"), JSON.stringify({
 }, null, 2) + "\n");
 NODE
 fi
+) &
+owner_pid=$!
+if wait "$owner_pid"; then :; else owner_failures=1; fi
 
 # R4 must execute its installed separate runtime and real owners too. Its
 # absence on the isolated R1 cut is not permission to skip it on joined cuts.
+(
 if [[ -f finnor-os/scripts/r4/run-integrated.mts ]]; then
   mkdir -p "$evidence/linux-r4-runtime"
   chmod 2770 "$evidence/linux-r4-runtime"
@@ -313,3 +322,7 @@ if (receipt.results.length !== 5 || receipt.results.some(r => r.status !== "PASS
 NODE
   cp "$evidence/linux-r4-runtime/owner/results.json" "$evidence/linux-r4-runtime/results.json"
 fi
+) &
+owner_pid=$!
+if wait "$owner_pid"; then :; else owner_failures=1; fi
+exit "$owner_failures"
