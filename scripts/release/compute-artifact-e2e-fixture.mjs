@@ -18,7 +18,7 @@ export function createFixture(t, scenario = "valid") {
   const repo = join(root, "repo")
   const scripts = join(repo, "scripts/release")
   mkdirSync(scripts, { recursive: true })
-  for (const name of ["deploy-production.mjs", "deploy-aws-compute-plane.mjs", "compute-plane-policy.mjs", "release-policy.mjs", "protected-env.mjs", "worktree-state.mjs", "vercel-build-context.mjs"]) {
+  for (const name of ["deploy-production.mjs", "deploy-aws-compute-plane.mjs", "compute-plane-policy.mjs", "release-policy.mjs", "protected-env.mjs", "worktree-state.mjs", "vercel-build-context.mjs", "vercel-auth.mjs"]) {
     cpSync(join(sourceRoot, "scripts/release", name), join(scripts, name))
   }
   mkdirSync(join(repo, "infra/deployment"), { recursive: true })

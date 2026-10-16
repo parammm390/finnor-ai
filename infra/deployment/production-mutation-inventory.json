@@ -15,6 +15,7 @@
     {
       "id": "vercel-production-deployments",
       "path": "scripts/release/deploy-production.mjs",
+      "supportingPaths": ["scripts/release/vercel-auth.mjs"],
       "classification": "PRODUCTION_MUTATOR",
       "state": "ACTIVE",
       "operations": ["vercel-production-deploy"],
@@ -222,6 +223,7 @@
         "scripts/release/compute-artifact-e2e-fixture.mjs",
         "scripts/release/compute-noop.e2e.test.mjs",
         "scripts/release/canary-artifact.e2e.test.mjs",
+        "scripts/release/vercel-auth.e2e.test.mjs",
         "scripts/release/worker-image-layout.e2e.test.mjs",
         "scripts/release/production-artifact.e2e.mjs",
         "scripts/release/api-artifact.e2e.test.mjs"

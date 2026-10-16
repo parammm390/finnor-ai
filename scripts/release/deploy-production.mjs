@@ -7,6 +7,7 @@ import { authorizeProductionMutation } from "./production-mutation-guard.mjs"
 import { readProtectedEnv, sanitizeVercelBuildEnvironment } from "./protected-env.mjs"
 import { readGit, worktreeStatus } from "./worktree-state.mjs"
 import { apiBuildContext, normalizeApiProjectRoot, vercelBuildConfiguration, materializeApiFunctions } from "./vercel-build-context.mjs"
+import { runAuthenticatedVercel } from "./vercel-auth.mjs"
 
 const appName = process.argv[2]
 const prepareOnly = process.argv.includes("--prepare-only")
@@ -44,7 +45,7 @@ function git(args) {
 
 function run(command, args, cwd, env) {
   console.log(`$ ${command} ${args.join(" ")}`)
-  const result = spawnSync(command, args, {
+  const result = command === "vercel" && env.VERCEL_TOKEN ? runAuthenticatedVercel(args, { cwd, env }) : spawnSync(command, args, {
     cwd,
     env,
     encoding: "utf8",
@@ -52,6 +53,7 @@ function run(command, args, cwd, env) {
   })
   if (result.stdout) process.stdout.write(result.stdout)
   if (result.stderr) process.stderr.write(result.stderr)
+  if (result.error) console.error(result.error.message)
   if (result.status !== 0) process.exit(result.status || 1)
   return result.stdout || ""
 }
