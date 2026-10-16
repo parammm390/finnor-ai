@@ -1,20 +1,20 @@
 {
   "schema": "finnor.ci-process-e2e.v1",
   "status": "PASS",
-  "startedAt": "2026-10-16T03:43:01.592Z",
-  "finishedAt": "2026-10-16T03:43:02.284Z",
+  "startedAt": "2026-10-16T03:58:58.619Z",
+  "finishedAt": "2026-10-16T03:58:59.066Z",
   "inputs": {
-    "scripts/release/ci-process.e2e.test.mjs": "6fa286f569288f535a9539fd7690d53fcc6ceea83c6aa8affc4386dd374dcca4",
+    "scripts/release/ci-process.e2e.test.mjs": "22c1ef12183be9982977228e85e47bbad3f99a869e39cf0c56c4253966390ea0",
     "scripts/release/pr-verdict-policy.mjs": "00c480b0e3cde6d2581af716b4b5e0709c814a8de8f291b4fd91c10a9e56a372",
-    "scripts/release/ci-process-policy.mjs": "6fcad5d1902b8d838c23c1a54e52c3bb3a3fd64fdb5668690329b024001899d3",
+    "scripts/release/ci-process-policy.mjs": "a6b1ca7ff784dea49c9d8e381902e05a861d97c45256984e9d0b9bc952be599d",
     "scripts/release/worktree-state.mjs": "6286168452299ee98564886808756d44020367eda3ee4f80bb1cb0cdbde8986a"
   },
   "records": [
     {
       "case": "real-git-diff",
-      "base": "aa88dcff26426a4d2b19f0dc69427c6848f372c4",
-      "movedBase": "bcaf893cbea2772c7f142cc5a26182d39cfec17c",
-      "head": "8ac748609dc9da5becc4fb938db7b3ab54096152",
+      "base": "fd0988683422961c1b44a9b239206ba8cb8e1b34",
+      "movedBase": "22831cc517e5837e69aef548e9bf0bd7c42eee11",
+      "head": "ae6c86d2f048d8752aad562f8af50fa9b2faac6c",
       "observedFiles": [
         "docs/line\nbreak.md",
         "docs/renamed.md",
@@ -36,7 +36,7 @@
       "actualGitSuccess": true,
       "invalidRepositoryRejected": true,
       "timeoutMs": 40,
-      "observedMs": 42
+      "observedMs": 41
     },
     {
       "case": "actual-workflow-graph",
@@ -48,8 +48,16 @@
         "production-cancelled",
         "missing-test-shard",
         "source-bypasses-workflow-validation",
-        "missing-readiness-certification"
+        "missing-readiness-certification",
+        "missing-source-aggregate"
       ]
+    },
+    {
+      "case": "source-diagnostics-aggregate",
+      "allRequiredAccepted": true,
+      "negativeOutcomesRejected": 28,
+      "onlyInapplicableSkipsAccepted": true,
+      "missingOutcomesRejected": true
     }
   ],
   "rerun": "FINNOR_CI_PROCESS_EVIDENCE_DIR=/absolute/new/evidence node --test scripts/release/ci-process.e2e.test.mjs",

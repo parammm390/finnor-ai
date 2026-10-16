@@ -5,7 +5,7 @@ import { AllocationContractError, ControlContractError, ExperimentContractError,
 import { PeDomainError, clearEnterprisePortfolio, consumeEnterpriseAllocation, listEnterpriseAllocationResources, readEnterpriseAllocation, reconcileEnterpriseAllocation, recordEnterpriseAllocationAssessment, registerEnterpriseAllocationResource, releaseEnterpriseAllocation, validateEnterpriseAllocation,settleEnterpriseAllocation } from '@finnor/private-equity';
 import { errorResponse, requireContext } from '../../../../lib/auth';
 import {LedgerFault} from '@finnor/private-equity';
-import {clearEnterpriseCoalitionAllocation,readEnterpriseCoalitionAllocation,consumeEnterpriseCoalitionAllocation,releaseEnterpriseCoalitionAllocation} from '../../../../../../packages/private-equity/src/enterprise-allocation';
+import {clearEnterpriseCoalitionAllocation,readEnterpriseCoalitionAllocation,consumeEnterpriseCoalitionAllocation,releaseEnterpriseCoalitionAllocation} from '../../../../../../packages/private-equity/src/capital-program/r5-allocation-owner';
 import {ExperimentRefSchema} from '@finnor/epistemic-runtime';
 import { R3OwnerOperationSchemas } from '../../../../../../packages/epistemic-runtime/src/incentive-rule-synthesis/output-contracts';
 const coalitionClear=z.object({selectionRef:ExperimentRefSchema,idempotencyKey:z.string().min(1).max(256)}).strict();

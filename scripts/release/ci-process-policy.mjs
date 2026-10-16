@@ -1,6 +1,11 @@
 import { readFileSync, readdirSync } from "node:fs"
 import { join } from "node:path"
 
+export function sourceCheckFailures({ backend, root, outcomes }) {
+  const required = ["workspace", "types", "inventory", "drift", ...(backend ? ["shards", "backend"] : []), ...(root ? ["lint"] : [])]
+  return required.filter(name => outcomes[name] !== "success")
+}
+
 export function workflowJob(text, name) {
   return text.match(new RegExp(`^  ${name}:\\n([\\s\\S]*?)(?=^  [\\w-]+:|(?![\\s\\S]))`, "m"))?.[1] ?? ""
 }
@@ -33,6 +38,11 @@ export function verifyCiProcess(root) {
     require(/needs: validate\b/.test(workflowJob(sourceWorkflow, name)), `${name}: workflow validation must precede parallel source/governance work`)
   }
   require(workflowJob(sourceWorkflow, "governance").includes("npm run test:release") && !workflowJob(sourceWorkflow, "source").includes("npm run test:release"), "governance fixtures must run once in parallel with source checks")
+  const source = workflowJob(sourceWorkflow, "source")
+  require(source.includes('import { sourceCheckFailures } from "./scripts/release/ci-process-policy.mjs"') && source.includes("const failures = sourceCheckFailures(") && source.includes("id: aggregate") && source.includes("if: ${{ always() }}"), "independent source diagnostics must end in a fail-closed aggregate")
+  for (const name of ["shards", "workspace", "backend", "types", "inventory", "lint", "drift"]) {
+    require(source.includes(`id: ${name}`) && source.includes(`steps.${name}.outcome`), `source aggregate must consume ${name} outcome`)
+  }
   require(/name: required-pr-verdict\b/.test(verdict), "protected main requires the unchanged required-pr-verdict name")
   const tests = workflowJob(ci, "test")
   require(tests.includes("shard: [1, 2, 3]") && tests.includes("--shard=${{ matrix.shard }}/3") && tests.includes("fail-fast: false"), "backend must execute all three independent test shards")

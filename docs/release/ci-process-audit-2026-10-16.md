@@ -188,3 +188,35 @@ compiler output. It is NOT a pass. Hosted clean-runner types, full application
 execution, actual image/artifact execution and wall-clock improvement remain
 unverified for this update. Existing hosted timing is only a baseline, not a
 speed promise. R/V merge and production deployment remain stopped.
+
+## First hosted result and diagnostic aggregation repair
+
+Run 38847850231 on e4c66513 passed pinned workflow validation, governance,
+full-history Gitleaks, OSV and actual shard-inventory verification. The backend
+compiler finished in 37 seconds and reported four missing exports, all on one
+allocation-route import: the symbols belong to capital-program/r5-allocation-owner,
+not enterprise-allocation. The source job failed in about 98 seconds; expensive
+backend/image/artifact/root/readiness jobs were skipped. No production ran.
+
+Before changing diagnostic aggregation, required failure cases are: an applicable
+backend failure must not hide independent frontend diagnostics; every required
+failure, cancellation, skipped result or missing outcome must still fail the final
+source gate; only explicitly inapplicable backend/shard/lint checks may be skipped;
+no changed graph may omit the final aggregate. Dependency-install failures must
+still prevent execution and fail the gate. Retain the failed hosted run as evidence,
+not a passing application check. Repair the single owner import without weakening
+the type gate or adding an export to the wrong semantic owner.
+
+The correction imports the four functions directly from their actual R5 owner.
+Independent source groups now retain original step outcomes and run through
+errors; an always-running final aggregate requires every applicable outcome to
+be successful. Both failed install and skipped/missing required-check paths
+remain fail-closed. Backend and frontend inventory command groups also collect
+all command failures rather than stopping at the first command.
+
+Updated process E2E passes 5/5, including 28 negative aggregate outcomes and
+eight damaged workflow copies. The first new damaged-copy case exposed that
+checking for a function name alone was insufficient; the graph verifier now
+requires both its exact import and invocation. Pinned actionlint, 17 affected
+release/verdict policy cases, targeted lint and whitespace checks pass. No
+full application or production acceptance is claimed by this correction.

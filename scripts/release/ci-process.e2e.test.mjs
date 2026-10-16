@@ -7,7 +7,7 @@ import { dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
 import { createHash } from "node:crypto"
 import { changedPullRequestFiles, classifyPullRequestFiles, evaluateRequiredPrVerdict } from "./pr-verdict-policy.mjs"
-import { verifyCiProcess } from "./ci-process-policy.mjs"
+import { sourceCheckFailures, verifyCiProcess } from "./ci-process-policy.mjs"
 import { readGit } from "./worktree-state.mjs"
 
 const root = fileURLToPath(new URL("../..", import.meta.url))
@@ -18,7 +18,7 @@ test.after(() => {
   if (!evidence) return
   const files = ["scripts/release/ci-process.e2e.test.mjs", "scripts/release/pr-verdict-policy.mjs", "scripts/release/ci-process-policy.mjs", "scripts/release/worktree-state.mjs"]
   const inputs = Object.fromEntries(files.map(path => [path, createHash("sha256").update(readFileSync(join(root, path))).digest("hex")]))
-  const receipt = { schema: "finnor.ci-process-e2e.v1", status: records.length === 4 ? "PASS" : "FAIL", startedAt, finishedAt: new Date().toISOString(), inputs, records, rerun: "FINNOR_CI_PROCESS_EVIDENCE_DIR=/absolute/new/evidence node --test scripts/release/ci-process.e2e.test.mjs", applicationTestsExecuted: false }
+  const receipt = { schema: "finnor.ci-process-e2e.v1", status: records.length === 5 ? "PASS" : "FAIL", startedAt, finishedAt: new Date().toISOString(), inputs, records, rerun: "FINNOR_CI_PROCESS_EVIDENCE_DIR=/absolute/new/evidence node --test scripts/release/ci-process.e2e.test.mjs", applicationTestsExecuted: false }
   mkdirSync(evidence, { recursive: true })
   writeFileSync(join(evidence, "process-e2e.json"), `${JSON.stringify(receipt, null, 2)}\n`)
 })
@@ -91,6 +91,7 @@ test("actual process graph passes and damaged workflow copies are rejected", () 
     ["missing-test-shard", "ci.yml", text => text.replace("shard: [1, 2, 3]", "shard: [1, 2]")],
     ["source-bypasses-workflow-validation", "source-checks.yml", text => text.replace("needs: validate", "needs: []")],
     ["missing-readiness-certification", "release-readiness.yml", text => text.replace("certification: [scope4, scope5]", "certification: [scope4]")],
+    ["missing-source-aggregate", "source-checks.yml", text => text.replace("sourceCheckFailures", "ignoredSourceFailures")],
   ]
   for (const [name, file, mutate] of mutations) {
     const directory = mkdtempSync(join(tmpdir(), `finnor-ci-${name}-`))
@@ -105,4 +106,18 @@ test("actual process graph passes and damaged workflow copies are rejected", () 
     } finally { rmSync(directory, { recursive: true, force: true }) }
   }
   records.push({ case: "actual-workflow-graph", baselineAccepted: true, rejectedMutations: mutations.map(([name]) => name) })
+})
+
+test("actual source diagnostic aggregate rejects all failed or omitted required checks", () => {
+  const names = ["shards", "workspace", "backend", "types", "inventory", "lint", "drift"]
+  const outcomes = Object.fromEntries(names.map(name => [name, "success"]))
+  assert.deepEqual(sourceCheckFailures({ backend: true, root: true, outcomes }), [])
+  let rejected = 0
+  for (const name of names) for (const result of ["failure", "cancelled", "skipped", undefined]) {
+    assert.deepEqual(sourceCheckFailures({ backend: true, root: true, outcomes: { ...outcomes, [name]: result } }), [name])
+    rejected++
+  }
+  assert.deepEqual(sourceCheckFailures({ backend: false, root: false, outcomes: { ...outcomes, shards: "skipped", backend: "skipped", lint: "skipped" } }), [])
+  assert.ok(sourceCheckFailures({ backend: true, root: true, outcomes: {} }).length === names.length)
+  records.push({ case: "source-diagnostics-aggregate", allRequiredAccepted: true, negativeOutcomesRejected: rejected, onlyInapplicableSkipsAccepted: true, missingOutcomesRejected: true })
 })

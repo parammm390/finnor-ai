@@ -81,33 +81,74 @@ jobs:
       - run: npm ci --no-audit --no-fund
       - run: npm ci --prefix finnor-os --no-audit --no-fund
       - name: Verify the actual backend inventory is partitioned exactly once
+        id: shards
+        continue-on-error: true
         if: ${{ inputs.backend }}
         run: node scripts/release/verify-test-shards.mjs
         env:
           FINNOR_CI_PROCESS_EVIDENCE_DIR: ${{ runner.temp }}/finnor-ci-process
-      - run: npm run workspace:check
+      - id: workspace
+        continue-on-error: true
+        run: npm run workspace:check
       - name: Check backend contracts and types
+        id: backend
+        continue-on-error: true
         if: ${{ inputs.backend }}
         working-directory: finnor-os
         run: |
-          npm run authz:matrix:check
-          npm run openapi
-          npm run typecheck
-          npm run release:manifest
-          npm run release:pe-domain-boundary
+          status=0
+          npm run authz:matrix:check || status=1
+          npm run openapi || status=1
+          npm run typecheck || status=1
+          npm run release:manifest || status=1
+          npm run release:pe-domain-boundary || status=1
+          exit "$status"
       - name: Check all root types against the workspace
+        id: types
+        continue-on-error: true
         run: npx --no-install tsc --noEmit -p tsconfig.json
       - name: Check shared frontend inventories and retirement boundary
+        id: inventory
+        continue-on-error: true
         run: |
-          npm run centropy:client:check
-          npm run centropy:manifest:check
-          npm run centropy:forms:check
-          npm run release:p8-zero-resurrection
+          status=0
+          npm run centropy:client:check || status=1
+          npm run centropy:manifest:check || status=1
+          npm run centropy:forms:check || status=1
+          npm run release:p8-zero-resurrection || status=1
+          exit "$status"
       - name: Lint changed root sources and scripts
+        id: lint
+        continue-on-error: true
         if: ${{ inputs.root }}
         run: npm run lint
       - name: Reject generated source drift
+        id: drift
+        continue-on-error: true
         run: git diff --exit-code
+      - name: Fail closed after collecting independent source diagnostics
+        id: aggregate
+        if: ${{ always() }}
+        env:
+          BACKEND_REQUIRED: ${{ inputs.backend }}
+          ROOT_REQUIRED: ${{ inputs.root }}
+          SHARDS_OUTCOME: ${{ steps.shards.outcome }}
+          WORKSPACE_OUTCOME: ${{ steps.workspace.outcome }}
+          BACKEND_OUTCOME: ${{ steps.backend.outcome }}
+          TYPES_OUTCOME: ${{ steps.types.outcome }}
+          INVENTORY_OUTCOME: ${{ steps.inventory.outcome }}
+          LINT_OUTCOME: ${{ steps.lint.outcome }}
+          DRIFT_OUTCOME: ${{ steps.drift.outcome }}
+        run: |
+          node --input-type=module <<'NODE'
+          import { appendFileSync } from "node:fs"
+          import { sourceCheckFailures } from "./scripts/release/ci-process-policy.mjs"
+          const names = ["shards", "workspace", "backend", "types", "inventory", "lint", "drift"]
+          const outcomes = Object.fromEntries(names.map(name => [name, process.env[name.toUpperCase() + "_OUTCOME"]]))
+          const failures = sourceCheckFailures({ backend: process.env.BACKEND_REQUIRED === "true", root: process.env.ROOT_REQUIRED === "true", outcomes })
+          appendFileSync(process.env.GITHUB_STEP_SUMMARY, "\nSource diagnostics: " + JSON.stringify({ outcomes, failures }) + "\n")
+          if (failures.length) throw new Error("Source checks failed: " + failures.join(", "))
+          NODE
       - name: Retain workflow and source diagnostics
         if: ${{ always() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
