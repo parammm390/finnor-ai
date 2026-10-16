@@ -328,7 +328,7 @@ try {
     const before = (await admin.query('SELECT name FROM finnor_os._migrations ORDER BY name')).rows;
     assert.equal(before.at(-1).name, '0186_r7_policy_atlas.sql');
     const applied = await migrate(url, MIGRATIONS), replay = await migrate(url, MIGRATIONS);
-    assert.deepEqual(applied, ['0187_r3_incentive_rule_synthesis.sql']); assert.deepEqual(replay, []);
+    assert.deepEqual(applied, MIGRATIONS.filter(m => m.name >= '0187_r3_incentive_rule_synthesis.sql').map(m => m.name)); assert.deepEqual(replay, []);
     await postgres.createDatabase('r3_fresh');
     const fresh = await migrate(url.replace(/r3_e2e$/, 'r3_fresh'), MIGRATIONS);
     assert.equal(fresh.length, MIGRATIONS.length);

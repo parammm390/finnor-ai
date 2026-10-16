@@ -46,7 +46,7 @@ export async function observeBilateralTransport(ctx: TenantContext, source: {
   await withTenantTransaction(ctx.tenantId, { userId: ctx.employeeId ?? ctx.userId }, async (_db, c) => {
     await c.query(`UPDATE finnor_os.s6_contact_intents SET status=$3,
       acknowledged_at=CASE WHEN $3='ACKNOWLEDGED' THEN COALESCE(acknowledged_at,clock_timestamp()) ELSE acknowledged_at END
-      WHERE tenant_id=$1 AND action_id=$2`, [ctx.tenantId, o.actionId, o.outcome === "ACCEPTED" ? "ACKNOWLEDGED" : "UNKNOWN"]);
+      WHERE tenant_id=$1 AND action_id=$2 AND status NOT IN('ACKNOWLEDGED','CANCELLED_BEFORE_DISPATCH')`, [ctx.tenantId, o.actionId, o.outcome === "ACCEPTED" ? "ACKNOWLEDGED" : "UNKNOWN"]);
   });
   if (o.outcome === "ACCEPTED" && o.providerMessageRef) await recordObservedCommunicationAcceptance({
     tenantId: ctx.tenantId, actionId: o.actionId, recipientId: o.participantId, communicationIdentityId: o.communicationIdentityId,

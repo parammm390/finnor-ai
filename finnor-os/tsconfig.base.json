@@ -22,6 +22,18 @@
       "vitest/globals"
     ],
     "paths": {
+      "@finnor/planning": [
+        "./packages/planning/src/index.ts"
+      ],
+      "@finnor/projections": [
+        "./packages/projections/src/index.ts"
+      ],
+      "@finnor/provider-microsoft365": [
+        "./packages/provider-microsoft365/src/index.ts"
+      ],
+      "@finnor/workforce": [
+        "./packages/workforce/src/index.ts"
+      ],
       "@finnor/shared-types": [
         "./packages/shared-types/src/index.ts"
       ],

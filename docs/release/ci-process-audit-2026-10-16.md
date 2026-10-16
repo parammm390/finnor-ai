@@ -431,3 +431,80 @@ schema, require every closed Deal and holding identity/status to survive, then
 measure the same current-schema graph operations and original p95 thresholds.
 The fresh/current-schema and populated-upgrade gates remain independent. This
 does not prove or bypass a new V3 transaction close, and does not seed a V3 proof.
+
+## Finite independent-review disposition
+
+The combined package review returned 15 findings. Before the remaining repairs,
+register these failure modes: a source/version mismatch must not enter either
+observation ledger; temporary compute contention must defer without charging an
+unstarted child; non-UUID authority actors must fail before SQL; acknowledged or
+cancelled contact facts must not regress; exact member intent must win over a
+primary fallback; invalid authority dates must deny; the dispatched S5 request
+must be the stored approved bytes, not reconstructed array order. Missing native
+verifier identity must produce an unsatisfied criterion, never fabricated identity
+or privacy bypass. Use existing owner, migration and process drivers; preserve
+all earlier failures. Do not add post-implementation unit tests.
+
+Review suggestions about removing material/egress fences, broadening private
+evidence custody, making effect hashes optional, and changing historical signature
+canonicalization are not automatically accepted. They require actual caller and
+codec evidence; financial authority and privacy safeguards remain intact. The
+production migration owner's FORCE-RLS compatibility remains an explicit check,
+not an assumed property of local superuser databases.
+
+### Combined repair publication record
+
+The R/V merge is locally resolved, not discarded. Main's 184 migrations remain
+byte-identical; six unmerged R SQL files move after V's 0181 without SQL changes.
+New 0188 adds validated source/version composite foreign keys and explicitly
+reports historical mismatches instead of silently repairing evidence. Head and
+supplier canary agree on all 191 migrations. R3 upgrade/replay admits the explicit
+forward successor. The stored approved S5 request is dispatched without rebuilding
+resource order; exact quantity/version bindings and current-authority gates stay.
+
+Confirmed review repairs also preserve terminal contact facts, select the exact
+member's intent before primary fallback, deny invalid standing dates/UUID actors,
+require a closing initiator, defer compute capacity/deadline errors to the queue,
+acquire compute capacity before the original native charge, and record missing
+objective-verifier identity as unsatisfied rather than substitute a principal.
+
+Both semantic typechecks pass under Node 22.22.3. Local cloud-placeholder files
+required SRI-verified, lock-matching steel-sdk/redis-parser/undici overlays in /tmp;
+shared dependencies were not changed. Four missing TS workspace aliases otherwise
+resolved planning/projections and peers to the older Desktop checkout; explicit
+candidate aliases fix source custody without modifying those owners' contracts.
+Generated client/manifest/forms/workspace/deployment checks and all nine actionlint
+checks pass. Process E2E 6/6 and real relocated worker/source custody pass. Release
+fixtures pass 80/80, zero skips. The subsequent mutation inventory first rejected
+the new disposable verification driver; classifying it READ_ONLY/PRODUCTION_BLOCKED
+restored the inventory, with no new production writer or bypass.
+
+The 191-migration benchmark reached all six original p95 thresholds successfully,
+but its new FK harness failed on unrelated absent owner parents, then search-path
+rendering, then PostgreSQL's prohibition on temporary-to-permanent FKs. Those FAIL
+receipts are retained. A narrowed fresh-database probe now uses the exact validated
+installed FK definition on an isolated regular scratch table: matching source and
+version accepted, cross-source version rejected with 23503 for both owners. It
+does not claim V owner-write or production acceptance. The driver now explicitly
+exits from its recorded outcome after teardown rather than trust dependency cleanup
+exit-code changes. A second review identified the temporary-FK issue and requested
+historical mismatch preflight; both are addressed before publication.
+
+The earlier positive R1 authenticated API -> actual queue/worker/checker -> S4/S5
+owner proof passes on 14e71d59/190 migrations; two unselected cases remain NOT_RUN.
+It is not mounted Work or the final Linux-image proof. Hash-bound receipts and
+rerun commands are in evidence/ci-process-repair-2026-10-16/combined-r-v-repair.json.
+
+Remaining review dispositions: closing compiler/checker/broker use the same current
+locale canonicalizer; do not unilaterally change historical signed bytes. API and
+voice approval callers forward the reviewed effect hash; absent voice hashes remain
+fail-closed/manual-review, not optional authority. Closing signed observations use
+the closing owner, not a grant to raw V1/V2 private data; broader private custody is
+not authorized by an independent-reader role. The tenant material lock and V4
+disposable egress lock findings remain open performance/concurrency risks, not
+silently marked fixed: removing those authority fences without a decisive race proof
+would weaken revocation. Production migration-owner FORCE-RLS behavior requires
+live verification. Live role inspection confirms PAID/ACTIVE project us-east-1,
+production-only immutable repository OIDC, three inline policies, no attached
+managed policies, and a CloudFormation-managed deployment role. No IAM mutation
+or production deployment has occurred at this publication point.

@@ -541,9 +541,10 @@ async function queryCriterion(params: {
   const identity = params.request.intent === "harness_program_v1" || params.request.intent === "closing_readiness" ? await withTenant(params.tenantId,async db=>{
     const [loop]=await db.select({createdBy:workObjectiveLoops.createdBy}).from(workObjectiveLoops).where(and(eq(workObjectiveLoops.tenantId,params.tenantId),eq(workObjectiveLoops.workId,params.workId),eq(workObjectiveLoops.id,params.loopId))).limit(1);
     const [input]=await db.select({id:workInputs.id}).from(workInputs).where(and(eq(workInputs.tenantId,params.tenantId),eq(workInputs.workId,params.workId))).orderBy(sql`${workInputs.createdAt} DESC`,sql`${workInputs.id} DESC`).limit(1);
-    if(!loop?.createdBy||!input)throw Error("NATIVE_VERIFIER_PRINCIPAL_INPUT_REQUIRED");
+    if(!loop?.createdBy||!input)return null;
     return {userId:loop.createdBy,employeeId:loop.createdBy,...(params.request.intent==="harness_program_v1"?{workInputId:input.id}:{})};
   }):{};
+  if (!identity) return { satisfied: false, basis: "Native verification requires the persisted current principal and Work input; no substitute identity was used.", evidenceRefs: [], observed: { predicate: "NATIVE_VERIFIER_PRINCIPAL_INPUT_REQUIRED" } };
   const result = await executeTenantOperationalQuery(params.tenantId, params.request as CanonicalOperationalQueryRequest, { workId: params.workId, executionKey: params.executionKey,...identity });
   const assertion = evaluateObjectiveAssertion(result, params.assertion);
   const executionId = result.execution?.id;

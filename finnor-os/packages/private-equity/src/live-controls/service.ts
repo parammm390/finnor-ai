@@ -1,14 +1,14 @@
 import { randomUUID } from 'node:crypto';
 import type { PoolClient } from 'pg';
-import type { AuthorityRequest, DomainAction, ExecutionResult } from '@finnor/shared-types';
+import type { AllocationClearingInput, AuthorityRequest, DomainAction, ExecutionResult } from '@finnor/shared-types';
 import { evaluateAuthorityTx, exactControlRequirementsTx, employeeAuthoritySnapshotTx, lockCurrentAuthorityTx, validateExactControlApprovalsTx } from '@finnor/authority';
-import { LIVE_CONTROL_OPERATION_SCHEMAS as schemas, ControlIntentSchema, LiveControlError, unavailable, allocationInput, type ControlIntent, type OwnerVector } from './contracts';
+import { LIVE_CONTROL_OPERATION_SCHEMAS as schemas, ControlIntentSchema, LiveControlError, unavailable, type ControlIntent, type OwnerVector } from './contracts';
 import type { z } from 'zod';
 import type { PeMutationContext } from '../types';
 import { actor, appendHistory, assertActorActionTx, assertBranchUsableTx, assertVector, authorizeResourcesTx, branchRow, canonicalObjectTx, controlTransaction,
   currentOwnerVectorTx, digest, intentResourcesTx, investmentAnchorTx, proposalRow, rememberCommand, replayCommand, assertControlCutTx, sharedControlIntent, sessionResources, sessionRow,
   type BranchRow, type EvaluationRow, type ProposalRow, type SessionRow } from './store';
-import { constrainEnterpriseAllocationSelection, clearEnterprisePortfolio } from '../enterprise-allocation';
+import { clearEnterprisePortfolio } from '../enterprise-allocation';
 import { prepareEnterpriseContingentHandoff } from '../enterprise-control';
 import { prepareEnterpriseDurableObligation, compileEnterpriseDurableObligationRequest, scheduleEnterpriseDurableObligationRequest } from '../enterprise-obligations';
 import { readLiveControlSnapshot, readLiveControlEvents } from './projection';
@@ -383,7 +383,10 @@ async function dispatch(ctx: PeMutationContext, input: Input<'dispatch'>, ports?
   let refs: Record<string, unknown> = {}, status = 'OWNER_ACCEPTED', reason: string | null = null;
   try {
     if (branch.intent.kind === 'S5_ALLOCATION') {
-      const exact = constrainEnterpriseAllocationSelection(ctx, { ...allocationInput(branch.intent.request), idempotencyKey: 'v5-dispatch:' + branch.id }, branch.intent.selectedPolicyIds);
+      const bound = proposal.native_request as {kind:string;request:AllocationClearingInput};
+      if (bound.kind !== 'S5_ALLOCATION' || proposal.request_digest !== digest(bound))
+        throw new LiveControlError('EXACT_NATIVE_REQUEST_CHANGED', 'The native allocation request differs from the approved request', 409);
+      const exact = bound.request;
       const cleared = await clearEnterprisePortfolio(ctx, exact, async client => {
         const checked = await assertNativeControlActionTx(ctx, proposal.id, client);
         if (!checked || proposal.request_digest !== digest({ kind: 'S5_ALLOCATION', request: exact }))

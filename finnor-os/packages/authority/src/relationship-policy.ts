@@ -118,7 +118,7 @@ export async function withRelationshipDispatch<T>(input: {
     const policies = await currentRelationshipPolicies(c, input.tenantId, input.channel);
     const existing = (await c.query<ContactIntent>(`SELECT * FROM finnor_os.s6_contact_intents
       WHERE tenant_id=$1 AND action_id=$2 AND (member_key=$3 OR member_key='primary')
-      ORDER BY member_key LIMIT 1 FOR UPDATE`, [input.tenantId, input.actionId, input.memberKey ?? "primary"])).rows[0];
+      ORDER BY (member_key=$3) DESC,member_key LIMIT 1 FOR UPDATE`, [input.tenantId, input.actionId, input.memberKey ?? "primary"])).rows[0];
     if (!policies.length && !existing) return;
     await input.validate(c);
     let intent = existing;

@@ -1,5 +1,6 @@
 import {createEvidenceSourceTx,appendEvidenceVersionTx} from '@finnor/memory';
 import {recordBusinessEvent} from '@finnor/data-platform';
+import {ComputeCapacityUnavailableError,DatabaseExecutionDeadlineError} from '@finnor/db';
 import type pg from 'pg';
 import type {JobExecutionContext} from '../../../../apps/worker/src/queue';
 import type {DiligenceAssertion,IndependentlyEstablishedFinding,PrimaryClaimCheck,PrimaryCostReceipt,PrimaryObservation,PrimaryRequest,VReference} from '@finnor/shared-types';
@@ -245,6 +246,7 @@ export async function advancePrimaryDiligenceJob(payload:Record<string,unknown>,
   const obligation=reference('S4',p.id+':remaining-coverage',p.revision,{assertions:p.intake.assertions.map(a=>a.assertionId),unresolved,deadline:bindings.mandate.stopping.deadline,remainingGrantRef:p.intake.budgetGrantRef,reachableNewOpportunity:'NONE_CURRENTLY_REGISTERED'});
   await transition(ctx,p,unresolved?(Date.now()>=Date.parse(bindings.mandate.stopping.waitUntil)?'STOPPED':'WAITING'):'COMPLETE',unresolved?'REGISTERED_MATERIAL_REMAINDER_UNRESOLVED':'EXACT_REGISTERED_CLAIMS_DEVELOPMENT_CHECKED',unresolved?[obligation]:[]);
  }catch(error){
+  if(error instanceof ComputeCapacityUnavailableError||error instanceof DatabaseExecutionDeadlineError)throw error;
   if(error instanceof PrimaryNativeFailure){try{const b=await ownerBindings(ctx,p);await settleNative(ctx,p,b.grant,error.receipt);}catch{await event(ctx,p,'S5','NATIVE_METER_UNAVAILABLE',{receipt:error.receipt,responsibilityRetained:true});}}
   const predicate=safe(error);await event(ctx,p,'S6','CLAIM_FAILURE',{predicate,responsibilityRetained:true,releaseGranted:false});
   await transition(ctx,p,/GRANT|BUDGET|LIMIT|AUTHORITY|GOVERNANCE|REVISION|FENCED|RETENTION/.test(predicate)?'BLOCKED':'FAILED',predicate,[],[reference('S4',p.id+':approval',p.revision,{predicate,originalGrantRef:p.intake.budgetGrantRef,permissionToExecute:false})]);

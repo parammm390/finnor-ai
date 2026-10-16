@@ -15,10 +15,11 @@ export async function independentPrimaryCheck(ctx:PeMutationContext,p:Programme,
  const payload=canonical(frame);if(Buffer.byteLength(payload)>8388608)throw Error('PRIMARY_CHECK_INPUT_BOUND');
  if(BigInt(grant.maximumMemoryBytes)<268435456n)throw Error('PRIMARY_NATIVE_MEMORY_GRANT_TOO_NARROW');
  const invocationId=newId(),cpuReserve='5000000',reserved=priceCeiling(grant.pricebook.cpuMicroUsdPerSecond.numerator,grant.pricebook.cpuMicroUsdPerSecond.denominator,5n);
- await tx(ctx,async c=>{await reservePrimaryCharge(ctx,c,{grant,programmeId:p.id,requestId:null,chargeKey:'native:'+invocationId,kind:'NATIVE',microUsd:reserved,cpuMicros:cpuReserve});await event(ctx,p,'P2','NATIVE_INTENDED',{invocationId,checker:(await methodIdentity()).checker,originalGrantRef:p.intake.budgetGrantRef,reservedCpuMicros:cpuReserve,reservedMicroUsd:reserved},c);});
  const leases=await acquireComputeResourceLeases({tenantId:ctx.auth.tenantId,resourceKeys:['native:p4'],requiredResourceKeys:['native:p4'],workloadClass:'INTERACTIVE',ownerId:'v2:'+invocationId});
  const receipt:NativeReceipt={invocationId,childPid:null,cpuMicros:null,peakMemoryBytes:null,wallMs:0,inputBytes:Buffer.byteLength(payload),outputBytes:0,status:'UNKNOWN',exitCode:null,exitSignal:null},start=performance.now();
- try{return await new Promise<{check:PrimaryClaimCheck;receipt:NativeReceipt}>((yes,no)=>{
+ try{
+  await tx(ctx,async c=>{await reservePrimaryCharge(ctx,c,{grant,programmeId:p.id,requestId:null,chargeKey:'native:'+invocationId,kind:'NATIVE',microUsd:reserved,cpuMicros:cpuReserve});await event(ctx,p,'P2','NATIVE_INTENDED',{invocationId,checker:(await methodIdentity()).checker,originalGrantRef:p.intake.budgetGrantRef,reservedCpuMicros:cpuReserve,reservedMicroUsd:reserved},c);});
+  return await new Promise<{check:PrimaryClaimCheck;receipt:NativeReceipt}>((yes,no)=>{
   const child=spawn(process.execPath,['--max-old-space-size=128','--import='+createRequire(import.meta.url).resolve('tsx'),fileURLToPath(new URL('./checker.mts',import.meta.url))],
    {env:{PATH:'/usr/bin:/bin',LANG:'en_US.UTF-8',NODE_ENV:'production'},stdio:['pipe','pipe','pipe']});
   receipt.childPid=child.pid??null;let output='',diagnosticBytes=0,settled=false,reason:string|null=null,checking=false;

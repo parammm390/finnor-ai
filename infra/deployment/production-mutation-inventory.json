@@ -142,6 +142,7 @@
         "finnor-os/scripts/release/run-scope3-compute-certification.ts",
         "finnor-os/scripts/release/generate-scope4-relationship-contracts.ts",
         "finnor-os/scripts/release/run-scope4-digital-twin-certification.ts",
+        "finnor-os/scripts/release/verify-scope4-benchmark.mts",
         "finnor-os/scripts/release/run-scope5-epistemic-impact-certification.ts",
         "finnor-os/scripts/release/rehearse-historical-upgrade.ts",
         "finnor-os/scripts/release/run-pe-p1-world-truth-certification.ts",

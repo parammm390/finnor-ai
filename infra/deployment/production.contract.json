@@ -10,7 +10,7 @@
     "requireCleanWorktree": true
   },
   "release": {
-    "requiredMigrationHead": "0187_r3_incentive_rule_synthesis.sql",
+    "requiredMigrationHead": "0188_observation_source_version_binding.sql",
     "metadata": [
       "FINNOR_COMMIT_SHA",
       "FINNOR_BUILD_ID",

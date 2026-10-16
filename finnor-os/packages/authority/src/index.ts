@@ -140,6 +140,8 @@ function withinAmount(request: AuthorityRequest, ceiling: string | null): boolea
 /** Share the actual revision/employee fence with a reader or writer's existing
  * transaction. Do not open another hosted-pool connection while holding it. */
 export async function lockCurrentAuthorityTx(ctx: TenantContext, client: PoolClient, lock = true): Promise<number> {
+  if (!UUID.test(ctx.employeeId ?? ctx.userId) || ctx.employeeId && ctx.employeeId !== ctx.userId)
+    throw new Error("CURRENT_CANONICAL_AUTHORITY_UNAVAILABLE");
   const result = await client.query<{ revision: number }>(
     `SELECT a.revision FROM finnor_os.authority_states a
        JOIN finnor_os.users u ON u.tenant_id=a.tenant_id
