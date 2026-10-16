@@ -18,12 +18,13 @@ import {
 import { putAllocationResource } from "../../packages/private-equity/src/allocation-store";
 import { nativeHttpFixture } from "../p7/native-http-fixture.mjs";
 import { installedHttpFixture } from "./installed-http-fixture.mts";
-import { inspectInstalledRuntime } from "./installed-runtime-custody.mts";
+import { inspectInstalledRuntime, verifyInstalledOriginalUseFences } from "./installed-runtime-custody.mts";
 import { runMountedNativeIntegration } from "./mounted-native-integration.mts";
 import { startAuthenticatedHttpFixture, type AuthenticatedHttpFixture, type AuthSessionHandle } from "./authenticated-http-fixture.mts";
 import { configure, initialize, releaseHeldOut } from "./fixtures/admin.mjs";
 import { snapshot } from "./fixtures/store.mjs";
-import { bootstrapNativeS8Fixture, NATIVE_S8_FIXTURE_FLAGS, type NativeS8Fixture } from "./native-s8-fixture.mts";
+import { bootstrapNativeS8Fixture, NATIVE_S8_FIXTURE_FLAGS, type NativeS8Fixture,
+  type NativeS8ApplicationCommandNegativeReport } from "./native-s8-fixture.mts";
 import { inspectNativeDiscovery, nativeDiscoveryCaseCommitment } from "./inspect-native-discovery.mts";
 import { NATIVE_REVIEW_CASES, nativeReadRelay, runNativeReviewGates } from "./native-review-gates.mts";
 import { applicationArtifact, applicationSession, nativeApplicationProfile, retainApplicationArtifact,
@@ -45,9 +46,13 @@ const installed = existsSync(join(repo, "../build-manifest.json"));
 const nodeMode = installed ? "production" : "development";
 const mounted = process.env.FINNOR_X2_TEST_MOUNTED === "1";
 assert(!mounted || installed, "MOUNTED_PROOF_REQUIRES_EMITTED_INSTALLED_OWNERS");
+const installedTamper = process.env.FINNOR_X2_TEST_INSTALLED_TAMPER === "1";
+assert(!installedTamper || installed, "INSTALLED_BYTE_FENCES_REQUIRE_ACTUAL_EMITTED_OWNERS");
 const surface = process.env.FINNOR_X2_TEST_SURFACE ?? "api";
 assert(["api", "ui", "hybrid"].includes(surface));
 const configuredS8 = process.env.FINNOR_X2_TEST_S8 === "1";
+const s8CommandNegatives = process.env.FINNOR_X2_TEST_S8_COMMAND_NEGATIVES === "1";
+const s8NegativeReports: NativeS8ApplicationCommandNegativeReport[] = [];
 const reviewGates = process.env.FINNOR_X2_TEST_REVIEW_GATES === "1";
 assert(!reviewGates || surface === "api" && !configuredS8 && !mounted, "REVIEW_GATES_HAVE_THEIR_OWN_API_OWNER_CUT");
 const computeContention = process.env.FINNOR_X2_TEST_COMPUTE_CONTENTION === "1";
@@ -79,6 +84,13 @@ assert(!mounted || configuredS8 && recoveryMode === "none" && !semanticDrift && 
 assert(!reviewGates || recoveryMode === "none" && !semanticDrift && !renderingDrift && !computeContention
   && !finalEgressRevocation && !resourceBeliefChange && !referenceBacklog && !terminalCancellation,
   "REVIEW_GATES_REQUIRE_THEIR_OWN_OWNER_CUT");
+assert(!installedTamper || !configuredS8 && !mounted && recoveryMode === "none" && !reviewGates && !semanticDrift && !renderingDrift
+  && !computeContention && !finalEgressRevocation && !resourceBeliefChange && !referenceBacklog && !terminalCancellation,
+  "INSTALLED_BYTE_FENCES_PRECEDE_THE_UNCHANGED_POSITIVE_CUT");
+assert(!s8CommandNegatives || configuredS8 && !mounted && !installedTamper && !reviewGates
+  && recoveryMode === "none" && !semanticDrift && !renderingDrift && !computeContention
+  && !finalEgressRevocation && !resourceBeliefChange && !referenceBacklog && !terminalCancellation,
+  "S8_COMMAND_NEGATIVES_HAVE_THEIR_OWN_UNCHANGED_POSITIVE_CUT");
 const results: Array<Record<string, unknown>> = [];
 const owned: ChildProcess[] = [];
 const flushLogs: Array<() => Promise<void>> = [];
@@ -535,6 +547,7 @@ try {
         native: { context: ctx, acquisitionSessionId: sessionId, currentRightsRef: parent.parent.rightsRevision },
         model, check, originalParent: parent.parent, originalProfiles });
       const proposal = await s8.propose();
+      if (s8CommandNegatives) s8NegativeReports.push(await s8.checkApplicationCommandNegatives({ phase: "candidate" }));
       const evidence = await s8.readDiscoveryEvidence();
       const nativeRequests = (await admin!.query<ApplicationRequestRow>("SELECT * FROM finnor_os.application_semantics_requests WHERE session_id=$1 ORDER BY created_at,id", [sessionId])).rows;
       const fields = (await admin!.query<{ body: { fields: ApplicationField[] } }>(
@@ -555,18 +568,20 @@ try {
         inspectorDigest: sha(await readFile(join(import.meta.dirname, "inspect-native-discovery.mts"))),
         journalDigest: journal.digest, caseCommitments,
       });
-      const registered = await s8.register({
+      const protocolBody: Parameters<NativeS8Fixture["register"]>[0] = {
         schema: "finnor.s8.application-evaluation-protocol.v1", tenantId: tenant, principalId: actor,
         revisionRef: s8.candidate.ref, evaluatorId: s8.principals.evaluator, registeredAt: new Date().toISOString(),
         dependencyDigest: s8.dependencyDigest, originalEvidenceRefs: evidence.map(value => value.ref),
         oracleRef, caseCommitments, ...NATIVE_S8_FIXTURE_FLAGS,
-      });
+      };
+      if (s8CommandNegatives) s8NegativeReports.push(await s8.checkApplicationCommandNegatives({ phase: "register", body: protocolBody }));
+      const registered = await s8.register(protocolBody);
       const independent = inspectNativeDiscovery({ model, fields, evidence, requests: nativeRequests, profiles: originalProfiles, journal });
       await save("private/independent-discovery-grade.json", independent);
       assert.equal(independent.verdict, "SUPPORTED_DEVELOPMENT", JSON.stringify(independent.checks.filter(value => !value.passed)));
       assert.deepEqual(independent.cases.map(value => value.commitment), caseCommitments);
       const resultRef = x2Ref("ORACLE", "application-independent-discovery-result", independent);
-      const evaluation = await s8.evaluate({
+      const evaluationBody: Parameters<NativeS8Fixture["evaluate"]>[0] = {
         schema: "finnor.s8.application-evaluation.v1", tenantId: tenant, principalId: actor,
         revisionRef: s8.candidate.ref, protocolRef: registered.commitment.ref, evaluatorId: s8.principals.evaluator,
         completedAt: new Date().toISOString(), dependencyDigest: s8.dependencyDigest,
@@ -578,13 +593,23 @@ try {
         costs: { search: null, training: null, evaluation: null, human: null, computeData: null,
           integration: null, maintenance: null, recovery: null, deployment: null, costRefs: [], currency: "USD", basis: "UNKNOWN" },
         economicCreditGranted: false, ...NATIVE_S8_FIXTURE_FLAGS,
-      });
-      const admission = await s8.admit({ schema: "finnor.s8.application-admission.v1", revisionRef: s8.candidate.ref,
-        evaluationRef: evaluation.commitment.ref, dependencyDigest: s8.dependencyDigest, ...NATIVE_S8_FIXTURE_FLAGS });
-      const activation = await s8.activate({ schema: "finnor.s8.application-activation.v1", revisionRef: s8.candidate.ref,
+      };
+      if (s8CommandNegatives) s8NegativeReports.push(await s8.checkApplicationCommandNegatives({ phase: "evaluate", body: evaluationBody }));
+      const evaluation = await s8.evaluate(evaluationBody);
+      const admissionBody: Parameters<NativeS8Fixture["admit"]>[0] = {
+        schema: "finnor.s8.application-admission.v1", revisionRef: s8.candidate.ref,
+        evaluationRef: evaluation.commitment.ref, dependencyDigest: s8.dependencyDigest, ...NATIVE_S8_FIXTURE_FLAGS };
+      if (s8CommandNegatives) s8NegativeReports.push(await s8.checkApplicationCommandNegatives({ phase: "admit", body: admissionBody }));
+      const admission = await s8.admit(admissionBody);
+      const activationBody: Parameters<NativeS8Fixture["activate"]>[0] = {
+        schema: "finnor.s8.application-activation.v1", revisionRef: s8.candidate.ref,
         admissionRef: admission.commitment.ref, dependencyDigest: s8.dependencyDigest, expectedGeneration: 0,
         predecessorRef: null, mode: "DEVELOPMENT", validUntil: deadlineAt, maxCost: 100, maxUses: 64,
-        evidenceRefs: [evaluation.commitment.ref], ...NATIVE_S8_FIXTURE_FLAGS });
+        evidenceRefs: [evaluation.commitment.ref], ...NATIVE_S8_FIXTURE_FLAGS };
+      if (s8CommandNegatives) s8NegativeReports.push(await s8.checkApplicationCommandNegatives({ phase: "activate", body: activationBody }));
+      const activation = await s8.activate(activationBody);
+      if (s8CommandNegatives) s8NegativeReports.push(await s8.checkApplicationCommandNegatives({
+        phase: "disposable-revocation", protocol: registered.signed.body }));
       const wrongRole = await s8.commandAs("proposer", "APPLICATION_REGISTER", registered.signed);
       assert.equal(wrongRole.status, 403);
       assert.equal((wrongRole.body as { code: string }).code, "S8_OPERATION_NOT_AUTHORIZED");
@@ -644,6 +669,62 @@ try {
     }
     assert.equal(quantityParameterNames.size, 1, "FROZEN_MODEL_UNAMBIGUOUS_QUANTITY_SIGNATURE_REQUIRED");
     const parameters = { [[...quantityParameterNames][0]!]: quantity };
+    if (installedTamper) {
+      const before = await snapshot(portalDir);
+      const checked = await record("installed-original-use-byte-fences", async () =>
+        verifyInstalledOriginalUseFences({
+          runtimeRoot: repo, evidenceDirectory: out,
+          prepare: async name => {
+            const probeWork = await createWork("Fence original installed use before any application observation or effect: " + name);
+            const queued = await http!.call("application-execute", { root, workId: probeWork, sessionId,
+              executionProfileId: profiles[0], targetId: objective.recordId,
+              goal: { phase: "APPROVED", reporting: quantity }, parameters, idempotencyKey: "x2-installed-fence-" + randomUUID() });
+            assert.equal(queued.status, 202, "VALID_INSTALLED_PROBE_MUST_REACH_CANONICAL_REGISTRATION");
+            const id = queued.body.sessionId as string;
+            const controller = new pg.Client({ connectionString: adminUrl });
+            await controller.connect(); await controller.query("BEGIN");
+            let released = false, worker: Awaited<ReturnType<typeof startWorker>> | undefined;
+            try {
+              const pid = Number((await controller.query("SELECT pg_backend_pid() pid")).rows[0].pid);
+              await controller.query("SELECT id FROM finnor_os.application_semantics_sessions WHERE id=$1 FOR UPDATE", [id]);
+              worker = await startWorker(id);
+              const until = Date.now() + 5000;
+              let blocked = false;
+              do {
+                blocked = Boolean((await admin!.query("SELECT EXISTS(SELECT 1 FROM pg_stat_activity"
+                  + " WHERE $1::integer=ANY(pg_blocking_pids(pid)) AND query LIKE '%application_semantics_sessions%') blocked", [pid])).rows[0].blocked);
+                if (!blocked) await new Promise(yes => setTimeout(yes, 25));
+              } while (!blocked && Date.now() < until);
+              assert(blocked, "ACTUAL_LOADED_WORKER_MUST_WAIT_BEFORE_INSTALLED_MUTATION");
+              const claimed = (await admin!.query("SELECT id,status,claim_fence,attempts FROM finnor_os.jobs"
+                + " WHERE tenant_id=$1 AND payload->>'sessionId'=$2 AND status='running'", [tenant, id])).rows;
+              assert.equal(claimed.length, 1);
+              await save("installed-fence-" + name + "-claimed.json", { sessionId: id, workId: probeWork,
+                controllerPid: pid, actualBlockedSql: true, claimed,
+                originalParent: (await applicationSession(ctx, id)).original_parent_ref, originalDeadline: deadlineAt });
+              const active = worker;
+              return {
+                resume: async () => { await controller.query("COMMIT"); released = true; return active.completed; },
+                close: async () => {
+                  if (!released) { await controller.query("ROLLBACK"); active.child.kill("SIGTERM"); }
+                  await controller.end();
+                  assert.equal((await admin!.query("SELECT count(*)::int n FROM finnor_os.application_semantics_requests WHERE session_id=$1", [id])).rows[0].n, 0);
+                },
+              };
+            } catch (error) {
+              if (!released) await controller.query("ROLLBACK");
+              worker?.child.kill("SIGTERM"); await controller.end(); throw error;
+            }
+          },
+          assertNoMutation: async name => {
+            const after = await snapshot(portalDir);
+            await save("private/installed-fence-" + name + "-external.json", { before, after });
+            assert.equal(after.digest, before.digest, "INSTALLED_TAMPER_MUST_NOT_REACH_THE_APPLICATION");
+            assert.equal(after.sequence, before.sequence);
+          },
+        }));
+      if (!checked) throw Error("INSTALLED_ORIGINAL_USE_FENCES_UNPASSED");
+    }
     const workId = await createWork("Use the frozen model on the freshly authorized reporting configuration and obtain distinct test approval.");
     freshWorkId = workId;
     freshExactQuantity = objective.reporting.amount;
@@ -1128,6 +1209,20 @@ try {
     }> } }).applications.uses;
     assert.equal(uses.length, 4, "FOUR_REAL_NATIVE_USE_LEASES_REQUIRED");
     const use = uses[0]!;
+    if (s8CommandNegatives) {
+      const checked = await record("native-S8-typed-application-command-negatives", async () => {
+        s8NegativeReports.push(await s8!.checkApplicationCommandNegatives({ phase: "retained-use", lease: use.lease }));
+        assert.deepEqual(s8NegativeReports.map(value => value.phase),
+          ["candidate", "register", "evaluate", "admit", "activate", "disposable-revocation", "retained-use"]);
+        assert(s8NegativeReports.every(value => value.verdict === "PASS"), "ALL_INVOKED_S8_NEGATIVE_PHASES_MUST_PASS");
+        await save("native-s8-command-negative-reports.json", s8NegativeReports);
+        return { phases: s8NegativeReports.map(value => value.phase),
+          refused: s8NegativeReports.reduce((count, value) => count + value.cases.length, 0),
+          liveUse: "NOT_RUN", independentSecondCandidate: "NOT_SUPPLIED",
+          newAuthorityOrDeadline: false, protectedAdmission: false };
+      });
+      if (!checked) throw Error("NATIVE_S8_COMMAND_NEGATIVE_PREREQUISITE_FAILED");
+    }
     const originals = (await admin!.query<{ body: Omit<ApplicationTransitionEvidence, "ref"> }>(
       "SELECT a.body FROM finnor_os.application_semantics_events e JOIN finnor_os.application_semantics_artifacts a"
       + " ON a.tenant_id=e.tenant_id AND a.principal_id=e.principal_id AND a.artifact_id=e.body->'detail'->'ref'->>'id'"
@@ -1272,6 +1367,8 @@ try {
     "ordinary-role-original-request-deletion-refusal", "unchanged-source-and-runtime-custody",
     ...(installed ? [...(!reviewGates ? ["installed-runtime-restart-and-byte-custody"] : []), "installed-ending-asset-custody"] : []),
     ...(mounted ? ["actual-maintained-mounted-Work-lifecycle"] : []),
+    ...(installedTamper ? ["installed-original-use-byte-fences"] : []),
+    ...(s8CommandNegatives ? ["native-S8-typed-application-command-negatives"] : []),
     ...(reviewGates ? [...NATIVE_REVIEW_CASES] : semanticDrift ? ["canonical-P7-semantic-drift-and-Work-invalidation"]
       : finalEgressRevocation ? ["canonical-S6-locked-prepared-profile-revocation"]
       : resourceBeliefChange ? ["canonical-S5-resource-belief-initial-owner-cut", "canonical-S5-pinned-belief-dependency-currentness"]

@@ -95,6 +95,107 @@ business result and actual API restart. It neither repairs nor qualifies
 native 074's browser episode. The known cache/recent-list risks below are
 still unexposed by the complete maintained lifecycle.
 
+Native 076 passes the first seven mounted stages, including independently
+checked fresh business, persisted fresh Investigation/reload, delayed Work
+response, offline/reconnect, genuine logout and SDK refresh. Canonical
+revocation then fails in the fixture with SQLSTATE 23514 before access is
+changed. Migration 0069 permits only `active` and `suspended`; the fixture
+incorrectly writes `inactive`. Before another episode, change only that
+fixture value to `suspended`. Require the same SQL readback, still-live auth
+negative control, newly denied native `/me`, erased private evidence,
+unmodified delayed-response check and finally restoration. Do not weaken
+the schema or replace native revocation with auth-fixture revocation.
+Native 076 remains failed; its last two stages are NOT_RUN. Preserve its
+original fixture/runtime inventory. A fresh fixture-only reconstruction
+must retain the same product bytes and all existing acceptance bounds.
+
+Native 077 repeats the cold canvas PUT 500 with sufficient disk space.
+The standalone cold HTTP diagnostic does not reproduce it. Instrumented
+native 078 identifies a zero-byte `.next/dev/build-manifest.json` read by
+Next 16.3.8's `loadManifest` during concurrent development compilation.
+Its canvas PUT and independent SQL focus assertion pass; the following
+Investigation page reload returns 500 through the manifest parser.
+The original cache and installation 006 are restored. This is a retained
+diagnostic failure, not installed acceptance or a changed application body.
+
+Before the next uninstrumented episode, serially prepare the actual login,
+Home, Investigation and WORLD pages, the real private catchall route and
+the observed missing-route/404 path. Record every preparation method,
+path, expected/actual status and elapsed time. Unauthenticated private
+GET/PUT must still return 401; the missing route must still return 404.
+No route stub, credential, business mutation, accepted owner input or
+browser instrumentation is supplied by preparation. Complete compilation
+before sign-in and retain the original parent/deadline. Do not retry a
+failed business request or extend any mounted assertion deadline.
+This addresses the observed development-server startup race; it does
+not establish a production frontend build or a general Next.js repair.
+
+Native 079 completes that uninstrumented cold preparation and eight mounted
+stages, including independently checked fresh business and canonical native
+revocation. Its second-tab principal-switch stage then fails
+`PRIVATE_RESPONSE_RESURRECTION`. The unchanged old-principal Investigation
+list is genuinely delivered after the new principal's own list and canvas;
+the observer records six previous-principal-title violations, without
+overflow. Route coverage is NOT_RUN. Ending source/runtime/installed custody
+passes, installation 006 is restored, and no product rebuild occurred.
+
+Before the product repair, the concrete failure model is a retained
+`CentropyWorkspace` instance whose `refreshRecent` awaits an old authenticated
+request, then sets local state after logout/new-principal login. Its local
+conversation, Work and canvas hooks also key caches by selected record,
+not by principal. Put all that retained state under a React instance keyed
+by the resolved principal and open/closed workspace boundary. An old response
+must still be delivered unmodified, but cannot update the new instance.
+Closing access or changing principal must discard the old instance and stop
+its trace. Same-principal valid SDK refresh must preserve ongoing instruction
+state; never use a credential as a React key. Keep backend authentication,
+owner checks, delays, forbidden titles and the full route assertions unchanged.
+This is a frontend product change, so fixture-only reconstruction is no longer
+sufficient. Require a fresh affected product build and the unchanged mounted
+episode, including delayed-list non-resurrection and both principals' genuine
+backend verification. Preserve 079 as failed, not as an aggregate pass.
+
+Fresh installation 007 includes that product repair and builds successfully.
+Native 080 passes login, focus/reload and the root boundary, then fails fresh
+business before the privacy regression is exercised. Saved original evidence
+shows the observation aging from 29,101 ms at initial S8 currentness to
+36,962 ms at the pre-wire refusal event, beyond the unchanged 30,000 ms bound.
+The application session fails with possible egress false even though the
+queue job completes and its process exits 0. Preserve 080 as failed, with
+all later mounted stages NOT_RUN. The latency cause and any disk/swap
+contribution are not established. Do not renew the original observation,
+lease, grant or deadline, widen the bound, skip fresh business, or count the
+unreached privacy regression as a pass. A later replay must keep the same
+finite acceptance contract and record the actual resource condition.
+
+Native 081 repeats the unchanged full episode after stopped scratch cleanup
+and records its resource condition. It again fails at fresh business after
+three mounted stages. Unlike 080, its first fresh draft request is VERIFIED
+with acknowledged possible egress. Read-only SQL on an independent copy of
+the stopped database finds that draft's transition reference in RETRY,
+attempt 1, with owner code `LEDGER_UNAVAILABLE`. The reference is absent
+from the original S6 journal. Do not describe this as no-egress or completion.
+The principal-isolation regression remains NOT_RUN; custody and seed restore
+pass. Stop uninstrumented full-flow retries.
+
+The copied-journal diagnostic passes 17 authenticated reads. A second,
+explicitly instrumented disposable copy commits the exact failed transition
+reference in 47.804 ms. Neither reproduces the original failure. The first
+append-probe attempt refuses its unsupported external module before launching;
+the corrected probe resolves only the actual installed source-custody helper.
+No original release, rights, key, deadline, journal or source bytes change.
+These are diagnostics, not installed acceptance.
+
+Before further product execution, retain the S6 service's existing HTTP
+error/status behavior and add only bounded exception classification to its
+unknown-error catch. Log fixed event/name labels and an explicit allowlist of
+system error codes. Never log exception messages/stacks, paths, credentials,
+headers, request bodies or response content. Known `LedgerFault` responses
+must remain unchanged and need no new log. This is observability, not an
+established cause or repair. Require affected static checks, a fresh product
+build, and the unchanged mounted/business acceptance. A later generic
+failure without a reproduced cause remains unpassed.
+
 Written before implementation. This directory is the only write target. The FINNOR checkout is read-only; no server, browser, database, worker, build, credential discovery, publication or peer operation is authorized here.
 
 ## Authoring gate

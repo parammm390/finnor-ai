@@ -33,6 +33,142 @@ S8 original-evidence refusal and actual API restart all pass. Installation
 006 stays unavailable throughout and is restored afterward. This proves
 the stated standalone API/worker episode, not maintained browser acceptance.
 Beginning/ending source, oracle, runtime and installed custody pass.
+Native 076 then passes seven maintained browser stages: real login,
+persisted focus/reload, full root boundary, independently checked fresh
+business and persisted fresh Investigation, delayed Work response,
+offline/reconnect, and genuine logout/expiry/SDK refresh. Revocation fails
+before changing access because the fixture writes `inactive`; canonical
+migration 0069 permits `active`/`suspended`. The fixture now uses `suspended`,
+and that repaired revocation boundary passes in native 079.
+
+Native 077 retains another cold canvas PUT 500 with adequate disk space.
+A 20-request standalone cold HTTP diagnostic does not reproduce it.
+Instrumented native 078 records Next 16.3.8 reading an empty development
+build manifest during compilation. Its canvas PUT and independent SQL
+focus check pass, then Investigation reload returns 500. Both failed
+episodes retain original identities and ending custody; 078 is explicitly
+diagnostic, never final installed acceptance. Original frontend cache and
+installation 006 are restored. Serial unauthenticated route preparation
+is implemented, without a product repair, deadline extension or business
+retry. Native 079 completes that uninstrumented preparation and eight mounted
+stages, including fresh four-action business and canonical revocation.
+The old principal's genuinely delayed Investigation list then restores its
+private titles after the second principal's own canvas/list load. The observer
+records six violations with no overflow; route coverage is NOT_RUN. The full
+episode fails and ending custody passes. This is a reproduced frontend product
+bug, not another framework or fixture diagnosis.
+
+The product repair scopes the retained workspace instance to its resolved
+principal and open/closed access boundary. All conversation, Work, canvas,
+recent-list and pending callback state belongs to that instance; an old
+response cannot update a replacement principal's instance. Valid same-principal
+SDK token refresh retains ongoing work. Frontend typecheck and file lint
+`principal-scope-{typecheck,lint}-001.log` pass. Fresh installation 007 builds
+successfully in approximately 194.2 seconds, including actual backend type
+validation, 66 static pages and traces. It includes the frontend repair;
+the five emitted worker/owner/consumer digests remain unchanged from 004–006.
+The maintained frontend still runs in development mode.
+The episode launcher now distinguishes fresh builds from reconstructions and
+records its own hash; original seed withdrawal/restoration remains mandatory.
+
+Native 080 exercises installation 007 without diagnostic instrumentation:
+8 native gates PASS, 1 FAIL, exit 1. Its first three mounted stages pass;
+fresh business fails and every subsequent mounted stage, including the
+principal-isolation regression, is NOT_RUN. The queue worker exits 0 with
+a FAILED application session, not a successful business result.
+Saved evidence records `X2_S8_ACTUAL_CURRENT_INPUT_REQUIRED` before egress.
+The original observation is 29,101 ms old at the initial currentness stamp
+and 36,962 ms old at the refusal event, exceeding the unchanged 30,000 ms
+limit. Possible egress remains false. This establishes the freshness
+refusal, not the underlying latency cause or disk/swap causality.
+`native-080-failure-diagnostic-001.json` records the selected original
+identities, times and evidence hashes. No deadline, observation timestamp
+or freshness limit is renewed. Ending source/oracle/runtime/installed custody
+passes and installation 006 is restored. The privacy repair remains
+unverified. The stopped 080 database is byte/mode/inventory-verified and
+archived; original JSON, logs, external state and runtime assets remain.
+
+The one unchanged full replay, native 081, also ends 8 PASS/1 FAIL/exit 1
+after three mounted stages. It has a different original failure: its first
+fresh draft request is VERIFIED and acknowledged, with possible egress true.
+An independent stopped-database copy shows the retained draft transition's
+S6 delivery at RETRY/attempt 1 with `LEDGER_UNAVAILABLE`; the transition
+is absent from the S6 journal. This is not 074's transport code or 080's
+freshness refusal. Later mounted stages remain NOT_RUN. Ending custody and
+seed restoration pass.
+
+The copied-journal diagnostic passes 17 authenticated reads, maximum
+98.203 ms. An explicitly instrumented disposable copy commits the exact
+failed transition reference in 47.804 ms. Both report NOT_REPRODUCED,
+not a repair or acceptance. The first append probe refuses its external
+module before launch; the corrected probe uses only the actual installed
+source-custody helper. Original keys, rights, release/deadline and failed
+journal stay unchanged. Full-flow retries stop until the service can
+classify its previously hidden operational exception.
+
+The S6 HTTP catch now emits only fixed event/name labels and allowlisted
+system error codes for unknown exceptions. Existing HTTP error/status
+behavior and known `LedgerFault` handling remain unchanged; no message,
+stack, path, credential, header or body is logged. Full backend typecheck
+and explicit affected lint `s6-operational-diagnostic-{typecheck,lint}-001.log`
+pass. This is observability, not an established cause or repair. The fresh
+affected build succeeds below; unchanged mounted acceptance remains open.
+
+Fresh installation 008 completes in 228,268.227 ms, including backend type
+validation, 66 static pages and traces. Only the S6 emitted role changes:
+its digest is `dfe9922901bf7a5249da9d5b461348b0477957ac8e3e788fb518320a3cc47677`.
+This installs the bounded operational log, not an established S6 repair.
+All six generated/static compatibility checks pass: workspace contract,
+capability manifest, OpenAPI client, human forms, authorization matrix and
+action release manifest. Their private receipt is
+`generated-compatibility-001/result.json`; they are not business proof.
+
+Native 082 ends 8 PASS/1 FAIL/exit 1 on installation 008. Acquisition,
+independent model checking and the real signed S6/S8 development lifecycle
+pass. Serial frontend preparation also passes. Fresh visible Chrome launch
+then fails before any mounted stage or fresh business request; the principal
+repair is NOT_RUN. Ending custody and original seed restoration pass.
+One isolated blank-browser diagnostic reproduces the unchanged 15-second
+launch timeout using the same locked Playwright and visible Chrome settings,
+without saved authentication or application navigation. Its original exception
+is retained privately. No further browser launch or full-flow browser retry
+is attempted while this boundary is blocked; no shared browser installation
+or policy is changed. Native 081's underlying S6 exception remains unknown.
+
+Native 083 passes 11 gates, exit 0, on installation 008. All nine claimed-worker
+installed-byte cases pass with exact original deliveries, no new physical
+requests/external changes and exact byte/mode restoration. A separate unchanged
+four-action business result, maintained-client HTTP projection, actual API
+restart and ending custody pass afterward. The matrix preserves a real
+session-row lock until the loaded emitted worker is observed waiting,
+then changes only generated assets/identity and restores them in finally.
+Native-driver typecheck 059 retains the new S8 fixture's duplicate
+`operation` property failure. The diagnostic tag now uses `kind`;
+typecheck 060 passes the adopted extension and driver integration.
+An independent read-only review returns no actionable S8 fixture findings,
+not a runtime pass. Native 084 then passes 13 gates, exit 0, including 53 exact
+refusals across all seven wired lifecycle/retained-lease phases. Canonical
+before/after snapshots, independent fresh business, original-evidence refusal,
+actual API restart and ending custody pass. Live-use and independently
+qualified second-domain cases remain unexecuted. A late unvalidated live-use
+relay addition is withdrawn byte-exactly to the fixture/driver in installation
+008. Its private patch is retained, not delivered or credited as coverage.
+
+Native 085 passes all 14 gates, exit 0, using the current emitted worker,
+S6/S8 and authenticated API. A real SIGKILL follows independent submission
+acceptance. Natural lease expiry/quarantine, original observation after owner
+restart, full independently graded business completion, exact original
+reconciliation refusal, actual API restart and ending custody all pass.
+Original deadlines, effects, allocations and evidence remain; no timestamp
+edit, replay allowance or new completion authority is introduced. This is a
+passing installed crash-recovery episode, not mounted or final acceptance.
+Opaque, stopped/cancelled and expired-parent variants remain prior-cut proof.
+
+Further additions are frozen. The remaining gaps below are not waived, and
+neither CODE_COMPLETE nor E2E_DEV_VERIFIED is achieved. Stopped database images 075–078 are byte/mode/
+inventory-verified archives; portal state, raw evidence and runtime assets
+remain retained. Database 030 remains untouched.
+
 Prior API/UI/hybrid, recovery, cancellation, drift, backlog and final-lock
 evidence remains prior-cut evidence. Full finite engineering remains
 incomplete and unsealed.
@@ -117,6 +253,12 @@ The recoverable continuation commit is
 clean source-only reconstruction remain separate from installed acceptance.
 Later fixture repairs and this updated ledger form a further continuation,
 not a final release seal. No publication is authorized or performed.
+The later scanned source-only installed-proof continuation is
+`c4abdb97b4a6f39a0944dc26cc7fae1797e16a95`, tree
+`cfe4ecefeef8d31a608ee36177e516c6723c7b2a`. The current fixture extensions
+and frontend principal-isolation repair are uncommitted and unsealed.
+The frontend repair changes product source; its static checks and installation
+007 build pass, but full mounted acceptance has not passed.
 
 ## Current changed source
 

@@ -75,6 +75,36 @@ identity. The real installed positive and deliberate installed-byte mutation,
 not a new private-predicate unit test, own these cases. Complete API/dependency
 inventories are additionally checked by the launcher before and after the run.
 
+### Original-use tampering matrix, before implementation
+
+Exercise actual authenticated application-execute registration followed by
+the emitted original-use worker after a model has been acquired. Registration
+alone may queue work; it is not an execution/currentness verdict. Hold the
+real session row until the actual claimed worker is independently observed
+waiting, then change installed bytes and release that same delivery. This
+ensures a missing worker directory cannot substitute a bootstrap failure for
+the intended runtime guard. Run this matrix with S8 unconfigured so an earlier
+consumer-policy source-pin refusal cannot replace the native identity guard;
+configured S8 lifecycle and command proofs remain separate. Use a new,
+task-owned reconstructed installation, never a prior episode's retained
+installation. Mutate only its owned generated consumer asset or identity,
+restore exact original bytes/mode/path in finally, and retain each mutation.
+Changed emitted bytes must reach `X2_INSTALLED_RUNTIME_ASSET_CHANGED`;
+writable assets must reach `X2_INSTALLED_RUNTIME_UNSAFE_ASSET`; duplicate and
+omitted required descriptors must reach their explicit installed identity
+guards; a symlink identity must reach `X2_INSTALLED_RUNTIME_PATH_CHANGED`.
+Missing identity/directory must also refuse original use rather than fall
+back to source mode. Record their actual unavailable-file disposition,
+without relabelling a generic failure as a different semantic guard.
+
+Every case uses a genuine otherwise-valid fresh Work with the same
+profile/target/goal and original acquired parent. Independent SQL must
+retain its queued/claimed then fenced child and show no application request;
+the independent application snapshot must remain unchanged. After restoration,
+the same real owner must accept the positive fresh registration and four-action external business
+oracle must pass. A direct private-reader test or ending inventory alone
+cannot satisfy this matrix. Keep original deadlines, grants and resources.
+
 The existing physical-loss/restart/original-observation variants own recovery.
 Run their affected installed variants, preserving the same effect, obligation,
 request, parent, reservation, allocation and original deadline. Include the
@@ -102,8 +132,13 @@ excluding generated frontend output. Preserve the API build ID, all API and
 dependency inventories, emitted bytes, locks and retained source adapters.
 Never modify the seed or claim this is a new compiler/backend build.
 
-Only the two explicit browser-fixture modules and these scope ledger documents
-may differ from the original source input. Compare every other canonical
+Only explicitly named verification modules and scope ledger documents may
+differ from the original source input. The original two browser modules,
+native driver, native S8 fixture and installed-custody fixture are eligible
+only after checking they are outside the emitter input closure. New documents
+must be explicitly allowlisted scope contracts, never product/configuration
+inputs. Record every changed or added input and its original/new digest.
+Compare every other canonical
 source input and both locks against the checked source inventory; reject a
 product/configuration/dependency change rather than reusing its old output.
 Copy independent COW files, preserve internal relative links, and reject

@@ -57,11 +57,20 @@ function formatDate(value: string): string {
 }
 
 export function CentropyWorkspace() {
+  const auth = useCentropyAuth()
+  // Private caches and pending callbacks belong to one open principal scope.
+  // A valid same-principal token refresh must not interrupt ongoing work.
+  const scope = auth.session && auth.role === "owner" && !auth.loading && !auth.authError && !auth.roleError
+    ? `owner:${auth.session.user.id}` : "closed"
+  return <ScopedCentropyWorkspace key={scope} />
+}
+
+function ScopedCentropyWorkspace() {
   const pathname = usePathname()
   const router = useRouter()
   const searchParams = useSearchParams()
   const auth = useCentropyAuth()
-  const ready = Boolean(auth.session && auth.role === "owner" && !auth.roleError)
+  const ready = Boolean(auth.session && auth.role === "owner" && !auth.loading && !auth.authError && !auth.roleError)
   const fromRoute = routeThreadId(pathname)
   const worldMode = pathname === "/centropy/world"
   const worldThreadId = worldMode && UUID.test(searchParams.get("threadId") ?? "") ? searchParams.get("threadId") : null

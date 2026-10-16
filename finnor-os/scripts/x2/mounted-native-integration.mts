@@ -94,12 +94,28 @@ export async function runMountedNativeIntegration(input: MountedNativeInput) {
       backend: "ACTUAL_EMITTED_PRODUCTION_NODE_STAGING_DISPOSABLE", log,
       ambientEnvironmentLoaded: false, cspDisabled: false, authBypassPresent: false,
     }, null, 2) + "\n", { mode: 0o600, flag: "wx" });
-    // Real cold compilation, not a route stub. These unauthenticated page fetches
-    // do not establish access, acquisition, or an application outcome.
-    for (const path of ["/centropy/login", `/centropy/investigations/${acquisition.threadId}`]) {
-      const response = await fetch(input.frontendOrigin + path, { redirect: "manual", signal: AbortSignal.timeout(60000) });
-      assert.equal(response.status, 200, "ACTUAL_MAINTAINED_PAGE_COMPILE_FAILED"); await response.arrayBuffer();
+    // Finish cold compilation serially before real sign-in. Preparation grants
+    // no access and never counts as an authenticated route or business result.
+    const preparation: Array<{ method: "GET" | "POST" | "PUT"; path: string; expectedStatus: number; status: number; wallMs: number }> = [];
+    for (const [method, path, expected] of [
+      ["GET", "/centropy/login", 200], ["GET", "/centropy", 200],
+      ["GET", `/centropy/investigations/${acquisition.threadId}`, 200],
+      ["GET", "/centropy/world", 200], ["GET", "/api/centropy/me", 401],
+      ["PUT", `/api/centropy/threads/${acquisition.threadId}/canvas`, 401],
+      ["POST", "/api/branches/list", 404],
+    ] as const) {
+      const before = performance.now();
+      const response = await fetch(input.frontendOrigin + path, { method,
+        redirect: "manual", signal: AbortSignal.timeout(60000),
+        ...(method === "GET" ? {} : { headers: { "content-type": "application/json" }, body: "{}" }) });
+      await response.arrayBuffer();
+      preparation.push({ method, path, expectedStatus: expected, status: response.status, wallMs: performance.now() - before });
+      assert.equal(response.status, expected, "ACTUAL_MAINTAINED_PREPARATION_FAILED");
     }
+    await writeFile(join(input.evidenceDirectory, "mounted-frontend-preparation.json"), JSON.stringify({
+      qualification: "UNAUTHENTICATED_COMPILATION_PREPARATION_NOT_ACCESS_OR_BUSINESS_PROOF",
+      routes: preparation, businessDeadlineRenewed: false,
+    }, null, 2) + "\n", { mode: 0o600, flag: "wx" });
     try {
       const { chromium } = await import("playwright-core");
       const mode = process.env.FINNOR_X2_MOUNTED_BROWSER ?? "assigned_desktop";
@@ -203,7 +219,7 @@ export async function runMountedNativeIntegration(input: MountedNativeInput) {
       },
       setPrincipalRevoked: async request => {
         assert.equal(request.principalId, input.actorId);
-        const status = request.revoked ? "inactive" : "active";
+        const status = request.revoked ? "suspended" : "active";
         const rows = (await input.sql.query("UPDATE finnor_os.users SET status=$3 WHERE tenant_id=$1 AND id=$2 RETURNING id,status,role",
           [input.tenantId, input.actorId, status])).rows;
         assert.equal(rows.length, 1); assert.equal(rows[0].status, status); assert.equal(rows[0].role, "owner");

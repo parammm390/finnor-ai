@@ -1,7 +1,7 @@
 /** Independent launcher integrity check, not a model/business oracle. */
 import { strict as assert } from "node:assert";
 import { createHash } from "node:crypto";
-import { lstat, readFile, readdir, realpath } from "node:fs/promises";
+import { chmod, lstat, readFile, readdir, realpath, rename, symlink, writeFile } from "node:fs/promises";
 import { dirname, join, relative, resolve } from "node:path";
 
 type Asset = { path: string; bytes?: number; sha256?: string; kind?: "link"; target?: string };
@@ -80,4 +80,94 @@ export async function inspectInstalledRuntime(runtimeRoot: string) {
     emittedFiles: manifest.emittedFiles, installedIdentityDigest: sha(identityBytes), checked,
     wallMs: performance.now() - started, sourceLoadedAdapters: manifest.sourceLoadedAdapters,
     qualification: "ACTUAL_ARTIFACT_INTEGRITY_NOT_BUSINESS_OR_PROTECTED_QUALIFICATION" };
+}
+
+/** Actual queued/claimed original use owns this check, not the identity reader. */
+export async function verifyInstalledOriginalUseFences(input: {
+  runtimeRoot: string; evidenceDirectory: string;
+  prepare(name: string): Promise<{
+    resume(): Promise<{ status: string; reason: string | null }>;
+    close(): Promise<void>;
+  }>;
+  assertNoMutation(name: string): Promise<void>;
+}) {
+  const runtime = await realpath(input.runtimeRoot), evidence = await realpath(input.evidenceDirectory);
+  assert.equal(runtime, resolve(input.runtimeRoot));
+  assert(inside(dirname(dirname(runtime)), evidence) && !inside(runtime, evidence));
+  const directory = join(runtime, "finnor-os/x2-runtime"), identityPath = join(directory, "identity.json");
+  const assetPath = join(directory, "application-consumer.js");
+  const identityBytes = await readFile(identityPath), assetBytes = await readFile(assetPath);
+  const identityMode = (await lstat(identityPath)).mode & 0o777, assetMode = (await lstat(assetPath)).mode & 0o777;
+  assert(!(identityMode & 0o222) && !(assetMode & 0o222));
+  const identity = JSON.parse(identityBytes.toString());
+  assert.equal(identity.schema, "finnor.x2.installed-asset-identity.v1");
+  const cases = [
+    ["changed-consumer-bytes", "X2_INSTALLED_RUNTIME_ASSET_CHANGED"],
+    ["writable-consumer", "X2_INSTALLED_RUNTIME_UNSAFE_ASSET"],
+    ["writable-identity", "X2_INSTALLED_RUNTIME_UNSAFE_ASSET"],
+    ["duplicate-descriptor", "X2_INSTALLED_RUNTIME_AMBIGUOUS_ASSET"],
+    ["missing-required-role", "X2_INSTALLED_RUNTIME_REQUIRED_ASSET_MISSING"],
+    ["changed-node-identity", "X2_INSTALLED_NODE_IDENTITY_CHANGED"],
+    ["symlink-identity", "X2_INSTALLED_RUNTIME_PATH_CHANGED"],
+    ["missing-identity", "ENOENT"], ["missing-runtime-directory", "ENOENT"],
+  ] as const;
+  const observed: Array<Record<string, unknown>> = [];
+  const rewrite = async (path: string, bytes: Buffer, mode: number) => {
+    await chmod(path, 0o600); await writeFile(path, bytes); await chmod(path, mode);
+  };
+  for (const [name, expectedReason] of cases) {
+    // Preparation observes the real blocked worker while all original assets
+    // are intact. A missing entrypoint cannot masquerade as a currentness fence.
+    const delivery = await input.prepare(name);
+    let movedIdentity = false, movedDirectory = false, linkedIdentity = false;
+    const heldIdentity = join(evidence, "installed-" + name + "-identity.json");
+    const heldDirectory = join(evidence, "installed-" + name + "-runtime");
+    let passed = false;
+    try {
+      if (name === "changed-consumer-bytes")
+        await rewrite(assetPath, Buffer.concat([assetBytes, Buffer.from("\n// owned installed-byte probe\n")]), assetMode);
+      else if (name === "writable-consumer") await chmod(assetPath, 0o644);
+      else if (name === "writable-identity") await chmod(identityPath, 0o644);
+      else if (name === "duplicate-descriptor" || name === "missing-required-role" || name === "changed-node-identity") {
+        const changed = structuredClone(identity);
+        if (name === "duplicate-descriptor") changed.emittedFiles.push(changed.emittedFiles[0]);
+        else if (name === "missing-required-role")
+          changed.emittedFiles = changed.emittedFiles.filter((file: Asset) => file.path !== "finnor-os/x2-runtime/application-consumer.js");
+        else changed.nodeBinarySha256 = "0".repeat(64);
+        await rewrite(identityPath, Buffer.from(JSON.stringify(changed)), identityMode);
+      } else if (name === "missing-runtime-directory") {
+        await rename(directory, heldDirectory); movedDirectory = true;
+      } else {
+        await rename(identityPath, heldIdentity); movedIdentity = true;
+        if (name === "symlink-identity") { await symlink(heldIdentity, identityPath); linkedIdentity = true; }
+      }
+      const result = await delivery.resume();
+      observed.push({ name, expectedReason, observed: result, status: "FAIL", originalDelivery: true });
+      assert(["STALE", "FAILED"].includes(result.status), "TAMPERED_INSTALLED_USE_WAS_NOT_FENCED");
+      assert.equal(result.reason, expectedReason, "INSTALLED_TAMPER_STOPPED_AT_THE_WRONG_BOUNDARY");
+      await input.assertNoMutation(name);
+      passed = true;
+    } finally {
+      if (movedDirectory) await rename(heldDirectory, directory);
+      if (linkedIdentity) await rename(identityPath, join(evidence, "installed-" + name + "-retained.link"));
+      if (movedIdentity) await rename(heldIdentity, identityPath);
+      await rewrite(identityPath, identityBytes, identityMode);
+      await rewrite(assetPath, assetBytes, assetMode);
+      await delivery.close();
+      assert.equal(sha(await readFile(identityPath)), sha(identityBytes));
+      assert.equal(sha(await readFile(assetPath)), sha(assetBytes));
+      assert.equal((await lstat(identityPath)).mode & 0o777, identityMode);
+      assert.equal((await lstat(assetPath)).mode & 0o777, assetMode);
+      const row = observed.at(-1);
+      if (row?.name === name) { row.status = passed ? "PASS" : "FAIL"; row.originalBytesAndModesRestored = true; }
+      await writeFile(join(evidence, "installed-original-use-fences.json"), JSON.stringify({
+        schema: "finnor.x2.installed-original-use-fences.v1", expected: cases,
+        status: passed && observed.length === cases.length ? "PASS" : "INCOMPLETE",
+        originalIdentitySha256: sha(identityBytes), originalConsumerSha256: sha(assetBytes), observed,
+        qualification: "CLAIMED_EMITTED_ORIGINAL_USE_WITH_INDEPENDENT_ZERO_EGRESS_ASSERTIONS",
+        positiveFreshBusiness: "REQUIRED_SEPARATELY_AFTER_RESTORATION",
+      }, null, 2) + "\n", { mode: 0o600 });
+    }
+  }
+  return { cases: observed, originalIdentitySha256: sha(identityBytes), positiveFreshBusiness: "REQUIRED_AFTER_RESTORATION" };
 }

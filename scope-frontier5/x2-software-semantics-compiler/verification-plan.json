@@ -13,11 +13,17 @@
   },
   "status": "REVIEW_REPAIRS_SOURCE_VERIFIED_INSTALLED_MOUNTED_UNFINISHED",
   "currentContinuation": {
-    "asOf": "native-e2e-075",
+    "asOf": "native-e2e-085-scope-frozen-incomplete",
     "checkpoint": "368755a222581ad9c49ae4d15c2dfd661cc4ccd4",
     "recoverableContinuationCommit": "b35bf3ba9a4e4dcdd63fa7dc546de743cc74f809",
     "recoverableContinuationTree": "7d5e63c33639f5a34b8a6804941b7a51b97aeedc",
     "laterContinuationRecordedHere": true,
+    "precedingScannedSourceContinuation": {
+      "commit": "c4abdb97b4a6f39a0944dc26cc7fae1797e16a95",
+      "tree": "cfe4ecefeef8d31a608ee36177e516c6723c7b2a",
+      "fixtureExtensionsAbsentFromThatCommit": true,
+      "finalReleaseSeal": false
+    },
     "sourceContracts": {"artifact": "source-contract-004/result.json", "pass": 15, "fail": 0},
     "nativeReview": {
       "artifact": "native-e2e-068/results.json",
@@ -33,10 +39,125 @@
       "historicalMigrationsRewritten": false
     },
     "focusedTypecheck": {"artifact": "native-driver-typecheck-057.log", "status": "PASS"},
+    "currentFixtureTypecheck": {
+      "artifact": "native-driver-typecheck-060.log", "status": "PASS",
+      "retainedFailure": {"artifact": "native-driver-typecheck-059.log", "boundary": "S8_FIXTURE_DUPLICATE_OPERATION_PROPERTY"},
+      "repair": "DIAGNOSTIC_TAG_KIND_PRESERVES_ACTUAL_COMMAND_OPERATION",
+      "readOnlyS8Review": "NO_ACTIONABLE_FINDINGS_NOT_RUNTIME_PROOF",
+      "earlier058PassAppliesOnlyToEarlierFixture": true
+    },
     "backendTypecheck": {"artifact": "native-typecheck-038.log", "status": "PASS"},
     "backendInclusiveLint": {"artifact": "native-lint-046.log", "status": "PASS"},
-    "installedBuilds": ["installed-001", "installed-002", "installed-003", "installed-004", "installed-005", "installed-006"],
+    "installedBuilds": ["installed-001", "installed-002", "installed-003", "installed-004", "installed-005", "installed-006", "installed-007", "installed-008"],
+    "principalIsolationRepair": {
+      "retainedFailure": "native-e2e-079/mounted-work-8abcfc0d-82b4-421e-aaae-bedd03bad48f/result.json",
+      "previousPrincipalTitleViolations": 6,
+      "implementation": "WORKSPACE_INSTANCE_KEYED_BY_RESOLVED_PRINCIPAL_AND_OPEN_CLOSED_ACCESS",
+      "typecheck": {"artifact": "principal-scope-typecheck-001.log", "status": "PASS"},
+      "lint": {"artifact": "principal-scope-lint-001.log", "status": "PASS"},
+      "freshBuild": {
+        "installation": "installed-007", "status": "PASS",
+        "manifest": "installed-007/build-manifest.json",
+        "buildId": "x2-2f5236312186a73b50d0694ddc6e53df5c9b2a193482d57b7fbf83fa2646b4e0",
+        "wallMs": 194216.453917,
+        "backendStaticPages": 66,
+        "fiveEmittedDigestsUnchangedFrom004Through006": true,
+        "maintainedFrontendMode": "DEVELOPMENT"
+      },
+      "mountedRegression": "NOT_RUN_080_AND_081_FAIL_AT_FRESH_BUSINESS_082_AT_BROWSER_LAUNCH",
+      "runtimeVerified": false
+    },
     "latestInstalledExecution": {
+      "run": "native-e2e-085",
+      "installation": "installed-008",
+      "productRebuilt": true,
+      "pass": 14, "fail": 0, "exitCode": 0,
+      "freshFourActionIndependentBusiness": "PASS",
+      "emittedS6S8Lifecycle": "PASS",
+      "physicalWorkerSIGKILLAfterIndependentAcceptance": "PASS",
+      "naturalLeaseExpiryAndOriginalQuarantine": "PASS",
+      "originalObservationAfterOwnerRestart": "PASS",
+      "originalReconciliationEvidenceRefusal": "PASS",
+      "actualApiRestart": "PASS",
+      "endingSourceOracleRuntimeCustody": "PASS",
+      "endingInstalledCustody": "PASS",
+      "executionReceipt": "reconstruction-native-013.json",
+      "seedAbsentThroughoutEpisode": true, "seedRestored": true,
+      "mounted": "NOT_REQUESTED_BROWSER_LAUNCH_BLOCKED",
+      "principalIsolationRegression": "NOT_RUN",
+      "completionClaimed": false
+    },
+    "precedingMountedPreconditionExecution": {
+      "run": "native-e2e-082",
+      "installation": "installed-008",
+      "productRebuilt": true,
+      "pass": 8, "fail": 1, "exitCode": 1,
+      "freshFourActionIndependentBusiness": "NOT_RUN_BROWSER_LAUNCH_UNAVAILABLE",
+      "failure": "FRESH_TASK_OWNED_BROWSER_CONTEXT_UNAVAILABLE",
+      "savedDiagnostic": "browser-launch-diagnostic-001/result.json",
+      "emittedS6S8Lifecycle": "PASS",
+      "mountedStagesExecuted": 0,
+      "endingSourceOracleRuntimeCustody": "PASS",
+      "endingInstalledCustody": "PASS",
+      "executionReceipt": "reconstruction-native-010.json",
+      "seedAbsentThroughoutEpisode": true,
+      "seedRestored": true,
+      "frontendDiagnosticInstrumentation": false,
+      "principalIsolationRegression": "NOT_RUN",
+      "completionClaimed": false,
+      "preceding081": {
+        "run": "native-e2e-081",
+        "failure": "X2_S8_NATIVE_REFERENCE_DELIVERY_UNPASSED",
+        "ownerCode": "LEDGER_UNAVAILABLE",
+        "savedDiagnostic": "native-081-owner-diagnostic-001.log",
+        "firstFreshDraft": {"status": "VERIFIED", "possibleEgress": true, "acknowledged": true},
+        "transitionReferenceDelivery": {"status": "RETRY", "attempts": 1, "presentInOriginalS6Journal": false},
+        "underlyingOperationalException": "NOT_ESTABLISHED",
+        "endingCustody": "PASS", "seedRestored": true
+      },
+      "preceding080": {
+        "run": "native-e2e-080", "failure": "X2_S8_ACTUAL_CURRENT_INPUT_REQUIRED",
+        "savedDiagnostic": "native-080-failure-diagnostic-001.json",
+        "initialObservationAgeMs": 29101, "refusalEventObservationAgeMs": 36962,
+        "maxCurrentnessMs": 30000, "possibleEgress": false,
+        "latencyRootCause": "NOT_ESTABLISHED", "diskOrSwapCausality": "NOT_ESTABLISHED"
+      }
+    },
+    "s6OperationalExceptionDiagnostic": {
+      "stoppedCopiedDatabase": {"artifact": "native-081-owner-diagnostic-001.log", "code": "LEDGER_UNAVAILABLE", "originalDatabaseModified": false},
+      "retainedReadProbe": {"artifact": "s6-retained-read-diagnostic-001/result.json", "requests": 17, "maximumWallMs": 98.202042, "status": "NOT_REPRODUCED"},
+      "exactReferenceProbe": {"artifact": "s6-retained-append-diagnostic-003/result.json", "httpStatus": 200, "wallMs": 47.803583, "status": "NOT_REPRODUCED_COPY_ONLY", "installedAcceptance": false},
+      "retainedProbeBootstrapFailure": "s6-retained-append-diagnostic-002/result.json",
+      "productChange": "BOUNDED_FIXED_LABEL_AND_ALLOWLISTED_SYSTEM_ERROR_CLASSIFICATION_ONLY",
+      "typecheck": {"artifact": "s6-operational-diagnostic-typecheck-001.log", "status": "PASS"},
+      "lint": {"artifact": "s6-operational-diagnostic-lint-001.log", "status": "PASS"},
+      "freshAffectedBuild": {
+        "installation": "installed-008", "status": "PASS",
+        "manifest": "installed-008/build-manifest.json",
+        "buildId": "x2-121da14e473030ba481a19a011a05fa1b90d93e17bdd0c51b0a16f0e53516504",
+        "wallMs": 228268.2265,
+        "backendStaticPages": 66,
+        "ledgerDigest": "dfe9922901bf7a5249da9d5b461348b0477957ac8e3e788fb518320a3cc47677",
+        "otherFourEmittedDigestsUnchanged": true
+      },
+      "causeOrRepairEstablished": false
+    },
+    "generatedStaticCompatibility": {
+      "artifact": "generated-compatibility-001/result.json",
+      "pass": 6, "fail": 0,
+      "checks": ["workspace-contract", "capability-manifest", "openapi-client", "human-forms", "authorization-matrix", "action-release-manifest"],
+      "runtimeBusinessProof": false
+    },
+    "blankBrowserDiagnostic": {
+      "artifact": "browser-launch-diagnostic-001/result.json",
+      "status": "FAILED", "phase": "launch",
+      "observed": "VISIBLE_CHROME_LAUNCH_TIMEOUT",
+      "launchTimeoutMs": 15000,
+      "attempts": 1, "savedAuthenticationLoaded": false,
+      "applicationVisited": false, "sharedInstallationOrPolicyChanged": false,
+      "furtherBrowserRetries": "BLOCKED"
+    },
+    "precedingPassingStandaloneInstalledExecution": {
       "run": "native-e2e-075",
       "installation": "reconstructed-installed-001",
       "originalProductInstallation": "installed-006",
@@ -60,27 +181,81 @@
       "scope": "STANDALONE_API_WORKER_EPISODE_NOT_FULL_MOUNTED_ACCEPTANCE"
     },
     "latestMountedExecution": {
-      "run": "native-e2e-074",
+      "run": "native-e2e-082",
       "pass": 8,
       "fail": 1,
       "exitCode": 1,
-      "loginFocusReloadAndFullRootBoundary": "PASS",
-      "accessibleParametersAndRealExecutionPost": "PASS_HTTP_202",
-      "retainedHistorySqlWhenUiScopeNull": "PASS",
-      "freshWorker": "FAILED_X2_S8_NATIVE_REFERENCE_DELIVERY_UNPASSED",
-      "originalDeliveryState": "RETRY_LEDGER_TRANSPORT_UNAVAILABLE",
-      "sameReferenceInS6Commitments": true,
-      "freshRequestStatus": "PREPARED",
-      "freshPossibleEgress": false,
+      "mountedStagesPass": 0,
+      "login": "NOT_RUN",
+      "focusReloadAndRootBoundary": "NOT_RUN",
+      "failedStage": "PRECONDITION_BEFORE_MOUNTED_STAGES",
+      "boundary": "FRESH_TASK_OWNED_BROWSER_CONTEXT_UNAVAILABLE",
       "laterLifecycle": "NOT_RUN",
       "endingCustody": "PASS",
-      "transportRootCause": "NOT_ESTABLISHED",
+      "seedRestored": true,
+      "preceding079": {
+        "run": "native-e2e-079", "mountedStagesPass": 8,
+        "freshFourActionIndependentBusiness": "PASS_STAGE_NOT_OVERALL_EPISODE",
+        "canonicalSuspendedRevocation": "PASS",
+        "failedStage": "principal-switch-and-delayed-investigation-list",
+        "failure": "PRIVATE_RESPONSE_RESURRECTION",
+        "previousPrincipalTitleViolations": 6,
+        "observerOverflow": false,
+        "routeCoverage": "NOT_RUN",
+        "endingCustody": "PASS",
+        "seedRestored": true
+      },
+      "preceding076": {
+        "run": "native-e2e-076", "mountedStagesPass": 7,
+        "freshFourActionIndependentBusiness": "PASS_STAGE_NOT_OVERALL_EPISODE",
+        "delayedWorkOfflineLogoutExpirySdkRefresh": "PASS",
+        "failedStage": "canonical-revocation-and-delayed-response",
+        "failure": "OWNER_DATABASE_23514_INVALID_INACTIVE_FIXTURE_VALUE",
+        "repair": "CANONICAL_SUSPENDED_VALUE_PASSES_079",
+        "lastTwoStages": "NOT_RUN"
+      },
       "retainedPriorFailures": [
+        {"run": "native-e2e-077", "boundary": "NEXT_DEV_COLD_CANVAS_PUT_500"},
+        {"run": "native-e2e-074", "boundary": "S6_REFERENCE_LEDGER_TRANSPORT_UNAVAILABLE_MATCHING_COMMITMENT_PREPARED_NO_POSSIBLE_EGRESS_ROOT_CAUSE_UNESTABLISHED"},
         {"run": "native-e2e-072", "boundary": "EXACT_NESTED_PARAMETERS_LABEL"},
         {"run": "native-e2e-073", "boundary": "NEXT_DEV_CANVAS_PUT_500_UNEXPECTED_END_OF_JSON"},
         {"run": "native-e2e-071", "boundary": "BROWSER_OBSERVER_NAMED_ARROW_SERIALIZATION"},
         {"run": "native-e2e-070", "boundary": "WORLD_TIMEOUT_WITH_FRONTEND_ENOSPC"}
       ]
+    },
+    "coldFrontendDiagnostic": {
+      "httpOnly": {"artifact": "cold-frontend-diagnostic-001/result.json", "requests": 20, "status": "NOT_REPRODUCED"},
+      "mounted": {"run": "native-e2e-078", "status": "FAIL_DIAGNOSTIC_NOT_INSTALLED_ACCEPTANCE",
+        "trace": "native-078-frontend-parse-failures.jsonl",
+        "observed": "EMPTY_NEXT_DEV_BUILD_MANIFEST_IN_LOAD_MANIFEST",
+        "canvasPutAndSqlFocus": "PASS", "followingInvestigationReload": "HTTP_500",
+        "originalCacheAndSeedRestored": true},
+      "preparationRepair": "SERIAL_REAL_UNAUTHENTICATED_ROUTES_EXPECTED_STATUSES_PASS_UNINSTRUMENTED_079_AND_080",
+      "productSourceChanged": false,
+      "businessDeadlineRenewed": false
+    },
+    "newVerification": {
+      "installedOriginalUseByteMatrix": {
+        "artifact": "native-e2e-083/results.json",
+        "casesPassed": 9, "nativeGatesPassed": 11, "exitCode": 0,
+        "originalDeliveryAndExactRestoration": true,
+        "separateUnchangedFreshBusiness": "PASS",
+        "actualApiRestartAndEndingCustody": "PASS"
+      },
+      "typedS8CommandNegatives": {
+        "artifact": "native-e2e-084/native-s8-command-negative-reports.json",
+        "phasesPassed": 7, "refusalsPassed": 53, "nativeGatesPassed": 13, "exitCode": 0,
+        "separateUnchangedFreshBusiness": "PASS",
+        "liveUse": "NOT_RUN", "independentlyQualifiedSecondDomain": "NOT_SUPPLIED",
+        "lateUnvalidatedRelay": "WITHDRAWN_BYTE_EXACTLY_TO_TESTED_INSTALLATION_008_FIXTURES",
+        "withdrawnPatch": "live-use-relay-unvalidated-001.patch"
+      },
+      "affectedEmittedRecovery": {
+        "fullCrashAndOriginalRecovery": {"artifact": "native-e2e-085/results.json", "pass": 14, "fail": 0, "exitCode": 0},
+        "opaqueCancelledExpiredParent": "NOT_RUN_ON_CURRENT_EMITTED_CUT"
+      },
+      "furtherAdditions": "FROZEN",
+      "finalAcceptance": false
     },
     "emittedConsumerPolicyFences": {
       "artifact": "emitted-consumer-policy-002/result.json",
@@ -93,7 +268,7 @@
       "requiredLoadedConsumerPinMutated": true,
       "retainedWrongBoundaryProbe": "emitted-consumer-policy-001/result.json"
     },
-    "explicitVisibleChromeMode": "LOGIN_FOCUS_RELOAD_ROOT_AND_EXECUTION_POST_PASS_FULL_LIFECYCLE_UNFINISHED",
+    "explicitVisibleChromeMode": "BLANK_VISIBLE_CHROME_LAUNCH_TIMEOUT_082_AND_DIAGNOSTIC_001_NO_BROWSER_RETRY",
     "finalReleaseSeal": false,
     "codeComplete": false,
     "e2eDevVerified": false
@@ -363,8 +538,10 @@
       "heavyBuildsAndInstalledStacksConcurrent": 1,
       "ownedDisposableDatabaseClusters": 1,
       "ports": "dynamic loopback, exclude peer 19073",
-      "latestFreeDiskGiB": 4.7,
-      "stoppedDatabaseArchives": "001–029 and 031–036 byte/mode/link/inventory verified; interrupted 030 raw preserved",
+      "latestFreeDiskGiB": 1.09,
+      "resourceConditionArtifact": "replay-resource-condition-081.json",
+      "stoppedDatabaseArchives": "001–029 and 031–080 byte/mode/link/inventory verified; interrupted 030 raw preserved",
+      "generatedBuildCacheReclaim": "generated-api-cache-reclaim-081.json",
       "peerOrUncommittedCleanup": false,
       "cleanup": "proven X2-created stopped regenerable scratch only, preserve raw evidence and final assets"
     }
@@ -385,9 +562,9 @@
       "input": "independently administered API/UI/hybrid applications; frozen model before fresh objective",
       "expected": "fresh target and composition execute from learned algebra without app-specific engineer code",
       "command": "nativeExecutor",
-      "artifact": "native-e2e-029/results.json",
-      "status": "PARTIAL_API_ONLY",
-      "remaining": ["native UI-only and hybrid positive reuse"]
+      "artifact": ["native-e2e-029/results.json", "native-e2e-075/results.json", "native-e2e-079/results.json", "native-e2e-080/results.json"],
+      "status": "PARTIAL_API_AND_INSTALLED_UI_REUSE_FULL_CURRENT_PROFILE_UNFINISHED",
+      "remaining": ["current emitted hybrid positive reuse", "full current mounted acceptance", "sealed-cut compatibility"]
     },
     {
       "id": "B",
@@ -396,7 +573,7 @@
       "input": "original observations, current owner state, deliberate typed candidate mutations",
       "expected": "positive candidates pass; intended invalid mutations fail; unknown coverage remains unknown; false-valid and false-invalid separate",
       "command": "nativeExecutor",
-      "artifact": ["kernel-reference-readiness.json", "native-e2e-029/private/independent-discovery-grade.json", "native-e2e-029/results.json"],
+      "artifact": ["kernel-reference-readiness.json", "source-contract-004/result.json", "native-e2e-029/private/independent-discovery-grade.json", "native-e2e-067/results.json", "native-e2e-068/results.json", "native-e2e-075/results.json"],
       "status": "PARTIAL",
       "remaining": ["complete candidate mutation families and external coverage"]
     },
@@ -417,9 +594,10 @@
       "ownerConsumer": "X2 validity -> P7 dependency closure -> planner/executor/Work",
       "input": "independent rendering-preserving and same-label semantic revisions",
       "expected": "lawful rendering revalidation; all affected semantics fenced; independent unrelated operations remain valid; history retained",
-      "command": null,
-      "artifact": null,
-      "status": "NOT_RUN"
+      "command": "nativeExecutor",
+      "artifact": ["native-e2e-062/results.json"],
+      "status": "PARTIAL_EARLIER_SOURCE_CUT_NOT_CURRENT_EMITTED_QUALIFICATION",
+      "remaining": ["current emitted semantic and rendering drift", "unresolved sibling Work and input-change propagation"]
     },
     {
       "id": "E",
@@ -439,9 +617,9 @@
       "input": "fresh withheld permissions-portal reporting assignment",
       "expected": "typed model consumed; draft/validation/submission/commitment distinct; toast cannot complete Work; exact durable result reaches mounted Work",
       "command": "nativeExecutor",
-      "artifact": "native-e2e-029/results.json",
-      "status": "PARTIAL_API",
-      "remaining": ["native UI-only/hybrid and mounted completion"]
+      "artifact": ["native-e2e-029/results.json", "native-e2e-075/results.json", "native-e2e-079/results.json", "native-e2e-080/results.json"],
+      "status": "PARTIAL_API_AND_INSTALLED_UI_BUSINESS",
+      "remaining": ["current emitted hybrid reuse", "full mounted completion", "080 freshness latency and 081 unknown S6 operational exception"]
     },
     {
       "id": "G",
@@ -460,9 +638,9 @@
       "input": "keyboard/pointer/accessibility; reload, Work/root/principal changes, refresh, genuine fresh sign-in, offline/reconnect, revocation, delayed response",
       "expected": "model/operations/evidence/authority/drift/effects/costs visible; no prior-principal data resurrection; complete only from canonical independent observation",
       "command": "nativeExecutor",
-      "artifact": "native-e2e-029/maintained-client-projection.json",
-      "status": "PARTIAL_AUTHENTICATED_CODEC_NOT_MOUNTED",
-      "remaining": ["all mounted lifecycle and interaction predicates"]
+      "artifact": ["native-e2e-075/maintained-client-projection.json", "native-e2e-079/mounted-work-8abcfc0d-82b4-421e-aaae-bedd03bad48f/result.json", "native-e2e-080/mounted-work-f0e01a06-8554-44c2-8d29-1f4fec027077/result.json"],
+      "status": "FAIL_079_PRIVACY_REPAIR_STATIC_AND_BUILD_PASS_REGRESSION_NOT_REACHED_080_OR_081",
+      "remaining": ["unchanged full mounted replay with principal-isolation repair", "delayed old-list actual delivery without resurrection", "both-principal backend verification and route coverage"]
     },
     {
       "id": "I",
@@ -471,9 +649,9 @@
       "input": "fresh/upgrade/replay/restart/old-inflight jobs, ordinary roles, exact resolved locks, independent reconstruction",
       "expected": "positive final installed chain and compatible legacy consumers; source/runtime/schema parity without hidden donor/peer links",
       "command": "nativeExecutor",
-      "artifact": ["native-e2e-029/results.json", "native-typecheck-023.log", "native-driver-typecheck-019.log", "native-lint-028.log"],
-      "status": "PARTIAL_MIGRATION_ROLES_AND_STATIC",
-      "remaining": ["emitted installed positive, reconstruction, restart/inflight, final static/generated/security/compatibility cut"]
+      "artifact": ["native-e2e-068/results.json", "native-e2e-075/results.json", "installed-007/build-manifest.json", "reconstruction-native-008.json", "native-typecheck-038.log", "native-driver-typecheck-060.log", "native-lint-046.log"],
+      "status": "PARTIAL_INSTALLED_STANDALONE_POSITIVE_AND_SOURCE_RECONSTRUCTION",
+      "remaining": ["installed claimed-worker tamper matrix", "current mounted repair acceptance", "restart/inflight and populated legacy compatibility", "final static/generated/security/sealed-source reconstruction"]
     },
     {
       "id": "J",
@@ -492,9 +670,9 @@
       "input": "typed model/producer/checker/observer/transport/runtime/domain/current grant; legacy contracts",
       "expected": "implemented development candidate path preserves legacy domains; protected admission impossible without real independent authority/custody; admission never execution permission",
       "command": "nativeExecutor",
-      "artifact": "native-e2e-029/results.json",
+      "artifact": ["native-e2e-075/results.json", "native-e2e-080/results.json", "emitted-consumer-policy-002/result.json"],
       "status": "PARTIAL_SIGNED_INDEPENDENT_DEVELOPMENT",
-      "remaining": ["legacy-domain final compatibility", "protected population and actual protected authority"]
+      "remaining": ["typed command negative runtime phases", "live-use and independently qualified second-domain conditional cases", "legacy-domain final compatibility", "protected population and actual protected authority"]
     }
   ],
   "existingStaticCommands": [
