@@ -1,6 +1,6 @@
 /** Synthetic auth only; every business response comes from its actual owner route. */
 import {createServer,type Server} from 'node:http';
-import {createHmac,randomBytes,timingSafeEqual} from 'node:crypto';
+import {createHmac,randomBytes,randomUUID,timingSafeEqual} from 'node:crypto';
 import {readdir} from 'node:fs/promises';
 import {resolve,join} from 'node:path';
 import {pathToFileURL} from 'node:url';
@@ -14,11 +14,11 @@ export async function browserHttpFixture(admin:pg.Client,tenant:string,actor:str
  const {NextRequest}=createRequire(import.meta.url)('next/server') as typeof import('next/server');
  let authOrigin='';
  const userBody=(u:{id:string;email:string})=>({id:u.id,email:u.email,aud:'authenticated',role:'authenticated',app_metadata:{},user_metadata:{},created_at:new Date().toISOString()});
- let issued=0;
+ let issued=0;const sessions=new Map(users.map(u=>[u.id,randomUUID()]));
  const issue=(id:string,lifetime=1800)=>{
   const user=users.find(u=>u.id===id);if(!user)throw Error('ACTUAL_DISPOSABLE_AUTH_USER_REQUIRED');
   const encode=(v:unknown)=>Buffer.from(JSON.stringify(v)).toString('base64url'),now=Math.floor(Date.now()/1000);
-  const body=encode({alg:'HS256',typ:'JWT'})+'.'+encode({sub:id,email:user.email,aud:'authenticated',role:'authenticated',iat:now,exp:now+lifetime,session_revision:++issued,iss:authOrigin+'/auth/v1'});
+  const body=encode({alg:'HS256',typ:'JWT'})+'.'+encode({sub:id,email:user.email,aud:'authenticated',role:'authenticated',iat:now,exp:now+lifetime,session_id:sessions.get(id),session_revision:++issued,iss:authOrigin+'/auth/v1'});
   return body+'.'+createHmac('sha256',secret).update(body).digest('base64url');
  };
  const verify=(authorization:unknown)=>{
@@ -76,13 +76,16 @@ export async function browserHttpFixture(admin:pg.Client,tenant:string,actor:str
   }catch(error){console.error('OWNED_BROWSER_ROUTE_FAILURE',error instanceof Error?error.message:'UNKNOWN');res.writeHead(500);res.end('{"code":"OWNED_BROWSER_HTTP_FAILURE"}');}
  });
  const origin=await listen(api),token=issue(actor),otherToken=issue(otherActor);
- const call=async(operation:string,body:unknown,identity:'actor'|'other'|'anonymous'|'invalid'='actor',upstream=origin)=>{
+ const request=async(path:string,body:unknown,identity:'actor'|'other'|'anonymous'|'invalid'='actor',upstream=origin)=>{
+  if(!/^[a-zA-Z0-9_-]+(?:\/[a-zA-Z0-9_-]+)*$/.test(path))throw Error('EXACT_OWNED_API_PATH_REQUIRED');
   const headers:Record<string,string>={'content-type':'application/json'};
   if(identity!=='anonymous')headers.authorization='Bearer '+(identity==='other'?otherToken:identity==='invalid'?'invalid.disposable.token':token);
-  const response=await fetch(upstream+'/api/company-brain/'+operation,{method:'POST',headers,body:JSON.stringify(body),signal:AbortSignal.timeout(15000)});
+  const response=await fetch(upstream+'/api/'+path,{method:'POST',headers,body:JSON.stringify(body),signal:AbortSignal.timeout(15000)});
   return {status:response.status,body:await response.json() as any};
  };
- return {origin,authOrigin,loginEmail:users.find(u=>u.id===actor)!.email,call,observed,close:async()=>{
+ const call=async(operation:string,body:unknown,identity:'actor'|'other'|'anonymous'|'invalid'='actor',upstream=origin)=>
+  request('company-brain/'+operation,body,identity,upstream);
+ return {origin,authOrigin,loginEmail:users.find(u=>u.id===actor)!.email,call,request,observed,close:async()=>{
   for(const server of [api,auth]){server.closeAllConnections();await new Promise<void>(yes=>server.close(()=>yes()));}
   for(const [key,value]of Object.entries(prior)){if(value===undefined)delete process.env[key];else process.env[key]=value;}
  }};

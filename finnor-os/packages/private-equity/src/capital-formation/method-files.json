@@ -2,6 +2,7 @@
   "finnor-os/packages/private-equity/src/capital-formation/method-files.json",
   "finnor-os/packages/private-equity/src/capital-formation/contracts.ts",
   "finnor-os/packages/private-equity/src/capital-formation/store.ts",
+  "finnor-os/packages/private-equity/src/capital-formation/publication-storage.ts",
   "finnor-os/packages/private-equity/src/capital-formation/service.ts",
   "finnor-os/packages/private-equity/src/capital-formation/worker.ts",
   "finnor-os/packages/private-equity/src/capital-formation/independent-checker.mjs",

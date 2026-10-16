@@ -3,6 +3,7 @@ import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { spawn } from "node:child_process";
 import methodPaths from "./method-files.json";
+import { decodeCapitalPublication, encodeCapitalPublication } from "./publication-storage";
 import { withTenantTransaction, type Db } from "@finnor/db";
 import { createEvidenceSourceTx, appendEvidenceVersionTx } from "@finnor/memory";
 import type { PoolClient } from "pg";
@@ -390,8 +391,8 @@ export async function readCapitalPublicationTx(ctx: PeMutationContext, q: Capita
      JOIN finnor_os.evidence_source_versions v ON v.id=p.evidence_version_id AND v.tenant_id=p.tenant_id
      WHERE p.tenant_id=$1 AND p.principal_id=$2 AND p.publication_id=$3`,
     [ctx.auth.tenantId, principal(ctx), q.current_publication_id])).rows[0];
-  if (!row || capitalDigest(row.content) !== row.content_hash || row.content_hash !== row.content_digest) throw new CapitalFormationError("CAPITAL_PUBLICATION_BYTES_CHANGED");
-  const publication = JSON.parse(row.content) as CapitalPublication;
+  if (!row || capitalDigest(row.content) !== row.content_hash) throw new CapitalFormationError("CAPITAL_PUBLICATION_BYTES_CHANGED");
+  const publication = decodeCapitalPublication(row.content, row.content_digest) as unknown as CapitalPublication;
   if (publication.schema !== "finnor.v4.capital-publication.v1" || publication.check.resultDigest !== capitalDigest(publication.package)
     || publication.check.resultDigest !== capitalDigest(publication.check.result)
     || publication.package.programmeId !== q.programme_id || !Array.isArray(publication.artifacts)
@@ -464,16 +465,17 @@ export async function publishCapitalTx(ctx: PeMutationContext, q: CapitalProgram
   await lockCapitalWork(ctx, q.body, q.rights_revision, c);
   const now = Date.now();
   if (now >= q.deadline_at.getTime() && !["STOPPED", "RECONCILING"].includes(q.status)) throw new CapitalFormationError("ORIGINAL_EPISODE_DEADLINE_EXHAUSTED");
-  const stored = await recordCapitalEvidence(ctx, c, db, q.body, "publication:" + q.programme_id, "checked_financing_package", publication as unknown as Record<string, unknown>),
-    id = randomUUID();
+  const publicationDigest = capitalDigest(publication);
+  const stored = await recordCapitalEvidence(ctx, c, db, q.body, "publication:" + q.programme_id, "checked_financing_package",
+    encodeCapitalPublication(publication as unknown as Record<string, unknown>)), id = randomUUID();
   await c.query("INSERT INTO finnor_os.v4_publications(publication_id,tenant_id,principal_id,programme_id,revision,content_digest,check_input_digest,code_digest,owner_snapshot_digest,evidence_version_id) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)",
-    [id, ctx.auth.tenantId, principal(ctx), q.programme_id, q.revision, stored.contentHash, check.inputDigest, method.digest, snapshot.ownerDigest, stored.versionId]);
+    [id, ctx.auth.tenantId, principal(ctx), q.programme_id, q.revision, publicationDigest, check.inputDigest, method.digest, snapshot.ownerDigest, stored.versionId]);
   const status = ["STOPPED", "FAILED", "COMPLETE", "BLOCKED"].includes(q.status) ? q.status : q.cost_unknown || check.result.dispatchedUnknownMinor !== "0" ? "RECONCILING"
     : check.result.readiness === "FUNDING_RECEIVED" ? "COMPLETE" : "WAITING";
   await c.query("UPDATE finnor_os.v4_programmes SET current_publication_id=$4,status=$5,updated_at=clock_timestamp() WHERE tenant_id=$1 AND principal_id=$2 AND programme_id=$3",
     [ctx.auth.tenantId, principal(ctx), q.programme_id, id, status]);
-  await capitalTransition(ctx, q.programme_id, "INDEPENDENT_PUBLICATION", { publicationId: id, contentDigest: stored.contentHash, readiness: check.result.readiness,
+  await capitalTransition(ctx, q.programme_id, "INDEPENDENT_PUBLICATION", { publicationId: id, contentDigest: publicationDigest, readiness: check.result.readiness,
     conditionalMinor: check.result.conditionalCommittedMinor, fundingReceivedMinor: check.result.fundingReceivedMinor, unknownMinor: check.result.dispatchedUnknownMinor,
     sourceEventCount: snapshot.events.length, executionAuthorityGranted: false }, c);
-  return { publication, digest: stored.contentHash, evidenceVersionId: stored.versionId };
+  return { publication, digest: publicationDigest, evidenceVersionId: stored.versionId };
 }

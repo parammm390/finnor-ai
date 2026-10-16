@@ -18,6 +18,7 @@ export async function runCapitalBoundaryProofs(t: {
   current(f: any, predicate: (v: any) => boolean, maximum?: number): Promise<any>;
   check(id: string, predicate: string, run: () => Promise<any>): Promise<void>;
   artifact(name: string, value: any): Promise<any>;
+  configureS7OwnerTransport(f: any): Promise<any>;
   stopWorker(): Promise<void>; startWorker(): Promise<void>; killWorker(): Promise<void>; dispose(f: any): void;
 }) {
   const ok = (r: any) => { assert([200, 201, 202].includes(r.status), JSON.stringify(r)); return r.body; };
@@ -27,7 +28,21 @@ export async function runCapitalBoundaryProofs(t: {
     programmeId: f.mandate.programmeId, expectedRevision: v.revision, reason: "Finite boundary proof stop; original duties retained",
   })); };
   const snapshot = (f: any) => capitalTx(f.ctx, async c => capitalOwnerSnapshot(f.ctx, await capitalProgramme(f.ctx, f.mandate.programmeId, c), c));
-  const publication = (f: any) => capitalTx(f.ctx, async c => readCapitalPublicationTx(f.ctx, await capitalProgramme(f.ctx, f.mandate.programmeId, c), c));
+  const publication = (f: any, cut?: { evidenceVersionId: string; publicationDigest: string }) => capitalTx(f.ctx, async c => {
+    let q = await capitalProgramme(f.ctx, f.mandate.programmeId, c);
+    if (cut) {
+      assert(cut.evidenceVersionId && cut.publicationDigest);
+      const rows = (await c.query(`SELECT publication_id FROM finnor_os.v4_publications
+        WHERE tenant_id=$1 AND principal_id=$2 AND programme_id=$3
+          AND evidence_version_id=$4 AND content_digest=$5 LIMIT 2`,
+      [f.tenant, f.principal, f.mandate.programmeId, cut.evidenceVersionId, cut.publicationDigest])).rows;
+      assert.equal(rows.length, 1, "Exact immutable owner-read publication cut required");
+      q = { ...q, current_publication_id: rows[0].publication_id };
+    }
+    const value = await readCapitalPublicationTx(f.ctx, q, c);
+    if (cut) assert(value && capitalDigest(value) === cut.publicationDigest);
+    return value;
+  });
   const sleep = (ms: number) => new Promise<void>(r => setTimeout(r, ms));
   const sourceReady = (f: any) => t.current(f, v => v.current && v.package?.conditionalCommittedMinor === "8000000000"
     && v.package?.indicativeEquityMinor === "4000000000" && v.status === "WAITING");
@@ -233,7 +248,8 @@ export async function runCapitalBoundaryProofs(t: {
     await t.startWorker();
     const aliasCapacity = await t.current(f, v => v.current && v.package?.conflicts.some((c: string) => c.startsWith("CANONICAL_FACILITY_CAPACITY_IDENTITY_AMBIGUOUS:")));
     assert.equal(aliasCapacity.package.eligibleUndrawnMinor, "0"); await t.stopWorker();
-    const alias = { ...shared, instrumentIdentity: terms[0].instrumentIdentity, executionDigest: capitalDigest("Original duplicate document alias") };
+    const alias = { ...shared, instrumentIdentity: terms[0].instrumentIdentity, trancheId: terms[0].trancheId,
+      executionDigest: capitalDigest("Original duplicate document alias") };
     sourceEvents.push(...await originalEvents(alias, false)); await t.startWorker();
     const aliased = await t.current(f, v => v.current && v.package?.conflicts.some((c: string) => c.startsWith("ALIASED_COMMITMENT:")));
     assert.equal(aliased.package.eligibleUndrawnMinor, "0");
@@ -256,11 +272,22 @@ export async function runCapitalBoundaryProofs(t: {
     assert(wire.package!.faceMinor.length > 38);
     assert.equal(wire.package!.remainingConditions.length, wide.package.remainingConditions.length);
     assert.equal(wire.package!.fundingReceivedMinor, "0"); assert.equal(wire.package!.readiness, "INCOMPLETE");
+    const completePublication = (await publication(f))!;
+    assert.equal(capitalDigest(completePublication), wide.publicationDigest);
+    const storage = (await t.admin.query(`SELECT p.content_digest,v.content_hash,
+      octet_length(v.content) content_bytes,octet_length(v.snapshot::text) snapshot_bytes
+      FROM finnor_os.v4_publications p JOIN finnor_os.evidence_source_versions v
+        ON v.tenant_id=p.tenant_id AND v.id=p.evidence_version_id
+      WHERE p.tenant_id=$1 AND p.programme_id=$2 AND p.content_digest=$3`,
+    [f.tenant, f.mandate.programmeId, wide.publicationDigest])).rows[0];
+    assert(Buffer.byteLength(canonicalCapital(completePublication)) > 262144);
+    assert(storage.content_bytes <= 262144 && storage.snapshot_bytes <= 262144);
+    assert.notEqual(storage.content_hash, storage.content_digest);
     await t.artifact("boundaries/scoped-cycles-and-duties.json", { initial, published, sourceEvents, resources, cyclicSnapshot,
       independentOracle: JSON.parse(oracle.stdout), circular, corrected, acyclic, notice, movedTranche, currentTranche, excessGuarantee, guaranteeRejected,
       covenantA, covenantB, covenantConflict, covenantAmendment, amendedCovenant,
       shadowProfile: f.shadowProfile, selectedDebt, shared, overallocated, ambiguous, aliasCapacity, alias, aliased, pendingEvents, wide, wire,
-      noFundingObserved: true });
+      noFundingObserved: true, storage, completeLogicalPublicationDigest: capitalDigest(completePublication) });
     await stop(f); t.dispose(f);
     return { issuerLocalIdsNotAliased: true, threeNodeCycleDetected: true, circularEligibleMinor: "0", acyclicEligibleMinor: "12000000000",
       equalLocalObligationIdsRetained: 3, receivedMinor: acyclic.package.fundingReceivedMinor };
@@ -391,6 +418,9 @@ export async function runCapitalBoundaryProofs(t: {
       extra: { terms: original.body.terms, cost: { ...original.body.cost, microUSD: "1100", final: true } } });
     ok(await t.cb(f, "capital-formation-event", { programmeId: f.mandate.programmeId, event: contradictory }));
     const conflict = await read(f); assert.equal(conflict.budget.costUnknown, true);
+    assert.equal(conflict.current, false);
+    assert.equal(conflict.package, null);
+    assert.equal(conflict.publicationDigest, null);
     const rejection = await t.cb(f, "capital-formation-advance", { programmeId: f.mandate.programmeId, expectedRevision: conflict.revision,
       triggerRef: "A contradictory final source cannot renew the original budget" });
     assert.equal(rejection.status, 409); assert.equal(rejection.body.code, "ORIGINAL_EPISODE_STOPPED_OR_EXHAUSTED");
@@ -400,16 +430,19 @@ export async function runCapitalBoundaryProofs(t: {
     assert.equal(after.calls.filter((c: any) => c.method === "POST").length, 1);
     assert(after.calls.some((c: any) => c.method === "GET"));
     await t.startWorker();
-    const costTraceView = await t.current(f, v => v.current && v.budget.costUnknown && v.publicationDigest !== resolved.publicationDigest);
+    const costTraceView = await t.current(f, v => v.current && v.package && v.evidenceVersionId
+      && v.budget.costUnknown && v.publicationDigest && v.publicationDigest !== resolved.publicationDigest);
     await t.stopWorker();
-    const costTrace = (await publication(f))!, retainedFacts = costTrace.artifacts.flatMap(a => a.envelope.cost_receipts)
+    const afterTraceStop = await read(f);
+    assert.equal(afterTraceStop.budget.costUnknown, true);
+    const costTrace = (await publication(f, costTraceView))!, retainedFacts = costTrace.artifacts.flatMap(a => a.envelope.cost_receipts)
       .filter(r => r.issuerId === original.body.issuerId && r.receiptId === original.body.cost.receiptId);
     for (const event of [original, final, intervening, contradictory]) {
       assert(retainedFacts.some(r => r.microUSD === event.body.cost.microUSD && r.final === event.body.cost.final));
     }
     await t.artifact("boundaries/cost-finality.json", { originalRequest: f.request, unresolved, publicationCount, unchangedCount,
       before, final, raceReceipt, raceObserved, raceFinal, resolved, pending, lateFinal, intervening, contradictory, conflict, rejection, cost, after,
-      costTraceView, costTrace, retainedFacts });
+      costTraceView, costTrace, retainedFacts, afterTraceStop, inspectionBoundToImmutableOwnerReadCut: true });
     await stop(f); await t.startWorker(); t.dispose(f);
     return { initialUnknownRetained: true, authenticatedSameReceiptFinalization: true, conflictingFinalReceiptRetained: true,
       originalProviderPosts: 1, originalGetRecovery: true, finalCostFalselyDeclared: false };
@@ -456,6 +489,8 @@ export async function runCapitalBoundaryProofs(t: {
   });
   await t.check("S7_ATOMIC_NOTICE", "Native S7 notice refusal rolls back V4 publication; original source/cost survives and same-grant repair commits both owners together", async () => {
     const f = await t.fixture("s7-atomic");
+    const ownerTransport = await t.configureS7OwnerTransport(f);
+    await t.artifact("boundaries/s7-disposable-owner-transport.json", ownerTransport);
     assert.match(f.mandate.programmeId, /^[0-9a-f-]{36}$/);
     await t.admin.query(`CREATE FUNCTION finnor_os.v4_fixture_reject_s7() RETURNS trigger LANGUAGE plpgsql AS $$
       BEGIN IF NEW.body->'payload'->>'programmeId'='${f.mandate.programmeId}' AND NEW.body->'payload'->>'schema'='finnor.v4.economic-notice.v1'

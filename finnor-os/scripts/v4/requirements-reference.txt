@@ -1,0 +1,2 @@
+# Independent development oracle, not admission or live signing authority.
+cryptography==44.0.3

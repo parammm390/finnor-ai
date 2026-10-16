@@ -13,13 +13,26 @@ const ref=(id:string,owner='SUPPLIED')=>({owner,id,version:'fixture-v1',contentD
 const freezeRef=(body:any,owner:string,prefix:string,version:string)=>({...body,ref:allocationRef(owner,prefix,body,version)});
 function successful(r:any){if(r.status!==200)throw new Error('OWNER_REQUEST_FAILED:'+JSON.stringify(r));return r.body;}
 function decision(f:any,allocation:any):any{return {knowledgeAt:new Date().toISOString(),period:0,actionHistory:[],observations:[],rightsRef:f.mandate.rightsRef,obligations:[],allocationRefs:[allocation]};}
-async function fixture(name:string,horizon:number,dimensions:any[],options:{nonlinear?:boolean;deadlineMs?:number;expiryMs?:number;additionalExposure?:boolean;beforeFit?:(fixture:any)=>Promise<void>}={}){
-  const f:any={name,tenant:randomUUID(),principal:randomUUID(),root:{entityType:'external_organization',entityId:randomUUID()},policies:[],labels:{},resources:[]};
+async function fixture(name:string,horizon:number,dimensions:any[],options:{nonlinear?:boolean;deadlineMs?:number;expiryMs?:number;expiresAt?:string;additionalExposure?:boolean;beforeFit?:(fixture:any)=>Promise<void>;existing?:{tenant:string;principal:string;root:{entityType:'external_organization';entityId:string}}}={}){
+  const originalExpiry=options.expiresAt?Date.parse(options.expiresAt):Infinity;
+  assert(originalExpiry>Date.now(),'ORIGINAL_FIXTURE_DEADLINE_EXHAUSTED');
+  const f:any={name,tenant:options.existing?.tenant??randomUUID(),principal:options.existing?.principal??randomUUID(),root:options.existing?.root??{entityType:'external_organization',entityId:randomUUID()},policies:[],labels:{},resources:[]};
   f.ctx={auth:{tenantId:f.tenant,userId:f.principal,employeeId:f.principal,role:'owner'}} as PeMutationContext;
+  if(options.existing){
+    const row=(await context.admin().query(`SELECT 1 FROM finnor_os.users u
+      JOIN finnor_os.external_organizations o ON o.tenant_id=u.tenant_id
+      WHERE u.tenant_id=$1 AND u.id=$2 AND u.status='active' AND u.role='owner'
+        AND o.id=$3 AND o.active
+        AND EXISTS(SELECT 1 FROM finnor_os.tenant_vertical_assignments v
+          WHERE v.tenant_id=u.tenant_id AND v.vertical_key='private_equity' AND v.effective_from<=clock_timestamp())`,
+      [f.tenant,f.principal,f.root.entityId])).rows[0];
+    assert(row,'EXISTING_CANONICAL_FIXTURE_IDENTITIES_REQUIRED');
+  }else{
   await context.admin().query("INSERT INTO finnor_os.tenants(id,client_key,name) VALUES($1,$2,$3)",[f.tenant,randomUUID(),name]);
   await context.admin().query("INSERT INTO finnor_os.users(id,tenant_id,email,role,status) VALUES($1,$2,$3,'owner','active')",[f.principal,f.tenant,`${name}@s5.example.test`]);
   await context.admin().query("INSERT INTO finnor_os.external_organizations(id,tenant_id,organization_key,name,kind) VALUES($1,$2,$3,$3,'other')",[f.root.entityId,f.tenant,name]);
   await configureTenantVertical({tenantId:f.tenant,verticalKey:'private_equity',expectedVersion:0,createdBy:f.principal,sourceSystem:'s5:e2e'});
+  }
   await options.beforeFit?.(f);
   const source=(await createEvidenceSource(f.tenant,{sourceKey:`s5:${name}:${randomUUID()}`,sourceType:'pe_document_claim',title:'Generated qualification observations'})).id,version=randomUUID();
   await context.admin().query("INSERT INTO finnor_os.evidence_source_versions(id,source_id,scope,tenant_id,version_number,content_hash,content,snapshot,as_of,retrieved_at,created_at) VALUES($1,$2,'tenant',$3,1,$4,'Generated observations, no field identification',$5::jsonb,$6,clock_timestamp(),clock_timestamp())",[version,source,f.tenant,ref(name).contentDigest,JSON.stringify({worldRoot:f.root,claims:[{propositionId:'s5-input',predicate:'reported',value:'Generated hypothetical H1 data'}]}),begin]);
@@ -31,12 +44,15 @@ async function fixture(name:string,horizon:number,dimensions:any[],options:{nonl
     await attachCanonicalEvidenceToWorld(f.ctx,{worldRoot:f.root,entity:{entityType:'pe_metric_series',entityId:series[id]},evidenceSourceId:source,evidenceVersionId:version,relationship:'supports'});
     for(const row of rows){const start=new Date(Date.parse(begin)+row.period*day).toISOString();await context.admin().query("INSERT INTO finnor_os.pe_metric_observations(id,tenant_id,metric_series_id,period_start,period_end,value_type,value_numeric,evidence_source_id,evidence_version_id,source_system,created_by) VALUES($1,$2,$3,$4,$5,'number',$6,$7,$8,'s5:generated',$9)",[randomUUID(),f.tenant,series[id],start,new Date(Date.parse(start)+day).toISOString(),String(row[id==='outcome'?'states':'exposures'][id]),source,version,f.principal]);}}
   const request={schema:'finnor.s3.fit-request.v1',modelKey:name,episodeId:`s5-${name}`,roots:[f.root],stateVariables:[{id:'outcome',root:f.root,seriesId:series.outcome,unit:'normalized-value',range:[-6,6],role:'ENTERPRISE_STATE'}],exposures:[{id:'price',root:f.root,seriesId:series.price,unit:'fraction',operation:'PRICE_CHANGE',measurement:{status:'MEASURED_ACTUAL',methodRef:ref('measurement'),qualification:'SUPPLIED_OWNER_MEASUREMENT_UNVERIFIED'}}],time:{startAt:begin,endAt:new Date(Date.parse(begin)+128*day).toISOString(),periodMs:day,trainingThrough:new Date(Date.parse(begin)+96*day).toISOString()},validity:{validUntil:new Date(Date.now()+3600000).toISOString(),maxBeliefAgeMs:3600000,regimes:['operating'],contexts:['public-price'],maximumHorizon:24},measurementPolicy:{selection:'COMPLETE_RECORDED_GRID_ASSUMED',missingness:'NONE',instrumentError:'ASSUMED_NEGLIGIBLE'},mechanisms:[{id:'registered',meaning:'Generated conditional response only',origin:'SUPPLIED_HYPOTHESIS',assumptions:['SEQUENTIAL_EXCHANGEABILITY','POSITIVITY','CONSISTENCY','MEASUREMENT','SELECTION','INTERFERENCE','STATIONARITY','FUNCTIONAL_FORM','ACTOR_INFORMATION'].map(category=>({id:category,category,status:'DECLARED',meaning:'Generated fixture assumption',evidenceRefs:[ref(category)]})),equations:[{variableId:'outcome',features:options.nonlinear?[{kind:'CONSTANT'},{kind:'PRODUCT',left:{kind:'STATE',id:'outcome',lag:1},right:{kind:'EXPOSURE',id:'price',lag:0}}]:[{kind:'CONSTANT'},{kind:'EXPOSURE',id:'price',lag:0}]}],counterparties:[]}],numerical:{bootstrapDraws:64,blockLength:4,seed:20261002}};
+  request.validity.validUntil=new Date(Math.min(Date.parse(request.validity.validUntil),originalExpiry)).toISOString();
+  assert(Date.parse(request.validity.validUntil)>Date.now(),'ORIGINAL_FIXTURE_DEADLINE_EXHAUSTED');
   if(options.additionalExposure){
     request.exposures.push({id:'priceSecondary',root:f.root,seriesId:series.priceSecondary,unit:'fraction',operation:'PRICE_CHANGE',measurement:{status:'MEASURED_ACTUAL',methodRef:ref('measurement-secondary'),qualification:'SUPPLIED_OWNER_MEASUREMENT_UNVERIFIED'}});
     request.mechanisms[0]!.equations[0]!.features.push({kind:'EXPOSURE',id:'priceSecondary',lag:0});
   }
   const fitted=successful(await api(f,'fit',{request},s3Post));assert.equal(fitted.status,'FITTED',JSON.stringify(fitted));f.model=fitted.model;f.series=series;
-  const now=new Date(Date.now()-1).toISOString(),until=new Date(Date.now()+(options.expiryMs??3600000)).toISOString();
+  const now=new Date(Date.now()-1).toISOString(),until=new Date(Math.min(Date.now()+(options.expiryMs??3600000),originalExpiry)).toISOString();
+  assert(Date.parse(until)>Date.now(),'ORIGINAL_FIXTURE_DEADLINE_EXHAUSTED');
   const body={schema:'finnor.economic-mandate.v1',tenantId:f.tenant,principalId:f.principal,episodeId:request.episodeId,knowledgeAt:now,validUntil:until,businessOwnerRef:ref(f.principal,'BUSINESS_OWNER'),rightsRef:'s5-owner-rights',utilityRef:ref('supplied-joint-net-utility','BUSINESS_OWNER'),horizon:{startAt:request.time.endAt,periodMs:day,periods:horizon},utility:{unit:'USD',accountingConventionRef:ref('declared-complete-cost-net-utility','BUSINESS_OWNER'),periodTerms:[{variableId:'outcome',unit:'normalized-value',coefficient:100}],discountFactors:Array(horizon+1).fill(1),terminalTerms:[],tail:{status:'SUPPLIED_COMPLETE_FINITE_HORIZON',terminalLiability:0,ref:ref('finite-tail','BUSINESS_OWNER')}},risk:{kind:'HARD_WORST_PATH_UTILITY_FLOOR',minimumUtility:-1000},ambiguity:{kind:'ROBUST_FIXED_JOINT_SCENARIOS',authorizationRef:ref('common-paths-no-probabilities','BUSINESS_OWNER')},resources:{dimensions:dimensions.map((d:any)=>({...d,resourceClass:d.resourceClass??(d.id==='cash'?'CASH':d.id==='leverage'?'BORROWING_HEADROOM':'OPERATIONAL_CAPACITY')})),couplings:[]},search:{maxExpansions:50000,deadlineMs:options.deadlineMs??30000,maxWorlds:512,maxPolicyNodes:50000,maxHumanSeconds:900},scoring:{normalization:100,maxRegret:.05},authorization:{basis:'AUTHENTICATED_OWNER_ASSERTION_UNADMITTED',protectedReceipt:null}};
   // Bind the available owner-supplied utility preimage, rather than an opaque label.
   body.utilityRef={...body.utilityRef,contentDigest:allocationRef('BUSINESS_OWNER','utility',body.utility).contentDigest};

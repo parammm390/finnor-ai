@@ -261,7 +261,7 @@ export async function readCapitalFormation(ctx: PeMutationContext, id: string): 
           || publication.check.resultDigest !== checked.resultDigest) {
           current = false; blockers.push("OWNER_SOURCE_TIME_OR_INSTALLED_METHOD_CHANGED");
         }
-      }
+      } else { current = false; blockers.push("CURRENT_PUBLICATION_UNAVAILABLE"); }
     } catch (error) {
       if (!(error instanceof CapitalFormationError) && !(error instanceof Error && /SOURCE_RIGHTS_MEMBERSHIP_OR_WORK_CHANGED/.test(error.message))) throw error;
       current = false; blockers.push(error instanceof CapitalFormationError ? error.code : "SOURCE_REVISION_CHANGED");
