@@ -11,7 +11,7 @@ import { ScopedToolRegistry, type ToolRegistry } from "@finnor/tools";
 import type { PluginRegistry } from "./plugin-registry";
 import { advanceWorkflowForActionRequired } from "./workflow";
 import { classifyExecutionFailure, executePluginViaRuntime } from "./runtime-bridge";
-import { finalizeReceipt, openReceipt } from "@finnor/workflow-runtime";
+import { finalizeReceipt, openReceipt } from "@finnor/workflow-runtime/receipts";
 import { redactStructured } from "@finnor/security";
 import { approvalRequirementForAction } from "../../../scripts/release/action-hardening-spec";
 import { evaluateActionAuthorityBoundary } from "./authority-runtime";

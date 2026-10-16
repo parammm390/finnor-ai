@@ -17,8 +17,10 @@
 
 import { MAX_BACKGROUND_SCAN_BATCH, withTenant, workflowRuns, workflowSteps, decisionReceipts, domainActions, domainPolicies, domainPolicyRevisions, enqueueJob, getPool } from "@finnor/db";
 import { and, asc, eq, gt, lt, isNull, or, sql } from "drizzle-orm";
-import { enqueueStep, isRunPastWatchdogDeadline, stuckRunDeadlineHours, workflowStepJobKey } from "@finnor/workflow-runtime";
-import { appendEpisode, readEpisodes } from "@finnor/memory";
+import { enqueueStep } from "@finnor/workflow-runtime/steps";
+import { isRunPastWatchdogDeadline, stuckRunDeadlineHours } from "@finnor/workflow-runtime/stuck-runs";
+import { workflowStepJobKey } from "@finnor/workflow-runtime/job-identity";
+import { appendEpisode, readEpisodes } from "@finnor/memory/episodic";
 import { recoverStaleProviderOperations, Sentry } from "@finnor/tools";
 import type { JobHandler } from "../queue";
 

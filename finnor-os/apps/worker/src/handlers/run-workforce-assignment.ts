@@ -2,10 +2,10 @@ import { randomUUID } from "node:crypto";
 import {
   enqueueAssignmentRecovery,
   finalizeWorkforceAssignment,
-  FinnorOrchestrator,
   recordLearningObservationForAssignment,
   renewWorkforceAssignmentLease,
-} from "@finnor/orchestration";
+} from "@finnor/orchestration/workforce-runtime";
+import type { FinnorOrchestrator } from "@finnor/orchestration";
 import type { JobHandler } from "../queue";
 
 let orchestrator: FinnorOrchestrator | null = null;
@@ -22,7 +22,10 @@ export const runWorkforceAssignment: JobHandler = async (payload) => {
   }
   const leaseOwner = randomUUID();
   let heartbeat: ReturnType<typeof setInterval> | undefined;
-  orchestrator ??= new FinnorOrchestrator();
+  if (!orchestrator) {
+    const { FinnorOrchestrator } = await import("@finnor/orchestration");
+    orchestrator = new FinnorOrchestrator();
+  }
   try {
     heartbeat = setInterval(() => {
       void renewWorkforceAssignmentLease(tenantId, workforceAssignmentId, leaseOwner).catch(() => undefined);

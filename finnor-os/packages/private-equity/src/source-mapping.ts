@@ -6,7 +6,7 @@ import {
   type SourceMaterializationResult,
 } from "@finnor/data-platform";
 import { withTenant, withTenantTransaction } from "@finnor/db";
-import { appendEvidenceVersion, createEvidenceSource } from "@finnor/memory";
+import { appendEvidenceVersion, createEvidenceSource } from "@finnor/memory/evidence";
 import type { CanonicalSourceRecord } from "@finnor/shared-types";
 import { attachCanonicalEvidence, attachCanonicalEvidenceToWorld } from "./repository";
 import { PE_PROPOSITION_PREDICATES, pePropositionId, peWorldPropositionId, type PePropositionPredicate, type PrivateEquityAssertion } from "./epistemic";

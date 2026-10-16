@@ -5,6 +5,32 @@
   "type": "module",
   "main": "src/index.ts",
   "types": "src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "import": "./src/index.ts"
+    },
+    "./broker": {
+      "types": "./src/broker.ts",
+      "import": "./src/broker.ts"
+    },
+    "./contracts": {
+      "types": "./src/contracts.ts",
+      "import": "./src/contracts.ts"
+    },
+    "./repository": {
+      "types": "./src/repository.ts",
+      "import": "./src/repository.ts"
+    },
+    "./runner": {
+      "types": "./src/runner.ts",
+      "import": "./src/runner.ts"
+    },
+    "./steel-provider": {
+      "types": "./src/steel-provider.ts",
+      "import": "./src/steel-provider.ts"
+    }
+  },
   "dependencies": {
     "@finnor/authority": "*",
     "@finnor/db": "*",

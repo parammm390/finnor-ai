@@ -6,8 +6,8 @@
 
 import { withTenant, domainActions } from "@finnor/db";
 import { and, eq } from "drizzle-orm";
-import { appendEpisode, readEpisodes } from "@finnor/memory";
-import { criticConfigured, reviewAction } from "@finnor/orchestration";
+import { appendEpisode, readEpisodes } from "@finnor/memory/episodic";
+import { criticConfigured, reviewAction } from "@finnor/orchestration/critic";
 import { logWithTrace } from "@finnor/tools";
 import type { JobHandler } from "../queue";
 

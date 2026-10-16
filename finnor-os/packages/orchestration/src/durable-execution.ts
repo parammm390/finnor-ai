@@ -35,19 +35,18 @@ import {
   awaitStepObservation,
   completeStep,
   failStep,
-  openReconciliationCase,
   type StepFence,
-} from "@finnor/workflow-runtime";
+} from "@finnor/workflow-runtime/steps";
+import { openReconciliationCase } from "@finnor/workflow-runtime/reconciliation";
 import { and, desc, eq, lte, sql } from "drizzle-orm";
 import type { BusinessEffectSet, DomainAction, DraftAction, ExecutionResult, ErrorKind } from "@finnor/shared-types";
-import { createDefaultPluginRegistry } from "./plugin-registry";
 import {
   BusinessEffectBoundaryError,
   recordBusinessEffectOutcome,
   verifyBusinessEffectPreconditions,
 } from "./compiler";
 import { classifyExecutionFailure } from "./runtime-bridge";
-import { appendEpisode } from "@finnor/memory";
+import { appendEpisode } from "@finnor/memory/episodic";
 import { advanceWorkflowForActionRequired } from "./workflow";
 import { emitInstructionEvent } from "./instruction-trace";
 import { resumeObjectiveForAction } from "./objective-loop";
@@ -855,6 +854,7 @@ export async function executeAuthorizedEffectStep(
   if (commit.kind === "replay") {
     result = commit.result;
   } else {
+    const { createDefaultPluginRegistry } = await import("./plugin-registry");
     const plugin = createDefaultPluginRegistry().resolve(loaded.action.actionType);
     if (!plugin) {
       result = { status: "failure", output: {}, error: `No plugin handles ${loaded.action.actionType}`, errorKind: "terminal" };

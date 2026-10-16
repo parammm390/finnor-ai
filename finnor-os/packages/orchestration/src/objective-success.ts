@@ -31,7 +31,10 @@ import {
 import { and, asc, eq, inArray, or, sql } from "drizzle-orm";
 import { validateOperationalQueryRequest } from "./fast-read-lane";
 import { executeTenantOperationalQuery } from "./operational-query-runtime";
-import { evaluateDealCloseEligibility, getIcWorkspace, loadDealExecutionGraph, peTransaction, type PeMutationContext, type IcWorkspaceReadModel } from "@finnor/private-equity";
+import { evaluateDealCloseEligibility, loadDealExecutionGraph, peTransaction } from "@finnor/private-equity/src/repository";
+import { getIcWorkspace } from "@finnor/private-equity/src/ic-repository";
+import type { PeMutationContext } from "@finnor/private-equity/src/types";
+import type { IcWorkspaceReadModel } from "@finnor/private-equity/src/ic-types";
 import { artifactContext, getArtifact } from "@finnor/artifacts";
 
 const PathSchema = z.array(z.union([z.string().min(1).max(120), z.number().int().nonnegative()])).max(24);

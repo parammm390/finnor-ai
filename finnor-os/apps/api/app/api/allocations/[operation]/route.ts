@@ -5,7 +5,12 @@ import { AllocationContractError, ControlContractError, ExperimentContractError,
 import { PeDomainError, clearEnterprisePortfolio, consumeEnterpriseAllocation, listEnterpriseAllocationResources, readEnterpriseAllocation, reconcileEnterpriseAllocation, recordEnterpriseAllocationAssessment, registerEnterpriseAllocationResource, releaseEnterpriseAllocation, validateEnterpriseAllocation,settleEnterpriseAllocation } from '@finnor/private-equity';
 import { errorResponse, requireContext } from '../../../../lib/auth';
 import {LedgerFault} from '@finnor/private-equity';
+import {clearEnterpriseCoalitionAllocation,readEnterpriseCoalitionAllocation,consumeEnterpriseCoalitionAllocation,releaseEnterpriseCoalitionAllocation} from '../../../../../../packages/private-equity/src/enterprise-allocation';
+import {ExperimentRefSchema} from '@finnor/epistemic-runtime';
 import { R3OwnerOperationSchemas } from '../../../../../../packages/epistemic-runtime/src/incentive-rule-synthesis/output-contracts';
+const coalitionClear=z.object({selectionRef:ExperimentRefSchema,idempotencyKey:z.string().min(1).max(256)}).strict();
+const coalitionRead=z.object({allocationRef:ExperimentRefSchema}).strict();
+const coalitionConsume=coalitionRead.extend({idempotencyKey:z.string().min(1).max(256)}).strict();
 
 export const runtime='nodejs';
 const {resource,clear:clearing,read:reference,consume:consumption,release,assessment}=AllocationOperationSchemas;
@@ -32,13 +37,13 @@ export async function POST(req:Request,{params}:{params:Promise<{operation:strin
       case 'clear':{const p=clearing.parse(body);return response(await clearEnterprisePortfolio(ctx,{...p,mandate:p.mandate,jointModel:p.jointModel}));}
       case 'clear-mechanism':{const p=R3OwnerOperationSchemas.allocations['clear-mechanism'].parse(body);
         return response(await clearEnterprisePortfolio(ctx,{schema:'finnor.s5.r3-clearing-request.v1',...p}));}
-      case 'read':return response(await readEnterpriseAllocation(ctx,reference.parse(body).allocationRef));
-      case 'validate':return response(await validateEnterpriseAllocation(ctx,reference.parse(body).allocationRef));
+      case 'read':{const ref=reference.parse(body).allocationRef;return response(ref.version==='r7-exact-affine-v1'?await readEnterpriseExactAllocation(ctx,ref):await readEnterpriseAllocation(ctx,ref));}
+      case 'validate':{const ref=reference.parse(body).allocationRef;return response(ref.version==='r7-exact-affine-v1'?await validateEnterpriseExactAllocation(ctx,ref):await validateEnterpriseAllocation(ctx,ref));}
       case 'consume':return response(await consumeEnterpriseAllocation(ctx,consumption.parse(body)));
       case 'consume-mechanism':{const p=R3OwnerOperationSchemas.allocations['consume-mechanism'].parse(body);
         return response(await consumeEnterpriseAllocation(ctx,{schema:'finnor.s5.r3-consumption-request.v1',...p}));}
-      case 'release':return response(await releaseEnterpriseAllocation(ctx,release.parse(body)));
-      case 'reconcile':return response(await reconcileEnterpriseAllocation(ctx,reference.parse(body)));
+      case 'release':{const p=release.parse(body);return response(p.allocationRef.version==='r7-exact-affine-v1'?await releaseEnterpriseExactAllocation(ctx,p.allocationRef):await releaseEnterpriseAllocation(ctx,p));}
+      case 'reconcile':{const p=reference.parse(body);return response(p.allocationRef.version==='r7-exact-affine-v1'?await reconcileEnterpriseExactAllocation(ctx,p.allocationRef):await reconcileEnterpriseAllocation(ctx,p));}
       case 'settle':return response(await settleEnterpriseAllocation(ctx,AllocationOperationSchemas.settle.parse(body)));
       case 'assessment':return response(await recordEnterpriseAllocationAssessment(ctx,assessment.parse(body)));
       default:return response({error:'S5 operation was not found',code:'NOT_FOUND'},404);

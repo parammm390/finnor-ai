@@ -25,6 +25,9 @@
       "@finnor/shared-types": [
         "./packages/shared-types/src/index.ts"
       ],
+      "@finnor/shared-types/src/*": [
+        "./packages/shared-types/src/*.ts"
+      ],
       "@finnor/policy-schema": [
         "./packages/policy-schema/src/index.ts"
       ],
@@ -40,6 +43,21 @@
       "@finnor/computer": [
         "./packages/computer/src/index.ts"
       ],
+      "@finnor/computer/broker": [
+        "./packages/computer/src/broker.ts"
+      ],
+      "@finnor/computer/contracts": [
+        "./packages/computer/src/contracts.ts"
+      ],
+      "@finnor/computer/repository": [
+        "./packages/computer/src/repository.ts"
+      ],
+      "@finnor/computer/runner": [
+        "./packages/computer/src/runner.ts"
+      ],
+      "@finnor/computer/steel-provider": [
+        "./packages/computer/src/steel-provider.ts"
+      ],
       "@finnor/data-platform": [
         "./packages/data-platform/src/index.ts"
       ],
@@ -51,6 +69,18 @@
       ],
       "@finnor/memory": [
         "./packages/memory/src/index.ts"
+      ],
+      "@finnor/memory/evidence": [
+        "./packages/memory/src/evidence.ts"
+      ],
+      "@finnor/memory/episodic": [
+        "./packages/memory/src/episodic.ts"
+      ],
+      "@finnor/memory/ingest": [
+        "./packages/memory/src/ingest.ts"
+      ],
+      "@finnor/memory/snapshot": [
+        "./packages/memory/src/snapshot.ts"
       ],
       "@finnor/security": [
         "./packages/security/src/index.ts"
@@ -64,11 +94,62 @@
       "@finnor/orchestration": [
         "./packages/orchestration/src/index.ts"
       ],
+      "@finnor/orchestration/critic": [
+        "./packages/orchestration/src/critic.ts"
+      ],
+      "@finnor/orchestration/durable-execution": [
+        "./packages/orchestration/src/durable-execution.ts"
+      ],
+      "@finnor/orchestration/event-waits": [
+        "./packages/orchestration/src/event-waits.ts"
+      ],
+      "@finnor/orchestration/external-observation": [
+        "./packages/orchestration/src/external-observation.ts"
+      ],
+      "@finnor/orchestration/learning": [
+        "./packages/orchestration/src/learning.ts"
+      ],
+      "@finnor/orchestration/objective-loop": [
+        "./packages/orchestration/src/objective-loop.ts"
+      ],
+      "@finnor/orchestration/workforce-learning": [
+        "./packages/orchestration/src/workforce-learning.ts"
+      ],
+      "@finnor/orchestration/workforce-runtime": [
+        "./packages/orchestration/src/workforce-runtime.ts"
+      ],
+      "@finnor/workflow-runtime/commands": [
+        "./packages/workflow-runtime/src/commands.ts"
+      ],
+      "@finnor/workflow-runtime/dlq-triage": [
+        "./packages/workflow-runtime/src/dlq-triage.ts"
+      ],
+      "@finnor/workflow-runtime/job-identity": [
+        "./packages/workflow-runtime/src/job-identity.ts"
+      ],
+      "@finnor/workflow-runtime/receipts": [
+        "./packages/workflow-runtime/src/receipts.ts"
+      ],
+      "@finnor/workflow-runtime/reconciliation": [
+        "./packages/workflow-runtime/src/reconciliation.ts"
+      ],
+      "@finnor/workflow-runtime/run-controls": [
+        "./packages/workflow-runtime/src/run-controls.ts"
+      ],
+      "@finnor/workflow-runtime/steps": [
+        "./packages/workflow-runtime/src/steps.ts"
+      ],
+      "@finnor/workflow-runtime/stuck-runs": [
+        "./packages/workflow-runtime/src/stuck-runs.ts"
+      ],
       "@finnor/read-models": [
         "./packages/read-models/src/index.ts"
       ],
       "@finnor/private-equity": [
         "./packages/private-equity/src/index.ts"
+      ],
+      "@finnor/private-equity/src/*": [
+        "./packages/private-equity/src/*.ts"
       ],
       "@finnor/underwriting": [
         "./packages/underwriting/src/index.ts"

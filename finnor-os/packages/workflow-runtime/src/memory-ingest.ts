@@ -6,7 +6,7 @@
 
 import { withTenant, decisionReceipts } from "@finnor/db";
 import { eq } from "drizzle-orm";
-import { ingestMemory } from "@finnor/memory";
+import { ingestMemory } from "@finnor/memory/ingest";
 
 /** Renders a receipt's actualResult into "key: value" lines — reads better in a chunk
  *  (and embeds more meaningfully) than raw JSON. */

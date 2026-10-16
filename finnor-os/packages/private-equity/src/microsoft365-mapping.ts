@@ -16,7 +16,7 @@ import {
   providerObjectRootBindings,
   type Db,
 } from "@finnor/db";
-import { appendEvidenceVersionTx, createEvidenceSourceTx } from "@finnor/memory";
+import { appendEvidenceVersionTx, createEvidenceSourceTx } from "@finnor/memory/evidence";
 import type { ProviderObservation, ProviderObservationParentRef } from "@finnor/shared-types";
 import { and, eq, inArray, isNull } from "drizzle-orm";
 import type { PoolClient } from "pg";

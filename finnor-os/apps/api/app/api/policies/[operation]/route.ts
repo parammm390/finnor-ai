@@ -2,6 +2,9 @@ import { z } from 'zod';
 import { ExactControlError, AllocationContractError, ControlContractError, ExperimentContractError, ExperimentRefSchema, InterventionContractError } from '@finnor/epistemic-runtime';
 import { PeDomainError, synthesizeEnterpriseExactControl, synthesizeEnterpriseControl, readEnterpriseContingentPolicy, replayEnterpriseContingentPolicy, validateEnterpriseContingentPolicy, recordEnterpriseControlAssessment, observeEnterpriseControl, chooseEnterpriseControlBranch, prepareEnterpriseContingentHandoff } from '@finnor/private-equity';
 import { errorResponse, requireContext } from '../../../../lib/auth';
+import {R1_OPERATIONS,handleR1Operation} from '@finnor/private-equity/src/r1/api';
+import {readEnterpriseCoalitionSelection} from '@finnor/private-equity/src/enterprise-control';
+import {CapitalProgramV2Error} from '@finnor/private-equity/src/capital-program/v2-contracts';
 import { R3OwnerOperationSchemas } from '../../../../../../packages/epistemic-runtime/src/incentive-rule-synthesis/output-contracts';
 
 export const runtime='nodejs';
@@ -20,6 +23,8 @@ export async function POST(req:Request,{params}:{params:Promise<{operation:strin
  case 'replan':return response(await synthesizeEnterpriseControl(ctx,revision.parse(body)));
  case 'read':return response(await readEnterpriseContingentPolicy(ctx,reference.parse(body).policyRef));
  case 'read-mechanism':return response(await readEnterpriseContingentPolicy(ctx,{schema:'finnor.s4.r3-policy-read.v1',policyRef:R3OwnerOperationSchemas.policies['read-mechanism'].parse(body).policyRef}));
+ case 'coalition-read':return response(await readEnterpriseCoalitionSelection(ctx,
+  z.object({selectionRef:ExperimentRefSchema}).strict().parse(body).selectionRef));
  case 'replay':return response(await replayEnterpriseContingentPolicy(ctx,reference.parse(body).policyRef));
  case 'validate':return response(await validateEnterpriseContingentPolicy(ctx,reference.parse(body).policyRef));
  case 'assessment':return response(await recordEnterpriseControlAssessment(ctx,assessment.parse(body)));

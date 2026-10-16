@@ -1,7 +1,8 @@
 import {randomUUID,createPrivateKey,sign} from 'node:crypto';
 import {fileURLToPath} from 'node:url';
 import {withTenantTransaction} from '@finnor/db';
-import {submitCommand,cancelRun} from '@finnor/workflow-runtime';
+import {submitCommand} from '@finnor/workflow-runtime/commands';
+import {cancelRun} from '@finnor/workflow-runtime/run-controls';
 import type pg from 'pg';
 import type {DurableObligation,ExperimentRef,BusinessEffectSet} from '@finnor/shared-types';
 import {epistemicHash,immutableControl,ExperimentRefSchema} from '@finnor/epistemic-runtime';

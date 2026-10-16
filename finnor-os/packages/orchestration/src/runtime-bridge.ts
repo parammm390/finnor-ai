@@ -13,7 +13,7 @@ import {
   works,
   type Db,
 } from "@finnor/db";
-import { submitCommand } from "@finnor/workflow-runtime";
+import { submitCommand } from "@finnor/workflow-runtime/commands";
 import { and, desc, eq, inArray, or, sql } from "drizzle-orm";
 import type { BusinessEffectSet, DraftAction, ExecutionResult, ErrorKind } from "@finnor/shared-types";
 import type { ToolRegistry } from "@finnor/tools";

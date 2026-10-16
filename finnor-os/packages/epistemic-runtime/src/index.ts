@@ -42,4 +42,8 @@ export * from "./allocation-checker";
 export * from "./allocation-verifier";
 
 export * from "./economic-attribution";
+export * from './certified-state-reduction';
+export * from './exact-control-policy';
+export * from "./verified-capital-compiler";
 export * from "./incentive-rule-synthesis/contracts";
+export * from "./incentive-rule-synthesis/output-contracts";

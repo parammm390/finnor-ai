@@ -73,13 +73,13 @@ import {
   type PlanNode,
   type PlanningWorldSnapshot,
 } from "@finnor/planning";
-import { attachWorkToDealGraph, resolvePrivateEquityDealReference } from "@finnor/private-equity";
+import { attachWorkToDealGraph } from "@finnor/private-equity/src/repository";
+import { resolvePrivateEquityDealReference } from "@finnor/private-equity/src/operational-queries";
 import { canExerciseAuthority, employeeAuthoritySnapshot, evaluateAuthority } from "@finnor/authority";
 import { listAvailableIdentityAccess } from "@finnor/security";
 import type { LLMChannel, LLMProvider } from "./llm";
 import { resolveProviderForPurpose } from "./llm";
 import type { PluginRegistry } from "./plugin-registry";
-import { plannerActionTypesForVertical, planningCapabilitiesForVertical } from "./plugin-registry";
 import { LLMPlanner, type Planner, type PlanningResult } from "./planner";
 import { parseModelJson } from "./model-json";
 import { PlanCompilationError, deterministicPlanActionId, selectPlanRevision } from "./plan-runtime";
@@ -1722,6 +1722,7 @@ async function objectivePlanningInputs(params: {
   ctx: TenantContext;
   plugins: PluginRegistry;
 }): Promise<{ workInputId: string; verticalKey: string; goal: GoalSpec; constraints: ConstraintSet; snapshot: PlanningWorldSnapshot; verifiedIrreversibleEffectHashes: string[] }> {
+  const { planningCapabilitiesForVertical } = await import("./plugin-registry");
   const vertical = await resolveTenantVertical(params.tenantId);
   const manifest = planningCapabilitiesForVertical(params.plugins, vertical.verticalKey);
   const actionTypes = manifest.filter((item) => item.kind === "action" && item.available).map((item) => item.capability);
@@ -1909,6 +1910,7 @@ async function consequentialDispatchViolation(params: {
   if (current.loop?.revision !== params.loopRevision || current.loop.state !== "continue") return "The Objective was interrupted, redirected, or moved out of runnable state";
   if (current.grounding.some((field) => field.status !== "verified")) return "An entity reference or expected version is no longer grounded";
   const vertical = await resolveTenantVertical(params.tenantId);
+  const { planningCapabilitiesForVertical } = await import("./plugin-registry");
   const capability = planningCapabilitiesForVertical(params.plugins, vertical.verticalKey).find((item) => item.kind === "action" && item.capability === params.node.actionType);
   if (!capability?.available || !capability.modelProposable || capability.health === "unavailable") return "The selected capability is no longer available to the planner";
   if (requiredPlanningHealthCapability(params.node.actionType, params.node.groundedPayload)) {
@@ -2239,6 +2241,7 @@ export class ObjectiveLoopRuntime {
         let planning: PlanningResult;
         let compatibilityDecision: ObjectiveDecision | undefined;
         if (this.compatibilityPlanner) {
+          const { plannerActionTypesForVertical } = await import("./plugin-registry");
           const allowedActionTypes = plannerActionTypesForVertical(this.plugins, inputs.verticalKey);
           const proposed = await this.compatibilityPlanner.decide({
             objective: loop.objective,

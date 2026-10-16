@@ -12,6 +12,9 @@ import {
   type CapitalExactSourceView,
 } from "./capital-program-view"
 import { OriginalChallengePanel } from "./OriginalChallengePanel"
+import { ExactControlReview } from "./ExactControlReview"
+import { CoalitionProgrammeReview } from "./CoalitionProgrammeReview"
+import { DecisionAtlasReview } from "./DecisionAtlasReview"
 import { ElicitationProtocolReview } from "./ElicitationProtocolReview"
 import "./capital-program.css"
 

@@ -34,11 +34,11 @@ import {
   resolveTenantVertical,
 } from "@finnor/db";
 import { and, asc, eq, inArray, isNull, or, sql } from "drizzle-orm";
-import { buildMemorySnapshot } from "@finnor/memory";
 import { loadOperatingDirectoryContext } from "@finnor/read-models";
 import { buildPlanningHealthContext } from "./planning-health";
 import { listAvailableIdentityAccess } from "@finnor/security";
-import { resolvePrivateEquityDealReference, loadEnterpriseBeliefView } from "@finnor/private-equity";
+import { resolvePrivateEquityDealReference } from "@finnor/private-equity/src/operational-queries";
+import { loadEnterpriseBeliefView } from "@finnor/private-equity/src/enterprise-beliefs";
 import { executeTenantOperationalQuery } from "./operational-query-runtime";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -324,6 +324,7 @@ export async function assembleOperatingContext(
   let memory = emptyMemory();
   if (opts.includeMemory) {
     try {
+      const { buildMemorySnapshot } = await import("@finnor/memory/snapshot");
       memory = await buildMemorySnapshot({
         tenantId: ctx.tenantId,
         employeeId: ctx.employeeId,

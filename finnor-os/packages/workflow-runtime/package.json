@@ -5,6 +5,44 @@
   "type": "module",
   "main": "src/index.ts",
   "types": "src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "import": "./src/index.ts"
+    },
+    "./commands": {
+      "types": "./src/commands.ts",
+      "import": "./src/commands.ts"
+    },
+    "./dlq-triage": {
+      "types": "./src/dlq-triage.ts",
+      "import": "./src/dlq-triage.ts"
+    },
+    "./job-identity": {
+      "types": "./src/job-identity.ts",
+      "import": "./src/job-identity.ts"
+    },
+    "./receipts": {
+      "types": "./src/receipts.ts",
+      "import": "./src/receipts.ts"
+    },
+    "./reconciliation": {
+      "types": "./src/reconciliation.ts",
+      "import": "./src/reconciliation.ts"
+    },
+    "./run-controls": {
+      "types": "./src/run-controls.ts",
+      "import": "./src/run-controls.ts"
+    },
+    "./steps": {
+      "types": "./src/steps.ts",
+      "import": "./src/steps.ts"
+    },
+    "./stuck-runs": {
+      "types": "./src/stuck-runs.ts",
+      "import": "./src/stuck-runs.ts"
+    }
+  },
   "dependencies": {
     "@finnor/authority": "*",
     "@finnor/db": "*",

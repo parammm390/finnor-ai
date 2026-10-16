@@ -3,7 +3,7 @@
 // evidence and wakes only exact effect observers.
 
 import { enqueueJob, resolveTenantVertical } from "@finnor/db";
-import { ingestIntegrationEvent } from "@finnor/orchestration";
+import { ingestIntegrationEvent } from "@finnor/orchestration/event-waits";
 import { logWithTrace } from "@finnor/tools";
 import type { JobHandler } from "../queue";
 

@@ -1,15 +1,9 @@
 import { z } from "zod";
-import {
-  ComputerBroker,
-  ComputerRunner,
-  SteelProvider,
-  markComputerSessionReleased,
-  markComputerSessionCleanupFailed,
-  recoverComputerRunJobs,
-  type ComputerDecisionContext,
-  type ComputerDecisionEngine,
-  type ComputerRunnerDecision,
-} from "@finnor/computer";
+import type {
+  ComputerDecisionContext,
+  ComputerDecisionEngine,
+  ComputerRunnerDecision,
+} from "@finnor/computer/contracts";
 import { ensureSecretsLoaded } from "@finnor/security";
 import { resolveProviderForPurpose, type LLMProvider } from "@finnor/tools";
 import type { JobHandler } from "../queue";
@@ -182,11 +176,18 @@ export const runComputerTask: JobHandler = async (payload) => {
   if (!tenantId || !runId) throw new Error("run_computer_task requires tenantId and runId");
   await ensureSecretsLoaded();
   const apiKey = process.env.STEEL_API_KEY?.trim();
-  const broker = new ComputerBroker();
-  if (apiKey) broker.register(new SteelProvider({ apiKey, ...(process.env.STEEL_BASE_URL?.trim() ? { baseURL: process.env.STEEL_BASE_URL.trim() } : {}) }));
-  const { getComputerRunBundle } = await import("@finnor/computer");
-  const before = await getComputerRunBundle(tenantId, runId);
+  const computerRepository = await import("@finnor/computer/repository");
+  const before = await computerRepository.getComputerRunBundle(tenantId, runId);
   if (!before) throw new Error("Computer run was not found");
+  const [{ ComputerBroker }, { ComputerRunner }] = await Promise.all([
+    import("@finnor/computer/broker"),
+    import("@finnor/computer/runner"),
+  ]);
+  const broker = new ComputerBroker();
+  if (apiKey) {
+    const { SteelProvider } = await import("@finnor/computer/steel-provider");
+    broker.register(new SteelProvider({ apiKey, ...(process.env.STEEL_BASE_URL?.trim() ? { baseURL: process.env.STEEL_BASE_URL.trim() } : {}) }));
+  }
   const result = await new ComputerRunner({
     broker,
     decisionEngine: new LLMComputerDecisionEngine({ tenantId, actionId: before.run.domainActionId, traceId: runId }),
@@ -199,10 +200,14 @@ export const runComputerTask: JobHandler = async (payload) => {
 export const recoverComputerTasks: JobHandler = async (payload) => {
   const tenantId = typeof payload.tenantId === "string" ? payload.tenantId : "";
   if (!tenantId) throw new Error("recover_computer_tasks requires tenantId");
-  const recovery = await recoverComputerRunJobs(tenantId);
+  const computerRepository = await import("@finnor/computer/repository");
+  const recovery = await computerRepository.recoverComputerRunJobs(tenantId);
   await ensureSecretsLoaded();
   const apiKey = process.env.STEEL_API_KEY?.trim();
   if (!apiKey) return;
+  if (recovery.orphanSessions.length === 0) return;
+  const { SteelProvider } = await import("@finnor/computer/steel-provider");
+  const { markComputerSessionReleased, markComputerSessionCleanupFailed } = computerRepository;
   const provider = new SteelProvider({ apiKey, ...(process.env.STEEL_BASE_URL?.trim() ? { baseURL: process.env.STEEL_BASE_URL.trim() } : {}) });
   for (const orphan of recovery.orphanSessions) {
     try {

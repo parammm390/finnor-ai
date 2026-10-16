@@ -3,7 +3,7 @@ import { randomUUID } from "node:crypto";
 import { canExerciseAuthority, evaluateAuthority } from "@finnor/authority";
 import { attachWorkEntityTx, type Db } from "@finnor/db";
 import type { AuthorityDecision, TenantContext } from "@finnor/shared-types";
-import { finalizeReceiptTx, openReceiptTx } from "@finnor/workflow-runtime";
+import { finalizeReceiptTx, openReceiptTx } from "@finnor/workflow-runtime/receipts";
 import { aggregateIcDecision, icSemanticHash } from "./ic-aggregation";
 import { recordIcMetric, type IcMetric } from "./ic-telemetry";
 import {
