@@ -1,0 +1,54 @@
+{
+  "schema": "finnor.ci-process.v1",
+  "status": "PASS",
+  "startedAt": "2026-10-16T03:32:02.639Z",
+  "commands": [
+    {
+      "command": "actionlint 1.7.12",
+      "args": [
+        "-shellcheck=",
+        "-pyflakes=",
+        ".github/workflows/ci.yml",
+        ".github/workflows/dealer-zero-replay.yml",
+        ".github/workflows/marketing-ci.yml",
+        ".github/workflows/pr-verdict.yml",
+        ".github/workflows/production-release.yml",
+        ".github/workflows/release-readiness.yml",
+        ".github/workflows/security.yml",
+        ".github/workflows/source-checks.yml",
+        ".github/workflows/tenant-isolation-nightly.yml"
+      ],
+      "exitCode": 0,
+      "output": ""
+    },
+    {
+      "command": "bash",
+      "args": [
+        "-n",
+        "scripts/release/smoke-worker-image.sh"
+      ],
+      "exitCode": 0,
+      "output": ""
+    }
+  ],
+  "inputs": {
+    ".github/workflows/ci.yml": "6905a218923f6c68784315aa787f74c6b263521f7df93bcc19dc15926a2fdbd2",
+    ".github/workflows/dealer-zero-replay.yml": "f61cb55b4bfa4a8ee7d1a0d0b892971c6ce83f45f52d8f2b2dad77915df307ea",
+    ".github/workflows/marketing-ci.yml": "374bda9aeb370c62be288ca9fc7507633f273779f08838c63ee7c48815f11ae7",
+    ".github/workflows/pr-verdict.yml": "df0265597e1ee2dc47161e8e25abe87b46024a131b0d02735f6e1b8f2bcc4c5e",
+    ".github/workflows/production-release.yml": "aefe1cc44338ffc8c981e6ddf748197a5a286e09d846bc52f17e734ff1181858",
+    ".github/workflows/release-readiness.yml": "50d711319dc6cc63145ef6fa27ab9a3d0d606a181974a0abb2b508261e4d7196",
+    ".github/workflows/security.yml": "79e0547c58487904ca78d780af4fcbb34695a09fe06caa96ad94d06096039afd",
+    ".github/workflows/source-checks.yml": "1f58d5c70eed676b925239de1330e956e277590f361c9b19f8b3d581179d6b21",
+    ".github/workflows/tenant-isolation-nightly.yml": "dc582e6cbf07319b39212935140b379b1fbff89fbc406ff54adcef81c96fc6d4",
+    "infra/deployment/release-toolchain.json": "b464a9c55f46f09e58f2cadab47193424c594857a821416a1f89f658ee7cd432",
+    "scripts/release/verify-ci-workflows.mjs": "1b73f73fb85ae039fde28b20d6b8143a21960d001d696ce03d39cfd20577b78e",
+    "scripts/release/ci-process-policy.mjs": "a032d113b91501fc5cbf8ccc29a30c62db83a4e6403bbe57dfbf57fc1388c3fb"
+  },
+  "rerun": "FINNOR_CI_PROCESS_EVIDENCE_DIR=/absolute/new/evidence node scripts/release/verify-ci-workflows.mjs",
+  "hostedExecutionClaimed": false,
+  "archiveSha256": "aba9ced2dee8d27fecca3dc7feb1a7f9a52caefa1eb46f3271ea66b6e0e6953f",
+  "binarySha256": "8db11704dc296f096216db4db65d86cd7f0ebfdf4c38453a1da276b137b88388",
+  "finishedAt": "2026-10-16T03:32:03.946Z",
+  "durationMs": 1307
+}

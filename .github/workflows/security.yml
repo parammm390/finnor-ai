@@ -7,9 +7,6 @@ on:
         required: false
         type: boolean
         default: true
-  push:
-    branches: [main]
-    paths: ["package.json", "package-lock.json", "finnor-os/**", ".gitleaks.toml", ".github/workflows/security.yml", "infra/deployment/release-toolchain.json", "scripts/centropy/verify-secret-scan-policy.mjs"]
 permissions:
   actions: read
   contents: read
@@ -18,6 +15,7 @@ jobs:
   gitleaks:
     name: gitleaks
     runs-on: ubuntu-latest
+    timeout-minutes: 8
     permissions:
       contents: read
     steps:
@@ -26,15 +24,9 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
-      - uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITLEAKS_ENABLE_COMMENTS: "false"
-      # The original action only requests the first page of PR commits.
-      # Independently scan all local base-to-head history, including side parents
-      # and a merge's diff against each parent. Never rely on that API page.
+      # One pinned scanner covers the complete history, including side parents
+      # and each merge parent; the overlapping first-page action is unnecessary.
       - name: Scan complete base-to-head history
-        if: ${{ !cancelled() }}
         shell: bash
         env:
           EVENT_NAME: ${{ github.event_name }}

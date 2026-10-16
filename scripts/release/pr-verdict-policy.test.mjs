@@ -7,12 +7,15 @@ function evaluate(files, results = {}) {
   return evaluateRequiredPrVerdict({
     files,
     classifyResult: "success",
+    sourceResult: scope.backend || scope.root ? "success" : "skipped",
     backendApplicable: scope.backend,
     backendResult: scope.backend ? "success" : "skipped",
     rootApplicable: scope.root,
     rootResult: scope.root ? "success" : "skipped",
     dependencyApplicable: scope.dependencies,
     securityResult: "success",
+    replayResult: scope.backend ? "success" : "skipped",
+    readinessResult: scope.backend ? "success" : "skipped",
     ...results,
   })
 }

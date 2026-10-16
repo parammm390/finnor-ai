@@ -9,13 +9,14 @@ permissions:
   contents: read
 
 concurrency:
-  group: pr-verdict-${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.sha }}
+  group: pr-verdict-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
 jobs:
   classify:
     name: classify-required-scope
     runs-on: ubuntu-latest
+    timeout-minutes: 3
     outputs:
       backend: ${{ steps.scope.outputs.backend }}
       root: ${{ steps.scope.outputs.root }}
@@ -25,6 +26,10 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 22.22.3
       - id: scope
         name: Classify the exact pull-request diff
         env:
@@ -32,25 +37,32 @@ jobs:
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           node --input-type=module <<'NODE'
-          import { execFileSync } from "node:child_process"
           const { appendFileSync } = await import("node:fs")
-          const { classifyPullRequestFiles, encodeChangedFiles } = await import("./scripts/release/pr-verdict-policy.mjs")
-          const bytes = execFileSync("git", ["diff", "--name-only", "-z", "--diff-filter=ACDMRT", process.env.BASE_SHA, process.env.HEAD_SHA])
-          const files = bytes.toString("utf8").split("\0").filter(Boolean)
+          const { changedPullRequestFiles, classifyPullRequestFiles, encodeChangedFiles } = await import("./scripts/release/pr-verdict-policy.mjs")
+          const files = changedPullRequestFiles({ base: process.env.BASE_SHA, head: process.env.HEAD_SHA })
           const { backend, root, dependencies } = classifyPullRequestFiles(files)
           const output = process.env.GITHUB_OUTPUT
           appendFileSync(output, `backend=${backend}\nroot=${root}\ndependencies=${dependencies}\nfiles_b64=${encodeChangedFiles(files)}\n`)
           NODE
 
+  source:
+    name: early-source-gates
+    needs: classify
+    if: ${{ needs.classify.outputs.backend == 'true' || needs.classify.outputs.root == 'true' }}
+    uses: ./.github/workflows/source-checks.yml
+    with:
+      backend: ${{ needs.classify.outputs.backend == 'true' }}
+      root: ${{ needs.classify.outputs.root == 'true' }}
+
   backend:
     name: applicable-backend-gates
-    needs: classify
+    needs: [classify, source]
     if: ${{ needs.classify.outputs.backend == 'true' }}
     uses: ./.github/workflows/ci.yml
 
   root:
     name: applicable-root-gates
-    needs: classify
+    needs: [classify, source]
     if: ${{ needs.classify.outputs.root == 'true' }}
     uses: ./.github/workflows/marketing-ci.yml
 
@@ -65,19 +77,38 @@ jobs:
     with:
       run_dependency_scan: ${{ needs.classify.outputs.dependencies == 'true' }}
 
+  replay:
+    name: applicable-dealer-zero
+    needs: [classify, source]
+    if: ${{ needs.classify.outputs.backend == 'true' }}
+    uses: ./.github/workflows/dealer-zero-replay.yml
+    secrets:
+      DEALER_ZERO_REPLAY_BASELINE: ${{ secrets.DEALER_ZERO_REPLAY_BASELINE }}
+      DEALER_ZERO_REPLAY_CANDIDATE: ${{ secrets.DEALER_ZERO_REPLAY_CANDIDATE }}
+
+  readiness:
+    name: applicable-release-readiness
+    needs: [classify, source]
+    if: ${{ needs.classify.outputs.backend == 'true' }}
+    uses: ./.github/workflows/release-readiness.yml
+
   verdict:
     name: required-pr-verdict
     runs-on: ubuntu-latest
+    timeout-minutes: 3
     if: ${{ always() }}
-    needs: [classify, backend, root, security]
+    needs: [classify, source, backend, root, security, replay, readiness]
     env:
       CLASSIFY_RESULT: ${{ needs.classify.result }}
+      SOURCE_RESULT: ${{ needs.source.result }}
       BACKEND_APPLICABLE: ${{ needs.classify.outputs.backend }}
       BACKEND_RESULT: ${{ needs.backend.result }}
       ROOT_APPLICABLE: ${{ needs.classify.outputs.root }}
       ROOT_RESULT: ${{ needs.root.result }}
       DEPENDENCY_APPLICABLE: ${{ needs.classify.outputs.dependencies }}
       SECURITY_RESULT: ${{ needs.security.result }}
+      REPLAY_RESULT: ${{ needs.replay.result }}
+      READINESS_RESULT: ${{ needs.readiness.result }}
       FILES_B64: ${{ needs.classify.outputs.files_b64 }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
@@ -90,12 +121,15 @@ jobs:
           const { verdict, failures } = evaluateRequiredPrVerdict({
             files: decodeChangedFiles(process.env.FILES_B64),
             classifyResult: process.env.CLASSIFY_RESULT,
+            sourceResult: process.env.SOURCE_RESULT,
             backendApplicable: applicable(process.env.BACKEND_APPLICABLE),
             backendResult: process.env.BACKEND_RESULT,
             rootApplicable: applicable(process.env.ROOT_APPLICABLE),
             rootResult: process.env.ROOT_RESULT,
             dependencyApplicable: applicable(process.env.DEPENDENCY_APPLICABLE),
             securityResult: process.env.SECURITY_RESULT,
+            replayResult: process.env.REPLAY_RESULT,
+            readinessResult: process.env.READINESS_RESULT,
           })
           appendFileSync(process.env.GITHUB_STEP_SUMMARY, `\n\`\`\`json\n${JSON.stringify(verdict, null, 2)}\n\`\`\`\n`)
           console.log(JSON.stringify(verdict))

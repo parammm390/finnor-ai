@@ -118,8 +118,29 @@ test("active release workflow uses the governed four-class AWS compute cutover",
   assert.match(workflow, /deploy-aws-compute-plane\.mjs/)
   const computeSessionPolicy = workflow.match(/- name: Authenticate exact AWS project with GitHub OIDC for ECS[\s\S]*?inline-session-policy: >-\s*([^\n]+)/)?.[1]
   assert.ok(computeSessionPolicy, "compute deployment must use a scoped AWS session")
-  assert.match(computeSessionPolicy, /ecr:DescribeRepositories/, "CloudFormation resolves the ECR repository ARN while updating worker roles")
-  assert.match(computeSessionPolicy, /logs:DescribeLogGroups/, "CloudFormation resolves the log group ARN while updating worker roles")
+  assert.ok(computeSessionPolicy.length <= 2048, "the inline STS session policy must fit AWS's 2,048-character limit")
+  const computePolicy = JSON.parse(computeSessionPolicy)
+  const computeStatements = computePolicy.Statement
+  const computeActions = computeStatements.flatMap((statement) => Array.isArray(statement.Action) ? statement.Action : [statement.Action])
+  assert.ok(computeActions.length > 0)
+  assert.ok(computeActions.every((action) => typeof action === "string" && !action.endsWith(":*")), "the deploy session must enumerate every AWS action")
+  for (const statement of computeStatements.filter((entry) => entry.Resource === "*")) {
+    const actions = Array.isArray(statement.Action) ? statement.Action : [statement.Action]
+    assert.ok(actions.every((action) => action === "ecr:GetAuthorizationToken" || /:(?:Describe|List)[A-Za-z]+$/.test(action)), `wildcard resource is restricted to read-only discovery actions: ${actions.join(", ")}`)
+  }
+  const computeResources = computeStatements.flatMap((statement) => Array.isArray(statement.Resource) ? statement.Resource : [statement.Resource])
+  assert.ok(computeResources.some((resource) => resource?.endsWith(":stack/finnor-production/*")), "CloudFormation is restricted to the production stack")
+  assert.match(JSON.stringify(computePolicy), /"ecs:cluster":"arn:aws:ecs:us-east-1:601804670058:cluster\/finnor-production"/, "task listing is restricted to the production cluster")
+  assert.ok(computeResources.some((resource) => resource?.includes(":service/finnor-production/finnor-")), "ECS services are restricted to FINNOR services")
+  assert.ok(computeResources.some((resource) => resource?.endsWith(":repository/finnor-worker")), "ECR writes are restricted to the worker repository")
+  const iamActions = computeActions.filter((action) => action.startsWith("iam:"))
+  assert.ok(iamActions.every((action) => action === "iam:PassRole"), "the deployment session can only pass the named ECS task roles, not mutate IAM")
+  const ecrSessionPolicy = workflow.match(/- name: Authenticate exact AWS project with GitHub OIDC for ECR[\s\S]*?inline-session-policy: >-\s*([^\n]+)/)?.[1]
+  assert.ok(ecrSessionPolicy, "worker image publication must use a scoped AWS session")
+  const ecrPolicy = JSON.parse(ecrSessionPolicy)
+  assert.ok(ecrSessionPolicy.length <= 2048)
+  assert.ok(ecrPolicy.Statement.some((statement) => statement.Action === "ecr:GetAuthorizationToken" && statement.Resource === "*"))
+  assert.ok(ecrPolicy.Statement.some((statement) => Array.isArray(statement.Action) && statement.Action.includes("ecr:PutImage") && statement.Resource === "arn:aws:ecr:us-east-1:601804670058:repository/finnor-worker"))
   const computeTemplate = readFileSync(new URL("../../infra/aws/finnor-production.yaml", import.meta.url), "utf8")
   assert.match(computeTemplate, /Sid: LogGroupLookup, Effect: Allow, Action: logs:DescribeLogGroups, Resource: '\*'/)
   assert.match(computeTemplate, /Sid: ComputeScalingTags[\s\S]{0,240}application-autoscaling:TagResource[\s\S]{0,120}application-autoscaling:UntagResource[\s\S]{0,180}scalable-target\/\*/)
@@ -133,8 +154,10 @@ test("active release workflow uses the governed four-class AWS compute cutover",
     assert.match(deployStage, new RegExp(`--${argument}=\\"\\$FINNOR_[A-Z_]+\\"`))
   }
   assert.doesNotMatch(workflow, /deploy-aws-worker\.mjs/)
-  assert.match(workflow, /release:scope4-digital-twin\b/)
-  assert.match(workflow, /release:scope5-epistemic-impact\b/)
+  const readinessWorkflow = readFileSync(new URL("../../.github/workflows/release-readiness.yml", import.meta.url), "utf8")
+  assert.match(workflow, /uses: \.\/\.github\/workflows\/release-readiness\.yml/)
+  assert.match(readinessWorkflow, /release:scope4-digital-twin\b/)
+  assert.match(readinessWorkflow, /release:scope5-epistemic-impact\b/)
   assert.match(workflow, /deploy-production\.mjs supplierCanaryApp/)
   assert.match(workflow, /deploy-production\.mjs supplierCanaryAuth/)
   assert.doesNotMatch(workflow, /run-p8-production-water-retirement\.mjs|release:scope5:rollout/)

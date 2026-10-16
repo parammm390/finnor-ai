@@ -1,6 +1,7 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs"
 import { join, relative, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
+import { verifyCiProcess } from "./ci-process-policy.mjs"
 
 const repoRoot = resolve(fileURLToPath(new URL("../..", import.meta.url)))
 const read = (path) => readFileSync(resolve(repoRoot, path), "utf8")
@@ -8,6 +9,8 @@ const inventory = JSON.parse(read("infra/deployment/production-mutation-inventor
 const contract = JSON.parse(read("infra/deployment/production.contract.json"))
 const fail = (message) => { throw new Error(message) }
 const requireInvariant = (condition, message) => { if (!condition) fail(message) }
+const processFailures = verifyCiProcess(repoRoot).failures
+requireInvariant(processFailures.length === 0, processFailures.join("\n"))
 
 requireInvariant(inventory.schema === "finnor-production-mutation-inventory.v1", "unsupported production mutation inventory schema")
 requireInvariant(inventory.breakGlassRetained === false, "an unreviewed BREAK_GLASS path is retained")
@@ -126,7 +129,7 @@ const releaseStepBlock = (stepName) => {
   const next = workflow.indexOf("\n      - ", at + 1)
   return workflow.slice(at, next < 0 ? undefined : next)
 }
-for (const installOrBuild of ["Install pinned Vercel CLI", "Install frontend dependencies", "Install API/workspace dependencies", "Frontend quality gate", "API typecheck gate"]) {
+for (const installOrBuild of ["Install pinned Vercel CLI", "Install frontend dependencies", "Install API/workspace dependencies"]) {
   const block = releaseStepBlock(installOrBuild)
   requireInvariant(!block.includes("${{ secrets."), `${installOrBuild} receives production secrets`)
 }
@@ -139,8 +142,6 @@ for (const unprivilegedStep of [
   "Release governance regression tests",
   "Derive commit-locked release metadata",
   "Verify clean canonical Git source",
-  "Frontend quality gate",
-  "API typecheck gate",
   "Prepare disposable worker smoke database",
   "Build and smoke-test exact worker image without production credentials",
   "Verify product-runtime release policy without production credentials",

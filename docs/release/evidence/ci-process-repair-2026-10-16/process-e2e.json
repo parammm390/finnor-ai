@@ -1,0 +1,47 @@
+{
+  "schema": "finnor.ci-process-e2e.v1",
+  "status": "PASS",
+  "startedAt": "2026-10-16T03:32:04.052Z",
+  "finishedAt": "2026-10-16T03:32:04.536Z",
+  "inputs": {
+    "scripts/release/ci-process.e2e.test.mjs": "7107f253731a3c505e6a985d7b7f616085ef329191488ff96290d9084c97faa9",
+    "scripts/release/pr-verdict-policy.mjs": "9853a30a7eb3c5b95c95d400cc6129ad633eeea22a8df8fcfabdff031ad6ecea",
+    "scripts/release/ci-process-policy.mjs": "a032d113b91501fc5cbf8ccc29a30c62db83a4e6403bbe57dfbf57fc1388c3fb"
+  },
+  "records": [
+    {
+      "case": "real-git-diff",
+      "base": "59bb929acd790a8567404ab60a0b1b7520e4adc1",
+      "movedBase": "34f30481138979f26741f905fd83262385d7fc5d",
+      "head": "b68c78b569bfd939370a19702e30cd4d7460ac13",
+      "observedFiles": [
+        "docs/line\nbreak.md",
+        "docs/renamed.md",
+        "finnor-os/deleted.ts",
+        "src/renamed.ts"
+      ],
+      "renamedAndDeletedCodeRetained": true,
+      "baseDriftExcluded": true,
+      "invalidEndpointsRejected": true
+    },
+    {
+      "case": "stable-verdict",
+      "successAccepted": true,
+      "applicableFailuresCancellationsAndSkipsRejected": 18,
+      "docsOnlyAccepted": true
+    },
+    {
+      "case": "actual-workflow-graph",
+      "baselineAccepted": true,
+      "rejectedMutations": [
+        "duplicate-main-trigger",
+        "unguarded-image-work",
+        "production-misses-security",
+        "production-cancelled",
+        "missing-test-shard"
+      ]
+    }
+  ],
+  "rerun": "FINNOR_CI_PROCESS_EVIDENCE_DIR=/absolute/new/evidence node --test scripts/release/ci-process.e2e.test.mjs",
+  "applicationTestsExecuted": false
+}
