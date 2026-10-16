@@ -1,7 +1,22 @@
 import { defineConfig } from "vitest/config";
 import { fileURLToPath } from "node:url";
+import { readFileSync } from "node:fs";
 
 const r = (p: string) => fileURLToPath(new URL(p, import.meta.url));
+
+// Vite's bare string aliases also match subpaths. Put canonical package exports
+// first so @finnor/memory/evidence never becomes src/index.ts/evidence, etc.
+const ownerSubpaths = Object.fromEntries(
+  ["computer", "memory", "orchestration", "workflow-runtime"].flatMap((owner) => {
+    const manifest = JSON.parse(readFileSync(r(`./packages/${owner}/package.json`), "utf8"));
+    return Object.entries(manifest.exports as Record<string, { import: string }>)
+      .filter(([subpath]) => subpath.startsWith("./"))
+      .map(([subpath, target]) => {
+        if (typeof target.import !== "string") throw new Error(`Missing runtime owner export: ${owner}${subpath}`);
+        return [`${manifest.name}/${subpath.slice(2)}`, r(`./packages/${owner}/${target.import}`)];
+      });
+  }),
+);
 
 export default defineConfig({
   // finnor-os is a backend monorepo with zero CSS of its own, but Vite's CSS plugin
@@ -19,6 +34,7 @@ export default defineConfig({
   css: { postcss: { plugins: [] } },
   resolve: {
     alias: {
+      ...ownerSubpaths,
       "@finnor/shared-types/src": r("./packages/shared-types/src"),
       "@finnor/shared-types": r("./packages/shared-types/src/index.ts"),
       "@finnor/policy-schema": r("./packages/policy-schema/src/index.ts"),

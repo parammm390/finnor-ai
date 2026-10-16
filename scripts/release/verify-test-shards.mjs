@@ -4,6 +4,7 @@ import { spawnSync } from "node:child_process"
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs"
 import { join, relative } from "node:path"
 import { fileURLToPath } from "node:url"
+import { ownerExportPath } from "./ci-process-policy.mjs"
 
 const root = fileURLToPath(new URL("../..", import.meta.url))
 const cwd = join(root, "finnor-os")
@@ -20,8 +21,19 @@ function list() {
   return files
 }
 try {
-  for (const path of ["finnor-os/vitest.config.ts", "finnor-os/package-lock.json", ".github/workflows/ci.yml"]) receipt.inputs[path] = createHash("sha256").update(readFileSync(join(root, path))).digest("hex")
+  for (const path of ["finnor-os/vitest.config.ts", "finnor-os/package-lock.json", ".github/workflows/ci.yml", "scripts/release/verify-test-shards.mjs", "scripts/release/ci-process-policy.mjs"]) receipt.inputs[path] = createHash("sha256").update(readFileSync(join(root, path))).digest("hex")
   const all = list()
+  const owners = ["computer", "memory", "orchestration", "workflow-runtime"]
+  const exports = owners.flatMap(owner => {
+    const path = `finnor-os/packages/${owner}/package.json`
+    const bytes = readFileSync(join(root, path))
+    receipt.inputs[path] = createHash("sha256").update(bytes).digest("hex")
+    const manifest = JSON.parse(bytes)
+    return Object.entries(manifest.exports).map(([subpath, conditions]) => {
+      assert.equal(typeof conditions.import, "string", `${manifest.name}${subpath}: no explicit runtime export`)
+      return { specifier: manifest.name + (subpath === "." ? "" : subpath.slice(1)), expected: ownerExportPath(join(cwd, "packages", owner), conditions.import) }
+    })
+  })
   // `vitest list --filesOnly` intentionally bypasses the execution pool and
   // ignores --shard. Invoke the installed, configured execution sequencer;
   // never implement a second approximation of its partition algorithm.
@@ -36,12 +48,20 @@ try {
         context.config.shard = { index, count: 3 };
         shards.push((await new Sequencer(context).shard(Array.from(specs))).map(spec => spec.moduleId));
       }
-      console.log(JSON.stringify({ all: specs.map(spec => spec.moduleId), shards }));
+      const resolutions = [];
+      for (const probe of ${JSON.stringify(exports)}) {
+        const resolved = await context.vite.pluginContainer.resolveId(probe.specifier, process.cwd() + "/apps/worker/src/index.ts");
+        resolutions.push({ ...probe, actual: resolved?.id ?? null, unresolved: resolved?.meta?.["vite:alias"]?.noResolved === true });
+      }
+      console.log(JSON.stringify({ all: specs.map(spec => spec.moduleId), shards, resolutions }));
     } finally { await context.close(); }
   `
   const selected = spawnSync(process.execPath, ["--input-type=module", "-e", program], { cwd, encoding: "utf8", timeout: 15_000, maxBuffer: 4 * 1024 * 1024 })
   assert.equal(selected.status, 0, `Installed execution sequencer failed: ${selected.stderr}`)
   const actual = JSON.parse(selected.stdout)
+  receipt.resolutions = actual.resolutions.map(probe => ({ ...probe, expected: relative(cwd, probe.expected), actual: probe.actual ? relative(cwd, probe.actual) : null }))
+  const unresolved = actual.resolutions.filter(probe => probe.unresolved || probe.actual !== probe.expected)
+  assert.deepEqual(unresolved, [], "Installed Vitest must resolve every changed owner export to the exact candidate source")
   const normalize = files => files.map(file => relative(cwd, file).replaceAll("\\", "/")).sort()
   assert.deepEqual(normalize(actual.all), all, "Runtime discovery differs from the independent CLI inventory")
   const shards = actual.shards.map(normalize)

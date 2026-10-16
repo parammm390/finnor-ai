@@ -8703,6 +8703,34 @@
       "source": "finnor-os/apps/api/app/api/policies/[operation]/route.ts"
     },
     {
+      "capabilityId": "http.post.policies.coalition-read",
+      "family": "coalition-programme",
+      "owner": "@finnor/private-equity",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "policies/coalition-read",
+      "routeDepth": 2,
+      "classification": "ADMIN",
+      "kind": "mutation",
+      "userProduct": false,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": false,
+      "adminOnly": true,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "backend_policy",
+      "effectClass": "domain_mutation",
+      "verificationClass": "canonical_reread",
+      "presentationTargets": [],
+      "invalidationTags": [
+        "coalition-programme"
+      ],
+      "timeoutClass": "WRITE",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/policies/[operation]/route.ts"
+    },
+    {
       "capabilityId": "http.post.policies.decide",
       "family": "policies",
       "owner": "@finnor/api",

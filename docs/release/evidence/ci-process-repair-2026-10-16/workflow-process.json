@@ -1,7 +1,7 @@
 {
   "schema": "finnor.ci-process.v1",
   "status": "PASS",
-  "startedAt": "2026-10-16T03:58:59.111Z",
+  "startedAt": "2026-10-16T04:14:58.735Z",
   "commands": [
     {
       "command": "actionlint 1.7.12",
@@ -43,12 +43,12 @@
     ".github/workflows/tenant-isolation-nightly.yml": "dc582e6cbf07319b39212935140b379b1fbff89fbc406ff54adcef81c96fc6d4",
     "infra/deployment/release-toolchain.json": "b464a9c55f46f09e58f2cadab47193424c594857a821416a1f89f658ee7cd432",
     "scripts/release/verify-ci-workflows.mjs": "1b73f73fb85ae039fde28b20d6b8143a21960d001d696ce03d39cfd20577b78e",
-    "scripts/release/ci-process-policy.mjs": "a6b1ca7ff784dea49c9d8e381902e05a861d97c45256984e9d0b9bc952be599d"
+    "scripts/release/ci-process-policy.mjs": "2c76e46ddd48fc187e3d9b36bccac4ca1b072cc8c12ca5c56ed03e0ca9cb0686"
   },
   "rerun": "FINNOR_CI_PROCESS_EVIDENCE_DIR=/absolute/new/evidence node scripts/release/verify-ci-workflows.mjs",
   "hostedExecutionClaimed": false,
   "archiveSha256": "aba9ced2dee8d27fecca3dc7feb1a7f9a52caefa1eb46f3271ea66b6e0e6953f",
   "binarySha256": "8db11704dc296f096216db4db65d86cd7f0ebfdf4c38453a1da276b137b88388",
-  "finishedAt": "2026-10-16T03:59:02.821Z",
-  "durationMs": 3710
+  "finishedAt": "2026-10-16T04:14:59.875Z",
+  "durationMs": 1140
 }

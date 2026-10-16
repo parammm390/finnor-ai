@@ -1,13 +1,13 @@
 import assert from "node:assert/strict"
 import test from "node:test"
 import { execFileSync } from "node:child_process"
-import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs"
+import { cpSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, symlinkSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
 import { createHash } from "node:crypto"
 import { changedPullRequestFiles, classifyPullRequestFiles, evaluateRequiredPrVerdict } from "./pr-verdict-policy.mjs"
-import { sourceCheckFailures, verifyCiProcess } from "./ci-process-policy.mjs"
+import { ownerExportPath, sourceCheckFailures, verifyCiProcess } from "./ci-process-policy.mjs"
 import { readGit } from "./worktree-state.mjs"
 
 const root = fileURLToPath(new URL("../..", import.meta.url))
@@ -18,7 +18,7 @@ test.after(() => {
   if (!evidence) return
   const files = ["scripts/release/ci-process.e2e.test.mjs", "scripts/release/pr-verdict-policy.mjs", "scripts/release/ci-process-policy.mjs", "scripts/release/worktree-state.mjs"]
   const inputs = Object.fromEntries(files.map(path => [path, createHash("sha256").update(readFileSync(join(root, path))).digest("hex")]))
-  const receipt = { schema: "finnor.ci-process-e2e.v1", status: records.length === 5 ? "PASS" : "FAIL", startedAt, finishedAt: new Date().toISOString(), inputs, records, rerun: "FINNOR_CI_PROCESS_EVIDENCE_DIR=/absolute/new/evidence node --test scripts/release/ci-process.e2e.test.mjs", applicationTestsExecuted: false }
+  const receipt = { schema: "finnor.ci-process-e2e.v1", status: records.length === 6 ? "PASS" : "FAIL", startedAt, finishedAt: new Date().toISOString(), inputs, records, rerun: "FINNOR_CI_PROCESS_EVIDENCE_DIR=/absolute/new/evidence node --test scripts/release/ci-process.e2e.test.mjs", applicationTestsExecuted: false }
   mkdirSync(evidence, { recursive: true })
   writeFileSync(join(evidence, "process-e2e.json"), `${JSON.stringify(receipt, null, 2)}\n`)
 })
@@ -120,4 +120,19 @@ test("actual source diagnostic aggregate rejects all failed or omitted required 
   assert.deepEqual(sourceCheckFailures({ backend: false, root: false, outcomes: { ...outcomes, shards: "skipped", backend: "skipped", lint: "skipped" } }), [])
   assert.ok(sourceCheckFailures({ backend: true, root: true, outcomes: {} }).length === names.length)
   records.push({ case: "source-diagnostics-aggregate", allRequiredAccepted: true, negativeOutcomesRejected: rejected, onlyInapplicableSkipsAccepted: true, missingOutcomesRejected: true })
+})
+
+test("real owner-export paths reject traversal, absolute targets and escaping symlinks", () => {
+  const directory = mkdtempSync(join(tmpdir(), "finnor-ci-owner-export-"))
+  const owner = join(directory, "owner")
+  try {
+    mkdirSync(join(owner, "src"), { recursive: true })
+    writeFileSync(join(owner, "src/index.ts"), "export const candidate = true\n")
+    writeFileSync(join(directory, "outside.ts"), "export const outside = true\n")
+    symlinkSync(join(directory, "outside.ts"), join(owner, "src/escaped.ts"))
+    assert.equal(ownerExportPath(owner, "./src/index.ts"), realpathSync(join(owner, "src/index.ts")))
+    const rejected = ["../outside.ts", "./../outside.ts", join(directory, "outside.ts"), "./src/escaped.ts", "./src/../../outside.ts", "./src\\\\index.ts"]
+    for (const target of rejected) assert.throws(() => ownerExportPath(owner, target))
+    records.push({ case: "real-owner-export-containment", exactCandidateAccepted: true, invalidTargetsRejected: rejected.length, escapingSymlinkRejected: true })
+  } finally { rmSync(directory, { recursive: true, force: true }) }
 })

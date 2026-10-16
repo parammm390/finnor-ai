@@ -1,20 +1,20 @@
 {
   "schema": "finnor.ci-process-e2e.v1",
   "status": "PASS",
-  "startedAt": "2026-10-16T03:58:58.619Z",
-  "finishedAt": "2026-10-16T03:58:59.066Z",
+  "startedAt": "2026-10-16T04:14:58.143Z",
+  "finishedAt": "2026-10-16T04:14:58.682Z",
   "inputs": {
-    "scripts/release/ci-process.e2e.test.mjs": "22c1ef12183be9982977228e85e47bbad3f99a869e39cf0c56c4253966390ea0",
+    "scripts/release/ci-process.e2e.test.mjs": "8f80b0d3e4274b51bcc3c67c0fe2355b6d9ac59cd3682ab59493e9e614bf4e26",
     "scripts/release/pr-verdict-policy.mjs": "00c480b0e3cde6d2581af716b4b5e0709c814a8de8f291b4fd91c10a9e56a372",
-    "scripts/release/ci-process-policy.mjs": "a6b1ca7ff784dea49c9d8e381902e05a861d97c45256984e9d0b9bc952be599d",
+    "scripts/release/ci-process-policy.mjs": "2c76e46ddd48fc187e3d9b36bccac4ca1b072cc8c12ca5c56ed03e0ca9cb0686",
     "scripts/release/worktree-state.mjs": "6286168452299ee98564886808756d44020367eda3ee4f80bb1cb0cdbde8986a"
   },
   "records": [
     {
       "case": "real-git-diff",
-      "base": "fd0988683422961c1b44a9b239206ba8cb8e1b34",
-      "movedBase": "22831cc517e5837e69aef548e9bf0bd7c42eee11",
-      "head": "ae6c86d2f048d8752aad562f8af50fa9b2faac6c",
+      "base": "48700ef23879a8a09e980f220a3d217b48cf39fd",
+      "movedBase": "cde4346b131f509eb876ac9d13d41487edfbdf1e",
+      "head": "38c2623e86cce5330c3ae75ffd7e4c82b2c623ac",
       "observedFiles": [
         "docs/line\nbreak.md",
         "docs/renamed.md",
@@ -58,6 +58,12 @@
       "negativeOutcomesRejected": 28,
       "onlyInapplicableSkipsAccepted": true,
       "missingOutcomesRejected": true
+    },
+    {
+      "case": "real-owner-export-containment",
+      "exactCandidateAccepted": true,
+      "invalidTargetsRejected": 6,
+      "escapingSymlinkRejected": true
     }
   ],
   "rerun": "FINNOR_CI_PROCESS_EVIDENCE_DIR=/absolute/new/evidence node --test scripts/release/ci-process.e2e.test.mjs",

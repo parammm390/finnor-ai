@@ -220,3 +220,82 @@ checking for a function name alone was insufficient; the graph verifier now
 requires both its exact import and invocation. Pinned actionlint, 17 affected
 release/verdict policy cases, targeted lint and whitespace checks pass. No
 full application or production acceptance is claimed by this correction.
+
+## Publication hold after hosted run 162
+
+The user explicitly rejected another one-error/fix/push/hope cycle. No further
+release-branch push is to occur until the candidate-wide preflight is assembled
+and all observed failures are consolidated. The release goal remains paused.
+
+Run 38848324196 on 358e03b3 passed backend contracts/types, root types,
+workspace/shard inventories, lint and generated drift, along with governance,
+workflow validation, Gitleaks and OSV. The source aggregate correctly failed on
+one remaining inventory predicate: the generated capability manifest was stale.
+OpenAPI clients, typed forms and P8 runtime/zero-resurrection guards passed on
+the hosted runner. Expensive tests/images/artifacts/readiness remained skipped.
+
+The generator was run locally; the resulting 28-line addition records the
+existing policies/coalition-read route, admin-only and not model/user callable.
+Workspace, client, capability-manifest and typed-form checks pass locally.
+The local P8 runtime check timed out after 30 seconds; that is not a local pass.
+The generated change remains UNPUBLISHED pending the batch preflight.
+
+Local execution prerequisites were inspected rather than repeatedly retried:
+the dependency directories are symlinks into the Desktop checkout; the previously
+stalled steel-sdk/resource.d.ts and undici-types/header.d.ts files are marked
+compressed,dataless by macOS. Docker, Podman, Colima, PostgreSQL/Redis command-line
+servers and Homebrew were not found. The Data volume reports only 2.0 GiB free.
+No shared dependency directory was deleted or replaced, no full reinstall was
+started on that nearly-full volume, and no user data was cleaned up.
+
+Full database/backend, actual Linux image, compiled artifact/browser and shared
+readiness execution are NOT established for this candidate. A clean Linux batch
+runner is needed to collect those results together. The remaining local manifest
+patch must not be represented as a completed whole-candidate preflight.
+
+## Batch follow-up: real test resolver boundary
+
+Before another publication, inspect the actual installed Vitest resolver as well
+as TypeScript and relocated tsx. Four representative new owner subpaths resolved
+to nonexistent index.ts/subpath paths under the broad bare-package aliases:
+memory/evidence, workflow-runtime/steps, computer/broker, orchestration/objective-loop.
+The actual resolver returned vite:alias.noResolved=true. This would break tests
+despite passing TypeScript and worker-layout checks. Required finite proof before
+the fix: exercise every explicit runtime export of the four changed owner packages
+with installed Vitest, compare to the package's exact source path inside this
+candidate, reject unresolved/escaped targets, and retain the actual full-inventory
+shard proof. No database tests may be silently excluded or rewritten for the fix.
+
+The resolver E2E reproduced failures in 25 subpath exports. Vitest aliases now
+derive those subpaths from the four packages' own runtime exports and put them
+before bare aliases. All 29 exports (including package roots) resolve to exact
+candidate files; the 219-file inventory still partitions 73/73/73. The verifier
+now checks both resolution and inventory in the existing source gate, so this
+class of mismatch fails before the full test/image jobs. Original failed and
+corrected receipts are retained; no test assertion or exclusion was relaxed.
+
+The root unit suite passed 11/11, and the two existing authenticated-intake route
+unit files passed without a database (counts in batch-checks.json). Workspace,
+OpenAPI client, capability-manifest, human-form, deployment truth, production
+mutation inventory and contrast checks passed together. The affected process,
+release-policy and PR-verdict fixtures passed 22/22 with no skips. These are
+finite candidate checks, not Linux image/database/browser acceptance.
+
+The user rejected the extra permission question and requested immediate work.
+No separate diagnostic branch, workflow dispatch or PR is being created. The
+known manifest and resolver failures are consolidated with their verification
+before updating existing PR #129. Production stays paused; no activation changes.
+
+CodeRabbit 0.9.0 raised one minor issue in this batch: an export target outside
+the owner could become the check's expected path. The corrected guard validates
+both lexical and physical containment, rejecting traversal, absolute targets,
+backslashes and escaping symlinks. All 29 real exports still pass. The real-filesystem
+E2E rejects six invalid targets; all six process cases and 17 affected policy cases
+pass (23/23 combined). Its first fixture comparison exposed macOS /var → /private/var
+normalization; the independent expected path now uses realpath, matching the guard's
+physical-source contract. The original fixture failure receipt is retained.
+
+No further code change is being justified by an assumed clean review. The next
+publication is the combined known-failure repair on the existing release branch,
+followed by its existing hosted gates, not a new isolated diagnostic run. Exact
+Linux/database/artifact acceptance and production completion remain unclaimed.

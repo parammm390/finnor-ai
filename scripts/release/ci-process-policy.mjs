@@ -1,5 +1,19 @@
-import { readFileSync, readdirSync } from "node:fs"
-import { join } from "node:path"
+import { readFileSync, readdirSync, realpathSync } from "node:fs"
+import { isAbsolute, join, relative, resolve } from "node:path"
+
+export function ownerExportPath(packageRoot, target) {
+  if (typeof target !== "string" || !target.startsWith("./") || target.includes("\\")) throw new Error("Owner exports require a package-relative target")
+  const owner = realpathSync(packageRoot)
+  const inside = path => {
+    const rel = relative(owner, path)
+    return rel !== "" && rel !== ".." && !rel.startsWith("../") && !isAbsolute(rel)
+  }
+  const lexical = resolve(owner, target)
+  if (!inside(lexical)) throw new Error("Owner export escapes its package")
+  const physical = realpathSync(lexical)
+  if (!inside(physical)) throw new Error("Owner export symlink escapes its package")
+  return physical
+}
 
 export function sourceCheckFailures({ backend, root, outcomes }) {
   const required = ["workspace", "types", "inventory", "drift", ...(backend ? ["shards", "backend"] : []), ...(root ? ["lint"] : [])]
