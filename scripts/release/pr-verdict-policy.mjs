@@ -1,4 +1,4 @@
-import { execFileSync } from "node:child_process"
+import { readGit } from "./worktree-state.mjs"
 
 export function classifyPullRequestFiles(files) {
   return {
@@ -50,7 +50,7 @@ export function evaluateRequiredPrVerdict({ files, classifyResult, sourceResult,
 }
 export function changedPullRequestFiles({ base, head, cwd = process.cwd() }) {
   if (![base, head].every(value => /^[0-9a-f]{40}$/.test(value ?? ""))) throw new Error("PR diff requires full commit SHAs")
-  const git = args => execFileSync("git", args, { cwd, encoding: "utf8", timeout: 30_000, maxBuffer: 16 * 1024 * 1024 })
+  const git = args => readGit(args, cwd)
   const mergeBase = git(["merge-base", base, head]).trim()
   // Disable rename folding so moving code into docs retains the deleted code
   // path. NUL separation preserves spaces, newlines and non-ASCII filenames.

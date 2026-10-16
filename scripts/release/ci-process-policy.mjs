@@ -24,10 +24,15 @@ export function verifyCiProcess(root) {
   require(workflowJob(pr, "readiness").includes("uses: ./.github/workflows/release-readiness.yml"), "production readiness must be rehearsed before merge")
   const readiness = workflows["release-readiness.yml"] ?? ""
   require(readiness.includes("release:scope4-digital-twin") && readiness.includes("release:scope5-epistemic-impact") && readiness.includes("rehearse-historical-upgrade.ts"), "shared readiness must retain both certifications and historical upgrades")
-  for (const [name, gate] of [["canonical-graph-gate", "canonical"], ["phase5-readiness", "phase5"]]) {
-    const wrapper = workflowJob(production, name)
-    require(wrapper.includes("uses: ./.github/workflows/release-readiness.yml") && wrapper.includes(`gate: ${gate}`) && wrapper.includes("canonical_source: true"), `${name}: production must call the shared readiness path for canonical main`)
+  const readinessWrapper = workflowJob(production, "readiness-release-gate")
+  require(readinessWrapper.includes("uses: ./.github/workflows/release-readiness.yml") && readinessWrapper.includes("canonical_source: true") && !/^\s+gate:/m.test(readinessWrapper), "production must call the entire shared readiness path once for canonical main")
+  const certificates = workflowJob(readiness, "phase5-readiness")
+  require(certificates.includes("certification: [scope4, scope5]") && certificates.includes("fail-fast: false") && certificates.includes("${{ matrix.certification }}"), "independent readiness certifications must run in two complete, isolated matrix jobs")
+  const sourceWorkflow = workflows["source-checks.yml"] ?? ""
+  for (const name of ["source", "governance"]) {
+    require(/needs: validate\b/.test(workflowJob(sourceWorkflow, name)), `${name}: workflow validation must precede parallel source/governance work`)
   }
+  require(workflowJob(sourceWorkflow, "governance").includes("npm run test:release") && !workflowJob(sourceWorkflow, "source").includes("npm run test:release"), "governance fixtures must run once in parallel with source checks")
   require(/name: required-pr-verdict\b/.test(verdict), "protected main requires the unchanged required-pr-verdict name")
   const tests = workflowJob(ci, "test")
   require(tests.includes("shard: [1, 2, 3]") && tests.includes("--shard=${{ matrix.shard }}/3") && tests.includes("fail-fast: false"), "backend must execute all three independent test shards")
@@ -35,7 +40,7 @@ export function verifyCiProcess(root) {
   require(!tests.includes("release:pe-p7-workforce-learning") && workflowJob(ci, "phase7").includes("release:pe-p7-workforce-learning"), "P7 certification must run once, outside the shard matrix")
   const certification = workflowJob(production, "post-merge-certification")
   const certificationNeeds = certification.match(/needs:\s*\[([^\]]+)\]/)?.[1].split(",").map(value => value.trim()) ?? []
-  for (const name of ["source-release-gate", "backend-release-gate", "security-release-gate", "root-release-gate", "canonical-graph-gate", "phase5-readiness"]) {
+  for (const name of ["source-release-gate", "backend-release-gate", "security-release-gate", "root-release-gate", "readiness-release-gate"]) {
     require(certificationNeeds.includes(name) && certification.includes(`needs.${name}.result`), `production certification must require ${name}`)
   }
   require(/cancel-in-progress: false/.test(production) && !/cancel-in-progress: true/.test(production), "production mutations must not be cancelled by a newer push")

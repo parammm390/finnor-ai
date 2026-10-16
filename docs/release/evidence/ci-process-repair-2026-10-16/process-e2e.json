@@ -1,19 +1,20 @@
 {
   "schema": "finnor.ci-process-e2e.v1",
   "status": "PASS",
-  "startedAt": "2026-10-16T03:32:04.052Z",
-  "finishedAt": "2026-10-16T03:32:04.536Z",
+  "startedAt": "2026-10-16T03:43:01.592Z",
+  "finishedAt": "2026-10-16T03:43:02.284Z",
   "inputs": {
-    "scripts/release/ci-process.e2e.test.mjs": "7107f253731a3c505e6a985d7b7f616085ef329191488ff96290d9084c97faa9",
-    "scripts/release/pr-verdict-policy.mjs": "9853a30a7eb3c5b95c95d400cc6129ad633eeea22a8df8fcfabdff031ad6ecea",
-    "scripts/release/ci-process-policy.mjs": "a032d113b91501fc5cbf8ccc29a30c62db83a4e6403bbe57dfbf57fc1388c3fb"
+    "scripts/release/ci-process.e2e.test.mjs": "6fa286f569288f535a9539fd7690d53fcc6ceea83c6aa8affc4386dd374dcca4",
+    "scripts/release/pr-verdict-policy.mjs": "00c480b0e3cde6d2581af716b4b5e0709c814a8de8f291b4fd91c10a9e56a372",
+    "scripts/release/ci-process-policy.mjs": "6fcad5d1902b8d838c23c1a54e52c3bb3a3fd64fdb5668690329b024001899d3",
+    "scripts/release/worktree-state.mjs": "6286168452299ee98564886808756d44020367eda3ee4f80bb1cb0cdbde8986a"
   },
   "records": [
     {
       "case": "real-git-diff",
-      "base": "59bb929acd790a8567404ab60a0b1b7520e4adc1",
-      "movedBase": "34f30481138979f26741f905fd83262385d7fc5d",
-      "head": "b68c78b569bfd939370a19702e30cd4d7460ac13",
+      "base": "aa88dcff26426a4d2b19f0dc69427c6848f372c4",
+      "movedBase": "bcaf893cbea2772c7f142cc5a26182d39cfec17c",
+      "head": "8ac748609dc9da5becc4fb938db7b3ab54096152",
       "observedFiles": [
         "docs/line\nbreak.md",
         "docs/renamed.md",
@@ -31,6 +32,13 @@
       "docsOnlyAccepted": true
     },
     {
+      "case": "git-process-deadline",
+      "actualGitSuccess": true,
+      "invalidRepositoryRejected": true,
+      "timeoutMs": 40,
+      "observedMs": 42
+    },
+    {
       "case": "actual-workflow-graph",
       "baselineAccepted": true,
       "rejectedMutations": [
@@ -38,7 +46,9 @@
         "unguarded-image-work",
         "production-misses-security",
         "production-cancelled",
-        "missing-test-shard"
+        "missing-test-shard",
+        "source-bypasses-workflow-validation",
+        "missing-readiness-certification"
       ]
     }
   ],

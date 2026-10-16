@@ -25,6 +25,9 @@ const candidatePath = "finnor-os/packages/private-equity/src/capital-program/v2-
 const r2AuthPath = "finnor-os/scripts/r2/run-owner.mts"
 const r6ModelPath = "finnor-os/scripts/r6/run-e2e.mts"
 const r8OwnerPath = "finnor-os/scripts/r8/run-owner.mts"
+const r3DigestPaths = ["scope-r/r3-incentive-rule-synthesis/handoff/README.md", "scope-r/r3-incentive-rule-synthesis/status.md"]
+const r3ApiDigest = sha("Authored public R3 API source digest fixture")
+const r3WorkerDigest = sha("Authored public R3 worker source digest fixture")
 const r4SourcePaths = ["producer", "checker"].map(name => `finnor-os/packages/epistemic-runtime/src/identification-plan/${name}.py`)
 const r4BrowserPath = "finnor-os/scripts/r4/browser.mts"
 const r4ApiPin = ["ad107d01a61c9ba1df2c71ca8e128851c6", "f3b1fee3f9377d5159c34d6b0e50c4"].join("")
@@ -60,6 +63,7 @@ const metadata = [
   { name: "r2-disposable-refresh", path: r2AuthPath, fields: ["refresh_token"], baselineCount: 1, bytes: objectFixture("session", "refresh_token", r2Refresh) },
   { name: "r6-synthetic-model", path: r6ModelPath, fields: ["modelKey"], baselineCount: 1, bytes: `const model={modelKey: "${r6Model}"};\n` },
   { name: "r8-publication-fixture", path: r8OwnerPath, fields: ["idempotencyKey"], baselineCount: 1, bytes: objectFixture("request", "idempotencyKey", r8PublicationKey) },
+  ...r3DigestPaths.map((path, index) => ({ name: `r3-public-digest-${index}`, path, fields: ["API", "worker"], baselineCount: 1, bytes: `API sha256:${r3ApiDigest} and worker sha256:${r3WorkerDigest}\n` })),
   ...r4SourcePaths.map((path, index) => ({ name: `r4-public-source-pin-${index}`, path,
     fields: ["algorithm/identify/api.py"], baselineCount: 1, bytes: json({ "algorithm/identify/api.py": r4ApiPin }) })),
   { name: "r4-auth-boundary-enum", path: r4BrowserPath, fields: ["authentication"], baselineCount: 1,

@@ -1,4 +1,4 @@
-import { execFileSync } from "node:child_process"
+import { readGit } from "./worktree-state.mjs"
 import { createHash, createPublicKey, verify as verifySignature } from "node:crypto"
 import { chmodSync, readFileSync, writeFileSync } from "node:fs"
 import { resolve } from "node:path"
@@ -118,7 +118,7 @@ async function readGitHubOidcIdentity(context, contract) {
 }
 
 function git(args) {
-  return execFileSync("git", args, { cwd: repoRoot, encoding: "utf8" }).trim()
+  return readGit(args, repoRoot).trim()
 }
 
 function currentContext(contract) {

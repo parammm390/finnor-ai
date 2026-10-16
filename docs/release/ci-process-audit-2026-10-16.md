@@ -133,3 +133,58 @@ Application integration fixes already present in the R checkout are outside
 this process-only commit. GitHub has not executed this patch and main has not
 changed. Once the shared process reaches main, V must integrate that main
 revision and preserve its own additive migrations and product acceptance ledger.
+
+## Efficiency follow-up — registered verification
+
+The user requested completion of the efficiency work after the first local
+commit. Remaining concrete costs: governance fixtures serialize before source
+checks; Scope-4 and Scope-5 certifications serialize despite independent
+databases; several release Git reads have no deadline or prompt suppression.
+
+Required cases before changing those paths: retain every governance/source
+predicate while running independent work concurrently; retain both readiness
+certifications in separate matrix jobs and retain distinct artifact names;
+exercise a real Git success, non-repository refusal and a deliberately delayed
+Git subprocess, requiring a bounded failure. Re-run the affected release
+fixtures because their shared Git helper changes. Keep the local verification
+budget at 120 seconds per bounded run; no full application suite is added.
+
+Read-only AWS Access Analyzer validation is also required for all four current
+session policies. Validation is not an AWS permission update and does not prove
+that live role policies, project controls or KMS configuration permit deployment.
+
+## Efficiency follow-up — observed results
+
+Governance and source work now run concurrently after pinned workflow validation.
+Scope-4 and Scope-5 run in separate database-isolated matrix jobs with distinct
+artifacts. Production calls the complete readiness workflow once. No predicate,
+protected required verdict or production authorization was removed.
+
+Release Git reads now have a 30-second maximum deadline, disable interactive
+credential prompts and redact command arguments/errors. The Vercel version
+probe has a 10-second deadline. Process E2E passes four cases, seven damaged
+workflow controls and 18 negative verdict controls. All nine workflows pass
+pinned actionlint, including their reusable calls.
+
+The full release fixture suite was rerun after changing the shared Git helper:
+the first run had 70 passes and 10 failures because the Vercel version probe
+still needed the execFileSync import. Restoring that import fixed the diagnosed
+failure. The final run passed 80/80, with zero skipped cases, in 40.514 seconds;
+the production mutation inventory also passed (19 mechanisms, seven mutators,
+break-glass false).
+
+Gitleaks 8.24.3 passed 108 policy probes, including real credentials on the same
+line/path as R3 public hash metadata. Complete candidate history scanning covered
+89 commits / 43.29 MB and found zero leaks with the candidate policy. Relocated
+worker-owner imports/source-custody E2E passed in 7.8 seconds; this is not an
+actual Linux image or mounted-Work acceptance claim.
+
+AWS Access Analyzer ValidatePolicy returned zero findings for all four actual
+deployment session policies. The receipt records four successful read-only
+operations. This does not narrow the live base role or prove deploy permission.
+
+The bounded local backend typecheck timed out after 120.005 seconds without
+compiler output. It is NOT a pass. Hosted clean-runner types, full application
+execution, actual image/artifact execution and wall-clock improvement remain
+unverified for this update. Existing hosted timing is only a baseline, not a
+speed promise. R/V merge and production deployment remain stopped.

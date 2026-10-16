@@ -70,9 +70,14 @@ jobs:
         working-directory: finnor-os
 
   phase5-readiness:
+    name: phase5-readiness (${{ matrix.certification }})
     if: ${{ inputs.gate == 'all' || inputs.gate == 'phase5' }}
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        certification: [scope4, scope5]
     services:
       postgres:
         image: pgvector/pgvector:pg16@sha256:7b822b0aac60967beb1ea5e576b8602c94c300a157d187f385ae3e0da199b90a
@@ -115,9 +120,6 @@ jobs:
           ACTIONS_ID_TOKEN_REQUEST_TOKEN: ""
           ACTIONS_ID_TOKEN_REQUEST_URL: ""
 
-      - name: Install frontend dependencies
-        run: npm ci --no-audit --no-fund
-
       - name: Install API/workspace dependencies
         run: npm ci
         working-directory: finnor-os
@@ -153,21 +155,18 @@ jobs:
         run: npx tsx scripts/install-vertical-fixture-seam.ts
         working-directory: finnor-os
 
-      - name: Exact-SHA Phase 5 type and ownership gates
-        run: |
-          npm run openapi
-          npm run typecheck
-          npm run release:manifest
-          npm run release:pe-domain-boundary
-        working-directory: finnor-os
-
+      # The required source workflow already checks this exact source's types,
+      # generated contracts and ownership. Each standalone certification also
+      # retains all of its own independent predicates.
       - name: Phase-4 PE Digital Twin certification
+        if: ${{ matrix.certification == 'scope4' }}
         run: npm run release:scope4-digital-twin
         working-directory: finnor-os
         env:
           FINNOR_CERTIFICATION_OUTPUT_DIR: ${{ runner.temp }}/finnor-readiness-reports
 
       - name: Scope-5 epistemic impact certification
+        if: ${{ matrix.certification == 'scope5' }}
         run: npm run release:scope5-epistemic-impact
         working-directory: finnor-os
         env:
@@ -177,7 +176,7 @@ jobs:
         if: ${{ always() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
-          name: release-readiness-${{ github.run_id }}-${{ github.run_attempt }}-${{ inputs.gate }}
+          name: release-readiness-${{ github.run_id }}-${{ github.run_attempt }}-${{ inputs.gate }}-${{ matrix.certification }}
           path: ${{ runner.temp }}/finnor-readiness-reports/*
           if-no-files-found: warn
           retention-days: 7

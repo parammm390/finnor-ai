@@ -31,18 +31,10 @@ jobs:
       security-events: write
     uses: ./.github/workflows/security.yml
 
-  canonical-graph-gate:
+  readiness-release-gate:
     needs: source-release-gate
     uses: ./.github/workflows/release-readiness.yml
     with:
-      gate: canonical
-      canonical_source: true
-
-  phase5-readiness:
-    needs: source-release-gate
-    uses: ./.github/workflows/release-readiness.yml
-    with:
-      gate: phase5
       canonical_source: true
 
   root-release-gate:
@@ -51,22 +43,20 @@ jobs:
 
   post-merge-certification:
     name: post-merge-certification
-    needs: [source-release-gate, backend-release-gate, security-release-gate, canonical-graph-gate, phase5-readiness, root-release-gate]
+    needs: [source-release-gate, backend-release-gate, security-release-gate, readiness-release-gate, root-release-gate]
     if: ${{ always() }}
     runs-on: ubuntu-latest
     timeout-minutes: 3
     steps:
       - name: Certify the exact merged SHA before production authority exists
         env:
-          CANONICAL_RESULT: ${{ needs.canonical-graph-gate.result }}
-          PHASE5_RESULT: ${{ needs.phase5-readiness.result }}
+          READINESS_RESULT: ${{ needs.readiness-release-gate.result }}
           ROOT_RESULT: ${{ needs.root-release-gate.result }}
           SOURCE_RESULT: ${{ needs.source-release-gate.result }}
           BACKEND_RESULT: ${{ needs.backend-release-gate.result }}
           SECURITY_RESULT: ${{ needs.security-release-gate.result }}
         run: |
-          test "$CANONICAL_RESULT" = success
-          test "$PHASE5_RESULT" = success
+          test "$READINESS_RESULT" = success
           test "$ROOT_RESULT" = success
           test "$SOURCE_RESULT" = success
           test "$BACKEND_RESULT" = success

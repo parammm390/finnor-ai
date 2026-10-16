@@ -162,7 +162,7 @@ test("active release workflow uses the governed four-class AWS compute cutover",
   assert.match(workflow, /deploy-production\.mjs supplierCanaryAuth/)
   assert.doesNotMatch(workflow, /run-p8-production-water-retirement\.mjs|release:scope5:rollout/)
   assert.match(workflow, /Verify final PE product authority readiness/)
-  assert.match(workflow, /phase5-readiness/)
+  assert.match(readinessWorkflow, /phase5-readiness/)
   for (const envName of [
     "VERCEL_FRONTEND_AUTOMATION_BYPASS_SECRET",
     "VERCEL_API_AUTOMATION_BYPASS_SECRET",

@@ -5,7 +5,7 @@ import { tmpdir } from "node:os"
 import { isAbsolute, join, relative, resolve } from "node:path"
 import { authorizeProductionMutation } from "./production-mutation-guard.mjs"
 import { readProtectedEnv, sanitizeVercelBuildEnvironment } from "./protected-env.mjs"
-import { worktreeStatus } from "./worktree-state.mjs"
+import { readGit, worktreeStatus } from "./worktree-state.mjs"
 import { apiBuildContext, normalizeApiProjectRoot, vercelBuildConfiguration, materializeApiFunctions } from "./vercel-build-context.mjs"
 
 const appName = process.argv[2]
@@ -19,7 +19,7 @@ if (!["frontend", "api", "supplierCanaryApp", "supplierCanaryAuth"].includes(app
 }
 if (prepareOnly && deployOnly) throw new Error("--prepare-only and --deploy-only are mutually exclusive")
 
-const repoRoot = execFileSync("git", ["rev-parse", "--show-toplevel"], { encoding: "utf8" }).trim()
+const repoRoot = readGit(["rev-parse", "--show-toplevel"]).trim()
 const contract = JSON.parse(readFileSync(join(repoRoot, "infra/deployment/production.contract.json"), "utf8"))
 const target = contract.topology[appName]
 if (target?.provider !== "vercel") throw new Error(`${appName} is not a Vercel target in the canonical deployment contract`)
@@ -39,7 +39,7 @@ if (process.env.VERCEL_PROJECT_ID && process.env.VERCEL_PROJECT_ID !== app.proje
 }
 
 function git(args) {
-  return execFileSync("git", args, { cwd: repoRoot, encoding: "utf8" }).trim()
+  return readGit(args, repoRoot).trim()
 }
 
 function run(command, args, cwd, env) {
@@ -130,7 +130,7 @@ const canaryIdentity = isPrepared ? {
 } : undefined
 const toolchain = isPrepared ? {
   node: process.version,
-  vercel: execFileSync("vercel", ["--version"], { encoding: "utf8", env: { PATH: process.env.PATH, HOME: process.env.HOME } }).trim(),
+  vercel: execFileSync("vercel", ["--version"], { encoding: "utf8", timeout: 10_000, killSignal: "SIGKILL", env: { PATH: process.env.PATH, HOME: process.env.HOME } }).trim(),
   rootLockSha256: sha256(readFileSync(join(repoRoot, "package-lock.json"))),
   workspaceLockSha256: sha256(readFileSync(join(repoRoot, "finnor-os/package-lock.json"))),
   deployerSha256: sha256(readFileSync(new URL(import.meta.url))),

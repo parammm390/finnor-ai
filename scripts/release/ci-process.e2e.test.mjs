@@ -8,6 +8,7 @@ import { fileURLToPath } from "node:url"
 import { createHash } from "node:crypto"
 import { changedPullRequestFiles, classifyPullRequestFiles, evaluateRequiredPrVerdict } from "./pr-verdict-policy.mjs"
 import { verifyCiProcess } from "./ci-process-policy.mjs"
+import { readGit } from "./worktree-state.mjs"
 
 const root = fileURLToPath(new URL("../..", import.meta.url))
 const records = []
@@ -15,9 +16,9 @@ const startedAt = new Date().toISOString()
 test.after(() => {
   const evidence = process.env.FINNOR_CI_PROCESS_EVIDENCE_DIR
   if (!evidence) return
-  const files = ["scripts/release/ci-process.e2e.test.mjs", "scripts/release/pr-verdict-policy.mjs", "scripts/release/ci-process-policy.mjs"]
+  const files = ["scripts/release/ci-process.e2e.test.mjs", "scripts/release/pr-verdict-policy.mjs", "scripts/release/ci-process-policy.mjs", "scripts/release/worktree-state.mjs"]
   const inputs = Object.fromEntries(files.map(path => [path, createHash("sha256").update(readFileSync(join(root, path))).digest("hex")]))
-  const receipt = { schema: "finnor.ci-process-e2e.v1", status: records.length === 3 ? "PASS" : "FAIL", startedAt, finishedAt: new Date().toISOString(), inputs, records, rerun: "FINNOR_CI_PROCESS_EVIDENCE_DIR=/absolute/new/evidence node --test scripts/release/ci-process.e2e.test.mjs", applicationTestsExecuted: false }
+  const receipt = { schema: "finnor.ci-process-e2e.v1", status: records.length === 4 ? "PASS" : "FAIL", startedAt, finishedAt: new Date().toISOString(), inputs, records, rerun: "FINNOR_CI_PROCESS_EVIDENCE_DIR=/absolute/new/evidence node --test scripts/release/ci-process.e2e.test.mjs", applicationTestsExecuted: false }
   mkdirSync(evidence, { recursive: true })
   writeFileSync(join(evidence, "process-e2e.json"), `${JSON.stringify(receipt, null, 2)}\n`)
 })
@@ -65,6 +66,21 @@ test("stable verdict requires source checks and applicable Dealer Zero, includin
   records.push({ case: "stable-verdict", successAccepted: true, applicableFailuresCancellationsAndSkipsRejected: 18, docsOnlyAccepted: true })
 })
 
+test("release Git reads succeed, refuse invalid repositories, and stop delayed subprocesses", () => {
+  const directory = mkdtempSync(join(tmpdir(), "finnor-ci-git-deadline-"))
+  try {
+    assert.throws(() => readGit(["status", "--porcelain"], directory), /Git status failed/)
+    execFileSync("git", ["init", "--quiet", "--initial-branch=main"], { cwd: directory })
+    assert.equal(readGit(["status", "--porcelain"], directory), "")
+    const start = Date.now()
+    const alias = `!exec "${process.execPath}" -e 'setTimeout(() => {}, 250)'`
+    assert.throws(() => readGit(["-c", `alias.finnor-ci-delay=${alias}`, "finnor-ci-delay"], directory, { timeoutMs: 40 }), error => error.code === "ETIMEDOUT" && error.timedOut === true)
+    const elapsedMs = Date.now() - start
+    assert.ok(elapsedMs < 2_000, `Git deadline took ${elapsedMs}ms`)
+    records.push({ case: "git-process-deadline", actualGitSuccess: true, invalidRepositoryRejected: true, timeoutMs: 40, observedMs: elapsedMs })
+  } finally { rmSync(directory, { recursive: true, force: true }) }
+})
+
 test("actual process graph passes and damaged workflow copies are rejected", () => {
   assert.deepEqual(verifyCiProcess(root).failures, [])
   const mutations = [
@@ -73,6 +89,8 @@ test("actual process graph passes and damaged workflow copies are rejected", () 
     ["production-misses-security", "production-release.yml", text => text.replace(", security-release-gate", "")],
     ["production-cancelled", "production-release.yml", text => text.replace("cancel-in-progress: false", "cancel-in-progress: true")],
     ["missing-test-shard", "ci.yml", text => text.replace("shard: [1, 2, 3]", "shard: [1, 2]")],
+    ["source-bypasses-workflow-validation", "source-checks.yml", text => text.replace("needs: validate", "needs: []")],
+    ["missing-readiness-certification", "release-readiness.yml", text => text.replace("certification: [scope4, scope5]", "certification: [scope4]")],
   ]
   for (const [name, file, mutate] of mutations) {
     const directory = mkdtempSync(join(tmpdir(), `finnor-ci-${name}-`))

@@ -171,7 +171,8 @@ regexTarget = "line"
 regexes = ["""NEXT_PUBLIC_SUPABASE_ANON_KEY: 'r3-disposable-publishable-key'"""]
 
 # These lines record verified public source digests in the unpublished R3
-# handoff. Match only the paired API/worker digest fields on these exact paths.
+# handoff. Match only the specific API/worker SHA-256 token finding on these
+# exact paths; do not allowlist other findings elsewhere on the long paragraph.
 [[rules.allowlists]]
 description = "Exact R3 public API and worker source digest pairs"
 condition = "AND"
@@ -180,8 +181,10 @@ paths = [
   '''(^|/)scope-r/r3-incentive-rule-synthesis/handoff/README\.md$''',
   '''(^|/)scope-r/r3-incentive-rule-synthesis/status\.md$''',
 ]
-regexTarget = "line"
-regexes = ['''API sha256:[0-9a-f]{64} and worker sha256:[0-9a-f]{64}''']
+regexTarget = "match"
+regexes = [
+  '''(?:API|worker) sha256:[0-9a-f]{64}''',
+]
 
 # The generated repair plan records exact public preimage hashes, not secrets.
 # Keep the field names and owning plan path exact.

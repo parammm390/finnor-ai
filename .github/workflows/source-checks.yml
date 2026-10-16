@@ -11,7 +11,58 @@ on:
 permissions:
   contents: read
 jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 22.22.3
+      - name: Validate workflows before dependency or image work
+        run: node scripts/release/verify-ci-workflows.mjs
+        env:
+          FINNOR_CI_PROCESS_EVIDENCE_DIR: ${{ runner.temp }}/finnor-ci-process
+      - name: Retain workflow evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: ci-workflow-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/finnor-ci-process/*
+          if-no-files-found: warn
+          retention-days: 7
+
+  governance:
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 22.22.3
+      - name: Verify release and Git process contracts in parallel with source checks
+        env:
+          FINNOR_CI_PROCESS_EVIDENCE_DIR: ${{ runner.temp }}/finnor-ci-process
+        run: |
+          npm run release:truth
+          npm run test:release
+          node --test scripts/release/ci-process.e2e.test.mjs
+      - name: Retain governance evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: ci-governance-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/finnor-ci-process/*
+          if-no-files-found: warn
+          retention-days: 7
+
   source:
+    needs: validate
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -25,17 +76,6 @@ jobs:
           cache-dependency-path: |
             package-lock.json
             finnor-os/package-lock.json
-      - name: Validate every workflow before dependency or image work
-        run: node scripts/release/verify-ci-workflows.mjs
-        env:
-          FINNOR_CI_PROCESS_EVIDENCE_DIR: ${{ runner.temp }}/finnor-ci-process
-      - name: Verify credential-free release and Git process contracts
-        env:
-          FINNOR_CI_PROCESS_EVIDENCE_DIR: ${{ runner.temp }}/finnor-ci-process
-        run: |
-          npm run release:truth
-          npm run test:release
-          node --test scripts/release/ci-process.e2e.test.mjs
       # Root types import the workspace, so both locked graphs are required even
       # for a UI-only change. No dependency directories are shared between jobs.
       - run: npm ci --no-audit --no-fund
@@ -72,7 +112,7 @@ jobs:
         if: ${{ always() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
-          name: ci-process-${{ github.run_id }}-${{ github.run_attempt }}
+          name: ci-source-${{ github.run_id }}-${{ github.run_attempt }}
           path: ${{ runner.temp }}/finnor-ci-process/*
           if-no-files-found: warn
           retention-days: 7
