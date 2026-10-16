@@ -45,7 +45,17 @@ export async function registerNativeApplicationAcquisition(ctx: PeMutationContex
   if (new Set(request.profileIds).size !== request.profileIds.length || new Set(request.targets.map((target) => target.id)).size !== request.targets.length) {
     x2Fault("X2_ORIGINAL_DISTINCT_PROFILE_AND_TARGET_BINDINGS");
   }
-  const profiles = await Promise.all(request.profileIds.map((id) => nativeApplicationProfile(ctx, id)));
+  let profiles: Awaited<ReturnType<typeof nativeApplicationProfile>>[];
+  try {
+    profiles = await Promise.all(request.profileIds.map((id) => nativeApplicationProfile(ctx, id)));
+  } catch (error) {
+    // This refusal precedes every reservation and session write. Other failures
+    // must not be translated into a claim that registration did not happen.
+    if (error instanceof Error && "code" in error && error.code === "PE_ENTITY_NOT_FOUND") {
+      x2Fault("X2_ACQUISITION_PROFILE_UNAVAILABLE", 404);
+    }
+    throw error;
+  }
   for (const profile of profiles) for (const target of request.targets) assertProfileTarget(profile, target);
   const end = Date.parse(request.deadlineAt);
   if (end <= Date.now() || end > Date.now() + 3600000 || profiles.some((item) => Date.parse(item.profile.validUntil) < end)) {

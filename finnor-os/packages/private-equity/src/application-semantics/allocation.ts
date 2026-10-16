@@ -56,6 +56,7 @@ export async function reserveApplicationParent(ctx: PeMutationContext, input: {
       || resource.resourceClass !== (demand.unit === "seconds" ? "HUMAN_ATTENTION" : "COMPUTE") || resource.revoked
       || resource.covenants.length || !resource.permittedRoots.some((root) => x2Digest(root) === x2Digest(input.root))
       || Date.parse(resource.validUntil) < Date.parse(input.deadlineAt)
+      || Date.parse(resource.horizon.startAt) > Date.now()
       || Date.parse(resource.horizon.startAt) + resource.horizon.periodMs * resource.horizon.periods < Date.parse(input.deadlineAt)) x2Fault("X2_S5_CURRENT_RESOURCE_DOMAIN");
     return resource;
   });
@@ -175,7 +176,9 @@ export async function assertApplicationAllocationCurrent(ctx: PeMutationContext,
       const latest = (await client.query<{ body: AllocationResource }>(
         "SELECT r.body FROM finnor_os.s5_resources r JOIN finnor_os.s5_resource_heads h USING(tenant_id,resource_id,revision) WHERE r.tenant_id=$1 AND r.resource_id=$2",
         [ctx.auth.tenantId, resource.resourceId])).rows[0]?.body;
-      if (!latest || x2Digest(latest) !== x2Digest(resource) || latest.revoked || Date.parse(latest.validUntil) <= Date.now()) x2Fault("X2_S5_RESOURCE_SOURCE_OR_REVISION_CHANGED");
+      if (!latest || x2Digest(latest) !== x2Digest(resource) || latest.revoked || Date.parse(latest.validUntil) <= Date.now()
+        || Date.parse(latest.horizon.startAt) > Date.now()
+        || Date.parse(latest.horizon.startAt) + latest.horizon.periodMs * latest.horizon.periods <= Date.now()) x2Fault("X2_S5_RESOURCE_SOURCE_OR_REVISION_CHANGED");
       for (const pin of resource.beliefPins) {
         if ((await validateBeliefViewPin(ctx, pin)).status !== "CURRENT") x2Fault("X2_S5_CURRENT_RESOURCE_SOURCE");
       }

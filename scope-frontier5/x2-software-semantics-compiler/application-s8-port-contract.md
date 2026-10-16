@@ -439,7 +439,9 @@ does not supply those missing owner facts or independent protected custody.
 
 Branch `codex/frontier5-x2-software-semantics-compiler`; unchanged base HEAD
 `517003a4396bc8101a90be4b425ee01de9446740`, base tree
-`07ba69b8e96f05944c2f9f14a74b2c400eb89e42`. All worker changes are uncommitted.
+`07ba69b8e96f05944c2f9f14a74b2c400eb89e42`. This historical worker-cut report
+predates the local commits. The worker implementation is included in resumed
+HEAD `ba92228c5ac74d106118d1bb7a9f887c8d54f27a`; final acceptance is separate.
 The parent's pre-existing principal-separation change in lifecycle is retained.
 
 Final selected checks on these source bytes: TypeScript zero diagnostics over

@@ -1,3 +1,30 @@
+# Migration 0193 packaging parity contract
+
+Before repair, compare the actual SQL directory, generated migration bundle
+and readiness/heartbeat head. Missing/duplicate/reordered filenames, changed
+historical SQL bytes, a head below the actual final migration, or a directory
+path passing while the bundled serverless path omits SQL are failures. Retain
+the failing receipt. Regenerate with the existing owner tool; do not rewrite
+historical SQL. The native upgrade/replay proof must consume the actual bundle,
+compare every member byte-for-byte, and retain original roles, queued/in-flight
+records and ordinary no-scope isolation. Packaging parity is not business or
+mounted acceptance.
+
+## Queued and in-flight legacy job continuation
+
+Before 0191–0193, create a separate owned tenant and enqueue two ordinary
+`recover_computer_tasks` jobs through the existing enqueue boundary. Claim the
+first with the real registry and non-root worker. Hold its actual read using a
+controller's exclusive lock on `computer_runs`; require the observed SQL wait
+and running delivery before upgrading the actual generated bundle. The second
+job must remain queued with its original payload/protocol. Release the original
+read, observe completion, then deliver the original queued job with a separate
+real worker. Preserve both identities, attempts, payloads and delivery history.
+The selected legacy handler is unchanged from the pinned base. Empty owned
+computer state deliberately needs no hosted credentials or external cleanup.
+This proves this legacy queue/schema seam, not every legacy business action or
+a hosted provider execution.
+
 # Installed X2 development boundary, before implementation
 
 This is local staging/disposable engineering, not production activation,
@@ -154,6 +181,43 @@ and labelling a reused build as newly compiled. Retain failures and qualify
 source-only bundle reconstruction separately from this installed boundary.
 
 ## Status
+
+### Resumed resulting-cut verification
+
+The remaining work is the user's existing four obligations, not a new phase.
+Native 095 passes the corrected API acquisition and handoff-only fresh role
+binding, with 228/256 physical reads, 18 exact one-shot independent readback
+reuses, 24 original transitions and zero fresh reads under the discovery-only
+reader. Native 098 passes all nine real sibling-Work gates, including two
+physical interruptions, natural lease expiry, canonical capacity deferral,
+replacement input preservation, two affected suffixes and a still-current
+independently verified draft. Preserve 096/097's failed harness assumptions.
+
+The authentic legacy S5 run 002 passes both selected checks. Legacy S8 run
+003 passes its real evaluator with 68 source pins but retains two S5-shadow
+failures. The six broad legacy S8 type diagnostics are independently reproduced
+on base `517003a4396bc8101a90be4b425ee01de9446740` in
+`compatibility-baseline-002`: 346 baseline project sources, zero source escapes
+and no extra diagnostics. These are inherited failures, not a green suite.
+
+Freeze and scan the resulting task-owned source before the next installation.
+Build once with `scripts/x2/build-installed.mjs --output <new-absolute-root>
+--dependency-seed <stopped-008-runtime>`. Explicitly include the new sibling
+helper and contracts in the tracked source inventory; never include private
+fixture artifacts. Selected affected installed executions are API acquisition
+with a discovery-only role, hybrid positive business with physical recovery,
+and UI opaque original-effect observation on an independent reconstruction.
+Do not rerun unrelated 083/084 matrices without a changed owning dependency.
+
+Failure predicates are unchanged: a missing emitted input, changed source
+oracle, external dependency resolution, renewed original parent/deadline,
+duplicate possible effect, hidden cost or optimistic completion fails. An
+opaque independent observer must retain UNKNOWN, original identity/exposure
+and no replay/release. `application-resume` and the existing worker's
+`reconcilePossibleRequests` are the compatible observation-only fallback,
+not authority to execute a stale or unsupported forward operation. No generic
+browser WRITE fallback is admitted. The mounted privacy regression remains
+mandatory and BLOCKED until an authorized working browser substrate exists.
 
 The acceptance requirements above were written before implementation.
 Installations 001–006 complete the emitted assets and real backend build.

@@ -862,16 +862,19 @@ export function buildApplicationAcquisitionRequest(
   if (end <= now || end > now + 3_600_000) throw new ApplicationInputError("The native development deadline must be in the future and within one hour. It is not automatically renewed.")
   return body
 }
+const applicationRegistrationSchema = z.object({ sessionId: z.string().uuid() })
+
 export async function acquireApplication(
   scope: ApplicationSemanticsScope, request: ApplicationAcquisitionRequest, currentUse: ApplicationCurrentUse,
-): Promise<void> {
+): Promise<{ sessionId: string }> {
   const body = acquisitionRequestSchema.parse(request)
   if (body.workId !== scope.workId || !sameRoot(body.root, scope.root)) throw new ApplicationProjectionError()
   assertNoCredentials(body.targets, 0, true)
   assertNoCredentials(body.resourceDemand, 0, true)
   assertCurrentSession(currentUse.sessionKey, currentUse.signal)
-  await centropyPost<unknown>("company-brain/application-acquire", body)
+  const response = await centropyPost<unknown>("company-brain/application-acquire", body)
   assertCurrentSession(currentUse.sessionKey, currentUse.signal)
+  return applicationRegistrationSchema.parse(response)
 }
 
 const executionRequestSchema = z.object({
@@ -923,16 +926,17 @@ export async function executeApplication(
   scope: ApplicationSemanticsScope,
   request: ApplicationExecutionRequest,
   currentUse: ApplicationCurrentUse,
-): Promise<void> {
+): Promise<{ sessionId: string }> {
   const body = executionRequestSchema.parse(request)
   if (body.workId === scope.workId || !sameRoot(body.root, scope.root)) throw new ApplicationProjectionError()
   assertNoCredentials(body.goal)
   assertNoCredentials(body.parameters)
   assertNoCredentials(body.targetId)
   assertCurrentSession(currentUse.sessionKey, currentUse.signal)
-  await centropyPost<unknown>("company-brain/application-execute", body)
+  const response = await centropyPost<unknown>("company-brain/application-execute", body)
   assertCurrentSession(currentUse.sessionKey, currentUse.signal)
   // Acknowledgement is not a receipt; only a fresh Work projection is rendered.
+  return applicationRegistrationSchema.parse(response)
 }
 
 export async function cancelApplication(

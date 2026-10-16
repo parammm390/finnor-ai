@@ -684,7 +684,7 @@ export class ApplicationSourceSession {
         this.gap("X2_UNSUPPORTED_NUMERIC_OR_UNKNOWN_STATE", source, name); return;
       }
       const kind: FieldSpec["kind"] = /Id$/.test(path.at(-1)!) && (type?.type === "string" || typeof value === "string")
-        ? "identity" : type?.enum ? "enum" : type?.type === "boolean" || typeof value === "boolean" ? "boolean" : "text";
+        ? "identity" : type?.type === "boolean" || !type && typeof value === "boolean" ? "boolean" : type?.enum ? "enum" : "text";
       result.push({ path: name, kind, nullable, schema: type, presence: false });
     };
     walk(raw, schema, []);
@@ -1295,7 +1295,9 @@ export class ApplicationSourceSession {
       if (!previous) applicationProviderFault("X2_UNKNOWN_OPERATION");
       boundedX2(parameters, X2_LIMITS.maxSourceBytes);
       this.noCredentials(parameters);
-      const schemas = await this.documents();
+      // API lowering uses the frozen contract. Dispatch still rereads and
+      // compares current documentation, context and version before the fence.
+      const schemas = previous.binding.substrate === "API" ? this.schemas : await this.documents();
       const cached = previous.binding.substrate === "API" && this.observedApiCapture?.targetDigest === x2Digest(target)
         ? this.observedApiCapture.capture : null;
       this.observedApiCapture = null;

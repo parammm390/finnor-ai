@@ -8,10 +8,12 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { ApplicationSourceSession } from "../../packages/private-equity/src/application-semantics/source";
 import { parameterBindingCode } from "../../packages/private-equity/src/application-semantics/checker";
+import { projectApplicationSnapshot } from "../../packages/private-equity/src/application-semantics/observation";
 import { applicationContentRef, ApplicationProviderFault } from "../../packages/computer/src/application-provider";
 import type { AuthorizedApplicationProfile } from "../../packages/private-equity/src/application-semantics/ports";
 
-type Case = { id: string; schema: Record<string, unknown>; value: string | boolean; expected: string };
+type Case = { id: string; schema: Record<string, unknown>; value: string | boolean; expected: string; booleanState?: boolean;
+  dispatchDrift?: "schema" | "context" | "version" };
 const text = (pattern: string) => ({ type: "string", pattern, maxLength: 2048 });
 const cases: Case[] = [
   { id: "overlapping-repetitions-bounded-nonmatch", schema: text("^a+a+a+a+a+a+a+a+$"), value: "a".repeat(2047) + "!", expected: "X2_PARAMETER_PATTERN_MISMATCH" },
@@ -29,6 +31,16 @@ const cases: Case[] = [
   { id: "malformed-pattern-unsupported", schema: text("[A-"), value: "A", expected: "X2_UNSUPPORTED_SCHEMA_PATTERN" },
   { id: "boolean-enum-keeps-type-and-domain", schema: { type: "boolean", enum: [true] }, value: true, expected: "PREPARED" },
   { id: "boolean-enum-rejects-false", schema: { type: "boolean", enum: [true] }, value: false, expected: "X2_PARAMETER_SCHEMA_MISMATCH" },
+  { id: "boolean-enum-state-false-keeps-type-and-coverage", schema: { type: "boolean", enum: [true] }, value: true,
+    booleanState: false, expected: "PREPARED" },
+  { id: "boolean-enum-state-true-keeps-type-and-coverage", schema: { type: "boolean", enum: [true] }, value: true,
+    booleanState: true, expected: "PREPARED" },
+  { id: "schema-drift-after-preparation-refused-before-wire", schema: text("^[a-z]+$"), value: "abc",
+    dispatchDrift: "schema", expected: "X2_PRE_WIRE_SEMANTIC_OR_RENDERING_DRIFT" },
+  { id: "context-drift-after-preparation-refused-before-wire", schema: text("^[a-z]+$"), value: "abc",
+    dispatchDrift: "context", expected: "X2_PRE_WIRE_EXTERNAL_DRIFT" },
+  { id: "version-drift-after-preparation-refused-before-wire", schema: text("^[a-z]+$"), value: "abc",
+    dispatchDrift: "version", expected: "X2_PRE_WIRE_EXTERNAL_DRIFT" },
 ];
 const digest = (value: string | Buffer) => createHash("sha256").update(value).digest("hex");
 if (process.argv[2] === "--case") {
@@ -42,9 +54,16 @@ if (process.argv[2] === "--case") {
   const objectShape = (value: Record<string, unknown>) => ({ type: "object", additionalProperties: false,
     required: Object.keys(value), properties: Object.fromEntries(Object.entries(value).map(([name, v]) =>
       [name, { type: typeof v === "number" ? "integer" : "string" }])) });
-  const record = { ...binding, version: 1, phase: "READY", value: test.value,
+  const record = { ...binding, version: 1, phase: "READY", value: test.booleanState ?? test.value,
     observation: { available: ["version", "phase", "value"], unavailable: [] } };
   const schema = { openapi: "3.1.0", paths: {
+    ...(test.booleanState !== undefined ? {
+      "/records/{recordId}": { get: { responses: { "200": { content: { "application/json": {
+        schema: { type: "object", required: ["phase", "value"], properties: {
+          phase: { type: "string" }, value: { type: "boolean", enum: [false, true] },
+        } },
+      } } } } } },
+    } : {}),
     "/records/{recordId}/change": { post: { operationId: "changeValue", summary: "Change value",
       requestBody: { content: { "application/json": { schema: { type: "object", additionalProperties: false,
         required: ["context", "request", "expectedVersion", "value"], properties: {
@@ -52,14 +71,18 @@ if (process.argv[2] === "--case") {
           expectedVersion: { type: "integer", minimum: 0 }, value: test.schema,
         } } } } } } },
   } };
+  let changed = false, nativeWireCallbacks = 0;
   const server = createServer((req, res) => {
     process.send?.({ stage: "HTTP", method: req.method, path: req.url });
     if (req.headers.authorization !== "Bearer " + secret || req.headers["x-portal-grant"] !== grant) {
       res.writeHead(403).end(); return;
     }
-    const body = req.url === "/schema" ? schema : req.url === "/context"
-      ? { binding, role: "editor", entities: [{ entityId: "entity", currency: "USD" }], recordIds: ["record"] }
-      : req.url === "/records/record" ? record : null;
+    const currentSchema = changed && test.dispatchDrift === "schema"
+      ? JSON.parse(JSON.stringify(schema).replace('"maxLength":2048', '"maxLength":1')) : schema;
+    const body = req.url === "/schema" ? currentSchema : req.url === "/context"
+      ? { binding, role: "editor", entities: [{ entityId: "entity", currency: "USD" }], recordIds: ["record"],
+        ...(changed && test.dispatchDrift === "context" ? { permissions: ["changed-external-grant"] } : {}) }
+      : req.url === "/records/record" ? { ...record, version: changed && test.dispatchDrift === "version" ? 2 : 1 } : null;
     res.writeHead(body ? 200 : 404, { "content-type": "application/json" }).end(JSON.stringify(body));
   });
   await new Promise<void>(yes => server.listen(0, "127.0.0.1", yes));
@@ -80,6 +103,16 @@ if (process.argv[2] === "--case") {
     const discovery = await source.discover();
     assert.equal(discovery.operations.length, 1, "ONE_REAL_DISCOVERED_OPERATION_REQUIRED");
     const operation = discovery.operations[0]!;
+    if (test.booleanState !== undefined) {
+      const field = discovery.fields.find(item => item.path === "value");
+      assert.equal(field?.kind, "boolean", "BOOLEAN_ENUM_STATE_MUST_REMAIN_BOOLEAN");
+      const observed = (await source.observe({
+        kind: "identity", application: profile.application, account: profile.account, entity: "entity", id: "record",
+      })).snapshot;
+      const projected = projectApplicationSnapshot(observed, discovery.fields);
+      assert.equal(projected.state.value, test.booleanState, "BOOLEAN_ENUM_STATE_MUST_REMAIN_EXACT");
+      assert(!projected.unavailableFields.includes("value"), "BOOLEAN_ENUM_STATE_MUST_REMAIN_OBSERVABLE");
+    }
     if (test.schema.type === "boolean") {
       assert.equal(operation.parameters[0]?.kind, "boolean", "BOOLEAN_ENUM_MUST_NOT_BECOME_TEXT_ENUM");
       assert.deepEqual(operation.parameters[0]?.values, [true]);
@@ -94,6 +127,14 @@ if (process.argv[2] === "--case") {
       idempotencyKey: randomUUID(), parentId: randomUUID(), deadline });
     assert.equal(JSON.parse(wire.body!).value, test.value, "EXACT_TYPED_ARGUMENT_MUST_REACH_PRIVATE_WIRE");
     actual = "PREPARED";
+    if (test.dispatchDrift) {
+      changed = true;
+      await source.dispatch(wire, {
+        beforeWire: async () => { nativeWireCallbacks++; },
+        afterWire: async () => {},
+      });
+      actual = "UNEXPECTED_DISPATCH";
+    }
   } catch (error) {
     actual = error instanceof ApplicationProviderFault ? error.code
       : error instanceof Error && error.message.includes("BOOLEAN_ENUM") ? error.message : "UNCLASSIFIED";
@@ -101,7 +142,7 @@ if (process.argv[2] === "--case") {
     await source.close();
     await new Promise<void>(yes => server.close(() => yes()));
   }
-  process.send?.({ stage: "RESULT", actual, parameterContract });
+  process.send?.({ stage: "RESULT", actual, parameterContract, nativeWireCallbacks });
   process.disconnect?.();
 } else {
   const destination = process.argv[2];
@@ -113,19 +154,21 @@ if (process.argv[2] === "--case") {
     const started = performance.now(), http: unknown[] = [];
     const child = spawn(process.execPath, ["--import=tsx", import.meta.filename, "--case", test.id],
       { cwd: resolve(import.meta.dirname, "../.."), stdio: ["ignore", "ignore", "ignore", "ipc"] });
-    const observed = await new Promise<{ actual: string; parameterContract?: unknown }>(yes => {
+    const observed = await new Promise<{ actual: string; parameterContract?: unknown; nativeWireCallbacks?: number }>(yes => {
       let settled = false;
-      const finish = (value: { actual: string; parameterContract?: unknown }) => {
+      const finish = (value: { actual: string; parameterContract?: unknown; nativeWireCallbacks?: number }) => {
         if (settled) return; settled = true; clearTimeout(timer); yes(value);
       };
       let timer = setTimeout(() => { child.kill("SIGKILL"); finish({ actual: "SOURCE_CHILD_STARTUP_DEADLINE" }); }, 15000);
-      child.on("message", (raw: { stage: string; actual?: string; parameterContract?: unknown; method?: string; path?: string }) => {
+      child.on("message", (raw: { stage: string; actual?: string; parameterContract?: unknown; nativeWireCallbacks?: number;
+        method?: string; path?: string }) => {
         if (raw.stage === "HTTP") http.push({ method: raw.method, path: raw.path });
         if (raw.stage === "PREPARE") {
           clearTimeout(timer);
           timer = setTimeout(() => { child.kill("SIGKILL"); finish({ actual: "UNINTERRUPTIBLE_SOURCE_PATTERN" }); }, 2000);
         }
-        if (raw.stage === "RESULT") finish({ actual: raw.actual!, parameterContract: raw.parameterContract });
+        if (raw.stage === "RESULT") finish({ actual: raw.actual!, parameterContract: raw.parameterContract,
+          nativeWireCallbacks: raw.nativeWireCallbacks });
       });
       child.once("error", () => finish({ actual: "SOURCE_CHILD_LAUNCH_FAILED" }));
       child.once("exit", () => finish({ actual: "SOURCE_CHILD_EXIT_WITHOUT_RESULT" }));
@@ -135,13 +178,15 @@ if (process.argv[2] === "--case") {
     }
     const mutationRequests = http.filter(row => (row as { method: string }).method !== "GET").length;
     results.push({ id: test.id, expected: test.expected, ...observed, http, mutationRequests,
-      pass: observed.actual === test.expected && mutationRequests === 0, wallMs: performance.now() - started });
+      pass: observed.actual === test.expected && mutationRequests === 0
+        && (!test.dispatchDrift || observed.nativeWireCallbacks === 0), wallMs: performance.now() - started });
   }
   const root = resolve(import.meta.dirname, "../../.."), pins: Record<string, string> = {};
   for (const path of ["finnor-os/packages/private-equity/src/application-semantics/source.ts",
     "finnor-os/packages/private-equity/src/application-semantics/schema-pattern.ts",
     "finnor-os/packages/private-equity/src/application-semantics/checker.ts",
     "finnor-os/scripts/x2/verify-source-contracts.mts",
+    "scope-frontier5/x2-software-semantics-compiler/review-repair-contract.md",
     "scope-frontier5/x2-software-semantics-compiler/continuation-boundary-contract.md"]) {
     pins[path] = digest(await readFile(resolve(root, path)));
   }

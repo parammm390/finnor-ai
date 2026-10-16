@@ -11,8 +11,10 @@ import { promisify } from "node:util";
 import EmbeddedPostgres from "embedded-postgres";
 import pg from "pg";
 import { migrate } from "../../packages/db/migrate";
+import { MIGRATIONS } from "../../packages/db/migrations-bundle";
+import { CURRENT_MIGRATION_HEAD } from "../../packages/db/migration-head";
 import {
-  closePool, configureTenantVertical, receiveWork, attachWorkEntity,
+  closePool, configureTenantVertical, receiveWork, attachWorkEntity, enqueueJob,
   acquireComputeResourceLeases, releaseComputeResourceLeases, withTenantTransaction,
 } from "@finnor/db";
 import { putAllocationResource } from "../../packages/private-equity/src/allocation-store";
@@ -27,10 +29,12 @@ import { bootstrapNativeS8Fixture, NATIVE_S8_FIXTURE_FLAGS, type NativeS8Fixture
   type NativeS8ApplicationCommandNegativeReport } from "./native-s8-fixture.mts";
 import { inspectNativeDiscovery, nativeDiscoveryCaseCommitment } from "./inspect-native-discovery.mts";
 import { NATIVE_REVIEW_CASES, nativeReadRelay, runNativeReviewGates } from "./native-review-gates.mts";
+import { runNativeSiblingGates } from "./native-sibling-gates.mts";
 import { applicationArtifact, applicationSession, nativeApplicationProfile, retainApplicationArtifact,
   type ApplicationSessionRow } from "../../packages/private-equity/src/application-semantics/store";
 import { x2Digest, x2Ref } from "../../packages/private-equity/src/application-semantics/contracts";
 import { enqueueOwnerDeliveryInTransaction } from "../../packages/governed-execution/src/owner-delivery-store";
+import { currentFreshApplicationAuthority } from "../../packages/private-equity/src/application-semantics/fresh-authority";
 import type { ApplicationField, ApplicationTransitionEvidence, BeliefViewPin, ExperimentRef } from "@finnor/shared-types";
 import type { ApplicationRequestRow } from "../../packages/private-equity/src/application-semantics/obligations";
 import type { ApplicationCapabilityUseLease } from "../../packages/capability-evolution/src/application-port";
@@ -62,6 +66,8 @@ const referenceBacklog = process.env.FINNOR_X2_TEST_REFERENCE_BACKLOG === "1";
 const terminalCancellation = process.env.FINNOR_X2_TEST_TERMINAL_CANCELLATION === "1";
 const semanticDrift = process.env.FINNOR_X2_TEST_SEMANTIC_DRIFT === "1";
 const renderingDrift = process.env.FINNOR_X2_TEST_RENDERING_DRIFT === "1";
+const siblingWork = process.env.FINNOR_X2_TEST_SIBLING_WORK === "1";
+const deniedOnlyProfile = process.env.FINNOR_X2_TEST_DENIED_ONLY_PROFILE === "1";
 const recoveryMode = process.env.FINNOR_X2_TEST_RECOVERY ?? "none";
 assert(["none", "full", "opaque", "deadline", "cancel"].includes(recoveryMode));
 assert(!(resourceBeliefChange && (configuredS8 || finalEgressRevocation)), "RESOURCE_BELIEF_VARIANT_HAS_ITS_OWN_NATIVE_OWNER_CUT");
@@ -91,6 +97,14 @@ assert(!s8CommandNegatives || configuredS8 && !mounted && !installedTamper && !r
   && recoveryMode === "none" && !semanticDrift && !renderingDrift && !computeContention
   && !finalEgressRevocation && !resourceBeliefChange && !referenceBacklog && !terminalCancellation,
   "S8_COMMAND_NEGATIVES_HAVE_THEIR_OWN_UNCHANGED_POSITIVE_CUT");
+assert(!siblingWork || surface === "api" && !configuredS8 && !mounted && !installedTamper && !reviewGates
+  && !s8CommandNegatives && recoveryMode === "none" && !semanticDrift && !renderingDrift
+  && !computeContention && !finalEgressRevocation && !resourceBeliefChange && !referenceBacklog && !terminalCancellation,
+  "REAL_SIBLING_WORK_REQUIRES_ITS_OWN_API_ORIGINAL_PARENT_CUT");
+assert(!deniedOnlyProfile || surface === "api" && !mounted && !installedTamper && !reviewGates && !siblingWork
+  && !s8CommandNegatives && recoveryMode === "none" && !semanticDrift && !renderingDrift
+  && !computeContention && !finalEgressRevocation && !resourceBeliefChange && !referenceBacklog && !terminalCancellation,
+  "DENIED_ONLY_DISCOVERY_PROFILE_REQUIRES_THE_UNCHANGED_FRESH_BUSINESS_CUT");
 const results: Array<Record<string, unknown>> = [];
 const owned: ChildProcess[] = [];
 const flushLogs: Array<() => Promise<void>> = [];
@@ -149,6 +163,12 @@ let credentials: any, model: any, check: any, sessionId = "", deadlineAt = "";
 let resourcePin: BeliefViewPin | null = null, resourceSource: ExperimentRef | null = null;
 let sourceObservationId = "", sourceEvidence: { evidenceSourceId: string; evidenceVersionId: string } | null = null;
 const backlogRefs: ExperimentRef[] = [];
+async function freshConsumerProfiles(id: string) {
+  const authority = await currentFreshApplicationAuthority(ctx, await applicationSession(ctx, id));
+  const covered = new Set(authority.bindings.map(binding => binding.profileId));
+  return Promise.all(profiles.filter(profileId => covered.has(profileId))
+    .map(async profileId => (await nativeApplicationProfile(ctx, profileId)).profile));
+}
 async function portalHeaders(name: string, grantId: string): Promise<Record<string, string>> {
   if (surface === "api") return { authorization: "Bearer " + credentials.tokens[name], "x-portal-grant": grantId };
   const response = await fetch(portalOrigin + "/login", {
@@ -240,7 +260,7 @@ try {
   beginningOracle = oraclePins;
   await save("freeze.json", { startedAt: new Date().toISOString(), sourceCut, driverPins: beginningDriver,
     oraclePins, surface, configuredS8, reviewGates, computeContention, finalEgressRevocation, resourceBeliefChange, referenceBacklog,
-    terminalCancellation, semanticDrift, renderingDrift, recoveryMode, installed, mounted, nodeMode,
+    terminalCancellation, semanticDrift, renderingDrift, siblingWork, deniedOnlyProfile, recoveryMode, installed, mounted, nodeMode,
     oracleCustody: "SEPARATE_DRIVER_PRIVATE_DIRECTORY_NOT_OS_SANDBOX", protectedAdmission: false });
   const migrated = await record("fresh-upgrade-replay-and-runtime-role-isolation", async () => {
     await database.initialise();
@@ -253,11 +273,9 @@ try {
       .filter((name) => name.endsWith(".sql")).sort().map(async (name) => ({
         name, sql: await readFile(join(repo, "finnor-os/packages/db/migrations", name), "utf8"),
       })));
-    const baseline = await migrate(adminUrl, files.filter((file) => file.name < "0191"));
-    const upgrade = await migrate(adminUrl);
-    assert.deepEqual(upgrade, ["0191_frontier5_x2_application_semantics.sql", "0192_frontier5_x2_request_custody.sql",
-      "0193_frontier5_x2_authority_custody.sql"]);
-    assert.deepEqual(await migrate(adminUrl), []);
+    assert.deepEqual(MIGRATIONS, files, "ACTUAL_BUNDLE_MUST_MATCH_EVERY_SQL_BYTE");
+    assert.equal(CURRENT_MIGRATION_HEAD, files.at(-1)?.name, "READINESS_HEAD_MUST_MATCH_THE_COMPLETE_BUNDLE");
+    const baseline = await migrate(adminUrl, MIGRATIONS.filter((file) => file.name < "0191"));
     admin = new pg.Client({ connectionString: adminUrl }); await admin.connect();
     const appPassword = randomBytes(24).toString("hex"), workerPassword = randomBytes(24).toString("hex");
     await admin.query(`ALTER ROLE finnor_app LOGIN PASSWORD '${appPassword}'`);
@@ -265,6 +283,97 @@ try {
     process.env.DATABASE_URL = `postgres://finnor_app:${appPassword}@127.0.0.1:${port}/x2_native`;
     workerUrl = `postgres://finnor_worker:${workerPassword}@127.0.0.1:${port}/x2_native`;
     await closePool();
+    let upgrade: string[] = [];
+    const legacy = await record("canonical-legacy-running-and-queued-jobs-across-X2-upgrade", async () => {
+      const legacyTenant = randomUUID(), legacyActor = randomUUID(), keys = [randomUUID(), randomUUID()];
+      await admin!.query("SET app.test_vertical_mode='explicit'");
+      await admin!.query("INSERT INTO finnor_os.tenants(id,client_key,name) VALUES($1,$2,'X2 owned legacy upgrade')",
+        [legacyTenant, randomUUID()]);
+      await admin!.query("INSERT INTO finnor_os.users(id,tenant_id,email,role,status) VALUES($1,$2,$3,'owner','active')",
+        [legacyActor, legacyTenant, legacyActor + "@test.invalid"]);
+      await configureTenantVertical({ tenantId: legacyTenant, verticalKey: "private_equity", expectedVersion: 0,
+        createdBy: legacyActor, sourceSystem: "FRONTIER5.X2:legacy-upgrade" });
+      for (const key of keys) await enqueueJob("recover_computer_tasks", { tenantId: legacyTenant }, key);
+      const jobs = async () => (await admin!.query(
+        "SELECT id,type,status,attempts,payload,protocol_version,claim_fence FROM finnor_os.jobs"
+        + " WHERE tenant_id=$1 AND idempotency_key=ANY($2::text[]) ORDER BY accepted_at,id", [legacyTenant, keys])).rows;
+      const before = await jobs();
+      assert.equal(before.length, 2);
+      assert(before.every(row => row.status === "queued" && row.protocol_version === 1 && row.attempts === 0));
+      const launch = async (ordinal: number) => {
+        const entry = installed ? join(repo, "finnor-os/x2-runtime/physical-worker.js") : join(import.meta.dirname, "physical-worker.mts");
+        const child = spawn(process.execPath, [...(installed ? [] : ["--import=tsx"]), entry,
+          legacyTenant, legacyActor, randomUUID(), "ONE_DELIVERY"], {
+          cwd: join(repo, "finnor-os"), env: { PATH: process.env.PATH, HOME: privateDir, LANG: "C", TZ: "UTC",
+            NODE_ENV: nodeMode, DATABASE_URL: workerUrl, FINNOR_ENVIRONMENT: "staging",
+            FINNOR_X2_PROFILE: "ordinary_disposable", FINNOR_X2_SOURCE_ROOT: repo,
+            FINNOR_TEST_MANAGED_EXTENSIONS: "omit", SECRETS_PROVIDER: "env", ALLOW_PLAINTEXT_ENV_SECRETS: "1" },
+          stdio: ["ignore", "pipe", "pipe"],
+        });
+        const exited = new Promise<number | null>((yes, no) => {
+          const timer = setTimeout(() => { child.kill("SIGKILL"); no(Error("LEGACY_OWNED_DELIVERY_TIMEOUT")); }, 30000);
+          child.once("error", error => { clearTimeout(timer); no(error); });
+          child.once("close", code => { clearTimeout(timer); yes(code); });
+        });
+        void exited.catch(() => undefined);
+        await logChild(child, `legacy-upgrade-worker-${ordinal}.log`);
+        return { pid: child.pid, exited };
+      };
+      const controller = new pg.Client({ connectionString: adminUrl });
+      await controller.connect(); await controller.query("BEGIN");
+      let released = false;
+      try {
+        const blocker = Number((await controller.query("SELECT pg_backend_pid() pid")).rows[0].pid);
+        await controller.query("LOCK TABLE finnor_os.computer_runs IN ACCESS EXCLUSIVE MODE");
+        const first = await launch(1);
+        let wait: unknown;
+        const end = Date.now() + 15000;
+        do {
+          wait = (await admin!.query("SELECT pid,wait_event_type,wait_event,pg_blocking_pids(pid) blockers"
+            + " FROM pg_stat_activity WHERE $1::integer=ANY(pg_blocking_pids(pid)) AND query LIKE '%computer_runs%'",
+          [blocker])).rows[0];
+          if (!wait) await new Promise(yes => setTimeout(yes, 20));
+        } while (!wait && Date.now() < end);
+        const claimed = await jobs();
+        await save("legacy-upgrade-claimed.json", { before, claimed, wait: wait ?? null, actualWorkerPid: first.pid });
+        assert(wait, "REAL_LEGACY_HANDLER_MUST_BE_BLOCKED_BEFORE_SCHEMA_UPGRADE");
+        assert.equal(claimed.filter(row => row.status === "running").length, 1);
+        assert.equal(claimed.filter(row => row.status === "queued").length, 1);
+        const upgradeUrl = new URL(adminUrl); upgradeUrl.searchParams.set("options", "-c lock_timeout=5000");
+        upgrade = await migrate(upgradeUrl.toString(), MIGRATIONS);
+        const during = await jobs();
+        assert.deepEqual(during, claimed, "MIGRATION_MUST_NOT_REWRITE_OR_REDELIVER_OLD_JOBS");
+        await controller.query("COMMIT"); released = true;
+        assert.equal(await first.exited, 0, "ORIGINAL_IN_FLIGHT_LEGACY_DELIVERY_MUST_FINISH");
+        const queued = await jobs();
+        assert.equal(queued.filter(row => row.status === "completed").length, 1);
+        assert.equal(queued.filter(row => row.status === "queued").length, 1);
+        const second = await launch(2);
+        assert.equal(await second.exited, 0, "ORIGINAL_QUEUED_LEGACY_JOB_MUST_FINISH_AFTER_UPGRADE");
+        const after = await jobs();
+        assert.equal(after.length, 2, "BOTH_ORIGINAL_LEGACY_ROWS_MUST_REMAIN");
+        for (const row of after) {
+          const original = before.find(item => item.id === row.id);
+          assert(original); assert.equal(row.status, "completed"); assert.equal(row.attempts, 1);
+          assert.equal(row.protocol_version, original.protocol_version); assert.deepEqual(row.payload, original.payload);
+        }
+        const deliveries = (await admin!.query("SELECT job_id,outcome FROM finnor_os.job_delivery_attempts"
+          + " WHERE job_id=ANY($1::uuid[]) ORDER BY job_id,started_at", [before.map(row => row.id)])).rows;
+        assert.equal(deliveries.length, 2); assert(deliveries.every(row => row.outcome === "completed"));
+        await save("legacy-upgrade-outcome.json", { before, claimed, during, queued, after, deliveries,
+          physicalWorkerPids: [first.pid, second.pid], providerSessions: 0, qualifiedLegacyFamily: "recover_computer_tasks" });
+        return { queuedBeforeUpgrade: 2, inFlightAtUpgrade: 1, originalCompletedAfterUpgrade: 2,
+          duplicateDeliveries: 0, family: "recover_computer_tasks", hostedProviderProof: false };
+      } finally {
+        if (!released) await controller.query("ROLLBACK");
+        await controller.end();
+      }
+    });
+    assert(legacy, "LEGACY_QUEUED_AND_IN_FLIGHT_COMPATIBILITY_REQUIRED");
+    assert.deepEqual(upgrade, ["0191_frontier5_x2_application_semantics.sql", "0192_frontier5_x2_request_custody.sql",
+      "0193_frontier5_x2_authority_custody.sql"]);
+    assert.deepEqual(await migrate(adminUrl, MIGRATIONS), []);
+    assert.deepEqual(await migrate(adminUrl), [], "DIRECTORY_AND_BUNDLED_PATHS_MUST_HAVE_THE_SAME_APPLIED_LINEAGE");
     const roles = (await admin.query("SELECT rolname,rolsuper,rolbypassrls FROM pg_roles WHERE rolname IN ('finnor_app','finnor_worker') ORDER BY rolname")).rows;
     assert(roles.every((row) => !row.rolsuper && !row.rolbypassrls));
     const app = new pg.Client({ connectionString: process.env.DATABASE_URL }); await app.connect();
@@ -273,6 +382,8 @@ try {
       assert.equal((await app.query("SELECT * FROM finnor_os.application_semantics_artifacts")).rowCount, 0);
     } finally { await app.end(); }
     return { baseline, upgrade, replay: "NO_PENDING_MIGRATIONS", roles,
+      packaging: { head: CURRENT_MIGRATION_HEAD, directoryCount: files.length, bundledCount: MIGRATIONS.length,
+        everySqlByteMatches: true, upgradePath: "ACTUAL_SERVERLESS_BUNDLE", directoryReplay: "NO_PENDING_MIGRATIONS" },
       schema: (await admin.query("SELECT tablename,policyname FROM pg_policies WHERE tablename LIKE 'application_%' ORDER BY tablename,policyname")).rows };
   });
   if (!migrated) throw Error("NATIVE_MIGRATION_PREREQUISITE_FAILED");
@@ -336,11 +447,12 @@ try {
     portal.stdout!.once("data", (bytes) => { clearTimeout(timer); yes(JSON.parse(bytes.toString()).origin); });
   });
   assert(portalOrigin?.startsWith("http://127.0.0.1:"));
-  if (reviewGates) { readRelay = await nativeReadRelay(portalOrigin); portalOrigin = readRelay.origin; }
+  if (reviewGates || siblingWork) { readRelay = await nativeReadRelay(portalOrigin); portalOrigin = readRelay.origin; }
   const initialState = (await snapshot(portalDir)).state;
   deadlineAt = new Date(Date.now() + (recoveryMode === "deadline" ? 300000 : 900000)).toISOString();
   assert(Date.parse(deadlineAt) < Date.parse(initialState.expiresAt));
-  for (const [role, name, grantName] of [["editor", "editor", "discovery"], ["approver", "approver", "approval"]]) {
+  for (const [role, name, grantName] of [["editor", "editor", "discovery"], ["approver", "approver", "approval"],
+    ...(deniedOnlyProfile ? [["reader", "reader", "readOnly"]] : [])]) {
     const accountId = randomUUID(), profileId = randomUUID();
     const config = { sourceContract: "BOUNDED_CONDITIONAL_APPLICATION_V1", protectionDomain: "DISPOSABLE_TEST_AUTHORITY",
       origin: portalOrigin, application: credentials.applicationId, account: credentials.accounts.primary,
@@ -441,6 +553,25 @@ try {
     assert.equal(response.body.code, "X2_S5_SHARED_RESOURCE_EXHAUSTED");
     return { response, owner: "S5", terminalAvailability: "0", mutations: 0 };
   });
+  await record("canonical-S5-future-resource-horizon-refusal", async () => {
+    const startAt = new Date(Date.now() + 600000).toISOString();
+    const { ref, revision, priorRef, ...resourceInput } = resource;
+    void ref; void revision; void priorRef;
+    const future = await putAllocationResource(ctx, {
+      ...resourceInput, resourceId: "x2-future-capacity", horizon: { ...resource.horizon, startAt },
+    }, null);
+    const workId = await createWork("Refuse immediate acquisition funded by capacity that has not started.");
+    const response = await http!.call("application-acquire", { ...request, workId,
+      resourceDemand: [{ resourceId: future.resourceId, unit: "request", amount: "2048" }],
+      idempotencyKey: "x2-future-capacity-" + randomUUID() });
+    await save("future-resource-horizon-response.json", { startAt, response });
+    if (response.status === 202) assert.equal((await http!.call("application-cancel", { root, workId })).status, 200);
+    assert.equal(response.status, 409, "FUTURE_CAPACITY_MUST_NOT_FUND_PRESENT_ACQUISITION");
+    assert.equal(response.body.code, "X2_S5_CURRENT_RESOURCE_DOMAIN");
+    assert.equal((await admin!.query("SELECT count(*)::int n FROM finnor_os.application_semantics_sessions WHERE work_id=$1",
+      [workId])).rows[0].n, 0, "REFUSAL_MUST_PRECEDE_CANONICAL_REGISTRATION");
+    return { response, owner: "S5", startAt, mutations: 0 };
+  });
   const accepted = await record("authenticated-original-registration-and-idempotency", async () => {
     if (resourcePin) {
       const pin = await http!.call("belief-pin", resourcePin);
@@ -453,6 +584,13 @@ try {
       if (identity === "other") assert.equal(denied.body.code, "PERMITTED_CONTEXT_UNAVAILABLE");
     }
     assert.equal((await admin!.query("SELECT count(*)::int n FROM finnor_os.application_semantics_sessions WHERE work_id=$1", [acquisitionWork])).rows[0].n, 0);
+    const refusedProfile = await http!.call("application-acquire", { ...request, profileIds: [randomUUID()],
+      idempotencyKey: "x2-nonexistent-profile-" + randomUUID() });
+    await save("nonexistent-profile-refusal.json", refusedProfile);
+    assert.equal(refusedProfile.status, 404);
+    assert.equal(refusedProfile.body.code, "X2_ACQUISITION_PROFILE_UNAVAILABLE");
+    assert.equal((await admin!.query("SELECT count(*)::int n FROM finnor_os.application_semantics_sessions WHERE work_id=$1",
+      [acquisitionWork])).rows[0].n, 0, "DEFINITIVE_PROFILE_REFUSAL_MUST_PRECEDE_REGISTRATION");
     const first = await http!.call("application-acquire", request);
     assert.equal(first.status, 202, JSON.stringify(first));
     const replay = await http!.call("application-acquire", request);
@@ -461,7 +599,7 @@ try {
     assert.equal((await admin!.query("SELECT count(*)::int n FROM finnor_os.s5_reservations r"
       + " JOIN finnor_os.application_semantics_sessions s ON r.allocation_digest=s.allocation_ref->>'contentDigest'"
       + " WHERE s.id=$1", [sessionId])).rows[0].n, 1);
-    return { first, replay, auth: http!.observed, originalDeadline: deadlineAt };
+    return { first, replay, refusedProfile, auth: http!.observed, originalDeadline: deadlineAt };
   });
   if (!accepted) throw Error("NATIVE_AUTHENTICATED_REGISTRATION_PREREQUISITE_FAILED");
   if (computeContention) {
@@ -633,7 +771,8 @@ try {
   let freshProjection: unknown;
   let freshWorkId = "";
   let freshExactQuantity = "";
-  const freshCase = semanticDrift ? "canonical-P7-semantic-drift-and-Work-invalidation"
+  const freshCase = siblingWork ? "canonical-P7-real-sibling-Work-and-replacement-input-closure"
+    : semanticDrift ? "canonical-P7-semantic-drift-and-Work-invalidation"
     : finalEgressRevocation ? "canonical-S6-locked-prepared-profile-revocation"
     : resourceBeliefChange ? "canonical-S5-pinned-belief-dependency-currentness"
     : recoveryMode === "deadline" ? "canonical-S6-expired-parent-original-observation"
@@ -661,7 +800,7 @@ try {
         applicationHeaders: JSON.stringify(await portalHeaders(name, objective[grantKey])),
       }), { mode: 0o600 });
     }
-    const quantity = { kind: "quantity", decimal: objective.reporting.amount, currency: objective.reporting.currency,
+    const quantity = { kind: "quantity" as const, decimal: objective.reporting.amount, currency: objective.reporting.currency,
       entity: objective.reporting.entity, unit: objective.reporting.unit, time: objective.reporting.date, basis: objective.reporting.basis };
     const quantityParameterNames = new Set<string>();
     for (const operation of model.operations) for (const parameter of operation.parameters) {
@@ -743,7 +882,7 @@ try {
         settleFresh: async (id, signal) => {
           freshSessionId = id;
           await s8!.writeConsumerConfig({
-            profiles: await Promise.all(profiles.map(async profileId => (await nativeApplicationProfile(ctx, profileId)).profile)),
+            profiles: await freshConsumerProfiles(id),
             freshSessionId: id,
           });
           const worker = await startWorker(id);
@@ -819,9 +958,22 @@ try {
       return { pin, unchangedResourceHead: currentHead, requests: 0, charges: 0, originalDeadline: deadlineAt, newAllowance: false };
     }
     if (s8 && !mounted) await s8.writeConsumerConfig({
-      profiles: await Promise.all(profiles.map(async id => (await nativeApplicationProfile(ctx, id)).profile)),
+      profiles: await freshConsumerProfiles(execution.body.sessionId),
       freshSessionId: execution.body.sessionId,
     });
+    if (siblingWork) {
+      assert(readRelay);
+      return runNativeSiblingGates({
+        ctx, sql: admin!, originalSessionId: sessionId, firstWorkId: workId, firstSessionId: freshSessionId,
+        targetId: objective.recordId,
+        recordPath: "/api/accounts/" + encodeURIComponent(credentials.accounts.primary) + "/records/" + encodeURIComponent(objective.recordId),
+        goal: { phase: "APPROVED", reporting: quantity }, parameters, relay: readRelay, createWork, startWorker, save,
+        execute: (childWorkId, goal) => http!.call("application-execute", { root, workId: childWorkId, sessionId,
+          executionProfileId: profiles[0], targetId: objective.recordId, goal, parameters,
+          idempotencyKey: "x2-sibling-" + randomUUID() }),
+        external: () => snapshot(portalDir),
+      });
+    }
     if (semanticDrift) {
       const original = await snapshot(portalDir);
       await configure(portalDir, { semanticRevision: original.state.config.semanticRevision + 1 });
@@ -831,7 +983,7 @@ try {
       const work = (await admin!.query("SELECT status FROM finnor_os.works WHERE id=$1", [workId])).rows[0];
       const requests = (await admin!.query("SELECT status,possible_egress FROM finnor_os.application_semantics_requests WHERE session_id=$1", [freshSessionId])).rows;
       const events = (await admin!.query("SELECT kind,body FROM finnor_os.application_semantics_events"
-        + " WHERE session_id=$1 AND kind IN ('P7_OPERATION_FALSIFIED_OR_REVOKED','P7_MINIMAL_SOUND_COMPOSITION_CLOSURE')"
+        + " WHERE session_id=$1 AND kind IN ('P7_OPERATION_FALSIFIED_OR_REVOKED','P7_MINIMAL_SOUND_COMPOSITION_CLOSURE','P7_INVALIDATION_COST_METER')"
         + " ORDER BY created_at,event_id", [freshSessionId])).rows;
       const final = await snapshot(portalDir);
       await save("private/semantic-drift-Work-outcome.json", { original, changed, row, work, requests, events, final });
@@ -842,6 +994,13 @@ try {
       assert.equal(work.status, "blocked", "P7_INVALIDATION_MUST_REACH_CANONICAL_WORK");
       assert.equal(requests.length, 0, "MATERIAL_DRIFT_MUST_FENCE_ALL_NEW_REQUESTS");
       assert.deepEqual(final.state.records[objective.recordId], original.state.records[objective.recordId]);
+      const meters = events.filter(event => event.kind === "P7_INVALIDATION_COST_METER");
+      assert.equal(meters.length, 1, "ACTUAL_INVALIDATION_OWNER_METER_REQUIRED");
+      assert(meters[0].body.detail.wallMs >= 0 && meters[0].body.detail.userCpuMicros >= 0
+        && meters[0].body.detail.systemCpuMicros >= 0);
+      assert.equal(meters[0].body.detail.originalDeadline, deadlineAt);
+      assert.equal(meters[0].body.detail.billingUSD, null, "UNAVAILABLE_COST_IS_NOT_ZERO");
+      assert.equal(meters[0].body.detail.fencingRequiresNewSpending, false);
       // Arrange a legal stopped sibling, not a receipt or external outcome.
       // Its actual checked composition and immutable original input are reused.
       const blockedId = randomUUID();
@@ -1162,10 +1321,69 @@ try {
       relocated++;
     }
     assert.equal(relocated, surface === "ui" ? 4 : 2);
-    await save("private/current-rendering-bindings.json", { requests, events, relocated, originalDeadline: deadlineAt });
-    return { relocated, renderingRevision: 2, originalDeadline: deadlineAt, newAllowance: false };
+    const meters = (await admin!.query("SELECT e.body,c.body charge FROM finnor_os.application_semantics_events e"
+      + " JOIN finnor_os.s5_governed_resource_charges c ON c.tenant_id=e.tenant_id"
+      + " AND c.body->'ref'=e.body->'detail'->'chargeRef' WHERE e.session_id=$1"
+      + " AND e.kind='P7_MAINTENANCE_COST_METER' ORDER BY e.created_at,e.event_id", [freshSessionId])).rows;
+    assert.equal(meters.length, relocated, "EACH_ACTUAL_REVALIDATION_MUST_HAVE_ORIGINAL_S5_MAINTENANCE_CHARGE");
+    const original = await applicationSession(ctx, freshSessionId);
+    for (const meter of meters) {
+      assert.equal(meter.charge.phase, "MAINTENANCE"); assert.equal(meter.charge.units, 1);
+      assert.deepEqual(meter.charge.originalParentRef, original.original_parent_ref);
+      assert.deepEqual(meter.charge.reservationRef, original.reservation_ref);
+      assert.equal(meter.body.detail.originalDeadline, deadlineAt);
+      assert.equal(meter.body.detail.billingUSD, null);
+      assert(meter.body.detail.wallMs >= 0 && meter.body.detail.userCpuMicros >= 0 && meter.body.detail.systemCpuMicros >= 0);
+    }
+    await save("private/current-rendering-bindings.json", { requests, events, meters, relocated, originalDeadline: deadlineAt });
+    return { relocated, chargedMaintenance: meters.length, renderingRevision: 2, originalDeadline: deadlineAt, newAllowance: false };
   });
-  if (!semanticDrift && !finalEgressRevocation && !resourceBeliefChange && !["deadline", "cancel"].includes(recoveryMode)) {
+  if (!siblingWork && !semanticDrift && !finalEgressRevocation && !resourceBeliefChange && !["deadline", "cancel"].includes(recoveryMode)) {
+  if (deniedOnlyProfile) await record("fresh-handoff-excludes-denied-only-discovery-profile", async () => {
+    const row = await applicationSession(ctx, freshSessionId);
+    assert.equal(row.status, "COMPLETED", "FRESH_BUSINESS_MUST_COMPLETE_BEFORE_PROFILE_EXCLUSION_CREDIT");
+    const authority = await currentFreshApplicationAuthority(ctx, row);
+    assert.equal(row.profile_ids.length, 3);
+    assert.equal(authority.bindings.length, 2);
+    assert(!authority.bindings.some(binding => binding.profileId === profiles[2]));
+    const reads = (await admin!.query("SELECT count(*)::int n FROM finnor_os.application_semantics_events"
+      + " WHERE session_id=$1 AND kind='PHYSICAL_READ_STARTED' AND body->'detail'->>'profileId'=$2",
+      [freshSessionId, profiles[2]])).rows[0].n;
+    assert.equal(reads, 0, "DENIED_ONLY_PROFILE_MUST_NOT_READ_THE_FRESH_RECORD");
+    const external = await snapshot(portalDir);
+    assert("targetId" in row.request, "FRESH_EXECUTION_REQUEST_REQUIRED");
+    assert(!external.state.grants[credentials.grantIds.readOnly].recordIds.includes(row.request.targetId));
+    const readTotals = (await admin!.query("SELECT session_id,count(*)::int reads"
+      + " FROM finnor_os.application_semantics_events WHERE tenant_id=$1 AND principal_id=$2"
+      + " AND kind='PHYSICAL_READ_STARTED' AND body->'originalParentRef'=$3::jsonb GROUP BY session_id",
+    [tenant, actor, JSON.stringify(row.original_parent_ref)])).rows;
+    assert(readTotals.reduce((total, item) => total + item.reads, 0) <= 256, "ORIGINAL_READ_BOUND_MUST_NOT_INCREASE");
+    const reused = (await admin!.query("SELECT e.body->'detail' detail,a.body transition"
+      + " FROM finnor_os.application_semantics_events e JOIN finnor_os.application_semantics_artifacts a"
+      + " ON a.tenant_id=e.tenant_id AND a.principal_id=e.principal_id"
+      + " AND a.artifact_id=e.body->'detail'->'transitionRef'->>'id'"
+      + " WHERE e.session_id=$1 AND e.kind='ACQUISITION_REUSED_INDEPENDENT_READBACK'",
+    [row.parent_id])).rows;
+    assert(reused.length > 0, "ACTUAL_SETTLED_READBACK_REUSE_REQUIRED");
+    for (const item of reused) {
+      assert(item.transition.disposition === "OBSERVED" && item.transition.independentOutcome === "ESTABLISHED"
+        || item.transition.disposition === "REJECTED" && item.transition.independentOutcome === "DENIED",
+      "UNKNOWN_READBACK_MUST_NOT_BE_REUSED");
+      assert.deepEqual(item.detail.sourceRef, item.transition.after.sourceRef);
+      assert.equal(item.detail.observedAt, item.transition.after.observedAt, "ORIGINAL_OBSERVATION_TIME_MUST_NOT_REFRESH");
+      assert.equal(item.detail.targetDigest, x2Digest(item.transition.after.target));
+      assert.equal(item.detail.physicalDispatchRecheckRequired, true);
+    }
+    assert.equal((await admin!.query("SELECT count(*)::int n FROM finnor_os.application_semantics_events"
+      + " WHERE session_id=$1 AND kind='ACQUISITION_REUSED_INDEPENDENT_READBACK'", [freshSessionId])).rows[0].n, 0);
+    const retainedTransitions = (await admin!.query("SELECT count(*)::int n FROM finnor_os.application_semantics_events"
+      + " WHERE session_id=$1 AND kind='ORIGINAL_TRANSITION_EVIDENCE'", [row.parent_id])).rows[0].n;
+    assert.equal(retainedTransitions, 24, "DENIED_ONLY_AND_POSITIVE_TRANSITIONS_MUST_REMAIN_RETAINED");
+    await save("private/original-read-budget-and-readback-reuse.json", { readTotals, reused, retainedTransitions });
+    return { acquisitionProfiles: 3, retainedFreshRoleBindings: 2, deniedOnlyFreshReads: reads,
+      readTotals, reusedIndependentReadbacks: reused.length, retainedTransitions,
+      originalDeadline: deadlineAt, readerGrantExtended: false };
+  });
   if (referenceBacklog) await record("native-S8-bounded-original-reference-delivery", async () => {
     const rows = (await admin!.query("SELECT s.identity,s.status,s.attempts,o.envelope FROM finnor_os.s6_owner_delivery_states s"
       + " JOIN finnor_os.s6_owner_delivery_origins o USING(tenant_id,principal_id,semantic_owner,kind,identity)"
@@ -1183,8 +1401,31 @@ try {
       assert.equal(row.envelope.payload.reference.contentDigest, ref.contentDigest);
     }
     assert.equal(unresolved.length, 0);
+    const preparations = (await admin!.query("SELECT created_at,body FROM finnor_os.application_semantics_events"
+      + " WHERE session_id=$1 AND kind='S8_PREOBSERVATION_REFERENCE_PREPARATION' ORDER BY created_at,event_id",
+      [freshSessionId])).rows;
+    const transitions = (await admin!.query<{ body: { detail: { ref: ExperimentRef } } }>(
+      "SELECT body FROM finnor_os.application_semantics_events WHERE session_id=$1"
+      + " AND kind='ORIGINAL_TRANSITION_EVIDENCE' ORDER BY created_at,event_id", [freshSessionId])).rows;
+    assert.equal(preparations.length, 4, "REFERENCE_PREPARATION_MUST_PRECEDE_EVERY_REAL_FRESH_STEP");
+    assert.equal(transitions.length, 4);
+    const timing = [];
+    for (const transition of transitions) {
+      const evidence = await applicationArtifact<Omit<ApplicationTransitionEvidence, "ref">>(ctx, transition.body.detail.ref);
+      const preparation = preparations.find(item => item.body.detail.operationId === evidence.operationId);
+      assert(preparation && evidence.before, "REAL_PREPARATION_AND_OBSERVATION_REQUIRED");
+      assert(Date.parse(evidence.before.observedAt) >= preparation.created_at.getTime(),
+        "NEW_OBSERVATION_MUST_FOLLOW_BACKLOG_DELIVERY_NOT_TIMESTAMP_REFRESH");
+      const detail = preparation.body.detail;
+      assert(detail.wallMs >= 0 && detail.userCpuMicros >= 0 && detail.systemCpuMicros >= 0);
+      assert.equal(detail.originalDeadline, deadlineAt);
+      assert.equal(detail.billingUSD, null);
+      timing.push({ operationId: evidence.operationId, preparationCommittedAt: preparation.created_at,
+        observedAt: evidence.before.observedAt, preparationWallMs: detail.wallMs });
+    }
+    await save("private/native-reference-observation-order.json", { preparations, timing, originalDeadline: deadlineAt });
     return { independentlyReadOriginals: rows.length, accepted: 96, duplicateAttempts: 0,
-      originalDeadline: deadlineAt, newAllowance: false };
+      realPreparationThenObservations: timing.length, originalDeadline: deadlineAt, newAllowance: false };
   });
   await record("maintained-client-authenticated-fresh-Work-projection", async () => {
     const path = join(privateDir, "maintained-client-projection-input.json");
@@ -1316,7 +1557,7 @@ try {
     await save("native-read-relay.json", { trace: readRelay.trace, responseSubstitution: false });
     await readRelay.close();
   }
-  if (admin) {
+  if (admin && (await admin.query("SELECT to_regclass('finnor_os.application_semantics_sessions') IS NOT NULL ready")).rows[0].ready) {
     await save("private/native-sessions.json", (await admin.query("SELECT * FROM finnor_os.application_semantics_sessions ORDER BY created_at,id")).rows);
     await save("private/native-events.json", (await admin.query("SELECT * FROM finnor_os.application_semantics_events ORDER BY created_at,event_id")).rows);
     await save("private/native-charges.json", (await admin.query("SELECT * FROM finnor_os.s5_governed_resource_charges ORDER BY created_at,charge_key")).rows);
@@ -1362,14 +1603,17 @@ try {
     "SIBLING_CONCURRENCY_AND_BUDGET", ...(!mounted ? ["MOUNTED_LIFECYCLE"] : []),
     ...(!installed ? ["EMITTED_INSTALLED_RUNTIME"] : []), "MATCHED_FULL_COST_DIAGNOSTIC",
   ], noInferenceFromPositiveRun: true });
-  const required = ["fresh-upgrade-replay-and-runtime-role-isolation", "canonical-S5-terminal-resource-floor",
+  const required = ["fresh-upgrade-replay-and-runtime-role-isolation", "canonical-legacy-running-and-queued-jobs-across-X2-upgrade",
+    "canonical-S5-terminal-resource-floor", "canonical-S5-future-resource-horizon-refusal",
     "authenticated-original-registration-and-idempotency", "physical-acquisition-and-independent-frozen-model",
     "ordinary-role-original-request-deletion-refusal", "unchanged-source-and-runtime-custody",
     ...(installed ? [...(!reviewGates ? ["installed-runtime-restart-and-byte-custody"] : []), "installed-ending-asset-custody"] : []),
     ...(mounted ? ["actual-maintained-mounted-Work-lifecycle"] : []),
     ...(installedTamper ? ["installed-original-use-byte-fences"] : []),
     ...(s8CommandNegatives ? ["native-S8-typed-application-command-negatives"] : []),
-    ...(reviewGates ? [...NATIVE_REVIEW_CASES] : semanticDrift ? ["canonical-P7-semantic-drift-and-Work-invalidation"]
+    ...(deniedOnlyProfile ? ["fresh-handoff-excludes-denied-only-discovery-profile"] : []),
+    ...(reviewGates ? [...NATIVE_REVIEW_CASES] : siblingWork ? ["canonical-P7-real-sibling-Work-and-replacement-input-closure"]
+      : semanticDrift ? ["canonical-P7-semantic-drift-and-Work-invalidation"]
       : finalEgressRevocation ? ["canonical-S6-locked-prepared-profile-revocation"]
       : resourceBeliefChange ? ["canonical-S5-resource-belief-initial-owner-cut", "canonical-S5-pinned-belief-dependency-currentness"]
       : recoveryMode === "deadline" ? ["canonical-S6-expired-parent-original-observation"]

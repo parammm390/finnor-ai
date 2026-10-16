@@ -1,3 +1,33 @@
+# Resumed browser-startup investigation
+
+Before another application campaign, check an authorized fresh visible context
+without loading saved authentication or visiting an application. Prefer the
+assigned Desktop endpoint; preserve policy refusal without changing policy.
+The documented task-owned visible Chrome fallback keeps its 15-second launch
+limit, isolated HOME/TMPDIR and blocked service workers. On failure retain the
+original exception privately and inspect only the newly launched owned PID
+(process state and a bounded sample). No signature, sandbox, CSP, profile or
+shared-installation bypass is permitted. A launch timeout, policy refusal or
+sample failure cannot pass any mounted stage. No repeated application campaign
+starts until this independent precondition succeeds.
+
+The first resumed sample locates system Chrome's main thread waiting in
+CloudDocs' synchronous `ubiquityIdentityToken` path. It does not establish an
+080/081 cause or authorize changing iCloud, signatures or system services.
+One explicit alternative may use the maintained frontend's already installed
+root Playwright and its matching cached headed Chrome for Testing. Record
+both dependency and browser identities; never silently substitute backend
+Playwright, install another runtime, reuse saved authentication or fall back
+to headless mode.
+
+The matching cached headed browser also times out. A single controlled
+process-local HOME comparison may distinguish invalid platform-home setup
+from browser-profile state: retain the normal OS HOME but require Playwright's
+new temporary user-data directory, a new context, no saved storage state and
+the existing mock-keychain/default launch flags. Preserve private TMPDIR and
+all timeouts. This neither reads a saved Chrome profile nor repairs iCloud;
+failure ends browser launches until the substrate changes.
+
 # Mounted Work fixture: pre-code failure and acceptance contract
 
 ## Integrated execution follow-through

@@ -1,5 +1,98 @@
 # FRONTIER5.X2 status
 
+## Current four-obligation continuation
+
+The user's remaining scope is fixed: sibling synchronization, inherited
+compatibility disposition, original browser/fallback/matched diagnostic, then
+the resulting installed application and local PR-ready handoff. There is no
+new X2 phase or completion estimate.
+
+1. **Sibling synchronization: PASS.** Native 098 exits 0 with nine passing
+   gates. Two real four-step compositions are interrupted at an actual
+   committed composition/read boundary. Canonical capacity defers the competing
+   Work until natural lease expiry. Replacement input survives, P7 closes two
+   affected suffixes while preserving two-step prefixes, and the third
+   still-current draft is independently verified with zero submission or
+   approval. The original parent/allocation/deadline remains unchanged.
+   Native 096's response-ordinal assumption and 097's wrong committed-versus-
+   draft goal remain retained failures, not product successes.
+2. **Compatibility inheritance: independently established, not all green.**
+   `compatibility-baseline-002` reproduces all six broad S8 type diagnostics
+   from pinned base `517003a`, with 346 baseline project sources and zero
+   source escapes. Diagnostic 001 is invalid for inheritance because it
+   escaped into current project sources. Authentic native S5 run 002 passes
+   both selected checks. Legacy S8 run 003 passes 13 checks, including the
+   real evaluator's complete 68-pin closure, and retains two baseline
+   S5-shadow failures. No unrelated owner machinery is added to mask them.
+3. **Original browser/fallback/diagnostic: not yet fully satisfied.** Browser
+   receipt `browser-continuation-blocker-001.json` retains the Desktop policy
+   refusal and three bounded visible-launch failures. The current system
+   Chrome version is the same `155.0.8059.80` as the sampled failed process.
+   No authorized substrate change is observed and no new launch is attempted.
+   The main-thread CloudDocs wait is an observed boundary, not an established
+   platform cause. The unchanged privacy, exact-acknowledgement and corrected-
+   intake mounted checks remain blocked, not substituted by source/API checks.
+   Existing original-effect observation is the only admitted recovery
+   fallback; no generic browser WRITE or stale forward repair is admitted.
+4. **Resulting installed verification and local handoff: pending.** The resumed
+   production repairs are not in immutable installation 008. The next build
+   must include the explicit sibling helper and contracts, exact migration
+   parity and all resumed owner/client changes. Selected affected executions
+   and independent reconstruction are specified in
+   `installed-runtime-contract.md`. No remote push or public PR is authorized.
+
+Native 095 passes all 13 gates for API acquisition plus signed S8 and fresh
+four-action independently graded business. It retains 228/256 physical reads,
+18 exact one-shot independent readback reuses, all 24 original transitions,
+three acquisition roles, two fresh handoff roles and zero fresh reader reads.
+The future resource horizon and definitive pre-registration profile refusal
+reach the owning boundaries. Source-contract 008 passes 20 cases, including
+post-prepare documentation/context/record drift with zero mutation requests.
+These results are source/native, not the resulting installed or mounted proof.
+
+Migration packaging now has 176/176 exact SQL files and head 0193;
+`migration-parity-after-001.json` passes without changing SQL bytes.
+Original failure receipts remain authoritative for their own attempts.
+`CODE_COMPLETE:false` and `E2E_DEV_VERIFIED:false` remain binding until every
+mandatory finite-development predicate is actually established.
+
+## Resumed completion record
+
+Resume source: `ba92228c5ac74d106118d1bb7a9f887c8d54f27a`, tree
+`edba0bf55010b84fcecc5776c7d06488f403e7fc`. The principal-isolation repair,
+typed S8 fixtures and installed-byte matrix are committed there, not uncommitted.
+The request remains `../request.md` outside this source checkout; its full
+scope and finite/external acceptance boundaries are unchanged.
+
+`completion-record-reconciliation-001.json` checks all 2,514 captured source
+inputs against installation 008: no product-source mismatch, three explicit
+documentation deltas, and the same five emitted role digests. It verifies the
+actual result, exit and seed-withdrawal/restoration receipts for 083–087.
+083 proves nine original-use byte fences; 084 proves 53 typed refusals across
+seven nonlive S8 phases; 085 proves full installed crash recovery; 086 proves
+installed semantic invalidation (10 PASS); 087 proves rendering relocation,
+fresh independent business and original lineage (13 PASS). Both later runs
+exit 0. These are narrow compatible proofs, not mounted or final acceptance.
+The six generated compatibility gates and source-only bundle reconstruction
+also pass. Do not repeat these unrelated campaigns without an invalidating
+source/dependency change.
+
+079's delayed old-principal response failure is preserved. Its repair remains
+runtime-unverified. 080 is the unchanged 30-second freshness refusal; 081 is
+`LEDGER_UNAVAILABLE` after an independently verified draft; 082 is visible
+Chrome launch timeout before any mounted stage. None establishes the cause
+of another. Diagnostics 002/003 also fail browser launch; the shorter private
+temporary directory does not resolve it. No error-classification change,
+later successful request or earlier-stage test establishes a root-cause repair.
+
+The current request resumes only original-scope work. The late unvalidated
+live-use relay stays withdrawn. `verification-plan.json` is the current
+requirement/evidence record. Historical sections below preserve original
+observations; their source-only, uncommitted or pending labels do not override
+later exact receipts. `CODE_COMPLETE` and `E2E_DEV_VERIFIED` remain false.
+
+## Retained execution history through native 085
+
 Started 14 October 2026. The recoverable local checkpoint is described in
 `checkpoint.md`; its native 049 failure is historical, not current status.
 Native 068 passes all 12 required source/native review gates, exit 0, after
@@ -164,7 +257,9 @@ edit, replay allowance or new completion authority is introduced. This is a
 passing installed crash-recovery episode, not mounted or final acceptance.
 Opaque, stopped/cancelled and expired-parent variants remain prior-cut proof.
 
-Further additions are frozen. The remaining gaps below are not waived, and
+At the 085 checkpoint, further additions were frozen. That historical freeze
+is superseded by the current request to resume the original scope, not expand
+it. The remaining gaps below are not waived, and
 neither CODE_COMPLETE nor E2E_DEV_VERIFIED is achieved. Stopped database images 075–078 are byte/mode/
 inventory-verified archives; portal state, raw evidence and runtime assets
 remain retained. Database 030 remains untouched.
@@ -256,7 +351,9 @@ not a final release seal. No publication is authorized or performed.
 The later scanned source-only installed-proof continuation is
 `c4abdb97b4a6f39a0944dc26cc7fae1797e16a95`, tree
 `cfe4ecefeef8d31a608ee36177e516c6723c7b2a`. The current fixture extensions
-and frontend principal-isolation repair are uncommitted and unsealed.
+and frontend principal-isolation repair were subsequently committed in
+`ba92228c5ac74d106118d1bb7a9f887c8d54f27a`. Final software acceptance remains
+unsealed.
 The frontend repair changes product source; its static checks and installation
 007 build pass, but full mounted acceptance has not passed.
 

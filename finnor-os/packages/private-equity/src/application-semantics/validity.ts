@@ -54,6 +54,7 @@ export function applicationCompositionClosure(composition: CheckedApplicationCom
 
 export async function invalidateApplicationOperation(ctx: PeMutationContext, row: ApplicationSessionRow,
   operationId: string, observation: ApplicationSnapshot | null, reason: string, revoked = false) {
+  const started = performance.now(), usage = process.resourceUsage();
   if (!row.model_ref) x2Fault("X2_P7_RETAINED_MODEL_REQUIRED");
   const body = await applicationArtifact<Omit<ApplicationActionModel, "ref">>(ctx, row.model_ref);
   const operation = body.operations.find((item) => item.id === operationId);
@@ -113,6 +114,16 @@ export async function invalidateApplicationOperation(ctx: PeMutationContext, row
         priorEffectsAndCostsRetained: true, newAllowance: false,
       }, c);
     }
+    const after = process.resourceUsage();
+    await applicationEvent(ctx, row, "P7_INVALIDATION_COST_METER", {
+      triggerRef: evidence, operationId, originalParentRef: row.original_parent_ref,
+      allocationRef: row.allocation_ref, originalDeadline: row.parent.deadlineAt,
+      wallMs: performance.now() - started, userCpuMicros: after.userCPUTime - usage.userCPUTime,
+      systemCpuMicros: after.systemCPUTime - usage.systemCPUTime,
+      coverage: "NESTED_IN_OWNING_DELIVERY_NOT_ADDITIVE_OR_BILLING",
+      billingUSD: null, humanWork: null, aggregateSimultaneousMemory: null,
+      fencingRequiresNewSpending: false, resourcesReleased: false, newAllowance: false,
+    }, c);
   });
 }
 
@@ -136,19 +147,37 @@ export async function revalidateApplicationOperation(ctx: PeMutationContext, row
   }
   // A current external version contract plus equal semantic/schema/parameter
   // and observer bindings, not an unchanged visual label, permits relocation.
-  if (!sameX2Ref(prior.current_binding_ref, fresh.ref)) await tx(ctx, async (c) => {
-    const evidence = await applicationEvent(ctx, row, "P7_LAWFUL_RENDERING_REVALIDATION", {
-      operationId: operation.id, modelRef: row.model_ref, priorBindingRef: prior.current_binding_ref,
-      currentBindingRef: fresh.ref, sourceRef: fresh.sourceRef, semanticDigest: fresh.semanticDigest,
-      observerRef: description.observerContractRef, renderingDigest: fresh.renderingDigest,
-      newExplorationAuthorityGranted: false,
-    }, c);
-    const updated = await c.query(
-      "UPDATE finnor_os.application_operation_validities SET current_binding_ref=$5::jsonb,evidence_ref=$6::jsonb,"
-      + " revision=revision+1,updated_at=clock_timestamp() WHERE tenant_id=$1 AND principal_id=$2 AND model_id=$3 AND operation_id=$4 AND status='CURRENT'",
-      [ctx.auth.tenantId, principal(ctx), row.model_ref!.id, operation.id, JSON.stringify(fresh.ref), JSON.stringify(evidence)]);
-    if (updated.rowCount !== 1) x2Fault("X2_P7_REVALIDATION_CONCURRENTLY_REVOKED");
-  });
+  if (!sameX2Ref(prior.current_binding_ref, fresh.ref)) {
+    const started = performance.now(), usage = process.resourceUsage();
+    const chargeRef = await chargeApplicationParent(ctx, {
+      allocationRef: row.allocation_ref, consumptionRef: row.root_consumption_ref, requestRef: fresh.ref,
+      phase: "MAINTENANCE", key: "rendering-revalidation:" + x2Digest({
+        model: row.model_ref, operationId: operation.id, prior: prior.current_binding_ref, current: fresh.ref,
+      }), units: 1,
+    });
+    await tx(ctx, async (c) => {
+      const evidence = await applicationEvent(ctx, row, "P7_LAWFUL_RENDERING_REVALIDATION", {
+        operationId: operation.id, modelRef: row.model_ref, priorBindingRef: prior.current_binding_ref,
+        currentBindingRef: fresh.ref, sourceRef: fresh.sourceRef, semanticDigest: fresh.semanticDigest,
+        observerRef: description.observerContractRef, renderingDigest: fresh.renderingDigest,
+        newExplorationAuthorityGranted: false,
+      }, c);
+      const updated = await c.query(
+        "UPDATE finnor_os.application_operation_validities SET current_binding_ref=$5::jsonb,evidence_ref=$6::jsonb,"
+        + " revision=revision+1,updated_at=clock_timestamp() WHERE tenant_id=$1 AND principal_id=$2 AND model_id=$3 AND operation_id=$4 AND status='CURRENT'",
+        [ctx.auth.tenantId, principal(ctx), row.model_ref!.id, operation.id, JSON.stringify(fresh.ref), JSON.stringify(evidence)]);
+      if (updated.rowCount !== 1) x2Fault("X2_P7_REVALIDATION_CONCURRENTLY_REVOKED");
+      const after = process.resourceUsage();
+      await applicationEvent(ctx, row, "P7_MAINTENANCE_COST_METER", {
+        operationId: operation.id, chargeRef, phase: "MAINTENANCE", originalParentRef: row.original_parent_ref,
+        allocationRef: row.allocation_ref, originalDeadline: row.parent.deadlineAt,
+        wallMs: performance.now() - started, userCpuMicros: after.userCPUTime - usage.userCPUTime,
+        systemCpuMicros: after.systemCPUTime - usage.systemCPUTime,
+        coverage: "NESTED_IN_OWNING_DELIVERY_NOT_ADDITIVE_OR_BILLING",
+        billingUSD: null, humanWork: null, aggregateSimultaneousMemory: null, newAllowance: false,
+      }, c);
+    });
+  }
 }
 
 export async function deliverApplicationReferences(ctx: PeMutationContext, row: ApplicationSessionRow, owners: string[], recovery = false) {

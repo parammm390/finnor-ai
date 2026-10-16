@@ -74,11 +74,33 @@ Episode floors stay $100, 900 human seconds, 16 GiB aggregate simultaneous peak,
 
 ## Peer and migration packet
 
-X1 delivered HEAD/tree is `f7fa088dbe32aebbf9ae1ed46b6f454ed109596c` / `dc7c1bd358d0e103fd8f2aef1d8f09215bd00c78`, clean. Its repair HEAD/tree is `5c32607b185f143d1faffc0a166d16a2fc2ab822` / `3736ab474d2ae0dbe0360a41b692b587ae6c9a68`, with an unsealed overlay and blocking review findings. Do not adopt earlier installation as repaired-cut proof.
+The accepted X1 handoff supersedes the historical delivered/repair labels.
+Current source is `0946085d7cedc866b54cb7979177ff758eaba30b`, tree
+`937b8f604f4d635160b739d878d3be6cdd39d36e`, tracked clean. Package006 and
+`codex-final-acceptance-001.json` establish
+`E2E_DEV_VERIFIED_DECLARED_LOCAL_DEVELOPMENT_DOMAIN`, not protected or
+production authority. Its installed backend015 derives from
+`a1840556093a40c975b4b5fba149b52a3da4e374`, not a rebuild of its final
+documentation commit. Exact receipt hashes and integration predicates are in
+`peer-compatibility.md` and `verification-plan.json`.
 
-ORIGINAL V1 HEAD/tree is `bd43f7a31862f5528d87fa522816c4a7fb0c6e3a` / `846fe92a7f08f10efaaa28151e8ed9c67e28fb3a`, with active unsealed changes. No completion/admission/deployment is established.
+ORIGINAL V1's HEAD/tree remain `bd43f7a31862f5528d87fa522816c4a7fb0c6e3a` /
+`846fe92a7f08f10efaaa28151e8ed9c67e28fb3a`, an adopted V2 predecessor.
+Its 88 archival candidate postimages match; that proves archival
+reconstruction, not accepted V1 engineering or admission. Cumulative V's
+distinct checkpoint is `e5b82eed009b549c12e656e9f3b3ec626569b946`, tree
+`faf091408e3573a88f1884de1ba6d3c5a3bc9d48`, explicitly incomplete,
+not admitted and activation-disabled. Neither is required for standalone
+X2 development; qualified B_V remains required for incremental post-V claims.
 
-X1 reserves 0172–0189 and proposes 0190. ORIGINAL V1 has untracked 0177, colliding with X1. Main ends before these peer deltas. Do not invent an unused migration number or rewrite peer/applied SQL. Prefer an explicit task-qualified additive migration identity with a recorded serial adoption/reindex packet after inspecting the actual migration enumerator; final cumulative ordering requires the integration owner's receipt.
+The actual migrator sorts and tracks full filenames. Numeric-prefix reuse is
+not itself a tracker collision: inspected X1/V filenames do not collide with
+X2's 0191–0193. All 173 historical SQL preimages match across the inspected
+cuts. Applied ordering, shared DDL, shared-owner edits and X1's differing
+backend lock still require serial compatibility proof. X2 has an internal
+directory/bundle/head parity defect: 0193 exists while generated metadata
+ends at 0192. Repair that owner metadata without rewriting historical SQL.
+No peer delta is adopted by this refresh or by X1's acceptance.
 
 ## Completion states
 

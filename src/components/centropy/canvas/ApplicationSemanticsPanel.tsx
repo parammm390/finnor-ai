@@ -508,6 +508,7 @@ interface UnconfirmedUse {
   tenantId: string
   principalId: string
   kind: "acquire" | "execute"
+  sessionId: string | null
   workId: string
   parentId: string | null
   originalParentRef: ApplicationReference | null
@@ -598,10 +599,11 @@ export function ApplicationSemanticsPanel(props: ApplicationSemanticsPanelProps)
         const destination = pending.workId === scope.workId ? data
           : await readApplicationProjection({ ...scope, workId: pending.workId }, transport)
         if (!isCurrent(marker) || request.controller.signal.aborted) return null
-        const recorded = destination.sessions.find(candidate => pending.kind === "acquire"
-          ? candidate.id === candidate.parentId
-          : candidate.parentId === pending.parentId && pending.originalParentRef !== null
-            && applicationReferencesMatch(candidate.originalParentRef, pending.originalParentRef))
+        const recorded = destination.sessions.find(candidate => candidate.id === pending.sessionId
+          && (pending.kind === "acquire"
+            ? candidate.id === candidate.parentId
+            : candidate.parentId === pending.parentId && pending.originalParentRef !== null
+              && applicationReferencesMatch(candidate.originalParentRef, pending.originalParentRef)))
         if (recorded) {
           // Registration is observed, not business completion or effect closure.
           if (pending.kind === "execute") setRecordedWork({ stamp: marker.stamp, id: destination.workId })
@@ -805,7 +807,7 @@ export function ApplicationSemanticsPanel(props: ApplicationSemanticsPanelProps)
       if (kind !== "cancel") {
         const pending: UnconfirmedUse = {
           stamp, sourceKey: scopeKey, tenantId: current.scope.tenantId, principalId: current.scope.principalId,
-          kind, workId: executionRequest?.workId ?? current.scope.workId,
+          kind, sessionId: null, workId: executionRequest?.workId ?? current.scope.workId,
           parentId: kind === "execute" ? original?.id ?? null : null,
           originalParentRef: kind === "execute" ? original?.originalParentRef ?? null : null,
         }
@@ -815,20 +817,35 @@ export function ApplicationSemanticsPanel(props: ApplicationSemanticsPanelProps)
       erasePrivate()
       let responseMessage: string
       try {
-        if (kind === "execute" && executionRequest) await executeApplication(current.scope, executionRequest, transport)
-        else if (kind === "acquire" && acquisitionRequest) await acquireApplication(current.scope, acquisitionRequest, transport)
-        else await cancelApplication(current.scope, transport)
+        const registered = kind === "execute" && executionRequest
+          ? await executeApplication(current.scope, executionRequest, transport)
+          : kind === "acquire" && acquisitionRequest
+            ? await acquireApplication(current.scope, acquisitionRequest, transport)
+            : await cancelApplication(current.scope, transport)
+        if (!isCurrent(marker)) return
+        if (registered && unconfirmedRef.current?.stamp === stamp) {
+          const pending = { ...unconfirmedRef.current, sessionId: registered.sessionId }
+          unconfirmedRef.current = pending
+          setUnconfirmed(pending)
+        }
         responseMessage = kind === "cancel"
           ? "The native stop-request response returned for this Work. Only canonical records establish new-work cancellation; possible effects and original responsibility are not undone."
           : "The native request response returned. Only canonical registration and independent observations establish its state; no business completion or grant is inferred."
       } catch (error) {
         if (!isCurrent(marker)) return
-        if (error instanceof CentropyApiError && [401, 403, 404].includes(error.status)) {
+        if (kind === "acquire" && error instanceof CentropyApiError && error.status === 404
+          && error.details && typeof error.details === "object" && "code" in error.details
+          && error.details.code === "X2_ACQUISITION_PROFILE_UNAVAILABLE") {
+          unconfirmedRef.current = null
+          setUnconfirmed(null)
+          responseMessage = "The native owner refused an unavailable profile before registration. No acquisition was registered by this request. Correct the profile input before requesting acquisition."
+        } else if (error instanceof CentropyApiError && [401, 403, 404].includes(error.status)) {
           erasePrivate()
           setNotice({ stamp, phase: "error", message: "Current native access was denied or unavailable. Private evidence and inputs are cleared. Original responsibility remains with its native owner." })
           return
+        } else {
+          responseMessage = "The native request outcome is unconfirmed. No automatic retry or replay occurs; only current canonical records can reconcile the original request."
         }
-        responseMessage = "The native request outcome is unconfirmed. No automatic retry or replay occurs; only current canonical records can reconcile the original request."
       }
       if (!isCurrent(marker)) return
       setSnapshot(null)

@@ -50,3 +50,25 @@ surface is selected by `FINNOR_X2_TEST_SURFACE=api|ui|hybrid`. UI and hybrid
 require an owned legitimate browser endpoint under the provider's actual
 configuration. Development proof does not confer protected or production
 authority, external population qualification, billing coverage or a multiplier.
+
+## Observation age and owned lifecycle meters
+
+The retained 080 chronology shows 21 pre-existing native-event references
+committed after the fresh predecessor observation, within a 16,156ms S6
+append-timestamp span. It does not identify HTTP/fsync/SQL/scheduling latency.
+Prepare existing reference backlog before a new step's actual observation.
+Keep all mandatory delivery, current grant/Work/model/resource checks and
+newly created request references afterward. Never refresh an observation's
+timestamp, replace a possible effect, extend 30-second freshness/5-second
+physical limits, or grant a new deadline. The existing 96-reference native
+backlog scenario must retain original digests, one delivery per record and
+fresh independent business, plus real egress refusal controls.
+
+Measure preparation before observation and actual P7 invalidation/rendering
+maintenance in their existing owners. CPU/wall slices inside a delivery are
+nested, not additive charges; process lifetime RSS is not aggregate memory.
+Successful rendering maintenance must charge its original S5 parent before
+publishing a replacement binding. Invalidation must still fence the smallest
+sound closure when spending is unavailable; its measured overhead stays
+attributed to the original parent, never erased or claimed free. Billing,
+human work and aggregate simultaneous memory remain UNKNOWN.

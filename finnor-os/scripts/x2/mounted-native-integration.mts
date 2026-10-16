@@ -116,20 +116,25 @@ export async function runMountedNativeIntegration(input: MountedNativeInput) {
       qualification: "UNAUTHENTICATED_COMPILATION_PREPARATION_NOT_ACCESS_OR_BUSINESS_PROOF",
       routes: preparation, businessDeadlineRenewed: false,
     }, null, 2) + "\n", { mode: 0o600, flag: "wx" });
+    let browserStartupPhase = "load-driver";
     try {
       const { chromium } = await import("playwright-core");
       const mode = process.env.FINNOR_X2_MOUNTED_BROWSER ?? "assigned_desktop";
       assert(["assigned_desktop", "task_owned_visible_chrome"].includes(mode), "EXPLICIT_MOUNTED_BROWSER_MODE_REQUIRED");
       if (mode === "task_owned_visible_chrome") {
+        browserStartupPhase = "visible-chrome-launch";
         browser = await chromium.launch({ channel: "chrome", headless: false, timeout: 15000,
           env: { PATH: process.env.PATH, HOME: directory, TMPDIR: directory, LANG: "C", TZ: "UTC" } });
         ownedBrowser = true;
       } else if (process.env.FACTORY_DESKTOP_CDP_PORT) {
+        browserStartupPhase = "assigned-desktop-connect";
         assert(process.env.AGENT_BROWSER_CDP, "ASSIGNED_DESKTOP_CDP_REQUIRED");
         browser = await chromium.connectOverCDP(process.env.AGENT_BROWSER_CDP, { timeout: 15000 });
       } else { throw Error("ASSIGNED_DESKTOP_OR_EXPLICIT_VISIBLE_BROWSER_REQUIRED"); }
+      browserStartupPhase = "new-context";
       context = await browser.newContext({ serviceWorkers: "block" });
       assert.equal(context.pages().length, 0);
+      browserStartupPhase = "blank-page";
       const probe = await context.newPage();
       assert.equal(probe.url(), "about:blank"); await probe.close();
       await writeFile(join(input.evidenceDirectory, "mounted-browser-runtime.json"), JSON.stringify({
@@ -137,7 +142,19 @@ export async function runMountedNativeIntegration(input: MountedNativeInput) {
         freshContext: true, savedAuthenticationLoaded: false, visible: true,
         blankPageCreation: "PASS", desktopPolicyChanged: false, headlessFallback: false,
       }, null, 2) + "\n", { mode: 0o600, flag: "wx" });
-    } catch { throw Error("FRESH_TASK_OWNED_BROWSER_CONTEXT_UNAVAILABLE"); }
+    } catch (error) {
+      const endpoint = process.env.AGENT_BROWSER_CDP;
+      const original = String(error instanceof Error ? error.stack ?? error.message : error).slice(0, 16384);
+      await writeFile(join(directory, "browser-startup-exception.txt"),
+        (endpoint ? original.replaceAll(endpoint, "[ASSIGNED_ENDPOINT_REDACTED]") : original) + "\n",
+        { mode: 0o600, flag: "wx" });
+      await writeFile(join(input.evidenceDirectory, "mounted-browser-startup-failure.json"), JSON.stringify({
+        phase: browserStartupPhase, exception: "private/maintained-frontend/browser-startup-exception.txt",
+        launchTimeoutMs: 15000, mountedStagesExecuted: 0, savedAuthenticationLoaded: false,
+        applicationVisited: false, sharedPolicyChanged: false,
+      }, null, 2) + "\n", { mode: 0o600, flag: "wx" });
+      throw Error("FRESH_TASK_OWNED_BROWSER_CONTEXT_UNAVAILABLE");
+    }
     context.on("response", response => {
       const url = new URL(response.url());
       if (url.origin !== input.frontendOrigin || url.pathname !== "/api/centropy/company-brain/application-execute"

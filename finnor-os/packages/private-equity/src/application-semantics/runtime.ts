@@ -13,7 +13,7 @@ import { withS5PortfolioTransaction } from "../allocation-store";
 import { enqueueOwnerDeliveryInTransaction } from "../../../governed-execution/src/owner-delivery-store";
 import { ComputerBroker } from "../../../computer/src/broker";
 import {
-  ApplicationComputerProvider, ApplicationProviderFault, applicationByteDigest, applicationContentRef,
+  ApplicationComputerProvider, ApplicationProviderFault, applicationByteDigest,
   applicationResourcePath, type ApplicationReadFence,
 } from "../../../computer/src/application-provider";
 import { ApplicationSourceSession } from "./source";
@@ -41,7 +41,7 @@ import {
 } from "./checker";
 import { learnApplicationActions } from "./learner";
 import { applicationGoalEstablished, assertApplicationComposition } from "./composition";
-import { assertFreshApplicationProfile } from "./fresh-authority";
+import { assertFreshApplicationProfile, currentFreshApplicationAuthority } from "./fresh-authority";
 import {
   acquireApplicationCapability, applicationConsumerPolicy, recheckApplicationCapability, reconcileApplicationCapability,
 } from "../../../capability-evolution/src/application-consumer";
@@ -62,6 +62,7 @@ function preimage(ref: ExperimentRef, value: unknown): unknown {
   if (value && typeof value === "object" && !Array.isArray(value) && "ref" in value
     && sameX2Ref((value as { ref: ExperimentRef }).ref, ref)) {
     const { ref: _ref, ...body } = value as Record<string, unknown>;
+    void _ref;
     if (x2Digest(body) === ref.contentDigest) return body;
   }
   if (x2Digest(value) !== ref.contentDigest) x2Fault("X2_TRUSTED_SOURCE_PREIMAGE_MISMATCH");
@@ -151,6 +152,7 @@ export class NativeApplicationRuntime implements ApplicationLearningPort {
   private lastDiscovery: ApplicationDiscovery | null = null;
   private declaredFields = new Map<string, ApplicationField>();
   private acquisitionObservations = new Map<string, ApplicationSnapshot>();
+  private acquisitionReadback: { profileId: string; snapshot: ApplicationSnapshot; transitionRef: ExperimentRef } | null = null;
   private chargeOrdinal = 0;
   private phase: ApplicationPhase = "ACQUISITION";
   private recovery = false;
@@ -278,10 +280,13 @@ export class NativeApplicationRuntime implements ApplicationLearningPort {
     this.entries.clear();
     this.descriptors.clear();
     this.acquisitionObservations.clear();
+    this.acquisitionReadback = null;
     let scope: ApplicationScope | null = null;
     const fields = new Map(), sources = new Map<string, ExperimentRef>(), signatures = new Map<string, ExperimentRef>();
     const substrates = new Set<string>();
-    for (const id of this.session.profile_ids) {
+    const profiles = this.session.id === this.session.parent_id ? this.session.profile_ids
+      : (await currentFreshApplicationAuthority(this.ctx, this.session)).bindings.map(binding => binding.profileId);
+    for (const id of profiles) {
       const entry = await this.newEntry(id);
       this.entries.set(id, entry);
       const discovered = await entry.source.discover();
@@ -326,7 +331,20 @@ export class NativeApplicationRuntime implements ApplicationLearningPort {
     const entry = this.entries.get(profileId);
     if (!entry) x2Fault("X2_NATIVE_DISCOVERY_PROFILE_REQUIRED");
     assertProfileTarget(entry.profile, target);
-    const snapshot = (await entry.source.observe(target)).snapshot;
+    const readback = this.acquisitionReadback;
+    this.acquisitionReadback = null;
+    let snapshot: ApplicationSnapshot;
+    if (this.session.id === this.session.parent_id && readback?.profileId === profileId
+      && x2Digest(readback.snapshot.target) === x2Digest(target)) {
+      if ((await nativeApplicationProfile(this.ctx, profileId)).bindingDigest !== entry.profile.bindingDigest)
+        x2Fault("X2_CURRENT_READ_PROFILE_CHANGED");
+      snapshot = structuredClone(readback.snapshot);
+      await applicationEvent(this.ctx, this.session, "ACQUISITION_REUSED_INDEPENDENT_READBACK", {
+        transitionRef: readback.transitionRef, profileId, targetDigest: x2Digest(target),
+        sourceRef: snapshot.sourceRef, observedAt: snapshot.observedAt,
+        physicalDispatchRecheckRequired: true,
+      });
+    } else snapshot = (await entry.source.observe(target)).snapshot;
     if (this.session.id === this.session.parent_id) {
       this.acquisitionObservations.set(x2Digest([target, profileId]), structuredClone(snapshot));
     }
@@ -390,6 +408,7 @@ export class NativeApplicationRuntime implements ApplicationLearningPort {
   }
   async interact(input: { operation: DescribedApplicationOperation; target: ScopedApplicationIdentity;
     parameters: ApplicationState; purpose: "AUTHORIZED_EXPLORATION" }): Promise<ApplicationTransitionEvidence> {
+    this.acquisitionReadback = null;
     if (this.session.id !== this.session.parent_id || input.purpose !== "AUTHORIZED_EXPLORATION") x2Fault("X2_EXPLORATION_ORIGINAL_PARENT_REQUIRED");
     const descriptor = this.descriptors.get(input.operation.id);
     if (!descriptor || x2Digest(descriptor.description) !== x2Digest(input.operation)) x2Fault("X2_EXPLORATION_ORIGINAL_DESCRIPTOR_REQUIRED");
@@ -405,7 +424,13 @@ export class NativeApplicationRuntime implements ApplicationLearningPort {
     if (ordinal >= 64) x2Fault("X2_ORIGINAL_AGGREGATE_EXPLORATION_BOUND");
     const nodeId = `exploration:${ordinal + 1}`;
     const { request, result, observed } = await this.perform(descriptor, before, input.parameters, nodeId);
-    return this.retainTransition(request, result, observed, input.operation.id, before, input.parameters);
+    const evidence = await this.retainTransition(request, result, observed, input.operation.id, before, input.parameters);
+    if (descriptor.entry.profile.profile.discoverySurface === "API" && observed.after
+      && (observed.classified.disposition === "VERIFIED" || observed.classified.disposition === "DENIED")) {
+      this.acquisitionReadback = { profileId: input.operation.profileId,
+        snapshot: structuredClone(observed.after), transitionRef: evidence.ref };
+    }
+    return evidence;
   }
   private async retainTransition(request: ApplicationRequestRow, result: WireResult | null,
     observed: Awaited<ReturnType<NativeApplicationRuntime["observeDisposition"]>>,
@@ -672,6 +697,24 @@ export class NativeApplicationRuntime implements ApplicationLearningPort {
         await this.reconcileOriginalCapability(existing, evidence);
         observed = event.detail.observation;
         continue;
+      }
+      if (await applicationConsumerPolicy({
+        tenantId: this.session.tenant_id, principalId: this.session.principal_id,
+        rightsRef: this.session.parent.rightsRevision,
+      })) {
+        // Deliver old references before accepting the time-sensitive input.
+        // The mandatory checks below still deliver every newly created ref.
+        const started = performance.now(), usage = process.resourceUsage();
+        await deliverApplicationReferences(this.ctx, this.session, ["S4", "S5", "S6", "COMPUTER"]);
+        const after = process.resourceUsage();
+        await applicationEvent(this.ctx, this.session, "S8_PREOBSERVATION_REFERENCE_PREPARATION", {
+          operationId: operation.id, nodeId: step.id, wallMs: performance.now() - started,
+          userCpuMicros: after.userCPUTime - usage.userCPUTime,
+          systemCpuMicros: after.systemCPUTime - usage.systemCPUTime,
+          originalParentRef: this.session.original_parent_ref, originalDeadline: this.parent.deadlineAt,
+          observationCapturedAfterPreparation: true, coverage: "NESTED_IN_PHYSICAL_DELIVERY_NOT_ADDITIVE",
+          billingUSD: null, humanWork: null, aggregateSimultaneousMemory: null, newAllowance: false,
+        });
       }
       const current = await this.observe(composition.target, descriptor.description.profileId);
       if (!sameState(observed, current)) x2Fault("X2_CURRENT_PREDECESSOR_INTERFERENCE");
