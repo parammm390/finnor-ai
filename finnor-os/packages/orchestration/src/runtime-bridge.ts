@@ -18,6 +18,7 @@ import { and, desc, eq, inArray, or, sql } from "drizzle-orm";
 import type { BusinessEffectSet, DraftAction, ExecutionResult, ErrorKind } from "@finnor/shared-types";
 import type { ToolRegistry } from "@finnor/tools";
 import type { DomainEnginePlugin } from "@finnor/plugins-shared";
+import { assertLiveControlBoundaryTx } from "./live-control-boundary";
 
 export interface ExecutePluginViaRuntimeParams {
   tenantId: string;
@@ -42,7 +43,7 @@ export interface AuthorizeActionExecutionTxParams {
   approvedBy?: string;
   authorityDecisionId?: string;
   authorityRevision?: number;
-  authorizationSource: "human_approval" | "policy";
+  authorizationSource: "human_approval" | "standing_authority" | "policy";
 }
 
 export class ActionCancellationConflictError extends Error {
@@ -131,6 +132,7 @@ export async function authorizeActionExecutionTx(
     .where(and(eq(domainActions.tenantId, params.tenantId), eq(domainActions.id, params.actionId)))
     .limit(1);
   if (!loaded) throw new Error("Durable execution refused: the action has no tenant-scoped Business Effect");
+  await assertLiveControlBoundaryTx(db, params.tenantId, loaded.action.id, loaded.action.initiatedBy);
 
   await assertActionNotCancelledTx(db, {
     tenantId: params.tenantId,
@@ -157,6 +159,13 @@ export async function authorizeActionExecutionTx(
       input: { policyId: effect.authority.policyId, policyVersion: effect.authority.policyVersion },
       output: { businessEffectId: effect.id, authorizedEffectHash: effect.semanticHash },
     });
+  } else if(params.authorizationSource==="standing_authority"){
+    const approval=await db.execute<{effect_hash:string;business_effect_id:string}>(sql`
+      SELECT effect_hash,business_effect_id FROM finnor_os.s6_standing_contact_authorizations
+      WHERE tenant_id=${params.tenantId}::uuid AND action_id=${params.actionId}::uuid`);
+    if(approval.rows[0]?.effect_hash!==effect.semanticHash||approval.rows[0]?.business_effect_id!==effect.id||!effect.approval.required||effect.approval.typedConfirmation){
+      throw new Error("Durable execution refused: standing authority did not authorize this exact required-approval contact");
+    }
   } else {
     const [approval] = await db.select({ id: actionLog.id, output: actionLog.output }).from(actionLog).where(and(
       eq(actionLog.tenantId, params.tenantId),
@@ -205,7 +214,7 @@ export async function authorizeActionExecutionTx(
     .where(and(
       eq(domainActions.tenantId, params.tenantId),
       eq(domainActions.id, params.actionId),
-      inArray(domainActions.status, params.authorizationSource === "human_approval" ? ["approved", "executing"] : ["draft", "approved", "executing"]),
+      inArray(domainActions.status, params.authorizationSource === "policy" ? ["draft", "approved", "executing"] : ["approved", "executing"]),
     )).returning({ id: domainActions.id });
   if (!claimedAction) throw new Error("Durable execution refused: action is no longer executable");
 

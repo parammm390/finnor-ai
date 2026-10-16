@@ -1,0 +1,47 @@
+{
+  "schema": "finnor.linux-numerical-memory-validation.v1",
+  "scope": "NUMERICAL_PROCESS_MEMORY_ACCOUNTING_ONLY",
+  "baseCommit": "069a3372987e43678d12246eef543d2fe59cad25",
+  "productSource": {
+    "path": "finnor-os/packages/epistemic-runtime/src/intervention-numerics.py",
+    "sha256": "c29aaabe7c04cd35786ec5b413ceb63721520b588540a7bff19cc65e0efa154f"
+  },
+  "proofSource": {
+    "path": "finnor-os/scripts/s3/numerical-memory-e2e.mjs",
+    "sha256": "e5529a6f3fb4950f114fd81e0a9302b57bf0fe0569a21b115e54ade184e85dbd"
+  },
+  "failureModel": "Linux ru_maxrss can retain the pre-exec Node parent peak instead of measuring only the numerical interpreter.",
+  "registeredBoundBytes": 536870912,
+  "boundChanged": false,
+  "parentAllocationBytes": 671088640,
+  "redBeforeProductChange": {
+    "observedAt": "2026-10-16T02:31:47.708Z",
+    "passed": false,
+    "reason": "Post-exec numerical peak reader did not exist",
+    "artifactSha256": "98a5c0a2cd22b9248cac1f7683e204a39b592cbecf73dbefed138a5fb522ca4a"
+  },
+  "greenActualForkExec": {
+    "observedAt": "2026-10-16T02:32:42.611Z",
+    "passed": true,
+    "interpreterPeakBytes": 158859264,
+    "inheritedPeakBytes": 674603008,
+    "basis": "LINUX_KERNEL_POST_EXEC_VMHWM_KIB_TO_BYTES",
+    "artifactSha256": "4aaaab9531f8cca8b96db1eaeb0d5ac59b8ea84fbaf234dad12afe3598ab139a"
+  },
+  "rerun": "FINNOR_S3_PYTHON=<absolute-python> FINNOR_S3_MEMORY_EVIDENCE=<fresh-absolute-json> node finnor-os/scripts/s3/numerical-memory-e2e.mjs",
+  "custody": {
+    "verifiedAt": "2026-10-16T04:20:58.776871+00:00",
+    "archiveSha256": "ef9c648014d41024b9a72e62756b9de84ebcf6e03d5fe2baed4ac1861f93b592",
+    "manifestSha256": "2b13dbebafb0438de2edb7db38dd1e71e4ef127fc59e42ca6b442f69e8571d6b",
+    "rawEvidence": "PRIVATE_NOT_COMMITTED",
+    "taskCleanupAbsenceChecks": 13,
+    "sharedKmsKeyDeleted": false
+  },
+  "qualification": {
+    "nativeFinancingAdapter": "UNPUBLISHED_FAILED_END_TO_END",
+    "cumulativeV1V5": "NOT_ESTABLISHED",
+    "protectedAdmission": "NOT_ESTABLISHED",
+    "productionDeployment": "NOT_PERFORMED",
+    "note": "This proof does not qualify financing, original full-Work completion or production. The separate financing recovery attempt remained UNKNOWN with S6_CLOSING_BROKER_CURRENT_DISPATCH_OR_OBSERVATION_UNAVAILABLE."
+  }
+}

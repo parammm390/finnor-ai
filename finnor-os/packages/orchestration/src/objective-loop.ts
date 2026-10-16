@@ -10,7 +10,7 @@ import { createHash, randomUUID } from "node:crypto";
 import { z } from "zod";
 import { assembleOperatingContext } from "./operating-context";
 import { and, asc, desc, eq, inArray, isNotNull, lt, lte, sql } from "drizzle-orm";
-import type { DomainAction, ExecutionResult, MemorySnapshot, ObjectiveSuccessCondition, ObjectiveSuccessVerification, OperatingInteractionContext, OperationalQueryRequest, OutcomePackStartBinding, Role, TenantContext } from "@finnor/shared-types";
+import type { ClosingWorkContinuation, DomainAction, ExecutionResult, MemorySnapshot, ObjectiveSuccessCondition, ObjectiveSuccessVerification, OperatingInteractionContext, OperationalQueryRequest, OutcomePackStartBinding, Role, TenantContext } from "@finnor/shared-types";
 import {
   MAX_HIGH_EGRESS_ROWS,
   activeWorkPlanRevision,
@@ -853,7 +853,241 @@ export async function bindHarnessWorkObjective(params: {
   });
 }
 
+export function closingWorkGoalDigest(loop: Pick<typeof workObjectiveLoops.$inferSelect,
+  "objective" | "successCondition" | "deadlineAt" | "maxSteps" | "maxActions" | "maxQueries"
+  | "maxPlannerFailures" | "maxConsecutiveNoProgress" | "maxParallelNodes" | "maxNodeAttempts" | "maxWaits" | "maxEstimatedCostMicros">): string {
+  return createHash("sha256").update(canonicalJson({
+    objective: loop.objective, successCondition: parseObjectiveSuccessCondition(loop.successCondition),
+    deadlineAt: loop.deadlineAt.toISOString(),
+    grant: { maxSteps: loop.maxSteps, maxActions: loop.maxActions, maxQueries: loop.maxQueries,
+      maxPlannerFailures: loop.maxPlannerFailures, maxConsecutiveNoProgress: loop.maxConsecutiveNoProgress,
+      maxParallelNodes: loop.maxParallelNodes, maxNodeAttempts: loop.maxNodeAttempts, maxWaits: loop.maxWaits,
+      maxEstimatedCostMicros: String(loop.maxEstimatedCostMicros) },
+  })).digest("hex");
+}
+
+/** Existing owner client only. Admission and recovery cannot mint a replacement
+ * input, narrower goal or larger grant for an already active full mandate. */
+export async function assertClosingWorkContinuationTx(db: Db, params: {
+  tenantId: string; principalId: string; workId: string; transactionId: string; specDigest: string;
+  binding: ClosingWorkContinuation;
+}) {
+  await db.execute(sql`SELECT id FROM ${workObjectiveLoops} WHERE tenant_id=${params.tenantId}::uuid AND work_id=${params.workId}::uuid FOR UPDATE`);
+  await db.execute(sql`SELECT id FROM ${works} WHERE tenant_id=${params.tenantId}::uuid AND id=${params.workId}::uuid FOR UPDATE`);
+  const [work] = await db.select().from(works).where(and(eq(works.tenantId, params.tenantId), eq(works.id, params.workId))).limit(1);
+  const [loop] = await db.select().from(workObjectiveLoops).where(and(eq(workObjectiveLoops.tenantId, params.tenantId), eq(workObjectiveLoops.workId, params.workId))).limit(1);
+  const [input] = await db.select().from(workInputs).where(and(eq(workInputs.tenantId, params.tenantId), eq(workInputs.workId, params.workId)))
+    .orderBy(desc(workInputs.createdAt), desc(workInputs.id)).limit(1);
+  const [actor] = await db.select({ status: users.status, role: users.role }).from(users)
+    .where(and(eq(users.tenantId, params.tenantId), eq(users.id, params.principalId))).limit(1);
+  const anchor = await db.execute(sql`SELECT 1 FROM finnor_os.work_entity_links
+    WHERE tenant_id=${params.tenantId}::uuid AND work_id=${params.workId}::uuid
+      AND entity_type='pe_deal' AND entity_id=${params.transactionId} LIMIT 1`);
+  if (!work || !loop || !input || actor?.status !== "active" || actor.role !== "owner"
+      || (work.currentOwnerId ?? work.createdBy) !== params.principalId || loop.createdBy !== params.principalId
+      || input.createdBy !== params.principalId || input.id !== params.binding.workInputId
+      || loop.id !== params.binding.objectiveLoopId || loop.revision !== params.binding.objectiveRevision
+      || input.instructionText !== loop.objective || closingWorkGoalDigest(loop) !== params.binding.objectiveDigest
+      || ["completed", "failed", "cancelled"].includes(work.status)
+      || ["completed", "blocked", "failed", "cancelled"].includes(loop.state)
+      || loop.deadlineAt.getTime() <= Date.now() || !anchor.rows.length) {
+    throw Error("CLOSING_ORIGINAL_FULL_WORK_BINDING_CHANGED_OR_UNAVAILABLE");
+  }
+  const condition = parseObjectiveSuccessCondition(loop.successCondition);
+  const relevant = condition.criteria.filter(c => c.kind === "canonical_query"
+    && c.request.intent === "closing_readiness" && c.request.dealId === params.transactionId);
+  if (condition.mode !== "all" || !relevant.some(c => c.kind === "canonical_query"
+      && c.assertion.path.join(".") === "verifiedClosing.status" && c.assertion.operator === "eq" && c.assertion.expected === "CLOSED")
+      || relevant.some(c => c.kind === "canonical_query" && c.assertion.path.join(".") === "verifiedClosing.specDigest"
+        && (c.assertion.operator !== "eq" || c.assertion.expected !== params.specDigest))) {
+    throw Error("CLOSING_ORIGINAL_FULL_GOAL_DOES_NOT_REQUIRE_THIS_CLOSE");
+  }
+  return { workId: work.id, workInputId: input.id, instructionId: input.instructionId, loop };
+}
+
 /** Transactional native delivery after the producer's immutable result commits. */
+export async function bindClosingWorkObjective(params: {
+  tenantId: string; principalId: string; workId: string; workInputId: string;
+  instruction: string; transactionId: string; specDigest: string; deadlineAt: string;
+  maxSteps: number; maxActions: number;
+  originalGoal?: ClosingWorkContinuation;
+}): Promise<{ id: string; revision: number; deadlineAt: string }> {
+  const originalGoal = params.originalGoal;
+  if (originalGoal) return withTenant(params.tenantId, async db => {
+    const { loop } = await assertClosingWorkContinuationTx(db, {
+      ...params, binding: originalGoal,
+    });
+    const deadlineAt = new Date(Math.min(loop.deadlineAt.getTime(), Date.parse(params.deadlineAt))).toISOString();
+    if (Date.parse(deadlineAt) <= Date.now()) throw Error("CLOSING_ORIGINAL_EPISODE_DEADLINE_EXPIRED");
+    return { id: loop.id, revision: loop.revision, deadlineAt };
+  });
+  const condition = parseObjectiveSuccessCondition({
+    version: 1, statement: params.instruction, mode: "all", source: "explicit", criteria: [
+      { kind: "canonical_query", request: { intent: "closing_readiness", dealId: params.transactionId },
+        assertion: { path: ["verifiedClosing", "status"], operator: "eq", expected: "CLOSED" } },
+      { kind: "canonical_query", request: { intent: "closing_readiness", dealId: params.transactionId },
+        assertion: { path: ["verifiedClosing", "specDigest"], operator: "eq", expected: params.specDigest } },
+    ],
+  });
+  const [existing] = await withTenant(params.tenantId, db => db.select().from(workObjectiveLoops)
+    .where(and(eq(workObjectiveLoops.tenantId, params.tenantId), eq(workObjectiveLoops.workId, params.workId))).limit(1));
+  if (!existing) {
+    const [originalInput] = await withTenant(params.tenantId, db => db.select().from(workInputs)
+      .where(and(eq(workInputs.tenantId, params.tenantId), eq(workInputs.workId, params.workId),
+        eq(workInputs.id, params.workInputId))).limit(1));
+    if (!originalInput || originalInput.instructionText !== params.instruction
+        || originalInput.createdBy !== params.principalId) throw Error("CLOSING_AUTHENTIC_NATIVE_HANDOFF_REQUIRED");
+    const started = await startWorkObjective(params.instruction, {
+      tenantId: params.tenantId, userId: params.principalId, employeeId: params.principalId, role: "owner",
+    }, {
+      workId: params.workId, workInputId: params.workInputId, instructionId: originalInput.instructionId,
+      channel: "console", successCondition: condition,
+      maxSteps: params.maxSteps, maxActions: params.maxActions, maxQueries: params.maxSteps,
+      deadlineAt: new Date(params.deadlineAt), deferInitialIteration: true,
+    });
+    return { id: started.objectiveLoopId, revision: 1, deadlineAt: params.deadlineAt };
+  }
+  return withTenant(params.tenantId, async db => {
+    await db.execute(sql`SELECT id FROM ${workObjectiveLoops} WHERE tenant_id=${params.tenantId}::uuid AND id=${existing.id}::uuid FOR UPDATE`);
+    const [loop] = await db.select().from(workObjectiveLoops).where(eq(workObjectiveLoops.id, existing.id)).limit(1);
+    const [input] = await db.select().from(workInputs).where(and(eq(workInputs.tenantId, params.tenantId), eq(workInputs.workId, params.workId)))
+      .orderBy(desc(workInputs.createdAt), desc(workInputs.id)).limit(1);
+    const [plan] = await db.select({ workInputId: workPlanRevisions.workInputId }).from(workPlanRevisions)
+      .where(and(eq(workPlanRevisions.tenantId, params.tenantId), eq(workPlanRevisions.workId, params.workId)))
+      .orderBy(desc(workPlanRevisions.revision)).limit(1);
+    if (!loop || loop.createdBy !== params.principalId || loop.state === "cancelled"
+        || input?.id !== params.workInputId || input.instructionText !== params.instruction) throw Error("CLOSING_AUTHENTIC_NATIVE_HANDOFF_REQUIRED");
+    const deadlineAt = new Date(Math.min(loop.deadlineAt.getTime(), Date.parse(params.deadlineAt))).toISOString();
+    if (Date.parse(deadlineAt) <= Date.now()) throw Error("CLOSING_ORIGINAL_EPISODE_DEADLINE_EXPIRED");
+    if (canonicalJson(loop.successCondition) === canonicalJson(condition) && plan?.workInputId === params.workInputId) {
+      if (["blocked", "failed"].includes(loop.state)) throw Error("CLOSING_EXPLICIT_NATIVE_CONTINUATION_REQUIRED");
+      return { id: loop.id, revision: loop.revision, deadlineAt };
+    }
+    await db.update(workObjectiveSteps).set({
+      phase: "finished", executionState: "superseded", iterationOutcome: "blocked",
+      failure: { code: "AUTHENTIC_CLOSING_HANDOFF_OLD_ATTEMPTS_RETAINED" }, claimOwner: null, claimUntil: null, completedAt: new Date(),
+    }).where(and(eq(workObjectiveSteps.tenantId, params.tenantId), eq(workObjectiveSteps.objectiveLoopId, loop.id), sql`${workObjectiveSteps.completedAt} IS NULL`));
+    const [updated] = await db.update(workObjectiveLoops).set({
+      objective: params.instruction, successCondition: condition, state: "continue", revision: loop.revision + 1,
+      deadlineAt: new Date(deadlineAt), successVerification: null, successVerifiedAt: null, completedAt: null,
+      leaseOwner: null, leaseUntil: null, nextRunAt: null, updatedAt: new Date(),
+      reason: "Legally accepted closing handoff; all original counters, grants and prior attempts retained.",
+    }).where(eq(workObjectiveLoops.id, loop.id)).returning();
+    await transitionWorkTx(db, params.tenantId, params.workId, "executing", "closing_objective_continued",
+      { objectiveLoopId: loop.id, revision: updated!.revision, workInputId: params.workInputId },
+      { expectedWorkInputId: params.workInputId });
+    return { id: loop.id, revision: updated!.revision, deadlineAt };
+  });
+}
+
+/** Every independent check and retained read consumes the original native Work
+ * query/step allowance. Stop/expiry never creates a fresh recovery allowance. */
+export class ClosingReadBudgetFenceError extends Error {
+  constructor(public readonly observation: {
+    responsibilityOnly: boolean;
+    predicates: { missingLoop: boolean; queriesExhausted: boolean; stepsExhausted: boolean; deadlineExpired: boolean; stateFenced: boolean };
+    loop: { id: string; revision: number; state: string; queryCount: number; maxQueries: number; stepCount: number; maxSteps: number; deadlineAt: string } | null;
+  }) { super("CLOSING_ORIGINAL_NATIVE_READ_BUDGET_EXHAUSTED_OR_FENCED"); }
+}
+export async function reserveClosingReadBudget(params: {
+  tenantId: string; workId: string; programmeId: string; inputId: string; responsibilityOnly: boolean;
+}) {
+  return withTenant(params.tenantId, async db => {
+    await db.execute(sql`SELECT id FROM ${workObjectiveLoops} WHERE tenant_id=${params.tenantId}::uuid AND work_id=${params.workId}::uuid FOR UPDATE`);
+    const [loop] = await db.select().from(workObjectiveLoops).where(and(eq(workObjectiveLoops.tenantId, params.tenantId), eq(workObjectiveLoops.workId, params.workId))).limit(1);
+    const predicates = { missingLoop: !loop, queriesExhausted: !!loop && loop.queryCount >= loop.maxQueries,
+      stepsExhausted: !!loop && loop.stepCount >= loop.maxSteps,
+      deadlineExpired: !!loop && loop.deadlineAt.getTime() <= Date.now(),
+      stateFenced: !!loop && ["blocked", "failed", "cancelled"].includes(loop.state) };
+    if (!loop || predicates.queriesExhausted || predicates.stepsExhausted
+        || !params.responsibilityOnly && (predicates.deadlineExpired || predicates.stateFenced)) {
+      throw new ClosingReadBudgetFenceError({ responsibilityOnly: params.responsibilityOnly, predicates,
+        loop: loop ? { id: loop.id, revision: loop.revision, state: loop.state,
+          queryCount: loop.queryCount, maxQueries: loop.maxQueries, stepCount: loop.stepCount,
+          maxSteps: loop.maxSteps, deadlineAt: loop.deadlineAt.toISOString() } : null });
+    }
+    const [step] = await db.insert(workObjectiveSteps).values({
+      tenantId: params.tenantId, workId: params.workId, objectiveLoopId: loop.id,
+      stepNumber: loop.stepCount + 1, objectiveRevision: loop.revision,
+      idempotencyKey: `v3-read:${params.programmeId}:${loop.queryCount + 1}`,
+      phase: "observing", decisionKind: "query", decision: {
+        kind: "closing_independent_check", programmeId: params.programmeId,
+        workInputId: params.inputId, responsibilityOnly: params.responsibilityOnly,
+        newMutationAuthorityGranted: false,
+      },
+      executionRole: "controller", executionState: "running",
+      budgetReservationKind: "query", budgetReservedAt: new Date(),
+      decisionReason: "Independent closing observation under the original finite Work budget.",
+    }).returning();
+    await db.update(workObjectiveLoops).set({ stepCount: loop.stepCount + 1, queryCount: loop.queryCount + 1, updatedAt: new Date() })
+      .where(eq(workObjectiveLoops.id, loop.id));
+    return step!.id;
+  });
+}
+
+export async function finishClosingReadBudget(tenantId: string, stepId: string, observation: Record<string, unknown>, failed = false) {
+  await withTenant(tenantId, db => db.update(workObjectiveSteps).set({
+    phase: "finished", executionState: failed ? "failed" : "completed",
+    iterationOutcome: failed ? "blocked" : "continue", observation,
+    completedAt: new Date(),
+  }).where(and(eq(workObjectiveSteps.tenantId, tenantId), eq(workObjectiveSteps.id, stepId), sql`${workObjectiveSteps.completedAt} IS NULL`)));
+}
+
+export async function finishClosingChildBudget(tenantId: string, actionId: string, independentlyVerifiedEvidenceVersionId?: string) {
+  await withTenant(tenantId, async db => {
+    const result = await db.execute(sql`SELECT a.objective_step_id,a.action_type,a.status,e.status effect_status
+      FROM finnor_os.domain_actions a LEFT JOIN finnor_os.business_effects e ON e.tenant_id=a.tenant_id AND e.id=a.business_effect_id
+      WHERE a.tenant_id=${tenantId}::uuid AND a.id=${actionId}::uuid`);
+    const a = result.rows[0] as { objective_step_id: string; action_type: string; status: string; effect_status?: string } | undefined;
+    if (!a?.objective_step_id || a.status !== "completed" || a.effect_status !== "verified"
+        || a.action_type === "execute_closing_operation" && !independentlyVerifiedEvidenceVersionId) return;
+    await db.update(workObjectiveSteps).set({
+      phase: "finished", executionState: "completed", iterationOutcome: "continue",
+      observation: { actionId, independentlyVerifiedEvidenceVersionId: independentlyVerifiedEvidenceVersionId ?? null,
+        originalCountersRetained: true }, completedAt: new Date(),
+    }).where(and(eq(workObjectiveSteps.tenantId, tenantId), eq(workObjectiveSteps.id, a.objective_step_id),
+      eq(workObjectiveSteps.domainActionId, actionId), sql`${workObjectiveSteps.completedAt} IS NULL`));
+  });
+}
+
+/** Reserve an exact V3 child against the existing original Work controller. A
+ * duplicate delivery cannot get a new action/step grant. S5 remains separate. */
+export async function reserveClosingChildBudget(params: {
+  tenantId: string; workId: string; inputId: string; programmeId: string; nodeKey: string;
+  actionType: string; payload: Record<string, unknown>; planRevisionId: string; planNodeId: string;
+}) {
+  return withTenant(params.tenantId, async db => {
+    const [loop] = await db.select().from(workObjectiveLoops).where(and(eq(workObjectiveLoops.tenantId, params.tenantId), eq(workObjectiveLoops.workId, params.workId))).limit(1);
+    if (!loop) throw Error("CLOSING_ORIGINAL_WORK_CONTROLLER_REQUIRED");
+    await db.execute(sql`SELECT id FROM ${workObjectiveLoops} WHERE id=${loop.id}::uuid FOR UPDATE`);
+    const key = `v3:${params.programmeId}:${params.nodeKey}`;
+    const [old] = await db.select().from(workObjectiveSteps).where(and(eq(workObjectiveSteps.objectiveLoopId, loop.id), eq(workObjectiveSteps.idempotencyKey, key))).limit(1);
+    if (old) {
+      const decision = old.decision as Record<string, unknown> | null;
+      if (decision?.actionType !== params.actionType || canonicalJson(decision.payload) !== canonicalJson(params.payload)
+          || old.planRevisionId !== params.planRevisionId || old.planNodeId !== params.planNodeId) {
+        throw Error("CLOSING_ORIGINAL_NATIVE_CHILD_IDEMPOTENCY_CONFLICT");
+      }
+      return { stepId: old.id, alreadyReserved: true };
+    }
+    const [current] = await db.select().from(workObjectiveLoops).where(eq(workObjectiveLoops.id, loop.id)).limit(1);
+    const [input] = await db.select({ id: workInputs.id }).from(workInputs).where(and(eq(workInputs.tenantId, params.tenantId), eq(workInputs.workId, params.workId))).orderBy(desc(workInputs.createdAt), desc(workInputs.id)).limit(1);
+    if (!current || current.deadlineAt.getTime() <= Date.now() || current.state === "cancelled"
+        || current.actionCount >= current.maxActions || current.stepCount >= current.maxSteps || input?.id !== params.inputId) throw Error("CLOSING_ORIGINAL_NATIVE_CHILD_BUDGET_EXHAUSTED_OR_CHANGED");
+    const [step] = await db.insert(workObjectiveSteps).values({
+      tenantId: params.tenantId, objectiveLoopId: loop.id, workId: params.workId,
+      stepNumber: current.stepCount + 1, idempotencyKey: key, phase: "deciding",
+      objectiveRevision: current.revision, decisionKind: "action",
+      decision: { kind: "action", actionType: params.actionType, payload: params.payload, programmeId: params.programmeId, nodeKey: params.nodeKey },
+      planRevisionId: params.planRevisionId, planNodeId: params.planNodeId, executionRole: "node",
+      budgetReservationKind: "action", budgetReservedAt: new Date(), executionState: "scheduled",
+      decisionReason: "Exact child of the original accepted closing programme; no new authority or S5 budget.",
+    }).returning();
+    await db.update(workObjectiveLoops).set({ stepCount: current.stepCount + 1, actionCount: current.actionCount + 1, updatedAt: new Date() }).where(eq(workObjectiveLoops.id, loop.id));
+    return { stepId: step!.id, alreadyReserved: false };
+  });
+}
+
 export async function schedulePreparedHarnessObjectiveTx(db:Db,params:{tenantId:string;workId:string;planRevisionId:string}):Promise<void>{
   const [plan]=await db.select({objectiveLoopId:workPlanRevisions.objectiveLoopId,status:workPlanRevisions.status}).from(workPlanRevisions).where(and(eq(workPlanRevisions.tenantId,params.tenantId),eq(workPlanRevisions.workId,params.workId),eq(workPlanRevisions.id,params.planRevisionId))).limit(1);
   if(!plan?.objectiveLoopId||plan.status!=="active")throw Error("HARNESS_NATIVE_ACTIVE_OBJECTIVE_PLAN_REQUIRED");
@@ -1006,7 +1240,9 @@ async function inspectCanonicalState(tenantId: string, workId: string, loop: typ
   }):undefined;
   const businessState = await executeTenantOperationalQuery(tenantId, businessRequest, {
     workId,
-    ...(harnessRequest ? {userId:ctx.userId,employeeId:ctx.employeeId,workInputId:harnessInput}:{}),
+    userId: ctx.userId,
+    employeeId: ctx.employeeId,
+    ...(harnessRequest ? {workInputId:harnessInput}:{}),
     executionKey: `objective:${loop.id}:revision:${loop.revision}:step:${step.stepNumber}:inspect:business-state`,
   });
   const privateEquityIcBasis = businessRequest.intent === "closing_readiness"
@@ -2706,7 +2942,9 @@ export class ObjectiveLoopRuntime {
         }
         const result = await executeTenantOperationalQuery(params.tenantId, validated.request, {
           workId: params.workId,
-          ...(validated.request.intent === "harness_program_v1" ? {userId:ctx.userId,employeeId:ctx.employeeId,workInputId:active?.workInputId??undefined} : {}),
+          userId: ctx.userId,
+          employeeId: ctx.employeeId,
+          ...(validated.request.intent === "harness_program_v1" ? {workInputId:active?.workInputId??undefined} : {}),
           executionKey: `objective:${loop.id}:revision:${loop.revision}:step:${step.stepNumber}:decision-query`,
         });
         const executionId = result.execution?.id ?? null;
@@ -3115,6 +3353,29 @@ export async function recoverRunnableObjectives(tenantId: string): Promise<numbe
  * original awaiting-approval iteration remains immutable evidence; a new iteration
  * re-inspects the action, receipt, operation, and Company Graph before deciding. */
 export async function resumeObjectiveForAction(tenantId: string, actionId: string): Promise<boolean> {
+  const closing = await withTenant(tenantId, async db => {
+    const schema = await db.execute(sql`SELECT to_regclass('finnor_os.pe_closing_programmes') ready`);
+    if (!schema.rows[0]?.ready) return undefined;
+    const result = await db.execute(sql`SELECT q.id,q.generation,q.status FROM finnor_os.pe_closing_programmes q
+      JOIN finnor_os.domain_actions a ON a.tenant_id=q.tenant_id AND a.work_id=q.work_id
+      WHERE q.tenant_id=${tenantId}::uuid AND a.id=${actionId}::uuid
+        AND (a.authority_context->>'closingSpecDigest'=q.spec_digest OR EXISTS(
+          SELECT 1 FROM finnor_os.pe_closing_node_links l WHERE l.tenant_id=q.tenant_id AND l.programme_id=q.id AND l.domain_action_id=a.id))
+      ORDER BY q.created_at DESC LIMIT 1`);
+    return result.rows[0] as { id: string; generation: number; status: string } | undefined;
+  });
+  if (closing) {
+    await finishClosingChildBudget(tenantId, actionId);
+    await withTenant(tenantId, db => db.insert(jobs).values({
+      tenantId, type: "advance_closing_programme_v1", protocolVersion: 1, retrySafety: "durably_effect_guarded",
+      payload: { tenantId, programmeId: closing.id, generation: closing.generation }, lane: "interactive",
+      idempotencyKey: `v3:${closing.id}:${closing.generation}:action:${actionId}:${Math.floor(Date.now()/1000)}`,
+    }).onConflictDoNothing({ target: jobs.idempotencyKey }));
+    // A published close still needs the original native Objective to consume
+    // its exact current certificate. Let the ordinary action event wake that
+    // controller after its logical publication attempt is durably finished.
+    if (closing.status !== "CLOSED") return true;
+  }
   const actionEvent = await withTenant(tenantId, async (db) => {
     const [action] = await db.select({
       id: domainActions.id,

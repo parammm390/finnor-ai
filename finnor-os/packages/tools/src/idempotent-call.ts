@@ -15,6 +15,8 @@ export type ProviderIdempotencyMode = "provider_key" | "readback" | "inherently_
 export type ProviderRetrySafety = "first_invocation_only" | "provider_idempotent" | "readback_required" | "repeatable" | "prohibited" | "unknown";
 
 export interface ExternalOperationContract {
+  /** Owner-private adapters attenuate canonical operation readers to this actor. */
+  principalId?: string;
   protocolVersion?: number;
   targetKey?: string;
   workflowStepClaimId?: string;
@@ -48,6 +50,7 @@ export type ClaimResult = ({ claimed: true } & ClaimedProviderOperation) | { cla
 
 export interface ProviderInvocationContext {
   tenantId: string;
+  principalId?: string;
   providerOperationAttemptId: string;
   provider: string;
   integrationId?: string;
@@ -60,6 +63,7 @@ export interface ProviderInvocationContext {
 
 export const ACCOUNT_BOUND_PROVIDERS = new Set([
   "ghl", "quickbooks", "stripe", "vapi", "docusign", "gmail", "resend", "meta_ads", "google_ads", "microsoft_graph",
+  "finnor_closing_provider",
 ]);
 
 /** Only a native whole-operation absence reconciliation clears earlier possible
@@ -364,7 +368,7 @@ export async function claimOwnedExternalOperation(
       return { claimed: false, existing: refetched ?? existing } as const;
     }
     return { claimed: false, existing } as const;
-  });
+  }, contract.principalId);
 }
 
 /** Scope-1-compatible facade. DomainAction remains the semantic owner; the generic
@@ -431,13 +435,18 @@ export async function readOwnedExternalOperation(
   tenantId: string,
   owner: ExternalOperationOwner,
   operationKey: string,
+  principalId?: string,
 ): Promise<ExternalOperationRow | null> {
-  const [row] = await withTenant(tenantId, (db) => db.select().from(externalOperations).where(and(
+  return withTenant(tenantId, db => readOwnedExternalOperationTx(db, tenantId, owner, operationKey), principalId);
+}
+/** Compose the canonical reader inside an already authenticated owner transaction. */
+export async function readOwnedExternalOperationTx(db: Db, tenantId: string, owner: ExternalOperationOwner, operationKey: string): Promise<ExternalOperationRow | null> {
+  const [row] = await db.select().from(externalOperations).where(and(
     eq(externalOperations.tenantId, tenantId),
     eq(externalOperations.ownerType, owner.type),
     eq(externalOperations.ownerKey, owner.key),
     eq(externalOperations.operationKey, operationKey),
-  )).limit(1));
+  )).limit(1);
   return row ?? null;
 }
 
@@ -505,12 +514,12 @@ export async function prepareProviderInvocation(
     )).returning({ id: externalOperations.id });
     if (!ownedOperation) throw new Error("Logical provider operation lost its execution fence before invocation preparation");
     return invocation.id;
-  });
+  }, context.principalId);
 }
 
 /** Called immediately before entering the provider adapter. This is intentionally
  * conservative: a crash afterward is a tracked possible effect, never a silent one. */
-export async function markProviderRequestMayHaveLeft(tenantId: string, invocationId: string): Promise<void> {
+export async function markProviderRequestMayHaveLeft(tenantId: string, invocationId: string, principalId?: string): Promise<void> {
   const marked = await withTenant(tenantId, async (db) => {
     // Serialize with logical retry, failure and recovery. The database clock is
     // checked in the marker update after any lock wait or asynchronous preflight;
@@ -549,7 +558,7 @@ export async function markProviderRequestMayHaveLeft(tenantId: string, invocatio
       'Provider invocation lost its native attempt fence or safe-repeat window before request egress',
       false, 'conflict', 'definite_pre_dispatch');
     return row;
-  });
+  }, principalId);
   if (!marked) throw new Error("Provider invocation marker was not persisted");
 }
 
@@ -876,7 +885,7 @@ export async function recordProviderInvocationAcknowledged(
         retrySafety: "locally_idempotent",
       }).onConflictDoNothing({ target: jobs.idempotencyKey });
     }
-  });
+  }, context.principalId);
 }
 
 export async function recordProviderInvocationFailure(
@@ -958,7 +967,7 @@ export async function recordProviderInvocationFailure(
       eq(externalOperations.id, attempt.externalOperationId),
       inArray(externalOperations.executionState, ["claimed", "provider_in_flight", "provider_acknowledged"]),
     ));
-  });
+  }, context.principalId);
 }
 
 export async function recordExternalOperationResult(
@@ -1116,58 +1125,62 @@ export async function reconcileOwnedExternalOperation(
   externalOperationId: string,
   status: "succeeded" | "failed",
   evidence: Record<string, unknown>,
+  principalId?: string,
 ): Promise<ExternalOperationRow> {
+  return withTenant(tenantId, db => reconcileOwnedExternalOperationTx(db, tenantId, externalOperationId, status, evidence), principalId);
+}
+/** Same canonical reconciliation, composed with the caller's owner scope. */
+export async function reconcileOwnedExternalOperationTx(db: Db, tenantId: string, externalOperationId: string,
+  status: "succeeded" | "failed", evidence: Record<string, unknown>): Promise<ExternalOperationRow> {
   const redacted = redactStructured(evidence) as Record<string, unknown>;
-  return withTenant(tenantId, async (db) => {
-    const [row] = await db
-      .update(externalOperations)
-      .set({
-        status,
-        response: {
-          ...redacted,
-          reconciliationOutcome: status === "succeeded" ? "happened_as_intended" : "definitely_did_not_happen",
-        },
-        executionState: "reconciled",
-        verificationStatus: "verified",
-        externalObservedAt: new Date(),
-        verifiedAt: new Date(),
-        version: sql`${externalOperations.version} + 1`,
-        updatedAt: new Date(),
-      })
-      .where(and(
-        eq(externalOperations.tenantId, tenantId),
-        eq(externalOperations.id, externalOperationId),
-        // Exact readback is stronger evidence than transport classification. It can
-        // settle unknown/running work, verify an acknowledged success, or correct a
-        // known rejection whose provider readback proves a different final truth.
-        sql`${externalOperations.executionState} IN (
-          'claimed','provider_in_flight','provider_acknowledged','awaiting_observation',
-          'unknown_outcome','reconciliation_required','known_failed'
-        )`,
-      ))
-      .returning();
-    if (!row) throw new Error("External operation is not awaiting reconciliation");
-    const [latestAttempt] = await db.select({ id: providerOperationAttempts.id })
-      .from(providerOperationAttempts)
-      .where(and(
-        eq(providerOperationAttempts.tenantId, tenantId),
-        eq(providerOperationAttempts.externalOperationId, row.id),
-      ))
-      .orderBy(desc(providerOperationAttempts.ordinal))
-      .limit(1);
-    if (latestAttempt) await db.update(providerOperationAttempts).set({
-      status: "reconciled",
-      finishedAt: new Date(),
-      outcomeDetail: {
+  const [row] = await db
+    .update(externalOperations)
+    .set({
+      status,
+      response: {
         ...redacted,
         reconciliationOutcome: status === "succeeded" ? "happened_as_intended" : "definitely_did_not_happen",
       },
-    }).where(and(
+      executionState: "reconciled",
+      verificationStatus: "verified",
+      externalObservedAt: new Date(),
+      verifiedAt: new Date(),
+      version: sql`${externalOperations.version} + 1`,
+      updatedAt: new Date(),
+    })
+    .where(and(
+      eq(externalOperations.tenantId, tenantId),
+      eq(externalOperations.id, externalOperationId),
+      // Exact readback is stronger evidence than transport classification. It can
+      // settle unknown/running work, verify an acknowledged success, or correct a
+      // known rejection whose provider readback proves a different final truth.
+      sql`${externalOperations.executionState} IN (
+        'claimed','provider_in_flight','provider_acknowledged','awaiting_observation',
+        'unknown_outcome','reconciliation_required','known_failed'
+      )`,
+    ))
+    .returning();
+  if (!row) throw new Error("External operation is not awaiting reconciliation");
+  const [latestAttempt] = await db.select({ id: providerOperationAttempts.id })
+    .from(providerOperationAttempts)
+    .where(and(
       eq(providerOperationAttempts.tenantId, tenantId),
-      eq(providerOperationAttempts.id, latestAttempt.id),
-    ));
-    return row;
-  });
+      eq(providerOperationAttempts.externalOperationId, row.id),
+    ))
+    .orderBy(desc(providerOperationAttempts.ordinal))
+    .limit(1);
+  if (latestAttempt) await db.update(providerOperationAttempts).set({
+    status: "reconciled",
+    finishedAt: new Date(),
+    outcomeDetail: {
+      ...redacted,
+      reconciliationOutcome: status === "succeeded" ? "happened_as_intended" : "definitely_did_not_happen",
+    },
+  }).where(and(
+    eq(providerOperationAttempts.tenantId, tenantId),
+    eq(providerOperationAttempts.id, latestAttempt.id),
+  ));
+  return row;
 }
 
 /** Exact readback proved that provider state differs from the immutable intent.

@@ -123,7 +123,7 @@ export function assertAllocationProblem(p:CanonicalAllocationProblem):void {
   unique(p.policies.map(x=>x.ref.id),'Duplicate policy');unique(p.resources.map(x=>x.resourceId),'Duplicate resource');
   const policies=new Map(p.policies.map(x=>[x.ref.id,x])),resources=new Map(p.resources.map(x=>[x.resourceId,x]));
   for(const r of p.resources){const {ref:rr,revision,priorRef,...input}=r;parseAllocationResource(input);
-    if(rr.owner!=='S5'||rr.version!==S5_VERSION||rr.contentDigest!==epistemicHash({...input,revision,priorRef})||rr.id!==`allocation-resource:${r.resourceId}:${revision}:${rr.contentDigest}`||r.tenantId!==p.tenantId||r.rightsRef!==m.rightsRef||!sameAllocationRef(r.horizon,m.horizon)||r.ownerRef.id!==m.businessOwnerRef.id)throw new AllocationContractError('INVALID_REQUEST','Resource revision, rights, owner or horizon differs');
+    if(rr.owner!=='S5'||rr.version!==S5_VERSION||rr.contentDigest!==epistemicHash({...input,revision,priorRef})||rr.id!==`allocation-resource:${r.resourceId}:${revision}:${rr.contentDigest}`||r.tenantId!==p.tenantId||r.rightsRef!==m.rightsRef||!sameAllocationRef(r.horizon,m.horizon))throw new AllocationContractError('INVALID_REQUEST','Resource revision, rights, owner or horizon differs');
     for(const c of r.covenants)for(const t of c.terms){const named=resources.get(t.resourceId);if(!named||t.coefficientUnit!==`${c.unit}/${named.unit}`)throw new AllocationContractError('INVALID_REQUEST','Covenant references unavailable resource or incompatible coefficient unit');}
   }
   for(const policy of p.policies){assertContingentPolicy(policy);

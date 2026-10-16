@@ -1,0 +1,1468 @@
+{
+  "schema": "finnor.v.public-source-checkpoint.v1",
+  "base": "517003a4396bc8101a90be4b425ee01de9446740",
+  "scope": "CUMULATIVE_V1_V5_SOURCE_ONLY_INCOMPLETE_ENGINEERING",
+  "excludes": [
+    "raw runtime evidence",
+    "databases and private credentials",
+    "unfinished S5/V4 fixture refactor",
+    "historical runtime metadata, allocations and evidence indices",
+    "local failed packaging attempts"
+  ],
+  "files": [
+    {
+      "path": "docs/release/generated/action-manifest.json",
+      "sha256": "068fbf73d49831001ee29c053fde7fa6f36ff21ad39fee3515b684d7b242930f",
+      "bytes": 14608,
+      "source": "integration-source"
+    },
+    {
+      "path": "docs/release/generated/action-manifest.md",
+      "sha256": "14fcb2f274d13ee8cc4c12839b9d4680226ec0bdc49b2995aeb0f75912afa0d7",
+      "bytes": 12145,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/apps/api/app/api/closing/[operation]/route.ts",
+      "sha256": "858b9199801de95dbc3862bc2c3699cfa6249517ea4ed90dc04233f62a216e9b",
+      "bytes": 2068,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
+      "sha256": "9c5dc71e54bdf2dc400e26501785ad0a0065e705c28b2be44645353ee8d9246b",
+      "bytes": 19918,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/apps/api/app/api/live-controls/route.ts",
+      "sha256": "f036172b405f5324dcb524a657a85b2e1459849a4079e7f839e664ce4cc69cb0",
+      "bytes": 7686,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/apps/api/app/api/webhooks/vapi/route.ts",
+      "sha256": "9f06e180cc1fa7893b1c0b91396ac94a3956158ff3dfae4e9ef6a2dd89ecab1c",
+      "bytes": 12193,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/apps/api/next.config.mjs",
+      "sha256": "71d3cc77b21b1e25a5d9de1af962480984b426c029fa18c8159df26ce3d770da",
+      "bytes": 6023,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/apps/supplier-canary/api/index.mjs",
+      "sha256": "6cfbd1796bdbb6b3e6475587028822dff77b5b05f4fadbaa3bb1be2b055caf31",
+      "bytes": 8699,
+      "source": "validated-backend-ci-repair"
+    },
+    {
+      "path": "finnor-os/apps/worker/src/handlers/observe-external-effect.ts",
+      "sha256": "f4f6df08406b5db42551affbe592ce15b41cfa5fa71caebcab988e9328a024ec",
+      "bytes": 9049,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/apps/worker/src/handlers/run-workflow-step.ts",
+      "sha256": "edef491d56dedc885792d897309865ac92c7f4ba387ad2c13f9da4ef4acbaf78",
+      "bytes": 6187,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/apps/worker/src/index.ts",
+      "sha256": "ab431e5dc28ee8459725a3ec8822c7cf876a87a94906d62d3fab8c7d3d5f9962",
+      "bytes": 17237,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/apps/worker/src/queue.ts",
+      "sha256": "44322d725c95d1b0a1dfe0f18d0de6e8cfb27a9966dbd01ada3a282f64bc5986",
+      "bytes": 34790,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/docs/authz-matrix.md",
+      "sha256": "b18755918c66f305c182419eb09975070825daf1b0b8e37a31871359e2f592b7",
+      "bytes": 11201,
+      "source": "validated-ci-repair"
+    },
+    {
+      "path": "finnor-os/docs/release/phase4-relationship-contracts.md",
+      "sha256": "57e09190aa383e6d50d515b3cb8d926c175734d3f1b1c9502d9dec6a83f7662f",
+      "bytes": 24462,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/openapi.json",
+      "sha256": "15c870ee0a7ac89d6bfd8d414d90c55cb0b0e61eab6b4911248255b0e5945e8f",
+      "bytes": 2390454,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/authority/src/bilateral-template.ts",
+      "sha256": "abf8772901f98214ee58d1b7186f8e4c5a36e62361a768f224562b63d52f5860",
+      "bytes": 2339,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/authority/src/index.ts",
+      "sha256": "684cf372d4470db56bec8a74124f02ea93600e341f1cfe5eec7f9306948dda7e",
+      "bytes": 51370,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/authority/src/relationship-policy.ts",
+      "sha256": "48827ae63dbb4b1f7abe9e91518f6bb9b527e65f14b809744928a287897735cb",
+      "bytes": 12347,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/authority/src/standing-contact.ts",
+      "sha256": "c7d64a69fffe06412b754fde12c22696968b40c30bd76f0fa64d60cb3f7e0fea",
+      "bytes": 10552,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/capability-evolution/src/closing-admission.ts",
+      "sha256": "6ef8478b4568a8d95e18607e3507b2d96689fae964c4259a8d03aea0e310b8a7",
+      "bytes": 2936,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/db/compute-contract.ts",
+      "sha256": "dc2aafb37e3412f77b4e1d3c3359c25eff5f1e7e8301f427928cd96a42b8031c",
+      "bytes": 13706,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/db/index.ts",
+      "sha256": "c3f950809b2290a98e87cd3cacfddc6ab71f9c52ef47d40a326765bb7629c00e",
+      "bytes": 136406,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/db/migration-head.ts",
+      "sha256": "ad8d5db05bd3b56807a3f23a4088ed2abb6a605c3043fd2acdbe760846e9a5ee",
+      "bytes": 279,
+      "source": "validated-backend-ci-repair"
+    },
+    {
+      "path": "finnor-os/packages/db/migrations-bundle.ts",
+      "sha256": "d0eea1536917b04b3bf0767662a780f6e0e6a38757d11907305364cf18f71a42",
+      "bytes": 1780297,
+      "source": "validated-backend-ci-repair"
+    },
+    {
+      "path": "finnor-os/packages/db/migrations/0172_v2_primary_diligence.sql",
+      "sha256": "b7cbbb92c26a980d9a2e7c1cf1d11138c0a14ad4c8908515ca7fad03663a70e3",
+      "bytes": 19309,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/db/migrations/0173_v2_primary_privacy.sql",
+      "sha256": "1d97fc21fd2a272cb4c99e3bd505b32c6007b09ec4ebee595c06c1780247586c",
+      "bytes": 6154,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/db/migrations/0173_v3_autonomous_transaction_closure.sql",
+      "sha256": "5811a4f53abc25e6abc6355c167e1b0931c4f8aea78516354db7a398afd779a6",
+      "bytes": 50031,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/db/migrations/0174_v2_primary_profile_custody.sql",
+      "sha256": "1e1aefd45a8b9759b49a5ac7b4eac718b3d95eeaad073647568cc6aac5c4b084",
+      "bytes": 1323,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/db/migrations/0175_v4_autonomous_capital_formation.sql",
+      "sha256": "4fa6dd4f1333a21040123699e7faeca4c047be7f54b4126b41f61e3f68873219",
+      "bytes": 20457,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/db/migrations/0176_v5_live_institutional_control.sql",
+      "sha256": "76c688a413d8f8f2f140974fe08f0c5ad6c6df0d4a663b338b405fb5ba2bcf70",
+      "bytes": 32598,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/db/migrations/0177_v1_bilateral_opportunities.sql",
+      "sha256": "b12da864101af31a3ff4ad0be6ad71ea5f82dd266e6a41cd5c17b03bef2560ba",
+      "bytes": 29060,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/db/migrations/0178_closing_evidence_custody_composition.sql",
+      "sha256": "6e3a1b381574d85298d23d4befb661ebc1e8a37b7a6ace37dde514adc5f1a4e9",
+      "bytes": 4999,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/db/migrations/0179_closing_primary_profile_custody.sql",
+      "sha256": "243e485e0f95f672d3eacd86bd051e756002d4b714cacc6b5546349226eb2e8a",
+      "bytes": 1065,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/db/migrations/0180_investment_case_signed_loi_transition.sql",
+      "sha256": "cea48521082b4ea0cb30804dd3abdc715762f63f5f34e4cff23bebdad83b0fd9",
+      "bytes": 2387,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/db/migrations/0181_native_system_actor_scope.sql",
+      "sha256": "755c7028a83bdeda0c97262ae1f0f58814d82d226517b26f682b4586cb7cca8f",
+      "bytes": 6762,
+      "source": "validated-backend-ci-repair"
+    },
+    {
+      "path": "finnor-os/packages/db/schema.ts",
+      "sha256": "df78c82f5d6e5eacb75b5bb27726a83058981861e439366d691c15c8975c0a44",
+      "bytes": 321000,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/domain-plugins/private-equity/index.ts",
+      "sha256": "e372f6df3fda45aa9bdadc68a92d630e963e44884bc1911f5bd849ce8a62da4a",
+      "bytes": 93049,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/domain-plugins/private-equity/schemas.ts",
+      "sha256": "2eef4c7519dbfed90028c04ccb88499a3713a0f48bcff221c05078f2f00cda68",
+      "bytes": 10520,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/domain-plugins/universal-actions/runtime.ts",
+      "sha256": "c491f63037d44accae5945cfb27aabde098f7f83af679b060c33588a34562591",
+      "bytes": 57119,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/epistemic-runtime/src/allocation-contracts.ts",
+      "sha256": "33f000c7a61feb34dbd59d760b3aa656f468ab5f10fcd95468d8af6a85c1f277",
+      "bytes": 25894,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/epistemic-runtime/src/bilateral-mechanics.ts",
+      "sha256": "e91919ea95cc4c52526fdc48ce38aec0e00c06a9654b09e4978d6eedb82af80e",
+      "bytes": 5898,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/epistemic-runtime/src/closing-checker-service.mts",
+      "sha256": "048bd67903a6f554bf9c01640b4ca7c9ef061a661fb9ea48bb38c34b2e52a141",
+      "bytes": 18386,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/epistemic-runtime/src/closing-checker.ts",
+      "sha256": "e5845c502cfa04eddd106125631e0624d9837eedce847b441559b87939756085",
+      "bytes": 37240,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/governed-execution/src/broker-io.ts",
+      "sha256": "c3a314610bc9f3180852cbc9e86e90112b9b39a84003371e06a9127900e790b1",
+      "bytes": 5946,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/governed-execution/src/canonical.ts",
+      "sha256": "cb24b1d575c888112f77a61abaa66c2e38ede74217bf67627c2c55b6ace73c00",
+      "bytes": 1042,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/governed-execution/src/closing-provider-broker.mts",
+      "sha256": "c61689506e00e786b93aa3e72c66565c640ed6747b1ebed7965a423785c255d9",
+      "bytes": 17818,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/governed-execution/src/closing-provider-client.ts",
+      "sha256": "bbd3b546dcd49a1381ad419129045eb380607d9dd177584605e2f141ce38bf24",
+      "bytes": 1068,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/governed-execution/src/closing-provider.ts",
+      "sha256": "fe4ed849f8d4d8b5ddd11c5e269d402324826c14b3ee5f4a9aadfa1c16a0d008",
+      "bytes": 5947,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/governed-execution/src/primary-records.ts",
+      "sha256": "7ec10d56e8efcfd5cc15b05f183506576314b9465d12567f42e5e2ee332167b7",
+      "bytes": 4790,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/memory/src/evidence.ts",
+      "sha256": "44afaaa454aa1cb02bbaad70790911a5c4702de67a092e201a52e7ab823d123e",
+      "bytes": 26851,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/orchestration/src/authority-runtime.ts",
+      "sha256": "043070d39b903889d82107893cbf308236bbbeb907cc88412f2e8b09082642bb",
+      "bytes": 11934,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/orchestration/src/bilateral-transport.ts",
+      "sha256": "6c5f7bd69e95e7661b9e6d96a06b1f71690ac7f5510d6ac2410e2549f0d98b84",
+      "bytes": 4464,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/orchestration/src/compiler.ts",
+      "sha256": "0b3f2bf3908072575ddc1952edae27b556be73cb3071c1be1680fa3e81e89486",
+      "bytes": 83865,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/orchestration/src/durable-execution.ts",
+      "sha256": "4b419eba7a1b3c626edcf57eae9b86c2043e6ea8cc83c9dc55e88a3bb314aaae",
+      "bytes": 64450,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/orchestration/src/index.ts",
+      "sha256": "8e582995892267fe9ae6d6acc5c6f0db866f66f0334301329cd2e16408efdc2f",
+      "bytes": 106093,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/orchestration/src/live-control-boundary.ts",
+      "sha256": "b46b278fa84e042d94497612bfdc6b1a0f5515b9a2dfbb82591feeae136ed390",
+      "bytes": 974,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/orchestration/src/objective-loop.ts",
+      "sha256": "4d31c4e37a07deb9ef4efb8d447a0d76a32cb6fa6491af47a1e82d3b3df82297",
+      "bytes": 211576,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/orchestration/src/objective-success.ts",
+      "sha256": "4ed25068bc5a1c17c58bb28b9b4a06a493321c8b70bec8956d78e2c2726e8f39",
+      "bytes": 59915,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/orchestration/src/runtime-bridge.ts",
+      "sha256": "b8427b0b5f6688506eb83e00c232ab18e21e29d5bfbd8faab846f4cfa588d55a",
+      "bytes": 13350,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/orchestration/src/standing-contact.ts",
+      "sha256": "bd7261b7498e3ebca454b825d10bc81bbc45a8fcd4b03b6c5c361c35592177ed",
+      "bytes": 4732,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/allocation-store.ts",
+      "sha256": "e52b9c42eaeb36734d88c9c08d863b3e7c702a4ff2e1ff1f69c786b9c9217e2d",
+      "bytes": 72256,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/bilateral-opportunities/api.ts",
+      "sha256": "e82f2502955ec04da26f1c1e5b80d0fecdd25e627f2b758f5fadf76db384469e",
+      "bytes": 17405,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/bilateral-opportunities/checker-service.mts",
+      "sha256": "6cf323257150fbdc3fdad83408e405b3991e1e3e6ed4b82f8756c81afb7da68b",
+      "bytes": 30153,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/bilateral-opportunities/checker-spec.md",
+      "sha256": "247f577f98e8f83ee3588c80d714b36f48069bee84ef89be4be785d6d86bfa7e",
+      "bytes": 2984,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/bilateral-opportunities/costs.ts",
+      "sha256": "5cb5b917eed62086551c689385bdb4487214b494cbcf9a487507a5ebbda0bb03",
+      "bytes": 4794,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/bilateral-opportunities/governance.ts",
+      "sha256": "fb549b236be9cd6f8a16590939e7e05839eea52fd70e8c79de60589b514b63b3",
+      "bytes": 7146,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/bilateral-opportunities/handoff.ts",
+      "sha256": "a0cdd939b086b2ea5a934d86213b56c50896fdcdb1edc398b11a8261f7735cc8",
+      "bytes": 1343,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/bilateral-opportunities/native.ts",
+      "sha256": "f48e4b1b2a4cb6e40950f5ae5910068c80ec819768bd055d54db2246b6f04ad4",
+      "bytes": 5934,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/bilateral-opportunities/observations.ts",
+      "sha256": "25a27909b320bfa3d1f269930f84bbdf2d09eb84bb5344543ec6c669c4eeaa06",
+      "bytes": 9898,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/bilateral-opportunities/store.ts",
+      "sha256": "16a1acb4e15c14e82e105d2690119b0d82cac41cbd1cd30277da92b85de189c5",
+      "bytes": 14651,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/bilateral-opportunities/worker.ts",
+      "sha256": "ccc1350521188c939222ec529689c5644d6a416d0b61bfa8eeccf2cc17f306e7",
+      "bytes": 50365,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/capital-formation/contracts.ts",
+      "sha256": "1e35f9a7e8e9dd7099f366900a807900a6cd7e2bfc07abbf5983ba2bfb230e76",
+      "bytes": 19267,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/capital-formation/independent-checker.mjs",
+      "sha256": "e6fe5cd9401eba69250e3997d1f5e495c0151d1230ddbf9a73e37fe5c95d3393",
+      "bytes": 28621,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/capital-formation/method-files.json",
+      "sha256": "5ba2c2204850d74cf897d6832c39dda43cf07624e503ceac947792a3c484e2f4",
+      "bytes": 1360,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/capital-formation/service.ts",
+      "sha256": "d7fdcad117b0a36883c66c17c5db5fb13e3e63f0351957ade8011b6e5293a482",
+      "bytes": 42464,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/capital-formation/store.ts",
+      "sha256": "50940a25db423105060ec7a5335fa5607bfa4d36a252f3e4346ba0c0ea337ad4",
+      "bytes": 44574,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/capital-formation/worker.ts",
+      "sha256": "9f452e95b8949ceda4763c7f4ab30f3b0112bb70a6084e95b99f5b7ad62dc1e6",
+      "bytes": 27518,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/closing/action.ts",
+      "sha256": "9abd66a5a4bc9bb39f03e74bb9d06026375ce04df945c0e62abfb39e80658932",
+      "bytes": 5957,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/closing/api.ts",
+      "sha256": "751351c3dbf2be142c30afbc77f9ee1362c2767afc5bdfbdadc0bea6fe49123f",
+      "bytes": 16938,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/closing/check-client.ts",
+      "sha256": "3baeefc3f19aa554ebf8e8fdbd9f5ddb8f2535f3ba865a9b3d7abb8a18d0e7f2",
+      "bytes": 4206,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/closing/compiler.ts",
+      "sha256": "fb8a65a6d84e17cdd37f45d24a60836f6400ef68434459774e0d192cbff9d7db",
+      "bytes": 4035,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/closing/contracts.ts",
+      "sha256": "1ea5a6a92e9f7d321d88e07bbb80193c38a9a51d9a62b0a8e4a298b65e084141",
+      "bytes": 4189,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/closing/plan.ts",
+      "sha256": "83de1a04a5562b8110c1d2dd7e9b68c1a973a5a4e379921fa39a04a900292802",
+      "bytes": 12656,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/closing/store.ts",
+      "sha256": "a99f03650ae6a18870347c10b0d97f24fb6d8af9068b71651e632b19bd87f62d",
+      "bytes": 20159,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/closing/worker.ts",
+      "sha256": "8bb047bff064b99755c3ac4890a242e49f289a20d9df205b9fc402f8645c4bbf",
+      "bytes": 28469,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/company-brain-relationships.ts",
+      "sha256": "8e73d23bbc0d960bc39b2e720550c960027e64cae7505b313ba17355c4d4167c",
+      "bytes": 43162,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/company-brain-types.ts",
+      "sha256": "956ae4dc977db65332d618982783ab90cd2fe953fcf1a61398f9cb04d666736a",
+      "bytes": 11318,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/company-brain.ts",
+      "sha256": "abd34ccd98bed7f521e3a2c8213831ab5123eb26fd1c18cd74286f40680a6d82",
+      "bytes": 88563,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/compute-search/admission.ts",
+      "sha256": "0192a10a0f8188523af72fbc2e0dc4017f98c63359d02a0a1a7dfd0bc4c7317d",
+      "bytes": 9611,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/compute-search/owners.ts",
+      "sha256": "bcd0348ac6aeac5889f7fc83f908f6a8937bd9ddd114a599ff63e0324440c469",
+      "bytes": 5998,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/economic-store.ts",
+      "sha256": "f2148dfc2c1ac7a068aa51eee4c525aef84507e07debebbcba5685d9915aca73",
+      "bytes": 14380,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/enterprise-allocation.ts",
+      "sha256": "c59fab188db53158e03d8955574747531d6771ad9aecea5af4365926a1338232",
+      "bytes": 39303,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/enterprise-beliefs.ts",
+      "sha256": "5d3c7199c47feaa311c7f6d503b29d8f6bc9c76a2f4ee4c2397878098a050839",
+      "bytes": 15452,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/enterprise-control.ts",
+      "sha256": "f89540eb3114d05a1c9558a673bf2b03bc59433c66cb9b87eee28477678153a5",
+      "bytes": 43851,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/enterprise-experiments.ts",
+      "sha256": "248d13e144277f57821734c95c3c5b4d2134215f10d65ae8a72fb566fa4cc99b",
+      "bytes": 13893,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/enterprise-obligations.ts",
+      "sha256": "77bb52b3cddc96c751882685b24185eafdd4d97aeb08284e1127a0ddc8fd4a42",
+      "bytes": 35460,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/epistemic.ts",
+      "sha256": "0dbfae1c4e52a55849c465ca058ca936cb7b1f17e642e4f9e302d66e3d49eb90",
+      "bytes": 44820,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/evidence-execution/consumer.ts",
+      "sha256": "10cdd449094afdf4605db4b0f3a4ac81ff14c1c02653abfa3816342114b1f71c",
+      "bytes": 8233,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/evidence-execution/store.ts",
+      "sha256": "e75fa7e3840aea89911e1417caa6d39c77f099208918388f420bbdf559f97204",
+      "bytes": 8185,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/exact-price.ts",
+      "sha256": "e8aae0627bfeb0c37b70a66b91f395a1216b229627b6f025e9ff75adc89f176d",
+      "bytes": 351,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/index.ts",
+      "sha256": "f325ac8e5f5221b167049af92a508ec402d84365a9e1935ca2d521ec6932a569",
+      "bytes": 3525,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/interface-synthesis/bilateral-adapter.ts",
+      "sha256": "2146f8c2ffe7031fe521e2d1cdd6904060f0597877f803dee7e2f60b788d0326",
+      "bytes": 3702,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/interface-synthesis/primary-adapter.ts",
+      "sha256": "3ce444d9deed7a471b72690cb5caf884c228b7edb14e211f358b7d92edf3e80b",
+      "bytes": 1157,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/live-controls/budget.ts",
+      "sha256": "272bee10af1348c7f9ca79a0b0a708aa1f9d24c2eab7fd9d944c615c5a52f980",
+      "bytes": 7812,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/live-controls/contracts.ts",
+      "sha256": "a4fd4a53656a4e1cb02e1ef7b91b9c93d84cab1095462545c99b6d146f1427f5",
+      "bytes": 9067,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/live-controls/fields.ts",
+      "sha256": "196732b361467348ca45aecde4d04a9d569f6d3315046aa135a0e461cf37b231",
+      "bytes": 5215,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/live-controls/native.ts",
+      "sha256": "e0bed7968c289ba6ae6c55b8ab86a9fa79f5f4174270256f0be172412e4de1a7",
+      "bytes": 12965,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/live-controls/projection.ts",
+      "sha256": "57191d71dcf8c6fd6580000158e8ac1454053b3bb3eefabbd6aa30c137660f96",
+      "bytes": 18153,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/live-controls/service.ts",
+      "sha256": "4703eb13f28808414814c26987f81295e83662967e00648c40c4c14161a27102",
+      "bytes": 38669,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/live-controls/store.ts",
+      "sha256": "726afc3431a354e25155f542b15ca93ec51a8a947be029a4e6624b0b712e7360",
+      "bytes": 33239,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/live-controls/worker.ts",
+      "sha256": "f3a7d2252b9072691541b2c6b06766432f1012d2b275f4be773503a37849fff2",
+      "bytes": 11662,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/live-recompilation/contracts.ts",
+      "sha256": "0dc216c4a01a52cdf3f1a225017e2acfb731227ed3fb13eb4fc778c79d5645c4",
+      "bytes": 3121,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/operational-queries.ts",
+      "sha256": "d6124c9dccc1cda4602793490f0e12eb9b3d1676f6c6c8b84aaaf17aac2f647c",
+      "bytes": 39206,
+      "source": "validated-backend-ci-repair"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/opportunity-handoff.ts",
+      "sha256": "b496c1cc24d7d3216b8d6c00606c75f22807daf032ede4a8ff151c2dd49b47cf",
+      "bytes": 15105,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/owner-context.ts",
+      "sha256": "2a6fbafb9ff852ac4e68dd8cb7779d7dcaf6682d0e54d8df7a2bac9f0241250d",
+      "bytes": 3118,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/primary-diligence/api.ts",
+      "sha256": "e643914bb767869e371d39c9caf776bb1634ff670a751df2e2b165582f524d68",
+      "bytes": 18613,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/primary-diligence/checker-spec.md",
+      "sha256": "8731088fc362d8e918967667402e4a80f95c2bd03b6d06ebcf7ca3529ce3e122",
+      "bytes": 13327,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/primary-diligence/checker.mts",
+      "sha256": "a2019875273ac4194771d137bb0ac69de0efbe0de645e05988484fefffc00858",
+      "bytes": 45922,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/primary-diligence/consumer.ts",
+      "sha256": "4112081bf18e26487425998114a6344ac9758b804f41f00244a57cdea622b5cf",
+      "bytes": 8906,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/primary-diligence/governance.ts",
+      "sha256": "69905a4d1fe6a96fa3e3cf994ce4db48f019444c7add7f3871b04238ab20ae91",
+      "bytes": 5518,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/primary-diligence/native.ts",
+      "sha256": "b941c0e657e80d49ac46f0cc168ef7b57db041ad80a4abfb60d80328bd26607a",
+      "bytes": 6706,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/primary-diligence/reconcile.ts",
+      "sha256": "fea34f60ede99d1cd0a1a9e392a1c15e821c247e28d631d2f2929634004ca1d3",
+      "bytes": 20620,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/primary-diligence/store.ts",
+      "sha256": "8070e3506f3a238ac939f2d429b153ab0499e64fe1c1f13d1dd3251e33d472fa",
+      "bytes": 16824,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/primary-diligence/worker.ts",
+      "sha256": "402827670c7d5b8441e43b5f3f9ac9df773f03aa34e279b5295a1074a2ab56c2",
+      "bytes": 38835,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/program-synthesis/store.ts",
+      "sha256": "383647df2d5f61871f7fcba0a9a7a7fe84ad6da18864a0b3ff1ad1e7bc4952a3",
+      "bytes": 12270,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/repository.ts",
+      "sha256": "1d8c18cfca1a762fd5a29084e8df2e1f339ef1ac3b44d501c6676232f7ec831d",
+      "bytes": 67125,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/underwriting-repository.ts",
+      "sha256": "bdd057c86ed8df1155b30584f0c325f1174edb841a7a6215c978d4f33f7d24df",
+      "bytes": 63700,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/world-repository.ts",
+      "sha256": "0f74f56e2f2c106dd9863c222a047fed7578155f0ee13e2f3990764663d7467a",
+      "bytes": 31643,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/world-state.ts",
+      "sha256": "743a1f2598f4fcc281d3ef66ee4f772231a84980753715b2b31b7df131e85c63",
+      "bytes": 76516,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/security/src/auth.ts",
+      "sha256": "2a770168e34c67705f2ff9aca4c552e2818806368c5784f738cace7e78d4d25a",
+      "bytes": 6024,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/security/src/delivery.ts",
+      "sha256": "91909e2d6a40d18169f6d5bfbe379587e11abfa2ec2fd1bc68e0b066c49aed30",
+      "bytes": 2746,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/security/src/index.ts",
+      "sha256": "7f0c043270be0a145c6d4ee281571bd0f0db74d0392e8a806561870c7189655c",
+      "bytes": 239,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/shared-types/src/bilateral-opportunities.ts",
+      "sha256": "79e326ba1f5de2ccf658da84d355f9bf96ed4aed5f414e9ff2a63de251e1db33",
+      "bytes": 18463,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/shared-types/src/business-effects.ts",
+      "sha256": "7bdcc86b6925719a65a7fd7acf48a5ecce24bc07ebbde649dc95a2e130941d8a",
+      "bytes": 3395,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/shared-types/src/capital-formation.ts",
+      "sha256": "b42e2a5ca1c98782bab61a08565433facb284f667307445f8cbbc9a293fd86fa",
+      "bytes": 3804,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/shared-types/src/closing.ts",
+      "sha256": "cf4a7bea415f295c855ff65b7b0cf8f9d94559981abcab4d1ce6e30f31fe3aff",
+      "bytes": 13111,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/shared-types/src/durable-obligations.ts",
+      "sha256": "51b43f6f41ad19372e1d159d3c2fc9c7646217efff895ee6b1dab02db93b400c",
+      "bytes": 3544,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/shared-types/src/index.ts",
+      "sha256": "1610e390e8b3c8dfa9aea3acb4a2516975a4daaedf5f68ddf5ac370ba0b68316",
+      "bytes": 16748,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/shared-types/src/operational-queries.ts",
+      "sha256": "44049858dae8cd9059fa573f2e563cc19cf31c402a9da2f123e27c66adeea820",
+      "bytes": 28894,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/shared-types/src/primary-diligence.ts",
+      "sha256": "9f9c9ced9b1a59c763a9a0db97ad5f0aea47fc7613eb9232e0323fe9fa4c3310",
+      "bytes": 23396,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/tools/src/builtin-tools.ts",
+      "sha256": "e05cb7b0d030d2aa885db789c2a750c3749d9eb4a0c9350bd176b798ff69f369",
+      "bytes": 8165,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/tools/src/capital-provider.ts",
+      "sha256": "a5efa04405b7248ee2208634a675dc719b91b7d38ce40089fddd7b93c10e3540",
+      "bytes": 11209,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/tools/src/idempotent-call.ts",
+      "sha256": "35302dd71eeeef2690633c790f1081881b8b14d205e13af43eee0ae85d1a2f4f",
+      "bytes": 62154,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/tools/src/registry.ts",
+      "sha256": "234edf523ed100d259ebe7b82bd827097a4549a8678b684028b027c1038c6b2a",
+      "bytes": 20841,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/packages/underwriting/src/types.ts",
+      "sha256": "6b7c1843104697bbcc82e6cea1a83b6e8c4888ef7ae317020479b2a9d7dd163a",
+      "bytes": 11528,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/scripts/bundle-migrations.ts",
+      "sha256": "3d2b801f4ea7314343af651b3e061d590dc08afca75f28d068dbe0f69914f1c7",
+      "bytes": 2107,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/scripts/generate-openapi.ts",
+      "sha256": "015743d5ddf9f19cff399dc2a02a0a267d49d0df1b90d019324a56bd37ca8cfe",
+      "bytes": 66921,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/scripts/release/action-hardening-spec.ts",
+      "sha256": "8576c158cfa10e3a0ec9a84213bf9df9c32bb651e0e49b36710ca3b8c888a768",
+      "bytes": 10163,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/scripts/release/run-pe-p5-actions-ic-certification.ts",
+      "sha256": "1a83979d18991178e2c201fce05ea18cb74a3e7cbbb7342ff03d5a3e25ed0362",
+      "bytes": 40131,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/scripts/release/verify-pe-domain-boundary.ts",
+      "sha256": "e73c054c52f549efbe79d577201607c5ec67b2598ab28e08e607bf3231c08b82",
+      "bytes": 19857,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/scripts/s5/owner-fixture.mts",
+      "sha256": "dbcab8be53c81b831734eebf4b0a682b819275885c7a817742ad2fdbfc94325e",
+      "bytes": 16366,
+      "source": "unchanged-pre-refactor-head"
+    },
+    {
+      "path": "finnor-os/scripts/v-closure/compatibility-fingerprint.mts",
+      "sha256": "5e9ced48dbd792dcc4eef3b8ba3870fd422883a40d63a23fbad5a2ad8fcf73fe",
+      "bytes": 1994,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/scripts/v-closure/probe-closing-permissions.mts",
+      "sha256": "f2f3f373e722bc447b767ae4fee276371a0f8fff4b1bc0f29358be9afb7162af",
+      "bytes": 8998,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/scripts/v-closure/run-io-e2e.mts",
+      "sha256": "b32ba12fd6ba90b0aa1027b23f4c13eb03930b53001103965b508ead31b820fd",
+      "bytes": 7842,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/scripts/v-closure/run-migration-e2e.mts",
+      "sha256": "9f4ff8e9d949b46b9528f34ce443950a7f957c929f350363fdf0e396436469d8",
+      "bytes": 10310,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/scripts/v-closure/run-populated-compatibility.mts",
+      "sha256": "a95418ea6188ad015c91473cff82318e6a6c6557d7c609d7593b44443d9ba5b6",
+      "bytes": 26232,
+      "source": "validated-ci-repair"
+    },
+    {
+      "path": "finnor-os/scripts/v-closure/run-v1-e2e.mts",
+      "sha256": "966c00db6d4345a898f0b7d0de408fa9889220bdfb249c3c7fe74bcafd2a128f",
+      "bytes": 8675,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/scripts/v-closure/tsconfig.json",
+      "sha256": "29c14822125f7a333acbe9829f812d030caa4c64a633bcaae8cc14d915ca123e",
+      "bytes": 396,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/scripts/v1/controlled-source.mts",
+      "sha256": "eed280557a47f6790f894a6c72c5996f97c2bf6c3822f1c85d76a528d5febd08",
+      "bytes": 21986,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/scripts/v1/physical-worker.mts",
+      "sha256": "521d67c2003cc0cc234ce785271bb774f263a7992224ab8a91bba46f55584334",
+      "bytes": 2967,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/scripts/v1/run-local.mts",
+      "sha256": "f0194913c7d74c6154547e0fac890a6b6ab74bc3c9623135faacfb607fd683ac",
+      "bytes": 69939,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/scripts/v1/signed-loi-handoff-e2e.mts",
+      "sha256": "1f28da0bcd0cd70dc0425509f9d6269b73c1d39d1c665a2239f19c104fc63ae9",
+      "bytes": 11565,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/scripts/v1/sql-diagnostics.mts",
+      "sha256": "1e1d7c32b7f04322f6dfe851d44b1830460f3f69b9a0255627098b8104dad13c",
+      "bytes": 947,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/scripts/v2/browser-http-fixture.mts",
+      "sha256": "2591d2b49a44e1692b449804d024b1392dde13e052a447fec2dbb94ddb69a29c",
+      "bytes": 7932,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/scripts/v2/controlled-source.mts",
+      "sha256": "5d2affe4e9766f0db8c93d8e28cbfbdd6b5168b3372067c7de36899384747f2f",
+      "bytes": 8157,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/scripts/v2/deadline-probe.mts",
+      "sha256": "189e8090f2c6bacff72aa3ef9b1ee05979d73a74f837e0b36fd585b496da0a6f",
+      "bytes": 3718,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/scripts/v2/local-managed-secrets.mts",
+      "sha256": "276f6da6777a804490fdf9ff1e5f440687b682848d1500ae46d374370bccec30",
+      "bytes": 2071,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/scripts/v2/mounted-controller.mts",
+      "sha256": "f9d42367b628eb65b5f064a70b0f3338b5783f9ed023602df3f3c81b611f529b",
+      "bytes": 14005,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/scripts/v2/packaged-runtime.mts",
+      "sha256": "7d9478acf038c9f33fd0c77df40b976e6dbc347238383ab7c1e724290c2bbdae",
+      "bytes": 5797,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/scripts/v2/physical-worker.mts",
+      "sha256": "5b5377f5a92a5ea571ec682e452e8a6692c3d8ab8c50893feae8bed8ea6a8d73",
+      "bytes": 838,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/scripts/v2/platform.mts",
+      "sha256": "c5e127ab24bccebd656284454a1155364331777e0dc680b8ce72df4b1444d743",
+      "bytes": 2480,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/scripts/v2/preflight.mts",
+      "sha256": "f838f8ee8df00c932675918747111facdf18490668d7ee550653eedf53440c8c",
+      "bytes": 2363,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/scripts/v2/run-checks.mts",
+      "sha256": "1d33342707fde835f28511bc3828dfd455afd631e7f5cceb81daf6abfc71d336",
+      "bytes": 5600,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/scripts/v2/run-local.mts",
+      "sha256": "ac1a04b2eaf3a03e4cfe67ca9dea7550c674055847fb42b06dfbc767e159e159",
+      "bytes": 77407,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/scripts/v2/runtime-artifact.mts",
+      "sha256": "df40c9ffb275a06010d5384c374c4cfe3239f8a5ac1ec836c45bacd6198aff95",
+      "bytes": 5566,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/scripts/v2/tsconfig.json",
+      "sha256": "d666be207cc96c89a0330629f235d7c852aed6210a5260529f54e2db9c5b57cc",
+      "bytes": 416,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/scripts/v2/verification-budget.mts",
+      "sha256": "fbb36bfbe41d4b49830e0e29b31c7013c1970f32240da73da7e90ba0b1a5fae4",
+      "bytes": 1074,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/scripts/v3/checker-probes.mts",
+      "sha256": "69492d38a9e10a40d5d7b067127a567c4feb2f658100519b848a4befdf169619",
+      "bytes": 12437,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/scripts/v3/provider-authority.mts",
+      "sha256": "5fd38f5faa2f2de7b2db72098d16097cc4563f65d1e205c7a991c53f8cc042d9",
+      "bytes": 13881,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/scripts/v3/run-checks.mts",
+      "sha256": "eb6a2b4aa12d39b597b353b18ddbc8c52edae1e11aaf51eb0392489af28908c1",
+      "bytes": 3263,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/scripts/v3/run-closing-e2e.mts",
+      "sha256": "8d6b96f91e9b0be780f50eaa56656eb906316f803fe9547a3ce3d5c90e8c6700",
+      "bytes": 74482,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/scripts/v3/run-migration-e2e.mts",
+      "sha256": "f41f368daa4e727f44cb07920aba7f6047dd039cccc6227137fbb718d0cda938",
+      "bytes": 9415,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/scripts/v3/tsconfig.json",
+      "sha256": "e27eaebc5d686f9a31761f66dcf153e412191750209f870332476a1570e6742d",
+      "bytes": 168,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/scripts/v4/boundary-proof.mts",
+      "sha256": "d2a0d8e9c127f72e193444b11dab9eb4dde4646440b61aabc6f8d3a132c8ac1d",
+      "bytes": 47654,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/scripts/v4/browser-proof.mts",
+      "sha256": "2c166a9d0d3ff270220157fd0298bc78b70c003f2898f03c086d72cb5f69520d",
+      "bytes": 9242,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/scripts/v4/fixture-actor.mjs",
+      "sha256": "28e9e2704edeadcc8941e37ea92453e8353921947237ccb75763a560af71acde",
+      "bytes": 12075,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/scripts/v4/reference.py",
+      "sha256": "6d8658bee4d9a69f37e1c0dbf58e60fb73a2c5205c7d02d74c5adc84bf9dadf4",
+      "bytes": 6776,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/scripts/v4/run-local.mts",
+      "sha256": "665493f9d23ce8f3d3a4dfee8c9398eae9848ddd2f6ba9b5c7d817a35412c3e6",
+      "bytes": 61087,
+      "source": "validated-ci-repair"
+    },
+    {
+      "path": "finnor-os/scripts/v4/tsconfig.json",
+      "sha256": "a0ce76f84595d2a114c0bb3be9bfd2d65eba099cbd7f927227c1903c1b992d6e",
+      "bytes": 302,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/scripts/v4/worker-process.mts",
+      "sha256": "ba1a55c962e481fe96922f7a56de0ab071971de98124ba5a1e4d5ec75fcae4e7",
+      "bytes": 1287,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/scripts/v5/browser-supervisor.mts",
+      "sha256": "a420c2274d9c5004ff0f03fefc57fa2dc298aed5b94de514bef8e2071e21637b",
+      "bytes": 15294,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/scripts/v5/mounted-campaign.mts",
+      "sha256": "c8ff213cc59d5a9c51defa1575dda89c2b8c7af8bd160dda83924995f6f50738",
+      "bytes": 6006,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/scripts/v5/owned-http.mts",
+      "sha256": "abae26f25b9533fc115c188640dde4abf3bd01f1bc12c97f1a67037200b4e70d",
+      "bytes": 8374,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/scripts/v5/owner-campaign.mts",
+      "sha256": "bca1a899c0dc5749d0af8da8ffc1f5a580e772d2b0d9ac1d503fa1cbb7c43913",
+      "bytes": 75916,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/scripts/v5/run-local.mts",
+      "sha256": "41a3dc1e77503489b0b7942f100e13f1102a30e79b4d48d0636f2a10e7eb0e9b",
+      "bytes": 10223,
+      "source": "validated-ci-repair"
+    },
+    {
+      "path": "finnor-os/tests/historical-pe-database.ts",
+      "sha256": "33b56a064c25de73907d611a558be98f49cc105c1da11821483c6296a7fca2f5",
+      "bytes": 1383,
+      "source": "validated-backend-ci-repair"
+    },
+    {
+      "path": "finnor-os/tests/integration/computer-execution-fabric.test.ts",
+      "sha256": "95cc14797992a713b3843ebd04f70b98a7cf01db9a6763f407a5c9d4731ef887",
+      "bytes": 51813,
+      "source": "validated-backend-ci-repair"
+    },
+    {
+      "path": "finnor-os/tests/integration/microsoft365-sync-worker.test.ts",
+      "sha256": "0c5ad1d736b445a4791b7bd1848095e685528ce986f9756db0957a0990d5b03d",
+      "bytes": 23392,
+      "source": "validated-backend-ci-repair"
+    },
+    {
+      "path": "finnor-os/tests/integration/private-equity-p5-upgrade.test.ts",
+      "sha256": "51d3d92a5f6713635e2797e59e702d5b0e504d2bf460eb9dddd01998bee4e6f8",
+      "bytes": 16875,
+      "source": "validated-backend-ci-repair"
+    },
+    {
+      "path": "finnor-os/tests/integration/private-equity-phase2.test.ts",
+      "sha256": "7d22308b26c0fe09c88f5c585fd5653f4fac2c5bcece3cfc61d2f424593ad23e",
+      "bytes": 50581,
+      "source": "validated-backend-ci-repair"
+    },
+    {
+      "path": "finnor-os/tests/integration/private-equity-phase4.test.ts",
+      "sha256": "5287b7d3bf4b571e9270637a4504a5dd973359d7e5e171c73d350e88e13ea1df",
+      "bytes": 51590,
+      "source": "validated-backend-ci-repair"
+    },
+    {
+      "path": "finnor-os/tests/integration/private-equity-scope4-digital-twin.test.ts",
+      "sha256": "d71eb76b5cd451ec7a974e168e4a8d8c7d2957381b7ebc0feff380d636ce11a3",
+      "bytes": 25316,
+      "source": "validated-backend-ci-repair"
+    },
+    {
+      "path": "finnor-os/tests/integration/production-manifest-readonly.test.ts",
+      "sha256": "2cb5bfc26005f4f64690639e3a1d1f062ac7ea7cba237a01f2c59eb3fb1da4fb",
+      "bytes": 2144,
+      "source": "validated-backend-ci-repair"
+    },
+    {
+      "path": "finnor-os/tests/integration/production-query-surface.test.ts",
+      "sha256": "e7e36f205b9fa7f881900d8493e2cf7dfa914bceed7baeb4c8a336e91ae1702e",
+      "bytes": 4740,
+      "source": "validated-backend-ci-repair"
+    },
+    {
+      "path": "finnor-os/tests/integration/single-action-runtime-bridge.test.ts",
+      "sha256": "a23ac0e71869f18a2ec081de756a1245e4e1a52eb961f17f540f8b2735d5d1eb",
+      "bytes": 43116,
+      "source": "validated-backend-ci-repair"
+    },
+    {
+      "path": "finnor-os/tests/reviewed-effect.ts",
+      "sha256": "4b0f6e30d5472489a05d414933ab236c8f86853211e846372e8c1d9a51678b23",
+      "bytes": 696,
+      "source": "validated-backend-ci-repair"
+    },
+    {
+      "path": "finnor-os/tsconfig.json",
+      "sha256": "585fc6c66ccd7701c40ac683c6a353693e906fc8e71d8a2cac8ae9f23bf49031",
+      "bytes": 480,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/tsconfig.v1.json",
+      "sha256": "21d46215d7df70a1caeb114272df05ded81fb2ed1350be37bd69b607f57c5ab0",
+      "bytes": 319,
+      "source": "integration-source"
+    },
+    {
+      "path": "finnor-os/tsconfig.v5.json",
+      "sha256": "15d592ab9e9fcb25fa04fdcd818220c66d5f9fc167d4e6c023b784fd2fb65d19",
+      "bytes": 140,
+      "source": "integration-source"
+    },
+    {
+      "path": "infra/deployment/production.contract.json",
+      "sha256": "ee1e773a309c752c347cef15bb7c2158eaa0c5de9e408c1c010cf3bca8b91b6a",
+      "bytes": 7263,
+      "source": "validated-backend-ci-repair"
+    },
+    {
+      "path": "next.config.mjs",
+      "sha256": "a7cac529be72c16c0e7058bc130238cc837504a830365b28da7497790ac24632",
+      "bytes": 5834,
+      "source": "integration-source"
+    },
+    {
+      "path": "scope-v/v1-v5-cumulative-closure/CI_REPAIR_PLAN.md",
+      "sha256": "04e411b0233ddad299adfa424c89d0582c688cd0f85fedc3ab4f0b5e5b6a0017",
+      "bytes": 1271,
+      "source": "validated-backend-ci-repair"
+    },
+    {
+      "path": "scope-v/v1-v5-cumulative-closure/CI_REPAIR_VALIDATION-004.json",
+      "sha256": "014668101713ba8e301cca58e7a0fabbacb278ebd912a159cbae1729a9a568c4",
+      "bytes": 1665,
+      "source": "validated-backend-ci-repair"
+    },
+    {
+      "path": "scope-v/v1-v5-cumulative-closure/DELIVERY_VALIDATION-002.json",
+      "sha256": "7a1e1cc86abbd16bae34497b8c4bae6024953ad27aca6b43303a994bdb17b6ab",
+      "bytes": 827,
+      "source": "delivery-tree-compiler-check"
+    },
+    {
+      "path": "scope-v/v1-v5-cumulative-closure/DELIVERY_VALIDATION-003.json",
+      "sha256": "0a660d6bf7edeb60efd33131c7b546788558ff8c1dc9c32dcd4a05ea297a0d71",
+      "bytes": 267,
+      "source": "validated-ci-repair"
+    },
+    {
+      "path": "scope-v/v1-v5-cumulative-closure/PULL_REQUEST.md",
+      "sha256": "fc079b8c9ce6f1a89c0465d82e4d951d8a1a307647753957fe9889c280169f4b",
+      "bytes": 7795,
+      "source": "validated-backend-ci-repair"
+    },
+    {
+      "path": "scripts/centropy/generate-capability-manifest.mjs",
+      "sha256": "daf89b5ddd26c87cb8b2796910a088a785fc271070826dd54b6240e34d69a9ef",
+      "bytes": 19432,
+      "source": "integration-source"
+    },
+    {
+      "path": "scripts/centropy/generate-human-forms.mjs",
+      "sha256": "fc3224a29a97fd6e9583016d13683dfff1a1ccf8ce107d7bde6b45636ebb8c9a",
+      "bytes": 8812,
+      "source": "integration-source"
+    },
+    {
+      "path": "scripts/v5/study.mjs",
+      "sha256": "c4661a4e07bd6e7c337accc2bf188e621624907427ee45ed2e5a1fa62f89902a",
+      "bytes": 25197,
+      "source": "integration-source"
+    },
+    {
+      "path": "src/components/centropy/canvas/BilateralOpportunityPanel.tsx",
+      "sha256": "71e7aea7fc6c93a26812833c3ddfd9ad17ffa2d4b1fc44b11bd9ea2988e6bafd",
+      "bytes": 17582,
+      "source": "integration-source"
+    },
+    {
+      "path": "src/components/centropy/canvas/CanvasDocument.tsx",
+      "sha256": "bd2888b300f435028ba5d4e61397fa51c003edeca3f2dca097e4fe408a0a3ee5",
+      "bytes": 33307,
+      "source": "integration-source"
+    },
+    {
+      "path": "src/components/centropy/canvas/CapitalFormationPanel.tsx",
+      "sha256": "ff1fa193a9162ddd34aa755614829b6282cf59f6e39987c67b1ff137695f8f88",
+      "bytes": 13194,
+      "source": "integration-source"
+    },
+    {
+      "path": "src/components/centropy/canvas/PrimaryDiligencePanel.tsx",
+      "sha256": "9de72a469eda3dbdd08a11f563e1580ad9540f9618b80d214c418391b052e24f",
+      "bytes": 15147,
+      "source": "integration-source"
+    },
+    {
+      "path": "src/components/centropy/canvas/canvas-compose.ts",
+      "sha256": "e3d45530bf2c6445d38ce4cab4074e78a4b53c4297adfab37c4686b54ab51917",
+      "bytes": 22428,
+      "source": "integration-source"
+    },
+    {
+      "path": "src/components/centropy/canvas/canvas-contract.ts",
+      "sha256": "4bbfeda51850777bdfab6994959f9ce5e07bb57de16e8651caeaacd2ce26c771",
+      "bytes": 8601,
+      "source": "integration-source"
+    },
+    {
+      "path": "src/components/centropy/canvas/capital-formation-view.ts",
+      "sha256": "7aac45e915943900af7e48b3d2fa86b35e6bbd88f037175f5a4790b46dcddb95",
+      "bytes": 4162,
+      "source": "integration-source"
+    },
+    {
+      "path": "src/components/centropy/closing/ClosingProgrammePanel.tsx",
+      "sha256": "39c4661db007f5502a921368dbdadb22a4b1782912ff86878470e914320fb924",
+      "bytes": 10175,
+      "source": "integration-source"
+    },
+    {
+      "path": "src/components/centropy/controls/LiveInstitutionalControl.module.css",
+      "sha256": "5d2d32dcaf95c2e7278bc60b048574ced1c525adeb87ab451526f72d9195e55d",
+      "bytes": 2152,
+      "source": "integration-source"
+    },
+    {
+      "path": "src/components/centropy/controls/LiveInstitutionalControl.tsx",
+      "sha256": "93e9ea5cfadc8fd29e87be7a975de07310f8384ccbd587cb9a17f46ee1e44ca2",
+      "bytes": 22360,
+      "source": "integration-source"
+    },
+    {
+      "path": "src/components/centropy/lib/api.ts",
+      "sha256": "a7f2f03f9f0574918de29eeb15cef7592d3f0c73d2e32766c6496c4740139c6f",
+      "bytes": 10052,
+      "source": "integration-source"
+    },
+    {
+      "path": "src/components/centropy/lib/business-invalidation.ts",
+      "sha256": "f850be861dc05594ef58cf1e28ae9afe216757fc35a66bb27c69128668a2ba3a",
+      "bytes": 2112,
+      "source": "integration-source"
+    },
+    {
+      "path": "src/components/centropy/lib/centropy-auth.tsx",
+      "sha256": "74291907c2c53101564140eddb6e1a57a58dcba85b7e9c8878b7020ea6640f99",
+      "bytes": 7379,
+      "source": "integration-source"
+    },
+    {
+      "path": "src/components/centropy/pe/contracts.ts",
+      "sha256": "4308f3153a1556b89dcafbdf57bf390135389a34a698bd6c78c2a5a842eccfee",
+      "bytes": 16874,
+      "source": "integration-source"
+    },
+    {
+      "path": "src/components/centropy/product/useProductRequest.ts",
+      "sha256": "f5331f1d2e5e5dc49fd60d029fba330714d994dc0779e04b633dc4027371a055",
+      "bytes": 3381,
+      "source": "integration-source"
+    },
+    {
+      "path": "src/components/centropy/shell/CentropyWorkspace.tsx",
+      "sha256": "649adbccab1de7e3a02650ad21bad6d00eaad4a22aa23a7b0f82ead17e27ce42",
+      "bytes": 40332,
+      "source": "integration-source"
+    },
+    {
+      "path": "src/components/centropy/world/WorldExplorer.tsx",
+      "sha256": "be66e0b0a7ecd1558ea9141c2c28648ffe3e3dd2ab4aa9df6a831ab774793f4c",
+      "bytes": 22491,
+      "source": "integration-source"
+    },
+    {
+      "path": "src/components/centropy/world/WorldWorkRecord.tsx",
+      "sha256": "827579b7f40d0a8152ddf1e646f3737d6f7361a6f4e1391a3f641a0414d0be6a",
+      "bytes": 8882,
+      "source": "integration-source"
+    },
+    {
+      "path": "src/components/centropy/world/world-context.ts",
+      "sha256": "91aee7ea4c5ea0fa9648e62a882030355c1d51e25cea81fa2c74d2d9c3fd2706",
+      "bytes": 1811,
+      "source": "integration-source"
+    },
+    {
+      "path": "src/lib/centropy/capability-manifest.generated.json",
+      "sha256": "d55b60852a7dd270cf9f0a0cb52dce25b1e56b1a496eca067be3a8c032ac66b3",
+      "bytes": 369916,
+      "source": "validated-ci-repair"
+    },
+    {
+      "path": "src/lib/centropy/human-forms.generated.json",
+      "sha256": "78e6da8a2346c1a96712b634d0307535e8adbef6959cc5a72cc2302f8b445ec6",
+      "bytes": 294793,
+      "source": "validated-ci-repair"
+    },
+    {
+      "path": "src/lib/centropy/openapi-types.ts",
+      "sha256": "c84f8459116820cd17521260cdb8e07ea403e60f768a4af2379256b74488b002",
+      "bytes": 1029491,
+      "source": "integration-source"
+    },
+    {
+      "path": "src/lib/jarvis/openapi-types.ts",
+      "sha256": "c84f8459116820cd17521260cdb8e07ea403e60f768a4af2379256b74488b002",
+      "bytes": 1029491,
+      "source": "integration-source"
+    }
+  ],
+  "initialPublishedCommitRetainedLocally": "954c897a3b1ec5a0e0c35d3fbb89ced73aaac356",
+  "ciStatus": "REPAIR_91_LOCAL_TESTS_PASS_FULL_GITHUB_RERUN_REQUIRED"
+}

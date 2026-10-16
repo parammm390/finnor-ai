@@ -28,6 +28,34 @@ export async function projectEnterpriseExactControlObservation(ctx:PeMutationCon
  const body={schema:'finnor.s2.exact-temporal-realization.v1',tenantId:ctx.auth.tenantId,principalId:principal(ctx),modelDigest:controlBytesDigest(input.modelBytes),instrumentRef:instrument.sourceRef,instrumentId:instrument.id,availablePeriod:input.availablePeriod,knowledgeAt:claim.knowledgeAt,token:matches[0]!.token,quantity:q.wire(),source:{root:m.root,seriesRef:series.ownerRef,claimRef:claim.ownerRef,dependencyDigest:view.dependencyDigest,rightsRef:view.rights.ref},qualification:'PERMITTED_RECORDED_EXACT_DECIMAL_SUPPLIED_COARSENING_UNVERIFIED_ERROR',protectedReceipt:null},digest=epistemicHash(body),ref={owner:'S2',id:'exact-temporal-realization:'+digest,version:'s2-exact-temporal-v1',contentDigest:digest};
  await enqueueNativeReferences(ctx,[{...ref,content:body}],[view.rights.ref]);return immutableControl({...body,ref});
 }
+/** S2 factual measurement adapter. This validates an exact primary acquisition,
+ * not a causal intervention or an experiment's protected qualification. */
+export function assessPrimaryMeasurement(ctx:PeMutationContext,input:{
+ assertion:import('@finnor/shared-types').DiligenceAssertion;
+ source:import('@finnor/shared-types').PrimarySourceProfile;
+ consent:import('@finnor/shared-types').PrimaryConsent;
+ authority:import('@finnor/shared-types').PrimaryAuthorityProfile;
+ semantics:import('@finnor/shared-types').PrimaryReferenceSemantics;
+ at:string;
+}):{eligible:boolean;reasons:string[];sourceClass:import('@finnor/shared-types').DiligenceSourceClass;protectedAdmission:null}{
+ const {assertion:a,source:s,consent:c,authority:p,semantics:m}=input,reasons:string[]=[],now=Date.parse(input.at);
+ const subset=(x:string[],y:string[])=>x.every(k=>y.includes(k));
+ if([s,c,p,m].some(v=>v.environment!=='DEVELOPMENT'||now<Date.parse(v.validFrom)||now>=Date.parse(v.expiresAt)))reasons.push('PRIMARY_GOVERNANCE_NOT_VALID');
+ if([s.legalEntityId,c.legalEntityId,m.legalEntityId].some(id=>id!==a.semantics.legalEntityId)||!p.legalEntityIds.includes(a.semantics.legalEntityId))reasons.push('PRIMARY_LEGAL_ENTITY_MISMATCH');
+ if(c.authorizedActorId!==principal(ctx)||!c.sourceProfileIds.includes(s.profileId)||c.rightsRef.contentDigest!==s.rightsRef.contentDigest||!c.purposes.includes(s.purpose)||!s.products.some(v=>c.products.includes(v)))reasons.push('PRIMARY_CONSENT_ACTOR_SOURCE_PURPOSE_MISMATCH');
+ if(!subset(a.semantics.accountOrParticipantIds,s.accountOrParticipantIds)||!subset(a.semantics.accountOrParticipantIds,c.accountOrParticipantIds)||Date.parse(a.semantics.periodStart)<Date.parse(c.periodStart)||Date.parse(a.semantics.periodEnd)>Date.parse(c.periodEnd))reasons.push('PRIMARY_CONSENT_SCOPE_TOO_NARROW');
+ if(!a.acceptableSourceClasses.includes(s.sourceClass)||s.sourceClass==='DERIVED_COMPUTATION'||({EXTERNAL_AUTHORITATIVE_RECORD:'EXTERNAL_ISSUER',DIRECT_EXTERNAL_CONFIRMATION:'EXTERNAL_RESPONDENT',TARGET_CONTROLLED_RECORD:'TARGET',DERIVED_COMPUTATION:'COMPUTATION'}[s.sourceClass])!==s.sourceControl)reasons.push('PRIMARY_SOURCE_CLASS_OR_CONTROL_UNSUPPORTED');
+ if(!s.authoritativeFields.includes(a.field)||!subset(a.observationPredicates,s.observationPredicates))reasons.push('PRIMARY_SOURCE_FIELD_OR_PREDICATE_UNSUPPORTED');
+ if(s.intermediary&&!s.intermediary.independentlyQualified)reasons.push('PRIMARY_INTERMEDIARY_UNQUALIFIED');
+ for(const activity of ['ACCESS_RECORDS','INTERPRET',...(s.sourceClass==='DIRECT_EXTERNAL_CONFIRMATION'?['CONTACT']:[])]){
+  if(!p.activities.some(v=>v.activity===activity&&v.actorIds.includes(principal(ctx))&&v.channelIds.includes(s.channelId)))reasons.push('PRIMARY_ACTIVITY_AUTHORITY_MISSING:'+activity);
+ }
+ if(s.accountOrParticipantIds.some(id=>p.contactLimits.suppressedParticipantIds.includes(id))||p.contactLimits.maximumRequests===0)reasons.push('PRIMARY_CONTACT_SUPPRESSED');
+ if(s.sourceClass==='DIRECT_EXTERNAL_CONFIRMATION'&&(!s.respondentId||!s.respondentRole||!s.respondentAuthorityRef||!subset(a.observationPredicates,s.respondentKnowledge)))reasons.push('PRIMARY_RESPONDENT_KNOWLEDGE_UNSUPPORTED');
+ if(m.rules.filter(r=>r.field===a.field).length!==1||['grossNetTreatment','recognitionRule','calendarRef','consolidationRef'].some(k=>(m as any)[k]!==(a.semantics as any)[k]))reasons.push('PRIMARY_REFERENCE_MEANING_UNSUPPORTED');
+ if(p.professionalRequirements.some(r=>r.requiredActorId!==principal(ctx))||m.rules.some(r=>/tax|benefit|legal/i.test(r.field))&&!m.professionalReviewRef)reasons.push('PRIMARY_PROFESSIONAL_AUTHORITY_MISSING');
+ return {eligible:reasons.length===0,reasons:[...new Set(reasons)].sort(),sourceClass:s.sourceClass,protectedAdmission:null};
+}
 export async function designEnterpriseExperiments(ctx: PeMutationContext, input: { root: PeWorldRootRef; request: unknown }): Promise<ExperimentDesignBundle> {
   const request = parseExperimentDesignRequest(input.request);
   const view = await loadEnterpriseBeliefView(ctx, { root: input.root });

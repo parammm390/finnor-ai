@@ -10,6 +10,13 @@ import {searchRow,append} from './store';
 import type {SearchRow,UnitRow} from './contracts';
 import type {Endpoint} from './endpoints';
 import {currentModule} from '../deliberation/module';
+/** One original S5 expenditure counter shared by native producer consumers.
+ * Caller holds S5's aggregate lock and validates the original owner envelope.
+ * Debit never decreases after cancellation, timeout or uncertain execution. */
+export async function debitNativeComputeAttemptTx(client:PoolClient,scope:{tenantId:string;principalId:string;grantDigest:string;resourceId:string;capacity:number}){
+ const spent=await chargeOriginalNativeGrant(client,{...scope,predicate:'P2_ORIGINAL_S5_COMPUTE_ENVELOPE_EXHAUSTED'});
+ return {owner:'P2/S5',grantDigest:scope.grantDigest,resourceId:scope.resourceId,spent:String(spent),unit:'native-attempt',refundGranted:false};
+}
 /** One transaction admits all dimensions and original parent counters. A failed
  * quota admission commits no debit or physical intent. Submission is a separate
  * durable cut; after it, costs/liabilities never disappear on timeout/cancel. */
@@ -43,7 +50,7 @@ export async function admit(ctx:PeMutationContext,s:SearchRow,u:UnitRow,x:Readon
    if(Number(w.active)>=endpoint.limits.concurrency||requests+1>endpoint.limits.rpm||input+inputTokens>endpoint.limits.inputTpm||output+maxOutput>endpoint.limits.outputTpm||daily+inputTokens+maxOutput>endpoint.limits.tpd)throw new ComputeCapacityUnavailableError('p2-endpoint:'+endpoint.id,1000);
    await c.query('UPDATE finnor_os.p2_endpoint_windows SET minute_start=$2,day_start=$3,requests=$4,input_tokens=$5,output_tokens=$6,daily_tokens=$7,active=active+1 WHERE endpoint_key=$1',[endpoint.key,minute,day,requests+1,input+inputTokens,output+maxOutput,daily+inputTokens+maxOutput]);
   }
-  await chargeOriginalNativeGrant(c,{tenantId:s.tenant_id,principalId:s.principal_id,grantDigest:s.request.computeGrant.contentDigest,resourceId:s.binding.resourceId,capacity:s.binding.capacity,predicate:'P2_ORIGINAL_S5_COMPUTE_ENVELOPE_EXHAUSTED'});
+  await debitNativeComputeAttemptTx(c,{tenantId:s.tenant_id,principalId:s.principal_id,grantDigest:s.request.computeGrant.contentDigest,resourceId:s.binding.resourceId,capacity:s.binding.capacity});
   const parent=await c.query('UPDATE finnor_os.p1_episodes SET steps_used=steps_used+$4,attempts_used=attempts_used+1 WHERE id=$1 AND tenant_id=$2 AND principal_id=$3 AND steps_used+$4<=max_steps AND attempts_used+1<=max_attempts AND deadline_at>clock_timestamp() RETURNING attempts_used,steps_used',[q.episode_id,s.tenant_id,s.principal_id,steps]);if(!parent.rowCount)throw Error('P2_ORIGINAL_P1_EPISODE_EXHAUSTED');
   const id=randomUUID(),body={unitId:u.id,unitBodyDigest:u.digest,unitInvocation:current.attempts+1,workKind:u.kind,jobId:x.jobId,deliveryAttemptId:x.deliveryAttemptId,claimFence:x.claimFence,protocolVersion:x.protocolVersion,requestedRoute:endpoint?.id??'P1_NATIVE',requestedModel:endpoint?.model??null,quotaDigest:endpoint?.digest??null,inputReservation:inputTokens,outputReservation:endpoint?.limits.maxOutputTokens??null,grantDigest:s.request.computeGrant.contentDigest,resourceId:s.binding.resourceId,chargedNativeAttempts:1,originalEpisode:q.episode_id,steps,recovery:current.attempts>0&&u.kind!=='CONTROL_M2',controlContinuation:u.kind==='CONTROL_M2'&&current.attempts>0,costUSD:null,createdAt:new Date().toISOString()};
   await c.query("INSERT INTO finnor_os.p2_attempts(id,tenant_id,principal_id,search_id,unit_id,delivery_id,claim_fence,status,endpoint_key,body,digest) VALUES($1,$2,$3,$4,$5,$6,$7,'INTENT',$8,$9::jsonb,$10)",[id,s.tenant_id,s.principal_id,s.id,u.id,x.deliveryAttemptId,x.claimFence,endpoint?.key??null,stable(body),sha(body)]);

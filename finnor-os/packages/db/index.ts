@@ -173,6 +173,13 @@ export async function withTenantTransaction<T>(
 
 /** Real transaction-local ORM on first use, including reflection and freeze.
  * No scoped client, owner evidence or relational database instance is cached. */
+const scopedOrmClients = new WeakMap<Db, pg.PoolClient>();
+/** A same-transaction owner port. Never open another pooled transaction here. */
+export function transactionClient(db: Db): pg.PoolClient {
+  const client = scopedOrmClients.get(db);
+  if (!client) throw new Error("A scoped transaction-local database is required");
+  return client;
+}
 export function transactionDb(client: pg.PoolClient): Db {
   const target = {} as Db;
   let initialized = false;
@@ -185,7 +192,7 @@ export function transactionDb(client: pg.PoolClient): Db {
     }
     return target;
   };
-  return new Proxy(target, {
+  const proxy = new Proxy(target, {
     get: (_target, key, receiver) => Reflect.get(hydrate(), key, receiver),
     set: (_target, key, value, receiver) => Reflect.set(hydrate(), key, value, receiver),
     has: (_target, key) => Reflect.has(hydrate(), key),
@@ -198,6 +205,8 @@ export function transactionDb(client: pg.PoolClient): Db {
     isExtensible: () => Reflect.isExtensible(hydrate()),
     preventExtensions: () => Reflect.preventExtensions(hydrate()),
   });
+  scopedOrmClients.set(proxy, client);
+  return proxy;
 }
 
 /** Same authenticated boundary for owners that need only the scoped SQL client.
@@ -634,7 +643,17 @@ export interface ReceiveWorkParams {
   userId?: string;
   idempotencyKey?: string;
   activeContext?: Record<string, unknown>;
+  entityAttachments?: AttachWorkEntityInput[];
   authorityContext?: Record<string, unknown>;
+  employeeThreadContext?: { threadId: string; expectedRevision: number };
+  requireExactIntake?: boolean;
+}
+
+export class ExactWorkIntakeConflict extends Error {
+  constructor() {
+    super("The original Work intake claim is bound to a different principal or exact input");
+    this.name = "ExactWorkIntakeConflict";
+  }
 }
 
 export interface ReceivedWork {
@@ -751,9 +770,11 @@ export async function receiveWork(params: ReceiveWorkParams): Promise<ReceivedWo
   // This is the canonical intake boundary shared by text, voice, objectives, and
   // system-created Work. Refuse a retired persisted identity before any row exists.
   await resolveTenantVertical(params.tenantId);
+  if ((params.entityAttachments?.length ?? 0) > 64) throw new Error("Work intake attachment bound exceeded");
   const desiredWorkId = params.workId ?? params.instructionId ?? randomUUID();
   const desiredInstructionId = params.instructionId ?? randomUUID();
-  const contextSnapshot = boundedProvenance(params.activeContext);
+  const contextSnapshot = boundedProvenance(params.entityAttachments?.length
+    ? { ...params.activeContext, entityAttachments: params.entityAttachments } : params.activeContext);
   const contextSnapshotHash = contextSnapshot ? provenanceHash(contextSnapshot) : null;
   const contextCapturedAt = contextSnapshot ? provenanceCapturedAt(contextSnapshot) : null;
   return withTenant(params.tenantId, async (db) => {
@@ -767,13 +788,49 @@ export async function receiveWork(params: ReceiveWorkParams): Promise<ReceivedWo
     for (const claimKey of claimKeys) {
       await db.execute(sql`SELECT pg_advisory_xact_lock(hashtextextended(${claimKey}, 0))`);
     }
+    let employeeThread: typeof schema.employeeConversationThreads.$inferSelect | undefined;
+    if (params.employeeThreadContext) {
+      if (!isUuid(params.userId) || !isUuid(params.employeeThreadContext.threadId) ||
+        !Number.isSafeInteger(params.employeeThreadContext.expectedRevision) || params.employeeThreadContext.expectedRevision < 0) {
+        throw new Error("WORK_THREAD_EXACT_OWNER_REQUIRED");
+      }
+      const [active] = await db.select({ id: schema.users.id }).from(schema.users).where(and(
+        eq(schema.users.tenantId, params.tenantId), eq(schema.users.id, params.userId), eq(schema.users.status, "active"),
+      )).limit(1);
+      if (!active) throw new Error("WORK_THREAD_EXACT_OWNER_REQUIRED");
+      await db.execute(sql`SELECT id FROM ${schema.employeeConversationThreads}
+        WHERE ${schema.employeeConversationThreads.tenantId}=${params.tenantId}
+        AND ${schema.employeeConversationThreads.ownerEmployeeId}=${params.userId}
+        AND ${schema.employeeConversationThreads.id}=${params.employeeThreadContext.threadId} FOR UPDATE`);
+      [employeeThread] = await db.select().from(schema.employeeConversationThreads).where(and(
+        eq(schema.employeeConversationThreads.tenantId, params.tenantId),
+        eq(schema.employeeConversationThreads.ownerEmployeeId, params.userId),
+        eq(schema.employeeConversationThreads.id, params.employeeThreadContext.threadId),
+      )).limit(1);
+      if (!employeeThread) throw new Error("WORK_THREAD_NOT_FOUND");
+    }
 
     const duplicateForInput = async (input: typeof schema.workInputs.$inferSelect): Promise<ReceivedWork> => {
+      if (params.requireExactIntake && (
+        input.createdBy !== params.userId || input.channel !== params.channel ||
+        input.instructionText !== params.instruction ||
+        (params.instructionId !== undefined && input.instructionId !== params.instructionId) ||
+        input.idempotencyKey !== (params.idempotencyKey ?? null) ||
+        canonicalJson(input.contextSnapshot) !== canonicalJson(contextSnapshot)
+      )) throw new ExactWorkIntakeConflict();
       const [canonicalWork] = await db.select().from(schema.works).where(and(
         eq(schema.works.tenantId, params.tenantId),
         eq(schema.works.id, input.workId),
       )).limit(1);
       if (!canonicalWork) throw new Error("Durable Work input references a missing Work");
+      if (employeeThread && (employeeThread.activeWorkId !== canonicalWork.id ||
+        jsonObject(input.contextSnapshot).employeeThreadId !== employeeThread.id ||
+        input.instructionText !== params.instruction)) throw new Error("WORK_THREAD_IDEMPOTENCY_SCOPE_CONFLICT");
+      if (params.requireExactIntake && (
+        canonicalWork.createdBy !== params.userId || canonicalWork.initialChannel !== params.channel ||
+        canonicalWork.initialInstruction !== params.instruction ||
+        (params.workId !== undefined && canonicalWork.id !== params.workId)
+      )) throw new ExactWorkIntakeConflict();
       return {
         workId: canonicalWork.id,
         workInputId: input.id,
@@ -794,9 +851,13 @@ export async function receiveWork(params: ReceiveWorkParams): Promise<ReceivedWo
     ));
     const distinctInputs = [...new Map(matchingInputs.map((input) => [input.id, input])).values()];
     if (distinctInputs.length > 1) {
+      if (params.requireExactIntake) throw new ExactWorkIntakeConflict();
       throw new Error("Work input idempotency claims resolve to different canonical inputs");
     }
     if (distinctInputs[0]) return duplicateForInput(distinctInputs[0]);
+    if (employeeThread && employeeThread.revision !== params.employeeThreadContext!.expectedRevision) {
+      throw new Error("WORK_THREAD_REVISION_CHANGED");
+    }
 
     const [validUser] = isUuid(params.userId)
       ? await db.select({ id: schema.users.id }).from(schema.users).where(and(eq(schema.users.tenantId, params.tenantId), eq(schema.users.id, params.userId))).limit(1)
@@ -852,12 +913,25 @@ export async function receiveWork(params: ReceiveWorkParams): Promise<ReceivedWo
       }
     }
     if (!work) throw new Error("Unable to create or resolve durable Work");
+    // Exact first intake cannot adopt a legacy Work whose input claim is absent.
+    // Ordinary continuation callers retain their existing behavior.
+    if (params.requireExactIntake && !created) throw new ExactWorkIntakeConflict();
 
-    for (const entity of canonicalRefsFromContext(params.activeContext)) {
+    const intakeEntities: Array<{ entityType: string; entityId: string }> = canonicalRefsFromContext(params.activeContext);
+    // Vertical entities are dynamically registered by the canonical attachment
+    // owner; the legacy core enum is not the authority for an Investigation root.
+    const focused = jsonObject(params.activeContext);
+    if (employeeThread && typeof focused.entityType === "string" && /^[a-z][a-z0-9_]{1,62}$/.test(focused.entityType) &&
+      typeof focused.entityId === "string" && isUuid(focused.entityId) &&
+      !intakeEntities.some(ref => ref.entityType === focused.entityType && ref.entityId === focused.entityId)) {
+      intakeEntities.push({ entityType: focused.entityType, entityId: focused.entityId });
+    }
+    for (const entity of [...intakeEntities, ...(params.entityAttachments ?? [])]) {
+      const attachment: AttachWorkEntityInput = entity;
       await attachWorkEntityTx(db, {
         tenantId: params.tenantId,
         workId: work.id,
-        entity: { ...entity, source: "work_intake.active_context" },
+        entity: { ...attachment, source: attachment.source ?? "work_intake.active_context" },
       });
     }
     if (validUser?.id) {
@@ -938,8 +1012,23 @@ export async function receiveWork(params: ReceiveWorkParams): Promise<ReceivedWo
       }).where(eq(schema.works.id, work.id));
     }
 
+    if (employeeThread) {
+      const references = [...new Map([
+        ...(Array.isArray(employeeThread.activeReferences) ? employeeThread.activeReferences as Record<string, unknown>[] : []),
+        ...intakeEntities,
+      ].map(ref => [JSON.stringify(ref), ref])).values()];
+      await db.update(schema.employeeConversationThreads).set({
+        activeWorkId: work.id,
+        activeReferences: references,
+        revision: sql`${schema.employeeConversationThreads.revision}+1`,
+        lastActivityAt: new Date(),
+        updatedAt: new Date(),
+      }).where(and(eq(schema.employeeConversationThreads.id, employeeThread.id),
+        eq(schema.employeeConversationThreads.ownerEmployeeId, params.userId!),
+        eq(schema.employeeConversationThreads.tenantId, params.tenantId)));
+    }
     return { workId: work.id, workInputId: input.id, instructionId: desiredInstructionId, created, duplicate: false, status: currentStatus, finalOutcome: work.finalOutcome };
-  });
+  }, params.employeeThreadContext ? params.userId : undefined);
 }
 
 /** Freeze the tenant-validated interaction context on the already-claimed input.
@@ -1720,6 +1809,10 @@ export async function reconcileWorkStatus(tenantId: string, workId: string): Pro
       .from(schema.businessOperations)
       .where(and(eq(schema.businessOperations.tenantId, tenantId), eq(schema.businessOperations.workId, workId)))
       .groupBy(schema.businessOperations.status);
+    const programmeStatusRows = await db.select({ status: schema.workProgrammeOccupations.status, count: sql<number>`count(*)::int` })
+      .from(schema.workProgrammeOccupations)
+      .where(and(eq(schema.workProgrammeOccupations.tenantId, tenantId), eq(schema.workProgrammeOccupations.workId, workId)))
+      .groupBy(schema.workProgrammeOccupations.status);
     const [objectiveLoop] = await db.select({ id: schema.workObjectiveLoops.id, state: schema.workObjectiveLoops.state }).from(schema.workObjectiveLoops).where(and(eq(schema.workObjectiveLoops.tenantId, tenantId), eq(schema.workObjectiveLoops.workId, workId))).limit(1);
     const [work] = await db.select().from(schema.works).where(and(eq(schema.works.tenantId, tenantId), eq(schema.works.id, workId))).limit(1);
     const statusGroup = (rows: Array<{ status: string; count: number }>) => ({
@@ -1731,6 +1824,7 @@ export async function reconcileWorkStatus(tenantId: string, workId: string): Pro
       runs: statusGroup(runStatusRows),
       repairs: statusGroup(repairStatusRows),
       operations: statusGroup(operationStatusRows),
+      programmes: statusGroup(programmeStatusRows),
       objectiveLoop,
       work,
     };
@@ -1740,6 +1834,21 @@ export async function reconcileWorkStatus(tenantId: string, workId: string): Pro
   // input changes it. Late child evidence may be inspected, but reconciliation
   // must never resurrect or relabel completed, failed, or cancelled Work.
   if (isImmutableWorkStatus(snapshot.work.status)) return snapshot.work.status;
+  // Transport completion is not programme completion. The programme owner keeps
+  // this generic occupation current; Work does not interpret a V1 seller reply.
+  if (snapshot.programmes.total > 0) {
+    const hasProgramme = (states: string[]) => states.some(state => (snapshot.programmes.counts.get(state) ?? 0) > 0);
+    const status: WorkStatus | null = hasProgramme(["RECONCILING"]) ? "recovery"
+      : hasProgramme(["PROGRESS"]) ? "executing"
+        : hasProgramme(["WAITING"]) ? "waiting"
+          : hasProgramme(["BLOCKED"]) ? "blocked" : null;
+    if (status) {
+      if (status !== snapshot.work.status) await transitionWork(tenantId, workId, status, "programme_occupation_reconciled", {
+        programmes: Object.fromEntries(snapshot.programmes.counts),
+      });
+      return status;
+    }
+  }
   if (snapshot.objectiveLoop) {
     const status: WorkStatus = snapshot.objectiveLoop.state === "continue"
       ? "executing"

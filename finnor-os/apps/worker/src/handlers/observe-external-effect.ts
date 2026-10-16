@@ -81,6 +81,18 @@ export const observeExternalEffectHandler: JobHandler = async (payload) => {
     return;
   }
   if (!operation?.businessEffectId || !operation.integrationId || !operation.provider) return;
+  if (operation.provider === "finnor_closing_provider") {
+    // The closing adapter reads original operations through separate credential
+    // custody and qualified signed evidence, not a generic source-sync adapter.
+    const linked = await withTenant(tenantId, async db => (await db.execute((await import("drizzle-orm")).sql`
+      SELECT q.id,q.generation FROM finnor_os.pe_closing_node_links l JOIN finnor_os.pe_closing_programmes q
+        ON q.tenant_id=l.tenant_id AND q.id=l.programme_id
+      WHERE l.tenant_id=${tenantId}::uuid AND l.business_effect_id=${operation.businessEffectId}::uuid`)).rows[0]) as { id: string; generation: number } | undefined;
+    if (linked) await enqueueJobAt("advance_closing_programme_v1", {
+      tenantId, programmeId: linked.id, generation: linked.generation,
+    }, new Date(), `v3:${linked.id}:${linked.generation}:original-operation:${operation.businessEffectId}:${attempt}`);
+    return;
+  }
   if (operation.verificationStatus === "divergent" || operation.verificationStatus === "verified") return;
 
   const [effectRow, integration] = await Promise.all([
@@ -151,7 +163,9 @@ export const observeExternalEffectHandler: JobHandler = async (payload) => {
       observedAt: record?.observedAt ?? new Date().toISOString(),
       expected: target.expected,
       observed: record?.data,
-      definitelyAbsent: !record && attempt >= 5,
+      // A query miss, including after recovery or polling exhaustion, is not
+      // authoritative whole-operation absence and must never authorize replay.
+      definitelyAbsent: false,
       evidence: { mechanism: "read_after_write" },
     });
     await settleExternalEffectObservation(observation, { integrationOperationId, domainActionId, externalOperationKey });

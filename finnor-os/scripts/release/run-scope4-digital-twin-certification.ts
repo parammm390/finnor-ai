@@ -166,7 +166,10 @@ async function measured(operation: string, thresholdMs: number, callback: () => 
   return metric;
 }
 
-async function benchmark(url: string): Promise<{ corpus: Record<string, number>; metrics: Metric[]; plans: Record<string, unknown> }> {
+export async function benchmark(url: string, files: MigrationFile[]): Promise<{ corpus: Record<string, number>; metrics: Metric[]; plans: Record<string, unknown> }> {
+  // This corpus represents historical holdings, not new V3 closing authority.
+  // Create them through the actual former owner, then measure only after upgrade.
+  await migrate(url, files.filter(file => file.name < "0173_v3_autonomous_transaction_closure.sql"));
   const admin = new pg.Client({ connectionString: url }); await admin.connect();
   const tenantId = "60000000-0000-4000-8000-000000000001";
   const userId = "60000000-0000-4000-8000-000000000002";
@@ -241,6 +244,13 @@ async function benchmark(url: string): Promise<{ corpus: Record<string, number>;
     process.env.DATABASE_URL = url.replace(/\/\/[^@]+@/, "//finnor_app:finnor_app@");
     await closePool();
     const ctx: PeMutationContext = { auth: { tenantId, userId, employeeId: userId, role: "owner" } };
+    const originalHoldings = (await admin.query("SELECT id,company_id,origin_deal_id,entry_date FROM finnor_os.pe_portfolio_holdings WHERE tenant_id=$1 ORDER BY id", [tenantId])).rows;
+    const originalDeals = (await admin.query("SELECT id,status,actual_close_at FROM finnor_os.pe_deals WHERE tenant_id=$1 ORDER BY id", [tenantId])).rows;
+    assert(originalHoldings.length === 200 && originalDeals.length === 200 && originalDeals.every(row => row.status === 'closed' && row.actual_close_at), "historical benchmark closes were not established by the original owner");
+    await migrate(url, files);
+    assert(JSON.stringify(originalHoldings) === JSON.stringify((await admin.query("SELECT id,company_id,origin_deal_id,entry_date FROM finnor_os.pe_portfolio_holdings WHERE tenant_id=$1 ORDER BY id", [tenantId])).rows), "current-schema upgrade changed historical holdings");
+    assert(JSON.stringify(originalDeals) === JSON.stringify((await admin.query("SELECT id,status,actual_close_at FROM finnor_os.pe_deals WHERE tenant_id=$1 ORDER BY id", [tenantId])).rows), "current-schema upgrade changed historical Deal closure");
+    assert((await admin.query("SELECT name FROM finnor_os._migrations ORDER BY name DESC LIMIT 1")).rows[0]?.name === CURRENT_MIGRATION_HEAD, "benchmark must run on the complete current schema");
     const currentValidAt = new Date().toISOString();
     let companyProjection = await loadCompanyBrainProjection(ctx, { root: { entityType: "external_organization", entityId: root }, validAt: currentValidAt });
     const metrics: Metric[] = [];
@@ -280,14 +290,14 @@ async function main(): Promise<void> {
     postgresFlags: ["-c", "track_commit_timestamp=on"],
     onLog: () => undefined,
   });
-  const databaseNames = { fresh: "scope4_fresh", upgrade: "scope4_upgrade" };
+  const databaseNames = { fresh: "scope4_fresh", upgrade: "scope4_upgrade", benchmark: "scope4_benchmark" };
   const url = (name: string) => `postgres://finnor:finnor@127.0.0.1:${port}/${name}`;
   const gates: Gate[] = [];
   let report: Record<string, unknown> | null = null;
   process.env.FINNOR_TEST_MANAGED_EXTENSIONS = "omit";
   try {
     await postgres.initialise(); await postgres.start();
-    await postgres.createDatabase(databaseNames.fresh); await postgres.createDatabase(databaseNames.upgrade);
+    await postgres.createDatabase(databaseNames.fresh); await postgres.createDatabase(databaseNames.upgrade); await postgres.createDatabase(databaseNames.benchmark);
     const prerequisite = new pg.Client({ connectionString: url(databaseNames.fresh) });
     await prerequisite.connect();
     try {
@@ -348,7 +358,7 @@ async function main(): Promise<void> {
     await command("phase15a-release-policy", "npm", ["run", "test:release"], WORKSPACE, {}, 900_000);
     gates.push({ id: "phase15a", status: "PASS_LOCAL", evidence: "production target, protected environment, PR verdict, mutation inventory, and release policy suite" });
 
-    const performanceEvidence = await benchmark(url(databaseNames.fresh));
+    const performanceEvidence = await benchmark(url(databaseNames.benchmark), files);
     gates.push({ id: "postgres-graph-benchmark", status: "PASS_INTEGRATION", evidence: `${performanceEvidence.metrics.length} measured operations on representative 200-company / 1,000-observation corpus; all p95 guardrails passed` });
     gates.push({ id: "live-provider-validation", status: "BLOCKED_EXTERNAL", evidence: "No SEC, GLEIF, PitchBook, Preqin, CapIQ, Grata, SourceScrub, or equivalent credential/data source was supplied; no live-provider claim made" });
 
@@ -381,7 +391,7 @@ async function main(): Promise<void> {
   }
 }
 
-main().catch((error) => {
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) main().catch((error) => {
   console.error(error);
   process.exit(1);
 });

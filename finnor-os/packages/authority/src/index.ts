@@ -14,10 +14,13 @@ import {
   rolePermissions,
   users,
   withTenant,
+  withTenantTransaction,
   withTenantClientTransaction,
   works,
+  transactionDb,
   type Db,
 } from "@finnor/db";
+import type { PoolClient } from "pg";
 import type {
   AuthorityDecision,
   AuthorityRequest,
@@ -28,6 +31,7 @@ import type {
 } from "@finnor/shared-types";
 import { and, eq, inArray, isNull, lte, or, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
+import {hasStandingContactAuthorization} from './standing-contact';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const RISK_RANK: Record<AuthorityRisk, number> = { low: 1, medium: 2, high: 3 };
@@ -36,7 +40,8 @@ type Scope =
   | { kind: "tenant" }
   | { kind: "resources"; resourceType?: string; resourceIds?: string[] }
   | { kind: "assigned" }
-  | { kind: "self" };
+  | { kind: "self" }
+  | { kind: "unavailable" };
 
 type Assignment = {
   roleId: string;
@@ -83,7 +88,7 @@ function scope(value: unknown): Scope {
     resourceIds: Array.isArray(raw.resourceIds) ? raw.resourceIds.filter((id): id is string => typeof id === "string" && UUID.test(id)) : [],
   };
   if (raw.kind === "assigned" || raw.kind === "self") return { kind: raw.kind };
-  return { kind: "tenant" };
+  return { kind: raw.kind === "tenant" ? "tenant" : "unavailable" };
 }
 
 function capabilityMatches(grant: string, requested: string): boolean {
@@ -103,6 +108,47 @@ function normalizeResources(request: AuthorityRequest): AuthorityResource[] {
   return [...new Map(rows.map((row) => [`${row.type}:${row.id ?? "*"}`, row])).values()];
 }
 
+function withinAmount(request: AuthorityRequest, ceiling: string | null): boolean {
+  const exact = request.exactAmountUsd;
+  if (exact === undefined && request.amountUsd === undefined && ceiling !== null &&
+    request.capability.endsWith(":execute_closing_operation")) return false;
+  if (exact === undefined) return request.amountUsd === undefined || ceiling === null || request.amountUsd <= Number(ceiling);
+  // S5's checked ledger has a versioned exact rational codec. Other financial
+  // capabilities retain their finite-decimal domain; no permission is inferred.
+  if (exact.startsWith('r3q:')) {
+    if (request.capability !== 'action:allocate_resource') return false;
+    const match = /^r3q:(0|[1-9]\d{0,127})\/([1-9]\d{0,127})$/.exec(exact);
+    if (!match) return false;
+    const numerator = BigInt(match[1]!), denominator = BigInt(match[2]!);
+    let a = numerator, b = denominator;
+    while (b) { const remainder = a % b; a = b; b = remainder; }
+    if (a !== 1n || numerator > 10n ** 30n * denominator) return false;
+    if (ceiling === null) return true;
+    if (!/^\d+(?:\.\d+)?$/.test(ceiling) || ceiling.length > 160) return false;
+    const [whole, fraction = ''] = ceiling.split('.');
+    return numerator * 10n ** BigInt(fraction.length) <= BigInt(whole! + fraction) * denominator;
+  }
+  if (!/^(?:0|[1-9]\d*)(?:\.\d+)?$/.test(exact) || exact.length > 160) return false;
+  if (ceiling === null) return true;
+  if (!/^\d+(?:\.\d+)?$/.test(ceiling) || ceiling.length > 160) return false;
+  const [leftWhole, leftFraction = ""] = exact.split(".");
+  const [rightWhole, rightFraction = ""] = ceiling.split(".");
+  const places = Math.max(leftFraction.length, rightFraction.length);
+  return BigInt(leftWhole! + leftFraction.padEnd(places, "0")) <= BigInt(rightWhole! + rightFraction.padEnd(places, "0"));
+}
+
+/** Share the actual revision/employee fence with a reader or writer's existing
+ * transaction. Do not open another hosted-pool connection while holding it. */
+export async function lockCurrentAuthorityTx(ctx: TenantContext, client: PoolClient, lock = true): Promise<number> {
+  const result = await client.query<{ revision: number }>(
+    `SELECT a.revision FROM finnor_os.authority_states a
+       JOIN finnor_os.users u ON u.tenant_id=a.tenant_id
+      WHERE a.tenant_id=$1 AND u.id=$2 AND u.status='active' AND u.role='owner'
+      ${lock ? 'FOR SHARE OF a,u' : ''}`, [ctx.tenantId, ctx.employeeId ?? ctx.userId]);
+  if (result.rowCount !== 1 || ctx.employeeId && ctx.employeeId !== ctx.userId) throw new Error("CURRENT_CANONICAL_AUTHORITY_UNAVAILABLE");
+  return result.rows[0]!.revision;
+}
+
 async function isAssigned(db: AuthorityReadDb, tenantId: string, employeeId: string, resource: AuthorityResource): Promise<boolean> {
   if (resource.type === "user" || resource.type === "employee") return resource.id === employeeId;
   if (!resource.id) return false;
@@ -114,6 +160,7 @@ async function isAssigned(db: AuthorityReadDb, tenantId: string, employeeId: str
 }
 
 async function scopeAllows(db: AuthorityReadDb, tenantId: string, employeeId: string, assignment: Assignment, resource: AuthorityResource): Promise<boolean> {
+  if (assignment.scope.kind === "unavailable") return false;
   if (assignment.scope.kind === "tenant") return true;
   if (assignment.scope.kind === "resources") {
     if (!resource.id) return false;
@@ -151,8 +198,8 @@ async function loadAuthorities(db: AuthorityReadDb, tenantId: string, employeeId
       eq(employeeRoleAssignments.tenantId, tenantId),
       inArray(employeeRoleAssignments.employeeId, uniqueEmployeeIds),
       eq(employeeRoleAssignments.active, true),
-      lte(employeeRoleAssignments.effectiveFrom, new Date()),
-      or(isNull(employeeRoleAssignments.expiresAt), sql`${employeeRoleAssignments.expiresAt} > now()`),
+      sql`${employeeRoleAssignments.effectiveFrom} <= clock_timestamp()`,
+      or(isNull(employeeRoleAssignments.expiresAt), sql`${employeeRoleAssignments.expiresAt} > clock_timestamp()`),
     ));
   const roleIds = [...new Set(assignmentsWithEmployee.map((row) => row.roleId))];
   const grantRows = roleIds.length === 0 ? [] : await db.select().from(roleAuthorityGrants).where(and(eq(roleAuthorityGrants.tenantId, tenantId), inArray(roleAuthorityGrants.roleId, roleIds)));
@@ -263,12 +310,17 @@ async function insertDecision(db: Db, params: {
     capability: params.request.capability,
     resourceType: first.type,
     resourceId: first.id && UUID.test(first.id) ? first.id : null,
-    amountUsd: params.request.amountUsd === undefined ? null : String(params.request.amountUsd),
+    // The legacy numeric column is only a display/accounting summary (scale 2).
+    // Preserve exact authorization semantics in immutable evidence.
+    amountUsd: params.request.exactAmountUsd !== undefined
+      ? Number(params.request.exactAmountUsd) <= 999999999999.99 ? params.request.exactAmountUsd : null
+      : params.request.amountUsd === undefined ? null : String(params.request.amountUsd),
     risk: params.request.risk,
     outcome: params.outcome,
     reasonCode: params.reasonCode,
     approvalChainId: params.chainId ?? null,
-    evidence: { ...params.evidence, resources, eligibleApproverIds: params.eligibleApproverIds ?? [] },
+    evidence: { ...params.evidence, resources, exactAmountUsd: params.request.exactAmountUsd ?? null,
+      controlBinding: params.request.controlBinding ?? null, eligibleApproverIds: params.eligibleApproverIds ?? [] },
     workId: params.request.workId && UUID.test(params.request.workId) ? params.request.workId : null,
     domainActionId: params.request.domainActionId && UUID.test(params.request.domainActionId) ? params.request.domainActionId : null,
     operationId: params.request.operationId && UUID.test(params.request.operationId) ? params.request.operationId : null,
@@ -281,7 +333,15 @@ async function insertDecision(db: Db, params: {
 /** Deterministic, fail-closed authority evaluation. The result and exact grant/scope
  * evidence are appended in the same tenant transaction. */
 export async function evaluateAuthority(ctx: TenantContext, request: AuthorityRequest): Promise<AuthorityDecision> {
-  return withTenant(ctx.tenantId, async (db) => {
+  return withTenant(ctx.tenantId, (db) => evaluateAuthorityOnDb(ctx, request, db));
+}
+
+export async function evaluateAuthorityTx(ctx: TenantContext, request: AuthorityRequest, client: PoolClient): Promise<AuthorityDecision> {
+  await lockCurrentAuthorityTx(ctx, client);
+  return evaluateAuthorityOnDb(ctx, request, transactionDb(client));
+}
+
+async function evaluateAuthorityOnDb(ctx: TenantContext, request: AuthorityRequest, db: Db): Promise<AuthorityDecision> {
     const employeeId = ctx.employeeId ?? (UUID.test(ctx.userId) ? ctx.userId : null);
     // Service principals are explicit and never synthesized from a human role.
     if (!employeeId) {
@@ -339,7 +399,7 @@ export async function evaluateAuthority(ctx: TenantContext, request: AuthorityRe
         resources,
         (resource) => scopeAllows(db, ctx.tenantId, employeeId, assignment, resource),
       );
-      const amountAllowed = request.amountUsd === undefined || grant.maxAmountUsd === null || request.amountUsd <= Number(grant.maxAmountUsd);
+      const amountAllowed = withinAmount(request, grant.maxAmountUsd);
       const riskAllowed = RISK_RANK[request.risk] <= RISK_RANK[grant.maxRisk];
       evaluated.push({ grant, assignment, scopeAllowed, typeAllowed, amountAllowed, riskAllowed });
     }
@@ -348,6 +408,7 @@ export async function evaluateAuthority(ctx: TenantContext, request: AuthorityRe
       evaluatedGrantIds: evaluated.map((row) => row.grant.id),
       matchedScopes: evaluated.filter((row) => row.scopeAllowed).map((row) => ({ grantId: row.grant.id, roleId: row.grant.roleId, scope: row.assignment.scope })),
       requestedAmountUsd: request.amountUsd ?? null,
+      requestedExactAmountUsd: request.exactAmountUsd ?? null,
       requestedRisk: request.risk,
     };
     if (evaluated.some((row) => row.grant.effect === "deny" && row.scopeAllowed)) {
@@ -360,6 +421,10 @@ export async function evaluateAuthority(ctx: TenantContext, request: AuthorityRe
     }
     const withinLimits = allows.filter((row) => row.amountAllowed && row.riskAllowed);
     if (withinLimits.length === 0) {
+      if (request.capability.endsWith(":execute_closing_operation") && request.amountUsd === undefined) {
+        return insertDecision(db, { ctx, request, employeeId, revision: auth.revision, outcome: "denied",
+          reasonCode: "qualified_usd_valuation_required_for_bounded_grant", evidence });
+      }
       const reasonCode = allows.some((row) => !row.amountAllowed) ? "monetary_limit_exceeded" : "risk_limit_exceeded";
       const chain = allows.find((row) => row.grant.approvalChainId)?.grant.approvalChainId ?? null;
       // A configured chain can elevate a limit breach; absent one, fail closed.
@@ -376,7 +441,6 @@ export async function evaluateAuthority(ctx: TenantContext, request: AuthorityRe
     const eligible = await eligibleApproversTx(db, ctx.tenantId, chain, request.capability.replace(/^action:/, ""), resources);
     if (eligible.length === 0) return insertDecision(db, { ctx, request, employeeId, revision: auth.revision, outcome: "denied", reasonCode: "no_authorized_approver", chainId: chain, evidence });
     return insertDecision(db, { ctx, request, employeeId, revision: auth.revision, outcome: "approval_required", reasonCode: request.policyRequiresApproval ? "policy_requires_approval" : "grant_requires_approval", chainId: chain, eligibleApproverIds: eligible, evidence: { ...evidence, selectedGrantId: chosen.grant.id } });
-  });
 }
 
 export async function recordActionAuthority(params: {
@@ -529,12 +593,90 @@ export async function employeeAuthoritySnapshot(ctx: TenantContext): Promise<{ e
   });
 }
 
+export async function employeeAuthoritySnapshotTx(ctx: TenantContext, client: PoolClient, lock = true) {
+  const revision = await lockCurrentAuthorityTx(ctx, client, lock);
+  const auth = await loadAuthority(transactionDb(client), ctx.tenantId, ctx.employeeId ?? ctx.userId);
+  if (!auth.employee || auth.employee.status !== "active") throw new Error("CURRENT_CANONICAL_AUTHORITY_UNAVAILABLE");
+  const temporal = await client.query<{ valid_until: Date | null }>(
+    `SELECT min(event_at) valid_until FROM (
+       SELECT effective_from event_at FROM finnor_os.employee_role_assignments
+        WHERE tenant_id=$1 AND employee_id=$2 AND active AND effective_from>clock_timestamp()
+       UNION ALL
+       SELECT expires_at FROM finnor_os.employee_role_assignments
+        WHERE tenant_id=$1 AND employee_id=$2 AND active AND expires_at>clock_timestamp()
+      ) temporal`, [ctx.tenantId, ctx.employeeId ?? ctx.userId]);
+  return { employeeId: auth.employee.id, revision, roles: auth.assignments.map(row => row.roleKey), validUntil: temporal.rows[0]?.valid_until?.toISOString() ?? null };
+}
+
 /** Read-only counterpart to evaluateAuthority for projection/control discovery.
  * It deliberately appends no authority decision: GET read models may reveal only
  * controls the current employee can exercise, without turning a read into history.
  * Mutation routes still call evaluateAuthority and remain the final authorizer. */
 export async function canExerciseAuthority(ctx: TenantContext, request: AuthorityRequest): Promise<boolean> {
-  return withAuthorityRead(ctx.tenantId, async (db) => {
+  return withAuthorityRead(ctx.tenantId, (db) => canExerciseAuthorityOnDb(ctx, request, db));
+}
+
+export async function canExerciseAuthorityTx(ctx: TenantContext, request: AuthorityRequest, client: PoolClient, lock = true): Promise<boolean> {
+  await lockCurrentAuthorityTx(ctx, client, lock);
+  return canExerciseAuthorityOnDb(ctx, request, transactionDb(client));
+}
+
+/** The same configured S1 chain, expressed as exact immutable decisions rather
+ * than a session-local approval ledger. This port does not authorize S6 method,
+ * business-owner signatures, professional determinations or external effects. */
+export async function exactControlRequirementsTx(ctx: TenantContext, request: AuthorityRequest, client: PoolClient) {
+  const decision = await evaluateAuthorityTx(ctx, request, client);
+  if (decision.outcome === "denied") return { decision, steps: [] as Array<{ sequence: number; capability: string; minimum: number }> };
+  if (decision.outcome === "allowed") return { decision, steps: [] as Array<{ sequence: number; capability: string; minimum: number }> };
+  const db = transactionDb(client);
+  const [chain] = await db.select().from(approvalChains).where(and(
+    eq(approvalChains.tenantId, ctx.tenantId), eq(approvalChains.id, decision.approvalChainId!), eq(approvalChains.active, true)));
+  if (!chain) throw new Error("EXACT_APPROVAL_CHAIN_UNAVAILABLE");
+  const steps = await db.select().from(approvalChainSteps).where(and(
+    eq(approvalChainSteps.tenantId, ctx.tenantId), eq(approvalChainSteps.approvalChainId, chain.id))).orderBy(approvalChainSteps.sequence);
+  if (!steps.length || steps.length > 32 || steps.some(step => step.minApprovals < 1 || step.minApprovals > 32)) throw new Error("EXACT_APPROVAL_CHAIN_UNAVAILABLE");
+  return { decision, steps: steps.map(step => ({ sequence: step.sequence,
+    capability: step.approverCapability.replaceAll("$action", request.capability.replace(/^action:/, "")), minimum: step.minApprovals })) };
+}
+
+export async function validateExactControlApprovalsTx(
+  ctx: TenantContext, request: AuthorityRequest, decisionIds: string[], client: PoolClient,
+) {
+  if (!request.controlBinding || Date.parse(request.controlBinding.expiresAt) <= Date.now()
+    || !Number.isFinite(Date.parse(request.controlBinding.expiresAt)) || decisionIds.length > 128) throw new Error("EXACT_APPROVAL_BINDING_EXPIRED_OR_UNAVAILABLE");
+  const requirements = await exactControlRequirementsTx(ctx, request, client);
+  if (requirements.decision.outcome === "denied") throw new Error("EXACT_ACTION_AUTHORITY_DENIED");
+  const db = transactionDb(client);
+  const rows = decisionIds.length ? await db.select().from(authorityDecisions).where(and(
+    eq(authorityDecisions.tenantId, ctx.tenantId), inArray(authorityDecisions.id, [...new Set(decisionIds)]),
+    sql`${authorityDecisions.evidence}->'controlBinding'=${JSON.stringify(request.controlBinding)}::jsonb`,
+    sql`${authorityDecisions.evidence}->'resources'=${JSON.stringify(normalizeResources(request))}::jsonb`)) : [];
+  const accepted: string[] = [];
+  let previousStepAt = 0;
+  for (const step of requirements.steps) {
+    const principals = new Set<string>();
+    const timestamps: number[] = [];
+    for (const row of rows) {
+      const evidence = record(row.evidence);
+      if (!row.employeeId || row.operation !== "approval" || row.outcome !== "allowed" || row.capability !== step.capability
+        || row.risk !== request.risk || row.authorityRevision !== requirements.decision.authorityRevision
+        || evidence.exactAmountUsd !== (request.exactAmountUsd ?? null)
+        || row.createdAt.getTime() < previousStepAt) continue;
+      const approver = { ...ctx, userId: row.employeeId, employeeId: row.employeeId };
+      // Rechecking the canonical decision's recorded issuer is not act_as.
+      await lockCurrentAuthorityTx(approver, client);
+      if (!await canExerciseAuthorityOnDb(approver, { ...request, operation: "approval", capability: step.capability }, db)) continue;
+      principals.add(row.employeeId);
+      timestamps.push(row.createdAt.getTime());
+      accepted.push(row.id);
+    }
+    if (principals.size < step.minimum) throw new Error("EXACT_CURRENT_APPROVAL_CHAIN_INCOMPLETE");
+    previousStepAt = Math.max(...timestamps);
+  }
+  return { decision: requirements.decision, approvalDecisionIds: [...new Set(accepted)] };
+}
+
+async function canExerciseAuthorityOnDb(ctx: TenantContext, request: AuthorityRequest, db: AuthorityReadDb): Promise<boolean> {
     const employeeId = ctx.employeeId ?? (UUID.test(ctx.userId) ? ctx.userId : null);
     const legacyApprovalAllowed = async (): Promise<boolean> => {
       if (process.env.NODE_ENV === "production" || request.operation !== "approval") return false;
@@ -567,7 +709,7 @@ export async function canExerciseAuthority(ctx: TenantContext, request: Authorit
       evaluated.push({
         grant,
         scopeAllowed,
-        amountAllowed: request.amountUsd === undefined || grant.maxAmountUsd === null || request.amountUsd <= Number(grant.maxAmountUsd),
+        amountAllowed: withinAmount(request, grant.maxAmountUsd),
         riskAllowed: RISK_RANK[request.risk] <= RISK_RANK[grant.maxRisk],
       });
     }
@@ -575,7 +717,6 @@ export async function canExerciseAuthority(ctx: TenantContext, request: Authorit
     const chosen = evaluated.find((row) => row.grant.effect === "allow" && row.scopeAllowed && row.amountAllowed && row.riskAllowed);
     if (!chosen) return false;
     return request.policyRequiresApproval !== true && chosen.grant.approvalRequired !== true;
-  });
 }
 
 export async function eligibleApproversForActions(tenantId: string, actionIds: string[]): Promise<Record<string, string[]>> {
@@ -685,6 +826,22 @@ export async function revalidateActionExecution(tenantId: string, actionId: stri
   }
   const decision = await evaluateAuthority(ctx, request);
   if (decision.outcome === "denied") return decision;
+  if(employeeId&&loaded.effect){
+    try{
+      const standing=await withTenantTransaction(tenantId,{userId:employeeId},(_db,c)=>
+        hasStandingContactAuthorization(c,tenantId,actionId,loaded.effect!.effect as import('@finnor/shared-types').BusinessEffectSet));
+      if(standing){
+        if(decision.outcome!=='allowed')throw Error('S6_STANDING_CANNOT_OVERRIDE_REQUIRED_ROLE_CHAIN');
+        const issuer=await evaluateAuthority(ctx,{...request,operation:'approval',capability:`approve:${action.actionType}`});
+        if(issuer.outcome!=='allowed')throw Error('S6_STANDING_ISSUER_AUTHORITY_REVOKED');
+        return withTenant(tenantId,db=>insertDecision(db,{ctx,request,employeeId,revision:issuer.authorityRevision,
+          outcome:'allowed',reasonCode:'exact_standing_contact_authority',evidence:{priorDecisionId:decision.id,standingIssuerDecisionId:issuer.id}}));
+      }
+    }catch{
+      return withTenant(tenantId,db=>insertDecision(db,{ctx,request,employeeId,revision:decision.authorityRevision,
+        outcome:'denied',reasonCode:'standing_contact_current_binding_invalid',evidence:{priorDecisionId:decision.id}}));
+    }
+  }
   const originallyRequiredApproval = context.outcome === "approval_required" || decision.outcome === "approval_required";
   if (!originallyRequiredApproval) return decision;
   return withTenant(tenantId, async (db) => {

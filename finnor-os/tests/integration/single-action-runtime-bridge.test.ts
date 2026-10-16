@@ -1,3 +1,4 @@
+import { reviewedEffectHash } from "../reviewed-effect";
 // Universal durable single-action acceptance. These tests intentionally assert the
 // new API contract: approval returns authorized/queued while canonical state is still
 // unchanged; only a persistent worker may cross the effect boundary.
@@ -67,7 +68,8 @@ async function draftUpdate(title: string) {
   expect(drafted.action.businessEffectId).toBeTruthy();
   const [action] = await withTenant(SEED_TENANT_ID, (db) => db.select().from(domainActions).where(eq(domainActions.id, drafted.action.id)).limit(1));
   expect(action!.status).toBe("pending");
-  return { orchestrator, action: action!, taskId, effectId: action!.businessEffectId! };
+  return { orchestrator, action: action!, taskId, effectId: action!.businessEffectId!,
+    reviewedEffectHash: await reviewedEffectHash(SEED_TENANT_ID, drafted.action.id) };
 }
 
 async function durableRows(actionId: string) {
@@ -91,7 +93,7 @@ describe.skipIf(!available)("single-action universal durable boundary", () => {
 
   it("commits final approval + exact EffectSet intent + first job atomically, and returns before execution", async () => {
     const fixture = await draftUpdate("Executed only by the worker");
-    const result = await fixture.orchestrator.decide(fixture.action.id, SEED_TENANT_ID, "approve", ownerId, { role: "owner" });
+    const result = await fixture.orchestrator.decide(fixture.action.id, SEED_TENANT_ID, "approve", ownerId, { role: "owner", expectedEffectHash: fixture.reviewedEffectHash });
     expect(result).toMatchObject({ status: "success", output: { authorized: true, durable: true, queued: true, durableWorkerExecution: true } });
 
     const beforeWorker = await withTenant(SEED_TENANT_ID, (db) => db.select().from(tasks).where(eq(tasks.id, fixture.taskId)).limit(1));
@@ -129,9 +131,9 @@ describe.skipIf(!available)("single-action universal durable boundary", () => {
       SEED_TENANT_ID,
       "approve",
       ownerId,
-      { role: "owner" },
+      { role: "owner", expectedEffectHash: fixture.reviewedEffectHash },
     )));
-    approvals.push(await fixture.orchestrator.decide(fixture.action.id, SEED_TENANT_ID, "approve", ownerId, { role: "owner" }));
+    approvals.push(await fixture.orchestrator.decide(fixture.action.id, SEED_TENANT_ID, "approve", ownerId, { role: "owner", expectedEffectHash: fixture.reviewedEffectHash }));
     expect(approvals.every((result) => result.status === "success")).toBe(true);
     const { step } = await durableRows(fixture.action.id);
     expect(step).toBeTruthy();
@@ -168,7 +170,7 @@ describe.skipIf(!available)("single-action universal durable boundary", () => {
         minApprovals: 1,
       });
     });
-    const intermediate = await fixture.orchestrator.decide(fixture.action.id, SEED_TENANT_ID, "approve", ownerId, { role: "owner" });
+    const intermediate = await fixture.orchestrator.decide(fixture.action.id, SEED_TENANT_ID, "approve", ownerId, { role: "owner", expectedEffectHash: fixture.reviewedEffectHash });
     expect(intermediate).toMatchObject({ status: "success", output: { awaitingNextApproval: true } });
     const [afterIntermediate, noCommands] = await withTenant(SEED_TENANT_ID, async (db) => Promise.all([
       db.select().from(domainActions).where(eq(domainActions.id, fixture.action.id)).then((rows) => rows[0]),
@@ -177,7 +179,7 @@ describe.skipIf(!available)("single-action universal durable boundary", () => {
     expect(afterIntermediate!.status).toBe("pending");
     expect(noCommands).toHaveLength(0);
 
-    const final = await fixture.orchestrator.decide(fixture.action.id, SEED_TENANT_ID, "approve", ownerId, { role: "owner" });
+    const final = await fixture.orchestrator.decide(fixture.action.id, SEED_TENANT_ID, "approve", ownerId, { role: "owner", expectedEffectHash: fixture.reviewedEffectHash });
     expect(final).toMatchObject({ status: "success", output: { queued: true, durable: true } });
     expect((await durableRows(fixture.action.id)).step).toMatchObject({ status: "pending", executionState: "authorized" });
   });
@@ -214,7 +216,7 @@ describe.skipIf(!available)("single-action universal durable boundary", () => {
       requestedBy: ownerId,
     });
 
-    const approval = await fixture.orchestrator.decide(fixture.action.id, SEED_TENANT_ID, "approve", ownerId, { role: "owner" });
+    const approval = await fixture.orchestrator.decide(fixture.action.id, SEED_TENANT_ID, "approve", ownerId, { role: "owner", expectedEffectHash: fixture.reviewedEffectHash });
     expect(approval).toMatchObject({ status: "failure", output: { cancelled: true } });
     const [action, commandRows] = await withTenant(SEED_TENANT_ID, async (db) => Promise.all([
       db.select().from(domainActions).where(eq(domainActions.id, fixture.action.id)).then((rows) => rows[0]),
@@ -249,7 +251,7 @@ describe.skipIf(!available)("single-action universal durable boundary", () => {
 
   it("cancels an authorized unclaimed effect with a hard no-mutation guarantee", async () => {
     const fixture = await draftUpdate("Must never be written");
-    await fixture.orchestrator.decide(fixture.action.id, SEED_TENANT_ID, "approve", ownerId, { role: "owner" });
+    await fixture.orchestrator.decide(fixture.action.id, SEED_TENANT_ID, "approve", ownerId, { role: "owner", expectedEffectHash: fixture.reviewedEffectHash });
     const { run, step } = await durableRows(fixture.action.id);
     const cancelled = await cancelRun(SEED_TENANT_ID, run!.id, run!.version, ownerId);
     expect(cancelled.ok).toBe(true);
@@ -269,7 +271,7 @@ describe.skipIf(!available)("single-action universal durable boundary", () => {
 
   it("lets cancellation win after local claim but before the effect commit point", async () => {
     const fixture = await draftUpdate("Claimed but cancelled before commit");
-    await fixture.orchestrator.decide(fixture.action.id, SEED_TENANT_ID, "approve", ownerId, { role: "owner" });
+    await fixture.orchestrator.decide(fixture.action.id, SEED_TENANT_ID, "approve", ownerId, { role: "owner", expectedEffectHash: fixture.reviewedEffectHash });
     const { run, step } = await durableRows(fixture.action.id);
     expect(await claimStep(SEED_TENANT_ID, step!.id)).toMatchObject({ executionState: "claimed" });
     expect((await cancelRun(SEED_TENANT_ID, run!.id, run!.version, ownerId)).ok).toBe(true);
@@ -285,7 +287,7 @@ describe.skipIf(!available)("single-action universal durable boundary", () => {
 
   it("fails closed when the initiating employee loses authority after approval", async () => {
     const fixture = await draftUpdate("Revoked authority must not write");
-    await fixture.orchestrator.decide(fixture.action.id, SEED_TENANT_ID, "approve", ownerId, { role: "owner" });
+    await fixture.orchestrator.decide(fixture.action.id, SEED_TENANT_ID, "approve", ownerId, { role: "owner", expectedEffectHash: fixture.reviewedEffectHash });
     const { step } = await durableRows(fixture.action.id);
     await withTenant(SEED_TENANT_ID, (db) => db.update(users).set({ status: "suspended" }).where(and(eq(users.tenantId, SEED_TENANT_ID), eq(users.id, ownerId))));
     try {
@@ -307,7 +309,7 @@ describe.skipIf(!available)("single-action universal durable boundary", () => {
 
   it("records an authority revocation as causal-ready but execution-ineligible before any runtime claim", async () => {
     const fixture = await draftUpdate("Pre-claim revocation must not write");
-    await fixture.orchestrator.decide(fixture.action.id, SEED_TENANT_ID, "approve", ownerId, { role: "owner" });
+    await fixture.orchestrator.decide(fixture.action.id, SEED_TENANT_ID, "approve", ownerId, { role: "owner", expectedEffectHash: fixture.reviewedEffectHash });
     const { command, run, step } = await durableRows(fixture.action.id);
     expect(step).toMatchObject({
       protocolVersion: 2,
@@ -394,7 +396,7 @@ describe.skipIf(!available)("single-action universal durable boundary", () => {
 
   it("does not execute an approved effect after its material target precondition changes", async () => {
     const fixture = await draftUpdate("Stale effect must not overwrite current truth");
-    await fixture.orchestrator.decide(fixture.action.id, SEED_TENANT_ID, "approve", ownerId, { role: "owner" });
+    await fixture.orchestrator.decide(fixture.action.id, SEED_TENANT_ID, "approve", ownerId, { role: "owner", expectedEffectHash: fixture.reviewedEffectHash });
     const { step } = await durableRows(fixture.action.id);
     await withTenant(SEED_TENANT_ID, (db) => db.update(tasks).set({ title: "Changed after approval", priority: "low" }).where(and(eq(tasks.tenantId, SEED_TENANT_ID), eq(tasks.id, fixture.taskId))));
     await runWorkflowStep({ tenantId: SEED_TENANT_ID, workflowStepId: step!.id });
@@ -412,7 +414,7 @@ describe.skipIf(!available)("single-action universal durable boundary", () => {
 
   it("treats cancellation after the effect commit point as reconciliation, never rollback", async () => {
     const fixture = await draftUpdate("Possible effect must be reconciled");
-    await fixture.orchestrator.decide(fixture.action.id, SEED_TENANT_ID, "approve", ownerId, { role: "owner" });
+    await fixture.orchestrator.decide(fixture.action.id, SEED_TENANT_ID, "approve", ownerId, { role: "owner", expectedEffectHash: fixture.reviewedEffectHash });
     const { run, step } = await durableRows(fixture.action.id);
     await claimStep(SEED_TENANT_ID, step!.id);
     await withTenant(SEED_TENANT_ID, async (db) => {
@@ -447,7 +449,7 @@ describe.skipIf(!available)("single-action universal durable boundary", () => {
 
   it("recovers a crash after possible provider acceptance without blind redelivery", async () => {
     const fixture = await draftUpdate("Unknown delivery must not repeat");
-    await fixture.orchestrator.decide(fixture.action.id, SEED_TENANT_ID, "approve", ownerId, { role: "owner" });
+    await fixture.orchestrator.decide(fixture.action.id, SEED_TENANT_ID, "approve", ownerId, { role: "owner", expectedEffectHash: fixture.reviewedEffectHash });
     const { step } = await durableRows(fixture.action.id);
     await claimStep(SEED_TENANT_ID, step!.id);
     await withTenant(SEED_TENANT_ID, async (db) => {
@@ -485,7 +487,7 @@ describe.skipIf(!available)("single-action universal durable boundary", () => {
 
   it("fails closed when a forged tenant tries to claim another tenant's durable step", async () => {
     const fixture = await draftUpdate("Cross-tenant claim must not write");
-    await fixture.orchestrator.decide(fixture.action.id, SEED_TENANT_ID, "approve", ownerId, { role: "owner" });
+    await fixture.orchestrator.decide(fixture.action.id, SEED_TENANT_ID, "approve", ownerId, { role: "owner", expectedEffectHash: fixture.reviewedEffectHash });
     const { step } = await durableRows(fixture.action.id);
     await runWorkflowStep({ tenantId: randomUUID(), workflowStepId: step!.id });
     const [task, storedStep] = await withTenant(SEED_TENANT_ID, async (db) => Promise.all([
@@ -499,7 +501,7 @@ describe.skipIf(!available)("single-action universal durable boundary", () => {
   it.each(['predicate','target','hash'] as const)("refuses observer-supplied %s substitution under an approved effect identity", async (substitution) => {
     const title = 'This exact authorized target must change';
     const fixture = await draftUpdate(title);
-    await fixture.orchestrator.decide(fixture.action.id, SEED_TENANT_ID, 'approve', ownerId, {role:'owner'});
+    await fixture.orchestrator.decide(fixture.action.id, SEED_TENANT_ID, 'approve', ownerId, {role:'owner',expectedEffectHash:fixture.reviewedEffectHash});
     const [row] = await withTenant(SEED_TENANT_ID, db => db.select().from(businessEffects).where(eq(businessEffects.id, fixture.effectId)).limit(1));
     const supplied = structuredClone(row!.effect) as BusinessEffectSet;
     if (substitution === 'predicate') supplied.expected.state = {title:'Before durable approval',status:'open'};
@@ -528,7 +530,7 @@ describe.skipIf(!available)("single-action universal durable boundary", () => {
 
   it("rejects executor self-verification when the exact authorized task readback disagrees", async () => {
     const fixture = await draftUpdate("Independent observation must see this title");
-    await fixture.orchestrator.decide(fixture.action.id, SEED_TENANT_ID, "approve", ownerId, { role: "owner" });
+    await fixture.orchestrator.decide(fixture.action.id, SEED_TENANT_ID, "approve", ownerId, { role: "owner", expectedEffectHash: fixture.reviewedEffectHash });
     const [row] = await withTenant(SEED_TENANT_ID, (db) => db.select().from(businessEffects).where(eq(businessEffects.id, fixture.effectId)).limit(1));
     const verification = await recordBusinessEffectOutcome(SEED_TENANT_ID, row!.effect as BusinessEffectSet, {
       status: "success", output: { verified: true, canonicalObserved: true, taskId: fixture.taskId },
@@ -547,7 +549,7 @@ describe.skipIf(!available)("single-action universal durable boundary", () => {
     const orchestrator = new FinnorOrchestrator();
     const title = "Exact created task title";
     const drafted = await orchestrator.draftKnownAction("create_task", { subjectRef: { entityType: "task", entityId: subject.taskId }, title, priority: "high" }, SEED_TENANT_ID, { initiatedBy: ownerId, source: "s6_creation_readback" });
-    await orchestrator.decide(drafted.action.id, SEED_TENANT_ID, "approve", ownerId, { role: "owner" });
+    await orchestrator.decide(drafted.action.id, SEED_TENANT_ID, "approve", ownerId, { role: "owner", expectedEffectHash: await reviewedEffectHash(SEED_TENANT_ID, drafted.action.id) });
     const [effectRow] = await withTenant(SEED_TENANT_ID, db => db.select().from(businessEffects).where(eq(businessEffects.domainActionId, drafted.action.id)));
     const { step } = await durableRows(drafted.action.id);
     if (mode === "actual_worker") {
@@ -572,7 +574,7 @@ describe.skipIf(!available)("single-action universal durable boundary", () => {
 
   it.each(["plain", "phantom_computer", "phantom_workflow"])("retains responsibility when recovered %s success lacks independent settlement", async (claim) => {
     const fixture = await draftUpdate("A cached success must not invent this mutation");
-    await fixture.orchestrator.decide(fixture.action.id, SEED_TENANT_ID, "approve", ownerId, { role: "owner" });
+    await fixture.orchestrator.decide(fixture.action.id, SEED_TENANT_ID, "approve", ownerId, { role: "owner", expectedEffectHash: fixture.reviewedEffectHash });
     const { command, step } = await durableRows(fixture.action.id);
     await withTenant(SEED_TENANT_ID, (db) => db.insert(integrationOperations).values({
       tenantId: SEED_TENANT_ID, workflowStepId: step!.id, businessEffectId: fixture.effectId,
@@ -597,7 +599,7 @@ describe.skipIf(!available)("single-action universal durable boundary", () => {
   it.each([false, true])("observes expired successful attempts without replaying execution (target applied=%s)", async (applied) => {
     const title = "Qualified readback after the worker disappears";
     const fixture = await draftUpdate(title);
-    await fixture.orchestrator.decide(fixture.action.id, SEED_TENANT_ID, "approve", ownerId, { role: "owner" });
+    await fixture.orchestrator.decide(fixture.action.id, SEED_TENANT_ID, "approve", ownerId, { role: "owner", expectedEffectHash: fixture.reviewedEffectHash });
     const { command, step } = await durableRows(fixture.action.id);
     expect(await claimStep(SEED_TENANT_ID, step!.id)).toBeTruthy();
     const [operation] = await withTenant(SEED_TENANT_ID, async (db) => {

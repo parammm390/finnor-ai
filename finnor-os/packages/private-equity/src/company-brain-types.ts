@@ -200,6 +200,7 @@ export const COMPANY_BRAIN_RELATIONSHIP_KINDS = [
   "opportunity_deal",
   "deal_child",
   "deal_investment_case",
+  "opportunity_investment_case",
   "investment_case_thesis",
   "investment_case_assumption",
   "investment_case_decision",

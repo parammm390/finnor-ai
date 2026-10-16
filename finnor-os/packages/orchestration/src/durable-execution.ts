@@ -21,6 +21,7 @@ import {
   workflowStepClaims,
   workflowSteps,
   works,
+  users,
   type Db,
 } from "@finnor/db";
 import { revalidateActionExecution } from "@finnor/authority";
@@ -54,6 +55,8 @@ import { demoteAutonomyForWorkRegression, evaluateEffectAutonomy } from "./auton
 import { redactStructured, redactText } from "@finnor/security";
 import { resolveCommunicationTargets } from "../../domain-plugins/universal-actions/endpoint-resolver";
 import type { PartyRef } from "@finnor/shared-types";
+import {withRelationshipDispatch} from '../../authority/src/relationship-policy';
+import {validateStandingContactTx} from '../../authority/src/standing-contact';
 
 class DurableExecutionBlocked extends Error {
   constructor(readonly reason: string, readonly afterPossibleEffect = false) {
@@ -224,7 +227,7 @@ export async function revalidateAuthorizedEffectEligibility(
   try {
     const { actionRow, humanApproval, generationViolation, epistemicViolation } = await withTenant(tenantId, async (db) => {
       const [row] = await db.select().from(domainActions).where(and(eq(domainActions.tenantId, tenantId), eq(domainActions.id, domainActionId))).limit(1);
-      const [approval] = await db.select({ id: actionLog.id }).from(actionLog).where(and(eq(actionLog.tenantId, tenantId), eq(actionLog.domainActionId, domainActionId), eq(actionLog.step, "confirmed"))).limit(1);
+      const [approval] = await db.select({ id: actionLog.id }).from(actionLog).where(and(eq(actionLog.tenantId, tenantId), eq(actionLog.domainActionId, domainActionId), sql`${actionLog.step} IN ('confirmed','standing_contact_authorized')`)).limit(1);
       const violation = row ? await orchestrationGenerationViolationTx(db, tenantId, row) : null;
       const epistemicViolation = row ? await epistemicExecutionViolationTx(db,tenantId,row) : null;
       return { actionRow: row, humanApproval: approval, generationViolation: violation, epistemicViolation };
@@ -460,6 +463,8 @@ type CommitClaim =
  * and request reconciliation; there is no ambiguous approved-but-untracked window. */
 async function beginEffectCommit(loaded: LoadedExecution, fence?: StepFence): Promise<CommitClaim> {
   return withTenant(loaded.action.tenantId, async (db) => {
+    const { assertLiveControlBoundaryTx } = await import("./live-control-boundary");
+    await assertLiveControlBoundaryTx(db, loaded.action.tenantId, loaded.action.id, loaded.action.initiatedBy);
     const generationViolation = await orchestrationGenerationViolationTx(db, loaded.action.tenantId, loaded.action);
     if (generationViolation) throw new DurableExecutionBlocked(`Orchestration generation invalidated: ${generationViolation}`);
     const epistemicViolation = await epistemicExecutionViolationTx(db,loaded.action.tenantId,loaded.action);
@@ -672,6 +677,18 @@ async function verifyConsequentialToolDispatch(loaded: LoadedExecution, fence: S
   }
   const eligibility = await revalidateAuthorizedEffectEligibility(tenantId, loaded.action.id, loaded.effect.id);
   if (!eligibility.allowed) throw new DurableExecutionBlocked(eligibility.reason);
+  if (loaded.effect.operation.name === "execute_closing_operation") {
+    const [actor] = await withTenant(tenantId, db => db.select({ role: users.role, status: users.status }).from(users)
+      .where(and(eq(users.tenantId, tenantId), eq(users.id, loaded.action.initiatedBy!))).limit(1));
+    if (!actor || actor.status !== "active" || actor.role !== "owner") {
+      throw new DurableExecutionBlocked("Closing requires a current active actor admitted by the canonical PE owner context");
+    }
+    const { verifyClosingToolDispatch } = await import("../../private-equity/src/closing/action");
+    await verifyClosingToolDispatch({ auth: {
+      tenantId, userId: loaded.action.initiatedBy!, employeeId: loaded.action.initiatedBy!, role: actor.role,
+    } }, loaded.effect, request);
+    return;
+  }
   if (!["send_message", "notify_group", "place_call"].includes(loaded.effect.operation.name)) {
     throw new DurableExecutionBlocked("This effect has no independently bound tool dispatch adapter");
   }
@@ -701,6 +718,45 @@ async function verifyConsequentialToolDispatch(loaded: LoadedExecution, fence: S
       || fixed?.authProfileRef && request.runtime.authProfileRef !== fixed.authProfileRef) {
     throw new DurableExecutionBlocked("Concrete provider identity differs from the approved account binding");
   }
+}
+
+async function relationshipBoundDispatch(loaded:LoadedExecution,fence:StepFence|undefined,request:ConsequentialDispatchRequest,dispatch:()=>Promise<Record<string,unknown>>){
+  await verifyConsequentialToolDispatch(loaded,fence,request);
+  if(!["send_message","notify_group","place_call"].includes(loaded.effect.operation.name))return dispatch();
+  const match=/^delivery:([a-f0-9-]{36})$/i.exec(request.runtime.semanticMemberKey??'');
+  if(!match)throw new DurableExecutionBlocked('Current canonical contact member is required');
+  const delivery=await withTenant(loaded.action.tenantId,async db=>{
+    const row=await db.execute<{recipient_type:string;recipient_id:string;company_id:string}>(sql`
+      SELECT d.recipient_type,d.recipient_id,CASE WHEN d.recipient_type='external_organization'
+        THEN d.recipient_id ELSE c.external_organization_id END company_id
+      FROM finnor_os.communication_deliveries d LEFT JOIN finnor_os.external_contacts c
+        ON c.tenant_id=d.tenant_id AND c.id=d.recipient_id
+      WHERE d.tenant_id=${loaded.action.tenantId}::uuid AND d.id=${match[1]}::uuid AND d.domain_action_id=${loaded.action.id}::uuid`);
+    return row.rows[0];
+  });
+  if(!delivery)throw new DurableExecutionBlocked('Current canonical contact delivery is unavailable');
+  if(!['external_contact','external_organization'].includes(delivery.recipient_type))return dispatch();
+  if(!loaded.action.initiatedBy)throw new DurableExecutionBlocked('Current canonical contact actor is required');
+  if(!delivery.company_id)throw new DurableExecutionBlocked('Contact company identity is unresolved');
+  const channel=request.toolName==='send_email'?'email':request.toolName==='send_sms_to_number'?'sms':'voice';
+  return withRelationshipDispatch({tenantId:loaded.action.tenantId,actorId:loaded.action.initiatedBy,actionId:loaded.action.id,
+    memberKey:request.runtime.semanticMemberKey,companyId:delivery.company_id,personId:delivery.recipient_id,channel,
+    endpoint:String(request.input.to??request.input.phoneNumber??''),dispatch,
+    validate:async c=>{
+      const standing=(await c.query("SELECT 1 FROM finnor_os.s6_contact_intents WHERE tenant_id=$1 AND action_id=$2 AND programme_owner='V1'",[loaded.action.tenantId,loaded.action.id])).rows[0];
+      if(standing)await validateStandingContactTx(c,loaded.action.tenantId,loaded.action.id,loaded.effect);
+      // Do not open a second relationship-locking connection from inside this
+      // transaction. The exact envelope was just verified; check its current
+      // durable lease/fence again on the connection spanning provider IO.
+      const current=(await c.query(`SELECT s.claim_token,s.claim_fence,s.dispatch_generation,s.lease_expires_at
+        FROM finnor_os.workflow_steps s JOIN finnor_os.domain_actions a ON a.tenant_id=s.tenant_id AND a.id=s.domain_action_id
+        WHERE s.tenant_id=$1 AND s.id=$2 AND s.status='leased' AND s.execution_state='commit_started'
+          AND a.status='executing'`,[loaded.action.tenantId,loaded.step.id])).rows[0];
+      if(!current||new Date(current.lease_expires_at).getTime()<=Date.now()||fence&&
+        (current.claim_token!==fence.claimToken||Number(current.claim_fence)!==fence.claimFence||Number(current.dispatch_generation)!==fence.dispatchGeneration)){
+        throw new DurableExecutionBlocked('Contact lost its current durable dispatch fence');
+      }
+    }});
 }
 
 export interface DurableExecutionDependencies {
@@ -883,10 +939,13 @@ export async function executeAuthorizedEffectStep(
         purpose: typeof values.purpose === "string" ? values.purpose : loaded.action.actionType,
         ...(binding?.communicationIdentityId ? { communicationIdentityId: binding.communicationIdentityId } : {}),
         ...(binding?.authProfileRef ? { authProfileRef: binding.authProfileRef } : {}),
+        ...(loaded.action.actionType === "execute_closing_operation" && typeof (values.closingProvider as Record<string, unknown> | undefined)?.integrationId === "string"
+          ? { providerIntegrationId: (values.closingProvider as { integrationId: string }).integrationId } : {}),
         businessEffectId: loaded.effect.id,
         businessEffectHash: loaded.effect.semanticHash,
         ...(loaded.workflowStepClaimId ? { workflowStepClaimId: loaded.workflowStepClaimId } : {}),
         beforeConsequentialDispatch: request => verifyConsequentialToolDispatch(loaded, fence, request),
+        withConsequentialDispatch:(request,dispatch)=>relationshipBoundDispatch(loaded,fence,request,dispatch),
       });
       try {
         result = await plugin.execute(draft, tools);

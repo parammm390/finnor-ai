@@ -44,6 +44,11 @@ export const IC_SOURCE_REFERENCE_SCHEMA = z.discriminatedUnion("kind", [
 ]);
 
 export const PRIVATE_EQUITY_ACTION_SCHEMAS = {
+  execute_closing_operation: z.object({
+    dealId: uuid, programmeId: uuid,
+    nodeKey: z.string().regex(/^[a-zA-Z0-9][a-zA-Z0-9:._-]{0,159}$/),
+    specDigest: z.string().regex(/^[a-f0-9]{64}$/),
+  }).strict(),
   create_underwriting_run: z.object({
     dealId: uuid,
     investmentCaseId: uuid,

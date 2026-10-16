@@ -15,6 +15,7 @@ import { CausalReplayPanel } from "../canvas/CausalReplayPanel"
 import { composeCanvasDocument } from "../canvas/canvas-compose"
 import { useCanvasSources } from "../canvas/use-canvas-sources"
 import { WorldExplorer } from "../world/WorldExplorer"
+import { LiveInstitutionalControl } from "../controls/LiveInstitutionalControl"
 import { canonicalWorldFocus, operatingSelection } from "../world/world-context"
 import { createInvestigation, listInvestigations } from "../thread/thread-api"
 import type { ConversationThreadSummary } from "../thread/thread-contract"
@@ -172,7 +173,8 @@ export function CentropyWorkspace() {
   }, [messages, visiblePending])
   useEffect(() => { messagesEnd.current?.scrollIntoView({ block: "end" }) }, [messages.length, visiblePending?.instructionId])
 
-  const activeWorkId = responseWork?.threadId === threadId ? responseWork.workId : investigation.loaded?.thread.activeWorkId ?? null
+  const activeWorkId = responseWork?.threadId === threadId ? responseWork.workId
+    : investigation.loaded?.thread.activeWorkId ?? (worldMode && routeSelection.workId && UUID.test(routeSelection.workId) ? routeSelection.workId : null)
   // Restored replay must belong to this Investigation's selected canonical Work.
   const replayWorkId = requestedReplayWorkId === activeWorkId ? requestedReplayWorkId : replayWork?.threadId === threadId ? replayWork.workId : null
   const activeObjectiveId = investigation.loaded?.thread.activeWorkId === activeWorkId ? investigation.loaded.thread.activeObjectiveLoopId : null
@@ -459,7 +461,9 @@ export function CentropyWorkspace() {
       </section>
 
       <main className="ct-canvas" aria-label={worldMode ? "WORLD explorer" : "Investigation Canvas"}>
-        {worldMode ? <WorldExplorer root={canvasRoot} projection={canvasSources.projection.data} projectionStatus={canvasSources.projection.status} projectionError={canvasSources.projection.error} initialObject={routeSelectedObject} onSelectRoot={selectWorldRoot} onSelectObject={selectWorldObject} onAsk={askAboutWorldNode} onRefresh={() => setCanvasRefresh((value) => value + 1)} />
+        {!worldMode && canvasRoot && focusedObject && canvasSources.projection.data && canvasSources.projection.status !== "error"
+          ? <LiveInstitutionalControl root={canvasRoot} focus={focusedObject} workId={activeWorkId} onChanged={() => setCanvasRefresh(value => value + 1)} /> : null}
+        {worldMode ? <WorldExplorer key={`${auth.session.user.id}:${auth.session.access_token}`} root={canvasRoot} projection={canvasSources.projection.data} projectionStatus={canvasSources.projection.status} projectionError={canvasSources.projection.error} initialObject={routeSelectedObject} workId={activeWorkId} onSelectRoot={selectWorldRoot} onSelectObject={selectWorldObject} onAsk={askAboutWorldNode} onRefresh={() => setCanvasRefresh((value) => value + 1)} />
           : threadId ? replayWorkId ? <CausalReplayPanel workId={replayWorkId} onClose={() => selectReplayWorkId(null)} /> : canvasDocument ? <CanvasDocument key={threadId} onSelectProgramWork={(workId) => {setResponseWork({threadId,workId});setRefreshToken(value=>value+1);setCanvasRefresh(value=>value+1)}} document={canvasDocument} root={canvasRoot} sourceErrors={canvasErrors} refreshing={canvasLoading} onRefresh={() => setCanvasRefresh((value) => value + 1)} onRefreshUnderwriting={() => setUnderwritingRefresh((value) => value + 1)} work={canvasSources.work.status === "ready" ? canvasSources.work.data : null} underwriting={canvasSources.underwriting.data} underwritingReady={canvasSources.underwriting.status === "ready"} ic={canvasSources.ic.data} icReady={canvasSources.ic.status === "ready"} onSelectIcCase={selectIcCase} onOpenReplay={selectReplayWorkId} onInspectEntity={(id) => { const node = canvasSources.projection.data?.nodes.find((item) => `${item.ref.type}:${item.ref.id}` === id); if (node && canvasRoot) { setFocusedObject(node.ref); router.push(worldHref(canvasRoot, node.ref)) } }} /> : investigation.status === "loading" || canvasLoading ? <p className="ct-canvas__loading" role="status">Assembling Canvas from persisted records…</p> : <div className="ct-canvas__invalid" role="alert"><h2>Canvas unavailable</h2><p>The typed document could not be composed from the current source records.</p><button type="button" onClick={() => setCanvasRefresh((value) => value + 1)}>Retry from sources</button></div>
           : draftArtifactInUrl ? <Suspense fallback={<p role="status">Reading the exact artifact draft…</p>}><StandaloneArtifactCanvas key={`${searchParams.get("artifactDocumentId")}:${searchParams.get("artifactVersionId")}`} documentId={searchParams.get("artifactDocumentId")!} initialVersionId={searchParams.get("artifactVersionId")!} onClose={() => { const query = new URLSearchParams(routeQuery); for (const key of ["artifactMode", "artifactDocumentId", "artifactVersionId"]) query.delete(key); router.replace(`${pathname}${query.size ? `?${query}` : ""}`, { scroll: false }) }} onVersionChange={(id) => { if (!UUID.test(id)) return; const query = new URLSearchParams(routeQuery); query.set("artifactVersionId", id); router.replace(`${pathname}?${query}`, { scroll: false }) }} /></Suspense>
           : <HomeCanvas recent={recent} recentError={recentError} onOpenInvestigation={openInvestigation} />}

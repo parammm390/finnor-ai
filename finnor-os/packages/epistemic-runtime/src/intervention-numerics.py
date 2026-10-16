@@ -5,6 +5,7 @@ data lookup. Fitting, bootstrap and hull machinery come from mature libraries.
 import hashlib
 import importlib.metadata
 import json
+import re
 import resource
 import sys
 import time
@@ -19,6 +20,27 @@ from statsmodels.stats.diagnostic import acorr_ljungbox
 from arch.bootstrap import MovingBlockBootstrap
 
 PINNED = {'numpy': '2.3.3', 'scipy': '1.16.2', 'statsmodels': '0.14.5', 'arch': '8.0.0', 'pandas': '2.3.2'}
+
+
+def numerical_peak_rss_bytes():
+    if sys.platform == 'linux':
+        # ru_maxrss can retain the Node parent's pre-exec peak on Linux.
+        # VmHWM is the interpreter's own post-exec resident high-water mark.
+        with open('/proc/self/status', encoding='ascii') as source:
+            status = source.read(65537)
+        fields = [line for line in status.splitlines() if line.startswith('VmHWM:')]
+        if len(status) > 65536 or len(fields) != 1:
+            raise ValueError('BACKEND_PEAK_RSS_OBSERVATION_UNAVAILABLE')
+        match = re.fullmatch(r'VmHWM:[ \t]+([0-9]+)[ \t]+kB[ \t]*', fields[0])
+        if not match or int(match[1]) <= 0:
+            raise ValueError('BACKEND_PEAK_RSS_OBSERVATION_INVALID')
+        return int(match[1]) * 1024
+    if sys.platform == 'darwin':
+        peak = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+        if not isinstance(peak, int) or peak <= 0:
+            raise ValueError('BACKEND_PEAK_RSS_OBSERVATION_INVALID')
+        return peak
+    raise ValueError('BACKEND_PEAK_RSS_PLATFORM_UNSUPPORTED')
 
 
 def atom(f, rows, i):
@@ -250,7 +272,7 @@ def main():
     if result is None: raise ValueError('UNSUPPORTED_OPERATION')
     usage = resource.getrusage(resource.RUSAGE_SELF)
     result['backend'] = {'versions': versions, 'python': sys.version, 'sourceDigest': hashlib.sha256(open(__file__, 'rb').read()).hexdigest()}
-    result['usage'] = {'elapsedMs': (time.perf_counter()-start)*1000, 'childMaxRssBytes': int(usage.ru_maxrss*(1 if sys.platform == 'darwin' else 1024)),
+    result['usage'] = {'elapsedMs': (time.perf_counter()-start)*1000, 'childMaxRssBytes': numerical_peak_rss_bytes(),
                        'childCpuUserSeconds': usage.ru_utime, 'childCpuSystemSeconds': usage.ru_stime}
     json.dump(result, sys.stdout, allow_nan=False, separators=(',', ':'))
 

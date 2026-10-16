@@ -440,6 +440,27 @@ async function ensureDelivery(params: {
   });
 }
 
+/** S6's qualified observer records transport acceptance on the same canonical
+ * delivery. It is not an acknowledgment, interest statement or recipient receipt. */
+export async function recordObservedCommunicationAcceptance(input: {
+  tenantId: string; actionId: string; recipientId: string; communicationIdentityId: string;
+  providerMessageRef: string; observation: Record<string, unknown>;
+}) {
+  return withTenant(input.tenantId, async db => {
+    const row = await db.execute<{ id: string; state: string }>(sql`
+      SELECT d.id,e.status state FROM finnor_os.communication_deliveries d
+      JOIN finnor_os.domain_actions a ON a.tenant_id=d.tenant_id AND a.id=d.domain_action_id
+      JOIN finnor_os.business_effects e ON e.tenant_id=a.tenant_id AND e.id=a.business_effect_id
+      WHERE d.tenant_id=${input.tenantId}::uuid AND d.domain_action_id=${input.actionId}::uuid
+        AND d.recipient_type='external_contact' AND d.recipient_id=${input.recipientId}::uuid AND d.channel='email'`);
+    if (row.rows[0]?.state !== "verified") throw Error("S6_EXACT_MEMBER_VERIFIED_OBSERVATION_REQUIRED");
+    await db.update(communicationDeliveries).set({
+      status: "sent", communicationIdentityId: input.communicationIdentityId, providerMessageRef: input.providerMessageRef,
+      errorCode: null, updatedAt: new Date(),
+    }).where(and(eq(communicationDeliveries.tenantId, input.tenantId), eq(communicationDeliveries.id, row.rows[0].id)));
+  });
+}
+
 function providerReference(output: Record<string, unknown>): string | null {
   for (const key of ["messageId", "callId", "id"]) if (typeof output[key] === "string") return String(output[key]);
   return null;

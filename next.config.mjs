@@ -48,6 +48,13 @@ const nextConfig = {
     return config
   },
   allowedDevOrigins: ["127.0.0.1"],
+  ...(process.env.FINNOR_V4_PROFILE === "DISPOSABLE" && process.env.FINNOR_V4_NO_PERSISTENT_BUILD_CACHE === "1" ? {
+    webpack(config) {
+      // Disposable verification must not spend its finite disk budget on a cache.
+      config.cache = false
+      return config
+    },
+  } : {}),
   // Release builds provide a commit-derived value. Keeping the Next build ID
   // deterministic makes the runtime release record independently checkable.
   generateBuildId: async () => process.env.FINNOR_BUILD_ID || process.env.VERCEL_GIT_COMMIT_SHA || null,

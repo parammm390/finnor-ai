@@ -1,0 +1,24 @@
+{
+  "status": "PASS",
+  "startedAt": "2026-10-15T16:07:14.229Z",
+  "finishedAt": "2026-10-15T16:07:31.756Z",
+  "elapsedMs": 17527,
+  "diagnostics": [],
+  "sourceFiles": 3487,
+  "rootFiles": 21,
+  "explicitRoots": [
+    "finnor-os/packages/private-equity/src/opportunity-handoff.ts",
+    "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
+    "finnor-os/scripts/generate-openapi.ts",
+    "finnor-os/scripts/v3/run-closing-e2e.mts"
+  ],
+  "node": "v22.22.3",
+  "noEmit": true,
+  "outputWritesForbidden": true,
+  "sourceLeaks": [],
+  "dependencies": "LINKED_EXTERNAL_DEPENDENCIES_WITH_DELIVERY_LOCAL_WORKSPACE_PACKAGES_NOT_CLEAN_INSTALLED",
+  "runtimeCasesReexecutedInDeliveryTree": 0,
+  "rawEvidenceExcluded": true,
+  "unfinishedFixtureRefactorExcluded": true,
+  "previousAttempt": "DELIVERY_VALIDATION-001.json"
+}

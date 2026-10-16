@@ -35,6 +35,7 @@ export interface BusinessEffectBinding {
   selection: "fixed" | "policy_resolved";
   application?: string;
   provider?: string | null;
+  tenantIntegrationId?: string;
   applicationAccountId?: string;
   authProfileId?: string;
   authProfileRef?: string;

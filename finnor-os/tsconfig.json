@@ -6,6 +6,8 @@
   "include": [
     "packages/**/*.ts",
     "packages/private-equity/src/r1/native-child.mts",
+    "packages/epistemic-runtime/src/closing-checker-service.mts",
+    "packages/governed-execution/src/closing-provider-broker.mts",
     "apps/**/*.ts",
     "apps/**/*.tsx",
     "tests/**/*.ts",

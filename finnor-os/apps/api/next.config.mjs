@@ -1,6 +1,8 @@
 /** @type {import('next').NextConfig} */
 import { fileURLToPath } from "node:url";
 import { dirname, relative } from "node:path";
+import { readFileSync } from "node:fs";
+import { createHash } from "node:crypto";
 
 const repositoryRoot = fileURLToPath(new URL("../../../", import.meta.url));
 
@@ -61,6 +63,14 @@ const nextConfig = {
         return JSON.stringify(source ? original(source) : "");
       }, true);
       config.plugins.push(new webpack.DefinePlugin({
+        "process.env.FINNOR_V4_BUILD_SOURCE_FILES_DIGEST": webpack.DefinePlugin.runtimeValue(() => {
+          const manifest = new URL("../../packages/private-equity/src/capital-formation/method-files.json", import.meta.url);
+          const paths = JSON.parse(readFileSync(manifest, "utf8"));
+          const canonical = value => value === null || typeof value !== "object" ? JSON.stringify(value) : Array.isArray(value)
+            ? "[" + value.map(canonical).join(",") + "]" : "{" + Object.keys(value).sort().map(key => JSON.stringify(key) + ":" + canonical(value[key])).join(",") + "}";
+          const files = paths.map(path => ({ path, sha256: createHash("sha256").update(readFileSync(new URL(path, new URL("../../../", import.meta.url)))).digest("hex") }));
+          return JSON.stringify(createHash("sha256").update(canonical(files)).digest("hex"));
+        }, true),
         "import.meta.url": meta("sourceURL", source => new URL(`file://${source}`).href),
         "import.meta.dirname": meta("sourceDirectory", dirname),
       }));
@@ -73,11 +83,16 @@ const nextConfig = {
       "../../../package-lock.json", "../../../infra/deployment/production.contract.json",
       "../../tsconfig.json", "../../tsconfig.base.json",
       "../../package-lock.json", "../../packages/**/*.ts", "../../packages/**/*.mts",
+      "../../packages/private-equity/src/primary-diligence/checker-spec.md",
+      "../../packages/private-equity/src/bilateral-opportunities/checker-spec.md",
       "../../packages/**/*.m", "../../packages/**/*.py", "../../packages/**/*.sql",
       "../../packages/**/*.mjs", "../../packages/**/*.cjs",
+      "../../packages/private-equity/src/capital-formation/method-files.json",
       "../../packages/**/package.json", "../../packages/source-custody/index.cjs",
       "../../packages/**/fixtures/*.json", "../../scripts/p3/**/*.{ts,mts,cjs,mjs}",
       "../../scripts/r4/requirements.lock",
+      "../../scripts/release/action-hardening-spec.ts",
+      "../../../scripts/release/production-mutation-guard.mjs",
       "../../apps/worker/src/**/*.ts", "./app/api/**/*.ts",
       "../../node_modules/fs-ext/**/*", "../../node_modules/tsx/**/*", "../../node_modules/esbuild/**/*",
     ],

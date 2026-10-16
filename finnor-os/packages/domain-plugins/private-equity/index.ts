@@ -28,6 +28,7 @@ import {
   createUnderwritingRun,
   createRequest,
   createWorkstream,
+  withPeMutationTransaction,
   declareDealClosed,
   evaluateDealCloseEligibility,
   getIcWorkspace,
@@ -75,6 +76,7 @@ import type {
   ValidationResult,
 } from "@finnor/shared-types";
 import type { ToolRegistry } from "@finnor/tools";
+import { groundClosingOperation, prepareClosingPublication } from "../../private-equity/src/closing/action";
 import {
   ActionGroundingError,
   type DomainActionGrounding,
@@ -94,15 +96,16 @@ type Row = Record<string, unknown>;
 export interface PrivateEquityActionContract {
   actionType: PrivateEquityActionType;
   canonicalMutationOwner: string;
-  resultEntityType: PeEntityRef["entityType"] | "underwriting_run";
+  resultEntityType: PeEntityRef["entityType"] | "underwriting_run" | "closing_operation";
   idempotencyIdentity: "domain_action_id";
-  verification: "canonical_return_and_reread";
+  verification: "canonical_return_and_reread" | "independent_signed_provider_observation";
   receiptPath: "core_durable_action_receipt";
 }
 
 /** Auditable one-to-one map: the plugin translates, while PE2 remains the only
  * owner of business truth and state-machine semantics. */
 export const PRIVATE_EQUITY_ACTION_CONTRACTS: readonly PrivateEquityActionContract[] = [
+  ["execute_closing_operation", "S6 original-spec closing broker", "closing_operation"],
   ["create_underwriting_run", "createUnderwritingRun", "underwriting_run"],
   ["open_ic_case", "createIcCase", "pe_ic_case"],
   ["begin_ic_preparation", "beginIcPreparation", "pe_ic_case"],
@@ -136,7 +139,7 @@ export const PRIVATE_EQUITY_ACTION_CONTRACTS: readonly PrivateEquityActionContra
   canonicalMutationOwner: canonicalMutationOwner!,
   resultEntityType: resultEntityType as PrivateEquityActionContract["resultEntityType"],
   idempotencyIdentity: "domain_action_id" as const,
-  verification: "canonical_return_and_reread" as const,
+  verification: actionType === "execute_closing_operation" ? "independent_signed_provider_observation" as const : "canonical_return_and_reread" as const,
   receiptPath: "core_durable_action_receipt" as const,
 }));
 
@@ -153,6 +156,7 @@ const CREATE_ID_FIELD: Partial<Record<PrivateEquityActionType, string>> = {
   link_deal_dependency: "dependencyId",
   create_closing_condition: "closingConditionId",
 };
+export const PRIVATE_EQUITY_CREATE_ID_FIELDS: Readonly<Partial<Record<PrivateEquityActionType, string>>> = CREATE_ID_FIELD;
 
 const COLLECTION_BY_TYPE: Partial<Record<PeEntityRef["entityType"], keyof DealExecutionGraph>> = {
   pe_deal_party: "dealParties",
@@ -627,6 +631,7 @@ function requiredEntityRefs(actionType: PrivateEquityActionType, payload: Payloa
     ...(versionField ? { expectedVersion: Number(payload[versionField]) } : {}),
   });
   switch (actionType) {
+    case "execute_closing_operation": return [];
     case "create_underwriting_run":
     case "open_ic_case":
     case "begin_ic_preparation":
@@ -755,6 +760,17 @@ async function groundPrivateEquityAction(draft: DraftAction, action: DomainActio
     payload[createIdField] = action.id;
   }
   payload.workId = workId;
+  if (actionType === "execute_closing_operation") {
+    const actor = await peTransaction(ctx, async (_db, c) =>
+      (await c.query("SELECT role,status FROM finnor_os.users WHERE tenant_id=$1 AND id=$2", [action.tenantId, actorId])).rows[0], { readOnly: true });
+    if (!actor || actor.status !== "active") throw new ActionGroundingError("CLOSING_CURRENT_ACTOR_REQUIRED", "Closing actor is unavailable");
+    ctx.auth.role = actor.role;
+    const values = await groundClosingOperation(ctx, action, { ...draft, payload });
+    return { draft: { ...draft, payload: values }, groundedPayload: [
+      { field: "dealId", status: "verified" }, { field: "workId", status: "verified" },
+      { field: "programmeId", status: "verified" }, { field: "specDigest", status: "verified" },
+    ] };
+  }
   if (actionType === "create_underwriting_run") {
     // The durable DomainAction creation time is a stable world cutoff across
     // approval delays and retries; a planner cannot choose or advance it.
@@ -968,7 +984,7 @@ async function governanceProof(draft: DraftAction, tenantId: string, actorId: st
 function existingCreateResult(graph: DealExecutionGraph, actionType: PrivateEquityActionType, payload: Payload): PeMutationResult | null {
   const field = CREATE_ID_FIELD[actionType];
   const contract = CONTRACT_BY_ACTION.get(actionType);
-  if (!field || !contract || contract.resultEntityType === "underwriting_run" || typeof payload[field] !== "string") return null;
+  if (!field || !contract || contract.resultEntityType === "underwriting_run" || contract.resultEntityType === "closing_operation" || typeof payload[field] !== "string") return null;
   const row = currentRow(graph, contract.resultEntityType, payload[field] as string);
   return row ? { row, changed: false, idempotent: true } : null;
 }
@@ -978,6 +994,7 @@ async function executeMutation(actionType: PrivateEquityActionType, payload: Pay
   const existing = existingCreateResult(graph, actionType, payload);
   if (existing) return existing;
   switch (actionType) {
+    case "execute_closing_operation": throw new PeDomainError("CLOSING_NATIVE_TRANSPORT_REQUIRED", "Closing provider execution is not a canonical PE row mutation");
     case "create_underwriting_run": {
       const scenario = payload.scenario as { name: string; overrides: UnderwritingScenario["overrides"] } | undefined;
       const createdScenario = scenario ? await createUnderwritingScenario(ctx, {
@@ -1205,7 +1222,7 @@ async function executeMutation(actionType: PrivateEquityActionType, payload: Pay
     case "open_workstream": return createWorkstream(ctx, {
       id: String(payload.workstreamId), dealId: String(payload.dealId), kind: payload.kind as never,
       name: String(payload.name), owner: payload.owner as never,
-    });
+    }, { workId: String(payload.workId) });
     case "create_deal_request": return createRequest(ctx, {
       id: String(payload.requestId), dealId: String(payload.dealId), workstreamId: String(payload.workstreamId),
       requestedFromDealPartyId: String(payload.requestedFromDealPartyId), owner: payload.owner as never,
@@ -1280,6 +1297,7 @@ export const privateEquityPlugin: DomainEnginePlugin = {
   // independently discover the executable surface. A contract test proves this
   // list is exactly the schema-key set, preventing registration/schema drift.
   actionTypes: [
+    "execute_closing_operation",
     "create_underwriting_run",
     "open_ic_case",
     "begin_ic_preparation",
@@ -1362,6 +1380,16 @@ export const privateEquityPlugin: DomainEnginePlugin = {
     const actionType = draft.actionType as PrivateEquityActionType;
     const contract = CONTRACT_BY_ACTION.get(actionType);
     if (!contract) return { status: "failure", output: {}, error: `No PE action contract for ${draft.actionType}`, errorKind: "terminal" };
+    if (actionType === "execute_closing_operation") {
+      if (!runtime.businessEffectId || !runtime.businessEffectHash) return { status: "failure", output: {}, error: "Closing requires the exact approved effect", errorKind: "conflict" };
+      const result = await tools.callIdempotent("execute_closing_provider_operation", {
+        tenantId: runtime.tenantId, programmeId: draft.payload.programmeId, nodeKey: draft.payload.nodeKey,
+        domainActionId: runtime.domainActionId, businessEffectId: runtime.businessEffectId, businessEffectHash: runtime.businessEffectHash,
+      }, `closing:${String(draft.payload.programmeId)}:${String(draft.payload.nodeKey)}`);
+      return result.ok && result.output.acknowledged === true
+        ? { status: "success", output: { ...result.output, verified: false, settlementEstablished: false }, expected: { independentSignedObservationRequired: true } }
+        : { status: "failure", output: result.output, error: result.error ?? "Original closing operation requires reconciliation", errorKind: result.errorKind ?? "unknown_outcome" };
+    }
     const ctx: PeMutationContext = {
       auth: {
         tenantId: runtime.tenantId,
@@ -1373,9 +1401,7 @@ export const privateEquityPlugin: DomainEnginePlugin = {
     };
     let mutationObserved = false;
     try {
-      const result = await executeMutation(actionType, draft.payload, ctx, draft);
-      mutationObserved = true;
-      const entityId = String(result.row.id);
+      if (actionType === "declare_deal_closed") await prepareClosingPublication(ctx, runtime.domainActionId);
       const workId = String(draft.payload.workId);
       // Closing atomically makes the Deal graph immutable.  Its Work->Deal anchor
       // was required during grounding, so trying to add another link after close
@@ -1385,14 +1411,20 @@ export const privateEquityPlugin: DomainEnginePlugin = {
       // Case is the durable Work target. Trying to attach a child result after
       // its repository mutation succeeds makes the action falsely fail.
       const icCaseChildResult = ["pe_ic_memo", "pe_ic_recommendation", "pe_ic_decision_proposal"].includes(contract.resultEntityType);
-      if (actionType !== "declare_deal_closed" && actionType !== "create_ic_deck_draft" && actionType !== "create_ic_memo_draft"
-        && !icCaseChildResult && contract.resultEntityType !== "underwriting_run") {
-        await attachWorkToDealGraph(ctx, {
-          dealId: String(draft.payload.dealId),
-          workId,
-          entities: [{ entityType: contract.resultEntityType, entityId, relationship: "result" }],
-        });
-      }
+      const resultEntityType = contract.resultEntityType;
+      const attachResult = actionType !== "open_workstream" && actionType !== "declare_deal_closed"
+        && actionType !== "create_ic_deck_draft" && actionType !== "create_ic_memo_draft"
+        && !icCaseChildResult && resultEntityType !== "underwriting_run" && resultEntityType !== "closing_operation";
+      const result = attachResult
+        ? await withPeMutationTransaction(ctx, async () => {
+          const mutation = await executeMutation(actionType, draft.payload, ctx, draft);
+          await attachWorkToDealGraph(ctx, { dealId: String(draft.payload.dealId), workId,
+            entities: [{ entityType: resultEntityType, entityId: String(mutation.row.id), relationship: "result" }] });
+          return mutation;
+        })
+        : await executeMutation(actionType, draft.payload, ctx, draft);
+      mutationObserved = true;
+      const entityId = String(result.row.id);
       if (result.idempotent) {
         recordIcMetric({
           tenantId: runtime.tenantId,

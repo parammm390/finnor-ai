@@ -1,0 +1,349 @@
+{
+  "schema": "finnor.installed-v4-validation.v1",
+  "baseCommit": "4a4c7b91074bca5b833897676546b8b6080a71da",
+  "scope": "DISPOSABLE_DEVELOPMENT_V4_INSTALLED_REGRESSION_NOT_CUMULATIVE_RELEASE",
+  "run": "013",
+  "results": [
+    {
+      "id": "RUNTIME_MIGRATION_RLS",
+      "status": "PASS"
+    },
+    {
+      "id": "K_ORIGINAL_WORK_CONTINUATION",
+      "status": "PASS"
+    },
+    {
+      "id": "A_B_ORIGINAL_SOURCE",
+      "status": "PASS"
+    },
+    {
+      "id": "C_AUTHENTICATION_AND_ENTITY",
+      "status": "PASS"
+    },
+    {
+      "id": "F_ACTUAL_CORPUS_READER",
+      "status": "PASS"
+    },
+    {
+      "id": "F_ENROLLED_WRITER_GUARDS",
+      "status": "PASS"
+    },
+    {
+      "id": "E_CURRENT_MATERIAL_GRANT",
+      "status": "PASS"
+    },
+    {
+      "id": "J_RECORD_WRITE_IS_NOT_FUNDING",
+      "status": "PASS"
+    },
+    {
+      "id": "G_PHYSICAL_ACCEPTANCE_KILL",
+      "status": "PASS"
+    },
+    {
+      "id": "H_E_STOP_AND_WRITE_BOUNDS",
+      "status": "PASS"
+    },
+    {
+      "id": "D_CONCURRENT_SIBLING_GRANTS",
+      "status": "PASS"
+    },
+    {
+      "id": "D_SCOPED_SOURCES_AND_CYCLES",
+      "status": "PASS"
+    },
+    {
+      "id": "C_PROFESSIONAL_ACTIVITY_INDEPENDENCE",
+      "status": "PASS"
+    },
+    {
+      "id": "E_EXACT_PROVIDER_COST_CEILING",
+      "status": "PASS"
+    },
+    {
+      "id": "E_UNRESOLVED_COST_RECEIPT",
+      "status": "PASS"
+    },
+    {
+      "id": "G_ORIGINAL_RECOVERY_AFTER_STOP",
+      "status": "PASS"
+    },
+    {
+      "id": "RUNTIME_INSTALLED_SOURCE_CHANGE",
+      "status": "PASS"
+    },
+    {
+      "id": "S7_ATOMIC_NOTICE",
+      "status": "PASS"
+    }
+  ],
+  "sourceManifest": [
+    {
+      "path": "finnor-os/packages/private-equity/src/capital-formation/method-files.json",
+      "sha256": "997a0dd446b7495c936f3e35db506059d7250fa306b2dc332f3d006db7558469",
+      "bytes": 1444
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/capital-formation/contracts.ts",
+      "sha256": "1e35f9a7e8e9dd7099f366900a807900a6cd7e2bfc07abbf5983ba2bfb230e76",
+      "bytes": 19267
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/capital-formation/store.ts",
+      "sha256": "7feba558ed7788a157c348f9645072a436290eb39a15f7d5a30a58452e297345",
+      "bytes": 44747
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/capital-formation/publication-storage.ts",
+      "sha256": "78281f732389ea848abf9105a0b82e956740f2d3215be501c189d91fa4c2d49a",
+      "bytes": 3190
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/capital-formation/service.ts",
+      "sha256": "684aec3db2d83903b99f904b1aa22a174eba9f499beb44144f45fbba61f76552",
+      "bytes": 42540
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/capital-formation/worker.ts",
+      "sha256": "9f452e95b8949ceda4763c7f4ab30f3b0112bb70a6084e95b99f5b7ad62dc1e6",
+      "bytes": 27518
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/capital-formation/independent-checker.mjs",
+      "sha256": "e6fe5cd9401eba69250e3997d1f5e495c0151d1230ddbf9a73e37fe5c95d3393",
+      "bytes": 28621
+    },
+    {
+      "path": "finnor-os/packages/tools/src/capital-provider.ts",
+      "sha256": "a5efa04405b7248ee2208634a675dc719b91b7d38ce40089fddd7b93c10e3540",
+      "bytes": 11209
+    },
+    {
+      "path": "finnor-os/packages/tools/src/idempotent-call.ts",
+      "sha256": "35302dd71eeeef2690633c790f1081881b8b14d205e13af43eee0ae85d1a2f4f",
+      "bytes": 62154
+    },
+    {
+      "path": "finnor-os/packages/shared-types/src/capital-formation.ts",
+      "sha256": "b42e2a5ca1c98782bab61a08565433facb284f667307445f8cbbc9a293fd86fa",
+      "bytes": 3804
+    },
+    {
+      "path": "finnor-os/packages/db/migrations/0175_v4_autonomous_capital_formation.sql",
+      "sha256": "4fa6dd4f1333a21040123699e7faeca4c047be7f54b4126b41f61e3f68873219",
+      "bytes": 20457
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/allocation-store.ts",
+      "sha256": "e52b9c42eaeb36734d88c9c08d863b3e7c702a4ff2e1ff1f69c786b9c9217e2d",
+      "bytes": 72256
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/economic-store.ts",
+      "sha256": "f2148dfc2c1ac7a068aa51eee4c525aef84507e07debebbcba5685d9915aca73",
+      "bytes": 14380
+    },
+    {
+      "path": "finnor-os/packages/planning/src/canonical.ts",
+      "sha256": "2c5b45dabbc0b6d6e5adab810fb3ecfefaf1dfc7e4422e38fc6f2a9de03f64f0",
+      "bytes": 1025
+    },
+    {
+      "path": "finnor-os/packages/epistemic-runtime/src/experiment-numerics.ts",
+      "sha256": "7ad3c704d23a6f0d2976217f2302d5f5dbd45e3ccd2436266fed55a488a78941",
+      "bytes": 10671
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/evidence-execution/exact.ts",
+      "sha256": "6626b317e52f0397e0ecb3e4cdd79e92c892bfc568c325f13ef4f21574f3df37",
+      "bytes": 2449
+    },
+    {
+      "path": "finnor-os/packages/source-custody/index.cjs",
+      "sha256": "22551b59dda522874f33dc1e654f6b4f1a001b3bc8617861c195493fceeebb1c",
+      "bytes": 1785
+    },
+    {
+      "path": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
+      "sha256": "9c5dc71e54bdf2dc400e26501785ad0a0065e705c28b2be44645353ee8d9246b",
+      "bytes": 19918
+    },
+    {
+      "path": "finnor-os/apps/api/next.config.mjs",
+      "sha256": "71d3cc77b21b1e25a5d9de1af962480984b426c029fa18c8159df26ce3d770da",
+      "bytes": 6023
+    },
+    {
+      "path": "finnor-os/apps/worker/src/index.ts",
+      "sha256": "ab431e5dc28ee8459725a3ec8822c7cf876a87a94906d62d3fab8c7d3d5f9962",
+      "bytes": 17237
+    },
+    {
+      "path": "finnor-os/packages/db/compute-contract.ts",
+      "sha256": "dc2aafb37e3412f77b4e1d3c3359c25eff5f1e7e8301f427928cd96a42b8031c",
+      "bytes": 13706
+    },
+    {
+      "path": "finnor-os/packages/db/migration-head.ts",
+      "sha256": "ad8d5db05bd3b56807a3f23a4088ed2abb6a605c3043fd2acdbe760846e9a5ee",
+      "bytes": 279
+    },
+    {
+      "path": "package-lock.json",
+      "sha256": "4ae84fbe370dfdf4708e35a2274f4be0fb612665d4dda88ddeb342c264f5b697",
+      "bytes": 364668
+    },
+    {
+      "path": "finnor-os/package-lock.json",
+      "sha256": "aebbbac3741b6cf7f2424447bf2bc12524eab526e041b6baada5d167003855c5",
+      "bytes": 259503
+    },
+    {
+      "path": "finnor-os/scripts/v4/run-local.mts",
+      "sha256": "c60e8a1acd8c9b82d82c1922e23473fc8a363a9b5137c9567e1b16708f32c770",
+      "bytes": 42742
+    },
+    {
+      "path": "finnor-os/scripts/v4/owner-fixture.mts",
+      "sha256": "7afb3df86b3d66ab79d726df8c6e96aa80f1f9267da118daa5a805b9986ae7b1",
+      "bytes": 26896
+    },
+    {
+      "path": "finnor-os/scripts/v4/fixture-actor.mjs",
+      "sha256": "28e9e2704edeadcc8941e37ea92453e8353921947237ccb75763a560af71acde",
+      "bytes": 12075
+    },
+    {
+      "path": "finnor-os/scripts/v4/reference.py",
+      "sha256": "6d8658bee4d9a69f37e1c0dbf58e60fb73a2c5205c7d02d74c5adc84bf9dadf4",
+      "bytes": 6776
+    },
+    {
+      "path": "finnor-os/scripts/v4/worker-process.mts",
+      "sha256": "ba1a55c962e481fe96922f7a56de0ab071971de98124ba5a1e4d5ec75fcae4e7",
+      "bytes": 1287
+    },
+    {
+      "path": "finnor-os/scripts/v4/boundary-proof.mts",
+      "sha256": "44582053247111752e6db7ac0f9492ef3d9e66c97db1c9523d25fd1c63732651",
+      "bytes": 49961
+    },
+    {
+      "path": "finnor-os/scripts/v4/browser-proof.mts",
+      "sha256": "2c166a9d0d3ff270220157fd0298bc78b70c003f2898f03c086d72cb5f69520d",
+      "bytes": 9242
+    },
+    {
+      "path": "finnor-os/scripts/v4/requirements-reference.txt",
+      "sha256": "866f03990e956965c63d6e9a40562f2cd5707dc8960ddebc345948f47877b174",
+      "bytes": 96
+    },
+    {
+      "path": "finnor-os/scripts/v4/original-work-proof.mts",
+      "sha256": "8fddc4295a6be4736577e7f276bcaa357c25445ea4692f0d2c97cc1f4078e5c9",
+      "bytes": 7032
+    },
+    {
+      "path": "finnor-os/scripts/s5/owner-fixture.mts",
+      "sha256": "1c7ce65ecf98cfd025902e9943f5606f4a3b89532457b85e372c406075d8ec2e",
+      "bytes": 17656
+    },
+    {
+      "path": "finnor-os/scripts/v4/owner-delivery-fixture.mts",
+      "sha256": "4230839acc3ae46308442acf8cf75d8a3e85280adec55796011428bc360ce784",
+      "bytes": 3785
+    },
+    {
+      "path": "finnor-os/scripts/s7/ledger-fixture.mts",
+      "sha256": "d1b63f5c064e9be99884a37f2cb98085a75c55b43bb079fa5a47f6358bacdbf5",
+      "bytes": 9604
+    },
+    {
+      "path": "finnor-os/apps/worker/src/queue.ts",
+      "sha256": "44322d725c95d1b0a1dfe0f18d0de6e8cfb27a9966dbd01ada3a282f64bc5986",
+      "bytes": 34790
+    },
+    {
+      "path": "src/components/centropy/canvas/CapitalFormationPanel.tsx",
+      "sha256": "ff1fa193a9162ddd34aa755614829b6282cf59f6e39987c67b1ff137695f8f88",
+      "bytes": 13194
+    },
+    {
+      "path": "src/components/centropy/canvas/capital-formation-view.ts",
+      "sha256": "7aac45e915943900af7e48b3d2fa86b35e6bbd88f037175f5a4790b46dcddb95",
+      "bytes": 4162
+    },
+    {
+      "path": "src/components/centropy/canvas/canvas-compose.ts",
+      "sha256": "e3d45530bf2c6445d38ce4cab4074e78a4b53c4297adfab37c4686b54ab51917",
+      "bytes": 22428
+    },
+    {
+      "path": "src/components/centropy/canvas/canvas-contract.ts",
+      "sha256": "4bbfeda51850777bdfab6994959f9ce5e07bb57de16e8651caeaacd2ce26c771",
+      "bytes": 8601
+    },
+    {
+      "path": "src/components/centropy/canvas/CanvasDocument.tsx",
+      "sha256": "bd2888b300f435028ba5d4e61397fa51c003edeca3f2dca097e4fe408a0a3ee5",
+      "bytes": 33307
+    },
+    {
+      "path": "next.config.mjs",
+      "sha256": "a7cac529be72c16c0e7058bc130238cc837504a830365b28da7497790ac24632",
+      "bytes": 5834
+    },
+    {
+      "path": "scope-v/v4-autonomous-capital-formation/failure-model.md",
+      "sha256": "2556c1399104426fe593bc2b0b354285bcb6b16299c9781782446859f4d87ced",
+      "bytes": 5626
+    },
+    {
+      "path": "scope-v/v4-autonomous-capital-formation/verification-plan.json",
+      "sha256": "0b174afca2c9337cdbf4b9fda02599df6b5cf64477590e58d0f3216f0e5ace5d",
+      "bytes": 10405
+    },
+    {
+      "path": "scope-v/v4-autonomous-capital-formation/review-boundary-plan.json",
+      "sha256": "57b91bb3379ebd06723a56fe1bd365ea229874a6ce679da26b13c015d3e0a3dc",
+      "bytes": 5127
+    }
+  ],
+  "archive": {
+    "archiveSha256": "45a8c29c21e43980569ccd3e593e99af3ca6347e6d148cb532a028298e32e9a2",
+    "bytes": 11249002,
+    "manifestSha256": "d40a7e21a62b186f006320d6e9941d8d56777e52dde3532bc871f1c049a3b45f",
+    "verifiedMembers": 2348,
+    "sourceManifestMembers": 46,
+    "verifiedAt": "2026-10-16T00:12:08.614941+00:00"
+  },
+  "prerequisites": {
+    "rootAndBackendCleanInstall": "PASS",
+    "installedApiBuild": "PASS",
+    "scientificRuntimePreflight": "PASS"
+  },
+  "isolatedCodecChecks": {
+    "passed": 9,
+    "failed": 0,
+    "writtenBeforeImplementation": true
+  },
+  "priorFailedAttemptsRetained": true,
+  "databaseBackup": false,
+  "cleanup": {
+    "status": "CLEANED_AFTER_VERIFIED_CUSTODY",
+    "absenceChecksPassed": 12,
+    "sharedAwsManagedKmsKeyPreserved": true
+  },
+  "notEstablished": [
+    "ORIGINAL_IDENTITY_V1_V5_CONNECTED_CHAIN",
+    "NATIVE_FINANCING_TO_CLOSING_ADAPTER",
+    "MOUNTED_MULTIUSER_ACCEPTANCE",
+    "BLIND_ADMISSION",
+    "FIELD_ECONOMICS",
+    "PRODUCTION_RELEASE"
+  ],
+  "ciForThisCommit": "PENDING_PUBLICATION",
+  "merged": false,
+  "deployed": false,
+  "note": "Source files below match the installed run. The release plan also contains prospective adapter work; that work is not a pass."
+}

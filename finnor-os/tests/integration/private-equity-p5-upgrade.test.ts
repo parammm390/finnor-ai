@@ -67,7 +67,7 @@ async function legacyFingerprint(client: pg.Client, tenantId: string): Promise<{
     `WITH facts AS (
        SELECT 'works' kind,to_jsonb(row_value) body FROM (SELECT * FROM finnor_os.works WHERE tenant_id=$1) row_value
        UNION ALL SELECT 'pe_deals',to_jsonb(row_value) FROM (SELECT * FROM finnor_os.pe_deals WHERE tenant_id=$1) row_value
-       UNION ALL SELECT 'pe_investment_cases',to_jsonb(row_value) FROM (SELECT * FROM finnor_os.pe_investment_cases WHERE tenant_id=$1) row_value
+       UNION ALL SELECT 'pe_investment_cases',to_jsonb(row_value)-'opportunity_id' FROM (SELECT * FROM finnor_os.pe_investment_cases WHERE tenant_id=$1) row_value
        UNION ALL SELECT 'pe_assumptions',to_jsonb(row_value) FROM (SELECT * FROM finnor_os.pe_assumptions WHERE tenant_id=$1) row_value
        UNION ALL SELECT 'pe_decisions',to_jsonb(row_value) FROM (SELECT * FROM finnor_os.pe_decisions WHERE tenant_id=$1) row_value
        UNION ALL SELECT 'evidence_sources',to_jsonb(row_value) FROM (SELECT * FROM finnor_os.evidence_sources WHERE tenant_id=$1) row_value
@@ -272,6 +272,14 @@ describe.skipIf(!available)("P5 populated P1-P4 database upgrade", () => {
     expect(applied).toEqual(expectedForwardMigrations);
     expect(after).toEqual(before);
     expect(after.facts).toBeGreaterThanOrEqual(20);
+  });
+
+  it("adds no Opportunity association to the pre-existing InvestmentCase", async () => {
+    const row = await admin!.query(
+      "SELECT opportunity_id FROM finnor_os.pe_investment_cases WHERE tenant_id=$1 AND id=$2",
+      [tenantId, investmentCaseId],
+    );
+    expect(row.rows).toEqual([{ opportunity_id: null }]);
   });
 
   it("does not fabricate P5 history for the existing canonical P1 investment_committee Decision", async () => {

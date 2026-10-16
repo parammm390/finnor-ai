@@ -242,18 +242,18 @@ try {
   if (!retained) await story("candidate-upgrade-restart", "Committed R1/R2 prefix, additive R4 and cumulative successors each install exactly once", async () => {
     const migrationsDirectory = join(repo, "finnor-os/packages/db/migrations");
     const names = (await readdir(migrationsDirectory)).filter(p => p.endsWith(".sql")).sort();
-    const base = await Promise.all(names.filter(n => n < "0174").map(async name => ({ name,
+    const base = await Promise.all(names.filter(n => n < "0184").map(async name => ({ name,
       sql: await readFile(join(migrationsDirectory, name), "utf8") })));
     const installedBase = await migrate(adminUrl, base);
-    const candidate = { name: "0174_identification_plan_compiler.sql",
-      sql: await readFile(join(migrationsDirectory, "0174_identification_plan_compiler.sql"), "utf8") };
+    const candidate = { name: "0184_identification_plan_compiler.sql",
+      sql: await readFile(join(migrationsDirectory, "0184_identification_plan_compiler.sql"), "utf8") };
     const upgrade = await migrate(adminUrl, [candidate]);
-    assert.equal(installedBase.at(-1), "0173_r2_robust_programme_search.sql");
-    assert.deepEqual(upgrade, ["0174_identification_plan_compiler.sql"]);
+    assert.equal(installedBase.at(-1), "0183_r2_robust_programme_search.sql");
+    assert.deepEqual(upgrade, ["0184_identification_plan_compiler.sql"]);
     const candidateRestart = await migrate(adminUrl, [candidate]);
     assert.deepEqual(candidateRestart, []);
     const cumulativeUpgrade = await migrate(adminUrl), restart = await migrate(adminUrl);
-    assert.deepEqual(cumulativeUpgrade, names.filter(n => n >= "0174" && n !== candidate.name));
+    assert.deepEqual(cumulativeUpgrade, names.filter(n => n >= "0184" && n !== candidate.name));
     assert.deepEqual(restart, []);
     const tracker = (await admin!.query("SELECT name FROM finnor_os._migrations ORDER BY name")).rows;
     assert.deepEqual(tracker.map(row => row.name), names);

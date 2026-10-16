@@ -386,3 +386,48 @@ The affected process/layout E2E passed seven cases, zero skips, in 3.865 seconds
 nine workflows pass pinned actionlint and the smoke shell passes syntax checks.
 R1/R3/R4 failed receipt gates now emit visible bounded diagnostics instead of a
 bare exit code. Full exact-image acceptance remains required and production paused.
+
+## Combined R/V source and production-process repair
+
+User confirmed both phases and explicitly requested production pipeline repair.
+Reconcile candidate a93de09f with canonical V merge 938c9fe3 in this one writer.
+The separately started V production run 38853190970 failed certification and
+skipped release. No deployed V completion is inferred.
+
+Failure model before combined verification: lost R/V handler or owner export;
+duplicate native-attempt debit; unversioned/rounded exact allocation;
+loss of V approval/currentness fences; missing packaged source; duplicate schema
+ordinal or destructive modification of canonical V migrations; generated client
+drift; source guards hiding errors; release jobs outrunning required checks;
+duplicate image builds or stale image/SHA proof; accidental protected activation.
+
+Keep all canonical V migrations byte-identical. Serialize the six unmerged R
+migrations after V's 0181 at 0182–0187, preserve their SQL bytes and update actual
+runtime/upgrade references. No existing deployed migration name is changed.
+Finite checks: migration inventory/hash preservation and generated bundle,
+generated API/client/authz/manifest/forms, source/type gates, actual relocated
+worker with both job inventories, original exact-allocation replay, existing
+process/release/verdict E2Es and one exact-source hosted workflow. Required
+database/image/readiness/security gates remain; unchanged prior greens do not
+qualify this combined source. No new PR, isolated diagnostic workflow or live
+business-effect authority. Re-run only affected local proofs after a diagnosed
+repair; the existing hosted graph checks the full combined cut before release.
+
+The combined source exposes a second exact-quantity boundary: V's native S1
+allocation authority expects decimals, while R1 retains one-third USD. Preserve
+the S1 approval/resource/revision fence and extend only allocate_resource's
+exact ledger codec, using integer cross-products, never a rounded dollar amount.
+Pre-edit failure cases: 1/3 must exceed a 0.33 ceiling and fit 0.34; invalid,
+negative, noncanonical or oversized fractions must deny even for unlimited
+grants; other financial capabilities retain decimal-only input. Existing R1
+authenticated grant flow is the positive real-owner proof; preserve old failure
+receipts and require hosted exact-image and authority regression checks.
+
+V's failed production Scope-4 run reached its old benchmark corpus, attempted
+legacy closes on the current V3 schema, then failed the unchanged holding guard.
+Repair the benchmark, not V3: create its 200 historical synthetic closes on the
+pre-V3 schema in a separate disposable database, upgrade it to the full current
+schema, require every closed Deal and holding identity/status to survive, then
+measure the same current-schema graph operations and original p95 thresholds.
+The fresh/current-schema and populated-upgrade gates remain independent. This
+does not prove or bypass a new V3 transaction close, and does not seed a V3 proof.

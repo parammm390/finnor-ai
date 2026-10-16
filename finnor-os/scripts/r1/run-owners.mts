@@ -70,7 +70,7 @@ try{
  const adminUrl='postgres://finnor:finnor@127.0.0.1:'+port+'/r1_e2e';
  if(selected==='runtime'){
   const migrations=join(repo,'finnor-os/packages/db/migrations'),files=await Promise.all((await readdir(migrations)).filter(p=>p.endsWith('.sql')).sort().map(async name=>({name,sql:await readFile(join(migrations,name),'utf8')})));
-  const split=files.findIndex(p=>p.name==='0172_r1_certified_state_reduction.sql');assert(split>0,'R1 migration must follow the retained historical prefix');
+  const split=files.findIndex(p=>p.name==='0182_r1_certified_state_reduction.sql');assert(split>0,'R1 migration must follow the retained historical prefix');
   const prior=files.slice(0,split),successors=files.slice(split).map(p=>p.name);
   const priorApplied=await migrate(adminUrl,prior),c=new pg.Client({connectionString:adminUrl});await c.connect();
   try{

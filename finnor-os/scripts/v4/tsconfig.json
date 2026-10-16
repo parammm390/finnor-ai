@@ -1,0 +1,6 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": { "noEmit": true, "allowImportingTsExtensions": true },
+  "include": ["*.mts", "../../packages/private-equity/src/capital-formation/*.ts", "../../packages/tools/src/capital-provider.ts"],
+  "exclude": ["../../node_modules", "**/.next"]
+}

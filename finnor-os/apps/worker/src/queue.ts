@@ -434,7 +434,14 @@ export class JobQueue {
             [this.workloadClass, candidate.tenantKey],
           );
         }
-        const claimedJob = claimed.rows[0] as Omit<ClaimedJob, "deliveryAttemptId">;
+        // PostgreSQL bigint values arrive as decimal strings. Normalize at the
+        // queue boundary so every handler receives the declared numeric fence.
+        const rawClaim = claimed.rows[0] as Omit<ClaimedJob, "deliveryAttemptId" | "claimFence"> & { claimFence: number | string };
+        const claimFence = Number(rawClaim.claimFence);
+        if (!Number.isSafeInteger(claimFence) || claimFence < 1) {
+          throw new Error("Durable job claim fence exceeds the supported integer range");
+        }
+        const claimedJob: Omit<ClaimedJob, "deliveryAttemptId"> = { ...rawClaim, claimFence };
         const delivery = await client.query<{ id: string }>(
           `INSERT INTO job_delivery_attempts(
              job_id,tenant_id,claim_token,claim_fence,worker_id,protocol_version,retry_safety,outcome

@@ -1,3 +1,4 @@
+import { reviewedEffectHash } from "../reviewed-effect";
 import { createHash, randomUUID } from "node:crypto";
 import pg from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
@@ -138,6 +139,7 @@ describe.skipIf(!databaseAvailable)("Private Equity Phase 4 governed execution",
 
   async function approve(orchestrator: FinnorOrchestrator, actionId: string, typedConfirmation = false) {
     return orchestrator.decide(actionId, tenantA, "approve", approver, {
+      expectedEffectHash: await reviewedEffectHash(tenantA, actionId),
       role: "owner",
       typedConfirmation,
     });
@@ -885,14 +887,15 @@ describe.skipIf(!databaseAvailable)("Private Equity Phase 4 governed execution",
     expect(waived?.waiverDecisionReceiptId).toBeTruthy();
   }, 60_000);
 
-  it("revalidates approved close against stale reality, then closes an eligible Deal once with a finalized receipt and evidence-backed success", async () => {
+  it("rejects stale and typed-approved legacy close without an independently accepted V3 ClosingSpec", async () => {
     const orchestrator = new FinnorOrchestrator();
     const staleDeal = await createActiveDeal("PE4 stale close journey");
     const staleDealId = String(staleDeal.row.id);
     const staleStream = await createWorkstream(ctxA, { dealId: staleDealId, kind: "closing", name: "Stale Closing", owner: { partyType: "employee", partyId: actor } });
     const staleWork = await anchoredWork(staleDealId, "Close only if reality remains eligible.");
     const staleEligibility = await evaluateDealCloseEligibility(ctxA, staleDealId);
-    expect(staleEligibility.eligible).toBe(true);
+    expect(staleEligibility).toMatchObject({ eligible: false,
+      v3: { independentlyAccepted: false, reasons: ["ACCEPTED_CLOSING_SPEC_REQUIRED"] } });
     const staleAction = await orchestrator.draftKnownAction("declare_deal_closed", {
       dealId: staleDealId,
       expectedVersion: staleEligibility.dealVersion,
@@ -917,27 +920,28 @@ describe.skipIf(!databaseAvailable)("Private Equity Phase 4 governed execution",
     const validDealId = String(validDeal.row.id);
     const validWork = await anchoredWork(validDealId, "Close Atlas through the governed runtime.");
     const eligibility = await evaluateDealCloseEligibility(ctxA, validDealId);
-    expect(eligibility.eligible).toBe(true);
+    expect(eligibility).toMatchObject({ eligible: false,
+      v3: { independentlyAccepted: false, reasons: ["ACCEPTED_CLOSING_SPEC_REQUIRED"] } });
     const validAction = await orchestrator.draftKnownAction("declare_deal_closed", {
       dealId: validDealId,
       expectedVersion: eligibility.dealVersion,
       expectedGraphVersion: eligibility.graphVersion,
     }, tenantA, { workId: validWork.workId, initiatedBy: actor });
     expect(await approve(orchestrator, validAction.action.id, true)).toMatchObject({ status: "success", output: { durable: true, queued: true } });
-    expect(await driveDurableAction(tenantA, validAction.action.id)).toMatchObject({ status: "success", output: { canonicalMutationOwner: "declareDealClosed" } });
+    expect((await driveDurableAction(tenantA, validAction.action.id)).status).toBe("failure");
 
     const graph = await loadDealExecutionGraph(ctxA, validDealId);
-    expect(graph.deal).toMatchObject({ status: "closed", actualCloseAt: expect.any(Date) });
-    expect(graph.businessEvents.filter((event) => event.eventType === "pe_deal_closed")).toHaveLength(1);
+    expect(graph.deal).toMatchObject({ status: "active", actualCloseAt: null });
+    expect(graph.businessEvents.filter((event) => event.eventType === "pe_deal_closed")).toHaveLength(0);
     const [action, effect, receipt] = await withTenant(tenantA, async (db) => {
       const [actionRow] = await db.select().from(domainActions).where(and(eq(domainActions.tenantId, tenantA), eq(domainActions.id, validAction.action.id))).limit(1);
       const [effectRow] = await db.select().from(businessEffects).where(and(eq(businessEffects.tenantId, tenantA), eq(businessEffects.domainActionId, validAction.action.id))).limit(1);
       const [receiptRow] = await db.select().from(decisionReceipts).where(and(eq(decisionReceipts.tenantId, tenantA), eq(decisionReceipts.domainActionId, validAction.action.id))).orderBy(desc(decisionReceipts.createdAt)).limit(1);
       return [actionRow, effectRow, receiptRow] as const;
     });
-    expect(action).toMatchObject({ status: "completed" });
-    expect(effect).toMatchObject({ status: "verified" });
-    expect(receipt).toMatchObject({ finalizedAt: expect.any(Date), failure: null });
+    expect(action?.status).not.toBe("completed");
+    expect(effect?.status).not.toBe("verified");
+    expect(receipt?.failure).toBeTruthy();
 
     const inspection = await inspectCurrentObjectiveSuccessState(tenantA, validWork.workId, randomUUID());
     const verified = await evaluateObjectiveSuccessCondition({
@@ -949,9 +953,9 @@ describe.skipIf(!databaseAvailable)("Private Equity Phase 4 governed execution",
       inspection,
       evidence: [{ kind: "business_effect", businessEffectId: effect!.id }],
     });
-    expect(verified.state).toBe("verified");
-    expect((await driveDurableAction(tenantA, validAction.action.id)).status).toBe("success");
-    expect((await listDealHistory(ctxA, validDealId)).filter((event) => event.eventType === "pe_deal_closed")).toHaveLength(1);
+    expect(verified.state).not.toBe("verified");
+    expect((await driveDurableAction(tenantA, validAction.action.id)).status).toBe("failure");
+    expect((await listDealHistory(ctxA, validDealId)).filter((event) => event.eventType === "pe_deal_closed")).toHaveLength(0);
   }, 60_000);
 
   it("blocks PE external egress unless an explicit sandbox/emulator binding exists", async () => {
