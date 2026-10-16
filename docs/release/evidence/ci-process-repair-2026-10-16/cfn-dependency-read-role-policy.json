@@ -1,0 +1,211 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": "ecr:GetAuthorizationToken",
+      "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "ecr:BatchCheckLayerAvailability",
+        "ecr:BatchGetImage",
+        "ecr:CompleteLayerUpload",
+        "ecr:DescribeImages",
+        "ecr:DescribeRepositories",
+        "ecr:GetDownloadUrlForLayer",
+        "ecr:InitiateLayerUpload",
+        "ecr:PutImage",
+        "ecr:UploadLayerPart"
+      ],
+      "Resource": "arn:aws:ecr:us-east-1:601804670058:repository/finnor-worker"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "cloudformation:DescribeStacks",
+        "ecs:DescribeServices",
+        "ecs:DescribeTaskDefinition",
+        "elasticloadbalancing:DescribeLoadBalancers",
+        "elasticloadbalancing:DescribeTargetGroups",
+        "elasticloadbalancing:DescribeListeners",
+        "elasticloadbalancing:DescribeLoadBalancerAttributes",
+        "ec2:DescribeSecurityGroups",
+        "ec2:DescribeNatGateways"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": "secretsmanager:GetSecretValue",
+      "Resource": [
+        "arn:aws:secretsmanager:us-east-1:601804670058:secret:finnor/prod/database-url-??????",
+        "arn:aws:secretsmanager:us-east-1:601804670058:secret:finnor/prod/worker-database-url-??????"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "cloudformation:CreateChangeSet",
+        "cloudformation:ExecuteChangeSet"
+      ],
+      "Resource": "arn:aws:cloudformation:us-east-1:601804670058:stack/finnor-production/*",
+      "Condition": {
+        "StringLike": {
+          "cloudformation:ChangeSetName": [
+            "finnor-compute-*",
+            "arn:aws:cloudformation:us-east-1:601804670058:changeSet/finnor-compute-*/*"
+          ]
+        }
+      }
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "cloudformation:DescribeStacks",
+        "cloudformation:GetTemplate",
+        "cloudformation:DescribeChangeSet"
+      ],
+      "Resource": "arn:aws:cloudformation:us-east-1:601804670058:stack/finnor-production/*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": "ecr:DescribeImages",
+      "Resource": "arn:aws:ecr:us-east-1:601804670058:repository/finnor-worker"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "ecs:DescribeServices",
+        "ecs:UpdateService"
+      ],
+      "Resource": "arn:aws:ecs:us-east-1:601804670058:service/finnor-production/finnor-*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": "ecs:RegisterTaskDefinition",
+      "Resource": "arn:aws:ecs:us-east-1:601804670058:task-definition/finnor-*:*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": "ecs:DescribeTasks",
+      "Resource": "arn:aws:ecs:us-east-1:601804670058:task/finnor-production/*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "ecs:TagResource",
+        "ecs:UntagResource"
+      ],
+      "Resource": [
+        "arn:aws:ecs:us-east-1:601804670058:service/finnor-production/finnor-*",
+        "arn:aws:ecs:us-east-1:601804670058:task-definition/finnor-*:*"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": "ecs:DescribeTaskDefinition",
+      "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": "ecs:ListTasks",
+      "Resource": "*",
+      "Condition": {
+        "ArnEquals": {
+          "ecs:cluster": "arn:aws:ecs:us-east-1:601804670058:cluster/finnor-production"
+        }
+      }
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "elasticloadbalancing:DescribeTargetGroups",
+        "elasticloadbalancing:DescribeTargetHealth"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": "iam:PassRole",
+      "Resource": [
+        "arn:aws:iam::601804670058:role/finnor-ecs-execution",
+        "arn:aws:iam::601804670058:role/finnor-worker-task",
+        "arn:aws:iam::601804670058:role/finnor-background-task",
+        "arn:aws:iam::601804670058:role/finnor-heavy-task",
+        "arn:aws:iam::601804670058:role/finnor-realtime-task"
+      ],
+      "Condition": {
+        "StringEquals": {
+          "iam:PassedToService": "ecs-tasks.amazonaws.com"
+        }
+      }
+    },
+    {
+      "Effect": "Allow",
+      "Action": "iam:GetRole",
+      "Resource": [
+        "arn:aws:iam::601804670058:role/finnor-ecs-execution",
+        "arn:aws:iam::601804670058:role/finnor-worker-task",
+        "arn:aws:iam::601804670058:role/finnor-background-task",
+        "arn:aws:iam::601804670058:role/finnor-heavy-task",
+        "arn:aws:iam::601804670058:role/finnor-realtime-task"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "ecs:DescribeServiceDeployments",
+        "ecs:StopServiceDeployment"
+      ],
+      "Resource": [
+        "arn:aws:ecs:us-east-1:601804670058:service/finnor-production/finnor-*",
+        "arn:aws:ecs:us-east-1:601804670058:service-deployment/finnor-production/finnor-*/*"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": "ecs:ListServiceDeployments",
+      "Resource": "arn:aws:ecs:us-east-1:601804670058:service/finnor-production/finnor-*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": "ecs:ListTagsForResource",
+      "Resource": [
+        "arn:aws:ecs:us-east-1:601804670058:service/finnor-production/finnor-*",
+        "arn:aws:ecs:us-east-1:601804670058:task-definition/finnor-*:*"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": "ecs:DeregisterTaskDefinition",
+      "Resource": "*",
+      "Condition": {
+        "StringEquals": {
+          "aws:CalledViaFirst": "cloudformation.amazonaws.com",
+          "aws:CalledViaLast": "cloudformation.amazonaws.com"
+        }
+      }
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "ec2:DescribeSubnets",
+        "ec2:DescribeVpcs",
+        "elasticloadbalancing:DescribeTargetGroupAttributes"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "StringEquals": {
+          "aws:RequestedRegion": "us-east-1"
+        }
+      }
+    },
+    {
+      "Effect": "Allow",
+      "Action": "ecs:DescribeClusters",
+      "Resource": "arn:aws:ecs:us-east-1:601804670058:cluster/finnor-production"
+    }
+  ]
+}

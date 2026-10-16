@@ -135,8 +135,11 @@ test("active release workflow uses the governed four-class AWS compute cutover",
   const computeResources = computeStatements.flatMap((statement) => Array.isArray(statement.Resource) ? statement.Resource : [statement.Resource])
   assert.ok(computeResources.some((resource) => resource?.endsWith(":stack/finnor-production/*")), "CloudFormation is restricted to the production stack")
   assert.match(JSON.stringify(computePolicy), /"ecs:cluster":"arn:aws:ecs:us-east-1:601804670058:cluster\/finnor-production"/, "task listing is restricted to the production cluster")
-  assert.ok(computeResources.some((resource) => resource?.includes(":service/finnor-production/finnor-")), "ECS services are restricted to FINNOR services")
-  assert.ok(computeResources.some((resource) => resource?.endsWith(":repository/finnor-worker")), "ECR writes are restricted to the worker repository")
+  assert.ok(computeResources.some((resource) => /:service\*?\/finnor-production\/finnor-\*/.test(resource)), "ECS services and deployment resources retain the exact FINNOR cluster and family namespace")
+  assert.ok(!computeActions.some(action => action.startsWith("ecr:") && !action.startsWith("ecr:Describe")), "the compute session must not publish or mutate ECR")
+  for (const action of ["ec2:DescribeSubnets", "ec2:DescribeVpcs", "ec2:DescribeSecurityGroups", "ecs:DescribeClusters", "ecr:DescribeRepositories", "elasticloadbalancing:DescribeTargetGroupAttributes"]) {
+    assert.ok(computeActions.includes(action), `CloudFormation dependency read closure must include ${action}`)
+  }
   const iamActions = computeActions.filter((action) => action.startsWith("iam:"))
   assert.ok(iamActions.every((action) => action === "iam:PassRole" || action === "iam:GetRole"), "the deployment session can only look up/pass ECS task roles, not mutate IAM")
   assert.ok(computeStatements.filter(entry => [entry.Action].flat().includes("iam:GetRole")).every(entry => [entry.Resource].flat().includes("arn:aws:iam::601804670058:role/finnor-*")), "role lookup remains scoped to FINNOR roles and intersects the five exact base-policy roles")
