@@ -1,0 +1,157 @@
+{
+  "schema": "finnor.s5.image-allocation-replay.v1",
+  "status": "PASS",
+  "qualification": "SAVED_ISSUED_INPUT_REPLAY_NOT_NEW_HTTP_SQL_OR_IMAGE_ACCEPTANCE",
+  "inputSha256": "1dd55b122cb8bb5f287224bfe86a4f8d6998daec53ff82a3910044e17afb892c",
+  "startedAt": "2026-10-16T04:57:31.183Z",
+  "rerun": "FINNOR_S5_PYTHON=<pinned-python> node --import=tsx scripts/s5/replay-image-allocation.mts <saved-http.jsonl> <fresh-output>",
+  "checked": {
+    "schema": "finnor.allocation-check.v1",
+    "problemRef": {
+      "owner": "S5",
+      "id": "allocation-problem:82153870c7d6bf8438b5ef70f39661e3519219d9977ce4d38eafbeec3d034de9",
+      "version": "s5-joint-finite-v1",
+      "contentDigest": "82153870c7d6bf8438b5ef70f39661e3519219d9977ce4d38eafbeec3d034de9"
+    },
+    "selectedPolicyIds": [
+      "contingent-policy:003ed5b9aacc5c18e055c8cac05ffbf9ceb84ab09a0d9b923c79d34bad5f68ae"
+    ],
+    "feasible": true,
+    "reasons": [],
+    "objective": "7",
+    "scenarioValues": [
+      {
+        "scenarioId": "common-0",
+        "value": "7"
+      }
+    ],
+    "envelopes": [
+      {
+        "resourceId": "capital",
+        "unit": "USD",
+        "kind": "STOCK",
+        "horizon": {
+          "startAt": "2026-10-16T04:47:48.990Z",
+          "periodMs": 60000,
+          "periods": 3
+        },
+        "quantities": [
+          "r3q:1/3",
+          "0",
+          "0",
+          "0"
+        ],
+        "minimumQuantities": [
+          "r3q:1/3",
+          "0",
+          "0",
+          "0"
+        ]
+      },
+      {
+        "resourceId": "compute",
+        "unit": "native-attempt",
+        "kind": "CUMULATIVE_EXPENDITURE",
+        "horizon": {
+          "startAt": "2026-10-16T04:47:48.990Z",
+          "periodMs": 60000,
+          "periods": 3
+        },
+        "quantities": [
+          "8",
+          "0",
+          "0",
+          "0"
+        ],
+        "minimumQuantities": [
+          "8",
+          "0",
+          "0",
+          "0"
+        ]
+      }
+    ],
+    "witnesses": [
+      {
+        "constraintId": "resource:capital",
+        "scenarioId": "common-0",
+        "period": 0,
+        "used": "r3q:1/3",
+        "maximum": "2",
+        "margin": "r3q:5/3"
+      },
+      {
+        "constraintId": "resource:capital",
+        "scenarioId": "common-0",
+        "period": 1,
+        "used": "r3q:1/3",
+        "maximum": "2",
+        "margin": "r3q:5/3"
+      },
+      {
+        "constraintId": "resource:capital",
+        "scenarioId": "common-0",
+        "period": 2,
+        "used": "r3q:1/3",
+        "maximum": "2",
+        "margin": "r3q:5/3"
+      },
+      {
+        "constraintId": "resource:capital",
+        "scenarioId": "common-0",
+        "period": 3,
+        "used": "r3q:1/3",
+        "maximum": "2",
+        "margin": "r3q:5/3"
+      },
+      {
+        "constraintId": "resource:compute",
+        "scenarioId": "common-0",
+        "period": 0,
+        "used": "8",
+        "maximum": "16",
+        "margin": "8"
+      },
+      {
+        "constraintId": "resource:compute",
+        "scenarioId": "common-0",
+        "period": 1,
+        "used": "8",
+        "maximum": "16",
+        "margin": "8"
+      },
+      {
+        "constraintId": "resource:compute",
+        "scenarioId": "common-0",
+        "period": 2,
+        "used": "8",
+        "maximum": "16",
+        "margin": "8"
+      },
+      {
+        "constraintId": "resource:compute",
+        "scenarioId": "common-0",
+        "period": 3,
+        "used": "8",
+        "maximum": "16",
+        "margin": "8"
+      }
+    ],
+    "numericalSemantics": "EXACT_DECIMAL_RATIONAL_ZERO_FEASIBILITY_TOLERANCE",
+    "executionAuthorityGranted": false
+  },
+  "backend": {
+    "pythonVersion": "3.12.14",
+    "scipyVersion": "1.16.2",
+    "numpyVersion": "2.3.3",
+    "highsVersion": "1.8.0"
+  },
+  "negativeCases": [
+    "missing-v2-binding",
+    "unreduced-ledger",
+    "zero-denominator",
+    "negative-zero",
+    "leading-zero"
+  ],
+  "finishedAt": "2026-10-16T04:57:31.571Z"
+}

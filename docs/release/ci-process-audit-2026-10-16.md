@@ -334,3 +334,55 @@ Read-only current Debian package indexes confirmed both pinned OpenSSL packages
 Relocated worker E2E passed after the edit in 4.057 seconds. CodeRabbit raised
 zero issues on the Docker/test correction. The actual Docker check/build/smoke
 still requires execution on the corrected source; no pass is inferred from review.
+
+## Hosted batch 165: exact allocation IPC boundary
+
+Commit 8afbf9c passed Docker checks and built the final linux/amd64 image
+sha256:41b7e0370bed42eb3a72445a4d704d29869bf2fb779768371c85e327bee8bc4e.
+All four service classes passed exact identity health and SIGTERM shutdown.
+The authenticated built-API R1 runtime then failed during its original S5 grant:
+NUMERICAL_FAILURE / ValueError:NONCANONICAL_FINITE_DECIMAL. Original evidence:
+run 38851153809, artifact 12025124841 (29 files, ZIP SHA-256
+39b61720d3f317d3929c37719bf1427646f6a55bf965f6d3f928719414a52201).
+R3/R4 image flows were not reached; every other applicable CI job passed.
+
+Before editing, register one bounded replay of that actual HTTP input, issued
+S4 policy and issued resource revisions through compiler -> real pinned Python
+solver -> independent canonical checker. Expected selection is the original
+policy, objective 7, exact capital demand one third; never float-round it.
+Also require legacy decimal wire input to remain decimal, reject a missing v2
+binding and malformed ledger values, and preserve raw solver/compiled inputs.
+Failure cases: internal ledger prefix crossing IPC, absent version binding,
+changed policy/resource refs, wrong selection, exact-check rejection, unavailable
+or wrong backend, deadline/child failure. The replay reconstructs a canonical
+problem from saved issued inputs, not a new authenticated grant or image pass.
+Run the affected proof before publishing. The existing full image smoke remains
+required on the changed exact image. No deadline or acceptance predicate changes.
+
+The replay reproduced the original NUMERICAL_FAILURE before repair. The compiler
+now translates validated internal r3q:n/d to the solver's n/d only under the
+explicit v2 schema; decimal v1, independent checking and durable ledgers stay
+unchanged. The real Python solver and original checker passed after repair with
+objective 7 and the exact one-third resource envelope. Local backend versions:
+Python 3.12.14, NumPy 2.3.3, SciPy 1.16.2, HiGHS 1.8.0; this is not the installed
+Linux Python 3.12.13 image proof. Raw before/after receipts and wire inputs retained.
+
+CodeRabbit found one replay-harness concern: an assumed empty outstanding list
+could change the problem. The corrected replay reconstructs the original owner
+knowledge cut within its retained request/child start window and requires its
+entire canonical hash to match the actual solver's original inputRef
+21bab16f08e2c2ab4bba1d77c7b6b35f02155de19119e6d350ae5420b6a21e6f.
+It passed with that exact original commitment, not a newly invented problem.
+Missing v2 and four malformed ledger encodings were rejected. Original ZIP bytes
+were independently SHA-256 checked against GitHub's artifact digest.
+
+The broader local authenticated owner selection was interrupted after 108 seconds
+before setup: the exact Node process was idle reading redis-parser/index.js,
+verified compressed,dataless. SIGTERM did not finish; the owned child was reaped
+with SIGKILL. No database was started and no owner result exists; retained driver
+receipt says FAIL/MISSING_DECISIVE_RECEIPT, not PASS. No shared dependencies changed.
+
+The affected process/layout E2E passed seven cases, zero skips, in 3.865 seconds;
+nine workflows pass pinned actionlint and the smoke shell passes syntax checks.
+R1/R3/R4 failed receipt gates now emit visible bounded diagnostics instead of a
+bare exit code. Full exact-image acceptance remains required and production paused.

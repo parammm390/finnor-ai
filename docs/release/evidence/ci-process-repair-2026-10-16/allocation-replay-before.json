@@ -1,0 +1,10 @@
+{
+  "schema": "finnor.s5.image-allocation-replay.v1",
+  "status": "FAIL",
+  "qualification": "SAVED_ISSUED_INPUT_REPLAY_NOT_NEW_HTTP_SQL_OR_IMAGE_ACCEPTANCE",
+  "inputSha256": "1dd55b122cb8bb5f287224bfe86a4f8d6998daec53ff82a3910044e17afb892c",
+  "startedAt": "2026-10-16T04:57:15.488Z",
+  "rerun": "FINNOR_S5_PYTHON=<pinned-python> node --import=tsx scripts/s5/replay-image-allocation.mts <saved-http.jsonl> <fresh-output>",
+  "error": "AssertionError [ERR_ASSERTION]: ValueError:NONCANONICAL_FINITE_DECIMAL\n+ actual - expected\n\n+ 'NUMERICAL_FAILURE'\n- 'OPTIMAL_NUMERICAL'\n",
+  "finishedAt": "2026-10-16T04:57:16.386Z"
+}

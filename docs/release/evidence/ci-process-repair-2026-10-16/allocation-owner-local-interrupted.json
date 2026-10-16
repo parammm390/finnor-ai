@@ -1,0 +1,62 @@
+{
+  "schema": "finnor.r1.native-rerun.v1",
+  "startedAt": "2026-10-16T04:57:39.298021+00:00",
+  "command": [
+    "/Users/paramdave/.hermes/node/bin/node",
+    "--import=tsx",
+    "scripts/r1/run-owners.mts",
+    "owners"
+  ],
+  "cwd": "/Users/paramdave/.codex/worktrees/finnor-release-candidate-5e8769e/finnor-os",
+  "environmentNames": [
+    "AUTH_DEV_BYPASS",
+    "CI",
+    "FINNOR_BUILD_ID",
+    "FINNOR_COMMIT_SHA",
+    "FINNOR_M1_PROFILE",
+    "FINNOR_P4_PROFILE",
+    "FINNOR_R1_CASE_FILTER",
+    "FINNOR_R1_EVIDENCE_DIR",
+    "FINNOR_R1_PYTHON",
+    "FINNOR_RELEASE_SOURCE",
+    "FINNOR_S3_PYTHON",
+    "FINNOR_S5_PYTHON",
+    "FINNOR_TEST_MANAGED_EXTENSIONS",
+    "FINNOR_VERSION",
+    "HOME",
+    "LOG_LEVEL",
+    "NODE_ENV",
+    "OMP_NUM_THREADS",
+    "OPENBLAS_NUM_THREADS",
+    "P3_GOVERNORS",
+    "PATH",
+    "RATE_LIMIT_PER_MINUTE",
+    "TMPDIR"
+  ],
+  "caseFilter": "positive-owner-reduction",
+  "executables": [
+    {
+      "path": "/Users/paramdave/.hermes/node/bin/node",
+      "sha256": "5d9d3872911e2340a43b707962e68143de8a4e8d54628845c0c4f2de1fb7cd5c"
+    },
+    {
+      "path": "/Users/paramdave/.codex/workspaces/finnor-s3-python/bin/python",
+      "sha256": "7a314947596fc484d4ec36ffc28e843b78d6d749c68736f8b5c24e7333f418eb"
+    }
+  ],
+  "driverSha256": "54ce01e69fb01ff3ab215ec3f8573a64c65266381b186d79cca570faf076bb59",
+  "status": "FAIL",
+  "qualification": "Ordinary real development proof, no protected qualification or business effects",
+  "exitCode": -9,
+  "failure": "MISSING_DECISIVE_RECEIPT",
+  "finishedAt": "2026-10-16T04:59:27.095407+00:00",
+  "interruption": {
+    "reason": "Paused before setup while reading a compressed,dataless third-party dependency",
+    "observedPid": 26439,
+    "blockedFile": "/Users/paramdave/Desktop/FINNOR/finnor-os/node_modules/redis-parser/index.js",
+    "observedFileFlags": "compressed,dataless",
+    "sigtermRequested": true,
+    "sigkillAfterNoExit": true,
+    "ownerSetupReached": false
+  }
+}

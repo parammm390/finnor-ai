@@ -1,0 +1,182 @@
+{
+  "input": {
+    "schema": "finnor.s5.milp.rational.v2",
+    "quantityEncoding": "DECIMAL_OR_RATIONAL_V2",
+    "c": [
+      "0",
+      "-1"
+    ],
+    "integrality": [
+      1,
+      0
+    ],
+    "lowerBounds": [
+      "0",
+      "0"
+    ],
+    "upperBounds": [
+      "1",
+      "7"
+    ],
+    "rows": [
+      {
+        "id": "resource:capital:common-0:0",
+        "coefficients": {
+          "0": "1/3"
+        },
+        "lower": null,
+        "upper": "2"
+      },
+      {
+        "id": "resource:capital:common-0:1",
+        "coefficients": {
+          "0": "1/3"
+        },
+        "lower": null,
+        "upper": "2"
+      },
+      {
+        "id": "resource:capital:common-0:2",
+        "coefficients": {
+          "0": "1/3"
+        },
+        "lower": null,
+        "upper": "2"
+      },
+      {
+        "id": "resource:capital:common-0:3",
+        "coefficients": {
+          "0": "1/3"
+        },
+        "lower": null,
+        "upper": "2"
+      },
+      {
+        "id": "resource:compute:common-0:0",
+        "coefficients": {
+          "0": "8"
+        },
+        "lower": null,
+        "upper": "16"
+      },
+      {
+        "id": "resource:compute:common-0:1",
+        "coefficients": {
+          "0": "8"
+        },
+        "lower": null,
+        "upper": "16"
+      },
+      {
+        "id": "resource:compute:common-0:2",
+        "coefficients": {
+          "0": "8"
+        },
+        "lower": null,
+        "upper": "16"
+      },
+      {
+        "id": "resource:compute:common-0:3",
+        "coefficients": {
+          "0": "8"
+        },
+        "lower": null,
+        "upper": "16"
+      },
+      {
+        "id": "mandate-total:capital:common-0",
+        "coefficients": {
+          "0": "1/3"
+        },
+        "lower": null,
+        "upper": "100000"
+      },
+      {
+        "id": "mandate-occupancy:capital:common-0:0",
+        "coefficients": {},
+        "lower": null,
+        "upper": "100000"
+      },
+      {
+        "id": "mandate-occupancy:capital:common-0:1",
+        "coefficients": {},
+        "lower": null,
+        "upper": "100000"
+      },
+      {
+        "id": "mandate-occupancy:capital:common-0:2",
+        "coefficients": {},
+        "lower": null,
+        "upper": "100000"
+      },
+      {
+        "id": "mandate-occupancy:capital:common-0:3",
+        "coefficients": {},
+        "lower": null,
+        "upper": "100000"
+      },
+      {
+        "id": "mandate-total:compute:common-0",
+        "coefficients": {
+          "0": "8"
+        },
+        "lower": null,
+        "upper": "8"
+      },
+      {
+        "id": "mandate-occupancy:compute:common-0:0",
+        "coefficients": {},
+        "lower": null,
+        "upper": "8"
+      },
+      {
+        "id": "mandate-occupancy:compute:common-0:1",
+        "coefficients": {},
+        "lower": null,
+        "upper": "8"
+      },
+      {
+        "id": "mandate-occupancy:compute:common-0:2",
+        "coefficients": {},
+        "lower": null,
+        "upper": "8"
+      },
+      {
+        "id": "mandate-occupancy:compute:common-0:3",
+        "coefficients": {},
+        "lower": null,
+        "upper": "8"
+      },
+      {
+        "id": "mandate-human:common-0",
+        "coefficients": {},
+        "lower": null,
+        "upper": "900"
+      },
+      {
+        "id": "worst-path:common-0",
+        "coefficients": {
+          "0": "-7",
+          "1": "1"
+        },
+        "lower": null,
+        "upper": "0"
+      },
+      {
+        "id": "risk-floor:common-0",
+        "coefficients": {
+          "0": "-7"
+        },
+        "lower": null,
+        "upper": "100000"
+      }
+    ],
+    "budget": {
+      "deadlineMs": 10000,
+      "nodeLimit": 50000
+    }
+  },
+  "policyColumns": [
+    "contingent-policy:003ed5b9aacc5c18e055c8cac05ffbf9ceb84ab09a0d9b923c79d34bad5f68ae"
+  ]
+}

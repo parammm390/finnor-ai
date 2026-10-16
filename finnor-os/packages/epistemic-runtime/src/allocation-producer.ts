@@ -5,7 +5,7 @@ import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import type { AllocationDualProposal, AllocationResultState, CanonicalAllocationProblem, S5ComputeInvocation } from '@finnor/shared-types';
 import { ExperimentRational, ER_ZERO } from './experiment-numerics';
-import { allocationDecimal as decimal, allocationNumber as number, allocationDerivedQuantity as quantity, assertAllocationProblem, AllocationContractError } from './allocation-contracts';
+import { allocationDecimal, allocationNumber as number, allocationDerivedQuantity as quantity, assertAllocationProblem, AllocationContractError } from './allocation-contracts';
 import { epistemicHash } from './source-precedence';
 
 interface MatrixRow {id:string;coefficients:Record<string,string>;lower:string|null;upper:string|null}
@@ -23,6 +23,14 @@ const usage=(kind:string,raw:ExperimentRational[],t:number)=>kind==='STOCK'||kin
 /** Ordinary evolvable compiler. The feasibility checker never reads its rows. */
 export function compileAllocationMilp(p:CanonicalAllocationProblem,deadlineMs:number):{input:AllocationMilpInput;policyColumns:string[]} {
   assertAllocationProblem(p);const ids=p.policies.map(policy=>policy.ref.id),h=p.mandate.horizon.periods,columns=new Map(ids.map((id,i)=>[id,i]));
+  // Internal durable ledgers use r3q:n/d; the versioned numerical IPC uses n/d.
+  // Translate only here, after exact validation, without rounding or widening v1.
+  const decimal=(value:ExperimentRational):string=>{
+    const encoded=allocationDecimal(value);
+    if(!encoded.startsWith('r3q:'))return encoded;
+    if(p.quantityEncoding!=='DECIMAL_OR_RATIONAL_V2')throw new AllocationContractError('INVALID_REQUEST','Rational MILP quantities require the versioned rational encoding binding');
+    return encoded.slice(4);
+  };
   const monomials=new Map<string,string[]>();for(const s of p.jointModel.scenarios)for(const term of s.terms)if(term.policyIds.length>1)monomials.set([...term.policyIds].sort().join('|'),[...term.policyIds].sort());
   const productColumns=new Map<string,number>();for(const key of monomials.keys())productColumns.set(key,ids.length+productColumns.size);
   const z=ids.length+productColumns.size,rows:MatrixRow[]=[],totalColumns=z+1;

@@ -1,0 +1,32 @@
+{
+  "schema": "finnor.s5.milp-result.v1",
+  "status": "OPTIMAL_NUMERICAL",
+  "vector": [
+    1,
+    7
+  ],
+  "minObjective": -7,
+  "minDualBound": -7,
+  "mipGap": 0,
+  "nodeCount": 0,
+  "termination": "Optimization terminated successfully. (HiGHS Status 7: Optimal)",
+  "dualProposal": {
+    "schema": "finnor.s5.dual-proposal.v1",
+    "multipliers": []
+  },
+  "backend": {
+    "pythonVersion": "3.12.14",
+    "scipyVersion": "1.16.2",
+    "numpyVersion": "2.3.3",
+    "highsVersion": "1.8.0"
+  },
+  "usage": {
+    "lpNumericalUpperEstimate": 7,
+    "elapsedMs": 309.0629580001405,
+    "cpuSeconds": 0.237893,
+    "maxRssBytes": 72794112,
+    "memoryScope": "CHILD_PROCESS_SELF_HIGH_WATER_NOT_CONTAINER_PEAK",
+    "pricing": "UNMETERED"
+  },
+  "warnings": []
+}

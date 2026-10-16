@@ -190,7 +190,11 @@ fi
 node - "$evidence/linux-r1-runtime/results.json" <<'NODE'
 const fs = require("node:fs");
 const receipt = JSON.parse(fs.readFileSync(process.argv[2], "utf8"));
-if (receipt.status !== "PASS_LOCAL" || receipt.results.length !== 1 || receipt.results[0].status !== "PASS") process.exit(1);
+if (receipt.status !== "PASS_LOCAL" || receipt.results.length !== 1 || receipt.results[0].status !== "PASS") {
+  console.error("::error::R1 installed owner proof failed: " + JSON.stringify({status:receipt.status,
+    cases:receipt.results.map(r=>({id:r.id,status:r.status,error:String(r.observed?.error??"").slice(0,1024)}))}));
+  process.exit(1);
+}
 NODE
 
 
@@ -253,7 +257,10 @@ const owner = JSON.parse(fs.readFileSync(process.argv[3], "utf8"));
 if (!installed.results?.length || installed.results.some(r => r.status !== "PASS") ||
     !owner.cases?.length || owner.cases.some(r => r.status !== "PASS") ||
     owner.qualification !== "SYNTHETIC_ORIGINALS_REAL_HTTP_AUTH_SQL_WORKER_ORDINARY_OWNERS" ||
-    owner.protectedAgreement !== false || owner.protectedEffect !== false) process.exit(1);
+    owner.protectedAgreement !== false || owner.protectedEffect !== false) {
+  console.error("::error::R3 installed runtime/owner proof failed; inspect retained linux-r3-runtime results.json files");
+  process.exit(1);
+}
 fs.writeFileSync(path.join(process.argv[6], "receipt.json"), JSON.stringify({
   schema: "finnor.r3.image-owner-proof.v1", status: "PASS",
   imageId: process.argv[4], sourceTree: process.argv[5],
@@ -298,7 +305,10 @@ const freeze = JSON.parse(fs.readFileSync(process.argv[3], "utf8"));
 if (receipt.results.length !== 5 || receipt.results.some(r => r.status !== "PASS") ||
     freeze.packagedSource !== true || freeze.head !== process.env.FINNOR_COMMIT_SHA ||
     freeze.imageId !== process.argv[4] || freeze.tree !== process.argv[5] ||
-    !/^sha256:[0-9a-f]{64}$/.test(freeze.imageId)) process.exit(1);
+    !/^sha256:[0-9a-f]{64}$/.test(freeze.imageId)) {
+  console.error("::error::R4 installed owner proof or exact image/source binding failed; inspect retained linux-r4-runtime/owner results.json and freeze.json");
+  process.exit(1);
+}
 NODE
   cp "$evidence/linux-r4-runtime/owner/results.json" "$evidence/linux-r4-runtime/results.json"
 fi
