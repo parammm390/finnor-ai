@@ -94,18 +94,58 @@ root without checkout/donor resolution and execute a fresh installed episode.
 Report billing, human work and simultaneous memory as UNKNOWN where unmetered.
 No complete-cost gain, protected qualification or external gate is inferred.
 
+## Fixture-only artifact reconstruction, before implementation
+
+Do not rebuild unchanged API/worker product bytes for a browser-fixture edit.
+A new, task-owned reconstruction may copy a stopped frozen installation,
+excluding generated frontend output. Preserve the API build ID, all API and
+dependency inventories, emitted bytes, locks and retained source adapters.
+Never modify the seed or claim this is a new compiler/backend build.
+
+Only the two explicit browser-fixture modules and these scope ledger documents
+may differ from the original source input. Compare every other canonical
+source input and both locks against the checked source inventory; reject a
+product/configuration/dependency change rather than reusing its old output.
+Copy independent COW files, preserve internal relative links, and reject
+external resolution. Rebind the source-input identity and relocation metadata
+explicitly, retaining the original product build ID and parent manifest hash.
+Beginning/ending actual-byte checks and a fresh complete native episode still
+own acceptance. A written reconstruction receipt alone proves nothing.
+
+Credible failures include an active or altered seed, undeclared source delta,
+hard-linked mutable product/source files, stale metadata, changed API output,
+escaping dependency links, hidden checkout/seed resolution, a rewritten seed,
+and labelling a reused build as newly compiled. Retain failures and qualify
+source-only bundle reconstruction separately from this installed boundary.
+
 ## Status
 
 The acceptance requirements above were written before implementation.
-Installations 001–005 now complete the emitted assets and real backend build.
-Native 071 uses unchanged installation 005 with signed disposable identity:
-migrations/role isolation, registration, physical acquisition/independent
-model checks, original-request DELETE refusal, emitted S6/S8 lifecycle and
-ending source/installed custody pass. Actual maintained login and persisted
-focus/reload pass. Root-boundary verification fails; fresh business, later
-browser lifecycle and API restart are not reached. This is 8 PASS/1 FAIL,
-exit 1, not installed end-to-end acceptance. Deliberate byte mutation,
-standalone reconstruction and affected installed recovery remain unfinished.
+Installations 001–006 complete the emitted assets and real backend build.
+Reconstructed installation 001 preserves installation 006's product bytes
+and build ID without another backend build. Native 075 reports 12 PASS/0
+FAIL/exit 0: actual authenticated API, emitted fresh worker, independently
+graded four-action business result, maintained-client HTTP projection,
+S8 original-evidence refusal and actual API restart pass. Installation 006
+is unavailable throughout and restored afterward; beginning/ending source,
+oracle, runtime and installed byte custody pass. This is a standalone
+API/worker episode, explicitly not a maintained browser lifecycle pass.
+
+Native 074 passes actual maintained login, focus/reload, full Deal → none →
+same Deal boundary and real fresh-use POST 202. The worker then stops at
+S6 reference delivery, retaining the original `LEDGER_TRANSPORT_UNAVAILABLE`
+RETRY and the matching S6 commitment. The fresh application request remains
+PREPARED without possible egress. No transport cause or business completion
+is inferred. Native 073's earlier Next development canvas PUT 500 is retained.
+Both are overall 8 PASS/1 FAIL/exit 1, not acceptance.
+
+The emitted consumer configuration owner passes 17 positive/negative cases
+in production Node mode, without issuing a command or effect and without
+renewing the original policy deadline. The source-pin negative targets the
+actual loaded consumer path, not an arbitrary extra metadata pin. Full
+application-command negative coverage, deliberate installed-byte mutation,
+affected installed recovery, later browser lifecycle and final release
+qualification remain unfinished.
 
 ## First installed attempt and affected fixture repair
 

@@ -164,8 +164,8 @@ export async function runMountedNativeIntegration(input: MountedNativeInput) {
         assert.equal(request.mutationCounts.acquisition, 0); assert.equal(request.mutationCounts.cancellation, 0);
         assert(request.mutationCounts.execution <= 1);
         let row: unknown = null, focus: unknown = null;
-        if (request.expected) {
-          const expected = request.expected;
+        {
+          const expected = request.expected ?? acquisition.expected;
           assert.equal(expected.tenantId, input.tenantId); assert.deepEqual(expected.root, input.root);
           row = (await input.sql.query("SELECT id,created_by,current_owner_id,tenant_id FROM finnor_os.works WHERE tenant_id=$1 AND id=$2",
             [input.tenantId, expected.workId])).rows[0];

@@ -52,6 +52,49 @@ arrow with object methods; preserve every scope check, observation bound,
 overflow refusal and assertion. No helper is installed on the product window.
 The full mounted gate must still pass in a new frozen installation.
 
+Native 072 passes the complete root/no-root/root stage after that correction.
+Its fresh-use stage fills Work/profile/target/goal, then times out before
+Parameters changes from its default `{}`; no execution request is sent.
+Before changing that locator, reproduce the nested-label/default-textarea
+case in the actual installed browser. Compare the exact label, accessible
+textbox name and canonical `textarea[name="parameters"]`; an unexpected
+result must remain unreproduced. Change only the proven locator, not the
+form payload or submission/assertion requirements.
+
+The isolated Chrome probe records exact-label count 0, accessible-textbox
+count 1 and canonical named-control count 1 for the actual nested label and
+default `{}`. Filling through the accessible textbox succeeds. Use that
+accessible locator; keep the same Parameters value and real submit control.
+
+An erased-scope callback must also execute an independent SQL check before
+returning a `CANONICAL_SQL` receipt. Verify the retained original Work,
+owner and acquisition-session identity; null UI scope does not mean the
+durable Work was deleted or its original history erased.
+
+Native 073 retains a Next development-server canvas PUT 500 with
+`Unexpected end of JSON input`; it fails during focus/reload. Native 074
+reuses the unchanged reconstructed product, with installation 006 unavailable,
+and passes login, persisted focus/reload and the full root boundary. The
+repaired accessible Parameters locator submits the real fresh-use form and
+the actual installed API returns 202. The erased-scope callback also checks
+retained Work/owner/session identity in SQL. No product control or expected
+business payload is replaced.
+
+The emitted fresh worker then fails with
+`X2_S8_NATIVE_REFERENCE_DELIVERY_UNPASSED`. Read-only original-database
+inspection identifies `LEDGER_TRANSPORT_UNAVAILABLE` and RETRY; the same
+S6 reference is retained in its commitments. The fresh application request
+remains PREPARED with possible egress false. This does not establish the
+transport cause or a completed business result. Later mounted lifecycle
+stages remain NOT_RUN, and the whole episode remains failed.
+
+Native 075 is a separate browser-free control of the unchanged reconstructed
+installation, again with installation 006 unavailable throughout. All 12
+required API/worker gates pass, including the independent four-action fresh
+business result and actual API restart. It neither repairs nor qualifies
+native 074's browser episode. The known cache/recent-list risks below are
+still unexposed by the complete maintained lifecycle.
+
 Written before implementation. This directory is the only write target. The FINNOR checkout is read-only; no server, browser, database, worker, build, credential discovery, publication or peer operation is authorized here.
 
 ## Authoring gate

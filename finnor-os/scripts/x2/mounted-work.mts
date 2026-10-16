@@ -629,7 +629,7 @@ export async function runMountedWork(options: MountedWorkOptions): Promise<Mount
       await panel.getByLabel("Existing execution-profile UUID (reference only)", { exact: true }).fill(options.freshUse.executionProfileId);
       await panel.getByLabel("Current authorized target identifier", { exact: true }).fill(options.freshUse.targetId);
       await panel.getByLabel("Goal — strict application-state JSON", { exact: true }).fill(options.freshUse.goalJson);
-      await panel.getByLabel("Parameters — strict application-state JSON", { exact: true }).fill(options.freshUse.parametersJson);
+      await panel.getByRole("textbox", { name: "Parameters — strict application-state JSON", exact: true }).fill(options.freshUse.parametersJson);
       await panel.getByRole("button", { name: "Request fresh use and native checks", exact: true }).click();
       const settled = await bounded("settle-ui-fresh-use", settleMs, boundary => options.settleFreshUse({
         ...boundary, workId: fresh.workId, parentSessionId: primary.sessionId!,

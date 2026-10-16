@@ -9,17 +9,30 @@ Migration 0193 repairs existing request UUID custody and header-connection
 revocation without rewriting 0191/0192. Runtime and composition repairs preserve
 observed identity dependencies and recheck authority after real lock waits.
 
-Installed 001–005 build successfully. Installation 005 includes the review
-repairs and completes the real backend build in 308,783.329 ms. Native 069
-reaches the maintained signed-in panel but fails on an incorrect fixture SQL
-column; that callback is repaired. Native 070 and 071 each report 8 PASS/1 FAIL
-and exit 1. Actual login, canonical Work display and persisted focus/reload
-pass. Native 070 encounters frontend ENOSPC during WORLD navigation. With
-7.5 GiB free, unchanged installation 005 in native 071 navigates from WORLD
-through explicit no-context back to Canvas, then fails inside that stage
-before its final assertions. The current failure is not established as a
-product defect or attributed to disk. Fresh business, later lifecycle and
-API restart are NOT_REACHED; beginning/ending installed custody passes.
+Installed 001–006 build successfully. Installation 006 completes the real
+backend build in 255,743.150 ms. The browser observer serialization repair
+passes the full Deal → none → same Deal boundary in native 072. Native 072
+then exposes an inaccessible exact-label fixture locator. The repaired
+accessible textbox locator reaches an actual fresh-use POST 202 in native
+074; erased-scope callbacks also perform independent retained-history SQL.
+
+Reconstructed installation 001 preserves installation 006's product/API/
+dependency bytes and build ID, with explicit fixture-only source-input and
+relocation metadata. No product rebuild is claimed. Native 073 fails on a
+Next development-server canvas PUT 500. Native 074 passes login, persisted
+focus/reload and the full root boundary, then fails at native S6 reference
+delivery. The original database records `LEDGER_TRANSPORT_UNAVAILABLE` and
+RETRY, while the same reference exists in S6's retained commitments. The
+fresh application request is PREPARED with possible egress false. The
+underlying transport cause is not established; later lifecycle is NOT_RUN.
+
+Native 075 runs the unchanged reconstructed product without the browser:
+12 PASS/0 FAIL/exit 0. Actual authenticated API, emitted worker, four-action
+fresh business result, independent grading, maintained-client HTTP projection,
+S8 original-evidence refusal and actual API restart all pass. Installation
+006 stays unavailable throughout and is restored afterward. This proves
+the stated standalone API/worker episode, not maintained browser acceptance.
+Beginning/ending source, oracle, runtime and installed custody pass.
 Prior API/UI/hybrid, recovery, cancellation, drift, backlog and final-lock
 evidence remains prior-cut evidence. Full finite engineering remains
 incomplete and unsealed.
@@ -37,7 +50,23 @@ No X1 or ORIGINAL V1 completion percentage, cumulative compatibility, admission 
 ## Executed development checks
 
 - Full backend typecheck 038, explicit backend-inclusive lint 046 and focused
-  native-driver closure 055: PASS. These do not establish mounted acceptance.
+  native-driver closure 057: PASS. These do not establish mounted acceptance.
+- Reconstructed installed/native 075: 12 PASS/0 FAIL/exit 0, including actual
+  independently graded fresh business and API restart while the seed
+  installation is unavailable. Browser lifecycle is not requested in this
+  control and must not be counted as passing.
+- Emitted consumer-policy probe 002: 17 PASS/0 FAIL. Actual production-Node
+  configuration validation retains staging/profile, signature, scope,
+  loopback, false-authority, required loaded-source, duplicate-pin, expiry and
+  missing-root refusals, plus optional unconfigured behavior. No S8 command
+  or application effect is issued by this probe. Probe 001's 12 PASS/1 FAIL
+  is retained: it changed an extra pin outside this owner's minimum loaded
+  closure. Probe 002 uses the actual loaded consumer pin, preserves every
+  original policy deadline and changes no product code or expected refusal.
+- Native 072–074: retained failures. Native 074 validates the repaired real
+  form submission, but its fresh worker and subsequent lifecycle fail/not
+  run. Native 073's canvas PUT JSON error is not erased by native 074's
+  unchanged-artifact focus/reload pass.
 - Installed 005/native 071: 8 PASS/1 FAIL/exit 1. The first two mounted stages
   pass; the root-boundary stage fails. Remaining mounted stages and fresh
   business/API restart are not executed. Ending source/oracle and installed
@@ -80,6 +109,14 @@ Raw artifacts are retained under the task-owned directory
 `provider-usage-before/result.json`, `provider-usage-after/result.json` and
 `kernel-reference-readiness.json` have separate qualifications. They are not
 native Factory validator verdicts.
+
+The recoverable continuation commit is
+`b35bf3ba9a4e4dcdd63fa7dc546de743cc74f809`, tree
+`7d5e63c33639f5a34b8a6804941b7a51b97aeedc`, following checkpoint
+`368755a222581ad9c49ae4d15c2dfd661cc4ccd4`. Its scanned source bundle and
+clean source-only reconstruction remain separate from installed acceptance.
+Later fixture repairs and this updated ledger form a further continuation,
+not a final release seal. No publication is authorized or performed.
 
 ## Current changed source
 
