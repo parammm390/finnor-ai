@@ -16,11 +16,28 @@ const startedAt = new Date().toISOString()
 test.after(() => {
   const evidence = process.env.FINNOR_CI_PROCESS_EVIDENCE_DIR
   if (!evidence) return
-  const files = ["scripts/release/ci-process.e2e.test.mjs", "scripts/release/pr-verdict-policy.mjs", "scripts/release/ci-process-policy.mjs", "scripts/release/worktree-state.mjs"]
+  const files = ["scripts/release/ci-process.e2e.test.mjs", "scripts/release/pr-verdict-policy.mjs", "scripts/release/ci-process-policy.mjs", "scripts/release/worktree-state.mjs", ".github/workflows/production-release.yml"]
   const inputs = Object.fromEntries(files.map(path => [path, createHash("sha256").update(readFileSync(join(root, path))).digest("hex")]))
-  const receipt = { schema: "finnor.ci-process-e2e.v1", status: records.length === 6 ? "PASS" : "FAIL", startedAt, finishedAt: new Date().toISOString(), inputs, records, rerun: "FINNOR_CI_PROCESS_EVIDENCE_DIR=/absolute/new/evidence node --test scripts/release/ci-process.e2e.test.mjs", applicationTestsExecuted: false }
+  const receipt = { schema: "finnor.ci-process-e2e.v1", status: records.length === 7 ? "PASS" : "FAIL", startedAt, finishedAt: new Date().toISOString(), inputs, records, rerun: "FINNOR_CI_PROCESS_EVIDENCE_DIR=/absolute/new/evidence node --test scripts/release/ci-process.e2e.test.mjs", applicationTestsExecuted: false }
   mkdirSync(evidence, { recursive: true })
   writeFileSync(join(evidence, "process-e2e.json"), `${JSON.stringify(receipt, null, 2)}\n`)
+})
+
+test("actual release sessions fit STS and cover CloudFormation ECS replacement handlers", () => {
+  const workflow = readFileSync(join(root, ".github/workflows/production-release.yml"), "utf8")
+  const serialized = [...workflow.matchAll(/inline-session-policy: >-\n\s+(\{[^\n]+\})/g)].map(match => match[1])
+  assert.equal(serialized.length, 4)
+  for (const policy of serialized) assert.ok(policy.length <= 2048, `STS session policy is ${policy.length} characters`)
+  const compute = JSON.parse(serialized.at(-1))
+  const actions = compute.Statement.flatMap(statement => [statement.Action].flat())
+  const required = ["ecs:RegisterTaskDefinition", "ecs:DescribeTaskDefinition", "ecs:DeregisterTaskDefinition", "ecs:TagResource", "ecs:UntagResource", "ecs:ListTagsForResource", "iam:GetRole", "iam:PassRole", "ecs:DescribeServices", "ecs:UpdateService", "ecs:DescribeServiceDeployments", "ecs:ListServiceDeployments", "ecs:StopServiceDeployment"]
+  for (const action of required) assert.ok(actions.includes(action), `missing CloudFormation handler permission ${action}`)
+  const cleanup = compute.Statement.filter(statement => [statement.Action].flat().includes("ecs:DeregisterTaskDefinition"))
+  assert.equal(cleanup.length, 1)
+  assert.equal(cleanup[0].Resource, "*")
+  assert.deepEqual(cleanup[0].Condition, { StringEquals: { "aws:CalledViaFirst": "cloudformation.amazonaws.com", "aws:CalledViaLast": "cloudformation.amazonaws.com" } })
+  assert.ok(!actions.some(action => /^(iam:(?:Put|Create|Attach|Update|Delete)|ec2:(?!Describe)|ecs:\*)/.test(action)))
+  records.push({ case: "actual-release-session-handler-closure", sessionLengths: serialized.map(policy => policy.length), requiredActions: required, directDeregistrationNotGranted: true, actualCloudFormationExecutionProven: false })
 })
 
 test("actual Git PR diff excludes base drift and retains deleted and renamed code paths", () => {

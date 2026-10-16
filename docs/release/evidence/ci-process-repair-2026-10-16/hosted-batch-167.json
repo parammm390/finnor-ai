@@ -1,0 +1,1285 @@
+{
+  "schema": "finnor.hosted-batch-167-repair.v1",
+  "failedRun": 38857215689,
+  "failedHead": "e3914d33b7dcccd266d52ce0d9e88969b10c91bf",
+  "jobs": [
+    {
+      "name": "classify-required-scope",
+      "id": 116831284258,
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "early-source-gates / validate",
+      "id": 116831378759,
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "universal-security-gates / gitleaks",
+      "id": 116831378760,
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "universal-security-gates / osv-scanner / osv-scan",
+      "id": 116831379007,
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "early-source-gates / source",
+      "id": 116831469730,
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "early-source-gates / governance",
+      "id": 116831469756,
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "applicable-release-readiness / canonical-graph-gate",
+      "id": 116832115767,
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "applicable-backend-gates / production-artifacts",
+      "id": 116832115825,
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "applicable-backend-gates / test (2)",
+      "id": 116832115839,
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "applicable-release-readiness / phase5-readiness (scope5)",
+      "id": 116832115870,
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "applicable-backend-gates / phase7",
+      "id": 116832115890,
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "applicable-release-readiness / phase5-readiness (scope4)",
+      "id": 116832115891,
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "applicable-backend-gates / worker-image",
+      "id": 116832115934,
+      "status": "completed",
+      "conclusion": "failure"
+    },
+    {
+      "name": "applicable-backend-gates / test (3)",
+      "id": 116832115959,
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "applicable-backend-gates / test (1)",
+      "id": 116832115996,
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "applicable-dealer-zero / receipt-diff",
+      "id": 116832116107,
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "applicable-root-gates / lint-typecheck-e2e",
+      "id": 116832116153,
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "applicable-dealer-zero / database-role-qa",
+      "id": 116832117975,
+      "status": "completed",
+      "conclusion": "skipped"
+    },
+    {
+      "name": "required-pr-verdict",
+      "id": 116835415918,
+      "status": "completed",
+      "conclusion": "failure"
+    }
+  ],
+  "artifact": {
+    "id": 12028355743,
+    "sha256": "7d8507a4ca18bcb3c3d499e871ad41453588867e3b3484b3f7ab5814ce85b751"
+  },
+  "failure": "R3 installed owner restart lacked FINNOR_R3_INSTALLED_SOURCE_COMMIT; Git-less image hit undefined stdout.trim()",
+  "localReceipts": {
+    "compute-policy-before/process-e2e.json": {
+      "schema": "finnor.ci-process-e2e.v1",
+      "status": "FAIL",
+      "startedAt": "2026-10-16T06:08:34.685Z",
+      "finishedAt": "2026-10-16T06:08:35.430Z",
+      "inputs": {
+        "scripts/release/ci-process.e2e.test.mjs": "33adcd71f4b3f04a02daaa22369aa5d75eb21f63453cca5072e17335c96d7601",
+        "scripts/release/pr-verdict-policy.mjs": "00c480b0e3cde6d2581af716b4b5e0709c814a8de8f291b4fd91c10a9e56a372",
+        "scripts/release/ci-process-policy.mjs": "2c76e46ddd48fc187e3d9b36bccac4ca1b072cc8c12ca5c56ed03e0ca9cb0686",
+        "scripts/release/worktree-state.mjs": "6286168452299ee98564886808756d44020367eda3ee4f80bb1cb0cdbde8986a",
+        ".github/workflows/production-release.yml": "c1d1235a9ca09114154856124d248b68d1f6c8b0e7d1b2b4fa91497bab3061a4"
+      },
+      "records": [
+        {
+          "case": "real-git-diff",
+          "base": "699c26f37217386501188cb85ab5f2dac36bee31",
+          "movedBase": "30255c48303342f133b0687e82bae2e41d058358",
+          "head": "9f3e7c03f9474439519ee7eb57f117bcb00fc718",
+          "observedFiles": [
+            "docs/line\nbreak.md",
+            "docs/renamed.md",
+            "finnor-os/deleted.ts",
+            "src/renamed.ts"
+          ],
+          "renamedAndDeletedCodeRetained": true,
+          "baseDriftExcluded": true,
+          "invalidEndpointsRejected": true
+        },
+        {
+          "case": "stable-verdict",
+          "successAccepted": true,
+          "applicableFailuresCancellationsAndSkipsRejected": 18,
+          "docsOnlyAccepted": true
+        },
+        {
+          "case": "git-process-deadline",
+          "actualGitSuccess": true,
+          "invalidRepositoryRejected": true,
+          "timeoutMs": 40,
+          "observedMs": 42
+        },
+        {
+          "case": "actual-workflow-graph",
+          "baselineAccepted": true,
+          "rejectedMutations": [
+            "duplicate-main-trigger",
+            "unguarded-image-work",
+            "production-misses-security",
+            "production-cancelled",
+            "missing-test-shard",
+            "source-bypasses-workflow-validation",
+            "missing-readiness-certification",
+            "missing-source-aggregate"
+          ]
+        },
+        {
+          "case": "source-diagnostics-aggregate",
+          "allRequiredAccepted": true,
+          "negativeOutcomesRejected": 28,
+          "onlyInapplicableSkipsAccepted": true,
+          "missingOutcomesRejected": true
+        },
+        {
+          "case": "real-owner-export-containment",
+          "exactCandidateAccepted": true,
+          "invalidTargetsRejected": 6,
+          "escapingSymlinkRejected": true
+        }
+      ],
+      "rerun": "FINNOR_CI_PROCESS_EVIDENCE_DIR=/absolute/new/evidence node --test scripts/release/ci-process.e2e.test.mjs",
+      "applicationTestsExecuted": false
+    },
+    "compute-policy-final/process-e2e.json": {
+      "schema": "finnor.ci-process-e2e.v1",
+      "status": "PASS",
+      "startedAt": "2026-10-16T06:10:15.984Z",
+      "finishedAt": "2026-10-16T06:10:16.756Z",
+      "inputs": {
+        "scripts/release/ci-process.e2e.test.mjs": "33adcd71f4b3f04a02daaa22369aa5d75eb21f63453cca5072e17335c96d7601",
+        "scripts/release/pr-verdict-policy.mjs": "00c480b0e3cde6d2581af716b4b5e0709c814a8de8f291b4fd91c10a9e56a372",
+        "scripts/release/ci-process-policy.mjs": "2c76e46ddd48fc187e3d9b36bccac4ca1b072cc8c12ca5c56ed03e0ca9cb0686",
+        "scripts/release/worktree-state.mjs": "6286168452299ee98564886808756d44020367eda3ee4f80bb1cb0cdbde8986a",
+        ".github/workflows/production-release.yml": "bab5f39936f33accf7bfb78093b92900431d88cd7a302a46c943c3385f06ba93"
+      },
+      "records": [
+        {
+          "case": "actual-release-session-handler-closure",
+          "sessionLengths": [
+            432,
+            731,
+            731,
+            2006
+          ],
+          "requiredActions": [
+            "ecs:RegisterTaskDefinition",
+            "ecs:DescribeTaskDefinition",
+            "ecs:DeregisterTaskDefinition",
+            "ecs:TagResource",
+            "ecs:UntagResource",
+            "ecs:ListTagsForResource",
+            "iam:GetRole",
+            "iam:PassRole",
+            "ecs:DescribeServices",
+            "ecs:UpdateService",
+            "ecs:DescribeServiceDeployments",
+            "ecs:ListServiceDeployments",
+            "ecs:StopServiceDeployment"
+          ],
+          "directDeregistrationNotGranted": true,
+          "actualCloudFormationExecutionProven": false
+        },
+        {
+          "case": "real-git-diff",
+          "base": "d96134162722f2e7490052ae23a2937b96a140a0",
+          "movedBase": "d11cd0b411636a268ee9d478b17ca9bd3d3eb435",
+          "head": "7478a9198961d2592c67ceb7802c502be8e5d6c7",
+          "observedFiles": [
+            "docs/line\nbreak.md",
+            "docs/renamed.md",
+            "finnor-os/deleted.ts",
+            "src/renamed.ts"
+          ],
+          "renamedAndDeletedCodeRetained": true,
+          "baseDriftExcluded": true,
+          "invalidEndpointsRejected": true
+        },
+        {
+          "case": "stable-verdict",
+          "successAccepted": true,
+          "applicableFailuresCancellationsAndSkipsRejected": 18,
+          "docsOnlyAccepted": true
+        },
+        {
+          "case": "git-process-deadline",
+          "actualGitSuccess": true,
+          "invalidRepositoryRejected": true,
+          "timeoutMs": 40,
+          "observedMs": 42
+        },
+        {
+          "case": "actual-workflow-graph",
+          "baselineAccepted": true,
+          "rejectedMutations": [
+            "duplicate-main-trigger",
+            "unguarded-image-work",
+            "production-misses-security",
+            "production-cancelled",
+            "missing-test-shard",
+            "source-bypasses-workflow-validation",
+            "missing-readiness-certification",
+            "missing-source-aggregate"
+          ]
+        },
+        {
+          "case": "source-diagnostics-aggregate",
+          "allRequiredAccepted": true,
+          "negativeOutcomesRejected": 28,
+          "onlyInapplicableSkipsAccepted": true,
+          "missingOutcomesRejected": true
+        },
+        {
+          "case": "real-owner-export-containment",
+          "exactCandidateAccepted": true,
+          "invalidTargetsRejected": 6,
+          "escapingSymlinkRejected": true
+        }
+      ],
+      "rerun": "FINNOR_CI_PROCESS_EVIDENCE_DIR=/absolute/new/evidence node --test scripts/release/ci-process.e2e.test.mjs",
+      "applicationTestsExecuted": false
+    },
+    "r3-image-wiring-before/worker-image-layout.json": {
+      "schema": "finnor.worker-image-layout-proof.v1",
+      "inputs": {
+        "workdir": "/app/finnor-os",
+        "dockerfileSha256": "e8f39471274ea9ed031d59490f3b5b5c1e94f5c648e3d91c68de19a67fa95dbd",
+        "smokeSha256": "65ebf11749cb41ea0a1d172a3d10c9ea655e30c1e622aa9796e17303175fdee0"
+      },
+      "steps": [
+        "Copy production source into image WORKDIR outside checkout",
+        "Reuse host third-party dependencies while mapping workspace packages to relocated candidate source",
+        "Import actual worker owners",
+        "Recheck P4/M4 canonical source identities"
+      ],
+      "observed": {
+        "installedOwnerCommitWired": false,
+        "exitCode": 0,
+        "signal": null,
+        "error": null,
+        "stdout": "{\"workerImported\":true,\"p4Sources\":944,\"m4Sources\":946,\"projectionResolution\":\"file:///private/var/folders/qp/j_yc8vfs6pd0mrx0xrb722640000gn/T/finnor-worker-image-layout-NQ2kpa/app/finnor-os/packages/projections/src/index.ts\"}\n",
+        "stderr": "IMPORT_START decision-slice\nIMPORT_DONE decision-slice\nIMPORT_START evidence-store\nIMPORT_DONE evidence-store\nIMPORT_START counterexample-search\nIMPORT_DONE counterexample-search\nIMPORT_START worker-index\nIMPORT_DONE worker-index\n(node:34856) ExperimentalWarning: SQLite is an experimental feature and might change at any time\n(Use `node --trace-warnings ...` to show where the warning was created)\n"
+      },
+      "rerun": "node --test scripts/release/worker-image-layout.e2e.test.mjs",
+      "actualLinuxImageProof": false
+    },
+    "final-image-layout/worker-image-layout.json": {
+      "schema": "finnor.worker-image-layout-proof.v1",
+      "inputs": {
+        "workdir": "/app/finnor-os",
+        "dockerfileSha256": "e8f39471274ea9ed031d59490f3b5b5c1e94f5c648e3d91c68de19a67fa95dbd",
+        "smokeSha256": "dc054446ee9cc3a45020e4b5c24f3a6622f0d57ec29767554408719fbf7b4573"
+      },
+      "steps": [
+        "Copy production source into image WORKDIR outside checkout",
+        "Reuse host third-party dependencies while mapping workspace packages to relocated candidate source",
+        "Import actual worker owners",
+        "Recheck P4/M4 canonical source identities"
+      ],
+      "observed": {
+        "installedOwnerCommitWired": true,
+        "exitCode": 0,
+        "signal": null,
+        "error": null,
+        "stdout": "{\"workerImported\":true,\"p4Sources\":944,\"m4Sources\":946,\"projectionResolution\":\"file:///private/var/folders/qp/j_yc8vfs6pd0mrx0xrb722640000gn/T/finnor-worker-image-layout-Ejvtu7/app/finnor-os/packages/projections/src/index.ts\"}\n",
+        "stderr": "IMPORT_START decision-slice\nIMPORT_DONE decision-slice\nIMPORT_START evidence-store\nIMPORT_DONE evidence-store\nIMPORT_START counterexample-search\nIMPORT_DONE counterexample-search\nIMPORT_START worker-index\nIMPORT_DONE worker-index\n(node:36926) ExperimentalWarning: SQLite is an experimental feature and might change at any time\n(Use `node --trace-warnings ...` to show where the warning was created)\n"
+      },
+      "rerun": "node --test scripts/release/worker-image-layout.e2e.test.mjs",
+      "actualLinuxImageProof": false
+    }
+  },
+  "aws": {
+    "baseValidationFindings": 0,
+    "baseAndInitialSessionSimulationCases": 20,
+    "finalSessionCharacters": 2006,
+    "finalSessionValidationAndSimulation": {
+      "status": "success",
+      "stdout": "",
+      "return_value": {
+        "validationAndCases": [
+          {
+            "findings": []
+          },
+          {
+            "case": "replacement-cleanup-via-cloudformation",
+            "expected": "allowed",
+            "response": {
+              "EvaluationResults": [
+                {
+                  "EvalActionName": "ecs:DeregisterTaskDefinition",
+                  "EvalResourceName": "*",
+                  "EvalDecision": "allowed",
+                  "MatchedStatements": [
+                    {
+                      "SourcePolicyId": "PolicyInputList.1",
+                      "SourcePolicyType": "IAM Policy",
+                      "StartPosition": {
+                        "Line": 1,
+                        "Column": 1325
+                      },
+                      "EndPosition": {
+                        "Line": 1,
+                        "Column": 1545
+                      }
+                    }
+                  ],
+                  "MissingContextValues": []
+                }
+              ]
+            }
+          },
+          {
+            "case": "direct-cleanup-denied",
+            "expected": "implicitDeny",
+            "response": {
+              "EvaluationResults": [
+                {
+                  "EvalActionName": "ecs:DeregisterTaskDefinition",
+                  "EvalResourceName": "*",
+                  "EvalDecision": "implicitDeny",
+                  "MatchedStatements": [],
+                  "MissingContextValues": [
+                    "aws:CalledViaLast",
+                    "cloudformation:ChangeSetName",
+                    "ecs:cluster",
+                    "aws:CalledViaFirst",
+                    "iam:PassedToService"
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "case": "service-update-read-tags",
+            "expected": "allowed",
+            "response": {
+              "EvaluationResults": [
+                {
+                  "EvalActionName": "ecs:DescribeServices",
+                  "EvalResourceName": "arn:aws:ecs:us-east-1:601804670058:service/finnor-production/finnor-interactive",
+                  "EvalDecision": "allowed",
+                  "MatchedStatements": [
+                    {
+                      "SourcePolicyId": "PolicyInputList.1",
+                      "SourcePolicyType": "IAM Policy",
+                      "StartPosition": {
+                        "Line": 1,
+                        "Column": 550
+                      },
+                      "EndPosition": {
+                        "Line": 1,
+                        "Column": 1140
+                      }
+                    }
+                  ],
+                  "MissingContextValues": [],
+                  "EvalDecisionDetails": {},
+                  "ResourceSpecificResults": [
+                    {
+                      "EvalResourceName": "arn:aws:ecs:us-east-1:601804670058:service/finnor-production/finnor-interactive",
+                      "EvalResourceDecision": "allowed",
+                      "MatchedStatements": [
+                        {
+                          "SourcePolicyId": "PolicyInputList.1",
+                          "SourcePolicyType": "IAM Policy",
+                          "StartPosition": {
+                            "Line": 1,
+                            "Column": 550
+                          },
+                          "EndPosition": {
+                            "Line": 1,
+                            "Column": 1140
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "EvalActionName": "ecs:UpdateService",
+                  "EvalResourceName": "arn:aws:ecs:us-east-1:601804670058:service/finnor-production/finnor-interactive",
+                  "EvalDecision": "allowed",
+                  "MatchedStatements": [
+                    {
+                      "SourcePolicyId": "PolicyInputList.1",
+                      "SourcePolicyType": "IAM Policy",
+                      "StartPosition": {
+                        "Line": 1,
+                        "Column": 550
+                      },
+                      "EndPosition": {
+                        "Line": 1,
+                        "Column": 1140
+                      }
+                    }
+                  ],
+                  "MissingContextValues": [],
+                  "EvalDecisionDetails": {},
+                  "ResourceSpecificResults": [
+                    {
+                      "EvalResourceName": "arn:aws:ecs:us-east-1:601804670058:service/finnor-production/finnor-interactive",
+                      "EvalResourceDecision": "allowed",
+                      "MatchedStatements": [
+                        {
+                          "SourcePolicyId": "PolicyInputList.1",
+                          "SourcePolicyType": "IAM Policy",
+                          "StartPosition": {
+                            "Line": 1,
+                            "Column": 550
+                          },
+                          "EndPosition": {
+                            "Line": 1,
+                            "Column": 1140
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "EvalActionName": "ecs:ListServiceDeployments",
+                  "EvalResourceName": "arn:aws:ecs:us-east-1:601804670058:service/finnor-production/finnor-interactive",
+                  "EvalDecision": "allowed",
+                  "MatchedStatements": [
+                    {
+                      "SourcePolicyId": "PolicyInputList.1",
+                      "SourcePolicyType": "IAM Policy",
+                      "StartPosition": {
+                        "Line": 1,
+                        "Column": 550
+                      },
+                      "EndPosition": {
+                        "Line": 1,
+                        "Column": 1140
+                      }
+                    }
+                  ],
+                  "MissingContextValues": [],
+                  "EvalDecisionDetails": {},
+                  "ResourceSpecificResults": [
+                    {
+                      "EvalResourceName": "arn:aws:ecs:us-east-1:601804670058:service/finnor-production/finnor-interactive",
+                      "EvalResourceDecision": "allowed",
+                      "MatchedStatements": [
+                        {
+                          "SourcePolicyId": "PolicyInputList.1",
+                          "SourcePolicyType": "IAM Policy",
+                          "StartPosition": {
+                            "Line": 1,
+                            "Column": 550
+                          },
+                          "EndPosition": {
+                            "Line": 1,
+                            "Column": 1140
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "EvalActionName": "ecs:ListTagsForResource",
+                  "EvalResourceName": "arn:aws:ecs:us-east-1:601804670058:service/finnor-production/finnor-interactive",
+                  "EvalDecision": "allowed",
+                  "MatchedStatements": [
+                    {
+                      "SourcePolicyId": "PolicyInputList.1",
+                      "SourcePolicyType": "IAM Policy",
+                      "StartPosition": {
+                        "Line": 1,
+                        "Column": 550
+                      },
+                      "EndPosition": {
+                        "Line": 1,
+                        "Column": 1140
+                      }
+                    }
+                  ],
+                  "MissingContextValues": [],
+                  "EvalDecisionDetails": {},
+                  "ResourceSpecificResults": [
+                    {
+                      "EvalResourceName": "arn:aws:ecs:us-east-1:601804670058:service/finnor-production/finnor-interactive",
+                      "EvalResourceDecision": "allowed",
+                      "MatchedStatements": [
+                        {
+                          "SourcePolicyId": "PolicyInputList.1",
+                          "SourcePolicyType": "IAM Policy",
+                          "StartPosition": {
+                            "Line": 1,
+                            "Column": 550
+                          },
+                          "EndPosition": {
+                            "Line": 1,
+                            "Column": 1140
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "EvalActionName": "ecs:TagResource",
+                  "EvalResourceName": "arn:aws:ecs:us-east-1:601804670058:service/finnor-production/finnor-interactive",
+                  "EvalDecision": "allowed",
+                  "MatchedStatements": [
+                    {
+                      "SourcePolicyId": "PolicyInputList.1",
+                      "SourcePolicyType": "IAM Policy",
+                      "StartPosition": {
+                        "Line": 1,
+                        "Column": 550
+                      },
+                      "EndPosition": {
+                        "Line": 1,
+                        "Column": 1140
+                      }
+                    }
+                  ],
+                  "MissingContextValues": [],
+                  "EvalDecisionDetails": {},
+                  "ResourceSpecificResults": [
+                    {
+                      "EvalResourceName": "arn:aws:ecs:us-east-1:601804670058:service/finnor-production/finnor-interactive",
+                      "EvalResourceDecision": "allowed",
+                      "MatchedStatements": [
+                        {
+                          "SourcePolicyId": "PolicyInputList.1",
+                          "SourcePolicyType": "IAM Policy",
+                          "StartPosition": {
+                            "Line": 1,
+                            "Column": 550
+                          },
+                          "EndPosition": {
+                            "Line": 1,
+                            "Column": 1140
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "EvalActionName": "ecs:UntagResource",
+                  "EvalResourceName": "arn:aws:ecs:us-east-1:601804670058:service/finnor-production/finnor-interactive",
+                  "EvalDecision": "allowed",
+                  "MatchedStatements": [
+                    {
+                      "SourcePolicyId": "PolicyInputList.1",
+                      "SourcePolicyType": "IAM Policy",
+                      "StartPosition": {
+                        "Line": 1,
+                        "Column": 550
+                      },
+                      "EndPosition": {
+                        "Line": 1,
+                        "Column": 1140
+                      }
+                    }
+                  ],
+                  "MissingContextValues": [],
+                  "EvalDecisionDetails": {},
+                  "ResourceSpecificResults": [
+                    {
+                      "EvalResourceName": "arn:aws:ecs:us-east-1:601804670058:service/finnor-production/finnor-interactive",
+                      "EvalResourceDecision": "allowed",
+                      "MatchedStatements": [
+                        {
+                          "SourcePolicyId": "PolicyInputList.1",
+                          "SourcePolicyType": "IAM Policy",
+                          "StartPosition": {
+                            "Line": 1,
+                            "Column": 550
+                          },
+                          "EndPosition": {
+                            "Line": 1,
+                            "Column": 1140
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "case": "deployment-stabilization",
+            "expected": "allowed",
+            "response": {
+              "EvaluationResults": [
+                {
+                  "EvalActionName": "ecs:DescribeServiceDeployments",
+                  "EvalResourceName": "arn:aws:ecs:${Region}:${Account}:${ResourceType}/${ResourcePath}",
+                  "EvalDecision": "allowed",
+                  "MatchedStatements": [
+                    {
+                      "SourcePolicyId": "PolicyInputList.1",
+                      "SourcePolicyType": "IAM Policy",
+                      "StartPosition": {
+                        "Line": 1,
+                        "Column": 550
+                      },
+                      "EndPosition": {
+                        "Line": 1,
+                        "Column": 1140
+                      }
+                    }
+                  ],
+                  "MissingContextValues": [],
+                  "EvalDecisionDetails": {},
+                  "ResourceSpecificResults": [
+                    {
+                      "EvalResourceName": "arn:aws:ecs:us-east-1:601804670058:service/finnor-production/finnor-interactive",
+                      "EvalResourceDecision": "allowed",
+                      "MatchedStatements": [
+                        {
+                          "SourcePolicyId": "PolicyInputList.1",
+                          "SourcePolicyType": "IAM Policy",
+                          "StartPosition": {
+                            "Line": 1,
+                            "Column": 550
+                          },
+                          "EndPosition": {
+                            "Line": 1,
+                            "Column": 1140
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "EvalResourceName": "arn:aws:ecs:us-east-1:601804670058:service-deployment/finnor-production/finnor-interactive/123",
+                      "EvalResourceDecision": "allowed",
+                      "MatchedStatements": [
+                        {
+                          "SourcePolicyId": "PolicyInputList.1",
+                          "SourcePolicyType": "IAM Policy",
+                          "StartPosition": {
+                            "Line": 1,
+                            "Column": 550
+                          },
+                          "EndPosition": {
+                            "Line": 1,
+                            "Column": 1140
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "EvalActionName": "ecs:StopServiceDeployment",
+                  "EvalResourceName": "arn:aws:ecs:${Region}:${Account}:${ResourceType}/${ResourcePath}",
+                  "EvalDecision": "allowed",
+                  "MatchedStatements": [
+                    {
+                      "SourcePolicyId": "PolicyInputList.1",
+                      "SourcePolicyType": "IAM Policy",
+                      "StartPosition": {
+                        "Line": 1,
+                        "Column": 550
+                      },
+                      "EndPosition": {
+                        "Line": 1,
+                        "Column": 1140
+                      }
+                    }
+                  ],
+                  "MissingContextValues": [],
+                  "EvalDecisionDetails": {},
+                  "ResourceSpecificResults": [
+                    {
+                      "EvalResourceName": "arn:aws:ecs:us-east-1:601804670058:service/finnor-production/finnor-interactive",
+                      "EvalResourceDecision": "allowed",
+                      "MatchedStatements": [
+                        {
+                          "SourcePolicyId": "PolicyInputList.1",
+                          "SourcePolicyType": "IAM Policy",
+                          "StartPosition": {
+                            "Line": 1,
+                            "Column": 550
+                          },
+                          "EndPosition": {
+                            "Line": 1,
+                            "Column": 1140
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "EvalResourceName": "arn:aws:ecs:us-east-1:601804670058:service-deployment/finnor-production/finnor-interactive/123",
+                      "EvalResourceDecision": "allowed",
+                      "MatchedStatements": [
+                        {
+                          "SourcePolicyId": "PolicyInputList.1",
+                          "SourcePolicyType": "IAM Policy",
+                          "StartPosition": {
+                            "Line": 1,
+                            "Column": 550
+                          },
+                          "EndPosition": {
+                            "Line": 1,
+                            "Column": 1140
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "case": "task-definition-replacement",
+            "expected": "allowed",
+            "response": {
+              "EvaluationResults": [
+                {
+                  "EvalActionName": "ecs:RegisterTaskDefinition",
+                  "EvalResourceName": "arn:aws:ecs:us-east-1:601804670058:task-definition/finnor-interactive:42",
+                  "EvalDecision": "allowed",
+                  "MatchedStatements": [
+                    {
+                      "SourcePolicyId": "PolicyInputList.1",
+                      "SourcePolicyType": "IAM Policy",
+                      "StartPosition": {
+                        "Line": 1,
+                        "Column": 550
+                      },
+                      "EndPosition": {
+                        "Line": 1,
+                        "Column": 1140
+                      }
+                    }
+                  ],
+                  "MissingContextValues": [],
+                  "EvalDecisionDetails": {},
+                  "ResourceSpecificResults": [
+                    {
+                      "EvalResourceName": "arn:aws:ecs:us-east-1:601804670058:task-definition/finnor-interactive:42",
+                      "EvalResourceDecision": "allowed",
+                      "MatchedStatements": [
+                        {
+                          "SourcePolicyId": "PolicyInputList.1",
+                          "SourcePolicyType": "IAM Policy",
+                          "StartPosition": {
+                            "Line": 1,
+                            "Column": 550
+                          },
+                          "EndPosition": {
+                            "Line": 1,
+                            "Column": 1140
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "EvalActionName": "ecs:ListTagsForResource",
+                  "EvalResourceName": "arn:aws:ecs:us-east-1:601804670058:task-definition/finnor-interactive:42",
+                  "EvalDecision": "allowed",
+                  "MatchedStatements": [
+                    {
+                      "SourcePolicyId": "PolicyInputList.1",
+                      "SourcePolicyType": "IAM Policy",
+                      "StartPosition": {
+                        "Line": 1,
+                        "Column": 550
+                      },
+                      "EndPosition": {
+                        "Line": 1,
+                        "Column": 1140
+                      }
+                    }
+                  ],
+                  "MissingContextValues": [],
+                  "EvalDecisionDetails": {},
+                  "ResourceSpecificResults": [
+                    {
+                      "EvalResourceName": "arn:aws:ecs:us-east-1:601804670058:task-definition/finnor-interactive:42",
+                      "EvalResourceDecision": "allowed",
+                      "MatchedStatements": [
+                        {
+                          "SourcePolicyId": "PolicyInputList.1",
+                          "SourcePolicyType": "IAM Policy",
+                          "StartPosition": {
+                            "Line": 1,
+                            "Column": 550
+                          },
+                          "EndPosition": {
+                            "Line": 1,
+                            "Column": 1140
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "EvalActionName": "ecs:TagResource",
+                  "EvalResourceName": "arn:aws:ecs:us-east-1:601804670058:task-definition/finnor-interactive:42",
+                  "EvalDecision": "allowed",
+                  "MatchedStatements": [
+                    {
+                      "SourcePolicyId": "PolicyInputList.1",
+                      "SourcePolicyType": "IAM Policy",
+                      "StartPosition": {
+                        "Line": 1,
+                        "Column": 550
+                      },
+                      "EndPosition": {
+                        "Line": 1,
+                        "Column": 1140
+                      }
+                    }
+                  ],
+                  "MissingContextValues": [],
+                  "EvalDecisionDetails": {},
+                  "ResourceSpecificResults": [
+                    {
+                      "EvalResourceName": "arn:aws:ecs:us-east-1:601804670058:task-definition/finnor-interactive:42",
+                      "EvalResourceDecision": "allowed",
+                      "MatchedStatements": [
+                        {
+                          "SourcePolicyId": "PolicyInputList.1",
+                          "SourcePolicyType": "IAM Policy",
+                          "StartPosition": {
+                            "Line": 1,
+                            "Column": 550
+                          },
+                          "EndPosition": {
+                            "Line": 1,
+                            "Column": 1140
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "EvalActionName": "ecs:UntagResource",
+                  "EvalResourceName": "arn:aws:ecs:us-east-1:601804670058:task-definition/finnor-interactive:42",
+                  "EvalDecision": "allowed",
+                  "MatchedStatements": [
+                    {
+                      "SourcePolicyId": "PolicyInputList.1",
+                      "SourcePolicyType": "IAM Policy",
+                      "StartPosition": {
+                        "Line": 1,
+                        "Column": 550
+                      },
+                      "EndPosition": {
+                        "Line": 1,
+                        "Column": 1140
+                      }
+                    }
+                  ],
+                  "MissingContextValues": [],
+                  "EvalDecisionDetails": {},
+                  "ResourceSpecificResults": [
+                    {
+                      "EvalResourceName": "arn:aws:ecs:us-east-1:601804670058:task-definition/finnor-interactive:42",
+                      "EvalResourceDecision": "allowed",
+                      "MatchedStatements": [
+                        {
+                          "SourcePolicyId": "PolicyInputList.1",
+                          "SourcePolicyType": "IAM Policy",
+                          "StartPosition": {
+                            "Line": 1,
+                            "Column": 550
+                          },
+                          "EndPosition": {
+                            "Line": 1,
+                            "Column": 1140
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "case": "execution-role-lookup",
+            "expected": "allowed",
+            "response": {
+              "EvaluationResults": [
+                {
+                  "EvalActionName": "iam:GetRole",
+                  "EvalResourceName": "arn:aws:iam::601804670058:role/finnor-ecs-execution",
+                  "EvalDecision": "allowed",
+                  "MatchedStatements": [
+                    {
+                      "SourcePolicyId": "PolicyInputList.1",
+                      "SourcePolicyType": "IAM Policy",
+                      "StartPosition": {
+                        "Line": 1,
+                        "Column": 1995
+                      },
+                      "EndPosition": {
+                        "Line": 1,
+                        "Column": 2096
+                      }
+                    }
+                  ],
+                  "MissingContextValues": [],
+                  "EvalDecisionDetails": {},
+                  "ResourceSpecificResults": [
+                    {
+                      "EvalResourceName": "arn:aws:iam::601804670058:role/finnor-ecs-execution",
+                      "EvalResourceDecision": "allowed",
+                      "MatchedStatements": [
+                        {
+                          "SourcePolicyId": "PolicyInputList.1",
+                          "SourcePolicyType": "IAM Policy",
+                          "StartPosition": {
+                            "Line": 1,
+                            "Column": 1995
+                          },
+                          "EndPosition": {
+                            "Line": 1,
+                            "Column": 2096
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "case": "pass-task-role",
+            "expected": "allowed",
+            "response": {
+              "EvaluationResults": [
+                {
+                  "EvalActionName": "iam:PassRole",
+                  "EvalResourceName": "arn:aws:iam::601804670058:role/finnor-worker-task",
+                  "EvalDecision": "allowed",
+                  "MatchedStatements": [
+                    {
+                      "SourcePolicyId": "PolicyInputList.1",
+                      "SourcePolicyType": "IAM Policy",
+                      "StartPosition": {
+                        "Line": 1,
+                        "Column": 1140
+                      },
+                      "EndPosition": {
+                        "Line": 1,
+                        "Column": 1325
+                      }
+                    }
+                  ],
+                  "MissingContextValues": [],
+                  "EvalDecisionDetails": {},
+                  "ResourceSpecificResults": [
+                    {
+                      "EvalResourceName": "arn:aws:iam::601804670058:role/finnor-worker-task",
+                      "EvalResourceDecision": "allowed",
+                      "MatchedStatements": [
+                        {
+                          "SourcePolicyId": "PolicyInputList.1",
+                          "SourcePolicyType": "IAM Policy",
+                          "StartPosition": {
+                            "Line": 1,
+                            "Column": 1140
+                          },
+                          "EndPosition": {
+                            "Line": 1,
+                            "Column": 1325
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "case": "self-policy-denied",
+            "expected": "implicitDeny",
+            "response": {
+              "EvaluationResults": [
+                {
+                  "EvalActionName": "iam:PutRolePolicy",
+                  "EvalResourceName": "arn:aws:iam::601804670058:role/finnor-github-actions-deploy",
+                  "EvalDecision": "implicitDeny",
+                  "MatchedStatements": [],
+                  "MissingContextValues": [
+                    "aws:CalledViaLast",
+                    "cloudformation:ChangeSetName",
+                    "ecs:cluster",
+                    "aws:CalledViaFirst",
+                    "iam:PassedToService"
+                  ],
+                  "EvalDecisionDetails": {},
+                  "ResourceSpecificResults": [
+                    {
+                      "EvalResourceName": "arn:aws:iam::601804670058:role/finnor-github-actions-deploy",
+                      "EvalResourceDecision": "implicitDeny",
+                      "MissingContextValues": [
+                        "aws:CalledViaLast",
+                        "cloudformation:ChangeSetName",
+                        "ecs:cluster",
+                        "aws:CalledViaFirst",
+                        "iam:PassedToService"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "EvalActionName": "iam:AttachRolePolicy",
+                  "EvalResourceName": "arn:aws:iam::601804670058:role/finnor-github-actions-deploy",
+                  "EvalDecision": "implicitDeny",
+                  "MatchedStatements": [],
+                  "MissingContextValues": [
+                    "aws:CalledViaLast",
+                    "cloudformation:ChangeSetName",
+                    "ecs:cluster",
+                    "aws:CalledViaFirst",
+                    "iam:PassedToService"
+                  ],
+                  "EvalDecisionDetails": {},
+                  "ResourceSpecificResults": [
+                    {
+                      "EvalResourceName": "arn:aws:iam::601804670058:role/finnor-github-actions-deploy",
+                      "EvalResourceDecision": "implicitDeny",
+                      "MissingContextValues": [
+                        "aws:CalledViaLast",
+                        "cloudformation:ChangeSetName",
+                        "ecs:cluster",
+                        "aws:CalledViaFirst",
+                        "iam:PassedToService"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "case": "unrelated-service-denied",
+            "expected": "implicitDeny",
+            "response": {
+              "EvaluationResults": [
+                {
+                  "EvalActionName": "ecs:UpdateService",
+                  "EvalResourceName": "arn:aws:ecs:us-east-1:601804670058:service/unrelated/unrelated",
+                  "EvalDecision": "implicitDeny",
+                  "MatchedStatements": [],
+                  "MissingContextValues": [
+                    "aws:CalledViaLast",
+                    "cloudformation:ChangeSetName",
+                    "ecs:cluster",
+                    "aws:CalledViaFirst",
+                    "iam:PassedToService"
+                  ],
+                  "EvalDecisionDetails": {},
+                  "ResourceSpecificResults": [
+                    {
+                      "EvalResourceName": "arn:aws:ecs:us-east-1:601804670058:service/unrelated/unrelated",
+                      "EvalResourceDecision": "implicitDeny",
+                      "MissingContextValues": [
+                        "aws:CalledViaLast",
+                        "cloudformation:ChangeSetName",
+                        "ecs:cluster",
+                        "aws:CalledViaFirst",
+                        "iam:PassedToService"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "case": "admin-pass-denied",
+            "expected": "implicitDeny",
+            "response": {
+              "EvaluationResults": [
+                {
+                  "EvalActionName": "iam:PassRole",
+                  "EvalResourceName": "arn:aws:iam::601804670058:role/administrator",
+                  "EvalDecision": "implicitDeny",
+                  "MatchedStatements": [],
+                  "MissingContextValues": [
+                    "aws:CalledViaLast",
+                    "cloudformation:ChangeSetName",
+                    "ecs:cluster",
+                    "aws:CalledViaFirst"
+                  ],
+                  "EvalDecisionDetails": {},
+                  "ResourceSpecificResults": [
+                    {
+                      "EvalResourceName": "arn:aws:iam::601804670058:role/administrator",
+                      "EvalResourceDecision": "implicitDeny",
+                      "MissingContextValues": [
+                        "aws:CalledViaLast",
+                        "cloudformation:ChangeSetName",
+                        "ecs:cluster",
+                        "aws:CalledViaFirst"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "api_calls": [
+        {
+          "service": "accessanalyzer",
+          "operation": "ValidatePolicy",
+          "status": "success",
+          "n_items": {
+            "findings": 0
+          }
+        },
+        {
+          "service": "iam",
+          "operation": "SimulateCustomPolicy",
+          "status": "success",
+          "n_items": {
+            "EvaluationResults": 1
+          }
+        },
+        {
+          "service": "iam",
+          "operation": "SimulateCustomPolicy",
+          "status": "success",
+          "n_items": {
+            "EvaluationResults": 1
+          }
+        },
+        {
+          "service": "iam",
+          "operation": "SimulateCustomPolicy",
+          "status": "success",
+          "n_items": {
+            "EvaluationResults": 6
+          }
+        },
+        {
+          "service": "iam",
+          "operation": "SimulateCustomPolicy",
+          "status": "success",
+          "n_items": {
+            "EvaluationResults": 2
+          }
+        },
+        {
+          "service": "iam",
+          "operation": "SimulateCustomPolicy",
+          "status": "success",
+          "n_items": {
+            "EvaluationResults": 4
+          }
+        },
+        {
+          "service": "iam",
+          "operation": "SimulateCustomPolicy",
+          "status": "success",
+          "n_items": {
+            "EvaluationResults": 1
+          }
+        },
+        {
+          "service": "iam",
+          "operation": "SimulateCustomPolicy",
+          "status": "success",
+          "n_items": {
+            "EvaluationResults": 1
+          }
+        },
+        {
+          "service": "iam",
+          "operation": "SimulateCustomPolicy",
+          "status": "success",
+          "n_items": {
+            "EvaluationResults": 2
+          }
+        },
+        {
+          "service": "iam",
+          "operation": "SimulateCustomPolicy",
+          "status": "success",
+          "n_items": {
+            "EvaluationResults": 1
+          }
+        },
+        {
+          "service": "iam",
+          "operation": "SimulateCustomPolicy",
+          "status": "success",
+          "n_items": {
+            "EvaluationResults": 1
+          }
+        }
+      ]
+    },
+    "handlerBaseAppliedReadbackMatches": true
+  },
+  "productionReleased": false,
+  "protectedEffectsEnabled": false,
+  "linuxImageR3AndR4AfterRepairProven": false
+}

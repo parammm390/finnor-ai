@@ -239,6 +239,7 @@ if [[ -f finnor-os/scripts/r3/run-owner-e2e.mts ]]; then
     --env FINNOR_S4_POLICY_STORE=/tmp/r3-policies \
     --env WORKER_JOB_LEASE_SECONDS=3 --env OPENBLAS_NUM_THREADS=1 --env OMP_NUM_THREADS=1 \
     --env FINNOR_R3_CASES=authenticated-owner-positive,queued-original-and-r3-physical-restart \
+    --env FINNOR_R3_INSTALLED_SOURCE_COMMIT="$FINNOR_COMMIT_SHA" \
     --env FINNOR_R3_EVIDENCE_DIR=/r3-evidence/owner \
     --mount "type=bind,source=$evidence/linux-r3-runtime,target=/r3-evidence" \
     "$image" node --import=tsx scripts/r3/run-owner-e2e.mts \

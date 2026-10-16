@@ -541,3 +541,58 @@ template; its eight-resource-only finalized ECS rollout forbids IAM changes.
 This intentionally restricts the live role beyond its historical provisioning
 template: a future IAM/infrastructure change requires separately reviewed admin
 authority and cannot restore broad permissions through the deployment role itself.
+
+### Hosted batch 167: installed R3 restart harness boundary
+
+All applicable checks except worker-image passed on e3914d33. Image digest
+6de3a32894fa4dce36010355d1c1acdab9bbee5267b8d5efdfe570e7ba886eb8 built.
+All four health/shutdown classes, authenticated R1 installed owner flow, R3 native
+interpreter/solver/independent checker/worker inventory, and R3's full migration,
+replay and physical PostgreSQL restart passed. The R3 queued-owner restart case
+failed at run-owner-e2e.mts:423: the harness fell through to Git in a Git-less
+installed image and dereferenced missing stdout. The image caller omitted the
+existing FINNOR_R3_INSTALLED_SOURCE_COMMIT input, although it provided the general
+release commit. R3 positive/restart completion and R4 were not reached, not passed.
+Original artifact 12028355743 is retained with independently verified ZIP SHA256
+7d8507a4ca18bcb3c3d499e871ad41453588867e3b3484b3f7ab5814ce85b751.
+
+Before repair, verify the real shared smoke command wires its already validated
+exact image commit to the harness's installed-source input. Failure cases: absent
+input invokes nonexistent Git; wrong/invalid commit is rejected; image metadata
+must still bind to actual labels and the source tree; no Git assumption may be
+introduced into packaged execution; restart/worker/auth/owner criteria remain.
+Extend the existing relocated-worker E2E to check this installed-call boundary,
+retain its initial failing receipt, then rerun after wiring. No runtime Git binary,
+checkout, swallowed error, case removal or protected-qualification change is needed.
+
+Before correcting compute permissions, retain the published CloudFormation ECS
+handler action lists and exercise both the base and session policy. Failure modes:
+task replacement cannot clean up old revisions; service stabilization cannot read
+or stop a deployment; role lookup or tag reconciliation is missing; session JSON
+exceeds STS's 2048-character limit; direct deregistration, unrelated resources,
+self-policy edits or arbitrary role passing accidentally gain authority. The
+normal eight-resource rollout must remain the only writable CloudFormation scope.
+No provisioning, role-trust or template mutation is part of this correction.
+
+Local relocated-worker proof failed before the R3 call wiring and passes after it.
+The existing CI-process E2E likewise rejected the missing replacement-handler
+permissions before correction; all seven scenarios now pass. Pinned actionlint
+1.7.12 and Bash syntax pass. The final compute session is 2006 characters, retaining
+the stack, ECR and cluster restrictions. Its role lookup is scoped and intersects
+the base policy's five exact task roles. AWS ValidatePolicy reports no findings;
+twenty base/initial-session simulations and ten final-session simulations pass.
+The role now also contains the verified handler closure, with matching readback.
+Deregistration cannot be resource-scoped by ECS, so both base and session require
+CloudFormation as first and last caller; direct deregistration remains denied.
+Self-policy edits, unrelated service writes and arbitrary administrator role
+passing remain denied. No production stack, task, database or application changed.
+The old generic read-only-wildcard fixture was updated for this one constrained
+cleanup action and read-only GetRole; all its other restrictions remain in force.
+Retained before/after receipts and exact failed hosted results are in
+evidence/ci-process-repair-2026-10-16/hosted-batch-167.json. Full image R3 restart
+and R4 execution on the corrected source still require the hosted Linux gate.
+
+After the final policy refinement, all 80 release fixtures pass, as do mutation
+inventory (19 mechanisms, seven governed writers, no break-glass), all generated
+contracts, seven process E2E scenarios and the relocated actual-worker proof.
+This is local repair evidence, not deployed-owner or Linux scientific execution.

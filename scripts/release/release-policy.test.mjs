@@ -126,6 +126,10 @@ test("active release workflow uses the governed four-class AWS compute cutover",
   assert.ok(computeActions.every((action) => typeof action === "string" && !action.endsWith(":*")), "the deploy session must enumerate every AWS action")
   for (const statement of computeStatements.filter((entry) => entry.Resource === "*")) {
     const actions = Array.isArray(statement.Action) ? statement.Action : [statement.Action]
+    if (actions.length === 1 && actions[0] === "ecs:DeregisterTaskDefinition") {
+      assert.deepEqual(statement.Condition, { StringEquals: { "aws:CalledViaFirst": "cloudformation.amazonaws.com", "aws:CalledViaLast": "cloudformation.amazonaws.com" } }, "unscopable task cleanup is allowed only through CloudFormation")
+      continue
+    }
     assert.ok(actions.every((action) => action === "ecr:GetAuthorizationToken" || /:(?:Describe|List)[A-Za-z]+$/.test(action)), `wildcard resource is restricted to read-only discovery actions: ${actions.join(", ")}`)
   }
   const computeResources = computeStatements.flatMap((statement) => Array.isArray(statement.Resource) ? statement.Resource : [statement.Resource])
@@ -134,7 +138,8 @@ test("active release workflow uses the governed four-class AWS compute cutover",
   assert.ok(computeResources.some((resource) => resource?.includes(":service/finnor-production/finnor-")), "ECS services are restricted to FINNOR services")
   assert.ok(computeResources.some((resource) => resource?.endsWith(":repository/finnor-worker")), "ECR writes are restricted to the worker repository")
   const iamActions = computeActions.filter((action) => action.startsWith("iam:"))
-  assert.ok(iamActions.every((action) => action === "iam:PassRole"), "the deployment session can only pass the named ECS task roles, not mutate IAM")
+  assert.ok(iamActions.every((action) => action === "iam:PassRole" || action === "iam:GetRole"), "the deployment session can only look up/pass ECS task roles, not mutate IAM")
+  assert.ok(computeStatements.filter(entry => [entry.Action].flat().includes("iam:GetRole")).every(entry => entry.Resource === "arn:aws:iam::601804670058:role/finnor-*"), "role lookup remains scoped to FINNOR roles and intersects the five exact base-policy roles")
   const ecrSessionPolicy = workflow.match(/- name: Authenticate exact AWS project with GitHub OIDC for ECR[\s\S]*?inline-session-policy: >-\s*([^\n]+)/)?.[1]
   assert.ok(ecrSessionPolicy, "worker image publication must use a scoped AWS session")
   const ecrPolicy = JSON.parse(ecrSessionPolicy)

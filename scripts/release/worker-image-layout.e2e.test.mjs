@@ -15,6 +15,7 @@ const workerImportSpecifiers = [...readFileSync(join(backend, "apps/worker/src/i
 
 test("the actual image layout imports every worker owner and rechecks source custody outside the checkout", () => {
   const dockerfile = readFileSync(join(backend, "Dockerfile.worker"), "utf8")
+  const smoke = readFileSync(join(root, "scripts/release/smoke-worker-image.sh"), "utf8")
   assert.match(dockerfile, /^ARG FINNOR_S6_NATIVE_PLATFORM=linux\/arm64$/m)
   assert.match(dockerfile, /^FROM --platform=\$\{FINNOR_S6_NATIVE_PLATFORM\} .* AS s6-native-callee$/m)
   assert.match(dockerfile, /RUN test "\$\(uname -m\)" = aarch64/)
@@ -119,7 +120,7 @@ test("the actual image layout imports every worker owner and rechecks source cus
       throw Error("source custody omitted canonical inputs");
     console.log(JSON.stringify({workerImported:true,p4Sources:p4.files.length,m4Sources:m4.files.length,projectionResolution}));
   `
-  let result
+  let result, installedOwnerCommitWired = false
   try {
     result = spawnSync(process.execPath, [
       "--import=" + join(backend, "node_modules/tsx/dist/loader.mjs"),
@@ -145,15 +146,22 @@ test("the actual image layout imports every worker owner and rechecks source cus
     for (const workflow of [ci, production]) {
       assert.match(workflow, /run: bash scripts\/release\/smoke-worker-image\.sh/)
     }
+    const ownerAt = smoke.indexOf('"$image" node --import=tsx scripts/r3/run-owner-e2e.mts')
+    assert.ok(ownerAt > 0)
+    const ownerCommand = smoke.slice(smoke.lastIndexOf("if docker run", ownerAt), ownerAt)
+    assert.match(ownerCommand, /--env FINNOR_R3_INSTALLED_SOURCE_COMMIT="\$FINNOR_COMMIT_SHA"/,
+      "installed R3 restart must receive the exact image commit instead of requiring Git")
+    installedOwnerCommitWired = true
   } finally {
     const directory = process.env.FINNOR_WORKER_LAYOUT_EVIDENCE_DIR
       ?? mkdtempSync(join(tmpdir(), "finnor-worker-image-layout-proof-"))
     mkdirSync(directory, { recursive: true })
     writeFileSync(join(directory, "worker-image-layout.json"), JSON.stringify({
       schema: "finnor.worker-image-layout-proof.v1",
-      inputs: { workdir, dockerfileSha256: createHash("sha256").update(dockerfile).digest("hex") },
+      inputs: { workdir, dockerfileSha256: createHash("sha256").update(dockerfile).digest("hex"), smokeSha256: createHash("sha256").update(smoke).digest("hex") },
       steps: ["Copy production source into image WORKDIR outside checkout", "Reuse host third-party dependencies while mapping workspace packages to relocated candidate source", "Import actual worker owners", "Recheck P4/M4 canonical source identities"],
       observed: {
+        installedOwnerCommitWired,
         exitCode: result?.status,
         signal: result?.signal,
         error: result?.error ? { name: result.error.name, message: result.error.message, code: result.error.code, errno: result.error.errno, syscall: result.error.syscall } : null,
