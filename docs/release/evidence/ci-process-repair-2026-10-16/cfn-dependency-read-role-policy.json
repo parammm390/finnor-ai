@@ -25,12 +25,9 @@
       "Effect": "Allow",
       "Action": [
         "cloudformation:DescribeStacks",
-        "ecs:DescribeServices",
         "ecs:DescribeTaskDefinition",
-        "elasticloadbalancing:DescribeLoadBalancers",
         "elasticloadbalancing:DescribeTargetGroups",
         "elasticloadbalancing:DescribeListeners",
-        "elasticloadbalancing:DescribeLoadBalancerAttributes",
         "ec2:DescribeSecurityGroups",
         "ec2:DescribeNatGateways"
       ],
@@ -193,7 +190,11 @@
       "Action": [
         "ec2:DescribeSubnets",
         "ec2:DescribeVpcs",
-        "elasticloadbalancing:DescribeTargetGroupAttributes"
+        "elasticloadbalancing:DescribeTargetGroupAttributes",
+        "elasticloadbalancing:DescribeCapacityReservation",
+        "elasticloadbalancing:DescribeTags",
+        "elasticloadbalancing:DescribeLoadBalancers",
+        "elasticloadbalancing:DescribeLoadBalancerAttributes"
       ],
       "Resource": "*",
       "Condition": {
@@ -206,6 +207,11 @@
       "Effect": "Allow",
       "Action": "ecs:DescribeClusters",
       "Resource": "arn:aws:ecs:us-east-1:601804670058:cluster/finnor-production"
+    },
+    {
+      "Effect": "Allow",
+      "Action": "iam:GetRole",
+      "Resource": "arn:aws:iam::601804670058:role/finnor-github-actions-deploy"
     }
   ]
 }
