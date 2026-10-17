@@ -13,6 +13,8 @@ import { POST as allocationPost } from '../../apps/api/app/api/allocations/[oper
 import { receiveWork } from '@finnor/db';
 import { proposeEnterpriseSameDealAlternatives } from '../../packages/private-equity/src/allocation-proposal';
 import { readEnterpriseControlDecisionContext } from '../../packages/private-equity/src/enterprise-control';
+import { synthesizeContingentControl } from '../../packages/epistemic-runtime/src/contingent-control';
+import { restoreInterventionControlAdapter } from '../../packages/epistemic-runtime/src/intervention-control';
 
 export async function operatingProfitOwnerCase(input: {
   admin: { query: (sql: string, values?: any[]) => Promise<any> }; ctx: PeMutationContext;
@@ -118,12 +120,29 @@ export async function operatingProfitOwnerCase(input: {
   assert.equal(read.status, 200, JSON.stringify(read)); assert.equal(replay.status, 200, JSON.stringify(replay));
   assert.equal(replay.body.programMatches, true); assert.equal(replay.body.certificateMatches, true);
   const context = await readEnterpriseControlDecisionContext(ctx, policy.ref);
-  const referenceInput = { mandate, problem: p, model: context.model, kernel: context.kernel }, referenceStarted = performance.now();
-  const referenceRun = spawnSync('python3', [fileURLToPath(new URL('./operating-programme-reference.py', import.meta.url))],
-    { input: JSON.stringify(referenceInput), encoding: 'utf8', timeout: 10000, maxBuffer: 2 * 1024 * 1024 });
-  const referenceWallMs = performance.now() - referenceStarted;
-  assert.equal(referenceRun.status, 0, referenceRun.stderr);
-  const reference = JSON.parse(referenceRun.stdout);
+  const referenceInput = { mandate, problem: p, model: context.model, kernel: context.kernel };
+  const runReference = (input: typeof referenceInput) => {
+    const started = performance.now(), run = spawnSync('python3', [fileURLToPath(new URL('./operating-programme-reference.py', import.meta.url))],
+      { input: JSON.stringify(input), encoding: 'utf8', timeout: 10000, maxBuffer: 2 * 1024 * 1024 });
+    assert.equal(run.status, 0, run.stderr);
+    return { reference: JSON.parse(run.stdout), invocation: { executable: 'python3', exitCode: run.status, wallMs: performance.now() - started, tolerance: 1e-6 } };
+  };
+  const compareProgrammes = (actual: any, expected: any) => {
+    const search = actual.operatingProgrammeSearch;
+    assert.equal(search.completeSearch, expected.completeWithinRegisteredModel);
+    assert.equal(search.generatedProgrammes, expected.candidates.length);
+    assert.equal(search.evaluatedProgrammes, expected.candidates.length);
+    for (const candidate of expected.candidates) {
+      const found = search.candidates.find((c: any) => c.choices.length === candidate.choices.length &&
+        candidate.choices.every((choice: any) => c.choices.some((x: any) => x.leverId === choice.leverId && x.optionId === choice.optionId)));
+      assert(found, JSON.stringify(candidate.choices));
+      assert.equal(found.status, candidate.feasible ? 'POLICY_AVAILABLE' : !candidate.resourcesFeasible || candidate.supported ? 'INFEASIBLE' : 'MODEL_UNSUPPORTED');
+      if (candidate.feasible) for (const value of found.valueBounds) assert(Math.abs(value - candidate.worst) <= 1e-6);
+      else assert.equal(found.valueBounds, null);
+    }
+  };
+  const { reference, invocation: referenceInvocation } = runReference(referenceInput);
+  compareProgrammes(result.body, reference);
   assert.equal(reference.targetMet, true); assert.equal(reference.completeWithinRegisteredModel, true); assert.equal(reference.candidates.length, 8);
   assert.deepEqual(reference.best.choices, result.body.operatingProgrammeSearch.selectedOptions);
   assert(Math.abs(reference.best.worst - policy.certificate.valueBounds[0]) <= 1e-6);
@@ -132,7 +151,19 @@ export async function operatingProfitOwnerCase(input: {
     const original = policy.certificate.operatingProfit.forecasts.find((f: any) => f.worldId === world.worldId);
     assert(original); assert(Math.abs(original.closingCash - world.closingCash) <= 1e-6);
     assert(Math.abs(original.minimumCashObserved - world.minimumCash) <= 1e-6);
+    assert(Math.abs(original.discountedUtility - world.value) <= 1e-6);
   }
+  // A resource-infeasible choice cannot make the feasible-domain bound unknown
+  // merely because its unused exposure lies outside S3 support. Replay the
+  // exact retained kernel rather than assuming a new fit reproduces its draws.
+  const resourceLimitedInput = structuredClone(referenceInput), blocked = resourceLimitedInput.problem.programmeSpace.levers[0].options.at(-1)!;
+  blocked.schedule = blocked.schedule.map(() => .9); blocked.resources.capacity = mandate.resources.dimensions[0].totalLimit + 1;
+  const resourceLimited = await synthesizeContingentControl({ mandate, problem: resourceLimitedInput.problem,
+    dynamics: restoreInterventionControlAdapter(context.model, context.kernel), instruments: [], now: policy.knowledgeAt });
+  assert.equal(resourceLimited.status, 'INFEASIBLE'); assert.equal(resourceLimited.policy, null);
+  assert.equal(resourceLimited.operatingProgrammeSearch!.completeSearch, true);
+  const resourceLimitedReference = runReference(resourceLimitedInput);
+  compareProgrammes(resourceLimited, resourceLimitedReference.reference);
   for (const field of ['currency', 'root']) {
     const invalid = structuredClone(payload);
     if (field === 'currency') invalid.mandate.utility.operatingProfit.currency = 'EUR'; else invalid.mandate.utility.operatingProfit.root.entityId = randomUUID();
@@ -161,7 +192,14 @@ export async function operatingProfitOwnerCase(input: {
   assert.equal(allocated.status, 200, JSON.stringify(allocated)); assert.equal(allocated.body.status, 'FEASIBLE', JSON.stringify(allocated));
   const certificate = allocated.body.certificate, envelope = certificate.check.envelopes.find((e: any) => e.resourceId === 'operating-cash');
   assert.deepEqual(certificate.check.selectedPolicyIds, [policy.ref.id]); assert.equal(envelope.quantities.length, 3);
-  assert(envelope.quantities.reduce((s: number, x: string) => s + Number(x), 0) > 1900);
+  const grossCash = reference.best.worlds.map((world: any) => [...world.periods.map((period: any) => period.actual.grossCashOutflow), reference.best.terminalLiability]);
+  let reserved = 0, minimumReserved = 0;
+  for (let t = 0; t <= mandate.horizon.periods; t++) {
+    const amounts = grossCash.map((path: number[]) => path.slice(0, t + 1).reduce((sum, value) => sum + value, 0) * Number(mandate.utility.operatingProfit.moneyScale));
+    reserved += Number(envelope.quantities[t]); minimumReserved += Number(envelope.minimumQuantities[t]);
+    assert(Math.abs(reserved - Math.max(...amounts)) <= 1e-6);
+    assert(Math.abs(minimumReserved - Math.min(...amounts)) <= 1e-6);
+  }
   assert.equal(allocated.body.executionAuthorityGranted, false);
   const repeated = await api('clear', clearing, tenant, principal, allocationPost);
   assert.equal(repeated.body.reservation.ref.contentDigest, allocated.body.reservation.ref.contentDigest);
@@ -175,6 +213,6 @@ export async function operatingProfitOwnerCase(input: {
   assert.equal((await api('release', { allocationRef: certificate.ref, idempotencyKey: randomUUID() }, tenant, principal, allocationPost)).status, 422);
   return { qualification: 'GENERATED_OWNER_INTEGRATION_NOT_CUSTOMER_PROFIT', request, payload, fitRef: fit.body.model.ref, result, read, replay,
     belowTargetPayload, belowTarget, singleLeverResults, referenceInput, reference,
-    referenceInvocation: { executable: 'python3', exitCode: referenceRun.status, wallMs: referenceWallMs, tolerance: 1e-6 },
+    referenceInvocation, resourceLimitedInput, resourceLimited, resourceLimitedReference,
     cash, proposed, clearing, allocated, repeated, consumed, held };
 }

@@ -95,7 +95,8 @@ def main(x):
                 minimum = min(minimum, cash)
                 feasible &= minimum >= a['minimumCash'] and value >= m['risk']['minimumUtility']
                 worlds.append({'worldId': world['id'], 'value': value, 'closingCash': cash, 'minimumCash': minimum, 'periods': periods})
-        return {'worlds': worlds, 'supported': supported, 'feasible': bool(feasible and supported), 'worst': min(w['value'] for w in worlds)}
+        return {'worlds': worlds, 'supported': supported, 'feasible': bool(feasible and supported),
+                'terminalLiability': m['utility']['tail']['terminalLiability'] + liability, 'worst': min(w['value'] for w in worlds)}
 
     baseline = simulate(p['baselineExposures'], 0, 0)
     baseline.update(choices=[], cost=0, interactionChargeIds=[])
@@ -115,6 +116,7 @@ def main(x):
         capacity &= sum(c['humanSeconds'] for c in components) <= m['search']['maxHumanSeconds']
         fee = sum(c['cost'] for c in components)
         result = simulate(schedule, fee, sum(c['tailLiability'] for c in components))
+        result['resourcesFeasible'] = bool(capacity)
         result['feasible'] &= capacity
         result.update(choices=[{'leverId': k, 'optionId': v} for k, v in selected.items()], cost=fee, interactionChargeIds=[c['id'] for c in charges])
         candidates.append(result)
@@ -125,7 +127,7 @@ def main(x):
     return {'schema': 'finnor.s4.independent-operating-programme-reference.v1', 'candidates': candidates, 'best': best,
             'required': {'numerator': str(required.numerator), 'denominator': str(required.denominator)},
             'targetMet': best is not None and Fraction(str(best['worst'])) >= required,
-            'completeWithinRegisteredModel': all(c['supported'] for c in candidates),
+            'completeWithinRegisteredModel': baseline['supported'] and all(not c['resourcesFeasible'] or c['supported'] for c in candidates),
             'qualification': 'EXHAUSTIVE_GENERATED_MODEL_CHECK_NOT_FIELD_VALUE_OR_CAUSAL_IDENTIFICATION'}
 
 

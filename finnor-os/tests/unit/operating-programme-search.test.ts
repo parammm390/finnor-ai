@@ -55,6 +55,9 @@ describe('joint operating programme discovery', () => {
     expect(r.policy.problem.actions).toHaveLength(11); // nine full combinations plus wait/stop
     expect(choice(r)).toMatchObject({ exposures: { pricing: [1], procurement: [.6] }, cost: 25, earliestPeriod: 0, lastPeriod: 0, atMostOnce: true });
     expect(r.policy.certificate.valueBounds[0]).toBeCloseTo(103);
+    const forecast = r.policy.certificate.operatingProfit.forecasts[0];
+    expect(forecast.netProfit.incrementalProfit).toBeCloseTo(103); // joint gross 128 minus 25, not 80 + 60 - 25
+    expect(forecast.periods[0]).toMatchObject({ revenue: 960, variableCost: 432, actionCost: 25 });
     expect(report(r)).toMatchObject({ combinations: 9, excludedCombinations: 0, generatedProgrammes: 9, evaluatedProgrammes: 9, completeSearch: true,
       selectedOptions: [{ leverId: 'pricing', optionId: 'price-2' }, { leverId: 'procurement', optionId: 'cost-2' }], interactionChargeIds: ['combined-rollout'] });
     expect(report(r).candidates).toHaveLength(9);
@@ -74,11 +77,6 @@ describe('joint operating programme discovery', () => {
     expect(Number(r.profitTargetAssessment.bestWorstCaseProfit.display)).toBeCloseTo(75);
     expect(Number(r.profitTargetAssessment.shortfall.display)).toBeCloseTo(25);
     expect(report(r)).toMatchObject({ generatedProgrammes: 3, evaluatedProgrammes: 3, completeSearch: true });
-  });
-  it('evaluates the coupled law rather than adding separate profit estimates', async () => {
-    const i = input(), r: any = await synthesizeContingentControl(i), f = r.policy.certificate.operatingProfit.forecasts[0];
-    expect(f.netProfit.incrementalProfit).toBeCloseTo(103); // joint gross 128 minus 25, not 80 + 60 - 25
-    expect(f.periods[0]).toMatchObject({ revenue: 960, variableCost: 432, actionCost: 25 });
   });
   it('applies forbidden combinations before search without silently replacing them', async () => {
     const i = input(); i.problem.programmeSpace.exclusions = [{ id: 'incompatible-supplier-and-price', when: i.problem.programmeSpace.interactionCharges[0].when }];
@@ -133,15 +131,15 @@ describe('joint operating programme discovery', () => {
     if (defect === 'overlapping-controls') s.levers[1].exposureId = 'pricing';
     if (defect === 'unknown-channel') s.levers[1].exposureId = 'unregistered-lever';
     if (defect === 'foreign-entity') s.scope.root = { ...profitRoot, entityId: '99999999-9999-4999-8999-999999999999' };
-    if (defect === 'wrong-currency') s.scope.unit = 'EUR';
-    if (defect === 'wrong-horizon') s.scope.horizon = { ...s.scope.horizon, periods: 2 };
+    if (defect === 'wrong-currency') { s.scope.unit = 'EUR'; for (const a of i.problem.actions) a.costUnit = 'EUR'; }
+    if (defect === 'wrong-horizon') s.scope.horizon = { ...s.scope.horizon, periodMs: s.scope.horizon.periodMs + 1 };
     if (defect === 'changed-mandate') s.scope.mandateRef = profitRef('other-mandate');
-    if (defect === 'oversize-domain') { for (let n = 0; n < 2; n++) s.levers.push({ ...structuredClone(s.levers[0]), id: `lever-${n}`, exposureId: `exposure-${n}` }); for (const l of s.levers) l.options = Array.from({ length: 8 }, (_, n) => ({ ...l.options[0], id: `option-${n}` })); }
+    if (defect === 'oversize-domain') { for (let n = 0; n < 2; n++) { const exposureId = `exposure-${n}`; s.levers.push({ ...structuredClone(s.levers[0]), id: `lever-${n}`, exposureId }); i.problem.baselineExposures[exposureId] = [0]; i.dynamics.exposureIds.push(exposureId); } for (const l of s.levers) l.options = Array.from({ length: 8 }, (_, n) => ({ ...l.options[0], id: `option-${n}` })); s.interactionCharges = []; }
     if (defect === 'dangling-rule') s.exclusions = [{ id: 'bad', when: [{ leverId: 'pricing', optionId: 'missing' }] }];
     if (defect === 'missing-ref') delete s.sourceRef;
     if (defect === 'non-profit') { delete i.mandate.utility.operatingProfit; i.mandate = sealProfitMandate(i.mandate); s.scope.mandateRef = i.mandate.ref; }
     if (defect === 'caller-action') i.problem.actions.push({ ...i.problem.actions[0], id: 'unregistered-free-profit', kind: 'INTERVENE', atMostOnce: true, exposures: { pricing: [1], procurement: [.6] } });
-    await expect(synthesizeContingentControl(i)).rejects.toThrow();
+    await expect(synthesizeContingentControl(i)).rejects.toMatchObject({ code: 'INVALID_REQUEST' });
   });
   it('requires explicit consumer support rather than letting legacy control paths ignore the domain', () => {
     expect(() => parseControlProblem(input().problem)).toThrow();
