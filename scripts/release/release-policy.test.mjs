@@ -135,14 +135,26 @@ test("active release workflow uses the governed four-class AWS compute cutover",
   const computeResources = computeStatements.flatMap((statement) => Array.isArray(statement.Resource) ? statement.Resource : [statement.Resource])
   assert.ok(computeResources.some((resource) => resource?.endsWith(":stack/finnor-production/*")), "CloudFormation is restricted to the production stack")
   assert.match(JSON.stringify(computePolicy), /"ecs:cluster":"arn:aws:ecs:us-east-1:601804670058:cluster\/finnor-production"/, "task listing is restricted to the production cluster")
-  assert.ok(computeResources.some((resource) => /:service\*?\/finnor-production\/finnor-\*/.test(resource)), "ECS services and deployment resources retain the exact FINNOR cluster and family namespace")
+  assert.ok(computeResources.includes("arn:aws:ecs:us-east-1:601804670058:*finnor-*"), "compact session retains the exact ECS project, Region and FINNOR namespace; exact resource-type/cluster restrictions remain in the base role")
+  const rolePolicy = JSON.parse(readFileSync(new URL("../../docs/release/evidence/ci-process-repair-2026-10-16/cfn-dependency-read-role-policy.json", import.meta.url), "utf8"))
+  const scopedEcsResources = new Set([
+    "arn:aws:ecs:us-east-1:601804670058:service/finnor-production/finnor-*",
+    "arn:aws:ecs:us-east-1:601804670058:task-definition/finnor-*:*",
+    "arn:aws:ecs:us-east-1:601804670058:service-deployment/finnor-production/finnor-*/*",
+    "arn:aws:ecs:us-east-1:601804670058:task/finnor-production/*",
+  ])
+  for (const entry of rolePolicy.Statement) {
+    const writes = [entry.Action].flat().filter(action => action.startsWith("ecs:") && !/:(?:Describe|List)/.test(action))
+    if (!writes.length || writes.every(action => action === "ecs:DeregisterTaskDefinition")) continue
+    assert.ok([entry.Resource].flat().every(resource => scopedEcsResources.has(resource)), "the base role keeps every ECS write in the original exact cluster/resource-type scopes")
+  }
   assert.ok(!computeActions.some(action => action.startsWith("ecr:") && !action.startsWith("ecr:Describe")), "the compute session must not publish or mutate ECR")
-  for (const action of ["ec2:DescribeSubnets", "ec2:DescribeVpcs", "ec2:DescribeSecurityGroups", "ecs:DescribeClusters", "ecr:DescribeRepositories", "elasticloadbalancing:DescribeTargetGroupAttributes"]) {
+  for (const action of ["ec2:DescribeSubnets", "ec2:DescribeVpcs", "ec2:DescribeSecurityGroups", "ecs:DescribeClusters", "ecr:DescribeRepositories", "elasticloadbalancing:DescribeTargetGroupAttributes", "elasticloadbalancing:DescribeLoadBalancers", "elasticloadbalancing:DescribeLoadBalancerAttributes", "elasticloadbalancing:DescribeCapacityReservation", "elasticloadbalancing:DescribeTags"]) {
     assert.ok(computeActions.includes(action), `CloudFormation dependency read closure must include ${action}`)
   }
   const iamActions = computeActions.filter((action) => action.startsWith("iam:"))
   assert.ok(iamActions.every((action) => action === "iam:PassRole" || action === "iam:GetRole"), "the deployment session can only look up/pass ECS task roles, not mutate IAM")
-  assert.ok(computeStatements.filter(entry => [entry.Action].flat().includes("iam:GetRole")).every(entry => [entry.Resource].flat().includes("arn:aws:iam::601804670058:role/finnor-*")), "role lookup remains scoped to FINNOR roles and intersects the five exact base-policy roles")
+  assert.ok(computeStatements.filter(entry => [entry.Action].flat().includes("iam:GetRole")).every(entry => [entry.Resource].flat().includes("arn:aws:iam::601804670058:role/finnor-*")), "role lookup intersects the exact approved base-policy task and deployment metadata roles; PassRole remains separate")
   const changeRead = computeStatements.find(entry => [entry.Action].flat().includes("cloudformation:DescribeChangeSet"))
   assert.ok(changeRead && !changeRead.Condition && [changeRead.Resource].flat().includes("arn:aws:cloudformation:us-east-1:601804670058:stack/finnor-production/*"), "change-set inspection is an independently stack-scoped read")
   for (const action of ["cloudformation:CreateChangeSet", "cloudformation:ExecuteChangeSet"]) {
