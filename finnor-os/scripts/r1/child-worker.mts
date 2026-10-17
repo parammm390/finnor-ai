@@ -12,9 +12,14 @@ else{
  queue.register('run_certified_state_reduction_v1',runCertifiedStateReductionJob,PRODUCTION_JOB_CONTRACTS.run_certified_state_reduction_v1);
  queue.register('run_r1_dependency_continuation_v1',runProgrammeContinuationJob,PRODUCTION_JOB_CONTRACTS.run_r1_dependency_continuation_v1);
 }
-let stopping=false;process.on('message',message=>{if(message==='stop')stopping=true;});
-console.log(JSON.stringify({kind:'READY',pid:process.pid,node:process.version}));
+// Only this disposable driver supports an IPC admission barrier. Prepare its
+// imports before accepting a bounded decision, then explicitly release queue
+// polling after the old/future protocol refusal probes. No owner clock moves.
+let stopping=false,released=process.env.FINNOR_R1_CHILD_MODE!=='RUN_HELD',wake:(()=>void)|undefined;
+process.on('message',message=>{if(message==='stop'){stopping=true;wake?.();}if(message==='start'){released=true;wake?.();}});
+process.on('disconnect',()=>{stopping=true;wake?.();});
+console.log(JSON.stringify({kind:'READY',pid:process.pid,node:process.version,dispatch:released?'AUTOMATIC':'HELD'}));
 try{
  if(process.env.FINNOR_R1_CHILD_MODE==='RECONCILE')console.log(JSON.stringify({kind:'COLD_QUEUE_RECONCILIATION',pid:process.pid,recovered:await queue.recoverExpiredRunningJobs(3)}));
- else {let worked=0;for(let i=0;i<1200&&!stopping;i++){if(await queue.tick())worked++;await new Promise(yes=>setTimeout(yes,25));}console.log(JSON.stringify({kind:'RETURNED',pid:process.pid,worked,resourceUsage:process.resourceUsage(),usd:null}));}
+ else {if(!released&&!stopping)await new Promise<void>(yes=>{wake=yes;});let worked=0;for(let i=0;i<1200&&!stopping;i++){if(await queue.tick())worked++;await new Promise(yes=>setTimeout(yes,25));}console.log(JSON.stringify({kind:'RETURNED',pid:process.pid,worked,resourceUsage:process.resourceUsage(),usd:null}));}
 }finally{await closePool();process.disconnect?.();}

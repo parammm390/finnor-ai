@@ -21,6 +21,7 @@ import {r2Ref,loadR2Runtime} from './capital-program/r2-native';
 import {chooseExactS4Branch} from './capital-program/r2-owners';
 import {codeIdentity} from './evidence-execution/store';
 import {readSourceObject} from './deliberation/store';
+import {assessRevenueProfitTarget} from '../../epistemic-runtime/src/operating-profit';
 import type {CoalitionSelection} from '@finnor/shared-types/src/coalition-programme';
 import {R5_VERSION} from '@finnor/shared-types/src/coalition-programme';
 import {coalitionCheckerIdentity} from './capital-program/r2-native';
@@ -135,7 +136,7 @@ export async function synthesizeEnterpriseControl(ctx:PeMutationContext,input:{m
  if(prior&&p.continuation&&(epistemicHash(m.utility)!==epistemicHash(prior.mandate.utility)||epistemicHash(m.horizon)!==epistemicHash(prior.mandate.horizon)))throw new ControlContractError('INVALID_REQUEST','A continuation cannot reinterpret the earlier utility or shorten its consequences');
  const protocols=input.protocols as ExperimentProtocol[];
  for(const protocol of protocols)if((await validateEnterpriseExperiment(ctx,protocol)).status!=='CURRENT')throw unavailable();
- const early=async(status:'UNCERTAINTY_UNRESOLVED'|'MODEL_UNSUPPORTED'|'NUMERICAL_FAILURE'|'SEARCH_EXHAUSTED',reason:string,compute:unknown=null)=>{const experience=[prepareS4Experience(m,'REJECTION',problemRef.id,{status,reason,originalProblemId:p.id,modelRef:model.ref,compute})];await saveEvents(ctx,experience);return {schema:'finnor.s4.policy-result.v1' as const,status,policy:null,reasons:[reason],experience,compute};};
+ const early=async(status:'UNCERTAINTY_UNRESOLVED'|'MODEL_UNSUPPORTED'|'NUMERICAL_FAILURE'|'SEARCH_EXHAUSTED',reason:string,compute:unknown=null)=>{const profitTargetAssessment=assessRevenueProfitTarget(m,null,false),experience=[prepareS4Experience(m,'REJECTION',problemRef.id,{status,reason,originalProblemId:p.id,modelRef:model.ref,compute,...(profitTargetAssessment?{profitTargetAssessment}:{})})];await saveEvents(ctx,experience);return {schema:'finnor.s4.policy-result.v1' as const,status,policy:null,reasons:[reason],experience,compute,...(profitTargetAssessment?{profitTargetAssessment}:{})};};
  if(prior&&prior.problem.obligations.filter(o=>o.status!=='SETTLED'||o.terminalLiability!==0).some(o=>!p.obligations.some(next=>epistemicHash(next)===epistemicHash(o))))return early('UNCERTAINTY_UNRESOLVED','EARLIER_OBLIGATION_CANNOT_BE_DROPPED_REVERSED_OR_RELABELED_WITHOUT_S6_OWNER_RECONCILIATION');
  if(await unresolvedEffects(ctx))return early('UNCERTAINTY_UNRESOLVED','UNMODELED_OUTSTANDING_DURABLE_EFFECTS_REQUIRE_S6_EXPOSURE_RESOURCE_AND_LIABILITY_RECONCILIATION');
  if(m.ambiguity.kind==='UNRESOLVED')return early('UNCERTAINTY_UNRESOLVED','MANDATE_HAS_NO_AUTHORIZED_AMBIGUITY_SEMANTICS');
@@ -152,7 +153,10 @@ export async function synthesizeEnterpriseControl(ctx:PeMutationContext,input:{m
  await resolveEnterpriseInterventionModelForControl(ctx,p.modelRef);for(const protocol of protocols)if((await validateEnterpriseExperiment(ctx,protocol)).status!=='CURRENT')throw unavailable();
  const events=[...result.experience];if(prior)events.push(prepareS4Experience(m,'POLICY_REVISION',result.policy?.ref.id??p.id,{reason:input.reason??'Supplied linked revision',priorPolicyRef:prior.ref,newPolicyRef:result.policy?.ref??null,ordinaryReplanNotMethodAdmission:true},[prior.ref.id]));
  await saveEvents(ctx,events);await saveArtifact(ctx,'results',epistemicHash(result),result);
- if(result.policy){await saveArtifact(ctx,'mandates',m.ref.contentDigest,m);await saveArtifact(ctx,'demands',result.policy.demand.contentDigest,result.policy.demand);await saveArtifact(ctx,'kernels',kernel.snapshot!.ref.contentDigest,kernel.snapshot);await saveArtifact(ctx,'inputs',inputDigest,artifact);await saveArtifact(ctx,'policies',result.policy.ref.contentDigest,result.policy);if(await current(ctx,result.policy))throw unavailable();}
+ // An unsuccessful revenue hurdle is an economic result too. Retain the exact
+ // owner charter and numerical kernel, rather than only a rejection summary.
+ if(result.policy||m.utility.operatingProfit?.profitTarget){await saveArtifact(ctx,'mandates',m.ref.contentDigest,m);await saveArtifact(ctx,'kernels',kernel.snapshot!.ref.contentDigest,kernel.snapshot);await saveArtifact(ctx,'inputs',inputDigest,artifact);}
+ if(result.policy){await saveArtifact(ctx,'demands',result.policy.demand.contentDigest,result.policy.demand);await saveArtifact(ctx,'policies',result.policy.ref.contentDigest,result.policy);if(await current(ctx,result.policy))throw unavailable();}
  return {...result,experience:events};
 }
 export interface R3ControlPolicyRead {schema:'finnor.s4.r3-policy-read.v1';policyRef:ExperimentRef}

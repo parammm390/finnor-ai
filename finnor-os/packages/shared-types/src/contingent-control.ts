@@ -1,18 +1,45 @@
 import type { BeliefViewPin } from './enterprise-beliefs';
-import type { ExperimentRef } from './experiments';
+import type { ExperimentExact, ExperimentRef } from './experiments';
 import type { InterventionSpecification } from './interventions';
 
 export type PolicyResultState = 'POLICY_AVAILABLE' | 'INFEASIBLE' | 'MODEL_UNSUPPORTED' | 'UNCERTAINTY_UNRESOLVED' | 'SEARCH_EXHAUSTED' | 'BLOCKED_ALLOCATION' | 'BLOCKED_AUTHORITY' | 'STALE_INPUT' | 'NUMERICAL_FAILURE';
 export type OperatingProfitDriver = { kind: 'STATE'; variableId: string; unit: string } |
   { kind: 'CONSTANT'; value: number; unit: string; sourceRef: ExperimentRef };
+export interface NetProfitAccounting {
+  schema: 'finnor.s4.net-profit-accounting.v1';
+  financingExpense: OperatingProfitDriver; incomeTaxExpense: OperatingProfitDriver;
+  otherIncome: OperatingProfitDriver; otherExpense: OperatingProfitDriver;
+  /** Accrual recognition does not infer cash payment, tax shields or borrowing.
+   * Payment remains in cashTaxes/nonOperatingCashOutflow exactly once. */
+  cashTreatment: 'ACCRUAL_PNL_SEPARATE_EXPLICIT_CASH_DRIVERS';
+}
+export interface RevenueProfitTarget {
+  schema: 'finnor.s4.revenue-profit-target.v1'; minimumBasisPoints: number;
+  basis: 'INCREMENTAL_NET_PROFIT_LESS_ADDITIONAL_TERMINAL_LIABILITY';
+  denominator: 'FIXED_PREREGISTERED_REVENUE';
+  revenueBaseline: { amount: number; unit: string; root: { entityType: string; entityId: string };
+    horizon: { startAt: string; periodMs: number; periods: number }; sourceRef: ExperimentRef };
+  qualification: 'OWNER_BASELINE_ASSERTION_NOT_VERIFIED_REVENUE';
+}
+export interface RevenueProfitAssessment {
+  schema: 'finnor.s4.revenue-profit-assessment.v1'; target: RevenueProfitTarget;
+  status: 'TARGET_MET_IN_RETAINED_MODEL' | 'TARGET_UNATTAINABLE_IN_ENUMERATED_MODEL' |
+    'INCUMBENT_BELOW_TARGET_SEARCH_UNRESOLVED' | 'NO_FEASIBLE_INCUMBENT';
+  requiredIncrementalProfit: ExperimentExact; bestWorstCaseProfit: ExperimentExact | null;
+  shortfall: ExperimentExact | null; searchComplete: boolean; modelUpperBound: ExperimentExact | null;
+  arithmetic: 'EXACT_DECIMAL_COMPARISON_OF_RETAINED_FLOAT64';
+  qualification: 'FINITE_MODEL_CONDITIONAL_NOT_REALIZED_OR_GUARANTEED';
+}
 /** Whole-entity, single-currency operating accounting. Net price and units must
  * already reflect discounts/returns; joint S3 volumes must include cannibalisation.
- * Profit is before financing and tax. Cash taxes/capex are explicit cash drivers.
+ * Operating profit is before financing/tax; netProfit explicitly recognizes
+ * financing/tax/other P&L. Cash taxes/capex are separate cash drivers.
  * This is an owner-supplied accounting convention, not verified causal evidence. */
 export interface OperatingProfitObjective {
   schema: 'finnor.s4.operating-profit.v1'; root: { entityType: string; entityId: string };
   currency: string; moneyScale: '1' | '1000' | '1000000' | '1000000000';
-  objective: 'INCREMENTAL_OPERATING_PROFIT' | 'INCREMENTAL_FREE_CASH_FLOW';
+  objective: 'INCREMENTAL_OPERATING_PROFIT' | 'INCREMENTAL_FREE_CASH_FLOW' | 'INCREMENTAL_NET_PROFIT';
+  netProfit?: NetProfitAccounting; profitTarget?: RevenueProfitTarget;
   segments: Array<{ id: string; quantityUnit: string; netUnitPrice: OperatingProfitDriver;
     unitsSold: OperatingProfitDriver; variableUnitCost: OperatingProfitDriver }>;
   fixedOperatingCost: OperatingProfitDriver; depreciationAmortization: OperatingProfitDriver;
@@ -20,7 +47,7 @@ export interface OperatingProfitObjective {
   capitalExpenditure: OperatingProfitDriver; cashTaxes: OperatingProfitDriver;
   /** Explicit financing/owner transfers affect liquidity, never operating
    * profit/free cash flow. Include debt service, distributions and funding;
-   * v1 does not infer payment schedules or financing P&L. */
+   * v1 does not infer payment schedules. Financing P&L requires netProfit. */
   nonOperatingCashInflow: OperatingProfitDriver; nonOperatingCashOutflow: OperatingProfitDriver;
   openingCash: number; minimumCash: number;
   actionCostTreatment: 'IMMEDIATE_OPERATING_EXPENSE_AND_CASH_OUTFLOW';
@@ -32,6 +59,7 @@ export interface OperatingProfitForecast {
   nodeIds: string[]; discountedUtility: number; periods: OperatingProfitCashPeriod[];
   revenue: number; comparatorRevenue: number;
   operatingProfit: number; comparatorOperatingProfit: number; incrementalOperatingProfit: number;
+  netProfit?: { profit: number; comparatorProfit: number; incrementalProfit: number };
   freeCashFlow: number; comparatorFreeCashFlow: number; incrementalFreeCashFlow: number;
   nonOperatingNetCashFlow: number; comparatorNonOperatingNetCashFlow: number;
   implementationCost: number; closingCash: number; comparatorClosingCash: number; minimumCashObserved: number;
@@ -43,12 +71,15 @@ export interface OperatingProfitCashPeriod {
   workingCapitalFunding: number; changeInWorkingCapital: number;
   operatingProfit: number; freeCashFlow: number; nonOperatingCashInflow: number; nonOperatingCashOutflow: number;
   nonOperatingNetCashFlow: number; comparatorOperatingProfit: number; comparatorFreeCashFlow: number;
+  netProfit?: { financingExpense: number; incomeTaxExpense: number; otherIncome: number; otherExpense: number; profit: number;
+    comparator: { financingExpense: number; incomeTaxExpense: number; otherIncome: number; otherExpense: number; profit: number } };
   openingCash: number; cashAfterAction: number; closingCash: number;
 }
 export interface OperatingProfitCertificate {
   schema: 'finnor.s4.operating-profit-certificate.v1'; root: OperatingProfitObjective['root'];
   currency: string; moneyScale: OperatingProfitObjective['moneyScale']; unit: string;
-  objective: OperatingProfitObjective['objective']; measure: 'OPERATING_PROFIT_BEFORE_FINANCING_AND_TAX';
+  objective: OperatingProfitObjective['objective']; measure: 'OPERATING_PROFIT_BEFORE_FINANCING_AND_TAX' | 'NET_PROFIT_AFTER_FINANCING_AND_INCOME_TAX';
+  profitTargetAssessment?: RevenueProfitAssessment;
   comparator: 'SAME_INITIAL_WORLD_AND_RETAINED_BASELINE_WITH_PENDING_OBLIGATIONS';
   arithmetic: 'FLOAT64_INHERITS_S3_AND_SEARCH_LIMITATIONS';
   forecastBasis: 'UNDISCOUNTED_TOTALS_SEPARATE_TERMINAL_LIABILITIES';
