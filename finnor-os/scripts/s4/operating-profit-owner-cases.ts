@@ -1,4 +1,6 @@
-/** Registered before implementation: permitted S1 -> S3 -> S4 -> owner replay.
+/** Permitted S1 -> S3 -> S4 -> owner replay -> S5 cash funding. The revenue
+ * hurdle must reject the small intervention before accepting a stronger one
+ * under the SAME revenue charter. Retain both requests/results and replay.
  * Generated price/volume history only; this is not measured customer profit. */
 import { strict as assert } from 'node:assert';
 import { randomUUID } from 'node:crypto';
@@ -46,16 +48,40 @@ export async function operatingProfitOwnerCase(input: {
   m.utility.operatingProfit.segments[0].netUnitPrice.variableId = 'netPrice';
   m.utility.operatingProfit.accountsReceivable = { kind: 'CONSTANT', value: 100, unit: 'USD', sourceRef: profitRef('generated-receivables') };
   m.utility.operatingProfit.nonOperatingCashOutflow = { kind: 'CONSTANT', value: 300, unit: 'USD', sourceRef: profitRef('generated-mandatory-debt-payments') };
+  m.utility.operatingProfit.objective = 'INCREMENTAL_NET_PROFIT';
+  const constant = (value: number, name: string) => ({ kind: 'CONSTANT', value, unit: 'USD', sourceRef: profitRef(name) });
+  m.utility.operatingProfit.netProfit = { schema: 'finnor.s4.net-profit-accounting.v1',
+    financingExpense: constant(20, 'generated-interest-already-in-debt-cash-payments'),
+    incomeTaxExpense: constant(30, 'generated-accrued-tax-no-payment-during-horizon'),
+    otherIncome: constant(0, 'generated-no-other-income'), otherExpense: constant(0, 'generated-no-other-expense'),
+    cashTreatment: 'ACCRUAL_PNL_SEPARATE_EXPLICIT_CASH_DRIVERS' };
+  m.utility.operatingProfit.profitTarget = { schema: 'finnor.s4.revenue-profit-target.v1', minimumBasisPoints: 1000,
+    basis: 'INCREMENTAL_NET_PROFIT_LESS_ADDITIONAL_TERMINAL_LIABILITY', denominator: 'FIXED_PREREGISTERED_REVENUE',
+    revenueBaseline: { amount: 2000, unit: 'USD', root, horizon: structuredClone(m.horizon), sourceRef: profitRef('generated-fixed-two-period-revenue-charter') },
+    qualification: 'OWNER_BASELINE_ASSERTION_NOT_VERIFIED_REVENUE' };
   const mandate = sealProfitMandate(m);
   p.episodeId = m.episodeId; p.modelRef = fit.body.model.ref; p.context = 'public-price'; p.regime = 'operating';
   p.baselineExposures = { price: [0, 0] };
-  for (const a of p.actions) if (a.kind === 'INTERVENE') a.exposures = { price: [.15, .15] };
+  for (const a of p.actions) if (a.kind === 'INTERVENE') a.exposures = { price: [.75, .75] };
   const payload = { mandate, problem: p, protocols: [], scenarios: { pathsPerMechanism: 4, seed: 20261017 } };
+  const belowTargetPayload = structuredClone(payload);
+  for (const a of belowTargetPayload.problem.actions) if (a.kind === 'INTERVENE') a.exposures = { price: [.15, .15] };
+  const belowTarget = await api('synthesize', belowTargetPayload);
+  assert.equal(belowTarget.status, 200, JSON.stringify(belowTarget)); assert.equal(belowTarget.body.status, 'INFEASIBLE', JSON.stringify(belowTarget));
+  assert.equal(belowTarget.body.policy, null);
+  assert.equal(belowTarget.body.profitTargetAssessment.status, 'TARGET_UNATTAINABLE_IN_ENUMERATED_MODEL');
+  assert.equal(belowTarget.body.profitTargetAssessment.requiredIncrementalProfit.numerator, '200');
+  assert(Number(belowTarget.body.profitTargetAssessment.shortfall.display) > 150);
   const result = await api('synthesize', payload);
   assert.equal(result.status, 200, JSON.stringify(result)); assert.equal(result.body.status, 'POLICY_AVAILABLE', JSON.stringify(result));
   const policy = result.body.policy;
   assert.equal(policy.nodes.find((n: any) => n.id === policy.rootNodeId).actionId, 'smart'); assert(policy.certificate.valueBounds[0] > 0);
   assert.equal(policy.certificate.operatingProfit.qualification, 'MODEL_CONDITIONAL_NOT_REALIZED_OR_GUARANTEED');
+  assert.equal(policy.certificate.operatingProfit.measure, 'NET_PROFIT_AFTER_FINANCING_AND_INCOME_TAX');
+  assert.deepEqual(result.body.profitTargetAssessment.target, belowTarget.body.profitTargetAssessment.target);
+  assert.equal(result.body.profitTargetAssessment.status, 'TARGET_MET_IN_RETAINED_MODEL');
+  assert.equal(result.body.profitTargetAssessment.shortfall.numerator, '0');
+  assert(policy.certificate.operatingProfit.forecasts.every((f: any) => f.netProfit.incrementalProfit >= 200));
   assert(policy.certificate.operatingProfit.forecasts.every((f: any) => f.incrementalOperatingProfit > 0 && f.minimumCashObserved >= 50));
   assert(policy.certificate.operatingProfit.forecasts.every((f: any) => f.nonOperatingNetCashFlow === -600));
   assert.equal(policy.admission.executionAuthorityGranted, false); assert.equal(policy.demand.reservationGranted, false);
@@ -103,5 +129,5 @@ export async function operatingProfitOwnerCase(input: {
   assert.equal(held.body.reservation.status, 'UNKNOWN_OUTCOME'); assert.deepEqual(held.body.reservation.envelopes, certificate.check.envelopes);
   assert.equal((await api('release', { allocationRef: certificate.ref, idempotencyKey: randomUUID() }, tenant, principal, allocationPost)).status, 422);
   return { qualification: 'GENERATED_OWNER_INTEGRATION_NOT_CUSTOMER_PROFIT', request, payload, fitRef: fit.body.model.ref, result, read, replay,
-    cash, proposed, clearing, allocated, repeated, consumed, held };
+    belowTargetPayload, belowTarget, cash, proposed, clearing, allocated, repeated, consumed, held };
 }

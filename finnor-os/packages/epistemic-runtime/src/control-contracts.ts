@@ -2,7 +2,7 @@ import { z } from 'zod';
 import type { EconomicMandate, ControlProblem, ControlDecisionInput, ContingentPolicy } from '@finnor/shared-types';
 import { ExperimentRefSchema } from './experiments';
 import { epistemicHash } from './source-precedence';
-import { OperatingProfitObjectiveSchema, OperatingProfitCertificateSchema, operatingProfitContractReason } from './operating-profit';
+import { OperatingProfitObjectiveSchema, OperatingProfitCertificateSchema, operatingProfitContractReason, assessRevenueProfitTarget } from './operating-profit';
 
 export class ControlContractError extends Error {
   constructor(readonly code: 'INVALID_REQUEST' | 'INVALID_POLICY' | 'LIMIT_EXCEEDED' | 'PERMITTED_CONTEXT_UNAVAILABLE', message: string) { super(message); this.name='ControlContractError'; }
@@ -90,20 +90,28 @@ export function assertContingentPolicy(v:unknown):asserts v is ContingentPolicy 
  const profit=p.mandate.utility.operatingProfit,certificate=p.certificate.operatingProfit;
  if(Boolean(profit)!==Boolean(certificate))throw new ControlContractError('INVALID_POLICY','Operating-profit profile and conditional certificate differ');
  if(profit&&certificate){
-  if(!OperatingProfitCertificateSchema.safeParse(certificate).success||certificate.objective!==profit.objective||certificate.unit!==p.mandate.utility.unit||certificate.currency!==profit.currency||certificate.moneyScale!==profit.moneyScale||epistemicHash(certificate.root)!==epistemicHash(profit.root))throw new ControlContractError('INVALID_POLICY','Operating-profit profile and conditional certificate differ');
+  if(!OperatingProfitCertificateSchema.safeParse(certificate).success||certificate.objective!==profit.objective||certificate.unit!==p.mandate.utility.unit||certificate.currency!==profit.currency||certificate.moneyScale!==profit.moneyScale||epistemicHash(certificate.root)!==epistemicHash(profit.root)||certificate.measure!==(profit.netProfit?'NET_PROFIT_AFTER_FINANCING_AND_INCOME_TAX':'OPERATING_PROFIT_BEFORE_FINANCING_AND_TAX'))throw new ControlContractError('INVALID_POLICY','Operating-profit profile and conditional certificate differ');
   if(certificate.forecasts.some(f=>f.incrementalOperatingProfit!==f.operatingProfit-f.comparatorOperatingProfit||f.incrementalFreeCashFlow!==f.freeCashFlow-f.comparatorFreeCashFlow||f.closingCash<profit.minimumCash||f.minimumCashObserved<profit.minimumCash||f.minimumCashObserved>Math.min(profit.openingCash,f.closingCash)))throw new ControlContractError('INVALID_POLICY','Operating-profit forecast accounting or cash floor differs');
   for(const f of certificate.forecasts){
    if(f.periods.length!==p.mandate.horizon.periods||f.nodeIds.length!==f.periods.length||f.nodeIds[0]!==p.rootNodeId)throw new ControlContractError('INVALID_POLICY','Operating-profit full cash ledger path is incomplete');
-   let utility=0,op=0,fcf=0,cost=0,cash=profit.openingCash,minimum=cash;
+   if(Boolean(profit.netProfit)!==Boolean(f.netProfit))throw new ControlContractError('INVALID_POLICY','Net-profit forecast accounting is missing or unexpected');
+   let utility=0,op=0,fcf=0,baselineOp=0,baselineFcf=0,net=0,baselineNet=0,cost=0,cash=profit.openingCash,minimum=cash;
    for(let t=0;t<f.periods.length;t++){
     const row=f.periods[t]!,node=p.nodes.find(n=>n.id===f.nodeIds[t]),action=p.problem.actions.find(a=>a.id===node?.actionId);
     if(!node||!action||node.period!==t||t>0&&!p.nodes.find(n=>n.id===f.nodeIds[t-1])?.branches.some(b=>b.childId===node.id)||row.period!==t||row.actionCost!==action.cost||row.openingCash!==cash||row.cashAfterAction!==cash-row.actionCost||row.operatingProfit!==row.revenue-row.variableCost-row.fixedOperatingCost-row.depreciationAmortization-row.actionCost||row.freeCashFlow!==row.operatingProfit+row.depreciationAmortization-row.cashTaxes-row.capitalExpenditure-row.changeInWorkingCapital||row.nonOperatingNetCashFlow!==row.nonOperatingCashInflow-row.nonOperatingCashOutflow||row.closingCash!==cash+row.freeCashFlow+row.nonOperatingNetCashFlow)throw new ControlContractError('INVALID_POLICY','Operating-profit cash ledger differs from its original action path');
+    const n=row.netProfit;
+    if(Boolean(profit.netProfit)!==Boolean(n)||n&&(n.profit!==row.operatingProfit-n.financingExpense-n.incomeTaxExpense+n.otherIncome-n.otherExpense||n.comparator.profit!==row.comparatorOperatingProfit-n.comparator.financingExpense-n.comparator.incomeTaxExpense+n.comparator.otherIncome-n.comparator.otherExpense))throw new ControlContractError('INVALID_POLICY','Net-profit P&L ledger differs from financing, tax and other expense recognition');
+    if(n){net+=n.profit;baselineNet+=n.comparator.profit;}
     op+=row.operatingProfit;fcf+=row.freeCashFlow;cost+=row.actionCost;cash=row.closingCash;minimum=Math.min(minimum,row.cashAfterAction,cash);
-    utility+=p.mandate.utility.discountFactors[t]!*(profit.objective==='INCREMENTAL_OPERATING_PROFIT'?row.operatingProfit-row.comparatorOperatingProfit:row.freeCashFlow-row.comparatorFreeCashFlow);
+    baselineOp+=row.comparatorOperatingProfit;baselineFcf+=row.comparatorFreeCashFlow;
+    utility+=p.mandate.utility.discountFactors[t]!*(profit.objective==='INCREMENTAL_NET_PROFIT'?n!.profit-n!.comparator.profit:profit.objective==='INCREMENTAL_OPERATING_PROFIT'?row.operatingProfit-row.comparatorOperatingProfit:row.freeCashFlow-row.comparatorFreeCashFlow);
    }
    utility+=p.mandate.utility.discountFactors[p.mandate.horizon.periods]!*(f.comparatorTerminalLiability-f.terminalLiability);
-   if(op!==f.operatingProfit||fcf!==f.freeCashFlow||cost!==f.implementationCost||cash-f.terminalLiability!==f.closingCash||Math.min(minimum,cash-f.terminalLiability)!==f.minimumCashObserved||utility!==f.discountedUtility)throw new ControlContractError('INVALID_POLICY','Operating-profit ledger totals or discounted utility differ');
+   if(op!==f.operatingProfit||baselineOp!==f.comparatorOperatingProfit||fcf!==f.freeCashFlow||baselineFcf!==f.comparatorFreeCashFlow||f.netProfit&&(net!==f.netProfit.profit||baselineNet!==f.netProfit.comparatorProfit||f.netProfit.incrementalProfit!==net-baselineNet)||cost!==f.implementationCost||cash-f.terminalLiability!==f.closingCash||Math.min(minimum,cash-f.terminalLiability)!==f.minimumCashObserved||utility!==f.discountedUtility)throw new ControlContractError('INVALID_POLICY','Operating-profit ledger totals or discounted utility differ');
   }
+  const worst=Math.min(...certificate.forecasts.map(f=>f.discountedUtility));
+  const assessment=assessRevenueProfitTarget(p.mandate,worst,p.certificate.completeSearch);
+  if(assessment&&(assessment.status!=='TARGET_MET_IN_RETAINED_MODEL'||p.certificate.valueBounds.some(v=>v!==worst)||p.nodes.find(n=>n.id===p.rootNodeId)?.valueBounds.some(v=>v!==worst))||epistemicHash(assessment??null)!==epistemicHash(certificate.profitTargetAssessment??null))throw new ControlContractError('INVALID_POLICY','Fixed revenue profit target or retained worst-world value differs');
  }
  if(p.exactProfile&&(p.problem.schema!=='finnor.control-problem.exact.v2'||p.demand.schema!=='finnor.contingent-resource-demand.exact.v2'||p.problem.exactSource?.modelDigest!==p.exactProfile.modelDigest||p.demand.exact?.modelDigest!==p.exactProfile.modelDigest||epistemicHash(p.problem.exactSource.sourceRef)!==epistemicHash(p.exactProfile.sourceRef)||epistemicHash(p.demand.exact.sourceRef)!==epistemicHash(p.exactProfile.sourceRef)||p.certificate.basis!=='MODEL_RELATIVE_EXACT_INFORMATION_TABLE'||p.certificate.numericalTolerance!==0||p.exactProfile.evaluation.modelDigest!==p.exactProfile.modelDigest||p.exactProfile.authoritativeQuantities!=='ORIGINAL_EXACT_SOURCE'||p.exactProfile.legacyNumbers!=='PRESENTATION_ONLY'))throw new ControlContractError('INVALID_POLICY','Exact policy source and arithmetic binding differs');
  if(!p.exactProfile&&(p.problem.schema!=='finnor.control-problem.v1'||p.demand.schema!=='finnor.contingent-resource-demand.v1'||p.demand.exact))throw new ControlContractError('INVALID_POLICY','Legacy policy cannot claim an exact quantity projection');
