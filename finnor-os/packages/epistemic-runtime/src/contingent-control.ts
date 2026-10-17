@@ -3,12 +3,14 @@ import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import type { BeliefViewPin, ContingentPolicy, ControlAction, ControlDecision, ControlDecisionInput, ControlDynamicsAdapter, ControlInstrumentSupport,
- ControlObservation, ControlProblem, ControlWorld, EconomicMandate, ExperimentRef, PolicyNode, PolicyResultState, ResolvedPolicyAllocation, S4ComputeInvocation, S4ExperienceEvent } from '@finnor/shared-types';
+ ControlObservation, ControlProblem, ControlWorld, EconomicMandate, ExperimentRef, PolicyNode, PolicyResultState, ResolvedPolicyAllocation, S4ComputeInvocation, S4ExperienceEvent, OperatingProfitForecast } from '@finnor/shared-types';
 import { epistemicHash } from './source-precedence';
 import { CONTROL_ADMISSION, ControlContractError, assertContingentPolicy, immutableControl, parseControlDecision, parseControlProblem, parseEconomicMandate } from './control-contracts';
 import { controlObservationToken, validateControlObservationInstruments } from './control-observations';
+import { operatingProfitContractReason, openOperatingProfitCourse, advanceOperatingProfitCourse, operatingProfitForecast,
+ OperatingProfitDomainError, type OperatingProfitCourse } from './operating-profit';
 
-const files=['./contingent-control.ts','./control-contracts.ts','./control-observations.ts','./intervention-control.ts','../../shared-types/src/contingent-control.ts','../../private-equity/src/enterprise-control.ts','../../private-equity/src/enterprise-experiments.ts','../../private-equity/src/enterprise-interventions.ts','../../../apps/api/app/api/policies/[operation]/route.ts'].map(p=>fileURLToPath(new URL(p,import.meta.url)));
+const files=['./contingent-control.ts','./control-contracts.ts','./control-observations.ts','./intervention-control.ts','./operating-profit.ts','../../shared-types/src/contingent-control.ts','../../private-equity/src/enterprise-control.ts','../../private-equity/src/enterprise-experiments.ts','../../private-equity/src/enterprise-interventions.ts','../../../apps/api/app/api/policies/[operation]/route.ts'].map(p=>fileURLToPath(new URL(p,import.meta.url)));
 const loadedSources=Promise.all(files.map(async path=>({path,sha256:createHash('sha256').update(await readFile(path)).digest('hex')})));
 void loadedSources.catch(()=>undefined);
 export async function controlSourcesCurrent(expected:S4ComputeInvocation['backend']['sourceDigests']):Promise<boolean>{try{return epistemicHash(await loadedSources)===epistemicHash(expected)&&(await Promise.all(expected.map(async s=>createHash('sha256').update(await readFile(s.path)).digest('hex')===s.sha256))).every(Boolean);}catch{return false;}}
@@ -16,9 +18,9 @@ export function prepareS4Experience(m:EconomicMandate,type:S4ExperienceEvent['ty
  const body={schema:'finnor.s4.experience.v1' as const,semanticOwner:'S4' as const,episodeId:m.episodeId,type,tenantId:m.tenantId,principalId:m.principalId,rightsRef:m.rightsRef,revisionRef,contentDigest:epistemicHash(detail),knowledgeAt,validAt:m.horizon.startAt,preparedParentRefs:parents,causalParents:[] as [],dependencyRefs:[m.ref.id,m.utilityRef.id],horizon:'H1' as const,uncertainty:'MODEL_CONDITIONAL_UNADMITTED' as const,detail,protectedReceipt:null,appendAuthorityGranted:false as const};
  return immutableControl({...body,eventId:`s4-event:${epistemicHash(body)}`});
 }
-type Path={world:ControlWorld;utility:number;liability:number;spent:Record<string,number>;occupancy:Record<string,number[]>;humanSeconds:number;
+type Path={world:ControlWorld;utility:number;liability:number;spent:Record<string,number>;occupancy:Record<string,number[]>;humanSeconds:number;operating?:OperatingProfitCourse;
  schedule:Record<string,number[]>;locks:Record<string,number>;pending:ControlObservation[];observations:ControlObservation[]};
-type Tree={node:PolicyNode;children:Tree[];value:number};
+type Tree={node:PolicyNode;children:Tree[];value:number;operatingForecasts?:OperatingProfitForecast[]};
 class Exhausted extends Error {}
 class Unsupported extends Error {}
 const observationKey=(observations:ControlObservation[])=>JSON.stringify(observations);
@@ -28,8 +30,10 @@ const pendingDelivery=(p:Path,period:number):Path=>({...p,observations:[...p.obs
 export async function synthesizeContingentControl(input:{mandate:unknown;problem:unknown;dynamics:ControlDynamicsAdapter;instruments:ControlInstrumentSupport[];
  now?:string;beliefPins?:BeliefViewPin[];priorPolicyRef?:ExperimentRef|null;validUntilCap?:string;inputArtifactRef?:ExperimentRef|null;budgetStartedAt?:number;
  remainingExpansions?:number}):Promise<{schema:'finnor.s4.policy-result.v1';status:PolicyResultState;policy:ContingentPolicy|null;reasons:string[];compute:S4ComputeInvocation;experience:S4ExperienceEvent[]}> {
- const m=parseEconomicMandate(input.mandate),p=parseControlProblem(input.problem),d=input.dynamics,now=input.now??new Date().toISOString();
+ const m=parseEconomicMandate(input.mandate,{operatingProfit:true}),p=parseControlProblem(input.problem),d=input.dynamics,now=input.now??new Date().toISOString(),profit=m.utility.operatingProfit;
  if(p.schema!=='finnor.control-problem.v1')throw new ControlContractError('INVALID_REQUEST','Exact information tables require the versioned exact S4 continuation owner');
+ const operatingReason=operatingProfitContractReason(m,d);if(operatingReason)throw new ControlContractError('INVALID_REQUEST',operatingReason);
+ if(profit&&p.continuation)throw new ControlContractError('INVALID_REQUEST','Operating-profit continuation requires qualified paired opening accounting; v1 does not infer it');
  const start=input.budgetStartedAt??performance.now(),cpu=process.cpuUsage(),rss=process.memoryUsage().rss,startedAt=new Date().toISOString();
  const expansionLimit=input.remainingExpansions??m.search.maxExpansions;
  if(!Number.isSafeInteger(expansionLimit)||expansionLimit<1||expansionLimit>m.search.maxExpansions)
@@ -68,7 +72,8 @@ export async function synthesizeContingentControl(input:{mandate:unknown;problem
    const initial:Path[]=conditionedWorlds.map(world=>{const schedule=structuredClone(p.baselineExposures),locks:Record<string,number>={},occupancy:Record<string,number[]>=Object.fromEntries(dim.map(id=>[id,Array(h).fill(0)])),spent=Object.fromEntries(dim.map(id=>[id,p.continuation?.usedResources[id]??0]));
     for(const o of known){for(const id of dim){spent[id]!+=o.resources![id]!;for(let t=0;t<Math.min(h,o.occupationUntilPeriod);t++)occupancy[id]![t]!+=o.occupancy![id]!;}
      for(const id of d.exposureIds){if(!o.lockedExposureIds!.includes(id)){if(!same(p.baselineExposures[id],o.exposures![id]))throw new ControlContractError('INVALID_REQUEST','Pending obligation cannot overwrite an unlocked exposure channel');continue;}if(locks[id]&&!same(schedule[id],o.exposures![id]))throw new ControlContractError('INVALID_REQUEST','Conflicting outstanding exposure schedules');schedule[id]=[...o.exposures![id]!];locks[id]=Math.max(locks[id]??0,o.occupationUntilPeriod);}}
-    return {world:structuredClone(world),utility:p.continuation?.accruedUtility.value??0,liability:m.utility.tail.terminalLiability+p.obligations.reduce((s,o)=>s+o.terminalLiability!,0),spent,occupancy,humanSeconds:p.continuation?.humanSeconds??0,schedule,locks,pending:[],observations:p.continuation?.observations.map(({instrumentId,token,availablePeriod})=>({instrumentId,token,availablePeriod}))??[]};});
+    const liability=m.utility.tail.terminalLiability+p.obligations.reduce((s,o)=>s+o.terminalLiability!,0);
+    return {world:structuredClone(world),utility:p.continuation?.accruedUtility.value??0,liability,spent,occupancy,humanSeconds:p.continuation?.humanSeconds??0,schedule,locks,pending:[],observations:p.continuation?.observations.map(({instrumentId,token,availablePeriod})=>({instrumentId,token,availablePeriod}))??[],...(profit?{operating:openOperatingProfitCourse(profit,world,schedule,liability)}:{})};});
    function resourceValid(path:Path):boolean {return m.resources.dimensions.every(r=>path.spent[r.id]!<=r.totalLimit&&path.occupancy[r.id]!.every(v=>v<=r.capacity))&&m.resources.couplings.every(c=>Array.from({length:h},(_,t)=>Object.entries(c.weights).reduce((s,[id,w])=>s+w*path.occupancy[id]![t]!,0)).every(v=>v<=c.maxPerPeriod));}
    function eligible(action:ControlAction,period:number,history:string[],stopped:boolean,observations:ControlObservation[]):string|null {
     if(stopped&&action.kind!=='STOP')return 'BUSINESS_STOP_PRESERVES_PENDING_EFFECTS';
@@ -89,9 +94,17 @@ export async function synthesizeContingentControl(input:{mandate:unknown;problem
      if(action.kind==='INTERVENE')for(const id of d.exposureIds){if((path.locks[id]??0)>t)throw new Unsupported('UNSETTLED_COMMITMENT_CHANNEL_CONFLICT');for(let k=0;k<action.exposures[id]!.length;k++)path.schedule[id]![t+k]=action.exposures[id]![k]!;path.locks[id]=t+action.exposures[id]!.length;}
      path.liability+=action.tailLiability;
      const exposures=Object.fromEntries(d.exposureIds.map(id=>[id,path.schedule[id]![t]!]));
+     const previous=path.world;
      path.world=d.advance(path.world,exposures,t-startPeriod);transitions++;
      if(!path.world.supported){unsupportedSeen=true;throw new Unsupported('MODEL_TRAJECTORY_OUTSIDE_JOINT_SUPPORT');}
-     path.utility+=m.utility.discountFactors[t]!*(utility(atState(path),m.utility.periodTerms)-action.cost);
+     if(profit){
+      let accounting:ReturnType<typeof advanceOperatingProfitCourse>;
+      try{accounting=advanceOperatingProfitCourse(profit,d,path.operating!,previous,path.world,t,action.cost);transitions++;}
+      catch(error){if(error instanceof OperatingProfitDomainError){unsupportedSeen=true;throw new Unsupported(error.message);}throw error;}
+      path.operating=accounting.course;
+      if(path.operating.minimumCashObserved<profit.minimumCash)throw new Unsupported('OPERATING_CASH_FLOOR_INFEASIBLE');
+      path.utility+=m.utility.discountFactors[t]!*accounting.increment;
+     }else path.utility+=m.utility.discountFactors[t]!*(utility(atState(path),m.utility.periodTerms)-action.cost);
      if(!Number.isFinite(path.utility))throw new Error('NONFINITE_UTILITY');
      for(const instrument of p.observations.filter(i=>i.afterActionIds.includes(action.id))){const token=controlObservationToken(instrument,path.world);if(token===null){unsupportedSeen=true;throw new Unsupported('OBSERVATION_COARSENING_HAS_UNSUPPORTED_MASS');}path.pending.push({instrumentId:instrument.id,token,availablePeriod:t+instrument.delayPeriods});}
      if(action.kind==='INQUIRE'){
@@ -104,7 +117,8 @@ export async function synthesizeContingentControl(input:{mandate:unknown;problem
     return output;
    }
    function terminal(paths:Path[]):number {
-    const values=paths.map(path=>path.utility+m.utility.discountFactors[h]!*(utility(atState(path),m.utility.terminalTerms)-path.liability));
+    if(profit&&paths.some(path=>path.operating!.cash-path.liability<profit.minimumCash))throw new Unsupported('OPERATING_TERMINAL_CASH_FLOOR_INFEASIBLE');
+    const values=paths.map(path=>path.utility+m.utility.discountFactors[h]!*(profit?path.operating!.commonLiability-path.liability:utility(atState(path),m.utility.terminalTerms)-path.liability));
     if(values.some(v=>!Number.isFinite(v)))throw new Error('NONFINITE_TERMINAL_VALUE');
     if(values.some(v=>v<m.risk.minimumUtility))throw new Unsupported('FULL_HORIZON_HARD_RISK_FLOOR_INFEASIBLE');
     return Math.min(...values);
@@ -118,7 +132,8 @@ export async function synthesizeContingentControl(input:{mandate:unknown;problem
     else {for(const group of groups.values()){const child=search(group,t+1,[...history,action.id],stopped||action.kind==='STOP',onlyStop);if(!child)throw new Unsupported('NO_FEASIBLE_CONTINUATION');children.push(child);}value=Math.min(...children.map(c=>c.value));}
     const observations=paths[0]!.observations;
     const node:PolicyNode={id:`policy-node:${epistemicHash({period:t,history,observations,actionId:action.id})}`,period:t,actionHistory:[...history],observations:structuredClone(observations),actionId:action.id,valueBounds:[value,value],branches:children.map(c=>({observationKey:observationKey(c.node.observations),childId:c.node.id})),alternatives:[]};
-    return {node,children,value};
+    if(profit&&t+1<h&&children.reduce((sum,child)=>sum+child.operatingForecasts!.length,0)>m.search.maxWorlds)throw new Exhausted('OPERATING_FORECAST_WORLD_BUDGET');
+    return {node,children,value,...(profit?{operatingForecasts:t+1===h?advanced.map(path=>operatingProfitForecast(path.operating!,path.world,path.liability,[node.id],path.utility+m.utility.discountFactors[h]!*(path.operating!.commonLiability-path.liability))):children.flatMap(child=>child.operatingForecasts!.map(forecast=>({...forecast,nodeIds:[node.id,...forecast.nodeIds]})))}:{})};
    }
    function search(paths:Path[],t:number,history:string[],stopped:boolean,onlyStop=false):Tree|null {
     tick();let incumbent:Tree|null=null;const alternatives:PolicyNode['alternatives']=[];
@@ -150,13 +165,14 @@ export async function synthesizeContingentControl(input:{mandate:unknown;problem
     const demandBody={schema:'finnor.contingent-resource-demand.v1' as const,semanticOwner:'S4' as const,mandateRef:m.ref,rightsRef:m.rightsRef,existingObligations:p.obligations,dimensions:m.resources.dimensions,couplings:m.resources.couplings,branches:nodes.map(n=>{const a=p.actions.find(a=>a.id===n.actionId)!;const prior=parent.get(n.id)!;return {nodeId:n.id,parentNodeId:prior,actionId:a.id,period:n.period,total:a.resources,occupancy:a.occupancy,occupationPeriods:a.occupationPeriods,mutuallyExclusiveSiblings:prior?nodes.find(q=>q.id===prior)!.branches.filter(b=>b.childId!==n.id).map(b=>b.childId):[]};}),reservationGranted:false as const,portfolioFeasibilityEstablished:false as const};
     const ranges=d.stateRanges;
     let upper:number=Infinity;
-    if(ranges){const maxTerm=(terms:EconomicMandate['utility']['periodTerms'])=>terms.reduce((s,t)=>s+t.coefficient*ranges[t.variableId]![t.coefficient>=0?1:0],0);upper=(p.continuation?.accruedUtility.value??0)+m.utility.discountFactors.slice(startPeriod,h).reduce((s,discount)=>s+discount*maxTerm(m.utility.periodTerms),0)+m.utility.discountFactors[h]!*(maxTerm(m.utility.terminalTerms)-m.utility.tail.terminalLiability);}
+    if(ranges&&!profit){const maxTerm=(terms:EconomicMandate['utility']['periodTerms'])=>terms.reduce((s,t)=>s+t.coefficient*ranges[t.variableId]![t.coefficient>=0?1:0],0);upper=(p.continuation?.accruedUtility.value??0)+m.utility.discountFactors.slice(startPeriod,h).reduce((s,discount)=>s+discount*maxTerm(m.utility.periodTerms),0)+m.utility.discountFactors[h]!*(maxTerm(m.utility.terminalTerms)-m.utility.tail.terminalLiability);}
     const complete=!exhausted&&!unsupportedSeen&&!uncertaintySeen;
     // For finite reference adapters without state ranges, incomplete bounds
     // remain null in transport below instead of inventing an economic cap.
     if(complete)upper=best.value;
     const lower=best.value;
-    const certificate:ContingentPolicy['certificate']={basis:'MODEL_RELATIVE_FINITE_ENUMERATION_FLOAT64',ambiguity:'FIXED_COMPLETE_SCENARIOS_NO_PROBABILITIES',valueBounds:[lower,lower],optimalBounds:[lower,Number.isFinite(upper)?Math.max(lower,upper):null],normalizedRegretBounds:[0,Number.isFinite(upper)?Math.max(0,upper-lower)/m.scoring.normalization:null],completeSearch:complete,finiteScenarioGapOnly:true,distributionAndIdentificationGap:'UNKNOWN',numericalTolerance:1e-8,feasibleIncumbentChecked:true,worlds:initial.length,riskSemantics:m.risk};
+    const certificate:ContingentPolicy['certificate']={basis:'MODEL_RELATIVE_FINITE_ENUMERATION_FLOAT64',ambiguity:'FIXED_COMPLETE_SCENARIOS_NO_PROBABILITIES',valueBounds:[lower,lower],optimalBounds:[lower,Number.isFinite(upper)?Math.max(lower,upper):null],normalizedRegretBounds:[0,Number.isFinite(upper)?Math.max(0,upper-lower)/m.scoring.normalization:null],completeSearch:complete,finiteScenarioGapOnly:true,distributionAndIdentificationGap:'UNKNOWN',numericalTolerance:1e-8,feasibleIncumbentChecked:true,worlds:initial.length,riskSemantics:m.risk,
+     ...(profit?{operatingProfit:{schema:'finnor.s4.operating-profit-certificate.v1' as const,root:profit.root,currency:profit.currency,moneyScale:profit.moneyScale,unit:m.utility.unit,objective:profit.objective,measure:'OPERATING_PROFIT_BEFORE_FINANCING_AND_TAX' as const,comparator:'SAME_INITIAL_WORLD_AND_RETAINED_BASELINE_WITH_PENDING_OBLIGATIONS' as const,arithmetic:'FLOAT64_INHERITS_S3_AND_SEARCH_LIMITATIONS' as const,forecastBasis:'UNDISCOUNTED_TOTALS_SEPARATE_TERMINAL_LIABILITIES' as const,qualification:'MODEL_CONDITIONAL_NOT_REALIZED_OR_GUARANTEED' as const,forecasts:best.operatingForecasts!}}:{})};
     const usedCpu=process.cpuUsage(cpu);Object.assign(compute.usage,{elapsedMs:performance.now()-start,cpuUserMicros:usedCpu.user,cpuSystemMicros:usedCpu.system,rssAfterBytes:process.memoryUsage().rss,expansions:Math.min(expansions,expansionLimit),transitionEvaluations:transitions});
     compute.outputRefs=[`policy-program:${epistemicHash({nodes,certificate,demand:demandBody})}`];
     compute.attempts=[{startedAt,finishedAt:new Date().toISOString(),status}];compute.id=`model-compute:${epistemicHash(compute)}`;

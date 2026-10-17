@@ -1039,6 +1039,11 @@
                                                   ],
                                                   "additionalProperties": false
                                                 },
+                                                "operatingWorldId": {
+                                                  "type": "string",
+                                                  "minLength": 1,
+                                                  "maxLength": 512
+                                                },
                                                 "policyPaths": {
                                                   "type": "array",
                                                   "items": {
@@ -1409,6 +1414,30 @@
                                                   "type": "null"
                                                 }
                                               ]
+                                            },
+                                            "operatingCash": {
+                                              "type": "object",
+                                              "properties": {
+                                                "schema": {
+                                                  "type": "string",
+                                                  "const": "finnor.s5.operating-cash-binding.v1"
+                                                },
+                                                "resourceId": {
+                                                  "type": "string",
+                                                  "minLength": 1,
+                                                  "maxLength": 256
+                                                },
+                                                "basis": {
+                                                  "type": "string",
+                                                  "const": "GROSS_OUTFLOWS_NO_FORECAST_PROCEEDS"
+                                                }
+                                              },
+                                              "required": [
+                                                "schema",
+                                                "resourceId",
+                                                "basis"
+                                              ],
+                                              "additionalProperties": false
                                             }
                                           },
                                           "required": [
@@ -3222,6 +3251,11 @@
                                                   ],
                                                   "additionalProperties": false
                                                 },
+                                                "operatingWorldId": {
+                                                  "type": "string",
+                                                  "minLength": 1,
+                                                  "maxLength": 512
+                                                },
                                                 "policyPaths": {
                                                   "type": "array",
                                                   "items": {
@@ -3592,6 +3626,30 @@
                                                   "type": "null"
                                                 }
                                               ]
+                                            },
+                                            "operatingCash": {
+                                              "type": "object",
+                                              "properties": {
+                                                "schema": {
+                                                  "type": "string",
+                                                  "const": "finnor.s5.operating-cash-binding.v1"
+                                                },
+                                                "resourceId": {
+                                                  "type": "string",
+                                                  "minLength": 1,
+                                                  "maxLength": 256
+                                                },
+                                                "basis": {
+                                                  "type": "string",
+                                                  "const": "GROSS_OUTFLOWS_NO_FORECAST_PROCEEDS"
+                                                }
+                                              },
+                                              "required": [
+                                                "schema",
+                                                "resourceId",
+                                                "basis"
+                                              ],
+                                              "additionalProperties": false
                                             }
                                           },
                                           "required": [

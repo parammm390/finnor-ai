@@ -7,6 +7,7 @@ import { checkBudget } from './budget';
 /** Model rehearsal only. Controller decisions see histories, never the joint world's ID. */
 export function replayOriginalWorld(binding:PolicyBinding,worldId:string){
   const {policy,model,kernel}=binding;
+  if(policy.mandate.utility.operatingProfit)return {status:'UNRESOLVED' as const,reason:'OPERATING_PROFIT_WORLD_REPLAY_ADAPTER_UNSUPPORTED'};
   if(policy.nodes.length>2048||policy.problem.continuation||policy.problem.obligations.length||
     policy.problem.actions.some(a=>a.kind==='INQUIRE'))return {status:'UNRESOLVED' as const,reason:'CONTINUATION_INQUIRY_OR_LIABILITY_REFERENCE_UNSUPPORTED'};
   const dynamics=restoreInterventionControlAdapter(model,kernel),initial=dynamics.initialWorlds.find(w=>w.id===worldId);

@@ -3,6 +3,58 @@ import type { ExperimentRef } from './experiments';
 import type { InterventionSpecification } from './interventions';
 
 export type PolicyResultState = 'POLICY_AVAILABLE' | 'INFEASIBLE' | 'MODEL_UNSUPPORTED' | 'UNCERTAINTY_UNRESOLVED' | 'SEARCH_EXHAUSTED' | 'BLOCKED_ALLOCATION' | 'BLOCKED_AUTHORITY' | 'STALE_INPUT' | 'NUMERICAL_FAILURE';
+export type OperatingProfitDriver = { kind: 'STATE'; variableId: string; unit: string } |
+  { kind: 'CONSTANT'; value: number; unit: string; sourceRef: ExperimentRef };
+/** Whole-entity, single-currency operating accounting. Net price and units must
+ * already reflect discounts/returns; joint S3 volumes must include cannibalisation.
+ * Profit is before financing and tax. Cash taxes/capex are explicit cash drivers.
+ * This is an owner-supplied accounting convention, not verified causal evidence. */
+export interface OperatingProfitObjective {
+  schema: 'finnor.s4.operating-profit.v1'; root: { entityType: string; entityId: string };
+  currency: string; moneyScale: '1' | '1000' | '1000000' | '1000000000';
+  objective: 'INCREMENTAL_OPERATING_PROFIT' | 'INCREMENTAL_FREE_CASH_FLOW';
+  segments: Array<{ id: string; quantityUnit: string; netUnitPrice: OperatingProfitDriver;
+    unitsSold: OperatingProfitDriver; variableUnitCost: OperatingProfitDriver }>;
+  fixedOperatingCost: OperatingProfitDriver; depreciationAmortization: OperatingProfitDriver;
+  accountsReceivable: OperatingProfitDriver; inventory: OperatingProfitDriver; accountsPayable: OperatingProfitDriver;
+  capitalExpenditure: OperatingProfitDriver; cashTaxes: OperatingProfitDriver;
+  /** Explicit financing/owner transfers affect liquidity, never operating
+   * profit/free cash flow. Include debt service, distributions and funding;
+   * v1 does not infer payment schedules or financing P&L. */
+  nonOperatingCashInflow: OperatingProfitDriver; nonOperatingCashOutflow: OperatingProfitDriver;
+  openingCash: number; minimumCash: number;
+  actionCostTreatment: 'IMMEDIATE_OPERATING_EXPENSE_AND_CASH_OUTFLOW';
+  terminalWorkingCapital: 'NO_AUTOMATIC_RELEASE';
+  qualification: 'OWNER_ACCOUNTING_CONDITIONAL_S3_DYNAMICS_NOT_OBSERVED_VALUE';
+}
+export interface OperatingProfitForecast {
+  worldId: string; mechanismId: string;
+  nodeIds: string[]; discountedUtility: number; periods: OperatingProfitCashPeriod[];
+  revenue: number; comparatorRevenue: number;
+  operatingProfit: number; comparatorOperatingProfit: number; incrementalOperatingProfit: number;
+  freeCashFlow: number; comparatorFreeCashFlow: number; incrementalFreeCashFlow: number;
+  nonOperatingNetCashFlow: number; comparatorNonOperatingNetCashFlow: number;
+  implementationCost: number; closingCash: number; comparatorClosingCash: number; minimumCashObserved: number;
+  terminalLiability: number; comparatorTerminalLiability: number;
+}
+export interface OperatingProfitCashPeriod {
+  period: number; revenue: number; variableCost: number; fixedOperatingCost: number;
+  depreciationAmortization: number; cashTaxes: number; capitalExpenditure: number; actionCost: number;
+  workingCapitalFunding: number; changeInWorkingCapital: number;
+  operatingProfit: number; freeCashFlow: number; nonOperatingCashInflow: number; nonOperatingCashOutflow: number;
+  nonOperatingNetCashFlow: number; comparatorOperatingProfit: number; comparatorFreeCashFlow: number;
+  openingCash: number; cashAfterAction: number; closingCash: number;
+}
+export interface OperatingProfitCertificate {
+  schema: 'finnor.s4.operating-profit-certificate.v1'; root: OperatingProfitObjective['root'];
+  currency: string; moneyScale: OperatingProfitObjective['moneyScale']; unit: string;
+  objective: OperatingProfitObjective['objective']; measure: 'OPERATING_PROFIT_BEFORE_FINANCING_AND_TAX';
+  comparator: 'SAME_INITIAL_WORLD_AND_RETAINED_BASELINE_WITH_PENDING_OBLIGATIONS';
+  arithmetic: 'FLOAT64_INHERITS_S3_AND_SEARCH_LIMITATIONS';
+  forecastBasis: 'UNDISCOUNTED_TOTALS_SEPARATE_TERMINAL_LIABILITIES';
+  qualification: 'MODEL_CONDITIONAL_NOT_REALIZED_OR_GUARANTEED';
+  forecasts: OperatingProfitForecast[];
+}
 export interface EconomicMandate {
   schema: 'finnor.economic-mandate.v1'; ref: ExperimentRef;
   tenantId: string; principalId: string; episodeId: string; knowledgeAt: string; validUntil: string;
@@ -12,6 +64,8 @@ export interface EconomicMandate {
     periodTerms: Array<{ variableId: string; unit: string; coefficient: number }>;
     discountFactors: number[]; terminalTerms: Array<{ variableId: string; unit: string; coefficient: number }>;
     tail: { status: 'SUPPLIED_COMPLETE_FINITE_HORIZON'; terminalLiability: number; ref: ExperimentRef };
+    /** Only consumers that explicitly support this profile may parse it. */
+    operatingProfit?: OperatingProfitObjective;
     /** Authenticated owner supplied finite utility, never a provider price. */
     deliberation?: { schema: 'finnor.s4.finite-deliberation-terms.v1'; scope: 'PUBLIC_FINITE_ACCEPTED_OUTPUT_MECHANICS';
       lossWithoutQualifiedResult: number; lossWithQualifiedResult: number; nativeAttemptCost: number;
@@ -80,6 +134,8 @@ export interface ControlWorld {
 }
 export interface ControlDynamicsAdapter {
   ref: ExperimentRef; stateUnits: Record<string, string>; stateRanges?: Record<string, [number, number]>; exposureIds: string[];
+  /** Required for operating-profit drivers; prevents cross-entity arithmetic. */
+  stateRoots?: Record<string, { entityType: string; entityId: string }>;
   qualification: 'S3_LEARNED_BOOTSTRAP_FINITE_SCENARIOS_UNADMITTED' | 'SUPPLIED_FINITE_REFERENCE_ONLY';
   initialWorlds: ControlWorld[]; advance: (world: ControlWorld, exposures: Record<string, number>, period: number) => ControlWorld;
   limitations: string[]; computeRefs?: string[];
@@ -136,7 +192,8 @@ export interface ContingentPolicy {
   certificate: { basis: 'MODEL_RELATIVE_FINITE_ENUMERATION_FLOAT64' | 'MODEL_RELATIVE_EXACT_INFORMATION_TABLE'; ambiguity: 'FIXED_COMPLETE_SCENARIOS_NO_PROBABILITIES';
     valueBounds: [number, number]; optimalBounds: [number, number | null]; normalizedRegretBounds: [number, number | null]; completeSearch: boolean;
     finiteScenarioGapOnly: true; distributionAndIdentificationGap: 'UNKNOWN'; numericalTolerance: number;
-    feasibleIncumbentChecked: boolean; worlds: number; riskSemantics: EconomicMandate['risk'] };
+    feasibleIncumbentChecked: boolean; worlds: number; riskSemantics: EconomicMandate['risk'];
+    operatingProfit?: OperatingProfitCertificate };
   exactProfile?: import('./certified-state-reduction').ExactControlPolicyProfile;
   compute: S4ComputeInvocation; limitations: string[];
   admission: { status: 'BLOCKED_EXTERNAL'; executionAuthorityGranted: false; appendAuthorityGranted: false; methodAdmitted: false; receipt: null };

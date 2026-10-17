@@ -5,7 +5,8 @@ import {allocationRef,allocationNumber,allocationDecimal,allocationQuantity,asse
 import {verifyCanonicalAllocation} from '../../epistemic-runtime/src/allocation-checker';
 import {restoreInterventionControlAdapter} from '../../epistemic-runtime/src/intervention-control';
 import {controlObservationToken,controlInstrumentSupports} from '../../epistemic-runtime/src/control-observations';
-import {readEnterpriseControlDecisionContext,readEnterpriseControlDecisionContexts} from './enterprise-control';
+import {readEnterpriseControlDecisionContext,readEnterpriseControlDecisionContexts,replayEnterpriseContingentPolicy} from './enterprise-control';
+import {operatingCashScenarios} from '../../epistemic-runtime/src/operating-profit-allocation';
 import {validateBeliefViewPin,authorizeBeliefResources} from './enterprise-beliefs';
 import {readAllocationSnapshot} from './allocation-store';
 import type {PeMutationContext} from './types';
@@ -35,6 +36,7 @@ export async function proposeEnterpriseSameDealAlternatives(ctx:PeMutationContex
   policies.push(context.policy);contexts.push(context);
  }
  const m=base.policy.mandate,dynamics=restoreInterventionControlAdapter(base.model,base.kernel),h=m.horizon.periods;
+ if(m.utility.operatingProfit)for(const p of policies){tick();const replay=await replayEnterpriseContingentPolicy(ctx,p.ref);if(!replay.programMatches||!replay.certificateMatches)fail('S5_OPERATING_CASH_CURRENT_S4_REPLAY_REQUIRED');}
  if(dynamics.initialWorlds.length>32)fail('S5 complete joint path constructor supports at most32 retained worlds, without subsampling');
  for(const resource of snapshot.resources)for(const pin of resource.beliefPins){
   tick();if((await validateBeliefViewPin(ctx,pin)).status!=='CURRENT')throw new AllocationContractError('STALE_INPUT','S5 resource source/rights changed');
@@ -87,8 +89,8 @@ export async function proposeEnterpriseSameDealAlternatives(ctx:PeMutationContex
    }active=next;
   }return active;
  }
- const scenarios:JointAllocationModel['scenarios']=[];
- for(const world of dynamics.initialWorlds){
+ const scenarios:JointAllocationModel['scenarios']=m.utility.operatingProfit?operatingCashScenarios(policies):[];
+ if(!m.utility.operatingProfit)for(const world of dynamics.initialWorlds){
   tick();const original=baseline(world),all=policies.map((p,i)=>courses(p,world,contexts[i]!.protocols));
   let combinations:Course[][]=[[]];for(const alternatives of all){combinations=combinations.flatMap(list=>alternatives.filter(path=>
    list.every(prior=>Object.entries(path.inquiryTokens).every(([key,token])=>prior.inquiryTokens[key]===undefined||prior.inquiryTokens[key]===token)))
@@ -129,8 +131,11 @@ export async function proposeEnterpriseSameDealAlternatives(ctx:PeMutationContex
    if(matches.length!==1)fail(`EXPLICIT_UNAMBIGUOUS_OWNER_FUNDING_REQUIRED:${resourceClass}:${unit}`);
    return matches[0]!.resourceId;
   }
-  funding.push({policyRef:p.ref,actionCostResourceId:fundingResource(p.problem.actions.some(a=>a.cost!==0),m.utility.unit,'CASH'),
-   terminalLiabilityResourceId:fundingResource(m.utility.tail.terminalLiability!==0||p.problem.actions.some(a=>a.tailLiability!==0),m.utility.unit,'CASH'),
+  const profit=m.utility.operatingProfit,cash=profit?snapshot.resources.filter(r=>r.unit===profit.currency&&r.currency===profit.currency&&r.resourceClass==='CASH'&&['STOCK','CUMULATIVE_EXPENDITURE'].includes(r.kind)&&r.legalEntityRef.id===profit.root.entityId&&r.permittedRoots.some(root=>sameAllocationRef(root,profit.root))):[];
+  if(profit&&cash.length!==1)fail('S5_OPERATING_CASH_EXPLICIT_UNAMBIGUOUS_ENTITY_FUNDING_REQUIRED');
+  funding.push({policyRef:p.ref,actionCostResourceId:profit?null:fundingResource(p.problem.actions.some(a=>a.cost!==0),m.utility.unit,'CASH'),
+   terminalLiabilityResourceId:profit?(m.utility.tail.terminalLiability!==0||p.problem.actions.some(a=>a.tailLiability!==0)?cash[0]!.resourceId:null):fundingResource(m.utility.tail.terminalLiability!==0||p.problem.actions.some(a=>a.tailLiability!==0),m.utility.unit,'CASH'),
+   ...(profit?{operatingCash:{schema:'finnor.s5.operating-cash-binding.v1' as const,resourceId:cash[0]!.resourceId,basis:'GROSS_OUTFLOWS_NO_FORECAST_PROCEEDS' as const}}:{}),
    humanSecondsResourceId:fundingResource(p.problem.actions.some(a=>a.humanSeconds!==0),'seconds','HUMAN_ATTENTION')});
  }
  const now=new Date().toISOString(),body:Omit<CanonicalAllocationProblem,'ref'>={schema:'finnor.allocation-problem.v1',tenantId:ctx.auth.tenantId,

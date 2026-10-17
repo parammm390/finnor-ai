@@ -5,6 +5,7 @@ import { immutableControl } from './control-contracts';
 import { ExperimentRational, ER_ZERO } from './experiment-numerics';
 import { ALLOCATION_ADMISSION, allocationRef, AllocationContractError, allocationDecimal as decimal, allocationNumber as number, allocationDerivedQuantity as quantity, allocationQuantity, allocationRatioUpper, assertAllocationProblem, sameAllocationRef } from './allocation-contracts';
 import {prepareAllocationResourceBasis,checkAllocationResourcePath,allocationResourceEnvelopes} from './allocation-resource-check';
+import {operatingCashDemand,operatingFinancialQuantity} from './operating-profit-allocation';
 export {canonicalResourceUsage as allocationResourceUsage,verifyCanonicalResourceSchedules} from './allocation-resource-check';
 export type {CanonicalResourceScheduleInput} from './allocation-resource-check';
 
@@ -46,8 +47,10 @@ function prepare(problem:CanonicalAllocationProblem):Prepared {
         }
         if(funding.actionCostResourceId){const v=raw.get(funding.actionCostResourceId)!;v[node.period]=v[node.period]!.add((exactPolicyActionQuantity(policy,action,'cost')??number(action.cost)));}
         if(funding.humanSecondsResourceId){const v=raw.get(funding.humanSecondsResourceId)!;v[node.period]=v[node.period]!.add((exactPolicyActionQuantity(policy,action,'humanSeconds')??number(action.humanSeconds)));}
-        if(funding.terminalLiabilityResourceId){const v=raw.get(funding.terminalLiabilityResourceId)!;v[h]=v[h]!.add((exactPolicyActionQuantity(policy,action,'tailLiability')??number(action.tailLiability)));}
-      }demands.set(policy.ref.id,raw);
+        if(funding.terminalLiabilityResourceId){const v=raw.get(funding.terminalLiabilityResourceId)!;v[h]=v[h]!.add((exactPolicyActionQuantity(policy,action,'tailLiability')??operatingFinancialQuantity(p,action.tailLiability)));}
+      }
+      if(funding.operatingCash){const values=raw.get(funding.operatingCash.resourceId)!,cash=operatingCashDemand(p,scenario,policy);for(let t=0;t<=h;t++)values[t]=values[t]!.add(cash[t]!);}
+      demands.set(policy.ref.id,raw);
     }paths.push({id:scenario.id,demands});
   }
   return {problem:p,baseline,minimumBaseline,paths,initialReasons};
@@ -62,7 +65,7 @@ function evaluate(prepared:Prepared,selected:string[],withWitnesses=true):Alloca
     // Mandate-wide terminal debt is part of the NEW durable envelope, even if
     // selection is empty. Future clears must see it in outstanding commitments.
     if(p.mandate.utility.tail.terminalLiability!==0&&!prepared.initialReasons.includes('MANDATE_TERMINAL_LIABILITY_FUNDING_UNRESOLVED')){
-      incremental.get(p.funding[0]!.terminalLiabilityResourceId!)![h]=number(p.mandate.utility.tail.terminalLiability);}
+      incremental.get(p.funding[0]!.terminalLiabilityResourceId!)![h]=operatingFinancialQuantity(p,p.mandate.utility.tail.terminalLiability);}
     for(const r of p.resources){const raw=incremental.get(r.resourceId)!;
       for(const id of chosen){const demand=path.demands.get(id)?.get(r.resourceId);if(demand)for(let t=0;t<=h;t++)raw[t]=raw[t]!.add(demand[t]!);}
     }
@@ -114,7 +117,7 @@ function canonicalLagrangianBound(prepared:Prepared,proposal:AllocationDualPropo
   for(const c of p.jointModel.choiceConstraints)add(`choice:${c.id}`,new Map(c.policyIds.map(id=>[`x:${id}`,number(1)])),number(c.maximum),number(c.minimum));
   for(const id of new Set(p.outstanding.flatMap(o=>o.policyRefs.map(q=>q.id))))if(ids.includes(id))add(`already-committed:${id}`,new Map([[`x:${id}`,number(1)]]),ER_ZERO);
   const tailResource=p.mandate.utility.tail.terminalLiability!==0?p.funding[0]!.terminalLiabilityResourceId:null;
-  const fixed=(r:CanonicalAllocationProblem['resources'][number],t:number,negative=false)=>resourceUsage(r.kind,(negative?prepared.minimumBaseline:prepared.baseline).get(r.resourceId)!,t).add(tailResource===r.resourceId&&t===h?number(p.mandate.utility.tail.terminalLiability):ER_ZERO);
+  const fixed=(r:CanonicalAllocationProblem['resources'][number],t:number,negative=false)=>resourceUsage(r.kind,(negative?prepared.minimumBaseline:prepared.baseline).get(r.resourceId)!,t).add(tailResource===r.resourceId&&t===h?operatingFinancialQuantity(p,p.mandate.utility.tail.terminalLiability):ER_ZERO);
   const objectives=new Map<string,{a:Map<string,Q>;base:Q}>();
   for(const path of prepared.paths){const s=p.jointModel.scenarios.find(q=>q.id===path.id)!;
     for(const r of p.resources)for(let t=0;t<=h;t++)add(`resource:${r.resourceId}:${s.id}:${t}`,coeff(id=>resourceUsage(r.kind,path.demands.get(id)!.get(r.resourceId)!,t)),quantity(r.availability[t]!.amount!).sub(quantity(r.safetyMargin)).sub(fixed(r,t)));
