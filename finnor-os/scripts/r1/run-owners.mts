@@ -119,6 +119,29 @@ try{
   if(selected==='owners')await test('co-funded-cost-tail','One canonical cash resource includes action cost2, terminal debt3 and original resource one-third exactly once; the 5 USD pool cannot select that policy',async()=>{
    const f=await prepareR1Owners(env(),{tail:true,name:'co-funded-owner'});assert.equal(f.allocation.status,'FEASIBLE',JSON.stringify({status:f.allocation.status,reasons:f.allocation.reasons}));assert.deepEqual(f.allocation.certificate.check.selectedPolicyIds,[]);return {status:f.allocation.status,selected:f.allocation.certificate.check.selectedPolicyIds,expectedOriginalDemand:'16/3',available:'5',authorityGranted:false};
   });
+  // Regression registered before the admission barrier implementation. A cold
+  // test driver must not consume the positive decision's 30-second grant;
+  // warming it must not let it claim before the compatibility probes finish,
+  // move either original deadline, skip an owner fence or fabricate completion.
+  if(selected==='runtime')await test('ready-worker-holds-until-dispatch','A ready real queue worker claims no work before explicit dispatch, then completes under the unchanged original decision and episode deadlines',async()=>{
+   const f=await prepareR1Owners(env(),{name:'held-queue-worker'}),w=await worker('RUN_HELD');
+   try{
+    const requestedAt=Date.now(),submitted=ok(await http.api(f.token,'policies','r1-submit',f.runRequest),202),returnedAt=Date.now();
+    const accepted=(await admin.query('SELECT created_at,decision_deadline_at,original_deadline_at FROM finnor_os.r1_runs WHERE id=$1',[submitted.runId])).rows[0];
+    await new Promise(yes=>setTimeout(yes,250));
+    const pending=ok(await http.api(f.token,'policies','r1-read',{runId:submitted.runId})),replay=ok(await http.api(f.token,'policies','r1-submit',f.runRequest),202),before=await snapshot(f,submitted.runId);
+    await f.artifact('held-worker-before-dispatch.json',{pid:w.child.pid,pending,replay,accepted,before});
+    assert.equal(pending.status,'QUEUED');assert.equal(pending.head,null);assert.equal(before.r1_attempts.length,0);assert.equal(before.deliveries.length,0);
+    assert.equal(replay.runId,submitted.runId);assert.equal(replay.replayed,true);assert.equal(before.r1_runs[0].decision_deadline_at.toISOString(),accepted.decision_deadline_at.toISOString());
+    assert.equal(f.mandate.search.deadlineMs,30000);assert(accepted.decision_deadline_at.getTime()>=requestedAt+30000);assert(accepted.decision_deadline_at.getTime()<=returnedAt+30000);
+    w.child.send('start');
+    const complete=await waitRun(f,submitted.runId),after=await snapshot(f,submitted.runId);
+    await f.artifact('held-worker-after-dispatch.json',{pid:w.child.pid,complete,after});
+    assert.equal(complete.status,'COMPLETE',JSON.stringify(complete));assert.equal(complete.head.decisionDeadlineAt,accepted.decision_deadline_at.toISOString());assert.equal(complete.head.originalDeadlineAt,accepted.original_deadline_at.toISOString());
+    assert.equal(after.deliveries.length,1);assert.deepEqual(after.r1_attempts.map((a:any)=>a.stage).sort(),['CHECK','PRODUCE','S4_EVALUATE']);assert.equal(complete.head.authority,false);
+    return {runId:submitted.runId,pid:w.child.pid,queuedBeforeDispatch:true,originalDecisionDeadlineAt:complete.head.decisionDeadlineAt,originalEpisodeDeadlineAt:complete.head.originalDeadlineAt,physicalStages:after.r1_attempts.map((a:any)=>a.stage),authorityGranted:false};
+   }finally{await w.stop();}
+  });
   for(const upper of selected==='runtime'?[false]:[false,true])await test(upper?'upper-owner-128-8-12':'positive-owner-reduction','Authenticated real owners, actual durable queue/worker/checker, positive S4 representation reuse, original policy aliases and S5 exact rational demand with authority blocked',async()=>{
    const f=await prepareR1Owners(env(),{upper,name:upper?'upper-owner':'positive-owner'});
    if(selected==='runtime'){
@@ -127,16 +150,16 @@ try{
      const response=await fetch(http.apiBase+'/api/policies/'+path,{method,headers:{authorization:'Bearer '+f.token,'content-type':'application/json'},...(method==='GET'?{}:{body:'{}'})}),body=await response.json();probes.push({method,path,status:response.status,body,expected});await artifact('built-legacy-policy-boundaries.json',probes);assert.equal(response.status,expected,JSON.stringify(probes.at(-1)));
     }
    }
-   // Start the unrelated legacy compatibility runtime before accepting the
-   // positive decision. Its real work/costs are retained; it stays live across
-   // enqueue so the original refusal assertions still exercise that boundary.
+   // Prepare both real driver processes before accepting the positive
+   // decision. The current worker stays held until the refusal probes finish;
+   // readiness does not claim a job, charge a grant or extend either clock.
    const old=selected==='runtime'?await worker('COMPATIBILITY_OLD'):null;
+   const w=await worker('RUN_HELD');
    const commonRequest={schema:'finnor.r1.run.v2',problem_ref:f.runRequest.problem_ref,envelope_inputs:f.runRequest.envelope_inputs,existing_work_revision:f.runRequest.work_rev,domain_profile_ref:f.source.sourceRef,budget_grant_ref:f.runRequest.grant,cancellation_ref:null,idempotencyKey:f.runRequest.idempotencyKey};
    await f.artifact('common-owner-request.json',commonRequest);
    const submitted=ok(await http.api(f.token,'policies','r1-submit',commonRequest),202);
    assert.equal(submitted.schema,'finnor.r1.common-result.v1');assert.equal(submitted.status,'INCOMPLETE');assert.equal(submitted.runtime_status,'QUEUED');assert.equal(submitted.artifact_ref,null);assert(submitted.unresolved_claim_refs.some((r:any)=>r.claim_id==='COMPLETE_RELATION'));assert(submitted.resource_receipt_refs.some((r:any)=>r.kind==='COMMON_PREPARATION_CHARGED'));
    const pending=ok(await http.api(f.token,'policies','r1-read',{runId:submitted.runId}));assert.equal(pending.status,'QUEUED');assert.equal(pending.head,null);
-   const replay=ok(await http.api(f.token,'policies','r1-submit',f.runRequest),202);assert.equal(replay.runId,submitted.runId);assert.equal(replay.replayed,true);
    if(selected==='runtime'){
     assert(legacyJobId);assert(old);
     try{for(let i=0;i<120;i++){if((await admin.query('SELECT status FROM finnor_os.jobs WHERE id=$1',[legacyJobId])).rows[0]?.status==='completed')break;await new Promise(yes=>setTimeout(yes,25));}}finally{await old.stop();}
@@ -145,7 +168,9 @@ try{
     assert.equal(legacy.status,'completed');assert.equal(legacy.attempts,1);assert.equal(accepted.status,'queued');assert.equal(accepted.attempts,0);assert.equal((await admin.query('SELECT count(*)::int n FROM finnor_os.r1_attempts WHERE run_id=$1',[submitted.runId])).rows[0].n,0);
     const future=(await admin.query("INSERT INTO finnor_os.jobs(tenant_id,type,payload,protocol_version,idempotency_key,max_attempts,lane) VALUES($1,$2,$3::jsonb,2,$4,1,'interactive') RETURNING *",[accepted.tenant_id,accepted.type,JSON.stringify(accepted.payload),'r1-future-protocol-'+submitted.runId])).rows[0];await artifact('future-protocol-before.json',future);
    }
-   const w=await worker();let complete:any;try{complete=await waitRun(f,submitted.runId);}finally{await w.stop();}
+   // Idempotent HTTP readback runs concurrently with actual admitted work;
+   // it must not keep a ready worker idle inside the original decision clock.
+   w.child.send('start');let complete:any;try{const [replayed,observed]=await Promise.all([http.api(f.token,'policies','r1-submit',f.runRequest),waitRun(f,submitted.runId)]);const replay=ok(replayed,202);assert.equal(replay.runId,submitted.runId);assert.equal(replay.replayed,true);complete=observed;}finally{await w.stop();}
    await f.artifact('completed-reader.json',complete);const sql=await snapshot(f,submitted.runId);
    const sourceRecord=(await admin.query('SELECT work_input_digest,model_digest,dependencies FROM finnor_os.r1_models WHERE id=$1',[f.source.sourceId])).rows[0];
    const common=ok(await http.api(f.token,'policies','r1-read',{schema:'finnor.r1.common-read.v1',runId:submitted.runId})),envelope=common.artifact_envelope;
