@@ -23,6 +23,7 @@ export function profitInput(options: { periods?: number; actions?: string[]; wor
     fixedOperatingCost: constant(100, unit), depreciationAmortization: constant(20, unit),
     accountsReceivable: state('ar', unit), inventory: constant(50, unit), accountsPayable: constant(30, unit),
     capitalExpenditure: constant(0, unit), cashTaxes: constant(0, unit),
+    nonOperatingCashInflow: constant(0, unit), nonOperatingCashOutflow: constant(0, unit),
     openingCash: 100, minimumCash: 50,
     actionCostTreatment: 'IMMEDIATE_OPERATING_EXPENSE_AND_CASH_OUTFLOW',
     terminalWorkingCapital: 'NO_AUTOMATIC_RELEASE',

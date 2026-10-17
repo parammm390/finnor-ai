@@ -29,10 +29,10 @@ export async function operatingProfitOwnerCase(input: {
     }
   }
   request.modelKey = 'generated-operating-profit'; request.episodeId = 's4-operating-profit'; request.roots = [root];
-  request.stateVariables = ['price', 'volume'].map(id => ({ id, root, seriesId: series[id], unit: units[id as 'price' | 'volume'], range: [0, id === 'price' ? 100 : 1000], role: 'ENTERPRISE_STATE' }));
+  request.stateVariables = ['price', 'volume'].map(id => ({ id: id === 'price' ? 'netPrice' : id, root, seriesId: series[id], unit: units[id as 'price' | 'volume'], range: [0, id === 'price' ? 100 : 1000], role: 'ENTERPRISE_STATE' }));
   request.exposures[0].root = root; request.exposures[0].seriesId = series.exposure;
   request.mechanisms = [request.mechanisms[0]];
-  request.mechanisms[0].equations = ['price', 'volume'].map(variableId => ({ variableId, features: [{ kind: 'CONSTANT' }, { kind: 'EXPOSURE', id: 'price', lag: 0 }] }));
+  request.mechanisms[0].equations = ['netPrice', 'volume'].map(variableId => ({ variableId, features: [{ kind: 'CONSTANT' }, { kind: 'EXPOSURE', id: 'price', lag: 0 }] }));
   request.mechanisms[0].counterparties = [];
   const fit = await api('fit', { request }, tenant, principal, s3Post);
   assert.equal(fit.status, 200, JSON.stringify(fit)); assert.equal(fit.body.status, 'FITTED', JSON.stringify(fit));
@@ -40,7 +40,9 @@ export async function operatingProfitOwnerCase(input: {
   m.tenantId = tenant; m.principalId = principal; m.businessOwnerRef = profitRef(principal); m.episodeId = request.episodeId;
   m.horizon = { startAt: request.time.endAt, periodMs: request.time.periodMs, periods: 2 };
   m.utility.operatingProfit.root = root; m.utility.operatingProfit.segments[0].unitsSold.variableId = 'volume';
+  m.utility.operatingProfit.segments[0].netUnitPrice.variableId = 'netPrice';
   m.utility.operatingProfit.accountsReceivable = { kind: 'CONSTANT', value: 100, unit: 'USD', sourceRef: profitRef('generated-receivables') };
+  m.utility.operatingProfit.nonOperatingCashOutflow = { kind: 'CONSTANT', value: 300, unit: 'USD', sourceRef: profitRef('generated-mandatory-debt-payments') };
   const mandate = sealProfitMandate(m);
   p.episodeId = m.episodeId; p.modelRef = fit.body.model.ref; p.context = 'public-price'; p.regime = 'operating';
   p.baselineExposures = { price: [0, 0] };
@@ -52,6 +54,7 @@ export async function operatingProfitOwnerCase(input: {
   assert.equal(policy.nodes.find((n: any) => n.id === policy.rootNodeId).actionId, 'smart'); assert(policy.certificate.valueBounds[0] > 0);
   assert.equal(policy.certificate.operatingProfit.qualification, 'MODEL_CONDITIONAL_NOT_REALIZED_OR_GUARANTEED');
   assert(policy.certificate.operatingProfit.forecasts.every((f: any) => f.incrementalOperatingProfit > 0 && f.minimumCashObserved >= 50));
+  assert(policy.certificate.operatingProfit.forecasts.every((f: any) => f.nonOperatingNetCashFlow === -600));
   assert.equal(policy.admission.executionAuthorityGranted, false); assert.equal(policy.demand.reservationGranted, false);
   const read = await api('read', { policyRef: policy.ref }), replay = await api('replay', { policyRef: policy.ref });
   assert.equal(read.status, 200, JSON.stringify(read)); assert.equal(replay.status, 200, JSON.stringify(replay));

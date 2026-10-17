@@ -10,8 +10,10 @@ env.update(NODE_ENV='test',CI='1',LOG_LEVEL='silent',AUTH_DEV_BYPASS='1',RATE_LI
 with (output/'runner.log').open('w') as log:
     run=subprocess.run(['node_modules/.bin/tsx','scripts/s4/run-s4-e2e.mts'],cwd=repo/'finnor-os',env=env,stdout=log,stderr=subprocess.STDOUT)
 status=run.returncode
+failures=[]
 if (output/'results.json').exists():
     result=json.loads((output/'results.json').read_text())
-    if any(x['status']!='PASS' for x in result['cases']): status=1
+    failures=[{'id':x['id'],'observed':str(x.get('observed',{}))[:2000]} for x in result['cases'] if x['status']!='PASS']
+    if failures: status=1
 else: status=1
-print(json.dumps({'output':str(output),'exitCode':status}));sys.exit(status)
+print(json.dumps({'output':str(output),'exitCode':status,'failures':failures}));sys.exit(status)

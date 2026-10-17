@@ -18,6 +18,10 @@ export interface OperatingProfitObjective {
   fixedOperatingCost: OperatingProfitDriver; depreciationAmortization: OperatingProfitDriver;
   accountsReceivable: OperatingProfitDriver; inventory: OperatingProfitDriver; accountsPayable: OperatingProfitDriver;
   capitalExpenditure: OperatingProfitDriver; cashTaxes: OperatingProfitDriver;
+  /** Explicit financing/owner transfers affect liquidity, never operating
+   * profit/free cash flow. Include debt service, distributions and funding;
+   * v1 does not infer payment schedules or financing P&L. */
+  nonOperatingCashInflow: OperatingProfitDriver; nonOperatingCashOutflow: OperatingProfitDriver;
   openingCash: number; minimumCash: number;
   actionCostTreatment: 'IMMEDIATE_OPERATING_EXPENSE_AND_CASH_OUTFLOW';
   terminalWorkingCapital: 'NO_AUTOMATIC_RELEASE';
@@ -28,6 +32,7 @@ export interface OperatingProfitForecast {
   revenue: number; comparatorRevenue: number;
   operatingProfit: number; comparatorOperatingProfit: number; incrementalOperatingProfit: number;
   freeCashFlow: number; comparatorFreeCashFlow: number; incrementalFreeCashFlow: number;
+  nonOperatingNetCashFlow: number; comparatorNonOperatingNetCashFlow: number;
   implementationCost: number; closingCash: number; comparatorClosingCash: number; minimumCashObserved: number;
   terminalLiability: number; comparatorTerminalLiability: number;
 }

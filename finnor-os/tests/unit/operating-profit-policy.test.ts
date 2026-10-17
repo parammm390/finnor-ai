@@ -2,6 +2,7 @@
  * - revenue/volume wins despite lower contribution, or private worlds leak into choice;
  * - accrual profit hides working-capital insolvency, or terminal stock is invented as cash;
  * - costs/tail debt disappear, duplicate, or are charged again after commitment;
+ * - debt payments/distributions are omitted from liquidity or new debt becomes profit;
  * - comparator worlds, pending schedules, units, currency, scale or legal entities drift;
  * - missing/negative/nonfinite drivers become zero, support failure becomes success;
  * - incomplete nonlinear search claims a linear zero-gap upper bound;
@@ -89,7 +90,7 @@ describe('operating-profit decision path', () => {
   it('models 100 billion dollars of sales with explicit million-dollar scaling', async () => {
     const input = profitInput({ actions: ['smart'] }), p = input.mandate.utility.operatingProfit;
     p.moneyScale = '1000000'; input.mandate.utility.unit = 'USD:1000000';
-    for (const key of ['fixedOperatingCost', 'depreciationAmortization', 'accountsReceivable', 'inventory', 'accountsPayable', 'capitalExpenditure', 'cashTaxes']) {
+    for (const key of ['fixedOperatingCost', 'depreciationAmortization', 'accountsReceivable', 'inventory', 'accountsPayable', 'capitalExpenditure', 'cashTaxes', 'nonOperatingCashInflow', 'nonOperatingCashOutflow']) {
       p[key].unit = 'USD:1000000'; if (p[key].kind === 'CONSTANT') p[key].value = 0;
     }
     input.dynamics.stateUnits.ar = 'USD:1000000';
@@ -109,6 +110,39 @@ describe('operating-profit decision path', () => {
     const decision = decideContingentPolicy(r.policy!, { knowledgeAt: input.now, period: 0, actionHistory: [], observations: [],
       rightsRef: input.mandate.rightsRef, obligations: [], allocationRefs: [] });
     expect(decision.actionId).toBeNull();
+  });
+  it('pays mandatory financing cash outflows without expensing principal a second time', async () => {
+    const input = profitInput({ actions: ['smart'] });
+    input.mandate.utility.operatingProfit.nonOperatingCashOutflow.value = 350;
+    const r = await synthesizeContingentControl(reseal(input));
+    expect(r.status).toBe('POLICY_AVAILABLE'); expect(selected(r).actionId).toBe('smart');
+    expect(forecast(r)).toMatchObject({ incrementalOperatingProfit: 100, freeCashFlow: 400,
+      nonOperatingNetCashFlow: -350, closingCash: 150, comparatorClosingCash: 50 });
+  });
+  it('refuses every profitable programme when mandatory debt cash payments breach the floor', async () => {
+    const input = profitInput({ actions: ['smart'] });
+    input.mandate.utility.operatingProfit.nonOperatingCashOutflow.value = 500;
+    const r = await synthesizeContingentControl(reseal(input));
+    expect(r.status).toBe('INFEASIBLE'); expect(r.policy).toBeNull();
+  });
+  it('uses modeled funding for liquidity without crediting borrowing as operating profit or free cash flow', async () => {
+    const input = profitInput({ actions: ['cash-trap'] }), p = input.mandate.utility.operatingProfit;
+    p.nonOperatingCashInflow = { kind: 'STATE', variableId: 'funding', unit: 'USD' };
+    input.dynamics.stateUnits.funding = 'USD'; input.dynamics.stateRoots.funding = profitRoot;
+    input.dynamics.stateRanges.funding = [0, 1000]; input.dynamics.initialWorlds[0].history[0].states.funding = 0;
+    const advance = input.dynamics.advance;
+    input.dynamics.advance = (w: any, e: any, t: number) => { const n = advance(w, e, t); n.history.at(-1).states.funding = e.choice === 3 ? 1000 : 0; return n; };
+    const profit = await synthesizeContingentControl(reseal(input));
+    expect(selected(profit).actionId).toBe('cash-trap');
+    expect(forecast(profit)).toMatchObject({ incrementalOperatingProfit: 100, incrementalFreeCashFlow: -400,
+      nonOperatingNetCashFlow: 1000, closingCash: 1000 });
+    input.mandate.utility.operatingProfit.objective = 'INCREMENTAL_FREE_CASH_FLOW';
+    const cash = await synthesizeContingentControl(reseal(input));
+    expect(['wait', 'stop']).toContain(selected(cash).actionId); expect(cash.policy!.certificate.valueBounds).toEqual([0, 0]);
+  });
+  it('requires an explicit owner declaration of non-operating cash obligations', async () => {
+    const input = profitInput(); delete input.mandate.utility.operatingProfit.nonOperatingCashOutflow;
+    await expect(synthesizeContingentControl(reseal(input))).rejects.toThrow();
   });
   it.each(['missing', 'negative', 'nonfinite'])('withholds activation for %s modeled drivers', async mode => {
     const input = profitInput(), advance = input.dynamics.advance;

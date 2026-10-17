@@ -14,6 +14,7 @@ export const OperatingProfitObjectiveSchema = z.object({
   segments: z.array(z.object({ id: text, quantityUnit: text, netUnitPrice: driver, unitsSold: driver, variableUnitCost: driver }).strict()).min(1).max(16),
   fixedOperatingCost: driver, depreciationAmortization: driver,
   accountsReceivable: driver, inventory: driver, accountsPayable: driver, capitalExpenditure: driver, cashTaxes: driver,
+  nonOperatingCashInflow: driver, nonOperatingCashOutflow: driver,
   openingCash: amount, minimumCash: amount,
   actionCostTreatment: z.literal('IMMEDIATE_OPERATING_EXPENSE_AND_CASH_OUTFLOW'),
   terminalWorkingCapital: z.literal('NO_AUTOMATIC_RELEASE'),
@@ -32,6 +33,7 @@ export const OperatingProfitCertificateSchema = z.object({
   forecasts: z.array(z.object({ worldId: text, mechanismId: text, revenue: finite.nonnegative(), comparatorRevenue: finite.nonnegative(),
     operatingProfit: finite, comparatorOperatingProfit: finite, incrementalOperatingProfit: finite,
     freeCashFlow: finite, comparatorFreeCashFlow: finite, incrementalFreeCashFlow: finite,
+    nonOperatingNetCashFlow: finite, comparatorNonOperatingNetCashFlow: finite,
     implementationCost: finite.nonnegative(), closingCash: finite, comparatorClosingCash: finite,
     minimumCashObserved: finite, terminalLiability: finite.nonnegative(), comparatorTerminalLiability: finite.nonnegative(),
   }).strict()).min(1).max(512),
@@ -42,7 +44,7 @@ function bindings(p: OperatingProfitObjective): Array<[OperatingProfitDriver, st
   return [...p.segments.flatMap(s => [[s.netUnitPrice, `${p.currency}/${s.quantityUnit}`], [s.unitsSold, s.quantityUnit],
     [s.variableUnitCost, `${p.currency}/${s.quantityUnit}`]] as Array<[OperatingProfitDriver, string]>),
   ...[p.fixedOperatingCost, p.depreciationAmortization, p.accountsReceivable, p.inventory, p.accountsPayable,
-    p.capitalExpenditure, p.cashTaxes].map(d => [d, unit] as [OperatingProfitDriver, string])];
+    p.capitalExpenditure, p.cashTaxes, p.nonOperatingCashInflow, p.nonOperatingCashOutflow].map(d => [d, unit] as [OperatingProfitDriver, string])];
 }
 /** A reason is returned so the owning boundary keeps its own error vocabulary. */
 export function operatingProfitContractReason(m: EconomicMandate, dynamics?: ControlDynamicsAdapter): string | null {
@@ -76,7 +78,7 @@ function workingCapital(p: OperatingProfitObjective, states: Record<string, numb
   return read(p.accountsReceivable, states) + read(p.inventory, states) - read(p.accountsPayable, states);
 }
 /** State values remain conditional FLOAT64 S3 simulations. There is no implicit
- * FX, ownership, debt service, tax shield, terminal sale or stock liquidation. */
+ * FX, ownership, financing payment schedule, tax shield or stock liquidation. */
 export function operatingProfitPeriod(p: OperatingProfitObjective, previous: Record<string, number>, states: Record<string, number>, actionCost: number) {
   let revenue = 0, variableCost = 0;
   for (const s of p.segments) {
@@ -88,9 +90,10 @@ export function operatingProfitPeriod(p: OperatingProfitObjective, previous: Rec
   const operatingProfit = revenue - variableCost - fixedCost - depreciation - actionCost;
   const changeInWorkingCapital = workingCapital(p, states) - workingCapital(p, previous);
   const freeCashFlow = operatingProfit + depreciation - read(p.cashTaxes, states) - read(p.capitalExpenditure, states) - changeInWorkingCapital;
-  if (![revenue, variableCost, operatingProfit, freeCashFlow, changeInWorkingCapital].every(Number.isFinite))
+  const nonOperatingNetCashFlow = read(p.nonOperatingCashInflow, states) - read(p.nonOperatingCashOutflow, states);
+  if (![revenue, variableCost, operatingProfit, freeCashFlow, nonOperatingNetCashFlow, changeInWorkingCapital].every(Number.isFinite))
     throw new OperatingProfitDomainError('OPERATING_PROFIT_NONFINITE_ACCOUNTING');
-  return { revenue, variableCost, operatingProfit, freeCashFlow, changeInWorkingCapital };
+  return { revenue, variableCost, operatingProfit, freeCashFlow, nonOperatingNetCashFlow, changeInWorkingCapital };
 }
 
 export interface OperatingProfitCourse {
@@ -98,12 +101,13 @@ export interface OperatingProfitCourse {
   cash: number; baselineCash: number; minimumCashObserved: number;
   revenue: number; baselineRevenue: number; operatingProfit: number; baselineOperatingProfit: number;
   freeCashFlow: number; baselineFreeCashFlow: number; implementationCost: number;
+  nonOperatingNetCashFlow: number; baselineNonOperatingNetCashFlow: number;
 }
 export function openOperatingProfitCourse(p: OperatingProfitObjective, world: ControlWorld, baselineSchedule: Record<string, number[]>, commonLiability: number): OperatingProfitCourse {
   return { baselineWorld: structuredClone(world), baselineSchedule: structuredClone(baselineSchedule), commonLiability,
     cash: p.openingCash, baselineCash: p.openingCash, minimumCashObserved: p.openingCash,
     revenue: 0, baselineRevenue: 0, operatingProfit: 0, baselineOperatingProfit: 0,
-    freeCashFlow: 0, baselineFreeCashFlow: 0, implementationCost: 0 };
+    freeCashFlow: 0, baselineFreeCashFlow: 0, implementationCost: 0, nonOperatingNetCashFlow: 0, baselineNonOperatingNetCashFlow: 0 };
 }
 export function advanceOperatingProfitCourse(p: OperatingProfitObjective, dynamics: ControlDynamicsAdapter, old: OperatingProfitCourse,
   previous: ControlWorld, next: ControlWorld, period: number, actionCost: number) {
@@ -117,12 +121,14 @@ export function advanceOperatingProfitCourse(p: OperatingProfitObjective, dynami
   };
   const actual = operatingProfitPeriod(p, states(previous), states(next), actionCost);
   const baseline = operatingProfitPeriod(p, states(old.baselineWorld), states(baselineWorld), 0);
-  const cash = old.cash + actual.freeCashFlow;
-  const course: OperatingProfitCourse = { ...old, baselineWorld, cash, baselineCash: old.baselineCash + baseline.freeCashFlow,
+  const cash = old.cash + actual.freeCashFlow + actual.nonOperatingNetCashFlow;
+  const course: OperatingProfitCourse = { ...old, baselineWorld, cash, baselineCash: old.baselineCash + baseline.freeCashFlow + baseline.nonOperatingNetCashFlow,
     minimumCashObserved: Math.min(old.minimumCashObserved, cash),
     revenue: old.revenue + actual.revenue, baselineRevenue: old.baselineRevenue + baseline.revenue,
     operatingProfit: old.operatingProfit + actual.operatingProfit, baselineOperatingProfit: old.baselineOperatingProfit + baseline.operatingProfit,
     freeCashFlow: old.freeCashFlow + actual.freeCashFlow, baselineFreeCashFlow: old.baselineFreeCashFlow + baseline.freeCashFlow,
+    nonOperatingNetCashFlow: old.nonOperatingNetCashFlow + actual.nonOperatingNetCashFlow,
+    baselineNonOperatingNetCashFlow: old.baselineNonOperatingNetCashFlow + baseline.nonOperatingNetCashFlow,
     implementationCost: old.implementationCost + actionCost };
   if (Object.values(course).some(v => typeof v === 'number' && !Number.isFinite(v)))
     throw new OperatingProfitDomainError('OPERATING_PROFIT_NONFINITE_ACCOUNTING');
@@ -137,6 +143,7 @@ export function operatingProfitForecast(course: OperatingProfitCourse, world: Co
     incrementalOperatingProfit: course.operatingProfit - course.baselineOperatingProfit,
     freeCashFlow: course.freeCashFlow, comparatorFreeCashFlow: course.baselineFreeCashFlow,
     incrementalFreeCashFlow: course.freeCashFlow - course.baselineFreeCashFlow,
+    nonOperatingNetCashFlow: course.nonOperatingNetCashFlow, comparatorNonOperatingNetCashFlow: course.baselineNonOperatingNetCashFlow,
     implementationCost: course.implementationCost,
     closingCash: course.cash - terminalLiability, comparatorClosingCash: course.baselineCash - course.commonLiability,
     minimumCashObserved: Math.min(course.minimumCashObserved, course.cash - terminalLiability),
