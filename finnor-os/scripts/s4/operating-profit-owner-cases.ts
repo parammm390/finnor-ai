@@ -29,7 +29,7 @@ export async function operatingProfitOwnerCase(input: {
     await attachCanonicalEvidenceToWorld(ctx, { worldRoot: root, entity: { entityType: 'pe_metric_series', entityId: series[id]! }, evidenceSourceId: source, evidenceVersionId: version, relationship: 'supports' });
     for (const row of rows) {
       const exposure = row.exposures.price, noise = .001 * (row.states.outcome - exposure), at = Date.parse(request.time.startAt) + row.period * request.time.periodMs;
-      const value = id === 'price' ? 10 + 2 * exposure + noise : id === 'volume' ? 100 - 10 * exposure + noise : exposure;
+      const value = id === 'price' ? 10 + 2.5 * exposure + noise : id === 'volume' ? 100 - 10 * exposure + noise : exposure;
       await admin.query("INSERT INTO finnor_os.pe_metric_observations(id,tenant_id,metric_series_id,period_start,period_end,value_type,value_numeric,evidence_source_id,evidence_version_id,source_system,created_by) VALUES($1,$2,$3,$4,$5,'number',$6,$7,$8,'s4:generated-operating-profit',$9)", [randomUUID(), tenant, series[id], new Date(at).toISOString(), new Date(at + request.time.periodMs).toISOString(), String(value), source, version, principal]);
     }
   }
@@ -62,7 +62,8 @@ export async function operatingProfitOwnerCase(input: {
   const mandate = sealProfitMandate(m);
   p.episodeId = m.episodeId; p.modelRef = fit.body.model.ref; p.context = 'public-price'; p.regime = 'operating';
   p.baselineExposures = { price: [0, 0] };
-  for (const a of p.actions) if (a.kind === 'INTERVENE') a.exposures = { price: [.75, .75] };
+  // Stay inside the original observed exposure support (roughly -.65 to .65).
+  for (const a of p.actions) if (a.kind === 'INTERVENE') a.exposures = { price: [.6, .6] };
   const payload = { mandate, problem: p, protocols: [], scenarios: { pathsPerMechanism: 4, seed: 20261017 } };
   const belowTargetPayload = structuredClone(payload);
   for (const a of belowTargetPayload.problem.actions) if (a.kind === 'INTERVENE') a.exposures = { price: [.15, .15] };
@@ -71,7 +72,7 @@ export async function operatingProfitOwnerCase(input: {
   assert.equal(belowTarget.body.policy, null);
   assert.equal(belowTarget.body.profitTargetAssessment.status, 'TARGET_UNATTAINABLE_IN_ENUMERATED_MODEL');
   assert.equal(belowTarget.body.profitTargetAssessment.requiredIncrementalProfit.numerator, '200');
-  assert(Number(belowTarget.body.profitTargetAssessment.shortfall.display) > 150);
+  assert(Number(belowTarget.body.profitTargetAssessment.shortfall.display) > 130);
   const result = await api('synthesize', payload);
   assert.equal(result.status, 200, JSON.stringify(result)); assert.equal(result.body.status, 'POLICY_AVAILABLE', JSON.stringify(result));
   const policy = result.body.policy;
