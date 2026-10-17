@@ -15,6 +15,9 @@ import { proposeEnterpriseSameDealAlternatives } from '../../packages/private-eq
 import { readEnterpriseControlDecisionContext } from '../../packages/private-equity/src/enterprise-control';
 import { synthesizeContingentControl } from '../../packages/epistemic-runtime/src/contingent-control';
 import { restoreInterventionControlAdapter } from '../../packages/epistemic-runtime/src/intervention-control';
+import { operatingCashScenarios } from '../../packages/epistemic-runtime/src/operating-profit-allocation';
+import { ControlContractError } from '../../packages/epistemic-runtime/src/control-contracts';
+import { epistemicHash } from '../../packages/epistemic-runtime/src/source-precedence';
 
 export async function operatingProfitOwnerCase(input: {
   admin: { query: (sql: string, values?: any[]) => Promise<any> }; ctx: PeMutationContext;
@@ -119,6 +122,24 @@ export async function operatingProfitOwnerCase(input: {
   const read = await api('read', { policyRef: policy.ref }), replay = await api('replay', { policyRef: policy.ref });
   assert.equal(read.status, 200, JSON.stringify(read)); assert.equal(replay.status, 200, JSON.stringify(replay));
   assert.equal(replay.body.programMatches, true); assert.equal(replay.body.certificateMatches, true);
+  // Use the actual owner-generated policy at the S5 adapter boundary. A new
+  // digest must not make an internally balanced omission of a charter payment
+  // valid. This is not an attempt to inject a policy into the immutable store.
+  const edited = structuredClone(policy), ledger = edited.certificate.operatingProfit.forecasts[0], last = ledger.periods.at(-1)!;
+  const omittedPayment = last.nonOperatingCashOutflow;
+  assert.equal(omittedPayment, 300);
+  last.nonOperatingCashOutflow = 0; last.nonOperatingNetCashFlow += omittedPayment; last.closingCash += omittedPayment;
+  ledger.nonOperatingNetCashFlow += omittedPayment; ledger.closingCash += omittedPayment;
+  ledger.minimumCashObserved = Math.min(edited.mandate.utility.operatingProfit.openingCash, ledger.closingCash,
+    ...ledger.periods.flatMap((row: any) => [row.cashAfterAction, row.closingCash]));
+  const { ref: originalRef, ...editedBody } = edited, digest = epistemicHash(editedBody);
+  edited.ref = { ...originalRef, id: `contingent-policy:${digest}`, contentDigest: digest };
+  let rejection: { code: string; message: string } | null = null;
+  assert.throws(() => operatingCashScenarios([edited]), error => {
+    if (!(error instanceof ControlContractError) || error.code !== 'INVALID_POLICY' || !error.message.includes('original constant cash')) return false;
+    rejection = { code: error.code, message: error.message }; return true;
+  });
+  const accountingBoundary = { originalRef, omittedPayment, editedPolicy: edited, rejection };
   const context = await readEnterpriseControlDecisionContext(ctx, policy.ref);
   const referenceInput = { mandate, problem: p, model: context.model, kernel: context.kernel };
   const runReference = (input: typeof referenceInput) => {
@@ -213,6 +234,6 @@ export async function operatingProfitOwnerCase(input: {
   assert.equal((await api('release', { allocationRef: certificate.ref, idempotencyKey: randomUUID() }, tenant, principal, allocationPost)).status, 422);
   return { qualification: 'GENERATED_OWNER_INTEGRATION_NOT_CUSTOMER_PROFIT', request, payload, fitRef: fit.body.model.ref, result, read, replay,
     belowTargetPayload, belowTarget, singleLeverResults, referenceInput, reference,
-    referenceInvocation, resourceLimitedInput, resourceLimited, resourceLimitedReference,
+    referenceInvocation, resourceLimitedInput, resourceLimited, resourceLimitedReference, accountingBoundary,
     cash, proposed, clearing, allocated, repeated, consumed, held };
 }

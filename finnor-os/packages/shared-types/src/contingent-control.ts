@@ -35,11 +35,9 @@ export interface RevenueProfitAssessment {
  * Operating profit is before financing/tax; netProfit explicitly recognizes
  * financing/tax/other P&L. Cash taxes/capex are separate cash drivers.
  * This is an owner-supplied accounting convention, not verified causal evidence. */
-export interface OperatingProfitObjective {
+interface OperatingProfitAccountingFields {
   schema: 'finnor.s4.operating-profit.v1'; root: { entityType: string; entityId: string };
   currency: string; moneyScale: '1' | '1000' | '1000000' | '1000000000';
-  objective: 'INCREMENTAL_OPERATING_PROFIT' | 'INCREMENTAL_FREE_CASH_FLOW' | 'INCREMENTAL_NET_PROFIT';
-  netProfit?: NetProfitAccounting; profitTarget?: RevenueProfitTarget;
   segments: Array<{ id: string; quantityUnit: string; netUnitPrice: OperatingProfitDriver;
     unitsSold: OperatingProfitDriver; variableUnitCost: OperatingProfitDriver }>;
   fixedOperatingCost: OperatingProfitDriver; depreciationAmortization: OperatingProfitDriver;
@@ -54,6 +52,10 @@ export interface OperatingProfitObjective {
   terminalWorkingCapital: 'NO_AUTOMATIC_RELEASE';
   qualification: 'OWNER_ACCOUNTING_CONDITIONAL_S3_DYNAMICS_NOT_OBSERVED_VALUE';
 }
+export type OperatingProfitObjective = OperatingProfitAccountingFields & (
+  | { objective: 'INCREMENTAL_OPERATING_PROFIT' | 'INCREMENTAL_FREE_CASH_FLOW'; netProfit?: never; profitTarget?: never }
+  | { objective: 'INCREMENTAL_NET_PROFIT'; netProfit: NetProfitAccounting; profitTarget?: RevenueProfitTarget }
+);
 export interface OperatingProfitForecast {
   worldId: string; mechanismId: string;
   nodeIds: string[]; discountedUtility: number; periods: OperatingProfitCashPeriod[];
@@ -166,17 +168,31 @@ export interface OperatingProgrammeSearchReport {
     status: PolicyResultState | 'NOT_EVALUATED'; valueBounds: [number, number] | null; reasons: string[] }>;
   qualification: 'REGISTERED_FINITE_JOINT_DOMAIN_NOT_GLOBAL_OR_FIELD_OPTIMALITY';
 }
-export interface ControlProblem {
-  schema: 'finnor.control-problem.v1' | 'finnor.control-problem.exact.v2' | 'finnor.control-problem.operating-programme.v2'; id: string; episodeId: string; modelRef: ExperimentRef;
+interface ControlProblemFields {
+  id: string; episodeId: string; modelRef: ExperimentRef;
   context: string; regime: string; baselineExposures: Record<string, number[]>;
   actions: ControlAction[]; observations: ControlObservationInstrument[]; obligations: ControlObligation[]; validUntil: string;
-  programmeSpace?: OperatingProgrammeSpace;
-  exactSource?: {modelDigest:string;sourceRef:ExperimentRef;quantityEncoding:'NORMALIZED_RATIONAL_PAIRS';numericProjection:'PRESENTATION_ONLY'};
-  continuation?: { elapsedPeriods: number; actionHistory: string[];
-    observations: Array<ControlObservation & { knowledgeAt: string; sourceRef: ExperimentRef }>;
-    accruedUtility: { value: number; unit: string; sourceRef: ExperimentRef };
-    usedResources: Record<string, number>; humanSeconds: number; accountingRef: ExperimentRef };
 }
+export interface ControlContinuation {
+  elapsedPeriods: number; actionHistory: string[];
+  observations: Array<ControlObservation & { knowledgeAt: string; sourceRef: ExperimentRef }>;
+  accruedUtility: { value: number; unit: string; sourceRef: ExperimentRef };
+  usedResources: Record<string, number>; humanSeconds: number; accountingRef: ExperimentRef;
+}
+export interface LegacyControlProblem extends ControlProblemFields {
+  schema: 'finnor.control-problem.v1'; continuation?: ControlContinuation;
+  programmeSpace?: never; exactSource?: never;
+}
+export interface ExactControlProblem extends ControlProblemFields {
+  schema: 'finnor.control-problem.exact.v2';
+  exactSource: { modelDigest: string; sourceRef: ExperimentRef; quantityEncoding: 'NORMALIZED_RATIONAL_PAIRS'; numericProjection: 'PRESENTATION_ONLY' };
+  continuation?: never; programmeSpace?: never;
+}
+export interface OperatingProgrammeProblem extends ControlProblemFields {
+  schema: 'finnor.control-problem.operating-programme.v2'; programmeSpace: OperatingProgrammeSpace;
+  observations: []; continuation?: never; exactSource?: never;
+}
+export type ControlProblem = LegacyControlProblem | ExactControlProblem | OperatingProgrammeProblem;
 export interface ControlObservation { instrumentId: string; token: string; availablePeriod: number }
 export interface ControlInstrumentSupport {
   protocolRef: ExperimentRef; tokensByMechanism: Record<string, string[]>;

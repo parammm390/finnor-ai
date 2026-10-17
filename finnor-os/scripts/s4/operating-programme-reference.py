@@ -65,11 +65,12 @@ def main(x):
         revenue = sum(read(g['netUnitPrice'], states) * read(g['unitsSold'], states) / float(a['moneyScale']) for g in a['segments'])
         variable = sum(read(g['variableUnitCost'], states) * read(g['unitsSold'], states) / float(a['moneyScale']) for g in a['segments'])
         operating = revenue - variable - r('fixedOperatingCost') - r('depreciationAmortization') - fee
-        wc = lambda states: read(a['accountsReceivable'], states) + read(a['inventory'], states) - read(a['accountsPayable'], states)
-        fcf = operating + r('depreciationAmortization') - r('cashTaxes') - r('capitalExpenditure') - (wc(states) - wc(previous))
+        stock_movements = [read(a[k], states) - read(a[k], previous) for k in ['accountsReceivable', 'inventory']]
+        stock_movements.append(read(a['accountsPayable'], previous) - read(a['accountsPayable'], states))
+        fcf = operating + r('depreciationAmortization') - r('cashTaxes') - r('capitalExpenditure') - sum(stock_movements)
         n = a['netProfit']
         net = operating - read(n['financingExpense'], states) - read(n['incomeTaxExpense'], states) + read(n['otherIncome'], states) - read(n['otherExpense'], states)
-        funding = sum(max(0.0, read(a[k], states) - read(a[k], previous)) for k in ['accountsReceivable', 'inventory']) + max(0.0, read(a['accountsPayable'], previous) - r('accountsPayable'))
+        funding = sum(max(0.0, movement) for movement in stock_movements)
         gross = variable + r('fixedOperatingCost') + fee + r('cashTaxes') + r('capitalExpenditure') + funding + r('nonOperatingCashOutflow')
         return {'netProfit': net, 'freeCashFlow': fcf, 'nonOperatingNetCashFlow': r('nonOperatingCashInflow') - r('nonOperatingCashOutflow'), 'grossCashOutflow': gross}
 

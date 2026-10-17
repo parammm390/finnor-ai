@@ -11,7 +11,7 @@ import { operatingProfitContractReason, openOperatingProfitCourse, advanceOperat
  OperatingProfitDomainError, assessRevenueProfitTarget, type OperatingProfitCourse } from './operating-profit';
 import { operatingProgrammeScopeReason, operatingProgrammeSearchReport } from './operating-programme';
 
-const files=['./contingent-control.ts','./control-contracts.ts','./control-observations.ts','./intervention-control.ts','./operating-profit.ts','./operating-programme.ts','./experiment-numerics.ts','../../shared-types/src/contingent-control.ts','../../private-equity/src/enterprise-control.ts','../../private-equity/src/enterprise-experiments.ts','../../private-equity/src/enterprise-interventions.ts','../../../apps/api/app/api/policies/[operation]/route.ts'].map(p=>fileURLToPath(new URL(p,import.meta.url)));
+const files=['./contingent-control.ts','./control-contracts.ts','./operating-profit-verifier.ts','./control-observations.ts','./intervention-control.ts','./operating-profit.ts','./operating-programme.ts','./experiment-numerics.ts','../../shared-types/src/contingent-control.ts','../../private-equity/src/enterprise-control.ts','../../private-equity/src/enterprise-experiments.ts','../../private-equity/src/enterprise-interventions.ts','../../../apps/api/app/api/policies/[operation]/route.ts'].map(p=>fileURLToPath(new URL(p,import.meta.url)));
 const loadedSources=Promise.all(files.map(async path=>({path,sha256:createHash('sha256').update(await readFile(path)).digest('hex')})));
 void loadedSources.catch(()=>undefined);
 export async function controlSourcesCurrent(expected:S4ComputeInvocation['backend']['sourceDigests']):Promise<boolean>{try{return epistemicHash(await loadedSources)===epistemicHash(expected)&&(await Promise.all(expected.map(async s=>createHash('sha256').update(await readFile(s.path)).digest('hex')===s.sha256))).every(Boolean);}catch{return false;}}
@@ -100,11 +100,11 @@ export async function synthesizeContingentControl(input:{mandate:unknown;problem
      path.liability+=action.tailLiability;
      const exposures=Object.fromEntries(d.exposureIds.map(id=>[id,path.schedule[id]![t]!]));
      const previous=path.world;
-     path.world=d.advance(path.world,exposures,t-startPeriod);transitions++;
+     path.world=d.advance(path.world,exposures,t-startPeriod);transitions++;tick();
      if(!path.world.supported){unsupportedSeen=true;throw new Unsupported('MODEL_TRAJECTORY_OUTSIDE_JOINT_SUPPORT');}
      if(profit){
       let accounting:ReturnType<typeof advanceOperatingProfitCourse>;
-      try{accounting=advanceOperatingProfitCourse(profit,d,path.operating!,previous,path.world,t,action.cost);transitions++;}
+      try{accounting=advanceOperatingProfitCourse(profit,d,path.operating!,previous,path.world,t,action.cost);transitions++;tick();}
       catch(error){if(error instanceof OperatingProfitDomainError){unsupportedSeen=true;throw new Unsupported(error.message);}throw error;}
       path.operating=accounting.course;
       if(path.operating.minimumCashObserved<profit.minimumCash)throw new Unsupported('OPERATING_CASH_FLOOR_INFEASIBLE');
@@ -195,7 +195,15 @@ export async function synthesizeContingentControl(input:{mandate:unknown;problem
    }
   }
  }catch(e){if(e instanceof ControlContractError)throw e;if(e instanceof Exhausted)fail('SEARCH_EXHAUSTED',e.message);else if(e instanceof Unsupported)fail('MODEL_UNSUPPORTED',e.message);else fail('NUMERICAL_FAILURE',e instanceof Error?e.message:'CONTROL_BACKEND_FAILURE');}
- if(!policy){const usedCpu=process.cpuUsage(cpu);Object.assign(compute.usage,{elapsedMs:performance.now()-start,cpuUserMicros:usedCpu.user,cpuSystemMicros:usedCpu.system,rssAfterBytes:process.memoryUsage().rss,expansions:Math.min(expansions,expansionLimit),transitionEvaluations:transitions});compute.attempts=[{startedAt,finishedAt:new Date().toISOString(),status}];if(profitTargetAssessment)compute.outputRefs=[`revenue-profit-assessment:${epistemicHash(profitTargetAssessment)}`];compute.id=`model-compute:${epistemicHash(compute)}`;}
+ // Hashing/freezing a completed policy also consumes the original grant. A
+ // checked incumbent already marked exhausted remains advisory; a late result
+ // must never cross the publication boundary as POLICY_AVAILABLE.
+ if(status==='POLICY_AVAILABLE'&&performance.now()-start>=m.search.deadlineMs){
+  fail('SEARCH_EXHAUSTED','DECISION_DEADLINE');policy=null;
+  profitTargetAssessment=assessRevenueProfitTarget(m,best?.value??null,false);
+  operatingProgrammeSearch=operatingProgrammeSearchReport(p,[...rootProgrammeResults.values()],best?.node.actionId??null,false);
+ }
+ if(!policy){const usedCpu=process.cpuUsage(cpu);Object.assign(compute.usage,{elapsedMs:performance.now()-start,cpuUserMicros:usedCpu.user,cpuSystemMicros:usedCpu.system,rssAfterBytes:process.memoryUsage().rss,expansions:Math.min(expansions,expansionLimit),transitionEvaluations:transitions});compute.attempts=[{startedAt,finishedAt:new Date().toISOString(),status}];compute.outputRefs=profitTargetAssessment?[`revenue-profit-assessment:${epistemicHash(profitTargetAssessment)}`]:[];compute.id='';compute.id=`model-compute:${epistemicHash(compute)}`;}
  const revisionRef=policy?.ref.id??compute.inputRef;
  const experience=[prepareS4Experience(m,policy?'POLICY_SEARCH':'REJECTION',revisionRef,{status,reasons,policyRef:policy?.ref??null,certificate:policy?.certificate??null,...(profitTargetAssessment?{profitTargetAssessment}:{}),...(operatingProgrammeSearch?{operatingProgrammeSearch}:{}),consideredChoices:policy?.nodes.map(n=>({nodeId:n.id,alternatives:n.alternatives}))??[],transitionEvaluations:transitions},input.priorPolicyRef?[input.priorPolicyRef.id]:[],now),prepareS4Experience(m,'COMPUTE',revisionRef,{compute},[],now)];
  if(input.priorPolicyRef)experience.push(prepareS4Experience(m,'POLICY_REVISION',revisionRef,{priorPolicyRef:input.priorPolicyRef,policyRef:policy?.ref??null,status},[input.priorPolicyRef.id],now));

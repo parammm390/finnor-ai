@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { ControlAction, ControlDynamicsAdapter, ControlProblem, EconomicMandate, OperatingProgrammeChoice,
-  OperatingProgrammeCost, OperatingProgrammeSearchReport, PolicyNode } from '@finnor/shared-types';
+  OperatingProgrammeCost, OperatingProgrammeProblem, OperatingProgrammeSearchReport, PolicyNode } from '@finnor/shared-types';
 import { ExperimentRefSchema } from './experiments';
 import { epistemicHash } from './source-precedence';
 
@@ -37,12 +37,10 @@ type Programme = { action: ControlAction; choices: OperatingProgrammeChoice[]; i
  * accepted here. The compiler combines only registered controls and costs.
  * Every generated action is one irreversible full-horizon commitment at t=0;
  * WAIT/STOP preserve scheduled consequences in the existing S4 owner. */
-export function compileOperatingProgramme(p: ControlProblem): { problem: ControlProblem; programmes: Programme[]; combinations: number; excludedCombinations: number } {
-  const s = p.programmeSpace;
-  requireValue(p.schema === 'finnor.control-problem.operating-programme.v2' && s, 'OPERATING_PROGRAMME_VERSIONED_DOMAIN_REQUIRED');
-  const space = s!, h = space.scope.horizon.periods, passive = p.actions.filter(a => a.kind === 'WAIT' || a.kind === 'STOP');
+export function compileOperatingProgramme(p: OperatingProgrammeProblem): { problem: OperatingProgrammeProblem; programmes: Programme[]; combinations: number; excludedCombinations: number } {
+  const space = p.programmeSpace, h = space.scope.horizon.periods, passive = p.actions.filter(a => a.kind === 'WAIT' || a.kind === 'STOP');
   requireValue(passive.length >= 1 && passive.length <= 2 && passive.filter(a => a.kind === 'STOP').length === 1 &&
-    passive.filter(a => a.kind === 'WAIT').length <= 1 && !p.observations.length && !p.continuation,
+    passive.filter(a => a.kind === 'WAIT').length <= 1,
   'OPERATING_PROGRAMME_FULL_HORIZON_PASSIVE_CHOICES_REQUIRED');
   const dimensions = Object.keys(passive[0]!.resources), exposures = Object.keys(p.baselineExposures);
   requireValue(dimensions.length >= 1 && dimensions.length <= 8 && exposures.length >= 1 && exposures.length <= 4,
@@ -105,9 +103,9 @@ export function compileOperatingProgramme(p: ControlProblem): { problem: Control
 }
 
 export function operatingProgrammeScopeReason(m: EconomicMandate, p: ControlProblem, dynamics?: ControlDynamicsAdapter): string | null {
-  if (p.schema !== 'finnor.control-problem.operating-programme.v2') return p.programmeSpace ? 'OPERATING_PROGRAMME_VERSIONED_DOMAIN_REQUIRED' : null;
+  if (p.schema !== 'finnor.control-problem.operating-programme.v2') return null;
   const s = p.programmeSpace;
-  if (!s || m.utility.operatingProfit?.objective !== 'INCREMENTAL_NET_PROFIT' || !m.utility.operatingProfit.profitTarget)
+  if (m.utility.operatingProfit?.objective !== 'INCREMENTAL_NET_PROFIT' || !m.utility.operatingProfit.profitTarget)
     return 'OPERATING_PROGRAMME_REQUIRES_EXPLICIT_NET_PROFIT_AND_FIXED_REVENUE_TARGET';
   if (!same(s.scope.mandateRef, m.ref) || !same(s.scope.root, m.utility.operatingProfit.root) || s.scope.unit !== m.utility.unit || !same(s.scope.horizon, m.horizon))
     return 'OPERATING_PROGRAMME_ORIGINAL_MANDATE_ENTITY_CURRENCY_OR_HORIZON_DIFFERS';
@@ -116,7 +114,7 @@ export function operatingProgrammeScopeReason(m: EconomicMandate, p: ControlProb
 }
 
 export function operatingProgrammeSearchReport(p: ControlProblem, alternatives: PolicyNode['alternatives'], bestActionId: string | null, completeSearch: boolean): OperatingProgrammeSearchReport | undefined {
-  if (!p.programmeSpace) return undefined;
+  if (p.schema !== 'finnor.control-problem.operating-programme.v2') return undefined;
   const domain = compileOperatingProgramme(p), chosen = domain.programmes.find(c => c.action.id === bestActionId);
   const candidates = domain.programmes.map(c => { const result = alternatives.find(a => a.actionId === c.action.id); return {
     actionId: c.action.id, choices: c.choices, interactionChargeIds: c.interactionChargeIds,
