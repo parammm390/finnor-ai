@@ -227,7 +227,9 @@ fi
 node - "$evidence/linux-r1-runtime/results.json" <<'NODE'
 const fs = require("node:fs");
 const receipt = JSON.parse(fs.readFileSync(process.argv[2], "utf8"));
-if (receipt.status !== "PASS_LOCAL" || receipt.results.length !== 1 || receipt.results[0].status !== "PASS") {
+const required = ["ready-worker-holds-until-dispatch", "positive-owner-reduction"];
+if (receipt.status !== "PASS_LOCAL" || receipt.results.length !== required.length ||
+    required.some(id => receipt.results.filter(r => r.id === id && r.status === "PASS").length !== 1)) {
   console.error("::error::R1 installed owner proof failed: " + JSON.stringify({status:receipt.status,
     cases:receipt.results.map(r=>({id:r.id,status:r.status,error:String(r.observed?.error??"").slice(0,1024)}))}));
   process.exit(1);
