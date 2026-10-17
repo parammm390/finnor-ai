@@ -2,6 +2,7 @@ import { z } from 'zod';
 import type { ControlDynamicsAdapter, ControlWorld, EconomicMandate, OperatingProfitDriver, OperatingProfitObjective, OperatingProfitForecast, OperatingProfitCashPeriod, RevenueProfitAssessment } from '@finnor/shared-types';
 import { ExperimentRefSchema } from './experiments';
 import { ER_ZERO, ExperimentRational } from './experiment-numerics';
+import { OperatingProgrammeSearchReportSchema } from './operating-programme';
 
 const text = z.string().min(1).max(256), amount = z.number().finite().nonnegative().max(1e9);
 const driver = z.discriminatedUnion('kind', [
@@ -53,6 +54,7 @@ export const OperatingProfitCertificateSchema = z.object({
   unit: text, objective: OperatingProfitObjectiveSchema.shape.objective,
   measure: z.enum(['OPERATING_PROFIT_BEFORE_FINANCING_AND_TAX', 'NET_PROFIT_AFTER_FINANCING_AND_INCOME_TAX']),
   profitTargetAssessment: revenueProfitAssessment.optional(),
+  programmeSearch: OperatingProgrammeSearchReportSchema.optional(),
   comparator: z.literal('SAME_INITIAL_WORLD_AND_RETAINED_BASELINE_WITH_PENDING_OBLIGATIONS'),
   arithmetic: z.literal('FLOAT64_INHERITS_S3_AND_SEARCH_LIMITATIONS'),
   forecastBasis: z.literal('UNDISCOUNTED_TOTALS_SEPARATE_TERMINAL_LIABILITIES'),

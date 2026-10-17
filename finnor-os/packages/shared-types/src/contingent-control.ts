@@ -80,6 +80,7 @@ export interface OperatingProfitCertificate {
   currency: string; moneyScale: OperatingProfitObjective['moneyScale']; unit: string;
   objective: OperatingProfitObjective['objective']; measure: 'OPERATING_PROFIT_BEFORE_FINANCING_AND_TAX' | 'NET_PROFIT_AFTER_FINANCING_AND_INCOME_TAX';
   profitTargetAssessment?: RevenueProfitAssessment;
+  programmeSearch?: OperatingProgrammeSearchReport;
   comparator: 'SAME_INITIAL_WORLD_AND_RETAINED_BASELINE_WITH_PENDING_OBLIGATIONS';
   arithmetic: 'FLOAT64_INHERITS_S3_AND_SEARCH_LIMITATIONS';
   forecastBasis: 'UNDISCOUNTED_TOTALS_SEPARATE_TERMINAL_LIABILITIES';
@@ -141,10 +142,35 @@ export interface ControlAction {
   /** Conjunction over lawful, already available information, never private worlds. */
   precondition?: { afterActionIds: string[]; observations: Array<{ instrumentId: string; tokens: string[] }> };
 }
+export interface OperatingProgrammeCost {
+  cost: number; resources: Record<string, number>; occupancy: Record<string, number>;
+  tailLiability: number; humanSeconds: number;
+}
+export interface OperatingProgrammeChoice { leverId: string; optionId: string }
+/** Owner-registered actionable choices, not generated claims about demand or
+ * causal response. Every bundle is evaluated through the SAME joint S3 law. */
+export interface OperatingProgrammeSpace {
+  schema: 'finnor.s4.operating-programme-space.v1'; sourceRef: ExperimentRef;
+  scope: { mandateRef: ExperimentRef; root: { entityType: string; entityId: string }; unit: string; horizon: EconomicMandate['horizon'] };
+  levers: Array<{ id: string; exposureId: string; options: Array<OperatingProgrammeCost & { id: string; schedule: number[] }> }>;
+  exclusions: Array<{ id: string; when: OperatingProgrammeChoice[] }>;
+  interactionCharges: Array<OperatingProgrammeCost & { id: string; when: OperatingProgrammeChoice[] }>;
+  commitment: 'FULL_HORIZON_COMMITMENTS_WITH_EXPLICIT_ADDITIVE_AND_INTERACTION_COSTS';
+  qualification: 'OWNER_DECLARED_OPTIONS_NOT_VERIFIED_ACTIONABILITY';
+}
+export interface OperatingProgrammeSearchReport {
+  schema: 'finnor.s4.operating-programme-search.v1'; spaceDigest: string;
+  combinations: number; excludedCombinations: number; generatedProgrammes: number; evaluatedProgrammes: number;
+  bestActionId: string | null; selectedOptions: OperatingProgrammeChoice[]; interactionChargeIds: string[]; completeSearch: boolean;
+  candidates: Array<{ actionId: string; choices: OperatingProgrammeChoice[]; interactionChargeIds: string[];
+    status: PolicyResultState | 'NOT_EVALUATED'; valueBounds: [number, number] | null; reasons: string[] }>;
+  qualification: 'REGISTERED_FINITE_JOINT_DOMAIN_NOT_GLOBAL_OR_FIELD_OPTIMALITY';
+}
 export interface ControlProblem {
-  schema: 'finnor.control-problem.v1' | 'finnor.control-problem.exact.v2'; id: string; episodeId: string; modelRef: ExperimentRef;
+  schema: 'finnor.control-problem.v1' | 'finnor.control-problem.exact.v2' | 'finnor.control-problem.operating-programme.v2'; id: string; episodeId: string; modelRef: ExperimentRef;
   context: string; regime: string; baselineExposures: Record<string, number[]>;
   actions: ControlAction[]; observations: ControlObservationInstrument[]; obligations: ControlObligation[]; validUntil: string;
+  programmeSpace?: OperatingProgrammeSpace;
   exactSource?: {modelDigest:string;sourceRef:ExperimentRef;quantityEncoding:'NORMALIZED_RATIONAL_PAIRS';numericProjection:'PRESENTATION_ONLY'};
   continuation?: { elapsedPeriods: number; actionHistory: string[];
     observations: Array<ControlObservation & { knowledgeAt: string; sourceRef: ExperimentRef }>;

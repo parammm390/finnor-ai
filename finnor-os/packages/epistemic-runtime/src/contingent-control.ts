@@ -3,14 +3,15 @@ import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import type { BeliefViewPin, ContingentPolicy, ControlAction, ControlDecision, ControlDecisionInput, ControlDynamicsAdapter, ControlInstrumentSupport,
- ControlObservation, ControlProblem, ControlWorld, EconomicMandate, ExperimentRef, PolicyNode, PolicyResultState, ResolvedPolicyAllocation, S4ComputeInvocation, S4ExperienceEvent, OperatingProfitForecast, RevenueProfitAssessment } from '@finnor/shared-types';
+ ControlObservation, ControlProblem, ControlWorld, EconomicMandate, ExperimentRef, PolicyNode, PolicyResultState, ResolvedPolicyAllocation, S4ComputeInvocation, S4ExperienceEvent, OperatingProfitForecast, RevenueProfitAssessment, OperatingProgrammeSearchReport } from '@finnor/shared-types';
 import { epistemicHash } from './source-precedence';
 import { CONTROL_ADMISSION, ControlContractError, assertContingentPolicy, immutableControl, parseControlDecision, parseControlProblem, parseEconomicMandate } from './control-contracts';
 import { controlObservationToken, validateControlObservationInstruments } from './control-observations';
 import { operatingProfitContractReason, openOperatingProfitCourse, advanceOperatingProfitCourse, operatingProfitForecast,
  OperatingProfitDomainError, assessRevenueProfitTarget, type OperatingProfitCourse } from './operating-profit';
+import { operatingProgrammeScopeReason, operatingProgrammeSearchReport } from './operating-programme';
 
-const files=['./contingent-control.ts','./control-contracts.ts','./control-observations.ts','./intervention-control.ts','./operating-profit.ts','./experiment-numerics.ts','../../shared-types/src/contingent-control.ts','../../private-equity/src/enterprise-control.ts','../../private-equity/src/enterprise-experiments.ts','../../private-equity/src/enterprise-interventions.ts','../../../apps/api/app/api/policies/[operation]/route.ts'].map(p=>fileURLToPath(new URL(p,import.meta.url)));
+const files=['./contingent-control.ts','./control-contracts.ts','./control-observations.ts','./intervention-control.ts','./operating-profit.ts','./operating-programme.ts','./experiment-numerics.ts','../../shared-types/src/contingent-control.ts','../../private-equity/src/enterprise-control.ts','../../private-equity/src/enterprise-experiments.ts','../../private-equity/src/enterprise-interventions.ts','../../../apps/api/app/api/policies/[operation]/route.ts'].map(p=>fileURLToPath(new URL(p,import.meta.url)));
 const loadedSources=Promise.all(files.map(async path=>({path,sha256:createHash('sha256').update(await readFile(path)).digest('hex')})));
 void loadedSources.catch(()=>undefined);
 export async function controlSourcesCurrent(expected:S4ComputeInvocation['backend']['sourceDigests']):Promise<boolean>{try{return epistemicHash(await loadedSources)===epistemicHash(expected)&&(await Promise.all(expected.map(async s=>createHash('sha256').update(await readFile(s.path)).digest('hex')===s.sha256))).every(Boolean);}catch{return false;}}
@@ -29,12 +30,13 @@ const pendingDelivery=(p:Path,period:number):Path=>({...p,observations:[...p.obs
 
 export async function synthesizeContingentControl(input:{mandate:unknown;problem:unknown;dynamics:ControlDynamicsAdapter;instruments:ControlInstrumentSupport[];
  now?:string;beliefPins?:BeliefViewPin[];priorPolicyRef?:ExperimentRef|null;validUntilCap?:string;inputArtifactRef?:ExperimentRef|null;budgetStartedAt?:number;
- remainingExpansions?:number}):Promise<{schema:'finnor.s4.policy-result.v1';status:PolicyResultState;policy:ContingentPolicy|null;reasons:string[];compute:S4ComputeInvocation;experience:S4ExperienceEvent[];profitTargetAssessment?:RevenueProfitAssessment}> {
- const m=parseEconomicMandate(input.mandate,{operatingProfit:true}),p=parseControlProblem(input.problem),d=input.dynamics,now=input.now??new Date().toISOString(),profit=m.utility.operatingProfit;
- if(p.schema!=='finnor.control-problem.v1')throw new ControlContractError('INVALID_REQUEST','Exact information tables require the versioned exact S4 continuation owner');
+ remainingExpansions?:number}):Promise<{schema:'finnor.s4.policy-result.v1';status:PolicyResultState;policy:ContingentPolicy|null;reasons:string[];compute:S4ComputeInvocation;experience:S4ExperienceEvent[];profitTargetAssessment?:RevenueProfitAssessment;operatingProgrammeSearch?:OperatingProgrammeSearchReport}> {
+ const receivedAt=performance.now(),receivedCpu=process.cpuUsage(),receivedRss=process.memoryUsage().rss,m=parseEconomicMandate(input.mandate,{operatingProfit:true}),p=parseControlProblem(input.problem,{operatingProgramme:true}),d=input.dynamics,now=input.now??new Date().toISOString(),profit=m.utility.operatingProfit;
+ if(p.schema==='finnor.control-problem.exact.v2')throw new ControlContractError('INVALID_REQUEST','Exact information tables require the versioned exact S4 continuation owner');
+ const programmeReason=operatingProgrammeScopeReason(m,p,d);if(programmeReason)throw new ControlContractError('INVALID_REQUEST',programmeReason);
  const operatingReason=operatingProfitContractReason(m,d);if(operatingReason)throw new ControlContractError('INVALID_REQUEST',operatingReason);
  if(profit&&p.continuation)throw new ControlContractError('INVALID_REQUEST','Operating-profit continuation requires qualified paired opening accounting; v1 does not infer it');
- const start=input.budgetStartedAt??performance.now(),cpu=process.cpuUsage(),rss=process.memoryUsage().rss,startedAt=new Date().toISOString();
+ const start=input.budgetStartedAt??receivedAt,cpu=receivedCpu,rss=receivedRss,startedAt=new Date().toISOString();
  const expansionLimit=input.remainingExpansions??m.search.maxExpansions;
  if(!Number.isSafeInteger(expansionLimit)||expansionLimit<1||expansionLimit>m.search.maxExpansions)
   throw new ControlContractError('INVALID_REQUEST','Remaining search grant may only attenuate the original mandate');
@@ -49,6 +51,8 @@ export async function synthesizeContingentControl(input:{mandate:unknown;problem
  const utility=(states:Record<string,number>,terms:EconomicMandate['utility']['periodTerms'])=>terms.reduce((s,t)=>s+t.coefficient*states[t.variableId]!,0);
  let best:Tree|null=null;
  let profitTargetAssessment=assessRevenueProfitTarget(m,null,false);
+ const rootProgrammeResults=new Map<string,PolicyNode['alternatives'][number]>();
+ let operatingProgrammeSearch=operatingProgrammeSearchReport(p,[],null,false);
  try{
   if(sourceDigests.length!==files.length)fail('NUMERICAL_FAILURE','LOADED_CONTROL_SOURCE_IDENTITY_UNAVAILABLE');
   else if(!Number.isFinite(Date.parse(now))||Date.parse(m.knowledgeAt)>Date.parse(now)||Date.parse(m.validUntil)<=Date.parse(now)||Date.parse(p.validUntil)<=Date.parse(now))fail('STALE_INPUT','MANDATE_OR_PROBLEM_KNOWLEDGE_EXPIRY');
@@ -138,13 +142,14 @@ export async function synthesizeContingentControl(input:{mandate:unknown;problem
    }
    function search(paths:Path[],t:number,history:string[],stopped:boolean,onlyStop=false):Tree|null {
     tick();let incumbent:Tree|null=null;const alternatives:PolicyNode['alternatives']=[];
+    const consider=(alternative:PolicyNode['alternatives'][number])=>{alternatives.push(alternative);if(p.programmeSpace&&t===startPeriod)rootProgrammeResults.set(alternative.actionId,alternative);};
     for(const action of p.actions){if(onlyStop&&action.kind!=='STOP')continue;
-     const reason=eligible(action,t,history,stopped,paths[0]!.observations);if(reason){alternatives.push({actionId:action.id,status:'INFEASIBLE',valueBounds:null,reasons:[reason]});continue;}
+     const reason=eligible(action,t,history,stopped,paths[0]!.observations);if(reason){consider({actionId:action.id,status:'INFEASIBLE',valueBounds:null,reasons:[reason]});continue;}
      if(!onlyStop&&++expansions>expansionLimit)throw new Exhausted('SEARCH_EXPANSION_BUDGET');
-     try{const candidate=finish(paths,action,t,history,stopped,onlyStop);alternatives.push({actionId:action.id,status:'POLICY_AVAILABLE',valueBounds:[candidate.value,candidate.value],reasons:[]});
+     try{const candidate=finish(paths,action,t,history,stopped,onlyStop);consider({actionId:action.id,status:'POLICY_AVAILABLE',valueBounds:[candidate.value,candidate.value],reasons:[]});
       if(!incumbent||candidate.value>incumbent.value)incumbent=candidate;
       if(t===startPeriod&&(!best||candidate.value>best.value))best=candidate;
-     }catch(e){if(e instanceof Unsupported){if(/UNRESOLVED/.test(e.message))uncertaintySeen=true;alternatives.push({actionId:action.id,status:/UNRESOLVED/.test(e.message)?'UNCERTAINTY_UNRESOLVED':/SUPPORT/.test(e.message)?'MODEL_UNSUPPORTED':'INFEASIBLE',valueBounds:null,reasons:[e.message]});}else throw e;}
+     }catch(e){if(e instanceof Unsupported){if(/UNRESOLVED/.test(e.message))uncertaintySeen=true;consider({actionId:action.id,status:/UNRESOLVED/.test(e.message)?'UNCERTAINTY_UNRESOLVED':/SUPPORT/.test(e.message)?'MODEL_UNSUPPORTED':'INFEASIBLE',valueBounds:null,reasons:[e.message]});}else throw e;}
     }
     if(incumbent)incumbent.node.alternatives=alternatives;
     return incumbent;
@@ -159,6 +164,7 @@ export async function synthesizeContingentControl(input:{mandate:unknown;problem
    else if(unsupportedSeen)fail('MODEL_UNSUPPORTED','CANDIDATE_TRAJECTORY_SUPPORT_UNRESOLVED_OPTIMALITY_GAP_RETAINED');
    else if(!best)fail('INFEASIBLE','NO_FULL_HORIZON_FEASIBLE_POLICY');
    const complete=!exhausted&&!unsupportedSeen&&!uncertaintySeen;
+   if(p.programmeSpace){if(best)best.node.alternatives=[...rootProgrammeResults.values()];operatingProgrammeSearch=operatingProgrammeSearchReport(p,[...rootProgrammeResults.values()],best?.node.actionId??null,complete);}
    profitTargetAssessment=assessRevenueProfitTarget(m,best?.value??null,complete);
    // The target does not prune intermediate branches: an expensive early step
    // may be necessary for later profit. Compare only the best full-horizon,
@@ -180,7 +186,7 @@ export async function synthesizeContingentControl(input:{mandate:unknown;problem
     if(complete)upper=best.value;
     const lower=best.value;
     const certificate:ContingentPolicy['certificate']={basis:'MODEL_RELATIVE_FINITE_ENUMERATION_FLOAT64',ambiguity:'FIXED_COMPLETE_SCENARIOS_NO_PROBABILITIES',valueBounds:[lower,lower],optimalBounds:[lower,Number.isFinite(upper)?Math.max(lower,upper):null],normalizedRegretBounds:[0,Number.isFinite(upper)?Math.max(0,upper-lower)/m.scoring.normalization:null],completeSearch:complete,finiteScenarioGapOnly:true,distributionAndIdentificationGap:'UNKNOWN',numericalTolerance:1e-8,feasibleIncumbentChecked:true,worlds:initial.length,riskSemantics:m.risk,
-     ...(profit?{operatingProfit:{schema:'finnor.s4.operating-profit-certificate.v1' as const,root:profit.root,currency:profit.currency,moneyScale:profit.moneyScale,unit:m.utility.unit,objective:profit.objective,measure:profit.netProfit?'NET_PROFIT_AFTER_FINANCING_AND_INCOME_TAX' as const:'OPERATING_PROFIT_BEFORE_FINANCING_AND_TAX' as const,...(profitTargetAssessment?{profitTargetAssessment}:{}),comparator:'SAME_INITIAL_WORLD_AND_RETAINED_BASELINE_WITH_PENDING_OBLIGATIONS' as const,arithmetic:'FLOAT64_INHERITS_S3_AND_SEARCH_LIMITATIONS' as const,forecastBasis:'UNDISCOUNTED_TOTALS_SEPARATE_TERMINAL_LIABILITIES' as const,qualification:'MODEL_CONDITIONAL_NOT_REALIZED_OR_GUARANTEED' as const,forecasts:best.operatingForecasts!}}:{})};
+     ...(profit?{operatingProfit:{schema:'finnor.s4.operating-profit-certificate.v1' as const,root:profit.root,currency:profit.currency,moneyScale:profit.moneyScale,unit:m.utility.unit,objective:profit.objective,measure:profit.netProfit?'NET_PROFIT_AFTER_FINANCING_AND_INCOME_TAX' as const:'OPERATING_PROFIT_BEFORE_FINANCING_AND_TAX' as const,...(profitTargetAssessment?{profitTargetAssessment}:{}),...(operatingProgrammeSearch?{programmeSearch:operatingProgrammeSearch}:{}),comparator:'SAME_INITIAL_WORLD_AND_RETAINED_BASELINE_WITH_PENDING_OBLIGATIONS' as const,arithmetic:'FLOAT64_INHERITS_S3_AND_SEARCH_LIMITATIONS' as const,forecastBasis:'UNDISCOUNTED_TOTALS_SEPARATE_TERMINAL_LIABILITIES' as const,qualification:'MODEL_CONDITIONAL_NOT_REALIZED_OR_GUARANTEED' as const,forecasts:best.operatingForecasts!}}:{})};
     const usedCpu=process.cpuUsage(cpu);Object.assign(compute.usage,{elapsedMs:performance.now()-start,cpuUserMicros:usedCpu.user,cpuSystemMicros:usedCpu.system,rssAfterBytes:process.memoryUsage().rss,expansions:Math.min(expansions,expansionLimit),transitionEvaluations:transitions});
     compute.outputRefs=[`policy-program:${epistemicHash({nodes,certificate,demand:demandBody})}`];
     compute.attempts=[{startedAt,finishedAt:new Date().toISOString(),status}];compute.id=`model-compute:${epistemicHash(compute)}`;
@@ -191,9 +197,9 @@ export async function synthesizeContingentControl(input:{mandate:unknown;problem
  }catch(e){if(e instanceof ControlContractError)throw e;if(e instanceof Exhausted)fail('SEARCH_EXHAUSTED',e.message);else if(e instanceof Unsupported)fail('MODEL_UNSUPPORTED',e.message);else fail('NUMERICAL_FAILURE',e instanceof Error?e.message:'CONTROL_BACKEND_FAILURE');}
  if(!policy){const usedCpu=process.cpuUsage(cpu);Object.assign(compute.usage,{elapsedMs:performance.now()-start,cpuUserMicros:usedCpu.user,cpuSystemMicros:usedCpu.system,rssAfterBytes:process.memoryUsage().rss,expansions:Math.min(expansions,expansionLimit),transitionEvaluations:transitions});compute.attempts=[{startedAt,finishedAt:new Date().toISOString(),status}];if(profitTargetAssessment)compute.outputRefs=[`revenue-profit-assessment:${epistemicHash(profitTargetAssessment)}`];compute.id=`model-compute:${epistemicHash(compute)}`;}
  const revisionRef=policy?.ref.id??compute.inputRef;
- const experience=[prepareS4Experience(m,policy?'POLICY_SEARCH':'REJECTION',revisionRef,{status,reasons,policyRef:policy?.ref??null,certificate:policy?.certificate??null,...(profitTargetAssessment?{profitTargetAssessment}:{}),consideredChoices:policy?.nodes.map(n=>({nodeId:n.id,alternatives:n.alternatives}))??[],transitionEvaluations:transitions},input.priorPolicyRef?[input.priorPolicyRef.id]:[],now),prepareS4Experience(m,'COMPUTE',revisionRef,{compute},[],now)];
+ const experience=[prepareS4Experience(m,policy?'POLICY_SEARCH':'REJECTION',revisionRef,{status,reasons,policyRef:policy?.ref??null,certificate:policy?.certificate??null,...(profitTargetAssessment?{profitTargetAssessment}:{}),...(operatingProgrammeSearch?{operatingProgrammeSearch}:{}),consideredChoices:policy?.nodes.map(n=>({nodeId:n.id,alternatives:n.alternatives}))??[],transitionEvaluations:transitions},input.priorPolicyRef?[input.priorPolicyRef.id]:[],now),prepareS4Experience(m,'COMPUTE',revisionRef,{compute},[],now)];
  if(input.priorPolicyRef)experience.push(prepareS4Experience(m,'POLICY_REVISION',revisionRef,{priorPolicyRef:input.priorPolicyRef,policyRef:policy?.ref??null,status},[input.priorPolicyRef.id],now));
- return immutableControl({schema:'finnor.s4.policy-result.v1',status,policy,reasons,compute,experience,...(profitTargetAssessment?{profitTargetAssessment}:{})});
+ return immutableControl({schema:'finnor.s4.policy-result.v1',status,policy,reasons,compute,experience,...(profitTargetAssessment?{profitTargetAssessment}:{}),...(operatingProgrammeSearch?{operatingProgrammeSearch}:{})});
 }
 
 export function decideContingentPolicy(policy:ContingentPolicy,value:unknown,allocation:ResolvedPolicyAllocation|null=null):ControlDecision {
