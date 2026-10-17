@@ -94,7 +94,7 @@ jobs:
           ACTIONS_ID_TOKEN_REQUEST_TOKEN: ""
           ACTIONS_ID_TOKEN_REQUEST_URL: ""
 
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
         with:
           node-version: 22.22.3
           cache: npm
@@ -186,11 +186,11 @@ jobs:
           FINNOR_TEST_MANAGED_EXTENSIONS: omit
 
       - name: Set up pinned QEMU for ARM64 image stages
-        uses: docker/setup-qemu-action@96fe6ef7f33517b61c61be40b68a1882f3264fb8
+        uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1
         with:
           platforms: arm64
       - name: Set up pinned cached image builder
-        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069
         env:
           ACTIONS_ID_TOKEN_REQUEST_TOKEN: ""
           ACTIONS_ID_TOKEN_REQUEST_URL: ""
@@ -203,7 +203,7 @@ jobs:
 
       - name: Build exact application-worker image before production authority
         id: worker_image
-        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc
         with:
           context: .
           file: finnor-os/Dockerfile.worker
@@ -229,7 +229,7 @@ jobs:
 
       - name: Retain exact Linux worker smoke evidence
         if: ${{ always() }}
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: production-worker-image-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
@@ -268,7 +268,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
 
       - name: Authenticate exact AWS project with GitHub OIDC for ECR
-        uses: aws-actions/configure-aws-credentials@cbe3b392738ccf3f987d68400dafcf4b0624a56c
+        uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd
         with:
           role-to-assume: ${{ vars.AWS_GITHUB_ACTIONS_ROLE_ARN || 'arn:aws:iam::601804670058:role/finnor-github-actions-deploy' }}
           aws-region: ${{ env.AWS_REGION }}
@@ -331,7 +331,7 @@ jobs:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
 
       - name: Authenticate exact AWS project with GitHub OIDC for preflight
-        uses: aws-actions/configure-aws-credentials@cbe3b392738ccf3f987d68400dafcf4b0624a56c
+        uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd
         with:
           role-to-assume: ${{ vars.AWS_GITHUB_ACTIONS_ROLE_ARN || 'arn:aws:iam::601804670058:role/finnor-github-actions-deploy' }}
           aws-region: ${{ env.AWS_REGION }}
@@ -457,7 +457,7 @@ jobs:
           ACTIONS_ID_TOKEN_REQUEST_URL: ""
           VERCEL_API_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_API_AUTOMATION_BYPASS_SECRET }}
       - name: Authenticate exact AWS project with GitHub OIDC for fresh compute preflight
-        uses: aws-actions/configure-aws-credentials@cbe3b392738ccf3f987d68400dafcf4b0624a56c
+        uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd
         with:
           role-to-assume: ${{ vars.AWS_GITHUB_ACTIONS_ROLE_ARN || 'arn:aws:iam::601804670058:role/finnor-github-actions-deploy' }}
           aws-region: ${{ env.AWS_REGION }}
@@ -476,7 +476,7 @@ jobs:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
 
       - name: Authenticate exact AWS project with GitHub OIDC for ECS
-        uses: aws-actions/configure-aws-credentials@cbe3b392738ccf3f987d68400dafcf4b0624a56c
+        uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd
         with:
           role-to-assume: ${{ vars.AWS_GITHUB_ACTIONS_ROLE_ARN || 'arn:aws:iam::601804670058:role/finnor-github-actions-deploy' }}
           aws-region: ${{ env.AWS_REGION }}
