@@ -221,6 +221,38 @@ jobs:
           if-no-files-found: warn
           retention-days: 7
 
+  operating-profit:
+    name: S4 operating-profit owner and replay
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 22.22.3
+          cache: npm
+          cache-dependency-path: finnor-os/package-lock.json
+      - run: npm ci --no-audit --no-fund
+      - name: Prepare the pinned conditional S3 numerical backend
+        run: |
+          python3 -m venv "$RUNNER_TEMP/s4-python"
+          "$RUNNER_TEMP/s4-python/bin/pip" install --disable-pip-version-check -r packages/epistemic-runtime/src/intervention-requirements.txt
+          echo "FINNOR_S3_PYTHON=$RUNNER_TEMP/s4-python/bin/python" >> "$GITHUB_ENV"
+      - name: Exercise full S4 owner, operating-profit and retained-kernel replay paths
+        run: python3 scripts/s4/run-local.py
+        env:
+          FINNOR_S4_CI_EVIDENCE_DIR: ${{ runner.temp }}/finnor-s4-evidence
+      - name: Retain inputs, source snapshot, API results and replay evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: s4-operating-profit-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/finnor-s4-evidence/**
+          if-no-files-found: warn
+          retention-days: 7
+
   phase7:
     runs-on: ubuntu-latest
     timeout-minutes: 25

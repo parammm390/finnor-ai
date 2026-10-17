@@ -52,6 +52,8 @@ export async function resolveR2Owners(ctx:PeMutationContext,request:CapitalProgr
  if(request.financial)throw new CapitalProgramV2Error('INVALID_REQUEST','This exact finite owner profile requires original S4 utility; a separate native finance IR needs its own exact correspondence adapter');
  if(request.permitted.agreement!=='UNILATERAL_PROPOSAL')
   throw new CapitalProgramV2Error('BLOCKED_SELECTION','R2_ACCEPTANCE_PRIMITIVE_UNAVAILABLE: the exact finite adapter cannot establish received acceptance of new counterparty terms');
+ if(binding.policy.mandate.utility.operatingProfit)
+  throw new CapitalProgramV2Error('CHECK_FAILED','R2_OPERATING_PROFIT_EXACT_CORRESPONDENCE_UNAVAILABLE');
  if(binding.outstandingEffects.length)
   throw new CapitalProgramV2Error('BLOCKED_SELECTION','R2_UNACCOUNTED_S6_OBLIGATION: resolve retained unknown/partial effects through the current S6 owner before an exact financial feasibility claim');
  const root=binding.model.request.roots[0];if(!root)throw new CapitalProgramV2Error('CHECK_FAILED','Original exact model has no permitted owner root');

@@ -13,6 +13,7 @@ const zeros=(n:number)=>Array.from({length:n},zero);
 
 /** Full native P1/M3 constructor family. Search counters are not constructor bounds. */
 export function lowerR2Grammar(o:R2OriginalProblem):R2Variant[]{
+  need(!o.mandate.utility.operatingProfit,'R2_OPERATING_PROFIT_EXACT_CORRESPONDENCE_UNAVAILABLE');
   const n=(path:string)=>s(q(o.source.quantities[path]!)),perm=o.permitted;
   need(perm.agreement==='UNILATERAL_PROPOSAL','R2_ACCEPTANCE_PRIMITIVE_UNAVAILABLE');
   need(o.resourceScopeRoots.length>0,'R2_CANONICAL_RESOURCE_SCOPE_ABSENT');

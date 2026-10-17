@@ -35,6 +35,7 @@ export async function proposeEnterpriseSameDealAlternatives(ctx:PeMutationContex
   policies.push(context.policy);contexts.push(context);
  }
  const m=base.policy.mandate,dynamics=restoreInterventionControlAdapter(base.model,base.kernel),h=m.horizon.periods;
+ if(m.utility.operatingProfit)fail('Operating-profit accounting requires a qualified S5 cash-and-comparator adapter; linear proposal conversion is unsupported');
  if(dynamics.initialWorlds.length>32)fail('S5 complete joint path constructor supports at most32 retained worlds, without subsampling');
  for(const resource of snapshot.resources)for(const pin of resource.beliefPins){
   tick();if((await validateBeliefViewPin(ctx,pin)).status!=='CURRENT')throw new AllocationContractError('STALE_INPUT','S5 resource source/rights changed');
