@@ -1,6 +1,66 @@
 # FRONTIER5.X2 status
 
-## Resulting installed cut, 17 October 2026
+## Existing-checklist follow-up, 17 October 2026
+
+The full unchanged mounted journey now **passes**: native103 has 15 PASS,
+exit0, including all ten mounted stages. A fresh visible task-owned Chrome
+passes the original 15-second blank-page bound. Actual old-principal list
+delivery after genuine second-principal sign-in produces no private-data
+resurrection; both-principal backend authentication, native revocation,
+offline/reconnect, refresh, route coverage and real fresh-use submission/
+independent business completion pass. The assigned Desktop still refuses
+fresh page creation. No browser policy, saved authentication or system
+configuration changes. The prior launch cause remains unestablished.
+
+The separate corrected acquisition-profile-404 intake UI case now **passes**
+registration-only episode002: all eight stages and all owned cleanup pass.
+It verifies real owner404 before writes, same-panel correction and real
+202/UUID/canonical reservation/job/projection, then genuine accepted-response
+loss with the unconfirmed replay fence preserved. No worker or business
+mutation is started. Episode001's timeout before any acquisition POST remains
+a failure;002 adds only DOM/validity/visibility diagnostics, not a product or
+timeout change. The first episode's underlying cause remains unestablished.
+
+The new bounded comparison controller is implemented and actually executed.
+`matched-diagnostic-002/attempt-002/result.json` records COMPLETED/INCONCLUSIVE,
+16 orchestration attempts, zero matched business executions, no denominator,
+and null lifecycle comparison costs. All nine arm/surface cells are NOT_RUN.
+It removes the absence of executable feasibility orchestration, **not** the
+missing equipped application executor, compatible current authority/config,
+matched business runs or full-cost measurements.
+
+Safety episode102 is retained INTERRUPTED, 9 PASS/0 FAIL before its controller
+timeout, not a green suite: cancellation/natural expiry was not reached.
+The safety worker acknowledges choosing a timeout shorter than the actual
+remaining lease. No grace/clock/lease bound is relaxed. Its saved report keeps
+remaining permission/malicious-input/live-use/isolated-domain cases explicit.
+Current native104 typed S8 negatives now pass **15 gates**, exit0. Serialized
+native107 cancelled-original recovery passes **14 gates**; native108
+expired-original recovery passes **13 gates**, both exit0 with restart and
+ending custody. Each preserves real post-acceptance SIGKILL, natural lease
+expiry/quarantine, the same original effect and no forward replay or release.
+Failed setup105/106 records zero gates and remains failed; no cause is assumed.
+
+Completed-history cancellation109 fails before its intended boundary:
+fresh Work returns `X2_RESPONSE_LOST`, cause unestablished. Permission review110
+aborts on ENOSPC with no aggregate exit or ending-custody receipt. Its verified
+orphan API is stopped separately; raw database/evidence remain preserved.
+Live-use111 never starts after110 fails. The new fixture-only live-use wiring
+passes types and unmodified-rule lint, but is **not runtime verified**.
+Separate-domain live/revocation/cumulative/expired-activation orchestration
+remains internal unfinished work, not an absent protected qualification.
+Database-heavy continuation is paused pending measured adequate task-owned
+headroom. No existing business deadline, grant, model or observation is renewed.
+
+`checklist-followup-evidence.json` is the current sanitized receipt.
+The follow-up adds only verification harnesses/contracts/evidence, not a
+product capability. Product code and five emitted roles remain installation
+009's verified `5e9a728` cut. Final follow-up source identity/reconstruction
+is recorded in `../x2-delivery-002`; the preceding package remains intact.
+CODE_COMPLETE and E2E_DEV_VERIFIED remain false until all internal mandatory
+cases pass. Preparation is local; no remote publication is performed.
+
+## Resulting installed cut, before checklist follow-up
 
 **Selected installed proofs pass; X2 finite engineering remains incomplete.**
 No mounted/privacy acceptance, matched performance comparison, protected

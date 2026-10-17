@@ -30,6 +30,7 @@ import { bootstrapNativeS8Fixture, NATIVE_S8_FIXTURE_FLAGS, type NativeS8Fixture
 import { inspectNativeDiscovery, nativeDiscoveryCaseCommitment } from "./inspect-native-discovery.mts";
 import { NATIVE_REVIEW_CASES, nativeReadRelay, runNativeReviewGates } from "./native-review-gates.mts";
 import { runNativeSiblingGates } from "./native-sibling-gates.mts";
+import { runNativeS8LiveGates } from "./native-s8-live-gates.mts";
 import { applicationArtifact, applicationSession, nativeApplicationProfile, retainApplicationArtifact,
   type ApplicationSessionRow } from "../../packages/private-equity/src/application-semantics/store";
 import { x2Digest, x2Ref } from "../../packages/private-equity/src/application-semantics/contracts";
@@ -56,6 +57,7 @@ const surface = process.env.FINNOR_X2_TEST_SURFACE ?? "api";
 assert(["api", "ui", "hybrid"].includes(surface));
 const configuredS8 = process.env.FINNOR_X2_TEST_S8 === "1";
 const s8CommandNegatives = process.env.FINNOR_X2_TEST_S8_COMMAND_NEGATIVES === "1";
+const s8LiveGates = process.env.FINNOR_X2_TEST_S8_LIVE_GATES === "1";
 const s8NegativeReports: NativeS8ApplicationCommandNegativeReport[] = [];
 const reviewGates = process.env.FINNOR_X2_TEST_REVIEW_GATES === "1";
 assert(!reviewGates || surface === "api" && !configuredS8 && !mounted, "REVIEW_GATES_HAVE_THEIR_OWN_API_OWNER_CUT");
@@ -97,6 +99,8 @@ assert(!s8CommandNegatives || configuredS8 && !mounted && !installedTamper && !r
   && recoveryMode === "none" && !semanticDrift && !renderingDrift && !computeContention
   && !finalEgressRevocation && !resourceBeliefChange && !referenceBacklog && !terminalCancellation,
   "S8_COMMAND_NEGATIVES_HAVE_THEIR_OWN_UNCHANGED_POSITIVE_CUT");
+assert(!s8LiveGates || s8CommandNegatives && surface === "api",
+  "S8_LIVE_GATES_REQUIRE_THE_EXISTING_API_COMMAND_NEGATIVE_CUT");
 assert(!siblingWork || surface === "api" && !configuredS8 && !mounted && !installedTamper && !reviewGates
   && !s8CommandNegatives && recoveryMode === "none" && !semanticDrift && !renderingDrift
   && !computeContention && !finalEgressRevocation && !resourceBeliefChange && !referenceBacklog && !terminalCancellation,
@@ -208,6 +212,7 @@ const createWork = async (instruction: string) => {
   return work.workId;
 };
 type WorkerSession = Pick<ApplicationSessionRow, "status" | "reason" | "generation" | "model_ref" | "check_ref" | "composition_ref">;
+let s8LiveRun: Awaited<ReturnType<typeof runNativeS8LiveGates<WorkerSession>>> | undefined;
 let workerOrdinal = 0;
 const startWorker = async (id: string, mode?: "ONE_DELIVERY" | "RECOVER_ONLY", killed = false) => {
   const launch = ++workerOrdinal;
@@ -239,7 +244,12 @@ const startWorker = async (id: string, mode?: "ONE_DELIVERY" | "RECOVER_ONLY", k
     return row;
   });
   void completed.catch(() => undefined);
-  await logChild(child, `worker-${id}-${launch}.log`);
+  try { await logChild(child, `worker-${id}-${launch}.log`); }
+  catch (error) {
+    child.kill("SIGKILL");
+    await exit.catch(() => undefined);
+    throw error;
+  }
   return { child, completed };
 };
 const runWorker = async (id: string, oneDelivery = false) =>
@@ -259,7 +269,7 @@ try {
   const oraclePins = await oracleIdentity();
   beginningOracle = oraclePins;
   await save("freeze.json", { startedAt: new Date().toISOString(), sourceCut, driverPins: beginningDriver,
-    oraclePins, surface, configuredS8, reviewGates, computeContention, finalEgressRevocation, resourceBeliefChange, referenceBacklog,
+    oraclePins, surface, configuredS8, s8CommandNegatives, s8LiveGates, reviewGates, computeContention, finalEgressRevocation, resourceBeliefChange, referenceBacklog,
     terminalCancellation, semanticDrift, renderingDrift, siblingWork, deniedOnlyProfile, recoveryMode, installed, mounted, nodeMode,
     oracleCustody: "SEPARATE_DRIVER_PRIVATE_DIRECTORY_NOT_OS_SANDBOX", protectedAdmission: false });
   const migrated = await record("fresh-upgrade-replay-and-runtime-role-isolation", async () => {
@@ -1258,6 +1268,20 @@ try {
         && value.effect_id === lostRequest!.body.wire.identity.effectId), "ORIGINAL_POSSIBLE_EFFECT_IDENTITY_MUST_SURVIVE_RECOVERY");
       await save("private/full-original-recovery.json", { row, originals, quarantine,
         originalParent: retained.parent, originalAllocation: retained.allocation_ref, originalReservation: retained.reservation_ref });
+    } else if (s8LiveGates) {
+      assert(s8, "X2_S8_LIVE_GATE_EXISTING_OWNER_REQUIRED");
+      const checked = await record("native-S8-live-application-command-negatives", async () => {
+        s8LiveRun = await runNativeS8LiveGates<WorkerSession>({
+          fixture: s8!, ctx, sql: admin!, adminUrl, sessionId: freshSessionId,
+          startWorker, external: () => snapshot(portalDir), save,
+          // The original driver has no separately acquired/qualified disposable domain.
+          isolatedInputs: [],
+        });
+        s8NegativeReports.push(...s8LiveRun.isolated, s8LiveRun.live);
+        return s8LiveRun.summary;
+      });
+      if (!checked || !s8LiveRun) throw Error("NATIVE_S8_LIVE_GATE_PREREQUISITE_FAILED");
+      row = s8LiveRun.row;
     } else row = mounted ? await applicationSession(ctx, freshSessionId) : await runWorker(execution.body.sessionId);
     assert.equal(row.status, "COMPLETED", JSON.stringify(row));
     const gradePath = join(portalDir, "native-grade.json");
@@ -1454,12 +1478,15 @@ try {
       const checked = await record("native-S8-typed-application-command-negatives", async () => {
         s8NegativeReports.push(await s8!.checkApplicationCommandNegatives({ phase: "retained-use", lease: use.lease }));
         assert.deepEqual(s8NegativeReports.map(value => value.phase),
-          ["candidate", "register", "evaluate", "admit", "activate", "disposable-revocation", "retained-use"]);
+          ["candidate", "register", "evaluate", "admit", "activate", "disposable-revocation",
+            ...(s8LiveGates ? ["live-use"] : []), "retained-use"]);
         assert(s8NegativeReports.every(value => value.verdict === "PASS"), "ALL_INVOKED_S8_NEGATIVE_PHASES_MUST_PASS");
         await save("native-s8-command-negative-reports.json", s8NegativeReports);
         return { phases: s8NegativeReports.map(value => value.phase),
           refused: s8NegativeReports.reduce((count, value) => count + value.cases.length, 0),
-          liveUse: "NOT_RUN", independentSecondCandidate: "NOT_SUPPLIED",
+          liveUse: s8LiveRun ? "PASS" : "NOT_RUN",
+          independentSecondCandidate: "NOT_RUN_INTERNAL_PREREQUISITE",
+          conditionalCoverage: s8LiveRun?.coverage ?? [],
           newAuthorityOrDeadline: false, protectedAdmission: false };
       });
       if (!checked) throw Error("NATIVE_S8_COMMAND_NEGATIVE_PREREQUISITE_FAILED");
@@ -1611,6 +1638,7 @@ try {
     ...(mounted ? ["actual-maintained-mounted-Work-lifecycle"] : []),
     ...(installedTamper ? ["installed-original-use-byte-fences"] : []),
     ...(s8CommandNegatives ? ["native-S8-typed-application-command-negatives"] : []),
+    ...(s8LiveGates ? ["native-S8-live-application-command-negatives"] : []),
     ...(deniedOnlyProfile ? ["fresh-handoff-excludes-denied-only-discovery-profile"] : []),
     ...(reviewGates ? [...NATIVE_REVIEW_CASES] : siblingWork ? ["canonical-P7-real-sibling-Work-and-replacement-input-closure"]
       : semanticDrift ? ["canonical-P7-semantic-drift-and-Work-invalidation"]

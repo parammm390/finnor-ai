@@ -1,5 +1,29 @@
 # X2 local delivery, incomplete finite-development gate
 
+Current follow-up: `checklist-followup-evidence.json`, the leading status
+section and `../x2-delivery-002` supersede only the older browser/comparison
+dispositions below. Native103 now passes all ten mounted stages and all15
+native gates. Separate intake002 passes all eight registration-only stages
+and all cleanup, including actual owner404/corrected202 and accepted-response
+loss with replay fencing. Incomplete safety cases and matched business
+execution remain separately unpassed. The
+comparison feasibility controller actually runs but returns INCONCLUSIVE.
+This is not a product rebuild or a new execution capability.
+
+Current emitted safety outcomes:104 typed S8 negatives15 PASS,107
+cancelled-original recovery14 PASS and108 expired-original recovery13 PASS,
+all exit0 with ending custody. Failed/interrupted102/105/106 remain retained.
+Registration-only intake001 fails before acquisition POST despite genuine
+headed login and remains failed with cause unknown;002's added DOM diagnostics
+do not change product code or bounds.
+
+Later109 fails before completed-history cancellation with `X2_RESPONSE_LOST`;
+110 aborts on ENOSPC without exit/ending custody;111 never starts. The110
+verified orphan API is separately stopped and its raw database/evidence
+preserved. New opt-in live-use fixture wiring is static-validated only.
+It is not an installed product change or a passed safety boundary. Remaining
+internal mutation/access/deception/isolated-domain preparation stays unpassed.
+
 No remote push, public PR, merge, deployment or protected activation is
 authorized or performed. `pr-draft.md` is a local draft body, not acceptance.
 
@@ -122,12 +146,18 @@ preserved as byte/mode/link-verified archives before backed-up copies are
 reclaimed. All logs/journals, latest proof DBs, database 030, source, peer work
 and current required installations remain untouched.
 
+Follow-up storage changes are separately receipted in
+`followup-storage-preservation-001.json`: stopped failed105/106 database images
+are byte/mode/link-verified archives; package001 duplicate pack bytes are
+shared. Historical reconstructed001's dependency-inode independence is
+explicitly retired. Current reconstructed005 remains independent and untouched.
+
 `remaining-execution-packet.md` supplies the browser/fallback/comparator packet.
-Mounted privacy/exact acknowledgement/corrected intake remains browser-blocked.
-The matched diagnostic has no established executable workflow/comparator
-entrypoint or configured authorized provider/profile; it is NOT RUN, not a
-runtime refusal or performance denominator. Other incomplete matrix cells,
-including conditional S8 cases, remain visible in `verification-plan.json`.
+Mounted103 and separate registration-only intake002 pass. The executable
+comparison feasibility controller runs, but its zero matched business
+executions provide no denominator or performance result. Missing equipped
+executor/compatible authority/configuration and other incomplete internal
+matrix cells, including conditional S8 cases, remain explicit.
 
 DESIGNED: recorded. CODE_COMPLETE: false. E2E_DEV_VERIFIED: false.
 DOMAIN_QUALIFIED: not run. PRODUCTION_ACTIVE: not authorized.

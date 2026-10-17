@@ -215,8 +215,9 @@ export interface NativeS8Fixture {
   commandAs(role: NativeS8FixtureRole, operation: NativeS8FixtureOperation,
     body: unknown, requestId?: string): Promise<NativeS8HttpResult>;
   /** Opt-in, serial, finite native owner checks. Writes a private replayable
-   * report, stops on the first unexpected response/state change, never logs keys. */
-  checkApplicationCommandNegatives(input: NativeS8ApplicationCommandNegativeInput):
+   * report, stops on the first unexpected response/state change, never logs keys.
+   * A test-only signal cancels delivery; it is never part of a signed command. */
+  checkApplicationCommandNegatives(input: NativeS8ApplicationCommandNegativeInput, options?: { signal?: AbortSignal }):
     Promise<NativeS8ApplicationCommandNegativeReport>;
   /** Same ports, signed configs, keys, original deadline and journal directories. */
   restart(services?: "S8" | "S6_AND_S8"): Promise<void>;
@@ -664,8 +665,9 @@ export async function bootstrapNativeS8Fixture(input: NativeS8FixtureInput): Pro
     FINNOR_ENVIRONMENT: "staging", FINNOR_X2_PROFILE: "ordinary_disposable", FINNOR_X2_SOURCE_ROOT: repoRoot,
   };
   const commandAs = async (role: NativeS8FixtureRole, operation: NativeS8FixtureOperation, body: unknown,
-    requestId = "x2-fixture:" + operation + ":" + randomUUID()): Promise<NativeS8HttpResult> => {
+    requestId = "x2-fixture:" + operation + ":" + randomUUID(), signal?: AbortSignal): Promise<NativeS8HttpResult> => {
     assertEnvironment();
+    if (signal?.aborted) failure("X2_S8_NEGATIVE_EXECUTION_ABORTED");
     if (!s8 || s8.child.exitCode !== null || s8.child.signalCode !== null) failure("X2_S8_FIXTURE_SERVICE_NOT_RUNNING");
     const token = lifecycleTokens.get(role) ?? failure("X2_S8_FIXTURE_ROLE_INVALID");
     const payload = canonical({ operation, requestId, body });
@@ -675,16 +677,19 @@ export async function bootstrapNativeS8Fixture(input: NativeS8FixtureInput): Pro
     try {
       const credential = await boundedFile(token.path, true);
       if (byteDigest(credential) !== byteDigest(token.value)) failure("X2_S8_FIXTURE_ROLE_TOKEN_CHANGED");
+      if (signal?.aborted) failure("X2_S8_NEGATIVE_EXECUTION_ABORTED");
       const response = await fetch(endpoints.s8 + "/command", {
         method: "POST", headers: { authorization: "Bearer " + credential.toString(), "content-type": "application/json" },
-        body: payload, redirect: "error", credentials: "omit", signal: AbortSignal.timeout(10000),
+        body: payload, redirect: "error", credentials: "omit",
+        signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(10000)]) : AbortSignal.timeout(10000),
       });
       const result = { status: response.status, body: await jsonResponse(response, 2 * 1024 * 1024) };
       await appendPrivate(paths.commands, { at: new Date().toISOString(), phase: "RESPONSE", ...attempt, ...result });
       return result;
     } catch (error) {
-      const code = error instanceof Error && /^[A-Z0-9_]{1,128}$/.test(error.message)
-        ? error.message : "X2_S8_FIXTURE_COMMAND_TRANSPORT_UNAVAILABLE";
+      const code = signal?.aborted ? "X2_S8_NEGATIVE_EXECUTION_ABORTED"
+        : error instanceof Error && /^[A-Z0-9_]{1,128}$/.test(error.message)
+          ? error.message : "X2_S8_FIXTURE_COMMAND_TRANSPORT_UNAVAILABLE";
       await appendPrivate(paths.commands, { at: new Date().toISOString(), phase: "FAILED", ...attempt, code });
       failure(code);
     }
@@ -846,6 +851,7 @@ export async function bootstrapNativeS8Fixture(input: NativeS8FixtureInput): Pro
   let negativeSuiteRunning = false;
   const checkApplicationCommandNegatives = async (
     supplied: NativeS8ApplicationCommandNegativeInput,
+    { signal }: { signal?: AbortSignal } = {},
   ): Promise<NativeS8ApplicationCommandNegativeReport> => {
     assertEnvironment();
     if (negativeSuiteRunning) failure("X2_S8_NEGATIVE_SERIAL_INVOCATION_REQUIRED");
@@ -863,7 +869,13 @@ export async function bootstrapNativeS8Fixture(input: NativeS8FixtureInput): Pro
       cases: [], controls: [], deferred: [], failureCode: null, ...NATIVE_S8_FIXTURE_FLAGS,
     };
     negativeSuiteRunning = true;
+    const assertActive = () => {
+      if (signal?.aborted) failure("X2_S8_NEGATIVE_EXECUTION_ABORTED");
+    };
+    const negativeCommand = (role: NativeS8FixtureRole, operation: NativeS8FixtureOperation,
+      body: unknown, requestId?: string) => commandAs(role, operation, body, requestId, signal);
     const requireThat = (condition: unknown, code: string): void => {
+      assertActive();
       if (!condition) failure("X2_S8_NEGATIVE_" + code);
     };
     const same = (left: unknown, right: unknown, code: string) => requireThat(digest(left) === digest(right), code);
@@ -876,7 +888,7 @@ export async function bootstrapNativeS8Fixture(input: NativeS8FixtureInput): Pro
       [...new Map([...left, ...right].map(ref => [digest(ref), ref])).values()];
     const defer = (boundary: string, reason: string) => { report.deferred.push({ boundary, reason }); };
     const snapshot = async (atSequence?: number): Promise<CommandNegativeSnapshot> => {
-      const response = successful(await commandAs("reader", "READ", {
+      const response = successful(await negativeCommand("reader", "READ", {
         offset: 0, limit: 256, ...(atSequence === undefined ? {} : { atSequence }),
       }));
       const parsed = commandNegativeSnapshotSchema.safeParse(response);
@@ -899,6 +911,7 @@ export async function bootstrapNativeS8Fixture(input: NativeS8FixtureInput): Pro
       consumedCases: state.applications.counts.consumedCases,
     });
     const ownerContent = async (ref: ExperimentRef) => {
+      assertActive();
       const read = await resolveEconomicOwnerReference(scope("S8"), ref, { purpose: "CONSUMER", rightsRef: parent.rightsRevision });
       requireThat(read.protectionDomain === "DISPOSABLE_TEST_AUTHORITY"
         && digest(read.reference.content) === ref.contentDigest, "CANONICAL_OWNER_PREIMAGE_REQUIRED");
@@ -926,7 +939,7 @@ export async function bootstrapNativeS8Fixture(input: NativeS8FixtureInput): Pro
       };
       (args.accepted ? report.controls : report.cases).push(row);
       try {
-        const result = await commandAs(args.role, args.operation, args.body, requestId);
+        const result = await negativeCommand(args.role, args.operation, args.body, requestId);
         const error = z.object({ code: z.string().regex(/^[A-Z0-9_]{1,128}$/) }).passthrough().safeParse(result.body);
         row.observed = { status: result.status, code: error.success ? error.data.code : null };
         // Refusals/read-only controls cannot append history, even with a right-looking error.
@@ -936,6 +949,7 @@ export async function bootstrapNativeS8Fixture(input: NativeS8FixtureInput): Pro
         same(row.observed, args.expected, "UNEXPECTED_OWNER_DISPOSITION");
         if (args.accepted) await args.accepted(result.body, before, after);
         else same(before, after, "REFUSAL_CHANGED_CANONICAL_STATE");
+        assertActive();
         row.passed = true;
         return { body: result.body, before, after, requestId };
       } finally {
@@ -992,7 +1006,7 @@ export async function bootstrapNativeS8Fixture(input: NativeS8FixtureInput): Pro
       same(retained.lease, lease, "LEASE_PREIMAGE_SUBSTITUTION");
       return retained;
     };
-    const useCommand = (lease: ApplicationCapabilityUseLease): ApplicationUseCommand => ApplicationUseCommandSchema.parse({
+    const applicationUseCommand = (lease: ApplicationCapabilityUseLease): ApplicationUseCommand => ApplicationUseCommandSchema.parse({
       revisionRef: lease.revisionRef, modelRef: lease.modelRef, checkRef: lease.checkRef,
       originalParentRef: lease.originalParentRef, originalParentDigest: lease.originalParentDigest,
       profile: lease.profile, request: lease.request,
@@ -1005,7 +1019,7 @@ export async function bootstrapNativeS8Fixture(input: NativeS8FixtureInput): Pro
       return matches[0]!.requestId;
     };
     const retainedUseChecks = async (lease: ApplicationCapabilityUseLease, state: CommandNegativeSnapshot) => {
-      const retained = canonicalLease(state, lease), original = useCommand(lease);
+      const retained = canonicalLease(state, lease), original = applicationUseCommand(lease);
       const recheck = ApplicationRecheckCommandSchema.parse({ ...original, useId: lease.useId, leaseDigest: changedHex(digest(lease)) });
       await refuse("wrong-exact-lease", "consumer", "APPLICATION_RECHECK", recheck, "S8_APPLICATION_USE_IDENTITY",
         "leaseDigest := flip-first-hex(digest(original canonical lease)); all use/request fields stay original.",
@@ -1070,7 +1084,9 @@ export async function bootstrapNativeS8Fixture(input: NativeS8FixtureInput): Pro
       return signedActivation.body;
     };
     try {
+      assertActive();
       await assertSourceCut();
+      assertActive();
       await newPrivateFile(report.inputArtifactPath, canonical(input));
       defer("expired-or-revoked-signing-authority",
         "Frozen signed policy contains only current nonrevoked keys; rewriting it is forbidden.");
@@ -1288,7 +1304,7 @@ export async function bootstrapNativeS8Fixture(input: NativeS8FixtureInput): Pro
           const activation = await actualActivation(initial, subject.ref);
           requireThat(Date.parse(activation.validUntil) <= Date.now(), "GENUINELY_EXPIRED_ACTIVATION_REQUIRED");
           requireThat(initial.applications.uses.some(item => sameX2Ref(item.lease.revisionRef, subject.ref)
-            && digest(useCommand(item.lease)) === digest(command)), "EXPIRED_SUBJECT_ORIGINAL_RETAINED_COMMAND_REQUIRED");
+            && digest(applicationUseCommand(item.lease)) === digest(command)), "EXPIRED_SUBJECT_ORIGINAL_RETAINED_COMMAND_REQUIRED");
           await currentControl(subject.ref, false, "expired-isolated-not-current");
           await refuse("expired-isolated-use", "consumer", "APPLICATION_USE", command, "S8_APPLICATION_NOT_ACTIVE",
             "New envelope ID, original shaped request; the separate retained activation is already expired.",
@@ -1330,7 +1346,7 @@ export async function bootstrapNativeS8Fixture(input: NativeS8FixtureInput): Pro
               operation === "APPLICATION_CURRENT" ? { revisionRef: subject.ref } : operation === "APPLICATION_USE" ? command : recheck,
               "S8_OPERATION_NOT_AUTHORIZED", "Only the authenticated existing role changes.", "ApplicationCapabilityPort.role", 403);
           }
-          const useRefusal = async (id: string, patch: Record<string, unknown>, code: string, mutation: string) => {
+          const applicationUseRefusal = async (id: string, patch: Record<string, unknown>, code: string, mutation: string) => {
             requireLiveControl();
             await refuse(id, "consumer", "APPLICATION_USE", ApplicationUseCommandSchema.parse({ ...command, ...patch }),
               code, mutation, "ApplicationCapabilityPort.currentness", 403);
@@ -1342,7 +1358,7 @@ export async function bootstrapNativeS8Fixture(input: NativeS8FixtureInput): Pro
             ["use-parent", { originalParentRef: subject.modelRef }, "originalParentRef := the real original model ref."],
             ["use-parent-digest", { originalParentDigest: changedHex(command.originalParentDigest) }, "originalParentDigest := flip-first-hex(original)."],
             ["use-profile-role", { profile: { ...command.profile, role: changedText(command.profile.role) } }, "profile.role := changedText(original), without changing grants."],
-          ] as const) await useRefusal(id, patch, "S8_APPLICATION_USE_BINDING", mutation);
+          ] as const) await applicationUseRefusal(id, patch, "S8_APPLICATION_USE_BINDING", mutation);
           for (const [id, patch, code, mutation] of [
             ["use-domain", { target: { ...command.request.target, account: changedText(command.request.target.account) } }, "S8_APPLICATION_USE_BINDING", "request.target.account := changedText(original)."],
             ["use-duplicate-operations", { operationIds: [command.request.operationIds[0]!, command.request.operationIds[0]!] }, "S8_APPLICATION_USE_BINDING", "operationIds := [original[0], original[0]]."],
@@ -1353,7 +1369,7 @@ export async function bootstrapNativeS8Fixture(input: NativeS8FixtureInput): Pro
             ["use-resource-envelope", { resourceEnvelopeDigest: changedHex(command.request.resourceEnvelopeDigest) }, "S8_APPLICATION_ORIGINAL_RESOURCE_BINDING", "resourceEnvelopeDigest := flip-first-hex(original); genuine S5 preimages unchanged."],
             ["use-currentness-input", { inputDigest: changedHex(command.request.inputDigest) }, "S8_APPLICATION_CURRENTNESS_INVALID", "inputDigest := flip-first-hex(original); original real currentness unchanged."],
             ["use-currentness-revision", { applicationRevision: changedText(command.request.applicationRevision) }, "S8_APPLICATION_CURRENTNESS_INVALID", "request.applicationRevision := changedText(original); original real currentness unchanged."],
-          ] as const) await useRefusal(id, { request: { ...command.request, ...patch } }, code, mutation);
+          ] as const) await applicationUseRefusal(id, { request: { ...command.request, ...patch } }, code, mutation);
           requireLiveControl();
           await refuse("recheck-request-mismatch", "consumer", "APPLICATION_RECHECK", ApplicationRecheckCommandSchema.parse({
             ...recheck, request: { ...command.request, inputDigest: changedHex(command.request.inputDigest) },
@@ -1370,7 +1386,7 @@ export async function bootstrapNativeS8Fixture(input: NativeS8FixtureInput): Pro
             requireThat(alternate.requestBindingDigest !== applicationRequestBindingDigest(command.request)
               || alternate.dependencyDigest !== applicationDependencyDigest(subject)
               || alternate.profileBindingDigest !== digest(command.profile), "INCOMPATIBLE_GENUINE_CURRENTNESS_REQUIRED");
-            await useRefusal("use-other-real-currentness", { request: { ...command.request, currentnessRef: alternateRef } },
+            await applicationUseRefusal("use-other-real-currentness", { request: { ...command.request, currentnessRef: alternateRef } },
               "S8_APPLICATION_CURRENTNESS_INVALID", "currentnessRef := caller-supplied, owner-read-back genuine S4 currentness with an incompatible request/dependency/profile binding.");
             requireThat(Date.parse(alternate.expiresAt) > Date.now(), "ALTERNATE_CURRENTNESS_EXPIRED_DURING_GUARD");
           } else defer("different-genuine-currentness-preimage", "No alternative independently retained S4 currentness ref supplied; a fabricated or model preimage is not substituted.");
@@ -1412,7 +1428,7 @@ export async function bootstrapNativeS8Fixture(input: NativeS8FixtureInput): Pro
             for (const [id, operation, body, requestId] of [
               ["revoked-isolated-new-use", "APPLICATION_USE", command, undefined],
               ["revoked-isolated-new-recheck", "APPLICATION_RECHECK", recheck, undefined],
-              ["revoked-isolated-exact-use-replay", "APPLICATION_USE", useCommand(lease), acceptedUseIdentity(initial, lease)],
+              ["revoked-isolated-exact-use-replay", "APPLICATION_USE", applicationUseCommand(lease), acceptedUseIdentity(initial, lease)],
               ["revoked-isolated-exact-recheck-replay", "APPLICATION_RECHECK", recheck, control.requestId],
             ] as const) {
               requireThat(Date.parse(lease.expiresAt) > Date.now(), "REVOKED_REPLAY_LEASE_EXPIRED_BEFORE_GUARD");
@@ -1434,11 +1450,16 @@ export async function bootstrapNativeS8Fixture(input: NativeS8FixtureInput): Pro
       if (input.phase !== "live-use" && input.phase !== "isolated-live-use") defer("live-currentness-and-cumulative-command-boundaries",
         "This phase does not acquire or fabricate a live native request; use the explicit live/isolated stages with their real prerequisites.");
       await assertSourceCut();
+      assertActive();
       report.verdict = "PASS";
     } catch (error) {
       report.failureCode = error instanceof Error && /^[A-Z0-9_]{1,128}$/.test(error.message)
         ? error.message : "X2_S8_NEGATIVE_VALIDATION_FAILED";
     } finally {
+      if (signal?.aborted) {
+        report.failureCode = "X2_S8_NEGATIVE_EXECUTION_ABORTED";
+        report.verdict = "FAIL";
+      }
       report.finishedAt = new Date().toISOString();
       try {
         await newPrivateFile(report.artifactPath, canonical(report));
@@ -1447,6 +1468,7 @@ export async function bootstrapNativeS8Fixture(input: NativeS8FixtureInput): Pro
       } finally { negativeSuiteRunning = false; }
     }
     if (report.failureCode) failure(report.failureCode);
+    assertActive();
     return structuredClone(report);
   };
   try {

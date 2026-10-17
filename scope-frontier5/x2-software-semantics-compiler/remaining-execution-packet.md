@@ -1,5 +1,46 @@
 # Existing execution blockers and lawful continuation
 
+## Current follow-up disposition
+
+Native103 now passes the unchanged full visible-browser mounted lifecycle:
+15 native gates, ten mounted stages, genuine delayed old-principal response
+delivery, both-principal backend verification and real fresh-use submission.
+The task-owned visible blank-page preflight succeeds within the unchanged
+15-second limit; the changed assigned Desktop endpoint still refuses page
+creation. No underlying launch-cause repair is established. The historical
+browser blocker below no longer blocks that proven lifecycle.
+
+The corrected acquisition-profile-404 UI resubmission case now passes
+registration-only episode002, all eight stages and cleanup. Actual owner404
+precedes registration writes; same-panel correction receives real202 and
+canonical registration/projection. Genuine accepted-response loss preserves
+the unconfirmed replay fence. Episode001's timeout before acquisition POST
+remains failed with cause unestablished; it is not the owner404 evidence.
+Native104 typed S8 negatives passes15; native107 cancelled-original recovery
+passes14 and native108 expired-original recovery passes13, each exit0.
+Native102 remains interrupted, and105/106 remain failed setup with zero gates.
+See `checklist-followup-evidence.json` for current results and remaining cases;
+the earlier safety report's cancel/deadline/current-negative gaps are
+superseded only by these exact passing episodes.
+
+Later attempts do not close the remaining safety predicates:109 fails with
+`X2_RESPONSE_LOST` before completed-history cancellation;110 aborts on ENOSPC
+with no exit/ending custody;111 does not start. The110 orphan API is stopped
+from its exact PID/listener receipt, not by broad process cleanup. Raw evidence
+and database are preserved. The fixture-only live-use helper is prepared and
+static-validated, not executed. Isolated-domain subject/lifecycle preparation
+remains internal unfinished work. Establish measured adequate local headroom
+before another fresh physical episode; do not resume or renew a failed one.
+
+`scripts/x2/run-matched-diagnostic.mjs` now provides executed feasibility
+orchestration. It freezes inputs, checks compatible historical support and
+records actual configuration/source-admission preflight, then returns honest
+INCONCLUSIVE with zero matched business executions. It does not invoke an
+incumbent/equipped business executor. Repeat from the source backend using
+Node and `--output` with a new absolute child directory under the task-owned
+`matched-diagnostic-002`. The missing matched executor/configuration and
+cost/demand observations below remain required, not waived.
+
 This packet preserves the original browser, fallback and matched-diagnostic
 requirements. It is not a waiver or another implementation phase.
 
@@ -38,9 +79,9 @@ Use only the actually authorized working mode. This is one serial local stack,
 fresh private profile and original parent/resource/deadline, not a refreshed
 old business episode. Acceptance requires all mounted stages, actual delayed
 first-principal list delivery after genuine second-principal sign-in,
-both-principal backend verification and route coverage. The privacy repair,
-exact acknowledgement reconciliation and corrected intake remain
-runtime-unverified until those checks pass.
+both-principal backend verification and route coverage. Native103 passes that
+unchanged journey. Separate intake002 passes corrected acquisition and actual
+response-loss fencing; it is not inferred from native103's fresh-use form.
 
 ## Existing original-effect fallback
 
@@ -72,9 +113,15 @@ regular-file reconstruction 005. All original identity/exposure/no-replay
 checks pass. These are executable observation fallback proofs, not authority
 for an unadmitted forward repair.
 
+Current emitted cancelled-original107 and expired-original108 also pass with
+the exact original effect, natural lease expiry/quarantine, no forward action,
+no replay and no release. They do not establish completed-history cancellation
+or close unrelated access-phase negatives.
+
 ## Matched X2-off and equipped comparison
 
-Status: **BLOCKED / NOT RUN**, not a runtime refusal or performance result.
+Status: **feasibility executed, INCONCLUSIVE; matched business runs NOT RUN**.
+Zero matched executions is not a performance denominator or a runtime refusal.
 
 The existing strongest incumbent is `ComputerTaskInput -> queueComputerRun ->
 run_computer_task -> real worker/LLM engine -> Steel provider`. The X2 fixture
