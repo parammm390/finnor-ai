@@ -1,4 +1,4 @@
-// Generated from finnor-os/openapi.json, SHA-256 23b7a1a7da800bccb5d9fec439f4a9b460a7649a9f56a91fd186dac093bf0809.
+// Generated from finnor-os/openapi.json, SHA-256 4083bb52c97df55cb860cd87b45a4c6c6e44a41fd4fb66b161be449d8a18aa21.
 export interface paths {
     "/api/live-controls": {
         parameters: {
@@ -213,6 +213,7 @@ export interface paths {
                                                 version: string;
                                                 contentDigest: string;
                                             };
+                                            operatingWorldId?: string;
                                             policyPaths: {
                                                 policyRef: {
                                                     owner: string;
@@ -271,6 +272,13 @@ export interface paths {
                                         actionCostResourceId: string | null;
                                         terminalLiabilityResourceId: string | null;
                                         humanSecondsResourceId: string | null;
+                                        operatingCash?: {
+                                            /** @constant */
+                                            schema: "finnor.s5.operating-cash-binding.v1";
+                                            resourceId: string;
+                                            /** @constant */
+                                            basis: "GROSS_OUTFLOWS_NO_FORECAST_PROCEEDS";
+                                        };
                                     }[];
                                     idempotencyKey: string;
                                 };
@@ -623,6 +631,7 @@ export interface paths {
                                                 version: string;
                                                 contentDigest: string;
                                             };
+                                            operatingWorldId?: string;
                                             policyPaths: {
                                                 policyRef: {
                                                     owner: string;
@@ -681,6 +690,13 @@ export interface paths {
                                         actionCostResourceId: string | null;
                                         terminalLiabilityResourceId: string | null;
                                         humanSecondsResourceId: string | null;
+                                        operatingCash?: {
+                                            /** @constant */
+                                            schema: "finnor.s5.operating-cash-binding.v1";
+                                            resourceId: string;
+                                            /** @constant */
+                                            basis: "GROSS_OUTFLOWS_NO_FORECAST_PROCEEDS";
+                                        };
                                     }[];
                                     idempotencyKey: string;
                                 };
