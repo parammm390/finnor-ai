@@ -82,7 +82,7 @@ jobs:
             --log-opts="-m ${scan_range}"
       - name: Retain redacted complete-history findings
         if: ${{ always() }}
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: secret-history-${{ github.run_id }}-${{ github.run_attempt }}
           path: ${{ runner.temp }}/finnor-secret-history-redacted.json
@@ -93,7 +93,7 @@ jobs:
     if: ${{ github.event_name == 'push' || inputs.run_dependency_scan }}
     # v2 ships reusable workflows, not a root action.yml. Calling the root as an
     # action makes GitHub reject it before the dependency scan begins.
-    uses: google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml@9a498708959aeaef5ef730655706c5a1df1edbc2
+    uses: google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml@b1d267aea5211fa648d9d442fa64b90dbdcbdd36
     with:
       fail-on-vuln: true
       scan-args: |-
