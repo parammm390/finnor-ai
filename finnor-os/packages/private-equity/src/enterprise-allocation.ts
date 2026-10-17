@@ -102,7 +102,7 @@ export async function clearEnterprisePortfolio(ctx:PeMutationContext,input:R3All
  return clearNumericEnterprisePortfolio(ctx,input as AllocationClearingInput,fence);
 }
 async function clearNumericEnterprisePortfolio(ctx:PeMutationContext,input:AllocationClearingInput,fence?:AllocationCommitFence):Promise<AllocationClearingResult>{
-  const started=performance.now(),m=parseEconomicMandate(input.mandate),joint=parseJointAllocationModel(input.jointModel);
+  const started=performance.now(),m=parseEconomicMandate(input.mandate,{operatingProfit:true}),joint=parseJointAllocationModel(input.jointModel);
   if(ctx.auth.role!=='owner'||m.tenantId!==ctx.auth.tenantId||m.principalId!==actor(ctx)||m.businessOwnerRef.id!==actor(ctx))throw denied();
   const requestDigest=epistemicHash(input),previous=await readAllocationReplay(ctx,input.idempotencyKey,requestDigest);
   if(previous?.reservation)return immutableControl({schema:'finnor.s5.clearing-result.v1',status:'FEASIBLE',reasons:['DURABLE_SEMANTIC_REPLAY_CURRENT_CLEARANCE_REQUIRES_VALIDATE'],certificate:previous.certificate,reservation:previous.reservation,experience:[],compute:previous.certificate.compute,executionAuthorityGranted:false,protectedReceipt:null});
@@ -152,7 +152,7 @@ async function clearNumericEnterprisePortfolio(ctx:PeMutationContext,input:Alloc
 /** Exact selection is an explicit owner-defined cardinality constraint, not a
  * UI independence assumption or a silent optimizer substitution. */
 export function constrainEnterpriseAllocationSelection(ctx:PeMutationContext,input:AllocationClearingInput,selectedPolicyIds:string[]):AllocationClearingInput {
- const m=parseEconomicMandate(input.mandate),joint=parseJointAllocationModel(input.jointModel),ids=input.policyRefs.map(ref=>ref.id);
+ const m=parseEconomicMandate(input.mandate,{operatingProfit:true}),joint=parseJointAllocationModel(input.jointModel),ids=input.policyRefs.map(ref=>ref.id);
  if(m.tenantId!==ctx.auth.tenantId||m.principalId!==actor(ctx)||m.businessOwnerRef.id!==actor(ctx)
    ||new Set(selectedPolicyIds).size!==selectedPolicyIds.length||selectedPolicyIds.some(id=>!ids.includes(id)))throw denied();
  const selected=new Set(selectedPolicyIds),{ref,...body}=joint;
@@ -168,7 +168,7 @@ export function constrainEnterpriseAllocationSelection(ctx:PeMutationContext,inp
  * requesting native-compute owner. No optimum or business truth is predicted. */
 export async function previewEnterprisePortfolio(ctx:PeMutationContext,input:AllocationClearingInput,selectedPolicyIds:string[]){
  const started=performance.now(),exact=constrainEnterpriseAllocationSelection(ctx,input,selectedPolicyIds);
- const m=parseEconomicMandate(exact.mandate),joint=parseJointAllocationModel(exact.jointModel);
+ const m=parseEconomicMandate(exact.mandate,{operatingProfit:true}),joint=parseJointAllocationModel(exact.jointModel);
  if(Date.now()>=Date.parse(m.validUntil)||Date.now()<Date.parse(m.knowledgeAt))throw new AllocationContractError('STALE_INPUT','Original mandate is no longer current');
  if(await unaccountedNativeEffects(ctx))return {status:'PARTIAL' as const,check:null,problemRef:null,
   materialGaps:['NATIVE_UNRECONCILED_EFFECTS_REQUIRE_S6_QUALIFIED_RESOURCE_ACCOUNTING'],elapsedMs:performance.now()-started,reservesCapital:false as const};

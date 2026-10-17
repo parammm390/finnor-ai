@@ -5,6 +5,9 @@ import { randomUUID } from 'node:crypto';
 import { createMetricSeries, attachCanonicalEvidenceToWorld, type PeMutationContext } from '@finnor/private-equity';
 import { createEvidenceSource } from '@finnor/memory';
 import { profitInput, profitRef, sealProfitMandate } from './operating-profit-fixtures';
+import { POST as allocationPost } from '../../apps/api/app/api/allocations/[operation]/route';
+import { receiveWork } from '@finnor/db';
+import { proposeEnterpriseSameDealAlternatives } from '../../packages/private-equity/src/allocation-proposal';
 
 export async function operatingProfitOwnerCase(input: {
   admin: { query: (sql: string, values?: any[]) => Promise<any> }; ctx: PeMutationContext;
@@ -65,5 +68,40 @@ export async function operatingProfitOwnerCase(input: {
     invalid.mandate = sealProfitMandate(invalid.mandate);
     assert.equal((await api('synthesize', invalid)).status, 400);
   }
-  return { qualification: 'GENERATED_OWNER_INTEGRATION_NOT_CUSTOMER_PROFIT', request, payload, fitRef: fit.body.model.ref, result, read, replay };
+  // Registered before the S5 implementation: a real owner-issued cash resource
+  // funds gross modeled outlays, remains held after unknown execution, and
+  // grants no protected effect, settlement or attribution.
+  const cash = await api('resource', { resource: { schema: 'finnor.allocation-resource.v1', resourceId: 'operating-cash', tenantId: tenant,
+    ownerRef: mandate.businessOwnerRef, legalEntityRef: profitRef(root.entityId, 'S1'), scopeRef: mandate.ref,
+    permittedRoots: [root], rightsRef: mandate.rightsRef, unit: 'USD', currency: 'USD', kind: 'STOCK', resourceClass: 'CASH',
+    horizon: mandate.horizon, sourceRef: profitRef('generated-ring-fenced-cash'), asOf: mandate.knowledgeAt,
+    knowledgeAt: new Date().toISOString(), validUntil: mandate.validUntil, beliefPins: policy.bindings.beliefPins,
+    availability: Array(3).fill({ amount: '3000', basis: 'REPORTED_AVAILABLE' }), existingUse: ['0', '0', '0'],
+    safetyMargin: '50', covenants: [], revoked: false, qualification: 'AUTHENTICATED_OWNER_ASSERTION_UNADMITTED' } }, tenant, principal, allocationPost);
+  assert.equal(cash.status, 200, JSON.stringify(cash));
+  const work = await receiveWork({ tenantId: tenant, userId: principal, instruction: 'Generated operating programme funding proof only', channel: 'console', idempotencyKey: randomUUID() });
+  const proposed = await proposeEnterpriseSameDealAlternatives(ctx, { workId: work.workId, incumbentPolicyRef: policy.ref, policyRefs: [policy.ref] });
+  assert.equal(proposed.reservationCreated, false);
+  assert(proposed.checks.some(check => check.selectedPolicyIds.includes(policy.ref.id) && check.feasible));
+  const clearing = { mandate, policyRefs: [policy.ref], resourceRefs: [cash.body.ref],
+    jointModel: proposed.problem.jointModel, demandBindings: proposed.problem.demandBindings,
+    funding: proposed.problem.funding, idempotencyKey: randomUUID() };
+  const allocated = await api('clear', clearing, tenant, principal, allocationPost);
+  assert.equal(allocated.status, 200, JSON.stringify(allocated)); assert.equal(allocated.body.status, 'FEASIBLE', JSON.stringify(allocated));
+  const certificate = allocated.body.certificate, envelope = certificate.check.envelopes.find((e: any) => e.resourceId === 'operating-cash');
+  assert.deepEqual(certificate.check.selectedPolicyIds, [policy.ref.id]); assert.equal(envelope.quantities.length, 3);
+  assert(envelope.quantities.reduce((s: number, x: string) => s + Number(x), 0) > 1900);
+  assert.equal(allocated.body.executionAuthorityGranted, false);
+  const repeated = await api('clear', clearing, tenant, principal, allocationPost);
+  assert.equal(repeated.body.reservation.ref.contentDigest, allocated.body.reservation.ref.contentDigest);
+  const consumed = await api('consume', { allocationRef: certificate.ref, policyRef: policy.ref,
+    decision: { knowledgeAt: new Date().toISOString(), period: 0, actionHistory: [], observations: [], rightsRef: mandate.rightsRef,
+      obligations: [], allocationRefs: [certificate.ref] }, idempotencyKey: randomUUID() }, tenant, principal, allocationPost);
+  assert.equal(consumed.status, 200, JSON.stringify(consumed)); assert.equal(consumed.body.consumption.status, 'INTENDED_PENDING_S6');
+  assert.deepEqual(consumed.body.consumption.envelope, certificate.check.envelopes);
+  const held = await api('reconcile', { allocationRef: certificate.ref }, tenant, principal, allocationPost);
+  assert.equal(held.body.reservation.status, 'UNKNOWN_OUTCOME'); assert.deepEqual(held.body.reservation.envelopes, certificate.check.envelopes);
+  assert.equal((await api('release', { allocationRef: certificate.ref, idempotencyKey: randomUUID() }, tenant, principal, allocationPost)).status, 422);
+  return { qualification: 'GENERATED_OWNER_INTEGRATION_NOT_CUSTOMER_PROFIT', request, payload, fitRef: fit.body.model.ref, result, read, replay,
+    cash, proposed, clearing, allocated, repeated, consumed, held };
 }

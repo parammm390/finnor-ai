@@ -4,6 +4,7 @@ import { ExperimentRefSchema } from './experiments';
 import { parseEconomicMandate, assertContingentPolicy, immutableControl } from './control-contracts';
 import { epistemicHash } from './source-precedence';
 import { ExperimentRational, ER_ZERO } from './experiment-numerics';
+import { assertOperatingCashCorrespondence } from './operating-profit-allocation';
 
 export class AllocationContractError extends Error {
   constructor(readonly code: 'INVALID_REQUEST' | 'PERMITTED_CONTEXT_UNAVAILABLE' | 'STALE_INPUT' | 'LIMIT_EXCEEDED' | 'IDEMPOTENCY_CONFLICT' | 'BLOCKED_AUTHORITY' | 'INVALID_CANDIDATE', message: string) {
@@ -27,11 +28,11 @@ export const AllocationResourceInputSchema = z.object({schema:z.literal('finnor.
   availability:z.array(z.object({amount:nonnegative.nullable(),basis:z.enum(['REPORTED_AVAILABLE','UNCERTAIN_PROCEEDS','UNKNOWN'])}).strict()).min(2).max(25),
   existingUse:z.array(nonnegative).min(2).max(25),safetyMargin:nonnegative,covenants:z.array(covenant).max(32),revoked:z.boolean(),qualification:z.literal('AUTHENTICATED_OWNER_ASSERTION_UNADMITTED')}).strict();
 export const AllocationDemandBindingSchema = z.object({policyRef:ExperimentRefSchema,dimensionId:text,component:z.enum(['TOTAL','OCCUPANCY']),resourceId:text,conversion:z.literal('IDENTICAL_UNIT_NO_CONVERSION')}).strict();
-export const AllocationFundingSchema = z.object({policyRef:ExperimentRefSchema,actionCostResourceId:text.nullable(),terminalLiabilityResourceId:text.nullable(),humanSecondsResourceId:text.nullable()}).strict();
+export const AllocationFundingSchema = z.object({policyRef:ExperimentRefSchema,actionCostResourceId:text.nullable(),terminalLiabilityResourceId:text.nullable(),humanSecondsResourceId:text.nullable(),operatingCash:z.object({schema:z.literal('finnor.s5.operating-cash-binding.v1'),resourceId:text,basis:z.literal('GROSS_OUTFLOWS_NO_FORECAST_PROCEEDS')}).strict().optional()}).strict();
 const jointModelSchema = z.object({schema:z.enum(['finnor.joint-allocation-model.v1','finnor.joint-allocation-model.exact.v2']),ref:ExperimentRefSchema,tenantId:z.string().uuid(),principalId:z.string().uuid(),mandateRef:ExperimentRefSchema,rightsRef:text,
   sourceRefs:z.array(ExperimentRefSchema).min(1).max(128),knowledgeAt:time,validUntil:time,qualification:z.literal('SUPPLIED_JOINT_FINITE_SCENARIOS_UNADMITTED'),ambiguity:z.literal('FIXED_COMPLETE_JOINT_PATHS_NO_PROBABILITIES'),
   completeness:z.literal('ALL_MATERIAL_INTERFERENCE_AND_COMPATIBILITY_DECLARED'),assumptions:z.array(z.string().min(1).max(2048)).min(1).max(64),omittedModelGap:z.literal('UNKNOWN'),identificationGap:z.literal('UNKNOWN'),
-  scenarios:z.array(z.object({id:text,sharedMechanismRef:ExperimentRefSchema,policyPaths:z.array(z.object({policyRef:ExperimentRefSchema,nodeIds:z.array(text).min(1).max(24)}).strict()).min(1).max(32),
+  scenarios:z.array(z.object({id:text,sharedMechanismRef:ExperimentRefSchema,operatingWorldId:z.string().min(1).max(512).optional(),policyPaths:z.array(z.object({policyRef:ExperimentRefSchema,nodeIds:z.array(text).min(1).max(24)}).strict()).min(1).max(32),
     baseValue:quantity,terms:z.array(z.object({policyIds:z.array(text).min(1).max(32),value:quantity,evidenceRef:ExperimentRefSchema}).strict()).max(512)}).strict()).min(1).max(32),
   choiceConstraints:z.array(z.object({id:text,policyIds:z.array(text).min(1).max(32),minimum:z.number().int().nonnegative().max(32),maximum:z.number().int().nonnegative().max(32),sourceRef:ExperimentRefSchema}).strict()).max(128)}).strict();
 
@@ -114,7 +115,7 @@ export function parseJointAllocationModel(value:unknown):JointAllocationModel {
 }
 export function assertAllocationProblem(p:CanonicalAllocationProblem):void {
   const {ref,...body}=p;if(p.schema!=='finnor.allocation-problem.v1'||p.methodVersion!==S5_VERSION||!sameAllocationRef(ref,allocationRef('S5','allocation-problem',body)))throw new AllocationContractError('INVALID_REQUEST','Canonical problem commitment differs');
-  const m=parseEconomicMandate(p.mandate),joint=parseJointAllocationModel(p.jointModel);
+  const m=parseEconomicMandate(p.mandate,{operatingProfit:true}),joint=parseJointAllocationModel(p.jointModel);
   const needsExact=p.policies.some(policy=>policy.exactProfile)||joint.schema==='finnor.joint-allocation-model.exact.v2'||p.outstanding.some(row=>row.envelopes.some(e=>[...e.quantities,...e.minimumQuantities].some(q=>q.includes('/'))));
   if(needsExact&&p.quantityEncoding!=='DECIMAL_OR_RATIONAL_V2'||p.quantityEncoding!==undefined&&p.quantityEncoding!=='DECIMAL_OR_RATIONAL_V2')throw new AllocationContractError('INVALID_REQUEST','Canonical exact quantities require the versioned rational encoding binding');
   if(p.snapshotDigest!==epistemicHash({resources:p.resources,outstanding:p.outstanding})||!Number.isFinite(Date.parse(p.knowledgeAt))||!Number.isFinite(Date.parse(p.validUntil))||Date.parse(p.knowledgeAt)<Date.parse(m.knowledgeAt)||Date.parse(p.validUntil)>Date.parse(m.validUntil))throw new AllocationContractError('INVALID_REQUEST','Original resource snapshot or mandate knowledge cut differs');
@@ -154,7 +155,7 @@ export function assertAllocationProblem(p:CanonicalAllocationProblem):void {
   unique(p.funding.map(f=>f.policyRef.id),'Duplicate policy funding');
   if(p.funding.length!==p.policies.length)throw new AllocationContractError('INVALID_REQUEST','Every policy requires explicit cost/tail/human funding semantics');
   for(const policy of p.policies){const f=p.funding.find(f=>sameAllocationRef(f.policyRef,policy.ref));if(!f)throw new AllocationContractError('INVALID_REQUEST','Funding policy differs');
-    const fundingPairs:Array<[string|null,string,number[]]>= [[f.actionCostResourceId,m.utility.unit,policy.problem.actions.map(a=>a.cost)],[f.terminalLiabilityResourceId,m.utility.unit,[m.utility.tail.terminalLiability,...policy.problem.actions.map(a=>a.tailLiability)]],[f.humanSecondsResourceId,'seconds',policy.problem.actions.map(a=>a.humanSeconds)]];
+    const fundingPairs:Array<[string|null,string,number[]]>= [[f.actionCostResourceId,m.utility.unit,m.utility.operatingProfit?[]:policy.problem.actions.map(a=>a.cost)],[f.terminalLiabilityResourceId,m.utility.operatingProfit?.currency??m.utility.unit,[m.utility.tail.terminalLiability,...policy.problem.actions.map(a=>a.tailLiability)]],[f.humanSecondsResourceId,'seconds',policy.problem.actions.map(a=>a.humanSeconds)]];
     for(const [id,unit,amounts]of fundingPairs){if(amounts.some(x=>x!==0)&&id===null)throw new AllocationContractError('INVALID_REQUEST','Positive cost, terminal liability or attention has no funding binding');
       if(id!==null){const r=resources.get(id);if(!r||r.unit!==unit||!['STOCK','FLOW','CUMULATIVE_EXPENDITURE'].includes(r.kind)||r.resourceClass!==(unit==='seconds'?'HUMAN_ATTENTION':'CASH')||policy.bindings.beliefPins.some(pin=>!r.permittedRoots.some(root=>sameAllocationRef(root,pin.root))))throw new AllocationContractError('INVALID_REQUEST','Explicit funding resource kind, entity scope or unit differs');}}
     for(const dimension of m.resources.dimensions)for(const component of ['TOTAL','OCCUPANCY'] as const){if(policy.nodes.some(n=>{const a=policy.problem.actions.find(a=>a.id===n.actionId)!;return (component==='TOTAL'?a.resources:a.occupancy)[dimension.id]!==0;})&&!p.demandBindings.some(b=>b.policyRef.id===policy.ref.id&&b.dimensionId===dimension.id&&b.component===component))throw new AllocationContractError('INVALID_REQUEST','Material S4 demand omitted from canonical clearing');}
@@ -172,6 +173,7 @@ export function assertAllocationProblem(p:CanonicalAllocationProblem):void {
   for(const policy of p.policies)if(policy.nodes.some(n=>!joint.scenarios.some(s=>s.policyPaths.find(q=>q.policyRef.id===policy.ref.id)!.nodeIds.includes(n.id))))throw new AllocationContractError('INVALID_REQUEST','Supplied joint model omits a reachable S4 contingency');
   if(joint.choiceConstraints.some(c=>c.policyIds.some(id=>!policies.has(id))))throw new AllocationContractError('INVALID_REQUEST','Choice constraint references a foreign policy');
   if(p.policies.some(policy=>!joint.sourceRefs.some(ref=>sameAllocationRef(ref,policy.bindings.modelRef))))throw new AllocationContractError('INVALID_REQUEST','Joint model omits qualified S3 policy model references');
+  assertOperatingCashCorrespondence(p);
   for(const r of p.resources)for(const c of r.covenants)for(const other of p.resources.flatMap(x=>x.covenants).filter(o=>o.id===c.id))if(!sameAllocationRef(c,other))throw new AllocationContractError('INVALID_REQUEST','Conflicting canonical shared covenant definitions');
 }
 export type S5ExperienceContext=Pick<EconomicMandate,'episodeId'|'tenantId'|'principalId'|'rightsRef'|'ref'|'utilityRef'|'horizon'>;

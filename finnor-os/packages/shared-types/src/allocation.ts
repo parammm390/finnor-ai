@@ -37,6 +37,8 @@ export interface AllocationPolicyFunding {
   policyRef: ExperimentRef;
   /** Additional explicit funding of S4 cost/tail/human quantities, never inferred. */
   actionCostResourceId: string | null; terminalLiabilityResourceId: string | null; humanSecondsResourceId: string | null;
+  operatingCash?: { schema: 'finnor.s5.operating-cash-binding.v1'; resourceId: string;
+    basis: 'GROSS_OUTFLOWS_NO_FORECAST_PROCEEDS' };
 }
 export interface JointAllocationModel {
   schema: 'finnor.joint-allocation-model.v1' | 'finnor.joint-allocation-model.exact.v2'; ref: ExperimentRef;
@@ -47,6 +49,7 @@ export interface JointAllocationModel {
   completeness: 'ALL_MATERIAL_INTERFERENCE_AND_COMPATIBILITY_DECLARED';
   assumptions: string[]; omittedModelGap: 'UNKNOWN'; identificationGap: 'UNKNOWN';
   scenarios: Array<{ id: string; sharedMechanismRef: ExperimentRef;
+    operatingWorldId?: string;
     policyPaths: Array<{ policyRef: ExperimentRef; nodeIds: string[] }>;
     baseValue: ResourceQuantity;
     /** A term applies iff all its policy IDs are selected. Includes joint interactions. */

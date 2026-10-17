@@ -133,7 +133,7 @@ export async function synthesizeContingentControl(input:{mandate:unknown;problem
     const observations=paths[0]!.observations;
     const node:PolicyNode={id:`policy-node:${epistemicHash({period:t,history,observations,actionId:action.id})}`,period:t,actionHistory:[...history],observations:structuredClone(observations),actionId:action.id,valueBounds:[value,value],branches:children.map(c=>({observationKey:observationKey(c.node.observations),childId:c.node.id})),alternatives:[]};
     if(profit&&t+1<h&&children.reduce((sum,child)=>sum+child.operatingForecasts!.length,0)>m.search.maxWorlds)throw new Exhausted('OPERATING_FORECAST_WORLD_BUDGET');
-    return {node,children,value,...(profit?{operatingForecasts:t+1===h?advanced.map(path=>operatingProfitForecast(path.operating!,path.world,path.liability)):children.flatMap(child=>child.operatingForecasts!)}:{})};
+    return {node,children,value,...(profit?{operatingForecasts:t+1===h?advanced.map(path=>operatingProfitForecast(path.operating!,path.world,path.liability,[node.id],path.utility+m.utility.discountFactors[h]!*(path.operating!.commonLiability-path.liability))):children.flatMap(child=>child.operatingForecasts!.map(forecast=>({...forecast,nodeIds:[node.id,...forecast.nodeIds]})))}:{})};
    }
    function search(paths:Path[],t:number,history:string[],stopped:boolean,onlyStop=false):Tree|null {
     tick();let incumbent:Tree|null=null;const alternatives:PolicyNode['alternatives']=[];

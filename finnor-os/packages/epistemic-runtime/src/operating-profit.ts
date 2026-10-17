@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { ControlDynamicsAdapter, ControlWorld, EconomicMandate, OperatingProfitDriver, OperatingProfitObjective, OperatingProfitForecast } from '@finnor/shared-types';
+import type { ControlDynamicsAdapter, ControlWorld, EconomicMandate, OperatingProfitDriver, OperatingProfitObjective, OperatingProfitForecast, OperatingProfitCashPeriod } from '@finnor/shared-types';
 import { ExperimentRefSchema } from './experiments';
 
 const text = z.string().min(1).max(256), amount = z.number().finite().nonnegative().max(1e9);
@@ -21,6 +21,12 @@ export const OperatingProfitObjectiveSchema = z.object({
   qualification: z.literal('OWNER_ACCOUNTING_CONDITIONAL_S3_DYNAMICS_NOT_OBSERVED_VALUE'),
 }).strict();
 const finite = z.number().finite();
+const cashPeriod = z.object({ period: z.number().int().min(0).max(23), revenue: finite.nonnegative(), variableCost: finite.nonnegative(),
+  fixedOperatingCost: finite.nonnegative(), depreciationAmortization: finite.nonnegative(), cashTaxes: finite.nonnegative(),
+  capitalExpenditure: finite.nonnegative(), actionCost: finite.nonnegative(), workingCapitalFunding: finite.nonnegative(),
+  changeInWorkingCapital: finite, operatingProfit: finite, freeCashFlow: finite, nonOperatingCashInflow: finite.nonnegative(),
+  nonOperatingCashOutflow: finite.nonnegative(), nonOperatingNetCashFlow: finite,
+  comparatorOperatingProfit: finite, comparatorFreeCashFlow: finite, openingCash: finite, cashAfterAction: finite, closingCash: finite }).strict();
 export const OperatingProfitCertificateSchema = z.object({
   schema: z.literal('finnor.s4.operating-profit-certificate.v1'), root: OperatingProfitObjectiveSchema.shape.root,
   currency: OperatingProfitObjectiveSchema.shape.currency, moneyScale: OperatingProfitObjectiveSchema.shape.moneyScale,
@@ -30,7 +36,8 @@ export const OperatingProfitCertificateSchema = z.object({
   arithmetic: z.literal('FLOAT64_INHERITS_S3_AND_SEARCH_LIMITATIONS'),
   forecastBasis: z.literal('UNDISCOUNTED_TOTALS_SEPARATE_TERMINAL_LIABILITIES'),
   qualification: z.literal('MODEL_CONDITIONAL_NOT_REALIZED_OR_GUARANTEED'),
-  forecasts: z.array(z.object({ worldId: text, mechanismId: text, revenue: finite.nonnegative(), comparatorRevenue: finite.nonnegative(),
+  forecasts: z.array(z.object({ worldId: z.string().min(1).max(512), mechanismId: text, nodeIds: z.array(text).min(1).max(24),
+    discountedUtility: finite, periods: z.array(cashPeriod).min(1).max(24), revenue: finite.nonnegative(), comparatorRevenue: finite.nonnegative(),
     operatingProfit: finite, comparatorOperatingProfit: finite, incrementalOperatingProfit: finite,
     freeCashFlow: finite, comparatorFreeCashFlow: finite, incrementalFreeCashFlow: finite,
     nonOperatingNetCashFlow: finite, comparatorNonOperatingNetCashFlow: finite,
@@ -91,9 +98,14 @@ export function operatingProfitPeriod(p: OperatingProfitObjective, previous: Rec
   const changeInWorkingCapital = workingCapital(p, states) - workingCapital(p, previous);
   const freeCashFlow = operatingProfit + depreciation - read(p.cashTaxes, states) - read(p.capitalExpenditure, states) - changeInWorkingCapital;
   const nonOperatingNetCashFlow = read(p.nonOperatingCashInflow, states) - read(p.nonOperatingCashOutflow, states);
+  const workingCapitalFunding = Math.max(0, read(p.accountsReceivable, states) - read(p.accountsReceivable, previous)) +
+    Math.max(0, read(p.inventory, states) - read(p.inventory, previous)) + Math.max(0, read(p.accountsPayable, previous) - read(p.accountsPayable, states));
   if (![revenue, variableCost, operatingProfit, freeCashFlow, nonOperatingNetCashFlow, changeInWorkingCapital].every(Number.isFinite))
     throw new OperatingProfitDomainError('OPERATING_PROFIT_NONFINITE_ACCOUNTING');
-  return { revenue, variableCost, operatingProfit, freeCashFlow, nonOperatingNetCashFlow, changeInWorkingCapital };
+  return { revenue, variableCost, operatingProfit, freeCashFlow, nonOperatingNetCashFlow, changeInWorkingCapital,
+    fixedOperatingCost: fixedCost, depreciationAmortization: depreciation, cashTaxes: read(p.cashTaxes, states),
+    capitalExpenditure: read(p.capitalExpenditure, states), actionCost, workingCapitalFunding,
+    nonOperatingCashInflow: read(p.nonOperatingCashInflow, states), nonOperatingCashOutflow: read(p.nonOperatingCashOutflow, states) };
 }
 
 export interface OperatingProfitCourse {
@@ -102,12 +114,13 @@ export interface OperatingProfitCourse {
   revenue: number; baselineRevenue: number; operatingProfit: number; baselineOperatingProfit: number;
   freeCashFlow: number; baselineFreeCashFlow: number; implementationCost: number;
   nonOperatingNetCashFlow: number; baselineNonOperatingNetCashFlow: number;
+  periods: OperatingProfitCashPeriod[];
 }
 export function openOperatingProfitCourse(p: OperatingProfitObjective, world: ControlWorld, baselineSchedule: Record<string, number[]>, commonLiability: number): OperatingProfitCourse {
   return { baselineWorld: structuredClone(world), baselineSchedule: structuredClone(baselineSchedule), commonLiability,
     cash: p.openingCash, baselineCash: p.openingCash, minimumCashObserved: p.openingCash,
     revenue: 0, baselineRevenue: 0, operatingProfit: 0, baselineOperatingProfit: 0,
-    freeCashFlow: 0, baselineFreeCashFlow: 0, implementationCost: 0, nonOperatingNetCashFlow: 0, baselineNonOperatingNetCashFlow: 0 };
+    freeCashFlow: 0, baselineFreeCashFlow: 0, implementationCost: 0, nonOperatingNetCashFlow: 0, baselineNonOperatingNetCashFlow: 0, periods: [] };
 }
 export function advanceOperatingProfitCourse(p: OperatingProfitObjective, dynamics: ControlDynamicsAdapter, old: OperatingProfitCourse,
   previous: ControlWorld, next: ControlWorld, period: number, actionCost: number) {
@@ -123,21 +136,23 @@ export function advanceOperatingProfitCourse(p: OperatingProfitObjective, dynami
   const baseline = operatingProfitPeriod(p, states(old.baselineWorld), states(baselineWorld), 0);
   const cash = old.cash + actual.freeCashFlow + actual.nonOperatingNetCashFlow;
   const course: OperatingProfitCourse = { ...old, baselineWorld, cash, baselineCash: old.baselineCash + baseline.freeCashFlow + baseline.nonOperatingNetCashFlow,
-    minimumCashObserved: Math.min(old.minimumCashObserved, cash),
+    minimumCashObserved: Math.min(old.minimumCashObserved, old.cash - actionCost, cash),
     revenue: old.revenue + actual.revenue, baselineRevenue: old.baselineRevenue + baseline.revenue,
     operatingProfit: old.operatingProfit + actual.operatingProfit, baselineOperatingProfit: old.baselineOperatingProfit + baseline.operatingProfit,
     freeCashFlow: old.freeCashFlow + actual.freeCashFlow, baselineFreeCashFlow: old.baselineFreeCashFlow + baseline.freeCashFlow,
     nonOperatingNetCashFlow: old.nonOperatingNetCashFlow + actual.nonOperatingNetCashFlow,
     baselineNonOperatingNetCashFlow: old.baselineNonOperatingNetCashFlow + baseline.nonOperatingNetCashFlow,
-    implementationCost: old.implementationCost + actionCost };
+    implementationCost: old.implementationCost + actionCost,
+    periods: [...old.periods, { ...actual, period, comparatorOperatingProfit: baseline.operatingProfit,
+      comparatorFreeCashFlow: baseline.freeCashFlow, openingCash: old.cash, cashAfterAction: old.cash - actionCost, closingCash: cash }] };
   if (Object.values(course).some(v => typeof v === 'number' && !Number.isFinite(v)))
     throw new OperatingProfitDomainError('OPERATING_PROFIT_NONFINITE_ACCOUNTING');
   const increment = p.objective === 'INCREMENTAL_OPERATING_PROFIT'
     ? actual.operatingProfit - baseline.operatingProfit : actual.freeCashFlow - baseline.freeCashFlow;
   return { course, increment };
 }
-export function operatingProfitForecast(course: OperatingProfitCourse, world: ControlWorld, terminalLiability: number): OperatingProfitForecast {
-  return { worldId: world.id, mechanismId: world.mechanismId,
+export function operatingProfitForecast(course: OperatingProfitCourse, world: ControlWorld, terminalLiability: number, nodeIds: string[], discountedUtility: number): OperatingProfitForecast {
+  return { worldId: world.id, mechanismId: world.mechanismId, nodeIds, discountedUtility, periods: course.periods,
     revenue: course.revenue, comparatorRevenue: course.baselineRevenue,
     operatingProfit: course.operatingProfit, comparatorOperatingProfit: course.baselineOperatingProfit,
     incrementalOperatingProfit: course.operatingProfit - course.baselineOperatingProfit,

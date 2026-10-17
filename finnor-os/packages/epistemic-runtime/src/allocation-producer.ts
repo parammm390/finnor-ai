@@ -1,4 +1,5 @@
 import {exactPolicyActionQuantity} from './exact-allocation-adapter';
+import {operatingCashDemand,operatingFinancialQuantity} from './operating-profit-allocation';
 import { spawn } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
@@ -12,7 +13,7 @@ interface MatrixRow {id:string;coefficients:Record<string,string>;lower:string|n
 export interface AllocationMilpInput {schema:'finnor.s5.milp.v1'|'finnor.s5.milp.rational.v2';quantityEncoding?:'DECIMAL_OR_RATIONAL_V2';c:string[];integrality:number[];lowerBounds:Array<string|null>;upperBounds:Array<string|null>;rows:MatrixRow[];budget:{deadlineMs:number;nodeLimit:number}}
 interface SolverResult {schema:'finnor.s5.milp-result.v1';status:string;vector:number[]|null;minObjective:number|null;minDualBound:number|null;mipGap:number|null;nodeCount:number|null;termination:string;dualProposal:AllocationDualProposal|null;
   backend:{pythonVersion:string;scipyVersion:string;numpyVersion:string;highsVersion:string};usage:Record<string,unknown>;warnings:string[]}
-const files=['allocation-producer.ts','allocation-solver.py','allocation-checker.ts','allocation-resource-check.ts','allocation-verifier.ts','allocation-verifier-worker.mjs','allocation-contracts.ts','control-contracts.ts','source-precedence.ts','../../db/migrations/0150_portfolio_resource_clearing.sql','../../db/migration-head.ts','../../shared-types/src/allocation.ts','../../private-equity/src/enterprise-allocation.ts','../../private-equity/src/allocation-store.ts'].map(p=>fileURLToPath(new URL(p,import.meta.url)));
+const files=['allocation-producer.ts','operating-profit-allocation.ts','operating-profit.ts','../../shared-types/src/contingent-control.ts','allocation-solver.py','allocation-checker.ts','allocation-resource-check.ts','allocation-verifier.ts','allocation-verifier-worker.mjs','allocation-contracts.ts','control-contracts.ts','source-precedence.ts','../../db/migrations/0150_portfolio_resource_clearing.sql','../../db/migration-head.ts','../../shared-types/src/allocation.ts','../../private-equity/src/enterprise-allocation.ts','../../private-equity/src/allocation-store.ts'].map(p=>fileURLToPath(new URL(p,import.meta.url)));
 const sources=Promise.all(files.map(async path=>({path,sha256:createHash('sha256').update(await readFile(path)).digest('hex')})));
 void sources.catch(()=>undefined);
 let activeSolvers=0;
@@ -52,12 +53,14 @@ export function compileAllocationMilp(p:CanonicalAllocationProblem,deadlineMs:nu
         for(const b of p.demandBindings.filter(b=>b.policyRef.id===policy.ref.id)){const values=resources.get(b.resourceId)!;
           if(b.component==='TOTAL')values[n.period]=values[n.period]!.add((exactPolicyActionQuantity(policy,a,'resources',b.dimensionId)??number(a.resources[b.dimensionId]!)));
           else for(let offset=0;offset<a.occupationPeriods&&n.period+offset<=h;offset++)values[n.period+offset]=values[n.period+offset]!.add((exactPolicyActionQuantity(policy,a,'occupancy',b.dimensionId)??number(a.occupancy[b.dimensionId]!)));}
-        for(const [resourceId,period,amount,field]of [[funding.actionCostResourceId,n.period,a.cost,'cost'],[funding.humanSecondsResourceId,n.period,a.humanSeconds,'humanSeconds'],[funding.terminalLiabilityResourceId,h,a.tailLiability,'tailLiability']] as const)if(resourceId){const v=resources.get(resourceId)!;v[period]=v[period]!.add(exactPolicyActionQuantity(policy,a,field)??number(amount));}
-      }raw.set(policy.ref.id,resources);
+        for(const [resourceId,period,amount,field]of [[funding.actionCostResourceId,n.period,a.cost,'cost'],[funding.humanSecondsResourceId,n.period,a.humanSeconds,'humanSeconds'],[funding.terminalLiabilityResourceId,h,a.tailLiability,'tailLiability']] as const)if(resourceId){const v=resources.get(resourceId)!;v[period]=v[period]!.add(exactPolicyActionQuantity(policy,a,field)??(field==='tailLiability'?operatingFinancialQuantity(p,amount):number(amount)));}
+      }
+      if(funding.operatingCash){const values=resources.get(funding.operatingCash.resourceId)!,cash=operatingCashDemand(p,scenario,policy);for(let t=0;t<=h;t++)values[t]=values[t]!.add(cash[t]!);}
+      raw.set(policy.ref.id,resources);
     }
     const base=new Map(p.resources.map(r=>[r.resourceId,r.existingUse.map(quantity)])),minimumBase=new Map(p.resources.map(r=>[r.resourceId,r.existingUse.map(quantity)]));
     for(const o of p.outstanding)for(const e of o.envelopes){const values=base.get(e.resourceId),lower=minimumBase.get(e.resourceId);if(!values||!lower||e.minimumQuantities?.length!==h+1)throw new AllocationContractError('INVALID_REQUEST','Outstanding resource lower/upper semantics omitted from compiler');for(let t=0;t<=h;t++){values[t]=values[t]!.add(quantity(e.quantities[t]!));lower[t]=lower[t]!.add(quantity(e.minimumQuantities[t]!));}}
-    if(p.mandate.utility.tail.terminalLiability!==0){const resourceId=p.funding[0]!.terminalLiabilityResourceId!;for(const baseline of [base,minimumBase]){const v=baseline.get(resourceId)!;v[h]=v[h]!.add(number(p.mandate.utility.tail.terminalLiability));}}
+    if(p.mandate.utility.tail.terminalLiability!==0){const resourceId=p.funding[0]!.terminalLiabilityResourceId!;for(const baseline of [base,minimumBase]){const v=baseline.get(resourceId)!;v[h]=v[h]!.add(operatingFinancialQuantity(p,p.mandate.utility.tail.terminalLiability));}}
     for(const r of p.resources)for(let t=0;t<=h;t++){
       if(r.availability[t]!.amount===null||r.availability[t]!.basis!=='REPORTED_AVAILABLE')throw new AllocationContractError('INVALID_REQUEST','Unresolved resource cannot be compiled as available cash');
       add(`resource:${r.resourceId}:${scenario.id}:${t}`,Object.fromEntries(ids.map(id=>[String(columns.get(id)!),usage(r.kind,raw.get(id)!.get(r.resourceId)!,t)])),quantity(r.availability[t]!.amount!).sub(quantity(r.safetyMargin)).sub(usage(r.kind,base.get(r.resourceId)!,t)));

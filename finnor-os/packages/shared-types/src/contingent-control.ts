@@ -29,12 +29,21 @@ export interface OperatingProfitObjective {
 }
 export interface OperatingProfitForecast {
   worldId: string; mechanismId: string;
+  nodeIds: string[]; discountedUtility: number; periods: OperatingProfitCashPeriod[];
   revenue: number; comparatorRevenue: number;
   operatingProfit: number; comparatorOperatingProfit: number; incrementalOperatingProfit: number;
   freeCashFlow: number; comparatorFreeCashFlow: number; incrementalFreeCashFlow: number;
   nonOperatingNetCashFlow: number; comparatorNonOperatingNetCashFlow: number;
   implementationCost: number; closingCash: number; comparatorClosingCash: number; minimumCashObserved: number;
   terminalLiability: number; comparatorTerminalLiability: number;
+}
+export interface OperatingProfitCashPeriod {
+  period: number; revenue: number; variableCost: number; fixedOperatingCost: number;
+  depreciationAmortization: number; cashTaxes: number; capitalExpenditure: number; actionCost: number;
+  workingCapitalFunding: number; changeInWorkingCapital: number;
+  operatingProfit: number; freeCashFlow: number; nonOperatingCashInflow: number; nonOperatingCashOutflow: number;
+  nonOperatingNetCashFlow: number; comparatorOperatingProfit: number; comparatorFreeCashFlow: number;
+  openingCash: number; cashAfterAction: number; closingCash: number;
 }
 export interface OperatingProfitCertificate {
   schema: 'finnor.s4.operating-profit-certificate.v1'; root: OperatingProfitObjective['root'];
