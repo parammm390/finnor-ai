@@ -184,6 +184,23 @@ source-only bundle reconstruction separately from this installed boundary.
 
 ### Resumed resulting-cut verification
 
+The resulting executions are now retained as 099 (API, 15 PASS), 100 (hybrid
+physical recovery, 16 PASS) and 101 (independent UI reconstruction with opaque
+UNKNOWN and subsequent same-original readback, 17 PASS). All exit 0 and pass
+ending source/oracle/runtime/installed custody with seed withdrawal/restoration.
+These results do not establish mounted or matched-comparator acceptance.
+
+Reconstruction 004 fails ENOSPC before a business episode. The separate
+enforced-clone probe returns ENOSYS. `COPYFILE_FICLONE` is only a request and
+may fall back to ordinary copying; distinct inodes alone never prove COW.
+Reconstruction 005 uses explicit independent regular copies instead, preserving
+all existing byte/mode/inode/resolution checks and original product build ID.
+It records `independentRegularFiles:true`, `copyOnWriteEstablished:false` and
+actual measured source allocation/free space. No shared mutable source or
+dependency inode replaces the independence requirement. Preserve the old
+failure and historical metadata; do not retroactively relabel old COW claims
+as measured behavior.
+
 The remaining work is the user's existing four obligations, not a new phase.
 Native 095 passes the corrected API acquisition and handoff-only fresh role
 binding, with 228/256 physical reads, 18 exact one-shot independent readback

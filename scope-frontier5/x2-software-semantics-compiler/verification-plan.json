@@ -8,10 +8,49 @@
     "parentCommit": "517003a4396bc8101a90be4b425ee01de9446740",
     "parentTree": "07ba69b8e96f05944c2f9f14a74b2c400eb89e42",
     "adoptedPeerDeltas": [],
-    "finalCommit": null,
-    "finalTree": null
+    "verifiedCodeCommit": "5e9a7289a3695092b820e037d8fcbd1fae470145",
+    "verifiedCodeTree": "42ed1b9183c7b6235d615fc2a584271dc74f64f8",
+    "finalCommitTreeReceipt": "../x2-delivery-001/source-manifest.json outside checkout, avoiding circular Git identity"
   },
-  "status": "RESUMED_FINITE_SOFTWARE_CHECKLIST_INCOMPLETE",
+  "status": "RESULTING_INSTALLED_PROOFS_PASS_MANDATORY_DEVELOPMENT_GATES_STILL_INCOMPLETE",
+  "resultingDelivery": {
+    "authoritativeCurrentRecord": "resulting-evidence.json",
+    "recordSha256": "baf509def9ec821468f45f75103424ffeb80476749e8f41fe1d10ef77d246b77",
+    "codeCommit": "5e9a7289a3695092b820e037d8fcbd1fae470145",
+    "codeTree": "42ed1b9183c7b6235d615fc2a584271dc74f64f8",
+    "installation": "installed-009",
+    "buildId": "x2-e75bccf83552f881a817f65d85751d2df377ce44251dd232724df485f98c0af4",
+    "buildManifestSha256": "871418ff506f890984f1d6747cc50f16280b9df0c3f9331071af229409fb3f90",
+    "actualBackendBuildWallMs": 191106.690042,
+    "sourceInputs": 2519,
+    "installed": [
+      {"run": 99, "surface": "api", "pass": 15, "fail": 0, "exitCode": 0, "seedReceipt": "reconstruction-native-027.json"},
+      {"run": 100, "surface": "hybrid", "pass": 16, "fail": 0, "exitCode": 0, "seedReceipt": "reconstruction-native-028.json"},
+      {"run": 101, "surface": "ui", "pass": 17, "fail": 0, "exitCode": 0, "seedReceipt": "reconstruction-native-029.json"}
+    ],
+    "reconstruction": {
+      "installation": "reconstructed-installed-005",
+      "originalBuildAndFiveRoleBytesPreserved": true,
+      "declaredSourceDelta": [],
+      "independentRegularFiles": true,
+      "copyOnWriteEstablished": false,
+      "enforcedCloneProbe": "independent-clone-probe-001/result.json_ENOSYS",
+      "retainedFailure": "failed-reconstruction-004.json_ENOSPC_BEFORE_BUSINESS_EXECUTION",
+      "seed009AbsentThroughout101AndRestored": true,
+      "beginningAndEndingInstalledCustody": "PASS"
+    },
+    "originalEffectFallback": "100_PASS_INDEPENDENT_ORIGINAL_OBSERVATION;101_PASS_OPAQUE_UNKNOWN_THEN_SAME_ORIGINAL_OBSERVATION_NO_REPLAY_OR_RELEASE",
+    "outer099DurationCaveat": "Includes paused engineering sequencer while actual child finished; not a business-latency measurement.",
+    "allOrdinaryRolesMigrationUpgradeLegacyInflightRestartAndCustodyGates": "PASS_SELECTED_INSTALLED_CASES",
+    "browser": "BLOCKED_NOT_RUN_PRIVACY_ACKNOWLEDGEMENT_AND_CORRECTED_INTAKE_UNVERIFIED",
+    "comparison": "BLOCKED_NOT_RUN_NO_MULTIPLIER",
+    "remainingMatrixCells": "Preserved below; selected installed proofs do not make every development case green.",
+    "codeComplete": false,
+    "e2eDevVerified": false,
+    "localHandoff": "delivery.md",
+    "localPrDraft": "pr-draft.md",
+    "remotePublication": "NOT_AUTHORIZED_NOT_PERFORMED"
+  },
   "remainingUserObligations": {
     "scope": "EXISTING_FOUR_OBLIGATIONS_ONLY_NO_NEW_PHASE",
     "siblingSynchronization": {
@@ -53,8 +92,8 @@
       "mounted": "NOT_RUN"
     },
     "browser": {
-      "artifact": "browser-continuation-blocker-001.json",
-      "artifactSha256": "55264934d27f918f3944d6e358486b9d4893d669384089e911f9f111cd350505",
+      "artifact": "browser-continuation-blocker-002.json",
+      "artifactSha256": "f38151a8e621b5f0cf9e1a4c067a9a9ee7436850eba7365c8d68d1878533d4bf",
       "status": "BLOCKED_NOT_MOUNTED_ACCEPTANCE",
       "sameFailedSystemChromeVersion": "155.0.8059.80",
       "newLaunchesWithoutSubstrateChange": 0,
@@ -83,8 +122,8 @@
       "legacyLintLogSha256ForBothCuts": "1fc6d389b2b849fef69927c476e22ce43680ed8dd390122a51361b70f6a6c370",
       "allRepositoryChecksGreen": false
     },
-    "resultingInstalledVerification": "PREPARED_NOT_YET_BUILT_OR_EXECUTED",
-    "localCommitAndPrReadyHandoff": "PENDING_NO_REMOTE_PUBLICATION_AUTHORITY"
+    "resultingInstalledVerification": "099_15_PASS_100_16_PASS_101_17_PASS_WITH_SEED_WITHDRAWAL_AND_RESTORATION",
+    "localCommitAndPrReadyHandoff": "SOURCE_COMMITTED_LOCAL_DRAFT_AND_RECONSTRUCTION_MANIFEST_NO_REMOTE_PUBLICATION_AUTHORITY"
   },
   "completionRecordReconciliation": {
     "resumeCommit": "ba92228c5ac74d106118d1bb7a9f887c8d54f27a",
@@ -161,6 +200,7 @@
     ]
   },
   "currentContinuation": {
+    "qualification": "HISTORICAL_THROUGH_087_SEE_RESULTING_DELIVERY_FOR_CURRENT_INSTALLED_CUT",
     "asOf": "native-e2e-087-receipt-reconciled-resumption",
     "checkpoint": "368755a222581ad9c49ae4d15c2dfd661cc4ccd4",
     "recoverableContinuationCommit": "ba92228c5ac74d106118d1bb7a9f887c8d54f27a",
@@ -735,10 +775,11 @@
       "heavyBuildsAndInstalledStacksConcurrent": 1,
       "ownedDisposableDatabaseClusters": 1,
       "ports": "dynamic loopback, exclude peer 19073",
-      "latestFreeDiskGiB": 4.47,
-      "latestResourceObservation": "completion-record-reconciliation-001.json",
+      "latestFreeDiskKiB": 158064,
+      "latestResourceObservation": "Post101 df observation; resulting-sequencer-resource-note-001.json and verified archive receipts",
       "resourceConditionArtifact": "replay-resource-condition-081.json",
-      "stoppedDatabaseArchives": "001–029 and 031–080 byte/mode/link/inventory verified; interrupted 030 raw preserved",
+      "stoppedDatabaseArchives": "001–029,031–080 and selected088–097 byte/mode/link/inventory verified; interrupted030 and latest095/098/099/100/101 raw preserved",
+      "historicalGeneratedRuntimeArchive": "historical-reconstructed-installed-002-archive.json; complete byte/mode/link parity; compressed original retained",
       "generatedBuildCacheReclaim": "generated-api-cache-reclaim-081.json",
       "peerOrUncommittedCleanup": false,
       "cleanup": "proven X2-created stopped regenerable scratch only, preserve raw evidence and final assets"
@@ -760,9 +801,9 @@
       "input": "independently administered API/UI/hybrid applications; frozen model before fresh objective",
       "expected": "fresh target and composition execute from learned algebra without app-specific engineer code",
       "command": "nativeExecutor",
-      "artifact": ["native-e2e-029/results.json", "native-e2e-075/results.json", "native-e2e-079/results.json", "native-e2e-080/results.json"],
-      "status": "PARTIAL_API_AND_INSTALLED_UI_REUSE_FULL_CURRENT_PROFILE_UNFINISHED",
-      "remaining": ["current emitted hybrid positive reuse", "full current mounted acceptance", "sealed-cut compatibility"]
+      "artifact": ["native-e2e-099/results.json", "native-e2e-100/results.json", "native-e2e-101/results.json"],
+      "status": "PASS_SELECTED_INSTALLED_API_PASSIVE_UI_AND_HYBRID_FRESH_REUSE_NOT_MOUNTED_OR_PROTECTED",
+      "remaining": ["full current mounted acceptance", "unpassed matrix cells and protected qualification remain separate"]
     },
     {
       "id": "B",
@@ -806,7 +847,8 @@
       "command": "nativeExecutor",
       "artifact": ["native-e2e-015/results.json", "native-e2e-027/results.json", "native-e2e-030/interrupted-disposition.json", "native-e2e-031/results.json", "native-e2e-032/results.json", "native-e2e-033/results.json", "native-e2e-035/results.json", "native-e2e-036/results.json", "native-e2e-037/results.json", "native-e2e-038/results.json", "native-e2e-039/results.json", "native-e2e-040/results.json", "native-e2e-041/results.json", "native-e2e-042/results.json", "native-e2e-043/results.json"],
       "status": "PARTIAL",
-      "remaining": ["final sealed-cut regression after remaining engineering"],
+      "remaining": ["current emitted cancelled/expired-parent variants not rerun; earlier exact receipts retained"],
+      "currentInstalledRecovery": ["native-e2e-100/results.json", "native-e2e-101/results.json"],
       "siblingConcurrency": "native-e2e-098/results.json_PASS_SOURCE_NATIVE"
     },
     {
@@ -818,7 +860,9 @@
       "command": "nativeExecutor",
       "artifact": ["native-e2e-029/results.json", "native-e2e-075/results.json", "native-e2e-079/results.json", "native-e2e-080/results.json"],
       "status": "PARTIAL_API_AND_INSTALLED_UI_BUSINESS",
-      "remaining": ["current emitted hybrid reuse", "full mounted completion", "080 freshness latency and 081 unknown S6 operational exception"]
+      "remaining": ["full mounted completion; prior080/081 underlying causes remain unestablished, not inferred from new passing cases"],
+      "currentInstalledHybridPositive": "native-e2e-100/results.json_PASS",
+      "currentInstalledApiAndUiPositive": ["native-e2e-099/results.json", "native-e2e-101/results.json"]
     },
     {
       "id": "G",
@@ -827,12 +871,12 @@
       "input": "unsupported/drift/checker/budget outcome",
       "expected": "lawful admitted fallback actually executes and is independently checked; unavailable fallback remains blocked/UNKNOWN",
       "command": "nativeExecutor with FINNOR_X2_TEST_RECOVERY=full|opaque|deadline|cancel under each registered S8/surface configuration",
-      "artifact": ["native-e2e-042/results.json", "native-e2e-043/results.json", "native-e2e-085/results.json"],
-      "status": "PRIOR_ORIGINAL_OBSERVATION_FALLBACK_PASS_RESULTING_CUT_PENDING",
+      "artifact": ["native-e2e-042/results.json", "native-e2e-043/results.json", "native-e2e-100/results.json", "native-e2e-101/results.json"],
+      "status": "PASS_AVAILABLE_ORIGINAL_EFFECT_OBSERVATION_FALLBACK_FORWARD_REPAIR_UNADMITTED",
       "callee": "authenticated application-resume -> existing application worker reconcilePossibleRequests; application-cancel preserves original observation",
       "supportedFallback": "Read and reconcile the same original possibly accepted effect under retained observation authority; preserve original grant, parent allocation and deadline.",
       "unsupportedForwardFallback": "NO_ADMITTED_GENERIC_BROWSER_WRITE_OR_STALE_CHECKER_DRIFT_BUDGET_REPAIR_CALLEE; retain BLOCKED or UNKNOWN, no new effect identity.",
-      "remaining": ["resulting installed positive original-effect observation and opaque UNKNOWN"]
+      "remaining": []
     },
     {
       "id": "H",
@@ -853,8 +897,9 @@
       "expected": "positive final installed chain and compatible legacy consumers; source/runtime/schema parity without hidden donor/peer links",
       "command": "nativeExecutor",
       "artifact": ["native-e2e-068/results.json", "native-e2e-075/results.json", "installed-008/build-manifest.json", "native-e2e-083/results.json", "native-e2e-085/results.json", "checkpoint-reconstruction-003.json", "native-typecheck-038.log", "native-driver-typecheck-060.log", "native-lint-046.log"],
-      "status": "PARTIAL_INSTALLED_STANDALONE_POSITIVE_AND_SOURCE_RECONSTRUCTION",
-      "remaining": ["current mounted repair acceptance", "final affected static/security and resulting-runtime reconstruction"],
+      "status": "PASS_SELECTED_RESULTING_INSTALLED_AND_INDEPENDENT_REGULAR_FILE_RECONSTRUCTION_NOT_MOUNTED_OR_CLEAN_HOST",
+      "remaining": ["current mounted repair acceptance", "whole legacy suites remain inherited FAIL, not green"],
+      "currentInstalledAndReconstructed": ["native-e2e-099/results.json", "native-e2e-100/results.json", "native-e2e-101/results.json", "reconstructed-installed-005/reconstruction.json"],
       "migrationParity": "migration-parity-after-001.json_PASS_176_EXACT_SQL_FILES_HEAD_0193",
       "realOldInflightJobs": "native-e2e-090/results.json_and_native-e2e-095/results.json_PASS",
       "legacyCompatibility": "legacy-s5-native-002_PASS; legacy-s8-native-003_13_PASS_2_INHERITED_FAIL; compatibility-baseline-002_six_exact_inherited_type_diagnostics_zero_source_escapes"

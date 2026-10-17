@@ -1,6 +1,67 @@
 # FRONTIER5.X2 status
 
-## Current four-obligation continuation
+## Resulting installed cut, 17 October 2026
+
+**Selected installed proofs pass; X2 finite engineering remains incomplete.**
+No mounted/privacy acceptance, matched performance comparison, protected
+admission, production activation or economic qualification is inferred.
+
+Verified code commit: `5e9a7289a3695092b820e037d8fcbd1fae470145`, tree
+`42ed1b9183c7b6235d615fc2a584271dc74f64f8`. Installation 009 is a real
+post-commit build, not the older 008 cut. Its backend build completes in
+191,106.690 ms with actual Next 15.5.27 type validation, 66 static pages and
+five emitted roles. Both dependency locks are unchanged.
+
+| Current evidence | Actual result |
+| --- | --- |
+| Installed 099, API with discovery-only reader | **15 PASS**, exit 0 |
+| Installed 100, hybrid and physical accepted-submission crash | **16 PASS**, exit 0 |
+| Independent reconstruction 005 / 101, UI and opaque recovery | **17 PASS**, exit 0 |
+| Backend, frontend and X2-driver typechecks | PASS |
+| Explicit X2 owner/client/harness lint; six generated/auth/release checks | PASS |
+| Broad legacy S8 types; full legacy S8 process suite; legacy runner lint | Retained inherited failures, not green |
+
+The earlier progress count of 14 for 099 omitted its final asset-custody gate;
+the verified complete result contains 15 passing gates. 099's outer controller
+duration includes the engineering sequencer pause during disk preservation,
+not business latency. 100/101 preserve the actual original parent, allocation,
+reservation, effect/obligation, deadline, physical SIGKILL, natural lease expiry
+and quarantine. 101 first retains UNKNOWN with no duplicate submission,
+approval or release, then uses newly available lawful readback of that same
+original effect before independent business completion.
+
+All three current episodes pass actual migration/upgrade/ordinary-role,
+old running/queued job, independent business, S8, API restart and ending
+source/oracle/runtime/installed custody gates. Seed 008 is unavailable during
+099/100 and restored; seed 009 is unavailable throughout reconstructed 101
+and restored. These are native/installed proofs, **not mounted browser proofs**.
+
+Reconstruction 004 fails `ENOSPC` before business execution. Its failure is
+retained. An enforced-clone probe returns `ENOSYS`; therefore copy-on-write is
+not established. Reconstruction 005 instead preserves all bytes in independent
+regular files, with distinct inodes and no external resolution, and passes the
+actual 101 episode. The historical COW labels do not establish OS cloning.
+Nine stopped DB images and historical reconstruction 002 are preserved in
+complete byte/mode/link-verified archives before their backed-up generated
+copies are reclaimed. No source, peer work, important data or required current
+runtime is deleted. Database 030 and latest proof databases remain untouched.
+
+`resulting-evidence.json` is the sanitized current receipt index.
+`delivery.md`, `pr-draft.md` and `remaining-execution-packet.md` name the exact
+local delivery and continuations. The final documentation commit/tree and
+donor-free source reconstruction are recorded outside Git in
+`../x2-delivery-001/source-manifest.json` and its reconstruction receipt.
+Later documentation does not claim a second product rebuild.
+
+Remaining mandatory predicates include the browser-blocked privacy/exact-ack/
+corrected-intake lifecycle, the unexecuted matched diagnostic and its missing
+entrypoint/configuration, and the other unpassed matrix cells retained in
+`verification-plan.json`. Complete comparison costs, human work and actual
+aggregate simultaneous peak memory remain unknown. **CODE_COMPLETE:false;
+E2E_DEV_VERIFIED:false.** The local PR is a draft, not merge or publication
+authority.
+
+## Four-obligation source continuation, before installation
 
 The user's remaining scope is fixed: sibling synchronization, inherited
 compatibility disposition, original browser/fallback/matched diagnostic, then

@@ -15,7 +15,7 @@ disable protections or change iCloud/system services.
 Retained evidence: `browser-startup-investigation-001/result.json`,
 `browser-root-preflight-001/result.json`,
 `browser-platform-home-001/result.json` and
-`browser-continuation-blocker-001.json` under the task evidence root.
+`browser-continuation-blocker-002.json` under the task evidence root.
 The current system Chrome and sampled failed process both identify
 `155.0.8059.80`. Desktop page creation was policy-denied; the three authorized
 visible launch variants timed out at 15 seconds. The sampled CloudDocs
@@ -65,7 +65,12 @@ No admitted generic browser WRITE, stale-model/checker repair or additional
 budget fallback exists. Unsupported forward work remains BLOCKED; a possible
 unobservable effect remains UNKNOWN. Earlier 042/043/085 receipts retain the
 actual expired/cancelled/full recovery outcomes. Resulting installed fallback
-receipts must be linked separately, not inferred from the flags.
+receipts are now linked separately: 100 passes hybrid original-effect recovery
+and independently graded completion on installation 009; 101 passes opaque
+UNKNOWN followed by same-original readback and completion on independent
+regular-file reconstruction 005. All original identity/exposure/no-replay
+checks pass. These are executable observation fallback proofs, not authority
+for an unadmitted forward repair.
 
 ## Matched X2-off and equipped comparison
 
