@@ -13,7 +13,7 @@ export const RETURN_SOLVER_POLICY = Object.freeze({
   maxIterations: 200,
   searchIntervals: 512,
   xirrDayCount: "ACT/365F" as const,
-  multipleRootDiscovery: "bounded sign-change scan; even-multiplicity roots without a sign change may be undiscovered" as const,
+  multipleRootDiscovery: "bounded sign-change scan for diagnostics only; nonconventional cash flows require independently established root uniqueness" as const,
 });
 
 type Exponent = (index: number, flow: SponsorCashFlow) => InstanceType<typeof FinnorDecimal>;
@@ -114,9 +114,18 @@ function solve(flows: readonly SponsorCashFlow[], exponent: Exponent): DecimalSt
   const roots = [...exact, ...brackets.map(([left, right]) => bisection(left, right, flows, exponent))]
     .sort((left, right) => left.comparedTo(right))
     .filter((root, index, all) => index === 0 || root.minus(all[index - 1]!).abs().gt(d(RETURN_SOLVER_POLICY.rateTolerance).times(10)));
-  if (!roots.length) fail("IRR_UNDEFINED", "No IRR root was found in the supported domain", { minimumRate: RETURN_SOLVER_POLICY.minimumRate, maximumRate: RETURN_SOLVER_POLICY.maximumRate });
-  if (roots.length > 1) fail("IRR_AMBIGUOUS", "Multiple economically supported IRR roots were detected", { roots: roots.map(decimalFrom) });
-  return decimalFrom(roots[0]!);
+  // A bounded sign-change scan is not a root-isolation proof. Nearby roots
+  // can share an interval, and even-multiplicity roots never change sign.
+  // Neither zero nor one discovered root establishes a unique IRR for a
+  // nonconventional stream. Preserve discoveries as diagnostics, not a rate.
+  fail("IRR_AMBIGUOUS", "Unique IRR is not established for this nonconventional cash-flow stream", {
+    roots: roots.map(decimalFrom),
+    signChanges: variations,
+    uniquenessEstablished: false,
+    discovery: RETURN_SOLVER_POLICY.multipleRootDiscovery,
+    minimumRate: RETURN_SOLVER_POLICY.minimumRate,
+    maximumRate: RETURN_SOLVER_POLICY.maximumRate,
+  });
 }
 
 export function solvePeriodicIrr(flows: readonly SponsorCashFlow[]): DecimalString {

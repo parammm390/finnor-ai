@@ -5,6 +5,8 @@ import {mkdtemp,mkdir,writeFile,readFile,appendFile} from 'node:fs/promises';
 import {tmpdir} from 'node:os';import {resolve,join} from 'node:path';import {createServer} from 'node:net';
 import EmbeddedPostgres from 'embedded-postgres';import pg from 'pg';
 import {economicFixture} from './economic-fixtures.mjs';
+import {canonicalEconomic} from '../../packages/epistemic-runtime/src/economic-attribution';
+import {ownerTransportHash} from '../../packages/governed-execution/src/owner-transport';
 const out=resolve(process.env.FINNOR_S7_EVIDENCE_DIR??'../scope-7/scope-evidence/owner-'+Date.now());await mkdir(out,{recursive:true});
 const sourcePaths=['packages/private-equity/src/economic-store.ts','packages/private-equity/src/enterprise-economic-attribution.ts','packages/epistemic-runtime/src/economic-attribution.ts','packages/shared-types/src/economic-attribution.ts','packages/db/migrations/0156_economic_attribution.sql','packages/db/migration-head.ts','apps/api/app/api/economic-outcomes/[operation]/route.ts','scripts/s7/run-owner-e2e.mts','scripts/s7/economic-fixtures.mts'];
 const snapshot=()=>Promise.all(sourcePaths.map(async path=>({path,sha256:createHash('sha256').update(await readFile(path)).digest('hex')})));const before=await snapshot();
@@ -25,5 +27,42 @@ await check('commit-after-cut-cannot-be-backdated-into-economic-history',async()
 await check('tenant-principal-role-and-HTTP-evidence-authority-attacks',async()=>{assert(first);const foreign=await api('read',{id:first.record.ref.id},{auth:{tenantId:otherTenant,userId:otherPrincipal,employeeId:otherPrincipal,role:'owner'}});assert.equal(foreign.status,404);const denied=await api('register',first.input,{auth:{...ctx.auth,role:'technician'}});assert.equal(denied.status,404);const injection=await api('assess',{estimandId:first.record.ref.id,lookAt:'2024-01-01T00:00:00.000Z',assignments:[],accounting:[],idempotencyKey:'forged',computeCost:{amount:null,pricebookRef:null,meteringRef:null},evidence:[{signatureVerified:true}]});assert.equal(injection.status,400);const rls=await db.withTenantTransaction(otherTenant,{userId:otherPrincipal,readOnly:true},async(_db,c)=>(await c.query('SELECT record_id FROM finnor_os.s7_economic_records')).rows);assert.equal(rls.length,0);return {foreign:foreign.status,role:denied.status,forged:injection.status,ordinaryRlsRows:rls};});
 await check('same-tenant-principal-isolation-at-ordinary-SQL-boundary',async()=>{const peer=randomUUID();await admin.query("INSERT INTO finnor_os.users(id,tenant_id,email,role,status) VALUES($1,$2,$3,'owner','active')",[peer,tenant,peer+'@generated.invalid']);const rows=await db.withTenantTransaction(tenant,{userId:peer,readOnly:true},async(_db,c)=>(await c.query('SELECT record_id,principal_id FROM finnor_os.s7_economic_records')).rows);await writeFile(join(out,'same-tenant-principal-readback.json'),JSON.stringify({peer,tenant,rows},null,2));assert.equal(rows.length,0,'Another principal could read private economic records through ordinary-role SQL');return {peer,rows};});
 await check('post-assignment-question-cannot-be-called-prospective',async()=>{const f=economicFixture(8,0,15),r=await api('register',{estimand:f.input.estimand,rightsRef:'generated-owner-rights',idempotencyKey:'hindsight',mode:'PROSPECTIVE'});assert.equal(r.status,400);return {status:r.status,body:await r.json()};});
+// Storage boundary failure modes: an otherwise hash-valid record can disagree
+// with its SQL owner/kind/links/time, or attach unhashed authority claims.
+// Exercise ordinary-role INSERT -> authenticated API read, not a mock decoder.
+const substitutions:Array<[string,(record:any)=>void,number]>=[
+ ['consistent-record',()=>undefined,200],
+ ['foreign-body-principal',r=>{r.principalId=otherPrincipal;},503],
+ ['different-body-kind',r=>{r.kind='COST';},503],
+ ['different-estimand-link',r=>{r.estimandId=first.record.ref.id;},503],
+ ['different-revision-link',r=>{r.revisionOf=first.record.ref.id;},503],
+ ['backdated-body-knowledge',r=>{r.knowledgeAt='1999-01-01T00:00:00.000Z';},503],
+ ['different-body-valid-time',r=>{r.validAt='1999-01-01T00:00:00.000Z';},503],
+ ['forged-protected-receipt',r=>{r.protectedReceipt={claimed:'not-an-owner-receipt'};},503],
+ ['forged-execution-authority',r=>{r.executionAuthorityGranted=true;},503],
+ ['different-semantic-owner',r=>{r.ref.owner='S8';},503],
+];
+for(const [id,substitute,expected]of substitutions)await check('storage-preimage-'+id,async()=>{
+ assert(first);
+ const record=structuredClone(first.record);
+ record.kind='SOURCE';record.estimandId=null;record.revisionOf=null;
+ record.payload={storageBoundaryCase:id};substitute(record);
+ const {ref:oldRef,event:oldEvent,protectedReceipt:_receipt,executionAuthorityGranted:_authority,...content}=record;
+ const encoded={schema:'finnor.s7.semantic-content.v2',canonicalPayload:canonicalEconomic(content)},digest=ownerTransportHash(encoded);
+ record.ref={...oldRef,id:'economic-record:'+digest,contentDigest:digest};
+ const {eventId:_eventId,...eventBody}=oldEvent;
+ Object.assign(eventBody,{type:'MEASUREMENT',revisionRef:record.ref.id,contentDigest:digest,validAt:record.validAt,knowledgeAt:record.knowledgeAt,detail:encoded});
+ record.event={...eventBody,eventId:'s7-event:'+ownerTransportHash(eventBody)};
+ await db.withTenantTransaction(tenant,{userId:principal},async(_db,c)=>{
+  await c.query('INSERT INTO finnor_os.s7_economic_records(tenant_id,principal_id,record_id,kind,estimand_id,revision_of,idempotency_key,request_digest,content_digest,valid_at,knowledge_at,body,event) VALUES($1,$2,$3,$4,NULL,NULL,$5,$6,$6,$7,$8,$9::jsonb,$10::jsonb)',
+   [tenant,principal,record.ref.id,'SOURCE','storage-preimage-'+id,digest,first.record.validAt,first.record.knowledgeAt,JSON.stringify(record),JSON.stringify(record.event)]);
+ });
+ const response=await api('read',{id:record.ref.id}),body=await response.json();
+ const observed={input:{record,sqlOwner:{tenantId:tenant,principalId:principal,kind:'SOURCE',estimandId:null,revisionOf:null,validAt:first.record.validAt,knowledgeAt:first.record.knowledgeAt}},expectedStatus:expected,status:response.status,response:body};
+ await writeFile(join(out,'storage-preimage-'+id+'.json'),JSON.stringify(observed,null,2));
+ assert.equal(response.status,expected,JSON.stringify(observed));
+ if(expected===503)assert.equal((body as any).code,'ECONOMIC_STORAGE_PREIMAGE_INVALID');
+ return observed;
+});
 }finally{await admin.end();await db.getPool().end();await postgres.stop();}
 const after=await snapshot(),unchanged=JSON.stringify(before)===JSON.stringify(after);await writeFile(join(out,'results.json'),JSON.stringify({results,before,after,sourcesUnchanged:unchanged,node:process.version,postgres:{directory,port,migrations},resources:process.resourceUsage(),qualification:'REAL_ORDINARY_ROLE_POSTGRESQL_AND_DEV_AUTH_HANDLER_ONLY; GENERATED_UNPROTECTED_INPUTS; NO_FIELD_H2',rerun:'FINNOR_S7_EVIDENCE_DIR=<new-dir> node --import=tsx scripts/s7/run-owner-e2e.mts'},null,2)+'\n');const failed=results.some(v=>v.status==='FAIL')||!unchanged;console.log(JSON.stringify({out,failed,sourcesUnchanged:unchanged}));process.exit(failed?1:0);

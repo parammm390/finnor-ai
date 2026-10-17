@@ -42,9 +42,24 @@ export async function authorizeEconomicActor(ctx: PeMutationContext, c: pg.PoolC
 }
 function decode(row: any): StoredEconomicRecord {
     const value = row.body as StoredEconomicRecord;
+    if (!value.ref || !value.event || typeof value.ref !== 'object' || typeof value.event !== 'object')
+        throw new LedgerFault(503, 'ECONOMIC_STORAGE_PREIMAGE_INVALID');
     const { ref, event, protectedReceipt, executionAuthorityGranted, ...content } = value;
-    if (ref.id !== row.record_id || ref.contentDigest !== row.content_digest || (ref.version === 's7-economic-record-v2' ? ownerTransportHash({ schema: 'finnor.s7.semantic-content.v2', canonicalPayload: canonicalEconomic(content) }) : ownerTransportHash(content)) !== ref.contentDigest
-        || value.tenantId !== row.tenant_id || value.principalId !== row.principal_id || ownerTransportHash(event) !== ownerTransportHash(row.event))
+    const { eventId, ...eventContent } = event;
+    // Content hashes authenticate bytes, not their SQL ownership, history cut,
+    // or authority. Bind the mirrored columns and ordinary event explicitly.
+    if (ref.owner !== 'S7' || ref.id !== row.record_id || ref.contentDigest !== row.content_digest
+        || value.tenantId !== row.tenant_id || value.principalId !== row.principal_id
+        || value.kind !== row.kind || value.estimandId !== row.estimand_id || value.revisionOf !== row.revision_of
+        || Date.parse(value.validAt) !== new Date(row.valid_at).getTime()
+        || Date.parse(value.knowledgeAt) !== new Date(row.knowledge_at).getTime()
+        || protectedReceipt !== null || executionAuthorityGranted !== false
+        || event.semanticOwner !== 'S7' || event.tenantId !== value.tenantId || event.principalId !== value.principalId
+        || event.revisionRef !== ref.id || event.contentDigest !== ref.contentDigest
+        || event.protectedReceipt !== null || event.appendAuthorityGranted !== false || event.executionAuthorityGranted !== false
+        || eventId !== `s7-event:${ownerTransportHash(eventContent)}`
+        || (ref.version === 's7-economic-record-v2' ? ownerTransportHash({ schema: 'finnor.s7.semantic-content.v2', canonicalPayload: canonicalEconomic(content) }) : ownerTransportHash(content)) !== ref.contentDigest
+        || ownerTransportHash(event) !== ownerTransportHash(row.event))
         throw new LedgerFault(503, 'ECONOMIC_STORAGE_PREIMAGE_INVALID');
     return value;
 }
