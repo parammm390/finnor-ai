@@ -4,4 +4,4 @@
  * Keep this beside the migrations so readiness and worker heartbeats cannot drift
  * by carrying independent literals.
  */
-export const CURRENT_MIGRATION_HEAD = "0188_observation_source_version_binding.sql";
+export const CURRENT_MIGRATION_HEAD = "0189_x3_enterprise_applications.sql";

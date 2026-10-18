@@ -45,6 +45,7 @@ import {inChallengeEpisode,transportDeadline,readChallengeBody} from '@finnor/pr
 import {handleCapitalFormationOperation,CAPITAL_FORMATION_OPERATION_NAMES} from '@finnor/private-equity/src/capital-formation/service';
 import {CapitalFormationError} from '@finnor/private-equity/src/capital-formation/contracts';
 import {promoteAttestedOpportunity} from '@finnor/private-equity/src/opportunity-handoff';
+import {APPLICATION_OPERATIONS,readApplicationBody,handleApplicationOperation,applicationResponseError} from '@finnor/private-equity/src/enterprise-applications/api';
 
 export const runtime = "nodejs";
 
@@ -192,6 +193,13 @@ function checkedRef(value: unknown): CompanyBrainObjectRef {
 
 export async function POST(req: Request, { params }: { params: Promise<{ operation: string }> }): Promise<Response> {
   try {const route=await params;
+    if(APPLICATION_OPERATIONS.some(operation=>operation===route.operation)){
+      try{
+        const auth=await requireContext(req),body=await readApplicationBody(req);
+        const result=await handleApplicationOperation({auth},route.operation,body);
+        return response(result.body,result.status);
+      }catch(error){const mapped=applicationResponseError(error);return mapped?response(mapped.body,mapped.status):requestError(error);}
+    }
     if(M4_OPERATIONS.has(route.operation)){
       return await inChallengeEpisode(transportDeadline(req),async()=>{
         const prepared=await Promise.allSettled([requireContext(req),readChallengeBody(req)]),

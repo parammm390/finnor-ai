@@ -80,6 +80,7 @@ const tenantLaneClassified = (
 
 /** Exhaustive registry for every production handler registered by the worker. */
 export const PRODUCTION_JOB_CONTRACTS = {
+  build_enterprise_application_v1: tenantFixed("INTERACTIVE", "locally_idempotent", "X3 bounded typed compilation, checking and transactional development installation under one original allocation; no guest effects or protected admission.", {leaseRecovery:"immediate_after_expiry"}),
   run_decision_atlas_v1: tenantFixed("INTERACTIVE", "locally_idempotent", "R7 exact named-family atlas under original episode; independent checker, retained physical costs, no effects or protected admission.", {leaseRecovery:"immediate_after_expiry"}),
   run_r1_dependency_continuation_v1: tenantFixed("INTERACTIVE", "locally_idempotent", "P7 versioned R1 dependency invalidation patch. Retains original episode, grant and S6 responsibility; no effect or fresh search budget."),
   run_certified_state_reduction_v1: tenantFixed("INTERACTIVE", "reconcilable", "R1 exact continuation reuse under the original Work/P1 episode and S5 grant; unknown physical work reconciles without automatic resubmission."),

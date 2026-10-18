@@ -3,7 +3,7 @@
 // regain an executable public schema here.
 import { writeFileSync } from "node:fs";
 import { z } from "zod";
-import { zodToJsonSchema } from "zod-to-json-schema";
+import { zodToJsonSchema,ignoreOverride } from "zod-to-json-schema";
 import {
   SubmitInstructionSchema,
   StartObjectiveSchema,
@@ -65,6 +65,8 @@ import { BilateralOperationSchemas } from "../packages/private-equity/src/bilate
 import { PROGRAM_OPERATIONS } from "../packages/private-equity/src/program-synthesis/api";
 import { COMPUTE_SEARCH_OPERATIONS } from "../packages/private-equity/src/compute-search/api";
 import { INTERFACE_OPERATIONS } from "../packages/private-equity/src/interface-synthesis/api";
+import { APPLICATION_OPERATIONS, APPLICATION_OPERATION_SCHEMAS } from "../packages/private-equity/src/enterprise-applications/api";
+import { ApplicationExpressionSchema } from "../packages/private-equity/src/enterprise-applications/contracts";
 import { M1_OPERATIONS, M1OperationSchemas } from "../packages/private-equity/src/decision-slice/handler";
 import { CapitalProgramV2Operations } from "@finnor/shared-types";
 import { M4Operations } from "../packages/private-equity/src/counterexample-search/handler";
@@ -288,6 +290,14 @@ const SemanticActivityInputSchema = z.object({
 
 const s = (schema: z.ZodTypeAny) => zodToJsonSchema(schema, { $refStrategy: "none" });
 const json = (schema: z.ZodTypeAny) => ({ content: { "application/json": { schema: s(schema) } } });
+// Named components preserve the recursive expression language. Inlining it
+// with refStrategy "none" would silently turn nested expressions into "any".
+const applicationSchema=(schema:z.ZodTypeAny)=>zodToJsonSchema(schema,{$refStrategy:"none",target:"openApi3",
+ override:def=>def===ApplicationExpressionSchema._def?{$ref:"#/components/schemas/X3Expression"}:ignoreOverride});
+const applicationComponents={schemas:Object.fromEntries([
+ ...Object.entries(APPLICATION_OPERATION_SCHEMAS).map(([name,schema])=>[name,applicationSchema(schema)]),
+ ["X3Expression",applicationSchema((ApplicationExpressionSchema._def as z.ZodLazyDef).getter())],
+])};
 const secured = [{ bearerAuth: [] }];
 const documentIdParameter = { name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" } } as const;
 const workforcePageParameters = [
@@ -682,6 +692,22 @@ const paths = {
   },
 } satisfies Record<string, unknown>;
 
+paths["/api/company-brain/{operation}"].post.parameters[0]!.schema.enum.push(...APPLICATION_OPERATIONS);
+for(const operation of APPLICATION_OPERATIONS){
+ Object.assign(paths,{["/api/company-brain/"+operation]:{post:{security:secured,requestBody:{content:{"application/json":{schema:{$ref:"#/components/schemas/"+operation}}}},responses:{
+  "200":{description:"Current authenticated development application, immutable business history or exact prepared-intent binding. Not protected admission or dispatch."},
+  "202":{description:"Original finite allocation accepted for durable physical compilation and independent checking; no installed success yet."},
+  "400":{description:"Strict bounded business contract or exact record precondition rejected."},
+  "401":{description:"Current authenticated bearer required."},
+  "403":{description:"Current authority missing or production not separately activated."},
+  "404":{description:"Absent or unauthorized scoped Work, application, record or canonical evidence."},
+  "409":{description:"Record CAS, release, Work, source, rights, dependency, cancellation or original allocation changed."},
+  "413":{description:"Original request, response, storage or finite resource bound exceeded."},
+  "422":{description:"Unsupported business semantics or independently checked construction failed."},
+  "503":{description:"Native capacity or independent owner configuration unavailable. Retry never renews resources."},
+ }}}});
+}
+
 for (const [operation,schema] of Object.entries(DecisionAtlasOperationSchemas)) {
   Object.assign(paths, { ["/api/decision-atlases/" + operation]: { post: {
     security: secured, requestBody: json(schema), responses: {
@@ -835,7 +861,7 @@ for (const [operation, schema] of Object.entries(ClosingOperationSchemas)) {
 const document = {
   openapi: "3.1.0",
   info: { title: "FINNOR Private Equity API", version: "6.0.0", description: "Private Equity is the only active product vertical. P1 owns temporal InvestmentCase, Assumption, and canonical investment Decision truth; P2 owns Microsoft Source Truth; P3 owns immutable artifacts; P4 owns deterministic underwriting math; P5 owns governed Investment Committee truth; P6 adds deterministic selected PlanGraphs and authenticated employee-specific causal attention without duplicating Core Work, Authority, DomainAction, BusinessEffect, DecisionReceipt, ObjectiveLoop, or prior truth owners. Historical Water payloads remain receipt-only quarantine inputs." },
-  components: { securitySchemes: { bearerAuth: { type: "http", scheme: "bearer", bearerFormat: "JWT" } } },
+  components: { schemas:applicationComponents.schemas,securitySchemes: { bearerAuth: { type: "http", scheme: "bearer", bearerFormat: "JWT" } } },
   paths,
 };
 

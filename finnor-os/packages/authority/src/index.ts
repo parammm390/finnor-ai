@@ -610,6 +610,21 @@ export async function employeeAuthoritySnapshotTx(ctx: TenantContext, client: Po
   return { employeeId: auth.employee.id, revision, roles: auth.assignments.map(row => row.roleKey), validUntil: temporal.rows[0]?.valid_until?.toISOString() ?? null };
 }
 
+/** Business roles are current, resource-scoped canonical assignments. A role
+ * held on another root cannot become an application role through a global list. */
+export async function employeeScopedRoleKeysTx(ctx: TenantContext, resources: AuthorityResource[], client: PoolClient) {
+  const revision = await lockCurrentAuthorityTx(ctx, client);
+  const db = transactionDb(client), auth = await loadAuthority(db, ctx.tenantId, ctx.employeeId ?? ctx.userId);
+  if (!auth.employee || auth.employee.status !== "active" || resources.length === 0)
+    throw new Error("CURRENT_CANONICAL_AUTHORITY_UNAVAILABLE");
+  const roles: string[] = [];
+  for (const assignment of auth.assignments) {
+    if (await everyResourceAllows(resources, resource => scopeAllows(db, ctx.tenantId, auth.employee!.id, assignment, resource)))
+      roles.push(assignment.roleKey);
+  }
+  return {employeeId: auth.employee.id, revision, roles: [...new Set(roles)]};
+}
+
 /** Read-only counterpart to evaluateAuthority for projection/control discovery.
  * It deliberately appends no authority decision: GET read models may reveal only
  * controls the current employee can exercise, without turning a read into history.

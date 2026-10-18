@@ -1,4 +1,4 @@
-// Generated from finnor-os/openapi.json, SHA-256 4083bb52c97df55cb860cd87b45a4c6c6e44a41fd4fb66b161be449d8a18aa21.
+// Generated from finnor-os/openapi.json, SHA-256 86bdaf1e6a0d0e04d0d91a37833650acfe4fb037ca72ea32704e8d3d2c1da79a.
 export interface paths {
     "/api/live-controls": {
         parameters: {
@@ -2759,7 +2759,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    operation: "opportunity-promote" | "belief-view" | "belief-pin" | "roots" | "projection" | "search" | "object" | "traverse" | "provenance" | "history" | "evidence-lineage" | "decision-lineage" | "available-actions" | "context" | "evidence-handles" | "evidence-submit" | "evidence-read" | "evidence-witness" | "evidence-replay" | "evidence-cancel" | "evidence-consume" | "program-submit" | "program-read" | "program-witness" | "program-module" | "program-projection" | "program-cancel" | "program-resume" | "program-artifact" | "program-ports" | "program-interface-module" | "compute-search-submit" | "compute-search-read" | "compute-search-projection" | "compute-search-cancel" | "compute-search-resume" | "compute-search-reconcile" | "interface-acquire" | "interface-read" | "interface-projection" | "interface-catalogue" | "interface-module" | "interface-cancel" | "interface-resume" | "interface-reconcile" | "interface-admission" | "interface-invoke" | "interface-ports" | "decision-slice-compile" | "decision-slice-read" | "decision-slice-context" | "decision-slice-patch" | "decision-slice-witness" | "decision-slice-consume" | "decision-slice-cancel" | "decision-slice-recompile" | "decision-slice-changes" | "decision-slice-view" | "continuation-submit" | "continuation-read" | "continuation-projection" | "procedure-experience" | "procedure-induce" | "procedure-induction-read" | "procedure-induction-cancel" | "procedure-read" | "procedure-component" | "procedure-counterexample" | "procedure-projection" | "procedure-admission-request" | "procedure-interface" | "procedure-costs" | "deliberation-submit" | "deliberation-read" | "deliberation-projection" | "deliberation-cancel" | "deliberation-resume" | "deliberation-reconcile" | "deliberation-calibrate" | "deliberation-evidence-read" | "deliberation-module-read" | "capital-formation-submit" | "capital-formation-read" | "capital-formation-list" | "capital-formation-profiles" | "capital-formation-advance" | "capital-formation-event" | "capital-formation-proposal" | "capital-formation-cancel" | "capital-formation-draw-handoff";
+                    operation: "opportunity-promote" | "belief-view" | "belief-pin" | "roots" | "projection" | "search" | "object" | "traverse" | "provenance" | "history" | "evidence-lineage" | "decision-lineage" | "available-actions" | "context" | "evidence-handles" | "evidence-submit" | "evidence-read" | "evidence-witness" | "evidence-replay" | "evidence-cancel" | "evidence-consume" | "program-submit" | "program-read" | "program-witness" | "program-module" | "program-projection" | "program-cancel" | "program-resume" | "program-artifact" | "program-ports" | "program-interface-module" | "compute-search-submit" | "compute-search-read" | "compute-search-projection" | "compute-search-cancel" | "compute-search-resume" | "compute-search-reconcile" | "interface-acquire" | "interface-read" | "interface-projection" | "interface-catalogue" | "interface-module" | "interface-cancel" | "interface-resume" | "interface-reconcile" | "interface-admission" | "interface-invoke" | "interface-ports" | "decision-slice-compile" | "decision-slice-read" | "decision-slice-context" | "decision-slice-patch" | "decision-slice-witness" | "decision-slice-consume" | "decision-slice-cancel" | "decision-slice-recompile" | "decision-slice-changes" | "decision-slice-view" | "continuation-submit" | "continuation-read" | "continuation-projection" | "procedure-experience" | "procedure-induce" | "procedure-induction-read" | "procedure-induction-cancel" | "procedure-read" | "procedure-component" | "procedure-counterexample" | "procedure-projection" | "procedure-admission-request" | "procedure-interface" | "procedure-costs" | "deliberation-submit" | "deliberation-read" | "deliberation-projection" | "deliberation-cancel" | "deliberation-resume" | "deliberation-reconcile" | "deliberation-calibrate" | "deliberation-evidence-read" | "deliberation-module-read" | "capital-formation-submit" | "capital-formation-read" | "capital-formation-list" | "capital-formation-profiles" | "capital-formation-advance" | "capital-formation-event" | "capital-formation-proposal" | "capital-formation-cancel" | "capital-formation-draw-handoff" | "application-submit" | "application-maintain" | "application-command" | "application-read" | "application-record" | "application-list" | "application-history" | "application-asset" | "application-cancel" | "application-rollback" | "application-impact" | "application-upload" | "application-prepare-effect" | "application-s8-propose" | "application-admission";
                 };
                 cookie?: never;
             };
@@ -10007,6 +10007,1506 @@ export interface paths {
             responses: {
                 /** @description New Core Document and first immutable version instantiated with lineage */
                 201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/application-submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["application-submit"];
+                };
+            };
+            responses: {
+                /** @description Current authenticated development application, immutable business history or exact prepared-intent binding. Not protected admission or dispatch. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original finite allocation accepted for durable physical compilation and independent checking; no installed success yet. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded business contract or exact record precondition rejected. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authenticated bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authority missing or production not separately activated. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Absent or unauthorized scoped Work, application, record or canonical evidence. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Record CAS, release, Work, source, rights, dependency, cancellation or original allocation changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original request, response, storage or finite resource bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unsupported business semantics or independently checked construction failed. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Native capacity or independent owner configuration unavailable. Retry never renews resources. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/application-maintain": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["application-maintain"];
+                };
+            };
+            responses: {
+                /** @description Current authenticated development application, immutable business history or exact prepared-intent binding. Not protected admission or dispatch. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original finite allocation accepted for durable physical compilation and independent checking; no installed success yet. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded business contract or exact record precondition rejected. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authenticated bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authority missing or production not separately activated. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Absent or unauthorized scoped Work, application, record or canonical evidence. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Record CAS, release, Work, source, rights, dependency, cancellation or original allocation changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original request, response, storage or finite resource bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unsupported business semantics or independently checked construction failed. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Native capacity or independent owner configuration unavailable. Retry never renews resources. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/application-command": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["application-command"];
+                };
+            };
+            responses: {
+                /** @description Current authenticated development application, immutable business history or exact prepared-intent binding. Not protected admission or dispatch. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original finite allocation accepted for durable physical compilation and independent checking; no installed success yet. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded business contract or exact record precondition rejected. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authenticated bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authority missing or production not separately activated. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Absent or unauthorized scoped Work, application, record or canonical evidence. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Record CAS, release, Work, source, rights, dependency, cancellation or original allocation changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original request, response, storage or finite resource bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unsupported business semantics or independently checked construction failed. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Native capacity or independent owner configuration unavailable. Retry never renews resources. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/application-read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["application-read"];
+                };
+            };
+            responses: {
+                /** @description Current authenticated development application, immutable business history or exact prepared-intent binding. Not protected admission or dispatch. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original finite allocation accepted for durable physical compilation and independent checking; no installed success yet. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded business contract or exact record precondition rejected. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authenticated bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authority missing or production not separately activated. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Absent or unauthorized scoped Work, application, record or canonical evidence. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Record CAS, release, Work, source, rights, dependency, cancellation or original allocation changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original request, response, storage or finite resource bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unsupported business semantics or independently checked construction failed. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Native capacity or independent owner configuration unavailable. Retry never renews resources. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/application-record": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["application-record"];
+                };
+            };
+            responses: {
+                /** @description Current authenticated development application, immutable business history or exact prepared-intent binding. Not protected admission or dispatch. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original finite allocation accepted for durable physical compilation and independent checking; no installed success yet. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded business contract or exact record precondition rejected. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authenticated bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authority missing or production not separately activated. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Absent or unauthorized scoped Work, application, record or canonical evidence. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Record CAS, release, Work, source, rights, dependency, cancellation or original allocation changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original request, response, storage or finite resource bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unsupported business semantics or independently checked construction failed. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Native capacity or independent owner configuration unavailable. Retry never renews resources. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/application-list": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["application-list"];
+                };
+            };
+            responses: {
+                /** @description Current authenticated development application, immutable business history or exact prepared-intent binding. Not protected admission or dispatch. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original finite allocation accepted for durable physical compilation and independent checking; no installed success yet. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded business contract or exact record precondition rejected. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authenticated bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authority missing or production not separately activated. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Absent or unauthorized scoped Work, application, record or canonical evidence. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Record CAS, release, Work, source, rights, dependency, cancellation or original allocation changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original request, response, storage or finite resource bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unsupported business semantics or independently checked construction failed. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Native capacity or independent owner configuration unavailable. Retry never renews resources. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/application-history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["application-history"];
+                };
+            };
+            responses: {
+                /** @description Current authenticated development application, immutable business history or exact prepared-intent binding. Not protected admission or dispatch. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original finite allocation accepted for durable physical compilation and independent checking; no installed success yet. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded business contract or exact record precondition rejected. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authenticated bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authority missing or production not separately activated. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Absent or unauthorized scoped Work, application, record or canonical evidence. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Record CAS, release, Work, source, rights, dependency, cancellation or original allocation changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original request, response, storage or finite resource bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unsupported business semantics or independently checked construction failed. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Native capacity or independent owner configuration unavailable. Retry never renews resources. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/application-asset": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["application-asset"];
+                };
+            };
+            responses: {
+                /** @description Current authenticated development application, immutable business history or exact prepared-intent binding. Not protected admission or dispatch. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original finite allocation accepted for durable physical compilation and independent checking; no installed success yet. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded business contract or exact record precondition rejected. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authenticated bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authority missing or production not separately activated. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Absent or unauthorized scoped Work, application, record or canonical evidence. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Record CAS, release, Work, source, rights, dependency, cancellation or original allocation changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original request, response, storage or finite resource bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unsupported business semantics or independently checked construction failed. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Native capacity or independent owner configuration unavailable. Retry never renews resources. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/application-cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["application-cancel"];
+                };
+            };
+            responses: {
+                /** @description Current authenticated development application, immutable business history or exact prepared-intent binding. Not protected admission or dispatch. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original finite allocation accepted for durable physical compilation and independent checking; no installed success yet. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded business contract or exact record precondition rejected. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authenticated bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authority missing or production not separately activated. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Absent or unauthorized scoped Work, application, record or canonical evidence. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Record CAS, release, Work, source, rights, dependency, cancellation or original allocation changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original request, response, storage or finite resource bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unsupported business semantics or independently checked construction failed. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Native capacity or independent owner configuration unavailable. Retry never renews resources. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/application-rollback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["application-rollback"];
+                };
+            };
+            responses: {
+                /** @description Current authenticated development application, immutable business history or exact prepared-intent binding. Not protected admission or dispatch. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original finite allocation accepted for durable physical compilation and independent checking; no installed success yet. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded business contract or exact record precondition rejected. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authenticated bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authority missing or production not separately activated. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Absent or unauthorized scoped Work, application, record or canonical evidence. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Record CAS, release, Work, source, rights, dependency, cancellation or original allocation changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original request, response, storage or finite resource bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unsupported business semantics or independently checked construction failed. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Native capacity or independent owner configuration unavailable. Retry never renews resources. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/application-impact": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["application-impact"];
+                };
+            };
+            responses: {
+                /** @description Current authenticated development application, immutable business history or exact prepared-intent binding. Not protected admission or dispatch. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original finite allocation accepted for durable physical compilation and independent checking; no installed success yet. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded business contract or exact record precondition rejected. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authenticated bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authority missing or production not separately activated. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Absent or unauthorized scoped Work, application, record or canonical evidence. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Record CAS, release, Work, source, rights, dependency, cancellation or original allocation changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original request, response, storage or finite resource bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unsupported business semantics or independently checked construction failed. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Native capacity or independent owner configuration unavailable. Retry never renews resources. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/application-upload": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["application-upload"];
+                };
+            };
+            responses: {
+                /** @description Current authenticated development application, immutable business history or exact prepared-intent binding. Not protected admission or dispatch. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original finite allocation accepted for durable physical compilation and independent checking; no installed success yet. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded business contract or exact record precondition rejected. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authenticated bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authority missing or production not separately activated. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Absent or unauthorized scoped Work, application, record or canonical evidence. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Record CAS, release, Work, source, rights, dependency, cancellation or original allocation changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original request, response, storage or finite resource bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unsupported business semantics or independently checked construction failed. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Native capacity or independent owner configuration unavailable. Retry never renews resources. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/application-prepare-effect": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["application-prepare-effect"];
+                };
+            };
+            responses: {
+                /** @description Current authenticated development application, immutable business history or exact prepared-intent binding. Not protected admission or dispatch. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original finite allocation accepted for durable physical compilation and independent checking; no installed success yet. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded business contract or exact record precondition rejected. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authenticated bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authority missing or production not separately activated. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Absent or unauthorized scoped Work, application, record or canonical evidence. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Record CAS, release, Work, source, rights, dependency, cancellation or original allocation changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original request, response, storage or finite resource bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unsupported business semantics or independently checked construction failed. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Native capacity or independent owner configuration unavailable. Retry never renews resources. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/application-s8-propose": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["application-s8-propose"];
+                };
+            };
+            responses: {
+                /** @description Current authenticated development application, immutable business history or exact prepared-intent binding. Not protected admission or dispatch. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original finite allocation accepted for durable physical compilation and independent checking; no installed success yet. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded business contract or exact record precondition rejected. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authenticated bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authority missing or production not separately activated. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Absent or unauthorized scoped Work, application, record or canonical evidence. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Record CAS, release, Work, source, rights, dependency, cancellation or original allocation changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original request, response, storage or finite resource bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unsupported business semantics or independently checked construction failed. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Native capacity or independent owner configuration unavailable. Retry never renews resources. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/application-admission": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["application-admission"];
+                };
+            };
+            responses: {
+                /** @description Current authenticated development application, immutable business history or exact prepared-intent binding. Not protected admission or dispatch. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original finite allocation accepted for durable physical compilation and independent checking; no installed success yet. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded business contract or exact record precondition rejected. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authenticated bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authority missing or production not separately activated. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Absent or unauthorized scoped Work, application, record or canonical evidence. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Record CAS, release, Work, source, rights, dependency, cancellation or original allocation changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original request, response, storage or finite resource bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unsupported business semantics or independently checked construction failed. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Native capacity or independent owner configuration unavailable. Retry never renews resources. */
+                503: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -31646,7 +33146,1313 @@ export interface paths {
 }
 export type webhooks = Record<string, never>;
 export interface components {
-    schemas: never;
+    schemas: {
+        "application-submit": {
+            /** @enum {string} */
+            schema: "finnor.x3.application-request.v1";
+            root: {
+                /** @enum {string} */
+                entityType: "pe_strategy" | "pe_opportunity" | "pe_deal" | "pe_fund" | "pe_vehicle" | "external_organization" | "pe_portfolio_holding";
+                /** Format: uuid */
+                entityId: string;
+            };
+            /** Format: uuid */
+            workId?: string;
+            /** Format: uuid */
+            workInputId?: string;
+            specification?: {
+                /** @enum {string} */
+                schema: "finnor.business-specification.v1";
+                /** @enum {string} */
+                profile: "PE_FIRM_TYPED_APPLICATION_V1";
+                owner: {
+                    id: string;
+                    version: string;
+                };
+                id: string;
+                version: string;
+                title: string;
+                /** @enum {string} */
+                family: "PE_FIRM_OPERATIONS";
+                model: {
+                    currencies: string[];
+                    units: string[];
+                    timeModes: ("AS_OF" | "PERIOD")[];
+                    accountingBases: string[];
+                    roles: {
+                        id: string;
+                        canonicalRole: string;
+                    }[];
+                    entities: {
+                        id: string;
+                        title: string;
+                        fields: ({
+                            id: string;
+                            title: string;
+                            required: boolean;
+                            allowUnknown: boolean;
+                            /** @enum {string} */
+                            type: "text";
+                            maxLength: number;
+                        } | {
+                            id: string;
+                            title: string;
+                            required: boolean;
+                            allowUnknown: boolean;
+                            /** @enum {string} */
+                            type: "boolean";
+                        } | {
+                            id: string;
+                            title: string;
+                            required: boolean;
+                            allowUnknown: boolean;
+                            /** @enum {string} */
+                            type: "enum";
+                            options: string[];
+                        } | {
+                            id: string;
+                            title: string;
+                            required: boolean;
+                            allowUnknown: boolean;
+                            /** @enum {string} */
+                            type: "quantity";
+                        } | {
+                            id: string;
+                            title: string;
+                            required: boolean;
+                            allowUnknown: boolean;
+                            /** @enum {string} */
+                            type: "quantity-list";
+                        } | {
+                            id: string;
+                            title: string;
+                            required: boolean;
+                            allowUnknown: boolean;
+                            /** @enum {string} */
+                            type: "evidence";
+                        } | {
+                            id: string;
+                            title: string;
+                            required: boolean;
+                            allowUnknown: boolean;
+                            /** @enum {string} */
+                            type: "reference";
+                        } | {
+                            id: string;
+                            title: string;
+                            required: boolean;
+                            allowUnknown: boolean;
+                            /** @enum {string} */
+                            type: "relation";
+                            entityId: string;
+                        })[];
+                        states: string[];
+                        initialState: string;
+                    }[];
+                };
+                requirements: {
+                    id: string;
+                    text: string;
+                    critical: boolean;
+                }[];
+                unresolvedCriticalRequirementIds: string[];
+                actions: {
+                    id: string;
+                    title: string;
+                    entityId: string;
+                    /** @enum {string} */
+                    kind: "create" | "update" | "transition";
+                    fromStates: string[];
+                    toState: string;
+                    roles: string[];
+                    inputFields: string[];
+                    assignments: {
+                        field: string;
+                        value: components["schemas"]["X3Expression"];
+                    }[];
+                    guards: {
+                        id: string;
+                        condition: components["schemas"]["X3Expression"];
+                        denialCode: string;
+                        unknownCode?: string;
+                        requirementIds: string[];
+                    }[];
+                    outcome: string;
+                    requirementIds: string[];
+                    approval?: {
+                        requirements: {
+                            role: string;
+                            when: components["schemas"]["X3Expression"];
+                        }[];
+                        noSelfApproval: boolean;
+                        distinctPrincipals: boolean;
+                        pendingOutcome: string;
+                    };
+                    requiresApprovalsFrom?: string;
+                    preparedEffect?: {
+                        kind: string;
+                        fields: string[];
+                    };
+                }[];
+                invariants: {
+                    id: string;
+                    entityId: string;
+                    critical: boolean;
+                    condition: components["schemas"]["X3Expression"];
+                    denialCode: string;
+                    requirementIds: string[];
+                }[];
+                acceptanceCases: {
+                    id: string;
+                    requirementIds: string[];
+                    input: {
+                        entityId: string;
+                        actionId: string;
+                        installedReleaseId: string;
+                        tenantId: string;
+                        scopeId: string;
+                        actor: {
+                            principalId: string;
+                            canonicalRoles: string[];
+                            authorityRevision: string;
+                            authorityCurrent: boolean;
+                            tenantId: string;
+                            scopeId: string;
+                        };
+                        record?: {
+                            entityId: string;
+                            state: string;
+                            values: {
+                                [key: string]: string | boolean | {
+                                    /** @enum {string} */
+                                    kind: "UNKNOWN";
+                                    reason: string;
+                                } | {
+                                    /** @enum {string} */
+                                    kind: "QUANTITY";
+                                    amount: string;
+                                    currency: string;
+                                    entity: {
+                                        owner: string;
+                                        id: string;
+                                        revision: string;
+                                        contentDigest: string;
+                                    };
+                                    units: string;
+                                    time: {
+                                        /** @enum {string} */
+                                        kind: "AS_OF";
+                                        /** Format: date-time */
+                                        asOf: string;
+                                    } | {
+                                        /** @enum {string} */
+                                        kind: "PERIOD";
+                                        /** Format: date-time */
+                                        start: string;
+                                        /** Format: date-time */
+                                        end: string;
+                                    };
+                                    accountingBasis: string;
+                                } | {
+                                    /** @enum {string} */
+                                    kind: "QUANTITY_LIST";
+                                    entries: {
+                                        /** @enum {string} */
+                                        kind: "QUANTITY";
+                                        amount: string;
+                                        currency: string;
+                                        entity: {
+                                            owner: string;
+                                            id: string;
+                                            revision: string;
+                                            contentDigest: string;
+                                        };
+                                        units: string;
+                                        time: {
+                                            /** @enum {string} */
+                                            kind: "AS_OF";
+                                            /** Format: date-time */
+                                            asOf: string;
+                                        } | {
+                                            /** @enum {string} */
+                                            kind: "PERIOD";
+                                            /** Format: date-time */
+                                            start: string;
+                                            /** Format: date-time */
+                                            end: string;
+                                        };
+                                        accountingBasis: string;
+                                    }[];
+                                } | {
+                                    /** @enum {string} */
+                                    kind: "EVIDENCE";
+                                    sourceId: string;
+                                    versionId: string;
+                                    contentDigest: string;
+                                } | {
+                                    /** @enum {string} */
+                                    kind: "RELATION";
+                                    entityId: string;
+                                    reference: {
+                                        owner: string;
+                                        id: string;
+                                        revision: string;
+                                        contentDigest: string;
+                                    };
+                                } | {
+                                    owner: string;
+                                    id: string;
+                                    revision: string;
+                                    contentDigest: string;
+                                };
+                            };
+                            authorPrincipalId: string;
+                            recordDigest: string;
+                            reference: {
+                                owner: string;
+                                id: string;
+                                revision: string;
+                                contentDigest: string;
+                            };
+                            releaseId: string;
+                        };
+                        expectedRecordDigest?: string;
+                        expectedRecordReference?: {
+                            owner: string;
+                            id: string;
+                            revision: string;
+                            contentDigest: string;
+                        };
+                        input: {
+                            [key: string]: string | boolean | {
+                                /** @enum {string} */
+                                kind: "UNKNOWN";
+                                reason: string;
+                            } | {
+                                /** @enum {string} */
+                                kind: "QUANTITY";
+                                amount: string;
+                                currency: string;
+                                entity: {
+                                    owner: string;
+                                    id: string;
+                                    revision: string;
+                                    contentDigest: string;
+                                };
+                                units: string;
+                                time: {
+                                    /** @enum {string} */
+                                    kind: "AS_OF";
+                                    /** Format: date-time */
+                                    asOf: string;
+                                } | {
+                                    /** @enum {string} */
+                                    kind: "PERIOD";
+                                    /** Format: date-time */
+                                    start: string;
+                                    /** Format: date-time */
+                                    end: string;
+                                };
+                                accountingBasis: string;
+                            } | {
+                                /** @enum {string} */
+                                kind: "QUANTITY_LIST";
+                                entries: {
+                                    /** @enum {string} */
+                                    kind: "QUANTITY";
+                                    amount: string;
+                                    currency: string;
+                                    entity: {
+                                        owner: string;
+                                        id: string;
+                                        revision: string;
+                                        contentDigest: string;
+                                    };
+                                    units: string;
+                                    time: {
+                                        /** @enum {string} */
+                                        kind: "AS_OF";
+                                        /** Format: date-time */
+                                        asOf: string;
+                                    } | {
+                                        /** @enum {string} */
+                                        kind: "PERIOD";
+                                        /** Format: date-time */
+                                        start: string;
+                                        /** Format: date-time */
+                                        end: string;
+                                    };
+                                    accountingBasis: string;
+                                }[];
+                            } | {
+                                /** @enum {string} */
+                                kind: "EVIDENCE";
+                                sourceId: string;
+                                versionId: string;
+                                contentDigest: string;
+                            } | {
+                                /** @enum {string} */
+                                kind: "RELATION";
+                                entityId: string;
+                                reference: {
+                                    owner: string;
+                                    id: string;
+                                    revision: string;
+                                    contentDigest: string;
+                                };
+                            } | {
+                                owner: string;
+                                id: string;
+                                revision: string;
+                                contentDigest: string;
+                            };
+                        };
+                        approvalRole?: string;
+                        approvals: {
+                            actionId: string;
+                            role: string;
+                            principalId: string;
+                            recordDigest: string;
+                            recordReference: {
+                                owner: string;
+                                id: string;
+                                revision: string;
+                                contentDigest: string;
+                            };
+                            releaseId: string;
+                            authorityRevision: string;
+                            tenantId: string;
+                            scopeId: string;
+                        }[];
+                        currentAuthorities: {
+                            principalId: string;
+                            canonicalRole: string;
+                            authorityRevision: string;
+                            current: boolean;
+                            tenantId: string;
+                            scopeId: string;
+                        }[];
+                        currentEvidence: {
+                            /** @enum {string} */
+                            kind: "EVIDENCE";
+                            sourceId: string;
+                            versionId: string;
+                            contentDigest: string;
+                        }[];
+                        currentRelations: {
+                            /** @enum {string} */
+                            kind: "RELATION";
+                            entityId: string;
+                            reference: {
+                                owner: string;
+                                id: string;
+                                revision: string;
+                                contentDigest: string;
+                            };
+                        }[];
+                    };
+                    expected: {
+                        allowed: boolean;
+                        outcome: string;
+                        nextState?: string;
+                    };
+                }[];
+            };
+            /** Format: uuid */
+            specificationUploadId?: string;
+            idempotencyKey: string;
+            limits: {
+                deadlineMs: number;
+                maxBuilds: number;
+                maxMutations: number;
+            };
+            /** Format: date-time */
+            installNotBefore?: string;
+        };
+        "application-maintain": {
+            /** Format: uuid */
+            applicationId: string;
+            specification?: {
+                /** @enum {string} */
+                schema: "finnor.business-specification.v1";
+                /** @enum {string} */
+                profile: "PE_FIRM_TYPED_APPLICATION_V1";
+                owner: {
+                    id: string;
+                    version: string;
+                };
+                id: string;
+                version: string;
+                title: string;
+                /** @enum {string} */
+                family: "PE_FIRM_OPERATIONS";
+                model: {
+                    currencies: string[];
+                    units: string[];
+                    timeModes: ("AS_OF" | "PERIOD")[];
+                    accountingBases: string[];
+                    roles: {
+                        id: string;
+                        canonicalRole: string;
+                    }[];
+                    entities: {
+                        id: string;
+                        title: string;
+                        fields: ({
+                            id: string;
+                            title: string;
+                            required: boolean;
+                            allowUnknown: boolean;
+                            /** @enum {string} */
+                            type: "text";
+                            maxLength: number;
+                        } | {
+                            id: string;
+                            title: string;
+                            required: boolean;
+                            allowUnknown: boolean;
+                            /** @enum {string} */
+                            type: "boolean";
+                        } | {
+                            id: string;
+                            title: string;
+                            required: boolean;
+                            allowUnknown: boolean;
+                            /** @enum {string} */
+                            type: "enum";
+                            options: string[];
+                        } | {
+                            id: string;
+                            title: string;
+                            required: boolean;
+                            allowUnknown: boolean;
+                            /** @enum {string} */
+                            type: "quantity";
+                        } | {
+                            id: string;
+                            title: string;
+                            required: boolean;
+                            allowUnknown: boolean;
+                            /** @enum {string} */
+                            type: "quantity-list";
+                        } | {
+                            id: string;
+                            title: string;
+                            required: boolean;
+                            allowUnknown: boolean;
+                            /** @enum {string} */
+                            type: "evidence";
+                        } | {
+                            id: string;
+                            title: string;
+                            required: boolean;
+                            allowUnknown: boolean;
+                            /** @enum {string} */
+                            type: "reference";
+                        } | {
+                            id: string;
+                            title: string;
+                            required: boolean;
+                            allowUnknown: boolean;
+                            /** @enum {string} */
+                            type: "relation";
+                            entityId: string;
+                        })[];
+                        states: string[];
+                        initialState: string;
+                    }[];
+                };
+                requirements: {
+                    id: string;
+                    text: string;
+                    critical: boolean;
+                }[];
+                unresolvedCriticalRequirementIds: string[];
+                actions: {
+                    id: string;
+                    title: string;
+                    entityId: string;
+                    /** @enum {string} */
+                    kind: "create" | "update" | "transition";
+                    fromStates: string[];
+                    toState: string;
+                    roles: string[];
+                    inputFields: string[];
+                    assignments: {
+                        field: string;
+                        value: components["schemas"]["X3Expression"];
+                    }[];
+                    guards: {
+                        id: string;
+                        condition: components["schemas"]["X3Expression"];
+                        denialCode: string;
+                        unknownCode?: string;
+                        requirementIds: string[];
+                    }[];
+                    outcome: string;
+                    requirementIds: string[];
+                    approval?: {
+                        requirements: {
+                            role: string;
+                            when: components["schemas"]["X3Expression"];
+                        }[];
+                        noSelfApproval: boolean;
+                        distinctPrincipals: boolean;
+                        pendingOutcome: string;
+                    };
+                    requiresApprovalsFrom?: string;
+                    preparedEffect?: {
+                        kind: string;
+                        fields: string[];
+                    };
+                }[];
+                invariants: {
+                    id: string;
+                    entityId: string;
+                    critical: boolean;
+                    condition: components["schemas"]["X3Expression"];
+                    denialCode: string;
+                    requirementIds: string[];
+                }[];
+                acceptanceCases: {
+                    id: string;
+                    requirementIds: string[];
+                    input: {
+                        entityId: string;
+                        actionId: string;
+                        installedReleaseId: string;
+                        tenantId: string;
+                        scopeId: string;
+                        actor: {
+                            principalId: string;
+                            canonicalRoles: string[];
+                            authorityRevision: string;
+                            authorityCurrent: boolean;
+                            tenantId: string;
+                            scopeId: string;
+                        };
+                        record?: {
+                            entityId: string;
+                            state: string;
+                            values: {
+                                [key: string]: string | boolean | {
+                                    /** @enum {string} */
+                                    kind: "UNKNOWN";
+                                    reason: string;
+                                } | {
+                                    /** @enum {string} */
+                                    kind: "QUANTITY";
+                                    amount: string;
+                                    currency: string;
+                                    entity: {
+                                        owner: string;
+                                        id: string;
+                                        revision: string;
+                                        contentDigest: string;
+                                    };
+                                    units: string;
+                                    time: {
+                                        /** @enum {string} */
+                                        kind: "AS_OF";
+                                        /** Format: date-time */
+                                        asOf: string;
+                                    } | {
+                                        /** @enum {string} */
+                                        kind: "PERIOD";
+                                        /** Format: date-time */
+                                        start: string;
+                                        /** Format: date-time */
+                                        end: string;
+                                    };
+                                    accountingBasis: string;
+                                } | {
+                                    /** @enum {string} */
+                                    kind: "QUANTITY_LIST";
+                                    entries: {
+                                        /** @enum {string} */
+                                        kind: "QUANTITY";
+                                        amount: string;
+                                        currency: string;
+                                        entity: {
+                                            owner: string;
+                                            id: string;
+                                            revision: string;
+                                            contentDigest: string;
+                                        };
+                                        units: string;
+                                        time: {
+                                            /** @enum {string} */
+                                            kind: "AS_OF";
+                                            /** Format: date-time */
+                                            asOf: string;
+                                        } | {
+                                            /** @enum {string} */
+                                            kind: "PERIOD";
+                                            /** Format: date-time */
+                                            start: string;
+                                            /** Format: date-time */
+                                            end: string;
+                                        };
+                                        accountingBasis: string;
+                                    }[];
+                                } | {
+                                    /** @enum {string} */
+                                    kind: "EVIDENCE";
+                                    sourceId: string;
+                                    versionId: string;
+                                    contentDigest: string;
+                                } | {
+                                    /** @enum {string} */
+                                    kind: "RELATION";
+                                    entityId: string;
+                                    reference: {
+                                        owner: string;
+                                        id: string;
+                                        revision: string;
+                                        contentDigest: string;
+                                    };
+                                } | {
+                                    owner: string;
+                                    id: string;
+                                    revision: string;
+                                    contentDigest: string;
+                                };
+                            };
+                            authorPrincipalId: string;
+                            recordDigest: string;
+                            reference: {
+                                owner: string;
+                                id: string;
+                                revision: string;
+                                contentDigest: string;
+                            };
+                            releaseId: string;
+                        };
+                        expectedRecordDigest?: string;
+                        expectedRecordReference?: {
+                            owner: string;
+                            id: string;
+                            revision: string;
+                            contentDigest: string;
+                        };
+                        input: {
+                            [key: string]: string | boolean | {
+                                /** @enum {string} */
+                                kind: "UNKNOWN";
+                                reason: string;
+                            } | {
+                                /** @enum {string} */
+                                kind: "QUANTITY";
+                                amount: string;
+                                currency: string;
+                                entity: {
+                                    owner: string;
+                                    id: string;
+                                    revision: string;
+                                    contentDigest: string;
+                                };
+                                units: string;
+                                time: {
+                                    /** @enum {string} */
+                                    kind: "AS_OF";
+                                    /** Format: date-time */
+                                    asOf: string;
+                                } | {
+                                    /** @enum {string} */
+                                    kind: "PERIOD";
+                                    /** Format: date-time */
+                                    start: string;
+                                    /** Format: date-time */
+                                    end: string;
+                                };
+                                accountingBasis: string;
+                            } | {
+                                /** @enum {string} */
+                                kind: "QUANTITY_LIST";
+                                entries: {
+                                    /** @enum {string} */
+                                    kind: "QUANTITY";
+                                    amount: string;
+                                    currency: string;
+                                    entity: {
+                                        owner: string;
+                                        id: string;
+                                        revision: string;
+                                        contentDigest: string;
+                                    };
+                                    units: string;
+                                    time: {
+                                        /** @enum {string} */
+                                        kind: "AS_OF";
+                                        /** Format: date-time */
+                                        asOf: string;
+                                    } | {
+                                        /** @enum {string} */
+                                        kind: "PERIOD";
+                                        /** Format: date-time */
+                                        start: string;
+                                        /** Format: date-time */
+                                        end: string;
+                                    };
+                                    accountingBasis: string;
+                                }[];
+                            } | {
+                                /** @enum {string} */
+                                kind: "EVIDENCE";
+                                sourceId: string;
+                                versionId: string;
+                                contentDigest: string;
+                            } | {
+                                /** @enum {string} */
+                                kind: "RELATION";
+                                entityId: string;
+                                reference: {
+                                    owner: string;
+                                    id: string;
+                                    revision: string;
+                                    contentDigest: string;
+                                };
+                            } | {
+                                owner: string;
+                                id: string;
+                                revision: string;
+                                contentDigest: string;
+                            };
+                        };
+                        approvalRole?: string;
+                        approvals: {
+                            actionId: string;
+                            role: string;
+                            principalId: string;
+                            recordDigest: string;
+                            recordReference: {
+                                owner: string;
+                                id: string;
+                                revision: string;
+                                contentDigest: string;
+                            };
+                            releaseId: string;
+                            authorityRevision: string;
+                            tenantId: string;
+                            scopeId: string;
+                        }[];
+                        currentAuthorities: {
+                            principalId: string;
+                            canonicalRole: string;
+                            authorityRevision: string;
+                            current: boolean;
+                            tenantId: string;
+                            scopeId: string;
+                        }[];
+                        currentEvidence: {
+                            /** @enum {string} */
+                            kind: "EVIDENCE";
+                            sourceId: string;
+                            versionId: string;
+                            contentDigest: string;
+                        }[];
+                        currentRelations: {
+                            /** @enum {string} */
+                            kind: "RELATION";
+                            entityId: string;
+                            reference: {
+                                owner: string;
+                                id: string;
+                                revision: string;
+                                contentDigest: string;
+                            };
+                        }[];
+                    };
+                    expected: {
+                        allowed: boolean;
+                        outcome: string;
+                        nextState?: string;
+                    };
+                }[];
+            };
+            /** Format: uuid */
+            specificationUploadId?: string;
+            idempotencyKey: string;
+            /** Format: uuid */
+            expectedReleaseId: string | null;
+            /** @enum {string} */
+            changeClass: "BUSINESS_RULES_UNITS" | "IDENTITY_AUTHORIZATION_CONCURRENCY" | "DEPENDENCY_SCHEMA_DEPLOYMENT";
+            migration: {
+                /** @enum {string} */
+                kind: "ADD_FIELD";
+                entityId: string;
+                field: string;
+                value: string | boolean | {
+                    /** @enum {string} */
+                    kind: "UNKNOWN";
+                    reason: string;
+                } | {
+                    /** @enum {string} */
+                    kind: "QUANTITY";
+                    amount: string;
+                    currency: string;
+                    entity: {
+                        owner: string;
+                        id: string;
+                        revision: string;
+                        contentDigest: string;
+                    };
+                    units: string;
+                    time: {
+                        /** @enum {string} */
+                        kind: "AS_OF";
+                        /** Format: date-time */
+                        asOf: string;
+                    } | {
+                        /** @enum {string} */
+                        kind: "PERIOD";
+                        /** Format: date-time */
+                        start: string;
+                        /** Format: date-time */
+                        end: string;
+                    };
+                    accountingBasis: string;
+                } | {
+                    /** @enum {string} */
+                    kind: "QUANTITY_LIST";
+                    entries: {
+                        /** @enum {string} */
+                        kind: "QUANTITY";
+                        amount: string;
+                        currency: string;
+                        entity: {
+                            owner: string;
+                            id: string;
+                            revision: string;
+                            contentDigest: string;
+                        };
+                        units: string;
+                        time: {
+                            /** @enum {string} */
+                            kind: "AS_OF";
+                            /** Format: date-time */
+                            asOf: string;
+                        } | {
+                            /** @enum {string} */
+                            kind: "PERIOD";
+                            /** Format: date-time */
+                            start: string;
+                            /** Format: date-time */
+                            end: string;
+                        };
+                        accountingBasis: string;
+                    }[];
+                } | {
+                    /** @enum {string} */
+                    kind: "EVIDENCE";
+                    sourceId: string;
+                    versionId: string;
+                    contentDigest: string;
+                } | {
+                    /** @enum {string} */
+                    kind: "RELATION";
+                    entityId: string;
+                    reference: {
+                        owner: string;
+                        id: string;
+                        revision: string;
+                        contentDigest: string;
+                    };
+                } | {
+                    owner: string;
+                    id: string;
+                    revision: string;
+                    contentDigest: string;
+                };
+            }[];
+            expectedEnvironment?: {
+                sourceDigest: string;
+                lockDigest: string;
+                schemaDigest: string;
+            };
+            /** Format: date-time */
+            installNotBefore?: string;
+        };
+        "application-command": {
+            /** Format: uuid */
+            applicationId: string;
+            entityId: string;
+            actionId: string;
+            /** Format: uuid */
+            recordId?: string;
+            expectedRevision?: number;
+            expectedReference?: {
+                owner: string;
+                id: string;
+                revision: string;
+                contentDigest: string;
+            };
+            input: {
+                [key: string]: string | boolean | {
+                    /** @enum {string} */
+                    kind: "UNKNOWN";
+                    reason: string;
+                } | {
+                    /** @enum {string} */
+                    kind: "QUANTITY";
+                    amount: string;
+                    currency: string;
+                    entity: {
+                        owner: string;
+                        id: string;
+                        revision: string;
+                        contentDigest: string;
+                    };
+                    units: string;
+                    time: {
+                        /** @enum {string} */
+                        kind: "AS_OF";
+                        /** Format: date-time */
+                        asOf: string;
+                    } | {
+                        /** @enum {string} */
+                        kind: "PERIOD";
+                        /** Format: date-time */
+                        start: string;
+                        /** Format: date-time */
+                        end: string;
+                    };
+                    accountingBasis: string;
+                } | {
+                    /** @enum {string} */
+                    kind: "QUANTITY_LIST";
+                    entries: {
+                        /** @enum {string} */
+                        kind: "QUANTITY";
+                        amount: string;
+                        currency: string;
+                        entity: {
+                            owner: string;
+                            id: string;
+                            revision: string;
+                            contentDigest: string;
+                        };
+                        units: string;
+                        time: {
+                            /** @enum {string} */
+                            kind: "AS_OF";
+                            /** Format: date-time */
+                            asOf: string;
+                        } | {
+                            /** @enum {string} */
+                            kind: "PERIOD";
+                            /** Format: date-time */
+                            start: string;
+                            /** Format: date-time */
+                            end: string;
+                        };
+                        accountingBasis: string;
+                    }[];
+                } | {
+                    /** @enum {string} */
+                    kind: "EVIDENCE";
+                    sourceId: string;
+                    versionId: string;
+                    contentDigest: string;
+                } | {
+                    /** @enum {string} */
+                    kind: "RELATION";
+                    entityId: string;
+                    reference: {
+                        owner: string;
+                        id: string;
+                        revision: string;
+                        contentDigest: string;
+                    };
+                } | {
+                    owner: string;
+                    id: string;
+                    revision: string;
+                    contentDigest: string;
+                };
+            };
+            approvalRole?: string;
+            idempotencyKey: string;
+        };
+        "application-read": {
+            /** Format: uuid */
+            applicationId: string;
+            /** Format: uuid */
+            cursor?: string;
+            /** @default 50 */
+            limit: number;
+        };
+        "application-record": {
+            /** Format: uuid */
+            applicationId: string;
+            /** Format: uuid */
+            recordId: string;
+        };
+        "application-list": {
+            root: {
+                /** @enum {string} */
+                entityType: "pe_strategy" | "pe_opportunity" | "pe_deal" | "pe_fund" | "pe_vehicle" | "external_organization" | "pe_portfolio_holding";
+                /** Format: uuid */
+                entityId: string;
+            };
+            /** Format: uuid */
+            workId: string;
+        };
+        "application-history": {
+            /** Format: uuid */
+            applicationId: string;
+            /** Format: uuid */
+            recordId?: string;
+            before?: string;
+            /** @default 20 */
+            limit: number;
+        };
+        "application-asset": {
+            /** Format: uuid */
+            applicationId: string;
+            /** Format: uuid */
+            releaseId: string;
+            path: string;
+        };
+        "application-cancel": {
+            /** Format: uuid */
+            applicationId: string;
+            /** Format: uuid */
+            expectedReleaseId: string | null;
+            idempotencyKey: string;
+        };
+        "application-rollback": {
+            /** Format: uuid */
+            applicationId: string;
+            /** Format: uuid */
+            expectedReleaseId: string | null;
+            idempotencyKey: string;
+            /** Format: uuid */
+            releaseId: string;
+        };
+        "application-impact": {
+            /** Format: uuid */
+            applicationId: string;
+            changed: ("business" | "sources" | "identity" | "schema" | "dependencies" | "checker" | "runtime")[];
+        };
+        "application-upload": {
+            root: {
+                /** @enum {string} */
+                entityType: "pe_strategy" | "pe_opportunity" | "pe_deal" | "pe_fund" | "pe_vehicle" | "external_organization" | "pe_portfolio_holding";
+                /** Format: uuid */
+                entityId: string;
+            };
+            /** Format: uuid */
+            uploadId: string;
+            part: number;
+            totalParts: number;
+            digest: string;
+            bytes: string;
+        };
+        "application-prepare-effect": {
+            /** Format: uuid */
+            applicationId: string;
+            /** Format: uuid */
+            recordId: string;
+            expectedRevision: number;
+            expectedReference: {
+                owner: string;
+                id: string;
+                revision: string;
+                contentDigest: string;
+            };
+            preparationRef: {
+                owner: string;
+                id: string;
+                version: string;
+                contentDigest: string;
+            };
+            allocationRef: {
+                owner: string;
+                id: string;
+                version: string;
+                contentDigest: string;
+            };
+            consumptionRef: {
+                owner: string;
+                id: string;
+                version: string;
+                contentDigest: string;
+            };
+            idempotencyKey: string;
+        };
+        "application-s8-propose": {
+            /** Format: uuid */
+            applicationId: string;
+            idempotencyKey: string;
+        };
+        "application-admission": {
+            /** Format: uuid */
+            applicationId: string;
+            revisionRef: {
+                owner: string;
+                id: string;
+                version: string;
+                contentDigest: string;
+            };
+        };
+        X3Expression: {
+            /** @enum {string} */
+            op: "literal";
+            value: string | boolean | {
+                /** @enum {string} */
+                kind: "UNKNOWN";
+                reason: string;
+            } | {
+                /** @enum {string} */
+                kind: "QUANTITY";
+                amount: string;
+                currency: string;
+                entity: {
+                    owner: string;
+                    id: string;
+                    revision: string;
+                    contentDigest: string;
+                };
+                units: string;
+                time: {
+                    /** @enum {string} */
+                    kind: "AS_OF";
+                    /** Format: date-time */
+                    asOf: string;
+                } | {
+                    /** @enum {string} */
+                    kind: "PERIOD";
+                    /** Format: date-time */
+                    start: string;
+                    /** Format: date-time */
+                    end: string;
+                };
+                accountingBasis: string;
+            } | {
+                /** @enum {string} */
+                kind: "QUANTITY_LIST";
+                entries: {
+                    /** @enum {string} */
+                    kind: "QUANTITY";
+                    amount: string;
+                    currency: string;
+                    entity: {
+                        owner: string;
+                        id: string;
+                        revision: string;
+                        contentDigest: string;
+                    };
+                    units: string;
+                    time: {
+                        /** @enum {string} */
+                        kind: "AS_OF";
+                        /** Format: date-time */
+                        asOf: string;
+                    } | {
+                        /** @enum {string} */
+                        kind: "PERIOD";
+                        /** Format: date-time */
+                        start: string;
+                        /** Format: date-time */
+                        end: string;
+                    };
+                    accountingBasis: string;
+                }[];
+            } | {
+                /** @enum {string} */
+                kind: "EVIDENCE";
+                sourceId: string;
+                versionId: string;
+                contentDigest: string;
+            } | {
+                /** @enum {string} */
+                kind: "RELATION";
+                entityId: string;
+                reference: {
+                    owner: string;
+                    id: string;
+                    revision: string;
+                    contentDigest: string;
+                };
+            } | {
+                owner: string;
+                id: string;
+                revision: string;
+                contentDigest: string;
+            };
+        } | {
+            /** @enum {string} */
+            op: "field";
+            /** @enum {string} */
+            source: "record" | "input";
+            field: string;
+        } | {
+            /** @enum {string} */
+            op: "sum";
+            value: components["schemas"]["X3Expression"];
+        } | {
+            /** @enum {string} */
+            op: "known";
+            value: components["schemas"]["X3Expression"];
+        } | {
+            /** @enum {string} */
+            op: "current-evidence";
+            value: components["schemas"]["X3Expression"];
+        } | {
+            /** @enum {string} */
+            op: "not";
+            value: components["schemas"]["X3Expression"];
+        } | {
+            /** @enum {string} */
+            op: "equal";
+            left: components["schemas"]["X3Expression"];
+            right: components["schemas"]["X3Expression"];
+        } | {
+            /** @enum {string} */
+            op: "same-quantity";
+            left: components["schemas"]["X3Expression"];
+            right: components["schemas"]["X3Expression"];
+        } | {
+            /** @enum {string} */
+            op: "difference";
+            left: components["schemas"]["X3Expression"];
+            right: components["schemas"]["X3Expression"];
+        } | {
+            /** @enum {string} */
+            op: "compare";
+            /** @enum {string} */
+            comparison: "lt" | "lte" | "eq" | "gte" | "gt";
+            left: components["schemas"]["X3Expression"];
+            right: components["schemas"]["X3Expression"];
+        } | {
+            /** @enum {string} */
+            op: "currency-threshold";
+            value: components["schemas"]["X3Expression"];
+            /** @enum {string} */
+            comparison: "lt" | "lte" | "eq" | "gte" | "gt";
+            thresholds: {
+                currency: string;
+                amount: string;
+                units: string;
+                accountingBasis: string;
+                /** @enum {string} */
+                timeMode: "AS_OF" | "PERIOD";
+            }[];
+        } | {
+            /** @enum {string} */
+            op: "state";
+            is: string;
+        } | {
+            /** @enum {string} */
+            op: "all";
+            args: components["schemas"]["X3Expression"][];
+        } | {
+            /** @enum {string} */
+            op: "any";
+            args: components["schemas"]["X3Expression"][];
+        };
+    };
     responses: never;
     parameters: never;
     requestBodies: never;

@@ -24,8 +24,8 @@ export async function startR1HttpFixture(repo:string,evidence:string,options?:{b
  const apiRoot=join(repo,'finnor-os/apps/api/app/api'),routes:any[]=[];
  async function scan(dir:string){for(const e of await readdir(dir,{withFileTypes:true})){const p=join(dir,e.name);if(e.isDirectory())await scan(p);else if(e.name==='route.ts'){const parts=relative(apiRoot,dir).split('/');routes.push({file:p,parts,dynamic:parts.filter(p=>p.startsWith('[')).length});}}}
  await scan(apiRoot);routes.sort((a,b)=>a.dynamic-b.dynamic);
- const built=options?.builtApi?await (await import('./built-api-fixture.mts')).startBuiltR1Api(repo,evidence).catch(async error=>{await new Promise<void>(yes=>{auth.closeAllConnections();auth.close(()=>yes());});throw error;}):null;
- let delayed:{workId:string;operation:string;waiting:boolean;gate:Promise<void>;release:()=>void}|null=null;
+ let built=options?.builtApi?await (await import('./built-api-fixture.mts')).startBuiltR1Api(repo,evidence).catch(async error=>{await new Promise<void>(yes=>{auth.closeAllConnections();auth.close(()=>yes());});throw error;}):null;
+ let delayed:{scopeId:string;operation:string;waiting:boolean;failed:boolean;gate:Promise<void>;release:()=>void}|null=null;
  const api=createServer(async(req,res)=>{const at=new Date().toISOString(),started=performance.now();let input:any=null;try{
   const url=new URL(req.url??'/','http://127.0.0.1'),parts=url.pathname.replace(/^\/api\//,'').split('/').map(decodeURIComponent);let matched:any;
   for(const r of routes){const params:any={};let ok=true,j=0;for(const part of r.parts){if(part.startsWith('[...')){params[part.slice(4,-1)]=parts.slice(j);j=parts.length;break;}if(j>=parts.length){ok=false;break;}if(part.startsWith('['))params[part.slice(1,-1)]=parts[j];else if(part!==parts[j]){ok=false;break;}j++;}if(ok&&j===parts.length){matched={...r,params};break;}}
@@ -36,8 +36,13 @@ export async function startR1HttpFixture(repo:string,evidence:string,options?:{b
   if(built)result=await fetch(built.base+url.pathname+url.search,{method:request.method,headers,body:['GET','HEAD'].includes(request.method)?undefined:raw});
   else{const m=await import(pathToFileURL(matched.file).href),handler=m[req.method??'GET'];if(!handler){res.writeHead(405);res.end('{}');return;}result=await handler(request,{params:Promise.resolve(matched.params)});}
   const output=Buffer.from(await result.arrayBuffer());
-  if(delayed&&parts.at(-1)===delayed.operation&&input?.workId===delayed.workId&&!delayed.waiting){delayed.waiting=true;await delayed.gate;}
   let observed:unknown;try{observed=JSON.parse(output.toString());}catch{observed={contentType:result.headers.get('content-type'),rawText:output.toString()};}
+  const held=delayed;
+  if(held&&parts.at(-1)===held.operation&&(input?.workId===held.scopeId||input?.applicationId===held.scopeId)&&!held.waiting){
+   held.waiting=true;
+   await appendFile(join(evidence,'held-owner-responses.jsonl'),JSON.stringify({at,path:url.pathname,input,ownerStatus:result.status,output:observed,transportHeld:true})+'\n');
+   await held.gate;if(held.failed)throw Error('DISPOSABLE_HELD_RESPONSE_TRANSPORT_FAILURE');
+  }
   await appendFile(join(evidence,'http.jsonl'),JSON.stringify({at,path:url.pathname,method:req.method,status:result.status,bearer:Boolean(req.headers.authorization),authBypass:false,transport:built?'ACTUAL_BUILT_NEXT_API':'SOURCE_ROUTE_OVER_HTTP',ownerRoute:relative(repo,matched.file),input,output:observed,elapsedMs:performance.now()-started})+'\n');
   const h:any={};result.headers.forEach((v,k)=>h[k]=v);res.writeHead(result.status,h);res.end(output);
  }catch(error){await appendFile(join(evidence,'http-fixture-errors.jsonl'),JSON.stringify({at,path:req.url,input,error:String(error),stack:(error as Error).stack})+'\n');if(!res.writableEnded){if(!res.headersSent)res.writeHead(500,{'content-type':'application/json'});res.end('{"error":"Disposable HTTP transport failed"}');}}});
@@ -45,7 +50,8 @@ export async function startR1HttpFixture(repo:string,evidence:string,options?:{b
  return {apiBase,authBase,register:(id:string,email:string,password='r1-disposable-only')=>identities.set(id,{id,email,password}),
   login:async(id:string)=>{const i=identities.get(id);if(!i)throw Error('R1_AUTH_FIXTURE_IDENTITY_NOT_REGISTERED');const r=await fetch(authBase+'/auth/v1/token?grant_type=password',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({email:i.email,password:i.password})});if(r.status!==200)throw Error('R1_AUTH_LOGIN_FAILED');return (await r.json()).access_token as string;},
   api:async(token:string,family:string,operation:string,input:unknown)=>{const r=await fetch(apiBase+'/api/'+family+'/'+operation,{method:'POST',headers:{'content-type':'application/json','authorization':'Bearer '+token},body:JSON.stringify(input)});return {status:r.status,body:await r.json()};},
-  delay:(workId:string,operation='r1-projection')=>{let release!:()=>void;const gate=new Promise<void>(yes=>release=yes);delayed={workId,operation,waiting:false,gate,release};return {waiting:()=>delayed?.waiting??false,release:()=>{release();delayed=null;}};},
+  delay:(scopeId:string,operation='r1-projection')=>{let release!:()=>void;const gate=new Promise<void>(yes=>release=yes),held={scopeId,operation,waiting:false,failed:false,gate,release};delayed=held;return {waiting:()=>delayed===held&&held.waiting,release:(failed=false)=>{held.failed=failed;release();if(delayed===held)delayed=null;}};},
+  restartApi:async(runtimeOptions?:{runtime?:'test'|'production';unsetDevBypass?:boolean})=>{if(!built)throw Error('BUILT_API_PROCESS_REQUIRED');await built.close();built=await (await import('./built-api-fixture.mts')).startBuiltR1Api(repo,evidence,runtimeOptions);},
   close:async()=>{delayed?.release();await built?.close();await Promise.all([auth,api].map(s=>new Promise<void>(yes=>{s.closeAllConnections();s.close(()=>yes());})));},
   qualification:'LOCAL_AUTH_SERVICE_WITH_REAL_SIGNATURE_EXPIRY_CHECK_REAL_SECURITY_OWNER_RLS_AND_HTTP; HOSTED_SUPABASE_NOT_QUALIFIED'};
 }
