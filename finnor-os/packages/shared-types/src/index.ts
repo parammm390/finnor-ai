@@ -1,4 +1,4 @@
-export type {FrontierArtifactEnvelope,EnterpriseApplicationPackage} from './enterprise-applications';
+export type {ApplicationReleaseBinding,EnterpriseApplicationRelease,FrontierArtifactEnvelope,FrontierEventCollectionReference,EnterpriseApplicationPackage} from './enterprise-applications';
 export * from "./closing";
 // Shared type contracts for the Finnor AI Operating System.
 // Every subsystem (orchestration, plugins, memory, tools, workers) compiles against these.

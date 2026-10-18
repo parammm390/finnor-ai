@@ -2,7 +2,7 @@
 export const X3_MIGRATION_HEAD='0189_x3_enterprise_applications.sql';
 const own=['contracts.ts','exact.ts','compiler.ts','program.ts','checker.ts','source-cut.ts','source-paths.ts','store.ts','service.ts','worker.ts','build-child.mts','api.ts','effects.ts','admission.ts'];
 export const APPLICATION_SOURCE_PATHS=own.map(n=>'finnor-os/packages/private-equity/src/enterprise-applications/'+n).concat([
- 'finnor-os/packages/shared-types/src/enterprise-applications.ts','finnor-os/packages/shared-types/src/primary-diligence.ts','finnor-os/packages/authority/src/index.ts',
+ 'finnor-os/packages/shared-types/src/enterprise-applications.ts','finnor-os/packages/shared-types/src/index.ts','finnor-os/packages/shared-types/src/primary-diligence.ts','finnor-os/packages/authority/src/index.ts',
  'finnor-os/packages/private-equity/src/owner-context.ts','finnor-os/packages/private-equity/src/enterprise-beliefs.ts',
  'finnor-os/packages/db/compute-contract.ts','finnor-os/packages/db/compute-governor.ts','finnor-os/packages/db/execution-deadline.ts',
  'finnor-os/packages/db/migration-head.ts','finnor-os/packages/db/migrations/'+X3_MIGRATION_HEAD,

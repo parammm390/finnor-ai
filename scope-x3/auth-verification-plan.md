@@ -41,6 +41,15 @@ The strongest owner boundary is the real emitted browser/API with ordinary
 database roles; no post-code unit tests or test-only production exports are
 needed.
 
+Before the final full browser rerun, add one real reconnect observation: put
+the owned Chromium session offline, invoke the actual Refresh button and require
+private business forms to clear. Restore its real network, reload the real page
+as directed by the canonical unavailable-state message,
+and require the same canonical application, selected CLOSED record, immutable
+head and business-event count. Do not intercept or fabricate an API response.
+Credible failures are stale usable private forms during failed revalidation,
+failure to recover on reconnect, a changed release/record, or duplicated writes.
+
 These observations qualify only the disposable signed development identity
 surface. They do not establish a hosted identity provider, independent protected
 custody, production deployment, or new grants.

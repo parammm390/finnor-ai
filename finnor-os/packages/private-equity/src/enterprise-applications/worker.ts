@@ -3,7 +3,7 @@ import {resolve} from 'node:path';
 import type {PoolClient} from 'pg';
 import {z} from 'zod';
 import {acquireComputeResourceLeases,renewComputeResourceLeases,releaseComputeResourceLeases,ComputeCapacityUnavailableError,type ComputeResourceLease} from '@finnor/db';
-import type {EnterpriseApplicationPackage} from '@finnor/shared-types';
+import type {EnterpriseApplicationRelease} from '@finnor/shared-types';
 import type {JobExecutionContext} from '../../../../apps/worker/src/queue';
 import type {PeMutationContext} from '../types';
 import {applicationDigest,applicationCanonical,validateValuesAgainstModel,ApplicationFault} from './contracts';
@@ -66,7 +66,7 @@ async function childBuild(spec:BuildRow['specification'],deadline:number,stillCu
   child.send(spec);
  });
 }
-function packageFor(a:ApplicationRow,b:BuildRow,built:BuiltApplication,check:ApplicationCheck,environment:ApplicationEnvironment,e:Readonly<JobExecutionContext>,leases:ComputeResourceLease[],resources:ChildResult['resources'],authorityRevision:number,id:string,parent:ReleaseBody|null):EnterpriseApplicationPackage{
+function packageFor(a:ApplicationRow,b:BuildRow,built:BuiltApplication,check:ApplicationCheck,environment:ApplicationEnvironment,e:Readonly<JobExecutionContext>,leases:ComputeResourceLease[],resources:ChildResult['resources'],authorityRevision:number,id:string,parent:ReleaseBody|null):EnterpriseApplicationRelease{
  return {schema:'finnor.enterprise-application-package.v1',id,applicationId:a.id,tenantId:a.tenant_id,principalId:a.owner_id,
   rights:{revision:authorityRevision,ref:'canonical-authority:'+a.tenant_id+':'+authorityRevision,evaluatedAt:new Date().toISOString()},
   work:{id:a.work_id,revision:b.work_input_id,inputDigest:b.work_input_digest},mandate:null,

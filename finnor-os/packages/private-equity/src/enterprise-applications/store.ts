@@ -1,9 +1,9 @@
 import {randomUUID} from 'node:crypto';
 import type {PoolClient} from 'pg';
 import {canExerciseAuthorityTx,employeeScopedRoleKeysTx} from '@finnor/authority';
-import type {EnterpriseApplicationPackage} from '@finnor/shared-types';
+import type {EnterpriseApplicationRelease} from '@finnor/shared-types';
 import type {PeMutationContext,PeWorldRootRef} from '../types';
-import {authorize,principal,revisions,tx,unavailable} from '../owner-context';
+import {authorize,principal,revisions,closingTx as tx,unavailable} from '../owner-context';
 import {applicationDigest,applicationCanonical,ApplicationFault,type BusinessSpecification,type ApplicationExecutionContext,type ApplicationValues,type ApplicationApprovalReceipt} from './contracts';
 import type {BuiltApplication} from './compiler';
 import type {ApplicationCheck} from './checker';
@@ -17,12 +17,12 @@ export interface ApplicationRow{
 }
 export interface BuildRow{
  tenant_id:string;id:string;application_id:string;generation:number;specification:BusinessSpecification;specification_digest:string;
- base_release_id:string|null;change_class:EnterpriseApplicationPackage['maintenance']['changeClass'];
+ base_release_id:string|null;change_class:EnterpriseApplicationRelease['maintenance']['changeClass'];
  work_input_id:string;work_input_digest:string;environment:ApplicationEnvironment;migration:MigrationStep[];
  status:string;attempt_count:number;install_not_before:Date;
 }
 export type MigrationStep={kind:'ADD_FIELD';entityId:string;field:string;value:ApplicationValues[string]};
-export interface ReleaseBody{package:EnterpriseApplicationPackage;built:BuiltApplication;check:ApplicationCheck;specification:BusinessSpecification;environment:ApplicationEnvironment;migration:MigrationStep[]}
+export interface ReleaseBody{package:EnterpriseApplicationRelease;built:BuiltApplication;check:ApplicationCheck;specification:BusinessSpecification;environment:ApplicationEnvironment;migration:MigrationStep[]}
 export interface RecordRow{
  id:string;tenant_id:string;application_id:string;entity_id:string;author_id:string;origin_release_id:string;release_id:string;schema_release_id:string;
  content_revision:number;concurrency_revision:number;state:string;values:ApplicationValues;content_digest:string;
@@ -65,21 +65,30 @@ export async function workCutTx(c:PoolClient,a:Pick<ApplicationRow,'tenant_id'|'
  const r=(await c.query('SELECT id,instruction_text,context_snapshot,context_snapshot_hash FROM finnor_os.work_inputs WHERE tenant_id=$1 AND work_id=$2 ORDER BY created_at DESC,id DESC LIMIT 1',[a.tenant_id,a.work_id])).rows[0];
  if(!r)fail('CANONICAL_WORK_INPUT_REQUIRED');return {id:r.id as string,digest:applicationDigest(r)};
 }
-export async function authorityTx(ctx:PeMutationContext,c:PoolClient,a:ApplicationRow,employee=principal(ctx)){
+export async function authorityTx(ctx:PeMutationContext,c:PoolClient,a:ApplicationRow,employee=principal(ctx),temporalBounds?:string[]){
  const auth={...ctx.auth,userId:employee,employeeId:employee};
  const snapshot=await employeeScopedRoleKeysTx(auth,[{type:a.root_type,id:a.root_id}],c);
+ if(snapshot.validUntil)temporalBounds?.push(snapshot.validUntil);
  const current=await canExerciseAuthorityTx(auth,{operation:'action',capability:'action:operate_enterprise_application',resource:{type:a.root_type,id:a.root_id},risk:'low'},c);
  return {principalId:employee,canonicalRoles:snapshot.roles,authorityRevision:String(snapshot.revision),authorityCurrent:current,tenantId:a.tenant_id,scopeId:a.root_id};
+}
+/** Authority locks prevent edits, not the passage of an assignment's original
+ * expiry. Check its owner-provided boundary after writes, before committing. */
+export async function assertAuthorityTemporalBoundsTx(c:PoolClient,temporalBounds:readonly string[]){
+ if(!temporalBounds.length)return;
+ const boundary=temporalBounds.reduce((a,b)=>a<b?a:b);
+ const current=(await c.query<{still_current:boolean}>('SELECT clock_timestamp()<$1::timestamptz AS still_current',[boundary])).rows[0];
+ if(!current?.still_current)fail('APPLICATION_AUTHORITY_EXPIRED');
 }
 /** Cache only inside this transaction. Each later command/effect stage obtains
  * a new current owner snapshot, never authority from a previous stage. */
 export async function approverAuthoritiesTx(ctx:PeMutationContext,c:PoolClient,a:ApplicationRow,spec:BusinessSpecification,
- receipts:ApplicationApprovalReceipt[],actor:Awaited<ReturnType<typeof authorityTx>>){
+ receipts:ApplicationApprovalReceipt[],actor:Awaited<ReturnType<typeof authorityTx>>,temporalBounds?:string[]){
  const authorities=new Map<string,Awaited<ReturnType<typeof authorityTx>>|null>([[actor.principalId,actor]]);
  const current:ApplicationExecutionContext['currentAuthorities']=[];
  for(const receipt of receipts){
   if(!authorities.has(receipt.principalId)){
-   try{authorities.set(receipt.principalId,await authorityTx(ctx,c,a,receipt.principalId));}catch{authorities.set(receipt.principalId,null);}
+   try{authorities.set(receipt.principalId,await authorityTx(ctx,c,a,receipt.principalId,temporalBounds));}catch{authorities.set(receipt.principalId,null);}
   }
   const authority=authorities.get(receipt.principalId),canonicalRole=spec.model.roles.find(r=>r.id===receipt.role)?.canonicalRole;
   if(canonicalRole&&!current.some(x=>x.principalId===receipt.principalId&&x.canonicalRole===canonicalRole))current.push({

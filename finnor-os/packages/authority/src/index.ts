@@ -595,10 +595,7 @@ export async function employeeAuthoritySnapshot(ctx: TenantContext): Promise<{ e
   });
 }
 
-export async function employeeAuthoritySnapshotTx(ctx: TenantContext, client: PoolClient, lock = true) {
-  const revision = await lockCurrentAuthorityTx(ctx, client, lock);
-  const auth = await loadAuthority(transactionDb(client), ctx.tenantId, ctx.employeeId ?? ctx.userId);
-  if (!auth.employee || auth.employee.status !== "active") throw new Error("CURRENT_CANONICAL_AUTHORITY_UNAVAILABLE");
+async function authorityTemporalBoundaryTx(ctx: TenantContext, client: PoolClient) {
   const temporal = await client.query<{ valid_until: Date | null }>(
     `SELECT min(event_at) valid_until FROM (
        SELECT effective_from event_at FROM finnor_os.employee_role_assignments
@@ -607,13 +604,22 @@ export async function employeeAuthoritySnapshotTx(ctx: TenantContext, client: Po
        SELECT expires_at FROM finnor_os.employee_role_assignments
         WHERE tenant_id=$1 AND employee_id=$2 AND active AND expires_at>clock_timestamp()
       ) temporal`, [ctx.tenantId, ctx.employeeId ?? ctx.userId]);
-  return { employeeId: auth.employee.id, revision, roles: auth.assignments.map(row => row.roleKey), validUntil: temporal.rows[0]?.valid_until?.toISOString() ?? null };
+  return temporal.rows[0]?.valid_until?.toISOString() ?? null;
+}
+
+export async function employeeAuthoritySnapshotTx(ctx: TenantContext, client: PoolClient, lock = true) {
+  const revision = await lockCurrentAuthorityTx(ctx, client, lock);
+  const validUntil = await authorityTemporalBoundaryTx(ctx, client);
+  const auth = await loadAuthority(transactionDb(client), ctx.tenantId, ctx.employeeId ?? ctx.userId);
+  if (!auth.employee || auth.employee.status !== "active") throw new Error("CURRENT_CANONICAL_AUTHORITY_UNAVAILABLE");
+  return { employeeId: auth.employee.id, revision, roles: auth.assignments.map(row => row.roleKey), validUntil };
 }
 
 /** Business roles are current, resource-scoped canonical assignments. A role
  * held on another root cannot become an application role through a global list. */
 export async function employeeScopedRoleKeysTx(ctx: TenantContext, resources: AuthorityResource[], client: PoolClient) {
   const revision = await lockCurrentAuthorityTx(ctx, client);
+  const validUntil = await authorityTemporalBoundaryTx(ctx, client);
   const db = transactionDb(client), auth = await loadAuthority(db, ctx.tenantId, ctx.employeeId ?? ctx.userId);
   if (!auth.employee || auth.employee.status !== "active" || resources.length === 0)
     throw new Error("CURRENT_CANONICAL_AUTHORITY_UNAVAILABLE");
@@ -622,7 +628,7 @@ export async function employeeScopedRoleKeysTx(ctx: TenantContext, resources: Au
     if (await everyResourceAllows(resources, resource => scopeAllows(db, ctx.tenantId, auth.employee!.id, assignment, resource)))
       roles.push(assignment.roleKey);
   }
-  return {employeeId: auth.employee.id, revision, roles: [...new Set(roles)]};
+  return {employeeId: auth.employee.id, revision, roles: [...new Set(roles)], validUntil};
 }
 
 /** Read-only counterpart to evaluateAuthority for projection/control discovery.

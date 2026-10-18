@@ -1,6 +1,6 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": { "noEmit": true, "allowImportingTsExtensions": true },
-  "include": ["./*.mts"],
+  "include": ["./*.mts", "../../packages/private-equity/src/enterprise-applications/build-child.mts"],
   "exclude": ["../../node_modules"]
 }

@@ -1,7 +1,7 @@
 import {z} from 'zod';
 import {receiveWork} from '@finnor/db';
 import {canExerciseAuthorityTx} from '@finnor/authority';
-import {EvidenceRootSchema} from '@finnor/shared-types';
+import {EvidenceRootSchema,type EnterpriseApplicationPackage,type FrontierEventCollectionReference} from '@finnor/shared-types';
 import {VReferenceSchema} from '../../../shared-types/src/primary-diligence';
 import {authorize,unavailable} from '../owner-context';
 import {affectedClosure} from '../live-recompilation/contracts';
@@ -9,7 +9,7 @@ import type {PeMutationContext} from '../types';
 import {BusinessSpecificationSchema,ApplicationValueSchema,ApplicationValuesSchema,parseBusinessSpecification,validateValuesAgainstModel,applicationDigest,applicationCanonical,applicationBytesDigest,assertApplicationData,ApplicationFault,type ApplicationExecutionContext} from './contracts';
 import {runApplicationProgram} from './compiler';
 import {currentApplicationEnvironment,assertApplicationEnvironment} from './source-cut';
-import {applicationTx,recordTx,recordSnapshot,recordSetDigest,releaseTx,workCutTx,authorityTx,approverAuthoritiesTx,actionLiterals,factsTx,valueSetsFactsTx,evidenceCurrentness,assertAllocation,eventTx,priorEventTx,recordReference,rootOf,tx,principal,fail,newId,enqueueBuildTx,type ApplicationRow,type BuildRow,type RecordRow} from './store';
+import {applicationTx,recordTx,recordSnapshot,recordSetDigest,releaseTx,workCutTx,authorityTx,approverAuthoritiesTx,assertAuthorityTemporalBoundsTx,actionLiterals,factsTx,valueSetsFactsTx,evidenceCurrentness,assertAllocation,eventTx,priorEventTx,recordReference,rootOf,tx,principal,fail,newId,enqueueBuildTx,type ApplicationRow,type BuildRow,type RecordRow,type ReleaseBody} from './store';
 const key=z.string().min(1).max(160),uuid=z.string().uuid(),id=z.object({applicationId:uuid}).strict();
 const SpecificationInput={specification:BusinessSpecificationSchema.optional(),specificationUploadId:uuid.optional()};
 export const ApplicationSubmitSchema=z.object({schema:z.literal('finnor.x3.application-request.v1'),root:EvidenceRootSchema,
@@ -101,6 +101,7 @@ export async function submitApplication(ctx:PeMutationContext,value:unknown){
  });
  return tx(ctx,async c=>{
   await c.query('SELECT pg_advisory_xact_lock(hashtextextended($1,0))',['x3-submit:'+ctx.auth.tenantId+':'+principal(ctx)+':'+input.idempotencyKey]);
+  if(!await canExerciseAuthorityTx(ctx.auth,{operation:'action',capability:'action:synthesize_enterprise_application',resource:{type:input.root.entityType,id:input.root.entityId},risk:'low'},c))throw unavailable();
   const prior=(await c.query<ApplicationRow>('SELECT * FROM finnor_os.x3_applications WHERE tenant_id=$1 AND owner_id=$2 AND idempotency_key=$3',[ctx.auth.tenantId,principal(ctx),input.idempotencyKey])).rows[0];
   if(prior){if(prior.request_digest!==requestDigest)fail('APPLICATION_IDEMPOTENCY_CONFLICT');await applicationTx(ctx,c,prior.id);return {applicationId:prior.id,workId:prior.work_id,status:prior.status,replayed:true};}
   if(!await canExerciseAuthorityTx(ctx.auth,{operation:'query',capability:'query:pe_world_state',resource:{type:'work',id:work.workId},risk:'low'},c))throw unavailable();
@@ -166,10 +167,10 @@ export async function commandApplication(ctx:PeMutationContext,value:unknown){
    const count=(await c.query<{n:number}>('SELECT count(*)::integer n FROM finnor_os.x3_records WHERE tenant_id=$1 AND application_id=$2',[a.tenant_id,a.id])).rows[0]!.n;
    if(count>=1000)fail('APPLICATION_RECORD_BOUND');
   }
-  const actor=await authorityTx(ctx,c,a);
+  const temporalBounds:string[]=[],actor=await authorityTx(ctx,c,a,principal(ctx),temporalBounds);
   const values={...record?.values,...input.input},literals=actionLiterals(release.built.program,input.actionId,input.entityId);
   const facts=await valueSetsFactsTx(ctx,c,a,[record?.values??{},values,literals]);
-  const currentAuthorities=await approverAuthoritiesTx(ctx,c,a,release.specification,record?.approvals??[],actor);
+  const currentAuthorities=await approverAuthoritiesTx(ctx,c,a,release.specification,record?.approvals??[],actor,temporalBounds);
   const rebasing=!!record&&action.kind==='update'&&record.release_id!==a.head_release_id;
   const context:ApplicationExecutionContext={
    entityId:input.entityId,actionId:input.actionId,installedReleaseId:a.head_release_id!,tenantId:a.tenant_id,scopeId:a.root_id,actor,
@@ -200,6 +201,7 @@ export async function commandApplication(ctx:PeMutationContext,value:unknown){
   const result={applicationId:a.id,decision,record:stored?projectRecord(stored,currentness,a.head_release_id):null,replayed:false};
   await eventTx(c,a,principal(ctx),decision.allowed?'BUSINESS_COMMAND':'BUSINESS_COMMAND_REFUSED','command:'+input.idempotencyKey,digest,
    {result,input,before:record?projectRecord(record,evidenceCurrentness(record.values,facts.currentEvidence),a.head_release_id):null},stored?.id??null,null,true);
+  assertAllocation(a);await assertAuthorityTemporalBoundsTx(c,temporalBounds);
   return result;
  });
 }
@@ -207,6 +209,64 @@ export function projectRecord(r:RecordRow,currentness:'CURRENT'|'STALE',head:str
  return {id:r.id,entityId:r.entity_id,authorPrincipalId:r.author_id,state:r.state,values:r.values,reference:recordReference(r),
   revision:r.concurrency_revision,releaseId:r.release_id,originReleaseId:r.origin_release_id,schemaReleaseId:r.schema_release_id,
   approvals:r.approvals,preparedIntent:r.prepared_intent,currentness,releaseCurrent:r.release_id===head,pendingEffectId:r.pending_effect_id};
+}
+async function projectApplicationPackage(c:import('pg').PoolClient,a:ApplicationRow,release:ReleaseBody):Promise<EnterpriseApplicationPackage>{
+ const p=release.package;
+ const events=(await c.query<{kind:string;count:string;last_id:string;installed:string}>(`SELECT kind,count(*)::text AS count,max(id)::text AS last_id,
+  count(*) FILTER(WHERE kind='INSTALLED_DEVELOPMENT' AND body->>'releaseId'=$3)::text AS installed
+  FROM finnor_os.x3_events WHERE tenant_id=$1 AND application_id=$2 GROUP BY kind`,[a.tenant_id,a.id,p.id])).rows;
+ if(a.head_release_id!==p.id||release.check.status!=='PASS'||!events.some(r=>BigInt(r.installed)>0n))fail('APPLICATION_INSTALLATION_EVIDENCE_MISSING');
+ const through=events.reduce((last,r)=>BigInt(r.last_id)>last?BigInt(r.last_id):last,0n);
+ const collection=(eventKinds:string[],referenceField:FrontierEventCollectionReference['referenceField']='body'):FrontierEventCollectionReference=>({
+  owner:'@finnor/db',table:'x3_events',tenantId:a.tenant_id,applicationId:a.id,eventKinds,
+  count:events.filter(r=>!eventKinds.length||eventKinds.includes(r.kind)).reduce((n,r)=>n+BigInt(r.count),0n).toString(),
+  snapshotThroughEventId:through?through.toString():null,
+  read:{operation:'application-history',applicationId:a.id,...(through?{before:(through+1n).toString()}:{}),limit:100},referenceField,
+ });
+ const unknown=(reason:string)=>({kind:'UNKNOWN' as const,reason});
+ const work={owner:'WORK',id:p.work.id,revision:p.work.revision,contentDigest:p.work.inputDigest};
+ const baseline={owner:'X3_BUILD',id:p.specification.id,revision:'B_live.v1',contentDigest:applicationDigest(release.environment)};
+ const check={owner:'X3_CHECK',id:p.id,revision:p.code.checkerDigest,contentDigest:applicationDigest(release.check)};
+ const allocation={tenantId:a.tenant_id,applicationId:a.id,requestDigest:a.request_digest,deadlineAt:a.deadline_at.toISOString(),maxBuilds:a.max_builds,maxMutations:a.max_mutations};
+ const sources=[p.specification,work,...release.environment.files.map(f=>({owner:'SOURCE',id:f.path,revision:f.sha256,contentDigest:f.sha256}))];
+ const missing={
+  institutionalProgram:unknown('No compatible X1 institutional-program reference was supplied; Work is the actual development owner.'),
+  authorityGrant:unknown('Current canonical authority is enforced by the owners; this profile does not emit an immutable authority-grant receipt.'),
+  admission:unknown('Protected S8 domain admission is not established by development installation or disposable evaluator receipts.'),
+  providerObservation:unknown('This adapter prepares obligations only. No provider execution, settlement, or independent provider observation is established.'),
+  aggregateMemory:unknown('Per-process build RSS is metered; aggregate simultaneous descendant memory is not attested by this shared-process meter.'),
+  money:unknown('Complete provider, hosting, persistence, recovery, integration, and engineering money is not independently metered.'),
+  humanWork:unknown('Attributable interpretation, supervision, rescue, and engineering human work has no complete independent meter.'),
+ };
+ const installations=collection(['INSTALLED_DEVELOPMENT','ROLLED_BACK']);
+ return {...p,envelope:{
+  artifact_id:p.id,kind:'EnterpriseApplicationPackage',schema_revision:'finnor.frontier-artifact-envelope.v1',
+  content_digest:applicationDigest(release,16*1024*1024),content_digest_basis:'IMMUTABLE_X3_RELEASE_BODY_V1',
+  tenant_ref:{owner:'@finnor/db',table:'tenants',id:a.tenant_id},
+  principal_ref:{owner:'@finnor/db',table:'users',tenantId:a.tenant_id,id:p.principalId},
+  work_ref:work,institutional_program_ref:missing.institutionalProgram,parent_artifact_refs:p.parents,
+  producer_revision:{owner:'SOURCE',id:'X3_PRODUCER',revision:p.code.version,contentDigest:p.code.sourceDigest},
+  baseline_manifest_ref:baseline,baseline_manifest_kind:'B_live',authority_grant_ref:missing.authorityGrant,rights_revision:String(p.rights.revision),
+  resource_grant_ref:{owner:'X3_ALLOCATION',id:a.id,revision:'ORIGINAL_APPLICATION_ALLOCATION_V1',contentDigest:applicationDigest(allocation)},
+  resource_lease_refs:collection(['BUILD_STARTED'],'body.leases'),
+  source_refs:sources,source_revision_vector:Object.fromEntries(sources.map(ref=>[ref.owner+':'+ref.id,ref.revision])),
+  knowledge_cut:{constructedAt:p.validity.validAfter,specification:p.specification,workInput:work,meaning:'PINNED_CONSTRUCTION_INPUTS_NOT_BUSINESS_TRUTH'},
+  admitted_domain_ref:missing.admission,
+  application_fingerprints:{applicationId:a.id,releaseId:p.id,backendDigest:p.backend.digest,frontendDigest:p.frontend.digest,schemaDigest:p.database.schemaDigest,hostSourceDigest:p.runtime.sourceDigest},
+  model_refs:[],model_use:'NONE_TYPED_COMPILER',dependency_lock_digest:p.runtime.lockDigest,runtime_digest:baseline.contentDigest,
+  observed_claims:[
+   {claim:'DEVELOPMENT_INSTALLATION_RECORDED',basis:installations,scope:'Canonical installation history for this application; no protected or production completion.'},
+   {claim:'BOUNDED_INDEPENDENT_KERNEL_CHECK_PASS',basis:check,scope:'Only the stored checker methods, exact specification and registered finite case domain; not whole-product formal verification.'},
+  ],inferred_claims:[],predicted_claims:[],
+  unresolved_claims:Object.entries(missing).map(([claim,value])=>({claim,critical:false as const,value})),
+  postcondition_contract_refs:release.specification.acceptanceCases.map(test=>({owner:'X3_SPEC',id:p.specification.id,revision:String(p.maintenance.generation)+':'+test.id,contentDigest:applicationDigest(test)})),
+  independent_check_refs:[check],S6_obligation_refs:collection(['S6_BOUND'],'body.obligationRef'),provider_observation_refs:missing.providerObservation,
+  invalidation_dependencies:{refs:[...sources,baseline,check,...p.parents],rightsRevision:String(p.rights.revision),owner:'P7',currentOwnerChecksRequired:true},
+  lifecycle_state:{applicationStatus:a.status,releaseState:'INSTALLED_DEVELOPMENT',immutableBuildState:p.status,productionActive:false},
+  lifecycle_events:collection([]),
+  build_learning_compute_cost_refs:{events:collection(['SUBMITTED','BUILD_STARTED','BUILD_METRICS','BUILD_OR_INSTALL_FAILED','MAINTENANCE_REQUESTED','CANCELLED','ROLLBACK_REFUSED','ROLLED_BACK']),aggregateMemory:missing.aggregateMemory,money:missing.money,failedAndInterruptedAttemptsRetained:true},
+  attributable_human_work_refs:missing.humanWork,
+ }};
 }
 export async function readApplication(ctx:PeMutationContext,value:unknown){
  const input=parse(ApplicationReadSchema,value);
@@ -219,7 +279,7 @@ export async function readApplication(ctx:PeMutationContext,value:unknown){
   const releases=(await c.query("SELECT id,build_id,body->'package'->'maintenance' AS maintenance FROM finnor_os.x3_releases WHERE tenant_id=$1 AND application_id=$2 ORDER BY created_at DESC,id DESC",[a.tenant_id,a.id])).rows;
   return {applicationId:a.id,status:a.status,headReleaseId:a.head_release_id,workId:a.work_id,root:rootOf(a),generation:a.generation,
    installation:{status:a.head_release_id?'INSTALLED_DEVELOPMENT':'NOT_INSTALLED',productionActive:false},
-   package:release?.package??null,frontend:release?.built.frontend??null,specification:release?.specification??null,records,
+   package:release?await projectApplicationPackage(c,a,release):null,frontend:release?.built.frontend??null,specification:release?.specification??null,records,
    nextCursor:rows.length>input.limit?rows[input.limit-1]!.id:null,builds,releases,
    counters:{builds:a.build_count,mutations:a.mutation_count,dataBytes:Number(a.data_bytes),releases:a.release_count,deadlineAt:a.deadline_at.toISOString()},
    controls:{canManage:a.owner_id===principal(ctx)&&a.status!=='CANCELLED'&&a.deadline_at.getTime()>Date.now()},protectedAdmission:false};

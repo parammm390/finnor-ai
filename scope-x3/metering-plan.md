@@ -28,3 +28,10 @@ and treating unavailable money/human/provider meters as zero.
 Missing observations stay unknown. CPU samples are lower bounds; sampled RSS
 can overcount shared pages and miss short peaks. This is reproducible development
 instrumentation, not protected accounting or provider billing.
+
+A browser daemon may finish asynchronously after its CLI's successful exit.
+Keep the original strict `PARTIAL_COMMAND_CLEANUP` receipt unchanged. A separate
+followup may read only its listed PID/start-time identities and record whether
+each original process is still live. Bind the original receipt hash and actual
+followup time. Never treat eventual cleanup as zero-latency cleanup, fill the
+unobserved intervening CPU/peak gap, or terminate a reused/unrelated PID.

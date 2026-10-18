@@ -15,6 +15,8 @@ import {installedChecks} from './installed-checks.mts';
 import {applicationS8Proof} from './s8-installed.mts';
 import {installedFaultChecks} from './fault-checks.mts';
 import {installedReviewChecks} from './review-checks.mts';
+import {checkInstalledEnvelope} from './envelope-check.mts';
+import {completionAuthorityChecks} from './completion-authority-checks.mts';
 
 const evidence=resolve(process.env.FINNOR_X3_EVIDENCE_DIR??join(repo,'scope-x3/evidence/installed-'+Date.now()));
 await mkdir(evidence,{recursive:true});
@@ -56,6 +58,10 @@ async function submit(specification:any,extra:Record<string,unknown>={}){
  const replay=ok(await api('analyst','submit',body),202);assert.equal(replay.applicationId,accepted.applicationId);assert.equal(replay.replayed,true);
  const changed=await api('analyst','submit',{...body,limits:{...body.limits,maxMutations:9999}});assert.equal(changed.status,409);
  const installed=await finish(accepted.applicationId);assert(installed.headReleaseId);assert.equal(installed.package.proofs.protectedCustody,false);
+ const envelope=await checkInstalledEnvelope(e,installed,tenant,evidence);
+ const reread=ok(await api('analyst','read',{applicationId:accepted.applicationId,limit:100}));
+ assert.deepEqual(reread.package.envelope,installed.package.envelope,'Unchanged reads retain exact envelope identity');
+ checks.push({id:'complete-common-envelope',...envelope});
  await artifact(evidence,'applications/'+accepted.applicationId+'.json',{input:body,accepted,replay,changed,installed});
  return {id:accepted.applicationId,workId:accepted.workId,installed};
 }
@@ -227,9 +233,12 @@ try{
  checks.push({id:'independent-second-application',applicationId:second.id,wrong,wrongState,persisted,closed:secondRecord,compilerEditsBetweenApplications:false});
  if(!limited)checks.push(...await installedChecks({e,tenant,root,main,api,command,record,runWorker,finish,maintenance,people,roles,evidence,second,secondCommand,secondInput,support,refreshSource}));
  if(!limited)checks.push(...await installedReviewChecks({e,tenant,root,main,api,people,evidence,finish,runWorker,support}));
+  if(!limited)checks.push(...await completionAuthorityChecks({e,evidence,runWorker}));
  if(!limited||faultProbe)checks.push(...await installedFaultChecks({e,tenant,root,main,api,people,evidence,runWorker,finish,secondInput,support}));
  if(!limited)checks.push(await applicationS8Proof({e,tenant,root,main,second,api,people,evidence}));
  const final=ok(await api('analyst','read',{applicationId:main.id,limit:100}));
+ checks.push({id:'final-common-envelope-after-lifecycle',...await checkInstalledEnvelope(e,final,tenant,evidence)});
+ await artifact(evidence,'complete-common-envelope.json',{status:'PASS_INSTALLED_COMMON_ENVELOPE',checks:checks.filter(check=>check.id.includes('common-envelope')),package:final.package});
  const raw=(await e.admin.query('SELECT id,type,status,claim_fence,attempts,protocol_version FROM finnor_os.jobs WHERE tenant_id=$1 ORDER BY accepted_at',[tenant])).rows;
  const deliveries=(await e.admin.query('SELECT d.id,d.job_id,d.claim_fence,d.worker_id,d.outcome FROM finnor_os.job_delivery_attempts d JOIN finnor_os.jobs j ON j.id=d.job_id WHERE j.tenant_id=$1 ORDER BY d.started_at',[tenant])).rows;
  assert(raw.some(j=>j.type==='build_enterprise_application_v1'&&j.status==='completed'));assert(deliveries.every(d=>['completed','known_failed','capacity_deferred','lease_lost'].includes(d.outcome)));

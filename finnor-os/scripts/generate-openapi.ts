@@ -292,8 +292,15 @@ const s = (schema: z.ZodTypeAny) => zodToJsonSchema(schema, { $refStrategy: "non
 const json = (schema: z.ZodTypeAny) => ({ content: { "application/json": { schema: s(schema) } } });
 // Named components preserve the recursive expression language. Inlining it
 // with refStrategy "none" would silently turn nested expressions into "any".
-const applicationSchema=(schema:z.ZodTypeAny)=>zodToJsonSchema(schema,{$refStrategy:"none",target:"openApi3",
- override:def=>def===ApplicationExpressionSchema._def?{$ref:"#/components/schemas/X3Expression"}:ignoreOverride});
+const applicationSchema=(schema:z.ZodTypeAny)=>{
+ // This installed converter has no 3.1 target. Its JSON Schema vocabulary
+ // supplies numeric exclusive bounds and null unions, unlike openApi3 (3.0).
+ const converted=zodToJsonSchema(schema,{$refStrategy:"none",target:"jsonSchema7",
+  override:def=>def===ApplicationExpressionSchema._def?{$ref:"#/components/schemas/X3Expression"}:ignoreOverride});
+ // These compatible keywords inherit the document's OpenAPI 3.1 dialect.
+ delete converted.$schema;
+ return converted;
+};
 const applicationComponents={schemas:Object.fromEntries([
  ...Object.entries(APPLICATION_OPERATION_SCHEMAS).map(([name,schema])=>[name,applicationSchema(schema)]),
  ["X3Expression",applicationSchema((ApplicationExpressionSchema._def as z.ZodLazyDef).getter())],

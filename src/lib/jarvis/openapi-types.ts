@@ -1,4 +1,4 @@
-// Generated from finnor-os/openapi.json, SHA-256 86bdaf1e6a0d0e04d0d91a37833650acfe4fb037ca72ea32704e8d3d2c1da79a.
+// Generated from finnor-os/openapi.json, SHA-256 9f524907f0b9da951d22e6d8664befea19a57f70d54077a4f22351ff6685c893.
 export interface paths {
     "/api/live-controls": {
         parameters: {
@@ -33148,7 +33148,7 @@ export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
         "application-submit": {
-            /** @enum {string} */
+            /** @constant */
             schema: "finnor.x3.application-request.v1";
             root: {
                 /** @enum {string} */
@@ -33161,9 +33161,9 @@ export interface components {
             /** Format: uuid */
             workInputId?: string;
             specification?: {
-                /** @enum {string} */
+                /** @constant */
                 schema: "finnor.business-specification.v1";
-                /** @enum {string} */
+                /** @constant */
                 profile: "PE_FIRM_TYPED_APPLICATION_V1";
                 owner: {
                     id: string;
@@ -33172,7 +33172,7 @@ export interface components {
                 id: string;
                 version: string;
                 title: string;
-                /** @enum {string} */
+                /** @constant */
                 family: "PE_FIRM_OPERATIONS";
                 model: {
                     currencies: string[];
@@ -33191,7 +33191,7 @@ export interface components {
                             title: string;
                             required: boolean;
                             allowUnknown: boolean;
-                            /** @enum {string} */
+                            /** @constant */
                             type: "text";
                             maxLength: number;
                         } | {
@@ -33199,14 +33199,14 @@ export interface components {
                             title: string;
                             required: boolean;
                             allowUnknown: boolean;
-                            /** @enum {string} */
+                            /** @constant */
                             type: "boolean";
                         } | {
                             id: string;
                             title: string;
                             required: boolean;
                             allowUnknown: boolean;
-                            /** @enum {string} */
+                            /** @constant */
                             type: "enum";
                             options: string[];
                         } | {
@@ -33214,35 +33214,35 @@ export interface components {
                             title: string;
                             required: boolean;
                             allowUnknown: boolean;
-                            /** @enum {string} */
+                            /** @constant */
                             type: "quantity";
                         } | {
                             id: string;
                             title: string;
                             required: boolean;
                             allowUnknown: boolean;
-                            /** @enum {string} */
+                            /** @constant */
                             type: "quantity-list";
                         } | {
                             id: string;
                             title: string;
                             required: boolean;
                             allowUnknown: boolean;
-                            /** @enum {string} */
+                            /** @constant */
                             type: "evidence";
                         } | {
                             id: string;
                             title: string;
                             required: boolean;
                             allowUnknown: boolean;
-                            /** @enum {string} */
+                            /** @constant */
                             type: "reference";
                         } | {
                             id: string;
                             title: string;
                             required: boolean;
                             allowUnknown: boolean;
-                            /** @enum {string} */
+                            /** @constant */
                             type: "relation";
                             entityId: string;
                         })[];
@@ -33324,11 +33324,11 @@ export interface components {
                             state: string;
                             values: {
                                 [key: string]: string | boolean | {
-                                    /** @enum {string} */
+                                    /** @constant */
                                     kind: "UNKNOWN";
                                     reason: string;
                                 } | {
-                                    /** @enum {string} */
+                                    /** @constant */
                                     kind: "QUANTITY";
                                     amount: string;
                                     currency: string;
@@ -33340,12 +33340,12 @@ export interface components {
                                     };
                                     units: string;
                                     time: {
-                                        /** @enum {string} */
+                                        /** @constant */
                                         kind: "AS_OF";
                                         /** Format: date-time */
                                         asOf: string;
                                     } | {
-                                        /** @enum {string} */
+                                        /** @constant */
                                         kind: "PERIOD";
                                         /** Format: date-time */
                                         start: string;
@@ -33354,10 +33354,10 @@ export interface components {
                                     };
                                     accountingBasis: string;
                                 } | {
-                                    /** @enum {string} */
+                                    /** @constant */
                                     kind: "QUANTITY_LIST";
                                     entries: {
-                                        /** @enum {string} */
+                                        /** @constant */
                                         kind: "QUANTITY";
                                         amount: string;
                                         currency: string;
@@ -33369,12 +33369,12 @@ export interface components {
                                         };
                                         units: string;
                                         time: {
-                                            /** @enum {string} */
+                                            /** @constant */
                                             kind: "AS_OF";
                                             /** Format: date-time */
                                             asOf: string;
                                         } | {
-                                            /** @enum {string} */
+                                            /** @constant */
                                             kind: "PERIOD";
                                             /** Format: date-time */
                                             start: string;
@@ -33384,13 +33384,13 @@ export interface components {
                                         accountingBasis: string;
                                     }[];
                                 } | {
-                                    /** @enum {string} */
+                                    /** @constant */
                                     kind: "EVIDENCE";
                                     sourceId: string;
                                     versionId: string;
                                     contentDigest: string;
                                 } | {
-                                    /** @enum {string} */
+                                    /** @constant */
                                     kind: "RELATION";
                                     entityId: string;
                                     reference: {
@@ -33425,11 +33425,11 @@ export interface components {
                         };
                         input: {
                             [key: string]: string | boolean | {
-                                /** @enum {string} */
+                                /** @constant */
                                 kind: "UNKNOWN";
                                 reason: string;
                             } | {
-                                /** @enum {string} */
+                                /** @constant */
                                 kind: "QUANTITY";
                                 amount: string;
                                 currency: string;
@@ -33441,12 +33441,12 @@ export interface components {
                                 };
                                 units: string;
                                 time: {
-                                    /** @enum {string} */
+                                    /** @constant */
                                     kind: "AS_OF";
                                     /** Format: date-time */
                                     asOf: string;
                                 } | {
-                                    /** @enum {string} */
+                                    /** @constant */
                                     kind: "PERIOD";
                                     /** Format: date-time */
                                     start: string;
@@ -33455,10 +33455,10 @@ export interface components {
                                 };
                                 accountingBasis: string;
                             } | {
-                                /** @enum {string} */
+                                /** @constant */
                                 kind: "QUANTITY_LIST";
                                 entries: {
-                                    /** @enum {string} */
+                                    /** @constant */
                                     kind: "QUANTITY";
                                     amount: string;
                                     currency: string;
@@ -33470,12 +33470,12 @@ export interface components {
                                     };
                                     units: string;
                                     time: {
-                                        /** @enum {string} */
+                                        /** @constant */
                                         kind: "AS_OF";
                                         /** Format: date-time */
                                         asOf: string;
                                     } | {
-                                        /** @enum {string} */
+                                        /** @constant */
                                         kind: "PERIOD";
                                         /** Format: date-time */
                                         start: string;
@@ -33485,13 +33485,13 @@ export interface components {
                                     accountingBasis: string;
                                 }[];
                             } | {
-                                /** @enum {string} */
+                                /** @constant */
                                 kind: "EVIDENCE";
                                 sourceId: string;
                                 versionId: string;
                                 contentDigest: string;
                             } | {
-                                /** @enum {string} */
+                                /** @constant */
                                 kind: "RELATION";
                                 entityId: string;
                                 reference: {
@@ -33533,14 +33533,14 @@ export interface components {
                             scopeId: string;
                         }[];
                         currentEvidence: {
-                            /** @enum {string} */
+                            /** @constant */
                             kind: "EVIDENCE";
                             sourceId: string;
                             versionId: string;
                             contentDigest: string;
                         }[];
                         currentRelations: {
-                            /** @enum {string} */
+                            /** @constant */
                             kind: "RELATION";
                             entityId: string;
                             reference: {
@@ -33573,9 +33573,9 @@ export interface components {
             /** Format: uuid */
             applicationId: string;
             specification?: {
-                /** @enum {string} */
+                /** @constant */
                 schema: "finnor.business-specification.v1";
-                /** @enum {string} */
+                /** @constant */
                 profile: "PE_FIRM_TYPED_APPLICATION_V1";
                 owner: {
                     id: string;
@@ -33584,7 +33584,7 @@ export interface components {
                 id: string;
                 version: string;
                 title: string;
-                /** @enum {string} */
+                /** @constant */
                 family: "PE_FIRM_OPERATIONS";
                 model: {
                     currencies: string[];
@@ -33603,7 +33603,7 @@ export interface components {
                             title: string;
                             required: boolean;
                             allowUnknown: boolean;
-                            /** @enum {string} */
+                            /** @constant */
                             type: "text";
                             maxLength: number;
                         } | {
@@ -33611,14 +33611,14 @@ export interface components {
                             title: string;
                             required: boolean;
                             allowUnknown: boolean;
-                            /** @enum {string} */
+                            /** @constant */
                             type: "boolean";
                         } | {
                             id: string;
                             title: string;
                             required: boolean;
                             allowUnknown: boolean;
-                            /** @enum {string} */
+                            /** @constant */
                             type: "enum";
                             options: string[];
                         } | {
@@ -33626,35 +33626,35 @@ export interface components {
                             title: string;
                             required: boolean;
                             allowUnknown: boolean;
-                            /** @enum {string} */
+                            /** @constant */
                             type: "quantity";
                         } | {
                             id: string;
                             title: string;
                             required: boolean;
                             allowUnknown: boolean;
-                            /** @enum {string} */
+                            /** @constant */
                             type: "quantity-list";
                         } | {
                             id: string;
                             title: string;
                             required: boolean;
                             allowUnknown: boolean;
-                            /** @enum {string} */
+                            /** @constant */
                             type: "evidence";
                         } | {
                             id: string;
                             title: string;
                             required: boolean;
                             allowUnknown: boolean;
-                            /** @enum {string} */
+                            /** @constant */
                             type: "reference";
                         } | {
                             id: string;
                             title: string;
                             required: boolean;
                             allowUnknown: boolean;
-                            /** @enum {string} */
+                            /** @constant */
                             type: "relation";
                             entityId: string;
                         })[];
@@ -33736,11 +33736,11 @@ export interface components {
                             state: string;
                             values: {
                                 [key: string]: string | boolean | {
-                                    /** @enum {string} */
+                                    /** @constant */
                                     kind: "UNKNOWN";
                                     reason: string;
                                 } | {
-                                    /** @enum {string} */
+                                    /** @constant */
                                     kind: "QUANTITY";
                                     amount: string;
                                     currency: string;
@@ -33752,12 +33752,12 @@ export interface components {
                                     };
                                     units: string;
                                     time: {
-                                        /** @enum {string} */
+                                        /** @constant */
                                         kind: "AS_OF";
                                         /** Format: date-time */
                                         asOf: string;
                                     } | {
-                                        /** @enum {string} */
+                                        /** @constant */
                                         kind: "PERIOD";
                                         /** Format: date-time */
                                         start: string;
@@ -33766,10 +33766,10 @@ export interface components {
                                     };
                                     accountingBasis: string;
                                 } | {
-                                    /** @enum {string} */
+                                    /** @constant */
                                     kind: "QUANTITY_LIST";
                                     entries: {
-                                        /** @enum {string} */
+                                        /** @constant */
                                         kind: "QUANTITY";
                                         amount: string;
                                         currency: string;
@@ -33781,12 +33781,12 @@ export interface components {
                                         };
                                         units: string;
                                         time: {
-                                            /** @enum {string} */
+                                            /** @constant */
                                             kind: "AS_OF";
                                             /** Format: date-time */
                                             asOf: string;
                                         } | {
-                                            /** @enum {string} */
+                                            /** @constant */
                                             kind: "PERIOD";
                                             /** Format: date-time */
                                             start: string;
@@ -33796,13 +33796,13 @@ export interface components {
                                         accountingBasis: string;
                                     }[];
                                 } | {
-                                    /** @enum {string} */
+                                    /** @constant */
                                     kind: "EVIDENCE";
                                     sourceId: string;
                                     versionId: string;
                                     contentDigest: string;
                                 } | {
-                                    /** @enum {string} */
+                                    /** @constant */
                                     kind: "RELATION";
                                     entityId: string;
                                     reference: {
@@ -33837,11 +33837,11 @@ export interface components {
                         };
                         input: {
                             [key: string]: string | boolean | {
-                                /** @enum {string} */
+                                /** @constant */
                                 kind: "UNKNOWN";
                                 reason: string;
                             } | {
-                                /** @enum {string} */
+                                /** @constant */
                                 kind: "QUANTITY";
                                 amount: string;
                                 currency: string;
@@ -33853,12 +33853,12 @@ export interface components {
                                 };
                                 units: string;
                                 time: {
-                                    /** @enum {string} */
+                                    /** @constant */
                                     kind: "AS_OF";
                                     /** Format: date-time */
                                     asOf: string;
                                 } | {
-                                    /** @enum {string} */
+                                    /** @constant */
                                     kind: "PERIOD";
                                     /** Format: date-time */
                                     start: string;
@@ -33867,10 +33867,10 @@ export interface components {
                                 };
                                 accountingBasis: string;
                             } | {
-                                /** @enum {string} */
+                                /** @constant */
                                 kind: "QUANTITY_LIST";
                                 entries: {
-                                    /** @enum {string} */
+                                    /** @constant */
                                     kind: "QUANTITY";
                                     amount: string;
                                     currency: string;
@@ -33882,12 +33882,12 @@ export interface components {
                                     };
                                     units: string;
                                     time: {
-                                        /** @enum {string} */
+                                        /** @constant */
                                         kind: "AS_OF";
                                         /** Format: date-time */
                                         asOf: string;
                                     } | {
-                                        /** @enum {string} */
+                                        /** @constant */
                                         kind: "PERIOD";
                                         /** Format: date-time */
                                         start: string;
@@ -33897,13 +33897,13 @@ export interface components {
                                     accountingBasis: string;
                                 }[];
                             } | {
-                                /** @enum {string} */
+                                /** @constant */
                                 kind: "EVIDENCE";
                                 sourceId: string;
                                 versionId: string;
                                 contentDigest: string;
                             } | {
-                                /** @enum {string} */
+                                /** @constant */
                                 kind: "RELATION";
                                 entityId: string;
                                 reference: {
@@ -33945,14 +33945,14 @@ export interface components {
                             scopeId: string;
                         }[];
                         currentEvidence: {
-                            /** @enum {string} */
+                            /** @constant */
                             kind: "EVIDENCE";
                             sourceId: string;
                             versionId: string;
                             contentDigest: string;
                         }[];
                         currentRelations: {
-                            /** @enum {string} */
+                            /** @constant */
                             kind: "RELATION";
                             entityId: string;
                             reference: {
@@ -33973,21 +33973,20 @@ export interface components {
             /** Format: uuid */
             specificationUploadId?: string;
             idempotencyKey: string;
-            /** Format: uuid */
             expectedReleaseId: string | null;
             /** @enum {string} */
             changeClass: "BUSINESS_RULES_UNITS" | "IDENTITY_AUTHORIZATION_CONCURRENCY" | "DEPENDENCY_SCHEMA_DEPLOYMENT";
             migration: {
-                /** @enum {string} */
+                /** @constant */
                 kind: "ADD_FIELD";
                 entityId: string;
                 field: string;
                 value: string | boolean | {
-                    /** @enum {string} */
+                    /** @constant */
                     kind: "UNKNOWN";
                     reason: string;
                 } | {
-                    /** @enum {string} */
+                    /** @constant */
                     kind: "QUANTITY";
                     amount: string;
                     currency: string;
@@ -33999,12 +33998,12 @@ export interface components {
                     };
                     units: string;
                     time: {
-                        /** @enum {string} */
+                        /** @constant */
                         kind: "AS_OF";
                         /** Format: date-time */
                         asOf: string;
                     } | {
-                        /** @enum {string} */
+                        /** @constant */
                         kind: "PERIOD";
                         /** Format: date-time */
                         start: string;
@@ -34013,10 +34012,10 @@ export interface components {
                     };
                     accountingBasis: string;
                 } | {
-                    /** @enum {string} */
+                    /** @constant */
                     kind: "QUANTITY_LIST";
                     entries: {
-                        /** @enum {string} */
+                        /** @constant */
                         kind: "QUANTITY";
                         amount: string;
                         currency: string;
@@ -34028,12 +34027,12 @@ export interface components {
                         };
                         units: string;
                         time: {
-                            /** @enum {string} */
+                            /** @constant */
                             kind: "AS_OF";
                             /** Format: date-time */
                             asOf: string;
                         } | {
-                            /** @enum {string} */
+                            /** @constant */
                             kind: "PERIOD";
                             /** Format: date-time */
                             start: string;
@@ -34043,13 +34042,13 @@ export interface components {
                         accountingBasis: string;
                     }[];
                 } | {
-                    /** @enum {string} */
+                    /** @constant */
                     kind: "EVIDENCE";
                     sourceId: string;
                     versionId: string;
                     contentDigest: string;
                 } | {
-                    /** @enum {string} */
+                    /** @constant */
                     kind: "RELATION";
                     entityId: string;
                     reference: {
@@ -34089,11 +34088,11 @@ export interface components {
             };
             input: {
                 [key: string]: string | boolean | {
-                    /** @enum {string} */
+                    /** @constant */
                     kind: "UNKNOWN";
                     reason: string;
                 } | {
-                    /** @enum {string} */
+                    /** @constant */
                     kind: "QUANTITY";
                     amount: string;
                     currency: string;
@@ -34105,12 +34104,12 @@ export interface components {
                     };
                     units: string;
                     time: {
-                        /** @enum {string} */
+                        /** @constant */
                         kind: "AS_OF";
                         /** Format: date-time */
                         asOf: string;
                     } | {
-                        /** @enum {string} */
+                        /** @constant */
                         kind: "PERIOD";
                         /** Format: date-time */
                         start: string;
@@ -34119,10 +34118,10 @@ export interface components {
                     };
                     accountingBasis: string;
                 } | {
-                    /** @enum {string} */
+                    /** @constant */
                     kind: "QUANTITY_LIST";
                     entries: {
-                        /** @enum {string} */
+                        /** @constant */
                         kind: "QUANTITY";
                         amount: string;
                         currency: string;
@@ -34134,12 +34133,12 @@ export interface components {
                         };
                         units: string;
                         time: {
-                            /** @enum {string} */
+                            /** @constant */
                             kind: "AS_OF";
                             /** Format: date-time */
                             asOf: string;
                         } | {
-                            /** @enum {string} */
+                            /** @constant */
                             kind: "PERIOD";
                             /** Format: date-time */
                             start: string;
@@ -34149,13 +34148,13 @@ export interface components {
                         accountingBasis: string;
                     }[];
                 } | {
-                    /** @enum {string} */
+                    /** @constant */
                     kind: "EVIDENCE";
                     sourceId: string;
                     versionId: string;
                     contentDigest: string;
                 } | {
-                    /** @enum {string} */
+                    /** @constant */
                     kind: "RELATION";
                     entityId: string;
                     reference: {
@@ -34217,14 +34216,12 @@ export interface components {
         "application-cancel": {
             /** Format: uuid */
             applicationId: string;
-            /** Format: uuid */
             expectedReleaseId: string | null;
             idempotencyKey: string;
         };
         "application-rollback": {
             /** Format: uuid */
             applicationId: string;
-            /** Format: uuid */
             expectedReleaseId: string | null;
             idempotencyKey: string;
             /** Format: uuid */
@@ -34297,14 +34294,14 @@ export interface components {
             };
         };
         X3Expression: {
-            /** @enum {string} */
+            /** @constant */
             op: "literal";
             value: string | boolean | {
-                /** @enum {string} */
+                /** @constant */
                 kind: "UNKNOWN";
                 reason: string;
             } | {
-                /** @enum {string} */
+                /** @constant */
                 kind: "QUANTITY";
                 amount: string;
                 currency: string;
@@ -34316,12 +34313,12 @@ export interface components {
                 };
                 units: string;
                 time: {
-                    /** @enum {string} */
+                    /** @constant */
                     kind: "AS_OF";
                     /** Format: date-time */
                     asOf: string;
                 } | {
-                    /** @enum {string} */
+                    /** @constant */
                     kind: "PERIOD";
                     /** Format: date-time */
                     start: string;
@@ -34330,10 +34327,10 @@ export interface components {
                 };
                 accountingBasis: string;
             } | {
-                /** @enum {string} */
+                /** @constant */
                 kind: "QUANTITY_LIST";
                 entries: {
-                    /** @enum {string} */
+                    /** @constant */
                     kind: "QUANTITY";
                     amount: string;
                     currency: string;
@@ -34345,12 +34342,12 @@ export interface components {
                     };
                     units: string;
                     time: {
-                        /** @enum {string} */
+                        /** @constant */
                         kind: "AS_OF";
                         /** Format: date-time */
                         asOf: string;
                     } | {
-                        /** @enum {string} */
+                        /** @constant */
                         kind: "PERIOD";
                         /** Format: date-time */
                         start: string;
@@ -34360,13 +34357,13 @@ export interface components {
                     accountingBasis: string;
                 }[];
             } | {
-                /** @enum {string} */
+                /** @constant */
                 kind: "EVIDENCE";
                 sourceId: string;
                 versionId: string;
                 contentDigest: string;
             } | {
-                /** @enum {string} */
+                /** @constant */
                 kind: "RELATION";
                 entityId: string;
                 reference: {
@@ -34382,51 +34379,51 @@ export interface components {
                 contentDigest: string;
             };
         } | {
-            /** @enum {string} */
+            /** @constant */
             op: "field";
             /** @enum {string} */
             source: "record" | "input";
             field: string;
         } | {
-            /** @enum {string} */
+            /** @constant */
             op: "sum";
             value: components["schemas"]["X3Expression"];
         } | {
-            /** @enum {string} */
+            /** @constant */
             op: "known";
             value: components["schemas"]["X3Expression"];
         } | {
-            /** @enum {string} */
+            /** @constant */
             op: "current-evidence";
             value: components["schemas"]["X3Expression"];
         } | {
-            /** @enum {string} */
+            /** @constant */
             op: "not";
             value: components["schemas"]["X3Expression"];
         } | {
-            /** @enum {string} */
+            /** @constant */
             op: "equal";
             left: components["schemas"]["X3Expression"];
             right: components["schemas"]["X3Expression"];
         } | {
-            /** @enum {string} */
+            /** @constant */
             op: "same-quantity";
             left: components["schemas"]["X3Expression"];
             right: components["schemas"]["X3Expression"];
         } | {
-            /** @enum {string} */
+            /** @constant */
             op: "difference";
             left: components["schemas"]["X3Expression"];
             right: components["schemas"]["X3Expression"];
         } | {
-            /** @enum {string} */
+            /** @constant */
             op: "compare";
             /** @enum {string} */
             comparison: "lt" | "lte" | "eq" | "gte" | "gt";
             left: components["schemas"]["X3Expression"];
             right: components["schemas"]["X3Expression"];
         } | {
-            /** @enum {string} */
+            /** @constant */
             op: "currency-threshold";
             value: components["schemas"]["X3Expression"];
             /** @enum {string} */
@@ -34440,15 +34437,15 @@ export interface components {
                 timeMode: "AS_OF" | "PERIOD";
             }[];
         } | {
-            /** @enum {string} */
+            /** @constant */
             op: "state";
             is: string;
         } | {
-            /** @enum {string} */
+            /** @constant */
             op: "all";
             args: components["schemas"]["X3Expression"][];
         } | {
-            /** @enum {string} */
+            /** @constant */
             op: "any";
             args: components["schemas"]["X3Expression"][];
         };

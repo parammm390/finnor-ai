@@ -1,253 +1,149 @@
 {
-  "schema": "finnor.x3.delivery-verification.v1",
+  "schema": "finnor.x3.delivery-verification.v2",
+  "scope": "FRONTIER5.X3; X4 reference only",
+  "profile": "PE_FIRM_TYPED_APPLICATION_V1",
   "base": "c12665661c1a536a2350aeb8abc01ac42aa16548",
   "branch": "codex/frontier5-x3-enterprise-application-synthesizer",
   "sourceRuntime": {
     "node": "v22.23.3",
-    "jobId": "c96f9a8f-e3bd-437b-9ee5-11c301662e15",
     "platform": "linux",
-    "workerId": "x3-physical-55247",
-    "claimFence": 1,
+    "architecture": "x64",
+    "sourceDigest": "acf454cc1ab8d6a7cbde23ff57d5c57f24e38155946fb65a4afced82c8da9b46",
     "lockDigest": "aebbbac3741b6cf7f2424447bf2bc12524eab526e041b6baada5d167003855c5",
     "imageDigest": null,
-    "architecture": "x64",
-    "sourceDigest": "5c25b6be4fbc665e5a9ba27e4f7044ccc8a917ab1fcda7b3d9172fa08ffec0c1",
-    "deliveryAttemptId": "02d63327-9a82-4a05-ba15-777657151ce9"
+    "pinnedFiles": 50,
+    "installedJobId": "d407e2b1-f8f1-4f0c-be83-06806d62ea4f",
+    "workerId": "x3-physical-73281",
+    "deliveryAttemptId": "da25768b-9bd4-49dc-a378-409ae93074ad"
   },
   "acceptance": {
     "architectureCommit": "4058f5ceb3d1fbbc594c447152860b96f92f07f1",
-    "integrationCommit": "77b1b53fcc350b0dd02ed326e108bc0035bb4b97",
+    "secondApplicationCommit": "77b1b53fcc350b0dd02ed326e108bc0035bb4b97",
     "freezeSha256": "f178cecbc327e551c805ce6354cb9e99dc79e6d49ae6c11bb5090ee62d5f31cc",
+    "expectationsChanged": false,
+    "currentRequirementMap": "verification-ledger.json",
+    "historicalProvisionalMappingAuthoritative": false,
     "caseCensus": {
       "INSTALLED_LITERAL_PROJECTION_MATCH": 30,
       "STRICTER_TYPED_BOUNDARY_REFUSAL": 4,
       "OWNER_BOUNDARY_DENIAL": 2
     },
-    "provisionalFamilyMapping": true,
     "protectedCustody": false
   },
   "gates": {
-    "DESIGNED": "COMPLETE",
+    "DESIGNED": "COMPLETE_BOUNDED_PROFILE",
     "CODE_COMPLETE": "IMPLEMENTED_TYPED_PROFILE",
-    "E2E_DEV_VERIFIED": "PASS_FINAL_EMITTED_TYPED_PROFILE_NOT_PROTECTED_QUALIFICATION",
-    "DOMAIN_QUALIFIED": "NOT_RUN",
+    "installedLifecycleMountedOwner": "PASS_SEALED_DEVELOPMENT",
+    "E2E_DEV_VERIFIED": "REQUIRES_DELIVERED_RECONSTRUCTION_RESULT_ALSO",
+    "standaloneReconstruction": {
+      "status": "READ_EXTERNAL_DELIVERY_RECEIPT",
+      "receipt": "reconstruction/result.json",
+      "requiredStatus": "PASS_COMPLETE_INSTALLED_RECONSTRUCTION",
+      "binding": "EXACT_ARCHIVE_HEAD_TREE_LOCKS_STAMP_AND_COMPLETE_INSTALLED_PARITY",
+      "sourceDocumentCannotPredeclareItsOwnFutureResult": true
+    },
+    "mandatoryMatchedDiagnosticJ1": "BLOCKED_EQUIPPED_COMPATIBLE_COMPARATOR_AND_BASELINE_NOT_SUPPLIED",
+    "nativeMission": "BLOCKED_NATIVE_ENTRY_REJECTED_NO_BYPASS",
+    "DOMAIN_QUALIFIED": "NOT_RUN_PROTECTED_CUSTODY_NOT_SUPPLIED",
+    "independentProtectedS8": "NOT_RUN",
     "PRODUCTION_ACTIVE": false,
     "operational100x": "NOT_RUN",
     "financial": "NOT_RUN",
-    "nativeMission": "BLOCKED_NO_NATIVE_ENTRY_TOOL",
-    "containerArm64": "NOT_RUN"
+    "containerArm64CleanOsHosted": "NOT_RUN",
+    "wholeRequestUnconditionallyComplete": false
   },
   "observations": {
-    "independentlySpecifiedApplications": 2,
+    "independentlySpecifiedApplicationModels": 2,
     "protectedApplications": 0,
     "protectedMaintenanceEpisodes": 0,
-    "installedChecks": [
-      "existing-company-brain-errors-preserved",
-      "maintenance-BUSINESS_RULES_UNITS",
-      "maintenance-BUSINESS_RULES_UNITS",
-      "maintenance-BUSINESS_RULES_UNITS",
-      "maintenance-BUSINESS_RULES_UNITS",
-      "independent-second-application",
-      "maintenance-IDENTITY_AUTHORIZATION_CONCURRENCY",
-      "maintenance-DEPENDENCY_SCHEMA_DEPLOYMENT",
-      "maintenance-DEPENDENCY_SCHEMA_DEPLOYMENT",
-      "second-application-frozen-negatives",
-      "sixteen-clients-and-idempotency",
-      "schema-migration-unsafe-rollback-forward-repair-safe-rollback",
-      "p7-affected-closure",
-      "governor-defers-before-physical-build",
-      "staged-process-replacement-retains-original-allocation",
-      "cancel-fences-staged-installation",
-      "deadline-body-and-private-asset-bounds",
-      "independent-decimal-and-negated-unknown-host-scope-and-all-source-pins",
-      "sixty-records-with-128-exact-entries-maintain-and-roll-back",
-      "foreign-root-migration-default-refuses-atomically",
-      "temporary-upload-consumption-idempotency-and-expiry",
-      "canonical-tenant-metadata-inventory-and-six-forced-rls-tables",
-      "cumulative-monotonic-database-deadline",
-      "self-consistent-mutated-instruction-and-omitted-action-refused",
-      "expired-old-physical-delivery-cannot-publish-over-replacement",
-      "original-build-mutation-and-deadline-allocation-cannot-renew",
-      "retained-storage-and-unsupported-guest-input-refused",
-      "ordinary-runtime-explicit-production-environment-refuses-x3",
-      "actual-production-bootstrap-refuses-before-x3-handler",
-      "typed-s8-application-lifecycle"
-    ],
-    "physicalWorkers": 61,
+    "independentCases": 36,
+    "installedCheckEntries": 39,
+    "physicalWorkers": 64,
     "jobs": 52,
-    "deliveries": 56,
+    "deliveries": 57,
     "mainApplicationResources": {
       "builds": 6,
       "mutations": 90,
-      "dataBytes": 2100901,
+      "dataBytes": 2105884,
       "releases": 6,
-      "deadlineAt": "2026-10-18T11:33:01.473Z"
+      "originalDeadlineAt": "2026-10-18T14:14:04.109Z"
     },
-    "apiProcessReplaced": true,
-    "sourceFiles": 49,
-    "s8": {
-      "initiallyCurrent": true,
-      "policyOwnerReplyCurrent": true,
-      "policyExpiredProjectionCurrent": false,
-      "expiredProposalStatus": 409,
-      "priorLocalProposalEvents": 1,
-      "afterExpiredLocalProposalEvents": 1,
-      "workChangedCurrent": false,
-      "ownerBeforeRevocation": true,
-      "ownerAfterRevocation": false,
-      "expiredEvaluatorAdmissionStatus": 403,
-      "expiredEvaluatorAdmissionCode": "INDEPENDENT_SIGNATURE_OR_AUTHORITY_INVALID",
-      "expiredEvaluatorCurrent": false,
-      "expiredEvaluatorAdmissionWritten": false,
-      "separateDisposableExpiryJournal": true
-    },
-    "effects": {
-      "literalPinNotStoredInRecord": true,
-      "uncertainFault": "OWNED_API_STOP_AFTER_GENUINE_S6_COMMIT_BEFORE_BLOCKED_LOCAL_COMPLETION",
-      "pendingRetained": true,
-      "nativeCount": 1,
-      "nativeStatus": "compiled",
-      "nativeActionStatus": "draft",
-      "finalPending": null,
-      "settlementEstablished": false
-    },
-    "browserSteps": [
-      "actual-login-and-mounted-work",
-      "consecutive-identical-creation-uses-new-logical-invocations",
-      "construct-create-transition-and-role-denial",
-      "definitive-refusal-does-not-cache-role-denial-after-current-grant",
-      "mounted-immutable-history-retains-literal-and-commands",
-      "declaration-only-browser-maintenance-preserves-record",
-      "generated-text-boolean-enum-explicit-unknown",
-      "stale-history-success-cannot-appear-for-new-record",
-      "stale-history-transport-failure-cannot-clear-new-record",
-      "full-browser-reload-preserves-canonical-record",
-      "twenty-one-real-records-and-next-page",
-      "spa-work-switch-fences-delayed-committed-mutation-refresh",
-      "canonical-identity-revocation-clears-business-forms"
-    ],
-    "interfaceConsumer": {
-      "status": "PASS_EXISTING_INTERFACE_CONSUMER_TRANSPORT",
-      "authBypass": false,
-      "independentApplicationPasses": 0,
-      "protectedAdmission": false
-    }
+    "actorAndApproverExpiry": "ACTUAL_DATABASE_WRITE_GATE_409_NO_COMMITTED_RECORD_OR_EVENT_CHANGE",
+    "intakeRevocation": "ACTUAL_WORK_INTAKE_FINAL_ACCEPTANCE_REFUSAL_ZERO_APPLICATIONS",
+    "browserFull": "PASS_LOCAL_BROWSER",
+    "browserFocused": "PASS_LOCAL_BROWSER_FOCUSED_ROTATION_PAGINATION",
+    "effect": "PASS_DEVELOPMENT",
+    "effectMounted": "PASS_SAME_WORK_MOUNTED_EFFECT",
+    "effectUnit": "USD:minor:RECORDED_MINOR",
+    "effectDose": "0.15",
+    "effectScope": "PERMITTED_DISPOSABLE_LOOPBACK_TLS_TARGET_NOT_PROTECTED_OR_PRODUCTION",
+    "S5SettlementEstablished": true,
+    "financialOrCausalSuccessEstablished": false,
+    "interface": "PASS_EXISTING_INTERFACE_CONSUMER_TRANSPORT",
+    "apiProcessReplaced": true
   },
-  "evidenceRoot": "/home/factory-user/x3-delivery/evidence",
-  "artifacts": [
-    {
-      "path": "built-installed-12/installed-summary.json",
-      "sha256": "721f7d54cbec8ab4ed98f992e44955538d6f75d0a59b8d072e464819eb5342ed"
-    },
-    {
-      "path": "built-installed-12/independent-cases.json",
-      "sha256": "0abe4ec0db7230de70659b73861f1567ef1f9f651a8b6c081b0137f038c62d4f"
-    },
-    {
-      "path": "built-installed-12/installed-maintenance-recovery-resources.json",
-      "sha256": "c70bdb1d7144bb654de12c6a0ad6a393f1e97d823e51d289720bbd722c3aa05c"
-    },
-    {
-      "path": "built-installed-12/installed-review-boundaries.json",
-      "sha256": "41e1b1e45b15ba04dd5d057de6c98df93b34d04d50235da5c7e4d19ae722a87b"
-    },
-    {
-      "path": "built-installed-12/installed-faults-and-bounds.json",
-      "sha256": "342a1c5ce2535271ceb876bc0230e893f6736dd90d93fa68081d30933e49783d"
-    },
-    {
-      "path": "built-installed-12/s8-application.json",
-      "sha256": "a04a06f2f779b416ddfbdaf1c882cbfcc2140a272f24a1bb550ad23b1b656412"
-    },
-    {
-      "path": "built-installed-12/s8-evaluator-expiry.json",
-      "sha256": "4f5a5c41200481ab45505942423f3b50a262a41cae76199e1d6fb73b87ba342c"
-    },
-    {
-      "path": "built-installed-12/migration-upgrade-replay.json",
-      "sha256": "730ba40471a39edadbc7b970ea49f3e3072ef9c241ccd6e3ce76c6b8d4fd060d"
-    },
-    {
-      "path": "built-installed-12/built-api-source.json",
-      "sha256": "e542434e226b77ab8ada8c0cd74b04471db5b4be738e4d0ef4b31d7d580351f4"
-    },
-    {
-      "path": "built-effects-8/exact-effect.json",
-      "sha256": "8f99caa4c8f312398ba57c1f89259c7f51a5cad5c7677203f4ec9e6d89a32e15"
-    },
-    {
-      "path": "browser-9/browser-results.json",
-      "sha256": "35caedfe6583c7ed73e643e102402938c2cc94e076de66d01cbc673c4c61908e"
-    },
-    {
-      "path": "browser-9/sql-readback.json",
-      "sha256": "5a74549bf338c3a724b85ae9c6fe2e670bd32e6867290dad292a892ce8494ceb"
-    },
-    {
-      "path": "interface-consumer-2/result.json",
-      "sha256": "b9eb0ec52e3dda53ef8c4c18c50b7751afb048e9a6dfe0d28999cd8fffb9ae6a"
-    },
-    {
-      "path": "legacy-interface-consumer-1/results.json",
-      "sha256": "ff95225c63ba4d1c70f1141b6036928e539ec586fe3e9022f45ca6ed395cc6c3"
-    },
-    {
-      "path": "migration-189/result.json",
-      "sha256": "7d8f14fc6cfd42b5866a13afa745e16f3881f6d16e16f43a86c87f515b1f2212"
-    },
-    {
-      "path": "reference-final.json",
-      "sha256": "1d99b7fe6894f019df93626e03a903f07d55d163cc3380634b19d3cbe4835c61"
-    },
-    {
-      "path": "final-checks/api-build.log",
-      "sha256": "2c4d6b68915526fc43b4430ed20f740eb4ffb129931a7d28b077c8481a933176"
-    }
-  ],
-  "additionalBrowserCoverage": {
-    "campaign": "browser-9",
-    "status": "PASS_LOCAL_BROWSER",
-    "finalSourceCut": true
+  "evidenceRoot": "/home/factory-user/x3-delivery/evidence/completion-cut-3",
+  "receipts": {
+    "installed": "installed-2/installed-summary.json",
+    "authority": "installed-2/completion-authority-boundaries.json",
+    "envelope": "installed-2/complete-common-envelope.json",
+    "completeImmutableExports": "installed-2/release-snapshots/",
+    "s8": "installed-2/s8-application.json",
+    "s8EvaluatorExpiry": "installed-2/s8-evaluator-expiry.json",
+    "browser": "browser-4/browser-results.json",
+    "browserFocused": "browser-focus/browser-focused-results.json",
+    "effect": "effect/exact-effect.json",
+    "dispatch": "effect/dispatch/governed-dispatch.json",
+    "effectMounted": "effect/effect-browser-results.json",
+    "interface": "interface/result.json",
+    "static": "static-verification.json",
+    "campaignTypesFinal": "campaign-types-final-meter.json",
+    "dependencyLicense": "dependency-license.json",
+    "scopedAuditBeforeCommit": "source-evidence-audit-precommit.json"
   },
-  "costs": {
-    "aggregateRss": "NOT_ATTESTED_BY_SHARED_PROCESS_PEAK",
-    "providerMoney": "UNMETERED",
-    "engineeringHuman": "UNMETERED",
+  "resources": {
+    "meter": "Linux /proc 250ms sampled owned PID/start-time descendants",
+    "commandWallBoundMs": 900000,
+    "sampledDescendantRssBoundBytes": 6442450944,
+    "commandLogBoundBytes": 16777216,
+    "mainInstalledWallMs": 304119.44894900004,
+    "mainInstalledSampledAggregatePeakRssBytes": 1682911232,
+    "strictBrowserMeterStatus": "PARTIAL_COMMAND_CLEANUP",
+    "browserBusinessExitCodes": 0,
+    "separateCleanupFollowups": "PASS_EVENTUAL_OWNED_CLEANUP; originals hash-bound and unchanged",
+    "unobservedCleanupIntervalCpuAndPeak": "UNKNOWN",
+    "observedCpu": "LOWER_BOUND",
+    "rss": "SAMPLED_NOT_UNSAMPLED_ATTESTATION; CAN_DOUBLE_COUNT_SHARED_PAGES",
+    "historicEngineeringProviderHostingHumanFullFinancialCosts": "UNKNOWN_NOT_ZERO",
     "no100xOrFinancialClaim": true
   },
-  "audit": "Run scope-x3/verify-handoff.mjs after the implementation commit for final source/history/artifact digests. The output is not a comprehensive security audit.",
-  "sourceChangesRequire": "RESTAMP_REBUILD_RESTART",
-  "retainedFailedAttempts": [
-    {
-      "campaign": "built-installed-10",
-      "reason": "Evidence driver queried nonexistent external_actions instead of canonical domain_actions; fixed and complete12 rerun passes."
-    },
-    {
-      "campaign": "built-installed-11",
-      "reason": "Additional expiry authority correctly refused replacing main S8 responsibility anchor; separate disposable S8/S6 journals used for complete12 negative."
-    },
-    {
-      "campaign": "legacy-interface-consumer-1",
-      "reason": "Full existing P5 worker harness QUEUE_DID_NOT_COMPLETE before changed consumer; no passing full-P5 claim. Separate signed native INTERFACE flow passes; legacy fixture uses dev auth bypass and is not X3 evidence."
-    }
-  ],
-  "review": {
-    "completeReview": "final-1",
-    "finalReconciliation": "final-2",
-    "finalFindings": 9,
-    "resolvedInSource": 9,
-    "finalDriverCorrectionsReviewedInline": true,
-    "sourceReviewNotQualification": true
-  },
   "validation": {
-    "backendTypes": "PASS",
-    "frontendTypes": "PASS",
-    "campaignTypes": "PASS_AFTER_FINAL_FIXTURES",
-    "scopedFrontendAuditLint": "PASS",
-    "emittedApiBuild": "PASS_49_PATH_STAMP",
-    "emittedFrontendBuild": "PASS_BROWSER_9",
-    "generatedContracts": "PASS",
-    "openapiExistingContracts": "PASS_ADDITIVE_15_PATHS_AND_OPERATION_ENUMS",
+    "backendFrontendCampaignAndPhysicalChildTypes": "PASS",
+    "generatedContractsDomainAndMutationInventory": "PASS",
+    "scopedProductAndDeliveryHelperLint": "PASS_ZERO_WARNINGS",
+    "emittedApiBuild": "PASS_50_PATH_STAMP",
+    "emittedFrontendBuilds": "PASS_FULL_FOCUSED_AND_SAME_WORK_EFFECT",
+    "productionAdvisoryReads": "ZERO_REPORTED_AT_OBSERVED_READ_NOT_SECURITY_CLEARANCE",
+    "rootMissingRecordedLicenses": 1,
+    "osMissingRecordedLicenses": 75,
+    "precommitScopedAudit": "PASS_99_SOURCE_50_PINNED_2137_ARTIFACTS_ZERO_PATTERN_FINDINGS",
+    "comprehensiveSecurityCertification": false,
     "postCodeUnitTestsWritten": false
-  }
+  },
+  "review": {
+    "independentReadOnlyGroups": 3,
+    "completionFindings": 8,
+    "resolvedInSourceAndAffectedDevelopmentRuntime": 8,
+    "ordinaryWorkersNotNativeMissions": true,
+    "source": "completion-review-results.md"
+  },
+  "retainedFailures": [
+    "All prior cuts and all failed completion attempts remain under the evidence root.",
+    "completion-cut-3/installed: authority timing fixture changed S8 specimen tenant rights; correct refusal; isolated fixture, fresh COMPLETE installed-2 PASS.",
+    "completion-cut-3/browser through browser-3: readiness, unavailable-state reload and delayed-selection gate ordering failures; fresh browser-4 PASS.",
+    "Strict browser meter partial-cleanup receipts remain partial; separate actual followups confirm eventual cleanup.",
+    "legacy-interface-consumer-1: QUEUE_DID_NOT_COMPLETE before changed consumer, not a passing full P5 harness.",
+    "Actual production managed-secrets bootstrap failure is not proof the X3 handler ran."
+  ],
+  "deliveryRule": "The final external delivery manifest binds the clean committed source archive, exact reconstruction receipt, all scoped evidence hashes and accounting. No push, PR, merge, cloud provisioning or production activation."
 }

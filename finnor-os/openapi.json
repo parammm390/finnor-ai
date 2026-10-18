@@ -12,9 +12,7 @@
         "properties": {
           "schema": {
             "type": "string",
-            "enum": [
-              "finnor.x3.application-request.v1"
-            ]
+            "const": "finnor.x3.application-request.v1"
           },
           "root": {
             "type": "object",
@@ -55,15 +53,11 @@
             "properties": {
               "schema": {
                 "type": "string",
-                "enum": [
-                  "finnor.business-specification.v1"
-                ]
+                "const": "finnor.business-specification.v1"
               },
               "profile": {
                 "type": "string",
-                "enum": [
-                  "PE_FIRM_TYPED_APPLICATION_V1"
-                ]
+                "const": "PE_FIRM_TYPED_APPLICATION_V1"
               },
               "owner": {
                 "type": "object",
@@ -103,9 +97,7 @@
               },
               "family": {
                 "type": "string",
-                "enum": [
-                  "PE_FIRM_OPERATIONS"
-                ]
+                "const": "PE_FIRM_OPERATIONS"
               },
               "model": {
                 "type": "object",
@@ -219,9 +211,7 @@
                                   },
                                   "type": {
                                     "type": "string",
-                                    "enum": [
-                                      "text"
-                                    ]
+                                    "const": "text"
                                   },
                                   "maxLength": {
                                     "type": "integer",
@@ -261,9 +251,7 @@
                                   },
                                   "type": {
                                     "type": "string",
-                                    "enum": [
-                                      "boolean"
-                                    ]
+                                    "const": "boolean"
                                   }
                                 },
                                 "required": [
@@ -297,9 +285,7 @@
                                   },
                                   "type": {
                                     "type": "string",
-                                    "enum": [
-                                      "enum"
-                                    ]
+                                    "const": "enum"
                                   },
                                   "options": {
                                     "type": "array",
@@ -344,9 +330,7 @@
                                   },
                                   "type": {
                                     "type": "string",
-                                    "enum": [
-                                      "quantity"
-                                    ]
+                                    "const": "quantity"
                                   }
                                 },
                                 "required": [
@@ -380,9 +364,7 @@
                                   },
                                   "type": {
                                     "type": "string",
-                                    "enum": [
-                                      "quantity-list"
-                                    ]
+                                    "const": "quantity-list"
                                   }
                                 },
                                 "required": [
@@ -416,9 +398,7 @@
                                   },
                                   "type": {
                                     "type": "string",
-                                    "enum": [
-                                      "evidence"
-                                    ]
+                                    "const": "evidence"
                                   }
                                 },
                                 "required": [
@@ -452,9 +432,7 @@
                                   },
                                   "type": {
                                     "type": "string",
-                                    "enum": [
-                                      "reference"
-                                    ]
+                                    "const": "reference"
                                   }
                                 },
                                 "required": [
@@ -488,9 +466,7 @@
                                   },
                                   "type": {
                                     "type": "string",
-                                    "enum": [
-                                      "relation"
-                                    ]
+                                    "const": "relation"
                                   },
                                   "entityId": {
                                     "type": "string",
@@ -1033,9 +1009,7 @@
                                     "properties": {
                                       "kind": {
                                         "type": "string",
-                                        "enum": [
-                                          "UNKNOWN"
-                                        ]
+                                        "const": "UNKNOWN"
                                       },
                                       "reason": {
                                         "type": "string",
@@ -1054,9 +1028,7 @@
                                     "properties": {
                                       "kind": {
                                         "type": "string",
-                                        "enum": [
-                                          "QUANTITY"
-                                        ]
+                                        "const": "QUANTITY"
                                       },
                                       "amount": {
                                         "type": "string",
@@ -1110,9 +1082,7 @@
                                             "properties": {
                                               "kind": {
                                                 "type": "string",
-                                                "enum": [
-                                                  "AS_OF"
-                                                ]
+                                                "const": "AS_OF"
                                               },
                                               "asOf": {
                                                 "type": "string",
@@ -1130,9 +1100,7 @@
                                             "properties": {
                                               "kind": {
                                                 "type": "string",
-                                                "enum": [
-                                                  "PERIOD"
-                                                ]
+                                                "const": "PERIOD"
                                               },
                                               "start": {
                                                 "type": "string",
@@ -1174,9 +1142,7 @@
                                     "properties": {
                                       "kind": {
                                         "type": "string",
-                                        "enum": [
-                                          "QUANTITY_LIST"
-                                        ]
+                                        "const": "QUANTITY_LIST"
                                       },
                                       "entries": {
                                         "type": "array",
@@ -1185,9 +1151,7 @@
                                           "properties": {
                                             "kind": {
                                               "type": "string",
-                                              "enum": [
-                                                "QUANTITY"
-                                              ]
+                                              "const": "QUANTITY"
                                             },
                                             "amount": {
                                               "type": "string",
@@ -1241,9 +1205,7 @@
                                                   "properties": {
                                                     "kind": {
                                                       "type": "string",
-                                                      "enum": [
-                                                        "AS_OF"
-                                                      ]
+                                                      "const": "AS_OF"
                                                     },
                                                     "asOf": {
                                                       "type": "string",
@@ -1261,9 +1223,7 @@
                                                   "properties": {
                                                     "kind": {
                                                       "type": "string",
-                                                      "enum": [
-                                                        "PERIOD"
-                                                      ]
+                                                      "const": "PERIOD"
                                                     },
                                                     "start": {
                                                       "type": "string",
@@ -1315,9 +1275,7 @@
                                     "properties": {
                                       "kind": {
                                         "type": "string",
-                                        "enum": [
-                                          "EVIDENCE"
-                                        ]
+                                        "const": "EVIDENCE"
                                       },
                                       "sourceId": {
                                         "type": "string",
@@ -1347,9 +1305,7 @@
                                     "properties": {
                                       "kind": {
                                         "type": "string",
-                                        "enum": [
-                                          "RELATION"
-                                        ]
+                                        "const": "RELATION"
                                       },
                                       "entityId": {
                                         "type": "string",
@@ -1538,9 +1494,7 @@
                                 "properties": {
                                   "kind": {
                                     "type": "string",
-                                    "enum": [
-                                      "UNKNOWN"
-                                    ]
+                                    "const": "UNKNOWN"
                                   },
                                   "reason": {
                                     "type": "string",
@@ -1559,9 +1513,7 @@
                                 "properties": {
                                   "kind": {
                                     "type": "string",
-                                    "enum": [
-                                      "QUANTITY"
-                                    ]
+                                    "const": "QUANTITY"
                                   },
                                   "amount": {
                                     "type": "string",
@@ -1615,9 +1567,7 @@
                                         "properties": {
                                           "kind": {
                                             "type": "string",
-                                            "enum": [
-                                              "AS_OF"
-                                            ]
+                                            "const": "AS_OF"
                                           },
                                           "asOf": {
                                             "type": "string",
@@ -1635,9 +1585,7 @@
                                         "properties": {
                                           "kind": {
                                             "type": "string",
-                                            "enum": [
-                                              "PERIOD"
-                                            ]
+                                            "const": "PERIOD"
                                           },
                                           "start": {
                                             "type": "string",
@@ -1679,9 +1627,7 @@
                                 "properties": {
                                   "kind": {
                                     "type": "string",
-                                    "enum": [
-                                      "QUANTITY_LIST"
-                                    ]
+                                    "const": "QUANTITY_LIST"
                                   },
                                   "entries": {
                                     "type": "array",
@@ -1690,9 +1636,7 @@
                                       "properties": {
                                         "kind": {
                                           "type": "string",
-                                          "enum": [
-                                            "QUANTITY"
-                                          ]
+                                          "const": "QUANTITY"
                                         },
                                         "amount": {
                                           "type": "string",
@@ -1746,9 +1690,7 @@
                                               "properties": {
                                                 "kind": {
                                                   "type": "string",
-                                                  "enum": [
-                                                    "AS_OF"
-                                                  ]
+                                                  "const": "AS_OF"
                                                 },
                                                 "asOf": {
                                                   "type": "string",
@@ -1766,9 +1708,7 @@
                                               "properties": {
                                                 "kind": {
                                                   "type": "string",
-                                                  "enum": [
-                                                    "PERIOD"
-                                                  ]
+                                                  "const": "PERIOD"
                                                 },
                                                 "start": {
                                                   "type": "string",
@@ -1820,9 +1760,7 @@
                                 "properties": {
                                   "kind": {
                                     "type": "string",
-                                    "enum": [
-                                      "EVIDENCE"
-                                    ]
+                                    "const": "EVIDENCE"
                                   },
                                   "sourceId": {
                                     "type": "string",
@@ -1852,9 +1790,7 @@
                                 "properties": {
                                   "kind": {
                                     "type": "string",
-                                    "enum": [
-                                      "RELATION"
-                                    ]
+                                    "const": "RELATION"
                                   },
                                   "entityId": {
                                     "type": "string",
@@ -2087,9 +2023,7 @@
                             "properties": {
                               "kind": {
                                 "type": "string",
-                                "enum": [
-                                  "EVIDENCE"
-                                ]
+                                "const": "EVIDENCE"
                               },
                               "sourceId": {
                                 "type": "string",
@@ -2123,9 +2057,7 @@
                             "properties": {
                               "kind": {
                                 "type": "string",
-                                "enum": [
-                                  "RELATION"
-                                ]
+                                "const": "RELATION"
                               },
                               "entityId": {
                                 "type": "string",
@@ -2305,15 +2237,11 @@
             "properties": {
               "schema": {
                 "type": "string",
-                "enum": [
-                  "finnor.business-specification.v1"
-                ]
+                "const": "finnor.business-specification.v1"
               },
               "profile": {
                 "type": "string",
-                "enum": [
-                  "PE_FIRM_TYPED_APPLICATION_V1"
-                ]
+                "const": "PE_FIRM_TYPED_APPLICATION_V1"
               },
               "owner": {
                 "type": "object",
@@ -2353,9 +2281,7 @@
               },
               "family": {
                 "type": "string",
-                "enum": [
-                  "PE_FIRM_OPERATIONS"
-                ]
+                "const": "PE_FIRM_OPERATIONS"
               },
               "model": {
                 "type": "object",
@@ -2469,9 +2395,7 @@
                                   },
                                   "type": {
                                     "type": "string",
-                                    "enum": [
-                                      "text"
-                                    ]
+                                    "const": "text"
                                   },
                                   "maxLength": {
                                     "type": "integer",
@@ -2511,9 +2435,7 @@
                                   },
                                   "type": {
                                     "type": "string",
-                                    "enum": [
-                                      "boolean"
-                                    ]
+                                    "const": "boolean"
                                   }
                                 },
                                 "required": [
@@ -2547,9 +2469,7 @@
                                   },
                                   "type": {
                                     "type": "string",
-                                    "enum": [
-                                      "enum"
-                                    ]
+                                    "const": "enum"
                                   },
                                   "options": {
                                     "type": "array",
@@ -2594,9 +2514,7 @@
                                   },
                                   "type": {
                                     "type": "string",
-                                    "enum": [
-                                      "quantity"
-                                    ]
+                                    "const": "quantity"
                                   }
                                 },
                                 "required": [
@@ -2630,9 +2548,7 @@
                                   },
                                   "type": {
                                     "type": "string",
-                                    "enum": [
-                                      "quantity-list"
-                                    ]
+                                    "const": "quantity-list"
                                   }
                                 },
                                 "required": [
@@ -2666,9 +2582,7 @@
                                   },
                                   "type": {
                                     "type": "string",
-                                    "enum": [
-                                      "evidence"
-                                    ]
+                                    "const": "evidence"
                                   }
                                 },
                                 "required": [
@@ -2702,9 +2616,7 @@
                                   },
                                   "type": {
                                     "type": "string",
-                                    "enum": [
-                                      "reference"
-                                    ]
+                                    "const": "reference"
                                   }
                                 },
                                 "required": [
@@ -2738,9 +2650,7 @@
                                   },
                                   "type": {
                                     "type": "string",
-                                    "enum": [
-                                      "relation"
-                                    ]
+                                    "const": "relation"
                                   },
                                   "entityId": {
                                     "type": "string",
@@ -3283,9 +3193,7 @@
                                     "properties": {
                                       "kind": {
                                         "type": "string",
-                                        "enum": [
-                                          "UNKNOWN"
-                                        ]
+                                        "const": "UNKNOWN"
                                       },
                                       "reason": {
                                         "type": "string",
@@ -3304,9 +3212,7 @@
                                     "properties": {
                                       "kind": {
                                         "type": "string",
-                                        "enum": [
-                                          "QUANTITY"
-                                        ]
+                                        "const": "QUANTITY"
                                       },
                                       "amount": {
                                         "type": "string",
@@ -3360,9 +3266,7 @@
                                             "properties": {
                                               "kind": {
                                                 "type": "string",
-                                                "enum": [
-                                                  "AS_OF"
-                                                ]
+                                                "const": "AS_OF"
                                               },
                                               "asOf": {
                                                 "type": "string",
@@ -3380,9 +3284,7 @@
                                             "properties": {
                                               "kind": {
                                                 "type": "string",
-                                                "enum": [
-                                                  "PERIOD"
-                                                ]
+                                                "const": "PERIOD"
                                               },
                                               "start": {
                                                 "type": "string",
@@ -3424,9 +3326,7 @@
                                     "properties": {
                                       "kind": {
                                         "type": "string",
-                                        "enum": [
-                                          "QUANTITY_LIST"
-                                        ]
+                                        "const": "QUANTITY_LIST"
                                       },
                                       "entries": {
                                         "type": "array",
@@ -3435,9 +3335,7 @@
                                           "properties": {
                                             "kind": {
                                               "type": "string",
-                                              "enum": [
-                                                "QUANTITY"
-                                              ]
+                                              "const": "QUANTITY"
                                             },
                                             "amount": {
                                               "type": "string",
@@ -3491,9 +3389,7 @@
                                                   "properties": {
                                                     "kind": {
                                                       "type": "string",
-                                                      "enum": [
-                                                        "AS_OF"
-                                                      ]
+                                                      "const": "AS_OF"
                                                     },
                                                     "asOf": {
                                                       "type": "string",
@@ -3511,9 +3407,7 @@
                                                   "properties": {
                                                     "kind": {
                                                       "type": "string",
-                                                      "enum": [
-                                                        "PERIOD"
-                                                      ]
+                                                      "const": "PERIOD"
                                                     },
                                                     "start": {
                                                       "type": "string",
@@ -3565,9 +3459,7 @@
                                     "properties": {
                                       "kind": {
                                         "type": "string",
-                                        "enum": [
-                                          "EVIDENCE"
-                                        ]
+                                        "const": "EVIDENCE"
                                       },
                                       "sourceId": {
                                         "type": "string",
@@ -3597,9 +3489,7 @@
                                     "properties": {
                                       "kind": {
                                         "type": "string",
-                                        "enum": [
-                                          "RELATION"
-                                        ]
+                                        "const": "RELATION"
                                       },
                                       "entityId": {
                                         "type": "string",
@@ -3788,9 +3678,7 @@
                                 "properties": {
                                   "kind": {
                                     "type": "string",
-                                    "enum": [
-                                      "UNKNOWN"
-                                    ]
+                                    "const": "UNKNOWN"
                                   },
                                   "reason": {
                                     "type": "string",
@@ -3809,9 +3697,7 @@
                                 "properties": {
                                   "kind": {
                                     "type": "string",
-                                    "enum": [
-                                      "QUANTITY"
-                                    ]
+                                    "const": "QUANTITY"
                                   },
                                   "amount": {
                                     "type": "string",
@@ -3865,9 +3751,7 @@
                                         "properties": {
                                           "kind": {
                                             "type": "string",
-                                            "enum": [
-                                              "AS_OF"
-                                            ]
+                                            "const": "AS_OF"
                                           },
                                           "asOf": {
                                             "type": "string",
@@ -3885,9 +3769,7 @@
                                         "properties": {
                                           "kind": {
                                             "type": "string",
-                                            "enum": [
-                                              "PERIOD"
-                                            ]
+                                            "const": "PERIOD"
                                           },
                                           "start": {
                                             "type": "string",
@@ -3929,9 +3811,7 @@
                                 "properties": {
                                   "kind": {
                                     "type": "string",
-                                    "enum": [
-                                      "QUANTITY_LIST"
-                                    ]
+                                    "const": "QUANTITY_LIST"
                                   },
                                   "entries": {
                                     "type": "array",
@@ -3940,9 +3820,7 @@
                                       "properties": {
                                         "kind": {
                                           "type": "string",
-                                          "enum": [
-                                            "QUANTITY"
-                                          ]
+                                          "const": "QUANTITY"
                                         },
                                         "amount": {
                                           "type": "string",
@@ -3996,9 +3874,7 @@
                                               "properties": {
                                                 "kind": {
                                                   "type": "string",
-                                                  "enum": [
-                                                    "AS_OF"
-                                                  ]
+                                                  "const": "AS_OF"
                                                 },
                                                 "asOf": {
                                                   "type": "string",
@@ -4016,9 +3892,7 @@
                                               "properties": {
                                                 "kind": {
                                                   "type": "string",
-                                                  "enum": [
-                                                    "PERIOD"
-                                                  ]
+                                                  "const": "PERIOD"
                                                 },
                                                 "start": {
                                                   "type": "string",
@@ -4070,9 +3944,7 @@
                                 "properties": {
                                   "kind": {
                                     "type": "string",
-                                    "enum": [
-                                      "EVIDENCE"
-                                    ]
+                                    "const": "EVIDENCE"
                                   },
                                   "sourceId": {
                                     "type": "string",
@@ -4102,9 +3974,7 @@
                                 "properties": {
                                   "kind": {
                                     "type": "string",
-                                    "enum": [
-                                      "RELATION"
-                                    ]
+                                    "const": "RELATION"
                                   },
                                   "entityId": {
                                     "type": "string",
@@ -4337,9 +4207,7 @@
                             "properties": {
                               "kind": {
                                 "type": "string",
-                                "enum": [
-                                  "EVIDENCE"
-                                ]
+                                "const": "EVIDENCE"
                               },
                               "sourceId": {
                                 "type": "string",
@@ -4373,9 +4241,7 @@
                             "properties": {
                               "kind": {
                                 "type": "string",
-                                "enum": [
-                                  "RELATION"
-                                ]
+                                "const": "RELATION"
                               },
                               "entityId": {
                                 "type": "string",
@@ -4505,9 +4371,15 @@
             "maxLength": 160
           },
           "expectedReleaseId": {
-            "type": "string",
-            "format": "uuid",
-            "nullable": true
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "changeClass": {
             "type": "string",
@@ -4524,9 +4396,7 @@
               "properties": {
                 "kind": {
                   "type": "string",
-                  "enum": [
-                    "ADD_FIELD"
-                  ]
+                  "const": "ADD_FIELD"
                 },
                 "entityId": {
                   "type": "string",
@@ -4552,9 +4422,7 @@
                       "properties": {
                         "kind": {
                           "type": "string",
-                          "enum": [
-                            "UNKNOWN"
-                          ]
+                          "const": "UNKNOWN"
                         },
                         "reason": {
                           "type": "string",
@@ -4573,9 +4441,7 @@
                       "properties": {
                         "kind": {
                           "type": "string",
-                          "enum": [
-                            "QUANTITY"
-                          ]
+                          "const": "QUANTITY"
                         },
                         "amount": {
                           "type": "string",
@@ -4629,9 +4495,7 @@
                               "properties": {
                                 "kind": {
                                   "type": "string",
-                                  "enum": [
-                                    "AS_OF"
-                                  ]
+                                  "const": "AS_OF"
                                 },
                                 "asOf": {
                                   "type": "string",
@@ -4649,9 +4513,7 @@
                               "properties": {
                                 "kind": {
                                   "type": "string",
-                                  "enum": [
-                                    "PERIOD"
-                                  ]
+                                  "const": "PERIOD"
                                 },
                                 "start": {
                                   "type": "string",
@@ -4693,9 +4555,7 @@
                       "properties": {
                         "kind": {
                           "type": "string",
-                          "enum": [
-                            "QUANTITY_LIST"
-                          ]
+                          "const": "QUANTITY_LIST"
                         },
                         "entries": {
                           "type": "array",
@@ -4704,9 +4564,7 @@
                             "properties": {
                               "kind": {
                                 "type": "string",
-                                "enum": [
-                                  "QUANTITY"
-                                ]
+                                "const": "QUANTITY"
                               },
                               "amount": {
                                 "type": "string",
@@ -4760,9 +4618,7 @@
                                     "properties": {
                                       "kind": {
                                         "type": "string",
-                                        "enum": [
-                                          "AS_OF"
-                                        ]
+                                        "const": "AS_OF"
                                       },
                                       "asOf": {
                                         "type": "string",
@@ -4780,9 +4636,7 @@
                                     "properties": {
                                       "kind": {
                                         "type": "string",
-                                        "enum": [
-                                          "PERIOD"
-                                        ]
+                                        "const": "PERIOD"
                                       },
                                       "start": {
                                         "type": "string",
@@ -4834,9 +4688,7 @@
                       "properties": {
                         "kind": {
                           "type": "string",
-                          "enum": [
-                            "EVIDENCE"
-                          ]
+                          "const": "EVIDENCE"
                         },
                         "sourceId": {
                           "type": "string",
@@ -4866,9 +4718,7 @@
                       "properties": {
                         "kind": {
                           "type": "string",
-                          "enum": [
-                            "RELATION"
-                          ]
+                          "const": "RELATION"
                         },
                         "entityId": {
                           "type": "string",
@@ -5016,8 +4866,7 @@
           },
           "expectedRevision": {
             "type": "integer",
-            "exclusiveMinimum": true,
-            "minimum": 0
+            "exclusiveMinimum": 0
           },
           "expectedReference": {
             "type": "object",
@@ -5066,9 +4915,7 @@
                   "properties": {
                     "kind": {
                       "type": "string",
-                      "enum": [
-                        "UNKNOWN"
-                      ]
+                      "const": "UNKNOWN"
                     },
                     "reason": {
                       "type": "string",
@@ -5087,9 +4934,7 @@
                   "properties": {
                     "kind": {
                       "type": "string",
-                      "enum": [
-                        "QUANTITY"
-                      ]
+                      "const": "QUANTITY"
                     },
                     "amount": {
                       "type": "string",
@@ -5143,9 +4988,7 @@
                           "properties": {
                             "kind": {
                               "type": "string",
-                              "enum": [
-                                "AS_OF"
-                              ]
+                              "const": "AS_OF"
                             },
                             "asOf": {
                               "type": "string",
@@ -5163,9 +5006,7 @@
                           "properties": {
                             "kind": {
                               "type": "string",
-                              "enum": [
-                                "PERIOD"
-                              ]
+                              "const": "PERIOD"
                             },
                             "start": {
                               "type": "string",
@@ -5207,9 +5048,7 @@
                   "properties": {
                     "kind": {
                       "type": "string",
-                      "enum": [
-                        "QUANTITY_LIST"
-                      ]
+                      "const": "QUANTITY_LIST"
                     },
                     "entries": {
                       "type": "array",
@@ -5218,9 +5057,7 @@
                         "properties": {
                           "kind": {
                             "type": "string",
-                            "enum": [
-                              "QUANTITY"
-                            ]
+                            "const": "QUANTITY"
                           },
                           "amount": {
                             "type": "string",
@@ -5274,9 +5111,7 @@
                                 "properties": {
                                   "kind": {
                                     "type": "string",
-                                    "enum": [
-                                      "AS_OF"
-                                    ]
+                                    "const": "AS_OF"
                                   },
                                   "asOf": {
                                     "type": "string",
@@ -5294,9 +5129,7 @@
                                 "properties": {
                                   "kind": {
                                     "type": "string",
-                                    "enum": [
-                                      "PERIOD"
-                                    ]
+                                    "const": "PERIOD"
                                   },
                                   "start": {
                                     "type": "string",
@@ -5348,9 +5181,7 @@
                   "properties": {
                     "kind": {
                       "type": "string",
-                      "enum": [
-                        "EVIDENCE"
-                      ]
+                      "const": "EVIDENCE"
                     },
                     "sourceId": {
                       "type": "string",
@@ -5380,9 +5211,7 @@
                   "properties": {
                     "kind": {
                       "type": "string",
-                      "enum": [
-                        "RELATION"
-                      ]
+                      "const": "RELATION"
                     },
                     "entityId": {
                       "type": "string",
@@ -5623,9 +5452,15 @@
             "format": "uuid"
           },
           "expectedReleaseId": {
-            "type": "string",
-            "format": "uuid",
-            "nullable": true
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "idempotencyKey": {
             "type": "string",
@@ -5648,9 +5483,15 @@
             "format": "uuid"
           },
           "expectedReleaseId": {
-            "type": "string",
-            "format": "uuid",
-            "nullable": true
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "idempotencyKey": {
             "type": "string",
@@ -5776,8 +5617,7 @@
           },
           "expectedRevision": {
             "type": "integer",
-            "exclusiveMinimum": true,
-            "minimum": 0
+            "exclusiveMinimum": 0
           },
           "expectedReference": {
             "type": "object",
@@ -5992,9 +5832,7 @@
             "properties": {
               "op": {
                 "type": "string",
-                "enum": [
-                  "literal"
-                ]
+                "const": "literal"
               },
               "value": {
                 "anyOf": [
@@ -6010,9 +5848,7 @@
                     "properties": {
                       "kind": {
                         "type": "string",
-                        "enum": [
-                          "UNKNOWN"
-                        ]
+                        "const": "UNKNOWN"
                       },
                       "reason": {
                         "type": "string",
@@ -6031,9 +5867,7 @@
                     "properties": {
                       "kind": {
                         "type": "string",
-                        "enum": [
-                          "QUANTITY"
-                        ]
+                        "const": "QUANTITY"
                       },
                       "amount": {
                         "type": "string",
@@ -6087,9 +5921,7 @@
                             "properties": {
                               "kind": {
                                 "type": "string",
-                                "enum": [
-                                  "AS_OF"
-                                ]
+                                "const": "AS_OF"
                               },
                               "asOf": {
                                 "type": "string",
@@ -6107,9 +5939,7 @@
                             "properties": {
                               "kind": {
                                 "type": "string",
-                                "enum": [
-                                  "PERIOD"
-                                ]
+                                "const": "PERIOD"
                               },
                               "start": {
                                 "type": "string",
@@ -6151,9 +5981,7 @@
                     "properties": {
                       "kind": {
                         "type": "string",
-                        "enum": [
-                          "QUANTITY_LIST"
-                        ]
+                        "const": "QUANTITY_LIST"
                       },
                       "entries": {
                         "type": "array",
@@ -6162,9 +5990,7 @@
                           "properties": {
                             "kind": {
                               "type": "string",
-                              "enum": [
-                                "QUANTITY"
-                              ]
+                              "const": "QUANTITY"
                             },
                             "amount": {
                               "type": "string",
@@ -6218,9 +6044,7 @@
                                   "properties": {
                                     "kind": {
                                       "type": "string",
-                                      "enum": [
-                                        "AS_OF"
-                                      ]
+                                      "const": "AS_OF"
                                     },
                                     "asOf": {
                                       "type": "string",
@@ -6238,9 +6062,7 @@
                                   "properties": {
                                     "kind": {
                                       "type": "string",
-                                      "enum": [
-                                        "PERIOD"
-                                      ]
+                                      "const": "PERIOD"
                                     },
                                     "start": {
                                       "type": "string",
@@ -6292,9 +6114,7 @@
                     "properties": {
                       "kind": {
                         "type": "string",
-                        "enum": [
-                          "EVIDENCE"
-                        ]
+                        "const": "EVIDENCE"
                       },
                       "sourceId": {
                         "type": "string",
@@ -6324,9 +6144,7 @@
                     "properties": {
                       "kind": {
                         "type": "string",
-                        "enum": [
-                          "RELATION"
-                        ]
+                        "const": "RELATION"
                       },
                       "entityId": {
                         "type": "string",
@@ -6418,9 +6236,7 @@
             "properties": {
               "op": {
                 "type": "string",
-                "enum": [
-                  "field"
-                ]
+                "const": "field"
               },
               "source": {
                 "type": "string",
@@ -6448,9 +6264,7 @@
             "properties": {
               "op": {
                 "type": "string",
-                "enum": [
-                  "sum"
-                ]
+                "const": "sum"
               },
               "value": {
                 "$ref": "#/components/schemas/X3Expression"
@@ -6467,9 +6281,7 @@
             "properties": {
               "op": {
                 "type": "string",
-                "enum": [
-                  "known"
-                ]
+                "const": "known"
               },
               "value": {
                 "$ref": "#/components/schemas/X3Expression"
@@ -6486,9 +6298,7 @@
             "properties": {
               "op": {
                 "type": "string",
-                "enum": [
-                  "current-evidence"
-                ]
+                "const": "current-evidence"
               },
               "value": {
                 "$ref": "#/components/schemas/X3Expression"
@@ -6505,9 +6315,7 @@
             "properties": {
               "op": {
                 "type": "string",
-                "enum": [
-                  "not"
-                ]
+                "const": "not"
               },
               "value": {
                 "$ref": "#/components/schemas/X3Expression"
@@ -6524,9 +6332,7 @@
             "properties": {
               "op": {
                 "type": "string",
-                "enum": [
-                  "equal"
-                ]
+                "const": "equal"
               },
               "left": {
                 "$ref": "#/components/schemas/X3Expression"
@@ -6547,9 +6353,7 @@
             "properties": {
               "op": {
                 "type": "string",
-                "enum": [
-                  "same-quantity"
-                ]
+                "const": "same-quantity"
               },
               "left": {
                 "$ref": "#/components/schemas/X3Expression"
@@ -6570,9 +6374,7 @@
             "properties": {
               "op": {
                 "type": "string",
-                "enum": [
-                  "difference"
-                ]
+                "const": "difference"
               },
               "left": {
                 "$ref": "#/components/schemas/X3Expression"
@@ -6593,9 +6395,7 @@
             "properties": {
               "op": {
                 "type": "string",
-                "enum": [
-                  "compare"
-                ]
+                "const": "compare"
               },
               "comparison": {
                 "type": "string",
@@ -6627,9 +6427,7 @@
             "properties": {
               "op": {
                 "type": "string",
-                "enum": [
-                  "currency-threshold"
-                ]
+                "const": "currency-threshold"
               },
               "value": {
                 "$ref": "#/components/schemas/X3Expression"
@@ -6702,9 +6500,7 @@
             "properties": {
               "op": {
                 "type": "string",
-                "enum": [
-                  "state"
-                ]
+                "const": "state"
               },
               "is": {
                 "type": "string",
@@ -6724,9 +6520,7 @@
             "properties": {
               "op": {
                 "type": "string",
-                "enum": [
-                  "all"
-                ]
+                "const": "all"
               },
               "args": {
                 "type": "array",
@@ -6748,9 +6542,7 @@
             "properties": {
               "op": {
                 "type": "string",
-                "enum": [
-                  "any"
-                ]
+                "const": "any"
               },
               "args": {
                 "type": "array",

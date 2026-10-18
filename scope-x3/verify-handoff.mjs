@@ -34,7 +34,7 @@ for(const [name,expected] of [
 const stampPath='finnor-os/packages/private-equity/src/enterprise-applications/source-manifest.generated.ts'
 const stampText=readFileSync(join(root,stampPath),'utf8')
 const stamp=JSON.parse(stampText.slice(stampText.indexOf('{'),stampText.lastIndexOf('}')+1))
-assert.equal(stamp.files.length,49)
+assert.equal(stamp.files.length,50)
 for(const file of stamp.files)assert.equal(hash(readFileSync(join(root,file.path))),file.sha256,file.path)
 
 const previous=JSON.parse(git('show',base+':finnor-os/openapi.json')),current=json(join(root,'finnor-os/openapi.json'))

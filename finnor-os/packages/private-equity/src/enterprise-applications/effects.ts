@@ -10,21 +10,29 @@ import {ApplicationFault,applicationDigest,applicationCanonical,assertApplicatio
 import {runApplicationProgram,type ActionDecision} from './program';
 import {applicationExactCompare} from './exact';
 import {currentApplicationEnvironment,assertApplicationEnvironment} from './source-cut';
-import {applicationTx,recordTx,releaseTx,authorityTx,approverAuthoritiesTx,actionLiterals,valueSetsFactsTx,recordReference,assertAllocation,eventTx,priorEventTx,tx,principal,fail,newId,workCutTx,type ApplicationRow,type RecordRow} from './store';
+import {applicationTx,recordTx,releaseTx,authorityTx,approverAuthoritiesTx,assertAuthorityTemporalBoundsTx,actionLiterals,valueSetsFactsTx,recordReference,assertAllocation,eventTx,priorEventTx,tx,principal,fail,newId,workCutTx,type ApplicationRow,type RecordRow} from './store';
 export const ApplicationEffectSchema=z.object({applicationId:z.string().uuid(),recordId:z.string().uuid(),expectedRevision:z.number().int().positive(),expectedReference:VReferenceSchema,
  preparationRef:ExperimentRefSchema,allocationRef:ExperimentRefSchema,consumptionRef:ExperimentRefSchema,idempotencyKey:z.string().min(1).max(160)}).strict();
-async function currentIntent(ctx:PeMutationContext,c:import('pg').PoolClient,a:ApplicationRow,r:RecordRow){
+async function currentIntent(ctx:PeMutationContext,c:import('pg').PoolClient,a:ApplicationRow,r:RecordRow,temporalBounds:string[]){
  const release=await releaseTx(c,a),intent=r.prepared_intent as ActionDecision['preparedEffectIntent'];
  assertApplicationEnvironment(release.environment,await currentApplicationEnvironment());
  if(!intent||intent.kind!=='S4_EXACT_CONDITIONAL_DOSE'||r.release_id!==a.head_release_id)fail('EXACT_APPLICATION_INTENT_REQUIRED');
  const work=await workCutTx(c,a);
  if(work.id!==release.package.work.revision||work.digest!==release.package.work.inputDigest)fail('APPLICATION_WORK_CHANGED');
- const actor=await authorityTx(ctx,c,a),facts=await valueSetsFactsTx(ctx,c,a,[r.values,actionLiterals(release.built.program,intent.binding.actionId,r.entity_id)]);
- const currentAuthorities=await approverAuthoritiesTx(ctx,c,a,release.specification,r.approvals,actor);
+ const committed=(await c.query<{body:any}>(`SELECT body FROM finnor_os.x3_events WHERE tenant_id=$1 AND application_id=$2 AND record_id=$3
+  AND kind='BUSINESS_COMMAND' AND body#>>'{result,decision,preparedEffectIntent,idempotencyKey}'=$4 ORDER BY id DESC LIMIT 1`,
+  [a.tenant_id,a.id,r.id,intent.idempotencyKey])).rows[0]?.body;
+ const before=committed?.before,after=committed?.result?.record;
+ if(!before||before.id!==r.id||!after||after.state!==r.state||
+  applicationCanonical(before.reference)!==applicationCanonical(recordReference(r))||
+  applicationCanonical(after.reference)!==applicationCanonical(recordReference(r))||
+  applicationCanonical(after.preparedIntent)!==applicationCanonical(intent))fail('COMMITTED_APPLICATION_INTENT_REQUIRED');
+ const actor=await authorityTx(ctx,c,a,principal(ctx),temporalBounds),facts=await valueSetsFactsTx(ctx,c,a,[r.values,actionLiterals(release.built.program,intent.binding.actionId,r.entity_id)]);
+ const currentAuthorities=await approverAuthoritiesTx(ctx,c,a,release.specification,r.approvals,actor,temporalBounds);
  const decision=runApplicationProgram(release.built.program,{entityId:r.entity_id,actionId:intent.binding.actionId,installedReleaseId:a.head_release_id,
-  tenantId:a.tenant_id,scopeId:a.root_id,actor,record:{entityId:r.entity_id,state:r.state,values:r.values,authorPrincipalId:r.author_id,recordDigest:r.content_digest,reference:recordReference(r),releaseId:r.release_id},
-  expectedRecordDigest:r.content_digest,expectedRecordReference:recordReference(r),input:{},approvals:r.approvals,currentAuthorities,currentEvidence:facts.currentEvidence,currentRelations:facts.currentRelations});
- if(!decision.allowed||!decision.preparedEffectIntent||applicationCanonical(decision.preparedEffectIntent)!==applicationCanonical(intent))fail(decision.outcome||'APPLICATION_INTENT_NOT_CURRENT');
+  tenantId:a.tenant_id,scopeId:a.root_id,actor,record:{entityId:r.entity_id,state:before.state,values:r.values,authorPrincipalId:r.author_id,recordDigest:r.content_digest,reference:recordReference(r),releaseId:r.release_id},
+  expectedRecordDigest:r.content_digest,expectedRecordReference:recordReference(r),input:{},approvals:before.approvals,currentAuthorities,currentEvidence:facts.currentEvidence,currentRelations:facts.currentRelations});
+ if(!decision.allowed||decision.nextState!==r.state||!decision.preparedEffectIntent||applicationCanonical(decision.preparedEffectIntent)!==applicationCanonical(intent))fail(decision.outcome||'APPLICATION_INTENT_NOT_CURRENT');
  return intent;
 }
 export async function prepareApplicationEffect(ctx:PeMutationContext,value:unknown){
@@ -35,8 +43,9 @@ export async function prepareApplicationEffect(ctx:PeMutationContext,value:unkno
   const done=await priorEventTx(c,a,principal(ctx),operationKey+':complete',digest);if(done)return {done};
   const r=await recordTx(c,a,input.recordId),prior=await priorEventTx(c,a,principal(ctx),operationKey+':start',digest);
   if(!prior&&(r.concurrency_revision!==input.expectedRevision||applicationCanonical(recordReference(r))!==applicationCanonical(input.expectedReference)))fail('COMMIT_CONFLICT');
-  const intent=await currentIntent(ctx,c,a,r),operationId=prior?.operationId??newId();
+  const temporalBounds:string[]=[],intent=await currentIntent(ctx,c,a,r,temporalBounds),operationId=prior?.operationId??newId();
   if(r.pending_effect_id&&r.pending_effect_id!==operationId)fail('CANONICAL_EFFECT_PREPARATION_PENDING');
+  assertAllocation(a);await assertAuthorityTemporalBoundsTx(c,temporalBounds);
   return {a,intent,operationId,started:!!prior};
  });
  if('done' in start)return start.done;
@@ -64,13 +73,14 @@ export async function prepareApplicationEffect(ctx:PeMutationContext,value:unkno
   const done=await priorEventTx(c,a,principal(ctx),operationKey+':complete',digest);if(done)return {done};
   const r=await recordTx(c,a,input.recordId),prior=await priorEventTx(c,a,principal(ctx),operationKey+':start',digest);
   if(!prior&&(r.concurrency_revision!==input.expectedRevision||applicationCanonical(recordReference(r))!==applicationCanonical(input.expectedReference)))fail('COMMIT_CONFLICT');
-  const intent=await currentIntent(ctx,c,a,r),operationId=prior?.operationId??start.operationId;
+  const temporalBounds:string[]=[],intent=await currentIntent(ctx,c,a,r,temporalBounds),operationId=prior?.operationId??start.operationId;
   if(applicationCanonical(intent)!==applicationCanonical(start.intent))fail('APPLICATION_EFFECT_COMMIT_FENCE');
   if(r.pending_effect_id&&r.pending_effect_id!==operationId)fail('CANONICAL_EFFECT_PREPARATION_PENDING');
   if(!prior){
    await c.query('UPDATE finnor_os.x3_records SET pending_effect_id=$4,concurrency_revision=concurrency_revision+1 WHERE tenant_id=$1 AND application_id=$2 AND id=$3',[a.tenant_id,a.id,r.id,operationId]);
    await eventTx(c,a,principal(ctx),'S6_BIND_STARTED',operationKey+':start',digest,{operationId,recordReference:recordReference(r),releaseId:r.release_id,ownerReferences:{preparationRef:input.preparationRef,allocationRef:input.allocationRef,consumptionRef:input.consumptionRef}},r.id,null,true);
   }
+  assertAllocation(a);await assertAuthorityTemporalBoundsTx(c,temporalBounds);
   return {operationId};
  });
  if('done' in reserved)return reserved.done;
@@ -78,11 +88,12 @@ export async function prepareApplicationEffect(ctx:PeMutationContext,value:unkno
  return tx(ctx,async c=>{
   const a=await applicationTx(ctx,c,input.applicationId,'action:operate_enterprise_application');assertAllocation(a);
   const prior=await priorEventTx(c,a,principal(ctx),operationKey+':complete',digest);if(prior)return prior;
-  const r=await recordTx(c,a,input.recordId),intent=await currentIntent(ctx,c,a,r);
+  const r=await recordTx(c,a,input.recordId),temporalBounds:string[]=[],intent=await currentIntent(ctx,c,a,r,temporalBounds);
   if(r.pending_effect_id!==reserved.operationId||applicationCanonical(intent)!==applicationCanonical(start.intent))fail('APPLICATION_EFFECT_COMMIT_FENCE');
   const result={status:'PREPARED_UNADMITTED',operationId:reserved.operationId,obligationRef:obligation.ref,preparationRef:input.preparationRef,
    allocationRef:input.allocationRef,consumptionRef:input.consumptionRef,executionAuthorityGranted:false,settlementEstablished:false};
   await c.query('UPDATE finnor_os.x3_records SET pending_effect_id=NULL,concurrency_revision=concurrency_revision+1 WHERE tenant_id=$1 AND application_id=$2 AND id=$3',[a.tenant_id,a.id,r.id]);
-  await eventTx(c,a,principal(ctx),'S6_BOUND',operationKey+':complete',digest,result,r.id);return result;
+  await eventTx(c,a,principal(ctx),'S6_BOUND',operationKey+':complete',digest,result,r.id);
+  assertAllocation(a);await assertAuthorityTemporalBoundsTx(c,temporalBounds);return result;
  });
 }

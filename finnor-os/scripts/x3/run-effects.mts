@@ -1,16 +1,22 @@
 /** Actual S1/S3 fit, S4 policy/preparation, S5 clearing/consumption and S6
  * obligation. Generated observations demonstrate codec/owner mechanics only.
- * No protected credentials, method admission, dispatch or settlement. */
+ * Disposable signatures and a loopback TLS target are development mechanics,
+ * not protected admission, independent custody, or a real financial effect. */
 import {strict as assert} from 'node:assert';
 import {randomUUID} from 'node:crypto';
+import {createServer} from 'node:http';
 import {spawn,spawnSync} from 'node:child_process';
 import {mkdtemp,mkdir} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join,resolve} from 'node:path';
 import {createEvidenceSource,appendEvidenceVersion} from '@finnor/memory';
+import {createEmployeeConversationThread,updateEmployeeConversationThreadContext} from '@finnor/db';
 import {createUpstreamFixtureSupport} from '../s5/owner-fixture.mjs';
 import {startEnvironment,artifact,repo} from './environment.mts';
 import {reconciliation,quantity} from './business-fixtures.mts';
+import {checkInstalledEnvelope} from './envelope-check.mts';
+import {proveGovernedDispatch} from '../s6/governed-dispatch-proof.mts';
+import {startMountedFrontend} from './mounted-fixture.mts';
 
 const evidence=resolve(process.env.FINNOR_X3_EVIDENCE_DIR!);
 assert(process.env.FINNOR_X3_EVIDENCE_DIR);
@@ -20,6 +26,7 @@ process.env.FINNOR_S3_MODEL_STORE=join(directory,'models');process.env.FINNOR_S4
 assert(process.env.FINNOR_S3_PYTHON?.startsWith('/'),'PINNED_PRIVATE_PYTHON_REQUIRED');
 const e=await startEnvironment(evidence,{builtApi:process.env.FINNOR_X3_BUILT_API==='1'});
 const tokens=new Map<string,string>(),calls:any[]=[],people={partner:randomUUID(),compliance:randomUUID()};
+let mounted:Awaited<ReturnType<typeof startMountedFrontend>>|undefined,closeBrowserControl:(()=>Promise<void>)|undefined;
 const ok=(r:any,status=200)=>{assert.equal(r.status,status,JSON.stringify(r));return r.body;};
 const generated=spawnSync(process.env.FINNOR_S3_PYTHON!,[join(repo,'finnor-os/scripts/s3/reference.py')],{input:JSON.stringify({operation:'equivalent'}),encoding:'utf8'});
 assert.equal(generated.status,0,generated.stderr);
@@ -38,13 +45,17 @@ async function worker(){
  assert.equal(result.code,0,JSON.stringify(result));return result;
 }
 try{
- let accepted:any,installed:any,literalEvidence:any;
+ let accepted:any,installed:any,literalEvidence:any,browserThread:any;
  const applicationCall=async(f:any,operation:string,body:unknown,principal=f.principal)=>{
   const response=await e.http!.api(tokens.get(principal)!,'company-brain','application-'+operation,body);calls.push({family:'company-brain',operation,input:body,...response});return response;
  };
- const f=await support.fixture('x3-exact-dose-'+randomUUID().slice(0,8),2,[{id:'cash',unit:'USD',capacity:100,totalLimit:100}],{
+ const f=await support.fixture('x3-exact-dose-'+randomUUID().slice(0,8),2,[
+  {id:'cash',unit:'USD',capacity:100,totalLimit:100},
+  {id:'execution',unit:'request',capacity:200,totalLimit:200,resourceClass:'COMPUTE'},
+  {id:'human',unit:'seconds',capacity:4,totalLimit:4,resourceClass:'HUMAN_ATTENTION'},
+ ],{
   exposureUnit:'USD:minor:RECORDED_MINOR',beforeFit:async f=>{
-   e.http!.register(f.principal,f.name+'@s5.example.test');tokens.set(f.principal,await e.http!.login(f.principal));
+   e.http!.register(f.principal,f.name+'@s5.example.test','x3-disposable-only');tokens.set(f.principal,await e.http!.login(f.principal));
    for(const [role,principal] of [['analyst',f.principal],...Object.entries(people)] as Array<[string,string]>){
     if(principal!==f.principal){await e.admin.query("INSERT INTO finnor_os.users(id,tenant_id,email,role,status) VALUES($1,$2,$3,'owner','active')",[principal,f.tenant,principal+'@x3.example.test']);e.http!.register(principal,principal+'@x3.example.test');tokens.set(principal,await e.http!.login(principal));}
     const r=(await e.admin.query('INSERT INTO finnor_os.employee_roles(tenant_id,key,name) VALUES($1,$2,$2) RETURNING id',[f.tenant,'x3_'+role])).rows[0];
@@ -58,6 +69,7 @@ try{
    literalEvidence={kind:'EVIDENCE',sourceId:literalSource.id,versionId:literalVersion.versionId,contentDigest:literalHash};
    const specification=reconciliation(f.tenant,f.root.entityId);
    const prepare=specification.actions.find(a=>a.id==='prepare')!;
+   prepare.fromStates=['APPROVED'];
    prepare.guards=[...prepare.guards,{id:'literal-owner-current',condition:{op:'current-evidence',value:{op:'literal',value:literalEvidence}},denialCode:'SOURCE_STALE',requirementIds:['evidence']}];
    accepted=ok(await applicationCall(f,'submit',{schema:'finnor.x3.application-request.v1',root:f.root,specification,idempotencyKey:randomUUID(),limits:{deadlineMs:3600000,maxBuilds:16,maxMutations:10000}}),202);
    for(let i=0;i<8;i++){
@@ -66,11 +78,17 @@ try{
     if(installed.status==='INSTALLED')break;
    }
    assert.equal(installed.status,'INSTALLED');
+   if(process.env.FINNOR_X3_EFFECT_BROWSER==='1'){
+    browserThread=await createEmployeeConversationThread({tenantId:f.tenant,ownerEmployeeId:f.principal,title:'X3 exact application effect and observed Work'});
+    await updateEmployeeConversationThreadContext({tenantId:f.tenant,ownerEmployeeId:f.principal,threadId:browserThread.id,activeWorkId:installed.workId,activeReferences:[f.root]});
+   }
   },
  });
  const api=(operation:string,body:unknown,principal=f.principal)=>applicationCall(f,operation,body,principal);
- const policy=await support.policy(f,'single-exact-dose',{cash:25});
+ const policy=await support.policy(f,'single-exact-dose',{cash:25,execution:130,human:4});
  await support.resource(f,'cash','USD','STOCK',['100','100','100']);
+ await support.resource(f,'execution','request','CUMULATIVE_EXPENDITURE',['200','200','200']);
+ await support.resource(f,'human','seconds','CUMULATIVE_EXPENDITURE',['4','4','4']);
  const cleared=ok(await upstream(f,'clear',support.clearing(f,{'single-exact-dose':['100']})));
  assert.equal(cleared.status,'FEASIBLE');
  const handoff=ok(await upstream(f,'handoff',{policyRef:policy.ref,allocationRef:cleared.certificate.ref,decision:support.decision(f,cleared.certificate.ref)}));
@@ -156,7 +174,58 @@ try{
  assert.equal(rollback.status,'ROLLBACK_BLOCKED');assert.equal(rollback.forwardRepairAllowed,true);assert.equal(rollback.dataRetained,true);
  assert(rollback.reasons.includes('CANONICAL_OBLIGATION_HISTORY_REQUIRES_FORWARD_REPAIR'));
  assert(!Object.values(record.values).some((v:any)=>v?.kind==='EVIDENCE'&&v.sourceId===literalEvidence.sourceId));
- await artifact(evidence,'exact-effect.json',{status:'PASS_DEVELOPMENT',handoff,record,literalEvidence,literalPinNotStoredInRecord:true,nonexistent,afterNonexistent,uncertainResponsibility,prepared,repeated,native,final,mismatch,wrongAfter,repaired,rollback,calls,qualification:'ACTUAL_OWNER_CODEC_AND_RESPONSIBILITY_ONLY; GENERATED_SCIENTIFIC_INPUTS; NO_DISPATCH_ADMISSION_OR_SETTLEMENT'});
+ const ownerCall=async(operation:string,body:unknown)=>{
+  const family=['resource','settle'].includes(operation)?'allocations':'obligations';
+  const response=await e.http!.api(tokens.get(f.principal)!,family,operation,body);calls.push({family,operation,input:body,...response});return response;
+ };
+ const obligation=ok(await ownerCall('read',{obligationRef:prepared.obligationRef}));
+ const dispatch=await proveGovernedDispatch(f,obligation,(_actor:any,operation:string,body:unknown)=>ownerCall(operation,body),e.admin,
+  (name:string,value:unknown)=>artifact(evidence,'dispatch/'+name,value),false,undefined,false,{
+   ownerCall,workerDatabaseUrl:e.workerUrl,
+   mapping:{field:'recordedMinorAmount',recordPrefix:'x3-recorded-minor',dose:0.15,operation:'PRICE_CHANGE',unit:'USD:minor:RECORDED_MINOR'},
+   onTransportConfigured:process.env.FINNOR_X3_BUILT_API==='1'?async()=>{await e.http!.restartApi();}:undefined,
+   onUnresolved:async context=>{
+    const retained=ok(await api('record',{applicationId:accepted.applicationId,recordId:record.id}));
+    const origin=(await e.admin.query("SELECT body->'workLineage'->>'workId' AS work_id,effect_id,body->'allocationRef'->>'id' AS allocation_id,consumption_id FROM finnor_os.s6_obligation_origins WHERE tenant_id=$1 AND obligation_id=$2",[f.tenant,prepared.obligationRef.id])).rows;
+    await artifact(evidence,'dispatch/x3-unresolved-responsibility.json',{context,retained,origin,prepared});
+    assert.equal(origin.length,1);assert.equal(origin[0].work_id,installed.workId);assert.equal(context.uncertain[0].status,'UNKNOWN_OUTCOME');
+   },
+  });
+ assert(dispatch.authorityCalls.every((call:any)=>call.authentication==='SIGNED_BEARER_REAL_HTTP'));
+ assert.equal(dispatch.requests.filter((request:any)=>request.method==='PATCH').length,1);
+ assert.equal(dispatch.requests.filter((request:any)=>request.method==='GET').length,3);
+ assert('current' in dispatch);assert.equal(dispatch.current.fields.recordedMinorAmount,0.15);
+ const nativeAfter=(await e.admin.query("SELECT o.body,e.status,e.verification,d.status AS action_status FROM finnor_os.s6_obligation_origins o JOIN finnor_os.business_effects e ON e.tenant_id=o.tenant_id AND e.id=o.effect_id JOIN finnor_os.domain_actions d ON d.tenant_id=e.tenant_id AND d.id=e.domain_action_id WHERE o.tenant_id=$1",[f.tenant])).rows;
+ assert.equal(nativeAfter[0].status,'verified');assert.equal(nativeAfter[0].action_status,'completed');
+ const immutablePreparation=(await e.admin.query("SELECT body result FROM finnor_os.x3_events WHERE tenant_id=$1 AND application_id=$2 AND kind='S6_BOUND'",[f.tenant,accepted.applicationId])).rows;
+ assert.deepEqual(immutablePreparation.map((row:any)=>row.result),[prepared]);
+ const application=ok(await api('read',{applicationId:accepted.applicationId})),envelope=await checkInstalledEnvelope(e,application,f.tenant,evidence);
+ assert.deepEqual(envelope.obligationRefs,[prepared.obligationRef]);assert.equal(application.package.envelope.S6_obligation_refs.count,'1');
+ await artifact(evidence,'complete-common-envelope.json',{status:'PASS_ACTUAL_S6_ENVELOPE_REFERENCES',check:envelope,envelope:application.package.envelope});
+ await artifact(evidence,'exact-effect.json',{status:'PASS_DEVELOPMENT',handoff,record,preparationFromStates:['APPROVED'],literalEvidence,literalPinNotStoredInRecord:true,nonexistent,afterNonexistent,uncertainResponsibility,prepared,repeated,native,nativeAfter,immutablePreparation,dispatch,final,mismatch,wrongAfter,repaired,rollback,calls,envelope,qualification:'ACTUAL_EXACT_X3_OWNER_CODEC_DISPATCH_UNCERTAINTY_READBACK_AND_S5_SETTLEMENT; GENERATED_SCIENTIFIC_INPUTS_AND_DISPOSABLE_AUTHORITY; LOOPBACK_TLS_ONLY; NO_INDEPENDENT_CUSTODY_PROTECTED_ADMISSION_LIVE_FINANCIAL_EFFECT_OR_PRODUCTION_ACTIVATION'});
+ if(process.env.FINNOR_X3_EFFECT_BROWSER==='1'){
+  assert(browserThread);assert('history' in dispatch);
+  const verification=dispatch.history.find((entry:any)=>entry.event.type==='VERIFICATION'&&entry.event.detail.status==='VERIFIED');assert(verification);
+  assert.equal(nativeAfter[0].verification.settlementEventId,verification.receipt.identity);
+  mounted=await startMountedFrontend(evidence,e.http!);
+  let stop!:()=>void;const stopped=new Promise<void>(yes=>stop=yes);
+  const control=createServer((req,res)=>{
+   res.setHeader('content-type','application/json');
+   if(req.url==='/stop'&&req.method==='POST'){res.end('{}');stop();return;}
+   res.writeHead(404);res.end('{}');
+  });
+  await new Promise<void>(yes=>control.listen(0,'127.0.0.1',yes));const address=control.address();assert(address&&typeof address!=='string');
+  closeBrowserControl=async()=>{control.closeAllConnections();if(control.listening)await new Promise<void>(yes=>control.close(()=>yes()));};
+  const query=new URLSearchParams({threadId:browserThread.id,root:JSON.stringify(f.root),workId:installed.workId,object:JSON.stringify({namespace:'core',owner:'@finnor/db',type:'work',id:installed.workId})});
+  const fixture={base:mounted.base,control:'http://127.0.0.1:'+address.port,email:f.name+'@s5.example.test',principal:f.principal,tenant:f.tenant,root:f.root,
+   applicationUrl:mounted.base+'/centropy/investigations/'+browserThread.id+'?root='+encodeURIComponent(JSON.stringify(f.root)),
+   worldUrl:mounted.base+'/centropy/world?'+query,expected:{applicationId:accepted.applicationId,releaseId:installed.headReleaseId,recordId:record.id,workId:installed.workId,
+    obligationRef:prepared.obligationRef,actionId:obligation.domainActionId,effectId:obligation.effectRef.id,semanticHash:obligation.effectRef.semanticHash,settlementEventId:verification.receipt.identity,verification:nativeAfter[0].verification},
+   qualification:'SAME_ACTUAL_X3_APPLICATION_WORK_AND_S5_SETTLED_LOOPBACK_EFFECT; DISPOSABLE_AUTHORITY_NOT_PROTECTED_QUALIFICATION'};
+  await artifact(evidence,'effect-browser-fixture.json',fixture);console.log(JSON.stringify({status:'X3_EFFECT_BROWSER_FIXTURE_READY',fixture:join(evidence,'effect-browser-fixture.json')}));
+  const interrupted=()=>stop();process.once('SIGTERM',interrupted);process.once('SIGINT',interrupted);
+  try{await stopped;}finally{process.off('SIGTERM',interrupted);process.off('SIGINT',interrupted);}
+ }
  console.log('X3_CANONICAL_EXACT_EFFECT_PASS');
 }catch(error){await artifact(evidence,'failure.json',{error:String(error),stack:(error as Error).stack,calls});throw error;}
-finally{await e.close();}
+finally{await closeBrowserControl?.();await mounted?.close();await e.close();}
