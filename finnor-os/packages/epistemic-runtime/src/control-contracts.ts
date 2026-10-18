@@ -1,8 +1,10 @@
 import { z } from 'zod';
-import type { EconomicMandate, ControlProblem, ControlDecisionInput, ContingentPolicy } from '@finnor/shared-types';
+import type { EconomicMandate, ControlProblem, LegacyControlProblem, ExactControlProblem, OperatingProgrammeProblem, ControlDecisionInput, ContingentPolicy } from '@finnor/shared-types';
 import { ExperimentRefSchema } from './experiments';
 import { epistemicHash } from './source-precedence';
-import { OperatingProfitObjectiveSchema, OperatingProfitCertificateSchema, operatingProfitContractReason, assessRevenueProfitTarget } from './operating-profit';
+import { OperatingProfitObjectiveSchema, operatingProfitContractReason } from './operating-profit';
+import { OperatingProgrammeSpaceSchema, compileOperatingProgramme, OperatingProgrammeError, operatingProgrammeScopeReason } from './operating-programme';
+import { operatingProfitCertificateReason } from './operating-profit-verifier';
 
 export class ControlContractError extends Error {
   constructor(readonly code: 'INVALID_REQUEST' | 'INVALID_POLICY' | 'LIMIT_EXCEEDED' | 'PERMITTED_CONTEXT_UNAVAILABLE', message: string) { super(message); this.name='ControlContractError'; }
@@ -24,6 +26,7 @@ const precondition=z.object({afterActionIds:z.array(text).max(8),observations:z.
 const actionSchema=z.object({id:text,kind:z.enum(['INQUIRE','INTERVENE','WAIT','STOP']),cost:nonnegative,costUnit:text,resources:amounts,occupancy:amounts,occupationPeriods:z.number().int().min(1).max(24),tailLiability:nonnegative,earliestPeriod:z.number().int().min(0).max(23),lastPeriod:z.number().int().min(0).max(23),atMostOnce:z.boolean(),exposures:z.record(text,z.array(number).min(1).max(24)),protocolRef:ExperimentRefSchema.nullable(),informationDelayPeriods:z.number().int().min(1).max(24),humanSeconds:nonnegative.max(900),precondition:precondition.optional()}).strict();
 const continuation=z.object({elapsedPeriods:z.number().int().min(1).max(23),actionHistory:z.array(text).min(1).max(23),observations:z.array(z.object({instrumentId:text,token:text,availablePeriod:z.number().int().min(0).max(24),knowledgeAt:time,sourceRef:ExperimentRefSchema}).strict()).max(192),accruedUtility:z.object({value:number,unit:text,sourceRef:ExperimentRefSchema}).strict(),usedResources:amounts,humanSeconds:nonnegative.max(900),accountingRef:ExperimentRefSchema}).strict();
 const problemSchema=z.object({schema:z.literal('finnor.control-problem.v1'),id:text,episodeId:text,modelRef:ExperimentRefSchema,context:text,regime:text,baselineExposures:schedules,actions:z.array(actionSchema).min(1).max(8),observations:z.array(ControlObservationSchema).max(8),obligations:z.array(obligation).max(32),validUntil:time,continuation:continuation.optional()}).strict();
+const operatingProgrammeProblemSchema=problemSchema.extend({schema:z.literal('finnor.control-problem.operating-programme.v2'),programmeSpace:OperatingProgrammeSpaceSchema,actions:z.array(actionSchema.extend({humanSeconds:nonnegative})).min(1).max(258),observations:z.tuple([]),continuation:z.never().optional()}).strict() satisfies z.ZodType<OperatingProgrammeProblem>;
 const display=z.number().finite(),displayAmounts=z.record(text,display.nonnegative()),displaySchedules=z.record(text,z.array(display).max(12));
 const rational=z.object({numerator:z.string().regex(/^-?(?:0|[1-9]\d*)$/).max(128),denominator:z.string().regex(/^[1-9]\d*$/).max(128)}).strict();
 const exactMeasurement=z.object({schema:z.literal('finnor.s2.exact-recorded-coarsening.v1'),root:z.object({entityType:text,entityId:text}).strict(),seriesId:text,unit:text,bins:z.array(z.object({token:text,lowerInclusive:rational,upperExclusive:rational}).strict()).min(1).max(128)}).strict();
@@ -34,7 +37,7 @@ const exactProblemSchema=problemSchema.extend({schema:z.literal('finnor.control-
 const observation=z.object({instrumentId:text,token:text,availablePeriod:z.number().int().min(0).max(24),knowledgeAt:time,sourceRef:ExperimentRefSchema}).strict();
 const decisionSchema=z.object({knowledgeAt:time,period:z.number().int().min(0).max(24),actionHistory:z.array(text).max(24),observations:z.array(observation).max(192),rightsRef:text,obligations:z.array(obligation).max(32),allocationRefs:z.array(ExperimentRefSchema).max(16)}).strict();
 export function immutableControl<T>(v:T):T {const copy=structuredClone(v);const freeze=(x:unknown):void=>{if(x&&typeof x==='object'){for(const y of Object.values(x))freeze(y);Object.freeze(x);}};freeze(copy);return copy;}
-function parse<T>(schema:z.ZodTypeAny,v:unknown):T{const parsed=schema.safeParse(v);if(!parsed.success)throw new ControlContractError('INVALID_REQUEST','Unsupported or incomplete S4 contract');return parsed.data as T;}
+function parse<T>(schema:z.ZodType<T>,v:unknown):T{const parsed=schema.safeParse(v);if(!parsed.success)throw new ControlContractError('INVALID_REQUEST','Unsupported or incomplete S4 contract');return parsed.data;}
 export function parseEconomicMandate(v:unknown,support:{operatingProfit:true}|null=null):EconomicMandate {
  const m=parse<EconomicMandate>(mandateSchema,v),{ref,...body}=m;
  if(m.utility.operatingProfit&&!support?.operatingProfit)throw new ControlContractError('INVALID_REQUEST','This consumer does not support operating-profit accounting');
@@ -46,14 +49,20 @@ export function parseEconomicMandate(v:unknown,support:{operatingProfit:true}|nu
  if(m.resources.couplings.some(c=>Object.keys(c.weights).some(id=>!m.resources.dimensions.some(d=>d.id===id))))throw new ControlContractError('INVALID_REQUEST','Unknown coupled resource dimension');
  return immutableControl(m);
 }
-export function parseControlProblem(v:unknown):ControlProblem {
- const exact=!!v&&typeof v==='object'&&(v as ControlProblem).schema==='finnor.control-problem.exact.v2';
- const p=parse<ControlProblem>(exact?exactProblemSchema:problemSchema,v);
+export function parseControlProblem(v:unknown,support:{operatingProgramme:true}|null=null):ControlProblem {
+ const version=v&&typeof v==='object'&&'schema' in v?v.schema:null;
+ const exact=version==='finnor.control-problem.exact.v2',programme=version==='finnor.control-problem.operating-programme.v2';
+ if(programme&&!support?.operatingProgramme)throw new ControlContractError('INVALID_REQUEST','This consumer does not support joint operating programme search');
+ let p:ControlProblem;
+ if(programme){
+  try{p=compileOperatingProgramme(parse<OperatingProgrammeProblem>(operatingProgrammeProblemSchema,v)).problem;}
+  catch(error){if(error instanceof OperatingProgrammeError)throw new ControlContractError('INVALID_REQUEST',error.message);throw error;}
+ }else p=exact?parse<ExactControlProblem>(exactProblemSchema,v):parse<LegacyControlProblem>(problemSchema,v);
  if(new Set(p.actions.map(a=>a.id)).size!==p.actions.length||new Set(p.observations.map(a=>a.id)).size!==p.observations.length||new Set(p.obligations.map(a=>a.effectRef.id)).size!==p.obligations.length)throw new ControlContractError('INVALID_REQUEST','Duplicate action, instrument or effect obligation');
  // The v2 object is a display/lookup projection, not an alternative input law.
  // Action legality is checked from its bound original exact table, whose
  // declared finite policy family is shared by R1-off and R1-on.
- if(exact)return immutableControl(p);
+ if(p.schema==='finnor.control-problem.exact.v2')return immutableControl(p);
  if(p.actions.some(a=>a.earliestPeriod>a.lastPeriod||(!['WAIT','STOP'].includes(a.kind)&&!a.atMostOnce)||(['WAIT','STOP'].includes(a.kind)&&a.atMostOnce)||(a.kind==='INQUIRE')!==Boolean(a.protocolRef)||(a.kind==='INTERVENE')!==Boolean(Object.keys(a.exposures).length)))throw new ControlContractError('INVALID_REQUEST','Action meaning, commitment or inquiry binding is incomplete');
  for(const action of p.actions)if(action.precondition){
   const condition=action.precondition;
@@ -86,33 +95,11 @@ export function assertContingentPolicy(v:unknown):asserts v is ContingentPolicy 
  if(!v||typeof v!=='object')throw new ControlContractError('INVALID_POLICY','S4 policy unavailable');
  const p=v as ContingentPolicy,{ref,...body}=p;
  if(!((p.schema==='finnor.contingent-policy.v1'&&p.version==='s4-finite-contingent-v1'&&!p.exactProfile)||(p.schema==='finnor.contingent-policy.exact.v2'&&p.version==='s4-finite-contingent-exact-v2'&&p.exactProfile?.schema==='finnor.s4.exact-policy-profile.v2'))||ref?.owner!=='S4'||ref.version!==p.version||ref.contentDigest!==epistemicHash(body)||ref.id!==`contingent-policy:${ref.contentDigest}`||epistemicHash(p.admission)!==epistemicHash(CONTROL_ADMISSION))throw new ControlContractError('INVALID_POLICY','S4 policy commitment or admission is invalid');
- parseEconomicMandate(p.mandate,p.exactProfile?null:{operatingProfit:true});parseControlProblem(p.problem);
- const profit=p.mandate.utility.operatingProfit,certificate=p.certificate.operatingProfit;
- if(Boolean(profit)!==Boolean(certificate))throw new ControlContractError('INVALID_POLICY','Operating-profit profile and conditional certificate differ');
- if(profit&&certificate){
-  if(!OperatingProfitCertificateSchema.safeParse(certificate).success||certificate.objective!==profit.objective||certificate.unit!==p.mandate.utility.unit||certificate.currency!==profit.currency||certificate.moneyScale!==profit.moneyScale||epistemicHash(certificate.root)!==epistemicHash(profit.root)||certificate.measure!==(profit.netProfit?'NET_PROFIT_AFTER_FINANCING_AND_INCOME_TAX':'OPERATING_PROFIT_BEFORE_FINANCING_AND_TAX'))throw new ControlContractError('INVALID_POLICY','Operating-profit profile and conditional certificate differ');
-  if(certificate.forecasts.some(f=>f.incrementalOperatingProfit!==f.operatingProfit-f.comparatorOperatingProfit||f.incrementalFreeCashFlow!==f.freeCashFlow-f.comparatorFreeCashFlow||f.closingCash<profit.minimumCash||f.minimumCashObserved<profit.minimumCash||f.minimumCashObserved>Math.min(profit.openingCash,f.closingCash)))throw new ControlContractError('INVALID_POLICY','Operating-profit forecast accounting or cash floor differs');
-  for(const f of certificate.forecasts){
-   if(f.periods.length!==p.mandate.horizon.periods||f.nodeIds.length!==f.periods.length||f.nodeIds[0]!==p.rootNodeId)throw new ControlContractError('INVALID_POLICY','Operating-profit full cash ledger path is incomplete');
-   if(Boolean(profit.netProfit)!==Boolean(f.netProfit))throw new ControlContractError('INVALID_POLICY','Net-profit forecast accounting is missing or unexpected');
-   let utility=0,op=0,fcf=0,baselineOp=0,baselineFcf=0,net=0,baselineNet=0,cost=0,cash=profit.openingCash,minimum=cash;
-   for(let t=0;t<f.periods.length;t++){
-    const row=f.periods[t]!,node=p.nodes.find(n=>n.id===f.nodeIds[t]),action=p.problem.actions.find(a=>a.id===node?.actionId);
-    if(!node||!action||node.period!==t||t>0&&!p.nodes.find(n=>n.id===f.nodeIds[t-1])?.branches.some(b=>b.childId===node.id)||row.period!==t||row.actionCost!==action.cost||row.openingCash!==cash||row.cashAfterAction!==cash-row.actionCost||row.operatingProfit!==row.revenue-row.variableCost-row.fixedOperatingCost-row.depreciationAmortization-row.actionCost||row.freeCashFlow!==row.operatingProfit+row.depreciationAmortization-row.cashTaxes-row.capitalExpenditure-row.changeInWorkingCapital||row.nonOperatingNetCashFlow!==row.nonOperatingCashInflow-row.nonOperatingCashOutflow||row.closingCash!==cash+row.freeCashFlow+row.nonOperatingNetCashFlow)throw new ControlContractError('INVALID_POLICY','Operating-profit cash ledger differs from its original action path');
-    const n=row.netProfit;
-    if(Boolean(profit.netProfit)!==Boolean(n)||n&&(n.profit!==row.operatingProfit-n.financingExpense-n.incomeTaxExpense+n.otherIncome-n.otherExpense||n.comparator.profit!==row.comparatorOperatingProfit-n.comparator.financingExpense-n.comparator.incomeTaxExpense+n.comparator.otherIncome-n.comparator.otherExpense))throw new ControlContractError('INVALID_POLICY','Net-profit P&L ledger differs from financing, tax and other expense recognition');
-    if(n){net+=n.profit;baselineNet+=n.comparator.profit;}
-    op+=row.operatingProfit;fcf+=row.freeCashFlow;cost+=row.actionCost;cash=row.closingCash;minimum=Math.min(minimum,row.cashAfterAction,cash);
-    baselineOp+=row.comparatorOperatingProfit;baselineFcf+=row.comparatorFreeCashFlow;
-    utility+=p.mandate.utility.discountFactors[t]!*(profit.objective==='INCREMENTAL_NET_PROFIT'?n!.profit-n!.comparator.profit:profit.objective==='INCREMENTAL_OPERATING_PROFIT'?row.operatingProfit-row.comparatorOperatingProfit:row.freeCashFlow-row.comparatorFreeCashFlow);
-   }
-   utility+=p.mandate.utility.discountFactors[p.mandate.horizon.periods]!*(f.comparatorTerminalLiability-f.terminalLiability);
-   if(op!==f.operatingProfit||baselineOp!==f.comparatorOperatingProfit||fcf!==f.freeCashFlow||baselineFcf!==f.comparatorFreeCashFlow||f.netProfit&&(net!==f.netProfit.profit||baselineNet!==f.netProfit.comparatorProfit||f.netProfit.incrementalProfit!==net-baselineNet)||cost!==f.implementationCost||cash-f.terminalLiability!==f.closingCash||Math.min(minimum,cash-f.terminalLiability)!==f.minimumCashObserved||utility!==f.discountedUtility)throw new ControlContractError('INVALID_POLICY','Operating-profit ledger totals or discounted utility differ');
-  }
-  const worst=Math.min(...certificate.forecasts.map(f=>f.discountedUtility));
-  const assessment=assessRevenueProfitTarget(p.mandate,worst,p.certificate.completeSearch);
-  if(assessment&&(assessment.status!=='TARGET_MET_IN_RETAINED_MODEL'||p.certificate.valueBounds.some(v=>v!==worst)||p.nodes.find(n=>n.id===p.rootNodeId)?.valueBounds.some(v=>v!==worst))||epistemicHash(assessment??null)!==epistemicHash(certificate.profitTargetAssessment??null))throw new ControlContractError('INVALID_POLICY','Fixed revenue profit target or retained worst-world value differs');
- }
+ parseEconomicMandate(p.mandate,p.exactProfile?null:{operatingProfit:true});const parsedProblem=parseControlProblem(p.problem,p.exactProfile?null:{operatingProgramme:true});
+ if(epistemicHash(parsedProblem)!==epistemicHash(p.problem))throw new ControlContractError('INVALID_POLICY','Operating programme is not the complete original materialized domain');
+ const programmeReason=operatingProgrammeScopeReason(p.mandate,p.problem);if(programmeReason)throw new ControlContractError('INVALID_POLICY',programmeReason);
+ const profitReason=operatingProfitCertificateReason(p);
+ if(profitReason)throw new ControlContractError('INVALID_POLICY',profitReason);
  if(p.exactProfile&&(p.problem.schema!=='finnor.control-problem.exact.v2'||p.demand.schema!=='finnor.contingent-resource-demand.exact.v2'||p.problem.exactSource?.modelDigest!==p.exactProfile.modelDigest||p.demand.exact?.modelDigest!==p.exactProfile.modelDigest||epistemicHash(p.problem.exactSource.sourceRef)!==epistemicHash(p.exactProfile.sourceRef)||epistemicHash(p.demand.exact.sourceRef)!==epistemicHash(p.exactProfile.sourceRef)||p.certificate.basis!=='MODEL_RELATIVE_EXACT_INFORMATION_TABLE'||p.certificate.numericalTolerance!==0||p.exactProfile.evaluation.modelDigest!==p.exactProfile.modelDigest||p.exactProfile.authoritativeQuantities!=='ORIGINAL_EXACT_SOURCE'||p.exactProfile.legacyNumbers!=='PRESENTATION_ONLY'))throw new ControlContractError('INVALID_POLICY','Exact policy source and arithmetic binding differs');
- if(!p.exactProfile&&(p.problem.schema!=='finnor.control-problem.v1'||p.demand.schema!=='finnor.contingent-resource-demand.v1'||p.demand.exact))throw new ControlContractError('INVALID_POLICY','Legacy policy cannot claim an exact quantity projection');
+ if(!p.exactProfile&&(!['finnor.control-problem.v1','finnor.control-problem.operating-programme.v2'].includes(p.problem.schema)||p.demand.schema!=='finnor.contingent-resource-demand.v1'||p.demand.exact))throw new ControlContractError('INVALID_POLICY','Legacy policy cannot claim an exact quantity projection');
 }

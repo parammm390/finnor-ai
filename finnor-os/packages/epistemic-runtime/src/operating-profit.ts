@@ -2,6 +2,7 @@ import { z } from 'zod';
 import type { ControlDynamicsAdapter, ControlWorld, EconomicMandate, OperatingProfitDriver, OperatingProfitObjective, OperatingProfitForecast, OperatingProfitCashPeriod, RevenueProfitAssessment } from '@finnor/shared-types';
 import { ExperimentRefSchema } from './experiments';
 import { ER_ZERO, ExperimentRational } from './experiment-numerics';
+import { OperatingProgrammeSearchReportSchema } from './operating-programme';
 
 const text = z.string().min(1).max(256), amount = z.number().finite().nonnegative().max(1e9);
 const driver = z.discriminatedUnion('kind', [
@@ -9,6 +10,8 @@ const driver = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('CONSTANT'), value: amount, unit: text, sourceRef: ExperimentRefSchema }).strict(),
 ]);
 const root = z.object({ entityType: text, entityId: z.string().uuid() }).strict();
+const currency = z.string().regex(/^[A-Z]{3}$/), moneyScale = z.enum(['1', '1000', '1000000', '1000000000']);
+const objective = z.enum(['INCREMENTAL_OPERATING_PROFIT', 'INCREMENTAL_FREE_CASH_FLOW', 'INCREMENTAL_NET_PROFIT']);
 const horizon = z.object({ startAt: z.string().datetime({ offset: true }), periodMs: z.number().int().positive().max(31536000000), periods: z.number().int().min(1).max(24) }).strict();
 const netProfitAccounting = z.object({ schema: z.literal('finnor.s4.net-profit-accounting.v1'),
   financingExpense: driver, incomeTaxExpense: driver, otherIncome: driver, otherExpense: driver,
@@ -17,11 +20,9 @@ const revenueProfitTarget = z.object({ schema: z.literal('finnor.s4.revenue-prof
   basis: z.literal('INCREMENTAL_NET_PROFIT_LESS_ADDITIONAL_TERMINAL_LIABILITY'), denominator: z.literal('FIXED_PREREGISTERED_REVENUE'),
   revenueBaseline: z.object({ amount: amount.positive(), unit: text, root, horizon, sourceRef: ExperimentRefSchema }).strict(),
   qualification: z.literal('OWNER_BASELINE_ASSERTION_NOT_VERIFIED_REVENUE') }).strict();
-export const OperatingProfitObjectiveSchema = z.object({
+const operatingProfitAccounting = z.object({
   schema: z.literal('finnor.s4.operating-profit.v1'), root,
-  currency: z.string().regex(/^[A-Z]{3}$/), moneyScale: z.enum(['1', '1000', '1000000', '1000000000']),
-  objective: z.enum(['INCREMENTAL_OPERATING_PROFIT', 'INCREMENTAL_FREE_CASH_FLOW', 'INCREMENTAL_NET_PROFIT']),
-  netProfit: netProfitAccounting.optional(), profitTarget: revenueProfitTarget.optional(),
+  currency, moneyScale,
   segments: z.array(z.object({ id: text, quantityUnit: text, netUnitPrice: driver, unitsSold: driver, variableUnitCost: driver }).strict()).min(1).max(16),
   fixedOperatingCost: driver, depreciationAmortization: driver,
   accountsReceivable: driver, inventory: driver, accountsPayable: driver, capitalExpenditure: driver, cashTaxes: driver,
@@ -31,6 +32,12 @@ export const OperatingProfitObjectiveSchema = z.object({
   terminalWorkingCapital: z.literal('NO_AUTOMATIC_RELEASE'),
   qualification: z.literal('OWNER_ACCOUNTING_CONDITIONAL_S3_DYNAMICS_NOT_OBSERVED_VALUE'),
 }).strict();
+export const OperatingProfitObjectiveSchema = z.discriminatedUnion('objective', [
+  operatingProfitAccounting.extend({ objective: z.enum(['INCREMENTAL_OPERATING_PROFIT', 'INCREMENTAL_FREE_CASH_FLOW']),
+    netProfit: z.never().optional(), profitTarget: z.never().optional() }).strict(),
+  operatingProfitAccounting.extend({ objective: z.literal('INCREMENTAL_NET_PROFIT'),
+    netProfit: netProfitAccounting, profitTarget: revenueProfitTarget.optional() }).strict(),
+]) satisfies z.ZodType<OperatingProfitObjective>;
 const finite = z.number().finite();
 const netComponents = z.object({ financingExpense: finite.nonnegative(), incomeTaxExpense: finite.nonnegative(),
   otherIncome: finite.nonnegative(), otherExpense: finite.nonnegative(), profit: finite }).strict();
@@ -48,11 +55,11 @@ const cashPeriod = z.object({ period: z.number().int().min(0).max(23), revenue: 
   comparatorOperatingProfit: finite, comparatorFreeCashFlow: finite, openingCash: finite, cashAfterAction: finite, closingCash: finite,
   netProfit: netComponents.extend({ comparator: netComponents }).strict().optional() }).strict();
 export const OperatingProfitCertificateSchema = z.object({
-  schema: z.literal('finnor.s4.operating-profit-certificate.v1'), root: OperatingProfitObjectiveSchema.shape.root,
-  currency: OperatingProfitObjectiveSchema.shape.currency, moneyScale: OperatingProfitObjectiveSchema.shape.moneyScale,
-  unit: text, objective: OperatingProfitObjectiveSchema.shape.objective,
+  schema: z.literal('finnor.s4.operating-profit-certificate.v1'), root, currency, moneyScale,
+  unit: text, objective,
   measure: z.enum(['OPERATING_PROFIT_BEFORE_FINANCING_AND_TAX', 'NET_PROFIT_AFTER_FINANCING_AND_INCOME_TAX']),
   profitTargetAssessment: revenueProfitAssessment.optional(),
+  programmeSearch: OperatingProgrammeSearchReportSchema.optional(),
   comparator: z.literal('SAME_INITIAL_WORLD_AND_RETAINED_BASELINE_WITH_PENDING_OBLIGATIONS'),
   arithmetic: z.literal('FLOAT64_INHERITS_S3_AND_SEARCH_LIMITATIONS'),
   forecastBasis: z.literal('UNDISCOUNTED_TOTALS_SEPARATE_TERMINAL_LIABILITIES'),
@@ -82,11 +89,9 @@ export function operatingProfitContractReason(m: EconomicMandate, dynamics?: Con
   if (!p) return null;
   if (m.utility.unit !== operatingMoneyUnit(p) || m.utility.periodTerms.length || m.utility.terminalTerms.length || m.utility.deliberation)
     return 'Operating-profit accounting requires its exact currency/scale unit and excludes duplicate linear or deliberation utility';
-  if ((p.objective === 'INCREMENTAL_NET_PROFIT') !== Boolean(p.netProfit))
-    return 'Net-profit objective requires explicit financing, income-tax and other P&L accounting';
   if (p.profitTarget) {
     const b = p.profitTarget.revenueBaseline;
-    if (p.objective !== 'INCREMENTAL_NET_PROFIT' || m.utility.discountFactors.some(v => v !== 1))
+    if (m.utility.discountFactors.some(v => v !== 1))
       return 'Revenue profit target requires undiscounted incremental net profit and the additional terminal-liability reserve';
     if (b.unit !== operatingMoneyUnit(p) || b.root.entityType !== p.root.entityType || b.root.entityId !== p.root.entityId ||
       b.horizon.startAt !== m.horizon.startAt || b.horizon.periodMs !== m.horizon.periodMs || b.horizon.periods !== m.horizon.periods)
@@ -135,9 +140,6 @@ function read(d: OperatingProfitDriver, states: Record<string, number>): number 
     throw new OperatingProfitDomainError('OPERATING_PROFIT_DRIVER_OUTSIDE_QUALIFIED_DOMAIN');
   return v;
 }
-function workingCapital(p: OperatingProfitObjective, states: Record<string, number>): number {
-  return read(p.accountsReceivable, states) + read(p.inventory, states) - read(p.accountsPayable, states);
-}
 /** State values remain conditional FLOAT64 S3 simulations. There is no implicit
  * FX, ownership, financing payment schedule, tax shield or stock liquidation. */
 export function operatingProfitPeriod(p: OperatingProfitObjective, previous: Record<string, number>, states: Record<string, number>, actionCost: number) {
@@ -149,11 +151,15 @@ export function operatingProfitPeriod(p: OperatingProfitObjective, previous: Rec
   }
   const depreciation = read(p.depreciationAmortization, states), fixedCost = read(p.fixedOperatingCost, states);
   const operatingProfit = revenue - variableCost - fixedCost - depreciation - actionCost;
-  const changeInWorkingCapital = workingCapital(p, states) - workingCapital(p, previous);
+  // Difference each stock before summing: subtracting aggregate balances can
+  // erase a small cash movement beside an unrelated large stock balance.
+  const receivablesFunding = read(p.accountsReceivable, states) - read(p.accountsReceivable, previous);
+  const inventoryFunding = read(p.inventory, states) - read(p.inventory, previous);
+  const payablesFunding = read(p.accountsPayable, previous) - read(p.accountsPayable, states);
+  const changeInWorkingCapital = receivablesFunding + inventoryFunding + payablesFunding;
   const freeCashFlow = operatingProfit + depreciation - read(p.cashTaxes, states) - read(p.capitalExpenditure, states) - changeInWorkingCapital;
   const nonOperatingNetCashFlow = read(p.nonOperatingCashInflow, states) - read(p.nonOperatingCashOutflow, states);
-  const workingCapitalFunding = Math.max(0, read(p.accountsReceivable, states) - read(p.accountsReceivable, previous)) +
-    Math.max(0, read(p.inventory, states) - read(p.inventory, previous)) + Math.max(0, read(p.accountsPayable, previous) - read(p.accountsPayable, states));
+  const workingCapitalFunding = Math.max(0, receivablesFunding) + Math.max(0, inventoryFunding) + Math.max(0, payablesFunding);
   if (![revenue, variableCost, operatingProfit, freeCashFlow, nonOperatingNetCashFlow, changeInWorkingCapital].every(Number.isFinite))
     throw new OperatingProfitDomainError('OPERATING_PROFIT_NONFINITE_ACCOUNTING');
   let netProfit: z.infer<typeof netComponents> | undefined;
