@@ -40,6 +40,9 @@ function processStat(pid){
   return result
  }catch{readMisses++;return null}
 }
+function liveObservedProcesses(){
+ return [...tracked.values()].filter(row=>{const current=processStat(row.pid);return current?.startTicks===row.startTicks&&current.state!=='Z'})
+}
 function terminate(signal){
  for(const identity of [...tracked.values()].reverse()){
   const current=processStat(identity.pid)
@@ -54,10 +57,11 @@ function stop(reason){
 }
 function sample(){
  if(finished||!child.pid)return
- const all=readdirSync('/proc').filter(name=>/^[0-9]+$/.test(name)).map(processStat).filter(Boolean),owned=new Set([child.pid])
+ const all=readdirSync('/proc').filter(name=>/^[0-9]+$/.test(name)).map(processStat).filter(Boolean),owned=new Set()
  const rootProcess=all.find(row=>row.pid===child.pid)
- if(!rootProcess||rootStartTicks&&rootProcess.startTicks!==rootStartTicks)return
- rootStartTicks??=rootProcess.startTicks
+ if(rootProcess&&(!rootStartTicks||rootProcess.startTicks===rootStartTicks)){
+  rootStartTicks??=rootProcess.startTicks;owned.add(child.pid)
+ }
  for(const identity of tracked.values())if(all.some(row=>row.pid===identity.pid&&row.startTicks===identity.startTicks))owned.add(identity.pid)
  let changed=true
  while(changed){changed=false;for(const row of all)if(owned.has(row.parentPid)&&!owned.has(row.pid)){owned.add(row.pid);changed=true}}
@@ -81,14 +85,21 @@ const terminal=await new Promise(resolve=>{
  child.once('exit',(exitCode,signal)=>resolve({exitCode,signal}))
  sample()
 })
+const cleanupStarted=performance.now(),cleanupBoundMs=Math.min(3000,Math.max(0,timeoutMs-(cleanupStarted-started)))
+const initiallyAliveObservedDescendants=liveObservedProcesses().map(({pid,startTicks})=>({pid,startTicks}))
+while(!stopReason&&liveObservedProcesses().length&&performance.now()-cleanupStarted<cleanupBoundMs){
+ await new Promise(resolve=>setTimeout(resolve,Math.min(intervalMs,Math.max(1,cleanupBoundMs-(performance.now()-cleanupStarted)))))
+}
+const cleanupWaitMs=performance.now()-cleanupStarted
 finished=true;clearInterval(sampler);clearTimeout(deadline);clearTimeout(killTimer)
 if(statSync(output+'.log').size>maxLogBytes)stopReason??='COMMAND_LOG_BOUND'
 if(stopReason)terminate('SIGKILL')
 closeSync(log)
-const alive=[...tracked.values()].filter(row=>{const current=processStat(row.pid);return current?.startTicks===row.startTicks&&current.state!=='Z'})
+const alive=liveObservedProcesses()
 const result={schema:'finnor.x3.sampled-process-meter.v1',status:terminal.exitCode===0&&!stopReason?(alive.length?'PARTIAL_COMMAND_CLEANUP':'PASS_COMMAND'):'FAIL_COMMAND',
  command:[command,...args],cwd,node:process.execPath,nodeVersion:process.version,source,startedAt,endedAt:new Date().toISOString(),wallMs:performance.now()-started,
  ...terminal,stopReason,bounds:{timeoutMs,maxRssBytes,maxLogBytes,intervalMs},samples,observedProcesses:tracked.size,
+ cleanup:{boundMs:cleanupBoundMs,waitedMs:cleanupWaitMs,initiallyAliveObservedDescendants},
  observedCpuSeconds:samples?[...tracked.values()].reduce((sum,row)=>sum+row.cpuTicks,0)/tickHz:null,
  sampledAggregatePeakRssBytes:samples?peakRssBytes:null,sampledAggregatePeakSwapBytes:samples&&!swapReadMisses?peakSwapBytes:null,swapReadMisses,
  processIdentities:[...tracked.values()].map(({pid,parentPid,startTicks})=>({pid,parentPid,startTicks})),aliveObservedDescendants:alive.map(({pid,startTicks})=>({pid,startTicks})),
