@@ -218,9 +218,9 @@ try{
  await membership('partner','compliance',true);
  await membership('analyst','partner',true);
  await membership('ledger','finance',true);
+ if(nativeFactory){await worker();await recordPriorReleaseProbeRefusal(evidence,e.admin);}
  // Fresh transfer uses a genuinely fresh operator, not the old source role.
  main=await install(reconciliation(tenant,root.entityId));
- if(nativeFactory)await recordPriorReleaseProbeRefusal(evidence,e.admin);
  const trainIds:string[]=[];
  for(const [id,currency,lines,bank,count] of training){
   console.log('X5_TRAINING_LINEAGE',id);
