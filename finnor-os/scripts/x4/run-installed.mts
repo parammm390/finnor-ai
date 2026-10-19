@@ -27,6 +27,8 @@ const boundary=process.env.FINNOR_X4_BOUNDARY??'none';
 assert(['none','cancel','revoke','deadline','observations','experiments','analysis','role','version','authority','work','work-cancel'].includes(boundary));
 const recovery=process.env.FINNOR_X4_RECOVERY??'none';
 assert(['none','crash','inflight-cancel','concurrent'].includes(recovery));
+const nativeFactory=process.env.FINNOR_X_PHASE_NATIVE_WORKER==='1';
+if(nativeFactory)assert(phase==='full'&&boundary==='none'&&recovery==='none'&&fault==='none','NATIVE_FACTORY_PROOF_REQUIRES_UNCHANGED_FULL_PROFILE');
 if(recovery==='crash')process.env.WORKER_JOB_LEASE_SECONDS='30';
 const e=await startEnvironment(evidence,{builtApi:process.env.FINNOR_X4_BUILT_API==='1',commitClock:true,baseHead:'0190_x5_experience_policy.sql'});
 const tenant=randomUUID(),people:Record<string,string>={},tokens:Record<string,string>={};
@@ -61,7 +63,10 @@ async function tick(){
   worker!.send({id:n,operation:'TICK'});
  });
  assert(!/postgres(?:ql)?:\/\/|Bearer /i.test(workerOutput),'Credentials cannot enter worker evidence');
- await artifact(evidence,'workers/'+n+'.json',{...result,logs:workerOutput});return result;
+ await artifact(evidence,'workers/'+n+'.json',{...result,logs:workerOutput});
+ assert(!result.error,'X4_ORDINARY_QUEUE_DRIVER_FAILED');
+ if(nativeFactory){assert.equal(result.productionWorkerFactory,true);assert.equal(result.effectiveLeaseSeconds,300);assert.equal(result.workloadClass,null);}
+ return result;
 }
 async function dump(id?:string){
  const statements={
@@ -97,6 +102,7 @@ try{
  const workstream=await createWorkstream(ctx,{dealId:root.entityId,kind:'technology',name:'Test-service export completeness',owner:{partyType:'employee',partyId:people.author!}}),
   investmentCase=await createInvestmentCase(ctx,{dealId:root.entityId,title:'Development export reconciliation, not financial completion'});
  await startWorker();
+ if(nativeFactory)await tick();
  const [source,replica]=await Promise.all([
   prepareBlackBox({mode,instrumentFault:fault,responseLossOnce:process.env.FINNOR_X4_RESPONSE_LOSS==='1',actualExposureMismatch:process.env.FINNOR_X4_EXPOSURE_MISMATCH==='1'}).then(b=>{boxes.push(b);return b;}),
   prepareBlackBox({mode:process.env.FINNOR_X4_REPLICA_FAILURE==='1'?'affine':mode}).then(b=>{boxes.push(b);return b;}),

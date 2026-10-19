@@ -19,6 +19,8 @@ const evidence=resolve(process.env.FINNOR_X5_EVIDENCE_DIR??join(repo,'scope-x5/e
 await mkdir(evidence,{recursive:true});
 const phase=process.env.FINNOR_X5_PHASE??'full',smoke=phase==='smoke',full=phase==='full',pendingOnly=phase==='pending';
 assert(['full','smoke','pending','probes','review-probes','faults','resources','browser','caller-expiry'].includes(phase),'REGISTERED_PHASE_REQUIRED');
+const nativeFactory=process.env.FINNOR_X_PHASE_NATIVE_WORKER==='1';
+if(nativeFactory)assert(full,'NATIVE_FACTORY_PROOF_REQUIRES_UNCHANGED_FULL_PROFILE');
 if(full||pendingOnly)for(const name of ['FINNOR_S3_PYTHON','FINNOR_S4_PYTHON'])assert(process.env[name]?.startsWith('/'),name+'_ABSOLUTE_PIN_REQUIRED_BEFORE_CAMPAIGN');
 const observations:any[]=[],armResults:any[]=[],useIds:string[]=[],retainedUseIds:string[]=[];
 const privateArtifacts=await mkdtemp(join(tmpdir(),'finnor-x5-owners-'));
@@ -50,6 +52,7 @@ async function worker(){
  });
  assert(!/postgres(?:ql)?:\/\/|Bearer /i.test(out.logs),'Credentials cannot enter worker evidence');
  await artifact(evidence,'workers/'+n+'.json',{...out,wallMs:performance.now()-at,ordinaryPhysicalWorker:true,persistentOrdinaryClaimLoop:true});
+ if(nativeFactory){assert.equal(out.productionWorkerFactory,true);assert.equal(out.effectiveLeaseSeconds,300);assert.equal(out.workloadClass,null);}
  assert.equal(out.code,0,JSON.stringify(out));return out;
 }
 async function restartWorker(){
