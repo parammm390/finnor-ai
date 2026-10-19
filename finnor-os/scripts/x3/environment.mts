@@ -4,7 +4,7 @@ import EmbeddedPostgres from 'embedded-postgres';
 import pg from 'pg';
 import {randomBytes,createHash} from 'node:crypto';
 import {createServer} from 'node:net';
-import {mkdir,mkdtemp,readFile,readdir,writeFile} from 'node:fs/promises';
+import {mkdir,mkdtemp,readFile,readdir,writeFile,appendFile} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join,resolve} from 'node:path';
 import {strict as assert} from 'node:assert';
@@ -18,7 +18,7 @@ export async function artifact(directory:string,name:string,value:unknown){
  const path=join(directory,name);await mkdir(resolve(path,'..'),{recursive:true});
  await writeFile(path,JSON.stringify(value,null,2)+'\n');
 }
-export async function startEnvironment(evidence:string,options:{builtApi?:boolean;migrationsOnly?:boolean}={}){
+export async function startEnvironment(evidence:string,options:{builtApi?:boolean;migrationsOnly?:boolean;commitClock?:boolean;baseHead?:string}={}){
  await mkdir(evidence,{recursive:true});
  process.env.NODE_ENV='test';process.env.AUTH_DEV_BYPASS='0';
  process.env.FINNOR_TEST_MANAGED_EXTENSIONS='omit';process.env.FINNOR_P4_PROFILE='ordinary_disposable';
@@ -33,12 +33,14 @@ export async function startEnvironment(evidence:string,options:{builtApi?:boolea
   await artifact(evidence,'database-lifecycle.json',{profile:'DISPOSABLE_LOCAL_POSTGRESQL',directory,port,status:'STOPPED',hostedQualification:false});
  };
  try{
-  await postgres.initialise();await postgres.start();started=true;await postgres.createDatabase('x3_e2e');
+  await postgres.initialise();
+  if(options.commitClock)await appendFile(join(directory,'postgresql.conf'),'\ntrack_commit_timestamp=on\n');
+  await postgres.start();started=true;await postgres.createDatabase('x3_e2e');
   const adminUrl=`postgres://x3_admin:${password}@127.0.0.1:${port}/x3_e2e`;
   const migrations=join(repo,'finnor-os/packages/db/migrations');
   const files=await Promise.all((await readdir(migrations)).filter(p=>p.endsWith('.sql')).sort().map(async name=>({name,sql:await readFile(join(migrations,name),'utf8')})));
-  const prefix=files.filter(f=>f.name<='0188_observation_source_version_binding.sql');
-  assert.equal(prefix.at(-1)?.name,'0188_observation_source_version_binding.sql');
+  const baseHead=options.baseHead??'0188_observation_source_version_binding.sql',prefix=files.filter(f=>f.name<=baseHead);
+  assert.equal(prefix.at(-1)?.name,baseHead);
   const prior=await migrate(adminUrl,prefix);
   admin=new pg.Client({connectionString:adminUrl});await admin.connect();
   await admin.query("SET app.test_vertical_mode='explicit'");

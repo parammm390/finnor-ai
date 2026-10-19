@@ -148,11 +148,20 @@ export async function maintainApplication(ctx:PeMutationContext,value:unknown){
  });
 }
 export async function commandApplication(ctx:PeMutationContext,value:unknown){
+ return commandApplicationWithBoundary(ctx,value);
+}
+/** Trusted native consumers may bind their immutable invocation and current
+ * rights to the same atomic owner decision. JSON callers cannot supply hooks. */
+export async function commandApplicationWithBoundary(ctx:PeMutationContext,value:unknown,boundary?:{
+ beforeTx:(c:import('pg').PoolClient)=>Promise<void>;
+ resultTx:(c:import('pg').PoolClient,result:unknown)=>Promise<void>;
+}){
  const input=parse(ApplicationCommandSchema,value),digest=applicationDigest(input),environment=await currentApplicationEnvironment();
  return tx(ctx,async c=>{
   const a=await applicationTx(ctx,c,input.applicationId,'action:operate_enterprise_application');assertAllocation(a);
+  await boundary?.beforeTx(c);
   const prior=await priorEventTx(c,a,principal(ctx),'command:'+input.idempotencyKey,digest);
-  if(prior)return {...prior.result,replayed:true};
+  if(prior){const result={...prior.result,replayed:true};await boundary?.resultTx(c,result);return result;}
   const release=await releaseTx(c,a),action=release.specification.actions.find(x=>x.id===input.actionId&&x.entityId===input.entityId);
   assertApplicationEnvironment(release.environment,environment);
   const currentWork=await workCutTx(c,a);
@@ -201,6 +210,7 @@ export async function commandApplication(ctx:PeMutationContext,value:unknown){
   const result={applicationId:a.id,decision,record:stored?projectRecord(stored,currentness,a.head_release_id):null,replayed:false};
   await eventTx(c,a,principal(ctx),decision.allowed?'BUSINESS_COMMAND':'BUSINESS_COMMAND_REFUSED','command:'+input.idempotencyKey,digest,
    {result,input,before:record?projectRecord(record,evidenceCurrentness(record.values,facts.currentEvidence),a.head_release_id):null},stored?.id??null,null,true);
+  await boundary?.resultTx(c,result);
   assertAllocation(a);await assertAuthorityTemporalBoundsTx(c,temporalBounds);
   return result;
  });
@@ -291,7 +301,7 @@ export async function readApplicationRecord(ctx:PeMutationContext,value:unknown)
 export async function applicationHistory(ctx:PeMutationContext,value:unknown){
  const input=parse(ApplicationHistorySchema,value);return tx(ctx,async c=>{
   const a=await applicationTx(ctx,c,input.applicationId);if(input.recordId)await recordTx(c,a,input.recordId);
-  return {events:(await c.query('SELECT id::text,record_id,build_id,actor_id,kind,body,created_at FROM finnor_os.x3_events WHERE tenant_id=$1 AND application_id=$2 AND ($3::uuid IS NULL OR record_id=$3) AND ($4::bigint IS NULL OR id<$4) ORDER BY id DESC LIMIT $5',[a.tenant_id,a.id,input.recordId??null,input.before??null,input.limit])).rows};
+  return {events:(await c.query('SELECT h.id::text,h.record_id,h.build_id,h.actor_id,h.kind,h.body,h.created_at FROM finnor_os.x3_events h WHERE h.tenant_id=$1 AND h.application_id=$2 AND ($3::uuid IS NULL OR h.record_id=$3) AND ($4::bigint IS NULL OR h.id<$4) ORDER BY h.id DESC LIMIT $5',[a.tenant_id,a.id,input.recordId??null,input.before??null,input.limit])).rows};
  });
 }
 export async function listApplications(ctx:PeMutationContext,value:unknown){

@@ -201,7 +201,10 @@ export const ApplicationActionSchema = z.object({
   guards: z.array(ApplicationGuardSchema).max(64), outcome: ApplicationIdSchema,
   requirementIds: z.array(ApplicationIdSchema).min(1).max(64),
   approval: ApplicationApprovalSchema.optional(), requiresApprovalsFrom: ApplicationIdSchema.optional(),
-  preparedEffect: z.object({ kind: ApplicationIdSchema, fields: z.array(ApplicationIdSchema).min(1).max(32) }).strict().optional(),
+  preparedEffect: z.object({
+    kind: ApplicationIdSchema, fields: z.array(ApplicationIdSchema).min(1).max(32),
+    exactBindings: z.object({quantity:ApplicationIdSchema,operation:ApplicationIdSchema,channel:ApplicationIdSchema}).strict().optional(),
+  }).strict().optional(),
 }).strict();
 export type ApplicationAction = z.infer<typeof ApplicationActionSchema>;
 export const ApplicationInvariantSchema = z.object({
@@ -447,6 +450,13 @@ export function parseBusinessSpecification(value: unknown): BusinessSpecificatio
     if (action.preparedEffect) {
       applicationUnique(action.preparedEffect.fields, "Prepared effect fields");
       action.preparedEffect.fields.forEach(f => applicationRequire(entity.fields.some(v => v.id === f), "Unknown effect field"));
+      const codec=action.preparedEffect.exactBindings;
+      if(codec){
+        applicationRequire(action.preparedEffect.kind==="S4_EXACT_CONDITIONAL_DOSE","Unsupported exact effect codec");
+        applicationUnique(Object.values(codec),"Exact effect bindings");
+        for(const [name,id] of Object.entries(codec))applicationRequire(action.preparedEffect.fields.includes(id)&&
+          entity.fields.some(f=>f.id===id&&f.type===(name==="quantity"?"quantity":"text")),"Invalid exact effect binding");
+      }
     }
   }
   for (const invariant of spec.invariants) {

@@ -176,6 +176,13 @@ export function validateProgram(value: unknown): ApplicationProgram {
     if (a.preparedEffect) {
       applicationUnique(a.preparedEffect.fields, "Effect fields");
       applicationRequire(a.preparedEffect.fields.every(id => entity.fields.some(f => f.id === id)), "Unknown effect field", "INVALID_PROGRAM");
+      const codec=a.preparedEffect.exactBindings;
+      if(codec){
+        applicationRequire(a.preparedEffect.kind==="S4_EXACT_CONDITIONAL_DOSE","Unsupported exact effect codec","INVALID_PROGRAM");
+        applicationUnique(Object.values(codec),"Exact effect bindings");
+        for(const [name,id] of Object.entries(codec))applicationRequire(a.preparedEffect.fields.includes(id)&&
+          entity.fields.some(f=>f.id===id&&f.type===(name==="quantity"?"quantity":"text")),"Invalid exact effect binding","INVALID_PROGRAM");
+      }
     }
   }
   for (const invariant of program.invariants) {

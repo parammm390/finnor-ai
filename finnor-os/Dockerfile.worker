@@ -45,6 +45,8 @@ COPY scripts/release/production-mutation-guard.mjs scripts/release/release-polic
 COPY src/components/centropy/canvas/ElicitationProtocolReview.tsx /app/src/components/centropy/canvas/ElicitationProtocolReview.tsx
 COPY src/components/centropy/canvas/elicitation-protocol-view.ts /app/src/components/centropy/canvas/elicitation-protocol-view.ts
 COPY src/components/centropy/canvas/CapitalProgramPanel.tsx /app/src/components/centropy/canvas/CapitalProgramPanel.tsx
+COPY src/components/centropy/canvas/CanvasDocument.tsx src/components/centropy/canvas/LearnedPolicyPanel.tsx src/components/centropy/canvas/EnterpriseApplicationPanel.tsx src/components/centropy/canvas/application-client.ts src/components/centropy/canvas/canvas-compose.ts src/components/centropy/canvas/canvas-contract.ts /app/src/components/centropy/canvas/
+COPY src/lib/centropy/capability-manifest.generated.json /app/src/lib/centropy/capability-manifest.generated.json
 COPY scope-r/r3-incentive-rule-synthesis/verification-plan.json /app/scope-r/r3-incentive-rule-synthesis/verification-plan.json
 
 RUN npm ci --no-audit --no-fund

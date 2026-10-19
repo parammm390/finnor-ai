@@ -46,17 +46,19 @@ export async function prepareApplicationEffect(ctx:PeMutationContext,value:unkno
   const temporalBounds:string[]=[],intent=await currentIntent(ctx,c,a,r,temporalBounds),operationId=prior?.operationId??newId();
   if(r.pending_effect_id&&r.pending_effect_id!==operationId)fail('CANONICAL_EFFECT_PREPARATION_PENDING');
   assertAllocation(a);await assertAuthorityTemporalBoundsTx(c,temporalBounds);
-  return {a,intent,operationId,started:!!prior};
+  const codec=(await releaseTx(c,a)).specification.actions.find(v=>v.id===intent.binding.actionId)?.preparedEffect?.exactBindings
+   ??{quantity:'quantity',operation:'operation',channel:'channel'};
+  return {a,intent,codec,operationId,started:!!prior};
  });
  if('done' in start)return start.done;
  const prepared=await readEnterpriseContingentHandoffPreparation(ctx,input.preparationRef),intervention=prepared.handoff.intervention;
- const values=start.intent!.binding.values,q=values.quantity as ApplicationQuantity|undefined;
+ const values=start.intent!.binding.values,q=values[start.codec!.quantity] as ApplicationQuantity|undefined;
  // Public adapter codec: a single exact conditional dose, including the full
  // currency/unit/accounting/time meaning. No inferred FX, rounding or netting.
  if(!intervention||intervention.channels.length!==1||!q||q.kind!=='QUANTITY')fail('UNSUPPORTED_APPLICATION_EFFECT_CODEC');
  const channel=intervention.channels[0]!;
  if(channel.doses.length!==1||channel.target.entityId!==start.a!.root_id||q.entity.id!==start.a!.root_id||
-  values.operation!==channel.operation||values.channel!==channel.exposureId||channel.unit!==`${q.currency}:${q.units}:${q.accountingBasis}`||
+  values[start.codec!.operation]!==channel.operation||values[start.codec!.channel]!==channel.exposureId||channel.unit!==`${q.currency}:${q.units}:${q.accountingBasis}`||
   q.time.kind!=='AS_OF'||q.time.asOf!==intervention.timing.startAt||
   !applicationExactCompare(q.amount,String(channel.doses[0]),'eq')||
   applicationCanonical(prepared.handoff.allocationRef)!==applicationCanonical(input.allocationRef))fail('APPLICATION_S4_EXACT_BINDING_MISMATCH');

@@ -799,6 +799,35 @@
                           },
                           "minItems": 1,
                           "maxItems": 32
+                        },
+                        "exactBindings": {
+                          "type": "object",
+                          "properties": {
+                            "quantity": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120,
+                              "pattern": "^[A-Za-z][A-Za-z0-9_.:-]*$"
+                            },
+                            "operation": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120,
+                              "pattern": "^[A-Za-z][A-Za-z0-9_.:-]*$"
+                            },
+                            "channel": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120,
+                              "pattern": "^[A-Za-z][A-Za-z0-9_.:-]*$"
+                            }
+                          },
+                          "required": [
+                            "quantity",
+                            "operation",
+                            "channel"
+                          ],
+                          "additionalProperties": false
                         }
                       },
                       "required": [
@@ -2983,6 +3012,35 @@
                           },
                           "minItems": 1,
                           "maxItems": 32
+                        },
+                        "exactBindings": {
+                          "type": "object",
+                          "properties": {
+                            "quantity": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120,
+                              "pattern": "^[A-Za-z][A-Za-z0-9_.:-]*$"
+                            },
+                            "operation": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120,
+                              "pattern": "^[A-Za-z][A-Za-z0-9_.:-]*$"
+                            },
+                            "channel": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120,
+                              "pattern": "^[A-Za-z][A-Za-z0-9_.:-]*$"
+                            }
+                          },
+                          "required": [
+                            "quantity",
+                            "operation",
+                            "channel"
+                          ],
+                          "additionalProperties": false
                         }
                       },
                       "required": [
@@ -5822,6 +5880,788 @@
         "required": [
           "applicationId",
           "revisionRef"
+        ],
+        "additionalProperties": false
+      },
+      "learning-consent": {
+        "type": "object",
+        "properties": {
+          "schema": {
+            "type": "string",
+            "const": "finnor.x5.training-rights.v1"
+          },
+          "applicationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "purposes": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": [
+              {
+                "type": "string",
+                "const": "TRAIN_STRUCTURAL_CONTROLLER"
+              },
+              {
+                "type": "string",
+                "const": "EXECUTE_DERIVED_POLICY"
+              }
+            ]
+          },
+          "transfer": {
+            "type": "string",
+            "enum": [
+              "SOURCE_APPLICATION_ONLY",
+              "SAME_TENANT_COMPATIBLE_APPLICATIONS"
+            ]
+          },
+          "failures": {
+            "type": "string",
+            "const": "NONPOSITIVE_STRUCTURAL_OBSERVATIONS_ONLY"
+          },
+          "data": {
+            "type": "string",
+            "const": "STRUCTURAL_BOOLEANS_ONLY_NO_TEXT_AMOUNTS_IDENTIFIERS_CREDENTIALS"
+          },
+          "retention": {
+            "type": "string",
+            "const": "RETAIN_AUDIT_REVOKE_DERIVED_USE_NO_UNLEARNING_CLAIM"
+          },
+          "knowledgeCut": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "validUntil": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          }
+        },
+        "required": [
+          "schema",
+          "applicationId",
+          "purposes",
+          "transfer",
+          "failures",
+          "data",
+          "retention",
+          "knowledgeCut",
+          "validUntil",
+          "idempotencyKey"
+        ],
+        "additionalProperties": false
+      },
+      "learning-revoke-consent": {
+        "type": "object",
+        "properties": {
+          "consentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          }
+        },
+        "required": [
+          "consentId",
+          "reason",
+          "idempotencyKey"
+        ],
+        "additionalProperties": false
+      },
+      "learning-experience": {
+        "type": "object",
+        "properties": {
+          "experience": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "applicationId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "recordIds": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "minItems": 1,
+                  "maxItems": 256
+                },
+                "consentId": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "required": [
+                "applicationId",
+                "recordIds",
+                "consentId"
+              ],
+              "additionalProperties": false
+            },
+            "minItems": 1,
+            "maxItems": 16
+          },
+          "knowledgeCut": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "experience",
+          "knowledgeCut"
+        ],
+        "additionalProperties": false
+      },
+      "learning-submit": {
+        "type": "object",
+        "properties": {
+          "schema": {
+            "type": "string",
+            "const": "finnor.x5.compile-request.v1"
+          },
+          "root": {
+            "type": "object",
+            "properties": {
+              "entityType": {
+                "type": "string",
+                "enum": [
+                  "pe_strategy",
+                  "pe_opportunity",
+                  "pe_deal",
+                  "pe_fund",
+                  "pe_vehicle",
+                  "external_organization",
+                  "pe_portfolio_holding"
+                ]
+              },
+              "entityId": {
+                "type": "string",
+                "format": "uuid"
+              }
+            },
+            "required": [
+              "entityType",
+              "entityId"
+            ],
+            "additionalProperties": false
+          },
+          "workId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "workInputId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "experience": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "applicationId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "recordIds": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "minItems": 1,
+                  "maxItems": 256
+                },
+                "consentId": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "required": [
+                "applicationId",
+                "recordIds",
+                "consentId"
+              ],
+              "additionalProperties": false
+            },
+            "minItems": 1,
+            "maxItems": 16
+          },
+          "knowledgeCut": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          },
+          "limits": {
+            "type": "object",
+            "properties": {
+              "deadlineMs": {
+                "type": "integer",
+                "minimum": 1000,
+                "maximum": 3600000
+              },
+              "maxAttempts": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 8
+              },
+              "maxUses": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 256
+              }
+            },
+            "required": [
+              "deadlineMs",
+              "maxAttempts",
+              "maxUses"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "schema",
+          "root",
+          "experience",
+          "knowledgeCut",
+          "idempotencyKey",
+          "limits"
+        ],
+        "additionalProperties": false
+      },
+      "learning-read": {
+        "type": "object",
+        "properties": {
+          "compilationId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "compilationId"
+        ],
+        "additionalProperties": false
+      },
+      "learning-list": {
+        "type": "object",
+        "properties": {
+          "root": {
+            "type": "object",
+            "properties": {
+              "entityType": {
+                "type": "string",
+                "enum": [
+                  "pe_strategy",
+                  "pe_opportunity",
+                  "pe_deal",
+                  "pe_fund",
+                  "pe_vehicle",
+                  "external_organization",
+                  "pe_portfolio_holding"
+                ]
+              },
+              "entityId": {
+                "type": "string",
+                "format": "uuid"
+              }
+            },
+            "required": [
+              "entityType",
+              "entityId"
+            ],
+            "additionalProperties": false
+          },
+          "workId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "root",
+          "workId"
+        ],
+        "additionalProperties": false
+      },
+      "learning-execute": {
+        "type": "object",
+        "properties": {
+          "compilationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "releaseId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "applicationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "recordId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "expectedRevision": {
+            "type": "integer",
+            "exclusiveMinimum": 0
+          },
+          "expectedReference": {
+            "type": "object",
+            "properties": {
+              "owner": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 32
+              },
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200
+              },
+              "revision": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200
+              },
+              "contentDigest": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            },
+            "required": [
+              "owner",
+              "id",
+              "revision",
+              "contentDigest"
+            ],
+            "additionalProperties": false
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "COMPILED_ORIGINAL",
+              "COMPILED_TRAINED",
+              "NATIVE_EXACT",
+              "COMPILED_NO_NEURAL"
+            ]
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          },
+          "stratum": {
+            "type": "string",
+            "enum": [
+              "TRANSFER",
+              "RETENTION",
+              "BOUNDARY"
+            ]
+          },
+          "assignmentRef": {
+            "type": "object",
+            "properties": {
+              "owner": {
+                "type": "string",
+                "const": "X5_ASSIGNMENT"
+              },
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "revision": {
+                "type": "string",
+                "const": "1"
+              },
+              "contentDigest": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            },
+            "required": [
+              "owner",
+              "id",
+              "revision",
+              "contentDigest"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "compilationId",
+          "releaseId",
+          "applicationId",
+          "recordId",
+          "expectedRevision",
+          "expectedReference",
+          "mode",
+          "idempotencyKey",
+          "stratum"
+        ],
+        "additionalProperties": false
+      },
+      "learning-evaluate": {
+        "type": "object",
+        "properties": {
+          "compilationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "releaseId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "useIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "minItems": 1,
+            "maxItems": 256
+          },
+          "retainedUseIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "minItems": 1,
+            "maxItems": 256
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          }
+        },
+        "required": [
+          "compilationId",
+          "releaseId",
+          "useIds",
+          "retainedUseIds",
+          "idempotencyKey"
+        ],
+        "additionalProperties": false
+      },
+      "learning-cancel": {
+        "type": "object",
+        "properties": {
+          "compilationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          }
+        },
+        "required": [
+          "compilationId",
+          "reason",
+          "idempotencyKey"
+        ],
+        "additionalProperties": false
+      },
+      "learning-invalidate": {
+        "type": "object",
+        "properties": {
+          "compilationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          }
+        },
+        "required": [
+          "compilationId",
+          "reason",
+          "idempotencyKey"
+        ],
+        "additionalProperties": false
+      },
+      "learning-retry": {
+        "type": "object",
+        "properties": {
+          "compilationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          }
+        },
+        "required": [
+          "compilationId",
+          "reason",
+          "idempotencyKey"
+        ],
+        "additionalProperties": false
+      },
+      "learning-rollback": {
+        "type": "object",
+        "properties": {
+          "compilationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "releaseId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          }
+        },
+        "required": [
+          "compilationId",
+          "releaseId",
+          "idempotencyKey"
+        ],
+        "additionalProperties": false
+      },
+      "learning-s8-propose": {
+        "type": "object",
+        "properties": {
+          "compilationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "releaseId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "controllerRevision": {
+            "type": "string",
+            "enum": [
+              "TRAINED",
+              "ORIGINAL_ABLATION"
+            ],
+            "default": "TRAINED"
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          }
+        },
+        "required": [
+          "compilationId",
+          "releaseId",
+          "idempotencyKey"
+        ],
+        "additionalProperties": false
+      },
+      "learning-admission": {
+        "type": "object",
+        "properties": {
+          "compilationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "releaseId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "revisionRef": {
+            "type": "object",
+            "properties": {
+              "owner": {
+                "type": "string"
+              },
+              "id": {
+                "type": "string"
+              },
+              "version": {
+                "type": "string"
+              },
+              "contentDigest": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            },
+            "required": [
+              "owner",
+              "id",
+              "version",
+              "contentDigest"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "compilationId",
+          "releaseId",
+          "revisionRef"
+        ],
+        "additionalProperties": false
+      },
+      "learning-register-assignment": {
+        "type": "object",
+        "properties": {
+          "compilationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "releaseId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "caseId": {
+            "type": "string",
+            "pattern": "^(F(0[1-9]|1[0-6])|R0[1-8]|C0[12]|N0[1-6])$"
+          },
+          "replicas": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "mode": {
+                  "type": "string",
+                  "enum": [
+                    "COMPILED_ORIGINAL",
+                    "COMPILED_TRAINED",
+                    "NATIVE_EXACT",
+                    "COMPILED_NO_NEURAL"
+                  ]
+                },
+                "applicationId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "recordId": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "required": [
+                "mode",
+                "applicationId",
+                "recordId"
+              ],
+              "additionalProperties": false
+            },
+            "minItems": 4,
+            "maxItems": 4
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          }
+        },
+        "required": [
+          "compilationId",
+          "releaseId",
+          "caseId",
+          "replicas",
+          "idempotencyKey"
+        ],
+        "additionalProperties": false
+      },
+      "learning-retrain": {
+        "type": "object",
+        "properties": {
+          "compilationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "experience": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "applicationId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "recordIds": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "minItems": 1,
+                  "maxItems": 256
+                },
+                "consentId": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "required": [
+                "applicationId",
+                "recordIds",
+                "consentId"
+              ],
+              "additionalProperties": false
+            },
+            "minItems": 1,
+            "maxItems": 16
+          },
+          "knowledgeCut": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          }
+        },
+        "required": [
+          "compilationId",
+          "experience",
+          "knowledgeCut",
+          "reason",
+          "idempotencyKey"
         ],
         "additionalProperties": false
       },
@@ -13509,7 +14349,23 @@
                 "application-upload",
                 "application-prepare-effect",
                 "application-s8-propose",
-                "application-admission"
+                "application-admission",
+                "learning-consent",
+                "learning-revoke-consent",
+                "learning-experience",
+                "learning-submit",
+                "learning-read",
+                "learning-list",
+                "learning-execute",
+                "learning-evaluate",
+                "learning-cancel",
+                "learning-invalidate",
+                "learning-retry",
+                "learning-rollback",
+                "learning-s8-propose",
+                "learning-admission",
+                "learning-register-assignment",
+                "learning-retrain"
               ]
             }
           }
@@ -25684,6 +26540,662 @@
         "responses": {
           "201": {
             "description": "New Core Document and first immutable version instantiated with lineage"
+          }
+        }
+      }
+    },
+    "/api/company-brain/learning-consent": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/learning-consent"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current authorized X5 development history, structural rights or capsule. Not protected admission, reward, production or effects."
+          },
+          "202": {
+            "description": "Original bounded allocation queued for physical learning, exact pinned native use or independent outcome evaluation. No success label accepted."
+          },
+          "400": {
+            "description": "Invalid bounded typed learning contract."
+          },
+          "401": {
+            "description": "Current signed bearer required."
+          },
+          "403": {
+            "description": "Current training/reuse or activity authority absent; no production activation."
+          },
+          "409": {
+            "description": "Evidence, consent, source/runtime identity, native CAS, history, partition or original allocation is no longer current."
+          },
+          "503": {
+            "description": "Independent S8 configuration, native commit clock or canonical capacity is unavailable."
+          }
+        }
+      }
+    },
+    "/api/company-brain/learning-revoke-consent": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/learning-revoke-consent"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current authorized X5 development history, structural rights or capsule. Not protected admission, reward, production or effects."
+          },
+          "202": {
+            "description": "Original bounded allocation queued for physical learning, exact pinned native use or independent outcome evaluation. No success label accepted."
+          },
+          "400": {
+            "description": "Invalid bounded typed learning contract."
+          },
+          "401": {
+            "description": "Current signed bearer required."
+          },
+          "403": {
+            "description": "Current training/reuse or activity authority absent; no production activation."
+          },
+          "409": {
+            "description": "Evidence, consent, source/runtime identity, native CAS, history, partition or original allocation is no longer current."
+          },
+          "503": {
+            "description": "Independent S8 configuration, native commit clock or canonical capacity is unavailable."
+          }
+        }
+      }
+    },
+    "/api/company-brain/learning-experience": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/learning-experience"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current authorized X5 development history, structural rights or capsule. Not protected admission, reward, production or effects."
+          },
+          "202": {
+            "description": "Original bounded allocation queued for physical learning, exact pinned native use or independent outcome evaluation. No success label accepted."
+          },
+          "400": {
+            "description": "Invalid bounded typed learning contract."
+          },
+          "401": {
+            "description": "Current signed bearer required."
+          },
+          "403": {
+            "description": "Current training/reuse or activity authority absent; no production activation."
+          },
+          "409": {
+            "description": "Evidence, consent, source/runtime identity, native CAS, history, partition or original allocation is no longer current."
+          },
+          "503": {
+            "description": "Independent S8 configuration, native commit clock or canonical capacity is unavailable."
+          }
+        }
+      }
+    },
+    "/api/company-brain/learning-submit": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/learning-submit"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current authorized X5 development history, structural rights or capsule. Not protected admission, reward, production or effects."
+          },
+          "202": {
+            "description": "Original bounded allocation queued for physical learning, exact pinned native use or independent outcome evaluation. No success label accepted."
+          },
+          "400": {
+            "description": "Invalid bounded typed learning contract."
+          },
+          "401": {
+            "description": "Current signed bearer required."
+          },
+          "403": {
+            "description": "Current training/reuse or activity authority absent; no production activation."
+          },
+          "409": {
+            "description": "Evidence, consent, source/runtime identity, native CAS, history, partition or original allocation is no longer current."
+          },
+          "503": {
+            "description": "Independent S8 configuration, native commit clock or canonical capacity is unavailable."
+          }
+        }
+      }
+    },
+    "/api/company-brain/learning-read": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/learning-read"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current authorized X5 development history, structural rights or capsule. Not protected admission, reward, production or effects."
+          },
+          "202": {
+            "description": "Original bounded allocation queued for physical learning, exact pinned native use or independent outcome evaluation. No success label accepted."
+          },
+          "400": {
+            "description": "Invalid bounded typed learning contract."
+          },
+          "401": {
+            "description": "Current signed bearer required."
+          },
+          "403": {
+            "description": "Current training/reuse or activity authority absent; no production activation."
+          },
+          "409": {
+            "description": "Evidence, consent, source/runtime identity, native CAS, history, partition or original allocation is no longer current."
+          },
+          "503": {
+            "description": "Independent S8 configuration, native commit clock or canonical capacity is unavailable."
+          }
+        }
+      }
+    },
+    "/api/company-brain/learning-list": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/learning-list"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current authorized X5 development history, structural rights or capsule. Not protected admission, reward, production or effects."
+          },
+          "202": {
+            "description": "Original bounded allocation queued for physical learning, exact pinned native use or independent outcome evaluation. No success label accepted."
+          },
+          "400": {
+            "description": "Invalid bounded typed learning contract."
+          },
+          "401": {
+            "description": "Current signed bearer required."
+          },
+          "403": {
+            "description": "Current training/reuse or activity authority absent; no production activation."
+          },
+          "409": {
+            "description": "Evidence, consent, source/runtime identity, native CAS, history, partition or original allocation is no longer current."
+          },
+          "503": {
+            "description": "Independent S8 configuration, native commit clock or canonical capacity is unavailable."
+          }
+        }
+      }
+    },
+    "/api/company-brain/learning-execute": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/learning-execute"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current authorized X5 development history, structural rights or capsule. Not protected admission, reward, production or effects."
+          },
+          "202": {
+            "description": "Original bounded allocation queued for physical learning, exact pinned native use or independent outcome evaluation. No success label accepted."
+          },
+          "400": {
+            "description": "Invalid bounded typed learning contract."
+          },
+          "401": {
+            "description": "Current signed bearer required."
+          },
+          "403": {
+            "description": "Current training/reuse or activity authority absent; no production activation."
+          },
+          "409": {
+            "description": "Evidence, consent, source/runtime identity, native CAS, history, partition or original allocation is no longer current."
+          },
+          "503": {
+            "description": "Independent S8 configuration, native commit clock or canonical capacity is unavailable."
+          }
+        }
+      }
+    },
+    "/api/company-brain/learning-evaluate": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/learning-evaluate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current authorized X5 development history, structural rights or capsule. Not protected admission, reward, production or effects."
+          },
+          "202": {
+            "description": "Original bounded allocation queued for physical learning, exact pinned native use or independent outcome evaluation. No success label accepted."
+          },
+          "400": {
+            "description": "Invalid bounded typed learning contract."
+          },
+          "401": {
+            "description": "Current signed bearer required."
+          },
+          "403": {
+            "description": "Current training/reuse or activity authority absent; no production activation."
+          },
+          "409": {
+            "description": "Evidence, consent, source/runtime identity, native CAS, history, partition or original allocation is no longer current."
+          },
+          "503": {
+            "description": "Independent S8 configuration, native commit clock or canonical capacity is unavailable."
+          }
+        }
+      }
+    },
+    "/api/company-brain/learning-cancel": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/learning-cancel"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current authorized X5 development history, structural rights or capsule. Not protected admission, reward, production or effects."
+          },
+          "202": {
+            "description": "Original bounded allocation queued for physical learning, exact pinned native use or independent outcome evaluation. No success label accepted."
+          },
+          "400": {
+            "description": "Invalid bounded typed learning contract."
+          },
+          "401": {
+            "description": "Current signed bearer required."
+          },
+          "403": {
+            "description": "Current training/reuse or activity authority absent; no production activation."
+          },
+          "409": {
+            "description": "Evidence, consent, source/runtime identity, native CAS, history, partition or original allocation is no longer current."
+          },
+          "503": {
+            "description": "Independent S8 configuration, native commit clock or canonical capacity is unavailable."
+          }
+        }
+      }
+    },
+    "/api/company-brain/learning-invalidate": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/learning-invalidate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current authorized X5 development history, structural rights or capsule. Not protected admission, reward, production or effects."
+          },
+          "202": {
+            "description": "Original bounded allocation queued for physical learning, exact pinned native use or independent outcome evaluation. No success label accepted."
+          },
+          "400": {
+            "description": "Invalid bounded typed learning contract."
+          },
+          "401": {
+            "description": "Current signed bearer required."
+          },
+          "403": {
+            "description": "Current training/reuse or activity authority absent; no production activation."
+          },
+          "409": {
+            "description": "Evidence, consent, source/runtime identity, native CAS, history, partition or original allocation is no longer current."
+          },
+          "503": {
+            "description": "Independent S8 configuration, native commit clock or canonical capacity is unavailable."
+          }
+        }
+      }
+    },
+    "/api/company-brain/learning-retry": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/learning-retry"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current authorized X5 development history, structural rights or capsule. Not protected admission, reward, production or effects."
+          },
+          "202": {
+            "description": "Original bounded allocation queued for physical learning, exact pinned native use or independent outcome evaluation. No success label accepted."
+          },
+          "400": {
+            "description": "Invalid bounded typed learning contract."
+          },
+          "401": {
+            "description": "Current signed bearer required."
+          },
+          "403": {
+            "description": "Current training/reuse or activity authority absent; no production activation."
+          },
+          "409": {
+            "description": "Evidence, consent, source/runtime identity, native CAS, history, partition or original allocation is no longer current."
+          },
+          "503": {
+            "description": "Independent S8 configuration, native commit clock or canonical capacity is unavailable."
+          }
+        }
+      }
+    },
+    "/api/company-brain/learning-rollback": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/learning-rollback"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current authorized X5 development history, structural rights or capsule. Not protected admission, reward, production or effects."
+          },
+          "202": {
+            "description": "Original bounded allocation queued for physical learning, exact pinned native use or independent outcome evaluation. No success label accepted."
+          },
+          "400": {
+            "description": "Invalid bounded typed learning contract."
+          },
+          "401": {
+            "description": "Current signed bearer required."
+          },
+          "403": {
+            "description": "Current training/reuse or activity authority absent; no production activation."
+          },
+          "409": {
+            "description": "Evidence, consent, source/runtime identity, native CAS, history, partition or original allocation is no longer current."
+          },
+          "503": {
+            "description": "Independent S8 configuration, native commit clock or canonical capacity is unavailable."
+          }
+        }
+      }
+    },
+    "/api/company-brain/learning-s8-propose": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/learning-s8-propose"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current authorized X5 development history, structural rights or capsule. Not protected admission, reward, production or effects."
+          },
+          "202": {
+            "description": "Original bounded allocation queued for physical learning, exact pinned native use or independent outcome evaluation. No success label accepted."
+          },
+          "400": {
+            "description": "Invalid bounded typed learning contract."
+          },
+          "401": {
+            "description": "Current signed bearer required."
+          },
+          "403": {
+            "description": "Current training/reuse or activity authority absent; no production activation."
+          },
+          "409": {
+            "description": "Evidence, consent, source/runtime identity, native CAS, history, partition or original allocation is no longer current."
+          },
+          "503": {
+            "description": "Independent S8 configuration, native commit clock or canonical capacity is unavailable."
+          }
+        }
+      }
+    },
+    "/api/company-brain/learning-admission": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/learning-admission"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current authorized X5 development history, structural rights or capsule. Not protected admission, reward, production or effects."
+          },
+          "202": {
+            "description": "Original bounded allocation queued for physical learning, exact pinned native use or independent outcome evaluation. No success label accepted."
+          },
+          "400": {
+            "description": "Invalid bounded typed learning contract."
+          },
+          "401": {
+            "description": "Current signed bearer required."
+          },
+          "403": {
+            "description": "Current training/reuse or activity authority absent; no production activation."
+          },
+          "409": {
+            "description": "Evidence, consent, source/runtime identity, native CAS, history, partition or original allocation is no longer current."
+          },
+          "503": {
+            "description": "Independent S8 configuration, native commit clock or canonical capacity is unavailable."
+          }
+        }
+      }
+    },
+    "/api/company-brain/learning-register-assignment": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/learning-register-assignment"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current authorized X5 development history, structural rights or capsule. Not protected admission, reward, production or effects."
+          },
+          "202": {
+            "description": "Original bounded allocation queued for physical learning, exact pinned native use or independent outcome evaluation. No success label accepted."
+          },
+          "400": {
+            "description": "Invalid bounded typed learning contract."
+          },
+          "401": {
+            "description": "Current signed bearer required."
+          },
+          "403": {
+            "description": "Current training/reuse or activity authority absent; no production activation."
+          },
+          "409": {
+            "description": "Evidence, consent, source/runtime identity, native CAS, history, partition or original allocation is no longer current."
+          },
+          "503": {
+            "description": "Independent S8 configuration, native commit clock or canonical capacity is unavailable."
+          }
+        }
+      }
+    },
+    "/api/company-brain/learning-retrain": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/learning-retrain"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current authorized X5 development history, structural rights or capsule. Not protected admission, reward, production or effects."
+          },
+          "202": {
+            "description": "Original bounded allocation queued for physical learning, exact pinned native use or independent outcome evaluation. No success label accepted."
+          },
+          "400": {
+            "description": "Invalid bounded typed learning contract."
+          },
+          "401": {
+            "description": "Current signed bearer required."
+          },
+          "403": {
+            "description": "Current training/reuse or activity authority absent; no production activation."
+          },
+          "409": {
+            "description": "Evidence, consent, source/runtime identity, native CAS, history, partition or original allocation is no longer current."
+          },
+          "503": {
+            "description": "Independent S8 configuration, native commit clock or canonical capacity is unavailable."
           }
         }
       }

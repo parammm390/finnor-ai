@@ -76,8 +76,9 @@ export async function authorityTx(ctx:PeMutationContext,c:PoolClient,a:Applicati
  * expiry. Check its owner-provided boundary after writes, before committing. */
 export async function assertAuthorityTemporalBoundsTx(c:PoolClient,temporalBounds:readonly string[]){
  if(!temporalBounds.length)return;
- const boundary=temporalBounds.reduce((a,b)=>a<b?a:b);
- const current=(await c.query<{still_current:boolean}>('SELECT clock_timestamp()<$1::timestamptz AS still_current',[boundary])).rows[0];
+ const boundary=Math.min(...temporalBounds.map(value=>Date.parse(value)));
+ if(!Number.isFinite(boundary))fail('APPLICATION_AUTHORITY_EXPIRED');
+ const current=(await c.query<{still_current:boolean}>('SELECT clock_timestamp()<$1::timestamptz AS still_current',[new Date(boundary).toISOString()])).rows[0];
  if(!current?.still_current)fail('APPLICATION_AUTHORITY_EXPIRED');
 }
 /** Cache only inside this transaction. Each later command/effect stage obtains

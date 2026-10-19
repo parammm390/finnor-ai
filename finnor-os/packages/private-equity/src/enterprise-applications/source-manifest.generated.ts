@@ -4,7 +4,7 @@ export default {
   "files": [
     {
       "path": "finnor-os/packages/private-equity/src/enterprise-applications/contracts.ts",
-      "sha256": "4f589f2a68e4fc2fae6b2c641b08e70281b273bff56ed0f07a3624fd86ece19f"
+      "sha256": "b8e5e669ab537f341b0b1ff2d8abbf245e5cf4996c493124750cec2fa2c1f750"
     },
     {
       "path": "finnor-os/packages/private-equity/src/enterprise-applications/exact.ts",
@@ -16,7 +16,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/enterprise-applications/program.ts",
-      "sha256": "75f50a49bdeb00be75c888105b0356117b4a4c0f5144034cd1854635bf53183a"
+      "sha256": "0dac0252ecadd031378be95fb17916614572d0fed3d92a17dad83ed3a745eacd"
     },
     {
       "path": "finnor-os/packages/private-equity/src/enterprise-applications/checker.ts",
@@ -32,11 +32,11 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/enterprise-applications/store.ts",
-      "sha256": "f7fcab59cb4b540bd2195d7c83ea3ddc50cc24edfc64ca4f3decc470ffd897f7"
+      "sha256": "dd66847d46091a43051b3e1175906343b3bdd2f91548cb609ab5b679598048c5"
     },
     {
       "path": "finnor-os/packages/private-equity/src/enterprise-applications/service.ts",
-      "sha256": "fe49c76c14a83073df3fdaf05e3220f5afcc6ff6b602b53031c70872a04f12bf"
+      "sha256": "bc3cb91aea0f6b3566dbd7d02d32c8758421bb90f70f20d50bdcda5c086f5892"
     },
     {
       "path": "finnor-os/packages/private-equity/src/enterprise-applications/worker.ts",
@@ -52,7 +52,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/enterprise-applications/effects.ts",
-      "sha256": "0c1c5fe61c76c803de19f4947a54c1edfedcd4913e4f9127b9afad415463d07d"
+      "sha256": "1a1fc41186afbda4fea9713c1a99b0d54d9e31a425a8b14b9a6ac33e8a53a96e"
     },
     {
       "path": "finnor-os/packages/private-equity/src/enterprise-applications/admission.ts",
@@ -64,7 +64,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/shared-types/src/index.ts",
-      "sha256": "591e5c01b480294f3126b8da7ecad761ce4cb25b26f30eee94176e5c8baeec5b"
+      "sha256": "02039172b84d18c4d826ad8616660976ea35a49f5a91ef1f1d51575bd43ffe17"
     },
     {
       "path": "finnor-os/packages/shared-types/src/primary-diligence.ts",
@@ -84,7 +84,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/db/compute-contract.ts",
-      "sha256": "8a6720562bb0be5dd411b6386a3fb027aee2abc3ba0180f7cd26b96e1c8a0d8f"
+      "sha256": "25c117f76b88f1b169d54b3f105c66292f5e3a5e458a4b8913e4e4b14595d63f"
     },
     {
       "path": "finnor-os/packages/db/compute-governor.ts",
@@ -96,7 +96,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/db/migration-head.ts",
-      "sha256": "949c732998e38b209b134fd89275c0ed6cc325a9c26102fdcc47e567052b1b0a"
+      "sha256": "b207a4a5e322983839a943109f707851815e5237df173f353bfe1d74e5296308"
     },
     {
       "path": "finnor-os/packages/db/migrations/0189_x3_enterprise_applications.sql",
@@ -104,7 +104,7 @@ export default {
     },
     {
       "path": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
-      "sha256": "1bc4045bf131ed6e7e4f1cc03eca90c4b598f52fc2bf0f231cd851880e1fc752"
+      "sha256": "bef1c1252fc794af480577ec82c8ba86516cd939d5206550b0192d1363c84f02"
     },
     {
       "path": "finnor-os/apps/api/lib/auth.ts",
@@ -112,7 +112,7 @@ export default {
     },
     {
       "path": "finnor-os/apps/worker/src/index.ts",
-      "sha256": "49295b627f77f967156686a521b074f3f21227baa111fa08b4c1ee1156434921"
+      "sha256": "7ddc417e446eeaf5c04d41652012f886f73bae1f7becb063a2f352b1f1bfb338"
     },
     {
       "path": "finnor-os/apps/worker/src/queue.ts",
@@ -148,7 +148,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/capability-evolution/src/consumer-transport.ts",
-      "sha256": "09617d947ff4ebe25443e05e1b191ed66f92e90140cd19b6f3fca645a18a0ced"
+      "sha256": "df042469eebec1ec47c35c93ad383f0a0dfe9899f9bd2e2c4882dec289541309"
     },
     {
       "path": "finnor-os/packages/db/index.ts",
@@ -168,7 +168,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/capability-evolution/src/source-closure.ts",
-      "sha256": "7ea6a33805d7667f3d6a33094c671360019172e9eff7e4862d7987140e52b031"
+      "sha256": "9c50fa220dd93a51c3a173a896b002d943dfefd7c81e1e6011b034a46e13218b"
     },
     {
       "path": "src/components/centropy/canvas/EnterpriseApplicationPanel.tsx",
@@ -180,7 +180,7 @@ export default {
     },
     {
       "path": "src/components/centropy/canvas/CanvasDocument.tsx",
-      "sha256": "8247d4aa16c480922d2485529cc9ae674c25ee8bf88ed30f11f04e9c69146646"
+      "sha256": "6ca2ac95f9c8a744478f77757ae6bfb2b5b0a018620958748f1a68269292e0a1"
     },
     {
       "path": "src/components/centropy/canvas/canvas-compose.ts",
@@ -192,7 +192,7 @@ export default {
     },
     {
       "path": "src/lib/centropy/capability-manifest.generated.json",
-      "sha256": "153615e912aa5d1e5c0a53dc5a3cc5d5fda74bb16780467cbb82c0955be07d8e"
+      "sha256": "c7f6017e673d0fff5636dd2913904862b669f158a2b3243f0ff74b352aa99abd"
     },
     {
       "path": "package-lock.json",

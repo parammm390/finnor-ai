@@ -1,5 +1,6 @@
 import {runDecisionAtlasJob} from '../../../packages/private-equity/src/r7/worker';
 import {buildEnterpriseApplicationJob} from '../../../packages/private-equity/src/enterprise-applications/worker';
+import {compileLearnedPolicyJob} from '../../../packages/private-equity/src/policy-learning/worker';
 import {handleBranch} from '@finnor/private-equity/src/branch-fabric/worker';
 import {runComputeSearchUnitJob} from '@finnor/private-equity/src/compute-search/worker';
 import {runHarnessProgramJob} from '@finnor/private-equity/src/program-synthesis/worker';
@@ -60,6 +61,7 @@ import { installWorkerDrainSignals } from "./drain-signals";
 
 export function createWorker(): JobQueue {
   const queue = new JobQueue();
+  queue.register('compile_learned_policy_v1',compileLearnedPolicyJob,PRODUCTION_JOB_CONTRACTS.compile_learned_policy_v1);
   queue.register('build_enterprise_application_v1',buildEnterpriseApplicationJob,PRODUCTION_JOB_CONTRACTS.build_enterprise_application_v1);
   queue.register('run_decision_atlas_v1',runDecisionAtlasJob,PRODUCTION_JOB_CONTRACTS.run_decision_atlas_v1);
   queue.register('run_certified_state_reduction_v1',runCertifiedStateReductionJob,PRODUCTION_JOB_CONTRACTS.run_certified_state_reduction_v1);

@@ -1,3 +1,4 @@
+export type {LearnedPolicyCapsule,LearnedPolicyEnvelope,LearnedPolicyProcedure,LearnedControllerCheckpoint,LearningUnknown,LearnedPolicyEventReference} from './learned-policy';
 export type {ApplicationReleaseBinding,EnterpriseApplicationRelease,FrontierArtifactEnvelope,FrontierEventCollectionReference,EnterpriseApplicationPackage} from './enterprise-applications';
 export * from "./closing";
 // Shared type contracts for the Finnor AI Operating System.

@@ -1,4 +1,4 @@
-// Generated from finnor-os/openapi.json, SHA-256 9f524907f0b9da951d22e6d8664befea19a57f70d54077a4f22351ff6685c893.
+// Generated from finnor-os/openapi.json, SHA-256 996b19502ebfb5bf46d9c32853f060d1a412a9b2bc33850900ab5ca06da91a3a.
 export interface paths {
     "/api/live-controls": {
         parameters: {
@@ -2759,7 +2759,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    operation: "opportunity-promote" | "belief-view" | "belief-pin" | "roots" | "projection" | "search" | "object" | "traverse" | "provenance" | "history" | "evidence-lineage" | "decision-lineage" | "available-actions" | "context" | "evidence-handles" | "evidence-submit" | "evidence-read" | "evidence-witness" | "evidence-replay" | "evidence-cancel" | "evidence-consume" | "program-submit" | "program-read" | "program-witness" | "program-module" | "program-projection" | "program-cancel" | "program-resume" | "program-artifact" | "program-ports" | "program-interface-module" | "compute-search-submit" | "compute-search-read" | "compute-search-projection" | "compute-search-cancel" | "compute-search-resume" | "compute-search-reconcile" | "interface-acquire" | "interface-read" | "interface-projection" | "interface-catalogue" | "interface-module" | "interface-cancel" | "interface-resume" | "interface-reconcile" | "interface-admission" | "interface-invoke" | "interface-ports" | "decision-slice-compile" | "decision-slice-read" | "decision-slice-context" | "decision-slice-patch" | "decision-slice-witness" | "decision-slice-consume" | "decision-slice-cancel" | "decision-slice-recompile" | "decision-slice-changes" | "decision-slice-view" | "continuation-submit" | "continuation-read" | "continuation-projection" | "procedure-experience" | "procedure-induce" | "procedure-induction-read" | "procedure-induction-cancel" | "procedure-read" | "procedure-component" | "procedure-counterexample" | "procedure-projection" | "procedure-admission-request" | "procedure-interface" | "procedure-costs" | "deliberation-submit" | "deliberation-read" | "deliberation-projection" | "deliberation-cancel" | "deliberation-resume" | "deliberation-reconcile" | "deliberation-calibrate" | "deliberation-evidence-read" | "deliberation-module-read" | "capital-formation-submit" | "capital-formation-read" | "capital-formation-list" | "capital-formation-profiles" | "capital-formation-advance" | "capital-formation-event" | "capital-formation-proposal" | "capital-formation-cancel" | "capital-formation-draw-handoff" | "application-submit" | "application-maintain" | "application-command" | "application-read" | "application-record" | "application-list" | "application-history" | "application-asset" | "application-cancel" | "application-rollback" | "application-impact" | "application-upload" | "application-prepare-effect" | "application-s8-propose" | "application-admission";
+                    operation: "opportunity-promote" | "belief-view" | "belief-pin" | "roots" | "projection" | "search" | "object" | "traverse" | "provenance" | "history" | "evidence-lineage" | "decision-lineage" | "available-actions" | "context" | "evidence-handles" | "evidence-submit" | "evidence-read" | "evidence-witness" | "evidence-replay" | "evidence-cancel" | "evidence-consume" | "program-submit" | "program-read" | "program-witness" | "program-module" | "program-projection" | "program-cancel" | "program-resume" | "program-artifact" | "program-ports" | "program-interface-module" | "compute-search-submit" | "compute-search-read" | "compute-search-projection" | "compute-search-cancel" | "compute-search-resume" | "compute-search-reconcile" | "interface-acquire" | "interface-read" | "interface-projection" | "interface-catalogue" | "interface-module" | "interface-cancel" | "interface-resume" | "interface-reconcile" | "interface-admission" | "interface-invoke" | "interface-ports" | "decision-slice-compile" | "decision-slice-read" | "decision-slice-context" | "decision-slice-patch" | "decision-slice-witness" | "decision-slice-consume" | "decision-slice-cancel" | "decision-slice-recompile" | "decision-slice-changes" | "decision-slice-view" | "continuation-submit" | "continuation-read" | "continuation-projection" | "procedure-experience" | "procedure-induce" | "procedure-induction-read" | "procedure-induction-cancel" | "procedure-read" | "procedure-component" | "procedure-counterexample" | "procedure-projection" | "procedure-admission-request" | "procedure-interface" | "procedure-costs" | "deliberation-submit" | "deliberation-read" | "deliberation-projection" | "deliberation-cancel" | "deliberation-resume" | "deliberation-reconcile" | "deliberation-calibrate" | "deliberation-evidence-read" | "deliberation-module-read" | "capital-formation-submit" | "capital-formation-read" | "capital-formation-list" | "capital-formation-profiles" | "capital-formation-advance" | "capital-formation-event" | "capital-formation-proposal" | "capital-formation-cancel" | "capital-formation-draw-handoff" | "application-submit" | "application-maintain" | "application-command" | "application-read" | "application-record" | "application-list" | "application-history" | "application-asset" | "application-cancel" | "application-rollback" | "application-impact" | "application-upload" | "application-prepare-effect" | "application-s8-propose" | "application-admission" | "learning-consent" | "learning-revoke-consent" | "learning-experience" | "learning-submit" | "learning-read" | "learning-list" | "learning-execute" | "learning-evaluate" | "learning-cancel" | "learning-invalidate" | "learning-retry" | "learning-rollback" | "learning-s8-propose" | "learning-admission" | "learning-register-assignment" | "learning-retrain";
                 };
                 cookie?: never;
             };
@@ -10007,6 +10007,1270 @@ export interface paths {
             responses: {
                 /** @description New Core Document and first immutable version instantiated with lineage */
                 201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/learning-consent": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["learning-consent"];
+                };
+            };
+            responses: {
+                /** @description Current authorized X5 development history, structural rights or capsule. Not protected admission, reward, production or effects. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original bounded allocation queued for physical learning, exact pinned native use or independent outcome evaluation. No success label accepted. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Invalid bounded typed learning contract. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current training/reuse or activity authority absent; no production activation. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Evidence, consent, source/runtime identity, native CAS, history, partition or original allocation is no longer current. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Independent S8 configuration, native commit clock or canonical capacity is unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/learning-revoke-consent": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["learning-revoke-consent"];
+                };
+            };
+            responses: {
+                /** @description Current authorized X5 development history, structural rights or capsule. Not protected admission, reward, production or effects. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original bounded allocation queued for physical learning, exact pinned native use or independent outcome evaluation. No success label accepted. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Invalid bounded typed learning contract. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current training/reuse or activity authority absent; no production activation. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Evidence, consent, source/runtime identity, native CAS, history, partition or original allocation is no longer current. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Independent S8 configuration, native commit clock or canonical capacity is unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/learning-experience": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["learning-experience"];
+                };
+            };
+            responses: {
+                /** @description Current authorized X5 development history, structural rights or capsule. Not protected admission, reward, production or effects. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original bounded allocation queued for physical learning, exact pinned native use or independent outcome evaluation. No success label accepted. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Invalid bounded typed learning contract. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current training/reuse or activity authority absent; no production activation. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Evidence, consent, source/runtime identity, native CAS, history, partition or original allocation is no longer current. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Independent S8 configuration, native commit clock or canonical capacity is unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/learning-submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["learning-submit"];
+                };
+            };
+            responses: {
+                /** @description Current authorized X5 development history, structural rights or capsule. Not protected admission, reward, production or effects. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original bounded allocation queued for physical learning, exact pinned native use or independent outcome evaluation. No success label accepted. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Invalid bounded typed learning contract. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current training/reuse or activity authority absent; no production activation. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Evidence, consent, source/runtime identity, native CAS, history, partition or original allocation is no longer current. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Independent S8 configuration, native commit clock or canonical capacity is unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/learning-read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["learning-read"];
+                };
+            };
+            responses: {
+                /** @description Current authorized X5 development history, structural rights or capsule. Not protected admission, reward, production or effects. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original bounded allocation queued for physical learning, exact pinned native use or independent outcome evaluation. No success label accepted. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Invalid bounded typed learning contract. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current training/reuse or activity authority absent; no production activation. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Evidence, consent, source/runtime identity, native CAS, history, partition or original allocation is no longer current. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Independent S8 configuration, native commit clock or canonical capacity is unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/learning-list": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["learning-list"];
+                };
+            };
+            responses: {
+                /** @description Current authorized X5 development history, structural rights or capsule. Not protected admission, reward, production or effects. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original bounded allocation queued for physical learning, exact pinned native use or independent outcome evaluation. No success label accepted. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Invalid bounded typed learning contract. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current training/reuse or activity authority absent; no production activation. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Evidence, consent, source/runtime identity, native CAS, history, partition or original allocation is no longer current. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Independent S8 configuration, native commit clock or canonical capacity is unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/learning-execute": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["learning-execute"];
+                };
+            };
+            responses: {
+                /** @description Current authorized X5 development history, structural rights or capsule. Not protected admission, reward, production or effects. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original bounded allocation queued for physical learning, exact pinned native use or independent outcome evaluation. No success label accepted. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Invalid bounded typed learning contract. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current training/reuse or activity authority absent; no production activation. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Evidence, consent, source/runtime identity, native CAS, history, partition or original allocation is no longer current. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Independent S8 configuration, native commit clock or canonical capacity is unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/learning-evaluate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["learning-evaluate"];
+                };
+            };
+            responses: {
+                /** @description Current authorized X5 development history, structural rights or capsule. Not protected admission, reward, production or effects. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original bounded allocation queued for physical learning, exact pinned native use or independent outcome evaluation. No success label accepted. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Invalid bounded typed learning contract. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current training/reuse or activity authority absent; no production activation. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Evidence, consent, source/runtime identity, native CAS, history, partition or original allocation is no longer current. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Independent S8 configuration, native commit clock or canonical capacity is unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/learning-cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["learning-cancel"];
+                };
+            };
+            responses: {
+                /** @description Current authorized X5 development history, structural rights or capsule. Not protected admission, reward, production or effects. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original bounded allocation queued for physical learning, exact pinned native use or independent outcome evaluation. No success label accepted. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Invalid bounded typed learning contract. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current training/reuse or activity authority absent; no production activation. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Evidence, consent, source/runtime identity, native CAS, history, partition or original allocation is no longer current. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Independent S8 configuration, native commit clock or canonical capacity is unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/learning-invalidate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["learning-invalidate"];
+                };
+            };
+            responses: {
+                /** @description Current authorized X5 development history, structural rights or capsule. Not protected admission, reward, production or effects. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original bounded allocation queued for physical learning, exact pinned native use or independent outcome evaluation. No success label accepted. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Invalid bounded typed learning contract. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current training/reuse or activity authority absent; no production activation. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Evidence, consent, source/runtime identity, native CAS, history, partition or original allocation is no longer current. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Independent S8 configuration, native commit clock or canonical capacity is unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/learning-retry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["learning-retry"];
+                };
+            };
+            responses: {
+                /** @description Current authorized X5 development history, structural rights or capsule. Not protected admission, reward, production or effects. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original bounded allocation queued for physical learning, exact pinned native use or independent outcome evaluation. No success label accepted. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Invalid bounded typed learning contract. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current training/reuse or activity authority absent; no production activation. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Evidence, consent, source/runtime identity, native CAS, history, partition or original allocation is no longer current. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Independent S8 configuration, native commit clock or canonical capacity is unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/learning-rollback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["learning-rollback"];
+                };
+            };
+            responses: {
+                /** @description Current authorized X5 development history, structural rights or capsule. Not protected admission, reward, production or effects. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original bounded allocation queued for physical learning, exact pinned native use or independent outcome evaluation. No success label accepted. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Invalid bounded typed learning contract. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current training/reuse or activity authority absent; no production activation. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Evidence, consent, source/runtime identity, native CAS, history, partition or original allocation is no longer current. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Independent S8 configuration, native commit clock or canonical capacity is unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/learning-s8-propose": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["learning-s8-propose"];
+                };
+            };
+            responses: {
+                /** @description Current authorized X5 development history, structural rights or capsule. Not protected admission, reward, production or effects. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original bounded allocation queued for physical learning, exact pinned native use or independent outcome evaluation. No success label accepted. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Invalid bounded typed learning contract. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current training/reuse or activity authority absent; no production activation. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Evidence, consent, source/runtime identity, native CAS, history, partition or original allocation is no longer current. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Independent S8 configuration, native commit clock or canonical capacity is unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/learning-admission": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["learning-admission"];
+                };
+            };
+            responses: {
+                /** @description Current authorized X5 development history, structural rights or capsule. Not protected admission, reward, production or effects. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original bounded allocation queued for physical learning, exact pinned native use or independent outcome evaluation. No success label accepted. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Invalid bounded typed learning contract. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current training/reuse or activity authority absent; no production activation. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Evidence, consent, source/runtime identity, native CAS, history, partition or original allocation is no longer current. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Independent S8 configuration, native commit clock or canonical capacity is unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/learning-register-assignment": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["learning-register-assignment"];
+                };
+            };
+            responses: {
+                /** @description Current authorized X5 development history, structural rights or capsule. Not protected admission, reward, production or effects. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original bounded allocation queued for physical learning, exact pinned native use or independent outcome evaluation. No success label accepted. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Invalid bounded typed learning contract. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current training/reuse or activity authority absent; no production activation. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Evidence, consent, source/runtime identity, native CAS, history, partition or original allocation is no longer current. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Independent S8 configuration, native commit clock or canonical capacity is unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/learning-retrain": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["learning-retrain"];
+                };
+            };
+            responses: {
+                /** @description Current authorized X5 development history, structural rights or capsule. Not protected admission, reward, production or effects. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original bounded allocation queued for physical learning, exact pinned native use or independent outcome evaluation. No success label accepted. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Invalid bounded typed learning contract. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current training/reuse or activity authority absent; no production activation. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Evidence, consent, source/runtime identity, native CAS, history, partition or original allocation is no longer current. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Independent S8 configuration, native commit clock or canonical capacity is unavailable. */
+                503: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -33292,6 +34556,11 @@ export interface components {
                     preparedEffect?: {
                         kind: string;
                         fields: string[];
+                        exactBindings?: {
+                            quantity: string;
+                            operation: string;
+                            channel: string;
+                        };
                     };
                 }[];
                 invariants: {
@@ -33704,6 +34973,11 @@ export interface components {
                     preparedEffect?: {
                         kind: string;
                         fields: string[];
+                        exactBindings?: {
+                            quantity: string;
+                            operation: string;
+                            channel: string;
+                        };
                     };
                 }[];
                 invariants: {
@@ -34292,6 +35566,209 @@ export interface components {
                 version: string;
                 contentDigest: string;
             };
+        };
+        "learning-consent": {
+            /** @constant */
+            schema: "finnor.x5.training-rights.v1";
+            /** Format: uuid */
+            applicationId: string;
+            purposes: [
+                "TRAIN_STRUCTURAL_CONTROLLER",
+                "EXECUTE_DERIVED_POLICY"
+            ];
+            /** @enum {string} */
+            transfer: "SOURCE_APPLICATION_ONLY" | "SAME_TENANT_COMPATIBLE_APPLICATIONS";
+            /** @constant */
+            failures: "NONPOSITIVE_STRUCTURAL_OBSERVATIONS_ONLY";
+            /** @constant */
+            data: "STRUCTURAL_BOOLEANS_ONLY_NO_TEXT_AMOUNTS_IDENTIFIERS_CREDENTIALS";
+            /** @constant */
+            retention: "RETAIN_AUDIT_REVOKE_DERIVED_USE_NO_UNLEARNING_CLAIM";
+            /** Format: date-time */
+            knowledgeCut: string;
+            /** Format: date-time */
+            validUntil: string;
+            idempotencyKey: string;
+        };
+        "learning-revoke-consent": {
+            /** Format: uuid */
+            consentId: string;
+            reason: string;
+            idempotencyKey: string;
+        };
+        "learning-experience": {
+            experience: {
+                /** Format: uuid */
+                applicationId: string;
+                recordIds: string[];
+                /** Format: uuid */
+                consentId: string;
+            }[];
+            /** Format: date-time */
+            knowledgeCut: string;
+        };
+        "learning-submit": {
+            /** @constant */
+            schema: "finnor.x5.compile-request.v1";
+            root: {
+                /** @enum {string} */
+                entityType: "pe_strategy" | "pe_opportunity" | "pe_deal" | "pe_fund" | "pe_vehicle" | "external_organization" | "pe_portfolio_holding";
+                /** Format: uuid */
+                entityId: string;
+            };
+            /** Format: uuid */
+            workId?: string;
+            /** Format: uuid */
+            workInputId?: string;
+            experience: {
+                /** Format: uuid */
+                applicationId: string;
+                recordIds: string[];
+                /** Format: uuid */
+                consentId: string;
+            }[];
+            /** Format: date-time */
+            knowledgeCut: string;
+            idempotencyKey: string;
+            limits: {
+                deadlineMs: number;
+                maxAttempts: number;
+                maxUses: number;
+            };
+        };
+        "learning-read": {
+            /** Format: uuid */
+            compilationId: string;
+        };
+        "learning-list": {
+            root: {
+                /** @enum {string} */
+                entityType: "pe_strategy" | "pe_opportunity" | "pe_deal" | "pe_fund" | "pe_vehicle" | "external_organization" | "pe_portfolio_holding";
+                /** Format: uuid */
+                entityId: string;
+            };
+            /** Format: uuid */
+            workId: string;
+        };
+        "learning-execute": {
+            /** Format: uuid */
+            compilationId: string;
+            /** Format: uuid */
+            releaseId: string;
+            /** Format: uuid */
+            applicationId: string;
+            /** Format: uuid */
+            recordId: string;
+            expectedRevision: number;
+            expectedReference: {
+                owner: string;
+                id: string;
+                revision: string;
+                contentDigest: string;
+            };
+            /** @enum {string} */
+            mode: "COMPILED_ORIGINAL" | "COMPILED_TRAINED" | "NATIVE_EXACT" | "COMPILED_NO_NEURAL";
+            idempotencyKey: string;
+            /** @enum {string} */
+            stratum: "TRANSFER" | "RETENTION" | "BOUNDARY";
+            assignmentRef?: {
+                /** @constant */
+                owner: "X5_ASSIGNMENT";
+                /** Format: uuid */
+                id: string;
+                /** @constant */
+                revision: "1";
+                contentDigest: string;
+            };
+        };
+        "learning-evaluate": {
+            /** Format: uuid */
+            compilationId: string;
+            /** Format: uuid */
+            releaseId: string;
+            useIds: string[];
+            retainedUseIds: string[];
+            idempotencyKey: string;
+        };
+        "learning-cancel": {
+            /** Format: uuid */
+            compilationId: string;
+            reason: string;
+            idempotencyKey: string;
+        };
+        "learning-invalidate": {
+            /** Format: uuid */
+            compilationId: string;
+            reason: string;
+            idempotencyKey: string;
+        };
+        "learning-retry": {
+            /** Format: uuid */
+            compilationId: string;
+            reason: string;
+            idempotencyKey: string;
+        };
+        "learning-rollback": {
+            /** Format: uuid */
+            compilationId: string;
+            /** Format: uuid */
+            releaseId: string;
+            idempotencyKey: string;
+        };
+        "learning-s8-propose": {
+            /** Format: uuid */
+            compilationId: string;
+            /** Format: uuid */
+            releaseId: string;
+            /**
+             * @default TRAINED
+             * @enum {string}
+             */
+            controllerRevision: "TRAINED" | "ORIGINAL_ABLATION";
+            idempotencyKey: string;
+        };
+        "learning-admission": {
+            /** Format: uuid */
+            compilationId: string;
+            /** Format: uuid */
+            releaseId: string;
+            revisionRef: {
+                owner: string;
+                id: string;
+                version: string;
+                contentDigest: string;
+            };
+        };
+        "learning-register-assignment": {
+            /** Format: uuid */
+            compilationId: string;
+            /** Format: uuid */
+            releaseId: string;
+            caseId: string;
+            replicas: {
+                /** @enum {string} */
+                mode: "COMPILED_ORIGINAL" | "COMPILED_TRAINED" | "NATIVE_EXACT" | "COMPILED_NO_NEURAL";
+                /** Format: uuid */
+                applicationId: string;
+                /** Format: uuid */
+                recordId: string;
+            }[];
+            idempotencyKey: string;
+        };
+        "learning-retrain": {
+            /** Format: uuid */
+            compilationId: string;
+            experience: {
+                /** Format: uuid */
+                applicationId: string;
+                recordIds: string[];
+                /** Format: uuid */
+                consentId: string;
+            }[];
+            /** Format: date-time */
+            knowledgeCut: string;
+            reason: string;
+            idempotencyKey: string;
         };
         X3Expression: {
             /** @constant */

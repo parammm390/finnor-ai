@@ -16,6 +16,7 @@ import { readOwnerTransportReference, ownerTransportRoute, signOwnerDeliveryOrig
 import { CapabilityJournal, privateFile, type JournalEntry } from './journal';
 import { InterfaceCapabilityPort } from './interface-port';
 import { ApplicationCapabilityPort } from './application-port';
+import { LearnedPolicyCapabilityPort } from './learned-policy-port';
 import { digest, byteDigest, fault, parseRevision, makeRef, sameRef, RefSchema, ProtocolSchema, EvaluationSummarySchema, AllocationMethodAdmissionSchema, assertSignature, S8_VERSION, type Signed, type AuthorityKey, type CapabilityRevision, type EvaluationProtocol, type EvaluationSummary, type CapabilityRef, type AllocationMethodAdmission } from './contracts';
 const Text = z.string().min(1).max(4096), Instant = z.string().datetime({ offset: true });
 const KeySchema = z.object({ id: Text, principalId: Text, publicKey: Text, validAfter: Instant, validUntil: Instant, revoked: z.boolean() }).strict();
@@ -57,6 +58,7 @@ export interface CapabilityUseLease {
 export class CapabilityEvolution {
     private interfaces: InterfaceCapabilityPort;
     private applications: ApplicationCapabilityPort;
+    private learnedPolicies: LearnedPolicyCapabilityPort;
     private states = new Map<string, RevisionState>();
     private active: string | null = null;
     private generation = 0;
@@ -76,6 +78,7 @@ export class CapabilityEvolution {
     private constructor(readonly policy: Policy, private journal: CapabilityJournal) {
         this.interfaces = new InterfaceCapabilityPort(policy);
         this.applications = new ApplicationCapabilityPort(policy);
+        this.learnedPolicies = new LearnedPolicyCapabilityPort(policy);
         this.protectedEvents = policy.protectedEvents ? new ProtectedCapabilityEvents({ ...policy, protectedEvents: policy.protectedEvents }, journal.policyDigest) : null;
         for (const e of journal.entries)
             this.replay(e);
@@ -403,6 +406,7 @@ export class CapabilityEvolution {
     }
     private replay(entry: JournalEntry) {
         if (entry.operation.startsWith('APPLICATION_')) { this.applications.replay(entry); return; }
+        if (entry.operation.startsWith('LEARNED_POLICY_')) { this.learnedPolicies.replay(entry); return; }
         if (entry.operation.startsWith('INTERFACE_')) { this.interfaces.replay(entry); return; }
         const b = entry.body, r = entry.result;
         if (entry.operation === 'JOURNAL_RECOVERY' && r.responsibilityImport === true) {
@@ -508,7 +512,7 @@ export class CapabilityEvolution {
                     fault('S8_IDEMPOTENCY_SUBSTITUTION');
                 // Interface current-use reads are deliberately never journaled or
                 // replayed from a cached admission. Every serve checks current use.
-                if (input.operation.startsWith('INTERFACE_') || input.operation.startsWith('APPLICATION_'))
+                if (input.operation.startsWith('INTERFACE_') || input.operation.startsWith('APPLICATION_') || input.operation.startsWith('LEARNED_POLICY_'))
                     await CapabilityEvolution.sources(this.policy.sourcePins);
                 if (input.operation === 'USE') {
                     const use = this.uses.get(prior.result.lease.useId);
@@ -524,6 +528,14 @@ export class CapabilityEvolution {
             if (this.policy.responsibilityHandoff) await this.resolveResponsibilityHandoff();
             const b = input.body;
             let result: any, journalOperation = input.operation;
+            if (input.operation.startsWith('LEARNED_POLICY_')) {
+                const answer = await this.learnedPolicies.command(a, input.operation, b,
+                    (ref, content) => this.commitNamedReference(ref, content));
+                if (!answer.readOnly)
+                    await this.persist({ requestId: input.requestId, requestDigest, actorId: a.id,
+                        operation: input.operation, body: b, result: answer.result });
+                return answer.result;
+            }
             if (input.operation.startsWith('APPLICATION_')) {
                 const answer = await this.applications.command(a, input.operation, b,
                     (ref, content) => this.commitNamedReference(ref, content));
