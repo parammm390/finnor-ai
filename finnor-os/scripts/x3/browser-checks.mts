@@ -274,7 +274,7 @@ try{
  assert.equal(page.options,2);assert.equal(page.firstPage,true);steps.push({id:'twenty-one-real-records-and-next-page',observed:page});
  browser('find','role','button','click','--name','First record page');
  browser('wait','--fn',`document.querySelector('${panel}')?.dataset.applicationStatus==='INSTALLED'`);
- const screenshots=join(repo,'evidence','x3-browser',evidence.split('/').at(-1)!);await mkdir(screenshots,{recursive:true});
+ const screenshots=join(evidence,'screenshots');await mkdir(screenshots,{recursive:true});
  browser('screenshot',join(screenshots,'mounted.png'));
  const raceBefore=await control('/observe','GET'),raceRecord=raceBefore.records.find((record:any)=>record.state==='OPEN'&&record.release_id===raceBefore.applications[0].head_release_id);
  assert(raceRecord);browser('select',selectRecord,raceRecord.id);

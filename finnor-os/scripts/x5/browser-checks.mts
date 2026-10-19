@@ -98,7 +98,7 @@ try{
  assert.notEqual(firstId,secondId);
  steps.push({id:'visible-consent-canonical-experience-and-two-original-Work-compilations',consent,first,second,additionalEligibleAssignments:0});
  navigate(f.url);current(f.workId);
- const screenshots=join(repo,'scope-x5/evidence');await mkdir(screenshots,{recursive:true});
+ const screenshots=join(evidence,'screenshots');await mkdir(screenshots,{recursive:true});
  browser('scrollintoview',panel+' h4');
  browser('screenshot',join(screenshots,basename(evidence)+'-mounted-current.png'));
 

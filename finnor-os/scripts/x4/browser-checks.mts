@@ -61,7 +61,7 @@ function endBoundary(){
  browser('wait','--fn','window.x4Boundary.completed.length>0');inspect('(()=>{requestAnimationFrame(()=>requestAnimationFrame(()=>window.x4Boundary.settled=true));return true})()');browser('wait','--fn','window.x4Boundary.settled===true');
  return inspect('(()=>{window.x4DOM.disconnect();window.x4Network.disconnect();return window.x4Boundary})()');
 }
-const screenshots=join(repo,'scope-x4/evidence');
+const screenshots=join(evidence,'screenshots');
 try{
  signIn(f.email,f.url);current();
  details(panel+' > details:nth-of-type(5)');
