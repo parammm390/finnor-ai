@@ -39,8 +39,23 @@ for(const file of stamp.files)assert.equal(hash(readFileSync(join(root,file.path
 
 const previous=JSON.parse(git('show',base+':finnor-os/openapi.json')),current=json(join(root,'finnor-os/openapi.json'))
 const addedPaths=Object.keys(current.paths).filter(path=>!Object.hasOwn(previous.paths,path))
-assert.equal(addedPaths.length,15)
-assert(addedPaths.every(path=>path.startsWith('/api/company-brain/application-')))
+const apiContractPath='scope-x-phase/acceptance/api-additions.json',apiContract=json(join(root,apiContractPath))
+assert.equal(apiContract.schema,'finnor.frontier5.registered-api-additions.v1')
+assert.equal(apiContract.base,base)
+assert.deepEqual(Object.keys(apiContract.families).sort(),['X3','X4','X5'])
+const registeredAdditions={}
+for(const [family,prefix,count] of [['X3','application-',15],['X5','learning-',16],['X4','identification-',15]]){
+ const operations=apiContract.families[family]
+ assert(Array.isArray(operations),family)
+ assert.equal(operations.length,count,family)
+ assert.equal(new Set(operations).size,count,family+': duplicate operations')
+ assert(operations.every(operation=>typeof operation==='string'&&operation.startsWith(prefix)),family)
+ registeredAdditions[family]=operations.map(operation=>'/api/company-brain/'+operation)
+}
+const registeredPaths=Object.values(registeredAdditions).flat()
+assert.deepEqual([...addedPaths].sort(),[...registeredPaths].sort(),'Exact registered X3/X5/X4 additions')
+const applicationPaths=addedPaths.filter(path=>path.startsWith('/api/company-brain/application-'))
+assert.equal(applicationPaths.length,15)
 const addedOperations=new Set(addedPaths.map(path=>path.split('/').at(-1))),enumExtensions=[]
 let nodes=0
 function compatible(oldValue,newValue,path=[],depth=0){
@@ -50,8 +65,7 @@ function compatible(oldValue,newValue,path=[],depth=0){
   assert(Array.isArray(newValue),path.join('.'))
   if(path.at(-1)==='enum'){
    const extra=newValue.filter(value=>!oldValue.includes(value))
-   assert.equal(extra.length,15,path.join('.'))
-   assert(extra.every(value=>addedOperations.has(value)),path.join('.'))
+   assert.deepEqual([...extra].sort(),[...addedOperations].sort(),path.join('.'))
    assert.deepEqual(newValue.filter(value=>oldValue.includes(value)),oldValue,path.join('.'))
    enumExtensions.push({path:path.join('.'),added:extra});return
   }
@@ -108,7 +122,9 @@ assert.equal(findings.length,0,JSON.stringify(findings))
 const result={schema:'finnor.x3.delivery-audit.v1',status:'PASS_SCOPED_AUDIT',base,head:git('rev-parse','HEAD').trim(),
  worktreeStatus:git('status','--porcelain'),frozenAcceptanceDigest:frozenDigest,
  emittedManifestDigest:hash(stampText),emittedFiles:stamp.files,sourceFiles,
- openapi:{previousPaths:Object.keys(previous.paths).length,currentPaths:Object.keys(current.paths).length,addedPaths,enumExtensions,previousNamedSchemaCount:Object.keys(previous.components.schemas??{}).length,existingSchemasUnchanged:true},
+ openapi:{previousPaths:Object.keys(previous.paths).length,currentPaths:Object.keys(current.paths).length,addedPaths,
+ registeredAdditions,apiContract:{path:apiContractPath,sha256:hash(readFileSync(join(root,apiContractPath)))},
+ enumExtensions,previousNamedSchemaCount:Object.keys(previous.components.schemas??{}).length,existingSchemasUnchanged:true},
  historyCommits:commits,credentialPatternRules:rules.map(([name])=>name),credentialPatternFindings:findings,artifacts,
  limitations:['PATTERN_SCAN_NOT_GITLEAKS_OR_FULL_SECURITY_AUDIT','DEVELOPMENT_EVIDENCE_NOT_PROTECTED_CUSTODY','NO_PRODUCTION_IMAGE_OR_ARM64_QUALIFICATION']}
 mkdirSync(dirname(output),{recursive:true});writeFileSync(output,JSON.stringify(result,null,2)+'\n')

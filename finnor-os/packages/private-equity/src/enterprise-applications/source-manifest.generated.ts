@@ -200,7 +200,7 @@ export default {
     },
     {
       "path": "finnor-os/scripts/x3/stamp-source.mts",
-      "sha256": "c4da0e8b57bb80abf12a1623647ed969604e62f3dd4acd763e9ad88e08fc6f73"
+      "sha256": "6c56440315012c336ce593fc664373e330972c35757897bed876d804dbad1cf4"
     }
   ]
 } as const;
