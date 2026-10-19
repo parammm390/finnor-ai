@@ -62,6 +62,12 @@ export function composeCanvasDocument(params: { thread: LoadedConversationThread
   }
   if (projection) {
     const nodes = projection.nodes
+    if(work&&projection.root.entityType==="pe_deal"){
+      blocks.push({id:"identified-system:"+projection.root.entityId,type:"identified_system",schemaVersion:1,sourceKind:"company_brain",title:"Autonomous system identification",
+        payload:{root:{entityType:"pe_deal",entityId:projection.root.entityId},workId:work.work.id,threadId:thread.id},
+        entityRefs:[],sourceRefs:[],workRefs:[{workId:work.work.id,recordType:"work"}],truthState:"UNKNOWN",
+        asOf:projection.asOf,createdAt:projection.asOf,updatedAt:projection.asOf})
+    }
     if(["external_organization","pe_strategy","pe_fund","pe_vehicle"].includes(projection.root.entityType)){
       blocks.push({id:"bilateral-opportunity:"+projection.root.entityId,type:"bilateral_opportunity",schemaVersion:1,sourceKind:"company_brain",title:"Private market opportunity creation",
         payload:{root:projection.root,workId:work?.work.id??thread.activeWorkId??null,investigation:{threadId:thread.id,expectedRevision:thread.revision}},entityRefs:[],sourceRefs:[],workRefs:work?[{workId:work.work.id,recordType:"bilateral_opportunity"}]:[],

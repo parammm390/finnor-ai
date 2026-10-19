@@ -5,7 +5,7 @@ import {byteDigest,fault} from './contracts';
 
 export async function capabilityConsumerCommand(
  policy:{endpoint:string;tokenPath:string;tokenHash:string;timeoutMs:number},
- operation:string,body:unknown,requestId:string,domain:'APPLICATION'|'INTERFACE'|'LEARNED_POLICY',
+ operation:string,body:unknown,requestId:string,domain:'APPLICATION'|'INTERFACE'|'LEARNED_POLICY'|'IDENTIFIED_SYSTEM',
 ){
  const prefix='S8_'+domain,token=await privateFile(policy.tokenPath,4096);
  if(byteDigest(token)!==policy.tokenHash)fault(prefix+'_TOKEN_CHANGED',403);

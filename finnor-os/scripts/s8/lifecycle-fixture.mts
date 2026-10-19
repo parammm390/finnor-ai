@@ -12,6 +12,7 @@ export async function createCapabilityLifecycle(input: {
     evaluator: string;
     promoter: string;
     rightsRef: string;
+    nativeIdentification?: boolean;
     protectedEvents?: { contract: 'S8_CAPABILITY_EVENTS_V1'; maxRecoveryEvents: number };
     sourcePins: Array<{
         path: string;
@@ -30,7 +31,9 @@ export async function createCapabilityLifecycle(input: {
     let child: ChildProcess | null = null, endpoint = '', logs = '';
     async function start() {
         logs = '';
-        child = spawn(process.execPath, ['--import=tsx', 'packages/capability-evolution/src/server.mts'], { env: { PATH: process.env.PATH, HOME: process.env.HOME, TMPDIR: process.env.TMPDIR, DATABASE_URL: process.env.DATABASE_URL, FINNOR_S3_MODEL_STORE: process.env.FINNOR_S3_MODEL_STORE, FINNOR_S4_POLICY_STORE: process.env.FINNOR_S4_POLICY_STORE, FINNOR_S8_LIFECYCLE_CONFIG: configPath, FINNOR_S8_RELEASE_ROOT: pub('release'), FINNOR_S6_OWNER_TRANSPORT_CONFIG: process.env.FINNOR_S6_OWNER_TRANSPORT_CONFIG, FINNOR_S6_OWNER_TRANSPORT_ROOT: process.env.FINNOR_S6_OWNER_TRANSPORT_ROOT }, stdio: ['ignore', 'pipe', 'pipe'] });
+        child = spawn(process.execPath, ['--import=tsx', 'packages/capability-evolution/src/server.mts'], { env: { PATH: process.env.PATH, HOME: process.env.HOME, TMPDIR: process.env.TMPDIR, DATABASE_URL: process.env.DATABASE_URL, FINNOR_S3_MODEL_STORE: process.env.FINNOR_S3_MODEL_STORE, FINNOR_S4_POLICY_STORE: process.env.FINNOR_S4_POLICY_STORE, FINNOR_S8_LIFECYCLE_CONFIG: configPath, FINNOR_S8_RELEASE_ROOT: pub('release'), FINNOR_S6_OWNER_TRANSPORT_CONFIG: process.env.FINNOR_S6_OWNER_TRANSPORT_CONFIG, FINNOR_S6_OWNER_TRANSPORT_ROOT: process.env.FINNOR_S6_OWNER_TRANSPORT_ROOT,
+          ...(input.nativeIdentification ? {FINNOR_ENVIRONMENT:process.env.FINNOR_ENVIRONMENT,FINNOR_X4_PROFILE:process.env.FINNOR_X4_PROFILE,FINNOR_X4_BINDINGS:process.env.FINNOR_X4_BINDINGS} : {}),
+        }, stdio: ['ignore', 'pipe', 'pipe'] });
         await new Promise<void>((ok, fail) => {
             const timer = setTimeout(() => fail(Error('S8_BOOT_TIMEOUT:' + logs)), 15000);
             child!.stdout!.on('data', b => {

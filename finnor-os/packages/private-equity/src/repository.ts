@@ -663,8 +663,19 @@ export async function createFinding(ctx: PeMutationContext, input: {
   materiality: "immaterial" | "non_material" | "material" | "critical"; owner: InternalPartyRef;
   requiredForWorkstreamCompletion?: boolean;
 }): Promise<PeMutationResult> {
+  return peTransaction(ctx, (_db, client) => createFindingTx(client, ctx, input));
+}
+
+/** Canonical finding constructor, composed atomically with checked evidence by
+ * native scientific owners. No caller-supplied scientific grade is accepted. */
+export async function createFindingTx(client: Client, ctx: PeMutationContext, input: {
+  id?: string; dealId: string; workstreamId: string; relatedRequestId?: string; relatedDeliverableId?: string;
+  statement: string; severity: "low" | "medium" | "high" | "critical";
+  materiality: "immaterial" | "non_material" | "material" | "critical"; owner: InternalPartyRef;
+  requiredForWorkstreamCompletion?: boolean;
+}): Promise<PeMutationResult> {
   assertPeText(input.statement, "Finding statement");
-  return createChild(ctx, "pe_findings", input.dealId, {
+  return createChildTx(client, ctx, "pe_findings", input.dealId, {
     id: input.id, workstream_id: input.workstreamId, related_request_id: input.relatedRequestId ?? null,
     related_deliverable_id: input.relatedDeliverableId ?? null, statement: input.statement.trim(),
     severity: input.severity, materiality: input.materiality,

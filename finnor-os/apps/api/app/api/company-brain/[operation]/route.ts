@@ -47,6 +47,7 @@ import {CapitalFormationError} from '@finnor/private-equity/src/capital-formatio
 import {promoteAttestedOpportunity} from '@finnor/private-equity/src/opportunity-handoff';
 import {APPLICATION_OPERATIONS,readApplicationBody,handleApplicationOperation,applicationResponseError} from '@finnor/private-equity/src/enterprise-applications/api';
 import {LEARNING_OPERATIONS,handleLearningOperation} from '@finnor/private-equity/src/policy-learning/api';
+import {IDENTIFICATION_OPERATIONS,handleIdentificationOperation,identificationResponseError} from '@finnor/private-equity/src/system-identification/api';
 
 export const runtime = "nodejs";
 
@@ -194,6 +195,13 @@ function checkedRef(value: unknown): CompanyBrainObjectRef {
 
 export async function POST(req: Request, { params }: { params: Promise<{ operation: string }> }): Promise<Response> {
   try {const route=await params;
+    if(IDENTIFICATION_OPERATIONS.some(operation=>operation===route.operation)){
+      try{
+        const auth=await requireContext(req),body=await readApplicationBody(req);
+        const result=await handleIdentificationOperation({auth},route.operation,body);
+        return response(result.body,result.status);
+      }catch(error){const mapped=identificationResponseError(error);return mapped?response(mapped.body,mapped.status):requestError(error);}
+    }
     if(APPLICATION_OPERATIONS.some(operation=>operation===route.operation)||LEARNING_OPERATIONS.some(operation=>operation===route.operation)){
       try{
         const auth=await requireContext(req),body=await readApplicationBody(req);

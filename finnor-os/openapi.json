@@ -6665,6 +6665,1121 @@
         ],
         "additionalProperties": false
       },
+      "identification-targets": {
+        "type": "object",
+        "properties": {
+          "root": {
+            "type": "object",
+            "properties": {
+              "entityType": {
+                "type": "string",
+                "const": "pe_deal"
+              },
+              "entityId": {
+                "type": "string",
+                "format": "uuid"
+              }
+            },
+            "required": [
+              "entityType",
+              "entityId"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "root"
+        ],
+        "additionalProperties": false
+      },
+      "identification-consent": {
+        "type": "object",
+        "properties": {
+          "schema": {
+            "type": "string",
+            "const": "finnor.x4.experiment-rights.v1"
+          },
+          "root": {
+            "type": "object",
+            "properties": {
+              "entityType": {
+                "type": "string",
+                "const": "pe_deal"
+              },
+              "entityId": {
+                "type": "string",
+                "format": "uuid"
+              }
+            },
+            "required": [
+              "entityType",
+              "entityId"
+            ],
+            "additionalProperties": false
+          },
+          "domain": {
+            "type": "object",
+            "properties": {
+              "schema": {
+                "type": "string",
+                "const": "finnor.x4.digital-domain.v1"
+              },
+              "profile": {
+                "type": "string",
+                "const": "PE_FIRM_DIGITAL_RELATION_V1"
+              },
+              "applicationVersion": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              },
+              "role": {
+                "type": "string",
+                "enum": [
+                  "analyst",
+                  "auditor"
+                ]
+              },
+              "records": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "value": {
+                      "type": "string",
+                      "pattern": "^(0|-?[1-9][0-9]{0,6})$"
+                    },
+                    "update": {
+                      "type": "string",
+                      "enum": [
+                        "PREEXISTING",
+                        "CONTROLLED"
+                      ]
+                    },
+                    "visibility": {
+                      "type": "string",
+                      "enum": [
+                        "PUBLIC",
+                        "CONTROLLED"
+                      ]
+                    },
+                    "features": {
+                      "type": "object",
+                      "properties": {
+                        "cohort": {
+                          "type": "integer",
+                          "minimum": -3,
+                          "maximum": 3
+                        },
+                        "flag": {
+                          "type": "integer",
+                          "minimum": -3,
+                          "maximum": 3
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "value",
+                    "update",
+                    "visibility",
+                    "features"
+                  ],
+                  "additionalProperties": false
+                },
+                "minItems": 2,
+                "maxItems": 16
+              },
+              "interventions": {
+                "type": "object",
+                "properties": {
+                  "updateTiming": {
+                    "type": "array",
+                    "items": {
+                      "type": "number",
+                      "enum": [
+                        -1,
+                        1,
+                        3
+                      ]
+                    },
+                    "minItems": 1,
+                    "maxItems": 3
+                  },
+                  "pageSize": {
+                    "type": "array",
+                    "items": {
+                      "type": "number",
+                      "enum": [
+                        1,
+                        2,
+                        4
+                      ]
+                    },
+                    "minItems": 1,
+                    "maxItems": 3
+                  },
+                  "visibility": {
+                    "type": "array",
+                    "items": {
+                      "type": "number",
+                      "enum": [
+                        0,
+                        1
+                      ]
+                    },
+                    "minItems": 1,
+                    "maxItems": 2
+                  }
+                },
+                "required": [
+                  "updateTiming",
+                  "pageSize",
+                  "visibility"
+                ],
+                "additionalProperties": false
+              },
+              "ordinary": {
+                "type": "object",
+                "properties": {
+                  "updateTiming": {
+                    "type": "number",
+                    "enum": [
+                      -1,
+                      1,
+                      3
+                    ]
+                  },
+                  "pageSize": {
+                    "type": "number",
+                    "enum": [
+                      1,
+                      2,
+                      4
+                    ]
+                  },
+                  "visibility": {
+                    "type": "number",
+                    "enum": [
+                      0,
+                      1
+                    ]
+                  }
+                },
+                "required": [
+                  "updateTiming",
+                  "pageSize",
+                  "visibility"
+                ],
+                "additionalProperties": false
+              },
+              "withheld": {
+                "type": "object",
+                "properties": {
+                  "updateTiming": {
+                    "type": "number",
+                    "enum": [
+                      -1,
+                      1,
+                      3
+                    ]
+                  },
+                  "pageSize": {
+                    "type": "number",
+                    "enum": [
+                      1,
+                      2,
+                      4
+                    ]
+                  },
+                  "visibility": {
+                    "type": "number",
+                    "enum": [
+                      0,
+                      1
+                    ]
+                  }
+                },
+                "required": [
+                  "updateTiming",
+                  "pageSize",
+                  "visibility"
+                ],
+                "additionalProperties": false
+              },
+              "costUnits": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 1000000
+              },
+              "assumptions": {
+                "type": "object",
+                "properties": {
+                  "deterministic": {
+                    "type": "boolean",
+                    "const": true
+                  },
+                  "isolatedFreshRecords": {
+                    "type": "boolean",
+                    "const": true
+                  },
+                  "noInterference": {
+                    "type": "boolean",
+                    "const": true
+                  },
+                  "completePermittedObservations": {
+                    "type": "boolean",
+                    "const": true
+                  },
+                  "sameHostClock": {
+                    "type": "boolean",
+                    "const": true
+                  },
+                  "replicaVersionInvariant": {
+                    "type": "boolean",
+                    "const": true
+                  }
+                },
+                "required": [
+                  "deterministic",
+                  "isolatedFreshRecords",
+                  "noInterference",
+                  "completePermittedObservations",
+                  "sameHostClock",
+                  "replicaVersionInvariant"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "schema",
+              "profile",
+              "applicationVersion",
+              "role",
+              "records",
+              "interventions",
+              "ordinary",
+              "withheld",
+              "costUnits",
+              "assumptions"
+            ],
+            "additionalProperties": false
+          },
+          "targetIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "minItems": 2,
+            "maxItems": 4
+          },
+          "actorIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "minItems": 2,
+            "maxItems": 8
+          },
+          "purposes": {
+            "type": "array",
+            "minItems": 5,
+            "maxItems": 5,
+            "items": [
+              {
+                "type": "string",
+                "const": "EXPERIMENT"
+              },
+              {
+                "type": "string",
+                "const": "OBSERVE"
+              },
+              {
+                "type": "string",
+                "const": "REPLICATE"
+              },
+              {
+                "type": "string",
+                "const": "DERIVE_FINDING"
+              },
+              {
+                "type": "string",
+                "const": "USE_IN_DECISION"
+              }
+            ]
+          },
+          "retention": {
+            "type": "string",
+            "const": "RETAIN_AUDIT_REVOKE_FUTURE_USE_NO_EFFECT_ROLLBACK"
+          },
+          "validUntil": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          }
+        },
+        "required": [
+          "schema",
+          "root",
+          "domain",
+          "targetIds",
+          "actorIds",
+          "purposes",
+          "retention",
+          "validUntil",
+          "idempotencyKey"
+        ],
+        "additionalProperties": false
+      },
+      "identification-revoke-consent": {
+        "type": "object",
+        "properties": {
+          "consentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          }
+        },
+        "required": [
+          "consentId",
+          "reason",
+          "idempotencyKey"
+        ],
+        "additionalProperties": false
+      },
+      "identification-submit": {
+        "type": "object",
+        "properties": {
+          "schema": {
+            "type": "string",
+            "const": "finnor.x4.identification-request.v1"
+          },
+          "root": {
+            "type": "object",
+            "properties": {
+              "entityType": {
+                "type": "string",
+                "const": "pe_deal"
+              },
+              "entityId": {
+                "type": "string",
+                "format": "uuid"
+              }
+            },
+            "required": [
+              "entityType",
+              "entityId"
+            ],
+            "additionalProperties": false
+          },
+          "workId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "workInputId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "consentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sourceTargetId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "replicationTargetId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "question": {
+            "type": "object",
+            "properties": {
+              "text": {
+                "type": "string",
+                "minLength": 10,
+                "maxLength": 4000
+              },
+              "target": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 500
+              },
+              "affectedDecision": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 2000
+              },
+              "requestedClaimClass": {
+                "type": "string",
+                "enum": [
+                  "PREDICTIVE",
+                  "INTERVENTION_IDENTIFIED",
+                  "MECHANISM_SPECIFIC"
+                ]
+              }
+            },
+            "required": [
+              "text",
+              "target",
+              "affectedDecision",
+              "requestedClaimClass"
+            ],
+            "additionalProperties": false
+          },
+          "decision": {
+            "type": "object",
+            "properties": {
+              "workstreamId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "investmentCaseId": {
+                "type": "string",
+                "format": "uuid"
+              }
+            },
+            "required": [
+              "workstreamId",
+              "investmentCaseId"
+            ],
+            "additionalProperties": false
+          },
+          "domain": {
+            "type": "object",
+            "properties": {
+              "schema": {
+                "type": "string",
+                "const": "finnor.x4.digital-domain.v1"
+              },
+              "profile": {
+                "type": "string",
+                "const": "PE_FIRM_DIGITAL_RELATION_V1"
+              },
+              "applicationVersion": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              },
+              "role": {
+                "type": "string",
+                "enum": [
+                  "analyst",
+                  "auditor"
+                ]
+              },
+              "records": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "value": {
+                      "type": "string",
+                      "pattern": "^(0|-?[1-9][0-9]{0,6})$"
+                    },
+                    "update": {
+                      "type": "string",
+                      "enum": [
+                        "PREEXISTING",
+                        "CONTROLLED"
+                      ]
+                    },
+                    "visibility": {
+                      "type": "string",
+                      "enum": [
+                        "PUBLIC",
+                        "CONTROLLED"
+                      ]
+                    },
+                    "features": {
+                      "type": "object",
+                      "properties": {
+                        "cohort": {
+                          "type": "integer",
+                          "minimum": -3,
+                          "maximum": 3
+                        },
+                        "flag": {
+                          "type": "integer",
+                          "minimum": -3,
+                          "maximum": 3
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "value",
+                    "update",
+                    "visibility",
+                    "features"
+                  ],
+                  "additionalProperties": false
+                },
+                "minItems": 2,
+                "maxItems": 16
+              },
+              "interventions": {
+                "type": "object",
+                "properties": {
+                  "updateTiming": {
+                    "type": "array",
+                    "items": {
+                      "type": "number",
+                      "enum": [
+                        -1,
+                        1,
+                        3
+                      ]
+                    },
+                    "minItems": 1,
+                    "maxItems": 3
+                  },
+                  "pageSize": {
+                    "type": "array",
+                    "items": {
+                      "type": "number",
+                      "enum": [
+                        1,
+                        2,
+                        4
+                      ]
+                    },
+                    "minItems": 1,
+                    "maxItems": 3
+                  },
+                  "visibility": {
+                    "type": "array",
+                    "items": {
+                      "type": "number",
+                      "enum": [
+                        0,
+                        1
+                      ]
+                    },
+                    "minItems": 1,
+                    "maxItems": 2
+                  }
+                },
+                "required": [
+                  "updateTiming",
+                  "pageSize",
+                  "visibility"
+                ],
+                "additionalProperties": false
+              },
+              "ordinary": {
+                "type": "object",
+                "properties": {
+                  "updateTiming": {
+                    "type": "number",
+                    "enum": [
+                      -1,
+                      1,
+                      3
+                    ]
+                  },
+                  "pageSize": {
+                    "type": "number",
+                    "enum": [
+                      1,
+                      2,
+                      4
+                    ]
+                  },
+                  "visibility": {
+                    "type": "number",
+                    "enum": [
+                      0,
+                      1
+                    ]
+                  }
+                },
+                "required": [
+                  "updateTiming",
+                  "pageSize",
+                  "visibility"
+                ],
+                "additionalProperties": false
+              },
+              "withheld": {
+                "type": "object",
+                "properties": {
+                  "updateTiming": {
+                    "type": "number",
+                    "enum": [
+                      -1,
+                      1,
+                      3
+                    ]
+                  },
+                  "pageSize": {
+                    "type": "number",
+                    "enum": [
+                      1,
+                      2,
+                      4
+                    ]
+                  },
+                  "visibility": {
+                    "type": "number",
+                    "enum": [
+                      0,
+                      1
+                    ]
+                  }
+                },
+                "required": [
+                  "updateTiming",
+                  "pageSize",
+                  "visibility"
+                ],
+                "additionalProperties": false
+              },
+              "costUnits": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 1000000
+              },
+              "assumptions": {
+                "type": "object",
+                "properties": {
+                  "deterministic": {
+                    "type": "boolean",
+                    "const": true
+                  },
+                  "isolatedFreshRecords": {
+                    "type": "boolean",
+                    "const": true
+                  },
+                  "noInterference": {
+                    "type": "boolean",
+                    "const": true
+                  },
+                  "completePermittedObservations": {
+                    "type": "boolean",
+                    "const": true
+                  },
+                  "sameHostClock": {
+                    "type": "boolean",
+                    "const": true
+                  },
+                  "replicaVersionInvariant": {
+                    "type": "boolean",
+                    "const": true
+                  }
+                },
+                "required": [
+                  "deterministic",
+                  "isolatedFreshRecords",
+                  "noInterference",
+                  "completePermittedObservations",
+                  "sameHostClock",
+                  "replicaVersionInvariant"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "schema",
+              "profile",
+              "applicationVersion",
+              "role",
+              "records",
+              "interventions",
+              "ordinary",
+              "withheld",
+              "costUnits",
+              "assumptions"
+            ],
+            "additionalProperties": false
+          },
+          "limits": {
+            "type": "object",
+            "properties": {
+              "deadlineMs": {
+                "type": "integer",
+                "minimum": 1000,
+                "maximum": 3600000
+              },
+              "maxExperiments": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 64
+              },
+              "maxObservationCalls": {
+                "type": "integer",
+                "minimum": 16,
+                "maximum": 256
+              },
+              "maxAnalysisJobs": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 64
+              },
+              "maxUses": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 16
+              }
+            },
+            "required": [
+              "deadlineMs",
+              "maxExperiments",
+              "maxObservationCalls",
+              "maxAnalysisJobs",
+              "maxUses"
+            ],
+            "additionalProperties": false
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "ACTIVE",
+              "OBSERVATION_ONLY"
+            ],
+            "default": "ACTIVE"
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          }
+        },
+        "required": [
+          "schema",
+          "root",
+          "consentId",
+          "sourceTargetId",
+          "replicationTargetId",
+          "question",
+          "decision",
+          "domain",
+          "limits",
+          "idempotencyKey"
+        ],
+        "additionalProperties": false
+      },
+      "identification-read": {
+        "type": "object",
+        "properties": {
+          "identificationId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "identificationId"
+        ],
+        "additionalProperties": false
+      },
+      "identification-list": {
+        "type": "object",
+        "properties": {
+          "root": {
+            "type": "object",
+            "properties": {
+              "entityType": {
+                "type": "string",
+                "const": "pe_deal"
+              },
+              "entityId": {
+                "type": "string",
+                "format": "uuid"
+              }
+            },
+            "required": [
+              "entityType",
+              "entityId"
+            ],
+            "additionalProperties": false
+          },
+          "workId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "root",
+          "workId"
+        ],
+        "additionalProperties": false
+      },
+      "identification-history": {
+        "type": "object",
+        "properties": {
+          "identificationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "before": {
+            "type": "string",
+            "pattern": "^\\d{1,19}$"
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "default": 50
+          }
+        },
+        "required": [
+          "identificationId"
+        ],
+        "additionalProperties": false
+      },
+      "identification-experiment": {
+        "type": "object",
+        "properties": {
+          "identificationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "experimentId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "identificationId",
+          "experimentId"
+        ],
+        "additionalProperties": false
+      },
+      "identification-replicate": {
+        "type": "object",
+        "properties": {
+          "identificationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "expectedModelId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          }
+        },
+        "required": [
+          "identificationId",
+          "expectedModelId",
+          "idempotencyKey"
+        ],
+        "additionalProperties": false
+      },
+      "identification-use": {
+        "type": "object",
+        "properties": {
+          "identificationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "modelId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          }
+        },
+        "required": [
+          "identificationId",
+          "modelId",
+          "idempotencyKey"
+        ],
+        "additionalProperties": false
+      },
+      "identification-cancel": {
+        "type": "object",
+        "properties": {
+          "identificationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          }
+        },
+        "required": [
+          "identificationId",
+          "reason",
+          "idempotencyKey"
+        ],
+        "additionalProperties": false
+      },
+      "identification-invalidate": {
+        "type": "object",
+        "properties": {
+          "identificationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          },
+          "changed": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "domain",
+                "instrument",
+                "observations",
+                "hypotheses",
+                "replication",
+                "rights",
+                "work",
+                "checker",
+                "runtime"
+              ]
+            },
+            "minItems": 1,
+            "maxItems": 9
+          }
+        },
+        "required": [
+          "identificationId",
+          "reason",
+          "idempotencyKey",
+          "changed"
+        ],
+        "additionalProperties": false
+      },
+      "identification-retry": {
+        "type": "object",
+        "properties": {
+          "identificationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          }
+        },
+        "required": [
+          "identificationId",
+          "reason",
+          "idempotencyKey"
+        ],
+        "additionalProperties": false
+      },
+      "identification-s8-propose": {
+        "type": "object",
+        "properties": {
+          "identificationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "modelId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          }
+        },
+        "required": [
+          "identificationId",
+          "modelId",
+          "idempotencyKey"
+        ],
+        "additionalProperties": false
+      },
+      "identification-admission": {
+        "type": "object",
+        "properties": {
+          "identificationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "modelId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "revisionRef": {
+            "type": "object",
+            "properties": {
+              "owner": {
+                "type": "string"
+              },
+              "id": {
+                "type": "string"
+              },
+              "version": {
+                "type": "string"
+              },
+              "contentDigest": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            },
+            "required": [
+              "owner",
+              "id",
+              "version",
+              "contentDigest"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "identificationId",
+          "modelId",
+          "revisionRef"
+        ],
+        "additionalProperties": false
+      },
       "X3Expression": {
         "anyOf": [
           {
@@ -14365,7 +15480,22 @@
                 "learning-s8-propose",
                 "learning-admission",
                 "learning-register-assignment",
-                "learning-retrain"
+                "learning-retrain",
+                "identification-targets",
+                "identification-consent",
+                "identification-revoke-consent",
+                "identification-submit",
+                "identification-read",
+                "identification-list",
+                "identification-history",
+                "identification-experiment",
+                "identification-replicate",
+                "identification-use",
+                "identification-cancel",
+                "identification-invalidate",
+                "identification-retry",
+                "identification-s8-propose",
+                "identification-admission"
               ]
             }
           }
@@ -26540,6 +27670,711 @@
         "responses": {
           "201": {
             "description": "New Core Document and first immutable version instantiated with lineage"
+          }
+        }
+      }
+    },
+    "/api/company-brain/identification-targets": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/identification-targets"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current scoped development rights, raw experiments, scientific model, decision use or retained history. Not protected admission or production."
+          },
+          "202": {
+            "description": "Original finite Work allocation queued for physical experiments, independent replication or actual guarded decision use. Not completion."
+          },
+          "400": {
+            "description": "Strict bounded request or unsupported domain rejected."
+          },
+          "401": {
+            "description": "Current signed bearer required."
+          },
+          "403": {
+            "description": "Current rights, separate principal or canonical authority missing."
+          },
+          "404": {
+            "description": "Absent or unauthorized scoped owner record."
+          },
+          "409": {
+            "description": "Original allocation, Work, source, observation, consent or exact recovery identity changed."
+          },
+          "413": {
+            "description": "Original finite request, response, storage or resource bound exceeded."
+          },
+          "503": {
+            "description": "Native capacity or independently configured lifecycle owner unavailable."
+          }
+        }
+      }
+    },
+    "/api/company-brain/identification-consent": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/identification-consent"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current scoped development rights, raw experiments, scientific model, decision use or retained history. Not protected admission or production."
+          },
+          "202": {
+            "description": "Original finite Work allocation queued for physical experiments, independent replication or actual guarded decision use. Not completion."
+          },
+          "400": {
+            "description": "Strict bounded request or unsupported domain rejected."
+          },
+          "401": {
+            "description": "Current signed bearer required."
+          },
+          "403": {
+            "description": "Current rights, separate principal or canonical authority missing."
+          },
+          "404": {
+            "description": "Absent or unauthorized scoped owner record."
+          },
+          "409": {
+            "description": "Original allocation, Work, source, observation, consent or exact recovery identity changed."
+          },
+          "413": {
+            "description": "Original finite request, response, storage or resource bound exceeded."
+          },
+          "503": {
+            "description": "Native capacity or independently configured lifecycle owner unavailable."
+          }
+        }
+      }
+    },
+    "/api/company-brain/identification-revoke-consent": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/identification-revoke-consent"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current scoped development rights, raw experiments, scientific model, decision use or retained history. Not protected admission or production."
+          },
+          "202": {
+            "description": "Original finite Work allocation queued for physical experiments, independent replication or actual guarded decision use. Not completion."
+          },
+          "400": {
+            "description": "Strict bounded request or unsupported domain rejected."
+          },
+          "401": {
+            "description": "Current signed bearer required."
+          },
+          "403": {
+            "description": "Current rights, separate principal or canonical authority missing."
+          },
+          "404": {
+            "description": "Absent or unauthorized scoped owner record."
+          },
+          "409": {
+            "description": "Original allocation, Work, source, observation, consent or exact recovery identity changed."
+          },
+          "413": {
+            "description": "Original finite request, response, storage or resource bound exceeded."
+          },
+          "503": {
+            "description": "Native capacity or independently configured lifecycle owner unavailable."
+          }
+        }
+      }
+    },
+    "/api/company-brain/identification-submit": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/identification-submit"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current scoped development rights, raw experiments, scientific model, decision use or retained history. Not protected admission or production."
+          },
+          "202": {
+            "description": "Original finite Work allocation queued for physical experiments, independent replication or actual guarded decision use. Not completion."
+          },
+          "400": {
+            "description": "Strict bounded request or unsupported domain rejected."
+          },
+          "401": {
+            "description": "Current signed bearer required."
+          },
+          "403": {
+            "description": "Current rights, separate principal or canonical authority missing."
+          },
+          "404": {
+            "description": "Absent or unauthorized scoped owner record."
+          },
+          "409": {
+            "description": "Original allocation, Work, source, observation, consent or exact recovery identity changed."
+          },
+          "413": {
+            "description": "Original finite request, response, storage or resource bound exceeded."
+          },
+          "503": {
+            "description": "Native capacity or independently configured lifecycle owner unavailable."
+          }
+        }
+      }
+    },
+    "/api/company-brain/identification-read": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/identification-read"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current scoped development rights, raw experiments, scientific model, decision use or retained history. Not protected admission or production."
+          },
+          "202": {
+            "description": "Original finite Work allocation queued for physical experiments, independent replication or actual guarded decision use. Not completion."
+          },
+          "400": {
+            "description": "Strict bounded request or unsupported domain rejected."
+          },
+          "401": {
+            "description": "Current signed bearer required."
+          },
+          "403": {
+            "description": "Current rights, separate principal or canonical authority missing."
+          },
+          "404": {
+            "description": "Absent or unauthorized scoped owner record."
+          },
+          "409": {
+            "description": "Original allocation, Work, source, observation, consent or exact recovery identity changed."
+          },
+          "413": {
+            "description": "Original finite request, response, storage or resource bound exceeded."
+          },
+          "503": {
+            "description": "Native capacity or independently configured lifecycle owner unavailable."
+          }
+        }
+      }
+    },
+    "/api/company-brain/identification-list": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/identification-list"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current scoped development rights, raw experiments, scientific model, decision use or retained history. Not protected admission or production."
+          },
+          "202": {
+            "description": "Original finite Work allocation queued for physical experiments, independent replication or actual guarded decision use. Not completion."
+          },
+          "400": {
+            "description": "Strict bounded request or unsupported domain rejected."
+          },
+          "401": {
+            "description": "Current signed bearer required."
+          },
+          "403": {
+            "description": "Current rights, separate principal or canonical authority missing."
+          },
+          "404": {
+            "description": "Absent or unauthorized scoped owner record."
+          },
+          "409": {
+            "description": "Original allocation, Work, source, observation, consent or exact recovery identity changed."
+          },
+          "413": {
+            "description": "Original finite request, response, storage or resource bound exceeded."
+          },
+          "503": {
+            "description": "Native capacity or independently configured lifecycle owner unavailable."
+          }
+        }
+      }
+    },
+    "/api/company-brain/identification-history": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/identification-history"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current scoped development rights, raw experiments, scientific model, decision use or retained history. Not protected admission or production."
+          },
+          "202": {
+            "description": "Original finite Work allocation queued for physical experiments, independent replication or actual guarded decision use. Not completion."
+          },
+          "400": {
+            "description": "Strict bounded request or unsupported domain rejected."
+          },
+          "401": {
+            "description": "Current signed bearer required."
+          },
+          "403": {
+            "description": "Current rights, separate principal or canonical authority missing."
+          },
+          "404": {
+            "description": "Absent or unauthorized scoped owner record."
+          },
+          "409": {
+            "description": "Original allocation, Work, source, observation, consent or exact recovery identity changed."
+          },
+          "413": {
+            "description": "Original finite request, response, storage or resource bound exceeded."
+          },
+          "503": {
+            "description": "Native capacity or independently configured lifecycle owner unavailable."
+          }
+        }
+      }
+    },
+    "/api/company-brain/identification-experiment": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/identification-experiment"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current scoped development rights, raw experiments, scientific model, decision use or retained history. Not protected admission or production."
+          },
+          "202": {
+            "description": "Original finite Work allocation queued for physical experiments, independent replication or actual guarded decision use. Not completion."
+          },
+          "400": {
+            "description": "Strict bounded request or unsupported domain rejected."
+          },
+          "401": {
+            "description": "Current signed bearer required."
+          },
+          "403": {
+            "description": "Current rights, separate principal or canonical authority missing."
+          },
+          "404": {
+            "description": "Absent or unauthorized scoped owner record."
+          },
+          "409": {
+            "description": "Original allocation, Work, source, observation, consent or exact recovery identity changed."
+          },
+          "413": {
+            "description": "Original finite request, response, storage or resource bound exceeded."
+          },
+          "503": {
+            "description": "Native capacity or independently configured lifecycle owner unavailable."
+          }
+        }
+      }
+    },
+    "/api/company-brain/identification-replicate": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/identification-replicate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current scoped development rights, raw experiments, scientific model, decision use or retained history. Not protected admission or production."
+          },
+          "202": {
+            "description": "Original finite Work allocation queued for physical experiments, independent replication or actual guarded decision use. Not completion."
+          },
+          "400": {
+            "description": "Strict bounded request or unsupported domain rejected."
+          },
+          "401": {
+            "description": "Current signed bearer required."
+          },
+          "403": {
+            "description": "Current rights, separate principal or canonical authority missing."
+          },
+          "404": {
+            "description": "Absent or unauthorized scoped owner record."
+          },
+          "409": {
+            "description": "Original allocation, Work, source, observation, consent or exact recovery identity changed."
+          },
+          "413": {
+            "description": "Original finite request, response, storage or resource bound exceeded."
+          },
+          "503": {
+            "description": "Native capacity or independently configured lifecycle owner unavailable."
+          }
+        }
+      }
+    },
+    "/api/company-brain/identification-use": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/identification-use"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current scoped development rights, raw experiments, scientific model, decision use or retained history. Not protected admission or production."
+          },
+          "202": {
+            "description": "Original finite Work allocation queued for physical experiments, independent replication or actual guarded decision use. Not completion."
+          },
+          "400": {
+            "description": "Strict bounded request or unsupported domain rejected."
+          },
+          "401": {
+            "description": "Current signed bearer required."
+          },
+          "403": {
+            "description": "Current rights, separate principal or canonical authority missing."
+          },
+          "404": {
+            "description": "Absent or unauthorized scoped owner record."
+          },
+          "409": {
+            "description": "Original allocation, Work, source, observation, consent or exact recovery identity changed."
+          },
+          "413": {
+            "description": "Original finite request, response, storage or resource bound exceeded."
+          },
+          "503": {
+            "description": "Native capacity or independently configured lifecycle owner unavailable."
+          }
+        }
+      }
+    },
+    "/api/company-brain/identification-cancel": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/identification-cancel"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current scoped development rights, raw experiments, scientific model, decision use or retained history. Not protected admission or production."
+          },
+          "202": {
+            "description": "Original finite Work allocation queued for physical experiments, independent replication or actual guarded decision use. Not completion."
+          },
+          "400": {
+            "description": "Strict bounded request or unsupported domain rejected."
+          },
+          "401": {
+            "description": "Current signed bearer required."
+          },
+          "403": {
+            "description": "Current rights, separate principal or canonical authority missing."
+          },
+          "404": {
+            "description": "Absent or unauthorized scoped owner record."
+          },
+          "409": {
+            "description": "Original allocation, Work, source, observation, consent or exact recovery identity changed."
+          },
+          "413": {
+            "description": "Original finite request, response, storage or resource bound exceeded."
+          },
+          "503": {
+            "description": "Native capacity or independently configured lifecycle owner unavailable."
+          }
+        }
+      }
+    },
+    "/api/company-brain/identification-invalidate": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/identification-invalidate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current scoped development rights, raw experiments, scientific model, decision use or retained history. Not protected admission or production."
+          },
+          "202": {
+            "description": "Original finite Work allocation queued for physical experiments, independent replication or actual guarded decision use. Not completion."
+          },
+          "400": {
+            "description": "Strict bounded request or unsupported domain rejected."
+          },
+          "401": {
+            "description": "Current signed bearer required."
+          },
+          "403": {
+            "description": "Current rights, separate principal or canonical authority missing."
+          },
+          "404": {
+            "description": "Absent or unauthorized scoped owner record."
+          },
+          "409": {
+            "description": "Original allocation, Work, source, observation, consent or exact recovery identity changed."
+          },
+          "413": {
+            "description": "Original finite request, response, storage or resource bound exceeded."
+          },
+          "503": {
+            "description": "Native capacity or independently configured lifecycle owner unavailable."
+          }
+        }
+      }
+    },
+    "/api/company-brain/identification-retry": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/identification-retry"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current scoped development rights, raw experiments, scientific model, decision use or retained history. Not protected admission or production."
+          },
+          "202": {
+            "description": "Original finite Work allocation queued for physical experiments, independent replication or actual guarded decision use. Not completion."
+          },
+          "400": {
+            "description": "Strict bounded request or unsupported domain rejected."
+          },
+          "401": {
+            "description": "Current signed bearer required."
+          },
+          "403": {
+            "description": "Current rights, separate principal or canonical authority missing."
+          },
+          "404": {
+            "description": "Absent or unauthorized scoped owner record."
+          },
+          "409": {
+            "description": "Original allocation, Work, source, observation, consent or exact recovery identity changed."
+          },
+          "413": {
+            "description": "Original finite request, response, storage or resource bound exceeded."
+          },
+          "503": {
+            "description": "Native capacity or independently configured lifecycle owner unavailable."
+          }
+        }
+      }
+    },
+    "/api/company-brain/identification-s8-propose": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/identification-s8-propose"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current scoped development rights, raw experiments, scientific model, decision use or retained history. Not protected admission or production."
+          },
+          "202": {
+            "description": "Original finite Work allocation queued for physical experiments, independent replication or actual guarded decision use. Not completion."
+          },
+          "400": {
+            "description": "Strict bounded request or unsupported domain rejected."
+          },
+          "401": {
+            "description": "Current signed bearer required."
+          },
+          "403": {
+            "description": "Current rights, separate principal or canonical authority missing."
+          },
+          "404": {
+            "description": "Absent or unauthorized scoped owner record."
+          },
+          "409": {
+            "description": "Original allocation, Work, source, observation, consent or exact recovery identity changed."
+          },
+          "413": {
+            "description": "Original finite request, response, storage or resource bound exceeded."
+          },
+          "503": {
+            "description": "Native capacity or independently configured lifecycle owner unavailable."
+          }
+        }
+      }
+    },
+    "/api/company-brain/identification-admission": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/identification-admission"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current scoped development rights, raw experiments, scientific model, decision use or retained history. Not protected admission or production."
+          },
+          "202": {
+            "description": "Original finite Work allocation queued for physical experiments, independent replication or actual guarded decision use. Not completion."
+          },
+          "400": {
+            "description": "Strict bounded request or unsupported domain rejected."
+          },
+          "401": {
+            "description": "Current signed bearer required."
+          },
+          "403": {
+            "description": "Current rights, separate principal or canonical authority missing."
+          },
+          "404": {
+            "description": "Absent or unauthorized scoped owner record."
+          },
+          "409": {
+            "description": "Original allocation, Work, source, observation, consent or exact recovery identity changed."
+          },
+          "413": {
+            "description": "Original finite request, response, storage or resource bound exceeded."
+          },
+          "503": {
+            "description": "Native capacity or independently configured lifecycle owner unavailable."
           }
         }
       }

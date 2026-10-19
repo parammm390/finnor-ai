@@ -38,6 +38,7 @@ export * from "./event-fabric";
 export * from "./compute-contract";
 export * from "./compute-control";
 export * from "./compute-governor";
+export * from "./identification-resources";
 export { pgConnectionConfig } from "./postgres-connection.mjs";
 export * from "./execution-deadline";
 export { schema };

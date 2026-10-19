@@ -67,6 +67,7 @@ import { COMPUTE_SEARCH_OPERATIONS } from "../packages/private-equity/src/comput
 import { INTERFACE_OPERATIONS } from "../packages/private-equity/src/interface-synthesis/api";
 import { APPLICATION_OPERATIONS, APPLICATION_OPERATION_SCHEMAS } from "../packages/private-equity/src/enterprise-applications/api";
 import {LEARNING_OPERATION_SCHEMAS,LEARNING_OPERATIONS} from "../packages/private-equity/src/policy-learning/api";
+import {IDENTIFICATION_OPERATION_SCHEMAS,IDENTIFICATION_OPERATIONS} from "../packages/private-equity/src/system-identification/api";
 import { ApplicationExpressionSchema } from "../packages/private-equity/src/enterprise-applications/contracts";
 import { M1_OPERATIONS, M1OperationSchemas } from "../packages/private-equity/src/decision-slice/handler";
 import { CapitalProgramV2Operations } from "@finnor/shared-types";
@@ -305,6 +306,7 @@ const applicationSchema=(schema:z.ZodTypeAny)=>{
 const applicationComponents={schemas:Object.fromEntries([
  ...Object.entries(APPLICATION_OPERATION_SCHEMAS).map(([name,schema])=>[name,applicationSchema(schema)]),
  ...Object.entries(LEARNING_OPERATION_SCHEMAS).map(([name,schema])=>[name,applicationSchema(schema)]),
+ ...Object.entries(IDENTIFICATION_OPERATION_SCHEMAS).map(([name,schema])=>[name,applicationSchema(schema)]),
  ["X3Expression",applicationSchema((ApplicationExpressionSchema._def as z.ZodLazyDef).getter())],
 ])};
 const secured = [{ bearerAuth: [] }];
@@ -703,6 +705,19 @@ const paths = {
 
 paths["/api/company-brain/{operation}"].post.parameters[0]!.schema.enum.push(...APPLICATION_OPERATIONS);
 (paths["/api/company-brain/{operation}"].post.parameters[0]!.schema.enum as string[]).push(...LEARNING_OPERATIONS);
+(paths["/api/company-brain/{operation}"].post.parameters[0]!.schema.enum as string[]).push(...IDENTIFICATION_OPERATIONS);
+for(const operation of IDENTIFICATION_OPERATIONS){
+ Object.assign(paths,{["/api/company-brain/"+operation]:{post:{security:secured,requestBody:{content:{"application/json":{schema:{$ref:"#/components/schemas/"+operation}}}},responses:{
+  "200":{description:"Current scoped development rights, raw experiments, scientific model, decision use or retained history. Not protected admission or production."},
+  "202":{description:"Original finite Work allocation queued for physical experiments, independent replication or actual guarded decision use. Not completion."},
+  "400":{description:"Strict bounded request or unsupported domain rejected."},"401":{description:"Current signed bearer required."},
+  "403":{description:"Current rights, separate principal or canonical authority missing."},
+  "404":{description:"Absent or unauthorized scoped owner record."},
+  "409":{description:"Original allocation, Work, source, observation, consent or exact recovery identity changed."},
+  "413":{description:"Original finite request, response, storage or resource bound exceeded."},
+  "503":{description:"Native capacity or independently configured lifecycle owner unavailable."},
+ }}}});
+}
 for(const operation of LEARNING_OPERATIONS){
  Object.assign(paths,{["/api/company-brain/"+operation]:{post:{security:secured,requestBody:{content:{"application/json":{schema:{$ref:"#/components/schemas/"+operation}}}},responses:{
   "200":{description:"Current authorized X5 development history, structural rights or capsule. Not protected admission, reward, production or effects."},

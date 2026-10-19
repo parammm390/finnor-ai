@@ -5,7 +5,9 @@ import { createRequire } from 'node:module';
 import { byteDigest, fault, type CapabilityRevisionBody } from './contracts';
 const own = ['contracts.ts', 'consumer-transport.ts', 'application-port.ts', 'application-consumer.ts', 'learned-policy-port.ts', 'learned-policy-consumer.ts', 'learning-experience.ts', 'interface-port.ts', 'interface-consumer.ts', 'journal.ts', 'protected-events.ts', 'protected-method.ts', 'canary.ts', 'reconciliation.ts', 'lifecycle.ts', 'server.mts', 'consumer.ts', 'search.ts', 'search-process.ts', 'search-worker.mts', 'evaluation.ts', 'evaluator.mts', 'experience.ts', 'proposer.ts', 'campaign.mts', 'source-closure.ts'];
 const upstream = ['../../governed-execution/src/protocol.ts', '../../governed-execution/src/owner-transport.ts', '../../epistemic-runtime/src/allocation-producer.ts', '../../epistemic-runtime/src/allocation-checker.ts', '../../epistemic-runtime/src/allocation-verifier.ts', '../../epistemic-runtime/src/allocation-verifier-worker.mjs', '../../epistemic-runtime/src/allocation-contracts.ts', '../../epistemic-runtime/src/control-contracts.ts', '../../epistemic-runtime/src/experiment-numerics.ts', '../../epistemic-runtime/src/source-precedence.ts', '../../private-equity/src/enterprise-allocation.ts', '../../private-equity/src/allocation-store.ts', '../../private-equity/src/enterprise-economic-consumers.ts', '../../private-equity/src/economic-store.ts', '../../private-equity/src/enterprise-economic-attribution.ts', '../../private-equity/src/enterprise-economic-assignments.ts', '../../private-equity/src/enterprise-control.ts', '../../private-equity/src/enterprise-obligations.ts', '../../epistemic-runtime/src/economic-attribution.ts', '../../shared-types/src/economic-attribution.ts', '../../../package-lock.json'];
-const require = createRequire(import.meta.url), native = require.resolve('fs-ext'), schema = require.resolve('zod');
+// Do not shadow Node's require: emitted import.meta source-custody expressions
+// must resolve before this native source-relative loader is initialized.
+const sourceRequire = createRequire(import.meta.url), native = sourceRequire.resolve('fs-ext'), schema = sourceRequire.resolve('zod');
 const interfaceSources=['contracts.ts','compiler.ts','runtime.ts','ui.ts','browser.ts','store.ts','worker.ts','api.ts'].map(path=>'../../private-equity/src/interface-synthesis/'+path)
  .concat(['../../governed-execution/src/executor.ts','../../private-equity/src/evidence-execution/store.ts','../../private-equity/src/program-synthesis/store.ts',
  '../../private-equity/src/program-synthesis/contracts.ts','../../private-equity/src/program-synthesis/interface-contracts.ts',
@@ -23,4 +25,19 @@ export async function assertCapabilitySourceClosure(pins: CapabilityRevisionBody
     const expected = await loaded;
     if (expected.some(source => !pins.some(pin => pin.path === source.path && pin.sha256 === source.sha256)))
         fault('S8_LOADED_DEPENDENCY_CLOSURE_MISSING_OR_CHANGED', 503);
+}
+/** The scientific sibling has a separate larger closure (cap 256), loaded only
+ * when used. Existing allocation revisions retain their exact 128-pin grammar. */
+export async function identifiedSystemSourcePaths(){
+ const {IDENTIFICATION_SOURCE_PATHS}=await import('../../private-equity/src/system-identification/source-paths');
+ return [...new Set([...requiredCapabilitySourcePaths,...IDENTIFICATION_SOURCE_PATHS.map(p=>fileURLToPath(new URL('../../../../'+p,import.meta.url))),
+  fileURLToPath(new URL('./identified-system-port.ts',import.meta.url)),fileURLToPath(new URL('./identified-system-consumer.ts',import.meta.url)),
+  fileURLToPath(new URL('../../private-equity/src/system-identification/source-manifest.generated.ts',import.meta.url))])];
+}
+let scientificLoaded:Promise<Array<{path:string;sha256:string}>>|undefined;
+export async function assertIdentifiedSystemSourceClosure(pins:Array<{path:string;sha256:string}>){
+ await assertCapabilitySourceClosure(pins);
+ scientificLoaded??=identifiedSystemSourcePaths().then(paths=>Promise.all(paths.map(async path=>({path,sha256:byteDigest(await readFile(path))}))));
+ const expected=await scientificLoaded;
+ if(pins.length>256||expected.length>256||expected.some(e=>!pins.some(p=>p.path===e.path&&p.sha256===e.sha256)))fault('S8_IDENTIFIED_SYSTEM_SOURCE_CLOSURE_MISSING_OR_CHANGED',503);
 }

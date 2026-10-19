@@ -90,7 +90,8 @@ comparisons of fields/constants/fields, negated atoms and conjunction/disjunctio
 of two atoms. Numerical programmes are `a * value + b`, with integer parameters
 generated from the registered coefficient domain [-3,3]. The generator is blind
 to test mechanism labels. Its full bounded language is declared before scoring.
-At most 16384 predicate programmes and 49 numerical programmes may be generated;
+At most 16384 distinct finite-domain inclusion classes and 49 numerical
+programmes may be retained;
 overflow refuses with a representation/search boundary, never a truncated proof.
 
 The finite registered condition/record vectors define the prediction domain.
@@ -171,6 +172,60 @@ deadline and original remaining budget. Negative decisions remain wait/stop.
 Failed replication fences future model use and S8 CURRENT through actual native
 proof. P7 invalidates model/use descendants without erasing original records.
 A model cannot publish itself as qualified or renew its allocation.
+
+The queue handler is `durably_effect_guarded`, with ordinary guarded backoff.
+It does not request immediate expired-lease recovery or claim local idempotence.
+S4's fixed, non-model-proposable experiment action and S6's DomainAction retain
+exactly the same `{protocol, protocolDigest}` payload. The existing native
+selected-PlanNode constraint is not relaxed. The deal is an entity target, not a
+PartyRef.
+
+An observation attempt and its original-parent charge commit before transport.
+The read and raw receipt then share one locked owner transaction, including
+post-read physical-fence, rights and temporal checks. This avoids a redundant
+third authority cut without rolling back the already committed attempt on a
+transport failure. Source hashing overlaps independent database reads; no
+cross-transaction authority or source-currentness cache is introduced.
+
+Operation phase times and subsequent durable journal notification times are
+different clock reads. The independent checker requires unique, monotone events
+within the corresponding causal intervals and unambiguous treatment timing on
+both sides of start. It does not invent exact equality between those reads.
+Scientific integer outcomes still require absolute tolerance zero. The output
+journal record set must equal the independently walked observation record set.
+
+The scientific S8 source closure currently contains 163 existing paths, under a
+separate 256-path scientific/lifecycle bound. The generic allocation grammar's
+128-path bound is unchanged. X3, then X5, then X4 manifests must be stamped after
+every pinned source change, and emitted API and loaded-worker checks must still
+match those manifests. Source-handler-over-HTTP evidence is not emitted-runtime
+evidence.
+
+The emitted fixed scientific child is built deterministically from its retained
+source by esbuild before stamping. Both files are pinned. The stamp check
+independently regenerates the child and compares bytes; the bounded supervisor
+executes the emitted Node 22 module, without a per-analysis TypeScript loader.
+This removes startup work, not the 30-second child or physical-provider bounds.
+
+The native Work programme occupation remains WAITING while the scientific owner
+awaits checked use or explicit continuation. Completed experiment DomainActions
+alone cannot complete that Work or claim business/financial completion. A real
+completed, failed or cancelled canonical Work fences model currentness and use.
+It cannot be reopened through the X4 occupation.
+
+Retained calibration output is usable only with its independent check receipt,
+bound to the immutable certificate, checker and controlled-case digests. A
+producer-valid certificate left by a failed check or process death is rechecked
+under the original analysis allocation before any physical experiment.
+
+S8 proposal identity and policy/request digests are registered durably before
+external submission. Concurrent calls and recovery reuse that exact candidate;
+they do not create new time-dependent candidates after possible delivery.
+
+The 16-MiB retained-byte bound covers the logical scientific owner rows and
+canonical Evidence source/version/chunk rows, with conservative parent growth
+reserved on the original allocation. It is not physical disk metering or money.
+Unavailable aggregate host peak memory, provider billing and labor stay UNKNOWN.
 
 ## Independent acceptance and custody
 

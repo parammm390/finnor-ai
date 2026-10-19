@@ -17,11 +17,15 @@ import { CapabilityJournal, privateFile, type JournalEntry } from './journal';
 import { InterfaceCapabilityPort } from './interface-port';
 import { ApplicationCapabilityPort } from './application-port';
 import { LearnedPolicyCapabilityPort } from './learned-policy-port';
+import type {IdentifiedSystemCapabilityPort} from './identified-system-port';
 import { digest, byteDigest, fault, parseRevision, makeRef, sameRef, RefSchema, ProtocolSchema, EvaluationSummarySchema, AllocationMethodAdmissionSchema, assertSignature, S8_VERSION, type Signed, type AuthorityKey, type CapabilityRevision, type EvaluationProtocol, type EvaluationSummary, type CapabilityRef, type AllocationMethodAdmission } from './contracts';
 const Text = z.string().min(1).max(4096), Instant = z.string().datetime({ offset: true });
 const KeySchema = z.object({ id: Text, principalId: Text, publicKey: Text, validAfter: Instant, validUntil: Instant, revoked: z.boolean() }).strict();
 const PolicySchema = z.object({ schema: z.literal('finnor.s8.lifecycle-policy.v1'), domain: z.enum(['DISPOSABLE_TEST_AUTHORITY', 'REVIEWED_PROTECTED_DOMAIN']), tenantId: Text, principalId: Text, rightsRef: Text, responsibilityHandoff: z.object({ reference: RefSchema, previousSignedPolicy: z.object({ body: z.unknown(), keyId: Text, signature: Text }).strict(), previousReleaseRoot: Text }).strict().optional(), protectedEvents: z.object({ contract: z.literal('S8_CAPABILITY_EVENTS_V1'), maxRecoveryEvents: z.number().int().min(1).max(256) }).strict().optional(), validAfter: Instant, validUntil: Instant, actors: z.array(z.object({ id: Text, principalId: Text, tokenHash: z.string().regex(/^[a-f0-9]{64}$/), roles: z.array(z.enum(['PROPOSER', 'EVALUATOR', 'PROMOTER', 'CONSUMER', 'READER'])).min(1).max(2) }).strict()).min(4).max(64), evaluatorKeys: z.array(KeySchema).min(1).max(16), promotionKeys: z.array(KeySchema).min(1).max(16), costAuthorityPrincipalIds: z.array(Text).max(16), journalPublicKey: Text, allowedStrata: z.array(Text).min(1).max(64), maxEntries: z.number().int().min(1).max(100000), maxQueue: z.number().int().min(1).max(64), maxTotalCost: z.number().finite().min(0).max(1000000), maxTotalLoss: z.number().finite().min(0).max(1000000000), maxTotalUses: z.number().int().min(1).max(100000), sourcePins: z.array(z.object({ path: Text, sha256: z.string().regex(/^[a-f0-9]{64}$/) }).strict()).min(1).max(128) }).strict();
-type Policy = z.infer<typeof PolicySchema>;
+// Only the additive scientific sibling needs the larger closure. The financial
+// allocation RevisionBodySchema and parseRevision remain unchanged at 128 pins.
+const LifecyclePolicySchema=PolicySchema.extend({sourcePins:PolicySchema.shape.sourcePins.max(256)});
+type Policy = z.infer<typeof LifecyclePolicySchema>;
 type Actor = Policy['actors'][number];
 interface Config {
     signedPolicy: Signed<Policy>;
@@ -59,6 +63,8 @@ export class CapabilityEvolution {
     private interfaces: InterfaceCapabilityPort;
     private applications: ApplicationCapabilityPort;
     private learnedPolicies: LearnedPolicyCapabilityPort;
+    private identifiedSystems: IdentifiedSystemCapabilityPort|null=null;
+    private identifiedReplay: JournalEntry[]=[];
     private states = new Map<string, RevisionState>();
     private active: string | null = null;
     private generation = 0;
@@ -85,7 +91,7 @@ export class CapabilityEvolution {
     }
     static async open(path: string, root: string) {
         const cfg = JSON.parse((await privateFile(path)).toString()) as Config;
-        const policy = PolicySchema.parse(cfg.signedPolicy.body);
+        const policy = LifecyclePolicySchema.parse(cfg.signedPolicy.body);
         if (policy.domain === 'REVIEWED_PROTECTED_DOMAIN' && !policy.protectedEvents)
             fault('S8_PROTECTED_EVENT_CONTRACT_REQUIRED', 503);
         await assertCapabilitySourceClosure(policy.sourcePins);
@@ -249,7 +255,7 @@ export class CapabilityEvolution {
         return { ref, receipt: answer.receipt };
     }
     /** Target identity excludes the proof reference to avoid a circular hash. */
-    static handoffTargetDigest(policy: unknown) { const { responsibilityHandoff: _proof, ...target } = PolicySchema.parse(policy); return digest(target); }
+    static handoffTargetDigest(policy: unknown) { const { responsibilityHandoff: _proof, ...target } = LifecyclePolicySchema.parse(policy); return digest(target); }
     private async handoffEntry(entry: JournalEntry) {
         if (entry.operation !== 'REVOKE' || entry.result.runtimeHandoff !== true) return;
         const ref = { owner: 'S8', id: `capability-handoff-entry:${this.journal.policyDigest}:${entry.sequence}`, version: S8_VERSION, contentDigest: digest(entry) };
@@ -271,12 +277,12 @@ export class CapabilityEvolution {
         if (anchor.policyDigest === digest(this.policy)) return;
         if (!this.policy.responsibilityHandoff) fault('S8_POLICY_RESPONSIBILITY_HANDOFF_REQUIRED', 503);
         const proof = await this.resolveResponsibilityHandoff();
-        let previous = PolicySchema.parse(this.policy.responsibilityHandoff.previousSignedPolicy.body);
+        let previous = LifecyclePolicySchema.parse(this.policy.responsibilityHandoff.previousSignedPolicy.body);
         const ancestors = [...proof!.capsule.predecessorHandoffs].reverse();
         for (const ref of ancestors) {
             const configuration = previous.responsibilityHandoff;
             if (!configuration || !sameRef(configuration.reference, ref)) fault('S8_HANDOFF_ANCESTRY_SUBSTITUTION');
-            const parent = PolicySchema.parse(configuration.previousSignedPolicy.body), key = createPublicKey(configuration.previousReleaseRoot);
+            const parent = LifecyclePolicySchema.parse(configuration.previousSignedPolicy.body), key = createPublicKey(configuration.previousReleaseRoot);
             if (key.asymmetricKeyType !== 'ed25519' || !verify(null, Buffer.from(canonical(parent)), key, Buffer.from(configuration.previousSignedPolicy.signature, 'base64'))
                 || parent.tenantId !== this.policy.tenantId || parent.principalId !== this.policy.principalId || parent.rightsRef !== this.policy.rightsRef || parent.domain !== this.policy.domain) fault('S8_HANDOFF_ANCESTRY_SUBSTITUTION');
             const original = (await this.protectedCurrent(ref)).reference.content;
@@ -289,7 +295,7 @@ export class CapabilityEvolution {
     private async resolveResponsibilityHandoff() {
         const configured = this.policy.responsibilityHandoff;
         if (!configured) return null;
-        const prior = PolicySchema.parse(configured.previousSignedPolicy.body), root = createPublicKey(configured.previousReleaseRoot);
+        const prior = LifecyclePolicySchema.parse(configured.previousSignedPolicy.body), root = createPublicKey(configured.previousReleaseRoot);
         if (root.asymmetricKeyType !== 'ed25519' || !verify(null, Buffer.from(canonical(prior)), root, Buffer.from(configured.previousSignedPolicy.signature, 'base64'))
             || prior.tenantId !== this.policy.tenantId || prior.principalId !== this.policy.principalId || prior.rightsRef !== this.policy.rightsRef || prior.domain !== this.policy.domain)
             fault('S8_HANDOFF_PREDECESSOR_POLICY_OR_SCOPE_INVALID', 403);
@@ -405,6 +411,9 @@ export class CapabilityEvolution {
         return row;
     }
     private replay(entry: JournalEntry) {
+        if(entry.operation.startsWith('IDENTIFIED_SYSTEM_')){
+            this.identifiedReplay.push(entry);this.identifiedSystems?.replay(entry);return;
+        }
         if (entry.operation.startsWith('APPLICATION_')) { this.applications.replay(entry); return; }
         if (entry.operation.startsWith('LEARNED_POLICY_')) { this.learnedPolicies.replay(entry); return; }
         if (entry.operation.startsWith('INTERFACE_')) { this.interfaces.replay(entry); return; }
@@ -512,7 +521,7 @@ export class CapabilityEvolution {
                     fault('S8_IDEMPOTENCY_SUBSTITUTION');
                 // Interface current-use reads are deliberately never journaled or
                 // replayed from a cached admission. Every serve checks current use.
-                if (input.operation.startsWith('INTERFACE_') || input.operation.startsWith('APPLICATION_') || input.operation.startsWith('LEARNED_POLICY_'))
+                if (input.operation.startsWith('INTERFACE_') || input.operation.startsWith('APPLICATION_') || input.operation.startsWith('LEARNED_POLICY_') || input.operation.startsWith('IDENTIFIED_SYSTEM_'))
                     await CapabilityEvolution.sources(this.policy.sourcePins);
                 if (input.operation === 'USE') {
                     const use = this.uses.get(prior.result.lease.useId);
@@ -528,6 +537,17 @@ export class CapabilityEvolution {
             if (this.policy.responsibilityHandoff) await this.resolveResponsibilityHandoff();
             const b = input.body;
             let result: any, journalOperation = input.operation;
+            if(input.operation.startsWith('IDENTIFIED_SYSTEM_')){
+                if(!this.identifiedSystems){
+                    const {IdentifiedSystemCapabilityPort}=await import('./identified-system-port');
+                    const port=new IdentifiedSystemCapabilityPort(this.policy);
+                    for(const entry of this.identifiedReplay)port.replay(entry);
+                    this.identifiedSystems=port;
+                }
+                const answer=await this.identifiedSystems.command(a,input.operation,b,(ref,content)=>this.commitNamedReference(ref,content));
+                if(!answer.readOnly)await this.persist({requestId:input.requestId,requestDigest,actorId:a.id,operation:input.operation,body:b,result:answer.result});
+                return answer.result;
+            }
             if (input.operation.startsWith('LEARNED_POLICY_')) {
                 const answer = await this.learnedPolicies.command(a, input.operation, b,
                     (ref, content) => this.commitNamedReference(ref, content));
@@ -804,7 +824,7 @@ export class CapabilityEvolution {
                     this.role(a, 'PROMOTER'); assertSignature(b, this.policy.promotionKeys, a.principalId);
                     const request = z.object({ runtimeHandoff: z.literal(true), expectedGeneration: z.number().int().min(0), successorPolicyDigest: z.string().regex(/^[a-f0-9]{64}$/), successorPolicy: z.unknown(), reason: Text }).strict().parse(b.body);
                     if (request.expectedGeneration !== this.generation || request.successorPolicyDigest === CapabilityEvolution.handoffTargetDigest(this.policy) || request.successorPolicyDigest !== CapabilityEvolution.handoffTargetDigest(request.successorPolicy)) fault('S8_HANDOFF_GENERATION_OR_TARGET_INVALID');
-                    const successor = PolicySchema.parse(request.successorPolicy);
+                    const successor = LifecyclePolicySchema.parse(request.successorPolicy);
                     if (successor.responsibilityHandoff || successor.tenantId !== this.policy.tenantId || successor.principalId !== this.policy.principalId || successor.rightsRef !== this.policy.rightsRef || successor.domain !== this.policy.domain
                         || successor.maxTotalCost < this.totalCost || successor.maxTotalLoss < this.totalLoss || successor.maxTotalUses < this.useCount || Date.parse(successor.validUntil) <= Date.now()) fault('S8_HANDOFF_SUCCESSOR_DOMAIN_OR_ENVELOPE');
                     const originalLeases = [...this.uses.keys()].map(id => this.importedLeases.get(id) ?? this.journal.entries.find(e => e.operation === 'USE' && e.result.lease.useId === id)?.result.lease);
