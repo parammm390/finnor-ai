@@ -18,6 +18,19 @@ export async function artifact(directory:string,name:string,value:unknown){
  const path=join(directory,name);await mkdir(resolve(path,'..'),{recursive:true});
  await writeFile(path,JSON.stringify(value,null,2)+'\n');
 }
+/** The inherited empty migration probe cannot certify a release. Observe its
+ * real factory refusal without repairing or deleting that original job. */
+export async function recordPriorReleaseProbeRefusal(evidence:string,admin:pg.Client){
+ const before=JSON.parse(await readFile(join(evidence,'migration-upgrade-replay.json'),'utf8')).retained;
+ assert.equal(before.type,'release_probe');assert.deepEqual(before.payload,{});assert.equal(before.status,'queued');
+ const after=(await admin.query('SELECT id,type,payload,status,protocol_version,attempts,claim_fence,last_error FROM finnor_os.jobs WHERE id=$1',[before.id])).rows[0];
+ assert(after);assert.equal(after.id,before.id);assert.equal(after.type,before.type);
+ assert.deepEqual(after.payload,before.payload);assert.equal(after.protocol_version,before.protocol_version);
+ assert.equal(after.status,'failed');assert.equal(after.attempts,1);
+ assert.match(String(after.last_error),/^(?:Error: )?(?:worker release identity is not traceable|release probe expected undefined, worker is [0-9a-f]{40})$/);
+ await artifact(evidence,'native-retained-prior-job.json',{before,after,
+  disposition:'EXPECTED_REFUSAL_EMPTY_PRIOR_RELEASE_PROBE',originalIdentityPayloadAndProtocolUnchanged:true,releaseQualified:false,fullServiceBootstrap:false});
+}
 export async function startEnvironment(evidence:string,options:{builtApi?:boolean;migrationsOnly?:boolean;commitClock?:boolean;baseHead?:string}={}){
  await mkdir(evidence,{recursive:true});
  process.env.NODE_ENV='test';process.env.AUTH_DEV_BYPASS='0';

@@ -9,7 +9,7 @@ import {tmpdir} from 'node:os';
 import {setTimeout as delay} from 'node:timers/promises';
 import {configureTenantVertical,closePool,withTenantClientTransaction} from '@finnor/db';
 import {createEvidenceSource,appendEvidenceVersion} from '@finnor/memory';
-import {startEnvironment,artifact,repo,hash} from '../x3/environment.mts';
+import {startEnvironment,artifact,repo,hash,recordPriorReleaseProbeRefusal} from '../x3/environment.mts';
 import {reconciliation,quantity} from '../x3/business-fixtures.mts';
 import {training,transfer,retention,modes,rename,transferSpecification,poisonSpecification} from './business-fixtures.mts';
 import {preparePendingReplicas} from './pending-fixture.mts';
@@ -220,6 +220,7 @@ try{
  await membership('ledger','finance',true);
  // Fresh transfer uses a genuinely fresh operator, not the old source role.
  main=await install(reconciliation(tenant,root.entityId));
+ if(nativeFactory)await recordPriorReleaseProbeRefusal(evidence,e.admin);
  const trainIds:string[]=[];
  for(const [id,currency,lines,bank,count] of training){
   console.log('X5_TRAINING_LINEAGE',id);

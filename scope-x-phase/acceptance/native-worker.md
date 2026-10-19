@@ -64,3 +64,19 @@ test reconciliation, not financial/business completion.
 Both modes keep original limits, oracles, timeouts, identifiers and counters.
 Keep separate fresh attempt directories. A mode may be reported only if its
 actual worker receipts and durable deliveries establish it.
+
+## Discovered retained-job accounting boundary
+
+The first factory run completed X4's business checks and also correctly rejected
+the retained migration `release_probe`: its original payload is `{}`, so it
+cannot bind any release commit. The local worker also has no traceable deployed
+release identity. Preserve that original run and its logged refusal.
+
+Before adding accounting code, require a read-only observation of the exact
+original job after factory consumption. Its identity/type/payload/protocol must
+remain unchanged, it must have one failed attempt, and its error must come from
+the real release-identity/probe check, not an unrelated failure. Retain this as
+an expected refusal with `releaseQualified:false`. Do not fabricate a release
+identity, edit the old payload or call this full service-bootstrap validation.
+This additional observer follows a disclosed development finding; it is not
+retroactively preregistered protected evidence or a changed business oracle.

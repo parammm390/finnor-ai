@@ -9,7 +9,7 @@ import {tmpdir} from 'node:os';
 import {join,resolve} from 'node:path';
 import {configureTenantVertical,closePool,receiveWork,transitionWork} from '@finnor/db';
 import {createDeal,createWorkstream,createInvestmentCase,type PeMutationContext} from '@finnor/private-equity';
-import {startEnvironment,artifact,repo,hash} from '../x3/environment.mts';
+import {startEnvironment,artifact,repo,hash,recordPriorReleaseProbeRefusal} from '../x3/environment.mts';
 import {prepareBlackBox,type BlackBox,type BehaviorMode,type InstrumentFault} from './black-box.mts';
 import {identificationS8Proof} from './s8-installed.mts';
 const evidence=resolve(process.env.FINNOR_X4_EVIDENCE_DIR??join(repo,'scope-x4/evidence/installed-'+Date.now()));
@@ -102,7 +102,7 @@ try{
  const workstream=await createWorkstream(ctx,{dealId:root.entityId,kind:'technology',name:'Test-service export completeness',owner:{partyType:'employee',partyId:people.author!}}),
   investmentCase=await createInvestmentCase(ctx,{dealId:root.entityId,title:'Development export reconciliation, not financial completion'});
  await startWorker();
- if(nativeFactory)await tick();
+ if(nativeFactory){await tick();await recordPriorReleaseProbeRefusal(evidence,e.admin);}
  const [source,replica]=await Promise.all([
   prepareBlackBox({mode,instrumentFault:fault,responseLossOnce:process.env.FINNOR_X4_RESPONSE_LOSS==='1',actualExposureMismatch:process.env.FINNOR_X4_EXPOSURE_MISMATCH==='1'}).then(b=>{boxes.push(b);return b;}),
   prepareBlackBox({mode:process.env.FINNOR_X4_REPLICA_FAILURE==='1'?'affine':mode}).then(b=>{boxes.push(b);return b;}),
