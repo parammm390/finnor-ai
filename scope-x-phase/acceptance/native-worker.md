@@ -24,10 +24,11 @@ Do not expose private queue state or add a production accessor solely for this.
 
 The environment contains a genuine old global `release_probe`. Account for it
 through a normal factory tick before queuing the scientific assignment. Never
-delete, retime, mark complete, or filter it out. X5 application installation
-already polls up to eight ordinary ticks, so it naturally accounts for earlier
-registered jobs. No extra retry count, startup deadline or tick deadline is
-introduced.
+delete, retime, mark complete, or filter it out. The initial X5 plan expected its
+up-to-eight installation ticks to account for earlier jobs. Current-cut3
+disproved that expectation; the disclosed correction below uses the same
+explicit pre-intake tick as X4. No extra retry count, startup deadline or tick
+deadline is introduced.
 
 ## Failure model
 
