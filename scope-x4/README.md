@@ -10,17 +10,32 @@ and limits are in `architecture.md`; the preregistered failure model is in
 
 Use a fresh directory and a supported Node 22 installation. Do not copy an old
 `node_modules`, `.next`, private binding file, scientific database or receipt.
-The bundle includes the base history and does not need the donor repository.
+The bundle includes the supplied base history and does not need the donor
+repository. That supplied history is genuinely shallow at
+`ed32d200a9459269509f1e40d4e13a3e2a1a4d6a`; its earlier parent is unavailable.
+An ordinary bundle clone fails on that boundary. Reuse X5's explicit
+boundary-aware source bootstrap, not another object database or invented history:
 
 ```sh
-git clone --branch codex/frontier5-x4-autonomous-system-identification \
-  /absolute/path/to/x4-source.bundle /absolute/path/to/fresh-x4
-cd /absolute/path/to/fresh-x4
-/absolute/path/to/node22 scope-x4/reconstruct.mjs \
+DELIVERY=/absolute/path/to/x4-delivery
+FRESH=/absolute/path/to/fresh-x4
+NODE=/absolute/path/to/node22
+REV=$("$NODE" -p \
+  "JSON.parse(require('node:fs').readFileSync(process.argv[1],'utf8')).sourceCommit" \
+  "$DELIVERY/delivery-manifest.json")
+test ! -e "$FRESH" || exit 1
+git init "$FRESH"
+git -C "$FRESH" bundle unbundle "$DELIVERY/x4-source.bundle"
+install -m 644 "$DELIVERY/x4-shallow-boundaries.txt" "$FRESH/.git/shallow"
+git -C "$FRESH" checkout -b codex/frontier5-x4-autonomous-system-identification "$REV"
+cd "$FRESH"
+"$NODE" scope-x4/reconstruct.mjs \
   --evidence-dir /absolute/path/to/new-reconstruction-evidence
 ```
 
-The reconstruction driver rejects a dirty starting checkout. It performs both
+The reconstruction driver rejects a dirty starting checkout or preexisting
+module/build directories and checks that
+installed workspace aliases resolve inside the fresh checkout. It performs both
 ordinary `npm ci` installs, source/child regeneration checks, backend/campaign/
 frontend type checks, affected UI lint, generated/security release preflight,
 the actual Next API and frontend builds, complete trace/native-ABI audit, and a
@@ -29,8 +44,9 @@ It retains each command, exit, elapsed time, log, source identity and result.
 An existing evidence directory is not overwritten.
 
 Ordinary package download/build prerequisites are required. This is a fresh
-checkout and dependency installation on the same host, not a clean-OS image
-proof. X4's scientific child executes fixed emitted JavaScript on Node 22; it
+checkout of the supplied shallow source and ordinary dependency installation
+on the same host, not a complete ancestral clone or clean-OS image proof.
+X4's scientific child executes fixed emitted JavaScript on Node 22; it
 does not require a new numerical supplier or run generated source.
 
 ## Run the scientific boundaries

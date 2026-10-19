@@ -31,6 +31,7 @@ ledger for actual executions and retained failures.
 | Recovery probe assumed an operation UUID in the scientific effect tuple | Capture the actual native operation before death; compare its exact ID, action, effect and operation key after recovery. Retain the interrupted pre-recovery matrix. Freeze verification-file hashes before the replacement full matrix. |
 | Concurrent large HTTP fixture replies interleaved JSONL bytes | Serialize complete native receipt records and drain active handlers/writes on close. Defer only a live unfinished tail, never forgive a malformed complete record. Keep the original corrupted failure. This changes evidence transport, not owner responses. |
 | Browser interaction could target a button inside a disabled fieldset | Wait for actual `:disabled` semantics and native form validity. A stopped mounted fixture now requires the separately completed browser artifact before reporting success. Keep the failed no-submit attempt. |
+| Ordinary bundle clone cannot traverse the supplied shallow boundary | Reuse X5's already documented unbundle plus genuine shallow metadata and exact checkout. Do not fetch ancestors, borrow another object database or rewrite history. Check installed workspace resolutions in the fresh checkout. Retain the failed ordinary clone. |
 
 ## Helper and compatibility inventory dispositions
 

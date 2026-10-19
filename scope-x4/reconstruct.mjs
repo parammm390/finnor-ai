@@ -5,7 +5,8 @@ import assert from 'node:assert/strict';
 import {spawn,spawnSync} from 'node:child_process';
 import {createHash,randomUUID} from 'node:crypto';
 import {createWriteStream} from 'node:fs';
-import {mkdir,readFile,writeFile} from 'node:fs/promises';
+import {mkdir,readFile,writeFile,realpath,lstat} from 'node:fs/promises';
+import {createRequire} from 'node:module';
 import {dirname,isAbsolute,join,resolve} from 'node:path';
 import {tmpdir} from 'node:os';
 import {fileURLToPath} from 'node:url';
@@ -18,10 +19,16 @@ await mkdir(evidence,{recursive:false});
 const sha=value=>createHash('sha256').update(value).digest('hex');
 const git=(...args)=>{const r=spawnSync('git',['-C',root,...args],{encoding:'utf8'});assert.equal(r.status,0,r.stderr);return r.stdout.trim();};
 const initialStatus=git('status','--porcelain');assert.equal(initialStatus,'','Reconstruct from a clean fresh clone');
+const absentPaths=['node_modules','.next','finnor-os/node_modules','finnor-os/apps/api/.next'];
+for(const path of absentPaths){
+ let exists=true;try{await lstat(join(root,path));}catch(error){if(error.code==='ENOENT')exists=false;else throw error;}
+ assert.equal(exists,false,'Fresh reconstruction must not start with '+path);
+}
 const report={schema:'finnor.x4.reconstruction.v1',status:'RUNNING',commit:git('rev-parse','HEAD'),tree:git('rev-parse','HEAD^{tree}'),
  root,node:process.version,abi:process.versions.modules,platform:process.platform,architecture:process.arch,startedAt:new Date().toISOString(),steps:[],
  qualification:'SAME_HOST_FRESH_ORDINARY_LOCK_INSTALL_AND_EMITTED_RUNTIME_NOT_CLEAN_OS_IMAGE_OR_PROTECTED_CUSTODY',
  borrowedDependencies:false,terminalScientificRowsInserted:0,protectedAdmission:false,productionActive:false};
+report.initiallyAbsent=absentPaths;report.sourceHistory=git('rev-parse','--is-shallow-repository')==='true'?'SUPPLIED_GENUINE_SHALLOW_BOUNDARY':'COMPLETE_LOCAL_HISTORY';
 const env={PATH:dirname(process.execPath)+':'+(process.env.PATH??'/usr/bin:/bin'),HOME:process.env.HOME,LANG:process.env.LANG??'C.UTF-8',
  TMPDIR:process.env.TMPDIR,CI:'1',NEXT_TELEMETRY_DISABLED:'1',NODE_OPTIONS:'--max-old-space-size=4096'};
 const locks=['package-lock.json','finnor-os/package-lock.json'];
@@ -43,6 +50,12 @@ async function run(id,cwd,command,args,extra={},timeoutMs=600000){
 try{
  await run('01-root-lock-install',root,'npm',['ci','--no-audit','--no-fund']);
  await run('02-backend-lock-install',os,'npm',['ci','--no-audit','--no-fund']);
+ const installedRequire=createRequire(join(os,'package.json')),freshRoot=await realpath(root);
+ report.installedWorkspacePaths=await Promise.all(['@finnor/db','@finnor/private-equity','@finnor/shared-types'].map(async name=>{
+  const path=await realpath(installedRequire.resolve(name));assert(path.startsWith(freshRoot+'/'),'Workspace alias escaped the fresh checkout: '+name);return {name,path};
+ }));
+ report.relativeS8Source=await realpath(join(os,'packages/capability-evolution/src/lifecycle.ts'));
+ assert(report.relativeS8Source.startsWith(freshRoot+'/'));
  for(const n of ['3','5','4'])await run('03-source-stamp-x'+n,os,process.execPath,['--import=tsx','scripts/x'+n+'/stamp-source.mts','--check']);
  await run('04-backend-types',os,process.execPath,['node_modules/typescript/bin/tsc','-p','tsconfig.json','--pretty','false']);
  await run('05-campaign-types',os,process.execPath,['node_modules/typescript/bin/tsc','-p','scripts/x4/tsconfig.json','--pretty','false']);
