@@ -77,7 +77,7 @@ export function CanvasSectionNav({ sections }: { sections: CanvasSection[] }) {
           aria-current={active ? "location" : undefined}
           onClick={() => {
             setActiveId(section.id)
-            document.getElementById(canvasSectionDomId(section.id))?.scrollIntoView({ block: "start", behavior: reducedMotion ? "auto" : "smooth" })
+            document.getElementById(canvasSectionDomId(section.id))?.scrollIntoView({ block: "start", behavior: "instant" })
           }}
         >
           {active ? <motion.span className="ct-canvas-nav__active" layoutId="centropy-canvas-active-section" transition={reducedMotion ? { duration: 0 } : { type: "spring", stiffness: 420, damping: 34 }} aria-hidden /> : null}

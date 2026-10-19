@@ -12,6 +12,11 @@ export interface BusinessInvalidationSignal {
 }
 
 const listeners = new Set<(signal: BusinessInvalidationSignal) => void>()
+let revision = 0
+
+export function businessInvalidationRevision(): number {
+  return revision
+}
 
 export function onBusinessInvalidation(listener: (signal: BusinessInvalidationSignal) => void): () => void {
   listeners.add(listener)
@@ -20,6 +25,7 @@ export function onBusinessInvalidation(listener: (signal: BusinessInvalidationSi
 
 export function publishBusinessInvalidation(signal: Omit<BusinessInvalidationSignal, "at">): void {
   if (!signal.tags.length) return
+  revision++
   const event = { ...signal, at: Date.now() }
   listeners.forEach((listener) => listener(event))
 }

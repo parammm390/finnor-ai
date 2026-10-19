@@ -56,6 +56,37 @@ describe("Phase 9 CENTROPY proxy boundary", () => {
     expect((await PUT(request("PUT", "workspace-config", { headers: AUTH, body: {} }), params("workspace-config"))).status).toBe(200)
   })
 
+  it.each([
+    "policies/r1-projection", "policies/r1-review", "policies/r1-submit",
+    "identification-plans/work", "identification-plans/submit",
+    "decision-atlases/context", "decision-atlases/build", "policies/coalition-read",
+  ])("forwards the authenticated panel request to its exact owner at %s", async (path) => {
+    const body = { workId: "11111111-1111-4111-8111-111111111111" }
+    fetchMock.mockResolvedValueOnce(new Response(JSON.stringify({ upstream: "accepted" }), {
+      status: 202, headers: { "content-type": "application/json" },
+    }))
+    const response = await POST(request("POST", path, { headers: AUTH, body }), params(path))
+    expect(response.status).toBe(202)
+    await expect(response.json()).resolves.toEqual({ upstream: "accepted" })
+    expect(fetchMock).toHaveBeenLastCalledWith(`https://os.example.test/api/${path}`, expect.objectContaining({
+      method: "POST", body: JSON.stringify(body),
+      headers: expect.objectContaining({ authorization: "Bearer caller-token" }),
+    }))
+  })
+
+  it("requires caller authentication for admitted delegated owners", async () => {
+    expect((await POST(request("POST", "identification-plans/work", { body: {} }), params("identification-plans/work"))).status).toBe(401)
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  it.each([
+    "policies/synthesize", "policies/replan", "policies/handoff", "policies/r1-not-real",
+    "identification-plans/not-real", "decision-atlases/not-real", "policies/coalition-not-real",
+  ])("keeps restricted or unknown owner operations closed at %s", async (path) => {
+    expect((await POST(request("POST", path, { headers: AUTH, body: {} }), params(path))).status).toBe(404)
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
   it("keeps only health anonymous and preserves a real caller identity", async () => {
     expect((await GET(request("GET", "health"), params("health"))).status).toBe(200)
     expect(getServiceTokenMock).not.toHaveBeenCalled()

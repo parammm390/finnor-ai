@@ -19,15 +19,19 @@ export async function browserFixture(e:any){
   await updateEmployeeConversationThreadContext({tenantId:fixture.tenant,ownerEmployeeId:fixture.principal,threadId:otherThread.id,activeWorkId:otherWork.workId,activeReferences:[dealRoot]});
   await e.admin.query("INSERT INTO finnor_os.users(id,tenant_id,email,role,status,display_name) VALUES($1,$2,$3,'owner','active','R1 other owner')",[otherPrincipal,fixture.tenant,otherPrincipal+'@r1.example.test']);e.http.register(otherPrincipal,otherPrincipal+'@r1.example.test');
  }});
- const out=join(e.evidence,'browser');await mkdir(out,{recursive:true});let stopped!:()=>void,closed=false,currentWorker:any=null,delay:any=null,checkerHeld:number|null=null;
+ const out=join(e.evidence,'browser');await mkdir(out,{recursive:true});let stopped!:()=>void,closed=false,currentWorker:any=null,workerHeld=false,delay:any=null,checkerHeld:number|null=null;
+ const observerDeadlineAt=new Date(Date.now()+1800000).toISOString();
  const stop=new Promise<void>(yes=>stopped=yes);
- async function ensureWorker(){
+ async function ensureWorker(mode:'RUN'|'RUN_HELD'='RUN'){
   if(currentWorker&&(currentWorker.child.exitCode!==null||currentWorker.child.signalCode!==null)){await currentWorker.stop();currentWorker=null;}
-  if(!currentWorker)currentWorker=await e.worker();
+  if(!currentWorker){currentWorker=await e.worker(mode);workerHeld=mode==='RUN_HELD';}
+  else if(mode==='RUN_HELD'&&!workerHeld)throw Error('R1_BROWSER_DISPATCH_ALREADY_STARTED');
+  if(mode==='RUN'&&workerHeld){currentWorker.child.send('start');workerHeld=false;}
   return currentWorker;
  }
  const control=createServer(async(req,res)=>{try{
   let input:any={};if(req.method==='POST'){let raw='';for await(const b of req){raw+=b;if(raw.length>8192)throw Error('R1_DISPOSABLE_CONTROL_BOUND');}input=JSON.parse(raw||'{}');}res.setHeader('content-type','application/json');
+  if(req.url==='/prepare-worker'&&req.method==='POST'){const worker=await ensureWorker('RUN_HELD');res.end(JSON.stringify({pid:worker.child.pid,dispatch:'HELD'}));return;}
   if(req.url==='/start-worker'&&req.method==='POST'){const worker=await ensureWorker();res.end(JSON.stringify({pid:worker.child.pid}));return;}
   if(req.url==='/stop-worker'&&req.method==='POST'){if(currentWorker){await currentWorker.stop();currentWorker=null;}res.end('{}');return;}
   if(req.url==='/hold-next-checker'&&req.method==='POST'){
@@ -54,9 +58,13 @@ export async function browserFixture(e:any){
  const frontend=spawn(process.execPath,['node_modules/next/dist/bin/next','dev','--webpack','--hostname','127.0.0.1','--port',String(frontendPort)],{cwd:e.repo,env:frontendEnv,stdio:['ignore','pipe','pipe']});
  for(const stream of [frontend.stdout!,frontend.stderr!])stream.on('data',b=>{logWrites=logWrites.then(()=>appendFile(logPath,b));});
  frontend.once('exit',(code,signal)=>{logWrites=logWrites.then(()=>writeFile(join(out,'frontend-exit.json'),JSON.stringify({pid:frontend.pid,at:new Date().toISOString(),code,signal},null,2)+'\n'));});
- const data={schema:'finnor.r1.mounted-fixture.v1',qualification:e.http.qualification,authBypass:false,profile:'ORDINARY_DISPOSABLE',base,url:url(f.thread.id),control:'http://127.0.0.1:'+address.port,email:f.principal+'@r1.example.test',password:'r1-disposable-only',workId:f.work.workId,programId:f.program.programId,originalEpisodeDeadlineMs:3600000,originalDecisionDeadlineMs:30000,root:f.root,dealRoot,threadId:f.thread.id,other:{url:url(otherThread.id),threadId:otherThread.id,workId:otherWork.workId},otherPrincipal:{email:otherPrincipal+'@r1.example.test',password:'r1-disposable-only'},expected:{value:{numerator:'7',denominator:'1'},rootAction:'choice1',laterAction:'stop',originalStates:13,quotientStates:8,exactCapital:'1/3',executionAuthority:false}};
+ const data={schema:'finnor.r1.mounted-fixture.v1',qualification:e.http.qualification,authBypass:false,profile:'ORDINARY_DISPOSABLE',observerDeadlineAt,base,url:url(f.thread.id),control:'http://127.0.0.1:'+address.port,email:f.principal+'@r1.example.test',password:'r1-disposable-only',workId:f.work.workId,programId:f.program.programId,originalEpisodeDeadlineMs:3600000,originalDecisionDeadlineMs:30000,root:f.root,dealRoot,threadId:f.thread.id,other:{url:url(otherThread.id),threadId:otherThread.id,workId:otherWork.workId},otherPrincipal:{email:otherPrincipal+'@r1.example.test',password:'r1-disposable-only'},expected:{value:{numerator:'7',denominator:'1'},rootAction:'choice1',laterAction:'stop',originalStates:13,quotientStates:8,exactCapital:'1/3',executionAuthority:false}};
  await writeFile(join(out,'fixture.json'),JSON.stringify(data,null,2)+'\n');console.log(JSON.stringify({kind:'BROWSER_FIXTURE_READY',fixture:join(out,'fixture.json'),url:data.url,frontendPid:frontend.pid}));
  const terminate=()=>{closed=true;delay?.release();stopped();};process.once('SIGINT',terminate);process.once('SIGTERM',terminate);
- try{await stop;const receipt=JSON.parse(await readFile(join(out,'results.json'),'utf8'));assert.equal(receipt.status,'PASS_LOCAL',JSON.stringify(receipt));assert.equal(receipt.steps.length,8);const sql=(await e.admin.query('SELECT id FROM finnor_os.r1_runs WHERE tenant_id=$1 AND principal_id=$2 ORDER BY created_at',[f.tenant,f.principal])).rows;assert.equal(sql.length,2);for(const row of sql)await e.snapshot(f,row.id);return {fixture:join(out,'fixture.json'),steps:receipt.steps,source:e.http.qualification};}
- finally{closed=true;delay?.release();if(checkerHeld)try{process.kill(checkerHeld,'SIGKILL');}catch{}if(currentWorker)await currentWorker.stop();frontend.kill('SIGTERM');await Promise.race([new Promise(yes=>frontend.once('exit',yes)),new Promise(yes=>setTimeout(yes,3000))]);if(frontend.exitCode===null&&frontend.signalCode===null)frontend.kill('SIGKILL');await logWrites;await new Promise<void>(yes=>{control.closeAllConnections();control.close(()=>yes());});process.off('SIGINT',terminate);process.off('SIGTERM',terminate);}
+ let observerTimer:ReturnType<typeof setInterval>|undefined;
+ const observerExpiry=new Promise<never>((_,no)=>{observerTimer=setInterval(()=>{if(Date.now()>=Date.parse(observerDeadlineAt))no(Error('R1_MOUNTED_OBSERVER_WALL_CEILING'));},1000);});
+ try{await Promise.race([stop,observerExpiry]);const receipt=JSON.parse(await readFile(join(out,'results.json'),'utf8'));assert.equal(receipt.status,'PASS_LOCAL',JSON.stringify(receipt));assert.equal(receipt.steps.length,8);const sql=(await e.admin.query('SELECT id FROM finnor_os.r1_runs WHERE tenant_id=$1 AND principal_id=$2 ORDER BY created_at',[f.tenant,f.principal])).rows;assert.equal(sql.length,2);return {fixture:join(out,'fixture.json'),steps:receipt.steps,source:e.http.qualification};}
+ finally{clearInterval(observerTimer);closed=true;delay?.release();if(checkerHeld)try{process.kill(checkerHeld,'SIGKILL');}catch{}if(currentWorker)await currentWorker.stop();
+  try{const rows=(await e.admin.query('SELECT id FROM finnor_os.r1_runs WHERE tenant_id=$1 AND principal_id=$2 ORDER BY created_at LIMIT 17',[f.tenant,f.principal])).rows;await writeFile(join(out,'retained-run-census.json'),JSON.stringify({runs:rows,hasMore:rows.length>16},null,2)+'\n');for(const row of rows.slice(0,16))await e.snapshot(f,row.id);}catch(error){await writeFile(join(out,'snapshot-failure.json'),JSON.stringify({error:String(error)})+'\n').catch(()=>undefined);}
+  frontend.kill('SIGTERM');await Promise.race([new Promise(yes=>frontend.once('exit',yes)),new Promise(yes=>setTimeout(yes,3000))]);if(frontend.exitCode===null&&frontend.signalCode===null)frontend.kill('SIGKILL');await logWrites;await new Promise<void>(yes=>{control.closeAllConnections();control.close(()=>yes());});process.off('SIGINT',terminate);process.off('SIGTERM',terminate);}
 }

@@ -1,5 +1,5 @@
 import {resolveExactControlSource} from './r1/source';
-import {exactSourcesCurrent,r1SourceCut} from './r1/runtime';
+import {r1SourceCut} from './r1/runtime';
 import {buildExactControlPolicy,evaluateExactContingentControl,EXACT_S4_VERSION} from '@finnor/epistemic-runtime';
 import type {ExactControlPolicyProfile,S4ComputeInvocation} from '@finnor/shared-types';
 import { constants } from 'node:fs';
@@ -115,7 +115,17 @@ async function readPolicy(ctx:PeMutationContext,value:unknown):Promise<Contingen
  }catch{throw unavailable();}}
 async function readable(ctx:PeMutationContext,policy:ContingentPolicy):Promise<void>{for(const pin of policy.bindings.beliefPins)await loadEnterpriseBeliefView(ctx,{root:pin.root as PeWorldRootRef});await recoverPolicyExperience(ctx,policy);}
 async function current(ctx:PeMutationContext,policy:ContingentPolicy):Promise<string|null>{
- if(policy.exactProfile){try{if(await unresolvedEffects(ctx))return 'R1_S6_OUTSTANDING_RESPONSIBILITY_RETAINED';await resolveExactControlSource(ctx,policy.exactProfile.sourceRef);if(!await exactSourcesCurrent(policy.exactProfile.sourceDigests))return 'R1_LOADED_METHOD_CHANGED';if(policy.exactProfile.durableRunId)await (await import('./r1/api')).assertR1PolicyPublished(ctx,policy.exactProfile.durableRunId,policy.ref);return null;}catch(error){return (error as Error).message.match(/^[A-Z][A-Z0-9_]+$/)?.[0]??'R1_CURRENT_OWNER_BINDING_UNPASSED';}}
+ if(policy.exactProfile){try{
+  if(await unresolvedEffects(ctx))return 'R1_S6_OUTSTANDING_RESPONSIBILITY_RETAINED';
+  const source=await resolveExactControlSource(ctx,policy.exactProfile.sourceRef);
+  if(policy.exactProfile.modelBytes!==source.model_bytes||policy.exactProfile.modelDigest!==source.model_digest||
+   epistemicHash(policy.mandate)!==epistemicHash(source.mandate)||
+   epistemicHash(policy.bindings.beliefPins)!==epistemicHash(source.belief_pins)||
+   epistemicHash(policy.exactProfile.beliefPins)!==epistemicHash(source.belief_pins))return 'R1_EXACT_POLICY_SOURCE_BINDING_CHANGED';
+  if(JSON.stringify(policy.exactProfile.sourceDigests)!==JSON.stringify(source.source_cut.files))return 'R1_LOADED_METHOD_CHANGED';
+  if(policy.exactProfile.durableRunId)await (await import('./r1/api')).assertR1PolicyPublished(ctx,policy.exactProfile.durableRunId,policy.ref);
+  return null;
+ }catch(error){return (error as Error).message.match(/^[A-Z][A-Z0-9_]+$/)?.[0]??'R1_CURRENT_OWNER_BINDING_UNPASSED';}}
  if(Date.now()>=Date.parse(policy.validUntil))return 'POLICY_EXPIRED';if(!await controlSourcesCurrent(policy.compute.backend.sourceDigests))return 'S4_LOADED_METHOD_CHANGED';
  for(const pin of policy.bindings.beliefPins)if((await validateBeliefViewPin(ctx,pin)).status!=='CURRENT')return 'S1_SOURCE_RIGHTS_COVERAGE_OR_INTERPRETATION_CHANGED';
  try{await resolveEnterpriseInterventionModelForControl(ctx,policy.bindings.modelRef);}catch{return 'S3_MODEL_REVISED_REVOKED_OR_UNSUPPORTED';}
@@ -165,7 +175,15 @@ export async function readEnterpriseContingentPolicy(ctx:PeMutationContext,value
 export async function readEnterpriseContingentPolicy(ctx:PeMutationContext,value:unknown){
  if(value&&typeof value==='object'&&'schema' in value&&value.schema==='finnor.s4.r3-policy-read.v1')
   return (await import('./r3/control')).readR3UsePolicy(ctx,ExperimentRefSchema.parse((value as R3ControlPolicyRead).policyRef));
- const policy=await readPolicy(ctx,value);await readable(ctx,policy);if(await current(ctx,policy))throw unavailable();await recoverPolicyExperience(ctx,policy);return immutableControl(policy);
+ const policy=await readPolicy(ctx,value);
+ // Exact source resolution already authorizes and validates these same S1
+ // pins. Keep that canonical current read and its durable publication fence.
+ if(!policy.exactProfile)await readable(ctx,policy);
+ if(await current(ctx,policy)){
+  if(policy.exactProfile)await readable(ctx,policy);
+  throw unavailable();
+ }
+ await recoverPolicyExperience(ctx,policy);return immutableControl(policy);
 }
 /** Narrow current S4-owned reader. A caller cannot add terms to a P2 request
  * or mistake supplied utility conversion for independently reconciled money. */

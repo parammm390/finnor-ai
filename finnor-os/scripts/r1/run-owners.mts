@@ -143,7 +143,7 @@ try{
    }finally{await w.stop();}
   });
   for(const upper of selected==='runtime'?[false]:[false,true])await test(upper?'upper-owner-128-8-12':'positive-owner-reduction','Authenticated real owners, actual durable queue/worker/checker, positive S4 representation reuse, original policy aliases and S5 exact rational demand with authority blocked',async()=>{
-   const f=await prepareR1Owners(env(),{upper,name:upper?'upper-owner':'positive-owner'});
+   const f=await prepareR1Owners(env(),{upper,name:upper?'upper-owner':'positive-owner',periodMs:120000});
    if(selected==='runtime'){
     const foreign='00000000-0000-4000-8000-000000000001';assert.notEqual(f.tenant,foreign);const probes:any[]=[];
     for(const [method,path,expected] of [['GET',f.tenant+'/clarification_request',404],['GET',foreign+'/clarification_request',403],['PUT',foreign+'/clarification_request',403],['POST',foreign+'/clarification_request/simulate',403]] as const){

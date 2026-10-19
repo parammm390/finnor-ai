@@ -3,6 +3,7 @@ const ref=z.object({owner:z.string(),id:z.string(),version:z.string(),contentDig
 const rational=z.object({numerator:z.string().regex(/^-?(0|[1-9]\d*)$/).max(512),denominator:z.string().regex(/^[1-9]\d*$/).max(512)})
 const observation=z.object({instrumentId:z.string(),token:z.string(),availablePeriod:z.number().int()}).passthrough()
 const costs=z.object({attempts:z.number().int().nonnegative(),unknown:z.number().int().nonnegative(),usd:z.null()})
+export const R1SubmissionSchema=z.object({runId:z.string().uuid()})
 export const R1ProjectionSchema=z.object({
  schema:z.literal("finnor.r1.work-projection.v1"),workId:z.string().uuid(),workRevision:z.string().uuid().nullable(),
  runs:z.array(z.object({id:z.string().uuid(),status:z.string(),predicate:z.string().nullable(),fallback:z.string().nullable(),policyRef:ref.nullable(),costs})).max(16),

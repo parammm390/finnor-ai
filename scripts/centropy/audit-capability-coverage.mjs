@@ -8,7 +8,7 @@ const root = resolve(import.meta.dirname, "../..")
 const ts = createRequire(join(root, "package.json"))("typescript")
 const read = (path) => readFileSync(join(root, path), "utf8")
 const digest = (value) => createHash("sha256").update(value).digest("hex")
-const walk = (directory) => readdirSync(join(root, directory), { withFileTypes: true }).flatMap((entry) => entry.isDirectory() ? walk(`${directory}/${entry.name}`) : [`${directory}/${entry.name}`])
+const walk = (directory) => readdirSync(join(root, directory), { withFileTypes: true }).sort((a, b) => a.name < b.name ? -1 : a.name > b.name ? 1 : 0).flatMap((entry) => entry.isDirectory() ? walk(`${directory}/${entry.name}`) : [`${directory}/${entry.name}`])
 const manifestPath = "src/lib/centropy/capability-manifest.generated.json"
 const formPath = "src/lib/centropy/human-forms.generated.json"
 const manifest = JSON.parse(read(manifestPath))
@@ -30,36 +30,76 @@ function visit(file) {
 function readdirIsDirectory(file) { try { readFileSync(join(root, file)); return false } catch { return true } }
 entries.forEach(visit)
 const calls = []
-function literalRoute(node) {
-  if (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node)) return node.text
-  if (ts.isTemplateExpression(node)) return node.head.text + node.templateSpans.map((span) => ":ref" + span.literal.text).join("")
-  if (ts.isBinaryExpression(node) && node.operatorToken.kind === ts.SyntaxKind.PlusToken) {
-    const left = literalRoute(node.left), right = literalRoute(node.right)
-    return left !== null || right !== null ? (left ?? ":ref") + (right ?? ":ref") : null
-  }
-  return null
+const config = ts.readConfigFile(join(root, "tsconfig.json"), ts.sys.readFile)
+if (config.error) throw new Error(ts.flattenDiagnosticMessageText(config.error.messageText, "\n"))
+const options = ts.parseJsonConfigFileContent(config.config, ts.sys, root).options
+const program = ts.createProgram([...source.keys()].filter(file => /\.tsx?$/.test(file)).map(file => join(root, file)), options)
+const checker = program.getTypeChecker()
+const canonicalApi = join(root, "src/components/centropy/lib/api.ts")
+const symbolFor = (node) => {
+  const symbol = checker.getSymbolAtLocation(node)
+  return symbol?.flags & ts.SymbolFlags.Alias ? checker.getAliasedSymbol(symbol) : symbol
 }
-for (const [file, text] of source) {
-  if (!/\.(ts|tsx)$/.test(file)) continue
-  const tree = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true, file.endsWith(".tsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS)
+const methodFor = (node) => {
+  const symbol = symbolFor(node)
+  if (!symbol?.declarations?.some(declaration => declaration.getSourceFile().fileName === canonicalApi)) return null
+  const match = /^centropy(Get|Post|Put|Delete|Patch|Download)$/.exec(symbol.name)
+  return match ? match[1] === "Download" ? "GET" : match[1].toUpperCase() : null
+}
+function finiteStrings(node) {
+  const type = checker.getTypeAtLocation(node)
+  const members = type.isUnion() ? type.types : [type]
+  const relevant = members.filter(member => !(member.flags & (ts.TypeFlags.Null | ts.TypeFlags.Undefined | ts.TypeFlags.Never)))
+  return relevant.length && relevant.every(member => member.isStringLiteral())
+    ? [...new Set(relevant.map(member => member.value))] : null
+}
+function combine(left, right) {
+  if (left.length * right.length > 128) throw new Error("Frontend route alternatives exceed the finite audit bound")
+  return [...new Set(left.flatMap(a => right.map(b => a + b)))]
+}
+function routeValues(node) {
+  if (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node)) return [node.text]
+  if (ts.isParenthesizedExpression(node)) return routeValues(node.expression)
+  if (ts.isTemplateExpression(node)) return node.templateSpans.reduce((values, span) =>
+    combine(values, routeValues(span.expression).map(value => value + span.literal.text)), [node.head.text])
+  if (ts.isBinaryExpression(node) && node.operatorToken.kind === ts.SyntaxKind.PlusToken)
+    return combine(routeValues(node.left), routeValues(node.right))
+  return finiteStrings(node) ?? [":ref"]
+}
+const trees = [...source.keys()].filter(file => /\.tsx?$/.test(file)).map(file => program.getSourceFile(join(root, file)))
+const calledSymbols = new Set()
+function indexCalls(node) {
+  if (ts.isCallExpression(node)) {
+    const symbol = symbolFor(node.expression)
+    if (symbol) calledSymbols.add(symbol)
+  }
+  ts.forEachChild(node, indexCalls)
+}
+trees.forEach(indexCalls)
+const unusedHelpers = new Set()
+for (const tree of trees) {
+  const file = relative(root, tree.fileName)
   const collect = (node) => {
-    if (ts.isCallExpression(node) && ts.isIdentifier(node.expression)) {
-      const match = /^centropy(Get|Post|Put|Delete|Patch|Download)$/.exec(node.expression.text)
-      const first = node.arguments[0]
-      if (match && first) {
-        const route = literalRoute(first)
-        if (route) calls.push({ file, route: route.split("?")[0], method: match[1] === "Download" ? "GET" : match[1].toUpperCase(), line: tree.getLineAndCharacterOfPosition(node.getStart(tree)).line + 1 })
-      }
-      if (node.expression.text === "fetch" && first) {
+    if (ts.isFunctionDeclaration(node) && node.name && /^[a-z]/.test(node.name.text) &&
+      node.modifiers?.some(modifier => modifier.kind === ts.SyntaxKind.ExportKeyword) && !calledSymbols.has(symbolFor(node.name))) {
+      unusedHelpers.add(`${file}:${node.name.text}`)
+      return
+    }
+    if (ts.isCallExpression(node)) {
+      const first = node.arguments[0], method = methodFor(node.expression)
+      if (first && method) for (const route of routeValues(first)) calls.push({ file, route: route.split("?")[0], method,
+        line: tree.getLineAndCharacterOfPosition(node.getStart(tree)).line + 1, binding: "Canonical API import and finite TypeScript expression; source evidence only" })
+      if (ts.isIdentifier(node.expression) && node.expression.text === "fetch" && first) {
         const options = node.arguments[1]
         const methodProperty = options && ts.isObjectLiteralExpression(options)
-          ? options.properties.find((property) => ts.isPropertyAssignment(property) && property.name.getText(tree) === "method")
-          : null
+          ? options.properties.find(property => ts.isPropertyAssignment(property) && property.name.getText(tree) === "method") : null
         const method = methodProperty && ts.isStringLiteral(methodProperty.initializer) ? methodProperty.initializer.text : null
-        const route = ts.isStringLiteral(first) || ts.isNoSubstitutionTemplateLiteral(first) ? first.text
-          : ts.isTemplateExpression(first) ? first.head.text + first.templateSpans.map((span) => ":ref" + span.literal.text).join("") : null
-        if (route?.startsWith("/api/") && method && /^(GET|POST|PUT|PATCH|DELETE)$/.test(method)) {
-          calls.push({ file, route: route.slice(5).split("?")[0], method, line: tree.getLineAndCharacterOfPosition(node.getStart(tree)).line + 1, binding: "Native fetch with explicit HTTP method; source reachability only" })
+        if (method && /^(GET|POST|PUT|PATCH|DELETE)$/.test(method)) for (const route of routeValues(first)) {
+          if (!route.startsWith("/api/")) continue
+          if (!route.startsWith("/api/centropy/")) throw new Error(`Mounted native fetch bypasses the product proxy: ${file} ${route}`)
+          calls.push({ file, route: route.slice(14).split("?")[0], method,
+            line: tree.getLineAndCharacterOfPosition(node.getStart(tree)).line + 1,
+            binding: "Native product proxy fetch with explicit HTTP method; source evidence only" })
         }
       }
     }
@@ -70,10 +110,13 @@ for (const [file, text] of source) {
 const matchesRoute = (pattern, route) => {
   const left = pattern.split("/"), right = route.split("/")
   const segmentMatches = (part, value) => {
+    // Only the catalogue side is a pattern. A dynamic frontend expression
+    // cannot prove that it names every concrete operation in a family.
+    if (value.includes(":")) return part.startsWith(":")
     const expression = part.split(/:[A-Za-z]+/).map((literal) => literal.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("[^/]+")
     return new RegExp(`^${expression}$`).test(value)
   }
-  return left.length === right.length && left.every((part, index) => segmentMatches(part, right[index]) || segmentMatches(right[index], part))
+  return left.length === right.length && left.every((part, index) => segmentMatches(part, right[index]))
 }
 // Dynamic reads must be registered in a reached, explicit GET-only control.
 // A family renderer reference alone is never enough to prove reachability.
@@ -145,6 +188,18 @@ const familyRenderers = {
 const tests = walk("e2e").filter((path) => path.endsWith(".spec.ts")).concat(walk("finnor-os/tests/integration").filter((path) => path.endsWith(".test.ts")))
 const testSources = tests.map((path) => [path, read(path)])
 const unclassified = []
+const unmounted = []
+const dynamicFrontendCalls = calls.filter((call) => call.route.includes(":"))
+const registeredDynamicCalls = dynamicFrontendCalls.filter(call => call.route === ":ref" && (
+  call.file === "src/components/centropy/controls/CanonicalRecordForm.tsx" && forms.some(form => form.method === call.method) ||
+  call.file === supportingFile && call.method === "GET" && source.has(supportingCatalog)))
+const unresolvedDynamicCalls = dynamicFrontendCalls.filter((call) => !registeredDynamicCalls.includes(call) && !manifest.capabilities.some((capability) =>
+  capability.transport === "http" && capability.userProduct && capability.method === call.method &&
+  matchesRoute(capability.routePattern, call.route)))
+const deniedLiteralCalls = calls.filter((call) => !call.route.includes(":") &&
+  !manifest.capabilities.some((capability) => capability.transport === "http" && capability.userProduct &&
+    capability.method === call.method && matchesRoute(capability.routePattern, call.route)))
+if (deniedLiteralCalls.length) throw new Error(`Mounted frontend calls denied by the product route catalogue: ${JSON.stringify(deniedLiteralCalls)}`)
 const capabilities = manifest.capabilities.map((capability) => {
   const c = capability
   const direct = c.transport === "http" ? calls.filter((call) => call.method === c.method && matchesRoute(c.routePattern, call.route)) : []
@@ -159,7 +214,7 @@ const capabilities = manifest.capabilities.map((capability) => {
   else if (c.transport === "planner") disposition = c.humanOnly ? "HUMAN_ONLY_CANONICAL_DECISION" : "CANONICAL_AGENT_CAPABILITY"
   else if (direct.length) disposition = "ACTIVE_DIRECT_FRONTEND_PATH"
   else if (humanForms.length) disposition = "ACTIVE_TYPED_HUMAN_CONTROL"
-  else { unclassified.push(c.capabilityId); disposition = "UNCLASSIFIED" }
+  else { unmounted.push(c.capabilityId); disposition = "BACKEND_API_NO_MOUNTED_FRONTEND" }
   const humanRoute = c.transport === "planner" && c.humanOnly ? humanRoutes[name] : null
   if (c.transport === "planner" && c.humanOnly && !humanRoute) throw new Error(`Human-only capability lacks an explicit canonical human route: ${name}`)
   const renderers = (familyRenderers[c.family] ?? (c.transport === "planner" ? ["src/components/centropy/thread/RecordedValue.tsx", "src/components/centropy/thread/PendingEffects.tsx", "src/components/centropy/world/WorldWorkRecord.tsx"] : direct.map((call) => call.file))).filter((file) => source.has(file))
@@ -182,7 +237,12 @@ const proofFiles = walk("docs/centropy/evidence").filter((file) => /release-cand
   const bytes = read(file), proof = JSON.parse(bytes)
   return { file, sha256: digest(bytes), result: proof.result ?? proof.status ?? null, capturedAt: proof.capturedAt ?? proof.verifiedAt ?? null, note: "Consult this proof's scope and limitations. A family proof does not certify every capability." }
 })
-const document = { schema: "centropy.capability-coverage-audit/v1", generatedAt: new Date().toISOString(), sourceBaseCommit: execFileSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8" }).trim(), manifestSha256: digest(read(manifestPath)), formsSha256: digest(read(formPath)), method: "Actual API/planner manifest; import graph from active CENTROPY route entries; literal API call bindings; typed human form registrations; explicit restricted/compatibility/protocol classifications. Source presence is not execution evidence.", counts: { total: capabilities.length, http: capabilities.filter((c) => c.transport === "http").length, planner: capabilities.filter((c) => c.transport === "planner").length, classified: capabilities.length, classificationCoveragePercent: 100, unclassified: 0, disposition: counts }, unclassifiedCapabilities: [], frontendImportGraph: { entries, files: [...source.keys()].sort(), hashes: [...source].map(([file, text]) => ({ file, sha256: digest(text) })) }, capabilities, executedProofIndex: proofFiles, limitations: ["Classification coverage is not a claim of 100% executed capability coverage", "Literal source matching is supplemented by typed controls and explicit owning renderer references; it does not infer conditional eligibility", "Provider protocol callbacks and real external publication require configured provider systems", "Retained compatibility routes are explicitly outside the active primary product"] }
+const document = { schema: "centropy.capability-coverage-audit/v1", generatedAt: new Date().toISOString(), sourceBaseCommit: execFileSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8" }).trim(), manifestSha256: digest(read(manifestPath)), formsSha256: digest(read(formPath)), method: "Actual API/planner manifest; import graph from active CENTROPY route entries; literal API call bindings; typed human form registrations; explicit restricted/compatibility/protocol classifications. Source presence is not execution evidence.", counts: { total: capabilities.length, http: capabilities.filter((c) => c.transport === "http").length, planner: capabilities.filter((c) => c.transport === "planner").length, classified: capabilities.length, classificationCoveragePercent: 100, unclassified: 0, backendApiWithoutMountedFrontend: unmounted.length, dynamicFrontendCalls: dynamicFrontendCalls.length, unresolvedDynamicCalls: unresolvedDynamicCalls.length, disposition: counts }, unclassifiedCapabilities: [], backendApiWithoutMountedFrontend: unmounted, dynamicFrontendCalls, registeredDynamicCalls, unresolvedDynamicCalls, unconfirmedExportedHelpers: [...unusedHelpers].sort(), frontendImportGraph: { entries, files: [...source.keys()].sort(), hashes: [...source].map(([file, text]) => ({ file, sha256: digest(text) })) }, capabilities, executedProofIndex: proofFiles, limitations: ["Classification coverage is not a claim of 100% executed capability coverage", "Backend API without mounted frontend is an unverified path, not a proven malfunction", "Dynamic frontend call expressions cannot certify any named operation without explicit finite bindings", "Registered dynamic form/read expressions are qualified by their separate canonical registries; uncalled exported helpers are not mounted evidence", "Import reachability is file-level; a matched call does not prove its enclosing function executes, conditional eligibility, or a rendered control", "Provider protocol callbacks and real external publication require configured provider systems", "Retained compatibility routes are explicitly outside the active primary product"] }
 const output = "docs/centropy/capability-coverage.json"
-writeFileSync(join(root, output), JSON.stringify(document, null, 2) + "\n")
+if (process.argv.includes("--check")) {
+  if (unresolvedDynamicCalls.length) throw new Error(`Mounted frontend operations lack finite route bindings: ${JSON.stringify(unresolvedDynamicCalls)}`)
+  const existing = JSON.parse(read(output))
+  const stable = (value) => JSON.stringify({ ...value, generatedAt: null, sourceBaseCommit: null })
+  if (stable(existing) !== stable(document)) throw new Error("CENTROPY coverage audit is stale; run node scripts/centropy/audit-capability-coverage.mjs")
+} else writeFileSync(join(root, output), JSON.stringify(document, null, 2) + "\n")
 console.log(JSON.stringify({ output, counts: document.counts }))

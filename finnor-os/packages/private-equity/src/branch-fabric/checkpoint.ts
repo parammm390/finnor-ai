@@ -32,6 +32,19 @@ const SealedSchema = z.object({
   qualification: z.literal('ENCRYPTED_LOGICAL_STATE_NOT_PROCESS_MEMORY_OR_PROTECTED_CUSTODY'),
 }).strict();
 type Sealed = z.infer<typeof SealedSchema>;
+/** Lifecycle only. Restore still verifies every binding and the original clock. */
+export async function checkpointDisposition(c: PoolClient, ctx: TenantContext, h: Head) {
+  if (!h.checkpoint_id) return null;
+  const parsed = SealedSchema.safeParse(await readArtifact(c, ctx, h.checkpoint_id, 'CHECKPOINT'));
+  if (!parsed.success || parsed.data.binding.branchId !== h.id || parsed.data.binding.workId !== h.work_id)
+    return { checkpointId: h.checkpoint_id, status: 'UNAVAILABLE' as const, expiresAt: null };
+  const state = (await c.query(`SELECT
+    EXISTS(SELECT 1 FROM finnor_os.p3_checkpoint_payloads WHERE checkpoint_id=$1) AS present,
+    EXISTS(SELECT 1 FROM finnor_os.p3_checkpoint_revocations WHERE checkpoint_id=$1) AS revoked,
+    clock_timestamp() >= $2::timestamptz AS expired`, [h.checkpoint_id, parsed.data.expiresAt])).rows[0];
+  return { checkpointId: h.checkpoint_id, status: !state.present ? 'ERASED' as const : state.revoked ? 'REVOKED' as const
+    : state.expired ? 'EXPIRED' as const : 'RECORDED' as const, expiresAt: parsed.data.expiresAt };
+}
 async function checkpointBinding(c: PoolClient, ctx: TenantContext, input: InputArtifact, h: Head, result: any) {
   if (!h.attempt_id || !h.result_id) fault('CHECKPOINT_RESULT_ORIGIN_INVALID');
   const attempt = await readArtifact<any>(c, ctx, h.attempt_id, 'ATTEMPT');

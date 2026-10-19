@@ -8,7 +8,7 @@
 // is disabled unless NEXT_PUBLIC_CENTROPY_TEST_MODE=1.
 
 import { getCurrentAccessToken, getCurrentSessionKey } from "./centropy-auth"
-import { mutationProjectionTags, publishBusinessInvalidation } from "./business-invalidation"
+import { businessInvalidationRevision, mutationProjectionTags, publishBusinessInvalidation } from "./business-invalidation"
 import { resolveProductRoute } from "@/lib/centropy/capability-manifest"
 
 const TEST_KEY_STORAGE = "centropy_admin_key"
@@ -166,7 +166,7 @@ const pendingReads = new Map<string, Promise<unknown>>()
 /** Share concurrent canonical reads within one exact authenticated session.
  * No resolved response is cached, and writes always retain their own request. */
 function sharedRead<T>(method: "GET" | "POST", path: string, body?: unknown, params?: Record<string, string>): Promise<T> {
-  const key = JSON.stringify([authHeaders(), method, path, body, params])
+  const key = JSON.stringify([getCurrentSessionKey(), authHeaders(), businessInvalidationRevision(), method, path, body, params])
   const existing = pendingReads.get(key)
   if (existing) return existing as Promise<T>
   const request = centropyRequest<T>(method, path, body, params)

@@ -115,6 +115,7 @@ jobs:
           npm run centropy:client:check || status=1
           npm run centropy:manifest:check || status=1
           npm run centropy:forms:check || status=1
+          npm run centropy:coverage:check || status=1
           npm run release:p8-zero-resurrection || status=1
           exit "$status"
       - name: Lint changed root sources and scripts
