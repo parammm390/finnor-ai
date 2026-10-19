@@ -1,0 +1,29 @@
+{
+  "schema": "finnor.x4.verification-ledger.v1",
+  "profile": "PE_FIRM_DIGITAL_RELATION_V1",
+  "oracleRevision": "x4-development-acceptance-v1",
+  "parentCommit": "9ca70e1131e013148c58d5d7bcd14934bc172c0b",
+  "statusesAreEvidenceNotPromises": true,
+  "requirements": [
+    {"id":"A","requirement":"Operational question, executable competing programmes and active discrimination","owner":"S2/S3","consumer":"S4","expected":"Generated distinct ASTs and registered predictions distinguish actual authorized trials","command":"Node22 --import=tsx scripts/x4/run-installed.mts","artifact":"installed/summary.json","status":"NOT_RUN"},
+    {"id":"B","requirement":"Independently validated observation instrument","owner":"S2/S1","consumer":"S3 checker","expected":"Literal independent control sets match; defects detected or unresolved","command":"Node22 --import=tsx scripts/x4/run-installed.mts","artifact":"installed/instruments.json","status":"NOT_RUN"},
+    {"id":"C","requirement":"Current authority, admissible experiment, actual exposure and original resource reservation","owner":"S4/S5/S6","consumer":"physical provider","expected":"Authorized positive dispatch; revoked/wrong scope/out of domain rejected at wire boundary","command":"Node22 --import=tsx scripts/x4/run-installed.mts","artifact":"installed/authority.json","status":"NOT_RUN"},
+    {"id":"D","requirement":"Refutation, frozen fresh prediction and independent replication","owner":"S3/S8","consumer":"canonical finding","expected":"Prediction before outcome; new records and withheld treatment; failed replication fences use","command":"Node22 --import=tsx scripts/x4/run-installed.mts","artifact":"installed/replication.json","status":"NOT_RUN"},
+    {"id":"E","requirement":"Equivalence, unsupported conditions, claim class and transport","owner":"S3","consumer":"S4","expected":"No unsupported mechanism or production claim; complete unresolved alternatives","command":"Node22 --import=tsx scripts/x4/run-installed.mts","artifact":"installed/limits.json","status":"NOT_RUN"},
+    {"id":"F","requirement":"Canonical authenticated Work to real decision consumption","owner":"S1/S3/S4/P1","consumer":"V5","expected":"Canonical findings/evidence and actual model-based decision persisted","command":"Node22 --import=tsx scripts/x4/run-installed.mts","artifact":"installed/consumer.json","status":"NOT_RUN"},
+    {"id":"G","requirement":"Concurrency, cancellation, response loss, worker death, restart, limits and accounting","owner":"S5/S6/P7","consumer":"durable worker","expected":"Original effect identity and allocation survive; recovery read only; stale writes fenced","command":"Node22 --import=tsx scripts/x4/run-installed.mts","artifact":"installed/recovery.json","status":"NOT_RUN"},
+    {"id":"H","requirement":"Mounted Work, accessible controls and identity/privacy fences","owner":"V5","consumer":"operator","expected":"Actual sign-in/pointer/keyboard/reload/switch/logout/refresh/reconnect with no stale private derivatives","command":"Node22 --import=tsx scripts/x4/browser-checks.mts","artifact":"mounted/results.json","status":"NOT_RUN"},
+    {"id":"I","requirement":"Installed emitted identities, migrations, static/generated/security and reconstruction","owner":"API/worker/db/release","consumer":"fresh ordinary runtime","expected":"One sealed cut passes normal two-lock install and complete installed parity","command":"node scope-x4/reconstruct.mjs","artifact":"reconstruction/result.json","status":"NOT_RUN"},
+    {"id":"J","requirement":"Matched meaningful X4 diagnostic and complete costs","owner":"S2/S3/S7","consumer":"comparison","expected":"Real business experiments; observation-only and strongest available native path distinguished; missing B_ref/complete money explicit","command":"Node22 --import=tsx scripts/x4/run-installed.mts","artifact":"diagnostic/results.json","status":"NOT_RUN"},
+    {"id":"S8","requirement":"Additive typed independent admission, currentness and revocation","owner":"S8","consumer":"S4","expected":"Native proof and separate current evaluators; no protected self-admission","command":"Node22 --import=tsx scripts/x4/run-installed.mts","artifact":"installed/s8.json","status":"NOT_RUN"},
+    {"id":"COMMON","requirement":"Envelope, exact units/identity, UNKNOWN, P/M ownership and original floors","owner":"existing canonical owners","consumer":"all X4 paths","expected":"Every field bound or explicit UNKNOWN; previous domains retained","command":"installed and release commands","artifact":"handoff/requirement-evidence.json","status":"NOT_RUN"}
+  ],
+  "externalGates": [
+    {"id":"NATIVE_MISSIONS","status":"BLOCKED","reason":"Current app forbids Mission entry through Execute; manual Mission Control/chat mode required."},
+    {"id":"FULL_GOVERNING_SOURCE_PARITY","status":"BLOCKED","reason":"Matching full PRD/framework not present in supplied local handoffs."},
+    {"id":"PROTECTED_36_SYSTEMS","status":"NOT_RUN","reason":"Independent original population/custody/identifiable split/margin and replication authority not supplied."},
+    {"id":"PRODUCTION_ACTIVE","status":"NOT_RUN","reason":"No production deployment or live-experiment authority supplied."},
+    {"id":"OPERATIONAL_100X","status":"BLOCKED","reason":"Qualified B_V, equipped mandatory comparators and integrated original campaign absent."},
+    {"id":"FINANCIAL_QUALIFICATION","status":"NOT_RUN","reason":"No mature S7 outcomes or original matched financial campaign."}
+  ]
+}
