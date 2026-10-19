@@ -80,3 +80,10 @@ an expected refusal with `releaseQualified:false`. Do not fabricate a release
 identity, edit the old payload or call this full service-bootstrap validation.
 This additional observer follows a disclosed development finding; it is not
 retroactively preregistered protected evidence or a changed business oracle.
+
+The second attempt exposed an observer error: the native queue's terminal state
+at its original one-attempt ceiling is `dead_letter`, not `failed`. Its retained
+error is a stack, not only a message. Correct the new observer to the existing
+queue contract (including `max_attempts=1` and the exact release-check first
+line), preserve that failed attempt, and leave the native queue and all original
+business/evaluation oracles unchanged.
