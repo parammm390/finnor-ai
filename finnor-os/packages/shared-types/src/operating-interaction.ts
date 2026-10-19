@@ -1,4 +1,5 @@
 import type { CanonicalEntityRef } from "./company-graph";
+import type { PeWorldRootRef } from "./private-equity";
 
 /**
  * The exact business context a person has made explicit on the operating canvas.
@@ -10,6 +11,8 @@ export interface OperatingInteractionContext {
   capturedAt: string;
   source: "voice" | "text" | "console";
   activeWork?: { workId: string };
+  /** Enclosing PE business scope, retained independently of the focused object. */
+  businessRoot?: PeWorldRootRef;
   focusedEntity?: CanonicalEntityRef<string>;
   /** Direct selections are deliberately bounded. Large populations use cohort. */
   selectedEntities: CanonicalEntityRef<string>[];

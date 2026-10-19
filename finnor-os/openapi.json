@@ -14061,6 +14061,32 @@
                         ],
                         "additionalProperties": false
                       },
+                      "businessRoot": {
+                        "type": "object",
+                        "properties": {
+                          "entityType": {
+                            "type": "string",
+                            "enum": [
+                              "pe_strategy",
+                              "pe_opportunity",
+                              "pe_deal",
+                              "pe_fund",
+                              "pe_vehicle",
+                              "external_organization",
+                              "pe_portfolio_holding"
+                            ]
+                          },
+                          "entityId": {
+                            "type": "string",
+                            "format": "uuid"
+                          }
+                        },
+                        "required": [
+                          "entityType",
+                          "entityId"
+                        ],
+                        "additionalProperties": false
+                      },
                       "focusedEntity": {
                         "type": "object",
                         "properties": {
@@ -14339,6 +14365,32 @@
                         },
                         "required": [
                           "workId"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "businessRoot": {
+                        "type": "object",
+                        "properties": {
+                          "entityType": {
+                            "type": "string",
+                            "enum": [
+                              "pe_strategy",
+                              "pe_opportunity",
+                              "pe_deal",
+                              "pe_fund",
+                              "pe_vehicle",
+                              "external_organization",
+                              "pe_portfolio_holding"
+                            ]
+                          },
+                          "entityId": {
+                            "type": "string",
+                            "format": "uuid"
+                          }
+                        },
+                        "required": [
+                          "entityType",
+                          "entityId"
                         ],
                         "additionalProperties": false
                       },
@@ -15383,6 +15435,32 @@
                         },
                         "required": [
                           "workId"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "businessRoot": {
+                        "type": "object",
+                        "properties": {
+                          "entityType": {
+                            "type": "string",
+                            "enum": [
+                              "pe_strategy",
+                              "pe_opportunity",
+                              "pe_deal",
+                              "pe_fund",
+                              "pe_vehicle",
+                              "external_organization",
+                              "pe_portfolio_holding"
+                            ]
+                          },
+                          "entityId": {
+                            "type": "string",
+                            "format": "uuid"
+                          }
+                        },
+                        "required": [
+                          "entityType",
+                          "entityId"
                         ],
                         "additionalProperties": false
                       },

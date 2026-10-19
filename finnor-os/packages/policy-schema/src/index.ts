@@ -2,7 +2,7 @@
 // Business rule CONTENT never lives here; only its shape does.
 
 import { z } from "zod";
-import { OUTCOME_PACK_IDS, isRetiredWaterCanonicalEntity } from "@finnor/shared-types";
+import { OUTCOME_PACK_IDS, PE_WORLD_ROOT_TYPES, isRetiredWaterCanonicalEntity } from "@finnor/shared-types";
 
 export const RoleSchema = z.enum(["owner"]);
 
@@ -70,6 +70,7 @@ export const OperatingInteractionContextSchema = z.object({
   capturedAt: z.string().datetime(),
   source: z.enum(["voice", "text", "console"]),
   activeWork: z.object({ workId: z.string().uuid() }).strict().optional(),
+  businessRoot: z.object({ entityType: z.enum(PE_WORLD_ROOT_TYPES), entityId: z.string().uuid() }).strict().optional(),
   focusedEntity: CanonicalEntityRefSchema.optional(),
   selectedEntities: z.array(CanonicalEntityRefSchema).max(50).default([]),
   excludedEntities: z.array(CanonicalEntityRefSchema).max(50).default([]),
@@ -96,6 +97,7 @@ export const OperatingInteractionContextSchema = z.object({
     if (excluded.has(key)) issue.addIssue({ code: z.ZodIssueCode.custom, path: ["excludedEntities"], message: "Duplicate exclusions are not allowed" });
     excluded.add(key);
     if (!selected.has(key)) issue.addIssue({ code: z.ZodIssueCode.custom, path: ["excludedEntities"], message: "An exclusion must belong to the direct selection" });
+    if (context.businessRoot && key === `${context.businessRoot.entityType}:${context.businessRoot.entityId}`) issue.addIssue({ code: z.ZodIssueCode.custom, path: ["businessRoot"], message: "The business root cannot be excluded" });
   }
   if (context.timeContext?.start && context.timeContext.end && context.timeContext.start > context.timeContext.end) {
     issue.addIssue({ code: z.ZodIssueCode.custom, path: ["timeContext"], message: "timeContext.start must be before timeContext.end" });

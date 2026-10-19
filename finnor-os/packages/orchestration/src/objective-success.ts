@@ -161,6 +161,13 @@ export function defaultObjectiveSuccessCondition(objective: string): ObjectiveSu
   return { version: 1, statement: objective.trim(), mode: "all", source: "objective_first_policy", criteria };
 }
 
+const WORLD_OUTCOME_VERIFICATION = "The PE business outcome requires an accepted outcome-specific verification contract; inspecting its records cannot establish success.";
+
+export function privateEquityWorldObjectiveSuccessCondition(objective: string): ObjectiveSuccessCondition {
+  const condition = defaultObjectiveSuccessCondition(objective);
+  return { ...condition, criteria: [...condition.criteria, { kind: "manual_verification", reason: WORLD_OUTCOME_VERIFICATION }] };
+}
+
 /** Only an explicit growth-rate decrease and exit multiple qualify for this exact financial contract. */
 export function exactGrowthAndExitRequest(objective: string): { growthDecreaseBps: number; exitMultiple: string } | null {
   const growth = /\b(?:revenue\s+)?growth\s+(?:down|lower(?:ed)?\s+by|reduc(?:e|ed)\s+by)\s+(\d{1,5})\s*(?:bps|basis\s+points)\b/i.exec(objective);
@@ -281,7 +288,8 @@ export function privateEquityObjectiveSuccessCondition(params: {
  * must retain its canonical Deal scope when no new explicit contract is given. */
 export function redirectedObjectiveSuccessCondition(current: ObjectiveSuccessCondition, objective: string): ObjectiveSuccessCondition {
   const scoped = current.criteria.find((criterion) => criterion.kind === "private_equity_ic_preparation" || criterion.kind === "private_equity_ic_deck_draft" || criterion.kind === "private_equity_underwriting_scenario" || criterion.kind === "private_equity_truth");
-  if (!scoped) return defaultObjectiveSuccessCondition(objective);
+  if (!scoped) return current.criteria.some(criterion => criterion.kind === "manual_verification" && criterion.reason === WORLD_OUTCOME_VERIFICATION)
+    ? privateEquityWorldObjectiveSuccessCondition(objective) : defaultObjectiveSuccessCondition(objective);
   const truthSubject = scoped.kind === "private_equity_truth" && scoped.entityType !== "pe_deal"
     ? { entityType: scoped.entityType, entityId: scoped.entityId } : undefined;
   return privateEquityObjectiveSuccessCondition({ objective, dealId: scoped.dealId, ...(truthSubject ? { subject: truthSubject } : {}) });
@@ -538,7 +546,7 @@ async function queryCriterion(params: {
   executionKey: string;
   loopId:string;
 }): Promise<{ satisfied: boolean; basis: string; evidenceRefs: Array<{ type: string; id: string }>; observed: unknown; queryExecutionId?: string }> {
-  const identity = params.request.intent === "harness_program_v1" || params.request.intent === "closing_readiness" ? await withTenant(params.tenantId,async db=>{
+  const identity: { userId?: string; employeeId?: string; workInputId?: string } | null = params.request.intent === "harness_program_v1" || params.request.intent === "closing_readiness" || params.request.intent === "pe_world_state" ? await withTenant(params.tenantId,async db=>{
     const [loop]=await db.select({createdBy:workObjectiveLoops.createdBy}).from(workObjectiveLoops).where(and(eq(workObjectiveLoops.tenantId,params.tenantId),eq(workObjectiveLoops.workId,params.workId),eq(workObjectiveLoops.id,params.loopId))).limit(1);
     const [input]=await db.select({id:workInputs.id}).from(workInputs).where(and(eq(workInputs.tenantId,params.tenantId),eq(workInputs.workId,params.workId))).orderBy(sql`${workInputs.createdAt} DESC`,sql`${workInputs.id} DESC`).limit(1);
     if(!loop?.createdBy||!input)return null;

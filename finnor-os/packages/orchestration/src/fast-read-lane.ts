@@ -13,6 +13,7 @@ import {
   type OperationalQuerySource,
   type OperatingEvidenceKind,
   type TenantContext,
+  type PeWorldRootRef,
 } from "@finnor/shared-types";
 import type { OperationalQueryOptions } from "@finnor/read-models";
 import { executeTenantOperationalQuery } from "./operational-query-runtime";
@@ -140,6 +141,11 @@ const PE_INTENTS = new Set<string>(PRIVATE_EQUITY_OPERATIONAL_QUERY_INTENTS);
 const MUTATION = /\b(?:send|email|message|call|create|update|delete|remove|assign|handoff|delegate|schedule|reschedule|share|approve|reject|close|waive|execute|change)\b/i;
 const QUESTION = /\?|\b(?:what|which|who|why|show|list|give|are|is|how|status|context|readiness|open|find)\b/i;
 const UUID = /\b[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\b/i;
+const WORLD_ROOT_NAMES: ReadonlyArray<readonly [RegExp, PeWorldRootRef["entityType"]]> = [
+  [/\bstrategy\b/i, "pe_strategy"], [/\bopportunity\b/i, "pe_opportunity"],
+  [/\bdeal\b/i, "pe_deal"], [/\bfund\b/i, "pe_fund"], [/\bvehicle\b/i, "pe_vehicle"],
+  [/\bholding\b/i, "pe_portfolio_holding"], [/\b(?:company|organization)\b/i, "external_organization"],
+];
 // A mention of "Work" can also describe the product or its replay semantics.
 // Claim a deterministic collection read only when the user asks for records.
 const WORK_RECORD = /(?:work(?:\s+items?)?|tasks?)/i;
@@ -166,25 +172,29 @@ function dealRequest(
   return { route: "fast_read", confidence: "high", request: { intent, dealId } };
 }
 
-export function interpretOperationalQuery(instruction: string, scopedDealId?: string): OperationalQueryDecision {
+export function interpretOperationalQuery(instruction: string, scope?: { businessRoot?: PeWorldRootRef | null; dealId?: string }): OperationalQueryDecision {
   const text = instruction.trim();
+  const scopedDealId = scope?.dealId ?? (scope?.businessRoot?.entityType === "pe_deal" ? scope.businessRoot.entityId : undefined);
+  const scopedRoot = scope?.businessRoot ?? (scopedDealId ? { entityType: "pe_deal" as const, entityId: scopedDealId } : undefined);
   if (!text || !QUESTION.test(text)) return { route: "planner", reason: "not_question" };
   if (MUTATION.test(text)) return { route: "planner", reason: "mutation_or_advice" };
 
   if (/^what changed since yesterday(?:,? and does it affect our recommendation)?\??$/i.test(text)) {
-    const dealId = text.match(UUID)?.[0] ?? scopedDealId;
-    return dealId
-      ? { route: "fast_read", confidence: "high", request: { intent: "pe_world_state", root: { entityType: "pe_deal", entityId: dealId }, compareWindow: "previous_24h" } }
+    return scopedRoot
+      ? { route: "fast_read", confidence: "high", request: { intent: "pe_world_state", root: scopedRoot, compareWindow: "previous_24h" } }
       : { route: "planner", reason: "external_or_ambiguous" };
   }
 
   if (/\b(?:pe\s+)?world\s+state\b/i.test(text)) {
     const entityId = text.match(UUID)?.[0];
-    const entityType = /\bstrategy\b/i.test(text) ? "pe_strategy" as const
-      : /\bopportunity\b/i.test(text) ? "pe_opportunity" as const
-        : /\bdeal\b/i.test(text) ? "pe_deal" as const : null;
-    if (!entityId || !entityType) return { route: "planner", reason: "external_or_ambiguous" };
-    return { route: "fast_read", confidence: "high", request: { intent: "pe_world_state", root: { entityType, entityId } } };
+    const namedTypes = WORLD_ROOT_NAMES.filter(([pattern]) => pattern.test(text));
+    if (namedTypes.length > 1) return { route: "planner", reason: "external_or_ambiguous" };
+    const entityType = namedTypes[0]?.[1];
+    if (entityId && entityType) return { route: "fast_read", confidence: "high", request: { intent: "pe_world_state", root: { entityType, entityId } } };
+    if (!entityId && scopedRoot && (!entityType || entityType === scopedRoot.entityType)) {
+      return { route: "fast_read", confidence: "high", request: { intent: "pe_world_state", root: scopedRoot } };
+    }
+    return { route: "planner", reason: "external_or_ambiguous" };
   }
 
   if (/^why\s+(?:is|are)\s+.{1,100}\s+blocked\??$/i.test(text)

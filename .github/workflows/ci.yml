@@ -208,6 +208,7 @@ jobs:
         env:
           FINNOR_S7_CI_EVIDENCE_DIR: ${{ runner.temp }}/finnor-s7-evidence
           FINNOR_PRODUCTION_PREFLIGHT_EVIDENCE_DIR: ${{ runner.temp }}/finnor-production-query-evidence
+          FINNOR_PE_OBJECTIVE_EVIDENCE_DIR: ${{ runner.temp }}/finnor-pe-objective-evidence
       - name: Retain S7 native owner proof diagnostics
         if: ${{ always() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
@@ -218,6 +219,7 @@ jobs:
             ${{ runner.temp }}/finnor-s7-evidence/**/partial-results.json
             ${{ runner.temp }}/finnor-s7-evidence/**/runner.log
             ${{ runner.temp }}/finnor-production-query-evidence/*.json
+            ${{ runner.temp }}/finnor-pe-objective-evidence/**
           if-no-files-found: warn
           retention-days: 7
 
