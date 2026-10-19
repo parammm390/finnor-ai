@@ -28,7 +28,11 @@ async function control(path:string,method='POST'){
  assert.equal(response.status,200,JSON.stringify(body));return body as any;
 }
 function focus(){
- browser('wait','--text','Enterprise application');click('Focus Enterprise application');browser('wait',panel);
+ const target='button[aria-label="Focus Enterprise application"]';
+ browser('wait','--text','Enterprise application');browser('wait',target+':not(:disabled)');
+ browser('scrollintoview',target);
+ browser('wait','--fn',`(()=>{const button=document.querySelector(${JSON.stringify(target)});if(!button||button.matches(':disabled'))return false;const r=button.getBoundingClientRect();return r.width>0&&r.height>0&&button.contains(document.elementFromPoint(r.left+r.width/2,r.top+r.height/2))})()`);
+ click('Focus Enterprise application');browser('wait',panel);
 }
 function navigate(url:string){
  browser('pushstate',url);browser('wait','--text',url===f.otherUrl?'X5 learned policy Work 1':'X5 learned policy Work 0');focus();
@@ -169,6 +173,7 @@ try{
  passed=true;
 }catch(error){
  let visibleState:unknown;try{visibleState=state();}catch{/* Preserve the original browser failure. */}
+ try{browser('screenshot',join(evidence,'browser-failure.png'));}catch{/* Do not mask the original exception. */}
  await artifact(evidence,'browser-FAILED.json',{error:String(error),stack:(error as Error).stack,visibleState,steps});throw error;
 }finally{
  browser('close');
