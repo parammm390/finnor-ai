@@ -87,3 +87,21 @@ error is a stack, not only a message. Correct the new observer to the existing
 queue contract (including `max_attempts=1` and the exact release-check first
 line), preserve that failed attempt, and leave the native queue and all original
 business/evaluation oracles unchanged.
+
+## Discovered X5 claim-order boundary
+
+The current-cut3 X5 native attempt failed before training because the original
+global probe was still queued. Its real factory ticks completed the interactive
+application BUILD and INSTALL jobs first. Installation then stopped polling
+because its original installed-status oracle had passed. The earlier expectation
+that up to eight installation ticks necessarily consumed the old batch probe
+was wrong. The failed run and stopped-database receipt are retained.
+
+Before changing the harness, require the same explicit pre-intake ordinary tick
+already used by X4: call the actual factory once while only the retained probe
+is queued, then run the unchanged read-only refusal observer, then submit the
+native X3 application. Do not inspect the queue to select a job, change native
+priority/lane/order, alter timestamps/payloads/identities, add retries, or widen
+the original tick/campaign deadlines. Keep the original installation loop and
+all four-arm, cost, acceptance and numerical oracles unchanged. This is a
+disclosed development-harness correction, not protected preregistration.
