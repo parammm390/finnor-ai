@@ -50,7 +50,9 @@ export async function checkpointSecurity(s: Support) {
       assert.deepEqual(original.state, s.appRun.branch.result.candidate.state);
       assert.equal(original.credentialsIncluded, false);
     } finally { key.fill(0); }
-    return { checkpoint, metadata, payloadBytes: payload.ciphertext.length, independentlyDecodedStateMatches: true,
+    const current = ok(await s.api(s.owner, 'read', { branchId: s.appRun.s.branchId }));
+    assert.deepEqual(current.checkpoint, { checkpointId: checkpoint.checkpointId, status: 'RECORDED', expiresAt: metadata.expiresAt });
+    return { checkpoint, metadata, current, payloadBytes: payload.ciphertext.length, independentlyDecodedStateMatches: true,
       qualification: 'Ordinary local custody and logical state, not protected key admission or process memory' };
   });
   await s.challenge('CB-P3-checkpoint-tamper-and-key-rotation', [
@@ -115,6 +117,9 @@ export async function checkpointSecurity(s: Support) {
     assert.equal(metadata?.schema, 'finnor.branch-checkpoint-sealed.v2', 'Encrypted checkpoint prerequisite unpassed');
     const originalResult = await tx(s.owner.ctx, c => readArtifact<any>(c, s.owner.ctx, metadata.binding.resultId, 'RESULT'));
     const revoked = ok(await s.api(s.owner, 'checkpoint-revoke', { branchId: s.appRun.s.branchId, checkpointId: checkpoint.checkpointId }));
+    const revokedRead = ok(await s.api(s.owner, 'read', { branchId: s.appRun.s.branchId }));
+    assert.equal(revokedRead.checkpoint?.checkpointId, checkpoint.checkpointId);
+    assert.equal(revokedRead.checkpoint?.status, 'REVOKED');
     const refused = await s.api(s.owner, 'resume', { branchId: s.appRun.s.branchId, checkpointId: checkpoint.checkpointId, idempotencyKey: randomUUID() });
     assert.equal(refused.status, 409); assert.equal(refused.body.code, 'CHECKPOINT_REVOKED');
     const config = join(s.custodyDirectory, 'current.json'), before = await readFile(config);
@@ -131,9 +136,15 @@ export async function checkpointSecurity(s: Support) {
     assert.equal(expired.status, 410); assert.equal(expired.body.code, 'CHECKPOINT_EXPIRED');
     const held = ok(await s.api(s.owner, 'checkpoint-purge', { branchId: s.appRun.s.branchId }));
     assert.equal(held.purgedPayloads, 0);
+    const heldRead = ok(await s.api(s.owner, 'read', { branchId: s.appRun.s.branchId }));
+    assert.equal(heldRead.checkpoint?.checkpointId, expiring.checkpointId);
+    assert.equal(heldRead.checkpoint?.status, 'EXPIRED');
     await s.admin.query('UPDATE finnor_os.data_retention_holds SET released_at=clock_timestamp() WHERE id=$1', [hold]);
     const erased = ok(await s.api(s.owner, 'checkpoint-purge', { branchId: s.appRun.s.branchId }));
     assert(erased.purgedPayloads >= 2); assert.equal(erased.immutableHistoryRetained, true);
+    const erasedRead = ok(await s.api(s.owner, 'read', { branchId: s.appRun.s.branchId }));
+    assert.equal(erasedRead.checkpoint?.checkpointId, expiring.checkpointId);
+    assert.equal(erasedRead.checkpoint?.status, 'ERASED');
     const rows = await tx(s.owner.ctx, c => c.query('SELECT checkpoint_id FROM finnor_os.p3_checkpoint_payloads WHERE checkpoint_id=ANY($1::uuid[])',
       [[checkpoint.checkpointId, expiring.checkpointId]])); assert.equal(rows.rowCount, 0);
     const retained = await tx(s.owner.ctx, c => readArtifact<any>(c, s.owner.ctx, metadata.binding.resultId, 'RESULT'));
@@ -141,7 +152,7 @@ export async function checkpointSecurity(s: Support) {
     const inspection = ok(await s.api(s.owner, 'inspect', { branchId: s.appRun.s.branchId }));
     assert(inspection.artifacts.some((r: any) => r.category === 'ATTEMPT'));
     assert(inspection.artifacts.some((r: any) => r.category === 'COST' && r.body.moneyUSD === null));
-    return { revoked, refused, expiring, expired, held, erased, retainedResultDigest: digest(retained),
+    return { revoked, revokedRead, refused, expiring, expired, held, heldRead, erased, erasedRead, retainedResultDigest: digest(retained),
       erasureScope: 'Encrypted logical checkpoint copy only; historical result and canonical S6 evidence are retained' };
   });
 }

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import { centropyPost, CentropyApiError } from "@/components/centropy/lib/api"
 import { onBusinessInvalidation } from "@/components/centropy/lib/business-invalidation"
-import { R1ProjectionSchema, R1ReviewSchema, R1HistorySchema, type R1Projection, type R1Review, type R1History } from "./exact-control-view"
+import { R1ProjectionSchema, R1ReviewSchema, R1HistorySchema, R1SubmissionSchema, type R1Projection, type R1Review, type R1History } from "./exact-control-view"
 
 type Scoped<T>={scope:string;value:T}
 const pending=(status:string)=>["QUEUED","RUNNING"].includes(status)
@@ -16,39 +16,41 @@ export function ExactControlReview({scope,authorized,workId,root}:{
  const rootType=root.entityType,rootId=root.entityId
  const [projection,setProjection]=useState<Scoped<R1Projection>|null>(null),[review,setReview]=useState<Scoped<R1Review>|null>(null),[history,setHistory]=useState<Scoped<R1History>|null>(null)
  const [busy,setBusy]=useState(false),[notice,setNotice]=useState("Loading current exact control owners."),[error,setError]=useState<string|null>(null)
- const epoch=useRef(0),scopeRef=useRef(scope),writing=useRef(false),refreshing=useRef(false)
+ const epoch=useRef(0),scopeRef=useRef(scope),writing=useRef<number|null>(null),refreshing=useRef<number|null>(null)
+ const pendingRun=useRef<string|null>(null)
  scopeRef.current=scope
  const available=authorized&&projection?.scope===scope?projection.value:null
- const current=authorized&&review?.scope===scope&&available?.runs.some(r=>r.id===review.value.id)?review.value:null
+ const current=authorized&&review?.scope===scope&&review.value.workId===workId&&(!available?.workRevision||available.workRevision===review.value.workRevision)?review.value:null
  const policy=current?.review&&Date.now()<Date.parse(current.review.validUntil)?current.review:null
  const past=authorized&&history?.scope===scope?history.value:null
  const active=useCallback((generation:number)=>generation===epoch.current&&scopeRef.current===scope&&document.visibilityState==="visible",[scope])
- const clear=useCallback(()=>{setProjection(null);setReview(null);setHistory(null)},[])
- const refresh=useCallback(async(generation:number)=>{
-  if(refreshing.current)return
-  refreshing.current=true
+ const clear=useCallback(()=>{pendingRun.current=null;setProjection(null);setReview(null);setHistory(null)},[])
+ const refresh=useCallback(async(generation:number,acceptedRunId?:string)=>{
+  if(refreshing.current===generation)return
+  refreshing.current=generation
   try{
-   const p=R1ProjectionSchema.parse(await centropyPost("policies/r1-projection",{workId,root:{entityType:rootType,entityId:rootId}}))
+   const p=acceptedRunId?null:R1ProjectionSchema.parse(await centropyPost("policies/r1-projection",{workId,root:{entityType:rootType,entityId:rootId}}))
    if(!active(generation))return
-   if(p.workId!==workId)throw Error("Current Work differs")
-   setProjection({scope,value:p})
-   const newest=p.runs[0]
-   if(newest){const r=R1ReviewSchema.parse(await centropyPost("policies/r1-review",{runId:newest.id}))
+   if(p&&p.workId!==workId)throw Error("Current Work differs")
+   if(p)setProjection({scope,value:p})
+   const newest=acceptedRunId??p?.runs[0]?.id
+   if(newest){const r=R1ReviewSchema.parse(await centropyPost("policies/r1-review",{runId:newest}))
     if(!active(generation))return
-    if(r.workId!==workId||r.id!==newest.id||p.workRevision&&r.workRevision!==p.workRevision)throw Error("Current input differs")
+    if(r.workId!==workId||r.id!==newest||p?.workRevision&&r.workRevision!==p.workRevision)throw Error("Current input differs")
+    pendingRun.current=pending(r.status)?r.id:null
     setReview({scope,value:r});if(!r.review)setHistory(null)
     setNotice(pending(r.status)?"Checking the original model under its original deadline. Claims remain provisional.":words(r.status))
-   }else{setReview(null);setNotice(p.eligibility.candidates.some(c=>c.request)?"An original exact model and issued compute grant are available.":"No current exact model with an original funded Work is available.")}
+   }else{setReview(null);setNotice(p?.eligibility.candidates.some(c=>c.request)?"An original exact model and issued compute grant are available.":"No current exact model with an original funded Work is available.")}
    setError(null)
   }catch(cause){if(!active(generation))return;clear();setError(cause instanceof CentropyApiError&&[401,403,404].includes(cause.status)?"Exact control is unavailable in your current access scope. Values cleared.":"Current exact control could not be verified. Values cleared.")}
-  finally{refreshing.current=false}
+  finally{if(refreshing.current===generation)refreshing.current=null}
  },[active,clear,rootId,rootType,scope,workId])
  useEffect(()=>{
   const requestEpoch=epoch
-  requestEpoch.current++;clear();writing.current=false;setBusy(false);setError(null)
+  requestEpoch.current++;clear();writing.current=null;setBusy(false);setError(null)
   if(!authorized){setNotice("Sign in with current owner access to review exact control.");return}
   let cancelled=false,timer:ReturnType<typeof setTimeout>
-  const cycle=async()=>{if(cancelled)return;if(document.visibilityState==="visible")await refresh(epoch.current);if(!cancelled)timer=setTimeout(cycle,5000)}
+  const cycle=async()=>{if(cancelled)return;if(document.visibilityState==="visible"&&writing.current===null)await refresh(epoch.current,pendingRun.current??undefined);if(!cancelled)timer=setTimeout(cycle,5000)}
   void cycle()
   const visibility=()=>{epoch.current++;clear();if(document.visibilityState==="visible")void refresh(epoch.current)}
   const unsubscribe=onBusinessInvalidation(signal=>{
@@ -60,13 +62,14 @@ export function ExactControlReview({scope,authorized,workId,root}:{
   return()=>{cancelled=true;requestEpoch.current++;clearTimeout(timer);unsubscribe();document.removeEventListener("visibilitychange",visibility)}
  },[authorized,clear,refresh])
  async function perform(operation:"submit"|"cancel"|"reconcile",body:object){
-  if(!authorized||writing.current)return
-  const generation=++epoch.current;writing.current=true;setBusy(true);setReview(null);setHistory(null)
+  if(!authorized||writing.current!==null)return
+  const generation=++epoch.current;writing.current=generation;pendingRun.current=null;setBusy(true);setReview(null);setHistory(null)
   try{
-   await centropyPost("policies/r1-"+operation,body)
-   if(active(generation))await refresh(generation)
+   const result=await centropyPost("policies/r1-"+operation,body)
+   const acceptedRunId=operation==="submit"?R1SubmissionSchema.parse(result).runId:undefined
+   if(writing.current===generation&&scopeRef.current===scope&&document.visibilityState==="visible")await refresh(++epoch.current,acceptedRunId)
   }catch(cause){if(active(generation)){clear();setError(cause instanceof CentropyApiError?cause.message:"Current owner operation failed. Values cleared.")}}
-  finally{if(scopeRef.current===scope){writing.current=false;setBusy(false)}}
+  finally{if(writing.current===generation){writing.current=null;if(scopeRef.current===scope)setBusy(false)}}
  }
  async function inspectHistory(){if(!current)return;const generation=epoch.current
   try{const h=R1HistorySchema.parse(await centropyPost("policies/r1-history",{runId:current.id}));if(active(generation)&&h.runId===current.id)setHistory({scope,value:h})}

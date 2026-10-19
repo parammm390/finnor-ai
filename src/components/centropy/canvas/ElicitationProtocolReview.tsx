@@ -78,7 +78,7 @@ export function ElicitationProtocolReview({ workId, root, programTargets = [] }:
     return () => { cancelled = true; epoch.current++; clearTimeout(timer); unsubscribe()
       window.removeEventListener("pagehide", invalidate); document.removeEventListener("visibilitychange", visibility) }
   }, [authorized, requestId, refresh, clear])
-  async function perform(operation: string, input: unknown) {
+  async function perform(operation: "context" | "submit" | "cancel" | "review" | "report" | "close" | "event" | "use", input: unknown) {
     if (!authorized || writing.current !== null || document.visibilityState !== "visible") return
     const generation = ++epoch.current; writing.current = generation; setBusy(true); clear()
     try {

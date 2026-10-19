@@ -47,9 +47,14 @@ export async function r1Current(ctx:PeMutationContext,row:R1RunRow,c?:PoolClient
  const q=await requestRow(ctx,row.program_id,c);await assertProgramCurrent(ctx,q,c,!!c);
  if(['CANCELLED','INVALIDATED','FAILED','PARTIAL'].includes(q.status))throw Error('R1_ORIGINAL_PROGRAM_STOPPED');
  const responsibility=await readR1Responsibility(ctx);if(responsibility.unresolved.length||responsibility.hasMore)throw Error('R1_S6_OUTSTANDING_RESPONSIBILITY_RETAINED');
- const source=await resolveExactControlSource(ctx,row.request.problem_ref);
+ const [sourceRead,ownersRead]=await Promise.allSettled([
+  resolveExactControlSource(ctx,row.request.problem_ref),
+  recheckSearchOwners(ctx,q,{request:{policyRequest:row.request.envelope_inputs.policyRequest,computeGrant:row.request.grant},binding:row.binding}),
+ ]);
+ if(sourceRead.status==='rejected')throw sourceRead.reason;
+ if(ownersRead.status==='rejected')throw ownersRead.reason;
+ const source=sourceRead.value;
  if(source.id!==row.model_id||source.work_input_id!==row.work_input_id||q.work_input_id!==row.work_input_id||q.episode_id!==row.episode_id)throw Error('R1_ORIGINAL_EPISODE_OR_INPUT_CHANGED');
- await recheckSearchOwners(ctx,q,{request:{policyRequest:row.request.envelope_inputs.policyRequest,computeGrant:row.request.grant},binding:row.binding});
  if(c)await lockExactSourceCurrent(ctx,source,c);
  if((await r1SourceCut()).codeDigest!==source.source_cut.codeDigest)throw Error('R1_CURRENT_SOURCE_CUT_CHANGED');
  return {q,source};
