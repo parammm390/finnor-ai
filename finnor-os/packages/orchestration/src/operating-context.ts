@@ -32,6 +32,7 @@ import {
   tenantSettings,
   canonicalTruthRegistry,
   resolveTenantVertical,
+  latestWorkInput,
 } from "@finnor/db";
 import { and, asc, eq, inArray, isNull, or, sql } from "drizzle-orm";
 import { loadOperatingDirectoryContext } from "@finnor/read-models";
@@ -40,6 +41,7 @@ import { listAvailableIdentityAccess } from "@finnor/security";
 import { resolvePrivateEquityDealReference } from "@finnor/private-equity/src/operational-queries";
 import { loadEnterpriseBeliefView } from "@finnor/private-equity/src/enterprise-beliefs";
 import { executeTenantOperationalQuery } from "./operational-query-runtime";
+import { interactionBusinessRoot } from "./interaction-context";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -318,7 +320,8 @@ export async function assembleOperatingContext(
   if (userProfile) sources.push(profileSource("user_operating_profile", userProfile.userId, iso(userProfile.updatedAt)));
   if (workRow) sources.push({ kind: "WORK", source: "works", ref: workRow.id, asOf: iso(workRow.updatedAt) ?? assembledAt, role: "context_only" });
 
-  const interactionParsed = OperatingInteractionContextSchema.safeParse(opts.activeContext ?? workRow?.activeContext);
+  const frozenInput = opts.workId ? await latestWorkInput(ctx.tenantId, opts.workId) : null;
+  const interactionParsed = OperatingInteractionContextSchema.safeParse(frozenInput?.contextSnapshot ?? opts.activeContext ?? workRow?.activeContext);
   const interactionContext: OperatingInteractionContext | null = interactionParsed.success ? interactionParsed.data : null;
 
   let memory = emptyMemory();
@@ -357,37 +360,47 @@ export async function assembleOperatingContext(
   if (opts.includeCanonicalBusinessState) {
     try {
       if (vertical?.verticalKey === "private_equity") {
-        const resolution = await resolvePrivateEquityDealReference(ctx.tenantId, opts.instruction, { workId: opts.workId, userId: ctx.userId });
-        if (resolution.status !== "resolved") throw new Error(`PE Deal reference is ${resolution.status}`);
+        let root = interactionBusinessRoot(interactionContext ?? undefined);
+        if (!root) {
+          const resolution = await resolvePrivateEquityDealReference(ctx.tenantId, opts.instruction, { workId: opts.workId, userId: ctx.userId });
+          if (resolution.status !== "resolved") throw new Error(`PE business reference is ${resolution.status}`);
+          root = { entityType: "pe_deal", entityId: resolution.dealId };
+        }
         beliefViews.push(await loadEnterpriseBeliefView({ auth: ctx }, {
-          root: { entityType: "pe_deal", entityId: resolution.dealId }, maxClaims: 16,
+          root, maxClaims: 16,
         }));
-        const [dealContext, closingReadiness] = await Promise.all([
-          executeTenantOperationalQuery(ctx.tenantId, { intent: "deal_context", dealId: resolution.dealId }, { userId: ctx.userId, employeeId: ctx.employeeId }),
-          executeTenantOperationalQuery(ctx.tenantId, { intent: "closing_readiness", dealId: resolution.dealId }, { userId: ctx.userId, employeeId: ctx.employeeId }),
-        ]);
-        canonicalSummaries.push({
-          name: "deal_context",
-          asOf: dealContext.asOf,
-          source: dealContext.source.kind,
-          data: { status: dealContext.status, deal: dealContext.deal, counts: dealContext.counts },
-        }, {
-          name: "closing_readiness",
-          asOf: closingReadiness.asOf,
-          source: closingReadiness.source.kind,
-          data: {
-            eligible: closingReadiness.eligible,
-            blockingConditions: closingReadiness.blockingConditions,
-            failedConditions: closingReadiness.failedConditions,
-            unverifiedClosingItems: closingReadiness.unverifiedClosingItems,
-            blockingDependencies: closingReadiness.blockingDependencies,
-            decisionReadiness: closingReadiness.decisionReadiness,
-          },
-        });
-        epistemicWarnings = [...dealContext.epistemicWarnings, ...closingReadiness.epistemicWarnings]
-          .filter((warning, index, all) => all.findIndex((candidate) => candidate.propositionId === warning.propositionId && candidate.status === warning.status) === index);
-        sources.push({ kind: "CANONICAL", source: "operational_query:deal_context", asOf: dealContext.asOf, role: "context_only" });
-        sources.push({ kind: "CANONICAL", source: "operational_query:closing_readiness", asOf: closingReadiness.asOf, role: "context_only" });
+        if (root.entityType !== "pe_deal") {
+          const current = await executeTenantOperationalQuery(ctx.tenantId, { intent: "pe_world_state", root }, { workId: opts.workId, userId: ctx.userId, employeeId: ctx.employeeId });
+          canonicalSummaries.push({ name: "pe_world_state", asOf: current.asOf, source: current.source.kind, data: { ...current } });
+          sources.push({ kind: "CANONICAL", source: "operational_query:pe_world_state", asOf: current.asOf, role: "context_only" });
+        } else {
+          const [dealContext, closingReadiness] = await Promise.all([
+            executeTenantOperationalQuery(ctx.tenantId, { intent: "deal_context", dealId: root.entityId }, { userId: ctx.userId, employeeId: ctx.employeeId }),
+            executeTenantOperationalQuery(ctx.tenantId, { intent: "closing_readiness", dealId: root.entityId }, { userId: ctx.userId, employeeId: ctx.employeeId }),
+          ]);
+          canonicalSummaries.push({
+            name: "deal_context",
+            asOf: dealContext.asOf,
+            source: dealContext.source.kind,
+            data: { status: dealContext.status, deal: dealContext.deal, counts: dealContext.counts },
+          }, {
+            name: "closing_readiness",
+            asOf: closingReadiness.asOf,
+            source: closingReadiness.source.kind,
+            data: {
+              eligible: closingReadiness.eligible,
+              blockingConditions: closingReadiness.blockingConditions,
+              failedConditions: closingReadiness.failedConditions,
+              unverifiedClosingItems: closingReadiness.unverifiedClosingItems,
+              blockingDependencies: closingReadiness.blockingDependencies,
+              decisionReadiness: closingReadiness.decisionReadiness,
+            },
+          });
+          epistemicWarnings = [...dealContext.epistemicWarnings, ...closingReadiness.epistemicWarnings]
+            .filter((warning, index, all) => all.findIndex((candidate) => candidate.propositionId === warning.propositionId && candidate.status === warning.status) === index);
+          sources.push({ kind: "CANONICAL", source: "operational_query:deal_context", asOf: dealContext.asOf, role: "context_only" });
+          sources.push({ kind: "CANONICAL", source: "operational_query:closing_readiness", asOf: closingReadiness.asOf, role: "context_only" });
+        }
       } else {
         const current = await executeTenantOperationalQuery(ctx.tenantId, { intent: "work_list", openOnly: true, page: { limit: 20 } });
         canonicalSummaries.push({
@@ -418,6 +431,7 @@ export async function assembleOperatingContext(
   const trustedPartyRefs = new Map<string, PartyRef>();
   const excludedInteractionRefs = new Set((interactionContext?.excludedEntities ?? []).map((ref) => `${ref.entityType}:${ref.entityId}`));
   const directInteractionRefs = [
+    ...(interactionContext?.businessRoot ? [interactionContext.businessRoot] : []),
     ...(interactionContext?.selectedEntities ?? []),
     ...(interactionContext?.focusedEntity ? [interactionContext.focusedEntity] : []),
   ];

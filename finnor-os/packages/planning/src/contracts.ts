@@ -157,6 +157,7 @@ export interface PlanningWorldSnapshot {
   decisionContextHash: string;
   canonicalStateHash: string;
   work: { id: string; status: string | null; inputId: string };
+  businessRoot?: { entityType: string; entityId: string } | null;
   interactionContextRef: { hash: string; sourceRef: string } | null;
   canonicalEntities: Array<{ kind: "entity" | "party" | "resource"; type: string; id: string; versionHash: string | null; sourceRef: string }>;
   canonicalVersions: Array<{ sourceRef: string; versionHash: string }>;

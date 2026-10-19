@@ -629,6 +629,7 @@ export async function resolvePrivateEquityDealReference(
 ): Promise<PrivateEquityDealResolution> {
   return withTenantTransaction(tenantId, { userId: options.userId, readOnly: true, isolation: "repeatable read" }, async (_db, client) => {
     const candidatesForIds = async (ids?: string[]) => {
+      if (ids && ids.length === 0) return [];
       const result = await client.query<{
         deal_id: string; name: string; code_name: string | null; target_name: string; lifecycle_state: string;
       }>(

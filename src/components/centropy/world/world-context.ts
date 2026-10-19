@@ -1,4 +1,4 @@
-import type { CompanyBrainObjectRef, PeWorldRootRef } from "@/components/centropy/pe/contracts"
+import type { CompanyBrainObjectRef, PeWorldRootRef } from "../pe/contracts"
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 const CORE_CANONICAL_TYPES: Record<string, string> = {
@@ -28,11 +28,13 @@ export function canonicalWorldFocus(ref: CompanyBrainObjectRef | null): Operatin
 }
 
 export function operatingSelection(root: PeWorldRootRef | null, focused: CompanyBrainObjectRef | null): {
+  businessRoot?: PeWorldRootRef
   focusedEntity?: OperatingEntityRef
   selectedEntities: OperatingEntityRef[]
 } {
   const exact = canonicalWorldFocus(focused)
   return {
+    ...(root ? { businessRoot: root } : {}),
     ...(exact ? { focusedEntity: exact } : {}),
     selectedEntities: exact ? [exact] : root ? [{ entityType: root.entityType, entityId: root.entityId }] : [],
   }

@@ -10,7 +10,8 @@ import { createHash, randomUUID } from "node:crypto";
 import { z } from "zod";
 import { assembleOperatingContext } from "./operating-context";
 import { and, asc, desc, eq, inArray, isNotNull, lt, lte, sql } from "drizzle-orm";
-import type { ClosingWorkContinuation, DomainAction, ExecutionResult, MemorySnapshot, ObjectiveSuccessCondition, ObjectiveSuccessVerification, OperatingInteractionContext, OperationalQueryRequest, OutcomePackStartBinding, Role, TenantContext } from "@finnor/shared-types";
+import { PE_WORLD_ROOT_TYPES, type ClosingWorkContinuation, type DomainAction, type ExecutionResult, type MemorySnapshot, type ObjectiveSuccessCondition, type ObjectiveSuccessVerification, type OperatingInteractionContext, type OperationalQueryRequest, type OutcomePackStartBinding, type PeWorldRootRef, type Role, type TenantContext } from "@finnor/shared-types";
+import { OperatingInteractionContextSchema } from "@finnor/policy-schema";
 import {
   MAX_HIGH_EGRESS_ROWS,
   activeWorkPlanRevision,
@@ -25,6 +26,8 @@ import {
   businessEffects,
   actionLog,
   canonicalRefsFromContext,
+  attachValidatedWorkInputContext,
+  latestWorkInput,
   computerArtifacts,
   computerRuns,
   createWorkEventWaitTx,
@@ -92,7 +95,7 @@ import { groundEntitiesWithDb } from "./compiler";
 import { validateOperationalQueryRequest } from "./fast-read-lane";
 import { executeTenantOperationalQuery } from "./operational-query-runtime";
 import { ingestIntegrationEvent, markObjectiveWakeConsumed, objectiveWakeContext, recoverDueWorkEventWaits } from "./event-waits";
-import { resolveOperatingInteractionContext } from "./interaction-context";
+import { effectiveInteractionTargets, interactionBusinessRoot, resolveOperatingInteractionContext, validateInteractionBusinessScope } from "./interaction-context";
 import {
   defaultObjectiveSuccessCondition,
   redirectedObjectiveSuccessCondition,
@@ -105,6 +108,7 @@ import {
   parseObjectiveCompletionEvidence,
   parseObjectiveSuccessCondition,
   privateEquityObjectiveSuccessCondition,
+  privateEquityWorldObjectiveSuccessCondition,
 } from "./objective-success";
 import {
   claimWorkforceAssignment,
@@ -118,7 +122,7 @@ import {
 export const OBJECTIVE_ITERATION_OUTCOMES = ["continue", "awaiting_approval", "waiting", "blocked", "completed", "failed", "cancelled"] as const;
 export type ObjectiveIterationOutcome = (typeof OBJECTIVE_ITERATION_OUTCOMES)[number];
 
-const PE_OBJECTIVE_ENTITY_TYPES = new Set(["pe_deal", "pe_request", "pe_finding", "pe_deal_risk", "pe_closing_condition", "pe_closing_item"]);
+const PE_OBJECTIVE_ENTITY_TYPES = new Set<string>([...PE_WORLD_ROOT_TYPES, "pe_request", "pe_finding", "pe_deal_risk", "pe_closing_condition", "pe_closing_item"]);
 
 function privateEquityRefsFromContext(value: unknown): Array<{ entityType: string; entityId: string }> {
   if (Array.isArray(value)) return value.flatMap(privateEquityRefsFromContext);
@@ -176,7 +180,7 @@ export type ObjectiveDecision = z.infer<typeof DecisionSchema>;
 
 export interface ObjectiveInspection extends Record<string, unknown> {
   inspectedAt: string;
-  work: Record<string, unknown>;
+  work: Record<string, unknown> & { businessRoot?: PeWorldRootRef | null };
   objective: Record<string, unknown>;
   companyGraph: Record<string, unknown>;
   businessState: unknown;
@@ -382,7 +386,10 @@ function isRecord(value: unknown): value is Record<string, unknown> {
  * their containing inspection object to canonicalRefsFromContext loses both. */
 export function objectivePlanningRefs(inspection: Pick<ObjectiveInspection, "work" | "companyGraph" | "privateEquityIcBasis">): Array<{ entityType: string; entityId: string; sourceRef: string }> {
   const context = isRecord(inspection.work.activeContext) ? inspection.work.activeContext : {};
-  const selected = { focusedEntity: context.focusedEntity, selectedEntities: context.selectedEntities };
+  const parsed = OperatingInteractionContextSchema.safeParse(context);
+  const selected = parsed.success
+    ? { entityRefs: [...(parsed.data.businessRoot ? [parsed.data.businessRoot] : []), ...effectiveInteractionTargets(parsed.data)] }
+    : { focusedEntity: context.focusedEntity, selectedEntities: context.selectedEntities };
   const contextRefs = [...canonicalRefsFromContext(selected), ...privateEquityRefsFromContext(selected)]
     .map((ref) => ({ ...ref, sourceRef: "work.active_context" }));
   const links = Array.isArray(inspection.companyGraph.entityLinks)
@@ -403,8 +410,10 @@ export function objectivePlanningRefs(inspection: Pick<ObjectiveInspection, "wor
     }
   }
   const unique = new Map<string, (typeof contextRefs)[number]>();
+  const excluded = new Set(parsed.success ? parsed.data.excludedEntities.map(ref => `${ref.entityType}:${ref.entityId}`) : []);
   for (const ref of [...contextRefs, ...linkRefs, ...basisRefs]) {
     const key = `${ref.entityType}:${ref.entityId}`;
+    if (excluded.has(key)) continue;
     if (!unique.has(key)) unique.set(key, ref);
   }
   return [...unique.values()];
@@ -647,19 +656,24 @@ export async function startWorkObjective(objective: string, ctx: TenantContext, 
       activeContext: undefined,
       authorityContext: intakeAuthorityContext(ctx),
     });
-  options = {
-    ...options,
-    activeContext: await resolveOperatingInteractionContext({
-      tenantId: ctx.tenantId,
-      context: options.activeContext,
-      channel: options.channel ?? "text",
-      workId: input.workId,
-    }),
-  };
+  const acceptedInput = await latestWorkInput(ctx.tenantId, input.workId);
+  if (!acceptedInput || acceptedInput.id !== input.workInputId) throw new Error("Objective input is no longer the active Work input");
+  const interaction = await resolveOperatingInteractionContext({
+    tenantId: ctx.tenantId,
+    context: options.activeContext ?? acceptedInput.contextSnapshot,
+    channel: options.channel ?? "text",
+    workId: input.workId,
+  });
+  options = { ...options, activeContext: interaction };
+  if (interaction && (!acceptedInput.contextSnapshot || OperatingInteractionContextSchema.safeParse(acceptedInput.contextSnapshot).success)) await attachValidatedWorkInputContext({
+    tenantId: ctx.tenantId, workId: input.workId, workInputId: input.workInputId, context: interaction,
+  });
   const vertical = await resolveTenantVertical(ctx.tenantId);
-  const activeRefs = privateEquityRefsFromContext(options.activeContext);
-  const activeDeal = activeRefs.find((ref) => ref.entityType === "pe_deal")?.entityId;
-  const resolution = vertical.verticalKey === "private_equity" && !activeDeal
+  const activeRefs = effectiveInteractionTargets(interaction);
+  const businessRoot = await validateInteractionBusinessScope(ctx, interaction);
+  const activeDeal = businessRoot ? businessRoot.entityType === "pe_deal" ? businessRoot.entityId : null
+    : activeRefs.find((ref) => ref.entityType === "pe_deal")?.entityId;
+  const resolution = vertical.verticalKey === "private_equity" && !businessRoot && !activeDeal
     ? await resolvePrivateEquityDealReference(ctx.tenantId, objective, { workId: input.workId, userId: ctx.userId })
     : null;
   const dealId = activeDeal ?? (resolution?.status === "resolved" ? resolution.dealId : null);
@@ -681,7 +695,7 @@ export async function startWorkObjective(objective: string, ctx: TenantContext, 
           dealId,
           ...(subject ? { subject: subject as { entityType: "pe_request" | "pe_finding" | "pe_deal_risk" | "pe_closing_condition" | "pe_closing_item"; entityId: string } } : {}),
         })
-      : defaultObjectiveSuccessCondition(objective);
+      : businessRoot ? privateEquityWorldObjectiveSuccessCondition(objective) : defaultObjectiveSuccessCondition(objective);
   }
   const loopClaim = await withTenant(ctx.tenantId, async (db) => {
     await db.execute(sql`SELECT id FROM ${works} WHERE ${works.id}=${input.workId} AND ${works.tenantId}=${ctx.tenantId} FOR NO KEY UPDATE`);
@@ -1213,7 +1227,11 @@ async function currentIterationState(tenantId: string, loopId: string, stepId: s
 async function inspectCanonicalState(tenantId: string, workId: string, loop: typeof workObjectiveLoops.$inferSelect, step: typeof workObjectiveSteps.$inferSelect, ctx: TenantContext): Promise<{ inspection: ObjectiveInspection; inspectionHash: string }> {
   const aggregate = await workAggregate(tenantId, workId);
   if (!aggregate) throw new Error("Objective Work aggregate not found");
+  const work = isRecord(aggregate.work) ? aggregate.work : {};
   const vertical = await resolveTenantVertical(tenantId);
+  const input = await latestWorkInput(tenantId, workId);
+  const context = OperatingInteractionContextSchema.safeParse(input?.contextSnapshot ?? work.activeContext);
+  const businessRoot = context.success ? await validateInteractionBusinessScope(ctx, context.data) : null;
   let businessRequest: OperationalQueryRequest;
   const success = parseObjectiveSuccessCondition(loop.successCondition);
   const harnessOnly = success.criteria.every(c=>c.kind==="canonical_query" && c.request.intent==="harness_program_v1" && c.request.workId===workId);
@@ -1223,12 +1241,14 @@ async function inspectCanonicalState(tenantId: string, workId: string, loop: typ
     // a deal-free company objective is never treated as IC readiness.
     businessRequest=harnessRequest;
   } else if (vertical.verticalKey === "private_equity") {
-    const resolution = await resolvePrivateEquityDealReference(tenantId, loop.objective, { workId, userId: ctx.userId });
-    if (resolution.status !== "resolved") throw new Error("Objective PE inspection requires one exact Work-anchored Deal");
-    // The close-readiness composition includes PE2 eligibility plus P3 decision
-    // readiness/acquisition options. Other bounded PE reads remain available as
-    // one-step query decisions when the objective needs requests/workstreams.
-    businessRequest = { intent: "closing_readiness", dealId: resolution.dealId };
+    if (businessRoot && businessRoot.entityType !== "pe_deal") {
+      businessRequest = { intent: "pe_world_state", root: businessRoot };
+    } else {
+      const resolution = businessRoot?.entityType === "pe_deal" ? { status: "resolved" as const, dealId: businessRoot.entityId }
+        : await resolvePrivateEquityDealReference(tenantId, loop.objective, { workId, userId: ctx.userId });
+      if (resolution.status !== "resolved") throw new Error("Objective PE inspection requires one exact accepted business root");
+      businessRequest = { intent: "closing_readiness", dealId: resolution.dealId };
+    }
   } else {
     businessRequest = { intent: "work_list", recordId: workId };
   }
@@ -1348,7 +1368,7 @@ async function inspectCanonicalState(tenantId: string, workId: string, loop: typ
   }));
   const inspection: ObjectiveInspection = {
     inspectedAt: new Date().toISOString(),
-    work: { id: workId, status: (aggregate.work as { status: string }).status, activeContext: (aggregate.work as { activeContext: unknown }).activeContext },
+    work: { id: workId, status: work.status, activeContext: context.success ? context.data : work.activeContext, businessRoot },
     objective: {
       id: loop.id, text: loop.objective, state: loop.state, revision: loop.revision,
       successCondition: loop.successCondition,
@@ -2060,6 +2080,7 @@ async function objectivePlanningInputs(params: {
     decisionContextHash: stateHash,
     canonicalStateHash: stateHash,
     work: { id: params.workId, status: String(params.inspection.work.status ?? ""), inputId: input.id },
+    businessRoot: params.inspection.work.businessRoot ?? null,
     interactionContextRef: { hash: planningHash(input.contextSnapshot ?? null), sourceRef: "work_input.context_snapshot" },
     canonicalEntities: targets.map((target) => ({ ...target, versionHash: null })),
     canonicalVersions: [
@@ -3283,11 +3304,17 @@ export async function controlWorkObjective(params: {
       return finishControl(updated!);
     }
     if (params.command === "redirect" && !params.objective?.trim()) throw new Error("Redirect requires a non-empty objective");
+    const [latestInput] = params.command === "redirect" ? await db.select({ contextSnapshot: workInputs.contextSnapshot }).from(workInputs)
+      .where(and(eq(workInputs.tenantId, params.tenantId), eq(workInputs.workId, params.workId)))
+      .orderBy(desc(workInputs.createdAt), desc(workInputs.id)).limit(1) : [];
+    const context = OperatingInteractionContextSchema.safeParse(latestInput?.contextSnapshot);
+    const root = context.success ? interactionBusinessRoot(context.data) : null;
     const [updated] = await db.update(workObjectiveLoops).set({
       ...(params.command === "redirect" ? {
         objective: params.objective!.trim(),
         successCondition: params.successCondition
           ? parseObjectiveSuccessCondition(params.successCondition)
+          : root && root.entityType !== "pe_deal" ? privateEquityWorldObjectiveSuccessCondition(params.objective!.trim())
           : redirectedObjectiveSuccessCondition(parseObjectiveSuccessCondition(current.successCondition), params.objective!.trim()),
         successVerification: null,
         successVerifiedAt: null,

@@ -793,6 +793,26 @@ export async function authorizePrivateEquityWorldState(ctx: PeMutationContext, r
   await readAuthorizedWorldState(ctx, root, undefined, false);
 }
 
+export async function validatePrivateEquityWorldContext(
+  ctx: PeMutationContext,
+  root: PeWorldRootRef,
+  targets: Array<{ entityType: string; entityId: string }>,
+): Promise<void> {
+  const world = await readAuthorizedWorldState(ctx, root, undefined, false);
+  const included = new Set(world.provenance.map(ref => `${ref.entityType}:${ref.entityId}`));
+  included.add(`${root.entityType}:${root.entityId}`);
+  for (const document of world.documents) included.add(`document:${document.id}`);
+  for (const evidence of world.evidence) {
+    included.add(`evidence_source:${evidence.sourceId}`);
+    included.add(`evidence_source_version:${evidence.versionId}`);
+  }
+  for (const link of world.workLinks) if (typeof link.workId === "string") included.add(`work:${link.workId}`);
+  for (const link of world.taskLinks) if (typeof link.taskId === "string") included.add(`task:${link.taskId}`);
+  if (targets.some(ref => !included.has(`${ref.entityType}:${ref.entityId}`))) {
+    throw new PeDomainError("PE_ENTITY_NOT_FOUND", "The selected subject is unavailable in this business scope");
+  }
+}
+
 async function readAuthorizedWorldState(
   ctx: PeMutationContext,
   root: PeWorldRootRef,

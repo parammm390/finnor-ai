@@ -197,6 +197,7 @@ export interface IcWorkspace {
 export interface WorkAggregateView {
   read?: { limit: number; complete: boolean; truncatedTables: string[] }
   work: { id: string; status: string; initialInstruction: string; executionModel: string | null; currentOwnerId: string | null; assignedTo: string | null; createdAt: string; updatedAt: string; failure: unknown; recovery: unknown; finalOutcome: unknown }
+  inputs?: Array<{ id: string; contextSnapshot: unknown }>
   plannerAttempts?: Array<{ id: string; attempt: number; status: string; failure: unknown; compilationResult: unknown }>
   outcomePack?: {
     id: string; workId: string; objectiveLoopId: string; packId: string; packVersion: number;

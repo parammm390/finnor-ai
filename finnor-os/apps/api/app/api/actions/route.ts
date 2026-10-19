@@ -248,6 +248,7 @@ export async function POST(req: Request): Promise<Response> {
       const excluded = new Set(base.excludedEntities.map((ref) => `${ref.entityType}:${ref.entityId}`));
       const selected = new Map(base.selectedEntities.map((ref) => [`${ref.entityType}:${ref.entityId}`, ref]));
       for (const { entityType, entityId } of prepared.context.resolution.resolvedReferences) {
+        if (base.businessRoot?.entityType === entityType && base.businessRoot.entityId === entityId) continue;
         if (!excluded.has(`${entityType}:${entityId}`)) selected.set(`${entityType}:${entityId}`, { entityType, entityId });
       }
       try {
@@ -353,7 +354,7 @@ export async function POST(req: Request): Promise<Response> {
         workId: received.workId,
         workInputId: received.workInputId,
         instructionId: received.instructionId,
-      }, { status: timeout ? 504 : 500 });
+      }, { status: timeout ? 504 : statusFromError(err) });
     }
 
     // Core orchestration has committed its own durable truth above. Assistant
