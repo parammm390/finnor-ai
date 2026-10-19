@@ -1,0 +1,2800 @@
+{
+  "schema": "finnor.frontier5.programme-evidence-ledger.v1",
+  "status": "ENGINEERING_PARTIAL_WHOLE_PHASE_NOT_COMPLETE",
+  "source": {
+    "base": "294921a9d431e0459588616ca1477677af8dffef",
+    "coreVerifiedCommit": "92361a9cc653c60298edbccf9b0f1b81b9a3b1a6",
+    "coreVerifiedTree": "dd7c8401e2750c0a6b4f87a90459e63a3d9b7728",
+    "mountedHarnessCommit": "1191ab7184a844f3382224fdd41a0eb043cdb2cb",
+    "mountedHarnessTree": "c0cdba3c6d935e20d5caace0be2ef680d7dbd5cb",
+    "sourceIdentityOfFinalDocumentation": "SEE_EXTERNAL_DELIVERY_MANIFEST_NO_SELF_REFERENTIAL_COMMIT",
+    "originalSealedX4Unmodified": true,
+    "authoringWorktreeRetainedUntrackedArtifacts": [
+      {
+        "path": "scope-x4/evidence/x4-mounted-mounted-current.png",
+        "sha256": "902e083b9d3586b42449ecb4296401ce1c6beed5baf97fe487c77d05368b6e9e"
+      },
+      {
+        "path": "scope-x4/evidence/x4-mounted-mounted-revoked.png",
+        "sha256": "8de9114896eb2d0c1ecae038b1ef46a708360d2eeac43fcc573019e5b8105a52"
+      },
+      {
+        "path": "scope-x5/evidence/x5-mounted-mounted-current.png",
+        "sha256": "19e4fc49e35c7851f5f7e151effa034e5ae142d7b8b1ef544aea65c601b8899e"
+      },
+      {
+        "path": "scope-x5/evidence/x5-mounted-mounted-revoked.png",
+        "sha256": "d4bdf9d22eeb6babf77b6b2637b503b2c82ff1a000d6bef44f59c5e3196b3929"
+      }
+    ]
+  },
+  "governingContract": {
+    "revision": "2.0",
+    "capturedTextSha256": "d86af8c65dbc306df4d52db4e2fd3cc51986f12c94f931ecde8dcaa1b8a4025b",
+    "olderOriginalFileByteParity": "NOT_ESTABLISHED"
+  },
+  "programme": {
+    "wholeEngineering": "INCOMPLETE_MISSING_PEERS_AND_GENUINE_CHAIN_BINDINGS",
+    "nativeMission": "BLOCKED_USER_CHOICE_NORMAL_CHAT",
+    "engineProtectedQualification": "NOT_RUN",
+    "operational100x": "NOT_RUN_MISSING_QUALIFIED_BASELINES_AND_ORIGINAL_POPULATIONS_HORIZON",
+    "matureFinancial": "NOT_RUN",
+    "production": "NOT_AUTHORIZED_NOT_ACTIVATED"
+  },
+  "engines": {
+    "X1": {
+      "source": "NOT_RECEIVED",
+      "reportedState": "USER_REPORTED_LOCAL_ENGINEERING_ACCEPTED",
+      "independentlyInspected": false,
+      "currentLocalE2E": "NOT_RUN_HERE"
+    },
+    "X2": {
+      "source": "NOT_RECEIVED",
+      "reportedState": "USER_REPORTED_SEALED_SOURCE_ENGINEERING_E2E_INCOMPLETE",
+      "independentlyInspected": false,
+      "currentLocalE2E": "NOT_RUN_HERE"
+    },
+    "X3": {
+      "implementation": "AVAILABLE_BOUNDED_NATIVE_ENGINE",
+      "localE2E": "PASS_ORIGINAL_COMPLETE_DEVELOPMENT_PROFILE",
+      "receipt": "evidence/current-cut-3/x3-complete/installed-summary.json",
+      "originalCases": 36,
+      "literalMatches": 30,
+      "stricterTypedCreationRefusals": 4,
+      "ownerBoundaryDenials": 2,
+      "physicalWorkers": 64,
+      "workerProof": "ORIGINAL_SUBSET_EXPLICIT_ONE_SECOND_LEASE",
+      "interfaceConsumer": "PASS",
+      "mounted": [
+        "MAIN",
+        "FOCUSED_ROTATION_PAGINATION",
+        "ACTUAL_EFFECT_AND_SETTLEMENT"
+      ],
+      "protectedApplications": 0,
+      "protectedMaintenanceEpisodes": 0
+    },
+    "X4": {
+      "implementation": "AVAILABLE_BOUNDED_SYSTEM_IDENTIFICATION",
+      "localE2E": "PASS_FULL_NATIVE_FACTORY_SECURITY_DATABASE_S8_REPEAT_REPLICATION",
+      "receipt": "evidence/current-cut-3/x4-native-full/receipt.json",
+      "physicalExperiments": 10,
+      "workerFactory": "ACTUAL_CREATE_WORKER_300_SECOND_DEFAULT_CLASS_NULL",
+      "serviceBootstrapQualified": false,
+      "releaseQualified": false,
+      "mounted": "PASS_CURRENT_CUT_7_WITH_ATTEMPT_LOCAL_IMAGES",
+      "protectedSystems": 0
+    },
+    "X5": {
+      "implementation": "AVAILABLE_BOUNDED_NON_EFFECTFUL_RECONCILIATION_DOMAIN",
+      "localE2E": "PASS_ORIGINAL_BOUNDARIES_FAULTS_RESOURCES_EXPIRY_FULL_NATIVE_FOUR_ARM_NUMERIC",
+      "receipt": "evidence/current-cut-4/x5-native-full/summary.json",
+      "evaluation": "evidence/current-cut-4/x5-native-full/independent-evaluation.json",
+      "evaluationDisposition": "SUPPORTED_DEVELOPMENT",
+      "assignedBusinessScenarios": 32,
+      "outcomes": 128,
+      "physicalExecuteUses": 152,
+      "criticalViolations": 0,
+      "workerFactory": "ACTUAL_CREATE_WORKER_300_SECOND_DEFAULT_CLASS_NULL",
+      "serviceBootstrapQualified": false,
+      "releaseQualified": false,
+      "numeric": {
+        "receipt": "evidence/current-cut-4/x5-native-full/independent-numeric-reference.json",
+        "samples": 66,
+        "epochs": 600,
+        "maximumAbsoluteParameterError": 1.3322676295501878e-15,
+        "tolerancePass": true
+      },
+      "mounted": "PASS_CURRENT_CUT_7_WITH_NATIVE_POINTER_READINESS_AND_ATTEMPT_LOCAL_IMAGES",
+      "protectedSequences": 0
+    }
+  },
+  "integration": {
+    "existing": "X3_ACCEPTED_NATIVE_HISTORY_TO_X5_PHYSICAL_TRAINING_TO_FRESH_X3_RECONCILIATION",
+    "x4": "GENUINE_SEPARATE_EXPERIMENT_CHECK_REPLICATION_MODEL_PHYSICAL_DECISION_NO_BUSINESS_COMPLETION",
+    "missing": [
+      "REAL_X1_X2_CONTRACT_BINDINGS",
+      "LEARNED_OPERATION_EXPERIMENT_BINDING",
+      "CURRENT_MODEL_GUARDED_X4_TO_X3_CONTINUATION",
+      "INDEPENDENTLY_ACCEPTED_EFFECTFUL_X5_DOMAIN_WITHOUT_RELAXING_ORIGINAL_NO_EFFECT_ORACLE",
+      "ONE_MAINTAINED_FIVE_OUTPUT_WORK_CHAIN"
+    ]
+  },
+  "reviews": {
+    "range": "294921a9d431e0459588616ca1477677af8dffef...1191ab7184a844f3382224fdd41a0eb043cdb2cb",
+    "safeIntendedPaths": 25,
+    "helperInventories": 10,
+    "reviewers": [
+      "559b0a00-2e64-4684-9c1b-dbe16c6c7a5c",
+      "3b5837f1-559d-49f3-bb64-dcd3c510d7f1",
+      "81f0eb43-f621-4390-aab1-7842a8fde0be"
+    ],
+    "actionableFindings": 0,
+    "dispositions": "review-4/dispositions.md",
+    "generatedReportExcluded": [
+      "scope-x-phase/verification-ledger.json"
+    ],
+    "generatedReportValidatedInlineAgainstRawReceiptStatusSourceResourcesAndHashes": true
+  },
+  "reconstruction": {
+    "status": "PASS_FRESH_ORDINARY_SOURCE_PLUS_SIBLING_CORE_CHECKS",
+    "sourceBundle": "source-checkpoints/92361a9.bundle",
+    "sourceBundleSha256": "d760f552434c4e7cbfb5c71dc6cefb1aa1173cc915f7df4e7b193bb280ef4fbd",
+    "sourceHistory": "SUPPLIED_GENUINE_SHALLOW_BOUNDARY",
+    "boundary": "ed32d200a9459269509f1e40d4e13a3e2a1a4d6a",
+    "evidence": "evidence/reconstruction-1",
+    "driverStepsPassed": 14,
+    "outerMeteredCommandsPassed": 8,
+    "borrowedDependencies": false,
+    "initiallyAbsent": [
+      "node_modules",
+      ".next",
+      "finnor-os/node_modules",
+      "finnor-os/apps/api/.next"
+    ],
+    "installedWorkspacePaths": [
+      {
+        "name": "@finnor/db",
+        "path": "/home/factory-user/repos/finnor-x-phase-reconstruction-1/finnor-os/packages/db/index.ts"
+      },
+      {
+        "name": "@finnor/private-equity",
+        "path": "/home/factory-user/repos/finnor-x-phase-reconstruction-1/finnor-os/packages/private-equity/src/index.ts"
+      },
+      {
+        "name": "@finnor/shared-types",
+        "path": "/home/factory-user/repos/finnor-x-phase-reconstruction-1/finnor-os/packages/shared-types/src/index.ts"
+      }
+    ],
+    "finalTrackedDiff": "",
+    "lockDigests": [
+      {
+        "path": "package-lock.json",
+        "sha256": "4ae84fbe370dfdf4708e35a2274f4be0fb612665d4dda88ddeb342c264f5b697"
+      },
+      {
+        "path": "finnor-os/package-lock.json",
+        "sha256": "aebbbac3741b6cf7f2424447bf2bc12524eab526e041b6baada5d167003855c5"
+      }
+    ],
+    "node": "v22.23.3",
+    "abi": "127",
+    "platform": "linux",
+    "architecture": "x64",
+    "peakSampledRssBytes": 4280459264,
+    "outerCommandWallMsSum": 877912.790542,
+    "qualification": "BUILDER_CONTROLLED_SAME_HOST_NOT_PROTECTED_CUSTODY"
+  },
+  "failureAccounting": {
+    "dispositions": {
+      "evidence/integration-repair-1/compatibility-before.meter.json": "REPRODUCED_INHERITED_VERIFIER_46_NOT_15",
+      "evidence/integration-repair-1/x3-stale-check.meter.json": "EXPECTED_STALE_CHECK_REFUSAL_WITHOUT_WRITE",
+      "evidence/integration-repair-1/x3-original-check-replay.meter.json": "COMMAND_ZERO_BUT_CHECK_ONLY_CONTRACT_FAILED_MANIFEST_MUTATED",
+      "evidence/integration-repair-1/original-api-build.meter.json": "COMMAND_ZERO_BUT_ORDINARY_BUILD_LEFT_X4_SEAL_STALE",
+      "evidence/integration-repair-1/x4-after-original-build.meter.json": "EXPECTED_REFUSAL_CONFIRMING_ORIGINAL_BUILD_DEFECT",
+      "evidence/current-cut-2/x4-native-full.meter.json": "RETAINED_NEW_OBSERVER_FAILED_EXPECTED_FAILED_INSTEAD_OF_NATIVE_DEAD_LETTER",
+      "evidence/current-cut-3/x5-native-full.meter.json": "RETAINED_NEW_HARNESS_ORDER_ASSUMPTION_FAILED_OLD_BATCH_PROBE_STILL_QUEUED",
+      "evidence/current-cut-4/x3-mounted-main-browser.meter.json": "FUNCTIONAL_BROWSER_PASS_18_GROUPS_BUT_ORIGINAL_METER_PARTIAL_CLEANUP_NOT_REGRADED",
+      "evidence/current-cut-6/x5-mounted-browser.meter.json": "RETAINED_NATIVE_FOCUS_CLICK_REFUSED_OCCLUSION_DURING_WORK_NAVIGATION"
+    },
+    "originalBusinessOraclesWeakened": false,
+    "priorPartialReceiptsRegraded": false,
+    "rawReceiptsSqlAndLogsPreserved": true,
+    "knownAuxiliaryImageLoss": {
+      "attempt": "current-cut-4/x3-mounted-main",
+      "artifact": "original repository-global mounted.png",
+      "state": "UNAVAILABLE_OVERWRITTEN_BY_ORIGINAL_DRIVER_DURING_CURRENT_CUT_5",
+      "receiptsSqlAndLogsRetained": true,
+      "newerImageRetroactivelyAttributed": false
+    }
+  },
+  "costAndQualification": {
+    "meter": "SAMPLED_LINUX_DESCENDANT_PROCESS_OBSERVER_NOT_ATTESTED_PEAK_OR_COMPLETE_BILLING",
+    "completeAcceptedWorkCost": "UNKNOWN",
+    "providerAndHumanCosts": "UNKNOWN",
+    "qualifiedBV": "NOT_SUPPLIED",
+    "equippedBRef": "NOT_SUPPLIED",
+    "componentRatiosMultiplied": false,
+    "productionActivation": false,
+    "containerArm64": "NOT_EXECUTED",
+    "accessibility": "NO_COMPLETE_CERTIFICATION_MANUAL_GRADIENT_CONTRAST_REVIEW_REMAINS",
+    "lint": "ZERO_ERRORS_SIX_INHERITED_WARNINGS_IN_MAIN_SCOPED_CHECK"
+  },
+  "commands": [
+    {
+      "receipt": "evidence/current-cut-1/x4-native-full.meter.json",
+      "sha256": "f35dfcdf12499e9fd64432c97e1e77fd26426eff1fa3d4357059c03feb0c5bcc",
+      "commandStatus": "PASS_COMMAND",
+      "exitCode": 0,
+      "signal": null,
+      "stopReason": null,
+      "disposition": "PASS_SCOPED_DEVELOPMENT_CHECK",
+      "source": {
+        "head": "fd6a81b249a539559dcf8be34cd0bfd0df0e14c1",
+        "tree": "07e8acb18a8899a38984ec96933c0ae054fc95d5",
+        "dirtyPatchSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "status": "",
+        "untracked": []
+      },
+      "wallMs": 47240.886438,
+      "sampledAggregatePeakRssBytes": 2008854528,
+      "observedProcesses": 37,
+      "bounds": {
+        "timeoutMs": 900000,
+        "maxRssBytes": 6442450944,
+        "maxLogBytes": 16777216,
+        "intervalMs": 250
+      },
+      "aliveObservedDescendants": [],
+      "cleanup": null
+    },
+    {
+      "receipt": "evidence/current-cut-2/x4-native-full.meter.json",
+      "sha256": "b1334e872a79b4d2308fa880a38f38d11006275f04a25329032d9d0243b3b790",
+      "commandStatus": "FAIL_COMMAND",
+      "exitCode": 1,
+      "signal": null,
+      "stopReason": null,
+      "disposition": "RETAINED_NEW_OBSERVER_FAILED_EXPECTED_FAILED_INSTEAD_OF_NATIVE_DEAD_LETTER",
+      "source": {
+        "head": "a91d1b55af496631ff0b2b039de97dd4416f724c",
+        "tree": "d63d568e53633cc59a22bbe3b4bd32ff147e7032",
+        "dirtyPatchSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "status": "",
+        "untracked": []
+      },
+      "wallMs": 13994.275829999999,
+      "sampledAggregatePeakRssBytes": 1427226624,
+      "observedProcesses": 21,
+      "bounds": {
+        "timeoutMs": 900000,
+        "maxRssBytes": 6442450944,
+        "maxLogBytes": 16777216,
+        "intervalMs": 250
+      },
+      "aliveObservedDescendants": [],
+      "cleanup": null
+    },
+    {
+      "receipt": "evidence/current-cut-3/x3-complete.meter.json",
+      "sha256": "cd4cf3dc214a19183c7de98b3b60026e073d3c611c594472b864ce6de7950c23",
+      "commandStatus": "PASS_COMMAND",
+      "exitCode": 0,
+      "signal": null,
+      "stopReason": null,
+      "disposition": "PASS_SCOPED_DEVELOPMENT_CHECK",
+      "source": {
+        "head": "0430a3cd11d15cecd8355a0c05d7cb9870512692",
+        "tree": "073baafc7433e39a8274d2ec262aad2079808e0d",
+        "dirtyPatchSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "status": "",
+        "untracked": []
+      },
+      "wallMs": 315860.030143,
+      "sampledAggregatePeakRssBytes": 1681301504,
+      "observedProcesses": 213,
+      "bounds": {
+        "timeoutMs": 900000,
+        "maxRssBytes": 6442450944,
+        "maxLogBytes": 16777216,
+        "intervalMs": 250
+      },
+      "aliveObservedDescendants": [],
+      "cleanup": null
+    },
+    {
+      "receipt": "evidence/current-cut-3/x3-interface.meter.json",
+      "sha256": "05c46b6757344bd54d762951c88cfeaf6e9677bcc8a09e02a0c4dce343f6cb5d",
+      "commandStatus": "PASS_COMMAND",
+      "exitCode": 0,
+      "signal": null,
+      "stopReason": null,
+      "disposition": "PASS_SCOPED_DEVELOPMENT_CHECK",
+      "source": {
+        "head": "0430a3cd11d15cecd8355a0c05d7cb9870512692",
+        "tree": "073baafc7433e39a8274d2ec262aad2079808e0d",
+        "dirtyPatchSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "status": "",
+        "untracked": []
+      },
+      "wallMs": 3985.134233,
+      "sampledAggregatePeakRssBytes": 504983552,
+      "observedProcesses": 6,
+      "bounds": {
+        "timeoutMs": 900000,
+        "maxRssBytes": 6442450944,
+        "maxLogBytes": 16777216,
+        "intervalMs": 250
+      },
+      "aliveObservedDescendants": [],
+      "cleanup": null
+    },
+    {
+      "receipt": "evidence/current-cut-3/x4-native-full.meter.json",
+      "sha256": "95425d7e7aa587dc3b5eeaf0a736d8aa1619da7eb35005fe0dd2a0d8502302d8",
+      "commandStatus": "PASS_COMMAND",
+      "exitCode": 0,
+      "signal": null,
+      "stopReason": null,
+      "disposition": "PASS_SCOPED_DEVELOPMENT_CHECK",
+      "source": {
+        "head": "0430a3cd11d15cecd8355a0c05d7cb9870512692",
+        "tree": "073baafc7433e39a8274d2ec262aad2079808e0d",
+        "dirtyPatchSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "status": "",
+        "untracked": []
+      },
+      "wallMs": 71586.272073,
+      "sampledAggregatePeakRssBytes": 2325528576,
+      "observedProcesses": 52,
+      "bounds": {
+        "timeoutMs": 900000,
+        "maxRssBytes": 6442450944,
+        "maxLogBytes": 16777216,
+        "intervalMs": 250
+      },
+      "aliveObservedDescendants": [],
+      "cleanup": null
+    },
+    {
+      "receipt": "evidence/current-cut-3/x5-caller-expiry.meter.json",
+      "sha256": "ab55156d327df25c092616bcae3419912876fc43ecf685b5403783edb0029093",
+      "commandStatus": "PASS_COMMAND",
+      "exitCode": 0,
+      "signal": null,
+      "stopReason": null,
+      "disposition": "PASS_SCOPED_DEVELOPMENT_CHECK",
+      "source": {
+        "head": "0430a3cd11d15cecd8355a0c05d7cb9870512692",
+        "tree": "073baafc7433e39a8274d2ec262aad2079808e0d",
+        "dirtyPatchSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "status": "",
+        "untracked": []
+      },
+      "wallMs": 38412.511064,
+      "sampledAggregatePeakRssBytes": 1983475712,
+      "observedProcesses": 25,
+      "bounds": {
+        "timeoutMs": 900000,
+        "maxRssBytes": 6442450944,
+        "maxLogBytes": 16777216,
+        "intervalMs": 250
+      },
+      "aliveObservedDescendants": [],
+      "cleanup": null
+    },
+    {
+      "receipt": "evidence/current-cut-3/x5-faults.meter.json",
+      "sha256": "2d36c184472fed9cfb8c90a9a66b2d4004f2ccede77ca7a62ba658b96bebadf8",
+      "commandStatus": "PASS_COMMAND",
+      "exitCode": 0,
+      "signal": null,
+      "stopReason": null,
+      "disposition": "PASS_SCOPED_DEVELOPMENT_CHECK",
+      "source": {
+        "head": "0430a3cd11d15cecd8355a0c05d7cb9870512692",
+        "tree": "073baafc7433e39a8274d2ec262aad2079808e0d",
+        "dirtyPatchSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "status": "",
+        "untracked": []
+      },
+      "wallMs": 318429.752624,
+      "sampledAggregatePeakRssBytes": 1964883968,
+      "observedProcesses": 61,
+      "bounds": {
+        "timeoutMs": 900000,
+        "maxRssBytes": 6442450944,
+        "maxLogBytes": 16777216,
+        "intervalMs": 250
+      },
+      "aliveObservedDescendants": [],
+      "cleanup": null
+    },
+    {
+      "receipt": "evidence/current-cut-3/x5-native-full.meter.json",
+      "sha256": "3ccc6198679485544b00225434c075b6639e0fed951928396712e47906c99e60",
+      "commandStatus": "FAIL_COMMAND",
+      "exitCode": 1,
+      "signal": null,
+      "stopReason": null,
+      "disposition": "RETAINED_NEW_HARNESS_ORDER_ASSUMPTION_FAILED_OLD_BATCH_PROBE_STILL_QUEUED",
+      "source": {
+        "head": "0430a3cd11d15cecd8355a0c05d7cb9870512692",
+        "tree": "073baafc7433e39a8274d2ec262aad2079808e0d",
+        "dirtyPatchSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "status": "",
+        "untracked": []
+      },
+      "wallMs": 15391.289509,
+      "sampledAggregatePeakRssBytes": 1644810240,
+      "observedProcesses": 22,
+      "bounds": {
+        "timeoutMs": 900000,
+        "maxRssBytes": 6442450944,
+        "maxLogBytes": 16777216,
+        "intervalMs": 250
+      },
+      "aliveObservedDescendants": [],
+      "cleanup": null
+    },
+    {
+      "receipt": "evidence/current-cut-3/x5-probes.meter.json",
+      "sha256": "f9aa03062b5c7dd21decd257ce5c2d6af95a35e18ab2a1425e536ee82a5e4232",
+      "commandStatus": "PASS_COMMAND",
+      "exitCode": 0,
+      "signal": null,
+      "stopReason": null,
+      "disposition": "PASS_SCOPED_DEVELOPMENT_CHECK",
+      "source": {
+        "head": "0430a3cd11d15cecd8355a0c05d7cb9870512692",
+        "tree": "073baafc7433e39a8274d2ec262aad2079808e0d",
+        "dirtyPatchSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "status": "",
+        "untracked": []
+      },
+      "wallMs": 53491.646043,
+      "sampledAggregatePeakRssBytes": 1934577664,
+      "observedProcesses": 27,
+      "bounds": {
+        "timeoutMs": 900000,
+        "maxRssBytes": 6442450944,
+        "maxLogBytes": 16777216,
+        "intervalMs": 250
+      },
+      "aliveObservedDescendants": [],
+      "cleanup": null
+    },
+    {
+      "receipt": "evidence/current-cut-3/x5-resources.meter.json",
+      "sha256": "d903b78f3bac1898ef4bd1df475e7d1a72fbe23b99936599ee7e02bbdaa4b28d",
+      "commandStatus": "PASS_COMMAND",
+      "exitCode": 0,
+      "signal": null,
+      "stopReason": null,
+      "disposition": "PASS_SCOPED_DEVELOPMENT_CHECK",
+      "source": {
+        "head": "0430a3cd11d15cecd8355a0c05d7cb9870512692",
+        "tree": "073baafc7433e39a8274d2ec262aad2079808e0d",
+        "dirtyPatchSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "status": "",
+        "untracked": []
+      },
+      "wallMs": 372662.56971999997,
+      "sampledAggregatePeakRssBytes": 2458013696,
+      "observedProcesses": 39,
+      "bounds": {
+        "timeoutMs": 900000,
+        "maxRssBytes": 6442450944,
+        "maxLogBytes": 16777216,
+        "intervalMs": 250
+      },
+      "aliveObservedDescendants": [],
+      "cleanup": null
+    },
+    {
+      "receipt": "evidence/current-cut-3/x5-review-probes.meter.json",
+      "sha256": "6edf893b5d9ef59e444004b747c192e518f319f914e7dfaf27b0a22d5d041ba4",
+      "commandStatus": "PASS_COMMAND",
+      "exitCode": 0,
+      "signal": null,
+      "stopReason": null,
+      "disposition": "PASS_SCOPED_DEVELOPMENT_CHECK",
+      "source": {
+        "head": "0430a3cd11d15cecd8355a0c05d7cb9870512692",
+        "tree": "073baafc7433e39a8274d2ec262aad2079808e0d",
+        "dirtyPatchSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "status": "",
+        "untracked": []
+      },
+      "wallMs": 162470.77473499998,
+      "sampledAggregatePeakRssBytes": 2338295808,
+      "observedProcesses": 50,
+      "bounds": {
+        "timeoutMs": 900000,
+        "maxRssBytes": 6442450944,
+        "maxLogBytes": 16777216,
+        "intervalMs": 250
+      },
+      "aliveObservedDescendants": [],
+      "cleanup": null
+    },
+    {
+      "receipt": "evidence/current-cut-4/x3-mounted-main-browser.meter.json",
+      "sha256": "7368cb9d9559a41b86a1b771f8ff405dda89e2b8cf6f7fa4293c3313251b2e0a",
+      "commandStatus": "PARTIAL_COMMAND_CLEANUP",
+      "exitCode": 0,
+      "signal": null,
+      "stopReason": null,
+      "disposition": "FUNCTIONAL_BROWSER_PASS_18_GROUPS_BUT_ORIGINAL_METER_PARTIAL_CLEANUP_NOT_REGRADED",
+      "source": {
+        "head": "f4ad48cd9fff6da6a7a633fd2f443e4aaa1d0020",
+        "tree": "e08de47d288a367cd2e1951b3c2f363bb340255e",
+        "dirtyPatchSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "status": "",
+        "untracked": []
+      },
+      "wallMs": 92487.806724,
+      "sampledAggregatePeakRssBytes": 1841287168,
+      "observedProcesses": 92,
+      "bounds": {
+        "timeoutMs": 900000,
+        "maxRssBytes": 6442450944,
+        "maxLogBytes": 16777216,
+        "intervalMs": 250
+      },
+      "aliveObservedDescendants": [
+        {
+          "pid": 211529,
+          "startTicks": "9692885"
+        }
+      ],
+      "cleanup": null
+    },
+    {
+      "receipt": "evidence/current-cut-4/x3-mounted-main-fixture.meter.json",
+      "sha256": "125dc4ac46b6b929e0462b64d8a6bdc922c3078166364ae4e11882ab701d75ef",
+      "commandStatus": "PASS_COMMAND",
+      "exitCode": 0,
+      "signal": null,
+      "stopReason": null,
+      "disposition": "PASS_SCOPED_DEVELOPMENT_CHECK",
+      "source": {
+        "head": "f4ad48cd9fff6da6a7a633fd2f443e4aaa1d0020",
+        "tree": "e08de47d288a367cd2e1951b3c2f363bb340255e",
+        "dirtyPatchSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "status": "",
+        "untracked": []
+      },
+      "wallMs": 137383.462516,
+      "sampledAggregatePeakRssBytes": 3385716736,
+      "observedProcesses": 53,
+      "bounds": {
+        "timeoutMs": 900000,
+        "maxRssBytes": 6442450944,
+        "maxLogBytes": 16777216,
+        "intervalMs": 250
+      },
+      "aliveObservedDescendants": [],
+      "cleanup": null
+    },
+    {
+      "receipt": "evidence/current-cut-4/x5-native-full.meter.json",
+      "sha256": "e51ef9d09b897aa6c01de5bf0b5ae254fc7a38814919877b6fdc18709bf964c4",
+      "commandStatus": "PASS_COMMAND",
+      "exitCode": 0,
+      "signal": null,
+      "stopReason": null,
+      "disposition": "PASS_SCOPED_DEVELOPMENT_CHECK",
+      "source": {
+        "head": "f4ad48cd9fff6da6a7a633fd2f443e4aaa1d0020",
+        "tree": "e08de47d288a367cd2e1951b3c2f363bb340255e",
+        "dirtyPatchSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "status": "",
+        "untracked": []
+      },
+      "wallMs": 701970.302294,
+      "sampledAggregatePeakRssBytes": 3033735168,
+      "observedProcesses": 161,
+      "bounds": {
+        "timeoutMs": 900000,
+        "maxRssBytes": 6442450944,
+        "maxLogBytes": 16777216,
+        "intervalMs": 250
+      },
+      "aliveObservedDescendants": [],
+      "cleanup": null
+    },
+    {
+      "receipt": "evidence/current-cut-4/x5-numeric.meter.json",
+      "sha256": "7dd65c2397537c17e2cf45a088bf6dfd605fb9bb4e7d25876d41b3b3b768f325",
+      "commandStatus": "PASS_COMMAND",
+      "exitCode": 0,
+      "signal": null,
+      "stopReason": null,
+      "disposition": "PASS_SCOPED_DEVELOPMENT_CHECK",
+      "source": {
+        "head": "f4ad48cd9fff6da6a7a633fd2f443e4aaa1d0020",
+        "tree": "e08de47d288a367cd2e1951b3c2f363bb340255e",
+        "dirtyPatchSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "status": "",
+        "untracked": []
+      },
+      "wallMs": 540.225673,
+      "sampledAggregatePeakRssBytes": 16277504,
+      "observedProcesses": 1,
+      "bounds": {
+        "timeoutMs": 900000,
+        "maxRssBytes": 6442450944,
+        "maxLogBytes": 16777216,
+        "intervalMs": 250
+      },
+      "aliveObservedDescendants": [],
+      "cleanup": null
+    },
+    {
+      "receipt": "evidence/current-cut-5/x3-mounted-effect-browser.meter.json",
+      "sha256": "afe2a66fa0033a838f7cb44e6035e53766c93043946fa74c5816722891bd9bb4",
+      "commandStatus": "PASS_COMMAND",
+      "exitCode": 0,
+      "signal": null,
+      "stopReason": null,
+      "disposition": "PASS_SCOPED_DEVELOPMENT_CHECK",
+      "source": {
+        "head": "92361a9cc653c60298edbccf9b0f1b81b9a3b1a6",
+        "tree": "dd7c8401e2750c0a6b4f87a90459e63a3d9b7728",
+        "dirtyPatchSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "status": "",
+        "untracked": []
+      },
+      "wallMs": 6054.321976,
+      "sampledAggregatePeakRssBytes": 1896542208,
+      "observedProcesses": 29,
+      "bounds": {
+        "timeoutMs": 900000,
+        "maxRssBytes": 6442450944,
+        "maxLogBytes": 16777216,
+        "intervalMs": 250
+      },
+      "aliveObservedDescendants": [],
+      "cleanup": {
+        "boundMs": 3000,
+        "waitedMs": 250.6790719999999,
+        "initiallyAliveObservedDescendants": [
+          {
+            "pid": 216045,
+            "startTicks": "9756430"
+          }
+        ]
+      }
+    },
+    {
+      "receipt": "evidence/current-cut-5/x3-mounted-effect-fixture.meter.json",
+      "sha256": "0fd8927f7722b486e57cdeb9144ac5a8b7554f614ef446650448e6d73e85fd41",
+      "commandStatus": "PASS_COMMAND",
+      "exitCode": 0,
+      "signal": null,
+      "stopReason": null,
+      "disposition": "PASS_SCOPED_DEVELOPMENT_CHECK",
+      "source": {
+        "head": "92361a9cc653c60298edbccf9b0f1b81b9a3b1a6",
+        "tree": "dd7c8401e2750c0a6b4f87a90459e63a3d9b7728",
+        "dirtyPatchSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "status": "",
+        "untracked": []
+      },
+      "wallMs": 71737.105543,
+      "sampledAggregatePeakRssBytes": 2342002688,
+      "observedProcesses": 84,
+      "bounds": {
+        "timeoutMs": 900000,
+        "maxRssBytes": 6442450944,
+        "maxLogBytes": 16777216,
+        "intervalMs": 250
+      },
+      "aliveObservedDescendants": [],
+      "cleanup": {
+        "boundMs": 3000,
+        "waitedMs": 1.1952059999894118,
+        "initiallyAliveObservedDescendants": []
+      }
+    },
+    {
+      "receipt": "evidence/current-cut-5/x3-mounted-focused-browser.meter.json",
+      "sha256": "1a3b2c5e7819571fbb6c2879fb0d62024ba7b08e39c9f7476912beb433e0acbf",
+      "commandStatus": "PASS_COMMAND",
+      "exitCode": 0,
+      "signal": null,
+      "stopReason": null,
+      "disposition": "PASS_SCOPED_DEVELOPMENT_CHECK",
+      "source": {
+        "head": "92361a9cc653c60298edbccf9b0f1b81b9a3b1a6",
+        "tree": "dd7c8401e2750c0a6b4f87a90459e63a3d9b7728",
+        "dirtyPatchSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "status": "",
+        "untracked": []
+      },
+      "wallMs": 57480.675539,
+      "sampledAggregatePeakRssBytes": 1857425408,
+      "observedProcesses": 72,
+      "bounds": {
+        "timeoutMs": 900000,
+        "maxRssBytes": 6442450944,
+        "maxLogBytes": 16777216,
+        "intervalMs": 250
+      },
+      "aliveObservedDescendants": [],
+      "cleanup": {
+        "boundMs": 3000,
+        "waitedMs": 251.54281199999969,
+        "initiallyAliveObservedDescendants": [
+          {
+            "pid": 214558,
+            "startTicks": "9743771"
+          }
+        ]
+      }
+    },
+    {
+      "receipt": "evidence/current-cut-5/x3-mounted-focused-fixture.meter.json",
+      "sha256": "ab58ead86283716bf53259db53372a9f9059b07381c4c68a1f9ce6c8e5f55e32",
+      "commandStatus": "PASS_COMMAND",
+      "exitCode": 0,
+      "signal": null,
+      "stopReason": null,
+      "disposition": "PASS_SCOPED_DEVELOPMENT_CHECK",
+      "source": {
+        "head": "92361a9cc653c60298edbccf9b0f1b81b9a3b1a6",
+        "tree": "dd7c8401e2750c0a6b4f87a90459e63a3d9b7728",
+        "dirtyPatchSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "status": "",
+        "untracked": []
+      },
+      "wallMs": 76452.879071,
+      "sampledAggregatePeakRssBytes": 1703346176,
+      "observedProcesses": 41,
+      "bounds": {
+        "timeoutMs": 900000,
+        "maxRssBytes": 6442450944,
+        "maxLogBytes": 16777216,
+        "intervalMs": 250
+      },
+      "aliveObservedDescendants": [],
+      "cleanup": {
+        "boundMs": 3000,
+        "waitedMs": 0.6787959999928717,
+        "initiallyAliveObservedDescendants": []
+      }
+    },
+    {
+      "receipt": "evidence/current-cut-5/x3-mounted-main-browser.meter.json",
+      "sha256": "b5225a9e9b671ea9a4a69a86999b2a597bc45883c6454c359ba600976175d9ec",
+      "commandStatus": "PASS_COMMAND",
+      "exitCode": 0,
+      "signal": null,
+      "stopReason": null,
+      "disposition": "PASS_SCOPED_DEVELOPMENT_CHECK",
+      "source": {
+        "head": "92361a9cc653c60298edbccf9b0f1b81b9a3b1a6",
+        "tree": "dd7c8401e2750c0a6b4f87a90459e63a3d9b7728",
+        "dirtyPatchSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "status": "",
+        "untracked": []
+      },
+      "wallMs": 91922.571304,
+      "sampledAggregatePeakRssBytes": 1837035520,
+      "observedProcesses": 96,
+      "bounds": {
+        "timeoutMs": 900000,
+        "maxRssBytes": 6442450944,
+        "maxLogBytes": 16777216,
+        "intervalMs": 250
+      },
+      "aliveObservedDescendants": [],
+      "cleanup": {
+        "boundMs": 3000,
+        "waitedMs": 253.24019299999054,
+        "initiallyAliveObservedDescendants": [
+          {
+            "pid": 213244,
+            "startTicks": "9732928"
+          }
+        ]
+      }
+    },
+    {
+      "receipt": "evidence/current-cut-5/x3-mounted-main-fixture.meter.json",
+      "sha256": "e18f2c79a53eec029d3be96a3c124f7636afee41c57515066b22407015ff88ca",
+      "commandStatus": "PASS_COMMAND",
+      "exitCode": 0,
+      "signal": null,
+      "stopReason": null,
+      "disposition": "PASS_SCOPED_DEVELOPMENT_CHECK",
+      "source": {
+        "head": "92361a9cc653c60298edbccf9b0f1b81b9a3b1a6",
+        "tree": "dd7c8401e2750c0a6b4f87a90459e63a3d9b7728",
+        "dirtyPatchSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "status": "",
+        "untracked": []
+      },
+      "wallMs": 109977.367759,
+      "sampledAggregatePeakRssBytes": 2321592320,
+      "observedProcesses": 46,
+      "bounds": {
+        "timeoutMs": 900000,
+        "maxRssBytes": 6442450944,
+        "maxLogBytes": 16777216,
+        "intervalMs": 250
+      },
+      "aliveObservedDescendants": [],
+      "cleanup": {
+        "boundMs": 3000,
+        "waitedMs": 0.775195000009262,
+        "initiallyAliveObservedDescendants": []
+      }
+    },
+    {
+      "receipt": "evidence/current-cut-5/x4-mounted-browser.meter.json",
+      "sha256": "6a7afa4bdda7805b93b695cb546d199935e6f2109b03c83b51f87a4c94d26ad5",
+      "commandStatus": "PASS_COMMAND",
+      "exitCode": 0,
+      "signal": null,
+      "stopReason": null,
+      "disposition": "PASS_SCOPED_DEVELOPMENT_CHECK",
+      "source": {
+        "head": "92361a9cc653c60298edbccf9b0f1b81b9a3b1a6",
+        "tree": "dd7c8401e2750c0a6b4f87a90459e63a3d9b7728",
+        "dirtyPatchSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "status": "?? scope-x5/evidence/x5-mounted-mounted-current.png\n?? scope-x5/evidence/x5-mounted-mounted-revoked.png\n",
+        "untracked": [
+          {
+            "path": "scope-x5/evidence/x5-mounted-mounted-current.png",
+            "sha256": "19e4fc49e35c7851f5f7e151effa034e5ae142d7b8b1ef544aea65c601b8899e"
+          },
+          {
+            "path": "scope-x5/evidence/x5-mounted-mounted-revoked.png",
+            "sha256": "d4bdf9d22eeb6babf77b6b2637b503b2c82ff1a000d6bef44f59c5e3196b3929"
+          }
+        ]
+      },
+      "wallMs": 99747.888831,
+      "sampledAggregatePeakRssBytes": 2447126528,
+      "observedProcesses": 91,
+      "bounds": {
+        "timeoutMs": 900000,
+        "maxRssBytes": 6442450944,
+        "maxLogBytes": 16777216,
+        "intervalMs": 250
+      },
+      "aliveObservedDescendants": [],
+      "cleanup": {
+        "boundMs": 3000,
+        "waitedMs": 251.9944400000095,
+        "initiallyAliveObservedDescendants": [
+          {
+            "pid": 218240,
+            "startTicks": "9774367"
+          }
+        ]
+      }
+    },
+    {
+      "receipt": "evidence/current-cut-5/x4-mounted-fixture.meter.json",
+      "sha256": "5ca94ffd3453e365e52de422ec5ff1fe9ead65030fee5613a1842eacb38176bd",
+      "commandStatus": "PASS_COMMAND",
+      "exitCode": 0,
+      "signal": null,
+      "stopReason": null,
+      "disposition": "PASS_SCOPED_DEVELOPMENT_CHECK",
+      "source": {
+        "head": "92361a9cc653c60298edbccf9b0f1b81b9a3b1a6",
+        "tree": "dd7c8401e2750c0a6b4f87a90459e63a3d9b7728",
+        "dirtyPatchSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "status": "?? scope-x5/evidence/x5-mounted-mounted-current.png\n?? scope-x5/evidence/x5-mounted-mounted-revoked.png\n",
+        "untracked": [
+          {
+            "path": "scope-x5/evidence/x5-mounted-mounted-current.png",
+            "sha256": "19e4fc49e35c7851f5f7e151effa034e5ae142d7b8b1ef544aea65c601b8899e"
+          },
+          {
+            "path": "scope-x5/evidence/x5-mounted-mounted-revoked.png",
+            "sha256": "d4bdf9d22eeb6babf77b6b2637b503b2c82ff1a000d6bef44f59c5e3196b3929"
+          }
+        ]
+      },
+      "wallMs": 141247.984692,
+      "sampledAggregatePeakRssBytes": 2602532864,
+      "observedProcesses": 57,
+      "bounds": {
+        "timeoutMs": 900000,
+        "maxRssBytes": 6442450944,
+        "maxLogBytes": 16777216,
+        "intervalMs": 250
+      },
+      "aliveObservedDescendants": [],
+      "cleanup": {
+        "boundMs": 3000,
+        "waitedMs": 0.8664280000084545,
+        "initiallyAliveObservedDescendants": []
+      }
+    },
+    {
+      "receipt": "evidence/current-cut-5/x5-mounted-browser.meter.json",
+      "sha256": "f4d736f60d8b30d09cbe08153f0eed4df3d102393fd978215124fd44acfffbc7",
+      "commandStatus": "PASS_COMMAND",
+      "exitCode": 0,
+      "signal": null,
+      "stopReason": null,
+      "disposition": "PASS_SCOPED_DEVELOPMENT_CHECK",
+      "source": {
+        "head": "92361a9cc653c60298edbccf9b0f1b81b9a3b1a6",
+        "tree": "dd7c8401e2750c0a6b4f87a90459e63a3d9b7728",
+        "dirtyPatchSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "status": "",
+        "untracked": []
+      },
+      "wallMs": 97222.92646900001,
+      "sampledAggregatePeakRssBytes": 1947291648,
+      "observedProcesses": 80,
+      "bounds": {
+        "timeoutMs": 900000,
+        "maxRssBytes": 6442450944,
+        "maxLogBytes": 16777216,
+        "intervalMs": 250
+      },
+      "aliveObservedDescendants": [],
+      "cleanup": {
+        "boundMs": 3000,
+        "waitedMs": 251.95050300000003,
+        "initiallyAliveObservedDescendants": [
+          {
+            "pid": 216831,
+            "startTicks": "9760401"
+          }
+        ]
+      }
+    },
+    {
+      "receipt": "evidence/current-cut-5/x5-mounted-fixture.meter.json",
+      "sha256": "4bd7b77588192261d1257239f7d6fd083a5b9120b9abec250c436361f72616cc",
+      "commandStatus": "PASS_COMMAND",
+      "exitCode": 0,
+      "signal": null,
+      "stopReason": null,
+      "disposition": "PASS_SCOPED_DEVELOPMENT_CHECK",
+      "source": {
+        "head": "92361a9cc653c60298edbccf9b0f1b81b9a3b1a6",
+        "tree": "dd7c8401e2750c0a6b4f87a90459e63a3d9b7728",
+        "dirtyPatchSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "status": "",
+        "untracked": []
+      },
+      "wallMs": 131153.305866,
+      "sampledAggregatePeakRssBytes": 2619674624,
+      "observedProcesses": 62,
+      "bounds": {
+        "timeoutMs": 900000,
+        "maxRssBytes": 6442450944,
+        "maxLogBytes": 16777216,
+        "intervalMs": 250
+      },
+      "aliveObservedDescendants": [],
+      "cleanup": {
+        "boundMs": 3000,
+        "waitedMs": 1.2155110000167042,
+        "initiallyAliveObservedDescendants": []
+      }
+    },
+    {
+      "receipt": "evidence/current-cut-6/x3-campaign-types.meter.json",
+      "sha256": "a4f13b8325922ea71ee2ab0c5ba8a3fa137aca22043527bcb835c33bac60a3dc",
+      "commandStatus": "PASS_COMMAND",
+      "exitCode": 0,
+      "signal": null,
+      "stopReason": null,
+      "disposition": "PASS_SCOPED_DEVELOPMENT_CHECK",
+      "source": {
+        "head": "bb4c44add737d9fc4c80c01bb89852acfbb2ee76",
+        "tree": "d4caef34aa6a386916d704e746eb524e827c7274",
+        "dirtyPatchSha256": "4296afebd94085345c235f175e7c38aa3c99c868e8103087ee14327921bd12ac",
+        "status": " M scope-x-phase/acceptance/native-worker.md\n?? scope-x-phase/README.md\n?? scope-x-phase/verification-ledger.json\n?? scope-x4/evidence/x4-mounted-mounted-current.png\n?? scope-x4/evidence/x4-mounted-mounted-revoked.png\n?? scope-x5/evidence/x5-mounted-mounted-current.png\n?? scope-x5/evidence/x5-mounted-mounted-revoked.png\n",
+        "untracked": [
+          {
+            "path": "scope-x-phase/README.md",
+            "sha256": "08735644a8a609de3c35c438b79f459ed8bbe6783f47a348964dc26e60212e88"
+          },
+          {
+            "path": "scope-x-phase/verification-ledger.json",
+            "sha256": "0b2f4aaa06d964e7c343ae082240105a8b7f3276dbfe3d76d87f18a314968d2a"
+          },
+          {
+            "path": "scope-x4/evidence/x4-mounted-mounted-current.png",
+            "sha256": "902e083b9d3586b42449ecb4296401ce1c6beed5baf97fe487c77d05368b6e9e"
+          },
+          {
+            "path": "scope-x4/evidence/x4-mounted-mounted-revoked.png",
+            "sha256": "8de9114896eb2d0c1ecae038b1ef46a708360d2eeac43fcc573019e5b8105a52"
+          },
+          {
+            "path": "scope-x5/evidence/x5-mounted-mounted-current.png",
+            "sha256": "19e4fc49e35c7851f5f7e151effa034e5ae142d7b8b1ef544aea65c601b8899e"
+          },
+          {
+            "path": "scope-x5/evidence/x5-mounted-mounted-revoked.png",
+            "sha256": "d4bdf9d22eeb6babf77b6b2637b503b2c82ff1a000d6bef44f59c5e3196b3929"
+          }
+        ]
+      },
+      "wallMs": 28083.043521,
+      "sampledAggregatePeakRssBytes": 1915080704,
+      "observedProcesses": 1,
+      "bounds": {
+        "timeoutMs": 900000,
+        "maxRssBytes": 6442450944,
+        "maxLogBytes": 16777216,
+        "intervalMs": 250
+      },
+      "aliveObservedDescendants": [],
+      "cleanup": {
+        "boundMs": 3000,
+        "waitedMs": 0.15025500000047032,
+        "initiallyAliveObservedDescendants": []
+      }
+    },
+    {
+      "receipt": "evidence/current-cut-6/x3-mounted-main-browser.meter.json",
+      "sha256": "a31f08dbe733c6c35f696abf232201e093616afcc16f53eb17a5d6f5e2d31729",
+      "commandStatus": "PASS_COMMAND",
+      "exitCode": 0,
+      "signal": null,
+      "stopReason": null,
+      "disposition": "PASS_SCOPED_DEVELOPMENT_CHECK",
+      "source": {
+        "head": "bb4c44add737d9fc4c80c01bb89852acfbb2ee76",
+        "tree": "d4caef34aa6a386916d704e746eb524e827c7274",
+        "dirtyPatchSha256": "80c69f1bfdb3eec72c156fc1ed0e65242170137371a203a8cf33ee23a3f6daf7",
+        "status": "A  scope-x-phase/README.md\nM  scope-x-phase/acceptance/native-worker.md\n?? scope-x-phase/verification-ledger.json\n?? scope-x4/evidence/x4-mounted-mounted-current.png\n?? scope-x4/evidence/x4-mounted-mounted-revoked.png\n?? scope-x5/evidence/x5-mounted-mounted-current.png\n?? scope-x5/evidence/x5-mounted-mounted-revoked.png\n",
+        "untracked": [
+          {
+            "path": "scope-x-phase/verification-ledger.json",
+            "sha256": "0b2f4aaa06d964e7c343ae082240105a8b7f3276dbfe3d76d87f18a314968d2a"
+          },
+          {
+            "path": "scope-x4/evidence/x4-mounted-mounted-current.png",
+            "sha256": "902e083b9d3586b42449ecb4296401ce1c6beed5baf97fe487c77d05368b6e9e"
+          },
+          {
+            "path": "scope-x4/evidence/x4-mounted-mounted-revoked.png",
+            "sha256": "8de9114896eb2d0c1ecae038b1ef46a708360d2eeac43fcc573019e5b8105a52"
+          },
+          {
+            "path": "scope-x5/evidence/x5-mounted-mounted-current.png",
+            "sha256": "19e4fc49e35c7851f5f7e151effa034e5ae142d7b8b1ef544aea65c601b8899e"
+          },
+          {
+            "path": "scope-x5/evidence/x5-mounted-mounted-revoked.png",
+            "sha256": "d4bdf9d22eeb6babf77b6b2637b503b2c82ff1a000d6bef44f59c5e3196b3929"
+          }
+        ]
+      },
+      "wallMs": 91009.69081300001,
+      "sampledAggregatePeakRssBytes": 1855184896,
+      "observedProcesses": 96,
+      "bounds": {
+        "timeoutMs": 900000,
+        "maxRssBytes": 6442450944,
+        "maxLogBytes": 16777216,
+        "intervalMs": 250
+      },
+      "aliveObservedDescendants": [],
+      "cleanup": {
+        "boundMs": 3000,
+        "waitedMs": 251.96880299999611,
+        "initiallyAliveObservedDescendants": [
+          {
+            "pid": 226644,
+            "startTicks": "9964645"
+          }
+        ]
+      }
+    },
+    {
+      "receipt": "evidence/current-cut-6/x3-mounted-main-fixture.meter.json",
+      "sha256": "fc24e3bdf661c7da81a10e93bbda71235a06a0fa88ca34c9c5c007808f3d79fd",
+      "commandStatus": "PASS_COMMAND",
+      "exitCode": 0,
+      "signal": null,
+      "stopReason": null,
+      "disposition": "PASS_SCOPED_DEVELOPMENT_CHECK",
+      "source": {
+        "head": "bb4c44add737d9fc4c80c01bb89852acfbb2ee76",
+        "tree": "d4caef34aa6a386916d704e746eb524e827c7274",
+        "dirtyPatchSha256": "4296afebd94085345c235f175e7c38aa3c99c868e8103087ee14327921bd12ac",
+        "status": " M scope-x-phase/acceptance/native-worker.md\n?? scope-x-phase/README.md\n?? scope-x-phase/verification-ledger.json\n?? scope-x4/evidence/x4-mounted-mounted-current.png\n?? scope-x4/evidence/x4-mounted-mounted-revoked.png\n?? scope-x5/evidence/x5-mounted-mounted-current.png\n?? scope-x5/evidence/x5-mounted-mounted-revoked.png\n",
+        "untracked": [
+          {
+            "path": "scope-x-phase/README.md",
+            "sha256": "08735644a8a609de3c35c438b79f459ed8bbe6783f47a348964dc26e60212e88"
+          },
+          {
+            "path": "scope-x-phase/verification-ledger.json",
+            "sha256": "0b2f4aaa06d964e7c343ae082240105a8b7f3276dbfe3d76d87f18a314968d2a"
+          },
+          {
+            "path": "scope-x4/evidence/x4-mounted-mounted-current.png",
+            "sha256": "902e083b9d3586b42449ecb4296401ce1c6beed5baf97fe487c77d05368b6e9e"
+          },
+          {
+            "path": "scope-x4/evidence/x4-mounted-mounted-revoked.png",
+            "sha256": "8de9114896eb2d0c1ecae038b1ef46a708360d2eeac43fcc573019e5b8105a52"
+          },
+          {
+            "path": "scope-x5/evidence/x5-mounted-mounted-current.png",
+            "sha256": "19e4fc49e35c7851f5f7e151effa034e5ae142d7b8b1ef544aea65c601b8899e"
+          },
+          {
+            "path": "scope-x5/evidence/x5-mounted-mounted-revoked.png",
+            "sha256": "d4bdf9d22eeb6babf77b6b2637b503b2c82ff1a000d6bef44f59c5e3196b3929"
+          }
+        ]
+      },
+      "wallMs": 111380.01053399999,
+      "sampledAggregatePeakRssBytes": 2170892288,
+      "observedProcesses": 50,
+      "bounds": {
+        "timeoutMs": 900000,
+        "maxRssBytes": 6442450944,
+        "maxLogBytes": 16777216,
+        "intervalMs": 250
+      },
+      "aliveObservedDescendants": [],
+      "cleanup": {
+        "boundMs": 3000,
+        "waitedMs": 0.7456240000028629,
+        "initiallyAliveObservedDescendants": []
+      }
+    },
+    {
+      "receipt": "evidence/current-cut-6/x4-campaign-types.meter.json",
+      "sha256": "84b18458960a8416e9f553eb1098854e7b2c99a8b9ebacd97f43b044fce0e8c1",
+      "commandStatus": "PASS_COMMAND",
+      "exitCode": 0,
+      "signal": null,
+      "stopReason": null,
+      "disposition": "PASS_SCOPED_DEVELOPMENT_CHECK",
+      "source": {
+        "head": "bb4c44add737d9fc4c80c01bb89852acfbb2ee76",
+        "tree": "d4caef34aa6a386916d704e746eb524e827c7274",
+        "dirtyPatchSha256": "4296afebd94085345c235f175e7c38aa3c99c868e8103087ee14327921bd12ac",
+        "status": " M scope-x-phase/acceptance/native-worker.md\n?? scope-x-phase/README.md\n?? scope-x-phase/verification-ledger.json\n?? scope-x4/evidence/x4-mounted-mounted-current.png\n?? scope-x4/evidence/x4-mounted-mounted-revoked.png\n?? scope-x5/evidence/x5-mounted-mounted-current.png\n?? scope-x5/evidence/x5-mounted-mounted-revoked.png\n",
+        "untracked": [
+          {
+            "path": "scope-x-phase/README.md",
+            "sha256": "08735644a8a609de3c35c438b79f459ed8bbe6783f47a348964dc26e60212e88"
+          },
+          {
+            "path": "scope-x-phase/verification-ledger.json",
+            "sha256": "0b2f4aaa06d964e7c343ae082240105a8b7f3276dbfe3d76d87f18a314968d2a"
+          },
+          {
+            "path": "scope-x4/evidence/x4-mounted-mounted-current.png",
+            "sha256": "902e083b9d3586b42449ecb4296401ce1c6beed5baf97fe487c77d05368b6e9e"
+          },
+          {
+            "path": "scope-x4/evidence/x4-mounted-mounted-revoked.png",
+            "sha256": "8de9114896eb2d0c1ecae038b1ef46a708360d2eeac43fcc573019e5b8105a52"
+          },
+          {
+            "path": "scope-x5/evidence/x5-mounted-mounted-current.png",
+            "sha256": "19e4fc49e35c7851f5f7e151effa034e5ae142d7b8b1ef544aea65c601b8899e"
+          },
+          {
+            "path": "scope-x5/evidence/x5-mounted-mounted-revoked.png",
+            "sha256": "d4bdf9d22eeb6babf77b6b2637b503b2c82ff1a000d6bef44f59c5e3196b3929"
+          }
+        ]
+      },
+      "wallMs": 28638.554292,
+      "sampledAggregatePeakRssBytes": 2033504256,
+      "observedProcesses": 1,
+      "bounds": {
+        "timeoutMs": 900000,
+        "maxRssBytes": 6442450944,
+        "maxLogBytes": 16777216,
+        "intervalMs": 250
+      },
+      "aliveObservedDescendants": [],
+      "cleanup": {
+        "boundMs": 3000,
+        "waitedMs": 0.21553300000232412,
+        "initiallyAliveObservedDescendants": []
+      }
+    },
+    {
+      "receipt": "evidence/current-cut-6/x5-campaign-types.meter.json",
+      "sha256": "d8bccd8a701a544931ade5de1cd90b4b9c53c1ef8cb84e356b38d8f23f29e998",
+      "commandStatus": "PASS_COMMAND",
+      "exitCode": 0,
+      "signal": null,
+      "stopReason": null,
+      "disposition": "PASS_SCOPED_DEVELOPMENT_CHECK",
+      "source": {
+        "head": "bb4c44add737d9fc4c80c01bb89852acfbb2ee76",
+        "tree": "d4caef34aa6a386916d704e746eb524e827c7274",
+        "dirtyPatchSha256": "4296afebd94085345c235f175e7c38aa3c99c868e8103087ee14327921bd12ac",
+        "status": " M scope-x-phase/acceptance/native-worker.md\n?? scope-x-phase/README.md\n?? scope-x-phase/verification-ledger.json\n?? scope-x4/evidence/x4-mounted-mounted-current.png\n?? scope-x4/evidence/x4-mounted-mounted-revoked.png\n?? scope-x5/evidence/x5-mounted-mounted-current.png\n?? scope-x5/evidence/x5-mounted-mounted-revoked.png\n",
+        "untracked": [
+          {
+            "path": "scope-x-phase/README.md",
+            "sha256": "08735644a8a609de3c35c438b79f459ed8bbe6783f47a348964dc26e60212e88"
+          },
+          {
+            "path": "scope-x-phase/verification-ledger.json",
+            "sha256": "0b2f4aaa06d964e7c343ae082240105a8b7f3276dbfe3d76d87f18a314968d2a"
+          },
+          {
+            "path": "scope-x4/evidence/x4-mounted-mounted-current.png",
+            "sha256": "902e083b9d3586b42449ecb4296401ce1c6beed5baf97fe487c77d05368b6e9e"
+          },
+          {
+            "path": "scope-x4/evidence/x4-mounted-mounted-revoked.png",
+            "sha256": "8de9114896eb2d0c1ecae038b1ef46a708360d2eeac43fcc573019e5b8105a52"
+          },
+          {
+            "path": "scope-x5/evidence/x5-mounted-mounted-current.png",
+            "sha256": "19e4fc49e35c7851f5f7e151effa034e5ae142d7b8b1ef544aea65c601b8899e"
+          },
+          {
+            "path": "scope-x5/evidence/x5-mounted-mounted-revoked.png",
+            "sha256": "d4bdf9d22eeb6babf77b6b2637b503b2c82ff1a000d6bef44f59c5e3196b3929"
+          }
+        ]
+      },
+      "wallMs": 30024.386910999998,
+      "sampledAggregatePeakRssBytes": 2031874048,
+      "observedProcesses": 1,
+      "bounds": {
+        "timeoutMs": 900000,
+        "maxRssBytes": 6442450944,
+        "maxLogBytes": 16777216,
+        "intervalMs": 250
+      },
+      "aliveObservedDescendants": [],
+      "cleanup": {
+        "boundMs": 3000,
+        "waitedMs": 0.16658800000004703,
+        "initiallyAliveObservedDescendants": []
+      }
+    },
+    {
+      "receipt": "evidence/current-cut-6/x5-mounted-browser.meter.json",
+      "sha256": "d6d16841013c75b1b2050903797907544328f59f20bbb846bca5f52fb604fddf",
+      "commandStatus": "FAIL_COMMAND",
+      "exitCode": 1,
+      "signal": null,
+      "stopReason": null,
+      "disposition": "RETAINED_NATIVE_FOCUS_CLICK_REFUSED_OCCLUSION_DURING_WORK_NAVIGATION",
+      "source": {
+        "head": "bb4c44add737d9fc4c80c01bb89852acfbb2ee76",
+        "tree": "d4caef34aa6a386916d704e746eb524e827c7274",
+        "dirtyPatchSha256": "80c69f1bfdb3eec72c156fc1ed0e65242170137371a203a8cf33ee23a3f6daf7",
+        "status": "A  scope-x-phase/README.md\nM  scope-x-phase/acceptance/native-worker.md\n?? scope-x-phase/verification-ledger.json\n?? scope-x4/evidence/x4-mounted-mounted-current.png\n?? scope-x4/evidence/x4-mounted-mounted-revoked.png\n?? scope-x5/evidence/x5-mounted-mounted-current.png\n?? scope-x5/evidence/x5-mounted-mounted-revoked.png\n",
+        "untracked": [
+          {
+            "path": "scope-x-phase/verification-ledger.json",
+            "sha256": "0b2f4aaa06d964e7c343ae082240105a8b7f3276dbfe3d76d87f18a314968d2a"
+          },
+          {
+            "path": "scope-x4/evidence/x4-mounted-mounted-current.png",
+            "sha256": "902e083b9d3586b42449ecb4296401ce1c6beed5baf97fe487c77d05368b6e9e"
+          },
+          {
+            "path": "scope-x4/evidence/x4-mounted-mounted-revoked.png",
+            "sha256": "8de9114896eb2d0c1ecae038b1ef46a708360d2eeac43fcc573019e5b8105a52"
+          },
+          {
+            "path": "scope-x5/evidence/x5-mounted-mounted-current.png",
+            "sha256": "19e4fc49e35c7851f5f7e151effa034e5ae142d7b8b1ef544aea65c601b8899e"
+          },
+          {
+            "path": "scope-x5/evidence/x5-mounted-mounted-revoked.png",
+            "sha256": "d4bdf9d22eeb6babf77b6b2637b503b2c82ff1a000d6bef44f59c5e3196b3929"
+          }
+        ]
+      },
+      "wallMs": 86966.34819799999,
+      "sampledAggregatePeakRssBytes": 1943121920,
+      "observedProcesses": 66,
+      "bounds": {
+        "timeoutMs": 900000,
+        "maxRssBytes": 6442450944,
+        "maxLogBytes": 16777216,
+        "intervalMs": 250
+      },
+      "aliveObservedDescendants": [],
+      "cleanup": {
+        "boundMs": 3000,
+        "waitedMs": 252.91361599999072,
+        "initiallyAliveObservedDescendants": [
+          {
+            "pid": 228078,
+            "startTicks": "9977213"
+          }
+        ]
+      }
+    },
+    {
+      "receipt": "evidence/current-cut-6/x5-mounted-fixture.meter.json",
+      "sha256": "5d84e2452f68985df95b87605bc74f3852cb6746102de8bbca0c96c62662f6f3",
+      "commandStatus": "PASS_COMMAND",
+      "exitCode": 0,
+      "signal": null,
+      "stopReason": null,
+      "disposition": "PASS_SCOPED_DEVELOPMENT_CHECK",
+      "source": {
+        "head": "bb4c44add737d9fc4c80c01bb89852acfbb2ee76",
+        "tree": "d4caef34aa6a386916d704e746eb524e827c7274",
+        "dirtyPatchSha256": "80c69f1bfdb3eec72c156fc1ed0e65242170137371a203a8cf33ee23a3f6daf7",
+        "status": "A  scope-x-phase/README.md\nM  scope-x-phase/acceptance/native-worker.md\n?? scope-x-phase/verification-ledger.json\n?? scope-x4/evidence/x4-mounted-mounted-current.png\n?? scope-x4/evidence/x4-mounted-mounted-revoked.png\n?? scope-x5/evidence/x5-mounted-mounted-current.png\n?? scope-x5/evidence/x5-mounted-mounted-revoked.png\n",
+        "untracked": [
+          {
+            "path": "scope-x-phase/verification-ledger.json",
+            "sha256": "0b2f4aaa06d964e7c343ae082240105a8b7f3276dbfe3d76d87f18a314968d2a"
+          },
+          {
+            "path": "scope-x4/evidence/x4-mounted-mounted-current.png",
+            "sha256": "902e083b9d3586b42449ecb4296401ce1c6beed5baf97fe487c77d05368b6e9e"
+          },
+          {
+            "path": "scope-x4/evidence/x4-mounted-mounted-revoked.png",
+            "sha256": "8de9114896eb2d0c1ecae038b1ef46a708360d2eeac43fcc573019e5b8105a52"
+          },
+          {
+            "path": "scope-x5/evidence/x5-mounted-mounted-current.png",
+            "sha256": "19e4fc49e35c7851f5f7e151effa034e5ae142d7b8b1ef544aea65c601b8899e"
+          },
+          {
+            "path": "scope-x5/evidence/x5-mounted-mounted-revoked.png",
+            "sha256": "d4bdf9d22eeb6babf77b6b2637b503b2c82ff1a000d6bef44f59c5e3196b3929"
+          }
+        ]
+      },
+      "wallMs": 125205.283497,
+      "sampledAggregatePeakRssBytes": 2729123840,
+      "observedProcesses": 50,
+      "bounds": {
+        "timeoutMs": 900000,
+        "maxRssBytes": 6442450944,
+        "maxLogBytes": 16777216,
+        "intervalMs": 250
+      },
+      "aliveObservedDescendants": [],
+      "cleanup": {
+        "boundMs": 3000,
+        "waitedMs": 1.2429540000011912,
+        "initiallyAliveObservedDescendants": []
+      }
+    },
+    {
+      "receipt": "evidence/current-cut-7/x4-mounted-browser.meter.json",
+      "sha256": "972e965fdaa7bdf131e90fc788fbe2533965b5b36a9be2a08eb2e1665f5c7fa7",
+      "commandStatus": "PASS_COMMAND",
+      "exitCode": 0,
+      "signal": null,
+      "stopReason": null,
+      "disposition": "PASS_SCOPED_DEVELOPMENT_CHECK",
+      "source": {
+        "head": "1191ab7184a844f3382224fdd41a0eb043cdb2cb",
+        "tree": "c0cdba3c6d935e20d5caace0be2ef680d7dbd5cb",
+        "dirtyPatchSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "status": "?? scope-x-phase/verification-ledger.json\n?? scope-x4/evidence/x4-mounted-mounted-current.png\n?? scope-x4/evidence/x4-mounted-mounted-revoked.png\n?? scope-x5/evidence/x5-mounted-mounted-current.png\n?? scope-x5/evidence/x5-mounted-mounted-revoked.png\n",
+        "untracked": [
+          {
+            "path": "scope-x-phase/verification-ledger.json",
+            "sha256": "0b2f4aaa06d964e7c343ae082240105a8b7f3276dbfe3d76d87f18a314968d2a"
+          },
+          {
+            "path": "scope-x4/evidence/x4-mounted-mounted-current.png",
+            "sha256": "902e083b9d3586b42449ecb4296401ce1c6beed5baf97fe487c77d05368b6e9e"
+          },
+          {
+            "path": "scope-x4/evidence/x4-mounted-mounted-revoked.png",
+            "sha256": "8de9114896eb2d0c1ecae038b1ef46a708360d2eeac43fcc573019e5b8105a52"
+          },
+          {
+            "path": "scope-x5/evidence/x5-mounted-mounted-current.png",
+            "sha256": "19e4fc49e35c7851f5f7e151effa034e5ae142d7b8b1ef544aea65c601b8899e"
+          },
+          {
+            "path": "scope-x5/evidence/x5-mounted-mounted-revoked.png",
+            "sha256": "d4bdf9d22eeb6babf77b6b2637b503b2c82ff1a000d6bef44f59c5e3196b3929"
+          }
+        ]
+      },
+      "wallMs": 105638.001594,
+      "sampledAggregatePeakRssBytes": 2314244096,
+      "observedProcesses": 92,
+      "bounds": {
+        "timeoutMs": 900000,
+        "maxRssBytes": 6442450944,
+        "maxLogBytes": 16777216,
+        "intervalMs": 250
+      },
+      "aliveObservedDescendants": [],
+      "cleanup": {
+        "boundMs": 3000,
+        "waitedMs": 253.09963199999765,
+        "initiallyAliveObservedDescendants": [
+          {
+            "pid": 231337,
+            "startTicks": "10046173"
+          }
+        ]
+      }
+    },
+    {
+      "receipt": "evidence/current-cut-7/x4-mounted-fixture.meter.json",
+      "sha256": "1976986a8558aebc89a43702c5f159c2dc0cfc68ef5938c63ef16863a46c7001",
+      "commandStatus": "PASS_COMMAND",
+      "exitCode": 0,
+      "signal": null,
+      "stopReason": null,
+      "disposition": "PASS_SCOPED_DEVELOPMENT_CHECK",
+      "source": {
+        "head": "1191ab7184a844f3382224fdd41a0eb043cdb2cb",
+        "tree": "c0cdba3c6d935e20d5caace0be2ef680d7dbd5cb",
+        "dirtyPatchSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "status": "?? scope-x-phase/verification-ledger.json\n?? scope-x4/evidence/x4-mounted-mounted-current.png\n?? scope-x4/evidence/x4-mounted-mounted-revoked.png\n?? scope-x5/evidence/x5-mounted-mounted-current.png\n?? scope-x5/evidence/x5-mounted-mounted-revoked.png\n",
+        "untracked": [
+          {
+            "path": "scope-x-phase/verification-ledger.json",
+            "sha256": "0b2f4aaa06d964e7c343ae082240105a8b7f3276dbfe3d76d87f18a314968d2a"
+          },
+          {
+            "path": "scope-x4/evidence/x4-mounted-mounted-current.png",
+            "sha256": "902e083b9d3586b42449ecb4296401ce1c6beed5baf97fe487c77d05368b6e9e"
+          },
+          {
+            "path": "scope-x4/evidence/x4-mounted-mounted-revoked.png",
+            "sha256": "8de9114896eb2d0c1ecae038b1ef46a708360d2eeac43fcc573019e5b8105a52"
+          },
+          {
+            "path": "scope-x5/evidence/x5-mounted-mounted-current.png",
+            "sha256": "19e4fc49e35c7851f5f7e151effa034e5ae142d7b8b1ef544aea65c601b8899e"
+          },
+          {
+            "path": "scope-x5/evidence/x5-mounted-mounted-revoked.png",
+            "sha256": "d4bdf9d22eeb6babf77b6b2637b503b2c82ff1a000d6bef44f59c5e3196b3929"
+          }
+        ]
+      },
+      "wallMs": 153974.393044,
+      "sampledAggregatePeakRssBytes": 2550288384,
+      "observedProcesses": 54,
+      "bounds": {
+        "timeoutMs": 900000,
+        "maxRssBytes": 6442450944,
+        "maxLogBytes": 16777216,
+        "intervalMs": 250
+      },
+      "aliveObservedDescendants": [],
+      "cleanup": {
+        "boundMs": 3000,
+        "waitedMs": 1.0396210000035353,
+        "initiallyAliveObservedDescendants": []
+      }
+    },
+    {
+      "receipt": "evidence/current-cut-7/x5-campaign-types.meter.json",
+      "sha256": "fc844eacfdb9cfa419cf8f1b496a58bd14a35740918fc2f57be32505a71c8f17",
+      "commandStatus": "PASS_COMMAND",
+      "exitCode": 0,
+      "signal": null,
+      "stopReason": null,
+      "disposition": "PASS_SCOPED_DEVELOPMENT_CHECK",
+      "source": {
+        "head": "1191ab7184a844f3382224fdd41a0eb043cdb2cb",
+        "tree": "c0cdba3c6d935e20d5caace0be2ef680d7dbd5cb",
+        "dirtyPatchSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "status": "?? scope-x-phase/verification-ledger.json\n?? scope-x4/evidence/x4-mounted-mounted-current.png\n?? scope-x4/evidence/x4-mounted-mounted-revoked.png\n?? scope-x5/evidence/x5-mounted-mounted-current.png\n?? scope-x5/evidence/x5-mounted-mounted-revoked.png\n",
+        "untracked": [
+          {
+            "path": "scope-x-phase/verification-ledger.json",
+            "sha256": "0b2f4aaa06d964e7c343ae082240105a8b7f3276dbfe3d76d87f18a314968d2a"
+          },
+          {
+            "path": "scope-x4/evidence/x4-mounted-mounted-current.png",
+            "sha256": "902e083b9d3586b42449ecb4296401ce1c6beed5baf97fe487c77d05368b6e9e"
+          },
+          {
+            "path": "scope-x4/evidence/x4-mounted-mounted-revoked.png",
+            "sha256": "8de9114896eb2d0c1ecae038b1ef46a708360d2eeac43fcc573019e5b8105a52"
+          },
+          {
+            "path": "scope-x5/evidence/x5-mounted-mounted-current.png",
+            "sha256": "19e4fc49e35c7851f5f7e151effa034e5ae142d7b8b1ef544aea65c601b8899e"
+          },
+          {
+            "path": "scope-x5/evidence/x5-mounted-mounted-revoked.png",
+            "sha256": "d4bdf9d22eeb6babf77b6b2637b503b2c82ff1a000d6bef44f59c5e3196b3929"
+          }
+        ]
+      },
+      "wallMs": 33995.38875300001,
+      "sampledAggregatePeakRssBytes": 2031718400,
+      "observedProcesses": 1,
+      "bounds": {
+        "timeoutMs": 900000,
+        "maxRssBytes": 6442450944,
+        "maxLogBytes": 16777216,
+        "intervalMs": 250
+      },
+      "aliveObservedDescendants": [],
+      "cleanup": {
+        "boundMs": 3000,
+        "waitedMs": 0.21558200000436045,
+        "initiallyAliveObservedDescendants": []
+      }
+    },
+    {
+      "receipt": "evidence/current-cut-7/x5-mounted-browser.meter.json",
+      "sha256": "5d3ee9dff770934722298cd359095cb976f8f2c682dbf2433424cfeeacb3cf31",
+      "commandStatus": "PASS_COMMAND",
+      "exitCode": 0,
+      "signal": null,
+      "stopReason": null,
+      "disposition": "PASS_SCOPED_DEVELOPMENT_CHECK",
+      "source": {
+        "head": "1191ab7184a844f3382224fdd41a0eb043cdb2cb",
+        "tree": "c0cdba3c6d935e20d5caace0be2ef680d7dbd5cb",
+        "dirtyPatchSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "status": "?? scope-x-phase/verification-ledger.json\n?? scope-x4/evidence/x4-mounted-mounted-current.png\n?? scope-x4/evidence/x4-mounted-mounted-revoked.png\n?? scope-x5/evidence/x5-mounted-mounted-current.png\n?? scope-x5/evidence/x5-mounted-mounted-revoked.png\n",
+        "untracked": [
+          {
+            "path": "scope-x-phase/verification-ledger.json",
+            "sha256": "0b2f4aaa06d964e7c343ae082240105a8b7f3276dbfe3d76d87f18a314968d2a"
+          },
+          {
+            "path": "scope-x4/evidence/x4-mounted-mounted-current.png",
+            "sha256": "902e083b9d3586b42449ecb4296401ce1c6beed5baf97fe487c77d05368b6e9e"
+          },
+          {
+            "path": "scope-x4/evidence/x4-mounted-mounted-revoked.png",
+            "sha256": "8de9114896eb2d0c1ecae038b1ef46a708360d2eeac43fcc573019e5b8105a52"
+          },
+          {
+            "path": "scope-x5/evidence/x5-mounted-mounted-current.png",
+            "sha256": "19e4fc49e35c7851f5f7e151effa034e5ae142d7b8b1ef544aea65c601b8899e"
+          },
+          {
+            "path": "scope-x5/evidence/x5-mounted-mounted-revoked.png",
+            "sha256": "d4bdf9d22eeb6babf77b6b2637b503b2c82ff1a000d6bef44f59c5e3196b3929"
+          }
+        ]
+      },
+      "wallMs": 100607.339704,
+      "sampledAggregatePeakRssBytes": 1951703040,
+      "observedProcesses": 95,
+      "bounds": {
+        "timeoutMs": 900000,
+        "maxRssBytes": 6442450944,
+        "maxLogBytes": 16777216,
+        "intervalMs": 250
+      },
+      "aliveObservedDescendants": [],
+      "cleanup": {
+        "boundMs": 3000,
+        "waitedMs": 252.65794999999343,
+        "initiallyAliveObservedDescendants": [
+          {
+            "pid": 229769,
+            "startTicks": "10031202"
+          }
+        ]
+      }
+    },
+    {
+      "receipt": "evidence/current-cut-7/x5-mounted-fixture.meter.json",
+      "sha256": "f767e42d6bfe0f61147f9f001bb106a7699df919c0395ee0b02c82ec75ff9904",
+      "commandStatus": "PASS_COMMAND",
+      "exitCode": 0,
+      "signal": null,
+      "stopReason": null,
+      "disposition": "PASS_SCOPED_DEVELOPMENT_CHECK",
+      "source": {
+        "head": "1191ab7184a844f3382224fdd41a0eb043cdb2cb",
+        "tree": "c0cdba3c6d935e20d5caace0be2ef680d7dbd5cb",
+        "dirtyPatchSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "status": "?? scope-x-phase/verification-ledger.json\n?? scope-x4/evidence/x4-mounted-mounted-current.png\n?? scope-x4/evidence/x4-mounted-mounted-revoked.png\n?? scope-x5/evidence/x5-mounted-mounted-current.png\n?? scope-x5/evidence/x5-mounted-mounted-revoked.png\n",
+        "untracked": [
+          {
+            "path": "scope-x-phase/verification-ledger.json",
+            "sha256": "0b2f4aaa06d964e7c343ae082240105a8b7f3276dbfe3d76d87f18a314968d2a"
+          },
+          {
+            "path": "scope-x4/evidence/x4-mounted-mounted-current.png",
+            "sha256": "902e083b9d3586b42449ecb4296401ce1c6beed5baf97fe487c77d05368b6e9e"
+          },
+          {
+            "path": "scope-x4/evidence/x4-mounted-mounted-revoked.png",
+            "sha256": "8de9114896eb2d0c1ecae038b1ef46a708360d2eeac43fcc573019e5b8105a52"
+          },
+          {
+            "path": "scope-x5/evidence/x5-mounted-mounted-current.png",
+            "sha256": "19e4fc49e35c7851f5f7e151effa034e5ae142d7b8b1ef544aea65c601b8899e"
+          },
+          {
+            "path": "scope-x5/evidence/x5-mounted-mounted-revoked.png",
+            "sha256": "d4bdf9d22eeb6babf77b6b2637b503b2c82ff1a000d6bef44f59c5e3196b3929"
+          }
+        ]
+      },
+      "wallMs": 143607.514796,
+      "sampledAggregatePeakRssBytes": 3393437696,
+      "observedProcesses": 63,
+      "bounds": {
+        "timeoutMs": 900000,
+        "maxRssBytes": 6442450944,
+        "maxLogBytes": 16777216,
+        "intervalMs": 250
+      },
+      "aliveObservedDescendants": [],
+      "cleanup": {
+        "boundMs": 3000,
+        "waitedMs": 1.0569979999854695,
+        "initiallyAliveObservedDescendants": []
+      }
+    },
+    {
+      "receipt": "evidence/integration-repair-1/backend-types.meter.json",
+      "sha256": "6283270fdfa74a36c7eea0e9f9b2f1ac15fbba7d0793c47ef7d37eb9fa6e1028",
+      "commandStatus": "PASS_COMMAND",
+      "exitCode": 0,
+      "signal": null,
+      "stopReason": null,
+      "disposition": "PASS_SCOPED_DEVELOPMENT_CHECK",
+      "source": {
+        "head": "d59bbd76504c3dbd8864eb5dc9a3dce146c86adf",
+        "tree": "9c8169d09a87d1ce6c168f2a2dd5ae3d0c74523a",
+        "dirtyPatchSha256": "7d86b7e8aa0cac01daf510744b87d00aed314502d5e8666aff7ba330d0f47d02",
+        "status": " M finnor-os/apps/api/package.json\n M finnor-os/packages/private-equity/src/enterprise-applications/source-manifest.generated.ts\n M finnor-os/packages/private-equity/src/policy-learning/source-manifest.generated.ts\n M finnor-os/packages/private-equity/src/system-identification/source-manifest.generated.ts\n M finnor-os/scripts/x3/stamp-source.mts\n M scope-x3/verify-handoff.mjs\n",
+        "untracked": []
+      },
+      "wallMs": 49092.939372,
+      "sampledAggregatePeakRssBytes": 2929455104,
+      "observedProcesses": 3,
+      "bounds": {
+        "timeoutMs": 900000,
+        "maxRssBytes": 6442450944,
+        "maxLogBytes": 16777216,
+        "intervalMs": 250
+      },
+      "aliveObservedDescendants": [],
+      "cleanup": null
+    },
+    {
+      "receipt": "evidence/integration-repair-1/compatibility-after.meter.json",
+      "sha256": "c087a7df272759044c2e030fdd0a3508451932eb8b585936f8aa3953e2b92b59",
+      "commandStatus": "PASS_COMMAND",
+      "exitCode": 0,
+      "signal": null,
+      "stopReason": null,
+      "disposition": "PASS_SCOPED_DEVELOPMENT_CHECK",
+      "source": {
+        "head": "d59bbd76504c3dbd8864eb5dc9a3dce146c86adf",
+        "tree": "9c8169d09a87d1ce6c168f2a2dd5ae3d0c74523a",
+        "dirtyPatchSha256": "e2befccd0fdc132ff6c95bdc8d43f0d20f8045eb43fbd3e2bafc7b297d16f7cf",
+        "status": " M finnor-os/apps/api/package.json\n M finnor-os/packages/private-equity/src/enterprise-applications/source-manifest.generated.ts\n M finnor-os/packages/private-equity/src/policy-learning/source-manifest.generated.ts\n M finnor-os/scripts/x3/stamp-source.mts\n M scope-x3/verify-handoff.mjs\n",
+        "untracked": []
+      },
+      "wallMs": 995.0805470000001,
+      "sampledAggregatePeakRssBytes": 92975104,
+      "observedProcesses": 3,
+      "bounds": {
+        "timeoutMs": 900000,
+        "maxRssBytes": 6442450944,
+        "maxLogBytes": 16777216,
+        "intervalMs": 250
+      },
+      "aliveObservedDescendants": [],
+      "cleanup": null
+    },
+    {
+      "receipt": "evidence/integration-repair-1/compatibility-before.meter.json",
+      "sha256": "63e856832b9771c9117328f9c0b1ad0b6dbd3a32e116ce5a8d011ea88772090a",
+      "commandStatus": "FAIL_COMMAND",
+      "exitCode": 1,
+      "signal": null,
+      "stopReason": null,
+      "disposition": "REPRODUCED_INHERITED_VERIFIER_46_NOT_15",
+      "source": {
+        "head": "d59bbd76504c3dbd8864eb5dc9a3dce146c86adf",
+        "tree": "9c8169d09a87d1ce6c168f2a2dd5ae3d0c74523a",
+        "dirtyPatchSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "status": "",
+        "untracked": []
+      },
+      "wallMs": 139.399054,
+      "sampledAggregatePeakRssBytes": 7110656,
+      "observedProcesses": 1,
+      "bounds": {
+        "timeoutMs": 900000,
+        "maxRssBytes": 6442450944,
+        "maxLogBytes": 16777216,
+        "intervalMs": 250
+      },
+      "aliveObservedDescendants": [],
+      "cleanup": null
+    },
+    {
+      "receipt": "evidence/integration-repair-1/fixed-api-build.meter.json",
+      "sha256": "0ea09b823d5c44f71d04be59600c0ff6de027fa1f74bae8bf7c06922334e0273",
+      "commandStatus": "PASS_COMMAND",
+      "exitCode": 0,
+      "signal": null,
+      "stopReason": null,
+      "disposition": "PASS_SCOPED_DEVELOPMENT_CHECK",
+      "source": {
+        "head": "d59bbd76504c3dbd8864eb5dc9a3dce146c86adf",
+        "tree": "9c8169d09a87d1ce6c168f2a2dd5ae3d0c74523a",
+        "dirtyPatchSha256": "e2befccd0fdc132ff6c95bdc8d43f0d20f8045eb43fbd3e2bafc7b297d16f7cf",
+        "status": " M finnor-os/apps/api/package.json\n M finnor-os/packages/private-equity/src/enterprise-applications/source-manifest.generated.ts\n M finnor-os/packages/private-equity/src/policy-learning/source-manifest.generated.ts\n M finnor-os/scripts/x3/stamp-source.mts\n M scope-x3/verify-handoff.mjs\n",
+        "untracked": []
+      },
+      "wallMs": 154017.740144,
+      "sampledAggregatePeakRssBytes": 4178792448,
+      "observedProcesses": 16,
+      "bounds": {
+        "timeoutMs": 900000,
+        "maxRssBytes": 6442450944,
+        "maxLogBytes": 16777216,
+        "intervalMs": 250
+      },
+      "aliveObservedDescendants": [],
+      "cleanup": null
+    },
+    {
+      "receipt": "evidence/integration-repair-1/frontend-types.meter.json",
+      "sha256": "d6cf931b84a1ee6dca2c630abd251ed2fe5863873d6fb524600689134b3e40ab",
+      "commandStatus": "PASS_COMMAND",
+      "exitCode": 0,
+      "signal": null,
+      "stopReason": null,
+      "disposition": "PASS_SCOPED_DEVELOPMENT_CHECK",
+      "source": {
+        "head": "d59bbd76504c3dbd8864eb5dc9a3dce146c86adf",
+        "tree": "9c8169d09a87d1ce6c168f2a2dd5ae3d0c74523a",
+        "dirtyPatchSha256": "7d86b7e8aa0cac01daf510744b87d00aed314502d5e8666aff7ba330d0f47d02",
+        "status": " M finnor-os/apps/api/package.json\n M finnor-os/packages/private-equity/src/enterprise-applications/source-manifest.generated.ts\n M finnor-os/packages/private-equity/src/policy-learning/source-manifest.generated.ts\n M finnor-os/packages/private-equity/src/system-identification/source-manifest.generated.ts\n M finnor-os/scripts/x3/stamp-source.mts\n M scope-x3/verify-handoff.mjs\n",
+        "untracked": []
+      },
+      "wallMs": 19238.608894,
+      "sampledAggregatePeakRssBytes": 1084604416,
+      "observedProcesses": 1,
+      "bounds": {
+        "timeoutMs": 900000,
+        "maxRssBytes": 6442450944,
+        "maxLogBytes": 16777216,
+        "intervalMs": 250
+      },
+      "aliveObservedDescendants": [],
+      "cleanup": null
+    },
+    {
+      "receipt": "evidence/integration-repair-1/generated-preflight.meter.json",
+      "sha256": "fd9041083c71fa64168ed50b5ae583f12af20a11e9d9af19e7146dcd791e91cf",
+      "commandStatus": "PASS_COMMAND",
+      "exitCode": 0,
+      "signal": null,
+      "stopReason": null,
+      "disposition": "PASS_SCOPED_DEVELOPMENT_CHECK",
+      "source": {
+        "head": "d59bbd76504c3dbd8864eb5dc9a3dce146c86adf",
+        "tree": "9c8169d09a87d1ce6c168f2a2dd5ae3d0c74523a",
+        "dirtyPatchSha256": "7d86b7e8aa0cac01daf510744b87d00aed314502d5e8666aff7ba330d0f47d02",
+        "status": " M finnor-os/apps/api/package.json\n M finnor-os/packages/private-equity/src/enterprise-applications/source-manifest.generated.ts\n M finnor-os/packages/private-equity/src/policy-learning/source-manifest.generated.ts\n M finnor-os/packages/private-equity/src/system-identification/source-manifest.generated.ts\n M finnor-os/scripts/x3/stamp-source.mts\n M scope-x3/verify-handoff.mjs\n",
+        "untracked": []
+      },
+      "wallMs": 19167.877711,
+      "sampledAggregatePeakRssBytes": 663261184,
+      "observedProcesses": 38,
+      "bounds": {
+        "timeoutMs": 900000,
+        "maxRssBytes": 6442450944,
+        "maxLogBytes": 16777216,
+        "intervalMs": 250
+      },
+      "aliveObservedDescendants": [],
+      "cleanup": null
+    },
+    {
+      "receipt": "evidence/integration-repair-1/lint.meter.json",
+      "sha256": "d4c7bb1c301f974568209bae5a401a8d5e0414f97b5ce936928fd065f840e26b",
+      "commandStatus": "PASS_COMMAND",
+      "exitCode": 0,
+      "signal": null,
+      "stopReason": null,
+      "disposition": "PASS_SCOPED_DEVELOPMENT_CHECK",
+      "source": {
+        "head": "d59bbd76504c3dbd8864eb5dc9a3dce146c86adf",
+        "tree": "9c8169d09a87d1ce6c168f2a2dd5ae3d0c74523a",
+        "dirtyPatchSha256": "7d86b7e8aa0cac01daf510744b87d00aed314502d5e8666aff7ba330d0f47d02",
+        "status": " M finnor-os/apps/api/package.json\n M finnor-os/packages/private-equity/src/enterprise-applications/source-manifest.generated.ts\n M finnor-os/packages/private-equity/src/policy-learning/source-manifest.generated.ts\n M finnor-os/packages/private-equity/src/system-identification/source-manifest.generated.ts\n M finnor-os/scripts/x3/stamp-source.mts\n M scope-x3/verify-handoff.mjs\n",
+        "untracked": []
+      },
+      "wallMs": 27674.786475,
+      "sampledAggregatePeakRssBytes": 1275969536,
+      "observedProcesses": 3,
+      "bounds": {
+        "timeoutMs": 900000,
+        "maxRssBytes": 6442450944,
+        "maxLogBytes": 16777216,
+        "intervalMs": 250
+      },
+      "aliveObservedDescendants": [],
+      "cleanup": null
+    },
+    {
+      "receipt": "evidence/integration-repair-1/original-api-build.meter.json",
+      "sha256": "320e0752bc97aef89581715404f9394b0a39329ba4f2608e713c2c5ad327e89d",
+      "commandStatus": "PASS_COMMAND",
+      "exitCode": 0,
+      "signal": null,
+      "stopReason": null,
+      "disposition": "COMMAND_ZERO_BUT_ORDINARY_BUILD_LEFT_X4_SEAL_STALE",
+      "source": {
+        "head": "d59bbd76504c3dbd8864eb5dc9a3dce146c86adf",
+        "tree": "9c8169d09a87d1ce6c168f2a2dd5ae3d0c74523a",
+        "dirtyPatchSha256": "a5113c9ee7e9ab6997de17eea2eec776d1089580c3d71b820d93a183f1e91213",
+        "status": " M finnor-os/packages/private-equity/src/enterprise-applications/source-manifest.generated.ts\n M finnor-os/scripts/x3/stamp-source.mts\n",
+        "untracked": []
+      },
+      "wallMs": 153637.224251,
+      "sampledAggregatePeakRssBytes": 3933339648,
+      "observedProcesses": 13,
+      "bounds": {
+        "timeoutMs": 900000,
+        "maxRssBytes": 6442450944,
+        "maxLogBytes": 16777216,
+        "intervalMs": 250
+      },
+      "aliveObservedDescendants": [],
+      "cleanup": null
+    },
+    {
+      "receipt": "evidence/integration-repair-1/release-source-audit.meter.json",
+      "sha256": "325548dce088570860c6ecc6ffd511684a8c0b724873258c21550bec282ed0bf",
+      "commandStatus": "PASS_COMMAND",
+      "exitCode": 0,
+      "signal": null,
+      "stopReason": null,
+      "disposition": "PASS_SCOPED_DEVELOPMENT_CHECK",
+      "source": {
+        "head": "d59bbd76504c3dbd8864eb5dc9a3dce146c86adf",
+        "tree": "9c8169d09a87d1ce6c168f2a2dd5ae3d0c74523a",
+        "dirtyPatchSha256": "7d86b7e8aa0cac01daf510744b87d00aed314502d5e8666aff7ba330d0f47d02",
+        "status": " M finnor-os/apps/api/package.json\n M finnor-os/packages/private-equity/src/enterprise-applications/source-manifest.generated.ts\n M finnor-os/packages/private-equity/src/policy-learning/source-manifest.generated.ts\n M finnor-os/packages/private-equity/src/system-identification/source-manifest.generated.ts\n M finnor-os/scripts/x3/stamp-source.mts\n M scope-x3/verify-handoff.mjs\n",
+        "untracked": []
+      },
+      "wallMs": 1292.592727,
+      "sampledAggregatePeakRssBytes": 196685824,
+      "observedProcesses": 2,
+      "bounds": {
+        "timeoutMs": 900000,
+        "maxRssBytes": 6442450944,
+        "maxLogBytes": 16777216,
+        "intervalMs": 250
+      },
+      "aliveObservedDescendants": [],
+      "cleanup": null
+    },
+    {
+      "receipt": "evidence/integration-repair-1/x3-after-preflight-check.meter.json",
+      "sha256": "7edff67938aa527bc8b8403843420a556b5e851d66b12015f0a436582637c2a0",
+      "commandStatus": "PASS_COMMAND",
+      "exitCode": 0,
+      "signal": null,
+      "stopReason": null,
+      "disposition": "PASS_SCOPED_DEVELOPMENT_CHECK",
+      "source": {
+        "head": "d59bbd76504c3dbd8864eb5dc9a3dce146c86adf",
+        "tree": "9c8169d09a87d1ce6c168f2a2dd5ae3d0c74523a",
+        "dirtyPatchSha256": "7d86b7e8aa0cac01daf510744b87d00aed314502d5e8666aff7ba330d0f47d02",
+        "status": " M finnor-os/apps/api/package.json\n M finnor-os/packages/private-equity/src/enterprise-applications/source-manifest.generated.ts\n M finnor-os/packages/private-equity/src/policy-learning/source-manifest.generated.ts\n M finnor-os/packages/private-equity/src/system-identification/source-manifest.generated.ts\n M finnor-os/scripts/x3/stamp-source.mts\n M scope-x3/verify-handoff.mjs\n",
+        "untracked": []
+      },
+      "wallMs": 173.434676,
+      "sampledAggregatePeakRssBytes": 3674112,
+      "observedProcesses": 1,
+      "bounds": {
+        "timeoutMs": 900000,
+        "maxRssBytes": 6442450944,
+        "maxLogBytes": 16777216,
+        "intervalMs": 250
+      },
+      "aliveObservedDescendants": [],
+      "cleanup": null
+    },
+    {
+      "receipt": "evidence/integration-repair-1/x3-campaign-types.meter.json",
+      "sha256": "8e60fb8126cd854d36b51ff1682ff09e59bf6fa61fdffdd0b6a09867bac49aa5",
+      "commandStatus": "PASS_COMMAND",
+      "exitCode": 0,
+      "signal": null,
+      "stopReason": null,
+      "disposition": "PASS_SCOPED_DEVELOPMENT_CHECK",
+      "source": {
+        "head": "d59bbd76504c3dbd8864eb5dc9a3dce146c86adf",
+        "tree": "9c8169d09a87d1ce6c168f2a2dd5ae3d0c74523a",
+        "dirtyPatchSha256": "7d86b7e8aa0cac01daf510744b87d00aed314502d5e8666aff7ba330d0f47d02",
+        "status": " M finnor-os/apps/api/package.json\n M finnor-os/packages/private-equity/src/enterprise-applications/source-manifest.generated.ts\n M finnor-os/packages/private-equity/src/policy-learning/source-manifest.generated.ts\n M finnor-os/packages/private-equity/src/system-identification/source-manifest.generated.ts\n M finnor-os/scripts/x3/stamp-source.mts\n M scope-x3/verify-handoff.mjs\n",
+        "untracked": []
+      },
+      "wallMs": 33379.702762,
+      "sampledAggregatePeakRssBytes": 2271064064,
+      "observedProcesses": 1,
+      "bounds": {
+        "timeoutMs": 900000,
+        "maxRssBytes": 6442450944,
+        "maxLogBytes": 16777216,
+        "intervalMs": 250
+      },
+      "aliveObservedDescendants": [],
+      "cleanup": null
+    },
+    {
+      "receipt": "evidence/integration-repair-1/x3-current-check.meter.json",
+      "sha256": "3a17057c81adb5026afa63cf55636dd1cf0a390ec97524598417df4ee4116067",
+      "commandStatus": "PASS_COMMAND",
+      "exitCode": 0,
+      "signal": null,
+      "stopReason": null,
+      "disposition": "PASS_SCOPED_DEVELOPMENT_CHECK",
+      "source": {
+        "head": "d59bbd76504c3dbd8864eb5dc9a3dce146c86adf",
+        "tree": "9c8169d09a87d1ce6c168f2a2dd5ae3d0c74523a",
+        "dirtyPatchSha256": "7d86b7e8aa0cac01daf510744b87d00aed314502d5e8666aff7ba330d0f47d02",
+        "status": " M finnor-os/apps/api/package.json\n M finnor-os/packages/private-equity/src/enterprise-applications/source-manifest.generated.ts\n M finnor-os/packages/private-equity/src/policy-learning/source-manifest.generated.ts\n M finnor-os/packages/private-equity/src/system-identification/source-manifest.generated.ts\n M finnor-os/scripts/x3/stamp-source.mts\n M scope-x3/verify-handoff.mjs\n",
+        "untracked": []
+      },
+      "wallMs": 167.554667,
+      "sampledAggregatePeakRssBytes": 9912320,
+      "observedProcesses": 1,
+      "bounds": {
+        "timeoutMs": 900000,
+        "maxRssBytes": 6442450944,
+        "maxLogBytes": 16777216,
+        "intervalMs": 250
+      },
+      "aliveObservedDescendants": [],
+      "cleanup": null
+    },
+    {
+      "receipt": "evidence/integration-repair-1/x3-original-check-replay.meter.json",
+      "sha256": "affd37c126f53946f6c3e44e163d76963ae3683025c0374d8e4f19890462bf9b",
+      "commandStatus": "PASS_COMMAND",
+      "exitCode": 0,
+      "signal": null,
+      "stopReason": null,
+      "disposition": "COMMAND_ZERO_BUT_CHECK_ONLY_CONTRACT_FAILED_MANIFEST_MUTATED",
+      "source": {
+        "head": "d59bbd76504c3dbd8864eb5dc9a3dce146c86adf",
+        "tree": "9c8169d09a87d1ce6c168f2a2dd5ae3d0c74523a",
+        "dirtyPatchSha256": "937cc1f699194e074e0c1b26c884f183ef7842f5755f42de5a3bc7c3dbbdacfa",
+        "status": " M finnor-os/scripts/x3/stamp-source.mts\n",
+        "untracked": []
+      },
+      "wallMs": 198.67571600000002,
+      "sampledAggregatePeakRssBytes": 3563520,
+      "observedProcesses": 1,
+      "bounds": {
+        "timeoutMs": 900000,
+        "maxRssBytes": 6442450944,
+        "maxLogBytes": 16777216,
+        "intervalMs": 250
+      },
+      "aliveObservedDescendants": [],
+      "cleanup": null
+    },
+    {
+      "receipt": "evidence/integration-repair-1/x3-stale-check.meter.json",
+      "sha256": "2f090e4f9fb4dc138423c3e74eab70debac528b588046d8c9eb557f3908bd87f",
+      "commandStatus": "FAIL_COMMAND",
+      "exitCode": 1,
+      "signal": null,
+      "stopReason": null,
+      "disposition": "EXPECTED_STALE_CHECK_REFUSAL_WITHOUT_WRITE",
+      "source": {
+        "head": "d59bbd76504c3dbd8864eb5dc9a3dce146c86adf",
+        "tree": "9c8169d09a87d1ce6c168f2a2dd5ae3d0c74523a",
+        "dirtyPatchSha256": "937cc1f699194e074e0c1b26c884f183ef7842f5755f42de5a3bc7c3dbbdacfa",
+        "status": " M finnor-os/scripts/x3/stamp-source.mts\n",
+        "untracked": []
+      },
+      "wallMs": 257.914765,
+      "sampledAggregatePeakRssBytes": 78974976,
+      "observedProcesses": 2,
+      "bounds": {
+        "timeoutMs": 900000,
+        "maxRssBytes": 6442450944,
+        "maxLogBytes": 16777216,
+        "intervalMs": 250
+      },
+      "aliveObservedDescendants": [],
+      "cleanup": null
+    },
+    {
+      "receipt": "evidence/integration-repair-1/x4-after-original-build.meter.json",
+      "sha256": "b6d7bda5f563a18edf0fbeeacea48169caa722210c99a0eee3f3aa568ae3bc88",
+      "commandStatus": "FAIL_COMMAND",
+      "exitCode": 1,
+      "signal": null,
+      "stopReason": null,
+      "disposition": "EXPECTED_REFUSAL_CONFIRMING_ORIGINAL_BUILD_DEFECT",
+      "source": {
+        "head": "d59bbd76504c3dbd8864eb5dc9a3dce146c86adf",
+        "tree": "9c8169d09a87d1ce6c168f2a2dd5ae3d0c74523a",
+        "dirtyPatchSha256": "32577f8a7009efe6e261bbb03a314f724dcd781af9076db0a80c7eb0492ad562",
+        "status": " M finnor-os/packages/private-equity/src/enterprise-applications/source-manifest.generated.ts\n M finnor-os/packages/private-equity/src/policy-learning/source-manifest.generated.ts\n M finnor-os/scripts/x3/stamp-source.mts\n",
+        "untracked": []
+      },
+      "wallMs": 304.269457,
+      "sampledAggregatePeakRssBytes": 107204608,
+      "observedProcesses": 3,
+      "bounds": {
+        "timeoutMs": 900000,
+        "maxRssBytes": 6442450944,
+        "maxLogBytes": 16777216,
+        "intervalMs": 250
+      },
+      "aliveObservedDescendants": [],
+      "cleanup": null
+    },
+    {
+      "receipt": "evidence/integration-repair-1/x4-after-preflight-check.meter.json",
+      "sha256": "9c84c2c92b3fb61179e01575c5be2615776ab77ccf37849af7d7b4beb890119e",
+      "commandStatus": "PASS_COMMAND",
+      "exitCode": 0,
+      "signal": null,
+      "stopReason": null,
+      "disposition": "PASS_SCOPED_DEVELOPMENT_CHECK",
+      "source": {
+        "head": "d59bbd76504c3dbd8864eb5dc9a3dce146c86adf",
+        "tree": "9c8169d09a87d1ce6c168f2a2dd5ae3d0c74523a",
+        "dirtyPatchSha256": "7d86b7e8aa0cac01daf510744b87d00aed314502d5e8666aff7ba330d0f47d02",
+        "status": " M finnor-os/apps/api/package.json\n M finnor-os/packages/private-equity/src/enterprise-applications/source-manifest.generated.ts\n M finnor-os/packages/private-equity/src/policy-learning/source-manifest.generated.ts\n M finnor-os/packages/private-equity/src/system-identification/source-manifest.generated.ts\n M finnor-os/scripts/x3/stamp-source.mts\n M scope-x3/verify-handoff.mjs\n",
+        "untracked": []
+      },
+      "wallMs": 207.885959,
+      "sampledAggregatePeakRssBytes": 3674112,
+      "observedProcesses": 1,
+      "bounds": {
+        "timeoutMs": 900000,
+        "maxRssBytes": 6442450944,
+        "maxLogBytes": 16777216,
+        "intervalMs": 250
+      },
+      "aliveObservedDescendants": [],
+      "cleanup": null
+    },
+    {
+      "receipt": "evidence/integration-repair-1/x4-campaign-types.meter.json",
+      "sha256": "fbc4f6c75c216291a05b812627dcb3e8aa7d2283aa9e8d300134b1e401f266e1",
+      "commandStatus": "PASS_COMMAND",
+      "exitCode": 0,
+      "signal": null,
+      "stopReason": null,
+      "disposition": "PASS_SCOPED_DEVELOPMENT_CHECK",
+      "source": {
+        "head": "d59bbd76504c3dbd8864eb5dc9a3dce146c86adf",
+        "tree": "9c8169d09a87d1ce6c168f2a2dd5ae3d0c74523a",
+        "dirtyPatchSha256": "7d86b7e8aa0cac01daf510744b87d00aed314502d5e8666aff7ba330d0f47d02",
+        "status": " M finnor-os/apps/api/package.json\n M finnor-os/packages/private-equity/src/enterprise-applications/source-manifest.generated.ts\n M finnor-os/packages/private-equity/src/policy-learning/source-manifest.generated.ts\n M finnor-os/packages/private-equity/src/system-identification/source-manifest.generated.ts\n M finnor-os/scripts/x3/stamp-source.mts\n M scope-x3/verify-handoff.mjs\n",
+        "untracked": []
+      },
+      "wallMs": 30566.944569,
+      "sampledAggregatePeakRssBytes": 2235285504,
+      "observedProcesses": 1,
+      "bounds": {
+        "timeoutMs": 900000,
+        "maxRssBytes": 6442450944,
+        "maxLogBytes": 16777216,
+        "intervalMs": 250
+      },
+      "aliveObservedDescendants": [],
+      "cleanup": null
+    },
+    {
+      "receipt": "evidence/integration-repair-1/x4-current-check.meter.json",
+      "sha256": "7415ff868202aee8c1e06bd81252a7a4cd254e2476be4bcd5cae2176bebfb425",
+      "commandStatus": "PASS_COMMAND",
+      "exitCode": 0,
+      "signal": null,
+      "stopReason": null,
+      "disposition": "PASS_SCOPED_DEVELOPMENT_CHECK",
+      "source": {
+        "head": "d59bbd76504c3dbd8864eb5dc9a3dce146c86adf",
+        "tree": "9c8169d09a87d1ce6c168f2a2dd5ae3d0c74523a",
+        "dirtyPatchSha256": "7d86b7e8aa0cac01daf510744b87d00aed314502d5e8666aff7ba330d0f47d02",
+        "status": " M finnor-os/apps/api/package.json\n M finnor-os/packages/private-equity/src/enterprise-applications/source-manifest.generated.ts\n M finnor-os/packages/private-equity/src/policy-learning/source-manifest.generated.ts\n M finnor-os/packages/private-equity/src/system-identification/source-manifest.generated.ts\n M finnor-os/scripts/x3/stamp-source.mts\n M scope-x3/verify-handoff.mjs\n",
+        "untracked": []
+      },
+      "wallMs": 183.209878,
+      "sampledAggregatePeakRssBytes": 7319552,
+      "observedProcesses": 1,
+      "bounds": {
+        "timeoutMs": 900000,
+        "maxRssBytes": 6442450944,
+        "maxLogBytes": 16777216,
+        "intervalMs": 250
+      },
+      "aliveObservedDescendants": [],
+      "cleanup": null
+    },
+    {
+      "receipt": "evidence/integration-repair-1/x5-after-preflight-check.meter.json",
+      "sha256": "81f289fe0c6fde19ef8425d698728457c3d417f7b7d0924923e5c3efb807ef22",
+      "commandStatus": "PASS_COMMAND",
+      "exitCode": 0,
+      "signal": null,
+      "stopReason": null,
+      "disposition": "PASS_SCOPED_DEVELOPMENT_CHECK",
+      "source": {
+        "head": "d59bbd76504c3dbd8864eb5dc9a3dce146c86adf",
+        "tree": "9c8169d09a87d1ce6c168f2a2dd5ae3d0c74523a",
+        "dirtyPatchSha256": "7d86b7e8aa0cac01daf510744b87d00aed314502d5e8666aff7ba330d0f47d02",
+        "status": " M finnor-os/apps/api/package.json\n M finnor-os/packages/private-equity/src/enterprise-applications/source-manifest.generated.ts\n M finnor-os/packages/private-equity/src/policy-learning/source-manifest.generated.ts\n M finnor-os/packages/private-equity/src/system-identification/source-manifest.generated.ts\n M finnor-os/scripts/x3/stamp-source.mts\n M scope-x3/verify-handoff.mjs\n",
+        "untracked": []
+      },
+      "wallMs": 181.35007900000002,
+      "sampledAggregatePeakRssBytes": 13115392,
+      "observedProcesses": 1,
+      "bounds": {
+        "timeoutMs": 900000,
+        "maxRssBytes": 6442450944,
+        "maxLogBytes": 16777216,
+        "intervalMs": 250
+      },
+      "aliveObservedDescendants": [],
+      "cleanup": null
+    },
+    {
+      "receipt": "evidence/integration-repair-1/x5-campaign-types.meter.json",
+      "sha256": "d957820daa254e965153646b29f94cee50e947b5bfc7a3efdeff178d3f392897",
+      "commandStatus": "PASS_COMMAND",
+      "exitCode": 0,
+      "signal": null,
+      "stopReason": null,
+      "disposition": "PASS_SCOPED_DEVELOPMENT_CHECK",
+      "source": {
+        "head": "d59bbd76504c3dbd8864eb5dc9a3dce146c86adf",
+        "tree": "9c8169d09a87d1ce6c168f2a2dd5ae3d0c74523a",
+        "dirtyPatchSha256": "7d86b7e8aa0cac01daf510744b87d00aed314502d5e8666aff7ba330d0f47d02",
+        "status": " M finnor-os/apps/api/package.json\n M finnor-os/packages/private-equity/src/enterprise-applications/source-manifest.generated.ts\n M finnor-os/packages/private-equity/src/policy-learning/source-manifest.generated.ts\n M finnor-os/packages/private-equity/src/system-identification/source-manifest.generated.ts\n M finnor-os/scripts/x3/stamp-source.mts\n M scope-x3/verify-handoff.mjs\n",
+        "untracked": []
+      },
+      "wallMs": 31596.81251,
+      "sampledAggregatePeakRssBytes": 2265137152,
+      "observedProcesses": 1,
+      "bounds": {
+        "timeoutMs": 900000,
+        "maxRssBytes": 6442450944,
+        "maxLogBytes": 16777216,
+        "intervalMs": 250
+      },
+      "aliveObservedDescendants": [],
+      "cleanup": null
+    },
+    {
+      "receipt": "evidence/integration-repair-1/x5-current-check.meter.json",
+      "sha256": "e7c0d80e96989332f520cb083b0e5f2bb1c7c88b23d68d0da301ef9a4c5f128e",
+      "commandStatus": "PASS_COMMAND",
+      "exitCode": 0,
+      "signal": null,
+      "stopReason": null,
+      "disposition": "PASS_SCOPED_DEVELOPMENT_CHECK",
+      "source": {
+        "head": "d59bbd76504c3dbd8864eb5dc9a3dce146c86adf",
+        "tree": "9c8169d09a87d1ce6c168f2a2dd5ae3d0c74523a",
+        "dirtyPatchSha256": "7d86b7e8aa0cac01daf510744b87d00aed314502d5e8666aff7ba330d0f47d02",
+        "status": " M finnor-os/apps/api/package.json\n M finnor-os/packages/private-equity/src/enterprise-applications/source-manifest.generated.ts\n M finnor-os/packages/private-equity/src/policy-learning/source-manifest.generated.ts\n M finnor-os/packages/private-equity/src/system-identification/source-manifest.generated.ts\n M finnor-os/scripts/x3/stamp-source.mts\n M scope-x3/verify-handoff.mjs\n",
+        "untracked": []
+      },
+      "wallMs": 148.74368099999998,
+      "sampledAggregatePeakRssBytes": 3641344,
+      "observedProcesses": 1,
+      "bounds": {
+        "timeoutMs": 900000,
+        "maxRssBytes": 6442450944,
+        "maxLogBytes": 16777216,
+        "intervalMs": 250
+      },
+      "aliveObservedDescendants": [],
+      "cleanup": null
+    },
+    {
+      "receipt": "evidence/native-proof-source-1/x3-stamp.meter.json",
+      "sha256": "736700318e5072f82a9597acd664ad0ea525a4bc139bf15745c7d124d7e9ba38",
+      "commandStatus": "PASS_COMMAND",
+      "exitCode": 0,
+      "signal": null,
+      "stopReason": null,
+      "disposition": "PASS_SCOPED_DEVELOPMENT_CHECK",
+      "source": {
+        "head": "ee1af928c54e2d1c3e17b4643ed4ec6695808863",
+        "tree": "a10bd5c5e9f95647896eb48347d9c5cea52fe2e1",
+        "dirtyPatchSha256": "2c4e8c581d6e03f09340390969ee313cf2660bce26d57fb8456ab6a7cee0f560",
+        "status": " M finnor-os/scripts/x4/run-installed.mts\n M finnor-os/scripts/x4/worker-loop.mts\n M finnor-os/scripts/x5/run-installed.mts\n M finnor-os/scripts/x5/worker-loop.mts\n",
+        "untracked": []
+      },
+      "wallMs": 207.69675,
+      "sampledAggregatePeakRssBytes": 3674112,
+      "observedProcesses": 1,
+      "bounds": {
+        "timeoutMs": 900000,
+        "maxRssBytes": 6442450944,
+        "maxLogBytes": 16777216,
+        "intervalMs": 250
+      },
+      "aliveObservedDescendants": [],
+      "cleanup": null
+    },
+    {
+      "receipt": "evidence/native-proof-source-1/x4-stamp.meter.json",
+      "sha256": "48d0facb3da2bcfe7ed1a29ea6ccee9f7e3815689631c7b60de590ef95fb2c5a",
+      "commandStatus": "PASS_COMMAND",
+      "exitCode": 0,
+      "signal": null,
+      "stopReason": null,
+      "disposition": "PASS_SCOPED_DEVELOPMENT_CHECK",
+      "source": {
+        "head": "ee1af928c54e2d1c3e17b4643ed4ec6695808863",
+        "tree": "a10bd5c5e9f95647896eb48347d9c5cea52fe2e1",
+        "dirtyPatchSha256": "2c4e8c581d6e03f09340390969ee313cf2660bce26d57fb8456ab6a7cee0f560",
+        "status": " M finnor-os/scripts/x4/run-installed.mts\n M finnor-os/scripts/x4/worker-loop.mts\n M finnor-os/scripts/x5/run-installed.mts\n M finnor-os/scripts/x5/worker-loop.mts\n",
+        "untracked": []
+      },
+      "wallMs": 220.25219300000003,
+      "sampledAggregatePeakRssBytes": 9912320,
+      "observedProcesses": 1,
+      "bounds": {
+        "timeoutMs": 900000,
+        "maxRssBytes": 6442450944,
+        "maxLogBytes": 16777216,
+        "intervalMs": 250
+      },
+      "aliveObservedDescendants": [],
+      "cleanup": null
+    },
+    {
+      "receipt": "evidence/native-proof-source-1/x4-types.meter.json",
+      "sha256": "a90aa2f2f6ac8569255f9cd9d0033dcf041d87fcb8a6d3f34ef26891c83c6027",
+      "commandStatus": "PASS_COMMAND",
+      "exitCode": 0,
+      "signal": null,
+      "stopReason": null,
+      "disposition": "PASS_SCOPED_DEVELOPMENT_CHECK",
+      "source": {
+        "head": "ee1af928c54e2d1c3e17b4643ed4ec6695808863",
+        "tree": "a10bd5c5e9f95647896eb48347d9c5cea52fe2e1",
+        "dirtyPatchSha256": "2c4e8c581d6e03f09340390969ee313cf2660bce26d57fb8456ab6a7cee0f560",
+        "status": " M finnor-os/scripts/x4/run-installed.mts\n M finnor-os/scripts/x4/worker-loop.mts\n M finnor-os/scripts/x5/run-installed.mts\n M finnor-os/scripts/x5/worker-loop.mts\n",
+        "untracked": []
+      },
+      "wallMs": 35778.113513,
+      "sampledAggregatePeakRssBytes": 2417209344,
+      "observedProcesses": 1,
+      "bounds": {
+        "timeoutMs": 900000,
+        "maxRssBytes": 6442450944,
+        "maxLogBytes": 16777216,
+        "intervalMs": 250
+      },
+      "aliveObservedDescendants": [],
+      "cleanup": null
+    },
+    {
+      "receipt": "evidence/native-proof-source-1/x5-stamp.meter.json",
+      "sha256": "180b9ef927362f3e3245c8d391f997a3e5993d61503df9c84677897d8c80c4e0",
+      "commandStatus": "PASS_COMMAND",
+      "exitCode": 0,
+      "signal": null,
+      "stopReason": null,
+      "disposition": "PASS_SCOPED_DEVELOPMENT_CHECK",
+      "source": {
+        "head": "ee1af928c54e2d1c3e17b4643ed4ec6695808863",
+        "tree": "a10bd5c5e9f95647896eb48347d9c5cea52fe2e1",
+        "dirtyPatchSha256": "2c4e8c581d6e03f09340390969ee313cf2660bce26d57fb8456ab6a7cee0f560",
+        "status": " M finnor-os/scripts/x4/run-installed.mts\n M finnor-os/scripts/x4/worker-loop.mts\n M finnor-os/scripts/x5/run-installed.mts\n M finnor-os/scripts/x5/worker-loop.mts\n",
+        "untracked": []
+      },
+      "wallMs": 163.58122500000002,
+      "sampledAggregatePeakRssBytes": 3686400,
+      "observedProcesses": 1,
+      "bounds": {
+        "timeoutMs": 900000,
+        "maxRssBytes": 6442450944,
+        "maxLogBytes": 16777216,
+        "intervalMs": 250
+      },
+      "aliveObservedDescendants": [],
+      "cleanup": null
+    },
+    {
+      "receipt": "evidence/native-proof-source-1/x5-types.meter.json",
+      "sha256": "a33f43c6febc8ca51a3770f715a7f07ac0b98222e5d66858c65c1f09704009db",
+      "commandStatus": "PASS_COMMAND",
+      "exitCode": 0,
+      "signal": null,
+      "stopReason": null,
+      "disposition": "PASS_SCOPED_DEVELOPMENT_CHECK",
+      "source": {
+        "head": "ee1af928c54e2d1c3e17b4643ed4ec6695808863",
+        "tree": "a10bd5c5e9f95647896eb48347d9c5cea52fe2e1",
+        "dirtyPatchSha256": "2c4e8c581d6e03f09340390969ee313cf2660bce26d57fb8456ab6a7cee0f560",
+        "status": " M finnor-os/scripts/x4/run-installed.mts\n M finnor-os/scripts/x4/worker-loop.mts\n M finnor-os/scripts/x5/run-installed.mts\n M finnor-os/scripts/x5/worker-loop.mts\n",
+        "untracked": []
+      },
+      "wallMs": 39433.999909,
+      "sampledAggregatePeakRssBytes": 2447671296,
+      "observedProcesses": 1,
+      "bounds": {
+        "timeoutMs": 900000,
+        "maxRssBytes": 6442450944,
+        "maxLogBytes": 16777216,
+        "intervalMs": 250
+      },
+      "aliveObservedDescendants": [],
+      "cleanup": null
+    },
+    {
+      "receipt": "evidence/native-proof-source-2/x3-stamp.meter.json",
+      "sha256": "bc0e42fb10091c53425a073cef5c174590155558e171294a878905db96ac07e4",
+      "commandStatus": "PASS_COMMAND",
+      "exitCode": 0,
+      "signal": null,
+      "stopReason": null,
+      "disposition": "PASS_SCOPED_DEVELOPMENT_CHECK",
+      "source": {
+        "head": "a91d1b55af496631ff0b2b039de97dd4416f724c",
+        "tree": "d63d568e53633cc59a22bbe3b4bd32ff147e7032",
+        "dirtyPatchSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "status": "",
+        "untracked": []
+      },
+      "wallMs": 194.668428,
+      "sampledAggregatePeakRssBytes": 14401536,
+      "observedProcesses": 1,
+      "bounds": {
+        "timeoutMs": 900000,
+        "maxRssBytes": 6442450944,
+        "maxLogBytes": 16777216,
+        "intervalMs": 250
+      },
+      "aliveObservedDescendants": [],
+      "cleanup": null
+    },
+    {
+      "receipt": "evidence/native-proof-source-2/x4-stamp.meter.json",
+      "sha256": "816520acf3453eafb7d449617c4a3cdfe81a7e8044f3b8325231afdd4faea1e4",
+      "commandStatus": "PASS_COMMAND",
+      "exitCode": 0,
+      "signal": null,
+      "stopReason": null,
+      "disposition": "PASS_SCOPED_DEVELOPMENT_CHECK",
+      "source": {
+        "head": "a91d1b55af496631ff0b2b039de97dd4416f724c",
+        "tree": "d63d568e53633cc59a22bbe3b4bd32ff147e7032",
+        "dirtyPatchSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "status": "",
+        "untracked": []
+      },
+      "wallMs": 192.76000999999997,
+      "sampledAggregatePeakRssBytes": 3710976,
+      "observedProcesses": 1,
+      "bounds": {
+        "timeoutMs": 900000,
+        "maxRssBytes": 6442450944,
+        "maxLogBytes": 16777216,
+        "intervalMs": 250
+      },
+      "aliveObservedDescendants": [],
+      "cleanup": null
+    },
+    {
+      "receipt": "evidence/native-proof-source-2/x4-types.meter.json",
+      "sha256": "f67abdc6d50637c3abc65cff1c0d6146068b91f2e0d5026b7d2b77573ae5fcfd",
+      "commandStatus": "PASS_COMMAND",
+      "exitCode": 0,
+      "signal": null,
+      "stopReason": null,
+      "disposition": "PASS_SCOPED_DEVELOPMENT_CHECK",
+      "source": {
+        "head": "a91d1b55af496631ff0b2b039de97dd4416f724c",
+        "tree": "d63d568e53633cc59a22bbe3b4bd32ff147e7032",
+        "dirtyPatchSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "status": "",
+        "untracked": []
+      },
+      "wallMs": 35546.312957999995,
+      "sampledAggregatePeakRssBytes": 2420068352,
+      "observedProcesses": 1,
+      "bounds": {
+        "timeoutMs": 900000,
+        "maxRssBytes": 6442450944,
+        "maxLogBytes": 16777216,
+        "intervalMs": 250
+      },
+      "aliveObservedDescendants": [],
+      "cleanup": null
+    },
+    {
+      "receipt": "evidence/native-proof-source-2/x5-stamp.meter.json",
+      "sha256": "b4adc00ccc843b24adb9d744b893a7bb65d95b2a7820b21c1616a75147dee8ca",
+      "commandStatus": "PASS_COMMAND",
+      "exitCode": 0,
+      "signal": null,
+      "stopReason": null,
+      "disposition": "PASS_SCOPED_DEVELOPMENT_CHECK",
+      "source": {
+        "head": "a91d1b55af496631ff0b2b039de97dd4416f724c",
+        "tree": "d63d568e53633cc59a22bbe3b4bd32ff147e7032",
+        "dirtyPatchSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "status": "",
+        "untracked": []
+      },
+      "wallMs": 163.569798,
+      "sampledAggregatePeakRssBytes": 3608576,
+      "observedProcesses": 1,
+      "bounds": {
+        "timeoutMs": 900000,
+        "maxRssBytes": 6442450944,
+        "maxLogBytes": 16777216,
+        "intervalMs": 250
+      },
+      "aliveObservedDescendants": [],
+      "cleanup": null
+    },
+    {
+      "receipt": "evidence/native-proof-source-2/x5-types.meter.json",
+      "sha256": "d8c1eb8b5eb1b6b734523a83ce5424c5afb4543452dcdfd0015f9319d2652ec6",
+      "commandStatus": "PASS_COMMAND",
+      "exitCode": 0,
+      "signal": null,
+      "stopReason": null,
+      "disposition": "PASS_SCOPED_DEVELOPMENT_CHECK",
+      "source": {
+        "head": "a91d1b55af496631ff0b2b039de97dd4416f724c",
+        "tree": "d63d568e53633cc59a22bbe3b4bd32ff147e7032",
+        "dirtyPatchSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "status": "",
+        "untracked": []
+      },
+      "wallMs": 35124.467491999996,
+      "sampledAggregatePeakRssBytes": 2435657728,
+      "observedProcesses": 1,
+      "bounds": {
+        "timeoutMs": 900000,
+        "maxRssBytes": 6442450944,
+        "maxLogBytes": 16777216,
+        "intervalMs": 250
+      },
+      "aliveObservedDescendants": [],
+      "cleanup": null
+    },
+    {
+      "receipt": "evidence/reconstruction-1/fresh-driver.meter.json",
+      "sha256": "7e160bd0a20f2e1c2fe766d5b9d9bddaa52d678a55158c0cd10a03a5db4de95d",
+      "commandStatus": "PASS_COMMAND",
+      "exitCode": 0,
+      "signal": null,
+      "stopReason": null,
+      "disposition": "PASS_SCOPED_DEVELOPMENT_CHECK",
+      "source": {
+        "head": "92361a9cc653c60298edbccf9b0f1b81b9a3b1a6",
+        "tree": "dd7c8401e2750c0a6b4f87a90459e63a3d9b7728",
+        "dirtyPatchSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "status": "",
+        "untracked": []
+      },
+      "wallMs": 369633.55802,
+      "sampledAggregatePeakRssBytes": 4280459264,
+      "observedProcesses": 132,
+      "bounds": {
+        "timeoutMs": 900000,
+        "maxRssBytes": 6442450944,
+        "maxLogBytes": 16777216,
+        "intervalMs": 250
+      },
+      "aliveObservedDescendants": [],
+      "cleanup": {
+        "boundMs": 3000,
+        "waitedMs": 1.7790900000254624,
+        "initiallyAliveObservedDescendants": []
+      }
+    },
+    {
+      "receipt": "evidence/reconstruction-1/ordinary-api.meter.json",
+      "sha256": "ba9be400dda7b24cff17be18affc8ddb163dca87ae330d09431eef355c9c8e74",
+      "commandStatus": "PASS_COMMAND",
+      "exitCode": 0,
+      "signal": null,
+      "stopReason": null,
+      "disposition": "PASS_SCOPED_DEVELOPMENT_CHECK",
+      "source": {
+        "head": "92361a9cc653c60298edbccf9b0f1b81b9a3b1a6",
+        "tree": "dd7c8401e2750c0a6b4f87a90459e63a3d9b7728",
+        "dirtyPatchSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "status": "",
+        "untracked": []
+      },
+      "wallMs": 127265.569926,
+      "sampledAggregatePeakRssBytes": 3488436224,
+      "observedProcesses": 17,
+      "bounds": {
+        "timeoutMs": 900000,
+        "maxRssBytes": 6442450944,
+        "maxLogBytes": 16777216,
+        "intervalMs": 250
+      },
+      "aliveObservedDescendants": [],
+      "cleanup": {
+        "boundMs": 3000,
+        "waitedMs": 0.5247419999941485,
+        "initiallyAliveObservedDescendants": []
+      }
+    },
+    {
+      "receipt": "evidence/reconstruction-1/ordinary-source-audit.meter.json",
+      "sha256": "983f4862ed478e572a7d39dfc655a9b805a4560939d53aafe572b59a20e25dd7",
+      "commandStatus": "PASS_COMMAND",
+      "exitCode": 0,
+      "signal": null,
+      "stopReason": null,
+      "disposition": "PASS_SCOPED_DEVELOPMENT_CHECK",
+      "source": {
+        "head": "92361a9cc653c60298edbccf9b0f1b81b9a3b1a6",
+        "tree": "dd7c8401e2750c0a6b4f87a90459e63a3d9b7728",
+        "dirtyPatchSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "status": "",
+        "untracked": []
+      },
+      "wallMs": 748.1104740000001,
+      "sampledAggregatePeakRssBytes": 127791104,
+      "observedProcesses": 1,
+      "bounds": {
+        "timeoutMs": 900000,
+        "maxRssBytes": 6442450944,
+        "maxLogBytes": 16777216,
+        "intervalMs": 250
+      },
+      "aliveObservedDescendants": [],
+      "cleanup": {
+        "boundMs": 3000,
+        "waitedMs": 0.13492799999994531,
+        "initiallyAliveObservedDescendants": []
+      }
+    },
+    {
+      "receipt": "evidence/reconstruction-1/x3-campaign-types.meter.json",
+      "sha256": "7f6f104241b4909678b5f69a16ccac305d87c96c4ac610e9ded00247a54f782f",
+      "commandStatus": "PASS_COMMAND",
+      "exitCode": 0,
+      "signal": null,
+      "stopReason": null,
+      "disposition": "PASS_SCOPED_DEVELOPMENT_CHECK",
+      "source": {
+        "head": "92361a9cc653c60298edbccf9b0f1b81b9a3b1a6",
+        "tree": "dd7c8401e2750c0a6b4f87a90459e63a3d9b7728",
+        "dirtyPatchSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "status": "",
+        "untracked": []
+      },
+      "wallMs": 25216.814314,
+      "sampledAggregatePeakRssBytes": 2278694912,
+      "observedProcesses": 1,
+      "bounds": {
+        "timeoutMs": 900000,
+        "maxRssBytes": 6442450944,
+        "maxLogBytes": 16777216,
+        "intervalMs": 250
+      },
+      "aliveObservedDescendants": [],
+      "cleanup": {
+        "boundMs": 3000,
+        "waitedMs": 0.14562300000034156,
+        "initiallyAliveObservedDescendants": []
+      }
+    },
+    {
+      "receipt": "evidence/reconstruction-1/x3-complete.meter.json",
+      "sha256": "8f7b74217e8b200330912659150f20a2565cdbcb913a0d8a71fd3b00b4db1210",
+      "commandStatus": "PASS_COMMAND",
+      "exitCode": 0,
+      "signal": null,
+      "stopReason": null,
+      "disposition": "PASS_SCOPED_DEVELOPMENT_CHECK",
+      "source": {
+        "head": "92361a9cc653c60298edbccf9b0f1b81b9a3b1a6",
+        "tree": "dd7c8401e2750c0a6b4f87a90459e63a3d9b7728",
+        "dirtyPatchSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "status": "",
+        "untracked": []
+      },
+      "wallMs": 267226.22612300003,
+      "sampledAggregatePeakRssBytes": 1788096512,
+      "observedProcesses": 217,
+      "bounds": {
+        "timeoutMs": 900000,
+        "maxRssBytes": 6442450944,
+        "maxLogBytes": 16777216,
+        "intervalMs": 250
+      },
+      "aliveObservedDescendants": [],
+      "cleanup": {
+        "boundMs": 3000,
+        "waitedMs": 3.0561759999836795,
+        "initiallyAliveObservedDescendants": []
+      }
+    },
+    {
+      "receipt": "evidence/reconstruction-1/x3-provenance.meter.json",
+      "sha256": "8343b6466178cb62e52ce33133aef13f2f5ed76f7a3d285374ab6ea060e64bd1",
+      "commandStatus": "PASS_COMMAND",
+      "exitCode": 0,
+      "signal": null,
+      "stopReason": null,
+      "disposition": "PASS_SCOPED_DEVELOPMENT_CHECK",
+      "source": {
+        "head": "92361a9cc653c60298edbccf9b0f1b81b9a3b1a6",
+        "tree": "dd7c8401e2750c0a6b4f87a90459e63a3d9b7728",
+        "dirtyPatchSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "status": "",
+        "untracked": []
+      },
+      "wallMs": 767.132419,
+      "sampledAggregatePeakRssBytes": 88371200,
+      "observedProcesses": 4,
+      "bounds": {
+        "timeoutMs": 900000,
+        "maxRssBytes": 6442450944,
+        "maxLogBytes": 16777216,
+        "intervalMs": 250
+      },
+      "aliveObservedDescendants": [],
+      "cleanup": {
+        "boundMs": 3000,
+        "waitedMs": 0.15368999999998323,
+        "initiallyAliveObservedDescendants": []
+      }
+    },
+    {
+      "receipt": "evidence/reconstruction-1/x4-native-full.meter.json",
+      "sha256": "af8df8051b93c691de448a562eda179d2a27b07bfdbea5f065731b287f801974",
+      "commandStatus": "PASS_COMMAND",
+      "exitCode": 0,
+      "signal": null,
+      "stopReason": null,
+      "disposition": "PASS_SCOPED_DEVELOPMENT_CHECK",
+      "source": {
+        "head": "92361a9cc653c60298edbccf9b0f1b81b9a3b1a6",
+        "tree": "dd7c8401e2750c0a6b4f87a90459e63a3d9b7728",
+        "dirtyPatchSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "status": "",
+        "untracked": []
+      },
+      "wallMs": 59145.621699,
+      "sampledAggregatePeakRssBytes": 2369097728,
+      "observedProcesses": 44,
+      "bounds": {
+        "timeoutMs": 900000,
+        "maxRssBytes": 6442450944,
+        "maxLogBytes": 16777216,
+        "intervalMs": 250
+      },
+      "aliveObservedDescendants": [],
+      "cleanup": {
+        "boundMs": 3000,
+        "waitedMs": 0.8015769999983604,
+        "initiallyAliveObservedDescendants": []
+      }
+    },
+    {
+      "receipt": "evidence/reconstruction-1/x5-campaign-types.meter.json",
+      "sha256": "9e1268dfdc7514fd648b23de5655181cce618a9d9fd0bd4becbf680d173a27be",
+      "commandStatus": "PASS_COMMAND",
+      "exitCode": 0,
+      "signal": null,
+      "stopReason": null,
+      "disposition": "PASS_SCOPED_DEVELOPMENT_CHECK",
+      "source": {
+        "head": "92361a9cc653c60298edbccf9b0f1b81b9a3b1a6",
+        "tree": "dd7c8401e2750c0a6b4f87a90459e63a3d9b7728",
+        "dirtyPatchSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "status": "",
+        "untracked": []
+      },
+      "wallMs": 27909.757567,
+      "sampledAggregatePeakRssBytes": 2436132864,
+      "observedProcesses": 1,
+      "bounds": {
+        "timeoutMs": 900000,
+        "maxRssBytes": 6442450944,
+        "maxLogBytes": 16777216,
+        "intervalMs": 250
+      },
+      "aliveObservedDescendants": [],
+      "cleanup": {
+        "boundMs": 3000,
+        "waitedMs": 0.11197600000014063,
+        "initiallyAliveObservedDescendants": []
+      }
+    }
+  ],
+  "mountedEvidenceIsolation": {
+    "screenshotPreregistration": "0d2ff64",
+    "screenshotImplementation": "bb4c44add737d9fc4c80c01bb89852acfbb2ee76",
+    "pointerReadinessPreregistration": "b88169c",
+    "pointerReadinessImplementation": "1191ab7184a844f3382224fdd41a0eb043cdb2cb",
+    "allOriginalAffectedFlowsPassed": true,
+    "actualAttemptLocalImagesVerified": true,
+    "pointerForced": false,
+    "clickRetriesAdded": 0,
+    "deadlineWidened": false,
+    "mounted": [
+      {
+        "engine": "X3",
+        "sourceCommit": "bb4c44add737d9fc4c80c01bb89852acfbb2ee76",
+        "receipt": "evidence/current-cut-6/x3-mounted-main/browser-results.json",
+        "status": "PASS_LOCAL_BROWSER",
+        "originalStepGroups": 18,
+        "screenshots": [
+          "evidence/current-cut-6/x3-mounted-main/screenshots/mounted.png"
+        ],
+        "extraEligibleAssignments": 0,
+        "cleanFixtureTeardown": true
+      },
+      {
+        "engine": "X5",
+        "sourceCommit": "1191ab7184a844f3382224fdd41a0eb043cdb2cb",
+        "receipt": "evidence/current-cut-7/x5-mounted/browser-results.json",
+        "status": "PASS_MOUNTED_EMITTED_X5_LOCAL_DEVELOPMENT",
+        "originalStepGroups": 7,
+        "screenshots": [
+          "evidence/current-cut-7/x5-mounted/screenshots/x5-mounted-mounted-revoked.png",
+          "evidence/current-cut-7/x5-mounted/screenshots/x5-mounted-mounted-current.png"
+        ],
+        "extraEligibleAssignments": 0,
+        "cleanFixtureTeardown": true
+      },
+      {
+        "engine": "X4",
+        "sourceCommit": "1191ab7184a844f3382224fdd41a0eb043cdb2cb",
+        "receipt": "evidence/current-cut-7/x4-mounted/browser-results.json",
+        "status": "PASS_MOUNTED_EMITTED_X4_DEVELOPMENT",
+        "originalStepGroups": 10,
+        "screenshots": [
+          "evidence/current-cut-7/x4-mounted/screenshots/x4-mounted-mounted-revoked.png",
+          "evidence/current-cut-7/x4-mounted/screenshots/x4-mounted-mounted-current.png"
+        ],
+        "extraEligibleAssignments": 0,
+        "cleanFixtureTeardown": true
+      }
+    ]
+  },
+  "cleanup": {
+    "receipt": "evidence/final-cleanup-1.json",
+    "observedOwnedIdentitiesChecked": 2610,
+    "aliveObservedOwnedIdentities": 0,
+    "disposableDatabasesStopped": 24,
+    "scope": "OBSERVED_OWNED_IDENTITIES_AND_RETAINED_DISPOSABLE_DATABASES_NOT_UNSAMPLED_HOST_CENSUS",
+    "originalPartialReceiptRegraded": false
+  },
+  "commandCensus": {
+    "meteredCommands": 76,
+    "statusCounts": {
+      "PASS_COMMAND": 69,
+      "FAIL_COMMAND": 6,
+      "PARTIAL_COMMAND_CLEANUP": 1
+    },
+    "interpretation": "RETAINED_COMMAND_VERDICTS_NOT_A_WHOLE_PROGRAMME_OR_SCIENTIFIC_PASS_RATE"
+  }
+}

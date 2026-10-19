@@ -1,15 +1,17 @@
 # FRONTIER-5 whole-phase continuation
 
-**The entire X phase is not 100% complete.** Available-engine local repairs and
-current X3/X4/X5 development checks pass. Actual X1/X2 deliveries and genuine
+**The entire X phase is not 100% complete.** Available-engine local repairs have
+passing scoped X3/X4/X5 development evidence. Actual X1/X2 deliveries and genuine
 five-engine chain bindings are missing. This is not merely a protected-sample
 shortfall.
 
 The core product/fresh-reconstruction checkpoint is
 `92361a9cc653c60298edbccf9b0f1b81b9a3b1a6`, tree
 `dd7c8401e2750c0a6b4f87a90459e63a3d9b7728`. Mounted screenshot-path repair is
-separate at `bb4c44add737d9fc4c80c01bb89852acfbb2ee76`, with unchanged product
-bytes. Final documentation and these proof-output-only changes are accounted
+separate at `bb4c44add737d9fc4c80c01bb89852acfbb2ee76`. Final mounted harness,
+including native X5 pointer readiness, is
+`1191ab7184a844f3382224fdd41a0eb043cdb2cb`, with unchanged product bytes.
+Final documentation and these proof-only changes are accounted
 for explicitly. Exact identities, receipt hashes and reconstruction status
 belong in `verification-ledger.json` and the external `delivery-manifest.json`,
 not an inferred blanket PASS.
@@ -50,13 +52,20 @@ managed-secret/scheduler/heartbeat/image bootstrap or production activation.
   Its original receipt/SQL/logs remain; no newer image is attributed to it.
   Current-cut5 images are copied into their actual attempts, with originals
   retained. See `acceptance/evidence-isolation.md`.
+- A later X5 rerun refused an occluded Focus pointer target. That failure and
+  clean fixture teardown remain. Its correction waits for actual hit readiness
+  before the same native click, without forcing or retrying it. The entire
+  original X5 flow then passed. Current-cut6 X3 main and current-cut7 X5/X4
+  verify all three attempt-local screenshot outputs and clean fixture teardown.
 
 The original failures and partial receipt remain unchanged in the evidence.
 No business oracle, queue priority, scientific tolerance, provider/tick limit or
-original assignment denominator was weakened. The completed earlier review
-covered 19 runtime-change paths and eight helper/provenance inventories.
-Final full-range review and direct generated-ledger verification are recorded
-separately; do not infer either from the prior review.
+original assignment denominator was weakened. Three final whole-change reviews
+covered all 25 safe source/contract/handoff paths and ten helper/provenance
+inventories, with no actionable finding. The generated 76-command ledger is
+checked inline against actual receipt status/source/resources and SHA-256s,
+not inferred from the code review. Its 69 PASS, six FAIL and one PARTIAL command
+verdicts are retained, not a scientific or whole-programme pass rate.
 
 ## Genuine remaining engineering
 
@@ -86,6 +95,9 @@ DELIVERY=/absolute/path/to/x-phase-delivery
 FRESH=/absolute/path/to/new-x-phase
 EVIDENCE=/absolute/path/to/new-evidence
 NODE=/absolute/path/to/node22
+PYTHON=/absolute/path/to/python-with-public-engine-suppliers
+export PATH="$(dirname "$NODE"):$PATH"
+export FINNOR_S3_PYTHON="$PYTHON" FINNOR_S4_PYTHON="$PYTHON" FINNOR_S5_PYTHON="$PYTHON"
 REV=$("$NODE" -p \
   "JSON.parse(require('node:fs').readFileSync(process.argv[1],'utf8')).sourceCommit" \
   "$DELIVERY/delivery-manifest.json")
@@ -109,7 +121,7 @@ eight outer commands, including the **ordinary package API build**, fresh
 X3/X5 campaign types, X3 COMPLETE/provenance and X4's full native factory. Exact
 commands/cwd, caps, source identities, output and resources are retained in each
 `evidence/reconstruction-1/*.meter.json` and its log; the ledger records whether
-these have actually finished. The screenshot-path-only repair has its own fresh
+these have actually finished. The mounted-proof-only repairs have their own fresh
 mounted checks, not a restamped reconstruction result.
 The historical X3 branch-specific packager guard remains unchanged.
 
