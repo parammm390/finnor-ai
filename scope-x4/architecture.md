@@ -93,6 +93,16 @@ to test mechanism labels. Its full bounded language is declared before scoring.
 At most 16384 predicate programmes and 49 numerical programmes may be generated;
 overflow refuses with a representation/search boundary, never a truncated proof.
 
+The finite registered condition/record vectors define the prediction domain.
+The implementation may store a behavioral quotient of the full grammar: retain
+one executable representative, its complete finite truth vector, the grammar and
+atom basis, and the number of syntactic alternatives in each equivalence class.
+This is exact compression over the declared finite domain, not evidence of a
+unique mechanism or equivalence outside it. Both the producer and an independent
+checker must enumerate that closure; an omitted distinct truth vector is a
+checker failure. Joint inclusion/numeric programmes may be represented as a
+factorized product, with every surviving factor and counterexample retained.
+
 The elimination rule requires exact categorical outcomes and exact integer
 numerical outcomes (absolute tolerance 0). The deterministic profile assumes
 fresh isolated records, no interference or unmeasured input dependence and

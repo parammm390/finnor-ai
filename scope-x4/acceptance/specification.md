@@ -102,6 +102,14 @@ Counterfactual predictions are conditional programme outputs until checked
 against external interventions. Successful dev cases cannot score the original
 thirty-six-system gate.
 
+Finite behavioral compression is acceptable only when an independently
+implemented checker reconstructs the complete grammar closure over every
+registered condition/record vector. Each retained class must include its exact
+truth vector, executable representative, and syntactic-alternative count.
+Factorized inclusion and affine-value families must retain the entire surviving
+Cartesian product, not one preferred pair. No quotient proves mechanism identity
+or behavior beyond the registered domain.
+
 ## Custody and costs
 
 The runtime interpreter has no oracle/source/filesystem/credential/effect
