@@ -1,5 +1,7 @@
 # FRONTIER5.X4 development handoff
 
+See `handoff.md` for the outcome, exact scope, evidence and remaining gates.
+
 This is a bounded, consent-only system-identification implementation, not a
 protected admission or production activation. The frozen profile, owner seams
 and limits are in `architecture.md`; the preregistered failure model is in
@@ -125,3 +127,18 @@ original thirty-six-system qualification, protected admission, production/live
 authority, qualified matched comparison and mature financial results remain
 separate gates. No remote write, cloud provisioning or production change is
 part of these commands.
+
+## Check the sealed delivery
+
+The local delivery directory contains `delivery-manifest.json`,
+`source-owner-parity.json`, `evidence-catalog.json`, `x4-source.bundle`,
+`x4-shallow-boundaries.txt`, `x4-evidence.tar.gz`, readable handoff/ledger copies
+and `SHA256SUMS`. From that directory, run `sha256sum -c SHA256SUMS`.
+
+The evidence archive preserves the failed/interrupted runs as well as passes.
+Its catalog hashes each original file, including malformed receipts from the
+retained logging failure. Archive verification checks bytes, not a regraded or
+repaired version of those failures. Source-owner parity compares the final cut
+with the exact reconstructed checkpoint; final documentation changes do not
+replace a fresh scientific run or alter the verified product/probe bytes.
+These are builder-controlled integrity seals, not protected custody signatures.
