@@ -40,3 +40,44 @@ The smoke phase itself trains, saves and loads but does not execute a fresh
 record. Therefore clean reconstruction additionally runs the unchanged
 installed `review-probes` phase for its real supported trained consumption
 and native denial checks. Do not label the compile-only smoke as inference.
+
+The first clean attempt failed before installation: ordinary clone of the
+bundle cannot traverse the source's inherited shallow root
+`ed32d200a9459269509f1e40d4e13a3e2a1a4d6a` to unavailable parent
+`8711063a1c80234179ae83e474bbc098928401e8`. Preserve that failed attempt.
+The source's actual shared Git `shallow` file contains exactly the first hash.
+
+Before attempt 2, register source-only bootstrap from the bundle plus that
+explicit genuine boundary metadata: initialize a fresh empty Git directory,
+unbundle its objects, install the recorded boundary, then check out the exact
+checkpoint. Do not fetch missing ancestors, borrow another object database,
+rewrite a commit, fabricate prior history or copy build/module caches.
+This reconstructs the supplied shallow source, not a complete ancestral clone.
+
+Attempt 2 installed both ordinary lockfiles with initially empty npm/node-gyp
+caches. Its first read-only alias check incorrectly assumed S8 was a separately
+named npm workspace. It is a relative source module. Retain the failed lookup;
+check the actual `db`, `private-equity`, `shared-types` aliases and the real
+relative S8 source path instead. This changes no product, install or outcome.
+
+## Observed result
+
+Attempt 2 passed: exact checkpoint `ac6471f`, source-only bootstrap, both normal
+lock installs, local workspace/relative-module paths, 78-path producer digest,
+emitted API build, smoke physical training/save/load and all 15 existing
+installed owner/consumption groups. No modules, build outputs, signer, durable
+database, alternate object database or npm/node-gyp cache came from the donor.
+The exact Node executable is an explicit external runtime prerequisite.
+
+Independent standard-library reproduction passed for the smoke release
+(66 samples/600 epochs, maximum error `8.881784197001252e-16`) and the checkpoint
+actually consumed by the owner probes (`2.220446049250313e-15`). All 193 bundled
+migrations match disk bytes, the prior queued job survived replay, both
+lockfiles match, oracle bytes match and the cloned working tree is clean.
+Disposable databases stopped. The source digest remains
+`9123db8dd41fc9cb5719bd5ab4eaf67def103e113c02081f0de947c0c323a353`.
+
+Receipts: `reconstruction/attempt-1-failed.json`,
+`reconstruction/attempt-2-summary.json`,
+`evidence/reconstruction-2-smoke/`, `evidence/reconstruction-2-review/`
+and `x5-reconstruction-*.log`. See `reproduce.md` for boundary-aware bootstrap.

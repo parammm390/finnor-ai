@@ -17,6 +17,9 @@ Original machine-readable receipts remain under
 | `installed-8/independent-evaluation.json` | 32 scenarios/128 outcomes and 152-use census; supported development, zero critical violations/registration errors |
 | `installed-8/s8-learning.json` | Signed typed lifecycle, harmful ablation refusal, held proof/positive-transport expiry, cold revocation |
 | `x5-numerical-reference-3.log` in `/home/factory-user/` | Independent full-run 66-sample/600-epoch reconstruction, maximum absolute error `8.881784197001252e-16` |
+| `reconstruction-2-smoke/` and `reconstruction-2-review/` | Source-only shallow bootstrap, normal installs/build, physical training, real guarded consumption and all 15 owner groups passed |
+| `x5-reconstruction-review-numeric-2.log` in `/home/factory-user/` | Actually consumed clean-install checkpoint, 66 samples/600 epochs, maximum error `2.220446049250313e-15` |
+| `x5-reconstruction-final-parity-2.log` in `/home/factory-user/` | 193 bundled migrations, both locks, original oracle and 78-path producer bytes match |
 
 The unchanged producer cut for these current-cut diagnostics is
 `9123db8dd41fc9cb5719bd5ab4eaf67def103e113c02081f0de947c0c323a353`.
@@ -47,3 +50,10 @@ unestablished.
 
 The older `browser-2-mounted-current.png` captured another Canvas section.
 Keep it as historical evidence, not as the policy-panel screenshot.
+
+Reconstruction's ordinary bundle-clone failure and incorrect read-only alias
+lookup remain retained. Its successful source-only bootstrap explicitly carries
+the genuine inherited shallow boundary. Earlier ancestry is not reconstructed.
+The final local delivery manifest lists source/evidence hashes and exclusions.
+Neither clean reconstruction nor the complete campaign clears the blocked
+native Mission, governing-source, protected or programme/financial gates.

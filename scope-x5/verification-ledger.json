@@ -90,8 +90,8 @@
       "owner": "release/build/DB and task handoff",
       "expected": "Fresh normal lock installs and emitted installed parity without hidden donor state",
       "command": "See acceptance/execution-registration.md and acceptance/runtime-faults.md for the actual installed commands and separate diagnostic scope.",
-      "artifact": "/home/factory-user/x5-api-build-3.log; /home/factory-user/x5-campaign-types-16.log; /home/factory-user/x5-final-backend-types.log; /home/factory-user/x5-final-frontend-types.log; /home/factory-user/x5-lint-1.log (warnings, zero errors); /home/factory-user/x5-generated-0.log through x5-generated-3.log; /home/factory-user/x5-final-parity.log; /home/factory-user/x5-final-x3-stamp.log; /home/factory-user/x5-final-x5-stamp.log; security-review.md; clean reconstruction pending. Migration receipt preserves a queued prior-protocol job, not a cross-version running production deployment.",
-      "status": "PARTIAL"
+      "artifact": "/home/factory-user/x5-api-build-3.log; /home/factory-user/x5-campaign-types-16.log; /home/factory-user/x5-final-backend-types.log; /home/factory-user/x5-final-frontend-types.log; /home/factory-user/x5-lint-1.log (warnings, zero errors); /home/factory-user/x5-generated-0.log through x5-generated-3.log; /home/factory-user/x5-final-parity.log; /home/factory-user/x5-final-x3-stamp.log; /home/factory-user/x5-final-x5-stamp.log; security-review.md; /home/factory-user/x5-delivery/reconstruction/attempt-2-summary.json; /home/factory-user/x5-delivery/evidence/reconstruction-2-review/review-probes.json; /home/factory-user/x5-reconstruction-final-parity-2.log. PASS applies to supplied local runtime, normal installs and bounded installed consumption. Migration receipt preserves a queued prior-protocol job, not a cross-version running production deployment.",
+      "status": "PASS"
     },
     {
       "id": "J",
@@ -149,5 +149,7 @@
     }
   ],
   "completionGate": "NOT_E2E_DEV_VERIFIED",
-  "lastVerified": "Installed-8 complete four-arm/signed S8 passed in 851 seconds; full-run independent numeric reconstruction passed. Final types/lint/generated/seals/closure, owner probes, faults, resources, mounted browser and caller-only expiry passed on the unchanged producer cut. Clean reconstruction remains pending. Protected, Mission, governing-source and programme/finance gates remain separate."
+  "installedDevelopmentGate": "VERIFIED_BOUND_X5_DOMAIN",
+  "completionBlockers": ["NATIVE_MISSION", "FULL_GOVERNING_SOURCE", "PROTECTED_X5", "PROGRAMME_AND_FINANCE"],
+  "lastVerified": "Installed-8 complete four-arm/signed S8 passed in 851 seconds; full-run independent numeric reconstruction passed. Fresh source-only shallow reconstruction passed normal two-lock installs, emitted API build, real physical training and all 15 guarded owner/consumption groups with independent consumed-checkpoint numeric and final byte parity. Final types/lint/generated/seals/closure, owner probes, faults, resources, mounted browser and caller-only expiry passed on the unchanged producer cut. Failed clone/alias/installed attempts remain retained. The whole-request gate stays NOT_E2E_DEV_VERIFIED because required Mission/governing-source and external qualification are not replaced by bounded local proof."
 }

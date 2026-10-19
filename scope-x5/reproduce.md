@@ -19,10 +19,35 @@ delivery evidence directory. The independent pre-code oracle is unchanged.
   runtime invalidates an old capsule. No Docker/ARM64 image proof is implied by
   a local Node run.
 
+## Delivered source bootstrap
+
+The supplied repository is shallow at
+`ed32d200a9459269509f1e40d4e13a3e2a1a4d6a`. An ordinary clone of its bundle
+fails on an unavailable earlier parent. The delivery therefore includes the
+original `frontier5-x5-shallow-boundaries.txt`; this is explicit source metadata,
+not a donor object database or invented history.
+
+Use a new empty destination and the final delivery manifest:
+
+```sh
+DELIVERY=/home/factory-user/x5-delivery
+REPO=/absolute/new/x5-checkout
+REV=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["sourceCommit"])' "$DELIVERY/delivery-manifest.json")
+test ! -e "$REPO" || exit 1
+git init "$REPO"
+git -C "$REPO" bundle unbundle "$DELIVERY/frontier5-x5.bundle"
+install -m 644 "$DELIVERY/frontier5-x5-shallow-boundaries.txt" "$REPO/.git/shallow"
+git -C "$REPO" checkout -b codex/frontier5-x5-experience-to-policy-compiler "$REV"
+```
+
+This reconstructs the supplied shallow source. It does not restore earlier
+history, old private databases, signers or expired grants. The recorded clean
+run used fresh npm/node-gyp caches and no copied modules or build outputs.
+
 Install both lockfiles with Node 22 active:
 
 ```sh
-REPO=/home/factory-user/repos/finnor-x5
+REPO=${REPO:-/home/factory-user/repos/finnor-x5}
 NODE=/home/factory-user/x3-tools/node_modules/node/bin/node
 export PATH=/home/factory-user/x3-tools/node_modules/node/bin:$PATH
 export FINNOR_S3_PYTHON=/home/factory-user/x3-tools/python/bin/python

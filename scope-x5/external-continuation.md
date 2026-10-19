@@ -13,6 +13,7 @@ reused public evaluation or engineering commit grants these authorities.
 | Operational reasoning and economics | Original reasoning-work accounting, complete acquisition/train/serve/failure/maintenance costs, human effort and memory, original reach and 100× criteria | Missing quantities remain UNKNOWN, never zero |
 | S8 protected admission | Independently authorized evaluator/promoter, current protected rights/domain/runtime/checkpoint/assignment bindings and all protected gates | Disposable typed S8 admission is not protected admission or execution authority |
 | Production activation | Separately authorized production release, current protected admission, exact image/runtime/schema and operational controls | Ordinary development does not activate production; no hosted deployment is requested or performed |
+| Deployment/upgrade qualification | Exact Docker/ARM64 runtime, source/ABI and cross-version running-worker/native-artifact compatibility | Local loss/recovery and queued-row migration replay are not a rolling production deployment proof |
 | Mature S7 financial qualification | Original independently accepted financial outcomes, denominators, intervals, costs and programme criteria across all required engines | Operational acceptance is not a causal action reward or financial result |
 
 Prepared code and repeatable local evidence may be inputs to that continuation.
