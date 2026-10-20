@@ -1,0 +1,34 @@
+{
+  "schema": "finnor.y2.finite-verification-manifest.v1",
+  "frozenBeforeCriticalImplementation": true,
+  "profile": "finnor-os/packages/epistemic-runtime/src/strategic-response/profile.json",
+  "developmentOnly": true,
+  "acceptance": "EVERY_REQUIRED_CASE_PASSES_OR_COMPLETION_GATE_REMAINS_FALSE",
+  "cases": [
+    {"id":"Y2-01","required":true,"claim":"Authenticated durable submission, immutable canonical problem evidence, physical queue delivery and independently checked learned state"},
+    {"id":"Y2-02","required":true,"claim":"Incumbent observations retain complementary, zero-interference and crowd-out hypotheses; uninformative relabeling does not identify them"},
+    {"id":"Y2-03","required":true,"claim":"Actual executed permitted informative interventions reduce the structural set; requested or confounded experiments do not"},
+    {"id":"Y2-04","required":true,"claim":"Fresh held-out rule produces the frozen two-actor oracle trajectories and values without conditioning actors on each other's current private types"},
+    {"id":"Y2-05","required":true,"claim":"Independent checker rejects missing alternatives, changed fitted coefficients, corrupted joint paths, private-information leakage and fabricated decision values"},
+    {"id":"Y2-06","required":true,"claim":"S8 response-model-set admission is a separate typed domain; no existing financial, X4 or Y1 receipt is widened"},
+    {"id":"Y2-07","required":true,"claim":"Actual canonical S4 evaluator retains incumbent under unresolved crowd-out, then selects supported coordination after identification, without utility or risk reinterpretation"},
+    {"id":"Y2-08","required":true,"claim":"Shared-regime and complete private paths remain joint across periods and actors; no marginal product or invented probability"},
+    {"id":"Y2-09","required":true,"claim":"Source, authority, Work, method and transport changes invalidate new use while prior S5/S6 obligations and published preimages remain"},
+    {"id":"Y2-10","required":true,"claim":"Worker death, stale claims, duplicate delivery, cancellation, original-episode resume and compatible executable fallback preserve original deadline and cumulative limits"},
+    {"id":"Y2-11","required":true,"claim":"Unsupported domains, exhausted limits and unavailable checker stay unsupported, incomplete or unknown, never economic infeasibility"},
+    {"id":"Y2-12","required":true,"claim":"Mounted Work supports submission, progress, inspection, checking/admission, prediction, S4 decision, cancellation/resume, fallback and exact download with identity fences"},
+    {"id":"Y2-13","required":true,"claim":"Tenant/principal/root/source isolation, malformed and oversized requests, unauthenticated transport, RLS and immutable migrations fail closed"},
+    {"id":"Y2-14","required":true,"claim":"Installed artifacts contain all checker/profile/source assets; emitted runtime performs real durable authenticated episodes"},
+    {"id":"Y2-15","required":true,"claim":"Independent fresh-lock reconstruction reproduces the bounded application campaign and mounted behavior"},
+    {"id":"Y2-16","required":true,"claim":"Retained Y1, S3/S4, S5/S6/S8 and current intake/security behavior remains separately labeled and passing"}
+  ],
+  "externalGates": [
+    "ORIGINAL_GOVERNING_SOURCE_CLAUSE_PARITY_UNKNOWN",
+    "QUALIFIED_EQUIPPED_X_COMPARATOR_UNESTABLISHED",
+    "PROTECTED_DOMAIN_QUALIFICATION_UNESTABLISHED",
+    "PROTECTED_ADMISSION_NOT_AUTHORIZED",
+    "PRODUCTION_ACTIVATION_NOT_AUTHORIZED",
+    "OPERATIONAL_100X_NOT_ESTABLISHED",
+    "S7_REALIZED_FINANCIAL_EFFICACY_NOT_ESTABLISHED"
+  ]
+}

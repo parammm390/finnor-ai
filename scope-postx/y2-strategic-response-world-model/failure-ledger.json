@@ -1,0 +1,9 @@
+{
+  "schema":"finnor.y2.failure-ledger.v1",
+  "entries":[
+    {"id":"ENV-01","stage":"preimplementation","predicate":"NATIVE_MISSION_ENTRY_NOT_AVAILABLE_THROUGH_EXECUTE","disposition":"Owner explicitly requested ordinary local chat execution; no Mission claim"},
+    {"id":"SOURCE-01","stage":"preimplementation","predicate":"ORIGINAL_PRD_S_LOCK_R1_BYTES_NOT_PRESENT","disposition":"Original-source clause parity UNKNOWN; no invented digest"},
+    {"id":"ENV-02","stage":"integration","predicate":"FS_EXT_NATIVE_BINDING_MISSING_AFTER_IGNORE_SCRIPTS","disposition":"Rebuilt locked native dependencies; generation passed"},
+    {"id":"BASELINE-01","stage":"grounding","predicate":"QUALIFIED_EQUIPPED_X_RELEASE_NOT_AVAILABLE","disposition":"Comparator blocked, not defeated; production frontend metadata is not full-fleet qualification"}
+  ]
+}
