@@ -353,9 +353,11 @@ try {
   const url = `postgres://finnor:finnor@127.0.0.1:${port}/r3_e2e`;
   admin = observeAdmin(new pg.Client({ connectionString: url })); await admin.connect();
   await story('base-local-migration-upgrade-restart', async () => {
-    const initial = await migrate(url, MIGRATIONS.filter(m => m.name < '0187_r3_incentive_rule_synthesis.sql'));
+    const baseline = MIGRATIONS.filter(m => m.name < '0187_r3_incentive_rule_synthesis.sql');
+    const initial = await migrate(url, baseline);
     const before = (await admin.query('SELECT name FROM finnor_os._migrations ORDER BY name')).rows;
-    assert.equal(before.at(-1).name, '0186_r7_policy_atlas.sql');
+    assert.deepEqual(before.map(row => row.name), baseline.map(m => m.name));
+    assert(before.some(row => row.name === '0186_r7_policy_atlas.sql'));
     const applied = await migrate(url, MIGRATIONS), replay = await migrate(url, MIGRATIONS);
     assert.deepEqual(applied, MIGRATIONS.filter(m => m.name >= '0187_r3_incentive_rule_synthesis.sql').map(m => m.name)); assert.deepEqual(replay, []);
     await postgres.createDatabase('r3_fresh');
@@ -696,8 +698,11 @@ try {
       assert.equal(before.request.protocol_ref, null); assert.equal(before.jobs[0].status, 'running');
       const pid = worker.child.pid; assert(pid); let osIdentity: string;
       if (process.platform === 'linux') {
-        const [stat, status, command] = await Promise.all(['stat', 'status', 'cmdline']
-          .map(name => readFile(`/proc/${pid}/${name}`, 'utf8')));
+        const [stat, status, command] = await Promise.all([
+          readFile(`/proc/${pid}/stat`, 'utf8'),
+          readFile(`/proc/${pid}/status`, 'utf8'),
+          readFile(`/proc/${pid}/cmdline`, 'utf8'),
+        ]);
         const fields = stat.slice(stat.lastIndexOf(')') + 2).trim().split(/\s+/);
         const uid = status.match(/^Uid:\s+(\d+)/m); assert(uid);
         assert.equal(Number(stat.slice(0, stat.indexOf('(')).trim()), pid);

@@ -4,6 +4,7 @@ import { dirname, join, resolve } from "node:path"
 import { fileURLToPath, pathToFileURL } from "node:url"
 import { spawnSync } from "node:child_process"
 import { createHash } from "node:crypto"
+import { API_ROOT_SOURCE_PATHS } from "./vercel-build-context.mjs"
 
 const sourceRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..")
 export const SHA = "a".repeat(40)
@@ -26,7 +27,7 @@ export function createFixture(t, scenario = "valid") {
   const contract = JSON.parse(readFileSync(join(sourceRoot, "infra/deployment/production.contract.json"), "utf8"))
   writeFileSync(join(repo, "infra/deployment/production.contract.json"), JSON.stringify(contract))
   cpSync(join(sourceRoot, "infra/aws/finnor-production.yaml"), join(repo, "infra/aws/finnor-production.yaml"))
-  for (const name of ["package.json", "package-lock.json", "finnor-os/package.json", "finnor-os/package-lock.json"]) {
+  for (const name of ["package.json", "package-lock.json", "finnor-os/package.json", "finnor-os/package-lock.json", ...API_ROOT_SOURCE_PATHS]) {
     mkdirSync(dirname(join(repo, name)), { recursive: true })
     cpSync(join(sourceRoot, name), join(repo, name))
   }
