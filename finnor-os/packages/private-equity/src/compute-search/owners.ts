@@ -1,5 +1,5 @@
 import type {PeMutationContext} from '../types';
-import {readEnterpriseAllocation,validateEnterpriseAllocation} from '../enterprise-allocation';
+import {readValidatedNumericEnterpriseAllocation,validateEnterpriseAllocation} from '../enterprise-allocation';
 import {readEnterpriseContingentPolicy,validateEnterpriseContingentPolicy,deriveEnterpriseDeliberationConversion} from '../enterprise-control';
 import {stable} from '../evidence-execution/store';
 import {assertProgramCurrent,type ProgramRow} from '../program-synthesis/store';
@@ -17,7 +17,7 @@ export async function resolveSearchOwners(ctx:PeMutationContext,q:ProgramRow,r:C
  * permission to invent a P1 episode, dollar/token conversion or new allowance. */
 export async function resolveNativeComputeGrant(ctx:PeMutationContext,policyRequest:import('@finnor/shared-types').ExperimentRef,computeGrant:import('@finnor/shared-types').ExperimentRef,deliberation=false) {
  const policy=await readEnterpriseContingentPolicy(ctx,policyRequest);
- const issued=await readEnterpriseAllocation(ctx,computeGrant),state=await validateEnterpriseAllocation(ctx,computeGrant);
+ const {issued,validation:state}=await readValidatedNumericEnterpriseAllocation(ctx,computeGrant);
  if(state.status!=='CURRENT'||!issued.reservation)throw Error('P2_CURRENT_S4_S5_OWNERS_REQUIRED');
  if(!issued.certificate.check.selectedPolicyIds.includes(policy.ref.id)||!issued.certificate.policyBindings.some(b=>stable(b.policyRef)===stable(policy.ref)&&b.demandDigest===policy.demand.contentDigest))throw Error('P2_SELECTED_COMPUTE_POLICY_BINDING_REQUIRED');
  if(stable(issued.certificate.mandateRef)!==stable(policy.mandateRef)||issued.certificate.rightsRef!==policy.bindings.rightsRef)throw Error('P2_OWNER_MANDATE_OR_RIGHTS_MISMATCH');
@@ -43,10 +43,16 @@ export async function resolveNativeComputeGrant(ctx:PeMutationContext,policyRequ
  * portfolio; this removes a duplicate certificate solve, not a currentness check. */
 export async function recheckSearchOwners(ctx:PeMutationContext,q:ProgramRow,s:any){
  if(stable(q.request.ownerBindings?.policyRef)!==stable(s.request.policyRequest)||stable(q.request.ownerBindings?.allocationRef)!==stable(s.request.computeGrant))throw Error('P2_EXACT_P1_OWNER_BINDINGS_REQUIRED');
- const policy=await readEnterpriseContingentPolicy(ctx,s.request.policyRequest);
+ const [policyRead,allocationRead]=await Promise.allSettled([
+  readEnterpriseContingentPolicy(ctx,s.request.policyRequest),
+  validateEnterpriseAllocation(ctx,s.request.computeGrant),
+ ]);
+ if(policyRead.status==='rejected')throw policyRead.reason;
+ if(allocationRead.status==='rejected')throw allocationRead.reason;
+ const policy=policyRead.value,state=allocationRead.value;
  if(s.request.deliberation&&stable(deriveEnterpriseDeliberationConversion(policy))!==stable(s.binding.deliberationConversion))throw Error('M2_S4_UTILITY_CONVERSION_CHANGED');
  if(stable(policy.mandateRef)!==stable(s.binding.mandateRef)||stable(policy.mandate.utilityRef)!==stable(s.binding.utilityRef)||policy.bindings.rightsRef!==s.binding.rightsRef)throw Error('P2_OWNER_MANDATE_OR_RIGHTS_CHANGED');
- const state=await validateEnterpriseAllocation(ctx,s.request.computeGrant);if(state.status!=='CURRENT'||stable(state.reservationRef)!==stable(s.binding.reservationRef)||Date.now()>=Date.parse(s.binding.validUntil))throw Error('P2_S5_CURRENTNESS_UNPASSED');
+ if(state.status!=='CURRENT'||stable(state.reservationRef)!==stable(s.binding.reservationRef)||Date.now()>=Date.parse(s.binding.validUntil))throw Error('P2_S5_CURRENTNESS_UNPASSED');
  const horizon=s.binding.resourceEnvelope.horizon,period=Math.floor((Date.now()-Date.parse(horizon.startAt))/horizon.periodMs);
  if(period<0||period>=horizon.periods||s.binding.resourceEnvelope.quantities.slice(0,period+1).reduce((n:number,v:string)=>n+Number(v),0)!==s.binding.capacity)throw Error('P2_ORIGINAL_COMPUTE_HORIZON_CHANGED');
 }

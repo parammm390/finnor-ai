@@ -1,7 +1,9 @@
 import { sql } from "drizzle-orm";
 import { canonicalTruthRegistry, resolveTenantVertical, withTenant } from "@finnor/db";
 import { OperatingInteractionContextSchema } from "@finnor/policy-schema";
-import { isRetiredWaterCanonicalEntity, type CanonicalEntityRef, type OperatingInteractionContext } from "@finnor/shared-types";
+import { PE_WORLD_ROOT_TYPES, isRetiredWaterCanonicalEntity, type CanonicalEntityRef, type OperatingInteractionContext, type PeWorldRootRef, type TenantContext } from "@finnor/shared-types";
+import { validatePrivateEquityWorldContext } from "@finnor/private-equity/src/world-state";
+import { PE_ENTITY_TYPES, PeDomainError } from "@finnor/private-equity/src/types";
 import { eq, isNull, or } from "drizzle-orm";
 import { interpretOperationalQuery, type OperationalQueryDecision } from "./fast-read-lane";
 
@@ -73,6 +75,7 @@ export async function resolveOperatingInteractionContext(params: {
   }
 
   const refs = unique([
+    ...(context.businessRoot ? [context.businessRoot] : []),
     ...(context.focusedEntity ? [context.focusedEntity] : []),
     ...context.selectedEntities,
     ...context.excludedEntities,
@@ -119,6 +122,7 @@ export async function resolveOperatingInteractionContext(params: {
     // change neither planner semantics nor auditing.
     source: params.channel,
     ...(context.activeWork ? { activeWork: context.activeWork } : {}),
+    ...(context.businessRoot ? { businessRoot: context.businessRoot } : {}),
     ...(context.focusedEntity ? { focusedEntity: context.focusedEntity } : {}),
     selectedEntities: unique(context.selectedEntities),
     excludedEntities: unique(context.excludedEntities),
@@ -141,6 +145,34 @@ export function effectiveInteractionTargets(context: OperatingInteractionContext
   return unique(candidates).filter((ref) => !excluded.has(key(ref)));
 }
 
+export function interactionBusinessRoot(context: OperatingInteractionContext | undefined): PeWorldRootRef | null {
+  if (context?.businessRoot) return context.businessRoot;
+  const roots = effectiveInteractionTargets(context).filter((ref): ref is PeWorldRootRef =>
+    PE_WORLD_ROOT_TYPES.some(type => type === ref.entityType));
+  if (roots.length > 1) throw new OperatingInteractionContextError("Select one enclosing PE business root for this objective");
+  return roots[0] ?? null;
+}
+
+/** Canvas focus and selected PE records must belong to the enclosing owner cut.
+ * Conversation-resolved recipients retain their tenant/party and action-authority
+ * boundaries; the institutional graph does not own employee membership. */
+export async function validateInteractionBusinessScope(
+  ctx: TenantContext,
+  context: OperatingInteractionContext | undefined,
+): Promise<PeWorldRootRef | null> {
+  const root = interactionBusinessRoot(context);
+  if (!root || (await resolveTenantVertical(ctx.tenantId)).verticalKey !== "private_equity") return null;
+  const subjects = effectiveInteractionTargets(context).filter(ref => PE_ENTITY_TYPES.some(type => type === ref.entityType));
+  try {
+    await validatePrivateEquityWorldContext({ auth: ctx }, root,
+      unique([...subjects, ...(context?.focusedEntity ? [context.focusedEntity] : [])]));
+  } catch (error) {
+    if (!(error instanceof PeDomainError) || error.code !== "PE_ENTITY_NOT_FOUND") throw error;
+    throw new OperatingInteractionContextError("The business root or selected subject is unavailable in the current scope", 403, "operating_context_scope_denied");
+  }
+  return root;
+}
+
 /** Global fast reads cannot silently discard an exact canvas target. Route the
  * instruction through the context-aware planner instead. */
 export function interactionAwareOperationalDecision(
@@ -150,16 +182,18 @@ export function interactionAwareOperationalDecision(
 ): OperationalQueryDecision {
   if (!context) return decision;
   const targets = effectiveInteractionTargets(context);
-  if (targets.length === 0) return decision;
-  const exactDeal = targets.length === 1 && targets[0]?.entityType === "pe_deal" ? targets[0].entityId : undefined;
-  const scoped = exactDeal && instruction ? interpretOperationalQuery(instruction, exactDeal) : decision;
+  const root = interactionBusinessRoot(context);
+  if (!root && targets.length === 0) return decision;
+  const exactDeal = targets.length === 1 && targets[0]?.entityType === "pe_deal" ? targets[0].entityId
+    : root?.entityType === "pe_deal" ? root.entityId : undefined;
+  const scoped = instruction ? interpretOperationalQuery(instruction, { businessRoot: root, dealId: exactDeal }) : decision;
   if (scoped.route === "fast_read" && "dealId" in scoped.request && scoped.request.dealId === exactDeal) {
     return scoped;
   }
   if (scoped.route === "fast_read" && scoped.request.intent === "pe_world_state"
-      && scoped.request.root.entityType === "pe_deal" && scoped.request.root.entityId === exactDeal) {
+      && scoped.request.root.entityType === root?.entityType && scoped.request.root.entityId === root.entityId) {
     return scoped;
   }
   if (decision.route === "fast_read" && decision.request.intent === "company_context") return decision;
-  return decision.route === "fast_read" ? { route: "planner", reason: "unsupported" } : decision;
+  return decision.route === "fast_read" || scoped.route === "fast_read" ? { route: "planner", reason: "external_or_ambiguous" } : scoped;
 }

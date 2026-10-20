@@ -1,6 +1,6 @@
 /** Failure-first P3 real auth/SQL/queue/native/checker/app/consumer challenges. */
 import { strict as assert } from 'node:assert';
-import { randomUUID, generateKeyPairSync, sign, createHash, randomBytes } from 'node:crypto';
+import { randomUUID, generateKeyPairSync, sign, verify, createHash, randomBytes } from 'node:crypto';
 import { mkdir, writeFile, readFile, readdir, mkdtemp, appendFile, rm, realpath } from 'node:fs/promises';
 import { join, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -9,10 +9,10 @@ import { createServer, type Server } from 'node:http';
 import { spawnSync, spawn, type ChildProcess } from 'node:child_process';
 import EmbeddedPostgres from 'embedded-postgres';
 import pg from 'pg';
-import { closePool, getPool, acquireComputeResourceLeases, releaseComputeResourceLeases, COMPUTE_CUTOVER_EPOCH } from '@finnor/db';
+import { closePool, getPool, acquireComputeResourceLeases, releaseComputeResourceLeases, COMPUTE_CUTOVER_EPOCH,
+  createEmployeeConversationThread, updateEmployeeConversationThreadContext, receiveWork } from '@finnor/db';
 import { migrate } from '../../packages/db/migrate';
 import { assertDisposableDatabaseTarget } from '../../packages/db/production-target-guard';
-import { POST } from '../../apps/api/app/api/branches/[operation]/route';
 import { branchQueue } from '../../packages/private-equity/src/branch-fabric/worker';
 import { actor, tx, head, inputFor, readArtifact, artifact } from '../../packages/private-equity/src/branch-fabric/store';
 import { baselineState, createFixtureApp, fixtureRequest } from '../../packages/private-equity/src/branch-fabric/fixture';
@@ -23,13 +23,12 @@ import { checkCandidate } from '../../packages/private-equity/src/branch-fabric/
 import { createDeal } from '../../packages/private-equity/src/repository';
 import { createInvestmentCase } from '../../packages/private-equity/src/world-repository';
 import { createUnderwritingModel, createUnderwritingModelVersion, createUnderwritingRun } from '../../packages/private-equity/src/underwriting-repository';
-import { createMetricSeries, attachCanonicalEvidenceToWorld, restateMetricObservation } from '@finnor/private-equity';
+import { createMetricSeries, attachCanonicalEvidenceToWorld, restateMetricObservation, attachWorkToDealGraph } from '@finnor/private-equity';
 import { createEvidenceSource } from '@finnor/memory';
 import { fitEnterpriseInterventionModel } from '../../packages/private-equity/src/enterprise-interventions';
 import type { TenantContext } from '@finnor/shared-types';
-import { GET as identityGet } from '../../apps/api/app/api/me/route';
 import { requireContext } from '../../apps/api/lib/auth';
-import { ownerChallenges, ownerHandlers } from './owner-e2e.mjs';
+import { ownerChallenges } from './owner-e2e.mjs';
 import { costOnce, workUsage } from '../../packages/private-equity/src/branch-fabric/accounting';
 import { runPerformance } from './performance.mjs';
 import { checkpointSecurity, deadlineSecurity } from './completion-security.mjs';
@@ -83,11 +82,20 @@ async function snapshot(directory: string) {
 }
 await snapshot(join(root, 'finnor-os/packages/private-equity/src/branch-fabric'));
 await snapshot(join(root, 'finnor-os/scripts/p3'));
+if (joinMode) for (const owner of ['evidence-execution', 'decision-slice'])
+  await snapshot(join(root, 'finnor-os/packages/private-equity/src', owner));
 for (const path of ['scope-pm/phase-03-p3-branch-fabric/failure-model.md', 'scope-pm/phase-03-p3-branch-fabric/migration.sql', 'scope-pm/phase-03-p3-branch-fabric/performance-protocol.json', 'finnor-os/packages/db/compute-contract.ts', 'finnor-os/apps/worker/src/queue.ts', 'finnor-os/apps/api/app/api/branches/[operation]/route.ts', 'src/components/centropy/canvas/BranchRehearsalPanel.tsx']) sources.push({ path, sha256: digestBytes(await readFile(join(root, path))) });
 const cases: any[] = [], calls: any[] = [], acknowledgements: number[] = [], startedAt = new Date().toISOString();
 let admin: pg.Client | undefined, postgres: EmbeddedPostgres | undefined, apiServer: Server | undefined, authServer: Server | undefined;
 let frontend: ChildProcess | undefined;
+let apiProcess: ChildProcess | undefined;
+let apiLogWrites = Promise.resolve();
+const apiPending = new Map<number, { resolve: (value: any) => void; reject: (cause: Error) => void; timer: ReturnType<typeof setTimeout> }>();
+let apiSequence = 0;
 let browserOwner: Fixture | undefined, browserOther: Fixture | undefined, browserDone = false, pauseQueue = false;
+let expiredLogin = false, retentionHold: string | null = null;
+let delayedPreparation: { waiting: boolean; release: () => void; gate: Promise<void> } | null = null;
+function releasePreparation() { delayedPreparation?.release(); delayedPreparation = null; }
 async function save(name: string, value: unknown) { const path = join(output, name); await mkdir(dirname(path), { recursive: true }); await writeFile(path, JSON.stringify(value, null, 2) + '\n'); }
 async function report() {
   await save('results.json', { schema: 'finnor.p3.e2e.v1', startedAt, observedAt: new Date().toISOString(), cases, calls, acknowledgementsMs: acknowledgements, sourceManifest: sources, protocolDigest: hash(protocol), protocol, qualification: 'PUBLIC_H0_REAL_SIGNED_LOCAL_JWT_ORDINARY_POSTGRES_QUEUE_NODE_SQLITE_CHECKER_NOT_LINUX_OR_PROTECTED_ADMISSION', rerun: 'env -u DATABASE_URL -u POSTGRES_URL -u POSTGRES_URL_NON_POOLING node --import=tsx finnor-os/scripts/p3/run-e2e.mts' });
@@ -106,6 +114,44 @@ async function challenge(id: string, steps: string[], expected: string, fn: () =
 async function listen(server: Server): Promise<number> {
   await new Promise<void>((ok, no) => { server.once('error', no); server.listen(0, '127.0.0.1', ok); });
   const a = server.address(); assert(a && typeof a !== 'string'); return a.port;
+}
+async function startApiProcess(applicationUrl: string) {
+  apiProcess = spawn(process.execPath, ['--import=tsx', join(root, 'finnor-os/scripts/p3/api-process.mts')], {
+    cwd: join(root, 'finnor-os'), env: { ...process.env, DATABASE_URL: applicationUrl, FINNOR_P3_DISPOSABLE_API: '1' },
+    stdio: ['ignore', 'pipe', 'pipe', 'ipc'],
+  });
+  for (const stream of [apiProcess.stdout!, apiProcess.stderr!]) stream.on('data', b => { apiLogWrites = apiLogWrites.then(() => appendFile(join(output, 'api-process.log'), b)); });
+  apiProcess.on('message', (message: any) => {
+    const pending = apiPending.get(message.id); if (!pending) return;
+    clearTimeout(pending.timer); apiPending.delete(message.id);
+    if (message.kind === 'RESPONSE') pending.resolve(message); else pending.reject(Error(message.error ?? 'P3_API_PROCESS_RESPONSE'));
+  });
+  apiProcess.once('exit', (code, signal) => {
+    for (const pending of apiPending.values()) { clearTimeout(pending.timer); pending.reject(Error('P3_API_PROCESS_EXIT:' + code + ':' + signal)); }
+    apiPending.clear();
+    apiLogWrites = apiLogWrites.then(() => save('api-process-exit.json', { pid: apiProcess!.pid, code, signal }));
+  });
+  const ready = await new Promise<any>((yes, no) => {
+    const timer = setTimeout(() => { apiProcess?.kill('SIGTERM'); no(Error('P3_API_PROCESS_BOOT_BOUND')); }, 15000);
+    apiProcess!.once('error', error => { clearTimeout(timer); no(error); });
+    apiProcess!.once('exit', code => { clearTimeout(timer); no(Error('P3_API_PROCESS_EARLY_EXIT:' + code)); });
+    const receive = (message: any) => { if (message.kind === 'READY') { clearTimeout(timer); apiProcess!.off('message', receive); yes(message); } };
+    apiProcess!.on('message', receive);
+  });
+  assert.equal(ready.role.current_user, 'finnor_app'); assert(!ready.role.rolsuper && !ready.role.rolbypassrls);
+  await save('api-process-role.json', ready);
+}
+function applicationRequest(req: any, raw: Buffer) {
+  const id = ++apiSequence;
+  const settings = Object.fromEntries(['FINNOR_S3_PYTHON', 'FINNOR_S3_MODEL_STORE', 'FINNOR_S4_POLICY_STORE', 'FINNOR_M1_STORE',
+    'FINNOR_S6_OWNER_TRANSPORT_CONFIG', 'FINNOR_S6_OWNER_TRANSPORT_ROOT'].map(key => [key, process.env[key] ?? null]));
+  return new Promise<any>((resolve, reject) => {
+    const timer = setTimeout(() => { apiPending.delete(id); reject(Error('P3_API_PROCESS_REQUEST_BOUND')); }, 60000);
+    apiPending.set(id, { resolve, reject, timer });
+    apiProcess!.send({ kind: 'REQUEST', id, url: apiOrigin + req.url, method: req.method, headers: req.headers, body: raw.toString('base64'), settings }, error => {
+      if (error) { clearTimeout(timer); apiPending.delete(id); reject(error); }
+    });
+  });
 }
 const rsa = generateKeyPairSync('rsa', { modulusLength: 2048 });
 const publicJwk = { ...rsa.publicKey.export({ format: 'jwk' }), kid: 'p3-local-rsa-v1', alg: 'RS256', use: 'sig' };
@@ -280,18 +326,43 @@ try {
   admin = new pg.Client({ connectionString: ownerUrl }); await admin.connect();
   await save('database.json', { schema: 'finnor.p3.disposable-database.v1', directory: dbDir, port: dbPort, database: 'p3_e2e', baseMigrations, phaseMigrations, phaseSqlDigest: digestBytes(candidateSql), ordinaryRole: 'finnor_app', qualification: 'NEW_AGENT_CREATED_DISPOSABLE_LOOPBACK_CLUSTER_NO_AMBIENT_TARGET', runtime: (await admin.query('SELECT version() AS version')).rows[0] });
   await admin.query("ALTER ROLE finnor_app LOGIN PASSWORD 'p3_disposable_app'");
+  await admin.query("ALTER ROLE finnor_worker LOGIN PASSWORD 'p3_disposable_worker'");
   await admin.query("SET app.test_vertical_mode='explicit'");
   if (process.env.P3_GOVERNORS === '1') await admin.query(
     "INSERT INTO finnor_os.compute_resource_policies(resource_key,capacity,per_tenant_capacity,interactive_reserve,lease_seconds,enabled,source) VALUES('provider:m1-native',2,2,0,120,true,'P3 disposable missing-record owner prerequisite') ON CONFLICT(resource_key) DO NOTHING");
   await admin.query("UPDATE finnor_os.compute_plane_cutover SET state='authoritative',accepted_job_epoch=$1,minimum_claim_epoch=$1,enforce_known_job_types=true,legacy_tenant_writes_allowed=false,activated_release_sha=$2,activated_at=clock_timestamp() WHERE singleton=true", [COMPUTE_CUTOVER_EPOCH, '3'.repeat(40)]);
-  process.env.DATABASE_URL = `postgres://finnor_app:p3_disposable_app@127.0.0.1:${dbPort}/p3_e2e`;
+  const applicationUrl = `postgres://finnor_app:p3_disposable_app@127.0.0.1:${dbPort}/p3_e2e`;
+  process.env.DATABASE_URL = `postgres://finnor_worker:p3_disposable_worker@127.0.0.1:${dbPort}/p3_e2e`;
   await closePool();
   authServer = createServer(async (req, res) => {
     res.setHeader('content-type', 'application/json'); res.setHeader('access-control-allow-origin', '*');
-    res.setHeader('access-control-allow-headers', 'authorization,content-type,apikey,x-client-info');
+    res.setHeader('access-control-allow-headers', 'authorization,content-type,apikey,x-client-info,x-supabase-api-version');
+    res.setHeader('access-control-allow-methods', 'GET,POST,OPTIONS');
     if (req.method === 'OPTIONS') { res.writeHead(204); res.end(); return; }
     if (req.url?.includes('/.well-known/jwks.json')) { res.end(JSON.stringify({ keys: [publicJwk] })); return; }
     const parsed = new URL(req.url ?? '/', authOrigin || 'http://127.0.0.1');
+    const user = (owner: Fixture) => ({ id: owner.ctx.userId, email: owner.email, aud: 'authenticated', role: 'authenticated',
+      app_metadata: { provider: 'email', providers: ['email'] }, user_metadata: {}, created_at: '2026-01-01T00:00:00.000Z' });
+    if (browserMode && parsed.pathname === '/auth/v1/token' && req.method === 'POST') {
+      try {
+        let raw = ''; for await (const bytes of req) { raw += bytes; assert(raw.length <= 16384); }
+        const input = JSON.parse(raw), owner = [browserOwner, browserOther].find(value => value?.email === input.email);
+        if (!owner || input.password !== 'p3-disposable-only') { res.writeHead(400); res.end('{"msg":"Invalid disposable credentials"}'); return; }
+        const expires = expiredLogin ? -1 : 3600; expiredLogin = false;
+        res.end(JSON.stringify({ access_token: token(owner.email, owner.ctx.userId, expires), refresh_token: 'disposable-nonrefreshing',
+          token_type: 'bearer', expires_in: expires, expires_at: Math.floor(Date.now()/1000) + expires, user: user(owner) })); return;
+      } catch { res.writeHead(400); res.end('{"msg":"Invalid disposable login request"}'); return; }
+    }
+    if (browserMode && parsed.pathname === '/auth/v1/user') {
+      try {
+        const [h, p, signature] = String(req.headers.authorization ?? '').replace(/^Bearer /, '').split('.');
+        assert(h && p && signature && verify('RSA-SHA256', Buffer.from(h + '.' + p), rsa.publicKey, Buffer.from(signature, 'base64url')));
+        const claims = JSON.parse(Buffer.from(p, 'base64url').toString()); assert(claims.exp > Date.now()/1000 && claims.iss === authOrigin + '/auth/v1');
+        const owner = [browserOwner, browserOther].find(value => value?.ctx.userId === claims.sub && value?.email === claims.email); assert(owner);
+        res.end(JSON.stringify(user(owner))); return;
+      } catch { res.writeHead(401); res.end('{"msg":"Invalid or expired disposable JWT"}'); return; }
+    }
+    if (browserMode && parsed.pathname === '/auth/v1/logout') { res.end('{}'); return; }
     if (browserMode && parsed.pathname === '/__p3/session') {
       const owner = parsed.searchParams.get('identity') === 'other' ? browserOther : browserOwner;
       if (!owner) { res.writeHead(503); res.end('{"code":"FIXTURE_NOT_READY"}'); return; }
@@ -311,6 +382,21 @@ try {
           case 'revise': await admin!.query("INSERT INTO finnor_os.work_inputs(id,tenant_id,work_id,instruction_id,channel,instruction_text,created_by) VALUES($1,$2,$3,$4,'text','Browser material Work change',$5)", [randomUUID(), browserOwner.ctx.tenantId, browserOwner.workId, randomUUID(), browserOwner.ctx.userId]); break;
           case 'suspend': await admin!.query("UPDATE finnor_os.users SET status='suspended' WHERE id=$1", [browserOwner.ctx.userId]); break;
           case 'reactivate': await admin!.query("UPDATE finnor_os.users SET status='active' WHERE id=$1", [browserOwner.ctx.userId]); break;
+          case 'expire-next-login': expiredLogin = true; break;
+          case 'delay-prepare': {
+            assert(!delayedPreparation); let release!: () => void; const gate = new Promise<void>(yes => { release = yes; });
+            delayedPreparation = { waiting: false, release, gate }; break;
+          }
+          case 'release-prepare': releasePreparation(); break;
+          case 'hold': {
+            assert(!retentionHold); retentionHold = randomUUID();
+            await admin!.query("INSERT INTO finnor_os.data_retention_holds(id,tenant_id,resource_type,resource_id,reason,held_by) VALUES($1,$2,'work',$3,'P3 mounted disposable hold',$4)", [retentionHold, browserOwner.ctx.tenantId, browserOwner.workId, browserOwner.ctx.userId]); break;
+          }
+          case 'release-hold': await admin!.query('UPDATE finnor_os.data_retention_holds SET released_at=clock_timestamp() WHERE id=$1', [retentionHold]); retentionHold = null; break;
+          case 'observe': {
+            res.end(JSON.stringify({ preparationWaiting: delayedPreparation?.waiting ?? false,
+              heads: (await admin!.query('SELECT id,status,result_id,checkpoint_id,work_id FROM finnor_os.p3_requests WHERE tenant_id=$1 AND principal_id=$2 ORDER BY created_at', [browserOwner.ctx.tenantId, browserOwner.ctx.userId])).rows })); return;
+          }
           case 'finish': browserDone = true; break;
           default: throw Error('UNKNOWN_FIXTURE_CONTROL');
         }
@@ -321,19 +407,23 @@ try {
   });
   authOrigin = 'http://127.0.0.1:' + await listen(authServer);
   process.env.SUPABASE_URL = authOrigin; process.env.SUPABASE_SERVICE_ROLE_KEY = 'p3-local-public-test-key-not-production';
+  await startApiProcess(applicationUrl);
   apiServer = createServer(async (req, res) => {
+    const began = performance.now(), at = new Date().toISOString();
     try {
-      const chunks = []; for await (const raw of req) chunks.push(Buffer.from(raw));
-      const op = req.url?.split('/').at(-1) ?? '';
-      const request = new Request(apiOrigin + req.url, { method: req.method, headers: req.headers as any, ...(req.method === 'POST' ? { body: Buffer.concat(chunks) } : {}) });
-      const domain = req.url?.split('/')[2] ?? '';
-      const handler = domain === 'branches' ? POST : domain === 'company-brain' && joinMode ? joinSuite.joinHandler : ownerHandlers[domain];
-      let response: Response;
-      if (req.url === '/api/me') response = await identityGet(request);
-      else { assert(handler, 'FINITE_LOCAL_OWNER_ROUTE_REQUIRED'); response = await handler(request, { params: Promise.resolve({ operation: op }) }); }
-      const headers: Record<string, string> = {}; response.headers.forEach((value, key) => { headers[key] = value; });
-      res.writeHead(response.status, headers); res.end(await response.text());
-    } catch { res.writeHead(500); res.end('{"code":"LOCAL_HTTP_FAILED"}'); }
+      const chunks = []; let size = 0;
+      for await (const raw of req) { size += raw.length; assert(size <= 8 * 1024 * 1024, 'P3_HTTP_BODY_BOUND'); chunks.push(Buffer.from(raw)); }
+      const raw = Buffer.concat(chunks), response = await applicationRequest(req, raw);
+      if (req.url === '/api/branches/prepare' && delayedPreparation && !delayedPreparation.waiting && response.status === 200) {
+        const held = delayedPreparation; held.waiting = true; await held.gate;
+      }
+      const bytes = Buffer.from(response.body, 'base64');
+      await appendFile(join(output, 'http.jsonl'), JSON.stringify({ at, method: req.method, path: req.url,
+        status: response.status, bearer: Boolean(req.headers.authorization), applicationRole: 'finnor_app',
+        ...(req.url?.startsWith('/api/branches/') ? { input: raw.length ? JSON.parse(raw.toString()) : null, output: JSON.parse(bytes.toString()) } : {}),
+        elapsedMs: performance.now() - began }) + '\n');
+      res.writeHead(response.status, response.headers); res.end(bytes);
+    } catch (error) { await save(`http-failures/${randomUUID()}.json`, { url: req.url, error: String(error) }); res.writeHead(500); res.end('{"code":"LOCAL_HTTP_FAILED"}'); }
   });
   apiOrigin = 'http://127.0.0.1:' + await listen(apiServer);
   const f = await fixture('p3-owner'), other = await fixture('p3-other');
@@ -341,17 +431,32 @@ try {
   await save('authorities.json', { schema: 'finnor.p3.test-authority.v1', authOrigin, apiOrigin, publicJwk, owner: { tenantId: f.ctx.tenantId, principalId: actor(f.ctx), workId: f.workId, rootId: f.rootId }, other: { tenantId: other.ctx.tenantId, principalId: actor(other.ctx) }, domain: 'SIGNED_DISPOSABLE_TEST_AUTHORITY_NOT_PRODUCTION_SUPABASE' });
   if (browserMode) {
     browserOwner = f; browserOther = other;
+    const mutation = { auth: f.ctx };
+    const deal = await createDeal(mutation, { targetOrganizationId: f.rootId, name: 'P3 mounted current Canvas',
+      dealLeadEmployeeId: f.ctx.userId, signedLoiAt: new Date('2025-01-01'), targetClosingAt: new Date('2027-01-01') });
+    const dealRoot = { entityType: 'pe_deal' as const, entityId: String(deal.row.id) };
+    const thread = await createEmployeeConversationThread({ tenantId: f.ctx.tenantId, ownerEmployeeId: f.ctx.userId, title: 'Branch lifecycle verification' });
+    const different = await receiveWork({ tenantId: f.ctx.tenantId, userId: f.ctx.userId,
+      instruction: 'Inspect a distinct Work without the original Branch results.', channel: 'console', idempotencyKey: randomUUID() });
+    const otherThread = await createEmployeeConversationThread({ tenantId: f.ctx.tenantId, ownerEmployeeId: f.ctx.userId, title: 'Other Branch Work scope' });
+    for (const [workId, threadId] of [[f.workId, thread.id], [different.workId, otherThread.id]]) {
+      await attachWorkToDealGraph(mutation, { dealId: dealRoot.entityId, workId: workId!, entities: [dealRoot] });
+      await updateEmployeeConversationThreadContext({ tenantId: f.ctx.tenantId, ownerEmployeeId: f.ctx.userId, threadId: threadId!, activeWorkId: workId!, activeReferences: [dealRoot] });
+    }
     const reservation = createServer((_req,res)=>res.end()), frontendPort = await listen(reservation);
     await new Promise<void>(ok=>reservation.close(()=>ok()));
     const frontendOrigin = 'http://127.0.0.1:' + frontendPort;
     frontend = spawn(process.execPath, [join(root, 'node_modules/next/dist/bin/next'), 'dev', '--hostname', '127.0.0.1', '--port', String(frontendPort), '--webpack'], {
       cwd: root, detached: true, stdio: ['ignore','pipe','pipe'],
-      env: { PATH: process.env.PATH, HOME: root, NODE_ENV: 'development', NEXT_TELEMETRY_DISABLED: '1', NEXT_PUBLIC_SUPABASE_URL: authOrigin, NEXT_PUBLIC_SUPABASE_ANON_KEY: 'p3-public-disposable-test-authority', NEXT_PUBLIC_OS_API_URL: apiOrigin, FINNOR_BUILD_ID: 'p3-disposable-native-browser', AUTH_DEV_BYPASS: '0' },
+      env: { PATH: process.env.PATH, HOME: process.env.HOME, NODE_ENV: 'development', NEXT_TELEMETRY_DISABLED: '1', NEXT_PUBLIC_SUPABASE_URL: authOrigin, NEXT_PUBLIC_SUPABASE_ANON_KEY: 'p3-public-disposable-test-authority', NEXT_PUBLIC_OS_API_URL: apiOrigin, FINNOR_BUILD_ID: 'p3-disposable-native-browser', AUTH_DEV_BYPASS: '0' },
     });
     frontend.stdout!.on('data', b=>void appendFile(join(output,'frontend.log'),b));
     frontend.stderr!.on('data', b=>void appendFile(join(output,'frontend.log'),b));
-    const url = `${frontendOrigin}/branches?workId=${f.workId}&rootId=${f.rootId}`;
-    await save('browser-ready.json', { url, frontendOrigin, authOrigin, apiOrigin, output, workId:f.workId, rootId:f.rootId, qualification:'REAL_MOUNTED_NEXT_SUPABASE_CLIENT_PROXY_SIGNED_FIXTURE_JWT_NO_AUTH_BYPASS_NO_PRODUCTION_CREDENTIALS' });
+    const urlFor = (id: string) => `${frontendOrigin}/centropy/investigations/${id}?root=${encodeURIComponent(JSON.stringify(dealRoot))}`;
+    const url = urlFor(thread.id);
+    await save('browser-ready.json', { url, otherWorkUrl: urlFor(otherThread.id), frontendOrigin, authOrigin, apiOrigin, output,
+      email: f.email, otherEmail: other.email, password: 'p3-disposable-only', threadId: thread.id, otherThreadId: otherThread.id,
+      otherWorkId: different.workId, workId:f.workId, rootId:f.rootId, qualification:'REAL_MOUNTED_NEXT_SUPABASE_CLIENT_PROXY_SIGNED_FIXTURE_JWT_NO_AUTH_BYPASS_NO_PRODUCTION_CREDENTIALS' });
     console.log(JSON.stringify({ browserReady: join(output,'browser-ready.json'), url }));
     await challenge('S-mounted-browser', ['Actual Next app and existing Supabase client','Signed JWT/JWKS through real frontend proxy and requireContext','Real ordinary SQL/queue/native/checker','Browser assertions retained separately'], 'Real mounted workflow, historical class retained, no cross-principal or stale numbers; independently asserted browser proof required', async()=>{
       const queue = branchQueue();
@@ -370,7 +475,7 @@ try {
   } else if (performanceMode) {
     await runPerformance({ owner: f, output, protocol, sources, prepared, run, api, queue: branchQueue, sqlState, save, challenge });
   } else if (joinMode) {
-    assert(baseMigrations.includes('0155_p4_evidence_execution.sql'));
+    assert(baseMigrations.includes('0157_completion_p4_evidence_execution.sql'));
     assert(baseMigrations.includes('0165_m3_capital_program.sql'));
     await joinSuite.joinChallenges({ root, output, admin, other, fixture, apiOrigin, save, challenge, api, prepared, submitted, run, sqlState, migrationCount: baseMigrations.length });
   } else {
@@ -380,8 +485,9 @@ try {
     assert.equal(new Set(baseMigrations).size, baseMigrations.length);
     assert.deepEqual(phaseMigrations, ['0158_completion_p3_branch_fabric_candidate.sql', '0167_p3_checkpoint_lifecycle.sql', '0168_p3_resource_ownership.sql', '0169_p3_episode_deadline.sql']);
     const applied = (await admin!.query('SELECT name FROM finnor_os._migrations ORDER BY name')).rows.map(r => r.name);
-    assert.deepEqual(applied, [...baseMigrations, ...phaseMigrations].sort());
+    assert.deepEqual(applied, [...baseMigrations].sort());
     const role = (await getPool().query('SELECT current_user,rolsuper,rolbypassrls FROM pg_roles WHERE rolname=current_user')).rows[0]; assert.equal(role.rolsuper, false); assert.equal(role.rolbypassrls, false);
+    assert.equal(role.current_user, 'finnor_worker');
     assert.throws(() => assertDisposableDatabaseTarget('postgres://fixture:fixture@203.0.113.1/p3', 'P3'));
     p = await prepared(f);
     assert.equal((await api(f, 'prepare', { workId: f.workId, root: { entityType: 'external_organization', entityId: f.rootId }, kind: 'pure', profile: 'TRUSTED_NATIVE_H0', source: pureSource() }, token(f.email, f.ctx.userId, -1))).status, 401);
@@ -706,7 +812,15 @@ try {
   cases.push({ id: 'HARNESS_SETUP_OR_INTEGRITY', status: 'FAIL', observed: e instanceof Error ? { message: e.message, stack: e.stack } : String(e) });
   console.error(e instanceof Error ? e.stack : String(e)); await report();
 } finally {
+  releasePreparation();
   if(frontend?.pid) try { process.kill(-frontend.pid,'SIGTERM'); } catch {}
+  if (apiProcess && apiProcess.exitCode === null && apiProcess.signalCode === null) {
+    const exited = new Promise<void>(yes => apiProcess!.once('exit', () => yes()));
+    apiProcess.send({ kind: 'STOP' });
+    await Promise.race([exited, new Promise(yes => setTimeout(yes, 3000))]);
+    if (apiProcess.exitCode === null && apiProcess.signalCode === null) { apiProcess.kill('SIGKILL'); await exited; }
+  }
+  await apiLogWrites;
   await closePool();
   await admin?.end();
   if (apiServer) await new Promise<void>(ok => apiServer!.close(() => ok()));

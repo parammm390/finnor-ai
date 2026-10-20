@@ -51,6 +51,7 @@ import { plannerContinuationInstruction, plannerMemoryContext, plannerShortTermC
 import { clarificationContinuationAction, enforceExternalResearchRoute, safeReadFallbackForInstruction } from "./read-routing";
 import { resolveCompetitorResearch } from "./research-context";
 import { applyOperatingInteractionTargets } from "./interaction-targeting";
+import { interactionBusinessRoot } from "./interaction-context";
 import { defaultObjectiveSuccessCondition, growthRateLessBps } from "./objective-success";
 import { planningHealthForAction } from "./planning-health";
 import { parseModelJson } from "./model-json";
@@ -206,12 +207,13 @@ function plannerConstraintContext(constraints: ConstraintSet): Record<string, un
  * deterministic compiler that actually validates every proposed node. */
 function plannerSnapshotContext(snapshot: PlanningWorldSnapshot): Record<string, unknown> {
   const dealId = snapshot.canonicalEntities.find((entity) => entity.kind === "entity" && entity.type === "pe_deal")?.id;
+  const businessRoot = snapshot.businessRoot ?? (dealId ? { entityType: "pe_deal", entityId: dealId } : null);
   const availableReads = snapshot.capabilities
     .filter((item) => item.kind === "query" && item.available && item.health !== "unavailable")
     .flatMap((item) => {
       const intent = item.capability.startsWith("query:") ? item.capability.slice("query:".length) : item.capability;
-      const request = intent === "pe_world_state" && dealId
-        ? { intent, root: { entityType: "pe_deal", entityId: dealId } }
+      const request = intent === "pe_world_state" && businessRoot
+        ? { intent, root: businessRoot }
         : PRIVATE_EQUITY_OPERATIONAL_QUERY_INTENTS.some((value) => value === intent) && dealId
           ? { intent, dealId }
           : item.requiredReferences.length === 0 ? { intent } : null;
@@ -222,6 +224,7 @@ function plannerSnapshotContext(snapshot: PlanningWorldSnapshot): Record<string,
   return {
     capturedAt: snapshot.capturedAt,
     work: snapshot.work,
+    businessRoot,
     canonicalEntities: snapshot.canonicalEntities,
     canonicalVersions: snapshot.canonicalVersions,
     activeObjective: snapshot.activeObjective,
@@ -922,6 +925,7 @@ export class LLMPlanner implements Planner {
         integrationHealth: context?.integrationHealth ?? {},
       }),
       work: { id: opts.workId ?? UUID_V4_ZERO, status: context?.activeWork?.status ?? null, inputId: opts.workInputId ?? UUID_V4_ZERO },
+      businessRoot: interactionBusinessRoot(context?.interactionContext ?? undefined),
       interactionContextRef: context?.interactionContext ? { hash: contextHash, sourceRef: "work_input.context_snapshot" } : null,
       canonicalEntities: (context?.referencedEntities ?? []).map((ref) => ({ kind: "entity", type: ref.entityType, id: ref.entityId, versionHash: null, sourceRef: `operating-context:${ref.entityType}:${ref.entityId}` })),
       canonicalVersions,

@@ -1,4 +1,4 @@
-// Generated from finnor-os/openapi.json, SHA-256 764bf44d3b49f2b71a161eb77703627611f2d4dcbbcd5811859d9e19d7345383.
+// Generated from finnor-os/openapi.json, SHA-256 6852c1743ef779585856ef356ee3131d1b987a17acf6ad728c6f075655c2848f.
 export interface paths {
     "/api/live-controls": {
         parameters: {
@@ -7184,6 +7184,12 @@ export interface paths {
                                 /** Format: uuid */
                                 workId: string;
                             };
+                            businessRoot?: {
+                                /** @enum {string} */
+                                entityType: "pe_strategy" | "pe_opportunity" | "pe_deal" | "pe_fund" | "pe_vehicle" | "external_organization" | "pe_portfolio_holding";
+                                /** Format: uuid */
+                                entityId: string;
+                            };
                             focusedEntity?: {
                                 entityType: string;
                                 /** Format: uuid */
@@ -7292,6 +7298,12 @@ export interface paths {
                             activeWork?: {
                                 /** Format: uuid */
                                 workId: string;
+                            };
+                            businessRoot?: {
+                                /** @enum {string} */
+                                entityType: "pe_strategy" | "pe_opportunity" | "pe_deal" | "pe_fund" | "pe_vehicle" | "external_organization" | "pe_portfolio_holding";
+                                /** Format: uuid */
+                                entityId: string;
                             };
                             focusedEntity?: {
                                 entityType: string;
@@ -7632,6 +7644,12 @@ export interface paths {
                             activeWork?: {
                                 /** Format: uuid */
                                 workId: string;
+                            };
+                            businessRoot?: {
+                                /** @enum {string} */
+                                entityType: "pe_strategy" | "pe_opportunity" | "pe_deal" | "pe_fund" | "pe_vehicle" | "external_organization" | "pe_portfolio_holding";
+                                /** Format: uuid */
+                                entityId: string;
                             };
                             focusedEntity?: {
                                 entityType: string;

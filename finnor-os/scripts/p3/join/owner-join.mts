@@ -13,7 +13,7 @@ import { JobQueue } from '../../../apps/worker/src/queue';
 import { PRODUCTION_JOB_CONTRACTS } from '../../../packages/db/compute-contract';
 import { runEvidenceDerivationJob } from '../../../packages/private-equity/src/evidence-execution/worker';
 import { branchQueue } from '../../../packages/private-equity/src/branch-fabric/worker';
-import { hash } from '../../../packages/private-equity/src/branch-fabric/contracts';
+import { hash, bytesHash } from '../../../packages/private-equity/src/branch-fabric/contracts';
 import { currentCodeIdentity } from '../../../packages/private-equity/src/evidence-execution/store';
 export const joinHandler = POST;
 const success = (r: any) => { assert(r.status >= 200 && r.status < 300, JSON.stringify(r)); return r.body; };
@@ -58,8 +58,13 @@ export async function joinChallenges(s: any) {
   }
   const submission = success(await ownerApi(f, 'evidence-submit', { schema: 'finnor.evidence-request.v1', root, workId: f.workId, question: 'Exact current equity and leverage for P3 native rehearsal', idempotencyKey: randomUUID(), mode: 'ordinary_disposable', inputs: handles.map((h: any) => ({ inputId: h.inputId, handleId: h.id })), program, acceptance: { selectedUniverse: 'COMPLETE', absoluteTolerance: '0', materialOutputs: ['equity', 'leverage'] } }));
   let current = await finish(submission), first: any;
+  let historicalImport: unknown = { status: 'NOT_SUPPLIED', qualification: 'EARLIER_TRANSFER_GATE_NOT_QUALIFIED_BY_CURRENT_RUNTIME' };
+  try {
+    const bytes = await readFile(join(s.root, 'scope-pm/phase-03-p3-branch-fabric/scope-evidence/join-import-receipt.json'));
+    historicalImport = { sha256: bytesHash(bytes), record: JSON.parse(bytes.toString()), qualification: 'HISTORICAL_CONTEXT_NOT_CURRENT_SOURCE_OR_ADMISSION' };
+  } catch (error) { if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error; }
   await s.save('join/producer-cut.json', { identity: await currentCodeIdentity(), migrationCount: s.migrationCount,
-    base: JSON.parse(await readFile(join(s.root, 'scope-pm/phase-03-p3-branch-fabric/scope-evidence/join-import-receipt.json'), 'utf8')),
+    historicalImport,
     sourceCut: current, mode: 'AUTHENTIC_COMMITTED_PRODUCERS_ORDINARY_NATIVE_NOT_ACCEPTED_ISOLATION' });
   await s.challenge('T1-authentic-P4-current-native-replay', ['Signed CompanyBrain producer routes', 'Real P4 queue/SQL witnesses/checks', 'P3 fixed credential-free native P4 child and independent rational checker', 'Foreign principal refusal'],
     'Exact equity50 and leverage3.5, selected universe preserved; no source/business/admission upgrade', async () => {

@@ -117,6 +117,7 @@ export function CentropyWorkspace() {
   const setExplicitRoot = (value: PeWorldRootRef | null) => setRootSelection({ key: selectionKey, value, explicit: true })
   const setFocusedObject = (value: CompanyBrainObjectRef | null) => setObjectSelection({ key: selectionKey, value })
   const [composerSuggestion, setComposerSuggestion] = useState<{ id: string; text: string } | null>(null)
+  const [restoredBusinessRoot, setRestoredBusinessRoot] = useState<{ key: string; root: PeWorldRootRef | null } | null>(null)
 
   useEffect(() => { if (draftArtifactInUrl) setMobilePane("canvas") }, [draftArtifactInUrl])
   useEffect(() => {
@@ -182,11 +183,24 @@ export function CentropyWorkspace() {
     const ref = investigation.loaded?.thread.activeReferences.find(isPeWorldRootRef)
     return ref && isPeWorldRootRef(ref) ? ref : null
   }, [investigation.loaded?.thread.activeReferences])
+  const workScopeKey = `${auth.session?.user.id ?? "signed-out"}:${threadId ?? "none"}:${activeWorkId ?? "none"}`
+  const persistedRoot = activeWorkId
+    ? restoredBusinessRoot?.key === workScopeKey ? restoredBusinessRoot.root : null
+    : selectedRootFromThread
   const canvasRoot = rootSelection.key === selectionKey && rootSelection.explicit
-    ? rootSelection.value : routeClearsContext ? null : explicitRoot ?? selectedRootFromThread
+    ? rootSelection.value : routeClearsContext ? null : explicitRoot ?? persistedRoot
   const routeSelectedObject = routeSelection.selectedObject
   const selectedIcCaseId = UUID.test(searchParams.get("icCaseId") ?? "") ? searchParams.get("icCaseId") : null
   const canvasSources = useCanvasSources(activeWorkId, canvasRoot, ready && Boolean(threadId || worldMode || canvasRoot), canvasRefresh + refreshToken, underwritingRefresh, selectedIcCaseId)
+  useEffect(() => {
+    const work = canvasSources.work
+    if (!activeWorkId || work.status !== "ready" || work.data?.work.id !== activeWorkId || work.data.read?.complete === false) return
+    const snapshot = work.data.inputs?.at(-1)?.contextSnapshot
+    const candidate = snapshot && typeof snapshot === "object" && "businessRoot" in snapshot ? snapshot.businessRoot : null
+    const root = isPeWorldRootRef(candidate) ? candidate : selectedRootFromThread
+    setRestoredBusinessRoot(previous => previous?.key === workScopeKey && previous.root?.entityType === root?.entityType && previous.root?.entityId === root?.entityId
+      ? previous : { key: workScopeKey, root })
+  }, [activeWorkId, canvasSources.work, selectedRootFromThread, workScopeKey])
   const contextLabel = canvasRoot ? canvasSources.projection.data?.nodes.find((item) => item.ref.type === canvasRoot.entityType && item.ref.id === canvasRoot.entityId)?.label
     ?? `${({pe_strategy:"Strategy",pe_opportunity:"Opportunity",pe_deal:"Deal",pe_fund:"Fund",pe_vehicle:"Vehicle",external_organization:"Company",pe_portfolio_holding:"Holding"})[canvasRoot.entityType]} ${canvasRoot.entityId.slice(0, 8)}` : null
   const selectIcCase = (id: string) => {

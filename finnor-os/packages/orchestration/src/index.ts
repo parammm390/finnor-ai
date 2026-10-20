@@ -54,7 +54,7 @@ import {
 import { isConversationalTurn, LLMConversationResponder, type ConversationResponder } from "./conversation";
 import { requiresTypedConfirmation } from "../../../scripts/release/action-hardening-spec";
 import { assembleOperatingContext } from "./operating-context";
-import { interactionAwareOperationalDecision, resolveOperatingInteractionContext } from "./interaction-context";
+import { interactionAwareOperationalDecision, interactionBusinessRoot, resolveOperatingInteractionContext, validateInteractionBusinessScope } from "./interaction-context";
 import { employeeAuthoritySnapshot, evaluateActionApproval, evaluateAuthority, finalizeApprovalAuthorityTx, isFinalApprovalStep, revalidateActionExecution } from "@finnor/authority";
 import { queryAuthorityRequest } from "./authority-runtime";
 import { isConsequentialAction } from "./compiler";
@@ -579,15 +579,13 @@ export class FinnorOrchestrator implements Orchestrator {
           activeContext: undefined,
           authorityContext: intakeAuthorityContext(ctx),
         });
-    opts = {
-      ...opts,
-      activeContext: await resolveOperatingInteractionContext({
-        tenantId: ctx.tenantId,
-        context: opts.activeContext,
-        channel: opts.channel ?? "console",
-        workId: received.workId,
-      }),
-    };
+    const interactionContext = await resolveOperatingInteractionContext({
+      tenantId: ctx.tenantId,
+      context: opts.activeContext,
+      channel: opts.channel ?? "console",
+      workId: received.workId,
+    });
+    opts = { ...opts, activeContext: interactionContext };
     const workId = received.workId;
     const workInputId = received.workInputId;
     const instructionId = received.instructionId;
@@ -612,11 +610,12 @@ export class FinnorOrchestrator implements Orchestrator {
     let fastAnswer: AnswerEnvelope | null = null;
     let fastQuery: OperationalQueryExecution | undefined;
     let operatingContext: OperatingContext | undefined;
-    const suppliedDecision = opts.fastReadDecision ? interactionAwareOperationalDecision(opts.fastReadDecision, opts.activeContext as OperatingInteractionContext | undefined) : undefined;
-    const shouldClassify = !opts.skipFastReadClassification && suppliedDecision === undefined;
-    let fastDecision: OperationalQueryDecision | undefined = suppliedDecision;
+    const shouldClassify = !opts.skipFastReadClassification && opts.fastReadDecision === undefined;
+    let fastDecision: OperationalQueryDecision | undefined;
     let instructionRoute: InstructionRouteDecision | undefined = opts.instructionRouteDecision;
     try {
+      const businessRoot = interactionBusinessRoot(interactionContext);
+      fastDecision = opts.fastReadDecision ? interactionAwareOperationalDecision(opts.fastReadDecision, interactionContext, instruction) : undefined;
       if (shouldClassify) {
         // Legacy/unit embeddings may provide a fully injected fast-read seam
         // without a configured database. A missing vertical identity is not a
@@ -629,7 +628,9 @@ export class FinnorOrchestrator implements Orchestrator {
         } catch {
           verticalKey = undefined;
         }
-        if (verticalKey === "private_equity") {
+        if (businessRoot && verticalKey === "private_equity") {
+          fastDecision = interactionAwareOperationalDecision(this.fastReadOnlyRouter.interpret?.(instruction) ?? { route: "planner", reason: "unsupported" }, interactionContext, instruction);
+        } else if (verticalKey === "private_equity") {
           const peDecision = await interpretPrivateEquityQuestion(ctx.tenantId, instruction, { workId, userId: ctx.userId });
           if (peDecision.route === "fast_read") {
             fastDecision = { route: "fast_read", confidence: "high", request: peDecision.request };
@@ -655,7 +656,7 @@ export class FinnorOrchestrator implements Orchestrator {
         }
         if (!fastDecision && !fastAnswer) {
           const interpreted = this.fastReadOnlyRouter.interpret?.(instruction);
-          fastDecision = interpreted ? interactionAwareOperationalDecision(interpreted, opts.activeContext as OperatingInteractionContext | undefined) : undefined;
+          fastDecision = interpreted ? interactionAwareOperationalDecision(interpreted, interactionContext, instruction) : undefined;
         }
       }
       const routeReadDecision: OperationalQueryDecision = fastDecision ?? { route: "planner", reason: "unsupported" };
@@ -668,6 +669,9 @@ export class FinnorOrchestrator implements Orchestrator {
       if (opts.conversationContext?.resolution.status === "clarification_required") {
         instructionRoute = { version: 1, route: "ATOMIC_EFFECT", reasonCodes: ["phase6_reference_or_sender_ambiguous"] };
       }
+      // Durable startup validates its own accepted scope. Other lanes validate
+      // here before any synchronous read, planning or conversational response.
+      if (instructionRoute.route !== "OBJECTIVE") await validateInteractionBusinessScope(ctx, interactionContext);
       await transitionWork(ctx.tenantId, workId, "understanding", "instruction_routed", {
         policyVersion: instructionRoute.version,
         route: instructionRoute.route,

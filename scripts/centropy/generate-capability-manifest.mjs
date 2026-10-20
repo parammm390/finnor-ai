@@ -21,10 +21,7 @@ function block(source, start, end) {
 }
 
 const companyBrainSource = readFileSync(join(apiRoot, "company-brain/[operation]/route.ts"), "utf8")
-const r1Source=readFileSync(join(project,"finnor-os/packages/private-equity/src/r1/api.ts"),"utf8")
-const r1Registry=r1Source.match(/export const R1_OPERATIONS=\[([^\]]+)\]/)
-if(!r1Registry)throw new Error("Missing delegated R1 operations")
-const r1Operations=[...r1Registry[1].matchAll(/'([^']+)'/g)].map(match=>match[1])
+const r1Operations = registeredOperations("finnor-os/packages/private-equity/src/r1/api.ts", "R1_OPERATIONS")
 const r1Reads=new Set(["r1-read","r1-review","r1-projection","r1-history","r1-record"])
 function registeredOperations(path, name) {
   const source = readFileSync(join(project, path), "utf8")
@@ -69,8 +66,8 @@ const branchOperations = new Map([...block(branchSource,"export const BranchOper
 if(!capitalOperations.length||!m4Operations.size||!branchOperations.size||
   !companyBrainSource.includes("CAPITAL_PROGRAM_V2_OPERATIONS")||!companyBrainSource.includes("M4_OPERATIONS"))
   throw new Error("Completed owner operation registries must be present and actually delegated")
-// Only the stagewise Work leaf's actual POST owners are added. Generic policies,
-// release/consent/effect routes and unknown operations remain unchanged/denied.
+// Product admission is limited to the mounted coalition controls; the generic
+// owner catalogue does not grant release, consent or effect authority.
 const coalitionOperations = new Map([
   ["policies/coalition-read", "READ"],
   ["allocations/coalition-read", "READ"],
@@ -105,18 +102,24 @@ const companyBrainReads = new Set([
   "continuation-read", "continuation-projection",
   "procedure-experience", "procedure-induction-read", "procedure-read", "procedure-component", "procedure-projection", "procedure-admission-request", "procedure-interface", "procedure-costs",
   "deliberation-read", "deliberation-projection", "deliberation-module-read", "deliberation-evidence-read",
-  "capital-program-read","capital-program-list","capital-program-context","capital-program-ports","capital-program-witness","capital-program-module",
+  "capital-program-read","capital-program-status","capital-program-list","capital-program-context","capital-program-ports","capital-program-witness","capital-program-module",
   "capital-formation-read","capital-formation-list","capital-formation-profiles",
 ])
 const elicitationOperations=registeredOperations("finnor-os/packages/epistemic-runtime/src/incentive-rule-synthesis/contracts.ts","ELICITATION_OPERATIONS")
 const elicitationReads=new Set(["context","read","status","history"])
 const ownerLeafOperations=new Map()
-for(const family of ["interventions","policies","allocations","obligations"]){
+for(const family of ["interventions","policies","allocations","obligations","experiments","economic-outcomes","coalition-programmes"]){
  const source=readFileSync(join(apiRoot,`${family}/[operation]/route.ts`),"utf8")
- ownerLeafOperations.set(family,[...source.matchAll(/case\s+['"]([a-z][a-z0-9-]*)['"]\s*:/g)].map(m=>m[1]))
+ const operations = new Set([
+   ...[...source.matchAll(/case\s+['"]([a-z][a-z0-9-]*)['"]\s*:/g)].map(m=>m[1]),
+   ...[...source.matchAll(/route\.operation\s*===?\s*['"]([a-z][a-z0-9-]*)['"]/g)].map(m=>m[1]),
+ ])
+ if (!operations.size) throw new Error(`Missing owner operation dispatch: ${family}`)
+ ownerLeafOperations.set(family,[...operations])
 }
 const ownerLeafReads=new Set(["query","validate","finite-preference","experiment-projection","read","read-mechanism",
- "resources","budget-status","read-commitment","read-execution-handoff","check-budget","check-dispatch"])
+ "resources","budget-status","read-commitment","read-execution-handoff","check-budget","check-dispatch",
+ "history","execution-evidence","learning-assessment"])
 const readModelsSource = readFileSync(join(apiRoot, "read-models/[view]/route.ts"), "utf8")
 const readModels = ["attention", ...[...block(readModelsSource, "const VIEWS:", "export async function GET").matchAll(/^[ \t]+"([a-z-]+)":/gm)].map((match) => match[1])]
 const artifactOperations = {
@@ -132,7 +135,37 @@ const atlasOperations = new Map([...block(atlasSource, "export const R7Operation
   .matchAll(/([a-z]+):'(READ|CONTROL|MUTATION)'/g)].map(match => [match[1], match[2]]))
 if (!atlasOperations.size) throw new Error("Missing versioned R7 operation classes")
 
+const operationClasses = new Map()
+for (const [family, operations] of ownerLeafOperations) for (const operation of operations)
+  operationClasses.set(`${family}/${operation}`, ownerLeafReads.has(operation) ? "READ" :
+    ["cancel-delivery", "reconcile-request", "reconcile"].includes(operation) ? "CONTROL" : "MUTATION")
+for (const [family, operations] of [
+  ["branches", branchOperations], ["decision-atlases", atlasOperations], ["company-brain", m4Operations],
+  ["identification-plans", new Map(identificationOperations.map(operation => [operation,
+    identificationReads.has(operation) ? "READ" : operation === "cancel" ? "CONTROL" : "MUTATION"]))],
+  ["policies", new Map(r1Operations.map(operation => [operation,
+    r1Reads.has(operation) ? "READ" : ["r1-cancel", "r1-reconcile"].includes(operation) ? "CONTROL" : "MUTATION"]))],
+  ["elicitation-protocols", new Map(elicitationOperations.map(operation => [operation,
+    elicitationReads.has(operation) ? "READ" : operation === "cancel" ? "CONTROL" : "MUTATION"]))],
+]) for (const [operation, classification] of operations) operationClasses.set(`${family}/${operation}`, classification)
+for (const [path, classification] of coalitionOperations) {
+  if (!ownerLeafOperations.get(path.split("/")[0])?.includes(path.split("/")[1]))
+    throw new Error(`Product coalition operation is not dispatched by its owner: ${path}`)
+  operationClasses.set(path, classification)
+}
+const routeOperations = new Map([...ownerLeafOperations].map(([family, operations]) => [`${family}/:operation`, operations]))
+for (const [path, operations] of [
+  ["company-brain/:operation", companyBrainOperations], ["elicitation-protocols/:operation", elicitationOperations],
+  ["closing/:operation", closingOperations], ["branches/:operation", [...branchOperations.keys()]],
+  ["identification-plans/:operation", identificationOperations], ["decision-atlases/:operation", [...atlasOperations.keys()]],
+  ["policies/:operation", [...new Set([...ownerLeafOperations.get("policies"), ...r1Operations])]],
+]) routeOperations.set(path, operations)
+
+
 const familyRules = [
+  [/^policies\/r1-/, "exact-control", "@finnor/private-equity", ["CANVAS"]],
+  [/^identification-plans\//, "identification-plan", "@finnor/private-equity", ["CANVAS"]],
+  [/^decision-atlases\//, "decision-atlas", "@finnor/private-equity", ["CANVAS"]],
   [/^elicitation-protocols\//,"elicitation-protocol","@finnor/private-equity",["CANVAS"]],
   [/^closing\//, "closing", "@finnor/private-equity", ["WORLD", "CANVAS"]],
   [/^live-controls$/, "live-control", "@finnor/private-equity", ["WORLD", "CANVAS"]],
@@ -169,8 +202,9 @@ const familyRules = [
 
 const denyPrefixes = [
   "admin/", "webhooks/", "dlq/", "policies/", "audit/", "ready/", "release/", "vitals/",
-  "setup/", "events/", "private-equity/calibration/", "coalition-programmes/",
+  "setup/", "events/", "private-equity/calibration/", "coalition-programmes/", "experiments/", "economic-outcomes/",
 ]
+const restrictedOperations = new Set(["allocations/coalition-release", "obligations/coalition-consent"])
 const humanOnlyPatterns = [
   /^elicitation-protocols\/(?:report|event|review|close|use)$/,
   /^closing\/(submit|stop|resume|observe)$/,
@@ -197,6 +231,8 @@ function familyFor(path) {
 
 function tags(family) {
   const byFamily = {
+    "exact-control": ["work", "company-brain"],
+    "coalition-programme": ["work", "company-brain", "authority"],
     "decision-atlas": ["work", "company-brain"],
     "identification-plan": ["work", "company-brain"],
     closing: ["closing", "work", "objective", "company-brain", "semantic-activity"],
@@ -219,14 +255,9 @@ function routeEntry(method, path, source) {
     : familyFor(path)
   const stream = path === "stream"
   const r1 = path.startsWith("policies/") && r1Operations.includes(path.slice("policies/".length))
-  // Digital Twin POST includes evidence-backed canonical mutations.
-  const ownerClassification=path.startsWith("branches/")?branchOperations.get(path.slice("branches/".length)):
-    path.startsWith("company-brain/")?m4Operations.get(path.slice("company-brain/".length)):
-    path.startsWith("elicitation-protocols/")?(elicitationReads.has(path.slice("elicitation-protocols/".length))?"READ":path.endsWith("/cancel")?"CONTROL":"MUTATION"):
-    ownerLeafOperations.has(path.split("/")[0])?(ownerLeafReads.has(path.split("/")[1])?"READ":
-      ["cancel-delivery","reconcile-request","reconcile"].includes(path.split("/")[1])?"CONTROL":"MUTATION"):undefined
+  const ownerClassification = operationClasses.get(path)
   const read = method === "GET" || ownerClassification==="READ" || (family === "company-brain" && companyBrainReads.has(path.slice("company-brain/".length))) || ["query", "semantic-activity"].includes(family) || family === "closing" && ["read", "projection", "ports"].includes(path.slice("closing/".length))
-  const adminOnly = denyPrefixes.some((prefix) => `${path}/`.startsWith(prefix)) ||
+  const adminOnly = restrictedOperations.has(path) || !r1 && !coalitionClassification && denyPrefixes.some((prefix) => `${path}/`.startsWith(prefix)) ||
     (family === "read-model" && /read-models\/(reliability|readiness|readiness-slo|failure-injections)/.test(path))
   const control = r1&&["r1-cancel","r1-reconcile"].includes(path.slice("policies/".length)) || path === "live-controls" || path === "closing/stop" || controls.test(path) || path === "company-brain/procedure-induction-cancel" || /^company-brain\/(?:evidence|program|compute-search|interface|decision-slice|deliberation|capital-program|capital-formation)-(?:cancel|resume|reconcile|advance)$/.test(path)
   const classification = adminOnly ? "ADMIN" : stream ? "STREAM" : ownerClassification ?? (read ? "READ" : control ? "CONTROL" : "MUTATION")
@@ -265,16 +296,8 @@ for (const file of files(apiRoot)) {
     // supply a tenant reference and the backend aliases it before enforcing it.
     .replace(/^policies\/:operation\/:actionType(?=\/|$)/, "policies/:tenantId/:actionType")
   for (const method of methods) {
-    if (path === "company-brain/:operation") {
-      for (const operation of companyBrainOperations) routes.push(routeEntry(method, `company-brain/${operation}`, source))
-    } else if(path==="elicitation-protocols/:operation"){
-      for(const operation of elicitationOperations)routes.push(routeEntry(method,`elicitation-protocols/${operation}`,source))
-    } else if (path === "closing/:operation") {
-      for (const operation of closingOperations) routes.push(routeEntry(method, `closing/${operation}`, source))
-    } else if(path==="branches/:operation"){
-      for(const operation of branchOperations.keys())routes.push(routeEntry(method,`branches/${operation}`,source))
-    } else if(ownerLeafOperations.has(path.split("/")[0])&&path.endsWith("/:operation")){
-      for(const operation of ownerLeafOperations.get(path.split("/")[0]))routes.push(routeEntry(method,`${path.split("/")[0]}/${operation}`,source))
+    if (routeOperations.has(path)) {
+      for (const operation of routeOperations.get(path)) routes.push(routeEntry(method, path.replace(":operation", operation), source))
     } else if (path === "read-models/:view") {
       for (const view of readModels) routes.push(routeEntry(method, `read-models/${view}`, source))
     } else if (path === "documents/:id/artifact/[...action]") {

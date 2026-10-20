@@ -3,7 +3,7 @@ import type { TenantContext } from '@finnor/shared-types';
 import { decode, fault, hash, PrepareSchema, RequestSchema, type BranchRequest, type InputArtifact } from './contracts';
 import { actor, artifact, assertBasis, assertEpisodeTime, head, inputFor, readArtifact, tx, workBasis } from './store';
 import { prepareInput, currentInput } from './owners';
-import { verifyCheckpoint, createCheckpoint, revokeCheckpoint, purgeCheckpoints } from './checkpoint';
+import { verifyCheckpoint, createCheckpoint, revokeCheckpoint, purgeCheckpoints, checkpointDisposition } from './checkpoint';
 import { capability } from './runtime';
 import { assertWorkBudget, beginControl, finishControl, workUsage } from './accounting';
 
@@ -63,7 +63,7 @@ export async function read(ctx: TenantContext, branchId: string) {
   return tx(ctx, async c => {
     const fresh = await head(c, ctx, branchId); await assertBasis(c, ctx, fresh);
     const result = fresh.status === 'COMPLETE' && fresh.result_id ? await readArtifact<any>(c, ctx, fresh.result_id, 'RESULT') : null;
-    return { branchId, status: fresh.status, generation: fresh.generation, reason: fresh.reason, kind: input.kind, programme: input.programme, baselineDigest: hash(input.payload), currentness: 'CURRENT', profile: input.profile, result, resultRef: result ? { id: fresh.result_id, contentDigest: hash(result), category: 'RESULT' } : null, checkpointId: fresh.checkpoint_id, work: input.basis, protectedEligible: false, funding: null, admission: null, externalSettlement: 'NOT_APPLICABLE' };
+    return { branchId, status: fresh.status, generation: fresh.generation, reason: fresh.reason, kind: input.kind, programme: input.programme, baselineDigest: hash(input.payload), currentness: 'CURRENT', profile: input.profile, result, resultRef: result ? { id: fresh.result_id, contentDigest: hash(result), category: 'RESULT' } : null, checkpointId: fresh.checkpoint_id, checkpoint: await checkpointDisposition(c, ctx, fresh), work: input.basis, protectedEligible: false, funding: null, admission: null, externalSettlement: 'NOT_APPLICABLE' };
   });
 }
 export async function list(ctx: TenantContext, workId: string, limit: number, after?: string) {

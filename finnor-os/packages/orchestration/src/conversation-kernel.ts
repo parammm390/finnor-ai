@@ -216,6 +216,7 @@ export async function prepareEmployeeConversationTurn(params: {
 
   const activeContext = record(params.activeContext);
   const rawExplicit = [
+    ...(activeContext.businessRoot ? [activeContext.businessRoot] : []),
     ...(Array.isArray(activeContext.selectedEntities) ? activeContext.selectedEntities : []),
     ...(activeContext.focusedEntity ? [activeContext.focusedEntity] : []),
   ];
