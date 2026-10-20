@@ -199,7 +199,9 @@ export async function readEnterpriseAllocation(ctx:PeMutationContext,value:unkno
   return readNumericEnterpriseAllocation(ctx,ref);
 }
 async function readNumericEnterpriseAllocation(ctx:PeMutationContext,ref:ExperimentRef){
-  const issued=await readStoredAllocation(ctx,ref);await verifyAllocationCertificateAsync(issued.problem,issued.certificate);
+  const issued=await readStoredAllocation(ctx,ref);
+  if(issued.kind!=='finite_allocation_v1')throw denied();
+  await verifyAllocationCertificateAsync(issued.problem,issued.certificate);
   return immutableControl({...issued,consumptions:await readAllocationConsumptions(ctx,ref),executionAuthorityGranted:false,protectedReceipt:null});
 }
 /** Read S5's original qualified settlement and its independently protected S6

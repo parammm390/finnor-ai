@@ -16,15 +16,26 @@ const server=createServer(async(req,res)=>{
   else if(req.method==='GET'&&path.startsWith('/events/'))answer=await ledger.read(owner,decodeURIComponent(path.slice(8)));
   else if(req.method==='GET'&&path.startsWith('/references/'))answer=await ledger.readReference(owner,decodeURIComponent(path.slice(12)));
   else if(req.method==='GET'&&path.startsWith('/execution-handoff/'))answer=await ledger.readExecutionHandoff(owner,decodeURIComponent(path.slice(19)));
-  else if(req.method==='POST'&&['/append','/references','/verify-request','/dispatch','/reconcile','/takeover'].includes(path)){
+  else if(req.method==='POST'&&['/append','/references','/reference-snapshot','/verify-request','/dispatch','/reconcile','/takeover'].includes(path)){
    let length=0;const chunks:Buffer[]=[];for await(const raw of req){const chunk=Buffer.from(raw);length+=chunk.length;if(length>8*1024*1024)throw new LedgerFault(413,'REQUEST_BYTE_LIMIT');chunks.push(chunk);}
    let input:unknown;try{input=JSON.parse(Buffer.concat(chunks).toString());}catch{throw new LedgerFault(400,'INVALID_JSON');}
    if(path==='/takeover'){if(!broker)throw new LedgerFault(503,'PROTECTED_DISPATCH_UNADMITTED');answer=await broker.takeover(owner,input);}
    else if(path==='/dispatch'||path==='/reconcile'){if(!broker)throw new LedgerFault(503,'PROTECTED_DISPATCH_UNADMITTED');answer=await broker.execute(owner,input,path==='/reconcile');}
+   else if(path==='/reference-snapshot')answer=await ledger.readReferenceSnapshot(owner,input);
    else answer=path==='/append'?await ledger.append(owner,input):path==='/references'?await ledger.registerReference(owner,input):await ledger.verifyRequest(owner,input);
   }else throw new LedgerFault(404,'NOT_FOUND');
   res.writeHead(200,{'content-type':'application/json','cache-control':'no-store'});res.end(JSON.stringify(answer));
- }catch(error){const known=error instanceof LedgerFault;res.writeHead(known?error.status:503,{'content-type':'application/json','cache-control':'no-store'});res.end(JSON.stringify({error:known?error.code:'LEDGER_UNAVAILABLE'}));}
+ }catch(error){
+  const known=error instanceof LedgerFault;
+  if(!known){
+   // Classify operational failures without exposing messages, stacks or data.
+   const diagnostic=error instanceof Error?error as Error&{code?:unknown}:null;
+   const code=typeof diagnostic?.code==='string'&&['ENOSPC','EDQUOT','EACCES','EPERM','EMFILE','ENFILE','EIO','ENOENT','ESTALE','EBUSY','EINVAL','EROFS','EFBIG','ENAMETOOLONG','ERR_OUT_OF_RANGE','ERR_INVALID_ARG_TYPE'].includes(diagnostic.code)?diagnostic.code:'UNCLASSIFIED';
+   const name=diagnostic&&['Error','TypeError','RangeError','SyntaxError','ReferenceError'].includes(diagnostic.name)?diagnostic.name:'OTHER';
+   console.error(JSON.stringify({event:'S6_REQUEST_UNAVAILABLE',name,code}));
+  }
+  res.writeHead(known?error.status:503,{'content-type':'application/json','cache-control':'no-store'});res.end(JSON.stringify({error:known?error.code:'LEDGER_UNAVAILABLE'}));
+ }
 });
 server.requestTimeout=30000;server.headersTimeout=10000;server.keepAliveTimeout=5000;server.maxConnections=256;
 await new Promise<void>(done=>server.listen(config.port??0,'127.0.0.1',done));

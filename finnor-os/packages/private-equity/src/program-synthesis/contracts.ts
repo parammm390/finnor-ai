@@ -2,6 +2,9 @@ import { z } from 'zod';
 import {ProcedureUseSchema} from '../procedure-induction/use-contracts';
 import { EvidenceRootSchema, EvidenceSourceSchema, FinancialSemanticsSchema, type EvidenceDependency, type EvidenceWitness, type FinancialSemantics } from '@finnor/shared-types';
 import type { GoalSpec, PlanGraph } from '@finnor/planning';
+import type { InstitutionResponsibility } from '../institution-program/responsibility';
+import type { InstitutionResourceDemand } from '../institution-program/resource-demand';
+import {X2RefSchema} from '../application-semantics/contracts';
 
 export const P1_VERSION = 'p1-bounded-native-v1';
 export const OPERATIONS = ['derive','propose_model','design_inquiry','search','simulate','solve','compose_artifact','await_observation','propose_effect','stop'] as const;
@@ -38,8 +41,56 @@ export const HarnessRequestSchema=z.object({schema:z.literal('finnor.harness-req
  proposalSource:z.enum(['REGISTERED_NATIVE','GOVERNED_MODEL']).default('REGISTERED_NATIVE'),
  limits:z.object({maxSteps:z.number().int().min(8).max(4096).default(1024),maxDepth:z.number().int().min(1).max(12).default(12),maxAttempts:z.number().int().min(1).max(8).default(4),maxCandidates:z.number().int().min(2).max(8).default(8),deadlineMs:z.number().int().min(1000).max(3600000).default(300000),requiredAggregateLimits:z.record(z.number().positive()).optional()}).strict().optional(),
 }).strict();
-export type HarnessRequest=z.infer<typeof HarnessRequestSchema>;
+export type AnalyticalHarnessRequest=z.infer<typeof HarnessRequestSchema>;
+const institutionRef=ownerRef;
+export const InstitutionHarnessRequestSchema=z.object({
+ schema:z.literal('finnor.harness-request.v1'),kind:z.literal('institution_responsibility_v1'),
+ instruction:z.string().min(1).max(4000),root:EvidenceRootSchema,
+ workId:uuid,workInputId:uuid,idempotencyKey:z.string().min(1).max(160),
+ validAt:instant,mode:z.literal('ordinary_disposable'),
+ institution:z.object({
+  programme:z.object({schema:z.literal('finnor.x1.institution-responsibility-programme.v1'),
+    tenantId:z.string().min(1),workId:z.string().min(1),principalId:z.string().min(1),
+    parentEnvelope:z.object({deadlineAt:instant}).passthrough(),
+    admission:z.object({originalDigest:z.string().regex(/^[a-f0-9]{64}$/),
+      candidateDigest:z.string().regex(/^[a-f0-9]{64}$/),checkerDigest:z.string().min(1)}).passthrough(),
+    dutyPopulationDigest:z.string().regex(/^[a-f0-9]{64}$/),
+    responsiblePrincipals:z.array(z.object({principalId:uuid,active:z.boolean(),status:z.string().nullable(),
+      role:z.string().nullable()}).strict()).min(1).max(128).optional(),
+    sourceScopes:z.array(z.object({grantId:uuid,digest:z.string().regex(/^[a-f0-9]{64}$/),
+      originalReadAllowed:z.boolean()}).strict()).min(1).max(16).optional(),
+    sourceCoverageGaps:z.array(z.object({sourceId:z.string().min(1),grantId:uuid,
+      reason:z.string().min(1),scopeDigest:z.string().regex(/^[a-f0-9]{64}$/),
+      expectedObjectCount:z.number().int().min(1).max(1000)}).strict()).max(16).optional(),
+  }).passthrough(),
+  responsibilities:z.array(z.custom<InstitutionResponsibility>((value)=>!!value&&typeof value==='object'
+    &&(value as InstitutionResponsibility).schema==='finnor.x1.institution-responsibility.v1')).max(128),
+  unresolved:z.array(z.object({stableIdentity:z.string(),reason:z.string(),originalDeadline:instant}).passthrough()).max(128),
+  demand:z.custom<InstitutionResourceDemand>((value)=>!!value&&typeof value==='object'
+    &&(value as InstitutionResourceDemand).schema==='finnor.x1.institution-resource-demand.v1'),
+  reservationRef:institutionRef,
+  // Exact action payload comes from the admitted mandate and is frozen per
+  // responsibility. Sparse mandates omit it and remain blocked, not guessed.
+  actions:z.array(z.object({responsibilityIdentity:z.string().min(1),
+    operation:z.enum(['create_deal_request','open_workstream','record_finding']),
+    payload:z.record(z.unknown()),expectedEntityId:uuid,postconditionDigest:z.string().regex(/^[a-f0-9]{64}$/),
+  }).strict()).max(128).optional(),
+  compilerRequestId:uuid.optional(),
+ }).strict(),
+}).strict();
+export type InstitutionHarnessRequest=z.infer<typeof InstitutionHarnessRequestSchema>;
+export type HarnessRequest=AnalyticalHarnessRequest;
+export const isInstitutionRequest=(request:HarnessRequest|InstitutionHarnessRequest):request is InstitutionHarnessRequest=>
+ 'kind' in request&&request.kind==='institution_responsibility_v1';
 export type OwnerOperation=z.infer<typeof OwnerOperationSchema>;
+/** Additive native application grammar. No URL, locator, program, authority or
+ * replacement budget can enter through a generated owner operation. */
+export const ApplicationOwnerOperationSchema=z.object({
+ schema:z.literal('finnor.p1.application-owner-operation.v1'),
+ op:z.enum(['compose_application_operations','continue_application_operations']),
+ sessionId:uuid,inputRef:X2RefSchema,
+}).strict();
+export type ApplicationOwnerOperation=z.infer<typeof ApplicationOwnerOperationSchema>;
 export type Instruction={op:'input';key:string}|{op:'literal';value:string}|{op:'add'|'subtract'|'multiply'|'ratio'|'min'|'max'}|{op:'branch';comparison:Comparison;left:Instruction[];right:Instruction[];whenTrue:Instruction[];whenFalse:Instruction[]};
 export interface TypeScriptModule {source:string;sourceDigest:string;emitted:string;emittedDigest:string;irDigest:string;compiler:{name:'typescript';version:string;optionsDigest:string;libraries:Array<{file:string;sha256:string}>;librariesDigest:string};diagnostics:Array<{code:number;category:string;file:string|null;start:number|null;message:string}>}
 export interface NativeModule {typescript:TypeScriptModule;schema:'finnor.harness-module.v1';id:string;sourceDigest:string;compiledDigest:string;structureDigest:string;source:string;compiled:string;format:'BOUNDED_SSA'|'BOUNDED_STACK';entrypoint:'compute';inputKeys:string[];outputs:Array<{key:string;unit:string;currencyCode:string|null}>;bounds:{steps:number;depth:number;bytes:number};runtime:{kind:'REGISTERED_NATIVE_IR';version:typeof P1_VERSION;closureDigest:string};checks:string[];admission:null}
@@ -47,7 +98,7 @@ export interface HarnessNode {id:string;op:typeof OPERATIONS[number];dependsOn:s
 export interface HarnessValue {value:string;semantics:FinancialSemantics;truthClass:'DERIVED_VALUE';witnessIds:string[]}
 export interface HarnessProgram {
  schema:'finnor.harness-program.v1';id:string;tenantId:string;principalId:string;sharing:{scope:'PRINCIPAL';policy:'CURRENT_S1_AUTHORIZATION'};
- work:{id:string;revision:string;inputDigest:string;planRevisionId:string};parents:string[];acceptance:HarnessRequest['acceptance'];acceptanceDigest:string;goal:GoalSpec;
+ work:{id:string;revision:string;inputDigest:string;planRevisionId:string};parents:string[];acceptance:AnalyticalHarnessRequest['acceptance'];acceptanceDigest:string;goal:GoalSpec;
  rights:{revision:number;ref:string;evaluatedAt:string};validAt:string;knowledgeAt:string;producer:{version:typeof P1_VERSION;codeDigest:string;schemaDigest:string};
  graph:HarnessNode[];planGraph:PlanGraph;modules:NativeModule[];candidates:Array<{id:string;moduleId:string;structureDigest:string;status:'PROPOSED'|'CHECKED'|'REJECTED';counterexamples:unknown[]}>;
  semanticBindings:unknown[];observableBranches:unknown[];effectProposals:unknown[];dependencies:EvidenceDependency[];witnesses:EvidenceWitness[];
@@ -56,11 +107,37 @@ export interface HarnessProgram {
  independentChecks:unknown[];costs:{usd:null;status:'UNMETERED';attempts:number;steps:number;wallMs:number;modelInvocations:unknown[];nativeInvocations:unknown[]};runtime:{node:string;imageDigest:null;jobId:string|null;workerId:string|null;deliveryAttemptId:string|null;claimFence:number|null};
  status:'PROPOSED'|'TESTED'|'PARTIAL'|'FAILED'|'INVALIDATED';admission:null;funding:null;unavailableBindings:string[];projection:{kind:'program_synthesis';workId:string;inspect:'program-read';run:'program-resume';download:'program-artifact'};
 }
+export interface InstitutionHarnessProgram {
+ schema:'finnor.institution-harness-program.v1';kind:'institution_responsibility_v1';
+ id:string;tenantId:string;principalId:string;
+ work:{id:string;revision:string;inputDigest:string;planRevisionId:string};
+ producer:{version:typeof P1_VERSION;codeDigest:string;schemaDigest:string};
+ goal:GoalSpec;planGraph:PlanGraph;acceptanceDigest:string;
+ institution:InstitutionHarnessRequest['institution'];
+ nodes:Array<{id:string;stableIdentity:string;derivationRevision:string;operation:string;
+   deadlineAt:string;postconditionRef:string;observerRef:string;action:NonNullable<InstitutionHarnessRequest['institution']['actions']>[number]|null}>;
+ admission:{originalDigest:string;candidateDigest:string;checkerDigest:string};
+ reservationRef:InstitutionHarnessRequest['institution']['reservationRef'];
+ bounds:{episodeId:string;deadlineAt:string;reservation:InstitutionHarnessRequest['institution']['reservationRef']};
+ costs:HarnessProgram['costs'];runtime:HarnessProgram['runtime'];
+ status:'PROPOSED'|'WAITING'|'PARTIAL'|'FAILED'|'OBSERVED';
+ observedPostconditions:Array<{stableIdentity:string;canonicalRef:string;observerDigest:string;
+   derivationRevision?:string;actionId?:string;frozenIntentDigest?:string;
+   carriedFrom?:{programId:string;headId:string;headDigest:string;derivationRevision:string}}>;
+ deliveryCursor?:number;
+ interventions?:Array<{stableIdentity:string;predicate:string;possibleEffect:boolean}>;
+ executionAuthorityGranted:false;
+}
+export type NativeHarnessProgram=HarnessProgram|InstitutionHarnessProgram;
+export const isInstitutionProgram=(program:NativeHarnessProgram):program is InstitutionHarnessProgram=>
+ program.schema==='finnor.institution-harness-program.v1';
 
 /** Bound shape before recursive schema decoding; even invalid input cannot exhaust the host stack. */
-export function parseHarnessRequest(value:unknown):HarnessRequest {
- if(Buffer.byteLength(JSON.stringify(value)??'')>65536)throw Error('PROGRAM_REQUEST_BYTE_BOUND');
+export function parseHarnessRequest(value:unknown):HarnessRequest|InstitutionHarnessRequest {
+ const institution=!!value&&typeof value==='object'&&'kind' in value&&value.kind==='institution_responsibility_v1';
+ if(Buffer.byteLength(JSON.stringify(value)??'')>(institution?8388608:65536))throw Error('PROGRAM_REQUEST_BYTE_BOUND');
  let count=0;const todo:Array<[unknown,number]>=[[value,0]];
- while(todo.length){const [v,d]=todo.pop()!;if(++count>4096||d>32)throw Error('PROGRAM_DECODE_BOUND');if(v&&typeof v==='object')for(const child of Object.values(v))todo.push([child,d+1]);}
- return HarnessRequestSchema.parse(value);
+ while(todo.length){const [v,d]=todo.pop()!;if(++count>(institution?262144:4096)||d>32)throw Error('PROGRAM_DECODE_BOUND');if(v&&typeof v==='object')for(const child of Object.values(v))todo.push([child,d+1]);}
+ return value&&typeof value==='object'&&'kind' in value
+  ? InstitutionHarnessRequestSchema.parse(value) : HarnessRequestSchema.parse(value);
 }

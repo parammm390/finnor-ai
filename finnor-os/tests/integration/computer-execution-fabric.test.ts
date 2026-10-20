@@ -433,7 +433,7 @@ describe.skipIf(!available)("Phase 3 Computer Execution Fabric", () => {
     const broker = new ComputerBroker(); broker.register(provider);
     const terminal = await new ComputerRunner({ broker, decisionEngine: { async decide() { throw new Error("must not decide after budget exhaustion"); } } }).run(tenantId, queued.run.id);
     expect(terminal).toMatchObject({ status: "timed_out", code: "provider_budget" });
-    expect(provider.performed).toEqual(["navigate"]);
+    expect(provider.performed).toEqual([]);
   });
 
   it("stops deterministically at the wall-clock timeout", async () => {

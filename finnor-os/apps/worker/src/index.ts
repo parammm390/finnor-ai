@@ -1,8 +1,14 @@
 import {runDecisionAtlasJob} from '../../../packages/private-equity/src/r7/worker';
+import {buildEnterpriseApplicationJob} from '../../../packages/private-equity/src/enterprise-applications/worker';
+import {compileLearnedPolicyJob} from '../../../packages/private-equity/src/policy-learning/worker';
+import {identifyDigitalSystemJob} from '../../../packages/private-equity/src/system-identification/worker';
 import {handleBranch} from '@finnor/private-equity/src/branch-fabric/worker';
 import {runComputeSearchUnitJob} from '@finnor/private-equity/src/compute-search/worker';
-import {runHarnessProgramJob} from '@finnor/private-equity/src/program-synthesis/worker';
+import {runHarnessProgramJob,runX1InstitutionContinuationJob} from '@finnor/private-equity/src/program-synthesis/worker';
+import {runInstitutionCompilerJob} from '@finnor/private-equity/src/institution-program/worker';
+import {runInstitutionUpdateJob} from '@finnor/private-equity/src/live-recompilation/institution-worker';
 import {runInterfaceAcquisitionJob} from '@finnor/private-equity/src/interface-synthesis/worker';
+import {runApplicationSemanticsJob} from '@finnor/private-equity/src/application-semantics/worker';
 import {runProgrammeContinuationJob} from '@finnor/private-equity/src/live-recompilation/worker';
 import {runProcedureInductionJob} from '@finnor/private-equity/src/procedure-induction/worker';
 import {runCapitalProgramJob,runRobustCapitalProgramJob,runCoalitionProgrammeJob} from '@finnor/private-equity/src/capital-program/worker';
@@ -59,9 +65,13 @@ import { installWorkerDrainSignals } from "./drain-signals";
 
 export function createWorker(): JobQueue {
   const queue = new JobQueue();
+  queue.register('identify_digital_system_v1',identifyDigitalSystemJob,PRODUCTION_JOB_CONTRACTS.identify_digital_system_v1);
+  queue.register('compile_learned_policy_v1',compileLearnedPolicyJob,PRODUCTION_JOB_CONTRACTS.compile_learned_policy_v1);
+  queue.register('build_enterprise_application_v1',buildEnterpriseApplicationJob,PRODUCTION_JOB_CONTRACTS.build_enterprise_application_v1);
   queue.register('run_decision_atlas_v1',runDecisionAtlasJob,PRODUCTION_JOB_CONTRACTS.run_decision_atlas_v1);
   queue.register('run_certified_state_reduction_v1',runCertifiedStateReductionJob,PRODUCTION_JOB_CONTRACTS.run_certified_state_reduction_v1);
   queue.register('run_identification_plan_v1',runIdentificationPlan,PRODUCTION_JOB_CONTRACTS.run_identification_plan_v1);
+  queue.register('run_application_semantics_v1',runApplicationSemanticsJob,PRODUCTION_JOB_CONTRACTS.run_application_semantics_v1);
   queue.register('run_capital_program_v2',runCapitalProgramJob,PRODUCTION_JOB_CONTRACTS.run_capital_program_v2);
   queue.register('run_capital_program_r2_v1',runRobustCapitalProgramJob,PRODUCTION_JOB_CONTRACTS.run_capital_program_r2_v1);
   queue.register('run_coalition_programme_v1',runCoalitionProgrammeJob,PRODUCTION_JOB_CONTRACTS.run_coalition_programme_v1);
@@ -81,6 +91,9 @@ export function createWorker(): JobQueue {
   queue.register('advance_bilateral_programme_v1',advanceBilateralProgrammeJob,PRODUCTION_JOB_CONTRACTS.advance_bilateral_programme_v1);
   queue.register('run_compute_search_unit_v1',runComputeSearchUnitJob,PRODUCTION_JOB_CONTRACTS.run_compute_search_unit_v1);
   queue.register('run_harness_program_v1',runHarnessProgramJob,PRODUCTION_JOB_CONTRACTS.run_harness_program_v1);
+  queue.register('run_x1_institution_continuation_v1',runX1InstitutionContinuationJob,PRODUCTION_JOB_CONTRACTS.run_x1_institution_continuation_v1);
+  queue.register('run_x1_institution_compiler_v1',runInstitutionCompilerJob,PRODUCTION_JOB_CONTRACTS.run_x1_institution_compiler_v1);
+  queue.register('run_x1_institution_update_v1',runInstitutionUpdateJob,PRODUCTION_JOB_CONTRACTS.run_x1_institution_update_v1);
   queue.register("process_instruction", processInstruction, PRODUCTION_JOB_CONTRACTS.process_instruction);
   queue.register("run_workflow_step", runWorkflowStep, PRODUCTION_JOB_CONTRACTS.run_workflow_step);
   // Protocol 2 uses a new physical type so a mixed-deploy protocol-1 worker cannot

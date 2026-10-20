@@ -206,11 +206,48 @@ export async function recoverOwnerTransportIntent(identity:OwnerTransportScope,e
 
 export async function readOwnerTransportReference(identity:OwnerTransportScope,id:string){
  const route=await ownerTransportRoute(identity)??fail('OWNER_TRANSPORT_ROUTE_UNAVAILABLE');text(id);
- const answer=await request(route,'/references/'+encodeURIComponent(id));const reference=object(answer.reference);
+ const answer=await request(route,'/references/'+encodeURIComponent(id));
+ return verifiedReferenceReadback(route,id,answer);
+}
+function verifiedReferenceReadback(route:OwnerTransportRoute,id:string,answer:Record<string,any>){
+ const reference=object(answer.reference);
  const receipt=verifyOwnerTransportReceipt(route,answer.receipt,{kind:answer.receipt.kind,identity:answer.receipt.identity});
  const {content,...descriptor}=reference;
  if(reference.id!==id||referencePreimageDigest(reference as any)!==reference.contentDigest||!Array.isArray(receipt.references)||!receipt.references.some((r:any)=>same(r,descriptor)))fail('LEDGER_REFERENCE_READBACK_INVALID');
  return {reference,receipt,executionAuthorityGranted:false as const,qualification:'AUTHENTICATED_CONTENT_AND_COMMITMENT_ONLY_NO_EFFECT_ADMISSION_OR_BUSINESS_TRUTH'};
+}
+
+/** Fresh signed absence and ordered content, from one complete S6 integrity pass. */
+export async function readOwnerTransportReferenceSnapshot(identity:OwnerTransportScope,ids:string[]){
+ const route=await ownerTransportRoute(identity)??fail('OWNER_TRANSPORT_ROUTE_UNAVAILABLE');
+ const requested=list(ids,2).map(id=>text(id));
+ if(new Set(requested).size!==requested.length)fail('OWNER_REFERENCE_SNAPSHOT_IDS_INVALID');
+ const nonce=randomBytes(32).toString('hex'),sentAt=Date.now(),deadlineAt=sentAt+route.requestTimeoutMs;
+ const answer=await request(route,'/reference-snapshot',{ids:requested,nonce},deadlineAt);
+ keys(answer,['snapshot']);const snapshot=object(answer.snapshot),{signature:encoded,...body}=snapshot;
+ keys(body,['schema','nonce','ids','semanticOwner','tenantId','principalId','rightsRefs','sequence','checkpointDigest',
+  'checkedAt','releaseId','verifierDigest','policyDigest','domain','results','executionAuthorityGranted','qualification']);
+ const pin=route.ledger.acceptedReceipts.find(p=>p.releaseId===body.releaseId&&p.verifierDigest===body.verifierDigest&&p.policyDigest===body.policyDigest)??fail('OWNER_REFERENCE_SNAPSHOT_RELEASE_UNADMITTED');
+ if(!verify(null,Buffer.from(canonical(body)),publicKey(pin.signerPublicKey),signature(encoded)))fail('OWNER_REFERENCE_SNAPSHOT_SIGNATURE_INVALID');
+ if(body.schema!=='finnor.s6.reference-snapshot.v1'||body.nonce!==nonce||!same(body.ids,requested)||!sameScope(body as OwnerTransportScope,identity)
+  ||!same(body.rightsRefs,[...route.rightsRefs].sort())||body.domain!==route.protectionDomain||body.executionAuthorityGranted!==false
+  ||body.qualification!=='AUTHENTICATED_REFERENCE_SNAPSHOT_ONLY_NO_EFFECT_AUTHORITY_OR_BUSINESS_TRUTH'
+  ||!Array.isArray(body.results)||body.results.length!==requested.length)fail('OWNER_REFERENCE_SNAPSHOT_BINDING_INVALID');
+ if(!Number.isSafeInteger(body.sequence)||body.sequence<0||body.sequence>100000
+  ||(body.sequence===0?body.checkpointDigest!==null:!(/^[a-f0-9]{64}$/.test(body.checkpointDigest)))
+  ||time(body.checkedAt)<sentAt-1000||time(body.checkedAt)>Date.now()+1000)fail('OWNER_REFERENCE_SNAPSHOT_HEAD_OR_TIME_INVALID');
+ const results=body.results.map((value:any,index:number)=>{
+  if(value===null)return null;
+  const row=object(value);keys(row,['reference','receipt']);
+  const accepted=verifiedReferenceReadback(route,requested[index]!,row);
+  if(accepted.receipt.sequence>body.sequence||accepted.receipt.sequence===body.sequence&&accepted.receipt.checkpointDigest!==body.checkpointDigest)fail('OWNER_REFERENCE_SNAPSHOT_RECEIPT_HEAD_INVALID');
+  return accepted;
+ });
+ const current=await ownerTransportRoute(identity)??fail('OWNER_TRANSPORT_ROUTE_UNAVAILABLE');
+ if(!same(current,route))fail('OWNER_REFERENCE_SNAPSHOT_ROUTE_CHANGED');
+ if(bytesHash(await privateFile(current.tokenPath))!==current.tokenSha256)fail('OWNER_TRANSPORT_TOKEN_CHANGED');
+ if(Date.now()>=deadlineAt)fail('OWNER_TRANSPORT_LEASE_DEADLINE_EXCEEDED');
+ return {snapshot,results,executionAuthorityGranted:false as const,qualification:'AUTHENTICATED_REFERENCE_SNAPSHOT_ONLY_NO_EFFECT_AUTHORITY_OR_BUSINESS_TRUTH'};
 }
 
 /** Ordinary attenuated client. A fresh mechanical binding grants no effect. */

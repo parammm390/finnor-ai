@@ -20,7 +20,7 @@ interface SteelSessionShape {
   id: string;
   websocketUrl: string;
   sessionViewerUrl: string;
-  creditsUsed: number;
+  creditsUsed: unknown;
 }
 
 /** Narrow port over the verified steel-sdk 0.18 surface. Keeping it here makes the
@@ -253,8 +253,10 @@ export class SteelProvider implements ComputerProvider {
   async cost(session: ComputerProviderSession): Promise<ComputerProviderCost> {
     try {
       const details = await this.client.sessions.retrieve(session.sessionRef);
-      return { creditsUsed: Number.isFinite(details.creditsUsed) ? details.creditsUsed : 0 };
-    } catch (error) { throw this.normalize(error, "Steel usage could not be read"); }
+      return { creditsUsed: typeof details.creditsUsed === "number" && Number.isFinite(details.creditsUsed) && details.creditsUsed >= 0 ? details.creditsUsed : null };
+    } catch {
+      throw new ComputerProviderError("usage_unknown", "Steel usage is unavailable; provider exposure remains UNKNOWN");
+    }
   }
 
   async release(session: ComputerProviderSession): Promise<void> {

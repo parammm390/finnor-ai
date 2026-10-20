@@ -75,6 +75,24 @@ paths = ['''(^|/)finnor-os/packages/private-equity/src/capital-program/v2-owners
 regexTarget = "match"
 regexes = ['''^candidateKey:'m3-nonconsequential-proposal'$''']
 
+# This exact historical typed CandidatePlan name is a public programme identity.
+# Neither other candidate values nor credential fields on this path are exempt.
+[[rules.allowlists]]
+description = "Exact historical X1 institution responsibility CandidatePlan identity"
+condition = "AND"
+paths = ['''(^|/)finnor-os/packages/private-equity/src/program-synthesis/plan\.ts$''']
+regexTarget = "match"
+regexes = ['''^candidateKey:'p1-institution-responsibility-v1'$''']
+
+# A two-parent merge reports this public peer commit once per parent.
+# Match only this complete adjacent Markdown field, never the containing line.
+[[rules.allowlists]]
+description = "Exact verified public X2 source peer commit"
+condition = "AND"
+paths = ['''(^|/)scope-x-phase/acceptance/x2-merge-dispositions\.md$''']
+regexTarget = "match"
+regexes = ['''^Authentic peer:\n`f496c86af698a5c5ea35971e7b1838ff151a9c98`$''']
+
 # This literal belongs to a local synthetic Auth server, not a usable token.
 # Keep every other refresh-token value and every other path fully scanned,
 # including the complete history of side parents and merge resolutions.

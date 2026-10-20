@@ -44,7 +44,12 @@ async function safeRead(path:string,secret=false):Promise<Buffer> {
   const f=await fd.stat(),limit=path.endsWith('commitments.jsonl')?256*1024*1024:8*1024*1024;
   if(f.size>limit)deny(503,'STORED_BYTE_LIMIT');if(!f.isFile()||(secret&&((f.mode&0o077)!==0||f.uid!==process.getuid?.())))deny(503,'UNSAFE_PROTECTED_FILE');
   const chunks:Buffer[]=[];let total=0;
-  for(;;){const chunk=Buffer.allocUnsafe(Math.min(65536,limit+1-total));const read=await fd.read(chunk,0,chunk.length,null);if(!read.bytesRead)break;total+=read.bytesRead;if(total>limit)deny(503,'STORED_BYTE_LIMIT');chunks.push(chunk.subarray(0,read.bytesRead));}
+  for(;;){
+   // The initial size only sizes buffers, never establishes EOF. Still read
+   // growth through the original byte bound, then require an actual EOF read.
+   const remaining=f.size-total,chunk=Buffer.allocUnsafe(Math.min(65536,remaining>=0?remaining+1:65536,limit+1-total));
+   const read=await fd.read(chunk,0,chunk.length,null);if(!read.bytesRead)break;total+=read.bytesRead;if(total>limit)deny(503,'STORED_BYTE_LIMIT');chunks.push(chunk.subarray(0,read.bytesRead));
+  }
   return Buffer.concat(chunks,total);
  }finally{await fd.close();}
 }
@@ -234,7 +239,12 @@ export class ExperienceLedger {
   // Every request still verifies every ordinary file's exact committed bytes.
   // Identical SHA256-bound bytes retain that verified preimage; decoding all
   // historical requests again adds no acceptance condition. Reads decode again.
-  for(const state of this.states.values())await this.verifiedContentBytes(state.receipt);await this.ensureWitness();}
+  const states=[...this.states.values()];
+  for(let offset=0;offset<states.length;offset+=8){
+   const checked=await Promise.allSettled(states.slice(offset,offset+8).map(state=>this.verifiedContentBytes(state.receipt)));
+   for(const result of checked)if(result.status==='rejected')throw result.reason;
+  }
+  await this.ensureWitness();}
  private serialized<T>(fn:()=>Promise<T>):Promise<T>{if(this.queued>=256)return Promise.reject(new LedgerFault(429,'APPEND_BACKLOG_LIMIT'));this.queued++;const next=this.queue.then(fn,fn);this.queue=next.catch(()=>undefined);return next.finally(()=>{this.queued--;});}
  async health(owner:Owner){if(!owner.read)deny(403,'READ_NOT_AUTHORIZED');return this.serialized(async()=>{await this.integrity();return {status:'AVAILABLE',sequence:this.last?.sequence??0,checkpointDigest:this.last?.checkpointDigest??null,domain:this.config.policy.domain,nonrollbackableWitness:this.config.policy.witness?'PINNED_PROTOCOL_VERIFIED_DEPLOYMENT_QUALIFICATION_EXTERNAL':'REQUIRED_EXTERNAL_DEPENDENCY',witness:this.witnessedHead};});}
  async verifyRequest(owner:Owner,input:unknown){
@@ -294,12 +304,32 @@ export class ExperienceLedger {
  async readReference(owner:Owner,id:string){
   if(!owner.read)deny(403,'READ_NOT_AUTHORIZED');text(id);
   return this.serialized(async()=>{
-   await this.integrity();const accepted=this.refs.get(refKey(owner.tenantId,id));if(!accepted)deny(404,'REFERENCE_NOT_FOUND');
-   if(accepted.receipt.sealed&&!owner.sealedRead||accepted.receipt.rightsRefs.some(r=>!owner.rightsRefs.includes(r)))deny(403,'EVALUATOR_OR_RIGHTS_NOT_AUTHORIZED');
-   const committed=await this.loadContent(accepted.receipt);
-   const reference=accepted.receipt.kind==='REFERENCE'?[committed.reference,...list(committed.relatedReferences??[],255)].find(r=>r.id===id):list(committed.references).find(r=>r.id===id);
-   if(!reference||referencePreimageDigest(reference)!==accepted.reference.contentDigest)deny(503,'ACCEPTED_REFERENCE_PREIMAGE_UNAVAILABLE');
-   return {reference,receipt:accepted.receipt};
+   await this.integrity();return await this.referenceAtHead(owner,id)??deny(404,'REFERENCE_NOT_FOUND');
+  });
+ }
+ private async referenceAtHead(owner:Owner,id:string){
+  const accepted=this.refs.get(refKey(owner.tenantId,id));if(!accepted)return null;
+  if(accepted.receipt.sealed&&!owner.sealedRead||accepted.receipt.rightsRefs.some(r=>!owner.rightsRefs.includes(r)))deny(403,'EVALUATOR_OR_RIGHTS_NOT_AUTHORIZED');
+  const committed=await this.loadContent(accepted.receipt);
+  const reference=accepted.receipt.kind==='REFERENCE'?[committed.reference,...list(committed.relatedReferences??[],255)].find(r=>r.id===id):list(committed.references).find(r=>r.id===id);
+  if(!reference||referencePreimageDigest(reference)!==accepted.reference.contentDigest)deny(503,'ACCEPTED_REFERENCE_PREIMAGE_UNAVAILABLE');
+  return {reference,receipt:accepted.receipt};
+ }
+ async readReferenceSnapshot(owner:Owner,input:unknown){
+  if(!owner.read)deny(403,'READ_NOT_AUTHORIZED');
+  const request=object(input);exactKeys(request,['ids','nonce']);
+  const ids=list(request.ids,2).map(text),nonce=hex(request.nonce);
+  if(!ids.length||new Set(ids).size!==ids.length)deny(400,'REFERENCE_SNAPSHOT_IDS_INVALID');
+  return this.serialized(async()=>{
+   await this.integrity();
+   const results=[];for(const id of ids)results.push(await this.referenceAtHead(owner,id));
+   const snapshot=this.signed({schema:'finnor.s6.reference-snapshot.v1',nonce,ids,
+    semanticOwner:owner.owner,tenantId:owner.tenantId,principalId:owner.principalId,rightsRefs:[...owner.rightsRefs].sort(),
+    sequence:this.last?.sequence??0,checkpointDigest:this.last?.checkpointDigest??null,checkedAt:new Date().toISOString(),
+    releaseId:this.config.release.releaseId,verifierDigest:this.verifierDigest,policyDigest:this.policyDigest,domain:this.config.policy.domain,
+    results,executionAuthorityGranted:false,qualification:'AUTHENTICATED_REFERENCE_SNAPSHOT_ONLY_NO_EFFECT_AUTHORITY_OR_BUSINESS_TRUTH'});
+   if(Buffer.byteLength(canonical({snapshot}))>8*1024*1024)deny(413,'REFERENCE_SNAPSHOT_BYTE_BOUND');
+   return {snapshot};
   });
  }
  releaseIdentity(){return {releaseId:this.config.release.releaseId,verifierDigest:this.verifierDigest,policyDigest:this.policyDigest,sourceDigests:this.config.release.sourceDigests,runtime:this.config.release.runtime,domain:this.config.policy.domain};}

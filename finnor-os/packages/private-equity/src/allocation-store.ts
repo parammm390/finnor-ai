@@ -1,4 +1,5 @@
 import type pg from 'pg';
+import {createHash} from 'node:crypto';
 import { withTenantTransaction } from '@finnor/db';
 import type { AuthorityRequest, AllocationResource, AllocationResourceInput, AllocationReservation, AllocationConsumption, AllocationOutstandingCommitment, AllocationCertificate, CanonicalAllocationProblem, ExperimentRef, AllocationCheck, S5ExperienceEvent,DurableObligation } from '@finnor/shared-types';
 import { AllocationContractError, allocationRef, sameAllocationRef, S5_VERSION, prepareS5Experience,allocationQuantity,allocationDerivedQuantity,allocationDecimal } from '../../epistemic-runtime/src/allocation-contracts';
@@ -7,6 +8,9 @@ import { epistemicHash } from '../../epistemic-runtime/src/source-precedence';
 import { enqueueOwnerDeliveryInTransaction } from '../../governed-execution/src/owner-delivery-store';
 import type { PeMutationContext } from './types';
 import { canExerciseAuthorityTx, evaluateAuthorityTx, lockCurrentAuthorityTx, validateExactControlApprovalsTx } from '@finnor/authority';
+import {planInstitutionDemandCharge,type InstitutionResourceDemand,type InstitutionChargeRequest} from './institution-program/resource-demand';
+import {validateBeliefViewPin} from './enterprise-beliefs';
+import {lockInstitutionSourceAuthority} from './institution-program/source-locks';
 
 const actor=(ctx:PeMutationContext)=>ctx.auth.employeeId??ctx.auth.userId;
 const denied=()=>new AllocationContractError('PERMITTED_CONTEXT_UNAVAILABLE','Permitted S5 context is unavailable');
@@ -79,10 +83,11 @@ async function locked<T>(ctx:PeMutationContext,fn:(c:pg.PoolClient)=>Promise<T>)
     await c.query('SELECT pg_advisory_xact_lock(hashtextextended($1,0))',[`s5-portfolio:${ctx.auth.tenantId}`]);await authorize(ctx,c);return fn(c);
   });}catch(e){if(attempt<2&&['40001','40P01'].includes((e as {code?:string}).code??''))continue;throw e;}
 }
+export { locked as withS5PortfolioTransaction };
 export interface AllocationSnapshot {resources:AllocationResource[];outstanding:AllocationOutstandingCommitment[];snapshotDigest:string}
 async function snapshot(c:pg.PoolClient,tenantId:string):Promise<AllocationSnapshot>{
   const resources=(await c.query('SELECT r.body FROM finnor_os.s5_resources r JOIN finnor_os.s5_resource_heads h USING(tenant_id,resource_id,revision) WHERE r.tenant_id=$1 ORDER BY r.resource_id LIMIT 17',[tenantId])).rows.map(r=>r.body as AllocationResource);
-  const live=(await c.query('SELECT s.*,o.body,p.certificate FROM finnor_os.s5_reservations s JOIN finnor_os.s5_reservation_origins o USING(tenant_id,reservation_id) JOIN finnor_os.s5_proposals p ON p.tenant_id=s.tenant_id AND p.content_digest=s.allocation_digest WHERE s.tenant_id=$1 AND s.status<>\'RELEASED\' ORDER BY s.reservation_id LIMIT 257',[tenantId])).rows;
+  const live=(await c.query('SELECT s.*,o.body,p.certificate FROM finnor_os.s5_reservations s JOIN finnor_os.s5_reservation_origins o USING(tenant_id,reservation_id) JOIN finnor_os.s5_proposals p ON p.tenant_id=s.tenant_id AND p.content_digest=s.allocation_digest WHERE s.tenant_id=$1 AND s.status<>\'RELEASED\' AND p.demand IS NULL ORDER BY s.reservation_id LIMIT 257',[tenantId])).rows;
   if(resources.length>16||live.length>256)throw new AllocationContractError('LIMIT_EXCEEDED','S5 registry/live commitment bound exceeded');
   const effectsByReservation=new Map<string,ExperimentRef[]>();
   if(live.length){
@@ -93,7 +98,14 @@ async function snapshot(c:pg.PoolClient,tenantId:string):Promise<AllocationSnaps
   for(const row of live){const origins=row.body as AllocationReservation,cert=row.certificate as AllocationCertificate;
     const effects=effectsByReservation.get(String(row.reservation_id))??[];
     outstanding.push({reservationRef:origins.ref,certificateRef:origins.certificateRef,envelopes:row.envelopes,status:row.status,policyRefs:cert.policyBindings.map(b=>b.policyRef),effectRefs:effects});
-  }const value={resources,outstanding};bounded(value);return {...value,snapshotDigest:epistemicHash(value)};
+  }
+  const typed=(await c.query(`SELECT * FROM finnor_os.s5_institution_outstanding()`)).rows;
+  if(typed.length>256)throw new AllocationContractError('LIMIT_EXCEEDED','S5 shared occupation bound exceeded');
+  for(const row of typed)outstanding.push({reservationRef:row.reservation_ref,
+    demandRef:row.demand_ref,envelopes:row.envelopes,status:row.status,
+    policyRefs:[],effectRefs:[]});
+  if(outstanding.length>256)throw new AllocationContractError('LIMIT_EXCEEDED','S5 shared occupation bound exceeded');
+  const value={resources,outstanding};bounded(value);return {...value,snapshotDigest:epistemicHash(value)};
 }
 export async function readAllocationSnapshot(ctx:PeMutationContext):Promise<AllocationSnapshot>{return locked(ctx,async c=>{
  const result=await snapshot(c,ctx.auth.tenantId);await authorizeResources(ctx,c,result.resources);return result;
@@ -208,6 +220,195 @@ export async function readAllocationSnapshotTx(ctx:PeMutationContext,c:pg.PoolCl
   await c.query('SELECT pg_advisory_xact_lock(hashtextextended($1,0))',[`s5-portfolio:${ctx.auth.tenantId}`]);
   await authorize(ctx,c);return snapshot(c,ctx.auth.tenantId);
 }
+type InstitutionReservation = {
+  schema:'finnor.s5.institution-reservation.v1';ref:ExperimentRef;demandRef:ExperimentRef;
+  tenantId:string;principalId:string;workId:string;demand:InstitutionResourceDemand;
+  originalDeadline:string;rightsRevision:string;resources:ExperimentRef[];
+  envelopes:CanonicalAllocationProblem['outstanding'][number]['envelopes'];
+  status:'RESERVED'|'CONSUMPTION_PENDING'|'UNKNOWN_OUTCOME'|'RELEASED';
+  revision?:number;revocationReason?:string|null;
+  executionAuthorityGranted:false;protectedReceipt:null;
+};
+async function institutionState(ctx:PeMutationContext,c:pg.PoolClient,ref:ExperimentRef):Promise<InstitutionReservation>{
+ const row=(await c.query(`SELECT o.body,s.status,s.revision,s.revocation_reason FROM finnor_os.s5_reservation_origins o
+   JOIN finnor_os.s5_reservations s USING(tenant_id,reservation_id)
+   JOIN finnor_os.s5_proposals p ON p.tenant_id=o.tenant_id AND p.content_digest=o.allocation_digest
+   WHERE o.tenant_id=$1 AND o.principal_id=$2 AND o.reservation_id=$3 AND p.demand IS NOT NULL`,
+   [ctx.auth.tenantId,actor(ctx),ref.id])).rows[0];
+ if(!row||row.body.tenantId!==ctx.auth.tenantId||row.body.principalId!==actor(ctx)
+   ||!sameAllocationRef(row.body.ref,ref))throw denied();
+ return {...row.body,status:row.status,revision:row.revision,revocationReason:row.revocation_reason};
+}
+async function currentInstitutionMandate(ctx:PeMutationContext,c:pg.PoolClient,workId:string,institutionId:string,deadline:string){
+ await lockInstitutionSourceAuthority(ctx,c,workId);
+ const rows=(await c.query(`SELECT institution_id,rules FROM finnor_os.x1_work_mandates
+    WHERE tenant_id=$1 AND work_id=$2 AND principal_id=$3 AND revoked_at IS NULL
+      AND valid_from<=clock_timestamp() AND expires_at>clock_timestamp()
+    ORDER BY valid_from DESC LIMIT 2`,[ctx.auth.tenantId,workId,actor(ctx)])).rows;
+ if(rows.length!==1||rows[0].institution_id!==institutionId
+   ||!Array.isArray(rows[0].rules)||rows[0].rules.length<1
+   ||deadline!==rows[0].rules.map((rule:{deadlineAt:string})=>rule.deadlineAt).sort()[0])
+   throw new AllocationContractError('STALE_INPUT','S5 institution original mandate deadline unavailable');
+}
+async function currentInstitution(ctx:PeMutationContext,c:pg.PoolClient,r:InstitutionReservation){
+ await currentInstitutionMandate(ctx,c,r.workId,r.demand.institutionId,r.originalDeadline);
+ const decision=await evaluateAuthorityTx(ctx.auth,{operation:'query',capability:'query:pe_world_state',risk:'low',
+   workId:r.workId,resources:[{type:'work',id:r.workId}]},c);
+ if(decision.outcome!=='allowed'||decision.reasonCode!=='grant_allows')
+   throw new AllocationContractError('STALE_INPUT','S5 original institution current read authority unavailable');
+ const currentness=(await c.query<{body:{authorityDecisionId:string;rightsRevision:string;executionAuthorityGranted:false}}>(
+   'SELECT finnor_os.s5_assert_institution_current($1,$2) AS body',[r.ref.id,decision.id])).rows[0]!.body;
+ const current=await snapshot(c,ctx.auth.tenantId);
+ if(Date.now()>=Date.parse(r.originalDeadline)
+   ||r.status==='RELEASED'||r.demand.tenantId!==ctx.auth.tenantId
+   ||r.demand.principalId!==actor(ctx)||r.demand.workId!==r.workId
+   ||r.resources.length!==current.resources.length
+   ||r.resources.some(ref=>!current.resources.some(resource=>sameAllocationRef(resource.ref,ref)))
+   ||current.resources.some(resource=>resource.revoked||Date.now()>=Date.parse(resource.validUntil)))
+   throw new AllocationContractError('STALE_INPUT','S5 institution reservation rights, deadline or resource revision changed');
+ for(const resource of current.resources)for(const pin of resource.beliefPins){
+  if(pin.tenantId!==ctx.auth.tenantId||pin.principalId!==actor(ctx)
+    ||(await validateBeliefViewPin(ctx,pin)).status!=='CURRENT')
+    throw new AllocationContractError('STALE_INPUT','S5 institution resource source or rights changed');
+ }
+ return {snapshot:current,currentness};
+}
+/** Institution demand enters the same S5 portfolio serializer and resource
+ * occupancy population as finite S5 clearings; it is not an X1 budget row. */
+export async function reserveInstitutionDemand(ctx:PeMutationContext,demand:InstitutionResourceDemand,rightsRevision:string,client?:pg.PoolClient){
+ const reserve=async(c:pg.PoolClient)=>{
+  if(demand.semanticOwner!=='S5'||demand.qualification!=='DECLARED_ACCOUNTING_NOT_FUNDING'
+    ||demand.tenantId!==ctx.auth.tenantId||demand.principalId!==actor(ctx))throw denied();
+  const requestDigest=epistemicHash(demand);
+  const {demandDigest,...preimage}=demand;
+  if(demandDigest!==epistemicHash(preimage))throw denied();
+  await currentInstitutionMandate(ctx,c,demand.workId,demand.institutionId,demand.originalDeadline);
+  if(demand.lines.every(line=>line.quantity==='0'))
+    throw new AllocationContractError('INVALID_REQUEST','S5 cannot reserve an empty institution resource occupation');
+  const prior=(await c.query(`SELECT o.body,s.status,p.demand FROM finnor_os.s5_reservation_origins o
+    JOIN finnor_os.s5_reservations s USING(tenant_id,reservation_id)
+    JOIN finnor_os.s5_proposals p ON p.tenant_id=o.tenant_id AND p.content_digest=o.allocation_digest
+    WHERE o.tenant_id=$1 AND o.principal_id=$2 AND o.allocation_digest=$3 AND p.demand IS NOT NULL`,
+    [ctx.auth.tenantId,actor(ctx),demand.demandDigest])).rows[0];
+  if(prior){
+   if(epistemicHash(prior.demand)!==requestDigest||prior.status==='RELEASED')throw conflict();
+   const existing={...prior.body,status:prior.status} as InstitutionReservation;
+   return {reservation:existing,semanticReplay:true,currentUseAllowed:false};
+  }
+  if(Date.now()>=Date.parse(demand.originalDeadline))
+    throw new AllocationContractError('STALE_INPUT','S5 original mandate deadline passed');
+  const rights=(await c.query('SELECT revision FROM finnor_os.authority_states WHERE tenant_id=$1 FOR SHARE',[ctx.auth.tenantId])).rows[0];
+  if(String(rights?.revision)!==rightsRevision)throw new AllocationContractError('STALE_INPUT','S5 institution rights changed');
+  const current=await snapshot(c,ctx.auth.tenantId);
+  for(const resource of current.resources)for(const pin of resource.beliefPins){
+   if(pin.tenantId!==ctx.auth.tenantId||pin.principalId!==actor(ctx)
+     ||(await validateBeliefViewPin(ctx,pin)).status!=='CURRENT')
+     throw new AllocationContractError('STALE_INPUT','S5 institution resource source or rights changed');
+  }
+  const envelopes:InstitutionReservation['envelopes']=[];
+  for(const line of demand.lines.filter(v=>v.quantity!=='0')){
+   const eligible=current.resources.filter(r=>r.resourceClass===line.resourceClass
+     && r.kind==='CUMULATIVE_EXPENDITURE'&&r.unit===line.unit&&r.currency===null
+     && !r.revoked&&r.covenants.length===0&&Date.now()<Date.parse(r.validUntil)
+     && r.availability.every(a=>a.basis==='REPORTED_AVAILABLE'&&a.amount!==null));
+   if(eligible.length!==1)throw new AllocationContractError('STALE_INPUT','S5 institution resource unavailable or ambiguous');
+   const resource=eligible[0]!,amount=allocationQuantity(line.quantity);
+   for(let t=0;t<resource.availability.length;t++){
+    const currentUse=allocationQuantity(resource.existingUse.slice(0,t+1).reduce((total,v)=>
+      allocationDecimal(allocationQuantity(total).add(allocationQuantity(v))),'0'));
+    const occupied=current.outstanding.reduce((total,commitment)=>{
+      const bound=commitment.envelopes.find(e=>e.resourceId===resource.resourceId);
+      return bound?total.add(allocationQuantity(bound.quantities.slice(0,t+1).reduce((sum,v)=>
+        allocationDecimal(allocationQuantity(sum).add(allocationQuantity(v))),'0'))):total;
+    },allocationQuantity('0'));
+    const maximum=allocationQuantity(resource.availability[t]!.amount!).sub(allocationQuantity(resource.safetyMargin));
+    if(currentUse.add(occupied).add(amount).compare(maximum)>0)
+      throw new AllocationContractError('STALE_INPUT','S5 shared resource capacity exhausted');
+   }
+   envelopes.push({resourceId:resource.resourceId,unit:resource.unit,kind:resource.kind,horizon:resource.horizon,
+     quantities:[line.quantity,...resource.availability.slice(1).map(()=>'0')],
+     minimumQuantities:[line.quantity,...resource.availability.slice(1).map(()=>'0')]});
+  }
+  if(envelopes.length!==demand.lines.filter(v=>v.quantity!=='0').length)
+    throw new AllocationContractError('STALE_INPUT','S5 institution resource funding incomplete');
+  const ref=allocationRef('S5','institution-reservation',{tenantId:ctx.auth.tenantId,
+    principalId:actor(ctx),workId:demand.workId,demandDigest:demand.demandDigest});
+  const demandRef=allocationRef('S5','institution-demand',demand);
+  const reservation:InstitutionReservation={schema:'finnor.s5.institution-reservation.v1',ref,demandRef,
+    tenantId:ctx.auth.tenantId,principalId:actor(ctx),workId:demand.workId,demand,
+    originalDeadline:demand.originalDeadline,rightsRevision,
+    resources:current.resources.map(resource=>resource.ref),envelopes,status:'RESERVED',
+    executionAuthorityGranted:false,protectedReceipt:null};
+  await c.query('SELECT finnor_os.s5_reserve_institution($1::jsonb,$2::jsonb,$3::jsonb,$4)',
+    [JSON.stringify(demand),JSON.stringify(reservation),JSON.stringify(envelopes),requestDigest]);
+  return {reservation,semanticReplay:false,currentUseAllowed:true};
+ };
+ if(!client)return locked(ctx,reserve);
+ // Parent publishers join this writer rather than waiting on another
+ // connection while holding the same source-authority mutex. Acquire this
+ // portfolio lock before domain/source locks, as in the standalone writer.
+ await client.query('SELECT pg_advisory_xact_lock(hashtextextended($1,0))',[`s5-portfolio:${ctx.auth.tenantId}`]);
+ await authorize(ctx,client);
+ return reserve(client);
+}
+export async function chargeInstitutionDemand(ctx:PeMutationContext,ref:ExperimentRef,request:InstitutionChargeRequest){
+ return locked(ctx,async c=>{
+  const r=await institutionState(ctx,c,ref);
+  if(!(await c.query<{allowed:boolean}>(
+    'SELECT finnor_os.x1_s5_charge_authorized($1::jsonb,$2) AS allowed',
+    [JSON.stringify(r),request.responsibilityIdentity])).rows[0]?.allowed)
+    throw new AllocationContractError('BLOCKED_AUTHORITY','X1 charge has no current checked duty in the original Work envelope');
+  // Original X1 Work reserves at most 520 compute + 900 human units. One-unit
+  // records can require 1,420 immutable charges without enlarging that grant.
+  const chargeLimit=r.demand.chargeScope?.kind==='ORIGINAL_WORK_EPISODE'?1420:512;
+  const rows=(await c.query(`SELECT ch.body FROM finnor_os.s5_governed_resource_charges ch
+    JOIN finnor_os.s5_consumptions co ON co.tenant_id=ch.tenant_id AND co.consumption_id=ch.consumption_id
+    WHERE ch.tenant_id=$1 AND ch.reservation_id=$2 AND co.principal_id=$3 ORDER BY ch.created_at,ch.charge_key LIMIT $4`,
+    [ctx.auth.tenantId,ref.id,actor(ctx),chargeLimit+1])).rows;
+  if(rows.length>chargeLimit)throw new AllocationContractError('LIMIT_EXCEEDED','S5 institution charge population bound');
+  const existing=rows.map(row=>row.body as {ref:ExperimentRef;reservationRef:ExperimentRef;
+    chargeKey:string;requestDigest:string;phase:string;ordinal:number;units:number;resourceId:string;unit:string;physicalInvocationId?:string});
+  const plan=planInstitutionDemandCharge({demand:r.demand,envelope:r.envelopes,existingCharges:existing,request});
+  if(plan.status==='REFUSED')throw new AllocationContractError('STALE_INPUT',plan.reason);
+  if(plan.status==='REPLAY')return {charge:existing.find(row=>row.chargeKey===plan.chargeKey)!,semanticReplay:true};
+  const {currentness}=await currentInstitution(ctx,c,r);
+  const preimage={schema:'finnor.s5.institution-consumption.v1',reservationRef:ref,
+    originalDeadline:r.originalDeadline,parentWorkId:r.workId,chargeKey:plan.chargeKey,
+    currentAuthorityDecisionId:currentness.authorityDecisionId,currentRightsRevision:currentness.rightsRevision,
+    requestDigest:plan.requestDigest,...request,resourceId:plan.resourceId,unit:plan.unit,
+    usedAfter:plan.usedAfter,costs:{money:null,status:'UNMETERED',releaseSufficient:false},
+    executionAuthorityGranted:false};
+  const body={...preimage,ref:allocationRef('S5','institution-consumption',preimage)};
+  await c.query('SELECT finnor_os.s5_consume_institution($1,$2::jsonb)',
+    [ref.id,JSON.stringify(body)]);
+  return {charge:body,semanticReplay:false};
+ });
+}
+export async function validateInstitutionDemand(ctx:PeMutationContext,ref:ExperimentRef){
+ return locked(ctx,async c=>{
+  const reservation=await institutionState(ctx,c,ref);
+  try{
+   const {currentness}=await currentInstitution(ctx,c,reservation);
+   return {status:'CURRENT' as const,reservation,currentness,executionAuthorityGranted:false as const};
+  }catch(error){
+   if(error instanceof AllocationContractError && error.code==='STALE_INPUT')
+    return {status:'STALE_INPUT' as const,reservation,reason:error.message,
+      exposureRetained:reservation.status!=='RELEASED',executionAuthorityGranted:false as const};
+   throw error;
+  }
+ });
+}
+export async function releaseUntouchedInstitutionDemand(ctx:PeMutationContext,ref:ExperimentRef){
+ return locked(ctx,async c=>{
+  const r=await institutionState(ctx,c,ref);
+  const count=(await c.query('SELECT count(*)::int AS n FROM finnor_os.s5_consumptions WHERE tenant_id=$1 AND reservation_id=$2',[ctx.auth.tenantId,ref.id])).rows[0]?.n;
+  if(count||r.status==='CONSUMPTION_PENDING'||r.status==='UNKNOWN_OUTCOME')
+    throw new AllocationContractError('BLOCKED_AUTHORITY','S5 possible use retains original resource exposure');
+  if(r.status==='RELEASED')return r;
+  await c.query('SELECT finnor_os.s5_release_untouched_institution($1)',[ref.id]);
+  return {...r,status:'RELEASED' as const};
+ });
+}
 export async function putAllocationResource(ctx:PeMutationContext,input:AllocationResourceInput,expectedRef:ExperimentRef|null):Promise<AllocationResource>{
   return locked(ctx,async c=>{
     if(input.tenantId!==ctx.auth.tenantId||input.ownerRef.id!==actor(ctx)||input.ownerRef.owner!=='BUSINESS_OWNER')throw denied();
@@ -221,13 +422,34 @@ export async function putAllocationResource(ctx:PeMutationContext,input:Allocati
     await c.query('INSERT INTO finnor_os.s5_resource_heads(tenant_id,resource_id,revision) VALUES($1,$2,$3) ON CONFLICT(tenant_id,resource_id) DO UPDATE SET revision=excluded.revision',[ctx.auth.tenantId,input.resourceId,body.revision]);
     await enqueueAllocationOrigin(ctx,c,resource,resource.rightsRef);
     // Invalidates clearance but never erases its durable accountable envelope.
-    if(current){const invalidated=(await c.query("UPDATE finnor_os.s5_reservations SET revocation_reason='RESOURCE_REVISION_CHANGED',revision=revision+1,updated_at=clock_timestamp() WHERE tenant_id=$1 AND status<>'RELEASED' AND envelopes @> $2::jsonb RETURNING allocation_digest,reservation_id,revision",[ctx.auth.tenantId,JSON.stringify([{resourceId:input.resourceId}])])).rows;
-      for(const old of invalidated){const proposal=(await c.query('SELECT problem FROM finnor_os.s5_proposals WHERE tenant_id=$1 AND content_digest=$2',[ctx.auth.tenantId,old.allocation_digest])).rows[0];
+    if(current){
+      const finite=(await c.query(`UPDATE finnor_os.s5_reservations s SET
+        revocation_reason='RESOURCE_REVISION_CHANGED',revision=s.revision+1,updated_at=clock_timestamp()
+        FROM finnor_os.s5_proposals p WHERE s.tenant_id=$1 AND p.tenant_id=s.tenant_id
+          AND p.content_digest=s.allocation_digest AND p.demand IS NULL AND s.status<>'RELEASED'
+          AND s.envelopes @> $2::jsonb RETURNING s.allocation_digest,s.reservation_id,s.revision`,
+        [ctx.auth.tenantId,JSON.stringify([{resourceId:input.resourceId}])])).rows;
+      await c.query('SELECT * FROM finnor_os.s5_invalidate_institution_resource($1,$2::jsonb,$3::jsonb)',
+        [input.resourceId,JSON.stringify(current.ref),JSON.stringify(ref)]);
+      for(const old of finite){const proposal=(await c.query('SELECT problem,certificate FROM finnor_os.s5_proposals WHERE tenant_id=$1 AND content_digest=$2',[ctx.auth.tenantId,old.allocation_digest])).rows[0];
+        const detail={resourceRef:ref,priorRef:current.ref,reservationRef:old.reservation_id,reservationRevision:old.revision,clearanceInvalidated:true,exposureRetained:true};
+        if(proposal?.problem.schema==='finnor.s5.application-resource-problem.v1'&&proposal.certificate.schema==='finnor.s5.application-allocation.v1'){
+          const content={schema:'finnor.s5.application-resource-invalidation.v1',tenantId:ctx.auth.tenantId,
+            principalId:proposal.certificate.principalId,changedBy:actor(ctx),allocationRef:proposal.certificate.ref,...detail};
+          const reference=allocationRef('S5','application-resource-invalidation',content);
+          await c.query("INSERT INTO finnor_os.s5_history(tenant_id,subject_id,revision,operation,body) VALUES($1,$2,$3,'APPLICATION_RESOURCE_REVISION',$4::jsonb)",
+            [ctx.auth.tenantId,old.reservation_id,old.revision,JSON.stringify({...content,ref:reference})]);
+          await enqueueOwnerDeliveryInTransaction(c,{semanticOwner:'S5',tenantId:ctx.auth.tenantId,principalId:proposal.certificate.principalId},
+            {kind:'REFERENCE',identity:reference.id,payload:{reference:{...reference,content},rightsRefs:[proposal.certificate.rightsRef]}});
+          continue;
+        }
         if(['finnor.s5.fixed-primary-problem.v1','finnor.s5.fixed-programme-problem.v1'].includes(proposal.problem.schema)){
           await c.query("INSERT INTO finnor_os.s5_history(tenant_id,subject_id,revision,operation,body) VALUES($1,$2,$3,'PRIMARY_RESOURCE_INVALIDATION',$4::jsonb)",[ctx.auth.tenantId,old.reservation_id,old.revision,JSON.stringify({resourceRef:ref,priorRef:current.ref,reservationId:old.reservation_id,clearanceInvalidated:true,exposureRetained:true})]);
           continue;
         }
-        await appendExperience(ctx,c,[prepareS5Experience(proposal.problem.mandate,'REVISION',ref.id,{resourceRef:ref,priorRef:current.ref,reservationRef:old.reservation_id,reservationRevision:old.revision,clearanceInvalidated:true,exposureRetained:true},[current.ref.id,old.reservation_id],'H0')]);}}
+        if(!proposal?.problem.mandate)throw denied();
+        await appendExperience(ctx,c,[prepareS5Experience(proposal.problem.mandate,'REVISION',ref.id,detail,[current.ref.id,old.reservation_id],'H0')]);}
+    }
     await c.query('INSERT INTO finnor_os.s5_history(tenant_id,subject_id,revision,operation,body) VALUES($1,$2,$3,\'RESOURCE_REVISION\',$4::jsonb)',[ctx.auth.tenantId,ref.id,body.revision,JSON.stringify(resource)]);return resource;
   });
 }
@@ -235,7 +457,7 @@ function validateStored(ctx:PeMutationContext,problem:CanonicalAllocationProblem
   const {ref:actual,...body}=certificate;
   if(problem.tenantId!==ctx.auth.tenantId||problem.principalId!==actor(ctx)||certificate.tenantId!==ctx.auth.tenantId||certificate.principalId!==actor(ctx)||!sameAllocationRef(actual,ref)||!sameAllocationRef(actual,allocationRef('S5','allocation-certificate',body))||!sameAllocationRef(problem.ref,certificate.problemRef))throw denied();bounded({problem,certificate});
 }
-async function stored(ctx:PeMutationContext,c:pg.PoolClient,value:ExperimentRef):Promise<{problem:CanonicalAllocationProblem;certificate:AllocationCertificate;reservation:AllocationReservation|null}>{
+async function finiteStored(ctx:PeMutationContext,c:pg.PoolClient,value:ExperimentRef):Promise<{problem:CanonicalAllocationProblem;certificate:AllocationCertificate;reservation:AllocationReservation|null}>{
   if(value.owner!=='S5'||value.version!==S5_VERSION||value.id!==`allocation-certificate:${value.contentDigest}`)throw denied();
   const r=(await c.query('SELECT problem,certificate FROM finnor_os.s5_proposals WHERE tenant_id=$1 AND principal_id=$2 AND content_digest=$3',[ctx.auth.tenantId,actor(ctx),value.contentDigest])).rows[0];if(!r)throw denied();validateStored(ctx,r.problem,r.certificate,value);
   const projection=(await c.query('SELECT o.body,s.status,s.envelopes,s.revocation_reason,s.revision FROM finnor_os.s5_reservation_origins o JOIN finnor_os.s5_reservations s USING(tenant_id,reservation_id) WHERE o.tenant_id=$1 AND o.principal_id=$2 AND o.allocation_digest=$3',[ctx.auth.tenantId,actor(ctx),value.contentDigest])).rows[0];
@@ -243,6 +465,14 @@ async function stored(ctx:PeMutationContext,c:pg.PoolClient,value:ExperimentRef)
   await enqueueProposalOrigins(ctx,c,r.problem,r.certificate);
   if(projection){const {ref,...origin}=projection.body as AllocationReservation;if(!sameAllocationRef(ref,allocationRef('S5','allocation-reservation',origin)))throw denied();await enqueueAllocationOrigin(ctx,c,projection.body,r.certificate.rightsRef);reservation={...projection.body,status:projection.status,envelopes:projection.envelopes,revocationReason:projection.revocation_reason,revision:projection.revision};}
   return {problem:r.problem,certificate:r.certificate,reservation};
+}
+async function stored(ctx:PeMutationContext,c:pg.PoolClient,value:ExperimentRef){
+ if(value.id.startsWith('institution-reservation:')){
+  const reservation=await institutionState(ctx,c,value);
+  return {kind:'institution_responsibility_v1' as const,demand:reservation.demand,
+    reservation,consumptions:await institutionConsumptions(ctx,c,reservation)};
+ }
+ return {kind:'finite_allocation_v1' as const,...await finiteStored(ctx,c,value)};
 }
 export async function persistAllocationProposal(ctx:PeMutationContext,problem:CanonicalAllocationProblem,certificate:AllocationCertificate):Promise<void>{
   validateStored(ctx,problem,certificate,certificate.ref);await locked(ctx,async c=>{const existing=(await c.query('SELECT problem,certificate FROM finnor_os.s5_proposals WHERE tenant_id=$1 AND content_digest=$2',[ctx.auth.tenantId,certificate.ref.contentDigest])).rows[0];
@@ -255,7 +485,7 @@ export async function persistAllocationProposal(ctx:PeMutationContext,problem:Ca
 export async function readStoredAllocation(ctx:PeMutationContext,ref:ExperimentRef){return locked(ctx,c=>stored(ctx,c,ref));}
 export async function readAllocationReplay(ctx:PeMutationContext,key:string,digest:string){
   return locked(ctx,async c=>{const r=(await c.query('SELECT request_digest,allocation_digest FROM finnor_os.s5_requests WHERE tenant_id=$1 AND principal_id=$2 AND idempotency_key=$3',[ctx.auth.tenantId,actor(ctx),key])).rows[0];
-    if(r&&r.request_digest!==digest)throw conflict();if(r?.allocation_digest)return stored(ctx,c,{owner:'S5',version:S5_VERSION,id:`allocation-certificate:${r.allocation_digest}`,contentDigest:r.allocation_digest});
+    if(r&&r.request_digest!==digest)throw conflict();if(r?.allocation_digest)return finiteStored(ctx,c,{owner:'S5',version:S5_VERSION,id:`allocation-certificate:${r.allocation_digest}`,contentDigest:r.allocation_digest});
     if(!r)await c.query('INSERT INTO finnor_os.s5_requests(tenant_id,principal_id,idempotency_key,request_digest) VALUES($1,$2,$3,$4)',[ctx.auth.tenantId,actor(ctx),key,digest]);return null;});
 }
 export type AllocationCommitFence=(client:pg.PoolClient,problem:CanonicalAllocationProblem,certificate:AllocationCertificate)=>Promise<{
@@ -265,8 +495,8 @@ export async function commitAllocationReservation(ctx:PeMutationContext,problem:
   return locked(ctx,async c=>{
     if(performance.now()>=deadlineAt)throw new AllocationContractError('LIMIT_EXCEEDED','Whole allocation decision deadline exhausted during commitment contention');
     const req=(await c.query('SELECT request_digest,allocation_digest FROM finnor_os.s5_requests WHERE tenant_id=$1 AND principal_id=$2 AND idempotency_key=$3',[ctx.auth.tenantId,actor(ctx),key])).rows[0];if(!req||req.request_digest!==digest)throw conflict();
-    if(req.allocation_digest){const previous=await stored(ctx,c,{owner:'S5',version:S5_VERSION,id:`allocation-certificate:${req.allocation_digest}`,contentDigest:req.allocation_digest});if(previous.reservation)return previous.reservation;throw denied();}
-    const issued=await stored(ctx,c,certificate.ref);if(!sameAllocationRef(issued.problem,problem)||!sameAllocationRef(issued.certificate,certificate))throw new AllocationContractError('INVALID_CANDIDATE','Candidate differs from persisted issuer');
+    if(req.allocation_digest){const previous=await finiteStored(ctx,c,{owner:'S5',version:S5_VERSION,id:`allocation-certificate:${req.allocation_digest}`,contentDigest:req.allocation_digest});if(previous.reservation)return previous.reservation;throw denied();}
+    const issued=await finiteStored(ctx,c,certificate.ref);if(!sameAllocationRef(issued.problem,problem)||!sameAllocationRef(issued.certificate,certificate))throw new AllocationContractError('INVALID_CANDIDATE','Candidate differs from persisted issuer');
     const current=await snapshot(c,ctx.auth.tenantId);
     if(current.snapshotDigest!==problem.snapshotDigest||Date.now()>=Date.parse(certificate.validUntil))throw new AllocationContractError('STALE_INPUT','Solved allocation snapshot expired or changed before commitment');
     if(current.outstanding.length>=256)throw new AllocationContractError('LIMIT_EXCEEDED','Live commitment registry is full; reconciliation and release remain permitted');
@@ -297,15 +527,37 @@ export async function commitAllocationReservation(ctx:PeMutationContext,problem:
   });
 }
 async function consumptions(ctx:PeMutationContext,c:pg.PoolClient,ref:ExperimentRef):Promise<AllocationConsumption[]>{
-  const issued=await stored(ctx,c,ref);const rows=(await c.query('SELECT co.body,st.status,st.effect_ref FROM finnor_os.s5_consumptions co JOIN finnor_os.s5_consumption_states st USING(tenant_id,consumption_id) JOIN finnor_os.s5_reservation_origins ro USING(tenant_id,reservation_id) WHERE co.tenant_id=$1 AND co.principal_id=$2 AND ro.allocation_digest=$3 ORDER BY co.consumption_id',[ctx.auth.tenantId,actor(ctx),ref.contentDigest])).rows;
+  const issued=await finiteStored(ctx,c,ref);const rows=(await c.query('SELECT co.body,st.status,st.effect_ref FROM finnor_os.s5_consumptions co JOIN finnor_os.s5_consumption_states st USING(tenant_id,consumption_id) JOIN finnor_os.s5_reservation_origins ro USING(tenant_id,reservation_id) WHERE co.tenant_id=$1 AND co.principal_id=$2 AND ro.allocation_digest=$3 ORDER BY co.consumption_id',[ctx.auth.tenantId,actor(ctx),ref.contentDigest])).rows;
   const result:AllocationConsumption[]=[];
   for(const row of rows){const {ref,...body}=row.body as AllocationConsumption;if(!sameAllocationRef(ref,allocationRef('S5','allocation-consumption',body)))throw denied();await enqueueAllocationOrigin(ctx,c,row.body,issued.certificate.rightsRef);result.push({...row.body,status:row.status,effectRef:row.effect_ref});}
   return result;
 }
-export async function readAllocationConsumptions(ctx:PeMutationContext,ref:ExperimentRef){return locked(ctx,c=>consumptions(ctx,c,ref));}
-export async function recordAllocationConsumption(ctx:PeMutationContext,reservationRef:ExperimentRef,body:Omit<AllocationConsumption,'ref'>,compatibleScenarioIds:string[],recheck:(resources:AllocationResource[],outstanding:AllocationOutstandingCommitment[])=>Promise<AllocationCheck>):Promise<AllocationConsumption>{
+async function institutionConsumptions(ctx:PeMutationContext,c:pg.PoolClient,reservation:InstitutionReservation){
+ const limit=reservation.demand.chargeScope?.kind==='ORIGINAL_WORK_EPISODE'?1420:512;
+ const rows=(await c.query(`SELECT co.body,st.status,st.effect_ref
+   FROM finnor_os.s5_consumptions co JOIN finnor_os.s5_consumption_states st USING(tenant_id,consumption_id)
+   WHERE co.tenant_id=$1 AND co.principal_id=$2 AND co.reservation_id=$3
+   ORDER BY co.consumption_id LIMIT $4`,[ctx.auth.tenantId,actor(ctx),reservation.ref.id,limit+1])).rows;
+ if(rows.length>limit)throw new AllocationContractError('LIMIT_EXCEEDED','S5 institution consumption bound exceeded');
+ return rows.map(row=>({...row.body,status:row.status,effectRef:row.effect_ref}));
+}
+export async function readAllocationConsumptions(ctx:PeMutationContext,ref:ExperimentRef){
+ return locked(ctx,async c=>ref.id.startsWith('institution-reservation:')
+   ? institutionConsumptions(ctx,c,await institutionState(ctx,c,ref))
+   : consumptions(ctx,c,ref));
+}
+export function recordAllocationConsumption(ctx:PeMutationContext,reservationRef:ExperimentRef,
+  request:InstitutionChargeRequest):ReturnType<typeof chargeInstitutionDemand>;
+export function recordAllocationConsumption(ctx:PeMutationContext,reservationRef:ExperimentRef,
+  body:Omit<AllocationConsumption,'ref'>,compatibleScenarioIds:string[],
+  recheck:(resources:AllocationResource[],outstanding:AllocationOutstandingCommitment[])=>Promise<AllocationCheck>):Promise<AllocationConsumption>;
+export async function recordAllocationConsumption(ctx:PeMutationContext,reservationRef:ExperimentRef,
+  body:Omit<AllocationConsumption,'ref'>|InstitutionChargeRequest,compatibleScenarioIds?:string[],
+  recheck?:(resources:AllocationResource[],outstanding:AllocationOutstandingCommitment[])=>Promise<AllocationCheck>){
+  if('responsibilityIdentity' in body)return chargeInstitutionDemand(ctx,reservationRef,body);
+  if(!compatibleScenarioIds||!recheck)throw denied();
   return locked(ctx,async c=>{
-    const issued=await stored(ctx,c,body.certificateRef),reservation=issued.reservation;if(!reservation||!sameAllocationRef(reservation.ref,reservationRef)||reservation.status==='RELEASED'||reservation.revocationReason||Date.now()>=Date.parse(issued.certificate.validUntil))throw new AllocationContractError('STALE_INPUT','Current unrevoked reserved allocation required');
+    const issued=await finiteStored(ctx,c,body.certificateRef),reservation=issued.reservation;if(!reservation||!sameAllocationRef(reservation.ref,reservationRef)||reservation.status==='RELEASED'||reservation.revocationReason||Date.now()>=Date.parse(issued.certificate.validUntil))throw new AllocationContractError('STALE_INPUT','Current unrevoked reserved allocation required');
     if(body.status!=='INTENDED_PENDING_S6'||body.effectRef!==null)throw new AllocationContractError('INVALID_REQUEST','Consumption cannot invent S6 effect or settlement');
     const usedKey=(await c.query('SELECT request_digest,body FROM finnor_os.s5_consumptions WHERE tenant_id=$1 AND principal_id=$2 AND idempotency_key=$3',[ctx.auth.tenantId,actor(ctx),body.idempotencyKey])).rows[0];
     if(usedKey&&(!sameAllocationRef(usedKey.body.certificateRef,body.certificateRef)||usedKey.request_digest!==body.requestDigest))throw conflict();
@@ -328,7 +580,7 @@ export async function recordAllocationConsumption(ctx:PeMutationContext,reservat
   });
 }
 export async function releaseUntouchedAllocation(ctx:PeMutationContext,ref:ExperimentRef,key:string):Promise<AllocationReservation>{
-  return locked(ctx,async c=>{const issued=await stored(ctx,c,ref),r=issued.reservation;if(!r)throw denied();
+  return locked(ctx,async c=>{const issued=await finiteStored(ctx,c,ref),r=issued.reservation;if(!r)throw denied();
     const digest=epistemicHash({operation:'RELEASE_UNTOUCHED',ref}),prior=(await c.query('SELECT request_digest,allocation_digest FROM finnor_os.s5_requests WHERE tenant_id=$1 AND principal_id=$2 AND idempotency_key=$3',[ctx.auth.tenantId,actor(ctx),key])).rows[0];if(prior&&prior.request_digest!==digest)throw conflict();
     const uses=await consumptions(ctx,c,ref);
     const primary=(await c.query('SELECT 1 FROM finnor_os.s5_primary_charges WHERE tenant_id=$1 AND reservation_id=$2 LIMIT 1',[ctx.auth.tenantId,r.ref.id])).rowCount;
@@ -340,7 +592,7 @@ export async function releaseUntouchedAllocation(ctx:PeMutationContext,ref:Exper
   });
 }
 export async function retainAllocationReconciliation(ctx:PeMutationContext,ref:ExperimentRef,expectedRevision:number,observations:Record<string,unknown>):Promise<AllocationReservation>{
-  return locked(ctx,async c=>{const issued=await stored(ctx,c,ref),r=issued.reservation;if(!r||r.revision!==expectedRevision)throw new AllocationContractError('STALE_INPUT','Reconciliation reservation revision changed');
+  return locked(ctx,async c=>{const issued=await finiteStored(ctx,c,ref),r=issued.reservation;if(!r||r.revision!==expectedRevision)throw new AllocationContractError('STALE_INPUT','Reconciliation reservation revision changed');
     const uses=await consumptions(ctx,c,ref);if(!uses.length||r.status==='RELEASED')return r;
     if(r.status!=='UNKNOWN_OUTCOME')await c.query('UPDATE finnor_os.s5_reservations SET status=\'UNKNOWN_OUTCOME\',revision=revision+1,updated_at=clock_timestamp() WHERE tenant_id=$1 AND reservation_id=$2',[ctx.auth.tenantId,r.ref.id]);
     for(const use of uses.filter(u=>u.status==='INTENDED_PENDING_S6'))await c.query('UPDATE finnor_os.s5_consumption_states SET status=\'UNKNOWN_OUTCOME\',revision=revision+1,updated_at=clock_timestamp() WHERE tenant_id=$1 AND consumption_id=$2',[ctx.auth.tenantId,use.ref.id]);
@@ -361,7 +613,7 @@ export async function bindClosingAllocationAttempt(ctx:PeMutationContext,input:{
   allocationRef:ExperimentRef;consumptionRef:ExperimentRef;programmeId:string;nodeKey:string;effectId:string;
 }) {
   return locked(ctx,async c=>{
-    const issued=await stored(ctx,c,input.allocationRef),r=issued.reservation;
+    const issued=await finiteStored(ctx,c,input.allocationRef),r=issued.reservation;
     const use=(await consumptions(ctx,c,input.allocationRef)).find(u=>sameAllocationRef(u.ref,input.consumptionRef));
     const native=(await c.query(
       "SELECT q.spec,q.spec_digest,e.semantic_hash,e.effect,e.domain_action_id FROM finnor_os.pe_closing_programmes q JOIN finnor_os.pe_closing_node_links l ON l.tenant_id=q.tenant_id AND l.programme_id=q.id JOIN finnor_os.business_effects e ON e.tenant_id=l.tenant_id AND e.id=l.business_effect_id WHERE q.tenant_id=$1 AND q.id=$2 AND l.node_key=$3 AND e.id=$4",
@@ -420,7 +672,7 @@ export async function reconcileClosingAllocationObservation(ctx:PeMutationContex
   allocationRef:ExperimentRef;consumptionRef:ExperimentRef;effectId:string;evidenceVersionId:string;
 }) {
   return locked(ctx,async c=>{
-    const issued=await stored(ctx,c,input.allocationRef),r=issued.reservation;
+    const issued=await finiteStored(ctx,c,input.allocationRef),r=issued.reservation;
     const use=(await consumptions(ctx,c,input.allocationRef)).find(u=>sameAllocationRef(u.ref,input.consumptionRef));
     const observed=(await c.query(
       "SELECT e.semantic_hash,o.observation FROM finnor_os.business_effects e JOIN finnor_os.external_operations o ON o.tenant_id=e.tenant_id AND o.business_effect_id=e.id WHERE e.tenant_id=$1 AND e.id=$2 AND o.provider='finnor_closing_provider' AND o.verification_status='verified' AND o.observation->'closingEvidenceRef'->>'versionId'=$3",
@@ -449,7 +701,7 @@ export async function reconcileClosingAllocationObservation(ctx:PeMutationContex
  * released capacity are different claims: unmetered settlement retains occupation. */
 export async function applyProtectedAllocationSettlement(ctx:PeMutationContext,input:{allocationRef:ExperimentRef;consumptionRef:ExperimentRef;obligation:any;event:Record<string,any>;receipt:Record<string,any>}){
  return locked(ctx,async c=>{
-  const issued=await stored(ctx,c,input.allocationRef),r=issued.reservation,uses=await consumptions(ctx,c,input.allocationRef),use=uses.find(u=>sameAllocationRef(u.ref,input.consumptionRef));
+  const issued=await finiteStored(ctx,c,input.allocationRef),r=issued.reservation,uses=await consumptions(ctx,c,input.allocationRef),use=uses.find(u=>sameAllocationRef(u.ref,input.consumptionRef));
   if(!r||r.status==='RELEASED'||!use||!sameAllocationRef(input.obligation.allocationRef,input.allocationRef)||!sameAllocationRef(input.obligation.consumptionRef,use.ref)||!sameAllocationRef(input.obligation.reservationRef,r.ref)||use.effectRef?.id!==input.obligation.effectRef.id||use.effectRef?.contentDigest!==input.obligation.effectRef.semanticHash)throw denied();
   const prior=(await c.query("SELECT body FROM finnor_os.s5_history WHERE tenant_id=$1 AND subject_id=$2 AND operation='PROTECTED_S6_SETTLEMENT' ORDER BY revision DESC LIMIT 1",[ctx.auth.tenantId,use.ref.id])).rows[0];
   if(prior){if(prior.body.event.eventId!==input.event.eventId||!sameAllocationRef(prior.body.receipt,input.receipt))throw conflict();return {consumption:use,reservation:r,costs:prior.body.costs,releaseGranted:false as const,semanticReplay:true};}
@@ -467,7 +719,7 @@ export async function applyProtectedAllocationSettlement(ctx:PeMutationContext,i
 
 export async function retainProtectedAllocationAttempt(ctx:PeMutationContext,input:{allocationRef:ExperimentRef;consumptionRef:ExperimentRef;obligation:any;event:Record<string,any>;receipt:Record<string,any>}){
  return locked(ctx,async c=>{
-  const issued=await stored(ctx,c,input.allocationRef),r=issued.reservation,use=(await consumptions(ctx,c,input.allocationRef)).find(u=>sameAllocationRef(u.ref,input.consumptionRef));
+  const issued=await finiteStored(ctx,c,input.allocationRef),r=issued.reservation,use=(await consumptions(ctx,c,input.allocationRef)).find(u=>sameAllocationRef(u.ref,input.consumptionRef));
   if(!r||r.status==='RELEASED'||!use||!sameAllocationRef(input.obligation.reservationRef,r.ref)||!sameAllocationRef(input.obligation.allocationRef,input.allocationRef)||!sameAllocationRef(input.obligation.consumptionRef,use.ref)||use.effectRef?.id!==input.obligation.effectRef.id||use.effectRef?.contentDigest!==input.obligation.effectRef.semanticHash)throw denied();
   const prior=(await c.query("SELECT body FROM finnor_os.s5_history WHERE tenant_id=$1 AND subject_id=$2 AND operation='PROTECTED_S6_ATTEMPT' AND body->'event'->>'eventId'=$3 LIMIT 1",[ctx.auth.tenantId,use.ref.id,input.event.eventId])).rows[0];
   if(prior){if(!sameAllocationRef(prior.body.receipt,input.receipt))throw conflict();return {consumption:use,reservation:r,semanticReplay:true,releaseGranted:false as const};}

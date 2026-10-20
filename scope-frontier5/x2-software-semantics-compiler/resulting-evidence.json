@@ -1,0 +1,489 @@
+{
+  "schema": "finnor.x2.resulting-development-evidence.v1",
+  "qualification": "SELECTED_PASSING_PROOFS_WITH_MANDATORY_BLOCKED_PREDICATES",
+  "codeCommit": "5e9a7289a3695092b820e037d8fcbd1fae470145",
+  "codeTree": "42ed1b9183c7b6235d615fc2a584271dc74f64f8",
+  "build": {
+    "installation": "installed-009",
+    "buildId": "x2-e75bccf83552f881a817f65d85751d2df377ce44251dd232724df485f98c0af4",
+    "manifestSha256": "871418ff506f890984f1d6747cc50f16280b9df0c3f9331071af229409fb3f90",
+    "wallMs": 191106.690042,
+    "node": "v22.22.3",
+    "platform": "darwin",
+    "architecture": "arm64",
+    "emittedFiles": [
+      {
+        "path": "finnor-os/x2-runtime/physical-worker.js",
+        "bytes": 5577128,
+        "sha256": "7de9d74a682ba706ccb7f6a6ee5de96e46bf41118bacd9b9df78943e988264a4"
+      },
+      {
+        "path": "finnor-os/x2-runtime/worker/index.js",
+        "bytes": 5571397,
+        "sha256": "c6edbef7e8a9af269a3e7480f5f46d9a538ee994789e011c1494e87aeb74e9a0"
+      },
+      {
+        "path": "finnor-os/x2-runtime/ledger-server.js",
+        "bytes": 107270,
+        "sha256": "dfe9922901bf7a5249da9d5b461348b0477957ac8e3e788fb518320a3cc47677"
+      },
+      {
+        "path": "finnor-os/x2-runtime/s8-server.js",
+        "bytes": 1520821,
+        "sha256": "8f18e8b7c4e107fb86f721993d0962040eb056de4a73d08e61e2a5cfb3dcd20e"
+      },
+      {
+        "path": "finnor-os/x2-runtime/application-consumer.js",
+        "bytes": 113860,
+        "sha256": "f3831ec5743237228abc2b68c3b976d02e3ad09cc77d91a9058fd205f62c5713"
+      }
+    ],
+    "locks": [
+      {
+        "path": "package-lock.json",
+        "sha256": "4ae84fbe370dfdf4708e35a2274f4be0fb612665d4dda88ddeb342c264f5b697"
+      },
+      {
+        "path": "finnor-os/package-lock.json",
+        "sha256": "aebbbac3741b6cf7f2424447bf2bc12524eab526e041b6baada5d167003855c5"
+      }
+    ]
+  },
+  "native": [
+    {
+      "episode": 95,
+      "surface": "api",
+      "pass": 13,
+      "fail": 0,
+      "exitCode": 0,
+      "resultsSha256": "cb7763d1fc1e171903615cd19b28b97fef9ec0da048675ad80de4af4d84aefe9",
+      "exitSha256": "30f732d684828c1e90bee20a82e45b84884f01123ae305f610c724fe6ef2d6cf",
+      "boundary": "SOURCE_NATIVE",
+      "cases": [
+        {
+          "id": "canonical-legacy-running-and-queued-jobs-across-X2-upgrade",
+          "status": "PASS",
+          "wallMs": 5433.427541999999
+        },
+        {
+          "id": "fresh-upgrade-replay-and-runtime-role-isolation",
+          "status": "PASS",
+          "wallMs": 7940.248374999999
+        },
+        {
+          "id": "canonical-S5-terminal-resource-floor",
+          "status": "PASS",
+          "wallMs": 211.8559580000001
+        },
+        {
+          "id": "canonical-S5-future-resource-horizon-refusal",
+          "status": "PASS",
+          "wallMs": 129.27858299999934
+        },
+        {
+          "id": "authenticated-original-registration-and-idempotency",
+          "status": "PASS",
+          "wallMs": 150.61837500000001
+        },
+        {
+          "id": "physical-acquisition-and-independent-frozen-model",
+          "status": "PASS",
+          "wallMs": 43673.94775
+        },
+        {
+          "id": "ordinary-role-original-request-deletion-refusal",
+          "status": "PASS",
+          "wallMs": 21.60849999999482
+        },
+        {
+          "id": "native-S8-independent-discovery-and-signed-development-lifecycle",
+          "status": "PASS",
+          "wallMs": 2778.358499999995
+        },
+        {
+          "id": "fresh-Work-model-composition-and-independent-business-outcome",
+          "status": "PASS",
+          "wallMs": 54452.51979200001
+        },
+        {
+          "id": "fresh-handoff-excludes-denied-only-discovery-profile",
+          "status": "PASS",
+          "wallMs": 11.99116600000707
+        },
+        {
+          "id": "maintained-client-authenticated-fresh-Work-projection",
+          "status": "PASS",
+          "wallMs": 281.77583400000003
+        },
+        {
+          "id": "native-S8-exact-original-reconciliation-evidence-refusal",
+          "status": "PASS",
+          "wallMs": 561.3203749999957
+        },
+        {
+          "id": "unchanged-source-and-runtime-custody",
+          "status": "PASS",
+          "wallMs": 2.35670800000662
+        }
+      ]
+    },
+    {
+      "episode": 98,
+      "surface": "api",
+      "pass": 9,
+      "fail": 0,
+      "exitCode": 0,
+      "resultsSha256": "2fd1d04e7d6d64fc2ca63a9fbd09cea0ebfa36cdf30e800ee2b212ad09fb31dc",
+      "exitSha256": "872136e360c766479b1025421894c8cab87152ef6d32e07f9ee5a2facdcb71b4",
+      "boundary": "SOURCE_NATIVE",
+      "cases": [
+        {
+          "id": "canonical-legacy-running-and-queued-jobs-across-X2-upgrade",
+          "status": "PASS",
+          "wallMs": 5249.677707999999
+        },
+        {
+          "id": "fresh-upgrade-replay-and-runtime-role-isolation",
+          "status": "PASS",
+          "wallMs": 7669.277542000001
+        },
+        {
+          "id": "canonical-S5-terminal-resource-floor",
+          "status": "PASS",
+          "wallMs": 199.4596249999995
+        },
+        {
+          "id": "canonical-S5-future-resource-horizon-refusal",
+          "status": "PASS",
+          "wallMs": 102.88762499999939
+        },
+        {
+          "id": "authenticated-original-registration-and-idempotency",
+          "status": "PASS",
+          "wallMs": 179.08587499999885
+        },
+        {
+          "id": "physical-acquisition-and-independent-frozen-model",
+          "status": "PASS",
+          "wallMs": 28820.924875
+        },
+        {
+          "id": "ordinary-role-original-request-deletion-refusal",
+          "status": "PASS",
+          "wallMs": 20.752583000001323
+        },
+        {
+          "id": "canonical-P7-real-sibling-Work-and-replacement-input-closure",
+          "status": "PASS",
+          "wallMs": 259421.33666699997
+        },
+        {
+          "id": "unchanged-source-and-runtime-custody",
+          "status": "PASS",
+          "wallMs": 2.670083999983035
+        }
+      ]
+    },
+    {
+      "episode": 99,
+      "surface": "api",
+      "pass": 15,
+      "fail": 0,
+      "exitCode": 0,
+      "resultsSha256": "6ffb10e8715935a15843d59c5a4aa32575fce74b4ccae6ae79a0186eb8b009a0",
+      "exitSha256": "8207552d391de3f0cde1b2953e34820221bab21f7de01589fcc1aeeda0853216",
+      "boundary": "INSTALLED",
+      "cases": [
+        {
+          "id": "canonical-legacy-running-and-queued-jobs-across-X2-upgrade",
+          "status": "PASS",
+          "wallMs": 4008.3345420000005
+        },
+        {
+          "id": "fresh-upgrade-replay-and-runtime-role-isolation",
+          "status": "PASS",
+          "wallMs": 15577.561084
+        },
+        {
+          "id": "canonical-S5-terminal-resource-floor",
+          "status": "PASS",
+          "wallMs": 1297.924500000001
+        },
+        {
+          "id": "canonical-S5-future-resource-horizon-refusal",
+          "status": "PASS",
+          "wallMs": 118.34395799999766
+        },
+        {
+          "id": "authenticated-original-registration-and-idempotency",
+          "status": "PASS",
+          "wallMs": 186.64995900000213
+        },
+        {
+          "id": "physical-acquisition-and-independent-frozen-model",
+          "status": "PASS",
+          "wallMs": 46989.813292
+        },
+        {
+          "id": "ordinary-role-original-request-deletion-refusal",
+          "status": "PASS",
+          "wallMs": 21.62750000000233
+        },
+        {
+          "id": "native-S8-independent-discovery-and-signed-development-lifecycle",
+          "status": "PASS",
+          "wallMs": 3193.7673750000104
+        },
+        {
+          "id": "fresh-Work-model-composition-and-independent-business-outcome",
+          "status": "PASS",
+          "wallMs": 47618.700667
+        },
+        {
+          "id": "fresh-handoff-excludes-denied-only-discovery-profile",
+          "status": "PASS",
+          "wallMs": 10.975541000021622
+        },
+        {
+          "id": "maintained-client-authenticated-fresh-Work-projection",
+          "status": "PASS",
+          "wallMs": 358.9477499999921
+        },
+        {
+          "id": "native-S8-exact-original-reconciliation-evidence-refusal",
+          "status": "PASS",
+          "wallMs": 685.4144580000138
+        },
+        {
+          "id": "installed-runtime-restart-and-byte-custody",
+          "status": "PASS",
+          "wallMs": 1716.9950410000165
+        },
+        {
+          "id": "unchanged-source-and-runtime-custody",
+          "status": "PASS",
+          "wallMs": 5.488209000002826
+        },
+        {
+          "id": "installed-ending-asset-custody",
+          "status": "PASS",
+          "wallMs": 14830.130708000012
+        }
+      ],
+      "seedWithdrawalRestorationReceipt": "reconstruction-native-027.json",
+      "seedReceiptSha256": "b327d38ed859991d24b179f2aab665b40e6b792cab81db60480f37c3dc0846b5"
+    },
+    {
+      "episode": 100,
+      "surface": "hybrid",
+      "pass": 16,
+      "fail": 0,
+      "exitCode": 0,
+      "resultsSha256": "cdc60bdcdf8d4b6a74a069795682930e200e592a81d6c5a8b1f8d092df5acedf",
+      "exitSha256": "ad7125a25c601e6f34ef5164c34689051a551f1f3076c034a5f72d0743b9ba1c",
+      "boundary": "INSTALLED",
+      "cases": [
+        {
+          "id": "canonical-legacy-running-and-queued-jobs-across-X2-upgrade",
+          "status": "PASS",
+          "wallMs": 3415.7282080000004
+        },
+        {
+          "id": "fresh-upgrade-replay-and-runtime-role-isolation",
+          "status": "PASS",
+          "wallMs": 5703.239125000002
+        },
+        {
+          "id": "canonical-S5-terminal-resource-floor",
+          "status": "PASS",
+          "wallMs": 1336.787042
+        },
+        {
+          "id": "canonical-S5-future-resource-horizon-refusal",
+          "status": "PASS",
+          "wallMs": 139.73937500000102
+        },
+        {
+          "id": "authenticated-original-registration-and-idempotency",
+          "status": "PASS",
+          "wallMs": 207.55870800000048
+        },
+        {
+          "id": "physical-acquisition-and-independent-frozen-model",
+          "status": "PASS",
+          "wallMs": 31507.585292
+        },
+        {
+          "id": "ordinary-role-original-request-deletion-refusal",
+          "status": "PASS",
+          "wallMs": 22.1932500000039
+        },
+        {
+          "id": "native-S8-independent-discovery-and-signed-development-lifecycle",
+          "status": "PASS",
+          "wallMs": 2794.5082919999986
+        },
+        {
+          "id": "canonical-physical-worker-SIGKILL-after-exact-acceptance",
+          "status": "PASS",
+          "wallMs": 33336.501833
+        },
+        {
+          "id": "canonical-natural-lease-expiry-and-original-quarantine",
+          "status": "PASS",
+          "wallMs": 271264.085167
+        },
+        {
+          "id": "fresh-Work-model-composition-and-independent-business-outcome",
+          "status": "PASS",
+          "wallMs": 350534.105291
+        },
+        {
+          "id": "maintained-client-authenticated-fresh-Work-projection",
+          "status": "PASS",
+          "wallMs": 429.5269590000389
+        },
+        {
+          "id": "native-S8-exact-original-reconciliation-evidence-refusal",
+          "status": "PASS",
+          "wallMs": 1074.0504580000415
+        },
+        {
+          "id": "installed-runtime-restart-and-byte-custody",
+          "status": "PASS",
+          "wallMs": 2779.9290000000037
+        },
+        {
+          "id": "unchanged-source-and-runtime-custody",
+          "status": "PASS",
+          "wallMs": 5.957916000043042
+        },
+        {
+          "id": "installed-ending-asset-custody",
+          "status": "PASS",
+          "wallMs": 16438.529125
+        }
+      ],
+      "seedWithdrawalRestorationReceipt": "reconstruction-native-028.json",
+      "seedReceiptSha256": "566e557f97da1a4dba86e5839dff001eb49e0655708af6f4d16bf701e837a49f"
+    },
+    {
+      "episode": 101,
+      "surface": "ui",
+      "pass": 17,
+      "fail": 0,
+      "exitCode": 0,
+      "resultsSha256": "53d8a00f2c3bb2ce159af615f5e4ed3bf1d7905a468a1e2f44982c49a855aff5",
+      "exitSha256": "e3873161067f5fa3470dff8883e04dc21575c368a6454070ed5c699f48a6f231",
+      "boundary": "INSTALLED",
+      "cases": [
+        {
+          "id": "canonical-legacy-running-and-queued-jobs-across-X2-upgrade",
+          "status": "PASS",
+          "wallMs": 4031.9080829999984
+        },
+        {
+          "id": "fresh-upgrade-replay-and-runtime-role-isolation",
+          "status": "PASS",
+          "wallMs": 12785.743124999999
+        },
+        {
+          "id": "canonical-S5-terminal-resource-floor",
+          "status": "PASS",
+          "wallMs": 1425.4017910000002
+        },
+        {
+          "id": "canonical-S5-future-resource-horizon-refusal",
+          "status": "PASS",
+          "wallMs": 130.1304999999993
+        },
+        {
+          "id": "authenticated-original-registration-and-idempotency",
+          "status": "PASS",
+          "wallMs": 199.3344169999982
+        },
+        {
+          "id": "physical-acquisition-and-independent-frozen-model",
+          "status": "PASS",
+          "wallMs": 14789.798459000001
+        },
+        {
+          "id": "ordinary-role-original-request-deletion-refusal",
+          "status": "PASS",
+          "wallMs": 20.5593330000047
+        },
+        {
+          "id": "native-S8-independent-discovery-and-signed-development-lifecycle",
+          "status": "PASS",
+          "wallMs": 2913.7344589999993
+        },
+        {
+          "id": "canonical-physical-worker-SIGKILL-after-exact-acceptance",
+          "status": "PASS",
+          "wallMs": 22546.631
+        },
+        {
+          "id": "canonical-natural-lease-expiry-and-original-quarantine",
+          "status": "PASS",
+          "wallMs": 281210.46025
+        },
+        {
+          "id": "canonical-opaque-original-effect-UNKNOWN",
+          "status": "PASS",
+          "wallMs": 136.63704200001666
+        },
+        {
+          "id": "fresh-Work-model-composition-and-independent-business-outcome",
+          "status": "PASS",
+          "wallMs": 325118.815292
+        },
+        {
+          "id": "maintained-client-authenticated-fresh-Work-projection",
+          "status": "PASS",
+          "wallMs": 304.8780830000178
+        },
+        {
+          "id": "native-S8-exact-original-reconciliation-evidence-refusal",
+          "status": "PASS",
+          "wallMs": 603.9864580000285
+        },
+        {
+          "id": "installed-runtime-restart-and-byte-custody",
+          "status": "PASS",
+          "wallMs": 1773.2215420000139
+        },
+        {
+          "id": "unchanged-source-and-runtime-custody",
+          "status": "PASS",
+          "wallMs": 3.095958999998402
+        },
+        {
+          "id": "installed-ending-asset-custody",
+          "status": "PASS",
+          "wallMs": 12790.258749999979
+        }
+      ],
+      "seedWithdrawalRestorationReceipt": "reconstruction-native-029.json",
+      "seedReceiptSha256": "7b94edf140d98bbdb80a30f5894e510f99539fe91782768ce0bff145dd337826"
+    }
+  ],
+  "codeComplete": false,
+  "e2eDevVerified": false,
+  "mandatoryMounted": "BLOCKED_NOT_RUN",
+  "matchedComparison": "BLOCKED_NOT_RUN_NO_PERFORMANCE_DENOMINATOR",
+  "billingUSD": null,
+  "humanWork": null,
+  "aggregateSimultaneousMemory": null,
+  "outer099Duration": "Includes an engineering sequencer pause while the real child finished; not a business-latency measurement or comparison.",
+  "stoppedDatabases": "resumption-db-preservation-001.json; original bytes/modes/links retained in verified archives; logs/journals unchanged; 030/095/098 untouched.",
+  "installedReconstruction": {
+    "installation": "reconstructed-installed-005",
+    "receiptSha256": "3e96340b9d9fd165e6c780e099664503cfb9eb6a8ccc86b3f29f8a8b7428fd2a",
+    "productRebuilt": false,
+    "independentRegularFiles": true,
+    "noSeedResolution": true,
+    "copyOnWriteEstablished": false,
+    "retainedReconstructionFailure": "failed-reconstruction-004.json",
+    "nativeEpisode": 101
+  }
+}

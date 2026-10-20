@@ -80,6 +80,9 @@ const tenantLaneClassified = (
 
 /** Exhaustive registry for every production handler registered by the worker. */
 export const PRODUCTION_JOB_CONTRACTS = {
+  identify_digital_system_v1: tenantFixed("INTERACTIVE", "durably_effect_guarded", "X4 exact original consented digital experiments and read-only possible-delivery recovery, independent checker, original resources and physical fences; no protected or production authority."),
+  compile_learned_policy_v1: tenantFixed("INTERACTIVE", "locally_idempotent", "X5 consented structural CPU learning, exact pinned native use and independent outcome evaluation under original immutable resources; no protected or production authority.", {leaseRecovery:"immediate_after_expiry"}),
+  build_enterprise_application_v1: tenantFixed("INTERACTIVE", "locally_idempotent", "X3 bounded typed compilation, checking and transactional development installation under one original allocation; no guest effects or protected admission.", {leaseRecovery:"immediate_after_expiry"}),
   run_decision_atlas_v1: tenantFixed("INTERACTIVE", "locally_idempotent", "R7 exact named-family atlas under original episode; independent checker, retained physical costs, no effects or protected admission.", {leaseRecovery:"immediate_after_expiry"}),
   run_r1_dependency_continuation_v1: tenantFixed("INTERACTIVE", "locally_idempotent", "P7 versioned R1 dependency invalidation patch. Retains original episode, grant and S6 responsibility; no effect or fresh search budget."),
   run_certified_state_reduction_v1: tenantFixed("INTERACTIVE", "reconcilable", "R1 exact continuation reuse under the original Work/P1 episode and S5 grant; unknown physical work reconciles without automatic resubmission."),
@@ -87,6 +90,7 @@ export const PRODUCTION_JOB_CONTRACTS = {
   advance_closing_programme_v1: tenantFixed("INTERACTIVE", "durably_effect_guarded", "V3 exact original-spec maintained closing controller; native S6 children and retained S5 exposure."),
   run_capital_formation_v1: tenantFixed("INTERACTIVE", "durably_effect_guarded", "Original bounded financing programme; canonical provider identities, status-only possible-delivery recovery and independent source classification. No live admission."),
   evaluate_live_control_v1: tenantFixed("INTERACTIVE", "locally_idempotent", "Finite current native V5 consequences under the original S5/P1 grant; no reservation or effect authority.", { leaseRecovery: "immediate_after_expiry" }),
+  run_application_semantics_v1: tenantFixed("INTERACTIVE", "reconcilable", "X2 exact application operations under original S5/S6 responsibility; recovery observes and never repeats possible egress."),
   run_counterexample_search_v1: tenantFixed("INTERACTIVE", "locally_idempotent", "Frozen bounded current candidate/owner search for accepted Work. No live effects or protected admission.", {leaseRecovery:"immediate_after_expiry"}),
   run_capital_program_v2: tenantFixed("INTERACTIVE", "locally_idempotent", "Bounded nonconsequential economic proposals under exact Work/Plan; no allocation or admission granted.", {protocolVersions:[2],leaseRecovery:"immediate_after_expiry"}),
   run_capital_program_r2_v1: tenantFixed("INTERACTIVE", "locally_idempotent", "R2 complete exact finite programme search; original deadline, shared serial native grant, no effect or admission authority.", {protocolVersions:[2],leaseRecovery:"immediate_after_expiry"}),
@@ -101,6 +105,9 @@ export const PRODUCTION_JOB_CONTRACTS = {
   advance_primary_diligence_v1: tenantFixed("INTERACTIVE", "reconcilable", "V2 original Work/mandate/grant primary acquisition; unknown requests reconcile before retry."),
   advance_bilateral_programme_v1: tenantFixed("INTERACTIVE", "reconcilable", "V1 original Work, mandate and aggregate grant; S6 physical contact and independent original-record qualification."),
   run_harness_program_v1: tenantFixed("INTERACTIVE", "locally_idempotent", "P1 bounded ordinary programme linked to canonical WorkPlanRevision; no effect authority."),
+  run_x1_institution_continuation_v1: tenantFixed("INTERACTIVE", "reconcilable", "X1 owner-bound ordinary duty with gated action and independent canonical observation; no governed S6 origin."),
+  run_x1_institution_compiler_v1: tenantFixed("INTERACTIVE", "reconcilable", "X1 authenticated raw-source reconstruction and original-evidence check under one original Work envelope."),
+  run_x1_institution_update_v1: tenantFixed("INTERACTIVE", "reconcilable", "P7 current owner-input update under the original X1 Work episode; no replacement grant or effect authority."),
   reconciliation: tenantFixed("INTERACTIVE", "locally_idempotent", "Provider events may unblock an actively observed effect."),
   process_instruction: tenantFixed("INTERACTIVE", "locally_idempotent", "An accepted user instruction has a near-term response dependency."),
   run_workflow_step: tenantFixed("INTERACTIVE", "durably_effect_guarded", "Scope-2 workflow execution advances accepted Work."),

@@ -1,0 +1,182 @@
+{
+  "revision": 1,
+  "custody": "Independently authored DEVELOPMENT controls; not protected evaluation custody.",
+  "applicationVersion": "x4-fixture-v1",
+  "surfacePageSize": 2,
+  "semantics": {
+    "identities": "UUID literals below are known controls, never unknown-instance answers.",
+    "pagination": "Follow nextCursor until null; displayedPageCount is deliberately not authoritative.",
+    "timing": "Known immutable UTC metadata; unknown experiments separately use actual child-process timers and timestamps. Slot -1 precedes request, slot 1 follows request but precedes start, slot 3 follows start but precedes completion.",
+    "roles": "Each HTTP bearer is bound to one role. A control bound to the other role is forbidden, not silently reinterpreted.",
+    "values": "Exact signed safe integer decimal strings; unit count; no float normalization.",
+    "negativeControls": "REJECT controls intentionally expose a defect. Their literal expected finite set describes the valid result, not acceptance of the defective page.",
+    "missing": "MISSING means HTTP 404, distinct from a terminal valid empty result.",
+    "delayed": "First read is unavailable; reads at least 180ms after the first read become available. Original timeout must remain bounded.",
+    "faultInjection": "Administrator instrumentFault applies to ordinary observations AND controls. ACCEPT cases must cease to pass when mutated."
+  },
+  "cases": [
+    {
+      "id": "empty",
+      "role": "any",
+      "semantics": "Terminal, available, empty finite set.",
+      "expectedDisposition": "ACCEPT",
+      "expectedStatus": 200,
+      "expectedUnits": "count",
+      "expectedRecords": []
+    },
+    {
+      "id": "pagination",
+      "role": "any",
+      "semantics": "Five rows on three physical pages of size two. displayedPageCount=1 is misleading.",
+      "expectedDisposition": "ACCEPT",
+      "expectedStatus": 200,
+      "expectedUnits": "count",
+      "expectedRecords": [
+        { "id": "10000000-0000-4000-8000-000000000001", "value": "-4" },
+        { "id": "10000000-0000-4000-8000-000000000002", "value": "0" },
+        { "id": "10000000-0000-4000-8000-000000000003", "value": "7" },
+        { "id": "10000000-0000-4000-8000-000000000004", "value": "23" },
+        { "id": "10000000-0000-4000-8000-000000000005", "value": "101" }
+      ],
+      "displayedPageCount": 1
+    },
+    {
+      "id": "timing",
+      "role": "any",
+      "semantics": "Exact event identities and UTC request/start/completion metadata, with known ordering.",
+      "expectedDisposition": "ACCEPT",
+      "expectedStatus": 200,
+      "expectedUnits": "count",
+      "expectedRecords": [
+        { "id": "20000000-0000-4000-8000-000000000001", "value": "11" }
+      ],
+      "expectedTiming": {
+        "requestedAt": "2026-01-01T00:00:00.000Z",
+        "startedAt": "2026-01-01T00:00:00.120Z",
+        "completedAt": "2026-01-01T00:00:00.240Z",
+        "events": [
+          { "id": "21000000-0000-4000-8000-000000000001", "type": "accepted", "at": "2026-01-01T00:00:00.000Z" },
+          { "id": "21000000-0000-4000-8000-000000000002", "type": "started", "at": "2026-01-01T00:00:00.120Z" },
+          { "id": "21000000-0000-4000-8000-000000000003", "type": "completed", "at": "2026-01-01T00:00:00.240Z" }
+        ]
+      }
+    },
+    {
+      "id": "role-analyst",
+      "role": "analyst",
+      "semantics": "Analyst sees exactly one authorized row; auditor-only row is not exposed.",
+      "expectedDisposition": "ACCEPT",
+      "expectedStatus": 200,
+      "expectedUnits": "count",
+      "expectedRecords": [
+        { "id": "30000000-0000-4000-8000-000000000001", "value": "13" }
+      ]
+    },
+    {
+      "id": "role-auditor",
+      "role": "auditor",
+      "semantics": "Separately bound auditor credential sees both rows.",
+      "expectedDisposition": "ACCEPT",
+      "expectedStatus": 200,
+      "expectedUnits": "count",
+      "expectedRecords": [
+        { "id": "30000000-0000-4000-8000-000000000001", "value": "13" },
+        { "id": "30000000-0000-4000-8000-000000000002", "value": "17" }
+      ]
+    },
+    {
+      "id": "integer-units",
+      "role": "any",
+      "semantics": "Signed safe-integer endpoints and zero are preserved exactly as count strings.",
+      "expectedDisposition": "ACCEPT",
+      "expectedStatus": 200,
+      "expectedUnits": "count",
+      "expectedRecords": [
+        { "id": "40000000-0000-4000-8000-000000000001", "value": "-9007199254740991" },
+        { "id": "40000000-0000-4000-8000-000000000002", "value": "0" },
+        { "id": "40000000-0000-4000-8000-000000000003", "value": "9007199254740991" }
+      ]
+    },
+    {
+      "id": "missing",
+      "role": "any",
+      "semantics": "Absent control: HTTP 404, never an available empty page.",
+      "expectedDisposition": "MISSING",
+      "expectedStatus": 404,
+      "expectedUnits": "count",
+      "expectedRecords": []
+    },
+    {
+      "id": "duplicates",
+      "role": "any",
+      "semantics": "Defective surface repeats this identity. Independent instrument must reject, not deduplicate it into success.",
+      "expectedDisposition": "REJECT",
+      "expectedStatus": 200,
+      "expectedUnits": "count",
+      "expectedFault": "duplicate",
+      "expectedRecords": [
+        { "id": "50000000-0000-4000-8000-000000000001", "value": "19" }
+      ],
+      "surfaceFault": "duplicate"
+    },
+    {
+      "id": "stale",
+      "role": "any",
+      "semantics": "Surface has obsolete applicationVersion; equal values cannot make it current.",
+      "expectedDisposition": "REJECT",
+      "expectedStatus": 200,
+      "expectedUnits": "count",
+      "expectedFault": "stale",
+      "expectedRecords": [
+        { "id": "60000000-0000-4000-8000-000000000001", "value": "29" }
+      ],
+      "surfaceFault": "stale"
+    },
+    {
+      "id": "delayed",
+      "role": "any",
+      "semantics": "Unavailable pending first read; available only at least 180ms after first read. No record is silently removed.",
+      "expectedDisposition": "ACCEPT",
+      "expectedStatus": 200,
+      "expectedUnits": "count",
+      "expectedRecords": [
+        { "id": "70000000-0000-4000-8000-000000000001", "value": "31" }
+      ],
+      "delayMs": 180
+    },
+    {
+      "id": "repeated-cursor",
+      "role": "any",
+      "semantics": "Second physical page returns its own cursor; reject bounded traversal instead of looping.",
+      "expectedDisposition": "REJECT",
+      "expectedStatus": 200,
+      "expectedUnits": "count",
+      "expectedFault": "repeated-cursor",
+      "expectedRecords": [
+        { "id": "80000000-0000-4000-8000-000000000001", "value": "2" },
+        { "id": "80000000-0000-4000-8000-000000000002", "value": "3" },
+        { "id": "80000000-0000-4000-8000-000000000003", "value": "5" },
+        { "id": "80000000-0000-4000-8000-000000000004", "value": "7" },
+        { "id": "80000000-0000-4000-8000-000000000005", "value": "11" }
+      ],
+      "surfaceFault": "repeated-cursor"
+    },
+    {
+      "id": "skipped-cursor",
+      "role": "any",
+      "semantics": "First page skips to the fifth row; literal finite-set comparison must reject.",
+      "expectedDisposition": "REJECT",
+      "expectedStatus": 200,
+      "expectedUnits": "count",
+      "expectedFault": "missing",
+      "expectedRecords": [
+        { "id": "90000000-0000-4000-8000-000000000001", "value": "2" },
+        { "id": "90000000-0000-4000-8000-000000000002", "value": "3" },
+        { "id": "90000000-0000-4000-8000-000000000003", "value": "5" },
+        { "id": "90000000-0000-4000-8000-000000000004", "value": "7" },
+        { "id": "90000000-0000-4000-8000-000000000005", "value": "11" }
+      ],
+      "surfaceFault": "skipped-cursor"
+    }
+  ]
+}

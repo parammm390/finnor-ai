@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import { usePathname, useSearchParams } from "next/navigation"
 import { centropyPost, CentropyApiError } from "@/components/centropy/lib/api"
-import { getCurrentSessionKey, useCentropyAuth } from "@/components/centropy/lib/centropy-auth"
+import { getCurrentAccessGeneration, getCurrentSessionKey, useCentropyAuth } from "@/components/centropy/lib/centropy-auth"
 import { onBusinessInvalidation } from "@/components/centropy/lib/business-invalidation"
 import {
   CoalitionAllocationViewSchema, CoalitionConsumptionViewSchema, CoalitionConsentHistoryViewSchema,
@@ -36,7 +36,7 @@ export function CoalitionProgrammeReview({ programme, scope, authorized, workId,
   const sessionScope = useRef({ token: auth.session?.access_token, version: 0 })
   if (sessionScope.current.token !== auth.session?.access_token)
     sessionScope.current = { token: auth.session?.access_token, version: sessionScope.current.version + 1 }
-  const sessionKey = auth.session ? `${auth.session.user.id}:${auth.session.access_token}` : null
+  const sessionKey = auth.session ? `${auth.session.user.id}:${getCurrentAccessGeneration()}:${auth.session.access_token}` : null
   const permitted = Boolean(authorized && auth.session && auth.role === "owner" && !auth.loading &&
     !auth.roleLoading && !auth.roleError && sessionKey === getCurrentSessionKey())
   const identity: CoalitionIdentity = { userId: auth.session?.user.id ?? "signed-out", workId, root, workRevision }
@@ -50,7 +50,7 @@ export function CoalitionProgrammeReview({ programme, scope, authorized, workId,
     pointers?.selectionRef.contentDigest ?? "", pointers?.allocationRef?.contentDigest ?? "",
     pointers?.consumptionRef?.contentDigest ?? "", pointers?.scheduleRef?.contentDigest ?? "",
   ].join(":")
-  const viewScope = JSON.stringify([scope, identity.userId, sessionScope.current.version, workId,
+  const viewScope = JSON.stringify([scope, identity.userId, sessionKey, sessionScope.current.version, workId,
     root.entityType, root.entityId, workRevision, pathname, restored.kind === "INVALID", pointerKey])
   const [readback, setReadback] = useState<Scoped<Readback> | null>(null)
   const [message, setMessage] = useState<Scoped<{ text: string; error: boolean }> | null>(null)

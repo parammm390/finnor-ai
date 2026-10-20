@@ -24,7 +24,7 @@ export function buildFaultGraph(current:Pick<CurrentSlice,'slice'|'binding'|'pro
   for(const outstanding of current.binding.resourceSnapshot?.outstanding??[]){
     const id=`m4-outstanding:${hash(outstanding)}`;
     add({id,nativeId:outstanding.reservationRef.id,kind:'OUTSTANDING_COMMITMENT',candidateId:null,
-      ownerRef:outstanding.certificateRef,unit:null,currency:null,periods:[],
+      ownerRef:outstanding.certificateRef??outstanding.demandRef,unit:null,currency:null,periods:[],
       definitionDigest:hash(outstanding),qualification:'CROSS_MANDATE_RESERVATION_UNKNOWN_OUTCOME_AND_RECOVERY',
       status:outstanding.status});
     link(id,work,'OWNER_CURRENTNESS',current.binding.work.ref);

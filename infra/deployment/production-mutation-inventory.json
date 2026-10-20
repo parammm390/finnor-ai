@@ -226,6 +226,7 @@
         "scripts/release/vercel-auth.e2e.test.mjs",
         "scripts/release/worker-image-layout.e2e.test.mjs",
         "scripts/release/production-artifact.e2e.mjs",
+        "scripts/release/api-build-context.e2e.test.mjs",
         "scripts/release/api-artifact.e2e.test.mjs"
       ],
       "classification": "READ_ONLY",

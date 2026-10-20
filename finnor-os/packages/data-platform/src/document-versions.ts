@@ -41,6 +41,8 @@ export async function appendDocumentVersion(db:Db,input:{tenantId:string;documen
 }
 
 export async function setDocumentVersionHead(db:Db,input:{tenantId:string;documentId:string;kind:'current'|'provider'|'draft'|'published';key:string;versionId:string;expectedVersionId:string|null}):Promise<void>{
+ const document=await db.execute(sql`SELECT id FROM finnor_os.documents WHERE tenant_id=${input.tenantId}::uuid AND id=${input.documentId}::uuid FOR UPDATE`);
+ if(!document.rows[0])throw new Error('DOCUMENT_OWNER_UNAVAILABLE');
  const existing=await db.execute(sql`SELECT version_id FROM finnor_os.document_version_heads WHERE tenant_id=${input.tenantId}::uuid AND document_id=${input.documentId}::uuid AND kind=${input.kind} AND head_key=${input.key}`);const current=(existing.rows[0]?.version_id as string|undefined)??null;if(current!==input.expectedVersionId)throw new Error('STALE_BRANCH_HEAD');
  await db.execute(sql`INSERT INTO finnor_os.document_version_heads(tenant_id,document_id,kind,head_key,version_id) VALUES(${input.tenantId}::uuid,${input.documentId}::uuid,${input.kind},${input.key},${input.versionId}::uuid) ON CONFLICT(tenant_id,document_id,kind,head_key) DO UPDATE SET version_id=EXCLUDED.version_id,updated_at=clock_timestamp()`);
 }

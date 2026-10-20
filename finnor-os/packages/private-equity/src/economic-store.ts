@@ -74,6 +74,48 @@ export async function readStoredEconomicRecord(ctx: PeMutationContext, id: strin
         return decode(row);
     });
 }
+/** Bounded immutable compute history for one owned Work. The economic owner
+ * validates every preimage; consumers cannot read raw unverified cost bodies. */
+export async function listStoredWorkCompute(ctx: PeMutationContext, input: {
+    workId: string; episodeIds: string[]; schema: string;
+}) {
+    if (!input.workId || !input.schema || input.episodeIds.length < 1 || input.episodeIds.length > 2
+        || new Set(input.episodeIds).size !== input.episodeIds.length)
+        denied();
+    return withTenantTransaction(ctx.auth.tenantId, { userId: economicActor(ctx), readOnly: true }, async (_db, c) => {
+        await authorizeEconomicActor(ctx, c, false);
+        if (!(await c.query(`SELECT id FROM finnor_os.works
+            WHERE tenant_id=$1 AND id=$2 AND created_by=$3`,
+        [ctx.auth.tenantId, input.workId, economicActor(ctx)])).rows[0]) denied();
+        const rows = (await c.query(`SELECT * FROM finnor_os.s7_economic_records
+            WHERE tenant_id=$1 AND principal_id=$2 AND kind='COMPUTE'
+              AND body->'payload'->>'schema'=$3 AND body->'payload'->>'workId'=$4
+              AND body->'payload'->>'episodeId'=ANY($5::text[])
+            ORDER BY knowledge_at,record_id LIMIT 1025`,
+        [ctx.auth.tenantId, economicActor(ctx), input.schema, input.workId, input.episodeIds])).rows;
+        return { records: rows.slice(0, 1024).map(decode), complete: rows.length <= 1024,
+            ...(rows.length > 1024 ? { reason: 'ECONOMIC_WORK_COMPUTE_HISTORY_BOUND' } : {}),
+            executionAuthorityGranted: false as const };
+    });
+}
+/** Work preparation precedes the first compiler episode. These immutable
+ * measurements retain their observed null episode; the X1 consumer binds the
+ * owned Work to its actual original parent without rewriting those records. */
+export async function listStoredWorkPreparationCompute(ctx:PeMutationContext,workId:string){
+    if(!/^[a-f0-9-]{36}$/i.test(workId))denied();
+    return withTenantTransaction(ctx.auth.tenantId,{userId:economicActor(ctx),readOnly:true},async(_db,c)=>{
+        await authorizeEconomicActor(ctx,c,false);
+        if(!(await c.query('SELECT id FROM finnor_os.works WHERE tenant_id=$1 AND id=$2 AND created_by=$3',
+            [ctx.auth.tenantId,workId,economicActor(ctx)])).rows[0])denied();
+        const rows=(await c.query(`SELECT * FROM finnor_os.s7_economic_records
+            WHERE tenant_id=$1 AND principal_id=$2 AND kind='COMPUTE'
+              AND body->'payload'->>'schema'='finnor.x1.api-preparation-compute.v1'
+              AND body->'payload'->>'workId'=$3 AND body->'payload'->'episodeId'='null'::jsonb
+            ORDER BY knowledge_at,record_id LIMIT 1025`,[ctx.auth.tenantId,economicActor(ctx),workId])).rows;
+        return {records:rows.slice(0,1024).map(decode),complete:rows.length<=1024,
+            ...(rows.length>1024?{reason:'ECONOMIC_WORK_PREPARATION_HISTORY_BOUND'}:{}),executionAuthorityGranted:false as const};
+    });
+}
 export async function listStoredEconomicHistory(ctx: PeMutationContext, estimandId: string, knowledgeAt?: string) {
     const cut = knowledgeAt ?? new Date().toISOString();
     if (!Number.isFinite(Date.parse(cut)) || Date.parse(cut) > Date.now() + 1000)

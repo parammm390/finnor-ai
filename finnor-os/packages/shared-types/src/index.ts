@@ -1,3 +1,6 @@
+export * from './identified-system';
+export type {LearnedPolicyCapsule,LearnedPolicyEnvelope,LearnedPolicyProcedure,LearnedControllerCheckpoint,LearningUnknown,LearnedPolicyEventReference} from './learned-policy';
+export type {ApplicationReleaseBinding,EnterpriseApplicationRelease,FrontierArtifactEnvelope,FrontierEventCollectionReference,EnterpriseApplicationPackage} from './enterprise-applications';
 export * from "./closing";
 // Shared type contracts for the Finnor AI Operating System.
 // Every subsystem (orchestration, plugins, memory, tools, workers) compiles against these.
@@ -10,6 +13,7 @@ export * from "./conversation-context";
 export * from "./identity-access";
 export * from "./universal-actions";
 export * from "./computer";
+export * from "./application-semantics";
 export * from "./operational-delta";
 export * from "./execution-projection";
 export * from "./causal-replay";

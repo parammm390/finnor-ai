@@ -1,0 +1,6 @@
+{
+ "extends":"../../tsconfig.base.json",
+ "compilerOptions":{"noEmit":true,"allowImportingTsExtensions":true},
+ "include":["./*.mts","../../packages/private-equity/src/system-identification/core-child.mts"],
+ "exclude":["../../node_modules"]
+}

@@ -1,0 +1,21 @@
+{
+  "schema": "x3-independent-freeze.v1",
+  "revision": "1",
+  "status": "FROZEN_DEVELOPMENT_EXPECTATIONS_NOT_OWNER_APPROVED",
+  "scheme": "SHA256 of UTF-8 lines: <file_sha256> two spaces <relative_filename> newline; sorted filenames; this digest file excluded",
+  "freeze_sha256": "f178cecbc327e551c805ce6354cb9e99dc79e6d49ae6c11bb5090ee62d5f31cc",
+  "files": {
+    "cases.json": "87278faa3a710713cddbe72fe4cbd463087ea0aff63b3c4f3e79829ca99b6c43",
+    "failure-model.md": "42091c8c56e50111e08ffd0f221d848c628e29ccb231df688ebd35f7741c33a7",
+    "independently-authored-requirements.md": "96b831d72288f913a9ac0c8f079468bd90858516e02aca769e2c6264fa404ff2",
+    "reference-check.json": "1d99b7fe6894f019df93626e03a903f07d55d163cc3380634b19d3cbe4835c61",
+    "reference.py": "5e9341f6545043b19a536ed9fa23c62e247cada0416dc0e23c57a187ab3f5d4a",
+    "test-audit.md": "4b5683a5b28bb51297c9ae1c039f80faaf00ab340858b4fc94655b9cff54039e",
+    "verification-manifest.json": "9fff2a10776bb8681a067284b678109a78cd440d345d5e659f702a846b967761"
+  },
+  "candidate_observation": "NOT_RUN",
+  "protected_custody": "NOT_PROVIDED",
+  "model_identity": "UNKNOWN",
+  "human_identity": "UNKNOWN",
+  "cost": "UNKNOWN"
+}

@@ -1,0 +1,58 @@
+{
+  "schema": "finnor.frontier5.registered-api-additions.v1",
+  "base": "c12665661c1a536a2350aeb8abc01ac42aa16548",
+  "families": {
+    "X3": [
+      "application-submit",
+      "application-maintain",
+      "application-command",
+      "application-read",
+      "application-record",
+      "application-list",
+      "application-history",
+      "application-asset",
+      "application-cancel",
+      "application-rollback",
+      "application-impact",
+      "application-upload",
+      "application-prepare-effect",
+      "application-s8-propose",
+      "application-admission"
+    ],
+    "X5": [
+      "learning-consent",
+      "learning-revoke-consent",
+      "learning-experience",
+      "learning-submit",
+      "learning-read",
+      "learning-list",
+      "learning-execute",
+      "learning-evaluate",
+      "learning-cancel",
+      "learning-invalidate",
+      "learning-retry",
+      "learning-rollback",
+      "learning-s8-propose",
+      "learning-admission",
+      "learning-register-assignment",
+      "learning-retrain"
+    ],
+    "X4": [
+      "identification-targets",
+      "identification-consent",
+      "identification-revoke-consent",
+      "identification-submit",
+      "identification-read",
+      "identification-list",
+      "identification-history",
+      "identification-experiment",
+      "identification-replicate",
+      "identification-use",
+      "identification-cancel",
+      "identification-invalidate",
+      "identification-retry",
+      "identification-s8-propose",
+      "identification-admission"
+    ]
+  }
+}

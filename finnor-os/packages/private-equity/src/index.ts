@@ -21,6 +21,20 @@ export * from "./company-brain";
 export * from "./digital-twin";
 export * from "./semantic-activity";
 export * from "./enterprise-beliefs";
+export { decodeInstitutionSources } from "./institution-program/source-decoder";
+export { proposeInstitutionModel } from "./institution-program/reconstruction";
+export { independentlyCheckInstitutionModel } from "./institution-program/checker";
+export { checkInstitutionInSeparateProcess } from "./institution-program/checker-process";
+export { X1_NATIVE_SOURCE_CONTRACT, X1_CHECKER_PROCESS_CONTRACT } from "./institution-program/contracts";
+// admitCheckedInstitutionMappings is deliberately not exported: publication is
+// reachable only through reconstructAndAdmitInstitutionSources, whose inputs are
+// assembled and rehydrated server-side from digest-pinned owner reads.
+export { retainInstitutionSource, loadInstitutionAdmissionOriginal, loadInstitutionCanonicalOwnerSnapshot, reconstructAndAdmitInstitutionSources } from "./institution-program/owner-admission";
+export { grantInstitutionSubjectConsent } from "./institution-program/source-authority";
+export { acquireInstalledMailOriginal } from "./institution-program/installed-source";
+export type { InstalledMailGrant } from "./institution-program/installed-source";
+export type { OriginalInstitutionEvidence, InstitutionCandidate, InstitutionCheck } from "./institution-program/checker";
+export type { RetainedOriginalSource, AcceptedInstitutionMappingRef } from "./institution-program/owner-admission";
 export * from "./enterprise-experiments";
 export * from "./enterprise-interventions";
 export * from "./enterprise-control";

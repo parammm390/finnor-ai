@@ -3,6 +3,7 @@
 import { lazy, Suspense, useEffect, useMemo, useState } from "react"
 import { ArrowRight, ArrowUpRight, Clock3, Globe2, Link2, RefreshCw, Search, ShieldCheck } from "lucide-react"
 import { centropyPost } from "@/components/centropy/lib/api"
+import { usePrivateRequestScope } from "../lib/use-private-request-scope"
 import { useCompanyBrainRoots } from "@/components/centropy/pe/use-pe-data"
 import { refKey, type CandidateCompanyBrainAction, type CompanyBrainEdge, type CompanyBrainFact, type CompanyBrainNode, type CompanyBrainObjectRef, type CompanyBrainProjection, type CompanyBrainSearchResult, type CompanyBrainSourceRef, type PeWorldRootRef } from "@/components/centropy/pe/contracts"
 import { WorldWorkRecord } from "./WorldWorkRecord"
@@ -53,7 +54,7 @@ function worldPriority(node: CompanyBrainNode, root: PeWorldRootRef | null): num
   return 10
 }
 
-export function WorldExplorer({ root, projection, projectionStatus, projectionError, initialObject, workId, onSelectRoot, onSelectObject, onAsk, onRefresh }: {
+type WorldExplorerProps = {
   root: PeWorldRootRef | null
   projection: CompanyBrainProjection | null
   projectionStatus: "idle" | "loading" | "ready" | "error"
@@ -64,7 +65,14 @@ export function WorldExplorer({ root, projection, projectionStatus, projectionEr
   onSelectObject: (ref: CompanyBrainObjectRef) => void
   onAsk: (node: CompanyBrainNode, prompt?: string) => void
   onRefresh: () => void
-}) {
+}
+export function WorldExplorer(props: WorldExplorerProps) {
+  const scope = usePrivateRequestScope(`${props.root?.entityType ?? "none"}:${props.root?.entityId ?? "none"}:${props.initialObject?.type ?? "none"}:${props.initialObject?.id ?? "none"}`)
+  if (!scope.allowed) return null
+  if (props.root && props.projectionStatus === "error") return <p role="alert">The current context is unavailable. Reload authorized sources to continue.</p>
+  return <WorldExplorerContent key={scope.key} {...props} />
+}
+function WorldExplorerContent({ root, projection, projectionStatus, projectionError, initialObject, workId, onSelectRoot, onSelectObject, onAsk, onRefresh }: WorldExplorerProps) {
   const roots = useCompanyBrainRoots()
   const [query, setQuery] = useState("")
   const [searchResults, setSearchResults] = useState<CompanyBrainSearchResult[] | null>(null)

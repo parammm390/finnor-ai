@@ -1,0 +1,59 @@
+{
+  "schema": "finnor.frontier5.continuation-baselines.v1",
+  "governingContract": {
+    "revision": "2.0",
+    "source": "USER_SUPPLIED_COMPLETE_TEXT",
+    "path": "/home/factory-user/x-phase-delivery/reference/user-supplied-contract.txt",
+    "sha256": "d86af8c65dbc306df4d52db4e2fd3cc51986f12c94f931ecde8dcaa1b8a4025b",
+    "olderReferencedOriginalFileSha256": "a1359fcb282261cd5ceee530905c4ad0cca6c329892140ea45a9a3c4014a311a",
+    "originalFileByteParity": "NOT_ESTABLISHED"
+  },
+  "B_live": {
+    "status": "ACTUAL_SOURCE_FROZEN_NOT_QUALIFIED_BASELINE",
+    "sourceCommit": "294921a9d431e0459588616ca1477677af8dffef",
+    "tree": "5b719018765477e8212b8922c7397719f9c72127",
+    "initialWorktreeStatus": "CLEAN",
+    "isolatedContinuation": "/home/factory-user/repos/finnor-x-phase",
+    "branch": "codex/frontier5-x-phase-completion",
+    "node": "22.23.3",
+    "platform": "linux-x64",
+    "initialEmittedBuildInContinuation": "ABSENT",
+    "locks": [
+      {
+        "path": "package-lock.json",
+        "sha256": "4ae84fbe370dfdf4708e35a2274f4be0fb612665d4dda88ddeb342c264f5b697"
+      },
+      {
+        "path": "finnor-os/package-lock.json",
+        "sha256": "aebbbac3741b6cf7f2424447bf2bc12524eab526e041b6baada5d167003855c5"
+      }
+    ],
+    "availableEngineSource": ["X3", "X4", "X5"],
+    "missingPeerSource": ["X1", "X2"],
+    "independentPostVQualification": false,
+    "providerEquipmentAndPreparationMatched": false,
+    "liveCustomerOrProductionAuthority": false
+  },
+  "B_V": {
+    "status": "BLOCKED_MISSING_INDEPENDENT_POST_V_QUALIFICATION",
+    "source": null,
+    "qualificationReceipts": [],
+    "substituteBLive": false
+  },
+  "B_ref": {
+    "status": "BLOCKED_NO_EQUIPPED_REGISTERED_COMPARATOR",
+    "implementations": [],
+    "historicalCostsInvented": false
+  },
+  "nativeMission": {
+    "status": "BLOCKED_NORMAL_CHAT",
+    "userDecision": "Continue local engineering here; keep Mission blocked",
+    "retroactiveConversion": false
+  },
+  "qualification": {
+    "engineProtectedPopulations": "NOT_SUPPLIED_OR_RUN",
+    "integratedOperational100x": "BLOCKED",
+    "matureFinancial100xAndOwnerValue": "BLOCKED",
+    "productionActivation": "NOT_AUTHORIZED"
+  }
+}

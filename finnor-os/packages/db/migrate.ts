@@ -126,6 +126,22 @@ export async function migrate(
           executableSql = executableSql.replace(addition[0],
             `ALTER TABLE finnor_os.work_query_executions ADD CONSTRAINT work_query_executions_intent_check CHECK ((${definition.slice(6)}) OR ${addition[1]});`);
         }
+        if (["0175_x1_work_compiler.sql", "0189_x1_physical_cost_allocation.sql",
+          "0191_frontier5_x2_application_semantics.sql"].includes(file)) {
+          // Independently shipped peers extend the same charge classification.
+          // Retain the prior predicate, including X1's body-schema qualifier,
+          // while preserving the original migration file and charge identities.
+          const previous = await client.query<{ definition: string }>(
+            "SELECT pg_get_constraintdef(oid) AS definition FROM pg_constraint WHERE conrelid='finnor_os.s5_governed_resource_charges'::regclass AND conname='s5_governed_resource_charges_phase_check'",
+          );
+          const definition = previous.rows[0]?.definition;
+          const addition = /ALTER TABLE finnor_os\.s5_governed_resource_charges\s+ADD CONSTRAINT s5_governed_resource_charges_phase_check\s+CHECK\s*(\([\s\S]*?\));/.exec(executableSql);
+          if (previous.rows.length !== 1 || !definition?.startsWith("CHECK (") || !addition) {
+            throw new Error("S5 charge-history constraint prerequisite differs from the reviewed peer bridge");
+          }
+          executableSql = executableSql.replace(addition[0],
+            `ALTER TABLE finnor_os.s5_governed_resource_charges ADD CONSTRAINT s5_governed_resource_charges_phase_check CHECK ((${definition.slice(6)}) OR ${addition[1]});`);
+        }
         await client.query(executableSql);
         await client.query("INSERT INTO finnor_os._migrations (name) VALUES ($1)", [file]);
         await client.query("COMMIT");

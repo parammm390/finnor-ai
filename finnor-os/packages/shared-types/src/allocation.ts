@@ -70,11 +70,15 @@ export interface AllocationEnvelope {
   /** Lower simultaneous usage envelope; negative covenant coefficients use it. */
   minimumQuantities: ResourceQuantity[];
 }
-export interface AllocationOutstandingCommitment {
-  reservationRef: ExperimentRef; certificateRef: ExperimentRef; envelopes: AllocationEnvelope[];
+export type AllocationOutstandingCommitment = {
+  reservationRef: ExperimentRef; certificateRef: ExperimentRef; demandRef?: never; envelopes: AllocationEnvelope[];
   status: 'RESERVED' | 'CONSUMPTION_PENDING' | 'UNKNOWN_OUTCOME' | 'PARTIALLY_RECONCILED' | 'SETTLED_RETAINED';
   policyRefs: ExperimentRef[]; effectRefs: ExperimentRef[];
-}
+} | {
+  reservationRef: ExperimentRef; demandRef: ExperimentRef; certificateRef?: never; envelopes: AllocationEnvelope[];
+  status: 'RESERVED' | 'CONSUMPTION_PENDING' | 'UNKNOWN_OUTCOME' | 'PARTIALLY_RECONCILED' | 'SETTLED_RETAINED';
+  policyRefs: []; effectRefs: ExperimentRef[];
+};
 export interface CanonicalAllocationProblem {
   schema: 'finnor.allocation-problem.v1'; ref: ExperimentRef;
   tenantId: string; principalId: string; episodeId: string; mandate: EconomicMandate;

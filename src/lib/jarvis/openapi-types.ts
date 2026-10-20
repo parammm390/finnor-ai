@@ -1,4 +1,4 @@
-// Generated from finnor-os/openapi.json, SHA-256 b4b3efe91317670fe2c2df266bd2e40177dad52694d412403ab7cac579a5a38d.
+// Generated from finnor-os/openapi.json, SHA-256 d65242ccea521994cdcecd4bae159fc99d0f102591b0c16aa3f5635a2ffc086d.
 export interface paths {
     "/api/live-controls": {
         parameters: {
@@ -2759,7 +2759,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    operation: "opportunity-promote" | "belief-view" | "belief-pin" | "roots" | "projection" | "search" | "object" | "traverse" | "provenance" | "history" | "evidence-lineage" | "decision-lineage" | "available-actions" | "context" | "evidence-handles" | "evidence-submit" | "evidence-read" | "evidence-witness" | "evidence-replay" | "evidence-cancel" | "evidence-consume" | "program-submit" | "program-read" | "program-witness" | "program-module" | "program-projection" | "program-cancel" | "program-resume" | "program-artifact" | "program-ports" | "program-interface-module" | "compute-search-submit" | "compute-search-read" | "compute-search-projection" | "compute-search-cancel" | "compute-search-resume" | "compute-search-reconcile" | "interface-acquire" | "interface-read" | "interface-projection" | "interface-catalogue" | "interface-module" | "interface-cancel" | "interface-resume" | "interface-reconcile" | "interface-admission" | "interface-invoke" | "interface-ports" | "decision-slice-compile" | "decision-slice-read" | "decision-slice-context" | "decision-slice-patch" | "decision-slice-witness" | "decision-slice-consume" | "decision-slice-cancel" | "decision-slice-recompile" | "decision-slice-changes" | "decision-slice-view" | "continuation-submit" | "continuation-read" | "continuation-projection" | "procedure-experience" | "procedure-induce" | "procedure-induction-read" | "procedure-induction-cancel" | "procedure-read" | "procedure-component" | "procedure-counterexample" | "procedure-projection" | "procedure-admission-request" | "procedure-interface" | "procedure-costs" | "deliberation-submit" | "deliberation-read" | "deliberation-projection" | "deliberation-cancel" | "deliberation-resume" | "deliberation-reconcile" | "deliberation-calibrate" | "deliberation-evidence-read" | "deliberation-module-read" | "capital-formation-submit" | "capital-formation-read" | "capital-formation-list" | "capital-formation-profiles" | "capital-formation-advance" | "capital-formation-event" | "capital-formation-proposal" | "capital-formation-cancel" | "capital-formation-draw-handoff";
+                    operation: "opportunity-promote" | "belief-view" | "belief-pin" | "roots" | "projection" | "search" | "object" | "traverse" | "provenance" | "history" | "evidence-lineage" | "decision-lineage" | "available-actions" | "context" | "evidence-handles" | "evidence-submit" | "evidence-read" | "evidence-witness" | "evidence-replay" | "evidence-cancel" | "evidence-consume" | "program-submit" | "program-read" | "program-witness" | "program-module" | "program-projection" | "program-cancel" | "program-resume" | "program-artifact" | "program-ports" | "program-interface-module" | "compute-search-submit" | "compute-search-read" | "compute-search-projection" | "compute-search-cancel" | "compute-search-resume" | "compute-search-reconcile" | "interface-acquire" | "interface-read" | "interface-projection" | "interface-catalogue" | "interface-module" | "interface-cancel" | "interface-resume" | "interface-reconcile" | "interface-admission" | "interface-invoke" | "interface-ports" | "decision-slice-compile" | "decision-slice-read" | "decision-slice-context" | "decision-slice-patch" | "decision-slice-witness" | "decision-slice-consume" | "decision-slice-cancel" | "decision-slice-recompile" | "decision-slice-changes" | "decision-slice-view" | "continuation-submit" | "continuation-read" | "continuation-projection" | "procedure-experience" | "procedure-induce" | "procedure-induction-read" | "procedure-induction-cancel" | "procedure-read" | "procedure-component" | "procedure-counterexample" | "procedure-projection" | "procedure-admission-request" | "procedure-interface" | "procedure-costs" | "deliberation-submit" | "deliberation-read" | "deliberation-projection" | "deliberation-cancel" | "deliberation-resume" | "deliberation-reconcile" | "deliberation-calibrate" | "deliberation-evidence-read" | "deliberation-module-read" | "capital-formation-submit" | "capital-formation-read" | "capital-formation-list" | "capital-formation-profiles" | "capital-formation-advance" | "capital-formation-event" | "capital-formation-proposal" | "capital-formation-cancel" | "capital-formation-draw-handoff" | "application-submit" | "application-maintain" | "application-command" | "application-read" | "application-record" | "application-list" | "application-history" | "application-asset" | "application-cancel" | "application-rollback" | "application-impact" | "application-upload" | "application-prepare-effect" | "application-s8-propose" | "application-admission" | "application-acquire" | "application-execute" | "application-projection" | "application-resume" | "institution-submit" | "institution-revise" | "institution-read" | "institution-status" | "institution-cancel" | "institution-resume" | "institution-witness" | "institution-sources" | "institution-inputs" | "institution-mandate" | "institution-register-source" | "institution-consent" | "learning-consent" | "learning-revoke-consent" | "learning-experience" | "learning-submit" | "learning-read" | "learning-list" | "learning-execute" | "learning-evaluate" | "learning-cancel" | "learning-invalidate" | "learning-retry" | "learning-rollback" | "learning-s8-propose" | "learning-admission" | "learning-register-assignment" | "learning-retrain" | "identification-targets" | "identification-consent" | "identification-revoke-consent" | "identification-submit" | "identification-read" | "identification-list" | "identification-history" | "identification-experiment" | "identification-replicate" | "identification-use" | "identification-cancel" | "identification-invalidate" | "identification-retry" | "identification-s8-propose" | "identification-admission";
                 };
                 cookie?: never;
             };
@@ -10025,6 +10025,4165 @@ export interface paths {
             responses: {
                 /** @description New Core Document and first immutable version instantiated with lineage */
                 201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/identification-targets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["identification-targets"];
+                };
+            };
+            responses: {
+                /** @description Current scoped development rights, raw experiments, scientific model, decision use or retained history. Not protected admission or production. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original finite Work allocation queued for physical experiments, independent replication or actual guarded decision use. Not completion. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded request or unsupported domain rejected. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current rights, separate principal or canonical authority missing. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Absent or unauthorized scoped owner record. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original allocation, Work, source, observation, consent or exact recovery identity changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original finite request, response, storage or resource bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Native capacity or independently configured lifecycle owner unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/identification-consent": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["identification-consent"];
+                };
+            };
+            responses: {
+                /** @description Current scoped development rights, raw experiments, scientific model, decision use or retained history. Not protected admission or production. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original finite Work allocation queued for physical experiments, independent replication or actual guarded decision use. Not completion. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded request or unsupported domain rejected. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current rights, separate principal or canonical authority missing. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Absent or unauthorized scoped owner record. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original allocation, Work, source, observation, consent or exact recovery identity changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original finite request, response, storage or resource bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Native capacity or independently configured lifecycle owner unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/identification-revoke-consent": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["identification-revoke-consent"];
+                };
+            };
+            responses: {
+                /** @description Current scoped development rights, raw experiments, scientific model, decision use or retained history. Not protected admission or production. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original finite Work allocation queued for physical experiments, independent replication or actual guarded decision use. Not completion. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded request or unsupported domain rejected. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current rights, separate principal or canonical authority missing. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Absent or unauthorized scoped owner record. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original allocation, Work, source, observation, consent or exact recovery identity changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original finite request, response, storage or resource bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Native capacity or independently configured lifecycle owner unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/identification-submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["identification-submit"];
+                };
+            };
+            responses: {
+                /** @description Current scoped development rights, raw experiments, scientific model, decision use or retained history. Not protected admission or production. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original finite Work allocation queued for physical experiments, independent replication or actual guarded decision use. Not completion. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded request or unsupported domain rejected. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current rights, separate principal or canonical authority missing. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Absent or unauthorized scoped owner record. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original allocation, Work, source, observation, consent or exact recovery identity changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original finite request, response, storage or resource bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Native capacity or independently configured lifecycle owner unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/identification-read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["identification-read"];
+                };
+            };
+            responses: {
+                /** @description Current scoped development rights, raw experiments, scientific model, decision use or retained history. Not protected admission or production. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original finite Work allocation queued for physical experiments, independent replication or actual guarded decision use. Not completion. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded request or unsupported domain rejected. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current rights, separate principal or canonical authority missing. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Absent or unauthorized scoped owner record. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original allocation, Work, source, observation, consent or exact recovery identity changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original finite request, response, storage or resource bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Native capacity or independently configured lifecycle owner unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/identification-list": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["identification-list"];
+                };
+            };
+            responses: {
+                /** @description Current scoped development rights, raw experiments, scientific model, decision use or retained history. Not protected admission or production. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original finite Work allocation queued for physical experiments, independent replication or actual guarded decision use. Not completion. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded request or unsupported domain rejected. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current rights, separate principal or canonical authority missing. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Absent or unauthorized scoped owner record. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original allocation, Work, source, observation, consent or exact recovery identity changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original finite request, response, storage or resource bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Native capacity or independently configured lifecycle owner unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/identification-history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["identification-history"];
+                };
+            };
+            responses: {
+                /** @description Current scoped development rights, raw experiments, scientific model, decision use or retained history. Not protected admission or production. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original finite Work allocation queued for physical experiments, independent replication or actual guarded decision use. Not completion. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded request or unsupported domain rejected. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current rights, separate principal or canonical authority missing. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Absent or unauthorized scoped owner record. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original allocation, Work, source, observation, consent or exact recovery identity changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original finite request, response, storage or resource bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Native capacity or independently configured lifecycle owner unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/identification-experiment": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["identification-experiment"];
+                };
+            };
+            responses: {
+                /** @description Current scoped development rights, raw experiments, scientific model, decision use or retained history. Not protected admission or production. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original finite Work allocation queued for physical experiments, independent replication or actual guarded decision use. Not completion. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded request or unsupported domain rejected. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current rights, separate principal or canonical authority missing. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Absent or unauthorized scoped owner record. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original allocation, Work, source, observation, consent or exact recovery identity changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original finite request, response, storage or resource bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Native capacity or independently configured lifecycle owner unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/identification-replicate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["identification-replicate"];
+                };
+            };
+            responses: {
+                /** @description Current scoped development rights, raw experiments, scientific model, decision use or retained history. Not protected admission or production. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original finite Work allocation queued for physical experiments, independent replication or actual guarded decision use. Not completion. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded request or unsupported domain rejected. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current rights, separate principal or canonical authority missing. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Absent or unauthorized scoped owner record. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original allocation, Work, source, observation, consent or exact recovery identity changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original finite request, response, storage or resource bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Native capacity or independently configured lifecycle owner unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/identification-use": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["identification-use"];
+                };
+            };
+            responses: {
+                /** @description Current scoped development rights, raw experiments, scientific model, decision use or retained history. Not protected admission or production. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original finite Work allocation queued for physical experiments, independent replication or actual guarded decision use. Not completion. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded request or unsupported domain rejected. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current rights, separate principal or canonical authority missing. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Absent or unauthorized scoped owner record. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original allocation, Work, source, observation, consent or exact recovery identity changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original finite request, response, storage or resource bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Native capacity or independently configured lifecycle owner unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/identification-cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["identification-cancel"];
+                };
+            };
+            responses: {
+                /** @description Current scoped development rights, raw experiments, scientific model, decision use or retained history. Not protected admission or production. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original finite Work allocation queued for physical experiments, independent replication or actual guarded decision use. Not completion. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded request or unsupported domain rejected. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current rights, separate principal or canonical authority missing. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Absent or unauthorized scoped owner record. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original allocation, Work, source, observation, consent or exact recovery identity changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original finite request, response, storage or resource bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Native capacity or independently configured lifecycle owner unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/identification-invalidate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["identification-invalidate"];
+                };
+            };
+            responses: {
+                /** @description Current scoped development rights, raw experiments, scientific model, decision use or retained history. Not protected admission or production. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original finite Work allocation queued for physical experiments, independent replication or actual guarded decision use. Not completion. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded request or unsupported domain rejected. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current rights, separate principal or canonical authority missing. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Absent or unauthorized scoped owner record. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original allocation, Work, source, observation, consent or exact recovery identity changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original finite request, response, storage or resource bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Native capacity or independently configured lifecycle owner unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/identification-retry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["identification-retry"];
+                };
+            };
+            responses: {
+                /** @description Current scoped development rights, raw experiments, scientific model, decision use or retained history. Not protected admission or production. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original finite Work allocation queued for physical experiments, independent replication or actual guarded decision use. Not completion. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded request or unsupported domain rejected. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current rights, separate principal or canonical authority missing. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Absent or unauthorized scoped owner record. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original allocation, Work, source, observation, consent or exact recovery identity changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original finite request, response, storage or resource bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Native capacity or independently configured lifecycle owner unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/identification-s8-propose": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["identification-s8-propose"];
+                };
+            };
+            responses: {
+                /** @description Current scoped development rights, raw experiments, scientific model, decision use or retained history. Not protected admission or production. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original finite Work allocation queued for physical experiments, independent replication or actual guarded decision use. Not completion. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded request or unsupported domain rejected. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current rights, separate principal or canonical authority missing. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Absent or unauthorized scoped owner record. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original allocation, Work, source, observation, consent or exact recovery identity changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original finite request, response, storage or resource bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Native capacity or independently configured lifecycle owner unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/identification-admission": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["identification-admission"];
+                };
+            };
+            responses: {
+                /** @description Current scoped development rights, raw experiments, scientific model, decision use or retained history. Not protected admission or production. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original finite Work allocation queued for physical experiments, independent replication or actual guarded decision use. Not completion. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded request or unsupported domain rejected. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current rights, separate principal or canonical authority missing. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Absent or unauthorized scoped owner record. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original allocation, Work, source, observation, consent or exact recovery identity changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original finite request, response, storage or resource bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Native capacity or independently configured lifecycle owner unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/learning-consent": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["learning-consent"];
+                };
+            };
+            responses: {
+                /** @description Current authorized X5 development history, structural rights or capsule. Not protected admission, reward, production or effects. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original bounded allocation queued for physical learning, exact pinned native use or independent outcome evaluation. No success label accepted. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Invalid bounded typed learning contract. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current training/reuse or activity authority absent; no production activation. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Evidence, consent, source/runtime identity, native CAS, history, partition or original allocation is no longer current. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Independent S8 configuration, native commit clock or canonical capacity is unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/learning-revoke-consent": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["learning-revoke-consent"];
+                };
+            };
+            responses: {
+                /** @description Current authorized X5 development history, structural rights or capsule. Not protected admission, reward, production or effects. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original bounded allocation queued for physical learning, exact pinned native use or independent outcome evaluation. No success label accepted. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Invalid bounded typed learning contract. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current training/reuse or activity authority absent; no production activation. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Evidence, consent, source/runtime identity, native CAS, history, partition or original allocation is no longer current. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Independent S8 configuration, native commit clock or canonical capacity is unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/learning-experience": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["learning-experience"];
+                };
+            };
+            responses: {
+                /** @description Current authorized X5 development history, structural rights or capsule. Not protected admission, reward, production or effects. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original bounded allocation queued for physical learning, exact pinned native use or independent outcome evaluation. No success label accepted. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Invalid bounded typed learning contract. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current training/reuse or activity authority absent; no production activation. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Evidence, consent, source/runtime identity, native CAS, history, partition or original allocation is no longer current. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Independent S8 configuration, native commit clock or canonical capacity is unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/learning-submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["learning-submit"];
+                };
+            };
+            responses: {
+                /** @description Current authorized X5 development history, structural rights or capsule. Not protected admission, reward, production or effects. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original bounded allocation queued for physical learning, exact pinned native use or independent outcome evaluation. No success label accepted. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Invalid bounded typed learning contract. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current training/reuse or activity authority absent; no production activation. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Evidence, consent, source/runtime identity, native CAS, history, partition or original allocation is no longer current. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Independent S8 configuration, native commit clock or canonical capacity is unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/learning-read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["learning-read"];
+                };
+            };
+            responses: {
+                /** @description Current authorized X5 development history, structural rights or capsule. Not protected admission, reward, production or effects. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original bounded allocation queued for physical learning, exact pinned native use or independent outcome evaluation. No success label accepted. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Invalid bounded typed learning contract. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current training/reuse or activity authority absent; no production activation. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Evidence, consent, source/runtime identity, native CAS, history, partition or original allocation is no longer current. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Independent S8 configuration, native commit clock or canonical capacity is unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/learning-list": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["learning-list"];
+                };
+            };
+            responses: {
+                /** @description Current authorized X5 development history, structural rights or capsule. Not protected admission, reward, production or effects. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original bounded allocation queued for physical learning, exact pinned native use or independent outcome evaluation. No success label accepted. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Invalid bounded typed learning contract. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current training/reuse or activity authority absent; no production activation. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Evidence, consent, source/runtime identity, native CAS, history, partition or original allocation is no longer current. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Independent S8 configuration, native commit clock or canonical capacity is unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/learning-execute": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["learning-execute"];
+                };
+            };
+            responses: {
+                /** @description Current authorized X5 development history, structural rights or capsule. Not protected admission, reward, production or effects. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original bounded allocation queued for physical learning, exact pinned native use or independent outcome evaluation. No success label accepted. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Invalid bounded typed learning contract. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current training/reuse or activity authority absent; no production activation. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Evidence, consent, source/runtime identity, native CAS, history, partition or original allocation is no longer current. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Independent S8 configuration, native commit clock or canonical capacity is unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/learning-evaluate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["learning-evaluate"];
+                };
+            };
+            responses: {
+                /** @description Current authorized X5 development history, structural rights or capsule. Not protected admission, reward, production or effects. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original bounded allocation queued for physical learning, exact pinned native use or independent outcome evaluation. No success label accepted. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Invalid bounded typed learning contract. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current training/reuse or activity authority absent; no production activation. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Evidence, consent, source/runtime identity, native CAS, history, partition or original allocation is no longer current. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Independent S8 configuration, native commit clock or canonical capacity is unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/learning-cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["learning-cancel"];
+                };
+            };
+            responses: {
+                /** @description Current authorized X5 development history, structural rights or capsule. Not protected admission, reward, production or effects. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original bounded allocation queued for physical learning, exact pinned native use or independent outcome evaluation. No success label accepted. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Invalid bounded typed learning contract. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current training/reuse or activity authority absent; no production activation. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Evidence, consent, source/runtime identity, native CAS, history, partition or original allocation is no longer current. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Independent S8 configuration, native commit clock or canonical capacity is unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/learning-invalidate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["learning-invalidate"];
+                };
+            };
+            responses: {
+                /** @description Current authorized X5 development history, structural rights or capsule. Not protected admission, reward, production or effects. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original bounded allocation queued for physical learning, exact pinned native use or independent outcome evaluation. No success label accepted. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Invalid bounded typed learning contract. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current training/reuse or activity authority absent; no production activation. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Evidence, consent, source/runtime identity, native CAS, history, partition or original allocation is no longer current. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Independent S8 configuration, native commit clock or canonical capacity is unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/learning-retry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["learning-retry"];
+                };
+            };
+            responses: {
+                /** @description Current authorized X5 development history, structural rights or capsule. Not protected admission, reward, production or effects. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original bounded allocation queued for physical learning, exact pinned native use or independent outcome evaluation. No success label accepted. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Invalid bounded typed learning contract. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current training/reuse or activity authority absent; no production activation. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Evidence, consent, source/runtime identity, native CAS, history, partition or original allocation is no longer current. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Independent S8 configuration, native commit clock or canonical capacity is unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/learning-rollback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["learning-rollback"];
+                };
+            };
+            responses: {
+                /** @description Current authorized X5 development history, structural rights or capsule. Not protected admission, reward, production or effects. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original bounded allocation queued for physical learning, exact pinned native use or independent outcome evaluation. No success label accepted. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Invalid bounded typed learning contract. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current training/reuse or activity authority absent; no production activation. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Evidence, consent, source/runtime identity, native CAS, history, partition or original allocation is no longer current. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Independent S8 configuration, native commit clock or canonical capacity is unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/learning-s8-propose": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["learning-s8-propose"];
+                };
+            };
+            responses: {
+                /** @description Current authorized X5 development history, structural rights or capsule. Not protected admission, reward, production or effects. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original bounded allocation queued for physical learning, exact pinned native use or independent outcome evaluation. No success label accepted. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Invalid bounded typed learning contract. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current training/reuse or activity authority absent; no production activation. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Evidence, consent, source/runtime identity, native CAS, history, partition or original allocation is no longer current. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Independent S8 configuration, native commit clock or canonical capacity is unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/learning-admission": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["learning-admission"];
+                };
+            };
+            responses: {
+                /** @description Current authorized X5 development history, structural rights or capsule. Not protected admission, reward, production or effects. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original bounded allocation queued for physical learning, exact pinned native use or independent outcome evaluation. No success label accepted. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Invalid bounded typed learning contract. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current training/reuse or activity authority absent; no production activation. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Evidence, consent, source/runtime identity, native CAS, history, partition or original allocation is no longer current. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Independent S8 configuration, native commit clock or canonical capacity is unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/learning-register-assignment": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["learning-register-assignment"];
+                };
+            };
+            responses: {
+                /** @description Current authorized X5 development history, structural rights or capsule. Not protected admission, reward, production or effects. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original bounded allocation queued for physical learning, exact pinned native use or independent outcome evaluation. No success label accepted. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Invalid bounded typed learning contract. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current training/reuse or activity authority absent; no production activation. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Evidence, consent, source/runtime identity, native CAS, history, partition or original allocation is no longer current. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Independent S8 configuration, native commit clock or canonical capacity is unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/learning-retrain": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["learning-retrain"];
+                };
+            };
+            responses: {
+                /** @description Current authorized X5 development history, structural rights or capsule. Not protected admission, reward, production or effects. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original bounded allocation queued for physical learning, exact pinned native use or independent outcome evaluation. No success label accepted. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Invalid bounded typed learning contract. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current training/reuse or activity authority absent; no production activation. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Evidence, consent, source/runtime identity, native CAS, history, partition or original allocation is no longer current. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Independent S8 configuration, native commit clock or canonical capacity is unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/application-submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["application-submit"];
+                };
+            };
+            responses: {
+                /** @description Current authenticated development application, immutable business history or exact prepared-intent binding. Not protected admission or dispatch. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original finite allocation accepted for durable physical compilation and independent checking; no installed success yet. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded business contract or exact record precondition rejected. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authenticated bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authority missing or production not separately activated. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Absent or unauthorized scoped Work, application, record or canonical evidence. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Record CAS, release, Work, source, rights, dependency, cancellation or original allocation changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original request, response, storage or finite resource bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unsupported business semantics or independently checked construction failed. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Native capacity or independent owner configuration unavailable. Retry never renews resources. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/application-maintain": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["application-maintain"];
+                };
+            };
+            responses: {
+                /** @description Current authenticated development application, immutable business history or exact prepared-intent binding. Not protected admission or dispatch. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original finite allocation accepted for durable physical compilation and independent checking; no installed success yet. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded business contract or exact record precondition rejected. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authenticated bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authority missing or production not separately activated. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Absent or unauthorized scoped Work, application, record or canonical evidence. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Record CAS, release, Work, source, rights, dependency, cancellation or original allocation changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original request, response, storage or finite resource bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unsupported business semantics or independently checked construction failed. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Native capacity or independent owner configuration unavailable. Retry never renews resources. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/application-command": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["application-command"];
+                };
+            };
+            responses: {
+                /** @description Current authenticated development application, immutable business history or exact prepared-intent binding. Not protected admission or dispatch. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original finite allocation accepted for durable physical compilation and independent checking; no installed success yet. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded business contract or exact record precondition rejected. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authenticated bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authority missing or production not separately activated. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Absent or unauthorized scoped Work, application, record or canonical evidence. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Record CAS, release, Work, source, rights, dependency, cancellation or original allocation changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original request, response, storage or finite resource bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unsupported business semantics or independently checked construction failed. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Native capacity or independent owner configuration unavailable. Retry never renews resources. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/application-read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["application-read"];
+                };
+            };
+            responses: {
+                /** @description Current authenticated development application, immutable business history or exact prepared-intent binding. Not protected admission or dispatch. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original finite allocation accepted for durable physical compilation and independent checking; no installed success yet. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded business contract or exact record precondition rejected. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authenticated bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authority missing or production not separately activated. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Absent or unauthorized scoped Work, application, record or canonical evidence. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Record CAS, release, Work, source, rights, dependency, cancellation or original allocation changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original request, response, storage or finite resource bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unsupported business semantics or independently checked construction failed. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Native capacity or independent owner configuration unavailable. Retry never renews resources. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/application-record": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["application-record"];
+                };
+            };
+            responses: {
+                /** @description Current authenticated development application, immutable business history or exact prepared-intent binding. Not protected admission or dispatch. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original finite allocation accepted for durable physical compilation and independent checking; no installed success yet. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded business contract or exact record precondition rejected. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authenticated bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authority missing or production not separately activated. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Absent or unauthorized scoped Work, application, record or canonical evidence. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Record CAS, release, Work, source, rights, dependency, cancellation or original allocation changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original request, response, storage or finite resource bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unsupported business semantics or independently checked construction failed. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Native capacity or independent owner configuration unavailable. Retry never renews resources. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/application-list": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["application-list"];
+                };
+            };
+            responses: {
+                /** @description Current authenticated development application, immutable business history or exact prepared-intent binding. Not protected admission or dispatch. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original finite allocation accepted for durable physical compilation and independent checking; no installed success yet. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded business contract or exact record precondition rejected. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authenticated bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authority missing or production not separately activated. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Absent or unauthorized scoped Work, application, record or canonical evidence. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Record CAS, release, Work, source, rights, dependency, cancellation or original allocation changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original request, response, storage or finite resource bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unsupported business semantics or independently checked construction failed. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Native capacity or independent owner configuration unavailable. Retry never renews resources. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/application-history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["application-history"];
+                };
+            };
+            responses: {
+                /** @description Current authenticated development application, immutable business history or exact prepared-intent binding. Not protected admission or dispatch. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original finite allocation accepted for durable physical compilation and independent checking; no installed success yet. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded business contract or exact record precondition rejected. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authenticated bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authority missing or production not separately activated. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Absent or unauthorized scoped Work, application, record or canonical evidence. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Record CAS, release, Work, source, rights, dependency, cancellation or original allocation changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original request, response, storage or finite resource bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unsupported business semantics or independently checked construction failed. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Native capacity or independent owner configuration unavailable. Retry never renews resources. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/application-asset": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["application-asset"];
+                };
+            };
+            responses: {
+                /** @description Current authenticated development application, immutable business history or exact prepared-intent binding. Not protected admission or dispatch. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original finite allocation accepted for durable physical compilation and independent checking; no installed success yet. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded business contract or exact record precondition rejected. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authenticated bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authority missing or production not separately activated. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Absent or unauthorized scoped Work, application, record or canonical evidence. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Record CAS, release, Work, source, rights, dependency, cancellation or original allocation changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original request, response, storage or finite resource bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unsupported business semantics or independently checked construction failed. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Native capacity or independent owner configuration unavailable. Retry never renews resources. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/application-cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["application-cancel"] | components["schemas"]["X2ApplicationCancel"];
+                };
+            };
+            responses: {
+                /** @description Current authenticated development application, immutable business history or exact prepared-intent binding. Not protected admission or dispatch. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original finite allocation accepted for durable physical compilation and independent checking; no installed success yet. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded business contract or exact record precondition rejected. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authenticated bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authority missing or production not separately activated. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Absent or unauthorized scoped Work, application, record or canonical evidence. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Record CAS, release, Work, source, rights, dependency, cancellation or original allocation changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original request, response, storage or finite resource bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unsupported business semantics or independently checked construction failed. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Native capacity or independent owner configuration unavailable. Retry never renews resources. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/application-rollback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["application-rollback"];
+                };
+            };
+            responses: {
+                /** @description Current authenticated development application, immutable business history or exact prepared-intent binding. Not protected admission or dispatch. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original finite allocation accepted for durable physical compilation and independent checking; no installed success yet. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded business contract or exact record precondition rejected. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authenticated bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authority missing or production not separately activated. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Absent or unauthorized scoped Work, application, record or canonical evidence. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Record CAS, release, Work, source, rights, dependency, cancellation or original allocation changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original request, response, storage or finite resource bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unsupported business semantics or independently checked construction failed. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Native capacity or independent owner configuration unavailable. Retry never renews resources. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/application-impact": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["application-impact"];
+                };
+            };
+            responses: {
+                /** @description Current authenticated development application, immutable business history or exact prepared-intent binding. Not protected admission or dispatch. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original finite allocation accepted for durable physical compilation and independent checking; no installed success yet. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded business contract or exact record precondition rejected. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authenticated bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authority missing or production not separately activated. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Absent or unauthorized scoped Work, application, record or canonical evidence. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Record CAS, release, Work, source, rights, dependency, cancellation or original allocation changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original request, response, storage or finite resource bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unsupported business semantics or independently checked construction failed. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Native capacity or independent owner configuration unavailable. Retry never renews resources. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/application-upload": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["application-upload"];
+                };
+            };
+            responses: {
+                /** @description Current authenticated development application, immutable business history or exact prepared-intent binding. Not protected admission or dispatch. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original finite allocation accepted for durable physical compilation and independent checking; no installed success yet. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded business contract or exact record precondition rejected. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authenticated bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authority missing or production not separately activated. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Absent or unauthorized scoped Work, application, record or canonical evidence. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Record CAS, release, Work, source, rights, dependency, cancellation or original allocation changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original request, response, storage or finite resource bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unsupported business semantics or independently checked construction failed. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Native capacity or independent owner configuration unavailable. Retry never renews resources. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/application-prepare-effect": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["application-prepare-effect"];
+                };
+            };
+            responses: {
+                /** @description Current authenticated development application, immutable business history or exact prepared-intent binding. Not protected admission or dispatch. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original finite allocation accepted for durable physical compilation and independent checking; no installed success yet. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded business contract or exact record precondition rejected. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authenticated bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authority missing or production not separately activated. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Absent or unauthorized scoped Work, application, record or canonical evidence. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Record CAS, release, Work, source, rights, dependency, cancellation or original allocation changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original request, response, storage or finite resource bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unsupported business semantics or independently checked construction failed. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Native capacity or independent owner configuration unavailable. Retry never renews resources. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/application-s8-propose": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["application-s8-propose"];
+                };
+            };
+            responses: {
+                /** @description Current authenticated development application, immutable business history or exact prepared-intent binding. Not protected admission or dispatch. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original finite allocation accepted for durable physical compilation and independent checking; no installed success yet. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded business contract or exact record precondition rejected. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authenticated bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authority missing or production not separately activated. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Absent or unauthorized scoped Work, application, record or canonical evidence. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Record CAS, release, Work, source, rights, dependency, cancellation or original allocation changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original request, response, storage or finite resource bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unsupported business semantics or independently checked construction failed. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Native capacity or independent owner configuration unavailable. Retry never renews resources. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/application-admission": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["application-admission"];
+                };
+            };
+            responses: {
+                /** @description Current authenticated development application, immutable business history or exact prepared-intent binding. Not protected admission or dispatch. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original finite allocation accepted for durable physical compilation and independent checking; no installed success yet. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded business contract or exact record precondition rejected. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authenticated bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authority missing or production not separately activated. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Absent or unauthorized scoped Work, application, record or canonical evidence. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Record CAS, release, Work, source, rights, dependency, cancellation or original allocation changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original request, response, storage or finite resource bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unsupported business semantics or independently checked construction failed. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Native capacity or independent owner configuration unavailable. Retry never renews resources. */
+                503: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -24704,6 +28863,422 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/company-brain/application-acquire": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        root: {
+                            /** @enum {string} */
+                            entityType: "pe_strategy" | "pe_opportunity" | "pe_deal" | "pe_fund" | "pe_vehicle" | "external_organization" | "pe_portfolio_holding";
+                            /** Format: uuid */
+                            entityId: string;
+                        };
+                        /** Format: uuid */
+                        workId: string;
+                        profileIds: string[];
+                        targets: {
+                            /** @constant */
+                            kind: "identity";
+                            application: string;
+                            account: string;
+                            entity: string;
+                            id: string;
+                        }[];
+                        resourceDemand: {
+                            resourceId: string;
+                            /** @enum {string} */
+                            unit: "request" | "seconds";
+                            amount: string;
+                        }[];
+                        /** Format: date-time */
+                        deadlineAt: string;
+                        idempotencyKey: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Authenticated current owner result; model evidence is not execution authority. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Accepted bounded durable Work computation, not admission, reservation or consent. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict owner request schema rejected invalid or unknown input. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact permitted owner reference unavailable. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Currentness, idempotency or handoff prerequisite changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Whole-request byte or resource bound exhausted. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Required owner port, verified evidence or protected authority unavailable. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/application-execute": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        root: {
+                            /** @enum {string} */
+                            entityType: "pe_strategy" | "pe_opportunity" | "pe_deal" | "pe_fund" | "pe_vehicle" | "external_organization" | "pe_portfolio_holding";
+                            /** Format: uuid */
+                            entityId: string;
+                        };
+                        /** Format: uuid */
+                        workId: string;
+                        /** Format: uuid */
+                        sessionId: string;
+                        /** Format: uuid */
+                        executionProfileId: string;
+                        targetId: string;
+                        goal: {
+                            [key: string]: string | boolean | null | {
+                                /** @constant */
+                                kind: "quantity";
+                                decimal: string;
+                                currency: string;
+                                entity: string;
+                                unit: string;
+                                time: string;
+                                basis: string;
+                            } | {
+                                /** @constant */
+                                kind: "identity";
+                                application: string;
+                                account: string;
+                                entity: string;
+                                id: string;
+                            };
+                        };
+                        parameters: {
+                            [key: string]: string | boolean | null | {
+                                /** @constant */
+                                kind: "quantity";
+                                decimal: string;
+                                currency: string;
+                                entity: string;
+                                unit: string;
+                                time: string;
+                                basis: string;
+                            } | {
+                                /** @constant */
+                                kind: "identity";
+                                application: string;
+                                account: string;
+                                entity: string;
+                                id: string;
+                            };
+                        };
+                        idempotencyKey: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Authenticated current owner result; model evidence is not execution authority. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Accepted bounded durable Work computation, not admission, reservation or consent. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict owner request schema rejected invalid or unknown input. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact permitted owner reference unavailable. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Currentness, idempotency or handoff prerequisite changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Whole-request byte or resource bound exhausted. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Required owner port, verified evidence or protected authority unavailable. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/application-projection": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        root: {
+                            /** @enum {string} */
+                            entityType: "pe_strategy" | "pe_opportunity" | "pe_deal" | "pe_fund" | "pe_vehicle" | "external_organization" | "pe_portfolio_holding";
+                            /** Format: uuid */
+                            entityId: string;
+                        };
+                        /** Format: uuid */
+                        workId: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Authenticated current owner result; model evidence is not execution authority. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Accepted bounded durable Work computation, not admission, reservation or consent. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict owner request schema rejected invalid or unknown input. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact permitted owner reference unavailable. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Currentness, idempotency or handoff prerequisite changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Whole-request byte or resource bound exhausted. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Required owner port, verified evidence or protected authority unavailable. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/application-resume": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        root: {
+                            /** @enum {string} */
+                            entityType: "pe_strategy" | "pe_opportunity" | "pe_deal" | "pe_fund" | "pe_vehicle" | "external_organization" | "pe_portfolio_holding";
+                            /** Format: uuid */
+                            entityId: string;
+                        };
+                        /** Format: uuid */
+                        workId: string;
+                        /** Format: uuid */
+                        sessionId: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Authenticated current owner result; model evidence is not execution authority. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Accepted bounded durable Work computation, not admission, reservation or consent. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict owner request schema rejected invalid or unknown input. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact permitted owner reference unavailable. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Currentness, idempotency or handoff prerequisite changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Whole-request byte or resource bound exhausted. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Required owner port, verified evidence or protected authority unavailable. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/company-brain/challenge-submit": {
         parameters: {
             query?: never;
@@ -31664,7 +36239,1807 @@ export interface paths {
 }
 export type webhooks = Record<string, never>;
 export interface components {
-    schemas: never;
+    schemas: {
+        X2ApplicationCancel: {
+            root: {
+                /** @enum {string} */
+                entityType: "pe_strategy" | "pe_opportunity" | "pe_deal" | "pe_fund" | "pe_vehicle" | "external_organization" | "pe_portfolio_holding";
+                /** Format: uuid */
+                entityId: string;
+            };
+            /** Format: uuid */
+            workId: string;
+        };
+        "application-submit": {
+            /** @constant */
+            schema: "finnor.x3.application-request.v1";
+            root: {
+                /** @enum {string} */
+                entityType: "pe_strategy" | "pe_opportunity" | "pe_deal" | "pe_fund" | "pe_vehicle" | "external_organization" | "pe_portfolio_holding";
+                /** Format: uuid */
+                entityId: string;
+            };
+            /** Format: uuid */
+            workId?: string;
+            /** Format: uuid */
+            workInputId?: string;
+            specification?: {
+                /** @constant */
+                schema: "finnor.business-specification.v1";
+                /** @constant */
+                profile: "PE_FIRM_TYPED_APPLICATION_V1";
+                owner: {
+                    id: string;
+                    version: string;
+                };
+                id: string;
+                version: string;
+                title: string;
+                /** @constant */
+                family: "PE_FIRM_OPERATIONS";
+                model: {
+                    currencies: string[];
+                    units: string[];
+                    timeModes: ("AS_OF" | "PERIOD")[];
+                    accountingBases: string[];
+                    roles: {
+                        id: string;
+                        canonicalRole: string;
+                    }[];
+                    entities: {
+                        id: string;
+                        title: string;
+                        fields: ({
+                            id: string;
+                            title: string;
+                            required: boolean;
+                            allowUnknown: boolean;
+                            /** @constant */
+                            type: "text";
+                            maxLength: number;
+                        } | {
+                            id: string;
+                            title: string;
+                            required: boolean;
+                            allowUnknown: boolean;
+                            /** @constant */
+                            type: "boolean";
+                        } | {
+                            id: string;
+                            title: string;
+                            required: boolean;
+                            allowUnknown: boolean;
+                            /** @constant */
+                            type: "enum";
+                            options: string[];
+                        } | {
+                            id: string;
+                            title: string;
+                            required: boolean;
+                            allowUnknown: boolean;
+                            /** @constant */
+                            type: "quantity";
+                        } | {
+                            id: string;
+                            title: string;
+                            required: boolean;
+                            allowUnknown: boolean;
+                            /** @constant */
+                            type: "quantity-list";
+                        } | {
+                            id: string;
+                            title: string;
+                            required: boolean;
+                            allowUnknown: boolean;
+                            /** @constant */
+                            type: "evidence";
+                        } | {
+                            id: string;
+                            title: string;
+                            required: boolean;
+                            allowUnknown: boolean;
+                            /** @constant */
+                            type: "reference";
+                        } | {
+                            id: string;
+                            title: string;
+                            required: boolean;
+                            allowUnknown: boolean;
+                            /** @constant */
+                            type: "relation";
+                            entityId: string;
+                        })[];
+                        states: string[];
+                        initialState: string;
+                    }[];
+                };
+                requirements: {
+                    id: string;
+                    text: string;
+                    critical: boolean;
+                }[];
+                unresolvedCriticalRequirementIds: string[];
+                actions: {
+                    id: string;
+                    title: string;
+                    entityId: string;
+                    /** @enum {string} */
+                    kind: "create" | "update" | "transition";
+                    fromStates: string[];
+                    toState: string;
+                    roles: string[];
+                    inputFields: string[];
+                    assignments: {
+                        field: string;
+                        value: components["schemas"]["X3Expression"];
+                    }[];
+                    guards: {
+                        id: string;
+                        condition: components["schemas"]["X3Expression"];
+                        denialCode: string;
+                        unknownCode?: string;
+                        requirementIds: string[];
+                    }[];
+                    outcome: string;
+                    requirementIds: string[];
+                    approval?: {
+                        requirements: {
+                            role: string;
+                            when: components["schemas"]["X3Expression"];
+                        }[];
+                        noSelfApproval: boolean;
+                        distinctPrincipals: boolean;
+                        pendingOutcome: string;
+                    };
+                    requiresApprovalsFrom?: string;
+                    preparedEffect?: {
+                        kind: string;
+                        fields: string[];
+                        exactBindings?: {
+                            quantity: string;
+                            operation: string;
+                            channel: string;
+                        };
+                    };
+                }[];
+                invariants: {
+                    id: string;
+                    entityId: string;
+                    critical: boolean;
+                    condition: components["schemas"]["X3Expression"];
+                    denialCode: string;
+                    requirementIds: string[];
+                }[];
+                acceptanceCases: {
+                    id: string;
+                    requirementIds: string[];
+                    input: {
+                        entityId: string;
+                        actionId: string;
+                        installedReleaseId: string;
+                        tenantId: string;
+                        scopeId: string;
+                        actor: {
+                            principalId: string;
+                            canonicalRoles: string[];
+                            authorityRevision: string;
+                            authorityCurrent: boolean;
+                            tenantId: string;
+                            scopeId: string;
+                        };
+                        record?: {
+                            entityId: string;
+                            state: string;
+                            values: {
+                                [key: string]: string | boolean | {
+                                    /** @constant */
+                                    kind: "UNKNOWN";
+                                    reason: string;
+                                } | {
+                                    /** @constant */
+                                    kind: "QUANTITY";
+                                    amount: string;
+                                    currency: string;
+                                    entity: {
+                                        owner: string;
+                                        id: string;
+                                        revision: string;
+                                        contentDigest: string;
+                                    };
+                                    units: string;
+                                    time: {
+                                        /** @constant */
+                                        kind: "AS_OF";
+                                        /** Format: date-time */
+                                        asOf: string;
+                                    } | {
+                                        /** @constant */
+                                        kind: "PERIOD";
+                                        /** Format: date-time */
+                                        start: string;
+                                        /** Format: date-time */
+                                        end: string;
+                                    };
+                                    accountingBasis: string;
+                                } | {
+                                    /** @constant */
+                                    kind: "QUANTITY_LIST";
+                                    entries: {
+                                        /** @constant */
+                                        kind: "QUANTITY";
+                                        amount: string;
+                                        currency: string;
+                                        entity: {
+                                            owner: string;
+                                            id: string;
+                                            revision: string;
+                                            contentDigest: string;
+                                        };
+                                        units: string;
+                                        time: {
+                                            /** @constant */
+                                            kind: "AS_OF";
+                                            /** Format: date-time */
+                                            asOf: string;
+                                        } | {
+                                            /** @constant */
+                                            kind: "PERIOD";
+                                            /** Format: date-time */
+                                            start: string;
+                                            /** Format: date-time */
+                                            end: string;
+                                        };
+                                        accountingBasis: string;
+                                    }[];
+                                } | {
+                                    /** @constant */
+                                    kind: "EVIDENCE";
+                                    sourceId: string;
+                                    versionId: string;
+                                    contentDigest: string;
+                                } | {
+                                    /** @constant */
+                                    kind: "RELATION";
+                                    entityId: string;
+                                    reference: {
+                                        owner: string;
+                                        id: string;
+                                        revision: string;
+                                        contentDigest: string;
+                                    };
+                                } | {
+                                    owner: string;
+                                    id: string;
+                                    revision: string;
+                                    contentDigest: string;
+                                };
+                            };
+                            authorPrincipalId: string;
+                            recordDigest: string;
+                            reference: {
+                                owner: string;
+                                id: string;
+                                revision: string;
+                                contentDigest: string;
+                            };
+                            releaseId: string;
+                        };
+                        expectedRecordDigest?: string;
+                        expectedRecordReference?: {
+                            owner: string;
+                            id: string;
+                            revision: string;
+                            contentDigest: string;
+                        };
+                        input: {
+                            [key: string]: string | boolean | {
+                                /** @constant */
+                                kind: "UNKNOWN";
+                                reason: string;
+                            } | {
+                                /** @constant */
+                                kind: "QUANTITY";
+                                amount: string;
+                                currency: string;
+                                entity: {
+                                    owner: string;
+                                    id: string;
+                                    revision: string;
+                                    contentDigest: string;
+                                };
+                                units: string;
+                                time: {
+                                    /** @constant */
+                                    kind: "AS_OF";
+                                    /** Format: date-time */
+                                    asOf: string;
+                                } | {
+                                    /** @constant */
+                                    kind: "PERIOD";
+                                    /** Format: date-time */
+                                    start: string;
+                                    /** Format: date-time */
+                                    end: string;
+                                };
+                                accountingBasis: string;
+                            } | {
+                                /** @constant */
+                                kind: "QUANTITY_LIST";
+                                entries: {
+                                    /** @constant */
+                                    kind: "QUANTITY";
+                                    amount: string;
+                                    currency: string;
+                                    entity: {
+                                        owner: string;
+                                        id: string;
+                                        revision: string;
+                                        contentDigest: string;
+                                    };
+                                    units: string;
+                                    time: {
+                                        /** @constant */
+                                        kind: "AS_OF";
+                                        /** Format: date-time */
+                                        asOf: string;
+                                    } | {
+                                        /** @constant */
+                                        kind: "PERIOD";
+                                        /** Format: date-time */
+                                        start: string;
+                                        /** Format: date-time */
+                                        end: string;
+                                    };
+                                    accountingBasis: string;
+                                }[];
+                            } | {
+                                /** @constant */
+                                kind: "EVIDENCE";
+                                sourceId: string;
+                                versionId: string;
+                                contentDigest: string;
+                            } | {
+                                /** @constant */
+                                kind: "RELATION";
+                                entityId: string;
+                                reference: {
+                                    owner: string;
+                                    id: string;
+                                    revision: string;
+                                    contentDigest: string;
+                                };
+                            } | {
+                                owner: string;
+                                id: string;
+                                revision: string;
+                                contentDigest: string;
+                            };
+                        };
+                        approvalRole?: string;
+                        approvals: {
+                            actionId: string;
+                            role: string;
+                            principalId: string;
+                            recordDigest: string;
+                            recordReference: {
+                                owner: string;
+                                id: string;
+                                revision: string;
+                                contentDigest: string;
+                            };
+                            releaseId: string;
+                            authorityRevision: string;
+                            tenantId: string;
+                            scopeId: string;
+                        }[];
+                        currentAuthorities: {
+                            principalId: string;
+                            canonicalRole: string;
+                            authorityRevision: string;
+                            current: boolean;
+                            tenantId: string;
+                            scopeId: string;
+                        }[];
+                        currentEvidence: {
+                            /** @constant */
+                            kind: "EVIDENCE";
+                            sourceId: string;
+                            versionId: string;
+                            contentDigest: string;
+                        }[];
+                        currentRelations: {
+                            /** @constant */
+                            kind: "RELATION";
+                            entityId: string;
+                            reference: {
+                                owner: string;
+                                id: string;
+                                revision: string;
+                                contentDigest: string;
+                            };
+                        }[];
+                    };
+                    expected: {
+                        allowed: boolean;
+                        outcome: string;
+                        nextState?: string;
+                    };
+                }[];
+            };
+            /** Format: uuid */
+            specificationUploadId?: string;
+            idempotencyKey: string;
+            limits: {
+                deadlineMs: number;
+                maxBuilds: number;
+                maxMutations: number;
+            };
+            /** Format: date-time */
+            installNotBefore?: string;
+        };
+        "application-maintain": {
+            /** Format: uuid */
+            applicationId: string;
+            specification?: {
+                /** @constant */
+                schema: "finnor.business-specification.v1";
+                /** @constant */
+                profile: "PE_FIRM_TYPED_APPLICATION_V1";
+                owner: {
+                    id: string;
+                    version: string;
+                };
+                id: string;
+                version: string;
+                title: string;
+                /** @constant */
+                family: "PE_FIRM_OPERATIONS";
+                model: {
+                    currencies: string[];
+                    units: string[];
+                    timeModes: ("AS_OF" | "PERIOD")[];
+                    accountingBases: string[];
+                    roles: {
+                        id: string;
+                        canonicalRole: string;
+                    }[];
+                    entities: {
+                        id: string;
+                        title: string;
+                        fields: ({
+                            id: string;
+                            title: string;
+                            required: boolean;
+                            allowUnknown: boolean;
+                            /** @constant */
+                            type: "text";
+                            maxLength: number;
+                        } | {
+                            id: string;
+                            title: string;
+                            required: boolean;
+                            allowUnknown: boolean;
+                            /** @constant */
+                            type: "boolean";
+                        } | {
+                            id: string;
+                            title: string;
+                            required: boolean;
+                            allowUnknown: boolean;
+                            /** @constant */
+                            type: "enum";
+                            options: string[];
+                        } | {
+                            id: string;
+                            title: string;
+                            required: boolean;
+                            allowUnknown: boolean;
+                            /** @constant */
+                            type: "quantity";
+                        } | {
+                            id: string;
+                            title: string;
+                            required: boolean;
+                            allowUnknown: boolean;
+                            /** @constant */
+                            type: "quantity-list";
+                        } | {
+                            id: string;
+                            title: string;
+                            required: boolean;
+                            allowUnknown: boolean;
+                            /** @constant */
+                            type: "evidence";
+                        } | {
+                            id: string;
+                            title: string;
+                            required: boolean;
+                            allowUnknown: boolean;
+                            /** @constant */
+                            type: "reference";
+                        } | {
+                            id: string;
+                            title: string;
+                            required: boolean;
+                            allowUnknown: boolean;
+                            /** @constant */
+                            type: "relation";
+                            entityId: string;
+                        })[];
+                        states: string[];
+                        initialState: string;
+                    }[];
+                };
+                requirements: {
+                    id: string;
+                    text: string;
+                    critical: boolean;
+                }[];
+                unresolvedCriticalRequirementIds: string[];
+                actions: {
+                    id: string;
+                    title: string;
+                    entityId: string;
+                    /** @enum {string} */
+                    kind: "create" | "update" | "transition";
+                    fromStates: string[];
+                    toState: string;
+                    roles: string[];
+                    inputFields: string[];
+                    assignments: {
+                        field: string;
+                        value: components["schemas"]["X3Expression"];
+                    }[];
+                    guards: {
+                        id: string;
+                        condition: components["schemas"]["X3Expression"];
+                        denialCode: string;
+                        unknownCode?: string;
+                        requirementIds: string[];
+                    }[];
+                    outcome: string;
+                    requirementIds: string[];
+                    approval?: {
+                        requirements: {
+                            role: string;
+                            when: components["schemas"]["X3Expression"];
+                        }[];
+                        noSelfApproval: boolean;
+                        distinctPrincipals: boolean;
+                        pendingOutcome: string;
+                    };
+                    requiresApprovalsFrom?: string;
+                    preparedEffect?: {
+                        kind: string;
+                        fields: string[];
+                        exactBindings?: {
+                            quantity: string;
+                            operation: string;
+                            channel: string;
+                        };
+                    };
+                }[];
+                invariants: {
+                    id: string;
+                    entityId: string;
+                    critical: boolean;
+                    condition: components["schemas"]["X3Expression"];
+                    denialCode: string;
+                    requirementIds: string[];
+                }[];
+                acceptanceCases: {
+                    id: string;
+                    requirementIds: string[];
+                    input: {
+                        entityId: string;
+                        actionId: string;
+                        installedReleaseId: string;
+                        tenantId: string;
+                        scopeId: string;
+                        actor: {
+                            principalId: string;
+                            canonicalRoles: string[];
+                            authorityRevision: string;
+                            authorityCurrent: boolean;
+                            tenantId: string;
+                            scopeId: string;
+                        };
+                        record?: {
+                            entityId: string;
+                            state: string;
+                            values: {
+                                [key: string]: string | boolean | {
+                                    /** @constant */
+                                    kind: "UNKNOWN";
+                                    reason: string;
+                                } | {
+                                    /** @constant */
+                                    kind: "QUANTITY";
+                                    amount: string;
+                                    currency: string;
+                                    entity: {
+                                        owner: string;
+                                        id: string;
+                                        revision: string;
+                                        contentDigest: string;
+                                    };
+                                    units: string;
+                                    time: {
+                                        /** @constant */
+                                        kind: "AS_OF";
+                                        /** Format: date-time */
+                                        asOf: string;
+                                    } | {
+                                        /** @constant */
+                                        kind: "PERIOD";
+                                        /** Format: date-time */
+                                        start: string;
+                                        /** Format: date-time */
+                                        end: string;
+                                    };
+                                    accountingBasis: string;
+                                } | {
+                                    /** @constant */
+                                    kind: "QUANTITY_LIST";
+                                    entries: {
+                                        /** @constant */
+                                        kind: "QUANTITY";
+                                        amount: string;
+                                        currency: string;
+                                        entity: {
+                                            owner: string;
+                                            id: string;
+                                            revision: string;
+                                            contentDigest: string;
+                                        };
+                                        units: string;
+                                        time: {
+                                            /** @constant */
+                                            kind: "AS_OF";
+                                            /** Format: date-time */
+                                            asOf: string;
+                                        } | {
+                                            /** @constant */
+                                            kind: "PERIOD";
+                                            /** Format: date-time */
+                                            start: string;
+                                            /** Format: date-time */
+                                            end: string;
+                                        };
+                                        accountingBasis: string;
+                                    }[];
+                                } | {
+                                    /** @constant */
+                                    kind: "EVIDENCE";
+                                    sourceId: string;
+                                    versionId: string;
+                                    contentDigest: string;
+                                } | {
+                                    /** @constant */
+                                    kind: "RELATION";
+                                    entityId: string;
+                                    reference: {
+                                        owner: string;
+                                        id: string;
+                                        revision: string;
+                                        contentDigest: string;
+                                    };
+                                } | {
+                                    owner: string;
+                                    id: string;
+                                    revision: string;
+                                    contentDigest: string;
+                                };
+                            };
+                            authorPrincipalId: string;
+                            recordDigest: string;
+                            reference: {
+                                owner: string;
+                                id: string;
+                                revision: string;
+                                contentDigest: string;
+                            };
+                            releaseId: string;
+                        };
+                        expectedRecordDigest?: string;
+                        expectedRecordReference?: {
+                            owner: string;
+                            id: string;
+                            revision: string;
+                            contentDigest: string;
+                        };
+                        input: {
+                            [key: string]: string | boolean | {
+                                /** @constant */
+                                kind: "UNKNOWN";
+                                reason: string;
+                            } | {
+                                /** @constant */
+                                kind: "QUANTITY";
+                                amount: string;
+                                currency: string;
+                                entity: {
+                                    owner: string;
+                                    id: string;
+                                    revision: string;
+                                    contentDigest: string;
+                                };
+                                units: string;
+                                time: {
+                                    /** @constant */
+                                    kind: "AS_OF";
+                                    /** Format: date-time */
+                                    asOf: string;
+                                } | {
+                                    /** @constant */
+                                    kind: "PERIOD";
+                                    /** Format: date-time */
+                                    start: string;
+                                    /** Format: date-time */
+                                    end: string;
+                                };
+                                accountingBasis: string;
+                            } | {
+                                /** @constant */
+                                kind: "QUANTITY_LIST";
+                                entries: {
+                                    /** @constant */
+                                    kind: "QUANTITY";
+                                    amount: string;
+                                    currency: string;
+                                    entity: {
+                                        owner: string;
+                                        id: string;
+                                        revision: string;
+                                        contentDigest: string;
+                                    };
+                                    units: string;
+                                    time: {
+                                        /** @constant */
+                                        kind: "AS_OF";
+                                        /** Format: date-time */
+                                        asOf: string;
+                                    } | {
+                                        /** @constant */
+                                        kind: "PERIOD";
+                                        /** Format: date-time */
+                                        start: string;
+                                        /** Format: date-time */
+                                        end: string;
+                                    };
+                                    accountingBasis: string;
+                                }[];
+                            } | {
+                                /** @constant */
+                                kind: "EVIDENCE";
+                                sourceId: string;
+                                versionId: string;
+                                contentDigest: string;
+                            } | {
+                                /** @constant */
+                                kind: "RELATION";
+                                entityId: string;
+                                reference: {
+                                    owner: string;
+                                    id: string;
+                                    revision: string;
+                                    contentDigest: string;
+                                };
+                            } | {
+                                owner: string;
+                                id: string;
+                                revision: string;
+                                contentDigest: string;
+                            };
+                        };
+                        approvalRole?: string;
+                        approvals: {
+                            actionId: string;
+                            role: string;
+                            principalId: string;
+                            recordDigest: string;
+                            recordReference: {
+                                owner: string;
+                                id: string;
+                                revision: string;
+                                contentDigest: string;
+                            };
+                            releaseId: string;
+                            authorityRevision: string;
+                            tenantId: string;
+                            scopeId: string;
+                        }[];
+                        currentAuthorities: {
+                            principalId: string;
+                            canonicalRole: string;
+                            authorityRevision: string;
+                            current: boolean;
+                            tenantId: string;
+                            scopeId: string;
+                        }[];
+                        currentEvidence: {
+                            /** @constant */
+                            kind: "EVIDENCE";
+                            sourceId: string;
+                            versionId: string;
+                            contentDigest: string;
+                        }[];
+                        currentRelations: {
+                            /** @constant */
+                            kind: "RELATION";
+                            entityId: string;
+                            reference: {
+                                owner: string;
+                                id: string;
+                                revision: string;
+                                contentDigest: string;
+                            };
+                        }[];
+                    };
+                    expected: {
+                        allowed: boolean;
+                        outcome: string;
+                        nextState?: string;
+                    };
+                }[];
+            };
+            /** Format: uuid */
+            specificationUploadId?: string;
+            idempotencyKey: string;
+            expectedReleaseId: string | null;
+            /** @enum {string} */
+            changeClass: "BUSINESS_RULES_UNITS" | "IDENTITY_AUTHORIZATION_CONCURRENCY" | "DEPENDENCY_SCHEMA_DEPLOYMENT";
+            migration: {
+                /** @constant */
+                kind: "ADD_FIELD";
+                entityId: string;
+                field: string;
+                value: string | boolean | {
+                    /** @constant */
+                    kind: "UNKNOWN";
+                    reason: string;
+                } | {
+                    /** @constant */
+                    kind: "QUANTITY";
+                    amount: string;
+                    currency: string;
+                    entity: {
+                        owner: string;
+                        id: string;
+                        revision: string;
+                        contentDigest: string;
+                    };
+                    units: string;
+                    time: {
+                        /** @constant */
+                        kind: "AS_OF";
+                        /** Format: date-time */
+                        asOf: string;
+                    } | {
+                        /** @constant */
+                        kind: "PERIOD";
+                        /** Format: date-time */
+                        start: string;
+                        /** Format: date-time */
+                        end: string;
+                    };
+                    accountingBasis: string;
+                } | {
+                    /** @constant */
+                    kind: "QUANTITY_LIST";
+                    entries: {
+                        /** @constant */
+                        kind: "QUANTITY";
+                        amount: string;
+                        currency: string;
+                        entity: {
+                            owner: string;
+                            id: string;
+                            revision: string;
+                            contentDigest: string;
+                        };
+                        units: string;
+                        time: {
+                            /** @constant */
+                            kind: "AS_OF";
+                            /** Format: date-time */
+                            asOf: string;
+                        } | {
+                            /** @constant */
+                            kind: "PERIOD";
+                            /** Format: date-time */
+                            start: string;
+                            /** Format: date-time */
+                            end: string;
+                        };
+                        accountingBasis: string;
+                    }[];
+                } | {
+                    /** @constant */
+                    kind: "EVIDENCE";
+                    sourceId: string;
+                    versionId: string;
+                    contentDigest: string;
+                } | {
+                    /** @constant */
+                    kind: "RELATION";
+                    entityId: string;
+                    reference: {
+                        owner: string;
+                        id: string;
+                        revision: string;
+                        contentDigest: string;
+                    };
+                } | {
+                    owner: string;
+                    id: string;
+                    revision: string;
+                    contentDigest: string;
+                };
+            }[];
+            expectedEnvironment?: {
+                sourceDigest: string;
+                lockDigest: string;
+                schemaDigest: string;
+            };
+            /** Format: date-time */
+            installNotBefore?: string;
+        };
+        "application-command": {
+            /** Format: uuid */
+            applicationId: string;
+            entityId: string;
+            actionId: string;
+            /** Format: uuid */
+            recordId?: string;
+            expectedRevision?: number;
+            expectedReference?: {
+                owner: string;
+                id: string;
+                revision: string;
+                contentDigest: string;
+            };
+            input: {
+                [key: string]: string | boolean | {
+                    /** @constant */
+                    kind: "UNKNOWN";
+                    reason: string;
+                } | {
+                    /** @constant */
+                    kind: "QUANTITY";
+                    amount: string;
+                    currency: string;
+                    entity: {
+                        owner: string;
+                        id: string;
+                        revision: string;
+                        contentDigest: string;
+                    };
+                    units: string;
+                    time: {
+                        /** @constant */
+                        kind: "AS_OF";
+                        /** Format: date-time */
+                        asOf: string;
+                    } | {
+                        /** @constant */
+                        kind: "PERIOD";
+                        /** Format: date-time */
+                        start: string;
+                        /** Format: date-time */
+                        end: string;
+                    };
+                    accountingBasis: string;
+                } | {
+                    /** @constant */
+                    kind: "QUANTITY_LIST";
+                    entries: {
+                        /** @constant */
+                        kind: "QUANTITY";
+                        amount: string;
+                        currency: string;
+                        entity: {
+                            owner: string;
+                            id: string;
+                            revision: string;
+                            contentDigest: string;
+                        };
+                        units: string;
+                        time: {
+                            /** @constant */
+                            kind: "AS_OF";
+                            /** Format: date-time */
+                            asOf: string;
+                        } | {
+                            /** @constant */
+                            kind: "PERIOD";
+                            /** Format: date-time */
+                            start: string;
+                            /** Format: date-time */
+                            end: string;
+                        };
+                        accountingBasis: string;
+                    }[];
+                } | {
+                    /** @constant */
+                    kind: "EVIDENCE";
+                    sourceId: string;
+                    versionId: string;
+                    contentDigest: string;
+                } | {
+                    /** @constant */
+                    kind: "RELATION";
+                    entityId: string;
+                    reference: {
+                        owner: string;
+                        id: string;
+                        revision: string;
+                        contentDigest: string;
+                    };
+                } | {
+                    owner: string;
+                    id: string;
+                    revision: string;
+                    contentDigest: string;
+                };
+            };
+            approvalRole?: string;
+            idempotencyKey: string;
+        };
+        "application-read": {
+            /** Format: uuid */
+            applicationId: string;
+            /** Format: uuid */
+            cursor?: string;
+            /** @default 50 */
+            limit: number;
+        };
+        "application-record": {
+            /** Format: uuid */
+            applicationId: string;
+            /** Format: uuid */
+            recordId: string;
+        };
+        "application-list": {
+            root: {
+                /** @enum {string} */
+                entityType: "pe_strategy" | "pe_opportunity" | "pe_deal" | "pe_fund" | "pe_vehicle" | "external_organization" | "pe_portfolio_holding";
+                /** Format: uuid */
+                entityId: string;
+            };
+            /** Format: uuid */
+            workId: string;
+        };
+        "application-history": {
+            /** Format: uuid */
+            applicationId: string;
+            /** Format: uuid */
+            recordId?: string;
+            before?: string;
+            /** @default 20 */
+            limit: number;
+        };
+        "application-asset": {
+            /** Format: uuid */
+            applicationId: string;
+            /** Format: uuid */
+            releaseId: string;
+            path: string;
+        };
+        "application-cancel": {
+            /** Format: uuid */
+            applicationId: string;
+            expectedReleaseId: string | null;
+            idempotencyKey: string;
+        };
+        "application-rollback": {
+            /** Format: uuid */
+            applicationId: string;
+            expectedReleaseId: string | null;
+            idempotencyKey: string;
+            /** Format: uuid */
+            releaseId: string;
+        };
+        "application-impact": {
+            /** Format: uuid */
+            applicationId: string;
+            changed: ("business" | "sources" | "identity" | "schema" | "dependencies" | "checker" | "runtime")[];
+        };
+        "application-upload": {
+            root: {
+                /** @enum {string} */
+                entityType: "pe_strategy" | "pe_opportunity" | "pe_deal" | "pe_fund" | "pe_vehicle" | "external_organization" | "pe_portfolio_holding";
+                /** Format: uuid */
+                entityId: string;
+            };
+            /** Format: uuid */
+            uploadId: string;
+            part: number;
+            totalParts: number;
+            digest: string;
+            bytes: string;
+        };
+        "application-prepare-effect": {
+            /** Format: uuid */
+            applicationId: string;
+            /** Format: uuid */
+            recordId: string;
+            expectedRevision: number;
+            expectedReference: {
+                owner: string;
+                id: string;
+                revision: string;
+                contentDigest: string;
+            };
+            preparationRef: {
+                owner: string;
+                id: string;
+                version: string;
+                contentDigest: string;
+            };
+            allocationRef: {
+                owner: string;
+                id: string;
+                version: string;
+                contentDigest: string;
+            };
+            consumptionRef: {
+                owner: string;
+                id: string;
+                version: string;
+                contentDigest: string;
+            };
+            idempotencyKey: string;
+        };
+        "application-s8-propose": {
+            /** Format: uuid */
+            applicationId: string;
+            idempotencyKey: string;
+        };
+        "application-admission": {
+            /** Format: uuid */
+            applicationId: string;
+            revisionRef: {
+                owner: string;
+                id: string;
+                version: string;
+                contentDigest: string;
+            };
+        };
+        "learning-consent": {
+            /** @constant */
+            schema: "finnor.x5.training-rights.v1";
+            /** Format: uuid */
+            applicationId: string;
+            purposes: [
+                "TRAIN_STRUCTURAL_CONTROLLER",
+                "EXECUTE_DERIVED_POLICY"
+            ];
+            /** @enum {string} */
+            transfer: "SOURCE_APPLICATION_ONLY" | "SAME_TENANT_COMPATIBLE_APPLICATIONS";
+            /** @constant */
+            failures: "NONPOSITIVE_STRUCTURAL_OBSERVATIONS_ONLY";
+            /** @constant */
+            data: "STRUCTURAL_BOOLEANS_ONLY_NO_TEXT_AMOUNTS_IDENTIFIERS_CREDENTIALS";
+            /** @constant */
+            retention: "RETAIN_AUDIT_REVOKE_DERIVED_USE_NO_UNLEARNING_CLAIM";
+            /** Format: date-time */
+            knowledgeCut: string;
+            /** Format: date-time */
+            validUntil: string;
+            idempotencyKey: string;
+        };
+        "learning-revoke-consent": {
+            /** Format: uuid */
+            consentId: string;
+            reason: string;
+            idempotencyKey: string;
+        };
+        "learning-experience": {
+            experience: {
+                /** Format: uuid */
+                applicationId: string;
+                recordIds: string[];
+                /** Format: uuid */
+                consentId: string;
+            }[];
+            /** Format: date-time */
+            knowledgeCut: string;
+        };
+        "learning-submit": {
+            /** @constant */
+            schema: "finnor.x5.compile-request.v1";
+            root: {
+                /** @enum {string} */
+                entityType: "pe_strategy" | "pe_opportunity" | "pe_deal" | "pe_fund" | "pe_vehicle" | "external_organization" | "pe_portfolio_holding";
+                /** Format: uuid */
+                entityId: string;
+            };
+            /** Format: uuid */
+            workId?: string;
+            /** Format: uuid */
+            workInputId?: string;
+            experience: {
+                /** Format: uuid */
+                applicationId: string;
+                recordIds: string[];
+                /** Format: uuid */
+                consentId: string;
+            }[];
+            /** Format: date-time */
+            knowledgeCut: string;
+            idempotencyKey: string;
+            limits: {
+                deadlineMs: number;
+                maxAttempts: number;
+                maxUses: number;
+            };
+        };
+        "learning-read": {
+            /** Format: uuid */
+            compilationId: string;
+        };
+        "learning-list": {
+            root: {
+                /** @enum {string} */
+                entityType: "pe_strategy" | "pe_opportunity" | "pe_deal" | "pe_fund" | "pe_vehicle" | "external_organization" | "pe_portfolio_holding";
+                /** Format: uuid */
+                entityId: string;
+            };
+            /** Format: uuid */
+            workId: string;
+        };
+        "learning-execute": {
+            /** Format: uuid */
+            compilationId: string;
+            /** Format: uuid */
+            releaseId: string;
+            /** Format: uuid */
+            applicationId: string;
+            /** Format: uuid */
+            recordId: string;
+            expectedRevision: number;
+            expectedReference: {
+                owner: string;
+                id: string;
+                revision: string;
+                contentDigest: string;
+            };
+            /** @enum {string} */
+            mode: "COMPILED_ORIGINAL" | "COMPILED_TRAINED" | "NATIVE_EXACT" | "COMPILED_NO_NEURAL";
+            idempotencyKey: string;
+            /** @enum {string} */
+            stratum: "TRANSFER" | "RETENTION" | "BOUNDARY";
+            assignmentRef?: {
+                /** @constant */
+                owner: "X5_ASSIGNMENT";
+                /** Format: uuid */
+                id: string;
+                /** @constant */
+                revision: "1";
+                contentDigest: string;
+            };
+        };
+        "learning-evaluate": {
+            /** Format: uuid */
+            compilationId: string;
+            /** Format: uuid */
+            releaseId: string;
+            useIds: string[];
+            retainedUseIds: string[];
+            idempotencyKey: string;
+        };
+        "learning-cancel": {
+            /** Format: uuid */
+            compilationId: string;
+            reason: string;
+            idempotencyKey: string;
+        };
+        "learning-invalidate": {
+            /** Format: uuid */
+            compilationId: string;
+            reason: string;
+            idempotencyKey: string;
+        };
+        "learning-retry": {
+            /** Format: uuid */
+            compilationId: string;
+            reason: string;
+            idempotencyKey: string;
+        };
+        "learning-rollback": {
+            /** Format: uuid */
+            compilationId: string;
+            /** Format: uuid */
+            releaseId: string;
+            idempotencyKey: string;
+        };
+        "learning-s8-propose": {
+            /** Format: uuid */
+            compilationId: string;
+            /** Format: uuid */
+            releaseId: string;
+            /**
+             * @default TRAINED
+             * @enum {string}
+             */
+            controllerRevision: "TRAINED" | "ORIGINAL_ABLATION";
+            idempotencyKey: string;
+        };
+        "learning-admission": {
+            /** Format: uuid */
+            compilationId: string;
+            /** Format: uuid */
+            releaseId: string;
+            revisionRef: {
+                owner: string;
+                id: string;
+                version: string;
+                contentDigest: string;
+            };
+        };
+        "learning-register-assignment": {
+            /** Format: uuid */
+            compilationId: string;
+            /** Format: uuid */
+            releaseId: string;
+            caseId: string;
+            replicas: {
+                /** @enum {string} */
+                mode: "COMPILED_ORIGINAL" | "COMPILED_TRAINED" | "NATIVE_EXACT" | "COMPILED_NO_NEURAL";
+                /** Format: uuid */
+                applicationId: string;
+                /** Format: uuid */
+                recordId: string;
+            }[];
+            idempotencyKey: string;
+        };
+        "learning-retrain": {
+            /** Format: uuid */
+            compilationId: string;
+            experience: {
+                /** Format: uuid */
+                applicationId: string;
+                recordIds: string[];
+                /** Format: uuid */
+                consentId: string;
+            }[];
+            /** Format: date-time */
+            knowledgeCut: string;
+            reason: string;
+            idempotencyKey: string;
+        };
+        "identification-targets": {
+            root: {
+                /** @constant */
+                entityType: "pe_deal";
+                /** Format: uuid */
+                entityId: string;
+            };
+        };
+        "identification-consent": {
+            /** @constant */
+            schema: "finnor.x4.experiment-rights.v1";
+            root: {
+                /** @constant */
+                entityType: "pe_deal";
+                /** Format: uuid */
+                entityId: string;
+            };
+            domain: {
+                /** @constant */
+                schema: "finnor.x4.digital-domain.v1";
+                /** @constant */
+                profile: "PE_FIRM_DIGITAL_RELATION_V1";
+                applicationVersion: string;
+                /** @enum {string} */
+                role: "analyst" | "auditor";
+                records: {
+                    value: string;
+                    /** @enum {string} */
+                    update: "PREEXISTING" | "CONTROLLED";
+                    /** @enum {string} */
+                    visibility: "PUBLIC" | "CONTROLLED";
+                    features: {
+                        cohort?: number;
+                        flag?: number;
+                    };
+                }[];
+                interventions: {
+                    updateTiming: (-1 | 1 | 3)[];
+                    pageSize: (1 | 2 | 4)[];
+                    visibility: (0 | 1)[];
+                };
+                ordinary: {
+                    /** @enum {number} */
+                    updateTiming: -1 | 1 | 3;
+                    /** @enum {number} */
+                    pageSize: 1 | 2 | 4;
+                    /** @enum {number} */
+                    visibility: 0 | 1;
+                };
+                withheld: {
+                    /** @enum {number} */
+                    updateTiming: -1 | 1 | 3;
+                    /** @enum {number} */
+                    pageSize: 1 | 2 | 4;
+                    /** @enum {number} */
+                    visibility: 0 | 1;
+                };
+                costUnits: number;
+                assumptions: {
+                    /** @constant */
+                    deterministic: true;
+                    /** @constant */
+                    isolatedFreshRecords: true;
+                    /** @constant */
+                    noInterference: true;
+                    /** @constant */
+                    completePermittedObservations: true;
+                    /** @constant */
+                    sameHostClock: true;
+                    /** @constant */
+                    replicaVersionInvariant: true;
+                };
+            };
+            targetIds: string[];
+            actorIds: string[];
+            purposes: [
+                "EXPERIMENT",
+                "OBSERVE",
+                "REPLICATE",
+                "DERIVE_FINDING",
+                "USE_IN_DECISION"
+            ];
+            /** @constant */
+            retention: "RETAIN_AUDIT_REVOKE_FUTURE_USE_NO_EFFECT_ROLLBACK";
+            /** Format: date-time */
+            validUntil: string;
+            idempotencyKey: string;
+        };
+        "identification-revoke-consent": {
+            /** Format: uuid */
+            consentId: string;
+            reason: string;
+            idempotencyKey: string;
+        };
+        "identification-submit": {
+            /** @constant */
+            schema: "finnor.x4.identification-request.v1";
+            root: {
+                /** @constant */
+                entityType: "pe_deal";
+                /** Format: uuid */
+                entityId: string;
+            };
+            /** Format: uuid */
+            workId?: string;
+            /** Format: uuid */
+            workInputId?: string;
+            /** Format: uuid */
+            consentId: string;
+            /** Format: uuid */
+            sourceTargetId: string;
+            /** Format: uuid */
+            replicationTargetId: string;
+            question: {
+                text: string;
+                target: string;
+                affectedDecision: string;
+                /** @enum {string} */
+                requestedClaimClass: "PREDICTIVE" | "INTERVENTION_IDENTIFIED" | "MECHANISM_SPECIFIC";
+            };
+            decision: {
+                /** Format: uuid */
+                workstreamId: string;
+                /** Format: uuid */
+                investmentCaseId: string;
+            };
+            domain: {
+                /** @constant */
+                schema: "finnor.x4.digital-domain.v1";
+                /** @constant */
+                profile: "PE_FIRM_DIGITAL_RELATION_V1";
+                applicationVersion: string;
+                /** @enum {string} */
+                role: "analyst" | "auditor";
+                records: {
+                    value: string;
+                    /** @enum {string} */
+                    update: "PREEXISTING" | "CONTROLLED";
+                    /** @enum {string} */
+                    visibility: "PUBLIC" | "CONTROLLED";
+                    features: {
+                        cohort?: number;
+                        flag?: number;
+                    };
+                }[];
+                interventions: {
+                    updateTiming: (-1 | 1 | 3)[];
+                    pageSize: (1 | 2 | 4)[];
+                    visibility: (0 | 1)[];
+                };
+                ordinary: {
+                    /** @enum {number} */
+                    updateTiming: -1 | 1 | 3;
+                    /** @enum {number} */
+                    pageSize: 1 | 2 | 4;
+                    /** @enum {number} */
+                    visibility: 0 | 1;
+                };
+                withheld: {
+                    /** @enum {number} */
+                    updateTiming: -1 | 1 | 3;
+                    /** @enum {number} */
+                    pageSize: 1 | 2 | 4;
+                    /** @enum {number} */
+                    visibility: 0 | 1;
+                };
+                costUnits: number;
+                assumptions: {
+                    /** @constant */
+                    deterministic: true;
+                    /** @constant */
+                    isolatedFreshRecords: true;
+                    /** @constant */
+                    noInterference: true;
+                    /** @constant */
+                    completePermittedObservations: true;
+                    /** @constant */
+                    sameHostClock: true;
+                    /** @constant */
+                    replicaVersionInvariant: true;
+                };
+            };
+            limits: {
+                deadlineMs: number;
+                maxExperiments: number;
+                maxObservationCalls: number;
+                maxAnalysisJobs: number;
+                maxUses: number;
+            };
+            /**
+             * @default ACTIVE
+             * @enum {string}
+             */
+            mode: "ACTIVE" | "OBSERVATION_ONLY";
+            idempotencyKey: string;
+        };
+        "identification-read": {
+            /** Format: uuid */
+            identificationId: string;
+        };
+        "identification-list": {
+            root: {
+                /** @constant */
+                entityType: "pe_deal";
+                /** Format: uuid */
+                entityId: string;
+            };
+            /** Format: uuid */
+            workId: string;
+        };
+        "identification-history": {
+            /** Format: uuid */
+            identificationId: string;
+            before?: string;
+            /** @default 50 */
+            limit: number;
+        };
+        "identification-experiment": {
+            /** Format: uuid */
+            identificationId: string;
+            /** Format: uuid */
+            experimentId: string;
+        };
+        "identification-replicate": {
+            /** Format: uuid */
+            identificationId: string;
+            expectedModelId: string | null;
+            idempotencyKey: string;
+        };
+        "identification-use": {
+            /** Format: uuid */
+            identificationId: string;
+            /** Format: uuid */
+            modelId: string;
+            idempotencyKey: string;
+        };
+        "identification-cancel": {
+            /** Format: uuid */
+            identificationId: string;
+            reason: string;
+            idempotencyKey: string;
+        };
+        "identification-invalidate": {
+            /** Format: uuid */
+            identificationId: string;
+            reason: string;
+            idempotencyKey: string;
+            changed: ("domain" | "instrument" | "observations" | "hypotheses" | "replication" | "rights" | "work" | "checker" | "runtime")[];
+        };
+        "identification-retry": {
+            /** Format: uuid */
+            identificationId: string;
+            reason: string;
+            idempotencyKey: string;
+        };
+        "identification-s8-propose": {
+            /** Format: uuid */
+            identificationId: string;
+            /** Format: uuid */
+            modelId: string;
+            idempotencyKey: string;
+        };
+        "identification-admission": {
+            /** Format: uuid */
+            identificationId: string;
+            /** Format: uuid */
+            modelId: string;
+            revisionRef: {
+                owner: string;
+                id: string;
+                version: string;
+                contentDigest: string;
+            };
+        };
+        X3Expression: {
+            /** @constant */
+            op: "literal";
+            value: string | boolean | {
+                /** @constant */
+                kind: "UNKNOWN";
+                reason: string;
+            } | {
+                /** @constant */
+                kind: "QUANTITY";
+                amount: string;
+                currency: string;
+                entity: {
+                    owner: string;
+                    id: string;
+                    revision: string;
+                    contentDigest: string;
+                };
+                units: string;
+                time: {
+                    /** @constant */
+                    kind: "AS_OF";
+                    /** Format: date-time */
+                    asOf: string;
+                } | {
+                    /** @constant */
+                    kind: "PERIOD";
+                    /** Format: date-time */
+                    start: string;
+                    /** Format: date-time */
+                    end: string;
+                };
+                accountingBasis: string;
+            } | {
+                /** @constant */
+                kind: "QUANTITY_LIST";
+                entries: {
+                    /** @constant */
+                    kind: "QUANTITY";
+                    amount: string;
+                    currency: string;
+                    entity: {
+                        owner: string;
+                        id: string;
+                        revision: string;
+                        contentDigest: string;
+                    };
+                    units: string;
+                    time: {
+                        /** @constant */
+                        kind: "AS_OF";
+                        /** Format: date-time */
+                        asOf: string;
+                    } | {
+                        /** @constant */
+                        kind: "PERIOD";
+                        /** Format: date-time */
+                        start: string;
+                        /** Format: date-time */
+                        end: string;
+                    };
+                    accountingBasis: string;
+                }[];
+            } | {
+                /** @constant */
+                kind: "EVIDENCE";
+                sourceId: string;
+                versionId: string;
+                contentDigest: string;
+            } | {
+                /** @constant */
+                kind: "RELATION";
+                entityId: string;
+                reference: {
+                    owner: string;
+                    id: string;
+                    revision: string;
+                    contentDigest: string;
+                };
+            } | {
+                owner: string;
+                id: string;
+                revision: string;
+                contentDigest: string;
+            };
+        } | {
+            /** @constant */
+            op: "field";
+            /** @enum {string} */
+            source: "record" | "input";
+            field: string;
+        } | {
+            /** @constant */
+            op: "sum";
+            value: components["schemas"]["X3Expression"];
+        } | {
+            /** @constant */
+            op: "known";
+            value: components["schemas"]["X3Expression"];
+        } | {
+            /** @constant */
+            op: "current-evidence";
+            value: components["schemas"]["X3Expression"];
+        } | {
+            /** @constant */
+            op: "not";
+            value: components["schemas"]["X3Expression"];
+        } | {
+            /** @constant */
+            op: "equal";
+            left: components["schemas"]["X3Expression"];
+            right: components["schemas"]["X3Expression"];
+        } | {
+            /** @constant */
+            op: "same-quantity";
+            left: components["schemas"]["X3Expression"];
+            right: components["schemas"]["X3Expression"];
+        } | {
+            /** @constant */
+            op: "difference";
+            left: components["schemas"]["X3Expression"];
+            right: components["schemas"]["X3Expression"];
+        } | {
+            /** @constant */
+            op: "compare";
+            /** @enum {string} */
+            comparison: "lt" | "lte" | "eq" | "gte" | "gt";
+            left: components["schemas"]["X3Expression"];
+            right: components["schemas"]["X3Expression"];
+        } | {
+            /** @constant */
+            op: "currency-threshold";
+            value: components["schemas"]["X3Expression"];
+            /** @enum {string} */
+            comparison: "lt" | "lte" | "eq" | "gte" | "gt";
+            thresholds: {
+                currency: string;
+                amount: string;
+                units: string;
+                accountingBasis: string;
+                /** @enum {string} */
+                timeMode: "AS_OF" | "PERIOD";
+            }[];
+        } | {
+            /** @constant */
+            op: "state";
+            is: string;
+        } | {
+            /** @constant */
+            op: "all";
+            args: components["schemas"]["X3Expression"][];
+        } | {
+            /** @constant */
+            op: "any";
+            args: components["schemas"]["X3Expression"][];
+        };
+    };
     responses: never;
     parameters: never;
     requestBodies: never;

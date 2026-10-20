@@ -1,0 +1,358 @@
+{
+  "schema": "finnor.x2.existing-checklist-followup.v1",
+  "recordedAt": "2026-10-17T03:36:10.645733+00:00",
+  "productCodeCommit": "5e9a7289a3695092b820e037d8fcbd1fae470145",
+  "productRebuilt": false,
+  "newProductCapabilities": false,
+  "mounted": {
+    "episode": 103,
+    "status": "PASS",
+    "nativePass": 15,
+    "exitCode": 0,
+    "allTenStages": [
+      {
+        "name": "real-login-and-initial-mount",
+        "status": "PASS"
+      },
+      {
+        "name": "canvas-focus-and-reload",
+        "status": "PASS"
+      },
+      {
+        "name": "world-root-boundary",
+        "status": "PASS"
+      },
+      {
+        "name": "fresh-use-and-persisted-investigation",
+        "status": "PASS"
+      },
+      {
+        "name": "delayed-work-response",
+        "status": "PASS"
+      },
+      {
+        "name": "offline-and-reconnect",
+        "status": "PASS"
+      },
+      {
+        "name": "global-logout-expiry-and-sdk-refresh",
+        "status": "PASS"
+      },
+      {
+        "name": "canonical-revocation-and-delayed-response",
+        "status": "PASS"
+      },
+      {
+        "name": "principal-switch-and-delayed-investigation-list",
+        "status": "PASS"
+      },
+      {
+        "name": "real-route-coverage",
+        "status": "PASS"
+      }
+    ],
+    "resultSha256": "58d3e384e3d682e63d8d28201ff182db0bfe874ea22fc7ff6ad162c1582d8b7a",
+    "nativeResultsSha256": "217ccd697ce927f9dc91424c247eebe8391fb55d334ca23af18288f15ec53a01",
+    "seedReceiptSha256": "718b27c8de195897373cbee506ff08ebacd6c949afd05be99c419e780b04bf4c",
+    "correctedAcquisition404UiResubmission": "PASS_REGISTRATION_ONLY_SEPARATE_INTAKE_002"
+  },
+  "safety": {
+    "report": "safety-closure-001/result.json",
+    "sha256": "6a8adb20d6d3b7cd4253d1160dce7986752b15a34060af710cd8e73d6d773d47",
+    "cancellation102": "INTERRUPTED_NINE_PASS_NO_AGGREGATE_EXIT_OR_ENDING_CUSTODY",
+    "remaining": "See remainingInternalGates; only104/107/108 and intake002 are newly accepted here.109/110 failures and unexecuted111 remain unpassed.",
+    "currentCancellation107": {
+      "episode": 107,
+      "status": "PASS",
+      "pass": 14,
+      "fail": 0,
+      "exitCode": 0,
+      "gates": [
+        "canonical-legacy-running-and-queued-jobs-across-X2-upgrade",
+        "fresh-upgrade-replay-and-runtime-role-isolation",
+        "canonical-S5-terminal-resource-floor",
+        "canonical-S5-future-resource-horizon-refusal",
+        "authenticated-original-registration-and-idempotency",
+        "physical-acquisition-and-independent-frozen-model",
+        "ordinary-role-original-request-deletion-refusal",
+        "native-S8-independent-discovery-and-signed-development-lifecycle",
+        "canonical-physical-worker-SIGKILL-after-exact-acceptance",
+        "canonical-natural-lease-expiry-and-original-quarantine",
+        "canonical-cancelled-Work-retains-original-observation",
+        "installed-runtime-restart-and-byte-custody",
+        "unchanged-source-and-runtime-custody",
+        "installed-ending-asset-custody"
+      ],
+      "receipts": {
+        "freeze.json": "4231fd34601675a0f1bb6d1f03998676dac576779e656030dbcfe2bb0ef312ac",
+        "results.json": "d3a3db93562665eef73b5ab1ac12944428fa31e53212ab38bb3c0500cc37b072",
+        "driver-exit.json": "d88a8eabe5c0cf47a79ab4980ed69dcdc0c16b2eec8a1930474377e0f0c62fe0"
+      }
+    },
+    "currentExpiry108": {
+      "episode": 108,
+      "status": "PASS",
+      "pass": 13,
+      "fail": 0,
+      "exitCode": 0,
+      "gates": [
+        "canonical-legacy-running-and-queued-jobs-across-X2-upgrade",
+        "fresh-upgrade-replay-and-runtime-role-isolation",
+        "canonical-S5-terminal-resource-floor",
+        "canonical-S5-future-resource-horizon-refusal",
+        "authenticated-original-registration-and-idempotency",
+        "physical-acquisition-and-independent-frozen-model",
+        "ordinary-role-original-request-deletion-refusal",
+        "canonical-physical-worker-SIGKILL-after-exact-acceptance",
+        "canonical-natural-lease-expiry-and-original-quarantine",
+        "canonical-S6-expired-parent-original-observation",
+        "installed-runtime-restart-and-byte-custody",
+        "unchanged-source-and-runtime-custody",
+        "installed-ending-asset-custody"
+      ],
+      "receipts": {
+        "freeze.json": "55ddd8f55eb30aa9cef2f619d00920a68647b36bdab9a3f4c225b6eec430cbc4",
+        "results.json": "d30198a726274f1027385c8669096017d13fa37f64f7c22e6463d78ce58a2b3b",
+        "driver-exit.json": "fc9d7ab12d0195992f5b52a23488435a34e096b4796393a9ccff1bad7bdd99bc"
+      }
+    },
+    "setupFailures105106": {
+      "episodes": [
+        105,
+        106
+      ],
+      "status": "FAILED_SETUP_UNHANDLED_PG_CONNECTION_TERMINATION",
+      "recordedGates": 0,
+      "exitReceipt": false,
+      "rootCauseEstablished": false,
+      "stoppedDatabaseImages": "Byte/mode/link-verified archives retained; followup-storage-preservation-001.json",
+      "endingCustodyEstablished": false
+    },
+    "completedCancellation109": {
+      "episode": 109,
+      "pass": 10,
+      "failedGates": [
+        {
+          "id": "fresh-Work-model-composition-and-independent-business-outcome",
+          "predicate": "{\"status\":\"FAILED\",\"reason\":\"X2_RESPONSE_LOST\",\"generation\":1,\"model_ref\":{\"id\":\"application-model:4b7563b5b2a8976fb57d88ee8f369f41cc25a0053afff25dc5e8874b2a904d21\",\"owner\":\"S4\",\"version\":\"application-operation-v1\",\"contentDigest\":\"4b7563b5b2a8976fb57d88ee8f369f41cc25a0053afff25dc5e8874b2a904d21\"},\"check_ref\":{\"id\":\"application-model-check:64a74558aced4eadda3e4f321d3f926d22ace456f483fff8be045fe1996bb9cd\",\"owner\":\"S4\",\"version\":\"application-operation-v1\",\"contentDigest\":\"64a74558aced4eadda3e4f321d3f926d22ace456f483fff8be045fe1996bb9cd\"},\"composition_ref\":null}\n+ actual - expected\n\n+ 'FAILED'\n- 'COMPLETED'\n",
+          "code": "ERR_ASSERTION"
+        }
+      ],
+      "exitCode": 1,
+      "resultsSha256": "dcfdb393afd2c96537ebb3f7184e84d69de5f3fec743b60572faf4da092a140f",
+      "endingCustodyEstablished": true,
+      "status": "FAILED_BEFORE_COMPLETED_CANCELLATION_X2_RESPONSE_LOST_CAUSE_UNESTABLISHED"
+    },
+    "permission110": {
+      "episode": 110,
+      "pass": 5,
+      "failedGates": [],
+      "exitCode": null,
+      "resultsSha256": "1cbddbde14ee27d559a339136957e91b0c0056be370a2d350bfa6dd030ceeae2",
+      "endingCustodyEstablished": false,
+      "status": "ABORTED_ENOSPC_NOT_A_PASS",
+      "driverGracefulCleanupEstablished": false,
+      "externalCleanup": "native-e2e-110/external-cleanup.json",
+      "externalCleanupSha256": "a752cc555311e49ff57ee20e07b0139df2ff7df1dc302362981b388b14d6a933",
+      "apiSurvivorStopped": true,
+      "rawDatabaseAndEvidencePreserved": true
+    },
+    "liveUse111": {
+      "status": "NOT_STARTED_AFTER110_FAILURE",
+      "fixtureOnlyWiring": "PREPARED_STATIC_VALIDATED_NOT_RUNTIME_VERIFIED",
+      "sourceCut": "followup-fixture-cut-001.json",
+      "isolatedDomains": "INTERNAL_PREPARATION_UNFINISHED_NOT_EXTERNAL_QUALIFICATION"
+    },
+    "remainingInternalGates": [
+      "B: complete typed checker/composition mutation families and separate false-valid/false-invalid coverage",
+      "C: complete access-change phases, deception and prompt-injection E2E negatives;110 is incomplete",
+      "D: resulting installed drift/sibling variants or exact affected-path compatibility;098 current source-native proof remains valid in its scope",
+      "E: completed-history cancellation unpassed after109 failed before reaching its intended case",
+      "S8: live-use111 unexecuted; isolated live/revocation/cumulative/expired-activation subject orchestration unfinished",
+      "J: equipped matched application executor/compatible authority/configuration and actual matched business runs/full costs absent"
+    ],
+    "executionCondition": "Database-heavy continuation paused after observed ENOSPC and incomplete110 cleanup; establish measured adequate task-owned headroom before another fresh episode. This is not a waiver or evidence that internal fixture work is complete."
+  },
+  "affectedS8Negatives104": {
+    "episode": 104,
+    "status": "PASS",
+    "pass": 15,
+    "fail": 0,
+    "exitCode": 0,
+    "gates": [
+      "canonical-legacy-running-and-queued-jobs-across-X2-upgrade",
+      "fresh-upgrade-replay-and-runtime-role-isolation",
+      "canonical-S5-terminal-resource-floor",
+      "canonical-S5-future-resource-horizon-refusal",
+      "authenticated-original-registration-and-idempotency",
+      "physical-acquisition-and-independent-frozen-model",
+      "ordinary-role-original-request-deletion-refusal",
+      "native-S8-independent-discovery-and-signed-development-lifecycle",
+      "fresh-Work-model-composition-and-independent-business-outcome",
+      "maintained-client-authenticated-fresh-Work-projection",
+      "native-S8-typed-application-command-negatives",
+      "native-S8-exact-original-reconciliation-evidence-refusal",
+      "installed-runtime-restart-and-byte-custody",
+      "unchanged-source-and-runtime-custody",
+      "installed-ending-asset-custody"
+    ],
+    "receipts": {
+      "freeze.json": "55d0973beff861e8c5948abc968baee8482a56814dec1c4625fbf73aedb16a61",
+      "results.json": "222d9bcfe00d7df334cf36e6ae71495a0bfba5f1f636abb97aba7105a1faeb43",
+      "driver-exit.json": "cbb2be1fe88e75d0fa2eab01e5af4f52c0808e343f993062c99e5309ac12a5fe"
+    }
+  },
+  "comparison": {
+    "diagnosticExecution": "COMPLETED",
+    "verdict": "INCONCLUSIVE",
+    "matchedBusinessExecutions": 0,
+    "matchedRunGate": "UNPASSED",
+    "resultSha256": "bb7e336bf0330daf88e688a18caf61306e077e09003ef4941f758fe0782622da",
+    "executedCommand": [
+      "/Users/paramdave/.hermes/node/bin/node",
+      "/Users/paramdave/.factory/worktrees/frontier5-x2-software-semantics-compiler/FINNOR/finnor-os/scripts/x2/run-matched-diagnostic.mjs",
+      "--output",
+      "/Users/paramdave/.factory/worktrees/frontier5-x2-software-semantics-compiler/matched-diagnostic-002/attempt-002"
+    ],
+    "costs": "UNMEASURED_NOT_ZERO",
+    "denominator": null,
+    "multiplier": null
+  },
+  "codeComplete": false,
+  "e2eDevVerified": false,
+  "publication": "LOCAL_DRAFT_ONLY; FOLLOWUP_SOURCE_IDENTITY_AND_FINAL_VALIDATION_IN_X2_DELIVERY_002_EXTERNAL_MANIFEST; NO_REMOTE_WRITE",
+  "intake": {
+    "status": "PASS",
+    "harness": "finnor-os/scripts/x2/run-intake-e2e.mts",
+    "preparation": "intake-e2e-preparation-001/preparation.json",
+    "firstLaunch": "TSX_CLI_EADDRINUSE_BEFORE_HARNESS_IMPORT",
+    "rescheduledLaunch": "intake-e2e-launch-002/launch.json",
+    "e2eResult": "intake-e2e-002/result.json",
+    "firstExecutedEpisode": {
+      "episode": "intake-e2e-001",
+      "status": "FAIL",
+      "acquisitionPosts": 0,
+      "cleanup": "ALL_PASS",
+      "failure": "TIMEOUT_BEFORE_ACQUISITION_POST_NOT_OWNER_404",
+      "resultSha256": "5f2a50ad93f7953906f8d554a83a5feffc4ecf5dee68730d9c062ee28d7ea13d"
+    },
+    "currentEpisode": "intake-e2e-002",
+    "EXECUTED": true,
+    "stages": [
+      {
+        "id": "installed-and-source-custody",
+        "status": "PASS",
+        "startedAt": "2026-10-17T01:51:45.034Z",
+        "wallMs": 18154.475166999997
+      },
+      {
+        "id": "fresh-canonical-database-and-owners",
+        "status": "PASS",
+        "startedAt": "2026-10-17T01:52:03.197Z",
+        "wallMs": 5061.211750000002
+      },
+      {
+        "id": "independent-native-intake-fixtures",
+        "status": "PASS",
+        "startedAt": "2026-10-17T01:52:08.259Z",
+        "wallMs": 385.596166000003
+      },
+      {
+        "id": "real-emitted-api-and-maintained-frontend",
+        "status": "PASS",
+        "startedAt": "2026-10-17T01:52:08.645Z",
+        "wallMs": 75469.397541
+      },
+      {
+        "id": "fresh-headed-browser-and-genuine-login",
+        "status": "PASS",
+        "startedAt": "2026-10-17T01:53:24.115Z",
+        "wallMs": 11261.282957999996
+      },
+      {
+        "id": "owning-404-before-writes-and-same-panel-correction",
+        "status": "PASS",
+        "startedAt": "2026-10-17T01:53:35.380Z",
+        "wallMs": 17694.880625000005
+      },
+      {
+        "id": "genuine-accepted-response-loss-stays-fenced",
+        "status": "PASS",
+        "startedAt": "2026-10-17T01:53:53.076Z",
+        "wallMs": 12403.620125000001
+      },
+      {
+        "id": "ending-auth-registration-and-installed-custody",
+        "status": "PASS",
+        "startedAt": "2026-10-17T01:54:05.487Z",
+        "wallMs": 25881.95633300001
+      }
+    ],
+    "cleanup": [
+      {
+        "owner": "retained-transport-observations",
+        "status": "PASS"
+      },
+      {
+        "owner": "fresh-browser-context",
+        "status": "PASS"
+      },
+      {
+        "owner": "task-owned-visible-chrome",
+        "status": "PASS"
+      },
+      {
+        "owner": "frontend",
+        "status": "PASS"
+      },
+      {
+        "owner": "portal-response-loss",
+        "status": "PASS"
+      },
+      {
+        "owner": "portal-corrected",
+        "status": "PASS"
+      },
+      {
+        "owner": "installed-api",
+        "status": "PASS"
+      },
+      {
+        "owner": "disposable-auth",
+        "status": "PASS"
+      },
+      {
+        "owner": "canonical-app-pool",
+        "status": "PASS"
+      },
+      {
+        "owner": "canonical-admin-connection",
+        "status": "PASS"
+      },
+      {
+        "owner": "owned-postgres",
+        "status": "PASS"
+      }
+    ],
+    "resultSha256": "3e1be89b8ee4509eb6d055adc02ddebfc2374a62b2fad8e72abb83ca60bbe940"
+  },
+  "validation": {
+    "sourceCompatibility": "followup-validation-001/source-compatibility.json",
+    "productInputMismatches": 0,
+    "finalTypesAndUnmodifiedRuleLint": "followup-validation-001/final-static-002.json",
+    "initialLintFailure": "Node helper useCommand/useRefusal names triggered React-hook lint; identifiers renamed without disabling rules",
+    "cachedCompilerStorage": "intake-generated-cache-reclaim-002.json",
+    "billingUSD": null,
+    "humanWork": null,
+    "aggregateSimultaneousMemory": null
+  },
+  "completionGates": {
+    "DESIGNED": "RECORDED",
+    "CODE_COMPLETE": false,
+    "E2E_DEV_VERIFIED": false,
+    "DOMAIN_QUALIFIED": "NOT_RUN",
+    "PRODUCTION_ACTIVE": "NOT_AUTHORIZED",
+    "OPERATIONAL_100X_PASSED": false,
+    "FINANCIAL_QUALIFIED": false
+  }
+}

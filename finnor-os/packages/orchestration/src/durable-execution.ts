@@ -12,6 +12,7 @@ import {
   domainPolicyRevisions,
   integrationOperations,
   reconcileWorkStatus,
+  reconciliationCases,
   transitionWork,
   withTenant,
   workObjectiveLoops,
@@ -41,6 +42,7 @@ import {
 import { openReconciliationCase } from "@finnor/workflow-runtime/reconciliation";
 import { and, desc, eq, lte, sql } from "drizzle-orm";
 import type { BusinessEffectSet, DomainAction, DraftAction, ExecutionResult, ErrorKind } from "@finnor/shared-types";
+import { createDefaultPluginRegistry } from "./plugin-registry";
 import {
   BusinessEffectBoundaryError,
   recordBusinessEffectOutcome,
@@ -771,7 +773,8 @@ export interface DurableExecutionDependencies {
 export async function observeRecoveredAuthorizedAttempt(tenantId: string, operationId: string): Promise<void> {
   const [operation] = await withTenant(tenantId, db => db.select().from(integrationOperations).where(and(
     eq(integrationOperations.tenantId, tenantId), eq(integrationOperations.id, operationId),
-    eq(integrationOperations.provider, "finnor_plugin_runtime"), eq(integrationOperations.status, "succeeded"),
+    eq(integrationOperations.provider, "finnor_plugin_runtime"),
+    sql`${integrationOperations.status} IN ('succeeded','unknown')`,
   )).limit(1));
   if (!operation?.workflowStepId || !operation.businessEffectId || operation.integrationId) return;
   const loaded = await loadExecution(tenantId, operation.workflowStepId, true);
@@ -781,10 +784,18 @@ export async function observeRecoveredAuthorizedAttempt(tenantId: string, operat
     throw new DurableExecutionBlocked("Recovered attempt is not bound to this exact authorized effect");
   }
   const response = operation.response as Record<string, unknown> | null;
-  if (response?.status !== "success" || !response.output || typeof response.output !== "object" || Array.isArray(response.output)) {
+  const canonicalRecovery = operation.status === "unknown"
+    ? await (await import("../../private-equity/src/program-synthesis/institution-recovery"))
+      .observeUnknownInstitutionCreation(tenantId, loaded.action, loaded.effect.delta.values) : null;
+  if (operation.status === "unknown" && !canonicalRecovery) return;
+  if (!canonicalRecovery && (response?.status !== "success" || !response.output || typeof response.output !== "object" || Array.isArray(response.output))) {
     throw new DurableExecutionBlocked("Recovered successful attempt lacks a bounded execution result");
   }
-  const result: ExecutionResult = { status: "success", output: response.output as Record<string, unknown> };
+  // Success describes the independently observed creation postcondition. The
+  // missing executor acknowledgement is retained as unknown with null response.
+  const result: ExecutionResult = { status: "success", output: canonicalRecovery
+    ? { canonicalRecovery, executorAcknowledgement: "UNKNOWN_RETAINED" }
+    : response!.output as Record<string, unknown> };
   const delegatedRuntime = await boundDeferredChildRuntime(loaded, result);
   if (delegatedRuntime) {
     // The child can commit before the original worker records its waiting edge.
@@ -820,6 +831,16 @@ export async function observeRecoveredAuthorizedAttempt(tenantId: string, operat
     await db.update(integrationOperations).set({ verificationStatus: verification.state === "verified" ? "verified" : verification.state === "divergent" ? "divergent" : "unknown", observation: verification, updatedAt: new Date() }).where(and(
       eq(integrationOperations.tenantId, tenantId), eq(integrationOperations.id, operationId),
     ));
+    if (canonicalRecovery && verification.state === "verified") {
+      await db.update(reconciliationCases).set({ status: "resolved", resolvedAt: new Date(),
+        resolvedBy: "system:x1-canonical-creation-observer",
+        resolutionOutcome: "happened_as_intended", resolutionProvider: "finnor_canonical_owner",
+        resolutionEvidence: { operationId, canonicalRecovery, verification },
+        version: sql`${reconciliationCases.version}+1`,
+      }).where(and(eq(reconciliationCases.tenantId, tenantId),
+        eq(reconciliationCases.relatedStepId, loaded.step.id),
+        eq(reconciliationCases.businessEffectId, loaded.effect.id), eq(reconciliationCases.status, "open")));
+    }
   });
   if (verification.state === "verified") {
     await completeStep(tenantId, loaded.step.id, { recoveredAttemptId: operationId, businessEffectId: loaded.effect.id, authorizedEffectHash: loaded.effect.semanticHash, verification }, fence);
@@ -830,6 +851,7 @@ export async function observeRecoveredAuthorizedAttempt(tenantId: string, operat
   }
   await advanceWorkflow(tenantId, loaded.run.id);
   if (loaded.action.workId) await reconcileWorkStatus(tenantId, loaded.action.workId);
+  await resumeObjectiveForAction(tenantId, loaded.action.id);
 }
 
 /** Called only after workflow-runtime.claimStep has won the local lease. */

@@ -1,0 +1,1964 @@
+{
+  "schema": "FRONTIER5.X2.DEVELOPMENT_VERIFICATION_PLAN.v1",
+  "scope": "FRONTIER5.X2 SoftwareSemanticsCompiler",
+  "createdAt": "2026-10-14",
+  "authority": "Current original X2 request, local disposable engineering only",
+  "sourceCut": {
+    "branch": "codex/frontier5-x2-software-semantics-compiler",
+    "parentCommit": "517003a4396bc8101a90be4b425ee01de9446740",
+    "parentTree": "07ba69b8e96f05944c2f9f14a74b2c400eb89e42",
+    "adoptedPeerDeltas": [],
+    "verifiedCodeCommit": "5e9a7289a3695092b820e037d8fcbd1fae470145",
+    "verifiedCodeTree": "42ed1b9183c7b6235d615fc2a584271dc74f64f8",
+    "finalCommitTreeReceipt": "../x2-delivery-002/source-manifest.json outside checkout;001 retained"
+  },
+  "status": "RESULTING_INSTALLED_PROOFS_PASS_MANDATORY_DEVELOPMENT_GATES_STILL_INCOMPLETE",
+  "resultingDelivery": {
+    "authoritativeCurrentRecord": "checklist-followup-evidence.json; resulting-evidence.json retained for009/099/100/101",
+    "recordSha256": "baf509def9ec821468f45f75103424ffeb80476749e8f41fe1d10ef77d246b77",
+    "codeCommit": "5e9a7289a3695092b820e037d8fcbd1fae470145",
+    "codeTree": "42ed1b9183c7b6235d615fc2a584271dc74f64f8",
+    "installation": "installed-009",
+    "buildId": "x2-e75bccf83552f881a817f65d85751d2df377ce44251dd232724df485f98c0af4",
+    "buildManifestSha256": "871418ff506f890984f1d6747cc50f16280b9df0c3f9331071af229409fb3f90",
+    "actualBackendBuildWallMs": 191106.690042,
+    "sourceInputs": 2519,
+    "installed": [
+      {
+        "run": 99,
+        "surface": "api",
+        "pass": 15,
+        "fail": 0,
+        "exitCode": 0,
+        "seedReceipt": "reconstruction-native-027.json"
+      },
+      {
+        "run": 100,
+        "surface": "hybrid",
+        "pass": 16,
+        "fail": 0,
+        "exitCode": 0,
+        "seedReceipt": "reconstruction-native-028.json"
+      },
+      {
+        "run": 101,
+        "surface": "ui",
+        "pass": 17,
+        "fail": 0,
+        "exitCode": 0,
+        "seedReceipt": "reconstruction-native-029.json"
+      }
+    ],
+    "reconstruction": {
+      "installation": "reconstructed-installed-005",
+      "originalBuildAndFiveRoleBytesPreserved": true,
+      "declaredSourceDelta": [],
+      "independentRegularFiles": true,
+      "copyOnWriteEstablished": false,
+      "enforcedCloneProbe": "independent-clone-probe-001/result.json_ENOSYS",
+      "retainedFailure": "failed-reconstruction-004.json_ENOSPC_BEFORE_BUSINESS_EXECUTION",
+      "seed009AbsentThroughout101AndRestored": true,
+      "beginningAndEndingInstalledCustody": "PASS"
+    },
+    "originalEffectFallback": "100_PASS_INDEPENDENT_ORIGINAL_OBSERVATION;101_PASS_OPAQUE_UNKNOWN_THEN_SAME_ORIGINAL_OBSERVATION_NO_REPLAY_OR_RELEASE",
+    "outer099DurationCaveat": "Includes paused engineering sequencer while actual child finished; not a business-latency measurement.",
+    "allOrdinaryRolesMigrationUpgradeLegacyInflightRestartAndCustodyGates": "PASS_SELECTED_INSTALLED_CASES",
+    "browser": "103_PASS_TEN_MOUNTED_STAGES;INTAKE002_PASS_REAL404_CORRECTION_AND_GENUINE_ACCEPTED_RESPONSE_LOSS",
+    "comparison": "FEASIBILITY_CONTROLLER_COMPLETED_INCONCLUSIVE_MATCHED_BUSINESS_RUNS_ZERO",
+    "remainingMatrixCells": "Unpassed internal gates remain explicit in existingChecklistFollowup.safety.remainingInternalGates;109/110 are failures,111 unexecuted",
+    "codeComplete": false,
+    "e2eDevVerified": false,
+    "localHandoff": "delivery.md",
+    "localPrDraft": "pr-draft.md",
+    "remotePublication": "NOT_AUTHORIZED_NOT_PERFORMED"
+  },
+  "remainingUserObligations": {
+    "scope": "EXISTING_FOUR_OBLIGATIONS_ONLY_NO_NEW_PHASE",
+    "siblingSynchronization": {
+      "status": "PASS_SOURCE_NATIVE_NOT_INSTALLED",
+      "artifact": "native-e2e-098/results.json",
+      "exitArtifact": "native-e2e-098/driver-exit.json",
+      "pass": 9,
+      "fail": 0,
+      "exitCode": 0,
+      "resultsSha256": "2fd1d04e7d6d64fc2ca63a9fbd09cea0ebfa36cdf30e800ee2b212ad09fb31dc",
+      "retainedFailures": [
+        "native-e2e-096",
+        "native-e2e-097"
+      ],
+      "physicalInterruptedCompositions": 2,
+      "naturalCapacityExpiry": true,
+      "replacementInputPreserved": true,
+      "affectedSuffixSteps": 2,
+      "keptPrefixSteps": 2,
+      "stillCurrentIndependentDraft": "VERIFIED",
+      "submissionsOrApprovals": 0,
+      "originalParentAndAllowancePreserved": true
+    },
+    "inheritedCompatibility": {
+      "status": "INDEPENDENTLY_ESTABLISHED_NOT_GREEN",
+      "baseCommit": "517003a4396bc8101a90be4b425ee01de9446740",
+      "artifact": "compatibility-baseline-002/result.json",
+      "artifactSha256": "f3c7bbcd3a4633ac552cf632c1d59686bf5c9991a6ce28d2e71ec2db5435ce77",
+      "exactTypeDiagnostics": 6,
+      "baselineProjectSources": 346,
+      "sourceEscapes": 0,
+      "diagnosticOnlyBorrowedThirdPartyDependencies": true,
+      "invalidEarlierDiagnostic": "compatibility-baseline-001",
+      "authenticLegacyS5": {
+        "artifact": "legacy-s5-native-002",
+        "pass": 2,
+        "fail": 0
+      },
+      "authenticLegacyS8": {
+        "artifact": "legacy-s8-native-003",
+        "pass": 13,
+        "fail": 2,
+        "actual68PinEvaluator": "PASS"
+      },
+      "remainingLegacyShadowFailures": "UNCHANGED_BASELINE_PRODUCER_DOES_NOT_CREATE_EXPECTED_LEASE"
+    },
+    "currentApiRepair": {
+      "artifact": "native-e2e-095/results.json",
+      "pass": 13,
+      "fail": 0,
+      "exitCode": 0,
+      "physicalReads": 228,
+      "originalReadBound": 256,
+      "exactOneShotReadbackReuses": 18,
+      "originalTransitions": 24,
+      "acquisitionProfiles": 3,
+      "freshHandoffProfiles": 2,
+      "freshReaderReads": 0,
+      "freshFourActionIndependentBusiness": "PASS",
+      "mounted": "NOT_RUN"
+    },
+    "browser": {
+      "artifact": "browser-continuation-blocker-002.json",
+      "artifactSha256": "f38151a8e621b5f0cf9e1a4c067a9a9ee7436850eba7365c8d68d1878533d4bf",
+      "status": "103_PASS_MOUNTED_PRIVACY_AND_FRESH_USE_SUBMISSION",
+      "sameFailedSystemChromeVersion": "155.0.8059.80",
+      "newLaunchesWithoutSubstrateChange": 0,
+      "privacyAndCorrectedIntakeRuntimeVerified": true,
+      "principalPrivacyRuntimeVerified": true,
+      "freshUseSubmitRuntimeVerified": true,
+      "correctedAcquire404UiRuntimeVerified": true,
+      "correctedIntakeArtifact": "intake-e2e-002/result.json"
+    },
+    "matchedDiagnostic": {
+      "status": "EXECUTED_FEASIBILITY_INCONCLUSIVE_MATCHED_BUSINESS_GATE_UNPASSED",
+      "artifact": "matched-diagnostic-002/attempt-002/result.json",
+      "artifactSha256": "bb7e336bf0330daf88e688a18caf61306e077e09003ef4941f758fe0782622da",
+      "actualBooleanConfigurationPreflight": true,
+      "matchedExecutions": 0,
+      "positivePerformanceDenominator": false,
+      "multiplierClaim": false,
+      "continuationPacket": "remaining-execution-packet.md",
+      "missingInternalPreparation": "EQUIPPED_MATCHED_APPLICATION_EXECUTOR_STILL_MISSING; FEASIBILITY_ORCHESTRATOR_IMPLEMENTED_AND_EXECUTED",
+      "missingExternalInputs": [
+        "authorized compatible browser profiles and exact native task/effect records",
+        "existing secure provider/model configuration",
+        "lawfully equipped matched comparator"
+      ],
+      "coldAcquisitionMatureReuseHorizonAndDemand": "NOT_ESTABLISHED",
+      "comparisonLifecycleCosts": "UNMEASURED_NOT_ZERO"
+    },
+    "resultingStatic": {
+      "artifacts": [
+        "resulting-static-001/result.json",
+        "resulting-static-002/result.json"
+      ],
+      "backendFrontendAndX2DriverTypes": "PASS",
+      "explicitX2OwnerClientHarnessLint": "PASS",
+      "sixGeneratedAuthAndReleaseChecks": "PASS",
+      "legacyRunnerLint": "FAIL_INHERITED_INDEPENDENTLY_REPRODUCED",
+      "legacyLintLogSha256ForBothCuts": "1fc6d389b2b849fef69927c476e22ce43680ed8dd390122a51361b70f6a6c370",
+      "allRepositoryChecksGreen": false
+    },
+    "resultingInstalledVerification": "099_15_PASS_100_16_PASS_101_17_PASS_WITH_SEED_WITHDRAWAL_AND_RESTORATION",
+    "localCommitAndPrReadyHandoff": "SOURCE_COMMITTED_LOCAL_DRAFT_AND_RECONSTRUCTION_MANIFEST_NO_REMOTE_PUBLICATION_AUTHORITY"
+  },
+  "completionRecordReconciliation": {
+    "resumeCommit": "ba92228c5ac74d106118d1bb7a9f887c8d54f27a",
+    "resumeTree": "edba0bf55010b84fcecc5776c7d06488f403e7fc",
+    "priorHandoff": "handoff-native-085.json",
+    "laterHandoff": "handoff-timebox-native-087.json",
+    "receiptAudit": "completion-record-reconciliation-001.json",
+    "sourceInputsChecked": 2514,
+    "productSourceMismatchesAgainstInstalled008": 0,
+    "installedFiveRoleDigestsMatch085": true,
+    "installed008IsPrecommitBuildNotPostcommitFullSourceBuild": true,
+    "sourceOnlyReconstruction": "checkpoint-reconstruction-003.json",
+    "historicalFailuresRetained": [
+      "native-e2e-079",
+      "native-e2e-080",
+      "native-e2e-081",
+      "native-e2e-082"
+    ],
+    "unrelatedPassingCampaignsMustNotBeRepeated": true,
+    "peerHandoffRefresh": "COMPLETE_READ_ONLY_EXACT_RECEIPTS_NO_PEER_DELTA_ADOPTED",
+    "peerCompatibilityPacket": "peer-compatibility.md",
+    "finiteSoftwareCompletion": false
+  },
+  "peerDependencies": {
+    "acceptedX1": {
+      "scope": "FRONTIER5.X1 InstitutionalProgrammeCompiler",
+      "commit": "0946085d7cedc866b54cb7979177ff758eaba30b",
+      "tree": "937b8f604f4d635160b739d878d3be6cdd39d36e",
+      "trackedClean": true,
+      "status": "E2E_DEV_VERIFIED_DECLARED_LOCAL_DEVELOPMENT_DOMAIN",
+      "acceptance": "/Users/paramdave/Desktop/FINNOR-X1-DELIVERY/source-package/codex-final-acceptance-001.json",
+      "acceptanceSha256": "5ad5e697b06f51a107539edc559b4b023ff0754a6fbd4af2a1c713f50e822a41",
+      "sourcePackageManifestSha256": "487367be914e8688ffc4e3007e2e6209e848f1f1bcaf75342bb42d3905227790",
+      "ownerCompatibilitySha256": "186181193871fc149309830d242c93a74a7ef19f58835210623d906d96413c44",
+      "standaloneReconstructionSha256": "8af1748bebf7541dfe79daa1f0c3cbdca1ad73a4c9370ac7ada4b3c7efe9cba2",
+      "acceptanceLinkedReceiptsVerified": 14,
+      "ownerSourcePinsVerified": 20,
+      "installedProductSourceCommit": "a1840556093a40c975b4b5fba149b52a3da4e374",
+      "finalDocumentationCommitIsNotRebuiltRuntime": true,
+      "backendLockSha256": "9a7b757ef717fbafa290c748d0faaedcb608afac1291c2fabe4d19c066d508b1",
+      "adoptedIntoX2": false,
+      "combinedX1X2Verified": false,
+      "protectedQualificationAndProductionAuthority": false
+    },
+    "originalV1": {
+      "scope": "ORIGINAL V1 PrivateMarketOpportunityCreation",
+      "source": "/Users/paramdave/.codex/worktrees/v1-private-market-opportunity-creation/FINNOR",
+      "head": "bd43f7a31862f5528d87fa522816c4a7fb0c6e3a",
+      "headTree": "846fe92a7f08f10efaaa28151e8ed9c67e28fb3a",
+      "headIsV2PredecessorNotV1Completion": true,
+      "archivalCandidateTree": "60aed481ad540c55c9a33d7bcfaddc0eef3b72b0",
+      "archivalPatchSha256": "8929ebc318b0e727aeadb680ca9a5a947bc0194375de359a3fa277911543dc68",
+      "archivedPostimagesMatch": 88,
+      "status": "ARCHIVAL_RECONSTRUCTION_VERIFIED_NOT_ACCEPTED_ENGINEERING_OR_ADMISSION",
+      "requiredForStandaloneX2": false,
+      "adoptedIntoX2": false
+    },
+    "cumulativeV": {
+      "scope": "V1_V5_CUMULATIVE_NOT_FRONTIER5_X1",
+      "head": "e5b82eed009b549c12e656e9f3b3ec626569b946",
+      "headTree": "faf091408e3573a88f1884de1ba6d3c5a3bc9d48",
+      "source": "/Users/paramdave/.factory/worktrees/v-closure-2026-10-14/FINNOR",
+      "latestIndexSha256": "f99af65b3584e7bcb1debfe274cb30c0c540f92358b9ddb13b80bdfad3dd3065",
+      "handoffSha256": "816ad7d93dd66014a5aa22d811fc50bf78c0fdc1c0d8d484b5cfd35f91921da5",
+      "indexedMembersVerified": 29,
+      "productFreezeFilesStillMatching": 1093,
+      "additionalHarnessDrift": "finnor-os/scripts/s5/owner-fixture.mts",
+      "status": "INCOMPLETE_NOT_ADMITTED_ACTIVATION_DISABLED",
+      "requiredForStandaloneX2": false,
+      "qualifiedBV": false,
+      "adoptedIntoX2": false
+    },
+    "serialIntegrationPredicates": [
+      "Accepted X1 no longer has an unsealed-handoff blocker; combined consumption remains unverified.",
+      "Inspected peer numeric migration prefixes repeat but full filenames do not collide with X2; validate actual applied ordering and shared DDL.",
+      "X2 migration parity is repaired: directory and bundle both contain 176 exact SQL files and CURRENT_MIGRATION_HEAD is 0193; migration-parity-after-001.json.",
+      "Reconcile exact changed shared-owner preimages and X1 backend package/lock differences before adopting any peer delta.",
+      "No qualified BV, protected admission, production or mature economics follows from a sealed local X1 handoff."
+    ]
+  },
+  "currentContinuation": {
+    "qualification": "HISTORICAL_THROUGH_087_SEE_RESULTING_DELIVERY_FOR_CURRENT_INSTALLED_CUT",
+    "asOf": "native-e2e-087-receipt-reconciled-resumption",
+    "checkpoint": "368755a222581ad9c49ae4d15c2dfd661cc4ccd4",
+    "recoverableContinuationCommit": "ba92228c5ac74d106118d1bb7a9f887c8d54f27a",
+    "recoverableContinuationTree": "edba0bf55010b84fcecc5776c7d06488f403e7fc",
+    "laterContinuationRecordedHere": true,
+    "precedingScannedSourceContinuation": {
+      "commit": "c4abdb97b4a6f39a0944dc26cc7fae1797e16a95",
+      "tree": "cfe4ecefeef8d31a608ee36177e516c6723c7b2a",
+      "fixtureExtensionsAbsentFromThatHistoricalCommit": true,
+      "fixtureExtensionsAndPrincipalRepairPresentInResumeCommit": true,
+      "finalReleaseSeal": false
+    },
+    "sourceContracts": {
+      "artifact": "source-contract-008/result.json",
+      "pass": 20,
+      "fail": 0
+    },
+    "nativeReview": {
+      "artifact": "native-e2e-068/results.json",
+      "exitArtifact": "native-e2e-068/driver-exit.json",
+      "pass": 12,
+      "fail": 0,
+      "exitCode": 0,
+      "intendedPreRepairFailures": "native-e2e-067/results.json",
+      "actualBlockedSql": true,
+      "zeroPhysicalReadsAfterCommittedRevocation": true,
+      "heldOutBusinessReleased": false,
+      "migrationRepair": "0193_frontier5_x2_authority_custody.sql",
+      "historicalMigrationsRewritten": false
+    },
+    "focusedTypecheck": {
+      "artifact": "native-driver-typecheck-057.log",
+      "status": "PASS"
+    },
+    "currentFixtureTypecheck": {
+      "artifact": "native-driver-typecheck-060.log",
+      "status": "PASS",
+      "retainedFailure": {
+        "artifact": "native-driver-typecheck-059.log",
+        "boundary": "S8_FIXTURE_DUPLICATE_OPERATION_PROPERTY"
+      },
+      "repair": "DIAGNOSTIC_TAG_KIND_PRESERVES_ACTUAL_COMMAND_OPERATION",
+      "readOnlyS8Review": "NO_ACTIONABLE_FINDINGS_NOT_RUNTIME_PROOF",
+      "earlier058PassAppliesOnlyToEarlierFixture": true
+    },
+    "backendTypecheck": {
+      "artifact": "native-typecheck-038.log",
+      "status": "PASS"
+    },
+    "backendInclusiveLint": {
+      "artifact": "native-lint-046.log",
+      "status": "PASS"
+    },
+    "installedBuilds": [
+      "installed-001",
+      "installed-002",
+      "installed-003",
+      "installed-004",
+      "installed-005",
+      "installed-006",
+      "installed-007",
+      "installed-008"
+    ],
+    "principalIsolationRepair": {
+      "retainedFailure": "native-e2e-079/mounted-work-8abcfc0d-82b4-421e-aaae-bedd03bad48f/result.json",
+      "previousPrincipalTitleViolations": 6,
+      "implementation": "WORKSPACE_INSTANCE_KEYED_BY_RESOLVED_PRINCIPAL_AND_OPEN_CLOSED_ACCESS",
+      "typecheck": {
+        "artifact": "principal-scope-typecheck-001.log",
+        "status": "PASS"
+      },
+      "lint": {
+        "artifact": "principal-scope-lint-001.log",
+        "status": "PASS"
+      },
+      "freshBuild": {
+        "installation": "installed-007",
+        "status": "PASS",
+        "manifest": "installed-007/build-manifest.json",
+        "buildId": "x2-2f5236312186a73b50d0694ddc6e53df5c9b2a193482d57b7fbf83fa2646b4e0",
+        "wallMs": 194216.453917,
+        "backendStaticPages": 66,
+        "fiveEmittedDigestsUnchangedFrom004Through006": true,
+        "maintainedFrontendMode": "DEVELOPMENT"
+      },
+      "mountedRegression": "NOT_RUN_080_AND_081_FAIL_AT_FRESH_BUSINESS_082_AT_BROWSER_LAUNCH",
+      "runtimeVerified": false
+    },
+    "latestInstalledExecution": {
+      "run": "native-e2e-087",
+      "installation": "installed-008",
+      "pass": 13,
+      "fail": 0,
+      "exitCode": 0,
+      "renderingRelocationAndOriginalLineage": "PASS",
+      "freshFourActionIndependentBusiness": "PASS",
+      "maintainedClientHttpProjection": "PASS_NOT_MOUNTED",
+      "endingSourceOracleRuntimeInstalledCustody": "PASS",
+      "executionReceipt": "reconstruction-native-015.json",
+      "seedAbsentThroughoutEpisode": true,
+      "seedRestored": true,
+      "mounted": "NOT_REQUESTED_BROWSER_LAUNCH_BLOCKED",
+      "completionClaimed": false
+    },
+    "currentInstalledCrashRecoveryExecution": {
+      "run": "native-e2e-085",
+      "installation": "installed-008",
+      "productRebuilt": true,
+      "pass": 14,
+      "fail": 0,
+      "exitCode": 0,
+      "freshFourActionIndependentBusiness": "PASS",
+      "emittedS6S8Lifecycle": "PASS",
+      "physicalWorkerSIGKILLAfterIndependentAcceptance": "PASS",
+      "naturalLeaseExpiryAndOriginalQuarantine": "PASS",
+      "originalObservationAfterOwnerRestart": "PASS",
+      "originalReconciliationEvidenceRefusal": "PASS",
+      "actualApiRestart": "PASS",
+      "endingSourceOracleRuntimeCustody": "PASS",
+      "endingInstalledCustody": "PASS",
+      "executionReceipt": "reconstruction-native-013.json",
+      "seedAbsentThroughoutEpisode": true,
+      "seedRestored": true,
+      "mounted": "NOT_REQUESTED_BROWSER_LAUNCH_BLOCKED",
+      "principalIsolationRegression": "NOT_RUN",
+      "completionClaimed": false
+    },
+    "precedingMountedPreconditionExecution": {
+      "run": "native-e2e-082",
+      "installation": "installed-008",
+      "productRebuilt": true,
+      "pass": 8,
+      "fail": 1,
+      "exitCode": 1,
+      "freshFourActionIndependentBusiness": "NOT_RUN_BROWSER_LAUNCH_UNAVAILABLE",
+      "failure": "FRESH_TASK_OWNED_BROWSER_CONTEXT_UNAVAILABLE",
+      "savedDiagnostic": "browser-launch-diagnostic-001/result.json",
+      "emittedS6S8Lifecycle": "PASS",
+      "mountedStagesExecuted": 0,
+      "endingSourceOracleRuntimeCustody": "PASS",
+      "endingInstalledCustody": "PASS",
+      "executionReceipt": "reconstruction-native-010.json",
+      "seedAbsentThroughoutEpisode": true,
+      "seedRestored": true,
+      "frontendDiagnosticInstrumentation": false,
+      "principalIsolationRegression": "NOT_RUN",
+      "completionClaimed": false,
+      "preceding081": {
+        "run": "native-e2e-081",
+        "failure": "X2_S8_NATIVE_REFERENCE_DELIVERY_UNPASSED",
+        "ownerCode": "LEDGER_UNAVAILABLE",
+        "savedDiagnostic": "native-081-owner-diagnostic-001.log",
+        "firstFreshDraft": {
+          "status": "VERIFIED",
+          "possibleEgress": true,
+          "acknowledged": true
+        },
+        "transitionReferenceDelivery": {
+          "status": "RETRY",
+          "attempts": 1,
+          "presentInOriginalS6Journal": false
+        },
+        "underlyingOperationalException": "NOT_ESTABLISHED",
+        "endingCustody": "PASS",
+        "seedRestored": true
+      },
+      "preceding080": {
+        "run": "native-e2e-080",
+        "failure": "X2_S8_ACTUAL_CURRENT_INPUT_REQUIRED",
+        "savedDiagnostic": "native-080-failure-diagnostic-001.json",
+        "initialObservationAgeMs": 29101,
+        "refusalEventObservationAgeMs": 36962,
+        "maxCurrentnessMs": 30000,
+        "possibleEgress": false,
+        "latencyRootCause": "NOT_ESTABLISHED",
+        "diskOrSwapCausality": "NOT_ESTABLISHED"
+      }
+    },
+    "s6OperationalExceptionDiagnostic": {
+      "stoppedCopiedDatabase": {
+        "artifact": "native-081-owner-diagnostic-001.log",
+        "code": "LEDGER_UNAVAILABLE",
+        "originalDatabaseModified": false
+      },
+      "retainedReadProbe": {
+        "artifact": "s6-retained-read-diagnostic-001/result.json",
+        "requests": 17,
+        "maximumWallMs": 98.202042,
+        "status": "NOT_REPRODUCED"
+      },
+      "exactReferenceProbe": {
+        "artifact": "s6-retained-append-diagnostic-003/result.json",
+        "httpStatus": 200,
+        "wallMs": 47.803583,
+        "status": "NOT_REPRODUCED_COPY_ONLY",
+        "installedAcceptance": false
+      },
+      "retainedProbeBootstrapFailure": "s6-retained-append-diagnostic-002/result.json",
+      "productChange": "BOUNDED_FIXED_LABEL_AND_ALLOWLISTED_SYSTEM_ERROR_CLASSIFICATION_ONLY",
+      "typecheck": {
+        "artifact": "s6-operational-diagnostic-typecheck-001.log",
+        "status": "PASS"
+      },
+      "lint": {
+        "artifact": "s6-operational-diagnostic-lint-001.log",
+        "status": "PASS"
+      },
+      "freshAffectedBuild": {
+        "installation": "installed-008",
+        "status": "PASS",
+        "manifest": "installed-008/build-manifest.json",
+        "buildId": "x2-121da14e473030ba481a19a011a05fa1b90d93e17bdd0c51b0a16f0e53516504",
+        "wallMs": 228268.2265,
+        "backendStaticPages": 66,
+        "ledgerDigest": "dfe9922901bf7a5249da9d5b461348b0477957ac8e3e788fb518320a3cc47677",
+        "otherFourEmittedDigestsUnchanged": true
+      },
+      "causeOrRepairEstablished": false
+    },
+    "generatedStaticCompatibility": {
+      "artifact": "generated-compatibility-001/result.json",
+      "pass": 6,
+      "fail": 0,
+      "checks": [
+        "workspace-contract",
+        "capability-manifest",
+        "openapi-client",
+        "human-forms",
+        "authorization-matrix",
+        "action-release-manifest"
+      ],
+      "runtimeBusinessProof": false
+    },
+    "blankBrowserDiagnostic": {
+      "artifact": "browser-launch-diagnostic-001/result.json",
+      "status": "FAILED",
+      "phase": "launch",
+      "observed": "VISIBLE_CHROME_LAUNCH_TIMEOUT",
+      "launchTimeoutMs": 15000,
+      "attempts": 1,
+      "savedAuthenticationLoaded": false,
+      "applicationVisited": false,
+      "sharedInstallationOrPolicyChanged": false,
+      "furtherBrowserRetries": "FRESH_PREFLIGHT_ONLY_BEFORE_ANOTHER_APPLICATION_CAMPAIGN",
+      "laterRetainedDiagnostics": [
+        {
+          "artifact": "browser-launch-diagnostic-002/result.json",
+          "status": "FAILED",
+          "phase": "launch",
+          "launchTimeoutMs": 15000
+        },
+        {
+          "artifact": "browser-launch-diagnostic-003/result.json",
+          "status": "FAILED_SHORT_OWNED_TMPDIR_HYPOTHESIS",
+          "phase": "launch",
+          "launchTimeoutMs": 15000
+        }
+      ],
+      "browserRootCauseEstablished": false
+    },
+    "resumedBrowserPreflight": {
+      "artifact": "browser-startup-investigation-001/result.json",
+      "assignedDesktop": "TARGET_CREATE_TARGET_BLOCKED_POLICY_UNCHANGED",
+      "systemChrome": "LAUNCH_TIMEOUT_15000MS",
+      "observedOwnedProcess": 18276,
+      "privateSample": "browser-startup-investigation-001/private/owned-process.sample.txt",
+      "observedMainThreadBoundary": "NSFileManager_ubiquityIdentityToken_CLOUDDOCS_SYNCHRONOUS_XPC_REPLY",
+      "underlyingPlatformCause": "NOT_ESTABLISHED",
+      "matchingRootHeadedBrowser": "browser-root-preflight-001/result.json",
+      "matchingRootHeadedBrowserResult": "LAUNCH_TIMEOUT_15000MS",
+      "normalPlatformHomeComparison": "browser-platform-home-001/result.json",
+      "normalPlatformHomeResult": "LAUNCH_TIMEOUT_15000MS",
+      "browserLaunchesStopped": true,
+      "applicationCampaignStarted": false,
+      "mountedPrivacyRegression": "BLOCKED_NOT_VERIFIED",
+      "unrelated080And081CausesInferred": false
+    },
+    "precedingPassingStandaloneInstalledExecution": {
+      "run": "native-e2e-075",
+      "installation": "reconstructed-installed-001",
+      "originalProductInstallation": "installed-006",
+      "productRebuilt": false,
+      "pass": 12,
+      "fail": 0,
+      "exitCode": 0,
+      "emittedS6S8Lifecycle": "PASS",
+      "mounted": "NOT_REQUESTED_API_WORKER_CONTROL",
+      "freshFourActionIndependentBusiness": "PASS",
+      "maintainedClientHttpProjection": "PASS_NOT_MOUNTED_BROWSER",
+      "actualApiRestart": "PASS",
+      "originalReconciliationEvidenceRefusal": "PASS",
+      "endingSourceOracleRuntimeCustody": "PASS",
+      "endingInstalledCustody": "PASS",
+      "containsLaterReviewRepairs": true,
+      "reconstructionReceipt": "reconstructed-installed-001/reconstruction.json",
+      "executionReceipt": "reconstruction-native-003.json",
+      "seedAbsentThroughoutEpisode": true,
+      "seedRestored": true,
+      "scope": "STANDALONE_API_WORKER_EPISODE_NOT_FULL_MOUNTED_ACCEPTANCE"
+    },
+    "latestMountedExecution": {
+      "run": "native-e2e-082",
+      "pass": 8,
+      "fail": 1,
+      "exitCode": 1,
+      "mountedStagesPass": 0,
+      "login": "NOT_RUN",
+      "focusReloadAndRootBoundary": "NOT_RUN",
+      "failedStage": "PRECONDITION_BEFORE_MOUNTED_STAGES",
+      "boundary": "FRESH_TASK_OWNED_BROWSER_CONTEXT_UNAVAILABLE",
+      "laterLifecycle": "NOT_RUN",
+      "endingCustody": "PASS",
+      "seedRestored": true,
+      "preceding079": {
+        "run": "native-e2e-079",
+        "mountedStagesPass": 8,
+        "freshFourActionIndependentBusiness": "PASS_STAGE_NOT_OVERALL_EPISODE",
+        "canonicalSuspendedRevocation": "PASS",
+        "failedStage": "principal-switch-and-delayed-investigation-list",
+        "failure": "PRIVATE_RESPONSE_RESURRECTION",
+        "previousPrincipalTitleViolations": 6,
+        "observerOverflow": false,
+        "routeCoverage": "NOT_RUN",
+        "endingCustody": "PASS",
+        "seedRestored": true
+      },
+      "preceding076": {
+        "run": "native-e2e-076",
+        "mountedStagesPass": 7,
+        "freshFourActionIndependentBusiness": "PASS_STAGE_NOT_OVERALL_EPISODE",
+        "delayedWorkOfflineLogoutExpirySdkRefresh": "PASS",
+        "failedStage": "canonical-revocation-and-delayed-response",
+        "failure": "OWNER_DATABASE_23514_INVALID_INACTIVE_FIXTURE_VALUE",
+        "repair": "CANONICAL_SUSPENDED_VALUE_PASSES_079",
+        "lastTwoStages": "NOT_RUN"
+      },
+      "retainedPriorFailures": [
+        {
+          "run": "native-e2e-077",
+          "boundary": "NEXT_DEV_COLD_CANVAS_PUT_500"
+        },
+        {
+          "run": "native-e2e-074",
+          "boundary": "S6_REFERENCE_LEDGER_TRANSPORT_UNAVAILABLE_MATCHING_COMMITMENT_PREPARED_NO_POSSIBLE_EGRESS_ROOT_CAUSE_UNESTABLISHED"
+        },
+        {
+          "run": "native-e2e-072",
+          "boundary": "EXACT_NESTED_PARAMETERS_LABEL"
+        },
+        {
+          "run": "native-e2e-073",
+          "boundary": "NEXT_DEV_CANVAS_PUT_500_UNEXPECTED_END_OF_JSON"
+        },
+        {
+          "run": "native-e2e-071",
+          "boundary": "BROWSER_OBSERVER_NAMED_ARROW_SERIALIZATION"
+        },
+        {
+          "run": "native-e2e-070",
+          "boundary": "WORLD_TIMEOUT_WITH_FRONTEND_ENOSPC"
+        }
+      ]
+    },
+    "coldFrontendDiagnostic": {
+      "httpOnly": {
+        "artifact": "cold-frontend-diagnostic-001/result.json",
+        "requests": 20,
+        "status": "NOT_REPRODUCED"
+      },
+      "mounted": {
+        "run": "native-e2e-078",
+        "status": "FAIL_DIAGNOSTIC_NOT_INSTALLED_ACCEPTANCE",
+        "trace": "native-078-frontend-parse-failures.jsonl",
+        "observed": "EMPTY_NEXT_DEV_BUILD_MANIFEST_IN_LOAD_MANIFEST",
+        "canvasPutAndSqlFocus": "PASS",
+        "followingInvestigationReload": "HTTP_500",
+        "originalCacheAndSeedRestored": true
+      },
+      "preparationRepair": "SERIAL_REAL_UNAUTHENTICATED_ROUTES_EXPECTED_STATUSES_PASS_UNINSTRUMENTED_079_AND_080",
+      "productSourceChanged": false,
+      "businessDeadlineRenewed": false
+    },
+    "newVerification": {
+      "installedOriginalUseByteMatrix": {
+        "artifact": "native-e2e-083/results.json",
+        "casesPassed": 9,
+        "nativeGatesPassed": 11,
+        "exitCode": 0,
+        "originalDeliveryAndExactRestoration": true,
+        "separateUnchangedFreshBusiness": "PASS",
+        "actualApiRestartAndEndingCustody": "PASS"
+      },
+      "typedS8CommandNegatives": {
+        "artifact": "native-e2e-084/native-s8-command-negative-reports.json",
+        "phasesPassed": 7,
+        "refusalsPassed": 53,
+        "nativeGatesPassed": 13,
+        "exitCode": 0,
+        "separateUnchangedFreshBusiness": "PASS",
+        "liveUse": "NOT_RUN",
+        "independentlyQualifiedSecondDomain": "NOT_SUPPLIED",
+        "lateUnvalidatedRelay": "WITHDRAWN_BYTE_EXACTLY_TO_TESTED_INSTALLATION_008_FIXTURES",
+        "withdrawnPatch": "live-use-relay-unvalidated-001.patch"
+      },
+      "affectedEmittedRecovery": {
+        "fullCrashAndOriginalRecovery": {
+          "artifact": "native-e2e-085/results.json",
+          "pass": 14,
+          "fail": 0,
+          "exitCode": 0
+        },
+        "opaqueCancelledExpiredParent": "NOT_RUN_ON_CURRENT_EMITTED_CUT"
+      },
+      "currentInstalledDrift": {
+        "semantic": {
+          "artifact": "native-e2e-086/results.json",
+          "receipt": "reconstruction-native-014.json",
+          "pass": 10,
+          "fail": 0,
+          "exitCode": 0
+        },
+        "rendering": {
+          "artifact": "native-e2e-087/results.json",
+          "receipt": "reconstruction-native-015.json",
+          "pass": 13,
+          "fail": 0,
+          "exitCode": 0
+        },
+        "siblingWorkAndInputPropagation": "SOURCE_NATIVE_098_PASS_NOT_FINAL_INSTALLED"
+      },
+      "furtherAdditions": "RESUMED_ORIGINAL_SCOPE_ONLY",
+      "finalAcceptance": false
+    },
+    "emittedConsumerPolicyFences": {
+      "artifact": "emitted-consumer-policy-002/result.json",
+      "pass": 17,
+      "fail": 0,
+      "nodeMode": "production",
+      "qualification": "ACTUAL_EMITTED_CONFIGURATION_OWNER_NOT_COMMAND_OR_BUSINESS",
+      "applicationCommandOrEffectIssued": false,
+      "originalPolicyDeadlineRenewed": false,
+      "requiredLoadedConsumerPinMutated": true,
+      "retainedWrongBoundaryProbe": "emitted-consumer-policy-001/result.json"
+    },
+    "explicitVisibleChromeMode": "TASK_OWNED_VISIBLE_FRESH_NO_SAVED_AUTH_PREFLIGHT_REQUIRED",
+    "finalReleaseSeal": false,
+    "codeComplete": false,
+    "e2eDevVerified": false
+  },
+  "recoverableCheckpoint": {
+    "qualification": "HISTORICAL_049_NOT_CURRENT_STATUS",
+    "date": "2026-10-15",
+    "description": "checkpoint.md",
+    "finalReleaseSeal": false,
+    "currentNativeRun": "native-e2e-049",
+    "currentNativeStatus": "FAIL",
+    "pass": 6,
+    "fail": 1,
+    "exitCode": 1,
+    "uiAcquisitionAndCanonicalCheck": "PASS",
+    "learnedOperations": 4,
+    "learnedFields": 9,
+    "freshWork": "FAIL_X2_TARGET_ENTITY_OUTSIDE_OBSERVED_CONTEXT",
+    "maintainedFreshProjection": "NOT_REACHED",
+    "endingSourceCustody": "PASS_NOT_ENDING_EXECUTABLE_ORACLE_CUSTODY",
+    "databaseStopped": true,
+    "passiveTransport": {
+      "artifact": "passive-provider-004/result.json",
+      "pass": 37,
+      "fail": 0,
+      "nativeOrMounted": false
+    },
+    "structuralReference": {
+      "artifact": "structural-projection-002/result.json",
+      "pass": 16,
+      "fail": 0,
+      "externalLaw": false
+    },
+    "static": {
+      "backend": "native-typecheck-033.log",
+      "driver": "native-driver-typecheck-034.log",
+      "explicitLint": [
+        "native-lint-039.log",
+        "native-lint-040.log"
+      ],
+      "retainedFailure": "native-typecheck-032.log"
+    },
+    "retainedFailures": [
+      {
+        "run": "native-e2e-046",
+        "pass": 2,
+        "fail": 2,
+        "boundary": "EARLIER_EMPTY_DOCUMENTATION_PROFILE_GUARD"
+      },
+      {
+        "run": "native-e2e-047",
+        "pass": 4,
+        "fail": 1,
+        "boundary": "ACTUAL_NULL_TO_OBJECT_SCHEMA_DRIFT_ORIGINAL_UNKNOWN"
+      },
+      {
+        "run": "native-e2e-048",
+        "pass": 4,
+        "fail": 1,
+        "boundary": "EIGHT_VERIFIED_UI_TRANSITIONS_THEN_MISSING_INITIAL_FIELD_SOURCE_REFS"
+      },
+      {
+        "run": "native-e2e-049",
+        "pass": 6,
+        "fail": 1,
+        "boundary": "FROZEN_CHECKED_UI_MODEL_THEN_FRESH_ENTITY_CONTEXT_REFUSAL"
+      }
+    ],
+    "independentReviewOpenFindings": [
+      {
+        "priority": "P1",
+        "boundary": "STALE_SESSION_CANONICAL_WORK_TRANSITION"
+      },
+      {
+        "priority": "P2",
+        "boundary": "ENDING_EXECUTABLE_ORACLE_PINS"
+      }
+    ],
+    "installed": "NOT_RUN",
+    "mounted": "NOT_RUN",
+    "codeComplete": false,
+    "e2eDevVerified": false
+  },
+  "evidenceRoot": "/Users/paramdave/.factory/worktrees/frontier5-x2-software-semantics-compiler",
+  "nativeExecutor": {
+    "cwd": "finnor-os",
+    "argv": [
+      "node",
+      "node_modules/tsx/dist/cli.mjs",
+      "scripts/x2/run-native-e2e.mts"
+    ],
+    "environment": {
+      "FINNOR_X2_EVIDENCE_DIR": "NEW_ABSOLUTE_PRIVATE_DIRECTORY_REQUIRED",
+      "FINNOR_X2_TEST_SURFACE": "api",
+      "FINNOR_X2_TEST_S8": "1"
+    },
+    "qualification": "ORDINARY_AUTHENTICATED_DEVELOPMENT_NOT_PROTECTED",
+    "executedConfiguredPositive": "native-e2e-023/results.json",
+    "executedBacklogPositive": {
+      "additionalEnvironment": {
+        "FINNOR_X2_TEST_REFERENCE_BACKLOG": "1"
+      },
+      "artifact": "native-e2e-029/results.json",
+      "exitArtifact": "native-e2e-029/driver-exit.json",
+      "requiredCases": 11,
+      "status": "PASS"
+    },
+    "executedBeliefInvalidation": {
+      "environment": {
+        "FINNOR_X2_TEST_S8": "0",
+        "FINNOR_X2_TEST_RESOURCE_BELIEF_CHANGE": "1"
+      },
+      "artifact": "native-e2e-027/results.json",
+      "exitArtifact": "native-e2e-027/driver-exit.json",
+      "requiredCases": 8,
+      "status": "PASS"
+    },
+    "retainedFailures": [
+      {
+        "run": "native-e2e-019",
+        "predicate": "wrong original reconciliation accepted",
+        "status": "FAIL"
+      },
+      {
+        "run": "native-e2e-020",
+        "predicate": "unpublished original reference",
+        "status": "FAIL"
+      },
+      {
+        "run": "native-e2e-021",
+        "predicate": "revoked prepared profile reached physical egress",
+        "status": "FAIL"
+      },
+      {
+        "run": "native-e2e-024",
+        "predicate": "resource belief fixture precondition",
+        "status": "FAIL"
+      },
+      {
+        "run": "native-e2e-025",
+        "predicate": "invalidated belief allowed forward spending",
+        "status": "FAIL"
+      },
+      {
+        "run": "native-e2e-026",
+        "predicate": "driver expected FAILED instead of correct STALE",
+        "status": "FAIL"
+      },
+      {
+        "run": "native-e2e-028",
+        "predicate": "bounded backlog hid required original",
+        "status": "FAIL"
+      },
+      {
+        "run": "native-e2e-031",
+        "predicate": "unrelated reference draining exceeded pre-wire fence before intended physical crash",
+        "status": "FAIL"
+      },
+      {
+        "run": "native-e2e-033",
+        "predicate": "driver expected four reconciliation events despite required same-original UNKNOWN then OBSERVED",
+        "status": "FAIL"
+      },
+      {
+        "run": "native-e2e-034",
+        "predicate": "actual S8 recheck exceeded unchanged pre-wire fence before intended submission fault",
+        "status": "FAIL"
+      },
+      {
+        "run": "native-e2e-035",
+        "predicate": "forward deadline precheck blocked lawful original possible-effect observation",
+        "status": "FAIL"
+      }
+    ],
+    "physicalRecovery": {
+      "driverImplemented": true,
+      "variantEnvironment": "FINNOR_X2_TEST_RECOVERY",
+      "variants": [
+        "full",
+        "opaque",
+        "deadline",
+        "cancel"
+      ],
+      "configuredS8": [
+        "full",
+        "opaque",
+        "cancel"
+      ],
+      "unconfiguredS8": [
+        "deadline"
+      ],
+      "originalLeasesExpireNaturally": true,
+      "recheckRepairStatus": "042_TERMINAL_043_CANCEL_044_BACKLOG_045_FINAL_LOCK_PASS_NOT_FINAL_SEALED",
+      "executedCurrentBacklog": {
+        "run": "native-e2e-044",
+        "artifact": "native-e2e-044/results.json",
+        "status": "PASS",
+        "exitCode": 0,
+        "requiredCases": 11,
+        "originalRecordsAccepted": 96,
+        "maximumAttemptsPerRecord": 1,
+        "originalDigestsRetained": true,
+        "unresolvedS4Records": 0,
+        "nativeFreshBusiness": "PASS",
+        "batchAndBacklogLimitsChanged": false,
+        "newAllowance": false,
+        "sourceCustody": "PASS",
+        "finalSealedCut": false
+      },
+      "executedCurrentFinalLock": {
+        "run": "native-e2e-045",
+        "artifact": "native-e2e-045/results.json",
+        "status": "PASS",
+        "exitCode": 0,
+        "requiredCases": 8,
+        "genuineS8RecheckBeforeRevocation": true,
+        "actualFinalSqlLockReached": true,
+        "nativeRequests": 1,
+        "possibleEgress": false,
+        "independentApplicationChanged": false,
+        "originalDeadlineRetained": true,
+        "newAllowance": false,
+        "sourceCustody": "PASS",
+        "finalSealedCut": false
+      },
+      "executedAcceptedCancellation": {
+        "run": "native-e2e-043",
+        "artifact": "native-e2e-043/results.json",
+        "exitArtifact": "native-e2e-043/driver-exit.json",
+        "status": "PASS",
+        "requiredCases": 10,
+        "configuredS8": true,
+        "acceptanceToKillMs": 132,
+        "naturalLeaseExpiryAndOriginalQuarantine": true,
+        "nativeStatus": "CANCELLED",
+        "canonicalWorkStatus": "cancelled",
+        "originalVerifiedRequests": 3,
+        "additionalChargePhases": {
+          "RECOVERY": 8
+        },
+        "newAllowance": false,
+        "externalRollbackClaimed": false,
+        "resourceReleaseGranted": false,
+        "businessCompletedClaimed": false,
+        "sourceCustody": "PASS",
+        "finalSealedCut": false
+      },
+      "executedCompletedCancellation": {
+        "run": "native-e2e-042",
+        "artifact": "native-e2e-042/results.json",
+        "exitArtifact": "native-e2e-042/driver-exit.json",
+        "status": "PASS",
+        "requiredCases": 11,
+        "configuredS8": true,
+        "canonicalAndNativeHistory": "COMPLETED_PRESERVED",
+        "originalVerifiedRequests": 4,
+        "repeatCreatesGeneration": false,
+        "resourceReleaseGranted": false,
+        "finalSealedCut": false,
+        "earlierUnconfiguredPass": "native-e2e-041"
+      },
+      "boundedCallbackStatic": {
+        "status": "PASS",
+        "backendTypecheck": "native-typecheck-028.log",
+        "driverTypecheck": "native-driver-typecheck-029.log",
+        "explicitAffectedLint": "native-lint-036.log",
+        "retainedImportFailure": "native-typecheck-027.log",
+        "dependencyFileConcurrency": 8,
+        "authorityCache": false,
+        "physicalTimeoutChanged": false,
+        "nativeMeterArtifact": "native-e2e-042/private/native-events.json",
+        "maximumConfiguredModelCurrentnessMs": 2216.216,
+        "maximumConfiguredS8RecheckMs": 1558.993,
+        "meterIsFinancialOrProgrammeQualification": false
+      },
+      "retainedCancellationFailures": [
+        {
+          "run": "native-e2e-038",
+          "exitCode": 1,
+          "pass": 9,
+          "fail": 1,
+          "reached": "ACCEPTED_ORIGINAL_OBSERVED_NATIVE_CANCELLED_CANONICAL_WORK_EXECUTING"
+        },
+        {
+          "run": "native-e2e-039",
+          "exitCode": 1,
+          "pass": 8,
+          "fail": 1,
+          "reached": "COMPLETED_NATIVE_HISTORY_REWRITTEN_BY_CANCEL"
+        }
+      ],
+      "retainedEarlierCallbackFailure": {
+        "run": "native-e2e-040",
+        "exitCode": 1,
+        "pass": 7,
+        "fail": 1,
+        "reached": "GENUINE_S8_RECHECK_THEN_FINAL_NATIVE_ATTEMPT_AFTER_PHYSICAL_CALLBACK_TIMEOUT",
+        "acceptedSubmissionInIndependentApplication": false,
+        "stickyPossibleEgressRetained": true,
+        "cancellationCase": "NOT_REACHED",
+        "sourceCustody": "PASS"
+      },
+      "executedOpaque": {
+        "run": "native-e2e-037",
+        "artifact": "native-e2e-037/results.json",
+        "exitArtifact": "native-e2e-037/driver-exit.json",
+        "requiredCases": 13,
+        "status": "PASS",
+        "acceptanceToKillMs": 126,
+        "opaqueDisposition": "UNKNOWN_NO_APPROVAL_NO_REPLAY_NO_RELEASE",
+        "laterDisposition": "SAME_ORIGINAL_OBSERVED_INDEPENDENT_BUSINESS_PASS",
+        "S8Uses": 4,
+        "S8EgressRechecks": 4,
+        "S8Reconciliations": 5,
+        "originalSubmissionReconciliations": [
+          "UNKNOWN",
+          "OBSERVED"
+        ],
+        "exactParameterReconciliationMutant": "409_S8_APPLICATION_RECONCILIATION_EVIDENCE",
+        "mounted": false
+      },
+      "executedDeadline": {
+        "run": "native-e2e-036",
+        "artifact": "native-e2e-036/results.json",
+        "exitArtifact": "native-e2e-036/driver-exit.json",
+        "requiredCases": 9,
+        "status": "PASS",
+        "originalSubmission": "VERIFIED_AFTER_ACTUAL_DEADLINE",
+        "canonicalWork": "blocked",
+        "sessionReason": "X2_ORIGINAL_BUSINESS_DEADLINE_EXPIRED",
+        "requests": 3,
+        "recoveryCharges": 6,
+        "forwardChargesAfterRecovery": 0,
+        "approvalOrResubmission": false,
+        "newAllowanceOrRelease": false
+      },
+      "executedFull": {
+        "run": "native-e2e-032",
+        "artifact": "native-e2e-032/results.json",
+        "exitArtifact": "native-e2e-032/driver-exit.json",
+        "requiredCases": 12,
+        "status": "PASS",
+        "acceptanceToKillMs": 221,
+        "physicalReads": 227,
+        "physicalReadLimit": 256,
+        "sameOriginalLineage": true,
+        "nativeOwnerRestartSameKeysAndJournals": true
+      },
+      "retainedOpaque": {
+        "run": "native-e2e-033",
+        "artifact": "native-e2e-033/results.json",
+        "exitArtifact": "native-e2e-033/driver-exit.json",
+        "status": "FAIL_DRIVER_EXPECTATION",
+        "opaqueBoundary": "PASS_UNKNOWN_NO_APPROVAL_NO_REPLAY_NO_RELEASE",
+        "laterIndependentBusinessGrade": "PASS",
+        "originalSubmissionReconciliations": [
+          "UNKNOWN",
+          "OBSERVED"
+        ],
+        "aggregateRerun": "native-e2e-037_PASS_OLD_FAILURE_RETAINED"
+      },
+      "retainedInterrupted": {
+        "run": "native-e2e-030",
+        "dispositionArtifact": "native-e2e-030/interrupted-disposition.json",
+        "status": "INCOMPLETE_NOT_PASS",
+        "reached": "actual queue-owning worker SIGKILL after exact independently observed submission acceptance",
+        "notEstablished": [
+          "natural lease expiry and recovery",
+          "ending-source custody",
+          "clean database shutdown"
+        ]
+      }
+    },
+    "notEstablished": [
+      "current-cut API and hybrid full reuse",
+      "mounted Work lifecycle and principal-repair acceptance",
+      "full declared development profile"
+    ],
+    "supersededBlockers": [
+      {
+        "predicate": "UI_ONLY_NATIVE_FRESH_REUSE",
+        "evidence": [
+          "native-e2e-083/results.json",
+          "native-e2e-087/results.json"
+        ],
+        "qualification": "INSTALLED_NATIVE_NOT_MOUNTED"
+      },
+      {
+        "predicate": "EMITTED_INSTALLED_EXECUTION",
+        "evidence": [
+          "native-e2e-083/results.json",
+          "native-e2e-084/results.json",
+          "native-e2e-085/results.json"
+        ]
+      },
+      {
+        "predicate": "CURRENT_EMITTED_SEMANTIC_AND_RENDERING_DRIFT",
+        "evidence": [
+          "native-e2e-086/results.json",
+          "native-e2e-087/results.json"
+        ]
+      },
+      {
+        "predicate": "INSTALLED_ORIGINAL_USE_BYTE_MATRIX",
+        "evidence": [
+          "native-e2e-083/results.json"
+        ],
+        "cases": 9
+      },
+      {
+        "predicate": "TYPED_S8_SEVEN_NONLIVE_NEGATIVE_PHASES",
+        "evidence": [
+          "native-e2e-084/native-s8-command-negative-reports.json"
+        ],
+        "refusals": 53
+      }
+    ]
+  },
+  "frozenObligations": {
+    "requestSnapshot": "../request.md outside source checkout",
+    "failureModel": "failure-model.md",
+    "shrinkAfterFailure": false,
+    "postCodeUnitTests": false,
+    "candidateExpectedTruthSource": "independent original evidence and external owner state",
+    "rejectionMustReachIntendedBoundary": true,
+    "unsupportedUnknownTimeoutIncluded": true
+  },
+  "profile": {
+    "revision": "development-v1",
+    "status": "FROZEN_DEVELOPMENT_DOMAIN_PARTIALLY_VERIFIED",
+    "applicationFamilies": [
+      "API-rich",
+      "accessible UI-only",
+      "hybrid"
+    ],
+    "operationFamilies": [
+      "read",
+      "preparation",
+      "persisted draft",
+      "validation",
+      "async submission",
+      "separately authorized commitment"
+    ],
+    "ceilings": {
+      "operations": 16,
+      "observableStateFields": 16,
+      "parametersPerOperation": 8,
+      "explorationInteractions": 64,
+      "transitionObservations": 256,
+      "operationsPerComposition": 8,
+      "compositionSearchNodes": 64,
+      "conditionalBranches": 8,
+      "unresolvedConsequentialEffectsPerOriginalAssignment": 1
+    },
+    "financialSemantics": "exact admitted strings/integers, currency/entity/unit/time/accounting basis; never display-rounded or JS-number-coerced",
+    "unsupported": [
+      "MFA requiring ungranted assistance",
+      "inaccessible state",
+      "prohibited exploration",
+      "unknown confirmation semantics",
+      "insufficient independent observation",
+      "unsupported quantity conversion"
+    ],
+    "measurementClaim": "engineering ceilings, not demonstrated mastery"
+  },
+  "resources": {
+    "originalEpisode": {
+      "computeDataIntegrationUsd": "100",
+      "humanSeconds": 900,
+      "aggregateSimultaneousPeakBytes": 17179869184,
+      "initialResponseSeconds": 30,
+      "wallSeconds": 3600,
+      "descendantsChargeOriginalParent": true,
+      "unknownMaterialCostsAreZero": false
+    },
+    "engineering": {
+      "heavyBuildsAndInstalledStacksConcurrent": 1,
+      "ownedDisposableDatabaseClusters": 1,
+      "ports": "dynamic loopback, exclude peer 19073",
+      "latestFreeDiskKiB": 158064,
+      "latestResourceObservation": "Post101 df observation; resulting-sequencer-resource-note-001.json and verified archive receipts",
+      "resourceConditionArtifact": "replay-resource-condition-081.json",
+      "stoppedDatabaseArchives": "001\u2013029,031\u2013080 and selected088\u2013097 byte/mode/link/inventory verified; interrupted030 and latest095/098/099/100/101 raw preserved",
+      "historicalGeneratedRuntimeArchive": "historical-reconstructed-installed-002-archive.json; complete byte/mode/link parity; compressed original retained",
+      "generatedBuildCacheReclaim": "generated-api-cache-reclaim-081.json",
+      "peerOrUncommittedCleanup": false,
+      "cleanup": "proven X2-created stopped regenerable scratch only, preserve raw evidence and final assets"
+    }
+  },
+  "custody": {
+    "developmentBusinessRules": "independent fixture/evaluator fixed before learner exposure",
+    "candidateInputs": [
+      "authorized mandate",
+      "current grants",
+      "lawful visible structures",
+      "permitted interactions"
+    ],
+    "privilegedEvaluatorStateAvailableToCandidate": false,
+    "protectedPopulation": "not supplied or generated by this development run",
+    "publicArtifactSecretsOrSessionHandles": false,
+    "evaluatorPromoterPrincipalsDistinct": true
+  },
+  "cases": [
+    {
+      "id": "A",
+      "requirement": "general acquisition and fresh reuse",
+      "ownerConsumer": "ComputerBroker/provider -> learner -> full model -> S4/P1 composition -> physical executor",
+      "input": "independently administered API/UI/hybrid applications; frozen model before fresh objective",
+      "expected": "fresh target and composition execute from learned algebra without app-specific engineer code",
+      "command": "nativeExecutor",
+      "artifact": [
+        "native-e2e-099/results.json",
+        "native-e2e-100/results.json",
+        "native-e2e-101/results.json"
+      ],
+      "status": "PASS_SELECTED_INSTALLED_API_PASSIVE_UI_AND_HYBRID_FRESH_REUSE_NOT_MOUNTED_OR_PROTECTED",
+      "remaining": [
+        "Other unpassed matrix cells and protected qualification remain separate; mounted103 passes its ten-stage journey."
+      ]
+    },
+    {
+      "id": "B",
+      "requirement": "independent predicate and composition checking",
+      "ownerConsumer": "separate checker -> canonical planner and dispatch consumer",
+      "input": "original observations, current owner state, deliberate typed candidate mutations",
+      "expected": "positive candidates pass; intended invalid mutations fail; unknown coverage remains unknown; false-valid and false-invalid separate",
+      "command": "nativeExecutor",
+      "artifact": [
+        "kernel-reference-readiness.json",
+        "source-contract-004/result.json",
+        "native-e2e-029/private/independent-discovery-grade.json",
+        "native-e2e-067/results.json",
+        "native-e2e-068/results.json",
+        "native-e2e-075/results.json"
+      ],
+      "status": "PARTIAL",
+      "remaining": [
+        "complete candidate mutation families and external coverage"
+      ]
+    },
+    {
+      "id": "C",
+      "requirement": "exact effects, authority and privacy",
+      "ownerConsumer": "S5 reservation -> S6 physical dispatch -> lawful independent readback",
+      "input": "positive current grant plus wrong actor/role/account/record/request; grant revocation and prompt injection",
+      "expected": "positive physical effect/readback settles exact identity; wrong or revoked dispatch has no wire effect; no leakage",
+      "command": "nativeExecutor",
+      "artifact": [
+        "native-e2e-022/results.json",
+        "native-e2e-029/results.json"
+      ],
+      "status": "PARTIAL",
+      "remaining": [
+        "all access-change phases, deception and injection cases"
+      ],
+      "currentPermissionReview": "110_ABORTED_ENOSPC_NO_EXIT_OR_ENDING_CUSTODY"
+    },
+    {
+      "id": "D",
+      "requirement": "semantic and rendering drift",
+      "ownerConsumer": "X2 validity -> P7 dependency closure -> planner/executor/Work",
+      "input": "independent rendering-preserving and same-label semantic revisions",
+      "expected": "lawful rendering revalidation; all affected semantics fenced; independent unrelated operations remain valid; history retained",
+      "command": "nativeExecutor",
+      "artifact": [
+        "native-e2e-062/results.json",
+        "native-e2e-086/results.json",
+        "native-e2e-087/results.json"
+      ],
+      "status": "PRIOR_INSTALLED_DRIFT_AND_SOURCE_098_REAL_SIBLING_INPUT_CLOSURE_PASS",
+      "remaining": [
+        "resulting installed cut and exact compatibility"
+      ]
+    },
+    {
+      "id": "E",
+      "requirement": "recovery, concurrency and original parent accounting",
+      "ownerConsumer": "durable queue/physical worker -> S5/S6 reconciliation -> canonical result",
+      "input": "SIGKILL after accepted egress before acknowledgement; duplicate jobs, competing Work, session loss, delay, cancellation and exhaustion",
+      "expected": "same original effect/obligation/parent/deadline; no duplicate dispatch or false release; unreconciled exposure and costs UNKNOWN",
+      "command": "nativeExecutor",
+      "artifact": [
+        "native-e2e-015/results.json",
+        "native-e2e-027/results.json",
+        "native-e2e-030/interrupted-disposition.json",
+        "native-e2e-031/results.json",
+        "native-e2e-032/results.json",
+        "native-e2e-033/results.json",
+        "native-e2e-035/results.json",
+        "native-e2e-036/results.json",
+        "native-e2e-037/results.json",
+        "native-e2e-038/results.json",
+        "native-e2e-039/results.json",
+        "native-e2e-040/results.json",
+        "native-e2e-041/results.json",
+        "native-e2e-042/results.json",
+        "native-e2e-043/results.json"
+      ],
+      "status": "PARTIAL",
+      "remaining": [
+        "Current completed-history cancellation and remaining concurrency/access-phase variants still unpassed;107/108 close only cancelled/expired-original observation."
+      ],
+      "currentInstalledRecovery": [
+        "native-e2e-100/results.json",
+        "native-e2e-101/results.json",
+        "native-e2e-107/results.json",
+        "native-e2e-108/results.json"
+      ],
+      "siblingConcurrency": "native-e2e-098/results.json_PASS_SOURCE_NATIVE",
+      "completedHistoryCancellation": "109_FAILED_X2_RESPONSE_LOST_BEFORE_INTENDED_CASE"
+    },
+    {
+      "id": "F",
+      "requirement": "actual canonical planning and owner consumer",
+      "ownerConsumer": "authenticated Work/API -> canonical state -> durable queue -> physical worker -> app -> observer -> action/effect/receipt/Work",
+      "input": "fresh withheld permissions-portal reporting assignment",
+      "expected": "typed model consumed; draft/validation/submission/commitment distinct; toast cannot complete Work; exact durable result reaches mounted Work",
+      "command": "nativeExecutor",
+      "artifact": [
+        "native-e2e-029/results.json",
+        "native-e2e-075/results.json",
+        "native-e2e-079/results.json",
+        "native-e2e-080/results.json"
+      ],
+      "status": "103_PASS_MOUNTED_CANONICAL_INDEPENDENT_BUSINESS",
+      "remaining": [
+        "historical080/081 causes unestablished; do not infer repair from103"
+      ],
+      "currentInstalledHybridPositive": "native-e2e-100/results.json_PASS",
+      "currentInstalledApiAndUiPositive": [
+        "native-e2e-099/results.json",
+        "native-e2e-101/results.json"
+      ]
+    },
+    {
+      "id": "G",
+      "requirement": "executable fallback",
+      "ownerConsumer": "actual existing compatible callee under remaining original authority/resources",
+      "input": "unsupported/drift/checker/budget outcome",
+      "expected": "lawful admitted fallback actually executes and is independently checked; unavailable fallback remains blocked/UNKNOWN",
+      "command": "nativeExecutor with FINNOR_X2_TEST_RECOVERY=full|opaque|deadline|cancel under each registered S8/surface configuration",
+      "artifact": [
+        "native-e2e-042/results.json",
+        "native-e2e-043/results.json",
+        "native-e2e-100/results.json",
+        "native-e2e-101/results.json"
+      ],
+      "status": "PASS_AVAILABLE_ORIGINAL_EFFECT_OBSERVATION_FALLBACK_FORWARD_REPAIR_UNADMITTED",
+      "callee": "authenticated application-resume -> existing application worker reconcilePossibleRequests; application-cancel preserves original observation",
+      "supportedFallback": "Read and reconcile the same original possibly accepted effect under retained observation authority; preserve original grant, parent allocation and deadline.",
+      "unsupportedForwardFallback": "NO_ADMITTED_GENERIC_BROWSER_WRITE_OR_STALE_CHECKER_DRIFT_BUDGET_REPAIR_CALLEE; retain BLOCKED or UNKNOWN, no new effect identity.",
+      "remaining": []
+    },
+    {
+      "id": "H",
+      "requirement": "maintained mounted Work experience and identity non-resurrection",
+      "ownerConsumer": "canonical API readers -> Work/WorldExplorer/focus",
+      "input": "keyboard/pointer/accessibility; reload, Work/root/principal changes, refresh, genuine fresh sign-in, offline/reconnect, revocation, delayed response",
+      "expected": "model/operations/evidence/authority/drift/effects/costs visible; no prior-principal data resurrection; complete only from canonical independent observation",
+      "command": "nativeExecutor",
+      "artifact": "native-e2e-103/mounted-work-94cfeaf6-b30d-4a4f-83ba-c7c2c76ef74f/result.json",
+      "status": "103_PASS_UNCHANGED_TEN_STAGE_MOUNTED_LIFECYCLE",
+      "remaining": [
+        "corrected acquisition404 UI resubmission is a separate unexecuted intake case"
+      ],
+      "correctedAcquisitionIntake": "intake-e2e-002/result.json_PASS_REGISTRATION_ONLY"
+    },
+    {
+      "id": "I",
+      "requirement": "final installed bytes, migrations, compatibility and reconstruction",
+      "ownerConsumer": "actual emitted API/worker/compiler/checker/provider; migration/job/generated/static/security/release",
+      "input": "fresh/upgrade/replay/restart/old-inflight jobs, ordinary roles, exact resolved locks, independent reconstruction",
+      "expected": "positive final installed chain and compatible legacy consumers; source/runtime/schema parity without hidden donor/peer links",
+      "command": "nativeExecutor",
+      "artifact": [
+        "native-e2e-068/results.json",
+        "native-e2e-075/results.json",
+        "installed-008/build-manifest.json",
+        "native-e2e-083/results.json",
+        "native-e2e-085/results.json",
+        "checkpoint-reconstruction-003.json",
+        "native-typecheck-038.log",
+        "native-driver-typecheck-060.log",
+        "native-lint-046.log"
+      ],
+      "status": "PASS_SELECTED_RESULTING_INSTALLED_AND_INDEPENDENT_REGULAR_FILE_RECONSTRUCTION_NOT_MOUNTED_OR_CLEAN_HOST",
+      "remaining": [
+        "current mounted repair acceptance",
+        "whole legacy suites remain inherited FAIL, not green"
+      ],
+      "currentInstalledAndReconstructed": [
+        "native-e2e-099/results.json",
+        "native-e2e-100/results.json",
+        "native-e2e-101/results.json",
+        "reconstructed-installed-005/reconstruction.json"
+      ],
+      "migrationParity": "migration-parity-after-001.json_PASS_176_EXACT_SQL_FILES_HEAD_0193",
+      "realOldInflightJobs": "native-e2e-090/results.json_and_native-e2e-095/results.json_PASS",
+      "legacyCompatibility": "legacy-s5-native-002_PASS; legacy-s8-native-003_13_PASS_2_INHERITED_FAIL; compatibility-baseline-002_six_exact_inherited_type_diagnostics_zero_source_escapes"
+    },
+    {
+      "id": "J",
+      "requirement": "matched X2-on/off/equipped comparator diagnostic and lifecycle costs",
+      "ownerConsumer": "registered diagnostic -> independent business oracle -> canonical resource/cost observations",
+      "input": "same application/version/fresh objectives/rights/models/resource envelope; fixed cold/mature reuse horizon and demand",
+      "expected": "complete acquisition/check/execution/recovery/invalidation/maintenance costs or named gaps; no gain from incumbent WRITE refusal",
+      "command": "node finnor-os/scripts/x2/run-matched-diagnostic.mjs --output <fresh-absolute-owned-child-directory>",
+      "artifact": "matched-diagnostic-002/attempt-002/result.json",
+      "status": "EXECUTED_FEASIBILITY_INCONCLUSIVE_ZERO_MATCHED_BUSINESS_RUNS",
+      "positivePerformanceDenominator": false,
+      "multiplierClaim": false,
+      "remaining": [
+        "lawful compatible incumbent profile and provider configuration",
+        "matched application-workflow comparator entrypoint",
+        "registered cold/reuse horizon, actual eligible demand and full lifecycle comparison costs"
+      ]
+    },
+    {
+      "id": "S8",
+      "requirement": "additive typed ApplicationActionModel domain and independent admission",
+      "ownerConsumer": "existing S8 journal/evaluator/promoter -> exact versioned operation consumer",
+      "input": "typed model/producer/checker/observer/transport/runtime/domain/current grant; legacy contracts",
+      "expected": "implemented development candidate path preserves legacy domains; protected admission impossible without real independent authority/custody; admission never execution permission",
+      "command": "nativeExecutor",
+      "artifact": [
+        "native-e2e-075/results.json",
+        "native-e2e-080/results.json",
+        "emitted-consumer-policy-002/result.json",
+        "native-e2e-084/native-s8-command-negative-reports.json"
+      ],
+      "status": "PARTIAL_SIGNED_INDEPENDENT_DEVELOPMENT",
+      "remaining": [
+        "live-use and independently qualified second-domain conditional cases",
+        "legacy-domain final compatibility"
+      ],
+      "separateExternalQualification": [
+        "protected population and actual protected authority"
+      ]
+    }
+  ],
+  "existingStaticCommands": [
+    {
+      "cwd": "finnor-os",
+      "argv": [
+        "node",
+        "node_modules/typescript/bin/tsc",
+        "--noEmit",
+        "--pretty",
+        "false",
+        "-p",
+        "tsconfig.json"
+      ],
+      "status": "PASS",
+      "artifact": "native-typecheck-025.log",
+      "finalSealedCut": false
+    },
+    {
+      "cwd": "finnor-os",
+      "argv": [
+        "node",
+        "node_modules/typescript/bin/tsc",
+        "--noEmit",
+        "--pretty",
+        "false",
+        "-p",
+        "scripts/x2/tsconfig.json"
+      ],
+      "status": "PASS",
+      "artifact": "native-driver-typecheck-025.log",
+      "retainedPriorTimeout": "native-driver-typecheck-023.log",
+      "finalSealedCut": false
+    },
+    {
+      "cwd": "finnor-os",
+      "argv": [
+        "node",
+        "../node_modules/eslint/bin/eslint.js",
+        "--no-ignore",
+        "--max-warnings=0",
+        "packages/private-equity/src/application-semantics/worker.ts",
+        "packages/private-equity/src/application-semantics/runtime.ts",
+        "packages/capability-evolution/src/application-port.ts",
+        "packages/capability-evolution/src/application-consumer.ts"
+      ],
+      "status": "PASS_AFFECTED_OWNERS",
+      "artifact": "native-lint-033.log",
+      "finalSealedCut": false
+    },
+    {
+      "cwd": ".",
+      "argv": [
+        "node",
+        "node_modules/eslint/bin/eslint.js",
+        "--no-ignore",
+        "--max-warnings=0",
+        "finnor-os/scripts/x2/run-native-e2e.mts"
+      ],
+      "status": "PASS_AFFECTED_DRIVER",
+      "artifact": "native-lint-032.log",
+      "finalSealedCut": false
+    },
+    {
+      "cwd": ".",
+      "argv": [
+        "node",
+        "node_modules/eslint/bin/eslint.js",
+        "--no-ignore",
+        "--max-warnings=0",
+        "finnor-os/packages/private-equity/src/application-semantics/validity.ts",
+        "finnor-os/packages/private-equity/src/application-semantics/runtime.ts"
+      ],
+      "status": "PASS_AFFECTED_FILES",
+      "artifact": "native-lint-031.log",
+      "finalSealedCut": false
+    },
+    {
+      "cwd": ".",
+      "argv": [
+        "npm",
+        "run",
+        "lint"
+      ],
+      "status": "NOT_RUN",
+      "limitation": "root command covers src/scripts only; backend changed files need explicit affected lint command"
+    },
+    {
+      "cwd": ".",
+      "argv": [
+        "npm",
+        "run",
+        "workspace:check"
+      ],
+      "status": "PASS_COMPATIBLE_INSTALLED008_CHECKPOINT",
+      "artifact": "generated-compatibility-001/result.json"
+    },
+    {
+      "cwd": ".",
+      "argv": [
+        "npm",
+        "run",
+        "centropy:manifest:check"
+      ],
+      "status": "PASS_COMPATIBLE_INSTALLED008_CHECKPOINT",
+      "artifact": "generated-compatibility-001/result.json"
+    },
+    {
+      "cwd": ".",
+      "argv": [
+        "npm",
+        "run",
+        "centropy:client:check"
+      ],
+      "status": "PASS_COMPATIBLE_INSTALLED008_CHECKPOINT",
+      "artifact": "generated-compatibility-001/result.json"
+    },
+    {
+      "cwd": ".",
+      "argv": [
+        "npm",
+        "run",
+        "centropy:forms:check"
+      ],
+      "status": "PASS_COMPATIBLE_INSTALLED008_CHECKPOINT",
+      "artifact": "generated-compatibility-001/result.json"
+    },
+    {
+      "cwd": "finnor-os",
+      "argv": [
+        "npm",
+        "run",
+        "authz:matrix:check"
+      ],
+      "status": "PASS_COMPATIBLE_INSTALLED008_CHECKPOINT",
+      "artifact": "generated-compatibility-001/result.json"
+    },
+    {
+      "cwd": "finnor-os",
+      "argv": [
+        "npm",
+        "run",
+        "release:manifest"
+      ],
+      "status": "PASS_COMPATIBLE_INSTALLED008_CHECKPOINT",
+      "artifact": "generated-compatibility-001/result.json"
+    }
+  ],
+  "rerunRules": [
+    "Freeze actual candidate source/dirty hashes/runtime/locks/schema/oracle/grants before each costly run.",
+    "Keep raw failed and interrupted attempts; diagnose live process/queue/lease/SQL/build/rights/browser after repeated failure.",
+    "Repair actual cause and rerun affected predicates only; reuse evidence solely when input/source/consumer/custody compatibility is demonstrated.",
+    "Do not extend original deadlines, shrink registered domain or replace missing positive boundaries with refusal/source proof."
+  ],
+  "separateExternalGates": {
+    "DOMAIN_QUALIFIED": "NOT_RUN: independently administered 20 unseen applications/200 withheld workflows, >=10 each, two revisions each and protected custody/admission",
+    "PRODUCTION_ACTIVE": "NOT_AUTHORIZED",
+    "OPERATIONAL_100X_PASSED": "BLOCKED: all-five qualification, B_V, mandatory equipped comparators, >=30 independent blocks and simultaneous intervals absent",
+    "FINANCIAL_QUALIFIED": "BLOCKED: canonical S7 attribution/comparators/downside/net owner value and H2 36-month evidence absent",
+    "CUMULATIVE_PEER_ADOPTION": "NOT_ADOPTED: X1 0946085d7cedc866b54cb7979177ff758eaba30b is sealed and E2E_DEV_VERIFIED for its declared local domain. ORIGINAL V1 archival candidate and cumulative V remain incomplete/not admitted. Combined X1\u2192X2 and V use require serial preimage-bound owner, lock, migration-lineage, legacy-job and installed-runtime proof. Neither V completion nor qualified BV is a prerequisite for standalone X2 development."
+  },
+  "existingChecklistFollowup": {
+    "schema": "finnor.x2.existing-checklist-followup.v1",
+    "recordedAt": "2026-10-17T03:36:10.645733+00:00",
+    "productCodeCommit": "5e9a7289a3695092b820e037d8fcbd1fae470145",
+    "productRebuilt": false,
+    "newProductCapabilities": false,
+    "mounted": {
+      "episode": 103,
+      "status": "PASS",
+      "nativePass": 15,
+      "exitCode": 0,
+      "allTenStages": [
+        {
+          "name": "real-login-and-initial-mount",
+          "status": "PASS"
+        },
+        {
+          "name": "canvas-focus-and-reload",
+          "status": "PASS"
+        },
+        {
+          "name": "world-root-boundary",
+          "status": "PASS"
+        },
+        {
+          "name": "fresh-use-and-persisted-investigation",
+          "status": "PASS"
+        },
+        {
+          "name": "delayed-work-response",
+          "status": "PASS"
+        },
+        {
+          "name": "offline-and-reconnect",
+          "status": "PASS"
+        },
+        {
+          "name": "global-logout-expiry-and-sdk-refresh",
+          "status": "PASS"
+        },
+        {
+          "name": "canonical-revocation-and-delayed-response",
+          "status": "PASS"
+        },
+        {
+          "name": "principal-switch-and-delayed-investigation-list",
+          "status": "PASS"
+        },
+        {
+          "name": "real-route-coverage",
+          "status": "PASS"
+        }
+      ],
+      "resultSha256": "58d3e384e3d682e63d8d28201ff182db0bfe874ea22fc7ff6ad162c1582d8b7a",
+      "nativeResultsSha256": "217ccd697ce927f9dc91424c247eebe8391fb55d334ca23af18288f15ec53a01",
+      "seedReceiptSha256": "718b27c8de195897373cbee506ff08ebacd6c949afd05be99c419e780b04bf4c",
+      "correctedAcquisition404UiResubmission": "PASS_REGISTRATION_ONLY_SEPARATE_INTAKE_002"
+    },
+    "safety": {
+      "report": "safety-closure-001/result.json",
+      "sha256": "6a8adb20d6d3b7cd4253d1160dce7986752b15a34060af710cd8e73d6d773d47",
+      "cancellation102": "INTERRUPTED_NINE_PASS_NO_AGGREGATE_EXIT_OR_ENDING_CUSTODY",
+      "remaining": "See remainingInternalGates; only104/107/108 and intake002 are newly accepted here.109/110 failures and unexecuted111 remain unpassed.",
+      "currentCancellation107": {
+        "episode": 107,
+        "status": "PASS",
+        "pass": 14,
+        "fail": 0,
+        "exitCode": 0,
+        "gates": [
+          "canonical-legacy-running-and-queued-jobs-across-X2-upgrade",
+          "fresh-upgrade-replay-and-runtime-role-isolation",
+          "canonical-S5-terminal-resource-floor",
+          "canonical-S5-future-resource-horizon-refusal",
+          "authenticated-original-registration-and-idempotency",
+          "physical-acquisition-and-independent-frozen-model",
+          "ordinary-role-original-request-deletion-refusal",
+          "native-S8-independent-discovery-and-signed-development-lifecycle",
+          "canonical-physical-worker-SIGKILL-after-exact-acceptance",
+          "canonical-natural-lease-expiry-and-original-quarantine",
+          "canonical-cancelled-Work-retains-original-observation",
+          "installed-runtime-restart-and-byte-custody",
+          "unchanged-source-and-runtime-custody",
+          "installed-ending-asset-custody"
+        ],
+        "receipts": {
+          "freeze.json": "4231fd34601675a0f1bb6d1f03998676dac576779e656030dbcfe2bb0ef312ac",
+          "results.json": "d3a3db93562665eef73b5ab1ac12944428fa31e53212ab38bb3c0500cc37b072",
+          "driver-exit.json": "d88a8eabe5c0cf47a79ab4980ed69dcdc0c16b2eec8a1930474377e0f0c62fe0"
+        }
+      },
+      "currentExpiry108": {
+        "episode": 108,
+        "status": "PASS",
+        "pass": 13,
+        "fail": 0,
+        "exitCode": 0,
+        "gates": [
+          "canonical-legacy-running-and-queued-jobs-across-X2-upgrade",
+          "fresh-upgrade-replay-and-runtime-role-isolation",
+          "canonical-S5-terminal-resource-floor",
+          "canonical-S5-future-resource-horizon-refusal",
+          "authenticated-original-registration-and-idempotency",
+          "physical-acquisition-and-independent-frozen-model",
+          "ordinary-role-original-request-deletion-refusal",
+          "canonical-physical-worker-SIGKILL-after-exact-acceptance",
+          "canonical-natural-lease-expiry-and-original-quarantine",
+          "canonical-S6-expired-parent-original-observation",
+          "installed-runtime-restart-and-byte-custody",
+          "unchanged-source-and-runtime-custody",
+          "installed-ending-asset-custody"
+        ],
+        "receipts": {
+          "freeze.json": "55ddd8f55eb30aa9cef2f619d00920a68647b36bdab9a3f4c225b6eec430cbc4",
+          "results.json": "d30198a726274f1027385c8669096017d13fa37f64f7c22e6463d78ce58a2b3b",
+          "driver-exit.json": "fc9d7ab12d0195992f5b52a23488435a34e096b4796393a9ccff1bad7bdd99bc"
+        }
+      },
+      "setupFailures105106": {
+        "episodes": [
+          105,
+          106
+        ],
+        "status": "FAILED_SETUP_UNHANDLED_PG_CONNECTION_TERMINATION",
+        "recordedGates": 0,
+        "exitReceipt": false,
+        "rootCauseEstablished": false,
+        "stoppedDatabaseImages": "Byte/mode/link-verified archives retained; followup-storage-preservation-001.json",
+        "endingCustodyEstablished": false
+      },
+      "completedCancellation109": {
+        "episode": 109,
+        "pass": 10,
+        "failedGates": [
+          {
+            "id": "fresh-Work-model-composition-and-independent-business-outcome",
+            "predicate": "{\"status\":\"FAILED\",\"reason\":\"X2_RESPONSE_LOST\",\"generation\":1,\"model_ref\":{\"id\":\"application-model:4b7563b5b2a8976fb57d88ee8f369f41cc25a0053afff25dc5e8874b2a904d21\",\"owner\":\"S4\",\"version\":\"application-operation-v1\",\"contentDigest\":\"4b7563b5b2a8976fb57d88ee8f369f41cc25a0053afff25dc5e8874b2a904d21\"},\"check_ref\":{\"id\":\"application-model-check:64a74558aced4eadda3e4f321d3f926d22ace456f483fff8be045fe1996bb9cd\",\"owner\":\"S4\",\"version\":\"application-operation-v1\",\"contentDigest\":\"64a74558aced4eadda3e4f321d3f926d22ace456f483fff8be045fe1996bb9cd\"},\"composition_ref\":null}\n+ actual - expected\n\n+ 'FAILED'\n- 'COMPLETED'\n",
+            "code": "ERR_ASSERTION"
+          }
+        ],
+        "exitCode": 1,
+        "resultsSha256": "dcfdb393afd2c96537ebb3f7184e84d69de5f3fec743b60572faf4da092a140f",
+        "endingCustodyEstablished": true,
+        "status": "FAILED_BEFORE_COMPLETED_CANCELLATION_X2_RESPONSE_LOST_CAUSE_UNESTABLISHED"
+      },
+      "permission110": {
+        "episode": 110,
+        "pass": 5,
+        "failedGates": [],
+        "exitCode": null,
+        "resultsSha256": "1cbddbde14ee27d559a339136957e91b0c0056be370a2d350bfa6dd030ceeae2",
+        "endingCustodyEstablished": false,
+        "status": "ABORTED_ENOSPC_NOT_A_PASS",
+        "driverGracefulCleanupEstablished": false,
+        "externalCleanup": "native-e2e-110/external-cleanup.json",
+        "externalCleanupSha256": "a752cc555311e49ff57ee20e07b0139df2ff7df1dc302362981b388b14d6a933",
+        "apiSurvivorStopped": true,
+        "rawDatabaseAndEvidencePreserved": true
+      },
+      "liveUse111": {
+        "status": "NOT_STARTED_AFTER110_FAILURE",
+        "fixtureOnlyWiring": "PREPARED_STATIC_VALIDATED_NOT_RUNTIME_VERIFIED",
+        "sourceCut": "followup-fixture-cut-001.json",
+        "isolatedDomains": "INTERNAL_PREPARATION_UNFINISHED_NOT_EXTERNAL_QUALIFICATION"
+      },
+      "remainingInternalGates": [
+        "B: complete typed checker/composition mutation families and separate false-valid/false-invalid coverage",
+        "C: complete access-change phases, deception and prompt-injection E2E negatives;110 is incomplete",
+        "D: resulting installed drift/sibling variants or exact affected-path compatibility;098 current source-native proof remains valid in its scope",
+        "E: completed-history cancellation unpassed after109 failed before reaching its intended case",
+        "S8: live-use111 unexecuted; isolated live/revocation/cumulative/expired-activation subject orchestration unfinished",
+        "J: equipped matched application executor/compatible authority/configuration and actual matched business runs/full costs absent"
+      ],
+      "executionCondition": "Database-heavy continuation paused after observed ENOSPC and incomplete110 cleanup; establish measured adequate task-owned headroom before another fresh episode. This is not a waiver or evidence that internal fixture work is complete."
+    },
+    "affectedS8Negatives104": {
+      "episode": 104,
+      "status": "PASS",
+      "pass": 15,
+      "fail": 0,
+      "exitCode": 0,
+      "gates": [
+        "canonical-legacy-running-and-queued-jobs-across-X2-upgrade",
+        "fresh-upgrade-replay-and-runtime-role-isolation",
+        "canonical-S5-terminal-resource-floor",
+        "canonical-S5-future-resource-horizon-refusal",
+        "authenticated-original-registration-and-idempotency",
+        "physical-acquisition-and-independent-frozen-model",
+        "ordinary-role-original-request-deletion-refusal",
+        "native-S8-independent-discovery-and-signed-development-lifecycle",
+        "fresh-Work-model-composition-and-independent-business-outcome",
+        "maintained-client-authenticated-fresh-Work-projection",
+        "native-S8-typed-application-command-negatives",
+        "native-S8-exact-original-reconciliation-evidence-refusal",
+        "installed-runtime-restart-and-byte-custody",
+        "unchanged-source-and-runtime-custody",
+        "installed-ending-asset-custody"
+      ],
+      "receipts": {
+        "freeze.json": "55d0973beff861e8c5948abc968baee8482a56814dec1c4625fbf73aedb16a61",
+        "results.json": "222d9bcfe00d7df334cf36e6ae71495a0bfba5f1f636abb97aba7105a1faeb43",
+        "driver-exit.json": "cbb2be1fe88e75d0fa2eab01e5af4f52c0808e343f993062c99e5309ac12a5fe"
+      }
+    },
+    "comparison": {
+      "diagnosticExecution": "COMPLETED",
+      "verdict": "INCONCLUSIVE",
+      "matchedBusinessExecutions": 0,
+      "matchedRunGate": "UNPASSED",
+      "resultSha256": "bb7e336bf0330daf88e688a18caf61306e077e09003ef4941f758fe0782622da",
+      "executedCommand": [
+        "/Users/paramdave/.hermes/node/bin/node",
+        "/Users/paramdave/.factory/worktrees/frontier5-x2-software-semantics-compiler/FINNOR/finnor-os/scripts/x2/run-matched-diagnostic.mjs",
+        "--output",
+        "/Users/paramdave/.factory/worktrees/frontier5-x2-software-semantics-compiler/matched-diagnostic-002/attempt-002"
+      ],
+      "costs": "UNMEASURED_NOT_ZERO",
+      "denominator": null,
+      "multiplier": null
+    },
+    "codeComplete": false,
+    "e2eDevVerified": false,
+    "publication": "LOCAL_DRAFT_ONLY; FOLLOWUP_SOURCE_IDENTITY_AND_FINAL_VALIDATION_IN_X2_DELIVERY_002_EXTERNAL_MANIFEST; NO_REMOTE_WRITE",
+    "intake": {
+      "status": "PASS",
+      "harness": "finnor-os/scripts/x2/run-intake-e2e.mts",
+      "preparation": "intake-e2e-preparation-001/preparation.json",
+      "firstLaunch": "TSX_CLI_EADDRINUSE_BEFORE_HARNESS_IMPORT",
+      "rescheduledLaunch": "intake-e2e-launch-002/launch.json",
+      "e2eResult": "intake-e2e-002/result.json",
+      "firstExecutedEpisode": {
+        "episode": "intake-e2e-001",
+        "status": "FAIL",
+        "acquisitionPosts": 0,
+        "cleanup": "ALL_PASS",
+        "failure": "TIMEOUT_BEFORE_ACQUISITION_POST_NOT_OWNER_404",
+        "resultSha256": "5f2a50ad93f7953906f8d554a83a5feffc4ecf5dee68730d9c062ee28d7ea13d"
+      },
+      "currentEpisode": "intake-e2e-002",
+      "EXECUTED": true,
+      "stages": [
+        {
+          "id": "installed-and-source-custody",
+          "status": "PASS",
+          "startedAt": "2026-10-17T01:51:45.034Z",
+          "wallMs": 18154.475166999997
+        },
+        {
+          "id": "fresh-canonical-database-and-owners",
+          "status": "PASS",
+          "startedAt": "2026-10-17T01:52:03.197Z",
+          "wallMs": 5061.211750000002
+        },
+        {
+          "id": "independent-native-intake-fixtures",
+          "status": "PASS",
+          "startedAt": "2026-10-17T01:52:08.259Z",
+          "wallMs": 385.596166000003
+        },
+        {
+          "id": "real-emitted-api-and-maintained-frontend",
+          "status": "PASS",
+          "startedAt": "2026-10-17T01:52:08.645Z",
+          "wallMs": 75469.397541
+        },
+        {
+          "id": "fresh-headed-browser-and-genuine-login",
+          "status": "PASS",
+          "startedAt": "2026-10-17T01:53:24.115Z",
+          "wallMs": 11261.282957999996
+        },
+        {
+          "id": "owning-404-before-writes-and-same-panel-correction",
+          "status": "PASS",
+          "startedAt": "2026-10-17T01:53:35.380Z",
+          "wallMs": 17694.880625000005
+        },
+        {
+          "id": "genuine-accepted-response-loss-stays-fenced",
+          "status": "PASS",
+          "startedAt": "2026-10-17T01:53:53.076Z",
+          "wallMs": 12403.620125000001
+        },
+        {
+          "id": "ending-auth-registration-and-installed-custody",
+          "status": "PASS",
+          "startedAt": "2026-10-17T01:54:05.487Z",
+          "wallMs": 25881.95633300001
+        }
+      ],
+      "cleanup": [
+        {
+          "owner": "retained-transport-observations",
+          "status": "PASS"
+        },
+        {
+          "owner": "fresh-browser-context",
+          "status": "PASS"
+        },
+        {
+          "owner": "task-owned-visible-chrome",
+          "status": "PASS"
+        },
+        {
+          "owner": "frontend",
+          "status": "PASS"
+        },
+        {
+          "owner": "portal-response-loss",
+          "status": "PASS"
+        },
+        {
+          "owner": "portal-corrected",
+          "status": "PASS"
+        },
+        {
+          "owner": "installed-api",
+          "status": "PASS"
+        },
+        {
+          "owner": "disposable-auth",
+          "status": "PASS"
+        },
+        {
+          "owner": "canonical-app-pool",
+          "status": "PASS"
+        },
+        {
+          "owner": "canonical-admin-connection",
+          "status": "PASS"
+        },
+        {
+          "owner": "owned-postgres",
+          "status": "PASS"
+        }
+      ],
+      "resultSha256": "3e1be89b8ee4509eb6d055adc02ddebfc2374a62b2fad8e72abb83ca60bbe940"
+    },
+    "validation": {
+      "sourceCompatibility": "followup-validation-001/source-compatibility.json",
+      "productInputMismatches": 0,
+      "finalTypesAndUnmodifiedRuleLint": "followup-validation-001/final-static-002.json",
+      "initialLintFailure": "Node helper useCommand/useRefusal names triggered React-hook lint; identifiers renamed without disabling rules",
+      "cachedCompilerStorage": "intake-generated-cache-reclaim-002.json",
+      "billingUSD": null,
+      "humanWork": null,
+      "aggregateSimultaneousMemory": null
+    },
+    "completionGates": {
+      "DESIGNED": "RECORDED",
+      "CODE_COMPLETE": false,
+      "E2E_DEV_VERIFIED": false,
+      "DOMAIN_QUALIFIED": "NOT_RUN",
+      "PRODUCTION_ACTIVE": "NOT_AUTHORIZED",
+      "OPERATIONAL_100X_PASSED": false,
+      "FINANCIAL_QUALIFIED": false
+    }
+  }
+}

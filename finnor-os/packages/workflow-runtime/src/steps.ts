@@ -1020,6 +1020,16 @@ export async function recoverStaleSteps(tenantId: string): Promise<{ recovered: 
           await db.update(domainActions).set({ status: "needs_human_review", executionStartedAt: null })
             .where(and(eq(domainActions.tenantId, tenantId), eq(domainActions.id, step.domainActionId), eq(domainActions.status, "executing")));
         }
+        // Observation is safe for an unknown native attempt. The closed X1
+        // adapter requires its exact immutable creation duty and owner state;
+        // other native operations remain unknown and are never re-executed.
+        if (claimRow.provider === "finnor_plugin_runtime" && !claimRow.integrationId) {
+          await db.insert(jobs).values({ tenantId, type: "observe_external_effect",
+            lane: "interactive", priority: 100,
+            payload: { tenantId, integrationOperationId: claimRow.id },
+            idempotencyKey: `observe-unknown-native-attempt:${claimRow.id}:${step.dispatchGeneration}`,
+          }).onConflictDoNothing({ target: jobs.idempotencyKey });
+        }
       });
       continue;
     }

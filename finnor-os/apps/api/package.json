@@ -5,7 +5,7 @@
   "engines": { "node": "22.x" },
   "scripts": {
     "dev": "next dev -p 3100",
-    "build": "next build",
+    "build": "tsx ../../scripts/x3/stamp-source.mts && tsx ../../scripts/x5/stamp-source.mts && tsx ../../scripts/x4/stamp-source.mts && next build",
     "start": "next start -p 3100"
   },
   "dependencies": {

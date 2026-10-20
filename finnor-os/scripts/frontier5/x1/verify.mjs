@@ -1,0 +1,417 @@
+import { spawnSync } from "node:child_process";
+import { createHash, randomUUID } from "node:crypto";
+import { existsSync, mkdirSync, readFileSync, realpathSync, statfsSync, writeFileSync } from "node:fs";
+import { dirname, join, relative, resolve, sep } from "node:path";
+import { fileURLToPath } from "node:url";
+
+const repo = fileURLToPath(new URL("../../../../", import.meta.url));
+const os = join(repo, "finnor-os");
+const scope = join(repo, "scope-frontier5/x1-institutional-programme-compiler");
+const manifest = JSON.parse(readFileSync(join(scope, "verification-plan.json"), "utf8"));
+const profile = JSON.parse(readFileSync(join(scope, "profile.json"), "utf8"));
+const args = process.argv.slice(2);
+const option = (name) => {
+  const at = args.indexOf(name);
+  return at < 0 ? null : args[at + 1] ?? null;
+};
+const stage = option("--stage");
+const only = option("--check");
+const ownerCase=option('--case');
+const installation=option('--installation');
+const frontendInstallation=option('--frontend-installation');
+const ownerCases={owners:{'one-duty':{count:'1',mode:'api'},'128-duty':{count:'128',mode:'api'},
+  heterogeneous:{count:'1',mode:'heterogeneous'},canonical:{count:'1',mode:'canonical'},creation:{count:'1',mode:'creation'},ordinary:{count:'1',mode:'ordinary'},
+  domain:{count:'1',mode:'domain'},'owner-inputs':{count:'1',mode:'owner_inputs'},'source-namespace':{count:'1',mode:'source_namespace'},
+  'qualification-execution':{count:'1',mode:'qualification_execution'},
+  'qualification-population':{count:'1',mode:'qualification_population'},
+  'admission-review':{count:'1',mode:'admission_review'},'raw-instructions':{count:'1',mode:'raw_instructions'},'protected-guards':{count:'1',mode:'protected_guards'}},
+  lifecycle:{material:{count:'1',mode:'material'},'reporting-changes':{count:'1',mode:'reporting_changes'},'staff-epoch':{count:'1',mode:'authority_epoch'},'sensitive-coverage':{count:'1',mode:'sensitive_coverage'},personnel:{count:'1',mode:'personnel'},recovery:{count:'1',mode:'recovery'},'accepted-child-recovery':{count:'1',mode:'child_recovery'},
+    contention:{count:'1',mode:'contention'},'active-contention':{count:'1',mode:'active_contention'},unsupported:{count:'1',mode:'unsupported'},'unsupported-operation':{count:'1',mode:'unsupported_operation'},'checker-crash':{count:'1',mode:'checker_crash'},
+    'cancel-observed':{count:'1',mode:'cancel_observed'},'publication-meter':{count:'1',mode:'publication_meter'},
+    'effect-recovery':{count:'1',mode:'effect_recovery'},'cancel-possible':{count:'1',mode:'cancel_possible'},'resource-review':{count:'1',mode:'resource_review'},'head-fence-review':{count:'1',mode:'head_fence_review'},'publication-race':{count:'1',mode:'publication_race'}},mounted:{mounted:{count:'1',mode:'mounted'},'ui-review':{count:'1',mode:'ui_review'}},
+  diagnostic:{'matched-native':{count:'1',mode:'diagnostic'}},
+  installed:{'schema-upgrade':{count:'1',mode:'upgrade'},delivery:{count:'1',mode:'owner_inputs'},'admission-cursor':{count:'1',mode:'admission_cursor'},
+    'upgrade-installed':{count:'1',mode:'upgrade'}}};
+const selectedOwnerCase=ownerCase?ownerCases[stage]?.[ownerCase]:null;
+const named = manifest.stages.find((entry) => entry.id === stage);
+if (!named || args.length%2!==0||new Set(args.filter((_,i)=>i%2===0)).size!==args.length/2
+    ||args.some((arg, i) => i%2===0&&!['--stage','--check','--evidence','--case','--installation','--frontend-installation'].includes(arg))
+    || (only && !["typecheck", "lint"].includes(only))||ownerCase&&!selectedOwnerCase
+    ||selectedOwnerCase&&only||ownerCases[stage]&&!selectedOwnerCase
+    ||installation&&(!selectedOwnerCase||!installation.startsWith('/'))
+    ||frontendInstallation&&(stage!=='mounted'||!installation&&ownerCase!=='ui-review'||!frontendInstallation.startsWith('/'))
+    ||['delivery','upgrade-installed'].includes(ownerCase)&&!installation) {
+  console.error("Use --stage <frozen-stage> [--case <registered-owner-case>] [--check typecheck|lint] [--evidence <fresh-private-directory>]");
+  process.exit(2);
+}
+const root = manifest.privateEvidenceRoot;
+mkdirSync(root, { recursive: true, mode: 0o700 });
+const privateRoot = realpathSync(root);
+const destination = resolve(option("--evidence") ?? join(privateRoot, `verify-${stage}-${Date.now()}-${randomUUID()}`));
+if (!destination.startsWith(privateRoot + sep) || existsSync(destination) || realpathSync(dirname(destination)) !== privateRoot) {
+  console.error("Evidence must be a new direct child of the registered private evidence root");
+  process.exit(2);
+}
+mkdirSync(destination, { mode: 0o700 });
+const sha = (bytes) => createHash("sha256").update(bytes).digest("hex");
+const pin = (path) => ({ path: relative(repo, path), sha256: sha(readFileSync(path)) });
+const git = (...command) => {
+  const result = spawnSync("git", ["-C", repo, ...command], { encoding: "utf8", timeout: 5000, maxBuffer: 1024 * 1024 });
+  if (result.status !== 0) throw new Error(`Git read failed: ${command.join(" ")}`);
+  return result.stdout.trim();
+};
+const changed = git("status", "--porcelain=v1", "-uall").split("\n").filter(Boolean).map((line) => line.slice(3));
+const sourcePins = changed.filter((path) => existsSync(join(repo, path))).map((path) => pin(join(repo, path)));
+for (const path of [
+  "finnor-os/packages/private-equity/src/institution-program/contracts.ts",
+  "finnor-os/packages/private-equity/src/institution-qualification/scoring.ts",
+  "finnor-os/packages/private-equity/src/institution-qualification/contracts.ts",
+  "finnor-os/packages/private-equity/src/institution-qualification/administration.ts",
+  "finnor-os/scripts/frontier5/x1/qualification-admin.mts",
+  'finnor-os/scripts/frontier5/x1/qualification-runtime.mts',
+  'finnor-os/scripts/frontier5/x1/qualification-state-journal.mts','finnor-os/scripts/frontier5/x1/qualification-owner-exercise.mts',
+  'finnor-os/scripts/frontier5/x1/qualification-native-inputs.mts','finnor-os/scripts/frontier5/x1/qualification-population.mts',
+  'finnor-os/scripts/frontier5/x1/qualification-population-owner-exercise.mts','finnor-os/scripts/frontier5/x1/qualification-native-worker.mts',
+  'finnor-os/scripts/frontier5/x1/qualification-native-administration.mts','finnor-os/scripts/frontier5/x1/qualification-native-observation.mts',
+  'finnor-os/scripts/frontier5/x1/qualification-observation-collection.mts',
+  'finnor-os/scripts/frontier5/x1/qualification-meaning.mts',
+  "finnor-os/scripts/frontier5/x1/qualification-cases.mts",
+  'finnor-os/scripts/frontier5/x1/reconstruction-timing-cases.mjs',
+  'finnor-os/scripts/frontier5/x1/reference/reconstruction-timing-native-review-contract.md',
+  'finnor-os/scripts/frontier5/x1/numeric-context-cases.mjs',
+  'finnor-os/scripts/frontier5/x1/reference/numeric-context-native-review-contract.md',
+  "finnor-os/scripts/frontier5/x1/reference/qualification-contract.md",
+  "finnor-os/packages/private-equity/src/institution-program/checker.ts",
+  "finnor-os/packages/private-equity/src/institution-program/checker-process.ts",
+  "finnor-os/packages/private-equity/src/institution-program/checker-raw.ts",
+  "finnor-os/packages/private-equity/src/institution-program/source-decoder.ts",
+  "finnor-os/packages/private-equity/src/institution-program/reconstruction.ts",
+  "finnor-os/packages/private-equity/src/institution-program/owner-admission.ts",
+  "finnor-os/packages/private-equity/src/institution-program/responsibility.ts",
+  "finnor-os/packages/private-equity/src/institution-program/resource-demand.ts",
+  "finnor-os/packages/private-equity/src/allocation-store.ts",
+  "finnor-os/packages/db/migrations/0173_x1_institution_s5_reservations.sql",
+  "finnor-os/packages/db/migration-head.ts",
+  "finnor-os/scripts/frontier5/x1/responsibility-cases.mts",
+  "finnor-os/scripts/frontier5/x1/responsibility-finish-cases.mts",
+  "finnor-os/scripts/frontier5/x1/reference/responsibility-finish-contract.md",
+  "finnor-os/packages/private-equity/src/program-synthesis/institution.ts",
+  "finnor-os/packages/private-equity/src/program-synthesis/contracts.ts",
+  "finnor-os/packages/private-equity/src/program-synthesis/plan.ts",
+  "finnor-os/packages/private-equity/src/program-synthesis/owners.ts",
+  "finnor-os/packages/private-equity/src/program-synthesis/api.ts",
+  "finnor-os/packages/private-equity/src/program-synthesis/worker.ts",
+  "finnor-os/packages/private-equity/src/program-synthesis/store.ts",
+  "finnor-os/packages/orchestration/src/objective-loop.ts",
+  "finnor-os/scripts/frontier5/x1/reference/responsibility-contract.md",
+  "finnor-os/scripts/frontier5/x1/reference/responsibility-expectations.json",
+  "finnor-os/packages/private-equity/src/institution-program/source-authority.ts",
+  'finnor-os/packages/private-equity/src/institution-program/inputs.ts',
+  'finnor-os/packages/db/migrations/0181_x1_authenticated_work_inputs.sql',
+  'finnor-os/packages/db/migrations/0182_x1_core_source_parameter_binding.sql',
+  'finnor-os/packages/db/migrations/0183_x1_source_authority_role_isolation.sql',
+  'finnor-os/packages/db/migrations/0184_x1_scoped_source_authority_locks.sql',
+  'finnor-os/packages/db/migrations/0185_x1_original_s5_authority_currentness.sql',
+  'finnor-os/packages/db/migrations/0186_x1_source_subject_scope.sql',
+  'finnor-os/packages/db/migrations/0187_x1_responsible_principal_currentness.sql',
+  'finnor-os/packages/db/migrations/0188_x1_source_namespace_binding.sql',
+  'finnor-os/packages/db/migrations/0189_x1_physical_cost_allocation.sql',
+  'finnor-os/packages/db/migrations/0190_x1_final_compiler_head_fence.sql',
+  'finnor-os/packages/db/migration-head.ts',
+  'finnor-os/packages/private-equity/src/institution-program/source-scope.ts',
+  'finnor-os/packages/private-equity/src/institution-program/source-locks.ts',
+  "finnor-os/packages/private-equity/src/institution-program/installed-source.ts",
+  "finnor-os/packages/private-equity/src/index.ts",
+  "finnor-os/packages/db/migrations/0172_x1_institution_source_authority.sql",
+  "finnor-os/packages/db/migrations-bundle.ts",
+  "finnor-os/packages/private-equity/package.json",
+  "finnor-os/package-lock.json",
+  "finnor-os/scripts/frontier5/x1/verify.mjs",
+  'finnor-os/scripts/frontier5/x1/scrutiny-evidence.mjs',
+  'finnor-os/scripts/frontier5/x1/reference/scrutiny-evidence-contract.json',
+  'finnor-os/scripts/frontier5/x1/reference/scrutiny-evidence-contract.md',
+  'finnor-os/scripts/frontier5/x1/run-owner-slice.mts',
+  'finnor-os/scripts/frontier5/x1/admission-cursor-review.mts',
+  'finnor-os/scripts/frontier5/x1/reference/admission-cursor-native-review-contract.md',
+  'finnor-os/scripts/frontier5/x1/s6-guard-review.mts',
+  'finnor-os/scripts/frontier5/x1/publication-race-review.mts',
+  'finnor-os/scripts/frontier5/x1/reference/publication-race-native-review-contract.md',
+  'finnor-os/scripts/frontier5/x1/reference/mounted-identity-native-review-contract.md',
+  'finnor-os/scripts/s6/run-obligation-e2e.mts',
+  'finnor-os/scripts/frontier5/x1/mounted-race-review.mts',
+  'finnor-os/scripts/frontier5/x1/qualification-full-contract-cases.mjs',
+  'finnor-os/scripts/frontier5/x1/qualification-full-population-cases.mjs',
+  'finnor-os/scripts/frontier5/x1/qualification-public-assessment-cases.mjs',
+  'finnor-os/scripts/frontier5/x1/reference/public-ed25519-test-vectors.json',
+  'finnor-os/scripts/frontier5/x1/reference/qualification-full-native-review-contract.md',
+  'finnor-os/scripts/frontier5/x1/reference/qualification-public-assessment-native-review-contract.md',
+
+  'src/components/centropy/lib/private-read-generation.ts',
+  'src/components/centropy/lib/use-private-request-scope.ts',
+  'src/components/centropy/lib/api.ts',
+  'src/components/centropy/canvas/InstitutionProgramPanel.tsx',
+  'src/components/centropy/shell/CentropyWorkspace.tsx',
+
+  'finnor-os/scripts/frontier5/x1/authenticated-api-fixture.mts',
+  'finnor-os/scripts/frontier5/x1/physical-owner-worker.mts',
+  'finnor-os/scripts/frontier5/x1/owner-source-corpus.mts',
+  'finnor-os/scripts/frontier5/x1/canonical-owner-corpus.mts',
+  'finnor-os/scripts/frontier5/x1/upgrade-owner-fixture.mts',
+  'finnor-os/scripts/frontier5/x1/institution-method-plan.mts',
+  'finnor-os/scripts/frontier5/x1/tsconfig.p1-contract.json',
+  'finnor-os/packages/private-equity/src/institution-program/baseline.ts',
+  'finnor-os/packages/private-equity/src/institution-program/worker.ts',
+  'finnor-os/packages/private-equity/src/institution-program/publication-checkpoint.ts',
+  'finnor-os/packages/private-equity/src/institution-program/store.ts',
+  'finnor-os/packages/private-equity/src/institution-program/api.ts',
+  'finnor-os/packages/private-equity/src/institution-program/meter.ts',
+  'finnor-os/packages/capability-evolution/src/institution-consumer.ts',
+  'finnor-os/packages/capability-evolution/src/institution-port.ts',
+  "finnor-os/scripts/frontier5/x1/eslint.config.mjs",
+  "finnor-os/scripts/frontier5/x1/tsconfig.oracle.json",
+  "finnor-os/scripts/frontier5/x1/kernel.mts",
+  "finnor-os/scripts/frontier5/x1/checker-command.mts",
+  "finnor-os/scripts/frontier5/x1/review-cases.mts",
+  "finnor-os/scripts/frontier5/x1/native-cases.mts",
+  "finnor-os/scripts/frontier5/x1/native-finish-cases.mts",
+  "finnor-os/scripts/frontier5/x1/creation-native-cases.mts",
+  "finnor-os/scripts/frontier5/x1/transport-cases.mts",
+  "finnor-os/scripts/frontier5/x1/admission-finish-cases.mts",
+  "finnor-os/scripts/frontier5/x1/reference/native-finish-contract.md",
+  "finnor-os/scripts/frontier5/x1/reference/admission-finish-contract.md",
+  "finnor-os/scripts/frontier5/x1/reference/creation-native-contract.md",
+  "finnor-os/scripts/frontier5/x1/reference/owner-currentness-contract.md",
+  "finnor-os/scripts/frontier5/x1/reference/owner-live-packet.md",
+  "finnor-os/scripts/frontier5/x1/protocol-cases.mts",
+  "finnor-os/scripts/frontier5/x1/reconstruction-cases.mts",
+  "finnor-os/scripts/frontier5/x1/reference/original-input.json",
+  "finnor-os/scripts/frontier5/x1/reference/expected-ledger.json",
+  "finnor-os/scripts/frontier5/x1/reference/challenges.json",
+  "finnor-os/scripts/frontier5/x1/reference/base-candidate.json",
+  "finnor-os/scripts/frontier5/x1/reference/native-input.json",
+  "finnor-os/scripts/frontier5/x1/reference/native-expectations.json",
+  "finnor-os/scripts/frontier5/x1/reference/native-contract.md",
+]) if (!sourcePins.some((entry) => entry.path === path)) sourcePins.push(pin(join(repo, path)));
+const free = (() => { const fs = statfsSync(repo, { bigint: true }); return fs.bavail * fs.bsize; })();
+const record = {
+  schema: "finnor.frontier5.x1.offline-evidence.v1", stage, check: only,
+  ownerCase,selectedOwnerCase,
+  startedAt: new Date().toISOString(), status: "NOT_RUN", source: {
+    commit: git("rev-parse", "HEAD"), tree: git("rev-parse", "HEAD^{tree}"),
+    dirty: sourcePins, userInstructionFileUnstaged: changed.includes("AGENTS.md"),
+  },
+  runtime: { node: process.version, executable: process.execPath, platform: process.platform, arch: process.arch,
+    lock: pin(join(os, "package-lock.json")), profile: pin(join(scope, "profile.json")),
+    oracle: pin(join(scope, "oracle-contract.md")), failureModel: pin(join(scope, "failure-model.md")),
+    verificationPlan: pin(join(scope, "verification-plan.json")) },
+  inputs: ["reference/original-input.json", "reference/base-candidate.json", "reference/expected-ledger.json",
+    "reference/challenges.json"].map((path) => pin(join(os, "scripts/frontier5/x1", path))),
+  originalFailure: "oracle-precode-3697f0c2/missing-interface.log",
+  capacity: { freeBytes: free.toString(), liveMinimumFreeBytes: String(manifest.limits.liveMinimumFreeBytes),
+    finalBuildMinimumFreeBytes: String(manifest.limits.finalBuildMinimumFreeBytes) },
+  limits: { wallSeconds: manifest.limits.smallCheckWallSeconds, kernelHeapMiB: manifest.limits.kernelNodeHeapMiB,
+    smallHeapMiB: manifest.limits.smallCheckNodeHeapMiB, outputBytes: manifest.limits.smallCheckOutputBytes },
+  commands: [], pending: manifest.stages.filter((entry) => entry.live).map((entry) => entry.id),
+  authority: "development-only; no protected custody or owner/effect admission",
+};
+const save = () => writeFileSync(join(destination, "run.json"), JSON.stringify(record, null, 2) + "\n", { flag: "wx", mode: 0o600 });
+const finish = (status, exit, reason) => {
+  record.status = status; record.endedAt = new Date().toISOString(); record.reason = reason;
+  record.rerun = `node finnor-os/scripts/frontier5/x1/verify.mjs --stage ${stage}${ownerCase?` --case ${ownerCase}`:''}${only ? ` --check ${only}` : ""} --evidence <new-private-directory>`;
+  save();
+  console.log(JSON.stringify({ status, stage, reason, evidence: destination, commands: record.commands.map(({ label, exitCode }) => ({ label, exitCode })) }));
+  process.exit(exit);
+};
+if (free < BigInt(manifest.limits.smallCheckOutputBytes + 100 * 1024 * 1024)) {
+  finish("CAPACITY_REFUSED", 2, "Less than bounded small-check output plus 100 MiB free; no command launched");
+}
+if (named.live || stage === "installed" || stage === "diagnostic") {
+  if (free < BigInt(stage === "installed" && !installation ? manifest.limits.finalBuildMinimumFreeBytes : manifest.limits.liveMinimumFreeBytes)) {
+    finish("CAPACITY_REFUSED", 2, "Registered live/build disk floor not met; no service or build launched");
+  }
+  if(selectedOwnerCase){
+    if(installation){
+      const path=join(realpathSync(installation),'finnor-os/x1-development-installation.json');
+      const installed=JSON.parse(readFileSync(path,'utf8'));
+      const observerPaths=new Set(['finnor-os/scripts/frontier5/x1/run-owner-slice.mts',
+        'finnor-os/scripts/frontier5/x1/verify.mjs',
+        'finnor-os/scripts/frontier5/x1/scrutiny-evidence.mjs',
+        'finnor-os/scripts/frontier5/x1/reference/scrutiny-evidence-contract.json',
+        'finnor-os/scripts/frontier5/x1/reference/scrutiny-evidence-contract.md',
+        'finnor-os/scripts/frontier5/x1/reference/admission-cursor-native-review-contract.md',
+        'finnor-os/scripts/frontier5/x1/review-cases.mts',
+        'scope-frontier5/x1-institutional-programme-compiler/failure-model.md',
+        'scope-frontier5/x1-institutional-programme-compiler/status.md',
+        'scope-frontier5/x1-institutional-programme-compiler/requirement-coverage.json',
+        'scope-frontier5/x1-institutional-programme-compiler/handoff/development-installation.md',
+        'scope-frontier5/x1-institutional-programme-compiler/oracle-contract.md']);
+      const differences=[];
+      for(const pin of installed.sourcePreimages){
+        const current=sha(readFileSync(join(repo,pin.path)));
+        if(current!==pin.sha256){
+          if(!observerPaths.has(pin.path))finish('REFUSED',2,'Installed runtime preimage differs from current source: '+pin.path);
+          differences.push({path:pin.path,installedSha256:pin.sha256,verifierSha256:current});
+        }
+      }
+      if(installed.mode!=='DEVELOPMENT_ONLY'||installed.productionActive!==false)
+        finish('REFUSED',2,'Installed runtime is not the declared development package');
+      record.installation={root:realpathSync(installation),manifestPath:path,sha256:sha(readFileSync(path)),
+        source:installed.source,entrypoints:installed.entrypoints,
+        comparedOriginalPreimages:installed.sourcePreimages.length,observerOnlyDelta:differences,
+        runtimeAndVerifierSourceRecordedSeparately:true};
+    }
+    if(frontendInstallation){
+      const path=join(realpathSync(frontendInstallation),'x1-frontend-installation.json'),installed=JSON.parse(readFileSync(path,'utf8'));
+      if(installed.schema!=='finnor.x1.frontend-installation.v1'||installed.productionActive!==false)
+        finish('REFUSED',2,'Exact compiled development frontend installation required');
+      for(const pin of installed.sourcePreimages){
+        const current=sha(readFileSync(join(repo,pin.path)));
+        if(current!==(pin.generatedSha256??pin.sha256))finish('REFUSED',2,'Compiled frontend source preimage differs: '+pin.path);
+      }
+      record.frontendInstallation={root:realpathSync(frontendInstallation),manifestPath:path,sha256:sha(readFileSync(path)),
+        source:installed.source,buildId:installed.buildId,frontendOrigin:installed.frontendOrigin,
+        sourcePreimagesCompared:installed.sourcePreimages.length,generatedInputDeltas:installed.generatedInputDeltas??[]};
+    }
+    const leaf=join(destination,'owner'),argv=['--max-old-space-size=1536','./node_modules/tsx/dist/cli.mjs','scripts/frontier5/x1/run-owner-slice.mts'];
+    const started=Date.now();
+    record.schema='finnor.frontier5.x1.named-owner-evidence.v1';
+    record.limits={wallSeconds:880,driverWallSeconds:840,workerWallSeconds:600,nodeHeapMiB:1536,
+      outputBytes:manifest.limits.smallCheckOutputBytes,sharedDiskGrowthBytes:manifest.limits.liveEpisodeIncrementalDiskBytes,
+      sampledOwnedRssStopBytes:manifest.limits.localSampledProcessMemoryStopBytes};
+    record.authority='actual disposable authenticated API/queue/worker/canonical owners; no protected qualification or production authority';
+    if(stage==='mounted')console.log(JSON.stringify({status:'WAITING_ACTUAL_BROWSER',evidence:leaf,
+      fixture:join(leaf,'mounted-private-fixture.json'),originalLimitsUnchanged:true,credentialsMustRemainPrivate:true}));
+    const child=spawnSync(process.execPath,argv,{cwd:os,encoding:'utf8',timeout:880000,maxBuffer:manifest.limits.smallCheckOutputBytes,
+      killSignal:'SIGTERM',env:{PATH:'/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin',HOME:join(leaf,'home'),TMPDIR:'/tmp',
+        LANG:'en_US.UTF-8',CI:'1',LOG_LEVEL:'silent',TSX_DISABLE_CACHE:'1',NEXT_TELEMETRY_DISABLED:'1',
+        FINNOR_X1_OWNER_EVIDENCE:leaf,FINNOR_X1_OWNER_CASE:selectedOwnerCase.count,FINNOR_X1_OWNER_MODE:selectedOwnerCase.mode,
+        ...(selectedOwnerCase.mode==='qualification_population'&&process.env.FINNOR_X1_LOCKED_SPECIFICATION
+          ?{FINNOR_X1_LOCKED_SPECIFICATION:process.env.FINNOR_X1_LOCKED_SPECIFICATION}:{}),
+        ...(selectedOwnerCase.mode==='diagnostic'&&process.env.FINNOR_X1_DIAGNOSTIC_BINDING_FILE
+          ?{FINNOR_X1_DIAGNOSTIC_BINDING_FILE:process.env.FINNOR_X1_DIAGNOSTIC_BINDING_FILE}:{}),
+        ...(installation?{FINNOR_X1_INSTALLED_ROOT:realpathSync(installation)}:{}),
+        ...(frontendInstallation?{FINNOR_X1_FRONTEND_ROOT:realpathSync(frontendInstallation)}:{})}});
+    const output=(child.stdout??'')+(child.stderr??'');
+    writeFileSync(join(destination,'owner-driver.log'),output,{flag:'wx',mode:0o600});
+    record.commands.push({label:'actual-owner:'+ownerCase,argv:[process.execPath,...argv],cwd:os,
+      exitCode:child.status,signal:child.signal,elapsedMs:Date.now()-started,outputSha256:sha(output),outputBytes:Buffer.byteLength(output)});
+    let result;try{result=JSON.parse(readFileSync(join(leaf,'results.json'),'utf8'));}catch{finish('FAIL_OR_INTERRUPTED',1,'Owner result absent; actual process interruption/failure retained, no restart or PASS');}
+    record.ownerResult={path:join(leaf,'results.json'),sha256:sha(readFileSync(join(leaf,'results.json'))),
+      status:result.status,sourceUnchanged:result.sourceUnchanged,cases:result.results.map(r=>({id:r.id,status:r.status}))};
+    if(child.error||child.status!==0||result.status!=='PASS_LOCAL_OWNER_SLICE'||result.sourceUnchanged!==true
+      ||result.source.commit!==record.source.commit)finish('FAIL',1,'Exact named actual owner case failed; raw evidence retained');
+    finish('DEVELOPMENT_NAMED_OWNER_CASE_PASS',0,'Only the named actual owner case passed; complete groups/final installation/protected qualification remain unestablished');
+  }
+  finish("NOT_IMPLEMENTED_NOT_RUN", 2, "This live stage still lacks its complete installed/diagnostic driver; never report PASS");
+}
+const run = (label, binary, argv, cwd, heapMiB) => {
+  const started = Date.now();
+  const child = spawnSync(binary, [`--max-old-space-size=${heapMiB}`, ...argv], {
+    cwd, encoding: "utf8", timeout: manifest.limits.smallCheckWallSeconds * 1000,
+    maxBuffer: 1024 * 1024, env: { ...process.env, NODE_OPTIONS: "" },
+  });
+  const text = `${child.stdout ?? ""}${child.stderr ?? ""}`;
+  writeFileSync(join(destination, `${label}.log`), text.slice(0, 1024 * 1024), { flag: "wx", mode: 0o600 });
+  const step = { label, argv: [binary, ...argv], exitCode: child.status, signal: child.signal,
+    elapsedMs: Date.now() - started, outputSha256: sha(text), outputBytes: Buffer.byteLength(text) };
+  record.commands.push(step);
+  if (label === 'retained-development-evidence-audit' && !child.error && !child.signal && child.status === 2) {
+    let audit; try { audit = JSON.parse(text); } catch { /* Invalid child output remains a failed check. */ }
+    if (audit?.status === 'INCOMPLETE_NOT_RUN' && audit.code === 'INCOMPLETE_NOT_RUN'
+        && Array.isArray(audit.missingStages) && audit.missingStages.length > 0 && audit.missingStages.length <= 64
+        && audit.missingStages.every(name => typeof name === 'string' && /^[a-zA-Z0-9._-]{1,128}$/.test(name))) {
+      record.evidenceAudit = audit; record.pending = [...new Set(audit.missingStages)].sort();
+      finish('INCOMPLETE_NOT_RUN', 2, `Missing development evidence: ${record.pending.join(', ')}`);
+    }
+  }
+  if (child.error || child.status !== 0) finish("FAIL", 1, `${label} failed; original output retained in ${label}.log`);
+  return text;
+};
+if (stage === "kernel" || stage === "scrutiny") {
+  run("kernel", process.execPath, ["./node_modules/tsx/dist/cli.mjs", "scripts/frontier5/x1/kernel.mts"], os, manifest.limits.kernelNodeHeapMiB);
+  run("protocols", process.execPath, ["./node_modules/tsx/dist/cli.mjs", "scripts/frontier5/x1/protocol-cases.mts"], os, manifest.limits.kernelNodeHeapMiB);
+  run("reconstruction", process.execPath, ["./node_modules/tsx/dist/cli.mjs", "scripts/frontier5/x1/reconstruction-cases.mts"], os, manifest.limits.kernelNodeHeapMiB);
+  run('reconstruction-replay-timing',process.execPath,['--import=tsx','scripts/frontier5/x1/reconstruction-timing-cases.mjs',join(destination,'reconstruction-replay-timing')],os,manifest.limits.kernelNodeHeapMiB);
+  run("checker-review", process.execPath, ["./node_modules/tsx/dist/cli.mjs", "scripts/frontier5/x1/review-cases.mts"], os, manifest.limits.kernelNodeHeapMiB);
+  run('checker-original-nominal-types',process.execPath,['--import=tsx','scripts/frontier5/x1/numeric-context-cases.mjs',join(destination,'checker-original-nominal-types')],os,manifest.limits.kernelNodeHeapMiB);
+  run("native-corpus", process.execPath, ["./node_modules/tsx/dist/cli.mjs", "scripts/frontier5/x1/native-cases.mts"], os, manifest.limits.kernelNodeHeapMiB);
+  run("native-finish", process.execPath, ["./node_modules/tsx/dist/cli.mjs", "scripts/frontier5/x1/native-finish-cases.mts"], os, manifest.limits.kernelNodeHeapMiB);
+  run("native-creation", process.execPath, ["./node_modules/tsx/dist/cli.mjs", "scripts/frontier5/x1/creation-native-cases.mts"], os, manifest.limits.kernelNodeHeapMiB);
+  run("process-transport", process.execPath, ["./node_modules/tsx/dist/cli.mjs", "scripts/frontier5/x1/transport-cases.mts"], os, manifest.limits.kernelNodeHeapMiB);
+  run("admission-finish", process.execPath, ["./node_modules/tsx/dist/cli.mjs", "scripts/frontier5/x1/admission-finish-cases.mts"], os, manifest.limits.kernelNodeHeapMiB);
+  run("responsibility", process.execPath, ["./node_modules/tsx/dist/cli.mjs", "scripts/frontier5/x1/responsibility-cases.mts"], os, manifest.limits.kernelNodeHeapMiB);
+  run("responsibility-finish", process.execPath, ["./node_modules/tsx/dist/cli.mjs", "scripts/frontier5/x1/responsibility-finish-cases.mts"], os, manifest.limits.kernelNodeHeapMiB);
+}
+if (stage === "static" || stage === "scrutiny") {
+  if (!only || only === "typecheck") {
+    run("x1-owner-typecheck", process.execPath, ["./node_modules/typescript/bin/tsc", "-p", "scripts/frontier5/x1/tsconfig.oracle.json",
+      "--noUnusedLocals", "false", "--noUnusedParameters", "false"], os, manifest.limits.smallCheckNodeHeapMiB);
+    run("runner-syntax", process.execPath, ["--check", "finnor-os/scripts/frontier5/x1/verify.mjs"], repo, manifest.limits.smallCheckNodeHeapMiB);
+    run("scrutiny-audit-syntax", process.execPath, ["--check", "finnor-os/scripts/frontier5/x1/scrutiny-evidence.mjs"], repo, manifest.limits.smallCheckNodeHeapMiB);
+  }
+  if (!only || only === "lint") {
+    run("oracle-lint", process.execPath, ["node_modules/eslint/bin/eslint.js", "--config",
+      "finnor-os/scripts/frontier5/x1/eslint.config.mjs", "--max-warnings=0",
+      "finnor-os/packages/private-equity/src/institution-program/contracts.ts",
+      "finnor-os/packages/private-equity/src/institution-program/checker.ts",
+      "finnor-os/packages/private-equity/src/institution-program/checker-process.ts",
+      "finnor-os/packages/private-equity/src/institution-program/checker-raw.ts",
+      "finnor-os/packages/private-equity/src/institution-program/source-decoder.ts",
+      "finnor-os/packages/private-equity/src/institution-program/reconstruction.ts",
+      "finnor-os/packages/private-equity/src/institution-program/owner-admission.ts",
+      "finnor-os/packages/private-equity/src/institution-program/responsibility.ts",
+      "finnor-os/packages/private-equity/src/institution-program/resource-demand.ts",
+      "finnor-os/packages/private-equity/src/allocation-store.ts",
+      "finnor-os/packages/private-equity/src/institution-program/source-authority.ts",
+      "finnor-os/packages/private-equity/src/institution-program/installed-source.ts",
+      "finnor-os/scripts/frontier5/x1/kernel.mts",
+      "finnor-os/scripts/frontier5/x1/protocol-cases.mts",
+      "finnor-os/scripts/frontier5/x1/reconstruction-cases.mts",
+      "finnor-os/scripts/frontier5/x1/responsibility-cases.mts"], repo, manifest.limits.smallCheckNodeHeapMiB);
+    run("responsibility-finish-lint", process.execPath, ["node_modules/eslint/bin/eslint.js", "--config",
+      "finnor-os/scripts/frontier5/x1/eslint.config.mjs", "--max-warnings=0",
+      "finnor-os/scripts/frontier5/x1/responsibility-finish-cases.mts",
+      "finnor-os/packages/private-equity/src/program-synthesis/institution.ts",
+      "finnor-os/packages/private-equity/src/program-synthesis/contracts.ts",
+      "finnor-os/packages/private-equity/src/program-synthesis/plan.ts",
+      "finnor-os/packages/private-equity/src/program-synthesis/owners.ts",
+      "finnor-os/packages/private-equity/src/program-synthesis/api.ts",
+      "finnor-os/packages/private-equity/src/program-synthesis/worker.ts",
+      "finnor-os/packages/private-equity/src/program-synthesis/store.ts",
+      "finnor-os/packages/orchestration/src/objective-loop.ts"], repo, manifest.limits.smallCheckNodeHeapMiB);
+    run("checker-command-lint", process.execPath, ["node_modules/eslint/bin/eslint.js", "--config",
+      "finnor-os/scripts/frontier5/x1/eslint.config.mjs", "--max-warnings=0",
+      "finnor-os/scripts/frontier5/x1/review-cases.mts",
+      "finnor-os/scripts/frontier5/x1/native-cases.mts",
+      "finnor-os/scripts/frontier5/x1/native-finish-cases.mts",
+      "finnor-os/scripts/frontier5/x1/creation-native-cases.mts",
+      "finnor-os/scripts/frontier5/x1/transport-cases.mts",
+      "finnor-os/scripts/frontier5/x1/admission-finish-cases.mts",
+      "finnor-os/scripts/frontier5/x1/checker-command.mts"], repo, manifest.limits.smallCheckNodeHeapMiB);
+  }
+}
+if (stage === "qualification-contract") {
+  const locked=process.env.FINNOR_X1_LOCKED_SPECIFICATION;
+  if(!locked?.startsWith('/')||!existsSync(locked))finish('INCOMPLETE_NOT_RUN',2,
+    'Full contract requires FINNOR_X1_LOCKED_SPECIFICATION pointing to the retained pinned original source');
+  record.qualificationOriginalSource={path:resolve(locked),sha256:sha(readFileSync(locked))};
+  run("qualification-scorer-contract", process.execPath,
+    ["./node_modules/tsx/dist/cli.mjs", "scripts/frontier5/x1/qualification-cases.mts"], os, manifest.limits.kernelNodeHeapMiB);
+  run('qualification-full-public-contract',process.execPath,['--import=tsx','scripts/frontier5/x1/qualification-full-contract-cases.mjs',
+    join(destination,'full-contract'),resolve(locked)],os,manifest.limits.smallCheckNodeHeapMiB);
+  record.qualificationBasis='FULL_PUBLIC_NONAUTHORITATIVE_FIXTURES_NO_ACTUAL_LIVE_TIME_OR_PROTECTED_CUSTODY';
+}
+if (stage !== "kernel" && stage !== "static" && stage !== "scrutiny" && stage !== "qualification-contract") {
+  finish("NOT_IMPLEMENTED_NOT_RUN", 2, "This frozen stage has no implementation in this feature");
+}
+if (stage === "scrutiny") {
+  const output = run('retained-development-evidence-audit', process.execPath,
+    ['finnor-os/scripts/frontier5/x1/scrutiny-evidence.mjs'], repo, manifest.limits.smallCheckNodeHeapMiB);
+  record.evidenceAudit = JSON.parse(output);
+  record.pending = ['native-independent-acceptance', 'protected-population-qualification', 'existing-S8-signed-admission',
+    'protected-S6-operation-authority', 'production-activation', 'operational-and-financial-100x', 'H2'];
+  finish('DEVELOPMENT_EVIDENCE_AUDIT_PASS', 0,
+    'Bounded offline checks and pinned development evidence audit passed; native independent acceptance and external qualification remain separate');
+}
+finish("DEVELOPMENT_OFFLINE_PASS", 0,
+  "Selected bounded offline commands passed; owner persistence, installed bytes and protected qualification remain NOT RUN");

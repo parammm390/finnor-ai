@@ -1,0 +1,597 @@
+# Independently specified X1 oracle v1
+
+Frozen before critical checker/compiler code. Owned by the validation specification, not candidate inference. Scope is `profile.json`; consistency means consistency in this encoded domain, not unique truth, causal qualification or protected admission.
+
+## Independent inputs and custody
+
+Checker reads (1) authorized retained original source bytes and transport metadata, (2) supplied standing mandate/current explicit policies, (3) independently fetched canonical identity/fact/right/resource/operation snapshots and revision vector, (4) candidate bytes only as the object being checked, (5) frozen profile and checker revision. It MUST NOT import producer inference, hypothesis ranking, source-to-domain mapping or rule-selection functions. Format-only libraries may be shared if semantic-free; raw byte identity and interpretation witnesses are independently checked.
+
+Reference expectations and material denominators are authored/derived separately from original sources/mandate, before candidate exposure. An omission is visible even when no candidate record exists. Expected population cannot be candidate-selected, created by a mock implementing its asserted behavior, or obtained by running the producer. Development fixtures use independently hand-specified truth for their raw inputs; protected evaluation loads an independently administered inaccessible ledger.
+
+Protected credentials/filesystem/process custody, immutable validator revision and independently controlled outcome observations must be verified by the evaluator. A development process/file split alone does not prove hostile isolation. Absent custody blocks protected qualification, not source engineering.
+
+## Typed reference/value semantics
+
+Use discriminated known/unknown bindings. A known owner ref binds owner, kind, canonical identity, revision/content digest, tenant/institution scope, rights revision and temporal cut where applicable. An unknown binds exact reason, affected claims/obligations and required owner/input; it is not an invented UUID, empty successful result, zero cost or null without meaning.
+
+Quantity = exact value representation + currency/unit + canonical entity + economic period/as-of + accounting basis + source witness. Missing/incompatible components remain unknown. Identity requires institution/source scoped durable identifier or explicit checked cross-reference. Matching names/embeddings or balancing accounts do not establish identity.
+
+Time distinguishes occurrence/validity, admitted-channel availability and knowledge cut. Dates with multiple supported meanings retain alternatives unless original protocol/context disambiguates. No future-available assertion enters an earlier knowledge cut.
+
+## Obligation and programme semantics
+
+The owner supplies responsibility, materiality, priority/risk, responsible role/principal requirements, deadlines and current grants, not an ontology or workflow. Generic canonical vocabulary and bounded responsibility/rule forms are permitted; institution-specific source field maps and hand-written held-out workflow code are not.
+
+A derivation binds: original trigger occurrence and evidence revision set; current explicit rule/policy or mandate clause; condition; materiality/priority; original deadline; responsible current principal; permissible operation class; exact preconditions; expected external/canonical postcondition; independent observer contract; stable obligation identity; derivation revision; existing effect binding if any.
+
+Rule provenance is normative only when explicitly supplied/authorized. A process hypothesis is descriptive. An exception-request email, silence, title, employment record or historical approval cannot satisfy a current approval predicate.
+
+The independent ledger recomputes supported triggers across ALL relevant authorized observations. Multiple supported alternatives remain unresolved, never uniquely true by consistency alone. Unsupported responsibility parts produce exact gaps while independent supported parts continue.
+
+S4/P1 lowering is checked against the accepted obligation set:
+- Each executable branch has an admitted operation with the original trigger/guard/principal/deadline/postcondition.
+- Each WAIT/STOP retains unresolved duties, reservations and possible effects according to existing owners.
+- New data can disable a branch or create a traced successor, never silently erase an old obligation/effect.
+- Continuation uses canonical owner semantics; it does not claim a supplied institutional rule is an S3 causal law.
+- S5 demand/actual reserve/consume refs join that branch and original parent.
+- Compiler/check receipts grant neither execution authority nor S6 settlement.
+
+Preservation argument: initial binding establishes the supplied mandate and source cut; each checked typed transition either preserves the same obligation and guard/deadline/completion contract, appends a justified revision, waits/stops without dropping liability, or executes a currently authorized native operation followed by independent observation. Induction over accepted native transitions preserves those obligations within the declared grammar. This is an encoded-contract argument, not a theorem of institutional/business truth.
+
+## Acceptance predicate
+
+1. Complete tenant/institution/source/principal/Work binding and original raw bytes; current source access and sensitive consent.
+2. Complete declared source/page/object coverage, or explicit gaps that disable every dependent positive claim. No truncated “complete” input.
+3. Every accepted entity/relation/quantity/time claim has a supported witness in originals/canonical owner state. Identity collisions and incompatible unit/context are not silently merged.
+4. Every material contradiction has a preserved disposition. Corrected prior data is superseded with history, not erased.
+5. Every normative rule has current mandate/policy provenance; unsupported text/process regularity supplies no authority.
+6. Complete independent supported-obligation population matches triggers, principals, materiality, deadlines and action classes, including omitted obligations.
+7. Accepted programme is expressible by the versioned actual S4/P1 grammar and preserves original semantics.
+8. Relevant current rights/resources/method/operation/checker/profile/schema/runtime/source/mandate dependencies match at acceptance and every later use.
+9. Check receipt binds exact original/candidate/checker/profile/currentness inputs and cannot be forged/reused for another revision.
+10. Completion requires a separately observed exact postcondition and timing. Prepared/submitted/acknowledged/UNKNOWN are not completed.
+
+Each failure emits a typed finding with witness/ref, reached predicate, affected claim/obligation and permitted exact intervention. A checker crash/exhaustion produces no accepted check; compatible fallback may run under the remaining original grant.
+
+## Complete artifact fields and owner mapping
+
+| InstitutionProgram field | Required meaning |
+|---|---|
+| envelope | Full envelope below, immutable artifact identity |
+| mandate_ref | Current immutable owner mandate/Work input revision |
+| inferred_source_mapping_refs | Candidate/check witnesses and accepted semantic-owner receipts |
+| canonical_entity_and_relation_refs | Actual S1/Core/PE identities/revisions, no replica |
+| temporal_and_unit_constraints | Complete checked quantity/identity/time semantics |
+| obligation_derivation_rules | Normative derivations with all bindings above |
+| materiality_and_priority_contract | Supplied mandate thresholds/risk/priority |
+| unresolved_interpretations | Alternatives, exact missing input/decision, affected commitments |
+| evidence_dependency_graph | Complete typed P7 dependency membership |
+| incremental_update_rules | Sound changed-node seeds, closure/reuse rules and revision behavior |
+| s4_programme_ref | Actual versioned owner responsibility/native programme |
+| s6_obligation_refs | Real governed obligations; ordinary effect binding is separately discriminated |
+| validity_and_invalidation_contract | All currentness predicates/fences/expiry |
+| independently_checked_model_revision | Exact candidate/source/profile/checker binding, basis and current disposition |
+
+| Envelope field(s) | Required canonical binding |
+|---|---|
+| artifact_id, kind, schema_revision, content_digest | Immutable typed revision; nonrecursive digest preimage |
+| tenant_ref, work_ref, institutional_program_ref | Actual canonical ownership and lineage |
+| parent_artifact_refs, producer_revision, baseline_manifest_ref | Immutable ancestry and exact code/dirty/runtime baseline |
+| authority_grant_ref, rights_revision, resource_grant_ref | Actual current authority/access and S5 original parent or explicit unknown |
+| source_refs, source_revision_vector, knowledge_cut | Complete retained sources/revisions and reconstructible knowledge cut |
+| admitted_domain_ref, application_fingerprints | Actual admission disposition and source/operation semantics; profile alone is not admission |
+| model_refs, dependency_lock_digest, runtime_digest | Actual provider/model if any, locks and installed identity; unknown alias explicitly unknown |
+| observed_claims, inferred_claims, predicted_claims, unresolved_claims | Distinct typed claims with witnesses/basis, never collapsed into facts |
+| postcondition_contract_refs, independent_check_refs | Frozen actual completion contracts and independent check records |
+| S6_obligation_refs, provider_observation_refs | Exact governed identities/observations; ordinary canonical readbacks separately typed |
+| invalidation_dependencies, lifecycle_state, lifecycle_events | Complete dependency set and append-only lifecycle transitions |
+| build_learning_compute_cost_refs, attributable_human_work_refs | Once-only actual parent S5/S7 meter/human refs with unknown coverage |
+
+All34 logical envelope fields must exist in parsable persisted output, even where a meaningful unknown binding is necessary. Full14 output fields are independently inspected.
+
+## Positive native completion oracle
+
+First supported responsibility: create exactly one specified internal evidence Request before its registered deadline. Original mandate/source-derived target is checked independently. Observer reads canonical state by frozen authorized DomainAction-derived ID and compares tenant, Deal, workstream, requested-from party, owner, request text, requestedAt/dueAt, accepted-deliverable requirement and creation/lifecycle state. A row existing under another target or with different fields fails. Creation does not mean requested evidence received, accepted, fulfilled or approved.
+
+Lost acknowledgement retains same effect/obligation/grant/deadline and UNKNOWN. Read-only canonical observation can reconcile supported exact completion; absent/ambiguous state cannot authorize blind retry. No new effect ID is invented to “recover.”
+
+### B-ledger-correction independent expectations
+
+The frozen ledger record changes only its value from 20.00 to 25.00. The
+independent expected quantity retains USD, units, 2026-10, outstanding basis and
+the original Deal identity. Source population stays three, with only the ledger
+grant/version superseded. Its prior projection must return INVALIDATED and no
+artifact/programme before use. The actual owner-change trigger must queue P7 and
+accept revision 2 without the observer calling institution-revise.
+
+Expected change disposition is SEMANTIC, with exactly the ledger source-model
+dependency changed, zero affected creation duties and one preserved duty. The
+unrelated work-tracking trigger, mandate, operation, principal and deadline are
+identical. The original Request/action/effect IDs and prior CompletionProof must
+remain unchanged; the same Work and Objective must complete their checked
+successor. Original episode, reservation, resource revisions, limits and deadline
+remain identical, with only monotone charged counters allowed to advance.
+Expectations come from these frozen original inputs, never producer inference
+or candidate-selected duty populations. This is development evidence only.
+
+### A-eight-class-original-corpus independent expectations
+
+Twelve complete sources contain thirteen independently enumerated records.
+Ten entity records resolve to the two existing scoped Deal identities despite
+their shared display name. Two quantity records carry USD 20.00, units, 2026-10,
+outstanding basis and their original occurrence/availability times; the ledger
+fact is facility_balance and the lender fact is outstanding. One separately
+specified work-tracking trigger and current mandate derive one Request creation.
+Mail/calendar/approval assertions create no additional commitment or permission.
+
+Freeze each source's protocol, original bytes and expected object IDs before
+candidate exposure. Observe actual Core retention, authenticated submit/read,
+separate checker, immutable S1 receipts, ordinary native creation and exact
+canonical completion. Native Work/Objective/Plan proof is required. Protected
+qualification and the other canonical types remain separate requirements.
+
+### A-fourteen-canonical-kinds independent expectations
+
+The frozen mapping population contains seventeen entity records covering fund,
+vehicle, deal, investment_case, counterparty, person, document, metric, facility,
+relationship, work, request, finding and decision. Two funds and two vehicles
+remain distinct; the source population includes their existing relationship.
+Every expected canonical ID comes from the corresponding pre-exposure owner
+creation result, never candidate output. Each checked evidence version must
+reference that exact owner type and ID. Core targets use Memory entity references;
+PE targets retain native evidence links when the canonical root supports them.
+One current person identity has an explicit expiring source binding and actual
+self-issued consent. One additional work-tracking trigger creates one new Request;
+the preexisting Request and draft Decision are not counted as completed effects.
+
+### D-compiler-before-publication-death independent expectations
+
+The independent SQL lock must intercept a real mapping-admission insertion
+before publication. At the observed interruption no immutable mapping admission,
+InstitutionProgram or native effect exists for this Work. SIGKILL is followed
+by actual lease expiry and a retained reconciliation_required delivery and
+quarantined original job. The authenticated compiler read must return UNKNOWN
+with no positive artifact/programme claim. It may be resumed under current
+original authority; it must not silently start another institution episode.
+
+After explicit authenticated resume, expect the same compiler ID, Work input,
+original compiler episode, S5 parent, original resource versions and deadline.
+Attempt/acquisition/charge history is monotone and both physical deliveries are
+retained. The recovered owner chain must produce exactly one independently
+observed Request and effect, then complete the same native Work/Objective/Plan.
+An absence observed in this coordinated pre-publication case does not generalize
+to absence after an unobserved external submission.
+
+### Installed baseline and parent readback expectations
+
+The immutable baseline preimage records actual loaded source digests, available
+Git commit/tree/dirty digest, root/backend locks, executable runtime, installed
+migration history/catalog digest, profile, source/mandate/rights/operation handles
+and original S5 parent. The artifact reference must hash that exact stored
+preimage. Its classification is B_live, with qualified B_V unavailable and
+preparation-cost/hosted-auth qualification gaps explicitly retained.
+
+A successor has exactly its actual parent's artifact ID and stored body digest
+under the same tenant, principal, Work and original episode. Authenticated read
+rechecks stored body and baseline reference digests. No caller can supply those
+bindings. The real material-correction case independently compares Git/source,
+schema/profile, original source handles and parent ID/digest from owner storage.
+
+### E-original-shared-parent-contention independent expectations
+
+Freeze one shared COMPUTE request resource with availability 520 and one shared
+HUMAN_ATTENTION seconds resource with availability 900. The first standing Work
+already occupies both under its original parent. A second correctly authorized
+Work requests the same full envelope. Its real worker must reach the existing
+S5 capacity predicate, create zero additional reservations and execute zero
+effects. An unrelated authentication/currentness refusal does not pass.
+
+The second compiler retains the exact failed/unknown disposition and original
+deadline/cost gap. Authenticated cancellation returns CANCELLED and no retained
+exposure only because no parent, native programme or effect was ever created.
+The first parent remains ACTIVE with unchanged envelope/resource revisions and
+its exact Request/effect/native completion. This is no new authority or budget.
+
+### F-mixed-unsupported-rule independent expectations
+
+Two original rule IDs match one retained trigger. The first has fully supported
+meaning and produces one exact independently observed Request. The second adds
+approvalCondition, whose unsupported meaning remains an unresolved duty with
+that rule ID/digest, original principal/deadline and exact field needing decision.
+Expected completed effects are one, unresolved duties one and programme PARTIAL.
+The native Work/Objective must not report completed. Both duties remain in the
+original population and original resource/cost envelope. No approval exists and
+no equivalent approved alternate operation is available for the unresolved duty.
+
+### E-cancel-observed-standing-continuation independent expectations
+
+After exact native Request creation and Work completion, institution-cancel must
+record CANCELLED for future compiler continuation and retain the original effect,
+completion proof and incurred resource envelope. Authenticated read returns the
+cancelled current disposition. Append a corrected Core source and a superseding
+grant with the same scope, then observe the physical queue: no second compiler
+request or P7 update may be accepted for that cancelled parent. The first Request
+and verified effect stay unique, and consumed resources are not marked released.
+
+### Publication compute attribution expectations
+
+On a normal real compiler delivery, Work's existing S7 readback must include one
+COMPILE and one PUBLICATION record for the same actual job/delivery/episode and
+original reservation. The split timestamps and positive measured publication
+elapsed interval come from physical execution, not a declared constant. Both
+records are immutable and independently reread; neither grants business-work or
+financial-value credit. Missing monetary/human/aggregate-memory and meter-writer
+coverage remain unknown. Recovery before publication retains its interrupted gap.
+
+## Qualification score specification
+
+Independently freeze material mapping set M, supported obligation set O, unique business assignment identities/weights/deadlines, critical subset K and actionable-change set C per environment before exposure. Candidate claims are CANDIDATE, not expectations. Match one-to-one only under independently defined equivalence; no duplicate credit.
+
+Mapping and obligation precision = accepted correct claimed items / all material claimed items; recall = accepted correct items / all independently expected items. Missing candidates remain in denominator. Empty or invalid denominators are unqualified/unknown, never a perfect score. Each environment must independently meet mapping99%/95% and obligation99%/95%.
+
+Within-deadline supported completion uses ALL O and independently observed exact postconditions; missed/blocked/unknown/refused/expired/overridden remain. At least95% by contractual deadline; critical misses may veto independently. Change recognition uses all actionable C and admitted-channel availability, at least95% within120s. Source occurrence-to-availability transport lag is a separate measurement, never subtracted to disguise slow recognition.
+
+Any observed unauthorized effect, tenant disclosure, stale-grant execution, false completion, silent material contradiction, scorer/oracle contamination or institutional human patch invalidates the affected qualification. Human clarification/supervision/rescue and all failures are charged, never removed.
+
+Ten environments each>=8 genuinely heterogeneous system classes; full30-day replay plus separate7-day live elapsed soak for each. Separate clocks/start/checkpoint/resume observations. No renamed known fixture, eight labels over one JSON object, shortened population/horizon or accelerated-live substitution.
+
+Original resource/generator/correctness/regret/calibration/downside/comparator and financialH2 contracts remain unchanged. X1 on/off is component development evidence, not qualifiedB_V or operational100x.
+# D-effect-submit-lost-ack independent expectations
+
+The pre-exposure raw source and standing mandate determine the same Request text,
+Deal, Workstream, recipient, owner, requested/due dates and creation-only meaning
+as case A. The external fixture observes the native operation identity before the
+effect commits; it does not choose an identity from a successful candidate.
+Before killing the worker, require one exact canonical record, a running operation
+with null response, a blocked acknowledgement UPDATE, and an unverified effect.
+After restart require the same operation still marked unknown with null response,
+separate verified canonical observation, no executor replay and one eventual native
+Work/Objective/Plan completion. Original reservations and deadlines remain equal;
+cost counters may only increase. Actual queue/claim, SQL wait, process death and
+canonical readbacks are retained. This establishes development recovery for the
+closed ordinary creation registry, not arbitrary external provider settlement.
+
+# A-all-ordinary-operations independent expectations
+
+One evidence-request trigger preserves the existing A Request oracle. Two
+additional raw triggers require a financial_diligence Workstream in not_started
+state with the independently generated name, and a high-severity material Finding
+in open state with the independently generated statement, bound to the original
+existing Workstream and owner. All terminal/resolution fields remain null and the
+Finding is required for Workstream completion. Require exactly three independently
+checked original obligations and three actual completed/verified native effects,
+all attached to their real Plan action nodes, one original parent envelope and
+actual Work/Objective/Plan completion. Read fields from canonical owner SQL and
+retain the raw source, mandate, policy/API, queue and physical worker evidence.
+
+# G-existing-schema-upgrade-and-jobs independent expectations
+
+The frozen old source contains no X1 migration and ends at 0171. The independently
+created legacy Work and original binary document/version rows form a byte-exact
+preimage before upgrade. Compare every selected column and original byte hash
+after additive migration and again after new X1 native completion. The original
+release probe identity and retired job identity are retained; require actual
+delivery attempts, completed compatible probe, quarantined retired job, and one
+new independently observed Request with completed native Work. A copied tracker,
+renamed old row or a new identity cannot satisfy this case. It is schema/job
+compatibility evidence, with final build/install explicitly separate.
+
+# A-full-declared-source-and-owner-domain independent expectations
+
+Fifteen source instances cover all ten classes and twelve direct-byte protocols.
+The independent fixture owner ledger supplies the exact fourteen-kind identity
+population before compiler exposure; source data contains raw registrations and
+relationships, never canonical IDs or supplied mappings. Two distinct funds and
+vehicles retain conflicting names. Exact original owner IDs remain stable across
+legacy provenance. Require one existing compatible fund/vehicle link byte-identical
+and one new owner link with the declared kind/valid-from, no duplicate links.
+Sensitive personnel and expense sources require current subject self-consent and
+source-scoped identity bindings. Expected expense decimal/currency/unit/period/basis
+and subject are retained, with no payment credit. Three original responsibilities
+execute the actual native owners and complete Work. Original bytes, hidden-field
+denominators and checker coverage stay frozen; this is development domain evidence.
+
+# Authenticated API lifecycle metering independent expectations
+
+Through the real authenticated endpoint, make one owned institution-status call
+and one owned institution-read call after native completion. Read immutable S7
+bodies independently from SQL: require distinct internal invocation identities,
+positive finite measured intervals, actual operation/status and the same original
+episode/reservation as the compiler. A repeated caller request still costs another
+physical read. An owned malformed request is a refused invocation with retained
+cost, not business-work credit. Unrelated tenant/principal requests must fail the
+original scope boundary without private attribution. The S7 owner preimage reader
+verifies stored hashes; API poll counts alone cannot establish measured compute.
+
+# B-report-meaning-exception-and-cosmetic-change independent expectations
+
+Start with the complete A-full-declared-source-and-owner-domain oracle. External
+ledger bytes change 20.00 to 25.00 with identical USD/unit/period/accounting basis;
+CRM names change with original registrations; mail adds only an exception request.
+The first successor has exactly the corrected financial value, unchanged mapping
+identities and three carried original creation witnesses. No duty is affected by
+these independent non-trigger sources. Lender Committed has no registered meaning
+as Outstanding: the next successor must omit that prior exact quantity and retain
+the original lender object as unresolved with its canonical alternative. Current
+explicit Outstanding restores the quantity; old failures/costs remain. Three
+automatic child IDs/immutable parents, exact fifteen-source population and all
+original limits survive; Request/Workstream/Finding counts and IDs never grow.
+
+# F-physical-checker-crash-and-compatible-resume independent expectations
+
+Use the original A raw three-source/one-duty oracle. Kill the first real checker
+child after its existing CHECK charge and spawn, before admission. Require actual
+X1_CHECKER_PROCESS_REFUSED/UNKNOWN and no candidate/check/native exposure. Read the
+original episode, S5 reservation/envelopes and deadline before resume. The existing
+authenticated institution-resume must reuse that exact request and parent, start
+the real second compiler/checker and produce exactly one independently observed
+Request plus completed native Work/Objective/Plan. Attempts become two, original
+raw acquisitions six, and both immutable physical COMPILE measurements persist.
+No alternative algorithm or protected fallback admission is claimed.
+
+# Quantitative semantic-owner source assertions independent expectations
+
+Keep the original all-domain identity denominator twenty-six and the original
+three contextual quantity expectations. The actual admission additionally carries
+three QUANTITY receipts, distinct from IDENTITY receipts. Read their genuine
+Memory versions and entity references plus PE attachment when applicable. Compare
+every stored decimal/currency/unit/period/basis/subject/time field against original
+pre-exposure owner inputs; require original Core document/version/hash and source
+revision, and explicit SOURCE_ASSERTION_ATTACHED_NOT_SETTLED_TRUTH. Sensitive
+expense subject stays the consented user and creates no payment. Material source
+revision retains old immutable assertions and adds the new current source version.
+No producer-derived numeric expectation or settled-truth claim is accepted.
+# G-authenticated-owner-inputs independent expectations
+
+Freeze the existing raw-source ledger and standing rules before exposing them to
+FINNOR. In `owner_inputs`, do not insert source grants or mandates with fixture
+SQL. Upload exact originals with the existing Core owner, then call authenticated
+`institution-mandate` and `institution-register-source` through the actual route
+using `finnor_app`. Coverage, immutable hashes, revisions and principal derive from
+owner records. The response and independent SQL reader must agree with the frozen
+original bytes and literal source-record IDs, with no supplied semantic mapping.
+Unknown Work and additional hash/coverage/canonical/observer fields fail before a
+binding is written. Identical registration is idempotent. The independent checker,
+registered physical worker, canonical creators and completion observer must still
+produce the same full-domain native effects; setup alone gives no PASS. Self-consent
+is subject-owned and renewal/revocation use the same authenticated owner boundary.
+
+## F-explicit-unsupported-operation independent expectations
+
+One raw trigger matches two pre-exposure rules: the existing permitted Request
+creation and an explicit `approve_transaction` responsibility. No approval or
+protected operation grant is installed. The original obligation denominator is
+two, with exactly one non-executable normative obligation and one native verified
+Request creation. The independent checker must preserve the unsupported rule's
+operation, principal and original deadline and require an exact OUTSIDE_PROFILE
+marker. A candidate that invents an operation or omits/forges this marker still
+fails authority or normative consistency. The resulting programme is PARTIAL,
+Work is not completed, no approval action/effect exists, original costs/deadline
+remain and the artifact names the missing operation in its exact intervention.
+
+## G-source-authority-role isolation
+
+In the actual disposable schema, `finnor_app` and `finnor_worker` must have no raw
+INSERT/UPDATE/DELETE on x1_source_grants, x1_work_mandates,
+x1_subject_identity_bindings, x1_source_acquisitions or x1_mapping_admissions.
+The authenticated application's zero-row direct UPDATE of source authority must
+raise SQLSTATE 42501. Reading privilege metadata alone is insufficient. Configuring
+all fifteen supported originals through authenticated owner functions must still
+produce real canonical admissions, three native effects and completed Work. Do
+not change the API/worker connection to a privileged role to recover that result.
+
+## B-unrelated personnel epoch and original S5 continuation
+
+Frozen before the S5 predicate change. The original raw corpus has two distinct
+deal identities, one complete ledger assertion and one request trigger. The
+supplied rule names one current owner and one immutable deadline. Another actual
+employee, created before exposure with the same display name, has no responsibility
+or identity binding in those records.
+
+After initial native completion, the independent source owner atomically suspends
+the other employee and publishes a second literal request record. Original actor
+and native grants remain unchanged. Expect exactly two distinct native Requests
+with the original and newly registered literal text; no duplicate action/effect;
+current Work completion through the same objective; original completion proof
+unchanged; one original compiler episode/reservation/resource population/demand;
+unchanged objective limits and deadline; retained failure and compute history.
+The actual tenant epoch must advance. Record expectations and revised raw bytes
+before the change.
+
+The intended pre-fix failure is the original S5 rights comparison. A source ACL,
+SQL lock, timeout or unrelated refusal is not that regression. A repair binds fresh
+native authority readback to consumption and final dispatch under the original
+frame. No new grant is accepted. Report the actual dependency closure without
+crediting this case as full sensitive-personnel or minimum semantic closure proof.
+
+## B-sensitive consent and independent continuation
+
+Frozen before the source/checker/continuation change. Start with fifteen originals,
+ten classes, fourteen native canonical kinds and three observed ordinary duties.
+The personnel source contains a person assertion; the independently retained raw
+expectations contain no normative trigger in that source. Revoke the actual
+subject's personnel-benefits consent for its exact institution and purpose, then
+publish one new literal evidence-request trigger in the independent source owner.
+
+Expect all fifteen source identities retained, one explicit personnel access gap,
+no private source acquisition during its revoked interval, exactly two Requests,
+one new Workstream and one Finding overall, and independent observations for all
+four known duties. The source gap must preserve unknown normative coverage and
+keep overall Work uncompleted/partial; it cannot be renamed a fifth assignment.
+The original three effects, completion proof, episode, S5 origin/resources/limits,
+standing identity and deadline are unchanged. Regrant actual self-consent through
+the authenticated owner API: the current full model and Work must complete under
+that same frame with no fifth effect. Failure/cost history remains immutable.
+
+The intended pre-fix boundary is an actual sensitive-consent refusal after source
+acquisition, or refusal of independent continuation due that unavailable source.
+Retain queue/compiler/native-owner evidence; an unrelated ACL or resource stop
+cannot replace this predicate. The fixture's expectations are original records,
+not inferred from candidate output. No protected qualification is claimed.
+
+
+## B overlapping-personnel and reporting inputs — independent expectations
+
+Before exposure freeze fifteen sources, fourteen canonical kinds, two preexisting funds, twenty-seven identity mappings (including two distinct employees with matching display names), three contextual quantities and three standing creation duties. A fourth dormant rule assigns a distinct staff trigger to the second actual employee. It is a supplied business rule, not an inferred permission.
+
+After initial three effects and canonical Work completion, atomically suspend that second employee and publish five literal original source revisions: ledger 20.00 to 25.00 with all original contexts; lender Outstanding to Committed; CRM cosmetic name correction; original emailed exception without any approval; and one new active-owner request plus one new suspended-staff request. Expect full fifteen-source coverage, one metadata-only personnel gap, five known normative duties, exactly four cumulative verified effects (two Requests, one Workstream, one Finding), one precise non-executable staff duty and Work PARTIAL/waiting. No effect may target the suspended employee. Source-gap normative coverage is UNKNOWN; the known staff refusal stays in the business denominator and cannot become a success. Lender accounting meaning remains explicit unknown and no approval is inferred from email. Corrected quantities reach immutable evidence; initial quantities and completion proof remain unchanged. Source/P7/native currentness withdraws the prior projection; three prior duties/effects are preserved and exactly one new lawful effect appears under the original objective, deadline, resources and reservation. Baseline and changes are independent original records; the observer supplies no mapping or workflow and never rescues the compiler.
+
+## G Work preparation API measurements — independent expectations
+
+Use the existing authenticated owner-input flow before its first compiler submit. All existing intended HTTP results remain unchanged. Before compiler exposure, no X1 episode or reservation exists; compare the original HTTP traffic's authorized 200/400 Work input/mandate/source invocations with S7 `finnor.x1.api-preparation-compute.v1` records. Expect one distinct physical invocation per call, measured positive elapsed time, exact actual operation/status/Work/principal, null episode/parent at measurement time, no raw input payload, unknown dollars/human/aggregate memory and zero business-work credit. Exclude unauthenticated and foreign-Work attribution without suppressing their actual refusal evidence. After normal native completion, original owner readback must include each preparation invocation once with its original reference and derived original parent allocation; repeated reads cannot append another physical measurement of the earlier calls. No budget/resource/episode/history reset or cost-zero assertion is permitted.
+
+## A new Fund/Vehicle properties — independent original inputs
+
+Three literal CRM objects have new independently randomized registrations and names: Fund baseCurrency EUR; Vehicle vehicleType parallel; Vehicle without a type. No canonical targets/mappings are supplied to FINNOR. The canonical source namespace's frozen deterministic ID preimage is [tenant,institution,kind,registration] using SHA256, UUID version/variant positions from the retained owner contract; this expectation is computed independently without importing producer logic. The initial canonical rows for these registrations must be absent. After actual admission, original Fund is forming with exact EUR, typed Vehicle is forming/parallel and missing-type Vehicle has no canonical row. The latter has one precise original-record clarification with no invented type. Two legitimate new mappings plus the original two Deal identities make four admitted identity assertions; five original entity records remain in the material input population, including the unresolved record. One genuine original Deal request must still be independently observed and Work complete in the supplied supported responsibility; that completion does not claim full institutional mapping qualification. No current existing Fund/Vehicle is renamed or retyped.
+
+## C established source class reclassification — independent expectation
+
+Use the actual source returned by the fifteen-source owner-input API. Keep owned Core ID/version/hash, original institution/purpose/expiry and JSON protocol unchanged. Revoke the actual source subject's personnel_benefits consent. Re-register the same source as crm_deals through the authenticated API. Expect 422 with X1_SOURCE_NAMESPACE_CLASS_RECLASSIFICATION_DENIED and no new grant/head or read permission. Query the old v1 SQL writer through the actual restricted application role with a fresh native input decision for the same owned Work/document; expect the same refusal. The original grant/class remains personnel_benefits, its native source scope remains unreadable during revocation, and actual consent restoration makes it readable. No changed source ID/document, privileged grant write or synthetic permission is supplied. Normal independent native completion remains required after the refusal.
+
+## G compiled local-development install — independent expectations
+
+The final package is a local development runtime, explicitly unqualified and without production admission. Its API dispatches compiled original route modules; worker runs actual createWorker/queue registrations; checker is a separate compiled process. Compare manifest hash preimages with independently read installed files and exact source/locks/profile/schema. No builder source path or substituted source digest may be required. First clean installed database accepts current190 migrations; existing173-migration fixture preserves original Work/users/Core and compatibility dispositions, adds original migrations without rewrite, and supports restart under the same accepted identities/parents. Normal authenticated raw inputs and native observers remain the source of completion evidence. Retained-source reflection is a current owner requirement and is packaged once; it is not an alternative execution result. The runtime must show which methods deliberately source-load under existing owners. NODE_ENV=production or a non-disposable profile cannot use the local entries. Tampered compiled/source bytes must refuse before effect use. Development evidence cannot become protected qualification or deployment authority.
+
+The observed startup timeout remains a failed original run. Its repair must keep
+the30-second startup limit and every original adverse check. Add a real running
+compiled API case: an unauthenticated native route first returns401; change a
+declared dependency byte without changing the manifest, restore its old mtime,
+then the SAME API process must return503 with the intended byte-pin refusal
+before route execution. Restore the original bytes/mode/time and observe401
+again. Retain actual server PID, hashes, statuses and refusal event. This checks
+ordinary filesystem mutation/currentness only, not privileged hostile custody.
+
+Keep size/inode unchanged during this live byte mutation and assert exact warmed
+mtime equality. A missing manifest must never turn a compiled checker into the
+source fallback, including after a prior verified load. Added special mode bits
+must fail the exact mode predicate without changing any byte or manifest hash.
+
+Actual installed peer imports must resolve to copied and pinned package bytes.
+The observed workforce/profiles import failure is retained; its repair is proved
+by the same native401, authenticated201 and full downstream owner flow, not by
+replacing the handler, peer module or expected status.
+
+Restart preservation reads actual pe_requests.state and pe_domain_actions.status.
+The expectation remains unchanged original IDs, states, reservation envelopes
+and deadlines plus new completed compiler-job processing. Bind installed source
+and independent verifier source separately; allow only exact observer/runner/
+failure/oracle deltas and independently compare all other installed preimages.
+
+For installed upgrade, the native release witness's expected commit and worker
+release environment are the actual installed manifest source commit. The
+observer checkout commit remains separately recorded; equality of an invented
+verifier label is not installed release evidence. Preserve all173 original SQL
+preimages, seventeen additive migrations, historical owners and old/new jobs.
+
+The bounded scanner must still reproduce every original installed SHA256 exactly
+and refuse byte, special-mode, namespace/link and manifest changes. Each actual
+process hashes its first declared file/executable bytes; cached digests require
+the same current trusted kernel metadata and descriptor-race checks. Existing
+adverse installation cases, actual401→503→401 same-size/mtime mutation and new
+post-restart queue processing remain decisive. Record actual resources without
+assigning shared swap/disk changes to this worker or assuming a memory gain.
+
+The fixed manifest file itself must refuse a same-byte outside symlink and
+special-mode change with X1_INSTALLATION_MANIFEST_PATH_OR_MODE_REFUSED. Test
+actual compiled cold startup and an already-running API; preserve its original
+digest and restore the original regular0444 file after every mutation.
+
+Restart preservation uses canonical domain_actions.status from0000_init.sql,
+pe_requests.state, the original compiler episode deadlines/parent and original
+S5 reservation IDs/envelopes. Execute these exact SELECTs after migration before
+compiler exposure; repeat before and after physical restart. No expected field
+or row population changes. Upgrade release readback and installed revision
+baseline bind actual installed source identity independently of verifier Git.
+
+## G compiled mounted frontend and ordinary input configuration
+
+Build the actual frontend once with Next standalone output, no type-error bypass,
+and unchanged registered build wall/output/free-space bounds. Installed frontend
+and auth transport bind loopback; actual password sign-in remains SDK managed.
+The public Supabase URL is the same compiled frontend origin, and /auth/v1 is
+forwarded byte-for-byte to the disposable auth owner. Production CSP remains
+unchanged. Backend proof uses installed original API/worker/checker bytes.
+
+The independent fifteen-source fixture freezes all original mappings, three
+duties, fields and deadlines before browser exposure. Actual form save, own
+consent revoke/regrant and original attach must produce their canonical owner
+rows/API outcomes before actual UI submit. Native effects and Work completion
+remain independently read. UI must show revision2, retain original frame, cancel
+future continuation and prevent scope/identity/late-response resurrection.
+Record screenshots, DOM predicates, original HTTP/SQL transitions and exact
+frontend/source/runtime/manifest identities; a compiled page load is insufficient.
+
+Standalone finalization may change only link targets to already-copied exact
+dependency bytes and install its pinned transport launcher. Bind the original
+successful Next exit/resource record and source commit. Exact source equality
+is required except the two observed .next-x1-install type include additions;
+retain their original/final preimages and verify structural tsconfig equality
+after removing only those additions. Every final runtime link resolves within
+installation; the compiled static auth URL matches the supplied original origin.
+
+The observed generated next-env.d.ts route-type import may change to the compiled
+distDir type path only. Independently compare all remaining declaration bytes
+against the original build commit and retain both hashes. This is type generation,
+not a silent runtime-source repair or new compiled-source history.
+
+For mounted input controls, freeze the additional actual preparation records at
+first durable UI submit, preserving the earlier API-preparation prefix byte for
+byte. Compare only physical authorized200/400 input calls before that actual202;
+post-submit API calls belong to their existing episode meter. No earlier record,
+parent or expected outcome is rewritten to count browser configuration work.
+
+During mounted cost readback, real UI polling is part of the workload. Retain and
+validate all new physical records. Exactly one successful and one refused status
+invocation plus at least one successful read must be present; any additional
+record must be an actual200 source/read poll under the same original parent.
+All physical invocation IDs remain unique. Keep exact-three checking when no
+browser is mounted, and report actual mounted record counts without gain credit.
+
+Compiled mounted003 reached independently observed native completion and then
+accepted the real mounted revision while the separate cost observer was reading.
+Its retained HTTP202 is an additional physical invocation. Permit at most one
+such overlapping revision; independently join every child meter request to its
+actual tenant/principal/Work, revision2, original episode and exact original
+parent request. Preserve the original successful/refused status pair, at least
+one successful read, every original record and invocation uniqueness. Save raw
+before/after records before assertions, including failures. No new owner
+authority, changed budget, discarded polling or rewritten expected business
+completion is permitted.
+
+## Lifecycle meter failure oracle, registered before production repair
+
+The disposable publication trigger must be reached after successful COMPILE
+attribution. Independently read original S7 rows and actual request/event/queue
+state. Require exactly one unchanged successful COMPILE and one distinct failed
+PUBLICATION for the same physical delivery, job, request, episode and original
+parent. The tail has positive measured duration and the actual SQL fault status;
+it cannot reuse COMPILE's idempotency key or erase the successful preimage.
+Request UNKNOWN and any accepted native child/effect remain retained. Run this
+oracle on defective bytes before the worker repair and preserve its actual
+missing-tail failure; then rerun only the affected physical boundary.
+
+Source/checker observations carry actual read/reused/input/output bytes, measured
+duration, outcome and checker PID/exit/signal. Mark them includedWithin COMPILE
+when that parent covers their interval. Once-only preparation allocation binds
+the unchanged original measurements to its actual S5 parent with real consumption
+under the same original envelope. Retrying or revising must not charge earlier
+measurements twice. Actual price coverage is distinct from observed CPU/bytes.
+# Physical lifecycle oracle
+
+The native focus repair must be reached through the real Objective queue on the original two-Deal Work. The original explicit focus equals one current direct Work Deal link. Preserve both links, 15 original sources, 26 mapping expectations, three duties and every authority/resource/deadline predicate. Actual diagnostic 003 supplies the pre-fix inspector failure, and 004 supplies the intended missing mapping failure when scope was reduced. Successful comparison requires model/source invocation after the repaired inspection, independent native effect readback and complete original denominator. Do not count the earlier failure as X1 capacity gain.
+
+Independently join every lifecycle invocation to its immutable S7 payload, unique S5 LIFECYCLE physical UUID and original episode/reservation. Require one request-unit allocation, unchanged envelopes and retained elapsed/components with explicit unknown prices, supervision and aggregate memory. A whole-run interval is a containing observation, not additional component elapsed time. A late-response proof captures actual private response bytes before the hold, original request/status/digest and real HTTP finish/close, releases within the original 20-second transport bound after mounted denial, then observes no private resurrection through the mounted UI. Server finish alone is not proof of client rendering.
+
+For the matched diagnostic, freeze independent literal expected duties and material mappings before either arm runs. Clone actual pre-exposure owner state and compare source/mandate/grant/task/canonical preimages. Run actual native Objective planning and dispatch in the off arm with generic decoded authorized originals and the existing configured provider. Score only independent canonical/provider readback against the pre-exposure denominator. Record failed attempts and unknown costs; preserve a no-gain or unresolved result without manufacturing completion.
+
+## Installed ordinary completion selector coverage
+
+Reuse A-all-ordinary-operations and its original three literal creation expectations.
+After the physical native worker creates the Request, Workstream and Finding,
+read each through the qualification observer using authenticated Work access and
+restricted finnor_app SQL. Each selector must return exactly the independently
+observed native action, with current/origin intent and verified creation predicates
+satisfied under the same original episode, parent digest and deadline. Compare
+the Workstream name and Finding statement with the pre-exposure oracle. This
+adds readback coverage to the existing installed scenario; it introduces no new
+business assignments, effect authority or protected qualification claim.

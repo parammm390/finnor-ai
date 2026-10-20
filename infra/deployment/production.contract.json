@@ -10,7 +10,7 @@
     "requireCleanWorktree": true
   },
   "release": {
-    "requiredMigrationHead": "0188_observation_source_version_binding.sql",
+    "requiredMigrationHead": "0194_x_phase_charge_phase_union.sql",
     "metadata": [
       "FINNOR_COMMIT_SHA",
       "FINNOR_BUILD_ID",

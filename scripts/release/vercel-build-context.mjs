@@ -1,22 +1,45 @@
-import { cpSync, mkdtempSync, rmSync, readdirSync, readFileSync, writeFileSync, existsSync, mkdirSync, realpathSync, statSync, linkSync, symlinkSync } from "node:fs"
+import { cpSync, mkdtempSync, rmSync, readdirSync, readFileSync, writeFileSync, existsSync, mkdirSync, realpathSync, statSync, lstatSync, linkSync, symlinkSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join, relative, resolve, dirname } from "node:path"
 
 // The API's remote root is relative to finnor-os, but source custody and Next's
 // tracing root include the repository root. Give the real builder that complete
 // root rather than flattening it or duplicating finnor-os in traced paths.
+// Fixed public inputs shared with the release fixture. The real-context E2E
+// checks this projection against the canonical X3/X5/X4 source-path owners.
+export const API_ROOT_SOURCE_PATHS = Object.freeze([
+  "src/components/centropy/canvas/EnterpriseApplicationPanel.tsx",
+  "src/components/centropy/canvas/application-client.ts",
+  "src/components/centropy/canvas/CanvasDocument.tsx",
+  "src/components/centropy/canvas/canvas-compose.ts",
+  "src/components/centropy/canvas/canvas-contract.ts",
+  "src/components/centropy/canvas/LearnedPolicyPanel.tsx",
+  "src/components/centropy/canvas/IdentifiedSystemPanel.tsx",
+  "src/lib/centropy/capability-manifest.generated.json",
+])
+
 export function apiBuildContext(repoRoot) {
   const directory = mkdtempSync(join(tmpdir(), "finnor-api-build-"))
-  const backend = join(repoRoot, "finnor-os")
-  cpSync(backend, join(directory, "finnor-os"), {
-    recursive: true,
-    filter: source => !relative(backend, source).split(/[\\/]/).some(part =>
-      ["node_modules", ".next", ".vercel", ".git", "evidence"].includes(part) || /^\.env(?:\.|$)/.test(part)),
-  })
-  for (const path of ["package.json", "package-lock.json", "infra/deployment/production.contract.json"]) {
-    cpSync(join(repoRoot, path), join(directory, path), { recursive: true })
+  const cleanup = () => rmSync(directory, { recursive: true, force: true })
+  try {
+    const repository = realpathSync(repoRoot)
+    const backend = join(repoRoot, "finnor-os")
+    cpSync(backend, join(directory, "finnor-os"), {
+      recursive: true,
+      filter: source => !relative(backend, source).split(/[\\/]/).some(part =>
+        ["node_modules", ".next", ".vercel", ".git", "evidence"].includes(part) || /^\.env(?:\.|$)/.test(part)),
+    })
+    for (const path of ["package.json", "package-lock.json", "infra/deployment/production.contract.json", ...API_ROOT_SOURCE_PATHS]) {
+      const source = join(repoRoot, path)
+      if (!lstatSync(source).isFile()) throw new Error("API_CONTEXT_SOURCE_NOT_REGULAR")
+      if (!realpathSync(source).startsWith(`${repository}/`)) throw new Error("API_CONTEXT_SOURCE_ESCAPES_ROOT")
+      cpSync(source, join(directory, path))
+    }
+    return { directory, cleanup }
+  } catch (error) {
+    cleanup()
+    throw error
   }
-  return { directory, cleanup: () => rmSync(directory, { recursive: true, force: true }) }
 }
 
 export function normalizeApiProjectRoot(component, project, contract) {

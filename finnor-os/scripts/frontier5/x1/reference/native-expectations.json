@@ -1,0 +1,26 @@
+{
+  "schema": "finnor.x1.independent-native-corpus.v1",
+  "basis": "Hand-specified from original class-native records and mandate, before native interpretation code. No canonical target IDs or X-Institution headers occur in the source bytes.",
+  "classes": {
+    "crm_deals": {"protocol": "paginated_json", "object": "opportunity-7", "identity": "FIRM-100", "type": "deal", "relation": "counterparty", "relationTarget": "PARTY-9"},
+    "financial_ledger": {"protocol": "csv", "object": "txn-7", "quantity": "1250.00", "currency": "USD", "unit": "units", "period": "2026-09", "basis": "posted", "identity": "FIRM-100"},
+    "document_dms": {"protocol": "text", "object": "memo-7", "identity": "FIRM-100", "type": "document", "normative": false},
+    "email": {"protocol": "rfc822", "object": "mail-7", "identity": "FIRM-100", "normative": false},
+    "calendar": {"protocol": "icalendar", "object": "meeting-7", "identity": "FIRM-100", "normative": false},
+    "work_tracking": {"protocol": "json_records", "object": "task-7", "identity": "FIRM-100", "trigger": "evidence_request_needed"},
+    "approval_records": {"protocol": "financial_xml", "object": "decision-7", "identity": "FIRM-100", "normative": false},
+    "lender_portal": {"protocol": "html", "object": "facility-7", "identity": "FIRM-100", "quantity": "1250.00", "currency": "USD", "unit": "units", "period": "2026-09", "basis": "outstanding"},
+    "personnel_benefits": {"protocol": "csv", "object": "employee-7", "identity": "EMP-7", "type": "person", "normative": false},
+    "expense_administration": {"protocol": "json_records", "object": "receipt-7", "identity": "EMP-7", "quantity": "12.00", "currency": "USD", "unit": "units", "period": "2026-10", "basis": "reimbursable"}
+  },
+  "adversarial": {
+    "sourceRecordCollision": "IDENTITY",
+    "triggerRuleCollisionWithFourthDutyOmitted": "OMISSION",
+    "numericCurrencyAndUnit": "QUANTITY",
+    "canonical101Deals": "BOUND",
+    "semanticKeyOrder": "ACCEPTED",
+    "staleOriginalWithRefreshedLabels": "CURRENTNESS",
+    "emailExceptionNotApproval": "RULE",
+    "unscopedNameCollision": "IDENTITY"
+  }
+}

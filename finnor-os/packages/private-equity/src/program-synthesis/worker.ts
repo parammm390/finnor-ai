@@ -13,26 +13,39 @@ import type {PeMutationContext} from '../types';
 import {handleEvidenceOperation,readEvidence} from '../evidence-execution/api';
 import {submitEvidenceContinuation} from '../evidence-execution/continuation';
 import {assertDependencies,authorize,codeIdentity,principal,revisions,sha,stable,tx,currentDerivation} from '../evidence-execution/store';
-import {parseHarnessRequest,type HarnessProgram,type HarnessValue,type NativeModule} from './contracts';
+import {isInstitutionRequest,parseHarnessRequest,type HarnessProgram,type HarnessRequest,type HarnessValue,type NativeModule} from './contracts';
+import {runInstitutionHarnessJob} from './institution';
 import {constructModules,evidenceSourceProgram} from './compiler';
 import {executeTypeScriptModule} from './typescript';
 import {executeNativeModule} from './native';
 import {checkNumericalAcceptance,checkDraftBytes,observeAcceptedBranches} from './checker';
 import {resolveEconomicBindings,executeOwnerOperation} from './owners';
-import {assertProgramCurrent,enqueueProgram,requestRow,safePredicate,trace,episodeCosts,persistProgrammeHead,reserveCandidate,costWitness,type ProgramRow} from './store';
+import {assertProgramCurrent,durableNode,enqueueProgram,nativeRequestRow,requestRow,safePredicate,trace,episodeCosts,persistProgrammeHead,reserveCandidate,costWitness,type ProgramRow,type InstitutionProgramRow} from './store';
 
-async function durableNode(ctx:PeMutationContext,q:ProgramRow,id:string,body:unknown){await tx(ctx,async c=>{const current=await requestRow(ctx,q.id,c,true);if(current.generation!==q.generation||current.claim_token!==q.claim_token||current.status!=='RUNNING')throw Error('PROGRAM_NODE_CLAIM_FENCED');const prior=(await c.query<{body:unknown;digest:string}>('SELECT body,digest FROM finnor_os.p1_node_results WHERE tenant_id=$1 AND principal_id=$2 AND request_id=$3 AND generation=$4 AND node_id=$5',[q.tenant_id,q.principal_id,q.id,q.generation,id])).rows[0];if(prior){if(sha(prior.body)!==prior.digest||sha(body)!==prior.digest)throw Error('DURABLE_NODE_REPLAY_MISMATCH');return;}await c.query('INSERT INTO finnor_os.p1_node_results(tenant_id,principal_id,request_id,generation,node_id,body,digest) VALUES($1,$2,$3,$4,$5,$6::jsonb,$7) ON CONFLICT DO NOTHING',[q.tenant_id,q.principal_id,q.id,q.generation,id,stable(body),sha(body)]);});}
 async function reserve(ctx:PeMutationContext,q:ProgramRow,steps:number,attempts:number,c?:import('pg').PoolClient){const run=async(client:import('pg').PoolClient)=>{const row=(await client.query('UPDATE finnor_os.p1_episodes SET steps_used=steps_used+$2,attempts_used=attempts_used+$3 WHERE id=$1 AND tenant_id=$4 AND principal_id=$5 AND steps_used+$2<=max_steps AND attempts_used+$3<=max_attempts AND deadline_at>clock_timestamp() RETURNING *',[q.episode_id,steps,attempts,q.tenant_id,q.principal_id])).rows[0];if(!row)throw Error('ORIGINAL_EPISODE_GRANT_EXHAUSTED');return row;};return c?run(c):tx(ctx,run);}
 
 export async function runHarnessProgramJob(payload:Record<string,unknown>,execution?:Readonly<JobExecutionContext>):Promise<void>{
  if(!execution||execution.protocolVersion!==1||typeof payload.tenantId!=='string'||typeof payload.principalId!=='string'||typeof payload.programId!=='string'||execution.tenantId!==payload.tenantId)throw Error('ACTUAL_DURABLE_HARNESS_JOB_CLAIM_REQUIRED');
  const ctx:PeMutationContext={auth:{tenantId:payload.tenantId,userId:payload.principalId,employeeId:payload.principalId,role:'owner'},provenance:{sourceSystem:'P1:bounded-native-worker',createdBy:payload.principalId}};
- let q=await requestRow(ctx,payload.programId);if(q.generation!==payload.generation||['TESTED','CANCELLED','INVALIDATED'].includes(q.status))return;if(typeof payload.stage==='string'&&payload.stage.startsWith('native-wait-deadline:')&&q.status!=='WAITING')return;const started=Date.now();let executedProgram:HarnessProgram|null=null;
+ const incoming=await nativeRequestRow(ctx,payload.programId);
+ if(incoming.generation!==payload.generation||['TESTED','OBSERVED','CANCELLED','INVALIDATED'].includes(incoming.status))return;
+ if(typeof payload.stage==='string'&&payload.stage.startsWith('native-wait-deadline:')&&incoming.status!=='WAITING')return;
+ if(isInstitutionRequest(incoming.request)){
+  if(incoming.head_id){
+   await enqueueProgram(ctx,incoming,'old-job-observe-'+execution.jobId);
+   return;
+  }
+  await runInstitutionHarnessJob(ctx,incoming as InstitutionProgramRow,execution);
+  return;
+ }
+ let q=incoming as ProgramRow & {request:HarnessRequest;proposed:HarnessProgram};
+ const started=Date.now();let executedProgram:HarnessProgram|null=null;
  try{
   await assertProgramCurrent(ctx,q);
   if(q.request.computeSearch==='P2_REQUIRED'){const pending=await tx(ctx,async c=>{const locked=await requestRow(ctx,q.id,c,true);const bound=(await c.query('SELECT id FROM finnor_os.p2_requests WHERE tenant_id=$1 AND principal_id=$2 AND program_id=$3',[q.tenant_id,q.principal_id,q.id])).rows[0];if(bound)return false;await c.query("UPDATE finnor_os.p1_requests SET status='WAITING' WHERE id=$1 AND generation=$2 AND evidence_query_id IS NULL",[q.id,q.generation]);await trace(ctx,locked,'P2_OWNER_BINDING_REQUIRED',{originalEpisode:locked.episode_id,physicalAttempts:0},c);return true;});if(pending)return;}
   q=await tx(ctx,async c=>{const locked=await requestRow(ctx,q.id,c,true);if(locked.generation!==payload.generation||['TESTED','CANCELLED','INVALIDATED'].includes(locked.status))throw Error('PROGRAM_GENERATION_FENCED');const claim=(await c.query("SELECT id FROM finnor_os.jobs WHERE id=$1 AND tenant_id=$2 AND type='run_harness_program_v1' AND status='running' AND claim_token=$3 AND claim_fence=$4 AND protocol_version=1 FOR SHARE",[execution.jobId,q.tenant_id,execution.claimToken,execution.claimFence])).rows[0];if(!claim)throw Error('PROGRAM_JOB_CLAIM_FENCED');await reserve(ctx,locked,1,locked.evidence_query_id?0:1,c);await c.query("UPDATE finnor_os.p1_requests SET status='RUNNING',claim_token=$4,claim_fence=$5,updated_at=clock_timestamp() WHERE tenant_id=$1 AND principal_id=$2 AND id=$3",[q.tenant_id,q.principal_id,q.id,execution.claimToken,execution.claimFence]);await trace(ctx,locked,'DELIVERY_STARTED',{jobId:execution.jobId,deliveryAttemptId:execution.deliveryAttemptId,claimFence:execution.claimFence,workerId:execution.workerId,originalEpisode:locked.episode_id,costUSD:null},c);return {...locked,status:'RUNNING',claim_token:execution.claimToken,claim_fence:execution.claimFence};});
-  const request=parseHarnessRequest(q.request);if(request.mode!=='ordinary_disposable'||runtimeEnvironment.NODE_ENV==='production'||process.env.FINNOR_P4_PROFILE!=='ordinary_disposable')throw Error('HARNESS_ORDINARY_RUNTIME_PROFILE_REQUIRED');
+  const request=parseHarnessRequest(q.request);if(isInstitutionRequest(request))throw Error('HARNESS_ANALYTICAL_VARIANT_CHANGED');
+  if(request.mode!=='ordinary_disposable'||runtimeEnvironment.NODE_ENV==='production'||process.env.FINNOR_P4_PROFILE!=='ordinary_disposable')throw Error('HARNESS_ORDINARY_RUNTIME_PROFILE_REQUIRED');
   if(!q.evidence_query_id){
    await trace(ctx,q,'MAP_PREMISES_ALTERNATIVES',{sourceSelectors:request.sources,materialRequired:request.acceptance.requiredSourceKeys,missingIsZero:false,contradictionsMayBeDropped:false});
    await trace(ctx,q,'RETRIEVE_COMPATIBLE_PROCEDURES',{catalogue:'REGISTERED_NATIVE_P4_EXACT_ARITHMETIC_ARTIFACT_V1',procedureCapsule:null,admission:null,p6Predicate:'P6_PROCEDURE_PORT_PENDING'});
@@ -97,6 +110,7 @@ program.semanticBindings=[{producer:'P4',id:d.id,schema:d.schema,resultDigest:d.
       let raw:any;try{raw=JSON.parse(rawResponse);}catch{throw Error('MODEL_PROPOSAL_INVALID_JSON');}
       if(!raw||Array.isArray(raw)||Object.keys(raw).length!==1||!Array.isArray(raw.targets))throw Error('MODEL_PROPOSAL_FIELDS_INVALID');
       const proposal=parseHarnessRequest({...request,acceptance:{...request.acceptance,targets:raw.targets}});
+      if(isInstitutionRequest(proposal))throw Error('MODEL_ACCEPTANCE_REWRITE');
       if(stable(proposal.acceptance.targets.map(t=>({key:t.key,unit:t.unit,currencyCode:t.currencyCode})))!==stable(request.acceptance.targets.map(t=>({key:t.key,unit:t.unit,currencyCode:t.currencyCode}))))throw Error('MODEL_ACCEPTANCE_REWRITE');
       const alternate=constructModules(proposal,program.producer.codeDigest)[0]!;
       if(program.modules.some(m=>m.structureDigest===alternate.structureDigest))throw Error('DUPLICATE_PROPOSED_STRUCTURE');
@@ -152,4 +166,20 @@ program.semanticBindings=[{producer:'P4',id:d.id,schema:d.schema,resultDigest:d.
   });
  }catch(error){const predicate=safePredicate(error);await tx(ctx,async c=>{const current=await requestRow(ctx,q.id,c,true);await trace(ctx,q,'FAILED_OR_FENCED',{predicate,jobId:execution.jobId,deliveryAttemptId:execution.deliveryAttemptId,claimFence:execution.claimFence,costUSD:null,acceptanceUnchanged:true},c);if(executedProgram&&current.generation===q.generation&&current.status==='RUNNING'&&current.claim_token===q.claim_token){executedProgram.status='FAILED';executedProgram.result=null;await persistProgrammeHead(ctx,q,executedProgram,'FAILED',predicate,c);}
    if(current.generation===q.generation&&!['CANCELLED','TESTED'].includes(current.status)){await c.query("UPDATE finnor_os.p1_requests SET status=$4,failure=$5,updated_at=clock_timestamp() WHERE tenant_id=$1 AND principal_id=$2 AND id=$3",[q.tenant_id,q.principal_id,q.id,/REVISION|FENCED|SOURCE_CHANGED|SCHEMA_CHANGED|SUPERSEDED/.test(predicate)?'INVALIDATED':'FAILED',predicate]);await invalidateUnstartedProgramSearch(ctx,current,c);}});}
+}
+
+/** Registered physical X1 handler. The shared P1 entry retains old analytical
+ * jobs, while this type cannot be claimed by old workers. */
+export async function runX1InstitutionContinuationJob(payload:Record<string,unknown>,execution?:Readonly<JobExecutionContext>):Promise<void>{
+ if(!execution||execution.protocolVersion!==1||execution.retrySafety!=='reconcilable')
+  throw Error('X1_PHYSICAL_CONTINUATION_CLAIM_REQUIRED');
+ if(typeof payload.tenantId!=='string'||typeof payload.principalId!=='string'
+   ||typeof payload.programId!=='string'||payload.tenantId!==execution.tenantId)
+  throw Error('X1_PHYSICAL_CONTINUATION_PAYLOAD_REQUIRED');
+ const ctx:PeMutationContext={auth:{tenantId:payload.tenantId,userId:payload.principalId,
+  employeeId:payload.principalId,role:'owner'},provenance:{sourceSystem:'X1:owner-continuation',createdBy:payload.principalId}};
+ const row=await nativeRequestRow(ctx,payload.programId);
+ if(!isInstitutionRequest(row.request))throw Error('X1_TYPED_INSTITUTION_REQUEST_REQUIRED');
+ if(row.generation!==payload.generation||['OBSERVED','CANCELLED','INVALIDATED'].includes(row.status))return;
+ await runInstitutionHarnessJob(ctx,row as InstitutionProgramRow,execution);
 }

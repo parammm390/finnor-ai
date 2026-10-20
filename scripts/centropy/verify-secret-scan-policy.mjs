@@ -20,6 +20,11 @@ const evidencePath = "docs/centropy/evidence/probe.json"
 const m1Path = "finnor-os/scripts/m1/run-e2e.mts"
 const p4Path = "finnor-os/scripts/p4/frontier-comparison.mts"
 const predicatesPath = "finnor-os/packages/private-equity/src/program-synthesis/owners.ts"
+const x1PlanPath = "finnor-os/packages/private-equity/src/program-synthesis/plan.ts"
+const x1PlanIdentity = ["p1", "institution", "responsibility", "v1"].join("-")
+const peerPath = "scope-x-phase/acceptance/x2-merge-dispositions.md"
+const peerCommit = "f496c86af698a5c5ea35971e7b1838ff151a9c98"
+const peerMetadata = `Authentic peer:\n\`${peerCommit}\`\n`
 const m4Path = "finnor-os/scripts/m4/run-e2e.mts"
 const candidatePath = "finnor-os/packages/private-equity/src/capital-program/v2-owners.ts"
 const r2AuthPath = "finnor-os/scripts/r2/run-owner.mts"
@@ -70,6 +75,8 @@ const metadata = [
     bytes: `const fixture={authentication: "${r4AuthMode}"};\n` },
   { name: "migration-pins", path: migrationsPath, fields: Object.keys(migrationPins), baselineCount: 4, bytes: json(migrationPins) },
   ...prosePaths.map((path, index) => ({ name: `prose-${index}`, path, fields: ["verbatim"], baselineCount: 1, bytes: json({ verbatim: `Retain instrument/source revision, token semantics, ${observationSemantics} time, provenance.` }) })),
+  { name: "x1-historical-plan", path: x1PlanPath, fields: ["candidateKey"], baselineCount: 1,
+    bytes: objectFixture("candidate", "candidateKey", x1PlanIdentity) },
 ]
 const scans = []
 const historyScans = []
@@ -120,6 +127,10 @@ function historyProbe(name, placement) {
   let introduced
   for (let number = 1; number <= 34; number++) {
     files["history-sequence.txt"] = `Authored proof step ${number}\n`
+    if (number === 1) {
+      files[x1PlanPath] = objectFixture("candidate", "candidateKey", x1PlanIdentity)
+      files[peerPath] = peerMetadata
+    }
     if (placement === "late" && number === 34) files["late-credential.ts"] = credential()
     head = object([head], `Authored scanner proof step ${number}`)
     if (placement === "late" && number === 34) introduced = head
@@ -173,6 +184,16 @@ try {
   scan("m4-altered-idempotency", m4Path, credential("idempotencyKey"), "configured", 1, ["idempotencyKey"])
   scan("m4-runtime-uuid-not-exempt", m4Path, `const idempotencyKey = '${reference}';\n`, "configured", 1, ["idempotencyKey"])
   scan("candidate-altered-value", candidatePath, credential("candidateKey"), "configured", 1, ["candidateKey"])
+  scan("x1-plan-altered-value", x1PlanPath, credential("candidateKey"), "configured", 1, ["candidateKey"])
+  scan("x1-plan-wrong-field", x1PlanPath, credential("apiKey", x1PlanIdentity), "configured", 1, ["apiKey"])
+  scan("peer-metadata", peerPath, peerMetadata, "default", 1, ["Authentic peer"])
+  scan("peer-metadata", peerPath, peerMetadata, "configured", 0, ["Authentic peer"])
+  scan("peer-wrong-path", "unrelated/peer.md", peerMetadata, "configured", 1, ["Authentic peer"])
+  scan("peer-same-path-credential", peerPath, credential(), "configured", 1, ["apiKey"])
+  scan("peer-adjacent-credential", peerPath, peerMetadata + credential(), "configured", 1, ["Authentic peer", "apiKey"])
+  scan("peer-same-line-credential", peerPath, peerMetadata.trimEnd() + " " + credential(), "configured", 1, ["Authentic peer", "apiKey"])
+  scan("peer-altered-value", peerPath, peerMetadata.replace(peerCommit, authoredNegative), "configured", 1, ["Authentic peer"])
+  scan("peer-wrong-field", peerPath, credential("apiKey", peerCommit), "configured", 1, ["apiKey"])
   scan("r2-refresh-altered-value", r2AuthPath, objectFixture("session", "refresh_token", authoredNegative), "configured", 1, ["refresh_token"])
   scan("r6-model-altered-value", r6ModelPath, credential("modelKey"), "configured", 1, ["modelKey"])
   scan("r6-model-wrong-field", r6ModelPath, credential("apiKey", r6Model), "configured", 1, ["apiKey"])

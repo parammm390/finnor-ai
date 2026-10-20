@@ -1,0 +1,10 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "allowJs": true,
+    "checkJs": false,
+    "allowImportingTsExtensions": true
+  },
+  "include": ["*.mts"],
+  "exclude": ["../../node_modules", "../../**/node_modules", "../../**/.next"]
+}

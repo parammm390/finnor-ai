@@ -1,5 +1,5 @@
 /** Authenticated ordinary S8 lifecycle; independent science/signatures stay external. */
-import { assertCapabilitySourceClosure } from './source-closure';
+import { assertCapabilitySourceClosure, assertApplicationSemanticsSourceClosure } from './source-closure';
 import { assertCapabilityEconomicExperienceCurrent } from './experience';
 import { ProtectedCapabilityEvents } from './protected-events';
 import { verifyCapabilityMethod } from './protected-method';
@@ -12,14 +12,29 @@ import { verifyAllocationCertificateAsync } from '../../epistemic-runtime/src/al
 import { allocationSourcesCurrent } from '../../epistemic-runtime/src/allocation-producer';
 import { runAllocationMethodProcess } from './search-process';
 import { canonical } from '../../governed-execution/src/protocol';
-import { readOwnerTransportReference, ownerTransportRoute, signOwnerDeliveryOrigin, deliverOwnerTransportIntent, resolveEconomicOwnerReference } from '../../governed-execution/src/owner-transport';
+import { readOwnerTransportReference, readOwnerTransportReferenceSnapshot, ownerTransportRoute, signOwnerDeliveryOrigin, deliverOwnerTransportIntent, resolveEconomicOwnerReference } from '../../governed-execution/src/owner-transport';
 import { CapabilityJournal, privateFile, type JournalEntry } from './journal';
 import { InterfaceCapabilityPort } from './interface-port';
+import { InstitutionCapabilityPort } from './institution-port';
+import { ApplicationCapabilityPort } from './application-port';
+import { ApplicationCapabilityPort as ApplicationSemanticsCapabilityPort, ApplicationPortConfigurationSchema } from './application-semantics-port';
+import { LearnedPolicyCapabilityPort } from './learned-policy-port';
+import type {IdentifiedSystemCapabilityPort} from './identified-system-port';
 import { digest, byteDigest, fault, parseRevision, makeRef, sameRef, RefSchema, ProtocolSchema, EvaluationSummarySchema, AllocationMethodAdmissionSchema, assertSignature, S8_VERSION, type Signed, type AuthorityKey, type CapabilityRevision, type EvaluationProtocol, type EvaluationSummary, type CapabilityRef, type AllocationMethodAdmission } from './contracts';
 const Text = z.string().min(1).max(4096), Instant = z.string().datetime({ offset: true });
 const KeySchema = z.object({ id: Text, principalId: Text, publicKey: Text, validAfter: Instant, validUntil: Instant, revoked: z.boolean() }).strict();
-const PolicySchema = z.object({ schema: z.literal('finnor.s8.lifecycle-policy.v1'), domain: z.enum(['DISPOSABLE_TEST_AUTHORITY', 'REVIEWED_PROTECTED_DOMAIN']), tenantId: Text, principalId: Text, rightsRef: Text, responsibilityHandoff: z.object({ reference: RefSchema, previousSignedPolicy: z.object({ body: z.unknown(), keyId: Text, signature: Text }).strict(), previousReleaseRoot: Text }).strict().optional(), protectedEvents: z.object({ contract: z.literal('S8_CAPABILITY_EVENTS_V1'), maxRecoveryEvents: z.number().int().min(1).max(256) }).strict().optional(), validAfter: Instant, validUntil: Instant, actors: z.array(z.object({ id: Text, principalId: Text, tokenHash: z.string().regex(/^[a-f0-9]{64}$/), roles: z.array(z.enum(['PROPOSER', 'EVALUATOR', 'PROMOTER', 'CONSUMER', 'READER'])).min(1).max(2) }).strict()).min(4).max(64), evaluatorKeys: z.array(KeySchema).min(1).max(16), promotionKeys: z.array(KeySchema).min(1).max(16), costAuthorityPrincipalIds: z.array(Text).max(16), journalPublicKey: Text, allowedStrata: z.array(Text).min(1).max(64), maxEntries: z.number().int().min(1).max(100000), maxQueue: z.number().int().min(1).max(64), maxTotalCost: z.number().finite().min(0).max(1000000), maxTotalLoss: z.number().finite().min(0).max(1000000000), maxTotalUses: z.number().int().min(1).max(100000), sourcePins: z.array(z.object({ path: Text, sha256: z.string().regex(/^[a-f0-9]{64}$/) }).strict()).min(1).max(64) }).strict();
-type Policy = z.infer<typeof PolicySchema>;
+const PolicySchema = z.object({ schema: z.literal('finnor.s8.lifecycle-policy.v1'), domain: z.enum(['DISPOSABLE_TEST_AUTHORITY', 'REVIEWED_PROTECTED_DOMAIN']), tenantId: Text, principalId: Text, rightsRef: Text, responsibilityHandoff: z.object({ reference: RefSchema, previousSignedPolicy: z.object({ body: z.unknown(), keyId: Text, signature: Text }).strict(), previousReleaseRoot: Text }).strict().optional(), protectedEvents: z.object({ contract: z.literal('S8_CAPABILITY_EVENTS_V1'), maxRecoveryEvents: z.number().int().min(1).max(256) }).strict().optional(), validAfter: Instant, validUntil: Instant, actors: z.array(z.object({ id: Text, principalId: Text, tokenHash: z.string().regex(/^[a-f0-9]{64}$/), roles: z.array(z.enum(['PROPOSER', 'EVALUATOR', 'PROMOTER', 'CONSUMER', 'READER'])).min(1).max(2) }).strict()).min(4).max(64), evaluatorKeys: z.array(KeySchema).min(1).max(16), promotionKeys: z.array(KeySchema).min(1).max(16), costAuthorityPrincipalIds: z.array(Text).max(16), journalPublicKey: Text, allowedStrata: z.array(Text).min(1).max(64), maxEntries: z.number().int().min(1).max(100000), maxQueue: z.number().int().min(1).max(64), maxTotalCost: z.number().finite().min(0).max(1000000), maxTotalLoss: z.number().finite().min(0).max(1000000000), maxTotalUses: z.number().int().min(1).max(100000), sourcePins: z.array(z.object({ path: Text, sha256: z.string().regex(/^[a-f0-9]{64}$/) }).strict()).min(1).max(128) }).strict();
+// Only the additive scientific sibling needs the larger closure. The financial
+// allocation RevisionBodySchema and parseRevision remain unchanged at 128 pins.
+const LifecyclePolicySchema=PolicySchema.extend({
+    sourcePins:PolicySchema.shape.sourcePins.max(256),
+    applicationSemantics:ApplicationPortConfigurationSchema.optional(),
+    institutionCompiler:z.object({
+        profileDigest:z.string().regex(/^[a-f0-9]{64}$/),
+        sourcePins:z.array(z.object({path:Text,sha256:z.string().regex(/^[a-f0-9]{64}$/)}).strict()).min(1).max(64),
+    }).strict().optional(),
+});
+type Policy = z.infer<typeof LifecyclePolicySchema>;
 type Actor = Policy['actors'][number];
 interface Config {
     signedPolicy: Signed<Policy>;
@@ -55,6 +70,12 @@ export interface CapabilityUseLease {
 }
 export class CapabilityEvolution {
     private interfaces: InterfaceCapabilityPort;
+    private applications: ApplicationCapabilityPort;
+    private applicationSemantics: ApplicationSemanticsCapabilityPort;
+    private learnedPolicies: LearnedPolicyCapabilityPort;
+    private identifiedSystems: IdentifiedSystemCapabilityPort|null=null;
+    private identifiedReplay: JournalEntry[]=[];
+    private institutions: InstitutionCapabilityPort;
     private states = new Map<string, RevisionState>();
     private active: string | null = null;
     private generation = 0;
@@ -73,16 +94,25 @@ export class CapabilityEvolution {
     private inheritedHandoff: any = null;
     private constructor(readonly policy: Policy, private journal: CapabilityJournal) {
         this.interfaces = new InterfaceCapabilityPort(policy);
+        this.applications = new ApplicationCapabilityPort(policy);
+        this.applicationSemantics = new ApplicationSemanticsCapabilityPort(policy);
+        this.learnedPolicies = new LearnedPolicyCapabilityPort(policy);
+        this.institutions = new InstitutionCapabilityPort(policy);
         this.protectedEvents = policy.protectedEvents ? new ProtectedCapabilityEvents({ ...policy, protectedEvents: policy.protectedEvents }, journal.policyDigest) : null;
         for (const e of journal.entries)
             this.replay(e);
     }
     static async open(path: string, root: string) {
         const cfg = JSON.parse((await privateFile(path)).toString()) as Config;
-        const policy = PolicySchema.parse(cfg.signedPolicy.body);
+        const policy = LifecyclePolicySchema.parse(cfg.signedPolicy.body);
         if (policy.domain === 'REVIEWED_PROTECTED_DOMAIN' && !policy.protectedEvents)
             fault('S8_PROTECTED_EVENT_CONTRACT_REQUIRED', 503);
         await assertCapabilitySourceClosure(policy.sourcePins);
+        if(policy.applicationSemantics){
+            await assertApplicationSemanticsSourceClosure(policy.applicationSemantics.sourcePins);
+            if(policy.applicationSemantics.sourcePins.some(pin=>!policy.sourcePins.some(outer=>outer.path===pin.path&&outer.sha256===pin.sha256)))
+                fault('S8_APPLICATION_DOMAIN_SOURCE_CLOSURE_UNBOUND',503);
+        }
         assertSignature(cfg.signedPolicy, [{ id: cfg.signedPolicy.keyId, principalId: 'RELEASE_ROOT', publicKey: root, validAfter: policy.validAfter, validUntil: policy.validUntil, revoked: false }]);
         if (new Set(policy.actors.map(a => a.id)).size !== policy.actors.length || [policy.evaluatorKeys, policy.promotionKeys].some(keys => new Set(keys.map(k => k.id)).size !== keys.length))
             fault('S8_AMBIGUOUS_AUTHORITY_IDENTITY', 503);
@@ -92,7 +122,12 @@ export class CapabilityEvolution {
             return byteDigest(key.export({ type: 'spki', format: 'der' }));
         };
         const evaluatorFingerprints = new Set(policy.evaluatorKeys.map(k => fingerprint(k.publicKey)));
-        if (policy.promotionKeys.some(k => evaluatorFingerprints.has(fingerprint(k.publicKey))))
+        const evaluatorPrincipals = new Set(policy.evaluatorKeys.map(k => k.principalId)
+            .concat(policy.actors.filter(a => a.roles.includes('EVALUATOR')).map(a => a.principalId)));
+        const promoterPrincipals = new Set(policy.promotionKeys.map(k => k.principalId)
+            .concat(policy.actors.filter(a => a.roles.includes('PROMOTER')).map(a => a.principalId)));
+        if (policy.promotionKeys.some(k => evaluatorFingerprints.has(fingerprint(k.publicKey))) ||
+            [...promoterPrincipals].some(id => evaluatorPrincipals.has(id)))
             fault('S8_AUTHORITY_NOT_SEPARATED', 503);
         const principals = new Set<string>(), tokens = new Set<string>();
         for (const a of policy.actors) {
@@ -133,16 +168,20 @@ export class CapabilityEvolution {
     }>) {
         const { open } = await import('node:fs/promises');
         const { constants } = await import('node:fs');
-        for (const pin of pins) {
-            const fd = await open(pin.path, constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK);
-            try {
-                const stat = await fd.stat();
-                if (!stat.isFile() || stat.size > 16 * 1024 * 1024 || byteDigest(await fd.readFile()) !== pin.sha256)
-                    fault('S8_DEPENDENCY_BYTES_CHANGED');
-            }
-            finally {
-                await fd.close();
-            }
+        for (let offset = 0; offset < pins.length; offset += 8) {
+            const checked = await Promise.allSettled(pins.slice(offset, offset + 8).map(async pin => {
+                const fd = await open(pin.path, constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK);
+                try {
+                    const stat = await fd.stat();
+                    if (!stat.isFile() || stat.size > 16 * 1024 * 1024 || byteDigest(await fd.readFile()) !== pin.sha256)
+                        fault('S8_DEPENDENCY_BYTES_CHANGED');
+                }
+                finally {
+                    await fd.close();
+                }
+            }));
+            for (const result of checked)
+                if (result.status === 'rejected') throw result.reason;
         }
     }
     private actor(token: string) {
@@ -243,7 +282,7 @@ export class CapabilityEvolution {
         return { ref, receipt: answer.receipt };
     }
     /** Target identity excludes the proof reference to avoid a circular hash. */
-    static handoffTargetDigest(policy: unknown) { const { responsibilityHandoff: _proof, ...target } = PolicySchema.parse(policy); return digest(target); }
+    static handoffTargetDigest(policy: unknown) { const { responsibilityHandoff: _proof, ...target } = LifecyclePolicySchema.parse(policy); return digest(target); }
     private async handoffEntry(entry: JournalEntry) {
         if (entry.operation !== 'REVOKE' || entry.result.runtimeHandoff !== true) return;
         const ref = { owner: 'S8', id: `capability-handoff-entry:${this.journal.policyDigest}:${entry.sequence}`, version: S8_VERSION, contentDigest: digest(entry) };
@@ -265,12 +304,12 @@ export class CapabilityEvolution {
         if (anchor.policyDigest === digest(this.policy)) return;
         if (!this.policy.responsibilityHandoff) fault('S8_POLICY_RESPONSIBILITY_HANDOFF_REQUIRED', 503);
         const proof = await this.resolveResponsibilityHandoff();
-        let previous = PolicySchema.parse(this.policy.responsibilityHandoff.previousSignedPolicy.body);
+        let previous = LifecyclePolicySchema.parse(this.policy.responsibilityHandoff.previousSignedPolicy.body);
         const ancestors = [...proof!.capsule.predecessorHandoffs].reverse();
         for (const ref of ancestors) {
             const configuration = previous.responsibilityHandoff;
             if (!configuration || !sameRef(configuration.reference, ref)) fault('S8_HANDOFF_ANCESTRY_SUBSTITUTION');
-            const parent = PolicySchema.parse(configuration.previousSignedPolicy.body), key = createPublicKey(configuration.previousReleaseRoot);
+            const parent = LifecyclePolicySchema.parse(configuration.previousSignedPolicy.body), key = createPublicKey(configuration.previousReleaseRoot);
             if (key.asymmetricKeyType !== 'ed25519' || !verify(null, Buffer.from(canonical(parent)), key, Buffer.from(configuration.previousSignedPolicy.signature, 'base64'))
                 || parent.tenantId !== this.policy.tenantId || parent.principalId !== this.policy.principalId || parent.rightsRef !== this.policy.rightsRef || parent.domain !== this.policy.domain) fault('S8_HANDOFF_ANCESTRY_SUBSTITUTION');
             const original = (await this.protectedCurrent(ref)).reference.content;
@@ -283,7 +322,7 @@ export class CapabilityEvolution {
     private async resolveResponsibilityHandoff() {
         const configured = this.policy.responsibilityHandoff;
         if (!configured) return null;
-        const prior = PolicySchema.parse(configured.previousSignedPolicy.body), root = createPublicKey(configured.previousReleaseRoot);
+        const prior = LifecyclePolicySchema.parse(configured.previousSignedPolicy.body), root = createPublicKey(configured.previousReleaseRoot);
         if (root.asymmetricKeyType !== 'ed25519' || !verify(null, Buffer.from(canonical(prior)), root, Buffer.from(configured.previousSignedPolicy.signature, 'base64'))
             || prior.tenantId !== this.policy.tenantId || prior.principalId !== this.policy.principalId || prior.rightsRef !== this.policy.rightsRef || prior.domain !== this.policy.domain)
             fault('S8_HANDOFF_PREDECESSOR_POLICY_OR_SCOPE_INVALID', 403);
@@ -339,22 +378,17 @@ export class CapabilityEvolution {
             result: { ...(await this.commitReference('capability-responsibility-import', body)), responsibilityImport: true, capsule: proof.capsule, liabilityBudgetReleased: false, executionAuthorityGranted: false } });
     }
     private checkpointId(sequence: number) { return `capability-checkpoint:${this.journal.policyDigest}:${sequence}`; }
-    private static async readCheckpoint(policy: Policy, sequence: number) {
-        try {
-            return await readOwnerTransportReference({ semanticOwner: 'S8', tenantId: policy.tenantId, principalId: policy.principalId }, `capability-checkpoint:${digest(policy)}:${sequence}`);
-        }
-        catch (error) {
-            if ((error as any)?.code === 'REFERENCE_NOT_FOUND')
-                return null;
-            throw error;
-        }
-    }
     private static async verifyCheckpointTail(policy: Policy, tail: JournalEntry | null | undefined) {
-        if (await CapabilityEvolution.readCheckpoint(policy, (tail?.sequence ?? 0) + 1))
+        const policyDigest = digest(policy), id = (sequence: number) => `capability-checkpoint:${policyDigest}:${sequence}`;
+        const snapshot = await readOwnerTransportReferenceSnapshot(
+            { semanticOwner: 'S8', tenantId: policy.tenantId, principalId: policy.principalId },
+            [id((tail?.sequence ?? 0) + 1), ...(tail ? [id(tail.sequence)] : [])],
+        );
+        if (snapshot.results[0])
             fault('S8_JOURNAL_ROLLBACK_DETECTED', 503);
         if (!tail)
             return null;
-        const accepted = await CapabilityEvolution.readCheckpoint(policy, tail.sequence);
+        const accepted = snapshot.results[1] ?? null;
         if (accepted) {
             const c = accepted.reference.content;
             if (c.policyDigest !== digest(policy) || c.sequence !== tail.sequence || c.entryDigest !== tail.digest || c.previousDigest !== tail.previous)
@@ -399,7 +433,21 @@ export class CapabilityEvolution {
         return row;
     }
     private replay(entry: JournalEntry) {
+        if(entry.operation.startsWith('IDENTIFIED_SYSTEM_')){
+            this.identifiedReplay.push(entry);this.identifiedSystems?.replay(entry);return;
+        }
+        if (entry.operation.startsWith('APPLICATION_SEMANTICS_')) {
+            this.applicationSemantics.replay(entry);
+            if (entry.operation === 'APPLICATION_SEMANTICS_USE') {
+                this.totalCost += entry.result.lease.reservedCost;
+                this.useCount++;
+            }
+            return;
+        }
+        if (entry.operation.startsWith('APPLICATION_')) { this.applications.replay(entry); return; }
+        if (entry.operation.startsWith('LEARNED_POLICY_')) { this.learnedPolicies.replay(entry); return; }
         if (entry.operation.startsWith('INTERFACE_')) { this.interfaces.replay(entry); return; }
+        if (entry.operation.startsWith('INSTITUTION_')) { this.institutions.replay(entry); return; }
         const b = entry.body, r = entry.result;
         if (entry.operation === 'JOURNAL_RECOVERY' && r.responsibilityImport === true) {
             const capsule = r.capsule;
@@ -504,8 +552,11 @@ export class CapabilityEvolution {
                     fault('S8_IDEMPOTENCY_SUBSTITUTION');
                 // Interface current-use reads are deliberately never journaled or
                 // replayed from a cached admission. Every serve checks current use.
-                if (input.operation.startsWith('INTERFACE_'))
+                if (input.operation.startsWith('INTERFACE_') || input.operation.startsWith('APPLICATION_') || input.operation.startsWith('LEARNED_POLICY_') || input.operation.startsWith('IDENTIFIED_SYSTEM_'))
                     await CapabilityEvolution.sources(this.policy.sourcePins);
+                if (input.operation.startsWith('APPLICATION_SEMANTICS_')) {
+                    await this.applicationSemantics.revalidateReplay(a, input.operation, input.body, prior.result);
+                }
                 if (input.operation === 'USE') {
                     const use = this.uses.get(prior.result.lease.useId);
                     if (!use)
@@ -520,6 +571,50 @@ export class CapabilityEvolution {
             if (this.policy.responsibilityHandoff) await this.resolveResponsibilityHandoff();
             const b = input.body;
             let result: any, journalOperation = input.operation;
+            if(input.operation.startsWith('IDENTIFIED_SYSTEM_')){
+                if(!this.identifiedSystems){
+                    const {IdentifiedSystemCapabilityPort}=await import('./identified-system-port');
+                    const port=new IdentifiedSystemCapabilityPort(this.policy);
+                    for(const entry of this.identifiedReplay)port.replay(entry);
+                    this.identifiedSystems=port;
+                }
+                const answer=await this.identifiedSystems.command(a,input.operation,b,(ref,content)=>this.commitNamedReference(ref,content));
+                if(!answer.readOnly)await this.persist({requestId:input.requestId,requestDigest,actorId:a.id,operation:input.operation,body:b,result:answer.result});
+                return answer.result;
+            }
+            if (input.operation.startsWith('LEARNED_POLICY_')) {
+                const answer = await this.learnedPolicies.command(a, input.operation, b,
+                    (ref, content) => this.commitNamedReference(ref, content));
+                if (!answer.readOnly)
+                    await this.persist({ requestId: input.requestId, requestDigest, actorId: a.id,
+                        operation: input.operation, body: b, result: answer.result });
+                return answer.result;
+            }
+            if (input.operation.startsWith('APPLICATION_SEMANTICS_')) {
+                const answer = await this.applicationSemantics.command(a, input.operation, b, input.requestId,
+                    { totalCost: this.totalCost, useCount: this.useCount },
+                    (ref, content) => this.commitNamedReference(ref, content));
+                if (!answer.readOnly)
+                    await this.persist({ requestId: input.requestId, requestDigest, actorId: a.id,
+                        operation: input.operation, body: b, result: answer.result });
+                return answer.result;
+            }
+            if (input.operation.startsWith('APPLICATION_')) {
+                const answer = await this.applications.command(a, input.operation, b,
+                    (ref, content) => this.commitNamedReference(ref, content));
+                if (!answer.readOnly)
+                    await this.persist({ requestId: input.requestId, requestDigest, actorId: a.id,
+                        operation: input.operation, body: b, result: answer.result });
+                return answer.result;
+            }
+            if (input.operation.startsWith('INSTITUTION_')) {
+                const answer = await this.institutions.command(a, input.operation, b,
+                    (ref, content) => this.commitNamedReference(ref, content));
+                if (!answer.readOnly)
+                    await this.persist({ requestId: input.requestId, requestDigest, actorId: a.id,
+                        operation: input.operation, body: b, result: answer.result });
+                return answer.result;
+            }
             if (input.operation.startsWith('INTERFACE_')) {
                 const answer = await this.interfaces.command(a, input.operation, b,
                     (ref, content) => this.commitNamedReference(ref, content));
@@ -535,7 +630,7 @@ export class CapabilityEvolution {
                     if (page.atSequence !== undefined && page.atSequence !== sequence)
                         fault('S8_READ_SNAPSHOT_CHANGED');
                     const take = <T>(items: T[]) => items.slice(page.offset, page.offset + page.limit), count = Math.max(this.states.size, this.attempts.length, this.uses.size, this.journal.entries.length), nextOffset = page.offset + page.limit < count ? page.offset + page.limit : null;
-                    return { ...(this.handedOff || this.inheritedHandoff ? { responsibilityContinuity: { transferred: this.handedOff, inheritedHandoff: this.inheritedHandoff, actionableActivationTransferred: false } } : {}), active: this.active, generation: this.generation, revisions: take([...this.states.values()]).map(s => ({ ref: s.revision.ref, state: s.state, evaluation: s.evaluation, activation: s.activation })), attempts: take(this.attempts), uses: take([...this.uses.values()]), accounting: { totalCost: this.totalCost, totalLoss: this.totalLoss, useCount: this.useCount }, history: take(this.journal.entries).map(e => ({ sequence: e.sequence, operation: e.operation, requestId: e.requestId, digest: e.digest, knowledgeAt: e.knowledgeAt })), page: { offset: page.offset, limit: page.limit, sequence, nextOffset, complete: page.offset === 0 && nextOffset === null }, counts: { revisions: this.states.size, attempts: this.attempts.length, uses: this.uses.size, history: this.journal.entries.length }, protectedHistory: this.protectedEvents?.snapshot() ?? null, qualification: this.protectedEvents ? 'SIGNED_JOURNAL_AND_AUTHENTICATED_CONSECUTIVE_S6_EVENTS_NO_VALUE_OR_EFFECT_AUTHORITY' : 'ORDINARY_SIGNED_HISTORY_AND_S6_REFERENCE_COMMITMENTS_NO_PROTECTED_S8_EVENT_APPEND' };
+                    return { ...(this.applicationSemantics.hasHistory() ? { applications: this.applicationSemantics.snapshot(page.offset, page.limit) } : {}), ...(this.handedOff || this.inheritedHandoff ? { responsibilityContinuity: { transferred: this.handedOff, inheritedHandoff: this.inheritedHandoff, actionableActivationTransferred: false } } : {}), active: this.active, generation: this.generation, revisions: take([...this.states.values()]).map(s => ({ ref: s.revision.ref, state: s.state, evaluation: s.evaluation, activation: s.activation })), attempts: take(this.attempts), uses: take([...this.uses.values()]), accounting: { totalCost: this.totalCost, totalLoss: this.totalLoss, useCount: this.useCount }, history: take(this.journal.entries).map(e => ({ sequence: e.sequence, operation: e.operation, requestId: e.requestId, digest: e.digest, knowledgeAt: e.knowledgeAt })), page: { offset: page.offset, limit: page.limit, sequence, nextOffset, complete: page.offset === 0 && nextOffset === null }, counts: { revisions: this.states.size, attempts: this.attempts.length, uses: this.uses.size, history: this.journal.entries.length }, protectedHistory: this.protectedEvents?.snapshot() ?? null, qualification: this.protectedEvents ? 'SIGNED_JOURNAL_AND_AUTHENTICATED_CONSECUTIVE_S6_EVENTS_NO_VALUE_OR_EFFECT_AUTHORITY' : 'ORDINARY_SIGNED_HISTORY_AND_S6_REFERENCE_COMMITMENTS_NO_PROTECTED_S8_EVENT_APPEND' };
                 }
                 case 'PROPOSE': {
                     this.role(a, 'PROPOSER');
@@ -778,9 +873,11 @@ export class CapabilityEvolution {
                 }
                 case 'HANDOFF': {
                     this.role(a, 'PROMOTER'); assertSignature(b, this.policy.promotionKeys, a.principalId);
+                    // An S5-only capsule must never discard application liabilities/history.
+                    if (this.applicationSemantics.hasHistory()) fault('S8_APPLICATION_RESPONSIBILITY_HANDOFF_UNSUPPORTED', 503);
                     const request = z.object({ runtimeHandoff: z.literal(true), expectedGeneration: z.number().int().min(0), successorPolicyDigest: z.string().regex(/^[a-f0-9]{64}$/), successorPolicy: z.unknown(), reason: Text }).strict().parse(b.body);
                     if (request.expectedGeneration !== this.generation || request.successorPolicyDigest === CapabilityEvolution.handoffTargetDigest(this.policy) || request.successorPolicyDigest !== CapabilityEvolution.handoffTargetDigest(request.successorPolicy)) fault('S8_HANDOFF_GENERATION_OR_TARGET_INVALID');
-                    const successor = PolicySchema.parse(request.successorPolicy);
+                    const successor = LifecyclePolicySchema.parse(request.successorPolicy);
                     if (successor.responsibilityHandoff || successor.tenantId !== this.policy.tenantId || successor.principalId !== this.policy.principalId || successor.rightsRef !== this.policy.rightsRef || successor.domain !== this.policy.domain
                         || successor.maxTotalCost < this.totalCost || successor.maxTotalLoss < this.totalLoss || successor.maxTotalUses < this.useCount || Date.parse(successor.validUntil) <= Date.now()) fault('S8_HANDOFF_SUCCESSOR_DOMAIN_OR_ENVELOPE');
                     const originalLeases = [...this.uses.keys()].map(id => this.importedLeases.get(id) ?? this.journal.entries.find(e => e.operation === 'USE' && e.result.lease.useId === id)?.result.lease);

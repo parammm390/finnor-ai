@@ -248,7 +248,8 @@ try {
     const candidate = { name: "0184_identification_plan_compiler.sql",
       sql: await readFile(join(migrationsDirectory, "0184_identification_plan_compiler.sql"), "utf8") };
     const upgrade = await migrate(adminUrl, [candidate]);
-    assert.equal(installedBase.at(-1), "0183_r2_robust_programme_search.sql");
+    assert.deepEqual(installedBase, base.map(migration => migration.name));
+    assert(installedBase.includes("0183_r2_robust_programme_search.sql"));
     assert.deepEqual(upgrade, ["0184_identification_plan_compiler.sql"]);
     const candidateRestart = await migrate(adminUrl, [candidate]);
     assert.deepEqual(candidateRestart, []);

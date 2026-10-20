@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+import { randomInt, randomUUID } from "node:crypto";
 import type pg from "pg";
 import { evaluateAuthority } from "@finnor/authority";
 import { attachWorkEntityTx, withTenantClientTransaction, transactionDb, type Db } from "@finnor/db";
@@ -98,7 +98,8 @@ function pgCode(error: unknown): string | undefined {
   return "cause" in error ? pgCode((error as { cause?: unknown }).cause) : undefined;
 }
 
-type PeTransactionOptions = { readOnly?: boolean; isolation?: "read committed" | "repeatable read" | "serializable" };
+type PeTransactionOptions = { readOnly?: boolean; isolation?: "read committed" | "repeatable read" | "serializable";
+  contentionBackoff?: true };
 const mutationClients = new WeakMap<PeMutationContext, Client>();
 
 /** Compose one original mutation and its required Work result under the same
@@ -169,10 +170,26 @@ async function scopedPeTransaction<T>(
           const { assertNativeControlActionTx } = await import("./live-controls/service");
           await assertNativeControlActionTx(ctx, ctx.provenance.externalId, client);
         }
+        // X1 ordinary continuation is revalidated at the actual canonical
+        // mutation. The same transaction holds its source/Work/mandate locks;
+        // compiler/check receipts cannot substitute for current permission.
+        if (!options.readOnly && source.externalId && UUID.test(source.externalId)) {
+          const institution=(await client.query<{kind:string|null}>(
+            "SELECT authority_context->>'kind' kind FROM finnor_os.domain_actions WHERE tenant_id=$1 AND id=$2",
+            [ctx.auth.tenantId,source.externalId])).rows[0]?.kind==="institution_duty";
+          const method=institution?(await (await import("../../capability-evolution/src/institution-port"))
+            .installedInstitutionCompilerIdentity()).ref.contentDigest:null;
+          await client.query("SELECT finnor_os.x1_assert_effect_current($1::uuid,$2::text)", [source.externalId,method]);
+        }
         return fn(client);
       });
     } catch (error) {
-      if (attempt < maxAttempts && (pgCode(error) === "40001" || pgCode(error) === "40P01")) continue;
+      if (attempt < maxAttempts && (pgCode(error) === "40001" || pgCode(error) === "40P01")) {
+        // X1 admission shares the live operational cursor. Pace only its
+        // existing rolled-back attempts; no new attempt or effect retry.
+        if (options.contentionBackoff) await new Promise(resolve => setTimeout(resolve, 200 * attempt + randomInt(100)));
+        continue;
+      }
       throw error;
     }
   }
@@ -663,8 +680,19 @@ export async function createFinding(ctx: PeMutationContext, input: {
   materiality: "immaterial" | "non_material" | "material" | "critical"; owner: InternalPartyRef;
   requiredForWorkstreamCompletion?: boolean;
 }): Promise<PeMutationResult> {
+  return peTransaction(ctx, (_db, client) => createFindingTx(client, ctx, input));
+}
+
+/** Canonical finding constructor, composed atomically with checked evidence by
+ * native scientific owners. No caller-supplied scientific grade is accepted. */
+export async function createFindingTx(client: Client, ctx: PeMutationContext, input: {
+  id?: string; dealId: string; workstreamId: string; relatedRequestId?: string; relatedDeliverableId?: string;
+  statement: string; severity: "low" | "medium" | "high" | "critical";
+  materiality: "immaterial" | "non_material" | "material" | "critical"; owner: InternalPartyRef;
+  requiredForWorkstreamCompletion?: boolean;
+}): Promise<PeMutationResult> {
   assertPeText(input.statement, "Finding statement");
-  return createChild(ctx, "pe_findings", input.dealId, {
+  return createChildTx(client, ctx, "pe_findings", input.dealId, {
     id: input.id, workstream_id: input.workstreamId, related_request_id: input.relatedRequestId ?? null,
     related_deliverable_id: input.relatedDeliverableId ?? null, statement: input.statement.trim(),
     severity: input.severity, materiality: input.materiality,

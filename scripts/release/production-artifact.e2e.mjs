@@ -66,7 +66,13 @@ function emittedApiCustody(outputDirectory) {
     const p4 = await evidence.codeIdentity(), m4 = await challenge.codeIdentity();
     const ports = await adapters.initializeAuthenticProducerPorts();
     if (ports.length !== 2 || p4.files.length < 700 || m4.files.length < 700) throw Error('INCOMPLETE_NATIVE_SOURCE_CUSTODY');
-    console.log(JSON.stringify({p4Sources:p4.files.length,m4Sources:m4.files.length,producerOwners:ports.map(p=>p.owner),onlyEmittedFunctionInputs:true}));
+    const application = await import(custody.sourceURL('finnor-os/packages/private-equity/src/enterprise-applications/source-cut.ts'));
+    const learning = await import(custody.sourceURL('finnor-os/packages/private-equity/src/policy-learning/source-cut.ts'));
+    const identification = await import(custody.sourceURL('finnor-os/packages/private-equity/src/system-identification/source-cut.ts'));
+    const x3 = await application.currentApplicationEnvironment();
+    const x5 = await learning.currentLearningEnvironment();
+    const x4 = await identification.currentIdentificationEnvironment();
+    console.log(JSON.stringify({p4Sources:p4.files.length,m4Sources:m4.files.length,x3Sources:x3.files.length,x5Sources:x5.files.length,x4Sources:x4.files.length,producerOwners:ports.map(p=>p.owner),onlyEmittedFunctionInputs:true}));
   `], native, "api-emitted-native-custody")
   receipt.probes.push({ emittedNativeFunction: native, originalCheckoutDependencies: false })
 }

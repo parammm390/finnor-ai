@@ -1,0 +1,48 @@
+{
+  "schema": "x3-independent-second-business-contract.v1",
+  "custody": "DEVELOPMENT_NOT_PROTECTED",
+  "title": "Firm control-exception register",
+  "purpose": "Record, evidence and independently close internal firm control exceptions. This is not deal reconciliation and performs no external execution.",
+  "entity": "control_exception",
+  "states": ["OPEN", "EVIDENCED", "CLOSED"],
+  "fields": {
+    "memo": "required bounded text",
+    "remediation": "required bounded text",
+    "support": "required canonical evidence reference with KNOWN and CURRENT status"
+  },
+  "roles": {
+    "operator": "canonical scoped employee assignment",
+    "reviewer": "different canonical scoped employee assignment"
+  },
+  "commands": [
+    {
+      "name": "document",
+      "from": "OPEN",
+      "to": "EVIDENCED",
+      "role": "operator",
+      "requires": ["support is KNOWN", "support is CURRENT"]
+    },
+    {
+      "name": "close",
+      "from": "EVIDENCED",
+      "to": "CLOSED",
+      "role": "reviewer",
+      "requires": ["actor differs from record author", "support is KNOWN", "support is CURRENT"]
+    }
+  ],
+  "cases": [
+    {"id": "complete", "events": ["operator.document", "reviewer.close"], "expectedStates": ["EVIDENCED", "CLOSED"]},
+    {"id": "wrong-role", "events": ["reviewer.document"], "expected": "ROLE_DENIED", "expectedState": "OPEN"},
+    {"id": "wrong-state", "events": ["reviewer.close"], "expected": "INVALID_STATE", "expectedState": "OPEN"},
+    {"id": "stale-support", "intervention": "publish a new version of support before document", "events": ["operator.document"], "expected": "SOURCE_STALE", "expectedState": "OPEN"},
+    {"id": "self-review", "intervention": "give author the reviewer role too", "events": ["operator.document", "author.close"], "expected": "SELF_APPROVAL_DENIED", "expectedState": "EVIDENCED"},
+    {"id": "revoked-reviewer", "intervention": "revoke reviewer after document", "events": ["operator.document", "reviewer.close"], "expected": "AUTHORITY_DENIED", "expectedState": "EVIDENCED"},
+    {"id": "restart-retains", "events": ["operator.document", "replace API and worker processes", "reviewer.read"], "expectedState": "EVIDENCED", "expectedMemo": "Quarterly access review missing", "expectedRemediation": "Independent reviewer confirms complete access inventory"}
+  ],
+  "critical": [
+    "Use the same compiler, installed runtime and generated UI without source edits.",
+    "No client actor or role field grants authority.",
+    "Original memo, remediation, source pins and event history survive restart.",
+    "CLOSED is a local business state, not a protected certification or external effect."
+  ]
+}

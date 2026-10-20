@@ -1,4 +1,5 @@
 export * from "./contracts";
+export * from "./identification";
 export * from "./source-precedence";
 export * from "./state";
 export * from "./belief-update";

@@ -20,6 +20,31 @@ const projectionTruth = (projection: CompanyBrainProjection, nodes: CompanyBrain
 const rows = (nodes: CompanyBrainNode[]) => nodes.map((node) => ({ id: `${node.ref.type}:${node.ref.id}`, label: node.label, state: node.state ?? node.epistemicState, ...(node.epistemicWarnings.length ? { detail: node.epistemicWarnings[0]?.reason ?? "Coverage caveat" } : {}) }))
 const nodeLabel = (value: string) => value.replace(/^output[._]/i, "").replace(/([a-z0-9])([A-Z])/g, "$1 $2").replace(/[._]/g, " ").toLowerCase()
 const financialValue = (value: UnderwritingValue) => typeof value === "object" ? Object.entries(value).map(([key, item]) => `${key}: ${item}`).join(" · ").slice(0, 300) : String(value)
+const record = (value: unknown): Record<string, unknown> | null => value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : null
+type WorkEffect = WorkAggregateView["businessEffects"][number]
+const verifiedEffect = (effect: WorkEffect): boolean => {
+  const verification = record(effect.verification)
+  return effect.status === "verified" && verification?.state === "verified"
+    && typeof verification.basis === "string" && Boolean(verification.basis.trim())
+    && typeof verification.checkedAt === "string" && Number.isFinite(Date.parse(verification.checkedAt))
+    && effect.observedResult !== null && effect.observedResult !== undefined
+}
+const effectStage = (effect: WorkEffect, index: number) => {
+  const verification = record(effect.verification), verified = verifiedEffect(effect)
+  const state: "verified" | "active" | "waiting" | "blocked" = verified ? "verified"
+    : ["failed", "divergent", "reconciliation_required"].includes(effect.status) ? "blocked"
+      : effect.status === "executing" ? "active" : "waiting"
+  const disposition = verified ? "Independent postcondition verified"
+    : effect.status === "prepared" ? "Prepared intent; execution not established"
+      : ["executing", "unknown", "reconciliation_required"].includes(effect.status) ? "Outcome UNKNOWN; reconcile before retry"
+        : "No independently verified postcondition"
+  return { id: `business-effect:${effect.id}`, label: `Business effect ${index + 1}`, state,
+    detail: [`Recorded: ${effect.status}`, `Verification: ${typeof verification?.state === "string" ? verification.state : "UNKNOWN"}`,
+      disposition, effect.observedResult !== null && effect.observedResult !== undefined
+        ? `Owner observation: ${oneLine(effect.observedResult) ?? "Structured owner observation recorded"}` : "No owner observation recorded",
+      typeof verification?.basis === "string" ? `Verification basis: ${verification.basis}` : "Verification basis unavailable",
+      typeof verification?.checkedAt === "string" ? `Checked: ${verification.checkedAt}` : "Verification time unavailable"].join(" · ") }
+}
 
 /** Compose presentation from canonical records. No business fact is persisted in browser state. */
 export function composeCanvasDocument(params: { thread: LoadedConversationThread["thread"]; work: WorkAggregateView | null; projection: CompanyBrainProjection | null; underwriting?: UnderwritingWorkspace | null; ic?: IcWorkspace | null; builtAt?: string }): CanvasDocument {
@@ -32,6 +57,7 @@ export function composeCanvasDocument(params: { thread: LoadedConversationThread
     const receipt = work.receipts.find((item) => item.finalizedAt) ?? work.receipts[0]
     const completedReads = work.queryExecutions.filter((query) => query.status === "succeeded")
     const failedReads = work.queryExecutions.filter((query) => query.status === "failed")
+    const verifiedEffects = work.businessEffects.filter(verifiedEffect).length
     const verified = Boolean(latestPlan?.completionProof && typeof latestPlan.completionProof === "object" && !Array.isArray(latestPlan.completionProof) && (latestPlan.completionProof as Record<string, unknown>).verified === true)
     blocks.push({
       id: `work:${work.work.id}`, type: "work_execution", schemaVersion: 1, sourceKind: "work", title: "Work and verification", payload: {
@@ -43,7 +69,8 @@ export function composeCanvasDocument(params: { thread: LoadedConversationThread
             state: work.actions.some((item) => stateOf(item.status) === "blocked") || failedReads.length ? "blocked"
               : work.work.status === "completed" && (work.actions.length || completedReads.length) ? "verified"
                 : work.actions.length || completedReads.length ? "active" : "waiting",
-            detail: `${work.actions.length} recorded Work action${work.actions.length === 1 ? "" : "s"} · ${completedReads.length} completed canonical read${completedReads.length === 1 ? "" : "s"}${completedReads.length ? ` (${[...new Set(completedReads.map((query) => query.intent.replaceAll("_", " ")))].join(", ")})` : ""} · ${work.businessEffects.length} observed business effect${work.businessEffects.length === 1 ? "" : "s"}` },
+            detail: `${work.actions.length} recorded Work action${work.actions.length === 1 ? "" : "s"} · ${completedReads.length} completed canonical read${completedReads.length === 1 ? "" : "s"}${completedReads.length ? ` (${[...new Set(completedReads.map((query) => query.intent.replaceAll("_", " ")))].join(", ")})` : ""} · ${work.businessEffects.length} recorded business effect${work.businessEffects.length === 1 ? "" : "s"} · ${verifiedEffects} independently verified outcome${verifiedEffects === 1 ? "" : "s"}` },
+          ...work.businessEffects.map(effectStage),
           { id: "verification", label: "Verification", state: verified || Boolean(receipt?.finalizedAt && !receipt.failure) ? "verified" : receipt?.failure ? "blocked" : receipt ? "active" : "waiting", detail: verified ? "Completion proof verified" : receipt?.finalizedAt ? "Finalized receipt recorded" : receipt ? "Receipt pending finalization" : "No finalized receipt" },
           { id: "outcome", label: "Outcome",
             state: work.work.failure || ["failed", "cancelled"].includes(work.work.status) ? "blocked"
@@ -54,14 +81,20 @@ export function composeCanvasDocument(params: { thread: LoadedConversationThread
         ],
         finalOutcome: oneLine(work.work.finalOutcome), failure: oneLine(work.work.failure),
       },
-      entityRefs: [], sourceRefs: work.queryExecutions.map((query) => ({ owner: "Work", table: "work_query_executions", id: query.id })),
-      workRefs: [{ workId: work.work.id, recordType: "work" }, ...work.queryExecutions.map((query) => ({ workId: work.work.id, recordType: "work_query_execution", recordId: query.id }))],
+      entityRefs: [], sourceRefs: [...work.queryExecutions.map((query) => ({ owner: "Work", table: "work_query_executions", id: query.id })), ...work.businessEffects.map((effect) => ({ owner: "Work", table: "business_effects", id: effect.id }))],
+      workRefs: [{ workId: work.work.id, recordType: "work" }, ...work.queryExecutions.map((query) => ({ workId: work.work.id, recordType: "work_query_execution", recordId: query.id })), ...work.businessEffects.map((effect) => ({ workId: work.work.id, recordType: "business_effect", recordId: effect.id }))],
       truthState: "KNOWN", asOf, createdAt: work.work.createdAt, updatedAt: asOf,
     })
     if (receipt) blocks.push({ id: `receipt:${receipt.id}`, type: "decision_receipt", schemaVersion: 1, sourceKind: "work", title: "Decision receipt", payload: { status: receipt.failure ? "Failed" : receipt.finalizedAt ? "Finalized" : "Pending", result: oneLine(receipt.actualResult) ?? (receipt.actualResult ? "Structured result recorded" : "No actual result recorded"), finalizedAt: receipt.finalizedAt, failure: oneLine(receipt.failure) }, entityRefs: [], sourceRefs: [], workRefs: [{ workId: work.work.id, recordType: "decision_receipt", recordId: receipt.id }], truthState: receipt.finalizedAt ? "KNOWN" : "PARTIAL", asOf: receipt.finalizedAt ?? asOf, createdAt: asOf, updatedAt: receipt.finalizedAt ?? asOf })
   }
   if (projection) {
     const nodes = projection.nodes
+    if(work&&projection.root.entityType==="pe_deal"){
+      blocks.push({id:"identified-system:"+projection.root.entityId,type:"identified_system",schemaVersion:1,sourceKind:"company_brain",title:"Autonomous system identification",
+        payload:{root:{entityType:"pe_deal",entityId:projection.root.entityId},workId:work.work.id,threadId:thread.id},
+        entityRefs:[],sourceRefs:[],workRefs:[{workId:work.work.id,recordType:"work"}],truthState:"UNKNOWN",
+        asOf:projection.asOf,createdAt:projection.asOf,updatedAt:projection.asOf})
+    }
     if(["external_organization","pe_strategy","pe_fund","pe_vehicle"].includes(projection.root.entityType)){
       blocks.push({id:"bilateral-opportunity:"+projection.root.entityId,type:"bilateral_opportunity",schemaVersion:1,sourceKind:"company_brain",title:"Private market opportunity creation",
         payload:{root:projection.root,workId:work?.work.id??thread.activeWorkId??null,investigation:{threadId:thread.id,expectedRevision:thread.revision}},entityRefs:[],sourceRefs:[],workRefs:work?[{workId:work.work.id,recordType:"bilateral_opportunity"}]:[],
@@ -106,6 +139,7 @@ export function composeCanvasDocument(params: { thread: LoadedConversationThread
       blocks.push({...ownerBasis,id:"branch-fabric:"+programRoot.entityId,type:"branch_fabric",title:"Branch rehearsal",
         payload:{rootId:programRoot.entityId,workId:work.work.id}})
     }
+    if(programRoot.entityType==="external_organization"){blocks.push({id:"enterprise-application:"+programRoot.entityId,type:"enterprise_application",schemaVersion:1,sourceKind:"company_brain",title:"Enterprise application",payload:{root:programRoot,workId:work?.work.id??thread.activeWorkId??null,threadId:thread.id},entityRefs:[],sourceRefs:companyEdge?[{owner:companyEdge.sourceRef.owner,table:companyEdge.sourceRef.table,id:companyEdge.sourceRef.id}]:[],workRefs:work?[{workId:work.work.id,recordType:"enterprise_application"}]:[],truthState:"UNKNOWN",asOf:projection.asOf,createdAt:projection.asOf,updatedAt:projection.asOf})}
     if(programRoot.entityType==="external_organization"){blocks.push({id:"interface-synthesis:"+programRoot.entityId,type:"interface_synthesis",schemaVersion:1,sourceKind:"company_brain",title:"Interface acquisition",payload:{root:programRoot,workId:work?.work.id??thread.activeWorkId??null,threadId:thread.id},entityRefs:[],sourceRefs:companyEdge?[{owner:companyEdge.sourceRef.owner,table:companyEdge.sourceRef.table,id:companyEdge.sourceRef.id}]:[],workRefs:work?[{workId:work.work.id,recordType:"interface_capability"}]:[],truthState:"UNKNOWN",asOf:projection.asOf,createdAt:projection.asOf,updatedAt:projection.asOf})}
     if(programRoot.entityType==="external_organization"){blocks.push({id:"program-synthesis:"+programRoot.entityId,type:"program_synthesis",schemaVersion:1,sourceKind:"company_brain",title:"Analytical method",payload:{root:programRoot,workId:work?.work.id??thread.activeWorkId??null,threadId:thread.id},entityRefs:[],sourceRefs:companyEdge?[{owner:companyEdge.sourceRef.owner,table:companyEdge.sourceRef.table,id:companyEdge.sourceRef.id}]:[],workRefs:work?[{workId:work.work.id,recordType:"harness_program"}]:[],truthState:"UNKNOWN",asOf:projection.asOf,createdAt:projection.asOf,updatedAt:projection.asOf})}
     if(programRoot.entityType==="external_organization"){blocks.push({id:"compute-search:"+programRoot.entityId,type:"compute_search",schemaVersion:1,sourceKind:"company_brain",title:"Allocated computation",payload:{root:programRoot,workId:work?.work.id??thread.activeWorkId??null,threadId:thread.id},entityRefs:[],sourceRefs:companyEdge?[{owner:companyEdge.sourceRef.owner,table:companyEdge.sourceRef.table,id:companyEdge.sourceRef.id}]:[],workRefs:work?[{workId:work.work.id,recordType:"compute_search"}]:[],truthState:"UNKNOWN",asOf:projection.asOf,createdAt:projection.asOf,updatedAt:projection.asOf})}

@@ -94,7 +94,14 @@ const nextConfig = {
       "../../scripts/release/action-hardening-spec.ts",
       "../../../scripts/release/production-mutation-guard.mjs",
       "../../apps/worker/src/**/*.ts", "./app/api/**/*.ts",
-      "../../node_modules/fs-ext/**/*", "../../node_modules/tsx/**/*", "../../node_modules/esbuild/**/*",
+      "../../node_modules/fs-ext/**/*", "../../node_modules/tsx/**/*", "../../node_modules/esbuild/**/*", "../../node_modules/zod/**/*",
+      // Native X3/X5/X4 source cuts also bind maintained UI and stamp inputs.
+      // They must travel with the emitted API, not depend on the build host.
+      "../../../src/components/centropy/canvas/*.ts", "../../../src/components/centropy/canvas/*.tsx",
+      "../../../src/lib/centropy/capability-manifest.generated.json",
+      "../../scripts/x3/stamp-source.mts", "../../scripts/x5/stamp-source.mts", "../../scripts/x4/stamp-source.mts",
+      "../../Dockerfile.worker", "./next.config.mjs",
+      "./lib/**/*.ts",
     ],
   },
 };
