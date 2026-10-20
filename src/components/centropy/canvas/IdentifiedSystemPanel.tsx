@@ -16,7 +16,12 @@ const viewSchema=z.object({identificationId:z.string().uuid(),workId:z.string().
  protectedAdmission:z.literal(false),productionActive:z.literal(false)}).passthrough()
 const listSchema=z.object({identifications:z.array(z.object({identificationId:z.string().uuid(),workId:z.string().uuid(),status:z.string(),modelId:z.string().uuid().nullable()}))})
 type View=z.infer<typeof viewSchema>
-const post=<T,>(operation:string,body:unknown)=>centropyPost<T>('company-brain/identification-'+operation,body)
+const IDENTIFICATION_POST_OPERATIONS=['targets','consent','revoke-consent','submit','read','list','history','experiment','replicate','use','cancel','invalidate','retry','s8-propose','admission'] as const
+const post=<T,>(operation:string,body:unknown)=>{
+ const registered=IDENTIFICATION_POST_OPERATIONS.find(value=>value===operation)
+ if(!registered)throw new Error('IDENTIFICATION_INVALID_OPERATION')
+ return centropyPost<T>('company-brain/identification-'+registered,body)
+}
 const pretty=(value:unknown)=>JSON.stringify(value,null,2)
 type Pending={scope:string;operation:string;fingerprint:string;body:Record<string,unknown>}
 

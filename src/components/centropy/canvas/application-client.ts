@@ -20,7 +20,12 @@ export type ApplicationView=z.infer<typeof view>
 export type ApplicationRecord=z.infer<typeof ApplicationRecordSchema>
 export type ApplicationEntity=z.infer<typeof frontend>['entities'][number]
 export type ApplicationAction=ApplicationEntity['actions'][number]
-export async function applicationPost<T>(operation:string,body:unknown){return centropyPost<T>('company-brain/application-'+operation,body)}
+const APPLICATION_POST_OPERATIONS=['submit','maintain','command','read','record','list','history','asset','cancel','rollback','impact','upload','prepare-effect','s8-propose','admission'] as const
+export async function applicationPost<T>(operation:string,body:unknown){
+ const registered=APPLICATION_POST_OPERATIONS.find(value=>value===operation)
+ if(!registered)throw new Error('APPLICATION_INVALID_OPERATION')
+ return centropyPost<T>('company-brain/application-'+registered,body)
+}
 function canonical(v:unknown):string{
  if(Array.isArray(v))return '['+v.map(canonical).join(',')+']'
  if(v!==null&&typeof v==='object')return '{'+Object.entries(v).sort(([a],[b])=>a<b?-1:a>b?1:0).map(([k,x])=>JSON.stringify(k)+':'+canonical(x)).join(',')+'}'

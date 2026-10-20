@@ -55,3 +55,14 @@ as noncredentials. The policy and fingerprint exclusions remain unchanged.
 Exact source/line hashes, provenance, commands and redacted reports stay in the
 private audit artifact. Repeat detection and disposition at the final cut;
 do not carry these six dispositions over to changed matching bytes.
+
+## Published CI correction
+
+The earlier local history commands omitted `-m`. They enumerated all proposed
+commits but did not inspect every parent-relative merge patch. CI correctly
+finds the exact peer Markdown field twice in the authentic two-parent merge,
+plus the historical typed CandidatePlan identity. Do not describe attempts
+two or three as complete merge-parent history audits. Subsequent commands
+must use CI's exact `-m base..head` range. The new preregistration and exact
+metadata-policy proof are in `published-ci-repairs.md`; original nonzero
+reports and source-bound dispositions remain preserved.

@@ -14,7 +14,12 @@ const viewSchema=z.object({
  protectedAdmission:z.literal(false),productionActive:z.literal(false),
 }).passthrough()
 type View=z.infer<typeof viewSchema>
-const post=<T,>(operation:string,body:unknown)=>centropyPost<T>('company-brain/learning-'+operation,body)
+const LEARNING_POST_OPERATIONS=['consent','revoke-consent','experience','submit','read','list','execute','evaluate','cancel','invalidate','retry','rollback','s8-propose','admission','register-assignment','retrain'] as const
+const post=<T,>(operation:string,body:unknown)=>{
+ const registered=LEARNING_POST_OPERATIONS.find(value=>value===operation)
+ if(!registered)throw new Error('LEARNING_INVALID_OPERATION')
+ return centropyPost<T>('company-brain/learning-'+registered,body)
+}
 const pretty=(value:unknown)=>JSON.stringify(value,null,2)
 export function LearnedPolicyPanel({root,workId,threadId}:{root:{entityType:string;entityId:string};workId:string|null;threadId:string}){
  const {session}=useCentropyAuth(),logical=JSON.stringify([session?.user.id??null,root.entityType,root.entityId,workId,threadId]),identity=JSON.stringify([logical,session?.access_token??null])
