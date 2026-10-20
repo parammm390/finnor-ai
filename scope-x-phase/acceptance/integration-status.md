@@ -38,11 +38,17 @@ earlier programme cuts; it does not supersede retained failed receipts.
   separate frozen portal outcome and maintained authenticated projection
   also pass without new allowance/deadline. All five prior attempts remain
   failed. Three isolated cells and ten other families remain unexecuted.
+- Clean committed-cut repetition at 37d585f also passes all 14 cases:
+  182.089 seconds / 3,252,002,816 sampled peak RSS bytes, actual second-use
+  pause 6,384 ms, original bounds and checks unchanged, no live descendants.
+  It does not execute the three isolated cells or qualify this later
+  worker-repair source cut.
 - The canonical paired-checkpoint read passes its 37-case separate-process
   adversarial boundary and 12 existing generated-control S8 recovery cases.
   Independent review finds no new candidate; source bytes remain unchanged.
   See `paired-checkpoint-read.md` for exact scope, failed fixture/type/lint
-  attempts and unchanged native limits. This is precommit dirty-cut evidence.
+  attempts and unchanged native limits. Boundary/recovery evidence is from
+  the recorded dirty cut; the native repetition identifies its clean commit.
 - Initial audits 1–3 omitted merge-parent expansion (`-m`); they did not
   establish complete history coverage. The gap is disclosed and later audits
   use the actual CI `-m` range. Audit 6 at published e2d91b5 covers 226 new
@@ -50,6 +56,15 @@ earlier programme cuts; it does not supersede retained failed receipts.
   the then-untracked pre-code E2E, not part of that publication. Four raw tree
   findings remain source-bound noncredentials inherited from main; no raw
   zero-finding tree claim. Final publication needs its own fresh audit.
+- Published e2d91b5 CI run 39376870447 is terminal **FAIL**. Other applicable
+  jobs pass, but installed worker R3 exhausts the 384-MiB heap after its
+  base-upgrade case, and R4 rejects a stale lexical migration-tail fixture.
+  Required later owner cases are not credited. The follow-up defers the
+  unchanged PDF parser until an actual PDF read and checks the exact full
+  R4 baseline. Real PDF readers, all 12 format protocols, actual PostgreSQL
+  upgrade/replay/restart, and the original eager R3 setup/HTTP 401 pass
+  locally without wider limits. Full installed owner CI remains pending.
+  See `installed-worker-ci-repairs.md`, including retained failed attempts.
 
 Evidence, exact source hashes and replay commands are retained privately under
 `/home/factory-user/x-phase-integration-evidence`. Do not publish raw native

@@ -131,3 +131,15 @@ Vercel function files. Preserve it, change no files or exclusions, and use
 the repository-declared `npm run lint` (eslint src scripts), which passes
 with the existing warnings. These observations are not a final committed-cut
 reconstruction or a remote verdict for the new paired-read code.
+
+## Clean committed-cut repetition
+
+The preregistered seventh campaign repeats the unchanged driver and flags
+from clean commit 37d585f00c2e7eb2d3587379d8e6b210c316385b, tree
+0e6a4de0908b6bfb96b68219ecda42860cd112fc. It passes all 14 cases in
+182.089 seconds / 3,252,002,816 sampled peak RSS bytes. The actual live
+second-use pause is 6,384 ms; all original state comparisons and original
+7,000/8,000-ms and 900-second/6-GiB bounds remain. Source is unchanged,
+cleanup succeeds and no observed descendants survive. This is an ordinary
+development repetition, not installed reconstruction, execution of missing
+isolated subjects, or qualification of a later source cut.

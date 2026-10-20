@@ -1,6 +1,5 @@
 import { createHash } from "node:crypto";
 import { OfficePackage, NS, children, descendants, parseXml, textContent, withArtifactDeadline } from "@finnor/ooxml";
-import { PDFParse } from "pdf-parse";
 import type { OriginalInstitutionEvidence } from "./checker";
 import type { DigitalInstitutionProfile } from "./contracts";
 
@@ -209,6 +208,7 @@ async function decode(protocol: string, raw: string, bytes: Buffer): Promise<Rec
     case "xlsx": return workbook(bytes);
     case "pdf_text": {
       if (bytes.subarray(0, 5).toString() !== "%PDF-") return fail("PDF magic absent");
+      const { PDFParse } = await import("pdf-parse");
       const parser = new PDFParse({ data: bytes });
       try {
         const info = await withArtifactDeadline(parser.getInfo(), 25_000);

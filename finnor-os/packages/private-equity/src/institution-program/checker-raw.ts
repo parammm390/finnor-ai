@@ -1,5 +1,4 @@
 import { OfficePackage, NS, children, descendants, parseXml, textContent, withArtifactDeadline } from "@finnor/ooxml";
-import { PDFParse } from "pdf-parse";
 
 /** Format-only original-byte reader. This module has no producer inference,
  * ranking, mapping or rule-selection dependency. Unknown material structure
@@ -340,6 +339,7 @@ export async function originalRawRecords(source: OriginalSource, limit: number, 
     case "xlsx": value = workbookRows(bytes); break;
     case "pdf_text": {
       if (bytes.subarray(0, 5).toString() !== "%PDF-") throw new Error("PDF magic absent");
+      const { PDFParse } = await import("pdf-parse");
       const parser = new PDFParse({ data: bytes });
       try {
         const info = await withArtifactDeadline(parser.getInfo(), 25_000);
