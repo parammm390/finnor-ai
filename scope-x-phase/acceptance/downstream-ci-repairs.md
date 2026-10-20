@@ -129,3 +129,19 @@ verdict for the next commit. Full installed worker-image cases, fresh
 committed-cut reconstruction, the five-engine chain, original X2 native
 gate and qualification remain pending. The paired-checkpoint-read document
 is a plan only, with no implementation or native result.
+
+## Published inventory follow-up, registered before repair
+
+Run 39376277173 at da28923 passes all 81 governance test cases but fails
+the unchanged exhaustive release-mutation inventory: the newly authored
+api-build-context.e2e.test.mjs was not classified. This was missed in the
+preceding repair and review; preserve the failure. Add only that exact path
+to the existing READ_ONLY / TEST_ONLY release-harness entry. Do not alter
+the validator, seven active mutators, operation permissions or production
+workflow. Run the actual inventory validator afterward and audit the new
+committed cut before publication.
+
+The unchanged validator now passes: 19 classified mechanisms, the same
+seven active production mutators, no retained break-glass mechanism and
+the same global production lock. This exact declarative delta was reviewed
+locally; no runtime permissions or validator code changed.
