@@ -3,6 +3,8 @@ import { afterEach, expect, it, vi } from "vitest"
 vi.mock("./centropy-auth", () => ({
   getCurrentAccessToken: () => "caller-token",
   getCurrentSessionKey: () => "unchanged-signed-session",
+  getCurrentAccessGeneration: () => 0,
+  rejectCurrentWorkspaceAccess: () => {},
 }))
 
 import { centropyPost } from "./api"

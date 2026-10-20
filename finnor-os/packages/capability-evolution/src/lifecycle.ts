@@ -15,6 +15,7 @@ import { canonical } from '../../governed-execution/src/protocol';
 import { readOwnerTransportReference, ownerTransportRoute, signOwnerDeliveryOrigin, deliverOwnerTransportIntent, resolveEconomicOwnerReference } from '../../governed-execution/src/owner-transport';
 import { CapabilityJournal, privateFile, type JournalEntry } from './journal';
 import { InterfaceCapabilityPort } from './interface-port';
+import { InstitutionCapabilityPort } from './institution-port';
 import { ApplicationCapabilityPort } from './application-port';
 import { LearnedPolicyCapabilityPort } from './learned-policy-port';
 import type {IdentifiedSystemCapabilityPort} from './identified-system-port';
@@ -24,7 +25,13 @@ const KeySchema = z.object({ id: Text, principalId: Text, publicKey: Text, valid
 const PolicySchema = z.object({ schema: z.literal('finnor.s8.lifecycle-policy.v1'), domain: z.enum(['DISPOSABLE_TEST_AUTHORITY', 'REVIEWED_PROTECTED_DOMAIN']), tenantId: Text, principalId: Text, rightsRef: Text, responsibilityHandoff: z.object({ reference: RefSchema, previousSignedPolicy: z.object({ body: z.unknown(), keyId: Text, signature: Text }).strict(), previousReleaseRoot: Text }).strict().optional(), protectedEvents: z.object({ contract: z.literal('S8_CAPABILITY_EVENTS_V1'), maxRecoveryEvents: z.number().int().min(1).max(256) }).strict().optional(), validAfter: Instant, validUntil: Instant, actors: z.array(z.object({ id: Text, principalId: Text, tokenHash: z.string().regex(/^[a-f0-9]{64}$/), roles: z.array(z.enum(['PROPOSER', 'EVALUATOR', 'PROMOTER', 'CONSUMER', 'READER'])).min(1).max(2) }).strict()).min(4).max(64), evaluatorKeys: z.array(KeySchema).min(1).max(16), promotionKeys: z.array(KeySchema).min(1).max(16), costAuthorityPrincipalIds: z.array(Text).max(16), journalPublicKey: Text, allowedStrata: z.array(Text).min(1).max(64), maxEntries: z.number().int().min(1).max(100000), maxQueue: z.number().int().min(1).max(64), maxTotalCost: z.number().finite().min(0).max(1000000), maxTotalLoss: z.number().finite().min(0).max(1000000000), maxTotalUses: z.number().int().min(1).max(100000), sourcePins: z.array(z.object({ path: Text, sha256: z.string().regex(/^[a-f0-9]{64}$/) }).strict()).min(1).max(128) }).strict();
 // Only the additive scientific sibling needs the larger closure. The financial
 // allocation RevisionBodySchema and parseRevision remain unchanged at 128 pins.
-const LifecyclePolicySchema=PolicySchema.extend({sourcePins:PolicySchema.shape.sourcePins.max(256)});
+const LifecyclePolicySchema=PolicySchema.extend({
+    sourcePins:PolicySchema.shape.sourcePins.max(256),
+    institutionCompiler:z.object({
+        profileDigest:z.string().regex(/^[a-f0-9]{64}$/),
+        sourcePins:z.array(z.object({path:Text,sha256:z.string().regex(/^[a-f0-9]{64}$/)}).strict()).min(1).max(64),
+    }).strict().optional(),
+});
 type Policy = z.infer<typeof LifecyclePolicySchema>;
 type Actor = Policy['actors'][number];
 interface Config {
@@ -65,6 +72,7 @@ export class CapabilityEvolution {
     private learnedPolicies: LearnedPolicyCapabilityPort;
     private identifiedSystems: IdentifiedSystemCapabilityPort|null=null;
     private identifiedReplay: JournalEntry[]=[];
+    private institutions: InstitutionCapabilityPort;
     private states = new Map<string, RevisionState>();
     private active: string | null = null;
     private generation = 0;
@@ -85,6 +93,7 @@ export class CapabilityEvolution {
         this.interfaces = new InterfaceCapabilityPort(policy);
         this.applications = new ApplicationCapabilityPort(policy);
         this.learnedPolicies = new LearnedPolicyCapabilityPort(policy);
+        this.institutions = new InstitutionCapabilityPort(policy);
         this.protectedEvents = policy.protectedEvents ? new ProtectedCapabilityEvents({ ...policy, protectedEvents: policy.protectedEvents }, journal.policyDigest) : null;
         for (const e of journal.entries)
             this.replay(e);
@@ -417,6 +426,7 @@ export class CapabilityEvolution {
         if (entry.operation.startsWith('APPLICATION_')) { this.applications.replay(entry); return; }
         if (entry.operation.startsWith('LEARNED_POLICY_')) { this.learnedPolicies.replay(entry); return; }
         if (entry.operation.startsWith('INTERFACE_')) { this.interfaces.replay(entry); return; }
+        if (entry.operation.startsWith('INSTITUTION_')) { this.institutions.replay(entry); return; }
         const b = entry.body, r = entry.result;
         if (entry.operation === 'JOURNAL_RECOVERY' && r.responsibilityImport === true) {
             const capsule = r.capsule;
@@ -558,6 +568,14 @@ export class CapabilityEvolution {
             }
             if (input.operation.startsWith('APPLICATION_')) {
                 const answer = await this.applications.command(a, input.operation, b,
+                    (ref, content) => this.commitNamedReference(ref, content));
+                if (!answer.readOnly)
+                    await this.persist({ requestId: input.requestId, requestDigest, actorId: a.id,
+                        operation: input.operation, body: b, result: answer.result });
+                return answer.result;
+            }
+            if (input.operation.startsWith('INSTITUTION_')) {
+                const answer = await this.institutions.command(a, input.operation, b,
                     (ref, content) => this.commitNamedReference(ref, content));
                 if (!answer.readOnly)
                     await this.persist({ requestId: input.requestId, requestDigest, actorId: a.id,

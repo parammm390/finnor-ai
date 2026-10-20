@@ -25,6 +25,7 @@ import {
   compileAndSelectPlans,
   DEFAULT_PLAN_BUDGETS,
   sha256,
+  planNodeSemanticHash,
   type CandidateCompilationFacts,
   type CandidatePlan,
   type CandidatePlanNode,
@@ -37,13 +38,11 @@ import {
   type PlanningConstraint,
   type PlanningWorldSnapshot,
 } from "@finnor/planning";
-import { planNodeSemanticHash } from "@finnor/planning";
 import { canExerciseAuthority } from "@finnor/authority";
 import { redactStructured, redactText, restoreTokens } from "@finnor/security";
 import { ACTION_HARDENING_SPEC } from "../../../scripts/release/action-hardening-spec";
-import type { LLMChannel, LLMProvider } from "./llm";
-import { resolveProviderForPurpose } from "./llm";
-import { groundEntitiesWithDb } from "./compiler";
+import { resolveProviderForPurpose, type LLMChannel, type LLMProvider } from "./llm";
+import { groundEntitiesWithDb, groundReservedActionWithDb } from "./compiler";
 import { validateOperationalQueryRequest } from "./fast-read-lane";
 import { authorityResourcesFromPayload, queryAuthorityRequest } from "./authority-runtime";
 import type { PluginRegistry } from "./plugin-registry";
@@ -134,6 +133,9 @@ export interface CompileCandidatePlansInput {
   /** Real Work planning must compile against current policy, grounding, authority,
    * and capability state. Unit-only callers may explicitly disable DB facts. */
   useDatabase?: boolean;
+  /** Original canonical owner's frozen creation IDs; no model proposal supplies
+   * this binding, and native execution still checks output ID = DomainAction.id. */
+  reservedActionIdentities?: Record<string, string>;
 }
 
 function boundedPromptValue(value: unknown, maxChars: number): unknown {
@@ -1114,6 +1116,7 @@ export class LLMPlanner implements Planner {
     useDatabase: boolean;
     operatingContext?: OperatingContext;
     planningContext?: unknown;
+    reservedActionIdentities?: Record<string, string>;
   }): Promise<CandidateCompilationFacts[]> {
     const parsed = params.candidates.flatMap((candidate) => {
       const result = CandidatePlanSchema.safeParse(candidate);
@@ -1143,7 +1146,10 @@ export class LLMPlanner implements Planner {
           const groundingErrors: string[] = [];
           if (grounded && params.useDatabase) {
             try {
-              const fields = await withTenant(params.tenantContext.tenantId, (db) => groundEntitiesWithDb(db, params.tenantContext.tenantId, groundedPayload));
+              const reserved = params.reservedActionIdentities?.[node.key];
+              const fields = await withTenant(params.tenantContext.tenantId, (db) => reserved
+                ? groundReservedActionWithDb(db, params.tenantContext.tenantId, node.actionType, groundedPayload, reserved)
+                : groundEntitiesWithDb(db, params.tenantContext.tenantId, groundedPayload));
               const rejected = fields.filter((field) => field.status !== "verified");
               grounded = rejected.length === 0;
               groundingErrors.push(...rejected.map((field) => `${field.field}:${field.status}`));
@@ -1304,6 +1310,7 @@ export class LLMPlanner implements Planner {
       useDatabase: input.useDatabase ?? true,
       operatingContext: input.operatingContext,
       planningContext: input.planningContext,
+      reservedActionIdentities: input.reservedActionIdentities,
     });
     const compilation = compileAndSelectPlans({
       candidates: input.candidates,

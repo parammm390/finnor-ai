@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { centropyGet, centropyPost } from "../lib/api"
 import { useCentropyAuth } from "../lib/centropy-auth"
+import { usePrivateRequestScope } from "../lib/use-private-request-scope"
 import { onBusinessInvalidation, type ProjectionTag } from "../lib/business-invalidation"
 import type { AttentionQueueResult, FirmDealProjectionSet, ProductResource } from "../product/contracts"
 import { unavailableState, type ProductTruthState } from "../product/source-health"
@@ -42,7 +43,10 @@ interface RetainedOptions<T> {
   confirmedAt?: (data: T) => string | null
 }
 
-function useRetainedResource<T>({ enabled, resourceKey, tag, load, stateFor, confirmedAt }: RetainedOptions<T>): ProductResource<T> {
+function useRetainedResource<T>({ enabled: requestedEnabled, resourceKey: requestedKey, tag, load, stateFor, confirmedAt }: RetainedOptions<T>): ProductResource<T> {
+  const scope = usePrivateRequestScope(requestedKey)
+  const enabled = requestedEnabled && scope.allowed
+  const resourceKey = scope.key
   const [data, setData] = useState<T | null>(null)
   const [dataKey, setDataKey] = useState<string | null>(null)
   const [status, setStatus] = useState<ProductResource<T>["status"]>("idle")
@@ -83,7 +87,7 @@ function useRetainedResource<T>({ enabled, resourceKey, tag, load, stateFor, con
     setErrorValue(null)
     void load()
       .then((value) => {
-        if (!active) return
+        if (!active || !scope.isCurrent(resourceKey)) return
         dataRef.current = { key: resourceKey, value }
         setData(value)
         setDataKey(resourceKey)
@@ -92,27 +96,28 @@ function useRetainedResource<T>({ enabled, resourceKey, tag, load, stateFor, con
         setLastConfirmedAt(confirmedAt?.(value) ?? new Date().toISOString())
       })
       .catch((cause) => {
-        if (!active) return
-        const current = dataRef.current?.key === resourceKey ? dataRef.current.value : null
-        setData(current)
-        setDataKey(current ? resourceKey : null)
+        if (!active || !scope.isCurrent(resourceKey)) return
+        dataRef.current = null
+        setData(null)
+        setDataKey(null)
         setStatus("error")
         setError(message(cause))
         setErrorValue(cause)
-        setTruthState(unavailableState(cause, Boolean(current)))
+        setTruthState(unavailableState(cause, false))
+        setLastConfirmedAt(null)
       })
     return () => { active = false }
-  }, [confirmedAt, enabled, load, resourceKey, revision, stateFor])
+  }, [confirmedAt, enabled, load, resourceKey, revision, stateFor, scope.isCurrent])
 
   return useMemo(() => ({
-    data: dataKey === resourceKey ? data : null,
+    data: enabled && dataKey === resourceKey ? data : null,
     status,
     error,
     errorValue,
     truthState,
     lastConfirmedAt,
     reload,
-  }), [data, dataKey, error, errorValue, lastConfirmedAt, reload, resourceKey, status, truthState])
+  }), [data, dataKey, enabled, error, errorValue, lastConfirmedAt, reload, resourceKey, status, truthState])
 }
 
 const rootsState = (data: CompanyBrainSearchResult[]): ProductTruthState => data.length ? "KNOWN" : "KNOWN_EMPTY"

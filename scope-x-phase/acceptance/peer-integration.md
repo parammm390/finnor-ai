@@ -58,6 +58,20 @@ installs and unchanged resolved locks afterward.
    from an unvalidated label or drop unexpected keys. Preserve each owner's
    authorization, idempotency and cancellation semantics. OpenAPI must describe
    the disjoint request alternatives without silently shadowing either one.
+   Source inspection also found X2/X3 add/add collisions in S8's
+   `application-port.ts` and `application-consumer.ts`, including identical
+   `APPLICATION_*` command names and consumer configuration variables for
+   incompatible typed payloads. Keep X3's existing protocol/config unchanged.
+   Adopt X2 as the separate `application-semantics-{port,consumer}.ts` domain,
+   using `APPLICATION_SEMANTICS_*` journal/transport operations and separate
+   `FINNOR_S8_APPLICATION_SEMANTICS_CONSUMER_{CONFIG,ROOT}` bindings. Update only
+   X2's source dependencies, native callers and executable fixtures accordingly.
+   Do not route either domain by trying an effectful owner then falling back.
+   Preserve original signed-history checks, field schemas, costs, caps, deadlines
+   and independent refusal oracles. Prior peer wire/history cannot be silently
+   imported as this newly built integration domain; fresh rebuilt/re-signed
+   disposable fixtures are required. Check both domains in one journal, wrong
+   namespace payloads, revocation, currentness and aggregate accounting.
 2. **Migration lineage.** Preserve all historical SQL bytes and complete
    filenames. X1 adds 19 files, X2 adds 0191/0192/0193, and ordinal overlap is
    not a filename collision. X2's own bundle/head are stale. Regenerate the

@@ -1,0 +1,42 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
+    "baseUrl": "../../..",
+    "types": ["node"]
+  },
+  "files": [
+    "./run-owner-slice.mts",
+    "./physical-owner-worker.mts",
+    "./native-diagnostic-worker.mts",
+    "./qualification-runtime.mts",
+    "./qualification-population.mts",
+    "./qualification-native-worker.mts",
+    "./qualification-native-inputs.mts",
+    "./qualification-native-administration.mts",
+    "./qualification-observation-collection.mts",
+    "./qualification-native-observation.mts",
+    "./qualification-meaning.mts",
+    "./qualification-population-owner-exercise.mts",
+    "../../../apps/worker/src/dev-entry.mts",
+    "../../../apps/api/dev-server.ts",
+    "./qualification-admin.mts",
+    "./institution-method-plan.mts",
+    "../../../packages/private-equity/src/institution-qualification/administration.ts",
+    "../../../packages/private-equity/src/institution-program/api.ts",
+    "../../../packages/private-equity/src/institution-program/worker.ts",
+    "../../../packages/private-equity/src/live-recompilation/institution-worker.ts",
+    "../../../packages/private-equity/src/program-synthesis/contracts.ts",
+    "../../../packages/private-equity/src/program-synthesis/plan.ts",
+    "../../../packages/private-equity/src/program-synthesis/owners.ts",
+    "../../../packages/private-equity/src/program-synthesis/store.ts",
+    "../../../packages/private-equity/src/program-synthesis/institution.ts",
+    "../../../packages/private-equity/src/program-synthesis/api.ts",
+    "../../../packages/private-equity/src/program-synthesis/worker.ts",
+    "../../../packages/private-equity/src/program-synthesis/operational-query.ts",
+    "../../../packages/orchestration/src/objective-loop.ts"
+  ],
+  "include": [],
+  "exclude": ["node_modules"]
+}

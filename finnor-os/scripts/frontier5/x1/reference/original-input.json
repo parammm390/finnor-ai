@@ -1,0 +1,39 @@
+{
+  "tenantId": "tenant-alpha",
+  "institutionId": "firm-alpha",
+  "workId": "work-readiness",
+  "principalId": "principal-operations",
+  "knowledgeCut": "2026-10-11T12:00:00.000Z",
+  "sources": [
+    {
+      "id": "crm-1", "revision": "r1", "sourceClass": "crm_deals", "protocol": "json_records",
+      "tenantId": "tenant-alpha", "institutionId": "firm-alpha", "authorizedPrincipalIds": ["principal-operations"],
+      "rightsRevision": "rights-1", "coverage": {"expectedObjectIds": ["deal-A", "deal-B"], "readObjectIds": ["deal-A", "deal-B"], "complete": true},
+      "rawUtf8": "[{\"id\":\"deal-A\",\"kind\":\"entity\",\"entityType\":\"deal\",\"registrationId\":\"FIRM-100\",\"name\":\"Harbor\"},{\"id\":\"deal-B\",\"kind\":\"entity\",\"entityType\":\"deal\",\"registrationId\":\"FIRM-200\",\"name\":\"Harbor\"}]"
+    },
+    {
+      "id": "ledger-1", "revision": "r3", "sourceClass": "financial_ledger", "protocol": "json_records",
+      "tenantId": "tenant-alpha", "institutionId": "firm-alpha", "authorizedPrincipalIds": ["principal-operations"],
+      "rightsRevision": "rights-1", "coverage": {"expectedObjectIds": ["amount-A", "amount-B"], "readObjectIds": ["amount-A", "amount-B"], "complete": true},
+      "rawUtf8": "[{\"id\":\"amount-A\",\"kind\":\"quantity\",\"registrationId\":\"FIRM-100\",\"factKey\":\"facility_balance\",\"value\":\"20.00\",\"currency\":\"USD\",\"unit\":\"units\",\"period\":\"2026-09\",\"basis\":\"outstanding\",\"occurredAt\":\"2026-09-30T00:00:00.000Z\",\"availableAt\":\"2026-10-01T00:00:00.000Z\"},{\"id\":\"amount-B\",\"kind\":\"quantity\",\"registrationId\":\"FIRM-100\",\"factKey\":\"facility_balance\",\"value\":\"25.00\",\"currency\":\"USD\",\"unit\":\"units\",\"period\":\"2026-09\",\"basis\":\"outstanding\",\"occurredAt\":\"2026-09-30T00:00:00.000Z\",\"availableAt\":\"2026-10-02T00:00:00.000Z\"}]"
+    },
+    {
+      "id": "work-1", "revision": "r2", "sourceClass": "work_tracking", "protocol": "json_records",
+      "tenantId": "tenant-alpha", "institutionId": "firm-alpha", "authorizedPrincipalIds": ["principal-operations"],
+      "rightsRevision": "rights-1", "coverage": {"expectedObjectIds": ["request-A", "request-B"], "readObjectIds": ["request-A", "request-B"], "complete": true},
+      "rawUtf8": "[{\"id\":\"request-A\",\"kind\":\"trigger\",\"triggerKind\":\"evidence_request_needed\",\"registrationId\":\"FIRM-100\",\"occurredAt\":\"2026-10-10T08:00:00.000Z\",\"availableAt\":\"2026-10-10T09:00:00.000Z\"},{\"id\":\"request-B\",\"kind\":\"trigger\",\"triggerKind\":\"evidence_request_needed\",\"registrationId\":\"FIRM-200\",\"occurredAt\":\"2026-10-10T09:00:00.000Z\",\"availableAt\":\"2026-10-10T09:30:00.000Z\"}]"
+    }
+  ],
+  "mandate": {
+    "id": "mandate-1", "revision": "m1", "tenantId": "tenant-alpha", "institutionId": "firm-alpha", "workId": "work-readiness",
+    "rules": [{"id":"rule-request","triggerKind":"evidence_request_needed","operation":"create_deal_request","principalId":"principal-operations","deadlineAt":"2026-10-15T17:00:00.000Z","materiality":"material","postconditionRef":"request-created-v1","observerRef":"canonical-request-readback-v1"}]
+  },
+  "canonical": {
+    "tenantId": "tenant-alpha", "revision": "canonical-1",
+    "entities": [
+      {"ref":"pe_deal:deal-100@v2","entityType":"deal","registrationId":"FIRM-100","institutionId":"firm-alpha"},
+      {"ref":"pe_deal:deal-200@v1","entityType":"deal","registrationId":"FIRM-200","institutionId":"firm-alpha"}
+    ]
+  },
+  "current": {"sourceRevisions":{"crm-1":"r1","ledger-1":"r3","work-1":"r2"},"mandateRevision":"m1","canonicalRevision":"canonical-1","rightsRevision":"rights-1","resourceRevision":"s5-1","methodRevision":"method-1","operationRevision":"op-1","checkerRevision":"checker-1","profileRevision":1,"schemaRevision":"institution-program-v1","runtimeRevision":"runtime-1","authorizedOperations":["create_deal_request"]}
+}

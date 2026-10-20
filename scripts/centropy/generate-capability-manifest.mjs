@@ -32,6 +32,7 @@ function registeredOperations(path, name) {
   return operations
 }
 const delegatedRegistries = [
+  ["INSTITUTION_OPERATIONS", "institution-program/api.ts"],
   ["EVIDENCE_OPERATIONS", "evidence-execution/api.ts"],
   ["PRIMARY_OPERATIONS", "primary-diligence/api.ts"],
   ["BILATERAL_OPERATIONS", "bilateral-opportunities/api.ts"],
@@ -87,6 +88,7 @@ const companyBrainOperations = [...new Set([
 ])]
 const closingOperations = registeredOperations("finnor-os/packages/private-equity/src/closing/api.ts", "CLOSING_OPERATIONS")
 const companyBrainReads = new Set([
+  "institution-read", "institution-status", "institution-witness", "institution-sources", "institution-inputs",
   "belief-view", "belief-pin", "roots", "projection", "search", "object", "traverse",
   "provenance", "history", "evidence-lineage", "decision-lineage", "available-actions", "context",
   "evidence-handles", "evidence-read", "evidence-witness",

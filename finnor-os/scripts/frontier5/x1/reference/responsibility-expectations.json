@@ -1,0 +1,63 @@
+{
+  "schema": "finnor.frontier5.x1.responsibility-expectations.v1",
+  "basis": "Independently derived from reference/original-input.json + reference/base-candidate.json before responsibility.ts exists. Identity is bound to distinct sourceId/recordId components; slash witnesses are display-only. A refreshed rights cut must update the authorized original sources and matching current vector. Digests are recomputed by the implementation and checked for format/determinism/preimage-binding, not copied from producer output.",
+  "lowering": {
+    "responsibilities": [
+      {
+        "trigger": { "witness": "work-1/request-A", "sourceId": "work-1", "recordId": "request-A", "occurredAt": "2026-10-10T08:00:00.000Z", "availableAt": "2026-10-10T09:00:00.000Z" },
+        "rule": { "id": "rule-request", "mandateId": "mandate-1", "mandateRevision": "m1", "triggerKind": "evidence_request_needed" },
+        "materiality": "material",
+        "priorityRank": 0,
+        "originalDeadline": "2026-10-15T17:00:00.000Z",
+        "responsiblePrincipal": "principal-operations",
+        "permissibleOperationClass": "create_deal_request",
+        "subjectRef": "pe_deal:deal-100@v2",
+        "preconditionStatus": "satisfied",
+        "postconditionContractRef": "request-created-v1",
+        "observerRef": "canonical-request-readback-v1",
+        "observerEntityType": "pe_request",
+        "observerDealId": "deal-100",
+        "effectKind": "ordinary",
+        "status": "LOWERED"
+      },
+      {
+        "trigger": { "witness": "work-1/request-B", "sourceId": "work-1", "recordId": "request-B", "occurredAt": "2026-10-10T09:00:00.000Z", "availableAt": "2026-10-10T09:30:00.000Z" },
+        "rule": { "id": "rule-request", "mandateId": "mandate-1", "mandateRevision": "m1", "triggerKind": "evidence_request_needed" },
+        "materiality": "material",
+        "priorityRank": 1,
+        "originalDeadline": "2026-10-15T17:00:00.000Z",
+        "responsiblePrincipal": "principal-operations",
+        "permissibleOperationClass": "create_deal_request",
+        "subjectRef": "pe_deal:deal-200@v1",
+        "preconditionStatus": "satisfied",
+        "postconditionContractRef": "request-created-v1",
+        "observerRef": "canonical-request-readback-v1",
+        "observerEntityType": "pe_request",
+        "observerDealId": "deal-200",
+        "effectKind": "ordinary",
+        "status": "LOWERED"
+      }
+    ],
+    "programme": {
+      "responsibilityCount": 2,
+      "unresolvedCount": 0,
+      "dependencyGraphNodes": 7,
+      "dependencyGraphEdges": 6,
+      "parentDeadline": "2026-10-15T17:00:00.000Z",
+      "status": "LOWERED",
+      "qualification": "TYPED_OWNER_PROGRESSION_NOT_NUMERIC_S4_NOT_S3_CAUSAL"
+    }
+  },
+  "demand": {
+    "input": { "computeRequests": 4, "humanSeconds": 900 },
+    "lines": [
+      { "resourceClass": "COMPUTE", "unit": "request", "quantity": "4" },
+      { "resourceClass": "HUMAN_ATTENTION", "unit": "seconds", "quantity": "900" }
+    ],
+    "qualification": "DECLARED_ACCOUNTING_NOT_FUNDING",
+    "envelopes": [
+      { "resourceId": "compute-pool", "unit": "request", "kind": "CUMULATIVE_EXPENDITURE", "quantities": ["8"] },
+      { "resourceId": "human-attention", "unit": "seconds", "kind": "CUMULATIVE_EXPENDITURE", "quantities": ["900"] }
+    ]
+  }
+}

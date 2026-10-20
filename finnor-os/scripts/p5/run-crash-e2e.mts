@@ -18,7 +18,7 @@ async function until(predicate:()=>Promise<boolean>,child?:ChildProcess){
 function launch(){
  return spawn(process.execPath,['--import=tsx',join(repo,'finnor-os/scripts/p5/physical-worker.mts')],{
   cwd:join(repo,'finnor-os'),env:{PATH:process.env.PATH,HOME:process.env.HOME,TMPDIR:process.env.TMPDIR,
-   NODE_ENV:'test',DATABASE_URL:process.env.DATABASE_URL,AUTH_DEV_BYPASS:'1',FINNOR_P4_PROFILE:'ordinary_disposable'},
+   NODE_ENV:'test',DATABASE_URL:process.env.FINNOR_P5_WORKER_DATABASE_URL,AUTH_DEV_BYPASS:'1',FINNOR_P4_PROFILE:'ordinary_disposable'},
   stdio:['ignore','ignore','ignore'],
  });
 }

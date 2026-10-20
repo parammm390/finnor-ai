@@ -1,19 +1,57 @@
 import {readHarnessDecisionSlice} from './decision-slice';
+import {recordAllocationConsumption,validateInstitutionDemand} from '../allocation-store';
 import {designEnterpriseExperiments} from '../enterprise-experiments';
 import {queryEnterpriseInterventionModel} from '../enterprise-interventions';
 import {readEnterpriseContingentPolicy,validateEnterpriseContingentPolicy} from '../enterprise-control';
 import {readEnterpriseAllocation,validateEnterpriseAllocation} from '../enterprise-allocation';
 import type {PeMutationContext} from '../types';
 import {authorize,principal,sha,tx} from '../evidence-execution/store';
-import type {HarnessRequest,OwnerOperation} from './contracts';
-import type {ProgramRow} from './store';
+import {isInstitutionRequest,type HarnessRequest,type InstitutionHarnessRequest,type OwnerOperation,type InstitutionHarnessProgram} from './contracts';
+import type {ProgramRow,InstitutionProgramRow} from './store';
+import {supportsInstitutionCompletion} from '../institution-program/completion-contracts';
 
-export async function resolveEconomicBindings(ctx:PeMutationContext,request:HarnessRequest,cut:{programId:string;workId:string;inputId:string;validAt:string;knowledgeAt:string}){const refs=[];
+export async function resolveEconomicBindings(ctx:PeMutationContext,request:HarnessRequest|InstitutionHarnessRequest,cut:{programId:string;workId:string;inputId:string;validAt:string;knowledgeAt:string}){const refs=[];
+ if(isInstitutionRequest(request)){
+  const validity=await validateInstitutionDemand(ctx,request.institution.reservationRef);
+  if(validity.status!=='CURRENT'||validity.reservation.workId!==cut.workId
+    ||validity.reservation.demand.demandDigest!==request.institution.demand.demandDigest)
+   throw Error('X1_P1_S5_PARENT_NOT_CURRENT');
+  return [{owner:'S5',ref:request.institution.reservationRef,validity,
+   originalDeadline:validity.reservation.originalDeadline,p1ReservationMinted:false}];
+ }
  if(request.ownerBindings?.policyRef){const ref=request.ownerBindings.policyRef;const policy=await readEnterpriseContingentPolicy(ctx,ref);const validity=await validateEnterpriseContingentPolicy(ctx,ref);if(validity.status!=='CURRENT')throw Error('S4_POLICY_CURRENTNESS_UNPASSED');refs.push({owner:'S4',ref:policy.ref,validity,businessSelectionOwner:'S4',p1AuthorityGranted:false});}
  if(request.ownerBindings?.allocationRef){const ref=request.ownerBindings.allocationRef;const allocation=await readEnterpriseAllocation(ctx,ref);const validity=await validateEnterpriseAllocation(ctx,ref);if(validity.status!=='CURRENT')throw Error('S5_ALLOCATION_CURRENTNESS_UNPASSED');refs.push({owner:'S5',ref,allocation,validity,p1ReservationMinted:false});}
  if(request.ownerBindings?.decisionSliceRef)refs.push(await readHarnessDecisionSlice(ctx,request.ownerBindings.decisionSliceRef,cut));return refs;
 }
-export async function executeOwnerOperation(ctx:PeMutationContext,q:ProgramRow,operation:OwnerOperation):Promise<{status:'DONE'|'WAITING'|'STOP';value:unknown}>{
+export async function executeOwnerOperation(ctx:PeMutationContext,q:ProgramRow|InstitutionProgramRow,operation:OwnerOperation|{
+ op:'institution_duty';node:InstitutionHarnessProgram['nodes'][number];
+}):Promise<{status:'DONE'|'WAITING'|'STOP';value:unknown}>{
+ if(operation.op==='institution_duty'){
+  if(!isInstitutionRequest(q.request)||q.proposed.schema!=='finnor.institution-harness-program.v1'
+    ||!q.proposed.nodes.some(node=>node.id===operation.node.id
+      &&sha(node)===sha(operation.node)))throw Error('X1_P1_DUTY_NOT_IN_CHECKED_PROGRAMME');
+  const node=operation.node;
+  if(!supportsInstitutionCompletion(node.operation,node.postconditionRef,node.observerRef))
+   return {status:'STOP',value:{reason:'X1_COMPLETION_CONTRACT_NOT_REGISTERED',stableIdentity:node.stableIdentity,
+    originalDeadline:node.deadlineAt,goalSuccess:false}};
+  if(!node.action)return {status:'STOP',value:{reason:'X1_EXACT_ACTION_PAYLOAD_MISSING',
+   stableIdentity:node.stableIdentity,originalDeadline:node.deadlineAt,
+   reservationRef:q.proposed.reservationRef,goalSuccess:false}};
+  const resource=await validateInstitutionDemand(ctx,q.proposed.reservationRef);
+  if(resource.status!=='CURRENT')throw Error('X1_P1_S5_PARENT_NOT_CURRENT');
+  const charged=await recordAllocationConsumption(ctx,q.proposed.reservationRef,{
+   responsibilityIdentity:node.stableIdentity,phase:'EXECUTION',ordinal:1,units:1});
+  // A checked payload is an intent. The ordinary action bridge and separate
+  // canonical observer are downstream; this owner never claims their receipt.
+  return {status:'WAITING',value:{schema:'finnor.p1.institution-intent.v1',
+   stableIdentity:node.stableIdentity,derivationRevision:node.derivationRevision,
+   operation:node.operation,action:node.action,postconditionRef:node.postconditionRef,
+   observerRef:node.observerRef,originalDeadline:node.deadlineAt,
+   reservationRef:q.proposed.reservationRef,chargeKey:charged.charge.chargeKey,
+   dispatched:false,observed:false,
+   goalSuccess:false}};
+ }
+ if(isInstitutionRequest(q.request))throw Error('X1_P1_FINANCIAL_OWNER_OPERATION_NOT_PERMITTED');
  if(operation.op==='propose_model')return {status:'DONE',value:{schema:'finnor.p1.model-proposal.v1',assumptions:operation.assumptions,units:operation.units,mechanism:operation.mechanism,sourceRefs:q.request.sources.map(s=>s.key),identification:'UNIDENTIFIED_PROPOSAL',validityOwner:'S3',admitted:false,observedFieldOutcome:false}};
  if(operation.op==='design_inquiry')return {status:'DONE',value:{proposal:await designEnterpriseExperiments(ctx,{root:q.request.root,request:operation.request}),measurementOrAssignmentExecuted:false,selectionOwner:'S4',resourceOwner:'S5',effectOwner:'S6'}};
  if(operation.op==='simulate')return {status:'DONE',value:{response:await queryEnterpriseInterventionModel(ctx,{modelRef:operation.modelRef,query:operation.query}),evidenceClass:'MODEL_RELATIVE',liveObservation:false}};

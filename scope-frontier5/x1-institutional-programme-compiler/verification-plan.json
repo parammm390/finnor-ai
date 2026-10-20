@@ -1,0 +1,643 @@
+{
+  "schema": "finnor.frontier5.x1.finite-verification.v1",
+  "revision": 1,
+  "status": "FROZEN_PRE_CODE",
+  "sourceBase": {
+    "commit": "517003a4396bc8101a90be4b425ee01de9446740",
+    "tree": "07ba69b8e96f05944c2f9f14a74b2c400eb89e42",
+    "dirtyAtStart": [
+      "AGENTS.md user instructions",
+      "scope-frontier5/x1-institutional-programme-compiler orchestration records"
+    ]
+  },
+  "profile": "profile.json",
+  "oracle": "oracle-contract.md",
+  "failureModel": "failure-model.md",
+  "runtime": {
+    "node": "/usr/local/bin/node",
+    "nodeVersion": "22.18.0",
+    "python": "/Users/paramdave/.codex/visualizations/2026/10/11/01a12960-fabc-7b31-8d1a-fa67a0be7117/x1-control/runtime/python",
+    "pythonVersion": "3.12.13",
+    "rootNext": "16.3.8",
+    "backendNext": "15.5.27",
+    "postgres": "18.4",
+    "platform": "darwin-arm64",
+    "dependencyResolution": "verified read-only exact third-party overlays; all workspace sources owned"
+  },
+  "privateEvidenceRoot": "/Users/paramdave/.codex/visualizations/2026/10/11/01a12960-fabc-7b31-8d1a-fa67a0be7117/x1-control/evidence",
+  "runner": "node finnor-os/scripts/frontier5/x1/verify.mjs",
+  "runnerStatus": "PROPOSED_TO_IMPLEMENT",
+  "limits": {
+    "smallCheckWallSeconds": 180,
+    "smallCheckNodeHeapMiB": 768,
+    "kernelNodeHeapMiB": 512,
+    "smallCheckOutputBytes": 67108864,
+    "wholeTypecheckWallSeconds": 300,
+    "wholeTypecheckNodeHeapMiB": 1536,
+    "liveMinimumFreeBytes": 1610612736,
+    "finalBuildMinimumFreeBytes": 2684354560,
+    "finalBuildWallSeconds": 900,
+    "finalBuildOutputBytes": 1610612736,
+    "liveStackMaximumCount": 1,
+    "liveEpisodeWallSeconds": 900,
+    "liveEpisodeIncrementalDiskBytes": 805306368,
+    "localSampledProcessMemoryStopBytes": 5368709120,
+    "readOnlyReviewerConcurrency": 2,
+    "staticConcurrency": 1,
+    "sourceWriterConcurrency": 1,
+    "completeAggregateMemoryQualification": "UNKNOWN_UNTIL_INDEPENDENT_MEASUREMENT",
+    "sourceEngineeringWallBoundary": "native feature budgets; do not stop independent source work for deferred live capacity",
+    "unchangedPredicateFailureLimitBeforeDiagnosis": 2
+  },
+  "resourceRationale": "Prior readiness sampled~3.52GB ownedRSS/~0.40GB disk; one stack only on16GiB shared host. Retain1.5GiB livefloor. Source/static allowed below it. Finalbuild requires extra1GiB margin, bounded1.5GiB outputs and separate preflight; no inferred fit or ENOSPC loop.",
+  "stages": [
+    {
+      "id": "kernel",
+      "live": false,
+      "caseGroups": [
+        "A",
+        "B",
+        "C",
+        "F"
+      ],
+      "scope": "pure declared-domain inference/checker/closure/quantity contracts only; no owner-runtime claim",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "static",
+      "live": false,
+      "caseGroups": [
+        "G"
+      ],
+      "scope": "affected root/backend type/lint/generatedAPI/workspace/capability/forms/migration/auth/security/protocol/release contracts; no finalbuild",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "owners",
+      "live": true,
+      "caseGroups": [
+        "A",
+        "C"
+      ],
+      "scope": "authenticated raw-to-S1-to-S4/P1-to-S5-to-native-effect-independent-observer",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "lifecycle",
+      "live": true,
+      "caseGroups": [
+        "B",
+        "D",
+        "E",
+        "F"
+      ],
+      "scope": "physical workers/currentness/UNKNOWN/concurrency/cancel/actualfallback",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "mounted",
+      "live": true,
+      "caseGroups": [
+        "A",
+        "B",
+        "G"
+      ],
+      "scope": "agent-browser existingWork/identity/revision/revocation/late-response",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "qualification-contract",
+      "live": false,
+      "caseGroups": [
+        "C",
+        "F",
+        "G"
+      ],
+      "scope": "independent hand-calculated full-population/scorer/custody/replay/liveclock/resume contract only",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "installed",
+      "live": true,
+      "caseGroups": [
+        "G"
+      ],
+      "scope": "singlefinalbuild/builtAPI/worker/checker/cleaninstall/existingDBupgrade/mixedjobs",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "diagnostic",
+      "live": true,
+      "caseGroups": [
+        "H"
+      ],
+      "scope": "actualequippedmatchedon/off/startup/reuse/remainingbottlenecks",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "handoff",
+      "live": false,
+      "caseGroups": [
+        "G"
+      ],
+      "scope": "source/lock/schema/profile/evidence/orderedpatchesorbundle/reconstruction/coverage/packets",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "scrutiny",
+      "live": false,
+      "caseGroups": [
+        "A",
+        "B",
+        "C",
+        "D",
+        "E",
+        "F",
+        "G",
+        "H"
+      ],
+      "scope": "run affected available offline stages and inspect exact live receipts/pendingstatus; never treat missing live as passed",
+      "status": "NOT_RUN"
+    }
+  ],
+  "groups": [
+    {
+      "id": "A",
+      "cases": [
+        "A-unseen-raw-structure",
+        "A-complete-envelope",
+        "A-semantic-owner-admission",
+        "A-native-request-completion",
+        "A-exact-independent-observer",
+        "A-mounted-result"
+      ],
+      "oracle": "independently frozen original-source mapping/obligation ledger and exact canonical Request postcondition",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "B",
+      "cases": [
+        "B-two-fund-overlapping-identity",
+        "B-lender-field-meaning",
+        "B-personnel-revocation",
+        "B-financial-correction",
+        "B-exception-not-approval",
+        "B-minimal-closure-unaffected-continuation",
+        "B-cosmetic-drift"
+      ],
+      "oracle": "independent raw revision/closure/obligation/deadline expectations; availability and transport clocks separate",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "C",
+      "cases": [
+        "C-wrong-entity",
+        "C-wrong-unit-currency-magnitude",
+        "C-impossible-chronology",
+        "C-wrong-deadline",
+        "C-normative-rule",
+        "C-suppressed-contradiction",
+        "C-omitted-obligation",
+        "C-stale-revision",
+        "C-unauthorized-action",
+        "C-tenant-source-principal",
+        "C-forged-check",
+        "C-profile-bound-overflow"
+      ],
+      "oracle": "each correctly scoped deliberate candidate reaches named independent predicate; all omitted obligations remain",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "D",
+      "cases": [
+        "D-worker-death-after-acceptance",
+        "D-worker-death-before-publication",
+        "D-effect-submit-lost-ack",
+        "D-same-identity-UNKNOWN-reconcile"
+      ],
+      "oracle": "actual SQLclaim/fence/process death plus independent provider/canonical history; no identity/grant/deadline reset",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "E",
+      "cases": [
+        "E-original-parent-contention",
+        "E-stale-worker-delivery",
+        "E-concurrent-revision-publication",
+        "E-cancel-release-and-liability"
+      ],
+      "oracle": "actualS5sharedreservation/resourceuse/jobfence/ownerendingstate",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "F",
+      "cases": [
+        "F-checker-crash",
+        "F-budget-exhaustion",
+        "F-ambiguous-mapping",
+        "F-unsupported-responsibility",
+        "F-unavailable-method",
+        "F-compatible-native-fallback"
+      ],
+      "oracle": "actualcompatiblecallee/job/observer underoriginalremaininggrant or exactblocked/unknown withunaffectedwork",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "G",
+      "cases": [
+        "G-final-static-contracts",
+        "G-built-api-worker-checker",
+        "G-clean-local-install",
+        "G-existing-db-upgrade-restart",
+        "G-old-new-jobs",
+        "G-mounted-initiate-revise-read-cancel",
+        "G-principal-tenant-Work-revision-switch",
+        "G-revoked-late-read-mutation",
+        "G-standalone-reconstruction"
+      ],
+      "oracle": "actualfinalinstalledbytes/authenticatedsession/restrictedSQL/datahistorycompatibility/reconstructedsource",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "H",
+      "cases": [
+        "H-matched-on-off-cold",
+        "H-matched-on-off-reuse",
+        "H-original-assignment-costs-and-gaps"
+      ],
+      "oracle": "sameoriginaladmittedinputs/rights/models/tools/identities/budgets; independent completion and actualowner measurements, no presumedgain",
+      "status": "NOT_RUN"
+    }
+  ],
+  "rerunPolicy": "Freeze exactcode/runtime/schema/profile/cases/independentexpectations/limits/evidence destination before eachrun. Reuse unchangedpassedstages withdependencyfingerprints. Repair failures then rerunonlyaffectedproof andnecessaryregressions. After2samepredicatefailures inspectactualprocess/queue/lease/SQL/source/browser. No observer-timeout restart/deadlineextension. Preserve allrawfailures and exactNOTRUN cases.",
+  "evidenceContract": [
+    "source_commit_tree_dirty_hashes",
+    "runtime_locks_schema_profile",
+    "starting_state_and_identities",
+    "original_sources_mandate_grants",
+    "independent_frozen_expectations",
+    "actual_HTTP_SQL_queue_worker_checker_owner_provider_Work_outcomes",
+    "ending_state",
+    "original_failures",
+    "elapsed_resources_costs_unknown_gaps",
+    "exact_secure_rerun_command"
+  ],
+  "protectedQualification": {
+    "environments": 10,
+    "minimumSystemClassesEach": 8,
+    "replayDaysEach": 30,
+    "separateLiveSoakDaysEach": 7,
+    "status": "NOT_RUN_PROTECTED_CUSTODY_MISSING",
+    "internalSoftwareRequired": true,
+    "originalThresholdsUnchanged": true
+  },
+  "separateGates": [
+    "DESIGNED",
+    "CODE_COMPLETE",
+    "E2E_DEV_VERIFIED",
+    "DOMAIN_QUALIFIED",
+    "S8_ADMISSION",
+    "ORDINARY_OPERATION_AUTHORITY",
+    "PROTECTED_OPERATION_AUTHORITY",
+    "PRODUCTION_ACTIVE",
+    "OPERATIONAL_100X",
+    "FINANCIAL_100X_100M_H2"
+  ],
+  "noAuthorityExpansion": true,
+  "registeredOwnerCases": [
+    {
+      "id": "B-ledger-correction",
+      "mode": "material",
+      "dutyCount": 1,
+      "status": "FROZEN_BEFORE_CASE_IMPLEMENTATION",
+      "originalValue": "20.00",
+      "correctedValue": "25.00",
+      "currency": "USD",
+      "unit": "units",
+      "period": "2026-10",
+      "basis": "outstanding",
+      "sourceClasses": [
+        "crm_deals",
+        "financial_ledger",
+        "work_tracking"
+      ],
+      "expectedAffectedDuties": 0,
+      "expectedPreservedDuties": 1,
+      "expectedNewEffects": 0,
+      "initiation": "ACTUAL_CORE_VERSION_APPEND_AND_SUPERSEDING_SAME_SCOPE_GRANT_TRIGGER_REGISTERED_P7_WORKER",
+      "acceptance": "oracle-contract.md#b-ledger-correction-independent-expectations",
+      "limits": "UNCHANGED",
+      "claimsOnlySubsetOfB": true
+    },
+    {
+      "id": "A-eight-class-original-corpus",
+      "mode": "heterogeneous",
+      "dutyCount": 1,
+      "status": "FROZEN_BEFORE_CASE_IMPLEMENTATION",
+      "sourceInstances": 12,
+      "observationRecords": 13,
+      "sourceClasses": [
+        "crm_deals",
+        "financial_ledger",
+        "work_tracking",
+        "document_dms",
+        "email",
+        "calendar",
+        "approval_records",
+        "lender_portal"
+      ],
+      "protocols": [
+        "csv",
+        "tsv",
+        "json_records",
+        "text",
+        "docx",
+        "xlsx",
+        "pdf_text",
+        "rfc822",
+        "icalendar",
+        "financial_xml",
+        "html",
+        "paginated_json"
+      ],
+      "expectedMappings": 10,
+      "expectedQuantities": 2,
+      "expectedDuties": 1,
+      "expectedEffects": 1,
+      "limits": "UNCHANGED",
+      "acceptance": "oracle-contract.md#a-eight-class-original-corpus-independent-expectations",
+      "protectedQualification": false,
+      "allCanonicalKindsEstablished": false
+    },
+    {
+      "id": "A-fourteen-canonical-kinds",
+      "mode": "canonical",
+      "dutyCount": 1,
+      "status": "FROZEN_BEFORE_CASE_IMPLEMENTATION",
+      "canonicalKinds": [
+        "fund",
+        "vehicle",
+        "deal",
+        "investment_case",
+        "counterparty",
+        "person",
+        "document",
+        "metric",
+        "facility",
+        "relationship",
+        "work",
+        "request",
+        "finding",
+        "decision"
+      ],
+      "entityRecords": 17,
+      "expectedAdditionalEffects": 1,
+      "prerequisites": "ACTUAL_CORE_MEMORY_PE_CREATORS_AND_SUBJECT_CONSENT_BEFORE_EXPOSURE",
+      "limits": "UNCHANGED",
+      "acceptance": "oracle-contract.md#a-fourteen-canonical-kinds-independent-expectations",
+      "protectedQualification": false
+    },
+    {
+      "id": "D-compiler-before-publication-death",
+      "mode": "recovery",
+      "dutyCount": 1,
+      "status": "FROZEN_BEFORE_CASE_IMPLEMENTATION",
+      "workerJobLeaseSeconds": 5,
+      "fault": "ACTUAL_SQL_MAPPING_ADMISSION_LOCK_THEN_OWNED_WORKER_SIGKILL",
+      "expectedInterruptedDisposition": "UNKNOWN",
+      "expectedQueueDisposition": "QUARANTINED_RECONCILIATION_REQUIRED",
+      "resumption": "AUTHENTICATED_SAME_COMPILER_ID_ORIGINAL_EPISODE",
+      "limits": "UNCHANGED",
+      "acceptance": "oracle-contract.md#d-compiler-before-publication-death-independent-expectations",
+      "effectLostAckEstablished": false
+    },
+    {
+      "id": "E-original-shared-parent-contention",
+      "mode": "contention",
+      "dutyCount": 1,
+      "status": "FROZEN_BEFORE_CASE_IMPLEMENTATION",
+      "resources": [
+        {
+          "class": "COMPUTE",
+          "availability": 520,
+          "unit": "request"
+        },
+        {
+          "class": "HUMAN_ATTENTION",
+          "availability": 900,
+          "unit": "seconds"
+        }
+      ],
+      "expectedAdditionalReservations": 0,
+      "expectedAdditionalEffects": 0,
+      "requiredBoundary": "S5_SHARED_RESOURCE_CAPACITY_EXHAUSTED",
+      "cancellation": "AUTHENTICATED_SECOND_COMPILER_BEFORE_EXPOSURE_FIRST_PARENT_UNCHANGED",
+      "limits": "UNCHANGED",
+      "acceptance": "oracle-contract.md#e-original-shared-parent-contention-independent-expectations",
+      "fullConcurrencySuiteEstablished": false
+    },
+    {
+      "id": "F-mixed-unsupported-rule",
+      "mode": "unsupported",
+      "dutyCount": 1,
+      "status": "FROZEN_BEFORE_CASE_IMPLEMENTATION",
+      "matchingRules": 2,
+      "expectedObservedNativeEffects": 1,
+      "expectedUnresolvedDuties": 1,
+      "unsupportedField": "approvalCondition",
+      "expectedProgramme": "PARTIAL",
+      "fullWorkCompletionAllowed": false,
+      "limits": "UNCHANGED",
+      "acceptance": "oracle-contract.md#f-mixed-unsupported-rule-independent-expectations",
+      "noFallbackCreditWithoutCallee": true
+    },
+    {
+      "id": "E-cancel-observed-standing-continuation",
+      "mode": "cancel_observed",
+      "dutyCount": 1,
+      "status": "FROZEN_BEFORE_CASE_IMPLEMENTATION",
+      "startingState": "ACTUAL_OBSERVED_CREATION_AND_COMPLETED_WORK",
+      "expectedCompiler": "CANCELLED",
+      "expectedFollowingCompilerChildren": 0,
+      "expectedDuplicateEffects": 0,
+      "consumedParentReleased": false,
+      "limits": "UNCHANGED",
+      "acceptance": "oracle-contract.md#e-cancel-observed-standing-continuation-independent-expectations"
+    },
+    {
+      "id": "D-effect-submit-lost-ack",
+      "mode": "effect_recovery",
+      "dutyCount": 1,
+      "status": "FROZEN_BEFORE_CASE_IMPLEMENTATION",
+      "workerJobLeaseSeconds": 5,
+      "workflowStepLeaseSeconds": 5,
+      "fault": "ACTUAL_OWNER_COMMIT_ACK_ROW_LOCK_THEN_PHYSICAL_WORKER_SIGKILL",
+      "expectedAttemptDisposition": "UNKNOWN_RETAINED_NULL_RESPONSE",
+      "settlement": "READ_ONLY_EXACT_FROZEN_CANONICAL_DUTY",
+      "expectedExecutorReplays": 0,
+      "limits": "UNCHANGED",
+      "acceptance": "oracle-contract.md#d-effect-submit-lost-ack-independent-expectations"
+    },
+    {
+      "id": "A-all-ordinary-operations",
+      "mode": "ordinary",
+      "dutyCount": 1,
+      "status": "FROZEN_BEFORE_CASE_IMPLEMENTATION",
+      "independentObligationDenominator": 3,
+      "operations": [
+        "create_deal_request",
+        "open_workstream",
+        "record_finding"
+      ],
+      "limits": "UNCHANGED",
+      "acceptance": "oracle-contract.md#a-all-ordinary-operations-independent-expectations"
+    },
+    {
+      "id": "G-existing-schema-upgrade-and-jobs",
+      "mode": "upgrade",
+      "dutyCount": 1,
+      "status": "FROZEN_BEFORE_CASE_IMPLEMENTATION",
+      "oldSourceCommit": "517003a4396bc8101a90be4b425ee01de9446740",
+      "oldMigrationHead": "0171_runtime_database_role_isolation.sql",
+      "migrationPolicy": "ALL_RETAINED_SQL_BYTE_IDENTICAL_ADDITIVE_ONLY",
+      "legacyObjects": [
+        "Work",
+        "DocumentVersion",
+        "release_probe",
+        "retired_Water_job"
+      ],
+      "limits": "UNCHANGED",
+      "acceptance": "oracle-contract.md#g-existing-schema-upgrade-and-jobs-independent-expectations",
+      "finalBuiltInstallationEstablished": false
+    },
+    {
+      "id": "A-full-declared-source-and-owner-domain",
+      "mode": "domain",
+      "dutyCount": 1,
+      "status": "FROZEN_BEFORE_CASE_IMPLEMENTATION",
+      "sourceInstances": 15,
+      "sourceClasses": 10,
+      "directProtocols": 12,
+      "canonicalKinds": 14,
+      "independentMappingDenominator": 26,
+      "independentObligationDenominator": 3,
+      "limits": "UNCHANGED",
+      "acceptance": "oracle-contract.md#a-full-declared-source-and-owner-domain-independent-expectations",
+      "protectedQualification": false
+    },
+    {
+      "id": "B-report-meaning-exception-and-cosmetic-change",
+      "mode": "reporting_changes",
+      "dutyCount": 1,
+      "status": "FROZEN_BEFORE_CASE_IMPLEMENTATION",
+      "sourceInstances": 15,
+      "automaticRevisions": 3,
+      "independentMappingDenominator": 26,
+      "independentObligationDenominator": 3,
+      "expectedTotalEffects": 3,
+      "sourcePhysicalAcquisitions": 60,
+      "limits": "UNCHANGED",
+      "acceptance": "oracle-contract.md#b-report-meaning-exception-and-cosmetic-change-independent-expectations",
+      "fullBFixtureEstablished": false
+    },
+    {
+      "id": "F-physical-checker-crash-and-compatible-resume",
+      "mode": "checker_crash",
+      "dutyCount": 1,
+      "status": "FROZEN_BEFORE_CASE_IMPLEMENTATION",
+      "fault": "OWNED_PHYSICAL_CHECKER_TREE_SIGKILL",
+      "expectedOriginalDisposition": "UNKNOWN_QUARANTINED_NO_ADMISSION_OR_EFFECT",
+      "continuation": "ACTUAL_AUTHENTICATED_SAME_REQUEST_RESUME_SECOND_CHECKER_NATIVE_OWNER",
+      "limits": "UNCHANGED",
+      "acceptance": "oracle-contract.md#f-physical-checker-crash-and-compatible-resume-independent-expectations",
+      "alternativeAlgorithmClaimed": false
+    },
+    {
+      "id": "G-authenticated-owner-inputs",
+      "mode": "owner_inputs",
+      "dutyCount": 1,
+      "status": "FROZEN_BEFORE_CASE_RUN",
+      "sourceInstances": 15,
+      "sourceClasses": 10,
+      "canonicalKinds": 14,
+      "independentMappingDenominator": 26,
+      "independentObligationDenominator": 3,
+      "privilegedMandateWrites": 0,
+      "privilegedSourceGrantWrites": 0,
+      "limits": "UNCHANGED",
+      "acceptance": "oracle-contract.md#g-authenticated-owner-inputs-independent-expectations",
+      "protectedQualification": false
+    },
+    {
+      "id": "F-explicit-unsupported-operation",
+      "mode": "unsupported_operation",
+      "dutyCount": 1,
+      "status": "FROZEN_BEFORE_PRODUCER_CHECKER_CHANGE",
+      "independentObligationDenominator": 2,
+      "expectedObservedNativeEffects": 1,
+      "unsupportedOperation": "approve_transaction",
+      "expectedProgramme": "PARTIAL",
+      "fullWorkCompletionAllowed": false,
+      "limits": "UNCHANGED",
+      "acceptance": "oracle-contract.md#f-explicit-unsupported-operation-independent-expectations",
+      "protectedQualification": false
+    },
+    {
+      "id": "B-unrelated-personnel-epoch-original-parent",
+      "mode": "authority_epoch",
+      "dutyCount": 1,
+      "status": "FROZEN_BEFORE_S5_CURRENTNESS_CHANGE",
+      "expectedOriginalRequests": 1,
+      "expectedEndingRequests": 2,
+      "expectedNewEffects": 1,
+      "limits": "UNCHANGED",
+      "acceptance": "oracle-contract.md#b-unrelated-personnel-epoch-and-original-s5-continuation",
+      "fullSensitivePersonnelCase": false,
+      "protectedQualification": false
+    },
+    {
+      "id": "B-sensitive-consent-independent-continuation",
+      "mode": "sensitive_coverage",
+      "dutyCount": 1,
+      "status": "FROZEN_BEFORE_SOURCE_SCOPE_CHANGE",
+      "sourcePopulation": 15,
+      "knownEndingDuties": 4,
+      "expectedTotalEffects": 4,
+      "expectedCoverageGaps": 1,
+      "privateAcquisitionDuringRevokedInterval": 0,
+      "overallNormativePopulationDuringGap": "UNKNOWN",
+      "sourceGapIsBusinessAssignment": false,
+      "limits": "UNCHANGED",
+      "acceptance": "oracle-contract.md#b-sensitive-consent-and-independent-continuation",
+      "protectedQualification": false
+    },
+    {
+      "id": "B-overlapping-personnel-reporting-continuation",
+      "mode": "personnel",
+      "dutyCount": 1,
+      "status": "FROZEN_BEFORE_CRITICAL_OWNER_IMPLEMENTATION",
+      "sourceInstances": 15,
+      "independentInitialIdentityDenominator": 27,
+      "independentInitialDutyDenominator": 3,
+      "independentChangedKnownDutyDenominator": 5,
+      "expectedTotalEffects": 4,
+      "limits": "UNCHANGED",
+      "acceptance": "oracle-contract.md#b-overlapping-personnel-and-reporting-inputs-independent-expectations",
+      "protectedQualification": false
+    },
+    {
+      "id": "A-new-canonical-creation-properties",
+      "mode": "creation",
+      "dutyCount": 1,
+      "status": "FROZEN_BEFORE_CRITICAL_OWNER_IMPLEMENTATION",
+      "sourceInstances": 3,
+      "originalEntityPopulation": 5,
+      "admittedIdentityDenominator": 4,
+      "unresolvedEntities": 1,
+      "expectedTotalEffects": 1,
+      "limits": "UNCHANGED",
+      "acceptance": "oracle-contract.md#a-new-fundvehicle-properties-independent-original-inputs",
+      "protectedQualification": false
+    }
+  ]
+}

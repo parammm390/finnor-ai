@@ -128,7 +128,8 @@ export function buildDecisionGraph(binding:NativeBinding):DecisionGraph {
     }
     for(const outstanding of binding.resourceSnapshot?.outstanding??problem.outstanding){
       const oid=`${prefix}:outstanding:${outstanding.reservationRef.contentDigest}`;
-      add(oid,outstanding.reservationRef.id,'OUTSTANDING_COMMITMENT',outstanding,outstanding.certificateRef,null);
+      add(oid,outstanding.reservationRef.id,'OUTSTANDING_COMMITMENT',outstanding,
+        outstanding.certificateRef??outstanding.demandRef,null);
       root(oid,'CROSS_MANDATE_RESERVATION_UNKNOWN_OUTCOME_AND_RECOVERY',true);
     }
   }

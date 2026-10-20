@@ -10,7 +10,7 @@ require("tsx/cjs/api").register({ tsconfig });
 // The real source tree is packaged with the function. Never use a builder's
 // absolute filename, an environment override, or a substituted source digest.
 function repositoryRoot() {
-  for (const start of [__dirname, process.cwd()]) {
+  for (const start of [__dirname]) {
     let directory = realpathSync(start);
     for (let n = 0; n < 16; n++) {
       if (existsSync(resolve(directory, "finnor-os/packages/private-equity/src/decision-slice/contracts.ts"))
@@ -24,7 +24,7 @@ function repositoryRoot() {
   throw new Error("CANONICAL_RUNTIME_SOURCE_TREE_UNAVAILABLE");
 }
 function sourcePath(relativePath) {
-  if (!/^finnor-os\/(?:packages|scripts|apps)\/[^\\]*\.(?:[cm]?ts|tsx|[cm]?js)$/.test(relativePath)
+  if (!/^(?:finnor-os\/(?:packages|scripts|apps)|scripts\/release)\/[^\\]*\.(?:[cm]?ts|tsx|[cm]?js)$/.test(relativePath)
     || relativePath.split("/").includes("..")) throw new Error("INVALID_RUNTIME_SOURCE_PATH");
   const path = resolve(repositoryRoot(), relativePath);
   if (!existsSync(path)) throw new Error("CANONICAL_RUNTIME_SOURCE_FILE_UNAVAILABLE");

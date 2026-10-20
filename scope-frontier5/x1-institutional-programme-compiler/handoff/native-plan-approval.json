@@ -1,0 +1,30 @@
+{
+  "schema": "finnor.frontier5.x1.native-plan-approval.v1",
+  "recordedAt": "2026-10-11T07:28:59.353243+00:00",
+  "missionId": "mis_8045f277",
+  "sessionId": "43f2af91-7eaa-438a-adad-ab443e63c910",
+  "tool": "ProposeMission",
+  "response": {
+    "accepted": true,
+    "missionDir": "/Users/paramdave/.factory/missions/43f2af91-7eaa-438a-adad-ab443e63c910"
+  },
+  "authority": "Original X1 goal plus continuation instruction; local engineering only",
+  "planningArtifactsSha256": {
+    "mission.md": "d6407d7cbd871f12c70ecfe3a0640a3618bdcbfa680828a40245c24e7a60507c",
+    "architecture.md": "0009ae12cfcb9d75c7b1d4bc7e2e0c2d112a9401a5a3e01148d49ca28d128079",
+    "validation-contract.md": "e304e225f3d779f880b307fb46085282fcd8c846131defd127ed144c591ea0f5",
+    "profile.json": "2bd1d8d9fcf8115976aad5df14c5edd2bc7d28d105ec45dadd1e907f5ceaf9a6",
+    "failure-model.md": "cef58a83de91b6f330b30a146e456c590211a470492581b36204dfa5d402e7d0",
+    "oracle-contract.md": "bc9726c33e8bd610878a05e83eab448b2406ad0929ed3a21b63d20361144c7a2",
+    "verification-plan.json": "77ce087bd5362027c20b186c2eb76c2d8ac0775691809d08bf2401e13a10bd9e"
+  },
+  "sourceBeforeImplementation": {
+    "commit": "517003a4396bc8101a90be4b425ee01de9446740",
+    "tree": "07ba69b8e96f05944c2f9f14a74b2c400eb89e42"
+  },
+  "protectedAdmissionGranted": false,
+  "publicationAuthorized": false,
+  "skipScrutiny": false,
+  "skipUserTesting": false,
+  "readiness": "PARTIAL; source/static authorized while live disk floor blocks application campaigns"
+}
