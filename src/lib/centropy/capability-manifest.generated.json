@@ -3933,6 +3933,37 @@
       "source": "finnor-os/apps/api/app/api/coalition-programmes/[operation]/route.ts"
     },
     {
+      "capabilityId": "http.post.company-brain.application-acquire",
+      "family": "company-brain",
+      "owner": "@finnor/private-equity",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "company-brain/application-acquire",
+      "routeDepth": 2,
+      "classification": "MUTATION",
+      "kind": "mutation",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "backend_policy",
+      "effectClass": "domain_mutation",
+      "verificationClass": "canonical_reread",
+      "presentationTargets": [
+        "WORLD",
+        "CANVAS"
+      ],
+      "invalidationTags": [
+        "company-brain"
+      ],
+      "timeoutClass": "WRITE",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts"
+    },
+    {
       "capabilityId": "http.post.company-brain.application-admission",
       "family": "company-brain",
       "owner": "@finnor/private-equity",
@@ -3998,6 +4029,37 @@
       "method": "POST",
       "routePattern": "company-brain/application-cancel",
       "routeDepth": 2,
+      "classification": "CONTROL",
+      "kind": "control",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "backend_policy",
+      "effectClass": "runtime_control",
+      "verificationClass": "canonical_reread",
+      "presentationTargets": [
+        "WORLD",
+        "CANVAS"
+      ],
+      "invalidationTags": [
+        "company-brain"
+      ],
+      "timeoutClass": "WRITE",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts"
+    },
+    {
+      "capabilityId": "http.post.company-brain.application-command",
+      "family": "company-brain",
+      "owner": "@finnor/private-equity",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "company-brain/application-command",
+      "routeDepth": 2,
       "classification": "MUTATION",
       "kind": "mutation",
       "userProduct": true,
@@ -4022,12 +4084,12 @@
       "source": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts"
     },
     {
-      "capabilityId": "http.post.company-brain.application-command",
+      "capabilityId": "http.post.company-brain.application-execute",
       "family": "company-brain",
       "owner": "@finnor/private-equity",
       "transport": "http",
       "method": "POST",
-      "routePattern": "company-brain/application-command",
+      "routePattern": "company-brain/application-execute",
       "routeDepth": 2,
       "classification": "MUTATION",
       "kind": "mutation",
@@ -4202,6 +4264,35 @@
       "source": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts"
     },
     {
+      "capabilityId": "http.post.company-brain.application-projection",
+      "family": "company-brain",
+      "owner": "@finnor/private-equity",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "company-brain/application-projection",
+      "routeDepth": 2,
+      "classification": "READ",
+      "kind": "read",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "query",
+      "effectClass": null,
+      "verificationClass": "canonical_read",
+      "presentationTargets": [
+        "WORLD",
+        "CANVAS"
+      ],
+      "invalidationTags": [],
+      "timeoutClass": "READ",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts"
+    },
+    {
       "capabilityId": "http.post.company-brain.application-read",
       "family": "company-brain",
       "owner": "@finnor/private-equity",
@@ -4256,6 +4347,37 @@
       ],
       "invalidationTags": [],
       "timeoutClass": "READ",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts"
+    },
+    {
+      "capabilityId": "http.post.company-brain.application-resume",
+      "family": "company-brain",
+      "owner": "@finnor/private-equity",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "company-brain/application-resume",
+      "routeDepth": 2,
+      "classification": "CONTROL",
+      "kind": "control",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "backend_policy",
+      "effectClass": "runtime_control",
+      "verificationClass": "canonical_reread",
+      "presentationTargets": [
+        "WORLD",
+        "CANVAS"
+      ],
+      "invalidationTags": [
+        "company-brain"
+      ],
+      "timeoutClass": "WRITE",
       "tests": [],
       "source": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts"
     },

@@ -9,7 +9,7 @@ const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const dir = join(root, "packages/db/migrations");
 const files = readdirSync(dir).filter((f) => f.endsWith(".sql")).sort();
 // Complete filenames are persisted migration identities. Preserve only the
-// explicitly reconciled historical and X1 peer overlaps below. This does not
+// explicitly reconciled historical and X1/X2 peer overlaps below. This does not
 // allocate another migration at any of these ordinals.
 const historicalPairs = new Map([
   ["0131",new Set(["0131_egress_bounded_read_indexes.sql","0131_private_equity_release_baseline.sql"])],
@@ -33,6 +33,7 @@ const historicalPairs = new Map([
   ["0188",new Set(["0188_observation_source_version_binding.sql","0188_x1_source_namespace_binding.sql"])],
   ["0189",new Set(["0189_x3_enterprise_applications.sql","0189_x1_physical_cost_allocation.sql"])],
   ["0190",new Set(["0190_x5_experience_policy.sql","0190_x1_final_compiler_head_fence.sql"])],
+  ["0191",new Set(["0191_x4_system_identification.sql","0191_frontier5_x2_application_semantics.sql"])],
 ]);
 const ids = new Map<string,string>();
 for (const name of files) {

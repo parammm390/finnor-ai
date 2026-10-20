@@ -101,7 +101,10 @@ await mkdir(evidence, { mode: 0o700 });
 for (const dir of ["tmp", "cache", "home", "originals"]) await mkdir(join(evidence, dir), { mode: 0o700 });
 const started = performance.now(), startedAt = new Date().toISOString(), diskBefore = disk();
 const sha = (bytes: string | Buffer) => createHash("sha256").update(bytes).digest("hex");
-const git = (...args: string[]) => execFileSync("git", args, { cwd: repo, encoding: "utf8", timeout: 5000 }).trim();
+const git = (...args: string[]) => {
+  try { return execFileSync("git", args, { cwd: repo, encoding: "utf8", timeout: 5000, maxBuffer: 64 * 1024 * 1024 }).trim(); }
+  catch { throw Error("X1_SOURCE_GIT_READ_FAILED"); }
+};
 const sourcePaths = ["finnor-os/scripts/frontier5/x1/run-owner-slice.mts", "finnor-os/scripts/frontier5/x1/mounted-race-review.mts", "finnor-os/scripts/frontier5/x1/authenticated-api-fixture.mts",
   'finnor-os/scripts/frontier5/x1/admission-cursor-review.mts',
   'finnor-os/packages/private-equity/src/company-brain.ts',
@@ -140,7 +143,7 @@ const freeze = { installation:installedManifest?{root:installation,manifestDiges
   dirty: git("status", "--porcelain=v1", "-uall"),dirtyDiffDigest:sha(git('diff','--binary')), pins: sourcePins }, startedAt,
   runtime: { node: process.version, platform: process.platform, arch: process.arch },
   profile: "DISPOSABLE_LOCAL_AUTH_SERVICE_ACTUAL_BEARER_AND_RLS", hostedSupabaseQualified: false,
-  authDevBypass: false, expectedMigrations: 192, limits, freeBytesBefore: String(diskBefore), dutyCount,mounted,
+  authDevBypass: false, expectedMigrations: 217, limits, freeBytesBefore: String(diskBefore), dutyCount,mounted,
   cases: publicationRace?["E-concurrent-initial-publication-and-authenticated-revision","G-physical-validation-lifecycle-original-parent"]:cancelPossible?["E-cancel-possible-effect-and-stale-generation-delivery","G-physical-validation-lifecycle-original-parent"]:uiReview?["A-quantitative-semantic-owner-assertions","A-authenticated-owner-creation","G-authenticated-api-compute-attribution",
     "U1-returned-Work-requires-new-owner-read","U2-older-refresh-cannot-replace-newer-programme","U3-navigation-fences-accepted-creation","G-physical-validation-lifecycle-original-parent"]:headFenceReview?["E-final-mutation-requires-latest-accepted-compiler-head","G-physical-validation-lifecycle-original-parent"]:admissionReview?["C-owner-concurrent-grant-publication-serialization","C-owner-mapped-intact-admission-replay","C-owner-ambiguous-source-truth-replay","C-owner-source-truth-restored-control","C-owner-remapped-source-truth-replay","C-owner-changed-digest-admission-replay","C-owner-tombstoned-source-truth-replay"]:["A-raw-two-identity-native-request", "C-unsigned-forged-input", "D-same-key-replay", "G-restricted-roles",
     ...(material?['B-ledger-correction']:[]),...(heterogeneous?['A-eight-class-original-corpus']:[]),

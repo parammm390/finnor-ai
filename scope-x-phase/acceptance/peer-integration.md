@@ -72,12 +72,59 @@ installs and unchanged resolved locks afterward.
    imported as this newly built integration domain; fresh rebuilt/re-signed
    disposable fixtures are required. Check both domains in one journal, wrong
    namespace payloads, revocation, currentness and aggregate accounting.
+   The first combined backend type check also exposed a public type-export
+   collision: X2 and X3 independently named incompatible envelope types
+   `FrontierArtifactEnvelope`. Preserve X3's existing export and identify X2's
+   exact original wire contract as `ApplicationActionModelEnvelope`. This is
+   type-name separation, not proof that either artifact satisfies a newly
+   unified common envelope or that X1/X2 parent binding is implemented. Do not
+   cast, drop required fields or make authority metadata optional to pass types.
+   Integrated native attempt `native-x2-s8-1` stops at the original X2
+   128-source-pin capacity check after actual acquisition and upgrade gates.
+   Do not raise that candidate/consumer/native-parent bound. Bind X2's
+   common-plus-application-semantics closure (including every original native
+   parent pin) in its signed strict domain configuration, separately from the
+   lifecycle's already-existing 256-pin multi-domain closure. Require the
+   exact X2 candidate/configuration pin set and its byte-for-byte inclusion in
+   the outer signed lifecycle closure. Keep the financial/X3/X5 closures and
+   original pin limits unchanged. The X2 consumer checks its own full closure;
+   the lifecycle additionally checks the full loaded multi-domain closure.
+   Preserve original source mutation/refusal oracles and assert both sets'
+   original caps before another fresh episode. No source is silently dropped
+   from the lifecycle closure, and no episode/grant/deadline is resumed.
+   `native-x2-s8-2` passes the signed S8 lifecycle but the prepared live-use
+   helper adds a trigger after acquisition. The real schema-currentness guard
+   correctly fences its worker as `X2_CURRENT_SCHEMA_CHANGED`, before use.
+   Install that fixture-only pause trigger before acquisition/schema pinning,
+   keep its definition unchanged throughout the episode, and remove it only
+   after all workers and current projections finish. Scope it to the exact
+   disposable tenant/principal and each session's second actual S8-use event;
+   retain the exact nominated session/worker/lease checks at the pause. Do not
+   omit triggers from schemaIdentity, re-sign an acquired parent, create a
+   use/observation, or widen the existing 8-second pause/7-second suite.
+   `native-x2-s8-3` now reaches that real ordinary-worker second-use pause,
+   then times out inside its unchanged 7-second suite. Retained command
+   timestamps show roughly 120 ms for each full-closure state read; the
+   lifecycle serially opens/stats/reads/closes every pin on every command.
+   Hash the same complete pins in batches of at most eight concurrent file
+   handles, settling and closing the whole batch before propagating failure.
+   Keep no cross-command byte cache. Preserve O_NOFOLLOW/O_NONBLOCK, regular
+   file/16-MiB checks, exact digests, queue serialization and every oracle.
+   Remove the duplicate immediate outer-source check in X2 replay, which is
+   already covered by its enclosing APPLICATION_ prefix check. This is not a
+   shorter closure, omitted revalidation, larger product grant or wider suite.
 2. **Migration lineage.** Preserve all historical SQL bytes and complete
    filenames. X1 adds 19 files, X2 adds 0191/0192/0193, and ordinal overlap is
    not a filename collision. X2's own bundle/head are stale. Regenerate the
    combined bundle/head and audit fresh ordering plus populated-database
    catch-up, role/FORCE-RLS behavior and retained old/in-flight jobs. Never
    renumber an applied migration or disable production lineage refusal.
+   X2's native upgrade driver selected its old baseline by ordinal `<0191`.
+   On this integrated source that would wrongly exclude the already-existing
+   `0191_x4_system_identification.sql` and misclassify it as an X2 upgrade.
+   Select the pre-X2 baseline by excluding only X2's three exact filenames,
+   then preserve the original exact three-file upgrade and queued/in-flight
+   legacy-job assertions. Ordinal prefix is not migration identity.
 3. **Worker/owner loss.** Preserve every existing handler, lease/fence and
    original effect observation path, including malformed legacy probe refusal.
    Preserve X1 tenant5510 before Work-plan/idempotency locking and rollback-only

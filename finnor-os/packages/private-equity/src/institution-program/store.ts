@@ -185,6 +185,7 @@ export async function submitInstitutionCompiler(ctx: PeMutationContext, input: {
     [ctx.auth.tenantId])).rows[0]!.n;
     if (active >= profile.bounds.concurrentCompilerEpisodes && !latest) throw Error("X1_CONCURRENT_COMPILER_BOUND");
     if (latest && ["QUEUED", "RUNNING"].includes(latest.status)) throw Error("X1_PREVIOUS_REVISION_IN_PROGRESS");
+    if (latest && !latest.artifact_id) throw Error("X1_UNPUBLISHED_PARENT_REQUIRES_ORIGINAL_RECONCILIATION");
     const work = (await c.query<{ id: string; body: unknown }>(`SELECT id::text,to_jsonb(w) body
       FROM finnor_os.work_inputs w WHERE tenant_id=$1 AND work_id=$2
       ORDER BY created_at DESC,id DESC LIMIT 1 FOR SHARE`, [ctx.auth.tenantId, input.workId])).rows[0];

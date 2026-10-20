@@ -7,6 +7,46 @@
   },
   "components": {
     "schemas": {
+      "X2ApplicationCancel": {
+        "type": "object",
+        "properties": {
+          "root": {
+            "type": "object",
+            "properties": {
+              "entityType": {
+                "type": "string",
+                "enum": [
+                  "pe_strategy",
+                  "pe_opportunity",
+                  "pe_deal",
+                  "pe_fund",
+                  "pe_vehicle",
+                  "external_organization",
+                  "pe_portfolio_holding"
+                ]
+              },
+              "entityId": {
+                "type": "string",
+                "format": "uuid"
+              }
+            },
+            "required": [
+              "entityType",
+              "entityId"
+            ],
+            "additionalProperties": false
+          },
+          "workId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "root",
+          "workId"
+        ],
+        "additionalProperties": false
+      },
       "application-submit": {
         "type": "object",
         "properties": {
@@ -15465,6 +15505,22 @@
                 "application-prepare-effect",
                 "application-s8-propose",
                 "application-admission",
+                "application-acquire",
+                "application-execute",
+                "application-projection",
+                "application-resume",
+                "institution-submit",
+                "institution-revise",
+                "institution-read",
+                "institution-status",
+                "institution-cancel",
+                "institution-resume",
+                "institution-witness",
+                "institution-sources",
+                "institution-inputs",
+                "institution-mandate",
+                "institution-register-source",
+                "institution-consent",
                 "learning-consent",
                 "learning-revoke-consent",
                 "learning-experience",
@@ -29524,7 +29580,14 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/application-cancel"
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/application-cancel"
+                  },
+                  {
+                    "$ref": "#/components/schemas/X2ApplicationCancel"
+                  }
+                ]
               }
             }
           }
@@ -66577,6 +66640,652 @@
                   "deal",
                   "loi",
                   "attestation"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Authenticated current owner result; model evidence is not execution authority."
+          },
+          "202": {
+            "description": "Accepted bounded durable Work computation, not admission, reservation or consent."
+          },
+          "400": {
+            "description": "Strict owner request schema rejected invalid or unknown input."
+          },
+          "404": {
+            "description": "Exact permitted owner reference unavailable."
+          },
+          "409": {
+            "description": "Currentness, idempotency or handoff prerequisite changed."
+          },
+          "413": {
+            "description": "Whole-request byte or resource bound exhausted."
+          },
+          "422": {
+            "description": "Required owner port, verified evidence or protected authority unavailable."
+          }
+        }
+      }
+    },
+    "/api/company-brain/application-acquire": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "root": {
+                    "type": "object",
+                    "properties": {
+                      "entityType": {
+                        "type": "string",
+                        "enum": [
+                          "pe_strategy",
+                          "pe_opportunity",
+                          "pe_deal",
+                          "pe_fund",
+                          "pe_vehicle",
+                          "external_organization",
+                          "pe_portfolio_holding"
+                        ]
+                      },
+                      "entityId": {
+                        "type": "string",
+                        "format": "uuid"
+                      }
+                    },
+                    "required": [
+                      "entityType",
+                      "entityId"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "workId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "profileIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "minItems": 1,
+                    "maxItems": 8
+                  },
+                  "targets": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "kind": {
+                          "type": "string",
+                          "const": "identity"
+                        },
+                        "application": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 256
+                        },
+                        "account": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 256
+                        },
+                        "entity": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 256
+                        },
+                        "id": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 256
+                        }
+                      },
+                      "required": [
+                        "kind",
+                        "application",
+                        "account",
+                        "entity",
+                        "id"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "minItems": 2,
+                    "maxItems": 16
+                  },
+                  "resourceDemand": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "resourceId": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 256
+                        },
+                        "unit": {
+                          "type": "string",
+                          "enum": [
+                            "request",
+                            "seconds"
+                          ]
+                        },
+                        "amount": {
+                          "type": "string",
+                          "pattern": "^(?:0|[1-9][0-9]{0,3})$"
+                        }
+                      },
+                      "required": [
+                        "resourceId",
+                        "unit",
+                        "amount"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "minItems": 1,
+                    "maxItems": 2
+                  },
+                  "deadlineAt": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "idempotencyKey": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 256
+                  }
+                },
+                "required": [
+                  "root",
+                  "workId",
+                  "profileIds",
+                  "targets",
+                  "resourceDemand",
+                  "deadlineAt",
+                  "idempotencyKey"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Authenticated current owner result; model evidence is not execution authority."
+          },
+          "202": {
+            "description": "Accepted bounded durable Work computation, not admission, reservation or consent."
+          },
+          "400": {
+            "description": "Strict owner request schema rejected invalid or unknown input."
+          },
+          "404": {
+            "description": "Exact permitted owner reference unavailable."
+          },
+          "409": {
+            "description": "Currentness, idempotency or handoff prerequisite changed."
+          },
+          "413": {
+            "description": "Whole-request byte or resource bound exhausted."
+          },
+          "422": {
+            "description": "Required owner port, verified evidence or protected authority unavailable."
+          }
+        }
+      }
+    },
+    "/api/company-brain/application-execute": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "root": {
+                    "type": "object",
+                    "properties": {
+                      "entityType": {
+                        "type": "string",
+                        "enum": [
+                          "pe_strategy",
+                          "pe_opportunity",
+                          "pe_deal",
+                          "pe_fund",
+                          "pe_vehicle",
+                          "external_organization",
+                          "pe_portfolio_holding"
+                        ]
+                      },
+                      "entityId": {
+                        "type": "string",
+                        "format": "uuid"
+                      }
+                    },
+                    "required": [
+                      "entityType",
+                      "entityId"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "workId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "sessionId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "executionProfileId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "targetId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 256
+                  },
+                  "goal": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "maxLength": 2048
+                        },
+                        {
+                          "type": "boolean"
+                        },
+                        {
+                          "type": "null"
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "kind": {
+                              "type": "string",
+                              "const": "quantity"
+                            },
+                            "decimal": {
+                              "type": "string",
+                              "maxLength": 96,
+                              "pattern": "^-?(?:0|[1-9][0-9]*)(?:\\.[0-9]+)?$"
+                            },
+                            "currency": {
+                              "type": "string",
+                              "pattern": "^[A-Z]{3}$"
+                            },
+                            "entity": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 256
+                            },
+                            "unit": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 256
+                            },
+                            "time": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 256
+                            },
+                            "basis": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 256
+                            }
+                          },
+                          "required": [
+                            "kind",
+                            "decimal",
+                            "currency",
+                            "entity",
+                            "unit",
+                            "time",
+                            "basis"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "kind": {
+                              "type": "string",
+                              "const": "identity"
+                            },
+                            "application": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 256
+                            },
+                            "account": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 256
+                            },
+                            "entity": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 256
+                            },
+                            "id": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 256
+                            }
+                          },
+                          "required": [
+                            "kind",
+                            "application",
+                            "account",
+                            "entity",
+                            "id"
+                          ],
+                          "additionalProperties": false
+                        }
+                      ]
+                    }
+                  },
+                  "parameters": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "maxLength": 2048
+                        },
+                        {
+                          "type": "boolean"
+                        },
+                        {
+                          "type": "null"
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "kind": {
+                              "type": "string",
+                              "const": "quantity"
+                            },
+                            "decimal": {
+                              "type": "string",
+                              "maxLength": 96,
+                              "pattern": "^-?(?:0|[1-9][0-9]*)(?:\\.[0-9]+)?$"
+                            },
+                            "currency": {
+                              "type": "string",
+                              "pattern": "^[A-Z]{3}$"
+                            },
+                            "entity": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 256
+                            },
+                            "unit": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 256
+                            },
+                            "time": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 256
+                            },
+                            "basis": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 256
+                            }
+                          },
+                          "required": [
+                            "kind",
+                            "decimal",
+                            "currency",
+                            "entity",
+                            "unit",
+                            "time",
+                            "basis"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "kind": {
+                              "type": "string",
+                              "const": "identity"
+                            },
+                            "application": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 256
+                            },
+                            "account": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 256
+                            },
+                            "entity": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 256
+                            },
+                            "id": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 256
+                            }
+                          },
+                          "required": [
+                            "kind",
+                            "application",
+                            "account",
+                            "entity",
+                            "id"
+                          ],
+                          "additionalProperties": false
+                        }
+                      ]
+                    }
+                  },
+                  "idempotencyKey": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 256
+                  }
+                },
+                "required": [
+                  "root",
+                  "workId",
+                  "sessionId",
+                  "executionProfileId",
+                  "targetId",
+                  "goal",
+                  "parameters",
+                  "idempotencyKey"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Authenticated current owner result; model evidence is not execution authority."
+          },
+          "202": {
+            "description": "Accepted bounded durable Work computation, not admission, reservation or consent."
+          },
+          "400": {
+            "description": "Strict owner request schema rejected invalid or unknown input."
+          },
+          "404": {
+            "description": "Exact permitted owner reference unavailable."
+          },
+          "409": {
+            "description": "Currentness, idempotency or handoff prerequisite changed."
+          },
+          "413": {
+            "description": "Whole-request byte or resource bound exhausted."
+          },
+          "422": {
+            "description": "Required owner port, verified evidence or protected authority unavailable."
+          }
+        }
+      }
+    },
+    "/api/company-brain/application-projection": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "root": {
+                    "type": "object",
+                    "properties": {
+                      "entityType": {
+                        "type": "string",
+                        "enum": [
+                          "pe_strategy",
+                          "pe_opportunity",
+                          "pe_deal",
+                          "pe_fund",
+                          "pe_vehicle",
+                          "external_organization",
+                          "pe_portfolio_holding"
+                        ]
+                      },
+                      "entityId": {
+                        "type": "string",
+                        "format": "uuid"
+                      }
+                    },
+                    "required": [
+                      "entityType",
+                      "entityId"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "workId": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                },
+                "required": [
+                  "root",
+                  "workId"
+                ],
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Authenticated current owner result; model evidence is not execution authority."
+          },
+          "202": {
+            "description": "Accepted bounded durable Work computation, not admission, reservation or consent."
+          },
+          "400": {
+            "description": "Strict owner request schema rejected invalid or unknown input."
+          },
+          "404": {
+            "description": "Exact permitted owner reference unavailable."
+          },
+          "409": {
+            "description": "Currentness, idempotency or handoff prerequisite changed."
+          },
+          "413": {
+            "description": "Whole-request byte or resource bound exhausted."
+          },
+          "422": {
+            "description": "Required owner port, verified evidence or protected authority unavailable."
+          }
+        }
+      }
+    },
+    "/api/company-brain/application-resume": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "root": {
+                    "type": "object",
+                    "properties": {
+                      "entityType": {
+                        "type": "string",
+                        "enum": [
+                          "pe_strategy",
+                          "pe_opportunity",
+                          "pe_deal",
+                          "pe_fund",
+                          "pe_vehicle",
+                          "external_organization",
+                          "pe_portfolio_holding"
+                        ]
+                      },
+                      "entityId": {
+                        "type": "string",
+                        "format": "uuid"
+                      }
+                    },
+                    "required": [
+                      "entityType",
+                      "entityId"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "workId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "sessionId": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                },
+                "required": [
+                  "root",
+                  "workId",
+                  "sessionId"
                 ],
                 "additionalProperties": false,
                 "$schema": "http://json-schema.org/draft-07/schema#"

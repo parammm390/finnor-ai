@@ -4,7 +4,7 @@ import type { ElicitationProtocol } from '../../../shared-types/src/elicitation-
 import { r3Digest } from '../../../epistemic-runtime/src/incentive-rule-synthesis/launcher';
 import { R3Rational as Q, R3_ZERO as Z, r3Quantity as q, r3FromDecimal, readR3LedgerQuantity, r3LedgerQuantity } from '../../../epistemic-runtime/src/incentive-rule-synthesis/exact';
 import { allocationRef } from '../../../epistemic-runtime/src/allocation-contracts';
-import { readAllocationSnapshot } from '../allocation-store';
+import { allocationSnapshotInTransaction, readAllocationSnapshot } from '../allocation-store';
 import { tx, principal, unavailable } from '../evidence-execution/store';
 import type { PeMutationContext } from '../types';
 import { assertR3Current } from './owners';
@@ -115,7 +115,7 @@ export async function clearR3Portfolio(ctx: PeMutationContext, row: R3RequestRow
     await r3Authorize(ctx, c);
     const locked = await r3Request(ctx, row.id, c, true);
     if (locked.allocation_ref) return readR3Allocation(ctx, locked.allocation_ref, c);
-    const current = await snapshotInTransaction(c, ctx.auth.tenantId);
+    const current = await allocationSnapshotInTransaction(c, ctx.auth.tenantId);
     if (current.snapshotDigest !== snapshot.snapshotDigest) throw Error('R3_S5_CONTINGENT_COMMIT_PUBLICATION_FENCED');
     await assertR3Current(ctx, locked, c, true, true);
     const final = checkR3CurrentDemand(protocol, current.resources, current.outstanding, locked);
@@ -147,21 +147,6 @@ export async function clearR3Portfolio(ctx: PeMutationContext, row: R3RequestRow
     await r3Event(ctx, locked, 'S5_CONTINGENT_RESERVED', { allocationRef: ref, reservationRef: reservation.ref, check: final, noIncomingPromiseFunding: true }, c);
     return { status: 'FEASIBLE', certificate, reservation, executionAuthorityGranted: false };
   });
-}
-/** Same canonical ledger snapshot shape, obtained after the existing S5 lock. */
-async function snapshotInTransaction(c: PoolClient, tenant: string) {
-  const resources = (await c.query('SELECT r.body FROM finnor_os.s5_resources r JOIN finnor_os.s5_resource_heads h USING(tenant_id,resource_id,revision) WHERE r.tenant_id=$1 ORDER BY r.resource_id LIMIT 17', [tenant])).rows.map(v => v.body as AllocationResource);
-  const live = (await c.query("SELECT s.status,s.envelopes,o.body,p.certificate FROM finnor_os.s5_reservations s JOIN finnor_os.s5_reservation_origins o USING(tenant_id,reservation_id) JOIN finnor_os.s5_proposals p ON p.tenant_id=s.tenant_id AND p.content_digest=s.allocation_digest WHERE s.tenant_id=$1 AND s.status<>'RELEASED' ORDER BY s.reservation_id LIMIT 257", [tenant])).rows;
-  if (resources.length > 16 || live.length > 256) throw Error('R3_CANONICAL_S5_SNAPSHOT_BOUND');
-  const outstanding: AllocationOutstandingCommitment[] = [];
-  for (const r of live) {
-    const effects = (await c.query('SELECT st.effect_ref FROM finnor_os.s5_consumptions co JOIN finnor_os.s5_consumption_states st USING(tenant_id,consumption_id) WHERE co.tenant_id=$1 AND co.reservation_id=$2 AND st.effect_ref IS NOT NULL', [tenant, r.body.ref.id])).rows.map(v => v.effect_ref);
-    outstanding.push({ reservationRef: r.body.ref, certificateRef: r.body.certificateRef, envelopes: r.envelopes,
-      status: r.status, policyRefs: r.certificate.policyBindings.map((b: { policyRef: ExperimentRef }) => b.policyRef), effectRefs: effects });
-  }
-  // Legacy snapshot uses epistemicHash, whose encoding is retained.
-  const { epistemicHash } = await import('../../../epistemic-runtime/src/source-precedence');
-  return { resources, outstanding, snapshotDigest: epistemicHash({ resources, outstanding }) };
 }
 export async function readR3Allocation(ctx: PeMutationContext, ref: ExperimentRef, c?: PoolClient): Promise<any> {
   const read = async (client: PoolClient) => {
@@ -212,7 +197,7 @@ export async function consumeR3Allocation(ctx:PeMutationContext,row:R3RequestRow
     const live=(await c.query("SELECT status,revocation_reason,envelopes FROM finnor_os.s5_reservations WHERE tenant_id=$1 AND reservation_id=$2 FOR UPDATE",
       [row.tenant_id,issued.reservation.ref.id])).rows[0];
     if(!live||live.revocation_reason||live.status!=='RESERVED')throw Error('R3_CURRENT_UNTOUCHED_S5_RESERVATION_REQUIRED');
-    const snapshot=await snapshotInTransaction(c,row.tenant_id),protocol=await r3Protocol(ctx,locked,c);
+    const snapshot=await allocationSnapshotInTransaction(c,row.tenant_id),protocol=await r3Protocol(ctx,locked,c);
     const current=checkR3CurrentDemand(protocol,snapshot.resources,snapshot.outstanding.filter(o=>o.reservationRef.id!==issued.reservation.ref.id),locked);
     if(!current.feasible||r3Digest(current.envelopes)!==r3Digest(live.envelopes))throw Error('R3_S5_CONSUMPTION_CURRENT_RESOURCE_FENCE');
     const body:Omit<AllocationConsumption,'ref'>={schema:'finnor.allocation-consumption.v1',reservationRef:issued.reservation.ref,

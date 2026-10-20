@@ -7,7 +7,7 @@ import type { PeMutationContext } from "../types";
 import { codeIdentity, principal, sha, stable, tx } from "../evidence-execution/store";
 import { safePredicate, nativeRequestRow } from "../program-synthesis/store";
 import { submitInstitutionHarnessProgram } from "../program-synthesis/institution";
-import { reserveInstitutionDemand, chargeInstitutionDemand, validateInstitutionDemand } from "../allocation-store";
+import { reserveInstitutionDemand, chargeInstitutionDemand, validateInstitutionDemand, withS5PortfolioTransaction } from "../allocation-store";
 import { buildInstitutionResourceDemand } from "./resource-demand";
 import { reconstructAndAdmitInstitutionSources } from "./owner-admission";
 import { readInstitutionMandate,withInstitutionOriginalReuse } from "./source-authority";
@@ -25,6 +25,7 @@ import { assertInstitutionCompilerCurrent, compilerEpisode, compilerEvent, compi
   loadInstitutionProfile, type CompilerRequestRow } from "./store";
 
 async function liveClaim(ctx: PeMutationContext, q: CompilerRequestRow, execution: Readonly<JobExecutionContext>, c: import("pg").PoolClient) {
+  await c.query("SELECT pg_advisory_xact_lock(hashtextextended($1,5510))", [q.tenant_id]);
   const request = await compilerRow(ctx, q.id, c, true);
   const job = (await c.query(`SELECT id FROM finnor_os.jobs WHERE tenant_id=$1 AND id=$2
     AND type='run_x1_institution_compiler_v1' AND protocol_version=1 AND status='running'
@@ -91,12 +92,12 @@ export async function runInstitutionCompilerJob(payload: Record<string, unknown>
         computeRequests: profile.bounds.authorizedAcquisitionCalls + profile.bounds.derivedObligations * 3 + 8,
         humanSeconds: profile.bounds.episodeHumanSeconds, originalDeadline: episode.original_deadline.toISOString(),
         chargeScope: { kind: "ORIGINAL_WORK_EPISODE", episodeId: episode.id }, profile });
-      await tx(ctx, async c => {
+      await withS5PortfolioTransaction(ctx, async c => {
         await liveClaim(ctx, q, execution, c);
         const parent = await compilerEpisode(ctx, q.episode_id, c, true);
         // Cancellation waits for this request lock. The owner reservation and
         // its durable parent binding must become visible together to control.
-        const reservation = await reserveInstitutionDemand(ctx, demand, String(rights.revision));
+        const reservation = await reserveInstitutionDemand(ctx, demand, String(rights.revision), c);
         if (parent.parent_reservation && sha(parent.parent_reservation) !== sha(reservation.reservation.ref))
           throw Error("X1_ORIGINAL_PARENT_RESERVATION_CONFLICT");
         if (!parent.parent_reservation) await c.query(`UPDATE finnor_os.x1_compiler_episodes

@@ -117,6 +117,7 @@ export async function retrainLearning(ctx:PeMutationContext,value:unknown){
   const generation=a.generation+1;
   await c.query("UPDATE finnor_os.x5_compilations SET status='QUEUED',generation=$3 WHERE tenant_id=$1 AND id=$2",[a.tenant_id,a.id,generation]);
   await c.query("UPDATE finnor_os.x5_uses SET status='CANCELLED',result=jsonb_build_object('error','X5_EXPLICITLY_ABORTED_FOR_RETRAIN','originalIdentityRetained',true) WHERE tenant_id=$1 AND compilation_id=$2 AND status IN('QUEUED','RUNNING')",[a.tenant_id,a.id]);
+  await c.query("UPDATE finnor_os.x5_evaluations SET status='FAILED',result=jsonb_build_object('error','X5_EXPLICITLY_ABORTED_FOR_RETRAIN','originalIdentityRetained',true) WHERE tenant_id=$1 AND compilation_id=$2 AND status IN('QUEUED','RUNNING')",[a.tenant_id,a.id]);
   const jobId=await enqueueTx(c,{stage:'TRAIN',tenantId:a.tenant_id,principalId:a.owner_id,compilationId:a.id,generation},'x5-train:'+a.id+':'+generation);
   const result={compilationId:a.id,experience:input.experience,knowledgeCut:input.knowledgeCut,reason:input.reason,requestDigest:sha(input),generation,jobId,status:'QUEUED',
    resourcesReplenished:false,originalDeadlineAt:a.deadline_at.toISOString(),previousReleasesRetained:true,pendingCalls:'EXPLICITLY_ABORTED_WITH_ORIGINAL_IDENTITY'};
@@ -224,6 +225,7 @@ export async function controlLearning(ctx:PeMutationContext,value:unknown,operat
   const closure=affectedClosure(graph,['evidence','rights']);
   await c.query('UPDATE finnor_os.x5_compilations SET status=$3,generation=generation+1 WHERE tenant_id=$1 AND id=$2',[a.tenant_id,a.id,next]);
   await c.query("UPDATE finnor_os.x5_uses SET status='CANCELLED',result=jsonb_build_object('error',$3::text,'originalIdentityRetained',true) WHERE tenant_id=$1 AND compilation_id=$2 AND status IN('QUEUED','RUNNING')",[a.tenant_id,a.id,'X5_'+next]);
+  await c.query("UPDATE finnor_os.x5_evaluations SET status='FAILED',result=jsonb_build_object('error',$3::text,'originalIdentityRetained',true) WHERE tenant_id=$1 AND compilation_id=$2 AND status IN('QUEUED','RUNNING')",[a.tenant_id,a.id,'X5_'+next]);
   const result={operation,status:next,requestDigest:sha(input),reason:input.reason,affectedNodes:closure.affectedNodes.map(n=>n.id),historyRetained:true,resourcesReplenished:false,externalEffectsUndone:false};
   await eventTx(c,a,principal(ctx),operation,key,result);
   if(operation==='RETRY')await enqueueTx(c,{stage:'TRAIN',tenantId:a.tenant_id,principalId:a.owner_id,compilationId:a.id,generation:a.generation+1},'x5-train:'+a.id+':'+(a.generation+1));

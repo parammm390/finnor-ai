@@ -1,0 +1,10 @@
+{
+  "schema": "X2.INDEPENDENT_DEVELOPMENT_ORACLE_FREEZE.v1",
+  "sealedAt": "2026-10-14T07:05:08.523Z",
+  "beforeFixtureImplementation": true,
+  "sourceCommit": null,
+  "hashes": {
+    "finnor-os/scripts/x2/fixtures/oracle-contract.json": "05050a5e7ecce87a72309e3de7c5e41f2064b9f66919c591bc61ac361df99c04",
+    "scope-frontier5/x2-software-semantics-compiler/development-oracle.md": "3267d1386daed9cae68bf8746e3868a4d18134ee650df215f7dfd5633b42e075"
+  }
+}

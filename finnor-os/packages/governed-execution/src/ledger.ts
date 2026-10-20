@@ -234,7 +234,12 @@ export class ExperienceLedger {
   // Every request still verifies every ordinary file's exact committed bytes.
   // Identical SHA256-bound bytes retain that verified preimage; decoding all
   // historical requests again adds no acceptance condition. Reads decode again.
-  for(const state of this.states.values())await this.verifiedContentBytes(state.receipt);await this.ensureWitness();}
+  const states=[...this.states.values()];
+  for(let offset=0;offset<states.length;offset+=8){
+   const checked=await Promise.allSettled(states.slice(offset,offset+8).map(state=>this.verifiedContentBytes(state.receipt)));
+   for(const result of checked)if(result.status==='rejected')throw result.reason;
+  }
+  await this.ensureWitness();}
  private serialized<T>(fn:()=>Promise<T>):Promise<T>{if(this.queued>=256)return Promise.reject(new LedgerFault(429,'APPEND_BACKLOG_LIMIT'));this.queued++;const next=this.queue.then(fn,fn);this.queue=next.catch(()=>undefined);return next.finally(()=>{this.queued--;});}
  async health(owner:Owner){if(!owner.read)deny(403,'READ_NOT_AUTHORIZED');return this.serialized(async()=>{await this.integrity();return {status:'AVAILABLE',sequence:this.last?.sequence??0,checkpointDigest:this.last?.checkpointDigest??null,domain:this.config.policy.domain,nonrollbackableWitness:this.config.policy.witness?'PINNED_PROTOCOL_VERIFIED_DEPLOYMENT_QUALIFICATION_EXTERNAL':'REQUIRED_EXTERNAL_DEPENDENCY',witness:this.witnessedHead};});}
  async verifyRequest(owner:Owner,input:unknown){

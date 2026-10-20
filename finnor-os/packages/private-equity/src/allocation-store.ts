@@ -83,6 +83,7 @@ async function locked<T>(ctx:PeMutationContext,fn:(c:pg.PoolClient)=>Promise<T>)
     await c.query('SELECT pg_advisory_xact_lock(hashtextextended($1,0))',[`s5-portfolio:${ctx.auth.tenantId}`]);await authorize(ctx,c);return fn(c);
   });}catch(e){if(attempt<2&&['40001','40P01'].includes((e as {code?:string}).code??''))continue;throw e;}
 }
+export { locked as withS5PortfolioTransaction };
 export interface AllocationSnapshot {resources:AllocationResource[];outstanding:AllocationOutstandingCommitment[];snapshotDigest:string}
 async function snapshot(c:pg.PoolClient,tenantId:string):Promise<AllocationSnapshot>{
   const resources=(await c.query('SELECT r.body FROM finnor_os.s5_resources r JOIN finnor_os.s5_resource_heads h USING(tenant_id,resource_id,revision) WHERE r.tenant_id=$1 ORDER BY r.resource_id LIMIT 17',[tenantId])).rows.map(r=>r.body as AllocationResource);
@@ -274,8 +275,8 @@ async function currentInstitution(ctx:PeMutationContext,c:pg.PoolClient,r:Instit
 }
 /** Institution demand enters the same S5 portfolio serializer and resource
  * occupancy population as finite S5 clearings; it is not an X1 budget row. */
-export async function reserveInstitutionDemand(ctx:PeMutationContext,demand:InstitutionResourceDemand,rightsRevision:string){
- return locked(ctx,async c=>{
+export async function reserveInstitutionDemand(ctx:PeMutationContext,demand:InstitutionResourceDemand,rightsRevision:string,client?:pg.PoolClient){
+ const reserve=async(c:pg.PoolClient)=>{
   if(demand.semanticOwner!=='S5'||demand.qualification!=='DECLARED_ACCOUNTING_NOT_FUNDING'
     ||demand.tenantId!==ctx.auth.tenantId||demand.principalId!==actor(ctx))throw denied();
   const requestDigest=epistemicHash(demand);
@@ -341,7 +342,14 @@ export async function reserveInstitutionDemand(ctx:PeMutationContext,demand:Inst
   await c.query('SELECT finnor_os.s5_reserve_institution($1::jsonb,$2::jsonb,$3::jsonb,$4)',
     [JSON.stringify(demand),JSON.stringify(reservation),JSON.stringify(envelopes),requestDigest]);
   return {reservation,semanticReplay:false,currentUseAllowed:true};
- });
+ };
+ if(!client)return locked(ctx,reserve);
+ // Parent publishers join this writer rather than waiting on another
+ // connection while holding the same source-authority mutex. Acquire this
+ // portfolio lock before domain/source locks, as in the standalone writer.
+ await client.query('SELECT pg_advisory_xact_lock(hashtextextended($1,0))',[`s5-portfolio:${ctx.auth.tenantId}`]);
+ await authorize(ctx,client);
+ return reserve(client);
 }
 export async function chargeInstitutionDemand(ctx:PeMutationContext,ref:ExperimentRef,request:InstitutionChargeRequest){
  return locked(ctx,async c=>{
@@ -423,12 +431,24 @@ export async function putAllocationResource(ctx:PeMutationContext,input:Allocati
         [ctx.auth.tenantId,JSON.stringify([{resourceId:input.resourceId}])])).rows;
       await c.query('SELECT * FROM finnor_os.s5_invalidate_institution_resource($1,$2::jsonb,$3::jsonb)',
         [input.resourceId,JSON.stringify(current.ref),JSON.stringify(ref)]);
-      for(const old of finite){const proposal=(await c.query('SELECT problem FROM finnor_os.s5_proposals WHERE tenant_id=$1 AND content_digest=$2',[ctx.auth.tenantId,old.allocation_digest])).rows[0];
+      for(const old of finite){const proposal=(await c.query('SELECT problem,certificate FROM finnor_os.s5_proposals WHERE tenant_id=$1 AND content_digest=$2',[ctx.auth.tenantId,old.allocation_digest])).rows[0];
+        const detail={resourceRef:ref,priorRef:current.ref,reservationRef:old.reservation_id,reservationRevision:old.revision,clearanceInvalidated:true,exposureRetained:true};
+        if(proposal?.problem.schema==='finnor.s5.application-resource-problem.v1'&&proposal.certificate.schema==='finnor.s5.application-allocation.v1'){
+          const content={schema:'finnor.s5.application-resource-invalidation.v1',tenantId:ctx.auth.tenantId,
+            principalId:proposal.certificate.principalId,changedBy:actor(ctx),allocationRef:proposal.certificate.ref,...detail};
+          const reference=allocationRef('S5','application-resource-invalidation',content);
+          await c.query("INSERT INTO finnor_os.s5_history(tenant_id,subject_id,revision,operation,body) VALUES($1,$2,$3,'APPLICATION_RESOURCE_REVISION',$4::jsonb)",
+            [ctx.auth.tenantId,old.reservation_id,old.revision,JSON.stringify({...content,ref:reference})]);
+          await enqueueOwnerDeliveryInTransaction(c,{semanticOwner:'S5',tenantId:ctx.auth.tenantId,principalId:proposal.certificate.principalId},
+            {kind:'REFERENCE',identity:reference.id,payload:{reference:{...reference,content},rightsRefs:[proposal.certificate.rightsRef]}});
+          continue;
+        }
         if(['finnor.s5.fixed-primary-problem.v1','finnor.s5.fixed-programme-problem.v1'].includes(proposal.problem.schema)){
           await c.query("INSERT INTO finnor_os.s5_history(tenant_id,subject_id,revision,operation,body) VALUES($1,$2,$3,'PRIMARY_RESOURCE_INVALIDATION',$4::jsonb)",[ctx.auth.tenantId,old.reservation_id,old.revision,JSON.stringify({resourceRef:ref,priorRef:current.ref,reservationId:old.reservation_id,clearanceInvalidated:true,exposureRetained:true})]);
           continue;
         }
-        await appendExperience(ctx,c,[prepareS5Experience(proposal.problem.mandate,'REVISION',ref.id,{resourceRef:ref,priorRef:current.ref,reservationRef:old.reservation_id,reservationRevision:old.revision,clearanceInvalidated:true,exposureRetained:true},[current.ref.id,old.reservation_id],'H0')]);}
+        if(!proposal?.problem.mandate)throw denied();
+        await appendExperience(ctx,c,[prepareS5Experience(proposal.problem.mandate,'REVISION',ref.id,detail,[current.ref.id,old.reservation_id],'H0')]);}
     }
     await c.query('INSERT INTO finnor_os.s5_history(tenant_id,subject_id,revision,operation,body) VALUES($1,$2,$3,\'RESOURCE_REVISION\',$4::jsonb)',[ctx.auth.tenantId,ref.id,body.revision,JSON.stringify(resource)]);return resource;
   });

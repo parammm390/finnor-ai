@@ -16,9 +16,27 @@ const applicationSources=['contracts.ts','exact.ts','compiler.ts','program.ts','
  .concat(['../../shared-types/src/enterprise-applications.ts','../../shared-types/src/primary-diligence.ts','../../authority/src/index.ts','../../db/compute-contract.ts','../../db/compute-governor.ts','../../db/migration-head.ts','../../db/migrations/0189_x3_enterprise_applications.sql']);
 const learningSources=['contracts.ts','types.ts','abstraction.ts','controller.ts','core-child.mts','process.ts','source-cut.ts','source-paths.ts','source-manifest.generated.ts','store.ts','service.ts','worker.ts','consumer.ts','evaluation.ts','evaluation-plan.ts','outcome-contract.ts','assignments.ts','admission.ts','api.ts'].map(path=>'../../private-equity/src/policy-learning/'+path)
  .concat(['../../shared-types/src/learned-policy.ts','../../db/migrations/0190_x5_experience_policy.sql']);
-export const requiredCapabilitySourcePaths = [...new Set([...own, ...upstream, ...interfaceSources,...applicationSources,...learningSources])].map(path => fileURLToPath(new URL(path, import.meta.url))).concat([native, schema, fileURLToPath(new URL('./build/Release/fs_ext.node', pathToFileURL(native)))]);
+const applicationSemanticsSources = [
+ './application-semantics-port.ts', './application-semantics-consumer.ts',
+ '../../private-equity/src/application-semantics/contracts.ts',
+ '../../private-equity/src/application-semantics/checker.ts',
+ '../../shared-types/src/application-semantics.ts',
+];
+export const requiredCapabilitySourcePaths = [...new Set([...own, ...upstream, ...interfaceSources,...applicationSources,...learningSources,...applicationSemanticsSources])].map(path => fileURLToPath(new URL(path, import.meta.url))).concat([native, schema, fileURLToPath(new URL('./build/Release/fs_ext.node', pathToFileURL(native)))]);
+/** X2's independently signed consumer/domain closure. Other compiler domains
+ * remain pinned by the outer lifecycle; they are not this consumer's payload. */
+export const requiredApplicationSemanticsSourcePaths = [...new Set([...own, ...upstream, ...interfaceSources,...applicationSemanticsSources])].map(path => fileURLToPath(new URL(path, import.meta.url))).concat([native, schema, fileURLToPath(new URL('./build/Release/fs_ext.node', pathToFileURL(native)))]);
 const loaded = Promise.all(requiredCapabilitySourcePaths.map(async (path) => ({ path, sha256: byteDigest(await readFile(path)) })));
 void loaded.catch(() => undefined);
+const applicationSemanticsLoaded = Promise.all(requiredApplicationSemanticsSourcePaths.map(async path => ({path,sha256:byteDigest(await readFile(path))})));
+void applicationSemanticsLoaded.catch(() => undefined);
+export async function assertApplicationSemanticsSourceClosure(pins:CapabilityRevisionBody['dependencies']){
+    if(pins.length>128||new Set(pins.map(pin=>pin.path)).size!==pins.length)
+        fault('S8_APPLICATION_SOURCE_PIN_BOUND_OR_DUPLICATE');
+    const expected=await applicationSemanticsLoaded;
+    if(expected.some(source=>!pins.some(pin=>pin.path===source.path&&pin.sha256===source.sha256)))
+        fault('S8_LOADED_DEPENDENCY_CLOSURE_MISSING_OR_CHANGED',503);
+}
 export async function assertCapabilitySourceClosure(pins: CapabilityRevisionBody['dependencies']) {
     if (new Set(pins.map(p => p.path)).size !== pins.length)
         fault('S8_DUPLICATE_DEPENDENCY_PATH');

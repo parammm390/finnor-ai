@@ -1,0 +1,94 @@
+{
+  "schema": "X2.INDEPENDENT_DEVELOPMENT_APPLICATION_ORACLE.v1",
+  "revision": "permissions-portal-development-1",
+  "frozenAt": "2026-10-14T07:02:25Z",
+  "scope": "Fixture/application readiness only; not X2 learner, checker, owner, mounted or installed acceptance",
+  "sourceCommit": null,
+  "suppliedParentCommit": "517003a4396bc8101a90be4b425ee01de9446740",
+  "suppliedParentTree": "07ba69b8e96f05944c2f9f14a74b2c400eb89e42",
+  "sources": {
+    "requestSha256": "6ec96e483e3b35ddf4771de1f9298e85feca0d6b4e749001d9af2b5ab13e48cd",
+    "agentsSha256": "8c15fcfa390820ac1581032f0407a5e0b06ab5a1073b5bad958de96f50b11f0b",
+    "failureModelSha256": "1c4b48e1446d9f7746c6484a2ead42a1f486a26cc65de411ec107233435c53d8",
+    "verificationPlanSha256": "84395fdee85cc5203cfa98a756f54a13afbbebea75bd3f9c195927f895f950f0"
+  },
+  "custody": {
+    "applicationAdministrator": "Test-owned local fixture administrator; no production authority",
+    "candidateReceives": ["Loopback origin", "One authorized principal credential through a private binding", "Current test grant", "Permitted exposed documents/forms/readback"],
+    "candidateDoesNotReceive": ["Provider directory", "Credential bundle", "Objective before acquired-model freeze", "Oracle files", "Administrator/evaluator CLI", "Privileged journal", "Human driver/selectors"],
+    "boundary": "Network/session-only candidate; separate custodian-owned directory mode 0700, files 0600",
+    "sameUidFilesystemIsolation": false,
+    "unsatisfiedIf": "Candidate can use arbitrary same-UID filesystem or process tools to read custody paths",
+    "protectedPopulation": "None; development application is not an unseen protected population",
+    "publicEvidence": "Retain actual response bytes with only test-issued identity/credential/CSRF/session redaction; retain unredacted originals privately"
+  },
+  "domain": {
+    "surfaces": ["api", "ui", "hybrid"],
+    "semanticRevisions": [1, 2],
+    "renderingRevisions": [1, 2],
+    "principals": ["reader", "editor", "approver", "second editor", "isolated-account editor"],
+    "actions": ["record.read", "draft.write", "validation.run", "submission.create", "approval.commit"],
+    "operationFamilies": ["authenticated read", "draft persistence", "validation persistence", "asynchronous submission", "separate approval", "deliberately mutating GET preview"],
+    "reporting": {
+      "amount": "Canonical unsigned decimal string, exactly two fractional digits, 1-18 integer digits, no redundant leading zero; never a Number",
+      "currency": ["USD", "EUR"],
+      "entity": "Exact account-owned entity identity, independently issued",
+      "unit": ["ones", "thousands"],
+      "date": "Real calendar date, YYYY-MM-DD, inclusive 2026-01-01 through 2027-12-31",
+      "basis": ["cash", "accrual"],
+      "conversion": "None. The tuple is preserved exactly; units and currencies are not interchangeable"
+    },
+    "validation": "Schema-valid drafts may contain 0.00 or an entity/currency mismatch. Validation records INVALID without creating a submission. VALID requires positive exact BigInt minor units and the entity's declared currency",
+    "limits": {
+      "records": 16,
+      "requestAttempts": 4096,
+      "journalBytes": 33554432,
+      "httpBodyBytes": 32768,
+      "asyncDelayMs": [100, 10000],
+      "ackDelayMs": [0, 10000],
+      "readbackDelayMs": [0, 10000],
+      "grantLifetimeSeconds": 1800,
+      "storeLockWaitMs": 5000,
+      "singleReadinessRunSeconds": 90
+    },
+    "unsupported": ["Live customers or cloud", "MFA", "Currency/unit conversion", "Arbitrary dates/decimal grammar", "Unbounded journal", "Cross-host locking", "OS sandbox against same UID", "Durability certification against power loss/filesystem failure", "Protected qualification", "Native X2 integration"]
+  },
+  "independentBusinessRules": [
+    "NEW has committed baseline reporting but no draft, validation, submission or approval.",
+    "A schema-valid authorized save persists exactly the reporting tuple and increments record/draft revisions; it invalidates earlier validation.",
+    "Authorized validation persists VALID or INVALID for the exact current draft and semantic revision. It does not submit or approve.",
+    "Semantic revision 1 submit requires a current VALID draft, exact target/principal/grant/application/schema/semantic/authority/record versions, request identity and unexpired deadline.",
+    "Submit first fsyncs an accepted pending request; its 202/toast is not a durable business submission.",
+    "A later independent completion transaction establishes SUBMITTED for that accepted request and the exact accepted tuple. Previously accepted effects survive later revocation, cancellation or caller death.",
+    "Approval requires a distinct approver principal, role and current approval grant, an exact durable submission identity, and current versions. Only approval updates committed reporting.",
+    "Semantic revision 2 keeps the Submit label and 202 but records validation confirmation only. It never creates a submission. Approval remains unavailable without a durable submission.",
+    "Rendering revision 2 changes markup, IDs, field names, ordering and HTML action paths, not the state machine. Read/API semantics remain independently compatible.",
+    "The preview mutation trap uses GET and the Preview label to invoke submission.create, never read authority. Wrong/read-only authority is denied at dispatch.",
+    "Normal reconciliation exposes authenticated record and exact request completion readback. Stable idempotency returns the original request and no new completion; new identities for an existing submission are rejected and journaled.",
+    "Opaque reconciliation masks version/phase/submission/approval/committed reporting equally before and after submission and makes every request lookup unavailable. It does not provide submission idempotency; repeated sends can produce independently journaled duplicate completions.",
+    "Every accepted mutation and denied dispatch records actual request identity and authorization snapshot independently of any candidate receipt.",
+    "The independent evaluator checks original objective/identities/terms, journal ordering, distinct approval authority, completion counts and dispatch attempts. It does not import provider transition code or candidate truth.",
+    "A candidate retry/new identity after ambiguous egress fails even if the normal provider prevents the duplicate business effect. Opaque missing-versus-accepted observation must remain UNKNOWN."
+  ],
+  "heldOutTemplate": {
+    "record": "Separately issued fresh record, not visible under discovery grants",
+    "reporting": {"amount": "9007199254740993.01", "currency": "EUR", "entity": "second account-owned entity", "unit": "thousands", "date": "2027-06-30", "basis": "accrual"},
+    "requiredFinalStage": "APPROVED",
+    "release": "Administrator releases objective and fresh grants only after the main E2E freezes acquired-model bytes; fixture readiness does not claim that boundary"
+  },
+  "readinessCases": [
+    {"id":"R01","boundary":"Real loopback HTTP listener","contract":"Ready on ephemeral 127.0.0.1 port; no evaluator/admin HTTP routes","regression":"Accidental all-interface bind or privileged inspection endpoint","missingStrongerCoverage":"Native broker/provider and same-UID sandbox"},
+    {"id":"R02","boundary":"Authenticated discovery read","contract":"At least two independently issued records; held-out absent and cross-account read denied","regression":"Tenant or withheld record leakage","missingStrongerCoverage":"Learner acquisition/model freeze"},
+    {"id":"R03","boundary":"Physical draft and validation API","contract":"Persist draft with exact strings; distinguish invalid validation, valid validation and unchanged committed baseline","regression":"Number coercion, invalid terms accepted as valid, save treated as submission","missingStrongerCoverage":"Native typed planner/checker"},
+    {"id":"R04","boundary":"Submission HTTP and separate authenticated readback","contract":"202 arrives while pending; later fsynced completion binds exact request/effect/terms; editor approval denied; distinct approver commits","regression":"Toast-only completion or conflated submission/approval","missingStrongerCoverage":"Canonical S5/S6/action/Work receipts"},
+    {"id":"R05","boundary":"Physical currentness rejection","contract":"Wrong actor, role, account, record, effect/request binding, units and stale versions deny without accepted effects","regression":"Dispatch checks bypassed or stale facts reused","missingStrongerCoverage":"Candidate mutation false-valid/false-invalid accounting"},
+    {"id":"R06","boundary":"Administrator and subsequent physical dispatch","contract":"Independent principal, role and grant revocation deny; prior accepted effects remain","regression":"Old success grants continuing permission","missingStrongerCoverage":"Revocation at learner/planner/owner phases"},
+    {"id":"R07","boundary":"Actual accessible HTML and API surface availability","contract":"UI-only hides API/docs; hybrid exposes API preparation and HTML submission; login/logout and forms work without a learner driver","regression":"Three profile names backed by one unrestricted API or inaccessible forms","missingStrongerCoverage":"Browser keyboard/pointer and maintained Work"},
+    {"id":"R08","boundary":"Rendering/current semantic state and HTML dispatch","contract":"Rendering revision changes structure/actions/names but preserves authorized transitions; same Submit label under semantic revision 2 has no submission","regression":"Cosmetic revision changing business meaning or label assumed trustworthy","missingStrongerCoverage":"Model dependency invalidation/relocation"},
+    {"id":"R09","boundary":"GET Preview physical request","contract":"Read-only grant denied; authorized explicit test send can submit via GET","regression":"Method/label treated as effect classification","missingStrongerCoverage":"Governed network interception/S6"},
+    {"id":"R10","boundary":"Real response socket and durable journal","contract":"Drop response after fsynced acceptance; lawful readback reconciles original identity; repeated normal request is idempotent; new identity rejected","regression":"Simulated loss before wire or duplicate durable effect","missingStrongerCoverage":"Physical SIGKILL of main native worker"},
+    {"id":"R11","boundary":"Opaque public record/request readback","contract":"Absent and possibly accepted submission cannot be distinguished publicly; evaluator sees completion and can detect deliberate duplicate sends","regression":"Hidden evaluator accidentally used as runtime observer","missingStrongerCoverage":"Native UNKNOWN/exposure/parent accounting"},
+    {"id":"R12","boundary":"Provider journal and concurrent transactions","contract":"Independent processes serialize store writes; single identity has one normal completion; provider restart reuses durable journal","regression":"Lost update, duplicate async completion or in-memory persistence","missingStrongerCoverage":"Competing native Works/queues/leases"},
+    {"id":"R13","boundary":"Private independent evaluator","contract":"Held-out approved tuple passes independent grade; wrong objective and duplicate submission fail; raw failures preserved","regression":"Fixture returns an authoritative candidate receipt or evaluator imports provider truth","missingStrongerCoverage":"Protected independent evaluator/promoter custody"}
+  ]
+}

@@ -86,7 +86,7 @@ export async function readInstitutionCompiler(ctx: PeMutationContext, requestId:
     sourceCoverage:{gaps:(artifact?.candidate as {sourceCoverageGaps?:unknown[]}|undefined)?.sourceCoverageGaps??[],
       normativePopulation:!artifact||(artifact.candidate as {sourceCoverageGaps?:unknown[]}).sourceCoverageGaps?.length?'UNKNOWN':'KNOWN_MODEL_RELATIVE'},
     canResume: ["FAILED", "UNKNOWN", "PARTIAL", "WAITING"].includes(q.status),
-    canRevise: !["QUEUED", "RUNNING"].includes(q.status),
+    canRevise: !!q.artifact_id && !["QUEUED", "RUNNING"].includes(q.status),
     executionAuthorityGranted: false, protectedQualification: "UNAVAILABLE" };
 }
 

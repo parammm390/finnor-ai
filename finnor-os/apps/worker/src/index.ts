@@ -8,6 +8,7 @@ import {runHarnessProgramJob,runX1InstitutionContinuationJob} from '@finnor/priv
 import {runInstitutionCompilerJob} from '@finnor/private-equity/src/institution-program/worker';
 import {runInstitutionUpdateJob} from '@finnor/private-equity/src/live-recompilation/institution-worker';
 import {runInterfaceAcquisitionJob} from '@finnor/private-equity/src/interface-synthesis/worker';
+import {runApplicationSemanticsJob} from '@finnor/private-equity/src/application-semantics/worker';
 import {runProgrammeContinuationJob} from '@finnor/private-equity/src/live-recompilation/worker';
 import {runProcedureInductionJob} from '@finnor/private-equity/src/procedure-induction/worker';
 import {runCapitalProgramJob,runRobustCapitalProgramJob,runCoalitionProgrammeJob} from '@finnor/private-equity/src/capital-program/worker';
@@ -70,6 +71,7 @@ export function createWorker(): JobQueue {
   queue.register('run_decision_atlas_v1',runDecisionAtlasJob,PRODUCTION_JOB_CONTRACTS.run_decision_atlas_v1);
   queue.register('run_certified_state_reduction_v1',runCertifiedStateReductionJob,PRODUCTION_JOB_CONTRACTS.run_certified_state_reduction_v1);
   queue.register('run_identification_plan_v1',runIdentificationPlan,PRODUCTION_JOB_CONTRACTS.run_identification_plan_v1);
+  queue.register('run_application_semantics_v1',runApplicationSemanticsJob,PRODUCTION_JOB_CONTRACTS.run_application_semantics_v1);
   queue.register('run_capital_program_v2',runCapitalProgramJob,PRODUCTION_JOB_CONTRACTS.run_capital_program_v2);
   queue.register('run_capital_program_r2_v1',runRobustCapitalProgramJob,PRODUCTION_JOB_CONTRACTS.run_capital_program_r2_v1);
   queue.register('run_coalition_programme_v1',runCoalitionProgrammeJob,PRODUCTION_JOB_CONTRACTS.run_coalition_programme_v1);

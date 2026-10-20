@@ -77,6 +77,8 @@ import { CONTINUATION_OPERATIONS } from "../packages/private-equity/src/live-rec
 import { ClosingOperationSchemas } from "../packages/private-equity/src/closing/contracts";
 import { OpportunityHandoffSchema } from "../packages/private-equity/src/opportunity-handoff";
 import { PROCEDURE_OPERATIONS, PROCEDURE_OPERATION_SCHEMAS } from "../packages/private-equity/src/procedure-induction/api";
+import { APPLICATION_OPERATIONS as APPLICATION_SEMANTICS_OPERATIONS, APPLICATION_OPERATION_SCHEMAS as APPLICATION_SEMANTICS_OPERATION_SCHEMAS } from "../packages/private-equity/src/application-semantics/api";
+import { INSTITUTION_OPERATIONS } from "../packages/private-equity/src/institution-program/api";
 import { DELIBERATION_OPERATIONS } from "../packages/private-equity/src/deliberation/api";
 import { ElicitationOperationSchemas } from "../packages/epistemic-runtime/src/incentive-rule-synthesis/contracts";
 import { R3OwnerOperationSchemas, R3WorkReviewSchema } from "../packages/epistemic-runtime/src/incentive-rule-synthesis/output-contracts";
@@ -304,6 +306,7 @@ const applicationSchema=(schema:z.ZodTypeAny)=>{
  return converted;
 };
 const applicationComponents={schemas:Object.fromEntries([
+ ["X2ApplicationCancel",applicationSchema(APPLICATION_SEMANTICS_OPERATION_SCHEMAS["application-cancel"])],
  ...Object.entries(APPLICATION_OPERATION_SCHEMAS).map(([name,schema])=>[name,applicationSchema(schema)]),
  ...Object.entries(LEARNING_OPERATION_SCHEMAS).map(([name,schema])=>[name,applicationSchema(schema)]),
  ...Object.entries(IDENTIFICATION_OPERATION_SCHEMAS).map(([name,schema])=>[name,applicationSchema(schema)]),
@@ -704,6 +707,7 @@ const paths = {
 } satisfies Record<string, unknown>;
 
 paths["/api/company-brain/{operation}"].post.parameters[0]!.schema.enum.push(...APPLICATION_OPERATIONS);
+(paths["/api/company-brain/{operation}"].post.parameters[0]!.schema.enum as string[]).push(...APPLICATION_SEMANTICS_OPERATIONS.filter(operation=>operation!=="application-cancel"),...INSTITUTION_OPERATIONS);
 (paths["/api/company-brain/{operation}"].post.parameters[0]!.schema.enum as string[]).push(...LEARNING_OPERATIONS);
 (paths["/api/company-brain/{operation}"].post.parameters[0]!.schema.enum as string[]).push(...IDENTIFICATION_OPERATIONS);
 for(const operation of IDENTIFICATION_OPERATIONS){
@@ -729,7 +733,9 @@ for(const operation of LEARNING_OPERATIONS){
  }}}});
 }
 for(const operation of APPLICATION_OPERATIONS){
- Object.assign(paths,{["/api/company-brain/"+operation]:{post:{security:secured,requestBody:{content:{"application/json":{schema:{$ref:"#/components/schemas/"+operation}}}},responses:{
+ Object.assign(paths,{["/api/company-brain/"+operation]:{post:{security:secured,requestBody:{content:{"application/json":{schema:operation==="application-cancel"
+  ?{oneOf:[{$ref:"#/components/schemas/application-cancel"},{$ref:"#/components/schemas/X2ApplicationCancel"}]}
+  :{$ref:"#/components/schemas/"+operation}}}},responses:{
   "200":{description:"Current authenticated development application, immutable business history or exact prepared-intent binding. Not protected admission or dispatch."},
   "202":{description:"Original finite allocation accepted for durable physical compilation and independent checking; no installed success yet."},
   "400":{description:"Strict bounded business contract or exact record precondition rejected."},
@@ -827,6 +833,7 @@ for (const [operation,schema] of [
   ...Object.entries(CapitalProgramV2Operations),
   ...Object.entries(CAPITAL_FORMATION_OPERATIONS),
   ["opportunity-promote", OpportunityHandoffSchema] as const,
+  ...Object.entries(APPLICATION_SEMANTICS_OPERATION_SCHEMAS).filter(([operation])=>operation!=="application-cancel"),
 ]) {
   Object.assign(paths,{["/api/company-brain/"+operation]:{post:{
     security:secured,requestBody:json(schema),responses:{

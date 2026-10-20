@@ -225,6 +225,9 @@ export async function loadSourceCredentialContext(
     if (binding.credentialProvider === "os-keychain") {
       throw new IntegrationError(integration.binding, "OS-keychain auth profiles cannot run on the production worker", false, "config");
     }
+    if (binding.credentialProvider === "disposable-private-file") {
+      throw new IntegrationError(integration.binding, "Disposable application profiles cannot become source-sync credentials", false, "config");
+    }
     if (binding.credentialProvider === "aws-iam-federated") {
       throw new IntegrationError(integration.binding, "federated workload auth requires a provider-observation adapter", false, "config");
     }

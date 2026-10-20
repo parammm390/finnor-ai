@@ -24,7 +24,17 @@ const server=createServer(async(req,res)=>{
    else answer=path==='/append'?await ledger.append(owner,input):path==='/references'?await ledger.registerReference(owner,input):await ledger.verifyRequest(owner,input);
   }else throw new LedgerFault(404,'NOT_FOUND');
   res.writeHead(200,{'content-type':'application/json','cache-control':'no-store'});res.end(JSON.stringify(answer));
- }catch(error){const known=error instanceof LedgerFault;res.writeHead(known?error.status:503,{'content-type':'application/json','cache-control':'no-store'});res.end(JSON.stringify({error:known?error.code:'LEDGER_UNAVAILABLE'}));}
+ }catch(error){
+  const known=error instanceof LedgerFault;
+  if(!known){
+   // Classify operational failures without exposing messages, stacks or data.
+   const diagnostic=error instanceof Error?error as Error&{code?:unknown}:null;
+   const code=typeof diagnostic?.code==='string'&&['ENOSPC','EDQUOT','EACCES','EPERM','EMFILE','ENFILE','EIO','ENOENT','ESTALE','EBUSY','EINVAL','EROFS','EFBIG','ENAMETOOLONG','ERR_OUT_OF_RANGE','ERR_INVALID_ARG_TYPE'].includes(diagnostic.code)?diagnostic.code:'UNCLASSIFIED';
+   const name=diagnostic&&['Error','TypeError','RangeError','SyntaxError','ReferenceError'].includes(diagnostic.name)?diagnostic.name:'OTHER';
+   console.error(JSON.stringify({event:'S6_REQUEST_UNAVAILABLE',name,code}));
+  }
+  res.writeHead(known?error.status:503,{'content-type':'application/json','cache-control':'no-store'});res.end(JSON.stringify({error:known?error.code:'LEDGER_UNAVAILABLE'}));
+ }
 });
 server.requestTimeout=30000;server.headersTimeout=10000;server.keepAliveTimeout=5000;server.maxConnections=256;
 await new Promise<void>(done=>server.listen(config.port??0,'127.0.0.1',done));

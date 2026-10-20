@@ -68,7 +68,7 @@ function CentropyWorkspaceContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const auth = useCentropyAuth()
-  const ready = Boolean(auth.session && auth.role === "owner" && !auth.roleError)
+  const ready = Boolean(auth.session && auth.role === "owner" && !auth.loading && !auth.authError && !auth.roleError)
   const fromRoute = routeThreadId(pathname)
   const worldMode = pathname === "/centropy/world"
   const worldThreadId = worldMode && UUID.test(searchParams.get("threadId") ?? "") ? searchParams.get("threadId") : null

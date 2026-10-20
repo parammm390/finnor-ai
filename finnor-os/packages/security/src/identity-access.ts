@@ -214,7 +214,7 @@ type CommunicationCandidate = {
   credentialVersion: string | null;
   authProfileId: string | null;
   linkedAuthProfileRef: string | null;
-  linkedCredentialProvider: "aws-secrets-manager" | "os-keychain" | "legacy-env" | null;
+  linkedCredentialProvider: "aws-secrets-manager" | "os-keychain" | "disposable-private-file" | "legacy-env" | null;
   linkedCredentialRef: string | null;
   linkedCredentialVersion: string | null;
   linkedProfileStatus: "active" | "disabled" | "suspended" | null;
@@ -274,7 +274,7 @@ function communicationMetadata(provider: TenantCredentialProvider, row: Communic
 
 async function communicationCredentialAvailable(tenantId: string, row: CommunicationCandidate): Promise<boolean> {
   if (!tenantCredentialProvider(row.provider)) return false;
-  if (row.authProfileId && row.linkedCredentialProvider === "os-keychain") return false;
+  if (row.authProfileId && ["os-keychain", "disposable-private-file"].includes(row.linkedCredentialProvider ?? "")) return false;
   try {
     await resolveCredentialReferenceContext(tenantId, row.provider, {
       credentialProvider: row.authProfileId ? row.linkedCredentialProvider as "aws-secrets-manager" | "legacy-env" | null : row.credentialProvider,
@@ -308,7 +308,7 @@ async function resolveCommunication<P extends TenantCredentialProvider>(params: 
   const candidates = all.flatMap((row) => {
     if (params.explicitId && row.identityId !== params.explicitId) return [];
     if (row.identityStatus !== "active" || row.bindingStatus !== "active") return [];
-    if (row.authProfileId && (row.linkedProfileStatus !== "active" || row.linkedCredentialProvider === "os-keychain" || !["active", "degraded"].includes(row.linkedConnectionStatus ?? ""))) return [];
+    if (row.authProfileId && (row.linkedProfileStatus !== "active" || ["os-keychain", "disposable-private-file"].includes(row.linkedCredentialProvider ?? "") || !["active", "degraded"].includes(row.linkedConnectionStatus ?? ""))) return [];
     if (row.provider !== params.provider || row.channel !== params.channel) return [];
     const purpose = purposeRank(row.purpose, params.purpose);
     if (purpose === null) return [];
@@ -410,11 +410,11 @@ type AuthCandidate = {
   purpose: string;
   priority: number;
   scope: unknown;
-  credentialProvider: "aws-secrets-manager" | "aws-iam-federated" | "os-keychain" | "legacy-env" | null;
+  credentialProvider: "aws-secrets-manager" | "aws-iam-federated" | "os-keychain" | "disposable-private-file" | "legacy-env" | null;
   credentialRef: string | null;
   credentialVersion: string | null;
   profileStatus: "active" | "disabled" | "suspended";
-  authMethod: "managed_secret" | "oauth2" | "browser_profile" | "workload_identity";
+  authMethod: "managed_secret" | "oauth2" | "browser_profile" | "workload_identity" | "application_headers";
   connectionStatus: string;
   requiredScopes: unknown;
   grantedScopes: unknown;
@@ -492,6 +492,17 @@ async function authProfileCredentialAvailable(tenantId: string, row: AuthCandida
         && ["ES384", "RS256"].includes(String(scope.signingAlgorithm))
         && typeof account.directoryTenantId === "string"
         && typeof account.applicationClientId === "string";
+    }
+    if (row.authMethod === "application_headers") {
+      const bundle = await resolveTenantBoundSecretBundle(tenantId, {
+        credentialProvider: row.credentialProvider,
+        credentialRef: row.credentialRef, credentialVersion: row.credentialVersion,
+      });
+      const headers: unknown = JSON.parse(bundle.applicationHeaders ?? "");
+      return Boolean(headers && typeof headers === "object" && !Array.isArray(headers)
+        && Object.keys(headers).length && Object.keys(headers).length <= 16
+        && Object.entries(headers).every(([name, value]) => /^[A-Za-z][A-Za-z0-9-]{0,63}$/.test(name)
+          && typeof value === "string" && value.length <= 8192 && !/[\r\n]/.test(value)));
     }
     if (row.authMethod === "browser_profile" || row.credentialProvider === "os-keychain") {
       const bundle = await resolveTenantBoundSecretBundle(tenantId, {
@@ -598,8 +609,9 @@ async function resolveApplication<P extends TenantCredentialProvider>(params: {
     if (row.credentialProvider === "aws-iam-federated" || row.authMethod === "workload_identity") {
       throw new IdentityAccessError("no_valid_auth_profile", "Secretless provider auth must use its tenant-bound provider auth resolver");
     }
-    if (row.credentialProvider === "os-keychain") {
-      throw new IdentityAccessError("no_valid_auth_profile", "OS Keychain auth profiles are restricted to governed computer execution");
+    if (row.credentialProvider === "os-keychain" || row.credentialProvider === "disposable-private-file"
+      || row.authMethod === "application_headers") {
+      throw new IdentityAccessError("no_valid_auth_profile", "This profile requires its exact governed execution resolver");
     }
     const credential = await resolveCredentialReferenceContext(params.tenantId, params.provider, {
       credentialProvider: row.credentialProvider,
@@ -831,6 +843,9 @@ export async function resolveComputerAuthProfile(
   if (row.credentialProvider === "aws-iam-federated" || row.authMethod === "workload_identity") {
     throw new IdentityAccessError("no_valid_auth_profile", "A workload-identity profile cannot be used for governed browser execution");
   }
+  if (row.authMethod === "application_headers" || row.credentialProvider === "disposable-private-file") {
+    throw new IdentityAccessError("no_valid_auth_profile", "Application header profiles are not generic browser profiles");
+  }
   const bundle = await resolveTenantBoundSecretBundle(tenantId, {
     credentialProvider: row.credentialProvider,
     credentialRef: row.credentialRef,
@@ -856,6 +871,53 @@ export async function resolveComputerAuthProfile(
       ...(typeof profileId === "string" && profileId.trim() ? { profileId: profileId.trim() } : {}),
       ...(typeof namespace === "string" && namespace.trim() ? { namespace: namespace.trim() } : {}),
     }),
+  });
+}
+
+export interface ResolvedApplicationOperationProfile {
+  profileId: string;
+  authProfileRef: string;
+  applicationAccountId: string;
+  application: string;
+  providerAccountRef: string | null;
+  principalRef: IdentityPrincipalRef;
+  restrictions: Record<string, unknown>;
+  accountMetadata: Record<string, unknown>;
+  authorityDecisionId: string;
+  /** Runtime memory only. Never forward to a semantic artifact or normal API. */
+  applicationHeaders: Readonly<Record<string, string>>;
+}
+
+/** Reuses the exact employee/account/profile/authority selection. This separate
+ * narrowing does not turn a header bundle into a generic browser session. */
+export async function resolveApplicationOperationProfile(
+  tenantId: string, actorId: string, application: string, authProfileRef: string,
+): Promise<ResolvedApplicationOperationProfile> {
+  const actor = await loadActorScope(tenantId, actorId);
+  if (actor.system) throw new IdentityAccessError("invalid_actor", "Application operations require an accountable employee");
+  const selected = await selectApplicationAccess({ tenantId, actor, application, purpose: "application_semantics", authProfileRef });
+  if (!selected || selected.row.authMethod !== "application_headers"
+    || !strings(selected.row.profileCapabilities).includes("application-operation-v1")) {
+    throw new IdentityAccessError("no_valid_auth_profile", "An exact application-operation profile is required");
+  }
+  const row = selected.row;
+  if (row.credentialProvider === "aws-iam-federated") throw new IdentityAccessError("no_valid_auth_profile", "Header operations do not use workload identity");
+  const bundle = await resolveTenantBoundSecretBundle(tenantId, {
+    credentialProvider: row.credentialProvider, credentialRef: row.credentialRef, credentialVersion: row.credentialVersion,
+  });
+  let headers: unknown;
+  try { headers = JSON.parse(bundle.applicationHeaders ?? ""); } catch { headers = null; }
+  if (!headers || typeof headers !== "object" || Array.isArray(headers) || !Object.keys(headers).length
+    || Object.keys(headers).length > 16 || Object.entries(headers).some(([name, value]) =>
+      !/^[A-Za-z][A-Za-z0-9-]{0,63}$/.test(name) || /^(?:host|connection|content-length|transfer-encoding)$/i.test(name)
+      || typeof value !== "string" || value.length > 8192 || /[\r\n]/.test(value))) {
+    throw new IdentityAccessError("no_valid_auth_profile", "The governed application header bundle is invalid");
+  }
+  return Object.freeze({
+    profileId: row.profileId, authProfileRef: row.authProfileRef, applicationAccountId: row.accountId,
+    application: row.application, providerAccountRef: row.providerAccountRef, principalRef: selected.principalRef,
+    restrictions: object(row.restrictions), accountMetadata: object(row.accountMetadata),
+    authorityDecisionId: selected.decisionId, applicationHeaders: Object.freeze(headers as Record<string, string>),
   });
 }
 

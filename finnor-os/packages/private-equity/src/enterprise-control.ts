@@ -532,3 +532,34 @@ export async function reviewEnterpriseObservationalAcquisition(ctx:PeMutationCon
  await readEnterpriseControlDecisionContext(ctx,policy.ref);
  return immutableControl(review);
 }
+/** Additive operation algebra, not a relabelled numerical intervention policy.
+ * The owner prepares its original reservation before any interface discovery. */
+export async function prepareEnterpriseApplicationAcquisition(ctx:PeMutationContext,
+ input:import('./application-semantics/native-contracts').ApplicationAcquireRequest){
+ const {registerNativeApplicationAcquisition}=await import('./application-semantics/api');
+ return registerNativeApplicationAcquisition(ctx,input);
+}
+/** S4 selects a composition from retained lawful state. P1 can invoke this seam,
+ * but cannot supply a model, replace original evidence, or mint authority. */
+export async function composeEnterpriseApplicationOperations(ctx:PeMutationContext,input:{
+ sessionId:string;initial:import('@finnor/shared-types').ApplicationSnapshot;
+}):Promise<import('@finnor/shared-types').CheckedApplicationComposition>{
+ const store=await import('./application-semantics/store'),contracts=await import('./application-semantics/contracts'),
+  composition=await import('./application-semantics/composition');
+ const row=await store.applicationSession(ctx,input.sessionId),request=(await import('./application-semantics/native-contracts')).ApplicationExecuteSchema.parse(row.request);
+ await store.currentApplicationWork(ctx,row);
+ const {model,check}=await store.currentApplicationModel(ctx,row);
+ const observedRef=contracts.x2Ref('COMPUTER','application-observation',input.initial);
+ const observed=await store.applicationArtifact<import('@finnor/shared-types').ApplicationSnapshot>(ctx,observedRef);
+ if(contracts.x2Digest(observed)!==contracts.x2Digest(input.initial)||request.targetId!==observed.target.id)
+  contracts.x2Fault('X2_S4_ORIGINAL_FRESH_OBSERVATION_REQUIRED');
+ const profiles=await Promise.all(row.profile_ids.map(id=>store.nativeApplicationProfile(ctx,id)));
+ const selected=composition.composeApplicationActions({model,check,initial:observed,goal:request.goal,parameters:request.parameters,
+  originalParentRef:row.original_parent_ref,deadlineAt:row.parent.deadlineAt,authorizedRoles:profiles.map(p=>p.profile.role)});
+ if(selected.disposition==='COMPOSED_WITH_REQUIRED_OBSERVATIONS')composition.assertApplicationComposition({composition:selected,model,check,initial:observed});
+ const {ref,...body}=selected;
+ await store.retainApplicationArtifact(ctx,ref,body,false,undefined,[row.parent.rightsRevision]);
+ await store.applicationEvent(ctx,row,'S4_TYPED_OPERATION_COMPOSITION_SELECTED',{compositionRef:ref,modelRef:model.ref,checkRef:check.ref,
+  exploredNodes:selected.exploredNodes,disposition:selected.disposition,originalDeadline:row.parent.deadlineAt,executionAuthorityGranted:false});
+ return selected;
+}

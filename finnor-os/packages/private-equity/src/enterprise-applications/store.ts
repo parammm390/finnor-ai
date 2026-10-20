@@ -43,10 +43,14 @@ export function assertAllocation(a:ApplicationRow){
  if(a.status==='CANCELLED')fail('APPLICATION_CANCELLED');
  if(a.deadline_at.getTime()<=Date.now())fail('ORIGINAL_APPLICATION_DEADLINE_EXPIRED');
 }
-export async function applicationTx(ctx:PeMutationContext,c:PoolClient,id:string,capability='query:enterprise_application'){
+export async function applicationTx(ctx:PeMutationContext,c:PoolClient,id:string,capability='query:enterprise_application',temporalBounds?:string[]){
  const a=(await c.query<ApplicationRow>('SELECT * FROM finnor_os.x3_applications WHERE tenant_id=$1 AND id=$2 FOR UPDATE',[ctx.auth.tenantId,id])).rows[0];
  if(!a)throw unavailable();
  await authorize(ctx,rootOf(a),[],[],c);
+ if(temporalBounds){
+  const snapshot=await employeeScopedRoleKeysTx(ctx.auth,[{type:a.root_type,id:a.root_id}],c);
+  if(snapshot.validUntil)temporalBounds.push(snapshot.validUntil);
+ }
  if(!await canExerciseAuthorityTx(ctx.auth,{operation:capability.startsWith('query:')?'query':'action',capability,resource:{type:a.root_type,id:a.root_id},risk:'low'},c))throw unavailable();
  return a;
 }

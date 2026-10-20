@@ -1,5 +1,5 @@
 /** Authenticated ordinary S8 lifecycle; independent science/signatures stay external. */
-import { assertCapabilitySourceClosure } from './source-closure';
+import { assertCapabilitySourceClosure, assertApplicationSemanticsSourceClosure } from './source-closure';
 import { assertCapabilityEconomicExperienceCurrent } from './experience';
 import { ProtectedCapabilityEvents } from './protected-events';
 import { verifyCapabilityMethod } from './protected-method';
@@ -17,6 +17,7 @@ import { CapabilityJournal, privateFile, type JournalEntry } from './journal';
 import { InterfaceCapabilityPort } from './interface-port';
 import { InstitutionCapabilityPort } from './institution-port';
 import { ApplicationCapabilityPort } from './application-port';
+import { ApplicationCapabilityPort as ApplicationSemanticsCapabilityPort, ApplicationPortConfigurationSchema } from './application-semantics-port';
 import { LearnedPolicyCapabilityPort } from './learned-policy-port';
 import type {IdentifiedSystemCapabilityPort} from './identified-system-port';
 import { digest, byteDigest, fault, parseRevision, makeRef, sameRef, RefSchema, ProtocolSchema, EvaluationSummarySchema, AllocationMethodAdmissionSchema, assertSignature, S8_VERSION, type Signed, type AuthorityKey, type CapabilityRevision, type EvaluationProtocol, type EvaluationSummary, type CapabilityRef, type AllocationMethodAdmission } from './contracts';
@@ -27,6 +28,7 @@ const PolicySchema = z.object({ schema: z.literal('finnor.s8.lifecycle-policy.v1
 // allocation RevisionBodySchema and parseRevision remain unchanged at 128 pins.
 const LifecyclePolicySchema=PolicySchema.extend({
     sourcePins:PolicySchema.shape.sourcePins.max(256),
+    applicationSemantics:ApplicationPortConfigurationSchema.optional(),
     institutionCompiler:z.object({
         profileDigest:z.string().regex(/^[a-f0-9]{64}$/),
         sourcePins:z.array(z.object({path:Text,sha256:z.string().regex(/^[a-f0-9]{64}$/)}).strict()).min(1).max(64),
@@ -69,6 +71,7 @@ export interface CapabilityUseLease {
 export class CapabilityEvolution {
     private interfaces: InterfaceCapabilityPort;
     private applications: ApplicationCapabilityPort;
+    private applicationSemantics: ApplicationSemanticsCapabilityPort;
     private learnedPolicies: LearnedPolicyCapabilityPort;
     private identifiedSystems: IdentifiedSystemCapabilityPort|null=null;
     private identifiedReplay: JournalEntry[]=[];
@@ -92,6 +95,7 @@ export class CapabilityEvolution {
     private constructor(readonly policy: Policy, private journal: CapabilityJournal) {
         this.interfaces = new InterfaceCapabilityPort(policy);
         this.applications = new ApplicationCapabilityPort(policy);
+        this.applicationSemantics = new ApplicationSemanticsCapabilityPort(policy);
         this.learnedPolicies = new LearnedPolicyCapabilityPort(policy);
         this.institutions = new InstitutionCapabilityPort(policy);
         this.protectedEvents = policy.protectedEvents ? new ProtectedCapabilityEvents({ ...policy, protectedEvents: policy.protectedEvents }, journal.policyDigest) : null;
@@ -104,6 +108,11 @@ export class CapabilityEvolution {
         if (policy.domain === 'REVIEWED_PROTECTED_DOMAIN' && !policy.protectedEvents)
             fault('S8_PROTECTED_EVENT_CONTRACT_REQUIRED', 503);
         await assertCapabilitySourceClosure(policy.sourcePins);
+        if(policy.applicationSemantics){
+            await assertApplicationSemanticsSourceClosure(policy.applicationSemantics.sourcePins);
+            if(policy.applicationSemantics.sourcePins.some(pin=>!policy.sourcePins.some(outer=>outer.path===pin.path&&outer.sha256===pin.sha256)))
+                fault('S8_APPLICATION_DOMAIN_SOURCE_CLOSURE_UNBOUND',503);
+        }
         assertSignature(cfg.signedPolicy, [{ id: cfg.signedPolicy.keyId, principalId: 'RELEASE_ROOT', publicKey: root, validAfter: policy.validAfter, validUntil: policy.validUntil, revoked: false }]);
         if (new Set(policy.actors.map(a => a.id)).size !== policy.actors.length || [policy.evaluatorKeys, policy.promotionKeys].some(keys => new Set(keys.map(k => k.id)).size !== keys.length))
             fault('S8_AMBIGUOUS_AUTHORITY_IDENTITY', 503);
@@ -113,7 +122,12 @@ export class CapabilityEvolution {
             return byteDigest(key.export({ type: 'spki', format: 'der' }));
         };
         const evaluatorFingerprints = new Set(policy.evaluatorKeys.map(k => fingerprint(k.publicKey)));
-        if (policy.promotionKeys.some(k => evaluatorFingerprints.has(fingerprint(k.publicKey))))
+        const evaluatorPrincipals = new Set(policy.evaluatorKeys.map(k => k.principalId)
+            .concat(policy.actors.filter(a => a.roles.includes('EVALUATOR')).map(a => a.principalId)));
+        const promoterPrincipals = new Set(policy.promotionKeys.map(k => k.principalId)
+            .concat(policy.actors.filter(a => a.roles.includes('PROMOTER')).map(a => a.principalId)));
+        if (policy.promotionKeys.some(k => evaluatorFingerprints.has(fingerprint(k.publicKey))) ||
+            [...promoterPrincipals].some(id => evaluatorPrincipals.has(id)))
             fault('S8_AUTHORITY_NOT_SEPARATED', 503);
         const principals = new Set<string>(), tokens = new Set<string>();
         for (const a of policy.actors) {
@@ -154,16 +168,20 @@ export class CapabilityEvolution {
     }>) {
         const { open } = await import('node:fs/promises');
         const { constants } = await import('node:fs');
-        for (const pin of pins) {
-            const fd = await open(pin.path, constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK);
-            try {
-                const stat = await fd.stat();
-                if (!stat.isFile() || stat.size > 16 * 1024 * 1024 || byteDigest(await fd.readFile()) !== pin.sha256)
-                    fault('S8_DEPENDENCY_BYTES_CHANGED');
-            }
-            finally {
-                await fd.close();
-            }
+        for (let offset = 0; offset < pins.length; offset += 8) {
+            const checked = await Promise.allSettled(pins.slice(offset, offset + 8).map(async pin => {
+                const fd = await open(pin.path, constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK);
+                try {
+                    const stat = await fd.stat();
+                    if (!stat.isFile() || stat.size > 16 * 1024 * 1024 || byteDigest(await fd.readFile()) !== pin.sha256)
+                        fault('S8_DEPENDENCY_BYTES_CHANGED');
+                }
+                finally {
+                    await fd.close();
+                }
+            }));
+            for (const result of checked)
+                if (result.status === 'rejected') throw result.reason;
         }
     }
     private actor(token: string) {
@@ -423,6 +441,14 @@ export class CapabilityEvolution {
         if(entry.operation.startsWith('IDENTIFIED_SYSTEM_')){
             this.identifiedReplay.push(entry);this.identifiedSystems?.replay(entry);return;
         }
+        if (entry.operation.startsWith('APPLICATION_SEMANTICS_')) {
+            this.applicationSemantics.replay(entry);
+            if (entry.operation === 'APPLICATION_SEMANTICS_USE') {
+                this.totalCost += entry.result.lease.reservedCost;
+                this.useCount++;
+            }
+            return;
+        }
         if (entry.operation.startsWith('APPLICATION_')) { this.applications.replay(entry); return; }
         if (entry.operation.startsWith('LEARNED_POLICY_')) { this.learnedPolicies.replay(entry); return; }
         if (entry.operation.startsWith('INTERFACE_')) { this.interfaces.replay(entry); return; }
@@ -533,6 +559,9 @@ export class CapabilityEvolution {
                 // replayed from a cached admission. Every serve checks current use.
                 if (input.operation.startsWith('INTERFACE_') || input.operation.startsWith('APPLICATION_') || input.operation.startsWith('LEARNED_POLICY_') || input.operation.startsWith('IDENTIFIED_SYSTEM_'))
                     await CapabilityEvolution.sources(this.policy.sourcePins);
+                if (input.operation.startsWith('APPLICATION_SEMANTICS_')) {
+                    await this.applicationSemantics.revalidateReplay(a, input.operation, input.body, prior.result);
+                }
                 if (input.operation === 'USE') {
                     const use = this.uses.get(prior.result.lease.useId);
                     if (!use)
@@ -560,6 +589,15 @@ export class CapabilityEvolution {
             }
             if (input.operation.startsWith('LEARNED_POLICY_')) {
                 const answer = await this.learnedPolicies.command(a, input.operation, b,
+                    (ref, content) => this.commitNamedReference(ref, content));
+                if (!answer.readOnly)
+                    await this.persist({ requestId: input.requestId, requestDigest, actorId: a.id,
+                        operation: input.operation, body: b, result: answer.result });
+                return answer.result;
+            }
+            if (input.operation.startsWith('APPLICATION_SEMANTICS_')) {
+                const answer = await this.applicationSemantics.command(a, input.operation, b, input.requestId,
+                    { totalCost: this.totalCost, useCount: this.useCount },
                     (ref, content) => this.commitNamedReference(ref, content));
                 if (!answer.readOnly)
                     await this.persist({ requestId: input.requestId, requestDigest, actorId: a.id,
@@ -597,7 +635,7 @@ export class CapabilityEvolution {
                     if (page.atSequence !== undefined && page.atSequence !== sequence)
                         fault('S8_READ_SNAPSHOT_CHANGED');
                     const take = <T>(items: T[]) => items.slice(page.offset, page.offset + page.limit), count = Math.max(this.states.size, this.attempts.length, this.uses.size, this.journal.entries.length), nextOffset = page.offset + page.limit < count ? page.offset + page.limit : null;
-                    return { ...(this.handedOff || this.inheritedHandoff ? { responsibilityContinuity: { transferred: this.handedOff, inheritedHandoff: this.inheritedHandoff, actionableActivationTransferred: false } } : {}), active: this.active, generation: this.generation, revisions: take([...this.states.values()]).map(s => ({ ref: s.revision.ref, state: s.state, evaluation: s.evaluation, activation: s.activation })), attempts: take(this.attempts), uses: take([...this.uses.values()]), accounting: { totalCost: this.totalCost, totalLoss: this.totalLoss, useCount: this.useCount }, history: take(this.journal.entries).map(e => ({ sequence: e.sequence, operation: e.operation, requestId: e.requestId, digest: e.digest, knowledgeAt: e.knowledgeAt })), page: { offset: page.offset, limit: page.limit, sequence, nextOffset, complete: page.offset === 0 && nextOffset === null }, counts: { revisions: this.states.size, attempts: this.attempts.length, uses: this.uses.size, history: this.journal.entries.length }, protectedHistory: this.protectedEvents?.snapshot() ?? null, qualification: this.protectedEvents ? 'SIGNED_JOURNAL_AND_AUTHENTICATED_CONSECUTIVE_S6_EVENTS_NO_VALUE_OR_EFFECT_AUTHORITY' : 'ORDINARY_SIGNED_HISTORY_AND_S6_REFERENCE_COMMITMENTS_NO_PROTECTED_S8_EVENT_APPEND' };
+                    return { ...(this.applicationSemantics.hasHistory() ? { applications: this.applicationSemantics.snapshot(page.offset, page.limit) } : {}), ...(this.handedOff || this.inheritedHandoff ? { responsibilityContinuity: { transferred: this.handedOff, inheritedHandoff: this.inheritedHandoff, actionableActivationTransferred: false } } : {}), active: this.active, generation: this.generation, revisions: take([...this.states.values()]).map(s => ({ ref: s.revision.ref, state: s.state, evaluation: s.evaluation, activation: s.activation })), attempts: take(this.attempts), uses: take([...this.uses.values()]), accounting: { totalCost: this.totalCost, totalLoss: this.totalLoss, useCount: this.useCount }, history: take(this.journal.entries).map(e => ({ sequence: e.sequence, operation: e.operation, requestId: e.requestId, digest: e.digest, knowledgeAt: e.knowledgeAt })), page: { offset: page.offset, limit: page.limit, sequence, nextOffset, complete: page.offset === 0 && nextOffset === null }, counts: { revisions: this.states.size, attempts: this.attempts.length, uses: this.uses.size, history: this.journal.entries.length }, protectedHistory: this.protectedEvents?.snapshot() ?? null, qualification: this.protectedEvents ? 'SIGNED_JOURNAL_AND_AUTHENTICATED_CONSECUTIVE_S6_EVENTS_NO_VALUE_OR_EFFECT_AUTHORITY' : 'ORDINARY_SIGNED_HISTORY_AND_S6_REFERENCE_COMMITMENTS_NO_PROTECTED_S8_EVENT_APPEND' };
                 }
                 case 'PROPOSE': {
                     this.role(a, 'PROPOSER');
@@ -840,6 +878,8 @@ export class CapabilityEvolution {
                 }
                 case 'HANDOFF': {
                     this.role(a, 'PROMOTER'); assertSignature(b, this.policy.promotionKeys, a.principalId);
+                    // An S5-only capsule must never discard application liabilities/history.
+                    if (this.applicationSemantics.hasHistory()) fault('S8_APPLICATION_RESPONSIBILITY_HANDOFF_UNSUPPORTED', 503);
                     const request = z.object({ runtimeHandoff: z.literal(true), expectedGeneration: z.number().int().min(0), successorPolicyDigest: z.string().regex(/^[a-f0-9]{64}$/), successorPolicy: z.unknown(), reason: Text }).strict().parse(b.body);
                     if (request.expectedGeneration !== this.generation || request.successorPolicyDigest === CapabilityEvolution.handoffTargetDigest(this.policy) || request.successorPolicyDigest !== CapabilityEvolution.handoffTargetDigest(request.successorPolicy)) fault('S8_HANDOFF_GENERATION_OR_TARGET_INVALID');
                     const successor = LifecyclePolicySchema.parse(request.successorPolicy);

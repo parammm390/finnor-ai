@@ -1,0 +1,4 @@
+{
+  "extends": "../x2/tsconfig.json",
+  "include": ["*.mts"]
+}

@@ -46,6 +46,7 @@ const delegatedRegistries = [
   ["CONTINUATION_OPERATIONS", "live-recompilation/api.ts"],
   ["PROCEDURE_OPERATIONS", "procedure-induction/api.ts"],
   ["DELIBERATION_OPERATIONS", "deliberation/api.ts"],
+  ["APPLICATION_OPERATIONS", "application-semantics/api.ts"],
 ]
 const identificationOperations = registeredOperations("finnor-os/packages/private-equity/src/r4/contracts.ts", "R4_OPERATIONS")
 const identificationReads = new Set(registeredOperations("finnor-os/packages/private-equity/src/r4/contracts.ts", "R4_READ_OPERATIONS"))
@@ -106,6 +107,7 @@ const companyBrainReads = new Set([
   "deliberation-read", "deliberation-projection", "deliberation-module-read", "deliberation-evidence-read",
   "capital-program-read","capital-program-status","capital-program-list","capital-program-context","capital-program-ports","capital-program-witness","capital-program-module",
   "capital-formation-read","capital-formation-list","capital-formation-profiles",
+  "application-projection",
 ])
 const elicitationOperations=registeredOperations("finnor-os/packages/epistemic-runtime/src/incentive-rule-synthesis/contracts.ts","ELICITATION_OPERATIONS")
 const elicitationReads=new Set(["context","read","status","history"])
@@ -261,7 +263,7 @@ function routeEntry(method, path, source) {
   const read = method === "GET" || ownerClassification==="READ" || (family === "company-brain" && companyBrainReads.has(path.slice("company-brain/".length))) || ["query", "semantic-activity"].includes(family) || family === "closing" && ["read", "projection", "ports"].includes(path.slice("closing/".length))
   const adminOnly = restrictedOperations.has(path) || !r1 && !coalitionClassification && denyPrefixes.some((prefix) => `${path}/`.startsWith(prefix)) ||
     (family === "read-model" && /read-models\/(reliability|readiness|readiness-slo|failure-injections)/.test(path))
-  const control = r1&&["r1-cancel","r1-reconcile"].includes(path.slice("policies/".length)) || path === "live-controls" || path === "closing/stop" || controls.test(path) || path === "company-brain/procedure-induction-cancel" || /^company-brain\/(?:evidence|program|compute-search|interface|decision-slice|deliberation|capital-program|capital-formation)-(?:cancel|resume|reconcile|advance)$/.test(path)
+  const control = r1&&["r1-cancel","r1-reconcile"].includes(path.slice("policies/".length)) || path === "live-controls" || path === "closing/stop" || controls.test(path) || path === "company-brain/procedure-induction-cancel" || /^company-brain\/(?:evidence|program|compute-search|interface|decision-slice|deliberation|capital-program|capital-formation|application)-(?:cancel|resume|reconcile|advance)$/.test(path)
   const classification = adminOnly ? "ADMIN" : stream ? "STREAM" : ownerClassification ?? (read ? "READ" : control ? "CONTROL" : "MUTATION")
   const systemOnly = path.startsWith("webhooks/") || ["ready", "release", "vitals", "health"].includes(path)
   const humanOnly = humanOnlyPatterns.some((pattern) => pattern.test(path))

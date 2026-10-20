@@ -1,4 +1,4 @@
-// Generated from finnor-os/openapi.json, SHA-256 6852c1743ef779585856ef356ee3131d1b987a17acf6ad728c6f075655c2848f.
+// Generated from finnor-os/openapi.json, SHA-256 d65242ccea521994cdcecd4bae159fc99d0f102591b0c16aa3f5635a2ffc086d.
 export interface paths {
     "/api/live-controls": {
         parameters: {
@@ -2759,7 +2759,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    operation: "opportunity-promote" | "belief-view" | "belief-pin" | "roots" | "projection" | "search" | "object" | "traverse" | "provenance" | "history" | "evidence-lineage" | "decision-lineage" | "available-actions" | "context" | "evidence-handles" | "evidence-submit" | "evidence-read" | "evidence-witness" | "evidence-replay" | "evidence-cancel" | "evidence-consume" | "program-submit" | "program-read" | "program-witness" | "program-module" | "program-projection" | "program-cancel" | "program-resume" | "program-artifact" | "program-ports" | "program-interface-module" | "compute-search-submit" | "compute-search-read" | "compute-search-projection" | "compute-search-cancel" | "compute-search-resume" | "compute-search-reconcile" | "interface-acquire" | "interface-read" | "interface-projection" | "interface-catalogue" | "interface-module" | "interface-cancel" | "interface-resume" | "interface-reconcile" | "interface-admission" | "interface-invoke" | "interface-ports" | "decision-slice-compile" | "decision-slice-read" | "decision-slice-context" | "decision-slice-patch" | "decision-slice-witness" | "decision-slice-consume" | "decision-slice-cancel" | "decision-slice-recompile" | "decision-slice-changes" | "decision-slice-view" | "continuation-submit" | "continuation-read" | "continuation-projection" | "procedure-experience" | "procedure-induce" | "procedure-induction-read" | "procedure-induction-cancel" | "procedure-read" | "procedure-component" | "procedure-counterexample" | "procedure-projection" | "procedure-admission-request" | "procedure-interface" | "procedure-costs" | "deliberation-submit" | "deliberation-read" | "deliberation-projection" | "deliberation-cancel" | "deliberation-resume" | "deliberation-reconcile" | "deliberation-calibrate" | "deliberation-evidence-read" | "deliberation-module-read" | "capital-formation-submit" | "capital-formation-read" | "capital-formation-list" | "capital-formation-profiles" | "capital-formation-advance" | "capital-formation-event" | "capital-formation-proposal" | "capital-formation-cancel" | "capital-formation-draw-handoff" | "application-submit" | "application-maintain" | "application-command" | "application-read" | "application-record" | "application-list" | "application-history" | "application-asset" | "application-cancel" | "application-rollback" | "application-impact" | "application-upload" | "application-prepare-effect" | "application-s8-propose" | "application-admission" | "learning-consent" | "learning-revoke-consent" | "learning-experience" | "learning-submit" | "learning-read" | "learning-list" | "learning-execute" | "learning-evaluate" | "learning-cancel" | "learning-invalidate" | "learning-retry" | "learning-rollback" | "learning-s8-propose" | "learning-admission" | "learning-register-assignment" | "learning-retrain" | "identification-targets" | "identification-consent" | "identification-revoke-consent" | "identification-submit" | "identification-read" | "identification-list" | "identification-history" | "identification-experiment" | "identification-replicate" | "identification-use" | "identification-cancel" | "identification-invalidate" | "identification-retry" | "identification-s8-propose" | "identification-admission";
+                    operation: "opportunity-promote" | "belief-view" | "belief-pin" | "roots" | "projection" | "search" | "object" | "traverse" | "provenance" | "history" | "evidence-lineage" | "decision-lineage" | "available-actions" | "context" | "evidence-handles" | "evidence-submit" | "evidence-read" | "evidence-witness" | "evidence-replay" | "evidence-cancel" | "evidence-consume" | "program-submit" | "program-read" | "program-witness" | "program-module" | "program-projection" | "program-cancel" | "program-resume" | "program-artifact" | "program-ports" | "program-interface-module" | "compute-search-submit" | "compute-search-read" | "compute-search-projection" | "compute-search-cancel" | "compute-search-resume" | "compute-search-reconcile" | "interface-acquire" | "interface-read" | "interface-projection" | "interface-catalogue" | "interface-module" | "interface-cancel" | "interface-resume" | "interface-reconcile" | "interface-admission" | "interface-invoke" | "interface-ports" | "decision-slice-compile" | "decision-slice-read" | "decision-slice-context" | "decision-slice-patch" | "decision-slice-witness" | "decision-slice-consume" | "decision-slice-cancel" | "decision-slice-recompile" | "decision-slice-changes" | "decision-slice-view" | "continuation-submit" | "continuation-read" | "continuation-projection" | "procedure-experience" | "procedure-induce" | "procedure-induction-read" | "procedure-induction-cancel" | "procedure-read" | "procedure-component" | "procedure-counterexample" | "procedure-projection" | "procedure-admission-request" | "procedure-interface" | "procedure-costs" | "deliberation-submit" | "deliberation-read" | "deliberation-projection" | "deliberation-cancel" | "deliberation-resume" | "deliberation-reconcile" | "deliberation-calibrate" | "deliberation-evidence-read" | "deliberation-module-read" | "capital-formation-submit" | "capital-formation-read" | "capital-formation-list" | "capital-formation-profiles" | "capital-formation-advance" | "capital-formation-event" | "capital-formation-proposal" | "capital-formation-cancel" | "capital-formation-draw-handoff" | "application-submit" | "application-maintain" | "application-command" | "application-read" | "application-record" | "application-list" | "application-history" | "application-asset" | "application-cancel" | "application-rollback" | "application-impact" | "application-upload" | "application-prepare-effect" | "application-s8-propose" | "application-admission" | "application-acquire" | "application-execute" | "application-projection" | "application-resume" | "institution-submit" | "institution-revise" | "institution-read" | "institution-status" | "institution-cancel" | "institution-resume" | "institution-witness" | "institution-sources" | "institution-inputs" | "institution-mandate" | "institution-register-source" | "institution-consent" | "learning-consent" | "learning-revoke-consent" | "learning-experience" | "learning-submit" | "learning-read" | "learning-list" | "learning-execute" | "learning-evaluate" | "learning-cancel" | "learning-invalidate" | "learning-retry" | "learning-rollback" | "learning-s8-propose" | "learning-admission" | "learning-register-assignment" | "learning-retrain" | "identification-targets" | "identification-consent" | "identification-revoke-consent" | "identification-submit" | "identification-read" | "identification-list" | "identification-history" | "identification-experiment" | "identification-replicate" | "identification-use" | "identification-cancel" | "identification-invalidate" | "identification-retry" | "identification-s8-propose" | "identification-admission";
                 };
                 cookie?: never;
             };
@@ -13515,7 +13515,7 @@ export interface paths {
             };
             requestBody?: {
                 content: {
-                    "application/json": components["schemas"]["application-cancel"];
+                    "application/json": components["schemas"]["application-cancel"] | components["schemas"]["X2ApplicationCancel"];
                 };
             };
             responses: {
@@ -28863,6 +28863,422 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/company-brain/application-acquire": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        root: {
+                            /** @enum {string} */
+                            entityType: "pe_strategy" | "pe_opportunity" | "pe_deal" | "pe_fund" | "pe_vehicle" | "external_organization" | "pe_portfolio_holding";
+                            /** Format: uuid */
+                            entityId: string;
+                        };
+                        /** Format: uuid */
+                        workId: string;
+                        profileIds: string[];
+                        targets: {
+                            /** @constant */
+                            kind: "identity";
+                            application: string;
+                            account: string;
+                            entity: string;
+                            id: string;
+                        }[];
+                        resourceDemand: {
+                            resourceId: string;
+                            /** @enum {string} */
+                            unit: "request" | "seconds";
+                            amount: string;
+                        }[];
+                        /** Format: date-time */
+                        deadlineAt: string;
+                        idempotencyKey: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Authenticated current owner result; model evidence is not execution authority. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Accepted bounded durable Work computation, not admission, reservation or consent. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict owner request schema rejected invalid or unknown input. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact permitted owner reference unavailable. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Currentness, idempotency or handoff prerequisite changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Whole-request byte or resource bound exhausted. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Required owner port, verified evidence or protected authority unavailable. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/application-execute": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        root: {
+                            /** @enum {string} */
+                            entityType: "pe_strategy" | "pe_opportunity" | "pe_deal" | "pe_fund" | "pe_vehicle" | "external_organization" | "pe_portfolio_holding";
+                            /** Format: uuid */
+                            entityId: string;
+                        };
+                        /** Format: uuid */
+                        workId: string;
+                        /** Format: uuid */
+                        sessionId: string;
+                        /** Format: uuid */
+                        executionProfileId: string;
+                        targetId: string;
+                        goal: {
+                            [key: string]: string | boolean | null | {
+                                /** @constant */
+                                kind: "quantity";
+                                decimal: string;
+                                currency: string;
+                                entity: string;
+                                unit: string;
+                                time: string;
+                                basis: string;
+                            } | {
+                                /** @constant */
+                                kind: "identity";
+                                application: string;
+                                account: string;
+                                entity: string;
+                                id: string;
+                            };
+                        };
+                        parameters: {
+                            [key: string]: string | boolean | null | {
+                                /** @constant */
+                                kind: "quantity";
+                                decimal: string;
+                                currency: string;
+                                entity: string;
+                                unit: string;
+                                time: string;
+                                basis: string;
+                            } | {
+                                /** @constant */
+                                kind: "identity";
+                                application: string;
+                                account: string;
+                                entity: string;
+                                id: string;
+                            };
+                        };
+                        idempotencyKey: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Authenticated current owner result; model evidence is not execution authority. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Accepted bounded durable Work computation, not admission, reservation or consent. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict owner request schema rejected invalid or unknown input. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact permitted owner reference unavailable. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Currentness, idempotency or handoff prerequisite changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Whole-request byte or resource bound exhausted. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Required owner port, verified evidence or protected authority unavailable. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/application-projection": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        root: {
+                            /** @enum {string} */
+                            entityType: "pe_strategy" | "pe_opportunity" | "pe_deal" | "pe_fund" | "pe_vehicle" | "external_organization" | "pe_portfolio_holding";
+                            /** Format: uuid */
+                            entityId: string;
+                        };
+                        /** Format: uuid */
+                        workId: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Authenticated current owner result; model evidence is not execution authority. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Accepted bounded durable Work computation, not admission, reservation or consent. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict owner request schema rejected invalid or unknown input. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact permitted owner reference unavailable. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Currentness, idempotency or handoff prerequisite changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Whole-request byte or resource bound exhausted. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Required owner port, verified evidence or protected authority unavailable. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/application-resume": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        root: {
+                            /** @enum {string} */
+                            entityType: "pe_strategy" | "pe_opportunity" | "pe_deal" | "pe_fund" | "pe_vehicle" | "external_organization" | "pe_portfolio_holding";
+                            /** Format: uuid */
+                            entityId: string;
+                        };
+                        /** Format: uuid */
+                        workId: string;
+                        /** Format: uuid */
+                        sessionId: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Authenticated current owner result; model evidence is not execution authority. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Accepted bounded durable Work computation, not admission, reservation or consent. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict owner request schema rejected invalid or unknown input. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact permitted owner reference unavailable. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Currentness, idempotency or handoff prerequisite changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Whole-request byte or resource bound exhausted. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Required owner port, verified evidence or protected authority unavailable. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/company-brain/challenge-submit": {
         parameters: {
             query?: never;
@@ -35824,6 +36240,16 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        X2ApplicationCancel: {
+            root: {
+                /** @enum {string} */
+                entityType: "pe_strategy" | "pe_opportunity" | "pe_deal" | "pe_fund" | "pe_vehicle" | "external_organization" | "pe_portfolio_holding";
+                /** Format: uuid */
+                entityId: string;
+            };
+            /** Format: uuid */
+            workId: string;
+        };
         "application-submit": {
             /** @constant */
             schema: "finnor.x3.application-request.v1";

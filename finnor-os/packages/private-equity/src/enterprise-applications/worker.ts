@@ -10,7 +10,7 @@ import {applicationDigest,applicationCanonical,validateValuesAgainstModel,Applic
 import {validateProgram,type BuiltApplication} from './compiler';
 import type {ApplicationCheck} from './checker';
 import {currentApplicationEnvironment,applicationSourceRoot,X3_MIGRATION_HEAD,type ApplicationEnvironment} from './source-cut';
-import {applicationTx,releaseTx,recordSnapshot,recordSetDigest,valueSetsFactsTx,assertAllocation,authorityTx,workCutTx,eventTx,enqueueBuildTx,tx,fail,newId,type ApplicationRow,type BuildRow,type RecordRow,type ReleaseBody} from './store';
+import {applicationTx,releaseTx,recordSnapshot,recordSetDigest,valueSetsFactsTx,assertAllocation,authorityTx,assertAuthorityTemporalBoundsTx,workCutTx,eventTx,enqueueBuildTx,tx,fail,newId,type ApplicationRow,type BuildRow,type RecordRow,type ReleaseBody} from './store';
 const Payload=z.object({tenantId:z.string().uuid(),principalId:z.string().uuid(),applicationId:z.string().uuid(),buildId:z.string().uuid(),generation:z.number().int().positive(),stage:z.enum(['BUILD','INSTALL'])}).strict();
 type Payload=z.infer<typeof Payload>;
 interface ChildResult{ok:boolean;error?:string;built?:BuiltApplication;check?:ApplicationCheck;resources:{wallMs:number;cpuMicros:number;peakProcessRSSBytes:number;pid:number}}
@@ -22,8 +22,8 @@ async function physical(c:PoolClient,e:Readonly<JobExecutionContext>,p:Payload){
    AND j.payload=$6::jsonb FOR SHARE OF j,d`,[e.jobId,p.tenantId,e.claimToken,e.claimFence,e.deliveryAttemptId,JSON.stringify(p)]);
  if(row.rowCount!==1)fail('APPLICATION_PHYSICAL_DELIVERY_FENCE');
 }
-async function owned(ctx:PeMutationContext,c:PoolClient,p:Payload,e:Readonly<JobExecutionContext>){
- const a=await applicationTx(ctx,c,p.applicationId,'action:synthesize_enterprise_application');
+async function owned(ctx:PeMutationContext,c:PoolClient,p:Payload,e:Readonly<JobExecutionContext>,temporalBounds?:string[]){
+ const a=await applicationTx(ctx,c,p.applicationId,'action:synthesize_enterprise_application',temporalBounds);
  await physical(c,e,p);
  const b=(await c.query<BuildRow>('SELECT * FROM finnor_os.x3_builds WHERE tenant_id=$1 AND application_id=$2 AND id=$3 FOR UPDATE',[p.tenantId,a.id,p.buildId])).rows[0];
  if(!b||a.owner_id!==p.principalId||b.generation!==p.generation)fail('APPLICATION_JOB_DOMAIN_MISMATCH');
@@ -136,8 +136,10 @@ export async function buildEnterpriseApplicationJob(raw:Record<string,unknown>,e
    });
   }else{
    await tx(ctx,async c=>{
-    const s=await owned(ctx,c,p,e);if(!s)return;
+    const temporalBounds:string[]=[];
+    const s=await owned(ctx,c,p,e,temporalBounds);if(!s)return;
     if(s.b.status!=='STAGED')fail('APPLICATION_NOT_STAGED');
+    temporalBounds.push(s.a.deadline_at.toISOString());
     const row=(await c.query<{id:string;body:ReleaseBody;body_digest:string}>('SELECT id,body,body_digest FROM finnor_os.x3_releases WHERE tenant_id=$1 AND application_id=$2 AND build_id=$3',[p.tenantId,p.applicationId,p.buildId])).rows[0];
     if(!row||applicationDigest(row.body,16*1024*1024)!==row.body_digest||row.body.check.status!=='PASS')fail('APPLICATION_RELEASE_INTEGRITY');
     const records=(await c.query<RecordRow>('SELECT * FROM finnor_os.x3_records WHERE tenant_id=$1 AND application_id=$2 ORDER BY id FOR UPDATE',[p.tenantId,p.applicationId])).rows;
@@ -165,6 +167,7 @@ export async function buildEnterpriseApplicationJob(raw:Record<string,unknown>,e
     await c.query("UPDATE finnor_os.x3_builds SET status='INSTALLED',updated_at=clock_timestamp() WHERE tenant_id=$1 AND id=$2",[p.tenantId,p.buildId]);
     await c.query("UPDATE finnor_os.x3_applications SET status='INSTALLED',head_release_id=$3,updated_at=clock_timestamp() WHERE tenant_id=$1 AND id=$2",[p.tenantId,p.applicationId,row.id]);
     await eventTx(c,s.a,p.principalId,'INSTALLED_DEVELOPMENT','installed:'+p.buildId,s.b.specification_digest,{releaseId:row.id,recordCount:records.length,beforeDataDigest:before,afterDataDigest:recordSetDigest(after),preservedOriginalData:true,jobId:e.jobId,deliveryAttemptId:e.deliveryAttemptId,claimFence:e.claimFence,productionActive:false},null,p.buildId);
+    await assertAuthorityTemporalBoundsTx(c,temporalBounds);
    });
   }
  }catch(error){

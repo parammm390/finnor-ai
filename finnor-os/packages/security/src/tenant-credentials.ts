@@ -3,10 +3,13 @@ import { and, eq, sql } from "drizzle-orm";
 import { readAwsSecretReference, writeAwsSecretReference } from "./secrets";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
+import { lstat } from "node:fs/promises";
+import { join, isAbsolute } from "node:path";
+import { brokerPrivateFile } from "../../governed-execution/src/broker-io";
 
 const execFileAsync = promisify(execFile);
 
-export type ManagedCredentialProvider = "aws-secrets-manager" | "os-keychain";
+export type ManagedCredentialProvider = "aws-secrets-manager" | "os-keychain" | "disposable-private-file";
 
 export type TenantCredentialProvider =
   | "quickbooks"
@@ -575,6 +578,29 @@ async function readOsKeychainReference(reference: string): Promise<Record<string
   return { value: raw };
 }
 
+async function readDisposableReference(tenantId: string, reference: string): Promise<Record<string, string>> {
+  const root = process.env.FINNOR_X2_DISPOSABLE_SECRET_ROOT;
+  const prefix = `finnor/tenants/${tenantId}/x2/`;
+  const name = reference.startsWith(prefix) ? reference.slice(prefix.length) : "";
+  if (process.env.FINNOR_ENVIRONMENT !== "staging" || process.env.FINNOR_X2_PROFILE !== "ordinary_disposable"
+    || !root || !isAbsolute(root) || !/^[A-Za-z0-9_-]{1,128}$/.test(name)) {
+    throw new Error("Disposable application secrets require explicit isolated staging");
+  }
+  for (const path of [root, join(root, tenantId)]) {
+    const stat = await lstat(path);
+    if (!stat.isDirectory() || stat.isSymbolicLink() || stat.uid !== process.getuid?.() || (stat.mode & 0o077)) {
+      throw new Error("Disposable application secret custody is invalid");
+    }
+  }
+  const bytes = await brokerPrivateFile(join(root, tenantId, `${name}.json`));
+  if (bytes.length > 32768) throw new Error("Disposable application secret exceeds its bound");
+  const body: unknown = JSON.parse(bytes.toString("utf8"));
+  if (!body || typeof body !== "object" || Array.isArray(body) || Object.keys(body).length > 16
+    || Object.entries(body).some(([key, value]) => !/^[A-Za-z][A-Za-z0-9_-]{0,63}$/.test(key)
+      || typeof value !== "string" || value.length > 16384)) throw new Error("Disposable application secret shape is invalid");
+  return body as Record<string, string>;
+}
+
 /** Runtime-only escape hatch for provider-neutral infrastructure that consumes a
  * governed auth-profile secret whose shape is not one of FINNOR's native API
  * integrations. The reference still has to be selected from tenant-scoped DB state,
@@ -584,7 +610,7 @@ export async function resolveTenantBoundSecretBundle(
   tenantId: string,
   reference: TenantBoundSecretReference,
 ): Promise<Readonly<Record<string, string>>> {
-  if ((reference.credentialProvider !== "aws-secrets-manager" && reference.credentialProvider !== "os-keychain") || !reference.credentialRef) {
+  if (!["aws-secrets-manager", "os-keychain", "disposable-private-file"].includes(reference.credentialProvider ?? "") || !reference.credentialRef) {
     throw new Error("A tenant-bound managed-secret auth profile is required");
   }
   if (!tenantBoundAwsReference(reference.credentialRef, tenantId)) {
@@ -592,7 +618,9 @@ export async function resolveTenantBoundSecretBundle(
   }
   const cacheKey = `${tenantId}:computer-auth:${reference.credentialProvider}:${reference.credentialRef}:${reference.credentialVersion ?? "current"}`;
   try {
-    const bundle = reference.credentialProvider === "os-keychain"
+    const bundle = reference.credentialProvider === "disposable-private-file"
+      ? await readDisposableReference(tenantId, reference.credentialRef)
+      : reference.credentialProvider === "os-keychain"
       ? await cachedSecretWith(cacheKey, () => readOsKeychainReference(reference.credentialRef!))
       : await cachedSecret(cacheKey, reference.credentialRef, reference.credentialVersion);
     return Object.freeze({ ...bundle });

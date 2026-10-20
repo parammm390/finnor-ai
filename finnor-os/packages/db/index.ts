@@ -41,6 +41,7 @@ export * from "./compute-governor";
 export * from "./identification-resources";
 export { pgConnectionConfig } from "./postgres-connection.mjs";
 export * from "./execution-deadline";
+export * from "./governed-egress";
 export { schema };
 
 export type Db = NodePgDatabase<typeof schema>;

@@ -13,6 +13,7 @@ export * from "./conversation-context";
 export * from "./identity-access";
 export * from "./universal-actions";
 export * from "./computer";
+export * from "./application-semantics";
 export * from "./operational-delta";
 export * from "./execution-projection";
 export * from "./causal-replay";

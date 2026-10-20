@@ -26,6 +26,7 @@ import {
   type PeMutationContext,
 } from "@finnor/private-equity";
 import { z } from "zod";
+import { IdentityAccessError } from "@finnor/security";
 import { errorResponse, requireContext } from "../../../../lib/auth";
 import {handleEvidenceOperation,EVIDENCE_OPERATIONS} from '@finnor/private-equity/src/evidence-execution/api';
 import {handlePrimaryOperation,PRIMARY_OPERATIONS} from '@finnor/private-equity/src/primary-diligence/api';
@@ -35,6 +36,9 @@ import {handleDeliberationOperation,DELIBERATION_OPERATIONS} from '@finnor/priva
 import {DeliberationDeadlineError,deliberationTransportDeadline,inDeliberationDeadline} from '@finnor/private-equity/src/deliberation/deadline';
 import {handleProgramOperation,PROGRAM_OPERATIONS} from '@finnor/private-equity/src/program-synthesis/api';
 import {handleInstitutionOperation,INSTITUTION_OPERATIONS} from '@finnor/private-equity/src/institution-program/api';
+import {handleApplicationOperation as handleApplicationSemanticsOperation,APPLICATION_OPERATIONS as APPLICATION_SEMANTICS_OPERATIONS,APPLICATION_OPERATION_SCHEMAS as APPLICATION_SEMANTICS_OPERATION_SCHEMAS} from '@finnor/private-equity/src/application-semantics/api';
+import {LedgerFault} from '../../../../../../packages/governed-execution/src/protocol';
+import {ApplicationProviderFault} from '@finnor/computer';
 import {handleInterfaceOperation,INTERFACE_OPERATIONS} from '@finnor/private-equity/src/interface-synthesis/api';
 import {handleContinuationOperation,CONTINUATION_OPERATIONS} from '@finnor/private-equity/src/live-recompilation/api';
 import {handleProcedureOperation,PROCEDURE_OPERATIONS} from '@finnor/private-equity/src/procedure-induction/api';
@@ -46,7 +50,7 @@ import {inChallengeEpisode,transportDeadline,readChallengeBody} from '@finnor/pr
 import {handleCapitalFormationOperation,CAPITAL_FORMATION_OPERATION_NAMES} from '@finnor/private-equity/src/capital-formation/service';
 import {CapitalFormationError} from '@finnor/private-equity/src/capital-formation/contracts';
 import {promoteAttestedOpportunity} from '@finnor/private-equity/src/opportunity-handoff';
-import {APPLICATION_OPERATIONS,readApplicationBody,handleApplicationOperation,applicationResponseError} from '@finnor/private-equity/src/enterprise-applications/api';
+import {APPLICATION_OPERATIONS,APPLICATION_OPERATION_SCHEMAS,readApplicationBody,handleApplicationOperation,applicationResponseError} from '@finnor/private-equity/src/enterprise-applications/api';
 import {LEARNING_OPERATIONS,handleLearningOperation} from '@finnor/private-equity/src/policy-learning/api';
 import {IDENTIFICATION_OPERATIONS,handleIdentificationOperation,identificationResponseError} from '@finnor/private-equity/src/system-identification/api';
 
@@ -147,6 +151,10 @@ function requestError(error: unknown): Response {
     return response({ error: error.message, code: error.code }, status);
   }
   if(error instanceof CapitalFormationError)return response({error:error.message,code:error.code},error.status);
+  if(error instanceof IdentityAccessError || error instanceof Error && error.name==="IdentityAccessError")
+    return response({error:"Permitted application context is unavailable",code:"PERMITTED_CONTEXT_UNAVAILABLE"},404);
+  if(error instanceof LedgerFault)return response({error:error.code,code:error.code},error.status);
+  if(error instanceof ApplicationProviderFault)return response({error:error.code,code:error.code},409);
   if(error instanceof ChallengeError){const status=error.code==='UNAVAILABLE'?404:['STALE_INPUT','CONFLICT','CANCELLED','PENDING_M3_READER'].includes(error.code)?409:error.code==='LIMIT_EXCEEDED'?413:error.code==='INVALID_REQUEST'?400:error.code==='CONFIGURATION_REQUIRED'?503:422;return response({error:error.message,code:error.code},status);}
   if(error instanceof DeliberationDeadlineError)return response({code:'M2_LIMIT_EXCEEDED',predicate:error.message},413);
   if(error instanceof Error&&error.message==='M2_INVALID_TRANSPORT_DEADLINE')return response({code:'M2_SCHEMA_INVALID',predicate:error.message},400);
@@ -196,6 +204,19 @@ function checkedRef(value: unknown): CompanyBrainObjectRef {
 
 export async function POST(req: Request, { params }: { params: Promise<{ operation: string }> }): Promise<Response> {
   try {const route=await params;
+    if(route.operation==='application-cancel'){
+      try{
+        const auth=await requireContext(req),body=await json(req);
+        const semantics=APPLICATION_SEMANTICS_OPERATION_SCHEMAS['application-cancel'].safeParse(body);
+        const application=APPLICATION_OPERATION_SCHEMAS['application-cancel'].safeParse(body);
+        if(semantics.success===application.success)
+          return response({code:'INVALID_REQUEST',error:'Cancellation must match exactly one strict owner contract'},400);
+        const result=semantics.success
+          ?await handleApplicationSemanticsOperation({auth},route.operation,semantics.data)
+          :await handleApplicationOperation({auth},route.operation,body);
+        return response(result.body,result.status);
+      }catch(error){const mapped=applicationResponseError(error);return mapped?response(mapped.body,mapped.status):requestError(error);}
+    }
     if(IDENTIFICATION_OPERATIONS.some(operation=>operation===route.operation)){
       try{
         const auth=await requireContext(req),body=await readApplicationBody(req);
@@ -242,6 +263,7 @@ async function dispatchPost(req:Request,route:{operation:string}):Promise<Respon
     const prepared=await Promise.allSettled([requireContext(req),json(req)]);const failed=prepared.find(p=>p.status==='rejected');if(failed?.status==='rejected')throw failed.reason;
     const auth=(prepared[0] as PromiseFulfilledResult<Awaited<ReturnType<typeof requireContext>>>).value,body=(prepared[1] as PromiseFulfilledResult<unknown>).value;
     const ctx: PeMutationContext = { auth };
+    if((APPLICATION_SEMANTICS_OPERATIONS as readonly string[]).includes(route.operation)){const result=await handleApplicationSemanticsOperation(ctx,route.operation,body);return response(result.body,result.status);}
     if(CAPITAL_FORMATION_OPERATION_NAMES.has(route.operation)){const result=await handleCapitalFormationOperation(ctx,route.operation,body);return response(result.body,result.status);}
     if((CONTINUATION_OPERATIONS as readonly string[]).includes(route.operation)){const result=await handleContinuationOperation(ctx,route.operation,body);return response(result.body,result.status);}
     if ((PROCEDURE_OPERATIONS as readonly string[]).includes(route.operation)) { const result=await handleProcedureOperation(ctx,route.operation,body);return response(result.body,result.status); }

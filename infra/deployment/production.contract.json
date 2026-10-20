@@ -10,7 +10,7 @@
     "requireCleanWorktree": true
   },
   "release": {
-    "requiredMigrationHead": "0191_x4_system_identification.sql",
+    "requiredMigrationHead": "0194_x_phase_charge_phase_union.sql",
     "metadata": [
       "FINNOR_COMMIT_SHA",
       "FINNOR_BUILD_ID",
