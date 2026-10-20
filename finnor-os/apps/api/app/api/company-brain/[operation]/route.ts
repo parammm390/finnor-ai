@@ -55,6 +55,8 @@ import {LEARNING_OPERATIONS,handleLearningOperation} from '@finnor/private-equit
 import {IDENTIFICATION_OPERATIONS,handleIdentificationOperation,identificationResponseError} from '@finnor/private-equity/src/system-identification/api';
 import {EconomicOperations,handleEconomicOperation,readEconomicBody} from '@finnor/private-equity/src/economic-action-theory/api';
 import {EconomicFault} from '@finnor/private-equity/src/economic-action-theory/contracts';
+import {StrategicOperations,handleStrategicOperation,readStrategicBody} from '@finnor/private-equity/src/strategic-response/api';
+import {StrategicFault} from '@finnor/private-equity/src/strategic-response/contracts';
 
 export const runtime = "nodejs";
 
@@ -147,6 +149,7 @@ function response(value: unknown, status = 200): Response {
 }
 
 function requestError(error: unknown): Response {
+  if(error instanceof StrategicFault)return response({code:error.code},error.status);
   if(error instanceof EconomicFault)return response({code:error.code},error.status);
   if (error instanceof PeDomainError && error.code.startsWith("PE_HANDOFF_")) {
     const status = /AUTHORITY_NOT_GRANTED|DISPOSABLE_DEVELOPMENT_ONLY/.test(error.code) ? 403
@@ -207,6 +210,11 @@ function checkedRef(value: unknown): CompanyBrainObjectRef {
 
 export async function POST(req: Request, { params }: { params: Promise<{ operation: string }> }): Promise<Response> {
   try {const route=await params;
+    if(StrategicOperations.some(operation=>operation===route.operation)){
+      const auth=await requireContext(req),body=await readStrategicBody(req);
+      const result=await handleStrategicOperation({auth},route.operation,body);
+      return response(result.body,result.status);
+    }
     if(EconomicOperations.some(operation=>operation===route.operation)){
       const auth=await requireContext(req),body=await readEconomicBody(req);
       const result=await handleEconomicOperation({auth},route.operation,body);

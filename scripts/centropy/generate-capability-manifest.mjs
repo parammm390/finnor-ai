@@ -43,6 +43,7 @@ const delegatedRegistries = [
   ["LEARNING_OPERATIONS", "policy-learning/api.ts"],
   ["IDENTIFICATION_OPERATIONS", "system-identification/api.ts"],
   ["EconomicOperations", "economic-action-theory/contracts.ts"],
+  ["StrategicOperations", "strategic-response/contracts.ts"],
   ["M1_OPERATIONS", "decision-slice/handler.ts"],
   ["CONTINUATION_OPERATIONS", "live-recompilation/api.ts"],
   ["PROCEDURE_OPERATIONS", "procedure-induction/api.ts"],
@@ -111,6 +112,7 @@ const companyBrainReads = new Set([
   "application-projection",
   "economic-theory-read", "economic-theory-list", "economic-theory-artifact", "economic-theory-compare",
   "economic-programme-read", "economic-reservation-read",
+  "response-model-read", "response-model-list", "response-model-artifact", "response-model-compare", "response-use-read",
 ])
 const elicitationOperations=registeredOperations("finnor-os/packages/epistemic-runtime/src/incentive-rule-synthesis/contracts.ts","ELICITATION_OPERATIONS")
 const elicitationReads=new Set(["context","read","status","history"])
@@ -143,6 +145,8 @@ const atlasOperations = new Map([...block(atlasSource, "export const R7Operation
 if (!atlasOperations.size) throw new Error("Missing versioned R7 operation classes")
 
 const operationClasses = new Map()
+for (const operation of ["response-model-cancel", "response-model-resume", "response-use-cancel", "response-use-resume"])
+  operationClasses.set(`company-brain/${operation}`, "CONTROL")
 for (const [family, operations] of ownerLeafOperations) for (const operation of operations)
   operationClasses.set(`${family}/${operation}`, ownerLeafReads.has(operation) ? "READ" :
     ["cancel-delivery", "reconcile-request", "reconcile"].includes(operation) ? "CONTROL" : "MUTATION")
@@ -282,6 +286,7 @@ function routeEntry(method, path, source) {
     verificationClass: read ? "canonical_read" : "canonical_reread",
     presentationTargets: userProduct ? presentationTargets : [],
     invalidationTags: read ? [] : family==="elicitation-protocol"?["work","company-brain","elicitation-protocol"]:family==="branch-fabric"?["work","branch-fabric"]:
+      path.startsWith("company-brain/response-")?["work","company-brain"]:
       path.startsWith("company-brain/capital-formation-")?["work","company-brain","authority","source"]:
       path.startsWith("company-brain/capital-program-")||m4Operations.has(path.slice("company-brain/".length))?["work","company-brain"]:tags(family),
     timeoutClass: stream ? "STREAM" : read ? "READ" : "WRITE",

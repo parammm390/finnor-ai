@@ -64,7 +64,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/shared-types/src/index.ts",
-      "sha256": "8443ab8af01091d53f92c9e57cbf3f3d370272fd114ba473c99fc7d8f6ea2d1d"
+      "sha256": "5af96a7210c3d03f880119c3fdadd0068ab60f494ac509d431ccae934512da1b"
     },
     {
       "path": "finnor-os/packages/shared-types/src/primary-diligence.ts",
@@ -84,7 +84,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/db/compute-contract.ts",
-      "sha256": "8ac958820a17179335fbd24574a1c65a1da73d38d264324b539e460a08c57d39"
+      "sha256": "deb45a958f50c7731eee77d9d66159dae3fe65de978ec4f0da7ac4a458e59ab0"
     },
     {
       "path": "finnor-os/packages/db/compute-governor.ts",
@@ -96,7 +96,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/db/migration-head.ts",
-      "sha256": "d758b887566777550428e06bf24e231816c666498888c1c68ef3b4c3a568befb"
+      "sha256": "b6934d00d40b19a83484398563f4423c4a90c4001e834ec699d7ef7729989f54"
     },
     {
       "path": "finnor-os/packages/db/migrations/0189_x3_enterprise_applications.sql",
@@ -104,7 +104,7 @@ export default {
     },
     {
       "path": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
-      "sha256": "91de6fe1c19aac94313ee091beb6b7727bfcd068df3cd786e8f8db57aa095c48"
+      "sha256": "4eb23dd68ef531e280dc21534025cd1963a88cbf53793799d966f1b08bd25316"
     },
     {
       "path": "finnor-os/apps/api/lib/auth.ts",
@@ -112,7 +112,7 @@ export default {
     },
     {
       "path": "finnor-os/apps/worker/src/index.ts",
-      "sha256": "79d051cd0632313ca88314e67f820b316b311c4adca16705482133bd2a2c8cf9"
+      "sha256": "3a535f7e0b41e69c9e9710bf33886e4bdbd0c0946604a7c0386931b4e55510d6"
     },
     {
       "path": "finnor-os/apps/worker/src/queue.ts",
@@ -128,7 +128,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/enterprise-control.ts",
-      "sha256": "652e52beca3fbc5f3b6926f6462270629b5b0820b2a5f0616e8797b49e440de7"
+      "sha256": "e1c90b9ce50ac6c08b8f1ebd07e31c4214d51e4531531b26fe7d250a99f7a92c"
     },
     {
       "path": "finnor-os/packages/private-equity/src/enterprise-allocation.ts",
@@ -192,7 +192,7 @@ export default {
     },
     {
       "path": "src/lib/centropy/capability-manifest.generated.json",
-      "sha256": "ec486d083c1ae95bb882bcd707922395615ff2d7c9bf61c7f73353339fc7eacd"
+      "sha256": "ca0e875ce479afa868b4565501fb2b8e4866fa8aba16f9447656db1474c485de"
     },
     {
       "path": "package-lock.json",
