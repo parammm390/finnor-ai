@@ -1,5 +1,12 @@
 # Canonical paired checkpoint read, pre-code contract
 
+Current-cut addendum: clean worker-repair commit ee1a186 fails native
+campaign 8 at the original seven-second live-suite deadline. Its complete
+26 refusal/two control observations do not constitute a suite pass.
+Earlier native 6/7 passes remain scoped to their recorded cuts. See
+`bounded-read-allocation.md` for the preregistered, separately measured
+reader repair; no new native pass is yet claimed.
+
 The fifth X2 native campaign still fails its original seven-second suite.
 Do not rerun unchanged, regrade its partial cases or alter the eight-second
 pause, seven-second suite, original lease/currentness, authority or resources.

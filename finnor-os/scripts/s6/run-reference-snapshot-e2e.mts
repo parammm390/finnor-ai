@@ -204,6 +204,31 @@ try{
    }
   });
  }
+ const pressureReceipts:any[]=[];
+ for(let i=0;i<120;i++){
+  const content={fixture:'bounded-read-pressure',index:i,payload:'x'.repeat(i===118?65536:i===119?131072:128+i)};
+  const r=await call('/references',{reference:reference('snapshot:pressure:'+i,content),rightsRefs:[rights]});
+  assert.equal(r.status,200);pressureReceipts.push(r.body.receipt);
+ }
+ await challenge('many-small-files-and-multichunk-full-integrity',async()=>{
+  const before=(await readFile(transcript,'utf8')).trim().split('\n').length,timings:number[]=[],digests:string[]=[];
+  for(let i=0;i<40;i++){
+   const start=performance.now(),r=await read(identity,[plain.id,missing]);timings.push(performance.now()-start);
+   assert.equal(r.results[0].reference.contentDigest,plain.contentDigest);assert.equal(r.results[1],null);
+   digests.push(hash(r));
+  }
+  const after=(await readFile(transcript,'utf8')).trim().split('\n').length;assert.equal(after-before,40);
+  return {additionalCommittedFiles:pressureReceipts.length,totalCommittedFiles:123,reads:40,witnessReads:40,timings,digests};
+ });
+ await challenge('pressure-unrelated-small-content-tamper',async()=>{
+  const path=join(privateDir,'content',pressureReceipts[117].contentFile),original=await readFile(path),changed=Buffer.from(original);
+  changed[0]=changed[0]!^1;
+  try{
+   await writeFile(path,changed,{mode:0o600});
+   const r=await call('/reference-snapshot',{ids:[missing],nonce:nonce()});assert.equal(r.status,503);
+   return {status:r.status,originalDigest:bytesHash(original)};
+  }finally{await writeFile(path,original,{mode:0o600});}
+ });
  for(const witnessMode of ['UNAVAILABLE','NONCE_REPLAY','HEAD_FORK'])await challenge('witness-'+witnessMode.toLowerCase(),async()=>{
   await store(modePath,{mode:witnessMode});
   try{const r=await call('/reference-snapshot',{ids:[missing],nonce:nonce()});assert.equal(r.status,503);return {status:r.status};}

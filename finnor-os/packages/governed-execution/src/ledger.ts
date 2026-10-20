@@ -44,7 +44,12 @@ async function safeRead(path:string,secret=false):Promise<Buffer> {
   const f=await fd.stat(),limit=path.endsWith('commitments.jsonl')?256*1024*1024:8*1024*1024;
   if(f.size>limit)deny(503,'STORED_BYTE_LIMIT');if(!f.isFile()||(secret&&((f.mode&0o077)!==0||f.uid!==process.getuid?.())))deny(503,'UNSAFE_PROTECTED_FILE');
   const chunks:Buffer[]=[];let total=0;
-  for(;;){const chunk=Buffer.allocUnsafe(Math.min(65536,limit+1-total));const read=await fd.read(chunk,0,chunk.length,null);if(!read.bytesRead)break;total+=read.bytesRead;if(total>limit)deny(503,'STORED_BYTE_LIMIT');chunks.push(chunk.subarray(0,read.bytesRead));}
+  for(;;){
+   // The initial size only sizes buffers, never establishes EOF. Still read
+   // growth through the original byte bound, then require an actual EOF read.
+   const remaining=f.size-total,chunk=Buffer.allocUnsafe(Math.min(65536,remaining>=0?remaining+1:65536,limit+1-total));
+   const read=await fd.read(chunk,0,chunk.length,null);if(!read.bytesRead)break;total+=read.bytesRead;if(total>limit)deny(503,'STORED_BYTE_LIMIT');chunks.push(chunk.subarray(0,read.bytesRead));
+  }
   return Buffer.concat(chunks,total);
  }finally{await fd.close();}
 }

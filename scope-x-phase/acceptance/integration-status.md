@@ -43,6 +43,14 @@ earlier programme cuts; it does not supersede retained failed receipts.
   pause 6,384 ms, original bounds and checks unchanged, no live descendants.
   It does not execute the three isolated cells or qualify this later
   worker-repair source cut.
+- Clean published worker-repair cut ee1a186 native campaign 8 is **FAIL**:
+  139.158 seconds / 2,457,038,848 sampled peak aggregate RSS bytes. All 26
+  live refusals and both controls complete their expected dispositions and
+  before/after comparisons, but the original 7,000-ms suite aborts remaining
+  validation. Fresh business composition consequently does not pass.
+  Cleanup reports no failures. Earlier passes do not qualify ee1a186.
+  A bounded reader-allocation repair has passing component, real HTTP and
+  strict-type checks, not yet a native pass. See `bounded-read-allocation.md`.
 - The canonical paired-checkpoint read passes its 37-case separate-process
   adversarial boundary and 12 existing generated-control S8 recovery cases.
   Independent review finds no new candidate; source bytes remain unchanged.
@@ -75,7 +83,7 @@ configuration, credentials, signed private fixtures or database contents.
 1. Implement and prove immutable X1-to-X2 parent/shared-resource binding,
    currently explicitly null, and the complete guarded five-engine chain.
    Five integrated owners or panels are not proof of that chain.
-2. Extend the now-passing original X2 live gate with independently acquired
+2. Stabilize the original X2 live gate without wider bounds, then extend it with independently acquired
    live subjects for isolated
    use, expired activation and cumulative-use/cost checks, plus remaining
    composition, access, drift, injection, sibling and history cells.
