@@ -1,0 +1,41 @@
+{
+  "schema": "finnor.y1.verification-plan.v1",
+  "frozenBeforeSemanticCode": true,
+  "profile": "Y1_EXACT_SPARSE_RELATIONS_1",
+  "sourceBase": "07e5a6a182dae37c3b0f3ec056c1d604a684be2b",
+  "cases": [
+    {"id":"A-CONSTRUCT","requirement":"Construct bodies and composition laws from observations without supplied executable semantics; separate exact checker; parameter and event reuse"},
+    {"id":"A-NEGATIVE","requirement":"Independent contradictory/ambiguous/missing/unsupported/incomplete dispositions, with checked finite exhaustion for INFEASIBLE"},
+    {"id":"B-MUTATIONS","requirement":"Body, law, definedness, dimensional meaning, source, certificate, currentness and admission mutations reach and fail their intended boundaries"},
+    {"id":"C-AUTH","requirement":"Actual bearer HTTP, restricted app/worker roles, tenant/principal/root/Work isolation, revocation and original Work revision fencing"},
+    {"id":"D-DURABLE","requirement":"Native durable queue and createWorker registration, protocol and claim fences, replay, process death, compatible bounded recovery and original episode counters"},
+    {"id":"E-LOWERING","requirement":"Typed S8 admission to P1/S4 programme, canonical S5 reservation/consumption, distinct S6 economic obligation/effect, independent canonical S7 readback"},
+    {"id":"E-SUBSTITUTION","requirement":"Public right substitution changes no total capacity, creates no duplicate reservation, preserves liabilities and rejects stale state; safety only, never novelty"},
+    {"id":"E-CONTENTION","requirement":"Concurrent programmes share original S5 portfolio capacity and cannot overreserve or partially move rights"},
+    {"id":"F-P7","requirement":"Affected closure for meaning/source/right changes, unaffected component reuse, immutable obligations and UNKNOWN outcomes survive invalidation/cancellation"},
+    {"id":"F-FALLBACK","requirement":"Strongest current checked eligible incumbent is retained; no failed/cancelled/unadmitted/foreign fallback or novel-family claim from reuse"},
+    {"id":"G-WORK","requirement":"Mounted Work interactions, private identity/token/Work/generation races, current artifact download and honest status display"},
+    {"id":"G-INSTALLED","requirement":"Built API/worker/checker/frontend assets, additive migration and registry parity, existing-job compatibility, no source-loader-only success"},
+    {"id":"H-RECONSTRUCT","requirement":"Preimage-bound source bundle, clean independent checkout and lockfile dependency installation, rebuilt installed owner path, no borrowed dependency trees"},
+    {"id":"H-METERS","requirement":"Original episode compute/resource accounting, attempts including failures, retained storage, available wall/CPU/RSS meters and explicit unknown money/human/aggregate costs"}
+  ],
+  "protectedGate": {
+    "unseenFamilies": 20,
+    "minimumAcceptedFamilies": 18,
+    "minimumTracesPerFamily": 200,
+    "minimumIncrementalFamilies": 5,
+    "independentCustodyRequired": true,
+    "qualifiedEquippedBaselineRequired": true,
+    "publicFixtureIsNoveltyEvidence": false
+  },
+  "limits": {
+    "maxRunWallMs": 1800000,
+    "maxOwnedStorageBytes": 3758096384,
+    "maxOwnedProcesses": 8,
+    "minimumFreeBytes": 134217728,
+    "maxEvidenceBytes": 67108864,
+    "maxProtectedSubmissions": 0,
+    "maxRealEconomicEffects": 0
+  },
+  "failureRetention": "Keep inputs, failed assertions, process outcomes, attempt costs and unmet gate items; never shrink the profile or relabel development fixtures."
+}

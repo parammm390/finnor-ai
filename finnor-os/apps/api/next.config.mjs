@@ -88,6 +88,7 @@ const nextConfig = {
       "../../packages/**/*.m", "../../packages/**/*.py", "../../packages/**/*.sql",
       "../../packages/**/*.mjs", "../../packages/**/*.cjs",
       "../../packages/private-equity/src/capital-formation/method-files.json",
+      "../../packages/private-equity/src/economic-action-theory/profile.json",
       "../../packages/**/package.json", "../../packages/source-custody/index.cjs",
       "../../packages/**/fixtures/*.json", "../../scripts/p3/**/*.{ts,mts,cjs,mjs}",
       "../../scripts/r4/requirements.lock",

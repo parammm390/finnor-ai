@@ -104,6 +104,10 @@ RUN uv python install 3.11.15 3.12.13 \
 FROM scientific-runtime AS runtime
 
 WORKDIR /app/finnor-os
+# Y1 pins this absolute interpreter path and its executable bytes.
+RUN test -x /usr/local/bin/python3.12 \
+    && if [ ! -e /usr/bin/python3 ]; then ln -s /usr/local/bin/python3.12 /usr/bin/python3; fi \
+    && test -x /usr/bin/python3
 # The worker keeps its exact pinned supplier libraries and the ARM64 ordinary
 # callee, while production R1/R2/R4 environments remain unchanged.
 RUN apt-get update \

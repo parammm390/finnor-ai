@@ -68,6 +68,7 @@ import { INTERFACE_OPERATIONS } from "../packages/private-equity/src/interface-s
 import { APPLICATION_OPERATIONS, APPLICATION_OPERATION_SCHEMAS } from "../packages/private-equity/src/enterprise-applications/api";
 import {LEARNING_OPERATION_SCHEMAS,LEARNING_OPERATIONS} from "../packages/private-equity/src/policy-learning/api";
 import {IDENTIFICATION_OPERATION_SCHEMAS,IDENTIFICATION_OPERATIONS} from "../packages/private-equity/src/system-identification/api";
+import {EconomicOperationSchemas,EconomicOperations} from "../packages/private-equity/src/economic-action-theory/api";
 import { ApplicationExpressionSchema } from "../packages/private-equity/src/enterprise-applications/contracts";
 import { M1_OPERATIONS, M1OperationSchemas } from "../packages/private-equity/src/decision-slice/handler";
 import { CapitalProgramV2Operations } from "@finnor/shared-types";
@@ -310,6 +311,7 @@ const applicationComponents={schemas:Object.fromEntries([
  ...Object.entries(APPLICATION_OPERATION_SCHEMAS).map(([name,schema])=>[name,applicationSchema(schema)]),
  ...Object.entries(LEARNING_OPERATION_SCHEMAS).map(([name,schema])=>[name,applicationSchema(schema)]),
  ...Object.entries(IDENTIFICATION_OPERATION_SCHEMAS).map(([name,schema])=>[name,applicationSchema(schema)]),
+ ...Object.entries(EconomicOperationSchemas).map(([name,schema])=>[name,applicationSchema(schema)]),
  ["X3Expression",applicationSchema((ApplicationExpressionSchema._def as z.ZodLazyDef).getter())],
 ])};
 const secured = [{ bearerAuth: [] }];
@@ -710,6 +712,24 @@ paths["/api/company-brain/{operation}"].post.parameters[0]!.schema.enum.push(...
 (paths["/api/company-brain/{operation}"].post.parameters[0]!.schema.enum as string[]).push(...APPLICATION_SEMANTICS_OPERATIONS.filter(operation=>operation!=="application-cancel"),...INSTITUTION_OPERATIONS);
 (paths["/api/company-brain/{operation}"].post.parameters[0]!.schema.enum as string[]).push(...LEARNING_OPERATIONS);
 (paths["/api/company-brain/{operation}"].post.parameters[0]!.schema.enum as string[]).push(...IDENTIFICATION_OPERATIONS);
+(paths["/api/company-brain/{operation}"].post.parameters[0]!.schema.enum as string[]).push(...EconomicOperations);
+for(const operation of EconomicOperations){
+ Object.assign(paths,{["/api/company-brain/"+operation]:{post:{
+  security:secured,requestBody:{required:true,content:{"application/json":{schema:{$ref:"#/components/schemas/"+operation}}}},
+  responses:{
+   "200":{description:"Current principal/Work-scoped finite economic theory, typed development admission, canonical reservation, programme or retained history. Not protected qualification or financial efficacy."},
+   "202":{description:"Original bounded construction or guarded internal programme accepted by the durable queue. Acceptance is not completion or an observed effect."},
+   "400":{description:"Strict bounded data-only contract rejected."},"401":{description:"Current signed bearer required."},
+   "403":{description:"Current authority missing or ordinary disposable development profile unavailable."},
+   "404":{description:"Absent or unauthorized principal/root/Work-scoped owner record."},
+   "408":{description:"Authenticated request body deadline exceeded."},
+   "409":{description:"Original episode, exact state, resource capacity, Work revision or idempotency preimage changed."},
+   "413":{description:"Original request or retained-resource bound exceeded."},
+   "422":{description:"Finite semantic, independent-check, admission, source or owner-lowering prerequisite failed."},
+   "503":{description:"Pinned checker/runtime or native capacity unavailable."},
+  },
+ }}});
+}
 for(const operation of IDENTIFICATION_OPERATIONS){
  Object.assign(paths,{["/api/company-brain/"+operation]:{post:{security:secured,requestBody:{content:{"application/json":{schema:{$ref:"#/components/schemas/"+operation}}}},responses:{
   "200":{description:"Current scoped development rights, raw experiments, scientific model, decision use or retained history. Not protected admission or production."},

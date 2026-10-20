@@ -9,6 +9,7 @@ import { requireContext, errorResponse } from "../../../lib/auth";
 import { getOrchestrator } from "../../../lib/orchestrator";
 import { validateOperationalQueryRequest, type OperationalQueryRequest } from "@finnor/orchestration";
 import { recordWorkResponse } from "@finnor/db";
+import { EconomicFault } from "@finnor/private-equity/src/economic-action-theory/contracts";
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value && typeof value === "object" && !Array.isArray(value));
@@ -38,7 +39,9 @@ function parseRequestBody(input: unknown): {
 } | { success: false; error: string } {
   if (!isRecord(input)) return { success: false, error: "A JSON object is required" };
   const directFields = Object.fromEntries(Object.entries(input).filter(([key]) => !ENVELOPE_KEYS.has(key)));
-  const queryInput = directFields;
+  // This programme reader names its original Work as part of the semantic
+  // query, not as a request to append a new steering input.
+  const queryInput = input.intent === "economic_programme_v1" ? { ...directFields, workId: input.workId } : directFields;
   if (input.workId !== undefined && !uuid(input.workId)) return { success: false, error: "workId must be a UUID" };
   if (input.idempotencyKey !== undefined && !boundedString(input.idempotencyKey, 200)) return { success: false, error: "idempotencyKey must be a non-empty string of at most 200 characters" };
   if (input.executionKey !== undefined && !boundedString(input.executionKey, 200)) return { success: false, error: "executionKey must be a non-empty string of at most 200 characters" };
@@ -79,7 +82,7 @@ export async function POST(req: Request): Promise<Response> {
     // handleOperationalQuery's completed Work outcome is the canonical durable
     // receipt. This additive response projection gives /api/actions and retries
     // the exact same typed query payload without creating another lifecycle row.
-    if (!run.duplicate) await recordWorkResponse(ctx.tenantId, run.workId, response);
+    if (!run.duplicate && run.request.intent !== "economic_programme_v1") await recordWorkResponse(ctx.tenantId, run.workId, response);
     return Response.json(response, {
       status: run.duplicate ? 200 : 201,
       headers: {
@@ -88,6 +91,12 @@ export async function POST(req: Request): Promise<Response> {
       },
     });
   } catch (err) {
+    if (err instanceof EconomicFault) return Response.json({ code: err.code }, {
+      status: err.status, headers: { "Cache-Control": "no-store" },
+    });
+    if ((err as { code?: string })?.code === "PE_ENTITY_NOT_FOUND") return Response.json(
+      { code: "Y1_AUTHENTICATED_RESOURCE_UNAVAILABLE" }, { status: 404, headers: { "Cache-Control": "no-store" } },
+    );
     return errorResponse(err);
   }
 }

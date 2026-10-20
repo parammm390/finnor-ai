@@ -29,9 +29,10 @@ export const PRIVATE_EQUITY_OPERATIONAL_QUERY_INTENTS = [
   "closing_readiness",
 ] as const;
 
-/** P1 implements this read through the existing tenant query dispatcher. */
-export const PROGRAM_OPERATIONAL_QUERY_INTENTS = ["harness_program_v1"] as const;
+/** P1 and Y1 retain original Work cuts through the native tenant dispatcher. */
+export const PROGRAM_OPERATIONAL_QUERY_INTENTS = ["harness_program_v1","economic_programme_v1"] as const;
 export interface HarnessProgramQueryRequest { intent: "harness_program_v1"; programId: string; workId: string }
+export interface EconomicProgrammeQueryRequest { intent: "economic_programme_v1"; programmeId: string; workId: string }
 
 export const OPERATIONAL_QUERY_INTENTS = [
   ...CORE_OPERATIONAL_QUERY_INTENTS,
@@ -170,6 +171,7 @@ export type CoreOperationalQueryRequest =
 
 export type CanonicalOperationalQueryRequest =
   | HarnessProgramQueryRequest
+  | EconomicProgrammeQueryRequest
   | CoreOperationalQueryRequest
   | PeWorldStateRequest
   | DealContextRequest
@@ -751,9 +753,11 @@ export interface PeWorldStateResult extends OperationalQueryResultBase<"pe_world
 }
 
 export interface HarnessProgramQueryResult extends OperationalQueryResultBase<"harness_program_v1"> {}
+export interface EconomicProgrammeQueryResult extends OperationalQueryResultBase<"economic_programme_v1"> {}
 
 export type OperationalQueryResult =
   | HarnessProgramQueryResult
+  | EconomicProgrammeQueryResult
   | WorkListResult
   | AttentionQueueResult
   | AgentActivityResult
@@ -774,7 +778,8 @@ export type OperationalQueryResult =
 export type OperationalQueryResultEnvelope = OperationalQueryResult;
 
 export type OperationalQueryResultFor<R extends OperationalQueryRequest> =
-  R extends HarnessProgramQueryRequest ? HarnessProgramQueryResult
+  R extends EconomicProgrammeQueryRequest ? EconomicProgrammeQueryResult
+    : R extends HarnessProgramQueryRequest ? HarnessProgramQueryResult
     : R extends WorkListRequest ? WorkListResult
     : R extends AttentionQueueRequest ? AttentionQueueResult
       : R extends AgentActivityRequest ? AgentActivityResult

@@ -7820,6 +7820,842 @@
         ],
         "additionalProperties": false
       },
+      "economic-theory-submit": {
+        "type": "object",
+        "properties": {
+          "schema": {
+            "type": "string",
+            "const": "finnor.economic-theory-request.v1"
+          },
+          "root": {
+            "type": "object",
+            "properties": {
+              "entityType": {
+                "type": "string",
+                "enum": [
+                  "pe_strategy",
+                  "pe_opportunity",
+                  "pe_deal",
+                  "pe_fund",
+                  "pe_vehicle",
+                  "external_organization",
+                  "pe_portfolio_holding"
+                ]
+              },
+              "entityId": {
+                "type": "string",
+                "format": "uuid"
+              }
+            },
+            "required": [
+              "entityType",
+              "entityId"
+            ],
+            "additionalProperties": false
+          },
+          "workId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "problem": {
+            "type": "object",
+            "properties": {
+              "schema": {
+                "type": "string",
+                "const": "finnor.economic-construction-problem.v1"
+              },
+              "goal": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+                  },
+                  "title": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 512
+                  }
+                },
+                "required": [
+                  "id",
+                  "title"
+                ],
+                "additionalProperties": false
+              },
+              "quantities": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+                    },
+                    "unit": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 64
+                    },
+                    "currency": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "pattern": "^[A-Z]{3}$"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "entityId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "accountingBasis": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 128
+                    },
+                    "period": {
+                      "type": "object",
+                      "properties": {
+                        "startAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "endAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        }
+                      },
+                      "required": [
+                        "startAt",
+                        "endAt"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "meaningKey": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+                    },
+                    "values": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "pattern": "^-?(?:0|[1-9][0-9]{0,17})(?:\\.[0-9]{0,5}[1-9])?$"
+                      },
+                      "minItems": 1,
+                      "maxItems": 16
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "unit",
+                    "currency",
+                    "entityId",
+                    "accountingBasis",
+                    "period",
+                    "meaningKey",
+                    "values"
+                  ],
+                  "additionalProperties": false
+                },
+                "minItems": 1,
+                "maxItems": 6
+              },
+              "parameters": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+                    },
+                    "unit": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 64
+                    },
+                    "currency": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "pattern": "^[A-Z]{3}$"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "entityId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "accountingBasis": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 128
+                    },
+                    "period": {
+                      "type": "object",
+                      "properties": {
+                        "startAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "endAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        }
+                      },
+                      "required": [
+                        "startAt",
+                        "endAt"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "meaningKey": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+                    },
+                    "values": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "pattern": "^-?(?:0|[1-9][0-9]{0,17})(?:\\.[0-9]{0,5}[1-9])?$"
+                      },
+                      "minItems": 1,
+                      "maxItems": 16
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "unit",
+                    "currency",
+                    "entityId",
+                    "accountingBasis",
+                    "period",
+                    "meaningKey",
+                    "values"
+                  ],
+                  "additionalProperties": false
+                },
+                "maxItems": 2
+              },
+              "meanings": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "key": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+                    },
+                    "kind": {
+                      "type": "string",
+                      "enum": [
+                        "INTERPRETATION",
+                        "CONSENT",
+                        "OBSERVATION"
+                      ]
+                    },
+                    "subjectId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "sourceId": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "versionId": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "contentDigest": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "pattern": "^[a-f0-9]{64}$"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "key",
+                    "kind",
+                    "subjectId",
+                    "sourceId",
+                    "versionId",
+                    "contentDigest"
+                  ],
+                  "additionalProperties": false
+                },
+                "maxItems": 64
+              },
+              "invariants": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+                    },
+                    "terms": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "quantityId": {
+                            "type": "string",
+                            "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+                          },
+                          "coefficient": {
+                            "type": "number",
+                            "enum": [
+                              -1,
+                              1
+                            ]
+                          }
+                        },
+                        "required": [
+                          "quantityId",
+                          "coefficient"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "minItems": 1,
+                      "maxItems": 6
+                    },
+                    "relation": {
+                      "type": "string",
+                      "enum": [
+                        "EQ",
+                        "LE"
+                      ]
+                    },
+                    "constant": {
+                      "type": "string",
+                      "pattern": "^-?(?:0|[1-9][0-9]{0,17})(?:\\.[0-9]{0,5}[1-9])?$"
+                    },
+                    "meaningKey": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "terms",
+                    "relation",
+                    "constant",
+                    "meaningKey"
+                  ],
+                  "additionalProperties": false
+                },
+                "maxItems": 32
+              },
+              "operators": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+                    },
+                    "title": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 256
+                    },
+                    "examples": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "before": {
+                            "type": "object",
+                            "additionalProperties": {
+                              "type": "string",
+                              "pattern": "^-?(?:0|[1-9][0-9]{0,17})(?:\\.[0-9]{0,5}[1-9])?$"
+                            }
+                          },
+                          "parameters": {
+                            "type": "object",
+                            "additionalProperties": {
+                              "type": "string",
+                              "pattern": "^-?(?:0|[1-9][0-9]{0,17})(?:\\.[0-9]{0,5}[1-9])?$"
+                            }
+                          },
+                          "after": {
+                            "anyOf": [
+                              {
+                                "type": "object",
+                                "additionalProperties": {
+                                  "type": "string",
+                                  "pattern": "^-?(?:0|[1-9][0-9]{0,17})(?:\\.[0-9]{0,5}[1-9])?$"
+                                }
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          }
+                        },
+                        "required": [
+                          "before",
+                          "parameters",
+                          "after"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "minItems": 1,
+                      "maxItems": 256
+                    },
+                    "requirements": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "key": {
+                            "type": "string",
+                            "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+                          },
+                          "kind": {
+                            "type": "string",
+                            "enum": [
+                              "AUTHORITY",
+                              "CONSENT",
+                              "INTERPRETATION",
+                              "OBSERVATION"
+                            ]
+                          },
+                          "subjectId": {
+                            "type": "string",
+                            "format": "uuid"
+                          }
+                        },
+                        "required": [
+                          "key",
+                          "kind",
+                          "subjectId"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "maxItems": 32
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "title",
+                    "examples",
+                    "requirements"
+                  ],
+                  "additionalProperties": false
+                },
+                "minItems": 1,
+                "maxItems": 6
+              }
+            },
+            "required": [
+              "schema",
+              "goal",
+              "quantities",
+              "parameters",
+              "meanings",
+              "invariants",
+              "operators"
+            ],
+            "additionalProperties": false
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "parentTheoryId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "schema",
+          "root",
+          "workId",
+          "problem",
+          "idempotencyKey"
+        ],
+        "additionalProperties": false
+      },
+      "economic-theory-read": {
+        "type": "object",
+        "properties": {
+          "theoryId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "theoryId"
+        ],
+        "additionalProperties": false
+      },
+      "economic-theory-list": {
+        "type": "object",
+        "properties": {
+          "root": {
+            "type": "object",
+            "properties": {
+              "entityType": {
+                "type": "string",
+                "enum": [
+                  "pe_strategy",
+                  "pe_opportunity",
+                  "pe_deal",
+                  "pe_fund",
+                  "pe_vehicle",
+                  "external_organization",
+                  "pe_portfolio_holding"
+                ]
+              },
+              "entityId": {
+                "type": "string",
+                "format": "uuid"
+              }
+            },
+            "required": [
+              "entityType",
+              "entityId"
+            ],
+            "additionalProperties": false
+          },
+          "workId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "root",
+          "workId"
+        ],
+        "additionalProperties": false
+      },
+      "economic-theory-admit": {
+        "type": "object",
+        "properties": {
+          "theoryId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "theoryId"
+        ],
+        "additionalProperties": false
+      },
+      "economic-theory-resume": {
+        "type": "object",
+        "properties": {
+          "theoryId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "theoryId"
+        ],
+        "additionalProperties": false
+      },
+      "economic-theory-cancel": {
+        "type": "object",
+        "properties": {
+          "theoryId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "theoryId"
+        ],
+        "additionalProperties": false
+      },
+      "economic-theory-artifact": {
+        "type": "object",
+        "properties": {
+          "theoryId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "theoryId"
+        ],
+        "additionalProperties": false
+      },
+      "economic-theory-compare": {
+        "type": "object",
+        "properties": {
+          "theoryId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "incumbentTheoryId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "theoryId"
+        ],
+        "additionalProperties": false
+      },
+      "economic-programme-create": {
+        "type": "object",
+        "properties": {
+          "theoryId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "reservationRef": {
+            "type": "object",
+            "properties": {
+              "owner": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 64
+              },
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "version": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 64
+              },
+              "contentDigest": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            },
+            "required": [
+              "owner",
+              "id",
+              "version",
+              "contentDigest"
+            ],
+            "additionalProperties": false
+          },
+          "expectedRevision": {
+            "type": "integer",
+            "exclusiveMinimum": 0
+          },
+          "goalState": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string",
+              "pattern": "^-?(?:0|[1-9][0-9]{0,17})(?:\\.[0-9]{0,5}[1-9])?$"
+            }
+          },
+          "parameters": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string",
+              "pattern": "^-?(?:0|[1-9][0-9]{0,17})(?:\\.[0-9]{0,5}[1-9])?$"
+            }
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          }
+        },
+        "required": [
+          "theoryId",
+          "reservationRef",
+          "expectedRevision",
+          "goalState",
+          "parameters",
+          "idempotencyKey"
+        ],
+        "additionalProperties": false
+      },
+      "economic-programme-run": {
+        "type": "object",
+        "properties": {
+          "programmeId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "programmeId"
+        ],
+        "additionalProperties": false
+      },
+      "economic-programme-read": {
+        "type": "object",
+        "properties": {
+          "programmeId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "programmeId"
+        ],
+        "additionalProperties": false
+      },
+      "economic-programme-reconcile": {
+        "type": "object",
+        "properties": {
+          "programmeId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "programmeId"
+        ],
+        "additionalProperties": false
+      },
+      "economic-reservation-create": {
+        "type": "object",
+        "properties": {
+          "theoryId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "initialState": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string",
+              "pattern": "^-?(?:0|[1-9][0-9]{0,17})(?:\\.[0-9]{0,5}[1-9])?$"
+            }
+          },
+          "bindings": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "quantityId": {
+                  "type": "string"
+                },
+                "resourceRef": {
+                  "type": "object",
+                  "properties": {
+                    "owner": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 64
+                    },
+                    "id": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 256
+                    },
+                    "version": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 64
+                    },
+                    "contentDigest": {
+                      "type": "string",
+                      "pattern": "^[a-f0-9]{64}$"
+                    }
+                  },
+                  "required": [
+                    "owner",
+                    "id",
+                    "version",
+                    "contentDigest"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "required": [
+                "quantityId",
+                "resourceRef"
+              ],
+              "additionalProperties": false
+            },
+            "minItems": 1,
+            "maxItems": 6
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          }
+        },
+        "required": [
+          "theoryId",
+          "initialState",
+          "bindings",
+          "idempotencyKey"
+        ],
+        "additionalProperties": false
+      },
+      "economic-reservation-read": {
+        "type": "object",
+        "properties": {
+          "reservationRef": {
+            "type": "object",
+            "properties": {
+              "owner": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 64
+              },
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "version": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 64
+              },
+              "contentDigest": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            },
+            "required": [
+              "owner",
+              "id",
+              "version",
+              "contentDigest"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "reservationRef"
+        ],
+        "additionalProperties": false
+      },
       "X3Expression": {
         "anyOf": [
           {
@@ -15551,7 +16387,21 @@
                 "identification-invalidate",
                 "identification-retry",
                 "identification-s8-propose",
-                "identification-admission"
+                "identification-admission",
+                "economic-theory-submit",
+                "economic-theory-read",
+                "economic-theory-list",
+                "economic-theory-admit",
+                "economic-theory-resume",
+                "economic-theory-cancel",
+                "economic-theory-artifact",
+                "economic-theory-compare",
+                "economic-programme-create",
+                "economic-programme-run",
+                "economic-programme-read",
+                "economic-programme-reconcile",
+                "economic-reservation-create",
+                "economic-reservation-read"
               ]
             }
           }
@@ -27804,6 +28654,762 @@
         "responses": {
           "201": {
             "description": "New Core Document and first immutable version instantiated with lineage"
+          }
+        }
+      }
+    },
+    "/api/company-brain/economic-theory-submit": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/economic-theory-submit"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current principal/Work-scoped finite economic theory, typed development admission, canonical reservation, programme or retained history. Not protected qualification or financial efficacy."
+          },
+          "202": {
+            "description": "Original bounded construction or guarded internal programme accepted by the durable queue. Acceptance is not completion or an observed effect."
+          },
+          "400": {
+            "description": "Strict bounded data-only contract rejected."
+          },
+          "401": {
+            "description": "Current signed bearer required."
+          },
+          "403": {
+            "description": "Current authority missing or ordinary disposable development profile unavailable."
+          },
+          "404": {
+            "description": "Absent or unauthorized principal/root/Work-scoped owner record."
+          },
+          "408": {
+            "description": "Authenticated request body deadline exceeded."
+          },
+          "409": {
+            "description": "Original episode, exact state, resource capacity, Work revision or idempotency preimage changed."
+          },
+          "413": {
+            "description": "Original request or retained-resource bound exceeded."
+          },
+          "422": {
+            "description": "Finite semantic, independent-check, admission, source or owner-lowering prerequisite failed."
+          },
+          "503": {
+            "description": "Pinned checker/runtime or native capacity unavailable."
+          }
+        }
+      }
+    },
+    "/api/company-brain/economic-theory-read": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/economic-theory-read"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current principal/Work-scoped finite economic theory, typed development admission, canonical reservation, programme or retained history. Not protected qualification or financial efficacy."
+          },
+          "202": {
+            "description": "Original bounded construction or guarded internal programme accepted by the durable queue. Acceptance is not completion or an observed effect."
+          },
+          "400": {
+            "description": "Strict bounded data-only contract rejected."
+          },
+          "401": {
+            "description": "Current signed bearer required."
+          },
+          "403": {
+            "description": "Current authority missing or ordinary disposable development profile unavailable."
+          },
+          "404": {
+            "description": "Absent or unauthorized principal/root/Work-scoped owner record."
+          },
+          "408": {
+            "description": "Authenticated request body deadline exceeded."
+          },
+          "409": {
+            "description": "Original episode, exact state, resource capacity, Work revision or idempotency preimage changed."
+          },
+          "413": {
+            "description": "Original request or retained-resource bound exceeded."
+          },
+          "422": {
+            "description": "Finite semantic, independent-check, admission, source or owner-lowering prerequisite failed."
+          },
+          "503": {
+            "description": "Pinned checker/runtime or native capacity unavailable."
+          }
+        }
+      }
+    },
+    "/api/company-brain/economic-theory-list": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/economic-theory-list"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current principal/Work-scoped finite economic theory, typed development admission, canonical reservation, programme or retained history. Not protected qualification or financial efficacy."
+          },
+          "202": {
+            "description": "Original bounded construction or guarded internal programme accepted by the durable queue. Acceptance is not completion or an observed effect."
+          },
+          "400": {
+            "description": "Strict bounded data-only contract rejected."
+          },
+          "401": {
+            "description": "Current signed bearer required."
+          },
+          "403": {
+            "description": "Current authority missing or ordinary disposable development profile unavailable."
+          },
+          "404": {
+            "description": "Absent or unauthorized principal/root/Work-scoped owner record."
+          },
+          "408": {
+            "description": "Authenticated request body deadline exceeded."
+          },
+          "409": {
+            "description": "Original episode, exact state, resource capacity, Work revision or idempotency preimage changed."
+          },
+          "413": {
+            "description": "Original request or retained-resource bound exceeded."
+          },
+          "422": {
+            "description": "Finite semantic, independent-check, admission, source or owner-lowering prerequisite failed."
+          },
+          "503": {
+            "description": "Pinned checker/runtime or native capacity unavailable."
+          }
+        }
+      }
+    },
+    "/api/company-brain/economic-theory-admit": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/economic-theory-admit"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current principal/Work-scoped finite economic theory, typed development admission, canonical reservation, programme or retained history. Not protected qualification or financial efficacy."
+          },
+          "202": {
+            "description": "Original bounded construction or guarded internal programme accepted by the durable queue. Acceptance is not completion or an observed effect."
+          },
+          "400": {
+            "description": "Strict bounded data-only contract rejected."
+          },
+          "401": {
+            "description": "Current signed bearer required."
+          },
+          "403": {
+            "description": "Current authority missing or ordinary disposable development profile unavailable."
+          },
+          "404": {
+            "description": "Absent or unauthorized principal/root/Work-scoped owner record."
+          },
+          "408": {
+            "description": "Authenticated request body deadline exceeded."
+          },
+          "409": {
+            "description": "Original episode, exact state, resource capacity, Work revision or idempotency preimage changed."
+          },
+          "413": {
+            "description": "Original request or retained-resource bound exceeded."
+          },
+          "422": {
+            "description": "Finite semantic, independent-check, admission, source or owner-lowering prerequisite failed."
+          },
+          "503": {
+            "description": "Pinned checker/runtime or native capacity unavailable."
+          }
+        }
+      }
+    },
+    "/api/company-brain/economic-theory-resume": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/economic-theory-resume"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current principal/Work-scoped finite economic theory, typed development admission, canonical reservation, programme or retained history. Not protected qualification or financial efficacy."
+          },
+          "202": {
+            "description": "Original bounded construction or guarded internal programme accepted by the durable queue. Acceptance is not completion or an observed effect."
+          },
+          "400": {
+            "description": "Strict bounded data-only contract rejected."
+          },
+          "401": {
+            "description": "Current signed bearer required."
+          },
+          "403": {
+            "description": "Current authority missing or ordinary disposable development profile unavailable."
+          },
+          "404": {
+            "description": "Absent or unauthorized principal/root/Work-scoped owner record."
+          },
+          "408": {
+            "description": "Authenticated request body deadline exceeded."
+          },
+          "409": {
+            "description": "Original episode, exact state, resource capacity, Work revision or idempotency preimage changed."
+          },
+          "413": {
+            "description": "Original request or retained-resource bound exceeded."
+          },
+          "422": {
+            "description": "Finite semantic, independent-check, admission, source or owner-lowering prerequisite failed."
+          },
+          "503": {
+            "description": "Pinned checker/runtime or native capacity unavailable."
+          }
+        }
+      }
+    },
+    "/api/company-brain/economic-theory-cancel": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/economic-theory-cancel"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current principal/Work-scoped finite economic theory, typed development admission, canonical reservation, programme or retained history. Not protected qualification or financial efficacy."
+          },
+          "202": {
+            "description": "Original bounded construction or guarded internal programme accepted by the durable queue. Acceptance is not completion or an observed effect."
+          },
+          "400": {
+            "description": "Strict bounded data-only contract rejected."
+          },
+          "401": {
+            "description": "Current signed bearer required."
+          },
+          "403": {
+            "description": "Current authority missing or ordinary disposable development profile unavailable."
+          },
+          "404": {
+            "description": "Absent or unauthorized principal/root/Work-scoped owner record."
+          },
+          "408": {
+            "description": "Authenticated request body deadline exceeded."
+          },
+          "409": {
+            "description": "Original episode, exact state, resource capacity, Work revision or idempotency preimage changed."
+          },
+          "413": {
+            "description": "Original request or retained-resource bound exceeded."
+          },
+          "422": {
+            "description": "Finite semantic, independent-check, admission, source or owner-lowering prerequisite failed."
+          },
+          "503": {
+            "description": "Pinned checker/runtime or native capacity unavailable."
+          }
+        }
+      }
+    },
+    "/api/company-brain/economic-theory-artifact": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/economic-theory-artifact"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current principal/Work-scoped finite economic theory, typed development admission, canonical reservation, programme or retained history. Not protected qualification or financial efficacy."
+          },
+          "202": {
+            "description": "Original bounded construction or guarded internal programme accepted by the durable queue. Acceptance is not completion or an observed effect."
+          },
+          "400": {
+            "description": "Strict bounded data-only contract rejected."
+          },
+          "401": {
+            "description": "Current signed bearer required."
+          },
+          "403": {
+            "description": "Current authority missing or ordinary disposable development profile unavailable."
+          },
+          "404": {
+            "description": "Absent or unauthorized principal/root/Work-scoped owner record."
+          },
+          "408": {
+            "description": "Authenticated request body deadline exceeded."
+          },
+          "409": {
+            "description": "Original episode, exact state, resource capacity, Work revision or idempotency preimage changed."
+          },
+          "413": {
+            "description": "Original request or retained-resource bound exceeded."
+          },
+          "422": {
+            "description": "Finite semantic, independent-check, admission, source or owner-lowering prerequisite failed."
+          },
+          "503": {
+            "description": "Pinned checker/runtime or native capacity unavailable."
+          }
+        }
+      }
+    },
+    "/api/company-brain/economic-theory-compare": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/economic-theory-compare"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current principal/Work-scoped finite economic theory, typed development admission, canonical reservation, programme or retained history. Not protected qualification or financial efficacy."
+          },
+          "202": {
+            "description": "Original bounded construction or guarded internal programme accepted by the durable queue. Acceptance is not completion or an observed effect."
+          },
+          "400": {
+            "description": "Strict bounded data-only contract rejected."
+          },
+          "401": {
+            "description": "Current signed bearer required."
+          },
+          "403": {
+            "description": "Current authority missing or ordinary disposable development profile unavailable."
+          },
+          "404": {
+            "description": "Absent or unauthorized principal/root/Work-scoped owner record."
+          },
+          "408": {
+            "description": "Authenticated request body deadline exceeded."
+          },
+          "409": {
+            "description": "Original episode, exact state, resource capacity, Work revision or idempotency preimage changed."
+          },
+          "413": {
+            "description": "Original request or retained-resource bound exceeded."
+          },
+          "422": {
+            "description": "Finite semantic, independent-check, admission, source or owner-lowering prerequisite failed."
+          },
+          "503": {
+            "description": "Pinned checker/runtime or native capacity unavailable."
+          }
+        }
+      }
+    },
+    "/api/company-brain/economic-programme-create": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/economic-programme-create"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current principal/Work-scoped finite economic theory, typed development admission, canonical reservation, programme or retained history. Not protected qualification or financial efficacy."
+          },
+          "202": {
+            "description": "Original bounded construction or guarded internal programme accepted by the durable queue. Acceptance is not completion or an observed effect."
+          },
+          "400": {
+            "description": "Strict bounded data-only contract rejected."
+          },
+          "401": {
+            "description": "Current signed bearer required."
+          },
+          "403": {
+            "description": "Current authority missing or ordinary disposable development profile unavailable."
+          },
+          "404": {
+            "description": "Absent or unauthorized principal/root/Work-scoped owner record."
+          },
+          "408": {
+            "description": "Authenticated request body deadline exceeded."
+          },
+          "409": {
+            "description": "Original episode, exact state, resource capacity, Work revision or idempotency preimage changed."
+          },
+          "413": {
+            "description": "Original request or retained-resource bound exceeded."
+          },
+          "422": {
+            "description": "Finite semantic, independent-check, admission, source or owner-lowering prerequisite failed."
+          },
+          "503": {
+            "description": "Pinned checker/runtime or native capacity unavailable."
+          }
+        }
+      }
+    },
+    "/api/company-brain/economic-programme-run": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/economic-programme-run"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current principal/Work-scoped finite economic theory, typed development admission, canonical reservation, programme or retained history. Not protected qualification or financial efficacy."
+          },
+          "202": {
+            "description": "Original bounded construction or guarded internal programme accepted by the durable queue. Acceptance is not completion or an observed effect."
+          },
+          "400": {
+            "description": "Strict bounded data-only contract rejected."
+          },
+          "401": {
+            "description": "Current signed bearer required."
+          },
+          "403": {
+            "description": "Current authority missing or ordinary disposable development profile unavailable."
+          },
+          "404": {
+            "description": "Absent or unauthorized principal/root/Work-scoped owner record."
+          },
+          "408": {
+            "description": "Authenticated request body deadline exceeded."
+          },
+          "409": {
+            "description": "Original episode, exact state, resource capacity, Work revision or idempotency preimage changed."
+          },
+          "413": {
+            "description": "Original request or retained-resource bound exceeded."
+          },
+          "422": {
+            "description": "Finite semantic, independent-check, admission, source or owner-lowering prerequisite failed."
+          },
+          "503": {
+            "description": "Pinned checker/runtime or native capacity unavailable."
+          }
+        }
+      }
+    },
+    "/api/company-brain/economic-programme-read": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/economic-programme-read"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current principal/Work-scoped finite economic theory, typed development admission, canonical reservation, programme or retained history. Not protected qualification or financial efficacy."
+          },
+          "202": {
+            "description": "Original bounded construction or guarded internal programme accepted by the durable queue. Acceptance is not completion or an observed effect."
+          },
+          "400": {
+            "description": "Strict bounded data-only contract rejected."
+          },
+          "401": {
+            "description": "Current signed bearer required."
+          },
+          "403": {
+            "description": "Current authority missing or ordinary disposable development profile unavailable."
+          },
+          "404": {
+            "description": "Absent or unauthorized principal/root/Work-scoped owner record."
+          },
+          "408": {
+            "description": "Authenticated request body deadline exceeded."
+          },
+          "409": {
+            "description": "Original episode, exact state, resource capacity, Work revision or idempotency preimage changed."
+          },
+          "413": {
+            "description": "Original request or retained-resource bound exceeded."
+          },
+          "422": {
+            "description": "Finite semantic, independent-check, admission, source or owner-lowering prerequisite failed."
+          },
+          "503": {
+            "description": "Pinned checker/runtime or native capacity unavailable."
+          }
+        }
+      }
+    },
+    "/api/company-brain/economic-programme-reconcile": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/economic-programme-reconcile"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current principal/Work-scoped finite economic theory, typed development admission, canonical reservation, programme or retained history. Not protected qualification or financial efficacy."
+          },
+          "202": {
+            "description": "Original bounded construction or guarded internal programme accepted by the durable queue. Acceptance is not completion or an observed effect."
+          },
+          "400": {
+            "description": "Strict bounded data-only contract rejected."
+          },
+          "401": {
+            "description": "Current signed bearer required."
+          },
+          "403": {
+            "description": "Current authority missing or ordinary disposable development profile unavailable."
+          },
+          "404": {
+            "description": "Absent or unauthorized principal/root/Work-scoped owner record."
+          },
+          "408": {
+            "description": "Authenticated request body deadline exceeded."
+          },
+          "409": {
+            "description": "Original episode, exact state, resource capacity, Work revision or idempotency preimage changed."
+          },
+          "413": {
+            "description": "Original request or retained-resource bound exceeded."
+          },
+          "422": {
+            "description": "Finite semantic, independent-check, admission, source or owner-lowering prerequisite failed."
+          },
+          "503": {
+            "description": "Pinned checker/runtime or native capacity unavailable."
+          }
+        }
+      }
+    },
+    "/api/company-brain/economic-reservation-create": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/economic-reservation-create"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current principal/Work-scoped finite economic theory, typed development admission, canonical reservation, programme or retained history. Not protected qualification or financial efficacy."
+          },
+          "202": {
+            "description": "Original bounded construction or guarded internal programme accepted by the durable queue. Acceptance is not completion or an observed effect."
+          },
+          "400": {
+            "description": "Strict bounded data-only contract rejected."
+          },
+          "401": {
+            "description": "Current signed bearer required."
+          },
+          "403": {
+            "description": "Current authority missing or ordinary disposable development profile unavailable."
+          },
+          "404": {
+            "description": "Absent or unauthorized principal/root/Work-scoped owner record."
+          },
+          "408": {
+            "description": "Authenticated request body deadline exceeded."
+          },
+          "409": {
+            "description": "Original episode, exact state, resource capacity, Work revision or idempotency preimage changed."
+          },
+          "413": {
+            "description": "Original request or retained-resource bound exceeded."
+          },
+          "422": {
+            "description": "Finite semantic, independent-check, admission, source or owner-lowering prerequisite failed."
+          },
+          "503": {
+            "description": "Pinned checker/runtime or native capacity unavailable."
+          }
+        }
+      }
+    },
+    "/api/company-brain/economic-reservation-read": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/economic-reservation-read"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current principal/Work-scoped finite economic theory, typed development admission, canonical reservation, programme or retained history. Not protected qualification or financial efficacy."
+          },
+          "202": {
+            "description": "Original bounded construction or guarded internal programme accepted by the durable queue. Acceptance is not completion or an observed effect."
+          },
+          "400": {
+            "description": "Strict bounded data-only contract rejected."
+          },
+          "401": {
+            "description": "Current signed bearer required."
+          },
+          "403": {
+            "description": "Current authority missing or ordinary disposable development profile unavailable."
+          },
+          "404": {
+            "description": "Absent or unauthorized principal/root/Work-scoped owner record."
+          },
+          "408": {
+            "description": "Authenticated request body deadline exceeded."
+          },
+          "409": {
+            "description": "Original episode, exact state, resource capacity, Work revision or idempotency preimage changed."
+          },
+          "413": {
+            "description": "Original request or retained-resource bound exceeded."
+          },
+          "422": {
+            "description": "Finite semantic, independent-check, admission, source or owner-lowering prerequisite failed."
+          },
+          "503": {
+            "description": "Pinned checker/runtime or native capacity unavailable."
           }
         }
       }

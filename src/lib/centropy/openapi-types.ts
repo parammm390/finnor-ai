@@ -1,4 +1,4 @@
-// Generated from finnor-os/openapi.json, SHA-256 d65242ccea521994cdcecd4bae159fc99d0f102591b0c16aa3f5635a2ffc086d.
+// Generated from finnor-os/openapi.json, SHA-256 7ab96b627b4d197e981d71196a1802ba3c7948860c5e6cc988a0195076c0499d.
 export interface paths {
     "/api/live-controls": {
         parameters: {
@@ -2759,7 +2759,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    operation: "opportunity-promote" | "belief-view" | "belief-pin" | "roots" | "projection" | "search" | "object" | "traverse" | "provenance" | "history" | "evidence-lineage" | "decision-lineage" | "available-actions" | "context" | "evidence-handles" | "evidence-submit" | "evidence-read" | "evidence-witness" | "evidence-replay" | "evidence-cancel" | "evidence-consume" | "program-submit" | "program-read" | "program-witness" | "program-module" | "program-projection" | "program-cancel" | "program-resume" | "program-artifact" | "program-ports" | "program-interface-module" | "compute-search-submit" | "compute-search-read" | "compute-search-projection" | "compute-search-cancel" | "compute-search-resume" | "compute-search-reconcile" | "interface-acquire" | "interface-read" | "interface-projection" | "interface-catalogue" | "interface-module" | "interface-cancel" | "interface-resume" | "interface-reconcile" | "interface-admission" | "interface-invoke" | "interface-ports" | "decision-slice-compile" | "decision-slice-read" | "decision-slice-context" | "decision-slice-patch" | "decision-slice-witness" | "decision-slice-consume" | "decision-slice-cancel" | "decision-slice-recompile" | "decision-slice-changes" | "decision-slice-view" | "continuation-submit" | "continuation-read" | "continuation-projection" | "procedure-experience" | "procedure-induce" | "procedure-induction-read" | "procedure-induction-cancel" | "procedure-read" | "procedure-component" | "procedure-counterexample" | "procedure-projection" | "procedure-admission-request" | "procedure-interface" | "procedure-costs" | "deliberation-submit" | "deliberation-read" | "deliberation-projection" | "deliberation-cancel" | "deliberation-resume" | "deliberation-reconcile" | "deliberation-calibrate" | "deliberation-evidence-read" | "deliberation-module-read" | "capital-formation-submit" | "capital-formation-read" | "capital-formation-list" | "capital-formation-profiles" | "capital-formation-advance" | "capital-formation-event" | "capital-formation-proposal" | "capital-formation-cancel" | "capital-formation-draw-handoff" | "application-submit" | "application-maintain" | "application-command" | "application-read" | "application-record" | "application-list" | "application-history" | "application-asset" | "application-cancel" | "application-rollback" | "application-impact" | "application-upload" | "application-prepare-effect" | "application-s8-propose" | "application-admission" | "application-acquire" | "application-execute" | "application-projection" | "application-resume" | "institution-submit" | "institution-revise" | "institution-read" | "institution-status" | "institution-cancel" | "institution-resume" | "institution-witness" | "institution-sources" | "institution-inputs" | "institution-mandate" | "institution-register-source" | "institution-consent" | "learning-consent" | "learning-revoke-consent" | "learning-experience" | "learning-submit" | "learning-read" | "learning-list" | "learning-execute" | "learning-evaluate" | "learning-cancel" | "learning-invalidate" | "learning-retry" | "learning-rollback" | "learning-s8-propose" | "learning-admission" | "learning-register-assignment" | "learning-retrain" | "identification-targets" | "identification-consent" | "identification-revoke-consent" | "identification-submit" | "identification-read" | "identification-list" | "identification-history" | "identification-experiment" | "identification-replicate" | "identification-use" | "identification-cancel" | "identification-invalidate" | "identification-retry" | "identification-s8-propose" | "identification-admission";
+                    operation: "opportunity-promote" | "belief-view" | "belief-pin" | "roots" | "projection" | "search" | "object" | "traverse" | "provenance" | "history" | "evidence-lineage" | "decision-lineage" | "available-actions" | "context" | "evidence-handles" | "evidence-submit" | "evidence-read" | "evidence-witness" | "evidence-replay" | "evidence-cancel" | "evidence-consume" | "program-submit" | "program-read" | "program-witness" | "program-module" | "program-projection" | "program-cancel" | "program-resume" | "program-artifact" | "program-ports" | "program-interface-module" | "compute-search-submit" | "compute-search-read" | "compute-search-projection" | "compute-search-cancel" | "compute-search-resume" | "compute-search-reconcile" | "interface-acquire" | "interface-read" | "interface-projection" | "interface-catalogue" | "interface-module" | "interface-cancel" | "interface-resume" | "interface-reconcile" | "interface-admission" | "interface-invoke" | "interface-ports" | "decision-slice-compile" | "decision-slice-read" | "decision-slice-context" | "decision-slice-patch" | "decision-slice-witness" | "decision-slice-consume" | "decision-slice-cancel" | "decision-slice-recompile" | "decision-slice-changes" | "decision-slice-view" | "continuation-submit" | "continuation-read" | "continuation-projection" | "procedure-experience" | "procedure-induce" | "procedure-induction-read" | "procedure-induction-cancel" | "procedure-read" | "procedure-component" | "procedure-counterexample" | "procedure-projection" | "procedure-admission-request" | "procedure-interface" | "procedure-costs" | "deliberation-submit" | "deliberation-read" | "deliberation-projection" | "deliberation-cancel" | "deliberation-resume" | "deliberation-reconcile" | "deliberation-calibrate" | "deliberation-evidence-read" | "deliberation-module-read" | "capital-formation-submit" | "capital-formation-read" | "capital-formation-list" | "capital-formation-profiles" | "capital-formation-advance" | "capital-formation-event" | "capital-formation-proposal" | "capital-formation-cancel" | "capital-formation-draw-handoff" | "application-submit" | "application-maintain" | "application-command" | "application-read" | "application-record" | "application-list" | "application-history" | "application-asset" | "application-cancel" | "application-rollback" | "application-impact" | "application-upload" | "application-prepare-effect" | "application-s8-propose" | "application-admission" | "application-acquire" | "application-execute" | "application-projection" | "application-resume" | "institution-submit" | "institution-revise" | "institution-read" | "institution-status" | "institution-cancel" | "institution-resume" | "institution-witness" | "institution-sources" | "institution-inputs" | "institution-mandate" | "institution-register-source" | "institution-consent" | "learning-consent" | "learning-revoke-consent" | "learning-experience" | "learning-submit" | "learning-read" | "learning-list" | "learning-execute" | "learning-evaluate" | "learning-cancel" | "learning-invalidate" | "learning-retry" | "learning-rollback" | "learning-s8-propose" | "learning-admission" | "learning-register-assignment" | "learning-retrain" | "identification-targets" | "identification-consent" | "identification-revoke-consent" | "identification-submit" | "identification-read" | "identification-list" | "identification-history" | "identification-experiment" | "identification-replicate" | "identification-use" | "identification-cancel" | "identification-invalidate" | "identification-retry" | "identification-s8-propose" | "identification-admission" | "economic-theory-submit" | "economic-theory-read" | "economic-theory-list" | "economic-theory-admit" | "economic-theory-resume" | "economic-theory-cancel" | "economic-theory-artifact" | "economic-theory-compare" | "economic-programme-create" | "economic-programme-run" | "economic-programme-read" | "economic-programme-reconcile" | "economic-reservation-create" | "economic-reservation-read";
                 };
                 cookie?: never;
             };
@@ -10025,6 +10025,1504 @@ export interface paths {
             responses: {
                 /** @description New Core Document and first immutable version instantiated with lineage */
                 201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/economic-theory-submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["economic-theory-submit"];
+                };
+            };
+            responses: {
+                /** @description Current principal/Work-scoped finite economic theory, typed development admission, canonical reservation, programme or retained history. Not protected qualification or financial efficacy. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original bounded construction or guarded internal programme accepted by the durable queue. Acceptance is not completion or an observed effect. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded data-only contract rejected. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authority missing or ordinary disposable development profile unavailable. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Absent or unauthorized principal/root/Work-scoped owner record. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Authenticated request body deadline exceeded. */
+                408: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original episode, exact state, resource capacity, Work revision or idempotency preimage changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original request or retained-resource bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Finite semantic, independent-check, admission, source or owner-lowering prerequisite failed. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Pinned checker/runtime or native capacity unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/economic-theory-read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["economic-theory-read"];
+                };
+            };
+            responses: {
+                /** @description Current principal/Work-scoped finite economic theory, typed development admission, canonical reservation, programme or retained history. Not protected qualification or financial efficacy. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original bounded construction or guarded internal programme accepted by the durable queue. Acceptance is not completion or an observed effect. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded data-only contract rejected. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authority missing or ordinary disposable development profile unavailable. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Absent or unauthorized principal/root/Work-scoped owner record. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Authenticated request body deadline exceeded. */
+                408: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original episode, exact state, resource capacity, Work revision or idempotency preimage changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original request or retained-resource bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Finite semantic, independent-check, admission, source or owner-lowering prerequisite failed. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Pinned checker/runtime or native capacity unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/economic-theory-list": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["economic-theory-list"];
+                };
+            };
+            responses: {
+                /** @description Current principal/Work-scoped finite economic theory, typed development admission, canonical reservation, programme or retained history. Not protected qualification or financial efficacy. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original bounded construction or guarded internal programme accepted by the durable queue. Acceptance is not completion or an observed effect. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded data-only contract rejected. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authority missing or ordinary disposable development profile unavailable. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Absent or unauthorized principal/root/Work-scoped owner record. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Authenticated request body deadline exceeded. */
+                408: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original episode, exact state, resource capacity, Work revision or idempotency preimage changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original request or retained-resource bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Finite semantic, independent-check, admission, source or owner-lowering prerequisite failed. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Pinned checker/runtime or native capacity unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/economic-theory-admit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["economic-theory-admit"];
+                };
+            };
+            responses: {
+                /** @description Current principal/Work-scoped finite economic theory, typed development admission, canonical reservation, programme or retained history. Not protected qualification or financial efficacy. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original bounded construction or guarded internal programme accepted by the durable queue. Acceptance is not completion or an observed effect. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded data-only contract rejected. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authority missing or ordinary disposable development profile unavailable. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Absent or unauthorized principal/root/Work-scoped owner record. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Authenticated request body deadline exceeded. */
+                408: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original episode, exact state, resource capacity, Work revision or idempotency preimage changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original request or retained-resource bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Finite semantic, independent-check, admission, source or owner-lowering prerequisite failed. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Pinned checker/runtime or native capacity unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/economic-theory-resume": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["economic-theory-resume"];
+                };
+            };
+            responses: {
+                /** @description Current principal/Work-scoped finite economic theory, typed development admission, canonical reservation, programme or retained history. Not protected qualification or financial efficacy. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original bounded construction or guarded internal programme accepted by the durable queue. Acceptance is not completion or an observed effect. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded data-only contract rejected. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authority missing or ordinary disposable development profile unavailable. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Absent or unauthorized principal/root/Work-scoped owner record. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Authenticated request body deadline exceeded. */
+                408: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original episode, exact state, resource capacity, Work revision or idempotency preimage changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original request or retained-resource bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Finite semantic, independent-check, admission, source or owner-lowering prerequisite failed. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Pinned checker/runtime or native capacity unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/economic-theory-cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["economic-theory-cancel"];
+                };
+            };
+            responses: {
+                /** @description Current principal/Work-scoped finite economic theory, typed development admission, canonical reservation, programme or retained history. Not protected qualification or financial efficacy. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original bounded construction or guarded internal programme accepted by the durable queue. Acceptance is not completion or an observed effect. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded data-only contract rejected. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authority missing or ordinary disposable development profile unavailable. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Absent or unauthorized principal/root/Work-scoped owner record. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Authenticated request body deadline exceeded. */
+                408: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original episode, exact state, resource capacity, Work revision or idempotency preimage changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original request or retained-resource bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Finite semantic, independent-check, admission, source or owner-lowering prerequisite failed. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Pinned checker/runtime or native capacity unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/economic-theory-artifact": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["economic-theory-artifact"];
+                };
+            };
+            responses: {
+                /** @description Current principal/Work-scoped finite economic theory, typed development admission, canonical reservation, programme or retained history. Not protected qualification or financial efficacy. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original bounded construction or guarded internal programme accepted by the durable queue. Acceptance is not completion or an observed effect. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded data-only contract rejected. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authority missing or ordinary disposable development profile unavailable. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Absent or unauthorized principal/root/Work-scoped owner record. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Authenticated request body deadline exceeded. */
+                408: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original episode, exact state, resource capacity, Work revision or idempotency preimage changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original request or retained-resource bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Finite semantic, independent-check, admission, source or owner-lowering prerequisite failed. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Pinned checker/runtime or native capacity unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/economic-theory-compare": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["economic-theory-compare"];
+                };
+            };
+            responses: {
+                /** @description Current principal/Work-scoped finite economic theory, typed development admission, canonical reservation, programme or retained history. Not protected qualification or financial efficacy. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original bounded construction or guarded internal programme accepted by the durable queue. Acceptance is not completion or an observed effect. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded data-only contract rejected. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authority missing or ordinary disposable development profile unavailable. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Absent or unauthorized principal/root/Work-scoped owner record. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Authenticated request body deadline exceeded. */
+                408: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original episode, exact state, resource capacity, Work revision or idempotency preimage changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original request or retained-resource bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Finite semantic, independent-check, admission, source or owner-lowering prerequisite failed. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Pinned checker/runtime or native capacity unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/economic-programme-create": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["economic-programme-create"];
+                };
+            };
+            responses: {
+                /** @description Current principal/Work-scoped finite economic theory, typed development admission, canonical reservation, programme or retained history. Not protected qualification or financial efficacy. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original bounded construction or guarded internal programme accepted by the durable queue. Acceptance is not completion or an observed effect. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded data-only contract rejected. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authority missing or ordinary disposable development profile unavailable. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Absent or unauthorized principal/root/Work-scoped owner record. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Authenticated request body deadline exceeded. */
+                408: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original episode, exact state, resource capacity, Work revision or idempotency preimage changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original request or retained-resource bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Finite semantic, independent-check, admission, source or owner-lowering prerequisite failed. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Pinned checker/runtime or native capacity unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/economic-programme-run": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["economic-programme-run"];
+                };
+            };
+            responses: {
+                /** @description Current principal/Work-scoped finite economic theory, typed development admission, canonical reservation, programme or retained history. Not protected qualification or financial efficacy. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original bounded construction or guarded internal programme accepted by the durable queue. Acceptance is not completion or an observed effect. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded data-only contract rejected. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authority missing or ordinary disposable development profile unavailable. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Absent or unauthorized principal/root/Work-scoped owner record. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Authenticated request body deadline exceeded. */
+                408: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original episode, exact state, resource capacity, Work revision or idempotency preimage changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original request or retained-resource bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Finite semantic, independent-check, admission, source or owner-lowering prerequisite failed. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Pinned checker/runtime or native capacity unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/economic-programme-read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["economic-programme-read"];
+                };
+            };
+            responses: {
+                /** @description Current principal/Work-scoped finite economic theory, typed development admission, canonical reservation, programme or retained history. Not protected qualification or financial efficacy. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original bounded construction or guarded internal programme accepted by the durable queue. Acceptance is not completion or an observed effect. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded data-only contract rejected. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authority missing or ordinary disposable development profile unavailable. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Absent or unauthorized principal/root/Work-scoped owner record. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Authenticated request body deadline exceeded. */
+                408: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original episode, exact state, resource capacity, Work revision or idempotency preimage changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original request or retained-resource bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Finite semantic, independent-check, admission, source or owner-lowering prerequisite failed. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Pinned checker/runtime or native capacity unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/economic-programme-reconcile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["economic-programme-reconcile"];
+                };
+            };
+            responses: {
+                /** @description Current principal/Work-scoped finite economic theory, typed development admission, canonical reservation, programme or retained history. Not protected qualification or financial efficacy. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original bounded construction or guarded internal programme accepted by the durable queue. Acceptance is not completion or an observed effect. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded data-only contract rejected. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authority missing or ordinary disposable development profile unavailable. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Absent or unauthorized principal/root/Work-scoped owner record. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Authenticated request body deadline exceeded. */
+                408: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original episode, exact state, resource capacity, Work revision or idempotency preimage changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original request or retained-resource bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Finite semantic, independent-check, admission, source or owner-lowering prerequisite failed. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Pinned checker/runtime or native capacity unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/economic-reservation-create": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["economic-reservation-create"];
+                };
+            };
+            responses: {
+                /** @description Current principal/Work-scoped finite economic theory, typed development admission, canonical reservation, programme or retained history. Not protected qualification or financial efficacy. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original bounded construction or guarded internal programme accepted by the durable queue. Acceptance is not completion or an observed effect. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded data-only contract rejected. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authority missing or ordinary disposable development profile unavailable. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Absent or unauthorized principal/root/Work-scoped owner record. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Authenticated request body deadline exceeded. */
+                408: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original episode, exact state, resource capacity, Work revision or idempotency preimage changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original request or retained-resource bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Finite semantic, independent-check, admission, source or owner-lowering prerequisite failed. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Pinned checker/runtime or native capacity unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/economic-reservation-read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["economic-reservation-read"];
+                };
+            };
+            responses: {
+                /** @description Current principal/Work-scoped finite economic theory, typed development admission, canonical reservation, programme or retained history. Not protected qualification or financial efficacy. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original bounded construction or guarded internal programme accepted by the durable queue. Acceptance is not completion or an observed effect. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded data-only contract rejected. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authority missing or ordinary disposable development profile unavailable. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Absent or unauthorized principal/root/Work-scoped owner record. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Authenticated request body deadline exceeded. */
+                408: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original episode, exact state, resource capacity, Work revision or idempotency preimage changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original request or retained-resource bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Finite semantic, independent-check, admission, source or owner-lowering prerequisite failed. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Pinned checker/runtime or native capacity unavailable. */
+                503: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -37877,6 +39375,196 @@ export interface components {
             /** Format: uuid */
             modelId: string;
             revisionRef: {
+                owner: string;
+                id: string;
+                version: string;
+                contentDigest: string;
+            };
+        };
+        "economic-theory-submit": {
+            /** @constant */
+            schema: "finnor.economic-theory-request.v1";
+            root: {
+                /** @enum {string} */
+                entityType: "pe_strategy" | "pe_opportunity" | "pe_deal" | "pe_fund" | "pe_vehicle" | "external_organization" | "pe_portfolio_holding";
+                /** Format: uuid */
+                entityId: string;
+            };
+            /** Format: uuid */
+            workId: string;
+            problem: {
+                /** @constant */
+                schema: "finnor.economic-construction-problem.v1";
+                goal: {
+                    id: string;
+                    title: string;
+                };
+                quantities: {
+                    id: string;
+                    unit: string;
+                    currency: string | null;
+                    /** Format: uuid */
+                    entityId: string;
+                    accountingBasis: string;
+                    period: {
+                        /** Format: date-time */
+                        startAt: string;
+                        /** Format: date-time */
+                        endAt: string;
+                    };
+                    meaningKey: string;
+                    values: string[];
+                }[];
+                parameters: {
+                    id: string;
+                    unit: string;
+                    currency: string | null;
+                    /** Format: uuid */
+                    entityId: string;
+                    accountingBasis: string;
+                    period: {
+                        /** Format: date-time */
+                        startAt: string;
+                        /** Format: date-time */
+                        endAt: string;
+                    };
+                    meaningKey: string;
+                    values: string[];
+                }[];
+                meanings: {
+                    key: string;
+                    /** @enum {string} */
+                    kind: "INTERPRETATION" | "CONSENT" | "OBSERVATION";
+                    /** Format: uuid */
+                    subjectId: string;
+                    sourceId: string | null;
+                    versionId: string | null;
+                    contentDigest: string | null;
+                }[];
+                invariants: {
+                    id: string;
+                    terms: {
+                        quantityId: string;
+                        /** @enum {number} */
+                        coefficient: -1 | 1;
+                    }[];
+                    /** @enum {string} */
+                    relation: "EQ" | "LE";
+                    constant: string;
+                    meaningKey: string;
+                }[];
+                operators: {
+                    id: string;
+                    title: string;
+                    examples: {
+                        before: {
+                            [key: string]: string;
+                        };
+                        parameters: {
+                            [key: string]: string;
+                        };
+                        after: {
+                            [key: string]: string;
+                        } | null;
+                    }[];
+                    requirements: {
+                        key: string;
+                        /** @enum {string} */
+                        kind: "AUTHORITY" | "CONSENT" | "INTERPRETATION" | "OBSERVATION";
+                        /** Format: uuid */
+                        subjectId: string;
+                    }[];
+                }[];
+            };
+            idempotencyKey: string;
+            /** Format: uuid */
+            parentTheoryId?: string;
+        };
+        "economic-theory-read": {
+            /** Format: uuid */
+            theoryId: string;
+        };
+        "economic-theory-list": {
+            root: {
+                /** @enum {string} */
+                entityType: "pe_strategy" | "pe_opportunity" | "pe_deal" | "pe_fund" | "pe_vehicle" | "external_organization" | "pe_portfolio_holding";
+                /** Format: uuid */
+                entityId: string;
+            };
+            /** Format: uuid */
+            workId: string;
+        };
+        "economic-theory-admit": {
+            /** Format: uuid */
+            theoryId: string;
+        };
+        "economic-theory-resume": {
+            /** Format: uuid */
+            theoryId: string;
+        };
+        "economic-theory-cancel": {
+            /** Format: uuid */
+            theoryId: string;
+        };
+        "economic-theory-artifact": {
+            /** Format: uuid */
+            theoryId: string;
+        };
+        "economic-theory-compare": {
+            /** Format: uuid */
+            theoryId: string;
+            /** Format: uuid */
+            incumbentTheoryId?: string;
+        };
+        "economic-programme-create": {
+            /** Format: uuid */
+            theoryId: string;
+            reservationRef: {
+                owner: string;
+                id: string;
+                version: string;
+                contentDigest: string;
+            };
+            expectedRevision: number;
+            goalState: {
+                [key: string]: string;
+            };
+            parameters: {
+                [key: string]: string;
+            };
+            idempotencyKey: string;
+        };
+        "economic-programme-run": {
+            /** Format: uuid */
+            programmeId: string;
+        };
+        "economic-programme-read": {
+            /** Format: uuid */
+            programmeId: string;
+        };
+        "economic-programme-reconcile": {
+            /** Format: uuid */
+            programmeId: string;
+        };
+        "economic-reservation-create": {
+            /** Format: uuid */
+            theoryId: string;
+            initialState: {
+                [key: string]: string;
+            };
+            bindings: {
+                quantityId: string;
+                resourceRef: {
+                    owner: string;
+                    id: string;
+                    version: string;
+                    contentDigest: string;
+                };
+            }[];
+            idempotencyKey: string;
+        };
+        "economic-reservation-read": {
+            reservationRef: {
                 owner: string;
                 id: string;
                 version: string;

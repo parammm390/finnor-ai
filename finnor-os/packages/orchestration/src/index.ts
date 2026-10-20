@@ -74,6 +74,7 @@ import {
 } from "./objective-loop";
 import { classifyInstructionRoute, finalizeInstructionRouteFromPlan, type InstructionRouteDecision } from "./instruction-routing";
 import { interpretPrivateEquityQuestion } from "@finnor/private-equity";
+import { fail as economicQueryFault } from "@finnor/private-equity/src/economic-action-theory/contracts";
 
 export * from "./llm";
 export * from "./planner";
@@ -502,6 +503,21 @@ export class FinnorOrchestrator implements Orchestrator {
     ctx: TenantContext,
     opts: OperationalQueryOptions = {},
   ): Promise<OperationalQueryRun> {
+    if (request.intent === "economic_programme_v1") {
+      // Observation must not create a new Work input, invalidate the programme,
+      // or mark the economic goal complete merely because a read succeeded.
+      if (opts.workId !== request.workId) economicQueryFault("Y1_AUTHENTICATED_EXACT_QUERY_WORK_REQUIRED", 403);
+      const input = await latestWorkInput(ctx.tenantId, request.workId);
+      if (!input) economicQueryFault("Y1_QUERY_WORK_UNAVAILABLE", 404);
+      if (!this.fastReadOnlyRouter.execute) economicQueryFault("Y1_CANONICAL_QUERY_EXECUTOR_UNAVAILABLE", 503);
+      const authority = await evaluateAuthority(ctx, queryAuthorityRequest(request, request.workId));
+      if (authority.outcome !== "allowed") economicQueryFault("Y1_CANONICAL_QUERY_AUTHORITY_REQUIRED", 403);
+      const execution = await this.fastReadOnlyRouter.execute(request, ctx, {
+        workId: request.workId, workInputId: input.id,
+        executionKey: opts.executionKey ?? opts.idempotencyKey,
+      });
+      return { ...execution, workId: request.workId, workInputId: input.id, instructionId: input.instructionId };
+    }
     const instruction = `Typed operational query: ${request.intent}`;
     const received = await receiveWork({
       tenantId: ctx.tenantId,
