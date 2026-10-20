@@ -82,7 +82,7 @@ point these commands at any hosted database or real economic context.
 npm ci --ignore-scripts
 cd finnor-os
 npm ci --ignore-scripts
-npm rebuild fs-ext embedded-postgres
+npm rebuild fs-ext embedded-postgres "@embedded-postgres/$(node -p 'process.platform + "-" + process.arch')"
 npm run db:bundle
 npm run openapi
 npm run build --workspace @finnor/api

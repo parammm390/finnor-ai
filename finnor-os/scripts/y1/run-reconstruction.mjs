@@ -58,7 +58,8 @@ try{
   assert(realpathSync(path).startsWith(checkout+sep),'FOREIGN_WORKSPACE_DEPENDENCY');workspaceLinks++;
  }
  assert(workspaceLinks>0);
- run('native-locked-dependency-rebuild','npm',['rebuild','--offline','fs-ext','embedded-postgres']);
+ run('native-locked-dependency-rebuild','npm',['rebuild','--offline','fs-ext','embedded-postgres',
+  '@embedded-postgres/'+process.platform+'-'+process.arch]);
  run('migration-bundle','npm',['run','db:bundle']);
  run('openapi','npm',['run','openapi']);
  for(const name of ['centropy:client:check','centropy:manifest:check','centropy:forms:check','centropy:coverage:check'])
@@ -73,8 +74,9 @@ try{
   assert(isAbsolute(outputOwner));assert.notEqual(realpathSync(outputOwner),checkout);
   for(const sub of ['.next','finnor-os/apps/api/.next']){
    const target=join(checkout,sub),old=join(outputOwner,sub);
-   assert(!existsSync(target));assert(lstatSync(old).isDirectory()&&!lstatSync(old).isSymbolicLink());
-   symlinkSync(old,target,'dir');
+   assert(lstatSync(old).isDirectory()&&!lstatSync(old).isSymbolicLink());
+   if(existsSync(target))assert(lstatSync(target).isSymbolicLink()&&realpathSync(target)===realpathSync(old),'FOREIGN_GENERATED_OUTPUT_STORAGE');
+   else symlinkSync(old,target,'dir');
   }
  }
  run('emitted-api-build','npm',['run','build','--workspace','@finnor/api']);

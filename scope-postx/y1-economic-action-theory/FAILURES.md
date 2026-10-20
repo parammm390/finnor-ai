@@ -22,6 +22,7 @@ or counted as passes. The finite semantic profile and protected gate did not cha
 | Browser tick ran before the next Work's accepted construction | Waited for durable acceptance and checked canonical progress across bounded native ticks |
 | New native query was advertised in flat public OpenAPI | Preserved the exact two-reader native catalogue and removed the internal invocation from public query schemas |
 | Dedicated `.mts` typecheck initially failed | Enabled explicit extension imports and fixed the inferred child-request type |
+| First fresh reconstruction skipped platform PostgreSQL symlink hydration | Rebuild the locked `@embedded-postgres/<platform>-<arch>` package as well as the wrapper and `fs-ext`; retain the failed run and repeat both fresh installs |
 
 Public source-HTTP pilot 10 passed its 17 cases. The expanded emitted campaign
 passed 24 cases and mounted campaign 6 passed all six browser cases. These are
