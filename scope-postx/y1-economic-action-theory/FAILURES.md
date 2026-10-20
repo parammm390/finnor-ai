@@ -23,6 +23,7 @@ or counted as passes. The finite semantic profile and protected gate did not cha
 | New native query was advertised in flat public OpenAPI | Preserved the exact two-reader native catalogue and removed the internal invocation from public query schemas |
 | Dedicated `.mts` typecheck initially failed | Enabled explicit extension imports and fixed the inferred child-request type |
 | First fresh reconstruction skipped platform PostgreSQL symlink hydration | Rebuild the locked `@embedded-postgres/<platform>-<arch>` package as well as the wrapper and `fs-ext`; retain the failed run and repeat both fresh installs |
+| Second reconstruction passed 24 owner cases, then exceeded the original storage cap before browser execution | Retire the verified redundant X-base staging copy, meter the dedicated temporary directory and await failed-fixture shutdown; keep the cap, source packets and failed evidence unchanged |
 
 Public source-HTTP pilot 10 passed its 17 cases. The expanded emitted campaign
 passed 24 cases and mounted campaign 6 passed all six browser cases. These are

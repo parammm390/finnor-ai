@@ -119,6 +119,10 @@ all workspace links resolve inside the reconstructed checkout. To respect the
 frozen disk bound, it can rebuild into existing task-owned generated output
 directories. That storage reuse is recorded separately from source and dependency
 independence. It repeats both the installed campaign and the mounted browser path.
+`run-reconstruction.mjs` requires absolute `FINNOR_Y1_RECONSTRUCTION_EVIDENCE`,
+`FINNOR_Y1_SOURCE_PACKET` and `FINNOR_Y1_TMPDIR` paths. The task-only temporary
+directory is included in every storage meter. The runner awaits fixture shutdown
+on failure as well as success.
 
 The emitted worker requires the delivered canonical source tree and a fresh
 lockfile install. Some pre-existing owner adapters register `tsx` through

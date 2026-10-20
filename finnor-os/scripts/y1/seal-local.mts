@@ -40,6 +40,7 @@ const browserCases=['mounted-construct-admit-reserve-compose-native-effect-canon
 assert(browserCases.every(id=>mounted.steps.some((v:any)=>v.id===id)));
 assert.equal(rebuilt.status,'PASS_FRESH_LOCKFILE_RECONSTRUCTION');assert.equal(rebuilt.commit,commit);assert.equal(rebuilt.tree,tree);
 assert.equal(rebuilt.borrowedDependenciesUsedForBuild,false);assert.equal(rebuilt.workspaceLinksWithinCheckout,true);
+assert.equal(rebuilt.temporaryStorageIncludedInMeters,true);
 assert.equal(rebuilt.freshLockfileInstalls,2);assert(rebuilt.commands.every((v:any)=>v.exitCode===0));
 const independent=await installedReport(rebuilt.installedEvidence);
 const independentBrowser=await read(join(rebuilt.browserEvidence,'browser-results.json'));
@@ -74,6 +75,8 @@ for(const file of files){
  if(file.path.endsWith('/browser-failure.json'))retainedFailures.push({path:file.path,kind:'BROWSER_FAILURE'});
  else if(file.path.endsWith('/report.json')&&(await read(file.path)).allExecutedPassed===false)
   retainedFailures.push({path:file.path,kind:'ENGINEERING_CAMPAIGN_FAILURE'});
+ else if(file.path.endsWith('/reconstruction.json')&&(await read(file.path)).status==='FAILED_RETAINED')
+  retainedFailures.push({path:file.path,kind:'RECONSTRUCTION_FAILURE'});
 }
 const packet={schema:'finnor.y1.local-engineering-handoff.v1',commit,tree,sourceBase:'07e5a6a182dae37c3b0f3ec056c1d604a684be2b',
  profileDigest:PROFILE_DIGEST,semanticRuntime:identity,sourcePacket:{path:rebuilt.sourcePacket,manifest:source},originalInstalled:original,

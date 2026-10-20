@@ -5,12 +5,14 @@ import {createHash} from 'node:crypto';
 import {readFileSync,writeFileSync,mkdirSync,openSync,closeSync,renameSync,symlinkSync,realpathSync,lstatSync,readdirSync,existsSync,statfsSync} from 'node:fs';
 import {join,resolve,dirname,isAbsolute,sep} from 'node:path';
 const checkout=resolve(import.meta.dirname,'../../..'),backend=join(checkout,'finnor-os'),
- evidence=process.env.FINNOR_Y1_RECONSTRUCTION_EVIDENCE,packet=process.env.FINNOR_Y1_SOURCE_PACKET;
-assert([evidence,packet].every(v=>v&&isAbsolute(v)),'ABSOLUTE_RECONSTRUCTION_EVIDENCE_AND_SOURCE_PACKET_REQUIRED');
+ evidence=process.env.FINNOR_Y1_RECONSTRUCTION_EVIDENCE,packet=process.env.FINNOR_Y1_SOURCE_PACKET,
+ temporary=process.env.FINNOR_Y1_TMPDIR;
+assert([evidence,packet,temporary].every(v=>v&&isAbsolute(v)),'ABSOLUTE_RECONSTRUCTION_EVIDENCE_SOURCE_PACKET_AND_TEMP_REQUIRED');
 assert.equal(process.versions.node.split('.')[0],'22');
 mkdirSync(evidence,{recursive:true});
+mkdirSync(temporary,{recursive:true});
 const source=JSON.parse(readFileSync(join(packet,'source.json'),'utf8')),commands=[],meters=[],started=Date.now();
-const env={...process.env,PATH:dirname(process.execPath)+':'+process.env.PATH,NODE_OPTIONS:'--max-old-space-size=4096',TMPDIR:'/dev/shm',NEXT_TELEMETRY_DISABLED:'1'};
+const env={...process.env,PATH:dirname(process.execPath)+':'+process.env.PATH,NODE_OPTIONS:'--max-old-space-size=4096',TMPDIR:temporary,NEXT_TELEMETRY_DISABLED:'1'};
 delete env.NODE_PATH;
 const hash=path=>createHash('sha256').update(readFileSync(path)).digest('hex'),
  git=(...args)=>{const r=spawnSync('git',['-C',checkout,...args],{encoding:'utf8'});assert.equal(r.status,0,r.stderr);return r.stdout.trim();};
@@ -18,7 +20,7 @@ assert.equal(git('rev-parse','HEAD'),source.commit);assert.equal(git('rev-parse'
 assert.equal(git('status','--porcelain','--untracked-files=all'),'');
 let installs=0,workspaceLinks=0,passed=false,fixture;
 const locks=['package-lock.json','finnor-os/package-lock.json'].map(path=>({path,sha256:hash(join(checkout,path))}));
-const storageRoots=(process.env.FINNOR_Y1_STORAGE_ROOTS??checkout).split(':');
+const storageRoots=[...new Set([...(process.env.FINNOR_Y1_STORAGE_ROOTS??checkout).split(':'),temporary])];
 assert(storageRoots.every(isAbsolute));
 function meter(step){
  const result=spawnSync('du',['-s','-B1',...storageRoots],{encoding:'utf8'});assert.equal(result.status,0,result.stderr);
@@ -104,13 +106,18 @@ try{
  meter('complete');
  passed=true;
 }finally{
- if(fixture&&fixture.exitCode===null&&fixture.signalCode===null)fixture.kill('SIGTERM');
+ if(fixture?.pid&&fixture.exitCode===null&&fixture.signalCode===null)await new Promise(yes=>{
+  const timer=setTimeout(()=>fixture.kill('SIGKILL'),15000);
+  fixture.once('close',()=>{clearTimeout(timer);yes();});
+  fixture.kill('SIGTERM');
+ });
  const result={schema:'finnor.y1.clean-reconstruction.v1',status:passed?'PASS_FRESH_LOCKFILE_RECONSTRUCTION':'FAILED_RETAINED',
   commit:source.commit,tree:source.tree,sourcePacket:packet,checkout,commands,meters,wallMs:Date.now()-started,locks,
   freshLockfileInstalls:installs,borrowedDependenciesUsedForBuild:installs===2?false:'BUILD_NOT_REACHED',
   workspaceLinksWithinCheckout:workspaceLinks>0,workspaceLinkCount:workspaceLinks,
   generatedOutputStorageRebuiltAt:process.env.FINNOR_Y1_REBUILD_OUTPUT_OWNER??checkout,
   compilerOutputStorageShared:!!process.env.FINNOR_Y1_REBUILD_OUTPUT_OWNER,
+  temporaryStorageRoot:temporary,temporaryStorageIncludedInMeters:true,
   installedEvidence:join(evidence,'installed'),browserEvidence:join(evidence,'mounted'),
   protectedQualification:false,productionActivated:false,realEconomicEffects:0,
   unknownCosts:{moneyUsd:null,humanSeconds:null,aggregateConcurrentPeakMemoryBytes:null}};
