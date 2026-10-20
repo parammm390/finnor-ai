@@ -29,16 +29,27 @@ earlier programme cuts; it does not supersede retained failed receipts.
   concurrent publication/authenticated revision passes two existing cases
   (32.979 seconds). Both preserve original-parent custody. They are Linux
   development slices, not the historical qualified Darwin product.
-- Latest X2/S8 native attempt **FAILS** overall. Its ordinary worker reaches
-  the actual second-use pause, and its seven-second suite completes eighteen
-  refusals plus two controls. The nineteenth response matches, but its ending
-  state read is incomplete and is not credited. All five failed attempts stay
-  failed. Independent 16-case/537-check lifecycle passage is not this live gate.
-- Initial credential audit covers 4,030 files and 222 newly reachable commits,
-  with complete proposed-range history despite the shared shallow clone.
-  Six nonzero detector findings have source-bound noncredential dispositions;
-  policy is unchanged. This is not a zero-finding pass or absence guarantee.
-  Final publication needs a fresh scan/disposition of its actual cut.
+- The sixth configured X2/S8 development campaign **PASSES** all 14 driver
+  cases in 183.534 seconds / 3,218,796,544 sampled peak RSS bytes. Its actual
+  second-use pause completes all 26 live refusals and both controls in
+  6,925 ms, preserving the original 7,000-ms suite / 8,000-ms pause and every
+  before/after state comparison. Eight phases complete 79 refusals and seven
+  controls. Independent lifecycle 16-case/537-check, fresh Work composition,
+  separate frozen portal outcome and maintained authenticated projection
+  also pass without new allowance/deadline. All five prior attempts remain
+  failed. Three isolated cells and ten other families remain unexecuted.
+- The canonical paired-checkpoint read passes its 37-case separate-process
+  adversarial boundary and 12 existing generated-control S8 recovery cases.
+  Independent review finds no new candidate; source bytes remain unchanged.
+  See `paired-checkpoint-read.md` for exact scope, failed fixture/type/lint
+  attempts and unchanged native limits. This is precommit dirty-cut evidence.
+- Initial audits 1–3 omitted merge-parent expansion (`-m`); they did not
+  establish complete history coverage. The gap is disclosed and later audits
+  use the actual CI `-m` range. Audit 6 at published e2d91b5 covers 226 new
+  commits with zero history findings. Its 4,036-file worktree scan includes
+  the then-untracked pre-code E2E, not part of that publication. Four raw tree
+  findings remain source-bound noncredentials inherited from main; no raw
+  zero-finding tree claim. Final publication needs its own fresh audit.
 
 Evidence, exact source hashes and replay commands are retained privately under
 `/home/factory-user/x-phase-integration-evidence`. Do not publish raw native
@@ -49,8 +60,8 @@ configuration, credentials, signed private fixtures or database contents.
 1. Implement and prove immutable X1-to-X2 parent/shared-resource binding,
    currently explicitly null, and the complete guarded five-engine chain.
    Five integrated owners or panels are not proof of that chain.
-2. Pass the original X2 live gate without wider deadlines or fewer state
-   comparisons. Establish independently acquired/live subjects for isolated
+2. Extend the now-passing original X2 live gate with independently acquired
+   live subjects for isolated
    use, expired activation and cumulative-use/cost checks, plus remaining
    composition, access, drift, injection, sibling and history cells.
 3. Complete affected runtime recovery/expiry/generation/cancellation/capacity

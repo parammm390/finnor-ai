@@ -299,12 +299,32 @@ export class ExperienceLedger {
  async readReference(owner:Owner,id:string){
   if(!owner.read)deny(403,'READ_NOT_AUTHORIZED');text(id);
   return this.serialized(async()=>{
-   await this.integrity();const accepted=this.refs.get(refKey(owner.tenantId,id));if(!accepted)deny(404,'REFERENCE_NOT_FOUND');
-   if(accepted.receipt.sealed&&!owner.sealedRead||accepted.receipt.rightsRefs.some(r=>!owner.rightsRefs.includes(r)))deny(403,'EVALUATOR_OR_RIGHTS_NOT_AUTHORIZED');
-   const committed=await this.loadContent(accepted.receipt);
-   const reference=accepted.receipt.kind==='REFERENCE'?[committed.reference,...list(committed.relatedReferences??[],255)].find(r=>r.id===id):list(committed.references).find(r=>r.id===id);
-   if(!reference||referencePreimageDigest(reference)!==accepted.reference.contentDigest)deny(503,'ACCEPTED_REFERENCE_PREIMAGE_UNAVAILABLE');
-   return {reference,receipt:accepted.receipt};
+   await this.integrity();return await this.referenceAtHead(owner,id)??deny(404,'REFERENCE_NOT_FOUND');
+  });
+ }
+ private async referenceAtHead(owner:Owner,id:string){
+  const accepted=this.refs.get(refKey(owner.tenantId,id));if(!accepted)return null;
+  if(accepted.receipt.sealed&&!owner.sealedRead||accepted.receipt.rightsRefs.some(r=>!owner.rightsRefs.includes(r)))deny(403,'EVALUATOR_OR_RIGHTS_NOT_AUTHORIZED');
+  const committed=await this.loadContent(accepted.receipt);
+  const reference=accepted.receipt.kind==='REFERENCE'?[committed.reference,...list(committed.relatedReferences??[],255)].find(r=>r.id===id):list(committed.references).find(r=>r.id===id);
+  if(!reference||referencePreimageDigest(reference)!==accepted.reference.contentDigest)deny(503,'ACCEPTED_REFERENCE_PREIMAGE_UNAVAILABLE');
+  return {reference,receipt:accepted.receipt};
+ }
+ async readReferenceSnapshot(owner:Owner,input:unknown){
+  if(!owner.read)deny(403,'READ_NOT_AUTHORIZED');
+  const request=object(input);exactKeys(request,['ids','nonce']);
+  const ids=list(request.ids,2).map(text),nonce=hex(request.nonce);
+  if(!ids.length||new Set(ids).size!==ids.length)deny(400,'REFERENCE_SNAPSHOT_IDS_INVALID');
+  return this.serialized(async()=>{
+   await this.integrity();
+   const results=[];for(const id of ids)results.push(await this.referenceAtHead(owner,id));
+   const snapshot=this.signed({schema:'finnor.s6.reference-snapshot.v1',nonce,ids,
+    semanticOwner:owner.owner,tenantId:owner.tenantId,principalId:owner.principalId,rightsRefs:[...owner.rightsRefs].sort(),
+    sequence:this.last?.sequence??0,checkpointDigest:this.last?.checkpointDigest??null,checkedAt:new Date().toISOString(),
+    releaseId:this.config.release.releaseId,verifierDigest:this.verifierDigest,policyDigest:this.policyDigest,domain:this.config.policy.domain,
+    results,executionAuthorityGranted:false,qualification:'AUTHENTICATED_REFERENCE_SNAPSHOT_ONLY_NO_EFFECT_AUTHORITY_OR_BUSINESS_TRUTH'});
+   if(Buffer.byteLength(canonical({snapshot}))>8*1024*1024)deny(413,'REFERENCE_SNAPSHOT_BYTE_BOUND');
+   return {snapshot};
   });
  }
  releaseIdentity(){return {releaseId:this.config.release.releaseId,verifierDigest:this.verifierDigest,policyDigest:this.policyDigest,sourceDigests:this.config.release.sourceDigests,runtime:this.config.release.runtime,domain:this.config.policy.domain};}

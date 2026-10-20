@@ -12,7 +12,7 @@ import { verifyAllocationCertificateAsync } from '../../epistemic-runtime/src/al
 import { allocationSourcesCurrent } from '../../epistemic-runtime/src/allocation-producer';
 import { runAllocationMethodProcess } from './search-process';
 import { canonical } from '../../governed-execution/src/protocol';
-import { readOwnerTransportReference, ownerTransportRoute, signOwnerDeliveryOrigin, deliverOwnerTransportIntent, resolveEconomicOwnerReference } from '../../governed-execution/src/owner-transport';
+import { readOwnerTransportReference, readOwnerTransportReferenceSnapshot, ownerTransportRoute, signOwnerDeliveryOrigin, deliverOwnerTransportIntent, resolveEconomicOwnerReference } from '../../governed-execution/src/owner-transport';
 import { CapabilityJournal, privateFile, type JournalEntry } from './journal';
 import { InterfaceCapabilityPort } from './interface-port';
 import { InstitutionCapabilityPort } from './institution-port';
@@ -378,22 +378,17 @@ export class CapabilityEvolution {
             result: { ...(await this.commitReference('capability-responsibility-import', body)), responsibilityImport: true, capsule: proof.capsule, liabilityBudgetReleased: false, executionAuthorityGranted: false } });
     }
     private checkpointId(sequence: number) { return `capability-checkpoint:${this.journal.policyDigest}:${sequence}`; }
-    private static async readCheckpoint(policy: Policy, sequence: number) {
-        try {
-            return await readOwnerTransportReference({ semanticOwner: 'S8', tenantId: policy.tenantId, principalId: policy.principalId }, `capability-checkpoint:${digest(policy)}:${sequence}`);
-        }
-        catch (error) {
-            if ((error as any)?.code === 'REFERENCE_NOT_FOUND')
-                return null;
-            throw error;
-        }
-    }
     private static async verifyCheckpointTail(policy: Policy, tail: JournalEntry | null | undefined) {
-        if (await CapabilityEvolution.readCheckpoint(policy, (tail?.sequence ?? 0) + 1))
+        const policyDigest = digest(policy), id = (sequence: number) => `capability-checkpoint:${policyDigest}:${sequence}`;
+        const snapshot = await readOwnerTransportReferenceSnapshot(
+            { semanticOwner: 'S8', tenantId: policy.tenantId, principalId: policy.principalId },
+            [id((tail?.sequence ?? 0) + 1), ...(tail ? [id(tail.sequence)] : [])],
+        );
+        if (snapshot.results[0])
             fault('S8_JOURNAL_ROLLBACK_DETECTED', 503);
         if (!tail)
             return null;
-        const accepted = await CapabilityEvolution.readCheckpoint(policy, tail.sequence);
+        const accepted = snapshot.results[1] ?? null;
         if (accepted) {
             const c = accepted.reference.content;
             if (c.policyDigest !== digest(policy) || c.sequence !== tail.sequence || c.entryDigest !== tail.digest || c.previousDigest !== tail.previous)

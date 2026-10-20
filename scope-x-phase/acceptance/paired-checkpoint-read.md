@@ -67,3 +67,67 @@ After boundary E2E, require backend/driver types, affected existing security
 and S8 recovery checks, source review, and a fresh complete native X2 campaign
 with every original state comparison. A faster component or passing boundary
 test is not a passing live gate, full chain or economic qualification.
+
+## Retained pre-code attempts and first boundary observation
+
+The authored fixture's first attempt fails before any case because it
+incorrectly requests a 2,000-ms witness timeout; the canonical policy
+requires exactly 5,000 ms. Correct only the fixture to that existing value.
+The second and third fresh attempts pass the unchanged original single
+read/native-encoding case, then fail with 404 at the absent paired endpoint.
+All owned processes stop and source snapshots remain unchanged. These are
+the expected missing-endpoint observations; the first boot failure is not
+regraded. The third also records safe child-log digests and classified
+error codes without exposing private wire bodies or configuration.
+
+After implementation, the first fresh boundary run passes all 37 cases
+in 1.071 seconds at 342,941,696 sampled peak RSS bytes. Every case preserves
+actual journal/head bytes and all owned processes stop. The ordered pair
+performs one witness READ, not two. This is only the preregistered synthetic
+HTTP boundary, not a passing native campaign or whole-phase result.
+
+Backend types pass. The first S6-driver type check finds a new fixture's
+output-directory closure narrowing error and an inherited explicit .mts
+import requiring allowImportingTsExtensions. Keep that failure. Capture
+the already validated directory in a new nonoptional constant, with no
+change to accepted inputs; rerun the same no-emit driver check with the
+standard allowImportingTsExtensions flag, leaving strict checks intact.
+
+## Native and recovery results at the e2d91b5 dirty cut
+
+The corrected S6 driver check passes. The final 37-case boundary replay
+also passes (1.060 seconds, 302,874,624 sampled peak RSS bytes), with source
+bytes unchanged. The existing S8 lifecycle harness passes all 12 applicable
+generated-control cases, including actual SIGKILL/restart, torn-tail repair,
+live truncation denial, retained liability and paged-state currentness
+(15.934 seconds, 515,821,568 peak RSS bytes). Native S5 and compiled protected
+branches are not inferred from this generated-control run.
+
+The sixth original configured X2 native campaign passes all 14 driver cases
+in 183.534 seconds with 3,218,796,544 sampled peak RSS bytes and no surviving
+observed descendants. The unchanged bounds are 900 seconds / 6 GiB overall,
+8,000 ms for the actual worker pause and 7,000 ms for its live suite.
+The actual second-use pause lasts 6,925 ms and completes all 26 live
+refusals plus both controls, including each original before/after state
+comparison. Across eight phases, 79 refusals and seven controls complete;
+the separate lifecycle has 16 cases / 537 checks. Fresh Work composition,
+independent frozen portal outcome and authenticated maintained projection
+also pass without new allowance or deadline. Start/end source digest is
+f45aa2c1731381123dcca8711424afeffd1efbdb6d5122ed39c1b859363929b8.
+All five earlier failed native attempts remain failed.
+
+This does not execute the three isolated-live/expiry/cumulative cells:
+their reports explicitly retain NOT_RUN_INTERNAL_PREREQUISITE. The driver
+also lists ten unexecuted families, including installed/mounted/recovery,
+drift, sibling resources and full-cost diagnostic. No protected admission,
+production effect, engine qualification or whole-phase completion follows.
+
+Independent read-only source review session
+cc88baca-aec5-4b16-8b45-ed1e759a4c9e returns zero actionable candidates for
+the four runtime files, new boundary E2E and pre-code contract. The later
+result text is checked locally, not a new independent whole-phase review.
+An accidentally broader `eslint .` command fails on two existing generated
+Vercel function files. Preserve it, change no files or exclusions, and use
+the repository-declared `npm run lint` (eslint src scripts), which passes
+with the existing warnings. These observations are not a final committed-cut
+reconstruction or a remote verdict for the new paired-read code.
