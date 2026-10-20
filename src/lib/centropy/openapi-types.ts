@@ -1,4 +1,4 @@
-// Generated from finnor-os/openapi.json, SHA-256 d65242ccea521994cdcecd4bae159fc99d0f102591b0c16aa3f5635a2ffc086d.
+// Generated from finnor-os/openapi.json, SHA-256 bbb4387ebbd9b3a82beb6b116e64e25074177c22567edc185f555ca63b0eb204.
 export interface paths {
     "/api/live-controls": {
         parameters: {
@@ -1832,6 +1832,75 @@ export interface paths {
                 };
             };
         };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/threads": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        title?: string;
+                        /** Format: uuid */
+                        workId?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Private Investigation created, or the caller's existing exact Work Investigation reused with its current Objective. No Work or business execution is created. */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict title or Work reference rejected */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authenticated bearer required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Active canonical human principal required */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Work is absent or outside the authenticated tenant */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;

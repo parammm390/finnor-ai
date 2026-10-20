@@ -277,7 +277,8 @@ export async function POST(req: Request): Promise<Response> {
       // authenticated-route limiter already ran in requireContext; this tighter
       // intake bucket and batch backpressure are reserved for planner work.
       fastReadDecision = interactionAwareOperationalDecision(interpretOperationalQuery(body.data.instruction), activeContext, body.data.instruction);
-      instructionRouteDecision = classifyInstructionRoute({ instruction: body.data.instruction, fastReadDecision, activeContext, conversational: isConversationalTurn(body.data.instruction) });
+      instructionRouteDecision = classifyInstructionRoute({ instruction: body.data.instruction, fastReadDecision, activeContext,
+        conversational: isConversationalTurn(body.data.instruction, { conversationContext: prepared.context, instructionId: received.instructionId }) });
       if (instructionRouteDecision.route !== "QUERY") {
         await enforceRouteRateLimit(`intake:${ctx.tenantId}`, Number(process.env.RATE_LIMIT_INTAKE_PER_MINUTE ?? 20));
       }

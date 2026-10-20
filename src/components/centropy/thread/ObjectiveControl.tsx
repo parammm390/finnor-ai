@@ -1,53 +1,39 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { Pause, Play, RotateCcw } from "lucide-react"
-import { centropyGet, centropyPost, CentropyApiError } from "@/components/centropy/lib/api"
+import { centropyPost } from "@/components/centropy/lib/api"
+import type { WorkAggregateView } from "../product/contracts"
 
-interface Objective { id: string; workId: string; state: string; objective: string; reason: string | null; revision: number; nextStep: string | null }
-
-export function ObjectiveControl({ workId, workStatus, refreshToken, redirecting, onRedirectToggle, onChanged }: {
+export function ObjectiveControl({ workId, source, redirecting, onRedirectToggle, onChanged }: {
   workId: string
-  workStatus?: string | null
-  refreshToken: number
+  source: { data: WorkAggregateView | null; status: "idle" | "loading" | "ready" | "error"; error: string | null }
   redirecting: boolean
   onRedirectToggle: () => void
   onChanged: () => void
 }) {
-  const [objective, setObjective] = useState<Objective | null>(null)
-  const [status, setStatus] = useState<"loading" | "ready" | "unavailable">("loading")
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
-
-  useEffect(() => {
-    let active = true
-    setObjective(null); setStatus("loading"); setError(null)
-    void centropyGet<{ objective: Objective }>(`works/${workId}/objective`).then((result) => {
-      if (!active) return
-      if (!result.objective || result.objective.workId !== workId) throw new Error("Objective response did not match this Work")
-      setObjective(result.objective); setStatus("ready")
-    }).catch((cause) => {
-      if (!active) return
-      setStatus("unavailable")
-      if (!(cause instanceof CentropyApiError && cause.status === 404)) setError(cause instanceof Error ? cause.message : "Objective state unavailable")
-    })
-    return () => { active = false }
-  }, [refreshToken, workId])
 
   async function control(command: "interrupt" | "continue") {
     if (busy) return
     setBusy(true); setError(null)
     try {
-      const response = await centropyPost<{ objective: Objective }>(`works/${workId}/objective`, { command })
+      const response = await centropyPost<{ objective: NonNullable<WorkAggregateView["objectiveLoop"]> }>(`works/${workId}/objective`, { command })
       if (!response.objective || response.objective.workId !== workId) throw new Error("Objective control returned a different Work")
-      setObjective(response.objective)
       onChanged()
     } catch (cause) { setError(cause instanceof Error ? cause.message : "Objective control failed") }
     finally { setBusy(false) }
   }
 
-  if (status === "loading") return <p className="ct-objective__loading" role="status">Reading Objective control state…</p>
-  if (!objective) return error ? <p className="ct-objective__error" role="alert">Objective controls unavailable: {error}</p> : null
+  if (source.status === "loading" || source.status === "idle") return <p className="ct-objective__loading" role="status">Reading Objective control state…</p>
+  if (source.status === "error") return <p className="ct-objective__error" role="alert">Objective controls unavailable: {source.error}</p>
+  const work = source.data
+  if (!work || work.work.id !== workId) return <p className="ct-objective__error" role="alert">Objective controls unavailable: Work response did not match this Investigation.</p>
+  const objective = work.objectiveLoop
+  if (!objective) return null
+  if (objective.workId !== workId) return <p className="ct-objective__error" role="alert">Objective controls unavailable: Objective response did not match this Work.</p>
+  const workStatus = work.work.status
   const terminal = objective.state === "completed" || objective.state === "cancelled"
   const blocked = objective.state === "blocked" || objective.state === "failed"
   const workTerminal = workStatus === "completed" || workStatus === "failed" || workStatus === "cancelled"

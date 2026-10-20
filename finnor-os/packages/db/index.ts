@@ -2304,6 +2304,7 @@ export interface CreateEmployeeConversationThreadParams {
   ownerEmployeeId: string;
   title?: string;
   originTransportKey?: string;
+  workId?: string;
 }
 
 export async function createEmployeeConversationThread(params: CreateEmployeeConversationThreadParams): Promise<EmployeeConversationThreadSummary> {
@@ -2316,30 +2317,77 @@ export async function createEmployeeConversationThread(params: CreateEmployeeCon
     )).limit(1);
     if (!principal) throw new Error("canonical_human_principal_not_active");
 
-    if (params.originTransportKey) {
-      const [existing] = await db.select().from(schema.employeeConversationThreads).where(and(
-        eq(schema.employeeConversationThreads.tenantId, params.tenantId),
-        eq(schema.employeeConversationThreads.ownerEmployeeId, params.ownerEmployeeId),
-        eq(schema.employeeConversationThreads.originTransportKey, params.originTransportKey),
-      )).limit(1);
-      if (existing) return conversationThread(existing);
-    }
-
-    const [created] = await db.insert(schema.employeeConversationThreads).values({
-      tenantId: params.tenantId,
-      ownerEmployeeId: params.ownerEmployeeId,
-      title: params.title?.trim().slice(0, 500) || null,
-      originTransportKey: params.originTransportKey?.slice(0, 500) || null,
-    }).onConflictDoNothing().returning();
-    if (created) return conversationThread(created);
-
-    const [raced] = await db.select().from(schema.employeeConversationThreads).where(and(
+    const [work] = params.workId ? await db.select({ id: schema.works.id, instruction: schema.works.initialInstruction }).from(schema.works).where(and(
+      eq(schema.works.tenantId, params.tenantId), eq(schema.works.id, params.workId),
+    )).limit(1) : [];
+    if (params.workId && !work) throw new Error("conversation_work_not_found");
+    const [objective] = work ? await db.select({ id: schema.workObjectiveLoops.id }).from(schema.workObjectiveLoops).where(and(
+      eq(schema.workObjectiveLoops.tenantId, params.tenantId), eq(schema.workObjectiveLoops.workId, work.id),
+    )).limit(1) : [];
+    const originTransportKey = work ? `work-inspection:${work.id}` : params.originTransportKey;
+    let [existing] = work ? await db.select().from(schema.employeeConversationThreads).where(and(
       eq(schema.employeeConversationThreads.tenantId, params.tenantId),
       eq(schema.employeeConversationThreads.ownerEmployeeId, params.ownerEmployeeId),
-      eq(schema.employeeConversationThreads.originTransportKey, params.originTransportKey!),
-    )).limit(1);
-    if (!raced) throw new Error("Unable to create conversation thread");
-    return conversationThread(raced);
+      eq(schema.employeeConversationThreads.activeWorkId, work.id),
+    )).orderBy(desc(schema.employeeConversationThreads.lastActivityAt), desc(schema.employeeConversationThreads.id)).limit(1) : [];
+
+    if (!existing && originTransportKey) {
+      [existing] = await db.select().from(schema.employeeConversationThreads).where(and(
+        eq(schema.employeeConversationThreads.tenantId, params.tenantId),
+        eq(schema.employeeConversationThreads.ownerEmployeeId, params.ownerEmployeeId),
+        eq(schema.employeeConversationThreads.originTransportKey, originTransportKey),
+      )).limit(1);
+    }
+
+    let activeReferences: Array<{ entityType: string; entityId: string }> = [];
+    if (work && (!existing || existing.activeWorkId !== work.id || existing.activeObjectiveLoopId !== (objective?.id ?? null))) {
+      const [input] = await db.select({ context: schema.workInputs.contextSnapshot }).from(schema.workInputs).where(and(
+        eq(schema.workInputs.tenantId, params.tenantId), eq(schema.workInputs.workId, work.id),
+      )).orderBy(desc(schema.workInputs.createdAt), desc(schema.workInputs.id)).limit(1);
+      const context = jsonObject(input?.context);
+      const registered = await db.select({ type: schema.canonicalTruthRegistry.entityType }).from(schema.canonicalTruthRegistry)
+        .where(sql`finnor_os.canonical_entity_work_attachable(${params.tenantId}::uuid, ${schema.canonicalTruthRegistry.entityType})`);
+      const allowedTypes = new Set(registered.map(row => row.type));
+      const excluded = new Set((Array.isArray(context.excludedEntities) ? context.excludedEntities : [])
+        .map(value => { const ref = jsonObject(value); return `${ref.entityType}:${ref.entityId}`; }));
+      const references = [context.businessRoot, context.focusedEntity, ...(Array.isArray(context.selectedEntities) ? context.selectedEntities : [])]
+        .flatMap(value => {
+          const ref = jsonObject(value);
+          return typeof ref.entityType === "string" && allowedTypes.has(ref.entityType)
+            && typeof ref.entityId === "string" && isUuid(ref.entityId) && !excluded.has(`${ref.entityType}:${ref.entityId}`)
+            ? [{ entityType: ref.entityType, entityId: ref.entityId }] : [];
+        });
+      activeReferences = [...new Map(references.map(ref => [`${ref.entityType}:${ref.entityId}`, ref])).values()];
+    }
+
+    if (!existing) {
+      const [created] = await db.insert(schema.employeeConversationThreads).values({
+        tenantId: params.tenantId,
+        ownerEmployeeId: params.ownerEmployeeId,
+        title: params.title?.trim().slice(0, 500) || work?.instruction.slice(0, 120) || null,
+        originTransportKey: originTransportKey?.slice(0, 500) || null,
+        activeWorkId: work?.id ?? null,
+        activeObjectiveLoopId: objective?.id ?? null,
+        activeReferences,
+      }).onConflictDoNothing().returning();
+      if (created) return conversationThread(created);
+
+      [existing] = await db.select().from(schema.employeeConversationThreads).where(and(
+        eq(schema.employeeConversationThreads.tenantId, params.tenantId),
+        eq(schema.employeeConversationThreads.ownerEmployeeId, params.ownerEmployeeId),
+        eq(schema.employeeConversationThreads.originTransportKey, originTransportKey!),
+      )).limit(1);
+    }
+    if (!existing) throw new Error("Unable to create conversation thread");
+    if (work && (existing.activeWorkId !== work.id || existing.activeObjectiveLoopId !== (objective?.id ?? null))) {
+      [existing] = await db.update(schema.employeeConversationThreads).set({
+        activeWorkId: work.id, activeObjectiveLoopId: objective?.id ?? null,
+        activeReferences, unresolvedReferences: [],
+        revision: sql`${schema.employeeConversationThreads.revision}+1`, lastActivityAt: new Date(), updatedAt: new Date(),
+      }).where(and(eq(schema.employeeConversationThreads.tenantId, params.tenantId), eq(schema.employeeConversationThreads.ownerEmployeeId, params.ownerEmployeeId), eq(schema.employeeConversationThreads.id, existing.id))).returning();
+      if (!existing) throw new Error("conversation_thread_not_found");
+    }
+    return conversationThread(existing);
   }, params.ownerEmployeeId);
 }
 
