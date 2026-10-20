@@ -33,7 +33,7 @@ import { LLMPlanner, type Planner, type PlanningResult } from "./planner";
 import { selectAndMaterializePlan } from "./plan-runtime";
 import { GatedExecutor, type Executor } from "./executor";
 import { OutcomeReflection, type Reflection } from "./reflection";
-import { createDefaultPluginRegistry, PluginRegistry } from "./plugin-registry";
+import { createDefaultPluginRegistry, planningCapabilitiesForVertical, PluginRegistry } from "./plugin-registry";
 import { resolveProvider, resolveProviderForPurpose } from "./llm";
 import { AllowlistExecutor } from "./graph/allowlist-executor";
 import { LangGraphExecutor } from "./graph/executor";
@@ -365,7 +365,9 @@ export class FinnorOrchestrator implements Orchestrator {
         signal: opts.signal,
         deadlineAt: opts.deadlineAt,
         deadlineMs: opts.deadlineMs,
-        capabilityActionTypes: this.plugins.actionTypes(),
+        capabilityManifest: planningCapabilitiesForVertical(this.plugins, (await resolveTenantVertical(ctx.tenantId)).verticalKey),
+        conversationContext: opts.conversationContext,
+        instructionId,
       });
       if (await isInstructionCancelled(ctx.tenantId, instructionId)) return { actions: [] };
       await finishWorkPlannerAttempt({
@@ -664,7 +666,7 @@ export class FinnorOrchestrator implements Orchestrator {
         instruction,
         fastReadDecision: routeReadDecision,
         activeContext: opts.activeContext,
-        conversational: isConversationalTurn(instruction),
+        conversational: isConversationalTurn(instruction, opts),
       });
       if (opts.conversationContext?.resolution.status === "clarification_required") {
         instructionRoute = { version: 1, route: "ATOMIC_EFFECT", reasonCodes: ["phase6_reference_or_sender_ambiguous"] };
@@ -738,14 +740,6 @@ export class FinnorOrchestrator implements Orchestrator {
     // cannot inherit unrelated company/research context, and
     // still produces the same explicit progress trace as every other turn.
     if (instructionRoute?.route === "CONVERSATION") {
-      try {
-        await ensureSecretsLoaded();
-      } catch (err) {
-        const failure = workFailure(err, "Provider initialization failed");
-        await transitionWork(ctx.tenantId, workId, "failed", "understanding_failed", failure, { failure, expectedWorkInputId: workInputId });
-        await emitInstructionEvent(ctx.tenantId, instructionId, "failed", { error: failure.message, workId, recoverable: true });
-        throw err;
-      }
       {
         await emitInstructionEvent(ctx.tenantId, instructionId, "context_retrieved", { chips: [] });
         await emitInstructionEvent(ctx.tenantId, instructionId, "planning", { route: "conversation" });

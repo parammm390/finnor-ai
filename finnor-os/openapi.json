@@ -14623,6 +14623,54 @@
         }
       }
     },
+    "/api/threads": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 500
+                  },
+                  "workId": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                },
+                "additionalProperties": false,
+                "$schema": "http://json-schema.org/draft-07/schema#"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Private Investigation created, or the caller's existing exact Work Investigation reused with its current Objective. No Work or business execution is created."
+          },
+          "400": {
+            "description": "Strict title or Work reference rejected"
+          },
+          "401": {
+            "description": "Current authenticated bearer required"
+          },
+          "403": {
+            "description": "Active canonical human principal required"
+          },
+          "404": {
+            "description": "Work is absent or outside the authenticated tenant"
+          }
+        }
+      }
+    },
     "/api/outcome-packs/grants": {
       "get": {
         "security": [

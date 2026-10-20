@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { PE_DEPENDENCY_ENDPOINT_TYPES, PE_ENTITY_TYPES, WORKSTREAM_KINDS } from "@finnor/private-equity";
+import { PE_DEPENDENCY_ENDPOINT_TYPES, PE_ENTITY_TYPES, WORKSTREAM_KINDS } from "@finnor/private-equity/src/types";
 
 const uuid = z.string().uuid();
 const version = z.number().int().positive();

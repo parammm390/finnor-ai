@@ -30,7 +30,7 @@ describe("real conversational lane", () => {
       "hey",
       { tenantId: "tenant-a", userId: "owner-a", role: "owner", correlationId: "trace-a" },
       memory,
-      { channel: "text", capabilityActionTypes: ["search_web", "open_workstream", "send_message"] },
+      { channel: "text", capabilityManifest: [] },
     );
 
     expect(complete).toHaveBeenCalledWith(expect.objectContaining({

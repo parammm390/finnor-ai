@@ -32,7 +32,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/enterprise-applications/store.ts",
-      "sha256": "dd66847d46091a43051b3e1175906343b3bdd2f91548cb609ab5b679598048c5"
+      "sha256": "ba44ac7af4a5acb357dae6c7cd0c551d4313f12a1078722b78e3d76a9c722668"
     },
     {
       "path": "finnor-os/packages/private-equity/src/enterprise-applications/service.ts",
@@ -40,7 +40,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/enterprise-applications/worker.ts",
-      "sha256": "471b694811d28c2889f7ef5b278aac92fd5827f5bd2f97c7352a097409ad9c63"
+      "sha256": "82cadd9400f383baf9634532ee30153dcb30ee995390b138dc2d3f00811eb8ff"
     },
     {
       "path": "finnor-os/packages/private-equity/src/enterprise-applications/build-child.mts",
@@ -64,7 +64,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/shared-types/src/index.ts",
-      "sha256": "2be855477961de800c43162001b665ca194f7fa8b5ccefe7cff39c3883f9b9c9"
+      "sha256": "8443ab8af01091d53f92c9e57cbf3f3d370272fd114ba473c99fc7d8f6ea2d1d"
     },
     {
       "path": "finnor-os/packages/shared-types/src/primary-diligence.ts",
@@ -72,7 +72,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/authority/src/index.ts",
-      "sha256": "547c4d873525e8de964c0f4a18346aa9c0245c5758ec5a575ced335b6a53db7c"
+      "sha256": "4399637b25c1c838ab4cfd4daf297e53aa95a01fca5fcf0d619d4413e9d5a9fb"
     },
     {
       "path": "finnor-os/packages/private-equity/src/owner-context.ts",
@@ -84,7 +84,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/db/compute-contract.ts",
-      "sha256": "5c285b2867045574a91fdb7eb0e11a16e2e5318e09a833581d39686a9c86c1b3"
+      "sha256": "5ae7997b4c954f3e123ebb5a95744d557be5c214b4615ad721b366fb10527687"
     },
     {
       "path": "finnor-os/packages/db/compute-governor.ts",
@@ -96,7 +96,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/db/migration-head.ts",
-      "sha256": "fb11d5ffa1b72abd372cf788a1bccbce3e30d9cff767b179782ca26e45655ef8"
+      "sha256": "51d04689436d28fbe1c56eb20ee4366bfc0c9e5a4419e3bc811026326ed85017"
     },
     {
       "path": "finnor-os/packages/db/migrations/0189_x3_enterprise_applications.sql",
@@ -104,19 +104,19 @@ export default {
     },
     {
       "path": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
-      "sha256": "f94d5fea566e2b33efb25f0b6702c49bad41e0dcb884fcc4f32b3b55c5d5f378"
+      "sha256": "fb502e308087c71f6a1ccd7104a8426efc0e91665851d70c4b139efec40e5a56"
     },
     {
       "path": "finnor-os/apps/api/lib/auth.ts",
-      "sha256": "3893d1d85e414cfe00360f71c1dc35a09a63ef79bf291a84f04ca201c9050d57"
+      "sha256": "5ffca184bf6068552803ca462b2ad4e62e885d78d93b3a35f5431ba10c3ae559"
     },
     {
       "path": "finnor-os/apps/worker/src/index.ts",
-      "sha256": "3856a848e45de8483397c8b44aea3a45382a2c463445704b637af2f1bd850ff7"
+      "sha256": "181d44459d314ce7e1688df6b3744514bf6c531b813a0bfb2e905caeaee6f8dc"
     },
     {
       "path": "finnor-os/apps/worker/src/queue.ts",
-      "sha256": "44322d725c95d1b0a1dfe0f18d0de6e8cfb27a9966dbd01ada3a282f64bc5986"
+      "sha256": "bcf620a878374c8126d61b60e7cbfe7198e9dc8c92be8e22ace7f45c9eb1f384"
     },
     {
       "path": "finnor-os/packages/private-equity/src/live-recompilation/contracts.ts",
@@ -124,15 +124,15 @@ export default {
     },
     {
       "path": "finnor-os/package-lock.json",
-      "sha256": "aebbbac3741b6cf7f2424447bf2bc12524eab526e041b6baada5d167003855c5"
+      "sha256": "9a7b757ef717fbafa290c748d0faaedcb608afac1291c2fabe4d19c066d508b1"
     },
     {
       "path": "finnor-os/packages/private-equity/src/enterprise-control.ts",
-      "sha256": "2dc056b5f9c6489c3996cd879f9db5175ab31ab204672b8e502a24b73e03a49f"
+      "sha256": "652e52beca3fbc5f3b6926f6462270629b5b0820b2a5f0616e8797b49e440de7"
     },
     {
       "path": "finnor-os/packages/private-equity/src/enterprise-allocation.ts",
-      "sha256": "5a61b4acd9e08f65f85f98e3ed73ba1458a4faf84e453fa4a7265f997fbff9f9"
+      "sha256": "467b8c584cd80920d9ab1208e1a0ddf2d8dd287b64108bc14a5688c29cfbb41b"
     },
     {
       "path": "finnor-os/packages/private-equity/src/enterprise-obligations.ts",
@@ -152,7 +152,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/db/index.ts",
-      "sha256": "b0052bcd6fb83b9ca15fb83644fe677c2a7648c76311262a607535a62e10b19f"
+      "sha256": "a3fa88a5b297c85a4721399428245da9d42e3bd96a4fac5a4dcfa4181936df41"
     },
     {
       "path": "finnor-os/packages/security/src/auth.ts",
@@ -168,7 +168,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/capability-evolution/src/source-closure.ts",
-      "sha256": "595e39c65b5f441e42e882f875dde656fa181790ce77df8990d99f7dff602881"
+      "sha256": "d227b2a6f117d9088f9d75926b18b1101e9ab9af9a72ed91c1767734d93f221d"
     },
     {
       "path": "src/components/centropy/canvas/EnterpriseApplicationPanel.tsx",
@@ -176,15 +176,15 @@ export default {
     },
     {
       "path": "src/components/centropy/canvas/application-client.ts",
-      "sha256": "aac9ccb843c14fcdde54ffa05fff653ee269a68d43c539f5c56f974c1af25836"
+      "sha256": "69fc7fe3bff71f203afa31699eed3e2b42957f3c4ddc80451735240760481140"
     },
     {
       "path": "src/components/centropy/canvas/CanvasDocument.tsx",
-      "sha256": "a6a3d6ad36b5f7472c588c6a341af10dcfd0c4d29d5345cea160ff7ef95c9f05"
+      "sha256": "085756e58e97eaa9509a8f43931915dc60dd8b77d49aa9c74d32e7476dfb2cb3"
     },
     {
       "path": "src/components/centropy/canvas/canvas-compose.ts",
-      "sha256": "73a7162bbcf6f5468075634a377395aee1cc65b23614038e6a8cb0dffbd026fe"
+      "sha256": "013fb5070cd8a0cc95a4446d3d8ca208f3d103dcd177c232fa3dd95573c4967c"
     },
     {
       "path": "src/components/centropy/canvas/canvas-contract.ts",
@@ -192,7 +192,7 @@ export default {
     },
     {
       "path": "src/lib/centropy/capability-manifest.generated.json",
-      "sha256": "dcf05982f2e7ef3cd5074910fe2212b0d6cfa12ee2c2823170c88a4ea2882926"
+      "sha256": "538da93db2609629b64096e9b6fa88ab34317aade2f312eed51403d82ac8c135"
     },
     {
       "path": "package-lock.json",

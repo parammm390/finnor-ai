@@ -2,6 +2,7 @@ import { z } from "zod";
 import { PRIVATE_EQUITY_ACTION_SCHEMAS } from "../../../packages/domain-plugins/private-equity/schemas";
 
 export const EmptyProductControlSchema = z.object({}).strict();
+export const CreateThreadSchema = z.object({ title: z.string().trim().min(1).max(500).optional(), workId: z.string().uuid().optional() }).strict();
 export const SubmitCorrectionSchema = z.object({ receiptId: z.string().uuid(), correctedFact: z.string().min(1).max(2_000) });
 export const ResolveReconciliationSchema = z.object({
   expectedVersion: z.number().int().positive(),
