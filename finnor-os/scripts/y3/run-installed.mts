@@ -3,7 +3,7 @@
  * in this disposable database; they never grant authority or supply results. */
 import {strict as assert} from 'node:assert';
 import {randomUUID} from 'node:crypto';
-import {readFile,writeFile} from 'node:fs/promises';
+import {readFile,writeFile,readdir} from 'node:fs/promises';
 import {resolve,join} from 'node:path';
 import pg from 'pg';
 import {appendEvidenceVersion} from '@finnor/memory';
@@ -425,7 +425,24 @@ try{
   if(built){
    await h!.stopWorker();await e.http!.restartApi({runtime:'production',unsetDevBypass:true});
    const production=await api('interaction-list',{root:h!.root,workId:f.request.workId});
-   assert([403,503].includes(production.status));return {suspendedLocal,suspendedWithdrawal,denied,withdrawn,after,production,productionActivated:false};
+   // This deliberately unequipped production fixture reaches the inherited
+   // secret-provider refusal before authentication or the Y3 owner. A generic
+   // server error is not evidence: require the actual canonical refusal log.
+   assert.equal(production.status,500);
+   let productionRefusal:unknown;
+   await until(async()=>{
+    const processes=join(evidence,'built-api-processes');
+    for(const directory of await readdir(processes)){
+     const source=JSON.parse(await readFile(join(processes,directory,'built-api-source.json'),'utf8'));
+     if(source.runtimeEnvironment!=='production')continue;
+     const path=join(processes,directory,'built-api.log'),log=await readFile(path,'utf8'),
+      reason='[security] production refused: SECRETS_PROVIDER=aws-secrets-manager is required';
+     if(log.includes(reason)){productionRefusal={path,pid:source.pid,reason,guard:'INHERITED_SECRET_CONFIGURATION_BEFORE_Y3'};return true;}
+    }
+    return false;
+   },'CANONICAL_PRODUCTION_CONFIGURATION_REFUSAL_REQUIRED');
+   return {suspendedLocal,suspendedWithdrawal,denied,withdrawn,after,production,productionRefusal,
+    productionOwnerActivationVerified:false,productionActivated:false};
   }
   return {suspendedLocal,suspendedWithdrawal,denied,withdrawn,after,production:'NOT_RUN_SOURCE_TRANSPORT_ONLY',productionActivated:false};
  });
