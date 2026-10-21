@@ -365,6 +365,12 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
 
+      - name: Bind approved model runtime into API production
+        run: node scripts/release/configure-vercel-model-runtime.mjs --apply
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+
       - name: Deploy Private Equity supplier canary app
         id: supplier_canary_app
         run: |

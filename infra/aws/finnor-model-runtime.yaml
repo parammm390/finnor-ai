@@ -1,0 +1,52 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: FINNOR model and research provider permissions isolated from software rollouts.
+Metadata:
+  AWSToolsMetrics: { AWSAgentToolkit: aws-cloudformation@2 }
+Resources:
+  ModelRuntimePolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Metadata: { com.aws.cloudformation.Context: { why: Keyless model execution, must: [Only approved in-Region models, REALTIME excluded] } }
+    Properties:
+      ManagedPolicyName: finnor-compute-model-runtime
+      Roles: [finnor-worker-task, finnor-background-task, finnor-heavy-task]
+      Users: [finnor-app-prod]
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action: bedrock:InvokeModel
+            Resource:
+              - !Sub 'arn:${AWS::Partition}:bedrock:${AWS::Region}::foundation-model/zai.glm-5'
+              - !Sub 'arn:${AWS::Partition}:bedrock:${AWS::Region}::foundation-model/mistral.mistral-large-3-675b-instruct'
+              - !Sub 'arn:${AWS::Partition}:bedrock:${AWS::Region}::foundation-model/deepseek.v3.2'
+            Condition: { StringEquals: { 'aws:RequestedRegion': !Ref 'AWS::Region' } }
+
+  ResearchSecretPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Metadata: { com.aws.cloudformation.Context: { why: Existing production search credential delivery, must: [Read only, REALTIME excluded] } }
+    Properties:
+      ManagedPolicyName: finnor-compute-research-secret
+      Roles: [finnor-worker-task, finnor-background-task]
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action: secretsmanager:GetSecretValue
+            Resource: !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:finnor/prod/exa-api-key-??????'
+  EmbeddingSecretPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Metadata: { com.aws.cloudformation.Context: { why: Existing production embedding credential delivery, must: [Read only, REALTIME excluded, Existing vector model retained] } }
+    Properties:
+      ManagedPolicyName: finnor-compute-embedding-secret
+      Roles: [finnor-worker-task, finnor-background-task, finnor-heavy-task]
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action: secretsmanager:GetSecretValue
+            Resource: !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:finnor/prod/embeddings-api-key-??????'
+Outputs:
+  ModelPolicyArn:
+    Value: !Ref ModelRuntimePolicy
+  ModelIds:
+    Value: zai.glm-5,mistral.mistral-large-3-675b-instruct,deepseek.v3.2

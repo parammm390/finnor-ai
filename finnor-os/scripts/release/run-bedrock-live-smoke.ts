@@ -4,7 +4,7 @@
 // through the existing llm_calls ledger, and performs no business action, webhook,
 // email, SMS, voice call, or production/staging write.
 
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { randomUUID } from "node:crypto";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -67,14 +67,14 @@ interface RouteResult {
 }
 
 function bedrockCredentialPresent(): boolean {
-  return Boolean(process.env.AWS_BEDROCK_API_KEY ?? process.env.AWS_BEARER_TOKEN_BEDROCK);
+  return process.env.AWS_BEDROCK_AUTH_MODE === "iam" || Boolean(process.env.AWS_BEDROCK_API_KEY ?? process.env.AWS_BEARER_TOKEN_BEDROCK);
 }
 
 function assertGuardedContext(databaseUrl: string): void {
   if (process.env.NODE_ENV === "production") throw new Error("Bedrock live smoke refuses NODE_ENV=production");
   if (process.env.FINNOR_BEDROCK_LIVE_SMOKE !== "1") throw new Error("Bedrock live smoke requires FINNOR_BEDROCK_LIVE_SMOKE=1");
   if (process.env.LIVE_SMOKE_ALLOWED !== "1") throw new Error("Bedrock live smoke requires LIVE_SMOKE_ALLOWED=1");
-  if (!bedrockCredentialPresent()) throw new Error("No Bedrock credential found in AWS_BEDROCK_API_KEY or AWS_BEARER_TOKEN_BEDROCK");
+  if (!bedrockCredentialPresent()) throw new Error("Explicit Bedrock IAM authentication or a Bedrock API key is required");
   const target = new URL(databaseUrl);
   if (!(target.hostname === "localhost" || target.hostname === "127.0.0.1" || target.hostname === "::1")) {
     throw new Error(`Bedrock live smoke requires a local Postgres target; received ${target.hostname}`);
@@ -129,7 +129,7 @@ function textEvidence(report: Record<string, unknown>): string {
     "guardedContext=true",
     "productionEgress=false",
     "businessActions=none",
-    "credentialSource=AWS_BEDROCK_API_KEY|AWS_BEARER_TOKEN_BEDROCK (value withheld)",
+    `credentialSource=${process.env.AWS_BEDROCK_AUTH_MODE === "iam" ? "AWS SDK credential chain" : "Bedrock API key (value withheld)"}`,
     "directVendorKeysUsed=false",
     `models=${results.filter((result) => result.status === "completed").length}/${results.length} completed`,
     ...results.map((result) => `provider=${result.provider} configuredModel=${result.configuredModel} observedModel=${result.observedModel ?? "none"} selectedProvider=${result.selectedProvider ?? "none"} status=${result.status} response=${result.responseShape} inputTokens=${result.inputTokens ?? "null"} outputTokens=${result.outputTokens ?? "null"} costUsd=${result.costUsd ?? "not_configured"} traceId=${result.traceId}${result.error ? ` error=${result.error}` : ""}`),
@@ -148,6 +148,11 @@ async function main(): Promise<void> {
   // The live proof is intentionally Bedrock-only even if a developer happens to
   // have direct vendor keys in their shell. This mutation is process-local.
   for (const key of DIRECT_VENDOR_KEYS) delete process.env[key];
+  if (process.env.AWS_BEDROCK_AUTH_MODE === "iam") {
+    const contract = JSON.parse(await readFile(resolve(REPO_ROOT, "infra/deployment/production.contract.json"), "utf8"));
+    const environment = contract.topology.computePlane.providerRuntime.environment;
+    for (const config of MODEL_CONFIGS) process.env[config.modelEnv] ??= environment[config.modelEnv];
+  }
 
   await mkdir(EVIDENCE_DIR, { recursive: true });
   await mkdir(dirname(JSON_REPORT_PATH), { recursive: true });
@@ -178,6 +183,7 @@ async function main(): Promise<void> {
           traceId,
           urgent: true,
           deadlineMs: 10_000,
+          maxOutputTokens: 128,
         });
         const usage = provider.lastUsage;
         if (!response.trim()) throw new Error("provider returned an empty response");
@@ -242,7 +248,7 @@ async function main(): Promise<void> {
     localDatabaseOnly: true,
     productionEgress: false,
     businessActions: [],
-    credentialSource: "AWS_BEDROCK_API_KEY|AWS_BEARER_TOKEN_BEDROCK (value withheld)",
+    credentialSource: process.env.AWS_BEDROCK_AUTH_MODE === "iam" ? "AWS SDK credential chain" : "Bedrock API key (value withheld)",
     directVendorKeysUsed: false,
     models: MODEL_CONFIGS.map((config) => ({ provider: config.provider, model: modelFor(config), transport: "bedrock-converse" })),
     results,

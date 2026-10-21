@@ -13,6 +13,14 @@ export const NO_CHANGES = "The submitted information didn't contain changes. Sub
 export const classes = ["REALTIME", "INTERACTIVE", "BACKGROUND", "HEAVY"]
 export const captureRoot = "/tmp/finnor-production-compute-artifact-e2e-captures"
 const hash = (bytes) => createHash("sha256").update(bytes).digest("hex")
+// Expected workload privileges are independent of the deployment mapper.
+function fixtureSecretMap(contract, workloadClass) {
+  const keys = workloadClass === "REALTIME" ? ["DATABASE_URL", "SENTRY_DSN", "SUPABASE_SERVICE_ROLE_KEY"]
+    : workloadClass === "HEAVY" ? ["DATABASE_URL", "REDIS_URL", "SENTRY_DSN", "EMBEDDINGS_API_KEY"]
+    : ["DATABASE_URL", "REDIS_URL", "SENTRY_DSN", "SUPABASE_SERVICE_ROLE_KEY", "VAPI_API_KEY", "VAPI_WEBHOOK_SECRET", "EXA_API_KEY", "EMBEDDINGS_API_KEY"]
+  const secrets = { ...contract.topology.worker.secretMap, ...contract.topology.computePlane.providerRuntime.workerSecrets }
+  return Object.fromEntries(keys.map(key => [key, secrets[key]]))
+}
 
 export function createFixture(t, scenario = "valid") {
   const root = mkdtempSync(join(tmpdir(), "finnor-release-e2e-"))
@@ -142,7 +150,7 @@ function fleet(s) {
     const taskArn = `arn:aws:ecs:us-east-1:${s.contract.topology.worker.accountId}:task/finnor-production/${name}`
     const definition = `arn:aws:ecs:us-east-1:${s.contract.topology.worker.accountId}:task-definition/${profile.taskFamily}:7`
     const ip = `10.0.0.${i + 10}`
-    const env = { FINNOR_COMMIT_SHA: SHA, FINNOR_BUILD_ID: `finnor-${SHA.slice(0, 12)}`, FINNOR_VERSION: `0.1.0+${SHA.slice(0, 12)}`, FINNOR_RELEASE_SOURCE: "github-actions", FINNOR_ENVIRONMENT: "production", FINNOR_CORE_CERTIFICATION_ID: `post-merge:${SHA}`, FINNOR_WORKLOAD_CLASS: name }
+    const env = { FINNOR_COMMIT_SHA: SHA, FINNOR_BUILD_ID: `finnor-${SHA.slice(0, 12)}`, FINNOR_VERSION: `0.1.0+${SHA.slice(0, 12)}`, FINNOR_RELEASE_SOURCE: "github-actions", FINNOR_ENVIRONMENT: "production", FINNOR_CORE_CERTIFICATION_ID: `post-merge:${SHA}`, FINNOR_WORKLOAD_CLASS: name, FINNOR_SECRET_IDS: JSON.stringify(fixtureSecretMap(s.contract, name)), ...(name === "REALTIME" ? {} : Object.fromEntries(Object.entries(s.contract.topology.computePlane.providerRuntime.environment).filter(([key]) => key !== "AWS_BEDROCK_REGION"))) }
     return { name, profile, taskArn, definition, ip,
       service: { status: "ACTIVE", serviceName: profile.serviceName, launchType: "FARGATE", desiredCount: 1, runningCount: 1, pendingCount: 0, taskDefinition: definition, deployments: [{ status: "PRIMARY", taskDefinition: definition, rolloutState: "COMPLETED" }] },
       task: { taskArn, taskDefinitionArn: definition, lastStatus: "RUNNING", attachments: [{ details: [{ name: "privateIPv4Address", value: ip }] }], containers: [{ name: profile.containerName, lastStatus: "RUNNING", healthStatus: "HEALTHY", imageDigest: DIGEST }] },
@@ -237,9 +245,12 @@ export function mockCommand(name, args) {
     if (service === "cloudformation" && command === "describe-stacks") {
       const count = readFileSync(s.log, "utf8").split("\n").filter((line) => line.includes('"describe-stacks"')).length
       const parameters = { ImageUri: `${s.contract.topology.worker.accountId}.dkr.ecr.us-east-1.amazonaws.com/finnor-worker@${DIGEST}`, ReleaseCommitSha: SHA, ReleaseBuildId: `finnor-${SHA.slice(0, 12)}`, ReleaseVersion: `0.1.0+${SHA.slice(0, 12)}`, CoreCertificationId: `post-merge:${SHA}`, SupabaseUrl: s.contract.topology.database.supabaseUrl, ComputePlaneStage: s.scenario === "routing-recovery" ? "preparing" : "finalized", LegacyWorkerTaskDefinitionArn: "" }
-      parameters.SecretMap = JSON.stringify(s.contract.topology.worker.secretMap)
-      parameters.RealtimeSecretMap = JSON.stringify(Object.fromEntries(["DATABASE_URL","SENTRY_DSN","SUPABASE_SERVICE_ROLE_KEY"].map((key) => [key,s.contract.topology.worker.secretMap[key]])))
-      parameters.HeavySecretMap = JSON.stringify(Object.fromEntries(["DATABASE_URL","GROQ_API_KEY","REDIS_URL","SENTRY_DSN"].map((key) => [key,s.contract.topology.worker.secretMap[key]])))
+      parameters.GlmModel = s.contract.topology.computePlane.providerRuntime.environment.AWS_BEDROCK_GLM_MODEL_ID
+      parameters.MistralModel = s.contract.topology.computePlane.providerRuntime.environment.AWS_BEDROCK_MISTRAL_MODEL_ID
+      parameters.DeepseekModel = s.contract.topology.computePlane.providerRuntime.environment.AWS_BEDROCK_DEEPSEEK_MODEL_ID
+      parameters.SecretMap = JSON.stringify(fixtureSecretMap(s.contract, "INTERACTIVE"))
+      parameters.RealtimeSecretMap = JSON.stringify(fixtureSecretMap(s.contract, "REALTIME"))
+      parameters.HeavySecretMap = JSON.stringify(fixtureSecretMap(s.contract, "HEAVY"))
       if (s.scenario === "parameter-sha") parameters.ReleaseCommitSha = "c".repeat(40)
       if (s.scenario === "parameter-digest") parameters.ImageUri = "wrong:image"
       return out({ Stacks: [{ StackName: "finnor-production", StackId: `arn:aws:cloudformation:us-east-1:${s.contract.topology.worker.accountId}:stack/finnor-production/fixture`, StackStatus: s.scenario === "unstable-stack" && count > 1 ? "UPDATE_IN_PROGRESS" : "UPDATE_COMPLETE", Parameters: Object.entries(parameters).map(([ParameterKey, ParameterValue]) => ({ ParameterKey, ParameterValue })) }] })
