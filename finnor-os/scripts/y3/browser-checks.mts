@@ -57,7 +57,7 @@ function current(workId=f.workId){
  wait(`document.querySelector('${panel}')?.dataset.interactionProtocol!=='none'&&document.querySelector('${panel} > p[role=status]')?.textContent?.startsWith('CHECKED.')===true`);
 }
 function choose(id:string){
- browser('find','label','Interaction','select',id,'--exact');
+ browser('select',panel+' > label:first-of-type > select',id);
  wait(`document.querySelector('${panel}')?.dataset.interactionProtocol===${JSON.stringify(id)}`);current();
 }
 function signIn(email:string,url:string,workId=f.workId){
