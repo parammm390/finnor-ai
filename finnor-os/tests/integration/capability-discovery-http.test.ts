@@ -5,13 +5,14 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import pg from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { closePool, configureTenantVertical } from "@finnor/db";
+import { closePool, configureTenantVertical, recordWorkResponse, transitionWork } from "@finnor/db";
 import { FinnorOrchestrator, prepareEmployeeConversationTurn, registerProvider } from "@finnor/orchestration";
 import { assertDisposableDatabaseTarget } from "../../packages/db/production-target-guard";
 import { CURRENT_MIGRATION_HEAD } from "../../packages/db/migration-head";
 import { browserHttpFixture } from "../../scripts/v2/browser-http-fixture.mjs";
 import { startHeartbeat } from "../../apps/worker/src/heartbeat";
 import { readWorkerFleetReadiness } from "../../apps/api/lib/worker-readiness";
+import { createDeal } from "@finnor/private-equity";
 
 // This real intake regression owns routing, persisted thread continuity and the
 // read-only result. Phrase tests and context-loader tests cannot observe them.
@@ -190,6 +191,141 @@ describe.skipIf(!adminUrl)("authenticated capability discovery", () => {
     expect(refused.status, JSON.stringify(refused.body)).toBe(404);
     expect(refused.body.answer).toBeUndefined();
     expect(refused.body.threadId).toBeUndefined();
+  });
+
+  it("replays the exact older input after a newer input and lifecycle update on the same Work", async () => {
+    const firstInput = { instruction: "What can you do?", channel: "text", instructionId: randomUUID(), idempotencyKey: randomUUID() };
+    const first = await http.request("actions", firstInput);
+    expect(first.status, JSON.stringify(first.body)).toBe(201);
+    const second = await http.request("actions", { instruction: "List your registered capabilities.", channel: "text", instructionId: randomUUID(), idempotencyKey: randomUUID(), workId: first.body.workId, threadId: first.body.threadId });
+    await record("two accepted inputs on one Work", { firstInput, first, second });
+    expect(second.status, JSON.stringify(second.body)).toBe(201);
+    expect(second.body.workId).toBe(first.body.workId);
+    expect(second.body.workInputId).not.toBe(first.body.workInputId);
+    const replay = await http.request("actions", firstInput);
+    await record("replay older input", replay);
+    expect(replay.status, JSON.stringify(replay.body)).toBe(200);
+    expect(replay.body).toMatchObject({ ...first.body, duplicate: true });
+    const lifecycle = { kind: "independently_recorded_completion", source: "canonical Work owner" };
+    await transitionWork(tenantId, first.body.workId, "completed", "completion_metadata_retained", {}, { finalOutcome: lifecycle });
+    await recordWorkResponse({ tenantId, workId: first.body.workId, workInputId: first.body.workInputId, userId: actorId }, first.body);
+    const work = (await admin.query("SELECT final_outcome FROM finnor_os.works WHERE tenant_id=$1 AND id=$2", [tenantId, first.body.workId])).rows[0];
+    expect(work.final_outcome).toEqual(lifecycle);
+    const replayAfterLifecycle = await http.request("actions", firstInput);
+    await record("original replay after lifecycle change", { replayAfterLifecycle, work });
+    expect(replayAfterLifecycle.body).toMatchObject({ ...first.body, duplicate: true });
+    const counts = (await admin.query("SELECT (SELECT count(*)::int FROM finnor_os.work_inputs WHERE tenant_id=$1 AND work_id=$2) AS inputs,(SELECT count(*)::int FROM finnor_os.work_planner_attempts WHERE tenant_id=$1 AND work_id=$2) AS attempts", [tenantId, first.body.workId])).rows[0];
+    expect(counts).toEqual({ inputs: 2, attempts: 2 });
+    // Losing a response projection cannot authorize replay of a different input.
+    await admin.query("DELETE FROM finnor_os.work_input_responses WHERE tenant_id=$1 AND work_input_id=$2", [tenantId, first.body.workInputId]);
+    const unavailable = await http.request("actions", firstInput);
+    await record("missing original receipt after a newer input", unavailable);
+    expect(unavailable.status).toBe(500);
+    expect(unavailable.body).toMatchObject({ workId: first.body.workId, workInputId: first.body.workInputId, duplicate: true });
+    expect(unavailable.body.answer).toBeUndefined();
+    expect(unavailable.body.assistantMessage).toBeUndefined();
+    expect(unavailable.body.objective).toBeUndefined();
+  });
+
+  it("does not replay a private input response to a different employee with its exact request keys", async () => {
+    const input = { instruction: "What can you do?", channel: "text", instructionId: randomUUID(), idempotencyKey: randomUUID() };
+    const accepted = await http.request("actions", input);
+    expect(accepted.status).toBe(201);
+    const refused = await http.request("actions", input, "other");
+    await record("foreign employee exact-key replay refusal", { input, accepted, refused });
+    expect([403, 404, 409], JSON.stringify(refused.body)).toContain(refused.status);
+    expect(JSON.stringify(refused.body)).not.toContain(accepted.body.threadId);
+    expect(refused.body.answer).toBeUndefined();
+    expect(refused.body.assistantMessage).toBeUndefined();
+    const applicationUrl = new URL(adminUrl!); applicationUrl.username = "finnor_app"; applicationUrl.password = "finnor_app";
+    const client = new pg.Client({ connectionString: applicationUrl.toString() }); await client.connect();
+    const readAs = async (userId: string) => {
+      await client.query("BEGIN");
+      try {
+        await client.query("SELECT set_config('app.tenant_id',$1,true),set_config('app.user_id',$2,true)", [tenantId, userId]);
+        return (await client.query("SELECT response FROM finnor_os.work_input_responses WHERE tenant_id=$1 AND work_input_id=$2", [tenantId, accepted.body.workInputId])).rows;
+      } finally { await client.query("ROLLBACK"); }
+    };
+    try {
+      await expect(recordWorkResponse({ tenantId, workId: accepted.body.workId, workInputId: accepted.body.workInputId, userId: actorId }, { ...accepted.body, replacedReply: true })).rejects.toThrow("different principal or exact input");
+      expect(await readAs(actorId)).toEqual([{ response: accepted.body }]);
+      expect(await readAs(otherActorId)).toEqual([]);
+      expect(await readAs("")).toEqual([]);
+      for (const statement of ["UPDATE finnor_os.work_input_responses SET response='{}'::jsonb", "DELETE FROM finnor_os.work_input_responses"]) {
+        await expect(client.query(statement)).rejects.toMatchObject({ code: "42501" });
+      }
+      await record("ordinary role exact reply privacy and immutability", { actorRows: 1, otherEmployeeRows: 0, anonymousRows: 0, mutationSqlState: "42501" });
+    } finally { await client.end(); }
+  });
+
+  it("keeps legacy replies private across every shared Work read while retaining exact replay", async () => {
+    const input = { instruction: "What can you do?", channel: "text", instructionId: randomUUID(), idempotencyKey: randomUUID() };
+    const accepted = await http.request("actions", input);
+    expect(accepted.status).toBe(201);
+    // Recreate the previous release's actual cache layout without erasing history.
+    const lifecycle = { kind: "legacy_lifecycle_evidence", independentlyRetained: true };
+    await admin.query("UPDATE finnor_os.works SET final_outcome=$3::jsonb WHERE tenant_id=$1 AND id=$2", [tenantId, accepted.body.workId, JSON.stringify({ ...lifecycle, response: accepted.body })]);
+    await admin.query("DELETE FROM finnor_os.work_input_responses WHERE tenant_id=$1 AND work_input_id=$2", [tenantId, accepted.body.workInputId]);
+    for (const path of ["works", `works/${accepted.body.workId}`, `works/${accepted.body.workId}/execution`, "read-models/work-cases"]) {
+      const shared = await http.read(path, "other");
+      await record("legacy cache excluded from shared Work read", { path, shared });
+      expect(shared.status, JSON.stringify(shared.body)).toBe(200);
+      const work = path === "works" ? shared.body.works.find((row: { id: string }) => row.id === accepted.body.workId)
+        : path === "read-models/work-cases" ? shared.body.data.find((row: { durableWork?: { id: string } }) => row.durableWork?.id === accepted.body.workId)?.durableWork
+          : path.endsWith("/execution") ? shared.body.execution.work : shared.body.work.work;
+      expect(work, `Target Work must actually occur in ${path}`).toMatchObject({ id: accepted.body.workId, finalOutcome: lifecycle });
+      expect(JSON.stringify(shared.body)).not.toContain(accepted.body.assistantMessage.id);
+      expect(JSON.stringify(shared.body)).not.toContain('"response":');
+    }
+    const replay = await http.request("actions", input);
+    await record("legacy cache exact-owner replay", replay);
+    expect(replay.status).toBe(200);
+    expect(replay.body).toMatchObject({ ...accepted.body, duplicate: true });
+    const preserved = (await admin.query("SELECT final_outcome FROM finnor_os.works WHERE tenant_id=$1 AND id=$2", [tenantId, accepted.body.workId])).rows[0].final_outcome;
+    expect(preserved).toEqual({ ...lifecycle, response: accepted.body });
+  });
+
+  it("replays the original typed query snapshot after a later query on its Work", async () => {
+    const input = { intent: "work_list", page: { limit: 100 }, idempotencyKey: randomUUID() };
+    const first = await http.request("queries", input);
+    expect(first.status, JSON.stringify(first.body)).toBe(201);
+    const second = await http.request("queries", { ...input, workId: first.body.workId, idempotencyKey: randomUUID() });
+    expect(second.status, JSON.stringify(second.body)).toBe(201);
+    expect(second.body.workInputId).not.toBe(first.body.workInputId);
+    const replay = await http.request("queries", input);
+    await record("typed query input snapshot replay", { input, first, second, replay });
+    expect(replay.status, JSON.stringify(replay.body)).toBe(200);
+    expect(replay.body).toMatchObject({ ...first.body, duplicate: true });
+    const executions = (await admin.query("SELECT count(*)::int AS count FROM finnor_os.work_query_executions WHERE tenant_id=$1 AND work_id=$2", [tenantId, first.body.workId])).rows[0].count;
+    expect(executions).toBe(2);
+    const changed = await http.request("queries", { ...input, page: { limit: 1 } });
+    expect(changed.status, JSON.stringify(changed.body)).toBe(409);
+    await admin.query("DELETE FROM finnor_os.work_input_responses WHERE tenant_id=$1 AND work_input_id=$2", [tenantId, first.body.workInputId]);
+    const unavailable = await http.request("queries", input);
+    await record("typed query missing exact reply", { changed, unavailable });
+    expect(unavailable.status).toBe(500);
+    expect(unavailable.body).toMatchObject({ workId: first.body.workId, workInputId: first.body.workInputId, instructionId: first.body.instructionId, duplicate: true });
+    expect(unavailable.body.result).toBeUndefined();
+    expect((await admin.query("SELECT count(*)::int AS count FROM finnor_os.work_query_executions WHERE tenant_id=$1 AND work_id=$2", [tenantId, first.body.workId])).rows[0].count).toBe(2);
+  });
+
+  it("persists and replays a real PE query with canonical date-valued rows", async () => {
+    const companyId = randomUUID();
+    await admin.query("INSERT INTO finnor_os.external_organizations(id,tenant_id,organization_key,name,kind) VALUES($1,$2,$3,'Reply serialization target','other')", [companyId, tenantId, `reply-${companyId}`]);
+    const deal = await createDeal({ auth: { tenantId, userId: actorId, employeeId: actorId, role: "owner" }, provenance: { sourceSystem: "integration:input-reply", createdBy: actorId } }, {
+      targetOrganizationId: companyId, name: "Reply serialization Deal", dealLeadEmployeeId: actorId,
+      signedLoiAt: new Date("2026-09-01T00:00:00.000Z"), targetClosingAt: new Date("2026-12-01T00:00:00.000Z"),
+    });
+    expect(deal.row.createdAt).toBeInstanceOf(Date);
+    const input = { intent: "deal_context", dealId: String(deal.row.id), idempotencyKey: randomUUID() };
+    const first = await http.request("queries", input);
+    await record("PE typed query containing canonical dates", { input, first, ownerRow: deal.row });
+    expect(first.status, JSON.stringify(first.body)).toBe(201);
+    expect(first.body.result.deal.createdAt).toBe((deal.row.createdAt as Date).toISOString());
+    const replay = await http.request("queries", input);
+    await record("PE typed query date snapshot replay", replay);
+    expect(replay.status, JSON.stringify(replay.body)).toBe(200);
+    expect(replay.body).toMatchObject({ ...first.body, duplicate: true });
   });
 
   it("stops capability continuation at a changed business topic", async () => {

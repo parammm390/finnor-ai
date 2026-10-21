@@ -66,7 +66,7 @@ describe.skipIf(!available)("intake idempotency (A4.T6)", () => {
     const instructionId = randomUUID();
     const claim = await receiveWork({ tenantId: TENANT_ID, instruction: "record canonical response", channel: "text", instructionId, idempotencyKey: key });
     const realResponse = { planned: [{ actionType: "record_finding", payload: {} }] };
-    await recordWorkResponse(TENANT_ID, claim.workId, realResponse);
+    await recordWorkResponse({ tenantId: TENANT_ID, workId: claim.workId, workInputId: claim.workInputId }, realResponse);
 
     const repeat = await receiveWork({ tenantId: TENANT_ID, instruction: "record canonical response", channel: "text", instructionId, idempotencyKey: key });
     expect(repeat.duplicate).toBe(true);

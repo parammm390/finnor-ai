@@ -1722,6 +1722,9 @@ async function finishIteration(params: {
     await db.execute(sql`SELECT id FROM ${workObjectiveLoops} WHERE ${workObjectiveLoops.id}=${params.loop.id} FOR NO KEY UPDATE`);
     const [current] = await db.select().from(workObjectiveLoops).where(eq(workObjectiveLoops.id, params.loop.id)).limit(1);
     if (!current) throw new Error("Objective loop disappeared while finishing an iteration");
+    // Plan replacement locks Work before its steps. Take that lock before any
+    // step/assignment writes so finalization cannot invert their lock order.
+    await db.execute(sql`SELECT id FROM ${works} WHERE ${works.tenantId}=${params.tenantId} AND ${works.id}=${params.loop.workId} FOR NO KEY UPDATE`);
     const [currentStep] = await db.select().from(workObjectiveSteps).where(and(eq(workObjectiveSteps.tenantId, params.tenantId), eq(workObjectiveSteps.id, params.step.id))).limit(1);
     const nodeAttempt = currentStep?.executionRole === "node";
     const [boundPlan] = currentStep?.planRevisionId ? await db.select({
@@ -1896,21 +1899,23 @@ async function finishIteration(params: {
         updatedAt: new Date(),
       }).where(and(eq(outcomePackRuns.tenantId, params.tenantId), eq(outcomePackRuns.objectiveLoopId, current.id)));
     }
+    if (!wakeClaimedDuringWaitCreation) {
+      const workStatus = outcome === "continue" ? "executing" : outcome;
+      await transitionWorkTx(db, params.tenantId, params.loop.workId, workStatus, "objective_iteration_finished", {
+        objectiveLoopId: params.loop.id,
+        objectiveStepId: params.step.id,
+        stepNumber: params.step.stepNumber,
+        outcome,
+        reason: finalLoop.reason,
+      }, outcome === "completed"
+        ? { finalOutcome: { kind: "objective", objectiveLoopId: params.loop.id, successVerification: params.successVerification, observation: bounded(params.observation), reason: finalLoop.reason } }
+        : outcome === "failed" ? { failure: { kind: "objective", objectiveLoopId: params.loop.id, reason: finalLoop.reason, detail: bounded(params.failure) } }
+          : outcome === "cancelled" ? { finalOutcome: { kind: "objective", objectiveLoopId: params.loop.id, state: "cancelled", reason: finalLoop.reason } } : {});
+    }
     return { outcome, loop: finalLoop, superseded: false as const, wakeClaimedDuringWaitCreation, finalizedAssignmentId: activeAssignment?.id ?? null };
   });
   if (result.superseded) return result;
   if (result.wakeClaimedDuringWaitCreation) return result;
-  const workStatus = result.outcome === "continue" ? "executing" : result.outcome;
-  await transitionWork(params.tenantId, params.loop.workId, workStatus, "objective_iteration_finished", {
-    objectiveLoopId: params.loop.id,
-    objectiveStepId: params.step.id,
-    stepNumber: params.step.stepNumber,
-    outcome: result.outcome,
-    reason: result.loop.reason,
-  }, result.outcome === "completed"
-    ? { finalOutcome: { kind: "objective", objectiveLoopId: params.loop.id, successVerification: params.successVerification, observation: bounded(params.observation), reason: result.loop.reason } }
-    : result.outcome === "failed" ? { failure: { kind: "objective", objectiveLoopId: params.loop.id, reason: result.loop.reason, detail: bounded(params.failure) } }
-      : result.outcome === "cancelled" ? { finalOutcome: { kind: "objective", objectiveLoopId: params.loop.id, state: "cancelled", reason: result.loop.reason } } : {});
   if (result.outcome === "continue") await scheduleIteration(result.loop, new Date(), params.loop.workId);
   if (result.finalizedAssignmentId) await recordLearningObservationForAssignment(params.tenantId, result.finalizedAssignmentId);
   return result;

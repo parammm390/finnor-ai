@@ -668,6 +668,21 @@ export interface ReceivedWork {
   finalOutcome: unknown;
 }
 
+/** Historical API response caches contain employee conversation data. Shared
+ * Work readers expose lifecycle evidence only; exact input replay owns replies. */
+export function workLifecycleOutcome(value: unknown): unknown {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return value;
+  const { response: _response, ...outcome } = value as Record<string, unknown>;
+  return Object.keys(outcome).length ? outcome : null;
+}
+
+function legacyInputResponse(value: unknown, input: typeof schema.workInputs.$inferSelect): Record<string, unknown> | undefined {
+  const response = jsonObject(jsonObject(value).response);
+  const identity = typeof response.workInputId === "string" ? response : jsonObject(response.objective);
+  return identity.workId === input.workId && identity.workInputId === input.id && identity.instructionId === input.instructionId
+    ? response : undefined;
+}
+
 export interface HandoffWorkParams {
   tenantId: string;
   workId: string;
@@ -813,6 +828,8 @@ export async function receiveWork(params: ReceiveWorkParams): Promise<ReceivedWo
     }
 
     const duplicateForInput = async (input: typeof schema.workInputs.$inferSelect): Promise<ReceivedWork> => {
+      // Idempotency keys never confer the original employee's private reply.
+      if (input.createdBy !== (isUuid(params.userId) ? params.userId : null)) throw new ExactWorkIntakeConflict();
       if (params.requireExactIntake && (
         input.createdBy !== params.userId || input.channel !== params.channel ||
         input.instructionText !== params.instruction ||
@@ -833,6 +850,10 @@ export async function receiveWork(params: ReceiveWorkParams): Promise<ReceivedWo
         canonicalWork.initialInstruction !== params.instruction ||
         (params.workId !== undefined && canonicalWork.id !== params.workId)
       )) throw new ExactWorkIntakeConflict();
+      const [receipt] = await db.select({ response: schema.workInputResponses.response }).from(schema.workInputResponses).where(and(
+        eq(schema.workInputResponses.tenantId, params.tenantId), eq(schema.workInputResponses.workInputId, input.id),
+      )).limit(1);
+      const response = receipt?.response ?? legacyInputResponse(canonicalWork.finalOutcome, input);
       return {
         workId: canonicalWork.id,
         workInputId: input.id,
@@ -840,7 +861,7 @@ export async function receiveWork(params: ReceiveWorkParams): Promise<ReceivedWo
         created: false,
         duplicate: true,
         status: canonicalWork.status,
-        finalOutcome: canonicalWork.finalOutcome,
+        finalOutcome: response ? { response } : null,
       };
     };
 
@@ -1030,7 +1051,7 @@ export async function receiveWork(params: ReceiveWorkParams): Promise<ReceivedWo
         eq(schema.employeeConversationThreads.tenantId, params.tenantId)));
     }
     return { workId: work.id, workInputId: input.id, instructionId: desiredInstructionId, created, duplicate: false, status: currentStatus, finalOutcome: work.finalOutcome };
-  }, params.employeeThreadContext ? params.userId : undefined);
+  }, isUuid(params.userId) ? params.userId : undefined);
 }
 
 /** Freeze the tenant-validated interaction context on the already-claimed input.
@@ -1315,17 +1336,27 @@ export async function transitionWork(
   await withTenant(tenantId, (db) => transitionWorkTx(db, tenantId, workId, toStatus, eventType, payload, patch));
 }
 
-/** Persist the exact backward-compatible API response without manufacturing a
- * lifecycle transition. Intake retries can therefore replay the original shape. */
-export async function recordWorkResponse(tenantId: string, workId: string, response: Record<string, unknown>): Promise<void> {
-  await withTenant(tenantId, async (db) => {
-    const [work] = await db.select({ finalOutcome: schema.works.finalOutcome }).from(schema.works).where(and(eq(schema.works.id, workId), eq(schema.works.tenantId, tenantId))).limit(1);
-    if (!work) throw new Error("Work not found");
-    await db.update(schema.works).set({
-      finalOutcome: { ...jsonObject(work.finalOutcome), response },
-      updatedAt: new Date(),
-    }).where(and(eq(schema.works.id, workId), eq(schema.works.tenantId, tenantId)));
-  });
+/** A reply is write-once for one input and its authenticated principal. Recording
+ * it neither races nor modifies the canonical Work completion evidence. */
+export async function recordWorkResponse(
+  scope: { tenantId: string; workId: string; workInputId: string; userId?: string },
+  response: Record<string, unknown>,
+): Promise<void> {
+  const userId = isUuid(scope.userId) ? scope.userId : undefined;
+  // Compare the wire representation JSONB actually stores (including Date and
+  // other toJSON values), not the in-memory object graph from a canonical read.
+  const wireResponse = JSON.parse(JSON.stringify(response)) as Record<string, unknown>;
+  await withTenant(scope.tenantId, async (db) => {
+    const [input] = await db.select().from(schema.workInputs).where(and(
+      eq(schema.workInputs.tenantId, scope.tenantId), eq(schema.workInputs.workId, scope.workId), eq(schema.workInputs.id, scope.workInputId),
+    )).limit(1);
+    if (!input || input.createdBy !== (userId ?? null)) throw new ExactWorkIntakeConflict();
+    await db.insert(schema.workInputResponses).values({ tenantId: scope.tenantId, workInputId: input.id, response: wireResponse }).onConflictDoNothing();
+    const [stored] = await db.select({ response: schema.workInputResponses.response }).from(schema.workInputResponses).where(and(
+      eq(schema.workInputResponses.tenantId, scope.tenantId), eq(schema.workInputResponses.workInputId, input.id),
+    )).limit(1);
+    if (!stored || canonicalJson(stored.response) !== canonicalJson(wireResponse)) throw new ExactWorkIntakeConflict();
+  }, userId);
 }
 
 const WORK_RECOVERY_CLAIM_TTL_MS = 15 * 60_000;
@@ -2059,7 +2090,7 @@ export async function workAggregate(tenantId: string, workId: string): Promise<W
         ? or(eq(schema.integrationEvents.workId, workId), inArray(schema.integrationEvents.id, wakeEventIds))
         : eq(schema.integrationEvents.workId, workId),
     )).orderBy(asc(schema.integrationEvents.occurredAt), asc(schema.integrationEvents.id)).limit(MAX_WORK_AGGREGATE_ROWS + 1));
-    return { work, inputs, plannerAttempts, planRevisions, actions, businessEffects, approvals, workflowRuns, workflowSteps, receipts, repairs, events, queryExecutions, entityLinks, operations, operationTargets, operationEvents, objectiveLoop: objectiveLoop ?? null, objectiveSteps, objectivePlannerAttempts, workforceAssignments: workforceAssignmentRows, recoveryDecisions, eventWaits, wakeClaims, integrationEvents, read: { limit: MAX_WORK_AGGREGATE_ROWS, complete: truncatedTables.length === 0, truncatedTables } };
+    return { work: { ...work, finalOutcome: workLifecycleOutcome(work.finalOutcome) }, inputs, plannerAttempts, planRevisions, actions, businessEffects, approvals, workflowRuns, workflowSteps, receipts, repairs, events, queryExecutions, entityLinks, operations, operationTargets, operationEvents, objectiveLoop: objectiveLoop ?? null, objectiveSteps, objectivePlannerAttempts, workforceAssignments: workforceAssignmentRows, recoveryDecisions, eventWaits, wakeClaims, integrationEvents, read: { limit: MAX_WORK_AGGREGATE_ROWS, complete: truncatedTables.length === 0, truncatedTables } };
   });
 }
 

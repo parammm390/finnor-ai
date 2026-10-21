@@ -1009,6 +1009,22 @@ export const workInputs = pgTable(
   ],
 );
 
+// API replies are private to the input's principal. They must never share the
+// mutable Work lifecycle outcome or appear in the shared Work aggregate.
+export const workInputResponses = pgTable(
+  "work_input_responses",
+  {
+    tenantId: uuid("tenant_id").notNull(),
+    workInputId: uuid("work_input_id").notNull(),
+    response: jsonb("response").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.tenantId, t.workInputId] }),
+    foreignKey({ columns: [t.tenantId, t.workInputId], foreignColumns: [workInputs.tenantId, workInputs.id] }),
+  ],
+);
+
 export const workPlannerAttempts = pgTable(
   "work_planner_attempts",
   {
