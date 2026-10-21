@@ -1,9 +1,10 @@
-/** Explicit disk-heavy verifier for a packet-reconstructed checkout. It does
- * not recycle, delete or borrow any existing source/dependency/database tree. */
+/** Explicit disk-heavy verifier for a packet-reconstructed checkout. It never
+ * deletes pre-existing trees or databases. Only its own fresh frontend
+ * dependencies are disposed, after their emitted build has passed. */
 import {strict as assert} from 'node:assert';
 import {spawnSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
-import {readFileSync,writeFileSync,mkdirSync,openSync,closeSync,realpathSync,lstatSync,readdirSync,existsSync,statfsSync} from 'node:fs';
+import {readFileSync,writeFileSync,mkdirSync,openSync,closeSync,realpathSync,lstatSync,readdirSync,existsSync,statfsSync,renameSync,rmSync} from 'node:fs';
 import {join,resolve,dirname,isAbsolute,sep} from 'node:path';
 const checkout=resolve(import.meta.dirname,'../../..'),backend=join(checkout,'finnor-os'),
  evidence=process.env.FINNOR_Y3_RECONSTRUCTION_EVIDENCE,packet=process.env.FINNOR_Y3_SOURCE_PACKET,temporary=process.env.FINNOR_Y3_TMPDIR;
@@ -29,7 +30,7 @@ const roots=[checkout,temporary,evidence,packet].map(path=>realpathSync(path)).s
  !all.some((parent,i)=>i!==index&&path.startsWith(parent+sep))).filter((path,index,all)=>all.indexOf(path)===index);
 const env={PATH:dirname(process.execPath)+':'+process.env.PATH,HOME:process.env.HOME,TMPDIR:temporary,
  NODE_ENV:'test',NODE_OPTIONS:'--max-old-space-size=4096',NEXT_TELEMETRY_DISABLED:'1'};
-let installs=0,workspaceLinks=0,passed=false,mathEvidence=null;
+let installs=0,workspaceLinks=0,passed=false,mathEvidence=null,frontendDependencyDisposition=null;
 function meter(step){
  const result=spawnSync('du',['-s','-B1',...roots],{encoding:'utf8'});assert.equal(result.status,0,result.stderr);
  const ownedBytes=result.stdout.trim().split('\n').reduce((sum,line)=>sum+Number(line.split(/\s/)[0]),0),
@@ -56,6 +57,31 @@ function run(name,command,args,cwd=backend,extra={}){
 try{
  const ci=['ci','--ignore-scripts','--no-audit','--no-fund','--offline'];
  run('root-fresh-npm-ci','npm',ci,checkout);installs++;
+ for(const name of ['centropy:client:check','centropy:manifest:check','centropy:forms:check','centropy:coverage:check'])
+  run(name.replaceAll(':','-'),'npm',['run',name],checkout);
+ run('frontend-typecheck',process.execPath,['node_modules/typescript/bin/tsc','--noEmit','-p','tsconfig.json'],checkout);
+ run('frontend-changed-lint',process.execPath,['node_modules/eslint/bin/eslint.js',
+  'src/components/centropy/canvas/InteractionProtocolPanel.tsx','src/components/centropy/world/WorldWorkRecord.tsx'],checkout);
+ run('emitted-frontend-build','npm',['run','build'],checkout,{NODE_ENV:'production',
+  NEXT_PUBLIC_OS_API_URL:'http://127.0.0.1:1',NEXT_PUBLIC_SUPABASE_URL:'http://127.0.0.1:1',
+  NEXT_PUBLIC_SUPABASE_ANON_KEY:'y3-disposable-unconnected-build-only'});
+ for(const lock of locks)assert.equal(hash(join(checkout,lock.path)),lock.sha256);
+ assert.equal(git('status','--porcelain','--untracked-files=all'),'','FRONTEND_RECONSTRUCTION_SOURCE_DRIFT');
+ const frontendDependencies=join(checkout,'node_modules'),staged=join(checkout,'node_modules.y3-fresh-disposal'),
+  typescript=join(frontendDependencies,'typescript');
+ assert(lstatSync(frontendDependencies).isDirectory()&&!lstatSync(frontendDependencies).isSymbolicLink());
+ assert.equal(realpathSync(frontendDependencies),join(realpathSync(checkout),'node_modules'),'FRESH_FRONTEND_DISPOSAL_OUTSIDE_CHECKOUT');
+ assert(lstatSync(typescript).isDirectory()&&!lstatSync(typescript).isSymbolicLink());
+ assert.equal(realpathSync(typescript),join(realpathSync(checkout),'node_modules/typescript'));
+ assert(!existsSync(staged),'FRESH_FRONTEND_DISPOSAL_PATH_ALREADY_EXISTS');
+ meter('fresh-frontend-verified-before-disposal');
+ renameSync(frontendDependencies,staged);mkdirSync(frontendDependencies);
+ renameSync(join(staged,'typescript'),join(frontendDependencies,'typescript'));
+ rmSync(staged,{recursive:true});
+ frontendDependencyDisposition={path:frontendDependencies,createdBy:'root-fresh-npm-ci',
+  existedBeforeVerifier:false,frontendChecksAndEmittedBuildPassed:true,removedFreshDependencies:true,
+  retainedPackages:['typescript'],reason:'UNCHANGED_ROOT_P8_COMMAND_REQUIRES_TYPESCRIPT',emittedFrontendPreserved:true};
+ meter('fresh-frontend-dependencies-disposed');
  run('backend-fresh-npm-ci','npm',ci);installs++;
  for(const lock of locks)assert.equal(hash(join(checkout,lock.path)),lock.sha256);
  const namespace=join(backend,'node_modules/@finnor');
@@ -67,8 +93,7 @@ try{
  run('native-locked-dependency-rebuild','npm',['rebuild','--offline','fs-ext','embedded-postgres',
   '@embedded-postgres/'+process.platform+'-'+process.arch]);
  run('migration-bundle','npm',['run','db:bundle']);run('openapi','npm',['run','openapi']);
- for(const name of ['centropy:client:check','centropy:manifest:check','centropy:forms:check','centropy:coverage:check'])
-  run(name.replaceAll(':','-'),'npm',['run',name],checkout);
+ assert.equal(git('status','--porcelain','--untracked-files=all'),'','RECONSTRUCTION_GENERATED_SOURCE_DRIFT');
  run('owner-domain-boundary','npm',['run','release:pe-domain-boundary']);run('native-action-manifest','npm',['run','release:manifest']);
  run('zero-water-resurrection','npm',['run','release:p8-zero-resurrection'],checkout);
  run('emitted-api-build',process.execPath,['--import=tsx','scripts/y3/build-api.mts'],backend,{FINNOR_Y3_ALLOW_DISK_HEAVY_VERIFICATION:'1'});
@@ -82,10 +107,6 @@ try{
  assert.equal(mathematics.status,'PASS');assert.equal(mathematics.results.length,20);
  run('installed-native-owner-campaign',process.execPath,['--import=tsx','scripts/y3/run-installed.mts'],backend,
   {FINNOR_Y3_BUILT_API:'1',FINNOR_Y3_EVIDENCE_DIR:join(evidence,'installed')});
- run('frontend-typecheck',process.execPath,['node_modules/typescript/bin/tsc','--noEmit','-p','tsconfig.json'],checkout);
- run('emitted-frontend-build','npm',['run','build'],checkout,{NODE_ENV:'production',
-  NEXT_PUBLIC_OS_API_URL:'http://127.0.0.1:1',NEXT_PUBLIC_SUPABASE_URL:'http://127.0.0.1:1',
-  NEXT_PUBLIC_SUPABASE_ANON_KEY:'y3-disposable-unconnected-build-only'});
  assert.equal(git('status','--porcelain','--untracked-files=all'),'','RECONSTRUCTION_GENERATED_SOURCE_DRIFT');
  meter('complete');passed=true;
 }finally{
@@ -93,6 +114,7 @@ try{
   commit:source.commit,tree:source.tree,sourcePacket:packet,checkout,commands,meters,wallMs:Date.now()-started,locks,
   freshLockfileInstalls:installs,borrowedDependenciesUsedForBuild:installs===2?false:'BUILD_NOT_REACHED',
   workspaceLinksWithinCheckout:workspaceLinks>0,workspaceLinkCount:workspaceLinks,noGitAlternates:true,
+  dependencyInstallSequence:'FRESH_FRONTEND_VERIFIED_THEN_FRESH_BACKEND',frontendDependencyDisposition,
   temporaryStorageRoot:temporary,temporaryStorageIncludedInMeters:true,retainedDatabases:true,
   installedEvidence:join(evidence,'installed'),mathematicalEvidence:mathEvidence,
   frontendQualification:'EMITTED_BUILD_ONLY_NO_RECONSTRUCTED_BROWSER_PROOF',browserEvidence:null,

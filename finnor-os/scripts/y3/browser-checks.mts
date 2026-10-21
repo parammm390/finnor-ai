@@ -27,9 +27,20 @@ function inspect(js:string){
 const wait=(js:string)=>browser('wait','--fn',js);
 function click(name:string){
  wait(`Array.from(document.querySelectorAll('${panel} button')).some(b=>b.textContent?.trim().startsWith(${JSON.stringify(name)})&&!b.disabled)`);
+ if(name==='Queue dynamic synthesis'){
+  const selector=panel+' > details:first-of-type form button';
+  browser('focus',selector);
+  wait(`document.querySelector('${selector}')===document.activeElement&&!document.activeElement.disabled&&document.activeElement.form?.checkValidity()===true`);
+  browser('press','Enter');return;
+ }
  browser('find','role','button','click','--name',name);
 }
-const fill=(label:string,value:unknown)=>browser('find','label',label,'fill',typeof value==='string'?value:JSON.stringify(value));
+function fill(label:string,value:unknown){
+ const text=typeof value==='string'?value:JSON.stringify(value);
+ wait(`Array.from(document.querySelectorAll('${panel} textarea')).some(t=>t.closest('label')?.textContent?.startsWith(${JSON.stringify(label)})&&!t.disabled)`);
+ browser('find','label',label,'fill',text);
+ wait(`Array.from(document.querySelectorAll('${panel} textarea')).find(t=>t.closest('label')?.textContent?.startsWith(${JSON.stringify(label)}))?.value===${JSON.stringify(text)}`);
+}
 function enter(selector:string){browser('focus',selector);browser('press','Enter');}
 async function control(path:string,method='POST'){
  const r=await fetch(f.control+path,{method,headers:{connection:'close'},signal:AbortSignal.timeout(180000)}),
