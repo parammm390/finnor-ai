@@ -241,7 +241,8 @@ try{
   assert.equal(last.counters.attempts,LIMITS.maxAttempts);
   assert.equal(last.counters.searchStepsOccupied,LIMITS.maxAttempts*LIMITS.maxSearchSteps);
   assert(last.events.some((v:any)=>v.kind==='NATIVE_ATTEMPT_NOT_STARTED'));
-  const denied=await api('interaction-resume',{protocolId:last.protocolId});assert.equal(denied.status,422);
+  const denied=await api('interaction-resume',{protocolId:last.protocolId});
+  assert.equal(denied.status,409);assert.equal(denied.body.code,'Y3_ORIGINAL_RESUME_UNAVAILABLE');
   return {accepted,statuses:rows.map(v=>({protocolId:v.protocolId,status:v.status,counters:v.counters})),last,delivery,denied,originalBudgetNotReset:true};
  });
  await test('G-current-dynamic-incumbent-and-honest-UNKNOWN-fallback',async()=>{
