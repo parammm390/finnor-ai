@@ -403,20 +403,31 @@ try{
   const f=await compile(await fixture('rights_change')),p=await h!.prepare(f,'rights_change'),lowered=await h!.materialize(p),
    before=await read(f.accepted.protocolId);
   await e.admin.query("UPDATE finnor_os.users SET status='suspended' WHERE tenant_id=$1 AND id=$2",[tenant,peer]);
-  assert.equal((await api('interaction-local',{protocolId:f.accepted.protocolId},peer)).status,403);
+  const suspendedLocal=await api('interaction-local',{protocolId:f.accepted.protocolId},peer);
+  assert.equal(suspendedLocal.status,403);
   const denied=await api('economic-programme-run',{programmeId:lowered.programmeId});
-  assert.equal(denied.status,403);assert.equal(denied.body.code,'Y3_ACTIVE_PARTICIPANT_REQUIRED');
-  // Exact withdrawal survives loss of current operational rights.
-  const withdrawn=await h!.consent(f,p.terms,peer,'EFFECT',p.run.intent.ref.contentDigest,'WITHDRAW');
-  assert.equal(withdrawn.consent.decision,'WITHDRAW');
+  // Canonical suspension bumps tenant authority and invalidates Y1 before the
+  // downstream Y3 guard. Do not bypass that earlier owner to force a Y3 code.
+  assert.equal(denied.status,422);assert.equal(denied.body.code,'Y1_CURRENT_CHECKED_THEORY_REQUIRED');
+  assert.equal((await e.admin.query('SELECT status FROM finnor_os.y1_requests WHERE tenant_id=$1 AND id=$2',
+   [tenant,f.theory.accepted.theoryId])).rows[0].status,'INVALIDATED');
+  assert.equal((await e.admin.query('SELECT effect_id FROM finnor_os.s6_economic_obligation_origins WHERE tenant_id=$1 AND programme_id=$2',
+   [tenant,lowered.programmeId])).rowCount,0);
+  const suspendedWithdrawal=await api('interaction-consent',{protocolId:f.accepted.protocolId,termsRef:p.terms.ref,
+   scope:'EFFECT',subjectDigest:p.run.intent.ref.contentDigest,decision:'WITHDRAW',idempotencyKey:randomUUID()},peer);
+  assert.equal(suspendedWithdrawal.status,403);
+  // An active authenticated participant can still withdraw the exact old
+  // consent after operational rights invalidate. Suspension grants no access.
+  const withdrawn=await h!.consent(f,p.terms,principal,'EFFECT',p.run.intent.ref.contentDigest,'WITHDRAW');
+  assert.equal(withdrawn.consent.decision,'WITHDRAW');assert.equal(withdrawn.consent.principalId,principal);
   await e.admin.query('UPDATE finnor_os.authority_states SET revision=revision+1 WHERE tenant_id=$1',[tenant]);
   const after=await read(f.accepted.protocolId);assert.equal(after.status,'INVALIDATED');assert.equal(digest(after.artifact),digest(before.artifact));
   if(built){
    await h!.stopWorker();await e.http!.restartApi({runtime:'production',unsetDevBypass:true});
    const production=await api('interaction-list',{root:h!.root,workId:f.request.workId});
-   assert([403,503].includes(production.status));return {denied,withdrawn,after,production,productionActivated:false};
+   assert([403,503].includes(production.status));return {suspendedLocal,suspendedWithdrawal,denied,withdrawn,after,production,productionActivated:false};
   }
-  return {denied,withdrawn,after,production:'NOT_RUN_SOURCE_TRANSPORT_ONLY',productionActivated:false};
+  return {suspendedLocal,suspendedWithdrawal,denied,withdrawn,after,production:'NOT_RUN_SOURCE_TRANSPORT_ONLY',productionActivated:false};
  });
  passed=true;
 }catch(error){
