@@ -78,7 +78,7 @@ export async function startR1HttpFixture(repo:string,evidence:string,options?:{b
   if(result.ok&&identity&&refreshedFingerprints.get(identity.id)===createHash('sha256').update(token).digest('hex'))refreshedApiSuccesses++;
   let observed:unknown;try{observed=JSON.parse(output.toString());}catch{observed={contentType:result.headers.get('content-type'),rawText:output.toString()};}
   const held=delayed;
-  if(held&&parts.at(-1)===held.operation&&(input?.workId===held.scopeId||input?.applicationId===held.scopeId||input?.identificationId===held.scopeId||input?.theoryId===held.scopeId)&&!held.waiting){
+  if(held&&parts.at(-1)===held.operation&&(input?.workId===held.scopeId||input?.applicationId===held.scopeId||input?.identificationId===held.scopeId||input?.theoryId===held.scopeId||input?.protocolId===held.scopeId||input?.runId===held.scopeId)&&!held.waiting){
    held.waiting=true;
    await appendEvidence('held-owner-responses.jsonl',{at,path:url.pathname,input,ownerStatus:result.status,output:observed,transportHeld:true});
    await held.gate;if(held.failed)throw Error('DISPOSABLE_HELD_RESPONSE_TRANSPORT_FAILURE');
@@ -89,7 +89,7 @@ export async function startR1HttpFixture(repo:string,evidence:string,options?:{b
   }finally{finish();requests.delete(pending);}
  });
  const apiBase=await listen(api);
- return {apiBase,authBase,register:(id:string,email:string,password='r1-disposable-only')=>identities.set(id,{id,email,password}),
+ return {apiBase,authBase,builtBase:()=>built?.base??null,register:(id:string,email:string,password='r1-disposable-only')=>identities.set(id,{id,email,password}),
   setTokenLifetimeSeconds:(seconds:number)=>{if(!Number.isInteger(seconds)||seconds<30||seconds>3600)throw Error('R1_AUTH_FIXTURE_LIFETIME_BOUND');tokenLifetimeSeconds=seconds;},
   authObservations:()=>({passwordSignIns,refreshes,refreshRefusals,logouts,refreshedApiSuccesses}),
   login:async(id:string)=>{const i=identities.get(id);if(!i)throw Error('R1_AUTH_FIXTURE_IDENTITY_NOT_REGISTERED');const r=await fetch(authBase+'/auth/v1/token?grant_type=password',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({email:i.email,password:i.password})});if(r.status!==200)throw Error('R1_AUTH_LOGIN_FAILED');return (await r.json()).access_token as string;},

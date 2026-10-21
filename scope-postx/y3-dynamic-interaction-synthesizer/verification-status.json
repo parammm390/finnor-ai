@@ -1,0 +1,22 @@
+{
+  "schema": "finnor.y3.verification-status.v1",
+  "status": "FINAL_RUNTIME_VERIFICATION_BLOCKED",
+  "sourceParity": "UNKNOWN_USER_AUTHORIZED_CONTINUATION",
+  "userStorageDecision": "Keep databases; stop disk-heavy verification",
+  "databaseDeletionAfterDecision": false,
+  "finalApiRebuild": "NOT_RUN",
+  "finalCompiledOwnerCampaign": "NOT_RUN",
+  "mountedBrowserCampaign": "IMPLEMENTED_NOT_RUN",
+  "freshLockfileReconstruction": "IMPLEMENTED_NOT_RUN",
+  "finalReviewRegressions": "IMPLEMENTED_NOT_RUN",
+  "earlierMath": {"status": "PASS", "cases": 20, "report": "math-2026-10-21T01-32-05-360Z/report.json"},
+  "earlierSourceDiagnostic": {"status": "FAIL", "passed": 14, "total": 15, "report": "source-owner-5/report.json", "installedEvidence": false},
+  "lowDiskValidation": "SEE_HANDOFF_RELEASE_AND_LOW_DISK_VALIDATION_REPORT",
+  "E2E_DEV_VERIFIED": false,
+  "DOMAIN_QUALIFIED": false,
+  "PRODUCTION_ACTIVE": false,
+  "protectedSubmissions": 0,
+  "realEconomicEffects": 0,
+  "unfinishedVerificationIsExternal": false,
+  "futureStatusAuthority": "A matched handoff/release.json may supersede this historical engineering snapshot without promoting it into protected qualification."
+}

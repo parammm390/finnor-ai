@@ -140,7 +140,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/enterprise-applications/source-manifest.generated.ts",
-      "sha256": "9835480ccdc35e6bc9dc8c23b12173314d6c5e60081118f09f299f975acbaf68"
+      "sha256": "cdfb2afd54025eb24f1ea0ef462ebe1e29a034167486adb68fae22c943dbfdda"
     },
     {
       "path": "finnor-os/packages/authority/src/index.ts",
@@ -152,7 +152,7 @@ export default {
     },
     {
       "path": "finnor-os/apps/worker/src/index.ts",
-      "sha256": "79d051cd0632313ca88314e67f820b316b311c4adca16705482133bd2a2c8cf9"
+      "sha256": "db92ab02963b32be73750133b22bdb8f09b7dc996a8bd5e25c15b853d0e1569e"
     },
     {
       "path": "finnor-os/apps/worker/src/queue.ts",
@@ -160,11 +160,11 @@ export default {
     },
     {
       "path": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
-      "sha256": "91de6fe1c19aac94313ee091beb6b7727bfcd068df3cd786e8f8db57aa095c48"
+      "sha256": "2c2b29c9c7af05e2ec729f61a9151653eee6e292c3158f9bdd488cf472562aa4"
     },
     {
       "path": "finnor-os/packages/db/compute-contract.ts",
-      "sha256": "8ac958820a17179335fbd24574a1c65a1da73d38d264324b539e460a08c57d39"
+      "sha256": "b39560c7ad7f3d2c117aeb264763b322b496201e4c15d25adb67a8de15e778cc"
     },
     {
       "path": "finnor-os/packages/db/compute-governor.ts",
@@ -172,7 +172,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/db/migration-head.ts",
-      "sha256": "d758b887566777550428e06bf24e231816c666498888c1c68ef3b4c3a568befb"
+      "sha256": "84b5dd534cea36d013cdc21e9504e466809856deb1d393c2c2aaa2afcf84c2d4"
     },
     {
       "path": "finnor-os/packages/db/migrations/0190_x5_experience_policy.sql",
@@ -308,7 +308,7 @@ export default {
     },
     {
       "path": "src/lib/centropy/capability-manifest.generated.json",
-      "sha256": "ec486d083c1ae95bb882bcd707922395615ff2d7c9bf61c7f73353339fc7eacd"
+      "sha256": "042acd82b7a9d9d269a180b0a893cb72162d642b19513eec0802ba6de437ccfb"
     },
     {
       "path": "finnor-os/scripts/x3/stamp-source.mts",

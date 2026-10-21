@@ -1,0 +1,14 @@
+{
+  "schema": "finnor.y3.serial-integration-ownership.v1",
+  "owner": "Y3 main implementation thread, isolated branch only",
+  "integratedY1Commit": "6b7f374",
+  "observedAllocations": {
+    "Y1": "0195_postx_y1_economic_action_theory.sql",
+    "Y2": "0196_postx_y2_strategic_response.sql",
+    "Y4": "No new migration present at inspection"
+  },
+  "localMigration": "0197_postx_y3_interaction_protocol.sql",
+  "Y2Adopted": false,
+  "sharedBranchWriteAuthorized": false,
+  "unionReleaseRequires": "Serial owner review, regeneration and installation of the actual final peer union. This isolated allocation is not a shared release or peer approval."
+}
