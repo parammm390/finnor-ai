@@ -42,6 +42,7 @@ const delegatedRegistries = [
   ["APPLICATION_OPERATIONS", "enterprise-applications/api.ts"],
   ["LEARNING_OPERATIONS", "policy-learning/api.ts"],
   ["IDENTIFICATION_OPERATIONS", "system-identification/api.ts"],
+  ["EconomicOperations", "economic-action-theory/contracts.ts"],
   ["M1_OPERATIONS", "decision-slice/handler.ts"],
   ["CONTINUATION_OPERATIONS", "live-recompilation/api.ts"],
   ["PROCEDURE_OPERATIONS", "procedure-induction/api.ts"],
@@ -108,6 +109,8 @@ const companyBrainReads = new Set([
   "capital-program-read","capital-program-status","capital-program-list","capital-program-context","capital-program-ports","capital-program-witness","capital-program-module",
   "capital-formation-read","capital-formation-list","capital-formation-profiles",
   "application-projection",
+  "economic-theory-read", "economic-theory-list", "economic-theory-artifact", "economic-theory-compare",
+  "economic-programme-read", "economic-reservation-read",
 ])
 const elicitationOperations=registeredOperations("finnor-os/packages/epistemic-runtime/src/incentive-rule-synthesis/contracts.ts","ELICITATION_OPERATIONS")
 const elicitationReads=new Set(["context","read","status","history"])

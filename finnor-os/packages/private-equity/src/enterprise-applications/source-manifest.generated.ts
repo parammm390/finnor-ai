@@ -84,7 +84,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/db/compute-contract.ts",
-      "sha256": "5ae7997b4c954f3e123ebb5a95744d557be5c214b4615ad721b366fb10527687"
+      "sha256": "8ac958820a17179335fbd24574a1c65a1da73d38d264324b539e460a08c57d39"
     },
     {
       "path": "finnor-os/packages/db/compute-governor.ts",
@@ -96,7 +96,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/db/migration-head.ts",
-      "sha256": "51d04689436d28fbe1c56eb20ee4366bfc0c9e5a4419e3bc811026326ed85017"
+      "sha256": "d758b887566777550428e06bf24e231816c666498888c1c68ef3b4c3a568befb"
     },
     {
       "path": "finnor-os/packages/db/migrations/0189_x3_enterprise_applications.sql",
@@ -104,7 +104,7 @@ export default {
     },
     {
       "path": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
-      "sha256": "fb502e308087c71f6a1ccd7104a8426efc0e91665851d70c4b139efec40e5a56"
+      "sha256": "91de6fe1c19aac94313ee091beb6b7727bfcd068df3cd786e8f8db57aa095c48"
     },
     {
       "path": "finnor-os/apps/api/lib/auth.ts",
@@ -112,7 +112,7 @@ export default {
     },
     {
       "path": "finnor-os/apps/worker/src/index.ts",
-      "sha256": "181d44459d314ce7e1688df6b3744514bf6c531b813a0bfb2e905caeaee6f8dc"
+      "sha256": "79d051cd0632313ca88314e67f820b316b311c4adca16705482133bd2a2c8cf9"
     },
     {
       "path": "finnor-os/apps/worker/src/queue.ts",
@@ -192,7 +192,7 @@ export default {
     },
     {
       "path": "src/lib/centropy/capability-manifest.generated.json",
-      "sha256": "538da93db2609629b64096e9b6fa88ab34317aade2f312eed51403d82ac8c135"
+      "sha256": "ec486d083c1ae95bb882bcd707922395615ff2d7c9bf61c7f73353339fc7eacd"
     },
     {
       "path": "package-lock.json",
