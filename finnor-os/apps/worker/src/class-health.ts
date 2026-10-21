@@ -1,5 +1,5 @@
 import { createServer } from "node:http";
-import { getRuntimeReleaseMetadata } from "@finnor/tools";
+import { describeLLMReadiness, getRuntimeReleaseMetadata } from "@finnor/tools";
 import type { WorkloadClass } from "@finnor/db";
 
 /** ECS uses loopback health checks for non-ingress compute tasks.  Only REALTIME
@@ -12,9 +12,12 @@ export function startClassHealthServer(workloadClass: WorkloadClass, port: numbe
         response.writeHead(404).end();
         return;
       }
-      response.writeHead(signal.aborted ? 503 : 200, { "content-type": "application/json", "cache-control": "no-store" });
+      const modelRoutes = workloadClass === "REALTIME" ? null : describeLLMReadiness();
+      const ok = !signal.aborted && (modelRoutes === null || modelRoutes.configured);
+      response.writeHead(ok ? 200 : 503, { "content-type": "application/json", "cache-control": "no-store" });
       response.end(JSON.stringify({
-        ok: !signal.aborted,
+        ok,
+        modelRoutes,
         serviceClass: workloadClass,
         realtime: false,
         release: getRuntimeReleaseMetadata("finnor-worker"),

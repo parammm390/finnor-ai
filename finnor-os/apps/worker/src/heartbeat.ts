@@ -6,7 +6,7 @@
 // fleets can be verified without pretending that one fixed process is the fleet.
 
 import { CURRENT_MIGRATION_HEAD, adminDb, getPool, recordCutoverCompatibleHeartbeats, workerHeartbeat, type WorkloadClass, type CutoverHeartbeatInput } from "@finnor/db";
-import { getLogger, getRuntimeReleaseMetadata } from "@finnor/tools";
+import { describeLLMReadiness, getLogger, getRuntimeReleaseMetadata } from "@finnor/tools";
 import { hostname } from "node:os";
 import { workerConcurrency } from "./queue";
 import { activeSseConnectionCount } from "./sse/gateway";
@@ -59,6 +59,7 @@ const CLASS_SERVICES: Record<WorkloadClass, CutoverHeartbeatInput["service"]> = 
 };
 
 async function beat(options: WorkerHeartbeatOptions, draining = false): Promise<void> {
+  const modelRoutes = options.workloadClass && options.workloadClass !== "REALTIME" ? describeLLMReadiness() : null;
   const now = new Date();
   const release = getRuntimeReleaseMetadata("finnor-worker");
   const capabilities = options.workloadClass
@@ -74,6 +75,7 @@ async function beat(options: WorkerHeartbeatOptions, draining = false): Promise<
     allowedWorkloadClasses: options.workloadClass ? [options.workloadClass] : ["REALTIME", "INTERACTIVE", "BACKGROUND", "HEAVY"],
     processConcurrency: workerConcurrency(),
     draining,
+    modelRoutes,
     activeSseConnections: options.workloadClass === "REALTIME" ? activeSseConnectionCount() : 0,
     releaseSha: release.commitSha,
     coreCertificationId: process.env.FINNOR_CORE_CERTIFICATION_ID ?? null,
@@ -85,7 +87,7 @@ async function beat(options: WorkerHeartbeatOptions, draining = false): Promise<
     .insert(workerHeartbeat)
     .values({ id: WORKER_HEARTBEAT_ID, lastBeatAt: now, meta })
     .onConflictDoUpdate({ target: workerHeartbeat.id, set: { lastBeatAt: now, meta } });
-  if (draining) {
+  if (draining || modelRoutes?.configured === false) {
     await getPool().query(
       "DELETE FROM service_release_heartbeats WHERE instance_id=$1 AND service=ANY($2::text[])",
       [WORKER_HEARTBEAT_ID, ["worker", "orchestrator", "scheduler-owner", ...Object.values(CLASS_SERVICES)]],
