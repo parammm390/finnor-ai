@@ -1,4 +1,4 @@
-import { works, withTenant } from "@finnor/db";
+import { works, withTenant, workLifecycleOutcome } from "@finnor/db";
 import { and, desc, eq, notInArray } from "drizzle-orm";
 import { errorResponse, requireContext } from "../../../lib/auth";
 
@@ -19,7 +19,7 @@ export async function GET(req: Request): Promise<Response> {
       ))
       .orderBy(desc(works.updatedAt))
       .limit(100));
-    return Response.json({ works: rows });
+    return Response.json({ works: rows.map(work => ({ ...work, finalOutcome: workLifecycleOutcome(work.finalOutcome) })) });
   } catch (err) {
     return errorResponse(err);
   }

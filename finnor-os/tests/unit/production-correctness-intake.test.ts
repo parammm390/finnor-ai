@@ -259,7 +259,7 @@ describe("production-correctness intake boundary", () => {
     mocks.receiveWork.mockResolvedValueOnce({ ...received(), duplicate: true, status: "completed", finalOutcome: null });
     mocks.workAggregate.mockResolvedValueOnce({
       work: { id: ids.workId, status: "completed" },
-      actions: [{ id: "canonical-action", status: "completed" }],
+      actions: [{ id: "canonical-action", instructionId: ids.instructionId, status: "completed" }],
     });
 
     const response = await actionsPOST(request("/api/actions", { instruction: "Create a work order", channel: "text" }));
