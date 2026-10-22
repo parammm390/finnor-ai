@@ -34,7 +34,7 @@ export function StrategicResponsePanel({root,workId}:{root:{entityType:string;en
  const {session}=useCentropyAuth(),logical=JSON.stringify([session?.user.id??null,root.entityType,root.entityId,workId]),
   identity=JSON.stringify([logical,session?.access_token??null])
  const identityRef=useRef(identity);identityRef.current=identity
- const epoch=useRef(0),selected=useRef(''),busyRef=useRef(false),pending=useRef<Original|null>(null)
+ const epoch=useRef(0),selected=useRef(''),inspected=useRef(''),busyRef=useRef(false),pending=useRef<Original|null>(null)
  const [actor,setActor]=useState<{identity:string;scope:string;tenantId:string;principalId:string}|null>(null),
   [display,setDisplay]=useState<{identity:string;value:View}|null>(null),[formIdentity,setFormIdentity]=useState(identity),
   [rows,setRows]=useState<{identity:string;items:Array<{id:string;status:string}>}|null>(null),
@@ -59,18 +59,29 @@ export function StrategicResponsePanel({root,workId}:{root:{entityType:string;en
    if(list.workId!==workId||list.root.entityId!==root.entityId||list.root.entityType!==root.entityType)throw Error('Response list scope changed')
    setRows({identity:expected,items:list.models})
    const id=preferred||selected.current||list.models[0]?.id
-   if(!id){setDisplay(null);setMessage('No response model is registered for this Work. Supply canonical joint evidence and public rule meanings.');return}
+   if(!id){inspected.current='';setDisplay(null);setUse(null);setResponse(null);setMessage('No response model is registered for this Work. Supply canonical joint evidence and public rule meanings.');return}
+   if(id!==selected.current){inspected.current='';setUse(null);setResponse(null)}
+   const useId=inspected.current
    const view=Projection.parse(await centropyPost('company-brain/'+paths.read,{modelId:id}))
    if(!current())return
    if(view.tenantId!==me.tenantId||view.principalId!==principalId||view.workId!==workId||
     view.root.entityId!==root.entityId||view.root.entityType!==root.entityType)throw Error('Response model scope changed')
+   if(useId){
+    const currentUse=Use.parse(await centropyPost('company-brain/'+paths.use,{modelId:id,useId}))
+    if(!current()||inspected.current!==useId)return
+    if(currentUse.modelId!==id||currentUse.useId!==useId||currentUse.tenantId!==me.tenantId||
+     currentUse.principalId!==principalId||currentUse.workId!==workId||currentUse.root.entityId!==root.entityId||
+     currentUse.root.entityType!==root.entityType)throw Error('Original use scope changed')
+    setUse({identity:expected,value:currentUse.current?currentUse:{...currentUse,artifact:null,check:null}})
+    if(!currentUse.current)setResponse(null)
+   }
    selected.current=id;setDisplay({identity:expected,value:view})
    setMessage(view.current?`${view.status}. Conditional finite model set. Field identification, protected qualification and financial efficacy remain unestablished.`
     :`${view.status}. New use is fenced. ${view.currentnessReasons.join(', ')}. Prior commitments remain.`)
   }catch{if(current()){setActor(null);setDisplay(null);setRows(null);setUse(null);setResponse(null);setMessage('Current identity, rights or Work could not be verified. Reload before acting.')}}
  },[identity,logical,session,workId,root])
  useEffect(()=>{
-  const fence=epoch,sequence=++fence.current;selected.current='';pending.current=null;busyRef.current=false
+  const fence=epoch,sequence=++fence.current;selected.current='';inspected.current='';pending.current=null;busyRef.current=false
   setActor(null);setDisplay(null);setRows(null);setUse(null);setResponse(null);setBusy(false)
   setProblem('');setForecast('');setDecision('');setFormIdentity(identity)
   void refresh(sequence)
@@ -81,7 +92,7 @@ export function StrategicResponsePanel({root,workId}:{root:{entityType:string;en
  useEffect(()=>{
   if(!session||!workId)return
   const poll=()=>{if(!busyRef.current&&document.visibilityState==='visible')void refresh(++epoch.current)}
-  const focus=()=>{if(!busyRef.current){setDisplay(null);setUse(null);void refresh(++epoch.current)}}
+  const focus=()=>{if(!busyRef.current){setDisplay(null);setUse(null);setResponse(null);void refresh(++epoch.current)}}
   const timer=setInterval(poll,4000);window.addEventListener('focus',focus);document.addEventListener('visibilitychange',focus)
   return()=>{clearInterval(timer);window.removeEventListener('focus',focus);document.removeEventListener('visibilitychange',focus)}
  },[refresh,session,workId])
@@ -101,7 +112,7 @@ export function StrategicResponsePanel({root,workId}:{root:{entityType:string;en
   }
   const request=mutation?pending.current:null
   busyRef.current=true;setBusy(true);setResponse(null)
-  if(op==='cancel'){setDisplay(null);setUse(null)}
+  if(op==='cancel'){inspected.current='';setDisplay(null);setUse(null)}
   try{
    const value=await centropyPost<unknown>('company-brain/'+paths[op],input)
    if(!current())return
@@ -109,9 +120,9 @@ export function StrategicResponsePanel({root,workId}:{root:{entityType:string;en
    if(mutation)pending.current=null
    if(op==='use'){
     const v=Use.parse(value)
-    if(v.modelId!==oldId||v.tenantId!==actor.tenantId||v.principalId!==actor.principalId||v.workId!==workId||
+    if(v.modelId!==oldId||v.useId!==input.useId||v.tenantId!==actor.tenantId||v.principalId!==actor.principalId||v.workId!==workId||
      v.root.entityId!==root.entityId||v.root.entityType!==root.entityType)throw Error('Original use scope changed')
-    setUse({identity:expected,value:v})
+    inspected.current=v.useId;setUse({identity:expected,value:v.current?v:{...v,artifact:null,check:null}})
    }
    if(op==='artifact'){
     const file=z.object({modelId:z.string(),workId:z.string(),root:Root,current:z.literal(true),fileName:z.string(),sha256:z.string(),bytesBase64:z.string()}).parse(value)
@@ -123,7 +134,7 @@ export function StrategicResponsePanel({root,workId}:{root:{entityType:string;en
     if(sha!==file.sha256)throw Error('Download preimage changed')
     const url=URL.createObjectURL(new Blob([bytes],{type:'application/json'})),link=document.createElement('a')
     link.href=url;link.download=file.fileName;link.click();URL.revokeObjectURL(url)
-   }else setResponse({identity:expected,value})
+   }else if(op!=='use')setResponse({identity:expected,value})
    const record=value&&typeof value==='object'?value as Record<string,unknown>:null
    await refresh(sequence,op==='submit'&&typeof record?.modelId==='string'?record.modelId:oldId)
   }catch(error){if(current()){
@@ -132,7 +143,7 @@ export function StrategicResponsePanel({root,workId}:{root:{entityType:string;en
    if(request&&!scopeChanged&&error instanceof CentropyApiError&&error.status>=400&&error.status<500&&![401,408,429].includes(error.status)){
     if(originals.get(request.scope)===request)originals.delete(request.scope);pending.current=null
    }
-   setDisplay(null);setUse(null);setMessage(error instanceof Error?error.message:'Owner response unavailable. Original server work may remain durable.')
+   setDisplay(null);setUse(null);setResponse(null);setMessage(error instanceof Error?error.message:'Owner response unavailable. Original server work may remain durable.')
   }}finally{if(current()){busyRef.current=false;setBusy(false)}}
  }
  function form(event:FormEvent,operation:'submit'|'forecast'|'programme',text:string){
@@ -155,7 +166,7 @@ export function StrategicResponsePanel({root,workId}:{root:{entityType:string;en
     <button disabled={busy} onClick={()=>{const p=pending.current;if(p)void act(p.operation,p.body,true,true)}}>Retry original response request</button>
     <button disabled={busy} onClick={()=>{originals.delete(actor!.scope);pending.current=null;setMessage('Stopped retrying locally. Server work and prior commitments remain.')}}>Stop retrying, retain commitments</button></div>:null}
    {rows?.identity===identity&&rows.items.length?<label>Response model<select value={visible?.modelId??selected.current} disabled={busy||!!pending.current}
-    onChange={event=>{selected.current=event.target.value;setDisplay(null);setUse(null);setResponse(null);setForecast('');setDecision('');void refresh(++epoch.current,event.target.value)}}>
+    onChange={event=>{selected.current=event.target.value;inspected.current='';setDisplay(null);setUse(null);setResponse(null);setForecast('');setDecision('');void refresh(++epoch.current,event.target.value)}}>
     {rows.items.map(row=><option key={row.id} value={row.id}>{row.id} · {row.status}</option>)}</select></label>:null}
    <details><summary>Learn from canonical joint evidence</summary><form onSubmit={e=>form(e,'submit',problem)}>
     <label>Response problem and evidence pin JSON<textarea value={problem} onChange={e=>setProblem(e.target.value)} required rows={8} maxLength={1900000} spellCheck={false}/></label>

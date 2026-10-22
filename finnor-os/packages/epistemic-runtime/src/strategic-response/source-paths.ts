@@ -8,4 +8,5 @@ export const STRATEGIC_SEMANTIC_FILES=[
  '../../../private-equity/src/strategic-response/worker.ts','../../../private-equity/src/strategic-response/api.ts',
  '../../../private-equity/src/enterprise-control.ts','../../../capability-evolution/src/strategic-response-port.ts',
  '../../../db/migrations/0196_postx_y2_strategic_response.sql',
+ '../../../db/migrations/0196a_postx_y2_requested_model_currentness.sql',
 ] as const;

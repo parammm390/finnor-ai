@@ -245,7 +245,24 @@ export function deriveEnterpriseDeliberationConversion(policy:ContingentPolicy){
  const contentDigest=epistemicHash(body);return {ref:{owner:'S4',id:'s4-deliberation-conversion:'+contentDigest,version:'s4-finite-deliberation-conversion-v1',contentDigest},...conversion};
 }
 export async function replayEnterpriseContingentPolicy(ctx:PeMutationContext,value:unknown):Promise<{policyRef:ExperimentRef;programMatches:boolean;certificateMatches:boolean;status:string;protectedReceipt:null;qualification:string}>{
- const policy=await readEnterpriseContingentPolicy(ctx,value);if(policy.exactProfile){const e=evaluateExactContingentControl(policy.exactProfile.modelBytes,{deadlineAt:Date.now()+policy.mandate.search.deadlineMs,maxSteps:4000000,reuse:policy.exactProfile.candidate&&policy.exactProfile.receipt?{candidate:policy.exactProfile.candidate,receipt:policy.exactProfile.receipt}:null});return {policyRef:policy.ref,programMatches:epistemicHash(e.selectedActions)===epistemicHash(policy.exactProfile.evaluation.selectedActions),certificateMatches:epistemicHash(e.values)===epistemicHash(policy.exactProfile.evaluation.values),status:e.status,protectedReceipt:null,qualification:'SUPPLIED_EXACT_INFORMATION_TABLE_CURRENT_OWNER_REPLAY_NO_FIELD_ADMISSION'};}const model=await resolveEnterpriseInterventionModelForControl(ctx,policy.bindings.modelRef),snapshot:InterventionControlSnapshot=await readArtifact(ctx,'kernels',policy.bindings.dynamicsRef.contentDigest);
+ const policy=await readEnterpriseContingentPolicy(ctx,value);if(policy.exactProfile){const e=evaluateExactContingentControl(policy.exactProfile.modelBytes,{deadlineAt:Date.now()+policy.mandate.search.deadlineMs,maxSteps:4000000,reuse:policy.exactProfile.candidate&&policy.exactProfile.receipt?{candidate:policy.exactProfile.candidate,receipt:policy.exactProfile.receipt}:null});return {policyRef:policy.ref,programMatches:epistemicHash(e.selectedActions)===epistemicHash(policy.exactProfile.evaluation.selectedActions),certificateMatches:epistemicHash(e.values)===epistemicHash(policy.exactProfile.evaluation.values),status:e.status,protectedReceipt:null,qualification:'SUPPLIED_EXACT_INFORMATION_TABLE_CURRENT_OWNER_REPLAY_NO_FIELD_ADMISSION'};}if(policy.bindings.modelRef.version==='postx-y2-strategic-response-v1'){
+  const store=await import('./strategic-response/store'),{DecisionRequest}=await import('./strategic-response/contracts'),
+   {createStrategicControlAdapter}=await import('../../epistemic-runtime/src/strategic-response/adapter');
+  const binding=await store.assertStrategicPolicyCurrent(ctx,policy),request=DecisionRequest.parse(binding.request),
+   dynamics=createStrategicControlAdapter(binding.model.request.problem,binding.model.candidate!,request.query,policy.problem,request.actionRules);
+  if(epistemicHash(dynamics.ref)!==epistemicHash(policy.bindings.dynamicsRef)||
+   epistemicHash(policy.bindings.inputArtifactRef)!==epistemicHash(binding.model.artifact!.envelope.contentRef)||
+   epistemicHash(parseEconomicMandate(request.mandate))!==epistemicHash(policy.mandate)||
+   epistemicHash(parseControlProblem(request.problem))!==epistemicHash(policy.problem))throw unavailable();
+  const result=await synthesizeContingentControl({mandate:policy.mandate,problem:policy.problem,dynamics,instruments:[],
+   now:policy.knowledgeAt,inputArtifactRef:policy.bindings.inputArtifactRef,beliefPins:policy.bindings.beliefPins,
+   priorPolicyRef:policy.priorPolicyRef,validUntilCap:policy.validUntil});
+  if(await current(ctx,policy))throw unavailable();
+  return {policyRef:policy.ref,programMatches:epistemicHash(result.policy?.nodes)===epistemicHash(policy.nodes),
+   certificateMatches:epistemicHash(result.policy?.certificate)===epistemicHash(policy.certificate),status:result.status,
+   protectedReceipt:null,qualification:'RETAINED_CHECKED_STRATEGIC_BINDINGS_CURRENT_S4_BINARY64_OWNER_REPLAY_NO_EFFECT_AUTHORITY'};
+ }
+ const model=await resolveEnterpriseInterventionModelForControl(ctx,policy.bindings.modelRef),snapshot:InterventionControlSnapshot=await readArtifact(ctx,'kernels',policy.bindings.dynamicsRef.contentDigest);
  const adapter=restoreInterventionControlAdapter(model,snapshot);
  const inputRef=policy.bindings.inputArtifactRef;if(!inputRef||inputRef.owner!=='S4'||inputRef.id!==`control-input:${inputRef.contentDigest}`)throw unavailable();
  const artifact=await readArtifact(ctx,'inputs',inputRef.contentDigest);if(epistemicHash(artifact)!==inputRef.contentDigest||artifact.kernelRef.id!==adapter.ref.id||epistemicHash(artifact.problem)!==epistemicHash(policy.problem))throw unavailable();const protocols:ExperimentProtocol[]=artifact.protocols;

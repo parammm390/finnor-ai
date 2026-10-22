@@ -42,7 +42,8 @@ export async function readResponseUse(ctx:PeMutationContext,modelId:string,useId
   const changes=await currentChangesTx(ctx,c,selected);await invalidateTx(c,selected,changes);
   const responsibilityReasons=use.kind==='DECISION'&&await (await import('../enterprise-control')).unresolvedEffects(ctx,c)?
    ['S6_OUTSTANDING_RESPONSIBILITY_RECONCILIATION_REQUIRED']:[];
-  const current=!use.cancelled&&!selected.cancelled&&selected.status==='CHECKED'&&use.status!=='INVALIDATED'&&!changes.length&&
+  const current=!use.cancelled&&!requested.cancelled&&!['INVALIDATED','CANCELLED'].includes(requested.status)&&
+   !selected.cancelled&&selected.status==='CHECKED'&&use.status!=='INVALIDATED'&&!changes.length&&
    !responsibilityReasons.length&&use.model_generation===selected.generation;
   return {modelId,useId,executedModelId:use.model_id,tenantId:requested.tenant_id,principalId:requested.principal_id,
    workId:requested.work_id,root:requested.root,kind:use.kind,status:use.cancelled?'CANCELLED':!current?'INVALIDATED':use.status,

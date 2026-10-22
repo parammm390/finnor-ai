@@ -87,7 +87,13 @@ export async function currentChangesTx(ctx:PeMutationContext,c:PoolClient,row:Th
  const changes=await meaningChangesTx(ctx,c,row.request),cut=await workCutTx(ctx,c,row.work_id);
  if(cut.id!==row.work_input_id||cut.digest!==row.work_input_digest||!cut.executable)changes.push('authority');
  const rights=await employeeAuthoritySnapshotTx(ctx.auth,c);
- if(String(rights.revision)!==row.rights_revision)changes.push('authority');
+ const accepted=(await c.query<{authority:{employeeId:string;revision:string;validUntil:string|null}|null}>(
+  "SELECT body->'authority' authority FROM finnor_os.y1_events WHERE tenant_id=$1 AND theory_id=$2 AND event_key='accepted' AND kind='ACCEPTED'",
+  [row.tenant_id,row.id])).rows[0]?.authority;
+ if(String(rights.revision)!==row.rights_revision||!accepted||accepted.employeeId!==row.principal_id||
+  accepted.revision!==row.rights_revision||accepted.validUntil!==null&&
+  (typeof accepted.validUntil!=='string'||!Number.isFinite(Date.parse(accepted.validUntil))||Date.now()>=Date.parse(accepted.validUntil)))
+  changes.push('authority');
  const environment=await runtimeIdentity();
  if(environment.semanticCodeDigest!==row.runtime.semanticCodeDigest||environment.checkerDigest!==row.runtime.checkerDigest||
   !same(environment.checkerInterpreter,row.runtime.checkerInterpreter))changes.push('authority');
@@ -161,6 +167,7 @@ export async function submitTheory(ctx:PeMutationContext,request:SubmitRequest){
     JSON.stringify(runtime),String(authority.revision),request.idempotencyKey,fallback?.id??null]);
   const row=await theoryTx(ctx,c,id);
   await eventTx(c,row,'ACCEPTED','accepted',{profile:PROFILE,runtime,requestDigest:hash,originalEpisodeId:episodeId,
+   authority:{employeeId:authority.employeeId,revision:String(authority.revision),validUntil:authority.validUntil},
    fallbackId:fallback?.id??null,protectedAuthorityCreated:false});
   const jobId=await enqueueTx(c,{tenantId:ctx.auth.tenantId,principalId:principal(ctx),theoryId:id,generation:1},id+':1');
   return {theoryId:id,workId:request.workId,status:'QUEUED',jobId,replayed:false};

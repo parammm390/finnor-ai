@@ -2,12 +2,12 @@
 import hashlib
 import itertools
 import json
+import math
 import os
 import platform
 import resource
 import sys
 import time
-from fractions import Fraction
 
 resource.setrlimit(resource.RLIMIT_AS, (268435456, 268435456))
 resource.setrlimit(resource.RLIMIT_CPU, (30, 30))
@@ -22,7 +22,7 @@ with open(os.path.join(HERE, "profile.json"), encoding="utf8") as source:
 
 class WireFloat(float):
     """Retain the JSON number emitted by the caller, not Python's spelling.
-    This is transport custody only. All programme arithmetic uses Fraction."""
+    Transport custody only; decision arithmetic mirrors the S4 binary64 owner."""
     def __new__(cls, token):
         value = super().__new__(cls, token)
         value.token = token
@@ -219,18 +219,27 @@ def check_decision(p, model, query, mandate, control, bindings, candidate):
         demand(all(rules[r]["incentive"] == exposures["incentive"][t] and rules[r]["interaction"] == exposures["interaction"][t]
                    for t, r in enumerate(rule_ids)), "RULE_MEANING_NOT_NUMERICAL_ALIAS")
     demand(candidate["certificate"]["completeSearch"] is True, "INCOMPLETE_S4_SEARCH")
-    f = lambda v: Fraction(str(v))
+    # S4 uses left-to-right IEEE-754 binary64 operations, not exact rationals
+    # or Python's compensated sum. Check that same declared numeric contract.
+    f = float
+
+    def add_all(values):
+        total = 0.0
+        for value in values:
+            total += value
+        return total
+
     dims = {r["id"]: r for r in mandate["resources"]["dimensions"]}
-    tail = f(mandate["utility"]["tail"]["terminalLiability"]) + sum(f(o["terminalLiability"]) for o in control["obligations"])
+    tail = f(mandate["utility"]["tail"]["terminalLiability"]) + add_all(f(o["terminalLiability"]) for o in control["obligations"])
     best = None
     feasible = {}
     evaluated = 0
 
     def consider(history):
         nonlocal best, evaluated
-        spent = {d: Fraction(0) for d in dims}
-        occupancy = {d: [Fraction(0)] * h for d in dims}
-        liability, humans, stopped = tail, Fraction(0), False
+        spent = {d: 0.0 for d in dims}
+        occupancy = {d: [0.0] * h for d in dims}
+        liability, humans, stopped = tail, 0.0, False
         rule_schedule = list(query["ruleIds"])
         locked_until = 0
         for t, action_id in enumerate(history):
@@ -254,13 +263,13 @@ def check_decision(p, model, query, mandate, control, bindings, candidate):
         if humans > f(mandate["search"]["maxHumanSeconds"]) or any(
                 spent[d] > f(r["totalLimit"]) or any(v > f(r["capacity"]) for v in occupancy[d]) for d, r in dims.items()):
             return
-        if any(sum(f(w) * occupancy[d][t] for d, w in coupling["weights"].items()) > f(coupling["maxPerPeriod"])
+        if any(add_all(f(w) * occupancy[d][t] for d, w in coupling["weights"].items()) > f(coupling["maxPerPeriod"])
                for coupling in mandate["resources"]["couplings"] for t in range(h)):
             return
         values = []
         for hypothesis, private, signal in all_paths:
             previous = query["initial"]
-            value = Fraction(0)
+            value = 0.0
             state = None
             for t, rule_id in enumerate(rule_schedule):
                 evaluated += len(p["actors"])
@@ -269,10 +278,12 @@ def check_decision(p, model, query, mandate, control, bindings, candidate):
                                       {a: v[t] for a, v in private["outsideOptions"].items()}, signal["values"][t])
                 state = dict(("actor_" + a, v) for a, v in previous.items())
                 state["joint_payoff"] = int(p["payoff"]["jointPayoff"]) if all(previous.values()) else 0
-                period_value = sum(f(term["coefficient"]) * state[term["variableId"]] for term in mandate["utility"]["periodTerms"])
+                period_value = add_all(f(term["coefficient"]) * state[term["variableId"]] for term in mandate["utility"]["periodTerms"])
                 value += f(mandate["utility"]["discountFactors"][t]) * (period_value - f(actions[history[t]]["cost"]))
+                demand(math.isfinite(value), "NONFINITE_UTILITY")
             value += f(mandate["utility"]["discountFactors"][h]) * (
-                sum(f(term["coefficient"]) * state[term["variableId"]] for term in mandate["utility"]["terminalTerms"]) - liability)
+                add_all(f(term["coefficient"]) * state[term["variableId"]] for term in mandate["utility"]["terminalTerms"]) - liability)
+            demand(math.isfinite(value), "NONFINITE_TERMINAL_VALUE")
             if value < f(mandate["risk"]["minimumUtility"]):
                 return
             values.append(value)

@@ -196,12 +196,14 @@ export async function assertStrategicPolicyCurrent(ctx:PeMutationContext,policy:
     AND artifact->'result'->'policy'->'ref'=$3::jsonb ORDER BY created_at DESC,id DESC LIMIT 1`,
    [ctx.auth.tenantId,principal(ctx),JSON.stringify(policy.ref)])).rows[0];
   if(!binding)fail('Y2_DURABLE_CHECKED_POLICY_PUBLICATION_REQUIRED');
+  const requested=await modelTx(ctx,c,binding.requested_model_id);
+  if(requested.cancelled||['INVALIDATED','CANCELLED'].includes(requested.status))fail('Y2_REQUESTED_MODEL_NOT_CURRENT');
   const use=await useTx(ctx,c,binding.requested_model_id,binding.id),selected=await resolveCurrentModelTx(ctx,c,use.model_id);
   const candidate=use.candidate as {policy?:unknown}|null,artifact=use.artifact as {result?:{policy?:unknown}}|null;
   if(!use.check||use.check.status!=='CHECKED'||use.check.candidateDigest!==digest(policy)||!same(candidate?.policy,policy)||
    !same(artifact?.result?.policy,policy)||use.model_generation!==selected.row.generation||
    !same(policy.bindings.modelRef,selected.row.artifact!.envelope.contentRef)||policy.episodeId!==selected.row.episode_id||
    Date.parse(policy.validUntil)<=Date.now())fail('Y2_STRATEGIC_POLICY_CHECKED_BINDING_CHANGED');
-  return {modelId:selected.row.id,useId:use.id,originalEpisodeId:use.episode_id,executionAuthorityGranted:false};
+  return {modelId:selected.row.id,useId:use.id,originalEpisodeId:use.episode_id,model:selected.row,request:use.request,executionAuthorityGranted:false};
  });
 }
