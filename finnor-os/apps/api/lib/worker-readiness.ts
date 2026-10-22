@@ -50,7 +50,7 @@ export async function readWorkerFleetReadiness(expectedReleaseSha = process.env.
           AND h.last_beat_at>now()-interval '90 seconds'
      )
      SELECT
-       (SELECT max(name) FROM finnor_os._migrations) AS migration_head,
+       (SELECT max(name COLLATE "C") FROM finnor_os._migrations) AS migration_head,
        (SELECT state FROM compute_cutover) AS compute_cutover_state,
        count(*) FILTER (
          WHERE ((SELECT state FROM compute_cutover)='preparing' AND service='worker'

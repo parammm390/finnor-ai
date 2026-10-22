@@ -199,7 +199,7 @@ describe.skipIf(!available)("P7 fresh migration and populated P1-P6 upgrade", ()
   it("applies the complete lineage to a fresh database and remains idempotent", async () => {
     expect(appliedFresh).toEqual(MIGRATIONS.map(({ name }) => name));
     expect(await migrate(freshUrl, MIGRATIONS)).toEqual([]);
-    const head = await freshClient.query<{ name: string }>("SELECT name FROM finnor_os._migrations ORDER BY name DESC LIMIT 1");
+    const head = await freshClient.query<{ name: string }>("SELECT name FROM finnor_os._migrations ORDER BY name COLLATE \"C\" DESC LIMIT 1");
     expect(head.rows[0]?.name).toBe(CURRENT_MIGRATION_HEAD);
   });
 });
