@@ -100,7 +100,10 @@ try{
   const roles=(await e.admin.query("SELECT rolname,rolsuper,rolbypassrls FROM pg_roles WHERE rolname IN('finnor_app','finnor_worker') ORDER BY rolname")).rows;
   assert(roles.every(r=>!r.rolsuper&&!r.rolbypassrls));
   const migration=JSON.parse(await readFile(join(evidence,'migration-upgrade-replay.json'),'utf8'));
-  assert.deepEqual(migration.upgrade,['0196_postx_y2_strategic_response.sql']);assert.deepEqual(migration.replay,[]);
+  assert.deepEqual(migration.upgrade,[
+    '0195_private_input_responses.sql','0195a_postx_y1_temporal_binding.sql',
+    '0196_postx_y2_strategic_response.sql','0196a_postx_y2_requested_model_currentness.sql',
+   ]);assert.deepEqual(migration.replay,[]);
   return {unauthenticated:unauth.status,oversized:413,strict:400,roles,upgrade:migration.upgrade,replay:migration.replay};
  });
  await test('02-durable-fitted-complete-model-set',['Y2-01','Y2-02','Y2-14'],async()=>{
