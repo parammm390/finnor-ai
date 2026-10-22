@@ -140,7 +140,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/enterprise-applications/source-manifest.generated.ts",
-      "sha256": "55ba5e4f7eeb3de1fa5d6cebdebef07c96fbea4ce1f5b28b66b245a99b43828e"
+      "sha256": "f5c24a4484e011b1f597cca8926f97b1adb43f08415e18ed411aff16171fd50e"
     },
     {
       "path": "finnor-os/packages/authority/src/index.ts",
@@ -172,7 +172,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/db/migration-head.ts",
-      "sha256": "aaa14f31930dc2fa327c04a9ebbed51ce2040067c00646b15d5d88f5e1c35fbe"
+      "sha256": "6d4f7df93db89c2c035c97b6f97ab6c821dd44b57bb43504eeec0b876fa2d70e"
     },
     {
       "path": "finnor-os/packages/db/migrations/0190_x5_experience_policy.sql",
@@ -184,11 +184,11 @@ export default {
     },
     {
       "path": "finnor-os/package-lock.json",
-      "sha256": "d83837193569a7b154dfa80f7d60c25cdeefe2e562a9b1e9907404085d636987"
+      "sha256": "4116b2a7e02a28b8e49baa4a24a378e5170c5dc66d285075c8cf50bf11b9faed"
     },
     {
       "path": "package-lock.json",
-      "sha256": "56398650ecba40d4fed91de7b190239a786589ea8efd77f2c71ec2c7d36def99"
+      "sha256": "af1d36679eb4123ab5f2d9f4668e82e1defc952a45777a74d3dff30c6d16f117"
     },
     {
       "path": "src/components/centropy/canvas/LearnedPolicyPanel.tsx",

@@ -57,7 +57,7 @@ export async function migrate(
   // production preflight below is deliberately read-only, including when this
   // database still uses the legacy public tracker.
   const files: MigrationFile[] = bundled
-    ? [...bundled].sort((a, b) => a.name.localeCompare(b.name))
+    ? [...bundled].sort((a, b) => a.name < b.name ? -1 : a.name > b.name ? 1 : 0)
     : await Promise.all(
         (await readdir(MIGRATIONS_DIR))
           .filter((f) => f.endsWith(".sql"))

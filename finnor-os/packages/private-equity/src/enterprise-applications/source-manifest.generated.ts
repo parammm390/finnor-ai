@@ -96,7 +96,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/db/migration-head.ts",
-      "sha256": "aaa14f31930dc2fa327c04a9ebbed51ce2040067c00646b15d5d88f5e1c35fbe"
+      "sha256": "6d4f7df93db89c2c035c97b6f97ab6c821dd44b57bb43504eeec0b876fa2d70e"
     },
     {
       "path": "finnor-os/packages/db/migrations/0189_x3_enterprise_applications.sql",
@@ -124,7 +124,7 @@ export default {
     },
     {
       "path": "finnor-os/package-lock.json",
-      "sha256": "d83837193569a7b154dfa80f7d60c25cdeefe2e562a9b1e9907404085d636987"
+      "sha256": "4116b2a7e02a28b8e49baa4a24a378e5170c5dc66d285075c8cf50bf11b9faed"
     },
     {
       "path": "finnor-os/packages/private-equity/src/enterprise-control.ts",
@@ -196,7 +196,7 @@ export default {
     },
     {
       "path": "package-lock.json",
-      "sha256": "56398650ecba40d4fed91de7b190239a786589ea8efd77f2c71ec2c7d36def99"
+      "sha256": "af1d36679eb4123ab5f2d9f4668e82e1defc952a45777a74d3dff30c6d16f117"
     },
     {
       "path": "finnor-os/scripts/x3/stamp-source.mts",

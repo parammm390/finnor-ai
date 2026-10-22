@@ -6,6 +6,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   CORE_OPERATIONAL_QUERY_INTENTS,
+  CONFIDENTIAL_OPERATIONAL_QUERY_INTENTS,
   PRIVATE_EQUITY_OPERATIONAL_QUERY_INTENTS,
   PROGRAM_OPERATIONAL_QUERY_INTENTS,
   RETIRED_WATER_JOB_TYPES,
@@ -16,6 +17,8 @@ import {
   verifyPeDomainBoundary,
   verifyQuerySurfaceCoverage,
 } from "../../scripts/release/verify-pe-domain-boundary";
+
+const nativeIntents = [...PROGRAM_OPERATIONAL_QUERY_INTENTS, ...CONFIDENTIAL_OPERATIONAL_QUERY_INTENTS];
 
 const publicIntents = [...CORE_OPERATIONAL_QUERY_INTENTS, ...PRIVATE_EQUITY_OPERATIONAL_QUERY_INTENTS];
 
@@ -48,11 +51,11 @@ describe("production query surface and native-only authority boundary", () => {
     expect(result).toMatchObject({
       negativeControl: true,
       actions: ACTION_HARDENING_SPEC.length,
-      publicQueries: 16,
-      nativeQueries: 1,
+      publicQueries: publicIntents.length,
+      nativeQueries: nativeIntents.length,
     });
     expect(verifyQuerySurfaceCoverage(await openApi())).toEqual([]);
-    await retainEvidence("complete-boundary", { publicIntents, nativeIntents: PROGRAM_OPERATIONAL_QUERY_INTENTS }, result);
+    await retainEvidence("complete-boundary", { publicIntents, nativeIntents }, result);
   });
 
   it("rejects a missing public query branch and accidental native-only exposure", async () => {
@@ -62,17 +65,16 @@ describe("production query surface and native-only authority boundary", () => {
     removed.paths["/api/queries"].post.requestBody.content["application/json"].schema.anyOf =
       schema.anyOf.filter((branch: any) => branch.properties?.intent?.const !== publicIntents[0]);
     expect(verifyQuerySurfaceCoverage(removed)).toContain(`OpenAPI is missing public query intent ${publicIntents[0]}`);
-    const exposed = structuredClone(contract);
-    exposed.paths["/api/queries"].post.requestBody.content["application/json"].schema.anyOf.push({
-      type: "object",
-      properties: { intent: { const: PROGRAM_OPERATIONAL_QUERY_INTENTS[0] } },
-    });
-    expect(verifyQuerySurfaceCoverage(exposed)).toContain(
-      `OpenAPI exposes native-only query intent ${PROGRAM_OPERATIONAL_QUERY_INTENTS[0]}`,
-    );
+    for (const intent of nativeIntents) {
+      const exposed = structuredClone(contract);
+      exposed.paths["/api/queries"].post.requestBody.content["application/json"].schema.anyOf.push({
+        type: "object", properties: { intent: { const: intent } },
+      });
+      expect(verifyQuerySurfaceCoverage(exposed)).toContain(`OpenAPI exposes native-only query intent ${intent}`);
+    }
     await retainEvidence("surface-negative-controls", {
       removedPublicIntent: publicIntents[0],
-      injectedNativeIntent: PROGRAM_OPERATIONAL_QUERY_INTENTS[0],
+      injectedNativeIntents: nativeIntents,
     }, { missingPublicRejected: true, exposedNativeRejected: true });
   });
 
