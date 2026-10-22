@@ -1,7 +1,8 @@
 /** A typed sibling, not a widening of financial, X4 or Y1 admission. */
 import type {PoolClient} from 'pg';
 import type {PeMutationContext} from '../../private-equity/src/types';
-import {checkedModelTx,developmentOnly,transaction,eventTx,principal} from '../../private-equity/src/strategic-response/store';
+import {withS5PortfolioTransaction as transaction} from '../../private-equity/src/allocation-store';
+import {checkedModelTx,developmentOnly,eventTx,principal} from '../../private-equity/src/strategic-response/store';
 import {PROFILE_DIGEST,digest,same,reference,fail,type ModelRow,type StrategicAdmission} from '../../private-equity/src/strategic-response/contracts';
 function verify(row:ModelRow,a:StrategicAdmission){
  const {ref,...body}=a,check=row.artifact!.envelope.independentChecks.find(v=>v.status==='CHECKED')!;

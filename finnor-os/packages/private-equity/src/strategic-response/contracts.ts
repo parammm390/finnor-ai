@@ -15,14 +15,12 @@ export const ModelList=z.object({root:Root,workId:z.string().uuid()}).strict();
 export const JobSchema=z.object({tenantId:z.string().uuid(),principalId:z.string().uuid(),modelId:z.string().uuid(),
  generation:z.number().int().positive(),useId:z.string().uuid().optional()}).strict();
 export type StrategicJob=z.infer<typeof JobSchema>;
-export const StrategicOperations=['response-model-submit','response-model-list','response-model-read','response-model-admit',
- 'response-model-resume','response-model-cancel','response-model-artifact','response-model-compare',
- 'response-forecast','response-programme','response-use-read','response-use-resume','response-use-cancel'] as const;
 export const StrategicOperationSchemas={
  'response-model-submit':SubmitSchema,'response-model-list':ModelList,'response-model-read':ModelId,'response-model-admit':ModelId,
  'response-model-resume':ModelId,'response-model-cancel':ModelId,'response-model-artifact':ModelId,'response-model-compare':ModelId,
  'response-forecast':ForecastRequest,'response-programme':DecisionRequest,'response-use-read':UseId,'response-use-resume':UseId,'response-use-cancel':UseId,
-} satisfies Record<typeof StrategicOperations[number],z.ZodTypeAny>;
+} satisfies Record<string,z.ZodTypeAny>;
+export const StrategicOperations=Object.keys(StrategicOperationSchemas) as ReadonlyArray<keyof typeof StrategicOperationSchemas>;
 export interface ModelRow {
  tenant_id:string;id:string;principal_id:string;root:SubmitRequest['root'];work_id:string;work_input_id:string;work_input_digest:string;
  episode_id:string;request:SubmitRequest;request_digest:string;runtime:StrategicRuntimeIdentity;rights_revision:string;idempotency_key:string;

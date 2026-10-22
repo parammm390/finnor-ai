@@ -64,7 +64,6 @@ export const ProblemSchema=ProblemObject.superRefine((p,ctx)=>{
   }
  }
 });
-export function parseProblem(raw:unknown):StrategicResponseProblem{return ProblemSchema.parse(raw);}
 export const ForecastSchema=z.object({context:Id,ruleIds:z.array(Id).min(1).max(PROFILE.maximumPeriods),initial:ActorChoices,
  jointPrivatePaths:z.array(z.object({id:Id,outsideOptions:z.record(Id,z.array(int).min(1).max(PROFILE.maximumPeriods))}).strict()).min(1).max(PROFILE.maximumJointPrivatePaths),
  sharedSignalPaths:z.array(z.object({id:Id,values:z.array(int).min(1).max(PROFILE.maximumPeriods)}).strict()).min(1).max(PROFILE.maximumSharedSignalPaths)}).strict();

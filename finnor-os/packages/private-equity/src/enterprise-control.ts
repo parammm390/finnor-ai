@@ -150,10 +150,11 @@ export async function synthesizeEnterpriseStrategicControl(ctx:PeMutationContext
  mandate:unknown;problem:unknown;actionRules:import('../../epistemic-runtime/src/strategic-response/adapter').StrategicActionRule[];
 }){
  const started=performance.now(),store=await import('./strategic-response/store'),
+  {withS5PortfolioTransaction}=await import('./allocation-store'),
   {same,fail}=await import('./strategic-response/contracts'),
   {createStrategicControlAdapter}=await import('../../epistemic-runtime/src/strategic-response/adapter');
  store.developmentOnly();
- const {row}=await store.transaction(ctx,c=>store.resolveCurrentModelTx(ctx,c,input.modelId));
+ const {row}=await withS5PortfolioTransaction(ctx,c=>store.resolveCurrentModelTx(ctx,c,input.modelId));
  const m=parseEconomicMandate(input.mandate),p=parseControlProblem(input.problem);
  if(ctx.auth.role!=='owner'||m.tenantId!==ctx.auth.tenantId||m.principalId!==actor(ctx)||m.businessOwnerRef.id!==actor(ctx)||
   m.episodeId!==row.episode_id||p.episodeId!==row.episode_id||!same(p.modelRef,row.artifact!.envelope.contentRef)||
@@ -164,7 +165,7 @@ export async function synthesizeEnterpriseStrategicControl(ctx:PeMutationContext
  const result=await synthesizeContingentControl({mandate:m,problem:p,dynamics,instruments:[],
   inputArtifactRef:row.artifact!.envelope.contentRef,budgetStartedAt:started,
   validUntilCap:row.deadline_at.toISOString()});
- await store.transaction(ctx,async c=>{
+ await withS5PortfolioTransaction(ctx,async c=>{
   await store.resolveCurrentModelTx(ctx,c,row.id);
   if(await unresolvedEffects(ctx,c))fail('Y2_S6_OUTSTANDING_RESPONSIBILITY_RECONCILIATION_REQUIRED');
  });

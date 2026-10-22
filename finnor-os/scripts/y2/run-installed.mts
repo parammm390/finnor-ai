@@ -14,7 +14,7 @@ import {publicProblem,bindCanonicalInputs,oracleQuery,decisionInput} from './bus
 import {publicProblem as y1Problem,bindCanonicalInputs as bindY1,resourceInput} from '../y1/business-fixtures.mts';
 import {PROFILE,digest} from '../../packages/private-equity/src/strategic-response/contracts';
 import {strategicRuntimeIdentity,checkStrategicResponse} from '../../packages/epistemic-runtime/src/strategic-response/process';
-import {transaction} from '../../packages/private-equity/src/strategic-response/store';
+import {withS5PortfolioTransaction as transaction} from '../../packages/private-equity/src/allocation-store';
 import {strategicResponseJob} from '../../packages/private-equity/src/strategic-response/worker';
 const evidence=resolve(process.env.FINNOR_Y2_EVIDENCE_DIR??join(repo,'scope-postx/y2-strategic-response-world-model/evidence/installed-'+Date.now()));
 await mkdir(evidence,{recursive:true});process.env.FINNOR_Y2_PROFILE='ordinary_disposable';process.env.FINNOR_Y1_PROFILE='ordinary_disposable';

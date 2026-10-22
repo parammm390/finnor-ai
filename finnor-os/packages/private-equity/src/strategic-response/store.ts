@@ -4,13 +4,12 @@ import {employeeAuthoritySnapshotTx} from '@finnor/authority';
 import {isImmutableWorkStatus,type WorkStatus} from '@finnor/db';
 import type {PeMutationContext} from '../types';
 import {authorize,principal,unavailable} from '../owner-context';
-import {withS5PortfolioTransaction} from '../allocation-store';
+import {withS5PortfolioTransaction as transaction} from '../allocation-store';
 import {affectedClosure} from '../live-recompilation/contracts';
 import {strategicRuntimeIdentity} from '../../../epistemic-runtime/src/strategic-response/process';
 import {assertForecast} from '../../../epistemic-runtime/src/strategic-response/contracts';
 import {PROFILE,digest,same,reference,fail,type ModelRow,type UseRow,type SubmitRequest,type StrategicJob,type UseRequest} from './contracts';
 export {principal,authorize};
-export const transaction=<T>(ctx:PeMutationContext,fn:(c:PoolClient)=>Promise<T>)=>withS5PortfolioTransaction(ctx,fn);
 export function developmentOnly(){
  if(process.env.FINNOR_Y2_PROFILE!=='ordinary_disposable'||process.env.FINNOR_ENVIRONMENT!=='ordinary_disposable'||
   Reflect.get(process.env,'NODE_ENV')==='production')fail('Y2_DISPOSABLE_DEVELOPMENT_ONLY',403);
@@ -40,8 +39,8 @@ export async function modelTx(ctx:PeMutationContext,c:PoolClient,id:string,lock=
  if(digest(row.request)!==row.request_digest)fail('Y2_IMMUTABLE_REQUEST_INTEGRITY');
  return row;
 }
-export async function useTx(ctx:PeMutationContext,c:PoolClient,modelId:string,id:string,lock=true):Promise<UseRow>{
- const row=(await c.query<UseRow>('SELECT *,check_result AS check FROM finnor_os.y2_uses WHERE tenant_id=$1 AND principal_id=$2 AND requested_model_id=$3 AND id=$4'+(lock?' FOR UPDATE':''),
+export async function useTx(ctx:PeMutationContext,c:PoolClient,modelId:string,id:string):Promise<UseRow>{
+ const row=(await c.query<UseRow>('SELECT *,check_result AS check FROM finnor_os.y2_uses WHERE tenant_id=$1 AND principal_id=$2 AND requested_model_id=$3 AND id=$4 FOR UPDATE',
   [ctx.auth.tenantId,principal(ctx),modelId,id])).rows[0];
  if(!row)throw unavailable();
  if(digest({kind:row.kind,request:row.request})!==row.request_digest)fail('Y2_IMMUTABLE_USE_INTEGRITY');

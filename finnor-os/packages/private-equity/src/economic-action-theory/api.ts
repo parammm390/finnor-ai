@@ -4,9 +4,9 @@ import type {PeMutationContext} from '../types';
 import {admitEconomicTheory} from '../../../capability-evolution/src/economic-theory-port';
 import {reserveEconomicRights,readEconomicReservation,EconomicReservationSchema} from '../economic-allocation';
 import {createEconomicProgramme,readEconomicProgramme,programmeTx,EconomicProgrammeSchema} from '../economic-control';
-import {PROFILE,SubmitSchema,RootSchema,RefSchema,EconomicOperations,EconomicFault,digest,byteDigest,fail,same} from './contracts';
-import {developmentOnly,transaction,theoryTx,principal,currentChangesTx,invalidateTx,eventTx,enqueueTx,submitTheory,checkedTheoryTx,workCutTx} from './store';
-export {EconomicOperations};
+import {PROFILE,SubmitSchema,RootSchema,RefSchema,EconomicFault,digest,byteDigest,fail,same} from './contracts';
+import {withS5PortfolioTransaction as transaction} from '../allocation-store';
+import {developmentOnly,theoryTx,principal,currentChangesTx,invalidateTx,eventTx,enqueueTx,submitTheory,checkedTheoryTx,workCutTx} from './store';
 const TheoryId=z.object({theoryId:z.string().uuid()}).strict(),ProgrammeId=z.object({programmeId:z.string().uuid()}).strict();
 const TheoryList=z.object({root:RootSchema,workId:z.string().uuid()}).strict(),
  TheoryComparison=TheoryId.extend({incumbentTheoryId:z.string().uuid().optional()}).strict(),
@@ -18,7 +18,8 @@ export const EconomicOperationSchemas={
  'economic-programme-create':EconomicProgrammeSchema,'economic-programme-run':ProgrammeId,
  'economic-programme-read':ProgrammeId,'economic-programme-reconcile':ProgrammeId,
  'economic-reservation-create':EconomicReservationSchema,'economic-reservation-read':ReservationId,
-} satisfies Record<typeof EconomicOperations[number],z.ZodTypeAny>;
+} satisfies Record<string,z.ZodTypeAny>;
+export const EconomicOperations=Object.keys(EconomicOperationSchemas) as ReadonlyArray<keyof typeof EconomicOperationSchemas>;
 /** Authentication runs before this bounded transport read. */
 export async function readEconomicBody(req:Request):Promise<unknown>{
  if(!req.body)fail('Y1_JSON_BODY_REQUIRED',400);

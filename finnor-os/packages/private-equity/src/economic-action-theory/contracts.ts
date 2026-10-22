@@ -128,7 +128,3 @@ export interface TheoryRow {
  admission:Record<string,unknown>|null;created_at:Date;deadline_at:Date;attempts_used:number;search_steps_used:number;
  semantic_applications_used:number;retained_bytes:number;fallback_id:string|null;cancelled:boolean;
 }
-export const EconomicOperations=['economic-theory-submit','economic-theory-read','economic-theory-list','economic-theory-admit',
- 'economic-theory-resume','economic-theory-cancel','economic-theory-artifact','economic-theory-compare',
- 'economic-programme-create','economic-programme-run','economic-programme-read','economic-programme-reconcile',
- 'economic-reservation-create','economic-reservation-read'] as const;

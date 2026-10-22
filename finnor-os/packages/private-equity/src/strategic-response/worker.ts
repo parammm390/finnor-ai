@@ -8,7 +8,8 @@ import {checkStrategicResponse} from '../../../epistemic-runtime/src/strategic-r
 import {synthesizeEnterpriseStrategicControl,retainEnterpriseStrategicControl,unresolvedEffects} from '../enterprise-control';
 import {parseEconomicMandate,parseControlProblem} from '../../../epistemic-runtime/src/control-contracts';
 import {PROFILE,PROFILE_DIGEST,VERSION,JobSchema,DecisionRequest,digest,reference,fail,type StrategicJob,type ModelRow,type UseRow} from './contracts';
-import {transaction,modelTx,useTx,currentChangesTx,invalidateTx,eventTx,developmentOnly,dependencyGraph,resolveCurrentModelTx} from './store';
+import {withS5PortfolioTransaction as transaction} from '../allocation-store';
+import {modelTx,useTx,currentChangesTx,invalidateTx,eventTx,developmentOnly,dependencyGraph,resolveCurrentModelTx} from './store';
 
 async function physical(c:PoolClient,p:StrategicJob,e:Readonly<JobExecutionContext>,leases:ComputeResourceLease[]){
  const result=await c.query(`SELECT j.id FROM finnor_os.jobs j JOIN finnor_os.job_delivery_attempts d ON d.tenant_id=j.tenant_id AND d.job_id=j.id

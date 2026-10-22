@@ -4,8 +4,9 @@ import {admitStrategicResponse} from '../../../capability-evolution/src/strategi
 import {ControlContractError,parseEconomicMandate,parseControlProblem} from '../../../epistemic-runtime/src/control-contracts';
 import {assertStrategicControlDomain} from '../../../epistemic-runtime/src/strategic-response/adapter';
 import {StrategicOperations,StrategicOperationSchemas,SubmitSchema,ModelId,UseId,ModelList,ForecastRequest,DecisionRequest,
- PROFILE,StrategicFault,digest,same,bytesDigest,fail} from './contracts';
-import {developmentOnly,transaction,principal,authorize,modelTx,useTx,currentChangesTx,invalidateTx,eventTx,enqueueTx,submitModel,
+ PROFILE,StrategicFault,same,bytesDigest,fail} from './contracts';
+import {withS5PortfolioTransaction as transaction} from '../allocation-store';
+import {developmentOnly,principal,authorize,modelTx,useTx,currentChangesTx,invalidateTx,eventTx,enqueueTx,submitModel,
  checkedModelTx,resolveCurrentModelTx,queueUse,workCutTx} from './store';
 export {StrategicOperations,StrategicOperationSchemas};
 export async function readStrategicBody(req:Request):Promise<unknown>{

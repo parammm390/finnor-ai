@@ -2,7 +2,8 @@
  * financial allocation-method receipt or a protected release/signature. */
 import type {PoolClient} from 'pg';
 import type {PeMutationContext} from '../../private-equity/src/types';
-import {checkedTheoryTx,developmentOnly,eventTx,transaction,principal} from '../../private-equity/src/economic-action-theory/store';
+import {withS5PortfolioTransaction as transaction} from '../../private-equity/src/allocation-store';
+import {checkedTheoryTx,developmentOnly,eventTx,principal} from '../../private-equity/src/economic-action-theory/store';
 import {PROFILE_DIGEST,digest,reference,same,fail,type EconomicRef,type TheoryRow} from '../../private-equity/src/economic-action-theory/contracts';
 export interface EconomicTheoryAdmission {
  schema:'finnor.s8.economic-theory-admission.v1';domain:'ECONOMIC_ACTION_THEORY';ref:EconomicRef;
