@@ -92,22 +92,26 @@ export async function reserveEconomicRights(ctx:PeMutationContext,raw:unknown){
    if(!resources.some(r=>r.resourceId===resource.resourceId))resources.push(resource);
    bindings.push({quantityId:quantity.id,resourceId:resource.resourceId});
   }
+  if(snapshot.resources.some(r=>r.covenants.some(cv=>cv.terms.some(t=>resources.some(selected=>selected.resourceId===t.resourceId)))))
+   fail('S5_ECONOMIC_CROSS_RESOURCE_COVENANT_UNSUPPORTED');
   const totals=economicResourceTotals(bindings,input.initialState),envelopes:AllocationEnvelope[]=[];
   for(const resource of resources){
+   let existing=0n;
    const total=totals.get(resource.resourceId)!;if(total<=0n)fail('S5_ECONOMIC_NONVACUOUS_RESERVATION');
    if(resource.availability.length!==resource.horizon.periods+1||resource.existingUse.length!==resource.availability.length)fail('S5_ECONOMIC_CAPACITY_COVERAGE');
    for(let period=0;period<resource.availability.length;period++){
     const available=resource.availability[period]!;
     if(available.basis!=='REPORTED_AVAILABLE'||available.amount===null)fail('S5_ECONOMIC_CAPACITY_UNKNOWN');
-    let held=0n;
+    existing+=amount(resource.existingUse[period]!);let held=0n;
     for(const outstanding of snapshot.outstanding)for(const e of outstanding.envelopes.filter(e=>e.resourceId===resource.resourceId)){
      if(e.kind!==resource.kind||e.unit!==resource.unit||!same(e.horizon,resource.horizon)||e.quantities.length!==resource.availability.length)fail('S5_ECONOMIC_OUTSTANDING_DOMAIN_UNSUPPORTED');
-     held+=amount(e.quantities[period]!);
+     held+=e.quantities.slice(0,period+1).reduce((sum,value)=>sum+amount(value),0n);
     }
-    if(total+held+amount(resource.existingUse[period]!)+amount(resource.safetyMargin)>amount(available.amount))fail('S5_ECONOMIC_SHARED_CAPACITY_EXHAUSTED',409);
+    if(total+held+existing+amount(resource.safetyMargin)>amount(available.amount))fail('S5_ECONOMIC_SHARED_CAPACITY_EXHAUSTED',409);
    }
    envelopes.push({resourceId:resource.resourceId,unit:resource.unit,kind:resource.kind,horizon:resource.horizon,
-    quantities:Array(resource.horizon.periods+1).fill(decimal(total)),minimumQuantities:Array(resource.horizon.periods+1).fill(decimal(total))});
+    quantities:[decimal(total),...Array(resource.horizon.periods).fill('0')],
+    minimumQuantities:[decimal(total),...Array(resource.horizon.periods).fill('0')]});
   }
   const exactAmountUsd=decimal(resources.reduce((sum,r)=>sum+(r.currency==='USD'?totals.get(r.resourceId)!:0n),0n));
   if(resources.some(r=>r.currency!==null&&r.currency!=='USD'))fail('S5_ECONOMIC_AUTHORITY_FX_UNSUPPORTED');
