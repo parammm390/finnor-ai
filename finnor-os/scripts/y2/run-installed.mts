@@ -197,6 +197,18 @@ try{
   assert.deepEqual(after.certificate.valueBounds,[18,18]);assert.deepEqual(after.mandate,afterInput.mandate);
   assert.equal(after.demand.reservationGranted,false);assert.equal(after.admission.executionAuthorityGranted,false);
   const canonical=ok(await e.http!.api(token,'policies','validate',{policyRef:after.ref}));assert.equal(canonical.status,'CURRENT');
+  const replay=ok(await e.http!.api(token,'policies','replay',{policyRef:after.ref}));
+  assert.equal(replay.programMatches,true);assert.equal(replay.certificateMatches,true);
+  const fractional=await compile(await fixture('fractional-binary64',(p:any)=>{p.payoff.jointPayoff='3'},true));
+  assert.equal(fractional.view.status,'CHECKED');await admit(fractional);
+  const fractionalInput:any=decisionInput(fractional.view,tenant,principal);
+  fractionalInput.mandate.utility.periodTerms[0].coefficient=0.1;
+  const {ref,...fractionalMandateBody}=fractionalInput.mandate,fractionalDigest=digest(fractionalMandateBody);
+  fractionalInput.mandate={...fractionalMandateBody,ref:{...ref,id:'mandate:'+fractionalDigest,contentDigest:fractionalDigest}};
+  fractionalInput.problem.actions.find((a:any)=>a.id==='coordinate').cost=0;
+  const fractionalUse=await use('response-programme',fractionalInput);
+  assert.equal(fractionalUse.view.status,'CHECKED',JSON.stringify(fractionalUse.view));
+  assert.deepEqual(fractionalUse.view.artifact.result.policy.certificate.valueBounds,[0.30000000000000004,0.30000000000000004]);
   const lie=structuredClone(before);lie.certificate.valueBounds=[18,18];lie.certificate.optimalBounds=[18,18];
   const rejected=await checkStrategicResponse('DECISION',{problem:main.request.problem,model:main.view.artifact.body,query:beforeInput.query,
    mandate:beforeInput.mandate,control:beforeInput.problem,actionRules:beforeInput.actionRules},lie,Date.now()+30000,await strategicRuntimeIdentity());
@@ -217,7 +229,7 @@ try{
   return {before:{action:'stop',value:before.certificate.valueBounds},after:{action:'coordinate',value:after.certificate.valueBounds},
    temporal:{nodes:course.nodes,value:course.certificate.valueBounds,stopRetainsOriginalPublicSchedule:true},
    publicDisclosureMeaning:{action:'stop',value:hiddenPolicy.certificate.valueBounds,sameNumericExposure:true},
-   causalQualification:'PUBLIC_SYNTHETIC_CONDITIONAL_ONLY',canonical,independentDecisionMutation:rejected,protectedEquippedXGain:false};
+   causalQualification:'PUBLIC_SYNTHETIC_CONDITIONAL_ONLY',canonical,replay,fractionalBinary64:{accepted:fractionalUse.accepted,check:fractionalUse.view.check,valueBounds:fractionalUse.view.artifact.result.policy.certificate.valueBounds},independentDecisionMutation:rejected,protectedEquippedXGain:false};
  });
  await test('08-actor-local-private-feedback-and-shared-paths',['Y2-08','Y2-04'],async()=>{
   const q=oracleQuery(2);q.jointPrivatePaths.push({id:'privateWithdrawal',outsideOptions:{lender:[3,3],capital:[8,8]}});
@@ -247,7 +259,12 @@ try{
   const fallback=await use('response-forecast',{modelId:child.view.modelId,query:oracleQuery(),idempotencyKey:randomUUID()});
   assert.equal(fallback.view.status,'CHECKED');assert.equal(fallback.accepted.fallbackUsed,true);assert.equal(fallback.accepted.executedModelId,main.view.modelId);
   assert.equal(fallback.view.originalEpisodeId,main.view.counters.episodeId);
-  return {unknown:unknown.view.status,resumed,recovered:recovered.counters,eligibility,actualFallback:fallback.accepted,fallbackCheck:fallback.view.check};
+  const independentBefore=await read(main.view.modelId);
+  ok(await api('response-model-cancel',{modelId:child.view.modelId}));
+  const cancelledFallback=await useRead(child.view.modelId,fallback.accepted.useId),independentAfter=await read(main.view.modelId);
+  assert.equal(cancelledFallback.current,false);assert.equal(cancelledFallback.status,'INVALIDATED');
+  assert.equal(independentAfter.current,true);assert.equal(digest(independentAfter.artifact),digest(independentBefore.artifact));
+  return {unknown:unknown.view.status,resumed,recovered:recovered.counters,eligibility,actualFallback:fallback.accepted,fallbackCheck:fallback.view.check,cancelledFallback,independentFallbackModelRetained:true};
  });
  await test('10-real-worker-checkpoint-death-and-fenced-recovery',['Y2-10'],async()=>{
   const f=await fixture('death'),accepted=ok(await api('response-model-submit',f.request),202),lock=71422002;

@@ -1,22 +1,22 @@
 {
   "phase": "P2",
-  "generatedAt": "2026-08-06T19:27:53.896Z",
+  "generatedAt": "2026-10-21T19:51:44.751Z",
   "pass": true,
   "guardedContext": true,
   "localDatabaseOnly": true,
   "productionEgress": false,
   "businessActions": [],
-  "credentialSource": "AWS_BEDROCK_API_KEY|AWS_BEARER_TOKEN_BEDROCK (value withheld)",
+  "credentialSource": "AWS SDK credential chain",
   "directVendorKeysUsed": false,
   "models": [
     {
       "provider": "glm",
-      "model": "zai.glm-4.7",
+      "model": "zai.glm-5",
       "transport": "bedrock-converse"
     },
     {
       "provider": "mistral",
-      "model": "mistral.mistral-small-2402-v1:0",
+      "model": "mistral.mistral-large-3-675b-instruct",
       "transport": "bedrock-converse"
     },
     {
@@ -28,29 +28,29 @@
   "results": [
     {
       "provider": "glm",
-      "configuredModel": "zai.glm-4.7",
+      "configuredModel": "zai.glm-5",
       "selectedProvider": "glm",
-      "observedModel": "zai.glm-4.7",
+      "observedModel": "zai.glm-5",
       "status": "completed",
       "responseShape": "non-empty",
       "inputTokens": 33,
       "outputTokens": 7,
       "costUsd": null,
-      "elapsedMs": 1989,
-      "traceId": "p2:bedrock-live:glm:8ae69d3b-fdd0-4689-b0b4-ab4792692ab5"
+      "elapsedMs": 2829,
+      "traceId": "p2:bedrock-live:glm:701bf6c2-7d5f-4170-aa81-10fc6f6313bd"
     },
     {
       "provider": "mistral",
-      "configuredModel": "mistral.mistral-small-2402-v1:0",
+      "configuredModel": "mistral.mistral-large-3-675b-instruct",
       "selectedProvider": "mistral",
-      "observedModel": "mistral.mistral-small-2402-v1:0",
+      "observedModel": "mistral.mistral-large-3-675b-instruct",
       "status": "completed",
       "responseShape": "non-empty",
-      "inputTokens": 39,
-      "outputTokens": 10,
+      "inputTokens": 34,
+      "outputTokens": 8,
       "costUsd": null,
-      "elapsedMs": 771,
-      "traceId": "p2:bedrock-live:mistral:354a02ee-03c3-4e49-9f0a-375b14231528"
+      "elapsedMs": 1189,
+      "traceId": "p2:bedrock-live:mistral:3ba2e582-b9e7-4cd4-841d-9382a621bba6"
     },
     {
       "provider": "deepseek",
@@ -62,8 +62,8 @@
       "inputTokens": 33,
       "outputTokens": 8,
       "costUsd": null,
-      "elapsedMs": 939,
-      "traceId": "p2:bedrock-live:deepseek:086a2ae0-e9d5-4415-ac28-cd9c200c513e"
+      "elapsedMs": 1259,
+      "traceId": "p2:bedrock-live:deepseek:9f10aa4b-1877-4873-96e7-bcfbe80c3cb3"
     }
   ],
   "routes": [
@@ -376,7 +376,7 @@
     "costConfigured": false,
     "rowsDetail": [
       {
-        "traceId": "p2:bedrock-live:deepseek:086a2ae0-e9d5-4415-ac28-cd9c200c513e",
+        "traceId": "p2:bedrock-live:deepseek:9f10aa4b-1877-4873-96e7-bcfbe80c3cb3",
         "provider": "deepseek",
         "model": "deepseek.v3.2",
         "status": "completed",
@@ -385,18 +385,18 @@
         "costUsd": null
       },
       {
-        "traceId": "p2:bedrock-live:mistral:354a02ee-03c3-4e49-9f0a-375b14231528",
+        "traceId": "p2:bedrock-live:mistral:3ba2e582-b9e7-4cd4-841d-9382a621bba6",
         "provider": "mistral",
-        "model": "mistral.mistral-small-2402-v1:0",
+        "model": "mistral.mistral-large-3-675b-instruct",
         "status": "completed",
-        "inputTokens": 39,
-        "outputTokens": 10,
+        "inputTokens": 34,
+        "outputTokens": 8,
         "costUsd": null
       },
       {
-        "traceId": "p2:bedrock-live:glm:8ae69d3b-fdd0-4689-b0b4-ab4792692ab5",
+        "traceId": "p2:bedrock-live:glm:701bf6c2-7d5f-4170-aa81-10fc6f6313bd",
         "provider": "glm",
-        "model": "zai.glm-4.7",
+        "model": "zai.glm-5",
         "status": "completed",
         "inputTokens": 33,
         "outputTokens": 7,

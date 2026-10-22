@@ -165,7 +165,7 @@ try{
   const input={theoryId:main.accepted.theoryId,initialState:{available:'3',committed:'2'},
    bindings:main.request.problem.quantities.map((q:any)=>({quantityId:q.id,resourceRef:resource.ref})),idempotencyKey:randomUUID()};
   held=ok(await api('economic-reservation-create',input));const replay=ok(await api('economic-reservation-create',input));
-  assert.deepEqual(replay.origin.ref,held.origin.ref);assert.equal(held.origin.envelopes[0].quantities[0],'5');
+  assert.deepEqual(replay.origin.ref,held.origin.ref);assert.deepEqual(held.origin.envelopes[0].quantities,['5','0']);
   return {admission,reservation:held,replaySameOrigin:true};
  });
  await test('E-shared-capacity-contention',async()=>{
@@ -179,9 +179,15 @@ try{
   programme=ok(await api('economic-programme-create',{theoryId:main.accepted.theoryId,reservationRef:held.origin.ref,expectedRevision:held.revision,
    goalState:{available:'1',committed:'4'},parameters:{amount:'2'},idempotencyKey:randomUUID()}));
   assert.equal(programme.steps.length,1);assert(programme.planRevisionId);
+  const emptyReconcile=ok(await api('economic-programme-reconcile',{programmeId:programme.id}),202);await tick();
+  assert.equal((await e.admin.query('SELECT status FROM finnor_os.jobs WHERE id=$1',[emptyReconcile.jobId])).rows[0].status,'completed');
   const job=ok(await api('economic-programme-run',{programmeId:programme.id}),202);await tick();
   const projection=ok(await api('economic-programme-read',{programmeId:programme.id}));assert.equal(projection.status,'OBSERVED',JSON.stringify(projection));
   assert.equal(projection.observedGoalDigest,digest(programme.goalState));assert.equal(projection.obligations.length,1);
+  const currentReconcile=ok(await api('economic-programme-reconcile',{programmeId:programme.id}),202);
+  assert.notEqual(currentReconcile.jobId,emptyReconcile.jobId);
+  assert.equal((await e.admin.query('SELECT max_attempts FROM finnor_os.jobs WHERE id=$1',[currentReconcile.jobId])).rows[0].max_attempts,4);
+  await tick();
   assert(projection.obligations[0].verification.canonicalObservationRef);
   const effects=(await e.admin.query('SELECT id,status,operation_class,effect,observed_result FROM finnor_os.business_effects WHERE tenant_id=$1',[tenant])).rows;
   assert.equal(effects.length,1);assert.equal(effects[0].operation_class,'internal_write');assert.equal(effects[0].status,'verified');
@@ -191,7 +197,7 @@ try{
    WHERE a.tenant_id=$1 AND p.id=$2 AND n.value->>'id'=a.plan_node_id`,[tenant,programme.planRevisionId])).rows;
   assert.equal(links.length,programme.steps.length);assert(links.every(v=>v.node.kind==='action'&&v.node.actionType==='execute_economic_right_transition'));
   assert(links.every(v=>digest(v.payload)===digest(v.node.groundedPayload??v.node.payload)));
-  return {programme,job,projection,effects,exactNativeActionPlanLinks:links};
+  return {programme,job,projection,effects,emptyReconcile,currentReconcile,originalReconciliationRetryLimit:4,exactNativeActionPlanLinks:links};
  });
  await test('E-canonical-query-preserves-original-Work',async()=>{
   const cut=async()=>(await e.admin.query(`SELECT w.status,(SELECT count(*)::int FROM finnor_os.work_inputs i
@@ -415,6 +421,69 @@ try{
   assert.equal(native.status,'INVALIDATED');const after=await read(f.accepted.theoryId);assert.equal(after.current,false);
   assert.equal(digest(after.artifact),digest(before.artifact));assert.equal((await api('economic-theory-admit',{theoryId:f.accepted.theoryId})).status,422);
   return {revision:changed.rows[0].revision,native,immutableArtifactRetained:true};
+ });
+ await test('C-native-cost-failure-still-releases-physical-lease',async()=>{
+  const f=await fixture('native_cost_refusal'),accepted=ok(await api('economic-theory-submit',f.request),202);
+  assert(/^[0-9a-f-]{36}$/.test(accepted.theoryId));
+  await e.admin.query('CREATE SEQUENCE finnor_os.y1_test_native_cost_failures');
+  await e.admin.query('GRANT USAGE ON SEQUENCE finnor_os.y1_test_native_cost_failures TO finnor_worker');
+  await e.admin.query(`CREATE FUNCTION finnor_os.y1_test_native_cost_refusal() RETURNS trigger LANGUAGE plpgsql AS $$
+   BEGIN
+    IF NEW.kind='NATIVE_COST' AND NEW.theory_id='${accepted.theoryId}'::uuid THEN
+     PERFORM nextval('finnor_os.y1_test_native_cost_failures');
+     RAISE EXCEPTION 'Y1_DISPOSABLE_NATIVE_COST_WRITE_REFUSED' USING ERRCODE='23514';
+    END IF;
+    RETURN NEW;
+   END $$`);
+  await e.admin.query('CREATE TRIGGER y1_test_native_cost_refusal BEFORE INSERT ON finnor_os.y1_events FOR EACH ROW EXECUTE FUNCTION finnor_os.y1_test_native_cost_refusal()');
+  try{
+   let failure:any;
+   for(let i=0;i<8;i++){
+    try{await tick();}catch(error){assert(String(error).includes('Y1_DISPOSABLE_NATIVE_COST_WRITE_REFUSED'));}
+    failure=(await e.admin.query('SELECT last_value,is_called FROM finnor_os.y1_test_native_cost_failures')).rows[0];
+    if(failure.is_called)break;
+   }
+   assert.equal(failure?.is_called,true);
+   const deliveries=(await e.admin.query('SELECT id,outcome FROM finnor_os.job_delivery_attempts WHERE job_id=$1 ORDER BY id',[accepted.jobId])).rows;
+   assert(deliveries.length>0);
+   const leases=(await e.admin.query(`SELECT owner_id,released_at FROM finnor_os.compute_resource_leases
+    WHERE owner_id IN(SELECT 'y1:'||id::text FROM finnor_os.job_delivery_attempts WHERE job_id=$1)`,[accepted.jobId])).rows;
+   assert(leases.length>0);assert(leases.every(v=>v.released_at!==null));
+   const charged=(await e.admin.query(`SELECT e.attempts_used FROM finnor_os.y1_requests r JOIN finnor_os.y1_episodes e
+    ON e.tenant_id=r.tenant_id AND e.id=r.episode_id WHERE r.tenant_id=$1 AND r.id=$2`,[tenant,accepted.theoryId])).rows[0].attempts_used;
+   assert.equal(charged,1);
+   return {theoryId:accepted.theoryId,actualNativeCostWriteFailed:true,observedFailureCount:Number(failure.last_value),
+    deliveries,leases,originalAttemptsCharged:charged,physicalLeaseReleasedDespiteWriteFailure:true};
+  }finally{
+   await e.admin.query('DROP TRIGGER y1_test_native_cost_refusal ON finnor_os.y1_events');
+   await e.admin.query('DROP FUNCTION finnor_os.y1_test_native_cost_refusal()');
+   await e.admin.query('DROP SEQUENCE finnor_os.y1_test_native_cost_failures');
+  }
+ });
+ await test('C-canonical-authority-expiry-without-revision-change',async()=>{
+  const role=(await e.admin.query(`SELECT r.id FROM finnor_os.employee_roles r
+   WHERE r.tenant_id=$1 AND NOT EXISTS(SELECT 1 FROM finnor_os.employee_role_assignments a WHERE a.employee_id=$2 AND a.role_id=r.id)
+    AND NOT EXISTS(SELECT 1 FROM finnor_os.role_authority_grants g WHERE g.role_id=r.id AND g.effect='deny')
+   ORDER BY r.id LIMIT 1`,[tenant,principal])).rows[0];
+  assert(role,'Y1_DISPOSABLE_UNUSED_NON_DENY_ROLE_REQUIRED');
+  const assignment=(await e.admin.query(`INSERT INTO finnor_os.employee_role_assignments
+   (tenant_id,employee_id,role_id,expires_at) VALUES($1,$2,$3,clock_timestamp()+interval '5 seconds')
+   RETURNING id,expires_at`,[tenant,principal,role.id])).rows[0];
+  const f=await fixture('scheduled_authority_expiry'),accepted=ok(await api('economic-theory-submit',f.request),202);
+  const binding=(await e.admin.query("SELECT body->'authority' authority FROM finnor_os.y1_events WHERE tenant_id=$1 AND theory_id=$2 AND event_key='accepted'",
+   [tenant,accepted.theoryId])).rows[0].authority;
+  assert.equal(binding.employeeId,principal);assert.equal(binding.validUntil,new Date(assignment.expires_at).toISOString());
+  const revision=(await e.admin.query('SELECT revision FROM finnor_os.authority_states WHERE tenant_id=$1',[tenant])).rows[0].revision;
+  assert.equal((await read(accepted.theoryId)).current,true);
+  await until(async()=>(await e.admin.query('SELECT clock_timestamp()>$1::timestamptz expired',[assignment.expires_at])).rows[0].expired,
+   'Y1_ORIGINAL_AUTHORITY_BOUNDARY_DID_NOT_ELAPSE',15000);
+  const after=await read(accepted.theoryId);assert.equal(after.current,false);assert.equal(after.status,'INVALIDATED');
+  const retained=(await e.admin.query("SELECT body->'authority' authority FROM finnor_os.y1_events WHERE tenant_id=$1 AND theory_id=$2 AND event_key='accepted'",
+   [tenant,accepted.theoryId])).rows[0].authority;
+  assert.deepEqual(retained,binding);
+  assert.equal((await e.admin.query('SELECT revision FROM finnor_os.authority_states WHERE tenant_id=$1',[tenant])).rows[0].revision,revision);
+  return {theoryId:accepted.theoryId,binding,unchangedAuthorityRevision:revision,current:after.current,status:after.status,
+   actualDatabaseClockBoundaryElapsed:true,originalAcceptedBindingRetained:true};
  });
  if(built)await test('C-emitted-production-bootstrap-refuses-unprotected-secrets',async()=>{
   const before=(await e.admin.query('SELECT count(*)::int n FROM finnor_os.business_effects WHERE tenant_id=$1',[tenant])).rows[0].n;

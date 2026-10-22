@@ -76,16 +76,17 @@ export async function browserHttpFixture(admin:pg.Client,tenant:string,actor:str
   }catch(error){console.error('OWNED_BROWSER_ROUTE_FAILURE',error instanceof Error?error.message:'UNKNOWN');res.writeHead(500);res.end('{"code":"OWNED_BROWSER_HTTP_FAILURE"}');}
  });
  const origin=await listen(api),token=issue(actor),otherToken=issue(otherActor);
- const request=async(path:string,body:unknown,identity:'actor'|'other'|'anonymous'|'invalid'='actor',upstream=origin)=>{
+ const request=async(path:string,body:unknown,identity:'actor'|'other'|'anonymous'|'invalid'='actor',upstream=origin,method:'POST'|'GET'='POST')=>{
   if(!/^[a-zA-Z0-9_-]+(?:\/[a-zA-Z0-9_-]+)*$/.test(path))throw Error('EXACT_OWNED_API_PATH_REQUIRED');
   const headers:Record<string,string>={'content-type':'application/json'};
   if(identity!=='anonymous')headers.authorization='Bearer '+(identity==='other'?otherToken:identity==='invalid'?'invalid.disposable.token':token);
-  const response=await fetch(upstream+'/api/'+path,{method:'POST',headers,body:JSON.stringify(body),signal:AbortSignal.timeout(15000)});
+  const response=await fetch(upstream+'/api/'+path,{method,headers,...(method==='POST'?{body:JSON.stringify(body)}:{}),signal:AbortSignal.timeout(15000)});
   return {status:response.status,body:await response.json() as any};
  };
  const call=async(operation:string,body:unknown,identity:'actor'|'other'|'anonymous'|'invalid'='actor',upstream=origin)=>
   request('company-brain/'+operation,body,identity,upstream);
- return {origin,authOrigin,loginEmail:users.find(u=>u.id===actor)!.email,call,request,observed,close:async()=>{
+ const read=(path:string,identity:'actor'|'other'|'anonymous'|'invalid'='actor')=>request(path,undefined,identity,origin,'GET');
+ return {origin,authOrigin,loginEmail:users.find(u=>u.id===actor)!.email,call,request,read,observed,close:async()=>{
   for(const server of [api,auth]){server.closeAllConnections();await new Promise<void>(yes=>server.close(()=>yes()));}
   for(const [key,value]of Object.entries(prior)){if(value===undefined)delete process.env[key];else process.env[key]=value;}
  }};

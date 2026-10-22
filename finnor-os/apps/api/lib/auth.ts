@@ -8,7 +8,7 @@ import { ensureSecretsLoaded, resolveTenantFromBearerToken, AuthVerificationErro
 import { initObservability, Sentry, logWithTrace } from "@finnor/tools";
 import { checkRateLimit, secondsUntilWindowReset } from "./rate-limit";
 import { canExerciseAuthority, evaluateAuthority } from "@finnor/authority";
-import { readProductRuntimeAuthority } from "@finnor/db";
+import { ExactWorkIntakeConflict, readProductRuntimeAuthority } from "@finnor/db";
 
 export class AuthError extends Error {
   constructor(
@@ -139,6 +139,7 @@ export async function canApproveReadOnly(ctx: TenantContext, actionType: string)
 }
 
 export function errorResponse(err: unknown): Response {
+  if (err instanceof ExactWorkIntakeConflict) return Response.json({ error: err.message }, { status: 409 });
   if (err instanceof AuthError) {
     return Response.json({ error: err.message }, { status: err.status, headers: err.headers });
   }

@@ -8,7 +8,8 @@ const semanticFiles=['contracts.ts','finite.ts','compiler.ts','process.ts','chec
  '../economic-allocation.ts','../economic-control.ts','../economic-obligations.ts','../economic-observation.ts',
  '../program-synthesis/economic-module.ts','../program-synthesis/economic-plan.ts','../program-synthesis/economic-query.ts',
  '../program-synthesis/economic-native.ts',
- '../allocation-store.ts','../../../capability-evolution/src/economic-theory-port.ts'];
+ '../allocation-store.ts','../../../capability-evolution/src/economic-theory-port.ts',
+ '../../../db/migrations/0195a_postx_y1_temporal_binding.sql'];
 export async function runtimeIdentity():Promise<RuntimeIdentity>{
  if(process.versions.node.split('.')[0]!=='22')fail('Y1_NODE_22_RUNTIME_REQUIRED',503);
  const sourcePins=await Promise.all(semanticFiles.map(async path=>({path,sha256:byteDigest(await readFile(join(assetRoot(),path)))})));

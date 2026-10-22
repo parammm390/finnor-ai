@@ -3,6 +3,17 @@
  * that the corresponding application task is healthy. */
 
 export const COMPUTE_CLASSES = Object.freeze(["REALTIME", "INTERACTIVE", "BACKGROUND", "HEAVY"])
+export function computeSecretMap(contract, workloadClass, { legacy = false } = {}) {
+  const base = contract.topology.worker.secretMap
+  const providers = legacy ? {} : contract.topology.computePlane.providerRuntime.workerSecrets
+  if (workloadClass === "REALTIME") return Object.fromEntries(["DATABASE_URL", "SENTRY_DSN", "SUPABASE_SERVICE_ROLE_KEY"].map(key => [key, base[key]]))
+  if (workloadClass === "HEAVY") return {
+    ...Object.fromEntries((legacy ? ["DATABASE_URL", "GROQ_API_KEY", "REDIS_URL", "SENTRY_DSN"] : ["DATABASE_URL", "REDIS_URL", "SENTRY_DSN"]).map(key => [key, base[key]])),
+    ...(providers.EMBEDDINGS_API_KEY ? { EMBEDDINGS_API_KEY: providers.EMBEDDINGS_API_KEY } : {}),
+  }
+  if (!["INTERACTIVE", "BACKGROUND"].includes(workloadClass)) throw new Error("Unknown compute class")
+  return { ...Object.fromEntries(Object.entries(base).filter(([key]) => legacy || key !== "GROQ_API_KEY")), ...providers }
+}
 const COMPUTE_ROLLOUT_RESOURCES = new Set([
   "WorkerTaskDefinition", "InteractiveTaskDefinition", "BackgroundTaskDefinition", "HeavyTaskDefinition",
   "RealtimeService", "InteractiveService", "BackgroundService", "HeavyService",
@@ -98,7 +109,7 @@ export function assertComputeNoopStack({ stack, expectedParameters, previousStac
   }
 }
 
-export function assertComputeNoopFleet({ profiles, services, tasksByClass, taskDefinitions, heartbeats, expected, imageDigest, imageUri, migrationHead, coreCertificationId, worker, targetGroup, targetHealth }) {
+export function assertComputeNoopFleet({ profiles, services, tasksByClass, taskDefinitions, heartbeats, expected, imageDigest, imageUri, migrationHead, coreCertificationId, worker, contract, targetGroup, targetHealth }) {
   assertComputeFleetConverged({ profiles, services, tasksByClass, heartbeats, expected, imageDigest, migrationHead })
   const definitions = []
   for (const workloadClass of COMPUTE_CLASSES) {
@@ -112,6 +123,8 @@ export function assertComputeNoopFleet({ profiles, services, tasksByClass, taskD
       FINNOR_VERSION: expected.version, FINNOR_ENVIRONMENT: expected.environment,
       FINNOR_RELEASE_SOURCE: expected.source, FINNOR_CORE_CERTIFICATION_ID: coreCertificationId,
       FINNOR_WORKLOAD_CLASS: workloadClass,
+      FINNOR_SECRET_IDS: JSON.stringify(computeSecretMap(contract, workloadClass)),
+      ...(workloadClass === "REALTIME" ? {} : Object.fromEntries(Object.entries(contract.topology.computePlane.providerRuntime.environment).filter(([key]) => key !== "AWS_BEDROCK_REGION"))),
     }
     if (!definition?.taskDefinitionArn || definition.taskDefinitionArn !== service.taskDefinition
       || service.taskDefinition !== service.deployments?.find((deployment) => deployment.status === "PRIMARY")?.taskDefinition

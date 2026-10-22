@@ -1,0 +1,11 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "git": {
+    "deploymentEnabled": {
+      "factory/postx-y1-economic-action-theory": false,
+      "factory/postx-y2-strategic-response-world-model": false,
+      "factory/postx-y3-dynamic-interaction-synthesizer": false,
+      "factory/postx-y4-confidential-economic-compiler": false
+    }
+  }
+}

@@ -8,7 +8,7 @@ export default {
     },
     {
       "path": "source-paths.ts",
-      "sha256": "a8132c8a3a258db61084976bd3c4f3381d7f0feab1e4a8983976a4ef88211fff"
+      "sha256": "0de89fc69c7984a38dea728738625d4f656b43f6a8a80532464deac57907fd26"
     },
     {
       "path": "contracts.ts",
@@ -24,7 +24,7 @@ export default {
     },
     {
       "path": "checker.py",
-      "sha256": "7a361ac50c72ec3a4ac8c2aced03c49e96614f708b793dce4912ab15aa25c8bd"
+      "sha256": "d21275e0d92de20c8f231f84092c472f9ee03ed4a1221e10e6a8a073b19b4f16"
     },
     {
       "path": "process.ts",
@@ -56,7 +56,7 @@ export default {
     },
     {
       "path": "../../../private-equity/src/strategic-response/store.ts",
-      "sha256": "7198dd456ea0907e9518a4d97f8848645009400ad450cbcbb31141ff6a53285e"
+      "sha256": "15e6c9d084b2e24af3ae0689e950256453506dc558920e0225d0e92f1d2260bd"
     },
     {
       "path": "../../../private-equity/src/strategic-response/worker.ts",
@@ -64,11 +64,11 @@ export default {
     },
     {
       "path": "../../../private-equity/src/strategic-response/api.ts",
-      "sha256": "9d308d5b46842e613301c57610ffdc34f5e27014443a10bddd1a1b6e542b2c3c"
+      "sha256": "baaeed899e7b066521c00b793f59749b301b6a54858728c605c3546ac28c7a0a"
     },
     {
       "path": "../../../private-equity/src/enterprise-control.ts",
-      "sha256": "e1c90b9ce50ac6c08b8f1ebd07e31c4214d51e4531531b26fe7d250a99f7a92c"
+      "sha256": "47402b32066d54df6a8e7c23b15c64c3e0379362e1d270e8220a0a35bf4b5958"
     },
     {
       "path": "../../../capability-evolution/src/strategic-response-port.ts",
@@ -77,6 +77,10 @@ export default {
     {
       "path": "../../../db/migrations/0196_postx_y2_strategic_response.sql",
       "sha256": "e1a99c7e9ca35c29bee8b549be03ab3c5da2ab0a669d7b9e5f5ac6500d764759"
+    },
+    {
+      "path": "../../../db/migrations/0196a_postx_y2_requested_model_currentness.sql",
+      "sha256": "e0bcb6c460dc838d1f13d5b137033d99ce140e910a31396bf6aa0b47cd3ae55e"
     }
   ]
 } as const;

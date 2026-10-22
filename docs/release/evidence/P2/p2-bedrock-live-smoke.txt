@@ -3,12 +3,12 @@ status=PASS
 guardedContext=true
 productionEgress=false
 businessActions=none
-credentialSource=AWS_BEDROCK_API_KEY|AWS_BEARER_TOKEN_BEDROCK (value withheld)
+credentialSource=AWS SDK credential chain
 directVendorKeysUsed=false
 models=3/3 completed
-provider=glm configuredModel=zai.glm-4.7 observedModel=zai.glm-4.7 selectedProvider=glm status=completed response=non-empty inputTokens=33 outputTokens=7 costUsd=not_configured traceId=p2:bedrock-live:glm:8ae69d3b-fdd0-4689-b0b4-ab4792692ab5
-provider=mistral configuredModel=mistral.mistral-small-2402-v1:0 observedModel=mistral.mistral-small-2402-v1:0 selectedProvider=mistral status=completed response=non-empty inputTokens=39 outputTokens=10 costUsd=not_configured traceId=p2:bedrock-live:mistral:354a02ee-03c3-4e49-9f0a-375b14231528
-provider=deepseek configuredModel=deepseek.v3.2 observedModel=deepseek.v3.2 selectedProvider=deepseek status=completed response=non-empty inputTokens=33 outputTokens=8 costUsd=not_configured traceId=p2:bedrock-live:deepseek:086a2ae0-e9d5-4415-ac28-cd9c200c513e
+provider=glm configuredModel=zai.glm-5 observedModel=zai.glm-5 selectedProvider=glm status=completed response=non-empty inputTokens=33 outputTokens=7 costUsd=not_configured traceId=p2:bedrock-live:glm:701bf6c2-7d5f-4170-aa81-10fc6f6313bd
+provider=mistral configuredModel=mistral.mistral-large-3-675b-instruct observedModel=mistral.mistral-large-3-675b-instruct selectedProvider=mistral status=completed response=non-empty inputTokens=34 outputTokens=8 costUsd=not_configured traceId=p2:bedrock-live:mistral:3ba2e582-b9e7-4cd4-841d-9382a621bba6
+provider=deepseek configuredModel=deepseek.v3.2 observedModel=deepseek.v3.2 selectedProvider=deepseek status=completed response=non-empty inputTokens=33 outputTokens=8 costUsd=not_configured traceId=p2:bedrock-live:deepseek:9f10aa4b-1877-4873-96e7-bcfbe80c3cb3
 routes=20/20 expected
 ledgerRows=3/3 pass=true totalCostUsd=not_configured
 No provider credential value or response content was written to this evidence file.

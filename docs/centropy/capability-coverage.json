@@ -1,7 +1,7 @@
 {
   "schema": "centropy.capability-coverage-audit/v1",
-  "generatedAt": "2026-10-20T22:34:53.862Z",
-  "sourceBaseCommit": "e2138bfb10951dadfb74bad3f49913920deece2f",
+  "generatedAt": "2026-10-22T19:54:03.039Z",
+  "sourceBaseCommit": "5ec02f674ac7f41ed04b32342dbf8b81f1983ef4",
   "manifestSha256": "ca0e875ce479afa868b4565501fb2b8e4866fa8aba16f9447656db1474c485de",
   "formsSha256": "78e6da8a2346c1a96712b634d0307535e8adbef6959cc5a72cc2302f8b445ec6",
   "method": "Actual API/planner manifest; import graph from active CENTROPY route entries; literal API call bindings; typed human form registrations; explicit restricted/compatibility/protocol classifications. Source presence is not execution evidence.",
@@ -1395,7 +1395,7 @@
       },
       {
         "file": "src/components/centropy/canvas/StrategicResponsePanel.tsx",
-        "sha256": "9fdee47bd17492c8437cca992a6c7498a83598046d9f7dd1c6595ea4980e4509"
+        "sha256": "c18bda6b82bbdca16bc4f97bde151773ace10a65bd912435397bb41cd7eeb342"
       },
       {
         "file": "src/components/centropy/controls/LiveInstitutionalControl.tsx",
@@ -2040,6 +2040,7 @@
         "e2e/private-equity-product-contract.spec.ts",
         "finnor-os/tests/integration/capability-discovery-http.test.ts",
         "finnor-os/tests/integration/computer-execution-fabric.test.ts",
+        "finnor-os/tests/integration/phase6-plan-graph-runtime.test.ts",
         "finnor-os/tests/integration/private-equity-phase3.test.ts",
         "finnor-os/tests/integration/scope3-compute-plane.test.ts",
         "finnor-os/tests/integration/user-prefs-route.test.ts",
@@ -5455,6 +5456,7 @@
       "invalidationTags": [],
       "timeoutClass": "READ",
       "tests": [
+        "finnor-os/tests/integration/capability-discovery-http.test.ts",
         "finnor-os/tests/integration/work-cases.test.ts"
       ],
       "source": "finnor-os/apps/api/app/api/read-models/[view]/route.ts",
@@ -5586,6 +5588,7 @@
         "finnor-os/tests/integration/instruction-trace.test.ts",
         "finnor-os/tests/integration/learning-digest.test.ts",
         "finnor-os/tests/integration/pe-objective-world-scope.test.ts",
+        "finnor-os/tests/integration/phase6-plan-graph-runtime.test.ts",
         "finnor-os/tests/integration/phase7-performance.test.ts",
         "finnor-os/tests/integration/private-equity-p5-ic-runtime.test.ts",
         "finnor-os/tests/integration/private-equity-phase2.test.ts",
@@ -5834,6 +5837,7 @@
         "e2e/centropy-live-host.spec.ts",
         "e2e/centropy-live-workforce-reassign.spec.ts",
         "e2e/centropy-underwriting-multi-input.spec.ts",
+        "finnor-os/tests/integration/capability-discovery-http.test.ts",
         "finnor-os/tests/integration/clarification-request.test.ts",
         "finnor-os/tests/integration/computer-execution-fabric.test.ts",
         "finnor-os/tests/integration/heartbeat.test.ts",
@@ -7506,6 +7510,7 @@
         "finnor-os/tests/integration/pg-notify-triggers.test.ts",
         "finnor-os/tests/integration/phase6-conversation-context-kernel.test.ts",
         "finnor-os/tests/integration/phase6-plan-concurrency.test.ts",
+        "finnor-os/tests/integration/phase6-plan-graph-runtime.test.ts",
         "finnor-os/tests/integration/phase7-performance.test.ts",
         "finnor-os/tests/integration/phase7-workforce-concurrency.test.ts",
         "finnor-os/tests/integration/private-equity-p1-world-truth.test.ts",
@@ -23751,7 +23756,7 @@
           "file": "src/components/centropy/canvas/StrategicResponsePanel.tsx",
           "route": "company-brain/response-forecast",
           "method": "POST",
-          "line": 106,
+          "line": 117,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -23819,7 +23824,7 @@
           "file": "src/components/centropy/canvas/StrategicResponsePanel.tsx",
           "route": "company-brain/response-model-admit",
           "method": "POST",
-          "line": 106,
+          "line": 117,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -23884,7 +23889,7 @@
           "file": "src/components/centropy/canvas/StrategicResponsePanel.tsx",
           "route": "company-brain/response-model-artifact",
           "method": "POST",
-          "line": 106,
+          "line": 117,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -23952,7 +23957,7 @@
           "file": "src/components/centropy/canvas/StrategicResponsePanel.tsx",
           "route": "company-brain/response-model-cancel",
           "method": "POST",
-          "line": 106,
+          "line": 117,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -24017,7 +24022,7 @@
           "file": "src/components/centropy/canvas/StrategicResponsePanel.tsx",
           "route": "company-brain/response-model-compare",
           "method": "POST",
-          "line": 106,
+          "line": 117,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -24089,7 +24094,7 @@
           "file": "src/components/centropy/canvas/StrategicResponsePanel.tsx",
           "route": "company-brain/response-model-list",
           "method": "POST",
-          "line": 106,
+          "line": 117,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -24154,14 +24159,14 @@
           "file": "src/components/centropy/canvas/StrategicResponsePanel.tsx",
           "route": "company-brain/response-model-read",
           "method": "POST",
-          "line": 63,
+          "line": 65,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         },
         {
           "file": "src/components/centropy/canvas/StrategicResponsePanel.tsx",
           "route": "company-brain/response-model-read",
           "method": "POST",
-          "line": 106,
+          "line": 117,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -24229,7 +24234,7 @@
           "file": "src/components/centropy/canvas/StrategicResponsePanel.tsx",
           "route": "company-brain/response-model-resume",
           "method": "POST",
-          "line": 106,
+          "line": 117,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -24297,7 +24302,7 @@
           "file": "src/components/centropy/canvas/StrategicResponsePanel.tsx",
           "route": "company-brain/response-model-submit",
           "method": "POST",
-          "line": 106,
+          "line": 117,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -24365,7 +24370,7 @@
           "file": "src/components/centropy/canvas/StrategicResponsePanel.tsx",
           "route": "company-brain/response-programme",
           "method": "POST",
-          "line": 106,
+          "line": 117,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -24433,7 +24438,7 @@
           "file": "src/components/centropy/canvas/StrategicResponsePanel.tsx",
           "route": "company-brain/response-use-cancel",
           "method": "POST",
-          "line": 106,
+          "line": 117,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -24498,7 +24503,14 @@
           "file": "src/components/centropy/canvas/StrategicResponsePanel.tsx",
           "route": "company-brain/response-use-read",
           "method": "POST",
-          "line": 106,
+          "line": 70,
+          "binding": "Canonical API import and finite TypeScript expression; source evidence only"
+        },
+        {
+          "file": "src/components/centropy/canvas/StrategicResponsePanel.tsx",
+          "route": "company-brain/response-use-read",
+          "method": "POST",
+          "line": 117,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -24566,7 +24578,7 @@
           "file": "src/components/centropy/canvas/StrategicResponsePanel.tsx",
           "route": "company-brain/response-use-resume",
           "method": "POST",
-          "line": 106,
+          "line": 117,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -34178,6 +34190,7 @@
         "finnor-os/tests/integration/capability-discovery-http.test.ts",
         "finnor-os/tests/integration/microsoft365-pe-mapping.test.ts",
         "finnor-os/tests/integration/pe-objective-world-scope.test.ts",
+        "finnor-os/tests/integration/phase6-plan-graph-runtime.test.ts",
         "finnor-os/tests/integration/phase7-performance.test.ts",
         "finnor-os/tests/integration/phase7-workforce-concurrency.test.ts",
         "finnor-os/tests/integration/private-equity-phase3.test.ts",
@@ -38725,6 +38738,7 @@
       "timeoutClass": "RUNTIME",
       "tests": [
         "finnor-os/tests/integration/answer-citations.test.ts",
+        "finnor-os/tests/integration/capability-discovery-http.test.ts",
         "finnor-os/tests/integration/private-equity-phase3.test.ts"
       ],
       "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
@@ -39454,6 +39468,7 @@
       "invalidationTags": [],
       "timeoutClass": "RUNTIME",
       "tests": [
+        "finnor-os/tests/integration/capability-discovery-http.test.ts",
         "finnor-os/tests/integration/phase6-performance.test.ts",
         "finnor-os/tests/integration/phase6-plan-concurrency.test.ts",
         "finnor-os/tests/integration/phase6-plan-graph-runtime.test.ts",

@@ -10,7 +10,7 @@
     "requireCleanWorktree": true
   },
   "release": {
-    "requiredMigrationHead": "0194_x_phase_charge_phase_union.sql",
+    "requiredMigrationHead": "0195_private_input_responses.sql",
     "metadata": [
       "FINNOR_COMMIT_SHA",
       "FINNOR_BUILD_ID",
@@ -114,6 +114,22 @@
         "INTERACTIVE": { "serviceName": "finnor-interactive", "heartbeatService": "compute-interactive", "taskFamily": "finnor-interactive", "containerName": "finnor-interactive", "cpu": 1024, "memory": 2048, "workerConcurrency": 2, "minTasks": 1, "maxTasks": 3, "leaseSeconds": 300, "stopTimeoutSeconds": 120, "ageTargetSeconds": 60, "backlogPerTaskTarget": 4, "ingress": "none", "taskRoleName": "finnor-worker-task" },
         "BACKGROUND": { "serviceName": "finnor-background", "heartbeatService": "compute-background", "taskFamily": "finnor-background", "containerName": "finnor-background", "cpu": 512, "memory": 1024, "workerConcurrency": 2, "minTasks": 1, "maxTasks": 2, "leaseSeconds": 300, "stopTimeoutSeconds": 120, "ageTargetSeconds": 900, "backlogPerTaskTarget": 8, "ingress": "none", "taskRoleName": "finnor-background-task" },
         "HEAVY": { "serviceName": "finnor-heavy", "heartbeatService": "compute-heavy", "taskFamily": "finnor-heavy", "containerName": "finnor-heavy", "cpu": 2048, "memory": 4096, "workerConcurrency": 1, "minTasks": 1, "maxTasks": 2, "leaseSeconds": 300, "stopTimeoutSeconds": 120, "ageTargetSeconds": 1800, "backlogPerTaskTarget": 1, "ingress": "none", "taskRoleName": "finnor-heavy-task" }
+      },
+      "providerRuntime": {
+        "environment": {
+          "AWS_BEDROCK_AUTH_MODE": "iam",
+          "AWS_BEDROCK_REGION": "us-east-1",
+          "AWS_BEDROCK_GLM_MODEL_ID": "zai.glm-5",
+          "AWS_BEDROCK_MISTRAL_MODEL_ID": "mistral.mistral-large-3-675b-instruct",
+          "AWS_BEDROCK_DEEPSEEK_MODEL_ID": "deepseek.v3.2"
+        },
+        "workerSecrets": {
+          "EXA_API_KEY": "finnor/prod/exa-api-key",
+          "EMBEDDINGS_API_KEY": "finnor/prod/embeddings-api-key"
+        },
+        "stackName": "finnor-model-runtime",
+        "policyName": "finnor-compute-model-runtime",
+        "applicationPrincipal": "finnor-app-prod"
       },
       "capacityProvenance": "Scope-3 engineering defaults pending load and live AWS certification; not product SLOs or provider quotas"
     },

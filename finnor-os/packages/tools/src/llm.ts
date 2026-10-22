@@ -9,6 +9,7 @@
 // moment a plugin needed an LLM call (the ops-overview grounded-QA action does).
 
 import Groq from "groq-sdk";
+import { BedrockRuntimeClient, ConverseCommand } from "@aws-sdk/client-bedrock-runtime";
 import { randomUUID } from "node:crypto";
 import { withTenant, decisionReceipts, llmCalls, tenantLlmBudgets, withGovernedModelInvocation, ComputeCapacityUnavailableError } from "@finnor/db";
 import { and, eq, gte, sql } from "drizzle-orm";
@@ -358,6 +359,7 @@ export class BedrockAnthropicProvider implements LLMProvider {
 export class BedrockConverseProvider implements LLMProvider {
   readonly name: string;
   lastUsage?: LLMUsage;
+  private client?: BedrockRuntimeClient;
   constructor(
     private modelId: string,
     private apiKey = bedrockApiKey(),
@@ -368,34 +370,53 @@ export class BedrockConverseProvider implements LLMProvider {
   }
 
   async complete(opts: LLMCallOptions): Promise<string> {
-    if (!this.apiKey) throw new Error("AWS_BEDROCK_API_KEY or AWS_BEARER_TOKEN_BEDROCK is not set");
+    const iam = process.env.AWS_BEDROCK_AUTH_MODE === "iam";
+    if (!iam && !this.apiKey) throw new Error("Bedrock requires explicit IAM authentication or a Bedrock API key");
     assertSelectedAwsRegion(this.region);
+    if (/^(us|eu|apac|global|us-gov|au|jp|ca)\./.test(this.modelId)
+      || (this.modelId.startsWith("arn:") && !this.modelId.startsWith(`arn:aws:bedrock:${this.region}::foundation-model/`))) {
+      throw new Error("Bedrock requires an in-Region foundation model");
+    }
+    opts = normalizeCallOptions(opts);
     this.lastUsage = undefined;
     const planningCall = opts.purpose === "planning" && opts.channel !== "voice";
     return withGovernedModelInvocation({ provider: "bedrock", model: this.modelId, tenantId: opts.tenantId, channel: opts.channel }, async () => {
-    const res = await fetchWithCallBudget(
-      `https://bedrock-runtime.${this.region}.amazonaws.com/model/${this.modelId}/converse`,
-      {
-        method: "POST",
-        headers: { Authorization: `Bearer ${this.apiKey}`, "Content-Type": "application/json" },
-        body: JSON.stringify({
-          system: [{ text: opts.system }],
-          messages: [
-            { role: "user", content: [{ text: opts.user }] },
-          ],
-          inferenceConfig: { maxTokens: opts.maxOutputTokens ?? (planningCall ? 1400 : 700), temperature: 0.1 },
-        }),
-      },
-      opts,
-      planningCall ? 25_000 : 8_000,
-    );
-    if (!res.ok) {
-      const body = await res.text().catch(() => "");
-      throw new Error(`Bedrock (${this.modelId}) failed (${res.status}): ${body.slice(0, 300)}`);
-    }
-    const data = (await res.json()) as { output?: { message?: { content?: Array<{ text?: string }> } }; usage?: { inputTokens?: number; outputTokens?: number } };
-    this.lastUsage = { model: this.modelId, inputTokens: data.usage?.inputTokens ?? null, outputTokens: data.usage?.outputTokens ?? null };
-    return data.output?.message?.content?.map((block) => block.text ?? "").join("") ?? "";
+      const payload = {
+        system: [{ text: opts.system }],
+        messages: [{ role: "user" as const, content: [{ text: opts.user }] }],
+        inferenceConfig: { maxTokens: opts.maxOutputTokens ?? (planningCall ? 1400 : 700), temperature: 0.1 },
+      };
+      let data: { output?: { message?: { content?: Array<{ text?: string }> } }; usage?: { inputTokens?: number; outputTokens?: number }; stopReason?: string };
+      if (iam) {
+        const budgetMs = remainingMs(opts, planningCall ? 25_000 : 8_000);
+        if (budgetMs <= 0) throw new LLMDeadlineExceededError(opts.deadlineAt!);
+        // Routing owns retries and one shared deadline across every physical attempt.
+        this.client ??= new BedrockRuntimeClient({ region: this.region, maxAttempts: 1, authSchemePreference: ["aws.auth#sigv4"] });
+        const signal = AbortSignal.any([AbortSignal.timeout(budgetMs), ...(opts.signal ? [opts.signal] : [])]);
+        try {
+          data = await this.client.send(new ConverseCommand({ modelId: this.modelId, ...payload }), { abortSignal: signal });
+          if (Date.now() >= opts.deadlineAt!) throw new LLMDeadlineExceededError(opts.deadlineAt!);
+        } catch (error) {
+          if (opts.signal?.aborted) throw opts.signal.reason ?? Object.assign(new Error("LLM request aborted"), { name: "AbortError" });
+          if (Date.now() >= opts.deadlineAt!) throw new LLMDeadlineExceededError(opts.deadlineAt!);
+          throw error;
+        }
+      } else {
+        const response = await fetchWithCallBudget(
+          `https://bedrock-runtime.${this.region}.amazonaws.com/model/${this.modelId}/converse`,
+          {
+            method: "POST",
+            headers: { Authorization: `Bearer ${this.apiKey}`, "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          },
+          opts,
+          planningCall ? 25_000 : 8_000,
+        );
+        if (!response.ok) throw new Error(`Bedrock (${this.modelId}) failed (${response.status})`);
+        data = await response.json() as typeof data;
+      }
+      this.lastUsage = { model: this.modelId, inputTokens: data.usage?.inputTokens ?? null, outputTokens: data.usage?.outputTokens ?? null };
+      return data.output?.message?.content?.map((block) => block.text ?? "").join("") ?? "";
     });
   }
 }
@@ -472,6 +493,7 @@ export class GroqProvider implements LLMProvider {
   lastAttempts: Array<Record<string, unknown>> = [];
 
   constructor(apiKey = process.env.GROQ_API_KEY, model = process.env.GROQ_MODEL ?? "llama-3.3-70b-versatile") {
+    if (process.env.AWS_BEDROCK_AUTH_MODE === "iam") throw new LLMProviderSelectionError("Groq is disabled in Bedrock IAM deployments");
     if (!apiKey) throw new Error("GROQ_API_KEY is not set");
     // No SDK-level retries: a throttled call fails in milliseconds and we fail over
     // to the next model, whose rate-limit bucket is separate — instead of sitting
@@ -536,8 +558,8 @@ const BEDROCK_QWEN_PLANNING_MODEL_ID = () => process.env.AWS_BEDROCK_QWEN_PLANNI
 const BEDROCK_QWEN_FAST_MODEL_ID = () => process.env.AWS_BEDROCK_QWEN_FAST_MODEL_ID ?? "qwen.qwen3-32b-v1:0";
 // These are the Bedrock model IDs for the single-key CENTROPY provider chain. Each
 // can be overridden when an account pins a different active model revision.
-const BEDROCK_GLM_MODEL_ID = () => process.env.AWS_BEDROCK_GLM_MODEL_ID ?? "zai.glm-4.7";
-const BEDROCK_MISTRAL_MODEL_ID = () => process.env.AWS_BEDROCK_MISTRAL_MODEL_ID ?? "mistral.mistral-small-2402-v1:0";
+const BEDROCK_GLM_MODEL_ID = () => process.env.AWS_BEDROCK_GLM_MODEL_ID ?? (process.env.AWS_BEDROCK_AUTH_MODE === "iam" ? "zai.glm-5" : "zai.glm-4.7");
+const BEDROCK_MISTRAL_MODEL_ID = () => process.env.AWS_BEDROCK_MISTRAL_MODEL_ID ?? (process.env.AWS_BEDROCK_AUTH_MODE === "iam" ? "mistral.mistral-large-3-675b-instruct" : "mistral.mistral-small-2402-v1:0");
 const BEDROCK_DEEPSEEK_MODEL_ID = () => process.env.AWS_BEDROCK_DEEPSEEK_MODEL_ID ?? "deepseek.v3.2";
 const BEDROCK_OPENAI_OSS_MODEL_ID = () => process.env.AWS_BEDROCK_OPENAI_OSS_MODEL_ID ?? "openai.gpt-oss-120b-1:0";
 const BEDROCK_NOVA_MICRO_MODEL_ID = () => process.env.AWS_BEDROCK_NOVA_MICRO_MODEL_ID ?? "amazon.nova-micro-v1:0";
@@ -566,10 +588,10 @@ function addProvider(name: string, factory: () => LLMProvider, configured: () =>
   providers.set(name, { factory, configured });
 }
 
-const bedrockConfigured = () => Boolean(bedrockApiKey());
+const bedrockConfigured = () => process.env.AWS_BEDROCK_AUTH_MODE === "iam" || Boolean(bedrockApiKey());
 const mistralConfigured = () => Boolean(process.env.MISTRAL_API_KEY);
 const deepseekConfigured = () => Boolean(process.env.DEEPSEEK_API_KEY || bedrockConfigured());
-const groqConfigured = () => Boolean(process.env.GROQ_API_KEY);
+const groqConfigured = () => process.env.AWS_BEDROCK_AUTH_MODE !== "iam" && Boolean(process.env.GROQ_API_KEY);
 
 const singleKeyMistralConfigured = () => Boolean(mistralConfigured() || bedrockConfigured());
 const singleKeyBedrockProvider = (modelId: string, name: string) => new BedrockConverseProvider(modelId, undefined, undefined, name);
@@ -589,6 +611,9 @@ addProvider("bedrock-deepseek", () => new BedrockConverseProvider(BEDROCK_DEEPSE
 addProvider("bedrock-openai-oss", () => new BedrockConverseProvider(BEDROCK_OPENAI_OSS_MODEL_ID(), undefined, undefined, "bedrock-openai-oss"), bedrockConfigured);
 addProvider("bedrock-nova-micro", () => new BedrockConverseProvider(BEDROCK_NOVA_MICRO_MODEL_ID(), undefined, undefined, "bedrock-nova-micro"), bedrockConfigured);
 addProvider("planning", () => {
+  if (process.env.AWS_BEDROCK_AUTH_MODE === "iam") {
+    return new CompositeProvider(DEFAULT_ROUTE_ORDER.planning.console.map(name => providers.get(name)!.factory()));
+  }
   const chain: LLMProvider[] = [];
   if (bedrockConfigured()) chain.push(new BedrockConverseProvider(BEDROCK_QWEN_PLANNING_MODEL_ID(), undefined, BEDROCK_QWEN_PLANNING_REGION(), "bedrock-qwen-planning"));
   if (groqConfigured()) chain.push(new GroqProvider());
@@ -746,6 +771,18 @@ export function isProviderConfigured(name: string): boolean {
 
 export function isPurposeConfigured(purpose: LLMPurpose, channel: LLMChannel = "text"): boolean {
   return routeNames(purpose, channel).length > 0;
+}
+
+/** Configuration evidence only. Provider authorization and model quality still
+ * require a physical invocation; neither is inferred from an IAM opt-in. */
+export function describeLLMReadiness(): { configured: boolean; unavailableRoutes: string[] } {
+  const unavailableRoutes: string[] = [];
+  for (const purpose of Object.keys(DEFAULT_ROUTE_ORDER) as LLMPurpose[]) {
+    for (const channel of Object.keys(DEFAULT_ROUTE_ORDER[purpose]) as LLMChannel[]) {
+      if (!isPurposeConfigured(purpose, channel)) unavailableRoutes.push(`${purpose}:${channel}`);
+    }
+  }
+  return { configured: unavailableRoutes.length === 0, unavailableRoutes };
 }
 
 export function resolveProviderForRequest(request: LLMRouteRequest): LLMProvider {
