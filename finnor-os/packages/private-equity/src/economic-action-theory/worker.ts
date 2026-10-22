@@ -129,14 +129,13 @@ export async function constructEconomicActionTheoryJob(raw:Record<string,unknown
   throw error;
  }finally{
   abort.abort();
-  if(attemptRegistered)await transaction(ctx,async c=>{
+  try{if(attemptRegistered)await transaction(ctx,async c=>{
    const row=await theoryTx(ctx,c,p.theoryId),usage=process.cpuUsage(cpu);
    await eventTx(c,row,'NATIVE_COST','native-cost:'+e.deliveryAttemptId,{deliveryAttemptId:e.deliveryAttemptId,disposition,
     wallMs:performance.now()-started,cpuMs:(usage.user+usage.system)/1000,checkerCpuMs:check?.cpuMs??null,
     peakProcessRssBytes:process.resourceUsage().maxRSS*1024,checkerPeakRssBytes:check?.peakRssBytes??null,
     moneyUsd:null,humanSeconds:null,aggregatePeakMemoryBytes:null,originalEpisodeId:row.episode_id,
     sourceDigest:row.runtime.semanticCodeDigest,failedAttemptsRetained:true});
-  });
-  await releaseComputeResourceLeases(leases,'y1_construction_delivery_finished');
+  });}finally{await releaseComputeResourceLeases(leases,'y1_construction_delivery_finished');}
  }
 }
