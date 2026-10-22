@@ -140,7 +140,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/enterprise-applications/source-manifest.generated.ts",
-      "sha256": "fea4f195da8a8cafa6f4f9893932dea25515b2175c78e187bfe602633957878f"
+      "sha256": "6e8689cb6928fd816a54f2c8acc922a4aa5888d1f176cdc6f31c77304782234f"
     },
     {
       "path": "finnor-os/packages/authority/src/index.ts",
@@ -152,7 +152,7 @@ export default {
     },
     {
       "path": "finnor-os/apps/worker/src/index.ts",
-      "sha256": "79d051cd0632313ca88314e67f820b316b311c4adca16705482133bd2a2c8cf9"
+      "sha256": "6585f139b5c9ab9c5a94fbcf2ac2b2e399d82ae8649410af99cfb6e3fe8e5892"
     },
     {
       "path": "finnor-os/apps/worker/src/queue.ts",
@@ -172,7 +172,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/db/migration-head.ts",
-      "sha256": "d758b887566777550428e06bf24e231816c666498888c1c68ef3b4c3a568befb"
+      "sha256": "2322b2d7bab2ebb19659fbdd99ebfab1fe78ff8409bcd8e8f22b3208f1c4c687"
     },
     {
       "path": "finnor-os/packages/db/migrations/0190_x5_experience_policy.sql",
@@ -184,11 +184,11 @@ export default {
     },
     {
       "path": "finnor-os/package-lock.json",
-      "sha256": "9a7b757ef717fbafa290c748d0faaedcb608afac1291c2fabe4d19c066d508b1"
+      "sha256": "d83837193569a7b154dfa80f7d60c25cdeefe2e562a9b1e9907404085d636987"
     },
     {
       "path": "package-lock.json",
-      "sha256": "4ae84fbe370dfdf4708e35a2274f4be0fb612665d4dda88ddeb342c264f5b697"
+      "sha256": "56398650ecba40d4fed91de7b190239a786589ea8efd77f2c71ec2c7d36def99"
     },
     {
       "path": "src/components/centropy/canvas/LearnedPolicyPanel.tsx",
@@ -256,7 +256,7 @@ export default {
     },
     {
       "path": "finnor-os/apps/api/lib/auth.ts",
-      "sha256": "5ffca184bf6068552803ca462b2ad4e62e885d78d93b3a35f5431ba10c3ae559"
+      "sha256": "3aa3fee5db30b4a719836c6501b3c8f1837bf6a85a259bdc2a2b3f8576ff5dff"
     },
     {
       "path": "finnor-os/packages/private-equity/src/live-recompilation/contracts.ts",
@@ -284,7 +284,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/db/index.ts",
-      "sha256": "e392a214aeba7c7d354f19a4993b9e9b578fd5b6bdf455e65e52b32421eebb56"
+      "sha256": "9fc9091d2073694b20915b8a192795be9693dd9c1b2a6e97a8b9bc71d064cbb8"
     },
     {
       "path": "finnor-os/packages/security/src/auth.ts",

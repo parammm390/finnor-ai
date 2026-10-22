@@ -62,10 +62,10 @@ export function classifyInstructionRoute(input: {
   activeContext?: OperatingInteractionContext | Record<string, unknown>;
   conversational?: boolean;
 }): InstructionRouteDecision {
+  if (input.conversational) return { version: 1, route: "CONVERSATION", reasonCodes: ["non_business_conversation"] };
   if (input.fastReadDecision.route === "fast_read") {
     return { version: 1, route: "QUERY", reasonCodes: ["deterministic_canonical_read"], queryDecision: input.fastReadDecision };
   }
-  if (input.conversational) return { version: 1, route: "CONVERSATION", reasonCodes: ["non_business_conversation"] };
   // A plain informational question outside the typed business-read grammar is
   // still not an objective. Keep it on the lightweight answer lane; business
   // terms, mutations, and external/research requests remain fail-closed.

@@ -4,7 +4,7 @@ import { existsSync, readFileSync } from "node:fs"
 import { createRequire } from "node:module"
 import { resolve } from "node:path"
 import { fileURLToPath } from "node:url"
-import { assertComputeFleetConverged, assertComputeNoopCandidate, assertComputeNoopFleet, assertComputeNoopStack, assertComputeRolloutChangeSet, assertComputeStageTransition, COMPUTE_CLASSES } from "./compute-plane-policy.mjs"
+import { computeSecretMap, assertComputeFleetConverged, assertComputeNoopCandidate, assertComputeNoopFleet, assertComputeNoopStack, assertComputeRolloutChangeSet, assertComputeStageTransition, COMPUTE_CLASSES } from "./compute-plane-policy.mjs"
 import { assertCanonicalRelease, assertFreshAwsPreflight, expectedRelease, loadContract, readGitRelease } from "./release-policy.mjs"
 import { authorizeProductionMutation } from "./production-mutation-guard.mjs"
 import { readProtectedEnvValue } from "./protected-env.mjs"
@@ -101,7 +101,7 @@ try {
     const taskDefinitionArns = proveTaskDefinitions ? assertComputeNoopFleet({
       profiles, services, tasksByClass, taskDefinitions, heartbeats: beats.rows, expected,
       imageDigest, imageUri, migrationHead: contract.release.requiredMigrationHead, coreCertificationId,
-      worker, targetGroup: targets[0], targetHealth: health,
+      worker, contract, targetGroup: targets[0], targetHealth: health,
     }) : undefined
     return { serviceNames: names, taskCounts: Object.fromEntries(COMPUTE_CLASSES.map((workloadClass) => [workloadClass, tasksByClass[workloadClass].length])), targetCount: health.length, ...(taskDefinitionArns ? {
       taskDefinitionArns, heartbeatsFreshThroughMs: Math.min(...beats.rows.map((beat) => Date.parse(beat.lastBeatAt))) + 45_000,
@@ -124,9 +124,12 @@ try {
       ReleaseVersion: expected.version, CoreCertificationId: coreCertificationId,
       SupabaseUrl: contract.topology.database.supabaseUrl, ComputePlaneStage: nextStage,
       LegacyWorkerTaskDefinitionArn: legacyTaskArn,
-      SecretMap: JSON.stringify(worker.secretMap),
-      RealtimeSecretMap: JSON.stringify(Object.fromEntries(["DATABASE_URL","SENTRY_DSN","SUPABASE_SERVICE_ROLE_KEY"].map((key) => [key,worker.secretMap[key]]))),
-      HeavySecretMap: JSON.stringify(Object.fromEntries(["DATABASE_URL","GROQ_API_KEY","REDIS_URL","SENTRY_DSN"].map((key) => [key,worker.secretMap[key]]))),
+      GlmModel: contract.topology.computePlane.providerRuntime.environment.AWS_BEDROCK_GLM_MODEL_ID,
+      MistralModel: contract.topology.computePlane.providerRuntime.environment.AWS_BEDROCK_MISTRAL_MODEL_ID,
+      DeepseekModel: contract.topology.computePlane.providerRuntime.environment.AWS_BEDROCK_DEEPSEEK_MODEL_ID,
+      SecretMap: JSON.stringify(computeSecretMap(contract, "INTERACTIVE")),
+      RealtimeSecretMap: JSON.stringify(computeSecretMap(contract, "REALTIME")),
+      HeavySecretMap: JSON.stringify(computeSecretMap(contract, "HEAVY")),
     }
     const parameters = Object.entries(overrides).map(([ParameterKey, ParameterValue]) => ({ ParameterKey, ParameterValue }))
     const preserved = ["VpcId", "PublicSubnet1", "PublicSubnet2", "CertificateArn", "GitHubOidcProviderArn", "GitHubOwner", "GitHubRepositoryName", "GitHubOwnerId", "GitHubRepositoryId", "GitHubEnvironment", "SseAllowedOrigins"]

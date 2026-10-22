@@ -1,7 +1,7 @@
 {
   "schema": "centropy.capability-coverage-audit/v1",
-  "generatedAt": "2026-10-20T17:46:32.277Z",
-  "sourceBaseCommit": "07e5a6a182dae37c3b0f3ec056c1d604a684be2b",
+  "generatedAt": "2026-10-22T19:54:04.119Z",
+  "sourceBaseCommit": "9376dea8f93bd68eed65b7865b90814ce455671d",
   "manifestSha256": "ec486d083c1ae95bb882bcd707922395615ff2d7c9bf61c7f73353339fc7eacd",
   "formsSha256": "78e6da8a2346c1a96712b634d0307535e8adbef6959cc5a72cc2302f8b445ec6",
   "method": "Actual API/planner manifest; import graph from active CENTROPY route entries; literal API call bindings; typed human form registrations; explicit restricted/compatibility/protocol classifications. Source presence is not execution evidence.",
@@ -12,16 +12,16 @@
     "classified": 598,
     "classificationCoveragePercent": 100,
     "unclassified": 0,
-    "backendApiWithoutMountedFrontend": 86,
-    "dynamicFrontendCalls": 78,
+    "backendApiWithoutMountedFrontend": 87,
+    "dynamicFrontendCalls": 77,
     "unresolvedDynamicCalls": 0,
     "disposition": {
       "ACTIVE_TYPED_HUMAN_CONTROL": 66,
       "INTENTIONAL_COMPATIBILITY": 23,
-      "ACTIVE_DIRECT_FRONTEND_PATH": 291,
+      "ACTIVE_DIRECT_FRONTEND_PATH": 290,
       "RESTRICTED_SYSTEM_OR_ADMIN": 58,
       "PROVIDER_PROTOCOL_CALLBACK": 2,
-      "BACKEND_API_NO_MOUNTED_FRONTEND": 86,
+      "BACKEND_API_NO_MOUNTED_FRONTEND": 87,
       "INTENTIONAL_ALTERNATE_CANONICAL_INTAKE": 2,
       "CANONICAL_AGENT_CAPABILITY": 59,
       "HUMAN_ONLY_CANONICAL_DECISION": 11
@@ -29,6 +29,7 @@
   },
   "unclassifiedCapabilities": [],
   "backendApiWithoutMountedFrontend": [
+    "http.get.works.$id.objective",
     "http.post.actions.$id.revert",
     "http.post.allocations.assessment",
     "http.post.allocations.clear",
@@ -121,14 +122,14 @@
       "file": "src/components/centropy/shell/CentropyWorkspace.tsx",
       "route": "works/:ref/objective",
       "method": "POST",
-      "line": 267,
+      "line": 269,
       "binding": "Canonical API import and finite TypeScript expression; source evidence only"
     },
     {
       "file": "src/components/centropy/shell/CentropyWorkspace.tsx",
       "route": "instructions/:ref/cancel",
       "method": "POST",
-      "line": 401,
+      "line": 403,
       "binding": "Canonical API import and finite TypeScript expression; source evidence only"
     },
     {
@@ -554,15 +555,8 @@
     {
       "file": "src/components/centropy/thread/ObjectiveControl.tsx",
       "route": "works/:ref/objective",
-      "method": "GET",
-      "line": 25,
-      "binding": "Canonical API import and finite TypeScript expression; source evidence only"
-    },
-    {
-      "file": "src/components/centropy/thread/ObjectiveControl.tsx",
-      "route": "works/:ref/objective",
       "method": "POST",
-      "line": 41,
+      "line": 22,
       "binding": "Canonical API import and finite TypeScript expression; source evidence only"
     },
     {
@@ -992,7 +986,7 @@
       },
       {
         "file": "src/components/centropy/shell/CentropyWorkspace.tsx",
-        "sha256": "48f6fcc391e59127a2d9c0c7684ea8cbbf2c88f96699201155e21bb0d7aa508f"
+        "sha256": "8e6b8cf104b7af0430ba9d6367c236a8ec9b892ec91ff3dd892b85e4ce4c40fe"
       },
       {
         "file": "src/components/centropy/lib/use-private-request-scope.ts",
@@ -1016,7 +1010,7 @@
       },
       {
         "file": "src/components/centropy/product/contracts.ts",
-        "sha256": "eeaaa867cc9c8705f79437d9d2d5a7d1e272f9d130ce030097b0af51ba87bf35"
+        "sha256": "dde850c195ed3044b46f4ef19ce7a411775978e1aec3d8a8543a396c9ed476ae"
       },
       {
         "file": "src/components/centropy/product/source-health.ts",
@@ -1160,7 +1154,7 @@
       },
       {
         "file": "src/lib/jarvis/openapi-types.ts",
-        "sha256": "794a313988db24d087f91e47011d5b766f6e99471dd7ee15ecc3ff3199858c1d"
+        "sha256": "da4b70ac0ccb9af5a407258ce55dcc981ceb79f2c1e4792aad0fd187615ae170"
       },
       {
         "file": "src/components/centropy/canvas/ProgramSynthesisPanel.tsx",
@@ -1432,7 +1426,7 @@
       },
       {
         "file": "src/components/centropy/thread/ObjectiveControl.tsx",
-        "sha256": "a301c086549f10208d6f754ea6a00e04090515742e144ef4381189f31ce36b54"
+        "sha256": "dd1790257ab11dbe69fb0a2224c28eeef8d1c482640455d2fb05143a9c6cd088"
       },
       {
         "file": "src/components/centropy/thread/VerifiedIcOutcome.tsx",
@@ -1444,7 +1438,7 @@
       },
       {
         "file": "src/components/centropy/shell/HomeCanvas.tsx",
-        "sha256": "04f41fde4af7f230bcf8966f09109702d3f2fca78d2bfa62aaef98ecdf7e4392"
+        "sha256": "3e96802d7d65e73a89833f333614f8ccbfbd83a5c2eb4fee935ad181f5b6ac67"
       },
       {
         "file": "src/components/centropy/controls/WorkflowRecoveryDesk.tsx",
@@ -2039,10 +2033,13 @@
       "tests": [
         "e2e/centropy-temporal-question.spec.ts",
         "e2e/private-equity-product-contract.spec.ts",
+        "finnor-os/tests/integration/capability-discovery-http.test.ts",
         "finnor-os/tests/integration/computer-execution-fabric.test.ts",
+        "finnor-os/tests/integration/phase6-plan-graph-runtime.test.ts",
         "finnor-os/tests/integration/private-equity-phase3.test.ts",
         "finnor-os/tests/integration/scope3-compute-plane.test.ts",
-        "finnor-os/tests/integration/user-prefs-route.test.ts"
+        "finnor-os/tests/integration/user-prefs-route.test.ts",
+        "finnor-os/tests/integration/work-investigation-http.test.ts"
       ],
       "source": "finnor-os/apps/api/app/api/activity/route.ts",
       "disposition": "INTENTIONAL_COMPATIBILITY",
@@ -3670,6 +3667,7 @@
         "e2e/centropy-temporal-question.spec.ts",
         "finnor-os/tests/integration/artifact-os.test.ts",
         "finnor-os/tests/integration/audit-immutability.test.ts",
+        "finnor-os/tests/integration/capability-discovery-http.test.ts",
         "finnor-os/tests/integration/external-effect-observation.test.ts",
         "finnor-os/tests/integration/inbox-dedup.test.ts",
         "finnor-os/tests/integration/instruction-trace.test.ts",
@@ -5188,7 +5186,7 @@
           "file": "src/components/centropy/shell/HomeCanvas.tsx",
           "route": "read-models/attention",
           "method": "GET",
-          "line": 55,
+          "line": 62,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -5445,6 +5443,7 @@
       "invalidationTags": [],
       "timeoutClass": "READ",
       "tests": [
+        "finnor-os/tests/integration/capability-discovery-http.test.ts",
         "finnor-os/tests/integration/work-cases.test.ts"
       ],
       "source": "finnor-os/apps/api/app/api/read-models/[view]/route.ts",
@@ -5569,12 +5568,14 @@
         "finnor-os/tests/integration/actions-revert.test.ts",
         "finnor-os/tests/integration/artifact-os.test.ts",
         "finnor-os/tests/integration/backup-restore.test.ts",
+        "finnor-os/tests/integration/capability-discovery-http.test.ts",
         "finnor-os/tests/integration/decision-receipts.test.ts",
         "finnor-os/tests/integration/external-effect-observation.test.ts",
         "finnor-os/tests/integration/external-operations-idempotency.test.ts",
         "finnor-os/tests/integration/instruction-trace.test.ts",
         "finnor-os/tests/integration/learning-digest.test.ts",
         "finnor-os/tests/integration/pe-objective-world-scope.test.ts",
+        "finnor-os/tests/integration/phase6-plan-graph-runtime.test.ts",
         "finnor-os/tests/integration/phase7-performance.test.ts",
         "finnor-os/tests/integration/private-equity-p5-ic-runtime.test.ts",
         "finnor-os/tests/integration/private-equity-phase2.test.ts",
@@ -5823,6 +5824,7 @@
         "e2e/centropy-live-host.spec.ts",
         "e2e/centropy-live-workforce-reassign.spec.ts",
         "e2e/centropy-underwriting-multi-input.spec.ts",
+        "finnor-os/tests/integration/capability-discovery-http.test.ts",
         "finnor-os/tests/integration/clarification-request.test.ts",
         "finnor-os/tests/integration/computer-execution-fabric.test.ts",
         "finnor-os/tests/integration/heartbeat.test.ts",
@@ -5946,6 +5948,7 @@
       "tests": [
         "e2e/centropy-real-demo.spec.ts",
         "e2e/phase9-institutional-workstation.spec.ts",
+        "finnor-os/tests/integration/capability-discovery-http.test.ts",
         "finnor-os/tests/integration/private-equity-p1-upgrade.test.ts",
         "finnor-os/tests/integration/private-equity-p1-world-truth.test.ts",
         "finnor-os/tests/integration/private-equity-phase2.test.ts",
@@ -6024,7 +6027,8 @@
         "e2e/centropy-ic-deck-work-action.spec.ts",
         "e2e/centropy-live-host.spec.ts",
         "e2e/centropy-real-demo.spec.ts",
-        "finnor-os/tests/integration/phase6-conversation-context-kernel.test.ts"
+        "finnor-os/tests/integration/phase6-conversation-context-kernel.test.ts",
+        "finnor-os/tests/integration/work-investigation-http.test.ts"
       ],
       "source": "finnor-os/apps/api/app/api/threads/route.ts",
       "disposition": "ACTIVE_DIRECT_FRONTEND_PATH",
@@ -6091,7 +6095,9 @@
       ],
       "invalidationTags": [],
       "timeoutClass": "READ",
-      "tests": [],
+      "tests": [
+        "finnor-os/tests/integration/work-investigation-http.test.ts"
+      ],
       "source": "finnor-os/apps/api/app/api/threads/[id]/route.ts",
       "disposition": "ACTIVE_DIRECT_FRONTEND_PATH",
       "actualRouteOrTool": "GET /api/threads/:id",
@@ -7005,6 +7011,7 @@
         "e2e/phase9-institutional-workstation.spec.ts",
         "e2e/private-equity-product-contract.spec.ts",
         "finnor-os/tests/integration/artifact-os.test.ts",
+        "finnor-os/tests/integration/capability-discovery-http.test.ts",
         "finnor-os/tests/integration/microsoft365-pe-mapping.test.ts",
         "finnor-os/tests/integration/pe-objective-world-scope.test.ts",
         "finnor-os/tests/integration/pg-notify-triggers.test.ts",
@@ -7030,6 +7037,7 @@
         "finnor-os/tests/integration/universal-actions-upgrade.test.ts",
         "finnor-os/tests/integration/water-retirement-forward-head.test.ts",
         "finnor-os/tests/integration/work-cases.test.ts",
+        "finnor-os/tests/integration/work-investigation-http.test.ts",
         "finnor-os/tests/integration/work-routes.test.ts",
         "finnor-os/tests/integration/workspace-v3-repair.test.ts"
       ],
@@ -7041,7 +7049,7 @@
           "file": "src/components/centropy/shell/HomeCanvas.tsx",
           "route": "works",
           "method": "GET",
-          "line": 48,
+          "line": 55,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -7262,17 +7270,9 @@
       "timeoutClass": "READ",
       "tests": [],
       "source": "finnor-os/apps/api/app/api/works/[id]/objective/route.ts",
-      "disposition": "ACTIVE_DIRECT_FRONTEND_PATH",
+      "disposition": "BACKEND_API_NO_MOUNTED_FRONTEND",
       "actualRouteOrTool": "GET /api/works/:id/objective",
-      "frontendSourceBindings": [
-        {
-          "file": "src/components/centropy/thread/ObjectiveControl.tsx",
-          "route": "works/:ref/objective",
-          "method": "GET",
-          "line": 25,
-          "binding": "Canonical API import and finite TypeScript expression; source evidence only"
-        }
-      ],
+      "frontendSourceBindings": [],
       "humanForms": [],
       "humanRoute": null,
       "agentPath": null,
@@ -7484,6 +7484,7 @@
         "finnor-os/tests/integration/actions-revert.test.ts",
         "finnor-os/tests/integration/audit-immutability.test.ts",
         "finnor-os/tests/integration/backup-restore.test.ts",
+        "finnor-os/tests/integration/capability-discovery-http.test.ts",
         "finnor-os/tests/integration/clarification-request.test.ts",
         "finnor-os/tests/integration/computer-execution-fabric.test.ts",
         "finnor-os/tests/integration/intake-idempotency.test.ts",
@@ -7496,6 +7497,7 @@
         "finnor-os/tests/integration/pg-notify-triggers.test.ts",
         "finnor-os/tests/integration/phase6-conversation-context-kernel.test.ts",
         "finnor-os/tests/integration/phase6-plan-concurrency.test.ts",
+        "finnor-os/tests/integration/phase6-plan-graph-runtime.test.ts",
         "finnor-os/tests/integration/phase7-performance.test.ts",
         "finnor-os/tests/integration/phase7-workforce-concurrency.test.ts",
         "finnor-os/tests/integration/private-equity-p1-world-truth.test.ts",
@@ -7511,6 +7513,7 @@
         "finnor-os/tests/integration/universal-actions-upgrade.test.ts",
         "finnor-os/tests/integration/water-retirement-forward-head.test.ts",
         "finnor-os/tests/integration/work-cases.test.ts",
+        "finnor-os/tests/integration/work-investigation-http.test.ts",
         "finnor-os/tests/integration/work-kernel.test.ts"
       ],
       "source": "finnor-os/apps/api/app/api/actions/route.ts",
@@ -7521,7 +7524,7 @@
           "file": "src/components/centropy/shell/CentropyWorkspace.tsx",
           "route": "actions",
           "method": "POST",
-          "line": 286,
+          "line": 288,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -27778,7 +27781,7 @@
           "file": "src/components/centropy/shell/CentropyWorkspace.tsx",
           "route": "instructions/:ref/cancel",
           "method": "POST",
-          "line": 401,
+          "line": 403,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -29535,7 +29538,7 @@
           "file": "src/components/centropy/shell/CentropyWorkspace.tsx",
           "route": "outcome-packs",
           "method": "POST",
-          "line": 351,
+          "line": 353,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -33281,8 +33284,10 @@
       "tests": [
         "e2e/centropy-parallel-deal-recheck.spec.ts",
         "e2e/centropy-temporal-question.spec.ts",
+        "finnor-os/tests/integration/capability-discovery-http.test.ts",
         "finnor-os/tests/integration/microsoft365-pe-mapping.test.ts",
         "finnor-os/tests/integration/pe-objective-world-scope.test.ts",
+        "finnor-os/tests/integration/phase6-plan-graph-runtime.test.ts",
         "finnor-os/tests/integration/phase7-performance.test.ts",
         "finnor-os/tests/integration/phase7-workforce-concurrency.test.ts",
         "finnor-os/tests/integration/private-equity-phase3.test.ts",
@@ -33479,7 +33484,8 @@
         "e2e/centropy-ic-deck-work-action.spec.ts",
         "e2e/centropy-live-host.spec.ts",
         "e2e/centropy-real-demo.spec.ts",
-        "finnor-os/tests/integration/phase6-conversation-context-kernel.test.ts"
+        "finnor-os/tests/integration/phase6-conversation-context-kernel.test.ts",
+        "finnor-os/tests/integration/work-investigation-http.test.ts"
       ],
       "source": "finnor-os/apps/api/app/api/threads/route.ts",
       "disposition": "ACTIVE_DIRECT_FRONTEND_PATH",
@@ -33490,6 +33496,13 @@
           "route": "threads",
           "method": "POST",
           "line": 15,
+          "binding": "Canonical API import and finite TypeScript expression; source evidence only"
+        },
+        {
+          "file": "src/components/centropy/shell/HomeCanvas.tsx",
+          "route": "threads",
+          "method": "POST",
+          "line": 78,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -35111,14 +35124,14 @@
           "file": "src/components/centropy/shell/CentropyWorkspace.tsx",
           "route": "works/:ref/objective",
           "method": "POST",
-          "line": 267,
+          "line": 269,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         },
         {
           "file": "src/components/centropy/thread/ObjectiveControl.tsx",
           "route": "works/:ref/objective",
           "method": "POST",
-          "line": 41,
+          "line": 22,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -37489,6 +37502,7 @@
       "invalidationTags": [],
       "timeoutClass": "RUNTIME",
       "tests": [
+        "finnor-os/tests/integration/capability-discovery-http.test.ts",
         "finnor-os/tests/integration/private-equity-phase3.test.ts"
       ],
       "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
@@ -37821,6 +37835,7 @@
       "timeoutClass": "RUNTIME",
       "tests": [
         "finnor-os/tests/integration/answer-citations.test.ts",
+        "finnor-os/tests/integration/capability-discovery-http.test.ts",
         "finnor-os/tests/integration/private-equity-phase3.test.ts"
       ],
       "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
@@ -38016,7 +38031,9 @@
       ],
       "invalidationTags": [],
       "timeoutClass": "RUNTIME",
-      "tests": [],
+      "tests": [
+        "finnor-os/tests/integration/capability-discovery-http.test.ts"
+      ],
       "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
       "disposition": "CANONICAL_AGENT_CAPABILITY",
       "actualRouteOrTool": "query:harness_program_v1",
@@ -38416,6 +38433,7 @@
         "e2e/centropy-controlled-recovery.spec.ts",
         "e2e/centropy-parallel-deal-recheck.spec.ts",
         "e2e/centropy-temporal-question.spec.ts",
+        "finnor-os/tests/integration/capability-discovery-http.test.ts",
         "finnor-os/tests/integration/pe-objective-world-scope.test.ts",
         "finnor-os/tests/integration/private-equity-p1-world-truth.test.ts"
       ],
@@ -38547,6 +38565,7 @@
       "invalidationTags": [],
       "timeoutClass": "RUNTIME",
       "tests": [
+        "finnor-os/tests/integration/capability-discovery-http.test.ts",
         "finnor-os/tests/integration/phase6-performance.test.ts",
         "finnor-os/tests/integration/phase6-plan-concurrency.test.ts",
         "finnor-os/tests/integration/phase6-plan-graph-runtime.test.ts",
@@ -38891,7 +38910,9 @@
       ],
       "invalidationTags": [],
       "timeoutClass": "RUNTIME",
-      "tests": [],
+      "tests": [
+        "finnor-os/tests/integration/capability-discovery-http.test.ts"
+      ],
       "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
       "disposition": "HUMAN_ONLY_CANONICAL_DECISION",
       "actualRouteOrTool": "record_ic_vote",

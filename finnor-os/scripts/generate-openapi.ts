@@ -57,7 +57,7 @@ import { PeDigitalTwinRequestSchema } from "../apps/api/lib/pe-digital-twin";
 import { OperatingProfileUpdateSchema } from "../apps/api/lib/operating-profile";
 import { UserPreferencesPatchSchema } from "../apps/api/lib/user-preferences";
 import { WorkflowRunControlSchema } from "../apps/api/lib/run-control-route";
-import { DeletePushSubscriptionSchema, EmptyProductControlSchema, GoogleConnectionStartSchema, HumanClosingActionSchema, InitiateCompensationSchema, PushSubscriptionSchema, ResolveReconciliationSchema, SubmitCorrectionSchema } from "../apps/api/lib/product-control-schemas";
+import { CreateThreadSchema, DeletePushSubscriptionSchema, EmptyProductControlSchema, GoogleConnectionStartSchema, HumanClosingActionSchema, InitiateCompensationSchema, PushSubscriptionSchema, ResolveReconciliationSchema, SubmitCorrectionSchema } from "../apps/api/lib/product-control-schemas";
 import { PE_ENTITY_TYPES, PE_WORLD_ROOT_TYPES } from "@finnor/private-equity";
 import { EVIDENCE_OPERATIONS, EvidenceOperationSchemas } from "../packages/private-equity/src/evidence-execution/api";
 import { PRIMARY_OPERATIONS, PrimaryOperationSchemas } from "../packages/private-equity/src/primary-diligence/api";
@@ -383,6 +383,15 @@ const paths = {
     get: { security: secured, responses: { "200": { description: "Authenticated employee preferences" } } },
     put: { security: secured, requestBody: json(UserPreferencesPatchSchema), responses: { "200": { description: "Own validated preferences saved" } } },
     delete: { security: secured, responses: { "200": { description: "Own preferences reset to canonical defaults" } } },
+  },
+  "/api/threads": {
+    post: { security: secured, requestBody: json(CreateThreadSchema), responses: {
+      "201": { description: "Private Investigation created, or the caller's existing exact Work Investigation reused with its current Objective. No Work or business execution is created." },
+      "400": { description: "Strict title or Work reference rejected" },
+      "401": { description: "Current authenticated bearer required" },
+      "403": { description: "Active canonical human principal required" },
+      "404": { description: "Work is absent or outside the authenticated tenant" },
+    } },
   },
   "/api/outcome-packs/grants": {
     get: { security: secured, responses: { "200": { description: "Owner-visible tenant autonomy grants" } } },

@@ -139,6 +139,9 @@ export interface FastReadOnlyRouterDeps {
 const ACTIVE_INTENTS = new Set<string>(OPERATIONAL_QUERY_INTENTS);
 const PE_INTENTS = new Set<string>(PRIVATE_EQUITY_OPERATIONAL_QUERY_INTENTS);
 const MUTATION = /\b(?:send|email|message|call|create|update|delete|remove|assign|handoff|delegate|schedule|reschedule|share|approve|reject|close|waive|execute|change)\b/i;
+const EXECUTION_COMMAND = /(?:^|[.!?,;\n]\s*|\b(?:and|then)\s+)(?:(?:please|also)\s+){0,2}(?:run|start|launch)\b|\b(?:can|could|would|will)\s+you\s+(?:please\s+)?(?:run|start|launch)\b/i;
+// Exclude nominal lists without suppressing a later clause's command and object.
+const EXECUTION_NAME_LIST = /\b(?:for|between|of)\s+(?:run|start|launch)(?:\s*,\s*(?:run|start|launch))*(?:\s*,?\s+(?:and|or)\s+(?:run|start|launch))\b/gi;
 const QUESTION = /\?|\b(?:what|which|who|why|show|list|give|are|is|how|status|context|readiness|open|find)\b/i;
 const UUID = /\b[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\b/i;
 const WORLD_ROOT_NAMES: ReadonlyArray<readonly [RegExp, PeWorldRootRef["entityType"]]> = [
@@ -176,8 +179,9 @@ export function interpretOperationalQuery(instruction: string, scope?: { busines
   const text = instruction.trim();
   const scopedDealId = scope?.dealId ?? (scope?.businessRoot?.entityType === "pe_deal" ? scope.businessRoot.entityId : undefined);
   const scopedRoot = scope?.businessRoot ?? (scopedDealId ? { entityType: "pe_deal" as const, entityId: scopedDealId } : undefined);
-  if (!text || !QUESTION.test(text)) return { route: "planner", reason: "not_question" };
-  if (MUTATION.test(text)) return { route: "planner", reason: "mutation_or_advice" };
+  if (!text) return { route: "planner", reason: "not_question" };
+  if (MUTATION.test(text) || EXECUTION_COMMAND.test(text.replace(EXECUTION_NAME_LIST, "operation names"))) return { route: "planner", reason: "mutation_or_advice" };
+  if (!QUESTION.test(text)) return { route: "planner", reason: "not_question" };
 
   if (/^what changed since yesterday(?:,? and does it affect our recommendation)?\??$/i.test(text)) {
     return scopedRoot

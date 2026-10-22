@@ -22,6 +22,7 @@ import {
   workflowSteps,
   workEntityLinks,
   workObjectiveLoops,
+  workLifecycleOutcome,
   works,
 } from "@finnor/db";
 import { EXECUTION_COMPENSATABLE_STEP_TYPES, isRetiredWaterAction, isRetiredWaterWorkflow } from "@finnor/shared-types";
@@ -759,7 +760,7 @@ export async function executionProjection(
         successVerifiedAt: objectiveRows[0]?.successVerifiedAt?.toISOString() ?? null,
         createdAt: work.createdAt.toISOString(),
         updatedAt: work.updatedAt.toISOString(),
-        finalOutcome: work.finalOutcome ? sanitizeExecutionValue(work.finalOutcome, viewer.role) as Record<string, unknown> : null,
+        finalOutcome: work.finalOutcome ? sanitizeExecutionValue(workLifecycleOutcome(work.finalOutcome), viewer.role) as Record<string, unknown> : null,
         failure: workFailure,
       },
       targets,

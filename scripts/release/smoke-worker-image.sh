@@ -122,6 +122,12 @@ pg_isready --host 127.0.0.1 --port 5432 --username finnor --dbname finnor
 supabase_url="$(node -p "require('./infra/deployment/production.contract.json').topology.database.supabaseUrl")"
 
 for workload_class in REALTIME INTERACTIVE BACKGROUND HEAVY; do
+  model_environment=()
+  if [[ "$workload_class" != REALTIME ]]; then
+    while IFS= read -r entry; do model_environment+=(--env "$entry"); done < <(
+      node -e 'for (const [key, value] of Object.entries(require("./infra/deployment/production.contract.json").topology.computePlane.providerRuntime.environment)) console.log(`${key}=${value}`)'
+    )
+  fi
   case "$workload_class" in
     REALTIME) capabilities=jobs,realtime,sse ;;
     INTERACTIVE) capabilities=jobs,orchestration,event-wake,workflow ;;
@@ -129,6 +135,7 @@ for workload_class in REALTIME INTERACTIVE BACKGROUND HEAVY; do
     HEAVY) capabilities=jobs,computer,artifact ;;
   esac
   container_id="$(docker run --detach --network host \
+    "${model_environment[@]}" \
     --env NODE_ENV=test \
     --env FINNOR_ENVIRONMENT=production \
     --env FINNOR_RELEASE_SOURCE=github-actions \
@@ -163,7 +170,8 @@ if (body.ok !== true || body.release?.commitSha !== process.env.FINNOR_COMMIT_SH
 if (process.env.FINNOR_SMOKE_CLASS === "REALTIME") {
   if (body.realtime !== true || !body.capabilities?.includes("jobs") ||
       !body.capabilities?.includes("sse") || body.capabilities?.includes("orchestration")) process.exit(1);
-} else if (body.realtime !== false || body.serviceClass !== process.env.FINNOR_SMOKE_CLASS) process.exit(1);
+} else if (body.realtime !== false || body.serviceClass !== process.env.FINNOR_SMOKE_CLASS ||
+    body.modelRoutes?.configured !== true || body.modelRoutes.unavailableRoutes?.length !== 0) process.exit(1);
 NODE
       then ready=1; break; fi
     fi

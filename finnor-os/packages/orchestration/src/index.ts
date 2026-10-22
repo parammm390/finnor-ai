@@ -1,6 +1,7 @@
 // Orchestration core (§9): Planner → confirmation gate → Executor → Reflection.
 // This module is the single entry point the API, webhooks, and workers all use.
 
+import { isDeepStrictEqual } from "node:util";
 import {
   RetiredVerticalError,
   isRetiredWaterAction,
@@ -17,7 +18,7 @@ import {
 import {
   MAX_HIGH_EGRESS_ROWS,
   withTenant, domainActions, domainPolicies, domainPolicyRevisions, actionLog,
-  decisionReceipts, planRepairs, enqueueJob, receiveWork, transitionWork,
+  decisionReceipts, planRepairs, enqueueJob, receiveWork, recordWorkResponse, transitionWork,
   beginWorkPlannerAttempt, finishWorkPlannerAttempt, latestWorkInput, reconcileWorkStatus,
   recordRejectedWorkPlan, activeWorkPlanRevision,
   authorityStates,
@@ -25,6 +26,8 @@ import {
   workPlanRevisions,
   businessEffects,
   resolveTenantVertical,
+  ExactWorkIntakeConflict,
+  type ReceivedWork,
 } from "@finnor/db";
 import { buildMemorySnapshot, appendEpisode, appendShortTerm } from "@finnor/memory";
 import { createDefaultRegistry, type ToolRegistry } from "@finnor/tools";
@@ -33,7 +36,7 @@ import { LLMPlanner, type Planner, type PlanningResult } from "./planner";
 import { selectAndMaterializePlan } from "./plan-runtime";
 import { GatedExecutor, type Executor } from "./executor";
 import { OutcomeReflection, type Reflection } from "./reflection";
-import { createDefaultPluginRegistry, PluginRegistry } from "./plugin-registry";
+import { createDefaultPluginRegistry, planningCapabilitiesForVertical, PluginRegistry } from "./plugin-registry";
 import { resolveProvider, resolveProviderForPurpose } from "./llm";
 import { AllowlistExecutor } from "./graph/allowlist-executor";
 import { LangGraphExecutor } from "./graph/executor";
@@ -174,6 +177,13 @@ export interface OperationalQueryRun extends OperationalQueryExecution {
   instructionId: string;
   duplicate?: boolean;
   answer?: AnswerEnvelope;
+}
+
+export class OperationalQueryReplayUnavailable extends Error {
+  constructor(public readonly input: Pick<ReceivedWork, "workId" | "workInputId" | "instructionId" | "status">) {
+    super("The query input is already claimed, but its exact reply is unavailable. Inspect its Work before requesting a new read.");
+    this.name = "OperationalQueryReplayUnavailable";
+  }
 }
 
 export interface Orchestrator {
@@ -366,7 +376,9 @@ export class FinnorOrchestrator implements Orchestrator {
         signal: opts.signal,
         deadlineAt: opts.deadlineAt,
         deadlineMs: opts.deadlineMs,
-        capabilityActionTypes: this.plugins.actionTypes(),
+        capabilityManifest: planningCapabilitiesForVertical(this.plugins, (await resolveTenantVertical(ctx.tenantId)).verticalKey),
+        conversationContext: opts.conversationContext,
+        instructionId,
       });
       if (await isInstructionCancelled(ctx.tenantId, instructionId)) return { actions: [] };
       await finishWorkPlannerAttempt({
@@ -526,24 +538,26 @@ export class FinnorOrchestrator implements Orchestrator {
       sessionId: opts.sessionId,
       instructionId: opts.instructionId,
       workId: opts.workId,
-      userId: ctx.userId,
+      userId: ctx.employeeId ?? ctx.userId,
       idempotencyKey: opts.idempotencyKey,
       activeContext: opts.activeContext as Record<string, unknown> | undefined,
       authorityContext: await authorityContextForWork(ctx),
     });
     if (received.duplicate) {
       const finalOutcome = received.finalOutcome && typeof received.finalOutcome === "object" ? received.finalOutcome as Record<string, unknown> : {};
-      const stored = finalOutcome.query && typeof finalOutcome.query === "object"
-        ? finalOutcome.query as Record<string, unknown>
-        : finalOutcome.response && typeof finalOutcome.response === "object" && (finalOutcome.response as Record<string, unknown>).query && typeof (finalOutcome.response as Record<string, unknown>).query === "object"
-          ? (finalOutcome.response as Record<string, unknown>).query as Record<string, unknown>
-          : null;
+      const response = finalOutcome.response && typeof finalOutcome.response === "object"
+        ? finalOutcome.response as Record<string, unknown> : {};
+      const stored = response.query && typeof response.query === "object"
+        ? response.query as Record<string, unknown>
+        : response.request && response.result && response.execution
+          ? { request: response.request, result: response.result, metadata: response.execution } : null;
       if (stored && stored.result && stored.metadata) {
         const execution = stored as unknown as OperationalQueryExecution;
-        const answer = this.fastReadOnlyRouter.answer?.(execution);
+        if (!isDeepStrictEqual(execution.request, request)) throw new ExactWorkIntakeConflict();
+        const answer = response.answer && typeof response.answer === "object" ? response.answer as AnswerEnvelope : undefined;
         return { ...execution, workId: received.workId, workInputId: received.workInputId, instructionId: received.instructionId, duplicate: true, ...(answer ? { answer } : {}) };
       }
-      throw new Error("Duplicate operational query has no durable result to replay");
+      throw new OperationalQueryReplayUnavailable(received);
     }
     await ensureInstructionSession(ctx.tenantId, received.instructionId, instruction, {
       sessionId: opts.sessionId,
@@ -558,6 +572,11 @@ export class FinnorOrchestrator implements Orchestrator {
       workInputId: received.workInputId,
       instructionId: received.instructionId,
     }, { executionKey: opts.executionKey ?? opts.idempotencyKey ?? received.instructionId });
+    await recordWorkResponse({ tenantId: ctx.tenantId, workId: received.workId, workInputId: received.workInputId, userId: ctx.employeeId ?? ctx.userId }, {
+      request: result.execution.request, result: result.execution.result, execution: result.execution.metadata,
+      workId: received.workId, workInputId: received.workInputId, instructionId: received.instructionId,
+      ...(result.answer ? { answer: result.answer } : {}),
+    });
     return {
       ...result.execution,
       workId: received.workId,
@@ -680,7 +699,7 @@ export class FinnorOrchestrator implements Orchestrator {
         instruction,
         fastReadDecision: routeReadDecision,
         activeContext: opts.activeContext,
-        conversational: isConversationalTurn(instruction),
+        conversational: isConversationalTurn(instruction, opts),
       });
       if (opts.conversationContext?.resolution.status === "clarification_required") {
         instructionRoute = { version: 1, route: "ATOMIC_EFFECT", reasonCodes: ["phase6_reference_or_sender_ambiguous"] };
@@ -754,14 +773,6 @@ export class FinnorOrchestrator implements Orchestrator {
     // cannot inherit unrelated company/research context, and
     // still produces the same explicit progress trace as every other turn.
     if (instructionRoute?.route === "CONVERSATION") {
-      try {
-        await ensureSecretsLoaded();
-      } catch (err) {
-        const failure = workFailure(err, "Provider initialization failed");
-        await transitionWork(ctx.tenantId, workId, "failed", "understanding_failed", failure, { failure, expectedWorkInputId: workInputId });
-        await emitInstructionEvent(ctx.tenantId, instructionId, "failed", { error: failure.message, workId, recoverable: true });
-        throw err;
-      }
       {
         await emitInstructionEvent(ctx.tenantId, instructionId, "context_retrieved", { chips: [] });
         await emitInstructionEvent(ctx.tenantId, instructionId, "planning", { route: "conversation" });

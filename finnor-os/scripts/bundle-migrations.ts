@@ -12,6 +12,7 @@ const files = readdirSync(dir).filter((f) => f.endsWith(".sql")).sort();
 // explicitly reconciled historical and X1/X2 peer overlaps below. This does not
 // allocate another migration at any of these ordinals.
 const historicalPairs = new Map([
+  ["0195",new Set(["0195_postx_y1_economic_action_theory.sql","0195_private_input_responses.sql"])],
   ["0131",new Set(["0131_egress_bounded_read_indexes.sql","0131_private_equity_release_baseline.sql"])],
   ["0141",new Set(["0141_private_equity_outcome_pack_ids.sql","0141_restricted_digest_projection_access.sql"])],
   ["0172",new Set(["0172_v2_primary_diligence.sql","0172_x1_institution_source_authority.sql"])],

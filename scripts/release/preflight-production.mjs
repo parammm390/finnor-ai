@@ -6,6 +6,7 @@ import { createRequire } from "node:module"
 import { resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 import { readProtectedEnv, readProtectedEnvValue } from "./protected-env.mjs"
+import { computeSecretMap } from "./compute-plane-policy.mjs"
 import { assertAwsTarget, assertCanonicalRelease, assertImmutableEcrRelease, assertMigrationLineage, assertResolvedTarget, expectedRelease, loadContract, readGitRelease } from "./release-policy.mjs"
 import { pgConnectionConfig } from "../../finnor-os/packages/db/postgres-connection.mjs"
 import { assertProductionDatabaseTarget, verifyRestrictedApplicationRole } from "../../finnor-os/packages/db/production-database-admission.mjs"
@@ -123,6 +124,13 @@ const stack = awsJson("cloudformation", ["describe-stacks", "--stack-name", work
 if (!stack || !["CREATE_COMPLETE", "UPDATE_COMPLETE", "UPDATE_ROLLBACK_COMPLETE"].includes(stack.StackStatus) || stack.RoleARN) throw new Error("production CloudFormation stack is missing, unstable, or uses an unexpected service role")
 const stackParameters = Object.fromEntries((stack.Parameters ?? []).map((entry) => [entry.ParameterKey, entry.ParameterValue]))
 const computeStage = stackParameters.ComputePlaneStage ?? "legacy"
+const providerRuntime = contract.topology.computePlane.providerRuntime
+const providerStack = awsJson("cloudformation", ["describe-stacks", "--stack-name", providerRuntime.stackName]).Stacks?.[0]
+const providerOutputs = Object.fromEntries((providerStack?.Outputs ?? []).map(entry => [entry.OutputKey, entry.OutputValue]))
+const expectedModels = ["GLM", "MISTRAL", "DEEPSEEK"].map(name => providerRuntime.environment[`AWS_BEDROCK_${name}_MODEL_ID`]).join(",")
+if (!["CREATE_COMPLETE", "UPDATE_COMPLETE"].includes(providerStack?.StackStatus)
+  || providerOutputs.ModelPolicyArn !== `arn:aws:iam::${worker.accountId}:policy/${providerRuntime.policyName}`
+  || providerOutputs.ModelIds !== expectedModels) throw new Error("Approved provider runtime infrastructure is missing or incompatible")
 if (!["legacy", "preparing", "routing", "finalized"].includes(computeStage)) throw new Error(`unknown compute-plane stage ${computeStage}`)
 
 function assertServiceTopology(service, profile, label, { legacy = false } = {}) {
@@ -142,12 +150,6 @@ const capabilities = {
   INTERACTIVE: "jobs,orchestration,event-wake,workflow",
   BACKGROUND: "jobs,recovery,connection-health,scheduled-scans",
   HEAVY: "jobs,computer,artifact",
-}
-const classSecretKeys = {
-  REALTIME: ["DATABASE_URL", "SENTRY_DSN", "SUPABASE_SERVICE_ROLE_KEY"],
-  INTERACTIVE: Object.keys(worker.secretMap),
-  BACKGROUND: Object.keys(worker.secretMap),
-  HEAVY: ["DATABASE_URL", "GROQ_API_KEY", "REDIS_URL", "SENTRY_DSN"],
 }
 const classServices = {}
 let service
@@ -170,10 +172,15 @@ if (computeStage !== "legacy") {
       WORKER_CONCURRENCY: String(profile.workerConcurrency), FINNOR_DB_POOL_MAX: "1", PORT: "8090",
     }
     for (const [name, value] of Object.entries(expectedEnv)) if (env[name] !== value) throw new Error(`${workloadClass} ${name} is ${env[name] ?? "<missing>"}, expected ${value}`)
+    if (workloadClass !== "REALTIME" && env.AWS_BEDROCK_AUTH_MODE === "iam") {
+      for (const [name, value] of Object.entries(providerRuntime.environment)) {
+        if (name !== "AWS_BEDROCK_REGION" && env[name] !== value) throw new Error(`${workloadClass} ${name} differs from the approved model runtime`)
+      }
+    }
     if ("AWS_ACCESS_KEY_ID" in env || "AWS_SECRET_ACCESS_KEY" in env) throw new Error(`${workloadClass} contains static AWS credentials`)
     let secretMap
     try { secretMap = JSON.parse(env.FINNOR_SECRET_IDS ?? "") } catch { throw new Error(`${workloadClass} FINNOR_SECRET_IDS is invalid`) }
-    const expectedSecretMap = Object.fromEntries(classSecretKeys[workloadClass].map((key) => [key, worker.secretMap[key]]))
+    const expectedSecretMap = computeSecretMap(contract, workloadClass, { legacy: env.AWS_BEDROCK_AUTH_MODE !== "iam" })
     if (JSON.stringify(secretMap) !== JSON.stringify(expectedSecretMap)) throw new Error(`${workloadClass} secret map exceeds or differs from its contract`)
     classServices[workloadClass] = { service: classService, taskDefinition: classTask }
   }

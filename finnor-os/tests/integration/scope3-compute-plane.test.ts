@@ -709,42 +709,52 @@ describe.skipIf(!available || process.env.FINNOR_SCOPE3_CERTIFICATION !== "1")("
       REALTIME: "compute-realtime", INTERACTIVE: "compute-interactive",
       BACKGROUND: "compute-background", HEAVY: "compute-heavy",
     } as const;
-    for (const workloadClass of WORKLOAD_CLASSES) {
-      const stopping = new AbortController();
-      const heartbeat = startHeartbeat(60_000, stopping.signal, {
-        workloadClass, ownsScheduler: () => workloadClass === "BACKGROUND",
-      });
-      try {
-        let rows: Array<{ service: string }> = [];
-        let meta: { serviceClass?: string; allowedWorkloadClasses?: string[]; draining?: boolean } = {};
-        for (let attempt = 0; attempt < 100; attempt += 1) {
-          const found = await getPool().query<{ meta: typeof meta }>(
-            `SELECT meta FROM worker_heartbeat WHERE id=$1`, [WORKER_HEARTBEAT_ID],
-          );
-          meta = found.rows[0]?.meta ?? {};
-          const roles = await getPool().query<{ service: string }>(
-            `SELECT service FROM service_release_heartbeats WHERE instance_id=$1 ORDER BY service`,
-            [WORKER_HEARTBEAT_ID],
-          );
-          rows = roles.rows;
-          if (meta.serviceClass === workloadClass && rows.some((row) => row.service === services[workloadClass])) break;
-          await new Promise((resolveDelay) => setTimeout(resolveDelay, 20));
+    // This verifies configured readiness; no provider credential or network call.
+    const previousAuthMode = process.env.AWS_BEDROCK_AUTH_MODE;
+    process.env.AWS_BEDROCK_AUTH_MODE = "iam";
+    try {
+      for (const workloadClass of WORKLOAD_CLASSES) {
+        const stopping = new AbortController();
+        const heartbeat = startHeartbeat(60_000, stopping.signal, {
+          workloadClass, ownsScheduler: () => workloadClass === "BACKGROUND",
+        });
+        try {
+          let rows: Array<{ service: string }> = [];
+          let meta: { serviceClass?: string; allowedWorkloadClasses?: string[]; draining?: boolean; modelRoutes?: unknown } = {};
+          for (let attempt = 0; attempt < 100; attempt += 1) {
+            const found = await getPool().query<{ meta: typeof meta }>(
+              `SELECT meta FROM worker_heartbeat WHERE id=$1`, [WORKER_HEARTBEAT_ID],
+            );
+            meta = found.rows[0]?.meta ?? {};
+            const roles = await getPool().query<{ service: string }>(
+              `SELECT service FROM service_release_heartbeats WHERE instance_id=$1 ORDER BY service`,
+              [WORKER_HEARTBEAT_ID],
+            );
+            rows = roles.rows;
+            if (meta.serviceClass === workloadClass && rows.some((row) => row.service === services[workloadClass])) break;
+            await new Promise((resolveDelay) => setTimeout(resolveDelay, 20));
+          }
+          expect(meta).toMatchObject({ serviceClass: workloadClass, allowedWorkloadClasses: [workloadClass], draining: false,
+            modelRoutes: workloadClass === "REALTIME" ? null : { configured: true, unavailableRoutes: [] },
+          });
+          expect(rows.map((row) => row.service).sort()).toEqual([
+            services[workloadClass],
+            ...(workloadClass === "INTERACTIVE" ? ["orchestrator"] : []),
+            ...(workloadClass === "BACKGROUND" ? ["scheduler-owner"] : []),
+          ].sort());
+        } finally {
+          stopping.abort();
+          await heartbeat.markDraining();
         }
-        expect(meta).toMatchObject({ serviceClass: workloadClass, allowedWorkloadClasses: [workloadClass], draining: false });
-        expect(rows.map((row) => row.service).sort()).toEqual([
-          services[workloadClass],
-          ...(workloadClass === "INTERACTIVE" ? ["orchestrator"] : []),
-          ...(workloadClass === "BACKGROUND" ? ["scheduler-owner"] : []),
-        ].sort());
-      } finally {
-        stopping.abort();
-        await heartbeat.markDraining();
+        const remaining = await getPool().query<{ count: number }>(
+          `SELECT count(*)::int count FROM service_release_heartbeats WHERE instance_id=$1`,
+          [WORKER_HEARTBEAT_ID],
+        );
+        expect(remaining.rows[0]?.count).toBe(0);
       }
-      const remaining = await getPool().query<{ count: number }>(
-        `SELECT count(*)::int count FROM service_release_heartbeats WHERE instance_id=$1`,
-        [WORKER_HEARTBEAT_ID],
-      );
-      expect(remaining.rows[0]?.count).toBe(0);
+    } finally {
+      if (previousAuthMode === undefined) delete process.env.AWS_BEDROCK_AUTH_MODE;
+      else process.env.AWS_BEDROCK_AUTH_MODE = previousAuthMode;
     }
   }, 15_000);
 

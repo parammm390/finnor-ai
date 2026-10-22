@@ -201,7 +201,6 @@ function CentropyWorkspaceContent() {
     : investigation.loaded?.thread.activeWorkId ?? (worldMode && routeSelection.workId && UUID.test(routeSelection.workId) ? routeSelection.workId : null)
   // Restored replay must belong to this Investigation's selected canonical Work.
   const replayWorkId = requestedReplayWorkId === activeWorkId ? requestedReplayWorkId : replayWork?.threadId === threadId ? replayWork.workId : null
-  const activeObjectiveId = investigation.loaded?.thread.activeWorkId === activeWorkId ? investigation.loaded.thread.activeObjectiveLoopId : null
   const selectedRootFromThread = useMemo(() => {
     const ref = investigation.loaded?.thread.activeReferences.find(isPeWorldRootRef)
     return ref && isPeWorldRootRef(ref) ? ref : null
@@ -215,6 +214,9 @@ function CentropyWorkspaceContent() {
   const routeSelectedObject = routeSelection.selectedObject
   const selectedIcCaseId = UUID.test(searchParams.get("icCaseId") ?? "") ? searchParams.get("icCaseId") : null
   const canvasSources = useCanvasSources(activeWorkId, canvasRoot, ready && Boolean(threadId || worldMode || canvasRoot), canvasRefresh + refreshToken, underwritingRefresh, selectedIcCaseId)
+  const activeObjectiveId = canvasSources.work.data?.work.id === activeWorkId
+    ? canvasSources.work.data.objectiveLoop?.id ?? null
+    : investigation.loaded?.thread.activeWorkId === activeWorkId ? investigation.loaded.thread.activeObjectiveLoopId : null
   useEffect(() => {
     const work = canvasSources.work
     if (!activeWorkId || work.status !== "ready" || work.data?.work.id !== activeWorkId || work.data.read?.complete === false) return
@@ -517,7 +519,7 @@ function CentropyWorkspaceContent() {
           {activeWorkId && canvasSources.work.data?.work.id === activeWorkId && ["failed", "recovery"].includes(canvasSources.work.data.work.status) ? <Suspense fallback={<p className="ct-thread__notice">Reading Work recovery…</p>}><WorkRecovery key={activeWorkId} aggregate={canvasSources.work.data} current={canvasSources.work.status === "ready"} onChanged={() => { setRefreshToken((value) => value + 1); setCanvasRefresh((value) => value + 1) }} /></Suspense> : null}
           {activeWorkId && canvasSources.work.data?.work.id === activeWorkId && pendingActionSignature ? <Suspense fallback={<p className="ct-thread__notice">Reading governed effects…</p>}><PendingEffects key={activeWorkId} aggregate={canvasSources.work.data} current={canvasSources.work.status === "ready"} refreshKey={pendingActionSignature} onChanged={() => { setRefreshToken((value) => value + 1); setCanvasRefresh((value) => value + 1) }} /></Suspense> : null}
           {activeWorkId ? <><button type="button" className="ct-workforce-toggle" aria-expanded={assignmentsOpen} onClick={() => setAssignmentsOpen((value) => !value)}>{assignmentsOpen ? "Close specialist assignments" : "Inspect specialist assignments"}</button>{assignmentsOpen ? <Suspense fallback={<p className="ct-thread__notice">Opening specialist assignments…</p>}><WorkforceAssignments key={activeWorkId} workId={activeWorkId} aggregate={canvasSources.work.data?.work.id === activeWorkId ? canvasSources.work.data : null} onChanged={() => { setRefreshToken((value) => value + 1); setCanvasRefresh((value) => value + 1) }} /></Suspense> : null}</> : null}
-          {activeWorkId && activeObjectiveId ? <ObjectiveControl workId={activeWorkId} workStatus={canvasSources.work.status === "ready" && canvasSources.work.data?.work.id === activeWorkId ? canvasSources.work.data.work.status : null} refreshToken={refreshToken} redirecting={redirecting} onRedirectToggle={() => setRedirecting((value) => !value)} onChanged={() => { setRefreshToken((value) => value + 1); setCanvasRefresh((value) => value + 1) }} /> : null}
+          {activeWorkId && activeObjectiveId ? <ObjectiveControl key={activeWorkId} workId={activeWorkId} source={canvasSources.work} redirecting={redirecting} onRedirectToggle={() => setRedirecting((value) => !value)} onChanged={() => { setRefreshToken((value) => value + 1); setCanvasRefresh((value) => value + 1) }} /> : null}
           {controlNotice?.scope === noticeScope ? <p className="ct-thread__notice" role="status">{controlNotice.message}</p> : null}
           {submissionError?.scope === noticeScope ? <p className="ct-thread__notice ct-thread__notice--error" role="alert">{submissionError.message}</p> : null}
           <div ref={messagesEnd} />
