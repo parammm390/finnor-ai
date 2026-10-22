@@ -7,7 +7,8 @@ import {PROFILE,PROFILE_DIGEST,Y1_VERSION,JobSchema,digest,reference,fail,type E
 import {construct} from './compiler';
 import {dependencyGraph} from './finite';
 import {independentlyCheck} from './process';
-import {transaction,theoryTx,currentChangesTx,invalidateTx,eventTx,developmentOnly} from './store';
+import {withS5PortfolioTransaction as transaction} from '../allocation-store';
+import {theoryTx,currentChangesTx,invalidateTx,eventTx,developmentOnly} from './store';
 
 async function physical(c:PoolClient,p:EconomicJob,e:Readonly<JobExecutionContext>,leases:ComputeResourceLease[]){
  const result=await c.query(`SELECT j.id FROM finnor_os.jobs j JOIN finnor_os.job_delivery_attempts d ON d.tenant_id=j.tenant_id AND d.job_id=j.id

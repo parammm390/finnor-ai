@@ -4,7 +4,8 @@ import type {PoolClient} from 'pg';
 import type {PeMutationContext} from '../../private-equity/src/types';
 import {PROFILE_DIGEST,digest,fail,type Y3Ref} from '../../private-equity/src/interaction-synthesis/contracts';
 import {reference,same,type ProtocolRow} from '../../private-equity/src/interaction-synthesis/product-contracts';
-import {checkedProtocolTx,developmentOnly,eventTx,transaction,principal} from '../../private-equity/src/interaction-synthesis/store';
+import {withS5PortfolioTransaction as transaction} from '../../private-equity/src/allocation-store';
+import {checkedProtocolTx,developmentOnly,eventTx,principal} from '../../private-equity/src/interaction-synthesis/store';
 export interface InteractionAdmission{
  schema:'finnor.s8.interaction-admission.v1';domain:'INTERACTION_PROTOCOL';ref:Y3Ref;
  protectionDomain:'DISPOSABLE_LOCAL_DEVELOPMENT';tenantId:string;principalId:string;protocolId:string;protocolRef:Y3Ref;

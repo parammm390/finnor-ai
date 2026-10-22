@@ -7,7 +7,8 @@ import {construct} from './producer';
 import {independentlyCheck} from './process';
 import {productRuntimeIdentity} from './product-runtime';
 import {JobSchema,LIMITS,reference,type InteractionJob,type ProtocolRow,type InteractionProtocol} from './product-contracts';
-import {transaction,protocolTx,currentChangesTx,invalidateTx,eventTx,developmentOnly,dependencyGraph} from './store';
+import {withS5PortfolioTransaction as transaction} from '../allocation-store';
+import {protocolTx,currentChangesTx,invalidateTx,eventTx,developmentOnly,dependencyGraph} from './store';
 
 async function physical(c:PoolClient,p:InteractionJob,e:Readonly<JobExecutionContext>,leases:ComputeResourceLease[]){
  const live=await c.query(`SELECT j.id FROM finnor_os.jobs j JOIN finnor_os.job_delivery_attempts d

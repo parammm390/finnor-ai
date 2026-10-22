@@ -216,3 +216,12 @@ regexes = [
   '''"src/lib/centropy/openapi-types\.ts": "[0-9a-f]{64}"''',
   '''"src/lib/jarvis/openapi-types\.ts": "[0-9a-f]{64}"''',
 ]
+
+# The finite checker tests membership before reading a participant continuation.
+# Permit only this exact assertion match on its exact path, not credential fields.
+[[rules.allowlists]]
+description = "Exact Y3 finite-checker continuation-order assertion"
+condition = "AND"
+paths = ['''(^|/)finnor-os/packages/private-equity/src/interaction-synthesis/checker\.py$''']
+regexTarget = "match"
+regexes = ['''^key in choices, "Y3_CONTINUATION_ORDER_PREMISE"$''']

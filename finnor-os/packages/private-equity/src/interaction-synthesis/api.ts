@@ -4,14 +4,14 @@ import {authorize} from '../owner-context';
 import {EconomicFault,RootSchema} from '../economic-action-theory/contracts';
 import {handleEconomicOperation} from '../economic-action-theory/api';
 import {admitInteraction} from '../../../capability-evolution/src/interaction-port';
-import {InteractionFault,digest,byteDigest,fail} from './contracts';
+import {InteractionFault,byteDigest,fail} from './contracts';
 import {SubmitSchema,ProtocolId,RunId,TermsSchema,ConsentSchema,StartSchema,ObserveSchema,ActionSchema,MaterializeSchema,
- InteractionOperations,LIMITS,same} from './product-contracts';
-import {developmentOnly,transaction,protocolTx,checkedProtocolTx,principal,workCutTx,submitProtocol,
+ LIMITS,same} from './product-contracts';
+import {withS5PortfolioTransaction as transaction} from '../allocation-store';
+import {developmentOnly,protocolTx,checkedProtocolTx,principal,workCutTx,submitProtocol,
  currentChangesTx,invalidateTx,eventTx,enqueueTx} from './store';
 import {createInteractionTerms,localInteraction,recordInteractionConsent,startInteraction,readInteractionRun,
  recordInteractionObservation,recordInteractionAction,materializeInteraction,interactionProgramme} from './continuation';
-export {InteractionOperations};
 const List=z.object({root:RootSchema,workId:z.string().uuid()}).strict(),
  Compare=ProtocolId.extend({incumbentProtocolId:z.string().uuid().optional()}).strict();
 export const InteractionOperationSchemas={
@@ -20,7 +20,8 @@ export const InteractionOperationSchemas={
  'interaction-terms':TermsSchema,'interaction-local':ProtocolId,'interaction-consent':ConsentSchema,'interaction-start':StartSchema,
  'interaction-run-read':RunId,'interaction-observe':ObserveSchema,'interaction-action':ActionSchema,
  'interaction-materialize':MaterializeSchema,'interaction-run':RunId,'interaction-reconcile':RunId,
-} satisfies Record<typeof InteractionOperations[number],z.ZodTypeAny>;
+} satisfies Record<string,z.ZodTypeAny>;
+export const InteractionOperations=Object.keys(InteractionOperationSchemas) as ReadonlyArray<keyof typeof InteractionOperationSchemas>;
 export async function readInteractionBody(req:Request):Promise<unknown>{
  if(!req.body)fail('Y3_JSON_BODY_REQUIRED',400);
  const reader=req.body.getReader(),chunks:Uint8Array[]=[];let size=0,expired=false;

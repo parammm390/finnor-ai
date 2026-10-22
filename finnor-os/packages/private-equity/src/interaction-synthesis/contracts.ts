@@ -40,19 +40,16 @@ export const RefSchema = z.object({
   owner: text, id: z.string().min(1).max(1024), version: text, contentDigest: z.string().regex(/^[a-f0-9]{64}$/)
 }).strict();
 export type Y3Ref = z.infer<typeof RefSchema>;
-export type Ref = Y3Ref;
 export const BasisSchema = z.object({
   unit: text, currency: z.string().regex(/^[A-Z]{3}$/).nullable(), timeBasis: text, owner: text,
   rounding: z.literal("EXACT"), sourceStatus: z.enum(["SUPPLIED_MODEL", "CANONICAL_OBSERVATION", "UNKNOWN"]),
   sourceRef: RefSchema
 }).strict();
-export type Basis = z.infer<typeof BasisSchema>;
 export const QuantitySchema = z.object({
   value: rational.nullable(), basis: BasisSchema, unknownReason: text.optional()
 }).strict().superRefine((v, ctx) => {
   if (v.value === null && !v.unknownReason) ctx.addIssue({ code: "custom", message: "Y3_UNKNOWN_REASON_REQUIRED" });
 });
-export type Quantity = z.infer<typeof QuantitySchema>;
 const party = z.enum(["P0", "P1"]);
 const recipient = z.enum(["P0", "P1", "PUBLIC"]);
 const date = z.union([z.literal(0), z.literal(1), z.literal(2)]);

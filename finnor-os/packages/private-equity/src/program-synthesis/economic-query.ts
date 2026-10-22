@@ -3,7 +3,7 @@ import {beginWorkQueryExecution,finishWorkQueryExecution} from '@finnor/db';
 import type {OperationalQueryOptions} from '@finnor/read-models';
 import type {EconomicProgrammeQueryRequest,EconomicProgrammeQueryResult} from '@finnor/shared-types';
 import {readEconomicProgramme,programmeTx} from '../economic-control';
-import {transaction} from '../economic-action-theory/store';
+import {withS5PortfolioTransaction as transaction} from '../allocation-store';
 import {digest,fail} from '../economic-action-theory/contracts';
 import type {PeMutationContext} from '../types';
 export const EconomicProgrammeQuerySchema=z.object({intent:z.literal('economic_programme_v1'),programmeId:z.string().uuid(),workId:z.string().uuid()}).strict();

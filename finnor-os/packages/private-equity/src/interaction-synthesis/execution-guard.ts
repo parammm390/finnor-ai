@@ -17,17 +17,17 @@ export function participantId(ctx:PeMutationContext,row:ProtocolRow){
  if(!party)fail('Y3_PARTICIPANT_UNAVAILABLE',404);
  return party.id;
 }
-export async function termsTx(c:PoolClient,row:ProtocolRow,ref?:Y3Ref,current=true):Promise<InteractionTerms>{
+export async function termsTx(c:PoolClient,row:ProtocolRow,ref?:Y3Ref):Promise<InteractionTerms>{
  const found=(await c.query<{body:InteractionTerms}>(`SELECT body FROM finnor_os.s4_interaction_terms
   WHERE tenant_id=$1 AND protocol_id=$2 AND ($3::uuid IS NULL OR id=$3) ORDER BY revision DESC LIMIT 1 FOR SHARE`,
- [row.tenant_id,row.id,current?row.current_terms_id:null])).rows[0]?.body;
+ [row.tenant_id,row.id,row.current_terms_id])).rows[0]?.body;
  if(!found)fail('Y3_TERMS_UNAVAILABLE',404);
  const {ref:stored,...body}=found;
  if(!same(stored,reference('S4','interaction-terms',body))||ref&&!same(ref,stored)||
   found.protocolId!==row.id||found.tenantId!==row.tenant_id||found.principalId!==row.principal_id||
   !same(found.protocolRef,row.artifact?.envelope.contentRef)||!same(found.lowering,row.request.lowering)||
   found.candidateDigest!==digest(row.candidate)||!same(found.participants,row.request.problem.participants)||
-  current&&(!row.current_terms_id||found.id!==row.current_terms_id||Date.parse(found.validUntil)<=Date.now()))
+  (!row.current_terms_id||found.id!==row.current_terms_id||Date.parse(found.validUntil)<=Date.now()))
   fail('Y3_EXACT_CURRENT_TERMS_REQUIRED');
  return found;
 }

@@ -101,8 +101,3 @@ export interface ProgrammeBinding {
  programmeId:string;programmeRef:Y3Ref;intent:InteractionIntent;termsConsentIds:string[];effectConsentIds:string[];
  originalEpisodeId:string;externalEffects:false;executionAuthorityGranted:false;
 }
-export const InteractionOperations=[
- 'interaction-submit','interaction-read','interaction-list','interaction-admit','interaction-resume','interaction-cancel',
- 'interaction-artifact','interaction-compare','interaction-terms','interaction-local','interaction-consent','interaction-start',
- 'interaction-run-read','interaction-observe','interaction-action','interaction-materialize','interaction-run','interaction-reconcile',
-] as const;

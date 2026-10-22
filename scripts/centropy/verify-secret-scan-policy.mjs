@@ -30,6 +30,9 @@ const candidatePath = "finnor-os/packages/private-equity/src/capital-program/v2-
 const r2AuthPath = "finnor-os/scripts/r2/run-owner.mts"
 const r6ModelPath = "finnor-os/scripts/r6/run-e2e.mts"
 const r8OwnerPath = "finnor-os/scripts/r8/run-owner.mts"
+const y3CheckerPath = "finnor-os/packages/private-equity/src/interaction-synthesis/checker.py"
+const y3ContinuationPremise = ["Y3", "CONTINUATION", "ORDER", "PREMISE"].join("_")
+const y3ContinuationCheck = `need(key in choices, "${y3ContinuationPremise}")\n`
 const r3DigestPaths = ["scope-r/r3-incentive-rule-synthesis/handoff/README.md", "scope-r/r3-incentive-rule-synthesis/status.md"]
 const r3ApiDigest = sha("Authored public R3 API source digest fixture")
 const r3WorkerDigest = sha("Authored public R3 worker source digest fixture")
@@ -77,6 +80,7 @@ const metadata = [
   ...prosePaths.map((path, index) => ({ name: `prose-${index}`, path, fields: ["verbatim"], baselineCount: 1, bytes: json({ verbatim: `Retain instrument/source revision, token semantics, ${observationSemantics} time, provenance.` }) })),
   { name: "x1-historical-plan", path: x1PlanPath, fields: ["candidateKey"], baselineCount: 1,
     bytes: objectFixture("candidate", "candidateKey", x1PlanIdentity) },
+  { name: "y3-continuation-premise", path: y3CheckerPath, fields: ["key in choices"], baselineCount: 1, bytes: y3ContinuationCheck },
 ]
 const scans = []
 const historyScans = []
@@ -144,6 +148,7 @@ function historyProbe(name, placement) {
   for (const path of Object.keys(files)) delete files[path]
   Object.assign(files, savedFiles)
   if (placement === "merge-only") files["merge-credential.ts"] = credential()
+  files[y3CheckerPath] = y3ContinuationCheck
   head = object([linearHead, side], "Authored merge scanner proof")
   if (placement === "merge-only") introduced = head
   git(directory, ["update-ref", "refs/heads/scanner-proof", head])
@@ -177,6 +182,8 @@ try {
     const sameLine = fixture.bytes.trimEnd().replaceAll("\n", " ") + " " + credential()
     scan(`${fixture.name}-same-line-credential`, fixture.path, sameLine, "configured", 1, [...fixture.fields, "apiKey"])
   }
+  scan("y3-continuation-altered-value", y3CheckerPath, `need(key in choices, "${authoredNegative}")\n`, "configured", 1, ["key in choices"])
+  scan("y3-continuation-wrong-field", y3CheckerPath, credential("apiKey", y3ContinuationPremise), "configured", 1, ["apiKey"])
   for (const path of [m1Path, p4Path]) scan(`model-value-${path === m1Path ? "m1" : "p4"}`, path, credential("modelKey"), "configured", 1, ["modelKey"])
   scan("model-wrong-field", m1Path, credential("apiKey", cpuModel), "configured", 1, ["apiKey"])
   scan("predicate-altered-value", predicatesPath, predicateFixture(authoredNegative), "configured", 1, ["remainingPredicates"])

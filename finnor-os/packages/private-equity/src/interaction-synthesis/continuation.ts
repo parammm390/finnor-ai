@@ -6,11 +6,12 @@ import {readEconomicReservationTx} from '../economic-allocation';
 import {createEconomicProgrammeTx,readEconomicProgrammeTx} from '../economic-control';
 import {currentInteractionAdmissionTx} from '../../../capability-evolution/src/interaction-port';
 import {compileGame,protocolControlKeys,type CompiledNode,type ObservationToken} from './game';
-import {InteractionFault,digest,fail,type Y3Ref} from './contracts';
+import {InteractionFault,digest,fail} from './contracts';
 import {q,ZERO} from './exact';
 import {reference,same,TermsSchema,ConsentSchema,StartSchema,ObserveSchema,ActionSchema,MaterializeSchema,
  type ProtocolRow,type InteractionTerms,type InteractionRun,type InteractionHistory,type InteractionIntent,type Outcome,type ProgrammeBinding} from './product-contracts';
-import {developmentOnly,transaction,protocolTx,eventTx,currentChangesTx,sourceClaimTx} from './store';
+import {withS5PortfolioTransaction as transaction} from '../allocation-store';
+import {developmentOnly,protocolTx,eventTx,currentChangesTx,sourceClaimTx} from './store';
 import {responsibleContext,participantId,participantAuthorityTx,termsTx,requireConsentsTx,historyTx,assertHistoryCurrentTx,
  observationTimesCurrent} from './execution-guard';
 

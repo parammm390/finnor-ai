@@ -3,7 +3,7 @@ import type {PoolClient} from 'pg';
 import {employeeAuthoritySnapshotTx} from '@finnor/authority';
 import type {PeMutationContext} from '../types';
 import {authorize,principal,unavailable} from '../owner-context';
-import {withS5PortfolioTransaction} from '../allocation-store';
+import {withS5PortfolioTransaction as transaction} from '../allocation-store';
 import {affectedClosure} from '../live-recompilation/contracts';
 import {currentEconomicTheoryAdmissionTx} from '../../../capability-evolution/src/economic-theory-port';
 import {workCutTx,developmentOnly as y1DevelopmentOnly} from '../economic-action-theory/store';
@@ -14,7 +14,6 @@ import {LIMITS,same,reference,type ProtocolRow,type SubmitRequest,type Interacti
 import {productRuntimeIdentity} from './product-runtime';
 
 export {principal,workCutTx};
-export const transaction=<T>(ctx:PeMutationContext,fn:(c:PoolClient)=>Promise<T>)=>withS5PortfolioTransaction(ctx,fn);
 export function developmentOnly(){
  if(process.env.FINNOR_Y3_PROFILE!=='ordinary_disposable'||process.env.FINNOR_ENVIRONMENT!=='ordinary_disposable'||
   Reflect.get(process.env,'NODE_ENV')==='production')fail('Y3_DISPOSABLE_DEVELOPMENT_ONLY',403);
@@ -31,10 +30,10 @@ export async function enqueueTx(c:PoolClient,p:InteractionJob,key:string){
   ON CONFLICT(idempotency_key) DO UPDATE SET idempotency_key=EXCLUDED.idempotency_key RETURNING id`,
  [p.tenantId,JSON.stringify(p),'y3:'+p.tenantId+':'+key])).rows[0]!.id;
 }
-export async function protocolTx(ctx:PeMutationContext,c:PoolClient,id:string,ownerOnly=true,lock=true):Promise<ProtocolRow>{
+export async function protocolTx(ctx:PeMutationContext,c:PoolClient,id:string,ownerOnly=true):Promise<ProtocolRow>{
  const row=(await c.query<ProtocolRow>(`SELECT r.*,e.deadline_at,e.attempts_used,e.search_steps_used,e.retained_bytes::int
   FROM finnor_os.y3_requests r JOIN finnor_os.y3_episodes e ON e.tenant_id=r.tenant_id AND e.id=r.episode_id
-  WHERE r.tenant_id=$1 AND r.id=$2`+(ownerOnly?' AND r.principal_id=$3':'')+(lock?' FOR UPDATE OF r':''),
+  WHERE r.tenant_id=$1 AND r.id=$2`+(ownerOnly?' AND r.principal_id=$3':'')+' FOR UPDATE OF r',
  ownerOnly?[ctx.auth.tenantId,id,principal(ctx)]:[ctx.auth.tenantId,id])).rows[0];
  if(!row||!row.request.problem.participants.some(p=>p.principalId===principal(ctx)))throw unavailable();
  const user=(await c.query<{status:string}>('SELECT status FROM finnor_os.users WHERE tenant_id=$1 AND id=$2 FOR SHARE',

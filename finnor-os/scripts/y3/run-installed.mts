@@ -8,7 +8,7 @@ import {resolve,join} from 'node:path';
 import pg from 'pg';
 import {appendEvidenceVersion} from '@finnor/memory';
 import {receiveWork,isImmutableWorkStatus} from '@finnor/db';
-import {artifact,repo,hash,recordPriorReleaseProbeRefusal} from '../x3/environment.mts';
+import {artifact,hash,recordPriorReleaseProbeRefusal} from '../x3/environment.mts';
 import {startHarness,until} from './harness.mts';
 import {canonicalClaim} from './business-fixtures.mts';
 import {digest} from '../../packages/private-equity/src/interaction-synthesis/contracts';

@@ -3,7 +3,7 @@
 import {strict as assert} from 'node:assert';
 import {randomUUID} from 'node:crypto';
 import {spawn,type ChildProcess} from 'node:child_process';
-import {mkdir,readFile,readdir,stat} from 'node:fs/promises';
+import {mkdir,readFile,readdir} from 'node:fs/promises';
 import {resolve,join} from 'node:path';
 import {configureTenantVertical,receiveWork,closePool} from '@finnor/db';
 import {appendEvidenceVersion,createEvidenceSource} from '@finnor/memory';
@@ -11,7 +11,7 @@ import {startEnvironment,artifact,repo,hash,recordPriorReleaseProbeRefusal} from
 import {publicProblem,bindCanonicalInputs,resourceInput} from './business-fixtures.mts';
 import {independentlyCheck,runtimeIdentity} from '../../packages/private-equity/src/economic-action-theory/process';
 import {digest,PROFILE,type EconomicProblem} from '../../packages/private-equity/src/economic-action-theory/contracts';
-import {transaction} from '../../packages/private-equity/src/economic-action-theory/store';
+import {withS5PortfolioTransaction as transaction} from '../../packages/private-equity/src/allocation-store';
 const evidence=resolve(process.env.FINNOR_Y1_EVIDENCE_DIR??join(repo,'scope-postx/y1-economic-action-theory/evidence/installed-'+Date.now()));
 await mkdir(evidence,{recursive:true});process.env.FINNOR_Y1_PROFILE='ordinary_disposable';
 const built=process.env.FINNOR_Y1_BUILT_API==='1',started=performance.now(),results:any[]=[];
