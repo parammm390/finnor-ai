@@ -65,6 +65,7 @@ export async function lifecycleEpisode(e:Environment,evidence:string,caseName:st
   originalOpening:any,upstream:Awaited<ReturnType<typeof ownerSetup>>|undefined,
   ownerContinuation:Awaited<ReturnType<typeof ownerConsumption>>|undefined,
   s8:Awaited<ReturnType<typeof confidentialS8Episode>>|undefined;
+ let nonrecipientControlSessionId:string|undefined;
  const consumerPolicyKey=generateKeyPairSync('ed25519');
  const firstState=process.env.FINNOR_Y4_PRODUCT_FIRST_PARTICIPANT_STATE;
  if(firstState&&(!isAbsolute(firstState)||!firstState.includes('/PRIVATE-NOT-FOR-HANDOFF/')))
@@ -94,7 +95,7 @@ export async function lifecycleEpisode(e:Environment,evidence:string,caseName:st
  };
  const ownerCall=async(owner:string,operation:string,body:unknown,principal:string=principals[0]!)=>{
   if(!apiHost||!auth)throw Error('Y4_INSTALLED_API_NOT_READY');
-  const at=performance.now(),response=await fetch(apiHost.ready.origin+'/api/'+owner+'/'+operation,{
+  const at=performance.now(),response=await fetch(apiHost.ready.origin+'/api/'+owner+(operation?'/'+operation:''),{
    method:'POST',headers:{'content-type':'application/json',authorization:'Bearer '+auth.tokens.get(principal)},
    body:JSON.stringify(body),signal:AbortSignal.timeout(35000)});
   const result={status:response.status,body:await response.json()};
@@ -230,6 +231,15 @@ export async function lifecycleEpisode(e:Environment,evidence:string,caseName:st
     crossTenantDenied:true,privateComparisonNotExecutable:true,rawOwnerRowHidden:true,
     originalByteHashesAbsent:true,executionAuthorityGranted:false};
   });
+  if(ownerCase)await record('ordinary-live-control-before-private-reservation',
+   'the authenticated nonrecipient opens its own ordinary control session before any private native S5 reservation exists',async()=>{
+    const complete=await scope(principals[1]!,async c=>(await c.query('SELECT finnor_os.y4_allocation_context_complete() complete')).rows[0].complete);
+    assert.equal(complete,true);
+    const opened=await ownerCall('live-controls','',{operation:'open',input:{workId:sources[1].sourceWork.workId,
+     root,focus:{type:'external_organization',id:target}}},principals[1]!);
+    assert.equal(opened.status,200);nonrecipientControlSessionId=opened.body.sessionId;assert(nonrecipientControlSessionId);
+    return {sessionId:nonrecipientControlSessionId,allocationContextComplete:true,actualInstalledHttpStatus:opened.status,financialMutation:false};
+   });
   await record('ordinary-read-only-workforce','the disposable owner configures only registered analytical reader/check routing, never action authority',async()=>{
    const configured=await configureAgentProfile(tenant,createDefaultPluginRegistry(),{
     key:'y4-local-analytical-reader-'+sources[0].sourceWork.workId,
@@ -497,6 +507,17 @@ export async function lifecycleEpisode(e:Environment,evidence:string,caseName:st
      nonrecipient:principals[1]!,semantics,workId:intake.workId,computationId:submitted.computationId,releaseId:release.releaseId,
      opening:originalOpening,call:api,ownerCall,scope});
     return ownerContinuation.summary;
+   });
+  if(ownerCase)await record('private-native-allocation-is-not-zero-capacity',
+   'after real recipient S4/S5/S6 continuation, the same ordinary nonrecipient session refuses an incomplete global allocation cut instead of publishing filtered capacity',async()=>{
+    assert(ownerContinuation&&nonrecipientControlSessionId);
+    const complete=await scope(principals[1]!,async c=>(await c.query('SELECT finnor_os.y4_allocation_context_complete() complete')).rows[0].complete);
+    assert.equal(complete,false);
+    const denied=await ownerCall('live-controls','',{operation:'snapshot',input:{sessionId:nonrecipientControlSessionId}},principals[1]!);
+    assert.equal(denied.status,404);assert.equal(denied.body.code,'PERMITTED_CONTEXT_UNAVAILABLE');
+    assert(!JSON.stringify(denied.body).includes(originalOpening.releaseNonce));
+    return {sessionId:nonrecipientControlSessionId,allocationContextComplete:false,actualInstalledHttpStatus:denied.status,
+     refusalCode:denied.body.code,actualNativePrivateReservation:true,privacyFilteredCapacityNotPublished:true};
    });
   if(caseName==='owner-commit-race'){
    await record('actual-native-s6-revocation-commit-race',

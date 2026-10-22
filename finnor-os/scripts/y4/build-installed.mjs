@@ -21,7 +21,7 @@ const reuse=options.has("--reuse-source")?realpathSync(options.get("--reuse-sour
 if(existsSync(output)||output.startsWith(source+"/")||esbuildVersion!=="0.25.12")throw Error("UNUSED_OUTPUT_AND_LOCKED_EMITTER_REQUIRED");
 mkdirSync(emitted,{recursive:true,mode:0o700});
 const hash=bytes=>createHash("sha256").update(bytes).digest("hex"),files=[];
-const exclude=path=>path.split("/").some(part=>["node_modules",".git",".next","evidence","PRIVATE-NOT-FOR-HANDOFF"].includes(part)||/^\.env(?:\.|$)/.test(part));
+const exclude=path=>path.split("/").some(part=>["node_modules",".git",".next","__pycache__","evidence","PRIVATE-NOT-FOR-HANDOFF"].includes(part)||/^\.env(?:\.|$)/.test(part));
 // Existing owners identify both workspace locks and their closed frontend
 // source cuts, even when their business operation is not invoked by Y4.
 const inheritedSourceFiles=new Set(["package.json","package-lock.json","tsconfig.json","next.config.mjs",

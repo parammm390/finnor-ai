@@ -7,8 +7,7 @@
 import { performance } from "node:perf_hooks";
 import { requireContext, errorResponse } from "../../../lib/auth";
 import { getOrchestrator } from "../../../lib/orchestrator";
-import { validateOperationalQueryRequest, type OperationalQueryRequest } from "@finnor/orchestration";
-import { recordWorkResponse } from "@finnor/db";
+import { OperationalQueryReplayUnavailable, validateOperationalQueryRequest, type OperationalQueryRequest } from "@finnor/orchestration";
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value && typeof value === "object" && !Array.isArray(value));
@@ -76,10 +75,6 @@ export async function POST(req: Request): Promise<Response> {
       ...(run.answer ? { answer: run.answer } : {}),
       ...(run.duplicate ? { duplicate: true } : {}),
     };
-    // handleOperationalQuery's completed Work outcome is the canonical durable
-    // receipt. This additive response projection gives /api/actions and retries
-    // the exact same typed query payload without creating another lifecycle row.
-    if (!run.duplicate) await recordWorkResponse(ctx.tenantId, run.workId, response);
     return Response.json(response, {
       status: run.duplicate ? 200 : 201,
       headers: {
@@ -88,6 +83,13 @@ export async function POST(req: Request): Promise<Response> {
       },
     });
   } catch (err) {
+    if (err instanceof OperationalQueryReplayUnavailable) {
+      const { status } = err.input;
+      const terminal = ["completed", "failed", "cancelled"].includes(status);
+      return Response.json({ error: err.message, ...err.input, duplicate: true, inProgress: !terminal, recoverable: status === "failed", retryRequired: status === "failed" }, {
+        status: status === "failed" ? 409 : terminal ? 500 : 202, headers: { "Cache-Control": "no-store" },
+      });
+    }
     return errorResponse(err);
   }
 }

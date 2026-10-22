@@ -2,7 +2,7 @@ import { StartObjectiveSchema } from "@finnor/policy-schema";
 import { errorResponse, requireContext } from "../../../lib/auth";
 import { getOrchestrator } from "../../../lib/orchestrator";
 import { requireWorkerFleetReady } from "../../../lib/worker-readiness";
-import { receiveWork, recordWorkResponse, transitionWork, workAggregate } from "@finnor/db";
+import { receiveWork, recordWorkResponse, transitionWork } from "@finnor/db";
 import { ensureObjectiveIterationDelivery, linkEmployeeConversationTurnToWork, OperatingInteractionContextError, parseObjectiveSuccessCondition, persistEmployeeAssistantTurn, prepareEmployeeConversationTurn, resolveOperatingInteractionContext } from "@finnor/orchestration";
 import { randomUUID } from "node:crypto";
 
@@ -122,45 +122,18 @@ export async function POST(req: Request): Promise<Response> {
       authorityContext: intakeAuthorityContext(ctx),
     });
     if (received.duplicate) {
-      // Replays must not create another conversation turn or re-enter objective
-      // setup. The response projection is replayable from Work.finalOutcome; a
-      // durable objective loop is the only other safe canonical fallback.
-      let replay = storedResponse(received.finalOutcome);
-      let aggregate: Awaited<ReturnType<typeof workAggregate>> = null;
-      const replayObjective = replay?.objective && typeof replay.objective === "object" && !Array.isArray(replay.objective);
-      if (!replayObjective) {
-        aggregate = await workAggregate(ctx.tenantId, received.workId).catch(() => null);
-        replay = storedResponse(aggregate?.work && typeof aggregate.work === "object" ? (aggregate.work as { finalOutcome?: unknown }).finalOutcome : undefined);
-      }
-      if (replay && replay.objective && typeof replay.objective === "object" && !Array.isArray(replay.objective)) {
-        const objectiveLoopId = (replay.objective as { objectiveLoopId?: unknown }).objectiveLoopId;
-        if (typeof objectiveLoopId === "string") {
-          await ensureObjectiveIterationDelivery(ctx.tenantId, objectiveLoopId, ctx.correlationId);
+      // Only the exact input reply proves which objective this retry started.
+      // The shared Work loop may have been replaced by a subsequent input.
+      const replay = storedResponse(received.finalOutcome);
+      if (replay) {
+        const objective = replay.objective && typeof replay.objective === "object" && !Array.isArray(replay.objective)
+          ? replay.objective as Record<string, unknown> : undefined;
+        if (typeof objective?.objectiveLoopId === "string") {
+          await ensureObjectiveIterationDelivery(ctx.tenantId, objective.objectiveLoopId, ctx.correlationId);
         }
-        replay = {
-          ...replay,
-          objective: { ...(replay.objective as Record<string, unknown>), duplicate: true },
-        };
-        return Response.json(replay, { status: 200 });
+        return Response.json({ ...replay, ...(objective ? { objective: { ...objective, duplicate: true } } : { duplicate: true }) }, { status: 200 });
       }
-      const objectiveLoop = aggregate?.objectiveLoop;
-      if (objectiveLoop) {
-        await ensureObjectiveIterationDelivery(ctx.tenantId, objectiveLoop.id, ctx.correlationId);
-        return Response.json({
-          objective: {
-            workId: received.workId,
-            workInputId: received.workInputId,
-            instructionId: received.instructionId,
-            objectiveLoopId: objectiveLoop.id,
-            state: objectiveLoop.state,
-            duplicate: true,
-          },
-        }, { status: 200 });
-      }
-      const aggregateStatus = aggregate?.work && typeof aggregate.work === "object" && typeof (aggregate.work as { status?: unknown }).status === "string"
-        ? (aggregate.work as { status: string }).status
-        : received.status;
-      return duplicateWithoutObjectiveReplay(received, aggregateStatus);
+      return duplicateWithoutObjectiveReplay(received, received.status);
     }
     try {
       await requireWorkerFleetReady();
@@ -246,7 +219,7 @@ export async function POST(req: Request): Promise<Response> {
         reportAncillaryProjectionFailure(projectionWarnings, "clarification assistant message", error);
       }
       try {
-        await recordWorkResponse(ctx.tenantId, received.workId, clarificationResponse);
+        await recordWorkResponse({ tenantId: ctx.tenantId, workId: received.workId, workInputId: received.workInputId, userId: ctx.employeeId ?? ctx.userId }, clarificationResponse);
       } catch (error) {
         reportAncillaryProjectionFailure(projectionWarnings, "clarification response", error);
       }
@@ -297,7 +270,7 @@ export async function POST(req: Request): Promise<Response> {
       reportAncillaryProjectionFailure(projectionWarnings, "assistant message", error);
     }
     try {
-      await recordWorkResponse(ctx.tenantId, received.workId, objectiveResponse);
+      await recordWorkResponse({ tenantId: ctx.tenantId, workId: received.workId, workInputId: received.workInputId, userId: ctx.employeeId ?? ctx.userId }, objectiveResponse);
     } catch (error) {
       reportAncillaryProjectionFailure(projectionWarnings, "response", error);
     }

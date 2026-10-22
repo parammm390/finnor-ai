@@ -1,7 +1,7 @@
 {
   "schema": "centropy.capability-coverage-audit/v1",
-  "generatedAt": "2026-10-22T19:34:51.194Z",
-  "sourceBaseCommit": "b7b74b48efcb51bd6f1297a71f39cb9b4f117024",
+  "generatedAt": "2026-10-22T19:56:16.709Z",
+  "sourceBaseCommit": "538aa3108ef718b1c8d64de16bd53961ef2ef73a",
   "manifestSha256": "a5d4b7a1c6851a26b43c1cc7927a3be0f8425b8a57d119fff7360cc8a6bea19b",
   "formsSha256": "78e6da8a2346c1a96712b634d0307535e8adbef6959cc5a72cc2302f8b445ec6",
   "method": "Actual API/planner manifest; import graph from active CENTROPY route entries; literal API call bindings; typed human form registrations; explicit restricted/compatibility/protocol classifications. Source presence is not execution evidence.",
@@ -2041,6 +2041,7 @@
         "e2e/private-equity-product-contract.spec.ts",
         "finnor-os/tests/integration/capability-discovery-http.test.ts",
         "finnor-os/tests/integration/computer-execution-fabric.test.ts",
+        "finnor-os/tests/integration/phase6-plan-graph-runtime.test.ts",
         "finnor-os/tests/integration/private-equity-phase3.test.ts",
         "finnor-os/tests/integration/scope3-compute-plane.test.ts",
         "finnor-os/tests/integration/user-prefs-route.test.ts",
@@ -5440,6 +5441,7 @@
       "invalidationTags": [],
       "timeoutClass": "READ",
       "tests": [
+        "finnor-os/tests/integration/capability-discovery-http.test.ts",
         "finnor-os/tests/integration/work-cases.test.ts"
       ],
       "source": "finnor-os/apps/api/app/api/read-models/[view]/route.ts",
@@ -5571,6 +5573,7 @@
         "finnor-os/tests/integration/instruction-trace.test.ts",
         "finnor-os/tests/integration/learning-digest.test.ts",
         "finnor-os/tests/integration/pe-objective-world-scope.test.ts",
+        "finnor-os/tests/integration/phase6-plan-graph-runtime.test.ts",
         "finnor-os/tests/integration/phase7-performance.test.ts",
         "finnor-os/tests/integration/private-equity-p5-ic-runtime.test.ts",
         "finnor-os/tests/integration/private-equity-phase2.test.ts",
@@ -5819,6 +5822,7 @@
         "e2e/centropy-live-host.spec.ts",
         "e2e/centropy-live-workforce-reassign.spec.ts",
         "e2e/centropy-underwriting-multi-input.spec.ts",
+        "finnor-os/tests/integration/capability-discovery-http.test.ts",
         "finnor-os/tests/integration/clarification-request.test.ts",
         "finnor-os/tests/integration/computer-execution-fabric.test.ts",
         "finnor-os/tests/integration/heartbeat.test.ts",
@@ -7491,6 +7495,7 @@
         "finnor-os/tests/integration/pg-notify-triggers.test.ts",
         "finnor-os/tests/integration/phase6-conversation-context-kernel.test.ts",
         "finnor-os/tests/integration/phase6-plan-concurrency.test.ts",
+        "finnor-os/tests/integration/phase6-plan-graph-runtime.test.ts",
         "finnor-os/tests/integration/phase7-performance.test.ts",
         "finnor-os/tests/integration/phase7-workforce-concurrency.test.ts",
         "finnor-os/tests/integration/private-equity-p1-world-truth.test.ts",
@@ -33771,6 +33776,7 @@
         "finnor-os/tests/integration/capability-discovery-http.test.ts",
         "finnor-os/tests/integration/microsoft365-pe-mapping.test.ts",
         "finnor-os/tests/integration/pe-objective-world-scope.test.ts",
+        "finnor-os/tests/integration/phase6-plan-graph-runtime.test.ts",
         "finnor-os/tests/integration/phase7-performance.test.ts",
         "finnor-os/tests/integration/phase7-workforce-concurrency.test.ts",
         "finnor-os/tests/integration/private-equity-phase3.test.ts",
@@ -38381,6 +38387,7 @@
       "timeoutClass": "RUNTIME",
       "tests": [
         "finnor-os/tests/integration/answer-citations.test.ts",
+        "finnor-os/tests/integration/capability-discovery-http.test.ts",
         "finnor-os/tests/integration/private-equity-phase3.test.ts"
       ],
       "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
@@ -39047,6 +39054,7 @@
       "invalidationTags": [],
       "timeoutClass": "RUNTIME",
       "tests": [
+        "finnor-os/tests/integration/capability-discovery-http.test.ts",
         "finnor-os/tests/integration/phase6-performance.test.ts",
         "finnor-os/tests/integration/phase6-plan-concurrency.test.ts",
         "finnor-os/tests/integration/phase6-plan-graph-runtime.test.ts",
