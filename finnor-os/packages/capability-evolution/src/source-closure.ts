@@ -59,3 +59,22 @@ export async function assertIdentifiedSystemSourceClosure(pins:Array<{path:strin
  const expected=await scientificLoaded;
  if(pins.length>256||expected.length>256||expected.some(e=>!pins.some(p=>p.path===e.path&&p.sha256===e.sha256)))fault('S8_IDENTIFIED_SYSTEM_SOURCE_CLOSURE_MISSING_OR_CHANGED',503);
 }
+export async function confidentialSourcePaths(){
+ const native=['contracts.ts','artifact.ts','process.ts','store.ts','service.ts','worker.ts','consumer.ts','owner-consumer.ts',
+  'admission.ts','api.ts','plan.ts','operational-query.ts','compiler.py','correspondence.py','secure_runtime.py',
+  'participant.py','backend.py','public_driver.py','profile.json','backend-identity.json'];
+ return [...new Set([...requiredCapabilitySourcePaths,
+  ...native.map(p=>fileURLToPath(new URL('../../private-equity/src/confidential-computation/'+p,import.meta.url))),
+  fileURLToPath(new URL('./confidential-port.ts',import.meta.url)),
+  fileURLToPath(new URL('./confidential-consumer.ts',import.meta.url)),
+  fileURLToPath(new URL('../../db/migrations/postx_y4_confidential_economic_computation.sql',import.meta.url)),
+  fileURLToPath(new URL('../../db/migrations/postx_y4_confidential_owner_consumption.sql',import.meta.url))])];
+}
+let confidentialLoaded:Promise<Array<{path:string;sha256:string}>>|undefined;
+export async function assertConfidentialSourceClosure(pins:Array<{path:string;sha256:string}>){
+ await assertCapabilitySourceClosure(pins);
+ confidentialLoaded??=confidentialSourcePaths().then(paths=>Promise.all(paths.map(async path=>({path,sha256:byteDigest(await readFile(path))}))));
+ const expected=await confidentialLoaded;
+ if(pins.length>256||expected.length>256||expected.some(e=>!pins.some(p=>p.path===e.path&&p.sha256===e.sha256)))
+  fault('S8_CONFIDENTIAL_SOURCE_CLOSURE_MISSING_OR_CHANGED',503);
+}

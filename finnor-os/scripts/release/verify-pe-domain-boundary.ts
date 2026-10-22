@@ -3,6 +3,7 @@ import { dirname, extname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   CANONICAL_ENTITY_TYPES,
+  CONFIDENTIAL_OPERATIONAL_QUERY_INTENTS,
   CORE_OPERATIONAL_QUERY_INTENTS,
   EXECUTABLE_VERTICALS,
   OPERATIONAL_QUERY_INTENTS,
@@ -192,6 +193,7 @@ function equalSets(left: readonly string[], right: readonly string[]): boolean {
 }
 
 const PUBLIC_QUERY_INTENTS = [...CORE_OPERATIONAL_QUERY_INTENTS, ...PRIVATE_EQUITY_OPERATIONAL_QUERY_INTENTS];
+const NATIVE_QUERY_INTENTS = [...PROGRAM_OPERATIONAL_QUERY_INTENTS, ...CONFIDENTIAL_OPERATIONAL_QUERY_INTENTS];
 
 export function verifyQuerySurfaceCoverage(openApi: unknown): string[] {
   const errors: string[] = [];
@@ -214,20 +216,23 @@ export function verifyQuerySurfaceCoverage(openApi: unknown): string[] {
   if (!equalSets(PROGRAM_OPERATIONAL_QUERY_INTENTS, ["harness_program_v1"])) {
     errors.push("native-only query catalogue must retain the exact P1 reader");
   }
-  if (!equalSets(OPERATIONAL_QUERY_INTENTS, [...PUBLIC_QUERY_INTENTS, ...PROGRAM_OPERATIONAL_QUERY_INTENTS])) {
+  if (!equalSets(CONFIDENTIAL_OPERATIONAL_QUERY_INTENTS, ["confidential_economic_computation_v1"])) {
+    errors.push("native-only query catalogue must retain the exact Y4 reader");
+  }
+  if (!equalSets(OPERATIONAL_QUERY_INTENTS, [...PUBLIC_QUERY_INTENTS, ...NATIVE_QUERY_INTENTS])) {
     errors.push("active query catalogue has an unclassified public/native intent");
   }
   for (const intent of PUBLIC_QUERY_INTENTS) {
     if (!exposed.has(intent)) errors.push(`OpenAPI is missing public query intent ${intent}`);
   }
-  for (const intent of PROGRAM_OPERATIONAL_QUERY_INTENTS) {
-    // P1 requires the original authenticated Work/Input. The flat public query
-    // route creates a new input and must not advertise this internal read.
+  for (const intent of NATIVE_QUERY_INTENTS) {
+    // P1 and Y4 require the original authenticated Work/Input. The flat public
+    // query route creates a new input and must not advertise these reads.
     if (exposed.has(intent)) errors.push(`OpenAPI exposes native-only query intent ${intent}`);
   }
   for (const intent of exposed) {
     if (!(PUBLIC_QUERY_INTENTS as readonly string[]).includes(intent)
-        && !(PROGRAM_OPERATIONAL_QUERY_INTENTS as readonly string[]).includes(intent)) {
+        && !(NATIVE_QUERY_INTENTS as readonly string[]).includes(intent)) {
       errors.push(`OpenAPI exposes unregistered public query intent ${intent}`);
     }
   }
@@ -343,7 +348,7 @@ export async function verifyPeDomainBoundary(): Promise<{ scannedFiles: number; 
 
   const expectedVerticals = ["none", "private_equity"];
   if (!equalSets(EXECUTABLE_VERTICALS, expectedVerticals)) errors.push(`executable verticals are ${EXECUTABLE_VERTICALS.join(", ")}`);
-  if (OPERATIONAL_QUERY_INTENTS.length !== 17) errors.push(`active query registry has ${OPERATIONAL_QUERY_INTENTS.length} intents; expected 17 including P7 workforce_status and P1 harness_program_v1`);
+  if (OPERATIONAL_QUERY_INTENTS.length !== 18) errors.push(`active query registry has ${OPERATIONAL_QUERY_INTENTS.length} intents; expected 18 including P7 workforce_status, P1 harness_program_v1 and Y4 confidential_economic_computation_v1`);
   const retiredQueries = OPERATIONAL_QUERY_INTENTS.filter((intent) => (RETIRED_WATER_QUERY_INTENTS as readonly string[]).includes(intent));
   if (retiredQueries.length) errors.push(`retired queries registered: ${retiredQueries.join(", ")}`);
   const expectedParties = ["employee", "team", "location", "external_organization", "external_contact"];
@@ -388,7 +393,7 @@ export async function verifyPeDomainBoundary(): Promise<{ scannedFiles: number; 
 
   if (errors.length) throw new Error(`PE-DOMAIN-BOUNDARY FAIL\n${errors.map((error) => `- ${error}`).join("\n")}`);
   return { scannedFiles: files.length, negativeControl: true, actions: discovered.length,
-    publicQueries: PUBLIC_QUERY_INTENTS.length, nativeQueries: PROGRAM_OPERATIONAL_QUERY_INTENTS.length };
+    publicQueries: PUBLIC_QUERY_INTENTS.length, nativeQueries: NATIVE_QUERY_INTENTS.length };
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

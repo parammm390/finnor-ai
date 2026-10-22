@@ -615,7 +615,32 @@ export class JobQueue {
             job!.claimToken, job!.deliveryAttemptId, job!.id, job!.claimFence]);
           return proof.rowCount === 1;
         }).catch(() => false);
-      if (capacityDeferred && (safelyReplayable || p2Unsubmitted || x2Undispatched)) {
+      const y4Undispatched = capacityDeferred && job.type === "run_confidential_economic_computation_v1"
+        && job.retrySafety === "reconcilable" && job.protocolVersion === 1
+        && !!job.tenantId && typeof job.payload.principalId === "string"
+        && await withTenantTransaction(job.tenantId!, { userId: job.payload.principalId as string, readOnly: true }, async (_db, c) => {
+          const proof = await c.query(`SELECT q.id FROM finnor_os.y4_computations q
+            JOIN finnor_os.job_delivery_attempts a ON a.tenant_id=q.tenant_id AND a.id=$5 AND a.job_id=$6
+            WHERE q.tenant_id=$1 AND q.principal_id=$2 AND q.id=$3 AND q.generation=$4
+              AND q.deadline_at>clock_timestamp() AND a.claim_token=$7 AND a.claim_fence=$8
+              AND a.outcome='running' AND a.finished_at IS NULL
+              AND (($9='COMPILE' AND q.status='QUEUED') OR ($9='EXECUTE' AND q.status='READY')
+                OR ($9='RECONCILE' AND q.status IN('RUNNING','RECONCILIATION_REQUIRED')))
+              AND EXISTS(SELECT 1 FROM finnor_os.y4_events e WHERE e.tenant_id=q.tenant_id AND e.computation_id=q.id
+                AND e.kind='PHYSICAL_CAPACITY_DEFERRED' AND e.body->>'deliveryAttemptId'=a.id::text
+                AND e.body->>'jobId'=a.job_id::text AND e.body->>'claimFence'=a.claim_fence::text
+                AND e.body->>'stage'=$9 AND e.body->>'generation'=q.generation::text
+                AND e.body->>'computationStatus'=q.status
+                AND e.body->>'cpuReservedSeconds'=q.cpu_reserved_seconds::text
+                AND e.body->>'handlerDispatched'='false' AND e.body->>'inputDelivered'='false')
+              AND NOT EXISTS(SELECT 1 FROM finnor_os.y4_events e WHERE e.tenant_id=q.tenant_id AND e.computation_id=q.id
+                AND e.body->>'deliveryAttemptId'=a.id::text
+                AND e.kind IN('COMPILER_STARTED','NATIVE_STARTED','RECONCILIATION_STARTED'))`,
+          [job!.tenantId,job!.payload.principalId,job!.payload.computationId,job!.payload.generation,
+            job!.deliveryAttemptId,job!.id,job!.claimToken,job!.claimFence,job!.payload.stage]);
+          return proof.rowCount === 1;
+        }).catch(() => false);
+      if (capacityDeferred && (safelyReplayable || p2Unsubmitted || x2Undispatched || y4Undispatched)) {
         // No provider request was made: capacity contention is not a business
         // failure or an exhausted retry.  Keep an audit row for the physical
         // delivery but restore the logical attempt and defer durably.

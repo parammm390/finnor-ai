@@ -53,6 +53,7 @@ import {promoteAttestedOpportunity} from '@finnor/private-equity/src/opportunity
 import {APPLICATION_OPERATIONS,APPLICATION_OPERATION_SCHEMAS,readApplicationBody,handleApplicationOperation,applicationResponseError} from '@finnor/private-equity/src/enterprise-applications/api';
 import {LEARNING_OPERATIONS,handleLearningOperation} from '@finnor/private-equity/src/policy-learning/api';
 import {IDENTIFICATION_OPERATIONS,handleIdentificationOperation,identificationResponseError} from '@finnor/private-equity/src/system-identification/api';
+import {CONFIDENTIAL_OPERATIONS,handleConfidentialOperation} from '@finnor/private-equity/src/confidential-computation/api';
 
 export const runtime = "nodejs";
 
@@ -204,6 +205,13 @@ function checkedRef(value: unknown): CompanyBrainObjectRef {
 
 export async function POST(req: Request, { params }: { params: Promise<{ operation: string }> }): Promise<Response> {
   try {const route=await params;
+    if(CONFIDENTIAL_OPERATIONS.some(operation=>operation===route.operation)){
+      try{
+        const auth=await requireContext(req),body=await readApplicationBody(req);
+        const result=await handleConfidentialOperation({auth},route.operation,body);
+        return response(result.body,result.status);
+      }catch(error){const mapped=applicationResponseError(error);return mapped?response(mapped.body,mapped.status):requestError(error);}
+    }
     if(route.operation==='application-cancel'){
       try{
         const auth=await requireContext(req),body=await json(req);

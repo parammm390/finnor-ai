@@ -1,8 +1,9 @@
 import {z} from 'zod';
 import {FinancialSemanticsSchema,EvidenceRootSchema} from '@finnor/shared-types';
 import {ComputeSearchRequestSchema} from '../compute-search/contracts';
+import {BoundedReferenceSchema as RefSchema} from '../bounded-reference';
+export {RefSchema};
 export const M2_VERSION='m2-bounded-deliberation-v1';
-export const RefSchema=z.object({owner:z.string().min(1).max(128),id:z.string().min(1).max(512),version:z.string().min(1).max(128),contentDigest:z.string().regex(/^[a-f0-9]{64}$/)}).strict();
 export const SourceInspectionSchema=z.object({sourceId:z.string().uuid(),versionId:z.string().uuid(),contentDigest:z.string().regex(/^[a-f0-9]{64}$/)}).strict();
 export const DeliberationRequestSchema=ComputeSearchRequestSchema.omit({schema:true,deliberation:true}).extend({schema:z.literal('finnor.deliberation-request.v1'),valueEvidenceRef:RefSchema.nullable().default(null),sourceInspectionRef:SourceInspectionSchema.nullable().default(null)}).strict();
 export const CalibrationRequestSchema=z.object({root:EvidenceRootSchema,workId:z.string().uuid(),policyRequest:RefSchema,sourceId:z.string().uuid(),versionId:z.string().uuid(),datasetDigest:z.string().regex(/^[a-f0-9]{64}$/)}).strict();

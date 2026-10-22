@@ -53,7 +53,7 @@ export type SeriesValue = Readonly<Record<string, ScalarValue>>;
 export type ModelValue = ScalarValue | SeriesValue;
 
 export interface InputProvenanceRef {
-  kind: "p1_assumption" | "evidence_version" | "model_parameter" | "human_input" | "artifact_anchor" | "evidence_derivation" | "primary_finding";
+  kind: "p1_assumption" | "evidence_version" | "model_parameter" | "human_input" | "artifact_anchor" | "evidence_derivation" | "primary_finding" | "confidential_computation";
   id: string;
   versionId?: string;
   anchorId?: string;
@@ -74,6 +74,8 @@ export interface ResolvedInput {
   status: InputTruthStatus;
   provenance: readonly InputProvenanceRef[];
   reason?: string;
+  /** Recipient-private hiding material. Never include in shared telemetry. */
+  confidentialCommitmentSalt?: string;
 }
 
 export interface UnderwritingInputSnapshot {
@@ -82,6 +84,7 @@ export interface UnderwritingInputSnapshot {
   worldAt: string;
   values: Readonly<Record<string, ResolvedInput>>;
   semanticHash?: string;
+  confidentialCommitmentSalt?: string;
 }
 
 export interface InputSourceBinding {
@@ -316,6 +319,7 @@ export interface UnderwritingRunResult {
   inputSemanticHash: string;
   scenarioSemanticHash?: string;
   resultSemanticHash: string;
+  confidentialCommitmentSalt?: string;
   values: Readonly<Record<string, NodeExecutionResult>>;
   outputs: Readonly<Record<string, NodeExecutionResult>>;
   checks: readonly CheckResult[];

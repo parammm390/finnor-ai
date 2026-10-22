@@ -6,12 +6,12 @@ import type { InterventionControlSnapshot } from '../../../epistemic-runtime/src
 import type { AllocationSnapshot } from '../allocation-store';
 import { epistemicHash } from '../../../epistemic-runtime/src/source-precedence';
 import { EvidenceUnderwritingBindingSchema } from '../evidence-execution/consumer';
+import {BoundedReferenceSchema as RefSchema} from '../bounded-reference';
+export {RefSchema};
 
 export const M1_VERSION = 'm1-exact-dependency-v1';
 const uuid = z.string().uuid();
 const digest = z.string().regex(/^[a-f0-9]{64}$/);
-export const RefSchema = z.object({owner:z.string().min(1).max(128),id:z.string().min(1).max(512),
-  version:z.string().min(1).max(128),contentDigest:digest}).strict();
 const instant = z.string().datetime({offset:true});
 export const ResourceSchema = z.object({
   deadlineMs:z.number().int().min(1).max(30000),

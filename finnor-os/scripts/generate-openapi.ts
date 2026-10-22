@@ -68,6 +68,7 @@ import { INTERFACE_OPERATIONS } from "../packages/private-equity/src/interface-s
 import { APPLICATION_OPERATIONS, APPLICATION_OPERATION_SCHEMAS } from "../packages/private-equity/src/enterprise-applications/api";
 import {LEARNING_OPERATION_SCHEMAS,LEARNING_OPERATIONS} from "../packages/private-equity/src/policy-learning/api";
 import {IDENTIFICATION_OPERATION_SCHEMAS,IDENTIFICATION_OPERATIONS} from "../packages/private-equity/src/system-identification/api";
+import {CONFIDENTIAL_OPERATION_SCHEMAS,CONFIDENTIAL_OPERATIONS} from "../packages/private-equity/src/confidential-computation/api";
 import { ApplicationExpressionSchema } from "../packages/private-equity/src/enterprise-applications/contracts";
 import { M1_OPERATIONS, M1OperationSchemas } from "../packages/private-equity/src/decision-slice/handler";
 import { CapitalProgramV2Operations } from "@finnor/shared-types";
@@ -310,6 +311,7 @@ const applicationComponents={schemas:Object.fromEntries([
  ...Object.entries(APPLICATION_OPERATION_SCHEMAS).map(([name,schema])=>[name,applicationSchema(schema)]),
  ...Object.entries(LEARNING_OPERATION_SCHEMAS).map(([name,schema])=>[name,applicationSchema(schema)]),
  ...Object.entries(IDENTIFICATION_OPERATION_SCHEMAS).map(([name,schema])=>[name,applicationSchema(schema)]),
+ ...Object.entries(CONFIDENTIAL_OPERATION_SCHEMAS).map(([name,schema])=>[name,applicationSchema(schema)]),
  ["X3Expression",applicationSchema((ApplicationExpressionSchema._def as z.ZodLazyDef).getter())],
 ])};
 const secured = [{ bearerAuth: [] }];
@@ -719,6 +721,17 @@ paths["/api/company-brain/{operation}"].post.parameters[0]!.schema.enum.push(...
 (paths["/api/company-brain/{operation}"].post.parameters[0]!.schema.enum as string[]).push(...APPLICATION_SEMANTICS_OPERATIONS.filter(operation=>operation!=="application-cancel"),...INSTITUTION_OPERATIONS);
 (paths["/api/company-brain/{operation}"].post.parameters[0]!.schema.enum as string[]).push(...LEARNING_OPERATIONS);
 (paths["/api/company-brain/{operation}"].post.parameters[0]!.schema.enum as string[]).push(...IDENTIFICATION_OPERATIONS);
+(paths["/api/company-brain/{operation}"].post.parameters[0]!.schema.enum as string[]).push(...CONFIDENTIAL_OPERATIONS);
+for(const operation of CONFIDENTIAL_OPERATIONS){
+ Object.assign(paths,{["/api/company-brain/"+operation]:{post:{security:secured,
+  requestBody:{content:{"application/json":{schema:{$ref:"#/components/schemas/"+operation}}}},
+  responses:{"200":{description:"Current scoped local-engineering evidence or recipient-authorized release. Not primary truth, protected admission, production or effects."},
+   "202":{description:"Original durable Work queued. Not accepted computation or completion."},
+   "400":{description:"Strict typed contract refused."},"401":{description:"Current signed bearer required."},
+   "403":{description:"Current authority unavailable or production unadmitted."},"404":{description:"Unavailable in current identity and scope."},
+   "409":{description:"Original rights, source cut, deadline, disclosure, physical fence or reconciliation premise unpassed."},
+   "413":{description:"Original bounded request, response or retention exceeded."}}}}});
+}
 for(const operation of IDENTIFICATION_OPERATIONS){
  Object.assign(paths,{["/api/company-brain/"+operation]:{post:{security:secured,requestBody:{content:{"application/json":{schema:{$ref:"#/components/schemas/"+operation}}}},responses:{
   "200":{description:"Current scoped development rights, raw experiments, scientific model, decision use or retained history. Not protected admission or production."},

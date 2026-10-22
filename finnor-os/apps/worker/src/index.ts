@@ -1,6 +1,7 @@
 import {runDecisionAtlasJob} from '../../../packages/private-equity/src/r7/worker';
 import {buildEnterpriseApplicationJob} from '../../../packages/private-equity/src/enterprise-applications/worker';
 import {compileLearnedPolicyJob} from '../../../packages/private-equity/src/policy-learning/worker';
+import {runConfidentialEconomicJob} from '../../../packages/private-equity/src/confidential-computation/worker';
 import {identifyDigitalSystemJob} from '../../../packages/private-equity/src/system-identification/worker';
 import {handleBranch} from '@finnor/private-equity/src/branch-fabric/worker';
 import {runComputeSearchUnitJob} from '@finnor/private-equity/src/compute-search/worker';
@@ -65,6 +66,7 @@ import { installWorkerDrainSignals } from "./drain-signals";
 
 export function createWorker(): JobQueue {
   const queue = new JobQueue();
+  queue.register('run_confidential_economic_computation_v1',runConfidentialEconomicJob,PRODUCTION_JOB_CONTRACTS.run_confidential_economic_computation_v1);
   queue.register('identify_digital_system_v1',identifyDigitalSystemJob,PRODUCTION_JOB_CONTRACTS.identify_digital_system_v1);
   queue.register('compile_learned_policy_v1',compileLearnedPolicyJob,PRODUCTION_JOB_CONTRACTS.compile_learned_policy_v1);
   queue.register('build_enterprise_application_v1',buildEnterpriseApplicationJob,PRODUCTION_JOB_CONTRACTS.build_enterprise_application_v1);

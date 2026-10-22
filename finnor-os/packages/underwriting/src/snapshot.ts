@@ -51,7 +51,21 @@ export function sealInputSnapshot(snapshot: Omit<UnderwritingInputSnapshot, "sem
       provenance: [...input.provenance],
     };
   }
-  const body = { schemaVersion: snapshot.schemaVersion, investmentCaseId: snapshot.investmentCaseId, worldAt: snapshot.worldAt, values } as const;
+  const confidentialSalts = Object.values(values)
+    .filter(input => input.provenance.some(ref => ref.kind === "confidential_computation"))
+    .map(input => {
+      if (!/^[a-f0-9]{64}$/.test(input.confidentialCommitmentSalt ?? "")) {
+        fail("MODEL_SCHEMA_INVALID", "Confidential inputs require recipient-private hiding material");
+      }
+      return input.confidentialCommitmentSalt!;
+    }).sort();
+  const confidentialCommitmentSalt = confidentialSalts.length
+    ? semanticHash({ schema: "finnor.y4.consumer-salt.v1", salts: confidentialSalts }) : undefined;
+  if (snapshot.confidentialCommitmentSalt && snapshot.confidentialCommitmentSalt !== confidentialCommitmentSalt) {
+    fail("INPUT_SEMANTIC_HASH_MISMATCH", "Confidential snapshot hiding context changed");
+  }
+  const body = { schemaVersion: snapshot.schemaVersion, investmentCaseId: snapshot.investmentCaseId, worldAt: snapshot.worldAt, values,
+    ...(confidentialCommitmentSalt ? { confidentialCommitmentSalt } : {}) } as const;
   const hash = inputSnapshotHash(body);
   if (suppliedSemanticHash && suppliedSemanticHash !== hash) fail("INPUT_SEMANTIC_HASH_MISMATCH", "InputSnapshot semantic hash does not match its contents", { expected: suppliedSemanticHash, actual: hash });
   return deepFreeze({ ...body, semanticHash: hash });

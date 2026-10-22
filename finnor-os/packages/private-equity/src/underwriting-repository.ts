@@ -38,6 +38,8 @@ import { assertPeText, assertPeUuid, peProvenance, peTransaction, type PeClient 
 import { recordUnderwritingMetric } from "./underwriting-telemetry";
 import {resolveEvidenceUnderwritingInputs,assertEvidenceSnapshotCurrent,type EvidenceUnderwritingBinding} from './evidence-execution/consumer';
 import {resolvePrimaryUnderwritingInputs,bindPrimaryConsumerDependencies} from './primary-diligence/consumer';
+import {resolveConfidentialUnderwritingInputs,hasConfidentialSnapshot,sealConfidentialRunResult,refuseUnadmittedConfidentialSink} from './confidential-computation/consumer';
+import type {ConfidentialOutputBinding} from './confidential-computation/contracts';
 import type {PrimaryFindingBinding} from '@finnor/shared-types';
 import {
   boundUnderwritingCells,
@@ -99,6 +101,7 @@ export interface CreateUnderwritingRunInput {
   explicitInputs?: Readonly<Record<string, ExplicitUnderwritingInput>>;
   evidenceDerivationInputs?: Readonly<Record<string,EvidenceUnderwritingBinding>>;
   primaryFindingInputs?: Readonly<Record<string,PrimaryFindingBinding>>;
+  confidentialInputs?: Readonly<Record<string,ConfidentialOutputBinding>>;
 }
 
 function asIso(value: Date | string): string {
@@ -548,6 +551,7 @@ export async function createUnderwritingSensitivity(ctx: PeMutationContext, inpu
     }>("SELECT id::text,investment_case_id::text,model_version_id::text,input_hash,input_snapshot,result_hash,result FROM finnor_os.underwriting_runs WHERE tenant_id=$1 AND id=$2", [ctx.auth.tenantId, input.baseRunId])).rows[0];
     if (!run) throw new PeDomainError("PE_ENTITY_NOT_FOUND", "Base Underwriting Run was not found in the authenticated tenant");
     await assertStoredRunIntegrity(ctx.auth.tenantId, run,ctx,client);
+    refuseUnadmittedConfidentialSink(run.input_snapshot);
     const { row, compiled } = await loadModelVersion(client, ctx.auth.tenantId, run.model_version_id);
     return { run, row, compiled };
   }, { readOnly: true });
@@ -592,7 +596,7 @@ export async function createUnderwritingSensitivity(ctx: PeMutationContext, inpu
         result,
         idempotencyKey: `${input.idempotencyKey}:cell:${rowIndex}:${columnIndex}`,
       });
-      cells.push({ rowIndex, columnIndex, overrides, runId: persisted.id, result });
+      cells.push({ rowIndex, columnIndex, overrides, runId: persisted.id, result: persisted.result });
     }
   }
   const failed = cells.filter((cell) => cell.result.status === "FAILED").length;
@@ -633,6 +637,7 @@ export async function createUnderwritingSensitivity(ctx: PeMutationContext, inpu
     return { id: sensitivityId, replayed: false, status, cells: cells.map((cell) => ({ rowIndex: cell.rowIndex, columnIndex: cell.columnIndex, runId: cell.runId, overrides: cell.overrides, resultHash: cell.result.resultSemanticHash })) };
   });
   const metricContext = { tenantId: ctx.auth.tenantId, investmentCaseId: base.run.investment_case_id, modelVersionId: base.run.model_version_id };
+  if(hasConfidentialSnapshot(base.run.input_snapshot))return stored;
   recordUnderwritingMetric(metricContext, "underwriting_sensitivity_runs", 1, "count");
   recordUnderwritingMetric(metricContext, "underwriting_sensitivity_cells", cells.length, "count");
   if (failed) recordUnderwritingMetric(metricContext, "underwriting_sensitivity_failures", failed, "count");
@@ -649,10 +654,15 @@ export async function prepareUnderwritingRun(ctx: PeMutationContext, input: Omit
   const worldAt = normalizedWorldAt(input.worldAt);
   if(input.baseRunId&&input.evidenceDerivationInputs)fail("MODEL_SCHEMA_INVALID","Pinned base Run cannot combine newly resolved derivations");
   if(input.baseRunId&&input.primaryFindingInputs)fail("MODEL_SCHEMA_INVALID","Pinned base Run cannot combine newly resolved primary findings");
+  if(input.baseRunId&&input.confidentialInputs)fail("MODEL_SCHEMA_INVALID","Pinned base Run cannot combine newly resolved confidential inputs");
   const derivedInputs=await resolveEvidenceUnderwritingInputs(ctx,input.investmentCaseId,input.modelVersionId,input.evidenceDerivationInputs??{});
   const primaryInputs=await resolvePrimaryUnderwritingInputs(ctx,input.investmentCaseId,input.modelVersionId,input.primaryFindingInputs??{});
   if(Object.keys(primaryInputs).some(id=>derivedInputs[id]))fail("MODEL_SCHEMA_INVALID","One model input cannot bind a derived value and a primary finding");
   Object.assign(derivedInputs,primaryInputs);
+  const confidentialInputs=await resolveConfidentialUnderwritingInputs(ctx,input.investmentCaseId,input.modelVersionId,input.confidentialInputs??{});
+  if(Object.keys(confidentialInputs).some(id=>derivedInputs[id]||input.explicitInputs?.[id]))
+    fail("MODEL_SCHEMA_INVALID","A confidential input cannot shadow another input source");
+  Object.assign(derivedInputs,confidentialInputs);
   return peTransaction(ctx, async (_db, client) => {
     const { row, compiled } = await loadModelVersion(client, ctx.auth.tenantId, input.modelVersionId);
     if (row.investment_case_id !== input.investmentCaseId) fail("MODEL_VERSION_NOT_FOUND", "ModelVersion is not attached to the requested InvestmentCase");
@@ -679,13 +689,14 @@ export async function prepareUnderwritingRun(ctx: PeMutationContext, input: Omit
   }, { readOnly: true });
 }
 
-export async function persistPreparedUnderwritingRun(ctx: PeMutationContext, input: {
+export async function persistPreparedUnderwritingRun(ctx: PeMutationContext, original: {
   prepared: PreparedRun;
   result: UnderwritingRunResult;
   idempotencyKey: string;
   scenarioId?: string;
   workId?: string;
 }): Promise<{ id: string; replayed: boolean; result: UnderwritingRunResult; inputSnapshot: UnderwritingInputSnapshot }> {
+  const input={...original,result:sealConfidentialRunResult(original.prepared.effectiveSnapshot,original.result)};
   assertPeText(input.idempotencyKey, "underwriting idempotencyKey");
   if (input.idempotencyKey.length > 240) fail("MODEL_SCHEMA_INVALID", "Underwriting idempotency key exceeds 240 characters");
   if (input.workId) assertPeUuid(input.workId, "workId");
@@ -729,10 +740,12 @@ export async function persistPreparedUnderwritingRun(ctx: PeMutationContext, inp
       tenantId: ctx.auth.tenantId,
       entityType: "underwriting_run",
       entityId: id,
-      eventType: input.result.status === "FAILED" || input.result.validity !== "VALID" ? "underwriting_run_invalid" : "underwriting_run_completed",
+      eventType: hasConfidentialSnapshot(input.prepared.effectiveSnapshot) ? "underwriting_confidential_run_recorded"
+        : input.result.status === "FAILED" || input.result.validity !== "VALID" ? "underwriting_run_invalid" : "underwriting_run_completed",
       payload: {
         investmentCaseId: input.prepared.row.investment_case_id, modelVersionId: input.prepared.row.id, runId: id,
-        scenarioId: input.scenarioId ?? null, resultHash: input.result.resultSemanticHash, validity: input.result.validity,
+        scenarioId: input.scenarioId ?? null, resultHash: input.result.resultSemanticHash,
+        ...(!hasConfidentialSnapshot(input.prepared.effectiveSnapshot)?{validity:input.result.validity}:{}),
       },
       source: "@finnor/private-equity",
     });
@@ -749,6 +762,7 @@ export async function createUnderwritingRun(ctx: PeMutationContext, input: Creat
     fail("RESULT_SEMANTIC_HASH_MISMATCH", "Execution result references a different InputSnapshot hash");
   }
   const persisted = await persistPreparedUnderwritingRun(ctx, { prepared, result, idempotencyKey: input.idempotencyKey, scenarioId: input.scenarioId, workId: input.workId });
+  if(hasConfidentialSnapshot(prepared.effectiveSnapshot))return persisted;
   const metricContext = { tenantId: ctx.auth.tenantId, investmentCaseId: input.investmentCaseId, modelVersionId: input.modelVersionId, runId: persisted.id };
   recordUnderwritingMetric(metricContext, "underwriting_runs_total", 1, "count");
   recordUnderwritingMetric(metricContext, "underwriting_run_latency", Date.now() - started, "milliseconds");

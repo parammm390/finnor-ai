@@ -20,6 +20,7 @@ import { ApplicationCapabilityPort } from './application-port';
 import { ApplicationCapabilityPort as ApplicationSemanticsCapabilityPort, ApplicationPortConfigurationSchema } from './application-semantics-port';
 import { LearnedPolicyCapabilityPort } from './learned-policy-port';
 import type {IdentifiedSystemCapabilityPort} from './identified-system-port';
+import type {ConfidentialCapabilityPort} from './confidential-port';
 import { digest, byteDigest, fault, parseRevision, makeRef, sameRef, RefSchema, ProtocolSchema, EvaluationSummarySchema, AllocationMethodAdmissionSchema, assertSignature, S8_VERSION, type Signed, type AuthorityKey, type CapabilityRevision, type EvaluationProtocol, type EvaluationSummary, type CapabilityRef, type AllocationMethodAdmission } from './contracts';
 const Text = z.string().min(1).max(4096), Instant = z.string().datetime({ offset: true });
 const KeySchema = z.object({ id: Text, principalId: Text, publicKey: Text, validAfter: Instant, validUntil: Instant, revoked: z.boolean() }).strict();
@@ -75,6 +76,8 @@ export class CapabilityEvolution {
     private learnedPolicies: LearnedPolicyCapabilityPort;
     private identifiedSystems: IdentifiedSystemCapabilityPort|null=null;
     private identifiedReplay: JournalEntry[]=[];
+    private confidential:ConfidentialCapabilityPort|null=null;
+    private confidentialReplay:JournalEntry[]=[];
     private institutions: InstitutionCapabilityPort;
     private states = new Map<string, RevisionState>();
     private active: string | null = null;
@@ -151,6 +154,7 @@ export class CapabilityEvolution {
         try {
             await service.ensureRuntimeContinuityAnchor();
             await service.recoverCheckpoints();
+            await service.recoverConfidentialCommits();
             await service.importResponsibilities();
             if (recovered)
                 await service.persist({ requestId: 'journal-recovery:' + digest(recovered), requestDigest: digest(recovered), actorId: 'SIGNED_POLICY_RECOVERY', operation: 'JOURNAL_RECOVERY', body: recovered, result: await service.commitReference('capability-journal-recovery', recovered) });
@@ -433,6 +437,9 @@ export class CapabilityEvolution {
         return row;
     }
     private replay(entry: JournalEntry) {
+        if(entry.operation.startsWith('CONFIDENTIAL_')){
+            this.confidentialReplay.push(entry);this.confidential?.replay(entry);return;
+        }
         if(entry.operation.startsWith('IDENTIFIED_SYSTEM_')){
             this.identifiedReplay.push(entry);this.identifiedSystems?.replay(entry);return;
         }
@@ -531,6 +538,43 @@ export class CapabilityEvolution {
             use.evidenceRef = b.evidenceRef; /* Reservation totals never reset, even after rollback. */
         }
     }
+    private async confidentialPort(){
+        if(!this.confidential){
+            const {ConfidentialCapabilityPort}=await import('./confidential-port');
+            const port=new ConfidentialCapabilityPort(this.policy);
+            for(const entry of this.confidentialReplay)port.replay(entry);
+            this.confidential=port;
+        }
+        return this.confidential;
+    }
+    private async recoverConfidentialCommits(){
+        const completedRequests=new Set(this.journal.entries.map(e=>e.requestId));
+        for(const entry of this.journal.entries.filter(e=>e.operation==='CONFIDENTIAL_COMMIT_INTENT')){
+            const b=entry.body;
+            if(completedRequests.has(b.requestId))continue;
+            if(!['CONFIDENTIAL_PROPOSE','CONFIDENTIAL_REGISTER','CONFIDENTIAL_EVALUATE','CONFIDENTIAL_ADMIT','CONFIDENTIAL_REVOKE'].includes(b.operation)
+                ||b.originalRequestDigest!==digest({actorId:entry.actorId,requestId:b.requestId,operation:b.operation,body:b.input})
+                ||entry.requestId!=='confidential-intent:'+digest({requestId:b.requestId,requestDigest:b.originalRequestDigest,actorId:entry.actorId})
+                ||entry.requestDigest!==digest({requestDigest:b.originalRequestDigest,ref:b.ref,content:b.content}))
+                fault('S8_CONFIDENTIAL_COMMIT_INTENT_CHANGED');
+            let accepted:Awaited<ReturnType<typeof readOwnerTransportReference>>;
+            try{
+                accepted=await readOwnerTransportReference({semanticOwner:'S8',tenantId:this.policy.tenantId,
+                    principalId:this.policy.principalId},b.ref.id);
+            }catch(error:any){
+                if(error.code==='REFERENCE_NOT_FOUND')continue;
+                throw error;
+            }
+            if(digest(accepted.reference)!==digest({...b.ref,content:b.content}))
+                fault('S8_CONFIDENTIAL_ACCEPTED_REFERENCE_CHANGED');
+            const {confidentialCommitResult}=await import('./confidential-port');
+            // Readback reconciles an already accepted commitment, even when its
+            // candidate/proof expired. It neither resubmits nor grants current use.
+            await this.persist({requestId:b.requestId,requestDigest:b.originalRequestDigest,actorId:entry.actorId,
+                operation:b.operation,body:b.input,result:confidentialCommitResult(b.ref,{ref:b.ref,receipt:accepted.receipt})});
+            completedRequests.add(b.requestId);
+        }
+    }
     async command(token: string, input: {
         requestId: string;
         operation: string;
@@ -545,6 +589,7 @@ export class CapabilityEvolution {
                 fault('S8_REQUEST_ID_INVALID', 400);
             await this.journal.assertIntegrity();
             await this.recoverCheckpoints();
+            await this.recoverConfidentialCommits();
             await this.recoverPendingSearch();
             const requestDigest = digest({ actorId: a.id, ...input }), prior = this.journal.entries.find(e => e.requestId === input.requestId);
             if (prior) {
@@ -552,11 +597,13 @@ export class CapabilityEvolution {
                     fault('S8_IDEMPOTENCY_SUBSTITUTION');
                 // Interface current-use reads are deliberately never journaled or
                 // replayed from a cached admission. Every serve checks current use.
-                if (input.operation.startsWith('INTERFACE_') || input.operation.startsWith('APPLICATION_') || input.operation.startsWith('LEARNED_POLICY_') || input.operation.startsWith('IDENTIFIED_SYSTEM_'))
+                if (input.operation.startsWith('INTERFACE_') || input.operation.startsWith('APPLICATION_') || input.operation.startsWith('LEARNED_POLICY_') || input.operation.startsWith('IDENTIFIED_SYSTEM_') || input.operation.startsWith('CONFIDENTIAL_'))
                     await CapabilityEvolution.sources(this.policy.sourcePins);
                 if (input.operation.startsWith('APPLICATION_SEMANTICS_')) {
                     await this.applicationSemantics.revalidateReplay(a, input.operation, input.body, prior.result);
                 }
+                if(input.operation.startsWith('CONFIDENTIAL_'))
+                    await (await this.confidentialPort()).revalidateReplay(a,input.operation,input.body);
                 if (input.operation === 'USE') {
                     const use = this.uses.get(prior.result.lease.useId);
                     if (!use)
@@ -571,6 +618,26 @@ export class CapabilityEvolution {
             if (this.policy.responsibilityHandoff) await this.resolveResponsibilityHandoff();
             const b = input.body;
             let result: any, journalOperation = input.operation;
+            if(input.operation.startsWith('CONFIDENTIAL_')){
+                const port=await this.confidentialPort();
+                const answer=await port.command(a,input.operation,b,async(ref,content)=>{
+                    const intentId='confidential-intent:'+digest({requestId:input.requestId,requestDigest,actorId:a.id}),
+                        intentDigest=digest({requestDigest,ref,content}),
+                        priorIntent=this.journal.entries.find(entry=>entry.requestId===intentId);
+                    if(priorIntent){
+                        if(priorIntent.requestDigest!==intentDigest)fault('S8_IDEMPOTENCY_SUBSTITUTION');
+                    }else await this.persist({requestId:intentId,requestDigest:intentDigest,actorId:a.id,
+                        operation:'CONFIDENTIAL_COMMIT_INTENT',
+                        body:{operation:input.operation,requestId:input.requestId,input:b,originalRequestDigest:requestDigest,ref,content},
+                        result:{commitmentOnly:true,originalResponsibilityRetained:true,executionAuthorityGranted:false}});
+                    return this.commitNamedReference(ref,content);
+                });
+                if(!answer.readOnly){
+                    await this.persist({requestId:input.requestId,requestDigest,actorId:a.id,operation:input.operation,body:b,result:answer.result});
+                    await port.revalidateReplay(a,input.operation,b);
+                }
+                return answer.result;
+            }
             if(input.operation.startsWith('IDENTIFIED_SYSTEM_')){
                 if(!this.identifiedSystems){
                     const {IdentifiedSystemCapabilityPort}=await import('./identified-system-port');

@@ -133,7 +133,14 @@ async function current(ctx:PeMutationContext,policy:ContingentPolicy):Promise<st
 }
 /** Existing durable effects are independently read. A caller cannot hide an
  * unknown pending effect by sending an empty obligation list. No S6 is invented. */
-async function unresolvedEffects(ctx:PeMutationContext):Promise<number>{const result=await withTenantTransaction(ctx.auth.tenantId,{userId:actor(ctx),readOnly:true},(_db,c)=>c.query("SELECT count(*)::int count FROM finnor_os.business_effects WHERE tenant_id=$1 AND status NOT IN ('verified','cancelled','compensated')",[ctx.auth.tenantId]));return result.rows[0].count;}
+async function unresolvedEffects(ctx:PeMutationContext):Promise<number>{
+ return withTenantTransaction(ctx.auth.tenantId,{userId:actor(ctx),readOnly:true},async(_db,c)=>{
+  const complete=(await c.query('SELECT finnor_os.y4_control_context_complete() complete')).rows[0]?.complete;
+  // A hidden outstanding effect is uncertainty, never an RLS-filtered zero.
+  if(complete!==true)return 1;
+  return (await c.query("SELECT count(*)::int count FROM finnor_os.business_effects WHERE tenant_id=$1 AND status NOT IN ('verified','cancelled','compensated')",[ctx.auth.tenantId])).rows[0].count;
+ });
+}
 export async function synthesizeEnterpriseControl(ctx:PeMutationContext,input:{mandate?:unknown;problem?:unknown;protocols:unknown[];scenarios:{pathsPerMechanism:number;seed:number};priorPolicyRef?:unknown;reason?:string}):Promise<Awaited<ReturnType<typeof synthesizeContingentControl>>|{schema:'finnor.s4.policy-result.v1';status:'UNCERTAINTY_UNRESOLVED'|'MODEL_UNSUPPORTED'|'NUMERICAL_FAILURE'|'SEARCH_EXHAUSTED';policy:null;reasons:string[];experience:S4ExperienceEvent[];compute:unknown}> {
  const ownerStartedAt=performance.now(),m=parseEconomicMandate(input.mandate,{operatingProfit:true}),p=parseControlProblem(input.problem,{operatingProgramme:true});await checkedStore(ctx);
  if(ctx.auth.role!=='owner'||m.tenantId!==ctx.auth.tenantId||m.principalId!==actor(ctx)||m.businessOwnerRef.owner!=='BUSINESS_OWNER'||m.businessOwnerRef.id!==actor(ctx))throw unavailable();
@@ -226,7 +233,7 @@ export async function recordEnterpriseControlAssessment(ctx:PeMutationContext,in
  return {event,humanBudgetDemand:input.humanSeconds,protectedReceipt:null,policyChanged:false,executionAuthorityGranted:false};
 }
 export interface R3ControlChoice {schema:'finnor.s4.r3-choice-request.v1';policyRef:ExperimentRef}
-type NumericControlChoice={policyRef:unknown;decision?:unknown;allocationRef?:unknown;measurements?:Array<{protocol?:unknown;events:unknown[]}>};
+type NumericControlChoice={policyRef:unknown;decision?:unknown;allocationRef?:unknown;measurements?:Array<{protocol?:unknown;events:unknown[]}>;confidentialGuard?:unknown};
 export async function chooseEnterpriseControlBranch(ctx:PeMutationContext,input:R3ControlChoice):Promise<Awaited<ReturnType<typeof import('./r3/control').chooseR3ControlBranch>>>;
 export async function chooseEnterpriseControlBranch(ctx:PeMutationContext,input:NumericControlChoice):Promise<ReturnType<typeof decideContingentPolicy>>;
 export async function chooseEnterpriseControlBranch(ctx:PeMutationContext,input:R3ControlChoice|NumericControlChoice){
@@ -237,6 +244,7 @@ export async function chooseEnterpriseControlBranch(ctx:PeMutationContext,input:
  return chooseNumericEnterpriseControlBranch(ctx,input);
 }
 async function chooseNumericEnterpriseControlBranch(ctx:PeMutationContext,input:NumericControlChoice):Promise<ReturnType<typeof decideContingentPolicy>>{
+ await (await import('./confidential-computation/owner-consumer')).assertConfidentialGuard(ctx,input.confidentialGuard);
  const policy=await readEnterpriseContingentPolicy(ctx,input.policyRef),decision=parseControlDecision(input.decision);
  if(Date.parse(decision.knowledgeAt)>Date.now())throw new ControlContractError('INVALID_REQUEST','Future knowledge time cannot supply a current branch');
  // Reference observations are accepted only through the actual S2 realization
@@ -254,10 +262,14 @@ async function chooseNumericEnterpriseControlBranch(ctx:PeMutationContext,input:
  if(await unresolvedEffects(ctx))throw new ControlContractError('INVALID_REQUEST','Outstanding effects require reconciliation before a new choice');
  let resolvedAllocation=null;
  if(input.allocationRef)try{resolvedAllocation=await (await import('./enterprise-allocation')).resolveEnterprisePolicyAllocation(ctx,input.allocationRef,policy,decision.knowledgeAt);}catch(error){if(!(error instanceof AllocationContractError)||!['PERMITTED_CONTEXT_UNAVAILABLE','STALE_INPUT'].includes(error.code))throw error;resolvedAllocation=null;}
- const choice=decideContingentPolicy(policy,decision,resolvedAllocation);await saveArtifact(ctx,'choices',choice.ref.contentDigest,choice);await saveEvents(ctx,[prepareS4Experience(policy.mandate,'BRANCH_CHOICE',policy.ref.id,{choice,decision,observationQualification:'S2_REFERENCE_TELEMETRY_OR_PERMITTED_S1_TEMPORAL_COARSENING_UNVERIFIED_ERROR',referenceChoiceNotExecuted:true},[policy.ref.id],decision.knowledgeAt)]);
- if(await current(ctx,policy))throw unavailable();return choice;
+ const choice=decideContingentPolicy(policy,decision,resolvedAllocation);await saveArtifact(ctx,'choices',choice.ref.contentDigest,choice);await saveEvents(ctx,[prepareS4Experience(policy.mandate,'BRANCH_CHOICE',policy.ref.id,{choice,decision,
+  ...(input.confidentialGuard!==undefined?{confidentialGuard:input.confidentialGuard}:{}),
+  observationQualification:'S2_REFERENCE_TELEMETRY_OR_PERMITTED_S1_TEMPORAL_COARSENING_UNVERIFIED_ERROR',referenceChoiceNotExecuted:true},[policy.ref.id],decision.knowledgeAt)]);
+ if(await current(ctx,policy))throw unavailable();
+ await (await import('./confidential-computation/owner-consumer')).assertConfidentialGuard(ctx,input.confidentialGuard);
+ return choice;
 }
-export async function prepareEnterpriseContingentHandoff(ctx:PeMutationContext,input:{policyRef:unknown;decision?:unknown;allocationRef?:unknown;measurements?:Array<{protocol?:unknown;events:unknown[]}>}):Promise<ContingentChoiceHandoff>{
+export async function prepareEnterpriseContingentHandoff(ctx:PeMutationContext,input:NumericControlChoice):Promise<ContingentChoiceHandoff>{
  const policy=await readEnterpriseContingentPolicy(ctx,input.policyRef),decision=await chooseEnterpriseControlBranch(ctx,input),allocationRef=input.allocationRef?ExperimentRefSchema.parse(input.allocationRef):null;
  // Only the S5 owner's current durable readback can supply conditional clearance.
  let resolvedAllocation=null;
@@ -270,7 +282,8 @@ export async function prepareEnterpriseContingentHandoff(ctx:PeMutationContext,i
  }
  const result:ContingentChoiceHandoff={schema:'finnor.s4.choice-handoff.v1',status:decision.status==='POLICY_AVAILABLE'?allocation.status:decision.status,policyRef:policy.ref,decision,allocationRef,demandDigest:policy.demand.contentDigest,consumptionRef:null,intervention,interventionRef:intervention?interventionSpecificationRef(intervention):null,inquiryRef:action?.protocolRef??null,requiredContracts:[{owner:'BUSINESS_OWNER',requirement:'Protected authorized immutable mandate/utility/rights revision'},...(policy.exactProfile?[{owner:'S3' as const,requirement:'Independent exact model adequacy and a qualified causal intervention specification; the supplied transition table alone does not issue it'}]:[]),{owner:'S5',requirement:'Owner-resolved current mutually consistent policy/demand/mandate allocation, shared commitments and reservations'},{owner:'S6',requirement:'Protected IR, source/rights/allocation/method/fence rechecks, append receipt, concrete provider binding, execution/exposure/reconciliation/settlement'},{owner:'S7',requirement:'Independent prospective assignment/exposure/outcome/cost accounting and attribution'},{owner:'S8',requirement:'Independent admission of exact policy method and validity domain'}],executionAuthorityGranted:false,effectRef:null,settlementRef:null,attributionGranted:false,protectedReceipt:null};
  const plannedConsumptionKey=allocationRef&&resolvedAllocation&&decision.status==='POLICY_AVAILABLE'?`s4-handoff:${decision.contextDigest}`:null;
- const preparation={schema:'finnor.s4.handoff-preparation.v1' as const,handoff:result,plannedConsumptionKey,qualification:'PREPARED_NOT_CONSUMED_NOT_PROTECTED' as const},digest=epistemicHash(preparation);
+ const preparation={schema:'finnor.s4.handoff-preparation.v1' as const,handoff:result,plannedConsumptionKey,qualification:'PREPARED_NOT_CONSUMED_NOT_PROTECTED' as const,
+  ...(input.confidentialGuard!==undefined?{confidentialGuard:input.confidentialGuard}:{})},digest=epistemicHash(preparation);
  const preparationRef:ExperimentRef={owner:'S4',id:`contingent-handoff-preparation:${digest}`,version:'s4-handoff-preparation-v1',contentDigest:digest},prepared=immutableControl({...result,preparationRef});
  // All model construction and fallible S4 persistence precede durable S5 intent.
  // The S5 consumption transaction supplies the canonical consequence event.
@@ -284,11 +297,13 @@ export async function prepareEnterpriseContingentHandoff(ctx:PeMutationContext,i
 }
 
 /** S6 resolves the actual immutable producer artifact. Caller bodies are never handoffs. */
-export async function readEnterpriseContingentHandoffPreparation(ctx:PeMutationContext,value:unknown):Promise<{schema:'finnor.s4.handoff-preparation.v1';handoff:ContingentChoiceHandoff;plannedConsumptionKey:string|null;qualification:'PREPARED_NOT_CONSUMED_NOT_PROTECTED'}>{
+export async function readEnterpriseContingentHandoffPreparation(ctx:PeMutationContext,value:unknown):Promise<{schema:'finnor.s4.handoff-preparation.v1';handoff:ContingentChoiceHandoff;plannedConsumptionKey:string|null;qualification:'PREPARED_NOT_CONSUMED_NOT_PROTECTED';confidentialGuard?:unknown}>{
  const ref=ExperimentRefSchema.parse(value);if(ref.owner!=='S4'||ref.version!=='s4-handoff-preparation-v1'||ref.id!==`contingent-handoff-preparation:${ref.contentDigest}`)throw unavailable();
  const preparation=await readArtifact(ctx,'handoff-preparations',ref.contentDigest);
  if(preparation.schema!=='finnor.s4.handoff-preparation.v1'||epistemicHash(preparation)!==ref.contentDigest||preparation.qualification!=='PREPARED_NOT_CONSUMED_NOT_PROTECTED'||preparation.handoff.executionAuthorityGranted!==false||preparation.handoff.protectedReceipt!==null||preparation.handoff.consumptionRef!==null)throw unavailable();
- await readEnterpriseContingentPolicy(ctx,preparation.handoff.policyRef);return immutableControl(preparation);
+ await readEnterpriseContingentPolicy(ctx,preparation.handoff.policyRef);
+ await (await import('./confidential-computation/owner-consumer')).assertConfidentialGuard(ctx,preparation.confidentialGuard);
+ return immutableControl(preparation);
 }
 
 /** Exact current owner contexts. Nothing is cached across authenticated reads. */

@@ -7,9 +7,12 @@ import { configureTenantVertical } from '@finnor/db';
 import { allocationRef } from '@finnor/epistemic-runtime';
 import { POST as s3Post } from '../../apps/api/app/api/interventions/[operation]/route';
 import { POST as s4Post } from '../../apps/api/app/api/policies/[operation]/route';
+export const ownerFixtureReference=(id:string,owner='SUPPLIED')=>({
+ owner,id,version:'fixture-v1',contentDigest:createHash('sha256').update(id).digest('hex'),
+});
 export function createUpstreamFixtureSupport(context:{admin:()=>any;generatedRows:any[];begin:string;day:number;fixtures:Record<string,any>;api:(...args:any[])=>Promise<any>;artifact:(...args:any[])=>Promise<any>}) {
 const {generatedRows,begin,day,fixtures,api,artifact}=context;
-const ref=(id:string,owner='SUPPLIED')=>({owner,id,version:'fixture-v1',contentDigest:createHash('sha256').update(id).digest('hex')});
+const ref=ownerFixtureReference;
 const freezeRef=(body:any,owner:string,prefix:string,version:string)=>({...body,ref:allocationRef(owner,prefix,body,version)});
 function successful(r:any){if(r.status!==200)throw new Error('OWNER_REQUEST_FAILED:'+JSON.stringify(r));return r.body;}
 function decision(f:any,allocation:any):any{return {knowledgeAt:new Date().toISOString(),period:0,actionHistory:[],observations:[],rightsRef:f.mandate.rightsRef,obligations:[],allocationRefs:[allocation]};}

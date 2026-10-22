@@ -103,6 +103,8 @@ export async function nativeConsequence(ctx: PeMutationContext, session: Session
       const run = await canonicalObjectTx(ctx, { type: 'underwriting_run', id: intent.baseRunId }, client);
       const definition = model.raw.model_definition as UnderwritingModelIR, compiled = compileUnderwritingModel(definition);
       const input = run.raw.input_snapshot as UnderwritingInputSnapshot, prior = run.raw.result as UnderwritingRunResult;
+      const { refuseUnadmittedConfidentialSink } = await import('../confidential-computation/consumer');
+      refuseUnadmittedConfidentialSink(input);
       if (input.semanticHash !== run.raw.input_hash || inputSnapshotHash(input) !== run.raw.input_hash
         || runResultHash(prior) !== run.raw.result_hash || compiled.semanticHash !== model.raw.semantic_hash)
         throw new LiveControlError('NATIVE_OWNER_INTEGRITY_FAILED', 'Native model/input/result preimages do not match');

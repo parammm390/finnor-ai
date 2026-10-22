@@ -1190,6 +1190,48 @@ export async function schedulePreparedHarnessObjectiveTx(db:Db,params:{tenantId:
   await scheduleIterationTx(db,loop,new Date());
 }
 
+/** Resume only an already selected Y4 analytical goal after recipient import
+ * and a typed native consumer. Scheduling is not a completion observation. */
+export async function schedulePreparedConfidentialObjectiveTx(db:Db,params:{
+ tenantId:string;workId:string;planRevisionId:string;computationId:string;definitionDigest:string;
+}):Promise<void>{
+ const [plan]=await db.select().from(workPlanRevisions).where(and(eq(workPlanRevisions.tenantId,params.tenantId),
+  eq(workPlanRevisions.workId,params.workId),eq(workPlanRevisions.id,params.planRevisionId))).limit(1);
+ if(!plan?.objectiveLoopId||plan.status!=='active')throw Error('Y4_NATIVE_ACTIVE_OBJECTIVE_PLAN_REQUIRED');
+ await db.execute(sql`SELECT id FROM ${workObjectiveLoops} WHERE ${workObjectiveLoops.tenantId}=${params.tenantId}
+  AND ${workObjectiveLoops.id}=${plan.objectiveLoopId} FOR NO KEY UPDATE`);
+ let [loop]=await db.select().from(workObjectiveLoops).where(and(eq(workObjectiveLoops.tenantId,params.tenantId),
+  eq(workObjectiveLoops.id,plan.objectiveLoopId))).limit(1);
+ if(!loop||!['waiting','continue'].includes(loop.state)||loop.deadlineAt.getTime()<=Date.now())
+  throw Error('Y4_NATIVE_ORIGINAL_OBJECTIVE_FENCED');
+ const condition=parseObjectiveSuccessCondition(loop.successCondition);
+ if(condition.mode!=='all'||!condition.criteria.every(c=>c.kind==='canonical_query'
+  &&c.request.intent==='confidential_economic_computation_v1'&&c.request.workId===params.workId)
+  ||!condition.criteria.some(c=>c.kind==='canonical_query'&&c.assertion.path.join('.')==='data.definitionDigest'
+   &&c.assertion.operator==='eq'&&c.assertion.expected===params.definitionDigest))
+  throw Error('Y4_NATIVE_ORIGINAL_SUCCESS_CONDITION_CHANGED');
+ const ready=await db.execute(sql`SELECT q.id FROM finnor_os.y4_computations q
+  WHERE q.tenant_id=${params.tenantId}::uuid AND q.id=${params.computationId}::uuid
+   AND q.work_id=${params.workId}::uuid AND q.work_input_id=${plan.workInputId}::uuid
+   AND q.principal_id=${loop.createdBy}::uuid AND q.status='COMPUTED'
+   AND q.request->'function'->'workRevisionRef'->>'id'=${params.planRevisionId}
+   AND EXISTS(SELECT 1 FROM finnor_os.y4_releases r WHERE r.tenant_id=q.tenant_id
+    AND r.computation_id=q.id AND r.principal_id=q.principal_id)
+   AND EXISTS(SELECT 1 FROM finnor_os.y4_events e WHERE e.tenant_id=q.tenant_id
+    AND e.computation_id=q.id AND e.actor_id=q.principal_id AND e.kind='NATIVE_UNDERWRITING_CONSUMED')`);
+ if(ready.rows.length!==1)throw Error('Y4_NATIVE_TYPED_RECIPIENT_OBSERVATION_REQUIRED');
+ if(loop.state==='waiting'){
+  await transitionWorkTx(db,params.tenantId,params.workId,'executing','confidential_observation_ready',
+   {computationId:params.computationId,planRevisionId:plan.id,metadataOnly:true},{expectedWorkInputId:plan.workInputId!});
+  [loop]=await db.update(workObjectiveLoops).set({state:'continue',revision:loop.revision+1,
+   reason:'Recipient-authorized derived computation is ready for the original canonical goal check.',updatedAt:new Date()})
+   .where(and(eq(workObjectiveLoops.tenantId,params.tenantId),eq(workObjectiveLoops.id,loop.id),
+    eq(workObjectiveLoops.state,'waiting'))).returning();
+ }
+ if(!loop)throw Error('Y4_NATIVE_OBJECTIVE_FENCED');
+ await scheduleIterationTx(db,loop,new Date());
+}
+
 async function workerContext(tenantId: string, workId: string): Promise<{ ctx: TenantContext; work: typeof works.$inferSelect }> {
   return withTenant(tenantId, async (db) => {
     const [work] = await db.select().from(works).where(and(eq(works.tenantId, tenantId), eq(works.id, workId))).limit(1);
@@ -1322,7 +1364,8 @@ async function inspectCanonicalState(tenantId: string, workId: string, loop: typ
   const businessRoot = context.success ? await validateInteractionBusinessScope(ctx, context.data) : null;
   let businessRequest: OperationalQueryRequest;
   const success = parseObjectiveSuccessCondition(loop.successCondition);
-  const harnessOnly = success.criteria.every(c=>c.kind==="canonical_query" && c.request.intent==="harness_program_v1" && c.request.workId===workId);
+  const harnessOnly = success.criteria.every(c=>c.kind==="canonical_query"
+    &&(c.request.intent==="harness_program_v1"||c.request.intent==="confidential_economic_computation_v1")&&c.request.workId===workId);
   const harnessRequest = harnessOnly && success.criteria[0]?.kind==="canonical_query" ? success.criteria[0].request : null;
   if (harnessRequest) {
     // Analytical programme objectives have a registered current owner reader;
@@ -3053,7 +3096,7 @@ export class ObjectiveLoopRuntime {
           workId: params.workId,
           userId: ctx.userId,
           employeeId: ctx.employeeId,
-          ...(validated.request.intent === "harness_program_v1" ? {workInputId:active?.workInputId??undefined} : {}),
+          ...(["harness_program_v1","confidential_economic_computation_v1"].includes(validated.request.intent) ? {workInputId:active?.workInputId??undefined} : {}),
           executionKey: `objective:${loop.id}:revision:${loop.revision}:step:${step.stepNumber}:decision-query`,
         });
         const executionId = result.execution?.id ?? null;
