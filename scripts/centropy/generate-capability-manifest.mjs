@@ -26,8 +26,11 @@ const r1Reads=new Set(["r1-read","r1-review","r1-projection","r1-history","r1-re
 function registeredOperations(path, name) {
   const source = readFileSync(join(project, path), "utf8")
   const match = source.match(new RegExp(`export\\s+const\\s+${name}\\s*=\\s*(?:new\\s+Set\\s*\\(\\s*)?\\[([\\s\\S]*?)\\]`))
-  if (!match) throw new Error(`Cannot find operation registry ${name}`)
-  const operations = [...match[1].matchAll(/['"]([a-z][a-z0-9-]+)['"]/g)].map((entry) => entry[1])
+  const derived = source.match(new RegExp(`export\\s+const\\s+${name}\\s*=\\s*Object\\.keys\\(\\s*(\\w+)\\s*\\)`))
+  if (!match && !derived) throw new Error(`Cannot find operation registry ${name}`)
+  const operations = derived
+    ? [...block(source, `export const ${derived[1]}={`, "\n}").matchAll(/['"]([a-z][a-z0-9-]+)['"]\s*:/g)].map((entry) => entry[1])
+    : [...match[1].matchAll(/['"]([a-z][a-z0-9-]+)['"]/g)].map((entry) => entry[1])
   if (!operations.length || new Set(operations).size !== operations.length) throw new Error(`Invalid operation registry ${name}`)
   return operations
 }
@@ -42,7 +45,7 @@ const delegatedRegistries = [
   ["APPLICATION_OPERATIONS", "enterprise-applications/api.ts"],
   ["LEARNING_OPERATIONS", "policy-learning/api.ts"],
   ["IDENTIFICATION_OPERATIONS", "system-identification/api.ts"],
-  ["EconomicOperations", "economic-action-theory/contracts.ts"],
+  ["EconomicOperations", "economic-action-theory/api.ts"],
   ["M1_OPERATIONS", "decision-slice/handler.ts"],
   ["CONTINUATION_OPERATIONS", "live-recompilation/api.ts"],
   ["PROCEDURE_OPERATIONS", "procedure-induction/api.ts"],

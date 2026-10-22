@@ -140,7 +140,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/enterprise-applications/source-manifest.generated.ts",
-      "sha256": "6e8689cb6928fd816a54f2c8acc922a4aa5888d1f176cdc6f31c77304782234f"
+      "sha256": "2dc2d723b29c060305d469659a87eade6ff199baecc11f5d8622e4650aa546ba"
     },
     {
       "path": "finnor-os/packages/authority/src/index.ts",
@@ -184,11 +184,11 @@ export default {
     },
     {
       "path": "finnor-os/package-lock.json",
-      "sha256": "d83837193569a7b154dfa80f7d60c25cdeefe2e562a9b1e9907404085d636987"
+      "sha256": "4116b2a7e02a28b8e49baa4a24a378e5170c5dc66d285075c8cf50bf11b9faed"
     },
     {
       "path": "package-lock.json",
-      "sha256": "56398650ecba40d4fed91de7b190239a786589ea8efd77f2c71ec2c7d36def99"
+      "sha256": "af1d36679eb4123ab5f2d9f4668e82e1defc952a45777a74d3dff30c6d16f117"
     },
     {
       "path": "src/components/centropy/canvas/LearnedPolicyPanel.tsx",
@@ -368,7 +368,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/policy-learning/source-manifest.generated.ts",
-      "sha256": "62d07fe2cdc91021604c9a9d8c7f47642623056d60741be80f8647f1e40bc1f6"
+      "sha256": "7926842b090b08c93f4f2ed9324eae6fd279c62b7295d095129348d90fd13f8a"
     },
     {
       "path": "finnor-os/packages/epistemic-runtime/src/identification.ts",

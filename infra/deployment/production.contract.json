@@ -10,7 +10,7 @@
     "requireCleanWorktree": true
   },
   "release": {
-    "requiredMigrationHead": "0195_private_input_responses.sql",
+    "requiredMigrationHead": "0195a_postx_y1_temporal_binding.sql",
     "metadata": [
       "FINNOR_COMMIT_SHA",
       "FINNOR_BUILD_ID",

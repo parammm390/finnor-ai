@@ -4,7 +4,7 @@ import {employeeAuthoritySnapshotTx} from '@finnor/authority';
 import {isImmutableWorkStatus,type WorkStatus} from '@finnor/db';
 import type {PeMutationContext} from '../types';
 import {authorize,principal,unavailable} from '../owner-context';
-import {withS5PortfolioTransaction} from '../allocation-store';
+import {withS5PortfolioTransaction as transaction} from '../allocation-store';
 import {affectedClosure} from '../live-recompilation/contracts';
 import {runtimeIdentity} from './process';
 import {PROFILE,digest,same,fail,ordinaryDisposableEconomicRuntime,type EconomicJob,type TheoryRow,type SubmitRequest,type EconomicProblem} from './contracts';
@@ -12,7 +12,6 @@ import {PROFILE,digest,same,fail,ordinaryDisposableEconomicRuntime,type Economic
 export function developmentOnly(){
  if(!ordinaryDisposableEconomicRuntime())fail('Y1_DISPOSABLE_DEVELOPMENT_ONLY',403);
 }
-export const transaction=<T>(ctx:PeMutationContext,fn:(c:PoolClient)=>Promise<T>)=>withS5PortfolioTransaction(ctx,fn);
 export {principal};
 export async function workCutTx(ctx:PeMutationContext,c:PoolClient,workId:string){
  const work=(await c.query<{status:WorkStatus}>('SELECT status FROM finnor_os.works WHERE tenant_id=$1 AND id=$2 FOR SHARE',[ctx.auth.tenantId,workId])).rows[0];

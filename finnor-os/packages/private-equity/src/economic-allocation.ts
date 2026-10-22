@@ -5,11 +5,11 @@ import type {PoolClient} from 'pg';
 import {evaluateAuthorityTx,canExerciseAuthorityTx} from '@finnor/authority';
 import type {AllocationResource,AllocationEnvelope} from '@finnor/shared-types';
 import type {PeMutationContext} from './types';
-import {allocationSnapshotInTransaction} from './allocation-store';
+import {allocationSnapshotInTransaction,withS5PortfolioTransaction as transaction} from './allocation-store';
 import {validateBeliefViewPin} from './enterprise-beliefs';
 import {enqueueOwnerDeliveryInTransaction} from '../../governed-execution/src/owner-delivery-store';
 import {economicSemanticModuleTx} from './program-synthesis/economic-module';
-import {transaction,principal,developmentOnly,chargeOwnerStorageTx} from './economic-action-theory/store';
+import {principal,developmentOnly,chargeOwnerStorageTx} from './economic-action-theory/store';
 import {RefSchema,QuantityValue,digest,reference,same,fail,type EconomicRef,type State,type EconomicProblem} from './economic-action-theory/contracts';
 import {exact,decimal,safe} from './economic-action-theory/finite';
 export const EconomicReservationSchema=z.object({theoryId:z.string().uuid(),initialState:z.record(QuantityValue),
