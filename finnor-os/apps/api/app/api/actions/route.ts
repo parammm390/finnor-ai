@@ -83,24 +83,12 @@ function aggregateReplay(
   aggregate: Awaited<ReturnType<typeof workAggregate>>,
 ): Record<string, unknown> | undefined {
   if (!aggregate?.work || typeof aggregate.work !== "object") return undefined;
-  const finalOutcome = (aggregate.work as { finalOutcome?: unknown }).finalOutcome;
-  const outcome = finalOutcome && typeof finalOutcome === "object" && !Array.isArray(finalOutcome)
-    ? finalOutcome as Record<string, unknown>
-    : undefined;
-  const actions = Array.isArray(aggregate.actions) ? aggregate.actions : [];
-  const objectiveLoop = aggregate.objectiveLoop;
-  if (actions.length === 0 && !objectiveLoop && !outcome) return undefined;
+  const actions = Array.isArray(aggregate.actions) ? aggregate.actions.filter(action => action && typeof action === "object" && action.instructionId === received.instructionId) : [];
+  // A Work's current loop/outcome may belong to a later input. Only children
+  // carrying this input's instruction identity can support degraded replay.
+  if (actions.length === 0) return undefined;
   return {
     planned: actions,
-    ...(outcome?.query && typeof outcome.query === "object" ? { query: outcome.query } : {}),
-    ...(objectiveLoop ? {
-      objective: {
-        objectiveLoopId: objectiveLoop.id,
-        state: objectiveLoop.state,
-        route: "OBJECTIVE",
-      },
-    } : {}),
-    ...(outcome && !outcome.query ? { outcome } : {}),
     workId: received.workId,
     workInputId: received.workInputId,
     instructionId: received.instructionId,
@@ -183,8 +171,7 @@ export async function POST(req: Request): Promise<Response> {
       let replay = storedResponse(received.finalOutcome);
       if (!replay) {
         aggregate = await workAggregate(ctx.tenantId, received.workId).catch(() => null);
-        replay = storedResponse(aggregate?.work && typeof aggregate.work === "object" ? (aggregate.work as { finalOutcome?: unknown }).finalOutcome : undefined);
-        replay ??= aggregateReplay(received, aggregate);
+        replay = aggregateReplay(received, aggregate);
       }
       if (!replay) {
         const aggregateStatus = aggregate?.work && typeof aggregate.work === "object" && typeof (aggregate.work as { status?: unknown }).status === "string"
@@ -429,7 +416,7 @@ export async function POST(req: Request): Promise<Response> {
       reportAncillaryProjectionFailure(projectionWarnings, "objective link", error);
     }
     try {
-      await recordWorkResponse(ctx.tenantId, received.workId, response);
+      await recordWorkResponse({ tenantId: ctx.tenantId, workId: received.workId, workInputId: received.workInputId, userId: ctx.employeeId ?? ctx.userId }, response);
     } catch (error) {
       reportAncillaryProjectionFailure(projectionWarnings, "response", error);
     }

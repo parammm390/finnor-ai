@@ -4,6 +4,7 @@
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import pg from "pg";
+import { randomUUID } from "node:crypto";
 import { migrate } from "../../packages/db/migrate";
 import { workCases } from "../../packages/read-models";
 import {
@@ -28,23 +29,25 @@ import { GET } from "../../apps/api/app/api/read-models/[view]/route";
 import { and, eq, sql } from "drizzle-orm";
 
 const DB_URL = process.env.DATABASE_URL ?? "postgres://finnor:finnor@localhost:5432/finnor";
-const TENANT_ID = "00000000-0000-4000-8000-0000000002f1";
-const OTHER_TENANT_ID = "00000000-0000-4000-8000-0000000002f2";
-const HOUSEHOLD_ID = "00000000-0000-4000-8000-0000000002a1";
-const INVOICE_ID = "00000000-0000-4000-8000-0000000002a2";
-const INSTRUCTION_A = "00000000-0000-4000-8000-0000000002b1";
-const INSTRUCTION_B = "00000000-0000-4000-8000-0000000002b2";
-const INSTRUCTION_C = "00000000-0000-4000-8000-0000000002b3";
-const ACTION_A1 = "00000000-0000-4000-8000-0000000002c1";
-const ACTION_A2 = "00000000-0000-4000-8000-0000000002c2";
-const ACTION_B = "00000000-0000-4000-8000-0000000002c3";
-const ACTION_C = "00000000-0000-4000-8000-0000000002c4";
-const COMMAND_A = "00000000-0000-4000-8000-0000000002d1";
-const RUN_A = "00000000-0000-4000-8000-0000000002e1";
-const STEP_A = "00000000-0000-4000-8000-0000000002f1";
-const RECEIPT_A = "00000000-0000-4000-8000-0000000002f2";
-const VOICE_SESSION = "00000000-0000-4000-8000-0000000002f3";
-const CALL_EXTERNAL_ID = "p2-t1-call-0001";
+// Canonical Work retains append-only deltas after this fixture's legacy rows are
+// cleaned up. A fresh tenant keeps repeated runs independent without erasing it.
+const TENANT_ID = randomUUID();
+const OTHER_TENANT_ID = randomUUID();
+const HOUSEHOLD_ID = randomUUID();
+const INVOICE_ID = randomUUID();
+const INSTRUCTION_A = randomUUID();
+const INSTRUCTION_B = randomUUID();
+const INSTRUCTION_C = randomUUID();
+const ACTION_A1 = randomUUID();
+const ACTION_A2 = randomUUID();
+const ACTION_B = randomUUID();
+const ACTION_C = randomUUID();
+const COMMAND_A = randomUUID();
+const RUN_A = randomUUID();
+const STEP_A = randomUUID();
+const RECEIPT_A = randomUUID();
+const VOICE_SESSION = randomUUID();
+const CALL_EXTERNAL_ID = `p2-t1-call-${VOICE_SESSION}`;
 
 async function dbUp(): Promise<boolean> {
   const client = new pg.Client({ connectionString: DB_URL, connectionTimeoutMillis: 2000 });
@@ -67,6 +70,9 @@ function request(query = ""): Request {
 
 describe.skipIf(!available)("P2.T1 Work correlation + derived projection", () => {
   beforeAll(async () => {
+    console.log("WORK_CASE_FIXTURE_INPUTS", JSON.stringify({ tenantId: TENANT_ID, otherTenantId: OTHER_TENANT_ID,
+      instructionIds: [INSTRUCTION_A, INSTRUCTION_B, INSTRUCTION_C], actionIds: [ACTION_A1, ACTION_A2, ACTION_B, ACTION_C],
+      workflowRunId: RUN_A, workflowStepId: STEP_A, receiptId: RECEIPT_A, voiceSessionId: VOICE_SESSION }));
     process.env.DATABASE_URL = DB_URL;
     process.env.AUTH_DEV_BYPASS = "1";
     await migrate(DB_URL);
@@ -85,17 +91,17 @@ describe.skipIf(!available)("P2.T1 Work correlation + derived projection", () =>
         { tenantId: TENANT_ID, instructionId: INSTRUCTION_C, seq: 1, phase: "failed", payload: { actionId: ACTION_C } },
       ]);
       await db.insert(domainActions).values([
-        { id: ACTION_A1, tenantId: TENANT_ID, actionType: "schedule_water_test", payload: { householdId: HOUSEHOLD_ID, invoiceId: INVOICE_ID }, status: "completed", summary: "Schedule the Henderson service", instructionId: INSTRUCTION_A },
-        { id: ACTION_A2, tenantId: TENANT_ID, actionType: "send_payment_reminder", payload: { householdId: HOUSEHOLD_ID, invoiceId: INVOICE_ID }, status: "pending", summary: "Ask for approval to send the payment reminder", instructionId: INSTRUCTION_A },
+        { id: ACTION_A1, tenantId: TENANT_ID, actionType: "schedule_water_test", payload: { householdId: HOUSEHOLD_ID, invoiceId: INVOICE_ID }, status: "completed", summary: "Schedule the Henderson service", instructionId: INSTRUCTION_A, createdAt: new Date("2026-09-01T00:00:00.000Z") },
+        { id: ACTION_A2, tenantId: TENANT_ID, actionType: "send_payment_reminder", payload: { householdId: HOUSEHOLD_ID, invoiceId: INVOICE_ID }, status: "pending", summary: "Ask for approval to send the payment reminder", instructionId: INSTRUCTION_A, createdAt: new Date("2026-09-01T00:00:01.000Z") },
         { id: ACTION_B, tenantId: TENANT_ID, actionType: "send_payment_reminder", payload: { householdId: HOUSEHOLD_ID, invoiceId: INVOICE_ID }, status: "pending", summary: "Send a separate Henderson payment reminder", instructionId: INSTRUCTION_B },
         { id: ACTION_C, tenantId: TENANT_ID, actionType: "repair_visit", payload: { householdId: HOUSEHOLD_ID }, status: "failed", summary: "Repair the Henderson system", instructionId: INSTRUCTION_C },
-        { id: "00000000-0000-4000-8000-0000000002c5", tenantId: OTHER_TENANT_ID, actionType: "send_payment_reminder", payload: { householdId: HOUSEHOLD_ID, invoiceId: INVOICE_ID }, status: "pending", summary: "Other tenant action" },
+        { id: randomUUID(), tenantId: OTHER_TENANT_ID, actionType: "send_payment_reminder", payload: { householdId: HOUSEHOLD_ID, invoiceId: INVOICE_ID }, status: "pending", summary: "Other tenant action" },
       ]);
       await db.insert(voiceSessions).values({ id: VOICE_SESSION, tenantId: TENANT_ID, callExternalId: CALL_EXTERNAL_ID });
       await db.insert(pendingConfirmations).values({ tenantId: TENANT_ID, voiceSessionId: VOICE_SESSION, domainActionId: ACTION_B, promptText: "Send the separate reminder" });
       await db.insert(commands).values({ id: COMMAND_A, tenantId: TENANT_ID, commandType: "schedule_water_test", payload: { householdId: HOUSEHOLD_ID }, correlationId: "p2-t1-trace" });
       await db.insert(workflowRuns).values({ id: RUN_A, tenantId: TENANT_ID, commandId: COMMAND_A, workflowType: "single_action", status: "completed" });
-      await db.insert(workflowSteps).values({ tenantId: TENANT_ID, id: STEP_A, workflowRunId: RUN_A, stepType: "schedule_water_test", sequence: 0, status: "completed", idempotencyKey: "p2-t1-step", domainActionId: ACTION_A1, evidence: { invoiceId: INVOICE_ID } });
+      await db.insert(workflowSteps).values({ tenantId: TENANT_ID, id: STEP_A, workflowRunId: RUN_A, stepType: "schedule_water_test", sequence: 0, status: "completed", idempotencyKey: `p2-t1-step-${STEP_A}`, domainActionId: ACTION_A1, evidence: { invoiceId: INVOICE_ID } });
       await db.insert(decisionReceipts).values({ id: RECEIPT_A, tenantId: TENANT_ID, workflowRunId: RUN_A, workflowStepId: STEP_A, domainActionId: ACTION_A1, objective: "Schedule the Henderson service", evidence: [{ source: "test", ref: "p2-t1" }], actualResult: { householdId: HOUSEHOLD_ID, invoiceId: INVOICE_ID }, finalizedAt: new Date() });
       await db.insert(voiceTurns).values({ tenantId: TENANT_ID, voiceSessionId: VOICE_SESSION, sequence: 1, role: "caller", transcriptText: "yes", resolvedActionIds: [ACTION_B] });
       await db.insert(businessEvents).values({ tenantId: TENANT_ID, entityType: "household", entityId: HOUSEHOLD_ID, eventType: "service_scheduled", source: "p2-t1" });

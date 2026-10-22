@@ -6,6 +6,7 @@ import {
   type ProductRuntimeAuthoritySnapshot,
 } from "@finnor/db";
 import { ensureSecretsLoaded, secretProviderStatus } from "@finnor/security";
+import { describeLLMReadiness } from "@finnor/tools/llm";
 import { evaluateFinalPeReadiness, explicitDeploymentEnvironment } from "../../../lib/product-readiness";
 import { getReleaseMetadata } from "../../../lib/release";
 import { readWorkerFleetReadiness, type WorkerFleetReadiness } from "../../../lib/worker-readiness";
@@ -14,8 +15,8 @@ type ReadinessCheck = { ok: boolean; detail?: unknown };
 
 /** Dependency readiness, deliberately separate from /api/health liveness. Optional
  * provider connections are tenant-level degradation and never make the whole API
- * unready; Postgres, the migration contract, a current worker, and the configured
- * secret backend are process-level dependencies. */
+ * unready; Postgres, migrations, current workers, platform model routes, and the
+ * configured secret backend are process-level dependencies. */
 export async function GET(): Promise<Response> {
   const checks: Record<string, ReadinessCheck> = {};
   const release = getReleaseMetadata("finnor-api");
@@ -125,6 +126,10 @@ export async function GET(): Promise<Response> {
       ok: process.env.NODE_ENV !== "production" || status.provider === "aws-secrets-manager",
       detail: status.provider,
     };
+    if (explicitDeploymentEnvironment() === "production") {
+      const modelRoutes = describeLLMReadiness();
+      checks.modelRoutes = { ok: modelRoutes.configured, detail: modelRoutes };
+    }
   } catch {
     checks.secrets = { ok: false, detail: "unavailable" };
   }

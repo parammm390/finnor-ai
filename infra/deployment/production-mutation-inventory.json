@@ -24,6 +24,7 @@
     {
       "id": "vercel-realtime-environment",
       "path": "scripts/release/configure-vercel-realtime.mjs",
+      "supportingPaths": ["scripts/release/configure-vercel-model-runtime.mjs"],
       "classification": "PRODUCTION_MUTATOR",
       "state": "ACTIVE",
       "operations": ["vercel-environment-update"],
@@ -249,7 +250,7 @@
     },
     {
       "id": "declarative-production-source",
-      "paths": ["infra/aws/finnor-production.yaml", "infra/deployment/production.contract.json", "infra/deployment/production-database-admission-policy.json", "infra/deployment/vercel-build-settings.json"],
+      "paths": ["infra/aws/finnor-production.yaml", "infra/aws/finnor-model-runtime.yaml", "infra/deployment/production.contract.json", "infra/deployment/production-database-admission-policy.json", "infra/deployment/vercel-build-settings.json"],
       "classification": "READ_ONLY",
       "state": "DECLARATIVE_SOURCE_ONLY",
       "reason": "Repository code does not provide an independent apply path; active release mutations consume the contract and separately authorize each write."

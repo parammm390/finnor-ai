@@ -41,11 +41,11 @@ export async function POST(req: Request): Promise<Response> {
       instructionId: input.idempotencyKey, idempotencyKey: input.idempotencyKey, activeContext: contextSnapshot,
       authorityContext: { employeeId, principal: employeeId, revision: ctx.authorityRevision ?? null, roles: ctx.authorityRoles ?? [ctx.role], humanRequestHash: requestHash } });
     if (received.duplicate) {
-      const [stored] = await withTenant(ctx.tenantId, (db) => db.select({ authorityContext: works.authorityContext, finalOutcome: works.finalOutcome }).from(works)
+      const [stored] = await withTenant(ctx.tenantId, (db) => db.select({ authorityContext: works.authorityContext }).from(works)
         .where(and(eq(works.tenantId, ctx.tenantId), eq(works.id, received!.workId))).limit(1));
       const authorityContext = stored?.authorityContext as Record<string, unknown> | undefined;
       if (authorityContext?.humanRequestHash !== requestHash) return Response.json({ error: "This intake key belongs to a different exact human decision", workId: received.workId }, { status: 409 });
-      const outcome = stored?.finalOutcome as { response?: Record<string, unknown> } | undefined;
+      const outcome = received.finalOutcome as { response?: Record<string, unknown> } | undefined;
       // A lifecycle reconciliation may replace finalOutcome with terminal counts.
       // Restore the identity from its durable action and authenticated user turn;
       // replay never invokes Core or creates another decision.
@@ -86,7 +86,7 @@ export async function POST(req: Request): Promise<Response> {
       threadId: prepared.threadId, actionId: drafted.action.id, actionType: input.actionType, status, result: drafted.result };
     if (drafted.result.status === "failure") {
       const failed = { ...response, error: drafted.result.error ?? "Human decision could not be grounded" };
-      await recordWorkResponse(ctx.tenantId, received.workId, failed);
+      await recordWorkResponse({ tenantId: ctx.tenantId, workId: received.workId, workInputId: received.workInputId, userId: ctx.employeeId ?? ctx.userId }, failed);
       return Response.json(failed, { status: 422 });
     }
     const projectionWarnings: string[] = [];
@@ -96,7 +96,7 @@ export async function POST(req: Request): Promise<Response> {
         text: "Your human decision is drafted. Review its exact BusinessEffect and authority before confirming execution.",
         outcomeRefs: [{ kind: "work", id: received.workId }, { kind: "domain_action", id: drafted.action.id }] });
     } catch { projectionWarnings.push("assistant_projection_unavailable"); }
-    await recordWorkResponse(ctx.tenantId, received.workId, { ...response, projectionWarnings });
+    await recordWorkResponse({ tenantId: ctx.tenantId, workId: received.workId, workInputId: received.workInputId, userId: ctx.employeeId ?? ctx.userId }, { ...response, projectionWarnings });
     return Response.json({ ...response, projectionWarnings }, { status: 201 });
   } catch (error) {
     if (received && tenantId && !received.duplicate) {

@@ -24,7 +24,7 @@ import {runLiveControlEvaluationJob} from '@finnor/private-equity/src/live-contr
 
 import "dotenv/config";
 
-import { initObservability, getLogger, applyEmulatorFaultsFromEnv } from "@finnor/tools";
+import { describeLLMReadiness, initObservability, getLogger, applyEmulatorFaultsFromEnv } from "@finnor/tools";
 import { ensureSecretsLoaded } from "@finnor/security";
 import { JobQueue } from "./queue";
 import { reconciliation } from "./handlers/reconciliation";
@@ -176,6 +176,10 @@ if (isMain) {
     ? parseWorkloadClass(process.env.FINNOR_WORKLOAD_CLASS) : null;
   if (process.env.FINNOR_ENVIRONMENT === "production" && !workloadClass) {
     throw new Error("Production compute service requires FINNOR_WORKLOAD_CLASS");
+  }
+  if (process.env.FINNOR_ENVIRONMENT === "production" && workloadClass !== "REALTIME") {
+    const readiness = describeLLMReadiness();
+    if (!readiness.configured) throw new Error(`Worker model routes unavailable: ${readiness.unavailableRoutes.join(", ")}`);
   }
   if (workloadClass) {
     const cutover = await getPool().query("SELECT state FROM compute_plane_cutover WHERE singleton=true");

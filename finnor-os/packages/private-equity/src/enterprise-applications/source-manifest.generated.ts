@@ -108,11 +108,11 @@ export default {
     },
     {
       "path": "finnor-os/apps/api/lib/auth.ts",
-      "sha256": "5ffca184bf6068552803ca462b2ad4e62e885d78d93b3a35f5431ba10c3ae559"
+      "sha256": "3aa3fee5db30b4a719836c6501b3c8f1837bf6a85a259bdc2a2b3f8576ff5dff"
     },
     {
       "path": "finnor-os/apps/worker/src/index.ts",
-      "sha256": "db92ab02963b32be73750133b22bdb8f09b7dc996a8bd5e25c15b853d0e1569e"
+      "sha256": "622d64fdee85c64734f711ff78faf11857e910605a5fc371908b10be5831a060"
     },
     {
       "path": "finnor-os/apps/worker/src/queue.ts",
@@ -124,7 +124,7 @@ export default {
     },
     {
       "path": "finnor-os/package-lock.json",
-      "sha256": "21806af0fa408429cb12ce3089a4a1d4159bee107d2403e559bb3eb6a5ec4cd6"
+      "sha256": "d83837193569a7b154dfa80f7d60c25cdeefe2e562a9b1e9907404085d636987"
     },
     {
       "path": "finnor-os/packages/private-equity/src/enterprise-control.ts",
@@ -152,7 +152,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/db/index.ts",
-      "sha256": "a3fa88a5b297c85a4721399428245da9d42e3bd96a4fac5a4dcfa4181936df41"
+      "sha256": "9fc9091d2073694b20915b8a192795be9693dd9c1b2a6e97a8b9bc71d064cbb8"
     },
     {
       "path": "finnor-os/packages/security/src/auth.ts",
@@ -196,7 +196,7 @@ export default {
     },
     {
       "path": "package-lock.json",
-      "sha256": "458999539b0e9bb21d9202e1962a73e1e7b905eacf55d3bb8ee6debe186ae22c"
+      "sha256": "56398650ecba40d4fed91de7b190239a786589ea8efd77f2c71ec2c7d36def99"
     },
     {
       "path": "finnor-os/scripts/x3/stamp-source.mts",

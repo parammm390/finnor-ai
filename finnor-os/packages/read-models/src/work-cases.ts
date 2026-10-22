@@ -29,6 +29,7 @@ import {
   workPlannerAttempts,
   workEntityLinks,
   workObjectiveLoops,
+  workLifecycleOutcome,
   workObjectiveSteps,
   workObjectivePlannerAttempts,
   outcomePackRuns,
@@ -1261,7 +1262,7 @@ export async function workCasesPage(tenantId: string, options: WorkCasesPageOpti
             currentOwnerId: durableWork.currentOwnerId,
             assignedTo: durableWork.assignedTo,
             authorityContext: durableWork.authorityContext,
-            finalOutcome: durableWork.finalOutcome,
+            finalOutcome: workLifecycleOutcome(durableWork.finalOutcome),
             failure: durableWork.failure,
             recovery: durableWork.recovery,
             handoffs: workEventRows.filter((event) => event.workId === durableWork.id && event.eventType === "employee_handoff").map((event) => {
