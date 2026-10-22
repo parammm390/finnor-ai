@@ -152,7 +152,7 @@ describe.skipIf(!available)("authenticated PE objective world scope", () => {
     const applicationRole = (await admin.query("SELECT rolcanlogin,rolsuper,rolbypassrls FROM pg_roles WHERE rolname='finnor_app'")).rows[0];
     expect(applicationRole).toEqual({ rolcanlogin: true, rolsuper: false, rolbypassrls: false });
     await record("disposable-application-role", applicationRole);
-    expect((await admin.query("SELECT max(name) AS head FROM finnor_os._migrations")).rows[0].head).toBe(CURRENT_MIGRATION_HEAD);
+    expect((await admin.query("SELECT max(name COLLATE \"C\") AS head FROM finnor_os._migrations")).rows[0].head).toBe(CURRENT_MIGRATION_HEAD);
     await admin.query("SET app.test_vertical_mode='explicit'");
     await admin.query("INSERT INTO finnor_os.tenants(id,client_key,name) VALUES($1,$2,'PE world objective'),($3,$4,'Foreign PE world objective')", [tenantId, randomUUID(), foreignTenantId, randomUUID()]);
     await admin.query("INSERT INTO finnor_os.users(id,tenant_id,email,role,status,display_name) VALUES($1,$4,$6,'owner','active','World operator'),($2,$4,$7,'owner','active','Other operator'),($3,$5,$8,'owner','active','Foreign operator')", [actorId, otherActorId, foreignActorId, tenantId, foreignTenantId, `${actorId}@world.test.invalid`, `${otherActorId}@world.test.invalid`, `${foreignActorId}@world.test.invalid`]);

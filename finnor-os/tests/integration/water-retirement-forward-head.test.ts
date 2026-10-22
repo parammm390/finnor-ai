@@ -48,7 +48,7 @@ describe.skipIf(!available)("Water retirement forward-migration compatibility", 
   }, 30_000);
 
   it("requires the actual current migration head while preserving the Phase-5 freeze and activation barriers", async () => {
-    const migration = await client.query<{ head: string }>("SELECT max(name) head FROM finnor_os._migrations");
+    const migration = await client.query<{ head: string }>("SELECT max(name COLLATE \"C\") head FROM finnor_os._migrations");
     expect(migration.rows[0]?.head).toBe(CURRENT_MIGRATION_HEAD);
 
     const waterTenantId = randomUUID();

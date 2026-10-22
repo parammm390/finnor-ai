@@ -48,8 +48,8 @@ describe("production query surface and native-only authority boundary", () => {
     expect(result).toMatchObject({
       negativeControl: true,
       actions: ACTION_HARDENING_SPEC.length,
-      publicQueries: 16,
-      nativeQueries: 1,
+      publicQueries: publicIntents.length,
+      nativeQueries: PROGRAM_OPERATIONAL_QUERY_INTENTS.length,
     });
     expect(verifyQuerySurfaceCoverage(await openApi())).toEqual([]);
     await retainEvidence("complete-boundary", { publicIntents, nativeIntents: PROGRAM_OPERATIONAL_QUERY_INTENTS }, result);
@@ -62,17 +62,16 @@ describe("production query surface and native-only authority boundary", () => {
     removed.paths["/api/queries"].post.requestBody.content["application/json"].schema.anyOf =
       schema.anyOf.filter((branch: any) => branch.properties?.intent?.const !== publicIntents[0]);
     expect(verifyQuerySurfaceCoverage(removed)).toContain(`OpenAPI is missing public query intent ${publicIntents[0]}`);
-    const exposed = structuredClone(contract);
-    exposed.paths["/api/queries"].post.requestBody.content["application/json"].schema.anyOf.push({
-      type: "object",
-      properties: { intent: { const: PROGRAM_OPERATIONAL_QUERY_INTENTS[0] } },
-    });
-    expect(verifyQuerySurfaceCoverage(exposed)).toContain(
-      `OpenAPI exposes native-only query intent ${PROGRAM_OPERATIONAL_QUERY_INTENTS[0]}`,
-    );
+    for (const intent of PROGRAM_OPERATIONAL_QUERY_INTENTS) {
+      const exposed = structuredClone(contract);
+      exposed.paths["/api/queries"].post.requestBody.content["application/json"].schema.anyOf.push({
+        type: "object", properties: { intent: { const: intent } },
+      });
+      expect(verifyQuerySurfaceCoverage(exposed)).toContain(`OpenAPI exposes native-only query intent ${intent}`);
+    }
     await retainEvidence("surface-negative-controls", {
       removedPublicIntent: publicIntents[0],
-      injectedNativeIntent: PROGRAM_OPERATIONAL_QUERY_INTENTS[0],
+      injectedNativeIntents: PROGRAM_OPERATIONAL_QUERY_INTENTS,
     }, { missingPublicRejected: true, exposedNativeRejected: true });
   });
 

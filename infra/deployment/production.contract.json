@@ -10,7 +10,7 @@
     "requireCleanWorktree": true
   },
   "release": {
-    "requiredMigrationHead": "0196a_postx_y2_requested_model_currentness.sql",
+    "requiredMigrationHead": "0198_bytewise_migration_head.sql",
     "metadata": [
       "FINNOR_COMMIT_SHA",
       "FINNOR_BUILD_ID",
