@@ -7,6 +7,7 @@ import { mkdir, open, link, unlink, lstat,readdir } from 'node:fs/promises';
 import { randomUUID } from 'node:crypto';
 import { join, resolve } from 'node:path';
 import { withTenantTransaction } from '@finnor/db';
+import type {PoolClient} from 'pg';
 import type { InterventionModel, ContingentPolicy, ContingentChoiceHandoff, ControlDecisionInput, ControlDecision, ControlProblem, EconomicMandate, ExperimentProtocol, ExperimentRef, S4ExperienceEvent } from '@finnor/shared-types';
 import { assertContingentPolicy, AllocationContractError, ControlContractError, createInterventionControlAdapter, controlInstrumentSupports, controlSourcesCurrent, decideContingentPolicy, epistemicHash,
  ExperimentRefSchema, immutableControl, interventionSpecificationRef, parseControlDecision, parseControlProblem, parseEconomicMandate, prepareS4Experience, restoreInterventionControlAdapter, synthesizeContingentControl, checkPolicyAllocation, type InterventionControlSnapshot } from '@finnor/epistemic-runtime';
@@ -115,6 +116,10 @@ async function readPolicy(ctx:PeMutationContext,value:unknown):Promise<Contingen
  }catch{throw unavailable();}}
 async function readable(ctx:PeMutationContext,policy:ContingentPolicy):Promise<void>{for(const pin of policy.bindings.beliefPins)await loadEnterpriseBeliefView(ctx,{root:pin.root as PeWorldRootRef});await recoverPolicyExperience(ctx,policy);}
 async function current(ctx:PeMutationContext,policy:ContingentPolicy):Promise<string|null>{
+ if(policy.bindings.modelRef.version==='postx-y2-strategic-response-v1'){
+  try{await (await import('./strategic-response/store')).assertStrategicPolicyCurrent(ctx,policy);return null;}
+  catch{return 'Y2_STRATEGIC_MODEL_POLICY_OR_ADMISSION_NOT_CURRENT';}
+ }
  if(policy.exactProfile){try{
   if(await unresolvedEffects(ctx))return 'R1_S6_OUTSTANDING_RESPONSIBILITY_RETAINED';
   const source=await resolveExactControlSource(ctx,policy.exactProfile.sourceRef);
@@ -133,7 +138,49 @@ async function current(ctx:PeMutationContext,policy:ContingentPolicy):Promise<st
 }
 /** Existing durable effects are independently read. A caller cannot hide an
  * unknown pending effect by sending an empty obligation list. No S6 is invented. */
-async function unresolvedEffects(ctx:PeMutationContext):Promise<number>{const result=await withTenantTransaction(ctx.auth.tenantId,{userId:actor(ctx),readOnly:true},(_db,c)=>c.query("SELECT count(*)::int count FROM finnor_os.business_effects WHERE tenant_id=$1 AND status NOT IN ('verified','cancelled','compensated')",[ctx.auth.tenantId]));return result.rows[0].count;}
+export async function unresolvedEffects(ctx:PeMutationContext,client?:PoolClient):Promise<number>{
+ const query=(c:PoolClient)=>c.query<{count:number}>("SELECT count(*)::int count FROM finnor_os.business_effects WHERE tenant_id=$1 AND status NOT IN ('verified','cancelled','compensated')",[ctx.auth.tenantId]);
+ const result=client?await query(client):await withTenantTransaction(ctx.auth.tenantId,{userId:actor(ctx),readOnly:true},(_db,c)=>query(c));
+ return result.rows[0]!.count;
+}
+/** Additive S3 model family, same canonical S4 evaluator and mandate semantics.
+ * No forecast is allowed to hide an outstanding S6 responsibility. */
+export async function synthesizeEnterpriseStrategicControl(ctx:PeMutationContext,input:{
+ modelId:string;query:import('../../shared-types/src/strategic-response').StrategicForecastRequest;
+ mandate:unknown;problem:unknown;actionRules:import('../../epistemic-runtime/src/strategic-response/adapter').StrategicActionRule[];
+}){
+ const started=performance.now(),store=await import('./strategic-response/store'),
+  {withS5PortfolioTransaction}=await import('./allocation-store'),
+  {same,fail}=await import('./strategic-response/contracts'),
+  {createStrategicControlAdapter}=await import('../../epistemic-runtime/src/strategic-response/adapter');
+ store.developmentOnly();
+ const {row}=await withS5PortfolioTransaction(ctx,c=>store.resolveCurrentModelTx(ctx,c,input.modelId));
+ const m=parseEconomicMandate(input.mandate),p=parseControlProblem(input.problem);
+ if(ctx.auth.role!=='owner'||m.tenantId!==ctx.auth.tenantId||m.principalId!==actor(ctx)||m.businessOwnerRef.id!==actor(ctx)||
+  m.episodeId!==row.episode_id||p.episodeId!==row.episode_id||!same(p.modelRef,row.artifact!.envelope.contentRef)||
+  m.horizon.periods!==input.query.ruleIds.length||m.utility.unit!==row.request.problem.payoff.unit||p.context!==input.query.context)
+  fail('Y2_ORIGINAL_S4_OWNER_MANDATE_SCOPE_REQUIRED');
+ if(await unresolvedEffects(ctx))fail('Y2_S6_OUTSTANDING_RESPONSIBILITY_RECONCILIATION_REQUIRED');
+ const dynamics=createStrategicControlAdapter(row.request.problem,row.candidate!,input.query,p,input.actionRules);
+ const result=await synthesizeContingentControl({mandate:m,problem:p,dynamics,instruments:[],
+  inputArtifactRef:row.artifact!.envelope.contentRef,budgetStartedAt:started,
+  validUntilCap:row.deadline_at.toISOString()});
+ await withS5PortfolioTransaction(ctx,async c=>{
+  await store.resolveCurrentModelTx(ctx,c,row.id);
+  if(await unresolvedEffects(ctx,c))fail('Y2_S6_OUTSTANDING_RESPONSIBILITY_RECONCILIATION_REQUIRED');
+ });
+ return result;
+}
+/** Files are immutable preparation until the original physically fenced use
+ * publishes. Generic S4 reads below require that durable CHECKED binding. */
+export async function retainEnterpriseStrategicControl(ctx:PeMutationContext,result:Awaited<ReturnType<typeof synthesizeContingentControl>>){
+ await saveEvents(ctx,result.experience);await saveArtifact(ctx,'results',epistemicHash(result),result);
+ if(result.policy){
+  await saveArtifact(ctx,'mandates',result.policy.mandate.ref.contentDigest,result.policy.mandate);
+  await saveArtifact(ctx,'demands',result.policy.demand.contentDigest,result.policy.demand);
+  await saveArtifact(ctx,'policies',result.policy.ref.contentDigest,result.policy);
+ }
+}
 export async function synthesizeEnterpriseControl(ctx:PeMutationContext,input:{mandate?:unknown;problem?:unknown;protocols:unknown[];scenarios:{pathsPerMechanism:number;seed:number};priorPolicyRef?:unknown;reason?:string}):Promise<Awaited<ReturnType<typeof synthesizeContingentControl>>|{schema:'finnor.s4.policy-result.v1';status:'UNCERTAINTY_UNRESOLVED'|'MODEL_UNSUPPORTED'|'NUMERICAL_FAILURE'|'SEARCH_EXHAUSTED';policy:null;reasons:string[];experience:S4ExperienceEvent[];compute:unknown}> {
  const ownerStartedAt=performance.now(),m=parseEconomicMandate(input.mandate,{operatingProfit:true}),p=parseControlProblem(input.problem,{operatingProgramme:true});await checkedStore(ctx);
  if(ctx.auth.role!=='owner'||m.tenantId!==ctx.auth.tenantId||m.principalId!==actor(ctx)||m.businessOwnerRef.owner!=='BUSINESS_OWNER'||m.businessOwnerRef.id!==actor(ctx))throw unavailable();
@@ -199,7 +246,24 @@ export function deriveEnterpriseDeliberationConversion(policy:ContingentPolicy){
  const contentDigest=epistemicHash(body);return {ref:{owner:'S4',id:'s4-deliberation-conversion:'+contentDigest,version:'s4-finite-deliberation-conversion-v1',contentDigest},...conversion};
 }
 export async function replayEnterpriseContingentPolicy(ctx:PeMutationContext,value:unknown):Promise<{policyRef:ExperimentRef;programMatches:boolean;certificateMatches:boolean;status:string;protectedReceipt:null;qualification:string}>{
- const policy=await readEnterpriseContingentPolicy(ctx,value);if(policy.exactProfile){const e=evaluateExactContingentControl(policy.exactProfile.modelBytes,{deadlineAt:Date.now()+policy.mandate.search.deadlineMs,maxSteps:4000000,reuse:policy.exactProfile.candidate&&policy.exactProfile.receipt?{candidate:policy.exactProfile.candidate,receipt:policy.exactProfile.receipt}:null});return {policyRef:policy.ref,programMatches:epistemicHash(e.selectedActions)===epistemicHash(policy.exactProfile.evaluation.selectedActions),certificateMatches:epistemicHash(e.values)===epistemicHash(policy.exactProfile.evaluation.values),status:e.status,protectedReceipt:null,qualification:'SUPPLIED_EXACT_INFORMATION_TABLE_CURRENT_OWNER_REPLAY_NO_FIELD_ADMISSION'};}const model=await resolveEnterpriseInterventionModelForControl(ctx,policy.bindings.modelRef),snapshot:InterventionControlSnapshot=await readArtifact(ctx,'kernels',policy.bindings.dynamicsRef.contentDigest);
+ const policy=await readEnterpriseContingentPolicy(ctx,value);if(policy.exactProfile){const e=evaluateExactContingentControl(policy.exactProfile.modelBytes,{deadlineAt:Date.now()+policy.mandate.search.deadlineMs,maxSteps:4000000,reuse:policy.exactProfile.candidate&&policy.exactProfile.receipt?{candidate:policy.exactProfile.candidate,receipt:policy.exactProfile.receipt}:null});return {policyRef:policy.ref,programMatches:epistemicHash(e.selectedActions)===epistemicHash(policy.exactProfile.evaluation.selectedActions),certificateMatches:epistemicHash(e.values)===epistemicHash(policy.exactProfile.evaluation.values),status:e.status,protectedReceipt:null,qualification:'SUPPLIED_EXACT_INFORMATION_TABLE_CURRENT_OWNER_REPLAY_NO_FIELD_ADMISSION'};}if(policy.bindings.modelRef.version==='postx-y2-strategic-response-v1'){
+  const store=await import('./strategic-response/store'),{DecisionRequest}=await import('./strategic-response/contracts'),
+   {createStrategicControlAdapter}=await import('../../epistemic-runtime/src/strategic-response/adapter');
+  const binding=await store.assertStrategicPolicyCurrent(ctx,policy),request=DecisionRequest.parse(binding.request),
+   dynamics=createStrategicControlAdapter(binding.model.request.problem,binding.model.candidate!,request.query,policy.problem,request.actionRules);
+  if(epistemicHash(dynamics.ref)!==epistemicHash(policy.bindings.dynamicsRef)||
+   epistemicHash(policy.bindings.inputArtifactRef)!==epistemicHash(binding.model.artifact!.envelope.contentRef)||
+   epistemicHash(parseEconomicMandate(request.mandate))!==epistemicHash(policy.mandate)||
+   epistemicHash(parseControlProblem(request.problem))!==epistemicHash(policy.problem))throw unavailable();
+  const result=await synthesizeContingentControl({mandate:policy.mandate,problem:policy.problem,dynamics,instruments:[],
+   now:policy.knowledgeAt,inputArtifactRef:policy.bindings.inputArtifactRef,beliefPins:policy.bindings.beliefPins,
+   priorPolicyRef:policy.priorPolicyRef,validUntilCap:policy.validUntil});
+  if(await current(ctx,policy))throw unavailable();
+  return {policyRef:policy.ref,programMatches:epistemicHash(result.policy?.nodes)===epistemicHash(policy.nodes),
+   certificateMatches:epistemicHash(result.policy?.certificate)===epistemicHash(policy.certificate),status:result.status,
+   protectedReceipt:null,qualification:'RETAINED_CHECKED_STRATEGIC_BINDINGS_CURRENT_S4_BINARY64_OWNER_REPLAY_NO_EFFECT_AUTHORITY'};
+ }
+ const model=await resolveEnterpriseInterventionModelForControl(ctx,policy.bindings.modelRef),snapshot:InterventionControlSnapshot=await readArtifact(ctx,'kernels',policy.bindings.dynamicsRef.contentDigest);
  const adapter=restoreInterventionControlAdapter(model,snapshot);
  const inputRef=policy.bindings.inputArtifactRef;if(!inputRef||inputRef.owner!=='S4'||inputRef.id!==`control-input:${inputRef.contentDigest}`)throw unavailable();
  const artifact=await readArtifact(ctx,'inputs',inputRef.contentDigest);if(epistemicHash(artifact)!==inputRef.contentDigest||artifact.kernelRef.id!==adapter.ref.id||epistemicHash(artifact.problem)!==epistemicHash(policy.problem))throw unavailable();const protocols:ExperimentProtocol[]=artifact.protocols;
