@@ -18,6 +18,7 @@ import { clarificationPlugin } from "../../domain-plugins/clarification/index";
 import universalActionsPlugin from "../../domain-plugins/universal-actions/index";
 import computerTaskPlugin from "../../domain-plugins/computer-task/index";
 import privateEquityPlugin, { PRIVATE_EQUITY_ACTION_TYPES } from "../../domain-plugins/private-equity/index";
+import {economicNativeCapability} from "../../private-equity/src/program-synthesis/economic-native";
 
 type CompactSchema = {
   type?: string;
@@ -253,7 +254,8 @@ export function planningCapabilitiesForVertical(registry: PluginRegistry, vertic
   });
   return [
     ...actions,
-    ...queryUniverse.map((intent) => ({ capability: `query:${intent}`, kind: "query" as const, modelProposable: true, available: true, health: "available" as const, risk: "low" as const, irreversible: false, requiredReferences: intent === "pe_world_state" ? ["root"] : intent==="harness_program_v1"?["workId","programId"]:PRIVATE_EQUITY_OPERATIONAL_QUERY_INTENTS.includes(intent as (typeof PRIVATE_EQUITY_OPERATIONAL_QUERY_INTENTS)[number]) ? ["dealId"] : [], effectClass: null, observationStrategy: "operational_query" as const, reversibility: "read_only" as const, supportedRecoveryModes: ["retry", "replan", "escalate"] as Array<"retry" | "replan" | "escalate">, externalSideEffect: false, authorityRequirement: "query" as const })),
+    ...(verticalKey === PRIVATE_EQUITY_VERTICAL ? [economicNativeCapability()] : []),
+    ...queryUniverse.map((intent) => ({ capability: `query:${intent}`, kind: "query" as const, modelProposable: true, available: true, health: "available" as const, risk: "low" as const, irreversible: false, requiredReferences: intent === "pe_world_state" ? ["root"] : intent==="economic_programme_v1"?["workId","programmeId"]:intent==="harness_program_v1"?["workId","programId"]:PRIVATE_EQUITY_OPERATIONAL_QUERY_INTENTS.includes(intent as (typeof PRIVATE_EQUITY_OPERATIONAL_QUERY_INTENTS)[number]) ? ["dealId"] : [], effectClass: null, observationStrategy: "operational_query" as const, reversibility: "read_only" as const, supportedRecoveryModes: ["retry", "replan", "escalate"] as Array<"retry" | "replan" | "escalate">, externalSideEffect: false, authorityRequirement: "query" as const })),
     { capability: "wait:event", kind: "wait", modelProposable: true, available: true, health: "available", risk: "medium", irreversible: false, requiredReferences: ["correlation"], effectClass: null, observationStrategy: "integration_event", reversibility: "read_only", supportedRecoveryModes: ["replan", "recover", "escalate"], externalSideEffect: false, authorityRequirement: "policy" },
     { capability: "check:objective_success", kind: "check", modelProposable: true, available: true, health: "available", risk: "low", irreversible: false, requiredReferences: ["criterionId"], effectClass: null, observationStrategy: "objective_success", reversibility: "read_only", supportedRecoveryModes: ["replan", "escalate"], externalSideEffect: false, authorityRequirement: "query" },
   ];

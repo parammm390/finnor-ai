@@ -80,6 +80,8 @@ const tenantLaneClassified = (
 
 /** Exhaustive registry for every production handler registered by the worker. */
 export const PRODUCTION_JOB_CONTRACTS = {
+  construct_economic_action_theory_v1: tenantFixed("INTERACTIVE", "locally_idempotent", "Y1 finite economic semantic construction, separately checked immutable artifacts and original Work resources; no protected or external effects.", {leaseRecovery:"immediate_after_expiry"}),
+  run_economic_programme_v1: tenantFixed("INTERACTIVE", "durably_effect_guarded", "Y1 exact internal S5 reservation-right transitions with immutable S6 origins and separate canonical S7 observation; original effects reconcile before retry."),
   identify_digital_system_v1: tenantFixed("INTERACTIVE", "durably_effect_guarded", "X4 exact original consented digital experiments and read-only possible-delivery recovery, independent checker, original resources and physical fences; no protected or production authority."),
   compile_learned_policy_v1: tenantFixed("INTERACTIVE", "locally_idempotent", "X5 consented structural CPU learning, exact pinned native use and independent outcome evaluation under original immutable resources; no protected or production authority.", {leaseRecovery:"immediate_after_expiry"}),
   build_enterprise_application_v1: tenantFixed("INTERACTIVE", "locally_idempotent", "X3 bounded typed compilation, checking and transactional development installation under one original allocation; no guest effects or protected admission.", {leaseRecovery:"immediate_after_expiry"}),

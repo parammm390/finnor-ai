@@ -84,7 +84,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/db/compute-contract.ts",
-      "sha256": "5ae7997b4c954f3e123ebb5a95744d557be5c214b4615ad721b366fb10527687"
+      "sha256": "8ac958820a17179335fbd24574a1c65a1da73d38d264324b539e460a08c57d39"
     },
     {
       "path": "finnor-os/packages/db/compute-governor.ts",
@@ -96,7 +96,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/db/migration-head.ts",
-      "sha256": "76d34d29a2c2adc3c4841e05d568bb07da46274865ff72ab2572ca0c699022a7"
+      "sha256": "eb03998a459431ccaa23f103a23f5eb3c6e25e660a30a19231b462978c58287b"
     },
     {
       "path": "finnor-os/packages/db/migrations/0189_x3_enterprise_applications.sql",
@@ -104,7 +104,7 @@ export default {
     },
     {
       "path": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
-      "sha256": "fb502e308087c71f6a1ccd7104a8426efc0e91665851d70c4b139efec40e5a56"
+      "sha256": "91de6fe1c19aac94313ee091beb6b7727bfcd068df3cd786e8f8db57aa095c48"
     },
     {
       "path": "finnor-os/apps/api/lib/auth.ts",
@@ -112,7 +112,7 @@ export default {
     },
     {
       "path": "finnor-os/apps/worker/src/index.ts",
-      "sha256": "980d4af5aad29db5e4ca4dfab96ecef518ccbc94b5d858c51b5896cc24acc331"
+      "sha256": "6585f139b5c9ab9c5a94fbcf2ac2b2e399d82ae8649410af99cfb6e3fe8e5892"
     },
     {
       "path": "finnor-os/apps/worker/src/queue.ts",
@@ -124,7 +124,7 @@ export default {
     },
     {
       "path": "finnor-os/package-lock.json",
-      "sha256": "d83837193569a7b154dfa80f7d60c25cdeefe2e562a9b1e9907404085d636987"
+      "sha256": "4116b2a7e02a28b8e49baa4a24a378e5170c5dc66d285075c8cf50bf11b9faed"
     },
     {
       "path": "finnor-os/packages/private-equity/src/enterprise-control.ts",
@@ -192,11 +192,11 @@ export default {
     },
     {
       "path": "src/lib/centropy/capability-manifest.generated.json",
-      "sha256": "538da93db2609629b64096e9b6fa88ab34317aade2f312eed51403d82ac8c135"
+      "sha256": "ec486d083c1ae95bb882bcd707922395615ff2d7c9bf61c7f73353339fc7eacd"
     },
     {
       "path": "package-lock.json",
-      "sha256": "56398650ecba40d4fed91de7b190239a786589ea8efd77f2c71ec2c7d36def99"
+      "sha256": "af1d36679eb4123ab5f2d9f4668e82e1defc952a45777a74d3dff30c6d16f117"
     },
     {
       "path": "finnor-os/scripts/x3/stamp-source.mts",

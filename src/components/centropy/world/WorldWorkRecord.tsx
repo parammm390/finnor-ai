@@ -8,6 +8,7 @@ import { CausalReplayPanel } from "../canvas/CausalReplayPanel"
 import { PendingEffects } from "../thread/PendingEffects"
 import { HumanControlDesk } from "../controls/HumanControlDesk"
 import { ClosingProgrammePanel } from "../closing/ClosingProgrammePanel"
+import { EconomicActionTheoryPanel } from "../canvas/EconomicActionTheoryPanel"
 import { LiveInstitutionalControl } from "../controls/LiveInstitutionalControl"
 import type { PeWorldRootRef } from "../pe/contracts"
 import { canonicalRootFocus } from "./world-context"
@@ -60,6 +61,7 @@ export function WorldWorkRecord({ workId, root, onChanged }: { workId: string; r
       <div className="ct-world-work__metrics"><div><span>Work</span><strong>{label(aggregate.work.status)}</strong></div><div><span>Verified effects</span><strong>{verified.length} / {aggregate.businessEffects.length}</strong></div><div><span>Finalized receipts</span><strong>{finalized.length} / {aggregate.receipts.length}</strong></div></div>
       <p className="ct-world-work__objective">{aggregate.work.initialInstruction}</p>
       <ClosingProgrammePanel key={workId} workId={workId} onChanged={onChanged} />
+      {root ? <EconomicActionTheoryPanel key={`${workId}:${root.entityType}:${root.entityId}`} root={root} workId={workId} /> : null}
       {summary(aggregate.work.finalOutcome) ? <p className="ct-world-work__outcome"><ShieldCheck size={16} /> {summary(aggregate.work.finalOutcome)}</p> : null}
       {aggregate.read?.complete === false ? <p className="ct-world-work__caveat">This bounded Work read is incomplete. The counts below cover only returned rows.</p> : null}
       <div className="ct-world-work__section"><h4>Recorded actions and verification</h4>{aggregate.actions.map((action) => {
