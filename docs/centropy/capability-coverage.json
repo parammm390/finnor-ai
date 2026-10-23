@@ -1,7 +1,7 @@
 {
   "schema": "centropy.capability-coverage-audit/v1",
-  "generatedAt": "2026-10-22T22:32:10.974Z",
-  "sourceBaseCommit": "8ddd0c9a260f5752dc25764d5d4864a872bc70aa",
+  "generatedAt": "2026-10-23T00:37:45.224Z",
+  "sourceBaseCommit": "7ec93b4ca62473787d6402b63bb93f43b1facafe",
   "manifestSha256": "ca0e875ce479afa868b4565501fb2b8e4866fa8aba16f9447656db1474c485de",
   "formsSha256": "78e6da8a2346c1a96712b634d0307535e8adbef6959cc5a72cc2302f8b445ec6",
   "method": "Actual API/planner manifest; import graph from active CENTROPY route entries; literal API call bindings; typed human form registrations; explicit restricted/compatibility/protocol classifications. Source presence is not execution evidence.",
