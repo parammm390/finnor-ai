@@ -1,5 +1,5 @@
 /** Rebuild a source archive without a donor dependency tree or local Git. */
-import { readFile, writeFile, mkdir, realpath } from "node:fs/promises";
+import { readFile, writeFile, mkdir, realpath, readdir, lstat, rm } from "node:fs/promises";
 import { existsSync, createWriteStream } from "node:fs";
 import { resolve, dirname, sep } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -78,6 +78,35 @@ const env = { PATH: dirname(process.execPath) + ":/usr/bin:/bin", HOME: home, LA
   PLAYWRIGHT_BROWSERS_PATH: resolve(root, "browsers"), npm_config_cache: resolve(home, "npm-cache"),
   npm_config_devdir: resolve(home, "node-gyp") };
 const steps = [];
+let temporaryNpmCacheCleanup = null;
+async function cleanOwnTemporaryNpmCache() {
+  const path = resolve(home, "npm-cache");
+  if (!existsSync(path)) return;
+  if (path !== env.npm_config_cache || await realpath(path) !== path
+    || !path.startsWith(home + sep) || !home.startsWith(options.output + sep)) {
+    throw Error("Z0_ONLY_NEW_TARGET_TEMPORARY_NPM_CACHE_MAY_BE_REMOVED");
+  }
+  let files = 0, bytes = 0;
+  async function count(directory) {
+    for (const entry of await readdir(directory, { withFileTypes: true })) {
+      const file = resolve(directory, entry.name), observed = await lstat(file);
+      if (observed.isDirectory()) await count(file);
+      else if (observed.isFile()) { files++; bytes += observed.size; }
+      else throw Error("Z0_UNEXPECTED_TEMPORARY_NPM_CACHE_FILE_KIND");
+    }
+  }
+  await count(path);
+  const record = { schema: "finnor.project-z.z0.temporary-build-cache-cleanup.v1",
+    path, designation: "ONLY_THIS_FRESH_TARGETS_TEMPORARY_NPM_DOWNLOAD_CACHE",
+    afterStep: "04-native-fs-ext", files, bytes, retainedRuntimeOrEarlierEvidenceRemoved: false };
+  await writeFile(resolve(options.output, "temporary-npm-cache-before-cleanup.json"),
+    JSON.stringify(record, null, 2) + "\n", { flag: "wx" });
+  await rm(path, { recursive: true });
+  if (existsSync(path)) throw Error("Z0_NEW_TEMPORARY_NPM_CACHE_CLEANUP_FAILED");
+  temporaryNpmCacheCleanup = { ...record, status: "REMOVED_OWN_NEW_TEMPORARY_CACHE_ONLY" };
+  await writeFile(resolve(options.output, "temporary-npm-cache-cleanup.json"),
+    JSON.stringify(temporaryNpmCacheCleanup, null, 2) + "\n", { flag: "wx" });
+}
 async function run(name, command, args, cwd = root, expectedCode = 0, buildEnv = {}) {
   const log = resolve(options.output, name + ".log"), stream = createWriteStream(log, { flags: "wx" });
   const started = new Date().toISOString(), start = performance.now();
@@ -105,6 +134,7 @@ try {
   await run("02-root-ci", "/usr/bin/npm", ["ci", "--ignore-scripts", "--no-audit", "--no-fund"]);
   await run("03-backend-ci", "/usr/bin/npm", ["ci", "--ignore-scripts", "--no-audit", "--no-fund"], backend);
   await run("04-native-fs-ext", "/usr/bin/npm", ["rebuild", "fs-ext", "--build-from-source"], backend);
+  await cleanOwnTemporaryNpmCache();
   await run("05-browser-assets", process.execPath, [resolve(root, "node_modules/playwright/cli.js"), "install", "chromium", "--only-shell"]);
   await run("06-full-backend-types", process.execPath, [resolve(backend, "node_modules/typescript/bin/tsc"),
     "--project", resolve(backend, "tsconfig.json"), "--noEmit", "--incremental", "false"]);
@@ -127,6 +157,8 @@ try {
   await writeFile(resolve(options.output, "frontend-public-auth-build.json"), JSON.stringify(publicAuthBuild, null, 2) + "\n", { flag: "wx" });
   await run("07-actual-mounted-frontend-build", process.execPath, [resolve(root, "node_modules/next/dist/bin/next"), "build", "--webpack"],
     root, 0, frontendEnv);
+  await run("07a-seal-mounted-frontend", process.execPath, ["--input-type=module", "-e",
+    `const {sealMountedBuild}=await import(${JSON.stringify(resolve(backend, "scripts/project-z/z0/native-mounted-build.mjs"))});console.log(JSON.stringify(await sealMountedBuild(${JSON.stringify(root)})));`]);
   await run("08-complete-emission", process.execPath, [resolve(backend, "scripts/project-z/z0/emit-converged-runtime.mjs"),
     "--installation=" + options.output, "--attempt=01"]);
   const manifest = JSON.parse(await readFile(resolve(backend, "x1-development-installation.json"), "utf8"));
@@ -139,6 +171,7 @@ try {
     dependencyTreesCopied: false, localGitObjectsRequired: false, gitDiscoveryIsolated: true,
     gitCeiling: env.GIT_CEILING_DIRECTORIES, sentryRelease: env.SENTRY_RELEASE, backendTypeInputs: typeInputs.length,
     frontendPublicAuthBuild: publicAuthBuild,
+    temporaryNpmCacheCleanup,
     typescriptRuntimeFallback: "REFUSED",
     native: "NOT_RUN", installedNative: "NOT_RUN", databaseOrAuthExecuted: false,
   }, null, 2) + "\n", { flag: "wx" });

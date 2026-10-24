@@ -5,6 +5,7 @@ import { createRequire } from "node:module";
 import { spawnSync } from "node:child_process";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { validateMountedBuild } from "./native-mounted-build.mjs";
 if (!process.argv.includes("--z0-offline-doctor") || process.env.DATABASE_URL || process.env.AUTH_DEV_BYPASS) {
   throw Error("Z0_NETWORK_FREE_DOCTOR_ENVIRONMENT_REQUIRED");
 }
@@ -35,6 +36,11 @@ try {
     && publicAuth.authenticationExecuted === false, "Z0_BROWSER_PUBLIC_AUTH_BUILD_STATE_UNDECLARED");
   result.cases.push({ name: "BROWSER_PUBLIC_AUTH_BUILD_STATE_NOT_NATIVE_AUTH_PROOF",
     status: "PASSED", publicBuildInput: publicAuth.state, authenticatedNative: "NOT_RUN" });
+  const mountedBuild = await validateMountedBuild(root, manifest);
+  result.cases.push({ name: "ACTUAL_SOURCE_BOUND_STANDALONE_WITH_PUBLIC_AND_STATIC_ASSETS",
+    status: "PASSED", sha256: mountedBuild.sha256, buildId: mountedBuild.buildId,
+    files: mountedBuild.files, links: mountedBuild.links, totalBytes: mountedBuild.totalBytes,
+    serverStarted: false, authenticatedNative: "NOT_RUN" });
   const bridge = await import(pathToFileURL(installation.entrypoint("bridge")).href);
   const runtime = new bridge.ConvergedInstitutionRuntime(), capabilities = runtime.capabilities("private_equity");
   ensure(capabilities.length === 77 && new Set(capabilities.map(row => row.capability)).size === 77, "Z0_CANONICAL_CAPABILITY_CLOSURE_INCOMPLETE");
@@ -55,6 +61,8 @@ try {
       return report.cases.length === 54 && report.originalOracle?.candidateImports === false
         && report.originalOracle.expectedRowsAreInputs === false && report.database === "NOT_RUN" && report.auth === "NOT_RUN"
         && report.currentness?.simulation === false && report.currentness.databaseWrites === false
+        && report.recovery?.simulation === false && report.recovery.databaseWrites === false
+        && report.mountedBuild?.borrowedDependencies === false && report.mountedBuild.serverStarted === false
         && report.mountedWork?.transportInterception === false && report.mountedWork.injectedAuth === false
         && report.mountedWork.createdTenantsOrPrincipals === false;
     });

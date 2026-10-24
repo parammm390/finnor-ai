@@ -1,0 +1,60 @@
+{
+  "schema": "finnor.project-z.z0.guarded-driver-validation.v1",
+  "evidenceClass": "SOURCE_ENGINEERING_NOT_AUTHENTICATED_NATIVE_PROOF",
+  "startingOwnHead": "1404c893553a838cee2e131c7ee40d9a2474fedf",
+  "coordinatorHeadObserved": "9f3edfd3b4c6758832c53139da0773218062191e",
+  "coordinatorTreeObserved": "2dc4d5bc13d22853cf4dc9feb5f6ac7fbf6bb9c9",
+  "actualToolReceipt": "/home/factory-user/.factory/artifacts/scripts/66647028-fac4-4793-bec3-22b564d12b90/call_TEe5xsabZiO51DX6Iw8qgnYZ.log",
+  "preEditMap": {
+    "path": "recovery-identity-and-cleanup-before-07.md",
+    "sha256": "d946e7b5a70062e19b80f2d837cb69bbc958459eb2da344766e0fffd505c65da"
+  },
+  "node": "/home/factory-user/repos/finnor-z-toolchains/node22/node_modules/.bin/node",
+  "syntaxChecks": [
+    { "file": "native-recovery.mjs", "sha256": "7ef98a7304408853bf553548821718a372200546ac493ae78c1b9a2622c05ab1", "actualExit": 0 },
+    { "file": "native-mounted-build.mjs", "sha256": "2ea046150733d05088484bff555ab2c97fe1c43a2ce3be0c19724decad05efea", "actualExit": 0 },
+    { "file": "native-e2e-plan.mjs", "sha256": "23dbfd90649ea865f3ed828831d9e02347a766a91afa1c67b3164175a34ca1ed", "actualExit": 0 },
+    { "file": "run-native-e2e.mjs", "sha256": "b3570317bc3f8e117b7b6714077d56eda0e4ed7bc3f559f7669518a4263a0e64", "actualExit": 0 },
+    { "file": "reconstruct-converged.mjs", "sha256": "17f18f2ab0af1ac9639f8370a05d2e3a2f41956835345a86231cdec6bb7c9f98", "actualExit": 0 },
+    { "file": "emit-converged-runtime.mjs", "sha256": "162b2a6718055f3e2f7c3ded4d64ef355527650fc2090c31912d726946bb28f7", "actualExit": 0 },
+    { "file": "offline-runtime-doctor.mjs", "sha256": "17b630737d32d9b99acce9bf248770998a7ce3c553095a4141459abaabb637a8", "actualExit": 0 }
+  ],
+  "scopedGitDiffCheck": { "actualExit": 0 },
+  "doctor": {
+    "path": "native-driver-doctor-10.log",
+    "sha256": "06ad7c5f5147106d30d9370b169ce77090f1e7f552469643dfb6d2dd309931a7",
+    "actualExit": 0,
+    "plannedCasesPerTarget": 54,
+    "executedNativeCases": 0
+  },
+  "missingAuthorityGuard": {
+    "path": "native-driver-authority-refusal-08.log",
+    "sha256": "459a0eebdf75d3bf42c4797cbc60023c90e1ba4f9d6514b0dc191dc449ae290f",
+    "actualExit": 2,
+    "expectedExit": 2,
+    "predicate": "Z0_NATIVE_AUTHORITY_NOT_DELIVERED",
+    "status": "NOT_RUN",
+    "executedNativeCases": 0
+  },
+  "mandatoryAssembly": {
+    "path": "assembly-check-03.log",
+    "sha256": "86cbd5131424357f4efca0a8e3a22bd8d13155e32915e8e3fe519b2913b3dfc2",
+    "actualExit": 0,
+    "lockedMembersVerified": 20,
+    "delivery": "NOT_DELIVERED",
+    "executionsLaunched": 0
+  },
+  "sharedCspRequest": {
+    "path": "shared-mounted-csp-request-01/request.json",
+    "status": "PENDING_COORDINATOR_APPLICATION",
+    "readOnlyGitApplyCheckActualExit": 0,
+    "sharedFilesWritten": false
+  },
+  "newUnitTestsWritten": false,
+  "newIndependentReconstruction": "NOT_YET_RUN_AT_THIS_CHECKPOINT",
+  "sourceNative": "NOT_RUN",
+  "installedNative": "NOT_RUN",
+  "databaseAuthOrListenersExecuted": false,
+  "protectedAdmission": "NOT_GRANTED",
+  "slotReleased": false
+}

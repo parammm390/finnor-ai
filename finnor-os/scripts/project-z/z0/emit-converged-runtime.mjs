@@ -6,6 +6,7 @@ import { readFile, writeFile, mkdir, readdir, lstat, readlink, realpath, chmod }
 import { existsSync } from "node:fs";
 import { dirname, resolve, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
+import { validateMountedBuild } from "./native-mounted-build.mjs";
 const toolRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../../..");
 const evidenceMarker = "/scope-z/phase-evidence/z0/";
 const evidenceRoot = toolRoot.includes(evidenceMarker)
@@ -29,6 +30,7 @@ if (publicAuthBuild.schema !== "finnor.project-z.z0.frontend-public-auth-build-r
   || publicAuthBuild.sourcePopulationSha256 !== source.sourcePopulationSha256
   || !["NOT_DELIVERED", "EXPLICIT_PUBLIC_BUILD_INPUT"].includes(publicAuthBuild.state)
   || publicAuthBuild.authenticationExecuted !== false) throw Error("Z0_DECLARED_FRONTEND_PUBLIC_AUTH_BUILD_STATE_REQUIRED");
+const mountedBuildCustody = await validateMountedBuild(root);
 const generatedFrontendChanges = [];
 for (const file of source.files) {
   const actual = await readFile(resolve(root, file.path));
@@ -250,7 +252,9 @@ const manifest = {
     builderSha256: sha(await readFile(fileURLToPath(import.meta.url))) },
   generatedFrontendChanges,
   frontend: { buildId: (await readFile(resolve(root, ".next-x1-install/BUILD_ID"), "utf8")).trim(),
-    mode: "ACTUAL_NEXT_STANDALONE_BUILD_NOT_STARTED", publicAuthBuild },
+    mode: "ACTUAL_NEXT_STANDALONE_BUILD_NOT_STARTED", publicAuthBuild,
+    mountedBuildCustody: { path: "mounted-frontend-build-custody.json", location: "INSTALLATION_DIRECTORY",
+      ...mountedBuildCustody } },
   installedNative: "NOT_RUN", productionActive: false, protectedQualification: false, executionAuthorityGranted: false,
 };
 await save(resolve(backend, "x1-development-installation.json"), JSON.stringify(manifest, null, 2) + "\n");

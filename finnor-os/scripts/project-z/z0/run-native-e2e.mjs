@@ -16,6 +16,9 @@ import { originalOracleContract, originalOwnerPins, originalDigest, readOriginal
 import { nativeCurrentnessContract, currentnessStage, dependencyWitness, injectSourceRevision } from "./native-currentness.mjs";
 import { mountedWorkContract, signInExistingOwner, signOutExistingOwner, openMountedWork,
   submitMountedLearning, refreshMountedWork, switchMountedContexts } from "./native-mounted-work.mjs";
+import { nativeRecoveryContract, validateRecoverySelector, physicalBoundary,
+  recoveredExactJob, retainedRecoveryBoundary } from "./native-recovery.mjs";
+import { mountedBuildContract, validateMountedBuild } from "./native-mounted-build.mjs";
 
 const own = resolve(dirname(fileURLToPath(import.meta.url)), "../../../..");
 const sha = data => createHash("sha256").update(data).digest("hex");
@@ -139,6 +142,12 @@ async function checkOwnedWorker(target, expected = target.worker) {
     const equals = entry.indexOf("="); return [entry.slice(0, equals), entry.slice(equals + 1)];
   }));
   const argv = (await readFile("/proc/" + actual.pid + "/cmdline", "utf8")).split("\0").filter(Boolean);
+  const imports = target.kind === "INSTALLED" ? [target.loader] : [target.tsx, "tsx"];
+  const entryIndex = argv.findIndex((value, index) => index > 0 && resolve(actual.cwd, value) === target.worker.entry);
+  ensure(entryIndex > 0 && entryIndex === argv.length - 1
+    && closedNodeFlags(argv.slice(1, entryIndex), imports)
+    && closedNodeFlags((environment.NODE_OPTIONS ?? "").trim().split(/\s+/).filter(Boolean), imports),
+  "Z0_UNDECLARED_WORKER_PRELOAD_OR_EXECUTION_ARGUMENT_REFUSED");
   ensure(actual.executableSha256 === sha(await readFile(process.execPath))
     && argv.some(value => resolve(actual.cwd, value) === target.worker.entry)
     && environment.AUTH_DEV_BYPASS !== "1", "Z0_ACTUAL_CANONICAL_NONBYPASS_WORKER_REQUIRED");
@@ -201,7 +210,7 @@ async function snapshot(session, fixture) {
       work: await read("SELECT id,created_by,status FROM finnor_os.works WHERE tenant_id=$1 AND id=$3 LIMIT 1025"),
       globalCounts: await read("SELECT (SELECT count(*)::text FROM finnor_os.works WHERE tenant_id=$1 AND created_by=$2) works,(SELECT count(*)::text FROM finnor_os.work_inputs i JOIN finnor_os.works w ON w.tenant_id=i.tenant_id AND w.id=i.work_id WHERE w.tenant_id=$1 AND w.created_by=$2) inputs,(SELECT count(*)::text FROM finnor_os.domain_actions WHERE tenant_id=$1 AND initiated_by=$2) actions"),
       inputs: await read("SELECT id,instruction_id,created_at FROM finnor_os.work_inputs WHERE tenant_id=$1 AND work_id=$3 ORDER BY created_at,id LIMIT 1025"),
-      compiler: await read("SELECT r.id,r.work_id,r.work_input_id,r.episode_id,r.status,r.generation,r.program_id,r.artifact_id,r.input_manifest,e.original_deadline,e.wall_deadline,e.parent_reservation,e.parent_demand FROM finnor_os.x1_compiler_requests r JOIN finnor_os.x1_compiler_episodes e ON e.tenant_id=r.tenant_id AND e.id=r.episode_id WHERE r.tenant_id=$1 AND r.principal_id=$2 AND r.work_id=$3 LIMIT 1025"),
+      compiler: await read("SELECT r.id,r.work_id,r.work_input_id,r.episode_id,r.status,r.generation,r.claim_token,r.claim_fence,r.program_id,r.artifact_id,r.input_manifest,e.original_deadline,e.wall_deadline,e.parent_reservation,e.parent_demand FROM finnor_os.x1_compiler_requests r JOIN finnor_os.x1_compiler_episodes e ON e.tenant_id=r.tenant_id AND e.id=r.episode_id WHERE r.tenant_id=$1 AND r.principal_id=$2 AND r.work_id=$3 LIMIT 1025"),
       programs: await read("SELECT id,work_id,work_input_id,episode_id,status,generation,claim_token,claim_fence,proposed,request FROM finnor_os.p1_requests WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3 LIMIT 1025"),
       programHeads: await read("SELECT p.id,p.request_id,p.body,p.digest FROM finnor_os.p1_programs p JOIN finnor_os.p1_requests r ON r.tenant_id=p.tenant_id AND r.head_id=p.id AND r.id=p.request_id WHERE r.tenant_id=$1 AND r.principal_id=$2 AND r.work_id=$3 LIMIT 1025"),
       applications: await read("SELECT id,work_id,work_input_id,parent_id,original_parent_ref,parent,status,generation,claim_token,claim_fence,deadline_at,reservation_ref,allocation_ref,model_ref,check_ref,request FROM finnor_os.application_semantics_sessions WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3 LIMIT 1025"),
@@ -209,12 +218,12 @@ async function snapshot(session, fixture) {
       uses: await read("SELECT e.request_id,e.generation,e.kind,e.body FROM finnor_os.p1_events e JOIN finnor_os.p1_requests p ON p.tenant_id=e.tenant_id AND p.id=e.request_id WHERE p.tenant_id=$1 AND p.principal_id=$2 AND p.work_id=$3 AND e.kind IN ('P1_ORIGINAL_APPLICATION_MODEL_CONSUMED','P1_ORIGINAL_APPLICATION_MODEL_MATERIALIZED','P1_ORIGINAL_APPLICATION_DIRECT_FALLBACK') LIMIT 1025"),
       refusals: await read("SELECT 'P1' event_owner,e.id::text event_id,e.kind,e.body FROM finnor_os.p1_events e JOIN finnor_os.p1_requests p ON p.tenant_id=e.tenant_id AND p.id=e.request_id WHERE p.tenant_id=$1 AND p.principal_id=$2 AND p.work_id=$3 UNION ALL SELECT 'X2' event_owner,e.event_id,e.kind,e.body FROM finnor_os.application_semantics_events e JOIN finnor_os.application_semantics_sessions s ON s.tenant_id=e.tenant_id AND s.id=e.session_id WHERE s.tenant_id=$1 AND s.principal_id=$2 AND s.work_id=$3 UNION ALL SELECT 'X1' event_owner,e.id::text event_id,e.kind,e.body FROM finnor_os.x1_compiler_events e JOIN finnor_os.x1_compiler_requests r ON r.tenant_id=e.tenant_id AND r.id=e.request_id WHERE r.tenant_id=$1 AND r.principal_id=$2 AND r.work_id=$3 LIMIT 1025"),
       queryExecutions: await read("SELECT id,work_id,work_input_id,intent,status,execution_key FROM finnor_os.work_query_executions WHERE tenant_id=$1 AND work_id=$3 LIMIT 1025"),
-      jobs: await read("SELECT id,type,status,claim_fence,claim_token,lease_owner,lease_expires_at,payload FROM finnor_os.jobs WHERE tenant_id=$1 AND (payload->>'workId'=$3::text OR payload->>'requestId' IN(SELECT id::text FROM finnor_os.x1_compiler_requests WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3) OR payload->>'programId' IN(SELECT id::text FROM finnor_os.p1_requests WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3) OR payload->>'sessionId' IN(SELECT id::text FROM finnor_os.application_semantics_sessions WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3)) LIMIT 1025"),
-      deliveries: await read("SELECT d.job_id,d.claim_token,d.claim_fence,d.worker_id,d.outcome FROM finnor_os.job_delivery_attempts d JOIN finnor_os.jobs j ON j.tenant_id=d.tenant_id AND j.id=d.job_id WHERE d.tenant_id=$1 AND (j.payload->>'workId'=$3::text OR j.payload->>'requestId' IN(SELECT id::text FROM finnor_os.x1_compiler_requests WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3) OR j.payload->>'programId' IN(SELECT id::text FROM finnor_os.p1_requests WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3) OR j.payload->>'sessionId' IN(SELECT id::text FROM finnor_os.application_semantics_sessions WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3)) LIMIT 1025"),
+      jobs: await read("SELECT id,type,protocol_version,idempotency_key,status,claim_fence,claim_token,lease_owner,lease_expires_at,payload FROM finnor_os.jobs WHERE tenant_id=$1 AND (payload->>'workId'=$3::text OR payload->>'requestId' IN(SELECT id::text FROM finnor_os.x1_compiler_requests WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3) OR payload->>'programId' IN(SELECT id::text FROM finnor_os.p1_requests WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3) OR payload->>'sessionId' IN(SELECT id::text FROM finnor_os.application_semantics_sessions WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3)) LIMIT 1025"),
+      deliveries: await read("SELECT d.id,d.job_id,d.claim_token,d.claim_fence,d.worker_id,d.outcome,d.finished_at FROM finnor_os.job_delivery_attempts d JOIN finnor_os.jobs j ON j.tenant_id=d.tenant_id AND j.id=d.job_id WHERE d.tenant_id=$1 AND (j.payload->>'workId'=$3::text OR j.payload->>'requestId' IN(SELECT id::text FROM finnor_os.x1_compiler_requests WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3) OR j.payload->>'programId' IN(SELECT id::text FROM finnor_os.p1_requests WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3) OR j.payload->>'sessionId' IN(SELECT id::text FROM finnor_os.application_semantics_sessions WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3)) LIMIT 1025"),
       applicationArtifacts: await read("SELECT artifact_id,semantic_owner,version,content_digest,private,body FROM finnor_os.application_semantics_artifacts WHERE tenant_id=$1 AND principal_id=$2 AND artifact_id IN(SELECT model_ref->>'id' FROM finnor_os.application_semantics_sessions WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3 UNION SELECT check_ref->>'id' FROM finnor_os.application_semantics_sessions WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3 UNION SELECT refs.ref->>'id' FROM finnor_os.p1_events e JOIN finnor_os.p1_requests p ON p.tenant_id=e.tenant_id AND p.id=e.request_id CROSS JOIN LATERAL(VALUES(e.body->'modelUseRef'),(e.body->'acceptanceRef'),(e.body->'modelRef'),(e.body->'checkRef'),(e.body->'compositionRef')) refs(ref) WHERE p.tenant_id=$1 AND p.principal_id=$2 AND p.work_id=$3) LIMIT 1025"),
       reservations: await read("SELECT reservation_id,status,envelopes FROM finnor_os.s5_reservations WHERE tenant_id=$1 AND reservation_id=$4 LIMIT 1025"),
       charges: await read("SELECT charge_key,phase,resource_id,unit,units::text,body FROM finnor_os.s5_governed_resource_charges WHERE tenant_id=$1 AND principal_id=$2 AND reservation_id=$4 LIMIT 1025"),
-      obligations: await read("SELECT o.obligation_id,o.consumption_id,o.effect_id,o.domain_action_id,st.status consumption_status,e.status effect_status,ar.status application_status,ar.possible_egress FROM finnor_os.s6_obligation_origins o JOIN finnor_os.s5_consumptions c USING(tenant_id,consumption_id) JOIN finnor_os.s5_consumption_states st USING(tenant_id,consumption_id) JOIN finnor_os.business_effects e ON e.tenant_id=o.tenant_id AND e.id=o.effect_id LEFT JOIN finnor_os.application_semantics_requests ar ON ar.tenant_id=o.tenant_id AND ar.obligation_id=o.obligation_id WHERE o.tenant_id=$1 AND o.principal_id=$2 AND c.reservation_id=$4 LIMIT 1025"),
+      obligations: await read("SELECT o.obligation_id,o.consumption_id,o.effect_id,o.domain_action_id,o.input_digest,c.node_id consumption_node_id,st.status consumption_status,e.status effect_status,e.semantic_hash effect_semantic_hash,ar.id request_id,ar.session_id,ar.node_id request_node_id,ar.request_ref,ar.binding_ref,ar.wire_digest,ar.status application_status,ar.possible_egress FROM finnor_os.s6_obligation_origins o JOIN finnor_os.s5_consumptions c USING(tenant_id,consumption_id) JOIN finnor_os.s5_consumption_states st USING(tenant_id,consumption_id) JOIN finnor_os.business_effects e ON e.tenant_id=o.tenant_id AND e.id=o.effect_id LEFT JOIN finnor_os.application_semantics_requests ar ON ar.tenant_id=o.tenant_id AND ar.obligation_id=o.obligation_id WHERE o.tenant_id=$1 AND o.principal_id=$2 AND c.reservation_id=$4 LIMIT 1025"),
       compute: await read("SELECT record_id,body->'payload' payload FROM finnor_os.s7_economic_records WHERE tenant_id=$1 AND principal_id=$2 AND body->'payload'->>'workId'=$3::text AND body->'payload'->>'schema'='finnor.x1.native-compute.v1' LIMIT 1025"),
       authority: await read("SELECT revision FROM finnor_os.authority_states WHERE tenant_id=$1 LIMIT 1025"),
     };
@@ -443,20 +452,13 @@ async function waitFor(session, fixture, predicate, timeoutMs = 60000) {
   }
   throw Error("Z0_NATIVE_DURABLE_BOUNDARY_NOT_OBSERVED");
 }
-function atBoundary(value, boundary) {
-  if (boundary === "CLAIM") return value.jobs.some(row => row.status === "running" && row.claim_token && Number(row.claim_fence) > 0);
-  if (boundary === "ARTIFACT") return value.applications.some(row => row.model_ref && row.check_ref) && consumed(value).length === 0;
-  if (boundary === "AMBIGUITY") return unknown(value).some(row => row.effect_status === "reconciliation_required"
-    || row.application_status === "UNKNOWN" && row.possible_egress === true);
-  return false;
-}
 async function restartWorker(session) {
   const { target } = session;
   ensure(await realpath(target.worker.entry) === target.worker.entry && target.worker.entry.startsWith(target.root + sep)
     && sha(await readFile(target.worker.entry)) === target.worker.entrySha256, "Z0_WORKER_ENTRY_CHANGED");
   const imports = target.kind === "INSTALLED" ? target.loader : target.tsx;
   const child = spawn(process.execPath, ["--max-old-space-size=4096", "--import", imports, target.worker.entry],
-    { cwd: target.root, env: nativeEnvironment(target), detached: true, stdio: ["ignore", "pipe", "pipe"] });
+    { cwd: target.worker.cwd, env: nativeEnvironment(target), detached: true, stdio: ["ignore", "pipe", "pipe"] });
   child.stdout.on("data", () => {}); child.stderr.on("data", () => {});
   await new Promise((ok, reject) => { child.once("spawn", ok); child.once("error", reject); });
   const identity = await processIdentity(child.pid);
@@ -473,36 +475,40 @@ async function physicalCut(session, fixture, boundary) {
     && ["ORIGINAL_OWNER_OBSERVED", "TYPED_REMAINING_BUDGET_REFUSAL", "UNKNOWN_RETAINED"].includes(fixture.recoveryOutcome)
     && (boundary === "AMBIGUITY") === (fixture.recoveryOutcome === "UNKNOWN_RETAINED"),
   "Z0_INDEPENDENT_RECOVERY_TERMINAL_EXPECTATION_REQUIRED");
-  let paused = false, before, identity, killedClaim, killedProcesses;
+  validateRecoverySelector(fixture, boundary);
+  let paused = false, before, identity, cut, killedProcesses;
+  const receipt = stage => resolve(output, session.target.kind.toLowerCase() + "-" + fixture.id + "-physical-" + stage + ".json");
   try {
     const end = Date.now() + 120000;
     while (Date.now() < end) {
       identity = await checkOwnedWorker(session.target, session.worker);
       process.kill(-identity.pid, "SIGSTOP"); paused = true;
       before = await snapshot(session, fixture);
-      if (atBoundary(before, boundary)) break;
+      cut = physicalBoundary(before, fixture, boundary, identity, session.activeActor ?? session.target.actor);
+      if (cut) break;
       process.kill(-identity.pid, "SIGCONT"); paused = false;
       await delay(100);
     }
-    ensure(paused && before && atBoundary(before, boundary), "Z0_PHYSICAL_CUT_BOUNDARY_MISSED");
-    killedClaim = before.jobs.find(row => row.status === "running" && row.claim_token
-      && row.lease_owner === identity.workerInstanceId && Date.parse(row.lease_expires_at) > Date.now());
-    ensure(killedClaim && before.deliveries.some(row => row.job_id === killedClaim.id
-      && row.claim_token === killedClaim.claim_token && Number(row.claim_fence) === Number(killedClaim.claim_fence)
-      && row.worker_id === identity.workerInstanceId), "Z0_KILLED_WORKER_DID_NOT_OWN_ORIGINAL_CLAIM");
+    ensure(paused && before && cut, "Z0_PHYSICAL_CUT_BOUNDARY_MISSED");
     killedProcesses = await deliveryGroupMembers(identity);
     await checkProcess(identity, true);
+    await save(receipt("before-kill"), { status: "EXACT_BOUNDARY_OBSERVED_NOT_YET_KILLED",
+      witness: cut, process: identity, killedProcesses, beforeSha256: digest(before), lifecycleStartedAt });
     process.kill(-identity.pid, "SIGKILL"); paused = false;
     for (const member of killedProcesses) await waitExit(member);
     const exitedAt = new Date().toISOString(), afterExit = await snapshot(session, fixture);
-    ensure(atBoundary(afterExit, boundary), "Z0_PHYSICAL_CUT_BOUNDARY_ADVANCED");
+    const afterExitCut = physicalBoundary(afterExit, fixture, boundary, identity, session.activeActor ?? session.target.actor);
+    await save(receipt("after-exit"), { status: "ACTUAL_PHYSICAL_EXIT_OBSERVED",
+      witness: afterExitCut, exitedAt, afterExitSha256: digest(afterExit) });
+    ensure(afterExitCut && originalDigest(afterExitCut) === originalDigest(cut), "Z0_EXACT_PHYSICAL_CUT_BOUNDARY_ADVANCED");
     sameOriginal(before, afterExit, fixture);
     const replacement = await restartWorker(session);
     ensure(replacement.pid !== identity.pid || replacement.startTicks !== identity.startTicks, "Z0_ACTUAL_WORKER_RESTART_NOT_OBSERVED");
+    await save(receipt("replacement"), { status: "ACTUAL_SAME_ENTRY_REPLACEMENT_OBSERVED",
+      replacement, originalJob: cut.job, originalDelivery: cut.delivery });
     for (const step of fixture.afterRestart ?? []) await call(session, step);
-    const reclaimed = value => value.deliveries.some(row => row.job_id === killedClaim.id
-      && Number(row.claim_fence) > Number(killedClaim.claim_fence) && row.worker_id === replacement.workerInstanceId);
-    const recovered = await waitFor(session, fixture, value => reclaimed(value) && subset(value, fixture.expectedDurableState)
+    const recovered = await waitFor(session, fixture, value => recoveredExactJob(value, cut, replacement)
+      && retainedRecoveryBoundary(value, cut) && subset(value, fixture.expectedDurableState)
       && (fixture.recoveryOutcome !== "ORIGINAL_OWNER_OBSERVED" || originalOwnerObserved(session, value, fixture))
       && (fixture.recoveryOutcome !== "TYPED_REMAINING_BUDGET_REFUSAL"
         || observedRefusal(session, value, fixture.expectedRefusalPredicate))
@@ -527,9 +533,7 @@ async function physicalCut(session, fixture, boundary) {
       && consumed(recovered).length === consumed(before).length && recovered.actions.length === before.actions.length,
       "Z0_UNKNOWN_ORIGINAL_EXPOSURE_RELEASED_OR_FORWARD_USE_ADDED");
     session.steps.push({ kind: "PHYSICAL_OWNED_PROCESS_GROUP_EXIT_RESTART", boundary, beforeProcess: identity,
-      killedClaim: { jobId: killedClaim.id, claimFence: killedClaim.claim_fence,
-        claimTokenSha256: sha(killedClaim.claim_token), workerId: identity.workerInstanceId },
-      killedProcesses,
+      exactBoundary: cut, killedProcesses,
       exitedAt, replacement, beforeSha256: digest(before), afterExitSha256: digest(afterExit), recoveredSha256: digest(recovered),
       lifecycleStartedAt, recoveryOutcome: fixture.recoveryOutcome, externallyObservedElapsedMs: Date.now() - Date.parse(lifecycleStartedAt),
       killedDeliveryCpuSeconds: null, aggregatePeakMemoryBytes: null, money: null,
@@ -615,18 +619,20 @@ async function runCase(session, obligation, fixture) {
   session.activeActor = session.target.actor; session.caseSwitched = false;
   ensure(fixture.id === obligation.id && fixture.oracleProvenance === "ORIGINAL_STANDING_INPUTS_NOT_LEARNED_MODEL",
     "Z0_INDEPENDENT_CASE_ORACLE_REQUIRED");
+  let report;
+  try {
   if (fixture.caseOwner) {
     ensure(/^[0-9a-f-]{36}$/.test(fixture.caseOwner.actor?.tenantId ?? "")
       && /^[0-9a-f-]{36}$/.test(fixture.caseOwner.actor?.principalId ?? "")
-      && (fixture.caseOwner.actor.tenantId !== session.target.actor.tenantId
-        || fixture.caseOwner.actor.principalId !== session.target.actor.principalId)
+      && fixture.caseOwner.actor.tenantId !== session.target.actor.tenantId
+      && fixture.caseOwner.actor.principalId !== session.target.actor.principalId
       && typeof fixture.caseOwner.ownerEmailEnv === "string" && typeof fixture.caseOwner.ownerPasswordEnv === "string",
     "Z0_DISTINCT_EXISTING_CASE_OWNER_REQUIRED");
+    session.caseSwitched = true;
     await signOutExistingOwner(session);
     await signInExistingOwner(session, fixture.caseOwner, envValue);
-    session.activeActor = fixture.caseOwner.actor; session.caseSwitched = true;
+    session.activeActor = fixture.caseOwner.actor;
   }
-  try {
   session.originalExpected = null; session.ownerVisibilityWitness = null;
   if (["LEARNING", "CURRENTNESS"].includes(obligation.family) || fixture.recoveryOutcome === "ORIGINAL_OWNER_OBSERVED" || fixture.owner) {
     originalOwnerPins(fixture.owner);
@@ -720,22 +726,28 @@ async function runCase(session, obligation, fixture) {
   }
   sameOriginal(before, after, fixture);
   await restoreCurrentnessSource(session);
-  const report = { schema: "finnor.project-z.z0.native-case.v1", ...currentCase, status: "PASSED",
+  report = { schema: "finnor.project-z.z0.native-case.v1", ...currentCase, status: "PASSED",
     oracleSha256: authority.oracleSha256, originalWorkId: fixture.workId, originalWorkInputId: fixture.workInputId,
     reservationId: fixture.reservationId ?? null, beforeSha256: digest(before), afterSha256: digest(after),
     actualOwnerRowsSha256: digest(after.owner ?? []), independentOriginalInputWitness: session.originalExpected?.inputWitness ?? null,
     independentOwnerObservation: session.ownerVisibilityWitness, steps: session.steps, money: "UNKNOWN", completedByPrediction: false };
-  await save(resolve(output, session.target.kind.toLowerCase() + "-" + obligation.id + ".json"), report);
-  reports.push(report);
   } finally {
+    const failures = [];
     try { await restoreCurrentnessSource(session); }
-    catch (error) { session.restoreFailure = "SOURCE:" + (error?.message ?? String(error)); completed = false; }
+    catch (error) { failures.push("SOURCE:" + sha(String(error?.message ?? error))); }
     if (session.caseSwitched) {
-      try { await signOutExistingOwner(session); await signInExistingOwner(session, session.target, envValue); }
-      catch (error) { session.restoreFailure = (session.restoreFailure ?? "") + "|LOGIN:" + (error?.message ?? String(error)); completed = false; }
-      session.caseSwitched = false; session.activeActor = session.target.actor;
+      try {
+        await signOutExistingOwner(session); await signInExistingOwner(session, session.target, envValue);
+        session.caseSwitched = false; session.activeActor = session.target.actor;
+      } catch (error) { failures.push("LOGIN:" + sha(String(error?.message ?? error))); }
+    }
+    if (failures.length) {
+      session.restoreFailure = failures.join("|"); completed = false;
+      throw Error("Z0_NATIVE_CASE_RESTORATION_FAILED");
     }
   }
+  await save(resolve(output, session.target.kind.toLowerCase() + "-" + obligation.id + ".json"), report);
+  reports.push(report);
 }
 async function login(target) {
   const rootRequire = createRequire(resolve(target.root, "package.json")), pwPath = await realpath(rootRequire.resolve("@playwright/test"));
@@ -748,6 +760,38 @@ async function login(target) {
   await signInExistingOwner(session, target, envValue);
   return session;
 }
+function closedNodeFlags(values, imports) {
+  for (let i = 0; i < values.length; i++) {
+    if (values[i] === "--max-old-space-size=4096") continue;
+    if (values[i] === "--import") {
+      if (!imports.includes(values[++i])) return false;
+      continue;
+    }
+    if (values[i].startsWith("--import=") && imports.includes(values[i].slice(9))) continue;
+    return false;
+  }
+  return true;
+}
+async function boundEntryProcess(target, expected, entry, cwd, nextVersion = null, imports = []) {
+  ensure(expected && target.ownedProcesses.some(row => row.pid === expected.pid && row.startTicks === expected.startTicks),
+    "Z0_DEDICATED_CANONICAL_ENTRY_PROCESS_NOT_DELIVERED");
+  const actual = await checkProcess(expected);
+  ensure(actual.cwd === cwd && actual.executableSha256 === sha(await readFile(process.execPath))
+    && entry.startsWith(target.root + sep) && (await realpath(entry)).startsWith(target.root + sep),
+  "Z0_CANONICAL_EXECUTING_ENTRY_ROOT_OR_BINARY_MISMATCH");
+  const argv = (await readFile("/proc/" + actual.pid + "/cmdline", "utf8")).split("\0").filter(Boolean);
+  const namedNext = nextVersion && argv.length === 1 && argv[0] === `next-server (v${nextVersion})`;
+  const entryIndex = argv.findIndex((value, index) => index > 0 && resolve(actual.cwd, value) === entry);
+  ensure(namedNext || entryIndex > 0 && closedNodeFlags(argv.slice(1, entryIndex), imports),
+    "Z0_ACTUAL_PROCESS_DID_NOT_EXECUTE_CANONICAL_ENTRY");
+  const environment = Object.fromEntries((await readFile("/proc/" + actual.pid + "/environ", "utf8"))
+    .split("\0").filter(Boolean).map(value => { const i = value.indexOf("="); return [value.slice(0, i), value.slice(i + 1)]; }));
+  ensure(environment.AUTH_DEV_BYPASS === "0"
+    && closedNodeFlags((environment.NODE_OPTIONS ?? "").trim().split(/\s+/).filter(Boolean), imports),
+  "Z0_CANONICAL_EXECUTION_MUST_DISABLE_AUTH_BYPASS_OR_UNDECLARED_PRELOAD");
+  return { ...actual, entry, entrySha256: sha(await readFile(entry)), identityFromNextTitle: !!namedNext,
+    environment };
+}
 async function checkTargetSource(target) {
   const bytes = await readFile(resolve(dirname(target.root), "source-snapshot.json"));
   const source = JSON.parse(bytes);
@@ -757,7 +801,8 @@ async function checkTargetSource(target) {
     && sha(JSON.stringify(source.files)) === source.sourcePopulationSha256, "Z0_ACTUAL_TARGET_SOURCE_SNAPSHOT_MISMATCH");
   const verificationCode = [];
   for (const name of ["run-native-e2e.mjs", "native-e2e-plan.mjs", "native-original-oracle.mjs",
-    "native-currentness.mjs", "native-mounted-work.mjs", "native-observation-child.mjs"]) {
+    "native-currentness.mjs", "native-mounted-work.mjs", "native-observation-child.mjs",
+    "native-recovery.mjs", "native-mounted-build.mjs"]) {
     const fileSha256 = sha(await readFile(new URL(name, import.meta.url)));
     ensure(source.files.some(file => file.path === "finnor-os/scripts/project-z/z0/" + name
       && file.sha256 === fileSha256), "Z0_NATIVE_VERIFICATION_CODE_NOT_BOUND_TO_FROZEN_SOURCE");
@@ -802,8 +847,51 @@ async function checkTargetSource(target) {
     const installed = require(resolve(target.root, "finnor-os/packages/source-custody/installation.cjs")).installedRuntime(true);
     ensure(installed?.manifestDigest === manifestDigest, "Z0_ACTUAL_INSTALLED_ASSET_CUSTODY_REQUIRED");
   }
+  const mountedBuild = await validateMountedBuild(target.root, manifest);
+  ensure(mountedBuild.sourcePopulationSha256 === authority.sourcePopulationSha256
+    && mountedBuild.publicAuthBuild.state === "EXPLICIT_PUBLIC_BUILD_INPUT"
+    && mountedBuild.publicAuthBuild.authOrigin === target.authOrigin
+    && mountedBuild.publicAuthBuild.anonKeySha256 === sha(envValue(target.authAnonKeyEnv)),
+  "Z0_ACTUAL_SOURCE_BOUND_BROWSER_PUBLIC_AUTH_BUILD_INPUT_REQUIRED");
+  const require = createRequire(resolve(target.root, "finnor-os/package.json"));
+  const workerEntry = manifest ? resolve(target.root, manifest.entrypoints.worker)
+    : resolve(target.root, "finnor-os/apps/worker/src/index.ts");
+  ensure(target.worker.entry === workerEntry && target.worker.entrySha256 === sha(await readFile(workerEntry))
+    && target.worker.cwd === (manifest ? target.root : resolve(target.root, "finnor-os")),
+  "Z0_CANONICAL_SOURCE_OR_INSTALLED_WORKER_ENTRY_REQUIRED");
+  if (!manifest) ensure(target.tsx === await realpath(require.resolve("tsx")), "Z0_TARGET_LOCAL_CANONICAL_TSX_REQUIRED");
+  const apiEntry = manifest ? resolve(target.root, manifest.entrypoints.api) : require.resolve("next/dist/bin/next");
+  const apiVersion = manifest ? null : require("next/package.json").version;
+  const api = await boundEntryProcess(target, target.apiProcess, apiEntry,
+    manifest ? target.root : resolve(target.root, "finnor-os/apps/api"), apiVersion, manifest ? [target.loader] : []);
+  ensure(api.environment.SUPABASE_URL === target.authOrigin, "Z0_EXECUTING_API_AUTH_PROJECT_MISMATCH");
+  const frontendRequire = createRequire(resolve(target.root, "package.json"));
+  const frontend = await boundEntryProcess(target, target.frontendProcess, resolve(target.root, mountedBuild.entry),
+    resolve(target.root, mountedBuild.standaloneRoot), frontendRequire("next/package.json").version);
+  ensure(frontend.environment.FINNOR_OS_API_URL === target.apiOrigin
+    || frontend.environment.NEXT_PUBLIC_OS_API_URL === target.apiOrigin, "Z0_MOUNTED_FRONTEND_ORIGINAL_API_PROXY_MISMATCH");
+  await checkListener(target.apiOrigin, [api]); await checkListener(target.frontendOrigin, [frontend]);
+  const probe = await fetch(target.frontendOrigin + mountedBuild.staticProbe.path,
+    { redirect: "error", signal: AbortSignal.timeout(15000) });
+  ensure(probe.status === 200 && mountedBuild.staticProbe.bytes <= 16 * 1024 ** 2,
+    "Z0_FINITE_APPROVED_MOUNTED_STATIC_ASSET_REQUIRED");
+  const chunks = []; let length = 0;
+  for await (const chunk of probe.body) {
+    length += chunk.length;
+    ensure(length <= mountedBuild.staticProbe.bytes, "Z0_MOUNTED_STATIC_ASSET_RESPONSE_BOUND");
+    chunks.push(chunk);
+  }
+  ensure(length === mountedBuild.staticProbe.bytes && sha(Buffer.concat(chunks)) === mountedBuild.staticProbe.sha256,
+    "Z0_EXECUTING_MOUNTED_STATIC_ASSET_NOT_FROM_APPROVED_BUILD");
+  const processBinding = value => ({ pid: value.pid, startTicks: value.startTicks, cwd: value.cwd,
+    cmdlineSha256: value.cmdlineSha256, entry: value.entry, entrySha256: value.entrySha256,
+    executableSha256: value.executableSha256, identityFromNextTitle: value.identityFromNextTitle });
   sourceBindings.push({ kind: target.kind, sourceSnapshotSha256: sha(bytes), sourcePopulationSha256: source.sourcePopulationSha256,
     originalSourceFiles: source.files.length, manifestSha256: manifestDigest, verificationCode,
+    mountedBuild: { sha256: mountedBuild.sha256, buildId: mountedBuild.buildId, files: mountedBuild.files,
+      links: mountedBuild.links, staticProbeSha256: mountedBuild.staticProbe.sha256 },
+    executingApi: processBinding(api), executingFrontend: processBinding(frontend),
+    executingWorker: { entry: workerEntry, entrySha256: target.worker.entrySha256, cwd: target.worker.cwd },
     runtimeTypeScriptFallback: manifest ? "REFUSED" : "SOURCE_TARGET" });
 }
 async function main() {
@@ -812,6 +900,7 @@ async function main() {
     console.log(JSON.stringify({ ...nativePlan, driverSha256: sha(await readFile(fileURLToPath(import.meta.url))),
       originalOracle: originalOracleContract, originalOracleSha256: sha(await readFile(new URL("native-original-oracle.mjs", import.meta.url))),
       currentness: nativeCurrentnessContract, mountedWork: mountedWorkContract,
+      recovery: nativeRecoveryContract, mountedBuild: mountedBuildContract,
       authority: "NOT_DELIVERED", database: "NOT_RUN", auth: "NOT_RUN", browser: "NOT_RUN", physicalRecovery: "NOT_RUN",
       driver: opts.doctor ? "NETWORK_FREE_AUTHORITY_GUARD_DOCTOR" : "NETWORK_FREE_EXECUTABLE_PLAN" }));
     return;
@@ -858,6 +947,7 @@ async function main() {
       && nativePlan.cases.every(c => fixtures.some(f => f.id === c.id)), "Z0_COMPLETE_NATIVE_FIXTURE_COVERAGE_NOT_DELIVERED");
     for (const obligation of nativePlan.cases) {
       const fixture = fixtures.find(row => row.id === obligation.id);
+      if (obligation.family === "RECOVERY") validateRecoverySelector(fixture, obligation.boundary);
       if (["LEARNING", "CURRENTNESS"].includes(obligation.family)
         || fixture.recoveryOutcome === "ORIGINAL_OWNER_OBSERVED" || fixture.owner) {
         originalOwnerPins(fixture.owner);
@@ -865,10 +955,18 @@ async function main() {
       if (fixture.caseOwner) {
         ensure(/^[0-9a-f-]{36}$/.test(fixture.caseOwner.actor?.tenantId ?? "")
           && /^[0-9a-f-]{36}$/.test(fixture.caseOwner.actor?.principalId ?? "")
-          && (fixture.caseOwner.actor.tenantId !== target.actor.tenantId
-            || fixture.caseOwner.actor.principalId !== target.actor.principalId),
+          && fixture.caseOwner.actor.tenantId !== target.actor.tenantId
+          && fixture.caseOwner.actor.principalId !== target.actor.principalId,
         "Z0_DISTINCT_EXISTING_CASE_OWNER_REQUIRED");
         envValue(fixture.caseOwner.ownerEmailEnv); envValue(fixture.caseOwner.ownerPasswordEnv);
+      }
+      if (obligation.family === "CURRENTNESS" && obligation.dependency === "RIGHTS") {
+        const actor = fixture.caseOwner?.actor;
+        ensure(actor && actor.tenantId !== target.alternateOwner?.actor?.tenantId
+          && actor.principalId !== target.alternateOwner?.actor?.principalId
+          && fixtures.filter(row => (row.caseOwner?.actor ?? target.actor).tenantId === actor.tenantId).length === 1
+          && fixtures.filter(row => (row.caseOwner?.actor ?? target.actor).principalId === actor.principalId).length === 1,
+        "Z0_RIGHTS_FAULT_REQUIRES_UNIQUE_EXISTING_PER_CASE_TENANT_AND_PRINCIPAL");
       }
       if (fixture.otherMountedContext) {
         ensure(/^[0-9a-f-]{36}$/.test(target.alternateOwner?.actor?.tenantId ?? "")
@@ -900,6 +998,8 @@ async function main() {
     session.db = await observer(target);
     for (const obligation of nativePlan.cases) await runCase(session, obligation, oracle.targets[target.kind].find(f => f.id === obligation.id));
   }
+  ensure(sessions.every(session => !session.restoreFailure && !session.caseSwitched)
+    && reports.length === nativePlan.cases.length * nativePlan.requiredTargets.length, "Z0_COMPLETE_RESTORED_NATIVE_CASE_POPULATION_REQUIRED");
   completed = true;
 }
 try { await main(); }
@@ -914,6 +1014,7 @@ catch (error) {
 } finally {
   for (const session of sessions.reverse()) {
     const failures = [];
+    if (session.restoreFailure || session.caseSwitched) failures.push("PREVIOUS_CASE_RESTORATION_FAILED");
     try { await restoreCurrentnessSource(session); } catch { failures.push("SOURCE_FAULT_RESTORE"); }
     if (session.restarted) {
       try {
