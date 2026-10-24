@@ -171,7 +171,7 @@ export async function continueInstitutionProgram(ctx: PeMutationContext, q: Inst
     continue;
    }
    const priorApplicationInput=existing?institutionApplicationOwnerInputFromCanonicalAction(node,existing.authority_context):null;
-   if(priorApplicationInput?.modelUseRef)await recordInstitutionApplicationModelUse(ctx,claimed.id,execution,priorApplicationInput);
+   if(existing?.status==="draft"&&priorApplicationInput?.modelUseRef)await recordInstitutionApplicationModelUse(ctx,claimed.id,execution,priorApplicationInput);
    if(existing&&existing.plan_revision_id!==q.plan_revision_id&&existing.status==="draft"){
     interventions.push({stableIdentity:node.stableIdentity,
      predicate:"X1_PRIOR_DRAFT_PLAN_SUPERSEDED_REQUIRES_DECISION",possibleEffect:false});
