@@ -21,7 +21,7 @@ const result = { schema: "finnor.project-z.z0.offline-emitted-runtime-doctor.v1"
 const ensure = (condition, code) => { if (!condition) throw Error(code); };
 const run = (name, executable, args, input, predicate, extra = {}) => {
   const env = { PATH: dirname(process.execPath) + ":/usr/bin:/bin", HOME: dirname(output), LANG: "C.UTF-8",
-    NODE_OPTIONS: "--max-old-space-size=4096", GIT_CEILING_DIRECTORIES: root, ...extra };
+    NODE_OPTIONS: "--max-old-space-size=4096", GIT_CEILING_DIRECTORIES: dirname(root), ...extra };
   const child = spawnSync(executable, args, { cwd: root, env, input, encoding: "utf8", timeout: 90000, maxBuffer: 2 * 1024 ** 2 });
   const record = { name, exitCode: child.status, signal: child.signal, stdout: child.stdout, stderr: child.stderr };
   result.cases.push(record);

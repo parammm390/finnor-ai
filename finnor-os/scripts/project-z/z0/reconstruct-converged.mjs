@@ -31,7 +31,7 @@ await mkdir(root); await mkdir(home);
 const env = { PATH: dirname(process.execPath) + ":/usr/bin:/bin", HOME: home, LANG: "C.UTF-8",
   NODE_OPTIONS: "--max-old-space-size=4096", NEXT_TELEMETRY_DISABLED: "1", FINNOR_X1_FRONTEND_INSTALL: "1",
   FINNOR_BUILD_ID: "z0-" + source.sourcePopulationSha256.slice(0, 16),
-  SENTRY_RELEASE: "z0-" + source.sourcePopulationSha256, GIT_CEILING_DIRECTORIES: root,
+  SENTRY_RELEASE: "z0-" + source.sourcePopulationSha256, GIT_CEILING_DIRECTORIES: dirname(root),
   PLAYWRIGHT_BROWSERS_PATH: resolve(root, "browsers"), npm_config_cache: resolve(home, "npm-cache"),
   npm_config_devdir: resolve(home, "node-gyp") };
 const steps = [];
@@ -92,7 +92,7 @@ try {
     schema: "finnor.project-z.z0.complete-fresh-reconstruction.v1", status: "PASSED_ENGINEERING_RECONSTRUCTION",
     sourcePopulationSha256: source.sourcePopulationSha256, archiveSha256: archive.sha256, steps,
     dependencyTreesCopied: false, localGitObjectsRequired: false, gitDiscoveryIsolated: true,
-    gitCeiling: root, sentryRelease: env.SENTRY_RELEASE, backendTypeInputs: typeInputs.length,
+    gitCeiling: env.GIT_CEILING_DIRECTORIES, sentryRelease: env.SENTRY_RELEASE, backendTypeInputs: typeInputs.length,
     typescriptRuntimeFallback: "REFUSED",
     native: "NOT_RUN", installedNative: "NOT_RUN", databaseOrAuthExecuted: false,
   }, null, 2) + "\n", { flag: "wx" });
