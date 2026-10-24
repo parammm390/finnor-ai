@@ -1,0 +1,13 @@
+diff --git a/finnor-os/scripts/bundle-migrations.ts b/finnor-os/scripts/bundle-migrations.ts
+index 510a349b4687a82e2f7d3ddf1b95d39f2d8b8eb0..5a41e0591c2aa8fd3ffc0ca62c69c047d10fd951 100644
+--- a/finnor-os/scripts/bundle-migrations.ts
++++ b/finnor-os/scripts/bundle-migrations.ts
+@@ -40,7 +40,7 @@
+ for (const name of files) {
+   // Explicit Y4 namespace avoids claiming a numeric ordinal from independent
+   // POST-X peers. This exception does not admit arbitrary nonnumeric names.
+-  if(["postx_y4_confidential_economic_computation.sql","postx_y4_confidential_owner_consumption.sql","postx_y4_runtime_migration_order.sql","postz_z0_institution_application_bridge.sql"].includes(name))continue;
++  if(["postx_y4_confidential_economic_computation.sql","postx_y4_confidential_owner_consumption.sql","postx_y4_runtime_migration_order.sql","postz_z0_institution_application_bridge.sql","postz_z3_viability.sql"].includes(name))continue;
+   const id = name.split("_")[0]!;
+   if (!/^\d{4}[a-z]?$/.test(id)) throw new Error(`Invalid migration ID: ${name}`);
+   const prior=ids.get(id),historical=historicalPairs.get(id);

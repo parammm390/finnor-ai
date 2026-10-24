@@ -1,15 +1,17 @@
-diff --git a/finnor-os/packages/db/migrations/0199_z3_viability.sql b/finnor-os/packages/db/migrations/0199_z3_viability.sql
+diff --git a/finnor-os/packages/db/migrations/postz_z3_viability.sql b/finnor-os/packages/db/migrations/postz_z3_viability.sql
 new file mode 100644
-index 0000000..ba8174cf633903ee880ce0a074f939760fcb7fdf
+index 0000000..1998cf29c074cb6777a2d15fe9c09c065a30ba64
 --- /dev/null
-+++ b/finnor-os/packages/db/migrations/0199_z3_viability.sql
-@@ -0,0 +1,98 @@
++++ b/finnor-os/packages/db/migrations/postz_z3_viability.sql
+@@ -0,0 +1,101 @@
 +-- Z3 ViabilityStrategy native persistence. Owned tables only: no new Work,
 +-- reservation, effect, admission, evidence or authority owner is created, and
 +-- the S4/S5/S6/S7 owners keep their authority. The session row binds the
 +-- original Work input, authority revision, runtime code digest and deadline;
 +-- terminal verdicts, published candidates, observed checks and recorded
 +-- consumption cannot be rewritten.
++-- Applies after postz_z0_institution_application_bridge.sql by the canonical
++-- bytewise filename order and becomes the release migration head.
 +CREATE TABLE finnor_os.z3_viability_sessions(
 + tenant_id uuid NOT NULL,id uuid NOT NULL,principal_id uuid NOT NULL,
 + work_id uuid NOT NULL,work_input_id uuid NOT NULL,
@@ -85,6 +87,7 @@ index 0000000..ba8174cf633903ee880ce0a074f939760fcb7fdf
 + THEN RAISE EXCEPTION 'Z3 terminal or stale verdict cannot change'; END IF;
 + RETURN NEW;
 +END $$;
++REVOKE ALL ON FUNCTION finnor_os.z3_session_progress() FROM PUBLIC;
 +CREATE TRIGGER z3_session_progress BEFORE UPDATE OR DELETE ON finnor_os.z3_viability_sessions FOR EACH ROW EXECUTE FUNCTION finnor_os.z3_session_progress();
 +DO $$ DECLARE t text; BEGIN
 + FOREACH t IN ARRAY ARRAY['z3_viability_sessions','z3_viability_requests','z3_viability_events','z3_viability_artifacts'] LOOP

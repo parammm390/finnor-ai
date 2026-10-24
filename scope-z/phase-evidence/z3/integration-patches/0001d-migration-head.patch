@@ -1,0 +1,10 @@
+diff --git a/finnor-os/packages/db/migration-head.ts b/finnor-os/packages/db/migration-head.ts
+index af9052e19a64509357188268bd6557de8b5520d7..ce8d03bf810b1a0ebf9f5a1b9f4f6954ded75715 100644
+--- a/finnor-os/packages/db/migration-head.ts
++++ b/finnor-os/packages/db/migration-head.ts
+@@ -4,4 +4,4 @@
+  * Keep this beside the migrations so readiness and worker heartbeats cannot drift
+  * by carrying independent literals.
+  */
+-export const CURRENT_MIGRATION_HEAD = "postz_z0_institution_application_bridge.sql";
++export const CURRENT_MIGRATION_HEAD = "postz_z3_viability.sql";

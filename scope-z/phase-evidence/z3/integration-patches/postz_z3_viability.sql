@@ -4,6 +4,8 @@
 -- original Work input, authority revision, runtime code digest and deadline;
 -- terminal verdicts, published candidates, observed checks and recorded
 -- consumption cannot be rewritten.
+-- Applies after postz_z0_institution_application_bridge.sql by the canonical
+-- bytewise filename order and becomes the release migration head.
 CREATE TABLE finnor_os.z3_viability_sessions(
  tenant_id uuid NOT NULL,id uuid NOT NULL,principal_id uuid NOT NULL,
  work_id uuid NOT NULL,work_input_id uuid NOT NULL,
@@ -79,6 +81,7 @@ BEGIN
  THEN RAISE EXCEPTION 'Z3 terminal or stale verdict cannot change'; END IF;
  RETURN NEW;
 END $$;
+REVOKE ALL ON FUNCTION finnor_os.z3_session_progress() FROM PUBLIC;
 CREATE TRIGGER z3_session_progress BEFORE UPDATE OR DELETE ON finnor_os.z3_viability_sessions FOR EACH ROW EXECUTE FUNCTION finnor_os.z3_session_progress();
 DO $$ DECLARE t text; BEGIN
  FOREACH t IN ARRAY ARRAY['z3_viability_sessions','z3_viability_requests','z3_viability_events','z3_viability_artifacts'] LOOP
