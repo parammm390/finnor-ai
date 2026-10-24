@@ -20,6 +20,9 @@ export const nativePlan = Object.freeze({
   schema: "finnor.project-z.z0.native-e2e-plan.v1",
   phase: "Z0", cases, requiredTargets: ["SOURCE", "INSTALLED"],
   oracle: "PRECOMMITTED_ORIGINAL_STANDING_RULES_FULL_NATIVE_ROWS_LITERAL_INVENTORY_NOT_CANDIDATE_DERIVED",
+  originalOwnerOracle: "INDEPENDENT_SCOPED_IMMUTABLE_CORE_JSON_AND_STANDING_RULE_COMPUTATION_WITH_TIMELY_DB_VISIBILITY",
+  currentness: "ACTUAL_FENCED_STAGE_RELEVANT_DEPENDENCY_WITNESS_EXACT_PREIMAGE_SOURCE_COMMENT_FAULT_ONLY",
+  mountedWork: "REAL_SEMANTIC_FORM_DRAWER_SIGNOUT_CONTROLS_NO_INTERCEPTION_OR_INJECTED_AUTH",
   provisioning: "FORBIDDEN", fakeAuthOrOwnersOrDatabaseOrQueue: "FORBIDDEN",
   scientificIncrement: false, money: "UNKNOWN", qualificationWithoutAuthority: "NOT_RUN",
 });

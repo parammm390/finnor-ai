@@ -47,6 +47,21 @@ try {
   require("fs-ext");
   result.cases.push({ name: "ACTUAL_FRESH_FS_EXT_NATIVE_ADDON_LOADED", status: "PASSED" });
   const common = ["--import", loader];
+  const nativeDriver = resolve(root, "finnor-os/scripts/project-z/z0/run-native-e2e.mjs");
+  run("INSTALLED_NATIVE_DRIVER_LOADS_INDEPENDENT_ORIGINAL_ORACLE_WITHOUT_AUTHORITY", process.execPath,
+    [...common, nativeDriver, "--doctor"], "", child => {
+      if (child.status !== 0) return false;
+      const report = JSON.parse(child.stdout);
+      return report.cases.length === 54 && report.originalOracle?.candidateImports === false
+        && report.originalOracle.expectedRowsAreInputs === false && report.database === "NOT_RUN" && report.auth === "NOT_RUN"
+        && report.currentness?.simulation === false && report.currentness.databaseWrites === false
+        && report.mountedWork?.transportInterception === false && report.mountedWork.injectedAuth === false
+        && report.mountedWork.createdTenantsOrPrincipals === false;
+    });
+  run("INSTALLED_NATIVE_DRIVER_REFUSES_MISSING_AUTHORITY", process.execPath,
+    [...common, nativeDriver, "--run"], "", child => child.status === 2
+      && JSON.parse(child.stdout).predicate === "Z0_NATIVE_AUTHORITY_NOT_DELIVERED"
+      && JSON.parse(child.stdout).completedCases === 0);
   for (const entry of ["api", "worker"]) run(entry.toUpperCase() + "_PRE_AUTHORITY_GUARD", process.execPath,
     [...common, installation.entrypoint(entry), "--z0-offline-doctor"], "",
     child => child.status !== 0 && child.stderr.includes("X1_COMPILED_DEVELOPMENT_PROFILE_REQUIRED"));
