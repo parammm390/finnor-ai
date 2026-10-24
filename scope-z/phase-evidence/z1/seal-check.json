@@ -1,0 +1,59 @@
+{
+  "schema": "finnor.z1.handoff-seal-check.v1",
+  "status": "PASSED",
+  "scope": "Asset and metadata integrity, not new native/software/domain qualification",
+  "originalIntegrity": {
+    "assets": 16,
+    "evidenceFiles": 2202,
+    "evidenceBytes": 127819782
+  },
+  "deliveredProofIntegrity": {
+    "assets": 19,
+    "evidenceFiles": 306,
+    "evidenceBytes": 17410749
+  },
+  "totalEvidenceFiles": 2508,
+  "artifactIndexSha256": "2740892891b31287b83807a85e6e01e071a3afb38c2baf9b64473ef0689d6372",
+  "supplementalAssets": [
+    {
+      "path": "handoff.json",
+      "bytes": 18107,
+      "sha256": "4f61f075d9b5c5e5483ba46da227e4517c341f2f2c510d89f605ae8f90200cdc"
+    },
+    {
+      "path": "handoff.md",
+      "bytes": 9136,
+      "sha256": "dee0db7c256cbc255dd9e5be8fc4535505fa5ac044befe073d2c469ac610ec9a"
+    },
+    {
+      "path": "requirements-coverage.md",
+      "bytes": 10146,
+      "sha256": "663f5eb0cd955e206b30cb16850526a674491bd6dc75c637cf377a00139ca89a"
+    },
+    {
+      "path": "family-coverage.json",
+      "bytes": 14770,
+      "sha256": "832c8036e9bc395ac6aad3ef9ce7cde82b1ad3e297a0efe9fcceb98f62e1fa99"
+    },
+    {
+      "path": "retained-failures.json",
+      "bytes": 30477,
+      "sha256": "5892be241bc5c8d32ab755c8b59bf3e115728f630d0f90c60b460d2f15d88131"
+    },
+    {
+      "path": "packaged-replay-index.json",
+      "bytes": 62464,
+      "sha256": "933edb18a3cf3a2ee54427060284a77539c861123e46a70d22fa79fb137e1c42"
+    },
+    {
+      "path": "packaged-replay-report.json",
+      "bytes": 6854,
+      "sha256": "a8e7b5037dacb38637f328f39a0115414cd739fa105e79730daeb8358b9c6614"
+    }
+  ],
+  "commonHandoffFields": "PASSED",
+  "ownershipAndAbsentPreimages": "PASSED",
+  "gateAndScopeConsistency": "PASSED",
+  "sourceHead": "ebf8e4006df9b9f9e1e9cdc1a52234e823c1bf17",
+  "sourceTree": "2738732bed8ad245bb68e1c2265b91aaa815ed4c"
+}

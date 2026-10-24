@@ -1,0 +1,21 @@
+{
+  "schema": "finnor.z1.archive-build.v1",
+  "source": {
+    "path": "source-ebf8e400.tar.gz",
+    "sha256": "ee47c21da4545b99e6d61cf0b7a4498be348bce14a5cf4ba30654ca7ccb5be36",
+    "bytes": 8120533,
+    "tarSha256": "8261bafa59f61dad92c16ec932c4cf087f736e841b0751dc3258cbdd21f508ee",
+    "tarBytes": 37355520
+  },
+  "retained": {
+    "asset": {
+      "path": "retained-evidence.tar.gz",
+      "bytes": 11415770,
+      "sha256": "1e52cf5c144b7484b32e9ca0269c4f946a198838cfcf75eb568e90a86eebd9be"
+    },
+    "files": 2202,
+    "bytes": 127819782
+  },
+  "changedFiles": 22,
+  "retainedRawCopies": "PRESERVED_UNTRACKED; indexed byte-for-byte"
+}

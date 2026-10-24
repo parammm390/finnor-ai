@@ -1,0 +1,186 @@
+{
+  "schema": "finnor.z1.packaged-development-replay.v1",
+  "status": "PASSED",
+  "scope": "Packaged installed development kernel only; not native FINNOR application verification",
+  "steps": [
+    {
+      "name": "packaged-npm-ci",
+      "command": [
+        "/usr/bin/npm",
+        "ci",
+        "--ignore-scripts",
+        "--no-audit",
+        "--no-fund"
+      ],
+      "pid": 41961,
+      "exitCode": 0,
+      "timedOut": false,
+      "wallMs": 24562,
+      "log": "packaged-npm-ci.log",
+      "logSha256": "ebcfe4a695d9ba2051cfa87034a3556ded9a2a390b4043d34c4d20d474e7ac2e"
+    },
+    {
+      "name": "packaged-kernel-types",
+      "command": [
+        "/home/factory-user/repos/finnor-z-toolchains/node22/node_modules/.bin/node",
+        "/tmp/finnor-z1-packaged-t9tnqols/source/finnor-os/node_modules/typescript/bin/tsc",
+        "--noEmit",
+        "--strict",
+        "--noUncheckedIndexedAccess",
+        "--skipLibCheck",
+        "--target",
+        "ES2022",
+        "--module",
+        "ESNext",
+        "--moduleResolution",
+        "Bundler",
+        "--types",
+        "node",
+        "/tmp/finnor-z1-packaged-t9tnqols/source/finnor-os/packages/epistemic-runtime/src/project-z/z1-shared-work/engine.ts",
+        "/tmp/finnor-z1-packaged-t9tnqols/source/finnor-os/packages/epistemic-runtime/src/project-z/z1-shared-work/producer-child.ts",
+        "/tmp/finnor-z1-packaged-t9tnqols/source/finnor-os/packages/private-equity/src/project-z/z1-shared-work/processes.ts"
+      ],
+      "pid": 42029,
+      "exitCode": 0,
+      "timedOut": false,
+      "wallMs": 2141,
+      "log": "packaged-kernel-types.log",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "packaged-isolated-translation",
+      "command": [
+        "/home/factory-user/repos/finnor-z-toolchains/node22/node_modules/.bin/node",
+        "/tmp/finnor-z1-packaged-t9tnqols/source/finnor-os/scripts/project-z/z1/check-syntax.mjs",
+        "/home/factory-user/repos/finnor-z1/scope-z/phase-evidence/z1/packaged-replay-1/isolated-translation.json"
+      ],
+      "pid": 42036,
+      "exitCode": 0,
+      "timedOut": false,
+      "wallMs": 873,
+      "log": "packaged-isolated-translation.log",
+      "logSha256": "fef8ba6dfb84324c71daced36edc727a6de7fa8f281c98cda1965ae075317f60"
+    },
+    {
+      "name": "packaged-original-semantics",
+      "command": [
+        "/home/factory-user/repos/finnor-z-toolchains/node22/node_modules/.bin/node",
+        "--import",
+        "/tmp/finnor-z1-packaged-t9tnqols/source/finnor-os/node_modules/tsx/dist/loader.mjs",
+        "/tmp/finnor-z1-packaged-t9tnqols/source/finnor-os/scripts/project-z/z1/verify.mjs",
+        "/home/factory-user/repos/finnor-z1/scope-z/phase-evidence/z1/packaged-replay-1/packaged-original-semantics"
+      ],
+      "pid": 42051,
+      "exitCode": 0,
+      "timedOut": false,
+      "wallMs": 40376,
+      "log": "packaged-original-semantics.log",
+      "logSha256": "86284ae3f3dd862ed427f6a5a59f1f6cb830ecfe1630b50c359e19a9aeb4ca69"
+    },
+    {
+      "name": "packaged-process-edges",
+      "command": [
+        "/home/factory-user/repos/finnor-z-toolchains/node22/node_modules/.bin/node",
+        "--import",
+        "/tmp/finnor-z1-packaged-t9tnqols/source/finnor-os/node_modules/tsx/dist/loader.mjs",
+        "/tmp/finnor-z1-packaged-t9tnqols/source/finnor-os/scripts/project-z/z1/edge-cases.mjs",
+        "/home/factory-user/repos/finnor-z1/scope-z/phase-evidence/z1/packaged-replay-1/packaged-process-edges"
+      ],
+      "pid": 42797,
+      "exitCode": 0,
+      "timedOut": false,
+      "wallMs": 6726,
+      "log": "packaged-process-edges.log",
+      "logSha256": "771b286df94c34d81e0fd08438e783584e0d2f73e3d2f31bdfc05e3bf01b7ae8"
+    },
+    {
+      "name": "packaged-local-physical-recovery",
+      "command": [
+        "/home/factory-user/repos/finnor-z-toolchains/node22/node_modules/.bin/node",
+        "--import",
+        "/tmp/finnor-z1-packaged-t9tnqols/source/finnor-os/node_modules/tsx/dist/loader.mjs",
+        "/tmp/finnor-z1-packaged-t9tnqols/source/finnor-os/scripts/project-z/z1/physical-recovery.mjs",
+        "/home/factory-user/repos/finnor-z1/scope-z/phase-evidence/z1/packaged-replay-1/packaged-local-physical-recovery"
+      ],
+      "pid": 43105,
+      "exitCode": 0,
+      "timedOut": false,
+      "wallMs": 4810,
+      "log": "packaged-local-physical-recovery.log",
+      "logSha256": "7231465d851482cdb3128ffd259191bf59946419696421d2468da5290d25e4ca"
+    }
+  ],
+  "nativeOwnerFlow": "NOT_RUN",
+  "nativeMountedWork": "NOT_RUN",
+  "installedApplicationReconstruction": "NOT_RUN",
+  "protectedAdmission": "NOT_RUN",
+  "fullNativeAdapterTypes": "NOT_RUN; earlier capped closure OOM is retained",
+  "heavyLock": "/home/factory-user/repos/finnor-z-shared-heavy.lock",
+  "heavyLockMethod": "fcntl.flock LOCK_EX",
+  "artifactIndexSha256": "2740892891b31287b83807a85e6e01e071a3afb38c2baf9b64473ef0689d6372",
+  "sourceHead": "ebf8e4006df9b9f9e1e9cdc1a52234e823c1bf17",
+  "sourceTree": "2738732bed8ad245bb68e1c2265b91aaa815ed4c",
+  "integrity": {
+    "assets": 16,
+    "evidenceFiles": 2202,
+    "evidenceBytes": 127819782
+  },
+  "temporaryTarget": "/tmp/finnor-z1-packaged-t9tnqols/source",
+  "environmentNames": [
+    "FINNOR_Z1_SOURCE_COMMIT",
+    "FINNOR_Z1_SOURCE_TREE",
+    "HOME",
+    "LANG",
+    "NODE_OPTIONS",
+    "PATH",
+    "PYTHONDONTWRITEBYTECODE",
+    "TSX_DISABLE_CACHE",
+    "npm_config_cache",
+    "npm_config_globalconfig",
+    "npm_config_userconfig"
+  ],
+  "toolchain": {
+    "node": "v22.23.4",
+    "nodeSha256": "94efd062ed066c1a0b332e18249859c905e920eeada5df55d24c99b919629a90",
+    "npm": "11.19.1",
+    "python": "3.12.3",
+    "pythonSha256": "e50d468e8b0adfb05733f5b87b3cff34829c4a8c1aea50c865aa8bdfe4bb150f"
+  },
+  "sourceFilesChecked": 16,
+  "sourceCheckoutOverlay": false,
+  "borrowedNodeModules": false,
+  "installedDependencyAssets": [
+    {
+      "path": "tsx/dist/loader.mjs",
+      "sha256": "7e3dba3b9b862a5fa1c741d54fc921ee8b17fc7a4d0087fa64e42a32142cf03d"
+    },
+    {
+      "path": "typescript/lib/typescript.js",
+      "sha256": "3ae902c92cc44dace175c0e69e13a4b0899f6983c6121d76b9ab8dd5795e7675"
+    },
+    {
+      "path": "zod/package.json",
+      "sha256": "70eedbe34fd52385a4ae2f3e5759b19682189f0118ea73a6e7c32c677f61668e"
+    },
+    {
+      "path": "@esbuild/linux-x64/bin/esbuild",
+      "sha256": "bab29b2ca7a9e89b67cf720b77b2d743f9f31f5cf0d5bd74ee8c8de30ced7014"
+    }
+  ],
+  "coverage": {
+    "originalSemantics": {
+      "passed": 256,
+      "failed": 0
+    },
+    "processEdges": {
+      "passed": 31,
+      "failed": 0
+    },
+    "localFileRecovery": 3,
+    "isolatedTranslationFiles": 7
+  },
+  "runtimeIdentity": "117cd109bd839e67368bb820534d6644ecca5841128d9f7006c24f0f3c7e065a",
+  "temporaryTargetRemoved": true,
+  "verifyOnly": false,
+  "wallMsIncludingLockWait": 82598
+}

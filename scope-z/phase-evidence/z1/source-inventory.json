@@ -1,0 +1,87 @@
+{
+  "schema": "finnor.z1.source-inventory.v1",
+  "sourceHead": "ebf8e4006df9b9f9e1e9cdc1a52234e823c1bf17",
+  "sourceTree": "2738732bed8ad245bb68e1c2265b91aaa815ed4c",
+  "files": [
+    {
+      "path": "finnor-os/packages/epistemic-runtime/src/project-z/z1-shared-work/README.md",
+      "sha256": "35ed34d0edfc6511cb1337feb4d974c86aa9175403e07dd523dbecbd82ab6c5d",
+      "bytes": 6556
+    },
+    {
+      "path": "finnor-os/packages/epistemic-runtime/src/project-z/z1-shared-work/contracts.ts",
+      "sha256": "5999ac42c9f4aa2ade0e02c0728fc028be0b5c2a7d1080b13551b485e93e66a2",
+      "bytes": 12200
+    },
+    {
+      "path": "finnor-os/packages/epistemic-runtime/src/project-z/z1-shared-work/engine.ts",
+      "sha256": "78eacd82d8fd3f770d846ae4706b82b3ab709c7ae6393b27525776f740239ffe",
+      "bytes": 24815
+    },
+    {
+      "path": "finnor-os/packages/epistemic-runtime/src/project-z/z1-shared-work/original_checker.py",
+      "sha256": "309ae412a9f3d00f99bf7adfc71445a5b6202e41ffb512e7a02f662a26b02cfd",
+      "bytes": 24938
+    },
+    {
+      "path": "finnor-os/packages/epistemic-runtime/src/project-z/z1-shared-work/producer-child.ts",
+      "sha256": "ce44a72212d716ceb19909d3c84f0153417b69b906a5f6332727e636730bf1be",
+      "bytes": 1319
+    },
+    {
+      "path": "finnor-os/packages/epistemic-runtime/src/project-z/z1-shared-work/relational.ts",
+      "sha256": "3fb6e1f5a3838433eed6241acfce4bb04e3c726e761845240442941b126c2f42",
+      "bytes": 14018
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/project-z/z1-shared-work/owner.ts",
+      "sha256": "4946e3333be8292b87f52855d49356f3878977d5d80a1f8d18b8b5572fe9f6fe",
+      "bytes": 14777
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/project-z/z1-shared-work/processes.ts",
+      "sha256": "d3cc88138cfb43dba77b1260b7fbd0420ec89b45fbac897594be0497132c197a",
+      "bytes": 9020
+    },
+    {
+      "path": "finnor-os/packages/orchestration/src/project-z/z1-shared-work/worker.ts",
+      "sha256": "3b0aa88d51d82512a4b5116a8d804366468a5b3c4a58b2e86de429b396347166",
+      "bytes": 1086
+    },
+    {
+      "path": "finnor-os/scripts/project-z/z1/check-syntax.mjs",
+      "sha256": "70f84723d5645183f2fb6c8ff3ac441d8befae94262291a11c33cf20835cf2d2",
+      "bytes": 1820
+    },
+    {
+      "path": "finnor-os/scripts/project-z/z1/edge-cases.mjs",
+      "sha256": "365f07a305ca7247b84a2a314ca98461963aa8a1db04137dc470de2feb99b348",
+      "bytes": 13800
+    },
+    {
+      "path": "finnor-os/scripts/project-z/z1/fixtures.mjs",
+      "sha256": "cff12ce678c3a71511767aa429ead339486c73f092f98bc0d418d08865da4959",
+      "bytes": 12995
+    },
+    {
+      "path": "finnor-os/scripts/project-z/z1/physical-recovery.mjs",
+      "sha256": "aaa0b2bf6b65c767fc54a16e7a7080f22303bdc00a89b9b036fc37ca5e4aaf60",
+      "bytes": 8968
+    },
+    {
+      "path": "finnor-os/scripts/project-z/z1/reconstruct.py",
+      "sha256": "e32e5113d93e0869d8bd4aa5619c0a370fc86e05d4e1e5f3a68013d8a4508538",
+      "bytes": 8564
+    },
+    {
+      "path": "finnor-os/scripts/project-z/z1/typecheck.json",
+      "sha256": "d63063413db7e0194d0b5b74890dd0d9e41dcdbe894b1f828ab55bf843b55907",
+      "bytes": 400
+    },
+    {
+      "path": "finnor-os/scripts/project-z/z1/verify.mjs",
+      "sha256": "6ff0f0066b089a37a6c86b088731350a4e0b0f8f9704b1e74754cab2e7e1e1bf",
+      "bytes": 14004
+    }
+  ]
+}

@@ -1,0 +1,479 @@
+{
+  "schema": "finnor.z1.retained-run-history.v1",
+  "originals": "retained-evidence.tar.gz, indexed byte-for-byte in retained-evidence-inventory.json",
+  "runs": [
+    {
+      "name": "before-engine",
+      "path": "before-engine/report.json",
+      "status": "FAILED",
+      "scope": "Public original-semantics engine E2E, not native owner proof",
+      "passed": 0,
+      "failed": 256,
+      "failures": [],
+      "failedSteps": []
+    },
+    {
+      "name": "engine-run-1",
+      "path": "engine-run-1/report.json",
+      "status": "FAILED",
+      "scope": "Public original-semantics engine E2E only. Not 32×8 native/protected qualification.",
+      "passed": 248,
+      "failed": 8,
+      "failures": [
+        {
+          "family": 10,
+          "obligation": 0,
+          "failure": {
+            "name": "AssertionError",
+            "message": "ORIGINAL_FIELD_UNAVAILABLE\n+ actual - expected\n\n+ 'UNSUPPORTED'\n- 'UNKNOWN'\n     ^\n",
+            "stack": "AssertionError [ERR_ASSERTION]: ORIGINAL_FIELD_UNAVAILABLE\n+ actual - expected\n\n+ 'UNSUPPORTED'\n- 'UNKNOWN'\n     ^\n\n    at accepted (/home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/verify.mjs:50:10)\n    at <anonymous> (/home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/verify.mjs:63:27)"
+          }
+        },
+        {
+          "family": 10,
+          "obligation": 1,
+          "failure": {
+            "name": "AssertionError",
+            "message": "ORIGINAL_FIELD_UNAVAILABLE\n+ actual - expected\n\n+ 'UNSUPPORTED'\n- 'UNKNOWN'\n     ^\n",
+            "stack": "AssertionError [ERR_ASSERTION]: ORIGINAL_FIELD_UNAVAILABLE\n+ actual - expected\n\n+ 'UNSUPPORTED'\n- 'UNKNOWN'\n     ^\n\n    at accepted (/home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/verify.mjs:50:10)\n    at <anonymous> (/home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/verify.mjs:63:27)"
+          }
+        },
+        {
+          "family": 10,
+          "obligation": 2,
+          "failure": {
+            "name": "AssertionError",
+            "message": "ORIGINAL_FIELD_UNAVAILABLE\n+ actual - expected\n\n+ 'UNSUPPORTED'\n- 'UNKNOWN'\n     ^\n",
+            "stack": "AssertionError [ERR_ASSERTION]: ORIGINAL_FIELD_UNAVAILABLE\n+ actual - expected\n\n+ 'UNSUPPORTED'\n- 'UNKNOWN'\n     ^\n\n    at accepted (/home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/verify.mjs:50:10)\n    at <anonymous> (/home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/verify.mjs:63:27)"
+          }
+        },
+        {
+          "family": 10,
+          "obligation": 3,
+          "failure": {
+            "name": "AssertionError",
+            "message": "ORIGINAL_FIELD_UNAVAILABLE\n+ actual - expected\n\n+ 'UNSUPPORTED'\n- 'UNKNOWN'\n     ^\n",
+            "stack": "AssertionError [ERR_ASSERTION]: ORIGINAL_FIELD_UNAVAILABLE\n+ actual - expected\n\n+ 'UNSUPPORTED'\n- 'UNKNOWN'\n     ^\n\n    at accepted (/home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/verify.mjs:50:10)\n    at <anonymous> (/home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/verify.mjs:63:27)"
+          }
+        },
+        {
+          "family": 10,
+          "obligation": 4,
+          "failure": {
+            "name": "AssertionError",
+            "message": "ORIGINAL_FIELD_UNAVAILABLE\n+ actual - expected\n\n+ 'UNSUPPORTED'\n- 'UNKNOWN'\n     ^\n",
+            "stack": "AssertionError [ERR_ASSERTION]: ORIGINAL_FIELD_UNAVAILABLE\n+ actual - expected\n\n+ 'UNSUPPORTED'\n- 'UNKNOWN'\n     ^\n\n    at accepted (/home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/verify.mjs:50:10)\n    at <anonymous> (/home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/verify.mjs:63:27)"
+          }
+        },
+        {
+          "family": 10,
+          "obligation": 5,
+          "failure": {
+            "name": "AssertionError",
+            "message": "ORIGINAL_FIELD_UNAVAILABLE\n+ actual - expected\n\n+ 'UNSUPPORTED'\n- 'UNKNOWN'\n     ^\n",
+            "stack": "AssertionError [ERR_ASSERTION]: ORIGINAL_FIELD_UNAVAILABLE\n+ actual - expected\n\n+ 'UNSUPPORTED'\n- 'UNKNOWN'\n     ^\n\n    at accepted (/home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/verify.mjs:50:10)\n    at <anonymous> (/home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/verify.mjs:63:27)"
+          }
+        },
+        {
+          "family": 10,
+          "obligation": 6,
+          "failure": {
+            "name": "AssertionError",
+            "message": "ORIGINAL_FIELD_UNAVAILABLE\n+ actual - expected\n\n+ 'UNSUPPORTED'\n- 'UNKNOWN'\n     ^\n",
+            "stack": "AssertionError [ERR_ASSERTION]: ORIGINAL_FIELD_UNAVAILABLE\n+ actual - expected\n\n+ 'UNSUPPORTED'\n- 'UNKNOWN'\n     ^\n\n    at accepted (/home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/verify.mjs:50:10)\n    at <anonymous> (/home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/verify.mjs:63:27)"
+          }
+        },
+        {
+          "family": 10,
+          "obligation": 7,
+          "failure": {
+            "name": "AssertionError",
+            "message": "ORIGINAL_FIELD_UNAVAILABLE\n+ actual - expected\n\n+ 'UNSUPPORTED'\n- 'UNKNOWN'\n     ^\n",
+            "stack": "AssertionError [ERR_ASSERTION]: ORIGINAL_FIELD_UNAVAILABLE\n+ actual - expected\n\n+ 'UNSUPPORTED'\n- 'UNKNOWN'\n     ^\n\n    at accepted (/home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/verify.mjs:50:10)\n    at <anonymous> (/home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/verify.mjs:63:27)"
+          }
+        }
+      ],
+      "failedSteps": []
+    },
+    {
+      "name": "engine-run-2",
+      "path": "engine-run-2/report.json",
+      "status": "PASSED",
+      "scope": "Public original-semantics engine E2E only. Not 32×8 native/protected qualification.",
+      "passed": 256,
+      "failed": 0,
+      "failures": [],
+      "failedSteps": []
+    },
+    {
+      "name": "engine-run-3",
+      "path": "engine-run-3/report.json",
+      "status": "PASSED",
+      "scope": "Public original-semantics engine E2E only. Not 32×8 native/protected qualification.",
+      "passed": 256,
+      "failed": 0,
+      "failures": [],
+      "failedSteps": []
+    },
+    {
+      "name": "edge-run-1",
+      "path": "edge-run-1/report.json",
+      "status": "FAILED",
+      "scope": "Public full-programme/process edge E2E, not native/protected qualification",
+      "passed": 17,
+      "failed": 1,
+      "failures": [
+        {
+          "name": "cross-currency",
+          "failure": {
+            "message": "Expected values to be strictly equal:\n+ actual - expected\n\n+ 'UNKNOWN'\n- 'UNSUPPORTED'\n     ^\n",
+            "stack": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ 'UNKNOWN'\n- 'UNSUPPORTED'\n     ^\n\n    at file:///home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/edge-cases.mjs:108:40\n    at trial (file:///home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/edge-cases.mjs:24:15)\n    at file:///home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/edge-cases.mjs:107:9"
+          }
+        }
+      ],
+      "failedSteps": []
+    },
+    {
+      "name": "physical-run-1",
+      "path": "physical-run-1/report.json",
+      "status": "PASSED",
+      "scope": "Three real SIGKILL/restarts of an owned LOCAL FILE FIXTURE worker, actual producer/checker children and durable files",
+      "passed": null,
+      "failed": null,
+      "failures": [],
+      "failedSteps": []
+    },
+    {
+      "name": "fresh-reconstruction-1",
+      "path": "fresh-reconstruction-1/report.json",
+      "status": "PASSED",
+      "scope": "Fresh locked dependencies, Z1 original-semantics/process E2E. Not full application installation.",
+      "passed": null,
+      "failed": null,
+      "failures": [],
+      "failedSteps": []
+    },
+    {
+      "name": "review-before-fix",
+      "path": "review-before-fix/report.json",
+      "status": "FAILED",
+      "scope": "Public full-programme/process edge E2E, not native/protected qualification",
+      "passed": 18,
+      "failed": 12,
+      "failures": [
+        {
+          "name": "unicode-original-work-identities",
+          "failure": {
+            "message": "Expected values to be strictly equal:\n+ actual - expected\n\n+ 'COUNTEREXAMPLE'\n- 'CHECKED_CANDIDATE'\n",
+            "stack": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ 'COUNTEREXAMPLE'\n- 'CHECKED_CANDIDATE'\n\n    at file:///home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/edge-cases.mjs:153:12\n    at async trial (file:///home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/edge-cases.mjs:25:9)\n    at async file:///home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/edge-cases.mjs:149:3"
+          }
+        },
+        {
+          "name": "prototype-like-original-work-identities",
+          "failure": {
+            "message": "EXACT_RATIONAL_TEXT_REQUIRED",
+            "stack": "AssertionError [ERR_ASSERTION]: EXACT_RATIONAL_TEXT_REQUIRED\n    at file:///home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/edge-cases.mjs:151:12\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\n    at async trial (file:///home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/edge-cases.mjs:25:9)\n    at async file:///home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/edge-cases.mjs:149:3"
+          }
+        },
+        {
+          "name": "original-left-to-right-short-circuit",
+          "failure": {
+            "message": "Expected values to be strictly equal:\n+ actual - expected\n\n+ 'COUNTEREXAMPLE'\n- 'CHECKED_CANDIDATE'\n",
+            "stack": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ 'COUNTEREXAMPLE'\n- 'CHECKED_CANDIDATE'\n\n    at file:///home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/edge-cases.mjs:172:10\n    at async trial (file:///home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/edge-cases.mjs:25:9)\n    at async file:///home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/edge-cases.mjs:167:1"
+          }
+        },
+        {
+          "name": "derived-group-column-profile-bound",
+          "failure": {
+            "message": "Expected values to be strictly equal:\n+ actual - expected\n\n+ 'UNKNOWN'\n- 'UNSUPPORTED'\n     ^\n",
+            "stack": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ 'UNKNOWN'\n- 'UNSUPPORTED'\n     ^\n\n    at file:///home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/edge-cases.mjs:180:10\n    at trial (file:///home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/edge-cases.mjs:25:15)\n    at file:///home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/edge-cases.mjs:178:7"
+          }
+        },
+        {
+          "name": "rehashed-false-envelope-tenant",
+          "failure": {
+            "message": "Expected values to be strictly equal:\n+ actual - expected\n\n+ 'CHECKED_CANDIDATE'\n- 'COUNTEREXAMPLE'\n",
+            "stack": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ 'CHECKED_CANDIDATE'\n- 'COUNTEREXAMPLE'\n\n    at file:///home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/edge-cases.mjs:209:12\n    at async trial (file:///home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/edge-cases.mjs:25:9)\n    at async file:///home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/edge-cases.mjs:200:3"
+          }
+        },
+        {
+          "name": "rehashed-false-envelope-build",
+          "failure": {
+            "message": "Expected values to be strictly equal:\n+ actual - expected\n\n+ 'CHECKED_CANDIDATE'\n- 'COUNTEREXAMPLE'\n",
+            "stack": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ 'CHECKED_CANDIDATE'\n- 'COUNTEREXAMPLE'\n\n    at file:///home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/edge-cases.mjs:209:12\n    at async trial (file:///home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/edge-cases.mjs:25:9)\n    at async file:///home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/edge-cases.mjs:200:3"
+          }
+        },
+        {
+          "name": "rehashed-false-envelope-checker",
+          "failure": {
+            "message": "Expected values to be strictly equal:\n+ actual - expected\n\n+ 'CHECKED_CANDIDATE'\n- 'COUNTEREXAMPLE'\n",
+            "stack": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ 'CHECKED_CANDIDATE'\n- 'COUNTEREXAMPLE'\n\n    at file:///home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/edge-cases.mjs:209:12\n    at async trial (file:///home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/edge-cases.mjs:25:9)\n    at async file:///home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/edge-cases.mjs:200:3"
+          }
+        },
+        {
+          "name": "rehashed-source-evidence-upgrade",
+          "failure": {
+            "message": "Expected values to be strictly equal:\n+ actual - expected\n\n+ 'CHECKED_CANDIDATE'\n- 'COUNTEREXAMPLE'\n",
+            "stack": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ 'CHECKED_CANDIDATE'\n- 'COUNTEREXAMPLE'\n\n    at file:///home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/edge-cases.mjs:209:12\n    at async trial (file:///home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/edge-cases.mjs:25:9)\n    at async file:///home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/edge-cases.mjs:200:3"
+          }
+        },
+        {
+          "name": "rehashed-null-authority-flag",
+          "failure": {
+            "message": "Expected values to be strictly equal:\n+ actual - expected\n\n+ 'CHECKED_CANDIDATE'\n- 'COUNTEREXAMPLE'\n",
+            "stack": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ 'CHECKED_CANDIDATE'\n- 'COUNTEREXAMPLE'\n\n    at file:///home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/edge-cases.mjs:209:12\n    at async trial (file:///home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/edge-cases.mjs:25:9)\n    at async file:///home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/edge-cases.mjs:200:3"
+          }
+        },
+        {
+          "name": "rehashed-fabricated-zero-usd",
+          "failure": {
+            "message": "Expected values to be strictly equal:\n+ actual - expected\n\n+ 'CHECKED_CANDIDATE'\n- 'COUNTEREXAMPLE'\n",
+            "stack": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ 'CHECKED_CANDIDATE'\n- 'COUNTEREXAMPLE'\n\n    at file:///home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/edge-cases.mjs:209:12\n    at async trial (file:///home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/edge-cases.mjs:25:9)\n    at async file:///home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/edge-cases.mjs:200:3"
+          }
+        },
+        {
+          "name": "rehashed-removed-meter-gaps",
+          "failure": {
+            "message": "Expected values to be strictly equal:\n+ actual - expected\n\n+ 'CHECKED_CANDIDATE'\n- 'COUNTEREXAMPLE'\n",
+            "stack": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ 'CHECKED_CANDIDATE'\n- 'COUNTEREXAMPLE'\n\n    at file:///home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/edge-cases.mjs:209:12\n    at async trial (file:///home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/edge-cases.mjs:25:9)\n    at async file:///home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/edge-cases.mjs:200:3"
+          }
+        },
+        {
+          "name": "rehashed-zeroed-all-operation-charges",
+          "failure": {
+            "message": "Expected values to be strictly equal:\n+ actual - expected\n\n+ 'CHECKED_CANDIDATE'\n- 'COUNTEREXAMPLE'\n",
+            "stack": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ 'CHECKED_CANDIDATE'\n- 'COUNTEREXAMPLE'\n\n    at file:///home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/edge-cases.mjs:209:12\n    at async trial (file:///home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/edge-cases.mjs:25:9)\n    at async file:///home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/edge-cases.mjs:200:3"
+          }
+        }
+      ],
+      "failedSteps": []
+    },
+    {
+      "name": "review-before-fix-2",
+      "path": "review-before-fix-2/report.json",
+      "status": "FAILED",
+      "scope": "Public full-programme/process edge E2E, not native/protected qualification",
+      "passed": 18,
+      "failed": 12,
+      "failures": [
+        {
+          "name": "unicode-original-work-identities",
+          "failure": {
+            "message": "Expected values to be strictly equal:\n+ actual - expected\n\n+ 'COUNTEREXAMPLE'\n- 'CHECKED_CANDIDATE'\n",
+            "stack": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ 'COUNTEREXAMPLE'\n- 'CHECKED_CANDIDATE'\n\n    at file:///home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/edge-cases.mjs:155:12\n    at async trial (file:///home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/edge-cases.mjs:25:9)\n    at async file:///home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/edge-cases.mjs:149:3"
+          }
+        },
+        {
+          "name": "prototype-like-original-work-identities",
+          "failure": {
+            "message": "EXACT_RATIONAL_TEXT_REQUIRED",
+            "stack": "AssertionError [ERR_ASSERTION]: EXACT_RATIONAL_TEXT_REQUIRED\n    at file:///home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/edge-cases.mjs:152:12\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\n    at async trial (file:///home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/edge-cases.mjs:25:9)\n    at async file:///home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/edge-cases.mjs:149:3"
+          }
+        },
+        {
+          "name": "original-left-to-right-short-circuit",
+          "failure": {
+            "message": "Expected values to be strictly equal:\n+ actual - expected\n\n+ 'COUNTEREXAMPLE'\n- 'CHECKED_CANDIDATE'\n",
+            "stack": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ 'COUNTEREXAMPLE'\n- 'CHECKED_CANDIDATE'\n\n    at file:///home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/edge-cases.mjs:175:10\n    at async trial (file:///home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/edge-cases.mjs:25:9)\n    at async file:///home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/edge-cases.mjs:168:1"
+          }
+        },
+        {
+          "name": "derived-group-column-profile-bound",
+          "failure": {
+            "message": "Expected values to be strictly equal:\n+ actual - expected\n\n+ 'UNKNOWN'\n- 'UNSUPPORTED'\n     ^\n",
+            "stack": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ 'UNKNOWN'\n- 'UNSUPPORTED'\n     ^\n\n    at file:///home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/edge-cases.mjs:183:10\n    at trial (file:///home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/edge-cases.mjs:25:15)\n    at file:///home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/edge-cases.mjs:180:7"
+          }
+        },
+        {
+          "name": "rehashed-false-envelope-tenant",
+          "failure": {
+            "message": "Expected values to be strictly equal:\n+ actual - expected\n\n+ 'CHECKED_CANDIDATE'\n- 'COUNTEREXAMPLE'\n",
+            "stack": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ 'CHECKED_CANDIDATE'\n- 'COUNTEREXAMPLE'\n\n    at file:///home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/edge-cases.mjs:212:12\n    at async trial (file:///home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/edge-cases.mjs:25:9)\n    at async file:///home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/edge-cases.mjs:202:3"
+          }
+        },
+        {
+          "name": "rehashed-false-envelope-build",
+          "failure": {
+            "message": "Expected values to be strictly equal:\n+ actual - expected\n\n+ 'CHECKED_CANDIDATE'\n- 'COUNTEREXAMPLE'\n",
+            "stack": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ 'CHECKED_CANDIDATE'\n- 'COUNTEREXAMPLE'\n\n    at file:///home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/edge-cases.mjs:212:12\n    at async trial (file:///home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/edge-cases.mjs:25:9)\n    at async file:///home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/edge-cases.mjs:202:3"
+          }
+        },
+        {
+          "name": "rehashed-false-envelope-checker",
+          "failure": {
+            "message": "Expected values to be strictly equal:\n+ actual - expected\n\n+ 'CHECKED_CANDIDATE'\n- 'COUNTEREXAMPLE'\n",
+            "stack": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ 'CHECKED_CANDIDATE'\n- 'COUNTEREXAMPLE'\n\n    at file:///home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/edge-cases.mjs:212:12\n    at async trial (file:///home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/edge-cases.mjs:25:9)\n    at async file:///home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/edge-cases.mjs:202:3"
+          }
+        },
+        {
+          "name": "rehashed-source-evidence-upgrade",
+          "failure": {
+            "message": "Expected values to be strictly equal:\n+ actual - expected\n\n+ 'CHECKED_CANDIDATE'\n- 'COUNTEREXAMPLE'\n",
+            "stack": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ 'CHECKED_CANDIDATE'\n- 'COUNTEREXAMPLE'\n\n    at file:///home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/edge-cases.mjs:212:12\n    at async trial (file:///home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/edge-cases.mjs:25:9)\n    at async file:///home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/edge-cases.mjs:202:3"
+          }
+        },
+        {
+          "name": "rehashed-null-authority-flag",
+          "failure": {
+            "message": "Expected values to be strictly equal:\n+ actual - expected\n\n+ 'CHECKED_CANDIDATE'\n- 'COUNTEREXAMPLE'\n",
+            "stack": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ 'CHECKED_CANDIDATE'\n- 'COUNTEREXAMPLE'\n\n    at file:///home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/edge-cases.mjs:212:12\n    at async trial (file:///home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/edge-cases.mjs:25:9)\n    at async file:///home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/edge-cases.mjs:202:3"
+          }
+        },
+        {
+          "name": "rehashed-fabricated-zero-usd",
+          "failure": {
+            "message": "Expected values to be strictly equal:\n+ actual - expected\n\n+ 'CHECKED_CANDIDATE'\n- 'COUNTEREXAMPLE'\n",
+            "stack": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ 'CHECKED_CANDIDATE'\n- 'COUNTEREXAMPLE'\n\n    at file:///home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/edge-cases.mjs:212:12\n    at async trial (file:///home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/edge-cases.mjs:25:9)\n    at async file:///home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/edge-cases.mjs:202:3"
+          }
+        },
+        {
+          "name": "rehashed-removed-meter-gaps",
+          "failure": {
+            "message": "Expected values to be strictly equal:\n+ actual - expected\n\n+ 'CHECKED_CANDIDATE'\n- 'COUNTEREXAMPLE'\n",
+            "stack": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ 'CHECKED_CANDIDATE'\n- 'COUNTEREXAMPLE'\n\n    at file:///home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/edge-cases.mjs:212:12\n    at async trial (file:///home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/edge-cases.mjs:25:9)\n    at async file:///home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/edge-cases.mjs:202:3"
+          }
+        },
+        {
+          "name": "rehashed-zeroed-all-operation-charges",
+          "failure": {
+            "message": "Expected values to be strictly equal:\n+ actual - expected\n\n+ 'CHECKED_CANDIDATE'\n- 'COUNTEREXAMPLE'\n",
+            "stack": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ 'CHECKED_CANDIDATE'\n- 'COUNTEREXAMPLE'\n\n    at file:///home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/edge-cases.mjs:212:12\n    at async trial (file:///home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/edge-cases.mjs:25:9)\n    at async file:///home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/edge-cases.mjs:202:3"
+          }
+        }
+      ],
+      "failedSteps": []
+    },
+    {
+      "name": "review-after-fix",
+      "path": "review-after-fix/report.json",
+      "status": "PASSED",
+      "scope": "Public full-programme/process edge E2E, not native/protected qualification",
+      "passed": 30,
+      "failed": 0,
+      "failures": [],
+      "failedSteps": []
+    },
+    {
+      "name": "foreign-source-before-fix",
+      "path": "foreign-source-before-fix/report.json",
+      "status": "FAILED",
+      "scope": "Public full-programme/process edge E2E, not native/protected qualification",
+      "passed": 30,
+      "failed": 1,
+      "failures": [
+        {
+          "name": "unused-foreign-source-raw-data-rejected",
+          "failure": {
+            "message": "Expected values to be strictly equal:\n+ actual - expected\n\n+ 'UNKNOWN'\n- 'REVOKED'\n",
+            "stack": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ 'UNKNOWN'\n- 'REVOKED'\n\n    at file:///home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/edge-cases.mjs:190:10\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\n    at async trial (file:///home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/edge-cases.mjs:25:9)\n    at async file:///home/factory-user/repos/finnor-z1/finnor-os/scripts/project-z/z1/edge-cases.mjs:187:1"
+          }
+        }
+      ],
+      "failedSteps": []
+    },
+    {
+      "name": "final-source-process-edges",
+      "path": "final-source-process-edges/report.json",
+      "status": "PASSED",
+      "scope": "Public full-programme/process edge E2E, not native/protected qualification",
+      "passed": 31,
+      "failed": 0,
+      "failures": [],
+      "failedSteps": []
+    },
+    {
+      "name": "final-fresh-reconstruction",
+      "path": "final-fresh-reconstruction/report.json",
+      "status": "FAILED",
+      "scope": "Fresh locked dependencies, Z1 original-semantics/process E2E. Not full application installation.",
+      "passed": null,
+      "failed": null,
+      "failures": [],
+      "failedSteps": [
+        {
+          "name": "fresh-original-semantics",
+          "exitCode": 1,
+          "timedOut": false,
+          "log": "fresh-original-semantics.log"
+        }
+      ]
+    },
+    {
+      "name": "plain-json-allocation-edges",
+      "path": "plain-json-allocation-edges/report.json",
+      "status": "PASSED",
+      "scope": "Public full-programme/process edge E2E, not native/protected qualification",
+      "passed": 31,
+      "failed": 0,
+      "failures": [],
+      "failedSteps": []
+    },
+    {
+      "name": "final-fresh-reconstruction-2",
+      "path": "final-fresh-reconstruction-2/report.json",
+      "status": "PASSED",
+      "scope": "Fresh locked dependencies, Z1 original-semantics/process E2E. Not full application installation.",
+      "passed": null,
+      "failed": null,
+      "failures": [],
+      "failedSteps": []
+    },
+    {
+      "name": "final-fresh-reconstruction-3",
+      "path": "final-fresh-reconstruction-3/report.json",
+      "status": "PASSED",
+      "scope": "Fresh locked dependencies, Z1 original-semantics/process E2E. Not full application installation.",
+      "passed": null,
+      "failed": null,
+      "failures": [],
+      "failedSteps": []
+    }
+  ],
+  "reportingCorrections": [
+    {
+      "run": "before-engine",
+      "actualUnavailableEntryFailures": 1,
+      "notRunCases": 256,
+      "note": "Original report's failed=256 is preserved but not a true executed-case count."
+    }
+  ],
+  "additionalFailures": [
+    {
+      "path": "harness-setup-failure-1.json",
+      "status": "FAILED",
+      "scope": "Wrong fixture repository traversal before engine campaign"
+    },
+    {
+      "path": "syntax-harness-failure-1.json",
+      "status": "FAILED",
+      "scope": "Disposable inline reporter syntax before product execution"
+    },
+    {
+      "path": "backend-typecheck-1.log",
+      "status": "FAILED",
+      "scope": "Existing backend typecheck, 1536 MiB heap OOM"
+    },
+    {
+      "path": "z1-typecheck-1.log",
+      "status": "FAILED",
+      "scope": "Native closure, 1536 MiB heap OOM"
+    }
+  ],
+  "historicalSourceLimitation": "Inputs/actions/outputs/logs/source hashes retained. Complete source preimages are not sealed for every pre-first-commit failing state.",
+  "currentPackagedReplay": {
+    "status": "PASSED",
+    "report": "packaged-replay-report.json",
+    "coverage": {
+      "originalSemantics": {
+        "passed": 256,
+        "failed": 0
+      },
+      "processEdges": {
+        "passed": 31,
+        "failed": 0
+      },
+      "localFileRecovery": 3,
+      "isolatedTranslationFiles": 7
+    }
+  }
+}

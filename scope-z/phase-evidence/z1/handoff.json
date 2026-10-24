@@ -1,0 +1,264 @@
+{
+  "schema": "finnor.project-z.phase-handoff.v1",
+  "phase": "Z1",
+  "principalOutput": "SharedWorkProgram",
+  "engineeringDisposition": "INTERNAL_INCOMPLETE; exact public development kernel delivered, native integration and required owner proofs unfinished",
+  "claimClass": "partial",
+  "codeComplete": false,
+  "nativeE2EDevVerified": false,
+  "domainQualified": false,
+  "productionActive": false,
+  "productLockDigest": "61d9881ca8059d24d057d1e00d5436ef2059de7889ccd1fd2f92a630075bcebf",
+  "executionPackDigest": "4419731d2544d1c07fe275ec8071d5d783273942ca9947eda2ff6b4e2dffb9db",
+  "seed": {
+    "path": "scope-z/prompts/seeds/z1.seed.md",
+    "bytes": 861773,
+    "sha256": "635e04fc82b8ff5769f0569d95b1185b95d195eec67d4552d1a4f999178bad7d",
+    "fullReadAcknowledgement": false,
+    "requiredReadingBeforeImplementation": "NOT_SATISFIED; full seed, earlier Z0 seed and mandatory companion reading incomplete at implementation start",
+    "retroactiveCureClaimed": false,
+    "historicalAuthoringDeliveryRecords": "Unchanged NOT_DELIVERED/zero-execution records; not current delivery or product success receipts"
+  },
+  "sourceBase": {
+    "commit": "684d805e471836a720aa6741a3128eca17d28202",
+    "tree": "163f63b65c88481194d0d48e77337494b3b9f24f"
+  },
+  "historicalProductSource": {
+    "commit": "7bfdd2d3ab611c90f1355637858824ff1ba67f98",
+    "tree": "82caf48007bc826794650505ae76aba92d4f981b",
+    "isActualEngineeringBase": false
+  },
+  "sourceHead": "ebf8e4006df9b9f9e1e9cdc1a52234e823c1bf17",
+  "sourceTree": "2738732bed8ad245bb68e1c2265b91aaa815ed4c",
+  "sourceIdentityScope": "Runtime-tested implementation, not the later handoff-only commit",
+  "handoffRevision": "The Git commit containing handoff.json; resolve separately. No self-referential commit hash embedded.",
+  "branch": "factory/project-z1",
+  "worktree": "/home/factory-user/repos/finnor-z1",
+  "changedFiles": "changed-source-manifest.json",
+  "implementationChangedFiles": 22,
+  "implementationPatch": "implementation-source.diff",
+  "patchPreimages": "All 22 implementation files are ADD with ABSENT preimages at sourceBase",
+  "handoffOnlyChanges": "Evidence, inventories, source/evidence archives, replay helper and handoff documents within scope-z/phase-evidence/z1",
+  "ownership": {
+    "ownedPrefixes": [
+      "finnor-os/packages/epistemic-runtime/src/project-z/z1-shared-work/",
+      "finnor-os/packages/private-equity/src/project-z/z1-shared-work/",
+      "finnor-os/packages/orchestration/src/project-z/z1-shared-work/",
+      "finnor-os/scripts/project-z/z1/",
+      "scope-z/phase-evidence/z1/"
+    ],
+    "sharedFilesModified": false,
+    "unrelatedPreexistingUntrackedPreserved": "scope-z/orchestration/shared-computer-launch/",
+    "rawEvidenceCopies": "Retained untracked originals, indexed and committed byte-for-byte in archives"
+  },
+  "runtimeIdentity": {
+    "digest": "117cd109bd839e67368bb820534d6644ecca5841128d9f7006c24f0f3c7e065a",
+    "sourceInventory": "source-inventory.json",
+    "checkerCodeSha256": "309ae412a9f3d00f99bf7adfc71445a5b6202e41ffb512e7a02f662a26b02cfd",
+    "dependencyLockSha256": "4116b2a7e02a28b8e49baa4a24a378e5170c5dc66d285075c8cf50bf11b9faed",
+    "rootDependencyLockSha256": "af1d36679eb4123ab5f2d9f4668e82e1defc952a45777a74d3dff30c6d16f117",
+    "scope": "Hashed phase code, checker, owner/worker contracts and backend lock; no native deployment, image, admission or attestation implied"
+  },
+  "interfaceVersions": {
+    "kernel": "z1-shared-work-v1",
+    "request": "finnor.z1.request.v1",
+    "program": "finnor.z1.shared-work-program.v1",
+    "checkpoint": "finnor.z1.checkpoint.v1",
+    "checkedPublication": "finnor.z1.checked-publication.v1",
+    "owner": "z1-per-original-work-v1",
+    "job": "run_shared_work_program_v1",
+    "jobProtocolVersion": 1,
+    "jobRegistration": "NOT_APPLIED"
+  },
+  "profile": {
+    "works": [2, 1000],
+    "maxOriginalDagNodes": 4096,
+    "maxSourceRows": 100000,
+    "maxNewlyMaterializedDerivedRows": 1000000,
+    "maxReducedRationalComponentBits": 512,
+    "additionalLimits": "128 columns, 64 input levels, encoded bytes/cells/operations, original remaining budget and deadline",
+    "semantics": "Exact finite typed pure source/filter/project/equality-join/bag-or-set-union/grouped-sum/comparison/bounded-selection DAGs, explicit units/currency/rounding/UTF-16 ties",
+    "changeMaintenance": "Exact unchanged-node reuse and dirty dependent recomputation; atomic signed bag retractions",
+    "unsupported": ["Floating semantics", "Effects", "Unbounded recursion", "Implicit algebraic rewrites", "Cross-tenant/principal raw pooling"],
+    "limitMeaning": "Declared bounds, not qualification at every size; exhaustion may yield INCOMPLETE without usable approximate output"
+  },
+  "verification": {
+    "coverage": "requirements-coverage.md",
+    "families": "family-coverage.json",
+    "publicRegistrationSha256": "6af201d06d54d33245dabb1addb0f8f72acd75c9f7a9fc50716e8e1d72a17222",
+    "existingSealedPackCheck": {"state": "PASSED", "members": 20, "scope": "Assembly integrity only"},
+    "newOriginalSemantics": {"state": "PASSED", "passed": 256, "failed": 0, "class": "deterministic", "scope": "Exact recomputation on named public inputs, not whole-domain/native/protected proof"},
+    "newProcessEdges": {"state": "PASSED", "passed": 31, "failed": 0, "class": "empirical"},
+    "newLocalPhysicalRecovery": {"state": "PASSED", "boundaries": ["CLAIM", "ARTIFACT", "DELIVERY"], "count": 3, "scope": "Owned local file-fixture worker only"},
+    "newKernelTypes": {"state": "PASSED", "scope": "Kernel, producer child, processes"},
+    "newIsolatedTranslation": {"state": "PASSED", "files": 7, "isAdapterTypecheck": false},
+    "existingBackendTypecheck": {"state": "FAILED", "reason": "1536 MiB heap OOM", "log": "backend-typecheck-1.log"},
+    "nativeClosureTypecheck": {"state": "FAILED", "reason": "1536 MiB heap OOM", "log": "z1-typecheck-1.log"},
+    "fullAppBuildLintAuthMigrationRelease": "NOT_RUN",
+    "nativePositiveOwnerFlow": "NOT_RUN",
+    "nativePhysicalRecovery": "NOT_RUN",
+    "nativeMountedWork": "NOT_RUN",
+    "native32By8Qualification": "NOT_RUN",
+    "sessionNativePositiveOffers": 0,
+    "nativePositiveAcceptanceRate": null,
+    "protectedQualification": "NOT_RUN",
+    "equippedComparison": "NOT_RUN",
+    "fiveAlternatingCostedRepetitions": "NOT_RUN"
+  },
+  "retainedFailures": {
+    "index": "retained-failures.json",
+    "archive": "retained-evidence.tar.gz",
+    "inventory": "retained-evidence-inventory.json",
+    "fileCount": 2202,
+    "uncompressedBytes": 127819782,
+    "highlights": [
+      "Absent-engine preflight: one entry failure, 256 cases not run; original erroneous failed=256 retained",
+      "Initial sweep 248/8: malformed grouping fixtures, repaired without changing expected semantics",
+      "Initial process edges 17/1: shared fixture currency type aliases, repaired with JSON intake clone",
+      "Review 18/12: UTF-16, prototype identifiers, lazy predicates, width and rehashed envelope/authority/evidence/meter/charge falsifiers",
+      "Foreign unused-source 30/1: entire raw batch now checked for tenant/principal authority",
+      "First committed reconstruction 224/32: null-prototype allocation replay mismatch, repaired with own-property-safe plain records",
+      "Two capped native/backend type closures OOM; retained, not overruled by translation",
+      "Disposable inline syntax reporter failed before product execution"
+    ],
+    "historicalSourceLimitation": "Not every pre-first-commit failing source state has a complete sealed preimage; inputs/actions/outputs/logs/source hashes are retained"
+  },
+  "reconstruction": {
+    "artifactIndex": "artifact-index.json",
+    "artifactIndexSha256": "2740892891b31287b83807a85e6e01e071a3afb38c2baf9b64473ef0689d6372",
+    "sourceArchive": {
+      "path": "source-ebf8e400.tar.gz",
+      "bytes": 8120533,
+      "sha256": "ee47c21da4545b99e6d61cf0b7a4498be348bce14a5cf4ba30654ca7ccb5be36",
+      "tarSha256": "8261bafa59f61dad92c16ec932c4cf087f736e841b0751dc3258cbdd21f508ee"
+    },
+    "finalCheckoutReconstruction": {"state": "PASSED", "report": "runtime-tested-reconstruction.json", "scope": "Development kernel only"},
+    "deliveredTarReplay": {
+      "state": "PASSED",
+      "report": "packaged-replay-report.json",
+      "archive": "packaged-replay-1.tar.gz",
+      "archiveSha256": "d9772597a10293db9a88260cd56ada80c7951917397fe254c704d763031dfbc0",
+      "inventory": "packaged-replay-index.json",
+      "fileCount": 306,
+      "wallMsIncludingLockWait": 82598,
+      "sourceCheckoutOverlay": false,
+      "borrowedNodeModules": false,
+      "runtimeGitObjects": false,
+      "temporaryTargetRemoved": true
+    },
+    "installedApplicationReconstruction": "NOT_RUN",
+    "replayHelper": "replay-handoff.py",
+    "replayCommand": "env PATH=/home/factory-user/repos/finnor-z-toolchains/node22/node_modules/.bin:$PATH PYTHONDONTWRITEBYTECODE=1 python3 /home/factory-user/repos/finnor-z1/scope-z/phase-evidence/z1/replay-handoff.py /absolute/new/evidence",
+    "replayPreconditions": "New absolute evidence directory, exact recorded Node/Python binaries, npm 11.19.1, Linux x64, existing public dependency lock",
+    "heavyLock": "/home/factory-user/repos/finnor-z-shared-heavy.lock",
+    "lockHandling": "Replay helper holds fcntl.flock LOCK_EX itself; do not nest a second lock on this file",
+    "nativeOwnerRerunCommand": null,
+    "nativeOwnerRerunReason": "No complete native Z1 intake/owner/mount proof runner exists; do not invent a route or substitute the kernel replay"
+  },
+  "integrationRequests": [
+    {
+      "request": "integration-request.json",
+      "exactPatch": "registration-request.diff",
+      "scope": "Conditional worker registration and code-level compute classification only",
+      "preimageDigests": {
+        "finnor-os/apps/worker/src/index.ts": "5cffd9239ccd0bcb7abd4f301cc52fe28ab2adc2d33e218248524290f7865cb9",
+        "finnor-os/packages/db/compute-contract.ts": "d8783ff65e9ed0489a93077e2766ae5f395c32eb1fecda163c5d941a23e20814"
+      },
+      "preimageCheck": "PASSED",
+      "applied": false,
+      "receiverReceipt": "NONE_OBSERVED",
+      "integrationReceipt": "NONE_OBSERVED",
+      "completeNativeIntegrationPatch": false
+    }
+  ],
+  "remainingInternalEngineering": [
+    "Concrete authenticated original-parent intake and every Z1NativePorts canonical binding",
+    "Actual registered job, claim fence/generation/heartbeat and canonical checkpoint/check/artifact/outbox transactions",
+    "Actual cumulative original-parent/S5 debits and preserved unknown physical costs",
+    "Current independent typed S8 consumption admission without self-promotion",
+    "Separate actual S3/S4 variable/unit/truth-class projections and useful original Work consumption",
+    "Existing S6 original effect identity, independent observation or UNKNOWN and unresolved obligations",
+    "S7 full costs, executable native remaining-parent fallback and mounted original Work",
+    "Canonical physical worker recovery at all three required boundaries",
+    "Native closure type validation, affected real application checks and separately installed application proof",
+    "Remaining full mandatory reading and explicit acknowledgement of the already-failed sequencing prerequisite"
+  ],
+  "baselines": {
+    "B_live": "Actual base and runtime-tested kernel source above; no measured active native Z1 release",
+    "B_XY_plan": "Stipulated full intended completed X/Y capabilities, not the checkout's incompleteness",
+    "B_XY_release": "NONE_OBSERVED; qualified completed release manifest not supplied",
+    "B_ref": "DIRECT mode only as same-operator/per-Work-cache diagnostic equipment; not a full qualified X/Y actor",
+    "measuredEquippedIncrement": null
+  },
+  "costsAndMeterGaps": {
+    "deterministicTicks": "Exact reproducible conserved per-original-Work allocations and cumulative ceilings, not physical or financial cost",
+    "observed": ["Producer process-local CPU/RSS reported near completion where recorded, before final output serialization and excluding parent/aggregate overhead", "Bounded child wall/input/output and actual PID/exit receipts", "Install/check/replay wall times and archived file byte lengths"],
+    "unknown": [
+      "Full loader/validation/hashing/sorting/serialization/I/O and checker/parent CPU",
+      "Interrupted process CPU/RSS and aggregate simultaneous peak",
+      "Native storage/owner/S5/S6/S7 and provider/model billed costs",
+      "USD, human work, acquisition, exposure, full lifecycle and historical comparator engineering costs",
+      "Preregistered actual demand/reuse horizon and complete amortization"
+    ],
+    "missingCostsAreZero": false,
+    "episodeResourceComplianceClaimed": false,
+    "nodeHeapMiB": 1536,
+    "node": "v22.23.4",
+    "npm": "11.19.1",
+    "python": "3.12.3"
+  },
+  "remainingBudget": {
+    "realNativeParent": "NONE_CREATED_BY_THIS_PHASE",
+    "realRemainingGrantAndDeadline": "NOT_APPLICABLE_TO_PUBLIC_FIXTURES; existing live state not queried",
+    "publicFixtures": "Original synthetic parent, ceiling, deadline, cumulative charges and retained obligations preserved in each archived input/checkpoint",
+    "futureIntegrationRule": "Resolve actual canonical original parents and remaining grants/deadlines; never renew them on retry, replacement, replay or fallback"
+  },
+  "unresolvedObligations": {
+    "realEffectsInitiatedByThisPhase": 0,
+    "liveSystemObligations": "UNKNOWN_NOT_QUERIED",
+    "fixtureReferences": "Retained through withdrawal/retry/recovery; not actual grants, effect observation or settlement",
+    "interruptedFixturePhysicalCosts": "UNKNOWN_RETAINED; not released or relabelled zero"
+  },
+  "gates": {
+    "architecture": {"state": "IN_PROGRESS", "reason": "Frozen design exists; required reading sequence and integrated architecture proof incomplete"},
+    "internal-software": {"state": "IN_PROGRESS", "reason": "Kernel verified, canonical bindings and native proofs absent"},
+    "installed-development-reconstruction": {"state": "NOT_RUN", "developmentKernelSubproof": "PASSED", "reason": "Full authenticated installed FINNOR application not reconstructed"},
+    "mathematical-security-domain": {"state": "IN_PROGRESS", "reason": "Finite exact recomputation/falsifiers only; no whole-domain/security qualification"},
+    "protected-admission": {"state": "NOT_RUN"},
+    "equipped-increment": {"state": "BLOCKED", "reason": "Qualified completed X/Y unavailable; native flow and complete meters also internally incomplete"},
+    "operational-100x": {"state": "BLOCKED", "reason": "Required engine/native/protected/comparator/load/cost evidence absent"},
+    "financial-headroom": {"state": "NOT_RUN"},
+    "financial-100x": {"state": "BLOCKED", "reason": "No qualified signed attributable owner-value endpoint, comparison or mature outcomes"},
+    "production-activation": {"state": "NOT_RUN"}
+  },
+  "frontierDelta": {
+    "class": "partial",
+    "demonstrated": "Joint exact execution and supported change maintenance of nonidentical original public programmes, independently recomputed",
+    "equipment": ["Hash-consing", "Indexed joins", "Caches", "Dirty recomputation", "Exact rational interpretation"],
+    "noveltyClaim": false,
+    "equippedXYGainClaim": false,
+    "materialBusinessThroughputClaim": false,
+    "performanceRatio": null,
+    "financialGain": null
+  },
+  "supplyChain": {
+    "newDependencyOrLockChanges": false,
+    "declaredExistingPackages": {"tsx": "4.23.13", "typescript": "5.9.3", "zod": "3.25.76", "pg": "8.23.0", "@esbuild/linux-x64": "0.25.12"},
+    "licenseMetadata": {"tsx": "MIT", "typescript": "Apache-2.0", "zod": "MIT", "pg": "MIT", "@esbuild/linux-x64": "MIT"},
+    "nativeAssetHashes": "runtime-tested-reconstruction.json and packaged-replay-report.json",
+    "securityLimit": "Existing lock retained; credential stripping and child limits are not a complete dependency audit or OS/filesystem/network sandbox"
+  },
+  "modelPolicy": {"requested": "gpt-6.1-sol/max", "actualRuntimeAttestation": "UNKNOWN", "fallbackRequestedByThisPhase": false, "actualRoutingOrFallbackAttestation": "UNKNOWN", "subagentsInvoked": false, "nativeMissionInvoked": false},
+  "topology": {"authority": "Current user shared-Computer override recorded in start-receipt.json", "ordinaryChat": true, "newComputerCreated": false, "maxImplementationSlots": 3, "globalScheduleAttestation": "UNKNOWN_NOT_CONTROLLED_BY_THIS_PHASE"},
+  "receivedPeerReceipts": [],
+  "peerDisposition": "NONE_OBSERVED; no dirty peer integration consumed",
+  "delivery": {"intendedReceiver": "Project Z PRD/coordinator", "state": "REQUESTED", "receiverReceipt": "NONE_OBSERVED", "acknowledgedRead": false, "crossChatSendClaimed": false},
+  "scheduling": "Ownership-stable partial handoff for review, not CODE_COMPLETE or certification; coordinator decides continuation and slot accounting",
+  "nextDependencies": [
+    {"kind": "INTERNAL_ENGINEERING", "owner": "Z1 phase with serial coordinator shared-change ownership", "work": "Complete concrete native bindings, reviewed API/registry/DB/admission/owner/mount changes and actual integration receipts"},
+    {"kind": "INTERNAL_VERIFICATION", "owner": "Integrated Z1/native owner verification", "work": "Authorized disposable principals/target, real positive flow, native fallback/recovery/mount, full types and installed application proof"},
+    {"kind": "INDEPENDENT_CUSTODY_AND_COMPARISON", "owner": "Existing S8 and equipped comparison custodians", "work": "Only after internal prerequisites: protected assets/admission and qualified completed X/Y actor with complete meters"},
+    {"kind": "SEPARATE_AUTHORITY_AND_FUTURE_OUTCOMES", "owner": "Current S6/S7/release authority", "work": "Only if separately authorized: field observation, signed owner-value endpoints, mature outcomes and activation"}
+  ],
+  "outwardActions": {"push": false, "pullRequest": false, "merge": false, "deploy": false, "provision": false, "newGrantOrSigner": false, "outsideContact": false, "protectedPromotion": false, "realFinancialEffect": false}
+}

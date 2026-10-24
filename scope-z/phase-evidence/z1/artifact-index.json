@@ -1,0 +1,144 @@
+{
+  "schema": "finnor.z1.handoff-artifacts.v1",
+  "phase": "Z1",
+  "classification": "Public development engineering and synthetic evidence; not admission or protected qualification",
+  "productLockDigest": "61d9881ca8059d24d057d1e00d5436ef2059de7889ccd1fd2f92a630075bcebf",
+  "executionPackDigest": "4419731d2544d1c07fe275ec8071d5d783273942ca9947eda2ff6b4e2dffb9db",
+  "sourceBase": {
+    "commit": "684d805e471836a720aa6741a3128eca17d28202",
+    "tree": "163f63b65c88481194d0d48e77337494b3b9f24f"
+  },
+  "sourceHead": "ebf8e4006df9b9f9e1e9cdc1a52234e823c1bf17",
+  "sourceTree": "2738732bed8ad245bb68e1c2265b91aaa815ed4c",
+  "sourceArchive": {
+    "path": "source-ebf8e400.tar.gz",
+    "sha256": "ee47c21da4545b99e6d61cf0b7a4498be348bce14a5cf4ba30654ca7ccb5be36",
+    "bytes": 8120533,
+    "tarSha256": "8261bafa59f61dad92c16ec932c4cf087f736e841b0751dc3258cbdd21f508ee",
+    "tarBytes": 37355520
+  },
+  "sourceInventory": "source-inventory.json",
+  "referenceReport": "runtime-tested-reconstruction.json",
+  "sourcePatch": "implementation-source.diff",
+  "changedFiles": "changed-source-manifest.json",
+  "retainedEvidence": {
+    "archive": "retained-evidence.tar.gz",
+    "inventory": "retained-evidence-inventory.json",
+    "fileCount": 2202,
+    "bytes": 127819782
+  },
+  "assets": [
+    {
+      "path": "source-ebf8e400.tar.gz",
+      "bytes": 8120533,
+      "sha256": "ee47c21da4545b99e6d61cf0b7a4498be348bce14a5cf4ba30654ca7ccb5be36"
+    },
+    {
+      "path": "retained-evidence.tar.gz",
+      "bytes": 11415770,
+      "sha256": "1e52cf5c144b7484b32e9ca0269c4f946a198838cfcf75eb568e90a86eebd9be"
+    },
+    {
+      "path": "retained-evidence-inventory.json",
+      "bytes": 426741,
+      "sha256": "56baa3e26916f56d0fc0520ed24c844eff7aaabbbd1e5660a454e7cd9b536493"
+    },
+    {
+      "path": "source-inventory.json",
+      "bytes": 3362,
+      "sha256": "bba0853fc66474fbb41104c30938c685e3259961c1e7d420002cd5d77073ec53"
+    },
+    {
+      "path": "runtime-tested-reconstruction.json",
+      "bytes": 9726,
+      "sha256": "deb628697fb4c71bbb0ab1568c0923c52ac08ebfe553a9c3c677c1fffd727542"
+    },
+    {
+      "path": "changed-source-manifest.json",
+      "bytes": 5803,
+      "sha256": "b725aa3cf0ace547280666ca452265595b499b0aaed308d43498b51e14d01efc"
+    },
+    {
+      "path": "implementation-source.diff",
+      "bytes": 207153,
+      "sha256": "346d6f5d547c011cdd4445854d72bd0b4bf623adde314e6c0136993d5b8928e1"
+    },
+    {
+      "path": "integration-request.json",
+      "bytes": 3780,
+      "sha256": "bb516b2810fbe7a3163209080c87ced87de2f163f5c575468724d76248b0fb46"
+    },
+    {
+      "path": "registration-request.diff",
+      "bytes": 2394,
+      "sha256": "bceebca6eb5dc9b649a302e20ebdfea0573e552e1d76080e24c69d191293e818"
+    },
+    {
+      "path": "engineering-contract.md",
+      "bytes": 9666,
+      "sha256": "339042c6355c34d89c46f9f7377784ce43950b63da3e2f0b76275aae16456256"
+    },
+    {
+      "path": "review-falsifier-contract.md",
+      "bytes": 2313,
+      "sha256": "5f2bba96444fa26b35163c7c4bbe5c64dbbf1fd7a8d0afef17d3319bf2d14bc5"
+    },
+    {
+      "path": "verification-scope.md",
+      "bytes": 6792,
+      "sha256": "094a616f5c3d386fd0d61a4dd0a8ec035f7ad3f803246732ca2c48fd12df1ae3"
+    },
+    {
+      "path": "start-receipt.json",
+      "bytes": 2102,
+      "sha256": "580fc9880dee7dfc179d27fb328d892d10911ec19992b244e4c0acbaaef1e1b9"
+    },
+    {
+      "path": "handoff-packaging-contract.md",
+      "bytes": 3675,
+      "sha256": "a630916371743b7636e077e80fbc60fb2852a8a258aa785e743122351874b920"
+    },
+    {
+      "path": "replay-handoff.py",
+      "bytes": 12943,
+      "sha256": "3eefba1dc2ef1987d09930c87719271b2e9cd436e163a703fa78cb9d5cdbcec3"
+    },
+    {
+      "path": "archive-build-receipt.json",
+      "bytes": 642,
+      "sha256": "209a6e8e922f6fd217cd18a06f035e72f431c67a1becaf6cd939f3499d40d347"
+    }
+  ],
+  "governingIdentities": [
+    {
+      "path": "scope-z/locks/execution-pack.json",
+      "bytes": 61081,
+      "sha256": "4419731d2544d1c07fe275ec8071d5d783273942ca9947eda2ff6b4e2dffb9db"
+    },
+    {
+      "path": "scope-z/prompts/source-materials/product-lock.json",
+      "bytes": 4516,
+      "sha256": "61d9881ca8059d24d057d1e00d5436ef2059de7889ccd1fd2f92a630075bcebf"
+    },
+    {
+      "path": "scope-z/prompts/seeds/z1.seed.md",
+      "bytes": 861773,
+      "sha256": "635e04fc82b8ff5769f0569d95b1185b95d195eec67d4552d1a4f999178bad7d"
+    },
+    {
+      "path": "package-lock.json",
+      "bytes": 357893,
+      "sha256": "af1d36679eb4123ab5f2d9f4668e82e1defc952a45777a74d3dff30c6d16f117"
+    },
+    {
+      "path": "finnor-os/package-lock.json",
+      "bytes": 263370,
+      "sha256": "4116b2a7e02a28b8e49baa4a24a378e5170c5dc66d285075c8cf50bf11b9faed"
+    }
+  ],
+  "nativeOwnerFlow": "NOT_RUN",
+  "installedApplicationReconstruction": "NOT_RUN",
+  "protectedAdmission": "NOT_RUN",
+  "integrityIsNotAuthority": true,
+  "scope": "Assets exclude this self-index and later handoff-only summaries to avoid hash cycles. Immutable handoff Git commit anchors the index."
+}
