@@ -59,10 +59,12 @@ function parseRequestBody(input: unknown): {
 }
 
 export async function POST(req: Request): Promise<Response> {
+  let intent: string | undefined;
   try {
     const ctx = await requireContext(req);
     const body = parseRequestBody(await req.json().catch(() => ({})));
     if (!body.success) return Response.json({ error: body.error }, { status: 400, headers: { "Cache-Control": "no-store" } });
+    intent = body.request.intent;
 
     const started = performance.now();
     const run = await getOrchestrator().handleOperationalQuery(body.request, ctx, body.options);
@@ -89,7 +91,7 @@ export async function POST(req: Request): Promise<Response> {
     if (err instanceof EconomicFault) return Response.json({ code: err.code }, {
       status: err.status, headers: { "Cache-Control": "no-store" },
     });
-    if ((err as { code?: string })?.code === "PE_ENTITY_NOT_FOUND") return Response.json(
+    if (intent === "economic_programme_v1" && (err as { code?: string })?.code === "PE_ENTITY_NOT_FOUND") return Response.json(
       { code: "Y1_AUTHENTICATED_RESOURCE_UNAVAILABLE" }, { status: 404, headers: { "Cache-Control": "no-store" } },
     );
     if (err instanceof OperationalQueryReplayUnavailable) {

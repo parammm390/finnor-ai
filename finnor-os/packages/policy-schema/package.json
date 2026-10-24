@@ -7,6 +7,6 @@
   "types": "src/index.ts",
   "dependencies": {
     "@finnor/shared-types": "*",
-    "zod": "^3.23.8"
+    "zod": "^4.6.7"
   }
 }

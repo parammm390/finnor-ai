@@ -50,8 +50,8 @@ export async function sourceClaimTx(ctx:PeMutationContext,c:PoolClient,root:Subm
  if(!(await c.query('SELECT id FROM finnor_os.evidence_sources WHERE tenant_id=$1 AND id=$2 FOR SHARE',
   [ctx.auth.tenantId,source.sourceId])).rowCount)return null;
  const head=(await c.query<{id:string;content_hash:string;snapshot:Record<string,unknown>}>(
-  `SELECT id::text,content_hash,snapshot FROM finnor_os.evidence_source_versions
-   WHERE tenant_id=$1 AND source_id=$2 ORDER BY version_number DESC,id DESC LIMIT 1 FOR SHARE`,
+  `SELECT v.id::text AS id,v.content_hash,v.snapshot FROM finnor_os.evidence_source_versions v
+   WHERE v.tenant_id=$1 AND v.source_id=$2 ORDER BY v.version_number DESC,v.id DESC LIMIT 1 FOR SHARE`,
  [ctx.auth.tenantId,source.sourceId])).rows[0];
  if(!head||head.id!==source.versionId||head.content_hash!==source.contentDigest)return null;
  const claims=head.snapshot?.interactionClaims;

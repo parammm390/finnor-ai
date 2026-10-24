@@ -5,7 +5,7 @@ import { z } from "zod"
 import { centropyGet } from "@/components/centropy/lib/api"
 import { HumanControlDesk } from "../controls/HumanControlDesk"
 
-const RowsSchema = z.array(z.record(z.unknown()))
+const RowsSchema = z.array(z.record(z.string(), z.unknown()))
 type Anchor = { id: string; hash: string; kind: string }
 
 export function ArtifactRecordControls({ documentId, versionId, kind, anchors }: { documentId: string; versionId: string; kind: string; anchors: Anchor[] }) {

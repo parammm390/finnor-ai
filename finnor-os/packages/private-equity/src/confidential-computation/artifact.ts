@@ -20,7 +20,7 @@ export const PostXArtifactEnvelopeSchema=z.object({
  }).strict())}).strict(),
  baseline_manifest_ref:ArtifactBindingSchema,
  producer_code_dependency_model_and_runtime_refs:bindings,
- source_revision_vector:z.record(RefSchema),knowledge_cut:instant,effective_time:instant,
+ source_revision_vector:z.record(z.string(), RefSchema),knowledge_cut:instant,effective_time:instant,
  rights_and_authority_revision_refs:bindings,mandate_ref:ArtifactBindingSchema,
  economic_semantics_and_domain_refs:bindings,claim_basis_and_independent_checker_refs:bindings,
  unresolved_assumptions_and_excluded_claims:z.array(text),

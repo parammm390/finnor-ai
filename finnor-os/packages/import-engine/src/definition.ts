@@ -42,7 +42,7 @@ export const FieldMappingSchema = z.object({
   required: z.boolean().default(false),
   default: z.unknown().optional(),
   normalize: z.array(NormalizationSchema).default([]),
-  valueMap: z.record(z.unknown()).optional(),
+  valueMap: z.record(z.string(), z.unknown()).optional(),
 }).superRefine((rule, ctx) => {
   const selectors = [rule.from !== undefined, rule.compose !== undefined, rule.literal !== undefined].filter(Boolean).length;
   if (selectors > 1) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "field mapping may use only one of from, compose, or literal" });
@@ -64,10 +64,10 @@ const DeclarativeImportBodyObjectSchema = z.object({
   entity: ImportEntitySchema,
   sourceSystem: z.string().trim().min(1).max(120),
   delimiter: z.string().length(1).default(","),
-  fields: z.record(FieldMappingSchema),
+  fields: z.record(z.string(), FieldMappingSchema),
   externalId: FieldMappingSchema.optional(),
   identity: z.array(ImportIdentityRuleSchema).default([]),
-  relationships: z.record(ImportRelationshipSchema).default({}),
+  relationships: z.record(z.string(), ImportRelationshipSchema).default({}),
   updateMode: z.enum(["insert_only", "fill_missing", "source_owned"]).default("fill_missing"),
   batchSize: z.number().int().min(1).max(1000).default(100),
 });

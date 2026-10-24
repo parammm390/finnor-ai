@@ -4,7 +4,7 @@ import type {JobExecutionContext} from '../../../../apps/worker/src/queue';
 import type {PeMutationContext} from '../types';
 import {PROFILE,PROFILE_DIGEST,Y1_VERSION,JobSchema,digest,reference,fail,type EconomicJob,type TheoryRow,type EconomicActionTheory,
  type ConstructionResult,type IndependentCheck,type ConstructionStatus} from './contracts';
-import {construct} from './compiler';
+import {constructEconomicTheoryAsync} from './constructor-process';
 import {dependencyGraph} from './finite';
 import {independentlyCheck} from './process';
 import {withS5PortfolioTransaction as transaction} from '../allocation-store';
@@ -65,8 +65,8 @@ export async function constructEconomicActionTheoryJob(raw:Record<string,unknown
    attemptRegistered=true;return theoryTx(ctx,c,row.id);
   });
   if(!original)return;
-  let construction:ConstructionResult=original.construction??construct(original.request.problem,
-   performance.now()+Math.min(PROFILE.maxCheckerWallMs,original.deadline_at.getTime()-Date.now()));
+  let construction:ConstructionResult=original.construction??await constructEconomicTheoryAsync(original.request.problem,
+   original.deadline_at.getTime(),abort.signal);
   if(!original.candidate&&construction.candidate){
    await transaction(ctx,async c=>{
     const live=await owned(c);if(!live)fail('Y1_CANDIDATE_CHECKPOINT_FENCED');

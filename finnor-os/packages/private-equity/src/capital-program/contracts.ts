@@ -78,7 +78,7 @@ export type NumericGrid = z.infer<typeof GridSchema>;
 export type FinancingPermission = z.infer<typeof FinancingSchema>;
 export type PermittedChanges = z.infer<typeof PermittedChangesSchema>;
 export const EntityBindingsSchema = z.object({
-  acquiredEntityId: text, sponsorEntityId: text, lenderByTranche: z.record(text),
+  acquiredEntityId: text, sponsorEntityId: text, lenderByTranche: z.record(z.string(), text),
 }).strict();
 export type EntityBindings = z.infer<typeof EntityBindingsSchema>;
 export const ConstructionContextSchema = z.object({
@@ -117,7 +117,7 @@ export const NativeConfigSchema = z.object({
     amortization: z.enum(["original_principal_percent", "explicit_amount"]),
     cashSweepEligible: z.boolean(), maturityTreatment: z.enum(["mandatory_repayment", "unsupported"]),
   }).strict()).max(CAPITAL_PROGRAM_LIMITS.tranches),
-  solver: SolverSchema.optional(), inputBindings: z.record(BindingSchema).optional(),
+  solver: SolverSchema.optional(), inputBindings: z.record(z.string(), BindingSchema).optional(),
 }).strict();
 const ProvenanceSchema = z.object({
   kind: z.enum(["p1_assumption", "evidence_version", "model_parameter", "human_input", "artifact_anchor", "evidence_derivation"]),
@@ -128,11 +128,11 @@ const ScalarSchema = z.union([z.string().max(512), z.boolean()]);
 export const NativeSnapshotSchema = z.object({
   schemaVersion: z.literal("underwriting-input-snapshot.v1"), investmentCaseId: text,
   worldAt: z.string().datetime({ offset: true }), semanticHash: hash.optional(),
-  values: z.record(z.object({
+  values: z.record(z.string(), z.object({
     nodeId: text, valueType: z.enum(["decimal", "date", "boolean", "text"]),
     unit: z.enum(["money", "rate", "multiple", "ratio", "count", "date", "period", "boolean", "text"]),
     currency: currency.optional(), shape: z.enum(["scalar", "series"]),
-    value: z.union([ScalarSchema, z.record(ScalarSchema), z.null()]),
+    value: z.union([ScalarSchema, z.record(z.string(), ScalarSchema), z.null()]),
     truthClass: z.enum(["OBSERVED_FACT", "CANONICAL_ASSUMPTION", "MODEL_PARAMETER", "SCENARIO_OVERRIDE", "DERIVED_VALUE", "EXTERNAL_CALCULATED_COMPARISON", "UNKNOWN"]),
     status: z.enum(["KNOWN", "UNKNOWN", "STALE", "CONFLICTING", "UNSUPPORTED"]),
     provenance: z.array(ProvenanceSchema).max(32), reason: z.string().max(2000).optional(),

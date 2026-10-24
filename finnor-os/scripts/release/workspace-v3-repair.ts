@@ -17,11 +17,11 @@ import {
 
 const LegacyPresentationSchema = z.object({
   voiceEnabled: z.boolean().optional(),
-  terminology: z.record(z.unknown()).optional(),
+  terminology: z.record(z.string(), z.unknown()).optional(),
   navigationPriority: z.array(z.unknown()).optional(),
-  brand: z.record(z.unknown()).optional(),
-  visibility: z.record(z.unknown()).optional(),
-  scenes: z.record(z.unknown()).optional(),
+  brand: z.record(z.string(), z.unknown()).optional(),
+  visibility: z.record(z.string(), z.unknown()).optional(),
+  scenes: z.record(z.string(), z.unknown()).optional(),
 }).passthrough();
 
 function stringPreference(value: unknown, fallback: string, max: number): string {

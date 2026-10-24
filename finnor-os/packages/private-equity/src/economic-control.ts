@@ -15,7 +15,7 @@ import {PROFILE,RefSchema,QuantityValue,digest,reference,same,fail,type Economic
 import {applyOperator,inDomain,safe} from './economic-action-theory/finite';
 import {assertInteractionProgrammeCurrentTx} from './interaction-synthesis/execution-guard';
 export const EconomicProgrammeSchema=z.object({theoryId:z.string().uuid(),reservationRef:RefSchema,expectedRevision:z.number().int().positive(),
- goalState:z.record(QuantityValue),parameters:z.record(QuantityValue),idempotencyKey:z.string().min(1).max(128)}).strict();
+ goalState:z.record(z.string(), QuantityValue),parameters:z.record(z.string(), QuantityValue),idempotencyKey:z.string().min(1).max(128)}).strict();
 export interface EconomicProgramme {
  schema:'finnor.s4.economic-programme.v1';ref:EconomicRef;id:string;tenantId:string;principalId:string;theoryId:string;
  theoryRef:EconomicRef;moduleRef:EconomicRef;admissionRef:EconomicRef;workId:string;workInputId:string;episodeId:string;

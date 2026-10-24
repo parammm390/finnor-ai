@@ -43,7 +43,7 @@ const AssertionSchema = z.object({
   operator: z.enum(["exists", "not_exists", "eq", "not_eq", "gte", "lte", "contains", "array_contains"]),
   expected: z.unknown().optional(),
 }).strict();
-const QueryEvidenceSchema = z.object({ kind: z.literal("canonical_query"), request: z.record(z.unknown()), assertion: AssertionSchema }).strict();
+const QueryEvidenceSchema = z.object({ kind: z.literal("canonical_query"), request: z.record(z.string(), z.unknown()), assertion: AssertionSchema }).strict();
 const CompletionEvidenceSchema = z.discriminatedUnion("kind", [
   QueryEvidenceSchema,
   z.object({ kind: z.literal("business_effect"), businessEffectId: z.string().uuid() }).strict(),

@@ -2,7 +2,7 @@
   "name": "finnor-os",
   "version": "0.1.0",
   "private": true,
-  "description": "Finnor AI Operating System — governed Private Equity execution and evidence platform",
+  "description": "Finnor AI Operating System \u2014 governed Private Equity execution and evidence platform",
   "engines": {
     "node": ">=22"
   },
@@ -33,7 +33,7 @@
     "authz:matrix:check": "tsx scripts/generate-authz-matrix.ts --check",
     "setup:langgraph": "tsx packages/orchestration/src/graph/setup.ts",
     "openapi": "tsx scripts/generate-openapi.ts",
-    "release:manifest": "tsx scripts/release/verify-action-manifest.ts",
+    "release:manifest": "tsx scripts/y1/build-constructor.mts --check && tsx scripts/release/verify-action-manifest.ts",
     "release:environment": "tsx scripts/release/generate-environment-contract.ts",
     "release:bedrock-smoke": "tsx scripts/release/run-bedrock-live-smoke.ts",
     "release:migrate:production": "tsx scripts/release/migrate-production.ts",
@@ -76,19 +76,19 @@
     "groq-sdk": "^0.9.1",
     "ioredis": "^5.4.1",
     "next": "^15.5.28",
-    "nodemailer": "10.0.11",
+    "nodemailer": "10.1.4",
     "pdf-parse": "^2.4.5",
     "pg": "^8.13.1",
     "playwright": "1.61.1",
     "react": "^18",
     "react-dom": "^18",
-    "zod": "^3.23.8",
+    "zod": "^4.6.7",
     "zod-to-json-schema": "^3.23.5"
   },
   "overrides": {
     "@swc/core": "1.10.18",
     "@hono/node-server": "2.0.11",
-    "fast-uri": "3.1.8",
+    "fast-uri": "3.1.9",
     "hono": "4.13.11",
     "ip-address": "10.7.4",
     "postcss": "8.5.23",
@@ -100,7 +100,9 @@
     "next": "$next",
     "esbuild": "0.25.12",
     "brace-expansion@^1": "1.1.21",
-    "brace-expansion@^5": "5.0.12"
+    "brace-expansion@^5": "5.0.12",
+    "body-parser": "2.4.0",
+    "zod": "$zod"
   },
   "devDependencies": {
     "@types/node": "^20",

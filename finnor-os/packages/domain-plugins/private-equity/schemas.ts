@@ -9,7 +9,7 @@ const shortText = z.string().trim().min(1).max(500);
 const underwritingScalar = z.union([z.string().max(4_096), z.boolean()]);
 const underwritingValue = z.union([
   underwritingScalar,
-  z.record(underwritingScalar).superRefine((value, context) => {
+  z.record(z.string(), underwritingScalar).superRefine((value, context) => {
     if (Object.keys(value).length > 240) context.addIssue({ code: z.ZodIssueCode.custom, message: "Series exceeds 240 values" });
   }),
 ]);

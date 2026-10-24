@@ -41,7 +41,7 @@ const Meaning=z.object({key:id,kind:z.enum(['INTERPRETATION','CONSENT','OBSERVAT
  subjectId:z.string().uuid(),sourceId:z.string().uuid().nullable(),versionId:z.string().uuid().nullable(),
  contentDigest:hex.nullable()}).strict();
 const Requirement=z.object({key:id,kind:z.enum(['AUTHORITY','CONSENT','INTERPRETATION','OBSERVATION']),subjectId:z.string().uuid()}).strict();
-const State=z.record(QuantityValue);
+const State=z.record(z.string(), QuantityValue);
 export const ProblemSchema=z.object({schema:z.literal('finnor.economic-construction-problem.v1'),
  goal:z.object({id,title:z.string().min(1).max(512)}).strict(),
  quantities:z.array(Quantity).min(1).max(PROFILE.maxQuantities),

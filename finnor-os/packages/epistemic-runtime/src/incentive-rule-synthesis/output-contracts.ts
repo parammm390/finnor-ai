@@ -14,15 +14,15 @@ export const R3RuleSchema = z.object({
   binding: R3ProblemSchema.shape.binding, table: z.array(R3RuleRowSchema).length(81),
   search: z.object({ status: text, numericalSemantics: z.literal('SCIP_FLOAT64_PROPOSAL'),
     optimum: z.enum(['UNKNOWN', 'ORIGINAL_ANALYTIC_BOUND_ATTAINED']),
-    claimedObjective: quantity, claimedUpper: quantity.nullable(), proof: z.null(), trace: z.record(z.unknown()) }).strict(),
+    claimedObjective: quantity, claimedUpper: quantity.nullable(), proof: z.null(), trace: z.record(z.string(), z.unknown()) }).strict(),
 }).strict();
 export const R3CheckSchema = z.object({
   schema: z.literal('finnor.r3.check.v1'), accepted: z.literal(true), inputDigest: digest, ruleDigest: digest,
   checker: z.object({ sourceDigest: digest, pythonVersion: text, implementation: z.literal('INDEPENDENT_FRACTION_V1') }).strict(),
   basis: z.literal('MODEL_RELATIVE_EXACT'), counts: z.object({ profiles: z.literal(81), deviations: z.literal(648), participation: z.literal(324) }).strict(),
-  failures: z.array(z.record(z.unknown())).max(0), objective: quantity, upper: quantity.nullable(), optimizationGap: quantity.nullable(),
+  failures: z.array(z.record(z.string(), z.unknown())).max(0), objective: quantity, upper: quantity.nullable(), optimizationGap: quantity.nullable(),
   optimum: z.enum(['CHECKED_ANALYTIC', 'UNKNOWN']), minimumIncentiveMargin: quantity, minimumParticipationMargin: quantity,
-  maximumDeviationGain: quantity, envelopes: z.array(z.record(z.unknown())).max(16), assumptions: z.array(text).max(64),
+  maximumDeviationGain: quantity, envelopes: z.array(z.record(z.string(), z.unknown())).max(16), assumptions: z.array(text).max(64),
   consentEstablished: z.literal(false), executionAuthorityGranted: z.literal(false), behavioralTruthEstablished: z.literal(false),
 }).passthrough();
 export const R3ArtifactEnvelopeSchema = z.object({
@@ -34,7 +34,7 @@ export const R3ArtifactEnvelopeSchema = z.object({
   domainRef: ref, grammar: z.literal('r3-elicitation-use-v1'), checkBasis: z.literal('MODEL_RELATIVE_EXACT'),
   claims: z.array(z.object({ statement: text, domainRef: ref, checkerReceipt: ref }).strict()).min(1).max(32),
   gaps: z.array(z.object({ reason: text, affectedClaims: z.array(text), status: z.enum(['UNKNOWN', 'BLOCKED_EXTERNAL']) }).strict()).max(64),
-  budgetGrantRef: ref, resourceReceipts: z.array(z.record(z.unknown())).max(32),
+  budgetGrantRef: ref, resourceReceipts: z.array(z.record(z.string(), z.unknown())).max(32),
   invalidationDependencies: z.array(z.object({ key: text, revision: z.number().int().nonnegative(),
     nodeIds: z.array(text), digest: digest.nullable() }).strict()).max(256),
   lifecycle: z.object({ state: z.literal('development-verified'), historyRefs: z.array(ref),
@@ -45,15 +45,15 @@ export const ElicitationProtocolSchema = z.object({
   problem: R3ProblemSchema, rule: R3RuleSchema, check: R3CheckSchema,
   reporting: z.object({ schema: z.literal('r3-authorized-report-v1'), corrections: z.literal('BEFORE_CLOSE_ONLY'),
     closing: z.literal('ALL_REPORTS_OR_NO_AGREEMENT'), tableFixedBeforeReports: z.literal(true) }).strict(),
-  usePolicyRef: ref.nullable(), reservation: z.record(z.unknown()).nullable(), proposedSchedulesRef: ref.nullable(),
+  usePolicyRef: ref.nullable(), reservation: z.record(z.string(), z.unknown()).nullable(), proposedSchedulesRef: ref.nullable(),
   agreementEstablished: z.literal(false), settlementEstablished: z.literal(false), executionAuthorityGranted: z.literal(false),
 }).strict();
 export const R3WorkReviewSchema = z.object({
   schema: z.literal('finnor.r3.work-review.v1'), requestId: id, workId: id, workRevision: id, tenantId: id, principalId: id,
   status: z.enum(['QUEUED', 'RUNNING', 'COMPLETE', 'INCOMPLETE', 'INFEASIBLE', 'UNSUPPORTED', 'INVALIDATED', 'CANCELLED', 'UNKNOWN']),
-  deadlineAt: time, protocol: ElicitationProtocolSchema.nullable(), usePolicy: z.record(z.unknown()).nullable(),
-  allocation: z.record(z.unknown()).nullable(), schedules: z.record(z.unknown()).nullable(), reportState: z.record(z.unknown()).nullable(),
-  costs: z.record(z.unknown()), reason: z.string().nullable(), provisional: z.boolean(),
+  deadlineAt: time, protocol: ElicitationProtocolSchema.nullable(), usePolicy: z.record(z.string(), z.unknown()).nullable(),
+  allocation: z.record(z.string(), z.unknown()).nullable(), schedules: z.record(z.string(), z.unknown()).nullable(), reportState: z.record(z.string(), z.unknown()).nullable(),
+  costs: z.record(z.string(), z.unknown()), reason: z.string().nullable(), provisional: z.boolean(),
   agreementEstablished: z.literal(false), settlementEstablished: z.literal(false), executionAuthorityGranted: z.literal(false),
 }).strict();
 /** Only this R3 artifact is contributed. No other algorithm output is invented. */

@@ -9,7 +9,7 @@ export const GovernedDeliveryFenceSchema=z.union([
  z.object({...deliveryPosition,claimToken:z.string().uuid()}).strict(),
  z.object({...deliveryPosition,kind:z.literal('RECOVERY'),jobId:z.string().uuid(),jobDeliveryAttemptId:z.string().uuid(),jobClaimToken:z.string().uuid(),jobClaimFence:z.number().int().positive().max(Number.MAX_SAFE_INTEGER)}).strict(),
 ]);
-const execution=z.object({request:z.object({ref:ExperimentRefSchema,ir:z.record(z.unknown()),admissions:z.array(z.unknown()).min(1).max(64)}).strict(),authorization:z.object({body:z.record(z.unknown()),signature:z.string().min(1).max(256)}).strict()}).strict();
+const execution=z.object({request:z.object({ref:ExperimentRefSchema,ir:z.record(z.string(), z.unknown()),admissions:z.array(z.unknown()).min(1).max(64)}).strict(),authorization:z.object({body:z.record(z.string(), z.unknown()),signature:z.string().min(1).max(256)}).strict()}).strict();
 export const GovernedRequestBindingSchema=z.object({
  exposureId:z.string().min(1).max(256),methodRef:ExperimentRefSchema.refine(ref=>ref.owner==='S8'&&ref.version==='json-field-replace-v1','Exact S8 method version required'),
  providerOrigin:origin,applicationAccountId:z.string().uuid(),recordKey:z.string().min(1).max(1024).refine(value=>!/[\u0000-\u001f\u007f]/.test(value)),

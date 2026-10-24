@@ -1,4 +1,4 @@
-// Generated from finnor-os/openapi.json, SHA-256 466a0147bd8fc949b0ee4b438591c5a82891127a0471a85b8e2fef31bcf2791d.
+// Generated from finnor-os/openapi.json, SHA-256 78bd0e663887ffcc46dda31e074c510e18fc6da84a62cafb103d07dbe9eef508.
 export interface paths {
     "/api/live-controls": {
         parameters: {
@@ -151,7 +151,7 @@ export interface paths {
                                 kind: "S5_ALLOCATION";
                                 request: {
                                     /** @description Exact EconomicMandate v1; validated by the S4 owner contract */
-                                    mandate?: unknown;
+                                    mandate: unknown;
                                     policyRefs: {
                                         owner: string;
                                         id: string;
@@ -569,7 +569,7 @@ export interface paths {
                                 kind: "S5_ALLOCATION";
                                 request: {
                                     /** @description Exact EconomicMandate v1; validated by the S4 owner contract */
-                                    mandate?: unknown;
+                                    mandate: unknown;
                                     policyRefs: {
                                         owner: string;
                                         id: string;
@@ -7516,7 +7516,9 @@ export interface paths {
             parameters: {
                 query?: never;
                 header?: never;
-                path?: never;
+                path: {
+                    id: string;
+                };
                 cookie?: never;
             };
             requestBody?: {
@@ -8369,7 +8371,9 @@ export interface paths {
             parameters: {
                 query?: never;
                 header?: never;
-                path?: never;
+                path: {
+                    id: string;
+                };
                 cookie?: never;
             };
             requestBody?: {
@@ -8411,7 +8415,9 @@ export interface paths {
             parameters: {
                 query?: never;
                 header?: never;
-                path?: never;
+                path: {
+                    id: string;
+                };
                 cookie?: never;
             };
             requestBody?: {
@@ -8450,7 +8456,9 @@ export interface paths {
             parameters: {
                 query?: never;
                 header?: never;
-                path?: never;
+                path: {
+                    id: string;
+                };
                 cookie?: never;
             };
             requestBody?: {
@@ -8488,7 +8496,10 @@ export interface paths {
             parameters: {
                 query?: never;
                 header?: never;
-                path?: never;
+                path: {
+                    tenantId: string;
+                    actionType: string;
+                };
                 cookie?: never;
             };
             requestBody?: {
@@ -21822,10 +21833,10 @@ export interface paths {
                             version: string;
                             contentDigest: string;
                         };
-                        decision?: unknown;
+                        decision: unknown;
                         /** @default [] */
                         measurements?: {
-                            protocol?: unknown;
+                            protocol: unknown;
                             events: unknown[];
                         }[];
                         idempotencyKey: string;
@@ -28355,7 +28366,7 @@ export interface paths {
                             version: string;
                             contentDigest: string;
                         };
-                        patch?: unknown;
+                        patch: unknown;
                     };
                 };
             };
@@ -43061,11 +43072,11 @@ export interface components {
                     inputFields: string[];
                     assignments: {
                         field: string;
-                        value: components["schemas"]["X3Expression"];
+                        value: components["schemas"]["application-submit"]["definitions"]["__schema0"];
                     }[];
                     guards: {
                         id: string;
-                        condition: components["schemas"]["X3Expression"];
+                        condition: components["schemas"]["application-submit"]["definitions"]["__schema0"];
                         denialCode: string;
                         unknownCode?: string;
                         requirementIds: string[];
@@ -43075,7 +43086,7 @@ export interface components {
                     approval?: {
                         requirements: {
                             role: string;
-                            when: components["schemas"]["X3Expression"];
+                            when: components["schemas"]["application-submit"]["definitions"]["__schema0"];
                         }[];
                         noSelfApproval: boolean;
                         distinctPrincipals: boolean;
@@ -43096,7 +43107,7 @@ export interface components {
                     id: string;
                     entityId: string;
                     critical: boolean;
-                    condition: components["schemas"]["X3Expression"];
+                    condition: components["schemas"]["application-submit"]["definitions"]["__schema0"];
                     denialCode: string;
                     requirementIds: string[];
                 }[];
@@ -43478,11 +43489,11 @@ export interface components {
                     inputFields: string[];
                     assignments: {
                         field: string;
-                        value: components["schemas"]["X3Expression"];
+                        value: components["schemas"]["application-maintain"]["definitions"]["__schema0"];
                     }[];
                     guards: {
                         id: string;
-                        condition: components["schemas"]["X3Expression"];
+                        condition: components["schemas"]["application-maintain"]["definitions"]["__schema0"];
                         denialCode: string;
                         unknownCode?: string;
                         requirementIds: string[];
@@ -43492,7 +43503,7 @@ export interface components {
                     approval?: {
                         requirements: {
                             role: string;
-                            when: components["schemas"]["X3Expression"];
+                            when: components["schemas"]["application-maintain"]["definitions"]["__schema0"];
                         }[];
                         noSelfApproval: boolean;
                         distinctPrincipals: boolean;
@@ -43513,7 +43524,7 @@ export interface components {
                     id: string;
                     entityId: string;
                     critical: boolean;
-                    condition: components["schemas"]["X3Expression"];
+                    condition: components["schemas"]["application-maintain"]["definitions"]["__schema0"];
                     denialCode: string;
                     requirementIds: string[];
                 }[];
@@ -44341,19 +44352,13 @@ export interface components {
                     visibility: (0 | 1)[];
                 };
                 ordinary: {
-                    /** @enum {number} */
                     updateTiming: -1 | 1 | 3;
-                    /** @enum {number} */
                     pageSize: 1 | 2 | 4;
-                    /** @enum {number} */
                     visibility: 0 | 1;
                 };
                 withheld: {
-                    /** @enum {number} */
                     updateTiming: -1 | 1 | 3;
-                    /** @enum {number} */
                     pageSize: 1 | 2 | 4;
-                    /** @enum {number} */
                     visibility: 0 | 1;
                 };
                 costUnits: number;
@@ -44450,19 +44455,13 @@ export interface components {
                     visibility: (0 | 1)[];
                 };
                 ordinary: {
-                    /** @enum {number} */
                     updateTiming: -1 | 1 | 3;
-                    /** @enum {number} */
                     pageSize: 1 | 2 | 4;
-                    /** @enum {number} */
                     visibility: 0 | 1;
                 };
                 withheld: {
-                    /** @enum {number} */
                     updateTiming: -1 | 1 | 3;
-                    /** @enum {number} */
                     pageSize: 1 | 2 | 4;
-                    /** @enum {number} */
                     visibility: 0 | 1;
                 };
                 costUnits: number;
@@ -44637,7 +44636,6 @@ export interface components {
                     id: string;
                     terms: {
                         quantityId: string;
-                        /** @enum {number} */
                         coefficient: -1 | 1;
                     }[];
                     /** @enum {string} */
@@ -44973,8 +44971,8 @@ export interface components {
                 }[];
             };
             idempotencyKey: string;
-            mandate?: unknown;
-            problem?: unknown;
+            mandate: unknown;
+            problem: unknown;
             actionRules: {
                 actionId: string;
                 ruleIds: string[];
@@ -45112,34 +45110,7 @@ export interface components {
                 }[];
                 outputs: {
                     key: string;
-                    expression: {
-                        /** @constant */
-                        kind: "input";
-                        key: string;
-                    } | {
-                        /** @constant */
-                        kind: "literal";
-                        value: string;
-                        /** @enum {string} */
-                        unit: "currency" | "count" | "ratio" | "multiple" | "rate";
-                        currencyCode: string | null;
-                    } | {
-                        /** @enum {string} */
-                        kind: "add" | "subtract" | "multiply" | "ratio" | "min" | "max";
-                        left: unknown;
-                        right: unknown;
-                    } | {
-                        /** @constant */
-                        kind: "if";
-                        condition: {
-                            /** @enum {string} */
-                            comparison: "lt" | "lte" | "eq" | "gte" | "gt";
-                            left: unknown;
-                            right: unknown;
-                        };
-                        whenTrue: unknown;
-                        whenFalse: unknown;
-                    };
+                    expression: components["schemas"]["confidential-intake"]["definitions"]["__schema0"];
                     semantics: {
                         entityType: string;
                         /** Format: uuid */
@@ -45321,34 +45292,7 @@ export interface components {
                 }[];
                 outputs: {
                     key: string;
-                    expression: {
-                        /** @constant */
-                        kind: "input";
-                        key: string;
-                    } | {
-                        /** @constant */
-                        kind: "literal";
-                        value: string;
-                        /** @enum {string} */
-                        unit: "currency" | "count" | "ratio" | "multiple" | "rate";
-                        currencyCode: string | null;
-                    } | {
-                        /** @enum {string} */
-                        kind: "add" | "subtract" | "multiply" | "ratio" | "min" | "max";
-                        left: unknown;
-                        right: unknown;
-                    } | {
-                        /** @constant */
-                        kind: "if";
-                        condition: {
-                            /** @enum {string} */
-                            comparison: "lt" | "lte" | "eq" | "gte" | "gt";
-                            left: unknown;
-                            right: unknown;
-                        };
-                        whenTrue: unknown;
-                        whenFalse: unknown;
-                    };
+                    expression: components["schemas"]["confidential-plan"]["definitions"]["__schema0"];
                     semantics: {
                         entityType: string;
                         /** Format: uuid */
@@ -45527,34 +45471,7 @@ export interface components {
                 }[];
                 outputs: {
                     key: string;
-                    expression: {
-                        /** @constant */
-                        kind: "input";
-                        key: string;
-                    } | {
-                        /** @constant */
-                        kind: "literal";
-                        value: string;
-                        /** @enum {string} */
-                        unit: "currency" | "count" | "ratio" | "multiple" | "rate";
-                        currencyCode: string | null;
-                    } | {
-                        /** @enum {string} */
-                        kind: "add" | "subtract" | "multiply" | "ratio" | "min" | "max";
-                        left: unknown;
-                        right: unknown;
-                    } | {
-                        /** @constant */
-                        kind: "if";
-                        condition: {
-                            /** @enum {string} */
-                            comparison: "lt" | "lte" | "eq" | "gte" | "gt";
-                            left: unknown;
-                            right: unknown;
-                        };
-                        whenTrue: unknown;
-                        whenFalse: unknown;
-                    };
+                    expression: components["schemas"]["confidential-submit"]["definitions"]["__schema0"];
                     semantics: {
                         entityType: string;
                         /** Format: uuid */
@@ -45732,7 +45649,7 @@ export interface components {
                 version: string;
                 contentDigest: string;
             };
-            decision?: unknown;
+            decision: unknown;
             allocationRef?: {
                 owner: string;
                 id: string;
@@ -45777,7 +45694,7 @@ export interface components {
             };
         };
         "confidential-allocation": {
-            input?: unknown;
+            input: unknown;
             bindings: {
                 scenarioId: string;
                 termIndex: number;
@@ -45820,7 +45737,7 @@ export interface components {
                 version: string;
                 contentDigest: string;
             };
-            decision?: unknown;
+            decision: unknown;
             allocationRef: {
                 owner: string;
                 id: string;
@@ -46142,7 +46059,6 @@ export interface components {
                     root: string;
                     nodes: ({
                         id: string;
-                        /** @enum {number} */
                         date: 0 | 1 | 2;
                         state: [
                             0 | 1,
@@ -46185,7 +46101,6 @@ export interface components {
                         }[];
                     } | {
                         id: string;
-                        /** @enum {number} */
                         date: 0 | 1 | 2;
                         state: [
                             0 | 1,
@@ -46218,7 +46133,6 @@ export interface components {
                         informationSet?: string;
                     } | {
                         id: string;
-                        /** @enum {number} */
                         date: 0 | 1 | 2;
                         state: [
                             0 | 1,
@@ -46249,7 +46163,6 @@ export interface components {
                         }[];
                     } | {
                         id: string;
-                        /** @enum {number} */
                         date: 0 | 1 | 2;
                         state: [
                             0 | 1,
@@ -46614,45 +46527,45 @@ export interface components {
         } | {
             /** @constant */
             op: "sum";
-            value: components["schemas"]["X3Expression"];
+            value: components["schemas"]["X3Expression"]["definitions"]["__schema0"];
         } | {
             /** @constant */
             op: "known";
-            value: components["schemas"]["X3Expression"];
+            value: components["schemas"]["X3Expression"]["definitions"]["__schema0"];
         } | {
             /** @constant */
             op: "current-evidence";
-            value: components["schemas"]["X3Expression"];
+            value: components["schemas"]["X3Expression"]["definitions"]["__schema0"];
         } | {
             /** @constant */
             op: "not";
-            value: components["schemas"]["X3Expression"];
+            value: components["schemas"]["X3Expression"]["definitions"]["__schema0"];
         } | {
             /** @constant */
             op: "equal";
-            left: components["schemas"]["X3Expression"];
-            right: components["schemas"]["X3Expression"];
+            left: components["schemas"]["X3Expression"]["definitions"]["__schema0"];
+            right: components["schemas"]["X3Expression"]["definitions"]["__schema0"];
         } | {
             /** @constant */
             op: "same-quantity";
-            left: components["schemas"]["X3Expression"];
-            right: components["schemas"]["X3Expression"];
+            left: components["schemas"]["X3Expression"]["definitions"]["__schema0"];
+            right: components["schemas"]["X3Expression"]["definitions"]["__schema0"];
         } | {
             /** @constant */
             op: "difference";
-            left: components["schemas"]["X3Expression"];
-            right: components["schemas"]["X3Expression"];
+            left: components["schemas"]["X3Expression"]["definitions"]["__schema0"];
+            right: components["schemas"]["X3Expression"]["definitions"]["__schema0"];
         } | {
             /** @constant */
             op: "compare";
             /** @enum {string} */
             comparison: "lt" | "lte" | "eq" | "gte" | "gt";
-            left: components["schemas"]["X3Expression"];
-            right: components["schemas"]["X3Expression"];
+            left: components["schemas"]["X3Expression"]["definitions"]["__schema0"];
+            right: components["schemas"]["X3Expression"]["definitions"]["__schema0"];
         } | {
             /** @constant */
             op: "currency-threshold";
-            value: components["schemas"]["X3Expression"];
+            value: components["schemas"]["X3Expression"]["definitions"]["__schema0"];
             /** @enum {string} */
             comparison: "lt" | "lte" | "eq" | "gte" | "gt";
             thresholds: {
@@ -46670,11 +46583,11 @@ export interface components {
         } | {
             /** @constant */
             op: "all";
-            args: components["schemas"]["X3Expression"][];
+            args: components["schemas"]["X3Expression"]["definitions"]["__schema0"][];
         } | {
             /** @constant */
             op: "any";
-            args: components["schemas"]["X3Expression"][];
+            args: components["schemas"]["X3Expression"]["definitions"]["__schema0"][];
         };
     };
     responses: never;

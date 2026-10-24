@@ -5,8 +5,7 @@ No Y3–Y5 implementation, publication, push, merge to a shared branch, producti
 deployment, provisioning, protected admission, new signer/grant or real economic
 effect is authorized.
 
-The owner approved proceeding in this chat and explicitly rejected Mission mode:
-“fuck mission!!!!!!!!! and make it like here!!! not on mission mode”.
+The owner approved proceeding in this chat and explicitly requested the ordinary chat workflow.
 Guidance: Low. The attempted native Mission entry was denied by tool policy.
 Neither ordinary chat nor the read-only source investigator is Mission Control.
 

@@ -46,6 +46,22 @@ async function retainEvidence(name: string, inputs: unknown, observed: unknown) 
 }
 
 describe("production query surface and native-only authority boundary", () => {
+  it("declares every path variable as a required typed parameter", async () => {
+    const contract = await openApi();
+    const observed: Array<{ path: string; method: string; variables: string[] }> = [];
+    for (const [path, item] of Object.entries(contract.paths) as Array<[string, any]>) {
+      const variables = [...path.matchAll(/\{([^}]+)\}/g)].map(match => match[1]!);
+      for (const [method, operation] of Object.entries(item) as Array<[string, any]>) {
+        if (!["get", "post", "patch", "put", "delete"].includes(method)) continue;
+        const parameters = [...(item.parameters ?? []), ...(operation.parameters ?? [])];
+        for (const name of variables) expect(parameters, `${method} ${path}: ${name}`).toEqual(expect.arrayContaining([
+          expect.objectContaining({ name, in: "path", required: true, schema: expect.objectContaining({ type: "string" }) }),
+        ]));
+        observed.push({ path, method, variables });
+      }
+    }
+    await retainEvidence("required-path-parameters", { contract: "committed OpenAPI" }, observed);
+  });
   it("runs the complete production boundary against the generated public contract", async () => {
     const result = await verifyPeDomainBoundary();
     expect(result).toMatchObject({
@@ -61,13 +77,14 @@ describe("production query surface and native-only authority boundary", () => {
   it("rejects a missing public query branch and accidental native-only exposure", async () => {
     const contract = await openApi();
     const schema = contract.paths["/api/queries"].post.requestBody.content["application/json"].schema;
+    const unionKey = schema.oneOf ? "oneOf" : "anyOf";
     const removed = structuredClone(contract);
-    removed.paths["/api/queries"].post.requestBody.content["application/json"].schema.anyOf =
-      schema.anyOf.filter((branch: any) => branch.properties?.intent?.const !== publicIntents[0]);
+    removed.paths["/api/queries"].post.requestBody.content["application/json"].schema[unionKey] =
+      schema[unionKey].filter((branch: any) => branch.properties?.intent?.const !== publicIntents[0]);
     expect(verifyQuerySurfaceCoverage(removed)).toContain(`OpenAPI is missing public query intent ${publicIntents[0]}`);
     for (const intent of nativeIntents) {
       const exposed = structuredClone(contract);
-      exposed.paths["/api/queries"].post.requestBody.content["application/json"].schema.anyOf.push({
+      exposed.paths["/api/queries"].post.requestBody.content["application/json"].schema[unionKey].push({
         type: "object", properties: { intent: { const: intent } },
       });
       expect(verifyQuerySurfaceCoverage(exposed)).toContain(`OpenAPI exposes native-only query intent ${intent}`);

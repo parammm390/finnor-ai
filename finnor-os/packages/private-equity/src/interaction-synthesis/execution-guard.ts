@@ -60,8 +60,8 @@ export async function requireConsentsTx(c:PoolClient,row:ProtocolRow,terms:Inter
  return ids;
 }
 export async function historyTx(c:PoolClient,run:InteractionRun):Promise<InteractionHistory[]>{
- const rows=(await c.query<InteractionHistory>(`SELECT id::text,event_id,principal_id,kind,body FROM finnor_os.s4_interaction_history
-  WHERE tenant_id=$1 AND run_id=$2 ORDER BY id LIMIT 257`,[run.tenant_id,run.id])).rows;
+ const rows=(await c.query<InteractionHistory>(`SELECT h.id::text AS id,h.event_id,h.principal_id,h.kind,h.body FROM finnor_os.s4_interaction_history h
+  WHERE h.tenant_id=$1 AND h.run_id=$2 ORDER BY h.id LIMIT 257`,[run.tenant_id,run.id])).rows;
  if(rows.length>256)fail('Y3_ORIGINAL_HISTORY_BOUND');
  return rows;
 }

@@ -102,7 +102,7 @@ try{
   const migration=JSON.parse(await readFile(join(evidence,'migration-upgrade-replay.json'),'utf8'));
   assert.deepEqual(migration.upgrade,[
     '0195_private_input_responses.sql','0195a_postx_y1_temporal_binding.sql',
-    '0196_postx_y2_strategic_response.sql','0196a_postx_y2_requested_model_currentness.sql',
+    '0196_postx_y2_strategic_response.sql','0196a_postx_y2_requested_model_currentness.sql','0196b_postx_y2_system_actor_scope.sql',
    ]);assert.deepEqual(migration.replay,[]);
   return {unauthenticated:unauth.status,oversized:413,strict:400,roles,upgrade:migration.upgrade,replay:migration.replay};
  });

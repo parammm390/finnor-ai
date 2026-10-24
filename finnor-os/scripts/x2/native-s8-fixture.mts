@@ -251,7 +251,7 @@ const replyFlags = {
   protectionDomain: z.literal("DISPOSABLE_TEST_AUTHORITY"), qualification: z.literal(APPLICATION_S8_QUALIFICATION),
   protectedAdmission: z.literal(false), executionAuthorityGranted: z.literal(false),
 };
-const commitSchema = z.object({ ref: ApplicationPortRefSchema, receipt: z.record(z.unknown()), ...replyFlags }).strict();
+const commitSchema = z.object({ ref: ApplicationPortRefSchema, receipt: z.record(z.string(), z.unknown()), ...replyFlags }).strict();
 const activationReplySchema = commitSchema.extend({ generation: z.number().int().positive() }).strict();
 const revocationReplySchema = activationReplySchema.extend({
   liabilityBudgetReleased: z.literal(false), unresolvedUsesPreserved: z.number().int().nonnegative(),
@@ -277,7 +277,7 @@ const commandNegativeSnapshotSchema = z.object({
   applications: z.object({
     revisions: z.array(z.object({
       ref: ApplicationPortRefSchema, modelRef: X2RefSchema, checkRef: X2RefSchema, originalParentRef: X2RefSchema,
-      scope: z.record(z.unknown()), dependencyDigest: z.string(), revoked: z.boolean(),
+      scope: z.record(z.string(), z.unknown()), dependencyDigest: z.string(), revoked: z.boolean(),
       protocolRef: ApplicationPortRefSchema.nullable(), evaluationRef: ApplicationPortRefSchema.nullable(),
       admissionRef: ApplicationPortRefSchema.nullable(), activationRef: ApplicationPortRefSchema.nullable(),
       domain: z.object({ generation: z.number().int().nonnegative(), active: z.string().nullable() }).strict(),

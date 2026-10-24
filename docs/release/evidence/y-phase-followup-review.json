@@ -1,0 +1,192 @@
+{
+  "schema": "finnor.y-phase-followup-review.v1",
+  "base": "7bfdd2d3ab611c90f1355637858824ff1ba67f98",
+  "reviewProvider": "CodeRabbit CLI 0.9.0",
+  "reviews": [
+    {
+      "phase": "Y1",
+      "issues": [
+        {
+          "severity": "minor",
+          "fileName": "finnor-os/apps/api/app/api/queries/route.ts",
+          "title": "Limit the `PEENTITYNOTFOUND` \u2192 `Y1AUTHENTICATEDRESOURCEUNAVAILABLE` mapping to the Y1 intent.",
+          "startLine": 89,
+          "endLine": 94
+        },
+        {
+          "severity": "minor",
+          "fileName": "finnor-os/openapi.json",
+          "title": "Declare the path parameters for the action and policy routes.",
+          "startLine": 26693,
+          "endLine": 26699
+        },
+        {
+          "severity": "major",
+          "fileName": "finnor-os/packages/db/migrations-bundle.ts",
+          "title": "Revoke DELETE on Y1 episodes.",
+          "startLine": 222,
+          "endLine": 222
+        },
+        {
+          "severity": "minor",
+          "fileName": "finnor-os/packages/private-equity/src/economic-action-theory/api.ts",
+          "title": "A programme that loses its first `RUN` job can never be run again.",
+          "startLine": 61,
+          "endLine": 65
+        },
+        {
+          "severity": "minor",
+          "fileName": "src/components/centropy/canvas/EconomicActionTheoryPanel.tsx",
+          "title": "Do not revoke the object URL synchronously after `link.click()`.",
+          "startLine": 133,
+          "endLine": 134
+        },
+        {
+          "severity": "major",
+          "fileName": "finnor-os/packages/private-equity/src/program-synthesis/economic-plan.ts",
+          "title": "Composing an economic programme replaces the Work's existing active PlanRevision.",
+          "startLine": 49,
+          "endLine": 53
+        },
+        {
+          "severity": "major",
+          "fileName": "finnor-os/packages/db/migrations/0195_postx_y1_economic_action_theory.sql",
+          "title": "Make the global triggers independent of the caller's grants and RLS context.",
+          "startLine": 155,
+          "endLine": 176
+        },
+        {
+          "severity": "minor",
+          "fileName": "finnor-os/packages/private-equity/src/economic-action-theory/store.ts",
+          "title": "Do not recompute `runtimeIdentity()` on every currentness check while the tenant portfolio lock is held.",
+          "startLine": 96,
+          "endLine": 98
+        },
+        {
+          "severity": "major",
+          "fileName": "finnor-os/packages/private-equity/src/economic-action-theory/worker.ts",
+          "title": "`construct()` blocks the worker event loop for up to 120 s.",
+          "startLine": 68,
+          "endLine": 69
+        }
+      ]
+    },
+    {
+      "phase": "Y2",
+      "issues": [
+        {
+          "severity": "minor",
+          "fileName": "scope-postx/y2-strategic-response-world-model/DESIGN.md",
+          "title": "Correct the description of the checker's arithmetic and pin count.",
+          "startLine": 28,
+          "endLine": 32
+        },
+        {
+          "severity": "major",
+          "fileName": "finnor-os/scripts/y2/run-installed.mts",
+          "title": "Add migration 0196b to the expected upgrade list.",
+          "startLine": 103,
+          "endLine": 106
+        },
+        {
+          "severity": "minor",
+          "fileName": "finnor-os/packages/epistemic-runtime/src/strategic-response/source-paths.ts",
+          "title": "Pin `0196bpostxy2systemactorscope.sql` together with the other Y2 migrations.",
+          "startLine": 3,
+          "endLine": 12
+        },
+        {
+          "severity": "minor",
+          "fileName": "scope-postx/y2-strategic-response-world-model/PLAN.md",
+          "title": "Remove the verbatim profane chat quote from the committed plan.",
+          "startLine": 8,
+          "endLine": 10
+        },
+        {
+          "severity": "major",
+          "fileName": "finnor-os/scripts/y2/seal-local.mts",
+          "title": "The source-pin count assertion fails against the current pin list.",
+          "startLine": 17,
+          "endLine": 17
+        },
+        {
+          "severity": "minor",
+          "fileName": "finnor-os/packages/private-equity/src/strategic-response/worker.ts",
+          "title": "A job that hits an attempt limit leaves the model or use stuck in `QUEUED`.",
+          "startLine": 59,
+          "endLine": 79
+        },
+        {
+          "severity": "minor",
+          "fileName": "finnor-os/scripts/y2/seal-local.mts",
+          "title": "The seal reads host-specific absolute paths from the failure ledger.",
+          "startLine": 123,
+          "endLine": 127
+        },
+        {
+          "severity": "major",
+          "fileName": "finnor-os/packages/db/migrations/0196_postx_y2_strategic_response.sql",
+          "title": "Verify that every role that writes `workinputs`, `evidencesourceversions` or `authoritystates` can run these triggers.",
+          "startLine": 125,
+          "endLine": 141
+        }
+      ]
+    },
+    {
+      "phase": "Y3",
+      "issues": [
+        {
+          "severity": "minor",
+          "fileName": "finnor-os/openapi.json",
+          "title": "Declare the templated path parameters for these operations.",
+          "startLine": 28582,
+          "endLine": 28589
+        },
+        {
+          "severity": "major",
+          "fileName": "finnor-os/packages/private-equity/src/interaction-synthesis/execution-guard.ts",
+          "title": "Fix the history order: `ORDER BY id` sorts the text cast, not the bigint.",
+          "startLine": 63,
+          "endLine": 64
+        },
+        {
+          "severity": "major",
+          "fileName": "finnor-os/packages/private-equity/src/interaction-synthesis/store.ts",
+          "title": "Cache the runtime identity. Do not rehash the node and python binaries on every currentness check.",
+          "startLine": 127,
+          "endLine": 128
+        },
+        {
+          "severity": "minor",
+          "fileName": "src/components/centropy/canvas/InteractionProtocolPanel.tsx",
+          "title": "Delay `URL.revokeObjectURL` until after the click starts the download.",
+          "startLine": 156,
+          "endLine": 157
+        },
+        {
+          "severity": "major",
+          "fileName": "finnor-os/packages/db/migrations-bundle.ts",
+          "title": "Confirm the intended visibility of principal-scoped interaction records.",
+          "startLine": 228,
+          "endLine": 228
+        },
+        {
+          "severity": "major",
+          "fileName": "finnor-os/packages/db/migrations-bundle.ts",
+          "title": "Enforce exact owner relationships across Y3 records.",
+          "startLine": 228,
+          "endLine": 228
+        }
+      ]
+    }
+  ],
+  "security": {
+    "uniquePackages": 1007,
+    "findings": []
+  },
+  "qualification": {
+    "allGreen": false,
+    "productionDeployed": false,
+    "Y4Review": "RATE_LIMITED: 43 minutes; link an organization seat or Agentic API key"
+  }
+}

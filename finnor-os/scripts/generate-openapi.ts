@@ -3,7 +3,6 @@
 // regain an executable public schema here.
 import { writeFileSync } from "node:fs";
 import { z } from "zod";
-import { zodToJsonSchema,ignoreOverride } from "zod-to-json-schema";
 import {
   SubmitInstructionSchema,
   StartObjectiveSchema,
@@ -155,8 +154,8 @@ const MicrosoftSourceKindSchema = z.enum([
 const MicrosoftSourceScopeSchema = z.object({
   sourceKind: MicrosoftSourceKindSchema,
   permissionMode: z.enum(["SCOPED", "BROAD"]),
-  configuration: z.record(z.unknown()),
-  negativeProbeConfiguration: z.record(z.unknown()).nullable().optional(),
+  configuration: z.record(z.string(), z.unknown()),
+  negativeProbeConfiguration: z.record(z.string(), z.unknown()).nullable().optional(),
   acknowledgeBroadAccess: z.boolean().optional(),
   rootBinding: z.object({ type: z.enum(PE_WORLD_ROOT_TYPES), id: z.string().uuid() }).strict().nullable().optional(),
   freshnessPolicy: z.object({
@@ -183,7 +182,7 @@ const ArtifactDraftSchema = z.object({ baseVersionId: z.string().uuid() }).stric
 const ArtifactPatchSchema = z.object({
   baseVersionId: z.string().uuid(),
   draftKey: z.string().min(1).max(512),
-  operations: z.array(z.record(z.unknown())).min(1).max(1_000),
+  operations: z.array(z.record(z.string(), z.unknown())).min(1).max(1_000),
   expectedSemanticHash: z.string().regex(/^[0-9a-f]{64}$/).optional(),
 }).strict();
 const ArtifactCommentSchema = z.object({
@@ -283,7 +282,7 @@ const RawActivityItemSchema = z.object({
   source: z.enum(["action_log", "workflow_step", "computer_step", "work_event", "call"]),
   id: z.string().uuid(),
   occurredAt: z.string().datetime({ offset: true }),
-  detail: z.record(z.unknown()),
+  detail: z.record(z.string(), z.unknown()),
 }).strict();
 const RawActivityPageSchema = z.object({
   items: z.array(RawActivityItemSchema),
@@ -296,17 +295,22 @@ const SemanticActivityInputSchema = z.object({
   limit: z.number().int().min(1).max(1_000).optional(),
 }).strict();
 
-const s = (schema: z.ZodTypeAny) => zodToJsonSchema(schema, { $refStrategy: "none" });
+const s = (schema: z.ZodTypeAny) => z.toJSONSchema(schema, { io: "input", target: "draft-07", reused: "inline" });
 const json = (schema: z.ZodTypeAny) => ({ content: { "application/json": { schema: s(schema) } } });
 // Named components preserve the recursive expression language. Inlining it
 // with refStrategy "none" would silently turn nested expressions into "any".
-const applicationSchema=(schema:z.ZodTypeAny)=>{
+const applicationSchema=(schema:z.core.$ZodType)=>{
  // This installed converter has no 3.1 target. Its JSON Schema vocabulary
  // supplies numeric exclusive bounds and null unions, unlike openApi3 (3.0).
- const converted=zodToJsonSchema(schema,{$refStrategy:"none",target:"jsonSchema7",
-  override:def=>def===ApplicationExpressionSchema._def?{$ref:"#/components/schemas/X3Expression"}:ignoreOverride});
+ const converted=z.toJSONSchema(schema,{io:"input",target:"draft-07",reused:"inline",
+  override:({zodSchema,jsonSchema})=>{
+   if(Object.is(zodSchema,ApplicationExpressionSchema)){
+    for(const key of Object.keys(jsonSchema))delete jsonSchema[key];
+    jsonSchema.$ref="#/components/schemas/X3Expression";
+   }
+  }});
  // These compatible keywords inherit the document's OpenAPI 3.1 dialect.
- delete converted.$schema;
+ // Retain the converter scope marker until document-local references are rebased.
  return converted;
 };
 const applicationComponents={schemas:Object.fromEntries([
@@ -318,7 +322,7 @@ const applicationComponents={schemas:Object.fromEntries([
  ...Object.entries(StrategicOperationSchemas).map(([name,schema])=>[name,applicationSchema(schema)]),
  ...Object.entries(CONFIDENTIAL_OPERATION_SCHEMAS).map(([name,schema])=>[name,applicationSchema(schema)]),
  ...Object.entries(InteractionOperationSchemas).map(([name,schema])=>[name,applicationSchema(schema)]),
- ["X3Expression",applicationSchema((ApplicationExpressionSchema._def as z.ZodLazyDef).getter())],
+ ["X3Expression",applicationSchema((ApplicationExpressionSchema instanceof z.ZodLazy ? ApplicationExpressionSchema.unwrap() : ApplicationExpressionSchema))],
 ])};
 const secured = [{ bearerAuth: [] }];
 const documentIdParameter = { name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" } } as const;
@@ -562,7 +566,7 @@ const paths = {
   },
   "/api/instructions": { post: { security: secured, requestBody: json(SubmitInstructionSchema), responses: { "201": { description: "Work accepted" }, "400": { description: "Invalid or retired request" } } } },
   "/api/objectives": { post: { security: secured, requestBody: json(StartObjectiveSchema), responses: { "201": { description: "Objective accepted" } } } },
-  "/api/objectives/{id}/control": { post: { security: secured, requestBody: json(ControlObjectiveSchema), responses: { "200": { description: "Control recorded" } } } },
+  "/api/objectives/{id}/control": { post: { security: secured, parameters: [{name:"id",in:"path",required:true,schema:{type:"string",format:"uuid"}}], requestBody: json(ControlObjectiveSchema), responses: { "200": { description: "Control recorded" } } } },
   "/api/works/{id}/handoff": { post: { security: secured, parameters: [documentIdParameter], requestBody: json(HandoffWorkSchema), responses: { "200": { description: "Handoff recorded" } } } },
   "/api/outcome-packs": { post: { security: secured, requestBody: json(StartOutcomePackSchema), responses: { "201": { description: "Outcome pack started" } } } },
   "/api/queries": { post: { security: secured, requestBody: json(OperationalQuerySchema), responses: { "201": { description: "Canonical query completed" }, "400": { description: "Invalid or retired query" } } } },
@@ -573,10 +577,10 @@ const paths = {
   },
   "/api/workforce/proposals/{id}": { post: { security: secured, parameters: [documentIdParameter], requestBody: json(WorkforceReviewProposalSchema), responses: { "200": { description: "Learning proposal human review recorded; promotion creates immutable LearningRevision and AgentProfileRevision" }, "400": { description: "Invalid proposal review" }, "403": { description: "Authenticated employee lacks workforce learning-review authority" } } } },
   "/api/workforce/assignments/{id}/reassign": { post: { security: secured, parameters: [documentIdParameter], requestBody: json(WorkforceReassignSchema), responses: { "200": { description: "Active assignment relinquished with immutable operator provenance; normal deterministic assignment resumes the exact P6 node" }, "400": { description: "Invalid assignment or note" }, "403": { description: "Authenticated employee lacks workforce reassignment authority" } } } },
-  "/api/actions/{id}/confirm": { post: { security: secured, requestBody: json(ConfirmActionSchema), responses: { "200": { description: "Approval recorded" } } } },
-  "/api/actions/{id}/reject": { post: { security: secured, requestBody: json(RejectActionSchema), responses: { "200": { description: "Rejection recorded" } } } },
-  "/api/actions/{id}/escalate": { post: { security: secured, requestBody: json(EscalateActionSchema), responses: { "200": { description: "Escalation recorded" } } } },
-  "/api/policies/{tenantId}/{actionType}": { put: { security: secured, requestBody: json(UpsertPolicySchema), responses: { "200": { description: "Active policy saved" } } } },
+  "/api/actions/{id}/confirm": { post: { security: secured, parameters: [{ name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" } }], requestBody: json(ConfirmActionSchema), responses: { "200": { description: "Approval recorded" } } } },
+  "/api/actions/{id}/reject": { post: { security: secured, parameters: [{ name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" } }], requestBody: json(RejectActionSchema), responses: { "200": { description: "Rejection recorded" } } } },
+  "/api/actions/{id}/escalate": { post: { security: secured, parameters: [{ name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" } }], requestBody: json(EscalateActionSchema), responses: { "200": { description: "Escalation recorded" } } } },
+  "/api/policies/{tenantId}/{actionType}": { put: { security: secured, parameters: [{ name: "tenantId", in: "path", required: true, schema: { type: "string", format: "uuid" } }, { name: "actionType", in: "path", required: true, schema: { type: "string" } }], requestBody: json(UpsertPolicySchema), responses: { "200": { description: "Active policy saved" } } } },
   "/api/webhooks/vapi": { post: { requestBody: json(VapiWebhookSchema), responses: { "200": { description: "Employee voice event received" } } } },
   "/api/webhooks/ghl": { post: { responses: { "410": { description: "Authenticated historical payload quarantined; never executed" } } } },
   "/api/webhooks/marketing": { post: { responses: { "410": { description: "Authenticated historical payload quarantined; never executed" } } } },
@@ -987,5 +991,20 @@ const document = {
 // The tracked root contract is the release artifact consumed by tests and clients.
 // Writing a second ignored copy allowed a stale Water-era schema to survive earlier
 // generations, so there is deliberately one owner and one destination.
+// Each conversion is a standalone JSON Schema. Rebase its local definitions
+// after embedding so recursive references resolve inside the OpenAPI document.
+function rebaseSchemaReferences(node:unknown,path:string[]=[],scope="#") {
+ if(!node||typeof node!=="object")return;
+ if(Array.isArray(node)){node.forEach((child,index)=>rebaseSchemaReferences(child,[...path,String(index)],scope));return;}
+ const value=node as Record<string,unknown>;
+ if(typeof value.$schema==="string"){
+  scope="#/"+path.map(part=>part.replace(/~/g,"~0").replace(/\//g,"~1")).join("/");
+  delete value.$schema;
+ }
+ if(typeof value.$ref==="string"&&value.$ref.startsWith("#")&&!value.$ref.startsWith("#/components/"))
+  value.$ref=scope+value.$ref.slice(1);
+ for(const [key,child] of Object.entries(value))rebaseSchemaReferences(child,[...path,key],scope);
+}
+rebaseSchemaReferences(document);
 writeFileSync(new URL("../openapi.json", import.meta.url), `${JSON.stringify(document, null, 2)}\n`);
 console.log(`Generated openapi.json with ${Object.keys(paths).length} active/quarantine paths.`);

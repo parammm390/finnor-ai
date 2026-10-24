@@ -33,8 +33,8 @@ const operator = z.object({
   id, operationRef: ref, modelRef: ref, kind: z.enum(["INTERVENE", "WAIT", "STOP"]),
   eligibleParties: z.array(id).min(1).max(8), requiredParties: z.array(id).max(8),
   minMembers: z.number().int().min(1).max(8), maxMembers: z.number().int().min(1).max(8),
-  termChoices: z.array(z.record(quantity)).min(1).max(64),
-  grantChoices: z.array(z.record(series)).min(1).max(64),
+  termChoices: z.array(z.record(z.string(), quantity)).min(1).max(64),
+  grantChoices: z.array(z.record(z.string(), series)).min(1).max(64),
   equations: z.array(equation).max(256), costs: z.array(equation).max(256),
   requiresAfter: z.array(id).max(8), exclusiveItems: z.array(id).max(256),
   consentRequired: z.array(id).max(8),
@@ -56,13 +56,13 @@ const canonicalBasis=z.object({
   snapshotDigest:z.string().regex(/^[0-9a-f]{64}$/),knowledgeAt:z.string().datetime(),
 }).strict();
 
-export const CoalitionProblemSchema: z.ZodType<CoalitionProblem,z.ZodTypeDef,unknown> = z.object({
+export const CoalitionProblemSchema: z.ZodType<CoalitionProblem,unknown> = z.object({
   schema: z.literal("finnor.r5.original.v1"), version: z.literal(R5_VERSION), profile: z.literal(R5_PROFILE),
   parties: z.array(z.object({
     id, partyRef: ref, rightsRef: ref, outsideOptionRef: ref, fundingRef: ref, requiredConsentRef: ref,
-    outsideOptions: z.record(quantity), settledCash: z.record(series), ownerObjectiveWeight: quantity,
+    outsideOptions: z.record(z.string(), quantity), settledCash: z.record(z.string(), series), ownerObjectiveWeight: quantity,
   }).strict()).min(1).max(8),
-  worlds: z.array(z.object({ id, coefficients: z.record(quantity), eventTokens: z.record(id) }).strict()).min(1).max(32),
+  worlds: z.array(z.object({ id, coefficients: z.record(z.string(), quantity), eventTokens: z.record(z.string(), id) }).strict()).min(1).max(32),
   dates: z.array(z.string().datetime()).min(1).max(24),
   unit: id, currency: z.string().regex(/^[A-Z]{3}$/), valuationDate: z.string().datetime(),
   discountFactors: series,
@@ -70,7 +70,7 @@ export const CoalitionProblemSchema: z.ZodType<CoalitionProblem,z.ZodTypeDef,unk
     tokens: z.array(id).min(1).max(32) }).strict()).min(1).max(32),
   transfers: z.array(z.object({
     eventId: id, token: id, date: z.number().int().min(0).max(23), operationRef: ref,
-    bounds: z.record(z.tuple([quantity, quantity])),
+    bounds: z.record(z.string(), z.tuple([quantity, quantity])),
   }).strict()).min(1).max(768),
   grammar: z.object({ ref, operators: z.array(operator).min(1).max(8),
     maxSteps: z.number().int().min(1).max(8), admittedCoalitions: z.literal("ALL_ELIGIBLE_NONEMPTY_SUBSETS") }).strict(),
@@ -79,21 +79,21 @@ export const CoalitionProblemSchema: z.ZodType<CoalitionProblem,z.ZodTypeDef,unk
     omittedMechanisms: z.array(id).max(128) }).strict(),
   objective: z.discriminatedUnion("kind", [
     z.object({ kind: z.literal("ROBUST"), mandateRef: ref }).strict(),
-    z.object({ kind: z.literal("EXPECTED"), mandateRef: ref, qualifiedLawRef: ref, probabilities: z.record(quantity) }).strict(),
+    z.object({ kind: z.literal("EXPECTED"), mandateRef: ref, qualifiedLawRef: ref, probabilities: z.record(z.string(), quantity) }).strict(),
   ]),
-  resources: z.array(z.object({ id, sourceRef: ref, unit: id, available: z.record(series),
+  resources: z.array(z.object({ id, sourceRef: ref, unit: id, available: z.record(z.string(), series),
     kind: z.enum(["CUMULATIVE_EXPENDITURE", "OCCUPANCY", "FLOW"]) }).strict()).min(1).max(32),
   obligationsRef: ref,
   canonicalAllocation:canonicalBasis.optional(),
   controlDemand:z.object({schema:z.literal("finnor.r5.control-demand.v1"),
     dimensions:z.array(z.object({dimensionId:id,totalResourceId:id.nullable(),occupancyResourceId:id.nullable()}).strict()).max(16),
-    humanSecondsByOperator:z.record(quantity),staffing:z.literal("NO_EXISTING_EMPLOYMENT_OR_BENEFIT_CHANGE"),
+    humanSecondsByOperator:z.record(z.string(), quantity),staffing:z.literal("NO_EXISTING_EMPLOYMENT_OR_BENEFIT_CHANGE"),
     terminalLiabilityResourceId:id.nullable()}).strict().optional(),
   owner: z.object({ tenantId: id, principalId: id, workId: id, workRevision: id, originalEpisodeId: id,
     originalBudgetGrantRef: ref, originalDeadline: z.string().datetime(),
     dependencies: z.array(z.object({ key: id, revision: z.number().int().min(0) }).strict()).max(4096) }).strict(),
   limits: z.object({ maxProgrammeOptions: z.number().int().min(1).max(100000),
-    maxEncodingBytes: z.number().int().min(1024).max(8388608), native: R2RequestSchema.innerType().shape.budget }).strict(),
+    maxEncodingBytes: z.number().int().min(1024).max(8388608), native: R2RequestSchema.shape.budget }).strict(),
 }).strict();
 
 export function parseCoalitionProblem(value: unknown): CoalitionProblem {

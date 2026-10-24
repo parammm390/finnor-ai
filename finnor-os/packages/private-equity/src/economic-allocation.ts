@@ -12,7 +12,7 @@ import {economicSemanticModuleTx} from './program-synthesis/economic-module';
 import {principal,developmentOnly,chargeOwnerStorageTx} from './economic-action-theory/store';
 import {RefSchema,QuantityValue,digest,reference,same,fail,type EconomicRef,type State,type EconomicProblem} from './economic-action-theory/contracts';
 import {exact,decimal,safe} from './economic-action-theory/finite';
-export const EconomicReservationSchema=z.object({theoryId:z.string().uuid(),initialState:z.record(QuantityValue),
+export const EconomicReservationSchema=z.object({theoryId:z.string().uuid(),initialState:z.record(z.string(), QuantityValue),
  bindings:z.array(z.object({quantityId:z.string(),resourceRef:RefSchema}).strict()).min(1).max(6),
  idempotencyKey:z.string().min(1).max(128)}).strict();
 export interface EconomicReservation {

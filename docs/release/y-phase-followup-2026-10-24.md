@@ -1,0 +1,23 @@
+# Y-phase release and review repair
+
+The four Y PRs (#149–#152) were already merged when this follow-up began. At main `7bfdd2d3ab611c90f1355637858824ff1ba67f98`, production release was blocked by OSV advisories. All other main certification jobs had passed; release publication was skipped.
+
+Both locked dependency graphs now use patched body-parser, fast-uri, nodemailer and Zod. Zod was migrated to v4, including record keys, refined-object projection and native JSON Schema conversion. This uses the patched implementation; it does not import the still-vulnerable v3 compatibility API. Recursive schema references are rebased when embedded in OpenAPI, and all generated clients and catalogues are regenerated. The direct OSV query over 1,007 unique locked package versions returned no advisories; raw inputs and responses are retained in the task evidence folder.
+
+CodeRabbit completed Y1, Y2 and Y3 reviews and raised 23 issues. See `evidence/y-phase-followup-review.json` for the original issue inventory. Fixes include:
+
+- Y1: scope the query error mapping; declare path parameters; retain episode budgets against deletion; key delivery replay by original responsibility progress and retain queue attempt limits; defer blob URL revocation; refuse replacing unfinished business PlanGraphs under the Work writer lock; run global invalidation and intent triggers with scoped owner privileges; reuse hashes only while file metadata remains unchanged; move finite construction to a bounded thread so queue and resource heartbeats continue.
+- Y2: include migration 0196b in reconstruction and semantic pins; validate the complete source list instead of a stale literal count; retain unavailable historical evidence explicitly; record attempt exhaustion as INCOMPLETE; make global invalidation independent of the writer's grants and principal RLS. Historical quoted chat text and arithmetic descriptions were corrected.
+- Y3: declare path parameters; sort history on its actual bigint identity; avoid repeatedly hashing unchanged runtime binaries while preserving fresh per-dispatch hashing; defer download URL revocation; define collaboration access for the owner and named participants; enforce complete Work, principal, episode, theory, terms and run relationships in the database. Participant consent and history authors intentionally remain distinct from the protocol owner. Private HTTP projections remain authoritative for private participant information.
+
+The database repair is a new forward migration. Previously published SQL is unchanged. Required migration-head metadata, migration bundles and source stamps are regenerated together.
+
+CodeRabbit rejected Y4 with `rate_limit`: all three included reviews were used, the selected organization has no assigned seat, and the reported retry window was 43 minutes. Y4 and a final review of these repairs are not claimed complete. Link the organization seat or supply an Agentic API key, then rerun the CLI review. No substitute review is attributed to CodeRabbit.
+
+## Repeatable verification
+
+Use Node 22.22.3 and fresh `npm ci` installs in the repository and `finnor-os`. For vanilla disposable PostgreSQL, set `FINNOR_TEST_MANAGED_EXTENSIONS=omit`; never use this seam against a production target.
+
+Run `npm run release:generated-preflight`, backend and root typechecks, `npm run lint`, `npm run test:release`, root `npm run test:unit`, and backend `npm test`. The constructor liveness and production query integration tests write their inputs, steps, observed results and rerun commands under `FINNOR_PRODUCTION_PREFLIGHT_EVIDENCE_DIR`. The forward-migration integration test verifies that deleting an occupied episode fails, its original preimage survives and finnor_app has no DELETE privilege.
+
+OSV inputs, raw review output, command logs and boundary receipts are retained under `/Users/paramdave/.codex/workspaces/finnor-y-ci-repair-20261023/evidence/followup-20261024`. This document does not assert production activation, protected qualification, or a green remote commit before the actual PR checks complete.

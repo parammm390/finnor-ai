@@ -31,8 +31,8 @@ const operator = z.object({
   id: text, operationRef: ref, modelRef: ref, kind: z.enum(["INTERVENE", "WAIT", "STOP"]),
   eligibleParties: z.array(text).min(1).max(8), requiredParties: z.array(text).max(8),
   minMembers: z.number().int().min(1).max(8), maxMembers: z.number().int().min(1).max(8),
-  termChoices: z.array(z.record(quantity)).min(1).max(64),
-  grantChoices: z.array(z.record(series)).min(1).max(64),
+  termChoices: z.array(z.record(z.string(), quantity)).min(1).max(64),
+  grantChoices: z.array(z.record(z.string(), series)).min(1).max(64),
   equations: z.array(equation).max(256), costs: z.array(equation).max(256),
   requiresAfter: z.array(text).max(8), exclusiveItems: z.array(text).max(256),
   consentRequired: z.array(text).max(8),
@@ -41,7 +41,7 @@ const event = z.object({
   id: text, eventRef: ref, availableDate: date, tokens: z.array(text).min(1).max(32),
 })
 const division = z.object({
-  eventId: text, token: text, date, operationRef: ref, amounts: z.record(quantity),
+  eventId: text, token: text, date, operationRef: ref, amounts: z.record(z.string(), quantity),
 })
 const nativeBudget = z.object({
   maxPaths: z.number().int(), maxHistories: z.number().int(), maxVariables: z.number().int(),
@@ -53,15 +53,15 @@ const original = z.object({
   profile: z.literal("EIGHT_PARTIES_FINITE_JOINT_GRAMMAR_OBSERVABLE_DIVISION"),
   parties: z.array(z.object({
     id: text, partyRef: ref, rightsRef: ref, outsideOptionRef: ref, fundingRef: ref, requiredConsentRef: ref,
-    outsideOptions: z.record(quantity), settledCash: z.record(series), ownerObjectiveWeight: quantity,
+    outsideOptions: z.record(z.string(), quantity), settledCash: z.record(z.string(), series), ownerObjectiveWeight: quantity,
   })).min(1).max(8),
   worlds: z.array(z.object({
-    id: text, coefficients: z.record(quantity), eventTokens: z.record(text),
+    id: text, coefficients: z.record(z.string(), quantity), eventTokens: z.record(z.string(), text),
   })).min(1).max(32),
   dates: z.array(instant).min(1).max(24), unit: text, currency: z.string().regex(/^[A-Z]{3}$/),
   valuationDate: instant, discountFactors: series, events: z.array(event).min(1).max(32),
   transfers: z.array(z.object({
-    eventId: text, token: text, date, operationRef: ref, bounds: z.record(z.tuple([quantity, quantity])),
+    eventId: text, token: text, date, operationRef: ref, bounds: z.record(z.string(), z.tuple([quantity, quantity])),
   })).min(1).max(768),
   grammar: z.object({
     ref, operators: z.array(operator).min(1).max(8), maxSteps: z.number().int().min(1).max(8),
@@ -74,10 +74,10 @@ const original = z.object({
   }),
   objective: z.discriminatedUnion("kind", [
     z.object({ kind: z.literal("ROBUST"), mandateRef: ref }),
-    z.object({ kind: z.literal("EXPECTED"), mandateRef: ref, qualifiedLawRef: ref, probabilities: z.record(quantity) }),
+    z.object({ kind: z.literal("EXPECTED"), mandateRef: ref, qualifiedLawRef: ref, probabilities: z.record(z.string(), quantity) }),
   ]),
   resources: z.array(z.object({
-    id: text, sourceRef: ref, unit: text, available: z.record(series),
+    id: text, sourceRef: ref, unit: text, available: z.record(z.string(), series),
     kind: z.enum(["CUMULATIVE_EXPENDITURE", "OCCUPANCY", "FLOW"]),
   })).min(1).max(32),
   obligationsRef: ref,
@@ -86,7 +86,7 @@ const original = z.object({
     dimensions: z.array(z.object({
       dimensionId: text, totalResourceId: text.nullable(), occupancyResourceId: text.nullable(),
     })).max(16),
-    humanSecondsByOperator: z.record(quantity),
+    humanSecondsByOperator: z.record(z.string(), quantity),
     staffing: z.literal("NO_EXISTING_EMPLOYMENT_OR_BENEFIT_CHANGE"),
     terminalLiabilityResourceId: text.nullable(),
   }).optional(),
@@ -102,10 +102,10 @@ const original = z.object({
 })
 const option = z.object({
   id: text, members: z.array(text).min(1).max(8),
-  steps: z.array(z.object({ operatorId: text, terms: z.record(quantity), grants: z.record(series) })).min(1).max(8),
+  steps: z.array(z.object({ operatorId: text, terms: z.record(z.string(), quantity), grants: z.record(z.string(), series) })).min(1).max(8),
   itemIds: z.array(text), exclusiveItems: z.array(text),
-  grossPayoffs: z.record(z.record(quantity)), cashFlows: z.record(z.record(series)),
-  cashOutflows: z.record(z.record(series)), resourceUse: z.record(series), requiredConsents: z.array(text).max(8),
+  grossPayoffs: z.record(z.string(), z.record(z.string(), quantity)), cashFlows: z.record(z.string(), z.record(z.string(), series)),
+  cashOutflows: z.record(z.string(), z.record(z.string(), series)), resourceUse: z.record(z.string(), series), requiredConsents: z.array(text).max(8),
 })
 const candidate = z.object({
   schema: z.literal("finnor.r5.candidate.v1"), originalDigest: digest,

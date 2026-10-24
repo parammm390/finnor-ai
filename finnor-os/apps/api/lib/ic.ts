@@ -79,7 +79,7 @@ export const IcSelectMemoSchema = z.object({
   evidenceCutoffAt: timestamp,
   sourceCompleteness: z.enum(["COMPLETE", "INCOMPLETE", "CONFLICTING", "UNKNOWN"]),
   changeClassification: z.enum(["INITIAL", "MATERIAL", "NON_MATERIAL", "MANUAL_REVIEW_REQUIRED"]).optional(),
-  semanticChecks: z.record(z.unknown()).optional(),
+  semanticChecks: z.record(z.string(), z.unknown()).optional(),
   idempotencyKey,
 }).strict();
 

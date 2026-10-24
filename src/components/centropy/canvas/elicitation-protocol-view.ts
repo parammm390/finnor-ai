@@ -32,7 +32,7 @@ export const ElicitationReviewViewSchema = z.object({
       assumptions: z.array(text), constraints: z.object({ netTransferMinimum: quantity, netTransferMaximum: quantity, ownerLiabilityCap: quantity }).passthrough(),
       resources: z.array(z.object({ resourceId: text, unit: text, availability: z.array(quantity), baseline: z.array(quantity) }).passthrough()),
     }).passthrough(),
-    rule: z.object({ table: z.array(row).length(81), search: z.object({ optimum: text, trace: z.record(z.unknown()) }).passthrough() }),
+    rule: z.object({ table: z.array(row).length(81), search: z.object({ optimum: text, trace: z.record(z.string(), z.unknown()) }).passthrough() }),
     check: z.object({ accepted: z.literal(true), basis: z.literal("MODEL_RELATIVE_EXACT"),
       counts: z.object({ profiles: z.literal(81), deviations: z.literal(648), participation: z.literal(324) }),
       objective: quantity, upper: quantity.nullable(), optimizationGap: quantity.nullable(),
@@ -40,10 +40,10 @@ export const ElicitationReviewViewSchema = z.object({
     }).passthrough(),
     agreementEstablished: z.literal(false), settlementEstablished: z.literal(false), executionAuthorityGranted: z.literal(false),
   }).passthrough().nullable(),
-  usePolicy: z.object({ ref }).passthrough().nullable(), allocation: z.record(z.unknown()).nullable(), schedules: z.record(z.unknown()).nullable(),
-  reportState: z.object({ reports: z.array(z.string()), reportEventIds: z.record(z.string()), closed: z.boolean(), complete: z.boolean(),
+  usePolicy: z.object({ ref }).passthrough().nullable(), allocation: z.record(z.string(), z.unknown()).nullable(), schedules: z.record(z.string(), z.unknown()).nullable(),
+  reportState: z.object({ reports: z.array(z.string()), reportEventIds: z.record(z.string(), z.string()), closed: z.boolean(), complete: z.boolean(),
     noAgreement: z.boolean(), acceptanceComplete: z.boolean(), acceptedParties: z.array(text) }).passthrough().nullable(),
-  costs: z.record(z.unknown()),
+  costs: z.record(z.string(), z.unknown()),
   agreementEstablished: z.literal(false), settlementEstablished: z.literal(false), executionAuthorityGranted: z.literal(false),
 })
 export type ElicitationReviewView = z.infer<typeof ElicitationReviewViewSchema>

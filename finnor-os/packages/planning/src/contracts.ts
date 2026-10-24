@@ -396,12 +396,12 @@ const Common = {
   preconditions: z.array(z.object({
     kind: z.enum(["entity_exists", "version_matches", "state_matches", "authority_current", "policy_current", "capability_available", "observation_satisfied"]),
     ref: z.string().min(1).max(500),
-    requirement: z.record(z.unknown()),
+    requirement: z.record(z.string(), z.unknown()),
     certainty: z.enum(["known", "uncertain"]),
   }).strict()).max(24).optional(),
   expectedEffects: z.array(z.object({
     kind: z.enum(["query_result", "business_effect", "event", "objective_progress"]),
-    assertion: z.record(z.unknown()),
+    assertion: z.record(z.string(), z.unknown()),
   }).strict()).max(24).optional(),
   recovery: z.object({
     version: z.literal(1),
@@ -415,10 +415,10 @@ export const CandidatePlanSchema = z.object({
   version: z.literal(1),
   candidateKey: z.string().min(1).max(120),
   nodes: z.array(z.discriminatedUnion("kind", [
-    z.object({ ...Common, kind: z.literal("query"), request: z.record(z.unknown()) }).strict(),
-    z.object({ ...Common, kind: z.literal("action"), actionType: z.string().min(1).max(200), payload: z.record(z.unknown()) }).strict(),
-    z.object({ ...Common, kind: z.literal("wait"), waitFor: z.record(z.unknown()), earliestAt: z.string().datetime().optional(), deadlineAt: z.string().datetime().optional() }).strict(),
-    z.object({ ...Common, kind: z.literal("check"), criterionId: z.string().min(1).max(100), observation: z.record(z.unknown()).optional() }).strict(),
+    z.object({ ...Common, kind: z.literal("query"), request: z.record(z.string(), z.unknown()) }).strict(),
+    z.object({ ...Common, kind: z.literal("action"), actionType: z.string().min(1).max(200), payload: z.record(z.string(), z.unknown()) }).strict(),
+    z.object({ ...Common, kind: z.literal("wait"), waitFor: z.record(z.string(), z.unknown()), earliestAt: z.string().datetime().optional(), deadlineAt: z.string().datetime().optional() }).strict(),
+    z.object({ ...Common, kind: z.literal("check"), criterionId: z.string().min(1).max(100), observation: z.record(z.string(), z.unknown()).optional() }).strict(),
   ])).min(1).max(40),
   rationale: z.string().min(1).max(8_000).optional(),
   softPreferences: z.array(z.object({ key: z.string().min(1).max(100), weight: z.number().min(-100).max(100) }).strict()).max(20).optional(),

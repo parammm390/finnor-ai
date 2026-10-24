@@ -19,12 +19,12 @@ const originalReport = z.object({
   }),
   executionAuthorityGranted: z.literal(false), result: outcome,
   claimRecords: z.array(z.object({
-    ref: CapitalRefViewSchema, kind: z.string(), evaluation: z.record(z.unknown()),
+    ref: CapitalRefViewSchema, kind: z.string(), evaluation: z.record(z.string(), z.unknown()),
     qualification: z.string(),
   })).max(64),
   witnessRecords: z.array(z.object({
     ref: CapitalRefViewSchema, class: z.string(), claimRef: CapitalRefViewSchema,
-    original: z.record(z.unknown()), minimized: z.record(z.unknown()),
+    original: z.record(z.string(), z.unknown()), minimized: z.record(z.string(), z.unknown()),
     validation: z.object({
       status: z.literal("VALID"), material: z.literal(true), qualification: z.string(),
       native: z.object({ checker: z.string(), observed: z.unknown(), trace: z.unknown() }),

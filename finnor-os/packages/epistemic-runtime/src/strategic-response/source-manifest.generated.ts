@@ -8,7 +8,7 @@ export default {
     },
     {
       "path": "source-paths.ts",
-      "sha256": "0de89fc69c7984a38dea728738625d4f656b43f6a8a80532464deac57907fd26"
+      "sha256": "6f6217da28eb494fa21bbef1d105c5901470176e943ae67bc1260454e27a57ad"
     },
     {
       "path": "contracts.ts",
@@ -60,7 +60,7 @@ export default {
     },
     {
       "path": "../../../private-equity/src/strategic-response/worker.ts",
-      "sha256": "1a7789961339fd38aa83c5f3b2330754092a77fcf1a5cfa7c3fa611efe89aeb2"
+      "sha256": "71a21cb540d35b218c51db1b3bf52d0ab48cf8b107a9905330d7bc3a858d33f1"
     },
     {
       "path": "../../../private-equity/src/strategic-response/api.ts",
@@ -68,7 +68,7 @@ export default {
     },
     {
       "path": "../../../private-equity/src/enterprise-control.ts",
-      "sha256": "a719ac76ab690d5408e16c3e945e5ff7c5e69586b91f02a04aeb81c176be2e41"
+      "sha256": "aa33dcf657cdcb4ef85a059b51b52b646a93a11aabd9801e2436511b22d7ce43"
     },
     {
       "path": "../../../capability-evolution/src/strategic-response-port.ts",
@@ -81,6 +81,14 @@ export default {
     {
       "path": "../../../db/migrations/0196a_postx_y2_requested_model_currentness.sql",
       "sha256": "e0bcb6c460dc838d1f13d5b137033d99ce140e910a31396bf6aa0b47cd3ae55e"
+    },
+    {
+      "path": "../../../db/migrations/0196b_postx_y2_system_actor_scope.sql",
+      "sha256": "b062ef8d184e69e08a0e60490ede1bd5f640036dab521805bebe1d748f062735"
+    },
+    {
+      "path": "../../../db/migrations/postx_y4_runtime_owner_integrity.sql",
+      "sha256": "b929cb546bea6a3d6637e68f7b5a7dc66552390f9bfbeb220d06d0489624bcbb"
     }
   ]
 } as const;

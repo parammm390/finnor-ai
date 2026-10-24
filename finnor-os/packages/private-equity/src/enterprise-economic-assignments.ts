@@ -11,7 +11,7 @@ import { authorizeEconomicActor, economicActor, readStoredEconomicRecord } from 
 import { resolveEconomicSourceCut } from './enterprise-economic-attribution';
 import type { PeMutationContext } from './types';
 const text = z.string().min(1).max(256), ref = z.object({ owner: z.string().min(1).max(128), id: z.string().min(1).max(4096), version: text, contentDigest: z.string().regex(/^[a-f0-9]{64}$/) }).strict();
-const protocolSchema = z.object({ schema: z.literal('finnor.s2.economic-assignment-protocol.v1'), key: text, mandateRef: ref, populationRef: ref, clusterIds: z.array(text).min(1).max(4096), controllerIds: z.array(text).min(2).max(32), probabilityUnits: z.record(z.number().int().min(1).max(999999)), assignmentNotBefore: z.string().datetime({ offset: true }), outcomeAccessNotBefore: z.string().datetime({ offset: true }), randomization: z.literal('INDEPENDENT_CRYPTO_CATEGORICAL_V1') }).strict();
+const protocolSchema = z.object({ schema: z.literal('finnor.s2.economic-assignment-protocol.v1'), key: text, mandateRef: ref, populationRef: ref, clusterIds: z.array(text).min(1).max(4096), controllerIds: z.array(text).min(2).max(32), probabilityUnits: z.record(z.string(), z.number().int().min(1).max(999999)), assignmentNotBefore: z.string().datetime({ offset: true }), outcomeAccessNotBefore: z.string().datetime({ offset: true }), randomization: z.literal('INDEPENDENT_CRYPTO_CATEGORICAL_V1') }).strict();
 type Stored = {
     ref: EconomicRef;
     content: Record<string, any>;

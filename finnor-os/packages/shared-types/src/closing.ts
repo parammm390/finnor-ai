@@ -236,7 +236,7 @@ export const ClosingObservationSchema = z.object({
   status: z.enum(["CONFIRMED", "FAILED", "PARTIAL", "UNKNOWN", "REVOKED", "ABSENT"]),
   observedAt: Time,
   validUntil: Time,
-  claims: z.record(z.unknown()).and(BoundedJson),
+  claims: z.record(z.string(), z.unknown()).and(BoundedJson),
   supersedesFactIds: z.array(Id).max(128),
   signature: z.string().regex(/^[A-Za-z0-9+/]{86}==$/),
 }).strict();

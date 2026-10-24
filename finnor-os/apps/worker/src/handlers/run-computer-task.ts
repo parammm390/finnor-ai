@@ -29,11 +29,11 @@ const primitiveSchema = z.discriminatedUnion("kind", [
 ]);
 
 const targetSchema = z.object({ kind: z.string(), identifier: z.string() }).strict();
-const effectSchema = z.object({ operation: z.string(), target: targetSchema, changes: z.record(z.union([z.string(), z.number(), z.boolean(), z.null()])) }).strict();
+const effectSchema = z.object({ operation: z.string(), target: targetSchema, changes: z.record(z.string(), z.union([z.string(), z.number(), z.boolean(), z.null()])) }).strict();
 const decisionSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("act"), summary: z.string().min(1).max(1000), primitive: primitiveSchema }).strict(),
   z.object({ kind: z.literal("effect"), summary: z.string().min(1).max(1000), effect: effectSchema, primitive: primitiveSchema }).strict(),
-  z.object({ kind: z.literal("complete"), summary: z.string().min(1).max(1000), result: z.record(z.unknown()), evidenceText: z.string().min(1).max(4000) }).strict(),
+  z.object({ kind: z.literal("complete"), summary: z.string().min(1).max(1000), result: z.record(z.string(), z.unknown()), evidenceText: z.string().min(1).max(4000) }).strict(),
   z.object({ kind: z.literal("block"), summary: z.string().min(1).max(1000), reason: z.string().min(1).max(2000), code: z.string().min(1).max(120) }).strict(),
 ]);
 

@@ -111,7 +111,7 @@ export const ObligationConsumeSchema=z.object({policyRef:RefSchema,decision:z.un
  confidentialGuard:ConfidentialGuardSchema,workId:uuid}).strict();
 export const ConsumeSchema=z.object({
  investmentCaseId:uuid,modelVersionId:uuid,worldAt:instant,workId:uuid,idempotencyKey:idempotency,
- bindings:z.record(OutputBindingSchema).refine(v=>Object.keys(v).length>=1&&Object.keys(v).length<=16),
+ bindings:z.record(z.string(), OutputBindingSchema).refine(v=>Object.keys(v).length>=1&&Object.keys(v).length<=16),
 }).strict();
 export type ReleasedQuantity={key:string;mantissa:string;scale:number;semantics:FinancialSemantics};
 export interface ConfidentialReleaseFields {

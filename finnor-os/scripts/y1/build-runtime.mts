@@ -1,3 +1,4 @@
+import './build-constructor.mts';
 import {build} from 'esbuild';
 import {mkdir,copyFile,writeFile,readFile} from 'node:fs/promises';
 import {resolve,join,dirname,relative,sep} from 'node:path';

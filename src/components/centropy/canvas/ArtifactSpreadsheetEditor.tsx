@@ -7,7 +7,7 @@ import { RecordedFields } from "../controls/StructuredFields"
 
 const DraftSchema = z.object({ draftKey: z.string().min(1), versionId: z.string().uuid() })
 const PatchSchema = z.union([z.object({ version: z.object({ id: z.string().uuid() }) }), z.object({ versionId: z.string().uuid() })])
-const CellReadSchema = z.object({ nodes: z.array(z.object({ id: z.string(), kind: z.string(), data: z.record(z.unknown()) })) })
+const CellReadSchema = z.object({ nodes: z.array(z.object({ id: z.string(), kind: z.string(), data: z.record(z.string(), z.unknown()) })) })
 export type EditableCell = { id: string; hash: string; sheetId: string; address: string; value: unknown; formula: string | null }
 type ValueType = "text" | "number" | "formula" | "boolean" | "blank"
 type Operation = { type: "set_value"; sheetId: string; address: string; value: string | boolean | null; expectedHash: string } | { type: "set_number"; sheetId: string; address: string; value: string; expectedHash: string } | { type: "set_formula"; sheetId: string; address: string; formula: string; expectedHash: string }

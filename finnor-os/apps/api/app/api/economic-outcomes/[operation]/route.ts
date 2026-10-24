@@ -57,7 +57,7 @@ export async function POST(req: Request, { params }: {
             case 'read': return reply(await readEnterpriseEconomicRecord(ctx, z.object({ id: text, protectedReadback: z.boolean().optional() }).strict().parse(body)));
             case 'history': return reply(await readEnterpriseEconomicHistory(ctx, z.object({ estimandId: text, knowledgeAt: z.string().datetime({ offset: true }).optional() }).strict().parse(body)));
             case 'append': {
-                const v = z.object({ kind: z.enum(['SOURCE', 'ASSIGNMENT', 'EXPOSURE', 'MEASUREMENT', 'VALUATION', 'COST', 'CORRECTION', 'INVALIDATION']), estimandRefId: text, record: z.record(z.unknown()), sourceRefs: z.array(ref).max(256), validAt: z.string().datetime({ offset: true }), revisionOf: text.optional(), idempotencyKey: key }).strict().parse(body);
+                const v = z.object({ kind: z.enum(['SOURCE', 'ASSIGNMENT', 'EXPOSURE', 'MEASUREMENT', 'VALUATION', 'COST', 'CORRECTION', 'INVALIDATION']), estimandRefId: text, record: z.record(z.string(), z.unknown()), sourceRefs: z.array(ref).max(256), validAt: z.string().datetime({ offset: true }), revisionOf: text.optional(), idempotencyKey: key }).strict().parse(body);
                 return reply(await appendEnterpriseEconomicRecord(ctx, v));
             }
             case 'assess': {
