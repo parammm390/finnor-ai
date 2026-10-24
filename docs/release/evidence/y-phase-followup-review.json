@@ -178,6 +178,107 @@
           "endLine": 228
         }
       ]
+    },
+    {
+      "phase": "Y4",
+      "issues": [
+        {
+          "severity": "major",
+          "fileName": "finnor-os/apps/worker/src/queue.ts",
+          "title": "Verify that the `cpuReservedSeconds` text comparison matches the column type.",
+          "startLine": 634,
+          "endLine": 634,
+          "disposition": "NOT_APPLICABLE: cpu_reserved_seconds and generation are integer; the event writer serializes the same pg integer as a JSON integer. No numeric scale discrepancy exists."
+        },
+        {
+          "severity": "minor",
+          "fileName": "finnor-os/packages/capability-evolution/src/lifecycle.ts",
+          "title": "Reserve journal capacity for the second entry before persisting the commit intent.",
+          "startLine": 629,
+          "endLine": 632,
+          "disposition": "FIXED_IN_FOLLOWUP"
+        },
+        {
+          "severity": "minor",
+          "fileName": "finnor-os/packages/capability-evolution/src/lifecycle.ts",
+          "title": "Verify that the recovery digest check matches the digest computed in `command`.",
+          "startLine": 555,
+          "endLine": 559,
+          "disposition": "FIXED_IN_FOLLOWUP"
+        },
+        {
+          "severity": "major",
+          "fileName": "src/components/centropy/world/ConfidentialComputationPanel.tsx",
+          "title": "Stop the window `blur` handler from unmounting the recipient file input.",
+          "startLine": 90,
+          "endLine": 90,
+          "disposition": "FIXED_IN_FOLLOWUP"
+        },
+        {
+          "severity": "minor",
+          "fileName": "finnor-os/scripts/y4/run-finite.py",
+          "title": "Record crashed or timed-out attempts. Do not abort the campaign.",
+          "startLine": 32,
+          "endLine": 36,
+          "disposition": "FIXED_IN_FOLLOWUP"
+        },
+        {
+          "severity": "minor",
+          "fileName": "scope-postx/y4-confidential-economic-compiler/security-review.md",
+          "title": "Correct the stale query-registry count.",
+          "startLine": 49,
+          "endLine": 50,
+          "disposition": "FIXED_IN_FOLLOWUP"
+        },
+        {
+          "severity": "major",
+          "fileName": "infra/deployment/production.contract.json",
+          "title": "Confirm that a `postx` production migration head keeps future ordinal migrations orderable.",
+          "startLine": 13,
+          "endLine": 13,
+          "disposition": "RETAINED_CURRENT_CONTRACT: bytewise named migration heads are already merged. Keep the actual latest head for readiness; no guessed ordinal, renaming of applied SQL, production activation or reset to a stale head. Future allocation/order remains a separately governed migration task."
+        },
+        {
+          "severity": "major",
+          "fileName": "finnor-os/packages/db/migrations-bundle.ts",
+          "title": "Enable tenant RLS on every Y4 tenant table.",
+          "startLine": 230,
+          "endLine": 230,
+          "disposition": "ALREADY_ENFORCED: original migration lines 224-241 iterates all seven listed tables, enables and forces RLS, revokes default app privileges, and grants SELECT/INSERT plus computation UPDATE. Recipient releases have principal RLS."
+        },
+        {
+          "severity": "major",
+          "fileName": "finnor-os/packages/private-equity/src/confidential-computation/admission.ts",
+          "title": "S8 admission fails when the recipient is not the computation's initiator.",
+          "startLine": 30,
+          "endLine": 32,
+          "disposition": "FIXED_IN_FOLLOWUP"
+        },
+        {
+          "severity": "major",
+          "fileName": "finnor-os/packages/db/migrations/postx_y4_confidential_owner_consumption.sql",
+          "title": "Remove the per-row `s5experience` scan from the experience policy.",
+          "startLine": 48,
+          "endLine": 57,
+          "disposition": "FIXED_IN_FOLLOWUP"
+        },
+        {
+          "severity": "major",
+          "fileName": "finnor-os/packages/private-equity/src/confidential-computation/plan.ts",
+          "title": "One failure between Objective creation and plan persistence permanently blocks the Work.",
+          "startLine": 105,
+          "endLine": 112,
+          "disposition": "FIXED_IN_FOLLOWUP"
+        },
+        {
+          "severity": "minor",
+          "fileName": "finnor-os/packages/private-equity/src/confidential-computation/contracts.ts",
+          "title": "Align the escape range with Python's `ensureascii`.",
+          "startLine": 139,
+          "endLine": 139,
+          "disposition": "PARTIALLY_VALID_FIXED: code-point object key sorting now matches Python for astral keys. DEL escaping was already correct: actual Python ensure_ascii=True emits \\u007f; byte-parity evidence retains it unchanged."
+        }
+      ]
     }
   ],
   "security": {
@@ -187,6 +288,7 @@
   "qualification": {
     "allGreen": false,
     "productionDeployed": false,
-    "Y4Review": "RATE_LIMITED: 43 minutes; link an organization seat or Agentic API key"
+    "Y4Review": "COMPLETED: 12 issues adjudicated, 9 repaired and 3 rejected or retained with source evidence",
+    "finalRemoteChecks": "PENDING_ON_UPDATED_HEAD"
   }
 }

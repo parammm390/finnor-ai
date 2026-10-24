@@ -139,7 +139,11 @@ function encoded(value:unknown):string{
   return result.replace(/[\u007f-\uffff]/g,c=>'\\u'+c.charCodeAt(0).toString(16).padStart(4,'0'));
  }
  if(Array.isArray(value))return '['+value.map(encoded).join(',')+']';
- return '{'+Object.keys(value).sort().map(k=>encoded(k)+':'+encoded((value as Record<string,unknown>)[k])).join(',')+'}';
+ return '{'+Object.keys(value).sort((left,right)=>{
+  const a=Array.from(left,c=>c.codePointAt(0)!),b=Array.from(right,c=>c.codePointAt(0)!);
+  for(let i=0;i<Math.min(a.length,b.length);i++)if(a[i]!==b[i])return a[i]!-b[i]!;
+  return a.length-b.length;
+ }).map(k=>encoded(k)+':'+encoded((value as Record<string,unknown>)[k])).join(',')+'}';
 }
 export const canonical=encoded;
 export const sha=(value:unknown)=>createHash('sha256').update(encoded(value)).digest('hex');

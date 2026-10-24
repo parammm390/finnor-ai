@@ -1,7 +1,7 @@
 {
   "schema": "centropy.capability-coverage-audit/v1",
-  "generatedAt": "2026-10-24T19:50:42.047Z",
-  "sourceBaseCommit": "84687c263651d9b5eb7aeb603c7b7dd466fedebb",
+  "generatedAt": "2026-10-24T20:02:24.954Z",
+  "sourceBaseCommit": "94ef9737ae54283d756caacc704937f9bfd19dd8",
   "manifestSha256": "3ff6d0b06d57e13d8412ae9160b5cc844da1d861478665f688d6cb863b2e5238",
   "formsSha256": "1bc12487fb34759988ed4490715c21560653608fb313a409f0e6bcc551340e89",
   "method": "Actual API/planner manifest; import graph from active CENTROPY route entries; literal API call bindings; typed human form registrations; explicit restricted/compatibility/protocol classifications. Source presence is not execution evidence.",
@@ -1423,7 +1423,7 @@
       },
       {
         "file": "src/components/centropy/world/ConfidentialComputationPanel.tsx",
-        "sha256": "7f2202d2a4ef819dd3e8bfda4cf5149043546db69fe454f676e1f57fe87fed93"
+        "sha256": "5c167d820413119387abcc80427b3bb7368fbfa4e5c0097f53f062679826f196"
       },
       {
         "file": "src/components/centropy/world/WorldRelationships.tsx",

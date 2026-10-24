@@ -25,15 +25,25 @@ for case in args.cases:
     directory = args.evidence / case
     command = [sys.executable, str(Path(__file__).with_name("engineering.py")), "--case", case,
                "--backend", str(args.backend), "--evidence", str(directory)]
-    if case == "release":
-        if not results or results[-1]["case"] != "numerical" or results[-1]["status"] != "PASS":
-            raise ValueError("RELEASE_REQUIRES_IMMEDIATELY_PRECEDING_CURRENT_NUMERICAL_PASS")
-        command += ["--original-episode", str(args.evidence / "numerical")]
-    with (args.evidence / (case + ".log")).open("xb") as log:
-        child = subprocess.run(command, stdout=log, stderr=subprocess.STDOUT, timeout=1050)
-    result = json.loads((directory / "result.json").read_text())
-    results.append({"case": case, "status": result["status"], "exitCode": child.returncode,
-                    "wallSeconds": time.monotonic() - start, "result": str(directory / "result.json")})
+    failure = None
+    exit_code = None
+    result_path = directory / "result.json"
+    try:
+        if case == "release":
+            if not results or results[-1]["case"] != "numerical" or results[-1]["status"] != "PASS":
+                raise ValueError("RELEASE_REQUIRES_IMMEDIATELY_PRECEDING_CURRENT_NUMERICAL_PASS")
+            command += ["--original-episode", str(args.evidence / "numerical")]
+        with (args.evidence / (case + ".log")).open("xb") as log:
+            child = subprocess.run(command, stdout=log, stderr=subprocess.STDOUT, timeout=1050)
+            exit_code = child.returncode
+        result = json.loads(result_path.read_text())
+        status = "PASS" if exit_code == 0 and result["status"] == "PASS" else "FAIL"
+    except (subprocess.TimeoutExpired, OSError, ValueError, KeyError) as error:
+        failure = type(error).__name__ + ": " + str(error)
+        status = "FAIL"
+    results.append({"case": case, "status": status, "exitCode": exit_code,
+                    "wallSeconds": time.monotonic() - start, "result": str(result_path),
+                    "resultAvailable": result_path.is_file(), "failure": failure})
     print(json.dumps(results[-1]), flush=True)
 (args.evidence / "campaign.json").write_text(json.dumps({
     "schema": "finnor.y4.finite-local-engineering.v1", "attempts": results,

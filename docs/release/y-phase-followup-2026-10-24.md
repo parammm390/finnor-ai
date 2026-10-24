@@ -12,7 +12,11 @@ CodeRabbit completed Y1, Y2 and Y3 reviews and raised 23 issues. See `evidence/y
 
 The database repair is a new forward migration. Previously published SQL is unchanged. Required migration-head metadata, migration bundles and source stamps are regenerated together.
 
-CodeRabbit rejected Y4 with `rate_limit`: all three included reviews were used, the selected organization has no assigned seat, and the reported retry window was 43 minutes. Y4 and a final review of these repairs are not claimed complete. Link the organization seat or supply an Agentic API key, then rerun the CLI review. No substitute review is attributed to CodeRabbit.
+Y4 review subsequently completed and raised 12 issues. Nine valid or partially valid issues are repaired: reserve both journal slots before committing a reference, normalize the complete semantic command digest for recovery, preserve the recipient file input through native chooser focus transitions, retain crashed finite-campaign attempts, correct the query count, permit only a released recipient's original two-second S8 checker allocation, index confidential experience custody, resume the exact original objective after interrupted plan selection, and sort Unicode keys by code point. Python DEL escaping was already correct and remains unchanged.
+
+Three issues do not require the proposed change: CPU/generation fields are integers, every named Y4 tenant table already has forced RLS and restricted app grants, and reverting the required migration head would mismatch the already merged migration set. No published migration is renamed or edited. The new recipient recovery/index changes are another forward migration. Future ordinal allocation and production activation remain separate tasks.
+
+The post-review Chromium proof mounts the actual recipient panel with a public API fixture, opens a real file chooser, dispatches its focus transitions, imports a public export and observes exactly one import request. The PostgreSQL proof uses restricted finnor_app: a noninitiating release recipient can occupy exactly two original CPU seconds and append its S8 event; a different increment and an unreleased principal are refused. These are boundary regression proofs with public fixtures, not proof of confidential computation or protected S8 admission. The finite supervisor and TypeScript/Python Unicode byte parity have separate repeatable evidence.
 
 ## Repeatable verification
 
