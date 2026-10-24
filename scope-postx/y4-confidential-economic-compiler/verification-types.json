@@ -1,0 +1,10 @@
+{
+  "extends": "../../finnor-os/tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "incremental": false
+  },
+  "include": ["../../finnor-os/scripts/y4/*.mts"],
+  "exclude": ["../../finnor-os/node_modules"]
+}

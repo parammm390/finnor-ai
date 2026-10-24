@@ -1,0 +1,14 @@
+{
+  "schema":"EconomicConstructionProfile",
+  "institution_and_participant_classes":{"domain":"PE firm's own investment and institutional operations","participants":["fund","financing_party","institutional_counterparty"],"portfolioCompanyOperationsExcluded":true},
+  "admitted_rights_and_atomic_effects":{"owner":"current participant-local S1/S6","Y4GrantsEffects":false,"outsideY4":"actual local commitment/effect adapter authority"},
+  "economic_operator_and_state_semantics":{"owner":"P1 exact Expression / S4/S5","Y4":"confidential computational access only","Y1EngineRequired":false},
+  "information_and_disclosure_constraints":{"privateInputs":"participant-local","release":"exact function, recipients and cumulative family","rawPoolingPermitted":false},
+  "actor_model_and_identification_classes":{"supplied":"explicit admitted function","outsideY4":"S3/Y2 identification, assumptions and truth"},
+  "protocol_horizon_and_deviation_classes":{"protocol":"active malicious with abort","horizon":"original remaining episode","outsideY4":"Y3 dynamic interaction synthesis"},
+  "private_computation_and_corruption_profile":{"profileRef":"finnor-os/packages/private-equity/src/confidential-computation/profile.json","corruptedMaximum":"n-1","honestMinimum":1},
+  "theorem_and_runtime_problem_family":{"runtime":"bounded exact P1 expression compositions","proof":"independently checked typed arithmetic graph, conditional on pinned backend semantics","excluded":"unrestricted financial language or general cryptographic theorem"},
+  "units_currencies_time_and_rounding":{"owner":"FinancialSemanticsSchema","implicitFx":false,"rounding":"EXACT_OR_REJECT; ratio exact at 18 places"},
+  "resource_risk_and_exposure_limits":{"owner":"original canonical grant/S5/S7","aggregateSimultaneousGiB":16,"episodeWallSeconds":3600,"moneyUSD":100,"humanSeconds":900,"unknownCostsRemainUnknown":true},
+  "independent_oracles_and_field_coverage":{"engineering":"separate exact Fraction administrator","protectedCustody":"NOT_SUPPLIED","productionReview":"NOT_SUPPLIED","fieldTruth":"V2/S1 remains separate"}
+}

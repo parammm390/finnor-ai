@@ -64,8 +64,8 @@ export async function recordTx(c:PoolClient,a:ApplicationRow,id:string){
  const r=(await c.query<RecordRow>('SELECT * FROM finnor_os.x3_records WHERE tenant_id=$1 AND application_id=$2 AND id=$3 FOR UPDATE',[a.tenant_id,a.id,id])).rows[0];
  if(!r)throw unavailable();return r;
 }
-export async function workCutTx(c:PoolClient,a:Pick<ApplicationRow,'tenant_id'|'work_id'>){
- await c.query('SELECT id FROM finnor_os.works WHERE tenant_id=$1 AND id=$2 FOR SHARE',[a.tenant_id,a.work_id]);
+export async function workCutTx(c:PoolClient,a:Pick<ApplicationRow,'tenant_id'|'work_id'>,lock=true){
+ await c.query('SELECT id FROM finnor_os.works WHERE tenant_id=$1 AND id=$2'+(lock?' FOR SHARE':''),[a.tenant_id,a.work_id]);
  const r=(await c.query('SELECT id,instruction_text,context_snapshot,context_snapshot_hash FROM finnor_os.work_inputs WHERE tenant_id=$1 AND work_id=$2 ORDER BY created_at DESC,id DESC LIMIT 1',[a.tenant_id,a.work_id])).rows[0];
  if(!r)fail('CANONICAL_WORK_INPUT_REQUIRED');return {id:r.id as string,digest:applicationDigest(r)};
 }

@@ -122,6 +122,7 @@ async function clearNumericEnterprisePortfolio(ctx:PeMutationContext,input:Alloc
   const exactEncoding=policies.some(p=>p.exactProfile)||joint.schema==='finnor.joint-allocation-model.exact.v2'||snapshot.outstanding.some(row=>row.envelopes.some(e=>[...e.quantities,...e.minimumQuantities].some(q=>q.includes('/'))));
   const body:Omit<CanonicalAllocationProblem,'ref'>={schema:'finnor.allocation-problem.v1',tenantId:ctx.auth.tenantId,principalId:actor(ctx),episodeId:m.episodeId,mandate:m,policies,resources:snapshot.resources,jointModel:joint,demandBindings:input.demandBindings,funding:input.funding,outstanding:snapshot.outstanding,snapshotDigest:snapshot.snapshotDigest,knowledgeAt:now,validUntil,methodVersion:S5_VERSION,...(exactEncoding?{quantityEncoding:'DECIMAL_OR_RATIONAL_V2' as const}:{})};
   const problem:CanonicalAllocationProblem={...body,ref:allocationRef('S5','allocation-problem',body)};assertAllocationProblem(problem);
+  await (await import('./confidential-computation/owner-consumer')).assertConfidentialAllocationCurrent(ctx,problem);
   if(snapshot.resources.some(r=>r.revoked||r.availability.some(a=>a.amount===null||a.basis!=='REPORTED_AVAILABLE')))return failure('UNCERTAINTY_UNRESOLVED',['RESOURCE_RIGHTS_OR_AVAILABILITY_UNRESOLVED']);
   // Existing obligations must be feasible in their own right. An empty selected
   // portfolio never conceals a resource/covenant breach requiring owner recovery.
@@ -221,6 +222,8 @@ export async function readEnterpriseAllocationSettlement(ctx:PeMutationContext,i
 }
 async function validateAllocationState(ctx:PeMutationContext,value:unknown){
   const ref=ExperimentRefSchema.parse(value),issued=await readEnterpriseAllocation(ctx,ref),reasons:string[]=[];
+  try{await (await import('./confidential-computation/owner-consumer')).assertConfidentialAllocationCurrent(ctx,issued.problem);}
+  catch{reasons.push('Y4_RECIPIENT_SOURCE_CONSENT_OR_RELEASE_NOT_CURRENT_EXPOSURE_RETAINED');}
   if(!issued.reservation||issued.reservation.status==='RELEASED')reasons.push('DURABLE_RESERVATION_REQUIRED');
   if(issued.reservation?.revocationReason)reasons.push(issued.reservation.revocationReason);
   if(Date.now()>=Date.parse(issued.certificate.validUntil))reasons.push('CERTIFICATE_EXPIRED_ACCOUNTABLE_EXPOSURE_RETAINED');

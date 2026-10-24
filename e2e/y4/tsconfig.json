@@ -1,0 +1,8 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "incremental": false
+  },
+  "include": ["../../next-env.d.ts", "./browser-app.tsx"],
+  "exclude": ["../../node_modules", "../../finnor-os"]
+}

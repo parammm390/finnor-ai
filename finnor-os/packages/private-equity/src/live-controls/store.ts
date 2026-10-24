@@ -143,6 +143,13 @@ export async function canonicalObjectTx(ctx: PeMutationContext, ref: Resource, c
     `SELECT to_jsonb(r) body,to_jsonb(r)::text exact_json FROM ${table} r WHERE r.${tenant}=$1 AND r.${id}=$2`,
     [ctx.auth.tenantId, ref.id])).rows[0];
   if (!raw || Buffer.byteLength(raw.exact_json) > 2 * 1024 * 1024) throw unavailable();
+  if (ref.type === 'underwriting_run') {
+    const {hasConfidentialSnapshot} = await import('../confidential-computation/consumer');
+    // These shared control descriptors have no recipient-private disclosure
+    // contract. Refuse the whole sink, including before source expiry.
+    if (hasConfidentialSnapshot(raw.body.input_snapshot as import('@finnor/underwriting').UnderwritingInputSnapshot))
+      throw unavailable();
+  }
   const foreign = (await client.query<{ column_name: string; entity_type: string }>(
     `SELECT a.attname column_name,registry.entity_type FROM pg_constraint k
       JOIN pg_class target ON target.oid=k.confrelid
@@ -312,6 +319,8 @@ export async function currentOwnerVectorTx(ctx: PeMutationContext, session: Sess
 /** Permitted pool quantities include every retained hold, not the hold's private
  * author, reservation, policy, certificate, status or effect identifiers. */
 export async function permittedCapacityTx(ctx: PeMutationContext, client: PoolClient) {
+  if (!(await client.query<{ complete: boolean }>(
+    'SELECT finnor_os.y4_allocation_context_complete() complete')).rows[0]?.complete) throw unavailable();
   const rows = (await client.query<{ projection: Record<string, unknown> }>(`SELECT jsonb_build_object(
     'resourceId',r.resource_id,'revision',r.revision,'resourceClass',r.body->'resourceClass','kind',r.body->'kind',
     'unit',r.body->'unit','currency',r.body->'currency','horizon',r.body->'horizon',

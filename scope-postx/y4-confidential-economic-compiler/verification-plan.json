@@ -1,0 +1,65 @@
+{
+  "schema": "postx-y4-verification-plan.v1",
+  "state": "LOCAL_ENGINEERING_MANIFEST_FROZEN_BEFORE_EXECUTION_V1",
+  "sourceBase": "b7b74b48efcb51bd6f1297a71f39cb9b4f117024",
+  "profileFreezeRequiredBeforeExposure": true,
+  "protectedExposureAuthorized": false,
+  "limits": {
+    "episodeWallSeconds": 3600,
+    "initialResponseSeconds": 30,
+    "aggregateSimultaneousMemoryBytes": 17179869184,
+    "moneyUSD": 100,
+    "humanSeconds": 900,
+    "nativeBuildConcurrency": 1,
+    "privateInputsInEvidence": false,
+    "cleanupScope": "Only this Y4 task's explicitly created disposable assets"
+  },
+  "caseFamilies": [
+    {"id":"A","requirement":"Runtime-derived previously unseen compositions and independent correspondence","owner":"canonical native function / Y4 compiler","oracle":"independently specified original native semantics"},
+    {"id":"B","requirement":"Signed ranges, scaling, ties, rounding, division, overflow, secret control flow","owner":"native numerical contract / backend lowering","oracle":"independent exact arithmetic, plus native interpreter conformance"},
+    {"id":"C","requirement":"Commitment alteration, freshness, local validation, source truth and revocation","owner":"participant-local S1/P4/S6"},
+    {"id":"D","requirement":"Actual malicious protocol, preprocessing/key, replay, message and dropout faults","owner":"established native backend / participant session"},
+    {"id":"E","requirement":"Output recipients, retained metadata and adaptive cumulative release","owner":"canonical authority / disclosure history"},
+    {"id":"F","requirement":"Authenticated API, durable queue, real worker/backend, typed admission and actual owners","owner":"Work / P1/S4 / S5 / S6 / S8"},
+    {"id":"G","requirement":"Physical cancellation, expiry, contention, replay, crash and compatible fallback","owner":"canonical job/lease/budget and backend-safe session"},
+    {"id":"H","requirement":"Abort after unrelated dispatched effect preserves effect and reconciliation","owner":"canonical S6"},
+    {"id":"I","requirement":"Mounted accessible Work and identity/reload/offline/revocation fences","owner":"existing WORLD Work"},
+    {"id":"J","requirement":"Installed identity, independent reconstruction, matched on/off and equipped-X comparison","owner":"actual emitted deployment assets / independent comparator"}
+  ],
+  "exactCasesAndCommands": [
+    {"id":"A1","entry":"scripts/y4/engineering.py --case correspondence","predicate":"new held-out structures compile and ordered-term correspondence passes; changed operations/scales/recipient/interval/term rejected","scope":"local synthetic original records, not protected"},
+    {"id":"A2","entry":"scripts/y4/engineering.py --case hash-conformance","predicate":"exact pinned Bristol circuit equals independent hashlib SHA-256 on fixed 40-byte messages"},
+    {"id":"B1","entry":"scripts/y4/engineering.py --case numerical","predicate":"installed three-party runtime equals independent rational reference for signed arithmetic, exact ratio, min/max, equality/ties, secret conditional; no private input in shared artifacts"},
+    {"id":"B2","entry":"scripts/y4/engineering.py --case numerical-reject","predicate":"zero and inexact ratios, negative/range/wrap attempts fail without an accepted output"},
+    {"id":"C1","entry":"scripts/y4/engineering.py --case binding","predicate":"changed committed value, source/grant/session/cut or nonce rejected; source truth is not inferred"},
+    {"id":"D1","entry":"scripts/y4/engineering.py --case adverse","predicate":"live malicious-secure runtime dropout/TLS failure/message corruption/cancel each abort and cannot replay preprocessing"},
+    {"id":"E1","entry":"scripts/y4/engineering.py --case release","predicate":"only named recipients; cumulative changed-function release denied on original family/cut; revocation/expiry prevent subsequent consumption"},
+    {"id":"F1","entry":"scripts/y4/product-e2e.ts","predicate":"authenticated API -> real durable queue -> real handler -> checked runtime -> typed ordinary evidence -> native owner -> persisted Work, with denied/expired/duplicate cases"},
+    {"id":"G1","entry":"scripts/y4/engineering.py --case recovery","predicate":"original absolute deadline, burned session, fresh setup and retained failed costs; no uncertain automatic rerun"},
+    {"id":"H1","entry":"scripts/y4/product-e2e.ts --case effect-preservation","predicate":"unrelated S6 dispatched effect is retained despite Y4 abort; separately authorized execution only"},
+    {"id":"I1","entry":"scripts/y4/browser-e2e.ts","predicate":"mounted Work contains real evidence, reload/identity/offline/currentness fences, keyboard and screenshot"},
+    {"id":"J1","entry":"scripts/y4/reconstruct.py","predicate":"fresh install from recorded source/assets identifies compiler/checker/runtime/profile and reconstructs checked output"}
+  ],
+  "invocation": "cd <absolute-y4-worktree>/finnor-os && python3 scripts/y4/engineering.py --case <name> --backend <absolute-mp-spdz-root> --evidence <new-absolute-attempt-directory>",
+  "notRunRule": "An unimplemented entry or absent observation is NOT_RUN, never PASS. Hash/compiler-only cases do not imply actual backend, product, protected or production qualification.",
+  "rerunRules": [
+    "Append a new attempt, retaining original failure and costs",
+    "Changed code/profile/backend invalidates dependent evidence",
+    "Do not alter threat assumptions, numerical semantics, query policy, denominators or deadlines to pass",
+    "A missing internal implementation is INCOMPLETE_ENGINEERING, not BLOCKED_EXTERNAL"
+  ],
+  "protectedCampaign": {
+    "requiredAssignedCases":100,
+    "requiredHeldOutFunctions":40,
+    "requiredInstitutionIdentities":10,
+    "participantsPerCase":[3,8],
+    "assignmentCustody":"NOT_SUPPLIED",
+    "status":"NOT_RUN",
+    "completionPopulation":"Must be frozen by independent owners before exposure",
+    "supportedCompletionFloor":0.95,
+    "incorrectAcceptedResultsAllowed":0,
+    "unauthorizedDisclosuresAllowed":0,
+    "equippedXRelease":"NOT_RESOLVED",
+    "materialMargin":"UNKNOWN: no authorized comparator registration"
+  }
+}

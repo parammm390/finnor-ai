@@ -47,6 +47,7 @@ const delegatedRegistries = [
   ["IDENTIFICATION_OPERATIONS", "system-identification/api.ts"],
   ["EconomicOperations", "economic-action-theory/api.ts"],
   ["StrategicOperations", "strategic-response/contracts.ts"],
+  ["CONFIDENTIAL_OPERATIONS", "confidential-computation/api.ts"],
   ["InteractionOperations", "interaction-synthesis/api.ts"],
   ["M1_OPERATIONS", "decision-slice/handler.ts"],
   ["CONTINUATION_OPERATIONS", "live-recompilation/api.ts"],
@@ -106,6 +107,7 @@ const companyBrainReads = new Set([
   "interface-read", "interface-projection", "interface-catalogue", "interface-module", "interface-ports",
   "application-read", "application-record", "application-list", "application-history", "application-asset", "application-impact", "application-admission",
   "learning-read", "learning-list", "learning-experience", "learning-admission",
+  "confidential-read", "confidential-list",
   "identification-targets", "identification-read", "identification-list", "identification-history", "identification-experiment", "identification-admission",
   "decision-slice-read", "decision-slice-context", "decision-slice-witness", "decision-slice-changes", "decision-slice-view",
   "continuation-read", "continuation-projection",
@@ -222,6 +224,7 @@ const denyPrefixes = [
 ]
 const restrictedOperations = new Set(["allocations/coalition-release", "obligations/coalition-consent"])
 const humanOnlyPatterns = [
+  /^company-brain\/confidential-(?:consent|revoke|import-release)$/,
   /^company-brain\/interaction-(?:consent|observe|action)$/,
   /^elicitation-protocols\/(?:report|event|review|close|use)$/,
   /^closing\/(submit|stop|resume|observe)$/,
@@ -293,6 +296,7 @@ function routeEntry(method, path, source) {
     presentationTargets: userProduct ? presentationTargets : [],
     invalidationTags: read ? [] : family==="elicitation-protocol"?["work","company-brain","elicitation-protocol"]:family==="branch-fabric"?["work","branch-fabric"]:
       path.startsWith("company-brain/response-")?["work","company-brain"]:
+      path.startsWith("company-brain/confidential-")?["work","company-brain","authority","source","underwriting"]:
       path.startsWith("company-brain/capital-formation-")?["work","company-brain","authority","source"]:
       path.startsWith("company-brain/capital-program-")||m4Operations.has(path.slice("company-brain/".length))?["work","company-brain"]:tags(family),
     timeoutClass: stream ? "STREAM" : read ? "READ" : "WRITE",
@@ -332,7 +336,8 @@ function registryEntries() {
   const querySource = readFileSync(join(project, "finnor-os/packages/shared-types/src/operational-queries.ts"), "utf8")
   const queries = [...quoted(block(querySource, "export const CORE_OPERATIONAL_QUERY_INTENTS = [", "] as const")),
     ...quoted(block(querySource, "export const PRIVATE_EQUITY_OPERATIONAL_QUERY_INTENTS = [", "] as const")),
-    ...quoted(block(querySource, "export const PROGRAM_OPERATIONAL_QUERY_INTENTS = [", "] as const"))]
+    ...quoted(block(querySource, "export const PROGRAM_OPERATIONAL_QUERY_INTENTS = [", "] as const")),
+    ...quoted(block(querySource, "export const CONFIDENTIAL_OPERATIONAL_QUERY_INTENTS = [", "] as const"))]
   const registry = readFileSync(join(project, "finnor-os/packages/orchestration/src/plugin-registry.ts"), "utf8")
   const humanOnly = quoted(block(registry, "export const HUMAN_ONLY_PLANNING_CAPABILITIES = [", "] as const"))
   const humanOnlySet = new Set(humanOnly)

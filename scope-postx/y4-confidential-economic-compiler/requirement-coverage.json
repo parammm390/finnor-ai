@@ -1,0 +1,104 @@
+{
+  "schema": "finnor.y4.requirement-coverage.v1",
+  "overall": "CODE_COMPLETE",
+  "scope": "POSTX.Y4 only",
+  "completionAuthority": "The exact-source-bound engineering-gates.json in the sealed local handoff. CODE_COMPLETE here does not assert that execution gates passed.",
+  "rules": {
+    "localSyntheticCasesAreProtectedCases": false,
+    "missingInternalWorkIsExternallyBlocked": false,
+    "successfulSubsetClosesWholeRequestedGate": false,
+    "historicalEvidenceClosesCurrentRuntimeGate": false
+  },
+  "requirements": [
+    {
+      "id": "A",
+      "status": "CODE_COMPLETE",
+      "implementation": "runtime canonical expressions and independent ordered-graph correspondence, not function templates",
+      "requiredEngineeringGate": "finite-numerical-binding-release",
+      "limits": ["40 locally withheld structures are compiler/checker cases, not 40 protected native executions"]
+    },
+    {
+      "id": "B",
+      "status": "CODE_COMPLETE",
+      "implementation": "exact signed mantissas/scales, units, oblivious selected validity, exact-or-reject ratios and bounded field lowering",
+      "requiredEngineeringGate": "finite-numerical-binding-release",
+      "limits": ["quantity outputs only", "no Boolean/text output claim", "only current source-identity-bound native cases qualify"]
+    },
+    {
+      "id": "C",
+      "status": "CODE_COMPLETE",
+      "implementation": "opaque owner-issued handles, current participant consent, salted secret commitments, exact release cuts and revocation",
+      "requiredEngineeringGate": "installed-lifecycle",
+      "limits": ["source truth and separately administered participant custody are not proven"]
+    },
+    {
+      "id": "D",
+      "status": "CODE_COMPLETE",
+      "implementation": "pinned MP-SPDZ MASCOT, malicious SoftSpoken OT, authenticated local participants, no INSECURE build",
+      "requiredEngineeringGate": "adverse-and-custody",
+      "limits": ["all four protocol faults and all four setup/disposal boundaries must pass on the current runtime", "failed attempts remain retained", "not deployment security qualification"]
+    },
+    {
+      "id": "E",
+      "status": "CODE_COMPLETE",
+      "implementation": "MPC-authenticated recipient-private opening, stable institution/source cumulative reservation, no abort refund, prospective derivative revocation",
+      "requiredEngineeringGate": "finite-numerical-binding-release"
+    },
+    {
+      "id": "F",
+      "status": "CODE_COMPLETE",
+      "implementation": "authenticated Work and real queue/worker, recipient artifact, native underwriting, actual S4 choice, S5 exact allocation/reservation/consumption, unadmitted S6 analytical draft, and typed local S8 construction review with lost-acknowledgement history recovery",
+      "requiredEngineeringGate": "installed-lifecycle",
+      "limits": ["analytical Work is not action lineage", "no execution or dispatch authority follows from the Y4 result", "unadmitted shared owner sinks refuse rather than infer onward rights", "final S6 revocation race and hidden unresolved-effect visibility are required current-case assertions"]
+    },
+    {
+      "id": "G",
+      "status": "CODE_COMPLETE",
+      "implementation": "physical installed worker crash, descendant termination and secret burn, original lease expiry/quarantine, canonical read-only reconciliation, and separately authorized fresh originals using the same participant ledgers and original absolute deadline",
+      "requiredEngineeringGate": "canonical-recovery-and-fresh-authorization",
+      "limits": ["original failed costs, disclosure reservations, generation and responsibility are never reset", "a passing crash substage does not replace the complete fresh-authorized case"]
+    },
+    {
+      "id": "H",
+      "status": "CODE_COMPLETE",
+      "implementation": "separately signed synthetic loopback S6 effect loses one accepted response; actual Y4 crash/reconciliation/cancel/replay preserves its native responsibility before cold S6 recovery without a duplicate mutation",
+      "requiredEngineeringGate": "unrelated-effect-preservation",
+      "limits": ["synthetic loopback provider only", "declared compute-request and human-second funding is a fixture reservation, not actual billing", "no external provider or real funds"]
+    },
+    {
+      "id": "I",
+      "status": "CODE_COMPLETE",
+      "implementation": "actual WORLD Work components, keyboard refresh, recipient scope/reload/offline/delayed-principal/revocation fences",
+      "requiredEngineeringGate": "installed-lifecycle",
+      "limits": ["component host, not a deployed Next application", "current browser source cut and ordinary authenticated owner responses are required"]
+    },
+    {
+      "id": "J",
+      "status": "CODE_COMPLETE",
+      "implementation": "verified complete base Git objects plus exact overlay, native assets, complete archived Node package closure and isolated scientific Python; fresh emitted installation and actual owner/S8/native/browser lifecycle from newly materialized dependencies",
+      "requiredEngineeringGate": "offline-reconstruction",
+      "limits": ["actual browser build inputs and package metadata are materialized by default; every archived member is verified", "offline byte materialization is not an upstream native/package rebuild or OS-level read-trace isolation", "no qualified equipped-X comparator or complete cost meters"]
+    },
+    {
+      "id": "PRINCIPAL_ARTIFACT",
+      "status": "CODE_COMPLETE",
+      "implementation": "recipient-persisted v2 principal artifact and full Post-X envelope, explicit UNKNOWN owner bindings and complete-body hiding digest",
+      "requiredEngineeringGate": "installed-lifecycle",
+      "limits": ["only the final v2 shape is supported; branch-local v1 is not an external compatibility contract", "missing qualification, costs and independently issued admission remain explicit UNKNOWN"]
+    }
+  ],
+  "separateGates": {
+    "protectedQualification": "NOT_RUN",
+    "protectedAssignedComputations": 0,
+    "requiredProtectedComputations": 100,
+    "requiredProtectedUnseenFunctions": 40,
+    "requiredInstitutionIdentities": 10,
+    "requiredSeparatelyAdministeredParticipants": [3, 8],
+    "deploymentSecurity": "NOT_ISSUED",
+    "typedS8LocalEngineering": "REQUIRES_CURRENT_INSTALLED_LIFECYCLE_GATE",
+    "protectedTypedS8Admission": "NOT_ISSUED",
+    "qualifiedComparison": "NOT_RUN",
+    "economicBenefit": "NOT_ESTABLISHED",
+    "productionActive": false
+  }
+}

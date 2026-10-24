@@ -57,6 +57,7 @@ import {EconomicOperations,handleEconomicOperation,readEconomicBody} from '@finn
 import {EconomicFault} from '@finnor/private-equity/src/economic-action-theory/contracts';
 import {StrategicOperations,handleStrategicOperation,readStrategicBody} from '@finnor/private-equity/src/strategic-response/api';
 import {StrategicFault} from '@finnor/private-equity/src/strategic-response/contracts';
+import {CONFIDENTIAL_OPERATIONS,handleConfidentialOperation} from '@finnor/private-equity/src/confidential-computation/api';
 import {InteractionOperations,handleInteractionOperation,readInteractionBody} from '@finnor/private-equity/src/interaction-synthesis/api';
 import {InteractionFault} from '@finnor/private-equity/src/interaction-synthesis/contracts';
 
@@ -227,6 +228,13 @@ export async function POST(req: Request, { params }: { params: Promise<{ operati
       const auth=await requireContext(req),body=await readEconomicBody(req);
       const result=await handleEconomicOperation({auth},route.operation,body);
       return response(result.body,result.status);
+    }
+    if(CONFIDENTIAL_OPERATIONS.some(operation=>operation===route.operation)){
+      try{
+        const auth=await requireContext(req),body=await readApplicationBody(req);
+        const result=await handleConfidentialOperation({auth},route.operation,body);
+        return response(result.body,result.status);
+      }catch(error){const mapped=applicationResponseError(error);return mapped?response(mapped.body,mapped.status):requestError(error);}
     }
     if(route.operation==='application-cancel'){
       try{

@@ -86,6 +86,8 @@ async function locked<T>(ctx:PeMutationContext,fn:(c:pg.PoolClient)=>Promise<T>)
 export { locked as withS5PortfolioTransaction };
 export interface AllocationSnapshot {resources:AllocationResource[];outstanding:AllocationOutstandingCommitment[];snapshotDigest:string}
 async function snapshot(c:pg.PoolClient,tenantId:string):Promise<AllocationSnapshot>{
+  if((await c.query('SELECT finnor_os.y4_allocation_context_complete() complete')).rows[0]?.complete!==true)
+    throw new AllocationContractError('PERMITTED_CONTEXT_UNAVAILABLE','Current complete S5 context is unavailable');
   const resources=(await c.query('SELECT r.body FROM finnor_os.s5_resources r JOIN finnor_os.s5_resource_heads h USING(tenant_id,resource_id,revision) WHERE r.tenant_id=$1 ORDER BY r.resource_id LIMIT 17',[tenantId])).rows.map(r=>r.body as AllocationResource);
   const live=(await c.query('SELECT s.*,o.body,p.certificate FROM finnor_os.s5_reservations s JOIN finnor_os.s5_reservation_origins o USING(tenant_id,reservation_id) JOIN finnor_os.s5_proposals p ON p.tenant_id=s.tenant_id AND p.content_digest=s.allocation_digest WHERE s.tenant_id=$1 AND s.status<>\'RELEASED\' AND p.demand IS NULL ORDER BY s.reservation_id LIMIT 257',[tenantId])).rows;
   if(resources.length>16||live.length>256)throw new AllocationContractError('LIMIT_EXCEEDED','S5 registry/live commitment bound exceeded');
@@ -507,6 +509,7 @@ export async function commitAllocationReservation(ctx:PeMutationContext,problem:
     if(current.snapshotDigest!==problem.snapshotDigest||Date.now()>=Date.parse(certificate.validUntil))throw new AllocationContractError('STALE_INPUT','Solved allocation snapshot expired or changed before commitment');
     if(current.outstanding.length>=256)throw new AllocationContractError('LIMIT_EXCEEDED','Live commitment registry is full; reconciliation and release remain permitted');
     const check=await recheck(current.resources,current.outstanding);if(!check.feasible||!sameAllocationRef(check,certificate.check))throw new AllocationContractError('INVALID_CANDIDATE','Independent current-state canonical check rejects allocation');
+    await (await import('./confidential-computation/owner-consumer')).assertConfidentialAllocationCurrent(ctx,problem,c);
     await authorizeResources(ctx,c,current.resources);
     const nativeRequest=allocationAuthorityRequest(current.resources,check),authority=await evaluateAuthorityTx(ctx.auth,nativeRequest,c);
     if(authority.outcome==='denied'||authority.outcome==='approval_required'&&!fence)throw new AllocationContractError('BLOCKED_AUTHORITY','Current exact S1 allocation authority is required');

@@ -25,7 +25,7 @@ export async function controlFieldsTx(ctx: PeMutationContext, session: SessionRo
   const anchor = await investmentAnchorTx(ctx, investment, client);
   const base = (await client.query<{ id: string; model_version_id: string; world_at: Date }>(
     `SELECT id,model_version_id,world_at FROM finnor_os.underwriting_runs WHERE tenant_id=$1 AND investment_case_id=$2
-      AND scenario_id IS NULL AND status='SUCCEEDED' ORDER BY created_at DESC,id DESC LIMIT 1`,
+      AND scenario_id IS NULL AND status='SUCCEEDED' ORDER BY computed_at DESC,id DESC LIMIT 1`,
     [ctx.auth.tenantId, investmentCaseId])).rows[0];
   if (!base || !await canExerciseAuthorityTx(ctx.auth, { operation: 'query', capability: 'query:pe_world_state',
     resource: { type: 'underwriting_run', id: base.id }, risk: 'low' }, client))

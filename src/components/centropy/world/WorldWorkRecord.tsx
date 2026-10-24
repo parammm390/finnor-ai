@@ -14,6 +14,8 @@ import { InteractionProtocolPanel } from "../canvas/InteractionProtocolPanel"
 import { LiveInstitutionalControl } from "../controls/LiveInstitutionalControl"
 import type { PeWorldRootRef } from "../pe/contracts"
 import { canonicalRootFocus } from "./world-context"
+import { ConfidentialComputationPanel } from "./ConfidentialComputationPanel"
+import { usePrivateRequestScope } from "../lib/use-private-request-scope"
 
 const label = (value: string) => value.replaceAll("_", " ").replace(/([a-z0-9])([A-Z])/g, "$1 $2").toLowerCase()
 const record = (value: unknown): Record<string, unknown> | null => value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : null
@@ -32,7 +34,9 @@ function summary(value: unknown): string | null {
 }
 
 export function WorldWorkRecord({ workId, root, onChanged }: { workId: string; root?: PeWorldRootRef | null; onChanged: () => void }) {
-  const [aggregate, setAggregate] = useState<WorkAggregateView | null>(null)
+  const scope = usePrivateRequestScope(JSON.stringify([workId, root?.entityType, root?.entityId]))
+  const [stored, setStored] = useState<{ scope: string; value: WorkAggregateView } | null>(null)
+  const aggregate = scope.allowed && stored?.scope === scope.key ? stored.value : null
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [revision, setRevision] = useState(0)
@@ -40,18 +44,20 @@ export function WorldWorkRecord({ workId, root, onChanged }: { workId: string; r
 
   useEffect(() => {
     let active = true
-    setAggregate(null); setError(null); setLoading(true)
+    const key = scope.key
+    setStored(null); setError(null); setLoading(scope.allowed); setReplay(false)
+    if (!scope.allowed) return
     void centropyGet<{ work: WorkAggregateView }>(`works/${workId}`).then((result) => {
       if (!result.work || result.work.work?.id !== workId || !Array.isArray(result.work.actions) || !Array.isArray(result.work.businessEffects) || !Array.isArray(result.work.receipts)) {
         throw new Error("The Work record did not match the selected WORLD object")
       }
-      if (active) setAggregate(result.work)
-    }).catch((cause) => { if (active) setError(cause instanceof Error ? cause.message : "Work record unavailable") })
-      .finally(() => { if (active) setLoading(false) })
+      if (active && scope.isCurrent(key)) setStored({ scope: key, value: result.work })
+    }).catch((cause) => { if (active && scope.isCurrent(key)) setError(cause instanceof Error ? cause.message : "Work record unavailable") })
+      .finally(() => { if (active && scope.isCurrent(key)) setLoading(false) })
     return () => { active = false }
-  }, [workId, revision])
+  }, [workId, revision, scope.key, scope.allowed, scope.isCurrent])
 
-  if (replay) return <CausalReplayPanel workId={workId} onClose={() => setReplay(false)} returnLabel="Work record" />
+  if (replay && aggregate) return <CausalReplayPanel key={scope.key} workId={workId} onClose={() => setReplay(false)} returnLabel="Work record" />
   const finalized = aggregate?.receipts.filter((item) => Boolean(item.finalizedAt)) ?? []
   const verified = aggregate?.businessEffects.filter((item) => item.status === "verified") ?? []
   return <div className="ct-world__detail-content ct-world-work">
@@ -65,6 +71,7 @@ export function WorldWorkRecord({ workId, root, onChanged }: { workId: string; r
       <ClosingProgrammePanel key={workId} workId={workId} onChanged={onChanged} />
       {root ? <EconomicActionTheoryPanel key={`${workId}:${root.entityType}:${root.entityId}`} root={root} workId={workId} /> : null}
       {root ? <StrategicResponsePanel key={`response:${workId}:${root.entityType}:${root.entityId}`} root={root} workId={workId} /> : null}
+      {root ? <ConfidentialComputationPanel key={workId} root={root} workId={workId} /> : null}
       {root ? <InteractionProtocolPanel key={`interaction:${workId}:${root.entityType}:${root.entityId}`} root={root} workId={workId} /> : null}
       {summary(aggregate.work.finalOutcome) ? <p className="ct-world-work__outcome"><ShieldCheck size={16} /> {summary(aggregate.work.finalOutcome)}</p> : null}
       {aggregate.read?.complete === false ? <p className="ct-world-work__caveat">This bounded Work read is incomplete. The counts below cover only returned rows.</p> : null}

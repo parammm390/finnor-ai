@@ -80,6 +80,12 @@ async function prepareOwnedObligation(ctx:PeMutationContext,input:unknown,workLi
  return withTenantTransaction(ctx.auth.tenantId,{userId:actor(ctx)},async(_db,c)=>{
   // Joins participate in the existing S5 portfolio serialization boundary.
   await c.query('SELECT pg_advisory_xact_lock(hashtextextended($1,0))',[`s5-portfolio:${ctx.auth.tenantId}`]);await authorize(ctx,c);
+  const confidential=await import('./confidential-computation/owner-consumer');
+  // Serialize with original source/consent revocation before creating any S6
+  // action, effect, consumption binding or delivery. A later refusal cannot
+  // undo an already committed preparation.
+  await confidential.assertConfidentialGuard(ctx,context.preparation.confidentialGuard,c);
+  await confidential.assertConfidentialAllocationCurrent(ctx,context.issued.problem,c);
   if(workLineage&&!same(workLineage,await resolveWorkLineage(ctx,c,workLineage.workId)))throw denied();
   const prior=(await c.query('SELECT body,input_digest FROM finnor_os.s6_obligation_origins WHERE tenant_id=$1 AND consumption_id=$2',[ctx.auth.tenantId,refs.consumptionRef.id])).rows[0];if(prior){if(prior.input_digest!==inputDigest)throw denied();verifyBody(ctx,prior.body);await enqueueObligation(ctx,c,prior.body);return immutableControl(prior.body as DurableObligation);}
   const held=(await c.query('SELECT revision,status,revocation_reason FROM finnor_os.s5_reservations WHERE tenant_id=$1 AND reservation_id=$2 FOR SHARE',[ctx.auth.tenantId,issued.reservation!.ref.id])).rows[0];
@@ -135,6 +141,7 @@ export async function readEnterpriseDurableObligationCommitment(ctx:PeMutationCo
 }
 export async function validateEnterpriseDurableObligation(ctx:PeMutationContext,value:unknown){
  const obligation=await readEnterpriseDurableObligation(ctx,value),reasons:string[]=[];try{await readEnterpriseContingentPolicy(ctx,obligation.policyRef);}catch{reasons.push('POLICY_OR_UPSTREAM_SOURCE_RIGHTS_CHANGED');}try{const allocation=await validateEnterpriseAllocation(ctx,obligation.allocationRef);if(allocation.status!=='CURRENT')reasons.push(...allocation.reasons);}catch{reasons.push('ALLOCATION_CONTEXT_UNAVAILABLE');}if(Date.now()>=Date.parse(obligation.deadline.authorityExpiresAt))reasons.push('AUTHORITY_EXPIRED_RESPONSIBILITY_RETAINED');
+ try{await readEnterpriseContingentHandoffPreparation(ctx,obligation.preparationRef);}catch{reasons.push('ORIGINAL_S4_PREPARATION_OR_CONFIDENTIAL_DERIVATIVE_NOT_CURRENT');}
  reasons.push('PROTECTED_METHOD_IR_PROVIDER_BINDING_AND_RELEASE_UNADMITTED');return {obligationRef:obligation.ref,status:reasons.length>1?'STALE_INPUT':'PREPARED_UNADMITTED',reasons,executionAuthorityGranted:false as const,protectedReceipt:null};
 }
 export async function compileEnterpriseDurableObligationRequest(ctx:PeMutationContext,input:unknown){

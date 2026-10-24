@@ -1,4 +1,4 @@
-// Generated from finnor-os/openapi.json, SHA-256 9a1044dee2230bdf4e0596217b7caf3c41cb7a9cf8480321de2aed9c43ff0dc9.
+// Generated from finnor-os/openapi.json, SHA-256 466a0147bd8fc949b0ee4b438591c5a82891127a0471a85b8e2fef31bcf2791d.
 export interface paths {
     "/api/live-controls": {
         parameters: {
@@ -2828,7 +2828,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    operation: "opportunity-promote" | "belief-view" | "belief-pin" | "roots" | "projection" | "search" | "object" | "traverse" | "provenance" | "history" | "evidence-lineage" | "decision-lineage" | "available-actions" | "context" | "evidence-handles" | "evidence-submit" | "evidence-read" | "evidence-witness" | "evidence-replay" | "evidence-cancel" | "evidence-consume" | "program-submit" | "program-read" | "program-witness" | "program-module" | "program-projection" | "program-cancel" | "program-resume" | "program-artifact" | "program-ports" | "program-interface-module" | "compute-search-submit" | "compute-search-read" | "compute-search-projection" | "compute-search-cancel" | "compute-search-resume" | "compute-search-reconcile" | "interface-acquire" | "interface-read" | "interface-projection" | "interface-catalogue" | "interface-module" | "interface-cancel" | "interface-resume" | "interface-reconcile" | "interface-admission" | "interface-invoke" | "interface-ports" | "decision-slice-compile" | "decision-slice-read" | "decision-slice-context" | "decision-slice-patch" | "decision-slice-witness" | "decision-slice-consume" | "decision-slice-cancel" | "decision-slice-recompile" | "decision-slice-changes" | "decision-slice-view" | "continuation-submit" | "continuation-read" | "continuation-projection" | "procedure-experience" | "procedure-induce" | "procedure-induction-read" | "procedure-induction-cancel" | "procedure-read" | "procedure-component" | "procedure-counterexample" | "procedure-projection" | "procedure-admission-request" | "procedure-interface" | "procedure-costs" | "deliberation-submit" | "deliberation-read" | "deliberation-projection" | "deliberation-cancel" | "deliberation-resume" | "deliberation-reconcile" | "deliberation-calibrate" | "deliberation-evidence-read" | "deliberation-module-read" | "capital-formation-submit" | "capital-formation-read" | "capital-formation-list" | "capital-formation-profiles" | "capital-formation-advance" | "capital-formation-event" | "capital-formation-proposal" | "capital-formation-cancel" | "capital-formation-draw-handoff" | "application-submit" | "application-maintain" | "application-command" | "application-read" | "application-record" | "application-list" | "application-history" | "application-asset" | "application-cancel" | "application-rollback" | "application-impact" | "application-upload" | "application-prepare-effect" | "application-s8-propose" | "application-admission" | "application-acquire" | "application-execute" | "application-projection" | "application-resume" | "institution-submit" | "institution-revise" | "institution-read" | "institution-status" | "institution-cancel" | "institution-resume" | "institution-witness" | "institution-sources" | "institution-inputs" | "institution-mandate" | "institution-register-source" | "institution-consent" | "learning-consent" | "learning-revoke-consent" | "learning-experience" | "learning-submit" | "learning-read" | "learning-list" | "learning-execute" | "learning-evaluate" | "learning-cancel" | "learning-invalidate" | "learning-retry" | "learning-rollback" | "learning-s8-propose" | "learning-admission" | "learning-register-assignment" | "learning-retrain" | "identification-targets" | "identification-consent" | "identification-revoke-consent" | "identification-submit" | "identification-read" | "identification-list" | "identification-history" | "identification-experiment" | "identification-replicate" | "identification-use" | "identification-cancel" | "identification-invalidate" | "identification-retry" | "identification-s8-propose" | "identification-admission" | "economic-theory-submit" | "economic-theory-read" | "economic-theory-list" | "economic-theory-admit" | "economic-theory-resume" | "economic-theory-cancel" | "economic-theory-artifact" | "economic-theory-compare" | "economic-programme-create" | "economic-programme-run" | "economic-programme-read" | "economic-programme-reconcile" | "economic-reservation-create" | "economic-reservation-read" | "response-model-submit" | "response-model-list" | "response-model-read" | "response-model-admit" | "response-model-resume" | "response-model-cancel" | "response-model-artifact" | "response-model-compare" | "response-forecast" | "response-programme" | "response-use-read" | "response-use-resume" | "response-use-cancel" | "interaction-submit" | "interaction-read" | "interaction-list" | "interaction-admit" | "interaction-resume" | "interaction-cancel" | "interaction-artifact" | "interaction-compare" | "interaction-terms" | "interaction-local" | "interaction-consent" | "interaction-start" | "interaction-run-read" | "interaction-observe" | "interaction-action" | "interaction-materialize" | "interaction-run" | "interaction-reconcile";
+                    operation: "opportunity-promote" | "belief-view" | "belief-pin" | "roots" | "projection" | "search" | "object" | "traverse" | "provenance" | "history" | "evidence-lineage" | "decision-lineage" | "available-actions" | "context" | "evidence-handles" | "evidence-submit" | "evidence-read" | "evidence-witness" | "evidence-replay" | "evidence-cancel" | "evidence-consume" | "program-submit" | "program-read" | "program-witness" | "program-module" | "program-projection" | "program-cancel" | "program-resume" | "program-artifact" | "program-ports" | "program-interface-module" | "compute-search-submit" | "compute-search-read" | "compute-search-projection" | "compute-search-cancel" | "compute-search-resume" | "compute-search-reconcile" | "interface-acquire" | "interface-read" | "interface-projection" | "interface-catalogue" | "interface-module" | "interface-cancel" | "interface-resume" | "interface-reconcile" | "interface-admission" | "interface-invoke" | "interface-ports" | "decision-slice-compile" | "decision-slice-read" | "decision-slice-context" | "decision-slice-patch" | "decision-slice-witness" | "decision-slice-consume" | "decision-slice-cancel" | "decision-slice-recompile" | "decision-slice-changes" | "decision-slice-view" | "continuation-submit" | "continuation-read" | "continuation-projection" | "procedure-experience" | "procedure-induce" | "procedure-induction-read" | "procedure-induction-cancel" | "procedure-read" | "procedure-component" | "procedure-counterexample" | "procedure-projection" | "procedure-admission-request" | "procedure-interface" | "procedure-costs" | "deliberation-submit" | "deliberation-read" | "deliberation-projection" | "deliberation-cancel" | "deliberation-resume" | "deliberation-reconcile" | "deliberation-calibrate" | "deliberation-evidence-read" | "deliberation-module-read" | "capital-formation-submit" | "capital-formation-read" | "capital-formation-list" | "capital-formation-profiles" | "capital-formation-advance" | "capital-formation-event" | "capital-formation-proposal" | "capital-formation-cancel" | "capital-formation-draw-handoff" | "application-submit" | "application-maintain" | "application-command" | "application-read" | "application-record" | "application-list" | "application-history" | "application-asset" | "application-cancel" | "application-rollback" | "application-impact" | "application-upload" | "application-prepare-effect" | "application-s8-propose" | "application-admission" | "application-acquire" | "application-execute" | "application-projection" | "application-resume" | "institution-submit" | "institution-revise" | "institution-read" | "institution-status" | "institution-cancel" | "institution-resume" | "institution-witness" | "institution-sources" | "institution-inputs" | "institution-mandate" | "institution-register-source" | "institution-consent" | "learning-consent" | "learning-revoke-consent" | "learning-experience" | "learning-submit" | "learning-read" | "learning-list" | "learning-execute" | "learning-evaluate" | "learning-cancel" | "learning-invalidate" | "learning-retry" | "learning-rollback" | "learning-s8-propose" | "learning-admission" | "learning-register-assignment" | "learning-retrain" | "identification-targets" | "identification-consent" | "identification-revoke-consent" | "identification-submit" | "identification-read" | "identification-list" | "identification-history" | "identification-experiment" | "identification-replicate" | "identification-use" | "identification-cancel" | "identification-invalidate" | "identification-retry" | "identification-s8-propose" | "identification-admission" | "economic-theory-submit" | "economic-theory-read" | "economic-theory-list" | "economic-theory-admit" | "economic-theory-resume" | "economic-theory-cancel" | "economic-theory-artifact" | "economic-theory-compare" | "economic-programme-create" | "economic-programme-run" | "economic-programme-read" | "economic-programme-reconcile" | "economic-reservation-create" | "economic-reservation-read" | "response-model-submit" | "response-model-list" | "response-model-read" | "response-model-admit" | "response-model-resume" | "response-model-cancel" | "response-model-artifact" | "response-model-compare" | "response-forecast" | "response-programme" | "response-use-read" | "response-use-resume" | "response-use-cancel" | "interaction-submit" | "interaction-read" | "interaction-list" | "interaction-admit" | "interaction-resume" | "interaction-cancel" | "interaction-artifact" | "interaction-compare" | "interaction-terms" | "interaction-local" | "interaction-consent" | "interaction-start" | "interaction-run-read" | "interaction-observe" | "interaction-action" | "interaction-materialize" | "interaction-run" | "interaction-reconcile" | "confidential-intake" | "confidential-source-handle" | "confidential-plan" | "confidential-submit" | "confidential-read" | "confidential-list" | "confidential-consent" | "confidential-revoke" | "confidential-prepare" | "confidential-commit" | "confidential-import-release" | "confidential-cancel" | "confidential-invalidate" | "confidential-retry" | "confidential-reconcile" | "confidential-underwriting" | "confidential-control-choice" | "confidential-allocation" | "confidential-obligation" | "confidential-s8-propose" | "confidential-s8-current";
                 };
                 cookie?: never;
             };
@@ -14909,6 +14909,1812 @@ export interface paths {
                 };
                 /** @description Pinned checker/runtime or native capacity unavailable. */
                 503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/confidential-intake": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["confidential-intake"];
+                };
+            };
+            responses: {
+                /** @description Current scoped local-engineering evidence or recipient-authorized release. Not primary truth, protected admission, production or effects. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original durable Work queued. Not accepted computation or completion. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict typed contract refused. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authority unavailable or production unadmitted. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unavailable in current identity and scope. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original rights, source cut, deadline, disclosure, physical fence or reconciliation premise unpassed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original bounded request, response or retention exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/confidential-source-handle": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["confidential-source-handle"];
+                };
+            };
+            responses: {
+                /** @description Current scoped local-engineering evidence or recipient-authorized release. Not primary truth, protected admission, production or effects. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original durable Work queued. Not accepted computation or completion. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict typed contract refused. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authority unavailable or production unadmitted. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unavailable in current identity and scope. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original rights, source cut, deadline, disclosure, physical fence or reconciliation premise unpassed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original bounded request, response or retention exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/confidential-plan": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["confidential-plan"];
+                };
+            };
+            responses: {
+                /** @description Current scoped local-engineering evidence or recipient-authorized release. Not primary truth, protected admission, production or effects. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original durable Work queued. Not accepted computation or completion. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict typed contract refused. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authority unavailable or production unadmitted. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unavailable in current identity and scope. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original rights, source cut, deadline, disclosure, physical fence or reconciliation premise unpassed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original bounded request, response or retention exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/confidential-submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["confidential-submit"];
+                };
+            };
+            responses: {
+                /** @description Current scoped local-engineering evidence or recipient-authorized release. Not primary truth, protected admission, production or effects. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original durable Work queued. Not accepted computation or completion. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict typed contract refused. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authority unavailable or production unadmitted. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unavailable in current identity and scope. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original rights, source cut, deadline, disclosure, physical fence or reconciliation premise unpassed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original bounded request, response or retention exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/confidential-read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["confidential-read"];
+                };
+            };
+            responses: {
+                /** @description Current scoped local-engineering evidence or recipient-authorized release. Not primary truth, protected admission, production or effects. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original durable Work queued. Not accepted computation or completion. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict typed contract refused. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authority unavailable or production unadmitted. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unavailable in current identity and scope. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original rights, source cut, deadline, disclosure, physical fence or reconciliation premise unpassed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original bounded request, response or retention exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/confidential-list": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["confidential-list"];
+                };
+            };
+            responses: {
+                /** @description Current scoped local-engineering evidence or recipient-authorized release. Not primary truth, protected admission, production or effects. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original durable Work queued. Not accepted computation or completion. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict typed contract refused. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authority unavailable or production unadmitted. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unavailable in current identity and scope. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original rights, source cut, deadline, disclosure, physical fence or reconciliation premise unpassed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original bounded request, response or retention exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/confidential-consent": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["confidential-consent"];
+                };
+            };
+            responses: {
+                /** @description Current scoped local-engineering evidence or recipient-authorized release. Not primary truth, protected admission, production or effects. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original durable Work queued. Not accepted computation or completion. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict typed contract refused. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authority unavailable or production unadmitted. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unavailable in current identity and scope. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original rights, source cut, deadline, disclosure, physical fence or reconciliation premise unpassed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original bounded request, response or retention exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/confidential-revoke": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["confidential-revoke"];
+                };
+            };
+            responses: {
+                /** @description Current scoped local-engineering evidence or recipient-authorized release. Not primary truth, protected admission, production or effects. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original durable Work queued. Not accepted computation or completion. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict typed contract refused. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authority unavailable or production unadmitted. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unavailable in current identity and scope. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original rights, source cut, deadline, disclosure, physical fence or reconciliation premise unpassed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original bounded request, response or retention exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/confidential-prepare": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["confidential-prepare"];
+                };
+            };
+            responses: {
+                /** @description Current scoped local-engineering evidence or recipient-authorized release. Not primary truth, protected admission, production or effects. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original durable Work queued. Not accepted computation or completion. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict typed contract refused. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authority unavailable or production unadmitted. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unavailable in current identity and scope. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original rights, source cut, deadline, disclosure, physical fence or reconciliation premise unpassed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original bounded request, response or retention exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/confidential-commit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["confidential-commit"];
+                };
+            };
+            responses: {
+                /** @description Current scoped local-engineering evidence or recipient-authorized release. Not primary truth, protected admission, production or effects. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original durable Work queued. Not accepted computation or completion. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict typed contract refused. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authority unavailable or production unadmitted. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unavailable in current identity and scope. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original rights, source cut, deadline, disclosure, physical fence or reconciliation premise unpassed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original bounded request, response or retention exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/confidential-import-release": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["confidential-import-release"];
+                };
+            };
+            responses: {
+                /** @description Current scoped local-engineering evidence or recipient-authorized release. Not primary truth, protected admission, production or effects. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original durable Work queued. Not accepted computation or completion. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict typed contract refused. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authority unavailable or production unadmitted. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unavailable in current identity and scope. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original rights, source cut, deadline, disclosure, physical fence or reconciliation premise unpassed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original bounded request, response or retention exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/confidential-cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["confidential-cancel"];
+                };
+            };
+            responses: {
+                /** @description Current scoped local-engineering evidence or recipient-authorized release. Not primary truth, protected admission, production or effects. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original durable Work queued. Not accepted computation or completion. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict typed contract refused. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authority unavailable or production unadmitted. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unavailable in current identity and scope. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original rights, source cut, deadline, disclosure, physical fence or reconciliation premise unpassed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original bounded request, response or retention exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/confidential-invalidate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["confidential-invalidate"];
+                };
+            };
+            responses: {
+                /** @description Current scoped local-engineering evidence or recipient-authorized release. Not primary truth, protected admission, production or effects. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original durable Work queued. Not accepted computation or completion. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict typed contract refused. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authority unavailable or production unadmitted. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unavailable in current identity and scope. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original rights, source cut, deadline, disclosure, physical fence or reconciliation premise unpassed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original bounded request, response or retention exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/confidential-retry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["confidential-retry"];
+                };
+            };
+            responses: {
+                /** @description Current scoped local-engineering evidence or recipient-authorized release. Not primary truth, protected admission, production or effects. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original durable Work queued. Not accepted computation or completion. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict typed contract refused. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authority unavailable or production unadmitted. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unavailable in current identity and scope. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original rights, source cut, deadline, disclosure, physical fence or reconciliation premise unpassed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original bounded request, response or retention exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/confidential-reconcile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["confidential-reconcile"];
+                };
+            };
+            responses: {
+                /** @description Current scoped local-engineering evidence or recipient-authorized release. Not primary truth, protected admission, production or effects. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original durable Work queued. Not accepted computation or completion. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict typed contract refused. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authority unavailable or production unadmitted. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unavailable in current identity and scope. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original rights, source cut, deadline, disclosure, physical fence or reconciliation premise unpassed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original bounded request, response or retention exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/confidential-underwriting": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["confidential-underwriting"];
+                };
+            };
+            responses: {
+                /** @description Current scoped local-engineering evidence or recipient-authorized release. Not primary truth, protected admission, production or effects. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original durable Work queued. Not accepted computation or completion. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict typed contract refused. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authority unavailable or production unadmitted. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unavailable in current identity and scope. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original rights, source cut, deadline, disclosure, physical fence or reconciliation premise unpassed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original bounded request, response or retention exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/confidential-control-choice": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["confidential-control-choice"];
+                };
+            };
+            responses: {
+                /** @description Current scoped local-engineering evidence or recipient-authorized release. Not primary truth, protected admission, production or effects. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original durable Work queued. Not accepted computation or completion. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict typed contract refused. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authority unavailable or production unadmitted. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unavailable in current identity and scope. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original rights, source cut, deadline, disclosure, physical fence or reconciliation premise unpassed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original bounded request, response or retention exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/confidential-allocation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["confidential-allocation"];
+                };
+            };
+            responses: {
+                /** @description Current scoped local-engineering evidence or recipient-authorized release. Not primary truth, protected admission, production or effects. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original durable Work queued. Not accepted computation or completion. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict typed contract refused. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authority unavailable or production unadmitted. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unavailable in current identity and scope. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original rights, source cut, deadline, disclosure, physical fence or reconciliation premise unpassed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original bounded request, response or retention exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/confidential-obligation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["confidential-obligation"];
+                };
+            };
+            responses: {
+                /** @description Current scoped local-engineering evidence or recipient-authorized release. Not primary truth, protected admission, production or effects. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original durable Work queued. Not accepted computation or completion. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict typed contract refused. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authority unavailable or production unadmitted. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unavailable in current identity and scope. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original rights, source cut, deadline, disclosure, physical fence or reconciliation premise unpassed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original bounded request, response or retention exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/confidential-s8-propose": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["confidential-s8-propose"];
+                };
+            };
+            responses: {
+                /** @description Current scoped local-engineering evidence or recipient-authorized release. Not primary truth, protected admission, production or effects. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original durable Work queued. Not accepted computation or completion. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict typed contract refused. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authority unavailable or production unadmitted. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unavailable in current identity and scope. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original rights, source cut, deadline, disclosure, physical fence or reconciliation premise unpassed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original bounded request, response or retention exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/confidential-s8-current": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["confidential-s8-current"];
+                };
+            };
+            responses: {
+                /** @description Current scoped local-engineering evidence or recipient-authorized release. Not primary truth, protected admission, production or effects. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original durable Work queued. Not accepted computation or completion. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict typed contract refused. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current authority unavailable or production unadmitted. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unavailable in current identity and scope. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original rights, source cut, deadline, disclosure, physical fence or reconciliation premise unpassed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original bounded request, response or retention exceeded. */
+                413: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -43191,6 +44997,893 @@ export interface components {
             modelId: string;
             /** Format: uuid */
             useId: string;
+        };
+        "confidential-intake": {
+            root: {
+                /** @enum {string} */
+                entityType: "pe_strategy" | "pe_opportunity" | "pe_deal" | "pe_fund" | "pe_vehicle" | "external_organization" | "pe_portfolio_holding";
+                /** Format: uuid */
+                entityId: string;
+            };
+            function: {
+                /** @constant */
+                schema: "finnor.confidential-function.v1";
+                functionRef: {
+                    owner: string;
+                    id: string;
+                    version: string;
+                    contentDigest: string;
+                };
+                baselineManifestRef: {
+                    owner: string;
+                    id: string;
+                    version: string;
+                    contentDigest: string;
+                };
+                objectiveRef: {
+                    owner: string;
+                    id: string;
+                    version: string;
+                    contentDigest: string;
+                };
+                mandateRef: {
+                    owner: string;
+                    id: string;
+                    version: string;
+                    contentDigest: string;
+                };
+                jointSemanticsRef: {
+                    owner: string;
+                    id: string;
+                    version: string;
+                    contentDigest: string;
+                };
+                purpose: string;
+                participants: {
+                    id: string;
+                    /** Format: uuid */
+                    institutionId: string;
+                    authorityRef: {
+                        owner: string;
+                        id: string;
+                        version: string;
+                        contentDigest: string;
+                    };
+                }[];
+                inputs: {
+                    key: string;
+                    participantId: string;
+                    semantics: {
+                        entityType: string;
+                        /** Format: uuid */
+                        entityId: string;
+                        /** Format: date-time */
+                        periodStart: string;
+                        /** Format: date-time */
+                        periodEnd: string;
+                        /** @enum {string} */
+                        unit: "currency" | "count" | "ratio" | "multiple" | "rate";
+                        currencyCode: string | null;
+                        /** @enum {string} */
+                        frequency: "annual" | "quarterly" | "monthly" | "instant" | "daily" | "weekly" | "event";
+                        /** @enum {string} */
+                        calendar: "OWNER_RECORDED" | "GREGORIAN";
+                        /** @enum {string} */
+                        consolidation: "OWNER_SUBJECT_ONLY" | "CONSOLIDATED" | "STANDALONE";
+                        instrument: string;
+                        /** @enum {string} */
+                        scale: "1" | "1000" | "1000000";
+                        /** @enum {string} */
+                        sign: "AS_RECORDED" | "NEGATE";
+                    };
+                    lower: string;
+                    upper: string;
+                    decimalPlaces: number;
+                    sourceRef: {
+                        owner: string;
+                        id: string;
+                        version: string;
+                        contentDigest: string;
+                    };
+                    grantRef: {
+                        owner: string;
+                        id: string;
+                        version: string;
+                        contentDigest: string;
+                    };
+                    validationRef: {
+                        owner: string;
+                        id: string;
+                        version: string;
+                        contentDigest: string;
+                    };
+                    primaryEvidenceRef: {
+                        owner: string;
+                        id: string;
+                        version: string;
+                        contentDigest: string;
+                    } | null;
+                    /** @enum {string} */
+                    sourceStatus: "PRIMARY_CONFIRMED" | "OWNER_ASSERTED" | "ESTIMATED";
+                    /** Format: date-time */
+                    freshUntil: string;
+                    /** @constant */
+                    rounding: "EXACT_OR_REJECT";
+                }[];
+                outputs: {
+                    key: string;
+                    expression: {
+                        /** @constant */
+                        kind: "input";
+                        key: string;
+                    } | {
+                        /** @constant */
+                        kind: "literal";
+                        value: string;
+                        /** @enum {string} */
+                        unit: "currency" | "count" | "ratio" | "multiple" | "rate";
+                        currencyCode: string | null;
+                    } | {
+                        /** @enum {string} */
+                        kind: "add" | "subtract" | "multiply" | "ratio" | "min" | "max";
+                        left: unknown;
+                        right: unknown;
+                    } | {
+                        /** @constant */
+                        kind: "if";
+                        condition: {
+                            /** @enum {string} */
+                            comparison: "lt" | "lte" | "eq" | "gte" | "gt";
+                            left: unknown;
+                            right: unknown;
+                        };
+                        whenTrue: unknown;
+                        whenFalse: unknown;
+                    };
+                    semantics: {
+                        entityType: string;
+                        /** Format: uuid */
+                        entityId: string;
+                        /** Format: date-time */
+                        periodStart: string;
+                        /** Format: date-time */
+                        periodEnd: string;
+                        /** @enum {string} */
+                        unit: "currency" | "count" | "ratio" | "multiple" | "rate";
+                        currencyCode: string | null;
+                        /** @enum {string} */
+                        frequency: "annual" | "quarterly" | "monthly" | "instant" | "daily" | "weekly" | "event";
+                        /** @enum {string} */
+                        calendar: "OWNER_RECORDED" | "GREGORIAN";
+                        /** @enum {string} */
+                        consolidation: "OWNER_SUBJECT_ONLY" | "CONSOLIDATED" | "STANDALONE";
+                        instrument: string;
+                        /** @enum {string} */
+                        scale: "1" | "1000" | "1000000";
+                        /** @enum {string} */
+                        sign: "AS_RECORDED" | "NEGATE";
+                    };
+                    recipients: string[];
+                }[];
+                release: {
+                    familyId: string;
+                    policyRef: {
+                        owner: string;
+                        id: string;
+                        version: string;
+                        contentDigest: string;
+                    };
+                    termsRef: {
+                        owner: string;
+                        id: string;
+                        version: string;
+                        contentDigest: string;
+                    };
+                    /** @constant */
+                    maxDistinctFunctions: 1;
+                };
+            };
+            limits: {
+                /** Format: date-time */
+                deadlineAt: string;
+                maxAttempts: number;
+                maxCpuSeconds: number;
+                maxMemoryBytes: number;
+                maxRetainedBytes: number;
+            };
+            /** @constant */
+            schema: "finnor.y4.intake.v1";
+            idempotencyKey: string;
+        };
+        "confidential-source-handle": {
+            /** Format: uuid */
+            workId: string;
+            /** Format: uuid */
+            grantId: string;
+        };
+        "confidential-plan": {
+            /** @constant */
+            schema: "finnor.y4.plan.v1";
+            root: {
+                /** @enum {string} */
+                entityType: "pe_strategy" | "pe_opportunity" | "pe_deal" | "pe_fund" | "pe_vehicle" | "external_organization" | "pe_portfolio_holding";
+                /** Format: uuid */
+                entityId: string;
+            };
+            /** Format: uuid */
+            workId: string;
+            /** Format: uuid */
+            workInputId: string;
+            function: {
+                /** @constant */
+                schema: "finnor.confidential-function.v1";
+                functionRef: {
+                    owner: string;
+                    id: string;
+                    version: string;
+                    contentDigest: string;
+                };
+                baselineManifestRef: {
+                    owner: string;
+                    id: string;
+                    version: string;
+                    contentDigest: string;
+                };
+                objectiveRef: {
+                    owner: string;
+                    id: string;
+                    version: string;
+                    contentDigest: string;
+                };
+                mandateRef: {
+                    owner: string;
+                    id: string;
+                    version: string;
+                    contentDigest: string;
+                };
+                jointSemanticsRef: {
+                    owner: string;
+                    id: string;
+                    version: string;
+                    contentDigest: string;
+                };
+                purpose: string;
+                participants: {
+                    id: string;
+                    /** Format: uuid */
+                    institutionId: string;
+                    authorityRef: {
+                        owner: string;
+                        id: string;
+                        version: string;
+                        contentDigest: string;
+                    };
+                }[];
+                inputs: {
+                    key: string;
+                    participantId: string;
+                    semantics: {
+                        entityType: string;
+                        /** Format: uuid */
+                        entityId: string;
+                        /** Format: date-time */
+                        periodStart: string;
+                        /** Format: date-time */
+                        periodEnd: string;
+                        /** @enum {string} */
+                        unit: "currency" | "count" | "ratio" | "multiple" | "rate";
+                        currencyCode: string | null;
+                        /** @enum {string} */
+                        frequency: "annual" | "quarterly" | "monthly" | "instant" | "daily" | "weekly" | "event";
+                        /** @enum {string} */
+                        calendar: "OWNER_RECORDED" | "GREGORIAN";
+                        /** @enum {string} */
+                        consolidation: "OWNER_SUBJECT_ONLY" | "CONSOLIDATED" | "STANDALONE";
+                        instrument: string;
+                        /** @enum {string} */
+                        scale: "1" | "1000" | "1000000";
+                        /** @enum {string} */
+                        sign: "AS_RECORDED" | "NEGATE";
+                    };
+                    lower: string;
+                    upper: string;
+                    decimalPlaces: number;
+                    sourceRef: {
+                        owner: string;
+                        id: string;
+                        version: string;
+                        contentDigest: string;
+                    };
+                    grantRef: {
+                        owner: string;
+                        id: string;
+                        version: string;
+                        contentDigest: string;
+                    };
+                    validationRef: {
+                        owner: string;
+                        id: string;
+                        version: string;
+                        contentDigest: string;
+                    };
+                    primaryEvidenceRef: {
+                        owner: string;
+                        id: string;
+                        version: string;
+                        contentDigest: string;
+                    } | null;
+                    /** @enum {string} */
+                    sourceStatus: "PRIMARY_CONFIRMED" | "OWNER_ASSERTED" | "ESTIMATED";
+                    /** Format: date-time */
+                    freshUntil: string;
+                    /** @constant */
+                    rounding: "EXACT_OR_REJECT";
+                }[];
+                outputs: {
+                    key: string;
+                    expression: {
+                        /** @constant */
+                        kind: "input";
+                        key: string;
+                    } | {
+                        /** @constant */
+                        kind: "literal";
+                        value: string;
+                        /** @enum {string} */
+                        unit: "currency" | "count" | "ratio" | "multiple" | "rate";
+                        currencyCode: string | null;
+                    } | {
+                        /** @enum {string} */
+                        kind: "add" | "subtract" | "multiply" | "ratio" | "min" | "max";
+                        left: unknown;
+                        right: unknown;
+                    } | {
+                        /** @constant */
+                        kind: "if";
+                        condition: {
+                            /** @enum {string} */
+                            comparison: "lt" | "lte" | "eq" | "gte" | "gt";
+                            left: unknown;
+                            right: unknown;
+                        };
+                        whenTrue: unknown;
+                        whenFalse: unknown;
+                    };
+                    semantics: {
+                        entityType: string;
+                        /** Format: uuid */
+                        entityId: string;
+                        /** Format: date-time */
+                        periodStart: string;
+                        /** Format: date-time */
+                        periodEnd: string;
+                        /** @enum {string} */
+                        unit: "currency" | "count" | "ratio" | "multiple" | "rate";
+                        currencyCode: string | null;
+                        /** @enum {string} */
+                        frequency: "annual" | "quarterly" | "monthly" | "instant" | "daily" | "weekly" | "event";
+                        /** @enum {string} */
+                        calendar: "OWNER_RECORDED" | "GREGORIAN";
+                        /** @enum {string} */
+                        consolidation: "OWNER_SUBJECT_ONLY" | "CONSOLIDATED" | "STANDALONE";
+                        instrument: string;
+                        /** @enum {string} */
+                        scale: "1" | "1000" | "1000000";
+                        /** @enum {string} */
+                        sign: "AS_RECORDED" | "NEGATE";
+                    };
+                    recipients: string[];
+                }[];
+                release: {
+                    familyId: string;
+                    policyRef: {
+                        owner: string;
+                        id: string;
+                        version: string;
+                        contentDigest: string;
+                    };
+                    termsRef: {
+                        owner: string;
+                        id: string;
+                        version: string;
+                        contentDigest: string;
+                    };
+                    /** @constant */
+                    maxDistinctFunctions: 1;
+                };
+            };
+            limits: {
+                /** Format: date-time */
+                deadlineAt: string;
+                maxAttempts: number;
+                maxCpuSeconds: number;
+                maxMemoryBytes: number;
+                maxRetainedBytes: number;
+            };
+        };
+        "confidential-submit": {
+            /** @constant */
+            schema: "finnor.y4.submit.v1";
+            root: {
+                /** @enum {string} */
+                entityType: "pe_strategy" | "pe_opportunity" | "pe_deal" | "pe_fund" | "pe_vehicle" | "external_organization" | "pe_portfolio_holding";
+                /** Format: uuid */
+                entityId: string;
+            };
+            /** Format: uuid */
+            workId: string;
+            /** Format: uuid */
+            workInputId: string;
+            function: {
+                /** @constant */
+                schema: "finnor.confidential-function.v1";
+                functionRef: {
+                    owner: string;
+                    id: string;
+                    version: string;
+                    contentDigest: string;
+                };
+                workRevisionRef: {
+                    owner: string;
+                    id: string;
+                    version: string;
+                    contentDigest: string;
+                };
+                baselineManifestRef: {
+                    owner: string;
+                    id: string;
+                    version: string;
+                    contentDigest: string;
+                };
+                objectiveRef: {
+                    owner: string;
+                    id: string;
+                    version: string;
+                    contentDigest: string;
+                };
+                mandateRef: {
+                    owner: string;
+                    id: string;
+                    version: string;
+                    contentDigest: string;
+                };
+                jointSemanticsRef: {
+                    owner: string;
+                    id: string;
+                    version: string;
+                    contentDigest: string;
+                };
+                purpose: string;
+                participants: {
+                    id: string;
+                    /** Format: uuid */
+                    institutionId: string;
+                    authorityRef: {
+                        owner: string;
+                        id: string;
+                        version: string;
+                        contentDigest: string;
+                    };
+                }[];
+                inputs: {
+                    key: string;
+                    participantId: string;
+                    semantics: {
+                        entityType: string;
+                        /** Format: uuid */
+                        entityId: string;
+                        /** Format: date-time */
+                        periodStart: string;
+                        /** Format: date-time */
+                        periodEnd: string;
+                        /** @enum {string} */
+                        unit: "currency" | "count" | "ratio" | "multiple" | "rate";
+                        currencyCode: string | null;
+                        /** @enum {string} */
+                        frequency: "annual" | "quarterly" | "monthly" | "instant" | "daily" | "weekly" | "event";
+                        /** @enum {string} */
+                        calendar: "OWNER_RECORDED" | "GREGORIAN";
+                        /** @enum {string} */
+                        consolidation: "OWNER_SUBJECT_ONLY" | "CONSOLIDATED" | "STANDALONE";
+                        instrument: string;
+                        /** @enum {string} */
+                        scale: "1" | "1000" | "1000000";
+                        /** @enum {string} */
+                        sign: "AS_RECORDED" | "NEGATE";
+                    };
+                    lower: string;
+                    upper: string;
+                    decimalPlaces: number;
+                    sourceRef: {
+                        owner: string;
+                        id: string;
+                        version: string;
+                        contentDigest: string;
+                    };
+                    grantRef: {
+                        owner: string;
+                        id: string;
+                        version: string;
+                        contentDigest: string;
+                    };
+                    validationRef: {
+                        owner: string;
+                        id: string;
+                        version: string;
+                        contentDigest: string;
+                    };
+                    primaryEvidenceRef: {
+                        owner: string;
+                        id: string;
+                        version: string;
+                        contentDigest: string;
+                    } | null;
+                    /** @enum {string} */
+                    sourceStatus: "PRIMARY_CONFIRMED" | "OWNER_ASSERTED" | "ESTIMATED";
+                    /** Format: date-time */
+                    freshUntil: string;
+                    /** @constant */
+                    rounding: "EXACT_OR_REJECT";
+                }[];
+                outputs: {
+                    key: string;
+                    expression: {
+                        /** @constant */
+                        kind: "input";
+                        key: string;
+                    } | {
+                        /** @constant */
+                        kind: "literal";
+                        value: string;
+                        /** @enum {string} */
+                        unit: "currency" | "count" | "ratio" | "multiple" | "rate";
+                        currencyCode: string | null;
+                    } | {
+                        /** @enum {string} */
+                        kind: "add" | "subtract" | "multiply" | "ratio" | "min" | "max";
+                        left: unknown;
+                        right: unknown;
+                    } | {
+                        /** @constant */
+                        kind: "if";
+                        condition: {
+                            /** @enum {string} */
+                            comparison: "lt" | "lte" | "eq" | "gte" | "gt";
+                            left: unknown;
+                            right: unknown;
+                        };
+                        whenTrue: unknown;
+                        whenFalse: unknown;
+                    };
+                    semantics: {
+                        entityType: string;
+                        /** Format: uuid */
+                        entityId: string;
+                        /** Format: date-time */
+                        periodStart: string;
+                        /** Format: date-time */
+                        periodEnd: string;
+                        /** @enum {string} */
+                        unit: "currency" | "count" | "ratio" | "multiple" | "rate";
+                        currencyCode: string | null;
+                        /** @enum {string} */
+                        frequency: "annual" | "quarterly" | "monthly" | "instant" | "daily" | "weekly" | "event";
+                        /** @enum {string} */
+                        calendar: "OWNER_RECORDED" | "GREGORIAN";
+                        /** @enum {string} */
+                        consolidation: "OWNER_SUBJECT_ONLY" | "CONSOLIDATED" | "STANDALONE";
+                        instrument: string;
+                        /** @enum {string} */
+                        scale: "1" | "1000" | "1000000";
+                        /** @enum {string} */
+                        sign: "AS_RECORDED" | "NEGATE";
+                    };
+                    recipients: string[];
+                }[];
+                release: {
+                    familyId: string;
+                    policyRef: {
+                        owner: string;
+                        id: string;
+                        version: string;
+                        contentDigest: string;
+                    };
+                    termsRef: {
+                        owner: string;
+                        id: string;
+                        version: string;
+                        contentDigest: string;
+                    };
+                    /** @constant */
+                    maxDistinctFunctions: 1;
+                };
+            };
+            idempotencyKey: string;
+            limits: {
+                /** Format: date-time */
+                deadlineAt: string;
+                maxAttempts: number;
+                maxCpuSeconds: number;
+                maxMemoryBytes: number;
+                maxRetainedBytes: number;
+            };
+        };
+        "confidential-read": {
+            /** Format: uuid */
+            computationId: string;
+        };
+        "confidential-list": {
+            root: {
+                /** @enum {string} */
+                entityType: "pe_strategy" | "pe_opportunity" | "pe_deal" | "pe_fund" | "pe_vehicle" | "external_organization" | "pe_portfolio_holding";
+                /** Format: uuid */
+                entityId: string;
+            };
+            /** Format: uuid */
+            workId: string;
+        };
+        "confidential-consent": {
+            /** Format: uuid */
+            computationId: string;
+            participantId: string;
+            certificateDigest: string;
+            /** Format: date-time */
+            validUntil: string;
+            idempotencyKey: string;
+            /** @constant */
+            scope: "THIS_EXACT_FUNCTION_INPUT_CUT_AND_LISTED_RECIPIENTS_ONLY";
+            /** @constant */
+            retention: "RETAIN_AUDIT_DENY_FUTURE_DERIVATIVES_NO_RETROACTIVE_UNLEARNING";
+        };
+        "confidential-revoke": {
+            /** Format: uuid */
+            computationId: string;
+            reason: string;
+            idempotencyKey: string;
+            participantId: string;
+        };
+        "confidential-prepare": {
+            /** Format: uuid */
+            computationId: string;
+        };
+        "confidential-commit": {
+            /** Format: uuid */
+            computationId: string;
+            participantId: string;
+            idempotencyKey: string;
+            commitment: {
+                participantId: string;
+                sessionId: string;
+                functionDigest: string;
+                inputs: {
+                    key: string;
+                    bindingPrefix: string;
+                    commitment: string;
+                }[];
+                ownerCutDigest: string;
+                /** @constant */
+                qualification: "LOCAL_ENGINEERING_ONLY";
+                /** @constant */
+                sourceTruthProven: false;
+                /** @constant */
+                executionAuthority: false;
+            };
+        };
+        "confidential-import-release": {
+            /** Format: uuid */
+            computationId: string;
+            participantId: string;
+            idempotencyKey: string;
+            releaseNonce: string;
+            outputs: {
+                key: string;
+                mantissa: string;
+                scale: number;
+            }[];
+        };
+        "confidential-cancel": {
+            /** Format: uuid */
+            computationId: string;
+            reason: string;
+            idempotencyKey: string;
+        };
+        "confidential-invalidate": {
+            /** Format: uuid */
+            computationId: string;
+            reason: string;
+            idempotencyKey: string;
+        };
+        "confidential-retry": {
+            /** Format: uuid */
+            computationId: string;
+            reason: string;
+            idempotencyKey: string;
+        };
+        "confidential-reconcile": {
+            /** Format: uuid */
+            computationId: string;
+            reason: string;
+            idempotencyKey: string;
+        };
+        "confidential-underwriting": {
+            /** Format: uuid */
+            investmentCaseId: string;
+            /** Format: uuid */
+            modelVersionId: string;
+            /** Format: date-time */
+            worldAt: string;
+            /** Format: uuid */
+            workId: string;
+            idempotencyKey: string;
+            bindings: {
+                [key: string]: {
+                    /** Format: uuid */
+                    computationId: string;
+                    /** Format: uuid */
+                    releaseId: string;
+                    output: string;
+                };
+            };
+        };
+        "confidential-control-choice": {
+            policyRef: {
+                owner: string;
+                id: string;
+                version: string;
+                contentDigest: string;
+            };
+            decision?: unknown;
+            allocationRef?: {
+                owner: string;
+                id: string;
+                version: string;
+                contentDigest: string;
+            };
+            confidentialGuard: {
+                binding: {
+                    /** Format: uuid */
+                    computationId: string;
+                    /** Format: uuid */
+                    releaseId: string;
+                    output: string;
+                };
+                semantics: {
+                    entityType: string;
+                    /** Format: uuid */
+                    entityId: string;
+                    /** Format: date-time */
+                    periodStart: string;
+                    /** Format: date-time */
+                    periodEnd: string;
+                    /** @enum {string} */
+                    unit: "currency" | "count" | "ratio" | "multiple" | "rate";
+                    currencyCode: string | null;
+                    /** @enum {string} */
+                    frequency: "annual" | "quarterly" | "monthly" | "instant" | "daily" | "weekly" | "event";
+                    /** @enum {string} */
+                    calendar: "OWNER_RECORDED" | "GREGORIAN";
+                    /** @enum {string} */
+                    consolidation: "OWNER_SUBJECT_ONLY" | "CONSOLIDATED" | "STANDALONE";
+                    instrument: string;
+                    /** @enum {string} */
+                    scale: "1" | "1000" | "1000000";
+                    /** @enum {string} */
+                    sign: "AS_RECORDED" | "NEGATE";
+                };
+                minimum: string;
+                maximum: string;
+                /** @constant */
+                qualification: "RECIPIENT_LOCAL_DERIVED_ADMISSIBILITY_NOT_S2_OBSERVATION";
+            };
+        };
+        "confidential-allocation": {
+            input?: unknown;
+            bindings: {
+                scenarioId: string;
+                termIndex: number;
+                binding: {
+                    /** Format: uuid */
+                    computationId: string;
+                    /** Format: uuid */
+                    releaseId: string;
+                    output: string;
+                };
+                semantics: {
+                    entityType: string;
+                    /** Format: uuid */
+                    entityId: string;
+                    /** Format: date-time */
+                    periodStart: string;
+                    /** Format: date-time */
+                    periodEnd: string;
+                    /** @enum {string} */
+                    unit: "currency" | "count" | "ratio" | "multiple" | "rate";
+                    currencyCode: string | null;
+                    /** @enum {string} */
+                    frequency: "annual" | "quarterly" | "monthly" | "instant" | "daily" | "weekly" | "event";
+                    /** @enum {string} */
+                    calendar: "OWNER_RECORDED" | "GREGORIAN";
+                    /** @enum {string} */
+                    consolidation: "OWNER_SUBJECT_ONLY" | "CONSOLIDATED" | "STANDALONE";
+                    instrument: string;
+                    /** @enum {string} */
+                    scale: "1" | "1000" | "1000000";
+                    /** @enum {string} */
+                    sign: "AS_RECORDED" | "NEGATE";
+                };
+            }[];
+        };
+        "confidential-obligation": {
+            policyRef: {
+                owner: string;
+                id: string;
+                version: string;
+                contentDigest: string;
+            };
+            decision?: unknown;
+            allocationRef: {
+                owner: string;
+                id: string;
+                version: string;
+                contentDigest: string;
+            };
+            confidentialGuard: {
+                binding: {
+                    /** Format: uuid */
+                    computationId: string;
+                    /** Format: uuid */
+                    releaseId: string;
+                    output: string;
+                };
+                semantics: {
+                    entityType: string;
+                    /** Format: uuid */
+                    entityId: string;
+                    /** Format: date-time */
+                    periodStart: string;
+                    /** Format: date-time */
+                    periodEnd: string;
+                    /** @enum {string} */
+                    unit: "currency" | "count" | "ratio" | "multiple" | "rate";
+                    currencyCode: string | null;
+                    /** @enum {string} */
+                    frequency: "annual" | "quarterly" | "monthly" | "instant" | "daily" | "weekly" | "event";
+                    /** @enum {string} */
+                    calendar: "OWNER_RECORDED" | "GREGORIAN";
+                    /** @enum {string} */
+                    consolidation: "OWNER_SUBJECT_ONLY" | "CONSOLIDATED" | "STANDALONE";
+                    instrument: string;
+                    /** @enum {string} */
+                    scale: "1" | "1000" | "1000000";
+                    /** @enum {string} */
+                    sign: "AS_RECORDED" | "NEGATE";
+                };
+                minimum: string;
+                maximum: string;
+                /** @constant */
+                qualification: "RECIPIENT_LOCAL_DERIVED_ADMISSIBILITY_NOT_S2_OBSERVATION";
+            };
+            /** Format: uuid */
+            workId: string;
+        };
+        "confidential-s8-propose": {
+            /** Format: uuid */
+            computationId: string;
+            /** Format: uuid */
+            releaseId: string;
+            idempotencyKey: string;
+        };
+        "confidential-s8-current": {
+            /** Format: uuid */
+            computationId: string;
+            /** Format: uuid */
+            releaseId: string;
+            revisionRef: {
+                owner: string;
+                id: string;
+                version: string;
+                contentDigest: string;
+            };
         };
         "interaction-submit": {
             /** @constant */

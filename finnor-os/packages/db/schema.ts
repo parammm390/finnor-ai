@@ -1122,6 +1122,7 @@ export const workQueryExecutions = pgTable(
         "pe_world_state",
         "harness_program_v1",
         "economic_programme_v1",
+        "confidential_economic_computation_v1",
       ],
     }).notNull(),
     request: jsonb("request").notNull().default({}),
