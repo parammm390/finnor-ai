@@ -1,0 +1,20 @@
+▲ [WARNING] Import "resolveEnterpriseAllocationProblem" will always be undefined because there is no matching export in "packages/private-equity/src/enterprise-allocation.ts" [import-is-undefined]
+
+    packages/private-equity/src/r8/owners.ts:46:99:
+      46 │ ...eAllocationProblem?:Resolver}).resolveEnterpriseAllocationProblem;
+         ╵                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+node:internal/fs/promises:1179
+  return await PromisePrototypeThen(
+         ^
+
+Error: ENOENT: no such file or directory, realpath 'node:sqlite'
+    at async realpath (node:internal/fs/promises:1179:10)
+    at async file:///home/factory-user/repos/finnor-z0/finnor-os/scripts/project-z/z0/emit-converged-runtime.mjs:206:16 {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'realpath',
+  path: 'node:sqlite'
+}
+
+Node.js v22.23.4

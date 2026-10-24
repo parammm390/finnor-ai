@@ -1,0 +1,539 @@
+[
+  {
+    "PLpgSQL_function": {
+      "datums": [
+        {
+          "PLpgSQL_var": {
+            "refname": "p_body",
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "jsonb"
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "p_decision",
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "uuid"
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "found",
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "bool"
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "t",
+            "lineno": 2,
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "uuid"
+              }
+            },
+            "default_val": {
+              "PLpgSQL_expr": {
+                "query": "finnor_os.request_tenant_id()",
+                "parseMode": 2
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "u",
+            "lineno": 2,
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "uuid"
+              }
+            },
+            "default_val": {
+              "PLpgSQL_expr": {
+                "query": "nullif(current_setting('app.user_id',true),'')::uuid",
+                "parseMode": 2
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "frame",
+            "lineno": 3,
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "jsonb"
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "cert",
+            "lineno": 3,
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "jsonb"
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "parent",
+            "lineno": 3,
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "jsonb"
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "prior",
+            "lineno": 3,
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "jsonb"
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "co",
+            "lineno": 3,
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "jsonb"
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "original_limit",
+            "lineno": 3,
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "numeric"
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "child_limit",
+            "lineno": 3,
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "numeric"
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "original_used",
+            "lineno": 4,
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "numeric"
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "child_used",
+            "lineno": 4,
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "numeric"
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "recovery",
+            "lineno": 4,
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "bool"
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_row": {
+            "refname": "(unnamed row)",
+            "lineno": 9,
+            "fields": [
+              {
+                "name": "co",
+                "varno": 9
+              }
+            ]
+          }
+        },
+        {
+          "PLpgSQL_row": {
+            "refname": "(unnamed row)",
+            "lineno": 34,
+            "fields": [
+              {
+                "name": "prior",
+                "varno": 8
+              }
+            ]
+          }
+        },
+        {
+          "PLpgSQL_row": {
+            "refname": "(unnamed row)",
+            "lineno": 40,
+            "fields": [
+              {
+                "name": "original_limit",
+                "varno": 10
+              }
+            ]
+          }
+        },
+        {
+          "PLpgSQL_row": {
+            "refname": "(unnamed row)",
+            "lineno": 43,
+            "fields": [
+              {
+                "name": "child_limit",
+                "varno": 11
+              }
+            ]
+          }
+        },
+        {
+          "PLpgSQL_row": {
+            "refname": "(unnamed row)",
+            "lineno": 47,
+            "fields": [
+              {
+                "name": "original_used",
+                "varno": 12
+              },
+              {
+                "name": "child_used",
+                "varno": 13
+              }
+            ]
+          }
+        }
+      ],
+      "action": {
+        "PLpgSQL_stmt_block": {
+          "lineno": 5,
+          "body": [
+            {
+              "PLpgSQL_stmt_assign": {
+                "lineno": 6,
+                "varno": 14,
+                "expr": {
+                  "PLpgSQL_expr": {
+                    "query": "recovery:=coalesce((p_body->>'recovery')::boolean,false)",
+                    "parseMode": 3
+                  }
+                }
+              }
+            },
+            {
+              "PLpgSQL_stmt_assign": {
+                "lineno": 7,
+                "varno": 5,
+                "expr": {
+                  "PLpgSQL_expr": {
+                    "query": "frame:=finnor_os.z0_s5_application_frame(p_body->'allocationRef',p_decision,recovery)",
+                    "parseMode": 3
+                  }
+                }
+              }
+            },
+            {
+              "PLpgSQL_stmt_assign": {
+                "lineno": 8,
+                "varno": 6,
+                "expr": {
+                  "PLpgSQL_expr": {
+                    "query": "cert:=frame->'certificate'",
+                    "parseMode": 3
+                  }
+                }
+              }
+            },
+            {
+              "PLpgSQL_stmt_assign": {
+                "lineno": 8,
+                "varno": 7,
+                "expr": {
+                  "PLpgSQL_expr": {
+                    "query": "parent:=frame->'parent'",
+                    "parseMode": 3
+                  }
+                }
+              }
+            },
+            {
+              "PLpgSQL_stmt_execsql": {
+                "lineno": 9,
+                "sqlstmt": {
+                  "PLpgSQL_expr": {
+                    "query": "SELECT body         FROM finnor_os.s5_consumptions WHERE tenant_id=t AND principal_id=u\n  AND consumption_id=p_body->'consumptionRef'->>'id' AND reservation_id=parent->'ref'->>'id'",
+                    "parseMode": 0
+                  }
+                },
+                "into": true,
+                "target": {
+                  "PLpgSQL_row": {
+                    "refname": "(unnamed row)",
+                    "lineno": 9,
+                    "fields": [
+                      {
+                        "name": "co",
+                        "varno": 9
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            {
+              "PLpgSQL_stmt_if": {
+                "lineno": 11,
+                "cond": {
+                  "PLpgSQL_expr": {
+                    "query": "co IS NULL OR co->'ref' IS DISTINCT FROM p_body->'consumptionRef'\n  OR co->'certificateRef' IS DISTINCT FROM p_body->'allocationRef'\n  OR p_body->'reservationRef' IS DISTINCT FROM parent->'ref'\n  OR p_body->'originalParentRef' IS DISTINCT FROM cert->'originalParentRef'\n  OR p_body->>'tenantId' IS DISTINCT FROM t::text OR p_body->>'principalId' IS DISTINCT FROM u::text\n  OR p_body->>'schema' IS DISTINCT FROM 'finnor.s5.application-resource-charge.v1'\n  OR p_body->'executionAuthorityGranted' IS DISTINCT FROM 'false'::jsonb\n  OR coalesce(p_body->>'phase','') NOT IN('ACQUISITION','CHECKING','COMPOSITION','EXECUTION','RECOVERY','OBSERVATION','MAINTENANCE','HUMAN')\n  OR p_body->>'unit' IS DISTINCT FROM (CASE WHEN p_body->>'phase'='HUMAN' THEN 'seconds' ELSE 'request' END)\n  OR (recovery AND p_body->>'phase'<>'RECOVERY')\n  OR coalesce(p_body->>'units','') !~ '^[1-9][0-9]{0,3}$' OR (p_body->>'units')::integer>2048\n  OR coalesce(p_body->'ref'->>'contentDigest','') !~ '^[a-f0-9]{64}$'\n  OR coalesce(p_body->>'requestDigest','') !~ '^[a-f0-9]{64}$'\n  OR length(coalesce(p_body->>'chargeKey','')) NOT BETWEEN 1 AND 512\n  OR p_body->'ref'->>'id' IS DISTINCT FROM 'application-resource-charge:'||(p_body->'ref'->>'contentDigest')\n  OR p_body->'ref'->>'owner' IS DISTINCT FROM 'S5'\n  OR p_body->'ref'->>'version' IS DISTINCT FROM 'application-operation-v1'",
+                    "parseMode": 2
+                  }
+                },
+                "then_body": [
+                  {
+                    "PLpgSQL_stmt_raise": {
+                      "lineno": 28,
+                      "elog_level": 21,
+                      "message": "Z0 exact original application charge invalid"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "PLpgSQL_stmt_if": {
+                "lineno": 29,
+                "cond": {
+                  "PLpgSQL_expr": {
+                    "query": "recovery AND NOT EXISTS(SELECT 1 FROM finnor_os.application_semantics_requests r\n   JOIN finnor_os.application_semantics_sessions s ON s.tenant_id=r.tenant_id AND s.id=r.session_id\n   WHERE r.tenant_id=t AND r.principal_id=u AND s.allocation_ref=p_body->'allocationRef'\n    AND r.possible_egress AND r.status NOT IN('VERIFIED','DENIED'))",
+                    "parseMode": 2
+                  }
+                },
+                "then_body": [
+                  {
+                    "PLpgSQL_stmt_raise": {
+                      "lineno": 33,
+                      "elog_level": 21,
+                      "message": "Z0 recovery cannot renew forward spending"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "PLpgSQL_stmt_execsql": {
+                "lineno": 34,
+                "sqlstmt": {
+                  "PLpgSQL_expr": {
+                    "query": "SELECT body            FROM finnor_os.s5_governed_resource_charges WHERE tenant_id=t\n  AND reservation_id=parent->'ref'->>'id' AND charge_key=p_body->>'chargeKey'",
+                    "parseMode": 0
+                  }
+                },
+                "into": true,
+                "target": {
+                  "PLpgSQL_row": {
+                    "refname": "(unnamed row)",
+                    "lineno": 34,
+                    "fields": [
+                      {
+                        "name": "prior",
+                        "varno": 8
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            {
+              "PLpgSQL_stmt_if": {
+                "lineno": 36,
+                "cond": {
+                  "PLpgSQL_expr": {
+                    "query": "FOUND",
+                    "parseMode": 2
+                  }
+                },
+                "then_body": [
+                  {
+                    "PLpgSQL_stmt_if": {
+                      "lineno": 37,
+                      "cond": {
+                        "PLpgSQL_expr": {
+                          "query": "prior IS DISTINCT FROM p_body",
+                          "parseMode": 2
+                        }
+                      },
+                      "then_body": [
+                        {
+                          "PLpgSQL_stmt_raise": {
+                            "lineno": 37,
+                            "elog_level": 21,
+                            "message": "Z0 original charge replay conflict"
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "PLpgSQL_stmt_return": {
+                      "lineno": 38
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "PLpgSQL_stmt_execsql": {
+                "lineno": 40,
+                "sqlstmt": {
+                  "PLpgSQL_expr": {
+                    "query": "SELECT sum(q.value::numeric)                     FROM jsonb_array_elements(parent->'envelopes') e\n  CROSS JOIN LATERAL jsonb_array_elements_text(e->'quantities') q(value)\n  WHERE e->>'resourceId'=p_body->>'resourceId' AND e->>'unit'=p_body->>'unit'",
+                    "parseMode": 0
+                  }
+                },
+                "into": true,
+                "target": {
+                  "PLpgSQL_row": {
+                    "refname": "(unnamed row)",
+                    "lineno": 40,
+                    "fields": [
+                      {
+                        "name": "original_limit",
+                        "varno": 10
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            {
+              "PLpgSQL_stmt_execsql": {
+                "lineno": 43,
+                "sqlstmt": {
+                  "PLpgSQL_expr": {
+                    "query": "SELECT sum(q.value::numeric)                  FROM jsonb_array_elements(cert->'check'->'envelopes') e\n  CROSS JOIN LATERAL jsonb_array_elements_text(e->'quantities') q(value)\n  WHERE e->>'resourceId'=p_body->>'resourceId' AND e->>'unit'=p_body->>'unit'",
+                    "parseMode": 0
+                  }
+                },
+                "into": true,
+                "target": {
+                  "PLpgSQL_row": {
+                    "refname": "(unnamed row)",
+                    "lineno": 43,
+                    "fields": [
+                      {
+                        "name": "child_limit",
+                        "varno": 11
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            {
+              "PLpgSQL_stmt_execsql": {
+                "lineno": 46,
+                "sqlstmt": {
+                  "PLpgSQL_expr": {
+                    "query": "SELECT coalesce(sum(units),0),coalesce(sum(units) FILTER(WHERE body->'allocationRef'=p_body->'allocationRef'),0)\n                                FROM finnor_os.s5_governed_resource_charges\n  WHERE tenant_id=t AND reservation_id=parent->'ref'->>'id' AND resource_id=p_body->>'resourceId'",
+                    "parseMode": 0
+                  }
+                },
+                "into": true,
+                "target": {
+                  "PLpgSQL_row": {
+                    "refname": "(unnamed row)",
+                    "lineno": 47,
+                    "fields": [
+                      {
+                        "name": "original_used",
+                        "varno": 12
+                      },
+                      {
+                        "name": "child_used",
+                        "varno": 13
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            {
+              "PLpgSQL_stmt_if": {
+                "lineno": 49,
+                "cond": {
+                  "PLpgSQL_expr": {
+                    "query": "original_limit IS NULL OR child_limit IS NULL OR original_used+(p_body->>'units')::integer>original_limit\n  OR child_used+(p_body->>'units')::integer>child_limit\n  OR p_body->>'limit' IS DISTINCT FROM original_limit::text\n  OR p_body->>'childLimit' IS DISTINCT FROM child_limit::text\n  OR p_body->>'usedAfter' IS DISTINCT FROM (original_used+(p_body->>'units')::integer)::text\n  OR p_body->>'childUsedAfter' IS DISTINCT FROM (child_used+(p_body->>'units')::integer)::text\n  OR (SELECT count(*) FROM finnor_os.s5_governed_resource_charges\n    WHERE tenant_id=t AND reservation_id=parent->'ref'->>'id')>=1420",
+                    "parseMode": 2
+                  }
+                },
+                "then_body": [
+                  {
+                    "PLpgSQL_stmt_raise": {
+                      "lineno": 57,
+                      "elog_level": 21,
+                      "message": "Z0 original resource envelope exhausted"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "PLpgSQL_stmt_execsql": {
+                "lineno": 58,
+                "sqlstmt": {
+                  "PLpgSQL_expr": {
+                    "query": "INSERT INTO finnor_os.s5_governed_resource_charges(tenant_id,principal_id,reservation_id,consumption_id,\n  charge_key,phase,resource_id,unit,units,request_digest,body)\n VALUES(t,u,parent->'ref'->>'id',co->'ref'->>'id',p_body->>'chargeKey',p_body->>'phase',\n  p_body->>'resourceId',p_body->>'unit',(p_body->>'units')::integer,p_body->>'requestDigest',p_body)",
+                    "parseMode": 0
+                  }
+                }
+              }
+            },
+            {
+              "PLpgSQL_stmt_return": {
+                "lineno": 62
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+]

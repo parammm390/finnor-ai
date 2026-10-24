@@ -16,14 +16,20 @@ export async function projectInstitutionApplication(ctx: PeMutationContext, row:
     const accepted = (await c.query<{ ref: ExperimentRef; consumed: boolean }>(`SELECT
       e.body->'detail'->'acceptanceRef' ref,
       EXISTS(SELECT 1 FROM finnor_os.p1_events p
+        JOIN finnor_os.domain_actions d ON d.tenant_id=p.tenant_id AND d.id::text=p.body->>'canonicalActionId'
         WHERE p.tenant_id=e.tenant_id AND p.principal_id=e.principal_id AND p.request_id=$4
           AND p.generation=$5 AND p.kind='P1_ORIGINAL_APPLICATION_MODEL_CONSUMED'
+          AND p.body->>'schema'='finnor.z0.original-owner-model-use.v1'
+          AND p.body->>'actualOwner'='ORIGINAL_NATIVE_P1_ACTION_BRIDGE'
+          AND d.work_id=$6 AND d.initiated_by=e.principal_id
+          AND d.authority_context->'applicationModelUseRef'=p.body->'modelUseRef'
+          AND d.authority_context->>'applicationModelInputDigest'=p.body->>'ownerInputDigest'
           AND p.body->'acceptanceRef'=e.body->'detail'->'acceptanceRef') consumed
       FROM finnor_os.application_semantics_events e
       WHERE e.tenant_id=$1 AND e.principal_id=$2 AND e.session_id=$3
         AND e.kind='S4_INSTITUTION_APPLICATION_MODEL_ACCEPTED'
       ORDER BY e.created_at DESC,e.event_id DESC LIMIT 1`,
-    [ctx.auth.tenantId, principal(ctx), row.id, programme.id, programme.generation])).rows[0];
+    [ctx.auth.tenantId, principal(ctx), row.id, programme.id, programme.generation, programme.work_id])).rows[0];
     return {
       schema: "finnor.z0.institution-application-view.v1" as const,
       originRef: origin.ref, compilerRequestId: origin.body.selector.compilerRequestId,

@@ -1,0 +1,7 @@
+tools/
+installation-*/runtime/
+installation-*/build-home/
+installation-*/browser-assets/
+*.tar
+*.tar.gz
+*.bundle

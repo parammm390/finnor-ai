@@ -1,0 +1,47 @@
+✘ [ERROR] Syntax error "!"
+
+    scripts/m4/api-startup-e2e.mts:2:1:
+      2 │ #!/usr/bin/env -S node --import tsx
+        ╵  ^
+
+✘ [ERROR] Could not resolve "../s7/native-owner-database.mjs"
+
+    scripts/s8/run-effect-reconciliation-e2e.mts:12:42:
+      12 │ ...reateNativeOwnerDatabase } from '../s7/native-owner-database.mjs';
+         ╵                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+✘ [ERROR] Could not resolve "../s7/native-owner-database.mjs"
+
+    scripts/s8/run-native-campaign-e2e.mts:9:42:
+      9 │ ...createNativeOwnerDatabase } from '../s7/native-owner-database.mjs';
+        ╵                                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+▲ [WARNING] The glob pattern import("../../packages/db/migrations-bundle.ts?p5=*") did not match any files [empty-glob]
+
+    scripts/release/run-pe-p5-actions-ic-certification.ts:444:30:
+      444 │ ...it import(`../../packages/db/migrations-bundle.ts?p5=${Date.no...
+          ╵              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-01/runtime/finnor-os/node_modules/esbuild/lib/main.js:1467
+  let error = new Error(text);
+              ^
+
+Error: Build failed with 3 errors:
+scripts/m4/api-startup-e2e.mts:2:1: ERROR: Syntax error "!"
+scripts/s8/run-effect-reconciliation-e2e.mts:12:42: ERROR: Could not resolve "../s7/native-owner-database.mjs"
+scripts/s8/run-native-campaign-e2e.mts:9:42: ERROR: Could not resolve "../s7/native-owner-database.mjs"
+    at failureErrorWithLog (/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-01/runtime/finnor-os/node_modules/esbuild/lib/main.js:1467:15)
+    at /home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-01/runtime/finnor-os/node_modules/esbuild/lib/main.js:926:25
+    at runOnEndCallbacks (/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-01/runtime/finnor-os/node_modules/esbuild/lib/main.js:1307:45)
+    at buildResponseToResult (/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-01/runtime/finnor-os/node_modules/esbuild/lib/main.js:924:7)
+    at /home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-01/runtime/finnor-os/node_modules/esbuild/lib/main.js:951:16
+    at responseCallbacks.<computed> (/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-01/runtime/finnor-os/node_modules/esbuild/lib/main.js:603:9)
+    at handleIncomingPacket (/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-01/runtime/finnor-os/node_modules/esbuild/lib/main.js:658:12)
+    at Socket.readFromStdout (/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-01/runtime/finnor-os/node_modules/esbuild/lib/main.js:581:7)
+    at Socket.emit (node:events:519:28)
+    at addChunk (node:internal/streams/readable:561:12) {
+  errors: [Getter/Setter],
+  warnings: [Getter/Setter]
+}
+
+Node.js v22.23.4

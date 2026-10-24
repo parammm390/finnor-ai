@@ -1,0 +1,1938 @@
+diff --git a/finnor-os/packages/private-equity/src/application-semantics/store.ts b/finnor-os/packages/private-equity/src/application-semantics/store.ts
+--- a/finnor-os/packages/private-equity/src/application-semantics/store.ts
++++ b/finnor-os/packages/private-equity/src/application-semantics/store.ts
+@@ -1,261 +1,262 @@
+-/** Native scoped artifacts and run projections. S5/S6, not this projection,
+- * decide occupation, possible effects and independently observed settlement. */
+-import { readFile } from "node:fs/promises";
+-import { currentInstitutionApplicationSession } from "../../../orchestration/src/project-z/z0-convergence/institution-origin";
+-import { resolve } from "node:path";
+-import type { PoolClient } from "pg";
+-import { NATIVE_APPLICATION_PROFILE_AUTHORITY_SQL } from "@finnor/db";
+-import type {
+-  ApplicationActionModel, ApplicationModelCheck, ExperimentRef, Role,
+-} from "@finnor/shared-types";
+-import { resolveApplicationOperationProfile } from "@finnor/security";
+-import type { PeMutationContext, PeWorldRootRef } from "../types";
+-import { authorize, principal, schemaIdentity, tx, unavailable } from "../evidence-execution/store";
+-import { enqueueOwnerDeliveryInTransaction } from "../../../governed-execution/src/owner-delivery-store";
+-import type { AuthorizedApplicationProfile, OriginalApplicationParent } from "./ports";
+-import type { ApplicationAcquireRequest, ApplicationExecuteRequest } from "./native-contracts";
+-import { applicationRuntimeIdentity, parseApplicationCheck, parseApplicationModel, sameX2Ref, x2ByteDigest, x2Digest, x2Fault, x2Ref } from "./contracts";
+-
+-export interface ApplicationSessionRow {
+-  id: string; tenant_id: string; principal_id: string; work_id: string; root: PeWorldRootRef;
+-  work_input_id: string; work_input_digest: string; parent_id: string;
+-  original_parent_ref: ExperimentRef; parent: OriginalApplicationParent; profile_ids: string[];
+-  request: ApplicationAcquireRequest | ApplicationExecuteRequest; request_digest: string;
+-  idempotency_key: string; rights_revision: number | string;
+-  allocation_ref: ExperimentRef; reservation_ref: ExperimentRef; root_consumption_ref: ExperimentRef;
+-  status: string; reason: string | null; generation: number;
+-  model_ref: ExperimentRef | null; check_ref: ExperimentRef | null; composition_ref: ExperimentRef | null;
+-  claim_token: string | null; claim_fence: string | number | null;
+-  deadline_at: Date; cancel_requested_at: Date | null; started_at: Date | null;
+-  finished_at: Date | null; created_at: Date; updated_at: Date;
+-}
+-export interface NativeApplicationProfile {
+-  profile: AuthorizedApplicationProfile;
+-  authProfileRef: string;
+-  applicationAccountId: string;
+-  allowedEntities: string[];
+-  bindingDigest: string;
+-  privateProfileBinding: Record<string, unknown>;
+-  grantBody: Record<string, unknown>;
+-}
+-export const APPLICATION_SOURCE_FILES = [
+-  ...["index", "semantics", "original-work-observation", "institution-origin", "institution-allocation",
+-    "institution-consumer", "projection"].map(name => `finnor-os/packages/orchestration/src/project-z/z0-convergence/${name}.ts`),
+-  "finnor-os/packages/orchestration/src/project-z/z0-convergence/s5-owner-adapter.sql",
+-  "finnor-os/packages/db/migration-head.ts",
+-  "finnor-os/packages/db/migrations/postz_z0_institution_application_bridge.sql",
+-  "finnor-os/packages/shared-types/src/application-semantics.ts",
+-  ...["contracts", "native-contracts", "ports", "envelope", "learner", "checker", "composition",
+-    "source", "schema-pattern", "observation", "store", "allocation", "obligations", "runtime", "worker", "api", "validity", "fresh-authority"]
+-    .map((name) => `finnor-os/packages/private-equity/src/application-semantics/${name}.ts`),
+-  "finnor-os/packages/computer/src/application-provider.ts",
+-  "finnor-os/packages/computer/src/application-passive-document.ts",
+-  "finnor-os/packages/computer/src/broker.ts",
+-  "finnor-os/packages/governed-execution/src/adapter-contract.ts",
+-  "finnor-os/packages/security/src/identity-access.ts",
+-  "finnor-os/packages/security/src/tenant-credentials.ts",
+-  "finnor-os/packages/private-equity/src/allocation-store.ts",
+-  "finnor-os/packages/private-equity/src/enterprise-control.ts",
+-  "finnor-os/packages/private-equity/src/enterprise-allocation.ts",
+-  "finnor-os/packages/private-equity/src/enterprise-obligations.ts",
+-  "finnor-os/packages/private-equity/src/program-synthesis/owners.ts",
+-  "finnor-os/packages/private-equity/src/program-synthesis/contracts.ts",
+-  "finnor-os/packages/private-equity/src/live-recompilation/contracts.ts",
+-  "finnor-os/packages/capability-evolution/src/application-semantics-port.ts",
+-  "finnor-os/packages/capability-evolution/src/application-semantics-consumer.ts",
+-  "finnor-os/packages/capability-evolution/src/lifecycle.ts",
+-  "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
+-  "finnor-os/apps/worker/src/index.ts", "finnor-os/apps/worker/src/queue.ts",
+-  "finnor-os/packages/db/compute-contract.ts",
+-  "finnor-os/packages/db/governed-egress.ts",
+-  "finnor-os/packages/orchestration/src/compiler.ts",
+-  "finnor-os/packages/governed-execution/src/owner-delivery-store.ts",
+-  "finnor-os/packages/governed-execution/src/owner-transport.ts",
+-  "finnor-os/packages/private-equity/src/enterprise-beliefs.ts",
+-  "finnor-os/packages/db/migrations/0191_frontier5_x2_application_semantics.sql",
+-  "finnor-os/packages/db/migrations/0192_frontier5_x2_request_custody.sql",
+-  "finnor-os/packages/db/migrations/0193_frontier5_x2_authority_custody.sql",
+-  "finnor-os/packages/db/migrate.ts",
+-  "finnor-os/packages/db/migrations/0194_x_phase_charge_phase_union.sql",
+-  "package-lock.json", "finnor-os/package-lock.json",
+-] as const;
+-const sourceRoot = () => process.env.FINNOR_X2_SOURCE_ROOT
+-  ? resolve(process.env.FINNOR_X2_SOURCE_ROOT) : resolve(import.meta.dirname, "../../../../..");
+-export async function applicationCodeIdentity() {
+-  const pins = await Promise.all(APPLICATION_SOURCE_FILES.map(async (path) =>
+-    ({ path, sha256: x2ByteDigest(await readFile(resolve(sourceRoot(), path))) })));
+-  const lockDigest = x2Digest(pins.filter((pin) => pin.path.endsWith("package-lock.json")));
+-  const runtime = applicationRuntimeIdentity();
+-  return { pins, lockDigest, runtime, digest: x2Digest({ pins, runtime }), runtimeDigest: x2Digest(runtime) };
+-}
+-let loadedCut: ReturnType<typeof applicationCodeIdentity> | null = null;
+-export async function pinnedApplicationCode() {
+-  loadedCut ??= applicationCodeIdentity();
+-  const loaded = await loadedCut;
+-  if (loaded.digest !== (await applicationCodeIdentity()).digest) x2Fault("X2_LOADED_SOURCE_CHANGED");
+-  return loaded;
+-}
+-export async function applicationSession(ctx: PeMutationContext, id: string, client?: PoolClient, lock = false) {
+-  const read = async (c: PoolClient) => {
+-    const row = (await c.query<ApplicationSessionRow>("SELECT * FROM finnor_os.application_semantics_sessions WHERE tenant_id=$1 AND principal_id=$2 AND id=$3"
+-      + (lock ? " FOR UPDATE" : ""), [ctx.auth.tenantId, principal(ctx), id])).rows[0];
+-    if (!row) throw unavailable();
+-    if (x2Digest(row.request) !== row.request_digest || !sameX2Ref(row.original_parent_ref, row.parent.originalParentRef)
+-      || row.parent.deadlineAt !== row.deadline_at.toISOString()) x2Fault("X2_CANONICAL_ORIGINAL_SESSION_INTEGRITY");
+-    return row;
+-  };
+-  return client ? read(client) : tx(ctx, read, true);
+-}
+-export async function applicationArtifact<T>(ctx: PeMutationContext, ref: ExperimentRef, client?: PoolClient): Promise<T> {
+-  const read = async (c: PoolClient) => {
+-    const row = (await c.query<{ body: T; semantic_owner: string; version: string; content_digest: string }>(
+-      "SELECT body,semantic_owner,version,content_digest FROM finnor_os.application_semantics_artifacts WHERE tenant_id=$1 AND principal_id=$2 AND artifact_id=$3",
+-      [ctx.auth.tenantId, principal(ctx), ref.id])).rows[0];
+-    if (!row || row.semantic_owner !== ref.owner || row.version !== ref.version || row.content_digest !== ref.contentDigest
+-      || x2Digest(row.body) !== ref.contentDigest) x2Fault("X2_CANONICAL_ARTIFACT_INTEGRITY");
+-    return row.body;
+-  };
+-  return client ? read(client) : tx(ctx, read, true);
+-}
+-export async function retainApplicationArtifact(ctx: PeMutationContext, ref: ExperimentRef, body: unknown,
+-  privateBody = false, client?: PoolClient, rightsRefs: readonly string[] = []): Promise<void> {
+-  if (x2Digest(body) !== ref.contentDigest || Buffer.byteLength(JSON.stringify(body)) > 2 * 1024 * 1024) {
+-    x2Fault("X2_OWNER_ARTIFACT_PREIMAGE");
+-  }
+-  const write = async (c: PoolClient) => {
+-    const prior = (await c.query<{ body: unknown; private: boolean }>(
+-      "SELECT body,private FROM finnor_os.application_semantics_artifacts WHERE tenant_id=$1 AND principal_id=$2 AND artifact_id=$3",
+-      [ctx.auth.tenantId, principal(ctx), ref.id])).rows[0];
+-    if (prior && (x2Digest(prior.body) !== ref.contentDigest || prior.private !== privateBody)) x2Fault("X2_OWNER_ARTIFACT_CONFLICT");
+-    if (!prior) await c.query(
+-      "INSERT INTO finnor_os.application_semantics_artifacts(tenant_id,principal_id,artifact_id,semantic_owner,version,content_digest,private,body) VALUES($1,$2,$3,$4,$5,$6,$7,$8::jsonb)",
+-      [ctx.auth.tenantId, principal(ctx), ref.id, ref.owner, ref.version, ref.contentDigest, privateBody, JSON.stringify(body)]);
+-    if (!privateBody && rightsRefs.length) await enqueueOwnerDeliveryInTransaction(c, {
+-      semanticOwner: ref.owner, tenantId: ctx.auth.tenantId, principalId: principal(ctx),
+-    }, { kind: "REFERENCE", identity: ref.id, payload: { reference: { ...ref, content: body }, rightsRefs } });
+-  };
+-  if (client) await write(client); else await tx(ctx, write);
+-}
+-export async function applicationEvent(ctx: PeMutationContext, session: ApplicationSessionRow, kind: string,
+-  detail: unknown, client?: PoolClient): Promise<ExperimentRef> {
+-  const body = { schema: "finnor.x2.native-event.v1", tenantId: session.tenant_id, principalId: session.principal_id,
+-    sessionId: session.id, originalParentRef: session.original_parent_ref, generation: session.generation,
+-    kind, detail, observedAt: new Date().toISOString(), protectedReceipt: null };
+-  const ref = x2Ref("S6", "application-native-event", body);
+-  const write = async (c: PoolClient) => {
+-    await retainApplicationArtifact(ctx, ref, body, false, c, [session.parent.rightsRevision]);
+-    await c.query("INSERT INTO finnor_os.application_semantics_events(tenant_id,principal_id,session_id,event_id,kind,body) VALUES($1,$2,$3,$4,$5,$6::jsonb) ON CONFLICT DO NOTHING",
+-      [session.tenant_id, session.principal_id, session.id, ref.id, kind, JSON.stringify(body)]);
+-  };
+-  if (client) await write(client); else await tx(ctx, write);
+-  return ref;
+-}
+-export async function currentApplicationWork(ctx: PeMutationContext, row: ApplicationSessionRow, client?: PoolClient,
+-  recovery = false): Promise<void> {
+-  if (ctx.auth.role !== "owner" || principal(ctx) !== ctx.auth.userId) throw unavailable();
+-  const rights = await authorize(ctx, row.root, [{ type: "work", id: row.work_id }]);
+-  if (!Number.isSafeInteger(Number(row.rights_revision)) || rights.revision !== Number(row.rights_revision)) x2Fault("X2_CURRENT_S1_RIGHTS_CHANGED");
+-  const read = async (c: PoolClient) => {
+-    await currentInstitutionApplicationSession(ctx, row, c, recovery);
+-    const actor = await c.query("SELECT id FROM finnor_os.users WHERE tenant_id=$1 AND id=$2 AND status='active' AND role='owner' FOR SHARE",
+-      [ctx.auth.tenantId, principal(ctx)]);
+-    if (actor.rowCount !== 1) x2Fault("X2_CURRENT_ACTOR_OR_WORK_INPUT_CHANGED");
+-    // Intake inserts its new input before locking Work. Read inputs only after
+-    // this lock so a writer that committed while we waited cannot be missed.
+-    const work = (await c.query<{ status: string }>(
+-      "SELECT status FROM finnor_os.works WHERE tenant_id=$1 AND id=$2 FOR SHARE",
+-      [ctx.auth.tenantId, row.work_id])).rows[0];
+-    const input = (await c.query<{ id: string; body: unknown }>(
+-      "SELECT id::text,to_jsonb(w) body FROM finnor_os.work_inputs w WHERE tenant_id=$1 AND work_id=$2 ORDER BY created_at DESC,id DESC LIMIT 1",
+-      [ctx.auth.tenantId, row.work_id])).rows[0];
+-    if (input?.id !== row.work_input_id || x2Digest(input.body) !== row.work_input_digest) x2Fault("X2_CURRENT_ACTOR_OR_WORK_INPUT_CHANGED");
+-    if (!work || !recovery && ["cancelled", "failed"].includes(work.status)) x2Fault("X2_CURRENT_WORK_CANCELLED_OR_FAILED");
+-    if (!recovery && (row.cancel_requested_at || ["CANCELLED", "STALE", "BLOCKED"].includes(row.status)
+-      || row.deadline_at.getTime() <= Date.now())) x2Fault("X2_ORIGINAL_CANCELLED_STALE_OR_EXPIRED");
+-  };
+-  if (client) await read(client); else await tx(ctx, read);
+-  if (!recovery) {
+-    const code = await pinnedApplicationCode();
+-    if (row.parent.runtimeDigest !== code.runtimeDigest || row.parent.dependencyLockDigest !== code.lockDigest
+-      || x2Digest(row.parent.dependencyPins) !== x2Digest(code.pins)) x2Fault("X2_CURRENT_RUNTIME_OR_SOURCE_CHANGED");
+-    if (row.parent.schemaDigest !== await schemaIdentity(ctx)) x2Fault("X2_CURRENT_SCHEMA_CHANGED");
+-    if (row.parent_id !== row.id) {
+-      const parent = await applicationSession(ctx, row.parent_id, client);
+-      if (!sameX2Ref(parent.original_parent_ref, row.original_parent_ref)
+-        || !sameX2Ref(parent.allocation_ref, row.allocation_ref)) x2Fault("X2_CHILD_ORIGINAL_PARENT_ANCESTRY");
+-      await currentApplicationWork(ctx, parent, client);
+-    }
+-  }
+-}
+-export async function nativeApplicationProfile(ctx: PeMutationContext, id: string): Promise<NativeApplicationProfile> {
+-  const selected = await tx(ctx, async (c) => (await c.query<{
+-    auth_profile_ref: string; application: string; connection_revision: number; updated_at: Date;
+-    private_binding: Record<string, unknown>;
+-  }>(`SELECT p.auth_profile_ref,a.application,p.connection_revision,p.updated_at,${NATIVE_APPLICATION_PROFILE_AUTHORITY_SQL} private_binding FROM finnor_os.auth_profiles p JOIN finnor_os.application_accounts a ON a.tenant_id=p.tenant_id AND a.id=p.application_account_id WHERE p.tenant_id=$1 AND p.id=$2`,
+-  [ctx.auth.tenantId, id])).rows[0], true);
+-  if (!selected) throw unavailable();
+-  const access = await resolveApplicationOperationProfile(ctx.auth.tenantId, principal(ctx), selected.application, selected.auth_profile_ref);
+-  const config = access.restrictions.applicationSemantics;
+-  if (!config || typeof config !== "object" || Array.isArray(config)) x2Fault("X2_EXACT_AUTH_PROFILE_DOMAIN_REQUIRED");
+-  const data = config as Record<string, unknown>;
+-  const string = (key: string, optional = false) => {
+-    if (optional && data[key] === null) return null;
+-    if (typeof data[key] !== "string" || !(data[key] as string).length || (data[key] as string).length > 2048) x2Fault("X2_PROFILE_CONTRACT_INVALID");
+-    return data[key] as string;
+-  };
+-  const strings = (key: string, maximum: number, minimum = 1) => {
+-    const value = data[key];
+-    if (!Array.isArray(value) || value.length < minimum || value.length > maximum
+-      || value.some((item) => typeof item !== "string" || !item.length || item.length > 1024)) x2Fault("X2_PROFILE_CONTRACT_INVALID");
+-    return value as string[];
+-  };
+-  if (data.sourceContract !== "BOUNDED_CONDITIONAL_APPLICATION_V1" || data.protectionDomain !== "DISPOSABLE_TEST_AUTHORITY"
+-    || process.env.FINNOR_ENVIRONMENT !== "staging" || process.env.FINNOR_X2_PROFILE !== "ordinary_disposable") x2Fault("X2_PROTECTED_APPLICATION_DOMAIN_UNADMITTED", 403);
+-  const origin = string("origin")!, url = new URL(origin);
+-  if (url.origin !== origin || url.username || url.password || url.protocol !== "http:"
+-    || !["127.0.0.1", "localhost", "[::1]"].includes(url.hostname)) x2Fault("X2_DISPOSABLE_ORIGIN_REQUIRED", 403);
+-  const validUntil = string("validUntil")!;
+-  if (!Number.isFinite(Date.parse(validUntil)) || Date.parse(validUntil) <= Date.now()) x2Fault("X2_CURRENT_PROFILE_EXPIRED", 403);
+-  const account = string("account")!;
+-  if (access.providerAccountRef !== account) x2Fault("X2_PROVIDER_ACCOUNT_BINDING");
+-  const grant = { profileId: id, tenantId: ctx.auth.tenantId, principalId: principal(ctx),
+-    accountId: access.applicationAccountId, principalRef: access.principalRef,
+-    revision: selected.connection_revision, restrictions: access.restrictions, updatedAt: selected.updated_at.toISOString() };
+-  const profile: AuthorizedApplicationProfile = {
+-    id, tenantId: ctx.auth.tenantId, principalId: principal(ctx), application: string("application")!,
+-    account, actingPrincipal: string("actingPrincipal")!, role: string("role")!,
+-    grantRef: x2Ref("AUTHORITY", "application-profile-grant", grant), origin,
+-    entrypoint: string("entrypoint")!, documentationPaths: strings("documentationPaths", 8, 0),
+-    contextPath: string("contextPath", true), recordPathTemplate: string("recordPathTemplate")!,
+-    requestPathTemplate: string("requestPathTemplate", true), allowedTargets: strings("allowedTargets", 16),
+-    validUntil, credentials: { headers: { ...access.applicationHeaders } },
+-    sourceContract: "BOUNDED_CONDITIONAL_APPLICATION_V1", protectionDomain: "DISPOSABLE_TEST_AUTHORITY",
+-    ...(data.discoverySurface === "API" || data.discoverySurface === "UI" || data.discoverySurface === "HYBRID"
+-      ? { discoverySurface: data.discoverySurface } : {}),
+-  };
+-  return { profile, authProfileRef: access.authProfileRef, applicationAccountId: access.applicationAccountId,
+-    allowedEntities: strings("allowedEntities", 64), grantBody: grant, privateProfileBinding: selected.private_binding,
+-    bindingDigest: x2Digest({ grant, privateProfileBinding: selected.private_binding, privateHeaderDigest: x2Digest(access.applicationHeaders) }) };
+-}
+-export function assertProfileTarget(profile: NativeApplicationProfile, target: { application: string; account: string; entity: string; id: string }) {
+-  if (target.application !== profile.profile.application || target.account !== profile.profile.account
+-    || !profile.profile.allowedTargets.includes(target.id) || !profile.allowedEntities.includes(target.entity)) x2Fault("X2_EXACT_AUTHORIZED_TARGET_REQUIRED", 403);
+-}
+-export async function currentApplicationModel(ctx: PeMutationContext, row: ApplicationSessionRow): Promise<{ model: ApplicationActionModel; check: ApplicationModelCheck }> {
+-  if (!row.model_ref || !row.check_ref) x2Fault("X2_NATIVE_CHECKED_MODEL_REQUIRED");
+-  const body = await applicationArtifact<Omit<ApplicationActionModel, "ref">>(ctx, row.model_ref);
+-  const checkBody = await applicationArtifact<Omit<ApplicationModelCheck, "ref">>(ctx, row.check_ref);
+-  return { model: parseApplicationModel({ ...body, ref: row.model_ref }), check: parseApplicationCheck({ ...checkBody, ref: row.check_ref }) };
+-}
+-export async function enqueueApplicationSession(ctx: PeMutationContext, row: ApplicationSessionRow, stage: string, client: PoolClient) {
+-  await client.query("INSERT INTO finnor_os.jobs(tenant_id,type,payload,idempotency_key,lane,protocol_version,retry_safety,max_attempts) VALUES($1,'run_application_semantics_v1',$2::jsonb,$3,'interactive',1,'reconcilable',5) ON CONFLICT(idempotency_key) DO NOTHING",
+-    [ctx.auth.tenantId, JSON.stringify({ tenantId: ctx.auth.tenantId, principalId: principal(ctx), sessionId: row.id, generation: row.generation }),
+-      `x2:${row.id}:${row.generation}:${stage}`]);
+-}
+-export async function canonicalApplicationActor(tenantId: string, principalId: string): Promise<PeMutationContext> {
+-  const provisional: PeMutationContext = { auth: { tenantId, userId: principalId, employeeId: principalId, role: "owner" } };
+-  const role = await tx(provisional, async (c) => (await c.query<{ role: Role }>(
+-    "SELECT role FROM finnor_os.users WHERE tenant_id=$1 AND id=$2 AND status='active'", [tenantId, principalId])).rows[0]?.role, true);
+-  if (role !== "owner") throw unavailable();
+-  return { auth: { tenantId, userId: principalId, employeeId: principalId, role } };
+-}
++/** Native scoped artifacts and run projections. S5/S6, not this projection,
++ * decide occupation, possible effects and independently observed settlement. */
++import { readFile } from "node:fs/promises";
++import { currentInstitutionApplicationSession } from "../../../orchestration/src/project-z/z0-convergence/institution-origin";
++import { resolve } from "node:path";
++import type { PoolClient } from "pg";
++import type { JobExecutionContext } from "../../../../apps/worker/src/queue";
++import { NATIVE_APPLICATION_PROFILE_AUTHORITY_SQL } from "@finnor/db";
++import type {
++  ApplicationActionModel, ApplicationModelCheck, ExperimentRef, Role,
++} from "@finnor/shared-types";
++import { resolveApplicationOperationProfile } from "@finnor/security";
++import type { PeMutationContext, PeWorldRootRef } from "../types";
++import { authorize, principal, schemaIdentity, tx, unavailable } from "../evidence-execution/store";
++import { enqueueOwnerDeliveryInTransaction } from "../../../governed-execution/src/owner-delivery-store";
++import type { AuthorizedApplicationProfile, OriginalApplicationParent } from "./ports";
++import type { ApplicationAcquireRequest, ApplicationExecuteRequest } from "./native-contracts";
++import { applicationRuntimeIdentity, parseApplicationCheck, parseApplicationModel, sameX2Ref, x2ByteDigest, x2Digest, x2Fault, x2Ref } from "./contracts";
++
++export interface ApplicationSessionRow {
++  id: string; tenant_id: string; principal_id: string; work_id: string; root: PeWorldRootRef;
++  work_input_id: string; work_input_digest: string; parent_id: string;
++  original_parent_ref: ExperimentRef; parent: OriginalApplicationParent; profile_ids: string[];
++  request: ApplicationAcquireRequest | ApplicationExecuteRequest; request_digest: string;
++  idempotency_key: string; rights_revision: number | string;
++  allocation_ref: ExperimentRef; reservation_ref: ExperimentRef; root_consumption_ref: ExperimentRef;
++  status: string; reason: string | null; generation: number;
++  model_ref: ExperimentRef | null; check_ref: ExperimentRef | null; composition_ref: ExperimentRef | null;
++  claim_token: string | null; claim_fence: string | number | null;
++  deadline_at: Date; cancel_requested_at: Date | null; started_at: Date | null;
++  finished_at: Date | null; created_at: Date; updated_at: Date;
++}
++export interface NativeApplicationProfile {
++  profile: AuthorizedApplicationProfile;
++  authProfileRef: string;
++  applicationAccountId: string;
++  allowedEntities: string[];
++  bindingDigest: string;
++  privateProfileBinding: Record<string, unknown>;
++  grantBody: Record<string, unknown>;
++}
++export const APPLICATION_SOURCE_FILES = [
++  ...["index", "semantics", "original-work-observation", "institution-origin", "institution-allocation",
++    "institution-consumer", "projection"].map(name => `finnor-os/packages/orchestration/src/project-z/z0-convergence/${name}.ts`),
++  "finnor-os/packages/orchestration/src/project-z/z0-convergence/s5-owner-adapter.sql",
++  "finnor-os/packages/db/migration-head.ts",
++  "finnor-os/packages/db/migrations/postz_z0_institution_application_bridge.sql",
++  "finnor-os/packages/shared-types/src/application-semantics.ts",
++  ...["contracts", "native-contracts", "ports", "envelope", "learner", "checker", "composition",
++    "source", "schema-pattern", "observation", "store", "allocation", "obligations", "runtime", "worker", "api", "validity", "fresh-authority"]
++    .map((name) => `finnor-os/packages/private-equity/src/application-semantics/${name}.ts`),
++  "finnor-os/packages/computer/src/application-provider.ts",
++  "finnor-os/packages/computer/src/application-passive-document.ts",
++  "finnor-os/packages/computer/src/broker.ts",
++  "finnor-os/packages/governed-execution/src/adapter-contract.ts",
++  "finnor-os/packages/security/src/identity-access.ts",
++  "finnor-os/packages/security/src/tenant-credentials.ts",
++  "finnor-os/packages/private-equity/src/allocation-store.ts",
++  "finnor-os/packages/private-equity/src/enterprise-control.ts",
++  "finnor-os/packages/private-equity/src/enterprise-allocation.ts",
++  "finnor-os/packages/private-equity/src/enterprise-obligations.ts",
++  "finnor-os/packages/private-equity/src/program-synthesis/owners.ts",
++  "finnor-os/packages/private-equity/src/program-synthesis/contracts.ts",
++  "finnor-os/packages/private-equity/src/live-recompilation/contracts.ts",
++  "finnor-os/packages/capability-evolution/src/application-semantics-port.ts",
++  "finnor-os/packages/capability-evolution/src/application-semantics-consumer.ts",
++  "finnor-os/packages/capability-evolution/src/lifecycle.ts",
++  "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
++  "finnor-os/apps/worker/src/index.ts", "finnor-os/apps/worker/src/queue.ts",
++  "finnor-os/packages/db/compute-contract.ts",
++  "finnor-os/packages/db/governed-egress.ts",
++  "finnor-os/packages/orchestration/src/compiler.ts",
++  "finnor-os/packages/governed-execution/src/owner-delivery-store.ts",
++  "finnor-os/packages/governed-execution/src/owner-transport.ts",
++  "finnor-os/packages/private-equity/src/enterprise-beliefs.ts",
++  "finnor-os/packages/db/migrations/0191_frontier5_x2_application_semantics.sql",
++  "finnor-os/packages/db/migrations/0192_frontier5_x2_request_custody.sql",
++  "finnor-os/packages/db/migrations/0193_frontier5_x2_authority_custody.sql",
++  "finnor-os/packages/db/migrate.ts",
++  "finnor-os/packages/db/migrations/0194_x_phase_charge_phase_union.sql",
++  "package-lock.json", "finnor-os/package-lock.json",
++] as const;
++const sourceRoot = () => process.env.FINNOR_X2_SOURCE_ROOT
++  ? resolve(process.env.FINNOR_X2_SOURCE_ROOT) : resolve(import.meta.dirname, "../../../../..");
++export async function applicationCodeIdentity() {
++  const pins = await Promise.all(APPLICATION_SOURCE_FILES.map(async (path) =>
++    ({ path, sha256: x2ByteDigest(await readFile(resolve(sourceRoot(), path))) })));
++  const lockDigest = x2Digest(pins.filter((pin) => pin.path.endsWith("package-lock.json")));
++  const runtime = applicationRuntimeIdentity();
++  return { pins, lockDigest, runtime, digest: x2Digest({ pins, runtime }), runtimeDigest: x2Digest(runtime) };
++}
++let loadedCut: ReturnType<typeof applicationCodeIdentity> | null = null;
++export async function pinnedApplicationCode() {
++  loadedCut ??= applicationCodeIdentity();
++  const loaded = await loadedCut;
++  if (loaded.digest !== (await applicationCodeIdentity()).digest) x2Fault("X2_LOADED_SOURCE_CHANGED");
++  return loaded;
++}
++export async function applicationSession(ctx: PeMutationContext, id: string, client?: PoolClient, lock = false) {
++  const read = async (c: PoolClient) => {
++    const row = (await c.query<ApplicationSessionRow>("SELECT * FROM finnor_os.application_semantics_sessions WHERE tenant_id=$1 AND principal_id=$2 AND id=$3"
++      + (lock ? " FOR UPDATE" : ""), [ctx.auth.tenantId, principal(ctx), id])).rows[0];
++    if (!row) throw unavailable();
++    if (x2Digest(row.request) !== row.request_digest || !sameX2Ref(row.original_parent_ref, row.parent.originalParentRef)
++      || row.parent.deadlineAt !== row.deadline_at.toISOString()) x2Fault("X2_CANONICAL_ORIGINAL_SESSION_INTEGRITY");
++    return row;
++  };
++  return client ? read(client) : tx(ctx, read, true);
++}
++export async function applicationArtifact<T>(ctx: PeMutationContext, ref: ExperimentRef, client?: PoolClient): Promise<T> {
++  const read = async (c: PoolClient) => {
++    const row = (await c.query<{ body: T; semantic_owner: string; version: string; content_digest: string }>(
++      "SELECT body,semantic_owner,version,content_digest FROM finnor_os.application_semantics_artifacts WHERE tenant_id=$1 AND principal_id=$2 AND artifact_id=$3",
++      [ctx.auth.tenantId, principal(ctx), ref.id])).rows[0];
++    if (!row || row.semantic_owner !== ref.owner || row.version !== ref.version || row.content_digest !== ref.contentDigest
++      || x2Digest(row.body) !== ref.contentDigest) x2Fault("X2_CANONICAL_ARTIFACT_INTEGRITY");
++    return row.body;
++  };
++  return client ? read(client) : tx(ctx, read, true);
++}
++export async function retainApplicationArtifact(ctx: PeMutationContext, ref: ExperimentRef, body: unknown,
++  privateBody = false, client?: PoolClient, rightsRefs: readonly string[] = []): Promise<void> {
++  if (x2Digest(body) !== ref.contentDigest || Buffer.byteLength(JSON.stringify(body)) > 2 * 1024 * 1024) {
++    x2Fault("X2_OWNER_ARTIFACT_PREIMAGE");
++  }
++  const write = async (c: PoolClient) => {
++    const prior = (await c.query<{ body: unknown; private: boolean }>(
++      "SELECT body,private FROM finnor_os.application_semantics_artifacts WHERE tenant_id=$1 AND principal_id=$2 AND artifact_id=$3",
++      [ctx.auth.tenantId, principal(ctx), ref.id])).rows[0];
++    if (prior && (x2Digest(prior.body) !== ref.contentDigest || prior.private !== privateBody)) x2Fault("X2_OWNER_ARTIFACT_CONFLICT");
++    if (!prior) await c.query(
++      "INSERT INTO finnor_os.application_semantics_artifacts(tenant_id,principal_id,artifact_id,semantic_owner,version,content_digest,private,body) VALUES($1,$2,$3,$4,$5,$6,$7,$8::jsonb)",
++      [ctx.auth.tenantId, principal(ctx), ref.id, ref.owner, ref.version, ref.contentDigest, privateBody, JSON.stringify(body)]);
++    if (!privateBody && rightsRefs.length) await enqueueOwnerDeliveryInTransaction(c, {
++      semanticOwner: ref.owner, tenantId: ctx.auth.tenantId, principalId: principal(ctx),
++    }, { kind: "REFERENCE", identity: ref.id, payload: { reference: { ...ref, content: body }, rightsRefs } });
++  };
++  if (client) await write(client); else await tx(ctx, write);
++}
++export async function applicationEvent(ctx: PeMutationContext, session: ApplicationSessionRow, kind: string,
++  detail: unknown, client?: PoolClient): Promise<ExperimentRef> {
++  const body = { schema: "finnor.x2.native-event.v1", tenantId: session.tenant_id, principalId: session.principal_id,
++    sessionId: session.id, originalParentRef: session.original_parent_ref, generation: session.generation,
++    kind, detail, observedAt: new Date().toISOString(), protectedReceipt: null };
++  const ref = x2Ref("S6", "application-native-event", body);
++  const write = async (c: PoolClient) => {
++    await retainApplicationArtifact(ctx, ref, body, false, c, [session.parent.rightsRevision]);
++    await c.query("INSERT INTO finnor_os.application_semantics_events(tenant_id,principal_id,session_id,event_id,kind,body) VALUES($1,$2,$3,$4,$5,$6::jsonb) ON CONFLICT DO NOTHING",
++      [session.tenant_id, session.principal_id, session.id, ref.id, kind, JSON.stringify(body)]);
++  };
++  if (client) await write(client); else await tx(ctx, write);
++  return ref;
++}
++export async function currentApplicationWork(ctx: PeMutationContext, row: ApplicationSessionRow, client?: PoolClient,
++  recovery = false, institutionDelivery?: Readonly<JobExecutionContext>): Promise<void> {
++  if (ctx.auth.role !== "owner" || principal(ctx) !== ctx.auth.userId) throw unavailable();
++  const rights = await authorize(ctx, row.root, [{ type: "work", id: row.work_id }]);
++  if (!Number.isSafeInteger(Number(row.rights_revision)) || rights.revision !== Number(row.rights_revision)) x2Fault("X2_CURRENT_S1_RIGHTS_CHANGED");
++  const read = async (c: PoolClient) => {
++    await currentInstitutionApplicationSession(ctx, row, c, recovery, institutionDelivery);
++    const actor = await c.query("SELECT id FROM finnor_os.users WHERE tenant_id=$1 AND id=$2 AND status='active' AND role='owner' FOR SHARE",
++      [ctx.auth.tenantId, principal(ctx)]);
++    if (actor.rowCount !== 1) x2Fault("X2_CURRENT_ACTOR_OR_WORK_INPUT_CHANGED");
++    // Intake inserts its new input before locking Work. Read inputs only after
++    // this lock so a writer that committed while we waited cannot be missed.
++    const work = (await c.query<{ status: string }>(
++      "SELECT status FROM finnor_os.works WHERE tenant_id=$1 AND id=$2 FOR SHARE",
++      [ctx.auth.tenantId, row.work_id])).rows[0];
++    const input = (await c.query<{ id: string; body: unknown }>(
++      "SELECT id::text,to_jsonb(w) body FROM finnor_os.work_inputs w WHERE tenant_id=$1 AND work_id=$2 ORDER BY created_at DESC,id DESC LIMIT 1",
++      [ctx.auth.tenantId, row.work_id])).rows[0];
++    if (input?.id !== row.work_input_id || x2Digest(input.body) !== row.work_input_digest) x2Fault("X2_CURRENT_ACTOR_OR_WORK_INPUT_CHANGED");
++    if (!work || !recovery && ["cancelled", "failed"].includes(work.status)) x2Fault("X2_CURRENT_WORK_CANCELLED_OR_FAILED");
++    if (!recovery && (row.cancel_requested_at || ["CANCELLED", "STALE", "BLOCKED"].includes(row.status)
++      || row.deadline_at.getTime() <= Date.now())) x2Fault("X2_ORIGINAL_CANCELLED_STALE_OR_EXPIRED");
++  };
++  if (client) await read(client); else await tx(ctx, read);
++  if (!recovery) {
++    const code = await pinnedApplicationCode();
++    if (row.parent.runtimeDigest !== code.runtimeDigest || row.parent.dependencyLockDigest !== code.lockDigest
++      || x2Digest(row.parent.dependencyPins) !== x2Digest(code.pins)) x2Fault("X2_CURRENT_RUNTIME_OR_SOURCE_CHANGED");
++    if (row.parent.schemaDigest !== await schemaIdentity(ctx)) x2Fault("X2_CURRENT_SCHEMA_CHANGED");
++    if (row.parent_id !== row.id) {
++      const parent = await applicationSession(ctx, row.parent_id, client);
++      if (!sameX2Ref(parent.original_parent_ref, row.original_parent_ref)
++        || !sameX2Ref(parent.allocation_ref, row.allocation_ref)) x2Fault("X2_CHILD_ORIGINAL_PARENT_ANCESTRY");
++      await currentApplicationWork(ctx, parent, client, false, institutionDelivery);
++    }
++  }
++}
++export async function nativeApplicationProfile(ctx: PeMutationContext, id: string): Promise<NativeApplicationProfile> {
++  const selected = await tx(ctx, async (c) => (await c.query<{
++    auth_profile_ref: string; application: string; connection_revision: number; updated_at: Date;
++    private_binding: Record<string, unknown>;
++  }>(`SELECT p.auth_profile_ref,a.application,p.connection_revision,p.updated_at,${NATIVE_APPLICATION_PROFILE_AUTHORITY_SQL} private_binding FROM finnor_os.auth_profiles p JOIN finnor_os.application_accounts a ON a.tenant_id=p.tenant_id AND a.id=p.application_account_id WHERE p.tenant_id=$1 AND p.id=$2`,
++  [ctx.auth.tenantId, id])).rows[0], true);
++  if (!selected) throw unavailable();
++  const access = await resolveApplicationOperationProfile(ctx.auth.tenantId, principal(ctx), selected.application, selected.auth_profile_ref);
++  const config = access.restrictions.applicationSemantics;
++  if (!config || typeof config !== "object" || Array.isArray(config)) x2Fault("X2_EXACT_AUTH_PROFILE_DOMAIN_REQUIRED");
++  const data = config as Record<string, unknown>;
++  const string = (key: string, optional = false) => {
++    if (optional && data[key] === null) return null;
++    if (typeof data[key] !== "string" || !(data[key] as string).length || (data[key] as string).length > 2048) x2Fault("X2_PROFILE_CONTRACT_INVALID");
++    return data[key] as string;
++  };
++  const strings = (key: string, maximum: number, minimum = 1) => {
++    const value = data[key];
++    if (!Array.isArray(value) || value.length < minimum || value.length > maximum
++      || value.some((item) => typeof item !== "string" || !item.length || item.length > 1024)) x2Fault("X2_PROFILE_CONTRACT_INVALID");
++    return value as string[];
++  };
++  if (data.sourceContract !== "BOUNDED_CONDITIONAL_APPLICATION_V1" || data.protectionDomain !== "DISPOSABLE_TEST_AUTHORITY"
++    || process.env.FINNOR_ENVIRONMENT !== "staging" || process.env.FINNOR_X2_PROFILE !== "ordinary_disposable") x2Fault("X2_PROTECTED_APPLICATION_DOMAIN_UNADMITTED", 403);
++  const origin = string("origin")!, url = new URL(origin);
++  if (url.origin !== origin || url.username || url.password || url.protocol !== "http:"
++    || !["127.0.0.1", "localhost", "[::1]"].includes(url.hostname)) x2Fault("X2_DISPOSABLE_ORIGIN_REQUIRED", 403);
++  const validUntil = string("validUntil")!;
++  if (!Number.isFinite(Date.parse(validUntil)) || Date.parse(validUntil) <= Date.now()) x2Fault("X2_CURRENT_PROFILE_EXPIRED", 403);
++  const account = string("account")!;
++  if (access.providerAccountRef !== account) x2Fault("X2_PROVIDER_ACCOUNT_BINDING");
++  const grant = { profileId: id, tenantId: ctx.auth.tenantId, principalId: principal(ctx),
++    accountId: access.applicationAccountId, principalRef: access.principalRef,
++    revision: selected.connection_revision, restrictions: access.restrictions, updatedAt: selected.updated_at.toISOString() };
++  const profile: AuthorizedApplicationProfile = {
++    id, tenantId: ctx.auth.tenantId, principalId: principal(ctx), application: string("application")!,
++    account, actingPrincipal: string("actingPrincipal")!, role: string("role")!,
++    grantRef: x2Ref("AUTHORITY", "application-profile-grant", grant), origin,
++    entrypoint: string("entrypoint")!, documentationPaths: strings("documentationPaths", 8, 0),
++    contextPath: string("contextPath", true), recordPathTemplate: string("recordPathTemplate")!,
++    requestPathTemplate: string("requestPathTemplate", true), allowedTargets: strings("allowedTargets", 16),
++    validUntil, credentials: { headers: { ...access.applicationHeaders } },
++    sourceContract: "BOUNDED_CONDITIONAL_APPLICATION_V1", protectionDomain: "DISPOSABLE_TEST_AUTHORITY",
++    ...(data.discoverySurface === "API" || data.discoverySurface === "UI" || data.discoverySurface === "HYBRID"
++      ? { discoverySurface: data.discoverySurface } : {}),
++  };
++  return { profile, authProfileRef: access.authProfileRef, applicationAccountId: access.applicationAccountId,
++    allowedEntities: strings("allowedEntities", 64), grantBody: grant, privateProfileBinding: selected.private_binding,
++    bindingDigest: x2Digest({ grant, privateProfileBinding: selected.private_binding, privateHeaderDigest: x2Digest(access.applicationHeaders) }) };
++}
++export function assertProfileTarget(profile: NativeApplicationProfile, target: { application: string; account: string; entity: string; id: string }) {
++  if (target.application !== profile.profile.application || target.account !== profile.profile.account
++    || !profile.profile.allowedTargets.includes(target.id) || !profile.allowedEntities.includes(target.entity)) x2Fault("X2_EXACT_AUTHORIZED_TARGET_REQUIRED", 403);
++}
++export async function currentApplicationModel(ctx: PeMutationContext, row: ApplicationSessionRow): Promise<{ model: ApplicationActionModel; check: ApplicationModelCheck }> {
++  if (!row.model_ref || !row.check_ref) x2Fault("X2_NATIVE_CHECKED_MODEL_REQUIRED");
++  const body = await applicationArtifact<Omit<ApplicationActionModel, "ref">>(ctx, row.model_ref);
++  const checkBody = await applicationArtifact<Omit<ApplicationModelCheck, "ref">>(ctx, row.check_ref);
++  return { model: parseApplicationModel({ ...body, ref: row.model_ref }), check: parseApplicationCheck({ ...checkBody, ref: row.check_ref }) };
++}
++export async function enqueueApplicationSession(ctx: PeMutationContext, row: ApplicationSessionRow, stage: string, client: PoolClient) {
++  await client.query("INSERT INTO finnor_os.jobs(tenant_id,type,payload,idempotency_key,lane,protocol_version,retry_safety,max_attempts) VALUES($1,'run_application_semantics_v1',$2::jsonb,$3,'interactive',1,'reconcilable',5) ON CONFLICT(idempotency_key) DO NOTHING",
++    [ctx.auth.tenantId, JSON.stringify({ tenantId: ctx.auth.tenantId, principalId: principal(ctx), sessionId: row.id, generation: row.generation }),
++      `x2:${row.id}:${row.generation}:${stage}`]);
++}
++export async function canonicalApplicationActor(tenantId: string, principalId: string): Promise<PeMutationContext> {
++  const provisional: PeMutationContext = { auth: { tenantId, userId: principalId, employeeId: principalId, role: "owner" } };
++  const role = await tx(provisional, async (c) => (await c.query<{ role: Role }>(
++    "SELECT role FROM finnor_os.users WHERE tenant_id=$1 AND id=$2 AND status='active'", [tenantId, principalId])).rows[0]?.role, true);
++  if (role !== "owner") throw unavailable();
++  return { auth: { tenantId, userId: principalId, employeeId: principalId, role } };
++}
+diff --git a/finnor-os/packages/private-equity/src/program-synthesis/institution.ts b/finnor-os/packages/private-equity/src/program-synthesis/institution.ts
+--- a/finnor-os/packages/private-equity/src/program-synthesis/institution.ts
++++ b/finnor-os/packages/private-equity/src/program-synthesis/institution.ts
+@@ -1,333 +1,333 @@
+-import type { JobExecutionContext } from '../../../../apps/worker/src/queue';
+-import { consumeInstitutionApplicationModels } from '../../../orchestration/src/project-z/z0-convergence/institution-consumer';
+-import { employeeAuthoritySnapshot } from '@finnor/authority';
+-import { validateInstitutionDemand, chargeInstitutionDemand } from '../allocation-store';
+-import { persistInstitutionCompute } from '../institution-program/meter';
+-import { verifyInstitutionDutyPopulation } from '../institution-program/responsibility';
+-import type { PeMutationContext } from '../types';
+-import { authorize, codeIdentity, principal, schemaIdentity, sha, stable, tx } from '../evidence-execution/store';
+-import { P1_VERSION, isInstitutionRequest, type InstitutionHarnessRequest, type InstitutionHarnessProgram } from './contracts';
+-import { selectHarnessPlan } from './plan';
+-import { assertProgramCurrent, durableNode, enqueueProgram, episodeCosts, nativeRequestRow, persistProgrammeHead, trace, safePredicate,
+- type InstitutionProgramRow } from './store';
+-import { executeOwnerOperation, resolveEconomicBindings } from './owners';
+-import { continueInstitutionProgram } from './institution-continuation';
+-import { readUnaffectedInstitutionHistory } from './institution-history';
+-
+-/** Admission checks existing owner receipts and the original S5 reservation,
+- * rather than accepting a caller's `LOWERED` label as owner authority. */
+-export async function submitInstitutionHarnessProgram(ctx:PeMutationContext,request:InstitutionHarnessRequest){
+- const {programme,responsibilities,unresolved,demand,reservationRef,actions=[],compilerRequestId}=request.institution;
+- let originalCompilerDeadline:string|null=null;
+- if(process.env.NODE_ENV==='production'||process.env.FINNOR_P4_PROFILE!=='ordinary_disposable')
+-  throw Error('HARNESS_PROTECTED_FUNDING_ADMISSION_AND_RUNTIME_UNAVAILABLE');
+- verifyInstitutionDutyPopulation(programme,responsibilities,unresolved);
+- if(request.workId!==programme.workId||request.workId!==demand.workId
+-   ||programme.tenantId!==ctx.auth.tenantId||demand.tenantId!==ctx.auth.tenantId
+-   ||programme.principalId!==principal(ctx)||demand.principalId!==principal(ctx)
+-   ||(!compilerRequestId&&sha(programme)!==demand.programmeDigest)
+-   ||(!compilerRequestId&&programme.parentEnvelope.deadlineAt!==demand.originalDeadline)
+-   ||responsibilities.length+unresolved.length>128
+-   ||new Set([...responsibilities.map(r=>r.obligation.stableIdentity),
+-      ...unresolved.map(r=>r.stableIdentity)]).size!==responsibilities.length+unresolved.length
+-   ||(!compilerRequestId&&stable(demand.responsibilityIdentities)!==stable(responsibilities.map(r=>r.obligation.stableIdentity).sort()))
+-   ||responsibilities.some(r=>(!compilerRequestId&&r.obligation.responsiblePrincipal!==principal(ctx))
+-     ||Date.parse(r.obligation.originalDeadline)<Date.parse(demand.originalDeadline))
+-   ||actions.some(a=>!responsibilities.some(r=>r.obligation.stableIdentity===a.responsibilityIdentity
+-     &&r.obligation.permissibleOperationClass===a.operation))
+-   ||new Set(actions.map(a=>a.responsibilityIdentity)).size!==actions.length)
+-  throw Error('X1_P1_ORIGINAL_PROGRAMME_BINDING_MISMATCH');
+- await authorize(ctx,request.root,[{type:'work',id:request.workId}]);
+- const resource=await validateInstitutionDemand(ctx,reservationRef);
+- if(resource.status!=='CURRENT'||resource.reservation.demand.demandDigest!==demand.demandDigest
+-   ||stable(resource.reservation.demand)!==stable(demand))throw Error('X1_P1_S5_PARENT_NOT_CURRENT');
+- const admission=await tx(ctx,async c=>(await c.query(`SELECT id FROM finnor_os.x1_mapping_admissions
+-   WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3 AND original_digest=$4
+-     AND candidate_digest=$5 AND checker_digest=$6 AND duty_population_digest=$7`,
+-  [ctx.auth.tenantId,principal(ctx),request.workId,programme.admission.originalDigest,
+-   programme.admission.candidateDigest,programme.admission.checkerDigest,
+-   programme.dutyPopulationDigest])).rows[0],true);
+- if(!admission)throw Error('X1_P1_CHECKED_OWNER_ADMISSION_REQUIRED');
+- if(compilerRequestId){
+-  const {compilerRow,compilerEpisode,assertInstitutionCompilerCurrent}=await import('../institution-program/store');
+-  const owner=await compilerRow(ctx,compilerRequestId),episode=await compilerEpisode(ctx,owner.episode_id);
+-  if(!['RUNNING','WAITING','PARTIAL'].includes(owner.status)||owner.work_id!==request.workId
+-    ||owner.work_input_id!==request.workInputId||owner.admission_id!==admission.id
+-    ||!episode.parent_reservation||stable(episode.parent_reservation)!==stable(reservationRef)
+-    ||!episode.parent_demand||stable(episode.parent_demand)!==stable(demand)
+-    ||demand.chargeScope?.episodeId!==episode.id||owner.programme_digest!==sha(programme)
+-    ||owner.intent_digest!==sha(actions))throw Error('X1_P1_ORIGINAL_COMPILER_BINDING_REQUIRED');
+-  await assertInstitutionCompilerCurrent(ctx,owner,owner.input_manifest?.current);
+-  originalCompilerDeadline=episode.wall_deadline.toISOString();
+- }
+- const mandate=await tx(ctx,async c=>(await c.query<{revision:string;rules:Array<{
+-  id:string;operation:string;deadlineAt:string;principalId:string;actionPayload?:unknown;
+-  expectedEntityId?:string;postconditionDigest?:string;
+- }>}>(`SELECT revision,rules FROM finnor_os.x1_work_mandates
+-   WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3 AND institution_id=$4
+-     AND revoked_at IS NULL AND valid_from<=clock_timestamp() AND expires_at>clock_timestamp()
+-   ORDER BY valid_from DESC LIMIT 2`,[ctx.auth.tenantId,principal(ctx),request.workId,
+-    demand.institutionId])).rows,true);
+- if(mandate.length!==1||responsibilities.some(r=>r.obligation.rule.mandateRevision!==mandate[0]!.revision
+-   ||!mandate[0]!.rules.some(rule=>rule.id===r.obligation.rule.id
+-     &&rule.operation===r.obligation.permissibleOperationClass
+-     &&rule.principalId===r.obligation.responsiblePrincipal
+-     &&rule.deadlineAt===r.obligation.originalDeadline))
+-   ||(!compilerRequestId&&actions.some(action=>{
+-    const duty=responsibilities.find(r=>r.obligation.stableIdentity===action.responsibilityIdentity);
+-    const rule=mandate[0]!.rules.find(r=>r.id===duty?.obligation.rule.id);
+-    return !rule?.actionPayload||stable(rule.actionPayload)!==stable(action.payload)
+-      ||rule.expectedEntityId!==action.expectedEntityId
+-      ||rule.postconditionDigest!==action.postconditionDigest;
+-   })))throw Error('X1_P1_FROZEN_MANDATE_ACTION_NOT_ESTABLISHED');
+- const digest=sha(request),code=await codeIdentity(),schemaDigest=await schemaIdentity(ctx);
+- return tx(ctx,async(c,db)=>{
+-  // Source publication locks this mutex before Work rows. Plan selection also
+-  // mutates Work, so compiler-bound children must preserve that same order.
+-  if(compilerRequestId)await c.query('SELECT pg_advisory_xact_lock(hashtextextended($1,5510))',[ctx.auth.tenantId]);
+-  await c.query('SELECT pg_advisory_xact_lock(hashtextextended($1,4401))',
+-   [ctx.auth.tenantId+':'+principal(ctx)+':'+request.idempotencyKey]);
+-  const old=(await c.query<InstitutionProgramRow>(`SELECT * FROM finnor_os.p1_requests
+-    WHERE tenant_id=$1 AND principal_id=$2 AND idempotency_key=$3`,
+-    [ctx.auth.tenantId,principal(ctx),request.idempotencyKey])).rows[0];
+-  if(old){if(old.request_digest!==digest)throw Error('IDEMPOTENCY_REQUEST_CONFLICT');
+-   return {programId:old.id,workId:old.work_id,workRevision:old.work_input_id,status:old.status,replayed:true};}
+-  const work=(await c.query<{id:string;body:unknown}>(`SELECT id::text,to_jsonb(w) body
+-    FROM finnor_os.work_inputs w WHERE tenant_id=$1 AND work_id=$2
+-    ORDER BY created_at DESC,id DESC LIMIT 1`,
+-    [ctx.auth.tenantId,request.workId])).rows[0];
+-  if(work?.id!==request.workInputId)throw Error('EXACT_WORK_REVISION_CHANGED');
+-  const inputDigest=sha(work.body),id=(await import('node:crypto')).randomUUID();
+-  const parentPlan=(await c.query<{id:string}>(`SELECT id::text FROM finnor_os.work_plan_revisions
+-    WHERE tenant_id=$1 AND work_id=$2 ORDER BY (status='active') DESC,revision DESC LIMIT 1`,
+-    [ctx.auth.tenantId,request.workId])).rows[0];
+-  const episodeDeadline=originalCompilerDeadline??new Date(Math.min(Date.parse(demand.originalDeadline),Date.now()+3600000)).toISOString();
+-  const selected=await selectHarnessPlan(ctx,request,{programId:id,workId:request.workId,
+-   inputId:work.id,inputDigest,parentRevisionId:parentPlan?.id??null,
+-   rightsRevision:Number(resource.reservation.rightsRevision),deadlineAt:episodeDeadline},db);
+-  const previous=(await c.query(`SELECT * FROM finnor_os.p1_episodes
+-    WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3`,
+-    [ctx.auth.tenantId,principal(ctx),request.workId])).rows[0];
+-  const episodeId=previous?.id??(await import('node:crypto')).randomUUID();
+-  if(!previous)await c.query(`INSERT INTO finnor_os.p1_episodes
+-    (id,tenant_id,principal_id,work_id,max_steps,max_attempts,deadline_at,max_candidates,max_depth,candidates_used)
+-    VALUES($1,$2,$3,$4,1024,4,$5,8,12,0)`,
+-    [episodeId,ctx.auth.tenantId,principal(ctx),request.workId,episodeDeadline]);
+-  const nodes=responsibilities.map(r=>({id:'p1node_'+sha([r.obligation.stableIdentity,r.obligation.derivationRevision]).slice(0,24),
+-   stableIdentity:r.obligation.stableIdentity,derivationRevision:r.obligation.derivationRevision,
+-   operation:r.obligation.permissibleOperationClass,deadlineAt:r.obligation.originalDeadline,
+-   postconditionRef:r.obligation.postcondition.contractRef,
+-   observerRef:r.obligation.independentObserver.ref,
+-   action:actions.find(a=>a.responsibilityIdentity===r.obligation.stableIdentity)??null}));
+-  const head:InstitutionHarnessProgram={schema:'finnor.institution-harness-program.v1',
+-   kind:'institution_responsibility_v1',id,tenantId:ctx.auth.tenantId,principalId:principal(ctx),
+-   work:{id:request.workId,revision:work.id,inputDigest,planRevisionId:selected.planRevisionId},
+-   producer:{version:P1_VERSION,codeDigest:code.digest,schemaDigest},goal:selected.goal,planGraph:selected.planGraph,
+-   acceptanceDigest:sha(request.institution),institution:request.institution,nodes,
+-   admission:programme.admission,reservationRef,
+-   bounds:{episodeId,deadlineAt:episodeDeadline,reservation:reservationRef},
+-   costs:{usd:null,status:'UNMETERED',attempts:0,steps:0,wallMs:0,modelInvocations:[],nativeInvocations:[]},
+-   runtime:{node:process.version,imageDigest:null,jobId:null,workerId:null,deliveryAttemptId:null,claimFence:null},
+-   status:'PROPOSED',observedPostconditions:[],executionAuthorityGranted:false};
+-  await c.query('SELECT id FROM finnor_os.works WHERE tenant_id=$1 AND id=$2 FOR SHARE',
+-   [ctx.auth.tenantId,request.workId]);
+-  const current=(await c.query<{id:string}>(`SELECT id::text FROM finnor_os.work_inputs
+-    WHERE tenant_id=$1 AND work_id=$2 ORDER BY created_at DESC,id DESC LIMIT 1`,
+-    [ctx.auth.tenantId,request.workId])).rows[0];
+-  if(current?.id!==work.id)throw Error('EXACT_WORK_REVISION_CHANGED');
+-  let carriedHistory:Awaited<ReturnType<typeof readUnaffectedInstitutionHistory>>|null=null;
+-  if(compilerRequestId){
+-   const {compilerRow,assertInstitutionCompilerCurrent}=await import('../institution-program/store');
+-   const compiler=await compilerRow(ctx,compilerRequestId,c,true);
+-   await assertInstitutionCompilerCurrent(ctx,compiler,compiler.input_manifest?.current,c,true);
+-   carriedHistory=await readUnaffectedInstitutionHistory(ctx,c,compilerRequestId,head);
+-   head.observedPostconditions=carriedHistory.observations;
+-  }
+-  await c.query(`INSERT INTO finnor_os.p1_requests
+-    (id,tenant_id,principal_id,work_id,work_input_id,work_input_digest,episode_id,
+-     plan_revision_id,idempotency_key,request_digest,request,proposed)
+-    VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11::jsonb,$12::jsonb)`,
+-    [id,ctx.auth.tenantId,principal(ctx),request.workId,work.id,inputDigest,episodeId,
+-     selected.planRevisionId,request.idempotencyKey,digest,stable(request),stable(head)]);
+-  const row=await nativeRequestRow(ctx,id,c);
+-  if(carriedHistory)await trace(ctx,row,'X1_UNAFFECTED_CREATION_HISTORY_BOUND',{
+-   priorHead:carriedHistory.priorHead,update:carriedHistory.update,
+-   carriedDutyIds:head.observedPostconditions.map(item=>item.stableIdentity),
+-   originalEpisode:episodeId,authorityGranted:false},c);
+-  await trace(ctx,row,'INSTITUTION_RESPONSIBILITY_BOUND',{work:head.work,
+-   proposedDigest:sha(head),dutyPopulation:{count:nodes.length,digest:sha(nodes)},
+-   unresolvedPopulation:{count:unresolved.length,digest:sha(unresolved)},
+-   fullPopulationOwner:'P1_IMMUTABLE_PROPOSED_AND_PROGRAMME_HEAD',
+-   originalDeadline:demand.originalDeadline,reservationRef,admission:programme.admission,
+-   checkedAdmissionId:admission.id,completion:'INDEPENDENT_CANONICAL_OBSERVATION_REQUIRED'},c);
+-  await enqueueProgram(ctx,row,'initial',c);
+-  return {programId:id,workId:request.workId,workRevision:work.id,status:'QUEUED',replayed:false};
+- });
+-}
+-
+-export async function readInstitutionHarnessProgram(ctx:PeMutationContext,id:string){
+- return readInstitutionHarnessOwnerCut(ctx,id,1);
+-}
+-type InstitutionHarnessOwnerProjection={programId:string;workId:string;workRevision:string;
+- status:string;program:InstitutionHarnessProgram|null;reason:string|null;
+- incurredCosts:Awaited<ReturnType<typeof episodeCosts>>;canResume?:boolean};
+-async function readInstitutionHarnessOwnerCut(ctx:PeMutationContext,id:string,remainingRefresh:number):Promise<InstitutionHarnessOwnerProjection>{
+- const q=await nativeRequestRow(ctx,id);
+- if(!isInstitutionRow(q))throw Error('X1_P1_TYPED_HEAD_REQUIRED');
+- await authorize(ctx,q.request.root,[{type:'work',id:q.work_id}]);
+- if(['CANCELLED','INVALIDATED'].includes(q.status))
+-  return {programId:id,workId:q.work_id,workRevision:q.work_input_id,status:q.status,
+-   program:null,reason:q.failure,incurredCosts:await episodeCosts(ctx,q)};
+- try{await assertProgramCurrent(ctx,q);}
+- catch(error){
+-  if(remainingRefresh>0&&(error as Error).message==='CANONICAL_PLAN_REVISION_SUPERSEDED'){
+-   const latest=await nativeRequestRow(ctx,id);
+-   // A canonical batch can advance while this read validates its old pointer.
+-   // Refresh once only after proving the same owner/input/generation acquired a
+-   // different actual plan. Unrelated supersession and all other guards refuse.
+-   if(latest.generation===q.generation&&latest.work_input_id===q.work_input_id
+-     &&latest.plan_revision_id!==q.plan_revision_id)
+-    return readInstitutionHarnessOwnerCut(ctx,id,remainingRefresh-1);
+-  }
+-  throw error;
+- }
+- const program=q.head_id?await tx(ctx,async c=>{
+-  const row=(await c.query<{body:InstitutionHarnessProgram;digest:string}>(`SELECT body,digest
+-    FROM finnor_os.p1_programs WHERE tenant_id=$1 AND principal_id=$2 AND id=$3`,
+-   [q.tenant_id,q.principal_id,q.head_id])).rows[0];
+-  if(!row||row.body.schema!=='finnor.institution-harness-program.v1'
+-    ||sha(row.body)!==row.digest)throw Error('PROGRAM_IMMUTABLE_DIGEST_MISMATCH');
+-  return row.body;
+- },true):q.proposed;
+- if(q.status==='TESTED'||q.status==='OBSERVED'&&program.observedPostconditions.length!==program.nodes.length)
+-  throw Error('X1_P1_INDEPENDENT_CANONICAL_POSTCONDITION_REQUIRED');
+- await resolveEconomicBindings(ctx,q.request,{programId:q.id,workId:q.work_id,
+-  inputId:q.work_input_id,validAt:q.request.validAt,knowledgeAt:q.request.validAt});
+- await authorize(ctx,q.request.root,[{type:'work',id:q.work_id}]);
+- return {programId:id,workId:q.work_id,workRevision:q.work_input_id,status:q.status,
+-  program,reason:q.failure,incurredCosts:await episodeCosts(ctx,q),
+-  canResume:['WAITING','PARTIAL','FAILED'].includes(q.status)};
+-}
+-function isInstitutionRow(q:Awaited<ReturnType<typeof nativeRequestRow>>):q is InstitutionProgramRow{
+- return isInstitutionRequest(q.request)&&q.proposed.schema==='finnor.institution-harness-program.v1';
+-}
+-
+-export async function runInstitutionHarnessJob(ctx:PeMutationContext,q:InstitutionProgramRow,execution:Readonly<JobExecutionContext>){
+- // A published head is durable progress even if the previous claimant died
+- // after setting RUNNING. Recovery must never clone the initial proposal.
+- if(q.head_id)return continueInstitutionProgram(ctx,q,execution);
+- await consumeInstitutionApplicationModels(ctx,q.id);
+- const started=performance.now(),startedAt=new Date().toISOString();
+- let current=q,nativeOrdinal=0,meterStatus='PREPARATION_UNCERTAIN';
+- try{
+- await assertProgramCurrent(ctx,q);
+- const valid=await validateInstitutionDemand(ctx,q.proposed.reservationRef);
+- if(valid.status!=='CURRENT')throw Error('X1_P1_S5_PARENT_NOT_CURRENT');
+- current=await tx(ctx,async c=>{
+-  const row=await nativeRequestRow(ctx,q.id,c,true);
+-  const claim=(await c.query(`SELECT id FROM finnor_os.jobs WHERE id=$1 AND tenant_id=$2
+-    AND type IN('run_harness_program_v1','run_x1_institution_continuation_v1')
+-    AND status='running' AND claim_token=$3
+-    AND claim_fence=$4 AND protocol_version=1 AND lease_expires_at>clock_timestamp() FOR SHARE`,
+-   [execution.jobId,q.tenant_id,execution.claimToken,execution.claimFence])).rows[0];
+-  if(!claim||row.generation!==q.generation)throw Error('PROGRAM_JOB_CLAIM_FENCED');
+-  const charged=await c.query(`UPDATE finnor_os.p1_episodes SET steps_used=steps_used+1,
+-    attempts_used=attempts_used+1 WHERE id=$1 AND tenant_id=$2 AND principal_id=$3
+-    AND steps_used+1<=LEAST(max_steps,$4) AND attempts_used+1<=max_attempts
+-    AND deadline_at>clock_timestamp() RETURNING steps_used`,
+-   [q.episode_id,q.tenant_id,q.principal_id,q.request.institution.compilerRequestId?1024:64]);
+-  if(!charged.rowCount)throw Error('ORIGINAL_EPISODE_GRANT_EXHAUSTED');
+-  nativeOrdinal=Number(charged.rows[0].steps_used);
+-  await c.query(`UPDATE finnor_os.p1_requests SET status='RUNNING',claim_token=$4,claim_fence=$5
+-    WHERE tenant_id=$1 AND principal_id=$2 AND id=$3`,
+-   [q.tenant_id,q.principal_id,q.id,execution.claimToken,execution.claimFence]);
+-  await trace(ctx,row,'DELIVERY_STARTED',{jobId:execution.jobId,claimFence:execution.claimFence,
+-   originalEpisode:q.episode_id,reservationRef:q.proposed.reservationRef},c);
+-  return {...row,status:'RUNNING',claim_token:execution.claimToken,claim_fence:execution.claimFence} as InstitutionProgramRow;
+- });
+- if(q.request.institution.compilerRequestId){
+-  const {compilerRow,compilerEpisode}=await import('../institution-program/store');
+-  const compiler=await compilerRow(ctx,q.request.institution.compilerRequestId);
+-  const episode=await compilerEpisode(ctx,compiler.episode_id);
+-  // The original P1 step domain includes preparation and continuation, so
+-  // this physical delivery cannot alias a later continuation's charge.
+-  await chargeInstitutionDemand(ctx,q.proposed.reservationRef,{
+-   responsibilityIdentity:`x1-compiler-episode:${episode.id}`,phase:'RECOVERY',
+-   ordinal:nativeOrdinal,units:1});
+- }
+- const head:InstitutionHarnessProgram=structuredClone(q.proposed);
+- head.runtime={node:process.version,imageDigest:null,jobId:execution.jobId,
+-  workerId:execution.workerId,deliveryAttemptId:execution.deliveryAttemptId,claimFence:execution.claimFence};
+- const bindings=await resolveEconomicBindings(ctx,q.request,{programId:q.id,workId:q.work_id,
+-  inputId:q.work_input_id,validAt:q.request.validAt,knowledgeAt:q.request.validAt});
+- for(const node of head.nodes){
+-  await assertProgramCurrent(ctx,current);
+-  const outcome=await executeOwnerOperation(ctx,current,{op:'institution_duty',node});
+-  await durableNode(ctx,current,node.id,outcome);
+-  if(outcome.status==='STOP'){
+-   node.action=null;
+-   head.interventions=[...(head.interventions??[]),{stableIdentity:node.stableIdentity,
+-    predicate:String((outcome.value as {reason?:string}).reason??'X1_EXACT_OPERATION_INTERPRETATION_REQUIRED'),possibleEffect:false}];
+-  }
+-  await trace(ctx,current,'INSTITUTION_OWNER_OPERATION',{nodeId:node.id,
+-   outcome,originalDeadline:node.deadlineAt,reservationRef:head.reservationRef,
+-   bindings,completed:false,executionAuthorityGranted:false});
+- }
+- head.status=head.nodes.some(n=>n.action)?'WAITING':'PARTIAL';
+- // Neither a P1 node nor an analytical TESTED result may publish OBSERVED.
+- await tx(ctx,async c=>{
+-  await c.query(`SELECT l.id FROM finnor_os.work_objective_loops l
+-    JOIN finnor_os.work_plan_revisions p ON p.objective_loop_id=l.id AND p.tenant_id=l.tenant_id
+-    WHERE l.tenant_id=$1 AND p.id=$2 FOR UPDATE OF l`,[q.tenant_id,q.plan_revision_id]);
+-  await assertProgramCurrent(ctx,current,c,true);
+-  const claim=(await c.query(`SELECT id FROM finnor_os.jobs
+-    WHERE tenant_id=$1 AND id=$2 AND status='running'
+-      AND claim_token=$3 AND claim_fence=$4 AND lease_expires_at>clock_timestamp() FOR SHARE`,
+-   [q.tenant_id,execution.jobId,execution.claimToken,execution.claimFence])).rows[0];
+-  if(!claim)throw Error('ATOMIC_PROGRAM_PUBLICATION_FENCED');
+-  await persistProgrammeHead(ctx,current,head,head.status,
+-   head.status==='PARTIAL'?'X1_EXACT_ACTION_PAYLOAD_OR_OBSERVER_MISSING':null,c);
+-  if(head.status==='WAITING'){
+-   await enqueueProgram(ctx,current,'first-canonical-observation',c);
+-  }
+- });
+- meterStatus='PREPARATION_PUBLISHED';
+- }catch(error){
+-  meterStatus=safePredicate(error);
+-  await tx(ctx,async c=>{
+-   const row=await nativeRequestRow(ctx,q.id,c,true);
+-   await trace(ctx,row,'FAILED_OR_FENCED',{predicate:String((error as Error).message),
+-    claimFence:execution.claimFence,originalDeadline:q.request.institution.demand.originalDeadline,
+-    reservationRef:q.proposed.reservationRef,exposureRetained:true},c);
+-   const claim=(await c.query(`SELECT id FROM finnor_os.jobs WHERE tenant_id=$1 AND id=$2
+-     AND type IN('run_harness_program_v1','run_x1_institution_continuation_v1')
+-     AND status='running' AND claim_token=$3 AND claim_fence=$4
+-     AND lease_expires_at>clock_timestamp() FOR SHARE`,
+-    [q.tenant_id,execution.jobId,execution.claimToken,execution.claimFence])).rows[0];
+-   if(claim&&row.generation===q.generation&&(row.status==='QUEUED'
+-     ||row.status==='RUNNING'&&row.claim_token===execution.claimToken&&row.claim_fence===execution.claimFence)){
+-    await c.query(`UPDATE finnor_os.p1_requests
+-      SET status='FAILED',failure=$4,updated_at=clock_timestamp()
+-      WHERE tenant_id=$1 AND principal_id=$2 AND id=$3`,
+-     [q.tenant_id,q.principal_id,q.id,
+-      /^X1_[A-Z0-9_]+$/.test(String((error as Error).message))
+-        ?(error as Error).message:'X1_P1_OWNER_FAILURE']);
+-   }
+-  });
+-  throw error;
+- }
+- finally{
+-  try{
+-   const rights=await employeeAuthoritySnapshot(ctx.auth);
+-   const compute=await persistInstitutionCompute(ctx,{requestId:q.id,workId:q.work_id,
+-    episodeId:q.episode_id,jobId:execution.jobId,deliveryAttemptId:execution.deliveryAttemptId,
+-    parentReservation:q.proposed.reservationRef,rightsRevision:String(rights.revision),
+-    startedAt,elapsedMs:performance.now()-started,phase:'PREPARATION',status:meterStatus,
+-    observedAcquisitionAttempts:0,observedCheckerAttempts:0});
+-   await trace(ctx,current,'X1_PREPARATION_COMPUTE_ATTRIBUTED',{
+-    ordinal:nativeOrdinal,compute:compute.record.ref,jobId:execution.jobId,
+-    deliveryAttemptId:execution.deliveryAttemptId,originalEpisode:q.episode_id});
+-  }catch(error){await trace(ctx,current,'X1_PREPARATION_METER_GAP',{
+-   jobId:execution.jobId,deliveryAttemptId:execution.deliveryAttemptId,predicate:safePredicate(error)});}
+- }
+-}
++import type { JobExecutionContext } from '../../../../apps/worker/src/queue';
++import { assertInstitutionApplicationDeliveryCurrent } from '../../../orchestration/src/project-z/z0-convergence/institution-consumer';
++import { employeeAuthoritySnapshot } from '@finnor/authority';
++import { validateInstitutionDemand, chargeInstitutionDemand } from '../allocation-store';
++import { persistInstitutionCompute } from '../institution-program/meter';
++import { verifyInstitutionDutyPopulation } from '../institution-program/responsibility';
++import type { PeMutationContext } from '../types';
++import { authorize, codeIdentity, principal, schemaIdentity, sha, stable, tx } from '../evidence-execution/store';
++import { P1_VERSION, isInstitutionRequest, type InstitutionHarnessRequest, type InstitutionHarnessProgram } from './contracts';
++import { selectHarnessPlan } from './plan';
++import { assertProgramCurrent, durableNode, enqueueProgram, episodeCosts, nativeRequestRow, persistProgrammeHead, trace, safePredicate,
++ type InstitutionProgramRow } from './store';
++import { executeOwnerOperation, resolveEconomicBindings } from './owners';
++import { continueInstitutionProgram } from './institution-continuation';
++import { readUnaffectedInstitutionHistory } from './institution-history';
++
++/** Admission checks existing owner receipts and the original S5 reservation,
++ * rather than accepting a caller's `LOWERED` label as owner authority. */
++export async function submitInstitutionHarnessProgram(ctx:PeMutationContext,request:InstitutionHarnessRequest){
++ const {programme,responsibilities,unresolved,demand,reservationRef,actions=[],compilerRequestId}=request.institution;
++ let originalCompilerDeadline:string|null=null;
++ if(process.env.NODE_ENV==='production'||process.env.FINNOR_P4_PROFILE!=='ordinary_disposable')
++  throw Error('HARNESS_PROTECTED_FUNDING_ADMISSION_AND_RUNTIME_UNAVAILABLE');
++ verifyInstitutionDutyPopulation(programme,responsibilities,unresolved);
++ if(request.workId!==programme.workId||request.workId!==demand.workId
++   ||programme.tenantId!==ctx.auth.tenantId||demand.tenantId!==ctx.auth.tenantId
++   ||programme.principalId!==principal(ctx)||demand.principalId!==principal(ctx)
++   ||(!compilerRequestId&&sha(programme)!==demand.programmeDigest)
++   ||(!compilerRequestId&&programme.parentEnvelope.deadlineAt!==demand.originalDeadline)
++   ||responsibilities.length+unresolved.length>128
++   ||new Set([...responsibilities.map(r=>r.obligation.stableIdentity),
++      ...unresolved.map(r=>r.stableIdentity)]).size!==responsibilities.length+unresolved.length
++   ||(!compilerRequestId&&stable(demand.responsibilityIdentities)!==stable(responsibilities.map(r=>r.obligation.stableIdentity).sort()))
++   ||responsibilities.some(r=>(!compilerRequestId&&r.obligation.responsiblePrincipal!==principal(ctx))
++     ||Date.parse(r.obligation.originalDeadline)<Date.parse(demand.originalDeadline))
++   ||actions.some(a=>!responsibilities.some(r=>r.obligation.stableIdentity===a.responsibilityIdentity
++     &&r.obligation.permissibleOperationClass===a.operation))
++   ||new Set(actions.map(a=>a.responsibilityIdentity)).size!==actions.length)
++  throw Error('X1_P1_ORIGINAL_PROGRAMME_BINDING_MISMATCH');
++ await authorize(ctx,request.root,[{type:'work',id:request.workId}]);
++ const resource=await validateInstitutionDemand(ctx,reservationRef);
++ if(resource.status!=='CURRENT'||resource.reservation.demand.demandDigest!==demand.demandDigest
++   ||stable(resource.reservation.demand)!==stable(demand))throw Error('X1_P1_S5_PARENT_NOT_CURRENT');
++ const admission=await tx(ctx,async c=>(await c.query(`SELECT id FROM finnor_os.x1_mapping_admissions
++   WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3 AND original_digest=$4
++     AND candidate_digest=$5 AND checker_digest=$6 AND duty_population_digest=$7`,
++  [ctx.auth.tenantId,principal(ctx),request.workId,programme.admission.originalDigest,
++   programme.admission.candidateDigest,programme.admission.checkerDigest,
++   programme.dutyPopulationDigest])).rows[0],true);
++ if(!admission)throw Error('X1_P1_CHECKED_OWNER_ADMISSION_REQUIRED');
++ if(compilerRequestId){
++  const {compilerRow,compilerEpisode,assertInstitutionCompilerCurrent}=await import('../institution-program/store');
++  const owner=await compilerRow(ctx,compilerRequestId),episode=await compilerEpisode(ctx,owner.episode_id);
++  if(!['RUNNING','WAITING','PARTIAL'].includes(owner.status)||owner.work_id!==request.workId
++    ||owner.work_input_id!==request.workInputId||owner.admission_id!==admission.id
++    ||!episode.parent_reservation||stable(episode.parent_reservation)!==stable(reservationRef)
++    ||!episode.parent_demand||stable(episode.parent_demand)!==stable(demand)
++    ||demand.chargeScope?.episodeId!==episode.id||owner.programme_digest!==sha(programme)
++    ||owner.intent_digest!==sha(actions))throw Error('X1_P1_ORIGINAL_COMPILER_BINDING_REQUIRED');
++  await assertInstitutionCompilerCurrent(ctx,owner,owner.input_manifest?.current);
++  originalCompilerDeadline=episode.wall_deadline.toISOString();
++ }
++ const mandate=await tx(ctx,async c=>(await c.query<{revision:string;rules:Array<{
++  id:string;operation:string;deadlineAt:string;principalId:string;actionPayload?:unknown;
++  expectedEntityId?:string;postconditionDigest?:string;
++ }>}>(`SELECT revision,rules FROM finnor_os.x1_work_mandates
++   WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3 AND institution_id=$4
++     AND revoked_at IS NULL AND valid_from<=clock_timestamp() AND expires_at>clock_timestamp()
++   ORDER BY valid_from DESC LIMIT 2`,[ctx.auth.tenantId,principal(ctx),request.workId,
++    demand.institutionId])).rows,true);
++ if(mandate.length!==1||responsibilities.some(r=>r.obligation.rule.mandateRevision!==mandate[0]!.revision
++   ||!mandate[0]!.rules.some(rule=>rule.id===r.obligation.rule.id
++     &&rule.operation===r.obligation.permissibleOperationClass
++     &&rule.principalId===r.obligation.responsiblePrincipal
++     &&rule.deadlineAt===r.obligation.originalDeadline))
++   ||(!compilerRequestId&&actions.some(action=>{
++    const duty=responsibilities.find(r=>r.obligation.stableIdentity===action.responsibilityIdentity);
++    const rule=mandate[0]!.rules.find(r=>r.id===duty?.obligation.rule.id);
++    return !rule?.actionPayload||stable(rule.actionPayload)!==stable(action.payload)
++      ||rule.expectedEntityId!==action.expectedEntityId
++      ||rule.postconditionDigest!==action.postconditionDigest;
++   })))throw Error('X1_P1_FROZEN_MANDATE_ACTION_NOT_ESTABLISHED');
++ const digest=sha(request),code=await codeIdentity(),schemaDigest=await schemaIdentity(ctx);
++ return tx(ctx,async(c,db)=>{
++  // Source publication locks this mutex before Work rows. Plan selection also
++  // mutates Work, so compiler-bound children must preserve that same order.
++  if(compilerRequestId)await c.query('SELECT pg_advisory_xact_lock(hashtextextended($1,5510))',[ctx.auth.tenantId]);
++  await c.query('SELECT pg_advisory_xact_lock(hashtextextended($1,4401))',
++   [ctx.auth.tenantId+':'+principal(ctx)+':'+request.idempotencyKey]);
++  const old=(await c.query<InstitutionProgramRow>(`SELECT * FROM finnor_os.p1_requests
++    WHERE tenant_id=$1 AND principal_id=$2 AND idempotency_key=$3`,
++    [ctx.auth.tenantId,principal(ctx),request.idempotencyKey])).rows[0];
++  if(old){if(old.request_digest!==digest)throw Error('IDEMPOTENCY_REQUEST_CONFLICT');
++   return {programId:old.id,workId:old.work_id,workRevision:old.work_input_id,status:old.status,replayed:true};}
++  const work=(await c.query<{id:string;body:unknown}>(`SELECT id::text,to_jsonb(w) body
++    FROM finnor_os.work_inputs w WHERE tenant_id=$1 AND work_id=$2
++    ORDER BY created_at DESC,id DESC LIMIT 1`,
++    [ctx.auth.tenantId,request.workId])).rows[0];
++  if(work?.id!==request.workInputId)throw Error('EXACT_WORK_REVISION_CHANGED');
++  const inputDigest=sha(work.body),id=(await import('node:crypto')).randomUUID();
++  const parentPlan=(await c.query<{id:string}>(`SELECT id::text FROM finnor_os.work_plan_revisions
++    WHERE tenant_id=$1 AND work_id=$2 ORDER BY (status='active') DESC,revision DESC LIMIT 1`,
++    [ctx.auth.tenantId,request.workId])).rows[0];
++  const episodeDeadline=originalCompilerDeadline??new Date(Math.min(Date.parse(demand.originalDeadline),Date.now()+3600000)).toISOString();
++  const selected=await selectHarnessPlan(ctx,request,{programId:id,workId:request.workId,
++   inputId:work.id,inputDigest,parentRevisionId:parentPlan?.id??null,
++   rightsRevision:Number(resource.reservation.rightsRevision),deadlineAt:episodeDeadline},db);
++  const previous=(await c.query(`SELECT * FROM finnor_os.p1_episodes
++    WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3`,
++    [ctx.auth.tenantId,principal(ctx),request.workId])).rows[0];
++  const episodeId=previous?.id??(await import('node:crypto')).randomUUID();
++  if(!previous)await c.query(`INSERT INTO finnor_os.p1_episodes
++    (id,tenant_id,principal_id,work_id,max_steps,max_attempts,deadline_at,max_candidates,max_depth,candidates_used)
++    VALUES($1,$2,$3,$4,1024,4,$5,8,12,0)`,
++    [episodeId,ctx.auth.tenantId,principal(ctx),request.workId,episodeDeadline]);
++  const nodes=responsibilities.map(r=>({id:'p1node_'+sha([r.obligation.stableIdentity,r.obligation.derivationRevision]).slice(0,24),
++   stableIdentity:r.obligation.stableIdentity,derivationRevision:r.obligation.derivationRevision,
++   operation:r.obligation.permissibleOperationClass,deadlineAt:r.obligation.originalDeadline,
++   postconditionRef:r.obligation.postcondition.contractRef,
++   observerRef:r.obligation.independentObserver.ref,
++   action:actions.find(a=>a.responsibilityIdentity===r.obligation.stableIdentity)??null}));
++  const head:InstitutionHarnessProgram={schema:'finnor.institution-harness-program.v1',
++   kind:'institution_responsibility_v1',id,tenantId:ctx.auth.tenantId,principalId:principal(ctx),
++   work:{id:request.workId,revision:work.id,inputDigest,planRevisionId:selected.planRevisionId},
++   producer:{version:P1_VERSION,codeDigest:code.digest,schemaDigest},goal:selected.goal,planGraph:selected.planGraph,
++   acceptanceDigest:sha(request.institution),institution:request.institution,nodes,
++   admission:programme.admission,reservationRef,
++   bounds:{episodeId,deadlineAt:episodeDeadline,reservation:reservationRef},
++   costs:{usd:null,status:'UNMETERED',attempts:0,steps:0,wallMs:0,modelInvocations:[],nativeInvocations:[]},
++   runtime:{node:process.version,imageDigest:null,jobId:null,workerId:null,deliveryAttemptId:null,claimFence:null},
++   status:'PROPOSED',observedPostconditions:[],executionAuthorityGranted:false};
++  await c.query('SELECT id FROM finnor_os.works WHERE tenant_id=$1 AND id=$2 FOR SHARE',
++   [ctx.auth.tenantId,request.workId]);
++  const current=(await c.query<{id:string}>(`SELECT id::text FROM finnor_os.work_inputs
++    WHERE tenant_id=$1 AND work_id=$2 ORDER BY created_at DESC,id DESC LIMIT 1`,
++    [ctx.auth.tenantId,request.workId])).rows[0];
++  if(current?.id!==work.id)throw Error('EXACT_WORK_REVISION_CHANGED');
++  let carriedHistory:Awaited<ReturnType<typeof readUnaffectedInstitutionHistory>>|null=null;
++  if(compilerRequestId){
++   const {compilerRow,assertInstitutionCompilerCurrent}=await import('../institution-program/store');
++   const compiler=await compilerRow(ctx,compilerRequestId,c,true);
++   await assertInstitutionCompilerCurrent(ctx,compiler,compiler.input_manifest?.current,c,true);
++   carriedHistory=await readUnaffectedInstitutionHistory(ctx,c,compilerRequestId,head);
++   head.observedPostconditions=carriedHistory.observations;
++  }
++  await c.query(`INSERT INTO finnor_os.p1_requests
++    (id,tenant_id,principal_id,work_id,work_input_id,work_input_digest,episode_id,
++     plan_revision_id,idempotency_key,request_digest,request,proposed)
++    VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11::jsonb,$12::jsonb)`,
++    [id,ctx.auth.tenantId,principal(ctx),request.workId,work.id,inputDigest,episodeId,
++     selected.planRevisionId,request.idempotencyKey,digest,stable(request),stable(head)]);
++  const row=await nativeRequestRow(ctx,id,c);
++  if(carriedHistory)await trace(ctx,row,'X1_UNAFFECTED_CREATION_HISTORY_BOUND',{
++   priorHead:carriedHistory.priorHead,update:carriedHistory.update,
++   carriedDutyIds:head.observedPostconditions.map(item=>item.stableIdentity),
++   originalEpisode:episodeId,authorityGranted:false},c);
++  await trace(ctx,row,'INSTITUTION_RESPONSIBILITY_BOUND',{work:head.work,
++   proposedDigest:sha(head),dutyPopulation:{count:nodes.length,digest:sha(nodes)},
++   unresolvedPopulation:{count:unresolved.length,digest:sha(unresolved)},
++   fullPopulationOwner:'P1_IMMUTABLE_PROPOSED_AND_PROGRAMME_HEAD',
++   originalDeadline:demand.originalDeadline,reservationRef,admission:programme.admission,
++   checkedAdmissionId:admission.id,completion:'INDEPENDENT_CANONICAL_OBSERVATION_REQUIRED'},c);
++  await enqueueProgram(ctx,row,'initial',c);
++  return {programId:id,workId:request.workId,workRevision:work.id,status:'QUEUED',replayed:false};
++ });
++}
++
++export async function readInstitutionHarnessProgram(ctx:PeMutationContext,id:string){
++ return readInstitutionHarnessOwnerCut(ctx,id,1);
++}
++type InstitutionHarnessOwnerProjection={programId:string;workId:string;workRevision:string;
++ status:string;program:InstitutionHarnessProgram|null;reason:string|null;
++ incurredCosts:Awaited<ReturnType<typeof episodeCosts>>;canResume?:boolean};
++async function readInstitutionHarnessOwnerCut(ctx:PeMutationContext,id:string,remainingRefresh:number):Promise<InstitutionHarnessOwnerProjection>{
++ const q=await nativeRequestRow(ctx,id);
++ if(!isInstitutionRow(q))throw Error('X1_P1_TYPED_HEAD_REQUIRED');
++ await authorize(ctx,q.request.root,[{type:'work',id:q.work_id}]);
++ if(['CANCELLED','INVALIDATED'].includes(q.status))
++  return {programId:id,workId:q.work_id,workRevision:q.work_input_id,status:q.status,
++   program:null,reason:q.failure,incurredCosts:await episodeCosts(ctx,q)};
++ try{await assertProgramCurrent(ctx,q);}
++ catch(error){
++  if(remainingRefresh>0&&(error as Error).message==='CANONICAL_PLAN_REVISION_SUPERSEDED'){
++   const latest=await nativeRequestRow(ctx,id);
++   // A canonical batch can advance while this read validates its old pointer.
++   // Refresh once only after proving the same owner/input/generation acquired a
++   // different actual plan. Unrelated supersession and all other guards refuse.
++   if(latest.generation===q.generation&&latest.work_input_id===q.work_input_id
++     &&latest.plan_revision_id!==q.plan_revision_id)
++    return readInstitutionHarnessOwnerCut(ctx,id,remainingRefresh-1);
++  }
++  throw error;
++ }
++ const program=q.head_id?await tx(ctx,async c=>{
++  const row=(await c.query<{body:InstitutionHarnessProgram;digest:string}>(`SELECT body,digest
++    FROM finnor_os.p1_programs WHERE tenant_id=$1 AND principal_id=$2 AND id=$3`,
++   [q.tenant_id,q.principal_id,q.head_id])).rows[0];
++  if(!row||row.body.schema!=='finnor.institution-harness-program.v1'
++    ||sha(row.body)!==row.digest)throw Error('PROGRAM_IMMUTABLE_DIGEST_MISMATCH');
++  return row.body;
++ },true):q.proposed;
++ if(q.status==='TESTED'||q.status==='OBSERVED'&&program.observedPostconditions.length!==program.nodes.length)
++  throw Error('X1_P1_INDEPENDENT_CANONICAL_POSTCONDITION_REQUIRED');
++ await resolveEconomicBindings(ctx,q.request,{programId:q.id,workId:q.work_id,
++  inputId:q.work_input_id,validAt:q.request.validAt,knowledgeAt:q.request.validAt});
++ await authorize(ctx,q.request.root,[{type:'work',id:q.work_id}]);
++ return {programId:id,workId:q.work_id,workRevision:q.work_input_id,status:q.status,
++  program,reason:q.failure,incurredCosts:await episodeCosts(ctx,q),
++  canResume:['WAITING','PARTIAL','FAILED'].includes(q.status)};
++}
++function isInstitutionRow(q:Awaited<ReturnType<typeof nativeRequestRow>>):q is InstitutionProgramRow{
++ return isInstitutionRequest(q.request)&&q.proposed.schema==='finnor.institution-harness-program.v1';
++}
++
++export async function runInstitutionHarnessJob(ctx:PeMutationContext,q:InstitutionProgramRow,execution:Readonly<JobExecutionContext>){
++ // A published head is durable progress even if the previous claimant died
++ // after setting RUNNING. Recovery must never clone the initial proposal.
++ if(q.head_id)return continueInstitutionProgram(ctx,q,execution);
++ const started=performance.now(),startedAt=new Date().toISOString();
++ let current=q,nativeOrdinal=0,meterStatus='PREPARATION_UNCERTAIN';
++ try{
++ await assertProgramCurrent(ctx,q);
++ const valid=await validateInstitutionDemand(ctx,q.proposed.reservationRef);
++ if(valid.status!=='CURRENT')throw Error('X1_P1_S5_PARENT_NOT_CURRENT');
++ current=await tx(ctx,async c=>{
++  const row=await nativeRequestRow(ctx,q.id,c,true);
++  const claim=(await c.query(`SELECT id FROM finnor_os.jobs WHERE id=$1 AND tenant_id=$2
++    AND type IN('run_harness_program_v1','run_x1_institution_continuation_v1')
++    AND status='running' AND claim_token=$3
++    AND claim_fence=$4 AND protocol_version=1 AND lease_expires_at>clock_timestamp() FOR SHARE`,
++   [execution.jobId,q.tenant_id,execution.claimToken,execution.claimFence])).rows[0];
++  if(!claim||row.generation!==q.generation)throw Error('PROGRAM_JOB_CLAIM_FENCED');
++  const charged=await c.query(`UPDATE finnor_os.p1_episodes SET steps_used=steps_used+1,
++    attempts_used=attempts_used+1 WHERE id=$1 AND tenant_id=$2 AND principal_id=$3
++    AND steps_used+1<=LEAST(max_steps,$4) AND attempts_used+1<=max_attempts
++    AND deadline_at>clock_timestamp() RETURNING steps_used`,
++   [q.episode_id,q.tenant_id,q.principal_id,q.request.institution.compilerRequestId?1024:64]);
++  if(!charged.rowCount)throw Error('ORIGINAL_EPISODE_GRANT_EXHAUSTED');
++  nativeOrdinal=Number(charged.rows[0].steps_used);
++  await c.query(`UPDATE finnor_os.p1_requests SET status='RUNNING',claim_token=$4,claim_fence=$5
++    WHERE tenant_id=$1 AND principal_id=$2 AND id=$3`,
++   [q.tenant_id,q.principal_id,q.id,execution.claimToken,execution.claimFence]);
++  await trace(ctx,row,'DELIVERY_STARTED',{jobId:execution.jobId,claimFence:execution.claimFence,
++   originalEpisode:q.episode_id,reservationRef:q.proposed.reservationRef},c);
++  return {...row,status:'RUNNING',claim_token:execution.claimToken,claim_fence:execution.claimFence} as InstitutionProgramRow;
++ });
++ if(q.request.institution.compilerRequestId){
++  const {compilerRow,compilerEpisode}=await import('../institution-program/store');
++  const compiler=await compilerRow(ctx,q.request.institution.compilerRequestId);
++  const episode=await compilerEpisode(ctx,compiler.episode_id);
++  // The original P1 step domain includes preparation and continuation, so
++  // this physical delivery cannot alias a later continuation's charge.
++  await chargeInstitutionDemand(ctx,q.proposed.reservationRef,{
++   responsibilityIdentity:`x1-compiler-episode:${episode.id}`,phase:'RECOVERY',
++   ordinal:nativeOrdinal,units:1});
++ }
++ await assertInstitutionApplicationDeliveryCurrent(ctx,current.id,execution);
++ const head:InstitutionHarnessProgram=structuredClone(q.proposed);
++ head.runtime={node:process.version,imageDigest:null,jobId:execution.jobId,
++  workerId:execution.workerId,deliveryAttemptId:execution.deliveryAttemptId,claimFence:execution.claimFence};
++ const bindings=await resolveEconomicBindings(ctx,q.request,{programId:q.id,workId:q.work_id,
++  inputId:q.work_input_id,validAt:q.request.validAt,knowledgeAt:q.request.validAt});
++ for(const node of head.nodes){
++  await assertProgramCurrent(ctx,current);
++  const outcome=await executeOwnerOperation(ctx,current,{op:'institution_duty',node});
++  await durableNode(ctx,current,node.id,outcome);
++  if(outcome.status==='STOP'){
++   node.action=null;
++   head.interventions=[...(head.interventions??[]),{stableIdentity:node.stableIdentity,
++    predicate:String((outcome.value as {reason?:string}).reason??'X1_EXACT_OPERATION_INTERPRETATION_REQUIRED'),possibleEffect:false}];
++  }
++  await trace(ctx,current,'INSTITUTION_OWNER_OPERATION',{nodeId:node.id,
++   outcome,originalDeadline:node.deadlineAt,reservationRef:head.reservationRef,
++   bindings,completed:false,executionAuthorityGranted:false});
++ }
++ head.status=head.nodes.some(n=>n.action)?'WAITING':'PARTIAL';
++ // Neither a P1 node nor an analytical TESTED result may publish OBSERVED.
++ await tx(ctx,async c=>{
++  await c.query(`SELECT l.id FROM finnor_os.work_objective_loops l
++    JOIN finnor_os.work_plan_revisions p ON p.objective_loop_id=l.id AND p.tenant_id=l.tenant_id
++    WHERE l.tenant_id=$1 AND p.id=$2 FOR UPDATE OF l`,[q.tenant_id,q.plan_revision_id]);
++  await assertProgramCurrent(ctx,current,c,true);
++  const claim=(await c.query(`SELECT id FROM finnor_os.jobs
++    WHERE tenant_id=$1 AND id=$2 AND status='running'
++      AND claim_token=$3 AND claim_fence=$4 AND lease_expires_at>clock_timestamp() FOR SHARE`,
++   [q.tenant_id,execution.jobId,execution.claimToken,execution.claimFence])).rows[0];
++  if(!claim)throw Error('ATOMIC_PROGRAM_PUBLICATION_FENCED');
++  await persistProgrammeHead(ctx,current,head,head.status,
++   head.status==='PARTIAL'?'X1_EXACT_ACTION_PAYLOAD_OR_OBSERVER_MISSING':null,c);
++  if(head.status==='WAITING'){
++   await enqueueProgram(ctx,current,'first-canonical-observation',c);
++  }
++ });
++ meterStatus='PREPARATION_PUBLISHED';
++ }catch(error){
++  meterStatus=safePredicate(error);
++  await tx(ctx,async c=>{
++   const row=await nativeRequestRow(ctx,q.id,c,true);
++   await trace(ctx,row,'FAILED_OR_FENCED',{predicate:String((error as Error).message),
++    claimFence:execution.claimFence,originalDeadline:q.request.institution.demand.originalDeadline,
++    reservationRef:q.proposed.reservationRef,exposureRetained:true},c);
++   const claim=(await c.query(`SELECT id FROM finnor_os.jobs WHERE tenant_id=$1 AND id=$2
++     AND type IN('run_harness_program_v1','run_x1_institution_continuation_v1')
++     AND status='running' AND claim_token=$3 AND claim_fence=$4
++     AND lease_expires_at>clock_timestamp() FOR SHARE`,
++    [q.tenant_id,execution.jobId,execution.claimToken,execution.claimFence])).rows[0];
++   if(claim&&row.generation===q.generation&&(row.status==='QUEUED'
++     ||row.status==='RUNNING'&&row.claim_token===execution.claimToken&&row.claim_fence===execution.claimFence)){
++    await c.query(`UPDATE finnor_os.p1_requests
++      SET status='FAILED',failure=$4,updated_at=clock_timestamp()
++      WHERE tenant_id=$1 AND principal_id=$2 AND id=$3`,
++     [q.tenant_id,q.principal_id,q.id,
++      /^X1_[A-Z0-9_]+$/.test(String((error as Error).message))
++        ?(error as Error).message:'X1_P1_OWNER_FAILURE']);
++   }
++  });
++  throw error;
++ }
++ finally{
++  try{
++   const rights=await employeeAuthoritySnapshot(ctx.auth);
++   const compute=await persistInstitutionCompute(ctx,{requestId:q.id,workId:q.work_id,
++    episodeId:q.episode_id,jobId:execution.jobId,deliveryAttemptId:execution.deliveryAttemptId,
++    parentReservation:q.proposed.reservationRef,rightsRevision:String(rights.revision),
++    startedAt,elapsedMs:performance.now()-started,phase:'PREPARATION',status:meterStatus,
++    observedAcquisitionAttempts:0,observedCheckerAttempts:0});
++   await trace(ctx,current,'X1_PREPARATION_COMPUTE_ATTRIBUTED',{
++    ordinal:nativeOrdinal,compute:compute.record.ref,jobId:execution.jobId,
++    deliveryAttemptId:execution.deliveryAttemptId,originalEpisode:q.episode_id});
++  }catch(error){await trace(ctx,current,'X1_PREPARATION_METER_GAP',{
++   jobId:execution.jobId,deliveryAttemptId:execution.deliveryAttemptId,predicate:safePredicate(error)});}
++ }
++}
+diff --git a/finnor-os/packages/private-equity/src/program-synthesis/institution-continuation.ts b/finnor-os/packages/private-equity/src/program-synthesis/institution-continuation.ts
+--- a/finnor-os/packages/private-equity/src/program-synthesis/institution-continuation.ts
++++ b/finnor-os/packages/private-equity/src/program-synthesis/institution-continuation.ts
+@@ -1,364 +1,373 @@
+-import type { JobExecutionContext } from "../../../../apps/worker/src/queue";
+-import type { PoolClient } from "pg";
+-import { consumeInstitutionApplicationModels } from "../../../orchestration/src/project-z/z0-convergence/institution-consumer";
+-import type { PeMutationContext } from "../types";
+-import { validateInstitutionDemand,chargeInstitutionDemand } from "../allocation-store";
+-import { authorize, principal, sha, stable, tx } from "../evidence-execution/store";
+-import type { InstitutionHarnessProgram } from "./contracts";
+-import { frozenDutyExpectation, readCanonicalDuty, matchesFrozenInstitutionIntent } from "./duty-observer";
+-import { assertProgramCurrent, enqueueProgram, nativeRequestRow, persistProgrammeHead, trace, type InstitutionProgramRow } from "./store";
+-import { persistInstitutionCompute } from "../institution-program/meter";
+-import { institutionPlanBatchSize, selectInstitutionPlan } from "./plan";
+-
+-// PE creation reserves the canonical request ID from DomainAction.id. The
+-// mandate's frozen expectedEntityId is therefore also the durable action ID.
+-const actionId = (node: InstitutionHarnessProgram["nodes"][number]) => {
+- if(!node.action)throw Error("X1_EXACT_REQUEST_ACTION_REQUIRED");
+- return node.action.expectedEntityId;
+-};
+-
+-/** The actual command/worker, not this P1 job, mutates PE. After dispatch,
+- * subsequent deliveries only reconcile the same action and canonical row. */
+-export async function continueInstitutionProgram(ctx: PeMutationContext, q: InstitutionProgramRow, execution: Readonly<JobExecutionContext>) {
+- await consumeInstitutionApplicationModels(ctx,q.id);
+- const started=performance.now(),startedAt=new Date().toISOString();
+- if(!["WAITING","RUNNING","QUEUED","FAILED","PARTIAL"].includes(q.status) || !q.head_id)
+-  throw Error("X1_CURRENT_CONTINUATION_HEAD_REQUIRED");
+- const head=await tx(ctx,async c=>{
+-  const row=(await c.query<{body:InstitutionHarnessProgram;digest:string}>(`SELECT body,digest
+-   FROM finnor_os.p1_programs WHERE tenant_id=$1 AND principal_id=$2 AND id=$3 AND request_id=$4`,
+-   [q.tenant_id,q.principal_id,q.head_id,q.id])).rows[0];
+-  if(!row||sha(row.body)!==row.digest||row.body.schema!=="finnor.institution-harness-program.v1"
+-    ||!["WAITING","PARTIAL"].includes(row.body.status)||row.body.work.revision!==q.work_input_id
+-    ||row.body.work.planRevisionId!==q.plan_revision_id)
+-    throw Error("X1_WAITING_HEAD_CHANGED");
+-  return row.body;
+- },true);
+- const adoptClaim=async(c:PoolClient,row:Awaited<ReturnType<typeof nativeRequestRow>>)=>{
+-  const updated=await c.query(`UPDATE finnor_os.p1_requests
+-    SET status='RUNNING',claim_token=$4,claim_fence=$5,updated_at=clock_timestamp()
+-    WHERE tenant_id=$1 AND principal_id=$2 AND id=$3
+-      AND status IN('WAITING','RUNNING','QUEUED','FAILED','PARTIAL')`,
+-    [q.tenant_id,q.principal_id,q.id,execution.claimToken,execution.claimFence]);
+-  if(updated.rowCount!==1)throw Error("X1_CONTINUATION_CLAIM_FENCED");
+-  return {...row,status:"RUNNING",claim_token:execution.claimToken,claim_fence:execution.claimFence};
+- };
+- if(Date.now()>=Date.parse(head.bounds.deadlineAt)){
+-  // A terminal metadata stop does not re-open expired authority or re-dispatch
+-  // an uncertain native effect. Its receipt retains the last observed head.
+-  await tx(ctx,async c=>{
+-   const locked=await nativeRequestRow(ctx,q.id,c,true);
+-   const claim=(await c.query(`SELECT id FROM finnor_os.jobs WHERE tenant_id=$1 AND id=$2
+-    AND type='run_x1_institution_continuation_v1' AND status='running'
+-    AND claim_token=$3 AND claim_fence=$4 AND lease_expires_at>clock_timestamp() FOR SHARE`,
+-    [q.tenant_id,execution.jobId,execution.claimToken,execution.claimFence])).rows[0];
+-   if(!claim||locked.generation!==q.generation||locked.head_id!==q.head_id
+-    ||["OBSERVED","CANCELLED","INVALIDATED"].includes(locked.status))
+-    throw Error("X1_CONTINUATION_CLAIM_FENCED");
+-   const running=await adoptClaim(c,locked);
+-   await persistProgrammeHead(ctx,running,{...head,status:"PARTIAL"},"PARTIAL",
+-    "X1_ORIGINAL_OBSERVATION_DEADLINE_EXPIRED",c);
+-   await trace(ctx,locked,"X1_ORIGINAL_OBSERVATION_DEADLINE_EXPIRED",{
+-    originalDeadline:head.bounds.deadlineAt,observationsRetained:head.observedPostconditions,
+-    replacementActionCreated:false,originalEpisode:q.episode_id},c);
+-  });
+-  return;
+- }
+- await assertProgramCurrent(ctx,q);
+- const resource=await validateInstitutionDemand(ctx,q.proposed.reservationRef);
+- if(resource.status!=="CURRENT")
+-  throw Error("X1_P1_S5_PARENT_NOT_CURRENT");
+- const executable=head.nodes.filter(node=>node.action);
+- if(!executable.length)throw Error("X1_SUPPORTED_ACTION_POPULATION_REQUIRED");
+- // Reconcile expired native claims through their existing runtime before
+- // interpreting an uncertain action as an intervention. No executor replay.
+- await (await import("@finnor/workflow-runtime")).recoverStaleSteps(q.tenant_id);
+- for(const node of executable){
+-  const expected=frozenDutyExpectation(q.tenant_id,node);
+-  const duty=q.request.institution.responsibilities.find(r=>r.obligation.stableIdentity===node.stableIdentity);
+-  if(!duty||duty.obligation.postcondition.structuralObserver.entityType!==expected.entityType
+-    ||duty.obligation.postcondition.structuralObserver.dealId!==expected.dealId
+-    ||node.postconditionRef!==duty.obligation.postcondition.contractRef
+-    ||node.observerRef!==duty.obligation.independentObserver.ref)
+-    throw Error("X1_REQUEST_DUTY_AND_CANONICAL_ROOT_MISMATCH");
+- }
+- const claimed=await tx(ctx,async c=>{
+-  const locked=await nativeRequestRow(ctx,q.id,c,true);
+-  const job=(await c.query(`SELECT id FROM finnor_os.jobs WHERE tenant_id=$1 AND id=$2
+-    AND type='run_x1_institution_continuation_v1' AND protocol_version=1 AND status='running'
+-    AND claim_token=$3 AND claim_fence=$4 AND lease_expires_at>clock_timestamp() FOR SHARE`,
+-   [q.tenant_id,execution.jobId,execution.claimToken,execution.claimFence])).rows[0];
+-  if(!job||locked.generation!==q.generation||locked.head_id!==q.head_id
+-    ||!["WAITING","RUNNING","QUEUED","FAILED","PARTIAL"].includes(locked.status))
+-    throw Error("X1_CONTINUATION_CLAIM_FENCED");
+-  const allowed=(await c.query(`SELECT id FROM finnor_os.work_plan_revisions WHERE tenant_id=$1
+-    AND id=$2 AND work_id=$3 AND work_input_id=$4 AND status='active' FOR SHARE`,
+-   [q.tenant_id,q.plan_revision_id,q.work_id,q.work_input_id])).rows[0];
+-  if(!allowed)throw Error("X1_ACTIVE_PLAN_REQUIRED");
+-  const running=await adoptClaim(c,locked);
+-  const step=(await c.query<{steps_used:number}>(`UPDATE finnor_os.p1_episodes
+-    SET steps_used=steps_used+1 WHERE tenant_id=$1 AND principal_id=$2 AND id=$3
+-      AND steps_used+1<=LEAST(max_steps,$4) AND deadline_at>clock_timestamp() RETURNING steps_used`,
+-    [q.tenant_id,q.principal_id,q.episode_id,q.request.institution.compilerRequestId?1024:64])).rows[0];
+-  if(!step){
+-   await persistProgrammeHead(ctx,running,{...head,status:"PARTIAL"},"PARTIAL","X1_ORIGINAL_CONTINUATION_ENVELOPE_EXHAUSTED",c);
+-   await trace(ctx,locked,"X1_ORIGINAL_CONTINUATION_ENVELOPE_EXHAUSTED",{
+-    originalEpisode:q.episode_id,observationsRetained:head.observedPostconditions,possibleEffectsRetained:true},c);
+-   return null;
+-  }
+-  await trace(ctx,locked,"X1_CONTINUATION_CLAIMED",{jobId:execution.jobId,claimFence:execution.claimFence},c);
+-  return {...running,
+-    continuationOrdinal:step.steps_used} as InstitutionProgramRow & {continuationOrdinal:number};
+- });
+- if(!claimed)return;
+- // A governed S6 origin is never sent through this protocol-2 ordinary action.
+- // Check before drafting AND again inside publication, so later attachment cannot
+- // silently turn the old ordinary path into a protected delivery.
+- const noGovernedOrigin=async(id:string)=>tx(ctx,async c=>(await c.query(
+-  `SELECT 1 FROM finnor_os.s6_obligation_origins WHERE tenant_id=$1 AND domain_action_id=$2`,
+-  [q.tenant_id,id])).rowCount===0,true);
+- let resourceCharged=false;
+- try{
+-  if(q.request.institution.compilerRequestId){
+-   const {compilerRow,compilerEpisode}=await import("../institution-program/store");
+-   const compiler=await compilerRow(ctx,q.request.institution.compilerRequestId);
+-   const episode=await compilerEpisode(ctx,compiler.episode_id);
+-   await chargeInstitutionDemand(ctx,head.reservationRef,{
+-    responsibilityIdentity:`x1-compiler-episode:${episode.id}`,phase:"RECOVERY",
+-    ordinal:claimed.continuationOrdinal,units:1});
+-  }else{
+-   // Legacy explicit institution requests charge their checked first duty.
+-   await chargeInstitutionDemand(ctx,head.reservationRef,{responsibilityIdentity:executable[0]!.stableIdentity,
+-    phase:"RECOVERY",ordinal:claimed.continuationOrdinal,units:1});
+-  }
+-  resourceCharged=true;
+-  const cursor=head.deliveryCursor??0,chunk=executable.slice(cursor,cursor+institutionPlanBatchSize());
+-  if(!Number.isSafeInteger(cursor)||cursor<0||cursor>executable.length)
+-   throw Error("X1_SAVED_BATCH_CURSOR_INVALID");
+-  const interventions=[...(head.interventions??[])];
+-  // Native effects freeze the current Deal graph. Its next action is compiled
+-  // after the accepted predecessor is observed, preserving native eligibility.
+-  const activeRoots=new Set<string>();
+-  let newlyDispatched=0;
+-  for(const node of chunk){
+-   const expected=frozenDutyExpectation(q.tenant_id,node);
+-   const id=actionId(node);
+-   if(!await noGovernedOrigin(id))throw Error("X1_GOVERNED_ORIGIN_REQUIRES_PROTOCOL3");
+-   const existing=await tx(ctx,async c=>(await c.query<{
+-    work_id:string|null;initiated_by:string|null;action_type:string;
+-    payload:unknown;plan_revision_id:string|null;status:string;episode_id:string|null;authority_context:any;
+-    observation_pending:boolean
+-   }>(`SELECT a.work_id,a.initiated_by,a.action_type,a.payload,a.plan_revision_id,a.status,
+-      p.episode_id,a.authority_context,EXISTS(SELECT 1 FROM finnor_os.workflow_steps s
+-        JOIN finnor_os.integration_operations o ON o.tenant_id=s.tenant_id AND o.workflow_step_id=s.id
+-        JOIN finnor_os.jobs j ON j.tenant_id=o.tenant_id AND j.type='observe_external_effect'
+-          AND j.payload->>'integrationOperationId'=o.id::text AND j.status IN('queued','running')
+-        WHERE s.tenant_id=a.tenant_id AND s.domain_action_id=a.id AND s.status='waiting_observation'
+-          AND o.provider='finnor_plugin_runtime' AND o.integration_id IS NULL
+-          AND o.status='unknown') observation_pending FROM finnor_os.domain_actions a
+-     LEFT JOIN finnor_os.p1_requests p ON p.tenant_id=a.tenant_id
+-      AND p.id::text=a.authority_context->>'programId' AND p.principal_id=a.initiated_by
+-     WHERE a.tenant_id=$1 AND a.id=$2`,[q.tenant_id,id])).rows[0],true);
+-   if(existing&&(existing.work_id!==q.work_id||existing.initiated_by!==q.principal_id
+-     ||existing.action_type!==node.operation||existing.episode_id!==q.episode_id
+-     ||existing.authority_context?.kind!=="institution_duty"
+-     ||existing.authority_context?.stableIdentity!==node.stableIdentity
+-     ||!matchesFrozenInstitutionIntent(node.action!.payload,existing.payload,q.work_id))){
+-    interventions.push({stableIdentity:node.stableIdentity,
+-     predicate:"X1_ORIGINAL_EFFECT_INTENT_CONFLICT_REQUIRES_DECISION",possibleEffect:true});
+-    await trace(ctx,claimed,"X1_ORIGINAL_EFFECT_RETAINED",{stableIdentity:node.stableIdentity,
+-     actionId:id,priorStatus:existing.status,predicate:"X1_ORIGINAL_EFFECT_INTENT_CONFLICT_REQUIRES_DECISION"});
+-    continue;
+-   }
+-   if(existing&&existing.plan_revision_id!==q.plan_revision_id&&existing.status==="draft"){
+-    interventions.push({stableIdentity:node.stableIdentity,
+-     predicate:"X1_PRIOR_DRAFT_PLAN_SUPERSEDED_REQUIRES_DECISION",possibleEffect:false});
+-    continue;
+-   }
+-   if(existing&&['failed','rejected','needs_human_review','blocked_integration_unavailable'].includes(existing.status)){
+-    if(existing.status==='needs_human_review'&&existing.observation_pending){
+-     activeRoots.add(expected.dealId);continue;
+-    }
+-    interventions.push({stableIdentity:node.stableIdentity,
+-     predicate:'X1_NATIVE_ACTION_'+existing.status.toUpperCase()+'_REQUIRES_DECISION',possibleEffect:true});
+-    continue;
+-   }
+-   if(existing&&['executing','approved','pending'].includes(existing.status)){
+-    activeRoots.add(expected.dealId);
+-    continue;
+-   }
+-   // Accepted/possibly submitted actions are reconciled in place. The native
+-   // runtime owns their retry/receipt path; P1 never creates a replacement ID.
+-   if(!existing||existing.status==="draft"){
+-    if(activeRoots.has(expected.dealId))continue;
+-    await assertProgramCurrent(ctx,claimed);
+-    await authorize(ctx,{entityType:"pe_deal",entityId:expected.dealId},[{type:"work",id:q.work_id}]);
+-    const planNodes=head.planGraph.nodes.filter(planNode=>planNode.kind==='action'
+-     &&planNode.actionType===node.operation&&sha(planNode.payload)===sha(node.action!.payload));
+-    const planNode=planNodes[0];
+-    if(planNodes.length!==1||planNode?.kind!=='action'
+-      ||sha(planNode.groundedPayload)!==sha(node.action!.payload))
+-     throw Error('X1_EXACT_NATIVE_ACTION_NODE_REQUIRED');
+-    // The deterministic action ID makes uncertain delivery recoverable by the
+-    // native bridge. No self-supplied completion receipt is accepted.
+-    const { FinnorOrchestrator }=await import("../../../orchestration/src");
+-    await new FinnorOrchestrator().draftKnownAction(node.operation,planNode.groundedPayload,q.tenant_id,{
+-     source:"x1_checked_institution_duty",actionId:id,workId:q.work_id,initiatedBy:principal(ctx),
+-     authorityContext:{principal:principal(ctx),kind:"institution_duty",programId:q.id,
+-      compilerRequestId:q.request.institution.compilerRequestId??null,
+-      stableIdentity:node.stableIdentity,workInputId:q.work_input_id},
+-     planRevisionId:q.plan_revision_id,planNodeId:planNode.id,reviewBeforeExecution:false,
+-    });
+-    activeRoots.add(expected.dealId);newlyDispatched++;
+-   }
+-  }
+-  await tx(ctx,async(c,db)=>{
+-   await c.query(`SELECT l.id FROM finnor_os.work_objective_loops l
+-    JOIN finnor_os.work_plan_revisions p ON p.objective_loop_id=l.id AND p.tenant_id=l.tenant_id
+-    WHERE l.tenant_id=$1 AND p.id=$2 FOR UPDATE OF l`,[q.tenant_id,q.plan_revision_id]);
+-   await assertProgramCurrent(ctx,claimed,c,true);
+-   const current=await nativeRequestRow(ctx,q.id,c,true);
+-   const job=(await c.query(`SELECT id FROM finnor_os.jobs WHERE tenant_id=$1 AND id=$2
+-    AND type='run_x1_institution_continuation_v1' AND status='running'
+-    AND claim_token=$3 AND claim_fence=$4 AND lease_expires_at>clock_timestamp() FOR SHARE`,
+-    [q.tenant_id,execution.jobId,execution.claimToken,execution.claimFence])).rows[0];
+-   if(!job||current.generation!==q.generation||current.status!=="RUNNING"
+-     ||current.claim_token!==execution.claimToken||current.claim_fence!==execution.claimFence)
+-    throw Error("X1_OBSERVATION_PUBLICATION_FENCED");
+-   const observed:InstitutionHarnessProgram["observedPostconditions"]=[...head.observedPostconditions];
+-   const previous=new Map(head.observedPostconditions.map(item=>[item.stableIdentity,item]));
+-   if(previous.size!==head.observedPostconditions.length)throw Error("X1_SAVED_CREATION_WITNESS_DUPLICATE");
+-   for(const prior of observed){
+-    const node=executable.find(item=>item.stableIdentity===prior.stableIdentity);
+-    if(!node)throw Error("X1_SAVED_CREATION_WITNESS_NO_DUTY");
+-    const expected=frozenDutyExpectation(q.tenant_id,node);
+-    if(prior.canonicalRef!==`${expected.entityType}:${expected.entityId}`
+-     ||!/^([a-f0-9]{64})$/.test(prior.observerDigest)
+-     ||prior.derivationRevision&&prior.derivationRevision!==node.derivationRevision
+-     ||prior.actionId&&prior.actionId!==actionId(node)
+-     ||prior.frozenIntentDigest&&prior.frozenIntentDigest!==sha(node.action))
+-     throw Error("X1_SAVED_CREATION_WITNESS_INTENT_CHANGED");
+-   }
+-   const actionRows=(await c.query<{id:string;action_type:string;status:string;effect_status:string|null;payload:unknown;stable_identity:string}>(
+-     `SELECT a.id,a.action_type,a.status,e.status effect_status,a.payload,
+-       a.authority_context->>'stableIdentity' stable_identity FROM finnor_os.domain_actions a
+-      LEFT JOIN finnor_os.business_effects e ON e.tenant_id=a.tenant_id
+-        AND e.domain_action_id=a.id
+-      WHERE a.tenant_id=$1 AND a.id=ANY($2::uuid[]) AND a.work_id=$3
+-        AND a.initiated_by=$4 AND a.authority_context->>'kind'='institution_duty' AND EXISTS
+-        (SELECT 1 FROM finnor_os.p1_requests prior WHERE prior.tenant_id=a.tenant_id
+-          AND prior.id::text=a.authority_context->>'programId' AND prior.work_id=a.work_id
+-          AND prior.principal_id=a.initiated_by AND prior.episode_id=$5
+-          AND prior.work_input_id::text=a.authority_context->>'workInputId')
+-        AND NOT EXISTS
+-        (SELECT 1 FROM finnor_os.s6_obligation_origins o
+-          WHERE o.tenant_id=a.tenant_id AND o.domain_action_id=a.id)`,
+-     [q.tenant_id,executable.map(actionId),q.work_id,q.principal_id,q.episode_id])).rows;
+-   const actionsById=new Map(actionRows.map(action=>[action.id,action]));
+-   if(actionsById.size!==actionRows.length)throw Error('X1_NATIVE_EFFECT_POPULATION_AMBIGUOUS');
+-   for(const node of executable){
+-    const id=actionId(node),action=actionsById.get(id);
+-    if(!action||action.action_type!==node.operation||action.stable_identity!==node.stableIdentity
+-      ||!matchesFrozenInstitutionIntent(node.action!.payload,action.payload,q.work_id,true)
+-      ||action.status!=="completed"||action.effect_status!=="verified"){
+-     if(previous.has(node.stableIdentity))interventions.push({stableIdentity:node.stableIdentity,
+-      predicate:"X1_PRIOR_CREATION_EFFECT_REQUIRES_RECONCILIATION",possibleEffect:true});
+-     continue;
+-    }
+-    const prior=previous.get(node.stableIdentity);
+-    if(prior){
+-     // The immutable saved head binds legacy witnesses to these same nodes.
+-     // New observations also carry explicit derivation/action/intent bindings.
+-     continue;
+-    }
+-    const result=await readCanonicalDuty(c,q.tenant_id,node);
+-    if(result.observed&&result.observerDigest)observed.push({stableIdentity:node.stableIdentity,
+-     canonicalRef:result.canonicalRef,observerDigest:result.observerDigest,
+-     derivationRevision:node.derivationRevision,actionId:id,frozenIntentDigest:sha(node.action)});
+-   }
+-   const supportedComplete=observed.length===executable.length;
+-   const completed=supportedComplete&&executable.length===head.nodes.length
+-    &&head.institution.unresolved.length===0
+-    &&(head.institution.programme.sourceCoverageGaps?.length??0)===0&&interventions.length===0
+-    &&Date.now()<Date.parse(head.bounds.deadlineAt);
+-   const deadlineExpired=Date.now()>=Date.parse(head.bounds.deadlineAt);
+-   const batchObserved=chunk.every(node=>observed.some(item=>item.stableIdentity===node.stableIdentity));
+-   const nextCursor=supportedComplete?executable.length:batchObserved?cursor+chunk.length:cursor;
+-   let selected:{goal:InstitutionHarnessProgram['goal'];planGraph:InstitutionHarnessProgram['planGraph'];planRevisionId:string}|null=null;
+-   // Retire a batch only after actual completed/verified actions and independent
+-   // canonical witnesses. The next/final graph and P1 pointer commit together.
+-   if(batchObserved&&!deadlineExpired&&interventions.length===0&&nextCursor!==cursor){
+-    selected=await selectInstitutionPlan(ctx,q.request,{programId:q.id,workId:q.work_id,
+-     inputId:q.work_input_id,inputDigest:q.work_input_digest,parentRevisionId:q.plan_revision_id,
+-     rightsRevision:Number(resource.reservation.rightsRevision),deadlineAt:head.bounds.deadlineAt,
+-     cursor:nextCursor},db);
+-    await c.query(`UPDATE finnor_os.p1_requests SET plan_revision_id=$4
+-     WHERE tenant_id=$1 AND principal_id=$2 AND id=$3`,
+-     [q.tenant_id,q.principal_id,q.id,selected.planRevisionId]);
+-    await trace(ctx,claimed,'X1_NATIVE_BATCH_ADVANCED',{previousPlan:q.plan_revision_id,
+-     selectedPlan:selected.planRevisionId,batchStart:cursor,batchEnd:nextCursor,
+-     population:executable.length,originalEpisode:q.episode_id,originalReservation:head.reservationRef},c);
+-   }
+-   const revised:InstitutionHarnessProgram={...head,observedPostconditions:observed,
+-    deliveryCursor:nextCursor,interventions,
+-    ...(selected?{goal:selected.goal,planGraph:selected.planGraph,
+-     work:{...head.work,planRevisionId:selected.planRevisionId}}:{}),
+-    status:completed?"OBSERVED":supportedComplete||deadlineExpired||interventions.length?"PARTIAL":"WAITING",runtime:{...head.runtime,jobId:execution.jobId,
+-     workerId:execution.workerId,deliveryAttemptId:execution.deliveryAttemptId,
+-     claimFence:execution.claimFence}};
+-   const advanced=selected?{...claimed,plan_revision_id:selected.planRevisionId}:claimed;
+-   await persistProgrammeHead(ctx,advanced,revised,revised.status,
+-    interventions[0]?.predicate??(deadlineExpired?"X1_ORIGINAL_OBSERVATION_DEADLINE_EXPIRED":
+-     supportedComplete&&!completed?(head.institution.programme.sourceCoverageGaps?.length
+-       ?"X1_SOURCE_COVERAGE_GAP_NORMATIVE_POPULATION_UNKNOWN":"X1_UNRESOLVED_DUTIES_RETAINED"):null),c);
+-   await trace(ctx,claimed,completed?"X1_CANONICAL_DUTIES_OBSERVED":"X1_CANONICAL_OBSERVATION_PENDING",
+-    {count:observed.length,total:head.nodes.length,deadlineAt:head.bounds.deadlineAt},c);
+-   if(completed){
+-    await (await import("../../../orchestration/src/objective-loop"))
+-     .schedulePreparedHarnessObjectiveTx(db,{tenantId:q.tenant_id,workId:q.work_id,planRevisionId:advanced.plan_revision_id});
+-   }else if(!supportedComplete&&!deadlineExpired&&interventions.length===0){
+-    await c.query("UPDATE finnor_os.p1_requests SET poll_count=poll_count+1 WHERE tenant_id=$1 AND id=$2",
+-     [q.tenant_id,q.id]);
+-    // Exponential backoff reaches one minute. The final scheduled wake reaches
+-    // the original deadline; poll 60 is not a silent unscheduled WAITING state.
+-    const remaining=Date.parse(head.bounds.deadlineAt)-Date.now();
+-    const progress=newlyDispatched>0||observed.length>head.observedPostconditions.length;
+-    const delay=Math.max(1,Math.min(remaining,progress?200:60000,2000*2**Math.min(q.poll_count,5)));
+-    await enqueueProgram(ctx,advanced,"observe-"+(q.poll_count+1),c,delay);
+-   }
+-  });
+- }catch(error){
+-  await tx(ctx,async c=>{
+-   const current=await nativeRequestRow(ctx,q.id,c,true);
+-   await trace(ctx,current,"X1_CONTINUATION_UNCERTAIN",{predicate:String((error as Error).message),
+-    possibleEffect:true,actionIds:executable.map(actionId)},c);
+-   if(current.generation===q.generation&&current.status==="RUNNING"
+-    &&current.claim_token===execution.claimToken&&current.claim_fence===execution.claimFence){
+-    if(!resourceCharged){
+-     await persistProgrammeHead(ctx,current,{...head,status:"PARTIAL"},"PARTIAL",
+-      "X1_ORIGINAL_RECOVERY_RESOURCE_REFUSED",c);
+-     await trace(ctx,current,"X1_ORIGINAL_RECOVERY_RESOURCE_REFUSED",{
+-      predicate:String((error as Error).message),replacementActionCreated:false,possibleEffectsRetained:true},c);
+-    }else await c.query(
+-    `UPDATE finnor_os.p1_requests SET status='WAITING',failure=$4,updated_at=clock_timestamp()
+-     WHERE tenant_id=$1 AND principal_id=$2 AND id=$3`,
+-    [q.tenant_id,q.principal_id,q.id,"X1_CONTINUATION_RECONCILIATION_REQUIRED"]);
+-   }
+-  });
+-  throw error;
+- }finally{
+-  try{
+-   const compute=await persistInstitutionCompute(ctx,{requestId:q.id,workId:q.work_id,episodeId:q.episode_id,
+-    jobId:execution.jobId,deliveryAttemptId:execution.deliveryAttemptId,parentReservation:head.reservationRef,
+-    rightsRevision:resource.reservation.rightsRevision,startedAt,
+-    elapsedMs:performance.now()-started,phase:"RECOVERY",status:"PHYSICAL_CONTINUATION_ATTEMPT",
+-    observedAcquisitionAttempts:0,observedCheckerAttempts:0});
+-   await trace(ctx,claimed,"X1_CONTINUATION_COMPUTE_ATTRIBUTED",{compute:compute.record.ref,
+-    ordinal:claimed.continuationOrdinal,originalEpisode:q.episode_id});
+-  }catch(error){
+-   await trace(ctx,claimed,"X1_CONTINUATION_METER_GAP",{jobId:execution.jobId,
+-    deliveryAttemptId:execution.deliveryAttemptId,elapsedMs:performance.now()-started,
+-    predicate:String((error as Error).message),money:null,humanSeconds:null,aggregatePeakMemoryBytes:null});
+-  }
+- }
+-}
++import type { JobExecutionContext } from "../../../../apps/worker/src/queue";
++import type { PoolClient } from "pg";
++import { assertInstitutionApplicationDeliveryCurrent, consumeInstitutionApplicationModels, recordInstitutionApplicationModelUse, institutionApplicationOwnerInputFromCanonicalAction } from "../../../orchestration/src/project-z/z0-convergence/institution-consumer";
++import type { PeMutationContext } from "../types";
++import { validateInstitutionDemand,chargeInstitutionDemand } from "../allocation-store";
++import { authorize, principal, sha, stable, tx } from "../evidence-execution/store";
++import type { InstitutionHarnessProgram } from "./contracts";
++import { frozenDutyExpectation, readCanonicalDuty, matchesFrozenInstitutionIntent } from "./duty-observer";
++import { assertProgramCurrent, enqueueProgram, nativeRequestRow, persistProgrammeHead, trace, type InstitutionProgramRow } from "./store";
++import { persistInstitutionCompute } from "../institution-program/meter";
++import { institutionPlanBatchSize, selectInstitutionPlan } from "./plan";
++
++// PE creation reserves the canonical request ID from DomainAction.id. The
++// mandate's frozen expectedEntityId is therefore also the durable action ID.
++const actionId = (node: InstitutionHarnessProgram["nodes"][number]) => {
++ if(!node.action)throw Error("X1_EXACT_REQUEST_ACTION_REQUIRED");
++ return node.action.expectedEntityId;
++};
++
++/** The actual command/worker, not this P1 job, mutates PE. After dispatch,
++ * subsequent deliveries only reconcile the same action and canonical row. */
++export async function continueInstitutionProgram(ctx: PeMutationContext, q: InstitutionProgramRow, execution: Readonly<JobExecutionContext>) {
++ const started=performance.now(),startedAt=new Date().toISOString();
++ if(!["WAITING","RUNNING","QUEUED","FAILED","PARTIAL"].includes(q.status) || !q.head_id)
++  throw Error("X1_CURRENT_CONTINUATION_HEAD_REQUIRED");
++ const head=await tx(ctx,async c=>{
++  const row=(await c.query<{body:InstitutionHarnessProgram;digest:string}>(`SELECT body,digest
++   FROM finnor_os.p1_programs WHERE tenant_id=$1 AND principal_id=$2 AND id=$3 AND request_id=$4`,
++   [q.tenant_id,q.principal_id,q.head_id,q.id])).rows[0];
++  if(!row||sha(row.body)!==row.digest||row.body.schema!=="finnor.institution-harness-program.v1"
++    ||!["WAITING","PARTIAL"].includes(row.body.status)||row.body.work.revision!==q.work_input_id
++    ||row.body.work.planRevisionId!==q.plan_revision_id)
++    throw Error("X1_WAITING_HEAD_CHANGED");
++  return row.body;
++ },true);
++ const adoptClaim=async(c:PoolClient,row:Awaited<ReturnType<typeof nativeRequestRow>>)=>{
++  const updated=await c.query(`UPDATE finnor_os.p1_requests
++    SET status='RUNNING',claim_token=$4,claim_fence=$5,updated_at=clock_timestamp()
++    WHERE tenant_id=$1 AND principal_id=$2 AND id=$3
++      AND status IN('WAITING','RUNNING','QUEUED','FAILED','PARTIAL')`,
++    [q.tenant_id,q.principal_id,q.id,execution.claimToken,execution.claimFence]);
++  if(updated.rowCount!==1)throw Error("X1_CONTINUATION_CLAIM_FENCED");
++  return {...row,status:"RUNNING",claim_token:execution.claimToken,claim_fence:execution.claimFence};
++ };
++ if(Date.now()>=Date.parse(head.bounds.deadlineAt)){
++  // A terminal metadata stop does not re-open expired authority or re-dispatch
++  // an uncertain native effect. Its receipt retains the last observed head.
++  await tx(ctx,async c=>{
++   const locked=await nativeRequestRow(ctx,q.id,c,true);
++   const claim=(await c.query(`SELECT id FROM finnor_os.jobs WHERE tenant_id=$1 AND id=$2
++    AND type='run_x1_institution_continuation_v1' AND status='running'
++    AND claim_token=$3 AND claim_fence=$4 AND lease_expires_at>clock_timestamp() FOR SHARE`,
++    [q.tenant_id,execution.jobId,execution.claimToken,execution.claimFence])).rows[0];
++   if(!claim||locked.generation!==q.generation||locked.head_id!==q.head_id
++    ||["OBSERVED","CANCELLED","INVALIDATED"].includes(locked.status))
++    throw Error("X1_CONTINUATION_CLAIM_FENCED");
++   const running=await adoptClaim(c,locked);
++   await persistProgrammeHead(ctx,running,{...head,status:"PARTIAL"},"PARTIAL",
++    "X1_ORIGINAL_OBSERVATION_DEADLINE_EXPIRED",c);
++   await trace(ctx,locked,"X1_ORIGINAL_OBSERVATION_DEADLINE_EXPIRED",{
++    originalDeadline:head.bounds.deadlineAt,observationsRetained:head.observedPostconditions,
++    replacementActionCreated:false,originalEpisode:q.episode_id},c);
++  });
++  return;
++ }
++ await assertProgramCurrent(ctx,q);
++ const resource=await validateInstitutionDemand(ctx,q.proposed.reservationRef);
++ if(resource.status!=="CURRENT")
++  throw Error("X1_P1_S5_PARENT_NOT_CURRENT");
++ const executable=head.nodes.filter(node=>node.action);
++ if(!executable.length)throw Error("X1_SUPPORTED_ACTION_POPULATION_REQUIRED");
++ // Reconcile expired native claims through their existing runtime before
++ // interpreting an uncertain action as an intervention. No executor replay.
++ await (await import("@finnor/workflow-runtime")).recoverStaleSteps(q.tenant_id);
++ for(const node of executable){
++  const expected=frozenDutyExpectation(q.tenant_id,node);
++  const duty=q.request.institution.responsibilities.find(r=>r.obligation.stableIdentity===node.stableIdentity);
++  if(!duty||duty.obligation.postcondition.structuralObserver.entityType!==expected.entityType
++    ||duty.obligation.postcondition.structuralObserver.dealId!==expected.dealId
++    ||node.postconditionRef!==duty.obligation.postcondition.contractRef
++    ||node.observerRef!==duty.obligation.independentObserver.ref)
++    throw Error("X1_REQUEST_DUTY_AND_CANONICAL_ROOT_MISMATCH");
++ }
++ const claimed=await tx(ctx,async c=>{
++  const locked=await nativeRequestRow(ctx,q.id,c,true);
++  const job=(await c.query(`SELECT id FROM finnor_os.jobs WHERE tenant_id=$1 AND id=$2
++    AND type='run_x1_institution_continuation_v1' AND protocol_version=1 AND status='running'
++    AND claim_token=$3 AND claim_fence=$4 AND lease_expires_at>clock_timestamp() FOR SHARE`,
++   [q.tenant_id,execution.jobId,execution.claimToken,execution.claimFence])).rows[0];
++  if(!job||locked.generation!==q.generation||locked.head_id!==q.head_id
++    ||!["WAITING","RUNNING","QUEUED","FAILED","PARTIAL"].includes(locked.status))
++    throw Error("X1_CONTINUATION_CLAIM_FENCED");
++  const allowed=(await c.query(`SELECT id FROM finnor_os.work_plan_revisions WHERE tenant_id=$1
++    AND id=$2 AND work_id=$3 AND work_input_id=$4 AND status='active' FOR SHARE`,
++   [q.tenant_id,q.plan_revision_id,q.work_id,q.work_input_id])).rows[0];
++  if(!allowed)throw Error("X1_ACTIVE_PLAN_REQUIRED");
++  const running=await adoptClaim(c,locked);
++  const step=(await c.query<{steps_used:number}>(`UPDATE finnor_os.p1_episodes
++    SET steps_used=steps_used+1 WHERE tenant_id=$1 AND principal_id=$2 AND id=$3
++      AND steps_used+1<=LEAST(max_steps,$4) AND deadline_at>clock_timestamp() RETURNING steps_used`,
++    [q.tenant_id,q.principal_id,q.episode_id,q.request.institution.compilerRequestId?1024:64])).rows[0];
++  if(!step){
++   await persistProgrammeHead(ctx,running,{...head,status:"PARTIAL"},"PARTIAL","X1_ORIGINAL_CONTINUATION_ENVELOPE_EXHAUSTED",c);
++   await trace(ctx,locked,"X1_ORIGINAL_CONTINUATION_ENVELOPE_EXHAUSTED",{
++    originalEpisode:q.episode_id,observationsRetained:head.observedPostconditions,possibleEffectsRetained:true},c);
++   return null;
++  }
++  await trace(ctx,locked,"X1_CONTINUATION_CLAIMED",{jobId:execution.jobId,claimFence:execution.claimFence},c);
++  return {...running,
++    continuationOrdinal:step.steps_used} as InstitutionProgramRow & {continuationOrdinal:number};
++ });
++ if(!claimed)return;
++ // A governed S6 origin is never sent through this protocol-2 ordinary action.
++ // Check before drafting AND again inside publication, so later attachment cannot
++ // silently turn the old ordinary path into a protected delivery.
++ const noGovernedOrigin=async(id:string)=>tx(ctx,async c=>(await c.query(
++  `SELECT 1 FROM finnor_os.s6_obligation_origins WHERE tenant_id=$1 AND domain_action_id=$2`,
++  [q.tenant_id,id])).rowCount===0,true);
++ let resourceCharged=false;
++ try{
++  if(q.request.institution.compilerRequestId){
++   const {compilerRow,compilerEpisode}=await import("../institution-program/store");
++   const compiler=await compilerRow(ctx,q.request.institution.compilerRequestId);
++   const episode=await compilerEpisode(ctx,compiler.episode_id);
++   await chargeInstitutionDemand(ctx,head.reservationRef,{
++    responsibilityIdentity:`x1-compiler-episode:${episode.id}`,phase:"RECOVERY",
++    ordinal:claimed.continuationOrdinal,units:1});
++  }else{
++   // Legacy explicit institution requests charge their checked first duty.
++   await chargeInstitutionDemand(ctx,head.reservationRef,{responsibilityIdentity:executable[0]!.stableIdentity,
++    phase:"RECOVERY",ordinal:claimed.continuationOrdinal,units:1});
++  }
++  resourceCharged=true;
++  await assertInstitutionApplicationDeliveryCurrent(ctx,claimed.id,execution);
++  const cursor=head.deliveryCursor??0,chunk=executable.slice(cursor,cursor+institutionPlanBatchSize());
++  if(!Number.isSafeInteger(cursor)||cursor<0||cursor>executable.length)
++   throw Error("X1_SAVED_BATCH_CURSOR_INVALID");
++  const interventions=[...(head.interventions??[])];
++  // Native effects freeze the current Deal graph. Its next action is compiled
++  // after the accepted predecessor is observed, preserving native eligibility.
++  const activeRoots=new Set<string>();
++  let newlyDispatched=0;
++  for(const node of chunk){
++   const expected=frozenDutyExpectation(q.tenant_id,node);
++   const id=actionId(node);
++   if(!await noGovernedOrigin(id))throw Error("X1_GOVERNED_ORIGIN_REQUIRES_PROTOCOL3");
++   const existing=await tx(ctx,async c=>(await c.query<{
++    work_id:string|null;initiated_by:string|null;action_type:string;
++    payload:unknown;plan_revision_id:string|null;status:string;episode_id:string|null;authority_context:any;
++    observation_pending:boolean
++   }>(`SELECT a.work_id,a.initiated_by,a.action_type,a.payload,a.plan_revision_id,a.status,
++      p.episode_id,a.authority_context,EXISTS(SELECT 1 FROM finnor_os.workflow_steps s
++        JOIN finnor_os.integration_operations o ON o.tenant_id=s.tenant_id AND o.workflow_step_id=s.id
++        JOIN finnor_os.jobs j ON j.tenant_id=o.tenant_id AND j.type='observe_external_effect'
++          AND j.payload->>'integrationOperationId'=o.id::text AND j.status IN('queued','running')
++        WHERE s.tenant_id=a.tenant_id AND s.domain_action_id=a.id AND s.status='waiting_observation'
++          AND o.provider='finnor_plugin_runtime' AND o.integration_id IS NULL
++          AND o.status='unknown') observation_pending FROM finnor_os.domain_actions a
++     LEFT JOIN finnor_os.p1_requests p ON p.tenant_id=a.tenant_id
++      AND p.id::text=a.authority_context->>'programId' AND p.principal_id=a.initiated_by
++     WHERE a.tenant_id=$1 AND a.id=$2`,[q.tenant_id,id])).rows[0],true);
++   if(existing&&(existing.work_id!==q.work_id||existing.initiated_by!==q.principal_id
++     ||existing.action_type!==node.operation||existing.episode_id!==q.episode_id
++     ||existing.authority_context?.kind!=="institution_duty"
++     ||existing.authority_context?.stableIdentity!==node.stableIdentity
++     ||!matchesFrozenInstitutionIntent(node.action!.payload,existing.payload,q.work_id))){
++    interventions.push({stableIdentity:node.stableIdentity,
++     predicate:"X1_ORIGINAL_EFFECT_INTENT_CONFLICT_REQUIRES_DECISION",possibleEffect:true});
++    await trace(ctx,claimed,"X1_ORIGINAL_EFFECT_RETAINED",{stableIdentity:node.stableIdentity,
++     actionId:id,priorStatus:existing.status,predicate:"X1_ORIGINAL_EFFECT_INTENT_CONFLICT_REQUIRES_DECISION"});
++    continue;
++   }
++   const priorApplicationInput=existing?institutionApplicationOwnerInputFromCanonicalAction(node,existing.authority_context):null;
++   if(existing?.status==="draft"&&priorApplicationInput?.modelUseRef)await recordInstitutionApplicationModelUse(ctx,claimed.id,execution,priorApplicationInput);
++   if(existing&&existing.plan_revision_id!==q.plan_revision_id&&existing.status==="draft"){
++    interventions.push({stableIdentity:node.stableIdentity,
++     predicate:"X1_PRIOR_DRAFT_PLAN_SUPERSEDED_REQUIRES_DECISION",possibleEffect:false});
++    continue;
++   }
++   if(existing&&['failed','rejected','needs_human_review','blocked_integration_unavailable'].includes(existing.status)){
++    if(existing.status==='needs_human_review'&&existing.observation_pending){
++     activeRoots.add(expected.dealId);continue;
++    }
++    interventions.push({stableIdentity:node.stableIdentity,
++     predicate:'X1_NATIVE_ACTION_'+existing.status.toUpperCase()+'_REQUIRES_DECISION',possibleEffect:true});
++    continue;
++   }
++   if(existing&&['executing','approved','pending'].includes(existing.status)){
++    activeRoots.add(expected.dealId);
++    continue;
++   }
++   // Accepted/possibly submitted actions are reconciled in place. The native
++   // runtime owns their retry/receipt path; P1 never creates a replacement ID.
++   if(!existing||existing.status==="draft"){
++    if(activeRoots.has(expected.dealId))continue;
++    await assertProgramCurrent(ctx,claimed);
++    await authorize(ctx,{entityType:"pe_deal",entityId:expected.dealId},[{type:"work",id:q.work_id}]);
++    const planNodes=head.planGraph.nodes.filter(planNode=>planNode.kind==='action'
++     &&planNode.actionType===node.operation&&sha(planNode.payload)===sha(node.action!.payload));
++    const planNode=planNodes[0];
++    if(planNodes.length!==1||planNode?.kind!=='action'
++      ||sha(planNode.groundedPayload)!==sha(node.action!.payload))
++     throw Error('X1_EXACT_NATIVE_ACTION_NODE_REQUIRED');
++    // The deterministic action ID makes uncertain delivery recoverable by the
++    // native bridge. No self-supplied completion receipt is accepted.
++    const applicationInput=priorApplicationInput??await consumeInstitutionApplicationModels(ctx,claimed.id,execution,node);
++    const ownerPayload=applicationInput.node.action!.payload;
++    if(sha(ownerPayload)!==sha(planNode.groundedPayload))throw Error("Z0_NATIVE_FROZEN_OWNER_ARGUMENT_CHANGED");
++    const { FinnorOrchestrator }=await import("../../../orchestration/src");
++    await new FinnorOrchestrator().draftKnownAction(node.operation,ownerPayload,q.tenant_id,{
++     source:"x1_checked_institution_duty",actionId:id,workId:q.work_id,initiatedBy:principal(ctx),
++     authorityContext:{principal:principal(ctx),kind:"institution_duty",programId:q.id,
++      compilerRequestId:q.request.institution.compilerRequestId??null,
++      stableIdentity:node.stableIdentity,workInputId:q.work_input_id,
++      applicationModelUseRef:applicationInput.modelUseRef,
++      applicationModelAcceptanceRef:applicationInput.acceptanceRef,
++      applicationModelInputDigest:applicationInput.modelUseRef?sha(applicationInput.node.action):null},
++     planRevisionId:q.plan_revision_id,planNodeId:planNode.id,reviewBeforeExecution:false,
++     onActionPersisted:async()=>{await recordInstitutionApplicationModelUse(ctx,claimed.id,execution,applicationInput);},
++    });
++    activeRoots.add(expected.dealId);newlyDispatched++;
++   }
++  }
++  await tx(ctx,async(c,db)=>{
++   await c.query(`SELECT l.id FROM finnor_os.work_objective_loops l
++    JOIN finnor_os.work_plan_revisions p ON p.objective_loop_id=l.id AND p.tenant_id=l.tenant_id
++    WHERE l.tenant_id=$1 AND p.id=$2 FOR UPDATE OF l`,[q.tenant_id,q.plan_revision_id]);
++   await assertProgramCurrent(ctx,claimed,c,true);
++   const current=await nativeRequestRow(ctx,q.id,c,true);
++   const job=(await c.query(`SELECT id FROM finnor_os.jobs WHERE tenant_id=$1 AND id=$2
++    AND type='run_x1_institution_continuation_v1' AND status='running'
++    AND claim_token=$3 AND claim_fence=$4 AND lease_expires_at>clock_timestamp() FOR SHARE`,
++    [q.tenant_id,execution.jobId,execution.claimToken,execution.claimFence])).rows[0];
++   if(!job||current.generation!==q.generation||current.status!=="RUNNING"
++     ||current.claim_token!==execution.claimToken||current.claim_fence!==execution.claimFence)
++    throw Error("X1_OBSERVATION_PUBLICATION_FENCED");
++   const observed:InstitutionHarnessProgram["observedPostconditions"]=[...head.observedPostconditions];
++   const previous=new Map(head.observedPostconditions.map(item=>[item.stableIdentity,item]));
++   if(previous.size!==head.observedPostconditions.length)throw Error("X1_SAVED_CREATION_WITNESS_DUPLICATE");
++   for(const prior of observed){
++    const node=executable.find(item=>item.stableIdentity===prior.stableIdentity);
++    if(!node)throw Error("X1_SAVED_CREATION_WITNESS_NO_DUTY");
++    const expected=frozenDutyExpectation(q.tenant_id,node);
++    if(prior.canonicalRef!==`${expected.entityType}:${expected.entityId}`
++     ||!/^([a-f0-9]{64})$/.test(prior.observerDigest)
++     ||prior.derivationRevision&&prior.derivationRevision!==node.derivationRevision
++     ||prior.actionId&&prior.actionId!==actionId(node)
++     ||prior.frozenIntentDigest&&prior.frozenIntentDigest!==sha(node.action))
++     throw Error("X1_SAVED_CREATION_WITNESS_INTENT_CHANGED");
++   }
++   const actionRows=(await c.query<{id:string;action_type:string;status:string;effect_status:string|null;payload:unknown;stable_identity:string}>(
++     `SELECT a.id,a.action_type,a.status,e.status effect_status,a.payload,
++       a.authority_context->>'stableIdentity' stable_identity FROM finnor_os.domain_actions a
++      LEFT JOIN finnor_os.business_effects e ON e.tenant_id=a.tenant_id
++        AND e.domain_action_id=a.id
++      WHERE a.tenant_id=$1 AND a.id=ANY($2::uuid[]) AND a.work_id=$3
++        AND a.initiated_by=$4 AND a.authority_context->>'kind'='institution_duty' AND EXISTS
++        (SELECT 1 FROM finnor_os.p1_requests prior WHERE prior.tenant_id=a.tenant_id
++          AND prior.id::text=a.authority_context->>'programId' AND prior.work_id=a.work_id
++          AND prior.principal_id=a.initiated_by AND prior.episode_id=$5
++          AND prior.work_input_id::text=a.authority_context->>'workInputId')
++        AND NOT EXISTS
++        (SELECT 1 FROM finnor_os.s6_obligation_origins o
++          WHERE o.tenant_id=a.tenant_id AND o.domain_action_id=a.id)`,
++     [q.tenant_id,executable.map(actionId),q.work_id,q.principal_id,q.episode_id])).rows;
++   const actionsById=new Map(actionRows.map(action=>[action.id,action]));
++   if(actionsById.size!==actionRows.length)throw Error('X1_NATIVE_EFFECT_POPULATION_AMBIGUOUS');
++   for(const node of executable){
++    const id=actionId(node),action=actionsById.get(id);
++    if(!action||action.action_type!==node.operation||action.stable_identity!==node.stableIdentity
++      ||!matchesFrozenInstitutionIntent(node.action!.payload,action.payload,q.work_id,true)
++      ||action.status!=="completed"||action.effect_status!=="verified"){
++     if(previous.has(node.stableIdentity))interventions.push({stableIdentity:node.stableIdentity,
++      predicate:"X1_PRIOR_CREATION_EFFECT_REQUIRES_RECONCILIATION",possibleEffect:true});
++     continue;
++    }
++    const prior=previous.get(node.stableIdentity);
++    if(prior){
++     // The immutable saved head binds legacy witnesses to these same nodes.
++     // New observations also carry explicit derivation/action/intent bindings.
++     continue;
++    }
++    const result=await readCanonicalDuty(c,q.tenant_id,node);
++    if(result.observed&&result.observerDigest)observed.push({stableIdentity:node.stableIdentity,
++     canonicalRef:result.canonicalRef,observerDigest:result.observerDigest,
++     derivationRevision:node.derivationRevision,actionId:id,frozenIntentDigest:sha(node.action)});
++   }
++   const supportedComplete=observed.length===executable.length;
++   const completed=supportedComplete&&executable.length===head.nodes.length
++    &&head.institution.unresolved.length===0
++    &&(head.institution.programme.sourceCoverageGaps?.length??0)===0&&interventions.length===0
++    &&Date.now()<Date.parse(head.bounds.deadlineAt);
++   const deadlineExpired=Date.now()>=Date.parse(head.bounds.deadlineAt);
++   const batchObserved=chunk.every(node=>observed.some(item=>item.stableIdentity===node.stableIdentity));
++   const nextCursor=supportedComplete?executable.length:batchObserved?cursor+chunk.length:cursor;
++   let selected:{goal:InstitutionHarnessProgram['goal'];planGraph:InstitutionHarnessProgram['planGraph'];planRevisionId:string}|null=null;
++   // Retire a batch only after actual completed/verified actions and independent
++   // canonical witnesses. The next/final graph and P1 pointer commit together.
++   if(batchObserved&&!deadlineExpired&&interventions.length===0&&nextCursor!==cursor){
++    selected=await selectInstitutionPlan(ctx,q.request,{programId:q.id,workId:q.work_id,
++     inputId:q.work_input_id,inputDigest:q.work_input_digest,parentRevisionId:q.plan_revision_id,
++     rightsRevision:Number(resource.reservation.rightsRevision),deadlineAt:head.bounds.deadlineAt,
++     cursor:nextCursor},db);
++    await c.query(`UPDATE finnor_os.p1_requests SET plan_revision_id=$4
++     WHERE tenant_id=$1 AND principal_id=$2 AND id=$3`,
++     [q.tenant_id,q.principal_id,q.id,selected.planRevisionId]);
++    await trace(ctx,claimed,'X1_NATIVE_BATCH_ADVANCED',{previousPlan:q.plan_revision_id,
++     selectedPlan:selected.planRevisionId,batchStart:cursor,batchEnd:nextCursor,
++     population:executable.length,originalEpisode:q.episode_id,originalReservation:head.reservationRef},c);
++   }
++   const revised:InstitutionHarnessProgram={...head,observedPostconditions:observed,
++    deliveryCursor:nextCursor,interventions,
++    ...(selected?{goal:selected.goal,planGraph:selected.planGraph,
++     work:{...head.work,planRevisionId:selected.planRevisionId}}:{}),
++    status:completed?"OBSERVED":supportedComplete||deadlineExpired||interventions.length?"PARTIAL":"WAITING",runtime:{...head.runtime,jobId:execution.jobId,
++     workerId:execution.workerId,deliveryAttemptId:execution.deliveryAttemptId,
++     claimFence:execution.claimFence}};
++   const advanced=selected?{...claimed,plan_revision_id:selected.planRevisionId}:claimed;
++   await persistProgrammeHead(ctx,advanced,revised,revised.status,
++    interventions[0]?.predicate??(deadlineExpired?"X1_ORIGINAL_OBSERVATION_DEADLINE_EXPIRED":
++     supportedComplete&&!completed?(head.institution.programme.sourceCoverageGaps?.length
++       ?"X1_SOURCE_COVERAGE_GAP_NORMATIVE_POPULATION_UNKNOWN":"X1_UNRESOLVED_DUTIES_RETAINED"):null),c);
++   await trace(ctx,claimed,completed?"X1_CANONICAL_DUTIES_OBSERVED":"X1_CANONICAL_OBSERVATION_PENDING",
++    {count:observed.length,total:head.nodes.length,deadlineAt:head.bounds.deadlineAt},c);
++   if(completed){
++    await (await import("../../../orchestration/src/objective-loop"))
++     .schedulePreparedHarnessObjectiveTx(db,{tenantId:q.tenant_id,workId:q.work_id,planRevisionId:advanced.plan_revision_id});
++   }else if(!supportedComplete&&!deadlineExpired&&interventions.length===0){
++    await c.query("UPDATE finnor_os.p1_requests SET poll_count=poll_count+1 WHERE tenant_id=$1 AND id=$2",
++     [q.tenant_id,q.id]);
++    // Exponential backoff reaches one minute. The final scheduled wake reaches
++    // the original deadline; poll 60 is not a silent unscheduled WAITING state.
++    const remaining=Date.parse(head.bounds.deadlineAt)-Date.now();
++    const progress=newlyDispatched>0||observed.length>head.observedPostconditions.length;
++    const delay=Math.max(1,Math.min(remaining,progress?200:60000,2000*2**Math.min(q.poll_count,5)));
++    await enqueueProgram(ctx,advanced,"observe-"+(q.poll_count+1),c,delay);
++   }
++  });
++ }catch(error){
++  await tx(ctx,async c=>{
++   const current=await nativeRequestRow(ctx,q.id,c,true);
++   await trace(ctx,current,"X1_CONTINUATION_UNCERTAIN",{predicate:String((error as Error).message),
++    possibleEffect:true,actionIds:executable.map(actionId)},c);
++   if(current.generation===q.generation&&current.status==="RUNNING"
++    &&current.claim_token===execution.claimToken&&current.claim_fence===execution.claimFence){
++    if(!resourceCharged){
++     await persistProgrammeHead(ctx,current,{...head,status:"PARTIAL"},"PARTIAL",
++      "X1_ORIGINAL_RECOVERY_RESOURCE_REFUSED",c);
++     await trace(ctx,current,"X1_ORIGINAL_RECOVERY_RESOURCE_REFUSED",{
++      predicate:String((error as Error).message),replacementActionCreated:false,possibleEffectsRetained:true},c);
++    }else await c.query(
++    `UPDATE finnor_os.p1_requests SET status='WAITING',failure=$4,updated_at=clock_timestamp()
++     WHERE tenant_id=$1 AND principal_id=$2 AND id=$3`,
++    [q.tenant_id,q.principal_id,q.id,"X1_CONTINUATION_RECONCILIATION_REQUIRED"]);
++   }
++  });
++  throw error;
++ }finally{
++  try{
++   const compute=await persistInstitutionCompute(ctx,{requestId:q.id,workId:q.work_id,episodeId:q.episode_id,
++    jobId:execution.jobId,deliveryAttemptId:execution.deliveryAttemptId,parentReservation:head.reservationRef,
++    rightsRevision:resource.reservation.rightsRevision,startedAt,
++    elapsedMs:performance.now()-started,phase:"RECOVERY",status:"PHYSICAL_CONTINUATION_ATTEMPT",
++    observedAcquisitionAttempts:0,observedCheckerAttempts:0});
++   await trace(ctx,claimed,"X1_CONTINUATION_COMPUTE_ATTRIBUTED",{compute:compute.record.ref,
++    ordinal:claimed.continuationOrdinal,originalEpisode:q.episode_id});
++  }catch(error){
++   await trace(ctx,claimed,"X1_CONTINUATION_METER_GAP",{jobId:execution.jobId,
++    deliveryAttemptId:execution.deliveryAttemptId,elapsedMs:performance.now()-started,
++    predicate:String((error as Error).message),money:null,humanSeconds:null,aggregatePeakMemoryBytes:null});
++  }
++ }
++}

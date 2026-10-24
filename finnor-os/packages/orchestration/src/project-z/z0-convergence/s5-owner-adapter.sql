@@ -176,7 +176,7 @@ BEGIN
      WHERE q.value !~ '^(0|[1-9][0-9]{0,15})$'
        OR q.value::numeric>(original_line->'quantities'->>(q.n::integer-1))::numeric)
    OR coalesce(requested->>'amount','') !~ '^[1-9][0-9]{0,3}$'
-   OR (requested->>'amount')::numeric>CASE WHEN line->>'unit'='seconds' THEN 900 ELSE 2048 END
+   OR (requested->>'amount')::numeric>(CASE WHEN line->>'unit'='seconds' THEN 900 ELSE 2048 END)
    OR (SELECT sum(value::numeric) FROM jsonb_array_elements_text(line->'quantities'))<>(requested->>'amount')::numeric
    THEN RAISE EXCEPTION 'Z0 child envelope enlarges original resource'; END IF;
  END LOOP;
@@ -261,7 +261,7 @@ BEGIN
   OR p_body->>'schema' IS DISTINCT FROM 'finnor.s5.application-resource-charge.v1'
   OR p_body->'executionAuthorityGranted' IS DISTINCT FROM 'false'::jsonb
   OR coalesce(p_body->>'phase','') NOT IN('ACQUISITION','CHECKING','COMPOSITION','EXECUTION','RECOVERY','OBSERVATION','MAINTENANCE','HUMAN')
-  OR p_body->>'unit' IS DISTINCT FROM CASE WHEN p_body->>'phase'='HUMAN' THEN 'seconds' ELSE 'request' END
+  OR p_body->>'unit' IS DISTINCT FROM (CASE WHEN p_body->>'phase'='HUMAN' THEN 'seconds' ELSE 'request' END)
   OR (recovery AND p_body->>'phase'<>'RECOVERY')
   OR coalesce(p_body->>'units','') !~ '^[1-9][0-9]{0,3}$' OR (p_body->>'units')::integer>2048
   OR coalesce(p_body->'ref'->>'contentDigest','') !~ '^[a-f0-9]{64}$'

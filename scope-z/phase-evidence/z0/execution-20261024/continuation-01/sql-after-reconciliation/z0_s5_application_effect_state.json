@@ -1,0 +1,433 @@
+[
+  {
+    "PLpgSQL_function": {
+      "datums": [
+        {
+          "PLpgSQL_var": {
+            "refname": "p_obligation",
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "text"
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "p_stage",
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "text"
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "found",
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "bool"
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "t",
+            "lineno": 2,
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "uuid"
+              }
+            },
+            "default_val": {
+              "PLpgSQL_expr": {
+                "query": "finnor_os.request_tenant_id()",
+                "parseMode": 2
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "u",
+            "lineno": 2,
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "uuid"
+              }
+            },
+            "default_val": {
+              "PLpgSQL_expr": {
+                "query": "nullif(current_setting('app.user_id',true),'')::uuid",
+                "parseMode": 2
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "obligation",
+            "lineno": 3,
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "jsonb"
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "co",
+            "lineno": 3,
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "jsonb"
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "frame",
+            "lineno": 3,
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "jsonb"
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "effect_id",
+            "lineno": 3,
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "uuid"
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "effect_hash",
+            "lineno": 3,
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "text"
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "effect_status",
+            "lineno": 3,
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "text"
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "request_status",
+            "lineno": 4,
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "text"
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "possible",
+            "lineno": 4,
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "bool"
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "revision",
+            "lineno": 4,
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "int4"
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_row": {
+            "refname": "(unnamed row)",
+            "lineno": 6,
+            "fields": [
+              {
+                "name": "obligation",
+                "varno": 5
+              },
+              {
+                "name": "effect_id",
+                "varno": 8
+              },
+              {
+                "name": "effect_hash",
+                "varno": 9
+              },
+              {
+                "name": "effect_status",
+                "varno": 10
+              },
+              {
+                "name": "co",
+                "varno": 6
+              }
+            ]
+          }
+        },
+        {
+          "PLpgSQL_row": {
+            "refname": "(unnamed row)",
+            "lineno": 16,
+            "fields": [
+              {
+                "name": "request_status",
+                "varno": 11
+              },
+              {
+                "name": "possible",
+                "varno": 12
+              }
+            ]
+          }
+        },
+        {
+          "PLpgSQL_row": {
+            "refname": "(unnamed row)",
+            "lineno": 28,
+            "fields": [
+              {
+                "name": "revision",
+                "varno": 13
+              }
+            ]
+          }
+        }
+      ],
+      "action": {
+        "PLpgSQL_stmt_block": {
+          "lineno": 5,
+          "body": [
+            {
+              "PLpgSQL_stmt_execsql": {
+                "lineno": 6,
+                "sqlstmt": {
+                  "PLpgSQL_expr": {
+                    "query": "SELECT o.body,o.effect_id,e.semantic_hash,e.status,c.body                                                          FROM finnor_os.s6_obligation_origins o JOIN finnor_os.business_effects e ON e.tenant_id=o.tenant_id AND e.id=o.effect_id\n  JOIN finnor_os.s5_consumptions c ON c.tenant_id=o.tenant_id AND c.consumption_id=o.consumption_id\n  WHERE o.tenant_id=t AND o.principal_id=u AND o.obligation_id=p_obligation",
+                    "parseMode": 0
+                  }
+                },
+                "into": true,
+                "target": {
+                  "PLpgSQL_row": {
+                    "refname": "(unnamed row)",
+                    "lineno": 6,
+                    "fields": [
+                      {
+                        "name": "obligation",
+                        "varno": 5
+                      },
+                      {
+                        "name": "effect_id",
+                        "varno": 8
+                      },
+                      {
+                        "name": "effect_hash",
+                        "varno": 9
+                      },
+                      {
+                        "name": "effect_status",
+                        "varno": 10
+                      },
+                      {
+                        "name": "co",
+                        "varno": 6
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            {
+              "PLpgSQL_stmt_if": {
+                "lineno": 10,
+                "cond": {
+                  "PLpgSQL_expr": {
+                    "query": "co IS NULL OR obligation->>'schema' IS DISTINCT FROM 'finnor.s6.application-obligation.v1'\n  OR co->'ref' IS DISTINCT FROM obligation->'consumptionRef'\n  OR co->'certificateRef' IS DISTINCT FROM obligation->'allocationRef'",
+                    "parseMode": 2
+                  }
+                },
+                "then_body": [
+                  {
+                    "PLpgSQL_stmt_raise": {
+                      "lineno": 13,
+                      "elog_level": 21,
+                      "message": "Z0 canonical application obligation unavailable"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "PLpgSQL_stmt_assign": {
+                "lineno": 14,
+                "varno": 7,
+                "expr": {
+                  "PLpgSQL_expr": {
+                    "query": "frame:=finnor_os.z0_s5_application_frame(co->'certificateRef',NULL,true)",
+                    "parseMode": 3
+                  }
+                }
+              }
+            },
+            {
+              "PLpgSQL_stmt_if": {
+                "lineno": 15,
+                "cond": {
+                  "PLpgSQL_expr": {
+                    "query": "coalesce(p_stage,'') NOT IN('BOUND','POSSIBLE','OBSERVED')",
+                    "parseMode": 2
+                  }
+                },
+                "then_body": [
+                  {
+                    "PLpgSQL_stmt_raise": {
+                      "lineno": 15,
+                      "elog_level": 21,
+                      "message": "Z0 S6 observation stage invalid"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "PLpgSQL_stmt_execsql": {
+                "lineno": 16,
+                "sqlstmt": {
+                  "PLpgSQL_expr": {
+                    "query": "SELECT r.status,r.possible_egress                              FROM finnor_os.application_semantics_requests r\n  WHERE r.tenant_id=t AND r.principal_id=u AND r.obligation_id=p_obligation",
+                    "parseMode": 0
+                  }
+                },
+                "into": true,
+                "target": {
+                  "PLpgSQL_row": {
+                    "refname": "(unnamed row)",
+                    "lineno": 16,
+                    "fields": [
+                      {
+                        "name": "request_status",
+                        "varno": 11
+                      },
+                      {
+                        "name": "possible",
+                        "varno": 12
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            {
+              "PLpgSQL_stmt_if": {
+                "lineno": 18,
+                "cond": {
+                  "PLpgSQL_expr": {
+                    "query": "p_stage='POSSIBLE' AND (possible IS DISTINCT FROM true OR effect_status<>'executing')\n  OR p_stage='OBSERVED' AND (request_status IS NULL\n    OR request_status='VERIFIED' AND effect_status<>'verified'\n    OR request_status='DENIED' AND effect_status<>'cancelled')",
+                    "parseMode": 2
+                  }
+                },
+                "then_body": [
+                  {
+                    "PLpgSQL_stmt_raise": {
+                      "lineno": 22,
+                      "elog_level": 21,
+                      "message": "Z0 actual S6 state observation required"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "PLpgSQL_stmt_execsql": {
+                "lineno": 23,
+                "sqlstmt": {
+                  "PLpgSQL_expr": {
+                    "query": "UPDATE finnor_os.s5_consumption_states SET\n  effect_ref=jsonb_build_object('owner','S6','id',effect_id,'version','business-effect-v1','contentDigest',effect_hash),\n  status=CASE WHEN p_stage='BOUND' THEN status\n    WHEN p_stage='OBSERVED' AND request_status IN('VERIFIED','DENIED') THEN 'RECONCILED' ELSE 'UNKNOWN_OUTCOME' END,\n  revision=s5_consumption_states.revision+1,updated_at=clock_timestamp()\n  WHERE tenant_id=t AND consumption_id=co->'ref'->>'id' RETURNING s5_consumption_states.revision",
+                    "parseMode": 0
+                  }
+                },
+                "into": true,
+                "target": {
+                  "PLpgSQL_row": {
+                    "refname": "(unnamed row)",
+                    "lineno": 28,
+                    "fields": [
+                      {
+                        "name": "revision",
+                        "varno": 13
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            {
+              "PLpgSQL_stmt_if": {
+                "lineno": 29,
+                "cond": {
+                  "PLpgSQL_expr": {
+                    "query": "p_stage='POSSIBLE' OR p_stage='OBSERVED' AND request_status NOT IN('VERIFIED','DENIED')",
+                    "parseMode": 2
+                  }
+                },
+                "then_body": [
+                  {
+                    "PLpgSQL_stmt_execsql": {
+                      "lineno": 30,
+                      "sqlstmt": {
+                        "PLpgSQL_expr": {
+                          "query": "UPDATE finnor_os.s5_reservations SET status='UNKNOWN_OUTCOME',revision=s5_reservations.revision+1\n   WHERE tenant_id=t AND reservation_id=frame->'parent'->'ref'->>'id' AND status<>'UNKNOWN_OUTCOME'",
+                          "parseMode": 0
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "PLpgSQL_stmt_return": {
+                "lineno": 34,
+                "expr": {
+                  "PLpgSQL_expr": {
+                    "query": "jsonb_build_object('revision',revision,'originalReservationRef',frame->'parent'->'ref','releaseGranted',false)",
+                    "parseMode": 2
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+]

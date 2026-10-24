@@ -1,0 +1,88 @@
+{
+  "version": "1",
+  "pip_version": "24.0",
+  "install": [
+    {
+      "download_info": {
+        "url": "https://files.pythonhosted.org/packages/90/27/9e13baec1f26b7f6bc7fb8100cb4465dc93934323b1544e6fe55b92e695f/pglast-8.7-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl",
+        "archive_info": {
+          "hash": "sha256=e1c2e041507b723ac4eb521846c2a0be76f0b52b4bfd22a7e8e3dce05e3c78cb",
+          "hashes": {
+            "sha256": "e1c2e041507b723ac4eb521846c2a0be76f0b52b4bfd22a7e8e3dce05e3c78cb"
+          }
+        }
+      },
+      "is_direct": false,
+      "is_yanked": false,
+      "requested": true,
+      "metadata": {
+        "metadata_version": "2.4",
+        "name": "pglast",
+        "version": "8.7",
+        "summary": "PostgreSQL Languages AST and statements prettifier",
+        "description": ".. -*- coding: utf-8 -*-\n.. :Project:   pglast — PostgreSQL Languages AST\n.. :Created:   mer 02 ago 2017 14:49:24 CEST\n.. :Author:    Lele Gaifax <lele@metapensiero.it>\n.. :License:   GNU General Public License version 3 or later\n.. :Copyright: © 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2026 Lele Gaifax\n..\n\n========\n pglast\n========\n\nPostgreSQL Languages AST and statements prettifier\n==================================================\n\n:Author: Lele Gaifax\n:Contact: lele@metapensiero.it\n:License: `GNU General Public License version 3 or later`__\n:Status: |build| |doc|\n:Version: `8`__\n\n__ https://www.gnu.org/licenses/gpl.html\n__ https://pglast.readthedocs.io/en/v8/development.html#history\n\n.. |build| image:: https://github.com/lelit/pglast/actions/workflows/ci.yml/badge.svg?branch=v8\n   :target: https://github.com/lelit/pglast/actions/workflows/ci.yml\n   :alt: Build status\n.. |doc| image:: https://readthedocs.org/projects/pglast/badge/?version=v8\n   :target: https://readthedocs.org/projects/pglast/builds/\n   :alt: Documentation status\n\nThis is a Python 3 module that exposes the *parse tree* of a PostgreSQL__ statement (extracted\nby the almost standard PG parser repackaged as a standalone static library by `libpg_query`__)\nas set of interconnected *nodes*, usually called an *abstract syntax tree*.\n\n__ https://www.postgresql.org/\n__ https://github.com/pganalyze/libpg_query\n\nSee a `more detailed introduction`__ in the documentation_.\n\n__ https://pglast.readthedocs.io/en/v8/introduction.html\n\n\nInstallation\n------------\n\nAs usual, the easiest way is with pip::\n\n  $ pip install pglast\n\nAlternatively you can clone the repository::\n\n  $ git clone https://github.com/lelit/pglast.git --recursive\n\nand install from there::\n\n  $ pip install ./pglast\n\n\nDevelopment\n-----------\n\nThere is a set of *makefiles* implementing the most common operations, a ``make help`` will\nshow a brief table of contents. A comprehensive test suite, based on pytest__, covers__ nearly\n99% of the source lines.\n\n__ https://docs.pytest.org/en/latest/\n__ https://codecov.io/gh/lelit/pglast/branch/v8/\n\n\nContributing\n~~~~~~~~~~~~\n\nMany of the sources in this repository are *mechanically derived* from others: the enums, the\nkeyword sets, the ``pglast.ast`` module and its type stubs, the printer documentation and the\n``parser.c`` translation are all produced by one of the tools in ``tools/``, driven by the\n``Makefile``. Each of those files carries a ``DO NOT EDIT`` notice in its header, and none of\nthem should ever be modified by hand: change the generating tool, its input data or the recipe,\nthen rebuild with ``make build``.\n\nBecause a tiny change in a generator can produce an avalanche of changes in its output, two\ndevelopers working on unrelated areas of the same generator will rarely conflict on the\ngenerator itself, but are bound to conflict on the generated sources when their branches are\nmerged. A handful of lines edited in one of the tools is enough to rewrite every file it\nproduces: skipping a few node definitions in ``tools/extract_ast.py``, for instance, was\nfollowed by a regeneration touching more than twenty thousand lines, spread over the\n``pglast.ast`` module, the enums, the keyword sets and ``parser.c``. The trigger can also come\nfrom outside the tools: bumping ``libpg_query`` affects nearly all of the generated files,\nsince its revision is embedded in a comment of most of them, and a new release of ``Cython``\nretranslates ``parser.c`` from scratch. In all those cases use \"Update generated sources\" as\nthe subject of the regeneration commit, or \"Regenerate with Cython X.Y.Z\" when that is what\ntriggered it, and do not let it carry any other modification.\n\n.. important:: Please keep the *automatic regeneration* in a commit of its own, with nothing\n               else in it: the ordinary changes of a branch then merge without trouble, and the\n               regeneration commit can be easily resolved by simply re-running the generator on\n               the merged tree.\n\n\nDocumentation\n-------------\n\nLatest documentation is hosted by `Read the Docs`__ at https://pglast.readthedocs.io/en/v8\n\n__ https://readthedocs.org/\n",
+        "description_content_type": "text/x-rst",
+        "keywords": [
+          "postgresql",
+          "parser",
+          "sql",
+          "prettifier"
+        ],
+        "author_email": "Lele Gaifax <lele@metapensiero.it>",
+        "classifier": [
+          "Development Status :: 5 - Production/Stable",
+          "Intended Audience :: Developers",
+          "Programming Language :: Python",
+          "Programming Language :: Python :: 3",
+          "Programming Language :: Python :: 3 :: Only",
+          "Programming Language :: Python :: 3.10",
+          "Programming Language :: Python :: 3.11",
+          "Programming Language :: Python :: 3.12",
+          "Programming Language :: Python :: 3.13",
+          "Programming Language :: Python :: 3.14",
+          "Programming Language :: Python :: 3.15",
+          "Programming Language :: SQL",
+          "Topic :: Database",
+          "Topic :: Utilities"
+        ],
+        "requires_dist": [
+          "bump-my-version==1.6.0; extra == \"dev\"",
+          "cython==3.3.0; extra == \"dev\"",
+          "pycparser==3.0; extra == \"dev\"",
+          "readme-renderer==46.0; extra == \"dev\"",
+          "setuptools==84.0.0; extra == \"dev\"",
+          "sphinx==9.0.4; extra == \"dev\"",
+          "twine==7.0.0; extra == \"dev\"",
+          "coverage==7.16.2; extra == \"test\"",
+          "mypy==2.4.0; extra == \"test\"",
+          "pycparser==3.0; extra == \"test\"",
+          "pytest-cov==7.1.0; extra == \"test\"",
+          "pytest==9.1.1; extra == \"test\"",
+          "sphinx==9.0.4; extra == \"test\"",
+          "ty==0.0.87; extra == \"test\""
+        ],
+        "project_url": [
+          "Changelog, https://github.com/lelit/pglast/blob/v7/CHANGES.rst",
+          "Source, https://github.com/lelit/pglast"
+        ],
+        "provides_extra": [
+          "dev",
+          "test"
+        ]
+      }
+    }
+  ],
+  "environment": {
+    "implementation_name": "cpython",
+    "implementation_version": "3.12.3",
+    "os_name": "posix",
+    "platform_machine": "x86_64",
+    "platform_release": "6.1.158+",
+    "platform_system": "Linux",
+    "platform_version": "#1 SMP PREEMPT_DYNAMIC Wed Sep 30 12:40:02 UTC 2026",
+    "python_full_version": "3.12.3",
+    "platform_python_implementation": "CPython",
+    "python_version": "3.12",
+    "sys_platform": "linux"
+  }
+}

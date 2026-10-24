@@ -1,0 +1,366 @@
+[
+  {
+    "PLpgSQL_function": {
+      "datums": [
+        {
+          "PLpgSQL_var": {
+            "refname": "p_body",
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "jsonb"
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "p_decision",
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "uuid"
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "found",
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "bool"
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "t",
+            "lineno": 2,
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "uuid"
+              }
+            },
+            "default_val": {
+              "PLpgSQL_expr": {
+                "query": "finnor_os.request_tenant_id()",
+                "parseMode": 2
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "u",
+            "lineno": 2,
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "uuid"
+              }
+            },
+            "default_val": {
+              "PLpgSQL_expr": {
+                "query": "nullif(current_setting('app.user_id',true),'')::uuid",
+                "parseMode": 2
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "frame",
+            "lineno": 3,
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "jsonb"
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "cert",
+            "lineno": 3,
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "jsonb"
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "parent",
+            "lineno": 3,
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "jsonb"
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "prior",
+            "lineno": 3,
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "jsonb"
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_row": {
+            "refname": "(unnamed row)",
+            "lineno": 38,
+            "fields": [
+              {
+                "name": "prior",
+                "varno": 8
+              }
+            ]
+          }
+        }
+      ],
+      "action": {
+        "PLpgSQL_stmt_block": {
+          "lineno": 4,
+          "body": [
+            {
+              "PLpgSQL_stmt_assign": {
+                "lineno": 5,
+                "varno": 5,
+                "expr": {
+                  "PLpgSQL_expr": {
+                    "query": "frame:=finnor_os.z0_s5_application_frame(p_body->'certificateRef',p_decision,false)",
+                    "parseMode": 3
+                  }
+                }
+              }
+            },
+            {
+              "PLpgSQL_stmt_assign": {
+                "lineno": 6,
+                "varno": 6,
+                "expr": {
+                  "PLpgSQL_expr": {
+                    "query": "cert:=frame->'certificate'",
+                    "parseMode": 3
+                  }
+                }
+              }
+            },
+            {
+              "PLpgSQL_stmt_assign": {
+                "lineno": 6,
+                "varno": 7,
+                "expr": {
+                  "PLpgSQL_expr": {
+                    "query": "parent:=frame->'parent'",
+                    "parseMode": 3
+                  }
+                }
+              }
+            },
+            {
+              "PLpgSQL_stmt_if": {
+                "lineno": 7,
+                "cond": {
+                  "PLpgSQL_expr": {
+                    "query": "p_body->>'schema' IS DISTINCT FROM 'finnor.s5.application-consumption.v1'\n  OR p_body->'reservationRef' IS DISTINCT FROM parent->'ref'\n  OR p_body->'originalParentRef' IS DISTINCT FROM cert->'originalParentRef'\n  OR p_body->'envelope' IS DISTINCT FROM parent->'envelopes'\n  OR p_body->>'status' IS DISTINCT FROM 'INTENDED_PENDING_S6'\n  OR p_body->'effectRef' IS DISTINCT FROM 'null'::jsonb\n  OR p_body->'executionAuthorityGranted' IS DISTINCT FROM 'false'::jsonb\n  OR p_body->'ref'->>'owner' IS DISTINCT FROM 'S5'\n  OR p_body->'ref'->>'version' IS DISTINCT FROM 'application-operation-v1'\n  OR coalesce(p_body->'ref'->>'contentDigest','') !~ '^[a-f0-9]{64}$'\n  OR p_body->'ref'->>'id' IS DISTINCT FROM 'application-consumption:'||(p_body->'ref'->>'contentDigest')\n  OR length(coalesce(p_body->>'idempotencyKey','')) NOT BETWEEN 1 AND 256\n  OR length(coalesce(p_body->>'nodeId','')) NOT BETWEEN 1 AND 512\n  OR coalesce(p_body->>'requestDigest','') !~ '^[a-f0-9]{64}$'",
+                    "parseMode": 2
+                  }
+                },
+                "then_body": [
+                  {
+                    "PLpgSQL_stmt_raise": {
+                      "lineno": 21,
+                      "elog_level": 21,
+                      "message": "Z0 original application consumption invalid"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "PLpgSQL_stmt_if": {
+                "lineno": 22,
+                "cond": {
+                  "PLpgSQL_expr": {
+                    "query": "p_body->>'nodeId'='original-computation'",
+                    "parseMode": 2
+                  }
+                },
+                "then_body": [
+                  {
+                    "PLpgSQL_stmt_if": {
+                      "lineno": 23,
+                      "cond": {
+                        "PLpgSQL_expr": {
+                          "query": "p_body->'operationRef' IS DISTINCT FROM cert->'preparationRef'\n   OR p_body->'preparationRef' IS DISTINCT FROM cert->'preparationRef'\n   OR p_body->'predecessorObservationRef' IS DISTINCT FROM cert->'preparationRef'\n   OR p_body->>'requestDigest' IS DISTINCT FROM cert->>'requestDigest'",
+                          "parseMode": 2
+                        }
+                      },
+                      "then_body": [
+                        {
+                          "PLpgSQL_stmt_raise": {
+                            "lineno": 27,
+                            "elog_level": 21,
+                            "message": "Z0 original computation binding changed"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "else_body": [
+                  {
+                    "PLpgSQL_stmt_if": {
+                      "lineno": 29,
+                      "cond": {
+                        "PLpgSQL_expr": {
+                          "query": "NOT EXISTS(SELECT 1 FROM finnor_os.application_semantics_sessions s\n    WHERE s.tenant_id=t AND s.principal_id=u AND s.id=s.parent_id\n      AND s.allocation_ref=p_body->'certificateRef' AND s.reservation_ref=parent->'ref'\n      AND s.original_parent_ref=cert->'originalParentRef'\n      AND p_body->>'nodeId' LIKE s.id::text||':%'\n      AND s.cancel_requested_at IS NULL AND s.deadline_at>clock_timestamp()\n      AND s.status NOT IN('COMPLETED','MODEL_READY','CANCELLED','FAILED','STALE','BLOCKED'))",
+                          "parseMode": 2
+                        }
+                      },
+                      "then_body": [
+                        {
+                          "PLpgSQL_stmt_raise": {
+                            "lineno": 36,
+                            "elog_level": 21,
+                            "message": "Z0 actual original application session required"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "PLpgSQL_stmt_execsql": {
+                "lineno": 38,
+                "sqlstmt": {
+                  "PLpgSQL_expr": {
+                    "query": "SELECT body            FROM finnor_os.s5_consumptions\n  WHERE tenant_id=t AND principal_id=u AND idempotency_key=p_body->>'idempotencyKey'",
+                    "parseMode": 0
+                  }
+                },
+                "into": true,
+                "target": {
+                  "PLpgSQL_row": {
+                    "refname": "(unnamed row)",
+                    "lineno": 38,
+                    "fields": [
+                      {
+                        "name": "prior",
+                        "varno": 8
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            {
+              "PLpgSQL_stmt_if": {
+                "lineno": 40,
+                "cond": {
+                  "PLpgSQL_expr": {
+                    "query": "FOUND",
+                    "parseMode": 2
+                  }
+                },
+                "then_body": [
+                  {
+                    "PLpgSQL_stmt_if": {
+                      "lineno": 41,
+                      "cond": {
+                        "PLpgSQL_expr": {
+                          "query": "prior IS DISTINCT FROM p_body",
+                          "parseMode": 2
+                        }
+                      },
+                      "then_body": [
+                        {
+                          "PLpgSQL_stmt_raise": {
+                            "lineno": 41,
+                            "elog_level": 21,
+                            "message": "Z0 consumption replay conflict"
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "PLpgSQL_stmt_return": {
+                      "lineno": 42
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "PLpgSQL_stmt_if": {
+                "lineno": 44,
+                "cond": {
+                  "PLpgSQL_expr": {
+                    "query": "(SELECT count(*) FROM finnor_os.s5_consumptions WHERE tenant_id=t\n    AND reservation_id=parent->'ref'->>'id')>=1420",
+                    "parseMode": 2
+                  }
+                },
+                "then_body": [
+                  {
+                    "PLpgSQL_stmt_raise": {
+                      "lineno": 45,
+                      "elog_level": 21,
+                      "message": "Z0 original consumption bound exhausted"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "PLpgSQL_stmt_execsql": {
+                "lineno": 46,
+                "sqlstmt": {
+                  "PLpgSQL_expr": {
+                    "query": "INSERT INTO finnor_os.s5_consumptions(tenant_id,principal_id,consumption_id,reservation_id,\n  policy_id,node_id,idempotency_key,request_digest,body)\n VALUES(t,u,p_body->'ref'->>'id',parent->'ref'->>'id',p_body->'preparationRef'->>'id',\n  p_body->>'nodeId',p_body->>'idempotencyKey',p_body->>'requestDigest',p_body)",
+                    "parseMode": 0
+                  }
+                }
+              }
+            },
+            {
+              "PLpgSQL_stmt_execsql": {
+                "lineno": 50,
+                "sqlstmt": {
+                  "PLpgSQL_expr": {
+                    "query": "INSERT INTO finnor_os.s5_consumption_states(tenant_id,consumption_id,status,revision)\n VALUES(t,p_body->'ref'->>'id','INTENDED_PENDING_S6',1)",
+                    "parseMode": 0
+                  }
+                }
+              }
+            },
+            {
+              "PLpgSQL_stmt_execsql": {
+                "lineno": 52,
+                "sqlstmt": {
+                  "PLpgSQL_expr": {
+                    "query": "UPDATE finnor_os.s5_reservations SET status='CONSUMPTION_PENDING',revision=revision+1\n  WHERE tenant_id=t AND reservation_id=parent->'ref'->>'id' AND status='RESERVED'",
+                    "parseMode": 0
+                  }
+                }
+              }
+            },
+            {
+              "PLpgSQL_stmt_return": {
+                "lineno": 54
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+]

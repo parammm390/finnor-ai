@@ -1,0 +1,8 @@
+file:///home/factory-user/repos/finnor-z0/finnor-os/scripts/project-z/z0/emit-converged-runtime.mjs:25
+  if (sha(await readFile(resolve(root, file.path))) !== file.sha256) throw Error("Z0_SNAPSHOT_SOURCE_CHANGED:" + file.path);
+                                                                           ^
+
+Error: Z0_SNAPSHOT_SOURCE_CHANGED:next-env.d.ts
+    at file:///home/factory-user/repos/finnor-z0/finnor-os/scripts/project-z/z0/emit-converged-runtime.mjs:25:76
+
+Node.js v22.23.4

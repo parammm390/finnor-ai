@@ -1,0 +1,7 @@
+[96mfinnor-os/packages/orchestration/src/project-z/z0-convergence/institution-consumer.ts[0m:[93m203[0m:[93m69[0m - [91merror[0m[90m TS2339: [0mProperty 'reservationRef' does not exist on type 'HarnessProgram | InstitutionHarnessProgram'.
+  Property 'reservationRef' does not exist on type 'HarnessProgram'.
+
+[7m203[0m     return accepted ? { accepted, reservationRef: original.proposed.reservationRef } : null;
+[7m   [0m [91m                                                                    ~~~~~~~~~~~~~~[0m
+
+{"schema":"finnor.project-z.z0.full-proposed-convergence-types.v1","project":"backend","evidenceClass":"FULL_PROJECT_VIRTUAL_INTEGRATION_NOT_COORDINATOR_APPLIED_OR_NATIVE_PROOF","diagnostics":1,"rootFiles":1442,"sourceFiles":1468,"sourcePopulationSha256":"dc7db25ea86d2ff01f9c548e69bbdfbea9b6b0ed19d9a5f9b1f0f9f415301d64","proposalPatchSha256":"2997ca6e942309df18100693a6b134bb6f85a3140f19eec6f7b286ac1268a72a","compiler":"5.9.3","runtime":"v22.23.4","elapsedMs":64417,"memory":{"rss":3322757120,"heapTotal":3196076032,"heapUsed":3095712104,"external":1955429,"arrayBuffers":24811},"native":"NOT_RUN","sharedFilesWritten":false}

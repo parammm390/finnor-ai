@@ -1,0 +1,31 @@
+{
+  "schema": "finnor.project-z.z0.current-coordinator-owner-use-proposal.v1",
+  "observedAt": "2026-10-24T16:47:27.500Z",
+  "coordinator": "/home/factory-user/repos/finnor-z-coordinator",
+  "coordinatorHead": "eed64d827075b87b4fd5ab11155951fff58c7962",
+  "coordinatorTree": "72228b9aefc87150cd538a2d83d1ac7c8d245f9c",
+  "patchSha256": "b8eb54cce30445d227b50ae94dbb463493dc9587f76a8de6817787cfbaf284f0",
+  "paths": [
+    {
+      "path": "finnor-os/packages/private-equity/src/application-semantics/store.ts",
+      "preimageSha256": "d6d675a06d2f0d82b6231667bc52d4397b87e402759c690582a2b73c3bdbcc88",
+      "postimageSha256": "fc06aef01a7f4e82024793c76060967fbd4efecaa3834c0bcd3bdd9a74179770"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/program-synthesis/institution.ts",
+      "preimageSha256": "ca957fa26929f6a97c4c585010f4c4d8e668b1d3cbdde7df774a8cd81b7c43e1",
+      "postimageSha256": "545637532bee1bd6584f8f278b204779c92744ab0271c3f3dbbe74d5d9f168cd"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/program-synthesis/institution-continuation.ts",
+      "preimageSha256": "eadf1cc5b7d91781dfc8e430dd27698e4725ba6d65948fc843833bff2efd83ec",
+      "postimageSha256": "17fc1fd0dd3f187dfb9e680622b41438395b4966193527b7ce0ca32ae01a1ed2"
+    }
+  ],
+  "sharedFilesWritten": false,
+  "reviewState": "PROPOSED_NOT_APPLIED",
+  "sqlReconciliation": {
+    "sha256": "1511609691eed81aee3f227d70a0a5b061adf604780d5c6ab16822cc47aa029a",
+    "changeRequested": false
+  }
+}

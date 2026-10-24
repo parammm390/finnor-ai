@@ -1,0 +1,1056 @@
+[
+  {
+    "PLpgSQL_function": {
+      "datums": [
+        {
+          "PLpgSQL_var": {
+            "refname": "p_ref",
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "jsonb"
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "p_decision",
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "uuid"
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "p_recovery",
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "bool"
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "found",
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "bool"
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "t",
+            "lineno": 2,
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "uuid"
+              }
+            },
+            "default_val": {
+              "PLpgSQL_expr": {
+                "query": "finnor_os.request_tenant_id()",
+                "parseMode": 2
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "u",
+            "lineno": 3,
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "uuid"
+              }
+            },
+            "default_val": {
+              "PLpgSQL_expr": {
+                "query": "nullif(current_setting('app.user_id',true),'')::uuid",
+                "parseMode": 2
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "cert",
+            "lineno": 4,
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "jsonb"
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "origin",
+            "lineno": 4,
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "jsonb"
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "parent",
+            "lineno": 4,
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "jsonb"
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "parent_status",
+            "lineno": 4,
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "text"
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "parent_envelopes",
+            "lineno": 4,
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "jsonb"
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "compiler",
+            "lineno": 5,
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "finnor_os.x1_compiler_requests%rowtype"
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "programme",
+            "lineno": 6,
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "finnor_os.p1_requests%rowtype"
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "episode",
+            "lineno": 7,
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "finnor_os.x1_compiler_episodes%rowtype"
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "duty",
+            "lineno": 8,
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "jsonb"
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "duties",
+            "lineno": 8,
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "int4"
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "line",
+            "lineno": 8,
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "jsonb"
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "original_line",
+            "lineno": 8,
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "jsonb"
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "requested",
+            "lineno": 8,
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "jsonb"
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "subject",
+            "lineno": 9,
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "jsonb"
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_var": {
+            "refname": "subject_count",
+            "lineno": 9,
+            "datatype": {
+              "PLpgSQL_type": {
+                "typname": "int4"
+              }
+            }
+          }
+        },
+        {
+          "PLpgSQL_row": {
+            "refname": "(unnamed row)",
+            "lineno": 16,
+            "fields": [
+              {
+                "name": "cert",
+                "varno": 6
+              }
+            ]
+          }
+        },
+        {
+          "PLpgSQL_row": {
+            "refname": "(unnamed row)",
+            "lineno": 31,
+            "fields": [
+              {
+                "name": "origin",
+                "varno": 7
+              }
+            ]
+          }
+        },
+        {
+          "PLpgSQL_row": {
+            "refname": "(unnamed row)",
+            "lineno": 48,
+            "fields": [
+              {
+                "name": "compiler",
+                "varno": 11
+              }
+            ]
+          }
+        },
+        {
+          "PLpgSQL_row": {
+            "refname": "(unnamed row)",
+            "lineno": 50,
+            "fields": [
+              {
+                "name": "programme",
+                "varno": 12
+              }
+            ]
+          }
+        },
+        {
+          "PLpgSQL_row": {
+            "refname": "(unnamed row)",
+            "lineno": 52,
+            "fields": [
+              {
+                "name": "episode",
+                "varno": 13
+              }
+            ]
+          }
+        },
+        {
+          "PLpgSQL_row": {
+            "refname": "(unnamed row)",
+            "lineno": 78,
+            "fields": [
+              {
+                "name": "duties",
+                "varno": 15
+              },
+              {
+                "name": "duty",
+                "varno": 14
+              }
+            ]
+          }
+        },
+        {
+          "PLpgSQL_row": {
+            "refname": "(unnamed row)",
+            "lineno": 85,
+            "fields": [
+              {
+                "name": "parent",
+                "varno": 8
+              },
+              {
+                "name": "parent_status",
+                "varno": 9
+              },
+              {
+                "name": "parent_envelopes",
+                "varno": 10
+              }
+            ]
+          }
+        },
+        {
+          "PLpgSQL_row": {
+            "refname": "(unnamed row)",
+            "lineno": 131,
+            "fields": [
+              {
+                "name": "subject",
+                "varno": 19
+              }
+            ]
+          }
+        },
+        {
+          "PLpgSQL_row": {
+            "refname": "(unnamed row)",
+            "lineno": 159,
+            "fields": [
+              {
+                "name": "line",
+                "varno": 16
+              }
+            ]
+          }
+        },
+        {
+          "PLpgSQL_row": {
+            "refname": "(unnamed row)",
+            "lineno": 160,
+            "fields": [
+              {
+                "name": "original_line",
+                "varno": 17
+              }
+            ]
+          }
+        },
+        {
+          "PLpgSQL_row": {
+            "refname": "(unnamed row)",
+            "lineno": 162,
+            "fields": [
+              {
+                "name": "requested",
+                "varno": 18
+              }
+            ]
+          }
+        }
+      ],
+      "action": {
+        "PLpgSQL_stmt_block": {
+          "lineno": 10,
+          "body": [
+            {
+              "PLpgSQL_stmt_if": {
+                "lineno": 11,
+                "cond": {
+                  "PLpgSQL_expr": {
+                    "query": "t IS NULL OR u IS NULL OR NOT EXISTS(SELECT 1 FROM finnor_os.users\n  WHERE tenant_id=t AND id=u AND status='active' AND role='owner')",
+                    "parseMode": 2
+                  }
+                },
+                "then_body": [
+                  {
+                    "PLpgSQL_stmt_raise": {
+                      "lineno": 13,
+                      "elog_level": 21,
+                      "message": "Z0 authenticated original owner required"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "PLpgSQL_stmt_perform": {
+                "lineno": 14,
+                "expr": {
+                  "PLpgSQL_expr": {
+                    "query": "SELECT pg_advisory_xact_lock(hashtextextended('s5-portfolio:'||t::text,0))",
+                    "parseMode": 0
+                  }
+                }
+              }
+            },
+            {
+              "PLpgSQL_stmt_perform": {
+                "lineno": 15,
+                "expr": {
+                  "PLpgSQL_expr": {
+                    "query": "SELECT pg_advisory_xact_lock(hashtextextended(t::text,5510))",
+                    "parseMode": 0
+                  }
+                }
+              }
+            },
+            {
+              "PLpgSQL_stmt_execsql": {
+                "lineno": 16,
+                "sqlstmt": {
+                  "PLpgSQL_expr": {
+                    "query": "SELECT a.body           FROM finnor_os.application_semantics_artifacts a\n  WHERE a.tenant_id=t AND a.principal_id=u AND a.artifact_id=p_ref->>'id'\n   AND a.semantic_owner='S5' AND a.version='application-operation-v1'\n   AND a.content_digest=p_ref->>'contentDigest'",
+                    "parseMode": 0
+                  }
+                },
+                "into": true,
+                "target": {
+                  "PLpgSQL_row": {
+                    "refname": "(unnamed row)",
+                    "lineno": 16,
+                    "fields": [
+                      {
+                        "name": "cert",
+                        "varno": 6
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            {
+              "PLpgSQL_stmt_if": {
+                "lineno": 20,
+                "cond": {
+                  "PLpgSQL_expr": {
+                    "query": "cert IS NULL OR p_ref->>'owner' IS DISTINCT FROM 'S5'\n  OR p_ref->>'version' IS DISTINCT FROM 'application-operation-v1'\n  OR p_ref->>'id' IS DISTINCT FROM 'institution-application-allocation:'||(p_ref->>'contentDigest')\n  OR cert->>'schema' IS DISTINCT FROM 'finnor.s5.application-allocation.v1'\n  OR cert->>'occupation' IS DISTINCT FROM 'EXISTING_ORIGINAL_X1_RESERVATION_NO_NEW_FUNDING'\n  OR cert->>'tenantId' IS DISTINCT FROM t::text OR cert->>'principalId' IS DISTINCT FROM u::text\n  OR cert->'executionAuthorityGranted' IS DISTINCT FROM 'false'::jsonb\n  OR jsonb_typeof(cert->'check'->'envelopes') IS DISTINCT FROM 'array'\n  OR jsonb_typeof(cert->'acquisitionRequest'->'resourceDemand') IS DISTINCT FROM 'array'\n  OR jsonb_typeof(cert->'resourceRefs') IS DISTINCT FROM 'array'",
+                    "parseMode": 2
+                  }
+                },
+                "then_body": [
+                  {
+                    "PLpgSQL_stmt_raise": {
+                      "lineno": 30,
+                      "elog_level": 21,
+                      "message": "Z0 inherited allocation preimage unavailable"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "PLpgSQL_stmt_execsql": {
+                "lineno": 31,
+                "sqlstmt": {
+                  "PLpgSQL_expr": {
+                    "query": "SELECT a.body             FROM finnor_os.application_semantics_artifacts a\n  WHERE a.tenant_id=t AND a.principal_id=u AND a.artifact_id=cert->'institutionalOriginRef'->>'id'\n   AND a.semantic_owner='S4' AND a.version=cert->'institutionalOriginRef'->>'version'\n   AND a.content_digest=cert->'institutionalOriginRef'->>'contentDigest'",
+                    "parseMode": 0
+                  }
+                },
+                "into": true,
+                "target": {
+                  "PLpgSQL_row": {
+                    "refname": "(unnamed row)",
+                    "lineno": 31,
+                    "fields": [
+                      {
+                        "name": "origin",
+                        "varno": 7
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            {
+              "PLpgSQL_stmt_if": {
+                "lineno": 35,
+                "cond": {
+                  "PLpgSQL_expr": {
+                    "query": "origin IS NULL OR origin->>'schema' IS DISTINCT FROM 'finnor.z0.institution-application-origin.v1'\n  OR origin->>'tenantId' IS DISTINCT FROM t::text OR origin->>'principalId' IS DISTINCT FROM u::text\n  OR origin->>'workId' IS DISTINCT FROM cert->>'workId'\n  OR origin->>'deadlineAt' IS DISTINCT FROM cert->>'deadlineAt'\n  OR origin->'originalReservationRef' IS DISTINCT FROM cert->'originalReservationRef'\n  OR origin->>'purpose' IS DISTINCT FROM 'LEARN_APPLICATION_MODEL_THEN_RETURN_TO_ORIGINAL_P1'\n  OR origin->'executionAuthorityGranted' IS DISTINCT FROM 'false'::jsonb\n  OR origin->'protectedAdmission' IS DISTINCT FROM 'false'::jsonb\n  OR cert->'acquisitionRequest'->'institutionalOrigin' IS DISTINCT FROM origin->'selector'\n  OR cert->'acquisitionRequest'->>'workId' IS DISTINCT FROM origin->>'workId'\n  OR cert->'acquisitionRequest'->'root' IS DISTINCT FROM origin->'root'\n  OR cert->'acquisitionRequest'->>'deadlineAt' IS DISTINCT FROM origin->>'deadlineAt'",
+                    "parseMode": 2
+                  }
+                },
+                "then_body": [
+                  {
+                    "PLpgSQL_stmt_raise": {
+                      "lineno": 47,
+                      "elog_level": 21,
+                      "message": "Z0 original institution binding unavailable"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "PLpgSQL_stmt_execsql": {
+                "lineno": 48,
+                "sqlstmt": {
+                  "PLpgSQL_expr": {
+                    "query": "SELECT *               FROM finnor_os.x1_compiler_requests\n  WHERE tenant_id=t AND principal_id=u AND id=(origin->'selector'->>'compilerRequestId')::uuid FOR SHARE",
+                    "parseMode": 0
+                  }
+                },
+                "into": true,
+                "target": {
+                  "PLpgSQL_row": {
+                    "refname": "(unnamed row)",
+                    "lineno": 48,
+                    "fields": [
+                      {
+                        "name": "compiler",
+                        "varno": 11
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            {
+              "PLpgSQL_stmt_execsql": {
+                "lineno": 50,
+                "sqlstmt": {
+                  "PLpgSQL_expr": {
+                    "query": "SELECT *                FROM finnor_os.p1_requests\n  WHERE tenant_id=t AND principal_id=u AND id=(origin->'selector'->>'programId')::uuid FOR SHARE",
+                    "parseMode": 0
+                  }
+                },
+                "into": true,
+                "target": {
+                  "PLpgSQL_row": {
+                    "refname": "(unnamed row)",
+                    "lineno": 50,
+                    "fields": [
+                      {
+                        "name": "programme",
+                        "varno": 12
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            {
+              "PLpgSQL_stmt_execsql": {
+                "lineno": 52,
+                "sqlstmt": {
+                  "PLpgSQL_expr": {
+                    "query": "SELECT *              FROM finnor_os.x1_compiler_episodes\n  WHERE tenant_id=t AND principal_id=u AND id=compiler.episode_id FOR SHARE",
+                    "parseMode": 0
+                  }
+                },
+                "into": true,
+                "target": {
+                  "PLpgSQL_row": {
+                    "refname": "(unnamed row)",
+                    "lineno": 52,
+                    "fields": [
+                      {
+                        "name": "episode",
+                        "varno": 13
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            {
+              "PLpgSQL_stmt_if": {
+                "lineno": 54,
+                "cond": {
+                  "PLpgSQL_expr": {
+                    "query": "compiler.id IS NULL OR programme.id IS NULL OR episode.id IS NULL\n  OR compiler.work_id IS DISTINCT FROM (origin->>'workId')::uuid\n  OR programme.work_id IS DISTINCT FROM compiler.work_id\n  OR compiler.work_input_id IS DISTINCT FROM (origin->>'workInputId')::uuid\n  OR programme.work_input_id IS DISTINCT FROM compiler.work_input_id\n  OR compiler.work_input_digest IS DISTINCT FROM origin->>'workInputDigest'\n  OR programme.work_input_digest IS DISTINCT FROM compiler.work_input_digest\n  OR origin->'root' IS DISTINCT FROM programme.request->'root'\n  OR compiler.program_id IS DISTINCT FROM programme.id\n  OR compiler.admission_id IS DISTINCT FROM (origin->>'admissionId')::uuid\n  OR episode.id IS DISTINCT FROM (origin->>'compilerEpisodeId')::uuid\n  OR episode.parent_reservation IS DISTINCT FROM origin->'originalReservationRef'\n  OR episode.parent_demand->>'demandDigest' IS DISTINCT FROM origin->>'originalDemandDigest'\n  OR programme.request->'institution'->'reservationRef' IS DISTINCT FROM episode.parent_reservation\n  OR programme.request->'institution'->'demand' IS DISTINCT FROM episode.parent_demand\n  OR programme.request->'institution'->>'compilerRequestId' IS DISTINCT FROM compiler.id::text\n  OR origin->'institutionalProgramRef'->>'owner' IS DISTINCT FROM 'S4_P1'\n  OR NOT EXISTS(SELECT 1 FROM finnor_os.x1_compiler_artifacts a WHERE a.tenant_id=t AND a.principal_id=u\n    AND a.request_id=compiler.id AND a.id=compiler.artifact_id\n    AND a.id::text=origin->'institutionalProgramRef'->>'id'\n    AND a.body_digest=origin->'institutionalProgramRef'->>'contentDigest'\n    AND a.body->'envelope'->>'schema_revision'=origin->'institutionalProgramRef'->>'version'\n    AND a.check_result->>'disposition'='ACCEPTED_DEVELOPMENT')",
+                    "parseMode": 2
+                  }
+                },
+                "then_body": [
+                  {
+                    "PLpgSQL_stmt_raise": {
+                      "lineno": 77,
+                      "elog_level": 21,
+                      "message": "Z0 original owner/admission ancestry changed"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "PLpgSQL_stmt_execsql": {
+                "lineno": 78,
+                "sqlstmt": {
+                  "PLpgSQL_expr": {
+                    "query": "SELECT count(*),jsonb_agg(d.value)->0                    FROM finnor_os.x1_checked_artifacts a CROSS JOIN LATERAL jsonb_array_elements(a.responsibilities) d(value)\n  WHERE a.tenant_id=t AND a.principal_id=u AND a.work_id=compiler.work_id AND a.admission_id=compiler.admission_id\n    AND d.value->'obligation'->>'stableIdentity'=origin->'selector'->>'responsibilityIdentity'",
+                    "parseMode": 0
+                  }
+                },
+                "into": true,
+                "target": {
+                  "PLpgSQL_row": {
+                    "refname": "(unnamed row)",
+                    "lineno": 78,
+                    "fields": [
+                      {
+                        "name": "duties",
+                        "varno": 15
+                      },
+                      {
+                        "name": "duty",
+                        "varno": 14
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            {
+              "PLpgSQL_stmt_if": {
+                "lineno": 82,
+                "cond": {
+                  "PLpgSQL_expr": {
+                    "query": "duties<>1 OR duty->'obligation'->>'responsiblePrincipal' IS DISTINCT FROM u::text\n  OR NOT (programme.request->'institution'->'responsibilities' @> jsonb_build_array(duty))",
+                    "parseMode": 2
+                  }
+                },
+                "then_body": [
+                  {
+                    "PLpgSQL_stmt_raise": {
+                      "lineno": 84,
+                      "elog_level": 21,
+                      "message": "Z0 checked original responsibility required"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "PLpgSQL_stmt_execsql": {
+                "lineno": 85,
+                "sqlstmt": {
+                  "PLpgSQL_expr": {
+                    "query": "SELECT o.body,s.status,s.envelopes                                            FROM finnor_os.s5_reservation_origins o\n  JOIN finnor_os.s5_reservations s USING(tenant_id,reservation_id)\n  WHERE o.tenant_id=t AND o.principal_id=u AND o.reservation_id=episode.parent_reservation->>'id'\n   AND o.body->>'schema'='finnor.s5.institution-reservation.v1' FOR UPDATE OF s",
+                    "parseMode": 0
+                  }
+                },
+                "into": true,
+                "target": {
+                  "PLpgSQL_row": {
+                    "refname": "(unnamed row)",
+                    "lineno": 85,
+                    "fields": [
+                      {
+                        "name": "parent",
+                        "varno": 8
+                      },
+                      {
+                        "name": "parent_status",
+                        "varno": 9
+                      },
+                      {
+                        "name": "parent_envelopes",
+                        "varno": 10
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            {
+              "PLpgSQL_stmt_if": {
+                "lineno": 89,
+                "cond": {
+                  "PLpgSQL_expr": {
+                    "query": "parent IS NULL OR parent_status='RELEASED'\n  OR parent->'ref' IS DISTINCT FROM episode.parent_reservation\n  OR parent->'envelopes' IS DISTINCT FROM parent_envelopes\n  OR parent->>'workId' IS DISTINCT FROM origin->>'workId'\n  OR parent->'demand'->>'demandDigest' IS DISTINCT FROM origin->>'originalDemandDigest'",
+                    "parseMode": 2
+                  }
+                },
+                "then_body": [
+                  {
+                    "PLpgSQL_stmt_raise": {
+                      "lineno": 94,
+                      "elog_level": 21,
+                      "message": "Z0 original resource occupation unavailable"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "PLpgSQL_stmt_if": {
+                "lineno": 95,
+                "cond": {
+                  "PLpgSQL_expr": {
+                    "query": "NOT p_recovery",
+                    "parseMode": 2
+                  }
+                },
+                "then_body": [
+                  {
+                    "PLpgSQL_stmt_if": {
+                      "lineno": 96,
+                      "cond": {
+                        "PLpgSQL_expr": {
+                          "query": "p_decision IS NULL",
+                          "parseMode": 2
+                        }
+                      },
+                      "then_body": [
+                        {
+                          "PLpgSQL_stmt_raise": {
+                            "lineno": 96,
+                            "elog_level": 21,
+                            "message": "Z0 fresh original authority decision required"
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "PLpgSQL_stmt_perform": {
+                      "lineno": 97,
+                      "expr": {
+                        "PLpgSQL_expr": {
+                          "query": "SELECT finnor_os.s5_assert_institution_current(parent->'ref'->>'id',p_decision)",
+                          "parseMode": 0
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "PLpgSQL_stmt_if": {
+                      "lineno": 98,
+                      "cond": {
+                        "PLpgSQL_expr": {
+                          "query": "compiler.status NOT IN('WAITING','PARTIAL') OR programme.status NOT IN('WAITING','PARTIAL','FAILED')\n   OR compiler.generation IS DISTINCT FROM (origin->>'compilerGeneration')::integer\n   OR compiler.revision IS DISTINCT FROM (origin->>'compilerRevision')::integer\n   OR programme.generation IS DISTINCT FROM (origin->>'programmeGeneration')::integer\n   OR programme.episode_id IS DISTINCT FROM (origin->>'programmeEpisodeId')::uuid\n   OR programme.plan_revision_id IS DISTINCT FROM (origin->>'planRevisionId')::uuid\n   OR programme.request_digest IS DISTINCT FROM origin->>'programmeRequestDigest'\n   OR NOT EXISTS(SELECT 1 FROM finnor_os.works w\n      JOIN finnor_os.work_plan_revisions p ON p.tenant_id=w.tenant_id AND p.work_id=w.id\n      WHERE w.tenant_id=t AND w.id=compiler.work_id AND w.created_by=u\n        AND w.status NOT IN('completed','cancelled','failed')\n        AND p.id=programme.plan_revision_id AND p.work_input_id=compiler.work_input_id AND p.status='active'\n      FOR SHARE OF w,p)\n   OR compiler.programme_digest IS DISTINCT FROM origin->>'programmeDigest'\n   OR compiler.input_manifest->'current'->'sourceRevisions' IS DISTINCT FROM origin->'sourceRevisions'\n   OR compiler.input_manifest->'current'->>'rightsRevision' IS DISTINCT FROM origin->>'rightsRevision'\n   OR origin->>'rightsRevision' IS DISTINCT FROM (SELECT revision::text FROM finnor_os.authority_states WHERE tenant_id=t)\n   OR (SELECT i.id FROM finnor_os.work_inputs i WHERE i.tenant_id=t AND i.work_id=compiler.work_id\n     ORDER BY i.created_at DESC,i.id DESC LIMIT 1) IS DISTINCT FROM compiler.work_input_id\n   OR EXISTS(SELECT 1 FROM finnor_os.x1_compiler_requests newer WHERE newer.tenant_id=t\n      AND newer.principal_id=u AND newer.work_id=compiler.work_id AND newer.revision>compiler.revision)\n   OR (cert->>'deadlineAt')::timestamptz<=clock_timestamp()\n   OR (cert->>'deadlineAt')::timestamptz>LEAST(episode.original_deadline,episode.wall_deadline,\n      (duty->'obligation'->>'originalDeadline')::timestamptz,\n      (programme.proposed->'bounds'->>'deadlineAt')::timestamptz)\n   OR NOT EXISTS(SELECT 1 FROM finnor_os.x1_work_mandates m WHERE m.tenant_id=t AND m.principal_id=u\n      AND m.work_id=compiler.work_id AND m.revoked_at IS NULL AND m.valid_from<=clock_timestamp()\n      AND m.expires_at>clock_timestamp() AND m.revision=origin->>'mandateRevision')",
+                          "parseMode": 2
+                        }
+                      },
+                      "then_body": [
+                        {
+                          "PLpgSQL_stmt_raise": {
+                            "lineno": 126,
+                            "elog_level": 21,
+                            "message": "Z0 original forward authority or deadline changed"
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "PLpgSQL_stmt_perform": {
+                      "lineno": 127,
+                      "expr": {
+                        "PLpgSQL_expr": {
+                          "query": "SELECT finnor_os.x1_assert_responsible_principals(compiler.work_id,compiler.input_manifest->'current'->'responsiblePrincipals')",
+                          "parseMode": 0
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "PLpgSQL_stmt_perform": {
+                      "lineno": 128,
+                      "expr": {
+                        "PLpgSQL_expr": {
+                          "query": "SELECT finnor_os.x1_assert_source_scopes(compiler.work_id,compiler.input_manifest->'current'->'sourceScopes',\n    ARRAY(SELECT jsonb_array_elements_text(compiler.grant_ids)::uuid))",
+                          "parseMode": 0
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "PLpgSQL_stmt_perform": {
+                      "lineno": 130,
+                      "expr": {
+                        "PLpgSQL_expr": {
+                          "query": "SELECT finnor_os.x1_assert_canonical_owner_cut(compiler.input_manifest->'current'->'canonicalOwners',true)",
+                          "parseMode": 0
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "PLpgSQL_stmt_fors": {
+                      "lineno": 131,
+                      "var": {
+                        "PLpgSQL_row": {
+                          "refname": "(unnamed row)",
+                          "lineno": 131,
+                          "fields": [
+                            {
+                              "name": "subject",
+                              "varno": 19
+                            }
+                          ]
+                        }
+                      },
+                      "body": [
+                        {
+                          "PLpgSQL_stmt_if": {
+                            "lineno": 133,
+                            "cond": {
+                              "PLpgSQL_expr": {
+                                "query": "jsonb_typeof(subject->'registrations') IS DISTINCT FROM 'array'\n     OR jsonb_array_length(subject->'registrations') NOT BETWEEN 1 AND 200",
+                                "parseMode": 2
+                              }
+                            },
+                            "then_body": [
+                              {
+                                "PLpgSQL_stmt_raise": {
+                                  "lineno": 135,
+                                  "elog_level": 21,
+                                  "message": "Z0 original subject population required"
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        {
+                          "PLpgSQL_stmt_perform": {
+                            "lineno": 136,
+                            "expr": {
+                              "PLpgSQL_expr": {
+                                "query": "SELECT 1 FROM finnor_os.x1_subject_identity_bindings b\n    JOIN finnor_os.x1_subject_consents consent ON consent.tenant_id=b.tenant_id\n      AND consent.subject_user_id=b.subject_user_id AND consent.institution_id=b.institution_id\n      AND consent.source_class=subject->>'sourceClass' AND consent.purpose=subject->>'purpose'\n    JOIN finnor_os.users actor ON actor.tenant_id=b.tenant_id AND actor.id=b.subject_user_id\n    WHERE b.tenant_id=t AND b.institution_id=subject->>'institutionId' AND b.source_id=subject->>'sourceId'\n      AND b.registration_id IN(SELECT value FROM jsonb_array_elements_text(subject->'registrations'))\n      AND b.revoked_at IS NULL AND b.valid_from<=clock_timestamp() AND b.expires_at>clock_timestamp()\n      AND consent.revoked_at IS NULL AND consent.granted_at<=clock_timestamp() AND consent.expires_at>clock_timestamp()\n      AND actor.status='active' FOR SHARE OF b,consent,actor",
+                                "parseMode": 0
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "PLpgSQL_stmt_getdiag": {
+                            "lineno": 146,
+                            "diag_items": [
+                              {
+                                "PLpgSQL_diag_item": {
+                                  "kind": "ROW_COUNT",
+                                  "target": 20
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        {
+                          "PLpgSQL_stmt_if": {
+                            "lineno": 147,
+                            "cond": {
+                              "PLpgSQL_expr": {
+                                "query": "subject_count<>jsonb_array_length(subject->'registrations')",
+                                "parseMode": 2
+                              }
+                            },
+                            "then_body": [
+                              {
+                                "PLpgSQL_stmt_raise": {
+                                  "lineno": 148,
+                                  "elog_level": 21,
+                                  "message": "Z0 original subject consent changed"
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      ],
+                      "query": {
+                        "PLpgSQL_expr": {
+                          "query": "SELECT value FROM jsonb_array_elements(\n    coalesce(compiler.input_manifest->'current'->'sensitiveSubjects','[]'::jsonb))",
+                          "parseMode": 0
+                        }
+                      }
+                    }
+                  }
+                ],
+                "elsif_list": [
+                  {
+                    "PLpgSQL_if_elsif": {
+                      "lineno": 150,
+                      "cond": {
+                        "PLpgSQL_expr": {
+                          "query": "p_decision IS NOT NULL",
+                          "parseMode": 2
+                        }
+                      },
+                      "stmts": [
+                        {
+                          "PLpgSQL_stmt_perform": {
+                            "lineno": 152,
+                            "expr": {
+                              "PLpgSQL_expr": {
+                                "query": "SELECT finnor_os.x1_assert_input_decision(compiler.work_id,NULL,p_decision)",
+                                "parseMode": 0
+                              }
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "PLpgSQL_stmt_if": {
+                "lineno": 154,
+                "cond": {
+                  "PLpgSQL_expr": {
+                    "query": "jsonb_array_length(cert->'check'->'envelopes') NOT BETWEEN 1 AND 2\n  OR jsonb_array_length(cert->'acquisitionRequest'->'resourceDemand')<>jsonb_array_length(cert->'check'->'envelopes')\n  OR (SELECT count(DISTINCT value->>'resourceId') FROM jsonb_array_elements(cert->'check'->'envelopes'))<>\n    jsonb_array_length(cert->'check'->'envelopes')",
+                    "parseMode": 2
+                  }
+                },
+                "then_body": [
+                  {
+                    "PLpgSQL_stmt_raise": {
+                      "lineno": 158,
+                      "elog_level": 21,
+                      "message": "Z0 child envelope population invalid"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "PLpgSQL_stmt_fors": {
+                "lineno": 159,
+                "var": {
+                  "PLpgSQL_row": {
+                    "refname": "(unnamed row)",
+                    "lineno": 159,
+                    "fields": [
+                      {
+                        "name": "line",
+                        "varno": 16
+                      }
+                    ]
+                  }
+                },
+                "body": [
+                  {
+                    "PLpgSQL_stmt_execsql": {
+                      "lineno": 160,
+                      "sqlstmt": {
+                        "PLpgSQL_expr": {
+                          "query": "SELECT value                    FROM jsonb_array_elements(parent->'envelopes')\n    WHERE value->>'resourceId'=line->>'resourceId' AND value->>'unit'=line->>'unit'",
+                          "parseMode": 0
+                        }
+                      },
+                      "into": true,
+                      "target": {
+                        "PLpgSQL_row": {
+                          "refname": "(unnamed row)",
+                          "lineno": 160,
+                          "fields": [
+                            {
+                              "name": "original_line",
+                              "varno": 17
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "PLpgSQL_stmt_execsql": {
+                      "lineno": 162,
+                      "sqlstmt": {
+                        "PLpgSQL_expr": {
+                          "query": "SELECT value                FROM jsonb_array_elements(cert->'acquisitionRequest'->'resourceDemand')\n    WHERE value->>'resourceId'=line->>'resourceId' AND value->>'unit'=line->>'unit'",
+                          "parseMode": 0
+                        }
+                      },
+                      "into": true,
+                      "target": {
+                        "PLpgSQL_row": {
+                          "refname": "(unnamed row)",
+                          "lineno": 162,
+                          "fields": [
+                            {
+                              "name": "requested",
+                              "varno": 18
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "PLpgSQL_stmt_if": {
+                      "lineno": 164,
+                      "cond": {
+                        "PLpgSQL_expr": {
+                          "query": "original_line IS NULL OR requested IS NULL OR coalesce(line->>'unit','') NOT IN('request','seconds')\n   OR line->>'kind' IS DISTINCT FROM 'CUMULATIVE_EXPENDITURE'\n   OR jsonb_typeof(line->'quantities') IS DISTINCT FROM 'array'\n   OR line->'horizon' IS DISTINCT FROM original_line->'horizon'\n   OR jsonb_array_length(line->'quantities')<>jsonb_array_length(original_line->'quantities')\n   OR EXISTS(SELECT 1 FROM jsonb_array_elements_text(line->'quantities') WITH ORDINALITY q(value,n)\n     WHERE q.value !~ '^(0|[1-9][0-9]{0,15})$'\n       OR q.value::numeric>(original_line->'quantities'->>(q.n::integer-1))::numeric)\n   OR coalesce(requested->>'amount','') !~ '^[1-9][0-9]{0,3}$'\n   OR (requested->>'amount')::numeric>(CASE WHEN line->>'unit'='seconds' THEN 900 ELSE 2048 END)\n   OR (SELECT sum(value::numeric) FROM jsonb_array_elements_text(line->'quantities'))<>(requested->>'amount')::numeric",
+                          "parseMode": 2
+                        }
+                      },
+                      "then_body": [
+                        {
+                          "PLpgSQL_stmt_raise": {
+                            "lineno": 175,
+                            "elog_level": 21,
+                            "message": "Z0 child envelope enlarges original resource"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "query": {
+                  "PLpgSQL_expr": {
+                    "query": "SELECT value FROM jsonb_array_elements(cert->'check'->'envelopes')",
+                    "parseMode": 0
+                  }
+                }
+              }
+            },
+            {
+              "PLpgSQL_stmt_return": {
+                "lineno": 177,
+                "expr": {
+                  "PLpgSQL_expr": {
+                    "query": "jsonb_build_object('certificate',cert,'origin',origin,'parent',parent)",
+                    "parseMode": 2
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+]
