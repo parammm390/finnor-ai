@@ -1,4 +1,4 @@
-// Generated from finnor-os/openapi.json, SHA-256 78bd0e663887ffcc46dda31e074c510e18fc6da84a62cafb103d07dbe9eef508.
+// Generated from finnor-os/openapi.json, SHA-256 7c42b88ad863addf789a225087db7a2315ae45e420e06dcae54f95f4ce7c38c2.
 export interface paths {
     "/api/live-controls": {
         parameters: {
@@ -43072,11 +43072,11 @@ export interface components {
                     inputFields: string[];
                     assignments: {
                         field: string;
-                        value: components["schemas"]["application-submit"]["definitions"]["__schema0"];
+                        value: components["schemas"]["Generated_c1a8f9bea7fbe6aef1707737"];
                     }[];
                     guards: {
                         id: string;
-                        condition: components["schemas"]["application-submit"]["definitions"]["__schema0"];
+                        condition: components["schemas"]["Generated_c1a8f9bea7fbe6aef1707737"];
                         denialCode: string;
                         unknownCode?: string;
                         requirementIds: string[];
@@ -43086,7 +43086,7 @@ export interface components {
                     approval?: {
                         requirements: {
                             role: string;
-                            when: components["schemas"]["application-submit"]["definitions"]["__schema0"];
+                            when: components["schemas"]["Generated_c1a8f9bea7fbe6aef1707737"];
                         }[];
                         noSelfApproval: boolean;
                         distinctPrincipals: boolean;
@@ -43107,7 +43107,7 @@ export interface components {
                     id: string;
                     entityId: string;
                     critical: boolean;
-                    condition: components["schemas"]["application-submit"]["definitions"]["__schema0"];
+                    condition: components["schemas"]["Generated_c1a8f9bea7fbe6aef1707737"];
                     denialCode: string;
                     requirementIds: string[];
                 }[];
@@ -43489,11 +43489,11 @@ export interface components {
                     inputFields: string[];
                     assignments: {
                         field: string;
-                        value: components["schemas"]["application-maintain"]["definitions"]["__schema0"];
+                        value: components["schemas"]["Generated_26125b9a2f226a70b4ff89d4"];
                     }[];
                     guards: {
                         id: string;
-                        condition: components["schemas"]["application-maintain"]["definitions"]["__schema0"];
+                        condition: components["schemas"]["Generated_26125b9a2f226a70b4ff89d4"];
                         denialCode: string;
                         unknownCode?: string;
                         requirementIds: string[];
@@ -43503,7 +43503,7 @@ export interface components {
                     approval?: {
                         requirements: {
                             role: string;
-                            when: components["schemas"]["application-maintain"]["definitions"]["__schema0"];
+                            when: components["schemas"]["Generated_26125b9a2f226a70b4ff89d4"];
                         }[];
                         noSelfApproval: boolean;
                         distinctPrincipals: boolean;
@@ -43524,7 +43524,7 @@ export interface components {
                     id: string;
                     entityId: string;
                     critical: boolean;
-                    condition: components["schemas"]["application-maintain"]["definitions"]["__schema0"];
+                    condition: components["schemas"]["Generated_26125b9a2f226a70b4ff89d4"];
                     denialCode: string;
                     requirementIds: string[];
                 }[];
@@ -45110,7 +45110,7 @@ export interface components {
                 }[];
                 outputs: {
                     key: string;
-                    expression: components["schemas"]["confidential-intake"]["definitions"]["__schema0"];
+                    expression: components["schemas"]["Generated_45df65e61fb7f3a5662c6793"];
                     semantics: {
                         entityType: string;
                         /** Format: uuid */
@@ -45292,7 +45292,7 @@ export interface components {
                 }[];
                 outputs: {
                     key: string;
-                    expression: components["schemas"]["confidential-plan"]["definitions"]["__schema0"];
+                    expression: components["schemas"]["Generated_f4be2bb3872820006f5c9fe3"];
                     semantics: {
                         entityType: string;
                         /** Format: uuid */
@@ -45471,7 +45471,7 @@ export interface components {
                 }[];
                 outputs: {
                     key: string;
-                    expression: components["schemas"]["confidential-submit"]["definitions"]["__schema0"];
+                    expression: components["schemas"]["Generated_34c26af1381be1f0e97d0111"];
                     semantics: {
                         entityType: string;
                         /** Format: uuid */
@@ -46527,45 +46527,45 @@ export interface components {
         } | {
             /** @constant */
             op: "sum";
-            value: components["schemas"]["X3Expression"]["definitions"]["__schema0"];
+            value: components["schemas"]["Generated_2caeaa24811f2c65981139f1"];
         } | {
             /** @constant */
             op: "known";
-            value: components["schemas"]["X3Expression"]["definitions"]["__schema0"];
+            value: components["schemas"]["Generated_2caeaa24811f2c65981139f1"];
         } | {
             /** @constant */
             op: "current-evidence";
-            value: components["schemas"]["X3Expression"]["definitions"]["__schema0"];
+            value: components["schemas"]["Generated_2caeaa24811f2c65981139f1"];
         } | {
             /** @constant */
             op: "not";
-            value: components["schemas"]["X3Expression"]["definitions"]["__schema0"];
+            value: components["schemas"]["Generated_2caeaa24811f2c65981139f1"];
         } | {
             /** @constant */
             op: "equal";
-            left: components["schemas"]["X3Expression"]["definitions"]["__schema0"];
-            right: components["schemas"]["X3Expression"]["definitions"]["__schema0"];
+            left: components["schemas"]["Generated_2caeaa24811f2c65981139f1"];
+            right: components["schemas"]["Generated_2caeaa24811f2c65981139f1"];
         } | {
             /** @constant */
             op: "same-quantity";
-            left: components["schemas"]["X3Expression"]["definitions"]["__schema0"];
-            right: components["schemas"]["X3Expression"]["definitions"]["__schema0"];
+            left: components["schemas"]["Generated_2caeaa24811f2c65981139f1"];
+            right: components["schemas"]["Generated_2caeaa24811f2c65981139f1"];
         } | {
             /** @constant */
             op: "difference";
-            left: components["schemas"]["X3Expression"]["definitions"]["__schema0"];
-            right: components["schemas"]["X3Expression"]["definitions"]["__schema0"];
+            left: components["schemas"]["Generated_2caeaa24811f2c65981139f1"];
+            right: components["schemas"]["Generated_2caeaa24811f2c65981139f1"];
         } | {
             /** @constant */
             op: "compare";
             /** @enum {string} */
             comparison: "lt" | "lte" | "eq" | "gte" | "gt";
-            left: components["schemas"]["X3Expression"]["definitions"]["__schema0"];
-            right: components["schemas"]["X3Expression"]["definitions"]["__schema0"];
+            left: components["schemas"]["Generated_2caeaa24811f2c65981139f1"];
+            right: components["schemas"]["Generated_2caeaa24811f2c65981139f1"];
         } | {
             /** @constant */
             op: "currency-threshold";
-            value: components["schemas"]["X3Expression"]["definitions"]["__schema0"];
+            value: components["schemas"]["Generated_2caeaa24811f2c65981139f1"];
             /** @enum {string} */
             comparison: "lt" | "lte" | "eq" | "gte" | "gt";
             thresholds: {
@@ -46583,12 +46583,99 @@ export interface components {
         } | {
             /** @constant */
             op: "all";
-            args: components["schemas"]["X3Expression"]["definitions"]["__schema0"][];
+            args: components["schemas"]["Generated_2caeaa24811f2c65981139f1"][];
         } | {
             /** @constant */
             op: "any";
-            args: components["schemas"]["X3Expression"]["definitions"]["__schema0"][];
+            args: components["schemas"]["Generated_2caeaa24811f2c65981139f1"][];
         };
+        Generated_c1a8f9bea7fbe6aef1707737: components["schemas"]["X3Expression"];
+        Generated_26125b9a2f226a70b4ff89d4: components["schemas"]["X3Expression"];
+        Generated_45df65e61fb7f3a5662c6793: {
+            /** @constant */
+            kind: "input";
+            key: string;
+        } | {
+            /** @constant */
+            kind: "literal";
+            value: string;
+            /** @enum {string} */
+            unit: "currency" | "count" | "ratio" | "multiple" | "rate";
+            currencyCode: string | null;
+        } | {
+            /** @enum {string} */
+            kind: "add" | "subtract" | "multiply" | "ratio" | "min" | "max";
+            left: components["schemas"]["Generated_45df65e61fb7f3a5662c6793"];
+            right: components["schemas"]["Generated_45df65e61fb7f3a5662c6793"];
+        } | {
+            /** @constant */
+            kind: "if";
+            condition: {
+                /** @enum {string} */
+                comparison: "lt" | "lte" | "eq" | "gte" | "gt";
+                left: components["schemas"]["Generated_45df65e61fb7f3a5662c6793"];
+                right: components["schemas"]["Generated_45df65e61fb7f3a5662c6793"];
+            };
+            whenTrue: components["schemas"]["Generated_45df65e61fb7f3a5662c6793"];
+            whenFalse: components["schemas"]["Generated_45df65e61fb7f3a5662c6793"];
+        };
+        Generated_f4be2bb3872820006f5c9fe3: {
+            /** @constant */
+            kind: "input";
+            key: string;
+        } | {
+            /** @constant */
+            kind: "literal";
+            value: string;
+            /** @enum {string} */
+            unit: "currency" | "count" | "ratio" | "multiple" | "rate";
+            currencyCode: string | null;
+        } | {
+            /** @enum {string} */
+            kind: "add" | "subtract" | "multiply" | "ratio" | "min" | "max";
+            left: components["schemas"]["Generated_f4be2bb3872820006f5c9fe3"];
+            right: components["schemas"]["Generated_f4be2bb3872820006f5c9fe3"];
+        } | {
+            /** @constant */
+            kind: "if";
+            condition: {
+                /** @enum {string} */
+                comparison: "lt" | "lte" | "eq" | "gte" | "gt";
+                left: components["schemas"]["Generated_f4be2bb3872820006f5c9fe3"];
+                right: components["schemas"]["Generated_f4be2bb3872820006f5c9fe3"];
+            };
+            whenTrue: components["schemas"]["Generated_f4be2bb3872820006f5c9fe3"];
+            whenFalse: components["schemas"]["Generated_f4be2bb3872820006f5c9fe3"];
+        };
+        Generated_34c26af1381be1f0e97d0111: {
+            /** @constant */
+            kind: "input";
+            key: string;
+        } | {
+            /** @constant */
+            kind: "literal";
+            value: string;
+            /** @enum {string} */
+            unit: "currency" | "count" | "ratio" | "multiple" | "rate";
+            currencyCode: string | null;
+        } | {
+            /** @enum {string} */
+            kind: "add" | "subtract" | "multiply" | "ratio" | "min" | "max";
+            left: components["schemas"]["Generated_34c26af1381be1f0e97d0111"];
+            right: components["schemas"]["Generated_34c26af1381be1f0e97d0111"];
+        } | {
+            /** @constant */
+            kind: "if";
+            condition: {
+                /** @enum {string} */
+                comparison: "lt" | "lte" | "eq" | "gte" | "gt";
+                left: components["schemas"]["Generated_34c26af1381be1f0e97d0111"];
+                right: components["schemas"]["Generated_34c26af1381be1f0e97d0111"];
+            };
+            whenTrue: components["schemas"]["Generated_34c26af1381be1f0e97d0111"];
+            whenFalse: components["schemas"]["Generated_34c26af1381be1f0e97d0111"];
+        };
+        Generated_2caeaa24811f2c65981139f1: components["schemas"]["X3Expression"];
     };
     responses: never;
     parameters: never;

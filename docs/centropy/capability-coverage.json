@@ -1,7 +1,7 @@
 {
   "schema": "centropy.capability-coverage-audit/v1",
-  "generatedAt": "2026-10-24T17:36:51.755Z",
-  "sourceBaseCommit": "7bfdd2d3ab611c90f1355637858824ff1ba67f98",
+  "generatedAt": "2026-10-24T19:50:42.047Z",
+  "sourceBaseCommit": "84687c263651d9b5eb7aeb603c7b7dd466fedebb",
   "manifestSha256": "3ff6d0b06d57e13d8412ae9160b5cc844da1d861478665f688d6cb863b2e5238",
   "formsSha256": "1bc12487fb34759988ed4490715c21560653608fb313a409f0e6bcc551340e89",
   "method": "Actual API/planner manifest; import graph from active CENTROPY route entries; literal API call bindings; typed human form registrations; explicit restricted/compatibility/protocol classifications. Source presence is not execution evidence.",
@@ -1163,7 +1163,7 @@
       },
       {
         "file": "src/lib/jarvis/openapi-types.ts",
-        "sha256": "86a91d9a001876dc1f5dbe8965a336c6dc8d5d29006bf5c5d12017fccd9d9cc7"
+        "sha256": "2f0ebfb4fa5bf17f7f8c565f2bdfe7e0c2bf538001ca7bbe5e7974280077443d"
       },
       {
         "file": "src/components/centropy/canvas/ProgramSynthesisPanel.tsx",

@@ -698,7 +698,7 @@
                             "pattern": "^[A-Za-z][A-Za-z0-9_.:-]*$"
                           },
                           "value": {
-                            "$ref": "#/components/schemas/application-submit/definitions/__schema0"
+                            "$ref": "#/components/schemas/Generated_c1a8f9bea7fbe6aef1707737"
                           }
                         },
                         "required": [
@@ -721,7 +721,7 @@
                             "pattern": "^[A-Za-z][A-Za-z0-9_.:-]*$"
                           },
                           "condition": {
-                            "$ref": "#/components/schemas/application-submit/definitions/__schema0"
+                            "$ref": "#/components/schemas/Generated_c1a8f9bea7fbe6aef1707737"
                           },
                           "denialCode": {
                             "type": "string",
@@ -790,7 +790,7 @@
                                 "pattern": "^[A-Za-z][A-Za-z0-9_.:-]*$"
                               },
                               "when": {
-                                "$ref": "#/components/schemas/application-submit/definitions/__schema0"
+                                "$ref": "#/components/schemas/Generated_c1a8f9bea7fbe6aef1707737"
                               }
                             },
                             "required": [
@@ -923,7 +923,7 @@
                       "type": "boolean"
                     },
                     "condition": {
-                      "$ref": "#/components/schemas/application-submit/definitions/__schema0"
+                      "$ref": "#/components/schemas/Generated_c1a8f9bea7fbe6aef1707737"
                     },
                     "denialCode": {
                       "type": "string",
@@ -2317,12 +2317,7 @@
           "idempotencyKey",
           "limits"
         ],
-        "additionalProperties": false,
-        "definitions": {
-          "__schema0": {
-            "$ref": "#/components/schemas/X3Expression"
-          }
-        }
+        "additionalProperties": false
       },
       "application-maintain": {
         "type": "object",
@@ -2937,7 +2932,7 @@
                             "pattern": "^[A-Za-z][A-Za-z0-9_.:-]*$"
                           },
                           "value": {
-                            "$ref": "#/components/schemas/application-maintain/definitions/__schema0"
+                            "$ref": "#/components/schemas/Generated_26125b9a2f226a70b4ff89d4"
                           }
                         },
                         "required": [
@@ -2960,7 +2955,7 @@
                             "pattern": "^[A-Za-z][A-Za-z0-9_.:-]*$"
                           },
                           "condition": {
-                            "$ref": "#/components/schemas/application-maintain/definitions/__schema0"
+                            "$ref": "#/components/schemas/Generated_26125b9a2f226a70b4ff89d4"
                           },
                           "denialCode": {
                             "type": "string",
@@ -3029,7 +3024,7 @@
                                 "pattern": "^[A-Za-z][A-Za-z0-9_.:-]*$"
                               },
                               "when": {
-                                "$ref": "#/components/schemas/application-maintain/definitions/__schema0"
+                                "$ref": "#/components/schemas/Generated_26125b9a2f226a70b4ff89d4"
                               }
                             },
                             "required": [
@@ -3162,7 +3157,7 @@
                       "type": "boolean"
                     },
                     "condition": {
-                      "$ref": "#/components/schemas/application-maintain/definitions/__schema0"
+                      "$ref": "#/components/schemas/Generated_26125b9a2f226a70b4ff89d4"
                     },
                     "denialCode": {
                       "type": "string",
@@ -4997,12 +4992,7 @@
           "changeClass",
           "migration"
         ],
-        "additionalProperties": false,
-        "definitions": {
-          "__schema0": {
-            "$ref": "#/components/schemas/X3Expression"
-          }
-        }
+        "additionalProperties": false
       },
       "application-command": {
         "type": "object",
@@ -10666,7 +10656,7 @@
                       "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
                     },
                     "expression": {
-                      "$ref": "#/components/schemas/confidential-intake/definitions/__schema0"
+                      "$ref": "#/components/schemas/Generated_45df65e61fb7f3a5662c6793"
                     },
                     "semantics": {
                       "type": "object",
@@ -10947,150 +10937,7 @@
           "schema",
           "idempotencyKey"
         ],
-        "additionalProperties": false,
-        "definitions": {
-          "__schema0": {
-            "anyOf": [
-              {
-                "type": "object",
-                "properties": {
-                  "kind": {
-                    "type": "string",
-                    "const": "input"
-                  },
-                  "key": {
-                    "type": "string",
-                    "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
-                  }
-                },
-                "required": [
-                  "kind",
-                  "key"
-                ],
-                "additionalProperties": false
-              },
-              {
-                "type": "object",
-                "properties": {
-                  "kind": {
-                    "type": "string",
-                    "const": "literal"
-                  },
-                  "value": {
-                    "type": "string",
-                    "maxLength": 96,
-                    "pattern": "^[+-]?\\d+(?:\\.\\d+)?$"
-                  },
-                  "unit": {
-                    "type": "string",
-                    "enum": [
-                      "currency",
-                      "count",
-                      "ratio",
-                      "multiple",
-                      "rate"
-                    ]
-                  },
-                  "currencyCode": {
-                    "anyOf": [
-                      {
-                        "type": "string",
-                        "pattern": "^[A-Z]{3}$"
-                      },
-                      {
-                        "type": "null"
-                      }
-                    ]
-                  }
-                },
-                "required": [
-                  "kind",
-                  "value",
-                  "unit",
-                  "currencyCode"
-                ],
-                "additionalProperties": false
-              },
-              {
-                "type": "object",
-                "properties": {
-                  "kind": {
-                    "type": "string",
-                    "enum": [
-                      "add",
-                      "subtract",
-                      "multiply",
-                      "ratio",
-                      "min",
-                      "max"
-                    ]
-                  },
-                  "left": {
-                    "$ref": "#/components/schemas/confidential-intake/definitions/__schema0"
-                  },
-                  "right": {
-                    "$ref": "#/components/schemas/confidential-intake/definitions/__schema0"
-                  }
-                },
-                "required": [
-                  "kind",
-                  "left",
-                  "right"
-                ],
-                "additionalProperties": false
-              },
-              {
-                "type": "object",
-                "properties": {
-                  "kind": {
-                    "type": "string",
-                    "const": "if"
-                  },
-                  "condition": {
-                    "type": "object",
-                    "properties": {
-                      "comparison": {
-                        "type": "string",
-                        "enum": [
-                          "lt",
-                          "lte",
-                          "eq",
-                          "gte",
-                          "gt"
-                        ]
-                      },
-                      "left": {
-                        "$ref": "#/components/schemas/confidential-intake/definitions/__schema0"
-                      },
-                      "right": {
-                        "$ref": "#/components/schemas/confidential-intake/definitions/__schema0"
-                      }
-                    },
-                    "required": [
-                      "comparison",
-                      "left",
-                      "right"
-                    ],
-                    "additionalProperties": false
-                  },
-                  "whenTrue": {
-                    "$ref": "#/components/schemas/confidential-intake/definitions/__schema0"
-                  },
-                  "whenFalse": {
-                    "$ref": "#/components/schemas/confidential-intake/definitions/__schema0"
-                  }
-                },
-                "required": [
-                  "kind",
-                  "condition",
-                  "whenTrue",
-                  "whenFalse"
-                ],
-                "additionalProperties": false
-              }
-            ]
-          }
-        }
+        "additionalProperties": false
       },
       "confidential-source-handle": {
         "type": "object",
@@ -11694,7 +11541,7 @@
                       "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
                     },
                     "expression": {
-                      "$ref": "#/components/schemas/confidential-plan/definitions/__schema0"
+                      "$ref": "#/components/schemas/Generated_f4be2bb3872820006f5c9fe3"
                     },
                     "semantics": {
                       "type": "object",
@@ -11967,150 +11814,7 @@
           "function",
           "limits"
         ],
-        "additionalProperties": false,
-        "definitions": {
-          "__schema0": {
-            "anyOf": [
-              {
-                "type": "object",
-                "properties": {
-                  "kind": {
-                    "type": "string",
-                    "const": "input"
-                  },
-                  "key": {
-                    "type": "string",
-                    "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
-                  }
-                },
-                "required": [
-                  "kind",
-                  "key"
-                ],
-                "additionalProperties": false
-              },
-              {
-                "type": "object",
-                "properties": {
-                  "kind": {
-                    "type": "string",
-                    "const": "literal"
-                  },
-                  "value": {
-                    "type": "string",
-                    "maxLength": 96,
-                    "pattern": "^[+-]?\\d+(?:\\.\\d+)?$"
-                  },
-                  "unit": {
-                    "type": "string",
-                    "enum": [
-                      "currency",
-                      "count",
-                      "ratio",
-                      "multiple",
-                      "rate"
-                    ]
-                  },
-                  "currencyCode": {
-                    "anyOf": [
-                      {
-                        "type": "string",
-                        "pattern": "^[A-Z]{3}$"
-                      },
-                      {
-                        "type": "null"
-                      }
-                    ]
-                  }
-                },
-                "required": [
-                  "kind",
-                  "value",
-                  "unit",
-                  "currencyCode"
-                ],
-                "additionalProperties": false
-              },
-              {
-                "type": "object",
-                "properties": {
-                  "kind": {
-                    "type": "string",
-                    "enum": [
-                      "add",
-                      "subtract",
-                      "multiply",
-                      "ratio",
-                      "min",
-                      "max"
-                    ]
-                  },
-                  "left": {
-                    "$ref": "#/components/schemas/confidential-plan/definitions/__schema0"
-                  },
-                  "right": {
-                    "$ref": "#/components/schemas/confidential-plan/definitions/__schema0"
-                  }
-                },
-                "required": [
-                  "kind",
-                  "left",
-                  "right"
-                ],
-                "additionalProperties": false
-              },
-              {
-                "type": "object",
-                "properties": {
-                  "kind": {
-                    "type": "string",
-                    "const": "if"
-                  },
-                  "condition": {
-                    "type": "object",
-                    "properties": {
-                      "comparison": {
-                        "type": "string",
-                        "enum": [
-                          "lt",
-                          "lte",
-                          "eq",
-                          "gte",
-                          "gt"
-                        ]
-                      },
-                      "left": {
-                        "$ref": "#/components/schemas/confidential-plan/definitions/__schema0"
-                      },
-                      "right": {
-                        "$ref": "#/components/schemas/confidential-plan/definitions/__schema0"
-                      }
-                    },
-                    "required": [
-                      "comparison",
-                      "left",
-                      "right"
-                    ],
-                    "additionalProperties": false
-                  },
-                  "whenTrue": {
-                    "$ref": "#/components/schemas/confidential-plan/definitions/__schema0"
-                  },
-                  "whenFalse": {
-                    "$ref": "#/components/schemas/confidential-plan/definitions/__schema0"
-                  }
-                },
-                "required": [
-                  "kind",
-                  "condition",
-                  "whenTrue",
-                  "whenFalse"
-                ],
-                "additionalProperties": false
-              }
-            ]
-          }
-        }
+        "additionalProperties": false
       },
       "confidential-submit": {
         "type": "object",
@@ -12725,7 +12429,7 @@
                       "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
                     },
                     "expression": {
-                      "$ref": "#/components/schemas/confidential-submit/definitions/__schema0"
+                      "$ref": "#/components/schemas/Generated_34c26af1381be1f0e97d0111"
                     },
                     "semantics": {
                       "type": "object",
@@ -13005,150 +12709,7 @@
           "idempotencyKey",
           "limits"
         ],
-        "additionalProperties": false,
-        "definitions": {
-          "__schema0": {
-            "anyOf": [
-              {
-                "type": "object",
-                "properties": {
-                  "kind": {
-                    "type": "string",
-                    "const": "input"
-                  },
-                  "key": {
-                    "type": "string",
-                    "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
-                  }
-                },
-                "required": [
-                  "kind",
-                  "key"
-                ],
-                "additionalProperties": false
-              },
-              {
-                "type": "object",
-                "properties": {
-                  "kind": {
-                    "type": "string",
-                    "const": "literal"
-                  },
-                  "value": {
-                    "type": "string",
-                    "maxLength": 96,
-                    "pattern": "^[+-]?\\d+(?:\\.\\d+)?$"
-                  },
-                  "unit": {
-                    "type": "string",
-                    "enum": [
-                      "currency",
-                      "count",
-                      "ratio",
-                      "multiple",
-                      "rate"
-                    ]
-                  },
-                  "currencyCode": {
-                    "anyOf": [
-                      {
-                        "type": "string",
-                        "pattern": "^[A-Z]{3}$"
-                      },
-                      {
-                        "type": "null"
-                      }
-                    ]
-                  }
-                },
-                "required": [
-                  "kind",
-                  "value",
-                  "unit",
-                  "currencyCode"
-                ],
-                "additionalProperties": false
-              },
-              {
-                "type": "object",
-                "properties": {
-                  "kind": {
-                    "type": "string",
-                    "enum": [
-                      "add",
-                      "subtract",
-                      "multiply",
-                      "ratio",
-                      "min",
-                      "max"
-                    ]
-                  },
-                  "left": {
-                    "$ref": "#/components/schemas/confidential-submit/definitions/__schema0"
-                  },
-                  "right": {
-                    "$ref": "#/components/schemas/confidential-submit/definitions/__schema0"
-                  }
-                },
-                "required": [
-                  "kind",
-                  "left",
-                  "right"
-                ],
-                "additionalProperties": false
-              },
-              {
-                "type": "object",
-                "properties": {
-                  "kind": {
-                    "type": "string",
-                    "const": "if"
-                  },
-                  "condition": {
-                    "type": "object",
-                    "properties": {
-                      "comparison": {
-                        "type": "string",
-                        "enum": [
-                          "lt",
-                          "lte",
-                          "eq",
-                          "gte",
-                          "gt"
-                        ]
-                      },
-                      "left": {
-                        "$ref": "#/components/schemas/confidential-submit/definitions/__schema0"
-                      },
-                      "right": {
-                        "$ref": "#/components/schemas/confidential-submit/definitions/__schema0"
-                      }
-                    },
-                    "required": [
-                      "comparison",
-                      "left",
-                      "right"
-                    ],
-                    "additionalProperties": false
-                  },
-                  "whenTrue": {
-                    "$ref": "#/components/schemas/confidential-submit/definitions/__schema0"
-                  },
-                  "whenFalse": {
-                    "$ref": "#/components/schemas/confidential-submit/definitions/__schema0"
-                  }
-                },
-                "required": [
-                  "kind",
-                  "condition",
-                  "whenTrue",
-                  "whenFalse"
-                ],
-                "additionalProperties": false
-              }
-            ]
-          }
-        }
+        "additionalProperties": false
       },
       "confidential-read": {
         "type": "object",
@@ -18067,7 +17628,7 @@
                 "const": "sum"
               },
               "value": {
-                "$ref": "#/components/schemas/X3Expression/definitions/__schema0"
+                "$ref": "#/components/schemas/Generated_2caeaa24811f2c65981139f1"
               }
             },
             "required": [
@@ -18084,7 +17645,7 @@
                 "const": "known"
               },
               "value": {
-                "$ref": "#/components/schemas/X3Expression/definitions/__schema0"
+                "$ref": "#/components/schemas/Generated_2caeaa24811f2c65981139f1"
               }
             },
             "required": [
@@ -18101,7 +17662,7 @@
                 "const": "current-evidence"
               },
               "value": {
-                "$ref": "#/components/schemas/X3Expression/definitions/__schema0"
+                "$ref": "#/components/schemas/Generated_2caeaa24811f2c65981139f1"
               }
             },
             "required": [
@@ -18118,7 +17679,7 @@
                 "const": "not"
               },
               "value": {
-                "$ref": "#/components/schemas/X3Expression/definitions/__schema0"
+                "$ref": "#/components/schemas/Generated_2caeaa24811f2c65981139f1"
               }
             },
             "required": [
@@ -18135,10 +17696,10 @@
                 "const": "equal"
               },
               "left": {
-                "$ref": "#/components/schemas/X3Expression/definitions/__schema0"
+                "$ref": "#/components/schemas/Generated_2caeaa24811f2c65981139f1"
               },
               "right": {
-                "$ref": "#/components/schemas/X3Expression/definitions/__schema0"
+                "$ref": "#/components/schemas/Generated_2caeaa24811f2c65981139f1"
               }
             },
             "required": [
@@ -18156,10 +17717,10 @@
                 "const": "same-quantity"
               },
               "left": {
-                "$ref": "#/components/schemas/X3Expression/definitions/__schema0"
+                "$ref": "#/components/schemas/Generated_2caeaa24811f2c65981139f1"
               },
               "right": {
-                "$ref": "#/components/schemas/X3Expression/definitions/__schema0"
+                "$ref": "#/components/schemas/Generated_2caeaa24811f2c65981139f1"
               }
             },
             "required": [
@@ -18177,10 +17738,10 @@
                 "const": "difference"
               },
               "left": {
-                "$ref": "#/components/schemas/X3Expression/definitions/__schema0"
+                "$ref": "#/components/schemas/Generated_2caeaa24811f2c65981139f1"
               },
               "right": {
-                "$ref": "#/components/schemas/X3Expression/definitions/__schema0"
+                "$ref": "#/components/schemas/Generated_2caeaa24811f2c65981139f1"
               }
             },
             "required": [
@@ -18208,10 +17769,10 @@
                 ]
               },
               "left": {
-                "$ref": "#/components/schemas/X3Expression/definitions/__schema0"
+                "$ref": "#/components/schemas/Generated_2caeaa24811f2c65981139f1"
               },
               "right": {
-                "$ref": "#/components/schemas/X3Expression/definitions/__schema0"
+                "$ref": "#/components/schemas/Generated_2caeaa24811f2c65981139f1"
               }
             },
             "required": [
@@ -18230,7 +17791,7 @@
                 "const": "currency-threshold"
               },
               "value": {
-                "$ref": "#/components/schemas/X3Expression/definitions/__schema0"
+                "$ref": "#/components/schemas/Generated_2caeaa24811f2c65981139f1"
               },
               "comparison": {
                 "type": "string",
@@ -18327,7 +17888,7 @@
                 "maxItems": 32,
                 "type": "array",
                 "items": {
-                  "$ref": "#/components/schemas/X3Expression/definitions/__schema0"
+                  "$ref": "#/components/schemas/Generated_2caeaa24811f2c65981139f1"
                 }
               }
             },
@@ -18349,7 +17910,7 @@
                 "maxItems": 32,
                 "type": "array",
                 "items": {
-                  "$ref": "#/components/schemas/X3Expression/definitions/__schema0"
+                  "$ref": "#/components/schemas/Generated_2caeaa24811f2c65981139f1"
                 }
               }
             },
@@ -18359,12 +17920,439 @@
             ],
             "additionalProperties": false
           }
-        ],
-        "definitions": {
-          "__schema0": {
-            "$ref": "#/components/schemas/X3Expression"
+        ]
+      },
+      "Generated_c1a8f9bea7fbe6aef1707737": {
+        "$ref": "#/components/schemas/X3Expression"
+      },
+      "Generated_26125b9a2f226a70b4ff89d4": {
+        "$ref": "#/components/schemas/X3Expression"
+      },
+      "Generated_45df65e61fb7f3a5662c6793": {
+        "anyOf": [
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "const": "input"
+              },
+              "key": {
+                "type": "string",
+                "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+              }
+            },
+            "required": [
+              "kind",
+              "key"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "const": "literal"
+              },
+              "value": {
+                "type": "string",
+                "maxLength": 96,
+                "pattern": "^[+-]?\\d+(?:\\.\\d+)?$"
+              },
+              "unit": {
+                "type": "string",
+                "enum": [
+                  "currency",
+                  "count",
+                  "ratio",
+                  "multiple",
+                  "rate"
+                ]
+              },
+              "currencyCode": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "pattern": "^[A-Z]{3}$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "kind",
+              "value",
+              "unit",
+              "currencyCode"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "add",
+                  "subtract",
+                  "multiply",
+                  "ratio",
+                  "min",
+                  "max"
+                ]
+              },
+              "left": {
+                "$ref": "#/components/schemas/Generated_45df65e61fb7f3a5662c6793"
+              },
+              "right": {
+                "$ref": "#/components/schemas/Generated_45df65e61fb7f3a5662c6793"
+              }
+            },
+            "required": [
+              "kind",
+              "left",
+              "right"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "const": "if"
+              },
+              "condition": {
+                "type": "object",
+                "properties": {
+                  "comparison": {
+                    "type": "string",
+                    "enum": [
+                      "lt",
+                      "lte",
+                      "eq",
+                      "gte",
+                      "gt"
+                    ]
+                  },
+                  "left": {
+                    "$ref": "#/components/schemas/Generated_45df65e61fb7f3a5662c6793"
+                  },
+                  "right": {
+                    "$ref": "#/components/schemas/Generated_45df65e61fb7f3a5662c6793"
+                  }
+                },
+                "required": [
+                  "comparison",
+                  "left",
+                  "right"
+                ],
+                "additionalProperties": false
+              },
+              "whenTrue": {
+                "$ref": "#/components/schemas/Generated_45df65e61fb7f3a5662c6793"
+              },
+              "whenFalse": {
+                "$ref": "#/components/schemas/Generated_45df65e61fb7f3a5662c6793"
+              }
+            },
+            "required": [
+              "kind",
+              "condition",
+              "whenTrue",
+              "whenFalse"
+            ],
+            "additionalProperties": false
           }
-        }
+        ]
+      },
+      "Generated_f4be2bb3872820006f5c9fe3": {
+        "anyOf": [
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "const": "input"
+              },
+              "key": {
+                "type": "string",
+                "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+              }
+            },
+            "required": [
+              "kind",
+              "key"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "const": "literal"
+              },
+              "value": {
+                "type": "string",
+                "maxLength": 96,
+                "pattern": "^[+-]?\\d+(?:\\.\\d+)?$"
+              },
+              "unit": {
+                "type": "string",
+                "enum": [
+                  "currency",
+                  "count",
+                  "ratio",
+                  "multiple",
+                  "rate"
+                ]
+              },
+              "currencyCode": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "pattern": "^[A-Z]{3}$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "kind",
+              "value",
+              "unit",
+              "currencyCode"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "add",
+                  "subtract",
+                  "multiply",
+                  "ratio",
+                  "min",
+                  "max"
+                ]
+              },
+              "left": {
+                "$ref": "#/components/schemas/Generated_f4be2bb3872820006f5c9fe3"
+              },
+              "right": {
+                "$ref": "#/components/schemas/Generated_f4be2bb3872820006f5c9fe3"
+              }
+            },
+            "required": [
+              "kind",
+              "left",
+              "right"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "const": "if"
+              },
+              "condition": {
+                "type": "object",
+                "properties": {
+                  "comparison": {
+                    "type": "string",
+                    "enum": [
+                      "lt",
+                      "lte",
+                      "eq",
+                      "gte",
+                      "gt"
+                    ]
+                  },
+                  "left": {
+                    "$ref": "#/components/schemas/Generated_f4be2bb3872820006f5c9fe3"
+                  },
+                  "right": {
+                    "$ref": "#/components/schemas/Generated_f4be2bb3872820006f5c9fe3"
+                  }
+                },
+                "required": [
+                  "comparison",
+                  "left",
+                  "right"
+                ],
+                "additionalProperties": false
+              },
+              "whenTrue": {
+                "$ref": "#/components/schemas/Generated_f4be2bb3872820006f5c9fe3"
+              },
+              "whenFalse": {
+                "$ref": "#/components/schemas/Generated_f4be2bb3872820006f5c9fe3"
+              }
+            },
+            "required": [
+              "kind",
+              "condition",
+              "whenTrue",
+              "whenFalse"
+            ],
+            "additionalProperties": false
+          }
+        ]
+      },
+      "Generated_34c26af1381be1f0e97d0111": {
+        "anyOf": [
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "const": "input"
+              },
+              "key": {
+                "type": "string",
+                "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+              }
+            },
+            "required": [
+              "kind",
+              "key"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "const": "literal"
+              },
+              "value": {
+                "type": "string",
+                "maxLength": 96,
+                "pattern": "^[+-]?\\d+(?:\\.\\d+)?$"
+              },
+              "unit": {
+                "type": "string",
+                "enum": [
+                  "currency",
+                  "count",
+                  "ratio",
+                  "multiple",
+                  "rate"
+                ]
+              },
+              "currencyCode": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "pattern": "^[A-Z]{3}$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "kind",
+              "value",
+              "unit",
+              "currencyCode"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "add",
+                  "subtract",
+                  "multiply",
+                  "ratio",
+                  "min",
+                  "max"
+                ]
+              },
+              "left": {
+                "$ref": "#/components/schemas/Generated_34c26af1381be1f0e97d0111"
+              },
+              "right": {
+                "$ref": "#/components/schemas/Generated_34c26af1381be1f0e97d0111"
+              }
+            },
+            "required": [
+              "kind",
+              "left",
+              "right"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "const": "if"
+              },
+              "condition": {
+                "type": "object",
+                "properties": {
+                  "comparison": {
+                    "type": "string",
+                    "enum": [
+                      "lt",
+                      "lte",
+                      "eq",
+                      "gte",
+                      "gt"
+                    ]
+                  },
+                  "left": {
+                    "$ref": "#/components/schemas/Generated_34c26af1381be1f0e97d0111"
+                  },
+                  "right": {
+                    "$ref": "#/components/schemas/Generated_34c26af1381be1f0e97d0111"
+                  }
+                },
+                "required": [
+                  "comparison",
+                  "left",
+                  "right"
+                ],
+                "additionalProperties": false
+              },
+              "whenTrue": {
+                "$ref": "#/components/schemas/Generated_34c26af1381be1f0e97d0111"
+              },
+              "whenFalse": {
+                "$ref": "#/components/schemas/Generated_34c26af1381be1f0e97d0111"
+              }
+            },
+            "required": [
+              "kind",
+              "condition",
+              "whenTrue",
+              "whenFalse"
+            ],
+            "additionalProperties": false
+          }
+        ]
+      },
+      "Generated_2caeaa24811f2c65981139f1": {
+        "$ref": "#/components/schemas/X3Expression"
       }
     },
     "securitySchemes": {

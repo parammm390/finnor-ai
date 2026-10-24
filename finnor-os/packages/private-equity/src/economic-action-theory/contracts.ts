@@ -1,7 +1,7 @@
 import {createHash} from 'node:crypto';
 import {z} from 'zod';
 import profile from './profile.json';
-import {PE_WORLD_ROOT_TYPES} from '../types';
+import {PE_WORLD_ROOT_TYPES} from '../../../shared-types/src/private-equity';
 
 export const Y1_VERSION='economic-action-theory-v1' as const;
 export const PROFILE=Object.freeze(profile);

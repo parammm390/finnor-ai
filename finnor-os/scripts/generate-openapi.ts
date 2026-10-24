@@ -1,6 +1,7 @@
 // OpenAPI is generated from the active Phase-5 boundary schemas only. Historical
 // Water webhook payloads are intentionally opaque quarantine receipts and never
 // regain an executable public schema here.
+import {createHash} from "node:crypto";
 import { writeFileSync } from "node:fs";
 import { z } from "zod";
 import {
@@ -1006,5 +1007,43 @@ function rebaseSchemaReferences(node:unknown,path:string[]=[],scope="#") {
  for(const [key,child] of Object.entries(value))rebaseSchemaReferences(child,[...path,key],scope);
 }
 rebaseSchemaReferences(document);
+// OpenAPI clients expose named components, not nested JSON Schema definitions.
+// Hoist each standalone converter definition while retaining its recursive graph.
+const definitionTargets=new Map<string,string>();
+const hoisted:Record<string,unknown>={};
+function hoistDefinitions(node:unknown,path:string[]=[]) {
+ if(!node||typeof node!=="object")return;
+ if(Array.isArray(node)){node.forEach((child,index)=>hoistDefinitions(child,[...path,String(index)]));return;}
+ const value=node as Record<string,unknown>;
+ for(const keyword of ["definitions","$defs"]){
+  const definitions=value[keyword];
+  if(definitions&&typeof definitions==="object"){
+   for(const [name,schema] of Object.entries(definitions)){
+    const pointer="#/"+[...path,keyword,name].map(part=>part.replace(/~/g,"~0").replace(/\//g,"~1")).join("/");
+    const component="Generated_"+createHash("sha256").update(pointer).digest("hex").slice(0,24);
+    definitionTargets.set(pointer,"#/components/schemas/"+component);
+    hoistDefinitions(schema,[...path,keyword,name]);hoisted[component]=schema;
+   }
+   delete value[keyword];
+  }
+ }
+ for(const [key,child] of Object.entries(value))hoistDefinitions(child,[...path,key]);
+}
+hoistDefinitions(document);
+Object.assign(document.components.schemas,hoisted);
+function rewriteDefinitionReferences(node:unknown){
+ if(!node||typeof node!=="object")return;
+ if(Array.isArray(node)){node.forEach(rewriteDefinitionReferences);return;}
+ const value=node as Record<string,unknown>;
+ if(typeof value.$ref==="string"){
+  const reference=value.$ref;
+  for(const [source,target] of definitionTargets)if(reference===source||reference.startsWith(source+"/")){
+   value.$ref=target+reference.slice(source.length);break;
+  }
+ }
+ Object.values(value).forEach(rewriteDefinitionReferences);
+}
+rewriteDefinitionReferences(document);
+
 writeFileSync(new URL("../openapi.json", import.meta.url), `${JSON.stringify(document, null, 2)}\n`);
 console.log(`Generated openapi.json with ${Object.keys(paths).length} active/quarantine paths.`);
