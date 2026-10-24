@@ -1,0 +1,70 @@
+{
+  "schema": "finnor.postx.y3-y4.parallel-integration-snapshot.v1",
+  "status": "ISOLATED_PARALLEL_WORK_NOT_A_COMBINED_RELEASE",
+  "instruction": "Manage Y3 and Y4 without further questions; preserve peer work and the storage stop.",
+  "Y3": {
+    "worktree": "/home/factory-user/repos/finnor-postx-y3",
+    "branch": "factory/postx-y3-dynamic-interaction-synthesizer",
+    "sourceBase": "b7b74b48efcb51bd6f1297a71f39cb9b4f117024",
+    "adoptedY1": "e559705f42921c397acb5388d103809d03cab1b2",
+    "integrationCommit": "6b7f3748009358ad4849d4cc743e9da336fe08bc",
+    "finalCommitAuthority": "handoff/release.json",
+    "nativeJob": "construct_interaction_protocol_v1",
+    "operationNamespace": "interaction-*",
+    "migration": "0197_postx_y3_interaction_protocol.sql",
+    "diskHeavyJobsRunningByThisWorkstream": 0
+  },
+  "Y4": {
+    "worktree": "/home/factory-user/repos/finnor-postx-y4",
+    "branch": "factory/postx-y4-confidential-economic-compiler",
+    "observedHead": "b7b74b48efcb51bd6f1297a71f39cb9b4f117024",
+    "observedWorkingTree": "UNCOMMITTED_ACTIVE_PEER_WORK",
+    "adoptedIntoY3": false,
+    "modifiedByY3": false,
+    "nativeJob": "run_confidential_economic_computation_v1",
+    "operationNamespace": "confidential-*",
+    "migration": "postx_y4_confidential_economic_computation.sql",
+    "verificationAuthority": "Y4's own evidence, not this Y3 snapshot"
+  },
+  "mainCheckoutObservation": {
+    "commit": "ed32d200a9459269509f1e40d4e13a3e2a1a4d6a",
+    "tree": "ccaa5d084209f1f4fc7ca4fa2645e333805489e3",
+    "pinnedStartingTree": "0dd9781598cc65290122c5e8c6cb969961673364",
+    "sameTreeAsStartingCut": false,
+    "adopted": false,
+    "productionDeploymentInferred": false,
+    "policy": "Do not rebase these pinned workstreams onto an unrelated moving source tree during closeout."
+  },
+  "sharedModifiedPaths": [
+    "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
+    "finnor-os/apps/worker/src/index.ts",
+    "finnor-os/openapi.json",
+    "finnor-os/packages/db/compute-contract.ts",
+    "finnor-os/packages/db/migrations-bundle.ts",
+    "finnor-os/scripts/generate-openapi.ts",
+    "scripts/centropy/generate-capability-manifest.mjs",
+    "src/components/centropy/world/WorldWorkRecord.tsx",
+    "src/lib/centropy/capability-manifest.generated.json"
+  ],
+  "mergeRules": [
+    "Merge only immutable committed peer cuts in a separate integration checkout; never copy unfinished Y4 files or overwrite either worktree.",
+    "Preserve Y1 economic, Y3 interaction and Y4 confidential API dispatch, native queue registrations and compute contracts together.",
+    "Keep both mounted panels with participant/root/Work identity fences; neither panel replaces the other.",
+    "Retain both human-only capability patterns and each family's read classifications.",
+    "Retain Y4's exact named-migration bundler exception and Y3's numeric migration/head; regenerate the bundle from both source files.",
+    "Regenerate combined OpenAPI, clients, capability manifest, forms, coverage and X source stamps instead of choosing one generated side.",
+    "Rebuild source-custody receipts from the final clean combined cut. Neither branch's emitted assets prove the merged tree.",
+    "Run both workstreams' final owner, mounted, recovery and reconstruction gates before calling a combined release verified."
+  ],
+  "sharedStorage": {
+    "userDecision": "Keep databases; stop disk-heavy verification",
+    "databaseDeletionAfterDecision": false,
+    "rootAvailableBytesAtObservation": 148684800,
+    "sharedMemoryAvailableBytesAtObservation": 299913216,
+    "Y3Policy": "No installs, API/frontend rebuilds, database campaigns, browser campaigns or fresh reconstruction. Only bounded low-disk closeout artifacts.",
+    "peerProcessesStoppedByY3": false
+  },
+  "combinedIntegrationVerified": false,
+  "publicationAuthorized": false,
+  "productionActivationAuthorized": false
+}

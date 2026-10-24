@@ -1,0 +1,14 @@
+{
+  "schema":"finnor.y3.requirement-coverage.v1",
+  "status":"IMPLEMENTED_PENDING_FINAL_RUNTIME_VERIFICATION",
+  "governingSourceParity":"UNKNOWN_USER_AUTHORIZED_CONTINUATION",
+  "families":{"A":"PASS_MATH_20_CURRENT_CLOSURE_CHECKED_AT_SEAL","B":"PASS_MATH_20_CURRENT_CLOSURE_CHECKED_AT_SEAL","C":"PASS_MATH_20_CURRENT_CLOSURE_CHECKED_AT_SEAL","D":"PASS_MATH_20_CURRENT_CLOSURE_CHECKED_AT_SEAL","E":"PARTIAL_SOURCE_DIAGNOSTIC_FINAL_REVIEW_REGRESSIONS_UNRUN","F":"POSITIVE_SOURCE_PATH_FINAL_COMPILED_CAMPAIGN_UNRUN","G":"SOURCE_FAULTS_PASSED_FINAL_COMPILED_CAMPAIGN_UNRUN","H":"IMPLEMENTED_BLOCKED_USER_STORAGE_DECISION","I":"IMPLEMENTED_BLOCKED_USER_STORAGE_DECISION","J":"BLOCKED_EXTERNAL"},
+  "protectedGate":{"feasibleGames":16,"minimumAccepted":15,"infeasibleGoals":8,"requiredExactRegret":"0","independentCustody":"NOT_SUPPLIED","submissions":0},
+  "programmeGates":{"operational100x":"BLOCKED","financial100x":"BLOCKED","H0":"NOT_ESTABLISHED","H1":"NOT_ESTABLISHED","H2_36_months":"NOT_MATURE"},
+  "implementationMissingIsExternal":false,
+  "finalEngineeringVerificationComplete":false,
+  "userStorageDecision":"Keep databases; stop disk-heavy verification",
+  "evidenceAndRerunInstructions":"README.md",
+  "verifiedReviewRepairs":"review.md",
+  "completionStatus":"verification-status.json and matched handoff/release.json"
+}

@@ -9675,6 +9675,3111 @@
         ],
         "additionalProperties": false
       },
+      "interaction-submit": {
+        "type": "object",
+        "properties": {
+          "schema": {
+            "type": "string",
+            "const": "finnor.interaction-request.v1"
+          },
+          "root": {
+            "type": "object",
+            "properties": {
+              "entityType": {
+                "type": "string",
+                "enum": [
+                  "pe_strategy",
+                  "pe_opportunity",
+                  "pe_deal",
+                  "pe_fund",
+                  "pe_vehicle",
+                  "external_organization",
+                  "pe_portfolio_holding"
+                ]
+              },
+              "entityId": {
+                "type": "string",
+                "format": "uuid"
+              }
+            },
+            "required": [
+              "entityType",
+              "entityId"
+            ],
+            "additionalProperties": false
+          },
+          "workId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "problem": {
+            "type": "object",
+            "properties": {
+              "schema": {
+                "type": "string",
+                "const": "finnor.interaction-problem.v1"
+              },
+              "id": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,159}$"
+              },
+              "title": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "participants": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 2,
+                "items": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "const": "P0"
+                      },
+                      "principalId": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "outsideOption": {
+                        "type": "object",
+                        "properties": {
+                          "value": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "maxLength": 2500
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "basis": {
+                            "type": "object",
+                            "properties": {
+                              "unit": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 256
+                              },
+                              "currency": {
+                                "anyOf": [
+                                  {
+                                    "type": "string",
+                                    "pattern": "^[A-Z]{3}$"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "timeBasis": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 256
+                              },
+                              "owner": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 256
+                              },
+                              "rounding": {
+                                "type": "string",
+                                "const": "EXACT"
+                              },
+                              "sourceStatus": {
+                                "type": "string",
+                                "enum": [
+                                  "SUPPLIED_MODEL",
+                                  "CANONICAL_OBSERVATION",
+                                  "UNKNOWN"
+                                ]
+                              },
+                              "sourceRef": {
+                                "type": "object",
+                                "properties": {
+                                  "owner": {
+                                    "type": "string",
+                                    "minLength": 1,
+                                    "maxLength": 256
+                                  },
+                                  "id": {
+                                    "type": "string",
+                                    "minLength": 1,
+                                    "maxLength": 1024
+                                  },
+                                  "version": {
+                                    "type": "string",
+                                    "minLength": 1,
+                                    "maxLength": 256
+                                  },
+                                  "contentDigest": {
+                                    "type": "string",
+                                    "pattern": "^[a-f0-9]{64}$"
+                                  }
+                                },
+                                "required": [
+                                  "owner",
+                                  "id",
+                                  "version",
+                                  "contentDigest"
+                                ],
+                                "additionalProperties": false
+                              }
+                            },
+                            "required": [
+                              "unit",
+                              "currency",
+                              "timeBasis",
+                              "owner",
+                              "rounding",
+                              "sourceStatus",
+                              "sourceRef"
+                            ],
+                            "additionalProperties": false
+                          },
+                          "unknownReason": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 256
+                          }
+                        },
+                        "required": [
+                          "value",
+                          "basis"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "principalId",
+                      "outsideOption"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "const": "P1"
+                      },
+                      "principalId": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "outsideOption": {
+                        "type": "object",
+                        "properties": {
+                          "value": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "maxLength": 2500
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "basis": {
+                            "type": "object",
+                            "properties": {
+                              "unit": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 256
+                              },
+                              "currency": {
+                                "anyOf": [
+                                  {
+                                    "type": "string",
+                                    "pattern": "^[A-Z]{3}$"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "timeBasis": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 256
+                              },
+                              "owner": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 256
+                              },
+                              "rounding": {
+                                "type": "string",
+                                "const": "EXACT"
+                              },
+                              "sourceStatus": {
+                                "type": "string",
+                                "enum": [
+                                  "SUPPLIED_MODEL",
+                                  "CANONICAL_OBSERVATION",
+                                  "UNKNOWN"
+                                ]
+                              },
+                              "sourceRef": {
+                                "type": "object",
+                                "properties": {
+                                  "owner": {
+                                    "type": "string",
+                                    "minLength": 1,
+                                    "maxLength": 256
+                                  },
+                                  "id": {
+                                    "type": "string",
+                                    "minLength": 1,
+                                    "maxLength": 1024
+                                  },
+                                  "version": {
+                                    "type": "string",
+                                    "minLength": 1,
+                                    "maxLength": 256
+                                  },
+                                  "contentDigest": {
+                                    "type": "string",
+                                    "pattern": "^[a-f0-9]{64}$"
+                                  }
+                                },
+                                "required": [
+                                  "owner",
+                                  "id",
+                                  "version",
+                                  "contentDigest"
+                                ],
+                                "additionalProperties": false
+                              }
+                            },
+                            "required": [
+                              "unit",
+                              "currency",
+                              "timeBasis",
+                              "owner",
+                              "rounding",
+                              "sourceStatus",
+                              "sourceRef"
+                            ],
+                            "additionalProperties": false
+                          },
+                          "unknownReason": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 256
+                          }
+                        },
+                        "required": [
+                          "value",
+                          "basis"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "principalId",
+                      "outsideOption"
+                    ],
+                    "additionalProperties": false
+                  }
+                ]
+              },
+              "dates": {
+                "type": "array",
+                "minItems": 3,
+                "maxItems": 3,
+                "items": [
+                  {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  {
+                    "type": "string",
+                    "format": "date-time"
+                  }
+                ]
+              },
+              "fixedOperatorRefs": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "owner": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 256
+                    },
+                    "id": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 1024
+                    },
+                    "version": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 256
+                    },
+                    "contentDigest": {
+                      "type": "string",
+                      "pattern": "^[a-f0-9]{64}$"
+                    }
+                  },
+                  "required": [
+                    "owner",
+                    "id",
+                    "version",
+                    "contentDigest"
+                  ],
+                  "additionalProperties": false
+                },
+                "minItems": 1,
+                "maxItems": 64
+              },
+              "actorModelRefs": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "owner": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 256
+                    },
+                    "id": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 1024
+                    },
+                    "version": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 256
+                    },
+                    "contentDigest": {
+                      "type": "string",
+                      "pattern": "^[a-f0-9]{64}$"
+                    }
+                  },
+                  "required": [
+                    "owner",
+                    "id",
+                    "version",
+                    "contentDigest"
+                  ],
+                  "additionalProperties": false
+                },
+                "minItems": 1,
+                "maxItems": 64
+              },
+              "quantityBasis": {
+                "type": "object",
+                "properties": {
+                  "utilities": {
+                    "type": "array",
+                    "minItems": 2,
+                    "maxItems": 2,
+                    "items": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "unit": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 256
+                          },
+                          "currency": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "pattern": "^[A-Z]{3}$"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "timeBasis": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 256
+                          },
+                          "owner": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 256
+                          },
+                          "rounding": {
+                            "type": "string",
+                            "const": "EXACT"
+                          },
+                          "sourceStatus": {
+                            "type": "string",
+                            "enum": [
+                              "SUPPLIED_MODEL",
+                              "CANONICAL_OBSERVATION",
+                              "UNKNOWN"
+                            ]
+                          },
+                          "sourceRef": {
+                            "type": "object",
+                            "properties": {
+                              "owner": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 256
+                              },
+                              "id": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 1024
+                              },
+                              "version": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 256
+                              },
+                              "contentDigest": {
+                                "type": "string",
+                                "pattern": "^[a-f0-9]{64}$"
+                              }
+                            },
+                            "required": [
+                              "owner",
+                              "id",
+                              "version",
+                              "contentDigest"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "required": [
+                          "unit",
+                          "currency",
+                          "timeBasis",
+                          "owner",
+                          "rounding",
+                          "sourceStatus",
+                          "sourceRef"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "unit": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 256
+                          },
+                          "currency": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "pattern": "^[A-Z]{3}$"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "timeBasis": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 256
+                          },
+                          "owner": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 256
+                          },
+                          "rounding": {
+                            "type": "string",
+                            "const": "EXACT"
+                          },
+                          "sourceStatus": {
+                            "type": "string",
+                            "enum": [
+                              "SUPPLIED_MODEL",
+                              "CANONICAL_OBSERVATION",
+                              "UNKNOWN"
+                            ]
+                          },
+                          "sourceRef": {
+                            "type": "object",
+                            "properties": {
+                              "owner": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 256
+                              },
+                              "id": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 1024
+                              },
+                              "version": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 256
+                              },
+                              "contentDigest": {
+                                "type": "string",
+                                "pattern": "^[a-f0-9]{64}$"
+                              }
+                            },
+                            "required": [
+                              "owner",
+                              "id",
+                              "version",
+                              "contentDigest"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "required": [
+                          "unit",
+                          "currency",
+                          "timeBasis",
+                          "owner",
+                          "rounding",
+                          "sourceStatus",
+                          "sourceRef"
+                        ],
+                        "additionalProperties": false
+                      }
+                    ]
+                  },
+                  "ownerValue": {
+                    "type": "object",
+                    "properties": {
+                      "unit": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "currency": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "pattern": "^[A-Z]{3}$"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "timeBasis": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "owner": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "rounding": {
+                        "type": "string",
+                        "const": "EXACT"
+                      },
+                      "sourceStatus": {
+                        "type": "string",
+                        "enum": [
+                          "SUPPLIED_MODEL",
+                          "CANONICAL_OBSERVATION",
+                          "UNKNOWN"
+                        ]
+                      },
+                      "sourceRef": {
+                        "type": "object",
+                        "properties": {
+                          "owner": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 256
+                          },
+                          "id": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 1024
+                          },
+                          "version": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 256
+                          },
+                          "contentDigest": {
+                            "type": "string",
+                            "pattern": "^[a-f0-9]{64}$"
+                          }
+                        },
+                        "required": [
+                          "owner",
+                          "id",
+                          "version",
+                          "contentDigest"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "required": [
+                      "unit",
+                      "currency",
+                      "timeBasis",
+                      "owner",
+                      "rounding",
+                      "sourceStatus",
+                      "sourceRef"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "utilities",
+                  "ownerValue"
+                ],
+                "additionalProperties": false
+              },
+              "financialLimits": {
+                "type": "object",
+                "properties": {
+                  "absolutePayments": {
+                    "type": "array",
+                    "minItems": 2,
+                    "maxItems": 2,
+                    "items": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "value": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "maxLength": 2500
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "basis": {
+                            "type": "object",
+                            "properties": {
+                              "unit": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 256
+                              },
+                              "currency": {
+                                "anyOf": [
+                                  {
+                                    "type": "string",
+                                    "pattern": "^[A-Z]{3}$"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "timeBasis": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 256
+                              },
+                              "owner": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 256
+                              },
+                              "rounding": {
+                                "type": "string",
+                                "const": "EXACT"
+                              },
+                              "sourceStatus": {
+                                "type": "string",
+                                "enum": [
+                                  "SUPPLIED_MODEL",
+                                  "CANONICAL_OBSERVATION",
+                                  "UNKNOWN"
+                                ]
+                              },
+                              "sourceRef": {
+                                "type": "object",
+                                "properties": {
+                                  "owner": {
+                                    "type": "string",
+                                    "minLength": 1,
+                                    "maxLength": 256
+                                  },
+                                  "id": {
+                                    "type": "string",
+                                    "minLength": 1,
+                                    "maxLength": 1024
+                                  },
+                                  "version": {
+                                    "type": "string",
+                                    "minLength": 1,
+                                    "maxLength": 256
+                                  },
+                                  "contentDigest": {
+                                    "type": "string",
+                                    "pattern": "^[a-f0-9]{64}$"
+                                  }
+                                },
+                                "required": [
+                                  "owner",
+                                  "id",
+                                  "version",
+                                  "contentDigest"
+                                ],
+                                "additionalProperties": false
+                              }
+                            },
+                            "required": [
+                              "unit",
+                              "currency",
+                              "timeBasis",
+                              "owner",
+                              "rounding",
+                              "sourceStatus",
+                              "sourceRef"
+                            ],
+                            "additionalProperties": false
+                          },
+                          "unknownReason": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 256
+                          }
+                        },
+                        "required": [
+                          "value",
+                          "basis"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "value": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "maxLength": 2500
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "basis": {
+                            "type": "object",
+                            "properties": {
+                              "unit": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 256
+                              },
+                              "currency": {
+                                "anyOf": [
+                                  {
+                                    "type": "string",
+                                    "pattern": "^[A-Z]{3}$"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "timeBasis": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 256
+                              },
+                              "owner": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 256
+                              },
+                              "rounding": {
+                                "type": "string",
+                                "const": "EXACT"
+                              },
+                              "sourceStatus": {
+                                "type": "string",
+                                "enum": [
+                                  "SUPPLIED_MODEL",
+                                  "CANONICAL_OBSERVATION",
+                                  "UNKNOWN"
+                                ]
+                              },
+                              "sourceRef": {
+                                "type": "object",
+                                "properties": {
+                                  "owner": {
+                                    "type": "string",
+                                    "minLength": 1,
+                                    "maxLength": 256
+                                  },
+                                  "id": {
+                                    "type": "string",
+                                    "minLength": 1,
+                                    "maxLength": 1024
+                                  },
+                                  "version": {
+                                    "type": "string",
+                                    "minLength": 1,
+                                    "maxLength": 256
+                                  },
+                                  "contentDigest": {
+                                    "type": "string",
+                                    "pattern": "^[a-f0-9]{64}$"
+                                  }
+                                },
+                                "required": [
+                                  "owner",
+                                  "id",
+                                  "version",
+                                  "contentDigest"
+                                ],
+                                "additionalProperties": false
+                              }
+                            },
+                            "required": [
+                              "unit",
+                              "currency",
+                              "timeBasis",
+                              "owner",
+                              "rounding",
+                              "sourceStatus",
+                              "sourceRef"
+                            ],
+                            "additionalProperties": false
+                          },
+                          "unknownReason": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 256
+                          }
+                        },
+                        "required": [
+                          "value",
+                          "basis"
+                        ],
+                        "additionalProperties": false
+                      }
+                    ]
+                  },
+                  "liabilities": {
+                    "type": "array",
+                    "minItems": 2,
+                    "maxItems": 2,
+                    "items": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "value": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "maxLength": 2500
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "basis": {
+                            "type": "object",
+                            "properties": {
+                              "unit": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 256
+                              },
+                              "currency": {
+                                "anyOf": [
+                                  {
+                                    "type": "string",
+                                    "pattern": "^[A-Z]{3}$"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "timeBasis": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 256
+                              },
+                              "owner": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 256
+                              },
+                              "rounding": {
+                                "type": "string",
+                                "const": "EXACT"
+                              },
+                              "sourceStatus": {
+                                "type": "string",
+                                "enum": [
+                                  "SUPPLIED_MODEL",
+                                  "CANONICAL_OBSERVATION",
+                                  "UNKNOWN"
+                                ]
+                              },
+                              "sourceRef": {
+                                "type": "object",
+                                "properties": {
+                                  "owner": {
+                                    "type": "string",
+                                    "minLength": 1,
+                                    "maxLength": 256
+                                  },
+                                  "id": {
+                                    "type": "string",
+                                    "minLength": 1,
+                                    "maxLength": 1024
+                                  },
+                                  "version": {
+                                    "type": "string",
+                                    "minLength": 1,
+                                    "maxLength": 256
+                                  },
+                                  "contentDigest": {
+                                    "type": "string",
+                                    "pattern": "^[a-f0-9]{64}$"
+                                  }
+                                },
+                                "required": [
+                                  "owner",
+                                  "id",
+                                  "version",
+                                  "contentDigest"
+                                ],
+                                "additionalProperties": false
+                              }
+                            },
+                            "required": [
+                              "unit",
+                              "currency",
+                              "timeBasis",
+                              "owner",
+                              "rounding",
+                              "sourceStatus",
+                              "sourceRef"
+                            ],
+                            "additionalProperties": false
+                          },
+                          "unknownReason": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 256
+                          }
+                        },
+                        "required": [
+                          "value",
+                          "basis"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "value": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "maxLength": 2500
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "basis": {
+                            "type": "object",
+                            "properties": {
+                              "unit": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 256
+                              },
+                              "currency": {
+                                "anyOf": [
+                                  {
+                                    "type": "string",
+                                    "pattern": "^[A-Z]{3}$"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "timeBasis": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 256
+                              },
+                              "owner": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 256
+                              },
+                              "rounding": {
+                                "type": "string",
+                                "const": "EXACT"
+                              },
+                              "sourceStatus": {
+                                "type": "string",
+                                "enum": [
+                                  "SUPPLIED_MODEL",
+                                  "CANONICAL_OBSERVATION",
+                                  "UNKNOWN"
+                                ]
+                              },
+                              "sourceRef": {
+                                "type": "object",
+                                "properties": {
+                                  "owner": {
+                                    "type": "string",
+                                    "minLength": 1,
+                                    "maxLength": 256
+                                  },
+                                  "id": {
+                                    "type": "string",
+                                    "minLength": 1,
+                                    "maxLength": 1024
+                                  },
+                                  "version": {
+                                    "type": "string",
+                                    "minLength": 1,
+                                    "maxLength": 256
+                                  },
+                                  "contentDigest": {
+                                    "type": "string",
+                                    "pattern": "^[a-f0-9]{64}$"
+                                  }
+                                },
+                                "required": [
+                                  "owner",
+                                  "id",
+                                  "version",
+                                  "contentDigest"
+                                ],
+                                "additionalProperties": false
+                              }
+                            },
+                            "required": [
+                              "unit",
+                              "currency",
+                              "timeBasis",
+                              "owner",
+                              "rounding",
+                              "sourceStatus",
+                              "sourceRef"
+                            ],
+                            "additionalProperties": false
+                          },
+                          "unknownReason": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 256
+                          }
+                        },
+                        "required": [
+                          "value",
+                          "basis"
+                        ],
+                        "additionalProperties": false
+                      }
+                    ]
+                  },
+                  "semantics": {
+                    "type": "string",
+                    "const": "SIGNED_NODE_SNAPSHOTS_NO_IMPLICIT_NETTING_OR_UTILITY_CONVERSION"
+                  }
+                },
+                "required": [
+                  "absolutePayments",
+                  "liabilities",
+                  "semantics"
+                ],
+                "additionalProperties": false
+              },
+              "observationRules": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "key": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,159}$"
+                    },
+                    "allowedRecipients": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "enum": [
+                          "P0",
+                          "P1",
+                          "PUBLIC"
+                        ]
+                      },
+                      "minItems": 1,
+                      "maxItems": 3
+                    },
+                    "mandatoryByDate": {
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "enum": [
+                            0,
+                            1,
+                            2
+                          ]
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "classification": {
+                      "type": "string",
+                      "enum": [
+                        "SOURCED_FACT",
+                        "AUTHENTICATED_ASSERTION",
+                        "MODEL_RELATIVE_STATEMENT",
+                        "UNRESOLVED_CLAIM"
+                      ]
+                    },
+                    "sourceRef": {
+                      "type": "object",
+                      "properties": {
+                        "owner": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 256
+                        },
+                        "id": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 1024
+                        },
+                        "version": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 256
+                        },
+                        "contentDigest": {
+                          "type": "string",
+                          "pattern": "^[a-f0-9]{64}$"
+                        }
+                      },
+                      "required": [
+                        "owner",
+                        "id",
+                        "version",
+                        "contentDigest"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "key",
+                    "allowedRecipients",
+                    "mandatoryByDate",
+                    "classification",
+                    "sourceRef"
+                  ],
+                  "additionalProperties": false
+                },
+                "maxItems": 64
+              },
+              "controls": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,159}$"
+                    },
+                    "kind": {
+                      "type": "string",
+                      "enum": [
+                        "DISCLOSURE",
+                        "COMMUNICATION",
+                        "COMMITMENT_TIMING"
+                      ]
+                    },
+                    "options": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,159}$"
+                      },
+                      "minItems": 1,
+                      "maxItems": 2
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "kind",
+                    "options"
+                  ],
+                  "additionalProperties": false
+                },
+                "maxItems": 12
+              },
+              "models": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,159}$"
+                    },
+                    "qualificationRef": {
+                      "type": "object",
+                      "properties": {
+                        "owner": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 256
+                        },
+                        "id": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 1024
+                        },
+                        "version": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 256
+                        },
+                        "contentDigest": {
+                          "type": "string",
+                          "pattern": "^[a-f0-9]{64}$"
+                        }
+                      },
+                      "required": [
+                        "owner",
+                        "id",
+                        "version",
+                        "contentDigest"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "root": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,159}$"
+                    },
+                    "nodes": {
+                      "type": "array",
+                      "items": {
+                        "anyOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,159}$"
+                              },
+                              "date": {
+                                "type": "number",
+                                "enum": [
+                                  0,
+                                  1,
+                                  2
+                                ]
+                              },
+                              "state": {
+                                "type": "array",
+                                "minItems": 2,
+                                "maxItems": 2,
+                                "items": [
+                                  {
+                                    "type": "number",
+                                    "enum": [
+                                      0,
+                                      1
+                                    ]
+                                  },
+                                  {
+                                    "type": "number",
+                                    "enum": [
+                                      0,
+                                      1
+                                    ]
+                                  }
+                                ]
+                              },
+                              "observations": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "key": {
+                                      "type": "string",
+                                      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,159}$"
+                                    },
+                                    "value": {
+                                      "type": "string",
+                                      "maxLength": 4096
+                                    },
+                                    "recipients": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "string",
+                                        "enum": [
+                                          "P0",
+                                          "P1",
+                                          "PUBLIC"
+                                        ]
+                                      },
+                                      "minItems": 1,
+                                      "maxItems": 3
+                                    }
+                                  },
+                                  "required": [
+                                    "key",
+                                    "value",
+                                    "recipients"
+                                  ],
+                                  "additionalProperties": false
+                                },
+                                "maxItems": 8
+                              },
+                              "resources": {
+                                "type": "object",
+                                "additionalProperties": {
+                                  "type": "string",
+                                  "maxLength": 2500
+                                }
+                              },
+                              "payments": {
+                                "type": "array",
+                                "minItems": 2,
+                                "maxItems": 2,
+                                "items": [
+                                  {
+                                    "type": "string",
+                                    "maxLength": 2500
+                                  },
+                                  {
+                                    "type": "string",
+                                    "maxLength": 2500
+                                  }
+                                ]
+                              },
+                              "liabilities": {
+                                "type": "array",
+                                "minItems": 2,
+                                "maxItems": 2,
+                                "items": [
+                                  {
+                                    "type": "string",
+                                    "maxLength": 2500
+                                  },
+                                  {
+                                    "type": "string",
+                                    "maxLength": 2500
+                                  }
+                                ]
+                              },
+                              "kind": {
+                                "type": "string",
+                                "const": "CHANCE"
+                              },
+                              "chanceRole": {
+                                "type": "string",
+                                "enum": [
+                                  "PRIOR",
+                                  "TRANSITION",
+                                  "SIGNAL"
+                                ]
+                              },
+                              "probabilityBasis": {
+                                "type": "object",
+                                "properties": {
+                                  "population": {
+                                    "type": "string",
+                                    "minLength": 1,
+                                    "maxLength": 256
+                                  },
+                                  "conditioning": {
+                                    "type": "string",
+                                    "minLength": 1,
+                                    "maxLength": 256
+                                  },
+                                  "identificationRef": {
+                                    "type": "object",
+                                    "properties": {
+                                      "owner": {
+                                        "type": "string",
+                                        "minLength": 1,
+                                        "maxLength": 256
+                                      },
+                                      "id": {
+                                        "type": "string",
+                                        "minLength": 1,
+                                        "maxLength": 1024
+                                      },
+                                      "version": {
+                                        "type": "string",
+                                        "minLength": 1,
+                                        "maxLength": 256
+                                      },
+                                      "contentDigest": {
+                                        "type": "string",
+                                        "pattern": "^[a-f0-9]{64}$"
+                                      }
+                                    },
+                                    "required": [
+                                      "owner",
+                                      "id",
+                                      "version",
+                                      "contentDigest"
+                                    ],
+                                    "additionalProperties": false
+                                  }
+                                },
+                                "required": [
+                                  "population",
+                                  "conditioning",
+                                  "identificationRef"
+                                ],
+                                "additionalProperties": false
+                              },
+                              "edges": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "actionId": {
+                                      "type": "string",
+                                      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,159}$"
+                                    },
+                                    "next": {
+                                      "type": "string",
+                                      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,159}$"
+                                    },
+                                    "probability": {
+                                      "anyOf": [
+                                        {
+                                          "type": "string",
+                                          "maxLength": 2500
+                                        },
+                                        {
+                                          "type": "null"
+                                        }
+                                      ]
+                                    }
+                                  },
+                                  "required": [
+                                    "actionId",
+                                    "next",
+                                    "probability"
+                                  ],
+                                  "additionalProperties": false
+                                },
+                                "minItems": 1,
+                                "maxItems": 2
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "date",
+                              "state",
+                              "observations",
+                              "resources",
+                              "payments",
+                              "liabilities",
+                              "kind",
+                              "chanceRole",
+                              "probabilityBasis",
+                              "edges"
+                            ],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,159}$"
+                              },
+                              "date": {
+                                "type": "number",
+                                "enum": [
+                                  0,
+                                  1,
+                                  2
+                                ]
+                              },
+                              "state": {
+                                "type": "array",
+                                "minItems": 2,
+                                "maxItems": 2,
+                                "items": [
+                                  {
+                                    "type": "number",
+                                    "enum": [
+                                      0,
+                                      1
+                                    ]
+                                  },
+                                  {
+                                    "type": "number",
+                                    "enum": [
+                                      0,
+                                      1
+                                    ]
+                                  }
+                                ]
+                              },
+                              "observations": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "key": {
+                                      "type": "string",
+                                      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,159}$"
+                                    },
+                                    "value": {
+                                      "type": "string",
+                                      "maxLength": 4096
+                                    },
+                                    "recipients": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "string",
+                                        "enum": [
+                                          "P0",
+                                          "P1",
+                                          "PUBLIC"
+                                        ]
+                                      },
+                                      "minItems": 1,
+                                      "maxItems": 3
+                                    }
+                                  },
+                                  "required": [
+                                    "key",
+                                    "value",
+                                    "recipients"
+                                  ],
+                                  "additionalProperties": false
+                                },
+                                "maxItems": 8
+                              },
+                              "resources": {
+                                "type": "object",
+                                "additionalProperties": {
+                                  "type": "string",
+                                  "maxLength": 2500
+                                }
+                              },
+                              "payments": {
+                                "type": "array",
+                                "minItems": 2,
+                                "maxItems": 2,
+                                "items": [
+                                  {
+                                    "type": "string",
+                                    "maxLength": 2500
+                                  },
+                                  {
+                                    "type": "string",
+                                    "maxLength": 2500
+                                  }
+                                ]
+                              },
+                              "liabilities": {
+                                "type": "array",
+                                "minItems": 2,
+                                "maxItems": 2,
+                                "items": [
+                                  {
+                                    "type": "string",
+                                    "maxLength": 2500
+                                  },
+                                  {
+                                    "type": "string",
+                                    "maxLength": 2500
+                                  }
+                                ]
+                              },
+                              "kind": {
+                                "type": "string",
+                                "const": "DECISION"
+                              },
+                              "participant": {
+                                "type": "string",
+                                "enum": [
+                                  "P0",
+                                  "P1"
+                                ]
+                              },
+                              "edges": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "actionId": {
+                                      "type": "string",
+                                      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,159}$"
+                                    },
+                                    "next": {
+                                      "type": "string",
+                                      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,159}$"
+                                    }
+                                  },
+                                  "required": [
+                                    "actionId",
+                                    "next"
+                                  ],
+                                  "additionalProperties": false
+                                },
+                                "minItems": 1,
+                                "maxItems": 2
+                              },
+                              "informationSet": {
+                                "type": "string",
+                                "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,159}$"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "date",
+                              "state",
+                              "observations",
+                              "resources",
+                              "payments",
+                              "liabilities",
+                              "kind",
+                              "participant",
+                              "edges"
+                            ],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,159}$"
+                              },
+                              "date": {
+                                "type": "number",
+                                "enum": [
+                                  0,
+                                  1,
+                                  2
+                                ]
+                              },
+                              "state": {
+                                "type": "array",
+                                "minItems": 2,
+                                "maxItems": 2,
+                                "items": [
+                                  {
+                                    "type": "number",
+                                    "enum": [
+                                      0,
+                                      1
+                                    ]
+                                  },
+                                  {
+                                    "type": "number",
+                                    "enum": [
+                                      0,
+                                      1
+                                    ]
+                                  }
+                                ]
+                              },
+                              "observations": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "key": {
+                                      "type": "string",
+                                      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,159}$"
+                                    },
+                                    "value": {
+                                      "type": "string",
+                                      "maxLength": 4096
+                                    },
+                                    "recipients": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "string",
+                                        "enum": [
+                                          "P0",
+                                          "P1",
+                                          "PUBLIC"
+                                        ]
+                                      },
+                                      "minItems": 1,
+                                      "maxItems": 3
+                                    }
+                                  },
+                                  "required": [
+                                    "key",
+                                    "value",
+                                    "recipients"
+                                  ],
+                                  "additionalProperties": false
+                                },
+                                "maxItems": 8
+                              },
+                              "resources": {
+                                "type": "object",
+                                "additionalProperties": {
+                                  "type": "string",
+                                  "maxLength": 2500
+                                }
+                              },
+                              "payments": {
+                                "type": "array",
+                                "minItems": 2,
+                                "maxItems": 2,
+                                "items": [
+                                  {
+                                    "type": "string",
+                                    "maxLength": 2500
+                                  },
+                                  {
+                                    "type": "string",
+                                    "maxLength": 2500
+                                  }
+                                ]
+                              },
+                              "liabilities": {
+                                "type": "array",
+                                "minItems": 2,
+                                "maxItems": 2,
+                                "items": [
+                                  {
+                                    "type": "string",
+                                    "maxLength": 2500
+                                  },
+                                  {
+                                    "type": "string",
+                                    "maxLength": 2500
+                                  }
+                                ]
+                              },
+                              "kind": {
+                                "type": "string",
+                                "const": "PROTOCOL"
+                              },
+                              "controlId": {
+                                "type": "string",
+                                "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,159}$"
+                              },
+                              "edges": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "actionId": {
+                                      "type": "string",
+                                      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,159}$"
+                                    },
+                                    "next": {
+                                      "type": "string",
+                                      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,159}$"
+                                    }
+                                  },
+                                  "required": [
+                                    "actionId",
+                                    "next"
+                                  ],
+                                  "additionalProperties": false
+                                },
+                                "minItems": 1,
+                                "maxItems": 2
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "date",
+                              "state",
+                              "observations",
+                              "resources",
+                              "payments",
+                              "liabilities",
+                              "kind",
+                              "controlId",
+                              "edges"
+                            ],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,159}$"
+                              },
+                              "date": {
+                                "type": "number",
+                                "enum": [
+                                  0,
+                                  1,
+                                  2
+                                ]
+                              },
+                              "state": {
+                                "type": "array",
+                                "minItems": 2,
+                                "maxItems": 2,
+                                "items": [
+                                  {
+                                    "type": "number",
+                                    "enum": [
+                                      0,
+                                      1
+                                    ]
+                                  },
+                                  {
+                                    "type": "number",
+                                    "enum": [
+                                      0,
+                                      1
+                                    ]
+                                  }
+                                ]
+                              },
+                              "observations": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "key": {
+                                      "type": "string",
+                                      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,159}$"
+                                    },
+                                    "value": {
+                                      "type": "string",
+                                      "maxLength": 4096
+                                    },
+                                    "recipients": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "string",
+                                        "enum": [
+                                          "P0",
+                                          "P1",
+                                          "PUBLIC"
+                                        ]
+                                      },
+                                      "minItems": 1,
+                                      "maxItems": 3
+                                    }
+                                  },
+                                  "required": [
+                                    "key",
+                                    "value",
+                                    "recipients"
+                                  ],
+                                  "additionalProperties": false
+                                },
+                                "maxItems": 8
+                              },
+                              "resources": {
+                                "type": "object",
+                                "additionalProperties": {
+                                  "type": "string",
+                                  "maxLength": 2500
+                                }
+                              },
+                              "payments": {
+                                "type": "array",
+                                "minItems": 2,
+                                "maxItems": 2,
+                                "items": [
+                                  {
+                                    "type": "string",
+                                    "maxLength": 2500
+                                  },
+                                  {
+                                    "type": "string",
+                                    "maxLength": 2500
+                                  }
+                                ]
+                              },
+                              "liabilities": {
+                                "type": "array",
+                                "minItems": 2,
+                                "maxItems": 2,
+                                "items": [
+                                  {
+                                    "type": "string",
+                                    "maxLength": 2500
+                                  },
+                                  {
+                                    "type": "string",
+                                    "maxLength": 2500
+                                  }
+                                ]
+                              },
+                              "kind": {
+                                "type": "string",
+                                "const": "TERMINAL"
+                              },
+                              "payoff": {
+                                "type": "array",
+                                "minItems": 2,
+                                "maxItems": 2,
+                                "items": [
+                                  {
+                                    "anyOf": [
+                                      {
+                                        "type": "string",
+                                        "maxLength": 2500
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "anyOf": [
+                                      {
+                                        "type": "string",
+                                        "maxLength": 2500
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  }
+                                ]
+                              },
+                              "ownerValue": {
+                                "anyOf": [
+                                  {
+                                    "type": "string",
+                                    "maxLength": 2500
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "date",
+                              "state",
+                              "observations",
+                              "resources",
+                              "payments",
+                              "liabilities",
+                              "kind",
+                              "payoff",
+                              "ownerValue"
+                            ],
+                            "additionalProperties": false
+                          }
+                        ]
+                      },
+                      "minItems": 1,
+                      "maxItems": 2048
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "qualificationRef",
+                    "root",
+                    "nodes"
+                  ],
+                  "additionalProperties": false
+                },
+                "minItems": 1,
+                "maxItems": 4
+              },
+              "resourceLimits": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "object",
+                  "properties": {
+                    "value": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "maxLength": 2500
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "basis": {
+                      "type": "object",
+                      "properties": {
+                        "unit": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 256
+                        },
+                        "currency": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "pattern": "^[A-Z]{3}$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "timeBasis": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 256
+                        },
+                        "owner": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 256
+                        },
+                        "rounding": {
+                          "type": "string",
+                          "const": "EXACT"
+                        },
+                        "sourceStatus": {
+                          "type": "string",
+                          "enum": [
+                            "SUPPLIED_MODEL",
+                            "CANONICAL_OBSERVATION",
+                            "UNKNOWN"
+                          ]
+                        },
+                        "sourceRef": {
+                          "type": "object",
+                          "properties": {
+                            "owner": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 256
+                            },
+                            "id": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 1024
+                            },
+                            "version": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 256
+                            },
+                            "contentDigest": {
+                              "type": "string",
+                              "pattern": "^[a-f0-9]{64}$"
+                            }
+                          },
+                          "required": [
+                            "owner",
+                            "id",
+                            "version",
+                            "contentDigest"
+                          ],
+                          "additionalProperties": false
+                        }
+                      },
+                      "required": [
+                        "unit",
+                        "currency",
+                        "timeBasis",
+                        "owner",
+                        "rounding",
+                        "sourceStatus",
+                        "sourceRef"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "unknownReason": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 256
+                    }
+                  },
+                  "required": [
+                    "value",
+                    "basis"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "goal": {
+                "type": "object",
+                "properties": {
+                  "minimumOwnerValue": {
+                    "type": "object",
+                    "properties": {
+                      "value": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "maxLength": 2500
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "basis": {
+                        "type": "object",
+                        "properties": {
+                          "unit": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 256
+                          },
+                          "currency": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "pattern": "^[A-Z]{3}$"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "timeBasis": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 256
+                          },
+                          "owner": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 256
+                          },
+                          "rounding": {
+                            "type": "string",
+                            "const": "EXACT"
+                          },
+                          "sourceStatus": {
+                            "type": "string",
+                            "enum": [
+                              "SUPPLIED_MODEL",
+                              "CANONICAL_OBSERVATION",
+                              "UNKNOWN"
+                            ]
+                          },
+                          "sourceRef": {
+                            "type": "object",
+                            "properties": {
+                              "owner": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 256
+                              },
+                              "id": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 1024
+                              },
+                              "version": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 256
+                              },
+                              "contentDigest": {
+                                "type": "string",
+                                "pattern": "^[a-f0-9]{64}$"
+                              }
+                            },
+                            "required": [
+                              "owner",
+                              "id",
+                              "version",
+                              "contentDigest"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "required": [
+                          "unit",
+                          "currency",
+                          "timeBasis",
+                          "owner",
+                          "rounding",
+                          "sourceStatus",
+                          "sourceRef"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "unknownReason": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      }
+                    },
+                    "required": [
+                      "value",
+                      "basis"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "requireNontrivial": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "minimumOwnerValue",
+                  "requireNontrivial"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "schema",
+              "id",
+              "title",
+              "participants",
+              "dates",
+              "fixedOperatorRefs",
+              "actorModelRefs",
+              "quantityBasis",
+              "financialLimits",
+              "observationRules",
+              "controls",
+              "models",
+              "resourceLimits",
+              "goal"
+            ],
+            "additionalProperties": false
+          },
+          "lowering": {
+            "type": "object",
+            "properties": {
+              "schema": {
+                "type": "string",
+                "const": "finnor.y3.fixed-y1-lowering.v1"
+              },
+              "theoryId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "theoryRef": {
+                "type": "object",
+                "properties": {
+                  "owner": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 256
+                  },
+                  "id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1024
+                  },
+                  "version": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 256
+                  },
+                  "contentDigest": {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{64}$"
+                  }
+                },
+                "required": [
+                  "owner",
+                  "id",
+                  "version",
+                  "contentDigest"
+                ],
+                "additionalProperties": false
+              },
+              "outcomes": {
+                "type": "array",
+                "items": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "modelId": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 160
+                        },
+                        "terminalNodeId": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 160
+                        },
+                        "terminalDigest": {
+                          "type": "string",
+                          "pattern": "^[a-f0-9]{64}$"
+                        },
+                        "before": {
+                          "type": "object",
+                          "additionalProperties": {
+                            "type": "string",
+                            "pattern": "^-?(?:0|[1-9][0-9]{0,17})(?:\\.[0-9]{0,5}[1-9])?$"
+                          }
+                        },
+                        "after": {
+                          "type": "object",
+                          "additionalProperties": {
+                            "type": "string",
+                            "pattern": "^-?(?:0|[1-9][0-9]{0,17})(?:\\.[0-9]{0,5}[1-9])?$"
+                          }
+                        },
+                        "kind": {
+                          "type": "string",
+                          "const": "NO_EFFECT"
+                        }
+                      },
+                      "required": [
+                        "modelId",
+                        "terminalNodeId",
+                        "terminalDigest",
+                        "before",
+                        "after",
+                        "kind"
+                      ],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "modelId": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 160
+                        },
+                        "terminalNodeId": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 160
+                        },
+                        "terminalDigest": {
+                          "type": "string",
+                          "pattern": "^[a-f0-9]{64}$"
+                        },
+                        "before": {
+                          "type": "object",
+                          "additionalProperties": {
+                            "type": "string",
+                            "pattern": "^-?(?:0|[1-9][0-9]{0,17})(?:\\.[0-9]{0,5}[1-9])?$"
+                          }
+                        },
+                        "after": {
+                          "type": "object",
+                          "additionalProperties": {
+                            "type": "string",
+                            "pattern": "^-?(?:0|[1-9][0-9]{0,17})(?:\\.[0-9]{0,5}[1-9])?$"
+                          }
+                        },
+                        "kind": {
+                          "type": "string",
+                          "const": "RIGHT_TRANSITION"
+                        },
+                        "operatorId": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 160
+                        },
+                        "parameters": {
+                          "type": "object",
+                          "additionalProperties": {
+                            "type": "string",
+                            "pattern": "^-?(?:0|[1-9][0-9]{0,17})(?:\\.[0-9]{0,5}[1-9])?$"
+                          }
+                        }
+                      },
+                      "required": [
+                        "modelId",
+                        "terminalNodeId",
+                        "terminalDigest",
+                        "before",
+                        "after",
+                        "kind",
+                        "operatorId",
+                        "parameters"
+                      ],
+                      "additionalProperties": false
+                    }
+                  ]
+                },
+                "minItems": 1,
+                "maxItems": 8192
+              }
+            },
+            "required": [
+              "schema",
+              "theoryId",
+              "theoryRef",
+              "outcomes"
+            ],
+            "additionalProperties": false
+          },
+          "sources": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "sourceId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "versionId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "contentDigest": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "claimKey": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 160
+                },
+                "ref": {
+                  "type": "object",
+                  "properties": {
+                    "owner": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 256
+                    },
+                    "id": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 1024
+                    },
+                    "version": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 256
+                    },
+                    "contentDigest": {
+                      "type": "string",
+                      "pattern": "^[a-f0-9]{64}$"
+                    }
+                  },
+                  "required": [
+                    "owner",
+                    "id",
+                    "version",
+                    "contentDigest"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "required": [
+                "sourceId",
+                "versionId",
+                "contentDigest",
+                "claimKey",
+                "ref"
+              ],
+              "additionalProperties": false
+            },
+            "minItems": 2,
+            "maxItems": 32
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "parentProtocolId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "schema",
+          "root",
+          "workId",
+          "problem",
+          "lowering",
+          "sources",
+          "idempotencyKey"
+        ],
+        "additionalProperties": false
+      },
+      "interaction-read": {
+        "type": "object",
+        "properties": {
+          "protocolId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "protocolId"
+        ],
+        "additionalProperties": false
+      },
+      "interaction-list": {
+        "type": "object",
+        "properties": {
+          "root": {
+            "type": "object",
+            "properties": {
+              "entityType": {
+                "type": "string",
+                "enum": [
+                  "pe_strategy",
+                  "pe_opportunity",
+                  "pe_deal",
+                  "pe_fund",
+                  "pe_vehicle",
+                  "external_organization",
+                  "pe_portfolio_holding"
+                ]
+              },
+              "entityId": {
+                "type": "string",
+                "format": "uuid"
+              }
+            },
+            "required": [
+              "entityType",
+              "entityId"
+            ],
+            "additionalProperties": false
+          },
+          "workId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "root",
+          "workId"
+        ],
+        "additionalProperties": false
+      },
+      "interaction-admit": {
+        "type": "object",
+        "properties": {
+          "protocolId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "protocolId"
+        ],
+        "additionalProperties": false
+      },
+      "interaction-resume": {
+        "type": "object",
+        "properties": {
+          "protocolId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "protocolId"
+        ],
+        "additionalProperties": false
+      },
+      "interaction-cancel": {
+        "type": "object",
+        "properties": {
+          "protocolId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "protocolId"
+        ],
+        "additionalProperties": false
+      },
+      "interaction-artifact": {
+        "type": "object",
+        "properties": {
+          "protocolId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "protocolId"
+        ],
+        "additionalProperties": false
+      },
+      "interaction-compare": {
+        "type": "object",
+        "properties": {
+          "protocolId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "incumbentProtocolId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "protocolId"
+        ],
+        "additionalProperties": false
+      },
+      "interaction-terms": {
+        "type": "object",
+        "properties": {
+          "protocolId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "reservationRef": {
+            "type": "object",
+            "properties": {
+              "owner": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 1024
+              },
+              "version": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "contentDigest": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            },
+            "required": [
+              "owner",
+              "id",
+              "version",
+              "contentDigest"
+            ],
+            "additionalProperties": false
+          },
+          "expectedRevision": {
+            "type": "integer",
+            "exclusiveMinimum": 0
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          }
+        },
+        "required": [
+          "protocolId",
+          "reservationRef",
+          "expectedRevision",
+          "idempotencyKey"
+        ],
+        "additionalProperties": false
+      },
+      "interaction-local": {
+        "type": "object",
+        "properties": {
+          "protocolId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "protocolId"
+        ],
+        "additionalProperties": false
+      },
+      "interaction-consent": {
+        "type": "object",
+        "properties": {
+          "protocolId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "termsRef": {
+            "type": "object",
+            "properties": {
+              "owner": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 1024
+              },
+              "version": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "contentDigest": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            },
+            "required": [
+              "owner",
+              "id",
+              "version",
+              "contentDigest"
+            ],
+            "additionalProperties": false
+          },
+          "scope": {
+            "type": "string",
+            "enum": [
+              "TERMS",
+              "EFFECT"
+            ]
+          },
+          "subjectDigest": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "decision": {
+            "type": "string",
+            "enum": [
+              "ACCEPT",
+              "WITHDRAW"
+            ]
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          }
+        },
+        "required": [
+          "protocolId",
+          "termsRef",
+          "scope",
+          "subjectDigest",
+          "decision",
+          "idempotencyKey"
+        ],
+        "additionalProperties": false
+      },
+      "interaction-start": {
+        "type": "object",
+        "properties": {
+          "protocolId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "termsRef": {
+            "type": "object",
+            "properties": {
+              "owner": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 1024
+              },
+              "version": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "contentDigest": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            },
+            "required": [
+              "owner",
+              "id",
+              "version",
+              "contentDigest"
+            ],
+            "additionalProperties": false
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          }
+        },
+        "required": [
+          "protocolId",
+          "termsRef",
+          "idempotencyKey"
+        ],
+        "additionalProperties": false
+      },
+      "interaction-run-read": {
+        "type": "object",
+        "properties": {
+          "runId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "runId"
+        ],
+        "additionalProperties": false
+      },
+      "interaction-observe": {
+        "type": "object",
+        "properties": {
+          "runId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "expectedRevision": {
+            "type": "integer",
+            "exclusiveMinimum": 0
+          },
+          "date": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2
+          },
+          "key": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          },
+          "value": {
+            "type": "string",
+            "maxLength": 4096
+          },
+          "classification": {
+            "type": "string",
+            "enum": [
+              "SOURCED_FACT",
+              "AUTHENTICATED_ASSERTION",
+              "MODEL_RELATIVE_STATEMENT",
+              "UNRESOLVED_CLAIM"
+            ]
+          },
+          "source": {
+            "type": "object",
+            "properties": {
+              "sourceId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "versionId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "contentDigest": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "claimKey": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 160
+              },
+              "ref": {
+                "type": "object",
+                "properties": {
+                  "owner": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 256
+                  },
+                  "id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1024
+                  },
+                  "version": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 256
+                  },
+                  "contentDigest": {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{64}$"
+                  }
+                },
+                "required": [
+                  "owner",
+                  "id",
+                  "version",
+                  "contentDigest"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "sourceId",
+              "versionId",
+              "contentDigest",
+              "claimKey",
+              "ref"
+            ],
+            "additionalProperties": false
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          }
+        },
+        "required": [
+          "runId",
+          "expectedRevision",
+          "date",
+          "key",
+          "value",
+          "classification",
+          "idempotencyKey"
+        ],
+        "additionalProperties": false
+      },
+      "interaction-action": {
+        "type": "object",
+        "properties": {
+          "runId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "expectedRevision": {
+            "type": "integer",
+            "exclusiveMinimum": 0
+          },
+          "viewDigest": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "actionId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          }
+        },
+        "required": [
+          "runId",
+          "expectedRevision",
+          "viewDigest",
+          "actionId",
+          "idempotencyKey"
+        ],
+        "additionalProperties": false
+      },
+      "interaction-materialize": {
+        "type": "object",
+        "properties": {
+          "runId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "intentRef": {
+            "type": "object",
+            "properties": {
+              "owner": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 1024
+              },
+              "version": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "contentDigest": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            },
+            "required": [
+              "owner",
+              "id",
+              "version",
+              "contentDigest"
+            ],
+            "additionalProperties": false
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          }
+        },
+        "required": [
+          "runId",
+          "intentRef",
+          "idempotencyKey"
+        ],
+        "additionalProperties": false
+      },
+      "interaction-run": {
+        "type": "object",
+        "properties": {
+          "runId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "runId"
+        ],
+        "additionalProperties": false
+      },
+      "interaction-reconcile": {
+        "type": "object",
+        "properties": {
+          "runId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "runId"
+        ],
+        "additionalProperties": false
+      },
       "X3Expression": {
         "anyOf": [
           {
@@ -17481,7 +20586,25 @@
                 "response-programme",
                 "response-use-read",
                 "response-use-resume",
-                "response-use-cancel"
+                "response-use-cancel",
+                "interaction-submit",
+                "interaction-read",
+                "interaction-list",
+                "interaction-admit",
+                "interaction-resume",
+                "interaction-cancel",
+                "interaction-artifact",
+                "interaction-compare",
+                "interaction-terms",
+                "interaction-local",
+                "interaction-consent",
+                "interaction-start",
+                "interaction-run-read",
+                "interaction-observe",
+                "interaction-action",
+                "interaction-materialize",
+                "interaction-run",
+                "interaction-reconcile"
               ]
             }
           }
@@ -30436,6 +33559,978 @@
           },
           "503": {
             "description": "Pinned checker or runtime unavailable."
+          }
+        }
+      }
+    },
+    "/api/company-brain/interaction-submit": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/interaction-submit"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Exact Work and participant-local dynamic protocol, development admission, terms, consent or retained native responsibility. No protected qualification or financial efficacy."
+          },
+          "202": {
+            "description": "Original bounded construction or guarded native programme accepted. Not completion."
+          },
+          "400": {
+            "description": "Strict data-only contract required."
+          },
+          "401": {
+            "description": "Current signed bearer required."
+          },
+          "403": {
+            "description": "Current canonical participant rights or disposable profile missing."
+          },
+          "404": {
+            "description": "Unavailable or unauthorized exact participant, Work or root."
+          },
+          "408": {
+            "description": "Bounded authenticated body deadline exceeded."
+          },
+          "409": {
+            "description": "Original history, terms, resource revision or idempotency changed."
+          },
+          "413": {
+            "description": "Frozen request bound exceeded."
+          },
+          "422": {
+            "description": "Exact mathematical, consent, source or native owner prerequisite failed."
+          },
+          "503": {
+            "description": "Pinned runtime or native capacity unavailable."
+          }
+        }
+      }
+    },
+    "/api/company-brain/interaction-read": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/interaction-read"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Exact Work and participant-local dynamic protocol, development admission, terms, consent or retained native responsibility. No protected qualification or financial efficacy."
+          },
+          "202": {
+            "description": "Original bounded construction or guarded native programme accepted. Not completion."
+          },
+          "400": {
+            "description": "Strict data-only contract required."
+          },
+          "401": {
+            "description": "Current signed bearer required."
+          },
+          "403": {
+            "description": "Current canonical participant rights or disposable profile missing."
+          },
+          "404": {
+            "description": "Unavailable or unauthorized exact participant, Work or root."
+          },
+          "408": {
+            "description": "Bounded authenticated body deadline exceeded."
+          },
+          "409": {
+            "description": "Original history, terms, resource revision or idempotency changed."
+          },
+          "413": {
+            "description": "Frozen request bound exceeded."
+          },
+          "422": {
+            "description": "Exact mathematical, consent, source or native owner prerequisite failed."
+          },
+          "503": {
+            "description": "Pinned runtime or native capacity unavailable."
+          }
+        }
+      }
+    },
+    "/api/company-brain/interaction-list": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/interaction-list"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Exact Work and participant-local dynamic protocol, development admission, terms, consent or retained native responsibility. No protected qualification or financial efficacy."
+          },
+          "202": {
+            "description": "Original bounded construction or guarded native programme accepted. Not completion."
+          },
+          "400": {
+            "description": "Strict data-only contract required."
+          },
+          "401": {
+            "description": "Current signed bearer required."
+          },
+          "403": {
+            "description": "Current canonical participant rights or disposable profile missing."
+          },
+          "404": {
+            "description": "Unavailable or unauthorized exact participant, Work or root."
+          },
+          "408": {
+            "description": "Bounded authenticated body deadline exceeded."
+          },
+          "409": {
+            "description": "Original history, terms, resource revision or idempotency changed."
+          },
+          "413": {
+            "description": "Frozen request bound exceeded."
+          },
+          "422": {
+            "description": "Exact mathematical, consent, source or native owner prerequisite failed."
+          },
+          "503": {
+            "description": "Pinned runtime or native capacity unavailable."
+          }
+        }
+      }
+    },
+    "/api/company-brain/interaction-admit": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/interaction-admit"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Exact Work and participant-local dynamic protocol, development admission, terms, consent or retained native responsibility. No protected qualification or financial efficacy."
+          },
+          "202": {
+            "description": "Original bounded construction or guarded native programme accepted. Not completion."
+          },
+          "400": {
+            "description": "Strict data-only contract required."
+          },
+          "401": {
+            "description": "Current signed bearer required."
+          },
+          "403": {
+            "description": "Current canonical participant rights or disposable profile missing."
+          },
+          "404": {
+            "description": "Unavailable or unauthorized exact participant, Work or root."
+          },
+          "408": {
+            "description": "Bounded authenticated body deadline exceeded."
+          },
+          "409": {
+            "description": "Original history, terms, resource revision or idempotency changed."
+          },
+          "413": {
+            "description": "Frozen request bound exceeded."
+          },
+          "422": {
+            "description": "Exact mathematical, consent, source or native owner prerequisite failed."
+          },
+          "503": {
+            "description": "Pinned runtime or native capacity unavailable."
+          }
+        }
+      }
+    },
+    "/api/company-brain/interaction-resume": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/interaction-resume"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Exact Work and participant-local dynamic protocol, development admission, terms, consent or retained native responsibility. No protected qualification or financial efficacy."
+          },
+          "202": {
+            "description": "Original bounded construction or guarded native programme accepted. Not completion."
+          },
+          "400": {
+            "description": "Strict data-only contract required."
+          },
+          "401": {
+            "description": "Current signed bearer required."
+          },
+          "403": {
+            "description": "Current canonical participant rights or disposable profile missing."
+          },
+          "404": {
+            "description": "Unavailable or unauthorized exact participant, Work or root."
+          },
+          "408": {
+            "description": "Bounded authenticated body deadline exceeded."
+          },
+          "409": {
+            "description": "Original history, terms, resource revision or idempotency changed."
+          },
+          "413": {
+            "description": "Frozen request bound exceeded."
+          },
+          "422": {
+            "description": "Exact mathematical, consent, source or native owner prerequisite failed."
+          },
+          "503": {
+            "description": "Pinned runtime or native capacity unavailable."
+          }
+        }
+      }
+    },
+    "/api/company-brain/interaction-cancel": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/interaction-cancel"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Exact Work and participant-local dynamic protocol, development admission, terms, consent or retained native responsibility. No protected qualification or financial efficacy."
+          },
+          "202": {
+            "description": "Original bounded construction or guarded native programme accepted. Not completion."
+          },
+          "400": {
+            "description": "Strict data-only contract required."
+          },
+          "401": {
+            "description": "Current signed bearer required."
+          },
+          "403": {
+            "description": "Current canonical participant rights or disposable profile missing."
+          },
+          "404": {
+            "description": "Unavailable or unauthorized exact participant, Work or root."
+          },
+          "408": {
+            "description": "Bounded authenticated body deadline exceeded."
+          },
+          "409": {
+            "description": "Original history, terms, resource revision or idempotency changed."
+          },
+          "413": {
+            "description": "Frozen request bound exceeded."
+          },
+          "422": {
+            "description": "Exact mathematical, consent, source or native owner prerequisite failed."
+          },
+          "503": {
+            "description": "Pinned runtime or native capacity unavailable."
+          }
+        }
+      }
+    },
+    "/api/company-brain/interaction-artifact": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/interaction-artifact"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Exact Work and participant-local dynamic protocol, development admission, terms, consent or retained native responsibility. No protected qualification or financial efficacy."
+          },
+          "202": {
+            "description": "Original bounded construction or guarded native programme accepted. Not completion."
+          },
+          "400": {
+            "description": "Strict data-only contract required."
+          },
+          "401": {
+            "description": "Current signed bearer required."
+          },
+          "403": {
+            "description": "Current canonical participant rights or disposable profile missing."
+          },
+          "404": {
+            "description": "Unavailable or unauthorized exact participant, Work or root."
+          },
+          "408": {
+            "description": "Bounded authenticated body deadline exceeded."
+          },
+          "409": {
+            "description": "Original history, terms, resource revision or idempotency changed."
+          },
+          "413": {
+            "description": "Frozen request bound exceeded."
+          },
+          "422": {
+            "description": "Exact mathematical, consent, source or native owner prerequisite failed."
+          },
+          "503": {
+            "description": "Pinned runtime or native capacity unavailable."
+          }
+        }
+      }
+    },
+    "/api/company-brain/interaction-compare": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/interaction-compare"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Exact Work and participant-local dynamic protocol, development admission, terms, consent or retained native responsibility. No protected qualification or financial efficacy."
+          },
+          "202": {
+            "description": "Original bounded construction or guarded native programme accepted. Not completion."
+          },
+          "400": {
+            "description": "Strict data-only contract required."
+          },
+          "401": {
+            "description": "Current signed bearer required."
+          },
+          "403": {
+            "description": "Current canonical participant rights or disposable profile missing."
+          },
+          "404": {
+            "description": "Unavailable or unauthorized exact participant, Work or root."
+          },
+          "408": {
+            "description": "Bounded authenticated body deadline exceeded."
+          },
+          "409": {
+            "description": "Original history, terms, resource revision or idempotency changed."
+          },
+          "413": {
+            "description": "Frozen request bound exceeded."
+          },
+          "422": {
+            "description": "Exact mathematical, consent, source or native owner prerequisite failed."
+          },
+          "503": {
+            "description": "Pinned runtime or native capacity unavailable."
+          }
+        }
+      }
+    },
+    "/api/company-brain/interaction-terms": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/interaction-terms"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Exact Work and participant-local dynamic protocol, development admission, terms, consent or retained native responsibility. No protected qualification or financial efficacy."
+          },
+          "202": {
+            "description": "Original bounded construction or guarded native programme accepted. Not completion."
+          },
+          "400": {
+            "description": "Strict data-only contract required."
+          },
+          "401": {
+            "description": "Current signed bearer required."
+          },
+          "403": {
+            "description": "Current canonical participant rights or disposable profile missing."
+          },
+          "404": {
+            "description": "Unavailable or unauthorized exact participant, Work or root."
+          },
+          "408": {
+            "description": "Bounded authenticated body deadline exceeded."
+          },
+          "409": {
+            "description": "Original history, terms, resource revision or idempotency changed."
+          },
+          "413": {
+            "description": "Frozen request bound exceeded."
+          },
+          "422": {
+            "description": "Exact mathematical, consent, source or native owner prerequisite failed."
+          },
+          "503": {
+            "description": "Pinned runtime or native capacity unavailable."
+          }
+        }
+      }
+    },
+    "/api/company-brain/interaction-local": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/interaction-local"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Exact Work and participant-local dynamic protocol, development admission, terms, consent or retained native responsibility. No protected qualification or financial efficacy."
+          },
+          "202": {
+            "description": "Original bounded construction or guarded native programme accepted. Not completion."
+          },
+          "400": {
+            "description": "Strict data-only contract required."
+          },
+          "401": {
+            "description": "Current signed bearer required."
+          },
+          "403": {
+            "description": "Current canonical participant rights or disposable profile missing."
+          },
+          "404": {
+            "description": "Unavailable or unauthorized exact participant, Work or root."
+          },
+          "408": {
+            "description": "Bounded authenticated body deadline exceeded."
+          },
+          "409": {
+            "description": "Original history, terms, resource revision or idempotency changed."
+          },
+          "413": {
+            "description": "Frozen request bound exceeded."
+          },
+          "422": {
+            "description": "Exact mathematical, consent, source or native owner prerequisite failed."
+          },
+          "503": {
+            "description": "Pinned runtime or native capacity unavailable."
+          }
+        }
+      }
+    },
+    "/api/company-brain/interaction-consent": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/interaction-consent"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Exact Work and participant-local dynamic protocol, development admission, terms, consent or retained native responsibility. No protected qualification or financial efficacy."
+          },
+          "202": {
+            "description": "Original bounded construction or guarded native programme accepted. Not completion."
+          },
+          "400": {
+            "description": "Strict data-only contract required."
+          },
+          "401": {
+            "description": "Current signed bearer required."
+          },
+          "403": {
+            "description": "Current canonical participant rights or disposable profile missing."
+          },
+          "404": {
+            "description": "Unavailable or unauthorized exact participant, Work or root."
+          },
+          "408": {
+            "description": "Bounded authenticated body deadline exceeded."
+          },
+          "409": {
+            "description": "Original history, terms, resource revision or idempotency changed."
+          },
+          "413": {
+            "description": "Frozen request bound exceeded."
+          },
+          "422": {
+            "description": "Exact mathematical, consent, source or native owner prerequisite failed."
+          },
+          "503": {
+            "description": "Pinned runtime or native capacity unavailable."
+          }
+        }
+      }
+    },
+    "/api/company-brain/interaction-start": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/interaction-start"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Exact Work and participant-local dynamic protocol, development admission, terms, consent or retained native responsibility. No protected qualification or financial efficacy."
+          },
+          "202": {
+            "description": "Original bounded construction or guarded native programme accepted. Not completion."
+          },
+          "400": {
+            "description": "Strict data-only contract required."
+          },
+          "401": {
+            "description": "Current signed bearer required."
+          },
+          "403": {
+            "description": "Current canonical participant rights or disposable profile missing."
+          },
+          "404": {
+            "description": "Unavailable or unauthorized exact participant, Work or root."
+          },
+          "408": {
+            "description": "Bounded authenticated body deadline exceeded."
+          },
+          "409": {
+            "description": "Original history, terms, resource revision or idempotency changed."
+          },
+          "413": {
+            "description": "Frozen request bound exceeded."
+          },
+          "422": {
+            "description": "Exact mathematical, consent, source or native owner prerequisite failed."
+          },
+          "503": {
+            "description": "Pinned runtime or native capacity unavailable."
+          }
+        }
+      }
+    },
+    "/api/company-brain/interaction-run-read": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/interaction-run-read"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Exact Work and participant-local dynamic protocol, development admission, terms, consent or retained native responsibility. No protected qualification or financial efficacy."
+          },
+          "202": {
+            "description": "Original bounded construction or guarded native programme accepted. Not completion."
+          },
+          "400": {
+            "description": "Strict data-only contract required."
+          },
+          "401": {
+            "description": "Current signed bearer required."
+          },
+          "403": {
+            "description": "Current canonical participant rights or disposable profile missing."
+          },
+          "404": {
+            "description": "Unavailable or unauthorized exact participant, Work or root."
+          },
+          "408": {
+            "description": "Bounded authenticated body deadline exceeded."
+          },
+          "409": {
+            "description": "Original history, terms, resource revision or idempotency changed."
+          },
+          "413": {
+            "description": "Frozen request bound exceeded."
+          },
+          "422": {
+            "description": "Exact mathematical, consent, source or native owner prerequisite failed."
+          },
+          "503": {
+            "description": "Pinned runtime or native capacity unavailable."
+          }
+        }
+      }
+    },
+    "/api/company-brain/interaction-observe": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/interaction-observe"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Exact Work and participant-local dynamic protocol, development admission, terms, consent or retained native responsibility. No protected qualification or financial efficacy."
+          },
+          "202": {
+            "description": "Original bounded construction or guarded native programme accepted. Not completion."
+          },
+          "400": {
+            "description": "Strict data-only contract required."
+          },
+          "401": {
+            "description": "Current signed bearer required."
+          },
+          "403": {
+            "description": "Current canonical participant rights or disposable profile missing."
+          },
+          "404": {
+            "description": "Unavailable or unauthorized exact participant, Work or root."
+          },
+          "408": {
+            "description": "Bounded authenticated body deadline exceeded."
+          },
+          "409": {
+            "description": "Original history, terms, resource revision or idempotency changed."
+          },
+          "413": {
+            "description": "Frozen request bound exceeded."
+          },
+          "422": {
+            "description": "Exact mathematical, consent, source or native owner prerequisite failed."
+          },
+          "503": {
+            "description": "Pinned runtime or native capacity unavailable."
+          }
+        }
+      }
+    },
+    "/api/company-brain/interaction-action": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/interaction-action"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Exact Work and participant-local dynamic protocol, development admission, terms, consent or retained native responsibility. No protected qualification or financial efficacy."
+          },
+          "202": {
+            "description": "Original bounded construction or guarded native programme accepted. Not completion."
+          },
+          "400": {
+            "description": "Strict data-only contract required."
+          },
+          "401": {
+            "description": "Current signed bearer required."
+          },
+          "403": {
+            "description": "Current canonical participant rights or disposable profile missing."
+          },
+          "404": {
+            "description": "Unavailable or unauthorized exact participant, Work or root."
+          },
+          "408": {
+            "description": "Bounded authenticated body deadline exceeded."
+          },
+          "409": {
+            "description": "Original history, terms, resource revision or idempotency changed."
+          },
+          "413": {
+            "description": "Frozen request bound exceeded."
+          },
+          "422": {
+            "description": "Exact mathematical, consent, source or native owner prerequisite failed."
+          },
+          "503": {
+            "description": "Pinned runtime or native capacity unavailable."
+          }
+        }
+      }
+    },
+    "/api/company-brain/interaction-materialize": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/interaction-materialize"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Exact Work and participant-local dynamic protocol, development admission, terms, consent or retained native responsibility. No protected qualification or financial efficacy."
+          },
+          "202": {
+            "description": "Original bounded construction or guarded native programme accepted. Not completion."
+          },
+          "400": {
+            "description": "Strict data-only contract required."
+          },
+          "401": {
+            "description": "Current signed bearer required."
+          },
+          "403": {
+            "description": "Current canonical participant rights or disposable profile missing."
+          },
+          "404": {
+            "description": "Unavailable or unauthorized exact participant, Work or root."
+          },
+          "408": {
+            "description": "Bounded authenticated body deadline exceeded."
+          },
+          "409": {
+            "description": "Original history, terms, resource revision or idempotency changed."
+          },
+          "413": {
+            "description": "Frozen request bound exceeded."
+          },
+          "422": {
+            "description": "Exact mathematical, consent, source or native owner prerequisite failed."
+          },
+          "503": {
+            "description": "Pinned runtime or native capacity unavailable."
+          }
+        }
+      }
+    },
+    "/api/company-brain/interaction-run": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/interaction-run"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Exact Work and participant-local dynamic protocol, development admission, terms, consent or retained native responsibility. No protected qualification or financial efficacy."
+          },
+          "202": {
+            "description": "Original bounded construction or guarded native programme accepted. Not completion."
+          },
+          "400": {
+            "description": "Strict data-only contract required."
+          },
+          "401": {
+            "description": "Current signed bearer required."
+          },
+          "403": {
+            "description": "Current canonical participant rights or disposable profile missing."
+          },
+          "404": {
+            "description": "Unavailable or unauthorized exact participant, Work or root."
+          },
+          "408": {
+            "description": "Bounded authenticated body deadline exceeded."
+          },
+          "409": {
+            "description": "Original history, terms, resource revision or idempotency changed."
+          },
+          "413": {
+            "description": "Frozen request bound exceeded."
+          },
+          "422": {
+            "description": "Exact mathematical, consent, source or native owner prerequisite failed."
+          },
+          "503": {
+            "description": "Pinned runtime or native capacity unavailable."
+          }
+        }
+      }
+    },
+    "/api/company-brain/interaction-reconcile": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/interaction-reconcile"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Exact Work and participant-local dynamic protocol, development admission, terms, consent or retained native responsibility. No protected qualification or financial efficacy."
+          },
+          "202": {
+            "description": "Original bounded construction or guarded native programme accepted. Not completion."
+          },
+          "400": {
+            "description": "Strict data-only contract required."
+          },
+          "401": {
+            "description": "Current signed bearer required."
+          },
+          "403": {
+            "description": "Current canonical participant rights or disposable profile missing."
+          },
+          "404": {
+            "description": "Unavailable or unauthorized exact participant, Work or root."
+          },
+          "408": {
+            "description": "Bounded authenticated body deadline exceeded."
+          },
+          "409": {
+            "description": "Original history, terms, resource revision or idempotency changed."
+          },
+          "413": {
+            "description": "Frozen request bound exceeded."
+          },
+          "422": {
+            "description": "Exact mathematical, consent, source or native owner prerequisite failed."
+          },
+          "503": {
+            "description": "Pinned runtime or native capacity unavailable."
           }
         }
       }

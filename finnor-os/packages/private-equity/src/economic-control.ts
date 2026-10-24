@@ -13,6 +13,7 @@ import {withS5PortfolioTransaction as transaction} from './allocation-store';
 import {principal,developmentOnly,eventTx,theoryTx} from './economic-action-theory/store';
 import {PROFILE,RefSchema,QuantityValue,digest,reference,same,fail,type EconomicRef,type State} from './economic-action-theory/contracts';
 import {applyOperator,inDomain,safe} from './economic-action-theory/finite';
+import {assertInteractionProgrammeCurrentTx} from './interaction-synthesis/execution-guard';
 export const EconomicProgrammeSchema=z.object({theoryId:z.string().uuid(),reservationRef:RefSchema,expectedRevision:z.number().int().positive(),
  goalState:z.record(QuantityValue),parameters:z.record(QuantityValue),idempotencyKey:z.string().min(1).max(128)}).strict();
 export interface EconomicProgramme {
@@ -37,12 +38,18 @@ export async function programmeTx(ctx:PeMutationContext,c:PoolClient,id:string,c
    AND id=$3 AND work_input_id=$4 AND status='active' FOR SHARE`,
    [body.tenantId,body.workId,body.planRevisionId,body.workInputId]);
   if(plan.rowCount!==1)fail('S4_ECONOMIC_SELECTED_PLAN_NOT_CURRENT');
+  await assertInteractionProgrammeCurrentTx(ctx,c,found);
  }
  return found;
 }
 export async function createEconomicProgramme(ctx:PeMutationContext,raw:unknown){
  developmentOnly();const input=EconomicProgrammeSchema.parse(raw);
- return transaction(ctx,async c=>{
+ return transaction(ctx,c=>createEconomicProgrammeTx(ctx,c,input));
+}
+/** The Y3 adapter supplies one already checked fixed operator. Creation and its
+ * immutable interaction binding commit together in the caller's transaction. */
+export async function createEconomicProgrammeTx(ctx:PeMutationContext,c:PoolClient,input:z.infer<typeof EconomicProgrammeSchema>,fixedStep?:EconomicStep){
+ developmentOnly();
   const hash=digest(input),prior=(await c.query<{id:string;request_digest:string}>('SELECT id,request_digest FROM finnor_os.s4_economic_programmes WHERE tenant_id=$1 AND principal_id=$2 AND idempotency_key=$3',
    [ctx.auth.tenantId,principal(ctx),input.idempotencyKey])).rows[0];
   if(prior){if(prior.request_digest!==hash)fail('S4_ECONOMIC_IDEMPOTENCY_CONFLICT',409);return programmeTx(ctx,c,prior.id);}
@@ -57,7 +64,17 @@ export async function createEconomicProgramme(ctx:PeMutationContext,raw:unknown)
   if(pending)fail('S4_ECONOMIC_UNRESOLVED_RESPONSIBILITY_RETAINED');
   const start=held.economicState.state,queue:Array<{state:State;steps:EconomicStep[]}>=[{state:start,steps:[]}],seen=new Set([digest(start)]);
   let selected:EconomicStep[]|undefined,expansions=0,depthBound=false;
-  while(queue.length){
+  if(fixedStep){
+   const operator=module.body.operators.find(o=>o.id===fixedStep.operatorId),
+    beforeTotals=economicResourceTotals(held.economicState.bindings,start),
+    afterTotals=economicResourceTotals(held.economicState.bindings,fixedStep.after);
+   if(!operator||operator.requirements.some(r=>r.kind==='AUTHORITY'&&r.subjectId!==row.root.entityId)||
+    !same(fixedStep.before,start)||!same(fixedStep.after,input.goalState)||!same(fixedStep.parameters,input.parameters)||
+    !same(applyOperator(problem,operator,start,input.parameters),fixedStep.after)||
+    [...beforeTotals].some(([id,total])=>afterTotals.get(id)!==total))fail('S4_ECONOMIC_FIXED_STEP_BINDING');
+   selected=[fixedStep];
+  }
+  while(!fixedStep&&queue.length){
    const next=queue.shift()!;if(++expansions>PROFILE.maxStateProduct)fail('S4_ECONOMIC_FINITE_SEARCH_BOUND');
    if(next.steps.length>=PROFILE.maxProgrammeSteps){depthBound=true;continue;}
    for(const operator of module.body.operators){
@@ -88,10 +105,12 @@ export async function createEconomicProgramme(ctx:PeMutationContext,raw:unknown)
    admissionRef:admission.ref,planRevisionId:plan.id,composedOperatorIds:selected.map(s=>s.operatorId),goalDigest:digest(input.goalState),
    originalEpisodeId:row.episode_id,expansions,authorityGranted:false});
   return programme;
- });
 }
 export async function readEconomicProgramme(ctx:PeMutationContext,id:string){
- return transaction(ctx,async c=>{
+ return transaction(ctx,c=>readEconomicProgrammeTx(ctx,c,id));
+}
+/** Shared read-only S7 projection, including recovery after invalidation. */
+export async function readEconomicProgrammeTx(ctx:PeMutationContext,c:PoolClient,id:string){
   const programme=await programmeTx(ctx,c,id,false),row=await theoryTx(ctx,c,programme.theoryId,false);
   const obligations=(await c.query(`SELECT o.body,e.status,e.observed_result,e.verification FROM finnor_os.s6_economic_obligation_origins o
    JOIN finnor_os.business_effects e ON e.tenant_id=o.tenant_id AND e.id=o.effect_id
@@ -103,5 +122,4 @@ export async function readEconomicProgramme(ctx:PeMutationContext,id:string){
    row.cancelled?'CANCELLED_RESPONSIBILITY_RETAINED':row.status==='INVALIDATED'?'INVALIDATED_RESPONSIBILITY_RETAINED':'PREPARED',
    currentRightState:held.economicState.state,reservationRevision:held.revision,obligations,
    observedGoalDigest:observed?digest(programme.goalState):null,financialEfficacyEstablished:false,externalSettlementEstablished:false};
- });
 }
