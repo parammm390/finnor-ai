@@ -139,7 +139,15 @@ def main():
             with (evidence / "source.tar.gz").open("xb") as raw:
                 with gzip.GzipFile(filename="", mode="wb", fileobj=raw, mtime=0) as zipped:
                     result = subprocess.Popen(["git", "-C", str(source), "archive", "--format=tar", head, *paths], stdout=subprocess.PIPE)
-                    shutil.copyfileobj(result.stdout, zipped)
+                    report["omittedArchivePaths"] = []
+                    with tarfile.open(fileobj=result.stdout, mode="r|") as original:
+                        with tarfile.open(fileobj=zipped, mode="w|") as declared:
+                            for member in original:
+                                if any(part == ".git" or part == "node_modules" or part.startswith(".env")
+                                       for part in Path(member.name).parts):
+                                    report["omittedArchivePaths"].append(member.name)
+                                    continue
+                                declared.addfile(member, original.extractfile(member) if member.isfile() else None)
                     if result.wait() != 0:
                         raise ValueError("DECLARED_SOURCE_ARCHIVE_FAILED")
             request_module(source).emit(source, evidence / "integration-request")

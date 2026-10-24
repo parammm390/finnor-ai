@@ -193,7 +193,7 @@ paths["/api/company-brain/{operation}"].post.parameters[0]!.schema.enum.push(...
   if (manifest.schema !== "finnor.z1.native-source-files.v1" || !Array.isArray(manifest.files) ||
       manifest.files.length < 30 || manifest.files.length > 20000) throw new Error("Z1_WHOLE_OWNER_TRACE_MANIFEST_REQUIRED");
   return [base+"installed-source.json",base+"installed-source-files.json",...manifest.files.map(file => {
-    if (typeof file.path !== "string" || file.path.startsWith("/") || file.path.includes("..") ||
+    if (typeof file.path !== "string" || file.path.startsWith("/") || file.path.split("/").some(part=>part==="."||part==="..") ||
         /[\\\\%?#\\u0000-\\u001f]/.test(file.path)) throw new Error("Z1_TRACE_PATH_REQUIRED");
     return relative(fileURLToPath(new URL("./",import.meta.url)),resolve(repositoryRoot,file.path));
   })];

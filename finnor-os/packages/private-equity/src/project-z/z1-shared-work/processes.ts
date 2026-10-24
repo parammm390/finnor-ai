@@ -172,7 +172,8 @@ export async function installedSourceIdentity(): Promise<{
   // attestation or a proof about dependencies absent from the declared package.
   for (let start = 0; start < manifest.files.length; start += 32) {
     await Promise.all(manifest.files.slice(start, start + 32).map(async file => {
-      requireZ1(typeof file.path === 'string' && !file.path.includes('..') && !file.path.includes('\\') &&
+      requireZ1(typeof file.path === 'string' && !file.path.split('/').some(part => part === '.' || part === '..') &&
+        !file.path.includes('\\') &&
         !/[%?#\u0000-\u001f]/.test(file.path) &&
         /^(?:src\/|scripts\/|finnor-os\/(?:packages|apps|scripts)\/|(?:finnor-os\/)?(?:package(?:-lock)?\.json|tsconfig(?:\.base)?\.json|next\.config\.mjs)$)/.test(file.path) &&
         !/(?:^|\/)(?:node_modules|\.git|\.next[^/]*)\//.test(file.path) &&
