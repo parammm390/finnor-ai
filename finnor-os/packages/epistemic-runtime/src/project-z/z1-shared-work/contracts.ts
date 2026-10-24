@@ -55,7 +55,7 @@ export type Predicate =
   | { op: 'eq' | 'ne' | 'lt' | 'le' | 'gt' | 'ge'; left: Expression; right: Expression }
   | { op: 'and' | 'or'; args: Predicate[] }
   | { op: 'not'; arg: Predicate };
-const ExpressionSchema: z.ZodType<Expression> = z.lazy(() => z.union([
+export const ExpressionSchema: z.ZodType<Expression> = z.lazy(() => z.union([
   z.object({ op: z.literal('field'), name }).strict(),
   z.object({ op: z.literal('param'), name }).strict(),
   z.object({ op: z.literal('literal'), type: TypeSchema, value: z.union([z.string().max(8192), z.boolean()]) }).strict(),
@@ -63,7 +63,7 @@ const ExpressionSchema: z.ZodType<Expression> = z.lazy(() => z.union([
   z.object({ op: z.literal('round'), value: ExpressionSchema, places: z.number().int().min(0).max(18),
     mode: z.enum(['HALF_EVEN', 'HALF_AWAY', 'FLOOR', 'CEILING', 'TRUNCATE']) }).strict(),
 ]));
-const PredicateSchema: z.ZodType<Predicate> = z.lazy(() => z.union([
+export const PredicateSchema: z.ZodType<Predicate> = z.lazy(() => z.union([
   z.object({ op: z.enum(['eq', 'ne', 'lt', 'le', 'gt', 'ge']), left: ExpressionSchema, right: ExpressionSchema }).strict(),
   z.object({ op: z.enum(['and', 'or']), args: z.array(PredicateSchema).min(1).max(32) }).strict(),
   z.object({ op: z.literal('not'), arg: PredicateSchema }).strict(),

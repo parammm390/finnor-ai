@@ -2,7 +2,7 @@ import type { PoolClient } from 'pg';
 import type { ExperimentRef } from '@finnor/shared-types';
 import type { JobExecutionContext } from '../../../../../apps/worker/src/queue';
 import type { PeMutationContext } from '../../types';
-import { withS5PortfolioTransaction } from '../../allocation-store';
+import { withNativeTransaction as withS5PortfolioTransaction } from './resources.js';
 import { epistemicHash } from '../../../../epistemic-runtime/src/source-precedence';
 import {
   digest, requireZ1, type Checkpoint, type Production, type SharedWorkProgram, type SharedWorkRequest, type WorkProjection,
@@ -11,6 +11,8 @@ import { currentness, projectForWork, verifyProgramDigest } from '../../../../ep
 import {
   checkOriginal, runProducer, runtimeIdentity, Z1ProcessFailure, type OriginalCheckReceipt, type ProcessReceipt,
 } from './processes.js';
+import { nativeRecoveryBoundary } from './recovery.js';
+import { developmentOnly } from './native-contracts.js';
 
 export const Z1_OWNER_CONTRACT = 'z1-per-original-work-v1';
 export const Z1_JOB_TYPE = 'run_shared_work_program_v1';
@@ -38,9 +40,8 @@ export interface NativeOwnerReceipt {
 }
 type Boundary = 'CLAIM' | 'CHECK' | 'PUBLICATION' | 'DELIVERY';
 /**
- * Required canonical owner bindings, not implementations or optional approvals.
- * No default/file-backed substitute is provided. The coordinator must bind and
- * verify these against native intake, jobs, artifact/outbox and S3/S4 owners.
+ * Canonical boundary contract implemented by nativeSharedWorkPorts in native.ts.
+ * The registered worker never accepts injected bindings or a file-backed owner.
  */
 export interface Z1NativePorts {
   contract: typeof Z1_OWNER_CONTRACT;
@@ -81,11 +82,6 @@ export interface Z1NativePorts {
   recordS7AndConsumptionTx(ctx: PeMutationContext, client: PoolClient, publication: PublishedProgram, receipt: NativeOwnerReceipt): Promise<void>;
 }
 function actor(ctx: PeMutationContext): string { return ctx.auth.employeeId ?? ctx.auth.userId; }
-function developmentProfile(): void {
-  requireZ1(process.env.FINNOR_Z1_PROFILE === 'ordinary_disposable' &&
-    process.env.FINNOR_ENVIRONMENT === 'ordinary_disposable' && process.env.NODE_ENV !== 'production',
-  'Z1_AUTHORIZED_DISPOSABLE_NATIVE_PROFILE_REQUIRED');
-}
 function assertPrincipal(ctx: PeMutationContext, request: SharedWorkRequest): void {
   requireZ1(ctx.auth.role === 'owner' && actor(ctx) === ctx.auth.userId &&
     request.works.every(work => work.partition.tenantId === ctx.auth.tenantId && work.partition.principalId === actor(ctx)),
@@ -116,7 +112,7 @@ function assertPublication(publication: PublishedProgram): void {
 export async function runSharedWorkClaim(
   payload: ClaimPayload, claim: Readonly<JobExecutionContext>, ports: Z1NativePorts,
 ): Promise<void> {
-  developmentProfile();
+  developmentOnly();
   requireZ1(ports.contract === Z1_OWNER_CONTRACT && claim.protocolVersion === 1 &&
     claim.tenantId === payload.tenantId && claim.claimToken && Number.isSafeInteger(claim.claimFence) && claim.claimFence > 0,
   'ACTUAL_CANONICAL_JOB_CLAIM_REQUIRED', 'REVOKED');
@@ -141,6 +137,7 @@ export async function runSharedWorkClaim(
   try {
     await ports.withOriginalComputePermit(ctx, claim, snapshot, async permitSignal => {
       const signal = AbortSignal.any([permitSignal, claimLost.signal]);
+      await nativeRecoveryBoundary('CLAIM', claim, payload.requestId);
       let publication = snapshot.publication;
       if (publication) {
         assertPublication(publication);
@@ -152,6 +149,7 @@ export async function runSharedWorkClaim(
         await ports.recordProcess(ctx, attempt, produced.receipt);
         processInFlight = false;
         const checkpointVersion = await ports.saveCheckpoint(ctx, claim, snapshot, produced.production);
+        await nativeRecoveryBoundary('CHECKPOINT', claim, payload.requestId);
         if (!produced.production.program) { await ports.finishAttempt(ctx, attempt, null); return; }
         const candidate = produced.production.program;
         await ports.assertCurrent(ctx, claim, snapshot, 'CHECK');
@@ -172,6 +170,7 @@ export async function runSharedWorkClaim(
         if (!projection.result || projection.lifecycle !== 'ACTIVE' || projection.disposition === 'REVOKED') continue;
         await ports.enqueueOriginalProjection(ctx, claim, snapshot, publication, projection);
       }
+      await nativeRecoveryBoundary('DELIVERY', claim, payload.requestId);
       await ports.finishAttempt(ctx, attempt, publication.reference);
     });
   } catch (error) {
@@ -185,9 +184,15 @@ export async function runSharedWorkClaim(
 export async function consumeSharedWorkProjection(
   ctx: PeMutationContext, reference: ExperimentRef, workId: string, ports: Z1NativePorts,
 ): Promise<NativeOwnerReceipt> {
-  developmentProfile();
-  requireZ1(ports.contract === Z1_OWNER_CONTRACT, 'NATIVE_Z1_OWNER_BINDINGS_REQUIRED');
-  return withS5PortfolioTransaction(ctx, async client => {
+  return withS5PortfolioTransaction(ctx, client => consumeSharedWorkProjectionTx(ctx, client, reference, workId, ports));
+}
+/** Transaction form lets the real consumer job retain its canonical claim lock
+ * through original owner use, S7 persistence and delivery acknowledgement. */
+export async function consumeSharedWorkProjectionTx(
+  ctx: PeMutationContext, client: PoolClient, reference: ExperimentRef, workId: string, ports: Z1NativePorts,
+): Promise<NativeOwnerReceipt> {
+    developmentOnly();
+    requireZ1(ports.contract === Z1_OWNER_CONTRACT, 'NATIVE_Z1_OWNER_BINDINGS_REQUIRED');
     const { publication, currentRequest } = await ports.loadPublishedTx(ctx, client, reference, workId);
     assertPublication(publication); assertPrincipal(ctx, currentRequest);
     requireZ1(currentness(publication.body.candidate, currentRequest, workId) === 'CURRENT', 'ORIGINAL_WORK_PROJECTION_NOT_CURRENT', 'STALE');
@@ -205,5 +210,4 @@ export async function consumeSharedWorkProjection(
     'SEPARATE_NATIVE_OWNER_CONSUMPTION_BINDING', 'COUNTEREXAMPLE');
     await ports.recordS7AndConsumptionTx(ctx, client, publication, receipt);
     return receipt;
-  });
 }

@@ -80,7 +80,8 @@ function continuity(previous: Checkpoint, request: SharedWorkRequest): void {
     requireZ1(Date.parse(current.resources.originalDeadline) <= Date.parse(old.resources.originalDeadline) &&
       qcmp(quantity(current.resources.remainingTicks), quantity(old.resources.remainingTicks)) <= 0,
     'ORIGINAL_BUDGET_OR_DEADLINE_RENEWED', 'REVOKED');
-    requireZ1(!old.withdrawn || current.withdrawn, 'WITHDRAWN_WORK_REACTIVATION_UNSUPPORTED', 'REVOKED');
+    requireZ1(!old.withdrawn || current.withdrawn || current.programmeRevision !== old.programmeRevision,
+      'WITHDRAWN_WORK_REACTIVATION_REQUIRES_EXPLICIT_REVISION', 'REVOKED');
     requireZ1(old.unresolvedObligationRefs.every(ref => current.unresolvedObligationRefs.includes(ref)),
       'UNRESOLVED_OBLIGATION_DROPPED', 'REVOKED');
   }
@@ -188,7 +189,8 @@ export function produce(value: unknown, options: { previous?: Checkpoint; mode?:
         workId: work.id, lifecycle: work.withdrawn ? 'WITHDRAWN' : 'ACTIVE',
         disposition: revoked ? 'REVOKED' : 'UNKNOWN', result: null, originalNodeKeys: {}, outputKey: null,
         binding, bindingDigest: digest(binding), unresolvedObligationRefs: [...work.unresolvedObligationRefs],
-        accounting: { chargedTicks: '0', cumulativeTicks: qtext(cumulative.get(work.id)!), remainingTicks: work.resources.remainingTicks },
+        accounting: { chargedTicks: '0', cumulativeTicks: qtext(cumulative.get(work.id)!),
+          remainingTicks: qtext(qsub(quantity(work.resources.remainingTicks), cumulative.get(work.id)!)) },
       };
       projections.push(projection);
       if (work.withdrawn || revoked) continue;
@@ -300,9 +302,9 @@ export function produce(value: unknown, options: { previous?: Checkpoint; mode?:
     return { disposition: problem.disposition, reason: problem.message, program: null, checkpoint, costs: incurred };
   }
 }
-export function applyChanges(previous: Checkpoint | null, value: ProgrammeChanges | unknown): Production {
-  try {
-    requireZ1(previous, 'DURABLE_ORIGINAL_CHECKPOINT_REQUIRED');
+/** Exact signed mutation only. Native intake compares this to newly resolved
+ * canonical preimages; it does not run a second producer in the API process. */
+export function requestAfterChanges(previous: Checkpoint, value: ProgrammeChanges | unknown): SharedWorkRequest {
     boundedJSON(value, 134217728); const change = ChangesSchema.parse(value), request = structuredClone(previous.request);
     requireZ1(new Set(change.sourceChanges?.map(c => c.sourceId)).size === (change.sourceChanges?.length ?? 0), 'DUPLICATE_SOURCE_CHANGE', 'COUNTEREXAMPLE');
     for (const patch of change.sourceChanges ?? []) {
@@ -337,7 +339,12 @@ export function applyChanges(previous: Checkpoint | null, value: ProgrammeChange
     for (const id of change.withdrawWorkIds ?? []) {
       const work = request.works.find(w => w.id === id); requireZ1(work, 'ORIGINAL_WORK_UNAVAILABLE'); work.withdrawn = true;
     }
-    return produce(request, { previous });
+    return request;
+}
+export function applyChanges(previous: Checkpoint | null, value: ProgrammeChanges | unknown): Production {
+  try {
+    requireZ1(previous, 'DURABLE_ORIGINAL_CHECKPOINT_REQUIRED');
+    return produce(requestAfterChanges(previous, value), { previous });
   } catch (error) {
     const problem = fault(error);
     return { disposition: problem.disposition, reason: problem.message, program: null, checkpoint: previous, costs: emptyCosts() };
