@@ -8,8 +8,8 @@
     "scope": "Credential-free registration metadata; not tenant authority, executed owner coverage or public HTTP admission"
   },
   "schema": "centropy.capability-coverage-audit/v1",
-  "generatedAt": "2026-10-24T08:03:25.397Z",
-  "sourceBaseCommit": "0293c866a6e500cd0ad82f00b52db60ddb1c3a28",
+  "generatedAt": "2026-10-24T15:54:00.348Z",
+  "sourceBaseCommit": "684d805e471836a720aa6741a3128eca17d28202",
   "manifestSha256": "9958c308e2a4266c259123d8ae6773e847b8f86cfcf73c3e6cea09df0146758a",
   "formsSha256": "78e6da8a2346c1a96712b634d0307535e8adbef6959cc5a72cc2302f8b445ec6",
   "method": "Actual API catalogue and independently re-enumerated canonical planner metadata; import graph from active CENTROPY route entries; literal API call bindings; typed human form registrations; explicit restricted/compatibility/protocol classifications. Source presence is not execution evidence.",
@@ -1226,11 +1226,11 @@
       },
       {
         "file": "src/components/centropy/canvas/ApplicationSemanticsPanel.tsx",
-        "sha256": "5b13c158facb283bd127429ae648fa66ce7a1899d878fd6af2dab1363c9af6e2"
+        "sha256": "7badac3cfbf5eedc320fd08f2cbb0a251c5a01dd16cc30f2ba25fe75f5f4e0fe"
       },
       {
         "file": "src/components/centropy/canvas/application-semantics-client.ts",
-        "sha256": "f3c76c80a203de4f26d32025c4ec4d9f7e44cdca61eff30d990cd0f3a6712b98"
+        "sha256": "28bed8bc474df284ce81601264b58bff31661f0ab48feb0f1d7673a5a630d793"
       },
       {
         "file": "finnor-os/packages/shared-types/src/application-semantics.ts",
@@ -4471,7 +4471,7 @@
           "file": "src/components/centropy/canvas/application-semantics-client.ts",
           "route": "me",
           "method": "GET",
-          "line": 680,
+          "line": 735,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         },
         {
@@ -10485,7 +10485,7 @@
           "file": "src/components/centropy/canvas/application-semantics-client.ts",
           "route": "company-brain/application-acquire",
           "method": "POST",
-          "line": 875,
+          "line": 939,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -10689,7 +10689,7 @@
           "file": "src/components/centropy/canvas/application-semantics-client.ts",
           "route": "company-brain/application-cancel",
           "method": "POST",
-          "line": 948,
+          "line": 1012,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -10823,7 +10823,7 @@
           "file": "src/components/centropy/canvas/application-semantics-client.ts",
           "route": "company-brain/application-execute",
           "method": "POST",
-          "line": 936,
+          "line": 1000,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -11217,7 +11217,7 @@
           "file": "src/components/centropy/canvas/application-semantics-client.ts",
           "route": "company-brain/application-projection",
           "method": "POST",
-          "line": 713,
+          "line": 768,
           "binding": "Native product proxy fetch with explicit HTTP method; source evidence only"
         }
       ],

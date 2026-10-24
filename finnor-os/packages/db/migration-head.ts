@@ -4,4 +4,4 @@
  * Keep this beside the migrations so readiness and worker heartbeats cannot drift
  * by carrying independent literals.
  */
-export const CURRENT_MIGRATION_HEAD = "postx_y4_runtime_migration_order.sql";
+export const CURRENT_MIGRATION_HEAD = "postz_z0_institution_application_bridge.sql";

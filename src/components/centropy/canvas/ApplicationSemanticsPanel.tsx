@@ -279,6 +279,23 @@ function SessionEvidence({ session, now }: { session: ApplicationSession; now: n
         {now >= Date.parse(session.deadlineAt) ? " · expired; no fresh work is implied" : " · this is not a renewed allocation"}.</p>
       {session.cancelledAt ? <p>Cancellation requested at {session.cancelledAt}; this is not rollback or resource release.</p> : null}
     </section>
+    {session.institutional ? <section>
+      <h4>Original institutional responsibility</h4>
+      <p>Original Work: {session.institutional.originalWorkId}. Input: {session.institutional.originalWorkInputId}.</p>
+      <p>Original P1: {session.institutional.programId} · {session.institutional.programmeStatus}.
+        Responsibility: <code>{session.institutional.responsibilityIdentity}</code>.</p>
+      <p>Institution artifact: <Reference value={session.institutional.institutionalProgramRef}/></p>
+      <p>Same original S5 reservation: <Reference value={session.institutional.originalReservationRef}/></p>
+      <p>Original deadline: {session.institutional.originalDeadlineAt}. Wall deadline: {session.institutional.wallDeadlineAt}.
+        Learning cutoff: {session.institutional.childDeadlineAt}. None is renewed.</p>
+      <p>Original P1 consumed the checked model: {session.institutional.modelConsumedByOriginalP1 ? "yes" : "not observed"}.
+        Learning never fulfills the responsibility. The original owner and independent canonical observer still decide completion.</p>
+      {session.institutional.modelAcceptanceRef ? <p>S4 acceptance: <Reference value={session.institutional.modelAcceptanceRef}/></p> : null}
+      <details><summary>Remaining original resources and known accounting gaps</summary>
+        <JsonEvidence value={session.institutional.budget}/>
+      </details>
+      <p>No new reservation, budget, release, protected admission or fresh business-effect authority is granted.</p>
+    </section> : null}
     {model ? <ModelEvidence model={model} check={session.check} now={now}/>
       : <section><h4>Logical model not yet supplied</h4>
         <p>Operation signatures, supported domain, source validity and independent qualification are not yet established. There is no successful substitute or simulated application binding.</p>
@@ -384,7 +401,7 @@ function ApplicationAcquisitionForm({ busy, blockedReason, onSubmit }: {
 }) {
   const helpId = useId()
   const [draft, setDraft] = useState<ApplicationAcquisitionDraft>({
-    profileIdsJson: "", targetsJson: "", resourceDemandJson: "", deadlineAt: "",
+    profileIdsJson: "", targetsJson: "", resourceDemandJson: "", deadlineAt: "", institutionalOriginJson: "",
   })
   function submit(event: FormEvent<HTMLFormElement>) { event.preventDefault(); onSubmit(draft) }
   return <section>
@@ -414,7 +431,19 @@ function ApplicationAcquisitionForm({ busy, blockedReason, onSubmit }: {
             required maxLength={64} autoComplete="off" spellCheck={false}/>
         </label>
         <p>The native development window is at most one hour and must fit current profile/grant validity. Child execution, recovery and cancellation do not renew it.</p>
-        <button type="submit">Request acquisition and native reservation</button>
+        <details>
+          <summary>Learn for an unfinished original X1 responsibility</summary>
+          <p>Supply only existing compilerRequestId, programId and responsibilityIdentity references as one JSON object.
+            The native owner revalidates the checked responsibility, original input, deadline and remaining S5 resources.
+            This request cannot create a new allowance or complete the original Work.</p>
+          <label>Original institution references (optional for a standalone non-X1 Work)
+            <textarea name="institutionalOrigin" value={draft.institutionalOriginJson ?? ""}
+              onChange={event => setDraft({ ...draft, institutionalOriginJson: event.target.value })}
+              rows={3} maxLength={1024} spellCheck={false} autoComplete="off"/>
+          </label>
+        </details>
+        <button type="submit">{draft.institutionalOriginJson?.trim()
+          ? "Request learning under original reservation" : "Request acquisition and native reservation"}</button>
       </fieldset>
     </form>
   </section>
@@ -913,7 +942,7 @@ export function ApplicationSemanticsPanel(props: ApplicationSemanticsPanelProps)
         <FreshApplicationUseForm
           key={`${stamp}:${formRevision}:${selected.id}`}
           busy={busy}
-          blockedReason={blockReason}
+          blockedReason={selected.institutional ? "Institution learning returns to the original P1 owner. This grant cannot fund a fresh business assignment." : blockReason}
           onSubmit={draft => void control("execute", draft)}
         />
       </> : <ApplicationAcquisitionForm

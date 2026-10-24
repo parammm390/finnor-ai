@@ -1,5 +1,6 @@
 import type { JobExecutionContext } from "../../../../apps/worker/src/queue";
 import type { PoolClient } from "pg";
+import { consumeInstitutionApplicationModels } from "../../../orchestration/src/project-z/z0-convergence/institution-consumer";
 import type { PeMutationContext } from "../types";
 import { validateInstitutionDemand,chargeInstitutionDemand } from "../allocation-store";
 import { authorize, principal, sha, stable, tx } from "../evidence-execution/store";
@@ -19,6 +20,7 @@ const actionId = (node: InstitutionHarnessProgram["nodes"][number]) => {
 /** The actual command/worker, not this P1 job, mutates PE. After dispatch,
  * subsequent deliveries only reconcile the same action and canonical row. */
 export async function continueInstitutionProgram(ctx: PeMutationContext, q: InstitutionProgramRow, execution: Readonly<JobExecutionContext>) {
+ await consumeInstitutionApplicationModels(ctx,q.id);
  const started=performance.now(),startedAt=new Date().toISOString();
  if(!["WAITING","RUNNING","QUEUED","FAILED","PARTIAL"].includes(q.status) || !q.head_id)
   throw Error("X1_CURRENT_CONTINUATION_HEAD_REQUIRED");

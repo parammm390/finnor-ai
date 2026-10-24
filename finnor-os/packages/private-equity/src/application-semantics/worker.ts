@@ -1,6 +1,8 @@
 /** Durable native delivery, not an agent loop. Reconcilable jobs stay quarantined
  * after process loss until an explicit original-observation resume is requested. */
 import { z } from "zod";
+import { originOf } from "../../../orchestration/src/project-z/z0-convergence/institution-origin";
+import { acceptInstitutionApplicationModel, returnInstitutionApplicationToOriginal } from "../../../orchestration/src/project-z/z0-convergence/institution-consumer";
 import { acquireComputeResourceLeases, renewComputeResourceLeases, releaseComputeResourceLeases, ComputeCapacityUnavailableError,
   transitionWorkTx, type ComputeResourceLease, type WorkStatus } from "@finnor/db";
 import type { ApplicationActionModel, ApplicationModelCheck, ApplicationSnapshot } from "@finnor/shared-types";
@@ -56,7 +58,8 @@ async function changeStatus(ctx: PeMutationContext, row: ApplicationSessionRow, 
       "UPDATE finnor_os.application_semantics_sessions SET status=$3,reason=$4,updated_at=clock_timestamp() WHERE tenant_id=$1 AND id=$2 RETURNING *",
       [current.tenant_id, current.id, status, detail.reason ?? null])).rows[0]!;
     await applicationEvent(ctx, next, "NATIVE_SESSION_" + status, detail, c);
-    if (workStatus) {
+    await returnInstitutionApplicationToOriginal(ctx, next, c);
+    if (workStatus && !originOf(current)) {
       const work = (await c.query<{ status: string }>("SELECT status FROM finnor_os.works WHERE tenant_id=$1 AND id=$2",
         [current.tenant_id, current.work_id])).rows[0];
       if (work && !["completed", "cancelled", "failed"].includes(work.status)) await transitionWorkTx(db,
@@ -88,7 +91,8 @@ async function publishModel(ctx: PeMutationContext, row: ApplicationSessionRow, 
     const evidence = await applicationEvent(ctx, next, "CHECKED_MODEL_FROZEN_BEFORE_FRESH_OBJECTIVE", {
       modelRef: model.ref, checkRef: check.ref, heldOutObjectiveKnown: false, protectedAdmission: false,
     }, c);
-    await transitionWorkTx(db, current.tenant_id, current.work_id, "completed", "application_model_independently_checked",
+    const originalAcceptance = await acceptInstitutionApplicationModel(ctx, next, model, check, execution, c);
+    if (!originalAcceptance) await transitionWorkTx(db, current.tenant_id, current.work_id, "completed", "application_model_independently_checked",
       { sessionId: current.id, workInputId: current.work_input_id, modelRef: model.ref, checkRef: check.ref, evidenceRef: evidence },
       { expectedWorkInputId: current.work_input_id, finalOutcome: { schema: "finnor.x2.model-work-result.v1",
         sessionId: current.id, modelRef: model.ref, checkRef: check.ref, evidenceRef: evidence,
@@ -166,6 +170,7 @@ export async function runApplicationSemanticsJob(payload: Record<string, unknown
         row.cancel_requested_at ? "CANCELLED" : "BLOCKED", row.cancel_requested_at ? "cancelled" : "blocked",
         { reason: row.cancel_requested_at ? "X2_ORIGINAL_CANCELLED" : "X2_ORIGINAL_BUSINESS_DEADLINE_EXPIRED",
           resourcesReleased: false, newAllowance: false });
+      await tx(ctx, c => returnInstitutionApplicationToOriginal(ctx, row, c));
       await applicationEvent(ctx, row, "STOPPED_ORIGINAL_OBSERVATION_FALLBACK", { recovered, unresolved,
         callee: "S6:NativeApplicationRuntime.reconcilePossibleRequests", actualMutations: 0, newAllowance: false });
       return;

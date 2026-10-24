@@ -1,6 +1,7 @@
 /** Native scoped artifacts and run projections. S5/S6, not this projection,
  * decide occupation, possible effects and independently observed settlement. */
 import { readFile } from "node:fs/promises";
+import { currentInstitutionApplicationSession } from "../../../orchestration/src/project-z/z0-convergence/institution-origin";
 import { resolve } from "node:path";
 import type { PoolClient } from "pg";
 import { NATIVE_APPLICATION_PROFILE_AUTHORITY_SQL } from "@finnor/db";
@@ -38,6 +39,11 @@ export interface NativeApplicationProfile {
   grantBody: Record<string, unknown>;
 }
 export const APPLICATION_SOURCE_FILES = [
+  ...["index", "semantics", "original-work-observation", "institution-origin", "institution-allocation",
+    "institution-consumer", "projection"].map(name => `finnor-os/packages/orchestration/src/project-z/z0-convergence/${name}.ts`),
+  "finnor-os/packages/orchestration/src/project-z/z0-convergence/s5-owner-adapter.sql",
+  "finnor-os/packages/db/migration-head.ts",
+  "finnor-os/packages/db/migrations/postz_z0_institution_application_bridge.sql",
   "finnor-os/packages/shared-types/src/application-semantics.ts",
   ...["contracts", "native-contracts", "ports", "envelope", "learner", "checker", "composition",
     "source", "schema-pattern", "observation", "store", "allocation", "obligations", "runtime", "worker", "api", "validity", "fresh-authority"]
@@ -150,6 +156,7 @@ export async function currentApplicationWork(ctx: PeMutationContext, row: Applic
   const rights = await authorize(ctx, row.root, [{ type: "work", id: row.work_id }]);
   if (!Number.isSafeInteger(Number(row.rights_revision)) || rights.revision !== Number(row.rights_revision)) x2Fault("X2_CURRENT_S1_RIGHTS_CHANGED");
   const read = async (c: PoolClient) => {
+    await currentInstitutionApplicationSession(ctx, row, c, recovery);
     const actor = await c.query("SELECT id FROM finnor_os.users WHERE tenant_id=$1 AND id=$2 AND status='active' AND role='owner' FOR SHARE",
       [ctx.auth.tenantId, principal(ctx)]);
     if (actor.rowCount !== 1) x2Fault("X2_CURRENT_ACTOR_OR_WORK_INPUT_CHANGED");

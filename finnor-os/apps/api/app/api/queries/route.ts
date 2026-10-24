@@ -37,6 +37,9 @@ function parseRequestBody(input: unknown): {
   };
 } | { success: false; error: string } {
   if (!isRecord(input)) return { success: false, error: "A JSON object is required" };
+  if (input.intent === "harness_program_v1" || input.intent === "confidential_economic_computation_v1") {
+    return { success: false, error: "NATIVE_ORIGINAL_WORK_OWNER_REQUIRED" };
+  }
   const directFields = Object.fromEntries(Object.entries(input).filter(([key]) => !ENVELOPE_KEYS.has(key)));
   // This programme reader names its original Work as part of the semantic
   // query, not as a request to append a new steering input.
