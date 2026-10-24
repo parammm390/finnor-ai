@@ -149,8 +149,8 @@ export async function runSharedWorkClaim(
         processInFlight = true;
         const produced = await runProducer(snapshot.request, snapshot.previous, remaining(), signal,
           pid => ports.recordChildPid(ctx, attempt, 'PRODUCER', pid));
-        processInFlight = false;
         await ports.recordProcess(ctx, attempt, produced.receipt);
+        processInFlight = false;
         const checkpointVersion = await ports.saveCheckpoint(ctx, claim, snapshot, produced.production);
         if (!produced.production.program) { await ports.finishAttempt(ctx, attempt, null); return; }
         const candidate = produced.production.program;
@@ -158,8 +158,8 @@ export async function runSharedWorkClaim(
         processInFlight = true;
         const check = await checkOriginal(snapshot.request, candidate, remaining(), signal,
           pid => ports.recordChildPid(ctx, attempt, 'CHECKER', pid));
-        processInFlight = false;
         await ports.recordProcess(ctx, attempt, check.process);
+        processInFlight = false;
         requireZ1(check.disposition === 'CHECKED_CANDIDATE', 'ORIGINAL_SEMANTICS_CHECK_NOT_PASSED', check.disposition);
         requireZ1((await runtimeIdentity()).digest === runtime.digest, 'LOADED_Z1_RUNTIME_CHANGED', 'STALE');
         await ports.assertCurrent(ctx, claim, snapshot, 'PUBLICATION');
