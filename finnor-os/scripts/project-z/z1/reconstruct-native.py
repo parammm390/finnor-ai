@@ -260,6 +260,8 @@ def main():
             reconstruction["integrationPatchSha256"] = request["sharedPatchSha256"]
             document(base / "reconstruction-input.json", reconstruction)
         run("stamp-whole-owner", [node, "--import", loader, str(scripts / "stamp-installed.mjs")], cwd=backend)
+        run("trace-input-preflight", [node, str(scripts / "verify-trace-inputs.mjs"), str(evidence / "trace-inputs.json")],
+            cwd=backend, extra={"FINNOR_Z1_PACKAGE_BUILD": "1"})
         for name, command, cwd, heap in (
             ("full-backend-typecheck", [npm, "run", "typecheck"], backend, 4096),
             ("full-frontend-typecheck", [node, str(target / "node_modules/typescript/bin/tsc"), "-p", str(target / "tsconfig.json"), "--noEmit"], target, 4096),

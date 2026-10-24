@@ -66,7 +66,7 @@ async function pythonOriginal(payload, root, need) {
 }
 
 export async function runNativeEpisode(guarded, output, report) {
-  const { target, root, installed, need, privateJSON, sha, processIdentity } = guarded;
+  const { target, root, installed, need, privateJSON, sha, processIdentity, scenario } = guarded;
   try {
   const fixture = fixtureSchema.parse(guarded.fixture), ids = fixture.works.map(item => item.work.id);
   need(fixture.stages.map(stage => stage.name).join(",") === "INITIAL,INSERT,RETRACT,OBJECTIVE_EDIT,WITHDRAW,REACTIVATE,REVOKE" &&
@@ -85,7 +85,7 @@ export async function runNativeEpisode(guarded, output, report) {
     "COORDINATOR_NATIVE_JOB_CONTRACT_NOT_INSTALLED");
   need(target.authorization.noOtherWorkers === true && target.authorization.realDisposableAuthProject === true &&
     /^[a-f0-9]{64}$/.test(target.schemaCatalogSha256 ?? "") && /^[a-f0-9]{64}$/.test(target.browserExecutableSha256 ?? "") &&
-    /^[0-9]{4}_[a-z0-9_]+\.sql$/.test(target.appliedMigration ?? "") &&
+    /^[0-9]{4}[a-z]?_[a-z0-9_]+\.sql$/.test(target.appliedMigration ?? "") &&
     target.nativeSchemaSha256 === sha(await readFile(new URL("./shared-schema.sql", import.meta.url))),
     "EXPLICIT_INSTALLED_SCHEMA_BROWSER_AND_EXCLUSIVE_WORKER_CUSTODY_REQUIRED");
   const runtime = await runtimeIdentity(); need(runtime.digest === installed.nativeRuntimeDigest, "CURRENT_NATIVE_BUILD_REQUIRED");
@@ -260,7 +260,7 @@ export async function runNativeEpisode(guarded, output, report) {
     await audit({ kind: "CANONICAL_EXISTING_PUBLIC_S1_APPEND", sourceId, property,
       priorPin: previous.pin, pin: result.pin, declarationDigest: digest(declaration) }); return result.pin;
   }
-  async function worker(boundary = null) {
+  async function worker(boundary = null, expectLogicalRefusal = false) {
     await assertQueueOwned();
     const nonce = randomBytes(32).toString("hex"), loader = resolve(root, "finnor-os/node_modules/tsx/dist/loader.mjs");
     const child = spawn(process.execPath, ["--max-old-space-size=1536", "--import", loader,
@@ -274,7 +274,7 @@ export async function runNativeEpisode(guarded, output, report) {
         FINNOR_Z1_RECOVERY_REQUEST: report.requestId },
       stdio: ["ignore", "pipe", "pipe", "ipc"] });
     workers.add(child);
-    let diagnosticBytes = 0, killed = false, owned, failure = null, capturedClaim, crashSnapshot;
+    let diagnosticBytes = 0, killed = false, owned, failure = null, capturedClaim, crashSnapshot, logicalRefusalObserved = false;
     const exited = new Promise((resolveExit, reject) => {
       const timer = setTimeout(() => { failure = "OWNED_NATIVE_WORKER_BOUND"; child.kill("SIGKILL"); }, 125000);
       child.stdout.on("data", chunk => { diagnosticBytes += chunk.length; if (diagnosticBytes > 1048576) child.kill("SIGKILL"); });
@@ -314,17 +314,27 @@ export async function runNativeEpisode(guarded, output, report) {
     void exited.catch(() => {});
     if (!boundary) {
       for (let poll = 0; poll < 200; poll++) {
+        if (expectLogicalRefusal) {
+          logicalRefusalObserved = await scoped(async c => Boolean((await c.query(
+            `SELECT q.id FROM finnor_os.z1_requests q WHERE q.tenant_id=$1 AND q.principal_id=$2 AND q.id=$3
+             AND q.status='INCOMPLETE' AND EXISTS(SELECT 1 FROM finnor_os.z1_events e
+               WHERE e.tenant_id=q.tenant_id AND e.request_id=q.id
+               AND e.body->>'kind'='PRIOR_PRODUCER_LOGICAL_EXPOSURE_UNRESOLVED')`,
+            [fixture.tenantId, fixture.principalId, report.requestId])).rows[0]), true);
+          if (logicalRefusalObserved) { child.send({ kind: "STOP" }); break; }
+        }
         const pending = (await getPool().query(`SELECT count(*)::int n FROM finnor_os.jobs
           WHERE tenant_id=$1 AND type=ANY($2::text[]) AND payload->>'requestId'=$3 AND status<>'completed'`,
         [fixture.tenantId, jobTypes, report.requestId])).rows[0].n;
-        if (pending === 0) { child.send({ kind: "STOP" }); break; }
+        if (pending === 0 && !expectLogicalRefusal) { child.send({ kind: "STOP" }); break; }
         if (child.exitCode !== null || child.signalCode !== null) break;
         await wait(250);
       }
     }
     const exit = await exited;
     if (!boundary) need(exit.code === 0 && exit.signal === null, "BOUNDED_NATIVE_WORKER_DID_NOT_COMPLETE");
-    else {
+    if (expectLogicalRefusal) need(logicalRefusalObserved, "DURABLE_ORIGINAL_LOGICAL_EXPOSURE_REFUSAL_NOT_OBSERVED");
+    if (boundary) {
       physical.push(exit);
       await privateJSON(resolve(output, `physical-${boundary.toLowerCase()}.json`), { exit, snapshot: crashSnapshot,
         claim: { jobId: capturedClaim.job.id, deliveryAttemptId: capturedClaim.message.deliveryAttemptId,
@@ -421,6 +431,36 @@ export async function runNativeEpisode(guarded, output, report) {
       const canonical = (await post("z1-read-shared-work", { root: fixture.root, requestId: report.requestId, view: "ORIGINAL_REQUEST" })).body;
       need(isSame(canonical.request, request) && canonical.requestDigest === oracle.expected.requestDigest,
         "CANONICAL_NATIVE_INTAKE_DIFFERS_FROM_INDEPENDENT_ORIGINAL");
+      if (scenario === "UNRECONCILED_LOGICAL_PREFIX") {
+        need(index === 0, "BOUNDED_INITIAL_PREFIX_ONLY");
+        await worker("PRODUCER_PID");
+        const interrupted = await snapshot();
+        await worker(null, true);
+        const blocked = await snapshot(); assertConserved(previousSnapshot, blocked);
+        need(blocked.row.status === "INCOMPLETE" && blocked.row.attempts_used === interrupted.row.attempts_used &&
+          blocked.attempts.length === 1 && blocked.attempts[0].status === "LOST_UNKNOWN" &&
+          blocked.attempts[0].costs_unknown && blocked.row.logical_charges === null && blocked.uses.length === 0,
+          "UNRESOLVED_ORIGINAL_LOGICAL_WORK_WAS_RESTARTED_OR_CONSUMED");
+        for (const parent of interrupted.parents) need(
+          BigInt(blocked.parents.find(item => item.reservation_id === parent.reservation_id).pending_cpu) >= BigInt(parent.pending_cpu),
+          "UNRESOLVED_ORIGINAL_CPU_HOLD_BECAME_FREE");
+        const panel = await mount(ids[0]); await page.reload();
+        await expect(panel.locator(`[data-z1-request-id="${report.requestId}"]`)).toHaveAttribute("data-z1-status", "INCOMPLETE");
+        const image = await panel.screenshot({ path: resolve(output, "logical-exposure-incomplete.png"), animations: "disabled" });
+        await uiWrite(ids[0], "z1-cancel-shared-work", {
+          root: fixture.root, requestId: report.requestId, expectedGeneration: generation });
+        const cancelled = await snapshot(); assertConserved(blocked, cancelled);
+        need(cancelled.row.status === "CANCELLED", "UNRESOLVED_LOGICAL_CANCELLATION_NOT_RETAINED");
+        await privateJSON(resolve(output, "unreconciled-logical-prefix.json"), { interrupted, blocked, cancelled, physical,
+          panelSha256: sha(image), originalExpectedValues: "original-0-initial.json",
+          logicalCost: "UNKNOWN_NOT_ZERO", newLogicalComputationObserved: false, sourceOwnerFlow: "NOT_RUN",
+          installedOwnerFlow: "NOT_RUN", scope: "BOUNDED_NEGATIVE_PREFIX_NOT_COMPLETE_ORIGINAL_EPISODE" });
+        report.nativeLogicalExposureFalsifier = "PASSED";
+        report.originalWorkIds = ids; report.physicalExits = physical;
+        await audit({ kind: "DURABLE_ORIGINAL_LOGICAL_EXPOSURE_REFUSAL_AND_CONSERVATIVE_CANCELLATION",
+          originalWorkIds: ids, originalParentsRetained: true, fullOwnerJourney: "NOT_RUN" });
+        return;
+      }
       if (index === 0) for (const boundary of ["CLAIM", "CHECKPOINT", "DELIVERY"]) await worker(boundary);
       await worker();
       const replay = (await post("z1-submit-shared-work", intake)).body;

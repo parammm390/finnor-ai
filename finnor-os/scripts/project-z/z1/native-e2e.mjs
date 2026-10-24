@@ -62,6 +62,8 @@ export async function guardTarget() {
     target.authorization?.externalEffects === false && target.authorization?.newDatabaseTenantsAuthGrantsOrListeners === false &&
     typeof target.authorization?.reference === "string" && target.authorization.reference.length > 0,
     "EXPLICIT_TARGET_CUSTODY_AND_BOUNDED_ACTION_AUTHORITY_REQUIRED");
+  const scenario = target.authorization.scenario ?? "ORIGINAL_EPISODE";
+  need(["ORIGINAL_EPISODE", "UNRECONCILED_LOGICAL_PREFIX"].includes(scenario), "EXPLICIT_BOUNDED_NATIVE_SCENARIO_REQUIRED");
   need(["SOURCE_DEVELOPMENT", "SEPARATELY_INSTALLED_DEVELOPMENT"].includes(target.flavor) &&
     isAbsolute(target.repository) && resolve(target.repository) === resolve(root), "EXACT_OWN_SOURCE_TARGET_REQUIRED");
   const front = new URL(target.frontend), api = new URL(target.api), database = new URL(process.env.DATABASE_URL);
@@ -126,7 +128,7 @@ export async function guardTarget() {
   need(fixtureValue.schema === "finnor.z1.public-native-episode.v1" &&
     fixtureValue.dataClass === "PUBLIC_DETERMINISTIC_FIXTURE_NO_PII" && fixtureValue.externalEffects === false,
     "EXPLICIT_PUBLIC_NO_EFFECT_ORIGINAL_FIXTURE_REQUIRED");
-  return { target, fixture: fixtureValue, targetSha256: sha(bytes), identities, root, installed };
+  return { target, fixture: fixtureValue, targetSha256: sha(bytes), identities, root, installed, scenario };
 }
 
 const reportIndex = process.argv.indexOf("--report");
@@ -140,6 +142,7 @@ const report = { schema: "finnor.z1.native-e2e-report.v1", status: "NOT_RUN", st
 try {
   const guarded = await guardTarget();
   report.targetSha256 = guarded.targetSha256; report.targetFlavor = guarded.target.flavor;
+  report.scenario = guarded.scenario;
   report.sourceCommit = guarded.installed.sourceCommit; report.sourceTree = guarded.installed.sourceTree;
   report.nativeRuntimeDigest = guarded.installed.nativeRuntimeDigest; report.processIdentities = guarded.identities;
   await privateJSON(resolve(output, "doctor.json"), { ...report, status: "DOCTOR_PASSED_NETWORK_AND_DB_STILL_UNTOUCHED" });
@@ -147,7 +150,7 @@ try {
   const { tsImport } = await import(require.resolve("tsx/esm/api"));
   const { runNativeEpisode } = await tsImport(new URL("./native-e2e-run.mjs", import.meta.url).href, import.meta.url);
   await runNativeEpisode({ ...guarded, processIdentity, privateJSON, need, sha }, output, report);
-  report.status = "PASSED";
+  report.status = guarded.scenario === "UNRECONCILED_LOGICAL_PREFIX" ? "PASSED_BOUNDED_NEGATIVE_ONLY" : "PASSED";
 } catch (error) {
   report.status = report.mutationsStarted ? "FAILED" : "NOT_RUN";
   // No raw driver, PostgreSQL, browser or auth errors: they may carry private data.

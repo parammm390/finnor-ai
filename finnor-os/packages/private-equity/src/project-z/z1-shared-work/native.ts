@@ -87,13 +87,40 @@ export const nativeSharedWorkPorts: Z1NativePorts = {
       await assertNativeMemoryTx(ctx, c, row, claim); });
   },
   async beginAttempt(ctx, claim, snapshot) {
-    return transaction(ctx, async c => {
+    const reference = await transaction(ctx, async c => {
       const row = await claimRowTx(ctx, c, claim, snapshot); await assertRowCurrentTx(ctx, c, row);
       await assertNativeMemoryTx(ctx, c, row, claim, !row.publication);
       const prior = (await c.query<AttemptRow>(
         'SELECT * FROM finnor_os.z1_attempts WHERE tenant_id=$1 AND principal_id=$2 AND delivery_id=$3 FOR UPDATE',
         [ctx.auth.tenantId, principal(ctx), claim.deliveryAttemptId])).rows[0];
       if (prior) return prior.reference;
+      // A durable PID can precede private input, but its absence of a checkpoint
+      // cannot prove that input or logical work never ran. Do not spend that
+      // original headroom again. Known pre-PID loss and committed checkpoints
+      // remain recoverable without inventing a logical reconciliation.
+      const unresolved = (await c.query<AttemptRow>(
+        `SELECT a.* FROM finnor_os.z1_attempts a WHERE a.tenant_id=$1 AND a.principal_id=$2
+         AND a.request_id=$3 AND a.delivery_id<>$4
+         AND EXISTS(SELECT 1 FROM finnor_os.z1_events e WHERE e.tenant_id=a.tenant_id AND e.attempt_id=a.id
+           AND e.event_key='pid:'||a.id::text||':PRODUCER')
+         AND NOT EXISTS(SELECT 1 FROM finnor_os.z1_events e WHERE e.tenant_id=a.tenant_id AND e.attempt_id=a.id
+           AND e.body->>'kind'='DURABLE_CHECKPOINT') ORDER BY a.created_at,a.id LIMIT 16 FOR UPDATE OF a`,
+        [ctx.auth.tenantId, principal(ctx), row.id, claim.deliveryAttemptId])).rows;
+      if (unresolved.length) {
+        for (const orphan of unresolved) {
+          await eventTx(ctx, c, row.id, orphan.id, `logical-unknown:${orphan.id}`, {
+            kind: 'PRIOR_PRODUCER_LOGICAL_EXPOSURE_UNRESOLVED', originalAttempt: orphan.reference,
+            originalWorkIds: row.cuts.map(cut => cut.workId), originalDeadline: row.request.limits.deadlineAt,
+            logicalCost: 'UNKNOWN', logicalHeadroomAvailable: false, originalParentsAndCpuWallHoldsRetained: true,
+            reconciliationObserved: false, newComputationAuthorized: false });
+          await c.query(`UPDATE finnor_os.z1_attempts SET costs_unknown=true,
+            status=CASE WHEN status='STARTED' THEN 'LOST_UNKNOWN' ELSE status END WHERE tenant_id=$1 AND id=$2`,
+          [ctx.auth.tenantId, orphan.id]);
+        }
+        await c.query("UPDATE finnor_os.z1_requests SET status='INCOMPLETE' WHERE tenant_id=$1 AND principal_id=$2 AND id=$3",
+          [ctx.auth.tenantId, principal(ctx), row.id]);
+        return null;
+      }
       requireZ1(row.attempts_used < 16 && row.wall_used_ms + row.wall_reserved_ms < 120000,
         'Z1_ORIGINAL_NATIVE_ATTEMPT_OR_WALL_BUDGET_EXHAUSTED', 'INCOMPLETE');
       const lost = (await c.query<AttemptRow>(
@@ -127,6 +154,9 @@ export const nativeSharedWorkPorts: Z1NativePorts = {
       }
       return reference;
     });
+    // Throw after commit so the conservative refusal is itself durable.
+    requireZ1(reference, 'Z1_UNRECONCILED_ORIGINAL_LOGICAL_EXPOSURE', 'INCOMPLETE');
+    return reference;
   },
   async recordChildPid(ctx, attemptRef, kind, pid) {
     await transaction(ctx, async c => {

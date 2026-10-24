@@ -145,7 +145,10 @@ export async function runSharedWorkClaim(
       } else {
         processInFlight = true;
         const produced = await runProducer(snapshot.request, snapshot.previous, remaining(), signal,
-          pid => ports.recordChildPid(ctx, attempt, 'PRODUCER', pid));
+          async pid => {
+            await ports.recordChildPid(ctx, attempt, 'PRODUCER', pid);
+            await nativeRecoveryBoundary('PRODUCER_PID', claim, payload.requestId);
+          });
         await ports.recordProcess(ctx, attempt, produced.receipt);
         processInFlight = false;
         const checkpointVersion = await ports.saveCheckpoint(ctx, claim, snapshot, produced.production);

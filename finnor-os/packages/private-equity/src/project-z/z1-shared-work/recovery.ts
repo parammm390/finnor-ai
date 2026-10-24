@@ -6,7 +6,7 @@ import { developmentOnly } from './native-contracts.js';
  * substitutes a native port nor changes a claim, resource or stored artifact.
  * Normal workers have no IPC channel and do not enter this branch. */
 export async function nativeRecoveryBoundary(
-  boundary: 'CLAIM' | 'CHECKPOINT' | 'DELIVERY', claim: Readonly<JobExecutionContext>, requestId: string,
+  boundary: 'CLAIM' | 'PRODUCER_PID' | 'CHECKPOINT' | 'DELIVERY', claim: Readonly<JobExecutionContext>, requestId: string,
 ): Promise<void> {
   if (process.env.FINNOR_Z1_RECOVERY_BOUNDARY !== boundary) return;
   developmentOnly();

@@ -130,6 +130,13 @@ The target manifest has schema `finnor.z1.authorized-native-target.v1` and exact
   `existingFixtureWritesOnly`, `ownedWorkerFaultsOnly`, `noOtherWorkers`,
   `realDisposableAuthProject` all true; `externalEffects` and
   `newDatabaseTenantsAuthGrantsOrListeners` false.
+- `authorization.scenario` defaults to `ORIGINAL_EPISODE`. The explicit alternative
+  `UNRECONCILED_LOGICAL_PREFIX` uses one bounded producer-PID kill/retry and checks
+  the durable INCOMPLETE refusal, unchanged attempt allowance, retained parents
+  and conservative cancellation. It reports `PASSED_BOUNDED_NEGATIVE_ONLY`, never
+  a source/installed owner-flow pass. Originals already used by the complete
+  episode cannot be reused for this alternative. Existing bindings and explicit
+  authority are still required; the driver creates no replacement originals.
 - Actual coordinator-applied `appliedMigration` filename, exact
   `nativeSchemaSha256`, installed canonical `schemaCatalogSha256`, owned installed
   `browserExecutableSha256`. The catalog digest uses canonical Z1 `digest()` on
@@ -179,6 +186,9 @@ supervisor meter. Parent intervals, logical allocations, JSON write occupation a
 conservative outstanding CPU holds are retained. Supervisor exit tails, true
 aggregate memory, S5/S7/WAL/index/physical storage, provider/cloud/human and money
 remain incomplete/UNKNOWN, never zero. No complete financial comparison follows.
+A producer PID without its atomic checkpoint is also unresolved logical exposure.
+The next attempt commits INCOMPLETE and cannot compute again from that apparent
+headroom. A missing receipt is not zero use, and cancellation does not reconcile it.
 
 The ordinary application and DB credentials/filesystem are trusted implementation
 boundaries. A principal with direct application DB credentials can write ordinary
