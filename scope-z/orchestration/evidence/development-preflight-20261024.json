@@ -1,0 +1,70 @@
+{
+  "schemaVersion": "finnor.project-z.development-preflight.v1",
+  "date": "2026-10-24",
+  "sourceBase": "7bfdd2d3ab611c90f1355637858824ff1ba67f98",
+  "evidenceClass": "coordinator-local-development-only",
+  "node": {
+    "version": "v22.23.4",
+    "binDirectory": "/home/factory-user/repos/finnor-z-toolchains/node22/node_modules/.bin",
+    "note": "Explicit PATH is required; no npm executable is installed in that isolated bin directory."
+  },
+  "npm": {
+    "version": "11.19.1",
+    "invocation": "PATH includes the isolated Node 22 bin directory; use the environment's npm executable"
+  },
+  "actualBackendModuleLoad": {
+    "fsExt": "2.1.1",
+    "flockSyncExport": "function",
+    "esbuild": "0.25.12",
+    "next": "15.5.28",
+    "exitCode": 0
+  },
+  "postgresExecutableVersion": {
+    "observed": "postgres (PostgreSQL) 18.4",
+    "exitCode": 0,
+    "databaseInitialized": false,
+    "note": "Only --version ran with the package native library directory; no database or listener was started."
+  },
+  "cleanDependencyInstallLogs": [
+    "scope-z/orchestration/evidence/frontend-install.node22.log",
+    "scope-z/orchestration/evidence/backend-install.node22.log"
+  ],
+  "dependencyWarnings": "Peer warnings and unapproved install-script warnings are retained. Module loading and binary version do not prove all native assets or application reconstruction.",
+  "backendTypecheck": {
+    "command": "npm run typecheck",
+    "cwd": "/home/factory-user/repos/finnor-z-coordinator/finnor-os",
+    "nodeOptions": "--max-old-space-size=4096",
+    "exitCode": 0,
+    "log": "scope-z/phase-evidence/z0/baseline-typecheck-node22.log",
+    "productCodeChangedBeforeRun": false
+  },
+  "canonicalRegistryProbe": {
+    "entries": 77,
+    "vertical": "private_equity",
+    "exitCode": 0,
+    "log": "scope-z/phase-evidence/z0/canonical-registry-probe.node22.log",
+    "providerCredentialsPassed": false,
+    "actionsExecuted": false,
+    "guard": "Parent Node HTTP/HTTPS/fetch/socket calls throw; not a general child-process sandbox."
+  },
+  "promptEngineerLocalSettingsObservation": {
+    "sessionId": "ec89fb12-9c02-40b9-b383-8952b27b8ed1",
+    "model": "gpt-6.1-sol",
+    "reasoningEffort": "max",
+    "autonomyMode": "auto-low",
+    "allowSubagentsInScripts": false,
+    "evidenceClass": "actual-local-session-settings-read",
+    "remoteComputerAttestation": false,
+    "note": "The observed local autonomy mode is recorded, not inferred from requested CLI flags. This was research/authoring, not a dedicated execution phase."
+  },
+  "notClaimed": [
+    "real production authentication",
+    "FINNOR positive owner flow",
+    "dedicated phase launch",
+    "database reconstruction",
+    "separately installed final product",
+    "protected admission",
+    "scientific increment",
+    "operational or financial 100x"
+  ]
+}

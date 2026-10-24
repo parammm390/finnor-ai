@@ -1,0 +1,69 @@
+{
+  "schemaVersion": "finnor.project-z.controller-e2e.v1",
+  "evidenceClass": "deterministic-local-SIMULATED-platform-fixtures",
+  "source": "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/control.py",
+  "sourceSha256": null,
+  "driverSha256": "c52849bf8296bfaba7d4eb42921ff908f8e4139be9c668780a54335064fd0549",
+  "planned": [
+    "sealed-fixture-init",
+    "idempotent-init",
+    "draft-missing-lock",
+    "mutated-product-lock-member",
+    "symlink-member",
+    "fixture-live-separation",
+    "request-exact-initial-group",
+    "reject-early-Z3",
+    "reject-staged-computer",
+    "reject-wrong-model",
+    "reject-missing-model-role",
+    "start-initial-three",
+    "reject-duplicate-computer",
+    "start-idempotence",
+    "event-payload-conflict",
+    "certification-does-not-release-slot",
+    "interruption-not-completion",
+    "resume-same-parent",
+    "reject-reset-parent",
+    "reject-out-of-owner-handoff",
+    "reject-wrong-cut",
+    "reject-incomplete-internal-software",
+    "atomic-concurrent-handoffs",
+    "ordered-refill-Z3-Z4",
+    "reject-fourth-slot",
+    "handoff-refills-Z5-without-certification",
+    "replayed-handoff-does-not-refill-twice",
+    "unknown-launch-retains-slot",
+    "reconcile-same-launch-intent",
+    "corrupt-state-fails-closed",
+    "immutable-snapshots-survive",
+    "final-model-and-three-slot-invariants"
+  ],
+  "cases": [],
+  "commands": [
+    {
+      "argv": [
+        "/usr/bin/python3",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/control.py",
+        "--root",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-594e4ba0ccd347448b330081935c342e/fixture",
+        "--state",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-594e4ba0ccd347448b330081935c342e/fixture/control-state",
+        "--fixture",
+        "init"
+      ],
+      "exitCode": 2,
+      "stdout": "",
+      "stderr": "/usr/bin/python3: can't open file '/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/control.py': [Errno 2] No such file or directory\n",
+      "beforeStateSha256": null,
+      "afterStateSha256": null
+    }
+  ],
+  "elapsedSeconds": 0.020847558975219727,
+  "failure": "AssertionError({'argv': ['/usr/bin/python3', '/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/control.py', '--root', '/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-594e4ba0ccd347448b330081935c342e/fixture', '--state', '/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-594e4ba0ccd347448b330081935c342e/fixture/control-state', '--fixture', 'init'], 'exitCode': 2, 'stdout': '', 'stderr': \"/usr/bin/python3: can't open file '/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/control.py': [Errno 2] No such file or directory\\n\", 'beforeStateSha256': None, 'afterStateSha256': None})",
+  "productRuntimeEvidence": false,
+  "remoteExecutionEvidence": false,
+  "rerun": [
+    "/usr/bin/python3",
+    "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/e2e_controller.py"
+  ]
+}

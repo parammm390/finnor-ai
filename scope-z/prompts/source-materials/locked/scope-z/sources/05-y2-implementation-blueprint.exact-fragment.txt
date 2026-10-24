@@ -1,0 +1,842 @@
+/goal Implement POSTX.Y2 Strategic Response World Model → StrategicResponseModel from FINNOR POST-X FRONTIER-5: Economic construction PRD and Factory mission, revision 1.0, 13 October 2026, to its complete integrated software delivery gate.
+
+Deliver a FINNOR runtime that learns policy-conditioned responses of interacting economic actors from admitted evidence, computes their coupled consequences, preserves identification and equilibrium uncertainty, and supplies independently checked predictions to actual existing programme evaluation.
+
+Finish all independently achievable implementation, owner integration, authenticated product verification, installed-runtime proof and reconstructible handoff.
+
+This goal implements Y2 only. X is already published/live to production, and the owner has confirmed Y1 is done. Treat them as delivered predecessors. Do not restart their implementation or substitute older status reports for the owner’s current instruction.
+
+Discover their exact current source, runtime, handoff and applicable qualification evidence. Do not invent commits, paths, deployment details, scores or admissions. Y1 being done does not establish an unspecified Y1 production or qualification state.
+
+1. OUTCOME AND COMPLETION PREDICATE
+
+Authority and governing contract
+
+Read the entire supplied POST-X PRD. Y2’s specific contract is sections 5.1–5.6. Its common contracts, canonical ownership, infrastructure, qualification, economics and release requirements remain binding where applicable.
+
+Follow applicable repository instructions, the final approved S architecture lock and current inherited S/P/M/R/V/X contracts. Preserve Y1’s independently versioned meanings and actual consumer contracts.
+
+The reviewed R1 framework governs factual discipline, concrete owner integration, independent checking, finite verification and reconstructible delivery. Adapt its scope-specific mathematics and implementation details to Y2. Do not copy historical R1/X/Y1 facts, numerical profiles or permissions into this task.
+
+Authorized by this implementation goal: task-owned product engineering, necessary versioned owner adapters, isolated disposable verification, local commits and a reviewable handoff, within actual available resources and grants.
+
+Not authorized: branch/PR publication, pushing, merging, production deployment, cloud provisioning, protected admission/promotion, new grants/signers, customer or counterparty contact, human-participant recruitment, real economic commitments, fund transfers or other consequential external effects.
+
+Existing X deployment and Y1 completion do not authorize those actions for Y2. Prepare exact packets for separately authorized work.
+
+Y2’s computational boundary
+
+When FINNOR changes a policy, information rule or proposed economic arrangement, Y2 computes:
+- How independently acting parties may respond.
+- How their responses affect other parties.
+- Which joint outcomes remain supported.
+- Which predictions depend on unresolved preferences, selection assumptions or transport conditions.
+- How those supported responses change the permissible business decision.
+
+The model must condition on the changed rule itself. Reusing historical payoff worlds as though counterparties do not adapt is insufficient.
+
+R3 assumes a declared preference/type model. R5’s first profile excludes strategic spillovers between coalitions. X4 identifies digital mechanisms. Y2 must establish supported coupled, policy-dependent strategic response beyond whatever the actual equipped baseline already supplies.
+
+A fixed-world simulator, plausible counterparty roleplay or collection of independent marginal forecasts does not establish this boundary.
+
+The delivered FINNOR runtime must perform the learning and strategic computation. Build agents may implement generic machinery, but cannot supply hidden actor responses or rescue a scored episode and call that autonomous runtime success.
+
+Required computation
+
+1. Resolve the authorized policy/arrangement, economic meanings, participant scope, evidence, rights, current commitments and knowledge cut.
+2. Represent actor-local observations, permitted actions/messages and objectives/preferences as explicit hypotheses. Distinguish observed state from latent/private state.
+3. Learn policy-conditioned response functions from admitted observations and interventions.
+4. Construct a coupled state-transition and observation model, retaining cross-actor dependence and shared regimes.
+5. Establish the S3 basis for any causal-response claim. Preserve observationally indistinguishable models when they imply different policy responses.
+6. Compute joint responses under an explicit behavioral/equilibrium basis, retaining alternative models, selections and solver gaps.
+7. Evaluate withheld policies, spillovers, actor adaptation and regime changes. Calibrate uncertainty and apply the original decision-loss rules.
+8. Publish scoped predictions through existing owners, with actual currentness, admission, transport and unsupported-behavior conditions.
+9. Demonstrate actual S4 programme evaluation using those supported joint responses, without converting predictions into observed commitments or settlement.
+
+A supported representation may take the form:
+
+a_i,t ~ response_i(local_information_i,t,
+                   public_rule_t, commitments_t, private_state_i,t)
+
+s_t+1 ~ transition(s_t, a_1,t, ..., a_n,t, common_regime_t)
+
+This is an illustrative computational form, not a prescribed implementation or claim about existing interfaces.
+
+Private state in a model is not automatically observable or lawful policy input. Preserve actor-local information boundaries and the controller’s actual knowledge.
+
+Required principal output
+
+StrategicResponseModel {
+  envelope: PostXArtifactEnvelope,
+  participant_and_private_state_hypotheses,
+  authorized_observation_and_intervention_refs,
+  policy_conditioned_actor_response_models,
+  coupled_state_transition_and_observation_model,
+  beliefs_and_identification_status,
+  equilibrium_or_behavioral_solution_basis,
+  alternative_model_and_selection_set,
+  regime_and_transport_conditions,
+  held_out_policy_response_predictions,
+  calibration_and_decision_loss_evidence,
+  unsupported_behavior_and_invalidation_contract
+}
+
+The output may be a set of models. Unidentified preferences, multiple equilibria and unresolved dependence cannot be collapsed into a convenient point prediction.
+
+Any weighting, selection rule or probability assigned to alternatives needs an explicit basis. Do not silently discard inconvenient models or choose the optimistic equilibrium.
+
+A solver reaching one fixed point does not establish uniqueness, stability, causal identification or relevance to actual counterparties.
+
+A behavioral model does not need to be mislabeled an equilibrium model. State what it actually establishes and independently check that claim.
+
+Required common envelope
+
+PostXArtifactEnvelope {
+  artifact_id, kind, schema_revision, content_digest,
+  work_and_revision_refs, tenant_and_participant_scope,
+  baseline_manifest_ref,
+  producer_code_dependency_model_and_runtime_refs,
+  source_revision_vector, knowledge_cut, effective_time,
+  rights_and_authority_revision_refs, mandate_ref,
+  economic_semantics_and_domain_refs,
+  claim_basis_and_independent_checker_refs,
+  unresolved_assumptions_and_excluded_claims,
+  resource_reservation_and_complete_cost_refs,
+  invalidation_dependencies, admission_and_release_refs,
+  external_observation_and_s6_obligation_refs
+}
+
+Store payloads and references through existing owners. Do not create another economic truth store, evidence graph, resource ledger, authority registry, model-admission platform or financial grader.
+
+Every quantity binds unit, applicable currency, time basis, ownership, rounding and source/estimation status.
+
+Probabilities bind population, conditioning information and model/identification basis. Preserve uncertainty from data, latent state, model alternatives, equilibrium selection, numerical computation and transport where applicable.
+
+Use current canonical financial quantity types. Statistical computation may use a declared numerical profile, but numerical approximations cannot silently alter financial semantics or become exact proofs.
+
+Missing evidence, probabilities, costs, bounds or identification remain UNKNOWN with reasons. They are not zero or invented narrow intervals.
+
+Required producer contract
+
+construct({
+  canonical_work_revision,
+  baseline_manifest_ref,
+  objective_and_semantics_refs,
+  admitted_domain_profile,
+  rights_and_budget_grants,
+  existing_artifact_refs,
+  cancellation_ref
+}) -> {
+  artifact_ref?,
+  result: CANDIDATE | CHECKED | INCOMPLETE |
+          INFEASIBLE | UNIDENTIFIED | UNSUPPORTED | UNKNOWN,
+  claim_and_gap_refs,
+  independent_check_refs,
+  cost_and_outstanding_obligation_refs
+}
+
+This is the required logical contract. Resolve its actual versioned integration rather than claiming a function already exists.
+
+INFEASIBLE requires a checked basis over the stated domain. Failure to fit, identify, solve or finish is not economic infeasibility.
+
+UNIDENTIFIED may be a correct substantive result. Retain supported alternatives and conditional predictions rather than manufacturing identification.
+
+CHECKED does not mean empirically qualified, S8-admitted, currently applicable, externally effective or production-active.
+
+S4 may retain a checked feasible incumbent after timeout, displaying its actual optimality, identification and remaining gaps.
+
+First domain and supported profile
+
+The first domain is the PE firm’s own investment and institutional operations: admitted financing, liquidity, transaction-readiness, opportunity and decision/approval work. It excludes taking over portfolio-company operations.
+
+Freeze the EconomicConstructionProfile:
+
+institution_and_participant_classes
+admitted_rights_and_atomic_effects
+economic_operator_and_state_semantics
+information_and_disclosure_constraints
+actor_model_and_identification_classes
+protocol_horizon_and_deviation_classes
+private_computation_and_corruption_profile
+theorem_and_runtime_problem_family
+units_currencies_time_and_rounding
+resource_risk_and_exposure_limits
+independent_oracles_and_field_coverage
+
+For coordinates outside Y2, record applicability, supplied dependencies and gaps. Do not implement Y3–Y5 to populate the profile.
+
+Register actual finite actor/model classes, horizons, policy representations, observation domains, parameter/search bounds, numerical tolerances and runtime/resource limits before evaluation.
+
+Development actor counts are two, four and eight. Larger counts require separate qualification. Do not present these development counts as universal limits or extrapolate them to inherited large-workload claims.
+
+Missing rights, preferences, observation, professional interpretation or consent remain explicit. A language model cannot supply them as facts.
+
+Keep five meanings separate
+
+- Observed.
+- Model-relative.
+- Empirically qualified.
+- Formally checked.
+- Externally effective.
+
+Predictive fit is not causal policy-response identification. A model-generated rollout is not a new observation. A predicted acceptance is not actual consent. Predicted funding is not reserved capital, an executed draw or settlement.
+
+Synthetic actors following programmed utilities do not establish real lender preferences.
+
+Functional completion predicate
+
+The software gate requires:
+- Actual learning/model updating from admitted evidence.
+- Coupled policy-conditioned prediction.
+- Identification/model-set and behavioral/equilibrium handling.
+- Independent prediction, calibration and decision checks.
+- Typed S3/S8 integration and actual S4 consumption.
+- Authenticated API/queue/worker/persistence.
+- Currentness, P7 invalidation and executable compatible fallback.
+- Maintained mounted Work experience.
+- Applicable cost/resource meters.
+- Final installed-runtime, migration and reconstruction proof.
+
+A saved model label, hand-coded target response, disconnected simulator, successful build, endpoint response, self-issued receipt or refusal before the intended owner does not satisfy this predicate.
+
+Protected Y2 qualification, material gain, production activation, programme operational 100× and financial qualification remain separate.
+
+2. VERIFIED STARTING POINT AND INTEGRATION BOUNDARIES
+
+Ground the current product once
+
+Inspect the actual selected checkout, root/scoped instructions, dirty/untracked work, branches, current release/runtime configuration, migrations, locks, tests, owner paths and release/admission evidence.
+
+Record:
+
+- B_live: actual checkout, active capabilities and measured release state.
+- B_X_plan: full stipulated completed newest-X contract.
+- B_X_release: immutable release and qualification manifest actually used for comparison.
+- B_ref: additional independently equipped comparison actors.
+
+The older R document’s “X” means its S/P/M baseline. It is not the newest completed five-engine X comparator.
+
+Bind source commit/tree and dirty-file identity; runtime/build/image identity; migrations; dependencies; tools; data; model/learned-state/checkpoint identity; rights; preparation; meters; admissions; and qualification scope.
+
+No freshly verified current product pin is supplied by this prompt. Obtain it from actual evidence. The PRD’s 13 October source observations and older delivery reports are historical leads, not current release identity.
+
+Use an isolated task-owned branch/check-out from the verified current integration base. Preserve user and peer work. Record relevant predecessor ancestry and any adopted delta. Do not reset active checkouts or absorb unrelated changes.
+
+B_X_plan supports design. Only qualified B_X_release supports the required comparison against completed X. If it is unavailable, continue engineering against B_live and mark the dependent comparison BLOCKED.
+
+Completed Y1 and fair comparisons
+
+Read Y1’s actual handoff, source/schema identity, supported semantics and current admission/applicability where relevant. Do not invent its location or rerun its full qualification campaign routinely.
+
+Y2 consumes fixed admitted economic meanings. It cannot edit Y1’s semantics to make predicted behavior or a recommendation pass.
+
+Y2 can qualify on existing policies. Y1 is not a mathematical prerequisite, and Y3–Y5 are not invented prerequisites.
+
+Keep two comparisons distinct:
+- The Y2-on/Y2-off diagnostic on the current engineering baseline, holding applicable Y1 capability and meaning fixed.
+- The PRD’s comparison against qualified B_X_release.
+
+Do not silently redefine B_X_release to include Y1. Do not attribute Y1’s expanded action space or construction gain to Y2’s response computation.
+
+Where Y1 affects evaluated policies, control that difference explicitly. Use matched policy meanings and permitted comparison preparation; charge any necessary baseline extension. Report exactly what each comparison isolates.
+
+Reviewed authoring references
+
+The local reviewed framework is under:
+
+/Users/paramdave/.codex/visualizations/2026/10/09/01a11dfa-1994-7cd3-9a4a-5f7225f3e163/finnor-r-control/
+
+Read future-prompt-blueprint.md and the complete sources/10-user-R1-prompt-blueprint.txt.
+
+The full original framework’s SHA-256 is:
+b0ba121afba847ef7108208688eb39c4270372f2260f894069f772c2e2ab6352
+
+These are authoring-machine paths, not assertions about another computer’s filesystem. Resolve exact source copies through supplied source indexes/handoffs where necessary.
+
+Retain and hash the exact supplied POST-X PRD. Do not invent its filename or digest. Resolve current frozen architecture and inherited qualification contracts from authoritative sources.
+
+Actual canonical owners
+
+Trace real files, symbols, readers, writers, endpoints, job contracts and persistence for:
+
+- S1/P4: evidence, identities, rights, temporal truth, contradictions and lineage.
+- S2: permitted experiments/instruments, exposure, observations and acquisition.
+- S3: causal/strategic model ownership, identification and transport validity.
+- S4/P1: objectives, policies, mandate and durable programme progression.
+- S5/P2/P3: joint resources, reservations, numerical feasibility and execution bounds.
+- S6/P5: current authority, credentials, exact effects, UNKNOWN and reconciliation.
+- S7: complete costs, attribution and net owner value.
+- S8: independent protected evaluation, typed admission, promotion and revocation.
+- P7: dependency invalidation and continuation.
+- V5/current Work: shared inspection and consequence-aware intervention.
+
+Map actual baseline S3/R/X modeling and native specialist capabilities before claiming novelty. If the equipped baseline already satisfies a proposed ability, classify it REUSED.
+
+Specify the concrete versioned path:
+
+canonical Work/policy/meaning/evidence
+→ authorized learning or model update
+→ StrategicResponseModel and supported alternatives
+→ independent identification/prediction checks
+→ applicable typed admission
+→ S3-owned model consumption
+→ actual S4 policy-conditioned programme evaluation
+→ S5 feasibility/current reservations
+→ existing S6 authority/effect boundary
+→ independent observations, S7 costs and mounted Work.
+
+These are integration requirements, not claims that particular adapters already exist.
+
+Actual policy-conditioned consumption
+
+The S4 consumer must evaluate the response to the actual candidate policy/rule, not attach Y2 as metadata while continuing to use one unchanged historical world set for every policy.
+
+Finish any necessary versioned S3/S4 adapter inside existing ownership.
+
+Preserve joint and temporal dependence, lawful information, observation timing, current commitments, quantities and the original mandate’s objective/risk semantics.
+
+Do not turn a model set into an unsupported optimistic world or change S4’s utility to manufacture a gain.
+
+A conditional factorization can be a valid implementation when its assumptions and dependence structure are supported. Multiplying independent marginal forecasts without a qualified dependence basis does not earn joint-response credit.
+
+Verify current typed S8 coverage. Extend it additively when necessary, retaining existing S/R/X/Y1 domains. Do not disguise an actor model as an admitted finite S5 allocation method.
+
+Currentness and effect integrity
+
+Bind policy and meaning versions; participant/evidence/rights revisions; knowledge cut; data/split identity; learned state; identification assumptions; behavioral/equilibrium basis; regime; checker; producer/runtime; and relevant owner revisions.
+
+Recheck currentness at submission, worker claim, validation acceptance, publication, prediction use and consequential commitment.
+
+P7 invalidates the smallest sound dependent closure when policy, evidence, rights, actor assumptions, selection basis, regime, methods or runtime change. Retain original models, failed attempts, costs, observations and commitments.
+
+A transport failure withdraws the affected prediction. It does not erase a previously observed acceptance or actual commitment.
+
+Preserve original S6 effect identity through retries and interruptions. UNKNOWN remains unresolved until independent reconciliation. Cancellation, model replacement or record editing cannot authorize a duplicate effect.
+
+3. IMPLEMENTATION FREEDOM AND REQUIRED ENGINEERING METHODS
+
+Native planning and execution
+
+Start through the actual native Factory Mission planning path before implementation. After the required plan approval, use Mission Control and its actual scheduling/validation facilities.
+
+Do not run an ordinary session for a long time and then claim it was native Mission orchestration.
+
+Verify actual available models, tools, computer/runtime resources and configuration. Do not assume a particular model, GPU, cluster, worker count, credential or duration.
+
+Present one concrete source-grounded plan covering supported domain, owner seams, independent checks, budget, milestones and finite verification.
+
+Obtain platform-required approval and genuinely missing consequential authority. Routine reversible implementation choices do not need repeated questions.
+
+A missing native facility or external grant remains explicit. Continue independently authorized work without claiming the unavailable facility ran.
+
+Compare whole-shape Y2 designs, then select
+
+Compare at least two structurally different Y2 designs against current source, evidence, identification needs and measured limiting terms.
+
+Examples include:
+- Structural coupled actor/state models with explicit latent preference hypotheses and identified-set or posterior computation.
+- Learned policy-conditioned response kernels coupled through a probabilistic/agent-based transition model, with independently qualified identification, selection and transport conditions.
+
+These are examples, not prescribed dependencies or claims about installed capabilities.
+
+Choose one complete design. Do not build two production engines merely to show that alternatives were considered.
+
+Neural models, structural econometrics, probabilistic programmes, agent-based dynamics and game-solving methods are eligible only where their actual assumptions, evidence and checking paths fit.
+
+A roleplay transcript is not a calibrated economic transition model. A library’s equilibrium routine is not causal identification.
+
+Learning and identification discipline
+
+Write the failure model and independently specified observable contracts before critical learning, checking or isolated oracle code.
+
+Retain actual fitted/learned response state or model hypotheses, data lineage, fitting/search receipts and withheld-policy behavior. A manually supplied target response cannot replace learning.
+
+Distinguish:
+- Predictive fit in observed regimes.
+- Model-relative counterfactual response.
+- Causally supported policy response.
+- Transported predictions in another regime/population.
+- Independently observed real outcomes.
+
+Every causal-response claim must have its S3 basis, including the actual estimand, evidence/design, assumptions and uncertainty. Do not apply an unsupported no-interference assumption while claiming strategic spillovers.
+
+If several models fit current evidence but disagree under a changed rule, retain that disagreement. Any claim that the retained set is complete requires its own stated coverage basis.
+
+Use S2 only through permitted experiments and exposure. A requested experiment is not an observation. An uninformative or forbidden intervention cannot manufacture identification.
+
+Respect actor information sets. Future outcomes, private oracle state and unauthorized participant data cannot become controller features.
+
+Equilibrium and numerical discipline
+
+Declare the behavioral/equilibrium solution concept and its domain. Retain supported alternative selections and relevant solver/checker gaps.
+
+Solver convergence, a small residual, a preferred initialization or a chosen random seed does not prove unique, stable or empirically relevant behavior.
+
+Do not turn a behavioral forecast into a Nash/sequential-equilibrium claim. Y2 does not synthesize Y3 protocols or establish their full incentive properties.
+
+Use declared numerical tolerances, probability/support checks and independent recomputation where needed. Preserve exact canonical financial semantics at owner boundaries.
+
+Do not claim global optimization, complete equilibrium enumeration, exact identification or formal proof from incomplete search or sampled agreement.
+
+Protected custody and independent evidence
+
+Generators cannot modify trusted objectives, interpreters, source truth, evaluation assets, hidden actor mechanisms, privacy policy or promotion criteria.
+
+Independent validators use separately governed processes/credentials and immutable specification/checker identities.
+
+The candidate cannot inspect actor-simulator source, hidden private state, future observations or protected test mechanisms. Protect against leakage through files, logs, identifiers, debug endpoints and fixtures.
+
+Training, tuning and adaptive discovery do not consume protected cases. Separate calibration from qualification. Preserve actual knowledge cuts and exposure history.
+
+Self-generated rollouts can support model-relative search, but do not count as independent observed validation.
+
+Keep synthetic, controlled human-participant and consented field evidence separate. Qualification states name their actual evidence class and supported population.
+
+Engineering references and repository rules
+
+Read relevant retained pinned references and apply their principles:
+- pstack/architect: whole-shape comparison and actual owner tracing.
+- Model the Domain: typed state, hypotheses, quantities and dispositions.
+- Prove It Works: real installed behavior and independent observations.
+- Explain the Number/benchmark checklist: equipped actors, material endpoints, complete costs and retained failures.
+- Guard the Context Window: durable source pointers and focused scrutiny.
+- Ponytail: reuse existing complete primitives and minimize additional infrastructure.
+- Cursor quality review: inspect callers, ownership, types and unnecessary wrappers.
+- OpenClaw test audit: observable contracts, credible regressions, independent expectations and real coverage gaps.
+
+Do not import another project’s runners, publication permissions or entire skill catalogue.
+
+Multiplayer Performative Prediction, ABIDES-Economist, OpenSpiel, y0 and other cited work are research/implementation options. Verify actual APIs, assumptions, numerical behavior, licensing/commercial-use terms and security before adoption.
+
+Reported research performance is not FINNOR performance. A simulator’s programmed utilities do not establish field preferences.
+
+Follow actual root/scoped AGENTS.md. Before Next.js edits, read the relevant installed package guides.
+
+Never add post-code unit tests. Prefer real application-level E2E verification. Necessary isolated mathematical/statistical checks require the written failure model and independent oracle first.
+
+Do not introduce test-only production seams or self-derived expected answers.
+
+Isolation, coordination and resources
+
+Keep generated models and research code untrusted, with bounded filesystem, network, credentials, bytes, CPU, memory, storage and execution.
+
+Use current queue, cancellation, checkpoint, compute and obligation machinery. Do not introduce another workflow engine.
+
+Preserve any applicable inherited method identity, admission, quotas, isolation, model/provider cost, P7 revision and replacement/restart contracts. A checkpoint cannot settle an effect or clear UNKNOWN.
+
+Use one integration owner for shared contracts, migrations, clients, locks, worker manifests, financial boundaries and admission. Parallelize supported independent research/review; serialize shared writes and integration.
+
+Use actual available model identities and secure bindings. No new generic API-key collection or unapproved cloud resources.
+
+Meter all acquisition, interventions, learning, model selection, calibration, failed candidates, solver/search runs, checking, storage, fallback, invalidation, maintenance, humans and descendants.
+
+Charge reusable assets/caches for construction, retention, invalidation and actual reuse under a registered amortization horizon.
+
+Disclose general product engineering separately and include it in lifecycle analysis. Do not invent historical comparator development costs.
+
+No provisioning is authorized. Separately authorized AWS work must follow applicable skills and project instructions, including selected project/Region and actual plan/spend constraints.
+
+4. ACCEPTANCE EVIDENCE
+
+Freeze one finite verification manifest
+
+Before expensive runs, record:
+
+requirement
+→ changed owning boundary
+→ named case
+→ independent oracle
+→ exact command/environment
+→ retained artifact
+→ acceptance predicate.
+
+Include actual source/runtime/schema identity; finite cases; per-run wall/resource/storage/process limits; cleanup ownership; and justified rerun rules.
+
+Inspect actual runners and supported flags. Record concrete commands before execution.
+
+Run affected type/schema/generated-contract, lint/build, authentication, queue/worker, migration, S2/S3/S4/S5/S6/S8/P7 and release/security checks as selected by real dependencies and release classification.
+
+Reuse applicable unchanged owner evidence with explicit identity and coverage. Do not launch a new whole-X/Y1 campaign routinely.
+
+Operational limits bound verification, not acceptance thresholds. Omitted or interrupted cases are not PASS.
+
+Required development evidence families
+
+A. Learned endogenous and coupled response.
+Show actual evidence-driven model construction/update and fresh prediction under a changed policy.
+
+Include policy changes with independently expected effects, semantically equivalent labels, actor adaptation, shared regimes and spillovers.
+
+Demonstrate that another actor’s action can affect the supported joint outcome. Include cases where matching individual marginals fails to determine joint participation, liquidity or programme feasibility.
+
+A model need not change merely because a policy label changes; it must respond appropriately to the actual admitted rule and available information.
+
+B. Identification and admissible acquisition.
+Exercise observationally indistinguishable models that disagree under intervention.
+
+Show retained alternatives before informative evidence, continued ambiguity after uninformative evidence, denial of forbidden acquisition, and justified updating after a permitted informative intervention.
+
+A blanket refusal cannot replace the positive identifiable path. An unjustified point prediction cannot replace the correct unidentified path.
+
+C. Behavioral/equilibrium basis.
+Exercise alternative selections, unresolved preferences, relevant solver failures and numerical uncertainty.
+
+Verify that initialization or convenience cannot select an optimistic equilibrium without its declared basis. Retain honest incomplete/unknown results and actual feasible incumbents.
+
+D. Withheld policies, regimes and transport.
+Test withheld policy changes, outside-option changes, delay, shared resource competition, actor adaptation and unsupported regimes.
+
+Inspect P7 invalidation and consumer fences when transport assumptions cease to hold. Preserve actual earlier commitments and unaffected claims.
+
+E. Rights, knowledge and isolation.
+Exercise real tenant/principal/Work ownership, cross-tenant denial, rights revocation and lawful observation cuts.
+
+Test unauthorized private inputs, future-information leakage and model-generated observations masquerading as evidence.
+
+Do not assume permission to centrally pool private participant information or implement Y4 as a workaround.
+
+F. Real durable producer and owner consumption.
+At least one authorized disposable flow must reach:
+
+authenticated Work/API
+→ durable queue/job claim
+→ real worker learning/update
+→ independent model/prediction checks
+→ persisted StrategicResponseModel
+→ applicable typed admission
+→ actual S3 consumption
+→ actual S4 policy-conditioned evaluation and decision
+→ applicable S5 checks
+→ existing S6 boundary/readback
+→ canonical and mounted Work inspection.
+
+Assert reached boundaries and independently expected outcomes. A mock S3 reader, detached prediction display or refusal before the actual planner does not pass.
+
+If the selected scenario includes a controlled test effect, use actual authorized test principals/providers and independent readback. Do not claim real financing or settlement.
+
+G. Recovery and executable fallback.
+Exercise duplicate/stale delivery, cancellation, actual original deadline/lease expiry, concurrent Work resource contention and physical worker/checker interruption around accepted work/publication.
+
+Inspect durable claims/fences, actual children, released capacity, retained costs and obligations. Observer timeout does not reset the original episode.
+
+For unsupported models, failed checking, lost transport basis or exhaustion, name and execute the actual compatible baseline/incumbent path where available.
+
+Use the original episode, remaining grant and deadline. A static fallback retains its actual limited basis; it does not become a qualified strategic model by relabeling.
+
+Where no compatible admitted fallback exists, report the exact unsupported/unidentified/unknown disposition. No widened authority or fresh budget.
+
+Exercise Y2’s response to applicable existing S6 UNKNOWN/reconciliation evidence. Reuse unchanged S6 proofs where justified; do not rebuild the effect engine or initiate real payments.
+
+H. Maintained mounted Work.
+Use existing Work/focus/consequence-aware surfaces.
+
+Show:
+- The changed policy and its exact meaning.
+- Supported joint responses and alternative models/selections.
+- Observed versus predicted state.
+- Identification, calibration and transport basis.
+- Missing evidence and authorized acquisition options.
+- Decision implications, rights, costs and outstanding obligations.
+- What independent observation would establish actual completion.
+
+Drive real accessible controls. Test reload, Work/root/principal switch, token refresh, genuine logout/fresh sign-in, offline/reconnect, revocation and delayed old-principal responses.
+
+Private results cannot resurrect. A predicted acceptance cannot appear as an actual consent or completed business outcome.
+
+I. Final installed identity and compatibility.
+Build and exercise emitted API, worker, learning/prediction/checking code and any native solver/model assets.
+
+Verify actual dependencies/interpreters/assets in the final runtime, not only the builder stage.
+
+Check migrations, old/new jobs and model readers, upgrade/restart, immutable model identity and retained-domain regressions, including affected Y1 seams.
+
+Bind execution evidence to the actual tested product cut. Old build receipts cannot certify changed product code.
+
+J. Matched diagnostics and material decision contribution.
+Run Y2-on/Y2-off on identical policy meanings, evidence access, owner adapters, rights and total resources, holding applicable Y1 capability fixed.
+
+Disable only the new Y2 mechanism. Retain baseline S3/X methods, learned assets, code generation, specialists and strongest eligible fallback.
+
+Use policy-conditioning and coupling ablations where needed to isolate the claimed mechanism. These diagnostic controls do not replace the equipped-X comparator.
+
+Record joint prediction correctness, calibration, decision loss, selected programme, feasibility and complete acquisition/learning/search/checking/fallback/storage/maintenance costs.
+
+Separate adapter improvements and Y1 contributions from Y2. Preserve no-gain, REUSED and meter-gap results.
+
+Decisive identification/transport fixture
+
+Implement the PRD’s exact qualitative contract:
+
+Two model families match all observations under the incumbent financing rule. Under a withheld rule:
+- One predicts complementary counterparty participation.
+- The other predicts crowd-out.
+
+FINNOR initially retains both.
+
+A permitted intervention distinguishes them only when registered identification conditions hold. A forbidden or uninformative intervention cannot resolve the ambiguity.
+
+After admissible evidence, predict a fresh interaction involving changed outside options and another actor’s response. Independent observations check the joint prediction and recommended programme.
+
+A later regime removes the transport basis. Invalidate the affected claim while retaining actual commitments already created.
+
+Do not keep the optimistic model because withdrawal would make a proposed transaction unattractive.
+
+Freeze concrete fixture quantities and expected results independently before implementation. Public fixture success is development evidence, not protected or field qualification.
+
+Protected Y2 profile
+
+Preserve these exact requirements:
+
+- Twelve independently administered economic environments.
+- At least three materially different policy regimes per environment.
+- Development actor counts of two, four and eight; larger counts qualify separately.
+- At least one thousand preregistered prediction/decision trials per environment.
+- Withheld policy changes and future observations.
+- Candidate access to permissible historical observations/interventions, not actor-simulator source or private oracle state.
+- Variation in private information, outside options, delay, shared resources, adaptation and equilibrium selection.
+- Analysis clustered by environment, actor cohort and time.
+- Increased sample size where inherited calibration/power requirements demand it.
+- Separate synthetic, controlled human-participant and consented field evidence.
+
+Register actual allocation and coverage across environments, regimes and actor counts. Do not invent a measured result or balanced factorial design. Disclose unqualified cells.
+
+Raw trial counts do not create independent samples. Do not treat thousands of correlated rollouts as thousands of independent institutions.
+
+Protected Y2 gates
+
+1. Endogenous response:
+Predictions change appropriately with policy and other actors’ actions on withheld interventions.
+
+2. Joint correctness:
+At least 95% correct registered qualitative response/decision outcomes, with original numerical calibration and loss gates also passing where claimed.
+
+3. Identification:
+Every causal-response claim has its S3 basis. Indistinguishable models remain a set.
+
+4. Equilibrium basis:
+Explicit assumptions, alternatives, selection basis and solver/checker gaps. No unsupported uniqueness claim.
+
+5. Strategic coverage:
+Withheld spillover and adaptation cases pass. Independent marginals do not receive joint-response credit.
+
+6. Decisions:
+A simultaneous confidence-supported material improvement on the frozen business decision endpoint against equipped X.
+
+7. Transport:
+Supported regimes qualify separately. Unsupported policy/actor changes invalidate dependent predictions.
+
+Freeze the material decision margin in currency or original normalized decision-loss units before exposure, from the mandate and independent calibration.
+
+Use the inherited confidence basis and preregistered simultaneous analysis. Do not invent a margin from candidate outcomes or substitute a percentage improvement in whichever forecast score happened to improve.
+
+Do not replace this decision gate with Y1’s construction-cost test.
+
+Y2 falsifier:
+The delivered model merely simulates fixed supplied worlds, generates plausible counterparties, or forecasts marginal values without establishing supported policy-dependent strategic response.
+
+Inherited floors and separate programme requirements
+
+Preserve applicable current R/V/X contracts:
+
+- Correctness >=95% under the original oracle, estimation and confidence basis.
+- Normalized expected regret, or correctly labelled reference-policy shortfall, <=0.05.
+- Coverage error <=0.02 at 50/80/90/95%; mean 90% interval width <=0.5 of the fixed outcome range where applicable.
+- $100 total compute/data/integration; 900 human seconds; 16 GiB aggregate simultaneous peak; 30-second initial response; 3,600-second episode wall limit.
+- Eighty human preparation hours and $10,000 per admitted comparison actor.
+- Ninety operational days; 100 companies/deals; 10 system types; 1,000 concurrent missions; 10,000 interacting decision opportunities.
+- Sixteen firms, eight strategic counterparties, four resource pools; K={1,2,4,8,16,64,256,1000}; all other frozen coordinates retained.
+- Original attribution/comparator/downside requirements, the $100 million additional net owner-value objective and H2’s thirty-six-month mature horizon.
+
+Register separate aggregate learning, construction, experiment, proof/search and multiweek envelopes. Descendants, retries and recovery do not reset an episode grant.
+
+Large-workload coordinates do not establish qualification for larger Y2 actor counts.
+
+No low modeled probability authorizes a hard financial, rights, staffing, compensation or employee-benefit violation.
+
+Equipped comparisons retain completed X’s full native methods, learned assets, tools, code generation, specialists and eligible fallback. Tune on disjoint calibration data and match rights, information, capital, risk, exposure, resources and horizon.
+
+An unavailable comparator is NOT_RUN, not defeated.
+
+Keep the eventual programme load-curve contract:
+
+Q_a(lambda,w) =
+  sum_i(fixed_business_weight_i *
+        independently_accepted_completion_i_within_deadline)
+
+C_a =
+  max over preregistered qualifying load levels:
+      expected Q_a(lambda,w)
+
+Register business IDs, task mix, fixed weights, arrivals, deadlines, grid and saturation checks before exposure.
+
+Retain every offered assignment, including unstarted, refused, failed, late and unfinished work. Correct refusal is safety evidence, not positive business throughput. Check claimed-completion correctness before filtering accepted work into the numerator.
+
+Actors may qualify at different sustainable loads under matched parent resources. Retain overload trials. Untested potentially qualifying comparator loads remain upper-capacity gaps.
+
+Use simultaneous 95% inference across actors, strata and loads, with at least thirty independent institution/period blocks; power analysis may require more.
+
+The eventual operational programme passes only if:
+
+L_candidate >= 100 * max_b(U_b)
+L_B_X_release >= epsilon_X > 0
+max_b(L_b) >= epsilon > 0
+
+Freeze materially positive epsilon values before exposure. All five engine gates and original floors must pass.
+
+Y2 delivery alone does not establish this result. Component gains cannot be multiplied into it.
+
+Missing qualified baseline, oracle, meters, backlog or mandatory comparator means BLOCKED. A smaller measured improvement is UNPASSED, not 100×.
+
+Financial qualification remains separately under S7. Preserve:
+- Registered material signed decision-payoff improvement excluding clerical savings.
+- Capital/rights/risk/resources/horizon matching and downside limits.
+- Original attribution/accounting and complete uncertainty.
+- H0 observations/settlement, H1 provisional outcomes and H2 mature outcomes.
+- The $100 million additional net owner-value objective.
+
+A new financial 100× claim additionally requires:
+
+L_candidate_net_owner_value >= 100 * max_b(U_b_net_owner_value)
+L_B_X_release_net_owner_value >= epsilon_financial_X > 0
+
+Predicted participation, capital raised, AUM, transaction value, modeled surplus, forecasts, simulated cash and general market appreciation are not additional attributable owner value.
+
+Measure X’s actual limiting terms. For a sequential limiting resource, an unchanged fraction f caps improvement at 1/f. Use the actual concurrency model where applicable.
+
+Do not create a multiplier by changing resources, opportunities, authority, completion criteria or endpoint.
+
+5. EXECUTION CONTROL, FINISH DISCIPLINE AND HANDOFF
+
+Durable records and finite execution
+
+Create task-owned records at an explicitly proposed location such as:
+
+scope-postx/y2-strategic-response-world-model/
+
+Maintain plan, status, failure model, requirement coverage, verification manifest, evidence index and handoff. Preserve predecessor and peer records.
+
+For each run retain:
+- Commit/tree and dirty-file hashes.
+- Build/runtime, schema/migration, model/learned-state and checker identities.
+- Profile, policy meaning, evidence/split, knowledge-cut and rights references.
+- Independent expected outcome and validator identity.
+- Actual API/queue/SQL/process/checker/owner/mounted Work observations.
+- Starting/ending state, faults and outstanding obligations.
+- Complete resource/human/exposure costs or named gaps.
+- Original failures, duration, exit/cleanup state and exact repeatable command.
+- Secure configuration references, never secret values.
+
+Check route ownership, readiness, authentication and dependencies before expensive runs. Registration-only orchestration or a wrong endpoint is not a completed modeling/decision episode.
+
+Preserve failures. Repair the cause and rerun the affected owning proof plus necessary regressions.
+
+After repeated failure, inspect physical processes, queue/lease/SQL state, source/currentness, data splits, fixtures, browser state and available resources before another run.
+
+Do not weaken an oracle, move a deadline, reset an episode, select a favorable seed, change a scoring population or remove useful tests to obtain green status.
+
+Estimate storage and resource needs before large runs. Clean only authorized task-owned disposable assets. Preserve original evidence, user/peer work and unresolved obligations. Stop owned orphan processes safely.
+
+Once required applicable software checks pass on the sealed cut, finish the handoff. Do not broaden optional campaigns indefinitely or keep coding open while waiting for field operation or mature financial outcomes.
+
+Reconstructible delivery
+
+Deliver:
+- Exact local commit/tree, base/parent and changed-source manifest.
+- Coverage against every Y2 and applicable common clause.
+- Actual owner seams, schemas, migrations and compatibility conditions.
+- Supported/unsupported actor, policy, model, regime and evidence profiles.
+- Identification, behavioral/equilibrium, numerical and transport basis.
+- Installed learning/prediction/checker/runtime identities and runnable paths.
+- Independent receipts, original failures and PASS/FAIL/NOT_RUN cases.
+- B_X_release and comparator configuration.
+- Y1-fixed Y2 ablation and separate equipped-X results.
+- Calibration, loss, material decision results, confidence/power analysis and gaps.
+- Complete cost/resource/exposure meters and missing measurements.
+- Currentness, fallback, revocation and outstanding-effect conditions.
+- Dependency versions, licenses and actual adopted assumptions.
+- Reconstructible source/Git artifacts with required base objects or preimage-bound patches.
+- Serial integration/admission/release packets and a publication-ready description, without publishing it.
+
+Reconstruct in a separate checkout/environment without borrowed build trees, hidden Git objects, undeclared alternates or copied dependency directories.
+
+Install through actual locks, restore declared lawful model assets, build and run the named bounded learning/prediction/consumer proof.
+
+Keep protected evaluator assets inaccessible to the scored runtime. Do not leak private inputs or hidden truth into source bundles.
+
+Source replay is not installed verification. Installed development behavior is not field qualification or production activation.
+
+Distinguish the runtime-tested product cut from later handoff-only changes. Do not certify changed runtime code using earlier receipts.
+
+External blockers versus unfinished engineering
+
+Missing internal learning/model-set logic, independent checks, typed admission adapters, S3/S4 consumption, authentication, invalidation, fallback, packaging, mounted Work or material meters remains unfinished engineering.
+
+A genuine external requirement gets a concrete executable packet specifying:
+- Exact asset/authority.
+- Responsible owner.
+- Immutable code/model/profile/specification.
+- Required secure inputs.
+- Registered protocol and acceptance predicate.
+- Rerun command.
+- Receipt destination.
+
+Examples include independent environment/oracle custody, qualified comparator evidence, protected S8 admission, authorized interventions, participant consent, field data, professional interpretation, production authority or mature S7 outcomes.
+
+Do not forge these assets or replace them with staged demonstrations. Complete every independently achievable artifact and proof.
+
+If actual resources prevent repairing an internal defect, report retained evidence and incomplete engineering. Do not silently narrow the profile or call the defect externally blocked.
+
+Separate completion states
+
+Report independently:
+
+DESIGNED
+CODE_COMPLETE
+E2E_DEV_VERIFIED
+DOMAIN_QUALIFIED
+PRODUCTION_ACTIVE under current authority
+
+Separately report:
+- Y2 protected qualification by supported population/regime/evidence class.
+- Identification and behavioral/equilibrium limitations.
+- Typed S8 admission and current applicability.
+- Material decision improvement against qualified equipped X.
+- Y1-fixed Y2 contribution and REUSED findings.
+- POSTX_OPERATIONAL_100X_PASSED / UNPASSED / BLOCKED.
+- Economic/financial gate states and horizons.
+
+X production and Y1 completion do not make Y2 production-active.
+
+A model rollout, actor response, simulated negotiation or prediction is not another completed material business assignment.
+
+Finish all independently achievable software work and seal the reviewable handoff when only genuinely external qualification, activation or future outcomes remain unavailable.
+
+Do not stop at an audit, plan, roleplay, mock owner, disconnected predictor or favorable demonstration.
+
+Final response only, using these seven labels:
+
+IMPLEMENTED
+CHANGED
+EVIDENCE
+COMPLETION GATE
+REMAINING LIMITATIONS
+FRONTIER DELTA
+NEXT DEPENDENCIES
+
+Include exact commit/tree and handoff paths; supported domain; actual learned coupled response, withheld-policy, identification, equilibrium/behavioral, calibration, decision, transport, owner/API/queue/worker/persistence, mounted Work, recovery/fallback and installed/reconstruction evidence; original failures and NOT_RUN cases; costs and gaps; distinct implementation, qualification, admission, activation, comparative and financial states; and exact remaining dependencies.
+
+Classify material evidence within its actual scope as DETERMINISTICALLY_VERIFIED, EMPIRICALLY_VERIFIED, PROBABILISTICALLY_SUPPORTED, PARTIAL, BLOCKED_EXTERNAL or UNKNOWN.
+
+FRONTIER DELTA contains only demonstrated supported strategic-response ability and measured decision/cost/quality/reach change. No protected evidence means no protected gain claim.
+
+
+
+
+
+
+
+
+
+
+
+

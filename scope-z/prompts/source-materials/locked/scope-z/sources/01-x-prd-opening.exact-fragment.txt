@@ -1,0 +1,163 @@
+FINNOR FRONTIER-5 — Executable institution PRD and Factory mission
+Revision: 2.0.
+Date: 11 October 2026, Asia/Kolkata.
+Status: Proposed product, engineering, research and qualification contract. No implementation or performance result is claimed.
+Planning position: Incremental over completed, independently qualified S/P/M/R/V. The implementation must identify the actual checkout and prove that intended baseline before assigning an incremental multiplier.
+Scope identity: Exactly five product phases, FRONTIER5.X1–X5. These replace the earlier mission's mechanisms and acceptance conditions while retaining its five digital outcome classes.
+
+The programme changes FINNOR's unit of work. A firm gives an authorized institutional mandate; FINNOR reconstructs the relevant operating structure, turns unfamiliar software into composable operations, manufactures missing applications, identifies unknown system behavior and compiles verified experience into reusable execution policies. These outputs become executable assets consumed by the existing FINNOR runtime.
+
+The target is 100 times the independently accepted material business work of qualified post-V FINNOR under matched resources and authority. This is a programme acceptance requirement in Section 9, not a descriptive adjective. Component qualification alone cannot satisfy it.
+
+The design uses frontier intelligence to discover and construct durable computational assets, then reuses those assets while their validity holds. It must not repeatedly spend human interpretation, application integration and general-model reasoning on an already established problem. New evidence, new rights or a changed environment invalidate the relevant asset and reopen only the affected work.
+1. Five scope register
+Phase	Fundamental engineering change	Principal output	New capability boundary
+X1 — Institutional Programme Compiler	Compile authorized institutional evidence and standing mandates into an incrementally executable operating programme.	InstitutionProgram	The firm can supply sources and responsibility rather than manually defining every ontology mapping and workflow invocation.
+X2 — Software Semantics Compiler	Infer an unfamiliar application's operational semantics and compile a reusable, guarded operation algebra.	ApplicationActionModel	Previously unknown software becomes a native planning/execution capability without a human-built connector for each application or task.
+X3 — Enterprise Application Synthesizer	Compile a business requirement into complete software whose critical behavior is bound to independently checkable contracts.	EnterpriseApplicationPackage	FINNOR supplies missing enterprise software and maintains it through changed requirements, data and dependencies.
+X4 — Autonomous System Identification	Actively distinguish competing explanations of an unknown digital mechanism and establish an executable predictive relationship.	IdentifiedSystemModel	FINNOR acquires operational knowledge through permitted experiments and uses it to choose better interventions.
+X5 — Experience-to-Policy Compiler	Distill independently accepted experience into admitted executable policies and trained components with fresh-transfer and retention proof.	LearnedPolicyCapsule	Work produces reusable computational capability; future work can execute through the learned asset rather than restart general reasoning.
+
+
+These are five transformations, not five agent teams. X1 compiles institutional state/responsibility. X2 compiles operations. X3 synthesizes products. X4 identifies mechanisms. X5 compiles learned execution. Each owns one output and one falsifiable claim.
+1.1 One concrete product consequence
+A partner assigns a standing mandate to maintain investment-decision readiness across admitted deals, evidence, counterparties, obligations and approvals.
+
+The firm connects its approved sources and existing grants. FINNOR reconstructs the relevant operating model, maintains an executable responsibility programme and recognizes a material dependency change. Required work now depends on an unfamiliar portal and a missing reconciliation application.
+
+FINNOR learns the portal's operational semantics, constructs the reconciliation product, discovers an undocumented mechanism that makes an apparently complete export incomplete, and finishes the permitted work with independently observed postconditions. It then compiles the successful method into an admitted policy capsule.
+
+A second firm or differently structured application supplies fresh objects, permissions and workflow conditions. FINNOR transfers the method without copying the first firm's private facts, bypassing authority or receiving a task-specific human patch. If transfer assumptions fail, it identifies exactly which asset must be revised.
+
+The user sees the institutional obligation, its current evidence, the executable plan, the manufactured software, the learned operation and the established result in the existing Work experience. The user does not need to reconstruct this chain from five chat transcripts.
+1.2 Why this is a larger programme than the previous mission
+Earlier limitation	Binding replacement
+Awareness could be a configured watcher feeding an existing task.	X1 must infer the declared operating model and generate responsibility-driven continuation; no manually mapped institutional template may be required for held-out firms.
+Software mastery could be a collection of successful browser traces.	X2 must deliver composable operation semantics, use them for new workflow compositions, and detect when an operation's validity changes.
+Product creation could pass on several generated applications.	X3 must synthesize from independently specified business invariants, prove installed behavior and carry out data-preserving lifecycle changes.
+Discovery could be one useful experiment about an export.	X4 must learn an unknown mechanism class, distinguish confounded explanations and transfer the identified model to withheld interventions.
+Learning could be a prompt change plus a modest training result.	X5 must create executable learned assets, demonstrate generalization, measure amortized execution economics and prove an actual parameter contribution.
+A scope could pass with a 2× work improvement.	There is no 2× substitution for the programme target. All five engines can qualify while the 100× programme remains UNPASSED.
+Twenty episodes could be reported as a generational system result.	Integrate across independently administered institutions, workload strata and sustained fault-injected operation; report the exact population supported.
+Factory workers could quietly supply FINNOR's missing intelligence.	All scored work must be performed by the delivered FINNOR runtime. Build workers may repair product code outside scored runs; rescue inside a run remains assisted failure.
+
+
+The new names identify the computational changes. Renaming an existing controller, adding types around it or increasing a test count does not establish any of the changes above.
+1.3 What the 100× target requires structurally
+The programme must remove recurring human construction and interpretation from the critical path, and it must produce materially more completed work within the same total envelope.
+
+A tenfold cheaper model invocation does not satisfy this requirement if integration, confirmation or human approval dominates the end-to-end result. A system that performs the same work faster also needs a saturated, registered workload to demonstrate the requested capacity expansion.
+
+Before committing to implementation, measure the incumbent's actual limiting terms: institutional onboarding, unfamiliar-application integration, product construction, unanswered operational questions, per-assignment reasoning, mandatory approvals, failures and recovery.
+
+Allocate each proposed mechanism to the measured term it changes. If the model demonstrates that the unchanged terms cap the attainable result below 100×, change the design or report the unmet requirement. Do not revise the number to fit the implementation.
+2. Baseline, domain and canonical ownership
+2.1 Three baseline manifests
+Freeze B_live, the actual implementation checkout and active capabilities; B_V, completed and qualified S/P/M/R/V; and B_ref, appropriately equipped alternative implementations used for specific engineering comparisons.
+
+B_live is a current-state record. It is not a substitute for B_V when claiming an incremental 100× over the intended post-V system. A proposed V capability does not become an incumbent result through a manifest entry.
+
+Each record binds source commits, dirty-tree identity, schema/migration boundaries, dependencies, model/provider versions, tools, preparation, rights, grants, resources, runtime configuration and measured qualifications. Preserve historical R comparisons and the original principal financial protocol.
+
+The inspected reference repository is parammm390/finnor-ai at 517003a4396bc8101a90be4b425ee01de9446740. This is limited source grounding, not an audit of every line, the latest local branch or the production installation.
+Existing surface	Inspected boundary	Required treatment
+tools/src/source-adapters.ts	Provider observations are separated from domain truth mapping.	X1 consumes retained evidence through the canonical semantic owner; an observed provider field does not automatically become a business fact.
+workflow-runtime/src/index.ts	Durable command, inbox/outbox, receipt, reconciliation and operator-control exports use the existing runtime.	Compile X outputs into existing work/effect machinery; no competing workflow engine or business ledger.
+computer/src/index.ts	Computer-use contracts, provider, broker, repository and runner exports.	X2 extends the actual execution boundary after tracing its callers and effect semantics.
+artifacts/src/index.ts	Artifact creation, publication, recalculation and document/spreadsheet/presentation services.	Reuse appropriate lifecycle services; document generation alone does not establish X3 application construction.
+authority/src/index.ts	Tenant-scoped role, resource, grant and authority-revision handling.	All inferred responsibilities and generated products remain subject to current authority.
+capability-evolution/src/contracts.ts	The inspected ordinary revision schema targets S5 allocation methods.	X2/X3/X5 need explicit reviewed domain adapters if present S8 contracts remain constrained. Never mislabel arbitrary payloads as allocation methods.
+
+
+Paths above are relative to finnor-os/packages. Recheck actual implementations, dependencies and current instructions before designing file changes. All new interface names in this PRD are proposed logical contracts.
+2.2 First admitted institutional domain
+The first profile is a PE-firm operating environment, covering institutional work across deal evidence, decision readiness, obligations, financing/transaction records, approvals and selected firm administration. Portfolio-company operation is outside this profile.
+
+The source population includes permissioned financial/document systems, CRM/work tracking, email/calendar, approval systems, browser-only portals and selected HR/benefit/expense records where consent, role and data access permit them. The compiler may discover relations; it cannot infer permission to access sensitive records.
+
+Fix the exact source classes, user roles, workflow families, concurrency, data scale, effect types and oracle coverage in a DigitalInstitutionProfile. A previously unseen instance within a supported class differs from an entirely unsupported application protocol, business jurisdiction or fiduciary activity.
+
+“No manually defined operating model” does not mean “no mandate, permissions or business authority.” The owner supplies the institutional objective and grants. FINNOR must establish the remaining supported structure from evidence or leave it unresolved.
+2.3 Frozen ownership
+Owner	Retained responsibility
+S1 / P4	Evidence, identity, beliefs, rights, contradiction handling and temporal truth.
+S2	Experiment assignment, admissibility, exposure and measurement contracts.
+S3	Identification, competing mechanisms, causal claims and transport validity.
+S4 / P1	Policy/action/wait/stop semantics, mandate binding and durable programme progression.
+S5 / P2/P3	Resource feasibility, reservations, isolation and bounded computational execution.
+S6 / P5	Current authority, exact effect identity, settlement, UNKNOWN outcomes and reconciliation.
+S7	Costs, realized outcome accounting and economic attribution.
+S8	Independent evaluation, typed-domain admission, promotion, revocation and rollback authority.
+P7	Revision dependencies, invalidation and continuation.
+V5	Authorized shared Work/focus, consequence-aware inspection and operator intervention.
+
+
+The programme extends these owners. A compiler does not acquire an enforcement role simply because it emits code.
+2.4 Preserve the financial qualification contract
+The current V document retains the following R gates. They remain applicable wherever an X capability enters the corresponding financial decision path.
+Frozen item	Required retained gate
+Goal/correctness	≥95% under the original oracle, scoring and confidence basis.
+Decision loss	Normalized expected regret or valid reference-policy shortfall ≤0.05.
+Forecast calibration	Coverage error ≤0.02 at 50/80/90/95%; mean 90% interval width ≤0.5 of the fixed outcome range.
+Financial episode	$100 total compute/data/integration; 900 human seconds; 16 GiB aggregate simultaneous peak; 30-second initial response; 3,600-second wall limit.
+Reach/generator	Preserve 90 operational days, 100 companies/deals, ten system types, 1,000 concurrent missions, 10,000 interacting decision opportunities and the frozen generator coordinates.
+Money	Preserve the $100 million additional net owner-value objective and original attribution/comparator definitions; H2 is the registered 36-month mature horizon.
+
+
+Compilation, simulation, training and multiweek institutional work need separately registered aggregate envelopes. Their costs cannot be hidden by resetting descendant financial episodes.
+2.5 Independence of fact, model and execution
+An authenticated record establishes which source supplied which bytes. It does not establish that the source's business assertion is correct.
+
+An inferred institutional relation remains an inference. A learned transition is a prediction with a domain. A reproduced experiment supports a specific finding. A synthesized policy is a candidate. An independently observed external postcondition supports an execution result.
+
+Preserve these distinctions even when the UI uses a simple label. No model-generated success, generated document, trained reward, simulated balance or agent consensus may overwrite the authoritative status.
+3. Common executable contracts
+3.1 FrontierArtifactEnvelope
+FrontierArtifactEnvelope {
+  artifact_id, kind, schema_revision, content_digest
+  tenant_ref, work_ref, institutional_program_ref
+  parent_artifact_refs, producer_revision, baseline_manifest_ref
+  authority_grant_ref, rights_revision, resource_grant_ref
+  source_refs, source_revision_vector, knowledge_cut
+  admitted_domain_ref, application_fingerprints
+  model_refs, dependency_lock_digest, runtime_digest
+  observed_claims, inferred_claims, predicted_claims, unresolved_claims
+  postcondition_contract_refs, independent_check_refs
+  S6_obligation_refs, provider_observation_refs
+  invalidation_dependencies, lifecycle_state, lifecycle_events
+  build_learning_compute_cost_refs, attributable_human_work_refs
+}
+Bind amounts to currency, entity, time and accounting basis. Bind identities to their source/institution context. Bind operations to the actual application version, role and state. An amount read from a screen without a currency or date cannot certify a financial obligation.
+
+Principal outputs are versioned assets in existing canonical storage. Evidence bodies may live in rights-controlled object storage; compact projections may live in the existing database. Neither creates a second institutional truth authority.
+3.2 The operation contract
+Every effectful candidate operation binds inputs, current preconditions, external postconditions, effect class, supported authority, resource bounds and the observation method.
+
+Compile the proposal through existing S4/S5/S6. Final dispatch rechecks grants, relevant evidence revisions and the application's actual starting state. Admission to an operation domain grants no execution authority.
+
+For response loss after a submission, preserve the same obligation identity and mark the effect UNKNOWN. Query admissible external state; do not resubmit under a fresh identity. If the application cannot distinguish duplicate from missing completion, retain the unresolved outcome and exposure.
+
+A learned driver cannot promise idempotence that the external application does not support. Identify operations whose ambiguity requires human or provider reconciliation before replay.
+3.3 Compiler versus evaluator versus authority
+Compilers propose artifacts. Independent checkers evaluate specified properties. Existing protected owners admit capabilities and authorize effects.
+
+The builder cannot alter the business objective, expected postconditions, authority policy, evaluator code, hidden truth, measurement instrument or promotion record to make a candidate pass. Source-level accessibility or prompt instructions alone do not protect an oracle.
+
+Use separate validator credentials and process/filesystem boundaries where required. The scored runtime has no access to hidden oracle state. If custody cannot be established, evidence remains development evidence and the corresponding protected gate is blocked.
+3.4 Invalidation and continuation
+Every executable asset carries a validity dependency set. Changes to a relevant source revision, application semantics, mandate, grant, model, data schema or runtime invalidate the affected assumption.
+
+Recompute the smallest sound dependency closure. Preserve original results and cost. A new artifact revision cannot erase the episode that falsified its predecessor.
+
+Not all changes invalidate everything. A portal's visual theme change may leave API semantics intact; a changed confirmation meaning may invalidate the operation even when its screen layout is unchanged. The actual validity checker must establish the distinction.
+3.5 Independent measurement interfaces
+Qualify facts and operations against externally administered records, provider readback, persisted state and pinned business invariants. Keep both the starting state and ending state, including failures and intermediate effects.
+
+A contract oracle states what constitutes completion before implementation. Learned application semantics do not automatically define the external success criterion. Expected values cannot come from the function under test or a mock that performs the asserted behavior.
+
+
+
+
+
+
+

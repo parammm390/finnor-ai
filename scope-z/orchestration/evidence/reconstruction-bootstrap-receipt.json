@@ -1,0 +1,21 @@
+{
+  "schemaVersion": "finnor.project-z.reconstruction-bootstrap.v1",
+  "executionPackSha256": "4419731d2544d1c07fe275ec8071d5d783273942ca9947eda2ff6b4e2dffb9db",
+  "promptIndexSha256": "5c78fc5da28a8eb92caa5cda9f13f8179597c0b8c927f78d1f0576d83939f954",
+  "preimage": {
+    "path": "scope-z/prompts/reusable-blueprint.draft.md",
+    "sha256": "2bfa64f0cb40f7891d647eea962443d2883417b82731b262066895d0781a213f",
+    "bytes": 43440,
+    "digestAlreadyBoundBy": "sealed prompt index historicalDraftExcluded"
+  },
+  "archive": {
+    "path": "scope-z/orchestration/evidence/reconstruction-bootstrap-1.0.0.tar.gz",
+    "bytes": 17256,
+    "sha256": "659a086b3ec81192d777941b51861ebac029c71f0e654c5e74929f789b3a8ff3",
+    "entries": 1
+  },
+  "purpose": "Inactive unchanged historical preimage required by the cold verifier, not an active prompt or a changed lock",
+  "originalFailure": "scope-z/orchestration/evidence/cold-reconstruction-97a0feffbcd84d2baad9b6e6e63d5224/report.json",
+  "existingSealedFilesChanged": false,
+  "delivery": "NOT_DELIVERED"
+}

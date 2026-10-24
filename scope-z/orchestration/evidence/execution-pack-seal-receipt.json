@@ -1,0 +1,52 @@
+{
+  "schemaVersion": "finnor.project-z.external-execution-seal-receipt.v1",
+  "sealedAt": "2026-10-24T07:21:19.198995+00:00",
+  "productLockSha256": "61d9881ca8059d24d057d1e00d5436ef2059de7889ccd1fd2f92a630075bcebf",
+  "executionPack": {
+    "path": "scope-z/locks/execution-pack.json",
+    "sha256": "4419731d2544d1c07fe275ec8071d5d783273942ca9947eda2ff6b4e2dffb9db",
+    "members": 283
+  },
+  "promptIndexSha256": "5c78fc5da28a8eb92caa5cda9f13f8179597c0b8c927f78d1f0576d83939f954",
+  "promptAssemblyReceiptSha256": "e7c53d4a8581f67209010ac159c91c29395b427ac74b1da14832d9f1a44b0084",
+  "archive": {
+    "path": "scope-z/orchestration/evidence/project-z-execution-pack-1.0.0.tar.gz",
+    "sha256": "c6c5868a077346e61f50dea1d4fe77682a8c6e70a658a8e863752fb59cd52703",
+    "bytes": 3570581,
+    "entries": 284,
+    "uncompressedBytes": 13038945,
+    "roundTrip": "PASSED",
+    "deterministicHeaderTimes": true
+  },
+  "observedChecks": {
+    "promptAssemblyCasesPassed": 46,
+    "controllerSimulatedCasesPassed": 37,
+    "builderBuildCheckBuild": "PASSED_IDENTICAL",
+    "actualNonFixtureControllerVerify": "PASSED",
+    "backendPreChangeNode22TypecheckExitCode": 0
+  },
+  "receiptNotAManifestMember": "External receipt avoids self-reference; transfer it separately with the checked archive and original pinned source checkout.",
+  "delivery": "NOT_DELIVERED",
+  "peerHandoffs": "NONE_OBSERVED",
+  "executionPhasesLaunched": 0,
+  "liveStateInitialized": false,
+  "remoteActions": 0,
+  "productQualificationConferred": false,
+  "notClaimed": [
+    "FINNOR engine implementation",
+    "native owner flow",
+    "separately installed final product",
+    "protected admission",
+    "scientific increment",
+    "operational 100x",
+    "financial 100x",
+    "production activation"
+  ],
+  "coldReconstruction": [
+    "Use a fresh source checkout containing pinned base commit/tree, not a dirty user checkout.",
+    "Verify this external archive/manifest digest against the separately supplied trusted seal.",
+    "Extract with no-clobber and path-safe handling; preserve all original bytes.",
+    "Run python3 scope-z/prompts/assemble.py check; python3 scope-z/orchestration/build_execution_pack.py --check; then the actual controller verify with absolute root/state and the reviewed execution digest.",
+    "Do not initialize/start live phase state until actual Computer/model/full-delivery/read receipts exist."
+  ]
+}

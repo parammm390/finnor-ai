@@ -1,0 +1,1142 @@
+{
+  "actualComputer": null,
+  "actualModelReceipt": null,
+  "actualSession": null,
+  "delivery": "NOT_DELIVERED",
+  "files": [
+    {
+      "bytes": 6600,
+      "path": "README.md",
+      "sha256": "8be23cb4a15a68d18d8a4a77dce0e34b70a9924215e547e0eb2ea5239cdbc558"
+    },
+    {
+      "bytes": 3799,
+      "path": "annexes/cli-and-transport.md",
+      "sha256": "0d83341231ff6a53db10e11570d45bab465279ad5ea7d4125d328abb93fdc64d"
+    },
+    {
+      "bytes": 3613,
+      "path": "annexes/engineering-methods.md",
+      "sha256": "f80a4da60a0b67a4b051e02c6dfa664b4a817c20d57d972473dee077c67978fc"
+    },
+    {
+      "bytes": 8471,
+      "path": "annexes/execution-contract.md",
+      "sha256": "93bc1b037bc209d3d4bbe2145692f408fe0b1621315b05df2ca68352b6182224"
+    },
+    {
+      "bytes": 1901,
+      "path": "annexes/source-exceptions.md",
+      "sha256": "641462070eaca6ed7309075f12d3fb0d0440322c3428c827c25dec4c8b9a4704"
+    },
+    {
+      "bytes": 6837,
+      "path": "annexes/source-facts.md",
+      "sha256": "96ab0f22a4a05d09582baf306e4f0306d771e113702c5e422a46d5e5f84f9b52"
+    },
+    {
+      "bytes": 3750,
+      "path": "annexes/validation-contract.md",
+      "sha256": "bc4054a8745328d6c389204728bf16eda8f4724f61f1f966478d61084a1b3b94"
+    },
+    {
+      "bytes": 61790,
+      "path": "assemble.py",
+      "sha256": "3f3be8c9820bd0bd388a241944212a1f56fdc94344aedcb0905d61a58b2d8e13"
+    },
+    {
+      "bytes": 114947,
+      "path": "capture-receipt.json",
+      "sha256": "c95d801e8b33af54c3319315e0efc023e77514b8db9ea50cc93972f747455077"
+    },
+    {
+      "bytes": 132390,
+      "path": "companion-read-map.json",
+      "sha256": "8914c30683494c16130742a672607d0626c5cfc20a2bfddb097a6d85061dc61f"
+    },
+    {
+      "bytes": 332,
+      "path": "evidence/failures/ba7d5075f036f62a53a53cfe894bb3d2a411a8009dafc1b7f2452510b83b2917.json",
+      "sha256": "ba7d5075f036f62a53a53cfe894bb3d2a411a8009dafc1b7f2452510b83b2917"
+    },
+    {
+      "bytes": 5179,
+      "path": "evidence/validation-results.json",
+      "sha256": "273a303d5458ef31695ae8cad8bd0fe5fb78475d37f33dee17b07b762d4d61f3"
+    },
+    {
+      "bytes": 9620,
+      "path": "phases/z0.md",
+      "sha256": "0d88bffe92443dc1510f04d487936391e4c832698e87f48370add5b882f93e40"
+    },
+    {
+      "bytes": 10082,
+      "path": "phases/z1.md",
+      "sha256": "66bd20673c0570d5b26bf79f2c463295b3a341f5956b0d6d5d3a322db3944255"
+    },
+    {
+      "bytes": 11000,
+      "path": "phases/z2.md",
+      "sha256": "d6328c3ca3cb6deb57c5a902d5d45471351e3cec0886ebf5a71c737c2c64035b"
+    },
+    {
+      "bytes": 10541,
+      "path": "phases/z3.md",
+      "sha256": "a0659c5a2a11b4aab7474a67676de188170102805e2838568583de84b1750fd1"
+    },
+    {
+      "bytes": 10931,
+      "path": "phases/z4.md",
+      "sha256": "b70482718063f4fea0d46e28c314b30685dc59beea73411c785c8c3116906635"
+    },
+    {
+      "bytes": 10980,
+      "path": "phases/z5.md",
+      "sha256": "74c64699cf6316358e21a9d14a8c840342d8e58866555d24d974dc30c54d61d8"
+    },
+    {
+      "bytes": 19682,
+      "path": "qualification-families.json",
+      "sha256": "6af201d06d54d33245dabb1addb0f8f72acd75c9f7a9fc50716e8e1d72a17222"
+    },
+    {
+      "bytes": 6881,
+      "path": "reusable-blueprint.md",
+      "sha256": "f7984c250b81d6c2a395b40ab37af3a4a2c5ec0a2c84752cba868ae4acfe1d5c"
+    },
+    {
+      "bytes": 420629,
+      "path": "seeds/z0.seed.md",
+      "sha256": "3f7899558e008a006073e69ca45c46ea46021e680bac61155d06bc92cf949578"
+    },
+    {
+      "bytes": 861773,
+      "path": "seeds/z1.seed.md",
+      "sha256": "635e04fc82b8ff5769f0569d95b1185b95d195eec67d4552d1a4f999178bad7d"
+    },
+    {
+      "bytes": 852925,
+      "path": "seeds/z2.seed.md",
+      "sha256": "8c18ec1a305a1d05ac89fce3abc8e0b9f0cb69e752e2879205510f67d1f6f329"
+    },
+    {
+      "bytes": 859279,
+      "path": "seeds/z3.seed.md",
+      "sha256": "977943424d4715a06c68312866d1773d44f625ac893809ecd43e51c84064d4d1"
+    },
+    {
+      "bytes": 847625,
+      "path": "seeds/z4.seed.md",
+      "sha256": "9270b2784992630f7c6049cb689130e667bbd12dd835f5fa23e81fc2739461c4"
+    },
+    {
+      "bytes": 864473,
+      "path": "seeds/z5.seed.md",
+      "sha256": "efc68e8c35cae19e31359c20226e981855f875fa4d93615d9605dfcafa92794e"
+    },
+    {
+      "bytes": 1071,
+      "path": "skills/licenses/DietrichGebert-ponytail.LICENSE",
+      "sha256": "fb1bc6909ac3ef82d5c22106e32ef682b0cff66788fa915fb9b53b15c9d2f3ab"
+    },
+    {
+      "bytes": 1067,
+      "path": "skills/licenses/backnotprop-pstack.LICENSE",
+      "sha256": "bc957ca6bee02792566a1a028d105e02e247c6e77cf057061674273da77b200e"
+    },
+    {
+      "bytes": 1063,
+      "path": "skills/licenses/cursor-plugins.LICENSE",
+      "sha256": "702f5f331b56aff0e33d8c7826df5202559f894145eb70355c6477b55b5bb8a0"
+    },
+    {
+      "bytes": 1076,
+      "path": "skills/licenses/openclaw-openclaw.LICENSE",
+      "sha256": "9efd316ecf1c4c60f6fd5d26433142fff2b6794d7d328e9bc6179b29bf9c82a4"
+    },
+    {
+      "bytes": 10511,
+      "path": "skills/project-z-verification/SKILL.md",
+      "sha256": "aeba61a3a60780bc3afb7e61f9941efe75dd96c317f02cc7a16fdfbe57cef2e0"
+    },
+    {
+      "bytes": 5562,
+      "path": "skills/upstream/architect/SKILL.md",
+      "sha256": "1a1c56ec1fe352ddb832e8eaf9fe6c282ce2b0428d65fb4ebb4a9e4128cbb438"
+    },
+    {
+      "bytes": 5002,
+      "path": "skills/upstream/benchmark-checklist/SKILL.md",
+      "sha256": "ba109e96c8f6c1c391baccf19e5d11e14370df7b3f2605e1572cd565a6c0fca0"
+    },
+    {
+      "bytes": 6764,
+      "path": "skills/upstream/create-verification-skill/SKILL.md",
+      "sha256": "bba612e8b81a02df0f49e6f6911f3b543c8c7d9f1f3c13ae6c0e2d58cc8c3ad3"
+    },
+    {
+      "bytes": 3074,
+      "path": "skills/upstream/how/SKILL.md",
+      "sha256": "c80558c167c5feb69b68ab87006231509649a5ac8ed7fd499f282330418dfa83"
+    },
+    {
+      "bytes": 5012,
+      "path": "skills/upstream/maintain-verification-skill/SKILL.md",
+      "sha256": "5943f7747da6aafcf5c1063c988e725c97e415866f5c7746279012f35cb49815"
+    },
+    {
+      "bytes": 3492,
+      "path": "skills/upstream/ponytail/SKILL.md",
+      "sha256": "ba68ff26239c3c3b05b2a9a47ee0d9a6b93a69639a2555ec87a5d44bffaf2f0c"
+    },
+    {
+      "bytes": 22452,
+      "path": "skills/upstream/poteto-mode/SKILL.md",
+      "sha256": "0ac1d8154f235e9e903d18ce594759ac5f92acd3f59f41fc2a0d6be61a4868ac"
+    },
+    {
+      "bytes": 1663,
+      "path": "skills/upstream/principle-explain-the-number/SKILL.md",
+      "sha256": "cd5a25f9e7cf023627ccb470dc5faa97542f29b4319496a32b839a8e1e988047"
+    },
+    {
+      "bytes": 1858,
+      "path": "skills/upstream/principle-model-the-domain/SKILL.md",
+      "sha256": "52c0d85e0c3827c41c18299b642657d7b47eaf77b7b31609e42e0df42b84c75f"
+    },
+    {
+      "bytes": 1371,
+      "path": "skills/upstream/principle-prove-it-works/SKILL.md",
+      "sha256": "ec79a15025bac8d33d62011c54f3b612733fd2a024e623b531b3637aa75070e2"
+    },
+    {
+      "bytes": 7948,
+      "path": "skills/upstream/test-audit/SKILL.md",
+      "sha256": "fc38d2a34ade41960355d951b018dea1a0dfc89faca28914ba2c9a45d007fa3f"
+    },
+    {
+      "bytes": 12437,
+      "path": "skills/upstream/thermo-nuclear-code-quality-review/SKILL.md",
+      "sha256": "7faca08b51b643b2ddd0836f92af15574444024685dcc1e677dbbb39ae8c9e8f"
+    },
+    {
+      "bytes": 33569,
+      "path": "source-excerpts/z0.md",
+      "sha256": "f35221dc28a34d6ad4f1713199475b660aff3ea49b271e69be5e9d6435b9a240"
+    },
+    {
+      "bytes": 53411,
+      "path": "source-excerpts/z1.md",
+      "sha256": "2fdfd2fec34b7b49b50df574bc40c814bc3acf3e2503054551b1f217c5acaf0c"
+    },
+    {
+      "bytes": 43627,
+      "path": "source-excerpts/z2.md",
+      "sha256": "89eb2ae4d144c9be12bf77e7bba17c2bcf6ea18413db75ba0257e14d50918f96"
+    },
+    {
+      "bytes": 50458,
+      "path": "source-excerpts/z3.md",
+      "sha256": "ca178ead217d3d55b9b11d76120c0c5794475143fedff5e8d5b214a37f92a195"
+    },
+    {
+      "bytes": 38406,
+      "path": "source-excerpts/z4.md",
+      "sha256": "b98b2ae34ba5a89e3b589eae47ae5530d2f8b687ab5ea038f0233dc9adb98b81"
+    },
+    {
+      "bytes": 55181,
+      "path": "source-excerpts/z5.md",
+      "sha256": "150a8296429476890d848d452cb4694ef9d02b2d9540bf34ddce076cd80214cc"
+    },
+    {
+      "bytes": 76830,
+      "path": "source-materials/locked/scope-z/FINNOR-Z-PRD.md",
+      "sha256": "cb00aa9293a2d9199c35816b97984333078586b335be653bfb11dbe3f76d22ef"
+    },
+    {
+      "bytes": 13508,
+      "path": "source-materials/locked/scope-z/contracts/common-contracts.json",
+      "sha256": "ddce6a97857c25cec8e2c05a96a11bcd4f129b7feceb01ef805db614874c275e"
+    },
+    {
+      "bytes": 637,
+      "path": "source-materials/locked/scope-z/orchestration/gpt61-max-settings.json",
+      "sha256": "3930ce37431de3bf59a03aaa158ef2164b19c639e22b309d8bc67bf797687bef"
+    },
+    {
+      "bytes": 222617,
+      "path": "source-materials/locked/scope-z/research/baseline-owner-map.json",
+      "sha256": "479037a7ce0240fe9932b6b73a3d88265aec3c6163c506cb50c333a92a8a57f0"
+    },
+    {
+      "bytes": 76868,
+      "path": "source-materials/locked/scope-z/research/baseline-owner-report.md",
+      "sha256": "121486a4b5197ea4ed10c2032aa87208f2b77f027656a3487cf65fc7d0dc1653"
+    },
+    {
+      "bytes": 60832,
+      "path": "source-materials/locked/scope-z/research/blueprint-source-report.md",
+      "sha256": "4e3b9f8838ee5b5408009f994b587c34f327a3260829a73038728ae37388c552"
+    },
+    {
+      "bytes": 90514,
+      "path": "source-materials/locked/scope-z/research/frontier-adversarial-report.md",
+      "sha256": "aaf72b6c5bc5829c249c7690af5ce30e82da7c339e6791b6a4ee61935b89a2c5"
+    },
+    {
+      "bytes": 20425,
+      "path": "source-materials/locked/scope-z/research/frontier-followup-report.md",
+      "sha256": "0036ebf7645de4ccde6e56ce962e050d17d82efc87e339dffc87bfef50aa39e9"
+    },
+    {
+      "bytes": 7376,
+      "path": "source-materials/locked/scope-z/research/qualification-design.md",
+      "sha256": "97a27ee4cbd5766852747f530d1f184c0206e82db6db4a35882e04cacca926dc"
+    },
+    {
+      "bytes": 11580,
+      "path": "source-materials/locked/scope-z/research/scope-selection-decision.md",
+      "sha256": "6a8cdfea092bf6b189833c0e66b3168e32ea45bbb6d9090a25209295b713e29f"
+    },
+    {
+      "bytes": 3518,
+      "path": "source-materials/locked/scope-z/research/source-and-coordination-followup.md",
+      "sha256": "21fb3c550f27700f5747d92b41c206b159419425c68c83dcb890407ceba5fa76"
+    },
+    {
+      "bytes": 4339,
+      "path": "source-materials/locked/scope-z/research/supplied-source-reading-audit.md",
+      "sha256": "dc675dd4162b7eb0607605edbf4233649436853c47192b427aded2a1c384454f"
+    },
+    {
+      "bytes": 270924,
+      "path": "source-materials/locked/scope-z/sources/00-exact-user-request.txt",
+      "sha256": "83930d088bd096495206a5e463488af824118f52a3e5f27c5c057ddf33633c3d"
+    },
+    {
+      "bytes": 19015,
+      "path": "source-materials/locked/scope-z/sources/01-x-prd-opening.exact-fragment.txt",
+      "sha256": "957039b59e830160806e671679ba2f23f4964f34816a871fcaf940a7dae5147b"
+    },
+    {
+      "bytes": 69625,
+      "path": "source-materials/locked/scope-z/sources/02-x-prd-remainder.exact-fragment.txt",
+      "sha256": "dfd3debf87382e948ab6193918bd5875e997f85a09b453d07f43084eca27869f"
+    },
+    {
+      "bytes": 87277,
+      "path": "source-materials/locked/scope-z/sources/03-y-prd.exact-fragment.txt",
+      "sha256": "5d20f7e89931df3793c49bebac16a571d7ceb09c23b2899134ee44ca4c03ba66"
+    },
+    {
+      "bytes": 38309,
+      "path": "source-materials/locked/scope-z/sources/04-y3-implementation-blueprint.exact-fragment.txt",
+      "sha256": "f1dc4d8f82f3ac7c49d2e15a5536ab3848525aa9bb49f2693b6b968058e7526f"
+    },
+    {
+      "bytes": 49902,
+      "path": "source-materials/locked/scope-z/sources/05-y2-implementation-blueprint.exact-fragment.txt",
+      "sha256": "c54cf87199b39a7abc925e3292b4923638905c30ce6ecd37f9e41bd7c7d306c8"
+    },
+    {
+      "bytes": 88633,
+      "path": "source-materials/locked/scope-z/sources/06-x-prd.reconstructed.md",
+      "sha256": "678abc5212ad2fce46358f254b9c684916e0f649de30eb98b6d0bef4774a27a3"
+    },
+    {
+      "bytes": 2472,
+      "path": "source-materials/locked/scope-z/sources/source-index.json",
+      "sha256": "e58d791d1fade8d82ed6b711ca3b2b9f7a79ebc7cad051f4859b7fac332cb11b"
+    },
+    {
+      "bytes": 4516,
+      "path": "source-materials/product-lock.json",
+      "sha256": "61d9881ca8059d24d057d1e00d5436ef2059de7889ccd1fd2f92a630075bcebf"
+    },
+    {
+      "bytes": 7712,
+      "path": "source-materials/repository/AGENTS.md",
+      "sha256": "bd0c248a21f2cb25b6634fb77827879877588048aff5fb444a58833e805a86da"
+    },
+    {
+      "bytes": 3877,
+      "path": "source-materials/repository/README.md",
+      "sha256": "e451035b71be99e098f4c9da7ee594196bd1f7a4b16bb2caca7df96d12cfc2dd"
+    },
+    {
+      "bytes": 4204,
+      "path": "source-materials/repository/docs/centropy/capability-reachability-failure-modes.md",
+      "sha256": "a55e60710568455b8e685858e5e167074391476307d83376d90ec271b53cf722"
+    },
+    {
+      "bytes": 10155,
+      "path": "source-materials/repository/e2e/centropy-controlled-recovery.spec.ts",
+      "sha256": "d53a79c178c6995911cc80921e18e75fd63af43f71fb4a347a47e3d8b0c64982"
+    },
+    {
+      "bytes": 2857,
+      "path": "source-materials/repository/e2e/centropy-owner-login.spec.ts",
+      "sha256": "cb4f13418dc5a46dc4da459f576919c67da606e8ab82ced4923b259177e5abd3"
+    },
+    {
+      "bytes": 12494,
+      "path": "source-materials/repository/finnor-os/Dockerfile.worker",
+      "sha256": "bab32161586662b462edb7901c10144e72d1120d20844fdd366bb84d91302e53"
+    },
+    {
+      "bytes": 3982,
+      "path": "source-materials/repository/finnor-os/README.md",
+      "sha256": "8482d038572ab90e58af29ef5cf137aa6f636ac7c1504f9ae8d8e322789cc6c8"
+    },
+    {
+      "bytes": 22066,
+      "path": "source-materials/repository/finnor-os/apps/api/app/api/actions/route.ts",
+      "sha256": "64b9d4f65add1ebffd59523dd73da0d6564f27fe048b09493489d6012d318d22"
+    },
+    {
+      "bytes": 26178,
+      "path": "source-materials/repository/finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
+      "sha256": "0dec46803a98af52700832e83d01e138d643558a0717afbd185839810c6da9b8"
+    },
+    {
+      "bytes": 5066,
+      "path": "source-materials/repository/finnor-os/apps/api/app/api/queries/route.ts",
+      "sha256": "33084eb58a28ee7385843665672f3c727ddaaf4d1719fd804c2d63e96c3c13d6"
+    },
+    {
+      "bytes": 1747,
+      "path": "source-materials/repository/finnor-os/apps/api/app/api/works/[id]/execution/route.ts",
+      "sha256": "b3036d69ed9f6677ceb877539a2536b1d6a049db144df566ecbe483931cb0c0c"
+    },
+    {
+      "bytes": 2370,
+      "path": "source-materials/repository/finnor-os/apps/api/app/api/works/[id]/route.ts",
+      "sha256": "bfafaa0c2f17712dc8aad8fbde375bce270beac500c18c8e1b4557785aecc9f8"
+    },
+    {
+      "bytes": 21797,
+      "path": "source-materials/repository/finnor-os/apps/worker/src/index.ts",
+      "sha256": "5cffd9239ccd0bcb7abd4f301cc52fe28ab2adc2d33e218248524290f7865cb9"
+    },
+    {
+      "bytes": 38695,
+      "path": "source-materials/repository/finnor-os/apps/worker/src/queue.ts",
+      "sha256": "d7b9bcacad8f78ed92343e57ed31df8fd5bfcbff149cbbbb29c62361c8bd2082"
+    },
+    {
+      "bytes": 5276,
+      "path": "source-materials/repository/finnor-os/package.json",
+      "sha256": "5109ef3fcddcea39a92153f756ee12532a5f66d144ba04fd8fc8260b66b90f1e"
+    },
+    {
+      "bytes": 53922,
+      "path": "source-materials/repository/finnor-os/packages/authority/src/index.ts",
+      "sha256": "4399637b25c1c838ab4cfd4daf297e53aa95a01fca5fcf0d619d4413e9d5a9fb"
+    },
+    {
+      "bytes": 87968,
+      "path": "source-materials/repository/finnor-os/packages/capability-evolution/src/lifecycle.ts",
+      "sha256": "5be80e1adfa07789a43153affdcc93cc5d701db1decd987522c5b4fdaac648af"
+    },
+    {
+      "bytes": 150384,
+      "path": "source-materials/repository/finnor-os/packages/db/index.ts",
+      "sha256": "9fc9091d2073694b20915b8a192795be9693dd9c1b2a6e97a8b9bc71d064cbb8"
+    },
+    {
+      "bytes": 9498,
+      "path": "source-materials/repository/finnor-os/packages/db/migrate.ts",
+      "sha256": "da1b30e000be4ed00b9bfbc6cb24a08eb81dd9c0164601d706c829440ee3084a"
+    },
+    {
+      "bytes": 8738,
+      "path": "source-materials/repository/finnor-os/packages/db/migrations/postx_y4_runtime_migration_order.sql",
+      "sha256": "f7f33acbed1f5d290fb4beee6ce9c8cdc8c09fd6037b60f83ce6f4a50d4637c7"
+    },
+    {
+      "bytes": 470,
+      "path": "source-materials/repository/finnor-os/packages/db/read-limits.ts",
+      "sha256": "c47e925d8c21e60ab575ad32f6467499ad94e95bf99a8b95bf74bc2491fc83f4"
+    },
+    {
+      "bytes": 93660,
+      "path": "source-materials/repository/finnor-os/packages/domain-plugins/private-equity/index.ts",
+      "sha256": "5e530d40f5381ae456e97bcd12f82d684ce4d59d1ae2c5c0620cba30ff70b566"
+    },
+    {
+      "bytes": 11283,
+      "path": "source-materials/repository/finnor-os/packages/epistemic-runtime/src/allocation-solver.py",
+      "sha256": "4a199da439c633a1da28eeae9bf1c0faa7ef813c67812732d3cd9f4102d9a653"
+    },
+    {
+      "bytes": 3225,
+      "path": "source-materials/repository/finnor-os/packages/epistemic-runtime/src/certified-state-reduction/producer.ts",
+      "sha256": "75cfa0c84ee6ee574f5e8e8e65a60ee5bbe14ea3243e933b9e0718bf146b63f9"
+    },
+    {
+      "bytes": 13611,
+      "path": "source-materials/repository/finnor-os/packages/epistemic-runtime/src/identification.ts",
+      "sha256": "ca2309eceeed8e6af961f8020f6139af3f620a3298e1e7fcde55d5c2e2fd6229"
+    },
+    {
+      "bytes": 19646,
+      "path": "source-materials/repository/finnor-os/packages/epistemic-runtime/src/intervention-numerics.py",
+      "sha256": "ebbeeed0ae8ecd2e5e7224515d6b6bcd35be5c9f254661451fc8fc156442c1fb"
+    },
+    {
+      "bytes": 171,
+      "path": "source-materials/repository/finnor-os/packages/epistemic-runtime/src/intervention-requirements.txt",
+      "sha256": "a80b57d7c6bdabec985f97d36b41e27d2bd497a8eba9e709a6fc88a91a2a9fe3"
+    },
+    {
+      "bytes": 6865,
+      "path": "source-materials/repository/finnor-os/packages/epistemic-runtime/src/policy-atlas/compiler.ts",
+      "sha256": "b1922848fe70bc2d3b6f07569c0c0462fae6a940a827ca82d35edc4715cff5db"
+    },
+    {
+      "bytes": 112,
+      "path": "source-materials/repository/finnor-os/packages/epistemic-runtime/src/requirements-s5.txt",
+      "sha256": "681063045c2010a80d204e5c12393af4f2acdcc45fb09b12d1bf8663175422b4"
+    },
+    {
+      "bytes": 15642,
+      "path": "source-materials/repository/finnor-os/packages/epistemic-runtime/src/solver-synthesis/producer.ts",
+      "sha256": "4ccef81680857be65701e63f02abae7b6489e04b8d0f02d8cd1f3e1fa71580ab"
+    },
+    {
+      "bytes": 6108,
+      "path": "source-materials/repository/finnor-os/packages/epistemic-runtime/src/strategic-response/adapter.ts",
+      "sha256": "55a0fc8ea0c08ad888679d078b0e6a59bb3d9dcc9dd5bc66ee4940126fbece75"
+    },
+    {
+      "bytes": 6033,
+      "path": "source-materials/repository/finnor-os/packages/epistemic-runtime/src/strategic-response/learner.ts",
+      "sha256": "2e0c12e8511dc764a7fb4ab6e20a9e95d19b46216c84d660dec7eb53001cd57b"
+    },
+    {
+      "bytes": 13916,
+      "path": "source-materials/repository/finnor-os/packages/epistemic-runtime/src/verified-capital-compiler/compiler.ts",
+      "sha256": "4011301e2bd5719a505c4641f6b9b4f68791fa0ccc23bf27e68ae0f3d528a1e7"
+    },
+    {
+      "bytes": 7357,
+      "path": "source-materials/repository/finnor-os/packages/governed-execution/native/linux-launcher.c",
+      "sha256": "7a02833e1a06060f9112389813b989f7598903c0f85648444aa92d25d835a7b0"
+    },
+    {
+      "bytes": 29139,
+      "path": "source-materials/repository/finnor-os/packages/governed-execution/src/dispatch-broker.ts",
+      "sha256": "2dc70098c6fd5bdfc2a35d8bb96db344fb1617bf87e029eb3aeaa491624b216f"
+    },
+    {
+      "bytes": 11168,
+      "path": "source-materials/repository/finnor-os/packages/governed-execution/src/executor-linux.ts",
+      "sha256": "5c1efbb05f9cca16b0d8aef30d8ad9173cc4c81a5475348846fcbbaa23c2da62"
+    },
+    {
+      "bytes": 8321,
+      "path": "source-materials/repository/finnor-os/packages/governed-execution/src/executor.ts",
+      "sha256": "a19ba246f8c9f62640124ae7f2eb865c3326fc716d67aa34011a7b3e93efeeda"
+    },
+    {
+      "bytes": 47412,
+      "path": "source-materials/repository/finnor-os/packages/governed-execution/src/ledger.ts",
+      "sha256": "4d9f49968931acc6cf3e16b705d302444cb903246eb999c2f9c10c996c6f0db2"
+    },
+    {
+      "bytes": 10817,
+      "path": "source-materials/repository/finnor-os/packages/governed-execution/src/request-verifier.ts",
+      "sha256": "b098cc074a8afa4ceaa92244c66256d559515096252072f6b77ca5b365ae4ab7"
+    },
+    {
+      "bytes": 88720,
+      "path": "source-materials/repository/finnor-os/packages/orchestration/src/compiler.ts",
+      "sha256": "7b3f1f1418cc9d98c1d9896deaed93498da460396fabb860d7128296ac859ca0"
+    },
+    {
+      "bytes": 30796,
+      "path": "source-materials/repository/finnor-os/packages/orchestration/src/fast-read-lane.ts",
+      "sha256": "401e5462dee247c4c0928eafc677a48e90fa720e5ac632cd29b605f5f7f2f298"
+    },
+    {
+      "bytes": 108734,
+      "path": "source-materials/repository/finnor-os/packages/orchestration/src/index.ts",
+      "sha256": "29b662df15cf1ece9f868cd2c7b113e4989264e5ecd45d6cd9bdd38f7801e458"
+    },
+    {
+      "bytes": 3384,
+      "path": "source-materials/repository/finnor-os/packages/orchestration/src/operational-query-runtime.ts",
+      "sha256": "a932c6c75162aad6fa88cf8fd964b6fa65319f0d35673e68594e8c5d7ecab3a6"
+    },
+    {
+      "bytes": 90688,
+      "path": "source-materials/repository/finnor-os/packages/orchestration/src/planner.ts",
+      "sha256": "7117e950530e42ba9a53492a9d403a6ef8dd1710106bcbd5d25fb2015f94767b"
+    },
+    {
+      "bytes": 14943,
+      "path": "source-materials/repository/finnor-os/packages/orchestration/src/plugin-registry.ts",
+      "sha256": "d41f4be6b7c38c1fee8556c6a8e1513b4f2350f31f87d582a9d44ca7c5c2ccaf"
+    },
+    {
+      "bytes": 34427,
+      "path": "source-materials/repository/finnor-os/packages/planning/src/compiler.ts",
+      "sha256": "1ec0214588199fafea61237da84b82f06c0f4d4199406a2adfc544749d24ca6b"
+    },
+    {
+      "bytes": 92299,
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/allocation-store.ts",
+      "sha256": "fce8b9f05af8e78dfd81939a3e7cdd572b72401f7b0e49ddaf56cf4244e760fe"
+    },
+    {
+      "bytes": 26280,
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/application-semantics/api.ts",
+      "sha256": "daa82aa0f3e822afed38b0a729ad77c807807dd2706906b56f476485e1c10837"
+    },
+    {
+      "bytes": 3334,
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/application-semantics/envelope.ts",
+      "sha256": "500b044ba6a06ee9ff2902178993f6ba40fb2a2d33e370e3eb2ecd3faf166bb9"
+    },
+    {
+      "bytes": 17332,
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/application-semantics/learner.ts",
+      "sha256": "54711de6a3b9ae4292363cd2dff28f4911b7b4bbebeb39a16f1a75255a57541a"
+    },
+    {
+      "bytes": 23816,
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/application-semantics/validity.ts",
+      "sha256": "e989524ee2afbb6fe201fe72cce13d792dbc64363bd4d102bcb758753bccf27e"
+    },
+    {
+      "bytes": 18777,
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/application-semantics/worker.ts",
+      "sha256": "5af2f821ecca4078f6b759146713e6ad3cf054cc5d2b4532d2b77b4a197057c0"
+    },
+    {
+      "bytes": 17405,
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/bilateral-opportunities/api.ts",
+      "sha256": "e82f2502955ec04da26f1c1e5b80d0fecdd25e627f2b758f5fadf76db384469e"
+    },
+    {
+      "bytes": 11550,
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/branch-fabric/service.ts",
+      "sha256": "6f7f8ca475eaf13bfe6df1cec3569b6491c468128534c18340c7c5f0eb4db595"
+    },
+    {
+      "bytes": 42540,
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/capital-formation/service.ts",
+      "sha256": "684aec3db2d83903b99f904b1aa22a174eba9f499beb44144f45fbba61f76552"
+    },
+    {
+      "bytes": 24360,
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/capital-program/r2-search.ts",
+      "sha256": "cc6898c3ee181f6c7114dbe9c4e6af191b8dc9825d264c8f6e9c67a35e8b522a"
+    },
+    {
+      "bytes": 8708,
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/capital-program/r5-search.ts",
+      "sha256": "28f6bba93d5d7c2da943b4babd4644a932e5c8caca54e61b0f56079b1a6ca765"
+    },
+    {
+      "bytes": 13415,
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/capital-program/worker.ts",
+      "sha256": "d2db88cc463b3590d2dcb2a513c167856cb39740b54ee41828e19f1671193533"
+    },
+    {
+      "bytes": 16938,
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/closing/api.ts",
+      "sha256": "751351c3dbf2be142c30afbc77f9ee1362c2767afc5bdfbdadc0bea6fe49123f"
+    },
+    {
+      "bytes": 20861,
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/compute-search/worker.ts",
+      "sha256": "bf54da819e9467277c9ada3e22a3c16f52b3e66430765a473284afeca0f25e70"
+    },
+    {
+      "bytes": 7934,
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/confidential-computation/owner-consumer.ts",
+      "sha256": "0cf549d158c5836081ba01fbded3dedc9147cdf686a7ec2a9dd679d8ada3d8ee"
+    },
+    {
+      "bytes": 2800,
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/confidential-computation/profile.json",
+      "sha256": "5498dae72310e48d2d09be70710a91dba5c2624853b5dbdf5f36595a881c8502"
+    },
+    {
+      "bytes": 41854,
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/counterexample-search/service.ts",
+      "sha256": "fe27f1155fda79e7b0b218af1648d82930ab1938284015f77952f9cafcc08e73"
+    },
+    {
+      "bytes": 23633,
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/decision-slice/service.ts",
+      "sha256": "4863004fe71833cf6c863acce3116a5a8911c8f8ef9e2a5bd5bf14cb1357594b"
+    },
+    {
+      "bytes": 8933,
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/deliberation/api.ts",
+      "sha256": "584ed8803679539d678dacf1ccc49baf30c60b60b243d9b8fbc6bb2a91bf8619"
+    },
+    {
+      "bytes": 7564,
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/economic-action-theory/compiler.ts",
+      "sha256": "2ddbbcf33ca287ca6101eeaae3b51c30195db109017bc66c0c68ecb2ff7aa804"
+    },
+    {
+      "bytes": 5088,
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/economic-action-theory/programme-worker.ts",
+      "sha256": "99a816e1befa62db8dedad285cf22131e215c4daee669fd19e0272be8b8dd01f"
+    },
+    {
+      "bytes": 11346,
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/enterprise-applications/compiler.ts",
+      "sha256": "1355f145f2e88ee1e7eb7a3d337f8caf4c3a2a5900067b0191d9ecbee1305947"
+    },
+    {
+      "bytes": 15452,
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/enterprise-beliefs.ts",
+      "sha256": "5d3c7199c47feaa311c7f6d503b29d8f6bc9c76a2f4ee4c2397878098a050839"
+    },
+    {
+      "bytes": 74023,
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/enterprise-control.ts",
+      "sha256": "aa33dcf657cdcb4ef85a059b51b52b646a93a11aabd9801e2436511b22d7ce43"
+    },
+    {
+      "bytes": 34122,
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/enterprise-economic-attribution.ts",
+      "sha256": "25ecec3156542ccee9817784cfb2b6f07da317ea97e349073a534990086803d6"
+    },
+    {
+      "bytes": 19185,
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/enterprise-experiments.ts",
+      "sha256": "d8cf9f62c9f89d517a51c2815bd97efd16884389f71c709f0d188da442372062"
+    },
+    {
+      "bytes": 19660,
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/enterprise-interventions.ts",
+      "sha256": "2ade11d990db0eed59e81eefe206268d04a3f33fec73f90a36f2aaae390b41a0"
+    },
+    {
+      "bytes": 37873,
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/enterprise-obligations.ts",
+      "sha256": "90c80ae14f948b4474a006a440ae562a7c594f79a549391c213c25af3e8418dc"
+    },
+    {
+      "bytes": 17060,
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/evidence-execution/worker.ts",
+      "sha256": "b16b3232ef916b2f3f946f63fb20fc3dff13fb5fcc2a3783d7c360df88dc213e"
+    },
+    {
+      "bytes": 17046,
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/institution-program/api.ts",
+      "sha256": "bedb0e7443c51ff636f0ddfd1979373561cfa4ca298b378114302bfd1d2a2320"
+    },
+    {
+      "bytes": 11143,
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/institution-program/responsibility.ts",
+      "sha256": "388a0472110b9ea34243a788dc68743b7c8b3d1f6f118f858736cb1ca88327c6"
+    },
+    {
+      "bytes": 10820,
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/interaction-synthesis/api.ts",
+      "sha256": "8449d112103fb6dce52d49c8a02a1ab8c7ad0eed57bdcb1ec31c47844cc535bc"
+    },
+    {
+      "bytes": 32854,
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/interaction-synthesis/checker.py",
+      "sha256": "66afc296879b355c895d3783fd95c08b87dd98f3ac3c14556343cfe1f9422d3f"
+    },
+    {
+      "bytes": 8950,
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/interaction-synthesis/contracts.ts",
+      "sha256": "36166ca7032bab0e4a71121cb7ddbb6194ad98c78910b8077a0dc61a585e3b72"
+    },
+    {
+      "bytes": 1679,
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/interaction-synthesis/exact.ts",
+      "sha256": "04e9cd6e4dd3a835b1faf387691e4be5b5bb8bd4a496626e75130fb90637f257"
+    },
+    {
+      "bytes": 8043,
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/interaction-synthesis/execution-guard.ts",
+      "sha256": "bcc475a2d4cbed33780d2b4f073c61fc4e507ac0f14ef6d48caeb10bf0cd9919"
+    },
+    {
+      "bytes": 12121,
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/interaction-synthesis/game.ts",
+      "sha256": "7d7e261d0eb7f5f629b438afa3ef82a7e28a397c927994e2c0be9792748df216"
+    },
+    {
+      "bytes": 7966,
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/interaction-synthesis/producer.py",
+      "sha256": "b2ae080a77f54a5fa119bcd5c203f2f79bf4e3b203681ab7fcb5627d63b8b26b"
+    },
+    {
+      "bytes": 8163,
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/interaction-synthesis/product-contracts.ts",
+      "sha256": "7318049069cf40726bc3dbd835c782572faca9c0ff06c9283c6533e1218e91ac"
+    },
+    {
+      "bytes": 1799,
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/interaction-synthesis/product-runtime.ts",
+      "sha256": "65006eef28981541ca9654e952d7aa74564811e9471ade59cc6637d3630ffacf"
+    },
+    {
+      "bytes": 5204,
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/interaction-synthesis/reference.py",
+      "sha256": "7c34efac5f7910b21379a78c78c959a0c96476bc9f1d1e23a51ecfabc568b279"
+    },
+    {
+      "bytes": 16834,
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/interaction-synthesis/store.ts",
+      "sha256": "ccc859e86f243a99701849e78720eae4f0dc2242e2ab920b3a0a8c0fd01c8f95"
+    },
+    {
+      "bytes": 12657,
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/interaction-synthesis/worker.ts",
+      "sha256": "8d74cba218860076880c14fb80c14e8850369e438b56ae55b615d7eb21756bfc"
+    },
+    {
+      "bytes": 17655,
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/interface-synthesis/api.ts",
+      "sha256": "e90582bb03129b35de7528ea080a23b991c4d20f64435e95131cd6d7143589fc"
+    },
+    {
+      "bytes": 38804,
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/live-controls/service.ts",
+      "sha256": "01472ac5024992822b7731d3ed315d3ff8cb1a882067db308177c52a5371bb63"
+    },
+    {
+      "bytes": 19394,
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/live-recompilation/api.ts",
+      "sha256": "dc2b3142f64524fcd435428e3618b8e42d414c845c6e1060d05bd94a24374c42"
+    },
+    {
+      "bytes": 11558,
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/live-recompilation/worker.ts",
+      "sha256": "5a9405bcad0fefb5493bc97723c967cc6f90d45ee81bc2e48178c836db97d8c2"
+    },
+    {
+      "bytes": 7054,
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/policy-learning/consumer.ts",
+      "sha256": "c057840ee3512cb3de2ab650f0cab144d059310280d9a0cffb86f2274ec3e6a3"
+    },
+    {
+      "bytes": 4026,
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/policy-learning/controller.ts",
+      "sha256": "253a86736adb215503475cb18945b531eaf4b4abb1d8df9ea6ad927ed755c508"
+    },
+    {
+      "bytes": 18613,
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/primary-diligence/api.ts",
+      "sha256": "e643914bb767869e371d39c9caf776bb1634ff670a751df2e2b165582f524d68"
+    },
+    {
+      "bytes": 7104,
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/procedure-induction/worker.ts",
+      "sha256": "2da54cb1546e8f1a4b04228632f387ed4f226b24fe2126fc334247ae3fc2677d"
+    },
+    {
+      "bytes": 9505,
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/program-synthesis/compiler.ts",
+      "sha256": "55bde5b6f55624fb141d28da15bbe599e8847777fc7fb8ec07ba82e483345402"
+    },
+    {
+      "bytes": 1754,
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/program-synthesis/economic-native.ts",
+      "sha256": "a68c864b43c5c24e8a00ed8999522b06b3951afd58b656b1e78336a58905ed3d"
+    },
+    {
+      "bytes": 19541,
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/r3/worker.ts",
+      "sha256": "ef0e24005c7a60c388e0db5ddf305e28ad7c92b8af5fa03aee1d4dfd6547c98e"
+    },
+    {
+      "bytes": 9341,
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/r4/worker.ts",
+      "sha256": "cf59cc129d36cdc5cfb6b593b5304e3341670d00b2f335e8ec666a6e5e40059c"
+    },
+    {
+      "bytes": 4136,
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/strategic-response/contracts.ts",
+      "sha256": "0aa0752e175f191da0b660c8e8e1c4134c090cc89e250df5d094e03f347387d7"
+    },
+    {
+      "bytes": 11522,
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/system-identification/consumer.ts",
+      "sha256": "5384552d6e36ec7b28cf835529bb1030b8e5bd35942797eedafc62dd95ebeb30"
+    },
+    {
+      "bytes": 54408,
+      "path": "source-materials/repository/finnor-os/packages/read-models/src/execution-projection.ts",
+      "sha256": "c2d4317d8c2cfe539491a1a41a6c24544346451bef3adbd9ac5e45351e56f9f4"
+    },
+    {
+      "bytes": 29938,
+      "path": "source-materials/repository/finnor-os/packages/shared-types/src/operational-queries.ts",
+      "sha256": "ebd417c6b3eceaf1be87a444f9e0aff8cca2291d1b63f34793f709291a243662"
+    },
+    {
+      "bytes": 16134,
+      "path": "source-materials/repository/finnor-os/packages/shared-types/src/retired-water.ts",
+      "sha256": "67d262a9643f26828f8cce5bb83a9d33e0b58e7cf411037e4e2a217831240b9c"
+    },
+    {
+      "bytes": 1791,
+      "path": "source-materials/repository/finnor-os/packages/source-custody/index.cjs",
+      "sha256": "4284fa4774fc86352b1286ca5da0ac657bf9b5d0e73dc66aae331056353311b3"
+    },
+    {
+      "bytes": 20841,
+      "path": "source-materials/repository/finnor-os/packages/tools/src/registry.ts",
+      "sha256": "234edf523ed100d259ebe7b82bd827097a4549a8678b684028b027c1038c6b2a"
+    },
+    {
+      "bytes": 4525,
+      "path": "source-materials/repository/finnor-os/scripts/bundle-migrations.ts",
+      "sha256": "ca089b9ba1105c95172ffbf067711fdd86ec54026b1600af34ca2077576d9c1d"
+    },
+    {
+      "bytes": 27046,
+      "path": "source-materials/repository/finnor-os/scripts/p7/run-native-e2e.mts",
+      "sha256": "18f91354c009aee90e7f816ceccac9ef7112c5151da77c4ab871b5cd9947a8c8"
+    },
+    {
+      "bytes": 47090,
+      "path": "source-materials/repository/finnor-os/scripts/y1/run-installed.mts",
+      "sha256": "800aa544fc5ac65ba691a25f72f65e933b94cd2be546405597a948eafac2869f"
+    },
+    {
+      "bytes": 10911,
+      "path": "source-materials/repository/finnor-os/scripts/y3/run-math.mts",
+      "sha256": "605983aa27da148239e7d43d8787a0c812981389c48d45a8c192df1adcdaa74a"
+    },
+    {
+      "bytes": 2214,
+      "path": "source-materials/repository/finnor-os/scripts/y4/run-finite.py",
+      "sha256": "5efcf008c3278ee639e0290d709581fb801679335a65081d542f67a58e8f1c5a"
+    },
+    {
+      "bytes": 5435,
+      "path": "source-materials/repository/finnor-os/vitest.config.ts",
+      "sha256": "84e7a5be6043186523f1185d16bbba6fc9a59485080faf3f19eb98c6751e80a6"
+    },
+    {
+      "bytes": 7848,
+      "path": "source-materials/repository/infra/deployment/production.contract.json",
+      "sha256": "617b8597daad3d0cdea1052bdf0f6b995b28d47544fdafacab86c8366aac7992"
+    },
+    {
+      "bytes": 4229,
+      "path": "source-materials/repository/package.json",
+      "sha256": "e8add0c30c1d3f211a011d672a4634b847a8f574b8ebf3928dd4acdb0e20c4b6"
+    },
+    {
+      "bytes": 1675,
+      "path": "source-materials/repository/playwright.config.ts",
+      "sha256": "854efb9b5e09cbc379ef18f399f4c1557b0dcbf48e1dde37e28648192075b013"
+    },
+    {
+      "bytes": 836,
+      "path": "source-materials/repository/scope-1/README.md",
+      "sha256": "f2d79f6fcac0bce04acff17ebe12a2c6509d9193a03d5ee446decdaefbef997b"
+    },
+    {
+      "bytes": 862,
+      "path": "source-materials/repository/scope-2/README.md",
+      "sha256": "3eaa04dcf581d2bb6d74438e60d4fd58534a92e2663e21fa659b3bfc7d709fcb"
+    },
+    {
+      "bytes": 834,
+      "path": "source-materials/repository/scope-3/README.md",
+      "sha256": "6a6c5daa40304e1544d117c09d646d87b898608f098ccf599152839e834a97ff"
+    },
+    {
+      "bytes": 887,
+      "path": "source-materials/repository/scope-4/README.md",
+      "sha256": "658a8efca0d65851687d19c5bf7849fa3937b1d2825e1f61b9a2ada9494ff72e"
+    },
+    {
+      "bytes": 807,
+      "path": "source-materials/repository/scope-5/README.md",
+      "sha256": "5731a02322434383888101b901ab48f103146cd04592228c8cfbcdb21db96c61"
+    },
+    {
+      "bytes": 21967,
+      "path": "source-materials/repository/scope-6/completion-inventory.md",
+      "sha256": "c45c2e5915fad5c8d0e8af2cfe9e1be76b866ef7b50ccbd830a6130a18305373"
+    },
+    {
+      "bytes": 8175,
+      "path": "source-materials/repository/scope-6/scope-plan.md",
+      "sha256": "0bb3bd8f70253dce62695ce9a8daf30cac051d6e9ccd3e6bf6b60ec82deaed52"
+    },
+    {
+      "bytes": 7345,
+      "path": "source-materials/repository/scope-7/scope-plan.md",
+      "sha256": "3108f93f003b4a9ecc29d75093a574149f0f8326bcbfe89c4b732d3bd40ec6ed"
+    },
+    {
+      "bytes": 79964,
+      "path": "source-materials/repository/scope-frontier5/x1-institutional-programme-compiler/status.md",
+      "sha256": "e211be07b2f28c358a24da1630166227e6691b0cbef500bc376237fb3c09da02"
+    },
+    {
+      "bytes": 7102,
+      "path": "source-materials/repository/scope-frontier5/x2-software-semantics-compiler/checkpoint.md",
+      "sha256": "c01a3551bd2dab5ffefb34d60ed261d781f58bb33f42210a1db27c86edc4acd6"
+    },
+    {
+      "bytes": 58451,
+      "path": "source-materials/repository/scope-frontier5/x2-software-semantics-compiler/status.md",
+      "sha256": "905f0fd695cc6fa310fef5c8f93c83769a4fb5f10f6a4b9378ec5dcc364ff5d4"
+    },
+    {
+      "bytes": 9348,
+      "path": "source-materials/repository/scope-postx/y1-economic-action-theory/README.md",
+      "sha256": "0d65453beb0dddbe8a89665c008bed72df036b54884ca9afc0ac22fad0951d2c"
+    },
+    {
+      "bytes": 1923,
+      "path": "source-materials/repository/scope-postx/y2-strategic-response-world-model/STATUS.md",
+      "sha256": "02ae235df4d58c33c690a037cb8f4ce20a78ede451ca929af1ced93f600d2802"
+    },
+    {
+      "bytes": 11786,
+      "path": "source-materials/repository/scope-postx/y3-dynamic-interaction-synthesizer/README.md",
+      "sha256": "ffa9f65eccb4e3f8e3ecc090ea9593121cbd06d663050978fe9f607c66127d2a"
+    },
+    {
+      "bytes": 3212,
+      "path": "source-materials/repository/scope-postx/y4-confidential-economic-compiler/backend-build-contract.md",
+      "sha256": "663a7cf5fc017172fbb00ee206191291b5eeda2b14eb97f3cb295bc09b1ab30b"
+    },
+    {
+      "bytes": 6868,
+      "path": "source-materials/repository/scope-postx/y4-confidential-economic-compiler/design.md",
+      "sha256": "ec567ed30ca86c7e7aafc9e18bfbd77d32c381b2c79252f54515f6df68464124"
+    },
+    {
+      "bytes": 4430,
+      "path": "source-materials/repository/scope-postx/y4-confidential-economic-compiler/plan.md",
+      "sha256": "ded6e86e9bafc46a0a8a8a5bba7daf83db02f3ded35c5df9e8a3b324f2f6ea9b"
+    },
+    {
+      "bytes": 9693,
+      "path": "source-materials/repository/scope-postx/y4-confidential-economic-compiler/review-remediation.md",
+      "sha256": "f4f5694164ad620964c80f57480e5f7207f28b72a1fbe6e19ebe1696200d32ef"
+    },
+    {
+      "bytes": 8784,
+      "path": "source-materials/repository/scope-x-phase/README.md",
+      "sha256": "4606fdb53c35be2196d1df8c5f62a06d2a7b1934f2538e02f77183299b619bd2"
+    },
+    {
+      "bytes": 7811,
+      "path": "source-materials/repository/scope-x-phase/architecture.md",
+      "sha256": "5b5e625fde051cfaf7793352daaf07797b6596f192dcdc5890ee9102c80db97d"
+    },
+    {
+      "bytes": 12825,
+      "path": "source-materials/repository/scope-x3/handoff.md",
+      "sha256": "bd46ab444614bf0d97745b33f3692bb24f27160344ee1ddb7c5b373f8e4af414"
+    },
+    {
+      "bytes": 7381,
+      "path": "source-materials/repository/scope-x4/handoff.md",
+      "sha256": "9efabb9a7f177d7b0f30413ce0a08ef0428e325b9db2eda4e32db8a44544a53a"
+    },
+    {
+      "bytes": 4640,
+      "path": "source-materials/repository/scope-x5/handoff.md",
+      "sha256": "92d35520c268a1992c2edf00bb23d982e3b91d663116aac138e07911d5a50e75"
+    },
+    {
+      "bytes": 1467,
+      "path": "source-materials/repository/scope-z/README.md",
+      "sha256": "90b9b40e2902f1ce37cc329f387940bb0e4975bf5c8a6695b9a46bae27dcbcb6"
+    },
+    {
+      "bytes": 2997,
+      "path": "source-materials/repository/scope-z/orchestration/research-owners.seed.md",
+      "sha256": "9b532d73291d3e94cccdd8ab3b2ade714770c106f2ead97f5a2eca04bdf9b3bf"
+    },
+    {
+      "bytes": 22898,
+      "path": "source-materials/repository/scripts/centropy/audit-capability-coverage.mjs",
+      "sha256": "0f81d60febf1892ef434d0d2838f94133a6d4368c0d431373fc2d3f9a7a77921"
+    },
+    {
+      "bytes": 27511,
+      "path": "source-materials/repository/scripts/centropy/generate-capability-manifest.mjs",
+      "sha256": "9141e31d74a690a11d10ed0cb83cb94a7d1c9a738d39d0a1d4e55728e6e51eb8"
+    },
+    {
+      "bytes": 1357,
+      "path": "source-materials/repository/scripts/centropy/run-local-e2e.mjs",
+      "sha256": "a1d38ffcb7273fda748421cab056eafc51df01578511865d6d6b85935b46256f"
+    },
+    {
+      "bytes": 6379,
+      "path": "source-materials/repository/scripts/centropy/start-certification-stack.mjs",
+      "sha256": "985db4efcf04b6a9519b0743ea6da58a2c724f398a66aa56ca3465c77b98df22"
+    },
+    {
+      "bytes": 1525,
+      "path": "source-materials/repository/scripts/generate-workspace-contract.mjs",
+      "sha256": "42e795b6d45261b2eaa6840745744d3699f1d8b13d3cf4993c8435ca50c36ee4"
+    },
+    {
+      "bytes": 11749,
+      "path": "source-materials/repository/src/app/api/centropy/[...path]/route.ts",
+      "sha256": "f4595610db1279809e4566d7dd390d8d3ea880ac011f9a08c6bf487900ea87a8"
+    },
+    {
+      "bytes": 11566,
+      "path": "source-materials/repository/src/components/centropy/lib/api.ts",
+      "sha256": "5ef9ad627d1c655852274ab4b91930e8f94a3a7fdd828038eb8624cc16885626"
+    },
+    {
+      "bytes": 10232,
+      "path": "source-materials/repository/src/components/centropy/world/WorldWorkRecord.tsx",
+      "sha256": "06b7adb4a5ed940105c8af088e649da459dcde6fe0d48e0173896e0e841f6da5"
+    },
+    {
+      "bytes": 585261,
+      "path": "source-materials/repository/src/lib/centropy/capability-manifest.generated.json",
+      "sha256": "3ff6d0b06d57e13d8412ae9160b5cc844da1d861478665f688d6cb863b2e5238"
+    },
+    {
+      "bytes": 2287,
+      "path": "source-materials/repository/src/lib/centropy/capability-manifest.ts",
+      "sha256": "02fa17dd0cd1d912c88dfc633922f32877bc26236debfd992838c4a5f49b545f"
+    },
+    {
+      "bytes": 1560,
+      "path": "source-materials/repository/vitest.config.ts",
+      "sha256": "46daa26520e7017a1f39ce8a971180fbde0faf59485f4c779fe6ba8205edde4c"
+    }
+  ],
+  "mandatoryReadMap": "companion-read-map.json",
+  "peerHandoffs": "NONE_OBSERVED",
+  "phase": "Z0",
+  "productLockDigest": "61d9881ca8059d24d057d1e00d5436ef2059de7889ccd1fd2f92a630075bcebf",
+  "receiverReadReceipt": null,
+  "requiredEarlierFullSeeds": [],
+  "requiredSealedEnvelope": [
+    "prompt-source-index.json",
+    "assembly-receipt.json",
+    "coordinator execution-pack lock and launch snapshot"
+  ],
+  "requiresOtherZEngine": false,
+  "rule": "Transfer actual complete indexed bytes and original source/lock context. Verify externally sealed index/receipt, then every inventory file and ordered read. File existence is not delivery.",
+  "schema": "finnor.project-z.phase-delivery-inventory.v1",
+  "selectedSeed": "seeds/z0.seed.md",
+  "sourceBase": {
+    "commit": "7bfdd2d3ab611c90f1355637858824ff1ba67f98",
+    "tree": "82caf48007bc826794650505ae76aba92d4f981b"
+  }
+}

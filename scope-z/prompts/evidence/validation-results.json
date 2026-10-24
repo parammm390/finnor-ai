@@ -1,0 +1,211 @@
+{
+  "assemblerSha256": "3f3be8c9820bd0bd388a241944212a1f56fdc94344aedcb0905d61a58b2d8e13",
+  "cases": [
+    {
+      "name": "full-offline-assembly-is-deterministic",
+      "state": "PASSED"
+    },
+    {
+      "name": "validation-receipt-binds-the-complete-input-inventory",
+      "state": "PASSED"
+    },
+    {
+      "name": "Z0-full-bytes-and-earlier-seed-preserved",
+      "state": "PASSED"
+    },
+    {
+      "name": "Z1-full-bytes-and-earlier-seed-preserved",
+      "state": "PASSED"
+    },
+    {
+      "name": "Z2-full-bytes-and-earlier-seed-preserved",
+      "state": "PASSED"
+    },
+    {
+      "name": "Z3-full-bytes-and-earlier-seed-preserved",
+      "state": "PASSED"
+    },
+    {
+      "name": "Z4-full-bytes-and-earlier-seed-preserved",
+      "state": "PASSED"
+    },
+    {
+      "name": "Z5-full-bytes-and-earlier-seed-preserved",
+      "state": "PASSED"
+    },
+    {
+      "name": "all-twenty-real-locked-members-unchanged",
+      "state": "PASSED"
+    },
+    {
+      "name": "last-locked-member-tamper-rejected",
+      "state": "PASSED"
+    },
+    {
+      "name": "missing-locked-member-rejected",
+      "state": "PASSED"
+    },
+    {
+      "name": "duplicate-lock-path-rejected",
+      "state": "PASSED"
+    },
+    {
+      "name": "rehashed-snapshot-still-rejected-by-original-Git-binding",
+      "state": "PASSED"
+    },
+    {
+      "name": "omitted-source-snapshot-rejected",
+      "state": "PASSED"
+    },
+    {
+      "name": "altered-source-excerpt-rejected",
+      "state": "PASSED"
+    },
+    {
+      "name": "unsafe-path-rejected:/tmp/escape",
+      "state": "PASSED"
+    },
+    {
+      "name": "unsafe-path-rejected:../escape",
+      "state": "PASSED"
+    },
+    {
+      "name": "unsafe-path-rejected:a/../escape",
+      "state": "PASSED"
+    },
+    {
+      "name": "unsafe-path-rejected:./a",
+      "state": "PASSED"
+    },
+    {
+      "name": "unsafe-path-rejected:a//b",
+      "state": "PASSED"
+    },
+    {
+      "name": "unsafe-path-rejected:a/./b",
+      "state": "PASSED"
+    },
+    {
+      "name": "unsafe-path-rejected:a\\b",
+      "state": "PASSED"
+    },
+    {
+      "name": "unsafe-path-rejected:C:/escape",
+      "state": "PASSED"
+    },
+    {
+      "name": "safe-path-kept",
+      "state": "PASSED"
+    },
+    {
+      "name": "active-unresolved-field-rejected",
+      "state": "PASSED"
+    },
+    {
+      "name": "active-plain-marker-rejected",
+      "state": "PASSED"
+    },
+    {
+      "name": "quoted-historical-markers-and-math-are-data",
+      "state": "PASSED"
+    },
+    {
+      "name": "missing-heading-rejected",
+      "state": "PASSED"
+    },
+    {
+      "name": "duplicated-goal-rejected",
+      "state": "PASSED"
+    },
+    {
+      "name": "peer-recursion-and-cycle-rejected",
+      "state": "PASSED"
+    },
+    {
+      "name": "unicode-newline-and-fake-delimiter-byte-roundtrip",
+      "state": "PASSED"
+    },
+    {
+      "name": "framed-payload-tamper-rejected",
+      "state": "PASSED"
+    },
+    {
+      "name": "truncated-frame-rejected",
+      "state": "PASSED"
+    },
+    {
+      "name": "one-byte-seed-change-detected",
+      "state": "PASSED"
+    },
+    {
+      "name": "complete-real-companion-inventory",
+      "state": "PASSED"
+    },
+    {
+      "name": "missing-companion-delivery-rejected",
+      "state": "PASSED"
+    },
+    {
+      "name": "all-phase-mandatory-source-reads-exist",
+      "state": "PASSED"
+    },
+    {
+      "name": "delivery-is-not-invented",
+      "state": "PASSED"
+    },
+    {
+      "name": "unrecognized-output-is-preserved",
+      "state": "PASSED"
+    },
+    {
+      "name": "symlink-file-read-rejected",
+      "state": "PASSED"
+    },
+    {
+      "name": "symlink-parent-read-rejected",
+      "state": "PASSED"
+    },
+    {
+      "name": "symlink-file-write-rejected",
+      "state": "PASSED"
+    },
+    {
+      "name": "symlink-parent-write-rejected",
+      "state": "PASSED"
+    },
+    {
+      "name": "historical-draft-write-rejected",
+      "state": "PASSED"
+    },
+    {
+      "name": "nonregular-FIFO-read-rejected-without-blocking",
+      "state": "PASSED"
+    },
+    {
+      "name": "directory-read-rejected",
+      "state": "PASSED"
+    }
+  ],
+  "existingProductChecks": "Inspected, NOT_RUN in this prompt-only task",
+  "financial100x": "NOT_RUN",
+  "operational100x": "NOT_RUN",
+  "preCodeFailureContract": {
+    "bytes": 3750,
+    "path": "annexes/validation-contract.md",
+    "sha256": "bc4054a8745328d6c389204728bf16eda8f4724f61f1f966478d61084a1b3b94"
+  },
+  "productAndInstalledRuntime": "NOT_RUN",
+  "productLockDigest": "61d9881ca8059d24d057d1e00d5436ef2059de7889ccd1fd2f92a630075bcebf",
+  "protectedAdmission": "NOT_RUN",
+  "retainedAuthoringFailures": [
+    {
+      "bytes": 332,
+      "path": "evidence/failures/ba7d5075f036f62a53a53cfe894bb3d2a411a8009dafc1b7f2452510b83b2917.json",
+      "sha256": "ba7d5075f036f62a53a53cfe894bb3d2a411a8009dafc1b7f2452510b83b2917"
+    }
+  ],
+  "schema": "finnor.project-z.finite-authoring-validation.v1",
+  "scope": "New offline pack E2E/mutation checks only; no product runtime/unit/protected/comparative tests",
+  "state": "PASSED",
+  "validatedInputsDigest": "31715d0120ffbbc9ad92f4c2ef6a9c5e936483b596a81b749f3cb28b62dec452"
+}
