@@ -440,7 +440,19 @@ async function observeNative(session, operation, query, options) {
   clearTimeout(timer);
   ensure(exit.code === 0 || exit.code === 2, "Z0_ACTUAL_NATIVE_OBSERVATION_CHILD_FAILED");
   const result = JSON.parse(stdout.trim());
-  session.steps.push({ kind: "REAL_AUTH_NATIVE_QUERY_OWNER", operation, exit, resultSha256: sha(stdout), stderrSha256: sha(stderr) });
+  ensure(result && typeof result === "object" && !Array.isArray(result), "Z0_NATIVE_OBSERVATION_RESULT_REQUIRED");
+  if (exit.code === 0) {
+    const actor = session.activeActor ?? session.target.actor;
+    ensure(!Object.hasOwn(result, "refused") && result.authenticatedActor?.tenantId === actor.tenantId
+      && result.authenticatedActor?.principalId === actor.principalId && result.authenticatedActor?.role === "owner",
+    "Z0_NATIVE_OBSERVATION_AUTHENTICATED_ACTOR_MISMATCH");
+  } else {
+    ensure(result.refused === true && /^[A-Z][A-Z0-9_]{1,159}$/.test(result.predicate ?? ""),
+      "Z0_NATIVE_OBSERVATION_TYPED_REFUSAL_REQUIRED");
+  }
+  session.steps.push({ kind: exit.code === 0 ? "REAL_AUTH_NATIVE_OBSERVATION_OWNER" : "NATIVE_OBSERVATION_CHILD_REFUSAL",
+    operation, exit, authenticatedActor: exit.code === 0 ? result.authenticatedActor : null,
+    resultSha256: sha(stdout), stderrSha256: sha(stderr) });
   return result;
 }
 async function waitFor(session, fixture, predicate, timeoutMs = 60000) {

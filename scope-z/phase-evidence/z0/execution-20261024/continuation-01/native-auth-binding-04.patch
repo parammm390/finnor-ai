@@ -1,0 +1,67 @@
+diff --git a/finnor-os/scripts/project-z/z0/native-observation-child.mjs b/finnor-os/scripts/project-z/z0/native-observation-child.mjs
+index 96c9d25..d248466 100644
+--- a/finnor-os/scripts/project-z/z0/native-observation-child.mjs
++++ b/finnor-os/scripts/project-z/z0/native-observation-child.mjs
+@@ -21,22 +21,26 @@ const moduleAt = async path => {
+   return import(pathToFileURL(actual).href);
+ };
+ try {
++  if (typeof input.bearer !== "string" || !input.bearer.trim()) throw Error("Z0_NATIVE_BEARER_REQUIRED");
++  if (input.operation === "QUERY"
++    && !["harness_program_v1", "economic_programme_v1", "confidential_economic_computation_v1"].includes(input.query?.intent)) {
++    throw Error("Z0_NATIVE_ORIGINAL_QUERY_REQUIRED");
++  }
++  const { requireContext } = await moduleAt("finnor-os/apps/api/lib/auth.ts");
++  const ctx = await requireContext(new Request(input.apiOrigin + "/api/queries", {
++    headers: { authorization: "Bearer " + input.bearer },
++  }));
++  if (ctx.tenantId !== input.tenantId || ctx.userId !== input.principalId || ctx.role !== "owner") {
++    throw Error("Z0_REAL_AUTH_IDENTITY_MISMATCH");
++  }
++  const authenticatedActor = { tenantId: ctx.tenantId, principalId: ctx.userId, role: ctx.role };
+   if (input.operation === "INVENTORY") {
+     const { ConvergedInstitutionRuntime } = await moduleAt("finnor-os/packages/orchestration/src/project-z/z0-convergence/index.ts");
+-    console.log(JSON.stringify({ inventory: new ConvergedInstitutionRuntime().capabilities("private_equity") }));
++    console.log(JSON.stringify({ authenticatedActor, inventory: new ConvergedInstitutionRuntime().capabilities("private_equity") }));
+   } else {
+-    if (!["harness_program_v1", "economic_programme_v1", "confidential_economic_computation_v1"].includes(input.query?.intent)
+-      || typeof input.bearer !== "string") throw Error("Z0_NATIVE_ORIGINAL_QUERY_REQUIRED");
+-    const { requireContext } = await moduleAt("finnor-os/apps/api/lib/auth.ts");
+-    const ctx = await requireContext(new Request(input.apiOrigin + "/api/queries", {
+-      headers: { authorization: "Bearer " + input.bearer },
+-    }));
+-    if (ctx.tenantId !== input.tenantId || ctx.userId !== input.principalId || ctx.role !== "owner") {
+-      throw Error("Z0_REAL_AUTH_IDENTITY_MISMATCH");
+-    }
+     const { getOrchestrator } = await moduleAt("finnor-os/apps/api/lib/orchestrator.ts");
+     const response = await getOrchestrator().handleOperationalQuery(input.query, ctx, input.options);
+-    console.log(JSON.stringify({ response }));
++    console.log(JSON.stringify({ authenticatedActor, response }));
+   }
+ } catch (error) {
+   const predicate = /^[A-Z][A-Z0-9_]{1,159}$/.test(error?.message ?? "") ? error.message : "Z0_NATIVE_OBSERVATION_FAILED";
+diff --git a/finnor-os/scripts/project-z/z0/run-native-e2e.mjs b/finnor-os/scripts/project-z/z0/run-native-e2e.mjs
+index 085361e..6eff513 100644
+--- a/finnor-os/scripts/project-z/z0/run-native-e2e.mjs
++++ b/finnor-os/scripts/project-z/z0/run-native-e2e.mjs
+@@ -440,7 +440,19 @@ async function observeNative(session, operation, query, options) {
+   clearTimeout(timer);
+   ensure(exit.code === 0 || exit.code === 2, "Z0_ACTUAL_NATIVE_OBSERVATION_CHILD_FAILED");
+   const result = JSON.parse(stdout.trim());
+-  session.steps.push({ kind: "REAL_AUTH_NATIVE_QUERY_OWNER", operation, exit, resultSha256: sha(stdout), stderrSha256: sha(stderr) });
++  ensure(result && typeof result === "object" && !Array.isArray(result), "Z0_NATIVE_OBSERVATION_RESULT_REQUIRED");
++  if (exit.code === 0) {
++    const actor = session.activeActor ?? session.target.actor;
++    ensure(!Object.hasOwn(result, "refused") && result.authenticatedActor?.tenantId === actor.tenantId
++      && result.authenticatedActor?.principalId === actor.principalId && result.authenticatedActor?.role === "owner",
++    "Z0_NATIVE_OBSERVATION_AUTHENTICATED_ACTOR_MISMATCH");
++  } else {
++    ensure(result.refused === true && /^[A-Z][A-Z0-9_]{1,159}$/.test(result.predicate ?? ""),
++      "Z0_NATIVE_OBSERVATION_TYPED_REFUSAL_REQUIRED");
++  }
++  session.steps.push({ kind: exit.code === 0 ? "REAL_AUTH_NATIVE_OBSERVATION_OWNER" : "NATIVE_OBSERVATION_CHILD_REFUSAL",
++    operation, exit, authenticatedActor: exit.code === 0 ? result.authenticatedActor : null,
++    resultSha256: sha(stdout), stderrSha256: sha(stderr) });
+   return result;
+ }
+ async function waitFor(session, fixture, predicate, timeoutMs = 60000) {

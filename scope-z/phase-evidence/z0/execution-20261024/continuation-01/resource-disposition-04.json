@@ -1,0 +1,28 @@
+{
+  "schema": "finnor.project-z.z0.current-resource-disposition.v1",
+  "observedAt": "2026-10-24T20:52:51.227069+00:00",
+  "availableBytes": 18933428224,
+  "totalBytes": 56485507072,
+  "previousObservation": {
+    "availableKiB": 44784,
+    "usePercent": 100,
+    "status": "SUPERSEDED_BY_THIS_ACTUAL_OBSERVATION"
+  },
+  "sourceChanges": [
+    "finnor-os/scripts/project-z/z0/native-observation-child.mjs",
+    "finnor-os/scripts/project-z/z0/run-native-e2e.mjs"
+  ],
+  "previousCancellation": "PRESERVED_CAUSE_NOT_EXPOSED",
+  "newReconstructionDisposition": "PERMITTED_ENGINEERING_ONLY_AFTER_FRESH_FREEZE_SHARED_LOCK_AND_NEW_RESOURCE_GUARD",
+  "materialChangesSinceCanceledLaunch": [
+    "Both native observations now bind canonical Auth and matching real actor",
+    "Current disk headroom no longer equals the previous full-disk state"
+  ],
+  "streamingPackagingAlternative": "NOT_IMPLEMENTED_OR_NEEDED_WITH_CURRENT_HEADROOM",
+  "standardFreshTargets": {
+    "source": "installation-14",
+    "reconstruction": "installation-15"
+  },
+  "databaseAuthOrEffectsAuthority": "NOT_DELIVERED",
+  "protectedOrFinancialAuthority": "NOT_GRANTED"
+}

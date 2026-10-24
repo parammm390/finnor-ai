@@ -1,0 +1,86 @@
+{
+  "schema": "finnor.project-z.z0.native-auth-guard-checks.v1",
+  "observedAt": "2026-10-24T20:52:51.227069+00:00",
+  "failureMap": {
+    "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/inventory-auth-binding-before-09.md",
+    "bytes": 6432,
+    "sha256": "af137c3534264d51c68d324edb9e7a49c7613b9d473b30c754df04a00b2c5c5d"
+  },
+  "sourcePostimages": [
+    {
+      "path": "finnor-os/scripts/project-z/z0/native-observation-child.mjs",
+      "bytes": 3054,
+      "sha256": "90c5c6723ec63196fe580e51a0536dc70ebda7afb77e57a877b74ee6391ba54a"
+    },
+    {
+      "path": "finnor-os/scripts/project-z/z0/run-native-e2e.mjs",
+      "bytes": 81668,
+      "sha256": "457e2e05e4c6882eecbfd6b574748eb3dd161aea4dbed4117cb49c36a277aea8"
+    }
+  ],
+  "sourcePatch": {
+    "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/native-auth-binding-04.patch",
+    "bytes": 4424,
+    "sha256": "a6383e439a2ecb0171909eebe536dc1beabea9ec9ef239721851edc6b2982962"
+  },
+  "checks": [
+    {
+      "check": "Existing Node22 observation syntax",
+      "actualExit": 0,
+      "artifact": {
+        "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/syntax-observation-14.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "check": "Existing Node22 driver syntax",
+      "actualExit": 0,
+      "artifact": {
+        "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/syntax-driver-14.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "check": "Existing network-free driver doctor",
+      "actualExit": 0,
+      "artifact": {
+        "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/native-e2e-doctor-14.json",
+        "bytes": 10310,
+        "sha256": "2196e3e4280ac73fcc386bf46ea07323d901c39570863d6707f77497822a701c"
+      }
+    },
+    {
+      "check": "Existing missing-authority refusal",
+      "actualExit": 2,
+      "expectedExit": 2,
+      "artifact": {
+        "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/native-e2e-refusal-14.json",
+        "bytes": 242,
+        "sha256": "459a0eebdf75d3bf42c4797cbc60023c90e1ba4f9d6514b0dc191dc449ae290f"
+      }
+    },
+    {
+      "check": "Existing assembly/lock check",
+      "actualExit": 0,
+      "artifact": {
+        "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/assembly-check-04.log",
+        "bytes": 1641,
+        "sha256": "86cbd5131424357f4efca0a8e3a22bd8d13155e32915e8e3fe519b2913b3dfc2"
+      }
+    },
+    {
+      "check": "Scoped source whitespace/diff review",
+      "actualExit": 0
+    }
+  ],
+  "newUnitTestsWritten": false,
+  "nativeCasesExecuted": 0,
+  "sourceNative": "NOT_RUN",
+  "installedNative": "NOT_RUN",
+  "actualAuthIdentityPositive": "NOT_RUN",
+  "invalidBearerOrForeignActorNative": "NOT_RUN",
+  "currentReconstruction": "PENDING_FRESH_SOURCE_FREEZE",
+  "previousEvidence03": "RETAINED_UNCHANGED_NOT_CURRENT_FOR_THE_TWO_CHANGED_FILES"
+}
