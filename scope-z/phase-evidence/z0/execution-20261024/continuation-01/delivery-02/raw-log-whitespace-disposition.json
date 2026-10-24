@@ -1,0 +1,17 @@
+{
+  "schema": "finnor.project-z.z0.raw-evidence-format-disposition.v1",
+  "check": "git diff --cached --check",
+  "actualExitCode": 2,
+  "affectedPath": "delivery-02/bundle-verify-02.log",
+  "affectedLine": 5,
+  "diagnostic": "trailing whitespace",
+  "cause": "Git bundle verify prints a trailing space after the prerequisite ref.",
+  "rawEvidenceModified": false,
+  "disposition": "RETAIN_EXACT_TOOL_OUTPUT_NOT_A_PRODUCT_SOURCE_FAILURE",
+  "sourceDocumentationAndJsonWhitespace": "PASSED_SEPARATE_SCOPED_CHECK",
+  "bundleVerificationExitCode": 0,
+  "engineeringReconstructionExpectedStepsPassed": 11,
+  "native": "NOT_RUN",
+  "installedNative": "NOT_RUN",
+  "slotReleased": false
+}

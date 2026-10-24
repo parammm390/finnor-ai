@@ -1,0 +1,77 @@
+{
+  "schema": "finnor.project-z.z0.postcommit-evidence-binding.v2",
+  "createdAt": "2026-10-24T18:05:39.346361+00:00",
+  "phase": "Z0",
+  "sourceImplementationCommit": "b0da02031f4fb3bead483798d29ac0b0458df312",
+  "sourceImplementationTree": "51b7e8eb4dc5089ccde56ef9d4746acb350a2514",
+  "coordinatorProductAtFreeze": "9f3edfd3b4c6758832c53139da0773218062191e",
+  "sourcePopulationSha256": "3032d24fa61d1514fe8bf75cdfbad71c0a5f7dc5a7f1df835b6d005bf354201a",
+  "evidenceCommit": "a16b47fd0446ff2c9b655826caccbb06dffa39c1",
+  "evidenceTree": "f5bd5d642bbbbc241ba4d67625f1deb36cc4078e",
+  "verifiedCommittedEvidenceMembers": 212,
+  "evidenceIndex": {
+    "path": "final-evidence-index-02.json",
+    "sha256": "2f7d4500304e53611757e89e34e8690219892f5bab3758cd685ae55731ea6d59",
+    "bytes": 39762
+  },
+  "handoff": {
+    "path": "handoff-final-02.md",
+    "sha256": "db0308edd6558bbbb140b40e2d83e793336effa164a77638671848429699d602",
+    "bytes": 8555
+  },
+  "qualification": {
+    "path": "qualification-final-02.json",
+    "sha256": "e8eecb5b65dfdfb4723bbe123873824c7a7d1121be2204bca804a1d0869931b2",
+    "bytes": 7841
+  },
+  "sourceContentManifest": {
+    "path": "source-content-manifest-02.json",
+    "sha256": "abf80ece0a3834b6fbf4fd33678d6fbf54644a3b41904aa69800e922430d29bc",
+    "bytes": 12533
+  },
+  "standaloneSourceArchive": {
+    "path": "installation-08/converged-source.tar.gz",
+    "sha256": "a5cc3ca6ae9683d86b47aa661b95a321c2d10011c46d97afd98a8fb78c824670",
+    "bytes": 11047313
+  },
+  "standaloneReconstructionRequiresGitObjects": false,
+  "fullInstallationManifest": {
+    "path": "installation-09/full-installation-manifest-01.json",
+    "sha256": "5c3049be256dd4857af5439c8a89ff7698b19e7d9a96deb2882483860d98abce",
+    "bytes": 26973853
+  },
+  "optionalGitTransport": {
+    "path": "delivery-02/z0-owned-a16b47f.bundle",
+    "sha256": "ac557ec4daf8b73fbcd01190c7d103871714be52419381e7e954dbf97125fe63",
+    "bytes": 20873164,
+    "head": "a16b47fd0446ff2c9b655826caccbb06dffa39c1",
+    "prerequisite": "684d805e471836a720aa6741a3128eca17d28202",
+    "verification": {
+      "path": "delivery-02/bundle-verify-02.log",
+      "sha256": "f6aee3558f2a9b083fb5da2de4e52c83c15d4fd26d35d522892611447977fcdc",
+      "bytes": 330
+    },
+    "verificationExitCode": 0,
+    "scope": "Owned implementation and receipts through evidenceCommit; this later binding is envelope-only.",
+    "notRequiredForStandaloneSourceReconstruction": true
+  },
+  "validation": {
+    "sourceDocumentationAndMetadataWhitespace": "PASSED",
+    "stagedByteVerification": "PASSED",
+    "committedByteVerification": "PASSED",
+    "sevenHandoffLabels": "PASSED",
+    "finalArchiveRebuildExpectedSteps": 11
+  },
+  "authorOrCommitterIdentityOverriddenByProducer": false,
+  "noTemporaryIterationHelperFilesCreated": true,
+  "retainedGeneratedRuntimes": "Intentional immutable replay artifacts, not source fallback or temporary helper scripts.",
+  "native": "NOT_RUN",
+  "installedNative": "NOT_RUN",
+  "physicalRecovery": "NOT_RUN",
+  "computationDisposition": "INCOMPLETE",
+  "slotReleased": false,
+  "z3Launched": false,
+  "scientificIncrement": false,
+  "externalSends": 0,
+  "pushDeployProvision": false
+}
