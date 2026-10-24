@@ -1,0 +1,27 @@
+diff --git a/finnor-os/apps/worker/src/index.ts b/finnor-os/apps/worker/src/index.ts
+--- a/finnor-os/apps/worker/src/index.ts
++++ b/finnor-os/apps/worker/src/index.ts
+@@ -1,3 +1,5 @@
++import {createSharedWorkJobHandler} from '../../../packages/orchestration/src/project-z/z1-shared-work/worker';
++import type {Z1NativePorts} from '../../../packages/private-equity/src/project-z/z1-shared-work/owner';
+ import {runDecisionAtlasJob} from '../../../packages/private-equity/src/r7/worker';
+ import {buildEnterpriseApplicationJob} from '../../../packages/private-equity/src/enterprise-applications/worker';
+ import {compileLearnedPolicyJob} from '../../../packages/private-equity/src/policy-learning/worker';
+@@ -77,3 +79,8 @@
+-export function createWorker(): JobQueue {
++export function createWorker(options: {z1SharedWorkPorts?: Z1NativePorts} = {}): JobQueue {
+   const queue = new JobQueue();
++  // Configure only after canonical intake/store/owner bindings are integrated.
++  if (options.z1SharedWorkPorts) queue.register(
++    'run_shared_work_program_v1', createSharedWorkJobHandler(options.z1SharedWorkPorts),
++    PRODUCTION_JOB_CONTRACTS.run_shared_work_program_v1,
++  );
+   queue.register('learn_strategic_response_model_v1',strategicResponseJob,PRODUCTION_JOB_CONTRACTS.learn_strategic_response_model_v1);
+diff --git a/finnor-os/packages/db/compute-contract.ts b/finnor-os/packages/db/compute-contract.ts
+--- a/finnor-os/packages/db/compute-contract.ts
++++ b/finnor-os/packages/db/compute-contract.ts
+@@ -83,3 +83,4 @@
+ export const PRODUCTION_JOB_CONTRACTS = {
++  run_shared_work_program_v1: tenantFixed("INTERACTIVE", "locally_idempotent", "Z1 exact pure shared original-Work computation with separate checker, fenced checkpoint charges and original per-Work delivery; no admission or effect authority.", {leaseRecovery:"immediate_after_expiry"}),
+   learn_strategic_response_model_v1: tenantFixed("INTERACTIVE", "locally_idempotent", "Y2 finite actor-local response learning and independent complete model-set checking; original Work, no effects or protected authority.", {leaseRecovery:"immediate_after_expiry"}),
+   evaluate_strategic_response_v1: tenantFixed("INTERACTIVE", "locally_idempotent", "Y2 coupled S3 prediction and actual S4 search with independent programme checking; original episode and cumulative use limits, no effects.", {leaseRecovery:"immediate_after_expiry"}),

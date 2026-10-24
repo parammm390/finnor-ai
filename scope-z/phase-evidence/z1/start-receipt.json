@@ -1,0 +1,47 @@
+{
+  "schema": "finnor.project-z.z1.start.v1",
+  "observedAt": "2026-10-24T14:50:39Z",
+  "phase": "Z1",
+  "worktree": "/home/factory-user/repos/finnor-z1",
+  "branch": "factory/project-z1",
+  "base": "684d805e471836a720aa6741a3128eca17d28202",
+  "baseTree": "163f63b65c88481194d0d48e77337494b3b9f24f",
+  "productLockSha256": "61d9881ca8059d24d057d1e00d5436ef2059de7889ccd1fd2f92a630075bcebf",
+  "seedSha256": "635e04fc82b8ff5769f0569d95b1185b95d195eec67d4552d1a4f999178bad7d",
+  "seedBytes": 861773,
+  "packCheck": {
+    "command": "python3 scope-z/prompts/assemble.py check",
+    "exitCode": 0,
+    "membersVerified": 20,
+    "indexSha256": "5c78fc5da28a8eb92caa5cda9f13f8179597c0b8c927f78d1f0576d83939f954",
+    "receiptSha256": "e7c53d4a8581f67209010ac159c91c29395b427ac74b1da14832d9f1a44b0084",
+    "scope": "Sealed authoring bytes only, not delivery, reading or product proof"
+  },
+  "topologyOverride": {
+    "authority": "Current user correction recorded in the continuation context",
+    "mode": "Ordinary execution chat on existing shared cloud Computer",
+    "dedicatedComputer": "NOT_REQUESTED_BY_THIS_SESSION",
+    "nativeMission": false,
+    "maxImplementationSlots": 3,
+    "sharedHeavyLock": "/home/factory-user/repos/finnor-z-shared-heavy.lock",
+    "maxNodeHeapMiB": 1536,
+    "sealedControllerModified": false
+  },
+  "observations": {
+    "node": "v22.23.4",
+    "npm": "11.19.1",
+    "python": "3.12.3",
+    "preexistingUntracked": ["scope-z/orchestration/shared-computer-launch/"],
+    "peerHandoffs": "NONE_OBSERVED",
+    "runtimeModelAttestation": "UNKNOWN, no attestation available to this assistant",
+    "requestedModel": "gpt-6.1-sol/max",
+    "fullSeedAndMandatoryCompanionReading": "IN_PROGRESS, no full-read acknowledgement",
+    "installedNativeOwnerFlow": "NOT_RUN",
+    "externalWrites": false
+  },
+  "retainedSetupFailure": {
+    "command": "/home/factory-user/repos/finnor-z-toolchains/node22/node_modules/.bin/npm --version",
+    "exitCode": 127,
+    "reason": "Node-only toolchain prefix has no npm binary; system npm with the Node 22 prefix on PATH succeeded"
+  }
+}

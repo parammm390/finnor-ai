@@ -1,0 +1,54 @@
+{
+  "schema": "finnor.project-z.shared-change-request.v1",
+  "phase": "Z1",
+  "productLockDigest": "61d9881ca8059d24d057d1e00d5436ef2059de7889ccd1fd2f92a630075bcebf",
+  "preimageDigest": {
+    "finnor-os/apps/worker/src/index.ts": "5cffd9239ccd0bcb7abd4f301cc52fe28ab2adc2d33e218248524290f7865cb9",
+    "finnor-os/packages/db/compute-contract.ts": "d8783ff65e9ed0489a93077e2766ae5f395c32eb1fecda163c5d941a23e20814"
+  },
+  "exactPatch": "registration-request.diff",
+  "patchScope": "Conditional job factory registration and code-level compute classification only; not complete owner integration",
+  "disposition": "INTERNAL_INCOMPLETE; NOT_APPLIED; no integration receipt observed",
+  "symbolsAndVersion": [
+    "createSharedWorkJobHandler / run_shared_work_program_v1, protocol 1",
+    "Z1NativePorts / z1-per-original-work-v1",
+    "produce / applyChanges / currentness / projectForWork",
+    "consumeSharedWorkProjection / checkedPublication",
+    "finnor.z1.request.v1 / finnor.z1.shared-work-program.v1 / finnor.z1.checked-publication.v1"
+  ],
+  "callers": [
+    "Existing canonical Work/planner candidate intake, not implemented",
+    "Existing createWorker, conditionally configured only",
+    "Existing native S3/S4 numerical consumers, concrete mapping not implemented",
+    "Existing canonical mounted Work query/readback, not implemented"
+  ],
+  "failureModel": [
+    "Cross-tenant/principal/raw-source authorization",
+    "Claim token/fence/generation and publication compare-and-swap",
+    "Source, rights, model, terms, objective, units, code and checker revisions at every boundary",
+    "Lost worker after claim/checkpoint/artifact/delivery before acknowledgement",
+    "Duplicate deliveries, lost physical costs, renewed budget/deadline or dropped S6 exposure",
+    "Candidate confused with S8 admission, owner use or actual effect observation"
+  ],
+  "compatibilityImpact": "createWorker remains callable without arguments. Z1 is unavailable by default until real native ports are integrated. No existing action/query/Work/effect identity changes.",
+  "migrationImpact": "Coordinator must map immutable requests/checkpoints/checks/artifacts/outbox into existing canonical persistence and add matching durable job-classification policy. No migration number or alternative truth/authority ledger is created here.",
+  "finiteVerification": [
+    "git apply --check registration-request.diff against the exact preimages",
+    "Narrow Z1 type closure and complete backend typecheck under the shared host limit",
+    "Independent original-semantics engine E2E plus process/edge checks",
+    "Required real authenticated native positive owner flow and canonical physical recovery, NOT_RUN",
+    "Fresh installed application and reloaded original mounted Work, NOT_RUN"
+  ],
+  "remainingObligations": [
+    "Implement every Z1NativePorts binding against canonical current authenticated state",
+    "Wire actual original-parent intake and registered durable queue",
+    "Atomically persist native checkpoint, cumulative physical/tick costs, artifact and outbox under the same claim",
+    "Bind existing S8 independently; a local checker result never self-admits",
+    "Implement exact S3 and S4 variable/unit/truth-class projections, separate original Works, existing shared S5 feasibility",
+    "Retain native S6 UNKNOWN and obligations; no effect dispatch is added by this kernel",
+    "Publish S7 costs and actual native consumption receipts",
+    "Mount original per-Work evidence and validate reload/session/principal behavior",
+    "Perform real three-boundary canonical worker interruption and separately installed authenticated application proof",
+    "Do not infer enabled capability or internal completion from applying the conditional registration patch"
+  ]
+}
