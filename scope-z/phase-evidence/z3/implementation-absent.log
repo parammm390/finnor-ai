@@ -1,0 +1,26 @@
+Traceback (most recent call last):
+  File "/home/factory-user/repos/finnor-z3/finnor-os/scripts/project-z/z3/finite-e2e.py", line 272, in <module>
+    main()
+  File "/home/factory-user/repos/finnor-z3/finnor-os/scripts/project-z/z3/finite-e2e.py", line 175, in main
+    candidates = invoke_batch(["node", str(args.cli), "produce-batch"], requests)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/factory-user/repos/finnor-z3/finnor-os/scripts/project-z/z3/finite-e2e.py", line 147, in invoke_batch
+    raise RuntimeError(f"Child exit {result.returncode}: {result.stderr[:2000]}")
+RuntimeError: Child exit 1: node:internal/modules/cjs/loader:1433
+  throw err;
+  ^
+
+Error: Cannot find module '/home/factory-user/repos/finnor-z3/scope-z/phase-evidence/z3/build/cli.mjs'
+    at Function._resolveFilename (node:internal/modules/cjs/loader:1430:15)
+    at defaultResolveImpl (node:internal/modules/cjs/loader:1040:19)
+    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1045:22)
+    at Function._load (node:internal/modules/cjs/loader:1216:25)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:254:19)
+    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)
+    at node:internal/main/run_main_module:36:49 {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: []
+}
+
+Node.js v22.23.4
+

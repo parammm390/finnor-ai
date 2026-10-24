@@ -1,0 +1,71 @@
+{
+  "schema": "finnor.z3.integration-patches.v1",
+  "baseCommit": "9f3edfd3b4c6758832c53139da0773218062191e",
+  "baseTree": "2dc4d5bc13d22853cf4dc9feb5f6ac7fbf6bb9c9",
+  "applyOrder": [
+    "0002-compute-contract.patch",
+    "0003-worker-register.patch",
+    "0004-company-brain-route.patch",
+    "0005-mounted-work-panel.patch",
+    "0001-migration-0199-z3-viability.patch",
+    "0005b-viability-panel-file.patch"
+  ],
+  "patches": [
+    {
+      "patch": "0002-compute-contract.patch",
+      "path": "finnor-os/packages/db/compute-contract.ts",
+      "kind": "modify",
+      "preimageBlob": "0898402e36bd044316b7ea4f462ea113b82ad440",
+      "postimageBlob": "c3d3d1ecf599ec0cbd0587e799c1c64579b081e6",
+      "sha256": "419a894e719840f4d2a4bbb64c480924004350a66261ed37d018a88f6e90fbfd",
+      "appliedAndVerified": true
+    },
+    {
+      "patch": "0003-worker-register.patch",
+      "path": "finnor-os/apps/worker/src/index.ts",
+      "kind": "modify",
+      "preimageBlob": "5d39db6d2a064946c418323c0d83b0767b2e6e70",
+      "postimageBlob": "9a31fe473c17d2226dfd76f217edd8e3da137e41",
+      "sha256": "7154da53325f6c6b831bd38f674f913905ffed80e843e3d048113e63dfe40a18",
+      "appliedAndVerified": true
+    },
+    {
+      "patch": "0004-company-brain-route.patch",
+      "path": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
+      "kind": "modify",
+      "preimageBlob": "4d6bd4d58ac0d98f0b4dfbb217a045ba35613843",
+      "postimageBlob": "5f646de883029a29332eb3694d26f80ca9a22e5a",
+      "sha256": "30b512139cefe200fc21cfd8731c8f756cb55381ce0823cd15e7733e23cf1f30",
+      "appliedAndVerified": true
+    },
+    {
+      "patch": "0005-mounted-work-panel.patch",
+      "path": "src/components/centropy/world/WorldWorkRecord.tsx",
+      "kind": "modify",
+      "preimageBlob": "516765c0aa77d2866101c15ff53736440ba4808e",
+      "postimageBlob": "b9f0279f5b8af3b52e1eeea98b359a4fc2ad1a87",
+      "sha256": "e43da3c5de8fc69d47eb9e1878f5eeaedcdc1745c13069c37b72f497982161c3",
+      "appliedAndVerified": true
+    },
+    {
+      "patch": "0001-migration-0199-z3-viability.patch",
+      "path": "finnor-os/packages/db/migrations/0199_z3_viability.sql",
+      "kind": "add",
+      "preimageBlob": null,
+      "postimageBlob": "ba8174cf633903ee880ce0a074f939760fcb7fdf",
+      "payloadSha256": "2caf73c23eacba002a629ab4c6f73c31e54f92bb10a1f8741c3851ed90239e76",
+      "sha256": "dc11ef6c4000a3a84b22d9e3148a771bd5d4e4522e89a904002bfb2aca0bf6db",
+      "appliedAndVerified": true
+    },
+    {
+      "patch": "0005b-viability-panel-file.patch",
+      "path": "src/components/centropy/world/ViabilityPanel.tsx",
+      "kind": "add",
+      "preimageBlob": null,
+      "postimageBlob": "d4c465d307ee66dc18cd9e340298bf414cd16f0d",
+      "payloadSha256": "be45e0a6f4338ba313ffadcd8c3dd85884b9494372bc435d857d32dc850c9f14",
+      "sha256": "5204d21d3b76c42a2dcd8a7219a18ba82f621a90dcee32efc0b27ef6908aced4",
+      "appliedAndVerified": true
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+diff --git a/finnor-os/apps/api/app/api/company-brain/[operation]/route.ts b/finnor-os/apps/api/app/api/company-brain/[operation]/route.ts
+index 4d6bd4d58ac0d98f0b4dfbb217a045ba35613843..5f646de883029a29332eb3694d26f80ca9a22e5a 100644
+--- a/finnor-os/apps/api/app/api/company-brain/[operation]/route.ts
++++ b/finnor-os/apps/api/app/api/company-brain/[operation]/route.ts
+@@ -41,6 +41,7 @@
+ import {ApplicationProviderFault} from '@finnor/computer';
+ import {handleInterfaceOperation,INTERFACE_OPERATIONS} from '@finnor/private-equity/src/interface-synthesis/api';
+ import {handleContinuationOperation,CONTINUATION_OPERATIONS} from '@finnor/private-equity/src/live-recompilation/api';
++import {handleViabilityOperation,VIABILITY_OPERATIONS} from '@finnor/private-equity/src/project-z/z3-viability/api';
+ import {handleProcedureOperation,PROCEDURE_OPERATIONS} from '@finnor/private-equity/src/procedure-induction/api';
+ import {handleCapitalProgramOperation,CAPITAL_PROGRAM_V2_OPERATIONS,capitalProgramResponseError} from '@finnor/private-equity/src/capital-program/v2-api';
+ import {inM3Episode,m3TransportDeadline,readM3Body} from '@finnor/private-equity/src/capital-program/v2-budget';
+@@ -298,6 +299,7 @@
+     if((APPLICATION_SEMANTICS_OPERATIONS as readonly string[]).includes(route.operation)){const result=await handleApplicationSemanticsOperation(ctx,route.operation,body);return response(result.body,result.status);}
+     if(CAPITAL_FORMATION_OPERATION_NAMES.has(route.operation)){const result=await handleCapitalFormationOperation(ctx,route.operation,body);return response(result.body,result.status);}
+     if((CONTINUATION_OPERATIONS as readonly string[]).includes(route.operation)){const result=await handleContinuationOperation(ctx,route.operation,body);return response(result.body,result.status);}
++    if((VIABILITY_OPERATIONS as readonly string[]).includes(route.operation)){const result=await handleViabilityOperation(ctx,route.operation,body);return response(result.body,result.status);}
+     if ((PROCEDURE_OPERATIONS as readonly string[]).includes(route.operation)) { const result=await handleProcedureOperation(ctx,route.operation,body);return response(result.body,result.status); }
+     if(M1_OPERATIONS.has(route.operation))return response(await handleDecisionSliceOperation(ctx,route.operation,body));
+     if((INTERFACE_OPERATIONS as readonly string[]).includes(route.operation)){const result=await handleInterfaceOperation(ctx,route.operation,body);return response(result.body,result.status);}

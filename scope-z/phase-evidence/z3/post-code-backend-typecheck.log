@@ -1,0 +1,80 @@
+
+> finnor-os@0.1.0 typecheck
+> tsc -p tsconfig.json
+
+packages/private-equity/src/project-z/z3-viability/contracts.ts(99,55): error TS2366: Function lacks ending return statement and return type does not include 'undefined'.
+packages/private-equity/src/project-z/z3-viability/store.ts(179,20): error TS18048: 'inputRow' is possibly 'undefined'.
+packages/private-equity/src/project-z/z3-viability/store.ts(180,61): error TS18048: 'rights' is possibly 'undefined'.
+packages/private-equity/src/project-z/z3-viability/store.ts(207,61): error TS18048: 'inputRow' is possibly 'undefined'.
+packages/private-equity/src/project-z/z3-viability/store.ts(216,42): error TS18048: 'inputRow' is possibly 'undefined'.
+packages/private-equity/src/project-z/z3-viability/store.ts(231,3): error TS2322: Type 'ViabilitySessionRow | undefined' is not assignable to type 'ViabilitySessionRow'.
+  Type 'undefined' is not assignable to type 'ViabilitySessionRow'.
+packages/private-equity/src/project-z/z3-viability/store.ts(299,3): error TS2322: Type 'ViabilitySessionRow | undefined' is not assignable to type 'ViabilitySessionRow'.
+  Type 'undefined' is not assignable to type 'ViabilitySessionRow'.
+packages/private-equity/src/project-z/z3-viability/store.ts(327,3): error TS2322: Type 'ViabilitySessionRow | undefined' is not assignable to type 'ViabilitySessionRow'.
+  Type 'undefined' is not assignable to type 'ViabilitySessionRow'.
+packages/private-equity/src/project-z/z3-viability/store.ts(361,3): error TS2322: Type 'ViabilitySessionRow | undefined' is not assignable to type 'ViabilitySessionRow'.
+  Type 'undefined' is not assignable to type 'ViabilitySessionRow'.
+packages/private-equity/src/project-z/z3-viability/worker.ts(63,7): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Property 'NODE_ENV' is missing in type '{ PATH: string; LANG: string; PYTHONDONTWRITEBYTECODE: string; }' but required in type 'ProcessEnv'.
+packages/private-equity/src/project-z/z3-viability/worker.ts(72,13): error TS2339: Property 'kill' does not exist on type 'never'.
+  The intersection 'ChildProcessWithoutNullStreams & ChildProcessByStdio<Writable, Readable, Readable> & ... 7 more ... & ChildProcess' was reduced to 'never' because property 'stdin' has conflicting types in some constituents.
+packages/private-equity/src/project-z/z3-viability/worker.ts(76,11): error TS2339: Property 'stdout' does not exist on type 'never'.
+  The intersection 'ChildProcessWithoutNullStreams & ChildProcessByStdio<Writable, Readable, Readable> & ... 7 more ... & ChildProcess' was reduced to 'never' because property 'stdin' has conflicting types in some constituents.
+packages/private-equity/src/project-z/z3-viability/worker.ts(81,11): error TS2339: Property 'stderr' does not exist on type 'never'.
+  The intersection 'ChildProcessWithoutNullStreams & ChildProcessByStdio<Writable, Readable, Readable> & ... 7 more ... & ChildProcess' was reduced to 'never' because property 'stdin' has conflicting types in some constituents.
+packages/private-equity/src/project-z/z3-viability/worker.ts(82,11): error TS2339: Property 'on' does not exist on type 'never'.
+  The intersection 'ChildProcessWithoutNullStreams & ChildProcessByStdio<Writable, Readable, Readable> & ... 7 more ... & ChildProcess' was reduced to 'never' because property 'stdin' has conflicting types in some constituents.
+packages/private-equity/src/project-z/z3-viability/worker.ts(83,11): error TS2339: Property 'on' does not exist on type 'never'.
+  The intersection 'ChildProcessWithoutNullStreams & ChildProcessByStdio<Writable, Readable, Readable> & ... 7 more ... & ChildProcess' was reduced to 'never' because property 'stdin' has conflicting types in some constituents.
+packages/private-equity/src/project-z/z3-viability/worker.ts(83,24): error TS7006: Parameter 'code' implicitly has an 'any' type.
+packages/private-equity/src/project-z/z3-viability/worker.ts(93,11): error TS2339: Property 'stdin' does not exist on type 'never'.
+  The intersection 'ChildProcessWithoutNullStreams & ChildProcessByStdio<Writable, Readable, Readable> & ... 7 more ... & ChildProcess' was reduced to 'never' because property 'stdin' has conflicting types in some constituents.
+packages/private-equity/src/project-z/z3-viability/worker.ts(94,11): error TS2339: Property 'stdin' does not exist on type 'never'.
+  The intersection 'ChildProcessWithoutNullStreams & ChildProcessByStdio<Writable, Readable, Readable> & ... 7 more ... & ChildProcess' was reduced to 'never' because property 'stdin' has conflicting types in some constituents.
+packages/private-equity/src/project-z/z3-viability/worker.ts(95,11): error TS2339: Property 'stdin' does not exist on type 'never'.
+  The intersection 'ChildProcessWithoutNullStreams & ChildProcessByStdio<Writable, Readable, Readable> & ... 7 more ... & ChildProcess' was reduced to 'never' because property 'stdin' has conflicting types in some constituents.
+packages/private-equity/src/project-z/z3-viability/worker.ts(127,38): error TS18048: 'input' is possibly 'undefined'.
+packages/private-equity/src/project-z/z3-viability/worker.ts(134,66): error TS18048: 'input' is possibly 'undefined'.
+packages/private-equity/src/project-z/z3-viability/worker.ts(134,82): error TS18048: 'input' is possibly 'undefined'.
+packages/private-equity/src/project-z/z3-viability/worker.ts(137,47): error TS18048: 'input' is possibly 'undefined'.
+packages/private-equity/src/project-z/z3-viability/worker.ts(138,27): error TS18048: 'input' is possibly 'undefined'.
+packages/private-equity/src/project-z/z3-viability/worker.ts(144,49): error TS2345: Argument of type 'Readonly<{ claimFence: number; jobId?: string | undefined; tenantId?: string | null | undefined; deliveryAttemptId?: string | undefined; claimToken?: string | undefined; protocolVersion?: number | undefined; workerId?: string | undefined; retrySafety?: JobRetrySafety | undefined; registerHeartbeat?: ((callback: () =...' is not assignable to parameter of type 'Readonly<JobExecutionContext>'.
+  Types of property 'jobId' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+packages/private-equity/src/project-z/z3-viability/worker.ts(145,59): error TS2345: Argument of type 'Readonly<{ claimFence: number; jobId?: string | undefined; tenantId?: string | null | undefined; deliveryAttemptId?: string | undefined; claimToken?: string | undefined; protocolVersion?: number | undefined; workerId?: string | undefined; retrySafety?: JobRetrySafety | undefined; registerHeartbeat?: ((callback: () =...' is not assignable to parameter of type 'Readonly<JobExecutionContext>'.
+  Types of property 'jobId' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+packages/private-equity/src/project-z/z3-viability/worker.ts(147,54): error TS2345: Argument of type 'Readonly<{ claimFence: number; jobId?: string | undefined; tenantId?: string | null | undefined; deliveryAttemptId?: string | undefined; claimToken?: string | undefined; protocolVersion?: number | undefined; workerId?: string | undefined; retrySafety?: JobRetrySafety | undefined; registerHeartbeat?: ((callback: () =...' is not assignable to parameter of type 'Readonly<JobExecutionContext>'.
+  Types of property 'jobId' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+packages/private-equity/src/project-z/z3-viability/worker.ts(160,63): error TS2345: Argument of type 'Readonly<{ claimFence: number; jobId?: string | undefined; tenantId?: string | null | undefined; deliveryAttemptId?: string | undefined; claimToken?: string | undefined; protocolVersion?: number | undefined; workerId?: string | undefined; retrySafety?: JobRetrySafety | undefined; registerHeartbeat?: ((callback: () =...' is not assignable to parameter of type 'Readonly<JobExecutionContext>'.
+  Types of property 'jobId' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+packages/private-equity/src/project-z/z3-viability/worker.ts(164,57): error TS2345: Argument of type 'Readonly<{ claimFence: number; jobId?: string | undefined; tenantId?: string | null | undefined; deliveryAttemptId?: string | undefined; claimToken?: string | undefined; protocolVersion?: number | undefined; workerId?: string | undefined; retrySafety?: JobRetrySafety | undefined; registerHeartbeat?: ((callback: () =...' is not assignable to parameter of type 'Readonly<JobExecutionContext>'.
+  Types of property 'jobId' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+packages/private-equity/src/project-z/z3-viability/worker.ts(172,65): error TS2345: Argument of type 'Readonly<{ claimFence: number; jobId?: string | undefined; tenantId?: string | null | undefined; deliveryAttemptId?: string | undefined; claimToken?: string | undefined; protocolVersion?: number | undefined; workerId?: string | undefined; retrySafety?: JobRetrySafety | undefined; registerHeartbeat?: ((callback: () =...' is not assignable to parameter of type 'Readonly<JobExecutionContext>'.
+  Types of property 'jobId' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+packages/private-equity/src/project-z/z3-viability/worker.ts(176,60): error TS2345: Argument of type 'Readonly<{ claimFence: number; jobId?: string | undefined; tenantId?: string | null | undefined; deliveryAttemptId?: string | undefined; claimToken?: string | undefined; protocolVersion?: number | undefined; workerId?: string | undefined; retrySafety?: JobRetrySafety | undefined; registerHeartbeat?: ((callback: () =...' is not assignable to parameter of type 'Readonly<JobExecutionContext>'.
+  Types of property 'jobId' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+packages/private-equity/src/project-z/z3-viability/worker.ts(187,48): error TS2345: Argument of type 'Readonly<{ claimFence: number; jobId?: string | undefined; tenantId?: string | null | undefined; deliveryAttemptId?: string | undefined; claimToken?: string | undefined; protocolVersion?: number | undefined; workerId?: string | undefined; retrySafety?: JobRetrySafety | undefined; registerHeartbeat?: ((callback: () =...' is not assignable to parameter of type 'Readonly<JobExecutionContext>'.
+  Types of property 'jobId' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+packages/private-equity/src/project-z/z3-viability/worker.ts(189,37): error TS18048: 'input' is possibly 'undefined'.
+packages/private-equity/src/project-z/z3-viability/worker.ts(189,54): error TS2345: Argument of type 'Readonly<{ claimFence: number; jobId?: string | undefined; tenantId?: string | null | undefined; deliveryAttemptId?: string | undefined; claimToken?: string | undefined; protocolVersion?: number | undefined; workerId?: string | undefined; retrySafety?: JobRetrySafety | undefined; registerHeartbeat?: ((callback: () =...' is not assignable to parameter of type 'Readonly<JobExecutionContext>'.
+  Types of property 'jobId' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+exit=2

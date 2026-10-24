@@ -1,0 +1,7 @@
+
+> finnor-os@0.1.0 typecheck
+> tsc -p tsconfig.json
+
+packages/private-equity/src/project-z/z3-viability/worker.ts(78,19): error TS2352: Conversion of type '{ PATH: string; }' to type 'ProcessEnv' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Property 'NODE_ENV' is missing in type '{ PATH: string; }' but required in type 'ProcessEnv'.
+exit=2

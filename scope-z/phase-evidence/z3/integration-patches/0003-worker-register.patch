@@ -1,0 +1,21 @@
+diff --git a/finnor-os/apps/worker/src/index.ts b/finnor-os/apps/worker/src/index.ts
+index 5d39db6d2a064946c418323c0d83b0767b2e6e70..9a31fe473c17d2226dfd76f217edd8e3da137e41 100644
+--- a/finnor-os/apps/worker/src/index.ts
++++ b/finnor-os/apps/worker/src/index.ts
+@@ -15,6 +15,7 @@
+ import {runInterfaceAcquisitionJob} from '@finnor/private-equity/src/interface-synthesis/worker';
+ import {runApplicationSemanticsJob} from '@finnor/private-equity/src/application-semantics/worker';
+ import {runProgrammeContinuationJob} from '@finnor/private-equity/src/live-recompilation/worker';
++import {runZ3ViabilityRecoveryJob,runZ3ViabilitySynthesisJob} from '@finnor/private-equity/src/project-z/z3-viability/worker';
+ import {runProcedureInductionJob} from '@finnor/private-equity/src/procedure-induction/worker';
+ import {runCapitalProgramJob,runRobustCapitalProgramJob,runCoalitionProgrammeJob} from '@finnor/private-equity/src/capital-program/worker';
+ import {runCounterexampleSearchJob} from '@finnor/private-equity/src/counterexample-search/worker';
+@@ -93,6 +94,8 @@
+   queue.register('run_counterexample_search_v1',runCounterexampleSearchJob,PRODUCTION_JOB_CONTRACTS.run_counterexample_search_v1);
+   queue.register('run_procedure_induction_v1',runProcedureInductionJob,PRODUCTION_JOB_CONTRACTS.run_procedure_induction_v1);
+   queue.register('run_programme_continuation_v1',runProgrammeContinuationJob,PRODUCTION_JOB_CONTRACTS.run_programme_continuation_v1);
++  queue.register('run_z3_viability_synthesis_v1',runZ3ViabilitySynthesisJob,PRODUCTION_JOB_CONTRACTS.run_z3_viability_synthesis_v1);
++  queue.register('run_z3_viability_recovery_v1',runZ3ViabilityRecoveryJob,PRODUCTION_JOB_CONTRACTS.run_z3_viability_recovery_v1);
+   queue.register('run_r1_dependency_continuation_v1',runProgrammeContinuationJob,PRODUCTION_JOB_CONTRACTS.run_r1_dependency_continuation_v1);
+   queue.register('run_interface_acquisition_v1',runInterfaceAcquisitionJob,PRODUCTION_JOB_CONTRACTS.run_interface_acquisition_v1);
+   queue.register('run_branch_fabric_v1',(payload,execution)=>handleBranch(payload,execution!),PRODUCTION_JOB_CONTRACTS.run_branch_fabric_v1);

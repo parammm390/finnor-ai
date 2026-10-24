@@ -1,0 +1,20 @@
+diff --git a/src/components/centropy/world/WorldWorkRecord.tsx b/src/components/centropy/world/WorldWorkRecord.tsx
+index 516765c0aa77d2866101c15ff53736440ba4808e..b9f0279f5b8af3b52e1eeea98b359a4fc2ad1a87 100644
+--- a/src/components/centropy/world/WorldWorkRecord.tsx
++++ b/src/components/centropy/world/WorldWorkRecord.tsx
+@@ -15,6 +15,7 @@
+ import type { PeWorldRootRef } from "../pe/contracts"
+ import { canonicalRootFocus } from "./world-context"
+ import { ConfidentialComputationPanel } from "./ConfidentialComputationPanel"
++import { ViabilityPanel } from "./ViabilityPanel"
+ import { usePrivateRequestScope } from "../lib/use-private-request-scope"
+ 
+ const label = (value: string) => value.replaceAll("_", " ").replace(/([a-z0-9])([A-Z])/g, "$1 $2").toLowerCase()
+@@ -73,6 +74,7 @@
+       {root ? <StrategicResponsePanel key={`response:${workId}:${root.entityType}:${root.entityId}`} root={root} workId={workId} /> : null}
+       {root ? <ConfidentialComputationPanel key={workId} root={root} workId={workId} /> : null}
+       {root ? <InteractionProtocolPanel key={`interaction:${workId}:${root.entityType}:${root.entityId}`} root={root} workId={workId} /> : null}
++      {root ? <ViabilityPanel key={`viability:${workId}:${root.entityType}:${root.entityId}`} root={root} workId={workId} /> : null}
+       {summary(aggregate.work.finalOutcome) ? <p className="ct-world-work__outcome"><ShieldCheck size={16} /> {summary(aggregate.work.finalOutcome)}</p> : null}
+       {aggregate.read?.complete === false ? <p className="ct-world-work__caveat">This bounded Work read is incomplete. The counts below cover only returned rows.</p> : null}
+       <div className="ct-world-work__section"><h4>Recorded actions and verification</h4>{aggregate.actions.map((action) => {

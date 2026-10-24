@@ -1,0 +1,33 @@
+{
+  "cliExit": 0,
+  "cliStderrHead": "",
+  "cliRows": 4,
+  "cliDispositions": [
+    "COMPLETE",
+    "UNSUPPORTED",
+    "UNSUPPORTED",
+    "COMPLETE"
+  ],
+  "cliNullDigestRows": [
+    1,
+    2
+  ],
+  "cliReplayStable": true,
+  "checkerExit": 0,
+  "checkerStderrHead": "",
+  "checkerRows": 4,
+  "checkerStatuses": [
+    "VIABLE",
+    "UNSUPPORTED",
+    "UNSUPPORTED",
+    "UNSUPPORTED"
+  ],
+  "checkerReasons": [
+    "Z3_COMPLETE_ORDINARY_REGION_AND_CHECKED_NONCONFLICTING_STRATEGY",
+    "Z3_CHECK_MALFORMED_NDJSON",
+    "Z3_ORIGINAL_PROFILE_UNSUPPORTED",
+    "Z3_ORIGINAL_PROFILE_UNSUPPORTED"
+  ],
+  "pass": true,
+  "wallSeconds": 0.08535640300033265
+}
