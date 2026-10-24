@@ -1,0 +1,15 @@
+{
+  "name": "00-git-object-isolation",
+  "command": "/usr/bin/git",
+  "args": [
+    "rev-parse",
+    "--show-toplevel"
+  ],
+  "cwd": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-07/runtime",
+  "started": "2026-10-24T17:42:53.533Z",
+  "elapsedMs": 7,
+  "expectedCode": 128,
+  "code": 128,
+  "signal": null,
+  "logSha256": "d2b35cacadc66b7fad8dedd1be5244e17150a6625978c9330f831bd7a9cd6b1e"
+}

@@ -1,0 +1,9 @@
+file:///home/factory-user/repos/finnor-z0/finnor-os/scripts/project-z/z0/reconstruct-converged.mjs:50
+  if (exit.code !== expectedCode) throw Error("Z0_RECONSTRUCTION_STEP_FAILED_" + name);
+                                        ^
+
+Error: Z0_RECONSTRUCTION_STEP_FAILED_00-git-object-isolation
+    at run (file:///home/factory-user/repos/finnor-z0/finnor-os/scripts/project-z/z0/reconstruct-converged.mjs:50:41)
+    at async file:///home/factory-user/repos/finnor-z0/finnor-os/scripts/project-z/z0/reconstruct-converged.mjs:53:3
+
+Node.js v22.23.4

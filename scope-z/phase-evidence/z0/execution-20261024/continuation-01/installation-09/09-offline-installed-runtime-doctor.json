@@ -1,0 +1,18 @@
+{
+  "name": "09-offline-installed-runtime-doctor",
+  "command": "/home/factory-user/repos/finnor-z-toolchains/node22/node_modules/node/bin/node",
+  "args": [
+    "--import",
+    "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-09/runtime/finnor-os/z0-runtime-01/installed-loader.mjs",
+    "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-09/runtime/finnor-os/scripts/project-z/z0/offline-runtime-doctor.mjs",
+    "--z0-offline-doctor",
+    "--output=/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-09/offline-runtime-doctor.json"
+  ],
+  "cwd": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-09/runtime",
+  "started": "2026-10-24T17:53:37.342Z",
+  "elapsedMs": 41054,
+  "expectedCode": 0,
+  "code": 0,
+  "signal": null,
+  "logSha256": "e1548fed32bb3905761f82deb09c8fa84a94d65d15fbc51c7d1d83eecf7c875a"
+}

@@ -1,0 +1,210 @@
+{
+  "schema": "finnor.project-z.z0.qualification.v2",
+  "phase": "Z0",
+  "principalOutputType": "ConvergedInstitutionRuntime",
+  "computationDisposition": "INCOMPLETE",
+  "overallEvidenceClass": "partial",
+  "interfaceVersion": "institution-runtime-convergence-v1",
+  "scientificIncrement": false,
+  "sharedIntegration": "APPLIED_BY_COORDINATOR_RECONCILED_AT_FROZEN_SOURCE",
+  "slotReleased": false,
+  "z3Launched": false,
+  "delivery": "LOCAL_VERSIONED_ARTIFACT_NOT_ACKNOWLEDGED",
+  "frozenSource": {
+    "coordinatorHead": "9f3edfd3b4c6758832c53139da0773218062191e",
+    "coordinatorTree": "2dc4d5bc13d22853cf4dc9feb5f6ac7fbf6bb9c9",
+    "coordinatorTrackedDiffSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "ownHead": "b0da02031f4fb3bead483798d29ac0b0458df312",
+    "ownTree": "51b7e8eb4dc5089ccde56ef9d4746acb350a2514",
+    "ownTrackedDiffSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "sourcePopulationSha256": "3032d24fa61d1514fe8bf75cdfbad71c0a5f7dc5a7f1df835b6d005bf354201a",
+  "gates": {
+    "architecture": {
+      "state": "IN_PROGRESS",
+      "nativeOriginalOwner": "NOT_RUN"
+    },
+    "internal-software": {
+      "state": "IN_PROGRESS",
+      "fullBackendTypes": "PASSED",
+      "actualNextBuild": "PASSED",
+      "nativeE2E": "NOT_RUN"
+    },
+    "installed-development-reconstruction": {
+      "state": "IN_PROGRESS",
+      "engineeringReconstruction": "PASSED",
+      "nativeInstalledRepeat": "NOT_RUN"
+    },
+    "mathematical-security-domain": {
+      "state": "NOT_RUN"
+    },
+    "protected-admission": {
+      "state": "NOT_RUN"
+    },
+    "equipped-increment": {
+      "state": "NOT_RUN"
+    },
+    "operational-100x": {
+      "state": "NOT_RUN"
+    },
+    "financial-100x": {
+      "state": "NOT_RUN"
+    },
+    "production-activation": {
+      "state": "NOT_RUN"
+    },
+    "financial-headroom": {
+      "state": "UNKNOWN"
+    }
+  },
+  "engineering": {
+    "reconstruction": {
+      "path": "installation-09/reconstruction.json",
+      "sha256": "909e32a2cb0529936e28e0eab0797679c6a2b072ef60b5a4705b1a24a3c7c29d",
+      "bytes": 9555
+    },
+    "expectedStepsPassed": 11,
+    "gitControl": {
+      "actualExit": 128,
+      "expectedExit": 128,
+      "ceiling": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-09"
+    },
+    "fullBackendTypeInputs": 4454,
+    "outsideTargetTypeInputs": 0,
+    "frontendBuildId": "z0-3032d24fa61d1514",
+    "browserPublicAuthBuild": {
+      "schema": "finnor.project-z.z0.frontend-public-auth-build-receipt.v1",
+      "sourcePopulationSha256": "3032d24fa61d1514fe8bf75cdfbad71c0a5f7dc5a7f1df835b6d005bf354201a",
+      "state": "NOT_DELIVERED",
+      "authenticationExecuted": false,
+      "environmentNames": []
+    },
+    "files": {
+      "count": 98849,
+      "populationSha256": "2c5f4950425485b51a74a146e139e4aad555621d31a1e18a0f448aaf77ce5def"
+    },
+    "packages": 1823,
+    "nativeAssets": 150,
+    "emittedSources": 1160,
+    "apiRouteRecords": 157,
+    "externalImports": 36,
+    "internalLinks": 101,
+    "checkerPins": {
+      "count": 3163,
+      "sha256": "15e43114ccb770eef996c9a1877edadd53c06bd037b95cdd04c0156c26a8f2fb"
+    },
+    "totalBytes": 2084365078,
+    "runtime": {
+      "node": "v22.23.4",
+      "platform": "linux",
+      "architecture": "x64",
+      "modules": "127",
+      "nodeBinarySha256": "94efd062ed066c1a0b332e18249859c905e920eeada5df55d24c99b919629a90"
+    },
+    "buildTool": {
+      "esbuild": "0.25.12",
+      "typescript": "5.9.3",
+      "esbuildPath": "finnor-os/node_modules/esbuild/lib/main.js",
+      "typescriptPath": "finnor-os/node_modules/typescript/lib/typescript.js",
+      "builderSha256": "089ec36dcf1f4f2000a6f4388975a9c9e8aac0697904c4be8dd264208a4242bd"
+    },
+    "fullInstallationManifestSha256": "5c3049be256dd4857af5439c8a89ff7698b19e7d9a96deb2882483860d98abce",
+    "sourceFallback": "REFUSED",
+    "dependencyTreesCopied": false,
+    "localGitObjectsRequired": false,
+    "offlineDoctor": {
+      "path": "installation-09/offline-runtime-doctor.json",
+      "sha256": "10502413969c43c745290938f57925f244fa167736e910855839191f774c4469",
+      "bytes": 21027
+    },
+    "checksWritten": "Predeclared executable workflow/closure/authority checks; no new post-code unit tests.",
+    "existingChecksUsed": "Actual TypeScript full backend and Next production build; coordinator existing checks read, not rerun.",
+    "coordinatorReceipts": {
+      "path": "coordinator-receipts-02/provenance.json",
+      "sha256": "8c5dc974b99c02d822d3cfd93228019dacbd83930dea0160ab13077e632340c6",
+      "bytes": 4286
+    }
+  },
+  "coverage": {
+    "contextAndLockDoctor": "PASSED",
+    "actualEmittedCanonicalInventory": {
+      "state": "PASSED",
+      "count": 77
+    },
+    "originalWorkAuthenticatedHttpAndDb": "NOT_RUN",
+    "originalParentUsefulNativeOwnerConsumption": "NOT_RUN",
+    "independentOriginalBusinessCompletion": "NOT_RUN",
+    "s5RemainingBudgetsAndS6Unknown": "NOT_RUN",
+    "mountedCanonicalWorkAndReload": "NOT_RUN",
+    "completeS7NativeCosts": "NOT_RUN",
+    "physicalRecovery": {
+      "claim": "NOT_RUN",
+      "artifact": "NOT_RUN",
+      "ambiguity": "NOT_RUN"
+    },
+    "separatelyInstalledIntegratedRepeat": "NOT_RUN",
+    "nativePlan": {
+      "state": "IMPLEMENTED_NOT_RUN",
+      "casesPerTarget": 54,
+      "targets": [
+        "SOURCE",
+        "INSTALLED"
+      ],
+      "totalObligations": 108,
+      "completed": 0,
+      "driverSha256": "a22e563528271a2dbaf35428eb7798050fc4b1980f8052fd541969029501292f"
+    }
+  },
+  "sql": {
+    "state": "PARSED_NOT_EXECUTED",
+    "sha256": "1511609691eed81aee3f227d70a0a5b061adf604780d5c6ab16822cc47aa029a",
+    "statements": 12,
+    "functions": 4,
+    "parserVersion": "v8.7",
+    "parserNativeModuleSha256": "90a8f1f924ba61fd965de0def2d70b7e4f989c63c2e855016035a8eccb0dc008",
+    "sqlExecuted": false,
+    "grantsExecuted": false,
+    "catalogRolesTriggersRLS": "NOT_RUN",
+    "originalFailure": {
+      "path": "sql-before-reconciliation.log",
+      "sha256": "09f26ed8e34fdb948c1c3bc5a07173481e2cf77741fc92bb1441641c1a843623",
+      "bytes": 1409
+    }
+  },
+  "realRuntimeActions": {
+    "authBypassUsed": false,
+    "borrowedSiblingStack": false,
+    "migrationExecuted": false,
+    "grantsExecuted": false,
+    "newRuntimeReservationsCreated": 0,
+    "newRuntimeObligationsCreated": 0,
+    "preexistingRuntimeState": "UNKNOWN",
+    "externalSends": 0,
+    "pushOrPrOrDeployOrProvision": false
+  },
+  "costs": {
+    "engineeringSubprocessWallMsFinalReconstruction": 307905,
+    "engineeringWallIncludesNetworkAndWait": true,
+    "completeS7RuntimeCosts": "NOT_RUN",
+    "wholeRunMoney": null,
+    "wholeRunLabor": null,
+    "wholeRunTokens": null,
+    "wholeRunCpuSeconds": null,
+    "wholeRunPeakRss": null,
+    "modelAndEffortAttestation": "NOT_OBSERVED",
+    "releaseSufficient": false
+  },
+  "remainingInternal": [
+    "Native runtime correctness is unproven; actual execution can reveal further defects.",
+    "SQL schema, role, guard, digest, idempotency and concurrency behavior remain unexecuted.",
+    "Useful original-owner business consumption and mounted/installed/physical recovery gates remain NOT_RUN.",
+    "Existing unrelated R8 missing-export warning retained outside this producer's ownership."
+  ],
+  "externalAuthorityNotDelivered": [
+    "Exact expiring disposable native authority and precommitted independent original-semantics oracle",
+    "Two already initialized isolated native databases, lawful fixtures, tenant and restricted observer roles",
+    "Real local owner credentials and same-project frontend/API Auth",
+    "Explicit source-bound public browser Auth build input",
+    "Owned stack/listener/process identities and independently supervised workers with preauthorized finite leases"
+  ]
+}

@@ -1,0 +1,103 @@
+{
+  "checks": [
+    {
+      "name": "z0-integrated-native-boundary",
+      "cwd": "/home/factory-user/repos/finnor-z-coordinator/finnor-os",
+      "command": [
+        "npm",
+        "run",
+        "test",
+        "--",
+        "tests/integration/production-query-surface.test.ts",
+        "--maxWorkers=1",
+        "--no-file-parallelism"
+      ],
+      "actualExitCode": 0,
+      "elapsedSeconds": 11.135
+    },
+    {
+      "name": "z0-integrated-frontend-eslint",
+      "cwd": "/home/factory-user/repos/finnor-z-coordinator",
+      "command": [
+        "node",
+        "node_modules/eslint/bin/eslint.js",
+        "src/components/centropy/canvas/application-semantics-client.ts",
+        "src/components/centropy/canvas/ApplicationSemanticsPanel.tsx"
+      ],
+      "actualExitCode": 0,
+      "elapsedSeconds": 6.965
+    },
+    {
+      "name": "z0-integrated-release-head-parity",
+      "cwd": "/home/factory-user/repos/finnor-z-coordinator",
+      "command": [
+        "node",
+        "--test",
+        "--test-name-pattern=^(?!source checks ignore timestamp)",
+        "scripts/release/release-policy.test.mjs"
+      ],
+      "actualExitCode": 0,
+      "elapsedSeconds": 0.266
+    },
+    {
+      "name": "z0-integrated-workspace-check",
+      "cwd": "/home/factory-user/repos/finnor-z-coordinator",
+      "command": [
+        "npm",
+        "run",
+        "workspace:check"
+      ],
+      "actualExitCode": 0,
+      "elapsedSeconds": 0.216
+    },
+    {
+      "name": "z0-integrated-centropy-manifest-check",
+      "cwd": "/home/factory-user/repos/finnor-z-coordinator",
+      "command": [
+        "npm",
+        "run",
+        "centropy:manifest:check"
+      ],
+      "actualExitCode": 0,
+      "elapsedSeconds": 7.923
+    },
+    {
+      "name": "z0-integrated-centropy-coverage-check",
+      "cwd": "/home/factory-user/repos/finnor-z-coordinator",
+      "command": [
+        "npm",
+        "run",
+        "centropy:coverage:check"
+      ],
+      "actualExitCode": 1,
+      "elapsedSeconds": 18.564
+    },
+    {
+      "name": "z0-integrated-centropy-client-check",
+      "cwd": "/home/factory-user/repos/finnor-z-coordinator",
+      "command": [
+        "npm",
+        "run",
+        "centropy:client:check"
+      ],
+      "actualExitCode": 0,
+      "elapsedSeconds": 2.235
+    },
+    {
+      "name": "z0-integrated-centropy-forms-check",
+      "cwd": "/home/factory-user/repos/finnor-z-coordinator",
+      "command": [
+        "npm",
+        "run",
+        "centropy:forms:check"
+      ],
+      "actualExitCode": 0,
+      "elapsedSeconds": 0.268
+    }
+  ],
+  "credentialEnvironmentInherited": false,
+  "releaseTestExclusion": "The existing Git-fixture test overrides author identity; it is deliberately not executed.",
+  "nativeAuthenticatedProductFlow": "NOT_RUN",
+  "sqlExecuted": false,
+  "grantsExecuted": false
+}

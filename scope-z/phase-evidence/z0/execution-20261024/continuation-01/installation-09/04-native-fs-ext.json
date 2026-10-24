@@ -1,0 +1,16 @@
+{
+  "name": "04-native-fs-ext",
+  "command": "/usr/bin/npm",
+  "args": [
+    "rebuild",
+    "fs-ext",
+    "--build-from-source"
+  ],
+  "cwd": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-09/runtime/finnor-os",
+  "started": "2026-10-24T17:49:55.428Z",
+  "elapsedMs": 6361,
+  "expectedCode": 0,
+  "code": 0,
+  "signal": null,
+  "logSha256": "d87123d77de63183b78d26da347afeaa647fac327e5f0d5477009ba2e6980809"
+}

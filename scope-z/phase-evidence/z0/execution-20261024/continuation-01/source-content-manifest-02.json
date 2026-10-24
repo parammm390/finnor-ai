@@ -1,0 +1,287 @@
+{
+  "schema": "finnor.project-z.z0.final-source-content.v2",
+  "phase": "Z0",
+  "frozen": {
+    "coordinatorHead": "9f3edfd3b4c6758832c53139da0773218062191e",
+    "coordinatorTree": "2dc4d5bc13d22853cf4dc9feb5f6ac7fbf6bb9c9",
+    "coordinatorTrackedDiffSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "ownHead": "b0da02031f4fb3bead483798d29ac0b0458df312",
+    "ownTree": "51b7e8eb4dc5089ccde56ef9d4746acb350a2514",
+    "ownTrackedDiffSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "sourcePopulationSha256": "3032d24fa61d1514fe8bf75cdfbad71c0a5f7dc5a7f1df835b6d005bf354201a",
+  "sourceFileCount": 3035,
+  "sourceBytes": 47113363,
+  "archive": {
+    "path": "installation-08/converged-source.tar.gz",
+    "sha256": "a5cc3ca6ae9683d86b47aa661b95a321c2d10011c46d97afd98a8fb78c824670",
+    "bytes": 11047313
+  },
+  "sourceSnapshot": {
+    "path": "installation-08/source-snapshot.json",
+    "sha256": "4e38f7d255f653d2f484795e43faf019b4001740822f712e288734f38f9d6305",
+    "bytes": 767583
+  },
+  "ownedFiles": [
+    {
+      "path": "finnor-os/packages/orchestration/src/project-z/z0-convergence/index.ts",
+      "sha256": "f981fac916e112c27447e984de35f34825f067f6a0c4d015e3d7f1b060b8fcc5",
+      "bytes": 950,
+      "origin": "ACTUAL_COORDINATOR_SOURCE"
+    },
+    {
+      "path": "finnor-os/packages/orchestration/src/project-z/z0-convergence/institution-allocation.ts",
+      "sha256": "d23214d462b59b9bb8dc5978c0378370e3efce4157a75c97863f93c1970feca3",
+      "bytes": 22916,
+      "origin": "ACTUAL_COORDINATOR_SOURCE"
+    },
+    {
+      "path": "finnor-os/packages/orchestration/src/project-z/z0-convergence/institution-consumer.ts",
+      "sha256": "71d9df3579384b68c0300ce28665a244ecbe7102a254a88c8aa8485535a11a96",
+      "bytes": 29204,
+      "origin": "ACTUAL_COORDINATOR_SOURCE"
+    },
+    {
+      "path": "finnor-os/packages/orchestration/src/project-z/z0-convergence/institution-origin.ts",
+      "sha256": "5ee67ab595155e27b78b65c162d700c865f1eb62d2207bd026abf60d503199eb",
+      "bytes": 17258,
+      "origin": "ACTUAL_COORDINATOR_SOURCE"
+    },
+    {
+      "path": "finnor-os/packages/orchestration/src/project-z/z0-convergence/original-work-observation.ts",
+      "sha256": "0ac1dc3f861cac3d756b87f0caea18c317be0ba0b781fb29068095e2dcc005f4",
+      "bytes": 1993,
+      "origin": "ACTUAL_COORDINATOR_SOURCE"
+    },
+    {
+      "path": "finnor-os/packages/orchestration/src/project-z/z0-convergence/projection.ts",
+      "sha256": "b2bc7fd3eda606bfd3c573917ab3b03f76b8fd963f0989d64d0bb830589da1a7",
+      "bytes": 3559,
+      "origin": "ACTUAL_COORDINATOR_SOURCE"
+    },
+    {
+      "path": "finnor-os/packages/orchestration/src/project-z/z0-convergence/s5-owner-adapter.sql",
+      "sha256": "1511609691eed81aee3f227d70a0a5b061adf604780d5c6ab16822cc47aa029a",
+      "bytes": 27298,
+      "origin": "ACTUAL_COORDINATOR_SOURCE"
+    },
+    {
+      "path": "finnor-os/packages/orchestration/src/project-z/z0-convergence/semantics.ts",
+      "sha256": "45b56093dc1f13b78d3f9910364cae192a5cce530e4028a13071bd6dd4d9e389",
+      "bytes": 5512,
+      "origin": "ACTUAL_COORDINATOR_SOURCE"
+    },
+    {
+      "path": "finnor-os/scripts/project-z/z0/emit-converged-runtime.mjs",
+      "sha256": "089ec36dcf1f4f2000a6f4388975a9c9e8aac0697904c4be8dd264208a4242bd",
+      "bytes": 19034,
+      "origin": "CURRENT_OWNED_Z0_IMPLEMENTATION"
+    },
+    {
+      "path": "finnor-os/scripts/project-z/z0/freeze-source-archive.py",
+      "sha256": "28dad7fb70eb4bbd1ccd620503ce19a05ed3413254e354da16899a972b9a335a",
+      "bytes": 2124,
+      "origin": "CURRENT_OWNED_Z0_IMPLEMENTATION"
+    },
+    {
+      "path": "finnor-os/scripts/project-z/z0/installed-loader.mjs",
+      "sha256": "dbc7f7f1d21ca97fabf8bc6a13531b981fe2d35c3a5065bbc63c4d7b68143fe6",
+      "bytes": 3475,
+      "origin": "CURRENT_OWNED_Z0_IMPLEMENTATION"
+    },
+    {
+      "path": "finnor-os/scripts/project-z/z0/installed-source-custody.cjs",
+      "sha256": "7a70d4880abfc4e446f1eda81b530427901792966b6915546b09c94ffc03b732",
+      "bytes": 1169,
+      "origin": "CURRENT_OWNED_Z0_IMPLEMENTATION"
+    },
+    {
+      "path": "finnor-os/scripts/project-z/z0/integration-frontend.mts",
+      "sha256": "265be50fe90c1aab5a7b92f34381f328febde38d14bdc59fcb42fd4f8287b4f9",
+      "bytes": 9113,
+      "origin": "CURRENT_OWNED_Z0_IMPLEMENTATION"
+    },
+    {
+      "path": "finnor-os/scripts/project-z/z0/integration-preimages.json",
+      "sha256": "5c1c9405532a4b3f5a31cce66d7e7e093b0518a65b177cf30bc34ac08407eb17",
+      "bytes": 2661,
+      "origin": "CURRENT_OWNED_Z0_IMPLEMENTATION"
+    },
+    {
+      "path": "finnor-os/scripts/project-z/z0/native-e2e-plan.mjs",
+      "sha256": "f6e5511d2525e21fd88106520cc9c0da124bd768399947416e691c84f6a1ce5b",
+      "bytes": 2265,
+      "origin": "CURRENT_OWNED_Z0_IMPLEMENTATION"
+    },
+    {
+      "path": "finnor-os/scripts/project-z/z0/native-observation-child.mjs",
+      "sha256": "7503a1fa367185725c9bea17ffb2312ed4af7112333e79554f8c8f4414b67512",
+      "bytes": 2823,
+      "origin": "CURRENT_OWNED_Z0_IMPLEMENTATION"
+    },
+    {
+      "path": "finnor-os/scripts/project-z/z0/offline-runtime-doctor.mjs",
+      "sha256": "5eb7dab72cd6131a1381bd25d86db0ca6a5a2fa9481dca501da146cb1fd35bcc",
+      "bytes": 7279,
+      "origin": "CURRENT_OWNED_Z0_IMPLEMENTATION"
+    },
+    {
+      "path": "finnor-os/scripts/project-z/z0/prepare-converged-source.mjs",
+      "sha256": "3768efc5876c75d2b7e36640b9f83056d24735e701237050998f73655ddec67e",
+      "bytes": 7600,
+      "origin": "CURRENT_OWNED_Z0_IMPLEMENTATION"
+    },
+    {
+      "path": "finnor-os/scripts/project-z/z0/prepare-integration.mts",
+      "sha256": "c5b7ca6c737aad14c553e9e465abd1a981efd2a085a06b3a8289913ecc3394ff",
+      "bytes": 24553,
+      "origin": "CURRENT_OWNED_Z0_IMPLEMENTATION"
+    },
+    {
+      "path": "finnor-os/scripts/project-z/z0/prepare-owned-reconstruction.mts",
+      "sha256": "cc21ffd291b10255bf5b1495df5c3900e5eeb535b94c358ecdcc8a8727d813b0",
+      "bytes": 7852,
+      "origin": "CURRENT_OWNED_Z0_IMPLEMENTATION"
+    },
+    {
+      "path": "finnor-os/scripts/project-z/z0/prepare-owner-use-integration.mjs",
+      "sha256": "e520cd16e1ff68dac3945b905ca0ed4ab059dfcd59c2721c0bbcfeea4a4ce3cc",
+      "bytes": 7662,
+      "origin": "CURRENT_OWNED_Z0_IMPLEMENTATION"
+    },
+    {
+      "path": "finnor-os/scripts/project-z/z0/reconcile-current-integration.mjs",
+      "sha256": "debf6da4832ca5bcdd54671ebc44df9f147e5590cba2aab71d6ac437d9bbafe3",
+      "bytes": 6314,
+      "origin": "CURRENT_OWNED_Z0_IMPLEMENTATION"
+    },
+    {
+      "path": "finnor-os/scripts/project-z/z0/reconstruct-converged.mjs",
+      "sha256": "43f2d8266d179eb1aa6540fa6b8fe45898b6cdcf17d3f5009d70a4b3a2a8f685",
+      "bytes": 11519,
+      "origin": "CURRENT_OWNED_Z0_IMPLEMENTATION"
+    },
+    {
+      "path": "finnor-os/scripts/project-z/z0/run-native-e2e.mjs",
+      "sha256": "a22e563528271a2dbaf35428eb7798050fc4b1980f8052fd541969029501292f",
+      "bytes": 57410,
+      "origin": "CURRENT_OWNED_Z0_IMPLEMENTATION"
+    },
+    {
+      "path": "finnor-os/scripts/project-z/z0/sql-parser-requirements.txt",
+      "sha256": "89d6e4ca850933789bbca8f796ea8e5fd64e926c5a6d0eed7de1932e3ea8958e",
+      "bytes": 91,
+      "origin": "CURRENT_OWNED_Z0_IMPLEMENTATION"
+    },
+    {
+      "path": "finnor-os/scripts/project-z/z0/tsconfig.json",
+      "sha256": "91537e4d04d1012983c1ae8dc90758c619e2d93d17f3d4f5c4934b1de8adab54",
+      "bytes": 222,
+      "origin": "CURRENT_OWNED_Z0_IMPLEMENTATION"
+    },
+    {
+      "path": "finnor-os/scripts/project-z/z0/tsconfig.runtime.json",
+      "sha256": "65aa9828de590aee48afe35e052423317ee3a3ea49c459f5e4973f080d0cb3fd",
+      "bytes": 293,
+      "origin": "CURRENT_OWNED_Z0_IMPLEMENTATION"
+    },
+    {
+      "path": "finnor-os/scripts/project-z/z0/verify-continuation-types.mjs",
+      "sha256": "4871ac235ce1ba1c9e83101c495949c29f06e08aecf92bf907535c48295376c1",
+      "bytes": 4165,
+      "origin": "CURRENT_OWNED_Z0_IMPLEMENTATION"
+    },
+    {
+      "path": "finnor-os/scripts/project-z/z0/verify-contracts.mts",
+      "sha256": "7ba64589d32be2b208ff4212910d2f16146b751eebc906626852756e025eaca9",
+      "bytes": 8493,
+      "origin": "ACTUAL_COORDINATOR_SOURCE"
+    },
+    {
+      "path": "finnor-os/scripts/project-z/z0/verify-integration-types.mts",
+      "sha256": "51a079a23f13107943deed8bce210e37e64d3f696555f6f97858a06a32ca9844",
+      "bytes": 4747,
+      "origin": "CURRENT_OWNED_Z0_IMPLEMENTATION"
+    },
+    {
+      "path": "finnor-os/scripts/project-z/z0/verify-sql.py",
+      "sha256": "f66fb57963dbba92f5bf3e6b05bd18c65a73413a5533bf4593c2bcf9cee3ebe4",
+      "bytes": 3528,
+      "origin": "CURRENT_OWNED_Z0_IMPLEMENTATION"
+    }
+  ],
+  "sharedTargets": [
+    {
+      "path": "finnor-os/packages/private-equity/src/application-semantics/store.ts",
+      "currentSha256": "fc06aef01a7f4e82024793c76060967fbd4efecaa3834c0bcd3bdd9a74179770",
+      "requestedTargetSha256": "fc06aef01a7f4e82024793c76060967fbd4efecaa3834c0bcd3bdd9a74179770",
+      "disposition": "CURRENT_BYTES_MATCH_REQUESTED_TARGET"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/program-synthesis/institution.ts",
+      "currentSha256": "545637532bee1bd6584f8f278b204779c92744ab0271c3f3dbbe74d5d9f168cd",
+      "requestedTargetSha256": "545637532bee1bd6584f8f278b204779c92744ab0271c3f3dbbe74d5d9f168cd",
+      "disposition": "CURRENT_BYTES_MATCH_REQUESTED_TARGET"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/program-synthesis/institution-continuation.ts",
+      "currentSha256": "17fc1fd0dd3f187dfb9e680622b41438395b4966193527b7ce0ca32ae01a1ed2",
+      "requestedTargetSha256": "17fc1fd0dd3f187dfb9e680622b41438395b4966193527b7ce0ca32ae01a1ed2",
+      "disposition": "CURRENT_BYTES_MATCH_REQUESTED_TARGET"
+    }
+  ],
+  "coordinatorOwnedLeaves": [
+    {
+      "path": "finnor-os/packages/orchestration/src/project-z/z0-convergence/institution-consumer.ts",
+      "currentCoordinatorSha256": "71d9df3579384b68c0300ce28665a244ecbe7102a254a88c8aa8485535a11a96",
+      "ownedSha256": "71d9df3579384b68c0300ce28665a244ecbe7102a254a88c8aa8485535a11a96",
+      "disposition": "CURRENT_COORDINATOR_MATCHES_OWNED_TARGET"
+    },
+    {
+      "path": "finnor-os/packages/orchestration/src/project-z/z0-convergence/institution-origin.ts",
+      "currentCoordinatorSha256": "5ee67ab595155e27b78b65c162d700c865f1eb62d2207bd026abf60d503199eb",
+      "ownedSha256": "5ee67ab595155e27b78b65c162d700c865f1eb62d2207bd026abf60d503199eb",
+      "disposition": "CURRENT_COORDINATOR_MATCHES_OWNED_TARGET"
+    },
+    {
+      "path": "finnor-os/packages/orchestration/src/project-z/z0-convergence/projection.ts",
+      "currentCoordinatorSha256": "b2bc7fd3eda606bfd3c573917ab3b03f76b8fd963f0989d64d0bb830589da1a7",
+      "ownedSha256": "b2bc7fd3eda606bfd3c573917ab3b03f76b8fd963f0989d64d0bb830589da1a7",
+      "disposition": "CURRENT_COORDINATOR_MATCHES_OWNED_TARGET"
+    }
+  ],
+  "additionalSharedPatchSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "additionalSharedChanges": [],
+  "sqlSources": [
+    {
+      "path": "finnor-os/packages/db/migrations/postz_z0_institution_application_bridge.sql",
+      "sha256": "1511609691eed81aee3f227d70a0a5b061adf604780d5c6ab16822cc47aa029a",
+      "bytes": 27298,
+      "mode": 420,
+      "origin": "ACTUAL_COORDINATOR_SOURCE"
+    },
+    {
+      "path": "finnor-os/packages/orchestration/src/project-z/z0-convergence/s5-owner-adapter.sql",
+      "sha256": "1511609691eed81aee3f227d70a0a5b061adf604780d5c6ab16822cc47aa029a",
+      "bytes": 27298,
+      "mode": 420,
+      "origin": "ACTUAL_COORDINATOR_SOURCE"
+    }
+  ],
+  "fullInstalledManifest": {
+    "path": "installation-09/full-installation-manifest-01.json",
+    "sha256": "5c3049be256dd4857af5439c8a89ff7698b19e7d9a96deb2882483860d98abce",
+    "bytes": 26973853
+  },
+  "installedSourceSnapshot": {
+    "path": "installation-09/source-snapshot.json",
+    "sha256": "9a6ff170d1f5589229fe9bf4e8413b1fdb67eb16f4b2c899cf8be56239efa954",
+    "bytes": 767903
+  },
+  "emittedSourceSnapshotSha256": "9a6ff170d1f5589229fe9bf4e8413b1fdb67eb16f4b2c899cf8be56239efa954",
+  "sourceFallback": "REFUSED_FOR_INSTALLED",
+  "native": "NOT_RUN",
+  "installedNative": "NOT_RUN",
+  "sourceTargetCaveat": "Use a separate exact extraction of this converged capsule, not private-branch stale shared preimages.",
+  "legacyProposalTool": "prepare-owner-use-integration.mjs retains historical preimage pins; use reconcile-current-integration.mjs for current bytes."
+}

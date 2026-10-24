@@ -1,0 +1,17 @@
+{
+  "name": "02-root-ci",
+  "command": "/usr/bin/npm",
+  "args": [
+    "ci",
+    "--ignore-scripts",
+    "--no-audit",
+    "--no-fund"
+  ],
+  "cwd": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-07/runtime",
+  "started": "2026-10-24T17:42:54.647Z",
+  "elapsedMs": 21046,
+  "expectedCode": 0,
+  "code": 0,
+  "signal": null,
+  "logSha256": "07def8003dacd62a43a48751dd31161a48eb61b76d88ee08091f7e7454a6c7ee"
+}

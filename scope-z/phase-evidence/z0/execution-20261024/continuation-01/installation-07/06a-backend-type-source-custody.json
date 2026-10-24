@@ -1,0 +1,20 @@
+{
+  "name": "06a-backend-type-source-custody",
+  "command": "/home/factory-user/repos/finnor-z-toolchains/node22/node_modules/node/bin/node",
+  "args": [
+    "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-07/runtime/finnor-os/node_modules/typescript/bin/tsc",
+    "--project",
+    "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-07/runtime/finnor-os/tsconfig.json",
+    "--noEmit",
+    "--incremental",
+    "false",
+    "--listFilesOnly"
+  ],
+  "cwd": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-07/runtime",
+  "started": "2026-10-24T17:44:51.195Z",
+  "elapsedMs": 5679,
+  "expectedCode": 0,
+  "code": 0,
+  "signal": null,
+  "logSha256": "39837fdb77ef6da5a597e718082dfdf5bda6753885ddd10c7ccb373d2ce3bce7"
+}

@@ -1,0 +1,32 @@
+{
+  "sourceSha256": "cb45fe38a9103fc5405e9a78f09492bad8e88213ae9fcab6640ec9cf4a259741",
+  "originalFunctionDiagnostics": [
+    {
+      "function": "finnor_os.z0_s5_application_frame",
+      "status": "FAILED",
+      "diagnostic": "syntax error at end of input"
+    },
+    {
+      "function": "finnor_os.z0_s5_application_consumption",
+      "status": "PARSED"
+    },
+    {
+      "function": "finnor_os.z0_s5_application_charge",
+      "status": "FAILED",
+      "diagnostic": "syntax error at end of input"
+    },
+    {
+      "function": "finnor_os.z0_s5_application_effect_state",
+      "status": "PARSED"
+    }
+  ],
+  "candidateChange": "Parenthesize the two SQL CASE expressions inside PLpgSQL IF conditions to avoid the procedural THEN delimiter.",
+  "inMemoryCandidateSha256": "1511609691eed81aee3f227d70a0a5b061adf604780d5c6ab16822cc47aa029a",
+  "candidateParse": {
+    "status": "PARSED",
+    "functions": 4
+  },
+  "productFilesChanged": false,
+  "sqlExecuted": false,
+  "grantsExecuted": false
+}

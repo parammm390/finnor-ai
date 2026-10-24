@@ -1,0 +1,41 @@
+{
+  "schema": "finnor.project-z.z0.lossless-evidence-transports.v1",
+  "files": [
+    {
+      "rawPath": "installation-03/esbuild-metafile-01.json",
+      "rawSha256": "242978aa6ccbff7bf572134f274aaba1d3a1b13e4c4a0f1e0e553d32e122075e",
+      "rawBytes": 19754287,
+      "transportPath": "installation-03/esbuild-metafile-01.json.gz",
+      "transportSha256": "50c873d0445949b353282b7e37bcd223e51818f8c09c1d67056d49af2bf71f6b",
+      "transportBytes": 1056464,
+      "encoding": "gzip",
+      "roundTripVerified": true,
+      "rawRetainedLocallyUnchanged": true
+    },
+    {
+      "rawPath": "installation-07/esbuild-metafile-01.json",
+      "rawSha256": "530826ed61f4d78c09ab5346185afa640b68a673b80d6fb5cf4cd9972a7e8948",
+      "rawBytes": 19754287,
+      "transportPath": "installation-07/esbuild-metafile-01.json.gz",
+      "transportSha256": "254e05777bf06060ea6ca2f5273fc7b9b7ff493973dcfe1f38247a715edf9191",
+      "transportBytes": 1056287,
+      "encoding": "gzip",
+      "roundTripVerified": true,
+      "rawRetainedLocallyUnchanged": true
+    },
+    {
+      "rawPath": "installation-09/esbuild-metafile-01.json",
+      "rawSha256": "260e6f83a54fe310dc6f0e26aba872ae77d75f5b2d6223cf592fdb831fcf3cc9",
+      "rawBytes": 19754287,
+      "transportPath": "installation-09/esbuild-metafile-01.json.gz",
+      "transportSha256": "24f1cb067a7dc107fa6450873c7c634bd10285625c3e12aef283d241aaaff2b3",
+      "transportBytes": 1057035,
+      "encoding": "gzip",
+      "roundTripVerified": true,
+      "rawRetainedLocallyUnchanged": true
+    }
+  ],
+  "purpose": "Lossless portable graphs without three repetitive raw JSON diffs",
+  "native": "NOT_RUN",
+  "installedNative": "NOT_RUN"
+}

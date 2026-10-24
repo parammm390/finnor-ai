@@ -1,0 +1,17 @@
+{
+  "name": "03-backend-ci",
+  "command": "/usr/bin/npm",
+  "args": [
+    "ci",
+    "--ignore-scripts",
+    "--no-audit",
+    "--no-fund"
+  ],
+  "cwd": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-09/runtime/finnor-os",
+  "started": "2026-10-24T17:49:32.400Z",
+  "elapsedMs": 23027,
+  "expectedCode": 0,
+  "code": 0,
+  "signal": null,
+  "logSha256": "37c295851ced41ab67ea4d110725dcc236edc4bdbc19271aa8eec9e4d147aef2"
+}

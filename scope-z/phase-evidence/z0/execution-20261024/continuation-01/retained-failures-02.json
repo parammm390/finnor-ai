@@ -1,0 +1,198 @@
+{
+  "schema": "finnor.project-z.z0.retained-failure-ledger.v2",
+  "failures": [
+    {
+      "id": "independent-original-sql",
+      "reason": "Two of four PLpgSQL bodies rejected; all twelve top-level statements alone were insufficient.",
+      "original": {
+        "path": "sql-before-reconciliation.log",
+        "sha256": "09f26ed8e34fdb948c1c3bc5a07173481e2cf77741fc92bb1441641c1a843623",
+        "bytes": 1409
+      },
+      "laterRecord": {
+        "path": "sql-after-reconciliation.log",
+        "sha256": "e30d7f859031661a71990f4632310a4f739559144adcbec85046dfd2bd8cf5ef",
+        "bytes": 1318
+      }
+    },
+    {
+      "id": "initial-full-virtual-types",
+      "reason": "Inherited reservation union was not narrowed; retained original full-type failure.",
+      "original": {
+        "path": "full-backend-types-01.json",
+        "sha256": "c53785fa6ed98f698161fc1ae7aebc74d4c61f14adbba8399de5fee01fdc4cfe",
+        "bytes": 253239
+      },
+      "laterRecord": {
+        "path": "installation-09/06-full-backend-types.json",
+        "sha256": "8ba08f66e91b0a4f1c3d53a48737b9416b66a1f48e171f979334f1a31e4524b0",
+        "bytes": 866
+      }
+    },
+    {
+      "id": "initial-emission-declaration-drift",
+      "reason": "Canonical Next distDir declarations changed; both original and generated hashes are now explicit.",
+      "original": {
+        "path": "installation-01/emission-01.log",
+        "sha256": "b86f3e47b191d57656bcdaef4ce052b29e4a611bd4101c56801704475a45a167",
+        "bytes": 485
+      },
+      "laterRecord": {
+        "path": "installation-09/canonical-source-transforms-01.json",
+        "sha256": "b4d6e0c445c8270b945f35fd0c5186fbf2f764af1906cb6656674a790d4af816",
+        "bytes": 24060
+      }
+    },
+    {
+      "id": "initial-emission-input-selection",
+      "reason": "Compiling unrelated engineering scripts encountered invalid m4 shebang and missing S7 modules.",
+      "original": {
+        "path": "installation-01/emission-02.log",
+        "sha256": "9bfec2e49461f391aab0364fe5d5d9864e008e0186e361b1805bbf101dd653dd",
+        "bytes": 3312
+      },
+      "laterRecord": {
+        "path": "installation-09/08-complete-emission.json",
+        "sha256": "f64d63cc3905ac3140f379f0af2ddac23e2bd1b7364fc8953c15bb8624cf6fe9",
+        "bytes": 817
+      }
+    },
+    {
+      "id": "initial-emission-builtin",
+      "reason": "Prefixed Node builtin resolution failed; builtin handling corrected.",
+      "original": {
+        "path": "installation-01/emission-03.log",
+        "sha256": "c010d2127ca6d2ec088de878ba1c678e72cf3dc520dadfe238d260c7198de433",
+        "bytes": 839
+      },
+      "laterRecord": {
+        "path": "installation-09/08-complete-emission.json",
+        "sha256": "f64d63cc3905ac3140f379f0af2ddac23e2bd1b7364fc8953c15bb8624cf6fe9",
+        "bytes": 817
+      }
+    },
+    {
+      "id": "original-checker-url",
+      "reason": "Direct manifest checker worked but the original canonical command still attempted source execution.",
+      "original": {
+        "path": "canonical-checker-path-before-01.log",
+        "sha256": "56575958a162384a1f6db85bab702a63193d9e63ad7a8ec8f47e1abd372d9bb8",
+        "bytes": 1326
+      },
+      "laterRecord": {
+        "path": "installation-09/offline-runtime-doctor.json",
+        "sha256": "10502413969c43c745290938f57925f244fa167736e910855839191f774c4469",
+        "bytes": 21027
+      }
+    },
+    {
+      "id": "git-root-ceiling",
+      "reason": "Starting at the named Git ceiling still discovered the parent repository; actual control exited 0, expected 128.",
+      "original": {
+        "path": "installation-05/reconstruction-failure.json",
+        "sha256": "0fc1bdaf2aada86ddfd7c72041f1f53adba796b916520bf875cb725e759b55f7",
+        "bytes": 751
+      },
+      "laterRecord": {
+        "path": "installation-09/00-git-object-isolation.json",
+        "sha256": "6269ae97bcb456c1a7a5b6ae42b75bd85752d9a3eaf2e4fd7b6be38fd995d4a2",
+        "bytes": 456
+      }
+    },
+    {
+      "id": "public-browser-build-input",
+      "reason": "Source diagnosis: public Auth settings freeze at Next build and cannot be added only at server start.",
+      "original": {
+        "path": "public-auth-build-boundary-before-04.md",
+        "sha256": "1e7031c035968d4efa155e51d4fadae2895cfc0787842a3e10b26ee3c44beb4b",
+        "bytes": 2572
+      },
+      "laterRecord": {
+        "path": "installation-09/frontend-public-auth-build.json",
+        "sha256": "2db5543eb24743414edb8ec1be20030a29db5bb56985e5dfcceb7d69296becd6",
+        "bytes": 261
+      }
+    }
+  ],
+  "guardRefusals": [
+    {
+      "path": "native-driver-authority-refusal-01.log",
+      "sha256": "69cf4280b50f75d12c0cc1a48c74b9b97d88e81bfcdb220b7bcd968f50fa15a6",
+      "bytes": 193
+    },
+    {
+      "path": "native-driver-authority-refusal-02.log",
+      "sha256": "69cf4280b50f75d12c0cc1a48c74b9b97d88e81bfcdb220b7bcd968f50fa15a6",
+      "bytes": 193
+    },
+    {
+      "path": "native-driver-authority-refusal-03.log",
+      "sha256": "69cf4280b50f75d12c0cc1a48c74b9b97d88e81bfcdb220b7bcd968f50fa15a6",
+      "bytes": 193
+    },
+    {
+      "path": "native-driver-authority-refusal-04.log",
+      "sha256": "69cf4280b50f75d12c0cc1a48c74b9b97d88e81bfcdb220b7bcd968f50fa15a6",
+      "bytes": 193
+    },
+    {
+      "path": "public-auth-build-input-refusal-01.log",
+      "sha256": "978c03168e4c9d1d90dc75933d1691f22c8d0147f4585b7bb3f9aa5ab8f53a22",
+      "bytes": 444
+    }
+  ],
+  "preEditMaps": [
+    {
+      "path": "failure-map-and-e2e-plan.md",
+      "sha256": "420c425a691a621e75cbd50c66f054b52f5bbc3c03099d0ec4426f675eb2a8fe",
+      "bytes": 8736
+    },
+    {
+      "path": "original-owner-dataflow-design.md",
+      "sha256": "b75574852268eeacc717f388c4115f4a1c93ae24b109df24c0e5a904e63a0b03",
+      "bytes": 3038
+    },
+    {
+      "path": "recovery-and-driver-boundary-addendum.md",
+      "sha256": "c1b7ffde64698c52eeaf522328bcccc2731f32d12664849bf694a180e3192e61",
+      "bytes": 2870
+    },
+    {
+      "path": "final-reconstruction-boundaries-before-edits.md",
+      "sha256": "a6705656487cf5d4276a7cece47b2020e31cee2d940683b8ae8333a284663f50",
+      "bytes": 2817
+    },
+    {
+      "path": "driver-and-git-failure-before-02.md",
+      "sha256": "9d18e2a5b36104182a39e7b3197a665a9e7f8adcc556ee1a2681864304c32ca9",
+      "bytes": 3651
+    },
+    {
+      "path": "worker-custody-before-03.md",
+      "sha256": "89b8ea75665428f5242c4f3dc0afc2fadbf18c1e4ee35fb9ed2a03c50ed163cd",
+      "bytes": 1792
+    },
+    {
+      "path": "public-auth-build-boundary-before-04.md",
+      "sha256": "1e7031c035968d4efa155e51d4fadae2895cfc0787842a3e10b26ee3c44beb4b",
+      "bytes": 2572
+    }
+  ],
+  "historicalSuccessfulRebuilds": [
+    {
+      "path": "installation-03/reconstruction.json",
+      "sha256": "3bf3e6d1bd3523bcf8ea8734a50b09e51de01cf594d5a174bbaaa42ab661a3a4",
+      "bytes": 7249
+    },
+    {
+      "path": "installation-07/reconstruction.json",
+      "sha256": "e6471a5ff51511cf857e871e69023cd63ee7ce58e67063acdeb04b5e13b9b7db",
+      "bytes": 9251
+    }
+  ],
+  "historicalEvidenceNotDeleted": true,
+  "laterPassDoesNotRewriteEarlierExpectedValues": true,
+  "missingPublicAuthInputResolved": false,
+  "native": "NOT_RUN",
+  "installedNative": "NOT_RUN"
+}

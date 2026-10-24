@@ -5,3 +5,6 @@ installation-*/browser-assets/
 *.tar
 *.tar.gz
 *.bundle
+installation-03/esbuild-metafile-01.json
+installation-07/esbuild-metafile-01.json
+installation-09/esbuild-metafile-01.json

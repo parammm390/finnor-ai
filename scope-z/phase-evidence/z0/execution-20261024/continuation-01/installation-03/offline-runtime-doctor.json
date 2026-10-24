@@ -1,0 +1,304 @@
+{
+  "schema": "finnor.project-z.z0.offline-emitted-runtime-doctor.v1",
+  "evidenceClass": "NETWORK_FREE_ENGINEERING_NOT_AUTHENTICATED_NATIVE_PROOF",
+  "manifestSha256": "293faf97359172a647e57307630c122cb9684dd9adea1b653e7676a3a350d167",
+  "node": "v22.23.4",
+  "cases": [
+    {
+      "name": "ACTUAL_EMITTED_BRIDGE_CANONICAL_INVENTORY",
+      "status": "PASSED",
+      "count": 77,
+      "inventorySha256": "f1cad9ed2bdd17205550f32521c780debf087b79f4b8862b9e3ec0b463fb014e",
+      "scientificIncrement": false
+    },
+    {
+      "name": "ALL_DECLARED_COMPUTED_SOURCE_URLS_RESOLVE_TO_JS",
+      "status": "PASSED",
+      "count": 1159
+    },
+    {
+      "name": "ACTUAL_FRESH_FS_EXT_NATIVE_ADDON_LOADED",
+      "status": "PASSED"
+    },
+    {
+      "name": "API_PRE_AUTHORITY_GUARD",
+      "exitCode": 1,
+      "signal": null,
+      "stdout": "",
+      "stderr": "file:///home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-03/runtime/finnor-os/z0-runtime-01/chunk-3UNSHTXN.mjs:11\n    throw Error(\"X1_COMPILED_DEVELOPMENT_PROFILE_REQUIRED\");\n          ^\n\nError: X1_COMPILED_DEVELOPMENT_PROFILE_REQUIRED\n    at startDevelopmentApi (file:///home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-03/runtime/finnor-os/z0-runtime-01/chunk-3UNSHTXN.mjs:11:11)\n    at file:///home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-03/runtime/finnor-os/z0-runtime-01/api.mjs:168:20\n    at ModuleJob.run (node:internal/modules/esm/module_job:343:25)\n    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:681:26)\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)\n\nNode.js v22.23.4\n"
+    },
+    {
+      "name": "WORKER_PRE_AUTHORITY_GUARD",
+      "exitCode": 1,
+      "signal": null,
+      "stdout": "",
+      "stderr": "file:///home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-03/runtime/finnor-os/z0-runtime-01/chunk-O5TPV37O.mjs:10\n  throw Error(\"X1_COMPILED_DEVELOPMENT_PROFILE_REQUIRED\");\n        ^\n\nError: X1_COMPILED_DEVELOPMENT_PROFILE_REQUIRED\n    at file:///home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-03/runtime/finnor-os/z0-runtime-01/chunk-O5TPV37O.mjs:10:9\n    at ModuleJob.run (node:internal/modules/esm/module_job:343:25)\n    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:681:26)\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)\n\nNode.js v22.23.4\n"
+    },
+    {
+      "name": "INDEPENDENT_COMPILED_CHECKER_PIN_PROTOCOL",
+      "exitCode": 1,
+      "signal": null,
+      "stdout": "",
+      "stderr": "file:///home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-03/runtime/finnor-os/z0-runtime-01/checker.mjs:36\nif (request.schema !== \"finnor.x1.checker-process.v1\" || JSON.stringify(request.pins) !== JSON.stringify(pins)) throw new Error(\"X1_CHECKER_CODE_PIN_MISMATCH\");\n                                                                                                                      ^\n\nError: X1_CHECKER_CODE_PIN_MISMATCH\n    at file:///home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-03/runtime/finnor-os/z0-runtime-01/checker.mjs:36:119\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\n\nNode.js v22.23.4\n"
+    },
+    {
+      "name": "FRESH_BROWSER_BINARY_VERSION",
+      "exitCode": 0,
+      "signal": null,
+      "stdout": "Google Chrome for Testing 149.0.7827.55\n",
+      "stderr": ""
+    },
+    {
+      "name": "SOURCE_FALLBACK_REFUSED",
+      "exitCode": 1,
+      "signal": null,
+      "stdout": "",
+      "stderr": "file:///home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-03/runtime/finnor-os/z0-runtime-01/installed-loader.mjs:22\n    if (!target) throw Error(\"Z0_SOURCE_EXECUTION_WITHOUT_EMISSION_REFUSED\");\n                       ^\n\nError: Z0_SOURCE_EXECUTION_WITHOUT_EMISSION_REFUSED\n    at remap (file:///home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-03/runtime/finnor-os/z0-runtime-01/installed-loader.mjs:22:24)\n    at resolve (file:///home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-03/runtime/finnor-os/z0-runtime-01/installed-loader.mjs:32:19)\n    at nextStep (node:internal/modules/customization_hooks:189:26)\n    at resolveWithHooks (node:internal/modules/customization_hooks:417:10)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:803:14)\n    at ModuleLoader.resolve (node:internal/modules/esm/loader:719:19)\n    at ModuleLoader.getModuleJobForImport (node:internal/modules/esm/loader:320:38)\n    at onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:680:36)\n    at TracingChannel.tracePromise (node:diagnostics_channel:350:14)\n    at ModuleLoader.import (node:internal/modules/esm/loader:679:21)\n\nNode.js v22.23.4\n"
+    },
+    {
+      "name": "DECLARATION_BYTES_RETAINED_NOT_EXECUTABLE",
+      "sha256": "c430d44666289dae81f30fa7b2edebf186ecc91a2d4c71266ea6ae76388792e1"
+    }
+  ],
+  "native": "NOT_RUN",
+  "installedNative": "NOT_RUN",
+  "osNativeDependencies": [
+    {
+      "nativeAsset": "finnor-os/node_modules/fs-ext/build/Release/fs_ext.node",
+      "ldd": "\tlinux-vdso.so.1 (0x00007ffc8dff2000)\n\tlibstdc++.so.6 => /lib/x86_64-linux-gnu/libstdc++.so.6 (0x00007fdcb2600000)\n\tlibc.so.6 => /lib/x86_64-linux-gnu/libc.so.6 (0x00007fdcb2200000)\n\tlibm.so.6 => /lib/x86_64-linux-gnu/libm.so.6 (0x00007fdcb2517000)\n\t/lib64/ld-linux-x86-64.so.2 (0x00007fdcb2896000)\n\tlibgcc_s.so.1 => /lib/x86_64-linux-gnu/libgcc_s.so.1 (0x00007fdcb24e9000)\n",
+      "libraries": [
+        {
+          "path": "/usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.33",
+          "sha256": "1fd75fe70354a416d75aef22bcae68c47bd25d20e2d0568c30b1a9838cf62f11"
+        },
+        {
+          "path": "/usr/lib/x86_64-linux-gnu/libc.so.6",
+          "sha256": "3a15d66867d83762c7f2f1e37359cb8f6c5743edb369c65285cb0b1c4f7498bf"
+        },
+        {
+          "path": "/usr/lib/x86_64-linux-gnu/libm.so.6",
+          "sha256": "fce00b6f25f459cf4ae0b7fae4257909a1a8a86f9149e7c029a5d617baf1ccd0"
+        },
+        {
+          "path": "/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2",
+          "sha256": "c20a2dc8917c755f02b94049356320fe1f62ac7d9f8994731f807d9df39302da"
+        },
+        {
+          "path": "/usr/lib/x86_64-linux-gnu/libgcc_s.so.1",
+          "sha256": "d93224d2b0dab4247598be683adca02f5cf00586f99c187579cd7e92058fb7cb"
+        }
+      ]
+    },
+    {
+      "nativeAsset": "browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell",
+      "ldd": "\tlinux-vdso.so.1 (0x00007ffc29f64000)\n\tlibdl.so.2 => /lib/x86_64-linux-gnu/libdl.so.2 (0x00007fc6d8356000)\n\tlibpthread.so.0 => /lib/x86_64-linux-gnu/libpthread.so.0 (0x00007fc6d8351000)\n\tlibglib-2.0.so.0 => /lib/x86_64-linux-gnu/libglib-2.0.so.0 (0x00007fc6ccab7000)\n\tlibgobject-2.0.so.0 => /lib/x86_64-linux-gnu/libgobject-2.0.so.0 (0x00007fc6cca54000)\n\tlibnspr4.so => /lib/x86_64-linux-gnu/libnspr4.so (0x00007fc6d8310000)\n\tlibnss3.so => /lib/x86_64-linux-gnu/libnss3.so (0x00007fc6cc925000)\n\tlibnssutil3.so => /lib/x86_64-linux-gnu/libnssutil3.so (0x00007fc6cc8f3000)\n\tlibgio-2.0.so.0 => /lib/x86_64-linux-gnu/libgio-2.0.so.0 (0x00007fc6cc723000)\n\tlibatk-1.0.so.0 => /lib/x86_64-linux-gnu/libatk-1.0.so.0 (0x00007fc6cc6f9000)\n\tlibatk-bridge-2.0.so.0 => /lib/x86_64-linux-gnu/libatk-bridge-2.0.so.0 (0x00007fc6cc6bd000)\n\tlibdbus-1.so.3 => /lib/x86_64-linux-gnu/libdbus-1.so.3 (0x00007fc6cc66c000)\n\tlibm.so.6 => /lib/x86_64-linux-gnu/libm.so.6 (0x00007fc6cc583000)\n\tlibX11.so.6 => /lib/x86_64-linux-gnu/libX11.so.6 (0x00007fc6cc445000)\n\tlibXcomposite.so.1 => /lib/x86_64-linux-gnu/libXcomposite.so.1 (0x00007fc6cc440000)\n\tlibXdamage.so.1 => /lib/x86_64-linux-gnu/libXdamage.so.1 (0x00007fc6cc43b000)\n\tlibXext.so.6 => /lib/x86_64-linux-gnu/libXext.so.6 (0x00007fc6cc427000)\n\tlibXfixes.so.3 => /lib/x86_64-linux-gnu/libXfixes.so.3 (0x00007fc6cc41d000)\n\tlibXrandr.so.2 => /lib/x86_64-linux-gnu/libXrandr.so.2 (0x00007fc6cc410000)\n\tlibgbm.so.1 => /lib/x86_64-linux-gnu/libgbm.so.1 (0x00007fc6cc409000)\n\tlibexpat.so.1 => /lib/x86_64-linux-gnu/libexpat.so.1 (0x00007fc6cc3db000)\n\tlibxcb.so.1 => /lib/x86_64-linux-gnu/libxcb.so.1 (0x00007fc6cc3b2000)\n\tlibxkbcommon.so.0 => /lib/x86_64-linux-gnu/libxkbcommon.so.0 (0x00007fc6cc369000)\n\tlibudev.so.1 => /lib/x86_64-linux-gnu/libudev.so.1 (0x00007fc6cc334000)\n\tlibasound.so.2 => /lib/x86_64-linux-gnu/libasound.so.2 (0x00007fc6cc22a000)\n\tlibatspi.so.0 => /lib/x86_64-linux-gnu/libatspi.so.0 (0x00007fc6cc1f0000)\n\tlibgcc_s.so.1 => /lib/x86_64-linux-gnu/libgcc_s.so.1 (0x00007fc6cc1c2000)\n\tlibc.so.6 => /lib/x86_64-linux-gnu/libc.so.6 (0x00007fc6cbe00000)\n\t/lib64/ld-linux-x86-64.so.2 (0x00007fc6d8364000)\n\tlibpcre2-8.so.0 => /lib/x86_64-linux-gnu/libpcre2-8.so.0 (0x00007fc6cc128000)\n\tlibffi.so.8 => /lib/x86_64-linux-gnu/libffi.so.8 (0x00007fc6cc11a000)\n\tlibplc4.so => /lib/x86_64-linux-gnu/libplc4.so (0x00007fc6cc113000)\n\tlibplds4.so => /lib/x86_64-linux-gnu/libplds4.so (0x00007fc6cc10e000)\n\tlibgmodule-2.0.so.0 => /lib/x86_64-linux-gnu/libgmodule-2.0.so.0 (0x00007fc6cc107000)\n\tlibz.so.1 => /lib/x86_64-linux-gnu/libz.so.1 (0x00007fc6cc0eb000)\n\tlibmount.so.1 => /lib/x86_64-linux-gnu/libmount.so.1 (0x00007fc6cc09c000)\n\tlibselinux.so.1 => /lib/x86_64-linux-gnu/libselinux.so.1 (0x00007fc6cc06f000)\n\tlibsystemd.so.0 => /lib/x86_64-linux-gnu/libsystemd.so.0 (0x00007fc6cbd20000)\n\tlibXrender.so.1 => /lib/x86_64-linux-gnu/libXrender.so.1 (0x00007fc6cc063000)\n\tlibdrm.so.2 => /lib/x86_64-linux-gnu/libdrm.so.2 (0x00007fc6cc04c000)\n\tlibXau.so.6 => /lib/x86_64-linux-gnu/libXau.so.6 (0x00007fc6cc044000)\n\tlibXdmcp.so.6 => /lib/x86_64-linux-gnu/libXdmcp.so.6 (0x00007fc6cc03c000)\n\tlibcap.so.2 => /lib/x86_64-linux-gnu/libcap.so.2 (0x00007fc6cc02f000)\n\tlibXi.so.6 => /lib/x86_64-linux-gnu/libXi.so.6 (0x00007fc6cc01c000)\n\tlibblkid.so.1 => /lib/x86_64-linux-gnu/libblkid.so.1 (0x00007fc6cbce5000)\n\tlibgcrypt.so.20 => /lib/x86_64-linux-gnu/libgcrypt.so.20 (0x00007fc6cbb9c000)\n\tliblz4.so.1 => /lib/x86_64-linux-gnu/liblz4.so.1 (0x00007fc6cbb7a000)\n\tliblzma.so.5 => /lib/x86_64-linux-gnu/liblzma.so.5 (0x00007fc6cbb48000)\n\tlibzstd.so.1 => /lib/x86_64-linux-gnu/libzstd.so.1 (0x00007fc6cba8e000)\n\tlibbsd.so.0 => /lib/x86_64-linux-gnu/libbsd.so.0 (0x00007fc6cba78000)\n\tlibgpg-error.so.0 => /lib/x86_64-linux-gnu/libgpg-error.so.0 (0x00007fc6cba53000)\n\tlibmd.so.0 => /lib/x86_64-linux-gnu/libmd.so.0 (0x00007fc6cba44000)\n",
+      "libraries": [
+        {
+          "path": "/usr/lib/x86_64-linux-gnu/libdl.so.2",
+          "sha256": "c2994527172cc23b7fb0f7d611b71e00a37da27af12c2e5e9e0dc1a742886c96"
+        },
+        {
+          "path": "/usr/lib/x86_64-linux-gnu/libpthread.so.0",
+          "sha256": "90491a21ce44efcf3bd4b65ec82501c091d7ebe7f8d9b341dd01d721001d9ecd"
+        },
+        {
+          "path": "/usr/lib/x86_64-linux-gnu/libglib-2.0.so.0.8000.0",
+          "sha256": "448d9d271e77a7f6c4d057336df40c34b02c794f551caf8fa03b5122f25e601b"
+        },
+        {
+          "path": "/usr/lib/x86_64-linux-gnu/libgobject-2.0.so.0.8000.0",
+          "sha256": "2bf396b14b469ca2eed46a785b3bc0bd1fd979261c6bf505bc4debdcd0a6870a"
+        },
+        {
+          "path": "/usr/lib/x86_64-linux-gnu/libnspr4.so",
+          "sha256": "c32583a53640c144757419b977a76976ee3dbda7b905a0af1046ace3c570ae98"
+        },
+        {
+          "path": "/usr/lib/x86_64-linux-gnu/libnss3.so",
+          "sha256": "e02cd7ae23536d20588e6f0a3e1cfa93e7591cbca2408a090a147769dd3e3f7d"
+        },
+        {
+          "path": "/usr/lib/x86_64-linux-gnu/libnssutil3.so",
+          "sha256": "8be78576227541c877d6ab17b49efe9ed7635b75039ea9810c8ccd030380f6e3"
+        },
+        {
+          "path": "/usr/lib/x86_64-linux-gnu/libgio-2.0.so.0.8000.0",
+          "sha256": "373801faa40cd4eb46a40ce02bd0945b4905160a59894b600636e0fadfb78f2b"
+        },
+        {
+          "path": "/usr/lib/x86_64-linux-gnu/libatk-1.0.so.0.25209.1",
+          "sha256": "d312f3dbed8f19037bf4d8581f0e41ddfe53796dc7abbc9b7f253495d472a923"
+        },
+        {
+          "path": "/usr/lib/x86_64-linux-gnu/libatk-bridge-2.0.so.0.0.0",
+          "sha256": "366fcd2f2cd9a77767855a7c25b00ffce57e6b55109a2bf800872f0337a28415"
+        },
+        {
+          "path": "/usr/lib/x86_64-linux-gnu/libdbus-1.so.3.32.4",
+          "sha256": "a6ae7b4ef48562b40d7b9ba8efd2e49f6528b7cc6364bea382dcee4b473b5413"
+        },
+        {
+          "path": "/usr/lib/x86_64-linux-gnu/libm.so.6",
+          "sha256": "fce00b6f25f459cf4ae0b7fae4257909a1a8a86f9149e7c029a5d617baf1ccd0"
+        },
+        {
+          "path": "/usr/lib/x86_64-linux-gnu/libX11.so.6.4.0",
+          "sha256": "edd2ddf6e00a81c40b8645f7dbb6d6603c6a0a78d583bdbe7491d8a84de6e3b6"
+        },
+        {
+          "path": "/usr/lib/x86_64-linux-gnu/libXcomposite.so.1.0.0",
+          "sha256": "675c78d8d5b088a59ad4f8eb15419d0842b17caca3317a5e9f68573171ec5d61"
+        },
+        {
+          "path": "/usr/lib/x86_64-linux-gnu/libXdamage.so.1.1.0",
+          "sha256": "6ff910fbde851ede163b9066671e1740e374df414591015d90770b99d5b3de4a"
+        },
+        {
+          "path": "/usr/lib/x86_64-linux-gnu/libXext.so.6.4.0",
+          "sha256": "2907e6a996465de5b32a0dd10534d4416b87f1dee5670aaa7b19301a1fc93f44"
+        },
+        {
+          "path": "/usr/lib/x86_64-linux-gnu/libXfixes.so.3.1.0",
+          "sha256": "89e5897f438456013d2297850a7558cd28c9ad1f6978447197568949fb6a0fd9"
+        },
+        {
+          "path": "/usr/lib/x86_64-linux-gnu/libXrandr.so.2.2.0",
+          "sha256": "bc6120a734d52e7f5e3611334e9f3cff0b3ce1b129bb20b6412ce8f0f62c049d"
+        },
+        {
+          "path": "/usr/lib/x86_64-linux-gnu/libgbm.so.1.0.0",
+          "sha256": "3c781e20939adc578f1696980cb8a106cfc34da404e89d93faa887e995da2f14"
+        },
+        {
+          "path": "/usr/lib/x86_64-linux-gnu/libexpat.so.1.9.1",
+          "sha256": "286682ecbc5e59a638963b1a4e6351e65eb32fcf4bdcb9cb7569b6a61fe06a8d"
+        },
+        {
+          "path": "/usr/lib/x86_64-linux-gnu/libxcb.so.1.1.0",
+          "sha256": "7958a0136b121bdc4c708968569ad152a9ed208ab026e2537b1005dde64ca440"
+        },
+        {
+          "path": "/usr/lib/x86_64-linux-gnu/libxkbcommon.so.0.0.0",
+          "sha256": "3eb6c7315985803a7c72cb81aa3293b763e6cfc907b70b7b2f641c2827cd90f9"
+        },
+        {
+          "path": "/usr/lib/x86_64-linux-gnu/libudev.so.1.7.8",
+          "sha256": "0d6934adafb2ef3c640382440c14d6bd60f391e688c000796ffcea0c72849269"
+        },
+        {
+          "path": "/usr/lib/x86_64-linux-gnu/libasound.so.2.0.0",
+          "sha256": "ff4c69ef420f2d0ab92c813d2222d097c6a7eafe3b13952aed069e2bb0204f55"
+        },
+        {
+          "path": "/usr/lib/x86_64-linux-gnu/libatspi.so.0.0.1",
+          "sha256": "4af877d2d235b7eaab015abe6d81b82c82fe506a5d71403b9bbdfcbce99e8141"
+        },
+        {
+          "path": "/usr/lib/x86_64-linux-gnu/libgcc_s.so.1",
+          "sha256": "d93224d2b0dab4247598be683adca02f5cf00586f99c187579cd7e92058fb7cb"
+        },
+        {
+          "path": "/usr/lib/x86_64-linux-gnu/libc.so.6",
+          "sha256": "3a15d66867d83762c7f2f1e37359cb8f6c5743edb369c65285cb0b1c4f7498bf"
+        },
+        {
+          "path": "/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2",
+          "sha256": "c20a2dc8917c755f02b94049356320fe1f62ac7d9f8994731f807d9df39302da"
+        },
+        {
+          "path": "/usr/lib/x86_64-linux-gnu/libpcre2-8.so.0.11.2",
+          "sha256": "e00576d71d81d3ba0cfa4903c835a44a8723aac96f72f79ff75200b4cff9071b"
+        },
+        {
+          "path": "/usr/lib/x86_64-linux-gnu/libffi.so.8.1.4",
+          "sha256": "00f593fe192f2851b8ce23b25cec2488d769beb5a8f63e8c9e563071e1075153"
+        },
+        {
+          "path": "/usr/lib/x86_64-linux-gnu/libplc4.so",
+          "sha256": "f68520b4a9ba6190c67ce96511192f9af31dd96d91f18fd64cca48ffe08f7deb"
+        },
+        {
+          "path": "/usr/lib/x86_64-linux-gnu/libplds4.so",
+          "sha256": "403f3c1ec489de93d04b5a386d2e659af6da0a41e09ffb90a280b6d68eeb1617"
+        },
+        {
+          "path": "/usr/lib/x86_64-linux-gnu/libgmodule-2.0.so.0.8000.0",
+          "sha256": "1d3459ce2cd1a1fd276b08f75aa191597ece3e44bbe12ddd6bf0fe1dc8c27181"
+        },
+        {
+          "path": "/usr/lib/x86_64-linux-gnu/libz.so.1.3",
+          "sha256": "86200da370f20476a2507e9097a789b5ef97269b4ca8d5e164ad82dab9d99892"
+        },
+        {
+          "path": "/usr/lib/x86_64-linux-gnu/libmount.so.1.1.0",
+          "sha256": "7472255ae5799059b37ddd544788f5665dbd3e1cb78259f52180293039efc2a5"
+        },
+        {
+          "path": "/usr/lib/x86_64-linux-gnu/libselinux.so.1",
+          "sha256": "0ec0843463f90e227b0e138e1f379774f50b5514bd7f5dbd4c8a87aca0aa6670"
+        },
+        {
+          "path": "/usr/lib/x86_64-linux-gnu/libsystemd.so.0.38.0",
+          "sha256": "b10be60fc80ea6910df1b253658e638bd29f3d1aeeb3798006fc66972366cb94"
+        },
+        {
+          "path": "/usr/lib/x86_64-linux-gnu/libXrender.so.1.3.0",
+          "sha256": "250977e0e004b6c0556144c3e683487063b4582dc83d205196ec3aa65d54e2c6"
+        },
+        {
+          "path": "/usr/lib/x86_64-linux-gnu/libdrm.so.2.125.0",
+          "sha256": "ff39219aa058421e46afd36851342370cd1932d2557eb22f54e129755642bf67"
+        },
+        {
+          "path": "/usr/lib/x86_64-linux-gnu/libXau.so.6.0.0",
+          "sha256": "8040da3f8516c1acfe39f04ff022480cdb273705ba5e7a4ca70bbdb1527cd67a"
+        },
+        {
+          "path": "/usr/lib/x86_64-linux-gnu/libXdmcp.so.6.0.0",
+          "sha256": "667d97d6da16016400ab10de9f83ef4ab209ceb6adf68ff9650225ec13e723b0"
+        },
+        {
+          "path": "/usr/lib/x86_64-linux-gnu/libcap.so.2.66",
+          "sha256": "6ac6abc86ac891c6e13486470e26f1d939f47fda9e6b5d5508a7f5ec881adc84"
+        },
+        {
+          "path": "/usr/lib/x86_64-linux-gnu/libXi.so.6.1.0",
+          "sha256": "a51348c921ce1a35123fa7c99dc59bfd3e815be6829874fe15ae55172901d3e4"
+        },
+        {
+          "path": "/usr/lib/x86_64-linux-gnu/libblkid.so.1.1.0",
+          "sha256": "9c3860ffab5422410ff9e073d3e82267f00bc68ff1248cbb191640ee2ff045bc"
+        },
+        {
+          "path": "/usr/lib/x86_64-linux-gnu/libgcrypt.so.20.4.3",
+          "sha256": "6ad6d7007ee1ad8319eb18ba9a512cf09dda49396a303774c68b47477020bad4"
+        },
+        {
+          "path": "/usr/lib/x86_64-linux-gnu/liblz4.so.1.9.4",
+          "sha256": "40bffd0a098387368b16b992abd5f7cf43c0fa2f05cabe5a6d483719554adfda"
+        },
+        {
+          "path": "/usr/lib/x86_64-linux-gnu/liblzma.so.5.4.5",
+          "sha256": "26b37d25f7ca2a2d348de8ecabacda12e921cd933b21fa069a179760db77219d"
+        },
+        {
+          "path": "/usr/lib/x86_64-linux-gnu/libzstd.so.1.5.5",
+          "sha256": "0a2128bc10841fb29e76d08d945864dfb0b6a66da5df6df5d8299197439e54bb"
+        },
+        {
+          "path": "/usr/lib/x86_64-linux-gnu/libbsd.so.0.12.1",
+          "sha256": "e86cd4f0019f42c2ba5e60602e0edc8694d2948377d98c3654d0f6bddb5254bb"
+        },
+        {
+          "path": "/usr/lib/x86_64-linux-gnu/libgpg-error.so.0.34.0",
+          "sha256": "6cb18a007bfcb623029f4528a36b46578fea7dc34c2b505b8e6e0d99e6348cd1"
+        },
+        {
+          "path": "/usr/lib/x86_64-linux-gnu/libmd.so.0.1.0",
+          "sha256": "423e18586b6ea740f4465afd64f7a9a4cb7264ed979c8e7256f9085af5345fef"
+        }
+      ]
+    }
+  ],
+  "status": "PASSED_OFFLINE_ENGINEERING_ONLY"
+}

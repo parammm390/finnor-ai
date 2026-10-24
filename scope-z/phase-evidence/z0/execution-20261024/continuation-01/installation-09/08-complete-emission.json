@@ -1,0 +1,16 @@
+{
+  "name": "08-complete-emission",
+  "command": "/home/factory-user/repos/finnor-z-toolchains/node22/node_modules/node/bin/node",
+  "args": [
+    "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-09/runtime/finnor-os/scripts/project-z/z0/emit-converged-runtime.mjs",
+    "--installation=/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-09",
+    "--attempt=01"
+  ],
+  "cwd": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-09/runtime",
+  "started": "2026-10-24T17:52:42.163Z",
+  "elapsedMs": 55048,
+  "expectedCode": 0,
+  "code": 0,
+  "signal": null,
+  "logSha256": "5ca94693fee62a2fbba31d3de8b95ae331bc9998f9d5971475765e6d404f1946"
+}

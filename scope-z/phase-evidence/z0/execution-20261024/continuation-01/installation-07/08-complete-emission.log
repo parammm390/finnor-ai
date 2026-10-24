@@ -1,0 +1,7 @@
+▲ [WARNING] Import "resolveEnterpriseAllocationProblem" will always be undefined because there is no matching export in "packages/private-equity/src/enterprise-allocation.ts" [import-is-undefined]
+
+    packages/private-equity/src/r8/owners.ts:46:99:
+      46 │ ...eAllocationProblem?:Resolver}).resolveEnterpriseAllocationProblem;
+         ╵                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+{"schema":"finnor.x1.development-installation.v1","routes":157,"emittedSources":1160,"emittedAssets":2043,"packages":1823,"files":98849,"nativeAssets":150,"externalImports":36,"totalBytes":2084360487,"elapsedMs":52647,"source":{"commit":"a2a8c662ea31ce4ef8a607917868492ebacce9d9","tree":"1356645835caa17c19d92b40308174fe66bcd67c","snapshotPopulationSha256":"4d8a97185507eac865dd37113d80eb22567a3f873276cb6383ce2bf2ff67736b","snapshotSha256":"23ed70645e75d9b66b7af12a5a2f55d59894ac122e44b974d3829b1836ae01db","qualification":"ACTUAL_COORDINATOR_PRODUCT_WITH_OWNED_TOOLING_NOT_NATIVE_QUALIFIED","coordinatorHead":"9f3edfd3b4c6758832c53139da0773218062191e","proposalPatchSha256":"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"},"runtimeTypeScriptFallback":"REFUSED","installedNative":"NOT_RUN"}

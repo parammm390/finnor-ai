@@ -1,0 +1,554 @@
+[
+  {
+    "path": "finnor-os/scripts/frontier5/x1/checker-command.mts",
+    "originalSha256": "45160f7b50e329517eb479cc3ae184ce769684160ba425b4a69b2c59839999f7",
+    "emittedInputSha256": "8fa45c0ceb0f74935a90c6e1253759beda8f009e10b94440b120617c65043441",
+    "syntaxEdits": 7,
+    "invocationRewrites": []
+  },
+  {
+    "path": "finnor-os/packages/db/migrate.ts",
+    "originalSha256": "da1b30e000be4ed00b9bfbc6cb24a08eb81dd9c0164601d706c829440ee3084a",
+    "emittedInputSha256": "839f69d0c01e157354a837bacace4a33838d00d3a60c5ad69c4d6601360b3811",
+    "syntaxEdits": 2,
+    "invocationRewrites": []
+  },
+  {
+    "path": "finnor-os/packages/capability-evolution/src/source-closure.ts",
+    "originalSha256": "d05f641c474316424a84d9c5b10c0f66fe064fbf464b2a8ddc6a5f5bec15f50d",
+    "emittedInputSha256": "4e15e2e725132f5afeb7d05a422a93ad2d7084c856f4c2b9dd7ad207a046ac00",
+    "syntaxEdits": 12,
+    "invocationRewrites": []
+  },
+  {
+    "path": "finnor-os/packages/capability-evolution/src/search-process.ts",
+    "originalSha256": "1a9daecb862192fc42aad9e6f29ab4d038b919e369f1e8a9eaa0c82cf546109c",
+    "emittedInputSha256": "5ee3206e472750e0506756093cd6eeef883647cff8ed931aa431464524ba50ee",
+    "syntaxEdits": 2,
+    "invocationRewrites": [
+      {
+        "start": 1196,
+        "end": 1210,
+        "reason": "NODE_IMPORT_FLAG"
+      }
+    ]
+  },
+  {
+    "path": "finnor-os/packages/db/production-target-guard.ts",
+    "originalSha256": "bb92c1ade36f93e7cb12da44aa34fdca9a5a17f5fee0f726ab26591ea08afbb3",
+    "emittedInputSha256": "e35f1e40a221620cb46ec9b2e44e20cda6965e6b556da170510ad083a1175b3e",
+    "syntaxEdits": 1,
+    "invocationRewrites": []
+  },
+  {
+    "path": "finnor-os/packages/db/seed.ts",
+    "originalSha256": "8ab8ce244288c8e2207a0ea8639d328259033554493474ab7f511b1230e3f41c",
+    "emittedInputSha256": "f873ee7d4ceb206f5bdc17ac030cade3b69fcef5d589e0f4e76e84696ea0013b",
+    "syntaxEdits": 1,
+    "invocationRewrites": []
+  },
+  {
+    "path": "finnor-os/packages/epistemic-runtime/scripts/run-locked-corpus.ts",
+    "originalSha256": "04a91e7f108678a7e3c03100bded20948cac7dea484c71e80393346df6a9946d",
+    "emittedInputSha256": "79132156fb68341f1bdae13f3cbe6bd3640ec7b5d95c22fdc01548d92079f661",
+    "syntaxEdits": 1,
+    "invocationRewrites": []
+  },
+  {
+    "path": "finnor-os/packages/epistemic-runtime/src/allocation-producer.ts",
+    "originalSha256": "513bbcbfcc3d8b83653c550e2f8fec41fe38483f21eeb6c53ff982d768fa7154",
+    "emittedInputSha256": "95dd50f5caa8648a90a6e31d0c22e30fd0735a5ed06a40fab1962e5ea029b67c",
+    "syntaxEdits": 2,
+    "invocationRewrites": []
+  },
+  {
+    "path": "finnor-os/packages/epistemic-runtime/src/allocation-verifier.ts",
+    "originalSha256": "59c450764a56c6609cdc18a1521a2ad89d85c3a9b6b2a7d57d45ee57e262ecc5",
+    "emittedInputSha256": "73b4cce694e35d2de2abd4249887c6250f97471d5914674dc9bc5ffa8c6b6a37",
+    "syntaxEdits": 4,
+    "invocationRewrites": []
+  },
+  {
+    "path": "finnor-os/packages/epistemic-runtime/src/certified-state-reduction/checker.ts",
+    "originalSha256": "aec6c86e6d5b7acd264364710dbb73b792cb866480f7b710a25e933b3168bf16",
+    "emittedInputSha256": "4f48980f213c7b1ff281274b9ab62d47e5f36e328b813e86caab8a139a5e4f6c",
+    "syntaxEdits": 1,
+    "invocationRewrites": []
+  },
+  {
+    "path": "finnor-os/packages/epistemic-runtime/src/closing-checker-service.mts",
+    "originalSha256": "048bd67903a6f554bf9c01640b4ca7c9ef061a661fb9ea48bb38c34b2e52a141",
+    "emittedInputSha256": "62f1b04fb5490b33e2fdf8e057a68659addd2a86284f24c0e459e5974a6b589d",
+    "syntaxEdits": 7,
+    "invocationRewrites": []
+  },
+  {
+    "path": "finnor-os/packages/capability-evolution/src/institution-port.ts",
+    "originalSha256": "74153a8c7c44b82e636c24b4354ea5e666f4d6c44bcdd5a02f830d814a0b7d73",
+    "emittedInputSha256": "f752529a35528813c237fc68ed512fe07b900a24320cca253e048454994744f7",
+    "syntaxEdits": 9,
+    "invocationRewrites": []
+  },
+  {
+    "path": "finnor-os/packages/capability-evolution/src/journal.ts",
+    "originalSha256": "b18d63401509960e97bf9a27518b504bc9b52b306bc51ea4184a710c50f76be5",
+    "emittedInputSha256": "0de7c9d926cea57bf2cd069a79e848d5a30806fb54dfc537804f0f2c6549275e",
+    "syntaxEdits": 1,
+    "invocationRewrites": []
+  },
+  {
+    "path": "finnor-os/packages/epistemic-runtime/src/contingent-control.ts",
+    "originalSha256": "37330d195639077515f473262b60148cdf94d7e7d98b540a138746e164973fb4",
+    "emittedInputSha256": "35cb9d71606761771e8876e10156e199b9c1c2c9c7957a28c56fb5b46dea4392",
+    "syntaxEdits": 1,
+    "invocationRewrites": []
+  },
+  {
+    "path": "finnor-os/packages/epistemic-runtime/src/economic-attribution.ts",
+    "originalSha256": "5bebab4fa8f45f239fef942d68469afec6dd37de378eb673b27423672d10691f",
+    "emittedInputSha256": "61cff82b1261ebdda7a380c9c2de8efa14dbb37bdb04e3c8912af200cc0a09ae",
+    "syntaxEdits": 3,
+    "invocationRewrites": []
+  },
+  {
+    "path": "finnor-os/packages/epistemic-runtime/src/exact-continuation.ts",
+    "originalSha256": "126fce9b11f898edfe765cb9c7a6c755210ed4a13d8aecfdfb7b05ad8e192170",
+    "emittedInputSha256": "6214cfd2b4e3703b7dfbc9b40ad44dfcddf9a6a6e8743eda2252a52d4dc54b62",
+    "syntaxEdits": 1,
+    "invocationRewrites": []
+  },
+  {
+    "path": "finnor-os/packages/epistemic-runtime/src/experiments.ts",
+    "originalSha256": "eff523599bcfbf0150fec8c551ed7b5a390002462590ea02ec4d62a623740482",
+    "emittedInputSha256": "0759cc15489f62d68d671eec9f5877279b145bc91a5a7a95a8c03b177c8ff4b7",
+    "syntaxEdits": 1,
+    "invocationRewrites": []
+  },
+  {
+    "path": "finnor-os/packages/epistemic-runtime/src/import-boundary.test.ts",
+    "originalSha256": "9d21d588cc5ea11acdfe80b9e012e1e20602f4db318b665a365670d2910fe38f",
+    "emittedInputSha256": "2c6a2f10ce25fe1248621ab894c6253297a340c97055d256dce1bf36c9bc3a25",
+    "syntaxEdits": 1,
+    "invocationRewrites": []
+  },
+  {
+    "path": "finnor-os/packages/epistemic-runtime/src/incentive-rule-synthesis/launcher.ts",
+    "originalSha256": "d96d384fdb90139e1c69dd5f0d84aea100f643b7e95aa7bec673e8593c52b34a",
+    "emittedInputSha256": "566d76e60d7529be953a9dec69143b520fa48eda6b8c3e18019b30786a20fdb9",
+    "syntaxEdits": 1,
+    "invocationRewrites": []
+  },
+  {
+    "path": "finnor-os/packages/orchestration/src/request-compiler.ts",
+    "originalSha256": "b77f7fa366747417e4dd80da4e8ab802ca8931e27f52d4a9f28c0b7222b4b82d",
+    "emittedInputSha256": "85d1fcf6f605c98d85dec9d92b08f5bb6d0f4dff78f327de7ad769fbdb9c717c",
+    "syntaxEdits": 1,
+    "invocationRewrites": []
+  },
+  {
+    "path": "finnor-os/packages/epistemic-runtime/src/intervention-backend.ts",
+    "originalSha256": "b0b74b8a53de617d3d55fa4c1f7741e0550fc8424765a759153b9d5d78a8ddac",
+    "emittedInputSha256": "082f07645323ddff962780a052e2d6641e3ee5d9d1661ca49084ec459bf367a1",
+    "syntaxEdits": 4,
+    "invocationRewrites": []
+  },
+  {
+    "path": "finnor-os/packages/private-equity/src/application-semantics/contracts.ts",
+    "originalSha256": "4e308c8bdce98c1b4a917dfbd676f59a468a00843f32f4e7c9418d426480153e",
+    "emittedInputSha256": "6f9372b80dac5357f3ab32353fb528acaedbbbd7d3ea0fb90401d10683a49af9",
+    "syntaxEdits": 1,
+    "invocationRewrites": []
+  },
+  {
+    "path": "finnor-os/packages/private-equity/src/application-semantics/store.ts",
+    "originalSha256": "fc06aef01a7f4e82024793c76060967fbd4efecaa3834c0bcd3bdd9a74179770",
+    "emittedInputSha256": "c8a43fa8b144719b8a74166278685c302c949fb571c7d66ddd2e7afba9b7bf24",
+    "syntaxEdits": 1,
+    "invocationRewrites": []
+  },
+  {
+    "path": "finnor-os/packages/private-equity/src/bilateral-opportunities/checker-service.mts",
+    "originalSha256": "6cf323257150fbdc3fdad83408e405b3991e1e3e6ed4b82f8756c81afb7da68b",
+    "emittedInputSha256": "7f1b7d704d332073f24689fb025868c61eae2129a6510d0c8486fff157adc2e2",
+    "syntaxEdits": 7,
+    "invocationRewrites": []
+  },
+  {
+    "path": "finnor-os/packages/private-equity/src/bilateral-opportunities/store.ts",
+    "originalSha256": "16a1acb4e15c14e82e105d2690119b0d82cac41cbd1cd30277da92b85de189c5",
+    "emittedInputSha256": "f0ab0722334af798eca5dca867827815589579fba2dd28d0524716be4f059704",
+    "syntaxEdits": 2,
+    "invocationRewrites": []
+  },
+  {
+    "path": "finnor-os/packages/epistemic-runtime/src/solver-synthesis/runtime.ts",
+    "originalSha256": "05fdb23397f7e90b7bee5712bbb345b3fde3f1d2fb621a1f1eb4905dcc93fe15",
+    "emittedInputSha256": "6bd164776e6e6ea2e01f6eae30d667c152bbc6a349af2bb824d8246cca179099",
+    "syntaxEdits": 3,
+    "invocationRewrites": []
+  },
+  {
+    "path": "finnor-os/packages/epistemic-runtime/src/strategic-response/process.ts",
+    "originalSha256": "d10fb80942c08569ccad17464c509705b0859c09f9d8c2a58ed4e03cf2cac3f7",
+    "emittedInputSha256": "14147b62913b2d831c799fbda6e2520e6f318464ee4ca086f9f92d76b0426733",
+    "syntaxEdits": 1,
+    "invocationRewrites": []
+  },
+  {
+    "path": "finnor-os/packages/private-equity/src/branch-fabric/owners.ts",
+    "originalSha256": "ded5d14b495057ff6e3b6cbb1cbb13d0dd7ff674d0820bf1607fa1e0fece849d",
+    "emittedInputSha256": "45d4c217fff279e73e32d070dfb21099e5018c3e34d545884bce4a786e137366",
+    "syntaxEdits": 1,
+    "invocationRewrites": []
+  },
+  {
+    "path": "finnor-os/packages/private-equity/src/branch-fabric/producer-adapters.ts",
+    "originalSha256": "daa68323cb9a163f12734879822a29f6c86f235895411d53201cda33045ac9bd",
+    "emittedInputSha256": "702026154e3cd90e280d761c8cb6a43ae360404d4da7031dd502edf720773503",
+    "syntaxEdits": 5,
+    "invocationRewrites": []
+  },
+  {
+    "path": "finnor-os/packages/private-equity/src/branch-fabric/registry.ts",
+    "originalSha256": "d2ad059be15c959f2077ac29c0493915532876b61b814a5a4dfa4295c6baaa27",
+    "emittedInputSha256": "efdbaec265a9063d19c3664f21b0a8a671b108fa60389aee7b4f84c5d7550b02",
+    "syntaxEdits": 2,
+    "invocationRewrites": []
+  },
+  {
+    "path": "finnor-os/packages/private-equity/src/branch-fabric/runtime.ts",
+    "originalSha256": "c3b75e4739b40261d371abc562af5a2d7f170ac962eb25323e08069e9312febc",
+    "emittedInputSha256": "a2135bb9f29da200e8d54916cf858594dc5e6cb6bb399a5cbd22a0d457c0baf4",
+    "syntaxEdits": 3,
+    "invocationRewrites": [
+      {
+        "start": 2393,
+        "end": 2407,
+        "reason": "NODE_IMPORT_FLAG"
+      }
+    ]
+  },
+  {
+    "path": "finnor-os/packages/governed-execution/src/closing-provider-broker.mts",
+    "originalSha256": "c61689506e00e786b93aa3e72c66565c640ed6747b1ebed7965a423785c255d9",
+    "emittedInputSha256": "7f5742b849d9f833c4ddad8684fff55225fdac50badb56a0070583b8c4fc787b",
+    "syntaxEdits": 1,
+    "invocationRewrites": []
+  },
+  {
+    "path": "finnor-os/packages/governed-execution/src/dispatch-broker.ts",
+    "originalSha256": "2dc70098c6fd5bdfc2a35d8bb96db344fb1617bf87e029eb3aeaa491624b216f",
+    "emittedInputSha256": "4eb5c221cbd4bffbd27f994eca6e70e9023f8364868ef1e69bb9fdc14468ef1a",
+    "syntaxEdits": 2,
+    "invocationRewrites": []
+  },
+  {
+    "path": "finnor-os/packages/governed-execution/src/ledger.ts",
+    "originalSha256": "4d9f49968931acc6cf3e16b705d302444cb903246eb999c2f9c10c996c6f0db2",
+    "emittedInputSha256": "3eaac036c046e874a516daeaa9269d61df0414662ce6ae8f0e087a11814efb37",
+    "syntaxEdits": 5,
+    "invocationRewrites": []
+  },
+  {
+    "path": "finnor-os/packages/private-equity/src/capital-formation/store.ts",
+    "originalSha256": "7feba558ed7788a157c348f9645072a436290eb39a15f7d5a30a58452e297345",
+    "emittedInputSha256": "f39eda3c965aed2e829ce8c75ef641dbbe0fc10e1ab6d1c12ccd7035e657e7a1",
+    "syntaxEdits": 2,
+    "invocationRewrites": []
+  },
+  {
+    "path": "finnor-os/packages/epistemic-runtime/src/verified-capital-compiler/checker.ts",
+    "originalSha256": "464a4d30be559417224daf86fbd2d652c125fb528b5030ce1e15980971b4896b",
+    "emittedInputSha256": "392d0bd1ca3fc2266f67880389349da7db52d20bcfbd73b25c33a14803c1c62d",
+    "syntaxEdits": 1,
+    "invocationRewrites": []
+  },
+  {
+    "path": "finnor-os/packages/governed-execution/src/request-verifier.ts",
+    "originalSha256": "b098cc074a8afa4ceaa92244c66256d559515096252072f6b77ca5b365ae4ab7",
+    "emittedInputSha256": "f05dea156d716a8fb88b5558a4bcd94279862867b3cccb8330b6a6fc4a5e2d92",
+    "syntaxEdits": 1,
+    "invocationRewrites": []
+  },
+  {
+    "path": "finnor-os/packages/private-equity/src/capital-program/r2-native.ts",
+    "originalSha256": "7f2252d264c916400a84803441de12664e55d36307a834dad1b7e69c8c3bad6c",
+    "emittedInputSha256": "f3b4619ffe8a2c3e4f4620f087274bd4237593adeebfcc0b713521e4acbf8b20",
+    "syntaxEdits": 1,
+    "invocationRewrites": []
+  },
+  {
+    "path": "finnor-os/packages/private-equity/src/evidence-execution/store.ts",
+    "originalSha256": "e392455b61c16c879e9a1bce3c98c3bf1178cc03a955c8a77f60fb3b2e743c3e",
+    "emittedInputSha256": "25a3af1ec8b5e1aac217cc6c25143624a9068153989e2c08349b15f56afe61e2",
+    "syntaxEdits": 1,
+    "invocationRewrites": []
+  },
+  {
+    "path": "finnor-os/packages/orchestration/src/graph/setup.ts",
+    "originalSha256": "23377182ffa973bdf095da76a6d77e5839deb5c9eb4e0fd325e277749211f25f",
+    "emittedInputSha256": "59237948666f4cdbbdef6aebdc28b349f45ee43395ae2f767145777e00b1b6d3",
+    "syntaxEdits": 1,
+    "invocationRewrites": []
+  },
+  {
+    "path": "finnor-os/packages/private-equity/src/counterexample-search/reference.ts",
+    "originalSha256": "5378f7d6e4d8cba28d38744ee60fd5acf22e3565b23ee3c6760d7564757c6c07",
+    "emittedInputSha256": "7f1c5233a9c49ca431c9bbed96ed8c093af442eb805458cad2cb8a70314d941f",
+    "syntaxEdits": 1,
+    "invocationRewrites": []
+  },
+  {
+    "path": "finnor-os/packages/private-equity/src/r1/runtime.ts",
+    "originalSha256": "adf65157853d2fc6fc69d465ad086e46180b5c7d3727dca455ba99aba32177b4",
+    "emittedInputSha256": "48bbfa9c0841ff3b9aa1ec746e43c595d38c99f53dc6a700d91b22f3ea03fb80",
+    "syntaxEdits": 1,
+    "invocationRewrites": []
+  },
+  {
+    "path": "finnor-os/packages/private-equity/src/counterexample-search/service.ts",
+    "originalSha256": "fe27f1155fda79e7b0b218af1648d82930ab1938284015f77952f9cafcc08e73",
+    "emittedInputSha256": "f339b6faea668425592db86fb6acfd8fe22160c84ff8fdee7c81341de60e0076",
+    "syntaxEdits": 1,
+    "invocationRewrites": []
+  },
+  {
+    "path": "finnor-os/packages/private-equity/src/decision-slice/service.ts",
+    "originalSha256": "4863004fe71833cf6c863acce3116a5a8911c8f8ef9e2a5bd5bf14cb1357594b",
+    "emittedInputSha256": "3dee12cfcb74187d38e14871b1fd2689de6ab4fa2913ac7b5845f581179231d3",
+    "syntaxEdits": 1,
+    "invocationRewrites": []
+  },
+  {
+    "path": "finnor-os/packages/private-equity/src/deliberation/module.ts",
+    "originalSha256": "c7d4e9d6a9f214de2efb4223071710ba7e5ba9241a3a26e0797ed48059b59ba4",
+    "emittedInputSha256": "b4d6249cbd0ba163a83f53bf80bfcac2eea38206c87c74ae5e1080682d4eac4d",
+    "syntaxEdits": 2,
+    "invocationRewrites": []
+  },
+  {
+    "path": "finnor-os/packages/private-equity/src/r4/native.ts",
+    "originalSha256": "dce0f976bdaddc3bf134e86589e4778f1e0d253f2e532c8db8331bc1429a7229",
+    "emittedInputSha256": "13e362727c3676786c785d0a6ccba01a244ccb49fcef10bc65d9c380735f09c2",
+    "syntaxEdits": 1,
+    "invocationRewrites": []
+  },
+  {
+    "path": "finnor-os/packages/private-equity/src/decision-slice/store.ts",
+    "originalSha256": "e65258858fba671c81819f9e1da8c639669524c2f3e2a5c55f2f5087b5061772",
+    "emittedInputSha256": "a1d4debd6e57036c3b8189d9ce0cada430fb0a7fd6a81aafddb30c9294cc7850",
+    "syntaxEdits": 1,
+    "invocationRewrites": []
+  },
+  {
+    "path": "finnor-os/packages/private-equity/src/r4/store.ts",
+    "originalSha256": "f0c46ade11d6a3502213598bbe015bc14baf89c50f0979c11c707bc5653e6bf8",
+    "emittedInputSha256": "093779e259c69fb9cb7360c5929c92f9927c95b1550eb9ecf7d755403bf13a77",
+    "syntaxEdits": 1,
+    "invocationRewrites": []
+  },
+  {
+    "path": "finnor-os/packages/private-equity/src/r1/native.ts",
+    "originalSha256": "9c7d4a33bb8c668175dc2e1447447560ae4aa1f652bf664989e554e70e7aec70",
+    "emittedInputSha256": "0f3ec1481582a516cba69e669443c495abc9ed514c49c87b79f43a510255070f",
+    "syntaxEdits": 2,
+    "invocationRewrites": [
+      {
+        "start": 619,
+        "end": 624,
+        "reason": "NODE_IMPORT_OPERAND"
+      }
+    ]
+  },
+  {
+    "path": "finnor-os/packages/private-equity/src/r7/native-child.mts",
+    "originalSha256": "4684a5a76cae0e0a9ff452ee6623107327211ccdd3eb0cdb0e7c0593c6fe5a43",
+    "emittedInputSha256": "3045c47a8af99fcf5cd6b09f7c0271c8aa7b5cabd8af64fbe0d1fd7f648e0062",
+    "syntaxEdits": 1,
+    "invocationRewrites": []
+  },
+  {
+    "path": "finnor-os/packages/private-equity/src/r7/physical.ts",
+    "originalSha256": "c1666f9cf3c251a211e62f31c50243395a1c5191b1b22ad9c6473ddec411476e",
+    "emittedInputSha256": "bd3648ee158c0bbc8216c98977c5bf39df26c3554a3b3f10cffbef7f84356a82",
+    "syntaxEdits": 2,
+    "invocationRewrites": [
+      {
+        "start": 2494,
+        "end": 2539,
+        "reason": "CANONICAL_TSX_RESOLUTION_OPERAND"
+      }
+    ]
+  },
+  {
+    "path": "finnor-os/packages/private-equity/src/economic-action-theory/process.ts",
+    "originalSha256": "c9f31182b3ffe6fcaaa5a6023d3aaec7f70e24bd7ea43b9835a98cc703388f12",
+    "emittedInputSha256": "440c5194025c5668b603cc39cf2dce03e44da33aa58624fd6116310457b13ad7",
+    "syntaxEdits": 1,
+    "invocationRewrites": []
+  },
+  {
+    "path": "finnor-os/packages/private-equity/src/r7/runtime.ts",
+    "originalSha256": "9a62f7f4e3313bcb8dd37502008013268bf8bb4a5c82503f172b97e0bf350f5b",
+    "emittedInputSha256": "395dc96ed3113fbe42c0c8d8a8f378a13574436f68a4325eefcc10a47e187035",
+    "syntaxEdits": 3,
+    "invocationRewrites": []
+  },
+  {
+    "path": "finnor-os/packages/private-equity/src/institution-program/baseline.ts",
+    "originalSha256": "1669b7205f758d6589be6cb305c566087202089f014fd2820479b7dc2ab2c0df",
+    "emittedInputSha256": "f4eb4dfdc8e18545b93e4ddc559a439c9281b5176a8d32dec3ab4f14db8314d4",
+    "syntaxEdits": 3,
+    "invocationRewrites": []
+  },
+  {
+    "path": "finnor-os/packages/private-equity/src/institution-program/checker-process.ts",
+    "originalSha256": "e34711e4542fb490f9057aa4664dbd802db7b008bd690c20789e3489c5615a5b",
+    "emittedInputSha256": "f25e60a7fcfbb60338fa80e345f2e01f3ac725359e64a1494a9e83a46f091b49",
+    "syntaxEdits": 5,
+    "invocationRewrites": []
+  },
+  {
+    "path": "finnor-os/packages/private-equity/src/r8/owners.ts",
+    "originalSha256": "372a5502a5d65479f20e43589bdb61ee46808c090d7f89b40fe9a34410567ebb",
+    "emittedInputSha256": "aa01065fd9b583188288102366c141377adc5104f1f54c46718bc080179f8f08",
+    "syntaxEdits": 1,
+    "invocationRewrites": []
+  },
+  {
+    "path": "finnor-os/packages/private-equity/src/institution-program/installed-runtime.ts",
+    "originalSha256": "bcbbcb8fdc8359f333893f687c44f1c1dd10befb523e1a48c052aa6613ee2ba3",
+    "emittedInputSha256": "e42b5d38badf3c88638986e3b05653b788b9bf3a03311296595b9d0b96611f56",
+    "syntaxEdits": 1,
+    "invocationRewrites": []
+  },
+  {
+    "path": "finnor-os/packages/private-equity/src/institution-program/owner-admission.ts",
+    "originalSha256": "ba8f517f3bfe863028cc10a06a607ee1275279684ccd581e1ba41406cca5cec8",
+    "emittedInputSha256": "611cbd8210054eed3b4c8c679218f811e9be85043defb15abb43cb2bde2f9659",
+    "syntaxEdits": 4,
+    "invocationRewrites": []
+  },
+  {
+    "path": "finnor-os/packages/private-equity/src/r8/s8/source-closure.ts",
+    "originalSha256": "809b9030f71af2ffa1c87e43fb4a3eb2f7363ed78f662b68348c30abf0bcdd29",
+    "emittedInputSha256": "6e8d1c10c187852312813951d494be56a7f20c72aca9c7d40d6f7ebf623e4e8a",
+    "syntaxEdits": 1,
+    "invocationRewrites": []
+  },
+  {
+    "path": "finnor-os/packages/private-equity/src/institution-program/store.ts",
+    "originalSha256": "0923a39f1963d04a8a5068ef9047c3edcf01cbf86ddb361ebfb857cfd10ba5df",
+    "emittedInputSha256": "32cad40ca63ada3ef522e8a725a06c1cf312f6f6f5cc0c1a5f905095fde0323f",
+    "syntaxEdits": 1,
+    "invocationRewrites": []
+  },
+  {
+    "path": "finnor-os/packages/private-equity/src/institution-program/worker.ts",
+    "originalSha256": "99059004f097fb3abb7d1d29607427882d847f9c630e386e63af3c0de101d357",
+    "emittedInputSha256": "5f40d745cd01a539e833effcf4224408a70109892e23b5a6cce46743b655ec70",
+    "syntaxEdits": 1,
+    "invocationRewrites": []
+  },
+  {
+    "path": "finnor-os/packages/private-equity/src/enterprise-applications/worker.ts",
+    "originalSha256": "82cadd9400f383baf9634532ee30153dcb30ee995390b138dc2d3f00811eb8ff",
+    "emittedInputSha256": "98820991f4e47fcd0e4131073da4b4f07c5197d2e205717989443b1c2e53a771",
+    "syntaxEdits": 1,
+    "invocationRewrites": [
+      {
+        "start": 3571,
+        "end": 3585,
+        "reason": "NODE_IMPORT_FLAG"
+      }
+    ]
+  },
+  {
+    "path": "finnor-os/packages/private-equity/src/interaction-synthesis/contracts.ts",
+    "originalSha256": "36166ca7032bab0e4a71121cb7ddbb6194ad98c78910b8077a0dc61a585e3b72",
+    "emittedInputSha256": "b5a20382e8fb43d3ad02a3d3b09b584d9def1b671500678c7a00b40d3681cc98",
+    "syntaxEdits": 1,
+    "invocationRewrites": []
+  },
+  {
+    "path": "finnor-os/packages/private-equity/src/interaction-synthesis/process.ts",
+    "originalSha256": "e071792e155be398542ce7a6e259e0fb325fe937ead24c97509592c9a0be0c33",
+    "emittedInputSha256": "3222b272e60759159ab901bb86ff9b6c6d3deb16a0d179ac3aebeb3220043f75",
+    "syntaxEdits": 1,
+    "invocationRewrites": []
+  },
+  {
+    "path": "finnor-os/packages/private-equity/src/evidence-execution/backend.ts",
+    "originalSha256": "1d387aa4e692cfcd0b73d38aa02aeae7885617fa0d2fb0774577501cbe81b2c5",
+    "emittedInputSha256": "68f0e805cf6da57d7397ac05d540d3fe434dac9c65ac4abda8b9628e4103fa86",
+    "syntaxEdits": 4,
+    "invocationRewrites": [
+      {
+        "start": 3109,
+        "end": 3135,
+        "reason": "CANONICAL_TSX_RESOLUTION_OPERAND"
+      }
+    ]
+  },
+  {
+    "path": "finnor-os/packages/private-equity/src/enterprise-obligations.ts",
+    "originalSha256": "90c80ae14f948b4474a006a440ae562a7c594f79a549391c213c25af3e8418dc",
+    "emittedInputSha256": "3fb8c38f23a4cd8b68bcd056f9c556b0e524f80632dae3e0c268814fdd9db5d3",
+    "syntaxEdits": 2,
+    "invocationRewrites": []
+  },
+  {
+    "path": "finnor-os/packages/private-equity/src/policy-learning/process.ts",
+    "originalSha256": "f29c546843643efd7c675457468a6a8e89dabc1cd7f9abf80d6c4fc0aa6aceb8",
+    "emittedInputSha256": "fe0db4e61295eff2892fa391545678909457507410b2af58f38af9844c7ab8d0",
+    "syntaxEdits": 1,
+    "invocationRewrites": [
+      {
+        "start": 1030,
+        "end": 1044,
+        "reason": "NODE_IMPORT_FLAG"
+      }
+    ]
+  },
+  {
+    "path": "finnor-os/packages/private-equity/src/primary-diligence/native.ts",
+    "originalSha256": "ba1579469573bfa17acb758f0d6e8dcda2999b88ae0bd184273dcf9d729b178a",
+    "emittedInputSha256": "86849342e5d11100dcdbd1d1778baff9f902e24dd1e361fc570404de08a8ab38",
+    "syntaxEdits": 2,
+    "invocationRewrites": [
+      {
+        "start": 2515,
+        "end": 2560,
+        "reason": "CANONICAL_TSX_RESOLUTION_OPERAND"
+      }
+    ]
+  },
+  {
+    "path": "finnor-os/packages/private-equity/src/primary-diligence/store.ts",
+    "originalSha256": "8070e3506f3a238ac939f2d429b153ab0499e64fe1c1f13d1dd3251e33d472fa",
+    "emittedInputSha256": "50ffec8139654792cd99293586750f3ab55ca1389dc3f0bd09617d63f1f51838",
+    "syntaxEdits": 3,
+    "invocationRewrites": []
+  },
+  {
+    "path": "finnor-os/packages/private-equity/src/primary-diligence/checker.mts",
+    "originalSha256": "a2019875273ac4194771d137bb0ac69de0efbe0de645e05988484fefffc00858",
+    "emittedInputSha256": "55e84bf7bec1e28911d61335a26aa45636a825922049c037fef50cbba92b8993",
+    "syntaxEdits": 2,
+    "invocationRewrites": []
+  },
+  {
+    "path": "scripts/release/production-mutation-guard.mjs",
+    "originalSha256": "ebc53f8489c2c1768afba250225cef23802ebc947331c5a0bab4c9bde2f77452",
+    "emittedInputSha256": "85cac9f0b7ee881573bb529bce9a85f8235bfd5fbb07b308e0c561deb9de8a5a",
+    "syntaxEdits": 2,
+    "invocationRewrites": []
+  },
+  {
+    "path": "scripts/release/release-policy.mjs",
+    "originalSha256": "6a5507fd29d31aac54e74aac167ef08a14e4154774c0596df6d455a57796a7f0",
+    "emittedInputSha256": "80074ca0d358ed408882a24e8c6cdd856b5e2c3d860d82315bba6a4e1a07b566",
+    "syntaxEdits": 1,
+    "invocationRewrites": []
+  }
+]

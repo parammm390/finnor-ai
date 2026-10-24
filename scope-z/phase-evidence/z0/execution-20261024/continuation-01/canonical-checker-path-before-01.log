@@ -1,0 +1,17 @@
+file:///home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-03/runtime/finnor-os/z0-runtime-01/installed-loader.mjs:22
+    if (!target) throw Error("Z0_SOURCE_EXECUTION_WITHOUT_EMISSION_REFUSED");
+                       ^
+
+Error: Z0_SOURCE_EXECUTION_WITHOUT_EMISSION_REFUSED
+    at remap (file:///home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-03/runtime/finnor-os/z0-runtime-01/installed-loader.mjs:22:24)
+    at resolve (file:///home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-03/runtime/finnor-os/z0-runtime-01/installed-loader.mjs:32:19)
+    at nextStep (node:internal/modules/customization_hooks:189:26)
+    at resolveWithHooks (node:internal/modules/customization_hooks:417:10)
+    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:803:14)
+    at ModuleLoader.resolve (node:internal/modules/esm/loader:719:19)
+    at ModuleLoader.getModuleJobForImport (node:internal/modules/esm/loader:320:38)
+    at onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:680:36)
+    at TracingChannel.tracePromise (node:diagnostics_channel:350:14)
+    at ModuleLoader.import (node:internal/modules/esm/loader:679:21)
+
+Node.js v22.23.4

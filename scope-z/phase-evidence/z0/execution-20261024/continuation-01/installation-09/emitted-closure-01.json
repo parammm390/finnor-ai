@@ -1,0 +1,3124 @@
+{
+  "schema": "finnor.x1.development-installation.v1",
+  "mode": "DEVELOPMENT_ONLY",
+  "builtAt": "2026-10-24T17:53:36.025Z",
+  "source": {
+    "commit": "b0da02031f4fb3bead483798d29ac0b0458df312",
+    "tree": "51b7e8eb4dc5089ccde56ef9d4746acb350a2514",
+    "snapshotPopulationSha256": "3032d24fa61d1514fe8bf75cdfbad71c0a5f7dc5a7f1df835b6d005bf354201a",
+    "snapshotSha256": "9a6ff170d1f5589229fe9bf4e8413b1fdb67eb16f4b2c899cf8be56239efa954",
+    "qualification": "ACTUAL_COORDINATOR_PRODUCT_WITH_OWNED_TOOLING_NOT_NATIVE_QUALIFIED",
+    "coordinatorHead": "9f3edfd3b4c6758832c53139da0773218062191e",
+    "proposalPatchSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "files": {
+    "count": 98849,
+    "populationSha256": "2c5f4950425485b51a74a146e139e4aad555621d31a1e18a0f448aaf77ce5def"
+  },
+  "links": [
+    {
+      "path": "finnor-os/node_modules/.bin/drizzle-kit",
+      "target": "../drizzle-kit/bin.cjs"
+    },
+    {
+      "path": "finnor-os/node_modules/.bin/esbuild",
+      "target": "../esbuild/bin/esbuild"
+    },
+    {
+      "path": "finnor-os/node_modules/.bin/loose-envify",
+      "target": "../loose-envify/cli.js"
+    },
+    {
+      "path": "finnor-os/node_modules/.bin/mustache",
+      "target": "../mustache/bin/mustache"
+    },
+    {
+      "path": "finnor-os/node_modules/.bin/nanoid",
+      "target": "../nanoid/bin/nanoid.cjs"
+    },
+    {
+      "path": "finnor-os/node_modules/.bin/next",
+      "target": "../next/dist/bin/next"
+    },
+    {
+      "path": "finnor-os/node_modules/.bin/node-which",
+      "target": "../which/bin/node-which"
+    },
+    {
+      "path": "finnor-os/node_modules/.bin/pdf-parse",
+      "target": "../pdf-parse/bin/cli.mjs"
+    },
+    {
+      "path": "finnor-os/node_modules/.bin/pino",
+      "target": "../pino/bin.js"
+    },
+    {
+      "path": "finnor-os/node_modules/.bin/pino-pretty",
+      "target": "../pino-pretty/bin.js"
+    },
+    {
+      "path": "finnor-os/node_modules/.bin/playwright",
+      "target": "../playwright/cli.js"
+    },
+    {
+      "path": "finnor-os/node_modules/.bin/playwright-core",
+      "target": "../playwright-core/cli.js"
+    },
+    {
+      "path": "finnor-os/node_modules/.bin/rolldown",
+      "target": "../rolldown/bin/cli.mjs"
+    },
+    {
+      "path": "finnor-os/node_modules/.bin/semver",
+      "target": "../semver/bin/semver.js"
+    },
+    {
+      "path": "finnor-os/node_modules/.bin/tsc",
+      "target": "../typescript/bin/tsc"
+    },
+    {
+      "path": "finnor-os/node_modules/.bin/tsserver",
+      "target": "../typescript/bin/tsserver"
+    },
+    {
+      "path": "finnor-os/node_modules/.bin/tsx",
+      "target": "../tsx/dist/cli.mjs"
+    },
+    {
+      "path": "finnor-os/node_modules/.bin/vite",
+      "target": "../vite/bin/vite.js"
+    },
+    {
+      "path": "finnor-os/node_modules/.bin/vitest",
+      "target": "../vitest/vitest.mjs"
+    },
+    {
+      "path": "finnor-os/node_modules/.bin/web-push",
+      "target": "../web-push/src/cli.js"
+    },
+    {
+      "path": "finnor-os/node_modules/.bin/why-is-node-running",
+      "target": "../why-is-node-running/cli.js"
+    },
+    {
+      "path": "finnor-os/node_modules/@finnor/api",
+      "target": "../../apps/api"
+    },
+    {
+      "path": "finnor-os/node_modules/@finnor/artifacts",
+      "target": "../../packages/artifacts"
+    },
+    {
+      "path": "finnor-os/node_modules/@finnor/authority",
+      "target": "../../packages/authority"
+    },
+    {
+      "path": "finnor-os/node_modules/@finnor/computer",
+      "target": "../../packages/computer"
+    },
+    {
+      "path": "finnor-os/node_modules/@finnor/console",
+      "target": "../../apps/console"
+    },
+    {
+      "path": "finnor-os/node_modules/@finnor/data-platform",
+      "target": "../../packages/data-platform"
+    },
+    {
+      "path": "finnor-os/node_modules/@finnor/db",
+      "target": "../../packages/db"
+    },
+    {
+      "path": "finnor-os/node_modules/@finnor/document-ir",
+      "target": "../../packages/document-ir"
+    },
+    {
+      "path": "finnor-os/node_modules/@finnor/epistemic-runtime",
+      "target": "../../packages/epistemic-runtime"
+    },
+    {
+      "path": "finnor-os/node_modules/@finnor/import-engine",
+      "target": "../../packages/import-engine"
+    },
+    {
+      "path": "finnor-os/node_modules/@finnor/memory",
+      "target": "../../packages/memory"
+    },
+    {
+      "path": "finnor-os/node_modules/@finnor/ooxml",
+      "target": "../../packages/ooxml"
+    },
+    {
+      "path": "finnor-os/node_modules/@finnor/orchestration",
+      "target": "../../packages/orchestration"
+    },
+    {
+      "path": "finnor-os/node_modules/@finnor/orchestrator",
+      "target": "../../apps/orchestrator"
+    },
+    {
+      "path": "finnor-os/node_modules/@finnor/planning",
+      "target": "../../packages/planning"
+    },
+    {
+      "path": "finnor-os/node_modules/@finnor/plugin-computer-task",
+      "target": "../../packages/domain-plugins/computer-task"
+    },
+    {
+      "path": "finnor-os/node_modules/@finnor/plugin-private-equity",
+      "target": "../../packages/domain-plugins/private-equity"
+    },
+    {
+      "path": "finnor-os/node_modules/@finnor/plugin-universal-actions",
+      "target": "../../packages/domain-plugins/universal-actions"
+    },
+    {
+      "path": "finnor-os/node_modules/@finnor/plugin-web-research",
+      "target": "../../packages/domain-plugins/web-research"
+    },
+    {
+      "path": "finnor-os/node_modules/@finnor/plugins-shared",
+      "target": "../../packages/domain-plugins/shared"
+    },
+    {
+      "path": "finnor-os/node_modules/@finnor/policy-schema",
+      "target": "../../packages/policy-schema"
+    },
+    {
+      "path": "finnor-os/node_modules/@finnor/presentation-ir",
+      "target": "../../packages/presentation-ir"
+    },
+    {
+      "path": "finnor-os/node_modules/@finnor/private-equity",
+      "target": "../../packages/private-equity"
+    },
+    {
+      "path": "finnor-os/node_modules/@finnor/projections",
+      "target": "../../packages/projections"
+    },
+    {
+      "path": "finnor-os/node_modules/@finnor/provider-microsoft365",
+      "target": "../../packages/provider-microsoft365"
+    },
+    {
+      "path": "finnor-os/node_modules/@finnor/read-models",
+      "target": "../../packages/read-models"
+    },
+    {
+      "path": "finnor-os/node_modules/@finnor/security",
+      "target": "../../packages/security"
+    },
+    {
+      "path": "finnor-os/node_modules/@finnor/shared-types",
+      "target": "../../packages/shared-types"
+    },
+    {
+      "path": "finnor-os/node_modules/@finnor/source-custody",
+      "target": "../../packages/source-custody"
+    },
+    {
+      "path": "finnor-os/node_modules/@finnor/spreadsheet-ir",
+      "target": "../../packages/spreadsheet-ir"
+    },
+    {
+      "path": "finnor-os/node_modules/@finnor/supplier-canary",
+      "target": "../../apps/supplier-canary"
+    },
+    {
+      "path": "finnor-os/node_modules/@finnor/tools",
+      "target": "../../packages/tools"
+    },
+    {
+      "path": "finnor-os/node_modules/@finnor/underwriting",
+      "target": "../../packages/underwriting"
+    },
+    {
+      "path": "finnor-os/node_modules/@finnor/worker",
+      "target": "../../apps/worker"
+    },
+    {
+      "path": "finnor-os/node_modules/@finnor/workflow-runtime",
+      "target": "../../packages/workflow-runtime"
+    },
+    {
+      "path": "finnor-os/node_modules/@finnor/workforce",
+      "target": "../../packages/workforce"
+    },
+    {
+      "path": "finnor-os/node_modules/playwright/node_modules/.bin/playwright-core",
+      "target": "../playwright-core/cli.js"
+    },
+    {
+      "path": "node_modules/.bin/acorn",
+      "target": "../acorn/bin/acorn"
+    },
+    {
+      "path": "node_modules/.bin/autoprefixer",
+      "target": "../autoprefixer/bin/autoprefixer"
+    },
+    {
+      "path": "node_modules/.bin/baseline-browser-mapping",
+      "target": "../baseline-browser-mapping/dist/cli.cjs"
+    },
+    {
+      "path": "node_modules/.bin/browserslist",
+      "target": "../browserslist/cli.js"
+    },
+    {
+      "path": "node_modules/.bin/cssesc",
+      "target": "../cssesc/bin/cssesc"
+    },
+    {
+      "path": "node_modules/.bin/eslint",
+      "target": "../eslint/bin/eslint.js"
+    },
+    {
+      "path": "node_modules/.bin/jiti",
+      "target": "../jiti/bin/jiti.js"
+    },
+    {
+      "path": "node_modules/.bin/js-yaml",
+      "target": "../js-yaml/bin/js-yaml.js"
+    },
+    {
+      "path": "node_modules/.bin/jsesc",
+      "target": "../jsesc/bin/jsesc"
+    },
+    {
+      "path": "node_modules/.bin/json5",
+      "target": "../json5/lib/cli.js"
+    },
+    {
+      "path": "node_modules/.bin/loose-envify",
+      "target": "../loose-envify/cli.js"
+    },
+    {
+      "path": "node_modules/.bin/nanoid",
+      "target": "../nanoid/bin/nanoid.cjs"
+    },
+    {
+      "path": "node_modules/.bin/napi-postinstall",
+      "target": "../napi-postinstall/lib/cli.js"
+    },
+    {
+      "path": "node_modules/.bin/next",
+      "target": "../next/dist/bin/next"
+    },
+    {
+      "path": "node_modules/.bin/node-which",
+      "target": "../which/bin/node-which"
+    },
+    {
+      "path": "node_modules/.bin/openapi-typescript",
+      "target": "../openapi-typescript/bin/cli.js"
+    },
+    {
+      "path": "node_modules/.bin/parser",
+      "target": "../@babel/parser/bin/babel-parser.js"
+    },
+    {
+      "path": "node_modules/.bin/playwright",
+      "target": "../@playwright/test/cli.js"
+    },
+    {
+      "path": "node_modules/.bin/playwright-core",
+      "target": "../playwright-core/cli.js"
+    },
+    {
+      "path": "node_modules/.bin/resolve",
+      "target": "../resolve/bin/resolve"
+    },
+    {
+      "path": "node_modules/.bin/rolldown",
+      "target": "../rolldown/bin/cli.mjs"
+    },
+    {
+      "path": "node_modules/.bin/rollup",
+      "target": "../rollup/dist/bin/rollup"
+    },
+    {
+      "path": "node_modules/.bin/semver",
+      "target": "../semver/bin/semver.js"
+    },
+    {
+      "path": "node_modules/.bin/sentry-cli",
+      "target": "../@sentry/cli/bin/sentry-cli"
+    },
+    {
+      "path": "node_modules/.bin/sucrase",
+      "target": "../sucrase/bin/sucrase"
+    },
+    {
+      "path": "node_modules/.bin/sucrase-node",
+      "target": "../sucrase/bin/sucrase-node"
+    },
+    {
+      "path": "node_modules/.bin/tailwind",
+      "target": "../tailwindcss/lib/cli.js"
+    },
+    {
+      "path": "node_modules/.bin/tailwindcss",
+      "target": "../tailwindcss/lib/cli.js"
+    },
+    {
+      "path": "node_modules/.bin/terser",
+      "target": "../terser/bin/terser"
+    },
+    {
+      "path": "node_modules/.bin/tsc",
+      "target": "../typescript/bin/tsc"
+    },
+    {
+      "path": "node_modules/.bin/tsserver",
+      "target": "../typescript/bin/tsserver"
+    },
+    {
+      "path": "node_modules/.bin/update-browserslist-db",
+      "target": "../update-browserslist-db/cli.js"
+    },
+    {
+      "path": "node_modules/.bin/vite",
+      "target": "../vite/bin/vite.js"
+    },
+    {
+      "path": "node_modules/.bin/vitest",
+      "target": "../vitest/vitest.mjs"
+    },
+    {
+      "path": "node_modules/.bin/webpack",
+      "target": "../webpack/bin/webpack.js"
+    },
+    {
+      "path": "node_modules/.bin/why-is-node-running",
+      "target": "../why-is-node-running/cli.js"
+    },
+    {
+      "path": "node_modules/@babel/core/node_modules/.bin/json5",
+      "target": "../json5/lib/cli.js"
+    },
+    {
+      "path": "node_modules/@babel/core/node_modules/.bin/semver",
+      "target": "../semver/bin/semver.js"
+    },
+    {
+      "path": "node_modules/@babel/helper-compilation-targets/node_modules/.bin/semver",
+      "target": "../semver/bin/semver.js"
+    },
+    {
+      "path": "node_modules/eslint-plugin-import/node_modules/.bin/semver",
+      "target": "../semver/bin/semver.js"
+    },
+    {
+      "path": "node_modules/eslint-plugin-react/node_modules/.bin/resolve",
+      "target": "../resolve/bin/resolve"
+    },
+    {
+      "path": "node_modules/eslint-plugin-react/node_modules/.bin/semver",
+      "target": "../semver/bin/semver.js"
+    },
+    {
+      "path": "node_modules/node-exports-info/node_modules/.bin/semver",
+      "target": "../semver/bin/semver.js"
+    }
+  ],
+  "entrypoints": {
+    "api": "finnor-os/z0-runtime-01/api.mjs",
+    "worker": "finnor-os/z0-runtime-01/worker.mjs",
+    "checker": "finnor-os/z0-runtime-01/checker.mjs",
+    "bridge": "finnor-os/z0-runtime-01/bridge.mjs",
+    "migrations": "finnor-os/z0-runtime-01/migrations.mjs"
+  },
+  "checkerPins": {
+    "count": 3163,
+    "sha256": "15e43114ccb770eef996c9a1877edadd53c06bd037b95cdd04c0156c26a8f2fb"
+  },
+  "routes": [
+    {
+      "parts": [
+        "connections",
+        "google",
+        "callback"
+      ],
+      "source": "finnor-os/apps/api/app/api/connections/google/callback/route.ts",
+      "sha256": "0af5a2af657553b89095c255624fe2e92eb8fb216502d7b770213dcb5c5f193e"
+    },
+    {
+      "parts": [
+        "connections",
+        "google",
+        "start"
+      ],
+      "source": "finnor-os/apps/api/app/api/connections/google/start/route.ts",
+      "sha256": "b958fe017db22fa373330e3ea54a21463ee777aa6d3355675b39a4534d0c024b"
+    },
+    {
+      "parts": [
+        "connections",
+        "microsoft-graph",
+        "callback"
+      ],
+      "source": "finnor-os/apps/api/app/api/connections/microsoft-graph/callback/route.ts",
+      "sha256": "4b51695abac89ce5756cb225702a313a5d741fca8cff5e7de67ca260a70700e4"
+    },
+    {
+      "parts": [
+        "connections",
+        "microsoft-graph",
+        "start"
+      ],
+      "source": "finnor-os/apps/api/app/api/connections/microsoft-graph/start/route.ts",
+      "sha256": "1b0930b0fc37f5cd5491c964a7fa6a86bef95407888a406abe4269c4170212e0"
+    },
+    {
+      "parts": [
+        "connections",
+        "microsoft-graph",
+        "status"
+      ],
+      "source": "finnor-os/apps/api/app/api/connections/microsoft-graph/status/route.ts",
+      "sha256": "d0ed0501ca811048f8b62417ea29e7eff8ae1e864b5a98874523eb6ae2ffe4cd"
+    },
+    {
+      "parts": [
+        "integrations",
+        "microsoft-graph",
+        "coverage"
+      ],
+      "source": "finnor-os/apps/api/app/api/integrations/microsoft-graph/coverage/route.ts",
+      "sha256": "004626bc23a1d6b16856007a3c229658019d979109d86be7b9c2d2345a0d0f2a"
+    },
+    {
+      "parts": [
+        "integrations",
+        "microsoft-graph",
+        "source-scopes"
+      ],
+      "source": "finnor-os/apps/api/app/api/integrations/microsoft-graph/source-scopes/route.ts",
+      "sha256": "5882d335560f4fcf20cbde4375452c75748a311719f3e36a13a0bc92cbeb89d5"
+    },
+    {
+      "parts": [
+        "private-equity",
+        "ic",
+        "cases"
+      ],
+      "source": "finnor-os/apps/api/app/api/private-equity/ic/cases/route.ts",
+      "sha256": "aca8b89f450ed4444e1633499378b865fa7c88b0bdb390c25ebd63d59e43aeb6"
+    },
+    {
+      "parts": [
+        "private-equity",
+        "ic",
+        "committee-configurations"
+      ],
+      "source": "finnor-os/apps/api/app/api/private-equity/ic/committee-configurations/route.ts",
+      "sha256": "e0708c99f429313ccb7d6dd1ddad2609d8226b488085650d149ecb2ed3c2fb5c"
+    },
+    {
+      "parts": [
+        "underwriting",
+        "model-versions",
+        "diff"
+      ],
+      "source": "finnor-os/apps/api/app/api/underwriting/model-versions/diff/route.ts",
+      "sha256": "25e4a9426bf4d86302413b48d5f69d7f94f5d0ea738b1e68d23b848081187d10"
+    },
+    {
+      "parts": [
+        "underwriting",
+        "runs",
+        "diff"
+      ],
+      "source": "finnor-os/apps/api/app/api/underwriting/runs/diff/route.ts",
+      "sha256": "ad2af1a4c6b92d9bd99b0b5598b52cb0b7af31a2f22935e7d68996df46ab7a9c"
+    },
+    {
+      "parts": [
+        "actions",
+        "human"
+      ],
+      "source": "finnor-os/apps/api/app/api/actions/human/route.ts",
+      "sha256": "7a561207855ccc4642cdcc4f20b19b6dda2c407d84b0f56b3123bc969eef95a5"
+    },
+    {
+      "parts": [
+        "actions",
+        "pending"
+      ],
+      "source": "finnor-os/apps/api/app/api/actions/pending/route.ts",
+      "sha256": "71c3bab299c34cc5fd84f8d2aafeb439b118c2f8bb39ede08f6d7a97d3644b0b"
+    },
+    {
+      "parts": [
+        "actions",
+        "review-capability"
+      ],
+      "source": "finnor-os/apps/api/app/api/actions/review-capability/route.ts",
+      "sha256": "92f09343adcb96d3c337b6f82394d1eea3a9a36eb8565601ec977f9efefc4be0"
+    },
+    {
+      "parts": [
+        "admin",
+        "migrate"
+      ],
+      "source": "finnor-os/apps/api/app/api/admin/migrate/route.ts",
+      "sha256": "d3ba348cc433cf9df0bbc91667bc802b0119739d15da16c0c7985f31dcfb0e9b"
+    },
+    {
+      "parts": [
+        "integrations",
+        "status"
+      ],
+      "source": "finnor-os/apps/api/app/api/integrations/status/route.ts",
+      "sha256": "f420724864d51829031a0a1f8fb9829774e3be02e004dd3db4167eb930a32e26"
+    },
+    {
+      "parts": [
+        "outcome-packs",
+        "control"
+      ],
+      "source": "finnor-os/apps/api/app/api/outcome-packs/control/route.ts",
+      "sha256": "1592a39f4b0cf1dac9e17176403239bb2b54d5f755712c93ae812bc5721f7c01"
+    },
+    {
+      "parts": [
+        "outcome-packs",
+        "grants"
+      ],
+      "source": "finnor-os/apps/api/app/api/outcome-packs/grants/route.ts",
+      "sha256": "75836b37eb213ddb6e37c7d4536a5ce2647f58d75e7f01f77299f736d5750f79"
+    },
+    {
+      "parts": [
+        "private-equity",
+        "calibration"
+      ],
+      "source": "finnor-os/apps/api/app/api/private-equity/calibration/route.ts",
+      "sha256": "4dd496f09d07f06750822b9928aa880aee4918d27a899c70528fd7a0ac974efe"
+    },
+    {
+      "parts": [
+        "private-equity",
+        "digital-twin"
+      ],
+      "source": "finnor-os/apps/api/app/api/private-equity/digital-twin/route.ts",
+      "sha256": "f641c1c4f6dca0479decde6d9c0be9d019afb40f758c147601733281efbe097d"
+    },
+    {
+      "parts": [
+        "setup",
+        "status"
+      ],
+      "source": "finnor-os/apps/api/app/api/setup/status/route.ts",
+      "sha256": "5322694ac0e4833e39754b596a5edf8dc8322d7e56ca0856e89a321766fa0b10"
+    },
+    {
+      "parts": [
+        "underwriting",
+        "artifact-bindings"
+      ],
+      "source": "finnor-os/apps/api/app/api/underwriting/artifact-bindings/route.ts",
+      "sha256": "e2d8f1e23b5a2ae4f8c830aa9b720dfe4d679103cfade440b720b444f659c120"
+    },
+    {
+      "parts": [
+        "underwriting",
+        "comparisons"
+      ],
+      "source": "finnor-os/apps/api/app/api/underwriting/comparisons/route.ts",
+      "sha256": "bf3e5bf729a92e2e3b617ecb6026fe621cd55153380dfbae3c336cac65d6177b"
+    },
+    {
+      "parts": [
+        "underwriting",
+        "models"
+      ],
+      "source": "finnor-os/apps/api/app/api/underwriting/models/route.ts",
+      "sha256": "df7ae68939bea39da15fee4dc3367cfe1a5f9d574a3fc66791a2b5a1d22adae6"
+    },
+    {
+      "parts": [
+        "underwriting",
+        "projections"
+      ],
+      "source": "finnor-os/apps/api/app/api/underwriting/projections/route.ts",
+      "sha256": "96db6f3cec070bd211869d91261cf5a83ca0cc459d6f979d852d56c95f453c85"
+    },
+    {
+      "parts": [
+        "underwriting",
+        "runs"
+      ],
+      "source": "finnor-os/apps/api/app/api/underwriting/runs/route.ts",
+      "sha256": "9750108e4c2b4248fdc301458a942d42942df23f3532a7e7538e741c86480486"
+    },
+    {
+      "parts": [
+        "underwriting",
+        "scenarios"
+      ],
+      "source": "finnor-os/apps/api/app/api/underwriting/scenarios/route.ts",
+      "sha256": "b47981b9f09154f5f78197c4e0f998106bd3f4824ceb752abec41d4a9e520322"
+    },
+    {
+      "parts": [
+        "underwriting",
+        "sensitivities"
+      ],
+      "source": "finnor-os/apps/api/app/api/underwriting/sensitivities/route.ts",
+      "sha256": "00a5e642c8c45fee975aad1530538de6e95b591390a4a3eb123f47cfd14723d0"
+    },
+    {
+      "parts": [
+        "user-prefs",
+        "digest"
+      ],
+      "source": "finnor-os/apps/api/app/api/user-prefs/digest/route.ts",
+      "sha256": "9da7a8b1ab9cabdbc0ed649a595ccece98a71500ea1c84d1bcc11fca0749632c"
+    },
+    {
+      "parts": [
+        "webhooks",
+        "esign"
+      ],
+      "source": "finnor-os/apps/api/app/api/webhooks/esign/route.ts",
+      "sha256": "b3f70964f2f7f821db83548c82e1b822751ab0ce6f22809736fde46062e3fc28"
+    },
+    {
+      "parts": [
+        "webhooks",
+        "ghl"
+      ],
+      "source": "finnor-os/apps/api/app/api/webhooks/ghl/route.ts",
+      "sha256": "42afc5d595a7e5070db009cbaa74e47d23f2ae2ae63038b69a769bd689831b3b"
+    },
+    {
+      "parts": [
+        "webhooks",
+        "marketing"
+      ],
+      "source": "finnor-os/apps/api/app/api/webhooks/marketing/route.ts",
+      "sha256": "26c94c0408802cca826c6fbbb633ec357e5c71abbecd88630444c6ce5d1d4143"
+    },
+    {
+      "parts": [
+        "webhooks",
+        "microsoft-graph"
+      ],
+      "source": "finnor-os/apps/api/app/api/webhooks/microsoft-graph/route.ts",
+      "sha256": "3cc4a9e8fc6b09f8e1f3af1bcdfd59ab90ae0f1e8375ccd82b63e30323e88a1e"
+    },
+    {
+      "parts": [
+        "webhooks",
+        "payment"
+      ],
+      "source": "finnor-os/apps/api/app/api/webhooks/payment/route.ts",
+      "sha256": "b9793c234b07c074e450cc16f9bb1ed3ce0dfc59da456e8512a38165b1abd08d"
+    },
+    {
+      "parts": [
+        "webhooks",
+        "vapi"
+      ],
+      "source": "finnor-os/apps/api/app/api/webhooks/vapi/route.ts",
+      "sha256": "9f06e180cc1fa7893b1c0b91396ac94a3956158ff3dfae4e9ef6a2dd89ecab1c"
+    },
+    {
+      "parts": [
+        "workflows",
+        "runs"
+      ],
+      "source": "finnor-os/apps/api/app/api/workflows/runs/route.ts",
+      "sha256": "3b374783c54f3dfa9fe6455f058949796ce7b6b4711316184e697c412e650419"
+    },
+    {
+      "parts": [
+        "workforce",
+        "profiles"
+      ],
+      "source": "finnor-os/apps/api/app/api/workforce/profiles/route.ts",
+      "sha256": "10deb98954420d5cab51074493503d91196e566ec4df7a8c442c58be1ba65038"
+    },
+    {
+      "parts": [
+        "actions"
+      ],
+      "source": "finnor-os/apps/api/app/api/actions/route.ts",
+      "sha256": "64b9d4f65add1ebffd59523dd73da0d6564f27fe048b09493489d6012d318d22"
+    },
+    {
+      "parts": [
+        "activity"
+      ],
+      "source": "finnor-os/apps/api/app/api/activity/route.ts",
+      "sha256": "be3fdc322cfaaf82af68397c0584d7cbb95a3434e61a68bf16ececda4ff04006"
+    },
+    {
+      "parts": [
+        "artifact-templates"
+      ],
+      "source": "finnor-os/apps/api/app/api/artifact-templates/route.ts",
+      "sha256": "7ce415156d58e9c3e704a4ef3d4f0da8001205dea394b5f4372b4e9cca4464d9"
+    },
+    {
+      "parts": [
+        "artifacts"
+      ],
+      "source": "finnor-os/apps/api/app/api/artifacts/route.ts",
+      "sha256": "d27bdce1aea468e79988389e6e32c50c14241fb5e3885df36e07b2073cb439a2"
+    },
+    {
+      "parts": [
+        "audit"
+      ],
+      "source": "finnor-os/apps/api/app/api/audit/route.ts",
+      "sha256": "c2cb4f7b0b682bfdd89a4c97f6756e9bd8cc05af4765dcfd334d55da3dd3381f"
+    },
+    {
+      "parts": [
+        "corrections"
+      ],
+      "source": "finnor-os/apps/api/app/api/corrections/route.ts",
+      "sha256": "f7ce5e076113be2b16fe029d1f0c48e9eafbffa664c794acf8463e1e33f7f2d9"
+    },
+    {
+      "parts": [
+        "dlq"
+      ],
+      "source": "finnor-os/apps/api/app/api/dlq/route.ts",
+      "sha256": "956bb461b3d2dad93b7e0e4aff4109d514d4c247b462ef50c8ad8c2ff8174830"
+    },
+    {
+      "parts": [
+        "employees"
+      ],
+      "source": "finnor-os/apps/api/app/api/employees/route.ts",
+      "sha256": "c4c91cc266b35facd3f5ac641c93da29a74b5f099956be8d726e9a2856a05410"
+    },
+    {
+      "parts": [
+        "events"
+      ],
+      "source": "finnor-os/apps/api/app/api/events/route.ts",
+      "sha256": "734f4cdcda6e9493b80d5602bf2aff61030307f8780572e0c3f3888967a6c451"
+    },
+    {
+      "parts": [
+        "health"
+      ],
+      "source": "finnor-os/apps/api/app/api/health/route.ts",
+      "sha256": "d655300c64493bc5ccee03dcccbfefecc6faf7821afd267335267fd6a1c38e91"
+    },
+    {
+      "parts": [
+        "insights"
+      ],
+      "source": "finnor-os/apps/api/app/api/insights/route.ts",
+      "sha256": "7b62a19f61f5c6cf39b7f21daac41d53cf61e164f606730e9885d02391bb73a8"
+    },
+    {
+      "parts": [
+        "investment-cases"
+      ],
+      "source": "finnor-os/apps/api/app/api/investment-cases/route.ts",
+      "sha256": "27a6a2b8298f8c2b591ae78301ed44ee79a863ee28f441833c53d2b80dc308d9"
+    },
+    {
+      "parts": [
+        "live-controls"
+      ],
+      "source": "finnor-os/apps/api/app/api/live-controls/route.ts",
+      "sha256": "f036172b405f5324dcb524a657a85b2e1459849a4079e7f839e664ce4cc69cb0"
+    },
+    {
+      "parts": [
+        "me"
+      ],
+      "source": "finnor-os/apps/api/app/api/me/route.ts",
+      "sha256": "fa725b50c73e1f18825fc0b71f4c300e401e18c38f77389ba04a1354f579bdc1"
+    },
+    {
+      "parts": [
+        "objectives"
+      ],
+      "source": "finnor-os/apps/api/app/api/objectives/route.ts",
+      "sha256": "e2a10c579a4d083f2234a2147ffe748383f1e607e00a1ed4fe4bb9f2ea1112a3"
+    },
+    {
+      "parts": [
+        "operating-profile"
+      ],
+      "source": "finnor-os/apps/api/app/api/operating-profile/route.ts",
+      "sha256": "20b34d8225e4199581f05fc17d54ca84fe661cb6bbbd55fdf39db487f91e770e"
+    },
+    {
+      "parts": [
+        "operational-deltas"
+      ],
+      "source": "finnor-os/apps/api/app/api/operational-deltas/route.ts",
+      "sha256": "b70c116ea49061966e7a92874be447e87918d21f03b0666c8bb1621834298604"
+    },
+    {
+      "parts": [
+        "outcome-packs"
+      ],
+      "source": "finnor-os/apps/api/app/api/outcome-packs/route.ts",
+      "sha256": "1a8797b34b83eb1926fb147dfd5b6897c22f3729e5a61bc44d0ea02d3bbb20de"
+    },
+    {
+      "parts": [
+        "push-subscriptions"
+      ],
+      "source": "finnor-os/apps/api/app/api/push-subscriptions/route.ts",
+      "sha256": "4f1e2e758dd1e07fee64b6543f4581e4b3ba2c53be9fcee668abebece1146368"
+    },
+    {
+      "parts": [
+        "queries"
+      ],
+      "source": "finnor-os/apps/api/app/api/queries/route.ts",
+      "sha256": "8bbfeab57f78a6e7abf3007e20175b51ee478d1af458221fa0a0f7a3f027b99c"
+    },
+    {
+      "parts": [
+        "ready"
+      ],
+      "source": "finnor-os/apps/api/app/api/ready/route.ts",
+      "sha256": "06894d0285ad3dd61a5fa4b4fc82d9e00df17627edcc5410cc54fa17c4290fca"
+    },
+    {
+      "parts": [
+        "receipts"
+      ],
+      "source": "finnor-os/apps/api/app/api/receipts/route.ts",
+      "sha256": "f425c333da9d8796718d5c15d3a7f2ea60e270f5fa1cf89456909499725bd0ec"
+    },
+    {
+      "parts": [
+        "release"
+      ],
+      "source": "finnor-os/apps/api/app/api/release/route.ts",
+      "sha256": "a9f0937445b3ad231a0bfb5d3bd2a401ada219894b68b2f015660dd7ec29f862"
+    },
+    {
+      "parts": [
+        "semantic-activity"
+      ],
+      "source": "finnor-os/apps/api/app/api/semantic-activity/route.ts",
+      "sha256": "9ae1f9f6c753e12f6c208956788f192f942c1344e1f77b7878c74bfaf4099961"
+    },
+    {
+      "parts": [
+        "stream"
+      ],
+      "source": "finnor-os/apps/api/app/api/stream/route.ts",
+      "sha256": "8c50900b275a2810b4b8a07ed1de90f151e7aa45236620869cb5879d4af2124f"
+    },
+    {
+      "parts": [
+        "threads"
+      ],
+      "source": "finnor-os/apps/api/app/api/threads/route.ts",
+      "sha256": "46f3457f383b57198fec53739a56c0fc5d04879550e2ab7ce9a4d97bff2d4267"
+    },
+    {
+      "parts": [
+        "user-prefs"
+      ],
+      "source": "finnor-os/apps/api/app/api/user-prefs/route.ts",
+      "sha256": "dcd170870b0cabf7391d3bf7ca71f87745db1b192c8f85956c3f42aed6cfa266"
+    },
+    {
+      "parts": [
+        "vitals"
+      ],
+      "source": "finnor-os/apps/api/app/api/vitals/route.ts",
+      "sha256": "f74059cbc4c0e575bd9edaa2ee0ad0400b67bd33ac16b43828f121a371bb70cc"
+    },
+    {
+      "parts": [
+        "works"
+      ],
+      "source": "finnor-os/apps/api/app/api/works/route.ts",
+      "sha256": "197369ce886748c06337bd287a16a24292b29e61c8a5c19f5a3689451d6799c5"
+    },
+    {
+      "parts": [
+        "workspace-config"
+      ],
+      "source": "finnor-os/apps/api/app/api/workspace-config/route.ts",
+      "sha256": "3db9dd22643efa92db74dcc67250a622a49ded12bd6294b191cae0661931f4a6"
+    },
+    {
+      "parts": [
+        "private-equity",
+        "ic",
+        "cases",
+        "[id]",
+        "voting",
+        "close"
+      ],
+      "source": "finnor-os/apps/api/app/api/private-equity/ic/cases/[id]/voting/close/route.ts",
+      "sha256": "b3c3875eadeae62da99551acc790cdb3d826515b0e59847341834e871584612c"
+    },
+    {
+      "parts": [
+        "private-equity",
+        "ic",
+        "cases",
+        "[id]",
+        "voting",
+        "open"
+      ],
+      "source": "finnor-os/apps/api/app/api/private-equity/ic/cases/[id]/voting/open/route.ts",
+      "sha256": "7affad1a03d012816b2bf67e2c408ed19200b431af28b1ff901af689f13eea43"
+    },
+    {
+      "parts": [
+        "private-equity",
+        "ic",
+        "cases",
+        "[id]",
+        "begin-preparation"
+      ],
+      "source": "finnor-os/apps/api/app/api/private-equity/ic/cases/[id]/begin-preparation/route.ts",
+      "sha256": "0b0b942edc6fc0ff22a29c32b4bdc4da1eebf0195bec9fbf0c1557167bd7f535"
+    },
+    {
+      "parts": [
+        "private-equity",
+        "ic",
+        "cases",
+        "[id]",
+        "conditions"
+      ],
+      "source": "finnor-os/apps/api/app/api/private-equity/ic/cases/[id]/conditions/route.ts",
+      "sha256": "14eb0d5536665f8fc6e7c1743e152ce203e662fcc6510b7e30bb186840363d6c"
+    },
+    {
+      "parts": [
+        "private-equity",
+        "ic",
+        "cases",
+        "[id]",
+        "decision-proof"
+      ],
+      "source": "finnor-os/apps/api/app/api/private-equity/ic/cases/[id]/decision-proof/route.ts",
+      "sha256": "c932659ef828dfe9b5ab96f66efc5013a9a2515d21da080853329446deb87707"
+    },
+    {
+      "parts": [
+        "private-equity",
+        "ic",
+        "cases",
+        "[id]",
+        "decision-proposals"
+      ],
+      "source": "finnor-os/apps/api/app/api/private-equity/ic/cases/[id]/decision-proposals/route.ts",
+      "sha256": "544af3d0ad2b0abbd79cc546fc716233349fd6a9568297c79218d218084ea40d"
+    },
+    {
+      "parts": [
+        "private-equity",
+        "ic",
+        "cases",
+        "[id]",
+        "dissents"
+      ],
+      "source": "finnor-os/apps/api/app/api/private-equity/ic/cases/[id]/dissents/route.ts",
+      "sha256": "218f18272579a23f71aedb35fecb2b3beb69adb1be5ac2b55bf1099443f92809"
+    },
+    {
+      "parts": [
+        "private-equity",
+        "ic",
+        "cases",
+        "[id]",
+        "finalize"
+      ],
+      "source": "finnor-os/apps/api/app/api/private-equity/ic/cases/[id]/finalize/route.ts",
+      "sha256": "a9d0ac04802682c6a1cc39d5818b58d0acda5f17363923e80913ced43da76f74"
+    },
+    {
+      "parts": [
+        "private-equity",
+        "ic",
+        "cases",
+        "[id]",
+        "memos"
+      ],
+      "source": "finnor-os/apps/api/app/api/private-equity/ic/cases/[id]/memos/route.ts",
+      "sha256": "cf3ca57efd4ac36114aeb4d2916f0c6e7bdea85820352d2076227a002a051bd7"
+    },
+    {
+      "parts": [
+        "private-equity",
+        "ic",
+        "cases",
+        "[id]",
+        "open-questions"
+      ],
+      "source": "finnor-os/apps/api/app/api/private-equity/ic/cases/[id]/open-questions/route.ts",
+      "sha256": "ff7b797ab28106d43ba100353dbf7d46c354aa956e01db5738f68beeb51bfaec"
+    },
+    {
+      "parts": [
+        "private-equity",
+        "ic",
+        "cases",
+        "[id]",
+        "questions"
+      ],
+      "source": "finnor-os/apps/api/app/api/private-equity/ic/cases/[id]/questions/route.ts",
+      "sha256": "eaefc76164de25bf46026e2535666b7a8e3a57cd4fbbd2b5f652486246b92919"
+    },
+    {
+      "parts": [
+        "private-equity",
+        "ic",
+        "cases",
+        "[id]",
+        "ready-for-review"
+      ],
+      "source": "finnor-os/apps/api/app/api/private-equity/ic/cases/[id]/ready-for-review/route.ts",
+      "sha256": "5ba3fb105465349b613b16dad244bd61a2ee353b8c3e25405f901929d1933f9c"
+    },
+    {
+      "parts": [
+        "private-equity",
+        "ic",
+        "cases",
+        "[id]",
+        "ready-for-vote"
+      ],
+      "source": "finnor-os/apps/api/app/api/private-equity/ic/cases/[id]/ready-for-vote/route.ts",
+      "sha256": "498cdb8760996dfd3add9508ebcc21103a770e576225ac44c1dc57fe5bb5026d"
+    },
+    {
+      "parts": [
+        "private-equity",
+        "ic",
+        "cases",
+        "[id]",
+        "recommendations"
+      ],
+      "source": "finnor-os/apps/api/app/api/private-equity/ic/cases/[id]/recommendations/route.ts",
+      "sha256": "26773ec97325e32f5a86f577a692a17427670c49743c1b8368339ac0f52cd8f5"
+    },
+    {
+      "parts": [
+        "private-equity",
+        "ic",
+        "cases",
+        "[id]",
+        "reviewed-deck-link"
+      ],
+      "source": "finnor-os/apps/api/app/api/private-equity/ic/cases/[id]/reviewed-deck-link/route.ts",
+      "sha256": "8ba2a17b3b909187ae6eb498bff579db0d3dd345a463c08d3bba4d3282e6e746"
+    },
+    {
+      "parts": [
+        "private-equity",
+        "ic",
+        "cases",
+        "[id]",
+        "underwriting-run"
+      ],
+      "source": "finnor-os/apps/api/app/api/private-equity/ic/cases/[id]/underwriting-run/route.ts",
+      "sha256": "5f904521a6c63f8ff277579ad8195cfc0d35248ab6c855ac7d43d61a9b63d879"
+    },
+    {
+      "parts": [
+        "private-equity",
+        "ic",
+        "cases",
+        "[id]",
+        "votes"
+      ],
+      "source": "finnor-os/apps/api/app/api/private-equity/ic/cases/[id]/votes/route.ts",
+      "sha256": "295f8f24af7f65259e9d6fff1b63919623074d994b6badbb944ee9156d1f3814"
+    },
+    {
+      "parts": [
+        "private-equity",
+        "ic",
+        "cases",
+        "[id]",
+        "withdraw"
+      ],
+      "source": "finnor-os/apps/api/app/api/private-equity/ic/cases/[id]/withdraw/route.ts",
+      "sha256": "6cf058293daf934af83eb68e74b6eb83e88874912d76454e991813786cf9b235"
+    },
+    {
+      "parts": [
+        "computer",
+        "runs",
+        "[id]",
+        "cancel"
+      ],
+      "source": "finnor-os/apps/api/app/api/computer/runs/[id]/cancel/route.ts",
+      "sha256": "9846ce59542de632f9f4a94ae99f497272fc3c807d76205694bdbfd5649b0105"
+    },
+    {
+      "parts": [
+        "integrations",
+        "microsoft-graph",
+        "source-scopes",
+        "[id]"
+      ],
+      "source": "finnor-os/apps/api/app/api/integrations/microsoft-graph/source-scopes/[id]/route.ts",
+      "sha256": "20c1444566693154fc571e93a62086bc3c89bf645cdc143a2fbcb07395cf5c64"
+    },
+    {
+      "parts": [
+        "private-equity",
+        "ic",
+        "cases",
+        "[id]"
+      ],
+      "source": "finnor-os/apps/api/app/api/private-equity/ic/cases/[id]/route.ts",
+      "sha256": "09acbeb784feb784f25105af80daef61b1af0ff22b993ed928922fe12a6afb6f"
+    },
+    {
+      "parts": [
+        "underwriting",
+        "model-versions",
+        "[id]",
+        "affected"
+      ],
+      "source": "finnor-os/apps/api/app/api/underwriting/model-versions/[id]/affected/route.ts",
+      "sha256": "53ec250165c9d024ec39f8b562cf7da7a57a7aa49db81259eead6a3bbd8e84d5"
+    },
+    {
+      "parts": [
+        "underwriting",
+        "models",
+        "[id]",
+        "versions"
+      ],
+      "source": "finnor-os/apps/api/app/api/underwriting/models/[id]/versions/route.ts",
+      "sha256": "b2ac1a4852f81a5d6e15e696c667d974f07ae738151b5f6c71a83a38b3e4cc11"
+    },
+    {
+      "parts": [
+        "underwriting",
+        "runs",
+        "[id]",
+        "explain"
+      ],
+      "source": "finnor-os/apps/api/app/api/underwriting/runs/[id]/explain/route.ts",
+      "sha256": "9975668218920da76c8f2e0de0b4806a2c2a758cc174efd7da903602fe7fd929"
+    },
+    {
+      "parts": [
+        "workflows",
+        "runs",
+        "[id]",
+        "cancel"
+      ],
+      "source": "finnor-os/apps/api/app/api/workflows/runs/[id]/cancel/route.ts",
+      "sha256": "7e673344fd4527fb5a30f96ce8c1166d3ae4c228fec995abfe51765804480546"
+    },
+    {
+      "parts": [
+        "workflows",
+        "runs",
+        "[id]",
+        "escalate"
+      ],
+      "source": "finnor-os/apps/api/app/api/workflows/runs/[id]/escalate/route.ts",
+      "sha256": "95068e949d8d650128490ca2a463e6fa2f8a399d6f415860f196ae8c8e500204"
+    },
+    {
+      "parts": [
+        "workflows",
+        "runs",
+        "[id]",
+        "pause"
+      ],
+      "source": "finnor-os/apps/api/app/api/workflows/runs/[id]/pause/route.ts",
+      "sha256": "40419f4619d2731c3ce5f8e39c1722782b7e69982a667cd76f42bc644312126a"
+    },
+    {
+      "parts": [
+        "workflows",
+        "runs",
+        "[id]",
+        "resume"
+      ],
+      "source": "finnor-os/apps/api/app/api/workflows/runs/[id]/resume/route.ts",
+      "sha256": "ab0f562feab04e7b65572114fc941f603dcd4d5bc55c5f2f6102b3ff317fc4e2"
+    },
+    {
+      "parts": [
+        "workflows",
+        "runs",
+        "[id]",
+        "retry"
+      ],
+      "source": "finnor-os/apps/api/app/api/workflows/runs/[id]/retry/route.ts",
+      "sha256": "59da2e8f02fca3fdb3f2e7c613c679e17fa5056c4db6ee21966293a71c48469b"
+    },
+    {
+      "parts": [
+        "workflows",
+        "steps",
+        "[id]",
+        "compensate"
+      ],
+      "source": "finnor-os/apps/api/app/api/workflows/steps/[id]/compensate/route.ts",
+      "sha256": "dbfa29d849668e91f9658550e13c9cdc7567124d430a6e9efb03ac3c94b62113"
+    },
+    {
+      "parts": [
+        "workforce",
+        "assignments",
+        "[id]",
+        "reassign"
+      ],
+      "source": "finnor-os/apps/api/app/api/workforce/assignments/[id]/reassign/route.ts",
+      "sha256": "2f76fe52f0eab7e2acfdf411aa324e43b92987e1a44af0e0555e471337499dfd"
+    },
+    {
+      "parts": [
+        "actions",
+        "[id]",
+        "confirm"
+      ],
+      "source": "finnor-os/apps/api/app/api/actions/[id]/confirm/route.ts",
+      "sha256": "54866c3fdaebaf2d100cc10da36b151d2aad2f7f6573ff963b42501ce58e9a60"
+    },
+    {
+      "parts": [
+        "actions",
+        "[id]",
+        "escalate"
+      ],
+      "source": "finnor-os/apps/api/app/api/actions/[id]/escalate/route.ts",
+      "sha256": "e782fde8115765c659f855e8ac29b375e11f0c731ba5f977a15c6c8ddd07c80d"
+    },
+    {
+      "parts": [
+        "actions",
+        "[id]",
+        "reject"
+      ],
+      "source": "finnor-os/apps/api/app/api/actions/[id]/reject/route.ts",
+      "sha256": "d038940410e2cff99cdddabe16d9f7d14976904baae0506c75f8a83964673bcb"
+    },
+    {
+      "parts": [
+        "actions",
+        "[id]",
+        "revert"
+      ],
+      "source": "finnor-os/apps/api/app/api/actions/[id]/revert/route.ts",
+      "sha256": "466c2c7a58cc7477c1470d1a77e1babbfe7f16385d85c4275cb5ae259b754432"
+    },
+    {
+      "parts": [
+        "artifact-templates",
+        "[key]",
+        "instantiate"
+      ],
+      "source": "finnor-os/apps/api/app/api/artifact-templates/[key]/instantiate/route.ts",
+      "sha256": "e53d8efd1176286b439ebba8174ee9a1d7d1a6919217fbf9d1dcb817dc40dd63"
+    },
+    {
+      "parts": [
+        "computer",
+        "runs",
+        "[id]"
+      ],
+      "source": "finnor-os/apps/api/app/api/computer/runs/[id]/route.ts",
+      "sha256": "11f7a14475a2486d9b6ae2e931f85ab883524dfa08d30695ccbbabfff69a9778"
+    },
+    {
+      "parts": [
+        "connections",
+        "[ref]",
+        "verify"
+      ],
+      "source": "finnor-os/apps/api/app/api/connections/[ref]/verify/route.ts",
+      "sha256": "2e22e7485c7d7dd567ddfa842f5073cf2906c28c2b0059fe74b9442d59e2fdf7"
+    },
+    {
+      "parts": [
+        "dlq",
+        "[id]",
+        "discard"
+      ],
+      "source": "finnor-os/apps/api/app/api/dlq/[id]/discard/route.ts",
+      "sha256": "d2ca498c97164047c89ba22d31861cc85c6036f16787638fa2bb962f88298bbc"
+    },
+    {
+      "parts": [
+        "dlq",
+        "[id]",
+        "replay"
+      ],
+      "source": "finnor-os/apps/api/app/api/dlq/[id]/replay/route.ts",
+      "sha256": "abcf58f12a84c90fed1aedea803d4f1fecbb6d689cfcb1f4dbc9f670506190b5"
+    },
+    {
+      "parts": [
+        "documents",
+        "[id]",
+        "artifact"
+      ],
+      "source": "finnor-os/apps/api/app/api/documents/[id]/artifact/route.ts",
+      "sha256": "44fd653c76df9790a03070593547ea8ca2364a3be60060119c26bbbc98caef82"
+    },
+    {
+      "parts": [
+        "instructions",
+        "[id]",
+        "cancel"
+      ],
+      "source": "finnor-os/apps/api/app/api/instructions/[id]/cancel/route.ts",
+      "sha256": "cdf5b168228523bf35850030afdace108ad460ebed87635d5104575f1f25de2b"
+    },
+    {
+      "parts": [
+        "instructions",
+        "[id]",
+        "events"
+      ],
+      "source": "finnor-os/apps/api/app/api/instructions/[id]/events/route.ts",
+      "sha256": "f436a5fb0a6c8f1d71dc190b6e0cc0bf3f9eaad64b0f742537803fe48d0547fa"
+    },
+    {
+      "parts": [
+        "investment-cases",
+        "[id]",
+        "underwriting"
+      ],
+      "source": "finnor-os/apps/api/app/api/investment-cases/[id]/underwriting/route.ts",
+      "sha256": "d2d9fe45793ff616067dc8cf518487c6965f1bc1303363bf36459c84d0e2189c"
+    },
+    {
+      "parts": [
+        "outcome-packs",
+        "grants",
+        "[id]"
+      ],
+      "source": "finnor-os/apps/api/app/api/outcome-packs/grants/[id]/route.ts",
+      "sha256": "2ca94640443a4202a9e9d4b8f84fb353e72c911efadcd8225eafce6611a32fd4"
+    },
+    {
+      "parts": [
+        "reconciliation",
+        "[id]",
+        "resolve"
+      ],
+      "source": "finnor-os/apps/api/app/api/reconciliation/[id]/resolve/route.ts",
+      "sha256": "8424e56c644ab84804fbba346bfd0ea75a92fa1f2bf61640e06e840934c6cedc"
+    },
+    {
+      "parts": [
+        "threads",
+        "[id]",
+        "canvas"
+      ],
+      "source": "finnor-os/apps/api/app/api/threads/[id]/canvas/route.ts",
+      "sha256": "f6f33cec831df3a303c87bc793154aaa2ddd224d3b1430b67126eeca2b39b732"
+    },
+    {
+      "parts": [
+        "underwriting",
+        "runs",
+        "[id]"
+      ],
+      "source": "finnor-os/apps/api/app/api/underwriting/runs/[id]/route.ts",
+      "sha256": "b890f115ed0573d498b91757ee074564a6733c5cdb986ed314a56bb7860da5bd"
+    },
+    {
+      "parts": [
+        "underwriting",
+        "sensitivities",
+        "[id]"
+      ],
+      "source": "finnor-os/apps/api/app/api/underwriting/sensitivities/[id]/route.ts",
+      "sha256": "dc74ef46a95408fd0bffcc1881856f04ac661ed3cfae2e26bd6b5c9f4c605cc2"
+    },
+    {
+      "parts": [
+        "workforce",
+        "proposals",
+        "[id]"
+      ],
+      "source": "finnor-os/apps/api/app/api/workforce/proposals/[id]/route.ts",
+      "sha256": "d7050e07801ee5d6e7ae7526ef80042aaa03c5de8d08b0bb0a2cb5aeb7a32a86"
+    },
+    {
+      "parts": [
+        "works",
+        "[id]",
+        "execution"
+      ],
+      "source": "finnor-os/apps/api/app/api/works/[id]/execution/route.ts",
+      "sha256": "b3036d69ed9f6677ceb877539a2536b1d6a049db144df566ecbe483931cb0c0c"
+    },
+    {
+      "parts": [
+        "works",
+        "[id]",
+        "handoff"
+      ],
+      "source": "finnor-os/apps/api/app/api/works/[id]/handoff/route.ts",
+      "sha256": "609ae8df27acc5ad7180a2820001bd0d630953314667df41f2856833d27c2a5b"
+    },
+    {
+      "parts": [
+        "works",
+        "[id]",
+        "objective"
+      ],
+      "source": "finnor-os/apps/api/app/api/works/[id]/objective/route.ts",
+      "sha256": "8ac4d1b1884f4c8e9876950bd7ecf8d553ec9c083479b0eea91ea12cb91ce939"
+    },
+    {
+      "parts": [
+        "works",
+        "[id]",
+        "replay"
+      ],
+      "source": "finnor-os/apps/api/app/api/works/[id]/replay/route.ts",
+      "sha256": "202b8ece335bdee17886bb43ff176069e1c73738326df77d07f7955fb5f83d84"
+    },
+    {
+      "parts": [
+        "works",
+        "[id]",
+        "retry"
+      ],
+      "source": "finnor-os/apps/api/app/api/works/[id]/retry/route.ts",
+      "sha256": "6e7d12ea3d80d232df7049e76a059cf27d2701f2daea41ac7524a0ea1d55ff77"
+    },
+    {
+      "parts": [
+        "allocations",
+        "[operation]"
+      ],
+      "source": "finnor-os/apps/api/app/api/allocations/[operation]/route.ts",
+      "sha256": "381de32069560a1b06d3c6d27abf067572e37a5899e879112efdf5b358b49814"
+    },
+    {
+      "parts": [
+        "branches",
+        "[operation]"
+      ],
+      "source": "finnor-os/apps/api/app/api/branches/[operation]/route.ts",
+      "sha256": "89a9cad63898483e2ad9138a19c0cc252d95d17b663af7a23d236a748413d880"
+    },
+    {
+      "parts": [
+        "closing",
+        "[operation]"
+      ],
+      "source": "finnor-os/apps/api/app/api/closing/[operation]/route.ts",
+      "sha256": "858b9199801de95dbc3862bc2c3699cfa6249517ea4ed90dc04233f62a216e9b"
+    },
+    {
+      "parts": [
+        "coalition-programmes",
+        "[operation]"
+      ],
+      "source": "finnor-os/apps/api/app/api/coalition-programmes/[operation]/route.ts",
+      "sha256": "30cbff1aabf452d9ef5ad6cbde76e67ea8ef0f3a42803e4f26029eaf90320164"
+    },
+    {
+      "parts": [
+        "company-brain",
+        "[operation]"
+      ],
+      "source": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
+      "sha256": "0dec46803a98af52700832e83d01e138d643558a0717afbd185839810c6da9b8"
+    },
+    {
+      "parts": [
+        "connections",
+        "[ref]"
+      ],
+      "source": "finnor-os/apps/api/app/api/connections/[ref]/route.ts",
+      "sha256": "cb372d99bdfc27cc877065210e759f67fb5ab51209573724fa93bb6055aeaced"
+    },
+    {
+      "parts": [
+        "decision-atlases",
+        "[operation]"
+      ],
+      "source": "finnor-os/apps/api/app/api/decision-atlases/[operation]/route.ts",
+      "sha256": "743f57104b0bb50ed43f7a2dfaf654c2cfcfc7504b1896f0c91e707f094548cf"
+    },
+    {
+      "parts": [
+        "dlq",
+        "[id]"
+      ],
+      "source": "finnor-os/apps/api/app/api/dlq/[id]/route.ts",
+      "sha256": "13608740dd0e02a716229d44baa3aedee3feeeea72145d94ef840d81f649e45c"
+    },
+    {
+      "parts": [
+        "documents",
+        "[id]"
+      ],
+      "source": "finnor-os/apps/api/app/api/documents/[id]/route.ts",
+      "sha256": "9202971c76c49d2256872c86adb601dc1769014ffaf8c331a87f653f6ed5cda6"
+    },
+    {
+      "parts": [
+        "economic-outcomes",
+        "[operation]"
+      ],
+      "source": "finnor-os/apps/api/app/api/economic-outcomes/[operation]/route.ts",
+      "sha256": "a1b55c0305ac264be29d4a08bcedf7e213229b12fb0d3a9f5ed4ded04e1d4613"
+    },
+    {
+      "parts": [
+        "elicitation-protocols",
+        "[operation]"
+      ],
+      "source": "finnor-os/apps/api/app/api/elicitation-protocols/[operation]/route.ts",
+      "sha256": "35f5f5084a5e54c7a8972bbf44db5b1ac7f7911c69891435e4029c4029f91edd"
+    },
+    {
+      "parts": [
+        "experiments",
+        "[operation]"
+      ],
+      "source": "finnor-os/apps/api/app/api/experiments/[operation]/route.ts",
+      "sha256": "354f8adbdf7e97c3176d0f85ae4120e54eead14e8c70c7c687d7c45d11bcee2d"
+    },
+    {
+      "parts": [
+        "identification-plans",
+        "[operation]"
+      ],
+      "source": "finnor-os/apps/api/app/api/identification-plans/[operation]/route.ts",
+      "sha256": "432c98af6cfbb34a0e6f7414b74087184896b832552526b572d49a081b495b51"
+    },
+    {
+      "parts": [
+        "instructions",
+        "[id]"
+      ],
+      "source": "finnor-os/apps/api/app/api/instructions/[id]/route.ts",
+      "sha256": "764eb7ecbc0fceb7cc576dca96752f9f1287059411680931f91551cb11280908"
+    },
+    {
+      "parts": [
+        "interventions",
+        "[operation]"
+      ],
+      "source": "finnor-os/apps/api/app/api/interventions/[operation]/route.ts",
+      "sha256": "d1c57ce6bbf5df98bc6d9a96ea611d2d0f4cb1b181973da5a7213fb5963cd07f"
+    },
+    {
+      "parts": [
+        "obligations",
+        "[operation]"
+      ],
+      "source": "finnor-os/apps/api/app/api/obligations/[operation]/route.ts",
+      "sha256": "778ed3e4cf74abccf4a8eee37f0f1d117b6aa9e85e1f70cd7f8dbacc30a54748"
+    },
+    {
+      "parts": [
+        "operations",
+        "[id]"
+      ],
+      "source": "finnor-os/apps/api/app/api/operations/[id]/route.ts",
+      "sha256": "8624b204f69095f13dd53a0e9c735fbb9f0ca74d8cf8e30b4ef419c83f1439b0"
+    },
+    {
+      "parts": [
+        "policies",
+        "[operation]"
+      ],
+      "source": "finnor-os/apps/api/app/api/policies/[operation]/route.ts",
+      "sha256": "214d680b4504079c41f71618664a2dcb2ebf802e2d28679e9623e7409d6eadc7"
+    },
+    {
+      "parts": [
+        "read-models",
+        "[view]"
+      ],
+      "source": "finnor-os/apps/api/app/api/read-models/[view]/route.ts",
+      "sha256": "1af9677ec3854ac751cfc9de4725ca21aefe909215de0ce02b2599bf6bead637"
+    },
+    {
+      "parts": [
+        "receipts",
+        "[id]"
+      ],
+      "source": "finnor-os/apps/api/app/api/receipts/[id]/route.ts",
+      "sha256": "14553e2b487b74816a4b76118d95a6658384641586cd7047f0f44291ca44edb1"
+    },
+    {
+      "parts": [
+        "threads",
+        "[id]"
+      ],
+      "source": "finnor-os/apps/api/app/api/threads/[id]/route.ts",
+      "sha256": "d9fc275d07af9c1a5dde07a5f785e11b7d87865f092d8a92438d9902df204de8"
+    },
+    {
+      "parts": [
+        "works",
+        "[id]"
+      ],
+      "source": "finnor-os/apps/api/app/api/works/[id]/route.ts",
+      "sha256": "bfafaa0c2f17712dc8aad8fbde375bce270beac500c18c8e1b4557785aecc9f8"
+    },
+    {
+      "parts": [
+        "private-equity",
+        "ic",
+        "cases",
+        "[id]",
+        "conditions",
+        "[conditionId]",
+        "activate"
+      ],
+      "source": "finnor-os/apps/api/app/api/private-equity/ic/cases/[id]/conditions/[conditionId]/activate/route.ts",
+      "sha256": "a4a2357862f0839fa362aa9ed1bc2b77612782d5f33ecf18b697714bb4189c2e"
+    },
+    {
+      "parts": [
+        "private-equity",
+        "ic",
+        "cases",
+        "[id]",
+        "conditions",
+        "[conditionId]",
+        "fail"
+      ],
+      "source": "finnor-os/apps/api/app/api/private-equity/ic/cases/[id]/conditions/[conditionId]/fail/route.ts",
+      "sha256": "b0ab58341966d88cc71e8f717622d09361a8e6b580910f207b907f6ed9398ed7"
+    },
+    {
+      "parts": [
+        "private-equity",
+        "ic",
+        "cases",
+        "[id]",
+        "conditions",
+        "[conditionId]",
+        "satisfy"
+      ],
+      "source": "finnor-os/apps/api/app/api/private-equity/ic/cases/[id]/conditions/[conditionId]/satisfy/route.ts",
+      "sha256": "b4e9c99a6f8fdd8574f5c8027a1bb783092bf39d7f2d627b2d2b832e46d85df5"
+    },
+    {
+      "parts": [
+        "private-equity",
+        "ic",
+        "cases",
+        "[id]",
+        "conditions",
+        "[conditionId]",
+        "supersede"
+      ],
+      "source": "finnor-os/apps/api/app/api/private-equity/ic/cases/[id]/conditions/[conditionId]/supersede/route.ts",
+      "sha256": "cc1d354241b7146ca81675d6578481d085c3ff719b9411a059008715c4955191"
+    },
+    {
+      "parts": [
+        "private-equity",
+        "ic",
+        "cases",
+        "[id]",
+        "conditions",
+        "[conditionId]",
+        "waive"
+      ],
+      "source": "finnor-os/apps/api/app/api/private-equity/ic/cases/[id]/conditions/[conditionId]/waive/route.ts",
+      "sha256": "a47b77df534599d35d092f8be3c43607c4a95c58e0a9584eebfe412f807e70fc"
+    },
+    {
+      "parts": [
+        "private-equity",
+        "ic",
+        "cases",
+        "[id]",
+        "questions",
+        "[questionId]",
+        "answer"
+      ],
+      "source": "finnor-os/apps/api/app/api/private-equity/ic/cases/[id]/questions/[questionId]/answer/route.ts",
+      "sha256": "f510b2d1f1676a89a6ff304adfd4d6dfe28470a7b313a9a0147f051be1429379"
+    },
+    {
+      "parts": [
+        "private-equity",
+        "ic",
+        "cases",
+        "[id]",
+        "questions",
+        "[questionId]",
+        "resolve"
+      ],
+      "source": "finnor-os/apps/api/app/api/private-equity/ic/cases/[id]/questions/[questionId]/resolve/route.ts",
+      "sha256": "29bb7c679897b6fa1588f0ea4787dede16aa8051a1509b54ff549e92afe5c47e"
+    },
+    {
+      "parts": [
+        "private-equity",
+        "ic",
+        "cases",
+        "[id]",
+        "questions",
+        "[questionId]",
+        "sources"
+      ],
+      "source": "finnor-os/apps/api/app/api/private-equity/ic/cases/[id]/questions/[questionId]/sources/route.ts",
+      "sha256": "06feb5fdedea876526280962e77fe3283a5aebb5d9c1248e8a84c6b96193bc1f"
+    },
+    {
+      "parts": [
+        "private-equity",
+        "ic",
+        "cases",
+        "[id]",
+        "questions",
+        "[questionId]",
+        "supersede"
+      ],
+      "source": "finnor-os/apps/api/app/api/private-equity/ic/cases/[id]/questions/[questionId]/supersede/route.ts",
+      "sha256": "4f8c2fa709840dcd0101dee600575b623dcdc02fa05e866063753575d74429b1"
+    },
+    {
+      "parts": [
+        "private-equity",
+        "ic",
+        "cases",
+        "[id]",
+        "questions",
+        "[questionId]",
+        "waive"
+      ],
+      "source": "finnor-os/apps/api/app/api/private-equity/ic/cases/[id]/questions/[questionId]/waive/route.ts",
+      "sha256": "b7d9021d82f03db07a6592e02e2aaf2ab7c28b64c850c70b37b2170682441cc0"
+    },
+    {
+      "parts": [
+        "documents",
+        "[id]",
+        "artifact",
+        "[...action]"
+      ],
+      "source": "finnor-os/apps/api/app/api/documents/[id]/artifact/[...action]/route.ts",
+      "sha256": "720c2ffbfbd67880bf685ad643ed3cd730ab9f22983f9250871b5cb66e207bfa"
+    },
+    {
+      "parts": [
+        "policies",
+        "[operation]",
+        "[actionType]",
+        "simulate"
+      ],
+      "source": "finnor-os/apps/api/app/api/policies/[operation]/[actionType]/simulate/route.ts",
+      "sha256": "03189a7864c53b72876b6b79a7a816ccde97974c2cda353acd434b4698438300"
+    },
+    {
+      "parts": [
+        "policies",
+        "[operation]",
+        "[actionType]"
+      ],
+      "source": "finnor-os/apps/api/app/api/policies/[operation]/[actionType]/route.ts",
+      "sha256": "ec68ea19d2971e1bf2049bb0db4fa0753ff3cdb06660d16b19bb6a7ecf1a3985"
+    }
+  ],
+  "packages": 1823,
+  "externalImports": [
+    {
+      "specifier": "@aws-sdk/client-bedrock-runtime",
+      "resolved": "finnor-os/node_modules/@aws-sdk/client-bedrock-runtime/dist-cjs/index.js",
+      "sha256": "1806a9b08a081b490f462f88c379ba28a70d12cc8c39723927dd4aa46a2f5486"
+    },
+    {
+      "specifier": "@aws-sdk/client-secrets-manager",
+      "resolved": "finnor-os/node_modules/@aws-sdk/client-secrets-manager/dist-cjs/index.js",
+      "sha256": "794efac38d454a3d73dda169e687b6e49d36514f1c8e6b14ef872516ed208216"
+    },
+    {
+      "specifier": "@aws-sdk/client-sts",
+      "resolved": "finnor-os/node_modules/@aws-sdk/client-sts/dist-cjs/index.js",
+      "sha256": "87e1b6f6ce1083d5bb59bd49146303d7c7ffe5831a0263208b738081bbce8203"
+    },
+    {
+      "specifier": "@finnor/source-custody",
+      "resolved": "finnor-os/packages/source-custody/index.cjs",
+      "sha256": "7a70d4880abfc4e446f1eda81b530427901792966b6915546b09c94ffc03b732"
+    },
+    {
+      "specifier": "@getzep/zep-cloud",
+      "resolved": "finnor-os/node_modules/@getzep/zep-cloud/dist/cjs/index.js",
+      "sha256": "dbf2cd0a318191886b54c2fa0983e89eafe0580e171541e13b0a198c174b0f41"
+    },
+    {
+      "specifier": "@langchain/langgraph",
+      "resolved": "finnor-os/node_modules/@langchain/langgraph/dist/index.cjs",
+      "sha256": "befc9456e9104051a95a57bd784f0bc4686d5f4c4b9571161c6e267a580c9609"
+    },
+    {
+      "specifier": "@langchain/langgraph-checkpoint-postgres",
+      "resolved": "finnor-os/node_modules/@langchain/langgraph-checkpoint-postgres/dist/index.cjs",
+      "sha256": "e1c9416e90200e4cee603684581e976244d875b25ca4dd2740ab5094152c2ee1"
+    },
+    {
+      "specifier": "@modelcontextprotocol/sdk/client/index.js",
+      "resolved": "finnor-os/node_modules/@modelcontextprotocol/sdk/dist/cjs/client/index.js",
+      "sha256": "e2f909e827a6e08870b400f44f9e90f9545ef5655d6e10f9cc7d0a91a374af45"
+    },
+    {
+      "specifier": "@modelcontextprotocol/sdk/client/streamableHttp.js",
+      "resolved": "finnor-os/node_modules/@modelcontextprotocol/sdk/dist/cjs/client/streamableHttp.js",
+      "sha256": "f72fa171ba0cfb616428573d57c19e56d6315618c379d0f30a32f5ace02a1288"
+    },
+    {
+      "specifier": "@sentry/node",
+      "resolved": "finnor-os/node_modules/@sentry/node/build/cjs/index.js",
+      "sha256": "9cdd1368c61b33200a1d1fd0407662079cd50c8b6f23feb80e0e5546d178f5b5"
+    },
+    {
+      "specifier": "@supabase/supabase-js",
+      "resolved": "finnor-os/node_modules/@supabase/supabase-js/dist/index.cjs",
+      "sha256": "df957c70ef22a357fdae1412f50306c930f4af702b2fe24f1d91fae902d3accb"
+    },
+    {
+      "specifier": "@vapi-ai/web",
+      "resolved": "finnor-os/node_modules/@vapi-ai/web/dist/vapi.js",
+      "sha256": "dfbaded9f06f163831804c0f4bea2c0ee40fede42463c71bb308b0c3d5bb3462"
+    },
+    {
+      "specifier": "decimal.js",
+      "resolved": "finnor-os/node_modules/decimal.js/decimal.js",
+      "sha256": "6e99821f8204c5f611b56077e3fce056a1562d22bc341a1f4af01afe7e527d83"
+    },
+    {
+      "specifier": "dotenv/config",
+      "resolved": "finnor-os/node_modules/dotenv/config.js",
+      "sha256": "cd401a4aeb31f30ee55c295b0b65fccb6f1a0e3b7dfd2def4f69dd2a13a8fef2"
+    },
+    {
+      "specifier": "drizzle-kit",
+      "resolved": "finnor-os/node_modules/drizzle-kit/index.js",
+      "sha256": "8ef5913ff14e559ca9f69bb0bceb5124c58b899bb815dd6d13d41947ff224243"
+    },
+    {
+      "specifier": "drizzle-orm",
+      "resolved": "finnor-os/node_modules/drizzle-orm/index.cjs",
+      "sha256": "d26f03ba7eee981e1d0789b1b19c223ef8d081e4301aa40b1aa26f5933e70a1b"
+    },
+    {
+      "specifier": "drizzle-orm/node-postgres",
+      "resolved": "finnor-os/node_modules/drizzle-orm/node-postgres/index.cjs",
+      "sha256": "52f929bbbc11c2fcf6ca096e1b6cc742573f33b28ffe171883358af4c00fc8ed"
+    },
+    {
+      "specifier": "drizzle-orm/pg-core",
+      "resolved": "finnor-os/node_modules/drizzle-orm/pg-core/index.cjs",
+      "sha256": "90518a5d73bc28ad47ac490b855f1cb1f63a677b183ed423beea990c852084a8"
+    },
+    {
+      "specifier": "fast-check",
+      "resolved": "finnor-os/node_modules/fast-check/lib/cjs/fast-check.js",
+      "sha256": "33ca3dc51ab7f9c2e6e05771375f511e91152e3d8e9d56315fbfe0244b328155"
+    },
+    {
+      "specifier": "groq-sdk",
+      "resolved": "finnor-os/node_modules/groq-sdk/index.js",
+      "sha256": "1db72de4affe131a333298b0e99b24de1e1403d13de2b0f7b6ff39f8a996f6f3"
+    },
+    {
+      "specifier": "ioredis",
+      "resolved": "finnor-os/node_modules/ioredis/built/index.js",
+      "sha256": "917030e4386dbb1e4f512416f826fcdce9dff041dc163a2dc221e7188d5bb70d"
+    },
+    {
+      "specifier": "next/navigation",
+      "resolved": "finnor-os/node_modules/next/navigation.js",
+      "sha256": "85ac87607fdb3184d973f7bf30055bd96ebf9109e3c6d004725de1bdcafd3cc8"
+    },
+    {
+      "specifier": "next/server",
+      "resolved": "finnor-os/node_modules/next/server.js",
+      "sha256": "a115dfaeb8219cd215c40a427c3e03f18dc1fa15bf98adab8a4fc7fd41a05ccc"
+    },
+    {
+      "specifier": "nodemailer",
+      "resolved": "finnor-os/node_modules/nodemailer/dist/cjs/nodemailer.js",
+      "sha256": "4bf2f73259545de1e4df476b5f8f43851a61f6dbc91f1f495836fc332ab7b1bb"
+    },
+    {
+      "specifier": "pdf-parse",
+      "resolved": "finnor-os/node_modules/pdf-parse/dist/pdf-parse/cjs/index.cjs",
+      "sha256": "1c03368bd59dd4af0a3a3473da34def02e2d7af526d696f5a8b4ef8d74b4a01d"
+    },
+    {
+      "specifier": "pg",
+      "resolved": "finnor-os/node_modules/pg/lib/index.js",
+      "sha256": "3fad6e6d3d976edbabe0cbc9e1d39f4340bcb719bbbb186a0d3a24f3dbd4a94c"
+    },
+    {
+      "specifier": "pino",
+      "resolved": "finnor-os/node_modules/pino/pino.js",
+      "sha256": "31c425b5c0cdab46d86df72353cb25247c0e419dc00c3ca8c6574cf1601a6a22"
+    },
+    {
+      "specifier": "playwright",
+      "resolved": "finnor-os/node_modules/playwright/index.js",
+      "sha256": "4e98f65f0a9d9bcab8cffc0c5cfdd87fd3f5b0be74fc494ff166a466b204cd44"
+    },
+    {
+      "specifier": "playwright-core",
+      "resolved": "finnor-os/node_modules/playwright-core/index.js",
+      "sha256": "a58fb2cec4293e7dcf73c58a179898a4f3986666451a19da4e731fa3af63265b"
+    },
+    {
+      "specifier": "react",
+      "resolved": "finnor-os/node_modules/react/index.js",
+      "sha256": "a216c390bf956cbb906c66d29fdb2e2ad6999464a5ca83e476533a6f25ad0ef3"
+    },
+    {
+      "specifier": "saxes",
+      "resolved": "finnor-os/node_modules/saxes/saxes.js",
+      "sha256": "d00e2ba27ed7d6ac961d03ff14d6b8c0eb5bf063ed2c996c22c6df06ac121423"
+    },
+    {
+      "specifier": "steel-sdk",
+      "resolved": "finnor-os/node_modules/steel-sdk/index.js",
+      "sha256": "82f1592d556d5c077904873ec314ba67d36681a7ee72fb7fa294761e34681e86"
+    },
+    {
+      "specifier": "typescript",
+      "resolved": "finnor-os/node_modules/typescript/lib/typescript.js",
+      "sha256": "3ae902c92cc44dace175c0e69e13a4b0899f6983c6121d76b9ab8dd5795e7675"
+    },
+    {
+      "specifier": "vitest",
+      "resolved": "finnor-os/node_modules/vitest/index.cjs",
+      "sha256": "15a78ebcf7fc24ea0a829448d770ca486b7506fcf8fd696a2cbf8e17d25dc02b"
+    },
+    {
+      "specifier": "zod",
+      "resolved": "finnor-os/node_modules/zod/index.cjs",
+      "sha256": "69025493407e0f37f24e01e363452d75ae43a89aac18eb24806706b5b534b459"
+    },
+    {
+      "specifier": "zod-to-json-schema",
+      "resolved": "finnor-os/node_modules/zod-to-json-schema/dist/cjs/index.js",
+      "sha256": "b11a49bb4d13d0847ee2aef6487e8c3cf66cb1fef14065cac1f9ea5553952737"
+    }
+  ],
+  "sourceCustodyAdapter": {
+    "path": "finnor-os/packages/source-custody/index.cjs",
+    "originalSha256": "4284fa4774fc86352b1286ca5da0ac657bf9b5d0e73dc66aae331056353311b3",
+    "installedSha256": "7a70d4880abfc4e446f1eda81b530427901792966b6915546b09c94ffc03b732",
+    "source": "finnor-os/scripts/project-z/z0/installed-source-custody.cjs",
+    "runtimeTypeScriptFallback": "REFUSED",
+    "executableSourceMap": "finnor-os/z0-runtime-01/emitted-source-map.json",
+    "preload": "finnor-os/z0-runtime-01/installed-loader.mjs"
+  },
+  "runtime": {
+    "node": "v22.23.4",
+    "platform": "linux",
+    "architecture": "x64",
+    "modules": "127",
+    "nodeBinarySha256": "94efd062ed066c1a0b332e18249859c905e920eeada5df55d24c99b919629a90"
+  },
+  "schemaState": {
+    "migrationsExecuted": false,
+    "grantsExecuted": false,
+    "migrationCount": 229
+  },
+  "nativeAssets": [
+    {
+      "path": ".next-x1-install/standalone/node_modules/@img/sharp-libvips-linux-x64/lib/libvips-cpp.so.8.18.7",
+      "sha256": "4aa73553408c3964071728f4a231a8e86918e39bc49f1fbae75355f7ea933ea9",
+      "bytes": 18699288,
+      "mode": 292,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": ".next-x1-install/standalone/node_modules/@img/sharp-libvips-linuxmusl-x64/lib/libvips-cpp.so.8.18.7",
+      "sha256": "979b625437190a1970b835164e0e30d47dc60159ce6a394ce78cc40cb9d59ab8",
+      "bytes": 18911144,
+      "mode": 292,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": ".next-x1-install/standalone/node_modules/@img/sharp-linux-x64/lib/sharp-linux-x64-0.35.5.node",
+      "sha256": "cf896cc1b7f3ae9c3e8eb3d7b2b198b8de2824ff7d0681d684bab5a825def335",
+      "bytes": 415112,
+      "mode": 292,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": ".next-x1-install/standalone/node_modules/@img/sharp-linuxmusl-x64/lib/sharp-linuxmusl-x64-0.35.5.node",
+      "sha256": "14ce8ddd283c101f225089152da805632568bfa372d336ccbfdd811f4f1dca02",
+      "bytes": 301328,
+      "mode": 292,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell",
+      "sha256": "670ba079b75107746ba41abad131180a31a7c7219aa1bd4061fb471f4535d541",
+      "bytes": 189181152,
+      "mode": 365,
+      "kind": "ORIGINAL_SOURCE_OR_NATIVE_ASSET"
+    },
+    {
+      "path": "browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/libEGL.so",
+      "sha256": "8f9cee83c7a1a2175c3489681d7443bf027aa79a3027ffe6647f3bdd046e25ed",
+      "bytes": 254096,
+      "mode": 365,
+      "kind": "ORIGINAL_SOURCE_OR_NATIVE_ASSET"
+    },
+    {
+      "path": "browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/libGLESv2.so",
+      "sha256": "cef610e7b4529e52a665c7db3788c971d29a643b662777d56c921f85880a96e1",
+      "bytes": 6476448,
+      "mode": 365,
+      "kind": "ORIGINAL_SOURCE_OR_NATIVE_ASSET"
+    },
+    {
+      "path": "browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/libvk_swiftshader.so",
+      "sha256": "80c926acb511b116f59b88d33c6e8292c05fd502c0986206f8cdad48e35a4331",
+      "bytes": 4663480,
+      "mode": 365,
+      "kind": "ORIGINAL_SOURCE_OR_NATIVE_ASSET"
+    },
+    {
+      "path": "browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/libvulkan.so.1",
+      "sha256": "23bc1206407fcb1da6989f3eb9e9a0544ff4eb01d4b8a5d448682fef616754a0",
+      "bytes": 656072,
+      "mode": 365,
+      "kind": "ORIGINAL_SOURCE_OR_NATIVE_ASSET"
+    },
+    {
+      "path": "browsers/ffmpeg-1011/ffmpeg-linux",
+      "sha256": "460d44f3416005662f528d4b92e7b94ace924e8a0288106d3803b73c56eaadc8",
+      "bytes": 5101056,
+      "mode": 365,
+      "kind": "ORIGINAL_SOURCE_OR_NATIVE_ASSET"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/libcrypto.so.1.1",
+      "sha256": "89a2227a7731df9a95135e5d43d0c1b73af01c45842e482eb4a1e16121b1b6aa",
+      "bytes": 3046952,
+      "mode": 292,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/libecpg.so.6.18",
+      "sha256": "42349a3ed01aa769bc572d744a15c5b9af8daac32ed186d30ca8421cdf2fedbb",
+      "bytes": 95200,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/libecpg_compat.so.3.18",
+      "sha256": "cdcdac3fd5b8525e005678d6a444575c78f012afa6de7c75b5bf4b02cd727487",
+      "bytes": 24424,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/libicudata.so.60.2",
+      "sha256": "5660b0cf7215b5da11b50631645df305931a1cd4a21c7d456272acda53af9b68",
+      "bytes": 26907568,
+      "mode": 292,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/libicui18n.so.60.2",
+      "sha256": "af1b0d57d4b180562f8b273a3007218b71cfd0d0467bd4248d3581c2f085fe40",
+      "bytes": 3233552,
+      "mode": 292,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/libicuuc.so.60.2",
+      "sha256": "a9f7b4f24a14feb5767b661f0765bd9d789ee357accdcc7aea4f6360193f885c",
+      "bytes": 1966472,
+      "mode": 292,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/liblzma.so.5",
+      "sha256": "2e85e6ee6cbeb870dbe4ad8e73cbf4e06a538146e00513d2d375af62759adc9f",
+      "bytes": 159888,
+      "mode": 292,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/libossp-uuid.so.16",
+      "sha256": "b8c881f9a0a8b2d3de0dfec56009157e6c8174646d9efa1dab75e7c70a9836d5",
+      "bytes": 51952,
+      "mode": 292,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/libpgtypes.so.3.18",
+      "sha256": "8a37bafb9ad8c5d75b4b867231d84dfe823d2985c847e6c1834bcf1692a67d8a",
+      "bytes": 77208,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/libpq.so.5.18",
+      "sha256": "fc25b6ab756b056aba0c4df23d5504db65fa9125ea309ceafb199bc546d785ee",
+      "bytes": 369648,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/libssl.so.1.1",
+      "sha256": "85582cf361e8942ea6602a633d6fe33ebfd404edebaa907d060d9c705e86c3d4",
+      "bytes": 601008,
+      "mode": 292,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/libxml2.so.2",
+      "sha256": "24c1ffac47bec0466e77849ea17dfe9609809d9bad130388612306e4261c046b",
+      "bytes": 1886472,
+      "mode": 292,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/libxslt.so.1",
+      "sha256": "2184ab7ff5f2e7fbe432c9075dd1d823d97353617e1dfd2dabb148306287949e",
+      "bytes": 262456,
+      "mode": 292,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/libz.so.1",
+      "sha256": "3d628c727f2a0369141a8bde4236afc27d3c8c4d0cb738d46f6de7ae46470ed5",
+      "bytes": 121704,
+      "mode": 292,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/postgresql/_int.so",
+      "sha256": "d9c18f5872d1e51e5c5fc790fa591c83263e94470981937c83ee29601df4b407",
+      "bytes": 55768,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/postgresql/amcheck.so",
+      "sha256": "f3c925767203574c6bf4ac9e00e83577f92a49b1849900d5c2d1e7cc2c817fec",
+      "bytes": 74568,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/postgresql/auth_delay.so",
+      "sha256": "68b86a88497faea096514e3623ce44dd412d3afa3c47d26f628c1b7d58bdda6f",
+      "bytes": 8160,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/postgresql/auto_explain.so",
+      "sha256": "8b338eefecd9b58369ea25cff5385aca17960e4b774779022e77ed0faf1eca3b",
+      "bytes": 19224,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/postgresql/autoinc.so",
+      "sha256": "07719f36060b65d81125ee827c713c9f7e02ee2eaf220d329659ea78dcdfa721",
+      "bytes": 13024,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/postgresql/basebackup_to_shell.so",
+      "sha256": "f836c7956a852f094f3b36a41a3ff5ffe432e0d9a356577ebe7e83bb027641bf",
+      "bytes": 14736,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/postgresql/basic_archive.so",
+      "sha256": "d3c3b5b63b816be258ec316c3e0646caa61fa8641615eea1baaaaf9a207c7aa7",
+      "bytes": 13752,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/postgresql/bloom.so",
+      "sha256": "9267b497cae3821419de8e9774fb0c7adf90c03f889ec059f8b448e0b637defc",
+      "bytes": 29008,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/postgresql/bool_plperl.so",
+      "sha256": "fc39f1a3650c54ed680664d2fbf89e734bb80535228ee34b167bbc81f1018a5e",
+      "bytes": 8368,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/postgresql/btree_gin.so",
+      "sha256": "fe2e5a44c94dfb0cd5f190cb4a4e7b513f2d39d506a60ddf3343d01d02c17453",
+      "bytes": 41704,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/postgresql/btree_gist.so",
+      "sha256": "5fae79e13d5d3087f2669b077c06cb076f4aff36bce094d3e12512ab65697375",
+      "bytes": 125184,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/postgresql/citext.so",
+      "sha256": "0a3fa0229a9c9b67290a0dd7107ccc35bccdadd6301f5e61cf7c896f0f2b5d83",
+      "bytes": 18408,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/postgresql/cube.so",
+      "sha256": "78cca838e7136af5b0e20a14b8301dd0af0828b38b43cfd5f67e85fdba605d2c",
+      "bytes": 50616,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/postgresql/cyrillic_and_mic.so",
+      "sha256": "fdd2a7f67013be6c777a6bf9569a76daee512b206ea1b72ae5dbcf263555d52c",
+      "bytes": 22032,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/postgresql/dblink.so",
+      "sha256": "d9776f12362cf71054b07b91b85ee6a9317ba8b10d8c62cc597b5de125383df9",
+      "bytes": 61816,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/postgresql/dict_int.so",
+      "sha256": "34db96d163b60386042a603374f3e90bd7abf765844ab04de8428195962548bd",
+      "bytes": 12832,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/postgresql/dict_snowball.so",
+      "sha256": "1366601d60ab68b06e0773173f9ca052f9985606ced03ce13112ff922c666715",
+      "bytes": 1127480,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/postgresql/dict_xsyn.so",
+      "sha256": "2a5aef6cb1ce13143dc065990bd4e68720fb3fa4b388d06903c04ac1ad1aaf2d",
+      "bytes": 13512,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/postgresql/earthdistance.so",
+      "sha256": "ccd97908c5744efd4dcb46df35a6c3a9804c058a52b84f8803a7ec6adc3bd1fa",
+      "bytes": 8288,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/postgresql/euc2004_sjis2004.so",
+      "sha256": "05a166da2b6001346852f2f17fb844bc11f2e1f94bbac0eeb1fc31ec59405ea7",
+      "bytes": 17328,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/postgresql/euc_cn_and_mic.so",
+      "sha256": "977f8598b34185772c910ddfdd828361375d628fc7a905cc20cb19b3215d3f4b",
+      "bytes": 8992,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/postgresql/euc_jp_and_sjis.so",
+      "sha256": "ad7e9ff8264b5c51b70fda37322f782b0e6c7cd84de8cb1810d21f39ff59c4fe",
+      "bytes": 21488,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/postgresql/euc_kr_and_mic.so",
+      "sha256": "bbb7d8fd4a727b1611278d497c19af01d24f8be0571979ac9d6eb2c0645e303c",
+      "bytes": 13112,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/postgresql/euc_tw_and_big5.so",
+      "sha256": "5398e89e851c3925ccaf404b52eaf3d2685ba99d00b3eddeab88632c51bdc129",
+      "bytes": 17504,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/postgresql/file_fdw.so",
+      "sha256": "6ed2c9528c7131a995e8511632d7884915fddde822a832d22ff0f9cd80428ac1",
+      "bytes": 24744,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/postgresql/fuzzystrmatch.so",
+      "sha256": "c9b85fbefc33acb79d2d529a16c6868bfe545738459e7426828b1b437d58fff4",
+      "bytes": 46872,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/postgresql/hstore.so",
+      "sha256": "7f45d3c10b8a01df2324b3e65d2a7a415773a363ca85b3957b970324bb13b104",
+      "bytes": 70984,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/postgresql/hstore_plperl.so",
+      "sha256": "5aea1b54db2818fe000b7538fa94d3419ea8c2e83e234d5ea2e646d4d571afc0",
+      "bytes": 13912,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/postgresql/hstore_plpython3.so",
+      "sha256": "97774db43cb79b86a4bfd203ab49ac837a25103d395dc6c01cf5a28f041d1424",
+      "bytes": 13728,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/postgresql/insert_username.so",
+      "sha256": "58f75f02c7d5b21f17ee96973ed53605922d0fdad94a1a12141dfce8704a75af",
+      "bytes": 12904,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/postgresql/isn.so",
+      "sha256": "09027dec7e378bab0dcf2ddebab824bd4e47b7bf0078c118f192c64f862cdce8",
+      "bytes": 105888,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/postgresql/jsonb_plperl.so",
+      "sha256": "d515da019eee0be31ab03995a7e8c75db5a5811c6528a2e2da2a60159b353db0",
+      "bytes": 18696,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/postgresql/jsonb_plpython3.so",
+      "sha256": "fd9751f92578f0b52bcdbf4bf182cd5c5e40f44061e857327f11119423499401",
+      "bytes": 19320,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/postgresql/latin2_and_win1250.so",
+      "sha256": "e4e74773c84aae38eae2d811d9462ba99de2d708bc1de9361a879e8b1e143060",
+      "bytes": 17400,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/postgresql/latin_and_mic.so",
+      "sha256": "e2c75dd57eeb59e7ef6a74980ffd40d71e40f9166828d2b89d104a7787015bda",
+      "bytes": 17336,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/postgresql/libpqwalreceiver.so",
+      "sha256": "a849ba8b13a99524701fc8b68bfcff5f54b003dbc0acad8538189870000a0998",
+      "bytes": 34656,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/postgresql/lo.so",
+      "sha256": "b056e9a823d84171e35620c1fd7906247bd67e1b555e949221a3f0631f51efae",
+      "bytes": 12744,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/postgresql/ltree.so",
+      "sha256": "825f4da59cbfe5ef539338d7e7c7515948917c309e10ecad6d2856e98e7b9df9",
+      "bytes": 70336,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/postgresql/ltree_plpython3.so",
+      "sha256": "dd19fc8228e2e2aa25665043834a98e9574bea4abe3007a1f49d3f5e3d0599ed",
+      "bytes": 8424,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/postgresql/moddatetime.so",
+      "sha256": "82973f76c6b0105e381fffbd967040a6fbb2619c0854c180c143a70583a4937b",
+      "bytes": 12888,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/postgresql/pageinspect.so",
+      "sha256": "ab09e7ec8eb3b9840c11a45c121b52e033ed18cbb8644a18727bfd4b157bbcde",
+      "bytes": 59256,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/postgresql/passwordcheck.so",
+      "sha256": "3c35721d9826d64cf97eefb893679b255ad75048c7696d2c14102a0f3eab0a53",
+      "bytes": 12864,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/postgresql/pg_buffercache.so",
+      "sha256": "c2203dba7f1bafd476501c279a799340a4bf188116c9f5522ddd825068661120",
+      "bytes": 19264,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/postgresql/pg_freespacemap.so",
+      "sha256": "e6f2bea2bddaf6cf19ffc4bf747b999c0a47ea745e8e41a17b37c3e8701272a0",
+      "bytes": 8320,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/postgresql/pg_logicalinspect.so",
+      "sha256": "634565dac9feab4f5a7ecaab0766447968484bd53cff5d65df9e819ff4581119",
+      "bytes": 13416,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/postgresql/pg_overexplain.so",
+      "sha256": "c90164919eaf742c809b2927f6b83e9e33b0451cfdc5a1b5c3a4282204cb745f",
+      "bytes": 18184,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/postgresql/pg_prewarm.so",
+      "sha256": "0b0fab63fcd7eb1760e8ca734ba95a4a2833bca3f9ffb5fdae26cf55d47084d2",
+      "bytes": 30536,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/postgresql/pg_stat_statements.so",
+      "sha256": "5b91be9bade8d83bbeaa359ca076ea0cf4d6a0fd198dfd910baedb33c635b1b8",
+      "bytes": 45136,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/postgresql/pg_surgery.so",
+      "sha256": "dda9f60e67a2ed5c1a9b7e0777f9bf9eee3744642b7f889937739ecf2902d351",
+      "bytes": 18264,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/postgresql/pg_trgm.so",
+      "sha256": "0724b6c4e31af588d27d018158098419db27d3c14a7f7c2c30c9cfbcf4a83fe6",
+      "bytes": 54368,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/postgresql/pg_visibility.so",
+      "sha256": "400dcfb4067ce59c5fb89057dc83fa185e85b11638d55fcfcb1606767185d091",
+      "bytes": 24712,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/postgresql/pg_walinspect.so",
+      "sha256": "b7a71cea5f5c9d5f8f35c84dff652f18eac4082cf85849b7fe8bd01847a08d4a",
+      "bytes": 23824,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/postgresql/pgcrypto.so",
+      "sha256": "7fb60d146cf6611729fc764da17d9547da2e9d5576baa732f39983ec2a245d54",
+      "bytes": 138624,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/postgresql/pgoutput.so",
+      "sha256": "bc455684f46ea4783c7a0f63e1d900d5e7e4e2f5168abab8b09242b684120b56",
+      "bytes": 40488,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/postgresql/pgrowlocks.so",
+      "sha256": "2a8bf4b949cc4dc6e7171ea65b58aeb7dfa93df3ca74503b970028fb3113d86b",
+      "bytes": 13904,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/postgresql/pgstattuple.so",
+      "sha256": "f48cd4b2323ff361e798307af6706b325ba376f95c83d08a4d2c22296a8fbcf4",
+      "bytes": 30120,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/postgresql/pgxml.so",
+      "sha256": "fe86c9915e44ba9de062f77e59ccd4b8b221d6c99267b46d4251f66e36580116",
+      "bytes": 29616,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/postgresql/plperl.so",
+      "sha256": "442eac59ef47870f0df9a3e1f31e599985a6b893fb005d698be9c380907284f2",
+      "bytes": 93392,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/postgresql/plpgsql.so",
+      "sha256": "8a5d2f4affe52854b8c912f9f81d5840043b77a17bbdf9bbc156f0dd3eceb662",
+      "bytes": 202512,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/postgresql/plpython3.so",
+      "sha256": "478e54f7c5802a31c8645f4848787835dea8c566cd56c62d09e6cc99409a193b",
+      "bytes": 136992,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/postgresql/pltcl.so",
+      "sha256": "c7e1d5757b2da41f091e6afaf6ff10b089bee4cb6cdaae95da89e31be4774ca5",
+      "bytes": 70992,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/postgresql/postgres_fdw.so",
+      "sha256": "a4a41c91d1a54a29235e4351c37252525ff102c0cb7dc79bc5307b9dff76bc26",
+      "bytes": 138440,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/postgresql/refint.so",
+      "sha256": "a4bf57098fde7ccd66bbca2d0bcb107386254d070b7b65e6add1278a55e130f2",
+      "bytes": 18272,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/postgresql/seg.so",
+      "sha256": "3c1cf6543200bbca257c35132583575c426d93bfccbfbb20629a746e6a6cd1d3",
+      "bytes": 35504,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/postgresql/sslinfo.so",
+      "sha256": "eb7831c29e7066c854e4e21ea15033bf2b08d457f07b86d6fea4d9ff47e76a33",
+      "bytes": 20104,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/postgresql/tablefunc.so",
+      "sha256": "04dcca1e601b002d407c3d9a732a7905439b1168090efc4e0f3c5befca72e66b",
+      "bytes": 27816,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/postgresql/tcn.so",
+      "sha256": "f66bfd28cba0f7c0b1ecaedaceebf78d6512a3df99d5a2a2ccce29605e791379",
+      "bytes": 12680,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/postgresql/test_decoding.so",
+      "sha256": "3e563601ee897c51f5c65f181522bdf173778cb69e2f39274466c8362043e820",
+      "bytes": 23336,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/postgresql/tsm_system_rows.so",
+      "sha256": "3e9e1b4ecf2f246f945b6b670d7e96d4cf6070182f04b08940231f562d2a55b4",
+      "bytes": 13152,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/postgresql/tsm_system_time.so",
+      "sha256": "0fa6ed1a6d278b07ad6a4b80f94cc1ec67a1868f959d423268634ff5762510ec",
+      "bytes": 13312,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/postgresql/unaccent.so",
+      "sha256": "76a53295edd1abb950518f95696ff68c8eccc803bdaba7035871497749ea7792",
+      "bytes": 18432,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/postgresql/utf8_and_big5.so",
+      "sha256": "68a9ccfd040336ff2f09f50c38f1a402873c06e03d54f079215935eea414bc42",
+      "bytes": 127744,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/postgresql/utf8_and_cyrillic.so",
+      "sha256": "ae91561a8e9fb78e1ca44ee92f90c2240493d147901d82f4508f0f7c988e2e8b",
+      "bytes": 21320,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/postgresql/utf8_and_euc2004.so",
+      "sha256": "b7d45311febb1a94298c6f2905169891bbdc8f900f48feea8e19c88008528510",
+      "bytes": 217872,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/postgresql/utf8_and_euc_cn.so",
+      "sha256": "8925ed0b73d34112268b72d866f8bea3ede02c08d2734c46fd52eea22ef570d7",
+      "bytes": 86784,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/postgresql/utf8_and_euc_jp.so",
+      "sha256": "2b1999f72ff0fdca7d991af55f13a9f0044f9c71e7de391a3fc2d07c566af0ec",
+      "bytes": 164608,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/postgresql/utf8_and_euc_kr.so",
+      "sha256": "1bd4fa7ff99bc45bbedd345ee5ca8e95b6e16f55b4e1915201e9a86464fa37ef",
+      "bytes": 115456,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/postgresql/utf8_and_euc_tw.so",
+      "sha256": "f3c5fecaf50a2de0da8e0092eb221989306c45b088325737b62feeba328370cc",
+      "bytes": 213760,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/postgresql/utf8_and_gb18030.so",
+      "sha256": "9a3746a7d0514d630f981bcf560f9ca02923a75f4e7c71219a01dc8b686141dc",
+      "bytes": 275208,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/postgresql/utf8_and_gbk.so",
+      "sha256": "ded0b75a60bb41d301c96276774f1154cc728e1e71c9db5bbca653f49f9b0e62",
+      "bytes": 160512,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/postgresql/utf8_and_iso8859.so",
+      "sha256": "2e7261b5d154b2b4de147fe747914c84b75a369e9ab82efa3e80540d614ddc2f",
+      "bytes": 37672,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/postgresql/utf8_and_iso8859_1.so",
+      "sha256": "b50a3ad772cfa43def79e962353b767c3fa2d75d7524a21f56965005ac7db056",
+      "bytes": 13128,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/postgresql/utf8_and_johab.so",
+      "sha256": "4682af82957ade1b7f5783062f433400b9e187f37dd905ef3d3d21109f2b7786",
+      "bytes": 176896,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/postgresql/utf8_and_sjis.so",
+      "sha256": "15ac3a06f2573174f573ec8a6f8b7ebf5122c5646317e40d558e67999db0f19e",
+      "bytes": 94976,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/postgresql/utf8_and_sjis2004.so",
+      "sha256": "14cf13f6229e7eae3c0bfd29f8aec873b4ed5f5247247042380deca3516abd9d",
+      "bytes": 140048,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/postgresql/utf8_and_uhc.so",
+      "sha256": "b60ebb8cae33968a8dce639345b1867181c437652f228fec4da66d8c49cd12f7",
+      "bytes": 180992,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/postgresql/utf8_and_win.so",
+      "sha256": "f8d75a5f6101016e1ca3b75689b99ea9643baf1fd647dd89da6f94aae311a0af",
+      "bytes": 41760,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/postgresql/uuid-ossp.so",
+      "sha256": "94b4197b495ec5b4b591750938a936e89d89e1157bdff60d573100e4c340a2b3",
+      "bytes": 14304,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@esbuild/linux-x64/bin/esbuild",
+      "sha256": "bab29b2ca7a9e89b67cf720b77b2d743f9f31f5cf0d5bd74ee8c8de30ced7014",
+      "bytes": 10358936,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@img/sharp-libvips-linux-x64/lib/libvips-cpp.so.8.18.7",
+      "sha256": "4aa73553408c3964071728f4a231a8e86918e39bc49f1fbae75355f7ea933ea9",
+      "bytes": 18699288,
+      "mode": 292,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@img/sharp-libvips-linuxmusl-x64/lib/libvips-cpp.so.8.18.7",
+      "sha256": "979b625437190a1970b835164e0e30d47dc60159ce6a394ce78cc40cb9d59ab8",
+      "bytes": 18911144,
+      "mode": 292,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@img/sharp-linux-x64/lib/sharp-linux-x64-0.35.5.node",
+      "sha256": "cf896cc1b7f3ae9c3e8eb3d7b2b198b8de2824ff7d0681d684bab5a825def335",
+      "bytes": 415112,
+      "mode": 292,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@img/sharp-linuxmusl-x64/lib/sharp-linuxmusl-x64-0.35.5.node",
+      "sha256": "14ce8ddd283c101f225089152da805632568bfa372d336ccbfdd811f4f1dca02",
+      "bytes": 301328,
+      "mode": 292,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@napi-rs/canvas-linux-x64-gnu/skia.linux-x64-gnu.node",
+      "sha256": "7607cda801e86bee96d88b685766e7d22b707128de25134147f68192304220c5",
+      "bytes": 31201192,
+      "mode": 292,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@napi-rs/canvas-linux-x64-musl/skia.linux-x64-musl.node",
+      "sha256": "f84fb53d2362daac1bc17bf7af0e3a3e970231ada84f5e5fae84b03639561448",
+      "bytes": 28798328,
+      "mode": 292,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@next/swc-linux-x64-gnu/next-swc.linux-x64-gnu.node",
+      "sha256": "f0a82554aa443a7c96ea683ecc4c20cdc155957411da7b4ff4c9bd5f9bb4d40c",
+      "bytes": 143144904,
+      "mode": 292,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@rolldown/binding-linux-x64-gnu/rolldown-binding.linux-x64-gnu.node",
+      "sha256": "6a904466073a3ccdf0ad9a0c2e5e548cd334efebaf92d2b5cc2469174d78538a",
+      "bytes": 19312448,
+      "mode": 292,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/@rolldown/binding-linux-x64-musl/rolldown-binding.linux-x64-musl.node",
+      "sha256": "af1ab9550cbf7925f35cd625e2fb815128c559fdd0cc32174d577b91a2c43712",
+      "bytes": 19357904,
+      "mode": 292,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/esbuild/bin/esbuild",
+      "sha256": "3d1037d9a128440856daec17f4358ebb465b73823858a88a5fe1ce702cc17944",
+      "bytes": 9351,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/fs-ext/build/Release/fs_ext.node",
+      "sha256": "d2cdc182689fc659e1f27e050eb9954d0e550edbe6e3ceb973018430122225f8",
+      "bytes": 42432,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/fs-ext/build/Release/obj.target/fs_ext.node",
+      "sha256": "d2cdc182689fc659e1f27e050eb9954d0e550edbe6e3ceb973018430122225f8",
+      "bytes": 42432,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/lightningcss-linux-x64-gnu/lightningcss.linux-x64-gnu.node",
+      "sha256": "84c6f35fb9c78f9920090f4017a9dc6dc50842a56c543f509943a0d434325d93",
+      "bytes": 10032264,
+      "mode": 292,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/lightningcss-linux-x64-musl/lightningcss.linux-x64-musl.node",
+      "sha256": "a5cf77ba1e47a5539987d569d973bc9389f8c2bb1522d36a3adf22c82afaa86d",
+      "bytes": 10032056,
+      "mode": 292,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/next/dist/compiled/@vercel/og/resvg.wasm",
+      "sha256": "6332e8ff5ef63cb18592370d4f799c8551d886c90b8563e1323fdabee2371e24",
+      "bytes": 1378357,
+      "mode": 292,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/next/dist/compiled/@vercel/og/yoga.wasm",
+      "sha256": "47fb4f81d274932184cd19c75ed34f902d13f0519301590789a37f7077977e27",
+      "bytes": 88658,
+      "mode": 292,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/next/dist/compiled/source-map08/mappings.wasm",
+      "sha256": "be2dc7da3885e55013c8da58d7ba356705d932459db94ada37d5de2fa8733cfe",
+      "bytes": 48693,
+      "mode": 292,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/pdfjs-dist/wasm/openjpeg.wasm",
+      "sha256": "67b8e2b162da472e98cb48d3d32e3e38fff481b9b32ff4818e78bb248af88ab2",
+      "bytes": 250009,
+      "mode": 292,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/pdfjs-dist/wasm/qcms_bg.wasm",
+      "sha256": "6017eca5939cde1836e88e6d8cd27ae039246f206515ea4487bdfd0e3fb16e26",
+      "bytes": 94519,
+      "mode": 292,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "finnor-os/node_modules/playwright-core/lib/webp_codec.wasm",
+      "sha256": "164cd9583a3e4d081f767d3b41ff0a730443dc7535fcc5caff83561463384b79",
+      "bytes": 565369,
+      "mode": 365,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "node_modules/@img/sharp-libvips-linux-x64/lib/libvips-cpp.so.8.18.7",
+      "sha256": "4aa73553408c3964071728f4a231a8e86918e39bc49f1fbae75355f7ea933ea9",
+      "bytes": 18699288,
+      "mode": 292,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "node_modules/@img/sharp-libvips-linuxmusl-x64/lib/libvips-cpp.so.8.18.7",
+      "sha256": "979b625437190a1970b835164e0e30d47dc60159ce6a394ce78cc40cb9d59ab8",
+      "bytes": 18911144,
+      "mode": 292,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "node_modules/@img/sharp-linux-x64/lib/sharp-linux-x64-0.35.5.node",
+      "sha256": "cf896cc1b7f3ae9c3e8eb3d7b2b198b8de2824ff7d0681d684bab5a825def335",
+      "bytes": 415112,
+      "mode": 292,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "node_modules/@img/sharp-linuxmusl-x64/lib/sharp-linuxmusl-x64-0.35.5.node",
+      "sha256": "14ce8ddd283c101f225089152da805632568bfa372d336ccbfdd811f4f1dca02",
+      "bytes": 301328,
+      "mode": 292,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "node_modules/@next/swc-linux-x64-gnu/next-swc.linux-x64-gnu.node",
+      "sha256": "522db6ddbf906d80e88aa37624519ea7a97d4bdee988c51e46cb5640fa0435cb",
+      "bytes": 100921584,
+      "mode": 292,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "node_modules/@rolldown/binding-linux-x64-gnu/rolldown-binding.linux-x64-gnu.node",
+      "sha256": "d07e84b7aa4ded2886e3641aee6aed973a3c3401295d2eb41c82d0bdda065f96",
+      "bytes": 19129984,
+      "mode": 292,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "node_modules/@rolldown/binding-linux-x64-musl/rolldown-binding.linux-x64-musl.node",
+      "sha256": "86bcac6023952131364d45bce9d4e3312b733044e8567f81d90ffe7587898797",
+      "bytes": 19178416,
+      "mode": 292,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "node_modules/@rollup/rollup-linux-x64-gnu/rollup.linux-x64-gnu.node",
+      "sha256": "bcb96b3e239fe566ace26cb267acab3cb67d5babf4a11257301a91706d5f158e",
+      "bytes": 2067608,
+      "mode": 292,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "node_modules/@rollup/rollup-linux-x64-musl/rollup.linux-x64-musl.node",
+      "sha256": "82a90832747bfa59884a3ac4514ca859f950c76e6c66c4ffb7e53cfafc3337c0",
+      "bytes": 2100208,
+      "mode": 292,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "node_modules/@unrs/resolver-binding-linux-x64-gnu/resolver.linux-x64-gnu.node",
+      "sha256": "d940f041c7ae80b839f639adeadda83f71b52b3e483d6cc9da8fa0a755a99869",
+      "bytes": 2272024,
+      "mode": 292,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "node_modules/@unrs/resolver-binding-linux-x64-musl/resolver.linux-x64-musl.node",
+      "sha256": "c164663488e1a78eb29109b5c45af61dc2ce1555e5104cd0a76d3dc6921586dd",
+      "bytes": 2275480,
+      "mode": 292,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "node_modules/lightningcss-linux-x64-gnu/lightningcss.linux-x64-gnu.node",
+      "sha256": "84c6f35fb9c78f9920090f4017a9dc6dc50842a56c543f509943a0d434325d93",
+      "bytes": 10032264,
+      "mode": 292,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "node_modules/lightningcss-linux-x64-musl/lightningcss.linux-x64-musl.node",
+      "sha256": "a5cf77ba1e47a5539987d569d973bc9389f8c2bb1522d36a3adf22c82afaa86d",
+      "bytes": 10032056,
+      "mode": 292,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "node_modules/next/dist/compiled/@mswjs/interceptors/ClientRequest/llhttp/llhttp.wasm",
+      "sha256": "f37ae8e0ee713aed2aa405539a82994cc28473348a4e23e219760e52eabb07e3",
+      "bytes": 61045,
+      "mode": 292,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "node_modules/next/dist/compiled/@vercel/og/resvg.wasm",
+      "sha256": "9c1f8f54b842fcda3b72b06eba94a20b907958c443d73178da32b21ccb57b9bb",
+      "bytes": 1378357,
+      "mode": 292,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "node_modules/next/dist/compiled/@vercel/og/yoga.wasm",
+      "sha256": "7ba9c9483c8c38a468e9aef4a95ed72fad8a43594be8e5123eb3bdb6479edf5b",
+      "bytes": 71736,
+      "mode": 292,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    },
+    {
+      "path": "node_modules/next/dist/compiled/source-map08/mappings.wasm",
+      "sha256": "be2dc7da3885e55013c8da58d7ba356705d932459db94ada37d5de2fa8733cfe",
+      "bytes": 48693,
+      "mode": 292,
+      "kind": "FRESH_LOCKED_DEPENDENCY"
+    }
+  ],
+  "emittedSources": 1160,
+  "totalBytes": 2084365078,
+  "elapsedMs": 53497,
+  "buildTool": {
+    "esbuild": "0.25.12",
+    "typescript": "5.9.3",
+    "esbuildPath": "finnor-os/node_modules/esbuild/lib/main.js",
+    "typescriptPath": "finnor-os/node_modules/typescript/lib/typescript.js",
+    "builderSha256": "089ec36dcf1f4f2000a6f4388975a9c9e8aac0697904c4be8dd264208a4242bd"
+  },
+  "generatedFrontendChanges": [
+    {
+      "path": "next-env.d.ts",
+      "originalSha256": "1862ac4bbbc5192d4bf562161df66ea547ed3e67173100656ab606ae9797db2b",
+      "generatedSha256": "53a2cc1cdb2914313a6e4aff213b79826e704fad28b3c4e99ca0fe09da7d4597",
+      "generator": "CANONICAL_NEXT_FRONTEND_BUILD_DISTDIR_DECLARATIONS"
+    }
+  ],
+  "frontend": {
+    "buildId": "z0-3032d24fa61d1514",
+    "mode": "ACTUAL_NEXT_STANDALONE_BUILD_NOT_STARTED",
+    "publicAuthBuild": {
+      "schema": "finnor.project-z.z0.frontend-public-auth-build-receipt.v1",
+      "sourcePopulationSha256": "3032d24fa61d1514fe8bf75cdfbad71c0a5f7dc5a7f1df835b6d005bf354201a",
+      "state": "NOT_DELIVERED",
+      "authenticationExecuted": false,
+      "environmentNames": []
+    }
+  },
+  "installedNative": "NOT_RUN",
+  "productionActive": false,
+  "protectedQualification": false,
+  "executionAuthorityGranted": false
+}

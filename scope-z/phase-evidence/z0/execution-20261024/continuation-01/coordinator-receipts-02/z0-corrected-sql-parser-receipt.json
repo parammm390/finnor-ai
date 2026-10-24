@@ -1,0 +1,11 @@
+{
+  "observedAt": "2026-10-24T15:53:42.857469+00:00",
+  "sourceSha256": "1511609691eed81aee3f227d70a0a5b061adf604780d5c6ab16822cc47aa029a",
+  "adapterAndMigrationIdentical": true,
+  "sqlStatementsParsed": 12,
+  "plpgsqlFunctionsParsed": 4,
+  "sqlExecuted": false,
+  "grantsExecuted": false,
+  "catalogRolesTriggersRLS": "NOT_RUN",
+  "originalFailureRetained": true
+}

@@ -1,0 +1,16 @@
+{
+  "name": "07-actual-mounted-frontend-build",
+  "command": "/home/factory-user/repos/finnor-z-toolchains/node22/node_modules/node/bin/node",
+  "args": [
+    "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-09/runtime/node_modules/next/dist/bin/next",
+    "build",
+    "--webpack"
+  ],
+  "cwd": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-09/runtime",
+  "started": "2026-10-24T17:51:13.198Z",
+  "elapsedMs": 88964,
+  "expectedCode": 0,
+  "code": 0,
+  "signal": null,
+  "logSha256": "33afead0e561ce45e93d71198385a757ff48c69679bf26cdfeaa1f431440af10"
+}

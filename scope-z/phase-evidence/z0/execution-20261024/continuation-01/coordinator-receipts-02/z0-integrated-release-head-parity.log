@@ -1,0 +1,88 @@
+TAP version 13
+# Subtest: source checks ignore timestamp-only build changes but reject real edits and untracked directories
+ok 1 - source checks ignore timestamp-only build changes but reject real edits and untracked directories
+  ---
+  duration_ms: 49.751231
+  type: 'test'
+  ...
+# Subtest: production history is accepted only with forward repair; unknown and newer migrations fail
+ok 2 - production history is accepted only with forward repair; unknown and newer migrations fail
+  ---
+  duration_ms: 0.76317
+  type: 'test'
+  ...
+# Subtest: the Phase 8 production contract adds four independently required compute services without dropping either PE supplier canary
+ok 3 - the Phase 8 production contract adds four independently required compute services without dropping either PE supplier canary
+  ---
+  duration_ms: 1.699043
+  type: 'test'
+  ...
+# Subtest: canonical release and AWS target guards fail closed
+ok 4 - canonical release and AWS target guards fail closed
+  ---
+  duration_ms: 1.606777
+  type: 'test'
+  ...
+# Subtest: ECR, freshness, ECS, and ALB guards reject unsafe evidence
+ok 5 - ECR, freshness, ECS, and ALB guards reject unsafe evidence
+  ---
+  duration_ms: 0.813411
+  type: 'test'
+  ...
+# Subtest: worker health and heartbeat guards bind the exact certified P7 release
+ok 6 - worker health and heartbeat guards bind the exact certified P7 release
+  ---
+  duration_ms: 0.439235
+  type: 'test'
+  ...
+# Subtest: active release workflow uses the governed four-class AWS compute cutover
+ok 7 - active release workflow uses the governed four-class AWS compute cutover
+  ---
+  duration_ms: 10.81567
+  type: 'test'
+  ...
+# Subtest: supplier canary builds are isolated from the finnor-os workspace lockfile
+ok 8 - supplier canary builds are isolated from the finnor-os workspace lockfile
+  ---
+  duration_ms: 0.736429
+  type: 'test'
+  ...
+# Subtest: Vercel release authentication is explicit and redacted
+ok 9 - Vercel release authentication is explicit and redacted
+  ---
+  duration_ms: 0.676267
+  type: 'test'
+  ...
+# Subtest: isolated supplier canary builds preserve canonical Vercel routing
+ok 10 - isolated supplier canary builds preserve canonical Vercel routing
+  ---
+  duration_ms: 0.671209
+  type: 'test'
+  ...
+# Subtest: supplier canary verification honors Vercel deployment protection
+ok 11 - supplier canary verification honors Vercel deployment protection
+  ---
+  duration_ms: 0.618595
+  type: 'test'
+  ...
+# Subtest: Water retirement waits for rolling ECS heartbeat overlap before freeze
+ok 12 - Water retirement waits for rolling ECS heartbeat overlap before freeze
+  ---
+  duration_ms: 1.767308
+  type: 'test'
+  ...
+# Subtest: runtime parity requires the embedded orchestrator and exact migration
+ok 13 - runtime parity requires the embedded orchestrator and exact migration
+  ---
+  duration_ms: 0.502451
+  type: 'test'
+  ...
+1..13
+# tests 13
+# suites 0
+# pass 13
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 174.018923

@@ -1,0 +1,72 @@
+{
+  "schema": "finnor.project-z.z0.coordinator-receipt-observation.v1",
+  "observedAt": "2026-10-24T18:00:32.157982+00:00",
+  "receipts": [
+    {
+      "source": "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/shared-computer-launch-09ad1704f3584b7fa561712dad6c4845/z0-integrated-full-types.json",
+      "path": "coordinator-receipts-02/z0-integrated-full-types.json",
+      "sha256": "5865a5ddb37bd42ac45b05208e59a03f96a13540b21ad2784794ef69c0f77ca6",
+      "bytes": 795
+    },
+    {
+      "source": "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/shared-computer-launch-09ad1704f3584b7fa561712dad6c4845/z0-integrated-affected-checks.json",
+      "path": "coordinator-receipts-02/z0-integrated-affected-checks.json",
+      "sha256": "3ae2a3b40786df73299a03ea025096583fbd984b7cb171cc87f03a06acf802c1",
+      "bytes": 2824
+    },
+    {
+      "source": "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/shared-computer-launch-09ad1704f3584b7fa561712dad6c4845/z0-coordinator-checkpoint-02.json",
+      "path": "coordinator-receipts-02/z0-coordinator-checkpoint-02.json",
+      "sha256": "b2f5fd5d3fc0049ca922657c006a45c7c8451f2e5a4be5037150bd922e045364",
+      "bytes": 2364
+    },
+    {
+      "source": "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/shared-computer-launch-09ad1704f3584b7fa561712dad6c4845/z0-corrected-sql-parser-receipt.json",
+      "path": "coordinator-receipts-02/z0-corrected-sql-parser-receipt.json",
+      "sha256": "68887375a63164013c13692dbe58215e91eb012fb0e101a3e389cac5a95f8d57",
+      "bytes": 367
+    },
+    {
+      "source": "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/shared-computer-launch-09ad1704f3584b7fa561712dad6c4845/z0-sql-case-diagnosis-before-fix.json",
+      "path": "coordinator-receipts-02/z0-sql-case-diagnosis-before-fix.json",
+      "sha256": "6e7e442aa1511ff9411f1891c1cdd5d3e44c48da949223d81f64f8dcdc3f4672",
+      "bytes": 1003
+    },
+    {
+      "source": "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/shared-computer-launch-09ad1704f3584b7fa561712dad6c4845/z0-coverage-regeneration-receipt.json",
+      "path": "coordinator-receipts-02/z0-coverage-regeneration-receipt.json",
+      "sha256": "ee94e973ba109f4b6987c4fb7a56da1259b1483b035c890306b9b307a67aa716",
+      "bytes": 2242
+    },
+    {
+      "source": "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/shared-computer-launch-09ad1704f3584b7fa561712dad6c4845/z0-validation-followup.md",
+      "path": "coordinator-receipts-02/z0-validation-followup.md",
+      "sha256": "26efaa9508de3bc68cf49818a44b3584e862cdd1460dbfe63240886eb96d72ad",
+      "bytes": 2212
+    },
+    {
+      "source": "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/shared-computer-launch-09ad1704f3584b7fa561712dad6c4845/z0-integrated-postimage-receipt.json",
+      "path": "coordinator-receipts-02/z0-integrated-postimage-receipt.json",
+      "sha256": "a4de4c65d3b4c25f1acded5e1dd31fcb24493f86b50be5e816672c44f3339706",
+      "bytes": 4200
+    },
+    {
+      "source": "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/shared-computer-launch-09ad1704f3584b7fa561712dad6c4845/z0-integrated-release-head-parity.log",
+      "path": "coordinator-receipts-02/z0-integrated-release-head-parity.log",
+      "sha256": "9c7669b66a5b665f14918e616c3fd3a1261224a14430d2b9436de9b69098da17",
+      "bytes": 2963
+    }
+  ],
+  "originalsModified": false,
+  "scope": "HISTORICAL_COORDINATOR_TARGET_CHECKS_NOT_FINAL_NATIVE_QUALIFICATION",
+  "corrections": [
+    "Initial postimage manifest retains the old rejected SQL hash; corrected SQL receipt names current bytes.",
+    "Affected-check runner intended to exclude a Git fixture, but actual TAP is 13 passed, zero skipped.",
+    "Stale coverage initially failed, canonical regeneration and rerun passed without denominator changes.",
+    "Coordinator checkpoint 02 is partial and did not release the Z0 slot."
+  ],
+  "finalProductObservation": "9f3edfd3b4c6758832c53139da0773218062191e",
+  "finalProductObservationAt": "2026-10-24T17:47:29.906Z",
+  "native": "NOT_RUN",
+  "installedNative": "NOT_RUN"
+}

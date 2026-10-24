@@ -1,0 +1,17 @@
+{
+  "name": "05-browser-assets",
+  "command": "/home/factory-user/repos/finnor-z-toolchains/node22/node_modules/node/bin/node",
+  "args": [
+    "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-07/runtime/node_modules/playwright/cli.js",
+    "install",
+    "chromium",
+    "--only-shell"
+  ],
+  "cwd": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-07/runtime",
+  "started": "2026-10-24T17:43:45.095Z",
+  "elapsedMs": 6390,
+  "expectedCode": 0,
+  "code": 0,
+  "signal": null,
+  "logSha256": "14a29e762a45f494da47e15f48652f6505cb5572eae7fddb861965a2fa9715ee"
+}

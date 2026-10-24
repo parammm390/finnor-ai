@@ -1,0 +1,82 @@
+▲ Next.js 16.4.1 (webpack)
+[@sentry/nextjs] Importing `withSentryConfig` from `@sentry/nextjs` is deprecated and will stop working in v11. Import it from `@sentry/nextjs/config` instead:
+  import { withSentryConfig } from '@sentry/nextjs/config';
+✓ Running next.config.mjs took 470ms
+- Experiments (use with caution):
+  · clientTraceMetadata
+  · cpus: 1
+  ⨯ preloadEntriesOnStart
+  ✓ webpackMemoryOptimizations
+
+  Creating an optimized production build ...
+⚠ The Edge Runtime is deprecated. You can use the "nodejs" runtime instead. Learn more: https://nextjs.org/docs/messages/edge-runtime-deprecated
+✓ Compiled successfully in 30.8s
+  Running TypeScript ...
+  Finished TypeScript in 20.2s ...
+  Collecting page data using 1 worker ...
+⚠ Using edge runtime on a page currently disables static generation for that page
+  Generating static pages using 1 worker (0/44) ...
+  Generating static pages using 1 worker (11/44) 
+  Generating static pages using 1 worker (22/44) 
+  Generating static pages using 1 worker (33/44) 
+✓ Generating static pages using 1 worker (44/44) in 1225ms
+  Finalizing page optimization ...
+  Collecting build traces ...
+
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ƒ /api/ai-concierge
+├ ƒ /api/centropy/[...path]
+├ ƒ /api/centropy/operational-stream
+├ ƒ /api/centropy/stream
+├ ƒ /api/contact
+├ ƒ /api/health
+├ ƒ /api/release
+├ ○ /capabilities
+├ ○ /centropy
+├ ƒ /centropy/agents
+├ ○ /centropy/bridge
+├ ○ /centropy/classic
+├ ○ /centropy/customers
+├ ƒ /centropy/deals
+├ ƒ /centropy/deals/[dealId]
+├ ƒ /centropy/deals/[dealId]/[section]
+├ ƒ /centropy/investigations/[threadId]
+├ ○ /centropy/login
+├ ○ /centropy/money
+├ ○ /centropy/next
+├ ○ /centropy/reset-password
+├ ○ /centropy/schedule
+├ ○ /centropy/showtime
+├ ○ /centropy/stage
+├ ƒ /centropy/work
+├ ○ /centropy/world
+├ ○ /customers
+├ ○ /dashboard-demo
+├ ○ /faq
+├ ○ /how-it-works
+├ ○ /icon.svg
+├ ○ /manifest.webmanifest
+├ ○ /money
+├ ○ /pricing
+├ ○ /privacy
+├ ○ /product
+├ ○ /resources
+├ ○ /resources/admissions-ai-glossary
+├ ○ /resources/deployment-readiness-checklist
+├ ○ /resources/dispatch-ai-glossary
+├ ○ /resources/missed-call-cost-calculator
+├ ○ /resources/operating-glossary
+├ ○ /resources/operational-drag-estimator
+├ ○ /resources/pilot-setup-checklist
+├ ○ /robots.txt
+├ ○ /schedule
+├ ○ /sitemap.xml
+├ ○ /terms
+└ ○ /trust-safety
+
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+

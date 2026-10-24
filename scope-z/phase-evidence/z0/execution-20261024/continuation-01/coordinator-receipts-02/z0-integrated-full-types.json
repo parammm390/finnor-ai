@@ -1,0 +1,33 @@
+{
+  "observedAt": "2026-10-24T15:45:58.464783+00:00",
+  "heapMiB": 4096,
+  "serializedWithSharedHeavyLock": true,
+  "checks": [
+    {
+      "name": "z0-integrated-backend-full-typecheck",
+      "cwd": "/home/factory-user/repos/finnor-z-coordinator/finnor-os",
+      "command": [
+        "npm",
+        "run",
+        "typecheck"
+      ],
+      "actualExitCode": 0,
+      "elapsedSeconds": 63.374
+    },
+    {
+      "name": "z0-integrated-frontend-full-typecheck",
+      "cwd": "/home/factory-user/repos/finnor-z-coordinator",
+      "command": [
+        "node",
+        "node_modules/typescript/bin/tsc",
+        "--noEmit",
+        "--incremental",
+        "false"
+      ],
+      "actualExitCode": 0,
+      "elapsedSeconds": 21.576
+    }
+  ],
+  "sqlExecuted": false,
+  "grantsExecuted": false
+}

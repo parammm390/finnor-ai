@@ -1,0 +1,217 @@
+{
+  "schema": "finnor.project-z.z0.complete-fresh-reconstruction.v1",
+  "status": "PASSED_ENGINEERING_RECONSTRUCTION",
+  "sourcePopulationSha256": "3032d24fa61d1514fe8bf75cdfbad71c0a5f7dc5a7f1df835b6d005bf354201a",
+  "archiveSha256": "a5cc3ca6ae9683d86b47aa661b95a321c2d10011c46d97afd98a8fb78c824670",
+  "steps": [
+    {
+      "name": "00-git-object-isolation",
+      "command": "/usr/bin/git",
+      "args": [
+        "rev-parse",
+        "--show-toplevel"
+      ],
+      "cwd": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-09/runtime",
+      "started": "2026-10-24T17:49:08.282Z",
+      "elapsedMs": 11,
+      "expectedCode": 128,
+      "code": 128,
+      "signal": null,
+      "logSha256": "d2b35cacadc66b7fad8dedd1be5244e17150a6625978c9330f831bd7a9cd6b1e"
+    },
+    {
+      "name": "01-extract-source",
+      "command": "/usr/bin/tar",
+      "args": [
+        "--extract",
+        "--gzip",
+        "--file",
+        "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-08/converged-source.tar.gz",
+        "--directory",
+        "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-09/runtime",
+        "--no-same-owner",
+        "--no-same-permissions"
+      ],
+      "cwd": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-09/runtime",
+      "started": "2026-10-24T17:49:08.305Z",
+      "elapsedMs": 324,
+      "expectedCode": 0,
+      "code": 0,
+      "signal": null,
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "02-root-ci",
+      "command": "/usr/bin/npm",
+      "args": [
+        "ci",
+        "--ignore-scripts",
+        "--no-audit",
+        "--no-fund"
+      ],
+      "cwd": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-09/runtime",
+      "started": "2026-10-24T17:49:09.447Z",
+      "elapsedMs": 22953,
+      "expectedCode": 0,
+      "code": 0,
+      "signal": null,
+      "logSha256": "ab8c06ad3ddfc9fe633600dc912f0fbc3edd77be000f2d3c04d0a3df669b80f4"
+    },
+    {
+      "name": "03-backend-ci",
+      "command": "/usr/bin/npm",
+      "args": [
+        "ci",
+        "--ignore-scripts",
+        "--no-audit",
+        "--no-fund"
+      ],
+      "cwd": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-09/runtime/finnor-os",
+      "started": "2026-10-24T17:49:32.400Z",
+      "elapsedMs": 23027,
+      "expectedCode": 0,
+      "code": 0,
+      "signal": null,
+      "logSha256": "37c295851ced41ab67ea4d110725dcc236edc4bdbc19271aa8eec9e4d147aef2"
+    },
+    {
+      "name": "04-native-fs-ext",
+      "command": "/usr/bin/npm",
+      "args": [
+        "rebuild",
+        "fs-ext",
+        "--build-from-source"
+      ],
+      "cwd": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-09/runtime/finnor-os",
+      "started": "2026-10-24T17:49:55.428Z",
+      "elapsedMs": 6361,
+      "expectedCode": 0,
+      "code": 0,
+      "signal": null,
+      "logSha256": "d87123d77de63183b78d26da347afeaa647fac327e5f0d5477009ba2e6980809"
+    },
+    {
+      "name": "05-browser-assets",
+      "command": "/home/factory-user/repos/finnor-z-toolchains/node22/node_modules/node/bin/node",
+      "args": [
+        "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-09/runtime/node_modules/playwright/cli.js",
+        "install",
+        "chromium",
+        "--only-shell"
+      ],
+      "cwd": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-09/runtime",
+      "started": "2026-10-24T17:50:01.790Z",
+      "elapsedMs": 6744,
+      "expectedCode": 0,
+      "code": 0,
+      "signal": null,
+      "logSha256": "a6a1c31777c7a8f16f5a3d1adb2e81af13e63454318cbed4e94e4bf8db44a0e9"
+    },
+    {
+      "name": "06-full-backend-types",
+      "command": "/home/factory-user/repos/finnor-z-toolchains/node22/node_modules/node/bin/node",
+      "args": [
+        "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-09/runtime/finnor-os/node_modules/typescript/bin/tsc",
+        "--project",
+        "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-09/runtime/finnor-os/tsconfig.json",
+        "--noEmit",
+        "--incremental",
+        "false"
+      ],
+      "cwd": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-09/runtime",
+      "started": "2026-10-24T17:50:08.535Z",
+      "elapsedMs": 57840,
+      "expectedCode": 0,
+      "code": 0,
+      "signal": null,
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "06a-backend-type-source-custody",
+      "command": "/home/factory-user/repos/finnor-z-toolchains/node22/node_modules/node/bin/node",
+      "args": [
+        "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-09/runtime/finnor-os/node_modules/typescript/bin/tsc",
+        "--project",
+        "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-09/runtime/finnor-os/tsconfig.json",
+        "--noEmit",
+        "--incremental",
+        "false",
+        "--listFilesOnly"
+      ],
+      "cwd": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-09/runtime",
+      "started": "2026-10-24T17:51:06.376Z",
+      "elapsedMs": 5579,
+      "expectedCode": 0,
+      "code": 0,
+      "signal": null,
+      "logSha256": "24ce2f9e40a6b49793e9d21afada721274dfe71811973afcf7014fcedcd1f30d"
+    },
+    {
+      "name": "07-actual-mounted-frontend-build",
+      "command": "/home/factory-user/repos/finnor-z-toolchains/node22/node_modules/node/bin/node",
+      "args": [
+        "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-09/runtime/node_modules/next/dist/bin/next",
+        "build",
+        "--webpack"
+      ],
+      "cwd": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-09/runtime",
+      "started": "2026-10-24T17:51:13.198Z",
+      "elapsedMs": 88964,
+      "expectedCode": 0,
+      "code": 0,
+      "signal": null,
+      "logSha256": "33afead0e561ce45e93d71198385a757ff48c69679bf26cdfeaa1f431440af10"
+    },
+    {
+      "name": "08-complete-emission",
+      "command": "/home/factory-user/repos/finnor-z-toolchains/node22/node_modules/node/bin/node",
+      "args": [
+        "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-09/runtime/finnor-os/scripts/project-z/z0/emit-converged-runtime.mjs",
+        "--installation=/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-09",
+        "--attempt=01"
+      ],
+      "cwd": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-09/runtime",
+      "started": "2026-10-24T17:52:42.163Z",
+      "elapsedMs": 55048,
+      "expectedCode": 0,
+      "code": 0,
+      "signal": null,
+      "logSha256": "5ca94693fee62a2fbba31d3de8b95ae331bc9998f9d5971475765e6d404f1946"
+    },
+    {
+      "name": "09-offline-installed-runtime-doctor",
+      "command": "/home/factory-user/repos/finnor-z-toolchains/node22/node_modules/node/bin/node",
+      "args": [
+        "--import",
+        "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-09/runtime/finnor-os/z0-runtime-01/installed-loader.mjs",
+        "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-09/runtime/finnor-os/scripts/project-z/z0/offline-runtime-doctor.mjs",
+        "--z0-offline-doctor",
+        "--output=/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-09/offline-runtime-doctor.json"
+      ],
+      "cwd": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-09/runtime",
+      "started": "2026-10-24T17:53:37.342Z",
+      "elapsedMs": 41054,
+      "expectedCode": 0,
+      "code": 0,
+      "signal": null,
+      "logSha256": "e1548fed32bb3905761f82deb09c8fa84a94d65d15fbc51c7d1d83eecf7c875a"
+    }
+  ],
+  "dependencyTreesCopied": false,
+  "localGitObjectsRequired": false,
+  "gitDiscoveryIsolated": true,
+  "gitCeiling": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-09",
+  "sentryRelease": "z0-3032d24fa61d1514fe8bf75cdfbad71c0a5f7dc5a7f1df835b6d005bf354201a",
+  "backendTypeInputs": 4454,
+  "frontendPublicAuthBuild": {
+    "schema": "finnor.project-z.z0.frontend-public-auth-build-receipt.v1",
+    "sourcePopulationSha256": "3032d24fa61d1514fe8bf75cdfbad71c0a5f7dc5a7f1df835b6d005bf354201a",
+    "state": "NOT_DELIVERED",
+    "authenticationExecuted": false,
+    "environmentNames": []
+  },
+  "typescriptRuntimeFallback": "REFUSED",
+  "native": "NOT_RUN",
+  "installedNative": "NOT_RUN",
+  "databaseOrAuthExecuted": false
+}

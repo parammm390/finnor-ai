@@ -1,0 +1,8 @@
+file:///home/factory-user/repos/finnor-z0/finnor-os/scripts/project-z/z0/reconstruct-converged.mjs:34
+  if (!existsSync(options["public-auth-input"])) throw Error("Z0_PUBLIC_AUTH_BUILD_INPUT_NOT_DELIVERED");
+                                                       ^
+
+Error: Z0_PUBLIC_AUTH_BUILD_INPUT_NOT_DELIVERED
+    at file:///home/factory-user/repos/finnor-z0/finnor-os/scripts/project-z/z0/reconstruct-converged.mjs:34:56
+
+Node.js v22.23.4
