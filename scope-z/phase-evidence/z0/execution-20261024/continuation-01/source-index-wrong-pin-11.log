@@ -1,0 +1,8 @@
+file:///home/factory-user/repos/finnor-z0/finnor-os/scripts/project-z/z0/prepare-converged-source.mjs:100
+    throw Error("Z0_ADDITIONAL_COORDINATOR_SOURCE_PREIMAGE_DRIFT:" + item.path);
+          ^
+
+Error: Z0_ADDITIONAL_COORDINATOR_SOURCE_PREIMAGE_DRIFT:finnor-os/packages/db/migrations/postz_z1_shared_work.sql
+    at file:///home/factory-user/repos/finnor-z0/finnor-os/scripts/project-z/z0/prepare-converged-source.mjs:100:11
+
+Node.js v22.23.4

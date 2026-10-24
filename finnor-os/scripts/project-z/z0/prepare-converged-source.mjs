@@ -2,18 +2,20 @@
  * No dependency tree, .env, private fixture, Git object or service is borrowed. */
 import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
-import { readFile, writeFile, mkdir, readdir, lstat } from "node:fs/promises";
+import { readFile, writeFile, mkdir, readdir, lstat, realpath } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { dirname, resolve, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const own = resolve(dirname(fileURLToPath(import.meta.url)), "../../../..");
 const options = Object.fromEntries(process.argv.slice(2).map(arg => {
-  const match = /^--(coordinator|proposal|output)=(\/.+)$/.exec(arg);
+  const match = /^--(coordinator|proposal|output|coordinator-source-index)=(\/.+)$/.exec(arg);
   if (!match) throw Error("Z0_ABSOLUTE_SNAPSHOT_ARGUMENT_REQUIRED");
   return [match[1], resolve(match[2])];
 }));
-if (Object.keys(options).length !== 3 || !options.output.startsWith(resolve(own, "scope-z/phase-evidence/z0") + sep)
+if (!options.coordinator || !options.proposal || !options.output
+  || Object.keys(options).length !== (options["coordinator-source-index"] ? 4 : 3)
+  || !options.output.startsWith(resolve(own, "scope-z/phase-evidence/z0") + sep)
   || existsSync(options.output) || options.coordinator === own) throw Error("Z0_NEW_OWNED_SNAPSHOT_REQUIRED");
 const sha = bytes => createHash("sha256").update(bytes).digest("hex");
 const git = (root, ...args) => execFileSync("git", ["-C", root, ...args], { encoding: "utf8", timeout: 30_000, maxBuffer: 64 * 1024 * 1024 }).trimEnd();
@@ -48,6 +50,36 @@ const frozen = {
   ownHead: git(own, "rev-parse", "HEAD"), ownTree: git(own, "rev-parse", "HEAD^{tree}"),
   ownTrackedDiffSha256: sha(git(own, "diff", "--binary")),
 };
+let coordinatorSourceIndex = null, additionalCoordinatorFiles = [];
+if (options["coordinator-source-index"]) {
+  const path = options["coordinator-source-index"], metadata = await lstat(path);
+  if (!path.startsWith(resolve(own, "scope-z/phase-evidence/z0") + sep) || await realpath(path) !== path
+    || !metadata.isFile() || metadata.size > 1024 ** 2) throw Error("Z0_OWNED_BOUNDED_ADDITIONAL_SOURCE_INDEX_REQUIRED");
+  const bytes = await readFile(path);
+  if (bytes.length > 1024 ** 2) throw Error("Z0_OWNED_BOUNDED_ADDITIONAL_SOURCE_INDEX_REQUIRED");
+  const index = JSON.parse(bytes);
+  if (!index || typeof index !== "object" || Array.isArray(index)
+    || index.schema !== "finnor.project-z.z0.additional-coordinator-source-index.v1"
+    || index.coordinatorRoot !== options.coordinator || index.coordinatorHead !== frozen.coordinatorHead
+    || index.coordinatorTree !== frozen.coordinatorTree || index.coordinatorTrackedDiffSha256 !== frozen.coordinatorTrackedDiffSha256
+    || index.sourceOnly !== true || index.databaseAuthOrServices !== false
+    || !Array.isArray(index.files) || !index.files.length || index.files.length > 4096) {
+    throw Error("Z0_EXACT_ADDITIONAL_COORDINATOR_SOURCE_CUT_REQUIRED");
+  }
+  const seen = new Set();
+  let totalBytes = 0;
+  for (const item of index.files) {
+    if (!item || Object.keys(item).sort().join(",") !== "bytes,mode,path,sha256" || typeof item.path !== "string"
+      || item.path !== relative(options.coordinator, resolve(options.coordinator, item.path))
+      || !allowed(item.path) || seen.has(item.path) || typeof item.sha256 !== "string" || !/^[a-f0-9]{64}$/.test(item.sha256)
+      || !Number.isSafeInteger(item.bytes) || item.bytes < 0 || item.bytes > 16 * 1024 ** 2
+      || ![0o644, 0o755].includes(item.mode)) throw Error("Z0_INVALID_ADDITIONAL_COORDINATOR_SOURCE_MEMBER");
+    seen.add(item.path); totalBytes += item.bytes;
+  }
+  if (totalBytes > 64 * 1024 ** 2) throw Error("Z0_ADDITIONAL_COORDINATOR_SOURCE_BYTE_BOUND");
+  additionalCoordinatorFiles = index.files;
+  coordinatorSourceIndex = { path, sha256: sha(bytes), bytes: bytes.length, declaredFiles: index.files.length, additionalFiles: 0 };
+}
 for (const path of tracked.filter(allowed).sort()) {
   const original = resolve(options.coordinator, path), observed = await lstat(original);
   if (!observed.isFile()) throw Error("Z0_SOURCE_SYMLINK_OR_SPECIAL_FILE_REFUSED:" + path);
@@ -59,6 +91,24 @@ for (const path of tracked.filter(allowed).sort()) {
   if (change && sha(emitted) !== change.postimageSha256) throw Error("Z0_PROPOSAL_POSTIMAGE_DRIFT");
   await save(path, emitted, change ? "PROPOSED_CURRENT_COORDINATOR_DELTA_NOT_APPLIED" : "ACTUAL_COORDINATOR_SOURCE",
     observed.mode & 0o111 ? 0o755 : 0o644);
+}
+for (const item of additionalCoordinatorFiles) {
+  const path = resolve(options.coordinator, item.path), observed = await lstat(path);
+  if (!observed.isFile() || await realpath(path) !== path) throw Error("Z0_ADDITIONAL_SOURCE_SYMLINK_OR_ESCAPE_REFUSED");
+  const bytes = await readFile(path), mode = observed.mode & 0o111 ? 0o755 : 0o644;
+  if (sha(bytes) !== item.sha256 || bytes.length !== item.bytes || mode !== item.mode) {
+    throw Error("Z0_ADDITIONAL_COORDINATOR_SOURCE_PREIMAGE_DRIFT:" + item.path);
+  }
+  const prior = source.get(item.path);
+  if (prior) {
+    if (prior.sha256 !== item.sha256 || prior.bytes !== item.bytes || prior.mode !== mode) {
+      throw Error("Z0_ADDITIONAL_COORDINATOR_SOURCE_TRACKED_CONFLICT");
+    }
+  } else {
+    await save(item.path, bytes, "ACTUAL_COORDINATOR_SOURCE", mode);
+    coordinatorSourceIndex.additionalFiles++;
+  }
+  coordinatorPins.set(item.path, item.sha256);
 }
 // These are the one declared new shared migration and this producer's leaves.
 const migration = "finnor-os/packages/db/migrations/postz_z0_institution_application_bridge.sql";
@@ -92,6 +142,15 @@ async function addOwned(prefix) {
 }
 await addOwned("finnor-os/packages/orchestration/src/project-z/z0-convergence");
 await addOwned("finnor-os/scripts/project-z/z0");
+if (coordinatorSourceIndex && sha(await readFile(coordinatorSourceIndex.path)) !== coordinatorSourceIndex.sha256) {
+  throw Error("Z0_ADDITIONAL_COORDINATOR_SOURCE_INDEX_CHANGED");
+}
+for (const item of additionalCoordinatorFiles) {
+  const path = resolve(options.coordinator, item.path), observed = await lstat(path);
+  if (!observed.isFile() || await realpath(path) !== path || (observed.mode & 0o111 ? 0o755 : 0o644) !== item.mode) {
+    throw Error("Z0_ADDITIONAL_COORDINATOR_SOURCE_KIND_CHANGED");
+  }
+}
 for (const [path, hash] of coordinatorPins) if (sha(await readFile(resolve(options.coordinator, path))) !== hash) {
   throw Error("Z0_COORDINATOR_CHANGED_DURING_SNAPSHOT:" + path);
 }
@@ -102,7 +161,7 @@ if (git(options.coordinator, "rev-parse", "HEAD") !== frozen.coordinatorHead
 const files = [...source.values()].sort((a, b) => a.path.localeCompare(b.path));
 const manifest = {
   schema: "finnor.project-z.z0.converged-source-snapshot.v1", createdAt: new Date().toISOString(),
-  runtime, frozen, proposalPatchSha256: proposal.patchSha256, sourcePopulationSha256: sha(JSON.stringify(files)),
+  runtime, frozen, proposalPatchSha256: proposal.patchSha256, coordinatorSourceIndex, sourcePopulationSha256: sha(JSON.stringify(files)),
   files, ownedDeltas, totalBytes: files.reduce((n, file) => n + file.bytes, 0),
   dependencyTreesCopied: false, localGitObjectsRequired: false, privateFixtureCopied: false,
   target: proposal.paths.length ? "PROPOSED_CONVERGED_SNAPSHOT_NOT_COORDINATOR_APPLIED_OR_NATIVE_QUALIFIED"

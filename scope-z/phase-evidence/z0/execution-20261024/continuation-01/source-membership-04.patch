@@ -1,0 +1,78 @@
+diff --git a/finnor-os/scripts/project-z/z0/prepare-converged-source.mjs b/finnor-os/scripts/project-z/z0/prepare-converged-source.mjs
+index bb93caf..5c32a94 100644
+--- a/finnor-os/scripts/project-z/z0/prepare-converged-source.mjs
++++ b/finnor-os/scripts/project-z/z0/prepare-converged-source.mjs
+@@ -5 +5 @@ import { execFileSync } from "node:child_process";
+-import { readFile, writeFile, mkdir, readdir, lstat } from "node:fs/promises";
++import { readFile, writeFile, mkdir, readdir, lstat, realpath } from "node:fs/promises";
+@@ -12 +12 @@ const options = Object.fromEntries(process.argv.slice(2).map(arg => {
+-  const match = /^--(coordinator|proposal|output)=(\/.+)$/.exec(arg);
++  const match = /^--(coordinator|proposal|output|coordinator-source-index)=(\/.+)$/.exec(arg);
+@@ -16 +16,3 @@ const options = Object.fromEntries(process.argv.slice(2).map(arg => {
+-if (Object.keys(options).length !== 3 || !options.output.startsWith(resolve(own, "scope-z/phase-evidence/z0") + sep)
++if (!options.coordinator || !options.proposal || !options.output
++  || Object.keys(options).length !== (options["coordinator-source-index"] ? 4 : 3)
++  || !options.output.startsWith(resolve(own, "scope-z/phase-evidence/z0") + sep)
+@@ -50,0 +53,30 @@ const frozen = {
++let coordinatorSourceIndex = null, additionalCoordinatorFiles = [];
++if (options["coordinator-source-index"]) {
++  const path = options["coordinator-source-index"], metadata = await lstat(path);
++  if (!path.startsWith(resolve(own, "scope-z/phase-evidence/z0") + sep) || await realpath(path) !== path
++    || !metadata.isFile() || metadata.size > 1024 ** 2) throw Error("Z0_OWNED_BOUNDED_ADDITIONAL_SOURCE_INDEX_REQUIRED");
++  const bytes = await readFile(path);
++  if (bytes.length > 1024 ** 2) throw Error("Z0_OWNED_BOUNDED_ADDITIONAL_SOURCE_INDEX_REQUIRED");
++  const index = JSON.parse(bytes);
++  if (!index || typeof index !== "object" || Array.isArray(index)
++    || index.schema !== "finnor.project-z.z0.additional-coordinator-source-index.v1"
++    || index.coordinatorRoot !== options.coordinator || index.coordinatorHead !== frozen.coordinatorHead
++    || index.coordinatorTree !== frozen.coordinatorTree || index.coordinatorTrackedDiffSha256 !== frozen.coordinatorTrackedDiffSha256
++    || index.sourceOnly !== true || index.databaseAuthOrServices !== false
++    || !Array.isArray(index.files) || !index.files.length || index.files.length > 4096) {
++    throw Error("Z0_EXACT_ADDITIONAL_COORDINATOR_SOURCE_CUT_REQUIRED");
++  }
++  const seen = new Set();
++  let totalBytes = 0;
++  for (const item of index.files) {
++    if (!item || Object.keys(item).sort().join(",") !== "bytes,mode,path,sha256" || typeof item.path !== "string"
++      || item.path !== relative(options.coordinator, resolve(options.coordinator, item.path))
++      || !allowed(item.path) || seen.has(item.path) || typeof item.sha256 !== "string" || !/^[a-f0-9]{64}$/.test(item.sha256)
++      || !Number.isSafeInteger(item.bytes) || item.bytes < 0 || item.bytes > 16 * 1024 ** 2
++      || ![0o644, 0o755].includes(item.mode)) throw Error("Z0_INVALID_ADDITIONAL_COORDINATOR_SOURCE_MEMBER");
++    seen.add(item.path); totalBytes += item.bytes;
++  }
++  if (totalBytes > 64 * 1024 ** 2) throw Error("Z0_ADDITIONAL_COORDINATOR_SOURCE_BYTE_BOUND");
++  additionalCoordinatorFiles = index.files;
++  coordinatorSourceIndex = { path, sha256: sha(bytes), bytes: bytes.length, declaredFiles: index.files.length, additionalFiles: 0 };
++}
+@@ -62,0 +95,18 @@ for (const path of tracked.filter(allowed).sort()) {
++for (const item of additionalCoordinatorFiles) {
++  const path = resolve(options.coordinator, item.path), observed = await lstat(path);
++  if (!observed.isFile() || await realpath(path) !== path) throw Error("Z0_ADDITIONAL_SOURCE_SYMLINK_OR_ESCAPE_REFUSED");
++  const bytes = await readFile(path), mode = observed.mode & 0o111 ? 0o755 : 0o644;
++  if (sha(bytes) !== item.sha256 || bytes.length !== item.bytes || mode !== item.mode) {
++    throw Error("Z0_ADDITIONAL_COORDINATOR_SOURCE_PREIMAGE_DRIFT:" + item.path);
++  }
++  const prior = source.get(item.path);
++  if (prior) {
++    if (prior.sha256 !== item.sha256 || prior.bytes !== item.bytes || prior.mode !== mode) {
++      throw Error("Z0_ADDITIONAL_COORDINATOR_SOURCE_TRACKED_CONFLICT");
++    }
++  } else {
++    await save(item.path, bytes, "ACTUAL_COORDINATOR_SOURCE", mode);
++    coordinatorSourceIndex.additionalFiles++;
++  }
++  coordinatorPins.set(item.path, item.sha256);
++}
+@@ -94,0 +145,9 @@ await addOwned("finnor-os/scripts/project-z/z0");
++if (coordinatorSourceIndex && sha(await readFile(coordinatorSourceIndex.path)) !== coordinatorSourceIndex.sha256) {
++  throw Error("Z0_ADDITIONAL_COORDINATOR_SOURCE_INDEX_CHANGED");
++}
++for (const item of additionalCoordinatorFiles) {
++  const path = resolve(options.coordinator, item.path), observed = await lstat(path);
++  if (!observed.isFile() || await realpath(path) !== path || (observed.mode & 0o111 ? 0o755 : 0o644) !== item.mode) {
++    throw Error("Z0_ADDITIONAL_COORDINATOR_SOURCE_KIND_CHANGED");
++  }
++}
+@@ -105 +164 @@ const manifest = {
+-  runtime, frozen, proposalPatchSha256: proposal.patchSha256, sourcePopulationSha256: sha(JSON.stringify(files)),
++  runtime, frozen, proposalPatchSha256: proposal.patchSha256, coordinatorSourceIndex, sourcePopulationSha256: sha(JSON.stringify(files)),

@@ -1,0 +1,69 @@
+{
+  "schema": "finnor.project-z.z0.source-membership-guard-checks.v1",
+  "failureMap": {
+    "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/coordinator-source-membership-before-11.md",
+    "bytes": 4414,
+    "sha256": "a35349cfeee7e5d28cd2f1a586bdeb7e182159aa79adfbc045f3a2a5c281f99f"
+  },
+  "sourcePreimageSha256": "3768efc5876c75d2b7e36640b9f83056d24735e701237050998f73655ddec67e",
+  "sourcePostimageSha256": "67f93374367af4d0c87a1df3ac9c5517cf8e1e45287f1fc6402413548a7bc15c",
+  "sourcePatch": {
+    "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/source-membership-04.patch",
+    "bytes": 5338,
+    "sha256": "83490d9783741962cabb196b9a844fb15a9944fa7ffa0e007da8b255167da3c4"
+  },
+  "patchApplyRequiresUnidiffZero": true,
+  "checks": [
+    {
+      "name": "Actual pre-edit full CLI rejects additional source input",
+      "actualExit": 1,
+      "expectedBefore": true,
+      "artifact": {
+        "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/source-index-before-11.log",
+        "bytes": 760,
+        "sha256": "c69d343d346a7a1b2c0fa857a660a0455a8fb73a8bf07ae512f56d3fc5999565"
+      }
+    },
+    {
+      "name": "Existing Node22 syntax",
+      "actualExit": 0,
+      "artifact": {
+        "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/syntax-source-collector-16.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "name": "Actual full CLI rejects wrong member preimage",
+      "actualExit": 1,
+      "expectedExit": 1,
+      "predicate": "Z0_ADDITIONAL_COORDINATOR_SOURCE_PREIMAGE_DRIFT:finnor-os/packages/db/migrations/postz_z1_shared_work.sql",
+      "artifact": {
+        "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/source-index-wrong-pin-11.log",
+        "bytes": 447,
+        "sha256": "a6466ca9d42b62e84bed1a6c10d176c8c08eeefa4fb5e5c390f62c1848638dc9"
+      }
+    },
+    {
+      "name": "Scoped source whitespace and diff review",
+      "actualExit": 0
+    }
+  ],
+  "validInput": {
+    "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/coordinator-additional-source-05.json",
+    "bytes": 23783,
+    "sha256": "932760646b60beaaaf71866cdc22ec0ad27dc04bea5654ce493ff662d150bc2a"
+  },
+  "invalidInput": {
+    "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/coordinator-additional-source-wrong-pin-05.json",
+    "bytes": 23862,
+    "sha256": "1b5f243d979d12919d7e7dd0214826bcc05b0df6d4dd0bf26e3841fd2700f82d"
+  },
+  "declaredAdoptedSourceMembers": 99,
+  "successfulRefusalSnapshot": false,
+  "refusalDependenciesInstalled": false,
+  "sharedFilesWritten": false,
+  "servicesOrAuthOrNativeExecuted": false,
+  "newUnitTestsWritten": false,
+  "completePositiveCaptureAndRebuild": "PENDING_FRESH_FROZEN_SOURCE"
+}
