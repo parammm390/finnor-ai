@@ -1,0 +1,103 @@
+# schema: finnor.z3.native-freeze.v1
+# generatedAt: 2026-10-24T21:10:07Z
+# branch: factory/project-z3-viability
+# baseCommit: 9f3edfd3b4c6758832c53139da0773218062191e
+# headCommit: 3ed1a13a9804cdc3811e896dfccd7b229476f7ed
+# headTree: 289bb9d9b35e0e293c161a5b6019d27b6fc4a094
+# scopeRoots: finnor-os/packages/epistemic-runtime/src/project-z/z3-viability finnor-os/packages/private-equity/src/project-z/z3-viability finnor-os/scripts/project-z/z3 scripts/project-z/z3 scope-z/phase-evidence/z3
+# exclusions: __pycache__, build/patch-check (generator full-tree scratch), build/pg-libs (environment symlinks), this manifest
+# verify: tail -n +11 scope-z/phase-evidence/z3/native-freeze-v2.sha256 | sha256sum -c -
+b71c0bec3be5eb1e6218e4b04a26bf07918a3f781e5712800a8ff061497e837e  finnor-os/packages/epistemic-runtime/src/project-z/z3-viability/checker.py
+7addbf753aa18a76763cc8619b87c76263c2b8b508fa4daa860bda3b5bc00de8  finnor-os/packages/epistemic-runtime/src/project-z/z3-viability/contracts.ts
+538652946112222f7f47e4f08b9e12f44804fda5075c95b2e8cce5fc6d83fbb6  finnor-os/packages/epistemic-runtime/src/project-z/z3-viability/producer.ts
+55315c8cf3c0b01bdf1a07d121d11022ae80904fb0920b25d68ddddad144908a  finnor-os/packages/private-equity/src/project-z/z3-viability/api.ts
+a97420a6c88aba4182f431d35e8c436b8ff4940bd30ced7cc4a413d6f85dfee3  finnor-os/packages/private-equity/src/project-z/z3-viability/contracts.ts
+b253c4f17bc443d9b7523553b9b76b6d6cd3a80abbf642c38e032142f0acfebd  finnor-os/packages/private-equity/src/project-z/z3-viability/store.ts
+4850b8a930b0036be2527204d9d3b1ec4f595d968f3ed1c9a9a8983b592aff90  finnor-os/packages/private-equity/src/project-z/z3-viability/worker.ts
+9d4acd16ced00ebfb4240d119d7785e008aa568eb7eb18fb54354886974251db  finnor-os/scripts/project-z/z3/cli.mts
+74520f769f9c20c2ce6f79593ba4443244cff3b9a5a8cc0dbb5f4c8c67e32dc8  finnor-os/scripts/project-z/z3/finite-e2e.py
+f09ae0a5f1f0fc188607ba18d50ac07889274b94764dd8a114ac7b444fe1a005  finnor-os/scripts/project-z/z3/probe-independence.py
+fa267cb6f8d70c4f07271d7ceef68a7a68b4fad9dd792185d2bf6fd17bcbf84e  finnor-os/scripts/project-z/z3/reference.py
+bb3287beaa1891fdd97e29c90c6c9f3f263049a2aad78829c66b7d60197159b8  finnor-os/scripts/project-z/z3/tsconfig.entry-check.json
+52fb2b94a7be24e708920483927a2c4dfd0c52b539235a13a09adfec3d2694c3  finnor-os/scripts/project-z/z3/worker-entry.mts
+220dd81818083a1c9daf1ac21f81f492daf802b77a1ed8371688e35a491579f7  scope-z/phase-evidence/z3/baseline-backend-typecheck.log
+e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  scope-z/phase-evidence/z3/baseline-frontend-typecheck.log
+43a3d180cf01602ccacfc01147d934a5f3a5a437f5767eccb1a1ce933bdaa4d7  scope-z/phase-evidence/z3/build/cli.mjs
+af6b3bbbb8a7d9a8a1878f760abefc5149a35074a1b741a8d4116e591ebe1280  scope-z/phase-evidence/z3/build/entry-check/tsconfig.json
+19eaf43821a7660ec323a87c8457bf74823beb296c39f5e01aa8a683aa50f061  scope-z/phase-evidence/z3/build/entry-check/typecheck.log
+a6cb58cd85c24caf7f6e3b4053b347945e44e23f1d9e2c8c2681066145c21d2f  scope-z/phase-evidence/z3/build/generate-integration-patches.mjs
+aa042a6755f0d1d357f65847f01b43620c1cc0bd563c805d03134d00e23f15d8  scope-z/phase-evidence/z3/build/mount-check.log
+1af35ab0d0e3462d79b424b711c6761548b4633521bed19ea9a0e88b53c9292c  scope-z/phase-evidence/z3/build/mount-check.mjs
+c90961acc6a8689a0372fd21011c6f9933f82ac736c042ee91ee08f837b0fa40  scope-z/phase-evidence/z3/build/rebuild-02.log
+20b5de1dec3afadae12c4528186963629019b0838b679d7415ee4d668ef0c72e  scope-z/phase-evidence/z3/build/run-freeze.sh
+930b716268369fb1226a94702ef0305295e1b757adec07f6456744d3c4dc5646  scope-z/phase-evidence/z3/build/run-verify-batch-2.sh
+5ffcaf16e335a7f81114c18db3be6edd59cdf0118e34a37747dadf45f11b8106  scope-z/phase-evidence/z3/build/run-verify-batch-3.sh
+500ff1667a249cdf2a64880e2c9e59c6a68da71524d4eac9df7895cb77d1f13d  scope-z/phase-evidence/z3/build/run-verify-batch-4.sh
+ab3291f3459a53313e0ec60cf6dc1af69d16a692165c3deaeee932c927357504  scope-z/phase-evidence/z3/build/run-verify-batch-5.sh
+9b16c33d9d9b891de237cdb3e8522322a876dbef825d8c25d66f1d053ce821c8  scope-z/phase-evidence/z3/build/ui-check/tsconfig.json
+19eaf43821a7660ec323a87c8457bf74823beb296c39f5e01aa8a683aa50f061  scope-z/phase-evidence/z3/build/ui-check/typecheck.log
+48b96d5e9b6f27637875cc65f4ce98cccc2b673e396141d2b17ad00e0dc41f46  scope-z/phase-evidence/z3/build/validate-migration-0199.mjs
+582d794551ce5ef348fdf7a42ddc7acefad91bb62ee0c8356cce0cd1a5779d42  scope-z/phase-evidence/z3/build/validate-migration-postz-z3.mjs
+56d6e077f2d449b2c49c35ff0414bb6cfa8bc14dd72afb7082b00e0be2830f21  scope-z/phase-evidence/z3/engineering-plan.md
+d7cdb3a7b5e944d475da6785ce209d4bbc44a1908250781bf361dcd5d3c12e07  scope-z/phase-evidence/z3/freeze-v2.log
+563f852d27ab7ac3c0ae98b7a229c927c0316eaf7f16a7bbc2e2bfc400d16609  scope-z/phase-evidence/z3/freeze.log
+0f1cc6af5de3a006a8880c7550f65c1c0d56e00fdaf34bf8b388c7cbc1e726c6  scope-z/phase-evidence/z3/frozen-public-cases-v2.json
+2a8385ed1b1a2ba4ef9ef5e28dcc960be9fb0cd71fde63f061987d37a13f1515  scope-z/phase-evidence/z3/frozen-public-cases.json
+5c98baa10c9f468693c8e2b799dea4e68a2f21c75dcd59e159d3452ae12d99cc  scope-z/phase-evidence/z3/implementation-absent.log
+0c786c962efab4b25190da3aa97d3c704e711971a3b8276729174190ac85c7d1  scope-z/phase-evidence/z3/independent-verify-migration-2.log
+5badefc780d609e034b0069e838f039a7da0241c4c778ed87ac2d9aa965d3c1a  scope-z/phase-evidence/z3/independent-verify-migration.log
+9623f2d628a3cd78a0547aba7a9376370d5a92fa82bffc76850cced675a1d443  scope-z/phase-evidence/z3/independent-verify-postapply-frontend.log
+e0a2524939fc510b9beaef6b0750fdf9c6f4de672b5ee4079ca969da27736bc8  scope-z/phase-evidence/z3/independent-verify-postapply.log
+c9cecb2310f6f5487d9fbac2e03c2c6b5cb2ca4efd58d76c3f3b5805577e2b09  scope-z/phase-evidence/z3/independent-verify-probe-2.log
+e301625b2544dd4fba28936a90587e03fce58970c08ae42e856d48e488214be8  scope-z/phase-evidence/z3/independent-verify-probe.log
+77c5c4eec1a7064ebeb35ad7759d671e193a470c0d4f55ed8d01e319bd7ac2cb  scope-z/phase-evidence/z3/independent-verify-sweep.log
+79422c88705c272776e9b44bd7eacdf2943ee25ebde61f15b5c7be9bd769b8b0  scope-z/phase-evidence/z3/independent-verify-typechecks.log
+9d48db41a27a4eeb6857d60975bb46713090a5d328d3f5fa1919a8cfd25e347e  scope-z/phase-evidence/z3/install-backend.log
+4cda9aab74bb61cc275bbd84a94cca24f118f3d2c24d060d0b5eed04c55d5f4b  scope-z/phase-evidence/z3/install-frontend.log
+d1f7b746399ae7afb3c2c93227298fe0bd56d9c52a0a9f9d47b8f53e3d7fd1ae  scope-z/phase-evidence/z3/integration-patches/0001-postz-z3-migration.patch
+eafbb4a000b0acc8485c8673ea2930b0e31f339bdc517cf578262f2e141cf371  scope-z/phase-evidence/z3/integration-patches/0001b-bundle-generator-whitelist.patch
+6b3ed6993775014e2b5a94102839e9bd5f49f21da50f568f1e3b4b190c8b1dba  scope-z/phase-evidence/z3/integration-patches/0001c-migrations-bundle.patch
+88e5e3cb9388dbe77a3f4eb18126749c3f7a70bc0f28060538ba4e28d67c9b74  scope-z/phase-evidence/z3/integration-patches/0001d-migration-head.patch
+419a894e719840f4d2a4bbb64c480924004350a66261ed37d018a88f6e90fbfd  scope-z/phase-evidence/z3/integration-patches/0002-compute-contract.patch
+7154da53325f6c6b831bd38f674f913905ffed80e843e3d048113e63dfe40a18  scope-z/phase-evidence/z3/integration-patches/0003-worker-register.patch
+30b512139cefe200fc21cfd8731c8f756cb55381ce0823cd15e7733e23cf1f30  scope-z/phase-evidence/z3/integration-patches/0004-company-brain-route.patch
+e43da3c5de8fc69d47eb9e1878f5eeaedcdc1745c13069c37b72f497982161c3  scope-z/phase-evidence/z3/integration-patches/0005-mounted-work-panel.patch
+5204d21d3b76c42a2dcd8a7219a18ba82f621a90dcee32efc0b27ef6908aced4  scope-z/phase-evidence/z3/integration-patches/0005b-viability-panel-file.patch
+f5060bf324f6025b02e101a286c8e5e30a95b2f8f230cbcffb16c1d4748c1351  scope-z/phase-evidence/z3/integration-patches/README.md
+be45e0a6f4338ba313ffadcd8c3dd85884b9494372bc435d857d32dc850c9f14  scope-z/phase-evidence/z3/integration-patches/ViabilityPanel.tsx
+c63db52f0c01109567b01dc588e82c1ad445ef84c69d9199314a99fa4cbbe32f  scope-z/phase-evidence/z3/integration-patches/manifest.json
+9f4234029d0c01aea276f88a9c909e49d984dc5ab8227f12cd392c67e189b265  scope-z/phase-evidence/z3/integration-patches/postz_z3_viability.sql
+480da2982ec2e4caf1aa52483294a897c9f1b50d76ad6c6620443a8b00dddf4f  scope-z/phase-evidence/z3/mathematical-contract.md
+a2f2f1d935bcc13d6f40da2fddb6b0200718a6cdd1847eb9060d8bf1286ca7c6  scope-z/phase-evidence/z3/migration-ddl-validation-attempt1-supervisor-script.log
+73e316c89099ece1dd42de4145a776b698ffc62179c54e17cb118f5c8c53b50a  scope-z/phase-evidence/z3/migration-ddl-validation-attempt2.log
+bbdc25a87e364e6e6c1bab24073be3ca06381ad39a99e224173ff7fee4bdb97e  scope-z/phase-evidence/z3/migration-ddl-validation.log
+8881f02d022417bad525efaf2f2bb0e1b9907cb90fcd1d637bfe85d4acd14194  scope-z/phase-evidence/z3/native-backend-typecheck.log
+224ae3c427a2ec1fec61df0fd8b6420dc6b5c005b3e2c5cbeadcc9885bace4a9  scope-z/phase-evidence/z3/native-leaves-baseline.sha256
+e84cd8cbc9c33810aca4b9cb1adbec0129feeca3b2184a9e88b0b353f8e16d13  scope-z/phase-evidence/z3/post-code-backend-typecheck-2.log
+be50ba0c182f049f84b6e508e801d1216b0792d0963c888719f53bff8fb39aa2  scope-z/phase-evidence/z3/post-code-backend-typecheck-3.log
+be50ba0c182f049f84b6e508e801d1216b0792d0963c888719f53bff8fb39aa2  scope-z/phase-evidence/z3/post-code-backend-typecheck-4.log
+fd5917dc28226b95e4d3b04bac418b9f4b795d2add96eb2f9e539f7d234ad107  scope-z/phase-evidence/z3/post-code-backend-typecheck.log
+9cb3801f3fcefec786a7dc647560149ae39a0e56e9f93c7d09dc384b10c99b29  scope-z/phase-evidence/z3/pre-code-freeze-correction.md
+fbdf6bc95582853bd93835a961d0a08261c52bf881c35ea44bf3b7faf2682419  scope-z/phase-evidence/z3/probe-checker-hardening.log
+1bbf46e6a48650a3b5e1a96fb395c49e97a985ad1959a55caf2f0f7f2376a3eb  scope-z/phase-evidence/z3/reading-receipt.md
+dc84745280bcb1e94de842d0deaf96e2e022b370f1d88b4c81f046b539f686f4  scope-z/phase-evidence/z3/reconstruction.md
+d295a00ef372c5c0523e20aad3597a825e042196e346f9b77fdddcb20b49c5dd  scope-z/phase-evidence/z3/runs/01-source/critical.json
+37d2ff9ad3c44348aa890c9b652f82f283e07cac4968f839022d194421b02459  scope-z/phase-evidence/z3/runs/01-source/records.ndjson
+612ac11010a208383ce615750ed0654485795c323ef4083ff31398c2394b3989  scope-z/phase-evidence/z3/runs/01-source/report.json
+bf5787bc44fefa3a9069352ed214d437562572901f6eb8adafae697801471b33  scope-z/phase-evidence/z3/runs/02-checker-hardening/critical.json
+183e3fa3cf66d12f03b4efb660f4b437b29fb984de805fabf5b88d508758c37b  scope-z/phase-evidence/z3/runs/02-checker-hardening/records.ndjson
+61adc8485558490f3c4d3306ae1bee1894dae164e6592353fe902390783bb69c  scope-z/phase-evidence/z3/runs/02-checker-hardening/report.json
+349ad96db48f0655dcbee951183fc54e0e51d65db1ca443bc1ef5f9914d5ce43  scope-z/phase-evidence/z3/runs/03-independence-digest/probe-rows.ndjson
+a1d1313717ef6d26374138f33c3d8e30372064802f7eeca641f821d9fb88eb85  scope-z/phase-evidence/z3/runs/03-independence-digest/report.json
+332eca9e1e5b1aaac67187f00dd290fded2d8a5d0176b7e7bd0c024c7fe3e240  scope-z/phase-evidence/z3/runs/03-independent-reverification/critical.json
+b32c1dcba5fbb8844b4a9c5e7875427a1110ec31062f9420c4457d055fb459a0  scope-z/phase-evidence/z3/runs/03-independent-reverification/records.ndjson
+77c5c4eec1a7064ebeb35ad7759d671e193a470c0d4f55ed8d01e319bd7ac2cb  scope-z/phase-evidence/z3/runs/03-independent-reverification/report.json
+a8727fcd8cdee8ceb9e874a1ac5898936d2ae4e08af3b4bfccb009da1db269a9  scope-z/phase-evidence/z3/runs/03b-independence-digest-reverification/probe-rows.ndjson
+64a2e5c6c4c3c0f2eb7950707c2ad0e95f93c005ed08b8e8078c1d90c02a9056  scope-z/phase-evidence/z3/runs/03b-independence-digest-reverification/report.json
+3ddc591b547348baae2c5fef696318444ab90d83c0a885ae0a0d6e8660c28f5f  scope-z/phase-evidence/z3/runs/03c-independence-pinned-toolchain/probe-rows.ndjson
+64a2e5c6c4c3c0f2eb7950707c2ad0e95f93c005ed08b8e8078c1d90c02a9056  scope-z/phase-evidence/z3/runs/03c-independence-pinned-toolchain/report.json
+2a716a295c37230fd625baa39ca36535e094ec25b109bb9fdb7cf6cedddfa527  scope-z/phase-evidence/z3/runs/04-migration-ddl/report-attempt2-public-keyword.json
+7b9958b20be662fd0c2bb28ba4f39b0a9eb192cdc9fc214a0c8ed1df7a200d3f  scope-z/phase-evidence/z3/runs/04-migration-ddl/report.json
+612ac11010a208383ce615750ed0654485795c323ef4083ff31398c2394b3989  scope-z/phase-evidence/z3/source-sweep-01.log
+61adc8485558490f3c4d3306ae1bee1894dae164e6592353fe902390783bb69c  scope-z/phase-evidence/z3/source-sweep-02.log
+3bc6bf7d866df8d7aa47296b60587b562e035a91eb9bf45ef87e623148c68d0b  scripts/project-z/z3/native-e2e.mjs
