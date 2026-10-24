@@ -80,6 +80,8 @@ const tenantLaneClassified = (
 
 /** Exhaustive registry for every production handler registered by the worker. */
 export const PRODUCTION_JOB_CONTRACTS = {
+  learn_strategic_response_model_v1: tenantFixed("INTERACTIVE", "locally_idempotent", "Y2 finite actor-local response learning and independent complete model-set checking; original Work, no effects or protected authority.", {leaseRecovery:"immediate_after_expiry"}),
+  evaluate_strategic_response_v1: tenantFixed("INTERACTIVE", "locally_idempotent", "Y2 coupled S3 prediction and actual S4 search with independent programme checking; original episode and cumulative use limits, no effects.", {leaseRecovery:"immediate_after_expiry"}),
   construct_interaction_protocol_v1: tenantFixed("INTERACTIVE", "locally_idempotent", "Y3 bounded dynamic interaction construction, separately checked full contingent deviations and global beliefs; original episode, no protected or effect authority.", {leaseRecovery:"immediate_after_expiry"}),
   construct_economic_action_theory_v1: tenantFixed("INTERACTIVE", "locally_idempotent", "Y1 finite economic semantic construction, separately checked immutable artifacts and original Work resources; no protected or external effects.", {leaseRecovery:"immediate_after_expiry"}),
   run_economic_programme_v1: tenantFixed("INTERACTIVE", "durably_effect_guarded", "Y1 exact internal S5 reservation-right transitions with immutable S6 origins and separate canonical S7 observation; original effects reconcile before retry."),

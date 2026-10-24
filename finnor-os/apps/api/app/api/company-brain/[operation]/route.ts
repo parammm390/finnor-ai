@@ -55,6 +55,8 @@ import {LEARNING_OPERATIONS,handleLearningOperation} from '@finnor/private-equit
 import {IDENTIFICATION_OPERATIONS,handleIdentificationOperation,identificationResponseError} from '@finnor/private-equity/src/system-identification/api';
 import {EconomicOperations,handleEconomicOperation,readEconomicBody} from '@finnor/private-equity/src/economic-action-theory/api';
 import {EconomicFault} from '@finnor/private-equity/src/economic-action-theory/contracts';
+import {StrategicOperations,handleStrategicOperation,readStrategicBody} from '@finnor/private-equity/src/strategic-response/api';
+import {StrategicFault} from '@finnor/private-equity/src/strategic-response/contracts';
 import {InteractionOperations,handleInteractionOperation,readInteractionBody} from '@finnor/private-equity/src/interaction-synthesis/api';
 import {InteractionFault} from '@finnor/private-equity/src/interaction-synthesis/contracts';
 
@@ -149,6 +151,7 @@ function response(value: unknown, status = 200): Response {
 }
 
 function requestError(error: unknown): Response {
+  if(error instanceof StrategicFault)return response({code:error.code},error.status);
   if(error instanceof InteractionFault)return response({code:error.code},error.status);
   if(error instanceof EconomicFault)return response({code:error.code},error.status);
   if (error instanceof PeDomainError && error.code.startsWith("PE_HANDOFF_")) {
@@ -210,6 +213,11 @@ function checkedRef(value: unknown): CompanyBrainObjectRef {
 
 export async function POST(req: Request, { params }: { params: Promise<{ operation: string }> }): Promise<Response> {
   try {const route=await params;
+    if(StrategicOperations.some(operation=>operation===route.operation)){
+      const auth=await requireContext(req),body=await readStrategicBody(req);
+      const result=await handleStrategicOperation({auth},route.operation,body);
+      return response(result.body,result.status);
+    }
     if(InteractionOperations.some(operation=>operation===route.operation)){
       const auth=await requireContext(req),body=await readInteractionBody(req);
       const result=await handleInteractionOperation({auth},route.operation,body);

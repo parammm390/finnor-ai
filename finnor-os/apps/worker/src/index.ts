@@ -3,6 +3,7 @@ import {buildEnterpriseApplicationJob} from '../../../packages/private-equity/sr
 import {compileLearnedPolicyJob} from '../../../packages/private-equity/src/policy-learning/worker';
 import {identifyDigitalSystemJob} from '../../../packages/private-equity/src/system-identification/worker';
 import {constructEconomicActionTheoryJob} from '../../../packages/private-equity/src/economic-action-theory/worker';
+import {strategicResponseJob} from '../../../packages/private-equity/src/strategic-response/worker';
 import {runEconomicProgrammeJob} from '../../../packages/private-equity/src/economic-action-theory/programme-worker';
 import {constructInteractionProtocolJob} from '../../../packages/private-equity/src/interaction-synthesis/worker';
 import {handleBranch} from '@finnor/private-equity/src/branch-fabric/worker';
@@ -68,6 +69,8 @@ import { installWorkerDrainSignals } from "./drain-signals";
 
 export function createWorker(): JobQueue {
   const queue = new JobQueue();
+  queue.register('learn_strategic_response_model_v1',strategicResponseJob,PRODUCTION_JOB_CONTRACTS.learn_strategic_response_model_v1);
+  queue.register('evaluate_strategic_response_v1',strategicResponseJob,PRODUCTION_JOB_CONTRACTS.evaluate_strategic_response_v1);
   queue.register('construct_interaction_protocol_v1',constructInteractionProtocolJob,PRODUCTION_JOB_CONTRACTS.construct_interaction_protocol_v1);
   queue.register('construct_economic_action_theory_v1',constructEconomicActionTheoryJob,PRODUCTION_JOB_CONTRACTS.construct_economic_action_theory_v1);
   queue.register('run_economic_programme_v1',runEconomicProgrammeJob,PRODUCTION_JOB_CONTRACTS.run_economic_programme_v1);

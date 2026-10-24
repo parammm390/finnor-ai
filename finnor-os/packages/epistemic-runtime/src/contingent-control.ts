@@ -90,7 +90,7 @@ export async function synthesizeContingentControl(input:{mandate:unknown;problem
      condition.tokens.includes(o.token)&&o.availablePeriod<=period)))return 'REQUIRED_OBSERVATION_NOT_AVAILABLE_OR_TOKEN_REFUSED';
     return null;
    }
-   function advance(paths:Path[],action:ControlAction,t:number):Path[] {
+   function advance(paths:Path[],action:ControlAction,t:number,history:string[]):Path[] {
     const output:Path[]=[];
     for(const old of paths){tick();const path:Path={...old,world:old.world,schedule:structuredClone(old.schedule),locks:{...old.locks},spent:{...old.spent},occupancy:structuredClone(old.occupancy),pending:[...old.pending],observations:[...old.observations]};
      for(const id of dim){path.spent[id]!+=action.resources[id]!;for(let k=t;k<Math.min(h,t+action.occupationPeriods);k++)path.occupancy[id]![k]!+=action.occupancy[id]!;}
@@ -100,7 +100,7 @@ export async function synthesizeContingentControl(input:{mandate:unknown;problem
      path.liability+=action.tailLiability;
      const exposures=Object.fromEntries(d.exposureIds.map(id=>[id,path.schedule[id]![t]!]));
      const previous=path.world;
-     path.world=d.advance(path.world,exposures,t-startPeriod);transitions++;tick();
+     path.world=d.advance(path.world,exposures,t-startPeriod,{problemId:p.id,actionId:action.id,actionHistory:history,mandateRef:m.ref});transitions++;tick();
      if(!path.world.supported){unsupportedSeen=true;throw new Unsupported('MODEL_TRAJECTORY_OUTSIDE_JOINT_SUPPORT');}
      if(profit){
       let accounting:ReturnType<typeof advanceOperatingProfitCourse>;
@@ -129,7 +129,7 @@ export async function synthesizeContingentControl(input:{mandate:unknown;problem
     return Math.min(...values);
    }
    function finish(paths:Path[],action:ControlAction,t:number,history:string[],stopped:boolean,onlyStop=false):Tree {
-    const advanced=advance(paths,action,t),groups=new Map<string,Path[]>();
+    const advanced=advance(paths,action,t,history),groups=new Map<string,Path[]>();
     for(const path of advanced){const next=pendingDelivery(path,t+1),key=observationKey(next.observations);const group=groups.get(key)??[];group.push(next);groups.set(key,group);}
     const children:Tree[]=[];
     let value:number;

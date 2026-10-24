@@ -8656,6 +8656,1025 @@
         ],
         "additionalProperties": false
       },
+      "response-model-submit": {
+        "type": "object",
+        "properties": {
+          "schema": {
+            "type": "string",
+            "const": "finnor.strategic-response-request.v1"
+          },
+          "root": {
+            "type": "object",
+            "properties": {
+              "entityType": {
+                "type": "string",
+                "enum": [
+                  "pe_strategy",
+                  "pe_opportunity",
+                  "pe_deal",
+                  "pe_fund",
+                  "pe_vehicle",
+                  "external_organization",
+                  "pe_portfolio_holding"
+                ]
+              },
+              "entityId": {
+                "type": "string",
+                "format": "uuid"
+              }
+            },
+            "required": [
+              "entityType",
+              "entityId"
+            ],
+            "additionalProperties": false
+          },
+          "workId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "evidence": {
+            "type": "object",
+            "properties": {
+              "sourceId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "versionId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "contentDigest": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            },
+            "required": [
+              "sourceId",
+              "versionId",
+              "contentDigest"
+            ],
+            "additionalProperties": false
+          },
+          "problem": {
+            "type": "object",
+            "properties": {
+              "schema": {
+                "type": "string",
+                "const": "finnor.strategic-response-problem.v1"
+              },
+              "actors": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,47}$"
+                    },
+                    "role": {
+                      "type": "string",
+                      "enum": [
+                        "LENDER",
+                        "CAPITAL_PROVIDER",
+                        "COUNTERPARTY",
+                        "APPROVER"
+                      ]
+                    },
+                    "privateInformation": {
+                      "type": "string",
+                      "const": "OWN_OUTSIDE_OPTION_AND_OWN_PREVIOUS_CHOICE"
+                    },
+                    "outcomeVisibility": {
+                      "type": "string",
+                      "const": "PUBLIC"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "role",
+                    "privateInformation",
+                    "outcomeVisibility"
+                  ],
+                  "additionalProperties": false
+                },
+                "minItems": 2,
+                "maxItems": 3
+              },
+              "rules": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,47}$"
+                    },
+                    "incentive": {
+                      "type": "integer",
+                      "minimum": -32,
+                      "maximum": 32
+                    },
+                    "interaction": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 2
+                    },
+                    "peerDisclosure": {
+                      "type": "string",
+                      "enum": [
+                        "LAGGED_PEER_COUNT",
+                        "NONE"
+                      ]
+                    },
+                    "settlement": {
+                      "type": "string",
+                      "const": "ALL_ACTORS_PARTICIPATE"
+                    },
+                    "allocation": {
+                      "type": "string",
+                      "const": "JOINT_ALL_OR_NONE"
+                    },
+                    "transfer": {
+                      "type": "string",
+                      "const": "DECLARED_FIXED_INCENTIVE"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "incentive",
+                    "interaction",
+                    "peerDisclosure",
+                    "settlement",
+                    "allocation",
+                    "transfer"
+                  ],
+                  "additionalProperties": false
+                },
+                "minItems": 1,
+                "maxItems": 8
+              },
+              "training": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,47}$"
+                    },
+                    "origin": {
+                      "type": "string",
+                      "enum": [
+                        "OBSERVED",
+                        "SIMULATED",
+                        "REQUESTED_EXPERIMENT"
+                      ]
+                    },
+                    "assignment": {
+                      "type": "string",
+                      "enum": [
+                        "INCUMBENT_OBSERVATIONAL",
+                        "PERMITTED_RANDOMIZED",
+                        "CONFOUNDED"
+                      ]
+                    },
+                    "execution": {
+                      "type": "string",
+                      "enum": [
+                        "OBSERVED",
+                        "REQUESTED"
+                      ]
+                    },
+                    "observedAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "initial": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "number",
+                        "enum": [
+                          0,
+                          1
+                        ]
+                      },
+                      "propertyNames": {
+                        "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,47}$"
+                      }
+                    },
+                    "rounds": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "ruleId": {
+                            "type": "string",
+                            "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,47}$"
+                          },
+                          "outsideOptions": {
+                            "type": "object",
+                            "additionalProperties": {
+                              "type": "integer",
+                              "minimum": -32,
+                              "maximum": 32
+                            },
+                            "propertyNames": {
+                              "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,47}$"
+                            }
+                          },
+                          "commonSignal": {
+                            "type": "integer",
+                            "minimum": -32,
+                            "maximum": 32
+                          },
+                          "choices": {
+                            "type": "object",
+                            "additionalProperties": {
+                              "type": "number",
+                              "enum": [
+                                0,
+                                1
+                              ]
+                            },
+                            "propertyNames": {
+                              "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,47}$"
+                            }
+                          }
+                        },
+                        "required": [
+                          "ruleId",
+                          "outsideOptions",
+                          "commonSignal",
+                          "choices"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "minItems": 1,
+                      "maxItems": 4
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "origin",
+                    "assignment",
+                    "execution",
+                    "observedAt",
+                    "initial",
+                    "rounds"
+                  ],
+                  "additionalProperties": false
+                },
+                "minItems": 64,
+                "maxItems": 256
+              },
+              "holdout": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,47}$"
+                    },
+                    "origin": {
+                      "type": "string",
+                      "enum": [
+                        "OBSERVED",
+                        "SIMULATED",
+                        "REQUESTED_EXPERIMENT"
+                      ]
+                    },
+                    "assignment": {
+                      "type": "string",
+                      "enum": [
+                        "INCUMBENT_OBSERVATIONAL",
+                        "PERMITTED_RANDOMIZED",
+                        "CONFOUNDED"
+                      ]
+                    },
+                    "execution": {
+                      "type": "string",
+                      "enum": [
+                        "OBSERVED",
+                        "REQUESTED"
+                      ]
+                    },
+                    "observedAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "initial": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "number",
+                        "enum": [
+                          0,
+                          1
+                        ]
+                      },
+                      "propertyNames": {
+                        "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,47}$"
+                      }
+                    },
+                    "rounds": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "ruleId": {
+                            "type": "string",
+                            "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,47}$"
+                          },
+                          "outsideOptions": {
+                            "type": "object",
+                            "additionalProperties": {
+                              "type": "integer",
+                              "minimum": -32,
+                              "maximum": 32
+                            },
+                            "propertyNames": {
+                              "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,47}$"
+                            }
+                          },
+                          "commonSignal": {
+                            "type": "integer",
+                            "minimum": -32,
+                            "maximum": 32
+                          },
+                          "choices": {
+                            "type": "object",
+                            "additionalProperties": {
+                              "type": "number",
+                              "enum": [
+                                0,
+                                1
+                              ]
+                            },
+                            "propertyNames": {
+                              "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,47}$"
+                            }
+                          }
+                        },
+                        "required": [
+                          "ruleId",
+                          "outsideOptions",
+                          "commonSignal",
+                          "choices"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "minItems": 1,
+                      "maxItems": 4
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "origin",
+                    "assignment",
+                    "execution",
+                    "observedAt",
+                    "initial",
+                    "rounds"
+                  ],
+                  "additionalProperties": false
+                },
+                "minItems": 20,
+                "maxItems": 256
+              },
+              "assumptions": {
+                "type": "object",
+                "properties": {
+                  "sequentialExogeneity": {
+                    "type": "boolean"
+                  },
+                  "completeActorInformation": {
+                    "type": "boolean"
+                  },
+                  "stablePreferences": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "sequentialExogeneity",
+                  "completeActorInformation",
+                  "stablePreferences"
+                ],
+                "additionalProperties": false
+              },
+              "transport": {
+                "type": "object",
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "CONDITIONAL",
+                      "WITHDRAWN"
+                    ]
+                  },
+                  "contexts": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,47}$"
+                    },
+                    "minItems": 1,
+                    "maxItems": 8
+                  },
+                  "outsideOptionRange": {
+                    "type": "array",
+                    "minItems": 2,
+                    "maxItems": 2,
+                    "items": [
+                      {
+                        "type": "integer",
+                        "minimum": -32,
+                        "maximum": 32
+                      },
+                      {
+                        "type": "integer",
+                        "minimum": -32,
+                        "maximum": 32
+                      }
+                    ]
+                  },
+                  "commonSignalRange": {
+                    "type": "array",
+                    "minItems": 2,
+                    "maxItems": 2,
+                    "items": [
+                      {
+                        "type": "integer",
+                        "minimum": -32,
+                        "maximum": 32
+                      },
+                      {
+                        "type": "integer",
+                        "minimum": -32,
+                        "maximum": 32
+                      }
+                    ]
+                  },
+                  "validUntil": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "omittedModelGap": {
+                    "type": "string",
+                    "const": "UNKNOWN"
+                  }
+                },
+                "required": [
+                  "status",
+                  "contexts",
+                  "outsideOptionRange",
+                  "commonSignalRange",
+                  "validUntil",
+                  "omittedModelGap"
+                ],
+                "additionalProperties": false
+              },
+              "payoff": {
+                "type": "object",
+                "properties": {
+                  "unit": {
+                    "type": "string",
+                    "pattern": "^[A-Z]{3}$"
+                  },
+                  "currency": {
+                    "type": "string",
+                    "pattern": "^[A-Z]{3}$"
+                  },
+                  "scale": {
+                    "type": "string",
+                    "const": "1"
+                  },
+                  "entityRoot": {
+                    "type": "object",
+                    "properties": {
+                      "entityType": {
+                        "type": "string",
+                        "enum": [
+                          "pe_strategy",
+                          "pe_opportunity",
+                          "pe_deal",
+                          "pe_fund",
+                          "pe_vehicle",
+                          "external_organization",
+                          "pe_portfolio_holding"
+                        ]
+                      },
+                      "entityId": {
+                        "type": "string",
+                        "format": "uuid"
+                      }
+                    },
+                    "required": [
+                      "entityType",
+                      "entityId"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "accountingBasis": {
+                    "type": "string",
+                    "const": "GROSS_JOINT_PAYOFF_BEFORE_ACTION_COSTS"
+                  },
+                  "jointPayoff": {
+                    "type": "string",
+                    "pattern": "^(0|[1-9][0-9]{0,6})$"
+                  }
+                },
+                "required": [
+                  "unit",
+                  "currency",
+                  "scale",
+                  "entityRoot",
+                  "accountingBasis",
+                  "jointPayoff"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "schema",
+              "actors",
+              "rules",
+              "training",
+              "holdout",
+              "assumptions",
+              "transport",
+              "payoff"
+            ],
+            "additionalProperties": false
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "parentModelId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "schema",
+          "root",
+          "workId",
+          "evidence",
+          "problem",
+          "idempotencyKey"
+        ],
+        "additionalProperties": false
+      },
+      "response-model-list": {
+        "type": "object",
+        "properties": {
+          "root": {
+            "type": "object",
+            "properties": {
+              "entityType": {
+                "type": "string",
+                "enum": [
+                  "pe_strategy",
+                  "pe_opportunity",
+                  "pe_deal",
+                  "pe_fund",
+                  "pe_vehicle",
+                  "external_organization",
+                  "pe_portfolio_holding"
+                ]
+              },
+              "entityId": {
+                "type": "string",
+                "format": "uuid"
+              }
+            },
+            "required": [
+              "entityType",
+              "entityId"
+            ],
+            "additionalProperties": false
+          },
+          "workId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "root",
+          "workId"
+        ],
+        "additionalProperties": false
+      },
+      "response-model-read": {
+        "type": "object",
+        "properties": {
+          "modelId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "modelId"
+        ],
+        "additionalProperties": false
+      },
+      "response-model-admit": {
+        "type": "object",
+        "properties": {
+          "modelId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "modelId"
+        ],
+        "additionalProperties": false
+      },
+      "response-model-resume": {
+        "type": "object",
+        "properties": {
+          "modelId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "modelId"
+        ],
+        "additionalProperties": false
+      },
+      "response-model-cancel": {
+        "type": "object",
+        "properties": {
+          "modelId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "modelId"
+        ],
+        "additionalProperties": false
+      },
+      "response-model-artifact": {
+        "type": "object",
+        "properties": {
+          "modelId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "modelId"
+        ],
+        "additionalProperties": false
+      },
+      "response-model-compare": {
+        "type": "object",
+        "properties": {
+          "modelId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "modelId"
+        ],
+        "additionalProperties": false
+      },
+      "response-forecast": {
+        "type": "object",
+        "properties": {
+          "modelId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "query": {
+            "type": "object",
+            "properties": {
+              "context": {
+                "type": "string",
+                "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,47}$"
+              },
+              "ruleIds": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,47}$"
+                },
+                "minItems": 1,
+                "maxItems": 4
+              },
+              "initial": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "number",
+                  "enum": [
+                    0,
+                    1
+                  ]
+                },
+                "propertyNames": {
+                  "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,47}$"
+                }
+              },
+              "jointPrivatePaths": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,47}$"
+                    },
+                    "outsideOptions": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "array",
+                        "items": {
+                          "type": "integer",
+                          "minimum": -32,
+                          "maximum": 32
+                        },
+                        "minItems": 1,
+                        "maxItems": 4
+                      },
+                      "propertyNames": {
+                        "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,47}$"
+                      }
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "outsideOptions"
+                  ],
+                  "additionalProperties": false
+                },
+                "minItems": 1,
+                "maxItems": 4
+              },
+              "sharedSignalPaths": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,47}$"
+                    },
+                    "values": {
+                      "type": "array",
+                      "items": {
+                        "type": "integer",
+                        "minimum": -32,
+                        "maximum": 32
+                      },
+                      "minItems": 1,
+                      "maxItems": 4
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "values"
+                  ],
+                  "additionalProperties": false
+                },
+                "minItems": 1,
+                "maxItems": 4
+              }
+            },
+            "required": [
+              "context",
+              "ruleIds",
+              "initial",
+              "jointPrivatePaths",
+              "sharedSignalPaths"
+            ],
+            "additionalProperties": false
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          }
+        },
+        "required": [
+          "modelId",
+          "query",
+          "idempotencyKey"
+        ],
+        "additionalProperties": false
+      },
+      "response-programme": {
+        "type": "object",
+        "properties": {
+          "modelId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "query": {
+            "type": "object",
+            "properties": {
+              "context": {
+                "type": "string",
+                "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,47}$"
+              },
+              "ruleIds": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,47}$"
+                },
+                "minItems": 1,
+                "maxItems": 4
+              },
+              "initial": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "number",
+                  "enum": [
+                    0,
+                    1
+                  ]
+                },
+                "propertyNames": {
+                  "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,47}$"
+                }
+              },
+              "jointPrivatePaths": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,47}$"
+                    },
+                    "outsideOptions": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "array",
+                        "items": {
+                          "type": "integer",
+                          "minimum": -32,
+                          "maximum": 32
+                        },
+                        "minItems": 1,
+                        "maxItems": 4
+                      },
+                      "propertyNames": {
+                        "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,47}$"
+                      }
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "outsideOptions"
+                  ],
+                  "additionalProperties": false
+                },
+                "minItems": 1,
+                "maxItems": 4
+              },
+              "sharedSignalPaths": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,47}$"
+                    },
+                    "values": {
+                      "type": "array",
+                      "items": {
+                        "type": "integer",
+                        "minimum": -32,
+                        "maximum": 32
+                      },
+                      "minItems": 1,
+                      "maxItems": 4
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "values"
+                  ],
+                  "additionalProperties": false
+                },
+                "minItems": 1,
+                "maxItems": 4
+              }
+            },
+            "required": [
+              "context",
+              "ruleIds",
+              "initial",
+              "jointPrivatePaths",
+              "sharedSignalPaths"
+            ],
+            "additionalProperties": false
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "mandate": {},
+          "problem": {},
+          "actionRules": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "actionId": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,47}$"
+                },
+                "ruleIds": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,47}$"
+                  },
+                  "minItems": 1,
+                  "maxItems": 4
+                }
+              },
+              "required": [
+                "actionId",
+                "ruleIds"
+              ],
+              "additionalProperties": false
+            },
+            "maxItems": 8
+          }
+        },
+        "required": [
+          "modelId",
+          "query",
+          "idempotencyKey",
+          "actionRules"
+        ],
+        "additionalProperties": false
+      },
+      "response-use-read": {
+        "type": "object",
+        "properties": {
+          "modelId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "useId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "modelId",
+          "useId"
+        ],
+        "additionalProperties": false
+      },
+      "response-use-resume": {
+        "type": "object",
+        "properties": {
+          "modelId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "useId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "modelId",
+          "useId"
+        ],
+        "additionalProperties": false
+      },
+      "response-use-cancel": {
+        "type": "object",
+        "properties": {
+          "modelId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "useId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "modelId",
+          "useId"
+        ],
+        "additionalProperties": false
+      },
       "interaction-submit": {
         "type": "object",
         "properties": {
@@ -19555,6 +20574,19 @@
                 "economic-programme-reconcile",
                 "economic-reservation-create",
                 "economic-reservation-read",
+                "response-model-submit",
+                "response-model-list",
+                "response-model-read",
+                "response-model-admit",
+                "response-model-resume",
+                "response-model-cancel",
+                "response-model-artifact",
+                "response-model-compare",
+                "response-forecast",
+                "response-programme",
+                "response-use-read",
+                "response-use-resume",
+                "response-use-cancel",
                 "interaction-submit",
                 "interaction-read",
                 "interaction-list",
@@ -31825,6 +32857,708 @@
         "responses": {
           "201": {
             "description": "New Core Document and first immutable version instantiated with lineage"
+          }
+        }
+      }
+    },
+    "/api/company-brain/response-model-submit": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/response-model-submit"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current scoped response model set, development admission, exact artifact or retained use history. No field qualification or effects."
+          },
+          "202": {
+            "description": "Original durable learning, joint prediction or actual S4 programme evaluation accepted. Not completion."
+          },
+          "400": {
+            "description": "Strict data-only model or original S4 contract required."
+          },
+          "401": {
+            "description": "Current signed bearer required before body read."
+          },
+          "403": {
+            "description": "Current authority or disposable development profile unavailable."
+          },
+          "404": {
+            "description": "Absent or unauthorized tenant/principal/root/Work resource."
+          },
+          "408": {
+            "description": "Authenticated body deadline exceeded."
+          },
+          "409": {
+            "description": "Original episode, currentness, cumulative limits or idempotency conflict."
+          },
+          "413": {
+            "description": "Bounded request or retained resources exceeded."
+          },
+          "422": {
+            "description": "Canonical meaning, model alternatives, checking, typed admission or transport prerequisite failed."
+          },
+          "503": {
+            "description": "Pinned checker or runtime unavailable."
+          }
+        }
+      }
+    },
+    "/api/company-brain/response-model-list": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/response-model-list"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current scoped response model set, development admission, exact artifact or retained use history. No field qualification or effects."
+          },
+          "202": {
+            "description": "Original durable learning, joint prediction or actual S4 programme evaluation accepted. Not completion."
+          },
+          "400": {
+            "description": "Strict data-only model or original S4 contract required."
+          },
+          "401": {
+            "description": "Current signed bearer required before body read."
+          },
+          "403": {
+            "description": "Current authority or disposable development profile unavailable."
+          },
+          "404": {
+            "description": "Absent or unauthorized tenant/principal/root/Work resource."
+          },
+          "408": {
+            "description": "Authenticated body deadline exceeded."
+          },
+          "409": {
+            "description": "Original episode, currentness, cumulative limits or idempotency conflict."
+          },
+          "413": {
+            "description": "Bounded request or retained resources exceeded."
+          },
+          "422": {
+            "description": "Canonical meaning, model alternatives, checking, typed admission or transport prerequisite failed."
+          },
+          "503": {
+            "description": "Pinned checker or runtime unavailable."
+          }
+        }
+      }
+    },
+    "/api/company-brain/response-model-read": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/response-model-read"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current scoped response model set, development admission, exact artifact or retained use history. No field qualification or effects."
+          },
+          "202": {
+            "description": "Original durable learning, joint prediction or actual S4 programme evaluation accepted. Not completion."
+          },
+          "400": {
+            "description": "Strict data-only model or original S4 contract required."
+          },
+          "401": {
+            "description": "Current signed bearer required before body read."
+          },
+          "403": {
+            "description": "Current authority or disposable development profile unavailable."
+          },
+          "404": {
+            "description": "Absent or unauthorized tenant/principal/root/Work resource."
+          },
+          "408": {
+            "description": "Authenticated body deadline exceeded."
+          },
+          "409": {
+            "description": "Original episode, currentness, cumulative limits or idempotency conflict."
+          },
+          "413": {
+            "description": "Bounded request or retained resources exceeded."
+          },
+          "422": {
+            "description": "Canonical meaning, model alternatives, checking, typed admission or transport prerequisite failed."
+          },
+          "503": {
+            "description": "Pinned checker or runtime unavailable."
+          }
+        }
+      }
+    },
+    "/api/company-brain/response-model-admit": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/response-model-admit"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current scoped response model set, development admission, exact artifact or retained use history. No field qualification or effects."
+          },
+          "202": {
+            "description": "Original durable learning, joint prediction or actual S4 programme evaluation accepted. Not completion."
+          },
+          "400": {
+            "description": "Strict data-only model or original S4 contract required."
+          },
+          "401": {
+            "description": "Current signed bearer required before body read."
+          },
+          "403": {
+            "description": "Current authority or disposable development profile unavailable."
+          },
+          "404": {
+            "description": "Absent or unauthorized tenant/principal/root/Work resource."
+          },
+          "408": {
+            "description": "Authenticated body deadline exceeded."
+          },
+          "409": {
+            "description": "Original episode, currentness, cumulative limits or idempotency conflict."
+          },
+          "413": {
+            "description": "Bounded request or retained resources exceeded."
+          },
+          "422": {
+            "description": "Canonical meaning, model alternatives, checking, typed admission or transport prerequisite failed."
+          },
+          "503": {
+            "description": "Pinned checker or runtime unavailable."
+          }
+        }
+      }
+    },
+    "/api/company-brain/response-model-resume": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/response-model-resume"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current scoped response model set, development admission, exact artifact or retained use history. No field qualification or effects."
+          },
+          "202": {
+            "description": "Original durable learning, joint prediction or actual S4 programme evaluation accepted. Not completion."
+          },
+          "400": {
+            "description": "Strict data-only model or original S4 contract required."
+          },
+          "401": {
+            "description": "Current signed bearer required before body read."
+          },
+          "403": {
+            "description": "Current authority or disposable development profile unavailable."
+          },
+          "404": {
+            "description": "Absent or unauthorized tenant/principal/root/Work resource."
+          },
+          "408": {
+            "description": "Authenticated body deadline exceeded."
+          },
+          "409": {
+            "description": "Original episode, currentness, cumulative limits or idempotency conflict."
+          },
+          "413": {
+            "description": "Bounded request or retained resources exceeded."
+          },
+          "422": {
+            "description": "Canonical meaning, model alternatives, checking, typed admission or transport prerequisite failed."
+          },
+          "503": {
+            "description": "Pinned checker or runtime unavailable."
+          }
+        }
+      }
+    },
+    "/api/company-brain/response-model-cancel": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/response-model-cancel"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current scoped response model set, development admission, exact artifact or retained use history. No field qualification or effects."
+          },
+          "202": {
+            "description": "Original durable learning, joint prediction or actual S4 programme evaluation accepted. Not completion."
+          },
+          "400": {
+            "description": "Strict data-only model or original S4 contract required."
+          },
+          "401": {
+            "description": "Current signed bearer required before body read."
+          },
+          "403": {
+            "description": "Current authority or disposable development profile unavailable."
+          },
+          "404": {
+            "description": "Absent or unauthorized tenant/principal/root/Work resource."
+          },
+          "408": {
+            "description": "Authenticated body deadline exceeded."
+          },
+          "409": {
+            "description": "Original episode, currentness, cumulative limits or idempotency conflict."
+          },
+          "413": {
+            "description": "Bounded request or retained resources exceeded."
+          },
+          "422": {
+            "description": "Canonical meaning, model alternatives, checking, typed admission or transport prerequisite failed."
+          },
+          "503": {
+            "description": "Pinned checker or runtime unavailable."
+          }
+        }
+      }
+    },
+    "/api/company-brain/response-model-artifact": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/response-model-artifact"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current scoped response model set, development admission, exact artifact or retained use history. No field qualification or effects."
+          },
+          "202": {
+            "description": "Original durable learning, joint prediction or actual S4 programme evaluation accepted. Not completion."
+          },
+          "400": {
+            "description": "Strict data-only model or original S4 contract required."
+          },
+          "401": {
+            "description": "Current signed bearer required before body read."
+          },
+          "403": {
+            "description": "Current authority or disposable development profile unavailable."
+          },
+          "404": {
+            "description": "Absent or unauthorized tenant/principal/root/Work resource."
+          },
+          "408": {
+            "description": "Authenticated body deadline exceeded."
+          },
+          "409": {
+            "description": "Original episode, currentness, cumulative limits or idempotency conflict."
+          },
+          "413": {
+            "description": "Bounded request or retained resources exceeded."
+          },
+          "422": {
+            "description": "Canonical meaning, model alternatives, checking, typed admission or transport prerequisite failed."
+          },
+          "503": {
+            "description": "Pinned checker or runtime unavailable."
+          }
+        }
+      }
+    },
+    "/api/company-brain/response-model-compare": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/response-model-compare"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current scoped response model set, development admission, exact artifact or retained use history. No field qualification or effects."
+          },
+          "202": {
+            "description": "Original durable learning, joint prediction or actual S4 programme evaluation accepted. Not completion."
+          },
+          "400": {
+            "description": "Strict data-only model or original S4 contract required."
+          },
+          "401": {
+            "description": "Current signed bearer required before body read."
+          },
+          "403": {
+            "description": "Current authority or disposable development profile unavailable."
+          },
+          "404": {
+            "description": "Absent or unauthorized tenant/principal/root/Work resource."
+          },
+          "408": {
+            "description": "Authenticated body deadline exceeded."
+          },
+          "409": {
+            "description": "Original episode, currentness, cumulative limits or idempotency conflict."
+          },
+          "413": {
+            "description": "Bounded request or retained resources exceeded."
+          },
+          "422": {
+            "description": "Canonical meaning, model alternatives, checking, typed admission or transport prerequisite failed."
+          },
+          "503": {
+            "description": "Pinned checker or runtime unavailable."
+          }
+        }
+      }
+    },
+    "/api/company-brain/response-forecast": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/response-forecast"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current scoped response model set, development admission, exact artifact or retained use history. No field qualification or effects."
+          },
+          "202": {
+            "description": "Original durable learning, joint prediction or actual S4 programme evaluation accepted. Not completion."
+          },
+          "400": {
+            "description": "Strict data-only model or original S4 contract required."
+          },
+          "401": {
+            "description": "Current signed bearer required before body read."
+          },
+          "403": {
+            "description": "Current authority or disposable development profile unavailable."
+          },
+          "404": {
+            "description": "Absent or unauthorized tenant/principal/root/Work resource."
+          },
+          "408": {
+            "description": "Authenticated body deadline exceeded."
+          },
+          "409": {
+            "description": "Original episode, currentness, cumulative limits or idempotency conflict."
+          },
+          "413": {
+            "description": "Bounded request or retained resources exceeded."
+          },
+          "422": {
+            "description": "Canonical meaning, model alternatives, checking, typed admission or transport prerequisite failed."
+          },
+          "503": {
+            "description": "Pinned checker or runtime unavailable."
+          }
+        }
+      }
+    },
+    "/api/company-brain/response-programme": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/response-programme"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current scoped response model set, development admission, exact artifact or retained use history. No field qualification or effects."
+          },
+          "202": {
+            "description": "Original durable learning, joint prediction or actual S4 programme evaluation accepted. Not completion."
+          },
+          "400": {
+            "description": "Strict data-only model or original S4 contract required."
+          },
+          "401": {
+            "description": "Current signed bearer required before body read."
+          },
+          "403": {
+            "description": "Current authority or disposable development profile unavailable."
+          },
+          "404": {
+            "description": "Absent or unauthorized tenant/principal/root/Work resource."
+          },
+          "408": {
+            "description": "Authenticated body deadline exceeded."
+          },
+          "409": {
+            "description": "Original episode, currentness, cumulative limits or idempotency conflict."
+          },
+          "413": {
+            "description": "Bounded request or retained resources exceeded."
+          },
+          "422": {
+            "description": "Canonical meaning, model alternatives, checking, typed admission or transport prerequisite failed."
+          },
+          "503": {
+            "description": "Pinned checker or runtime unavailable."
+          }
+        }
+      }
+    },
+    "/api/company-brain/response-use-read": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/response-use-read"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current scoped response model set, development admission, exact artifact or retained use history. No field qualification or effects."
+          },
+          "202": {
+            "description": "Original durable learning, joint prediction or actual S4 programme evaluation accepted. Not completion."
+          },
+          "400": {
+            "description": "Strict data-only model or original S4 contract required."
+          },
+          "401": {
+            "description": "Current signed bearer required before body read."
+          },
+          "403": {
+            "description": "Current authority or disposable development profile unavailable."
+          },
+          "404": {
+            "description": "Absent or unauthorized tenant/principal/root/Work resource."
+          },
+          "408": {
+            "description": "Authenticated body deadline exceeded."
+          },
+          "409": {
+            "description": "Original episode, currentness, cumulative limits or idempotency conflict."
+          },
+          "413": {
+            "description": "Bounded request or retained resources exceeded."
+          },
+          "422": {
+            "description": "Canonical meaning, model alternatives, checking, typed admission or transport prerequisite failed."
+          },
+          "503": {
+            "description": "Pinned checker or runtime unavailable."
+          }
+        }
+      }
+    },
+    "/api/company-brain/response-use-resume": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/response-use-resume"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current scoped response model set, development admission, exact artifact or retained use history. No field qualification or effects."
+          },
+          "202": {
+            "description": "Original durable learning, joint prediction or actual S4 programme evaluation accepted. Not completion."
+          },
+          "400": {
+            "description": "Strict data-only model or original S4 contract required."
+          },
+          "401": {
+            "description": "Current signed bearer required before body read."
+          },
+          "403": {
+            "description": "Current authority or disposable development profile unavailable."
+          },
+          "404": {
+            "description": "Absent or unauthorized tenant/principal/root/Work resource."
+          },
+          "408": {
+            "description": "Authenticated body deadline exceeded."
+          },
+          "409": {
+            "description": "Original episode, currentness, cumulative limits or idempotency conflict."
+          },
+          "413": {
+            "description": "Bounded request or retained resources exceeded."
+          },
+          "422": {
+            "description": "Canonical meaning, model alternatives, checking, typed admission or transport prerequisite failed."
+          },
+          "503": {
+            "description": "Pinned checker or runtime unavailable."
+          }
+        }
+      }
+    },
+    "/api/company-brain/response-use-cancel": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/response-use-cancel"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current scoped response model set, development admission, exact artifact or retained use history. No field qualification or effects."
+          },
+          "202": {
+            "description": "Original durable learning, joint prediction or actual S4 programme evaluation accepted. Not completion."
+          },
+          "400": {
+            "description": "Strict data-only model or original S4 contract required."
+          },
+          "401": {
+            "description": "Current signed bearer required before body read."
+          },
+          "403": {
+            "description": "Current authority or disposable development profile unavailable."
+          },
+          "404": {
+            "description": "Absent or unauthorized tenant/principal/root/Work resource."
+          },
+          "408": {
+            "description": "Authenticated body deadline exceeded."
+          },
+          "409": {
+            "description": "Original episode, currentness, cumulative limits or idempotency conflict."
+          },
+          "413": {
+            "description": "Bounded request or retained resources exceeded."
+          },
+          "422": {
+            "description": "Canonical meaning, model alternatives, checking, typed admission or transport prerequisite failed."
+          },
+          "503": {
+            "description": "Pinned checker or runtime unavailable."
           }
         }
       }

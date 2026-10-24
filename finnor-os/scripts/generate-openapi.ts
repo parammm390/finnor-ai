@@ -69,6 +69,7 @@ import { APPLICATION_OPERATIONS, APPLICATION_OPERATION_SCHEMAS } from "../packag
 import {LEARNING_OPERATION_SCHEMAS,LEARNING_OPERATIONS} from "../packages/private-equity/src/policy-learning/api";
 import {IDENTIFICATION_OPERATION_SCHEMAS,IDENTIFICATION_OPERATIONS} from "../packages/private-equity/src/system-identification/api";
 import {EconomicOperationSchemas,EconomicOperations} from "../packages/private-equity/src/economic-action-theory/api";
+import {StrategicOperationSchemas,StrategicOperations} from "../packages/private-equity/src/strategic-response/api";
 import {InteractionOperationSchemas,InteractionOperations} from "../packages/private-equity/src/interaction-synthesis/api";
 import { ApplicationExpressionSchema } from "../packages/private-equity/src/enterprise-applications/contracts";
 import { M1_OPERATIONS, M1OperationSchemas } from "../packages/private-equity/src/decision-slice/handler";
@@ -313,6 +314,7 @@ const applicationComponents={schemas:Object.fromEntries([
  ...Object.entries(LEARNING_OPERATION_SCHEMAS).map(([name,schema])=>[name,applicationSchema(schema)]),
  ...Object.entries(IDENTIFICATION_OPERATION_SCHEMAS).map(([name,schema])=>[name,applicationSchema(schema)]),
  ...Object.entries(EconomicOperationSchemas).map(([name,schema])=>[name,applicationSchema(schema)]),
+ ...Object.entries(StrategicOperationSchemas).map(([name,schema])=>[name,applicationSchema(schema)]),
  ...Object.entries(InteractionOperationSchemas).map(([name,schema])=>[name,applicationSchema(schema)]),
  ["X3Expression",applicationSchema((ApplicationExpressionSchema._def as z.ZodLazyDef).getter())],
 ])};
@@ -724,6 +726,19 @@ paths["/api/company-brain/{operation}"].post.parameters[0]!.schema.enum.push(...
 (paths["/api/company-brain/{operation}"].post.parameters[0]!.schema.enum as string[]).push(...LEARNING_OPERATIONS);
 (paths["/api/company-brain/{operation}"].post.parameters[0]!.schema.enum as string[]).push(...IDENTIFICATION_OPERATIONS);
 (paths["/api/company-brain/{operation}"].post.parameters[0]!.schema.enum as string[]).push(...EconomicOperations);
+(paths["/api/company-brain/{operation}"].post.parameters[0]!.schema.enum as string[]).push(...StrategicOperations);
+for(const operation of StrategicOperations){
+ Object.assign(paths,{["/api/company-brain/"+operation]:{post:{
+  security:secured,requestBody:{required:true,content:{"application/json":{schema:{$ref:"#/components/schemas/"+operation}}}},
+  responses:{"200":{description:"Current scoped response model set, development admission, exact artifact or retained use history. No field qualification or effects."},
+   "202":{description:"Original durable learning, joint prediction or actual S4 programme evaluation accepted. Not completion."},
+   "400":{description:"Strict data-only model or original S4 contract required."},"401":{description:"Current signed bearer required before body read."},
+   "403":{description:"Current authority or disposable development profile unavailable."},"404":{description:"Absent or unauthorized tenant/principal/root/Work resource."},
+   "408":{description:"Authenticated body deadline exceeded."},"409":{description:"Original episode, currentness, cumulative limits or idempotency conflict."},
+   "413":{description:"Bounded request or retained resources exceeded."},"422":{description:"Canonical meaning, model alternatives, checking, typed admission or transport prerequisite failed."},
+   "503":{description:"Pinned checker or runtime unavailable."}},
+ }}});
+}
 (paths["/api/company-brain/{operation}"].post.parameters[0]!.schema.enum as string[]).push(...InteractionOperations);
 for(const operation of InteractionOperations){
  Object.assign(paths,{["/api/company-brain/"+operation]:{post:{

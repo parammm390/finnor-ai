@@ -209,8 +209,9 @@ export interface ControlDynamicsAdapter {
   ref: ExperimentRef; stateUnits: Record<string, string>; stateRanges?: Record<string, [number, number]>; exposureIds: string[];
   /** Required for operating-profit drivers; prevents cross-entity arithmetic. */
   stateRoots?: Record<string, { entityType: string; entityId: string }>;
-  qualification: 'S3_LEARNED_BOOTSTRAP_FINITE_SCENARIOS_UNADMITTED' | 'SUPPLIED_FINITE_REFERENCE_ONLY';
-  initialWorlds: ControlWorld[]; advance: (world: ControlWorld, exposures: Record<string, number>, period: number) => ControlWorld;
+  qualification: 'S3_LEARNED_BOOTSTRAP_FINITE_SCENARIOS_UNADMITTED' | 'SUPPLIED_FINITE_REFERENCE_ONLY' | 'S3_STRATEGIC_RESPONSE_FINITE_IDENTIFIED_SET_UNADMITTED';
+  initialWorlds: ControlWorld[]; advance: (world: ControlWorld, exposures: Record<string, number>, period: number,
+    context?: {problemId:string;actionId:string;actionHistory:string[];mandateRef:ExperimentRef}) => ControlWorld;
   limitations: string[]; computeRefs?: string[];
 }
 export interface PolicyNode {

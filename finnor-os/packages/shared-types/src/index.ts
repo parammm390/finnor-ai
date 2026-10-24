@@ -1,4 +1,5 @@
 export * from './identified-system';
+export type * from './strategic-response';
 export type {LearnedPolicyCapsule,LearnedPolicyEnvelope,LearnedPolicyProcedure,LearnedControllerCheckpoint,LearningUnknown,LearnedPolicyEventReference} from './learned-policy';
 export type {ApplicationReleaseBinding,EnterpriseApplicationRelease,FrontierArtifactEnvelope,FrontierEventCollectionReference,EnterpriseApplicationPackage} from './enterprise-applications';
 export * from "./closing";
