@@ -168,7 +168,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/capability-evolution/src/source-closure.ts",
-      "sha256": "d05f641c474316424a84d9c5b10c0f66fe064fbf464b2a8ddc6a5f5bec15f50d"
+      "sha256": "199e7f7b66eb8517a1ad552b662099cc47cb1c4d2bb90097eb984cb4d0397b8a"
     },
     {
       "path": "src/components/centropy/canvas/EnterpriseApplicationPanel.tsx",
