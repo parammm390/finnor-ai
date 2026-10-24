@@ -1,0 +1,240 @@
+{
+  "schema": "finnor.project-z.z0.postcommit-evidence-binding.v3",
+  "createdAt": "2026-10-24T20:37:48.767175+00:00",
+  "phase": "Z0",
+  "sourceImplementationCommit": "8a2d82bac98944db528667f868f4671f63bca2ba",
+  "sourceImplementationTree": "53fadcceccac84b90970e3cc1df0d1d9a7650f8c",
+  "coordinatorProductAtFreeze": "9f3edfd3b4c6758832c53139da0773218062191e",
+  "coordinatorProductTreeAtFreeze": "2dc4d5bc13d22853cf4dc9feb5f6ac7fbf6bb9c9",
+  "sourcePopulationSha256": "63bca8ad8ffff6787230683716f4127beda13a60a923584c964512e1c794bb30",
+  "sessionId": "66647028-fac4-4793-bec3-22b564d12b90",
+  "computerId": "eea8d359-5a5c-4aff-b465-494dd7a8ba88",
+  "branch": "factory/project-z0",
+  "worktree": "/home/factory-user/repos/finnor-z0",
+  "evidenceCommit": "375b0ed698f2561d57ce79fcda30910286df1077",
+  "evidenceTree": "395e1acfacb174b97561481f83e3d3ce2b59deab",
+  "evidenceOnlyChangedFilesAfterSourceFreeze": 72,
+  "verifiedIndexedEvidenceMembers": 307,
+  "verifiedCommittedEvidenceMembersIncludingIndex": 308,
+  "indexedEvidenceBytes": 127613145,
+  "evidenceIndex": {
+    "path": "final-evidence-index-03.json",
+    "sha256": "3835f997713e02a2ecbffadcc3261887d39465e4eb506929deb40006e544b131",
+    "bytes": 55551
+  },
+  "handoff": {
+    "path": "handoff-final-03.md",
+    "sha256": "aeb940a72937eacdbaedaa960a892493ab95546570c3266e97d9c666c60f0599",
+    "bytes": 12421
+  },
+  "qualification": {
+    "path": "qualification-final-03.json",
+    "sha256": "caeb301ac7e980d67fdb884119d6cb0614b5eb0ace20be2d02e9c2ff2af12eed",
+    "bytes": 16032
+  },
+  "sourceContentManifest": {
+    "path": "source-content-manifest-03.json",
+    "sha256": "0b31c9310c62898596b97cb585193bf35c72ff67a7bd726cd0b2f6759ca4044d",
+    "bytes": 20030
+  },
+  "changedFiles": {
+    "path": "changed-files-03.json",
+    "sha256": "269b395081310000951ff598d951156e764febac844d03140161bb3886f770f5",
+    "bytes": 13942
+  },
+  "currentStandaloneSourceArchive": {
+    "path": "installation-12/converged-source.tar.gz",
+    "sha256": "f900d214b0f114918d5f5f7490c9c9a19e7007a89a07354538ccf616ab98cc47",
+    "bytes": 11070952
+  },
+  "currentSourceSnapshot": {
+    "path": "installation-12/source-snapshot.json",
+    "sha256": "a4f0b08ebcd271847848900ba714277682a1ce404a0a6bb5f1e405eadcd89de0",
+    "bytes": 768880
+  },
+  "currentFullInstallationManifest": null,
+  "currentMountedBuildCustody": null,
+  "currentReconstruction": {
+    "state": "NOT_RUN",
+    "launchDisposition": {
+      "path": "reconstruction-13-launch-cancelled.json",
+      "sha256": "8a803b4aa4ca41e4cd9f22395afdb9e60e86d284c9a344060c1941ee83083d53",
+      "bytes": 1665
+    },
+    "actualExit": null,
+    "returnedPid": null,
+    "reason": "NOT_EXPOSED",
+    "observedCompletedReconstructionSteps": 0,
+    "implementedExpectedSteps": 12,
+    "unchangedRetryIssued": false,
+    "permissionsEscalated": false
+  },
+  "historicalInstallation11": {
+    "notCurrentSourceProof": true,
+    "sourcePopulationSha256": "60d02fdfea7df750e3502cbb5e5d03bd34d3ff138d27c1978fee539087134b0c",
+    "sourceCommit": "1404c893553a838cee2e131c7ee40d9a2474fedf",
+    "sourceArchive": {
+      "path": "installation-10/converged-source.tar.gz",
+      "sha256": "95fb9505bcc707439e35dd3ee72adb7005c6dd419e59e033209c522a02b6a1dd",
+      "bytes": 11062271
+    },
+    "reconstruction": {
+      "path": "installation-11/reconstruction.json",
+      "sha256": "4ac857225f80f13182ac71c407badbf4204c82c6a44e92ab3ef5864673b48285",
+      "bytes": 9554
+    },
+    "fullInstallationManifest": {
+      "path": "installation-11/full-installation-manifest-01.json",
+      "sha256": "dae273a3117ded61afc32ef536563911039be204c3038423ab3eef9d1caa1588",
+      "bytes": 26974627
+    },
+    "offlineDoctor": {
+      "path": "installation-11/offline-runtime-doctor.json",
+      "sha256": "5b9f069e1e5f89827a6377035748233d415817a97cb63dfcd1f070a1d0dabe7a",
+      "bytes": 32091
+    },
+    "expectedStepsPassed": 11,
+    "gitActualAndExpectedExit": 128,
+    "otherStepExits": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "subprocessWallMs": 323226,
+    "native": "NOT_RUN",
+    "installedNative": "NOT_RUN"
+  },
+  "pendingSharedRequest": {
+    "path": "shared-mounted-csp-request-01/request.json",
+    "sha256": "87b3b393df5cd0d36984aa7671bc44108ec0a1d9313f2dd589a023711e2bd15b",
+    "bytes": 1402
+  },
+  "pendingSharedPatch": {
+    "path": "shared-mounted-csp-request-01/next-config.patch",
+    "sha256": "337a022e811f1879d8557b3fbc30834db111b4995ad7e6c5583f57fde64dca11",
+    "bytes": 621
+  },
+  "pendingSharedStatus": "PENDING_COORDINATOR_APPLICATION",
+  "validation": {
+    "byteCustodyAudit": {
+      "path": "source-custody-audit-03.json",
+      "sha256": "42cced423cab1d10b0d99162eae00573ded7673ec4fb36ccdca8157f7480f9dc",
+      "bytes": 2619
+    },
+    "byteCustodyAuditActualExit": 0,
+    "staticDeliveryValidation": {
+      "path": "packaging-validation-03.json",
+      "sha256": "e47c4747968a17615e81e9b7476bec962fad5bb06ba88bf2f8156e9b0bbb04ae",
+      "bytes": 2964
+    },
+    "staticDeliveryValidationActualExit": 0,
+    "stagedByteVerification": "PASSED",
+    "stagedByteVerificationActualExit": 0,
+    "stagedByteVerificationToolReceipt": "/home/factory-user/.factory/artifacts/scripts/66647028-fac4-4793-bec3-22b564d12b90/call_vioDJCZHwmu89QwfGvPwYnNm.log",
+    "committedByteVerification": "PASSED",
+    "metadataAndDocumentationWhitespaceActualExit": 0,
+    "fullStagedWhitespaceActualExit": 2,
+    "rawWhitespaceOnly": {
+      "originalRawLog": {
+        "path": "installation-11/07-actual-mounted-frontend-build.log",
+        "sha256": "ce25c699c5f354a20df4e4bf606091164738fdc1169ed3c8bbafd4e93ec76659",
+        "bytes": 2604
+      },
+      "trailingWhitespaceLines": [
+        19,
+        20,
+        21
+      ],
+      "newBlankLineAtEofLine": 82,
+      "disposition": "PRESERVE_ORIGINAL_RAW_BYTES_UNCHANGED_NOT_A_PRODUCT_OR_METADATA_FAILURE",
+      "actualCheckToolReceipt": "/home/factory-user/.factory/artifacts/scripts/66647028-fac4-4793-bec3-22b564d12b90/call_lVU2jfKxtKGYdcLe654RfoJ0.log"
+    },
+    "sevenHandoffLabels": "PASSED",
+    "guardDoctorActualExit": 0,
+    "missingAuthorityGuardActualExit": 2,
+    "expectedMissingAuthorityGuardExit": 2,
+    "nativeCasesCompleted": 0,
+    "nativeObligations": 108,
+    "initialPackagingAuditActualExit": 1,
+    "resolvedPackagingFailure": {
+      "path": "packaging-failures-03.json",
+      "sha256": "66b777bfdfd26a00bc89c70abcf25b641e5ed6f35e288aa896641ad732ddcc6e",
+      "bytes": 777
+    },
+    "productSourceUnchangedSinceFreeze": true,
+    "coordinatorProductUnchangedSinceFreeze": true
+  },
+  "toolchainObservation": {
+    "path": "toolchain-observation-03.json",
+    "sha256": "6968ce49b9b8cae188229ff312315a3ce095ad5b63f48506c1f85e8ab610e316",
+    "bytes": 1409
+  },
+  "runtimeModelObservation": {
+    "time": 1792870978.5952284,
+    "phase": "Z0",
+    "session_id": "66647028-fac4-4793-bec3-22b564d12b90",
+    "event": "runtime_verified",
+    "attempt": 5,
+    "pid": 109408,
+    "actual_model": "gpt-6.1-sol",
+    "actual_reasoning": "max"
+  },
+  "runtimeModelObservationProvenance": {
+    "path": "continuity-receipts-03/provenance.json",
+    "sha256": "c179ff5eaad7d4c5b220b313b04551fbfe16e43bf65a1ff4648828f29f07979f",
+    "bytes": 4252
+  },
+  "retainedUsageDenial": {
+    "path": "usage-limit-denial-03.json",
+    "sha256": "a44d2c9dfe8491f8f995305fe4df66cbeb1784a5b3f8bbdea6655927bfa818f0",
+    "bytes": 2177
+  },
+  "retainedFailures": {
+    "path": "retained-failures-03.json",
+    "sha256": "860145d0472fbef131bfb53d6781f012365f0c1eb014c5d53ff9b06534dab542",
+    "bytes": 13636
+  },
+  "losslessGraphTransports": {
+    "path": "artifact-transports-03.json",
+    "sha256": "57b2bf3c1844eb39d292bace0f00dd486dc0d3ec721979feb7ff7cda4015c31a",
+    "bytes": 2239
+  },
+  "standaloneReconstructionRequiresGitObjects": false,
+  "newOptionalGitBundleCreated": false,
+  "authorOrCommitterIdentityOverriddenByProducer": false,
+  "newTemporaryIterationHelperFilesCreated": false,
+  "retainedGeneratedRuntimes": "Intentional local replay artifacts; no earlier runtime, raw graph or user file deleted.",
+  "availableFilesystemBytesAtBindingObservation": 60022784,
+  "diskObservationDoesNotEstablishCancellationCause": true,
+  "native": "NOT_RUN",
+  "installedNative": "NOT_RUN",
+  "physicalRecovery": "NOT_RUN",
+  "computationDisposition": "INCOMPLETE",
+  "slotReleased": false,
+  "scheduling": {
+    "occupied": [
+      "Z0",
+      "Z1",
+      "Z2",
+      "Z3"
+    ],
+    "queued": [
+      "Z4",
+      "Z5"
+    ],
+    "controller": "COORDINATOR_ONLY"
+  },
+  "scientificIncrement": false,
+  "protectedAuthority": "NOT_GRANTED",
+  "productionAuthority": "NOT_GRANTED",
+  "externalSends": 0,
+  "pushPrMergeDeployProvisionOrFinancialEffects": false,
+  "bindingScope": "Binds the preceding evidence commit; this separate envelope is excluded from its own index to avoid a self-referential commit hash."
+}
