@@ -137,6 +137,17 @@ The target manifest has schema `finnor.z1.authorized-native-target.v1` and exact
   a source/installed owner-flow pass. Originals already used by the complete
   episode cannot be reused for this alternative. Existing bindings and explicit
   authority are still required; the driver creates no replacement originals.
+- `EXHAUSTED_EPISODE_PREFIX` is another explicitly authorized alternative on unused
+  existing originals. It kills four owned workers at pre-producer CLAIM, waits
+  real leases and canonical terminal recovery, then replays the exact initial
+  mounted intake. The same request must persist INCOMPLETE without a fifth native
+  attempt, new artifact, permit, child, logical checkpoint or owner use. READ-only
+  mounted status may derive exhaustion before CONTROL replay persists it. No
+  checkpoint/update constraint is relaxed. The four distinct physical receipts
+  and cancellation retain all original budgets/holds/obligations. This is only
+  `PASSED_BOUNDED_NEGATIVE_ONLY`, not a source/installed owner-flow pass.
+  An existing current checked publication remains readable/replayable; this
+  never grants a new computation beyond the original episode limits.
 - Actual coordinator-applied `appliedMigration` filename, exact
   `nativeSchemaSha256`, installed canonical `schemaCatalogSha256`, owned installed
   `browserExecutableSha256`. The catalog digest uses canonical Z1 `digest()` on

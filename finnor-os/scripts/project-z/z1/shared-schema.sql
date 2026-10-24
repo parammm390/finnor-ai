@@ -644,6 +644,6 @@ REVOKE ALL ON FUNCTION finnor_os.z1_s5_visible(text) FROM PUBLIC;
 REVOKE ALL ON FUNCTION finnor_os.z1_s5_outstanding() FROM PUBLIC;
 REVOKE ALL ON FUNCTION finnor_os.z1_lock_source_cut(uuid) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION finnor_os.z1_s5_actor(),finnor_os.z1_s5_budget(text,boolean),
- finnor_os.z1_s5_reserve(jsonb,jsonb,jsonb,text),finnor_os.z1_s5_hold_cpu(jsonb,text,text),
+ finnor_os.z1_s5_reserve(jsonb,jsonb,jsonb,text,text,text),finnor_os.z1_s5_hold_cpu(jsonb,text,text),
  finnor_os.z1_s5_charge(jsonb,text,text,jsonb,boolean),finnor_os.z1_s5_visible(text),finnor_os.z1_s5_outstanding(),
  finnor_os.z1_lock_source_cut(uuid) TO finnor_app;

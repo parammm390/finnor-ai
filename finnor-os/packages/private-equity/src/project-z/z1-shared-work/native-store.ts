@@ -188,7 +188,8 @@ export async function submitNativeSharedWork(ctx: PeMutationContext, value: unkn
     if (replay) {
       requireZ1(replay.request_digest === digest(input), 'Z1_NATIVE_INTAKE_IDEMPOTENCY_CONFLICT');
       const row = await rowTx(ctx, c, replay.request_id); await assertRowCurrentTx(ctx, c, row);
-      return { requestId: row.id, generation: row.generation, status: row.status, replayed: true };
+      const exhausted = !row.publication && await refuseExhaustedEpisodeTx(ctx, c, row, null);
+      return { requestId: row.id, generation: row.generation, status: exhausted ? 'INCOMPLETE' : row.status, replayed: true };
     }
     if (original) requireZ1(original.status !== 'CANCELLED' && original.generation === input.previous!.generation && original.checkpoint &&
       original.attempts_used < 16 && original.wall_used_ms + original.wall_reserved_ms < 120000 && original.deadline_at.getTime() > Date.now() &&
@@ -256,16 +257,57 @@ export async function contextForNativeClaim(payload: ClaimPayload & { workId?: s
     requireZ1(row.generation === payload.generation, 'Z1_ORIGINAL_GENERATION_FENCED', 'STALE'); await fenceTx(ctx, c, row, claim); });
   return ctx;
 }
+async function requiresExhaustedEpisodeRefusalTx(ctx: PeMutationContext, c: PoolClient, row: NativeRow,
+  claim: Readonly<JobExecutionContext> | null): Promise<boolean> {
+  if (row.attempts_used < 16 && row.wall_used_ms + row.wall_reserved_ms < 120000) return false;
+  if (claim) return !(await c.query(
+      'SELECT id FROM finnor_os.z1_attempts WHERE tenant_id=$1 AND principal_id=$2 AND request_id=$3 AND delivery_id=$4',
+      [ctx.auth.tenantId, principal(ctx), row.id, claim.deliveryAttemptId])).rows[0];
+  // Only canonical recovery retires an allocation, never a READ or replay.
+  const running = (await c.query(
+    `SELECT n.id FROM finnor_os.z1_attempts n
+     JOIN finnor_os.job_delivery_attempts a ON a.id=n.delivery_id AND a.tenant_id=n.tenant_id
+     JOIN finnor_os.jobs j ON j.id=a.job_id AND j.tenant_id=n.tenant_id
+     WHERE n.tenant_id=$1 AND n.principal_id=$2 AND n.request_id=$3
+     AND j.type='run_shared_work_program_v1' AND j.protocol_version=1 AND j.status='running'
+     AND j.payload->>'requestId'=$3::text AND (j.payload->>'generation')::int=$4
+     AND a.outcome='running' AND a.finished_at IS NULL AND a.claim_token=j.claim_token
+     AND a.claim_fence=j.claim_fence AND a.worker_id=j.lease_owner LIMIT 1`,
+    [ctx.auth.tenantId, principal(ctx), row.id, row.generation])).rows[0];
+  return !running;
+}
+export async function refuseExhaustedEpisodeTx(ctx: PeMutationContext, c: PoolClient, row: NativeRow,
+  claim: Readonly<JobExecutionContext> | null): Promise<boolean> {
+  if (!await requiresExhaustedEpisodeRefusalTx(ctx, c, row, claim)) return false;
+  await eventTx(ctx, c, row.id, null,
+    `native-episode-exhausted:${row.generation}:${row.attempts_used}:${row.wall_used_ms}:${row.wall_reserved_ms}`, {
+      kind: 'ORIGINAL_NATIVE_EPISODE_EXHAUSTED', generation: row.generation,
+      attemptsUsed: row.attempts_used, maximumAttempts: 16, wallUsedMs: row.wall_used_ms,
+      wallReservedMs: row.wall_reserved_ms, maximumWallMs: 120000,
+      originalWorkIds: row.cuts.map(cut => cut.workId), originalDeadline: row.request.limits.deadlineAt,
+      originalParentsCpuWallAndLogicalLiabilityRetained: true, logicalHeadroomAvailable: false,
+      newComputationAuthorized: false, executionAuthorityGranted: false });
+  await c.query(`UPDATE finnor_os.z1_attempts SET status='LOST_UNKNOWN',costs_unknown=true
+    WHERE tenant_id=$1 AND principal_id=$2 AND request_id=$3 AND ($4::uuid IS NULL OR delivery_id<>$4)
+    AND status='STARTED'`,
+  [ctx.auth.tenantId, principal(ctx), row.id, claim?.deliveryAttemptId ?? null]);
+  await c.query(`UPDATE finnor_os.z1_requests SET status='INCOMPLETE'
+    WHERE tenant_id=$1 AND principal_id=$2 AND id=$3 AND status NOT IN('CANCELLED','INVALIDATED')`,
+  [ctx.auth.tenantId, principal(ctx), row.id]);
+  return true;
+}
 export async function loadNativeClaim(ctx: PeMutationContext, payload: ClaimPayload, claim: Readonly<JobExecutionContext>): Promise<ClaimedSnapshot> {
-  return withS5PortfolioTransaction(ctx, async c => {
+  const snapshot = await withS5PortfolioTransaction(ctx, async c => {
     const row = await rowTx(ctx, c, payload.requestId); await fenceTx(ctx, c, row, claim); await assertRowCurrentTx(ctx, c, row);
-    requireZ1(row.generation === payload.generation && row.attempts_used < 16 && row.wall_used_ms + row.wall_reserved_ms < 120000,
-      'Z1_ORIGINAL_NATIVE_EPISODE_EXHAUSTED', 'INCOMPLETE');
+    requireZ1(row.generation === payload.generation, 'Z1_ORIGINAL_NATIVE_GENERATION_CHANGED', 'STALE');
+    if (await refuseExhaustedEpisodeTx(ctx, c, row, claim)) return null;
     const originalRequestRef = await artifactTx(ctx, c, row.id, 'S3', 'z1-original-request', row.request);
     return { request: row.request, ...(row.checkpoint ? { previous: row.checkpoint } : {}), version: row.version,
       remainingWallMs: Math.min(30000, 120000 - row.wall_used_ms - row.wall_reserved_ms, row.deadline_at.getTime() - Date.now()),
       originalRequestRef, ...(row.publication ? { publication: row.publication } : {}) };
   });
+  requireZ1(snapshot, 'Z1_ORIGINAL_NATIVE_ATTEMPT_OR_WALL_BUDGET_EXHAUSTED', 'INCOMPLETE');
+  return snapshot;
 }
 export async function readPublishedTx(ctx: PeMutationContext, c: PoolClient, reference: ExperimentRef, workId: string) {
   const stored = (await c.query<{ body: PublishedProgram['body']; request_id: string; reference: ExperimentRef }>(
@@ -308,7 +350,10 @@ export async function readNativeWorkProjection(ctx: PeMutationContext, root: Sub
     const attempts = (await c.query<{ status: string; costs_unknown: boolean }>(
       'SELECT status,costs_unknown FROM finnor_os.z1_attempts WHERE tenant_id=$1 AND principal_id=$2 AND request_id=$3 ORDER BY created_at,id LIMIT 16',
       [ctx.auth.tenantId, principal(ctx), row.id])).rows;
-    return { workId, requestId: row.id, generation: row.generation, status: current ? row.status : 'STALE_OR_REVOKED',
+    const exhausted = current && !row.publication && await requiresExhaustedEpisodeRefusalTx(ctx, c, row, null);
+    return { workId, requestId: row.id, generation: row.generation,
+      status: current ? exhausted ? 'INCOMPLETE' : row.status : 'STALE_OR_REVOKED',
+      persistedStatus: current ? row.status : null, nativeEpisodeExhausted: exhausted,
       artifactRef: current ? row.publication?.reference ?? null : null, projection: projection ?? null,
       originalOwnerUses: current ? uses : [], historicalOwnerUseCount: uses.length,
       costs: { logical: projection?.accounting ?? null, attempts, usd: null, lifecycleComplete: false },

@@ -12,7 +12,7 @@ import { quantity } from '../../../../epistemic-runtime/src/project-z/z1-shared-
 import { nativeRef, same, assertOriginalBudget, developmentOnly, type NativeRow } from './native-contracts.js';
 import {
   artifactTx, eventTx, rowTx, assertRowCurrentTx, fenceTx, contextForNativeClaim, loadNativeClaim,
-  readPublishedTx, recordNativeCostTx,
+  readPublishedTx, recordNativeCostTx, refuseExhaustedEpisodeTx,
 } from './native-store.js';
 import { assertBudgetCurrentTx, chargeOriginalBudgetTx, holdOriginalCpuTx, withNativeTransaction as withS5PortfolioTransaction } from './resources.js';
 import { currentSharedWorkAdmissionTx } from './admission.js';
@@ -87,13 +87,13 @@ export const nativeSharedWorkPorts: Z1NativePorts = {
       await assertNativeMemoryTx(ctx, c, row, claim); });
   },
   async beginAttempt(ctx, claim, snapshot) {
-    const reference = await transaction(ctx, async c => {
+    const outcome = await transaction(ctx, async c => {
       const row = await claimRowTx(ctx, c, claim, snapshot); await assertRowCurrentTx(ctx, c, row);
       await assertNativeMemoryTx(ctx, c, row, claim, !row.publication);
       const prior = (await c.query<AttemptRow>(
         'SELECT * FROM finnor_os.z1_attempts WHERE tenant_id=$1 AND principal_id=$2 AND delivery_id=$3 FOR UPDATE',
         [ctx.auth.tenantId, principal(ctx), claim.deliveryAttemptId])).rows[0];
-      if (prior) return prior.reference;
+      if (prior) return { reference: prior.reference, refusal: null };
       // A durable PID can precede private input, but its absence of a checkpoint
       // cannot prove that input or logical work never ran. Do not spend that
       // original headroom again. Known pre-PID loss and committed checkpoints
@@ -119,10 +119,10 @@ export const nativeSharedWorkPorts: Z1NativePorts = {
         }
         await c.query("UPDATE finnor_os.z1_requests SET status='INCOMPLETE' WHERE tenant_id=$1 AND principal_id=$2 AND id=$3",
           [ctx.auth.tenantId, principal(ctx), row.id]);
-        return null;
+        return { reference: null, refusal: 'Z1_UNRECONCILED_ORIGINAL_LOGICAL_EXPOSURE' };
       }
-      requireZ1(row.attempts_used < 16 && row.wall_used_ms + row.wall_reserved_ms < 120000,
-        'Z1_ORIGINAL_NATIVE_ATTEMPT_OR_WALL_BUDGET_EXHAUSTED', 'INCOMPLETE');
+      if (await refuseExhaustedEpisodeTx(ctx, c, row, claim))
+        return { reference: null, refusal: 'Z1_ORIGINAL_NATIVE_ATTEMPT_OR_WALL_BUDGET_EXHAUSTED' };
       const lost = (await c.query<AttemptRow>(
         "SELECT * FROM finnor_os.z1_attempts WHERE tenant_id=$1 AND principal_id=$2 AND request_id=$3 AND status='STARTED' FOR UPDATE",
         [ctx.auth.tenantId, principal(ctx), row.id])).rows;
@@ -152,11 +152,11 @@ export const nativeSharedWorkPorts: Z1NativePorts = {
         await holdOriginalCpuTx(ctx, c, cut.parent, id, Math.ceil(60000000 / active.length));
         await holdOriginalCpuTx(ctx, c, cut.parent, `${id}:meter-tail`, Math.ceil(6000000 / active.length));
       }
-      return reference;
+      return { reference, refusal: null };
     });
     // Throw after commit so the conservative refusal is itself durable.
-    requireZ1(reference, 'Z1_UNRECONCILED_ORIGINAL_LOGICAL_EXPOSURE', 'INCOMPLETE');
-    return reference;
+    requireZ1(outcome.reference, outcome.refusal ?? 'Z1_ORIGINAL_NATIVE_ATTEMPT_OR_WALL_BUDGET_EXHAUSTED', 'INCOMPLETE');
+    return outcome.reference;
   },
   async recordChildPid(ctx, attemptRef, kind, pid) {
     await transaction(ctx, async c => {

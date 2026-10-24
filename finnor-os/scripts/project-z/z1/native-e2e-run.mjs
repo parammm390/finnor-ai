@@ -260,7 +260,7 @@ export async function runNativeEpisode(guarded, output, report) {
     await audit({ kind: "CANONICAL_EXISTING_PUBLIC_S1_APPEND", sourceId, property,
       priorPin: previous.pin, pin: result.pin, declarationDigest: digest(declaration) }); return result.pin;
   }
-  async function worker(boundary = null, expectLogicalRefusal = false) {
+  async function worker(boundary = null, expectLogicalRefusal = false, recoverTerminalOnly = false) {
     await assertQueueOwned();
     const nonce = randomBytes(32).toString("hex"), loader = resolve(root, "finnor-os/node_modules/tsx/dist/loader.mjs");
     const child = spawn(process.execPath, ["--max-old-space-size=1536", "--import", loader,
@@ -324,8 +324,9 @@ export async function runNativeEpisode(guarded, output, report) {
           if (logicalRefusalObserved) { child.send({ kind: "STOP" }); break; }
         }
         const pending = (await getPool().query(`SELECT count(*)::int n FROM finnor_os.jobs
-          WHERE tenant_id=$1 AND type=ANY($2::text[]) AND payload->>'requestId'=$3 AND status<>'completed'`,
-        [fixture.tenantId, jobTypes, report.requestId])).rows[0].n;
+          WHERE tenant_id=$1 AND type=ANY($2::text[]) AND payload->>'requestId'=$3
+          AND ((NOT $4::boolean AND status<>'completed') OR ($4::boolean AND status IN('queued','running')))`,
+        [fixture.tenantId, jobTypes, report.requestId, recoverTerminalOnly])).rows[0].n;
         if (pending === 0 && !expectLogicalRefusal) { child.send({ kind: "STOP" }); break; }
         if (child.exitCode !== null || child.signalCode !== null) break;
         await wait(250);
@@ -336,7 +337,7 @@ export async function runNativeEpisode(guarded, output, report) {
     if (expectLogicalRefusal) need(logicalRefusalObserved, "DURABLE_ORIGINAL_LOGICAL_EXPOSURE_REFUSAL_NOT_OBSERVED");
     if (boundary) {
       physical.push(exit);
-      await privateJSON(resolve(output, `physical-${boundary.toLowerCase()}.json`), { exit, snapshot: crashSnapshot,
+      await privateJSON(resolve(output, `physical-${physical.length}-${boundary.toLowerCase()}.json`), { exit, snapshot: crashSnapshot,
         claim: { jobId: capturedClaim.job.id, deliveryAttemptId: capturedClaim.message.deliveryAttemptId,
           claimFence: capturedClaim.job.claim_fence, leaseExpiresAt: capturedClaim.job.lease_expires_at },
         serialPermit: capturedClaim.permit,
@@ -431,6 +432,96 @@ export async function runNativeEpisode(guarded, output, report) {
       const canonical = (await post("z1-read-shared-work", { root: fixture.root, requestId: report.requestId, view: "ORIGINAL_REQUEST" })).body;
       need(isSame(canonical.request, request) && canonical.requestDigest === oracle.expected.requestDigest,
         "CANONICAL_NATIVE_INTAKE_DIFFERS_FROM_INDEPENDENT_ORIGINAL");
+      if (scenario === "EXHAUSTED_EPISODE_PREFIX") {
+        need(index === 0, "BOUNDED_INITIAL_EPISODE_EXHAUSTION_ONLY");
+        for (let interruption = 0; interruption < 4; interruption++) await worker("CLAIM");
+        const interrupted = await snapshot(); assertConserved(previousSnapshot, interrupted);
+        need(interrupted.row.attempts_used === 4 && interrupted.attempts.length === 4 &&
+          interrupted.row.wall_reserved_ms === 120000 && interrupted.row.wall_used_ms === 0 &&
+          interrupted.row.logical_charges === null && interrupted.uses.length === 0 &&
+          interrupted.attempts.every(attempt => attempt.reserved_wall_ms === 30000),
+          "ORIGINAL_NATIVE_EPISODE_WAS_NOT_PHYSICALLY_EXHAUSTED");
+        await worker(null, false, true);
+        const terminalJobs = await scoped(async c => (await c.query(
+          `SELECT id,status,attempts,max_attempts FROM finnor_os.jobs
+           WHERE tenant_id=$1 AND type='run_shared_work_program_v1' AND payload->>'requestId'=$2 ORDER BY id`,
+          [fixture.tenantId, report.requestId])).rows, true);
+        need(terminalJobs.length === 1 && terminalJobs[0].status === "dead_letter" &&
+          terminalJobs[0].attempts === 4 && terminalJobs[0].max_attempts === 4,
+          "CANONICAL_EXHAUSTED_JOB_WAS_NOT_RETIRED");
+        const counters = () => scoped(async c => (await c.query(
+          `SELECT
+           (SELECT count(*)::text FROM finnor_os.z1_artifacts
+            WHERE tenant_id=$1 AND principal_id=$2 AND request_id=$3) artifacts,
+           (SELECT count(*)::text FROM finnor_os.compute_resource_leases
+            WHERE resource_key='provider:z1-shared-work-native' AND tenant_key=$1::text) permits,
+           (SELECT count(*)::text FROM finnor_os.jobs
+            WHERE tenant_id=$1 AND payload->>'requestId'=$3::text) jobs,
+           (SELECT count(*)::text FROM finnor_os.job_delivery_attempts a JOIN finnor_os.jobs j ON j.id=a.job_id
+            WHERE j.tenant_id=$1 AND j.payload->>'requestId'=$3::text) deliveries,
+           (SELECT count(*)::text FROM finnor_os.z1_events WHERE tenant_id=$1 AND principal_id=$2 AND request_id=$3
+            AND body->>'kind'='ORIGINAL_NATIVE_EPISODE_EXHAUSTED') refusals`,
+          [fixture.tenantId, fixture.principalId, report.requestId])).rows[0], true);
+        const recovered = await snapshot(), beforeReadCounters = await counters();
+        const panel = await mount(ids[0]); await page.reload();
+        await expect(panel.locator(`[data-z1-request-id="${report.requestId}"]`)).toHaveAttribute("data-z1-status", "INCOMPLETE");
+        const beforeReplay = await snapshot(), afterReadCounters = await counters();
+        assertConserved(recovered, beforeReplay);
+        need(beforeReplay.row.status === recovered.row.status && beforeReadCounters.refusals === "0" &&
+          isSame(beforeReadCounters, afterReadCounters), "READ_ONLY_NATIVE_PROJECTION_MUTATED_DURABLE_STATE");
+        const replay = await uiWrite(ids[0], "z1-submit-shared-work", intake);
+        need(replay.replayed === true && replay.requestId === report.requestId && replay.generation === generation &&
+          replay.status === "INCOMPLETE", "EXHAUSTED_INTAKE_REPLAY_DID_NOT_COMMIT_REFUSAL");
+        const blocked = await snapshot(); assertConserved(beforeReplay, blocked);
+        const evidence = await scoped(async c => {
+          const events = (await c.query(
+            `SELECT event_key,body->>'kind' kind,CASE WHEN body->>'kind'='ORIGINAL_NATIVE_EPISODE_EXHAUSTED'
+             THEN body ELSE NULL END refusal FROM finnor_os.z1_events
+             WHERE tenant_id=$1 AND principal_id=$2 AND request_id=$3 ORDER BY created_at,id LIMIT 257`,
+            [fixture.tenantId, fixture.principalId, report.requestId])).rows;
+          const persisted = (await c.query(
+            "SELECT checkpoint IS NOT NULL has_checkpoint,publication IS NOT NULL has_publication FROM finnor_os.z1_requests WHERE tenant_id=$1 AND principal_id=$2 AND id=$3",
+            [fixture.tenantId, fixture.principalId, report.requestId])).rows[0];
+          return { events, ...persisted };
+        }, true);
+        const afterReplayCounters = await counters();
+        const refusals = evidence.events.filter(event => event.kind === "ORIGINAL_NATIVE_EPISODE_EXHAUSTED");
+        need(blocked.row.status === "INCOMPLETE" && blocked.row.generation === generation &&
+          blocked.row.attempts_used === 4 && blocked.attempts.length === 4 &&
+          blocked.attempts.every(attempt => attempt.status === "LOST_UNKNOWN" && attempt.costs_unknown) &&
+          blocked.row.wall_reserved_ms === 120000 && blocked.row.wall_used_ms === 0 &&
+          blocked.row.logical_charges === null && blocked.uses.length === 0 &&
+          evidence.events.length <= 256 && refusals.length === 1 &&
+          !evidence.events.some(event => event.event_key.startsWith("pid:") || event.kind === "DURABLE_CHECKPOINT") &&
+          !evidence.has_checkpoint && !evidence.has_publication &&
+          afterReplayCounters.artifacts === afterReadCounters.artifacts &&
+          afterReplayCounters.permits === afterReadCounters.permits && afterReplayCounters.jobs === afterReadCounters.jobs &&
+          afterReplayCounters.deliveries === "4" && afterReadCounters.deliveries === "4" && afterReplayCounters.refusals === "1" &&
+          refusals[0].refusal.attemptsUsed === 4 && refusals[0].refusal.maximumAttempts === 16 &&
+          refusals[0].refusal.wallReservedMs === 120000 && refusals[0].refusal.maximumWallMs === 120000 &&
+          refusals[0].refusal.originalParentsCpuWallAndLogicalLiabilityRetained === true &&
+          refusals[0].refusal.newComputationAuthorized === false,
+          "EXHAUSTED_ORIGINAL_NATIVE_EPISODE_WAS_RENEWED_OR_REFUSAL_NOT_DURABLE");
+        for (const parent of beforeReplay.parents) need(
+          blocked.parents.find(item => item.reservation_id === parent.reservation_id).pending_cpu === parent.pending_cpu,
+          "EXHAUSTED_ORIGINAL_CPU_HOLD_CHANGED_ON_REPLAY");
+        await page.reload();
+        await expect(panel.locator(`[data-z1-request-id="${report.requestId}"]`)).toHaveAttribute("data-z1-status", "INCOMPLETE");
+        const image = await panel.screenshot({ path: resolve(output, "native-episode-exhausted.png"), animations: "disabled" });
+        await uiWrite(ids[0], "z1-cancel-shared-work", { root: fixture.root, requestId: report.requestId, expectedGeneration: generation });
+        const cancelled = await snapshot(); assertConserved(blocked, cancelled);
+        need(cancelled.row.status === "CANCELLED", "EXHAUSTED_NATIVE_CANCELLATION_NOT_RETAINED");
+        await privateJSON(resolve(output, "exhausted-native-prefix.json"), { interrupted, beforeReplay, blocked, cancelled,
+          terminalJobs, evidence, beforeReadCounters, afterReadCounters, afterReplayCounters, physical,
+          panelSha256: sha(image), originalExpectedValues: "original-0-initial.json",
+          interruptedPhysicalCost: "UNKNOWN_NOT_ZERO", newLogicalComputationObserved: false,
+          sourceOwnerFlow: "NOT_RUN", installedOwnerFlow: "NOT_RUN", scope: "BOUNDED_NEGATIVE_PREFIX_NOT_COMPLETE_ORIGINAL_EPISODE" });
+        report.nativeEpisodeExhaustionFalsifier = "PASSED";
+        report.originalWorkIds = ids; report.physicalExits = physical;
+        await audit({ kind: "DURABLE_EXHAUSTED_ORIGINAL_NATIVE_EPISODE_REFUSAL_AND_CANCELLATION",
+          originalWorkIds: ids, originalParentsRetained: true, fullOwnerJourney: "NOT_RUN" });
+        return;
+      }
       if (scenario === "UNRECONCILED_LOGICAL_PREFIX") {
         need(index === 0, "BOUNDED_INITIAL_PREFIX_ONLY");
         await worker("PRODUCER_PID");

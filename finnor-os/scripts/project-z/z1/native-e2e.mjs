@@ -63,7 +63,8 @@ export async function guardTarget() {
     typeof target.authorization?.reference === "string" && target.authorization.reference.length > 0,
     "EXPLICIT_TARGET_CUSTODY_AND_BOUNDED_ACTION_AUTHORITY_REQUIRED");
   const scenario = target.authorization.scenario ?? "ORIGINAL_EPISODE";
-  need(["ORIGINAL_EPISODE", "UNRECONCILED_LOGICAL_PREFIX"].includes(scenario), "EXPLICIT_BOUNDED_NATIVE_SCENARIO_REQUIRED");
+  need(["ORIGINAL_EPISODE", "UNRECONCILED_LOGICAL_PREFIX", "EXHAUSTED_EPISODE_PREFIX"].includes(scenario),
+    "EXPLICIT_BOUNDED_NATIVE_SCENARIO_REQUIRED");
   need(["SOURCE_DEVELOPMENT", "SEPARATELY_INSTALLED_DEVELOPMENT"].includes(target.flavor) &&
     isAbsolute(target.repository) && resolve(target.repository) === resolve(root), "EXACT_OWN_SOURCE_TARGET_REQUIRED");
   const front = new URL(target.frontend), api = new URL(target.api), database = new URL(process.env.DATABASE_URL);
@@ -138,6 +139,7 @@ await mkdir(output, { recursive: false, mode: 0o700 });
 const report = { schema: "finnor.z1.native-e2e-report.v1", status: "NOT_RUN", startedAt: new Date().toISOString(),
   requiredEnvironmentNames: required, presentEnvironmentNames: required.filter(key => Boolean(process.env[key])),
   sourceOwnerFlow: "NOT_RUN", installedOwnerFlow: "NOT_RUN", physicalNativeRecovery: "NOT_RUN",
+  nativeLogicalExposureFalsifier: "NOT_RUN", nativeEpisodeExhaustionFalsifier: "NOT_RUN",
   protectedAdmission: false, productionActivated: false, externalEffectsAuthorized: false, actions: [] };
 try {
   const guarded = await guardTarget();
@@ -150,7 +152,7 @@ try {
   const { tsImport } = await import(require.resolve("tsx/esm/api"));
   const { runNativeEpisode } = await tsImport(new URL("./native-e2e-run.mjs", import.meta.url).href, import.meta.url);
   await runNativeEpisode({ ...guarded, processIdentity, privateJSON, need, sha }, output, report);
-  report.status = guarded.scenario === "UNRECONCILED_LOGICAL_PREFIX" ? "PASSED_BOUNDED_NEGATIVE_ONLY" : "PASSED";
+  report.status = guarded.scenario === "ORIGINAL_EPISODE" ? "PASSED" : "PASSED_BOUNDED_NEGATIVE_ONLY";
 } catch (error) {
   report.status = report.mutationsStarted ? "FAILED" : "NOT_RUN";
   // No raw driver, PostgreSQL, browser or auth errors: they may carry private data.
