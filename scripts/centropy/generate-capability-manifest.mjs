@@ -1,5 +1,6 @@
 import { mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs"
 import { join, relative, resolve } from "node:path"
+import { readCanonicalPlanner } from "./canonical-planner.mjs"
 
 const project = resolve(import.meta.dirname, "../..")
 const apiRoot = join(project, "finnor-os/apps/api/app/api")
@@ -12,7 +13,6 @@ function files(directory) {
   })
 }
 
-function quoted(content) { return [...content.matchAll(/"([a-z][a-z0-9_-]+)"/g)].map((match) => match[1]) }
 function block(source, start, end) {
   const begin = source.indexOf(start)
   const finish = source.indexOf(end, begin + start.length)
@@ -329,34 +329,29 @@ for (const file of files(apiRoot)) {
 }
 
 function registryEntries() {
-  const pe = readFileSync(join(project, "finnor-os/packages/domain-plugins/private-equity/index.ts"), "utf8")
-  const peActions = [...block(pe, "export const PRIVATE_EQUITY_ACTION_CONTRACTS", "].map(").matchAll(/\["([a-z_]+)"/g)].map((match) => match[1])
-  const universal = readFileSync(join(project, "finnor-os/packages/domain-plugins/universal-actions/index.ts"), "utf8")
-  const universalActions = quoted(block(universal, "const ACTION_TYPES:", "];"))
-  const querySource = readFileSync(join(project, "finnor-os/packages/shared-types/src/operational-queries.ts"), "utf8")
-  const queries = [...quoted(block(querySource, "export const CORE_OPERATIONAL_QUERY_INTENTS = [", "] as const")),
-    ...quoted(block(querySource, "export const PRIVATE_EQUITY_OPERATIONAL_QUERY_INTENTS = [", "] as const")),
-    ...quoted(block(querySource, "export const PROGRAM_OPERATIONAL_QUERY_INTENTS = [", "] as const")),
-    ...quoted(block(querySource, "export const CONFIDENTIAL_OPERATIONAL_QUERY_INTENTS = [", "] as const"))]
-  const registry = readFileSync(join(project, "finnor-os/packages/orchestration/src/plugin-registry.ts"), "utf8")
-  const humanOnly = quoted(block(registry, "export const HUMAN_ONLY_PLANNING_CAPABILITIES = [", "] as const"))
-  const humanOnlySet = new Set(humanOnly)
-  const registered = new Set([...peActions, ...universalActions])
-  const planner = (name, family, owner, modelCallable, humanOnly) => ({
-    capabilityId: `planner.${name}`, family, owner, transport: "planner", method: null, routePattern: null, routeDepth: 0,
-    classification: name.startsWith("query:") ? "READ" : "MUTATION", kind: name.startsWith("query:") ? "read" : "mutation",
-    userProduct: true, agentProduct: modelCallable, modelCallable, humanOnly, adminOnly: false, systemOnly: false,
-    requiredContext: name==="query:harness_program_v1"?["workId","programId"]:[], authorityClass: humanOnly ? "human_attestation" : name.startsWith("query:") ? "query" : "backend_policy",
-    effectClass: name.startsWith("query:") ? null : "planner_action", verificationClass: "backend_runtime",
-    presentationTargets: family === "private-equity" ? ["THREAD", "CANVAS", "WORLD"] : ["THREAD", "CANVAS"],
-    invalidationTags: [], timeoutClass: "RUNTIME", tests: [], source: "finnor-os/packages/orchestration/src/plugin-registry.ts",
+  const snapshot = readCanonicalPlanner()
+  const humanOnlySet = new Set(snapshot.humanOnly)
+  const privateEquitySet = new Set(snapshot.privateEquityActions)
+  return snapshot.entries.map(entry => {
+    const name = entry.capability, humanOnly = humanOnlySet.has(name)
+    const family = privateEquitySet.has(name) ? "private-equity" : humanOnly ? "human-attestation" :
+      entry.kind === "query" ? "operational-query" : entry.kind === "wait" || entry.kind === "check" ? "objective-runtime" :
+        snapshot.plugins[name] === "universal-actions" ? "universal-action" : "shared-action"
+    const owner = family === "private-equity" || humanOnly ? "@finnor/private-equity" :
+      snapshot.plugins[name] && snapshot.plugins[name] !== "clarification" ? `@finnor/plugin-${snapshot.plugins[name]}` : "@finnor/orchestration"
+    return {
+      capabilityId: `planner.${name}`, family, owner, transport: "planner", method: null, routePattern: null, routeDepth: 0,
+      classification: entry.kind === "query" ? "READ" : entry.kind === "action" ? "MUTATION" : "CONTROL",
+      kind: entry.kind === "query" ? "read" : entry.kind === "action" ? "mutation" : entry.kind,
+      userProduct: true, agentProduct: entry.modelProposable && entry.available, modelCallable: entry.modelProposable,
+      humanOnly, adminOnly: false, systemOnly: false,
+      requiredContext: entry.requiredReferences, authorityClass: humanOnly ? "human_attestation" : entry.authorityRequirement,
+      effectClass: entry.effectClass, verificationClass: "backend_runtime",
+      presentationTargets: family === "private-equity" ? ["THREAD", "CANVAS", "WORLD"] : ["THREAD", "CANVAS"],
+      invalidationTags: [], timeoutClass: "RUNTIME", tests: [], source: "finnor-os/packages/orchestration/src/plugin-registry.ts",
+      planning: entry,
+    }
   })
-  return [
-    ...peActions.map((name) => planner(name, "private-equity", "@finnor/private-equity", !humanOnlySet.has(name), humanOnlySet.has(name))),
-    ...universalActions.map((name) => planner(name, "universal-action", "@finnor/plugin-universal-actions", true, false)),
-    ...queries.map((name) => planner(`query:${name}`, "operational-query", "@finnor/orchestration", true, false)),
-    ...humanOnly.filter((name) => !registered.has(name)).map((name) => planner(name, "human-attestation", "@finnor/private-equity", false, true)),
-  ]
 }
 
 const capabilities = [...routes, ...registryEntries()].sort((a, b) => a.capabilityId.localeCompare(b.capabilityId))

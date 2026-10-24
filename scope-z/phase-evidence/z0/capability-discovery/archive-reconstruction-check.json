@@ -1,0 +1,13 @@
+{
+  "schema": "finnor.capability-discovery-archive-reconstruction/v1",
+  "archiveSha256": "b5c4e632885b2abc86bc2c68322725a1124ad4d4b7a0936ee4e8f215e0a7b5f0",
+  "result": "PASS",
+  "archiveMembersVerified": 143,
+  "initialSourcePreimagesVerified": 18598,
+  "uniqueGitBlobsVerified": 3082,
+  "allSixSourceInventoriesMatchTheirReports": true,
+  "httpCatalogueMatchesPreRepairBaseExactly": true,
+  "httpOperations": 580,
+  "knownEnvironmentCredentialPresenceCheck": "PASS",
+  "scope": "Independent archive, exact Git-base/source-overlay and HTTP-catalogue data reconstruction. No application execution or qualification claim."
+}

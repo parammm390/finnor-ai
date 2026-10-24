@@ -1,0 +1,137 @@
+{
+  "schema": "finnor.capability-discovery-evidence/v1",
+  "archive": "evidence-1.0.0.tar.gz",
+  "bytes": 1276539,
+  "sha256": "b5c4e632885b2abc86bc2c68322725a1124ad4d4b7a0936ee4e8f215e0a7b5f0",
+  "members": 143,
+  "uncompressedBytes": 8165424,
+  "roundTrip": "PASS",
+  "runs": [
+    {
+      "run": "run-KAFYLh",
+      "sourceBaseCommit": "0293c866a6e500cd0ad82f00b52db60ddb1c3a28",
+      "result": "FAIL",
+      "passed": 0,
+      "failed": 2,
+      "sourceInventorySha256": "3ea752607bf460b668d544a98c95eaae43458d3ec31fac1a364b9eaa4a571892",
+      "sourceOverlays": [
+        {
+          "file": "scripts/centropy/verify-capability-discovery.mjs",
+          "bytes": 16553,
+          "sha256": "c99939530f4977f208948252aceafe93ffdc5af9abe9fcb1e4eff68a660aef42"
+        }
+      ]
+    },
+    {
+      "run": "run-aODQI2",
+      "sourceBaseCommit": "0293c866a6e500cd0ad82f00b52db60ddb1c3a28",
+      "result": "FAIL",
+      "passed": 0,
+      "failed": 2,
+      "sourceInventorySha256": "6e2981fc96d851107facc29381ac0e4c0858ae2766f62e3f52ce2fd44cbbafe6",
+      "sourceOverlays": [
+        {
+          "file": "scripts/centropy/verify-capability-discovery.mjs",
+          "bytes": 16576,
+          "sha256": "85d24a4d2cee7b3ad5296e1eb49b072a1f5f4c84092aaec506630dc190e4ac68"
+        }
+      ]
+    },
+    {
+      "run": "run-6r9b7P",
+      "sourceBaseCommit": "0293c866a6e500cd0ad82f00b52db60ddb1c3a28",
+      "result": "FAIL",
+      "passed": 0,
+      "failed": 2,
+      "sourceInventorySha256": "a0c921df6c6f5bd96750a7f9483c001fcbdd81a3034d39b300e86df8007430bb",
+      "sourceOverlays": [
+        {
+          "file": "scripts/centropy/verify-capability-discovery.mjs",
+          "bytes": 16662,
+          "sha256": "c6c603153109a6f8ff00e43051e075d3a8134e3061cab2f8bc6059b09f158de8"
+        }
+      ]
+    },
+    {
+      "run": "run-nyn65Y",
+      "sourceBaseCommit": "0293c866a6e500cd0ad82f00b52db60ddb1c3a28",
+      "result": "FAIL",
+      "passed": 0,
+      "failed": 2,
+      "sourceInventorySha256": "3657169a59684722060ccfd5d9ed24713da614da2ec7cf16c42ad2cafde486df",
+      "sourceOverlays": [
+        {
+          "file": "scripts/centropy/verify-capability-discovery.mjs",
+          "bytes": 17054,
+          "sha256": "204e3f02b5dedd83aebe55f7c9917e98b80d3ee35f8fe34d922a73cbd9ec0a48"
+        }
+      ]
+    },
+    {
+      "run": "run-oQYNki",
+      "sourceBaseCommit": "0293c866a6e500cd0ad82f00b52db60ddb1c3a28",
+      "result": "FAIL",
+      "passed": 4,
+      "failed": 14,
+      "sourceInventorySha256": "09b522d8cd6f243fdbb3cb59770826a1d402e81f2358e611c6b53a341678b4f4",
+      "sourceOverlays": [
+        {
+          "file": "scripts/centropy/verify-capability-discovery.mjs",
+          "bytes": 17075,
+          "sha256": "df268e9eb410571a04a4d6d75b999058265f4d525fbac5924cd5aea64162edc9"
+        }
+      ]
+    },
+    {
+      "run": "run-UfA8os",
+      "sourceBaseCommit": "0293c866a6e500cd0ad82f00b52db60ddb1c3a28",
+      "result": "PASS",
+      "passed": 18,
+      "failed": 0,
+      "sourceInventorySha256": "e71cb7e6617fce9a084edc35d545edf784431301cd3c33343f2283c5a329a188",
+      "sourceOverlays": [
+        {
+          "file": "docs/centropy/capability-coverage.json",
+          "bytes": 1619540,
+          "sha256": "a6bdf377971ebd917c2959e65ddb467bc26b6c6e5765665766094949414f9131"
+        },
+        {
+          "file": "scripts/centropy/audit-capability-coverage.mjs",
+          "bytes": 25800,
+          "sha256": "1629972d93adae2db2588deb9f6f9712099fddb2203e28707d069ff5cbdb196c"
+        },
+        {
+          "file": "scripts/centropy/canonical-planner.mjs",
+          "bytes": 1447,
+          "sha256": "6d1f9a6cfb944067da63b6d9819bd4de38ff9a3ad0a3c27ef9c5757592f58f89"
+        },
+        {
+          "file": "scripts/centropy/generate-capability-manifest.mjs",
+          "bytes": 26425,
+          "sha256": "68b98dcc2ca6f4c48a355741e986a7bdb658ed2b8fe14db31aca12ebf6228e49"
+        },
+        {
+          "file": "scripts/centropy/read-canonical-planner.mjs",
+          "bytes": 2954,
+          "sha256": "edf9742accd26320685076dca09666caaf812c48d8506b1b7aad21a1ffc04b95"
+        },
+        {
+          "file": "scripts/centropy/verify-capability-discovery.mjs",
+          "bytes": 17075,
+          "sha256": "df268e9eb410571a04a4d6d75b999058265f4d525fbac5924cd5aea64162edc9"
+        },
+        {
+          "file": "src/lib/centropy/capability-manifest.generated.json",
+          "bytes": 642306,
+          "sha256": "9958c308e2a4266c259123d8ae6773e847b8f86cfcf73c3e6cea09df0146758a"
+        },
+        {
+          "file": "src/lib/centropy/capability-manifest.ts",
+          "bytes": 2542,
+          "sha256": "a3cdbdd49de9208ad7f9842d24b5175424bc3c76593fa47104f30b7ac80fcaa1"
+        }
+      ]
+    }
+  ],
+  "qualification": "Source-contract CLI evidence only, not clean product install, authenticated owner flow, dedicated execution or qualification"
+}

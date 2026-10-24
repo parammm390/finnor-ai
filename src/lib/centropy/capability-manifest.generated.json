@@ -17627,9 +17627,12 @@
       "humanOnly": false,
       "adminOnly": false,
       "systemOnly": false,
-      "requiredContext": [],
-      "authorityClass": "backend_policy",
-      "effectClass": "planner_action",
+      "requiredContext": [
+        "assigneeRef",
+        "taskRef"
+      ],
+      "authorityClass": "approval",
+      "effectClass": "OPERATIONAL_CHANGE",
       "verificationClass": "backend_runtime",
       "presentationTargets": [
         "THREAD",
@@ -17638,7 +17641,31 @@
       "invalidationTags": [],
       "timeoutClass": "RUNTIME",
       "tests": [],
-      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts"
+      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+      "planning": {
+        "capability": "assign_task",
+        "kind": "action",
+        "modelProposable": true,
+        "available": true,
+        "health": "available",
+        "risk": "medium",
+        "irreversible": false,
+        "requiredReferences": [
+          "assigneeRef",
+          "taskRef"
+        ],
+        "effectClass": "OPERATIONAL_CHANGE",
+        "observationStrategy": "business_effect",
+        "reversibility": "unknown_provider_dependent",
+        "supportedRecoveryModes": [
+          "retry",
+          "replan",
+          "recover",
+          "escalate"
+        ],
+        "externalSideEffect": false,
+        "authorityRequirement": "approval"
+      }
     },
     {
       "capabilityId": "planner.attach_ic_question_evidence",
@@ -17656,9 +17683,13 @@
       "humanOnly": false,
       "adminOnly": false,
       "systemOnly": false,
-      "requiredContext": [],
-      "authorityClass": "backend_policy",
-      "effectClass": "planner_action",
+      "requiredContext": [
+        "dealId",
+        "icCaseId",
+        "questionId"
+      ],
+      "authorityClass": "policy",
+      "effectClass": "INTERNAL_WRITE",
       "verificationClass": "backend_runtime",
       "presentationTargets": [
         "THREAD",
@@ -17668,7 +17699,32 @@
       "invalidationTags": [],
       "timeoutClass": "RUNTIME",
       "tests": [],
-      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts"
+      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+      "planning": {
+        "capability": "attach_ic_question_evidence",
+        "kind": "action",
+        "modelProposable": true,
+        "available": true,
+        "health": "available",
+        "risk": "medium",
+        "irreversible": false,
+        "requiredReferences": [
+          "dealId",
+          "icCaseId",
+          "questionId"
+        ],
+        "effectClass": "INTERNAL_WRITE",
+        "observationStrategy": "business_effect",
+        "reversibility": "unknown_provider_dependent",
+        "supportedRecoveryModes": [
+          "retry",
+          "replan",
+          "recover",
+          "escalate"
+        ],
+        "externalSideEffect": false,
+        "authorityRequirement": "policy"
+      }
     },
     {
       "capabilityId": "planner.begin_ic_preparation",
@@ -17686,9 +17742,12 @@
       "humanOnly": false,
       "adminOnly": false,
       "systemOnly": false,
-      "requiredContext": [],
-      "authorityClass": "backend_policy",
-      "effectClass": "planner_action",
+      "requiredContext": [
+        "dealId",
+        "icCaseId"
+      ],
+      "authorityClass": "policy",
+      "effectClass": "OPERATIONAL_CHANGE",
       "verificationClass": "backend_runtime",
       "presentationTargets": [
         "THREAD",
@@ -17698,7 +17757,31 @@
       "invalidationTags": [],
       "timeoutClass": "RUNTIME",
       "tests": [],
-      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts"
+      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+      "planning": {
+        "capability": "begin_ic_preparation",
+        "kind": "action",
+        "modelProposable": true,
+        "available": true,
+        "health": "available",
+        "risk": "medium",
+        "irreversible": false,
+        "requiredReferences": [
+          "dealId",
+          "icCaseId"
+        ],
+        "effectClass": "OPERATIONAL_CHANGE",
+        "observationStrategy": "business_effect",
+        "reversibility": "unknown_provider_dependent",
+        "supportedRecoveryModes": [
+          "retry",
+          "replan",
+          "recover",
+          "escalate"
+        ],
+        "externalSideEffect": false,
+        "authorityRequirement": "policy"
+      }
     },
     {
       "capabilityId": "planner.cancel_delegation",
@@ -17716,9 +17799,11 @@
       "humanOnly": false,
       "adminOnly": false,
       "systemOnly": false,
-      "requiredContext": [],
-      "authorityClass": "backend_policy",
-      "effectClass": "planner_action",
+      "requiredContext": [
+        "delegationRef"
+      ],
+      "authorityClass": "approval",
+      "effectClass": "OPERATIONAL_CHANGE",
       "verificationClass": "backend_runtime",
       "presentationTargets": [
         "THREAD",
@@ -17727,7 +17812,30 @@
       "invalidationTags": [],
       "timeoutClass": "RUNTIME",
       "tests": [],
-      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts"
+      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+      "planning": {
+        "capability": "cancel_delegation",
+        "kind": "action",
+        "modelProposable": true,
+        "available": true,
+        "health": "available",
+        "risk": "medium",
+        "irreversible": false,
+        "requiredReferences": [
+          "delegationRef"
+        ],
+        "effectClass": "OPERATIONAL_CHANGE",
+        "observationStrategy": "business_effect",
+        "reversibility": "unknown_provider_dependent",
+        "supportedRecoveryModes": [
+          "retry",
+          "replan",
+          "recover",
+          "escalate"
+        ],
+        "externalSideEffect": false,
+        "authorityRequirement": "approval"
+      }
     },
     {
       "capabilityId": "planner.cast_ic_vote",
@@ -17747,7 +17855,7 @@
       "systemOnly": false,
       "requiredContext": [],
       "authorityClass": "human_attestation",
-      "effectClass": "planner_action",
+      "effectClass": null,
       "verificationClass": "backend_runtime",
       "presentationTargets": [
         "THREAD",
@@ -17756,7 +17864,126 @@
       "invalidationTags": [],
       "timeoutClass": "RUNTIME",
       "tests": [],
-      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts"
+      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+      "planning": {
+        "capability": "cast_ic_vote",
+        "kind": "action",
+        "modelProposable": false,
+        "available": false,
+        "health": "unavailable",
+        "risk": "high",
+        "irreversible": true,
+        "requiredReferences": [],
+        "effectClass": null,
+        "observationStrategy": "objective_success",
+        "reversibility": "irreversible",
+        "supportedRecoveryModes": [
+          "escalate"
+        ],
+        "externalSideEffect": false,
+        "authorityRequirement": "human_attestation"
+      }
+    },
+    {
+      "capabilityId": "planner.check:objective_success",
+      "family": "objective-runtime",
+      "owner": "@finnor/orchestration",
+      "transport": "planner",
+      "method": null,
+      "routePattern": null,
+      "routeDepth": 0,
+      "classification": "CONTROL",
+      "kind": "check",
+      "userProduct": true,
+      "agentProduct": true,
+      "modelCallable": true,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [
+        "criterionId"
+      ],
+      "authorityClass": "query",
+      "effectClass": null,
+      "verificationClass": "backend_runtime",
+      "presentationTargets": [
+        "THREAD",
+        "CANVAS"
+      ],
+      "invalidationTags": [],
+      "timeoutClass": "RUNTIME",
+      "tests": [],
+      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+      "planning": {
+        "capability": "check:objective_success",
+        "kind": "check",
+        "modelProposable": true,
+        "available": true,
+        "health": "available",
+        "risk": "low",
+        "irreversible": false,
+        "requiredReferences": [
+          "criterionId"
+        ],
+        "effectClass": null,
+        "observationStrategy": "objective_success",
+        "reversibility": "read_only",
+        "supportedRecoveryModes": [
+          "replan",
+          "escalate"
+        ],
+        "externalSideEffect": false,
+        "authorityRequirement": "query"
+      }
+    },
+    {
+      "capabilityId": "planner.clarification_request",
+      "family": "shared-action",
+      "owner": "@finnor/orchestration",
+      "transport": "planner",
+      "method": null,
+      "routePattern": null,
+      "routeDepth": 0,
+      "classification": "MUTATION",
+      "kind": "mutation",
+      "userProduct": true,
+      "agentProduct": true,
+      "modelCallable": true,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "policy",
+      "effectClass": null,
+      "verificationClass": "backend_runtime",
+      "presentationTargets": [
+        "THREAD",
+        "CANVAS"
+      ],
+      "invalidationTags": [],
+      "timeoutClass": "RUNTIME",
+      "tests": [],
+      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+      "planning": {
+        "capability": "clarification_request",
+        "kind": "action",
+        "modelProposable": true,
+        "available": true,
+        "health": "available",
+        "risk": "low",
+        "irreversible": false,
+        "requiredReferences": [],
+        "effectClass": null,
+        "observationStrategy": "decision_receipt",
+        "reversibility": "read_only",
+        "supportedRecoveryModes": [
+          "retry",
+          "replan",
+          "escalate"
+        ],
+        "externalSideEffect": false,
+        "authorityRequirement": "policy"
+      }
     },
     {
       "capabilityId": "planner.close_ic_voting",
@@ -17776,7 +18003,7 @@
       "systemOnly": false,
       "requiredContext": [],
       "authorityClass": "human_attestation",
-      "effectClass": "planner_action",
+      "effectClass": null,
       "verificationClass": "backend_runtime",
       "presentationTargets": [
         "THREAD",
@@ -17785,7 +18012,80 @@
       "invalidationTags": [],
       "timeoutClass": "RUNTIME",
       "tests": [],
-      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts"
+      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+      "planning": {
+        "capability": "close_ic_voting",
+        "kind": "action",
+        "modelProposable": false,
+        "available": false,
+        "health": "unavailable",
+        "risk": "high",
+        "irreversible": true,
+        "requiredReferences": [],
+        "effectClass": null,
+        "observationStrategy": "objective_success",
+        "reversibility": "irreversible",
+        "supportedRecoveryModes": [
+          "escalate"
+        ],
+        "externalSideEffect": false,
+        "authorityRequirement": "human_attestation"
+      }
+    },
+    {
+      "capabilityId": "planner.computer_task",
+      "family": "shared-action",
+      "owner": "@finnor/plugin-computer-task",
+      "transport": "planner",
+      "method": null,
+      "routePattern": null,
+      "routeDepth": 0,
+      "classification": "MUTATION",
+      "kind": "mutation",
+      "userProduct": true,
+      "agentProduct": true,
+      "modelCallable": true,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [
+        "authProfileRef",
+        "target"
+      ],
+      "authorityClass": "policy",
+      "effectClass": "EXTERNAL_SIDE_EFFECT",
+      "verificationClass": "backend_runtime",
+      "presentationTargets": [
+        "THREAD",
+        "CANVAS"
+      ],
+      "invalidationTags": [],
+      "timeoutClass": "RUNTIME",
+      "tests": [],
+      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+      "planning": {
+        "capability": "computer_task",
+        "kind": "action",
+        "modelProposable": true,
+        "available": true,
+        "health": "available",
+        "risk": "high",
+        "irreversible": true,
+        "requiredReferences": [
+          "authProfileRef",
+          "target"
+        ],
+        "effectClass": "EXTERNAL_SIDE_EFFECT",
+        "observationStrategy": "business_effect",
+        "reversibility": "irreversible",
+        "supportedRecoveryModes": [
+          "replan",
+          "recover",
+          "escalate"
+        ],
+        "externalSideEffect": true,
+        "authorityRequirement": "policy"
+      }
     },
     {
       "capabilityId": "planner.configure_ic_committee",
@@ -17805,7 +18105,7 @@
       "systemOnly": false,
       "requiredContext": [],
       "authorityClass": "human_attestation",
-      "effectClass": "planner_action",
+      "effectClass": null,
       "verificationClass": "backend_runtime",
       "presentationTargets": [
         "THREAD",
@@ -17814,7 +18114,25 @@
       "invalidationTags": [],
       "timeoutClass": "RUNTIME",
       "tests": [],
-      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts"
+      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+      "planning": {
+        "capability": "configure_ic_committee",
+        "kind": "action",
+        "modelProposable": false,
+        "available": false,
+        "health": "unavailable",
+        "risk": "high",
+        "irreversible": true,
+        "requiredReferences": [],
+        "effectClass": null,
+        "observationStrategy": "objective_success",
+        "reversibility": "irreversible",
+        "supportedRecoveryModes": [
+          "escalate"
+        ],
+        "externalSideEffect": false,
+        "authorityRequirement": "human_attestation"
+      }
     },
     {
       "capabilityId": "planner.create_closing_condition",
@@ -17832,9 +18150,12 @@
       "humanOnly": false,
       "adminOnly": false,
       "systemOnly": false,
-      "requiredContext": [],
-      "authorityClass": "backend_policy",
-      "effectClass": "planner_action",
+      "requiredContext": [
+        "dealId",
+        "workstreamId"
+      ],
+      "authorityClass": "policy",
+      "effectClass": "INTERNAL_WRITE",
       "verificationClass": "backend_runtime",
       "presentationTargets": [
         "THREAD",
@@ -17844,7 +18165,31 @@
       "invalidationTags": [],
       "timeoutClass": "RUNTIME",
       "tests": [],
-      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts"
+      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+      "planning": {
+        "capability": "create_closing_condition",
+        "kind": "action",
+        "modelProposable": true,
+        "available": true,
+        "health": "available",
+        "risk": "medium",
+        "irreversible": false,
+        "requiredReferences": [
+          "dealId",
+          "workstreamId"
+        ],
+        "effectClass": "INTERNAL_WRITE",
+        "observationStrategy": "business_effect",
+        "reversibility": "unknown_provider_dependent",
+        "supportedRecoveryModes": [
+          "retry",
+          "replan",
+          "recover",
+          "escalate"
+        ],
+        "externalSideEffect": false,
+        "authorityRequirement": "policy"
+      }
     },
     {
       "capabilityId": "planner.create_deal_request",
@@ -17862,9 +18207,13 @@
       "humanOnly": false,
       "adminOnly": false,
       "systemOnly": false,
-      "requiredContext": [],
-      "authorityClass": "backend_policy",
-      "effectClass": "planner_action",
+      "requiredContext": [
+        "dealId",
+        "requestedFromDealPartyId",
+        "workstreamId"
+      ],
+      "authorityClass": "policy",
+      "effectClass": "INTERNAL_WRITE",
       "verificationClass": "backend_runtime",
       "presentationTargets": [
         "THREAD",
@@ -17874,7 +18223,32 @@
       "invalidationTags": [],
       "timeoutClass": "RUNTIME",
       "tests": [],
-      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts"
+      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+      "planning": {
+        "capability": "create_deal_request",
+        "kind": "action",
+        "modelProposable": true,
+        "available": true,
+        "health": "available",
+        "risk": "medium",
+        "irreversible": false,
+        "requiredReferences": [
+          "dealId",
+          "requestedFromDealPartyId",
+          "workstreamId"
+        ],
+        "effectClass": "INTERNAL_WRITE",
+        "observationStrategy": "business_effect",
+        "reversibility": "unknown_provider_dependent",
+        "supportedRecoveryModes": [
+          "retry",
+          "replan",
+          "recover",
+          "escalate"
+        ],
+        "externalSideEffect": false,
+        "authorityRequirement": "policy"
+      }
     },
     {
       "capabilityId": "planner.create_ic_deck_draft",
@@ -17892,9 +18266,13 @@
       "humanOnly": false,
       "adminOnly": false,
       "systemOnly": false,
-      "requiredContext": [],
-      "authorityClass": "backend_policy",
-      "effectClass": "planner_action",
+      "requiredContext": [
+        "dealId",
+        "icCaseId",
+        "templateVersionId"
+      ],
+      "authorityClass": "policy",
+      "effectClass": "INTERNAL_DRAFT",
       "verificationClass": "backend_runtime",
       "presentationTargets": [
         "THREAD",
@@ -17904,7 +18282,32 @@
       "invalidationTags": [],
       "timeoutClass": "RUNTIME",
       "tests": [],
-      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts"
+      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+      "planning": {
+        "capability": "create_ic_deck_draft",
+        "kind": "action",
+        "modelProposable": true,
+        "available": true,
+        "health": "available",
+        "risk": "low",
+        "irreversible": false,
+        "requiredReferences": [
+          "dealId",
+          "icCaseId",
+          "templateVersionId"
+        ],
+        "effectClass": "INTERNAL_DRAFT",
+        "observationStrategy": "business_effect",
+        "reversibility": "unknown_provider_dependent",
+        "supportedRecoveryModes": [
+          "retry",
+          "replan",
+          "recover",
+          "escalate"
+        ],
+        "externalSideEffect": false,
+        "authorityRequirement": "policy"
+      }
     },
     {
       "capabilityId": "planner.create_ic_memo_draft",
@@ -17922,9 +18325,12 @@
       "humanOnly": false,
       "adminOnly": false,
       "systemOnly": false,
-      "requiredContext": [],
-      "authorityClass": "backend_policy",
-      "effectClass": "planner_action",
+      "requiredContext": [
+        "dealId",
+        "icCaseId"
+      ],
+      "authorityClass": "policy",
+      "effectClass": "INTERNAL_DRAFT",
       "verificationClass": "backend_runtime",
       "presentationTargets": [
         "THREAD",
@@ -17934,7 +18340,31 @@
       "invalidationTags": [],
       "timeoutClass": "RUNTIME",
       "tests": [],
-      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts"
+      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+      "planning": {
+        "capability": "create_ic_memo_draft",
+        "kind": "action",
+        "modelProposable": true,
+        "available": true,
+        "health": "available",
+        "risk": "low",
+        "irreversible": false,
+        "requiredReferences": [
+          "dealId",
+          "icCaseId"
+        ],
+        "effectClass": "INTERNAL_DRAFT",
+        "observationStrategy": "business_effect",
+        "reversibility": "unknown_provider_dependent",
+        "supportedRecoveryModes": [
+          "retry",
+          "replan",
+          "recover",
+          "escalate"
+        ],
+        "externalSideEffect": false,
+        "authorityRequirement": "policy"
+      }
     },
     {
       "capabilityId": "planner.create_ic_question",
@@ -17952,9 +18382,12 @@
       "humanOnly": false,
       "adminOnly": false,
       "systemOnly": false,
-      "requiredContext": [],
-      "authorityClass": "backend_policy",
-      "effectClass": "planner_action",
+      "requiredContext": [
+        "dealId",
+        "icCaseId"
+      ],
+      "authorityClass": "policy",
+      "effectClass": "INTERNAL_WRITE",
       "verificationClass": "backend_runtime",
       "presentationTargets": [
         "THREAD",
@@ -17964,7 +18397,31 @@
       "invalidationTags": [],
       "timeoutClass": "RUNTIME",
       "tests": [],
-      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts"
+      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+      "planning": {
+        "capability": "create_ic_question",
+        "kind": "action",
+        "modelProposable": true,
+        "available": true,
+        "health": "available",
+        "risk": "medium",
+        "irreversible": false,
+        "requiredReferences": [
+          "dealId",
+          "icCaseId"
+        ],
+        "effectClass": "INTERNAL_WRITE",
+        "observationStrategy": "business_effect",
+        "reversibility": "unknown_provider_dependent",
+        "supportedRecoveryModes": [
+          "retry",
+          "replan",
+          "recover",
+          "escalate"
+        ],
+        "externalSideEffect": false,
+        "authorityRequirement": "policy"
+      }
     },
     {
       "capabilityId": "planner.create_task",
@@ -17982,9 +18439,11 @@
       "humanOnly": false,
       "adminOnly": false,
       "systemOnly": false,
-      "requiredContext": [],
-      "authorityClass": "backend_policy",
-      "effectClass": "planner_action",
+      "requiredContext": [
+        "subjectRef"
+      ],
+      "authorityClass": "policy",
+      "effectClass": "INTERNAL_WRITE",
       "verificationClass": "backend_runtime",
       "presentationTargets": [
         "THREAD",
@@ -17993,7 +18452,30 @@
       "invalidationTags": [],
       "timeoutClass": "RUNTIME",
       "tests": [],
-      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts"
+      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+      "planning": {
+        "capability": "create_task",
+        "kind": "action",
+        "modelProposable": true,
+        "available": true,
+        "health": "available",
+        "risk": "medium",
+        "irreversible": false,
+        "requiredReferences": [
+          "subjectRef"
+        ],
+        "effectClass": "INTERNAL_WRITE",
+        "observationStrategy": "business_effect",
+        "reversibility": "unknown_provider_dependent",
+        "supportedRecoveryModes": [
+          "retry",
+          "replan",
+          "recover",
+          "escalate"
+        ],
+        "externalSideEffect": false,
+        "authorityRequirement": "policy"
+      }
     },
     {
       "capabilityId": "planner.create_underwriting_run",
@@ -18011,9 +18493,13 @@
       "humanOnly": false,
       "adminOnly": false,
       "systemOnly": false,
-      "requiredContext": [],
-      "authorityClass": "backend_policy",
-      "effectClass": "planner_action",
+      "requiredContext": [
+        "dealId",
+        "investmentCaseId",
+        "modelVersionId"
+      ],
+      "authorityClass": "policy",
+      "effectClass": "INTERNAL_WRITE",
       "verificationClass": "backend_runtime",
       "presentationTargets": [
         "THREAD",
@@ -18023,7 +18509,32 @@
       "invalidationTags": [],
       "timeoutClass": "RUNTIME",
       "tests": [],
-      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts"
+      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+      "planning": {
+        "capability": "create_underwriting_run",
+        "kind": "action",
+        "modelProposable": true,
+        "available": true,
+        "health": "available",
+        "risk": "medium",
+        "irreversible": false,
+        "requiredReferences": [
+          "dealId",
+          "investmentCaseId",
+          "modelVersionId"
+        ],
+        "effectClass": "INTERNAL_WRITE",
+        "observationStrategy": "business_effect",
+        "reversibility": "unknown_provider_dependent",
+        "supportedRecoveryModes": [
+          "retry",
+          "replan",
+          "recover",
+          "escalate"
+        ],
+        "externalSideEffect": false,
+        "authorityRequirement": "policy"
+      }
     },
     {
       "capabilityId": "planner.declare_deal_closed",
@@ -18041,9 +18552,11 @@
       "humanOnly": false,
       "adminOnly": false,
       "systemOnly": false,
-      "requiredContext": [],
-      "authorityClass": "backend_policy",
-      "effectClass": "planner_action",
+      "requiredContext": [
+        "dealId"
+      ],
+      "authorityClass": "typed_approval",
+      "effectClass": "OPERATIONAL_CHANGE",
       "verificationClass": "backend_runtime",
       "presentationTargets": [
         "THREAD",
@@ -18053,7 +18566,30 @@
       "invalidationTags": [],
       "timeoutClass": "RUNTIME",
       "tests": [],
-      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts"
+      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+      "planning": {
+        "capability": "declare_deal_closed",
+        "kind": "action",
+        "modelProposable": true,
+        "available": true,
+        "health": "available",
+        "risk": "medium",
+        "irreversible": false,
+        "requiredReferences": [
+          "dealId"
+        ],
+        "effectClass": "OPERATIONAL_CHANGE",
+        "observationStrategy": "business_effect",
+        "reversibility": "unknown_provider_dependent",
+        "supportedRecoveryModes": [
+          "retry",
+          "replan",
+          "recover",
+          "escalate"
+        ],
+        "externalSideEffect": false,
+        "authorityRequirement": "typed_approval"
+      }
     },
     {
       "capabilityId": "planner.delegate_objective",
@@ -18071,9 +18607,12 @@
       "humanOnly": false,
       "adminOnly": false,
       "systemOnly": false,
-      "requiredContext": [],
-      "authorityClass": "backend_policy",
-      "effectClass": "planner_action",
+      "requiredContext": [
+        "targetRef",
+        "workRef"
+      ],
+      "authorityClass": "approval",
+      "effectClass": "DURABLE_WORKFLOW",
       "verificationClass": "backend_runtime",
       "presentationTargets": [
         "THREAD",
@@ -18082,7 +18621,31 @@
       "invalidationTags": [],
       "timeoutClass": "RUNTIME",
       "tests": [],
-      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts"
+      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+      "planning": {
+        "capability": "delegate_objective",
+        "kind": "action",
+        "modelProposable": true,
+        "available": true,
+        "health": "available",
+        "risk": "high",
+        "irreversible": false,
+        "requiredReferences": [
+          "targetRef",
+          "workRef"
+        ],
+        "effectClass": "DURABLE_WORKFLOW",
+        "observationStrategy": "business_effect",
+        "reversibility": "unknown_provider_dependent",
+        "supportedRecoveryModes": [
+          "retry",
+          "replan",
+          "recover",
+          "escalate"
+        ],
+        "externalSideEffect": false,
+        "authorityRequirement": "approval"
+      }
     },
     {
       "capabilityId": "planner.escalate_work",
@@ -18100,9 +18663,11 @@
       "humanOnly": false,
       "adminOnly": false,
       "systemOnly": false,
-      "requiredContext": [],
-      "authorityClass": "backend_policy",
-      "effectClass": "planner_action",
+      "requiredContext": [
+        "delegationRef"
+      ],
+      "authorityClass": "approval",
+      "effectClass": "OPERATIONAL_CHANGE",
       "verificationClass": "backend_runtime",
       "presentationTargets": [
         "THREAD",
@@ -18111,7 +18676,30 @@
       "invalidationTags": [],
       "timeoutClass": "RUNTIME",
       "tests": [],
-      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts"
+      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+      "planning": {
+        "capability": "escalate_work",
+        "kind": "action",
+        "modelProposable": true,
+        "available": true,
+        "health": "available",
+        "risk": "medium",
+        "irreversible": false,
+        "requiredReferences": [
+          "delegationRef"
+        ],
+        "effectClass": "OPERATIONAL_CHANGE",
+        "observationStrategy": "business_effect",
+        "reversibility": "unknown_provider_dependent",
+        "supportedRecoveryModes": [
+          "retry",
+          "replan",
+          "recover",
+          "escalate"
+        ],
+        "externalSideEffect": false,
+        "authorityRequirement": "approval"
+      }
     },
     {
       "capabilityId": "planner.execute_closing_operation",
@@ -18129,9 +18717,12 @@
       "humanOnly": false,
       "adminOnly": false,
       "systemOnly": false,
-      "requiredContext": [],
-      "authorityClass": "backend_policy",
-      "effectClass": "planner_action",
+      "requiredContext": [
+        "dealId",
+        "programmeId"
+      ],
+      "authorityClass": "typed_approval",
+      "effectClass": "EXTERNAL_SPEND",
       "verificationClass": "backend_runtime",
       "presentationTargets": [
         "THREAD",
@@ -18141,7 +18732,87 @@
       "invalidationTags": [],
       "timeoutClass": "RUNTIME",
       "tests": [],
-      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts"
+      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+      "planning": {
+        "capability": "execute_closing_operation",
+        "kind": "action",
+        "modelProposable": true,
+        "available": true,
+        "health": "available",
+        "risk": "high",
+        "irreversible": true,
+        "requiredReferences": [
+          "dealId",
+          "programmeId"
+        ],
+        "effectClass": "EXTERNAL_SPEND",
+        "observationStrategy": "business_effect",
+        "reversibility": "irreversible",
+        "supportedRecoveryModes": [
+          "replan",
+          "recover",
+          "escalate"
+        ],
+        "externalSideEffect": true,
+        "authorityRequirement": "typed_approval"
+      }
+    },
+    {
+      "capabilityId": "planner.execute_economic_right_transition",
+      "family": "private-equity",
+      "owner": "@finnor/private-equity",
+      "transport": "planner",
+      "method": null,
+      "routePattern": null,
+      "routeDepth": 0,
+      "classification": "MUTATION",
+      "kind": "mutation",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [
+        "theoryRef",
+        "programmeId",
+        "reservationRef"
+      ],
+      "authorityClass": "policy",
+      "effectClass": "INTERNAL_WRITE",
+      "verificationClass": "backend_runtime",
+      "presentationTargets": [
+        "THREAD",
+        "CANVAS",
+        "WORLD"
+      ],
+      "invalidationTags": [],
+      "timeoutClass": "RUNTIME",
+      "tests": [],
+      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+      "planning": {
+        "capability": "execute_economic_right_transition",
+        "kind": "action",
+        "modelProposable": false,
+        "available": false,
+        "health": "unavailable",
+        "risk": "medium",
+        "irreversible": false,
+        "requiredReferences": [
+          "theoryRef",
+          "programmeId",
+          "reservationRef"
+        ],
+        "effectClass": "INTERNAL_WRITE",
+        "observationStrategy": "business_effect",
+        "reversibility": "compensatable",
+        "supportedRecoveryModes": [
+          "recover",
+          "escalate"
+        ],
+        "externalSideEffect": false,
+        "authorityRequirement": "policy"
+      }
     },
     {
       "capabilityId": "planner.finalize_ic_decision",
@@ -18161,7 +18832,7 @@
       "systemOnly": false,
       "requiredContext": [],
       "authorityClass": "human_attestation",
-      "effectClass": "planner_action",
+      "effectClass": null,
       "verificationClass": "backend_runtime",
       "presentationTargets": [
         "THREAD",
@@ -18170,7 +18841,25 @@
       "invalidationTags": [],
       "timeoutClass": "RUNTIME",
       "tests": [],
-      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts"
+      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+      "planning": {
+        "capability": "finalize_ic_decision",
+        "kind": "action",
+        "modelProposable": false,
+        "available": false,
+        "health": "unavailable",
+        "risk": "high",
+        "irreversible": true,
+        "requiredReferences": [],
+        "effectClass": null,
+        "observationStrategy": "objective_success",
+        "reversibility": "irreversible",
+        "supportedRecoveryModes": [
+          "escalate"
+        ],
+        "externalSideEffect": false,
+        "authorityRequirement": "human_attestation"
+      }
     },
     {
       "capabilityId": "planner.handoff_work",
@@ -18188,9 +18877,12 @@
       "humanOnly": false,
       "adminOnly": false,
       "systemOnly": false,
-      "requiredContext": [],
-      "authorityClass": "backend_policy",
-      "effectClass": "planner_action",
+      "requiredContext": [
+        "targetEmployeeRef",
+        "workRef"
+      ],
+      "authorityClass": "approval",
+      "effectClass": "OPERATIONAL_CHANGE",
       "verificationClass": "backend_runtime",
       "presentationTargets": [
         "THREAD",
@@ -18199,7 +18891,31 @@
       "invalidationTags": [],
       "timeoutClass": "RUNTIME",
       "tests": [],
-      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts"
+      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+      "planning": {
+        "capability": "handoff_work",
+        "kind": "action",
+        "modelProposable": true,
+        "available": true,
+        "health": "available",
+        "risk": "medium",
+        "irreversible": false,
+        "requiredReferences": [
+          "targetEmployeeRef",
+          "workRef"
+        ],
+        "effectClass": "OPERATIONAL_CHANGE",
+        "observationStrategy": "business_effect",
+        "reversibility": "unknown_provider_dependent",
+        "supportedRecoveryModes": [
+          "retry",
+          "replan",
+          "recover",
+          "escalate"
+        ],
+        "externalSideEffect": false,
+        "authorityRequirement": "approval"
+      }
     },
     {
       "capabilityId": "planner.link_deal_dependency",
@@ -18217,9 +18933,11 @@
       "humanOnly": false,
       "adminOnly": false,
       "systemOnly": false,
-      "requiredContext": [],
-      "authorityClass": "backend_policy",
-      "effectClass": "planner_action",
+      "requiredContext": [
+        "dealId"
+      ],
+      "authorityClass": "policy",
+      "effectClass": "OPERATIONAL_CHANGE",
       "verificationClass": "backend_runtime",
       "presentationTargets": [
         "THREAD",
@@ -18229,7 +18947,30 @@
       "invalidationTags": [],
       "timeoutClass": "RUNTIME",
       "tests": [],
-      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts"
+      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+      "planning": {
+        "capability": "link_deal_dependency",
+        "kind": "action",
+        "modelProposable": true,
+        "available": true,
+        "health": "available",
+        "risk": "medium",
+        "irreversible": false,
+        "requiredReferences": [
+          "dealId"
+        ],
+        "effectClass": "OPERATIONAL_CHANGE",
+        "observationStrategy": "business_effect",
+        "reversibility": "unknown_provider_dependent",
+        "supportedRecoveryModes": [
+          "retry",
+          "replan",
+          "recover",
+          "escalate"
+        ],
+        "externalSideEffect": false,
+        "authorityRequirement": "policy"
+      }
     },
     {
       "capabilityId": "planner.mark_dependency_resolved",
@@ -18247,9 +18988,12 @@
       "humanOnly": false,
       "adminOnly": false,
       "systemOnly": false,
-      "requiredContext": [],
-      "authorityClass": "backend_policy",
-      "effectClass": "planner_action",
+      "requiredContext": [
+        "dealId",
+        "dependencyId"
+      ],
+      "authorityClass": "policy",
+      "effectClass": "OPERATIONAL_CHANGE",
       "verificationClass": "backend_runtime",
       "presentationTargets": [
         "THREAD",
@@ -18259,7 +19003,31 @@
       "invalidationTags": [],
       "timeoutClass": "RUNTIME",
       "tests": [],
-      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts"
+      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+      "planning": {
+        "capability": "mark_dependency_resolved",
+        "kind": "action",
+        "modelProposable": true,
+        "available": true,
+        "health": "available",
+        "risk": "medium",
+        "irreversible": false,
+        "requiredReferences": [
+          "dealId",
+          "dependencyId"
+        ],
+        "effectClass": "OPERATIONAL_CHANGE",
+        "observationStrategy": "business_effect",
+        "reversibility": "unknown_provider_dependent",
+        "supportedRecoveryModes": [
+          "retry",
+          "replan",
+          "recover",
+          "escalate"
+        ],
+        "externalSideEffect": false,
+        "authorityRequirement": "policy"
+      }
     },
     {
       "capabilityId": "planner.notify_group",
@@ -18277,9 +19045,11 @@
       "humanOnly": false,
       "adminOnly": false,
       "systemOnly": false,
-      "requiredContext": [],
-      "authorityClass": "backend_policy",
-      "effectClass": "planner_action",
+      "requiredContext": [
+        "teamRef"
+      ],
+      "authorityClass": "typed_approval",
+      "effectClass": "BATCH_EXTERNAL",
       "verificationClass": "backend_runtime",
       "presentationTargets": [
         "THREAD",
@@ -18288,7 +19058,29 @@
       "invalidationTags": [],
       "timeoutClass": "RUNTIME",
       "tests": [],
-      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts"
+      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+      "planning": {
+        "capability": "notify_group",
+        "kind": "action",
+        "modelProposable": true,
+        "available": true,
+        "health": "available",
+        "risk": "high",
+        "irreversible": true,
+        "requiredReferences": [
+          "teamRef"
+        ],
+        "effectClass": "BATCH_EXTERNAL",
+        "observationStrategy": "business_effect",
+        "reversibility": "irreversible",
+        "supportedRecoveryModes": [
+          "replan",
+          "recover",
+          "escalate"
+        ],
+        "externalSideEffect": true,
+        "authorityRequirement": "typed_approval"
+      }
     },
     {
       "capabilityId": "planner.open_ic_case",
@@ -18306,9 +19098,13 @@
       "humanOnly": false,
       "adminOnly": false,
       "systemOnly": false,
-      "requiredContext": [],
-      "authorityClass": "backend_policy",
-      "effectClass": "planner_action",
+      "requiredContext": [
+        "committeeConfigVersionId",
+        "dealId",
+        "investmentCaseId"
+      ],
+      "authorityClass": "approval",
+      "effectClass": "DURABLE_WORKFLOW",
       "verificationClass": "backend_runtime",
       "presentationTargets": [
         "THREAD",
@@ -18318,7 +19114,32 @@
       "invalidationTags": [],
       "timeoutClass": "RUNTIME",
       "tests": [],
-      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts"
+      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+      "planning": {
+        "capability": "open_ic_case",
+        "kind": "action",
+        "modelProposable": true,
+        "available": true,
+        "health": "available",
+        "risk": "high",
+        "irreversible": false,
+        "requiredReferences": [
+          "committeeConfigVersionId",
+          "dealId",
+          "investmentCaseId"
+        ],
+        "effectClass": "DURABLE_WORKFLOW",
+        "observationStrategy": "business_effect",
+        "reversibility": "unknown_provider_dependent",
+        "supportedRecoveryModes": [
+          "retry",
+          "replan",
+          "recover",
+          "escalate"
+        ],
+        "externalSideEffect": false,
+        "authorityRequirement": "approval"
+      }
     },
     {
       "capabilityId": "planner.open_ic_voting",
@@ -18338,7 +19159,7 @@
       "systemOnly": false,
       "requiredContext": [],
       "authorityClass": "human_attestation",
-      "effectClass": "planner_action",
+      "effectClass": null,
       "verificationClass": "backend_runtime",
       "presentationTargets": [
         "THREAD",
@@ -18347,7 +19168,25 @@
       "invalidationTags": [],
       "timeoutClass": "RUNTIME",
       "tests": [],
-      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts"
+      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+      "planning": {
+        "capability": "open_ic_voting",
+        "kind": "action",
+        "modelProposable": false,
+        "available": false,
+        "health": "unavailable",
+        "risk": "high",
+        "irreversible": true,
+        "requiredReferences": [],
+        "effectClass": null,
+        "observationStrategy": "objective_success",
+        "reversibility": "irreversible",
+        "supportedRecoveryModes": [
+          "escalate"
+        ],
+        "externalSideEffect": false,
+        "authorityRequirement": "human_attestation"
+      }
     },
     {
       "capabilityId": "planner.open_workstream",
@@ -18365,9 +19204,11 @@
       "humanOnly": false,
       "adminOnly": false,
       "systemOnly": false,
-      "requiredContext": [],
-      "authorityClass": "backend_policy",
-      "effectClass": "planner_action",
+      "requiredContext": [
+        "dealId"
+      ],
+      "authorityClass": "policy",
+      "effectClass": "INTERNAL_WRITE",
       "verificationClass": "backend_runtime",
       "presentationTargets": [
         "THREAD",
@@ -18377,7 +19218,30 @@
       "invalidationTags": [],
       "timeoutClass": "RUNTIME",
       "tests": [],
-      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts"
+      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+      "planning": {
+        "capability": "open_workstream",
+        "kind": "action",
+        "modelProposable": true,
+        "available": true,
+        "health": "available",
+        "risk": "medium",
+        "irreversible": false,
+        "requiredReferences": [
+          "dealId"
+        ],
+        "effectClass": "INTERNAL_WRITE",
+        "observationStrategy": "business_effect",
+        "reversibility": "unknown_provider_dependent",
+        "supportedRecoveryModes": [
+          "retry",
+          "replan",
+          "recover",
+          "escalate"
+        ],
+        "externalSideEffect": false,
+        "authorityRequirement": "policy"
+      }
     },
     {
       "capabilityId": "planner.place_call",
@@ -18395,9 +19259,11 @@
       "humanOnly": false,
       "adminOnly": false,
       "systemOnly": false,
-      "requiredContext": [],
-      "authorityClass": "backend_policy",
-      "effectClass": "planner_action",
+      "requiredContext": [
+        "recipient"
+      ],
+      "authorityClass": "approval",
+      "effectClass": "EXTERNAL_SIDE_EFFECT",
       "verificationClass": "backend_runtime",
       "presentationTargets": [
         "THREAD",
@@ -18406,7 +19272,29 @@
       "invalidationTags": [],
       "timeoutClass": "RUNTIME",
       "tests": [],
-      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts"
+      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+      "planning": {
+        "capability": "place_call",
+        "kind": "action",
+        "modelProposable": true,
+        "available": true,
+        "health": "available",
+        "risk": "high",
+        "irreversible": true,
+        "requiredReferences": [
+          "recipient"
+        ],
+        "effectClass": "EXTERNAL_SIDE_EFFECT",
+        "observationStrategy": "business_effect",
+        "reversibility": "irreversible",
+        "supportedRecoveryModes": [
+          "replan",
+          "recover",
+          "escalate"
+        ],
+        "externalSideEffect": true,
+        "authorityRequirement": "approval"
+      }
     },
     {
       "capabilityId": "planner.prepare_ic_decision_proposal",
@@ -18424,9 +19312,12 @@
       "humanOnly": false,
       "adminOnly": false,
       "systemOnly": false,
-      "requiredContext": [],
-      "authorityClass": "backend_policy",
-      "effectClass": "planner_action",
+      "requiredContext": [
+        "dealId",
+        "icCaseId"
+      ],
+      "authorityClass": "policy",
+      "effectClass": "INTERNAL_DRAFT",
       "verificationClass": "backend_runtime",
       "presentationTargets": [
         "THREAD",
@@ -18436,7 +19327,31 @@
       "invalidationTags": [],
       "timeoutClass": "RUNTIME",
       "tests": [],
-      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts"
+      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+      "planning": {
+        "capability": "prepare_ic_decision_proposal",
+        "kind": "action",
+        "modelProposable": true,
+        "available": true,
+        "health": "available",
+        "risk": "low",
+        "irreversible": false,
+        "requiredReferences": [
+          "dealId",
+          "icCaseId"
+        ],
+        "effectClass": "INTERNAL_DRAFT",
+        "observationStrategy": "business_effect",
+        "reversibility": "unknown_provider_dependent",
+        "supportedRecoveryModes": [
+          "retry",
+          "replan",
+          "recover",
+          "escalate"
+        ],
+        "externalSideEffect": false,
+        "authorityRequirement": "policy"
+      }
     },
     {
       "capabilityId": "planner.prepare_ic_recommendation",
@@ -18454,9 +19369,14 @@
       "humanOnly": false,
       "adminOnly": false,
       "systemOnly": false,
-      "requiredContext": [],
-      "authorityClass": "backend_policy",
-      "effectClass": "planner_action",
+      "requiredContext": [
+        "dealId",
+        "icCaseId",
+        "memoId",
+        "underwritingRunId"
+      ],
+      "authorityClass": "policy",
+      "effectClass": "INTERNAL_DRAFT",
       "verificationClass": "backend_runtime",
       "presentationTargets": [
         "THREAD",
@@ -18466,7 +19386,33 @@
       "invalidationTags": [],
       "timeoutClass": "RUNTIME",
       "tests": [],
-      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts"
+      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+      "planning": {
+        "capability": "prepare_ic_recommendation",
+        "kind": "action",
+        "modelProposable": true,
+        "available": true,
+        "health": "available",
+        "risk": "low",
+        "irreversible": false,
+        "requiredReferences": [
+          "dealId",
+          "icCaseId",
+          "memoId",
+          "underwritingRunId"
+        ],
+        "effectClass": "INTERNAL_DRAFT",
+        "observationStrategy": "business_effect",
+        "reversibility": "unknown_provider_dependent",
+        "supportedRecoveryModes": [
+          "retry",
+          "replan",
+          "recover",
+          "escalate"
+        ],
+        "externalSideEffect": false,
+        "authorityRequirement": "policy"
+      }
     },
     {
       "capabilityId": "planner.query:agent_activity",
@@ -18495,7 +19441,27 @@
       "invalidationTags": [],
       "timeoutClass": "RUNTIME",
       "tests": [],
-      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts"
+      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+      "planning": {
+        "capability": "query:agent_activity",
+        "kind": "query",
+        "modelProposable": true,
+        "available": true,
+        "health": "available",
+        "risk": "low",
+        "irreversible": false,
+        "requiredReferences": [],
+        "effectClass": null,
+        "observationStrategy": "operational_query",
+        "reversibility": "read_only",
+        "supportedRecoveryModes": [
+          "retry",
+          "replan",
+          "escalate"
+        ],
+        "externalSideEffect": false,
+        "authorityRequirement": "query"
+      }
     },
     {
       "capabilityId": "planner.query:attention_queue",
@@ -18524,7 +19490,27 @@
       "invalidationTags": [],
       "timeoutClass": "RUNTIME",
       "tests": [],
-      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts"
+      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+      "planning": {
+        "capability": "query:attention_queue",
+        "kind": "query",
+        "modelProposable": true,
+        "available": true,
+        "health": "available",
+        "risk": "low",
+        "irreversible": false,
+        "requiredReferences": [],
+        "effectClass": null,
+        "observationStrategy": "operational_query",
+        "reversibility": "read_only",
+        "supportedRecoveryModes": [
+          "retry",
+          "replan",
+          "escalate"
+        ],
+        "externalSideEffect": false,
+        "authorityRequirement": "query"
+      }
     },
     {
       "capabilityId": "planner.query:closing_readiness",
@@ -18542,7 +19528,9 @@
       "humanOnly": false,
       "adminOnly": false,
       "systemOnly": false,
-      "requiredContext": [],
+      "requiredContext": [
+        "dealId"
+      ],
       "authorityClass": "query",
       "effectClass": null,
       "verificationClass": "backend_runtime",
@@ -18553,7 +19541,29 @@
       "invalidationTags": [],
       "timeoutClass": "RUNTIME",
       "tests": [],
-      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts"
+      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+      "planning": {
+        "capability": "query:closing_readiness",
+        "kind": "query",
+        "modelProposable": true,
+        "available": true,
+        "health": "available",
+        "risk": "low",
+        "irreversible": false,
+        "requiredReferences": [
+          "dealId"
+        ],
+        "effectClass": null,
+        "observationStrategy": "operational_query",
+        "reversibility": "read_only",
+        "supportedRecoveryModes": [
+          "retry",
+          "replan",
+          "escalate"
+        ],
+        "externalSideEffect": false,
+        "authorityRequirement": "query"
+      }
     },
     {
       "capabilityId": "planner.query:company_context",
@@ -18582,7 +19592,27 @@
       "invalidationTags": [],
       "timeoutClass": "RUNTIME",
       "tests": [],
-      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts"
+      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+      "planning": {
+        "capability": "query:company_context",
+        "kind": "query",
+        "modelProposable": true,
+        "available": true,
+        "health": "available",
+        "risk": "low",
+        "irreversible": false,
+        "requiredReferences": [],
+        "effectClass": null,
+        "observationStrategy": "operational_query",
+        "reversibility": "read_only",
+        "supportedRecoveryModes": [
+          "retry",
+          "replan",
+          "escalate"
+        ],
+        "externalSideEffect": false,
+        "authorityRequirement": "query"
+      }
     },
     {
       "capabilityId": "planner.query:confidential_economic_computation_v1",
@@ -18600,7 +19630,9 @@
       "humanOnly": false,
       "adminOnly": false,
       "systemOnly": false,
-      "requiredContext": [],
+      "requiredContext": [
+        "workId"
+      ],
       "authorityClass": "query",
       "effectClass": null,
       "verificationClass": "backend_runtime",
@@ -18611,7 +19643,29 @@
       "invalidationTags": [],
       "timeoutClass": "RUNTIME",
       "tests": [],
-      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts"
+      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+      "planning": {
+        "capability": "query:confidential_economic_computation_v1",
+        "kind": "query",
+        "modelProposable": true,
+        "available": true,
+        "health": "available",
+        "risk": "low",
+        "irreversible": false,
+        "requiredReferences": [
+          "workId"
+        ],
+        "effectClass": null,
+        "observationStrategy": "operational_query",
+        "reversibility": "read_only",
+        "supportedRecoveryModes": [
+          "retry",
+          "replan",
+          "escalate"
+        ],
+        "externalSideEffect": false,
+        "authorityRequirement": "query"
+      }
     },
     {
       "capabilityId": "planner.query:critical_dependencies",
@@ -18629,7 +19683,9 @@
       "humanOnly": false,
       "adminOnly": false,
       "systemOnly": false,
-      "requiredContext": [],
+      "requiredContext": [
+        "dealId"
+      ],
       "authorityClass": "query",
       "effectClass": null,
       "verificationClass": "backend_runtime",
@@ -18640,7 +19696,29 @@
       "invalidationTags": [],
       "timeoutClass": "RUNTIME",
       "tests": [],
-      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts"
+      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+      "planning": {
+        "capability": "query:critical_dependencies",
+        "kind": "query",
+        "modelProposable": true,
+        "available": true,
+        "health": "available",
+        "risk": "low",
+        "irreversible": false,
+        "requiredReferences": [
+          "dealId"
+        ],
+        "effectClass": null,
+        "observationStrategy": "operational_query",
+        "reversibility": "read_only",
+        "supportedRecoveryModes": [
+          "retry",
+          "replan",
+          "escalate"
+        ],
+        "externalSideEffect": false,
+        "authorityRequirement": "query"
+      }
     },
     {
       "capabilityId": "planner.query:deal_context",
@@ -18658,7 +19736,9 @@
       "humanOnly": false,
       "adminOnly": false,
       "systemOnly": false,
-      "requiredContext": [],
+      "requiredContext": [
+        "dealId"
+      ],
       "authorityClass": "query",
       "effectClass": null,
       "verificationClass": "backend_runtime",
@@ -18669,7 +19749,29 @@
       "invalidationTags": [],
       "timeoutClass": "RUNTIME",
       "tests": [],
-      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts"
+      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+      "planning": {
+        "capability": "query:deal_context",
+        "kind": "query",
+        "modelProposable": true,
+        "available": true,
+        "health": "available",
+        "risk": "low",
+        "irreversible": false,
+        "requiredReferences": [
+          "dealId"
+        ],
+        "effectClass": null,
+        "observationStrategy": "operational_query",
+        "reversibility": "read_only",
+        "supportedRecoveryModes": [
+          "retry",
+          "replan",
+          "escalate"
+        ],
+        "externalSideEffect": false,
+        "authorityRequirement": "query"
+      }
     },
     {
       "capabilityId": "planner.query:deal_workstreams",
@@ -18687,7 +19789,9 @@
       "humanOnly": false,
       "adminOnly": false,
       "systemOnly": false,
-      "requiredContext": [],
+      "requiredContext": [
+        "dealId"
+      ],
       "authorityClass": "query",
       "effectClass": null,
       "verificationClass": "backend_runtime",
@@ -18698,7 +19802,29 @@
       "invalidationTags": [],
       "timeoutClass": "RUNTIME",
       "tests": [],
-      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts"
+      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+      "planning": {
+        "capability": "query:deal_workstreams",
+        "kind": "query",
+        "modelProposable": true,
+        "available": true,
+        "health": "available",
+        "risk": "low",
+        "irreversible": false,
+        "requiredReferences": [
+          "dealId"
+        ],
+        "effectClass": null,
+        "observationStrategy": "operational_query",
+        "reversibility": "read_only",
+        "supportedRecoveryModes": [
+          "retry",
+          "replan",
+          "escalate"
+        ],
+        "externalSideEffect": false,
+        "authorityRequirement": "query"
+      }
     },
     {
       "capabilityId": "planner.query:economic_programme_v1",
@@ -18716,7 +19842,10 @@
       "humanOnly": false,
       "adminOnly": false,
       "systemOnly": false,
-      "requiredContext": [],
+      "requiredContext": [
+        "workId",
+        "programmeId"
+      ],
       "authorityClass": "query",
       "effectClass": null,
       "verificationClass": "backend_runtime",
@@ -18727,7 +19856,30 @@
       "invalidationTags": [],
       "timeoutClass": "RUNTIME",
       "tests": [],
-      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts"
+      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+      "planning": {
+        "capability": "query:economic_programme_v1",
+        "kind": "query",
+        "modelProposable": true,
+        "available": true,
+        "health": "available",
+        "risk": "low",
+        "irreversible": false,
+        "requiredReferences": [
+          "workId",
+          "programmeId"
+        ],
+        "effectClass": null,
+        "observationStrategy": "operational_query",
+        "reversibility": "read_only",
+        "supportedRecoveryModes": [
+          "retry",
+          "replan",
+          "escalate"
+        ],
+        "externalSideEffect": false,
+        "authorityRequirement": "query"
+      }
     },
     {
       "capabilityId": "planner.query:harness_program_v1",
@@ -18759,7 +19911,30 @@
       "invalidationTags": [],
       "timeoutClass": "RUNTIME",
       "tests": [],
-      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts"
+      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+      "planning": {
+        "capability": "query:harness_program_v1",
+        "kind": "query",
+        "modelProposable": true,
+        "available": true,
+        "health": "available",
+        "risk": "low",
+        "irreversible": false,
+        "requiredReferences": [
+          "workId",
+          "programId"
+        ],
+        "effectClass": null,
+        "observationStrategy": "operational_query",
+        "reversibility": "read_only",
+        "supportedRecoveryModes": [
+          "retry",
+          "replan",
+          "escalate"
+        ],
+        "externalSideEffect": false,
+        "authorityRequirement": "query"
+      }
     },
     {
       "capabilityId": "planner.query:open_deal_risks",
@@ -18777,7 +19952,9 @@
       "humanOnly": false,
       "adminOnly": false,
       "systemOnly": false,
-      "requiredContext": [],
+      "requiredContext": [
+        "dealId"
+      ],
       "authorityClass": "query",
       "effectClass": null,
       "verificationClass": "backend_runtime",
@@ -18788,7 +19965,29 @@
       "invalidationTags": [],
       "timeoutClass": "RUNTIME",
       "tests": [],
-      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts"
+      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+      "planning": {
+        "capability": "query:open_deal_risks",
+        "kind": "query",
+        "modelProposable": true,
+        "available": true,
+        "health": "available",
+        "risk": "low",
+        "irreversible": false,
+        "requiredReferences": [
+          "dealId"
+        ],
+        "effectClass": null,
+        "observationStrategy": "operational_query",
+        "reversibility": "read_only",
+        "supportedRecoveryModes": [
+          "retry",
+          "replan",
+          "escalate"
+        ],
+        "externalSideEffect": false,
+        "authorityRequirement": "query"
+      }
     },
     {
       "capabilityId": "planner.query:open_findings",
@@ -18806,7 +20005,9 @@
       "humanOnly": false,
       "adminOnly": false,
       "systemOnly": false,
-      "requiredContext": [],
+      "requiredContext": [
+        "dealId"
+      ],
       "authorityClass": "query",
       "effectClass": null,
       "verificationClass": "backend_runtime",
@@ -18817,7 +20018,29 @@
       "invalidationTags": [],
       "timeoutClass": "RUNTIME",
       "tests": [],
-      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts"
+      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+      "planning": {
+        "capability": "query:open_findings",
+        "kind": "query",
+        "modelProposable": true,
+        "available": true,
+        "health": "available",
+        "risk": "low",
+        "irreversible": false,
+        "requiredReferences": [
+          "dealId"
+        ],
+        "effectClass": null,
+        "observationStrategy": "operational_query",
+        "reversibility": "read_only",
+        "supportedRecoveryModes": [
+          "retry",
+          "replan",
+          "escalate"
+        ],
+        "externalSideEffect": false,
+        "authorityRequirement": "query"
+      }
     },
     {
       "capabilityId": "planner.query:open_requests",
@@ -18835,7 +20058,9 @@
       "humanOnly": false,
       "adminOnly": false,
       "systemOnly": false,
-      "requiredContext": [],
+      "requiredContext": [
+        "dealId"
+      ],
       "authorityClass": "query",
       "effectClass": null,
       "verificationClass": "backend_runtime",
@@ -18846,7 +20071,29 @@
       "invalidationTags": [],
       "timeoutClass": "RUNTIME",
       "tests": [],
-      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts"
+      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+      "planning": {
+        "capability": "query:open_requests",
+        "kind": "query",
+        "modelProposable": true,
+        "available": true,
+        "health": "available",
+        "risk": "low",
+        "irreversible": false,
+        "requiredReferences": [
+          "dealId"
+        ],
+        "effectClass": null,
+        "observationStrategy": "operational_query",
+        "reversibility": "read_only",
+        "supportedRecoveryModes": [
+          "retry",
+          "replan",
+          "escalate"
+        ],
+        "externalSideEffect": false,
+        "authorityRequirement": "query"
+      }
     },
     {
       "capabilityId": "planner.query:party_context",
@@ -18875,7 +20122,27 @@
       "invalidationTags": [],
       "timeoutClass": "RUNTIME",
       "tests": [],
-      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts"
+      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+      "planning": {
+        "capability": "query:party_context",
+        "kind": "query",
+        "modelProposable": true,
+        "available": true,
+        "health": "available",
+        "risk": "low",
+        "irreversible": false,
+        "requiredReferences": [],
+        "effectClass": null,
+        "observationStrategy": "operational_query",
+        "reversibility": "read_only",
+        "supportedRecoveryModes": [
+          "retry",
+          "replan",
+          "escalate"
+        ],
+        "externalSideEffect": false,
+        "authorityRequirement": "query"
+      }
     },
     {
       "capabilityId": "planner.query:party_lookup",
@@ -18904,7 +20171,27 @@
       "invalidationTags": [],
       "timeoutClass": "RUNTIME",
       "tests": [],
-      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts"
+      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+      "planning": {
+        "capability": "query:party_lookup",
+        "kind": "query",
+        "modelProposable": true,
+        "available": true,
+        "health": "available",
+        "risk": "low",
+        "irreversible": false,
+        "requiredReferences": [],
+        "effectClass": null,
+        "observationStrategy": "operational_query",
+        "reversibility": "read_only",
+        "supportedRecoveryModes": [
+          "retry",
+          "replan",
+          "escalate"
+        ],
+        "externalSideEffect": false,
+        "authorityRequirement": "query"
+      }
     },
     {
       "capabilityId": "planner.query:pe_world_state",
@@ -18922,7 +20209,9 @@
       "humanOnly": false,
       "adminOnly": false,
       "systemOnly": false,
-      "requiredContext": [],
+      "requiredContext": [
+        "root"
+      ],
       "authorityClass": "query",
       "effectClass": null,
       "verificationClass": "backend_runtime",
@@ -18933,7 +20222,29 @@
       "invalidationTags": [],
       "timeoutClass": "RUNTIME",
       "tests": [],
-      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts"
+      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+      "planning": {
+        "capability": "query:pe_world_state",
+        "kind": "query",
+        "modelProposable": true,
+        "available": true,
+        "health": "available",
+        "risk": "low",
+        "irreversible": false,
+        "requiredReferences": [
+          "root"
+        ],
+        "effectClass": null,
+        "observationStrategy": "operational_query",
+        "reversibility": "read_only",
+        "supportedRecoveryModes": [
+          "retry",
+          "replan",
+          "escalate"
+        ],
+        "externalSideEffect": false,
+        "authorityRequirement": "query"
+      }
     },
     {
       "capabilityId": "planner.query:team_roster",
@@ -18962,7 +20273,27 @@
       "invalidationTags": [],
       "timeoutClass": "RUNTIME",
       "tests": [],
-      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts"
+      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+      "planning": {
+        "capability": "query:team_roster",
+        "kind": "query",
+        "modelProposable": true,
+        "available": true,
+        "health": "available",
+        "risk": "low",
+        "irreversible": false,
+        "requiredReferences": [],
+        "effectClass": null,
+        "observationStrategy": "operational_query",
+        "reversibility": "read_only",
+        "supportedRecoveryModes": [
+          "retry",
+          "replan",
+          "escalate"
+        ],
+        "externalSideEffect": false,
+        "authorityRequirement": "query"
+      }
     },
     {
       "capabilityId": "planner.query:work_list",
@@ -18991,7 +20322,27 @@
       "invalidationTags": [],
       "timeoutClass": "RUNTIME",
       "tests": [],
-      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts"
+      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+      "planning": {
+        "capability": "query:work_list",
+        "kind": "query",
+        "modelProposable": true,
+        "available": true,
+        "health": "available",
+        "risk": "low",
+        "irreversible": false,
+        "requiredReferences": [],
+        "effectClass": null,
+        "observationStrategy": "operational_query",
+        "reversibility": "read_only",
+        "supportedRecoveryModes": [
+          "retry",
+          "replan",
+          "escalate"
+        ],
+        "externalSideEffect": false,
+        "authorityRequirement": "query"
+      }
     },
     {
       "capabilityId": "planner.query:workforce_status",
@@ -19020,7 +20371,27 @@
       "invalidationTags": [],
       "timeoutClass": "RUNTIME",
       "tests": [],
-      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts"
+      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+      "planning": {
+        "capability": "query:workforce_status",
+        "kind": "query",
+        "modelProposable": true,
+        "available": true,
+        "health": "available",
+        "risk": "low",
+        "irreversible": false,
+        "requiredReferences": [],
+        "effectClass": null,
+        "observationStrategy": "operational_query",
+        "reversibility": "read_only",
+        "supportedRecoveryModes": [
+          "retry",
+          "replan",
+          "escalate"
+        ],
+        "externalSideEffect": false,
+        "authorityRequirement": "query"
+      }
     },
     {
       "capabilityId": "planner.raise_deal_risk",
@@ -19038,9 +20409,12 @@
       "humanOnly": false,
       "adminOnly": false,
       "systemOnly": false,
-      "requiredContext": [],
-      "authorityClass": "backend_policy",
-      "effectClass": "planner_action",
+      "requiredContext": [
+        "dealId",
+        "workstreamId"
+      ],
+      "authorityClass": "policy",
+      "effectClass": "INTERNAL_WRITE",
       "verificationClass": "backend_runtime",
       "presentationTargets": [
         "THREAD",
@@ -19050,7 +20424,31 @@
       "invalidationTags": [],
       "timeoutClass": "RUNTIME",
       "tests": [],
-      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts"
+      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+      "planning": {
+        "capability": "raise_deal_risk",
+        "kind": "action",
+        "modelProposable": true,
+        "available": true,
+        "health": "available",
+        "risk": "medium",
+        "irreversible": false,
+        "requiredReferences": [
+          "dealId",
+          "workstreamId"
+        ],
+        "effectClass": "INTERNAL_WRITE",
+        "observationStrategy": "business_effect",
+        "reversibility": "unknown_provider_dependent",
+        "supportedRecoveryModes": [
+          "retry",
+          "replan",
+          "recover",
+          "escalate"
+        ],
+        "externalSideEffect": false,
+        "authorityRequirement": "policy"
+      }
     },
     {
       "capabilityId": "planner.record_finding",
@@ -19068,9 +20466,12 @@
       "humanOnly": false,
       "adminOnly": false,
       "systemOnly": false,
-      "requiredContext": [],
-      "authorityClass": "backend_policy",
-      "effectClass": "planner_action",
+      "requiredContext": [
+        "dealId",
+        "workstreamId"
+      ],
+      "authorityClass": "policy",
+      "effectClass": "INTERNAL_WRITE",
       "verificationClass": "backend_runtime",
       "presentationTargets": [
         "THREAD",
@@ -19080,7 +20481,31 @@
       "invalidationTags": [],
       "timeoutClass": "RUNTIME",
       "tests": [],
-      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts"
+      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+      "planning": {
+        "capability": "record_finding",
+        "kind": "action",
+        "modelProposable": true,
+        "available": true,
+        "health": "available",
+        "risk": "medium",
+        "irreversible": false,
+        "requiredReferences": [
+          "dealId",
+          "workstreamId"
+        ],
+        "effectClass": "INTERNAL_WRITE",
+        "observationStrategy": "business_effect",
+        "reversibility": "unknown_provider_dependent",
+        "supportedRecoveryModes": [
+          "retry",
+          "replan",
+          "recover",
+          "escalate"
+        ],
+        "externalSideEffect": false,
+        "authorityRequirement": "policy"
+      }
     },
     {
       "capabilityId": "planner.record_ic_dissent",
@@ -19100,7 +20525,7 @@
       "systemOnly": false,
       "requiredContext": [],
       "authorityClass": "human_attestation",
-      "effectClass": "planner_action",
+      "effectClass": null,
       "verificationClass": "backend_runtime",
       "presentationTargets": [
         "THREAD",
@@ -19109,7 +20534,25 @@
       "invalidationTags": [],
       "timeoutClass": "RUNTIME",
       "tests": [],
-      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts"
+      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+      "planning": {
+        "capability": "record_ic_dissent",
+        "kind": "action",
+        "modelProposable": false,
+        "available": false,
+        "health": "unavailable",
+        "risk": "high",
+        "irreversible": true,
+        "requiredReferences": [],
+        "effectClass": null,
+        "observationStrategy": "objective_success",
+        "reversibility": "irreversible",
+        "supportedRecoveryModes": [
+          "escalate"
+        ],
+        "externalSideEffect": false,
+        "authorityRequirement": "human_attestation"
+      }
     },
     {
       "capabilityId": "planner.record_ic_vote",
@@ -19129,7 +20572,7 @@
       "systemOnly": false,
       "requiredContext": [],
       "authorityClass": "human_attestation",
-      "effectClass": "planner_action",
+      "effectClass": null,
       "verificationClass": "backend_runtime",
       "presentationTargets": [
         "THREAD",
@@ -19138,7 +20581,25 @@
       "invalidationTags": [],
       "timeoutClass": "RUNTIME",
       "tests": [],
-      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts"
+      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+      "planning": {
+        "capability": "record_ic_vote",
+        "kind": "action",
+        "modelProposable": false,
+        "available": false,
+        "health": "unavailable",
+        "risk": "high",
+        "irreversible": true,
+        "requiredReferences": [],
+        "effectClass": null,
+        "observationStrategy": "objective_success",
+        "reversibility": "irreversible",
+        "supportedRecoveryModes": [
+          "escalate"
+        ],
+        "externalSideEffect": false,
+        "authorityRequirement": "human_attestation"
+      }
     },
     {
       "capabilityId": "planner.request_acknowledgement",
@@ -19156,9 +20617,11 @@
       "humanOnly": false,
       "adminOnly": false,
       "systemOnly": false,
-      "requiredContext": [],
-      "authorityClass": "backend_policy",
-      "effectClass": "planner_action",
+      "requiredContext": [
+        "recipient"
+      ],
+      "authorityClass": "policy",
+      "effectClass": "INTERNAL_WRITE",
       "verificationClass": "backend_runtime",
       "presentationTargets": [
         "THREAD",
@@ -19167,7 +20630,30 @@
       "invalidationTags": [],
       "timeoutClass": "RUNTIME",
       "tests": [],
-      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts"
+      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+      "planning": {
+        "capability": "request_acknowledgement",
+        "kind": "action",
+        "modelProposable": true,
+        "available": true,
+        "health": "available",
+        "risk": "medium",
+        "irreversible": false,
+        "requiredReferences": [
+          "recipient"
+        ],
+        "effectClass": "INTERNAL_WRITE",
+        "observationStrategy": "business_effect",
+        "reversibility": "unknown_provider_dependent",
+        "supportedRecoveryModes": [
+          "retry",
+          "replan",
+          "recover",
+          "escalate"
+        ],
+        "externalSideEffect": false,
+        "authorityRequirement": "policy"
+      }
     },
     {
       "capabilityId": "planner.request_ic_memo_review",
@@ -19185,9 +20671,12 @@
       "humanOnly": false,
       "adminOnly": false,
       "systemOnly": false,
-      "requiredContext": [],
-      "authorityClass": "backend_policy",
-      "effectClass": "planner_action",
+      "requiredContext": [
+        "dealId",
+        "icCaseId"
+      ],
+      "authorityClass": "policy",
+      "effectClass": "OPERATIONAL_CHANGE",
       "verificationClass": "backend_runtime",
       "presentationTargets": [
         "THREAD",
@@ -19197,7 +20686,31 @@
       "invalidationTags": [],
       "timeoutClass": "RUNTIME",
       "tests": [],
-      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts"
+      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+      "planning": {
+        "capability": "request_ic_memo_review",
+        "kind": "action",
+        "modelProposable": true,
+        "available": true,
+        "health": "available",
+        "risk": "medium",
+        "irreversible": false,
+        "requiredReferences": [
+          "dealId",
+          "icCaseId"
+        ],
+        "effectClass": "OPERATIONAL_CHANGE",
+        "observationStrategy": "business_effect",
+        "reversibility": "unknown_provider_dependent",
+        "supportedRecoveryModes": [
+          "retry",
+          "replan",
+          "recover",
+          "escalate"
+        ],
+        "externalSideEffect": false,
+        "authorityRequirement": "policy"
+      }
     },
     {
       "capabilityId": "planner.reschedule_internal_event",
@@ -19215,9 +20728,11 @@
       "humanOnly": false,
       "adminOnly": false,
       "systemOnly": false,
-      "requiredContext": [],
-      "authorityClass": "backend_policy",
-      "effectClass": "planner_action",
+      "requiredContext": [
+        "internalEventRef"
+      ],
+      "authorityClass": "approval",
+      "effectClass": "OPERATIONAL_CHANGE",
       "verificationClass": "backend_runtime",
       "presentationTargets": [
         "THREAD",
@@ -19226,7 +20741,30 @@
       "invalidationTags": [],
       "timeoutClass": "RUNTIME",
       "tests": [],
-      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts"
+      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+      "planning": {
+        "capability": "reschedule_internal_event",
+        "kind": "action",
+        "modelProposable": true,
+        "available": true,
+        "health": "available",
+        "risk": "medium",
+        "irreversible": false,
+        "requiredReferences": [
+          "internalEventRef"
+        ],
+        "effectClass": "OPERATIONAL_CHANGE",
+        "observationStrategy": "business_effect",
+        "reversibility": "unknown_provider_dependent",
+        "supportedRecoveryModes": [
+          "retry",
+          "replan",
+          "recover",
+          "escalate"
+        ],
+        "externalSideEffect": false,
+        "authorityRequirement": "approval"
+      }
     },
     {
       "capabilityId": "planner.resolve_deal_risk",
@@ -19244,9 +20782,12 @@
       "humanOnly": false,
       "adminOnly": false,
       "systemOnly": false,
-      "requiredContext": [],
-      "authorityClass": "backend_policy",
-      "effectClass": "planner_action",
+      "requiredContext": [
+        "dealId",
+        "dealRiskId"
+      ],
+      "authorityClass": "policy",
+      "effectClass": "OPERATIONAL_CHANGE",
       "verificationClass": "backend_runtime",
       "presentationTargets": [
         "THREAD",
@@ -19256,7 +20797,31 @@
       "invalidationTags": [],
       "timeoutClass": "RUNTIME",
       "tests": [],
-      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts"
+      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+      "planning": {
+        "capability": "resolve_deal_risk",
+        "kind": "action",
+        "modelProposable": true,
+        "available": true,
+        "health": "available",
+        "risk": "medium",
+        "irreversible": false,
+        "requiredReferences": [
+          "dealId",
+          "dealRiskId"
+        ],
+        "effectClass": "OPERATIONAL_CHANGE",
+        "observationStrategy": "business_effect",
+        "reversibility": "unknown_provider_dependent",
+        "supportedRecoveryModes": [
+          "retry",
+          "replan",
+          "recover",
+          "escalate"
+        ],
+        "externalSideEffect": false,
+        "authorityRequirement": "policy"
+      }
     },
     {
       "capabilityId": "planner.resolve_finding",
@@ -19274,9 +20839,12 @@
       "humanOnly": false,
       "adminOnly": false,
       "systemOnly": false,
-      "requiredContext": [],
-      "authorityClass": "backend_policy",
-      "effectClass": "planner_action",
+      "requiredContext": [
+        "dealId",
+        "findingId"
+      ],
+      "authorityClass": "policy",
+      "effectClass": "OPERATIONAL_CHANGE",
       "verificationClass": "backend_runtime",
       "presentationTargets": [
         "THREAD",
@@ -19286,7 +20854,31 @@
       "invalidationTags": [],
       "timeoutClass": "RUNTIME",
       "tests": [],
-      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts"
+      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+      "planning": {
+        "capability": "resolve_finding",
+        "kind": "action",
+        "modelProposable": true,
+        "available": true,
+        "health": "available",
+        "risk": "medium",
+        "irreversible": false,
+        "requiredReferences": [
+          "dealId",
+          "findingId"
+        ],
+        "effectClass": "OPERATIONAL_CHANGE",
+        "observationStrategy": "business_effect",
+        "reversibility": "unknown_provider_dependent",
+        "supportedRecoveryModes": [
+          "retry",
+          "replan",
+          "recover",
+          "escalate"
+        ],
+        "externalSideEffect": false,
+        "authorityRequirement": "policy"
+      }
     },
     {
       "capabilityId": "planner.satisfy_closing_condition",
@@ -19304,9 +20896,12 @@
       "humanOnly": false,
       "adminOnly": false,
       "systemOnly": false,
-      "requiredContext": [],
-      "authorityClass": "backend_policy",
-      "effectClass": "planner_action",
+      "requiredContext": [
+        "closingConditionId",
+        "dealId"
+      ],
+      "authorityClass": "policy",
+      "effectClass": "OPERATIONAL_CHANGE",
       "verificationClass": "backend_runtime",
       "presentationTargets": [
         "THREAD",
@@ -19316,7 +20911,31 @@
       "invalidationTags": [],
       "timeoutClass": "RUNTIME",
       "tests": [],
-      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts"
+      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+      "planning": {
+        "capability": "satisfy_closing_condition",
+        "kind": "action",
+        "modelProposable": true,
+        "available": true,
+        "health": "available",
+        "risk": "medium",
+        "irreversible": false,
+        "requiredReferences": [
+          "closingConditionId",
+          "dealId"
+        ],
+        "effectClass": "OPERATIONAL_CHANGE",
+        "observationStrategy": "business_effect",
+        "reversibility": "unknown_provider_dependent",
+        "supportedRecoveryModes": [
+          "retry",
+          "replan",
+          "recover",
+          "escalate"
+        ],
+        "externalSideEffect": false,
+        "authorityRequirement": "policy"
+      }
     },
     {
       "capabilityId": "planner.satisfy_ic_condition",
@@ -19334,9 +20953,13 @@
       "humanOnly": false,
       "adminOnly": false,
       "systemOnly": false,
-      "requiredContext": [],
-      "authorityClass": "backend_policy",
-      "effectClass": "planner_action",
+      "requiredContext": [
+        "conditionId",
+        "dealId",
+        "icCaseId"
+      ],
+      "authorityClass": "policy",
+      "effectClass": "OPERATIONAL_CHANGE",
       "verificationClass": "backend_runtime",
       "presentationTargets": [
         "THREAD",
@@ -19346,7 +20969,32 @@
       "invalidationTags": [],
       "timeoutClass": "RUNTIME",
       "tests": [],
-      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts"
+      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+      "planning": {
+        "capability": "satisfy_ic_condition",
+        "kind": "action",
+        "modelProposable": true,
+        "available": true,
+        "health": "available",
+        "risk": "medium",
+        "irreversible": false,
+        "requiredReferences": [
+          "conditionId",
+          "dealId",
+          "icCaseId"
+        ],
+        "effectClass": "OPERATIONAL_CHANGE",
+        "observationStrategy": "business_effect",
+        "reversibility": "unknown_provider_dependent",
+        "supportedRecoveryModes": [
+          "retry",
+          "replan",
+          "recover",
+          "escalate"
+        ],
+        "externalSideEffect": false,
+        "authorityRequirement": "policy"
+      }
     },
     {
       "capabilityId": "planner.schedule_internal_event",
@@ -19365,8 +21013,8 @@
       "adminOnly": false,
       "systemOnly": false,
       "requiredContext": [],
-      "authorityClass": "backend_policy",
-      "effectClass": "planner_action",
+      "authorityClass": "approval",
+      "effectClass": "OPERATIONAL_CHANGE",
       "verificationClass": "backend_runtime",
       "presentationTargets": [
         "THREAD",
@@ -19375,7 +21023,77 @@
       "invalidationTags": [],
       "timeoutClass": "RUNTIME",
       "tests": [],
-      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts"
+      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+      "planning": {
+        "capability": "schedule_internal_event",
+        "kind": "action",
+        "modelProposable": true,
+        "available": true,
+        "health": "available",
+        "risk": "medium",
+        "irreversible": false,
+        "requiredReferences": [],
+        "effectClass": "OPERATIONAL_CHANGE",
+        "observationStrategy": "business_effect",
+        "reversibility": "unknown_provider_dependent",
+        "supportedRecoveryModes": [
+          "retry",
+          "replan",
+          "recover",
+          "escalate"
+        ],
+        "externalSideEffect": false,
+        "authorityRequirement": "approval"
+      }
+    },
+    {
+      "capabilityId": "planner.search_web",
+      "family": "shared-action",
+      "owner": "@finnor/plugin-web-research",
+      "transport": "planner",
+      "method": null,
+      "routePattern": null,
+      "routeDepth": 0,
+      "classification": "MUTATION",
+      "kind": "mutation",
+      "userProduct": true,
+      "agentProduct": true,
+      "modelCallable": true,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "policy",
+      "effectClass": null,
+      "verificationClass": "backend_runtime",
+      "presentationTargets": [
+        "THREAD",
+        "CANVAS"
+      ],
+      "invalidationTags": [],
+      "timeoutClass": "RUNTIME",
+      "tests": [],
+      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+      "planning": {
+        "capability": "search_web",
+        "kind": "action",
+        "modelProposable": true,
+        "available": true,
+        "health": "available",
+        "risk": "low",
+        "irreversible": false,
+        "requiredReferences": [],
+        "effectClass": null,
+        "observationStrategy": "provider_observation",
+        "reversibility": "read_only",
+        "supportedRecoveryModes": [
+          "retry",
+          "replan",
+          "escalate"
+        ],
+        "externalSideEffect": false,
+        "authorityRequirement": "policy"
+      }
     },
     {
       "capabilityId": "planner.select_ic_memo_version",
@@ -19393,9 +21111,14 @@
       "humanOnly": false,
       "adminOnly": false,
       "systemOnly": false,
-      "requiredContext": [],
-      "authorityClass": "backend_policy",
-      "effectClass": "planner_action",
+      "requiredContext": [
+        "dealId",
+        "documentId",
+        "documentVersionId",
+        "icCaseId"
+      ],
+      "authorityClass": "approval",
+      "effectClass": "OPERATIONAL_CHANGE",
       "verificationClass": "backend_runtime",
       "presentationTargets": [
         "THREAD",
@@ -19405,7 +21128,33 @@
       "invalidationTags": [],
       "timeoutClass": "RUNTIME",
       "tests": [],
-      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts"
+      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+      "planning": {
+        "capability": "select_ic_memo_version",
+        "kind": "action",
+        "modelProposable": true,
+        "available": true,
+        "health": "available",
+        "risk": "medium",
+        "irreversible": false,
+        "requiredReferences": [
+          "dealId",
+          "documentId",
+          "documentVersionId",
+          "icCaseId"
+        ],
+        "effectClass": "OPERATIONAL_CHANGE",
+        "observationStrategy": "business_effect",
+        "reversibility": "unknown_provider_dependent",
+        "supportedRecoveryModes": [
+          "retry",
+          "replan",
+          "recover",
+          "escalate"
+        ],
+        "externalSideEffect": false,
+        "authorityRequirement": "approval"
+      }
     },
     {
       "capabilityId": "planner.select_ic_underwriting_run",
@@ -19423,9 +21172,13 @@
       "humanOnly": false,
       "adminOnly": false,
       "systemOnly": false,
-      "requiredContext": [],
-      "authorityClass": "backend_policy",
-      "effectClass": "planner_action",
+      "requiredContext": [
+        "dealId",
+        "icCaseId",
+        "underwritingRunId"
+      ],
+      "authorityClass": "approval",
+      "effectClass": "OPERATIONAL_CHANGE",
       "verificationClass": "backend_runtime",
       "presentationTargets": [
         "THREAD",
@@ -19435,7 +21188,32 @@
       "invalidationTags": [],
       "timeoutClass": "RUNTIME",
       "tests": [],
-      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts"
+      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+      "planning": {
+        "capability": "select_ic_underwriting_run",
+        "kind": "action",
+        "modelProposable": true,
+        "available": true,
+        "health": "available",
+        "risk": "medium",
+        "irreversible": false,
+        "requiredReferences": [
+          "dealId",
+          "icCaseId",
+          "underwritingRunId"
+        ],
+        "effectClass": "OPERATIONAL_CHANGE",
+        "observationStrategy": "business_effect",
+        "reversibility": "unknown_provider_dependent",
+        "supportedRecoveryModes": [
+          "retry",
+          "replan",
+          "recover",
+          "escalate"
+        ],
+        "externalSideEffect": false,
+        "authorityRequirement": "approval"
+      }
     },
     {
       "capabilityId": "planner.send_message",
@@ -19453,9 +21231,11 @@
       "humanOnly": false,
       "adminOnly": false,
       "systemOnly": false,
-      "requiredContext": [],
-      "authorityClass": "backend_policy",
-      "effectClass": "planner_action",
+      "requiredContext": [
+        "recipient"
+      ],
+      "authorityClass": "approval",
+      "effectClass": "EXTERNAL_SIDE_EFFECT",
       "verificationClass": "backend_runtime",
       "presentationTargets": [
         "THREAD",
@@ -19464,7 +21244,29 @@
       "invalidationTags": [],
       "timeoutClass": "RUNTIME",
       "tests": [],
-      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts"
+      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+      "planning": {
+        "capability": "send_message",
+        "kind": "action",
+        "modelProposable": true,
+        "available": true,
+        "health": "available",
+        "risk": "high",
+        "irreversible": true,
+        "requiredReferences": [
+          "recipient"
+        ],
+        "effectClass": "EXTERNAL_SIDE_EFFECT",
+        "observationStrategy": "business_effect",
+        "reversibility": "irreversible",
+        "supportedRecoveryModes": [
+          "replan",
+          "recover",
+          "escalate"
+        ],
+        "externalSideEffect": true,
+        "authorityRequirement": "approval"
+      }
     },
     {
       "capabilityId": "planner.share_document",
@@ -19482,9 +21284,12 @@
       "humanOnly": false,
       "adminOnly": false,
       "systemOnly": false,
-      "requiredContext": [],
-      "authorityClass": "backend_policy",
-      "effectClass": "planner_action",
+      "requiredContext": [
+        "documentRef",
+        "recipient"
+      ],
+      "authorityClass": "approval",
+      "effectClass": "EXTERNAL_SIDE_EFFECT",
       "verificationClass": "backend_runtime",
       "presentationTargets": [
         "THREAD",
@@ -19493,7 +21298,30 @@
       "invalidationTags": [],
       "timeoutClass": "RUNTIME",
       "tests": [],
-      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts"
+      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+      "planning": {
+        "capability": "share_document",
+        "kind": "action",
+        "modelProposable": true,
+        "available": true,
+        "health": "available",
+        "risk": "high",
+        "irreversible": true,
+        "requiredReferences": [
+          "documentRef",
+          "recipient"
+        ],
+        "effectClass": "EXTERNAL_SIDE_EFFECT",
+        "observationStrategy": "business_effect",
+        "reversibility": "irreversible",
+        "supportedRecoveryModes": [
+          "replan",
+          "recover",
+          "escalate"
+        ],
+        "externalSideEffect": true,
+        "authorityRequirement": "approval"
+      }
     },
     {
       "capabilityId": "planner.submit_condition_evidence",
@@ -19511,9 +21339,13 @@
       "humanOnly": false,
       "adminOnly": false,
       "systemOnly": false,
-      "requiredContext": [],
-      "authorityClass": "backend_policy",
-      "effectClass": "planner_action",
+      "requiredContext": [
+        "closingConditionId",
+        "dealId",
+        "evidenceSourceId"
+      ],
+      "authorityClass": "policy",
+      "effectClass": "INTERNAL_WRITE",
       "verificationClass": "backend_runtime",
       "presentationTargets": [
         "THREAD",
@@ -19523,7 +21355,32 @@
       "invalidationTags": [],
       "timeoutClass": "RUNTIME",
       "tests": [],
-      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts"
+      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+      "planning": {
+        "capability": "submit_condition_evidence",
+        "kind": "action",
+        "modelProposable": true,
+        "available": true,
+        "health": "available",
+        "risk": "medium",
+        "irreversible": false,
+        "requiredReferences": [
+          "closingConditionId",
+          "dealId",
+          "evidenceSourceId"
+        ],
+        "effectClass": "INTERNAL_WRITE",
+        "observationStrategy": "business_effect",
+        "reversibility": "unknown_provider_dependent",
+        "supportedRecoveryModes": [
+          "retry",
+          "replan",
+          "recover",
+          "escalate"
+        ],
+        "externalSideEffect": false,
+        "authorityRequirement": "policy"
+      }
     },
     {
       "capabilityId": "planner.submit_deliverable",
@@ -19541,9 +21398,12 @@
       "humanOnly": false,
       "adminOnly": false,
       "systemOnly": false,
-      "requiredContext": [],
-      "authorityClass": "backend_policy",
-      "effectClass": "planner_action",
+      "requiredContext": [
+        "dealId",
+        "deliverableId"
+      ],
+      "authorityClass": "policy",
+      "effectClass": "OPERATIONAL_CHANGE",
       "verificationClass": "backend_runtime",
       "presentationTargets": [
         "THREAD",
@@ -19553,7 +21413,31 @@
       "invalidationTags": [],
       "timeoutClass": "RUNTIME",
       "tests": [],
-      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts"
+      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+      "planning": {
+        "capability": "submit_deliverable",
+        "kind": "action",
+        "modelProposable": true,
+        "available": true,
+        "health": "available",
+        "risk": "medium",
+        "irreversible": false,
+        "requiredReferences": [
+          "dealId",
+          "deliverableId"
+        ],
+        "effectClass": "OPERATIONAL_CHANGE",
+        "observationStrategy": "business_effect",
+        "reversibility": "unknown_provider_dependent",
+        "supportedRecoveryModes": [
+          "retry",
+          "replan",
+          "recover",
+          "escalate"
+        ],
+        "externalSideEffect": false,
+        "authorityRequirement": "policy"
+      }
     },
     {
       "capabilityId": "planner.update_task",
@@ -19571,9 +21455,11 @@
       "humanOnly": false,
       "adminOnly": false,
       "systemOnly": false,
-      "requiredContext": [],
-      "authorityClass": "backend_policy",
-      "effectClass": "planner_action",
+      "requiredContext": [
+        "taskRef"
+      ],
+      "authorityClass": "approval",
+      "effectClass": "OPERATIONAL_CHANGE",
       "verificationClass": "backend_runtime",
       "presentationTargets": [
         "THREAD",
@@ -19582,7 +21468,30 @@
       "invalidationTags": [],
       "timeoutClass": "RUNTIME",
       "tests": [],
-      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts"
+      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+      "planning": {
+        "capability": "update_task",
+        "kind": "action",
+        "modelProposable": true,
+        "available": true,
+        "health": "available",
+        "risk": "medium",
+        "irreversible": false,
+        "requiredReferences": [
+          "taskRef"
+        ],
+        "effectClass": "OPERATIONAL_CHANGE",
+        "observationStrategy": "business_effect",
+        "reversibility": "unknown_provider_dependent",
+        "supportedRecoveryModes": [
+          "retry",
+          "replan",
+          "recover",
+          "escalate"
+        ],
+        "externalSideEffect": false,
+        "authorityRequirement": "approval"
+      }
     },
     {
       "capabilityId": "planner.verify_closing_item",
@@ -19600,9 +21509,12 @@
       "humanOnly": true,
       "adminOnly": false,
       "systemOnly": false,
-      "requiredContext": [],
+      "requiredContext": [
+        "closingItemId",
+        "dealId"
+      ],
       "authorityClass": "human_attestation",
-      "effectClass": "planner_action",
+      "effectClass": "OPERATIONAL_CHANGE",
       "verificationClass": "backend_runtime",
       "presentationTargets": [
         "THREAD",
@@ -19612,7 +21524,84 @@
       "invalidationTags": [],
       "timeoutClass": "RUNTIME",
       "tests": [],
-      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts"
+      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+      "planning": {
+        "capability": "verify_closing_item",
+        "kind": "action",
+        "modelProposable": false,
+        "available": true,
+        "health": "available",
+        "risk": "medium",
+        "irreversible": false,
+        "requiredReferences": [
+          "closingItemId",
+          "dealId"
+        ],
+        "effectClass": "OPERATIONAL_CHANGE",
+        "observationStrategy": "business_effect",
+        "reversibility": "unknown_provider_dependent",
+        "supportedRecoveryModes": [
+          "retry",
+          "replan",
+          "recover",
+          "escalate"
+        ],
+        "externalSideEffect": false,
+        "authorityRequirement": "policy"
+      }
+    },
+    {
+      "capabilityId": "planner.wait:event",
+      "family": "objective-runtime",
+      "owner": "@finnor/orchestration",
+      "transport": "planner",
+      "method": null,
+      "routePattern": null,
+      "routeDepth": 0,
+      "classification": "CONTROL",
+      "kind": "wait",
+      "userProduct": true,
+      "agentProduct": true,
+      "modelCallable": true,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [
+        "correlation"
+      ],
+      "authorityClass": "policy",
+      "effectClass": null,
+      "verificationClass": "backend_runtime",
+      "presentationTargets": [
+        "THREAD",
+        "CANVAS"
+      ],
+      "invalidationTags": [],
+      "timeoutClass": "RUNTIME",
+      "tests": [],
+      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+      "planning": {
+        "capability": "wait:event",
+        "kind": "wait",
+        "modelProposable": true,
+        "available": true,
+        "health": "available",
+        "risk": "medium",
+        "irreversible": false,
+        "requiredReferences": [
+          "correlation"
+        ],
+        "effectClass": null,
+        "observationStrategy": "integration_event",
+        "reversibility": "read_only",
+        "supportedRecoveryModes": [
+          "replan",
+          "recover",
+          "escalate"
+        ],
+        "externalSideEffect": false,
+        "authorityRequirement": "policy"
+      }
     },
     {
       "capabilityId": "planner.waive_closing_condition",
@@ -19630,9 +21619,12 @@
       "humanOnly": true,
       "adminOnly": false,
       "systemOnly": false,
-      "requiredContext": [],
+      "requiredContext": [
+        "closingConditionId",
+        "dealId"
+      ],
       "authorityClass": "human_attestation",
-      "effectClass": "planner_action",
+      "effectClass": "OPERATIONAL_CHANGE",
       "verificationClass": "backend_runtime",
       "presentationTargets": [
         "THREAD",
@@ -19642,7 +21634,31 @@
       "invalidationTags": [],
       "timeoutClass": "RUNTIME",
       "tests": [],
-      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts"
+      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+      "planning": {
+        "capability": "waive_closing_condition",
+        "kind": "action",
+        "modelProposable": false,
+        "available": true,
+        "health": "available",
+        "risk": "medium",
+        "irreversible": false,
+        "requiredReferences": [
+          "closingConditionId",
+          "dealId"
+        ],
+        "effectClass": "OPERATIONAL_CHANGE",
+        "observationStrategy": "business_effect",
+        "reversibility": "unknown_provider_dependent",
+        "supportedRecoveryModes": [
+          "retry",
+          "replan",
+          "recover",
+          "escalate"
+        ],
+        "externalSideEffect": false,
+        "authorityRequirement": "approval"
+      }
     },
     {
       "capabilityId": "planner.waive_ic_condition",
@@ -19662,7 +21678,7 @@
       "systemOnly": false,
       "requiredContext": [],
       "authorityClass": "human_attestation",
-      "effectClass": "planner_action",
+      "effectClass": null,
       "verificationClass": "backend_runtime",
       "presentationTargets": [
         "THREAD",
@@ -19671,7 +21687,25 @@
       "invalidationTags": [],
       "timeoutClass": "RUNTIME",
       "tests": [],
-      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts"
+      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+      "planning": {
+        "capability": "waive_ic_condition",
+        "kind": "action",
+        "modelProposable": false,
+        "available": false,
+        "health": "unavailable",
+        "risk": "high",
+        "irreversible": true,
+        "requiredReferences": [],
+        "effectClass": null,
+        "observationStrategy": "objective_success",
+        "reversibility": "irreversible",
+        "supportedRecoveryModes": [
+          "escalate"
+        ],
+        "externalSideEffect": false,
+        "authorityRequirement": "human_attestation"
+      }
     },
     {
       "capabilityId": "planner.waive_ic_question",
@@ -19691,7 +21725,7 @@
       "systemOnly": false,
       "requiredContext": [],
       "authorityClass": "human_attestation",
-      "effectClass": "planner_action",
+      "effectClass": null,
       "verificationClass": "backend_runtime",
       "presentationTargets": [
         "THREAD",
@@ -19700,7 +21734,25 @@
       "invalidationTags": [],
       "timeoutClass": "RUNTIME",
       "tests": [],
-      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts"
+      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+      "planning": {
+        "capability": "waive_ic_question",
+        "kind": "action",
+        "modelProposable": false,
+        "available": false,
+        "health": "unavailable",
+        "risk": "high",
+        "irreversible": true,
+        "requiredReferences": [],
+        "effectClass": null,
+        "observationStrategy": "objective_success",
+        "reversibility": "irreversible",
+        "supportedRecoveryModes": [
+          "escalate"
+        ],
+        "externalSideEffect": false,
+        "authorityRequirement": "human_attestation"
+      }
     }
   ]
 }
