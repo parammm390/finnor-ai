@@ -195,7 +195,10 @@ paths["/api/company-brain/{operation}"].post.parameters[0]!.schema.enum.push(...
   return [base+"installed-source.json",base+"installed-source-files.json",...manifest.files.map(file => {
     if (typeof file.path !== "string" || file.path.startsWith("/") || file.path.split("/").some(part=>part==="."||part==="..") ||
         /[\\\\%?#\\u0000-\\u001f]/.test(file.path)) throw new Error("Z1_TRACE_PATH_REQUIRED");
-    return relative(fileURLToPath(new URL("./",import.meta.url)),resolve(repositoryRoot,file.path));
+    // These are literal filenames, not glob patterns. In particular Next
+    // catch-all and route-group names must not become character classes.
+    return [...relative(fileURLToPath(new URL("./",import.meta.url)),resolve(repositoryRoot,file.path))]
+      .map(character => "[]{}()*?!+@".includes(character) ? String.fromCharCode(92)+character : character).join("");
   })];
 })();
 

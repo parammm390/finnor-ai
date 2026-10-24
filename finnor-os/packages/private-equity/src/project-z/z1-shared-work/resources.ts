@@ -11,6 +11,7 @@ import { authorize, principal } from '../../owner-context';
 import { enqueueOwnerDeliveryInTransaction } from '../../../../governed-execution/src/owner-delivery-store';
 import type { PeMutationContext } from '../../types';
 import { requireZ1, digest, boundedJSON } from '../../../../epistemic-runtime/src/project-z/z1-shared-work/contracts.js';
+import { canonicalJson } from '../../../../epistemic-runtime/src/source-precedence';
 import { BudgetSchema, developmentOnly, nativeRef, parsed, same, type OriginalBudget, type BudgetInput } from './native-contracts.js';
 
 const integer = (value: string): bigint => {
@@ -20,13 +21,16 @@ export async function currentWorkInputTx(ctx: PeMutationContext, c: PoolClient, 
   const work = (await c.query<{ status: WorkStatus }>(
     'SELECT status FROM finnor_os.works WHERE tenant_id=$1 AND id=$2 AND created_by=$3 FOR SHARE',
     [ctx.auth.tenantId, workId, principal(ctx)])).rows[0];
-  const input = (await c.query<{ id: string; body: { context_snapshot?: { businessRoot?: unknown } } }>(
-    'SELECT id::text,to_jsonb(i) body FROM finnor_os.work_inputs i WHERE tenant_id=$1 AND work_id=$2 ORDER BY created_at DESC,id DESC LIMIT 1',
+  const input = (await c.query<{ id: string; input_digest: string; body: { context_snapshot?: { businessRoot?: unknown } } }>(
+    `SELECT id::text,to_jsonb(i) body,encode(sha256(convert_to(to_jsonb(i)::text,'UTF8')),'hex') input_digest
+     FROM finnor_os.work_inputs i WHERE tenant_id=$1 AND work_id=$2 ORDER BY created_at DESC,id DESC LIMIT 1`,
     [ctx.auth.tenantId, workId])).rows[0];
   requireZ1(work && input && !isImmutableWorkStatus(work.status) && input.body.context_snapshot?.businessRoot !== undefined &&
-    same(input.body.context_snapshot.businessRoot, root),
+    same(input.body.context_snapshot.businessRoot, root) && /^[a-f0-9]{64}$/.test(input.input_digest),
     'Z1_CURRENT_ROOTED_OWNED_ORIGINAL_WORK_REQUIRED', 'REVOKED');
-  return { inputId: input.id, inputDigest: digest(input.body) };
+  // Commit the canonical DB snapshot without losing numeric precision or
+  // changing arbitrary metadata keys through a JavaScript JSON round-trip.
+  return { inputId: input.id, inputDigest: input.input_digest };
 }
 async function referenceTx(ctx: PeMutationContext, c: PoolClient, value: { ref: ExperimentRef }, rightsRef: string) {
   const { ref, ...content } = value;
@@ -127,8 +131,9 @@ export async function reserveOriginalSharedWorkBudget(ctx: PeMutationContext, va
       createdAt: new Date().toISOString(), executionAuthorityGranted: false, protectedReceipt: null };
     const budget: OriginalBudget = { ...body, ref: nativeRef('S5', 'z1-original-budget', body) };
     boundedJSON({ problem, certificate }, 8388608); boundedJSON(budget, 8388608);
-    await c.query('SELECT finnor_os.z1_s5_reserve($1::jsonb,$2::jsonb,$3::jsonb,$4)',
-      [JSON.stringify(problem), JSON.stringify(certificate), JSON.stringify(budget), digest(input)]);
+    await c.query('SELECT finnor_os.z1_s5_reserve($1::jsonb,$2::jsonb,$3::jsonb,$4,$5,$6)',
+      [JSON.stringify(problem), JSON.stringify(certificate), JSON.stringify(budget), digest(input),
+        canonicalJson(body), canonicalJson(certificateBody)]);
     await referenceTx(ctx, c, certificate, body.rightsRevision); await referenceTx(ctx, c, budget, body.rightsRevision);
     return budget;
   });

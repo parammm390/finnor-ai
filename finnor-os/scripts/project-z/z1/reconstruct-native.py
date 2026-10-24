@@ -11,6 +11,7 @@ import importlib.util
 import json
 import os
 from pathlib import Path
+import platform
 import shutil
 import subprocess
 import sys
@@ -29,7 +30,7 @@ ARCHIVE = (
     "finnor-os", "src", "scripts", "public", "vendor", "e2e", "docs", "infra",
     "AGENTS.md", "README.md", "THIRD_PARTY_NOTICES.md", "package.json", "package-lock.json",
     "next.config.mjs", "next-env.d.ts", "tsconfig.json", "postcss.config.mjs", "tailwind.config.ts",
-    "eslint.config.mjs", "instrumentation.ts", "instrumentation-client.ts",
+    "eslint.config.mjs", ".eslintrc.cjs", "instrumentation.ts", "instrumentation-client.ts",
     "sentry.client.config.ts", "sentry.server.config.ts", "sentry.edge.config.ts",
     "scope-z/prompts/qualification-families.json",
 )
@@ -106,6 +107,7 @@ def main():
               "borrowedNodeModules": False, "sourceOwnerFlow": "NOT_RUN", "installedOwnerFlow": "NOT_RUN",
               "protectedAdmission": False, "productionActivated": False,
               "failures": [], "environmentNames": []}
+    delivered = None
     code = 1
     try:
         if shutil.disk_usage(evidence).free < 8 * 1024**3:
@@ -116,6 +118,7 @@ def main():
             package = json.loads(args.replay.read_text())
             if package["schema"] != "finnor.z1.reconstructible-package.v1":
                 raise ValueError("EXACT_NATIVE_PACKAGE_REQUIRED")
+            delivered = package
             archive = args.replay.parent / package["sourceArchive"]["path"]
             requests = args.replay.parent / package["integrationRequest"]["path"]
             if sha(archive) != package["sourceArchive"]["sha256"] or sha(requests / "request.json") != package["integrationRequest"]["sha256"]:
@@ -186,7 +189,17 @@ def main():
             "npm": subprocess.check_output([npm, "--version"], env=env, text=True).strip(),
             "npmPath": str(Path(npm).resolve()), "npmEntrySha256": sha(Path(npm).resolve()),
             "python": sys.version.split()[0], "pythonSha256": sha(Path(sys.executable).resolve()),
+            "platform": sys.platform, "machine": platform.machine(), "libc": list(platform.libc_ver()),
         }
+        report["toolchain"]["nativeBuildTools"] = []
+        for name in ("cc", "c++", "make", "ld"):
+            binary = shutil.which(name)
+            if not binary:
+                raise ValueError("DECLARED_NATIVE_BUILD_TOOL_REQUIRED:" + name)
+            version = subprocess.check_output([binary, "--version"], env=env, text=True, timeout=10).splitlines()[0]
+            report["toolchain"]["nativeBuildTools"].append({
+                "command": name, "version": version, "path": str(Path(binary).resolve()),
+                "sha256": sha(Path(binary).resolve())})
         report["dependencyLocks"] = [{"path": name, "sha256": sha(target / name)}
                                      for name in ("package-lock.json", "finnor-os/package-lock.json")]
         base = target / "finnor-os/packages/private-equity/src/project-z/z1-shared-work"
@@ -216,11 +229,17 @@ def main():
 
         run("root-fresh-npm-ci", [npm, "ci", "--no-audit", "--no-fund"], timeout=900)
         run("backend-fresh-npm-ci", [npm, "ci", "--no-audit", "--no-fund"], cwd=target / "finnor-os", timeout=900)
+        if any(sha(target / lock["path"]) != lock["sha256"] for lock in report["dependencyLocks"]):
+            raise ValueError("COLD_INSTALL_CHANGED_DECLARED_DEPENDENCY_LOCK")
+        report["installedPackages"] = []
         for prefix in ("", "finnor-os/"):
             for package_name in ("next", "react", "typescript", "zod"):
                 actual = (target / prefix / "node_modules" / package_name).resolve()
                 if not actual.is_relative_to(target):
                     raise ValueError("BORROWED_INSTALLED_PACKAGE:" + prefix + package_name)
+                metadata = actual / "package.json"
+                report["installedPackages"].append({"path": prefix + "node_modules/" + package_name,
+                    "version": json.loads(metadata.read_text())["version"], "packageJsonSha256": sha(metadata)})
         loader = str(target / "finnor-os/node_modules/tsx/dist/loader.mjs")
         scripts = target / "finnor-os/scripts/project-z/z1"
         backend = target / "finnor-os"
@@ -252,7 +271,9 @@ def main():
         ):
             run(name, command, cwd=cwd, heap=heap)
         run("frontend-lint", [npm, "run", "lint"], required=False)
-        build_id = "z1-" + head + "-" + request["sharedPatchSha256"][:16]
+        # Framework-generated next-env inputs join the final patch after build.
+        # Archive identity is already frozen and is identical during replay.
+        build_id = "z1-" + head + "-" + report["sourceArchiveSha256"][:16]
         run("api-build", [node, str(backend / "node_modules/next/dist/bin/next"), "build"],
             cwd=backend / "apps/api", timeout=1500, heap=4096,
             extra={"FINNOR_BUILD_ID": build_id + "-api", "FINNOR_Z1_PACKAGE_BUILD": "1"})
@@ -270,6 +291,22 @@ def main():
             reconstruction["integrationPatchSha256"] = request["sharedPatchSha256"]
             document(base / "reconstruction-input.json", reconstruction)
         run("verify-final-whole-owner", [node, "--import", loader, str(scripts / "stamp-installed.mjs")], cwd=backend)
+        source_files = json.loads((base / "installed-source-files.json").read_text())["files"]
+        trace = backend / "apps/api/.next/server/app/api/company-brain/[operation]/route.js.nft.json"
+        if not trace.is_file():
+            raise ValueError("ACTUAL_NATIVE_INTAKE_API_TRACE_REQUIRED")
+        traced = {(trace.parent / name).resolve() for name in json.loads(trace.read_text())["files"]}
+        missing = [file["path"] for file in source_files if (target / file["path"]).resolve() not in traced]
+        stamps = [base / name for name in ("installed-source.json", "installed-source-files.json")]
+        missing.extend(str(path.relative_to(target)) for path in stamps if path.resolve() not in traced)
+        trace_report = {"schema": "finnor.z1.whole-owner-trace-review.v1", "status": "FAILED" if missing else "PASSED",
+                        "tracePath": str(trace.relative_to(target)), "traceSha256": sha(trace),
+                        "declaredSourceFiles": len(source_files), "missingFiles": missing, "databaseActions": 0}
+        document(evidence / "trace-review.json", trace_report)
+        report["sourceTrace"] = {"path": "trace-review.json", "sha256": sha(evidence / "trace-review.json"),
+                                 "status": trace_report["status"]}
+        if missing:
+            raise ValueError("DECLARED_WHOLE_OWNER_SOURCE_MISSING_FROM_API_TRACE")
         for name, script in (("original-semantics", "verify.mjs"), ("process-edges", "edge-cases.mjs"),
                              ("file-fixture-physical-recovery", "physical-recovery.mjs"),
                              ("independent-original-episode", "original-episode.mjs")):
@@ -282,6 +319,24 @@ def main():
         report["builds"] = [{"path": name, "id": (target / name).read_text().strip()}
                             for name in (".next-z1-install/BUILD_ID", "finnor-os/apps/api/.next/BUILD_ID")]
         report["installedSource"] = json.loads((base / "installed-source.json").read_text())
+        if delivered:
+            fields = ("sourceCommit", "sourceTree", "integrationPatchSha256", "sourceFilesManifestSha256",
+                      "sourceArchiveSha256", "nativeRuntimeDigest", "node", "reconstructionReference")
+            differences = [field for field in fields if report["installedSource"][field] != delivered["installedSource"][field]]
+            if report["builds"] != delivered["builds"]:
+                differences.append("builds")
+            if report["dependencyLocks"] != delivered["dependencyLocks"]:
+                differences.append("dependencyLocks")
+            for field in ("node", "nodeSha256", "npm", "npmEntrySha256", "python", "pythonSha256", "platform", "machine", "libc"):
+                if report["toolchain"][field] != delivered["toolchain"][field]:
+                    differences.append("toolchain." + field)
+            tools = lambda items: [{key: item[key] for key in ("command", "version", "sha256")} for item in items]
+            if tools(report["toolchain"]["nativeBuildTools"]) != tools(delivered["toolchain"]["nativeBuildTools"]):
+                differences.append("toolchain.nativeBuildTools")
+            report["deliveredCutComparison"] = {"status": "FAILED" if differences else "PASSED", "differences": differences,
+                "scope": "Exact source, requested patch, runtime, build IDs and declared toolchain; not bit-for-bit emitted artifact identity."}
+            if differences:
+                raise ValueError("SEPARATE_REBUILD_CHANGED_DELIVERED_SOURCE_BUILD_OR_TOOLCHAIN")
         shutil.copyfile(base / "installed-source.json", evidence / "installed-source.json")
         shutil.copyfile(base / "installed-source-files.json", evidence / "installed-source-files.json")
         assets = []

@@ -200,7 +200,8 @@ BEGIN
  END IF;
  RETURN b;
 END $$;
-CREATE FUNCTION finnor_os.z1_s5_reserve(p_problem jsonb,p_certificate jsonb,p_budget jsonb,p_digest text)
+CREATE FUNCTION finnor_os.z1_s5_reserve(p_problem jsonb,p_certificate jsonb,p_budget jsonb,p_digest text,
+ p_budget_preimage text,p_certificate_preimage text)
  RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog,finnor_os AS $$
 DECLARE t uuid:=finnor_os.request_tenant_id();u uuid:=finnor_os.z1_s5_actor();r jsonb;e jsonb;
  current_resource jsonb;v_deadline timestamptz;v_max numeric;v_used numeric;v_period integer;v_index integer;
@@ -228,10 +229,13 @@ BEGIN
   OR p_certificate->'ref'->>'version' IS DISTINCT FROM 'z1-native-owner-v1'
   OR p_budget->'ref'->>'contentDigest' !~ '^[a-f0-9]{64}$'
   OR p_certificate->'ref'->>'contentDigest' !~ '^[a-f0-9]{64}$'
+  OR p_budget_preimage::jsonb IS DISTINCT FROM p_budget-'ref'
+  OR p_certificate_preimage::jsonb IS DISTINCT FROM p_certificate-'ref'
+  OR octet_length(p_budget_preimage)>8388608 OR octet_length(p_certificate_preimage)>8388608
   OR p_budget->'ref'->>'contentDigest' IS DISTINCT FROM
-   encode(sha256(convert_to(finnor_os.z1_budget_json(p_budget-'ref'),'UTF8')),'hex')
+   encode(sha256(convert_to(p_budget_preimage,'UTF8')),'hex')
   OR p_certificate->'ref'->>'contentDigest' IS DISTINCT FROM
-   encode(sha256(convert_to(finnor_os.z1_budget_json(p_certificate-'ref'),'UTF8')),'hex')
+   encode(sha256(convert_to(p_certificate_preimage,'UTF8')),'hex')
   OR p_budget->'ref'->>'id' IS DISTINCT FROM 'z1-original-budget:'||(p_budget->'ref'->>'contentDigest')
   OR p_certificate->'ref'->>'id' IS DISTINCT FROM 'z1-original-certificate:'||(p_certificate->'ref'->>'contentDigest')
   OR p_digest !~ '^[a-f0-9]{64}$' OR octet_length(p_problem::text)+octet_length(p_certificate::text)>8388608
@@ -245,7 +249,7 @@ BEGIN
  IF (v_input->>'id' IS DISTINCT FROM p_budget->>'inputId'
   OR v_input#>'{context_snapshot,businessRoot}' IS DISTINCT FROM p_budget#>'{original,root}'
   OR p_budget->>'inputDigest' IS DISTINCT FROM
-   encode(sha256(convert_to(finnor_os.z1_budget_json(v_input),'UTF8')),'hex')
+   encode(sha256(convert_to(v_input::text,'UTF8')),'hex')
   OR p_problem->'input' IS DISTINCT FROM jsonb_build_object('inputId',p_budget->>'inputId','inputDigest',p_budget->>'inputDigest')
   OR p_problem->>'originalWorkId' IS DISTINCT FROM v_work::text
   OR p_certificate->>'originalWorkId' IS DISTINCT FROM v_work::text
@@ -633,7 +637,7 @@ INSERT INTO finnor_os.compute_resource_policies
 REVOKE ALL ON FUNCTION finnor_os.z1_s5_actor() FROM PUBLIC;
 REVOKE ALL ON FUNCTION finnor_os.z1_budget_json(jsonb) FROM PUBLIC;
 REVOKE ALL ON FUNCTION finnor_os.z1_s5_budget(text,boolean) FROM PUBLIC;
-REVOKE ALL ON FUNCTION finnor_os.z1_s5_reserve(jsonb,jsonb,jsonb,text) FROM PUBLIC;
+REVOKE ALL ON FUNCTION finnor_os.z1_s5_reserve(jsonb,jsonb,jsonb,text,text,text) FROM PUBLIC;
 REVOKE ALL ON FUNCTION finnor_os.z1_s5_hold_cpu(jsonb,text,text) FROM PUBLIC;
 REVOKE ALL ON FUNCTION finnor_os.z1_s5_charge(jsonb,text,text,jsonb,boolean) FROM PUBLIC;
 REVOKE ALL ON FUNCTION finnor_os.z1_s5_visible(text) FROM PUBLIC;

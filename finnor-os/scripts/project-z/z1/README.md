@@ -105,6 +105,12 @@ Public fixture bindings use the strict
   need their actual `investmentCaseId`. First has no unresolved obligation,
   third has at least one.
 
+The input digest is SHA-256 of UTF-8 PostgreSQL `to_jsonb(work_inputs_row)::text`,
+read inside the same canonical tenant scope. Do not recreate it by parsing or
+sorting arbitrary Work metadata in JavaScript. Native S5 owner references retain
+their existing locale-canonical encoding; SQL verifies their actual canonical
+preimage bytes and exact parsed bodies rather than substituting another order.
+
 Materialize only from explicitly delivered existing bindings:
 
 ```sh
@@ -164,6 +170,9 @@ The kernel retains the locked 2–1000 Work / 4096 original-node / 100000 source
 1000000 newly derived-row / 512-bit rational / 128 MiB bounded request domain.
 Native S1 append uses the existing smaller per-version storage boundary; this
 does not certify a 128 MiB S1 write or a full native boundary episode.
+Admission also respects the existing S5 limit of 256 outstanding commitments.
+Resource exhaustion returns INCOMPLETE; no 1000-Work native capacity qualification
+or increase to canonical portfolio limits is claimed.
 
 Complete exited-child `wait4` CPU/RSS is observed, with a separate pre-FINISH
 supervisor meter. Parent intervals, logical allocations, JSON write occupation and
