@@ -1,0 +1,28 @@
+{
+  "schema": "finnor.y2.baselines.v1",
+  "B_live": {
+    "sourceCommit": "b7b74b48efcb51bd6f1297a71f39cb9b4f117024",
+    "sourceTree": "0dd9781598cc65290122c5e8c6cb969961673364",
+    "deploymentId": "dpl_DtBcNw7ArjRK3JjQ3r1u8X85aPf4",
+    "deploymentSourceDirty": "0",
+    "coverage": "FRONTEND_DEPLOYMENT_METADATA_NOT_FULL_FLEET_OR_DATABASE_PROOF"
+  },
+  "B_X_plan": {"status": "STIPULATED_COMPLETED_FIVE_ENGINE_X_CONTRACT", "implementationRestarted": false},
+  "B_X_release": {"status": "BLOCKED_MISSING_QUALIFIED_IMMUTABLE_COMPARISON_MANIFEST", "qualificationRefs": [], "substitutedWithY1": false},
+  "B_ref": {"status": "NOT_RUN_NO_REGISTERED_EQUIPPED_COMPARATORS", "actors": []},
+  "Y1": {
+    "sourceCommit": "e559705f42921c397acb5388d103809d03cab1b2",
+    "sourceTree": "e8f31fc58265d5f778b9e70da6f2312b34c04312",
+    "productionState": "NOT_ESTABLISHED",
+    "protectedQualificationState": "NOT_ESTABLISHED",
+    "meaningChangedByY2": false
+  },
+  "comparison": {"diagnostic": "Y2_ON_OFF_Y1_FIXED", "equippedX": "NOT_RUN", "historicalDevelopmentCosts": null},
+  "references": {
+    "pstack": "1f0f9c3bac03c4297f6fc8f7644fa412eda57085",
+    "ponytail": "2961b52fc1fe6a5a87c7a959a79512e5c2f3ffe5",
+    "originalPostXPrd": null,
+    "finalSLock": null,
+    "reviewedR1Source": null
+  }
+}

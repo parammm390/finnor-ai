@@ -262,6 +262,10 @@ export function validateOperationalQueryRequest(
   if (isRetiredWaterQuery(intent)) return { success: false, error: "Operational query intent belongs to the retired Water vertical" };
   if (!ACTIVE_INTENTS.has(intent)) return { success: false, error: "Unsupported operational query intent" };
 
+  if (intent === "economic_programme_v1") {
+    if (Object.keys(value!).some(key=>!["intent","programmeId","workId"].includes(key)) || typeof value?.programmeId!=="string" || !UUID.test(value.programmeId) || typeof value?.workId!=="string" || !UUID.test(value.workId)) return {success:false,error:"Economic query requires exact programme and Work IDs"};
+    return {success:true,request:value as unknown as OperationalQueryRequest};
+  }
   if (intent === "harness_program_v1") {
     if (Object.keys(value!).some(key=>!["intent","programId","workId"].includes(key)) || typeof value?.programId!=="string" || !UUID.test(value.programId) || typeof value?.workId!=="string" || !UUID.test(value.workId)) return {success:false,error:"Harness query requires exact programme and Work IDs"};
     return {success:true,request:value as unknown as OperationalQueryRequest};

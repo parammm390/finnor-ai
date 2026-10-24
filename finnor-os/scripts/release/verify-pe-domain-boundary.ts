@@ -213,8 +213,8 @@ export function verifyQuerySurfaceCoverage(openApi: unknown): string[] {
     Object.values(node).forEach((child) => { if (child && typeof child === "object") visit(child); });
   };
   visit(schema);
-  if (!equalSets(PROGRAM_OPERATIONAL_QUERY_INTENTS, ["harness_program_v1"])) {
-    errors.push("native-only query catalogue must retain the exact P1 reader");
+  if (!equalSets(PROGRAM_OPERATIONAL_QUERY_INTENTS, ["harness_program_v1", "economic_programme_v1"])) {
+    errors.push("native-only query catalogue must retain the exact P1 and Y1 readers");
   }
   if (!equalSets(CONFIDENTIAL_OPERATIONAL_QUERY_INTENTS, ["confidential_economic_computation_v1"])) {
     errors.push("native-only query catalogue must retain the exact Y4 reader");
@@ -226,8 +226,8 @@ export function verifyQuerySurfaceCoverage(openApi: unknown): string[] {
     if (!exposed.has(intent)) errors.push(`OpenAPI is missing public query intent ${intent}`);
   }
   for (const intent of NATIVE_QUERY_INTENTS) {
-    // P1 and Y4 require the original authenticated Work/Input. The flat public
-    // query route creates a new input and must not advertise these reads.
+    // P1, Y1 and Y4 native reads require the original authenticated Work/Input.
+    // Public facades must not advertise lowered internal query invocations.
     if (exposed.has(intent)) errors.push(`OpenAPI exposes native-only query intent ${intent}`);
   }
   for (const intent of exposed) {
@@ -348,7 +348,7 @@ export async function verifyPeDomainBoundary(): Promise<{ scannedFiles: number; 
 
   const expectedVerticals = ["none", "private_equity"];
   if (!equalSets(EXECUTABLE_VERTICALS, expectedVerticals)) errors.push(`executable verticals are ${EXECUTABLE_VERTICALS.join(", ")}`);
-  if (OPERATIONAL_QUERY_INTENTS.length !== 18) errors.push(`active query registry has ${OPERATIONAL_QUERY_INTENTS.length} intents; expected 18 including P7 workforce_status, P1 harness_program_v1 and Y4 confidential_economic_computation_v1`);
+  if (OPERATIONAL_QUERY_INTENTS.length !== 19) errors.push(`active query registry has ${OPERATIONAL_QUERY_INTENTS.length} intents; expected 19 including P7 workforce_status, P1 harness_program_v1, Y1 economic_programme_v1 and Y4 confidential_economic_computation_v1`);
   const retiredQueries = OPERATIONAL_QUERY_INTENTS.filter((intent) => (RETIRED_WATER_QUERY_INTENTS as readonly string[]).includes(intent));
   if (retiredQueries.length) errors.push(`retired queries registered: ${retiredQueries.join(", ")}`);
   const expectedParties = ["employee", "team", "location", "external_organization", "external_contact"];

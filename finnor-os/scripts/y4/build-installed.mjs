@@ -5,7 +5,7 @@ import {createHash} from "node:crypto";
 import {constants,copyFileSync,existsSync,linkSync,lstatSync,mkdirSync,readFileSync,readdirSync,realpathSync,statfsSync,writeFileSync} from "node:fs";
 import {dirname,isAbsolute,join,relative,resolve} from "node:path";
 import {fileURLToPath} from "node:url";
-import {builtinModules} from "node:module";
+import {isBuiltin} from "node:module";
 const source=resolve(dirname(fileURLToPath(import.meta.url)),"../../.."),args=process.argv.slice(2),options=new Map();
 for(let i=0;i<args.length;i++){
  const key=args[i];
@@ -50,7 +50,7 @@ for(const path of [...new Set(paths)].sort()){
 // createRequire()/resolve() calls are deliberately not rewritten by esbuild.
 // These existing native/child-process dependencies are part of the runtime too.
 const dynamicDependencies=["fs-ext","tsx","typescript"];
-const external=new Set(dynamicDependencies),builtins=new Set([...builtinModules,...builtinModules.map(name=>"node:"+name)]);
+const external=new Set(dynamicDependencies);
 const omittedBuildOnlyOptional=new Set();
 const externalRoot=path=>path.startsWith("@")?path.split("/").slice(0,2).join("/"):path.split("/")[0];
 const bundle=await build({absWorkingDir:runtime,entryPoints:{
@@ -61,7 +61,7 @@ const bundle=await build({absWorkingDir:runtime,entryPoints:{
  banner:{js:'import {createRequire as __y4Require} from "node:module";import {fileURLToPath as __y4Path} from "node:url";import {dirname as __y4Dir} from "node:path";const require=__y4Require(import.meta.url);const __y4URL=p=>new URL("../"+p,import.meta.url).href;const __y4Directory=p=>__y4Dir(__y4Path(__y4URL(p)));'},
  plugins:[{name:"explicit-installed-dependencies-and-source-paths",setup(plugin){
   plugin.onResolve({filter:/^[^./]/},({path})=>{
-   if(!path.startsWith("@finnor/")&&!path.startsWith("@/")&&!builtins.has(path)){
+   if(!path.startsWith("@finnor/")&&!path.startsWith("@/")&&!isBuiltin(path)){
     external.add(externalRoot(path));
     return {path:path==="next/server"?"next/server.js":path,external:true};
    }

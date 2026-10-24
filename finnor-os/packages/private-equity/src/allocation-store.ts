@@ -445,6 +445,12 @@ export async function putAllocationResource(ctx:PeMutationContext,input:Allocati
             {kind:'REFERENCE',identity:reference.id,payload:{reference:{...reference,content},rightsRefs:[proposal.certificate.rightsRef]}});
           continue;
         }
+        if(proposal?.problem.schema==='finnor.s5.economic-rights-problem.v1'&&proposal.certificate.schema==='finnor.s5.economic-rights-allocation.v1'){
+          await c.query("INSERT INTO finnor_os.s5_history(tenant_id,subject_id,revision,operation,body) VALUES($1,$2,$3,'ECONOMIC_RESOURCE_INVALIDATION',$4::jsonb)",
+            [ctx.auth.tenantId,old.reservation_id,old.revision,JSON.stringify({...detail,theoryId:proposal.certificate.theoryId,
+              semanticOwner:'S5',obligationsRetained:true,executionAuthorityGranted:false})]);
+          continue;
+        }
         if(['finnor.s5.fixed-primary-problem.v1','finnor.s5.fixed-programme-problem.v1'].includes(proposal.problem.schema)){
           await c.query("INSERT INTO finnor_os.s5_history(tenant_id,subject_id,revision,operation,body) VALUES($1,$2,$3,'PRIMARY_RESOURCE_INVALIDATION',$4::jsonb)",[ctx.auth.tenantId,old.reservation_id,old.revision,JSON.stringify({resourceRef:ref,priorRef:current.ref,reservationId:old.reservation_id,clearanceInvalidated:true,exposureRetained:true})]);
           continue;
