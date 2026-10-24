@@ -39,11 +39,14 @@ for (const file of source.files) {
   // imports for the existing FINNOR_X1_FRONTEND_INSTALL distDir. It changes no
   // executable product code. Preserve both hashes instead of hiding drift.
   if (file.path === "next-env.d.ts" && existsSync(resolve(root, ".next-x1-install/BUILD_ID"))) {
-    const original = actual.toString().replaceAll('import "./.next-x1-install/types/', 'import "./.next/types/');
-    if (sha(original) === file.sha256
-      && actual.toString() === original.replaceAll('import "./.next/types/', 'import "./.next-x1-install/types/')) {
+    const originalDistDir = [".next", ".next-z1-install"].find(distDir => {
+      const original = actual.toString().replaceAll('import "./.next-x1-install/types/', `import "./${distDir}/types/`);
+      return sha(original) === file.sha256
+        && actual.toString() === original.replaceAll(`import "./${distDir}/types/`, 'import "./.next-x1-install/types/');
+    });
+    if (originalDistDir) {
       generatedFrontendChanges.push({ path: file.path, originalSha256: file.sha256, generatedSha256: sha(actual),
-        generator: "CANONICAL_NEXT_FRONTEND_BUILD_DISTDIR_DECLARATIONS" });
+        originalDistDir, generator: "CANONICAL_NEXT_FRONTEND_BUILD_DISTDIR_DECLARATIONS" });
       continue;
     }
   }

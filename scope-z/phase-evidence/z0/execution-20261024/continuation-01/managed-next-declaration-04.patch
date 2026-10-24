@@ -1,0 +1,17 @@
+diff --git a/finnor-os/scripts/project-z/z0/emit-converged-runtime.mjs b/finnor-os/scripts/project-z/z0/emit-converged-runtime.mjs
+index 0393f6b..2e54d8d 100644
+--- a/finnor-os/scripts/project-z/z0/emit-converged-runtime.mjs
++++ b/finnor-os/scripts/project-z/z0/emit-converged-runtime.mjs
+@@ -42,3 +42,6 @@ for (const file of source.files) {
+-    const original = actual.toString().replaceAll('import "./.next-x1-install/types/', 'import "./.next/types/');
+-    if (sha(original) === file.sha256
+-      && actual.toString() === original.replaceAll('import "./.next/types/', 'import "./.next-x1-install/types/')) {
++    const originalDistDir = [".next", ".next-z1-install"].find(distDir => {
++      const original = actual.toString().replaceAll('import "./.next-x1-install/types/', `import "./${distDir}/types/`);
++      return sha(original) === file.sha256
++        && actual.toString() === original.replaceAll(`import "./${distDir}/types/`, 'import "./.next-x1-install/types/');
++    });
++    if (originalDistDir) {
+@@ -46 +49 @@ for (const file of source.files) {
+-        generator: "CANONICAL_NEXT_FRONTEND_BUILD_DISTDIR_DECLARATIONS" });
++        originalDistDir, generator: "CANONICAL_NEXT_FRONTEND_BUILD_DISTDIR_DECLARATIONS" });

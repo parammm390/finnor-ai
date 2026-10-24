@@ -1,0 +1,57 @@
+{
+  "schema": "finnor.project-z.z0.managed-next-declaration-repair.v1",
+  "createdAt": "2026-10-24T21:53:55.917811+00:00",
+  "failureMap": {
+    "path": "scope-z/phase-evidence/z0/execution-20261024/continuation-01/managed-next-declaration-before-14.md",
+    "bytes": 2913,
+    "sha256": "5170d50aaedd7f0b093bde556c690d71199c54b157db4aeebae80fea0ca86c3a"
+  },
+  "sourcePreimageSha256": "162b2a6718055f3e2f7c3ded4d64ef355527650fc2090c31912d726946bb28f7",
+  "sourcePostimage": {
+    "path": "finnor-os/scripts/project-z/z0/emit-converged-runtime.mjs",
+    "bytes": 19448,
+    "sha256": "0a769eb5739e8aeed6a5512ce0beb017920e432730837a05ea51e4565cb80392"
+  },
+  "patch": {
+    "path": "scope-z/phase-evidence/z0/execution-20261024/continuation-01/managed-next-declaration-04.patch",
+    "bytes": 1237,
+    "sha256": "0c989e7568d6df069c890afd4bad3b8f1ab8a18029cfbcdded4bb21516ab5efd"
+  },
+  "originalFailure": {
+    "path": "scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-17/reconstruction-failure.json",
+    "bytes": 8546,
+    "sha256": "e894bffabf474376a6125bf6aae713879fd1b7667470990a4f273f58ce60f343"
+  },
+  "actualOuterCommand": {
+    "path": "scope-z/phase-evidence/z0/execution-20261024/continuation-01/reconstruction-17-command.json",
+    "bytes": 1211,
+    "sha256": "6f4949a0a2f1eac8437898b996ffdcdf3b5ad6071e53752d7a92d27610a6c07e"
+  },
+  "actualExit": 1,
+  "stepsPassed": 10,
+  "failedStep": "08-complete-emission",
+  "sourceMembersAudited": 3139,
+  "actualBuildChangedSourceMembers": [
+    {
+      "path": "next-env.d.ts",
+      "originalSha256": "f39b312cebdf194b5a9d5f6d7e739ada61def0b38980c0e73ed326da5769048d",
+      "generatedSha256": "53a2cc1cdb2914313a6e4aff213b79826e704fad28b3c4e99ca0fe09da7d4597",
+      "generatedBytes": 310
+    }
+  ],
+  "allowedOriginalDistDirs": [
+    ".next",
+    ".next-z1-install"
+  ],
+  "requiredGeneratedDistDir": ".next-x1-install",
+  "validation": "EXACT_ORIGINAL_COMPLETE_SHA_AND_COMPLETE_FORWARD_ROUND_TRIP",
+  "unrelatedSourceExemptionsAdded": false,
+  "sourceArchiveRetained": {
+    "path": "scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-16/converged-source.tar.gz",
+    "bytes": 11393648,
+    "sha256": "994f3293c877ae44a8f8b0733302a3e1d70b634c39af978674b9c8b3b0912364"
+  },
+  "newFullReconstruction": "PENDING_FRESH_SOURCE_AND_DISK_GUARD",
+  "originalFailureRetained": true,
+  "nativeOwnerOrAuthenticationExecuted": false
+}
