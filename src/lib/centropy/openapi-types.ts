@@ -1,4 +1,4 @@
-// Generated from finnor-os/openapi.json, SHA-256 14b530f484db07330653997575b968513d48c2d7790a181d3ebb957f4d69611d.
+// Generated from finnor-os/openapi.json, SHA-256 466a0147bd8fc949b0ee4b438591c5a82891127a0471a85b8e2fef31bcf2791d.
 export interface paths {
     "/api/live-controls": {
         parameters: {
@@ -2828,7 +2828,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    operation: "opportunity-promote" | "belief-view" | "belief-pin" | "roots" | "projection" | "search" | "object" | "traverse" | "provenance" | "history" | "evidence-lineage" | "decision-lineage" | "available-actions" | "context" | "evidence-handles" | "evidence-submit" | "evidence-read" | "evidence-witness" | "evidence-replay" | "evidence-cancel" | "evidence-consume" | "program-submit" | "program-read" | "program-witness" | "program-module" | "program-projection" | "program-cancel" | "program-resume" | "program-artifact" | "program-ports" | "program-interface-module" | "compute-search-submit" | "compute-search-read" | "compute-search-projection" | "compute-search-cancel" | "compute-search-resume" | "compute-search-reconcile" | "interface-acquire" | "interface-read" | "interface-projection" | "interface-catalogue" | "interface-module" | "interface-cancel" | "interface-resume" | "interface-reconcile" | "interface-admission" | "interface-invoke" | "interface-ports" | "decision-slice-compile" | "decision-slice-read" | "decision-slice-context" | "decision-slice-patch" | "decision-slice-witness" | "decision-slice-consume" | "decision-slice-cancel" | "decision-slice-recompile" | "decision-slice-changes" | "decision-slice-view" | "continuation-submit" | "continuation-read" | "continuation-projection" | "procedure-experience" | "procedure-induce" | "procedure-induction-read" | "procedure-induction-cancel" | "procedure-read" | "procedure-component" | "procedure-counterexample" | "procedure-projection" | "procedure-admission-request" | "procedure-interface" | "procedure-costs" | "deliberation-submit" | "deliberation-read" | "deliberation-projection" | "deliberation-cancel" | "deliberation-resume" | "deliberation-reconcile" | "deliberation-calibrate" | "deliberation-evidence-read" | "deliberation-module-read" | "capital-formation-submit" | "capital-formation-read" | "capital-formation-list" | "capital-formation-profiles" | "capital-formation-advance" | "capital-formation-event" | "capital-formation-proposal" | "capital-formation-cancel" | "capital-formation-draw-handoff" | "application-submit" | "application-maintain" | "application-command" | "application-read" | "application-record" | "application-list" | "application-history" | "application-asset" | "application-cancel" | "application-rollback" | "application-impact" | "application-upload" | "application-prepare-effect" | "application-s8-propose" | "application-admission" | "application-acquire" | "application-execute" | "application-projection" | "application-resume" | "institution-submit" | "institution-revise" | "institution-read" | "institution-status" | "institution-cancel" | "institution-resume" | "institution-witness" | "institution-sources" | "institution-inputs" | "institution-mandate" | "institution-register-source" | "institution-consent" | "learning-consent" | "learning-revoke-consent" | "learning-experience" | "learning-submit" | "learning-read" | "learning-list" | "learning-execute" | "learning-evaluate" | "learning-cancel" | "learning-invalidate" | "learning-retry" | "learning-rollback" | "learning-s8-propose" | "learning-admission" | "learning-register-assignment" | "learning-retrain" | "identification-targets" | "identification-consent" | "identification-revoke-consent" | "identification-submit" | "identification-read" | "identification-list" | "identification-history" | "identification-experiment" | "identification-replicate" | "identification-use" | "identification-cancel" | "identification-invalidate" | "identification-retry" | "identification-s8-propose" | "identification-admission" | "economic-theory-submit" | "economic-theory-read" | "economic-theory-list" | "economic-theory-admit" | "economic-theory-resume" | "economic-theory-cancel" | "economic-theory-artifact" | "economic-theory-compare" | "economic-programme-create" | "economic-programme-run" | "economic-programme-read" | "economic-programme-reconcile" | "economic-reservation-create" | "economic-reservation-read" | "response-model-submit" | "response-model-list" | "response-model-read" | "response-model-admit" | "response-model-resume" | "response-model-cancel" | "response-model-artifact" | "response-model-compare" | "response-forecast" | "response-programme" | "response-use-read" | "response-use-resume" | "response-use-cancel" | "confidential-intake" | "confidential-source-handle" | "confidential-plan" | "confidential-submit" | "confidential-read" | "confidential-list" | "confidential-consent" | "confidential-revoke" | "confidential-prepare" | "confidential-commit" | "confidential-import-release" | "confidential-cancel" | "confidential-invalidate" | "confidential-retry" | "confidential-reconcile" | "confidential-underwriting" | "confidential-control-choice" | "confidential-allocation" | "confidential-obligation" | "confidential-s8-propose" | "confidential-s8-current";
+                    operation: "opportunity-promote" | "belief-view" | "belief-pin" | "roots" | "projection" | "search" | "object" | "traverse" | "provenance" | "history" | "evidence-lineage" | "decision-lineage" | "available-actions" | "context" | "evidence-handles" | "evidence-submit" | "evidence-read" | "evidence-witness" | "evidence-replay" | "evidence-cancel" | "evidence-consume" | "program-submit" | "program-read" | "program-witness" | "program-module" | "program-projection" | "program-cancel" | "program-resume" | "program-artifact" | "program-ports" | "program-interface-module" | "compute-search-submit" | "compute-search-read" | "compute-search-projection" | "compute-search-cancel" | "compute-search-resume" | "compute-search-reconcile" | "interface-acquire" | "interface-read" | "interface-projection" | "interface-catalogue" | "interface-module" | "interface-cancel" | "interface-resume" | "interface-reconcile" | "interface-admission" | "interface-invoke" | "interface-ports" | "decision-slice-compile" | "decision-slice-read" | "decision-slice-context" | "decision-slice-patch" | "decision-slice-witness" | "decision-slice-consume" | "decision-slice-cancel" | "decision-slice-recompile" | "decision-slice-changes" | "decision-slice-view" | "continuation-submit" | "continuation-read" | "continuation-projection" | "procedure-experience" | "procedure-induce" | "procedure-induction-read" | "procedure-induction-cancel" | "procedure-read" | "procedure-component" | "procedure-counterexample" | "procedure-projection" | "procedure-admission-request" | "procedure-interface" | "procedure-costs" | "deliberation-submit" | "deliberation-read" | "deliberation-projection" | "deliberation-cancel" | "deliberation-resume" | "deliberation-reconcile" | "deliberation-calibrate" | "deliberation-evidence-read" | "deliberation-module-read" | "capital-formation-submit" | "capital-formation-read" | "capital-formation-list" | "capital-formation-profiles" | "capital-formation-advance" | "capital-formation-event" | "capital-formation-proposal" | "capital-formation-cancel" | "capital-formation-draw-handoff" | "application-submit" | "application-maintain" | "application-command" | "application-read" | "application-record" | "application-list" | "application-history" | "application-asset" | "application-cancel" | "application-rollback" | "application-impact" | "application-upload" | "application-prepare-effect" | "application-s8-propose" | "application-admission" | "application-acquire" | "application-execute" | "application-projection" | "application-resume" | "institution-submit" | "institution-revise" | "institution-read" | "institution-status" | "institution-cancel" | "institution-resume" | "institution-witness" | "institution-sources" | "institution-inputs" | "institution-mandate" | "institution-register-source" | "institution-consent" | "learning-consent" | "learning-revoke-consent" | "learning-experience" | "learning-submit" | "learning-read" | "learning-list" | "learning-execute" | "learning-evaluate" | "learning-cancel" | "learning-invalidate" | "learning-retry" | "learning-rollback" | "learning-s8-propose" | "learning-admission" | "learning-register-assignment" | "learning-retrain" | "identification-targets" | "identification-consent" | "identification-revoke-consent" | "identification-submit" | "identification-read" | "identification-list" | "identification-history" | "identification-experiment" | "identification-replicate" | "identification-use" | "identification-cancel" | "identification-invalidate" | "identification-retry" | "identification-s8-propose" | "identification-admission" | "economic-theory-submit" | "economic-theory-read" | "economic-theory-list" | "economic-theory-admit" | "economic-theory-resume" | "economic-theory-cancel" | "economic-theory-artifact" | "economic-theory-compare" | "economic-programme-create" | "economic-programme-run" | "economic-programme-read" | "economic-programme-reconcile" | "economic-reservation-create" | "economic-reservation-read" | "response-model-submit" | "response-model-list" | "response-model-read" | "response-model-admit" | "response-model-resume" | "response-model-cancel" | "response-model-artifact" | "response-model-compare" | "response-forecast" | "response-programme" | "response-use-read" | "response-use-resume" | "response-use-cancel" | "interaction-submit" | "interaction-read" | "interaction-list" | "interaction-admit" | "interaction-resume" | "interaction-cancel" | "interaction-artifact" | "interaction-compare" | "interaction-terms" | "interaction-local" | "interaction-consent" | "interaction-start" | "interaction-run-read" | "interaction-observe" | "interaction-action" | "interaction-materialize" | "interaction-run" | "interaction-reconcile" | "confidential-intake" | "confidential-source-handle" | "confidential-plan" | "confidential-submit" | "confidential-read" | "confidential-list" | "confidential-consent" | "confidential-revoke" | "confidential-prepare" | "confidential-commit" | "confidential-import-release" | "confidential-cancel" | "confidential-invalidate" | "confidential-retry" | "confidential-reconcile" | "confidential-underwriting" | "confidential-control-choice" | "confidential-allocation" | "confidential-obligation" | "confidential-s8-propose" | "confidential-s8-current";
                 };
                 cookie?: never;
             };
@@ -11484,6 +11484,1932 @@ export interface paths {
                     content?: never;
                 };
                 /** @description Pinned checker or runtime unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/interaction-submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["interaction-submit"];
+                };
+            };
+            responses: {
+                /** @description Exact Work and participant-local dynamic protocol, development admission, terms, consent or retained native responsibility. No protected qualification or financial efficacy. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original bounded construction or guarded native programme accepted. Not completion. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict data-only contract required. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current canonical participant rights or disposable profile missing. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unavailable or unauthorized exact participant, Work or root. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Bounded authenticated body deadline exceeded. */
+                408: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original history, terms, resource revision or idempotency changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Frozen request bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact mathematical, consent, source or native owner prerequisite failed. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Pinned runtime or native capacity unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/interaction-read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["interaction-read"];
+                };
+            };
+            responses: {
+                /** @description Exact Work and participant-local dynamic protocol, development admission, terms, consent or retained native responsibility. No protected qualification or financial efficacy. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original bounded construction or guarded native programme accepted. Not completion. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict data-only contract required. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current canonical participant rights or disposable profile missing. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unavailable or unauthorized exact participant, Work or root. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Bounded authenticated body deadline exceeded. */
+                408: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original history, terms, resource revision or idempotency changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Frozen request bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact mathematical, consent, source or native owner prerequisite failed. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Pinned runtime or native capacity unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/interaction-list": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["interaction-list"];
+                };
+            };
+            responses: {
+                /** @description Exact Work and participant-local dynamic protocol, development admission, terms, consent or retained native responsibility. No protected qualification or financial efficacy. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original bounded construction or guarded native programme accepted. Not completion. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict data-only contract required. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current canonical participant rights or disposable profile missing. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unavailable or unauthorized exact participant, Work or root. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Bounded authenticated body deadline exceeded. */
+                408: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original history, terms, resource revision or idempotency changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Frozen request bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact mathematical, consent, source or native owner prerequisite failed. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Pinned runtime or native capacity unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/interaction-admit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["interaction-admit"];
+                };
+            };
+            responses: {
+                /** @description Exact Work and participant-local dynamic protocol, development admission, terms, consent or retained native responsibility. No protected qualification or financial efficacy. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original bounded construction or guarded native programme accepted. Not completion. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict data-only contract required. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current canonical participant rights or disposable profile missing. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unavailable or unauthorized exact participant, Work or root. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Bounded authenticated body deadline exceeded. */
+                408: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original history, terms, resource revision or idempotency changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Frozen request bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact mathematical, consent, source or native owner prerequisite failed. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Pinned runtime or native capacity unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/interaction-resume": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["interaction-resume"];
+                };
+            };
+            responses: {
+                /** @description Exact Work and participant-local dynamic protocol, development admission, terms, consent or retained native responsibility. No protected qualification or financial efficacy. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original bounded construction or guarded native programme accepted. Not completion. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict data-only contract required. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current canonical participant rights or disposable profile missing. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unavailable or unauthorized exact participant, Work or root. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Bounded authenticated body deadline exceeded. */
+                408: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original history, terms, resource revision or idempotency changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Frozen request bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact mathematical, consent, source or native owner prerequisite failed. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Pinned runtime or native capacity unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/interaction-cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["interaction-cancel"];
+                };
+            };
+            responses: {
+                /** @description Exact Work and participant-local dynamic protocol, development admission, terms, consent or retained native responsibility. No protected qualification or financial efficacy. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original bounded construction or guarded native programme accepted. Not completion. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict data-only contract required. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current canonical participant rights or disposable profile missing. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unavailable or unauthorized exact participant, Work or root. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Bounded authenticated body deadline exceeded. */
+                408: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original history, terms, resource revision or idempotency changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Frozen request bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact mathematical, consent, source or native owner prerequisite failed. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Pinned runtime or native capacity unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/interaction-artifact": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["interaction-artifact"];
+                };
+            };
+            responses: {
+                /** @description Exact Work and participant-local dynamic protocol, development admission, terms, consent or retained native responsibility. No protected qualification or financial efficacy. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original bounded construction or guarded native programme accepted. Not completion. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict data-only contract required. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current canonical participant rights or disposable profile missing. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unavailable or unauthorized exact participant, Work or root. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Bounded authenticated body deadline exceeded. */
+                408: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original history, terms, resource revision or idempotency changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Frozen request bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact mathematical, consent, source or native owner prerequisite failed. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Pinned runtime or native capacity unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/interaction-compare": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["interaction-compare"];
+                };
+            };
+            responses: {
+                /** @description Exact Work and participant-local dynamic protocol, development admission, terms, consent or retained native responsibility. No protected qualification or financial efficacy. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original bounded construction or guarded native programme accepted. Not completion. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict data-only contract required. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current canonical participant rights or disposable profile missing. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unavailable or unauthorized exact participant, Work or root. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Bounded authenticated body deadline exceeded. */
+                408: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original history, terms, resource revision or idempotency changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Frozen request bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact mathematical, consent, source or native owner prerequisite failed. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Pinned runtime or native capacity unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/interaction-terms": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["interaction-terms"];
+                };
+            };
+            responses: {
+                /** @description Exact Work and participant-local dynamic protocol, development admission, terms, consent or retained native responsibility. No protected qualification or financial efficacy. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original bounded construction or guarded native programme accepted. Not completion. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict data-only contract required. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current canonical participant rights or disposable profile missing. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unavailable or unauthorized exact participant, Work or root. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Bounded authenticated body deadline exceeded. */
+                408: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original history, terms, resource revision or idempotency changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Frozen request bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact mathematical, consent, source or native owner prerequisite failed. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Pinned runtime or native capacity unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/interaction-local": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["interaction-local"];
+                };
+            };
+            responses: {
+                /** @description Exact Work and participant-local dynamic protocol, development admission, terms, consent or retained native responsibility. No protected qualification or financial efficacy. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original bounded construction or guarded native programme accepted. Not completion. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict data-only contract required. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current canonical participant rights or disposable profile missing. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unavailable or unauthorized exact participant, Work or root. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Bounded authenticated body deadline exceeded. */
+                408: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original history, terms, resource revision or idempotency changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Frozen request bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact mathematical, consent, source or native owner prerequisite failed. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Pinned runtime or native capacity unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/interaction-consent": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["interaction-consent"];
+                };
+            };
+            responses: {
+                /** @description Exact Work and participant-local dynamic protocol, development admission, terms, consent or retained native responsibility. No protected qualification or financial efficacy. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original bounded construction or guarded native programme accepted. Not completion. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict data-only contract required. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current canonical participant rights or disposable profile missing. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unavailable or unauthorized exact participant, Work or root. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Bounded authenticated body deadline exceeded. */
+                408: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original history, terms, resource revision or idempotency changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Frozen request bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact mathematical, consent, source or native owner prerequisite failed. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Pinned runtime or native capacity unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/interaction-start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["interaction-start"];
+                };
+            };
+            responses: {
+                /** @description Exact Work and participant-local dynamic protocol, development admission, terms, consent or retained native responsibility. No protected qualification or financial efficacy. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original bounded construction or guarded native programme accepted. Not completion. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict data-only contract required. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current canonical participant rights or disposable profile missing. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unavailable or unauthorized exact participant, Work or root. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Bounded authenticated body deadline exceeded. */
+                408: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original history, terms, resource revision or idempotency changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Frozen request bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact mathematical, consent, source or native owner prerequisite failed. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Pinned runtime or native capacity unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/interaction-run-read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["interaction-run-read"];
+                };
+            };
+            responses: {
+                /** @description Exact Work and participant-local dynamic protocol, development admission, terms, consent or retained native responsibility. No protected qualification or financial efficacy. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original bounded construction or guarded native programme accepted. Not completion. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict data-only contract required. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current canonical participant rights or disposable profile missing. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unavailable or unauthorized exact participant, Work or root. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Bounded authenticated body deadline exceeded. */
+                408: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original history, terms, resource revision or idempotency changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Frozen request bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact mathematical, consent, source or native owner prerequisite failed. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Pinned runtime or native capacity unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/interaction-observe": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["interaction-observe"];
+                };
+            };
+            responses: {
+                /** @description Exact Work and participant-local dynamic protocol, development admission, terms, consent or retained native responsibility. No protected qualification or financial efficacy. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original bounded construction or guarded native programme accepted. Not completion. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict data-only contract required. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current canonical participant rights or disposable profile missing. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unavailable or unauthorized exact participant, Work or root. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Bounded authenticated body deadline exceeded. */
+                408: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original history, terms, resource revision or idempotency changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Frozen request bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact mathematical, consent, source or native owner prerequisite failed. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Pinned runtime or native capacity unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/interaction-action": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["interaction-action"];
+                };
+            };
+            responses: {
+                /** @description Exact Work and participant-local dynamic protocol, development admission, terms, consent or retained native responsibility. No protected qualification or financial efficacy. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original bounded construction or guarded native programme accepted. Not completion. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict data-only contract required. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current canonical participant rights or disposable profile missing. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unavailable or unauthorized exact participant, Work or root. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Bounded authenticated body deadline exceeded. */
+                408: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original history, terms, resource revision or idempotency changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Frozen request bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact mathematical, consent, source or native owner prerequisite failed. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Pinned runtime or native capacity unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/interaction-materialize": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["interaction-materialize"];
+                };
+            };
+            responses: {
+                /** @description Exact Work and participant-local dynamic protocol, development admission, terms, consent or retained native responsibility. No protected qualification or financial efficacy. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original bounded construction or guarded native programme accepted. Not completion. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict data-only contract required. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current canonical participant rights or disposable profile missing. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unavailable or unauthorized exact participant, Work or root. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Bounded authenticated body deadline exceeded. */
+                408: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original history, terms, resource revision or idempotency changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Frozen request bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact mathematical, consent, source or native owner prerequisite failed. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Pinned runtime or native capacity unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/interaction-run": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["interaction-run"];
+                };
+            };
+            responses: {
+                /** @description Exact Work and participant-local dynamic protocol, development admission, terms, consent or retained native responsibility. No protected qualification or financial efficacy. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original bounded construction or guarded native programme accepted. Not completion. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict data-only contract required. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current canonical participant rights or disposable profile missing. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unavailable or unauthorized exact participant, Work or root. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Bounded authenticated body deadline exceeded. */
+                408: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original history, terms, resource revision or idempotency changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Frozen request bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact mathematical, consent, source or native owner prerequisite failed. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Pinned runtime or native capacity unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/interaction-reconcile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["interaction-reconcile"];
+                };
+            };
+            responses: {
+                /** @description Exact Work and participant-local dynamic protocol, development admission, terms, consent or retained native responsibility. No protected qualification or financial efficacy. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original bounded construction or guarded native programme accepted. Not completion. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict data-only contract required. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current canonical participant rights or disposable profile missing. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unavailable or unauthorized exact participant, Work or root. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Bounded authenticated body deadline exceeded. */
+                408: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original history, terms, resource revision or idempotency changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Frozen request bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact mathematical, consent, source or native owner prerequisite failed. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Pinned runtime or native capacity unavailable. */
                 503: {
                     headers: {
                         [name: string]: unknown;
@@ -43958,6 +45884,641 @@ export interface components {
                 version: string;
                 contentDigest: string;
             };
+        };
+        "interaction-submit": {
+            /** @constant */
+            schema: "finnor.interaction-request.v1";
+            root: {
+                /** @enum {string} */
+                entityType: "pe_strategy" | "pe_opportunity" | "pe_deal" | "pe_fund" | "pe_vehicle" | "external_organization" | "pe_portfolio_holding";
+                /** Format: uuid */
+                entityId: string;
+            };
+            /** Format: uuid */
+            workId: string;
+            problem: {
+                /** @constant */
+                schema: "finnor.interaction-problem.v1";
+                id: string;
+                title: string;
+                participants: [
+                    {
+                        /** @constant */
+                        id: "P0";
+                        /** Format: uuid */
+                        principalId: string;
+                        outsideOption: {
+                            value: string | null;
+                            basis: {
+                                unit: string;
+                                currency: string | null;
+                                timeBasis: string;
+                                owner: string;
+                                /** @constant */
+                                rounding: "EXACT";
+                                /** @enum {string} */
+                                sourceStatus: "SUPPLIED_MODEL" | "CANONICAL_OBSERVATION" | "UNKNOWN";
+                                sourceRef: {
+                                    owner: string;
+                                    id: string;
+                                    version: string;
+                                    contentDigest: string;
+                                };
+                            };
+                            unknownReason?: string;
+                        };
+                    },
+                    {
+                        /** @constant */
+                        id: "P1";
+                        /** Format: uuid */
+                        principalId: string;
+                        outsideOption: {
+                            value: string | null;
+                            basis: {
+                                unit: string;
+                                currency: string | null;
+                                timeBasis: string;
+                                owner: string;
+                                /** @constant */
+                                rounding: "EXACT";
+                                /** @enum {string} */
+                                sourceStatus: "SUPPLIED_MODEL" | "CANONICAL_OBSERVATION" | "UNKNOWN";
+                                sourceRef: {
+                                    owner: string;
+                                    id: string;
+                                    version: string;
+                                    contentDigest: string;
+                                };
+                            };
+                            unknownReason?: string;
+                        };
+                    }
+                ];
+                dates: [
+                    string,
+                    string,
+                    string
+                ];
+                fixedOperatorRefs: {
+                    owner: string;
+                    id: string;
+                    version: string;
+                    contentDigest: string;
+                }[];
+                actorModelRefs: {
+                    owner: string;
+                    id: string;
+                    version: string;
+                    contentDigest: string;
+                }[];
+                quantityBasis: {
+                    utilities: [
+                        {
+                            unit: string;
+                            currency: string | null;
+                            timeBasis: string;
+                            owner: string;
+                            /** @constant */
+                            rounding: "EXACT";
+                            /** @enum {string} */
+                            sourceStatus: "SUPPLIED_MODEL" | "CANONICAL_OBSERVATION" | "UNKNOWN";
+                            sourceRef: {
+                                owner: string;
+                                id: string;
+                                version: string;
+                                contentDigest: string;
+                            };
+                        },
+                        {
+                            unit: string;
+                            currency: string | null;
+                            timeBasis: string;
+                            owner: string;
+                            /** @constant */
+                            rounding: "EXACT";
+                            /** @enum {string} */
+                            sourceStatus: "SUPPLIED_MODEL" | "CANONICAL_OBSERVATION" | "UNKNOWN";
+                            sourceRef: {
+                                owner: string;
+                                id: string;
+                                version: string;
+                                contentDigest: string;
+                            };
+                        }
+                    ];
+                    ownerValue: {
+                        unit: string;
+                        currency: string | null;
+                        timeBasis: string;
+                        owner: string;
+                        /** @constant */
+                        rounding: "EXACT";
+                        /** @enum {string} */
+                        sourceStatus: "SUPPLIED_MODEL" | "CANONICAL_OBSERVATION" | "UNKNOWN";
+                        sourceRef: {
+                            owner: string;
+                            id: string;
+                            version: string;
+                            contentDigest: string;
+                        };
+                    };
+                };
+                financialLimits: {
+                    absolutePayments: [
+                        {
+                            value: string | null;
+                            basis: {
+                                unit: string;
+                                currency: string | null;
+                                timeBasis: string;
+                                owner: string;
+                                /** @constant */
+                                rounding: "EXACT";
+                                /** @enum {string} */
+                                sourceStatus: "SUPPLIED_MODEL" | "CANONICAL_OBSERVATION" | "UNKNOWN";
+                                sourceRef: {
+                                    owner: string;
+                                    id: string;
+                                    version: string;
+                                    contentDigest: string;
+                                };
+                            };
+                            unknownReason?: string;
+                        },
+                        {
+                            value: string | null;
+                            basis: {
+                                unit: string;
+                                currency: string | null;
+                                timeBasis: string;
+                                owner: string;
+                                /** @constant */
+                                rounding: "EXACT";
+                                /** @enum {string} */
+                                sourceStatus: "SUPPLIED_MODEL" | "CANONICAL_OBSERVATION" | "UNKNOWN";
+                                sourceRef: {
+                                    owner: string;
+                                    id: string;
+                                    version: string;
+                                    contentDigest: string;
+                                };
+                            };
+                            unknownReason?: string;
+                        }
+                    ];
+                    liabilities: [
+                        {
+                            value: string | null;
+                            basis: {
+                                unit: string;
+                                currency: string | null;
+                                timeBasis: string;
+                                owner: string;
+                                /** @constant */
+                                rounding: "EXACT";
+                                /** @enum {string} */
+                                sourceStatus: "SUPPLIED_MODEL" | "CANONICAL_OBSERVATION" | "UNKNOWN";
+                                sourceRef: {
+                                    owner: string;
+                                    id: string;
+                                    version: string;
+                                    contentDigest: string;
+                                };
+                            };
+                            unknownReason?: string;
+                        },
+                        {
+                            value: string | null;
+                            basis: {
+                                unit: string;
+                                currency: string | null;
+                                timeBasis: string;
+                                owner: string;
+                                /** @constant */
+                                rounding: "EXACT";
+                                /** @enum {string} */
+                                sourceStatus: "SUPPLIED_MODEL" | "CANONICAL_OBSERVATION" | "UNKNOWN";
+                                sourceRef: {
+                                    owner: string;
+                                    id: string;
+                                    version: string;
+                                    contentDigest: string;
+                                };
+                            };
+                            unknownReason?: string;
+                        }
+                    ];
+                    /** @constant */
+                    semantics: "SIGNED_NODE_SNAPSHOTS_NO_IMPLICIT_NETTING_OR_UTILITY_CONVERSION";
+                };
+                observationRules: {
+                    key: string;
+                    allowedRecipients: ("P0" | "P1" | "PUBLIC")[];
+                    mandatoryByDate: (0 | 1 | 2) | null;
+                    /** @enum {string} */
+                    classification: "SOURCED_FACT" | "AUTHENTICATED_ASSERTION" | "MODEL_RELATIVE_STATEMENT" | "UNRESOLVED_CLAIM";
+                    sourceRef: {
+                        owner: string;
+                        id: string;
+                        version: string;
+                        contentDigest: string;
+                    };
+                }[];
+                controls: {
+                    id: string;
+                    /** @enum {string} */
+                    kind: "DISCLOSURE" | "COMMUNICATION" | "COMMITMENT_TIMING";
+                    options: string[];
+                }[];
+                models: {
+                    id: string;
+                    qualificationRef: {
+                        owner: string;
+                        id: string;
+                        version: string;
+                        contentDigest: string;
+                    };
+                    root: string;
+                    nodes: ({
+                        id: string;
+                        /** @enum {number} */
+                        date: 0 | 1 | 2;
+                        state: [
+                            0 | 1,
+                            0 | 1
+                        ];
+                        observations: {
+                            key: string;
+                            value: string;
+                            recipients: ("P0" | "P1" | "PUBLIC")[];
+                        }[];
+                        resources: {
+                            [key: string]: string;
+                        };
+                        payments: [
+                            string,
+                            string
+                        ];
+                        liabilities: [
+                            string,
+                            string
+                        ];
+                        /** @constant */
+                        kind: "CHANCE";
+                        /** @enum {string} */
+                        chanceRole: "PRIOR" | "TRANSITION" | "SIGNAL";
+                        probabilityBasis: {
+                            population: string;
+                            conditioning: string;
+                            identificationRef: {
+                                owner: string;
+                                id: string;
+                                version: string;
+                                contentDigest: string;
+                            };
+                        };
+                        edges: {
+                            actionId: string;
+                            next: string;
+                            probability: string | null;
+                        }[];
+                    } | {
+                        id: string;
+                        /** @enum {number} */
+                        date: 0 | 1 | 2;
+                        state: [
+                            0 | 1,
+                            0 | 1
+                        ];
+                        observations: {
+                            key: string;
+                            value: string;
+                            recipients: ("P0" | "P1" | "PUBLIC")[];
+                        }[];
+                        resources: {
+                            [key: string]: string;
+                        };
+                        payments: [
+                            string,
+                            string
+                        ];
+                        liabilities: [
+                            string,
+                            string
+                        ];
+                        /** @constant */
+                        kind: "DECISION";
+                        /** @enum {string} */
+                        participant: "P0" | "P1";
+                        edges: {
+                            actionId: string;
+                            next: string;
+                        }[];
+                        informationSet?: string;
+                    } | {
+                        id: string;
+                        /** @enum {number} */
+                        date: 0 | 1 | 2;
+                        state: [
+                            0 | 1,
+                            0 | 1
+                        ];
+                        observations: {
+                            key: string;
+                            value: string;
+                            recipients: ("P0" | "P1" | "PUBLIC")[];
+                        }[];
+                        resources: {
+                            [key: string]: string;
+                        };
+                        payments: [
+                            string,
+                            string
+                        ];
+                        liabilities: [
+                            string,
+                            string
+                        ];
+                        /** @constant */
+                        kind: "PROTOCOL";
+                        controlId: string;
+                        edges: {
+                            actionId: string;
+                            next: string;
+                        }[];
+                    } | {
+                        id: string;
+                        /** @enum {number} */
+                        date: 0 | 1 | 2;
+                        state: [
+                            0 | 1,
+                            0 | 1
+                        ];
+                        observations: {
+                            key: string;
+                            value: string;
+                            recipients: ("P0" | "P1" | "PUBLIC")[];
+                        }[];
+                        resources: {
+                            [key: string]: string;
+                        };
+                        payments: [
+                            string,
+                            string
+                        ];
+                        liabilities: [
+                            string,
+                            string
+                        ];
+                        /** @constant */
+                        kind: "TERMINAL";
+                        payoff: [
+                            string | null,
+                            string | null
+                        ];
+                        ownerValue: string | null;
+                    })[];
+                }[];
+                resourceLimits: {
+                    [key: string]: {
+                        value: string | null;
+                        basis: {
+                            unit: string;
+                            currency: string | null;
+                            timeBasis: string;
+                            owner: string;
+                            /** @constant */
+                            rounding: "EXACT";
+                            /** @enum {string} */
+                            sourceStatus: "SUPPLIED_MODEL" | "CANONICAL_OBSERVATION" | "UNKNOWN";
+                            sourceRef: {
+                                owner: string;
+                                id: string;
+                                version: string;
+                                contentDigest: string;
+                            };
+                        };
+                        unknownReason?: string;
+                    };
+                };
+                goal: {
+                    minimumOwnerValue: {
+                        value: string | null;
+                        basis: {
+                            unit: string;
+                            currency: string | null;
+                            timeBasis: string;
+                            owner: string;
+                            /** @constant */
+                            rounding: "EXACT";
+                            /** @enum {string} */
+                            sourceStatus: "SUPPLIED_MODEL" | "CANONICAL_OBSERVATION" | "UNKNOWN";
+                            sourceRef: {
+                                owner: string;
+                                id: string;
+                                version: string;
+                                contentDigest: string;
+                            };
+                        };
+                        unknownReason?: string;
+                    };
+                    requireNontrivial: boolean;
+                };
+            };
+            lowering: {
+                /** @constant */
+                schema: "finnor.y3.fixed-y1-lowering.v1";
+                /** Format: uuid */
+                theoryId: string;
+                theoryRef: {
+                    owner: string;
+                    id: string;
+                    version: string;
+                    contentDigest: string;
+                };
+                outcomes: ({
+                    modelId: string;
+                    terminalNodeId: string;
+                    terminalDigest: string;
+                    before: {
+                        [key: string]: string;
+                    };
+                    after: {
+                        [key: string]: string;
+                    };
+                    /** @constant */
+                    kind: "NO_EFFECT";
+                } | {
+                    modelId: string;
+                    terminalNodeId: string;
+                    terminalDigest: string;
+                    before: {
+                        [key: string]: string;
+                    };
+                    after: {
+                        [key: string]: string;
+                    };
+                    /** @constant */
+                    kind: "RIGHT_TRANSITION";
+                    operatorId: string;
+                    parameters: {
+                        [key: string]: string;
+                    };
+                })[];
+            };
+            sources: {
+                /** Format: uuid */
+                sourceId: string;
+                /** Format: uuid */
+                versionId: string;
+                contentDigest: string;
+                claimKey: string;
+                ref: {
+                    owner: string;
+                    id: string;
+                    version: string;
+                    contentDigest: string;
+                };
+            }[];
+            idempotencyKey: string;
+            /** Format: uuid */
+            parentProtocolId?: string;
+        };
+        "interaction-read": {
+            /** Format: uuid */
+            protocolId: string;
+        };
+        "interaction-list": {
+            root: {
+                /** @enum {string} */
+                entityType: "pe_strategy" | "pe_opportunity" | "pe_deal" | "pe_fund" | "pe_vehicle" | "external_organization" | "pe_portfolio_holding";
+                /** Format: uuid */
+                entityId: string;
+            };
+            /** Format: uuid */
+            workId: string;
+        };
+        "interaction-admit": {
+            /** Format: uuid */
+            protocolId: string;
+        };
+        "interaction-resume": {
+            /** Format: uuid */
+            protocolId: string;
+        };
+        "interaction-cancel": {
+            /** Format: uuid */
+            protocolId: string;
+        };
+        "interaction-artifact": {
+            /** Format: uuid */
+            protocolId: string;
+        };
+        "interaction-compare": {
+            /** Format: uuid */
+            protocolId: string;
+            /** Format: uuid */
+            incumbentProtocolId?: string;
+        };
+        "interaction-terms": {
+            /** Format: uuid */
+            protocolId: string;
+            reservationRef: {
+                owner: string;
+                id: string;
+                version: string;
+                contentDigest: string;
+            };
+            expectedRevision: number;
+            idempotencyKey: string;
+        };
+        "interaction-local": {
+            /** Format: uuid */
+            protocolId: string;
+        };
+        "interaction-consent": {
+            /** Format: uuid */
+            protocolId: string;
+            termsRef: {
+                owner: string;
+                id: string;
+                version: string;
+                contentDigest: string;
+            };
+            /** @enum {string} */
+            scope: "TERMS" | "EFFECT";
+            subjectDigest: string;
+            /** @enum {string} */
+            decision: "ACCEPT" | "WITHDRAW";
+            idempotencyKey: string;
+        };
+        "interaction-start": {
+            /** Format: uuid */
+            protocolId: string;
+            termsRef: {
+                owner: string;
+                id: string;
+                version: string;
+                contentDigest: string;
+            };
+            idempotencyKey: string;
+        };
+        "interaction-run-read": {
+            /** Format: uuid */
+            runId: string;
+        };
+        "interaction-observe": {
+            /** Format: uuid */
+            runId: string;
+            expectedRevision: number;
+            date: number;
+            key: string;
+            value: string;
+            /** @enum {string} */
+            classification: "SOURCED_FACT" | "AUTHENTICATED_ASSERTION" | "MODEL_RELATIVE_STATEMENT" | "UNRESOLVED_CLAIM";
+            source?: {
+                /** Format: uuid */
+                sourceId: string;
+                /** Format: uuid */
+                versionId: string;
+                contentDigest: string;
+                claimKey: string;
+                ref: {
+                    owner: string;
+                    id: string;
+                    version: string;
+                    contentDigest: string;
+                };
+            };
+            idempotencyKey: string;
+        };
+        "interaction-action": {
+            /** Format: uuid */
+            runId: string;
+            expectedRevision: number;
+            viewDigest: string;
+            actionId: string;
+            idempotencyKey: string;
+        };
+        "interaction-materialize": {
+            /** Format: uuid */
+            runId: string;
+            intentRef: {
+                owner: string;
+                id: string;
+                version: string;
+                contentDigest: string;
+            };
+            idempotencyKey: string;
+        };
+        "interaction-run": {
+            /** Format: uuid */
+            runId: string;
+        };
+        "interaction-reconcile": {
+            /** Format: uuid */
+            runId: string;
         };
         X3Expression: {
             /** @constant */

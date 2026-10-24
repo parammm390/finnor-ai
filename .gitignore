@@ -57,3 +57,7 @@ vercel_output.txt
 /finnor-os/packages/epistemic-runtime/src/strategic-response/__pycache__/
 /scope-postx/y2-strategic-response-world-model/evidence/
 /scope-postx/y2-strategic-response-world-model/handoff/
+/finnor-os/dist-y3/
+/finnor-os/packages/private-equity/src/interaction-synthesis/__pycache__/
+/scope-postx/y3-dynamic-interaction-synthesizer/evidence/
+/scope-postx/y3-dynamic-interaction-synthesizer/handoff/

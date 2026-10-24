@@ -4,7 +4,7 @@ import EmbeddedPostgres from 'embedded-postgres';
 import pg from 'pg';
 import {randomBytes,createHash} from 'node:crypto';
 import {createServer} from 'node:net';
-import {mkdir,mkdtemp,readFile,readdir,writeFile,appendFile} from 'node:fs/promises';
+import {mkdir,mkdtemp,readFile,readdir,writeFile,appendFile,stat} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join,resolve} from 'node:path';
 import {strict as assert} from 'node:assert';
@@ -31,19 +31,22 @@ export async function recordPriorReleaseProbeRefusal(evidence:string,admin:pg.Cl
  await artifact(evidence,'native-retained-prior-job.json',{before,after,
   disposition:'EXPECTED_REFUSAL_EMPTY_PRIOR_RELEASE_PROBE',originalIdentityPayloadAndProtocolUnchanged:true,releaseQualified:false,fullServiceBootstrap:false});
 }
-export async function startEnvironment(evidence:string,options:{builtApi?:boolean;migrationsOnly?:boolean;commitClock?:boolean;baseHead?:string}={}){
+export async function startEnvironment(evidence:string,options:{builtApi?:boolean;migrationsOnly?:boolean;commitClock?:boolean;baseHead?:string;keepDatabase?:boolean}={}){
  await mkdir(evidence,{recursive:true});
  process.env.NODE_ENV='test';process.env.AUTH_DEV_BYPASS='0';
  process.env.FINNOR_TEST_MANAGED_EXTENSIONS='omit';process.env.FINNOR_P4_PROFILE='ordinary_disposable';
  process.env.FINNOR_ENVIRONMENT='ordinary_disposable';
  const directory=await mkdtemp(join(tmpdir(),'finnor-x3-')),password=randomBytes(24).toString('hex');
  const port=await new Promise<number>((yes,no)=>{const s=createServer();s.once('error',no);s.listen(0,'127.0.0.1',()=>{const a=s.address();if(!a||typeof a==='string')return no(Error('X3_LOCAL_PORT'));s.close(()=>yes(a.port));});});
- const postgres=new EmbeddedPostgres({databaseDir:directory,user:'x3_admin',password,port,persistent:false,onLog:()=>undefined});
+ const postgres=new EmbeddedPostgres({databaseDir:directory,user:'x3_admin',password,port,persistent:options.keepDatabase===true,onLog:()=>undefined});
  let admin:pg.Client|undefined,http:Awaited<ReturnType<typeof startR1HttpFixture>>|undefined,started=false;
  const close=async()=>{
   await http?.close();await closePool();await admin?.end();
   if(started)await postgres.stop();
-  await artifact(evidence,'database-lifecycle.json',{profile:'DISPOSABLE_LOCAL_POSTGRESQL',directory,port,status:'STOPPED',hostedQualification:false});
+  const retained=(await stat(join(directory,'PG_VERSION')).catch(()=>null))?.isFile()??false;
+  await artifact(evidence,'database-lifecycle.json',{profile:'DISPOSABLE_LOCAL_POSTGRESQL',directory,port,status:'STOPPED',
+   retentionPolicy:options.keepDatabase?'RETAIN_ON_CLOSE':'DISPOSABLE_AUTO_REMOVE',retained,hostedQualification:false});
+  if(options.keepDatabase&&started)assert(retained,'REQUESTED_DATABASE_RETENTION_REQUIRED');
  };
  try{
   await postgres.initialise();

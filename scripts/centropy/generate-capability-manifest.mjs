@@ -48,6 +48,7 @@ const delegatedRegistries = [
   ["EconomicOperations", "economic-action-theory/api.ts"],
   ["StrategicOperations", "strategic-response/contracts.ts"],
   ["CONFIDENTIAL_OPERATIONS", "confidential-computation/api.ts"],
+  ["InteractionOperations", "interaction-synthesis/api.ts"],
   ["M1_OPERATIONS", "decision-slice/handler.ts"],
   ["CONTINUATION_OPERATIONS", "live-recompilation/api.ts"],
   ["PROCEDURE_OPERATIONS", "procedure-induction/api.ts"],
@@ -118,6 +119,7 @@ const companyBrainReads = new Set([
   "economic-theory-read", "economic-theory-list", "economic-theory-artifact", "economic-theory-compare",
   "economic-programme-read", "economic-reservation-read",
   "response-model-read", "response-model-list", "response-model-artifact", "response-model-compare", "response-use-read",
+  "interaction-read", "interaction-list", "interaction-artifact", "interaction-compare", "interaction-local", "interaction-run-read",
 ])
 const elicitationOperations=registeredOperations("finnor-os/packages/epistemic-runtime/src/incentive-rule-synthesis/contracts.ts","ELICITATION_OPERATIONS")
 const elicitationReads=new Set(["context","read","status","history"])
@@ -223,6 +225,7 @@ const denyPrefixes = [
 const restrictedOperations = new Set(["allocations/coalition-release", "obligations/coalition-consent"])
 const humanOnlyPatterns = [
   /^company-brain\/confidential-(?:consent|revoke|import-release)$/,
+  /^company-brain\/interaction-(?:consent|observe|action)$/,
   /^elicitation-protocols\/(?:report|event|review|close|use)$/,
   /^closing\/(submit|stop|resume|observe)$/,
   /^private-equity\/ic\/committee-configurations$/,

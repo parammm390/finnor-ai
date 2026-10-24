@@ -1,0 +1,2 @@
+# Reviewed false positive: need(key in choices, diagnostic), not a credential.
+0eb71f6236d3d3fbef035c4fec3871b976c0f857:finnor-os/packages/private-equity/src/interaction-synthesis/checker.py:generic-api-key:401

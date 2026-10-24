@@ -71,6 +71,7 @@ import {IDENTIFICATION_OPERATION_SCHEMAS,IDENTIFICATION_OPERATIONS} from "../pac
 import {EconomicOperationSchemas,EconomicOperations} from "../packages/private-equity/src/economic-action-theory/api";
 import {StrategicOperationSchemas,StrategicOperations} from "../packages/private-equity/src/strategic-response/api";
 import {CONFIDENTIAL_OPERATION_SCHEMAS,CONFIDENTIAL_OPERATIONS} from "../packages/private-equity/src/confidential-computation/api";
+import {InteractionOperationSchemas,InteractionOperations} from "../packages/private-equity/src/interaction-synthesis/api";
 import { ApplicationExpressionSchema } from "../packages/private-equity/src/enterprise-applications/contracts";
 import { M1_OPERATIONS, M1OperationSchemas } from "../packages/private-equity/src/decision-slice/handler";
 import { CapitalProgramV2Operations } from "@finnor/shared-types";
@@ -316,6 +317,7 @@ const applicationComponents={schemas:Object.fromEntries([
  ...Object.entries(EconomicOperationSchemas).map(([name,schema])=>[name,applicationSchema(schema)]),
  ...Object.entries(StrategicOperationSchemas).map(([name,schema])=>[name,applicationSchema(schema)]),
  ...Object.entries(CONFIDENTIAL_OPERATION_SCHEMAS).map(([name,schema])=>[name,applicationSchema(schema)]),
+ ...Object.entries(InteractionOperationSchemas).map(([name,schema])=>[name,applicationSchema(schema)]),
  ["X3Expression",applicationSchema((ApplicationExpressionSchema._def as z.ZodLazyDef).getter())],
 ])};
 const secured = [{ bearerAuth: [] }];
@@ -737,6 +739,24 @@ for(const operation of StrategicOperations){
    "408":{description:"Authenticated body deadline exceeded."},"409":{description:"Original episode, currentness, cumulative limits or idempotency conflict."},
    "413":{description:"Bounded request or retained resources exceeded."},"422":{description:"Canonical meaning, model alternatives, checking, typed admission or transport prerequisite failed."},
    "503":{description:"Pinned checker or runtime unavailable."}},
+ }}});
+}
+(paths["/api/company-brain/{operation}"].post.parameters[0]!.schema.enum as string[]).push(...InteractionOperations);
+for(const operation of InteractionOperations){
+ Object.assign(paths,{["/api/company-brain/"+operation]:{post:{
+  security:secured,requestBody:{required:true,content:{"application/json":{schema:{$ref:"#/components/schemas/"+operation}}}},
+  responses:{
+   "200":{description:"Exact Work and participant-local dynamic protocol, development admission, terms, consent or retained native responsibility. No protected qualification or financial efficacy."},
+   "202":{description:"Original bounded construction or guarded native programme accepted. Not completion."},
+   "400":{description:"Strict data-only contract required."},"401":{description:"Current signed bearer required."},
+   "403":{description:"Current canonical participant rights or disposable profile missing."},
+   "404":{description:"Unavailable or unauthorized exact participant, Work or root."},
+   "408":{description:"Bounded authenticated body deadline exceeded."},
+   "409":{description:"Original history, terms, resource revision or idempotency changed."},
+   "413":{description:"Frozen request bound exceeded."},
+   "422":{description:"Exact mathematical, consent, source or native owner prerequisite failed."},
+   "503":{description:"Pinned runtime or native capacity unavailable."},
+  },
  }}});
 }
 for(const operation of EconomicOperations){
