@@ -105,7 +105,8 @@ const manifest = {
   runtime, frozen, proposalPatchSha256: proposal.patchSha256, sourcePopulationSha256: sha(JSON.stringify(files)),
   files, ownedDeltas, totalBytes: files.reduce((n, file) => n + file.bytes, 0),
   dependencyTreesCopied: false, localGitObjectsRequired: false, privateFixtureCopied: false,
-  target: "PROPOSED_CONVERGED_SNAPSHOT_NOT_COORDINATOR_APPLIED_OR_NATIVE_QUALIFIED",
+  target: proposal.paths.length ? "PROPOSED_CONVERGED_SNAPSHOT_NOT_COORDINATOR_APPLIED_OR_NATIVE_QUALIFIED"
+    : "ACTUAL_COORDINATOR_PRODUCT_WITH_OWNED_TOOLING_NOT_NATIVE_QUALIFIED",
   native: "NOT_RUN", installedNative: "NOT_RUN",
 };
 await writeFile(resolve(options.output, "source-snapshot.json"), JSON.stringify(manifest, null, 2) + "\n", { flag: "wx" });

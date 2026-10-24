@@ -21,7 +21,7 @@ const result = { schema: "finnor.project-z.z0.offline-emitted-runtime-doctor.v1"
 const ensure = (condition, code) => { if (!condition) throw Error(code); };
 const run = (name, executable, args, input, predicate, extra = {}) => {
   const env = { PATH: dirname(process.execPath) + ":/usr/bin:/bin", HOME: dirname(output), LANG: "C.UTF-8",
-    NODE_OPTIONS: "--max-old-space-size=4096", ...extra };
+    NODE_OPTIONS: "--max-old-space-size=4096", GIT_CEILING_DIRECTORIES: root, ...extra };
   const child = spawnSync(executable, args, { cwd: root, env, input, encoding: "utf8", timeout: 90000, maxBuffer: 2 * 1024 ** 2 });
   const record = { name, exitCode: child.status, signal: child.signal, stdout: child.stdout, stderr: child.stderr };
   result.cases.push(record);
@@ -45,6 +45,11 @@ try {
     child => child.status !== 0 && child.stderr.includes("X1_COMPILED_DEVELOPMENT_PROFILE_REQUIRED"));
   run("INDEPENDENT_COMPILED_CHECKER_PIN_PROTOCOL", process.execPath,
     [...common, installation.entrypoint("checker"), "--z0-offline-doctor"], '{"schema":"finnor.x1.checker-process.v1","pins":{}}',
+    child => child.status !== 0 && child.stderr.includes("X1_CHECKER_CODE_PIN_MISMATCH"),
+    { NODE_ENV: "development", FINNOR_P4_PROFILE: "ordinary_disposable", FINNOR_ENVIRONMENT: "staging" });
+  run("ORIGINAL_CANONICAL_CHECKER_URL_RESOLVES_TO_DECLARED_JS", process.execPath,
+    [...common, resolve(root, "finnor-os/scripts/frontier5/x1/checker-command.mts"), "--z0-offline-doctor"],
+    '{"schema":"finnor.x1.checker-process.v1","pins":{}}',
     child => child.status !== 0 && child.stderr.includes("X1_CHECKER_CODE_PIN_MISMATCH"),
     { NODE_ENV: "development", FINNOR_P4_PROFILE: "ordinary_disposable", FINNOR_ENVIRONMENT: "staging" });
   const browser = manifest.nativeAssets.find(file => file.path.endsWith("/chrome-headless-shell"));

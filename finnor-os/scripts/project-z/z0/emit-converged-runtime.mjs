@@ -165,6 +165,13 @@ await save(resolve(runtimeDir, "installed-loader.mjs"), loader);
 const sourceMap = executableSources.map(file => ({
   source: file.path, emitted: relative(root, resolve(runtimeDir, "emitted", file.path + ".mjs")),
 }));
+// The independently selected checker is outside apps/packages. Its canonical
+// command URL must work too, without allowing arbitrary engineering TS.
+for (const [name, path] of Object.entries(entries)) {
+  if (path.startsWith("z0:") || sourceMap.some(file => file.source === relative(root, path))) continue;
+  sourceMap.push({ source: relative(root, path), emitted: relative(root, resolve(runtimeDir, name + ".mjs")) });
+}
+sourceMap.sort((a, b) => a.source.localeCompare(b.source));
 for (const file of sourceMap) if (!existsSync(resolve(root, file.emitted))) throw Error("Z0_DYNAMIC_NATIVE_ENTRY_NOT_EMITTED:" + file.source);
 await save(resolve(runtimeDir, "emitted-source-map.json"), JSON.stringify(sourceMap, null, 2) + "\n");
 // Declared installation-only adapter, never a covert edit to canonical source.

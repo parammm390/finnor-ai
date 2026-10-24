@@ -1,5 +1,5 @@
 /** Rebuild a source archive without a donor dependency tree or local Git. */
-import { readFile, writeFile, mkdir } from "node:fs/promises";
+import { readFile, writeFile, mkdir, realpath } from "node:fs/promises";
 import { existsSync, createWriteStream } from "node:fs";
 import { resolve, dirname, sep } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -31,10 +31,11 @@ await mkdir(root); await mkdir(home);
 const env = { PATH: dirname(process.execPath) + ":/usr/bin:/bin", HOME: home, LANG: "C.UTF-8",
   NODE_OPTIONS: "--max-old-space-size=4096", NEXT_TELEMETRY_DISABLED: "1", FINNOR_X1_FRONTEND_INSTALL: "1",
   FINNOR_BUILD_ID: "z0-" + source.sourcePopulationSha256.slice(0, 16),
+  SENTRY_RELEASE: "z0-" + source.sourcePopulationSha256, GIT_CEILING_DIRECTORIES: root,
   PLAYWRIGHT_BROWSERS_PATH: resolve(root, "browsers"), npm_config_cache: resolve(home, "npm-cache"),
   npm_config_devdir: resolve(home, "node-gyp") };
 const steps = [];
-async function run(name, command, args, cwd = root) {
+async function run(name, command, args, cwd = root, expectedCode = 0) {
   const log = resolve(options.output, name + ".log"), stream = createWriteStream(log, { flags: "wx" });
   const started = new Date().toISOString(), start = performance.now();
   const child = spawn(command, args, { cwd, env, stdio: ["ignore", "pipe", "pipe"] });
@@ -42,13 +43,14 @@ async function run(name, command, args, cwd = root) {
   const timer = setTimeout(() => child.kill("SIGKILL"), 600000);
   const exit = await new Promise((ok, reject) => { child.once("error", reject); child.once("close", (code, signal) => ok({ code, signal })); });
   clearTimeout(timer); await new Promise(ok => stream.end(ok));
-  const record = { name, command, args, cwd, started, elapsedMs: Math.round(performance.now() - start), ...exit,
+  const record = { name, command, args, cwd, started, elapsedMs: Math.round(performance.now() - start), expectedCode, ...exit,
     logSha256: sha(await readFile(log)) };
   steps.push(record);
   await writeFile(resolve(options.output, name + ".json"), JSON.stringify(record, null, 2) + "\n", { flag: "wx" });
-  if (exit.code !== 0) throw Error("Z0_RECONSTRUCTION_STEP_FAILED_" + name);
+  if (exit.code !== expectedCode) throw Error("Z0_RECONSTRUCTION_STEP_FAILED_" + name);
 }
 try {
+  await run("00-git-object-isolation", "/usr/bin/git", ["rev-parse", "--show-toplevel"], root, 128);
   await run("01-extract-source", "/usr/bin/tar", ["--extract", "--gzip", "--file", archivePath, "--directory", root,
     "--no-same-owner", "--no-same-permissions"]);
   for (const file of source.files) if (sha(await readFile(resolve(root, file.path))) !== file.sha256) {
@@ -63,6 +65,22 @@ try {
   await run("05-browser-assets", process.execPath, [resolve(root, "node_modules/playwright/cli.js"), "install", "chromium", "--only-shell"]);
   await run("06-full-backend-types", process.execPath, [resolve(backend, "node_modules/typescript/bin/tsc"),
     "--project", resolve(backend, "tsconfig.json"), "--noEmit", "--incremental", "false"]);
+  await run("06a-backend-type-source-custody", process.execPath, [resolve(backend, "node_modules/typescript/bin/tsc"),
+    "--project", resolve(backend, "tsconfig.json"), "--noEmit", "--incremental", "false", "--listFilesOnly"]);
+  const selectedTypes = (await readFile(resolve(options.output, "06a-backend-type-source-custody.log"), "utf8"))
+    .trim().split(/\r?\n/);
+  const typeInputs = [];
+  for (const selected of selectedTypes) {
+    if (!selected.startsWith(root + sep)) throw Error("Z0_TYPE_SOURCE_OUTSIDE_FRESH_TARGET");
+    const path = await realpath(selected);
+    if (!path.startsWith(root + sep)) throw Error("Z0_BORROWED_TYPE_SOURCE_REFUSED");
+    typeInputs.push({ path: path.slice(root.length + 1), sha256: sha(await readFile(path)) });
+  }
+  await writeFile(resolve(options.output, "backend-type-source-custody.json"), JSON.stringify({
+    schema: "finnor.project-z.z0.backend-type-source-custody.v1",
+    sourcePopulationSha256: source.sourcePopulationSha256, selectedFiles: typeInputs.length,
+    outsideTargetFiles: 0, files: typeInputs,
+  }, null, 2) + "\n", { flag: "wx" });
   await run("07-actual-mounted-frontend-build", process.execPath, [resolve(root, "node_modules/next/dist/bin/next"), "build", "--webpack"]);
   await run("08-complete-emission", process.execPath, [resolve(backend, "scripts/project-z/z0/emit-converged-runtime.mjs"),
     "--installation=" + options.output, "--attempt=01"]);
@@ -73,7 +91,9 @@ try {
   await writeFile(resolve(options.output, "reconstruction.json"), JSON.stringify({
     schema: "finnor.project-z.z0.complete-fresh-reconstruction.v1", status: "PASSED_ENGINEERING_RECONSTRUCTION",
     sourcePopulationSha256: source.sourcePopulationSha256, archiveSha256: archive.sha256, steps,
-    dependencyTreesCopied: false, localGitObjectsRequired: false, typescriptRuntimeFallback: "REFUSED",
+    dependencyTreesCopied: false, localGitObjectsRequired: false, gitDiscoveryIsolated: true,
+    gitCeiling: root, sentryRelease: env.SENTRY_RELEASE, backendTypeInputs: typeInputs.length,
+    typescriptRuntimeFallback: "REFUSED",
     native: "NOT_RUN", installedNative: "NOT_RUN", databaseOrAuthExecuted: false,
   }, null, 2) + "\n", { flag: "wx" });
   console.log(JSON.stringify({ status: "PASSED_ENGINEERING_RECONSTRUCTION", steps: steps.length,
