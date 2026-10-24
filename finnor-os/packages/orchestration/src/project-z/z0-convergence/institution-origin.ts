@@ -1,5 +1,6 @@
 import type { PoolClient } from "pg";
 import type { ExperimentRef } from "@finnor/shared-types";
+import type { JobExecutionContext } from "../../../../../apps/worker/src/queue";
 import type { PeMutationContext, PeWorldRootRef } from "@finnor/private-equity/src/types";
 import type { ApplicationAcquireRequest } from "@finnor/private-equity/src/application-semantics/native-contracts";
 import type { ApplicationSessionRow } from "@finnor/private-equity/src/application-semantics/store";
@@ -44,7 +45,8 @@ export async function lockInstitutionApplicationOwners(ctx: PeMutationContext, c
 }
 
 /** Selectors name owner records. They carry no supplied mandate, duty, grant or result. */
-async function readOwnerOrigin(ctx: PeMutationContext, request: InstitutionalAcquireRequest, c: PoolClient) {
+async function readOwnerOrigin(ctx: PeMutationContext, request: InstitutionalAcquireRequest, c: PoolClient,
+  delivery?: Readonly<JobExecutionContext>) {
   const selector = InstitutionApplicationSelectorSchema.parse(request.institutionalOrigin);
   if (ctx.auth.role !== "owner" || principal(ctx) !== ctx.auth.userId) throw unavailable();
   await lockInstitutionApplicationOwners(ctx, c);
@@ -52,12 +54,14 @@ async function readOwnerOrigin(ctx: PeMutationContext, request: InstitutionalAcq
   const episode = await compilerEpisode(ctx, compiler.episode_id, c, true);
   const native = await nativeRequestRow(ctx, selector.programId, c, true);
   if (!isInstitutionRequest(native.request) || native.proposed.schema !== "finnor.institution-harness-program.v1"
-    || !["WAITING", "PARTIAL"].includes(compiler.status) || !["WAITING", "PARTIAL", "FAILED"].includes(native.status)
+    || !["WAITING", "PARTIAL"].includes(compiler.status)
+    || !(delivery ? native.status === "RUNNING" : ["WAITING", "PARTIAL", "FAILED"].includes(native.status))
     || compiler.program_id !== native.id || compiler.work_id !== request.workId || native.work_id !== request.workId
     || native.work_input_id !== compiler.work_input_id || native.work_input_digest !== compiler.work_input_digest
     || native.request.institution.compilerRequestId !== compiler.id
     || !compiler.artifact_id || !compiler.admission_id || !episode.parent_reservation || !episode.parent_demand
     || x2Digest(request.root) !== x2Digest(native.request.root)) x2Fault("Z0_CURRENT_ORIGINAL_X1_OWNER_REQUIRED");
+  if (delivery) await assertInstitutionApplicationDeliveryClaim(ctx, native, delivery, c);
   const active = await c.query(`SELECT w.id FROM finnor_os.works w
     JOIN finnor_os.work_plan_revisions p ON p.tenant_id=w.tenant_id AND p.work_id=w.id
     WHERE w.tenant_id=$1 AND w.id=$2 AND w.created_by=$3
@@ -149,9 +153,9 @@ export async function assertStandaloneApplicationWork(ctx: PeMutationContext, wo
   if (parent.rowCount) x2Fault("Z0_X1_WORK_CANNOT_RESET_AS_STANDALONE_X2");
 }
 export async function assertInstitutionApplicationOriginCurrent(ctx: PeMutationContext, origin: PreparedInstitutionOrigin,
-  request: InstitutionalAcquireRequest, c: PoolClient) {
+  request: InstitutionalAcquireRequest, c: PoolClient, delivery?: Readonly<JobExecutionContext>) {
   if (!sameX2Ref(origin.ref, institutionOriginRef(origin.body))) x2Fault("Z0_ORIGINAL_INSTITUTION_BINDING_INTEGRITY");
-  const actual = await readOwnerOrigin(ctx, request, c);
+  const actual = await readOwnerOrigin(ctx, request, c, delivery);
   if (!sameX2Ref(origin.ref, actual.ref)) x2Fault("Z0_ORIGINAL_INSTITUTION_BINDING_CHANGED");
   return actual;
 }
@@ -172,16 +176,32 @@ export async function retainedInstitutionApplicationOrigin(ctx: PeMutationContex
   return { ref, body };
 }
 export async function currentInstitutionApplicationSession(ctx: PeMutationContext, row: ApplicationSessionRow,
-  c?: PoolClient, recovery = false) {
+  c?: PoolClient, recovery = false, delivery?: Readonly<JobExecutionContext>) {
   const inspect = async (client: PoolClient) => {
     const origin = await retainedInstitutionApplicationOrigin(ctx, row, client);
     if (!origin) return;
     if (!recovery) await assertInstitutionApplicationOriginCurrent(ctx, origin,
-      row.request as InstitutionalAcquireRequest, client);
+      row.request as InstitutionalAcquireRequest, client, delivery);
     // Recovery observes the retained same effect. It cannot use a new compiler
     // head, generation or grant to continue forward; S6 keeps its exact wire ID.
   };
   return c ? inspect(c) : tx(ctx, inspect);
+}
+
+/** A RUNNING original owner is usable only by its actual current delivery.
+ * Callers acquire the common portfolio/source locks before reading owner rows. */
+export async function assertInstitutionApplicationDeliveryClaim(ctx: PeMutationContext,
+  original: Awaited<ReturnType<typeof nativeRequestRow>>, execution: Readonly<JobExecutionContext>, c: PoolClient) {
+  const job = await c.query(`SELECT id FROM finnor_os.jobs
+    WHERE tenant_id=$1 AND id=$2 AND type IN('run_harness_program_v1','run_x1_institution_continuation_v1')
+      AND protocol_version=1 AND status='running' AND claim_token=$3 AND claim_fence=$4
+      AND lease_expires_at>clock_timestamp() AND payload->>'programId'=$5
+      AND payload->>'principalId'=$6 AND (payload->>'generation')::integer=$7 FOR SHARE`,
+  [ctx.auth.tenantId, execution.jobId, execution.claimToken, execution.claimFence,
+    original.id, principal(ctx), original.generation]);
+  if (job.rowCount !== 1 || original.tenant_id !== ctx.auth.tenantId || original.principal_id !== principal(ctx)
+    || original.status !== "RUNNING" || original.claim_token !== execution.claimToken
+    || String(original.claim_fence) !== String(execution.claimFence)) x2Fault("Z0_ACTUAL_ORIGINAL_P1_DELIVERY_REQUIRED");
 }
 
 /** Called only at acquisition acceptance, before physical discovery. */
