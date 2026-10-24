@@ -1,0 +1,434 @@
+{
+  "schema": "finnor.project-z.z0.qualification.v3",
+  "phase": "Z0",
+  "principalOutputType": "ConvergedInstitutionRuntime",
+  "computationDisposition": "INCOMPLETE",
+  "overallEvidenceClass": "partial",
+  "interfaceVersion": "institution-runtime-convergence-v1",
+  "scientificIncrement": false,
+  "sharedIntegration": "EXISTING_OWNER_USE_APPLIED_AND_RECONCILED_NEW_MOUNTED_CSP_REQUEST_PENDING",
+  "slotReleased": false,
+  "scheduling": {
+    "occupied": [
+      "Z0",
+      "Z1",
+      "Z2",
+      "Z3"
+    ],
+    "queued": [
+      "Z4",
+      "Z5"
+    ],
+    "releaseAuthority": "COORDINATOR_ONLY"
+  },
+  "z3LaunchedByThisProducer": false,
+  "z3AlreadyLiveUnderLatestUserCorrection": true,
+  "delivery": "LOCAL_VERSIONED_ARTIFACT_NOT_ACKNOWLEDGED",
+  "frozenSource": {
+    "coordinatorHead": "9f3edfd3b4c6758832c53139da0773218062191e",
+    "coordinatorTree": "2dc4d5bc13d22853cf4dc9feb5f6ac7fbf6bb9c9",
+    "coordinatorTrackedDiffSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "ownHead": "8a2d82bac98944db528667f868f4671f63bca2ba",
+    "ownTree": "53fadcceccac84b90970e3cc1df0d1d9a7650f8c",
+    "ownTrackedDiffSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "sourcePopulationSha256": "63bca8ad8ffff6787230683716f4127beda13a60a923584c964512e1c794bb30",
+  "governing": {
+    "seed": {
+      "path": "scope-z/prompts/seeds/z0.seed.md",
+      "sha256": "3f7899558e008a006073e69ca45c46ea46021e680bac61155d06bc92cf949578",
+      "bytes": 420629
+    },
+    "productLock": {
+      "path": "scope-z/locks/product-lock.json",
+      "sha256": "61d9881ca8059d24d057d1e00d5436ef2059de7889ccd1fd2f92a630075bcebf",
+      "bytes": 4516
+    },
+    "executionPack": {
+      "path": "scope-z/locks/execution-pack.json",
+      "sha256": "4419731d2544d1c07fe275ec8071d5d783273942ca9947eda2ff6b4e2dffb9db",
+      "bytes": 61081
+    },
+    "lockedProductSourceBase": {
+      "commit": "7bfdd2d3ab611c90f1355637858824ff1ba67f98",
+      "tree": "82caf48007bc826794650505ae76aba92d4f981b"
+    },
+    "actualLaunchSource": {
+      "commit": "684d805e471836a720aa6741a3128eca17d28202",
+      "tree": "163f63b65c88481194d0d48e77337494b3b9f24f"
+    },
+    "packCommit": "0293c866a6e500cd0ad82f00b52db60ddb1c3a28",
+    "packTree": "5b196c8be1deda39f3c56a371ca4ee81067af4c9",
+    "sessionId": "66647028-fac4-4793-bec3-22b564d12b90",
+    "computerId": "eea8d359-5a5c-4aff-b465-494dd7a8ba88",
+    "branch": "factory/project-z0",
+    "worktree": "/home/factory-user/repos/finnor-z0",
+    "historicalReadReceipt": {
+      "path": "continuity-receipts-03/historical-full-read.json",
+      "sha256": "915479a8e6498cbd6ce77d9b04fb525d9ae01d5bec7b4f30e57337359d259267",
+      "bytes": 13465
+    },
+    "readChronology": "Existing historical receipt retained byte-identically; no new historical pre-code read receipt asserted.",
+    "currentAssembly": {
+      "receipt": {
+        "path": "assembly-check-03.log",
+        "sha256": "86cbd5131424357f4efca0a8e3a22bd8d13155e32915e8e3fe519b2913b3dfc2",
+        "bytes": 1641
+      },
+      "actualExit": 0,
+      "lockedMembersVerified": 20,
+      "executionsLaunched": 0
+    },
+    "runtimeObservation": {
+      "time": 1792870978.5952284,
+      "phase": "Z0",
+      "session_id": "66647028-fac4-4793-bec3-22b564d12b90",
+      "event": "runtime_verified",
+      "attempt": 5,
+      "pid": 109408,
+      "actual_model": "gpt-6.1-sol",
+      "actual_reasoning": "max"
+    },
+    "runtimeObservationProvenance": {
+      "path": "continuity-receipts-03/provenance.json",
+      "sha256": "c179ff5eaad7d4c5b220b313b04551fbfe16e43bf65a1ff4648828f29f07979f",
+      "bytes": 4252
+    }
+  },
+  "gates": {
+    "architecture": {
+      "state": "IN_PROGRESS",
+      "nativeOriginalOwner": "NOT_RUN"
+    },
+    "internal-software": {
+      "state": "IN_PROGRESS",
+      "currentGuardDoctor": "PASSED",
+      "currentFullGraphAndMountedSeal": "NOT_RUN",
+      "nativeE2E": "NOT_RUN"
+    },
+    "installed-development-reconstruction": {
+      "state": "IN_PROGRESS",
+      "currentEngineeringReconstruction": "NOT_RUN",
+      "historicalInstallation11Engineering": "PASSED_NOT_CURRENT_SOURCE",
+      "nativeInstalledRepeat": "NOT_RUN"
+    },
+    "mathematical-security-domain": {
+      "state": "NOT_RUN"
+    },
+    "protected-admission": {
+      "state": "NOT_RUN",
+      "authority": "NOT_GRANTED"
+    },
+    "equipped-increment": {
+      "state": "NOT_RUN",
+      "scientificIncrement": false
+    },
+    "operational-100x": {
+      "state": "NOT_RUN"
+    },
+    "financial-100x": {
+      "state": "NOT_RUN"
+    },
+    "production-activation": {
+      "state": "NOT_RUN",
+      "authority": "NOT_GRANTED"
+    },
+    "financial-headroom": {
+      "state": "UNKNOWN"
+    }
+  },
+  "currentEngineering": {
+    "byteCustodyAudit": {
+      "path": "source-custody-audit-03.json",
+      "sha256": "42cced423cab1d10b0d99162eae00573ded7673ec4fb36ccdca8157f7480f9dc",
+      "bytes": 2619
+    },
+    "guardValidation": {
+      "path": "guarded-driver-validation-04.json",
+      "sha256": "b63d8546c2e7c4b689566dc3b328bd99cde55f804fff3b262d035c1274903e53",
+      "bytes": 1787
+    },
+    "priorUnchangedGuardChecks": {
+      "path": "guarded-driver-validation-03.json",
+      "sha256": "a8be4040292c6700a12220c9992d21006aca8c76a9d2a6aa11311529ab537319",
+      "bytes": 3066
+    },
+    "doctorActualExit": 0,
+    "missingAuthorityActualExit": 2,
+    "expectedMissingAuthorityExit": 2,
+    "plannedCasesPerTarget": 54,
+    "executedNativeCases": 0,
+    "freshReconstruction": "NOT_RUN",
+    "launchDisposition": {
+      "path": "reconstruction-13-launch-cancelled.json",
+      "sha256": "8a803b4aa4ca41e4cd9f22395afdb9e60e86d284c9a344060c1941ee83083d53",
+      "bytes": 1665
+    },
+    "actualLaunchExit": null,
+    "toolReason": "NOT_EXPOSED",
+    "newMountedBuildSeal": "IMPLEMENTED_NOT_EXECUTED",
+    "newExpectedReconstructionSteps": 12,
+    "currentFullInstalledManifest": null,
+    "sourceContentManifest": {
+      "path": "source-content-manifest-03.json",
+      "sha256": "0b31c9310c62898596b97cb585193bf35c72ff67a7bd726cd0b2f6759ca4044d",
+      "bytes": 20030
+    },
+    "changedFiles": {
+      "path": "changed-files-03.json",
+      "sha256": "269b395081310000951ff598d951156e764febac844d03140161bb3886f770f5",
+      "bytes": 13942
+    },
+    "pendingSharedCspRequest": {
+      "path": "shared-mounted-csp-request-01/request.json",
+      "sha256": "87b3b393df5cd0d36984aa7671bc44108ec0a1d9313f2dd589a023711e2bd15b",
+      "bytes": 1402
+    },
+    "sharedFilesWritten": false,
+    "checksWritten": "Predeclared guarded workflow/closure/authority and packaging integrity checks. No post-code unit tests.",
+    "existingChecksUsed": "Actual full TypeScript backend and Next build ran for historical source population only; current changed source has retained syntax/doctor/authority-guard receipts."
+  },
+  "historicalEngineeringInstallation11": {
+    "notCurrentSourceProof": true,
+    "sourceImplementationCommit": "1404c893553a838cee2e131c7ee40d9a2474fedf",
+    "sourceImplementationTree": "e044185b66562f94c983d76cb39e4821494320a7",
+    "sourcePopulationSha256": "60d02fdfea7df750e3502cbb5e5d03bd34d3ff138d27c1978fee539087134b0c",
+    "sourceArchive": {
+      "path": "installation-10/converged-source.tar.gz",
+      "sha256": "95fb9505bcc707439e35dd3ee72adb7005c6dd419e59e033209c522a02b6a1dd",
+      "bytes": 11062271
+    },
+    "sourceSnapshot": {
+      "path": "installation-10/source-snapshot.json",
+      "sha256": "cffadcbd1baaaa53b50fc99ea4e80dd8f5ca1100eef61de5ea41130a1abce84e",
+      "bytes": 768364
+    },
+    "installedSourceSnapshot": {
+      "path": "installation-11/source-snapshot.json",
+      "sha256": "a322a51e5123915953533e194a029815fcc658730c72a5aa2c507ee4e4805218",
+      "bytes": 768684
+    },
+    "fullInstallationManifest": {
+      "path": "installation-11/full-installation-manifest-01.json",
+      "sha256": "dae273a3117ded61afc32ef536563911039be204c3038423ab3eef9d1caa1588",
+      "bytes": 26974627
+    },
+    "reconstruction": {
+      "path": "installation-11/reconstruction.json",
+      "sha256": "4ac857225f80f13182ac71c407badbf4204c82c6a44e92ab3ef5864673b48285",
+      "bytes": 9554
+    },
+    "offlineDoctor": {
+      "path": "installation-11/offline-runtime-doctor.json",
+      "sha256": "5b9f069e1e5f89827a6377035748233d415817a97cb63dfcd1f070a1d0dabe7a",
+      "bytes": 32091
+    },
+    "backendTypeSourceCustody": {
+      "path": "installation-11/backend-type-source-custody.json",
+      "sha256": "f51860247c3db3ef294084a3760cbe0748d7697e839aaa93143c432c8b57822c",
+      "bytes": 820997
+    },
+    "expectedStepsPassed": 11,
+    "actualStepExits": [
+      {
+        "name": "00-git-object-isolation",
+        "actualExit": 128,
+        "expectedExit": 128
+      },
+      {
+        "name": "01-extract-source",
+        "actualExit": 0,
+        "expectedExit": 0
+      },
+      {
+        "name": "02-root-ci",
+        "actualExit": 0,
+        "expectedExit": 0
+      },
+      {
+        "name": "03-backend-ci",
+        "actualExit": 0,
+        "expectedExit": 0
+      },
+      {
+        "name": "04-native-fs-ext",
+        "actualExit": 0,
+        "expectedExit": 0
+      },
+      {
+        "name": "05-browser-assets",
+        "actualExit": 0,
+        "expectedExit": 0
+      },
+      {
+        "name": "06-full-backend-types",
+        "actualExit": 0,
+        "expectedExit": 0
+      },
+      {
+        "name": "06a-backend-type-source-custody",
+        "actualExit": 0,
+        "expectedExit": 0
+      },
+      {
+        "name": "07-actual-mounted-frontend-build",
+        "actualExit": 0,
+        "expectedExit": 0
+      },
+      {
+        "name": "08-complete-emission",
+        "actualExit": 0,
+        "expectedExit": 0
+      },
+      {
+        "name": "09-offline-installed-runtime-doctor",
+        "actualExit": 0,
+        "expectedExit": 0
+      }
+    ],
+    "subprocessWallMs": 323226,
+    "files": {
+      "count": 98852,
+      "populationSha256": "6d481251269d54edcd48fdb4cb001fd5a6b5a96618591a3c035e65a943efb5d0"
+    },
+    "packages": 1823,
+    "nativeAssets": 150,
+    "emittedSources": 1160,
+    "apiRouteRecords": 157,
+    "externalImports": 36,
+    "internalLinks": 101,
+    "checkerPins": {
+      "count": 3163,
+      "sha256": "1c21c970b95dc3a925e5f6847b414a197bcb4aff7de0d0f392f52da2a71cf81b"
+    },
+    "totalBytes": 2084428282,
+    "frontend": {
+      "buildId": "z0-60d02fdfea7df750",
+      "mode": "ACTUAL_NEXT_STANDALONE_BUILD_NOT_STARTED",
+      "publicAuthBuild": {
+        "schema": "finnor.project-z.z0.frontend-public-auth-build-receipt.v1",
+        "sourcePopulationSha256": "60d02fdfea7df750e3502cbb5e5d03bd34d3ff138d27c1978fee539087134b0c",
+        "state": "NOT_DELIVERED",
+        "authenticationExecuted": false,
+        "environmentNames": []
+      }
+    },
+    "runtime": {
+      "node": "v22.23.4",
+      "platform": "linux",
+      "architecture": "x64",
+      "modules": "127",
+      "nodeBinarySha256": "94efd062ed066c1a0b332e18249859c905e920eeada5df55d24c99b919629a90"
+    },
+    "buildTool": {
+      "esbuild": "0.25.12",
+      "typescript": "5.9.3",
+      "esbuildPath": "finnor-os/node_modules/esbuild/lib/main.js",
+      "typescriptPath": "finnor-os/node_modules/typescript/lib/typescript.js",
+      "builderSha256": "089ec36dcf1f4f2000a6f4388975a9c9e8aac0697904c4be8dd264208a4242bd"
+    },
+    "dependencyTreesCopied": false,
+    "localGitObjectsRequired": false,
+    "sourceFallback": "REFUSED",
+    "laterDiscoveredMountedGap": "Historical standalone did not contain copied public/static assets or the new complete mounted-build custody seal.",
+    "native": "NOT_RUN",
+    "installedNative": "NOT_RUN"
+  },
+  "coverage": {
+    "contextAndLockDoctor": "PASSED_BYTES_NOT_NEW_HISTORICAL_READ_ATTESTATION",
+    "currentArchiveAndOriginalSources": "PASSED_BYTE_CUSTODY_ONLY",
+    "currentEmittedCanonicalInventory": "NOT_RUN",
+    "historicalActualEmittedCanonicalInventory": {
+      "state": "PASSED_ENGINEERING_ONLY",
+      "count": 77,
+      "sourcePopulationSha256": "60d02fdfea7df750e3502cbb5e5d03bd34d3ff138d27c1978fee539087134b0c"
+    },
+    "independentExternallyPrecommittedLiteralInventory": "NOT_DELIVERED",
+    "originalWorkAuthenticatedHttpAndDb": "NOT_RUN",
+    "originalParentUsefulNativeOwnerConsumption": "NOT_RUN",
+    "independentOriginalBusinessCompletion": "NOT_RUN",
+    "s5RemainingBudgetsAndS6Unknown": "NOT_RUN",
+    "mountedCanonicalWorkAndReload": "NOT_RUN",
+    "completeS7NativeCosts": "NOT_RUN",
+    "physicalRecovery": {
+      "claim": "NOT_RUN",
+      "artifact": "NOT_RUN",
+      "ambiguity": "NOT_RUN"
+    },
+    "separatelyInstalledIntegratedRepeat": "NOT_RUN",
+    "nativePlan": {
+      "state": "IMPLEMENTED_NOT_RUN",
+      "casesPerTarget": 54,
+      "targets": [
+        "SOURCE",
+        "INSTALLED"
+      ],
+      "totalObligations": 108,
+      "completed": 0,
+      "driverSha256": "0b6e24b973865477620fc3f245106f66215801c679e464baec92934b10d107c1",
+      "exactRecoverySelectorsAndOriginalInputs": "NOT_DELIVERED"
+    }
+  },
+  "sql": {
+    "state": "PARSED_NOT_EXECUTED",
+    "sha256": "1511609691eed81aee3f227d70a0a5b061adf604780d5c6ab16822cc47aa029a",
+    "statements": 12,
+    "functions": 4,
+    "parserVersion": "v8.7",
+    "parserNativeModuleSha256": "90a8f1f924ba61fd965de0def2d70b7e4f989c63c2e855016035a8eccb0dc008",
+    "sqlExecuted": false,
+    "grantsExecuted": false,
+    "catalogRolesTriggersRLS": "NOT_RUN",
+    "originalFailure": {
+      "path": "sql-before-reconciliation.log",
+      "sha256": "09f26ed8e34fdb948c1c3bc5a07173481e2cf77741fc92bb1441641c1a843623",
+      "bytes": 1409
+    }
+  },
+  "realRuntimeActions": {
+    "authBypassUsed": false,
+    "borrowedSiblingStack": false,
+    "migrationExecuted": false,
+    "grantsExecuted": false,
+    "newRuntimeReservationsCreated": 0,
+    "newRuntimeObligationsCreated": 0,
+    "preexistingRuntimeState": "UNKNOWN",
+    "newListenersStarted": 0,
+    "physicalFaultsInjected": 0,
+    "externalSends": 0,
+    "pushOrPrOrDeployOrProvision": false
+  },
+  "costs": {
+    "currentSourceReconstructionSubprocessWallMs": null,
+    "historicalInstallation11SubprocessWallMs": 323226,
+    "historicalWallIsNotWholeRunOrS7Cost": true,
+    "completeS7RuntimeCosts": "NOT_RUN",
+    "wholeRunMoney": null,
+    "wholeRunLabor": null,
+    "wholeRunTokens": null,
+    "wholeRunCpuSeconds": null,
+    "wholeRunPeakRss": null,
+    "modelAndEffortAttestation": "COORDINATOR_OBSERVED_ATTEMPT_5_GPT_6_1_SOL_MAX_NOT_DIRECT_INTROSPECTION",
+    "releaseSufficient": false
+  },
+  "remainingInternal": [
+    "Current-source complete reconstruction, mounted seal and emitted offline checks were not executed after the canceled launch.",
+    "Exact coordinator-owned CSP repair is pending application; the current capsule intentionally retains its preimage.",
+    "Original-owner SQL, business rows, currentness, useful model consumption, mounted flow and physical recovery are unexecuted and may expose defects.",
+    "Existing unrelated R8 missing-export emission warning remains retained outside this producer's ownership."
+  ],
+  "externalAuthorityNotDelivered": [
+    "Exact expiring disposable native authority and externally precommitted independent original-semantics oracle including literal 77-entry inventory and exact recovery selectors",
+    "Two already initialized isolated native databases, existing lawful fixtures, four distinct per-case RIGHTS tenants/principals and restricted observer roles",
+    "Real local primary/alternate/case-owner credentials and same-project frontend/API Auth",
+    "Explicit source-bound public browser Auth build input",
+    "Owned API/frontend/worker stack and listener identities, sealed mounted build and independently supervised workers with preauthorized finite leases"
+  ],
+  "currentLaunchDispositionRequiresReviewBeforeRetry": true,
+  "retainedFailures": {
+    "path": "retained-failures-03.json",
+    "sha256": "860145d0472fbef131bfb53d6781f012365f0c1eb014c5d53ff9b06534dab542",
+    "bytes": 13636
+  },
+  "noNewAuthorityGrantedByThisArtifact": true
+}

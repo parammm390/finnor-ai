@@ -1,0 +1,295 @@
+{
+  "schema": "finnor.project-z.z0.full-read.v1",
+  "observedAt": "2026-10-24T14:50:59.523093+00:00",
+  "phase": "Z0",
+  "seed": {
+    "path": "scope-z/prompts/seeds/z0.seed.md",
+    "bytes": 420629,
+    "sha256": "3f7899558e008a006073e69ca45c46ea46021e680bac61155d06bc92cf949578",
+    "readSurface": "Complete verbatim seed supplied in the active user message, including PRD, common contracts, own prompt, all annexes, source excerpts, family specifications, companion map, twelve full skills, licenses and new verification skill; physical file identity independently verified"
+  },
+  "mandatoryCompanions": [
+    {
+      "path": "source-materials/product-lock.json",
+      "sha256": "61d9881ca8059d24d057d1e00d5436ef2059de7889ccd1fd2f92a630075bcebf",
+      "bytes": 4516,
+      "ranges": "FULL",
+      "observedRead": "Complete Read-tool output or complete system-supplied AGENTS/package configuration, byte-verified against the mandatory companion"
+    },
+    {
+      "path": "source-materials/locked/scope-z/research/scope-selection-decision.md",
+      "sha256": "6a8cdfea092bf6b189833c0e66b3168e32ea45bbb6d9090a25209295b713e29f",
+      "bytes": 11580,
+      "ranges": "FULL",
+      "observedRead": "Complete Read-tool output or complete system-supplied AGENTS/package configuration, byte-verified against the mandatory companion"
+    },
+    {
+      "path": "source-materials/locked/scope-z/research/baseline-owner-report.md",
+      "sha256": "121486a4b5197ea4ed10c2032aa87208f2b77f027656a3487cf65fc7d0dc1653",
+      "bytes": 76868,
+      "ranges": "FULL",
+      "observedRead": "Complete Read-tool output or complete system-supplied AGENTS/package configuration, byte-verified against the mandatory companion"
+    },
+    {
+      "path": "source-materials/locked/scope-z/research/qualification-design.md",
+      "sha256": "97a27ee4cbd5766852747f530d1f184c0206e82db6db4a35882e04cacca926dc",
+      "bytes": 7376,
+      "ranges": "FULL",
+      "observedRead": "Complete Read-tool output or complete system-supplied AGENTS/package configuration, byte-verified against the mandatory companion"
+    },
+    {
+      "path": "source-materials/locked/scope-z/research/supplied-source-reading-audit.md",
+      "sha256": "dc675dd4162b7eb0607605edbf4233649436853c47192b427aded2a1c384454f",
+      "bytes": 4339,
+      "ranges": "FULL",
+      "observedRead": "Complete Read-tool output or complete system-supplied AGENTS/package configuration, byte-verified against the mandatory companion"
+    },
+    {
+      "path": "source-materials/locked/scope-z/sources/source-index.json",
+      "sha256": "e58d791d1fade8d82ed6b711ca3b2b9f7a79ebc7cad051f4859b7fac332cb11b",
+      "bytes": 2472,
+      "ranges": "FULL",
+      "observedRead": "Complete Read-tool output or complete system-supplied AGENTS/package configuration, byte-verified against the mandatory companion"
+    },
+    {
+      "path": "source-materials/locked/scope-z/sources/00-exact-user-request.txt",
+      "sha256": "83930d088bd096495206a5e463488af824118f52a3e5f27c5c057ddf33633c3d",
+      "bytes": 270924,
+      "ranges": "FULL",
+      "observedRead": "Read tool, continuous complete lines 1-2755"
+    },
+    {
+      "path": "source-materials/locked/scope-z/sources/01-x-prd-opening.exact-fragment.txt",
+      "sha256": "957039b59e830160806e671679ba2f23f4964f34816a871fcaf940a7dae5147b",
+      "bytes": 19015,
+      "ranges": "FULL",
+      "observedRead": "Complete byte-identical fragment inside the fully read containing request, not a summary",
+      "containingRequestByteRange": [
+        6167,
+        25182
+      ]
+    },
+    {
+      "path": "source-materials/locked/scope-z/sources/02-x-prd-remainder.exact-fragment.txt",
+      "sha256": "dfd3debf87382e948ab6193918bd5875e997f85a09b453d07f43084eca27869f",
+      "bytes": 69625,
+      "ranges": "FULL",
+      "observedRead": "Complete byte-identical fragment inside the fully read containing request, not a summary",
+      "containingRequestByteRange": [
+        63692,
+        133317
+      ]
+    },
+    {
+      "path": "source-materials/locked/scope-z/sources/06-x-prd.reconstructed.md",
+      "sha256": "678abc5212ad2fce46358f254b9c684916e0f649de30eb98b6d0bef4774a27a3",
+      "bytes": 88633,
+      "ranges": "FULL",
+      "observedRead": "All reconstructed X text read in the two exact containing-request fragments; join verified byte-for-byte"
+    },
+    {
+      "path": "source-materials/locked/scope-z/sources/03-y-prd.exact-fragment.txt",
+      "sha256": "5d20f7e89931df3793c49bebac16a571d7ceb09c23b2899134ee44ca4c03ba66",
+      "bytes": 87277,
+      "ranges": "FULL",
+      "observedRead": "Complete byte-identical fragment inside the fully read containing request, not a summary",
+      "containingRequestByteRange": [
+        133317,
+        220594
+      ]
+    },
+    {
+      "path": "source-materials/locked/scope-z/sources/05-y2-implementation-blueprint.exact-fragment.txt",
+      "sha256": "c54cf87199b39a7abc925e3292b4923638905c30ce6ecd37f9e41bd7c7d306c8",
+      "bytes": 49902,
+      "ranges": "FULL",
+      "observedRead": "Complete byte-identical fragment inside the fully read containing request, not a summary",
+      "containingRequestByteRange": [
+        220763,
+        270665
+      ]
+    },
+    {
+      "path": "source-materials/locked/scope-z/sources/04-y3-implementation-blueprint.exact-fragment.txt",
+      "sha256": "f1dc4d8f82f3ac7c49d2e15a5536ab3848525aa9bb49f2693b6b968058e7526f",
+      "bytes": 38309,
+      "ranges": "FULL",
+      "observedRead": "Complete byte-identical fragment inside the fully read containing request, not a summary",
+      "containingRequestByteRange": [
+        25383,
+        63692
+      ]
+    },
+    {
+      "path": "source-materials/repository/finnor-os/apps/api/app/api/queries/route.ts",
+      "sha256": "33084eb58a28ee7385843665672f3c727ddaaf4d1719fd804c2d63e96c3c13d6",
+      "bytes": 5066,
+      "ranges": [
+        [
+          22,
+          62
+        ]
+      ],
+      "observedRead": "Complete required source ranges read in the verbatim inline seed payloads; full current callers are read separately before implementation"
+    },
+    {
+      "path": "source-materials/repository/finnor-os/packages/shared-types/src/operational-queries.ts",
+      "sha256": "ebd417c6b3eceaf1be87a444f9e0aff8cca2291d1b63f34793f709291a243662",
+      "bytes": 29938,
+      "ranges": [
+        [
+          30,
+          39
+        ]
+      ],
+      "observedRead": "Complete required source ranges read in the verbatim inline seed payloads; full current callers are read separately before implementation"
+    },
+    {
+      "path": "source-materials/repository/finnor-os/packages/orchestration/src/plugin-registry.ts",
+      "sha256": "d41f4be6b7c38c1fee8556c6a8e1513b4f2350f31f87d582a9d44ca7c5c2ccaf",
+      "bytes": 14943,
+      "ranges": [
+        [
+          149,
+          265
+        ]
+      ],
+      "observedRead": "Complete required source ranges read in the verbatim inline seed payloads; full current callers are read separately before implementation"
+    },
+    {
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/application-semantics/api.ts",
+      "sha256": "daa82aa0f3e822afed38b0a729ad77c807807dd2706906b56f476485e1c10837",
+      "bytes": 26280,
+      "ranges": [
+        [
+          107,
+          139
+        ]
+      ],
+      "observedRead": "Complete required source ranges read in the verbatim inline seed payloads; full current callers are read separately before implementation"
+    },
+    {
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/application-semantics/envelope.ts",
+      "sha256": "500b044ba6a06ee9ff2902178993f6ba40fb2a2d33e370e3eb2ecd3faf166bb9",
+      "bytes": 3334,
+      "ranges": [
+        [
+          23,
+          41
+        ]
+      ],
+      "observedRead": "Complete required source ranges read in the verbatim inline seed payloads; full current callers are read separately before implementation"
+    },
+    {
+      "path": "source-materials/repository/finnor-os/packages/orchestration/src/fast-read-lane.ts",
+      "sha256": "401e5462dee247c4c0928eafc677a48e90fa720e5ac632cd29b605f5f7f2f298",
+      "bytes": 30796,
+      "ranges": [
+        [
+          1,
+          100
+        ]
+      ],
+      "observedRead": "Complete required source ranges read in the verbatim inline seed payloads; full current callers are read separately before implementation"
+    },
+    {
+      "path": "source-materials/repository/scripts/centropy/generate-capability-manifest.mjs",
+      "sha256": "9141e31d74a690a11d10ed0cb83cb94a7d1c9a738d39d0a1d4e55728e6e51eb8",
+      "bytes": 27511,
+      "ranges": [
+        [
+          1,
+          100
+        ]
+      ],
+      "observedRead": "Complete required source ranges read in the verbatim inline seed payloads; full current callers are read separately before implementation"
+    },
+    {
+      "path": "source-materials/repository/scripts/centropy/audit-capability-coverage.mjs",
+      "sha256": "0f81d60febf1892ef434d0d2838f94133a6d4368c0d431373fc2d3f9a7a77921",
+      "bytes": 22898,
+      "ranges": [
+        [
+          1,
+          100
+        ]
+      ],
+      "observedRead": "Complete required source ranges read in the verbatim inline seed payloads; full current callers are read separately before implementation"
+    },
+    {
+      "path": "source-materials/repository/AGENTS.md",
+      "sha256": "bd0c248a21f2cb25b6634fb77827879877588048aff5fb444a58833e805a86da",
+      "bytes": 7712,
+      "ranges": "FULL",
+      "observedRead": "Complete Read-tool output or complete system-supplied AGENTS/package configuration, byte-verified against the mandatory companion"
+    },
+    {
+      "path": "source-materials/repository/package.json",
+      "sha256": "e8add0c30c1d3f211a011d672a4634b847a8f574b8ebf3928dd4acdb0e20c4b6",
+      "bytes": 4229,
+      "ranges": "FULL",
+      "observedRead": "Complete Read-tool output or complete system-supplied AGENTS/package configuration, byte-verified against the mandatory companion"
+    },
+    {
+      "path": "source-materials/repository/finnor-os/package.json",
+      "sha256": "5109ef3fcddcea39a92153f756ee12532a5f66d144ba04fd8fc8260b66b90f1e",
+      "bytes": 5276,
+      "ranges": "FULL",
+      "observedRead": "Complete Read-tool output or complete system-supplied AGENTS/package configuration, byte-verified against the mandatory companion"
+    },
+    {
+      "path": "source-materials/repository/playwright.config.ts",
+      "sha256": "854efb9b5e09cbc379ef18f399f4c1557b0dcbf48e1dde37e28648192075b013",
+      "bytes": 1675,
+      "ranges": "FULL",
+      "observedRead": "Complete Read-tool output or complete system-supplied AGENTS/package configuration, byte-verified against the mandatory companion"
+    },
+    {
+      "path": "source-materials/repository/scripts/centropy/start-certification-stack.mjs",
+      "sha256": "985db4efcf04b6a9519b0743ea6da58a2c724f398a66aa56ca3465c77b98df22",
+      "bytes": 6379,
+      "ranges": "FULL",
+      "observedRead": "Complete Read-tool output or complete system-supplied AGENTS/package configuration, byte-verified against the mandatory companion"
+    },
+    {
+      "path": "source-materials/repository/scripts/centropy/run-local-e2e.mjs",
+      "sha256": "a1d38ffcb7273fda748421cab056eafc51df01578511865d6d6b85935b46256f",
+      "bytes": 1357,
+      "ranges": "FULL",
+      "observedRead": "Complete Read-tool output or complete system-supplied AGENTS/package configuration, byte-verified against the mandatory companion"
+    },
+    {
+      "path": "source-materials/repository/e2e/centropy-owner-login.spec.ts",
+      "sha256": "cb4f13418dc5a46dc4da459f576919c67da606e8ab82ced4923b259177e5abd3",
+      "bytes": 2857,
+      "ranges": "FULL",
+      "observedRead": "Complete Read-tool output or complete system-supplied AGENTS/package configuration, byte-verified against the mandatory companion"
+    },
+    {
+      "path": "source-materials/repository/e2e/centropy-controlled-recovery.spec.ts",
+      "sha256": "d53a79c178c6995911cc80921e18e75fd63af43f71fb4a347a47e3d8b0c64982",
+      "bytes": 10155,
+      "ranges": "FULL",
+      "observedRead": "Complete Read-tool output or complete system-supplied AGENTS/package configuration, byte-verified against the mandatory companion"
+    }
+  ],
+  "fullReadAcknowledged": true,
+  "meaning": "This chat read the full delivered own context, not a peer receipt, controller attestation, behavioral verification or product completion.",
+  "sourceBase": "684d805e471836a720aa6741a3128eca17d28202",
+  "sourceTree": "163f63b65c88481194d0d48e77337494b3b9f24f",
+  "productLockDigest": "61d9881ca8059d24d057d1e00d5436ef2059de7889ccd1fd2f92a630075bcebf",
+  "executionPackDigest": "4419731d2544d1c07fe275ec8071d5d783273942ca9947eda2ff6b4e2dffb9db",
+  "byteVerification": "context-byte-verification.json",
+  "assemblyCheck": {
+    "exitCode": 0,
+    "log": "assembly-check.log",
+    "scope": "immutable pack content and deterministic assembly only"
+  },
+  "overrides": [
+    "Shared Computer with independent chats and the assigned branch/worktree, no distinct-Computer controller used"
+  ],
+  "peerHandoffs": "NONE_OBSERVED",
+  "modelRuntimeAttestation": "Harness reports GPT-6.1 Sol; max requested in creation/settings. No independent runtime reasoning attestation observed; no fallback or subagents used.",
+  "sourceExceptions": "Retained exactly as sealed; missing R1/S/P/M originals were not rediscovered or fabricated.",
+  "externalGates": "NOT_RUN"
+}

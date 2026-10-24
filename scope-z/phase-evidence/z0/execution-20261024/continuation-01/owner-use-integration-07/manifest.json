@@ -1,0 +1,62 @@
+{
+  "schema": "finnor.project-z.z0.current-coordinator-owner-use-proposal.v1",
+  "observedAt": "2026-10-24T18:55:29.560Z",
+  "coordinator": "/home/factory-user/repos/finnor-z-coordinator",
+  "coordinatorHead": "9f3edfd3b4c6758832c53139da0773218062191e",
+  "coordinatorTree": "2dc4d5bc13d22853cf4dc9feb5f6ac7fbf6bb9c9",
+  "coordinatorTrackedDiffSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "basisManifestSha256": "43edda27d7a16b2b40cc1ce88dd44f3ec0a314dc09c728558442b745f9071e62",
+  "basisPatchSha256": "b8eb54cce30445d227b50ae94dbb463493dc9587f76a8de6817787cfbaf284f0",
+  "patchSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "paths": [],
+  "sharedFilesWritten": false,
+  "reviewState": "CURRENT_COORDINATOR_MATCHES_REQUESTED_SHARED_TARGET_NO_NEW_SHARED_DELTA",
+  "observations": [
+    {
+      "path": "finnor-os/packages/private-equity/src/application-semantics/store.ts",
+      "currentSha256": "fc06aef01a7f4e82024793c76060967fbd4efecaa3834c0bcd3bdd9a74179770",
+      "requestedTargetSha256": "fc06aef01a7f4e82024793c76060967fbd4efecaa3834c0bcd3bdd9a74179770",
+      "disposition": "CURRENT_BYTES_MATCH_REQUESTED_TARGET"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/program-synthesis/institution.ts",
+      "currentSha256": "545637532bee1bd6584f8f278b204779c92744ab0271c3f3dbbe74d5d9f168cd",
+      "requestedTargetSha256": "545637532bee1bd6584f8f278b204779c92744ab0271c3f3dbbe74d5d9f168cd",
+      "disposition": "CURRENT_BYTES_MATCH_REQUESTED_TARGET"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/program-synthesis/institution-continuation.ts",
+      "currentSha256": "17fc1fd0dd3f187dfb9e680622b41438395b4966193527b7ce0ca32ae01a1ed2",
+      "requestedTargetSha256": "17fc1fd0dd3f187dfb9e680622b41438395b4966193527b7ce0ca32ae01a1ed2",
+      "disposition": "CURRENT_BYTES_MATCH_REQUESTED_TARGET"
+    }
+  ],
+  "ownedLeaves": [
+    {
+      "path": "finnor-os/packages/orchestration/src/project-z/z0-convergence/institution-consumer.ts",
+      "currentCoordinatorSha256": "71d9df3579384b68c0300ce28665a244ecbe7102a254a88c8aa8485535a11a96",
+      "ownedSha256": "71d9df3579384b68c0300ce28665a244ecbe7102a254a88c8aa8485535a11a96",
+      "disposition": "CURRENT_COORDINATOR_MATCHES_OWNED_TARGET"
+    },
+    {
+      "path": "finnor-os/packages/orchestration/src/project-z/z0-convergence/institution-origin.ts",
+      "currentCoordinatorSha256": "5ee67ab595155e27b78b65c162d700c865f1eb62d2207bd026abf60d503199eb",
+      "ownedSha256": "5ee67ab595155e27b78b65c162d700c865f1eb62d2207bd026abf60d503199eb",
+      "disposition": "CURRENT_COORDINATOR_MATCHES_OWNED_TARGET"
+    },
+    {
+      "path": "finnor-os/packages/orchestration/src/project-z/z0-convergence/projection.ts",
+      "currentCoordinatorSha256": "b2bc7fd3eda606bfd3c573917ab3b03f76b8fd963f0989d64d0bb830589da1a7",
+      "ownedSha256": "b2bc7fd3eda606bfd3c573917ab3b03f76b8fd963f0989d64d0bb830589da1a7",
+      "disposition": "CURRENT_COORDINATOR_MATCHES_OWNED_TARGET"
+    }
+  ],
+  "sqlReconciliation": {
+    "sha256": "1511609691eed81aee3f227d70a0a5b061adf604780d5c6ab16822cc47aa029a",
+    "changeRequested": false,
+    "executed": false
+  },
+  "native": "NOT_RUN",
+  "installedNative": "NOT_RUN",
+  "slotReleased": false
+}

@@ -1,0 +1,52 @@
+{
+  "schema": "finnor.project-z.z0.retained-usage-denial.v1",
+  "historical": true,
+  "attempt": 4,
+  "source": {
+    "path": "continuity-receipts-03/attempt-004-stream.jsonl",
+    "sha256": "de69993263e82336c6646002e93d57f537006ee926e8271587ae38543fc62117",
+    "bytes": 8936
+  },
+  "records": [
+    {
+      "type": "error",
+      "source": "agent_loop",
+      "message": "402 {\"detail\":\"You've reached your 5-hour standard usage limit (resets in 0h 22min).\\nSwitch to Droid Core or enable Extra Usage to continue.\",\"status\":402,\"title\":\"Payment Required\",\"displayToUser\":true}",
+      "timestamp": 1792869000079,
+      "session_id": "66647028-fac4-4793-bec3-22b564d12b90"
+    },
+    {
+      "type": "error",
+      "source": "agent_loop",
+      "message": "402 {\"detail\":\"You've reached your 5-hour standard usage limit (resets in 0h 22min).\\nSwitch to Droid Core or enable Extra Usage to continue.\",\"status\":402,\"title\":\"Payment Required\",\"displayToUser\":true}",
+      "timestamp": 1792869000696,
+      "session_id": "66647028-fac4-4793-bec3-22b564d12b90"
+    },
+    {
+      "type": "error",
+      "source": "cli",
+      "message": "402 {\"detail\":\"You've reached your 5-hour standard usage limit (resets in 0h 22min).\\nSwitch to Droid Core or enable Extra Usage to continue.\",\"status\":402,\"title\":\"Payment Required\",\"displayToUser\":true}",
+      "timestamp": 1792869000920,
+      "session_id": "66647028-fac4-4793-bec3-22b564d12b90"
+    }
+  ],
+  "actualSupervisorChildExit": {
+    "time": 1792869002.523129,
+    "phase": "Z0",
+    "session_id": "66647028-fac4-4793-bec3-22b564d12b90",
+    "event": "child_exit",
+    "attempt": 4,
+    "exit_code": 1,
+    "runtime_verified": true
+  },
+  "laterExplicitUserResumption": {
+    "path": "continuity-receipts-03/user-resume-all-four-03.md",
+    "sha256": "8f3539355cb944b4b4eb7c163f964fecbb24bbf4eb00902a4a7fe9044a1d60d3",
+    "bytes": 1724
+  },
+  "currentReconstructionCancellationIsNotThisDenial": true,
+  "currentReconstructionToolReason": "NOT_EXPOSED",
+  "currentReconstructionActualExit": null,
+  "modelOrBillingChangedByProducer": false,
+  "unchangedReconstructionRetryIssued": false
+}

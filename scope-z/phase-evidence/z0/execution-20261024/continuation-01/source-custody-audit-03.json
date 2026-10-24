@@ -1,0 +1,60 @@
+{
+  "schema": "finnor.project-z.z0.source-and-evidence-byte-audit.v1",
+  "createdAt": "2026-10-24T20:27:43.469804+00:00",
+  "status": "PASSED_BYTE_CUSTODY_AUDIT",
+  "sourceImplementationCommit": "8a2d82bac98944db528667f868f4671f63bca2ba",
+  "sourceImplementationTree": "53fadcceccac84b90970e3cc1df0d1d9a7650f8c",
+  "coordinatorHead": "9f3edfd3b4c6758832c53139da0773218062191e",
+  "coordinatorTree": "2dc4d5bc13d22853cf4dc9feb5f6ac7fbf6bb9c9",
+  "archiveAudits": [
+    {
+      "archive": {
+        "path": "installation-10/converged-source.tar.gz",
+        "sha256": "95fb9505bcc707439e35dd3ee72adb7005c6dd419e59e033209c522a02b6a1dd",
+        "bytes": 11062271
+      },
+      "snapshot": {
+        "path": "installation-10/source-snapshot.json",
+        "sha256": "cffadcbd1baaaa53b50fc99ea4e80dd8f5ca1100eef61de5ea41130a1abce84e",
+        "bytes": 768364
+      },
+      "sourcePopulationSha256": "60d02fdfea7df750e3502cbb5e5d03bd34d3ff138d27c1978fee539087134b0c",
+      "regularFilesVerified": 3038,
+      "totalSourceBytes": 47176524,
+      "liveCoordinatorAndOwnedSourceVerified": false,
+      "unsafePathsOrDependencyTrees": 0
+    },
+    {
+      "archive": {
+        "path": "installation-12/converged-source.tar.gz",
+        "sha256": "f900d214b0f114918d5f5f7490c9c9a19e7007a89a07354538ccf616ab98cc47",
+        "bytes": 11070952
+      },
+      "snapshot": {
+        "path": "installation-12/source-snapshot.json",
+        "sha256": "a4f0b08ebcd271847848900ba714277682a1ce404a0a6bb5f1e405eadcd89de0",
+        "bytes": 768880
+      },
+      "sourcePopulationSha256": "63bca8ad8ffff6787230683716f4127beda13a60a923584c964512e1c794bb30",
+      "regularFilesVerified": 3040,
+      "totalSourceBytes": 47206840,
+      "liveCoordinatorAndOwnedSourceVerified": true,
+      "unsafePathsOrDependencyTrees": 0
+    }
+  ],
+  "currentOwnedFilesVerified": 36,
+  "currentOwnedDeltasOverCoordinator": [],
+  "ownerUseSharedTargetsVerified": 3,
+  "ownerUseOwnedLeavesVerified": 3,
+  "pendingCspPreimageAndPatchVerified": true,
+  "pendingCspAppliedOrOverlaid": false,
+  "historicalFullManifestMatchesRuntimeCopy": true,
+  "historicalEmittedGraphGzipRoundTripsVerified": 4,
+  "newUnitTestsWritten": false,
+  "databaseAuthOrListenersExecuted": false,
+  "currentSourceReconstruction": "NOT_RUN",
+  "native": "NOT_RUN",
+  "installedNative": "NOT_RUN",
+  "algorithm": "SHA-256 over actual files and compact ordered JSON populations; every regular tar member checked against exact snapshot; current original/coordinator and all owned bytes rehashed; gzip decoded hash compared with retained raw graph.",
+  "pythonAddressSpaceLimitMiB": 512
+}

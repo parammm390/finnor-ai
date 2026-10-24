@@ -1,0 +1,22 @@
+{
+  "schema": "finnor.project-z.shared-computer-launch.v1",
+  "preparedAt": "2026-10-24T14:48:10.515029+00:00",
+  "phase": "z0",
+  "computerId": "eea8d359-5a5c-4aff-b465-494dd7a8ba88",
+  "cwd": "/home/factory-user/repos/finnor-z0",
+  "branch": "factory/project-z0",
+  "sourceHead": "684d805e471836a720aa6741a3128eca17d28202",
+  "sourceTree": "163f63b65c88481194d0d48e77337494b3b9f24f",
+  "locks": {
+    "scope-z/locks/product-lock.json": "61d9881ca8059d24d057d1e00d5436ef2059de7889ccd1fd2f92a630075bcebf",
+    "scope-z/locks/execution-pack.json": "4419731d2544d1c07fe275ec8071d5d783273942ca9947eda2ff6b4e2dffb9db"
+  },
+  "seedPath": "/home/factory-user/repos/finnor-z0/scope-z/prompts/seeds/z0.seed.md",
+  "seedBytes": 420629,
+  "seedSha256": "3f7899558e008a006073e69ca45c46ea46021e680bac61155d06bc92cf949578",
+  "correctionSha256": "9e2e192ee431963c34d1f388acbee413a1efcc7cd508e43e5d14311b8120b42f",
+  "fullReadAcknowledged": false,
+  "phaseRunningObserved": false,
+  "schedulingAuthority": "LATEST_USER_SHARED_COMPUTER_OVERRIDE",
+  "sealedDistinctComputerControllerUsed": false
+}

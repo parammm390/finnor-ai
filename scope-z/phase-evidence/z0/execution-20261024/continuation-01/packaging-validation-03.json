@@ -1,0 +1,80 @@
+{
+  "schema": "finnor.project-z.z0.static-delivery-validation.v1",
+  "createdAt": "2026-10-24T20:34:03.130715+00:00",
+  "status": "PASSED_STATIC_DELIVERY_VALIDATION_NOT_PHASE_COMPLETION",
+  "sourceImplementationCommit": "8a2d82bac98944db528667f868f4671f63bca2ba",
+  "sourcePopulationSha256": "63bca8ad8ffff6787230683716f4127beda13a60a923584c964512e1c794bb30",
+  "sourceByteAuditActualExit": 0,
+  "sourceByteAuditToolReceipt": "/home/factory-user/.factory/artifacts/scripts/66647028-fac4-4793-bec3-22b564d12b90/call_foy73bdVGWo1nJR8Ad4lb6gN.log",
+  "resolvedInitialPackagingAuditActualExit": 1,
+  "sourceByteAudit": {
+    "path": "source-custody-audit-03.json",
+    "sha256": "42cced423cab1d10b0d99162eae00573ded7673ec4fb36ccdca8157f7480f9dc",
+    "bytes": 2619
+  },
+  "handoff": {
+    "path": "handoff-final-03.md",
+    "sha256": "aeb940a72937eacdbaedaa960a892493ab95546570c3266e97d9c666c60f0599",
+    "bytes": 12421
+  },
+  "replay": {
+    "path": "runtime-and-native-replay-03.md",
+    "sha256": "f572cb15a6fcd98fa6c3aff72152259a33b37605dcce6c74a345241e26ee432b",
+    "bytes": 15500
+  },
+  "qualification": {
+    "path": "qualification-final-03.json",
+    "sha256": "caeb301ac7e980d67fdb884119d6cb0614b5eb0ace20be2d02e9c2ff2af12eed",
+    "bytes": 16032
+  },
+  "sourceContentManifest": {
+    "path": "source-content-manifest-03.json",
+    "sha256": "0b31c9310c62898596b97cb585193bf35c72ff67a7bd726cd0b2f6759ca4044d",
+    "bytes": 20030
+  },
+  "historicalContextReadReceipt": {
+    "path": "continuity-receipts-03/historical-full-read.json",
+    "sha256": "915479a8e6498cbd6ce77d9b04fb525d9ae01d5bec7b4f30e57337359d259267",
+    "bytes": 13465
+  },
+  "jsonDocumentsParsed": 140,
+  "exactMetadataReferencesVerified": 109,
+  "sevenHandoffLabels": [
+    "IMPLEMENTED",
+    "CHANGED",
+    "EVIDENCE",
+    "COMPLETION GATE",
+    "REMAINING LIMITATIONS",
+    "FRONTIER DELTA",
+    "NEXT DEPENDENCIES"
+  ],
+  "metadataAndDocumentationWhitespace": "PASSED",
+  "rawNewLogWhitespaceFindings": [
+    {
+      "path": "installation-11/07-actual-mounted-frontend-build.log",
+      "lines": [
+        19,
+        20,
+        21
+      ],
+      "disposition": "PRESERVE_RAW_BYTES_UNCHANGED"
+    }
+  ],
+  "historicalIndex02LivePathDrift": [
+    {
+      "path": ".gitignore",
+      "historicalSha256": "38cc351b7e88b29f981b3c34d8364ed408a4bce978845d569e1e2e41c8ca01df",
+      "currentSha256": "f7122f9a50ad1881ac31b251d1f40678151501039904a1d4ea344f3e4b2b23c4"
+    }
+  ],
+  "historicalIndex02DriftDisposition": "Only the intentional later .gitignore extension differs; old indexed commit and all original raw failure bytes remain retained.",
+  "productSourceUnchangedSinceFreeze": true,
+  "coordinatorProductUnchangedSinceFreeze": true,
+  "allActualToolchainFilePinsReverified": true,
+  "newUnitTestsWritten": false,
+  "currentSourceReconstruction": "NOT_RUN",
+  "native": "NOT_RUN",
+  "installedNative": "NOT_RUN",
+  "databaseAuthOrListenersExecuted": false,
+  "slotReleased": false
+}

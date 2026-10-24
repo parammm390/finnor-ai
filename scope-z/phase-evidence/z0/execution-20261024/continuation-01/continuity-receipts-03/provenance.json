@@ -1,0 +1,101 @@
+{
+  "schema": "finnor.project-z.z0.continuity-evidence-provenance.v1",
+  "copiedAt": "2026-10-24T20:27:43.469804+00:00",
+  "files": [
+    {
+      "originalPath": "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/continuity/evidence/Z0/attempt-004/stream.jsonl",
+      "copy": {
+        "path": "continuity-receipts-03/attempt-004-stream.jsonl",
+        "sha256": "de69993263e82336c6646002e93d57f537006ee926e8271587ae38543fc62117",
+        "bytes": 8936
+      },
+      "byteIdenticalAtCopy": true
+    },
+    {
+      "originalPath": "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/continuity/evidence/Z0/events.jsonl",
+      "copy": {
+        "path": "continuity-receipts-03/events-at-packaging.jsonl",
+        "sha256": "8ee1c2dbb48bac7152f5352cfdfb3cfb685f496802638e3693923399a8c366ac",
+        "bytes": 9274
+      },
+      "byteIdenticalAtCopy": true
+    },
+    {
+      "originalPath": "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/continuity/evidence/Z0/checkpoint.json",
+      "copy": {
+        "path": "continuity-receipts-03/coordinator-checkpoint.json",
+        "sha256": "e3e790bdbf8ee98a496ac39ccbdb93345a028e5d44355b69a5185bdd868f1a71",
+        "bytes": 203
+      },
+      "byteIdenticalAtCopy": true
+    },
+    {
+      "originalPath": "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/continuity/evidence/user-resume-all-four-03.md",
+      "copy": {
+        "path": "continuity-receipts-03/user-resume-all-four-03.md",
+        "sha256": "8f3539355cb944b4b4eb7c163f964fecbb24bbf4eb00902a4a7fe9044a1d60d3",
+        "bytes": 1724
+      },
+      "byteIdenticalAtCopy": true
+    },
+    {
+      "originalPath": "/home/factory-user/repos/finnor-z0/scope-z/orchestration/shared-computer-launch/continuation-03.prompt.md",
+      "copy": {
+        "path": "continuity-receipts-03/continuation-03.prompt.md",
+        "sha256": "8f738d9877ef41f229fffda87da944a345a79b07ffb41c99c33fe1d5b26379d4",
+        "bytes": 2297
+      },
+      "byteIdenticalAtCopy": true
+    },
+    {
+      "originalPath": "/home/factory-user/repos/finnor-z0/scope-z/orchestration/shared-computer-launch/coordinator-driver-review-06.md",
+      "copy": {
+        "path": "continuity-receipts-03/coordinator-driver-review-06.md",
+        "sha256": "4af4cffddae6827b4feb0617ae1ba6622cc9b55cf4e0a07fb397674b7179e3a6",
+        "bytes": 2132
+      },
+      "byteIdenticalAtCopy": true
+    },
+    {
+      "originalPath": "/home/factory-user/repos/finnor-z0/scope-z/orchestration/shared-computer-launch/coordinator-recovery-checkpoint-07.md",
+      "copy": {
+        "path": "continuity-receipts-03/coordinator-recovery-checkpoint-07.md",
+        "sha256": "1a0d851340bd590544fb70bd5afb9ed12e09eadfc8a21b9223c85e82db20663e",
+        "bytes": 568
+      },
+      "byteIdenticalAtCopy": true
+    },
+    {
+      "originalPath": "/home/factory-user/repos/finnor-z0/scope-z/orchestration/shared-computer-launch/launch-snapshot.json",
+      "copy": {
+        "path": "continuity-receipts-03/launch-snapshot.json",
+        "sha256": "ae6d5d9f54fbee37cd9fc8856a54a260d6effeb1c0d6b2aa38c310c69ddd3d5b",
+        "bytes": 1082
+      },
+      "byteIdenticalAtCopy": true
+    },
+    {
+      "originalPath": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/full-read.json",
+      "copy": {
+        "path": "continuity-receipts-03/historical-full-read.json",
+        "sha256": "915479a8e6498cbd6ce77d9b04fb525d9ae01d5bec7b4f30e57337359d259267",
+        "bytes": 13465
+      },
+      "byteIdenticalAtCopy": true
+    }
+  ],
+  "runtimeObservation": {
+    "time": 1792870978.5952284,
+    "phase": "Z0",
+    "session_id": "66647028-fac4-4793-bec3-22b564d12b90",
+    "event": "runtime_verified",
+    "attempt": 5,
+    "pid": 109408,
+    "actual_model": "gpt-6.1-sol",
+    "actual_reasoning": "max"
+  },
+  "runtimeObservationMeaning": "Actual coordinator observer record for resumed attempt 5, not direct model introspection or cost attestation.",
+  "historicalReadReceiptMeaning": "Byte-identical copy of an existing same-session 14:50 receipt, not a newly fabricated pre-code read or independent historical attestation.",
+  "supervisorOrHooksModified": false,
+  "coordinatorGateWritten": false
+}

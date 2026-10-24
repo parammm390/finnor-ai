@@ -1,0 +1,11 @@
+{
+  "schema": "finnor.project-z.z0.frozen-source-archive.v1",
+  "archive": "converged-source.tar.gz",
+  "sha256": "f900d214b0f114918d5f5f7490c9c9a19e7007a89a07354538ccf616ab98cc47",
+  "bytes": 11070952,
+  "sourcePopulationSha256": "63bca8ad8ffff6787230683716f4127beda13a60a923584c964512e1c794bb30",
+  "files": 3040,
+  "dependencyTreesIncluded": false,
+  "gitObjectsRequired": false,
+  "native": "NOT_RUN"
+}

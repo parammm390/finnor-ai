@@ -1,0 +1,16 @@
+{
+  "schema": "finnor.project-z.z0.packaging-failures.v1",
+  "attempts": [
+    {
+      "actualExit": 1,
+      "toolReceipt": "/home/factory-user/.factory/artifacts/scripts/66647028-fac4-4793-bec3-22b564d12b90/call_ri4k8TBCvrdGfafbwqjqAQHd.log",
+      "failure": "FileNotFoundError for a guessed historical runtime manifest filename",
+      "incorrectPath": "installation-11/runtime/finnor-os/x1-installation-manifest.json",
+      "correctSourceGroundedPath": "installation-11/runtime/finnor-os/x1-development-installation.json",
+      "generatorOutputsCreatedBeforeFailure": 0,
+      "productFilesChanged": false,
+      "correction": "Read the actual emitter manifest save path; rerun the byte audit with that path."
+    }
+  ],
+  "nativeOrHeavyReconstructionExecuted": false
+}
