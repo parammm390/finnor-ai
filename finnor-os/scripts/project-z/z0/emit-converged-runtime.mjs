@@ -58,6 +58,10 @@ for (const path of [esbuildPath, typescriptPath]) if (!(await realpath(path)).st
   throw Error("Z0_BORROWED_BUILD_DEPENDENCY_REFUSED");
 }
 const { build } = require("esbuild"), ts = require("typescript");
+const frontendConfig = ts.readConfigFile(resolve(root, "tsconfig.json"), ts.sys.readFile);
+if (frontendConfig.error) throw Error("Z0_FRONTEND_TYPESCRIPT_CONFIG_REQUIRED");
+const frontendOptions = ts.parseJsonConfigFileContent(frontendConfig.config, ts.sys, root).options;
+const localSourceAliases = new Map();
 const nativePackage = await realpath(require.resolve("fs-ext"));
 if (!nativePackage.startsWith(root + sep)
   || !existsSync(resolve(dirname(nativePackage), "build/Release/fs_ext.node"))) throw Error("Z0_FRESH_FS_EXT_NATIVE_BINARY_REQUIRED");
@@ -115,6 +119,19 @@ const compiled = await build({
     setup(builder) {
       builder.onResolve({ filter: /^z0:/ }, event => ({ path: event.path, namespace: "z0-generated" }));
       builder.onLoad({ filter: /.*/, namespace: "z0-generated" }, () => ({ contents: registry, loader: "js", resolveDir: backend }));
+      builder.onResolve({ filter: /^@\// }, async event => {
+        const selected = ts.resolveModuleName(event.path, event.importer, frontendOptions, ts.sys).resolvedModule;
+        if (!event.importer.startsWith(root + sep) || !selected) throw Error("Z0_LOCAL_SOURCE_ALIAS_UNRESOLVED:" + event.path);
+        const path = await realpath(selected.resolvedFileName), key = relative(root, path);
+        const original = source.files.find(file => file.path === key);
+        if (!path.startsWith(root + sep) || !original || sha(await readFile(path)) !== original.sha256) {
+          throw Error("Z0_LOCAL_SOURCE_ALIAS_OUTSIDE_FROZEN_SOURCE:" + event.path);
+        }
+        const binding = { specifier: event.path, importer: relative(root, event.importer),
+          source: key, sha256: original.sha256 };
+        localSourceAliases.set(JSON.stringify(binding), binding);
+        return { path };
+      });
       builder.onResolve({ filter: /^[^./]/ }, event => {
         if (natives.has(event.path) || isBuiltin(event.path)) return { path: event.path, external: true };
         if (event.path.startsWith("@finnor/") && event.path !== "@finnor/source-custody") return;
@@ -254,6 +271,8 @@ const manifest = {
     esbuildPath: relative(root, esbuildPath), typescriptPath: relative(root, typescriptPath),
     builderSha256: sha(await readFile(fileURLToPath(import.meta.url))) },
   generatedFrontendChanges,
+  localSourceAliases: [...localSourceAliases.values()].sort((a, b) =>
+    a.importer.localeCompare(b.importer) || a.specifier.localeCompare(b.specifier)),
   frontend: { buildId: (await readFile(resolve(root, ".next-x1-install/BUILD_ID"), "utf8")).trim(),
     mode: "ACTUAL_NEXT_STANDALONE_BUILD_NOT_STARTED", publicAuthBuild,
     mountedBuildCustody: { path: "mounted-frontend-build-custody.json", location: "INSTALLATION_DIRECTORY",

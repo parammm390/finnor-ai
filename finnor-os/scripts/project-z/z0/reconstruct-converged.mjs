@@ -1,19 +1,22 @@
 /** Rebuild a source archive without a donor dependency tree or local Git. */
-import { readFile, writeFile, mkdir, realpath, readdir, lstat, rm } from "node:fs/promises";
+import { readFile, writeFile, mkdir, realpath, readdir, lstat, rm, statfs } from "node:fs/promises";
 import { existsSync, createWriteStream } from "node:fs";
-import { resolve, dirname, sep } from "node:path";
+import { resolve, dirname, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { spawn, execFileSync } from "node:child_process";
 const toolRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../../..");
 const options = Object.fromEntries(process.argv.slice(2).map(arg => {
-  const match = /^--(installation|output|public-auth-input)=(\/.+)$/.exec(arg);
+  const pin = /^--(prepared-target-sha256)=([a-f0-9]{64})$/.exec(arg);
+  if (pin) return [pin[1], pin[2]];
+  const match = /^--(installation|output|public-auth-input|prepared-target-input)=(\/.+)$/.exec(arg);
   if (!match) throw Error("Z0_RECONSTRUCTION_ABSOLUTE_ARGUMENT_REQUIRED");
   return [match[1], resolve(match[2])];
 }));
+const preparedMode = Boolean(options["prepared-target-input"] || options["prepared-target-sha256"]);
 if (!options.installation || !options.output
   || !options.output.startsWith(resolve(toolRoot, "scope-z/phase-evidence/z0") + sep)
-  || existsSync(options.output) || process.versions.node.split(".")[0] !== "22") throw Error("Z0_FRESH_NODE22_RECONSTRUCTION_REQUIRED");
+  || existsSync(options.output) !== preparedMode || process.versions.node.split(".")[0] !== "22") throw Error("Z0_FRESH_NODE22_RECONSTRUCTION_REQUIRED");
 const sha = body => createHash("sha256").update(body).digest("hex");
 const source = JSON.parse(await readFile(resolve(options.installation, "source-snapshot.json"), "utf8"));
 const archive = JSON.parse(await readFile(resolve(options.installation, "source-archive.json"), "utf8"));
@@ -25,6 +28,81 @@ const members = execFileSync("/usr/bin/tar", ["-tzf", archivePath], { encoding: 
 if (new Set(members).size !== members.length || members.length !== source.files.length
   || members.some(path => path.startsWith("/") || path.split("/").includes("..") || !source.files.some(file => file.path === path))) {
   throw Error("Z0_UNDECLARED_RECONSTRUCTION_ARCHIVE_MEMBER");
+}
+let preparedTarget = null;
+if (preparedMode) {
+  const path = options["prepared-target-input"], expected = options["prepared-target-sha256"];
+  if (!path || !expected || !path.startsWith(resolve(toolRoot, "scope-z/phase-evidence/z0") + sep)
+    || await realpath(path) !== path || !(await lstat(path)).isFile() || (await lstat(path)).size > 4 * 1024 ** 2) {
+    throw Error("Z0_HASH_BOUND_OWNED_PREPARED_TARGET_INPUT_REQUIRED");
+  }
+  const bytes = await readFile(path);
+  if (sha(bytes) !== expected) throw Error("Z0_PREPARED_TARGET_INPUT_HASH_CHANGED");
+  const input = JSON.parse(bytes), root = resolve(options.output, "runtime");
+  if (input.schema !== "finnor.project-z.z0.prepared-engineering-target.v1"
+    || input.target !== options.output || input.sourcePopulationSha256 !== source.sourcePopulationSha256
+    || input.sourceArchiveSha256 !== archive.sha256 || input.databaseAuthOrNativeExecuted !== false
+    || !Number.isSafeInteger(input.projectedAdditionalPeakBytes) || input.projectedAdditionalPeakBytes < 1536 * 1024 ** 2
+    || input.projectedAdditionalPeakBytes > 8 * 1024 ** 3
+    || !Array.isArray(input.files) || input.files.length !== source.files.length
+    || !Array.isArray(input.additionalFiles) || input.additionalFiles.length > 1
+    || await realpath(root) !== root || await realpath(options.output) !== options.output) {
+    throw Error("Z0_EXACT_PREPARED_ENGINEERING_TARGET_REQUIRED");
+  }
+  const originalInput = await readFile(resolve(options.output, "source-input.json"));
+  const origin = JSON.parse(originalInput);
+  if (sha(originalInput) !== input.sourceInputSha256
+    || origin.schema !== "finnor.project-z.z0.canonical-postimage-generation-input.v1"
+    || origin.scope !== "FRESH_SOURCE_GENERATION_NOT_INSTALLED_OR_NATIVE_PROOF"
+    || origin.freshRoot !== root || origin.sourceMembers !== source.files.length
+    || origin.freshOwnDependenciesRequired !== true || origin.databaseAuthOrNativeExecuted !== false) {
+    throw Error("Z0_ORIGINAL_FRESH_SOURCE_GENERATION_RECEIPT_REQUIRED");
+  }
+  const outputNames = await readdir(options.output), rootNames = await readdir(root);
+  if (outputNames.some(name => /^(?:0[0-9][a-z]?-|reconstruction(?:-failure)?\.json$|source-snapshot\.json$|frontend-public-auth-build\.json$|mounted-frontend-build-custody\.json$|reconstruction-build-home$)/.test(name))
+    || rootNames.some(name => /^(?:\.git$|\.next|browsers$)/.test(name))
+    || existsSync(resolve(root, "finnor-os/x1-development-installation.json"))
+    || (await readdir(resolve(root, "finnor-os"))).some(name => name.startsWith("z0-runtime-"))) {
+    throw Error("Z0_PREPARED_TARGET_MUST_HAVE_NO_PRIOR_BUILD_OR_RECONSTRUCTION");
+  }
+  const originals = new Set(source.files.map(file => file.path)), checked = new Map();
+  for (const file of [...input.files, ...input.additionalFiles]) {
+    if (!file || Object.keys(file).sort().join(",") !== "bytes,mode,path,sha256"
+      || typeof file.path !== "string" || file.path !== relative(root, resolve(root, file.path))
+      || !/^[a-f0-9]{64}$/.test(file.sha256) || !Number.isSafeInteger(file.bytes) || file.bytes < 0
+      || ![0o644, 0o755].includes(file.mode) || checked.has(file.path)
+      || (!originals.has(file.path) && file.path !== ".z2-source-build.json")) {
+      throw Error("Z0_PREPARED_TARGET_SOURCE_SET_INVALID");
+    }
+    const selected = resolve(root, file.path), metadata = await lstat(selected), body = await readFile(selected);
+    if (!metadata.isFile() || await realpath(selected) !== selected || body.length !== file.bytes
+      || (metadata.mode & 0o777) !== file.mode || sha(body) !== file.sha256) {
+      throw Error("Z0_PREPARED_TARGET_SOURCE_PREIMAGE_CHANGED:" + file.path);
+    }
+    checked.set(file.path, file);
+  }
+  if (input.files.some(file => !originals.has(file.path)) || [...originals].some(path => !checked.has(path))
+    || input.additionalFiles.some(file => file.path !== ".z2-source-build.json" || originals.has(file.path))) {
+    throw Error("Z0_PREPARED_TARGET_SOURCE_SET_INVALID");
+  }
+  async function checkPreparedFiles(directory) {
+    for (const entry of await readdir(directory, { withFileTypes: true })) {
+      const path = resolve(directory, entry.name), key = relative(root, path);
+      if (key === "node_modules" || key === "finnor-os/node_modules") {
+        if (!entry.isDirectory() || await realpath(path) !== path) throw Error("Z0_PREPARED_DEPENDENCY_ROOT_INVALID");
+      } else if (entry.isDirectory()) await checkPreparedFiles(path);
+      else if (!entry.isFile() || !checked.has(key)) throw Error("Z0_UNDECLARED_PREPARED_TARGET_SOURCE:" + key);
+    }
+  }
+  await checkPreparedFiles(root);
+  const disk = await statfs(options.output), availableBytes = disk.bavail * disk.bsize;
+  if (availableBytes - input.projectedAdditionalPeakBytes < 2 * 1024 ** 3) {
+    throw Error("Z0_PREPARED_TARGET_PROJECTED_STORAGE_RESERVE_REQUIRED");
+  }
+  preparedTarget = { inputSha256: expected, sourceInputSha256: input.sourceInputSha256,
+    priorUse: "SOURCE_GENERATION_ONLY_NO_PRIOR_BUILD", preimageFiles: input.files.length,
+    additionalMetadata: input.additionalFiles, availableBytes, projectedAdditionalPeakBytes: input.projectedAdditionalPeakBytes,
+    minimumProjectedRemainingBytes: 2 * 1024 ** 3, dependencyAction: "FRESH_REINSTALL_BOTH_LOCKS_NOT_COPIED" };
 }
 const frontendEnv = {};
 const publicAuthBuild = { schema: "finnor.project-z.z0.frontend-public-auth-build-receipt.v1",
@@ -68,9 +146,11 @@ if (options["public-auth-input"]) {
     environmentNames: [input.publicUrlEnv, input.publicAnonKeyEnv],
     injectedNames: Object.keys(frontendEnv), secretOrUserKeyAccepted: false });
 }
-await mkdir(options.output, { mode: 0o700 });
-const root = resolve(options.output, "runtime"), backend = resolve(root, "finnor-os"), home = resolve(options.output, "build-home");
-await mkdir(root); await mkdir(home);
+if (!preparedMode) await mkdir(options.output, { mode: 0o700 });
+const root = resolve(options.output, "runtime"), backend = resolve(root, "finnor-os"),
+  home = resolve(options.output, preparedMode ? "reconstruction-build-home" : "build-home");
+if (!preparedMode) await mkdir(root);
+await mkdir(home);
 const env = { PATH: dirname(process.execPath) + ":/usr/bin:/bin", HOME: home, LANG: "C.UTF-8",
   NODE_OPTIONS: "--max-old-space-size=4096", NEXT_TELEMETRY_DISABLED: "1", FINNOR_X1_FRONTEND_INSTALL: "1",
   FINNOR_BUILD_ID: "z0-" + source.sourcePopulationSha256.slice(0, 16),
@@ -130,7 +210,8 @@ try {
   }
   await writeFile(resolve(options.output, "source-snapshot.json"), JSON.stringify({ ...source, runtime: root,
     reconstructedFrom: { sourcePopulationSha256: source.sourcePopulationSha256, sourceArchiveSha256: archive.sha256,
-      originalSnapshotSha256: sha(await readFile(resolve(options.installation, "source-snapshot.json"))) } }, null, 2) + "\n", { flag: "wx" });
+      originalSnapshotSha256: sha(await readFile(resolve(options.installation, "source-snapshot.json"))) },
+    preparedEngineeringTarget: preparedTarget }, null, 2) + "\n", { flag: "wx" });
   await run("02-root-ci", "/usr/bin/npm", ["ci", "--ignore-scripts", "--no-audit", "--no-fund"]);
   await run("03-backend-ci", "/usr/bin/npm", ["ci", "--ignore-scripts", "--no-audit", "--no-fund"], backend);
   await run("04-native-fs-ext", "/usr/bin/npm", ["rebuild", "fs-ext", "--build-from-source"], backend);
@@ -172,6 +253,7 @@ try {
     gitCeiling: env.GIT_CEILING_DIRECTORIES, sentryRelease: env.SENTRY_RELEASE, backendTypeInputs: typeInputs.length,
     frontendPublicAuthBuild: publicAuthBuild,
     temporaryNpmCacheCleanup,
+    preparedEngineeringTarget: preparedTarget,
     typescriptRuntimeFallback: "REFUSED",
     native: "NOT_RUN", installedNative: "NOT_RUN", databaseOrAuthExecuted: false,
   }, null, 2) + "\n", { flag: "wx" });
