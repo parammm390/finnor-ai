@@ -1,0 +1,70 @@
+{
+  "schema": "finnor.project-z.z0.postcommit-code-binding.v1",
+  "phase": "Z0",
+  "disposition": "INCOMPLETE",
+  "implementationCommit": "f9c7a2618206cd6b1de1c0d6335bc073f11dcd90",
+  "implementationTree": "aafa5dd473ffead6853c363ba342f38f22a483cd",
+  "branch": "factory/project-z0",
+  "basePrerequisite": {
+    "commit": "684d805e471836a720aa6741a3128eca17d28202",
+    "tree": "163f63b65c88481194d0d48e77337494b3b9f24f"
+  },
+  "sourceContentManifest": {
+    "path": "scope-z/phase-evidence/z0/execution-20261024/source-content-manifest-01.json",
+    "bytes": 4295,
+    "sha256": "e5f7eee0a276e3a1b1abce5b73d359e7de42648fb4cff85a7eff30a8a2ba6f2a"
+  },
+  "evidenceIndex": {
+    "path": "scope-z/phase-evidence/z0/execution-20261024/final-evidence-index-01.json",
+    "bytes": 19652,
+    "sha256": "8bcc98b1b17daec2dc83bc6df7cab4cf1106b03add492738141253e1073dddf9"
+  },
+  "ownedPopulationSha256": "f97f8f23f3746ef78e9a75bd096957483f231070aa5bbd3373cda2e54f4edefd",
+  "sourceMatchesImplementationCommit": true,
+  "sharedFilesModified": false,
+  "postcommitArtifacts": [
+    {
+      "path": "scope-z/phase-evidence/z0/execution-20261024/integration-from-committed-01/coordinator-integration.json",
+      "bytes": 8687,
+      "sha256": "4dac89d951b87f2b52984efb27ce0bee9d07bb2aeb6cbe82518baacfef78eb25"
+    },
+    {
+      "path": "scope-z/phase-evidence/z0/execution-20261024/integration-from-committed-01/coordinator-integration.patch",
+      "bytes": 153661,
+      "sha256": "c4160a06674bda29c924e7b94be2e6c16ec1153ee3d5bbab50af5a44d9afd6ae"
+    },
+    {
+      "path": "scope-z/phase-evidence/z0/execution-20261024/integration-from-committed-01.log",
+      "bytes": 335,
+      "sha256": "4b486b64766e7bb667191c634283474747d2f2cba56b4dc62795b76ae8f3672a"
+    }
+  ],
+  "additionalChecks": {
+    "nativeNode22CommittedGeneratorExit": 0,
+    "tsxLoaderOrBorrowedModulesForGenerator": false,
+    "identicalLatestProposalPatch": true,
+    "committedProposalGitApplyCheckExit": 0,
+    "stagedSourceWhitespaceCheckExit": 0,
+    "allStagedFilesWhitespaceCheckExit": 2,
+    "rawWhitespaceReason": "Retained unified-patch context blank lines and raw logs, not implementation whitespace",
+    "rawEvidenceRewritten": false,
+    "all92StagedFilesMatchedIndexedDigestsAndOwnedPaths": true
+  },
+  "runtimeAndInstalledProductProof": "NOT_RUN",
+  "fullProjectTypecheck": "FAILED",
+  "model": {
+    "required": "gpt-6.1-sol/max",
+    "harnessReported": "GPT-6.1 Sol",
+    "independentReasoningEffortAttestation": "NOT_OBSERVED",
+    "fallback": false,
+    "subagents": 0
+  },
+  "remainingObligations": [
+    "Coordinator integration, SQL validation and complete internal native build/tests",
+    "Authorized disposable Auth/DB/stack, real D1/G1 original-owner flow and mounted recovery",
+    "Separate installed final integrated repeat and complete S7 costs"
+  ],
+  "followupCommitScope": "Evidence only; source content hashes remain the implementation cut",
+  "localBundleEnvelope": "local-bundle-envelope-01.json",
+  "externalDeliveryPerformed": false
+}
