@@ -1,9 +1,9 @@
 # schema: finnor.z3.native-freeze.v1
-# generatedAt: 2026-10-24T21:10:07Z
+# generatedAt: 2026-10-24T21:11:53Z
 # branch: factory/project-z3-viability
 # baseCommit: 9f3edfd3b4c6758832c53139da0773218062191e
-# headCommit: 3ed1a13a9804cdc3811e896dfccd7b229476f7ed
-# headTree: 289bb9d9b35e0e293c161a5b6019d27b6fc4a094
+# headCommit: 80b6ee6c5ed8fd9810469e31979fd9b930eef48f
+# headTree: 863a4ca7183a4ceb38a3e92f109154b0521cc884
 # scopeRoots: finnor-os/packages/epistemic-runtime/src/project-z/z3-viability finnor-os/packages/private-equity/src/project-z/z3-viability finnor-os/scripts/project-z/z3 scripts/project-z/z3 scope-z/phase-evidence/z3
 # exclusions: __pycache__, build/patch-check (generator full-tree scratch), build/pg-libs (environment symlinks), this manifest
 # verify: tail -n +11 scope-z/phase-evidence/z3/native-freeze-v2.sha256 | sha256sum -c -
@@ -80,7 +80,7 @@ fd5917dc28226b95e4d3b04bac418b9f4b795d2add96eb2f9e539f7d234ad107  scope-z/phase-
 9cb3801f3fcefec786a7dc647560149ae39a0e56e9f93c7d09dc384b10c99b29  scope-z/phase-evidence/z3/pre-code-freeze-correction.md
 fbdf6bc95582853bd93835a961d0a08261c52bf881c35ea44bf3b7faf2682419  scope-z/phase-evidence/z3/probe-checker-hardening.log
 1bbf46e6a48650a3b5e1a96fb395c49e97a985ad1959a55caf2f0f7f2376a3eb  scope-z/phase-evidence/z3/reading-receipt.md
-dc84745280bcb1e94de842d0deaf96e2e022b370f1d88b4c81f046b539f686f4  scope-z/phase-evidence/z3/reconstruction.md
+19b379799975fb352b4a674256bdf5c24a950ecbb60307168a6920b637be4d5a  scope-z/phase-evidence/z3/reconstruction.md
 d295a00ef372c5c0523e20aad3597a825e042196e346f9b77fdddcb20b49c5dd  scope-z/phase-evidence/z3/runs/01-source/critical.json
 37d2ff9ad3c44348aa890c9b652f82f283e07cac4968f839022d194421b02459  scope-z/phase-evidence/z3/runs/01-source/records.ndjson
 612ac11010a208383ce615750ed0654485795c323ef4083ff31398c2394b3989  scope-z/phase-evidence/z3/runs/01-source/report.json
