@@ -40,7 +40,7 @@ const ids = new Map<string,string>();
 for (const name of files) {
   // Explicit Y4 namespace avoids claiming a numeric ordinal from independent
   // POST-X peers. This exception does not admit arbitrary nonnumeric names.
-  if(["postx_y4_confidential_economic_computation.sql","postx_y4_confidential_owner_consumption.sql","postx_y4_runtime_migration_order.sql"].includes(name))continue;
+  if(["postx_y4_confidential_economic_computation.sql","postx_y4_confidential_owner_consumption.sql","postx_y4_runtime_migration_order.sql","postx_y4_runtime_owner_integrity.sql","postx_y4_runtime_recipient_recovery.sql"].includes(name))continue;
   const id = name.split("_")[0]!;
   if (!/^\d{4}[a-z]?$/.test(id)) throw new Error(`Invalid migration ID: ${name}`);
   const prior=ids.get(id),historical=historicalPairs.get(id);

@@ -176,7 +176,7 @@ export async function strategicResponseJob(raw:Record<string,unknown>,execution?
   }
  }catch(error){
   const reason=(error as Error).message;disposition=/^[A-Z0-9_:]{1,256}$/.test(reason)?reason:'Y2_NATIVE_FAILURE';
-  if(original)await transaction(ctx,async c=>{
+  if(original||/^Y2_ORIGINAL_(USE|FIT)_ATTEMPT_LIMIT$/.test(disposition))await transaction(ctx,async c=>{
    const row=await modelTx(ctx,c,p.modelId);
    await eventTx(c,row,'NATIVE_FAILURE','failure:'+e.deliveryAttemptId,{predicate:disposition,useId:p.useId??null,
     deliveryAttemptId:e.deliveryAttemptId,originalEpisodeRetained:true,checkpointRetained:!!(originalUse?.candidate??row.candidate)});

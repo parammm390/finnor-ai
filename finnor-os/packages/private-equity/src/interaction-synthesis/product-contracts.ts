@@ -12,7 +12,7 @@ export function reference(owner:string,kind:string,body:unknown):Y3Ref{
 const key=z.string().min(1).max(160),hex=z.string().regex(/^[a-f0-9]{64}$/);
 export const SourceSchema=z.object({sourceId:z.string().uuid(),versionId:z.string().uuid(),
  contentDigest:hex,claimKey:key,ref:RefSchema}).strict();
-const State=z.record(QuantityValue),terminal={modelId:key,terminalNodeId:key,terminalDigest:hex,before:State,after:State};
+const State=z.record(z.string(), QuantityValue),terminal={modelId:key,terminalNodeId:key,terminalDigest:hex,before:State,after:State};
 export const OutcomeSchema=z.discriminatedUnion('kind',[
  z.object({...terminal,kind:z.literal('NO_EFFECT')}).strict(),
  z.object({...terminal,kind:z.literal('RIGHT_TRANSITION'),operatorId:key,parameters:State}).strict(),

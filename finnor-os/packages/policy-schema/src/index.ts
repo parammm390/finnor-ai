@@ -22,7 +22,7 @@ export const DomainPolicySchema = z.object({
   id: z.string().uuid(),
   tenantId: z.string().uuid(),
   actionType: z.string().min(1),
-  policy: z.record(z.unknown()),
+  policy: z.record(z.string(), z.unknown()),
   requiresConfirmation: z.boolean(),
   confirmationTemplate: z.string().nullable(),
   modelProvider: z.string().optional(),
@@ -40,7 +40,7 @@ export const DomainActionSchema = z.object({
   id: z.string().uuid(),
   tenantId: z.string().uuid(),
   actionType: z.string().min(1),
-  payload: z.record(z.unknown()),
+  payload: z.record(z.string(), z.unknown()),
   policyId: z.string().uuid().nullable(),
   status: DomainActionStatusSchema,
   createdAt: z.string(),
@@ -140,7 +140,7 @@ const ObjectiveAssertionSchema = z.object({
 const ObjectiveCriterionSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("no_open_execution") }).strict(),
   z.object({ kind: z.literal("all_objective_effects_verified"), minimumCount: z.number().int().min(0).max(25) }).strict(),
-  z.object({ kind: z.literal("canonical_query"), request: z.record(z.unknown()), assertion: ObjectiveAssertionSchema }).strict(),
+  z.object({ kind: z.literal("canonical_query"), request: z.record(z.string(), z.unknown()), assertion: ObjectiveAssertionSchema }).strict(),
   z.object({ kind: z.literal("private_equity_ic_preparation"), dealId: z.string().uuid(), requireScenario: z.boolean().optional() }).strict(),
   z.object({ kind: z.literal("matched_wait"), minimumCount: z.number().int().min(1).max(25), eventType: z.string().min(1).max(200).optional() }).strict(),
   z.object({ kind: z.literal("delegation_state"), minimumCount: z.number().int().min(1).max(25), requiredStatus: z.enum(["acknowledged", "accepted", "completed"]) }).strict(),
@@ -187,7 +187,7 @@ export const OutcomePackIdSchema = z.enum(OUTCOME_PACK_IDS);
 export const OutcomePackModeSchema = z.enum(["shadow", "approval", "autopilot"]);
 export const StartOutcomePackSchema = z.object({
   packId: OutcomePackIdSchema,
-  input: z.record(z.unknown()),
+  input: z.record(z.string(), z.unknown()),
   channel: z.enum(["voice", "text", "console"]).default("console"),
   threadId: z.string().uuid().optional(),
   sessionId: z.string().max(500).optional(),
@@ -253,7 +253,7 @@ export const EscalateActionSchema = z.object({
 });
 
 export const UpsertPolicySchema = z.object({
-  policy: z.record(z.unknown()),
+  policy: z.record(z.string(), z.unknown()),
   requiresConfirmation: z.boolean(),
   confirmationTemplate: z.string().nullable().optional(),
   modelProvider: z.string().optional(),
@@ -289,12 +289,12 @@ export const VapiWebhookSchema = z.object({
           phoneNumberId: z.string().optional(),
           customer: z.object({ number: z.string().optional() }).passthrough().optional(),
           phoneNumber: z.object({ number: z.string().optional() }).passthrough().optional(),
-          metadata: z.record(z.unknown()).optional(),
+          metadata: z.record(z.string(), z.unknown()).optional(),
         })
         .passthrough()
         .optional(),
       transcript: z.string().optional(),
-      artifact: z.record(z.unknown()).optional(),
+      artifact: z.record(z.string(), z.unknown()).optional(),
     })
     .passthrough(),
 });

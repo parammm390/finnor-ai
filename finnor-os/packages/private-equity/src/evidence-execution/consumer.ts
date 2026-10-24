@@ -59,7 +59,7 @@ export async function assertEvidenceRunTransactionCurrent(client:PoolClient,tena
  if(!['on','off'].includes(identity.transaction_read_only))throw Error('CURRENT_TRANSACTION_MODE_UNAVAILABLE');
  await assertEvidenceSnapshotCurrent({auth:{tenantId,userId:identity.id,employeeId:identity.id,role:'owner'},provenance:{sourceSystem:'P4:existing-consumer-currentness',createdBy:identity.id}},row.input_snapshot,client,identity.transaction_read_only==='off');return true;
 }
-export const EvidenceConsumeRequestSchema=z.object({investmentCaseId:z.string().uuid(),modelVersionId:z.string().uuid(),worldAt:z.string().datetime({offset:true}),idempotencyKey:z.string().min(1).max(200),workId:z.string().uuid().optional(),bindings:z.record(EvidenceUnderwritingBindingSchema)}).strict();
+export const EvidenceConsumeRequestSchema=z.object({investmentCaseId:z.string().uuid(),modelVersionId:z.string().uuid(),worldAt:z.string().datetime({offset:true}),idempotencyKey:z.string().min(1).max(200),workId:z.string().uuid().optional(),bindings:z.record(z.string(), EvidenceUnderwritingBindingSchema)}).strict();
 export async function consumeEvidenceUnderwriting(ctx:PeMutationContext,body:unknown){const request=EvidenceConsumeRequestSchema.parse(body);
  const derivations=await Promise.all(Object.values(request.bindings).map(binding=>currentDerivation(ctx,binding.derivationId))),workIds=[...new Set(derivations.map(d=>d.work.id))];
  if(workIds.length!==1||request.workId&&request.workId!==workIds[0])throw Error('DERIVATION_CONSUMER_WORK_SCOPE_MISMATCH');const workId=workIds[0]!;

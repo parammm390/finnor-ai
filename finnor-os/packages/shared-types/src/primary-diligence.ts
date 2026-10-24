@@ -168,8 +168,8 @@ export const PrimaryRecordSchema = z.object({
   state: z.enum(["POSTED", "PENDING", "REMOVED", "REVERSED"]),
   replacesEconomicId: id.nullable(), reversesEconomicId: id.nullable(), aliasOf: id.nullable(),
   effectiveAt: instant, observedAt: instant,
-  fields: z.record(DiligenceValueSchema).refine(v => Object.keys(v).length <= 64),
-  witnessFields: z.record(z.string().max(4000)).refine(v => Object.keys(v).length <= 64),
+  fields: z.record(z.string(), DiligenceValueSchema).refine(v => Object.keys(v).length <= 64),
+  witnessFields: z.record(z.string(), z.string().max(4000)).refine(v => Object.keys(v).length <= 64),
   relatedParty: z.enum(["YES", "NO", "UNKNOWN"]),
 }).strict();
 export type PrimaryRecord = z.infer<typeof PrimaryRecordSchema>;
@@ -303,9 +303,9 @@ export const PrimaryAdvanceSchema = z.object({
   budgetGrantRef: VReferenceSchema,
 }).strict();
 export const PrimaryFindingBindingSchema = z.object({ findingId: z.string().uuid(),economicId:id.optional() }).strict();
-export const PrimaryUnderwritingInputsSchema = z.record(PrimaryFindingBindingSchema).refine(b => Object.keys(b).length <= 16);
+export const PrimaryUnderwritingInputsSchema = z.record(z.string(), PrimaryFindingBindingSchema).refine(b => Object.keys(b).length <= 16);
 export type PrimaryFindingBinding = z.infer<typeof PrimaryFindingBindingSchema>;
-export const PrimaryUnderwritingScopeSchema = DiligenceAssertionSchema.innerType().pick({
+export const PrimaryUnderwritingScopeSchema = z.object(DiligenceAssertionSchema.shape).pick({
  predicateKind:true,field:true,economicRecordIds:true,semantics:true,requiredCoverage:true,acceptableSourceClasses:true,
 }).strict();
 export type PrimaryUnderwritingScope = z.infer<typeof PrimaryUnderwritingScopeSchema>;

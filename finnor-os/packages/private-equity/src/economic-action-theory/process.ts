@@ -1,23 +1,34 @@
 import {spawn} from 'node:child_process';
-import {readFile} from 'node:fs/promises';
+import {readFile,open} from 'node:fs/promises';
 import {fileURLToPath} from 'node:url';
 import {join} from 'node:path';
 import {PROFILE,PROFILE_DIGEST,Y1_VERSION,byteDigest,digest,fail,type IndependentCheck,type RuntimeIdentity,type EconomicProblem,type EconomicTheoryBody} from './contracts';
 export const assetRoot=()=>process.env.FINNOR_Y1_ASSET_ROOT??fileURLToPath(new URL('.',import.meta.url));
-const semanticFiles=['contracts.ts','finite.ts','compiler.ts','process.ts','checker.py','profile.json','store.ts','api.ts','worker.ts','programme-worker.ts',
- '../economic-allocation.ts','../economic-control.ts','../economic-obligations.ts','../economic-observation.ts',
+const semanticFiles=['contracts.ts','finite.ts','compiler.ts','constructor-process.ts','constructor-thread.mjs','constructor.generated.mjs','process.ts','checker.py','profile.json','store.ts','api.ts','worker.ts','programme-worker.ts',
+ '../types.ts','../economic-allocation.ts','../economic-control.ts','../economic-obligations.ts','../economic-observation.ts',
  '../program-synthesis/economic-module.ts','../program-synthesis/economic-plan.ts','../program-synthesis/economic-query.ts',
  '../program-synthesis/economic-native.ts',
  '../allocation-store.ts','../../../capability-evolution/src/economic-theory-port.ts',
  '../../../db/migrations/0195a_postx_y1_temporal_binding.sql'];
+const fileDigests=new Map<string,{stamp:string;sha256:string}>();
+async function unchangedFileDigest(path:string){
+ const fd=await open(path,'r');
+ try{
+  const before=await fd.stat(),stamp=[before.dev,before.ino,before.size,before.mtimeMs,before.ctimeMs].join(':');
+  const cached=fileDigests.get(path);if(cached?.stamp===stamp)return cached.sha256;
+  const bytes=await fd.readFile(),after=await fd.stat();
+  if(stamp!==[after.dev,after.ino,after.size,after.mtimeMs,after.ctimeMs].join(':'))fail('Y1_RUNTIME_ASSET_CHANGED');
+  const sha256=byteDigest(bytes);fileDigests.set(path,{stamp,sha256});return sha256;
+ }finally{await fd.close();}
+}
 export async function runtimeIdentity():Promise<RuntimeIdentity>{
  if(process.versions.node.split('.')[0]!=='22')fail('Y1_NODE_22_RUNTIME_REQUIRED',503);
- const sourcePins=await Promise.all(semanticFiles.map(async path=>({path,sha256:byteDigest(await readFile(join(assetRoot(),path)))})));
+ const sourcePins=await Promise.all(semanticFiles.map(async path=>({path,sha256:await unchangedFileDigest(join(assetRoot(),path))})));
  if(digest(JSON.parse(await readFile(join(assetRoot(),'profile.json'),'utf8')))!==PROFILE_DIGEST)fail('Y1_FROZEN_PROFILE_ASSET_CHANGED',503);
  let entrypointDigest:string|null=null;
- if(process.argv[1])try{entrypointDigest=byteDigest(await readFile(process.argv[1]));}catch{/* Runtime image identity remains explicitly unavailable. */}
+ if(process.argv[1])try{entrypointDigest=await unchangedFileDigest(process.argv[1]);}catch{/* Runtime image identity remains explicitly unavailable. */}
  let interpreterDigest:string|null=null;
- try{interpreterDigest=byteDigest(await readFile('/usr/bin/python3'));}catch{/* Availability is an UNKNOWN check, never infeasibility. */}
+ try{interpreterDigest=await unchangedFileDigest('/usr/bin/python3');}catch{/* Availability is an UNKNOWN check, never infeasibility. */}
  return {node:process.version,platform:process.platform,architecture:process.arch,profileDigest:PROFILE_DIGEST,
   checkerInterpreter:{path:'/usr/bin/python3',sha256:interpreterDigest},
   checkerDigest:sourcePins.find(p=>p.path==='checker.py')!.sha256,semanticCodeDigest:digest({version:Y1_VERSION,sourcePins}),entrypointDigest,sourcePins};

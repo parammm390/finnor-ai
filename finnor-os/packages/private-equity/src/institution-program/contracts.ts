@@ -78,7 +78,7 @@ export const FrontierArtifactEnvelope = z.object({
   rights_revision: Binding,
   resource_grant_ref: Binding,
   source_refs: BindingList,
-  source_revision_vector: z.record(NonEmpty),
+  source_revision_vector: z.record(z.string(), NonEmpty),
   knowledge_cut: IsoInstant,
   admitted_domain_ref: Binding,
   application_fingerprints: BindingList,

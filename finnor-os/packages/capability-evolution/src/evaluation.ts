@@ -2,7 +2,7 @@
 import { z } from 'zod';
 import { digest, fault, makeRef, ProtocolSchema, LifecycleCostSchema, type EvaluationProtocol, type EvaluationSummary, type LifecycleCost } from './contracts';
 const MetricsSchema = z.object({ correctness: z.number().min(0).max(1), regret: z.number().min(0), calibrationError: z.number().min(0), safetyViolations: z.number().int().min(0), episodeCost: z.number().min(0).nullable(), humanSeconds: z.number().min(0), decisionValue: z.tuple([z.number().finite(), z.number().finite()]).refine(([a, b]) => a <= b) }).strict();
-export const AdmissionCaseSchema = z.object({ id: z.string(), company: z.string(), dependenceGroup: z.string(), knowledgeAt: z.string().datetime({ offset: true }), stratum: z.string(), priorDomain: z.string().nullable(), problem: z.unknown(), reference: z.object({ oracleDigest: z.string().regex(/^[a-f0-9]{64}$/), optimum: z.string().nullable(), metrics: MetricsSchema, baselineMetrics: z.record(MetricsSchema) }).strict() }).strict();
+export const AdmissionCaseSchema = z.object({ id: z.string(), company: z.string(), dependenceGroup: z.string(), knowledgeAt: z.string().datetime({ offset: true }), stratum: z.string(), priorDomain: z.string().nullable(), problem: z.unknown(), reference: z.object({ oracleDigest: z.string().regex(/^[a-f0-9]{64}$/), optimum: z.string().nullable(), metrics: MetricsSchema, baselineMetrics: z.record(z.string(), MetricsSchema) }).strict() }).strict();
 export type AdmissionCase = z.infer<typeof AdmissionCaseSchema>;
 export interface ScoredCase {
     caseCommitment: string;

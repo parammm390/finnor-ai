@@ -1,9 +1,9 @@
 {
   "schema": "centropy.capability-coverage-audit/v1",
-  "generatedAt": "2026-10-24T03:13:58.621Z",
-  "sourceBaseCommit": "1e7cf04cba92f19bffc7590076bacca83bf1598b",
+  "generatedAt": "2026-10-24T20:02:24.954Z",
+  "sourceBaseCommit": "94ef9737ae54283d756caacc704937f9bfd19dd8",
   "manifestSha256": "3ff6d0b06d57e13d8412ae9160b5cc844da1d861478665f688d6cb863b2e5238",
-  "formsSha256": "78e6da8a2346c1a96712b634d0307535e8adbef6959cc5a72cc2302f8b445ec6",
+  "formsSha256": "1bc12487fb34759988ed4490715c21560653608fb313a409f0e6bcc551340e89",
   "method": "Actual API/planner manifest; import graph from active CENTROPY route entries; literal API call bindings; typed human form registrations; explicit restricted/compatibility/protocol classifications. Source presence is not execution evidence.",
   "counts": {
     "total": 651,
@@ -1067,7 +1067,7 @@
       },
       {
         "file": "src/components/centropy/canvas/capital-program-view.ts",
-        "sha256": "b76bdf340b2575383369fc6883b75be3cd76c32788a0f90dd4c3fa50a20fec58"
+        "sha256": "caf950a8826c03df0796ba5f9a49c2961b91658ee4be2b15a9f66618c70f7f57"
       },
       {
         "file": "src/components/centropy/canvas/capital-ref-view.ts",
@@ -1075,11 +1075,11 @@
       },
       {
         "file": "src/components/centropy/canvas/capital-request-view.ts",
-        "sha256": "8169669b6d3f82c50145584a2aa099ee0a330112973a8af162d6488f9935bc31"
+        "sha256": "b9048f75fe1f737a7605f143c027107fec36cdbb05f404ae901c02b04654bc20"
       },
       {
         "file": "src/components/centropy/canvas/coalition-programme-view.ts",
-        "sha256": "f89f840134ce8ecc6a06909ca463ad5a26a1e7dfbe9ab2e2cc85aa5455c97795"
+        "sha256": "85a21622593357042b06d445bd0f945c4d18827385ccb0b129e8b5bde850601c"
       },
       {
         "file": "src/components/centropy/canvas/OriginalChallengePanel.tsx",
@@ -1087,7 +1087,7 @@
       },
       {
         "file": "src/components/centropy/canvas/original-challenge-view.ts",
-        "sha256": "992b38697315e70b5fba613b8c80e772f17ef09a0f06c4cd31cbad9bfcea8c1e"
+        "sha256": "4e610ca51840900063ce4d74a35f6053aa38ca149b6db925dc88dca857dae96e"
       },
       {
         "file": "src/components/centropy/canvas/ExactControlReview.tsx",
@@ -1115,7 +1115,7 @@
       },
       {
         "file": "src/components/centropy/canvas/elicitation-protocol-view.ts",
-        "sha256": "2585d5edab8cb33b94042ead4af73521836504f2f7325f5c8298e4a1865c27d8"
+        "sha256": "e3a0ba7712656c5c02f79b35070e3fa1b512f90536d9d1e52c585af11ac395eb"
       },
       {
         "file": "src/components/centropy/canvas/CapitalFormationPanel.tsx",
@@ -1147,7 +1147,7 @@
       },
       {
         "file": "src/components/centropy/canvas/application-client.ts",
-        "sha256": "69fc7fe3bff71f203afa31699eed3e2b42957f3c4ddc80451735240760481140"
+        "sha256": "21f62f1eccb15eb7ecc17054ab22e47ea307a113bfeb407faf67d412285a072d"
       },
       {
         "file": "src/components/centropy/canvas/LearnedPolicyPanel.tsx",
@@ -1163,7 +1163,7 @@
       },
       {
         "file": "src/lib/jarvis/openapi-types.ts",
-        "sha256": "b6fd53b076763d9c97acb4a8df942de8f0b86e444c0ddcae99bf97dff7d8700d"
+        "sha256": "2f0ebfb4fa5bf17f7f8c565f2bdfe7e0c2bf538001ca7bbe5e7974280077443d"
       },
       {
         "file": "src/components/centropy/canvas/ProgramSynthesisPanel.tsx",
@@ -1199,7 +1199,7 @@
       },
       {
         "file": "src/components/centropy/canvas/identification-plan-view.ts",
-        "sha256": "1a3fddb1a79b67e2260fb8736031525db316554e56129f288feef178c3fb5eec"
+        "sha256": "e54c6370b1eeb1ca80eba3623f4c115290179d7069a478d5107f8040436e2939"
       },
       {
         "file": "src/components/centropy/canvas/PrimaryDiligencePanel.tsx",
@@ -1259,7 +1259,7 @@
       },
       {
         "file": "src/components/centropy/canvas/UnderwritingSensitivityLab.tsx",
-        "sha256": "0381f2a9ec8843b4c7f772f84d3d4aca6db3e4cc9120874ce2399d266cabc1f2"
+        "sha256": "36009a4160671d1eb30c7cff5f6cf7751356fee07e08dc92bc299e942ee7940b"
       },
       {
         "file": "src/components/centropy/product/sensitivity-model.ts",
@@ -1271,7 +1271,7 @@
       },
       {
         "file": "src/components/centropy/canvas/CounterexamplePanel.tsx",
-        "sha256": "fe2372c3b4f1fc3ba90fab3e77e811f609c65a47533407bd84906bf254361425"
+        "sha256": "fede04012d8f05d76f5a01021842414f765aa91f89852d2ff3b90465867f39c9"
       },
       {
         "file": "src/components/centropy/canvas/IcVoteControl.tsx",
@@ -1295,7 +1295,7 @@
       },
       {
         "file": "src/lib/centropy/human-forms.generated.json",
-        "sha256": "78e6da8a2346c1a96712b634d0307535e8adbef6959cc5a72cc2302f8b445ec6"
+        "sha256": "1bc12487fb34759988ed4490715c21560653608fb313a409f0e6bcc551340e89"
       },
       {
         "file": "src/components/centropy/controls/CanonicalRecordForm.tsx",
@@ -1307,7 +1307,7 @@
       },
       {
         "file": "src/components/centropy/canvas/ArtifactCanvas.tsx",
-        "sha256": "3c28a8963a581f665bcb5606c5a4c84885b1add27e9375f84adab69f28bcab81"
+        "sha256": "ef8e47df5ac7cdfcda54abcf95de7a8fed3d0d8579b12216452be46318b20bf1"
       },
       {
         "file": "src/components/centropy/canvas/ArtifactDocumentEditor.tsx",
@@ -1331,11 +1331,11 @@
       },
       {
         "file": "src/components/centropy/canvas/ArtifactSpreadsheetEditor.tsx",
-        "sha256": "3c2e049eb12c629b8884b02f30d53b8e16fee39200b71ef9eb0ccb818442cbcf"
+        "sha256": "3405bfd279a3755e046c66771bb1f4c667663e2fa76b63cf689b205c82eaab15"
       },
       {
         "file": "src/components/centropy/canvas/ArtifactRecordControls.tsx",
-        "sha256": "6361b20954065a525517045ee7e4d7999f91522da3af708cb157db19a64dd2de"
+        "sha256": "594ed47ade01383ce159bcab606d80c527ee1646ec202a5cf505da85b4bae099"
       },
       {
         "file": "src/components/centropy/canvas/SourceDiagnostics.tsx",
@@ -1347,7 +1347,7 @@
       },
       {
         "file": "finnor-os/packages/shared-types/src/closing.ts",
-        "sha256": "cf4a7bea415f295c855ff65b7b0cf8f9d94559981abcab4d1ce6e30f31fe3aff"
+        "sha256": "fcf513a5f33c2f0415bfc848af87e5af8d5562255fa1feb717953e9fbb022165"
       },
       {
         "file": "src/components/centropy/canvas/CausalReplayPanel.tsx",
@@ -1363,7 +1363,7 @@
       },
       {
         "file": "src/components/centropy/thread/thread-contract.ts",
-        "sha256": "b17707feeb5d03b0fe987b4253879de6358a23c529243d0ace168c633ea7d01a"
+        "sha256": "89ac192980cfa71c7b15b1d038dc1d5163ed2848e912b8507080097568881be2"
       },
       {
         "file": "src/components/centropy/canvas/use-canvas-sources.ts",
@@ -1399,7 +1399,7 @@
       },
       {
         "file": "src/components/centropy/canvas/EconomicActionTheoryPanel.tsx",
-        "sha256": "29f761ec94cad08490a092bbd9c2c6d1163395cde4da24a7342121d480ee8fe3"
+        "sha256": "eda696ff7e9137e1d313ddf102364d3f1dcfbeaddac23edc329d8673e53c9b5c"
       },
       {
         "file": "src/components/centropy/canvas/StrategicResponsePanel.tsx",
@@ -1407,7 +1407,7 @@
       },
       {
         "file": "src/components/centropy/canvas/InteractionProtocolPanel.tsx",
-        "sha256": "61fd1b1c319b355647fd1b33dc768fd038dba11b68938965900bb8f61fec5dfe"
+        "sha256": "6deac3b745de7f139410198d5fda5665ef4e9b82dfa627237853a95220d40669"
       },
       {
         "file": "src/components/centropy/controls/LiveInstitutionalControl.tsx",
@@ -1423,7 +1423,7 @@
       },
       {
         "file": "src/components/centropy/world/ConfidentialComputationPanel.tsx",
-        "sha256": "7f2202d2a4ef819dd3e8bfda4cf5149043546db69fe454f676e1f57fe87fed93"
+        "sha256": "5c167d820413119387abcc80427b3bb7368fbfa4e5c0097f53f062679826f196"
       },
       {
         "file": "src/components/centropy/world/WorldRelationships.tsx",
@@ -1491,7 +1491,7 @@
       },
       {
         "file": "src/components/centropy/thread/WorkforceAssignments.tsx",
-        "sha256": "ff2dfe50b3dde494917330253c26ea1c6fb5adf776c67a87647645176ca8b79b"
+        "sha256": "709fd5035b41181a45883b2650c3e6a1ee0166aa30bfba6a56dcab9aab96406c"
       },
       {
         "file": "src/components/centropy/thread/OutcomePacks.tsx",
@@ -7049,6 +7049,7 @@
         "e2e/private-equity-product-contract.spec.ts",
         "finnor-os/tests/integration/artifact-os.test.ts",
         "finnor-os/tests/integration/capability-discovery-http.test.ts",
+        "finnor-os/tests/integration/economic-constructor-process.test.ts",
         "finnor-os/tests/integration/microsoft365-pe-mapping.test.ts",
         "finnor-os/tests/integration/pe-objective-world-scope.test.ts",
         "finnor-os/tests/integration/pg-notify-triggers.test.ts",

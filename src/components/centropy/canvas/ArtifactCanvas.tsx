@@ -21,11 +21,11 @@ const ArtifactMetaSchema = z.object({
   version: RowSchema,
   versions: z.array(RowSchema),
   semantic: z.object({ kind: z.string(), semanticHash: z.string(), nodeCount: z.number().int().nonnegative(), warnings: z.array(z.string()), calculationStatus: z.string() }).passthrough(),
-  comments: z.array(z.record(z.unknown())), reviews: z.array(z.record(z.unknown())),
-  bindings: z.array(z.record(z.unknown())), lineage: z.array(z.record(z.unknown())),
-  publications: z.array(z.record(z.unknown())), providerCreations: z.array(z.record(z.unknown())),
+  comments: z.array(z.record(z.string(), z.unknown())), reviews: z.array(z.record(z.string(), z.unknown())),
+  bindings: z.array(z.record(z.string(), z.unknown())), lineage: z.array(z.record(z.string(), z.unknown())),
+  publications: z.array(z.record(z.string(), z.unknown())), providerCreations: z.array(z.record(z.string(), z.unknown())),
 }).passthrough()
-const NodeSchema = z.object({ id: z.string(), kind: z.string(), hash: z.string(), part: z.string(), data: z.record(z.unknown()) }).passthrough()
+const NodeSchema = z.object({ id: z.string(), kind: z.string(), hash: z.string(), part: z.string(), data: z.record(z.string(), z.unknown()) }).passthrough()
 const IrPageSchema = z.object({ kind: z.string(), semanticHash: z.string(), total: z.number().int().nonnegative(), offset: z.number().int().nonnegative(), nodes: z.array(NodeSchema), warnings: z.array(z.string()) }).passthrough()
 const DiffSchema = z.object({ left: UUID, right: UUID, changes: z.array(z.object({ id: z.string(), kind: z.string() }).passthrough()) }).passthrough()
 const PinnedProjectionSchema = z.object({

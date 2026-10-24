@@ -44,7 +44,7 @@ export const CapitalProgramV2RequestSchema=z.object({
   robust:R2RequestSchema.optional(),
   coalition:z.object({
     schema:z.literal('finnor.r5.owner-request.v1'),
-    source:R2RequestSchema.innerType().shape.source,
+    source:R2RequestSchema.shape.source,
   }).strict().optional(),
 }).strict().superRefine((value,ctx)=>{
   if(value.coalition&&(value.robust||value.financial||value.challengeEvidence))

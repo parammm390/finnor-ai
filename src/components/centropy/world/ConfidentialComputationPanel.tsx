@@ -87,12 +87,12 @@ export function ConfidentialComputationPanel({root,workId,onWorkCreated}:{
   void tick()
   const timer=setInterval(()=>void tick(),4000)
   window.addEventListener("offline",offline);window.addEventListener("online",recheck)
-  window.addEventListener("pagehide",invalidate);window.addEventListener("blur",invalidate)
-  window.addEventListener("focus",recheck);document.addEventListener("visibilitychange",recheck)
+  window.addEventListener("pagehide",invalidate)
+  document.addEventListener("visibilitychange",recheck)
   return()=>{stopped=true;invalidate();clearInterval(timer);unsubscribe()
    window.removeEventListener("offline",offline);window.removeEventListener("online",recheck)
-   window.removeEventListener("pagehide",invalidate);window.removeEventListener("blur",invalidate)
-   window.removeEventListener("focus",recheck);document.removeEventListener("visibilitychange",recheck)}
+   window.removeEventListener("pagehide",invalidate)
+   document.removeEventListener("visibilitychange",recheck)}
  },[authorized,refresh,clear])
  useEffect(()=>{
   if(!current)return

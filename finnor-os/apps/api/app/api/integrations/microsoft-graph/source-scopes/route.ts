@@ -22,11 +22,11 @@ const bodySchema = z.object({
     "sharepoint_list",
   ]),
   permissionMode: z.enum(["SCOPED", "BROAD"]),
-  configuration: z.record(z.unknown()),
-  negativeProbeConfiguration: z.record(z.unknown()).nullable().optional(),
+  configuration: z.record(z.string(), z.unknown()),
+  negativeProbeConfiguration: z.record(z.string(), z.unknown()).nullable().optional(),
   acknowledgeBroadAccess: z.boolean().optional(),
   rootBinding: rootBinding.nullable().optional(),
-  freshnessPolicy: z.record(z.unknown()).optional(),
+  freshnessPolicy: z.record(z.string(), z.unknown()).optional(),
 }).strict();
 
 function booleanQuery(url: URL, key: string): boolean | undefined {

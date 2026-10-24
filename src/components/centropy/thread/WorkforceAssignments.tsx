@@ -12,7 +12,7 @@ const AssignmentSchema = z.object({
   agentProfileId: UUID, agentRevisionId: UUID, capability: z.string(), nodeKind: z.string(),
   state: z.string(), attempt: z.number().int(), assignmentReason: z.string(),
   previousAssignmentId: UUID.nullable(), reassignmentReason: z.string().nullable(),
-  domainActionId: UUID.nullable(), failure: z.record(z.unknown()).nullable(),
+  domainActionId: UUID.nullable(), failure: z.record(z.string(), z.unknown()).nullable(),
   startedAt: z.string().nullable(), completedAt: z.string().nullable(), createdAt: z.string(),
 }).passthrough()
 const WorkerSchema = z.object({

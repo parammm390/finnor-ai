@@ -18,9 +18,9 @@ const rules=z.object({id:z.string().min(1),triggerKind:z.string().min(1),
   materiality:z.literal('material'),postconditionRef:z.string().min(1),observerRef:z.string().min(1),
   targetRegistrationIds:z.array(z.string().min(1)).min(1).max(1000),
   fixedBusinessWeight:z.number().positive().finite(),critical:z.boolean(),
-  postconditionFields:z.record(z.union([z.string(),z.number().finite(),z.boolean(),z.null()])).refine(
+  postconditionFields:z.record(z.string(), z.union([z.string(),z.number().finite(),z.boolean(),z.null()])).refine(
     fields=>Object.keys(fields).length>0,'INDEPENDENT_NATIVE_POSTCONDITION_FIELDS_REQUIRED'),
-  triggerFields:z.record(z.union([z.string(),z.number().int(),z.boolean()])).superRefine((fields,ctx)=>{
+  triggerFields:z.record(z.string(), z.union([z.string(),z.number().int(),z.boolean()])).superRefine((fields,ctx)=>{
     const reserved=new Set(['id','kind','registrationId','triggerKind','occurredAt','availableAt','request',
       '__proto__','constructor','prototype']);
     if(Object.keys(fields).some(key=>reserved.has(key)))ctx.addIssue({code:'custom',message:'ORIGINAL_GENERATED_IDENTITY_AND_CHRONOLOGY_ARE_RESERVED'});

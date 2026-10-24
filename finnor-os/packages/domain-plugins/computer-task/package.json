@@ -9,6 +9,6 @@
     "@finnor/computer": "*",
     "@finnor/shared-types": "*",
     "@finnor/tools": "*",
-    "zod": "^3.23.8"
+    "zod": "^4.6.7"
   }
 }

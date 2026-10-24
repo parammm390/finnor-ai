@@ -18,7 +18,7 @@ const localOrigin=z.string().url().superRefine((value,ctx)=>{
 const endpoint=z.object({origin:localOrigin,tenantId:z.string().uuid(),principalId:z.string().uuid(),
   tokenEnvironmentVariable:z.string().regex(/^FINNOR_X1_QUAL_[A-Z0-9_]+$/)}).strict();
 const request=z.object({path:z.string().regex(/^\/api\/[A-Za-z0-9_\[\]/-]+$/).max(512),
-  method:z.enum(['GET','POST']),body:z.record(z.unknown()).optional()}).strict();
+  method:z.enum(['GET','POST']),body:z.record(z.string(), z.unknown()).optional()}).strict();
 const readPredicate=z.object({path,equals:scalar}).strict();
 const observation=request.extend({readOnly:z.literal(true),
   admittedOwnerReadReceiptDigest:hex,responseIdentityPath:path,expectedOwnerIdentity:z.string().min(1).max(256),

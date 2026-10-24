@@ -15,7 +15,7 @@ const mathAssets=new Set(['profile.json','producer.py','checker.py','contracts.t
  * semantic preimages, while each mathematical dispatch separately pins its
  * actual executing module before and after the child process. */
 export async function productRuntimeIdentity():Promise<ProductRuntime>{
- const math=await runtimeIdentity(),root=resolve(process.env.FINNOR_Y3_OWNER_ASSET_ROOT??ASSET_ROOT),
+ const math=await runtimeIdentity(true),root=resolve(process.env.FINNOR_Y3_OWNER_ASSET_ROOT??ASSET_ROOT),
   node=await realpath(process.execPath),ownerSourcePins=await Promise.all(OWNER_ASSETS.map(async path=>({
    path,sha256:byteDigest(await readFile(resolve(root,path))),
   })));

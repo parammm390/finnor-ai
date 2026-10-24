@@ -10,7 +10,7 @@
     "requireCleanWorktree": true
   },
   "release": {
-    "requiredMigrationHead": "postx_y4_runtime_migration_order.sql",
+    "requiredMigrationHead": "postx_y4_runtime_recipient_recovery.sql",
     "metadata": [
       "FINNOR_COMMIT_SHA",
       "FINNOR_BUILD_ID",

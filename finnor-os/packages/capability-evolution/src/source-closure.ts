@@ -68,7 +68,10 @@ export async function confidentialSourcePaths(){
   fileURLToPath(new URL('./confidential-port.ts',import.meta.url)),
   fileURLToPath(new URL('./confidential-consumer.ts',import.meta.url)),
   fileURLToPath(new URL('../../db/migrations/postx_y4_confidential_economic_computation.sql',import.meta.url)),
-  fileURLToPath(new URL('../../db/migrations/postx_y4_confidential_owner_consumption.sql',import.meta.url))])];
+  fileURLToPath(new URL('../../db/migrations/postx_y4_confidential_owner_consumption.sql',import.meta.url)),
+  fileURLToPath(new URL('../../db/migrations/postx_y4_runtime_owner_integrity.sql',import.meta.url)),
+  fileURLToPath(new URL('../../db/migrations/postx_y4_runtime_recipient_recovery.sql',import.meta.url)),
+  fileURLToPath(new URL('../../db/migration-head.ts',import.meta.url))])];
 }
 let confidentialLoaded:Promise<Array<{path:string;sha256:string}>>|undefined;
 export async function assertConfidentialSourceClosure(pins:Array<{path:string;sha256:string}>){

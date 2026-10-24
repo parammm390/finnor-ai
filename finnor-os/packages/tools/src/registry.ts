@@ -73,7 +73,7 @@ export interface ToolExecutionContract {
 export interface Tool {
   name: string;
   description: string;
-  inputSchema: z.ZodTypeAny;
+  inputSchema: z.ZodType<Record<string, unknown>>;
   integration: string;
   retryPolicy?: RetryPolicy;
   execution: ToolExecutionContract;

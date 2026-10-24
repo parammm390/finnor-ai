@@ -4,7 +4,7 @@ export default {
   "files": [
     {
       "path": "finnor-os/packages/private-equity/src/enterprise-applications/contracts.ts",
-      "sha256": "b8e5e669ab537f341b0b1ff2d8abbf245e5cf4996c493124750cec2fa2c1f750"
+      "sha256": "d129e92f38d6237338601d214ff4e46ce77616ea9799b96ae3f13cc26b298296"
     },
     {
       "path": "finnor-os/packages/private-equity/src/enterprise-applications/exact.ts",
@@ -68,7 +68,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/shared-types/src/primary-diligence.ts",
-      "sha256": "9f9c9ced9b1a59c763a9a0db97ad5f0aea47fc7613eb9232e0323fe9fa4c3310"
+      "sha256": "f3ebd1abddfb838da768b6b4eed5ade6a840a1df38f527f15b6c53a644d63876"
     },
     {
       "path": "finnor-os/packages/authority/src/index.ts",
@@ -96,7 +96,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/db/migration-head.ts",
-      "sha256": "6d4f7df93db89c2c035c97b6f97ab6c821dd44b57bb43504eeec0b876fa2d70e"
+      "sha256": "c7e79308f4db72c13dc8e0f12e8f09fe4a387771d0d5bce4fc589cd4a6a4415f"
     },
     {
       "path": "finnor-os/packages/db/migrations/0189_x3_enterprise_applications.sql",
@@ -124,7 +124,7 @@ export default {
     },
     {
       "path": "finnor-os/package-lock.json",
-      "sha256": "4116b2a7e02a28b8e49baa4a24a378e5170c5dc66d285075c8cf50bf11b9faed"
+      "sha256": "b8dd13667bab0344a32337562003cd8cad43324f4a110919e88473fd7f6bfa3e"
     },
     {
       "path": "finnor-os/packages/private-equity/src/enterprise-control.ts",
@@ -168,7 +168,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/capability-evolution/src/source-closure.ts",
-      "sha256": "d05f641c474316424a84d9c5b10c0f66fe064fbf464b2a8ddc6a5f5bec15f50d"
+      "sha256": "199e7f7b66eb8517a1ad552b662099cc47cb1c4d2bb90097eb984cb4d0397b8a"
     },
     {
       "path": "src/components/centropy/canvas/EnterpriseApplicationPanel.tsx",
@@ -176,7 +176,7 @@ export default {
     },
     {
       "path": "src/components/centropy/canvas/application-client.ts",
-      "sha256": "69fc7fe3bff71f203afa31699eed3e2b42957f3c4ddc80451735240760481140"
+      "sha256": "21f62f1eccb15eb7ecc17054ab22e47ea307a113bfeb407faf67d412285a072d"
     },
     {
       "path": "src/components/centropy/canvas/CanvasDocument.tsx",
@@ -196,7 +196,7 @@ export default {
     },
     {
       "path": "package-lock.json",
-      "sha256": "af1d36679eb4123ab5f2d9f4668e82e1defc952a45777a74d3dff30c6d16f117"
+      "sha256": "03aeee17551a9634125ffef87fb41c143c21150da1b8c5c0a262f4a4ef59b704"
     },
     {
       "path": "finnor-os/scripts/x3/stamp-source.mts",

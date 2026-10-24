@@ -22,7 +22,7 @@ const dataSchemas: Record<ExperimentTelemetryKind, z.ZodTypeAny> = {
 };
 const telemetrySchema = z.object({ schema: z.literal("finnor.s2.reference-telemetry.v1"), id: text, tenantId: text, principalId: text, protocolRef: text,
   kind: z.enum(["SELECTION", "ALLOCATION", "ASSIGNMENT", "ATTEMPT", "ACKNOWLEDGMENT", "EXPOSURE", "OBSERVATION", "VERIFICATION", "RECONCILIATION", "COST", "CORRECTION", "BUSINESS_STOP"]),
-  data: z.record(z.unknown()), parents: z.array(text).max(32), validAt: z.string().datetime({ offset: true }), knowledgeAt: z.string().datetime({ offset: true }),
+  data: z.record(z.string(), z.unknown()), parents: z.array(text).max(32), validAt: z.string().datetime({ offset: true }), knowledgeAt: z.string().datetime({ offset: true }),
   sourceRef: ExperimentRefSchema, trust: z.literal("SUPPLIED_UNAUTHENTICATED"), protectedReceipt: z.null() }).strict();
 /** Explicit reference consumer helper. Content addressing provides no protected
  * history, source authentication, authorization, receipt or effect execution. */

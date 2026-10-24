@@ -34,6 +34,14 @@ export async function receiveConfidentialWork(ctx:PeMutationContext,value:unknow
  * replaced. The query returns metadata, never outputs or their opening nonce. */
 export async function selectConfidentialPlan(ctx:PeMutationContext,value:unknown){
  const input=parse(PlanSchema,value),acceptedDigest=sha({root:input.root,function:input.function,limits:input.limits});
+ const request={intent:'confidential_economic_computation_v1' as const,workId:input.workId};
+ const successCondition={version:1 as const,statement:input.function.purpose,source:'explicit' as const,mode:'all' as const,
+  criteria:[
+   {kind:'canonical_query' as const,request,assertion:{path:['data','status'],operator:'eq' as const,expected:'COMPUTED'}},
+   {kind:'canonical_query' as const,request,assertion:{path:['data','definitionDigest'],operator:'eq' as const,expected:sha(input.function)}},
+   {kind:'canonical_query' as const,request,assertion:{path:['data','recipientReleaseImported'],operator:'eq' as const,expected:true}},
+   {kind:'canonical_query' as const,request,assertion:{path:['data','typedConsumerCurrent'],operator:'eq' as const,expected:true}},
+  ]};
  const binding=await tx(ctx,async c=>{
   await authorize(ctx,input.root,[{type:'work',id:input.workId}],[],c);
   if(!await canExerciseAuthorityTx(ctx.auth,{operation:'action',capability:'action:confidential_economic_computation',
@@ -59,20 +67,19 @@ export async function selectConfidentialPlan(ctx:PeMutationContext,value:unknown
      &&item.criterion.assertion.expected===sha(input.function)))fail('Y4_ORIGINAL_PLAN_NOT_REPLACEABLE');
    return {prior,cut,instructionId:native.instruction_id,authorityRevision:0};
   }
-  if((await c.query('SELECT 1 FROM finnor_os.work_objective_loops WHERE tenant_id=$1 AND work_id=$2',
-   [ctx.auth.tenantId,input.workId])).rowCount)fail('Y4_ORIGINAL_OBJECTIVE_NOT_REPLACEABLE');
+  const originalObjective=(await c.query(`SELECT objective,success_condition,deadline_at,created_by,state
+   FROM finnor_os.work_objective_loops WHERE tenant_id=$1 AND work_id=$2`,
+   [ctx.auth.tenantId,input.workId])).rows[0];
+  // Core startWorkObjective reuses the existing loop. Never replace its bounds.
+  if(originalObjective&&(originalObjective.objective!==input.function.purpose
+   ||sha(originalObjective.success_condition)!==sha(successCondition)
+   ||originalObjective.deadline_at.getTime()!==Date.parse(input.limits.deadlineAt)
+   ||originalObjective.created_by!==principal(ctx)
+   ||['completed','failed','cancelled'].includes(originalObjective.state)))fail('Y4_ORIGINAL_OBJECTIVE_NOT_REPLACEABLE');
   const authority=await employeeAuthoritySnapshotTx(ctx.auth,c);
   return {prior:null,cut,instructionId:native.instruction_id,authorityRevision:Number(authority.revision)};
  });
  if(binding.prior)return {workRevisionRef:workPlanReference(binding.prior),replayed:true};
- const request={intent:'confidential_economic_computation_v1' as const,workId:input.workId};
- const successCondition={version:1 as const,statement:input.function.purpose,source:'explicit' as const,mode:'all' as const,
-  criteria:[
-   {kind:'canonical_query' as const,request,assertion:{path:['data','status'],operator:'eq' as const,expected:'COMPUTED'}},
-   {kind:'canonical_query' as const,request,assertion:{path:['data','definitionDigest'],operator:'eq' as const,expected:sha(input.function)}},
-   {kind:'canonical_query' as const,request,assertion:{path:['data','recipientReleaseImported'],operator:'eq' as const,expected:true}},
-   {kind:'canonical_query' as const,request,assertion:{path:['data','typedConsumerCurrent'],operator:'eq' as const,expected:true}},
-  ]};
  const goal=buildGoalSpec({objective:input.function.purpose,workId:input.workId,workInputId:input.workInputId,
   targets:[{kind:'entity',type:input.root.entityType,id:input.root.entityId,sourceRef:'S1:authenticated-root'}],
   deadline:input.limits.deadlineAt,explicitNonGoals:['source_truth','S4_business_selection','S5_reservation',

@@ -21,7 +21,7 @@ function profileRecordAudit(value: unknown, depth = 0): { unsafe: boolean; tooDe
   }, { unsafe: false, tooDeep: false, fields: 0 });
 }
 
-const BoundedRecord = z.record(z.unknown()).superRefine((value, ctx) => {
+const BoundedRecord = z.record(z.string(), z.unknown()).superRefine((value, ctx) => {
   const audit = profileRecordAudit(value);
   if (audit.fields > 200) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "profile record may contain at most 200 fields" });
   if (audit.unsafe) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "profile record contains an unsafe field name" });

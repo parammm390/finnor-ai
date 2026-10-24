@@ -11,6 +11,8 @@ const names=['profile.json','backend-identity.json','compiler.py','correspondenc
  '../../../capability-evolution/src/confidential-port.ts','../../../capability-evolution/src/confidential-consumer.ts',
  '../../../capability-evolution/src/lifecycle.ts','../../../capability-evolution/src/source-closure.ts',
  '../../../capability-evolution/src/consumer-transport.ts','../../../db/migrations/postx_y4_confidential_owner_consumption.sql',
+ '../../../db/migrations/postx_y4_runtime_owner_integrity.sql',
+ '../../../db/migrations/postx_y4_runtime_recipient_recovery.sql','../../../db/migration-head.ts',
  '../../../../apps/worker/src/queue.ts'];
 async function identity(){
  if(!isAbsolute(assets))fail('Y4_ABSOLUTE_INSTALLED_ASSET_DIRECTORY_REQUIRED');

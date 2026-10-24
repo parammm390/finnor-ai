@@ -21,7 +21,7 @@ export const ExpressionSchema:z.ZodType<Expression> = z.lazy(()=>z.union([
   z.object({kind:z.literal('if'),condition:z.object({comparison:z.enum(['lt','lte','eq','gte','gt']),left:ExpressionSchema,right:ExpressionSchema}).strict(),whenTrue:ExpressionSchema,whenFalse:ExpressionSchema}).strict(),
 ]));
 const ownerRef=z.object({owner:z.string().min(1).max(128),id:z.string().min(1).max(512),version:z.string().min(1).max(128),contentDigest:z.string().regex(/^[a-f0-9]{64}$/)}).strict();
-const jsonObject=z.record(z.unknown());
+const jsonObject=z.record(z.string(), z.unknown());
 const correlation=z.object({eventType:z.string().min(1).max(200),resource:z.object({type:z.string().min(1).max(128),id:uuid}).strict(),correlationId:z.string().min(1).max(128),provider:z.string().max(128).optional()}).strict();
 export const OwnerOperationSchema=z.discriminatedUnion('op',[
  z.object({op:z.literal('propose_model'),key,assumptions:z.array(z.string().min(1).max(1000)).min(1).max(16),units:z.array(z.string().min(1).max(128)).min(1).max(16),mechanism:z.string().min(1).max(4000)}).strict(),
@@ -39,7 +39,7 @@ export const HarnessRequestSchema=z.object({schema:z.literal('finnor.harness-req
  procedure:ProcedureUseSchema.optional(),
  computeSearch:z.literal('P2_REQUIRED').optional(),
  proposalSource:z.enum(['REGISTERED_NATIVE','GOVERNED_MODEL']).default('REGISTERED_NATIVE'),
- limits:z.object({maxSteps:z.number().int().min(8).max(4096).default(1024),maxDepth:z.number().int().min(1).max(12).default(12),maxAttempts:z.number().int().min(1).max(8).default(4),maxCandidates:z.number().int().min(2).max(8).default(8),deadlineMs:z.number().int().min(1000).max(3600000).default(300000),requiredAggregateLimits:z.record(z.number().positive()).optional()}).strict().optional(),
+ limits:z.object({maxSteps:z.number().int().min(8).max(4096).default(1024),maxDepth:z.number().int().min(1).max(12).default(12),maxAttempts:z.number().int().min(1).max(8).default(4),maxCandidates:z.number().int().min(2).max(8).default(8),deadlineMs:z.number().int().min(1000).max(3600000).default(300000),requiredAggregateLimits:z.record(z.string(), z.number().positive()).optional()}).strict().optional(),
 }).strict();
 export type AnalyticalHarnessRequest=z.infer<typeof HarnessRequestSchema>;
 const institutionRef=ownerRef;
@@ -73,7 +73,7 @@ export const InstitutionHarnessRequestSchema=z.object({
   // responsibility. Sparse mandates omit it and remain blocked, not guessed.
   actions:z.array(z.object({responsibilityIdentity:z.string().min(1),
     operation:z.enum(['create_deal_request','open_workstream','record_finding']),
-    payload:z.record(z.unknown()),expectedEntityId:uuid,postconditionDigest:z.string().regex(/^[a-f0-9]{64}$/),
+    payload:z.record(z.string(), z.unknown()),expectedEntityId:uuid,postconditionDigest:z.string().regex(/^[a-f0-9]{64}$/),
   }).strict()).max(128).optional(),
   compilerRequestId:uuid.optional(),
  }).strict(),

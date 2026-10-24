@@ -70,12 +70,12 @@ export const AllocationControlIntentSchema = z.object({
   request: AllocationOperationSchemas.clear,
   selectedPolicyIds: z.array(key).min(1).max(32),
   quantityContext: QuantityContextSchema,
-  handoff: z.object({ policyRef: ControlRefSchema, decision: z.record(z.unknown()) }).strict().nullable(),
+  handoff: z.object({ policyRef: ControlRefSchema, decision: z.record(z.string(), z.unknown()) }).strict().nullable(),
 }).strict();
 export const NativeActionIntentSchema = z.object({
   kind: z.literal('NATIVE_ACTION'),
   actionType: z.string().regex(/^[a-z][a-z0-9_]{1,100}$/),
-  payload: z.record(z.unknown()),
+  payload: z.record(z.string(), z.unknown()),
   quantityContext: QuantityContextSchema.nullable(),
   professionalAuthorityRef: ControlRefSchema.nullable(),
 }).strict();

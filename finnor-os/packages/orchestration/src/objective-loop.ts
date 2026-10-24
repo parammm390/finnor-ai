@@ -137,7 +137,7 @@ function privateEquityRefsFromContext(value: unknown): Array<{ entityType: strin
 }
 
 const OptionalDecisionText = z.preprocess((value) => value === null ? undefined : value, z.string().min(1).max(2000).optional());
-const OptionalDecisionRecord = z.preprocess((value) => value === null ? undefined : value, z.record(z.unknown()).optional());
+const OptionalDecisionRecord = z.preprocess((value) => value === null ? undefined : value, z.record(z.string(), z.unknown()).optional());
 const CanonicalWaitRefSchema = z.object({ type: z.string().min(1).max(120), id: z.string().uuid() }).strict();
 const WaitForSchema = z.object({
   eventType: z.string().min(1).max(200),
@@ -157,8 +157,8 @@ const WaitForSchema = z.object({
 const RecoveryModeSchema = z.enum(["retry", "replan", "recover", "compensate", "escalate"]);
 
 const DecisionSchema = z.discriminatedUnion("kind", [
-  z.object({ kind: z.literal("query"), request: z.record(z.unknown()), reason: z.string().min(1).max(4000), nextStep: OptionalDecisionText, recoveryMode: RecoveryModeSchema.optional() }),
-  z.object({ kind: z.literal("action"), actionType: z.string().min(1).max(200), payload: z.record(z.unknown()), reason: z.string().min(1).max(4000), nextStep: OptionalDecisionText, recoveryMode: RecoveryModeSchema.optional() }),
+  z.object({ kind: z.literal("query"), request: z.record(z.string(), z.unknown()), reason: z.string().min(1).max(4000), nextStep: OptionalDecisionText, recoveryMode: RecoveryModeSchema.optional() }),
+  z.object({ kind: z.literal("action"), actionType: z.string().min(1).max(200), payload: z.record(z.string(), z.unknown()), reason: z.string().min(1).max(4000), nextStep: OptionalDecisionText, recoveryMode: RecoveryModeSchema.optional() }),
   z.object({
     kind: z.literal("wait"),
     waitFor: WaitForSchema.optional(),
@@ -171,7 +171,7 @@ const DecisionSchema = z.discriminatedUnion("kind", [
     reason: z.string().min(1).max(4000),
     recoveryMode: RecoveryModeSchema.optional(),
   }),
-  z.object({ kind: z.literal("complete"), outcome: z.record(z.unknown()), evidence: ObjectiveCompletionEvidenceSchema.optional(), reason: z.string().min(1).max(4000) }),
+  z.object({ kind: z.literal("complete"), outcome: z.record(z.string(), z.unknown()), evidence: ObjectiveCompletionEvidenceSchema.optional(), reason: z.string().min(1).max(4000) }),
   z.object({ kind: z.literal("block"), reason: z.string().min(1).max(4000), recovery: OptionalDecisionText }),
   z.object({ kind: z.literal("fail"), reason: z.string().min(1).max(4000), failure: OptionalDecisionRecord }),
 ]);

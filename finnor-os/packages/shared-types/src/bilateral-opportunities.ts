@@ -144,8 +144,8 @@ export const BilateralCompanyRecordSchema = z.object({
   counterpartyId: uuid, role: z.enum(["OWNER", "AUTHORIZED_REPRESENTATIVE", "BROKER", "ASSISTANT", "UNKNOWN"]),
   representationActivities: z.array(id).max(32), roleSource: BilateralSourceRefSchema,
   companySource: BilateralSourceRefSchema,
-  facts: z.record(z.union([z.string().max(200), z.boolean(), z.null()])).refine(v => Object.keys(v).length <= 64),
-  factSources: z.record(BilateralSourceRefSchema).refine(v => Object.keys(v).length <= 64),
+  facts: z.record(z.string(), z.union([z.string().max(200), z.boolean(), z.null()])).refine(v => Object.keys(v).length <= 64),
+  factSources: z.record(z.string(), BilateralSourceRefSchema).refine(v => Object.keys(v).length <= 64),
   ownerObjectives: z.object({
     majoritySaleConsidered: z.boolean().nullable(), minimumRetainedBps: bps.nullable(),
     proposedManagementContinuityRequested: z.boolean().nullable(), earliestClosingAt: instant.nullable(),

@@ -114,7 +114,7 @@ export const ApplicationValueSchema = z.union([
 ]);
 export type ApplicationValue = z.infer<typeof ApplicationValueSchema>;
 export type ApplicationValues = Record<string, ApplicationValue>;
-export const ApplicationValuesSchema = z.record(ApplicationValueSchema);
+export const ApplicationValuesSchema = z.record(z.string(), ApplicationValueSchema);
 const FieldBase = {
   id: ApplicationIdSchema, title: label, required: z.boolean(), allowUnknown: z.boolean(),
 };

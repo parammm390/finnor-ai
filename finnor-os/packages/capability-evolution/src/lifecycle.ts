@@ -591,7 +591,7 @@ export class CapabilityEvolution {
             await this.recoverCheckpoints();
             await this.recoverConfidentialCommits();
             await this.recoverPendingSearch();
-            const requestDigest = digest({ actorId: a.id, ...input }), prior = this.journal.entries.find(e => e.requestId === input.requestId);
+            const requestDigest = digest({ actorId: a.id, requestId: input.requestId, operation: input.operation, body: input.body }), prior = this.journal.entries.find(e => e.requestId === input.requestId);
             if (prior) {
                 if (prior.requestDigest !== requestDigest)
                     fault('S8_IDEMPOTENCY_SUBSTITUTION');
@@ -626,10 +626,13 @@ export class CapabilityEvolution {
                         priorIntent=this.journal.entries.find(entry=>entry.requestId===intentId);
                     if(priorIntent){
                         if(priorIntent.requestDigest!==intentDigest)fault('S8_IDEMPOTENCY_SUBSTITUTION');
-                    }else await this.persist({requestId:intentId,requestDigest:intentDigest,actorId:a.id,
+                    }else{
+                        if(this.journal.entries.length+2>this.policy.maxEntries)fault('S8_CONFIDENTIAL_JOURNAL_CAPACITY',503);
+                        await this.persist({requestId:intentId,requestDigest:intentDigest,actorId:a.id,
                         operation:'CONFIDENTIAL_COMMIT_INTENT',
                         body:{operation:input.operation,requestId:input.requestId,input:b,originalRequestDigest:requestDigest,ref,content},
                         result:{commitmentOnly:true,originalResponsibilityRetained:true,executionAuthorityGranted:false}});
+                    }
                     return this.commitNamedReference(ref,content);
                 });
                 if(!answer.readOnly){

@@ -16,7 +16,7 @@ const uuid = z.string().uuid();
 const GrantSchema = z.object({
   profileId: uuid, tenantId: uuid, principalId: uuid, accountId: uuid,
   principalRef: z.object({ type: z.enum(["employee", "team", "location", "tenant"]), id: uuid }).strict(),
-  revision: z.number().int().nonnegative().safe(), restrictions: z.record(z.unknown()),
+  revision: z.number().int().nonnegative().safe(), restrictions: z.record(z.string(), z.unknown()),
   updatedAt: z.string().datetime({ offset: true }),
 }).strict();
 

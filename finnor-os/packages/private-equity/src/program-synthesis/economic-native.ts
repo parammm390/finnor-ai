@@ -6,8 +6,8 @@ export const ECONOMIC_NATIVE_ACTION='execute_economic_right_transition';
 export interface EconomicStep {operatorId:string;parameters:State;before:State;after:State}
 export const EconomicNativeIntent=z.object({
  theoryRef:RefSchema,programmeId:z.string().uuid(),stepIndex:z.number().int().min(0).max(15),
- operatorId:z.string().min(1).max(80),parameters:z.record(QuantityValue),reservationRef:RefSchema,
- before:z.record(QuantityValue),after:z.record(QuantityValue),
+ operatorId:z.string().min(1).max(80),parameters:z.record(z.string(), QuantityValue),reservationRef:RefSchema,
+ before:z.record(z.string(), QuantityValue),after:z.record(z.string(), QuantityValue),
 }).strict();
 export function economicStepIntent(theoryRef:EconomicRef,programmeId:string,reservationRef:EconomicRef,index:number,step:EconomicStep){
  return EconomicNativeIntent.parse({theoryRef,programmeId,reservationRef,stepIndex:index,

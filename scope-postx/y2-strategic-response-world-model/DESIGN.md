@@ -26,9 +26,9 @@ effects fence recommendations without deleting checked artifacts or the original
 effect. Only the existing owner can reconcile that responsibility.
 
 A separate bounded Python process re-enumerates the class, fitting conditions,
-joint predictions and feasible open-loop programmes with rational arithmetic.
+joint predictions and feasible open-loop programmes with bounded integer arithmetic.
 It imports no producer implementation and receives no credentials. Input,
-candidate, profile, checker, interpreter and 19 compiled semantic source pins
+candidate, profile, checker, interpreter and the complete compiled semantic source-pin list
 bind its engineering receipt. This is not independent protected evaluator custody.
 
 S8 has a separate `STRATEGIC_RESPONSE_MODEL_SET` disposable-development domain.

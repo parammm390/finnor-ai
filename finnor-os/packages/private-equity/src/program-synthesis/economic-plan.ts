@@ -9,6 +9,17 @@ import {digest,fail,type TheoryRow,type State,type EconomicRef} from '../economi
  * These actions are never offered as permissive model/plugin opcodes. */
 export async function selectEconomicProgrammePlanTx(ctx:PeMutationContext,c:PoolClient,row:TheoryRow,programmeId:string,
  reservationRef:EconomicRef,goalState:State,steps:EconomicStep[]){
+ // Creating an ordinary development programme cannot retire unrelated Work.
+ await c.query('SELECT id FROM finnor_os.works WHERE tenant_id=$1 AND id=$2 FOR NO KEY UPDATE',[row.tenant_id,row.work_id]);
+ const unfinished=(await c.query(`SELECT 1 FROM finnor_os.work_plan_revisions p,
+  LATERAL jsonb_array_elements(p.plan_graph->'nodes') n
+  WHERE p.tenant_id=$1 AND p.work_id=$2 AND p.status='active'
+   AND n->>'kind'='action' AND n->>'actionType'<>$3
+   AND NOT EXISTS(SELECT 1 FROM finnor_os.domain_actions a
+    WHERE a.tenant_id=p.tenant_id AND a.plan_revision_id=p.id AND a.plan_node_id=n->>'id'
+     AND a.status IN('completed','failed','rejected','cancelled')) LIMIT 1`,
+  [row.tenant_id,row.work_id,ECONOMIC_NATIVE_ACTION])).rowCount;
+ if(unfinished)fail('P1_ECONOMIC_UNFINISHED_BUSINESS_PLAN',409);
  const db=transactionDb(c),attempt=await beginWorkPlannerAttemptTx(db,{tenantId:row.tenant_id,workId:row.work_id,
   workInputId:row.work_input_id,attemptKey:'y1-programme:'+programmeId}),query={intent:'economic_programme_v1' as const,programmeId,workId:row.work_id};
  const goal=buildGoalSpec({objective:row.request.problem.goal.title,workId:row.work_id,workInputId:row.work_input_id,

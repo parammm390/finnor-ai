@@ -15,14 +15,14 @@ import {m3Tx} from './v2-store';
 
 const token=z.string().min(1).max(1025),id=z.string().min(1).max(256),ref=z.object({owner:id,id:z.string().min(1).max(512),version:id,contentDigest:z.string().regex(/^[a-f0-9]{64}$/)}).strict();
 const sourceSchema=z.object({schema:z.literal('finnor.s3.exact-control-source.v1'),qualification:z.literal('SUPPLIED_EXACT_FINITE_MODEL_UNADMITTED'),
- mandateRef:ref,problemDigest:z.string().regex(/^[a-f0-9]{64}$/),modelRef:ref,quantities:z.record(token),
+ mandateRef:ref,problemDigest:z.string().regex(/^[a-f0-9]{64}$/),modelRef:ref,quantities:z.record(z.string(), token),
  accounting:z.object({ref,entityRef:ref,unit:id,currency:z.string().regex(/^[A-Z]{3}$/).nullable(),valuationDate:z.string().datetime(),ownerShare:token,
   timeBasis:z.object({startAt:z.string().datetime(),periodMs:z.number().int().positive(),periods:z.number().int().min(1).max(24)}).strict(),discountConvention:z.literal('ORIGINAL_OWNER_FACTORS')}).strict(),
  mechanisms:z.array(z.object({id,equations:z.array(z.object({variableId:id,features:z.array(z.unknown()).min(1).max(64)}).strict()).min(1).max(8)}).strict()).min(1).max(8),
- stateUnits:z.record(id),stateRanges:z.record(z.tuple([token,token])),exposureIds:z.array(id).min(1).max(4),
- worlds:z.array(z.object({id,mechanismId:id,initialHistory:z.array(z.object({states:z.record(token),exposures:z.record(token)}).strict()).min(1).max(3),
+ stateUnits:z.record(z.string(), id),stateRanges:z.record(z.string(), z.tuple([token,token])),exposureIds:z.array(id).min(1).max(4),
+ worlds:z.array(z.object({id,mechanismId:id,initialHistory:z.array(z.object({states:z.record(z.string(), token),exposures:z.record(z.string(), token)}).strict()).min(1).max(3),
   coefficients:z.array(z.array(token).min(1).max(64)).min(1).max(8),shocks:z.array(z.array(token).min(1).max(8)).min(1).max(24),
-  inquiryTokens:z.record(z.array(z.string().min(1).max(4096)).min(1).max(24)),accruedUtility:token}).strict()).min(1).max(32),
+  inquiryTokens:z.record(z.string(), z.array(z.string().min(1).max(4096)).min(1).max(24)),accruedUtility:token}).strict()).min(1).max(32),
  completeWorldDeclaration:z.literal('ALL_DECLARED_JOINT_WORLDS_NO_PROBABILITIES')}).strict();
 
 export interface R2OwnerBinding {original:R2OriginalProblem;runtimeRef:ExperimentRef;runtimeManifest:R2Runtime['manifest'];checkerIdentity:R2Runtime['checkerIdentity'];admissionCost?:{cpuMs:number;wallMs:number;memoryBytes:number;money:null}}

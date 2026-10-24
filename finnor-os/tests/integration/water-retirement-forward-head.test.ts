@@ -1,3 +1,6 @@
+import {mkdir,writeFile} from "node:fs/promises";
+import {join} from "node:path";
+import {tmpdir} from "node:os";
 import { randomUUID } from "node:crypto";
 import pg from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
@@ -46,6 +49,25 @@ describe.skipIf(!available)("Water retirement forward-migration compatibility", 
     await source.connect();
     try { await source.query(`DROP DATABASE IF EXISTS ${database} WITH (FORCE)`); } finally { await source.end(); }
   }, 30_000);
+
+  it("preserves Y episode budgets against delete and recreate", async () => {
+    const tenant = randomUUID(), principal = randomUUID(), work = randomUUID(), episode = randomUUID();
+    await client.query("INSERT INTO finnor_os.tenants(id,name) VALUES($1,'Y budget deletion regression')", [tenant]);
+    await client.query("INSERT INTO finnor_os.users(id,tenant_id,email,role,status) VALUES($1,$2,$3,'owner','active')", [principal, tenant, `${principal}@budget.test.invalid`]);
+    await client.query("INSERT INTO finnor_os.works(id,tenant_id,initial_channel,initial_instruction,created_by) VALUES($1,$2,'text','Preserve original episode',$3)", [work, tenant, principal]);
+    await client.query("INSERT INTO finnor_os.y1_episodes(tenant_id,id,principal_id,work_id,deadline_at,attempts_used) VALUES($1,$2,$3,$4,clock_timestamp()+interval '1 minute',1)", [tenant, episode, principal, work]);
+    const before = (await client.query("SELECT to_jsonb(e) body FROM finnor_os.y1_episodes e WHERE id=$1", [episode])).rows[0].body;
+    await expect(client.query("DELETE FROM finnor_os.y1_episodes WHERE id=$1", [episode])).rejects.toThrow(/immutable|append-only|cannot.*delet|delete.*forbidden/i);
+    const privileges = (await client.query("SELECT has_table_privilege('finnor_app','finnor_os.y1_episodes','DELETE') allowed")).rows[0];
+    expect(privileges.allowed).toBe(false);
+    expect((await client.query("SELECT to_jsonb(e) body FROM finnor_os.y1_episodes e WHERE id=$1", [episode])).rows[0].body).toEqual(before);
+    const directory=process.env.FINNOR_PRODUCTION_PREFLIGHT_EVIDENCE_DIR??join(tmpdir(),"finnor-y-budget-proof");
+    await mkdir(directory,{recursive:true});
+    await writeFile(join(directory,"episode-delete-refusal.json"),JSON.stringify({inputs:{tenant,principal,work,episode},
+      steps:["Apply all migrations to a disposable database","Create original episode with one occupied attempt","Attempt administrator DELETE","Check app privileges and original preimage"],
+      observed:{original:before,deleteRejected:true,appDeleteAllowed:privileges.allowed,preimageRetained:true},
+      rerun:"FINNOR_TEST_MANAGED_EXTENSIONS=omit DATABASE_URL=<disposable-postgres> npm --prefix finnor-os test -- --run tests/integration/water-retirement-forward-head.test.ts"},null,2));
+  });
 
   it("requires the actual current migration head while preserving the Phase-5 freeze and activation barriers", async () => {
     const migration = await client.query<{ head: string }>("SELECT max(name COLLATE \"C\") head FROM finnor_os._migrations");

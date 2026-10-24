@@ -34,7 +34,7 @@ interface Coverage {
 const snapshotSchema = z.object({
   applications: z.object({
     revisions: z.array(z.object({
-      ref: ApplicationPortRefSchema, originalParentRef: X2RefSchema, scope: z.record(z.unknown()),
+      ref: ApplicationPortRefSchema, originalParentRef: X2RefSchema, scope: z.record(z.string(), z.unknown()),
       revoked: z.boolean(), protocolRef: ApplicationPortRefSchema.nullable(),
       evaluationRef: ApplicationPortRefSchema.nullable(), admissionRef: ApplicationPortRefSchema.nullable(),
       activationRef: ApplicationPortRefSchema.nullable(),

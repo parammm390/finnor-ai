@@ -40,7 +40,7 @@ export const Source = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('financing_fixture'), baseline: Id.optional(), steps: z.array(FinancingStep).min(1).max(16) }).strict(),
   z.object({ kind: z.literal('underwriting'), investmentCaseId: Id, modelVersionId: Id, baseRunId: Id, worldAt: z.string().datetime({ offset: true }) }).strict(),
   z.object({ kind: z.literal('allocation'), allocationRef: ExperimentRefSchema }).strict(),
-  z.object({ kind: z.literal('s3'), modelRef: ExperimentRefSchema, context: Text, regime: Text, horizon: z.number().int().min(1).max(24), pathsPerMechanism: z.number().int().min(1).max(64), seed: z.number().int().min(0).max(4294967295), exposures: z.record(z.array(z.number().finite()).min(1).max(24)) }).strict(),
+  z.object({ kind: z.literal('s3'), modelRef: ExperimentRefSchema, context: Text, regime: Text, horizon: z.number().int().min(1).max(24), pathsPerMechanism: z.number().int().min(1).max(64), seed: z.number().int().min(0).max(4294967295), exposures: z.record(z.string(), z.array(z.number().finite()).min(1).max(24)) }).strict(),
   z.object({ kind: z.literal('s6_read'), obligationRef: ExperimentRefSchema }).strict(),
   z.object({ kind: z.literal('p4'), derivationId: Id, output: z.string().regex(/^[A-Za-z][A-Za-z0-9_-]{0,63}$/) }).strict(),
   z.object({ kind: z.literal('m1'), sliceRef: ExperimentRefSchema }).strict(),
@@ -84,7 +84,7 @@ export interface InputArtifact extends Scope {
 }
 export const CandidateSchema = z.object({
   schema: z.literal('finnor.branch-candidate.v1'), invocationDigest: Hex,
-  result: z.record(z.unknown()), state: z.record(z.unknown()).nullable(),
+  result: z.record(z.string(), z.unknown()), state: z.record(z.string(), z.unknown()).nullable(),
 }).strict();
 export type Candidate = z.infer<typeof CandidateSchema>;
 export const STATES = ['PREPARING', 'RUNNING', 'CHECKPOINTING', 'CHECKING', 'COMPLETE', 'CANCEL_REQUESTED', 'CANCELLED', 'INTERRUPTED', 'FAILED', 'INVALIDATED', 'QUARANTINED'] as const;

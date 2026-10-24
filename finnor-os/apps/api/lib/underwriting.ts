@@ -17,8 +17,8 @@ const anchorHash = z.string().regex(/^[0-9a-f]{64}$/);
 const modelScalar = z.union([z.string().max(4_096), z.boolean()]);
 export const UnderwritingModelValueSchema = z.union([
   modelScalar,
-  z.record(modelScalar).superRefine((value, context) => {
-    if (Object.keys(value).length > 240) context.addIssue({ code: z.ZodIssueCode.too_big, maximum: 240, type: "array", inclusive: true, message: "Series exceeds 240 values" });
+  z.record(z.string(), modelScalar).superRefine((value, context) => {
+    if (Object.keys(value).length > 240) context.addIssue({ code: z.ZodIssueCode.too_big, maximum: 240, origin: "array", inclusive: true, message: "Series exceeds 240 values" });
   }),
 ]);
 
@@ -73,8 +73,8 @@ export const UnderwritingModelDefinitionSchema = z.object({
     iterationOrder: z.array(z.string().min(1).max(200)).min(2).max(10_000),
     settings: SolverSettingsSchema,
   }).strict()).max(100),
-  runtime: z.record(z.unknown()).optional(),
-  metadata: z.record(z.union([z.string(), z.boolean(), z.number().finite()])).optional(),
+  runtime: z.record(z.string(), z.unknown()).optional(),
+  metadata: z.record(z.string(), z.union([z.string(), z.boolean(), z.number().finite()])).optional(),
 }).strict();
 
 const ProvenanceSchema = z.object({
@@ -138,7 +138,7 @@ export const UnderwritingCreateRunSchema = z.object({
   scenarioId: UnderwritingUuidSchema.optional(),
   baseRunId: UnderwritingUuidSchema.optional(),
   workId: UnderwritingUuidSchema.optional(),
-  explicitInputs: z.record(ExplicitInputSchema).optional(),
+  explicitInputs: z.record(z.string(), ExplicitInputSchema).optional(),
 }).strict().superRefine((value, context) => {
   if (value.baseRunId && value.explicitInputs) {
     context.addIssue({ code: z.ZodIssueCode.custom, message: "A pinned baseRunId cannot be combined with newly resolved explicit inputs" });
@@ -163,7 +163,7 @@ export const UnderwritingCreateSensitivitySchema = z.object({
   }).strict(),
 }).strict().superRefine((value, context) => {
   const cells = value.definition.rowAxis.values.length * (value.definition.columnAxis?.values.length ?? 1);
-  if (cells > 2_500) context.addIssue({ code: z.ZodIssueCode.too_big, maximum: 2_500, type: "array", inclusive: true, message: "Sensitivity exceeds 2,500 cells" });
+  if (cells > 2_500) context.addIssue({ code: z.ZodIssueCode.too_big, maximum: 2_500, origin: "array", inclusive: true, message: "Sensitivity exceeds 2,500 cells" });
 });
 
 export const UnderwritingComparisonPolicySchema = z.discriminatedUnion("mode", [
@@ -213,7 +213,7 @@ export function underwritingJson(value: unknown, status = 200): Response {
   return Response.json(value, { status, headers: { "cache-control": "no-store" } });
 }
 
-export function requiredUnderwritingQuery(url: URL, name: string, schema: z.ZodTypeAny = z.string().min(1).max(240)): string {
+export function requiredUnderwritingQuery(url: URL, name: string, schema: z.ZodType<string> = z.string().min(1).max(240)): string {
   return schema.parse(url.searchParams.get(name));
 }
 

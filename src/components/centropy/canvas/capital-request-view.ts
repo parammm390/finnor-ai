@@ -18,8 +18,8 @@ export const CapitalRequestViewSchema = z.object({
   }),
   financial: z.object({
     investmentCaseId: z.string().uuid(), modelVersionId: z.string().uuid(), nodeId: text,
-    semantics: z.record(z.unknown()),
-    evidenceDerivationInputs: z.record(z.object({ derivationId: z.string().uuid(), output: text })).optional(),
+    semantics: z.record(z.string(), z.unknown()),
+    evidenceDerivationInputs: z.record(z.string(), z.object({ derivationId: z.string().uuid(), output: text })).optional(),
   }).optional(),
   robust: z.object({
     schema: z.literal("finnor.r2.request.v1"), domainProfile: z.literal("S4_8_ACTIONS_8_INSTRUMENTS_24_PERIODS_S5_32_WORLDS_EXACT_FINITE"),

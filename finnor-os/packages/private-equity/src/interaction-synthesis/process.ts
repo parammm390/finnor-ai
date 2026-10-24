@@ -22,10 +22,26 @@ async function pinnedRead(path: string, maximum = 32 * 1024 * 1024) {
     return bytes;
   } finally { await fd.close(); }
 }
-export async function runtimeIdentity(): Promise<RuntimeIdentity> {
+const digestCache=new Map<string,{stamp:string;sha256:string}>();
+async function runtimeDigest(path:string,maximum:number,cache:boolean){
+ if(!cache)return byteDigest(await pinnedRead(path,maximum));
+ const fd=await open(path,constants.O_RDONLY|constants.O_NOFOLLOW|constants.O_NONBLOCK);
+ const stamp=(value:Awaited<ReturnType<typeof fd.stat>>)=>[value.dev,value.ino,value.size,value.mtimeMs,value.ctimeMs].join(':');
+ try{
+  const before=await fd.stat();
+  if(!before.isFile()||before.size>maximum)fail('Y3_UNSAFE_RUNTIME_ASSET');
+  const key=stamp(before),previous=digestCache.get(path);
+  if(previous?.stamp===key)return previous.sha256;
+  const bytes=await fd.readFile(),after=await fd.stat();
+  if(stamp(after)!==key||bytes.length!==before.size)fail('Y3_RUNTIME_ASSET_CHANGED');
+  const sha256=byteDigest(bytes);digestCache.set(path,{stamp:key,sha256});return sha256;
+ }finally{await fd.close();}
+}
+/** Dispatches default to fresh bytes; owner reads can reuse unchanged file identities. */
+export async function runtimeIdentity(cacheUnchangedFiles=false): Promise<RuntimeIdentity> {
   const modulePath = fileURLToPath(import.meta.url);
   const paths = [...new Set([...requiredAssets.map(p => resolve(ASSET_ROOT, p)), modulePath, await realpath(process.execPath)])];
-  const outcomes = await Promise.allSettled(paths.map(async path => ({ path, sha256: byteDigest(await pinnedRead(path, 128 * 1024 * 1024)) })));
+  const outcomes = await Promise.allSettled(paths.map(async path => ({ path, sha256: await runtimeDigest(path,128*1024*1024,cacheUnchangedFiles) })));
   const sourcePins: RuntimeIdentity["sourcePins"] = [];
   for (const result of outcomes) {
     if (result.status === "rejected") throw result.reason;
@@ -34,7 +50,7 @@ export async function runtimeIdentity(): Promise<RuntimeIdentity> {
   const asset = (name: string) => sourcePins.find(p => p.path === resolve(ASSET_ROOT, name))!.sha256;
   if (asset("profile.json") !== PROFILE_DIGEST) fail("Y3_LOADED_PROFILE_CHANGED");
   const interpreterPath = await realpath(PYTHON);
-  const interpreter = { path: PYTHON, sha256: byteDigest(await pinnedRead(interpreterPath, 32 * 1024 * 1024)) };
+  const interpreter = { path: PYTHON, sha256: await runtimeDigest(interpreterPath,32*1024*1024,cacheUnchangedFiles) };
   return {
     profileDigest: asset("profile.json"), producerDigest: asset("producer.py"), checkerDigest: asset("checker.py"),
     codeDigest: digest(sourcePins.map(p => ({ path: basename(p.path), sha256: p.sha256 }))), interpreter,

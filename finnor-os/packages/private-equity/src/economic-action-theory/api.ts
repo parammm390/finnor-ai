@@ -52,17 +52,21 @@ async function enqueueProgramme(ctx:PeMutationContext,id:string,mode:'RUN'|'RECO
  return transaction(ctx,async c=>{
   const programme=await programmeTx(ctx,c,id,mode==='RUN');
   const payload={tenantId:ctx.auth.tenantId,principalId:principal(ctx),programmeId:id,mode};
-  const responsibility=mode==='RECONCILE'?(await c.query(
+  const responsibility=(await c.query(
    `SELECT o.obligation_id,e.status FROM finnor_os.s6_economic_obligation_origins o
     JOIN finnor_os.business_effects e ON e.tenant_id=o.tenant_id AND e.id=o.effect_id
     WHERE o.tenant_id=$1 AND o.principal_id=$2 AND o.programme_id=$3 ORDER BY o.step_index LIMIT 17`,
-   [ctx.auth.tenantId,principal(ctx),id])).rows:null;
+   [ctx.auth.tenantId,principal(ctx),id])).rows;
   if(responsibility&&responsibility.length>programme.steps.length)fail('Y1_PROGRAMME_RESPONSIBILITY_BOUND');
   const deliveryKey='y1-programme:'+ctx.auth.tenantId+':'+id+':'+mode+(responsibility?':'+digest(responsibility):'');
   const job=(await c.query<{id:string;status:string}>(`INSERT INTO finnor_os.jobs(tenant_id,type,payload,idempotency_key,protocol_version,max_attempts,lane)
    VALUES($1,'run_economic_programme_v1',$2::jsonb,$3,1,4,'interactive')
-   ON CONFLICT(idempotency_key) DO UPDATE SET idempotency_key=EXCLUDED.idempotency_key RETURNING id,status`,
+   ON CONFLICT(idempotency_key) DO UPDATE SET
+    status=CASE WHEN jobs.status IN('failed','dead_letter') AND jobs.attempts<jobs.max_attempts THEN 'queued' ELSE jobs.status END,
+    run_at=CASE WHEN jobs.status IN('failed','dead_letter') AND jobs.attempts<jobs.max_attempts THEN clock_timestamp() ELSE jobs.run_at END
+    RETURNING id,status`,
    [ctx.auth.tenantId,JSON.stringify(payload),deliveryKey])).rows[0]!;
+  if(['failed','dead_letter'].includes(job.status))fail('Y1_PROGRAMME_ORIGINAL_DELIVERY_EXHAUSTED',409);
   const row=await theoryTx(ctx,c,programme.theoryId);
   await eventTx(c,row,'S4_DURABLE_PROGRAMME_ACCEPTED','programme-job:'+deliveryKey,{programmeId:id,jobId:job.id,mode,
    originalEpisodeId:programme.episodeId,existingObligationsRetained:true,externalEffects:false});

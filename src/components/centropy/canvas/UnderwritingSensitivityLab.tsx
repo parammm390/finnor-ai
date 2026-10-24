@@ -9,11 +9,11 @@ import { parseSensitivityAxis } from "@/components/centropy/product/sensitivity-
 import { useProductRequest } from "@/components/centropy/product/useProductRequest"
 
 const UUID = z.string().uuid()
-const ValueSchema = z.union([z.string(), z.boolean(), z.record(z.union([z.string(), z.boolean()]))])
+const ValueSchema = z.union([z.string(), z.boolean(), z.record(z.string(), z.union([z.string(), z.boolean()]))])
 const SensitivitySchema = z.object({
   id: UUID, baseRunId: UUID, name: z.string(), status: z.string(), cellCount: z.number().int().nonnegative(), complete: z.boolean(),
   definition: z.object({ rowAxis: z.object({ nodeId: z.string(), values: z.array(ValueSchema) }), columnAxis: z.object({ nodeId: z.string(), values: z.array(ValueSchema) }).optional(), outputNodeIds: z.array(z.string()) }),
-  cells: z.array(z.object({ rowIndex: z.number().int(), columnIndex: z.number().int(), runId: UUID, runStatus: z.string(), runValidity: z.string(), result: z.object({ outputs: z.record(z.object({ value: ValueSchema })) }) })),
+  cells: z.array(z.object({ rowIndex: z.number().int(), columnIndex: z.number().int(), runId: UUID, runStatus: z.string(), runValidity: z.string(), result: z.object({ outputs: z.record(z.string(), z.object({ value: ValueSchema })) }) })),
 })
 type ReviewedSweep = { baseRunId: string; name: string; rowNodeId: string; rowValues: Array<string | boolean | Record<string, string | boolean>>; columnNodeId: string; columnValues: Array<string | boolean | Record<string, string | boolean>>; outputNodeId: string; idempotencyKey: string }
 const label = (value: string) => value.replace(/[._]/g, " ").replace(/([a-z0-9])([A-Z])/g, "$1 $2").toLowerCase()

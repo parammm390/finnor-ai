@@ -6,16 +6,16 @@ import { CoalitionProgrammeViewSchema } from "./coalition-programme-view"
 export { CapitalRefViewSchema } from "./capital-ref-view"
 const digest = z.string().regex(/^[a-f0-9]{64}$/)
 const blocker = z.object({ code: z.string(), owner: z.string(), requirement: z.string() })
-const amounts = z.record(z.number().finite())
+const amounts = z.record(z.string(), z.number().finite())
 const rational = z.string().max(1025).regex(/^-?(?:0|[1-9]\d*)(?:\.\d+|\/[1-9]\d*)?$/)
 const exactSource = z.object({ sourceId: z.string().uuid(), versionId: z.string().uuid(), contentDigest: digest,
   policyRef: CapitalRefViewSchema, worldIds: z.array(z.string()).min(1).max(32), qualification: z.literal("SUPPLIED_EXACT_FINITE_MODEL_UNADMITTED") })
 const exactPolicy = z.object({ ref: CapitalRefViewSchema, value: rational,
   variant: z.object({ structure: z.string(), actions: z.array(z.object({ id: z.string(), kind: z.string(), cost: rational,
-    costUnit: z.string(), resources: z.record(rational), occupancy: z.record(rational), occupationPeriods: z.number().int(),
+    costUnit: z.string(), resources: z.record(z.string(), rational), occupancy: z.record(z.string(), rational), occupationPeriods: z.number().int(),
     tailLiability: rational, humanSeconds: rational })).max(8) }),
   decisions: z.array(z.object({ key: z.string(), period: z.number().int(), actionId: z.string(), actionHistory: z.array(z.string()), observations: z.array(z.unknown()) })).max(50000),
-  worldCourses: z.array(z.object({ worldId: z.string(), utility: rational, terminalLiability: rational, resourceUse: z.record(z.array(rational)) })).max(32),
+  worldCourses: z.array(z.object({ worldId: z.string(), utility: rational, terminalLiability: rational, resourceUse: z.record(z.string(), z.array(rational)) })).max(32),
 })
 const jointCertificate = z.object({ ref: CapitalRefViewSchema, status: z.enum(["COMPLETE", "INCOMPLETE", "INFEASIBLE", "UNSUPPORTED", "INVALIDATED", "UNKNOWN"]),
   checkingBasis: z.string(), lower: rational.nullable(), upper: rational.nullable(), gap: rational.nullable(), normalizedGap: rational.nullable(), exactOptimalityClaimed: z.boolean(),
@@ -31,7 +31,7 @@ const action = z.object({
   id: z.string(), kind: z.enum(["INTERVENE", "INQUIRE", "WAIT", "STOP"]),
   earliestPeriod: z.number().int(), lastPeriod: z.number().int(), cost: z.number().finite(),
   costUnit: z.string(), resources: amounts, occupancy: amounts, occupationPeriods: z.number().int(),
-  exposures: z.record(z.array(z.number().finite())), informationDelayPeriods: z.number().int(),
+  exposures: z.record(z.string(), z.array(z.number().finite())), informationDelayPeriods: z.number().int(),
   protocolRef: CapitalRefViewSchema.nullable(), tailLiability: z.number().finite(), humanSeconds: z.number().finite(),
   precondition: z.object({ afterActionIds: z.array(z.string()).max(8),
     observations: z.array(z.object({ instrumentId: z.string(), tokens: z.array(z.string()).max(16) })).max(8) }).optional(),

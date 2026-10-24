@@ -131,7 +131,8 @@ export function EconomicActionTheoryPanel({root,workId}:{root:{entityType:string
     if(!current())return
     if(hash!==download.sha256)throw Error('Y1_DOWNLOAD_PREIMAGE')
     const url=URL.createObjectURL(new Blob([bytes],{type:'application/json'})),link=document.createElement('a')
-    link.href=url;link.download=download.fileName;link.click();URL.revokeObjectURL(url)
+    link.href=url;link.download=download.fileName;document.body.appendChild(link);link.click();link.remove()
+    setTimeout(()=>URL.revokeObjectURL(url),60_000)
     setMessage('Downloaded the exact current checked artifact. This is not protected qualification.')
    }else setResult({identity:expected,value})
    const record=value&&typeof value==='object'?value as Record<string,unknown>:null

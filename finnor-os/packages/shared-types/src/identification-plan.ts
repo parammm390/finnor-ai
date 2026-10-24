@@ -21,7 +21,7 @@ export type IdentificationRational = z.infer<typeof IdentificationRationalSchema
 const fraction = IdentificationRationalSchema;
 const time = z.object({ start: z.string().datetime(), end: z.string().datetime() }).strict();
 const scope = z.object({
-  population: id, intervention: id, time, units: z.record(unit),
+  population: id, intervention: id, time, units: z.record(z.string(), unit),
 }).strict();
 const premise = z.object({
   status: z.enum(["SATISFIED", "UNKNOWN", "CONTRADICTED", "UNSUPPORTED"]),

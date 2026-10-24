@@ -44,7 +44,7 @@ export const IdentificationWorkViewSchema = z.object({
     id: z.string().uuid(), ref, workRevision: z.string().uuid(), budgetGrantRef: ref,
     query: z.object({
       id: z.string(), outcomes: z.array(z.string()), treatments: z.array(z.string()), conditions: z.array(z.string()),
-      estimandRef: z.string(), scope: z.object({ population: z.string(), intervention: z.string(), time, units: z.record(z.string()) }),
+      estimandRef: z.string(), scope: z.object({ population: z.string(), intervention: z.string(), time, units: z.record(z.string(), z.string()) }),
     }),
     graphIds: z.array(z.string()).max(8), costBasis, scheduleUnit: z.literal("second"), qualification: z.string(),
     validUntil: z.string().datetime(),

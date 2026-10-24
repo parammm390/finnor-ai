@@ -5,7 +5,7 @@ const ref=z.object({owner:z.string(),id:z.string(),revision:z.string(),contentDi
 const field=z.object({id:z.string(),title:z.string(),type:z.enum(['text','boolean','enum','quantity','quantity-list','evidence','reference','relation']),
  required:z.boolean(),allowUnknown:z.boolean(),encoding:z.enum(['text','boolean','json']),options:z.array(z.string()).optional(),maxLength:z.number().optional()}).passthrough()
 const action=z.object({id:z.string(),title:z.string(),kind:z.enum(['create','update','transition']),inputFields:z.array(z.string()),fromStates:z.array(z.string()),toState:z.string(),roles:z.array(z.string())}).strict()
-export const ApplicationRecordSchema=z.object({id:z.string().uuid(),entityId:z.string(),state:z.string(),values:z.record(z.unknown()),reference:ref,revision:z.number().int().positive(),
+export const ApplicationRecordSchema=z.object({id:z.string().uuid(),entityId:z.string(),state:z.string(),values:z.record(z.string(), z.unknown()),reference:ref,revision:z.number().int().positive(),
  releaseId:z.string().uuid(),originReleaseId:z.string().uuid(),schemaReleaseId:z.string().uuid(),authorPrincipalId:z.string().uuid(),
  currentness:z.enum(['CURRENT','STALE']),releaseCurrent:z.boolean(),approvals:z.array(z.unknown()),preparedIntent:z.unknown().nullable(),pendingEffectId:z.string().uuid().nullable()}).strict()
 const frontend=z.object({schema:z.literal('finnor.enterprise-application.forms.v1'),renderer:z.literal('FINNOR_HOST_TYPED_FORMS_V1'),

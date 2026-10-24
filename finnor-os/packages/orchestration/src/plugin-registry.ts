@@ -12,7 +12,9 @@ import {
   type SimulationResult,
 } from "@finnor/shared-types";
 import { ACTION_HARDENING_SPEC } from "../../../scripts/release/action-hardening-spec";
-import { zodToJsonSchema } from "zod-to-json-schema";
+import { z } from "zod";
+const zodToJsonSchema = (schema: z.ZodType, _options: { $refStrategy: string }) =>
+  z.toJSONSchema(schema, { io: "input", target: "draft-07", reused: "inline" });
 import webResearchPlugin from "../../domain-plugins/web-research/index";
 import { clarificationPlugin } from "../../domain-plugins/clarification/index";
 import universalActionsPlugin from "../../domain-plugins/universal-actions/index";

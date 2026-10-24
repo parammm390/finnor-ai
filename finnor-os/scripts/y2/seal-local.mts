@@ -3,6 +3,7 @@ import {strict as assert} from 'node:assert';
 import {execFileSync} from 'node:child_process';
 import {mkdir,readFile,readdir,stat,writeFile} from 'node:fs/promises';
 import {isAbsolute,join,resolve} from 'node:path';
+import {STRATEGIC_SEMANTIC_FILES} from '../../packages/epistemic-runtime/src/strategic-response/source-paths';
 import {strategicRuntimeIdentity} from '../../packages/epistemic-runtime/src/strategic-response/process';
 import {PROFILE_DIGEST,bytesDigest,digest} from '../../packages/private-equity/src/strategic-response/contracts';
 const repo=resolve(import.meta.dirname,'../../..'),scope=join(repo,'scope-postx/y2-strategic-response-world-model'),
@@ -14,7 +15,7 @@ const [installed,browser,reconstruction]=directories as [string,string,string],
  git=(...args:string[])=>execFileSync('git',['-C',repo,...args],{encoding:'utf8'}).trim();
 assert.equal(git('status','--porcelain','--untracked-files=all'),'','CLEAN_COMMITTED_Y2_SOURCE_REQUIRED');
 const commit=git('rev-parse','HEAD'),tree=git('rev-parse','HEAD^{tree}'),identity=await strategicRuntimeIdentity();
-assert(identity.assetsMatchEmitted);assert.equal(identity.sourcePins.length,19);
+assert(identity.assetsMatchEmitted);assert.deepEqual(identity.sourcePins.map(p=>p.path),[...STRATEGIC_SEMANTIC_FILES]);
 const appCases=['01-authentication-migration-and-strict-body','02-durable-fitted-complete-model-set',
  '03-current-principal-root-evidence-and-replay','04-uninformative-labels-and-requested-experiments',
  '05-separate-admission-and-fresh-withheld-prediction','06-independent-mutations-are-rejected',
@@ -123,6 +124,7 @@ for(const directory of [join(scope,'evidence'),...directories,rebuilt.sourcePack
 for(const entry of (await read(join(scope,'failure-ledger.json'))).entries){
  if(!entry.evidence)continue;
  const path=isAbsolute(entry.evidence)?entry.evidence:join(scope,entry.evidence);
+ if(isAbsolute(entry.evidence)){try{await stat(path);}catch(error){if((error as NodeJS.ErrnoException).code!=='ENOENT')throw error;failures.push({path,kind:'UNAVAILABLE_HISTORICAL_EVIDENCE'});continue;}}
  if(!seen.has(path)){const bytes=await readFile(path);seen.add(path);files.push({path,bytes:bytes.length,sha256:bytesDigest(bytes)});evidenceBytes+=bytes.length;}
 }
 assert(evidenceBytes<=268435456);files.sort((a,b)=>a.path.localeCompare(b.path));

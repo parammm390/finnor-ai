@@ -216,7 +216,7 @@ export const WebSearchSchema = z.object({
     industry: z.string().min(1).max(200),
     niche: z.string().min(1).max(200).optional(),
     geographies: z.array(z.string().min(1).max(120)).min(1).max(10),
-    idealCustomerProfile: z.record(z.unknown()),
+    idealCustomerProfile: z.record(z.string(), z.unknown()),
     comparison: z.object({
       founderAge: z.number().int().min(18).max(100).optional(),
       ageToleranceYears: z.number().int().min(0).max(20).optional(),

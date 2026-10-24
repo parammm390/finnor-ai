@@ -46,7 +46,7 @@ Structural JSON comparison, not line-count inference, found:
 - The capability manifest retains every prior entry and adds 17 entries
   (16 HTTP operations and one planner query).
 
-The inherited executable query registry increases from 17 to 18. Existing
+The inherited executable query registry increases from 18 to 19. Existing
 release-boundary assertions were updated for that explicit additive query.
 
 ## Supply-chain observations

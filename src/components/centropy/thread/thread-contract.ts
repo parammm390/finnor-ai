@@ -1,6 +1,6 @@
 import { z } from "zod"
 
-const Reference = z.record(z.unknown())
+const Reference = z.record(z.string(), z.unknown())
 
 export const ConversationMessageSchema = z.object({
   id: z.string().uuid(),

@@ -2,7 +2,9 @@
   "name": "@finnor/api",
   "version": "0.1.0",
   "private": true,
-  "engines": { "node": "22.x" },
+  "engines": {
+    "node": "22.x"
+  },
   "scripts": {
     "dev": "next dev -p 3100",
     "build": "tsx ../../scripts/x3/stamp-source.mts && tsx ../../scripts/x5/stamp-source.mts && tsx ../../scripts/x4/stamp-source.mts && tsx ../../scripts/y2/stamp-source.mts && next build",
@@ -33,11 +35,11 @@
     "groq-sdk": "^0.9.1",
     "ioredis": "^5.4.1",
     "next": "^15.5.21",
-    "nodemailer": "10.0.11",
+    "nodemailer": "10.1.4",
     "pg": "^8.13.1",
     "react": "^18",
     "react-dom": "^18",
-    "zod": "^3.23.8"
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@types/node": "^20",
