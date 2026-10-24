@@ -1,0 +1,5 @@
+== frontend post-apply re-check with next-env.d.ts 2026-10-24T21:06:17Z node v22.23.4 ==
+frontend-exit=0
+-- control: same check WITHOUT the two panel patches (pre-existing baseline) --
+baseline-exit=0
+worktree removed
