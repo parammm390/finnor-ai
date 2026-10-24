@@ -1,0 +1,16 @@
+{
+  "source": "finnor-os/packages/db/migrations/0129_phase7_governed_workforce_learning.sql",
+  "identifiers": [
+    "configure_ic_committee",
+    "record_ic_vote",
+    "cast_ic_vote",
+    "record_ic_dissent",
+    "waive_ic_question",
+    "waive_ic_condition",
+    "open_ic_voting",
+    "close_ic_voting",
+    "finalize_ic_decision",
+    "waive_closing_condition",
+    "verify_closing_item"
+  ]
+}

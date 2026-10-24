@@ -1,0 +1,22 @@
+{
+  "schema": "finnor.project-z.z0.literal-original-input-audit.v1",
+  "scope": "STATIC_ORIGINAL_INPUT_CUSTODY_AND_TRANSCRIPTION_NOT_NATIVE_INVENTORY_COMPARISON",
+  "actualExit": 0,
+  "registeredHardeningRowsMatched": 46,
+  "privateEquitySchemaNamesMatched": 29,
+  "universalSchemaNamesMatched": 14,
+  "originalSqlHumanBoundariesMatched": 11,
+  "originalQueryNamesMatched": 19,
+  "literalTotal": 77,
+  "metadataFieldsPerRow": 14,
+  "sourceInputHashesMatched": 10,
+  "literalArtifact": {
+    "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/inventory-literal-04.json",
+    "bytes": 49792,
+    "sha256": "1636a647515d3b5f4b5f21ad547758b271ed0458d9fb4200c0b886fb3f7bee84"
+  },
+  "candidateImports": false,
+  "candidateInventoryOutputsRead": false,
+  "nativeComparison": "NOT_RUN",
+  "newUnitTestsWritten": false
+}
