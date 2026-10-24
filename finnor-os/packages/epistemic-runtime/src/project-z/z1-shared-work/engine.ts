@@ -169,9 +169,9 @@ export function produce(value: unknown, options: { previous?: Checkpoint; mode?:
       }
       requireZ1(ticks + count <= request!.limits.maxTicks, 'ATTEMPT_OPERATION_BOUND', 'INCOMPLETE');
       timeCheck();
-      const allocations: Record<string, string> = Object.create(null);
+      const allocations: Record<string, string> = Object.fromEntries(consumers.map(id => [id, qtext(share)]));
       for (const id of consumers) {
-        current.set(id, qadd(current.get(id)!, share)); cumulative.set(id, qadd(cumulative.get(id)!, share)); allocations[id] = qtext(share);
+        current.set(id, qadd(current.get(id)!, share)); cumulative.set(id, qadd(cumulative.get(id)!, share));
       }
       ticks += count;
       const prior = charges[charges.length - 1];
