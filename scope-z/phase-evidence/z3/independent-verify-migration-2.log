@@ -1,0 +1,24 @@
+== node v22.23.4 ==
+== migration payload validation (seed-split fix, pinned toolchain) 2026-10-24T20:53:45Z
+PASS shell
+PASS 0199 applies
+PASS seed insert
+PASS progress update (status/fence/generation)
+PASS candidate first publish
+PASS candidate immutable (raised: Z3 published candidate is immutable)
+PASS arena preimage immutable (raised: Z3 original Work, arena, binding, reservation and obligation)
+PASS fence cannot retreat (raised: Z3 claim fence cannot retreat)
+PASS generation cannot reset (raised: Z3 session generation cannot reset)
+PASS terminal publish
+PASS terminal status irreversible (raised: Z3 terminal or stale verdict cannot change)
+PASS session delete refused (raised: Z3 original viability responsibility is retained)
+PASS requests append-only (raised: S5 original revisions/history are append-only)
+PASS compute_job_type_policies rows
+PASS RLS same-tenant visible
+PASS RLS cross-tenant hidden
+{
+ "payload": "postz_z3_viability.sql",
+ "sha256": "9f4234029d0c01aea276f88a9c909e49d984dc5ab8227f12cd392c67e189b265",
+ "failures": []
+}
+migration-exit=0

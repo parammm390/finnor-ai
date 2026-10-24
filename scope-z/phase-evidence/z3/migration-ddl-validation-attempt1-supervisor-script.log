@@ -1,0 +1,48 @@
+PASS shell
+PASS 0199 applies
+FAIL harness :: cannot insert multiple commands into a prepared statement
+node:events:497
+      throw er; // Unhandled 'error' event
+      ^
+
+error: terminating connection due to administrator command
+    at parseErrorMessage (/home/factory-user/repos/finnor-z3/finnor-os/node_modules/pg-protocol/dist/parser.js:306:11)
+    at Parser.handlePacket (/home/factory-user/repos/finnor-z3/finnor-os/node_modules/pg-protocol/dist/parser.js:143:27)
+    at Parser.parse (/home/factory-user/repos/finnor-z3/finnor-os/node_modules/pg-protocol/dist/parser.js:37:38)
+    at Socket.<anonymous> (/home/factory-user/repos/finnor-z3/finnor-os/node_modules/pg-protocol/dist/index.js:12:42)
+    at Socket.emit (node:events:519:28)
+    at addChunk (node:internal/streams/readable:561:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:512:3)
+    at Readable.push (node:internal/streams/readable:392:5)
+    at TCP.onStreamRead (node:internal/stream_base_commons:189:23)
+Emitted 'error' event on Client instance at:
+    at Client._handleErrorEvent (/home/factory-user/repos/finnor-z3/finnor-os/node_modules/pg/lib/client.js:422:10)
+    at Client._handleErrorMessage (/home/factory-user/repos/finnor-z3/finnor-os/node_modules/pg/lib/client.js:433:12)
+    at Connection.emit (node:events:519:28)
+    at /home/factory-user/repos/finnor-z3/finnor-os/node_modules/pg/lib/connection.js:137:12
+    at Parser.parse (/home/factory-user/repos/finnor-z3/finnor-os/node_modules/pg-protocol/dist/parser.js:38:17)
+    at Socket.<anonymous> (/home/factory-user/repos/finnor-z3/finnor-os/node_modules/pg-protocol/dist/index.js:12:42)
+    at Socket.emit (node:events:519:28)
+    at addChunk (node:internal/streams/readable:561:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:512:3)
+    at Readable.push (node:internal/streams/readable:392:5) {
+  length: 116,
+  severity: 'FATAL',
+  code: '57P01',
+  detail: undefined,
+  hint: undefined,
+  position: undefined,
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'postgres.c',
+  line: '3356',
+  routine: 'ProcessInterrupts'
+}
+
+Node.js v22.23.4

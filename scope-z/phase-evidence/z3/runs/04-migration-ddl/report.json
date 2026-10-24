@@ -1,0 +1,129 @@
+{
+ "schema": "finnor.z3.migration-ddl-validation.v1",
+ "payload": "postz_z3_viability.sql",
+ "sha256": "9f4234029d0c01aea276f88a9c909e49d984dc5ab8227f12cd392c67e189b265",
+ "engine": "embedded-postgres disposable (deleted on exit)",
+ "results": [
+  {
+   "name": "payload digest pinned",
+   "passed": true
+  },
+  {
+   "name": "shell",
+   "passed": true
+  },
+  {
+   "name": "payload applies",
+   "passed": true
+  },
+  {
+   "name": "seed insert",
+   "passed": true
+  },
+  {
+   "name": "progress update (status/fence/generation)",
+   "passed": true
+  },
+  {
+   "name": "candidate first publish",
+   "passed": true
+  },
+  {
+   "name": "candidate immutable",
+   "passed": true,
+   "detail": "Z3 published candidate is immutable"
+  },
+  {
+   "name": "arena preimage immutable",
+   "passed": true,
+   "detail": "Z3 original Work, arena, binding, reservation and obligation"
+  },
+  {
+   "name": "fence advance 1->2",
+   "passed": true
+  },
+  {
+   "name": "fence retreat 2->1 refused",
+   "passed": true,
+   "detail": "Z3 claim fence cannot retreat"
+  },
+  {
+   "name": "generation cannot reset",
+   "passed": true,
+   "detail": "Z3 session generation cannot reset"
+  },
+  {
+   "name": "finnor_app inserts (requests/events/artifacts)",
+   "passed": true
+  },
+  {
+   "name": "finnor_app update as in-scope principal",
+   "passed": true
+  },
+  {
+   "name": "finnor_app candidate rewrite refused",
+   "passed": true,
+   "detail": "Z3 published candidate is immutable"
+  },
+  {
+   "name": "RLS same-tenant visible",
+   "passed": true,
+   "detail": "[{\"n\":1}]"
+  },
+  {
+   "name": "RLS cross-tenant hidden",
+   "passed": true,
+   "detail": "[{\"n\":0}]"
+  },
+  {
+   "name": "RLS cross-tenant insert refused",
+   "passed": true
+  },
+  {
+   "name": "terminal publish",
+   "passed": true
+  },
+  {
+   "name": "terminal status irreversible",
+   "passed": true,
+   "detail": "Z3 terminal or stale verdict cannot change"
+  },
+  {
+   "name": "session delete refused",
+   "passed": true,
+   "detail": "Z3 original viability responsibility is retained"
+  },
+  {
+   "name": "finnor_app terminal mutation refused",
+   "passed": true,
+   "detail": "Z3 terminal or stale verdict cannot change"
+  },
+  {
+   "name": "requests append-only",
+   "passed": true,
+   "detail": "S5 original revisions/history are append-only"
+  },
+  {
+   "name": "events append-only",
+   "passed": true,
+   "detail": "S5 original revisions/history are append-only"
+  },
+  {
+   "name": "artifacts append-only",
+   "passed": true,
+   "detail": "S5 original revisions/history are append-only"
+  },
+  {
+   "name": "compute_job_type_policies rows",
+   "passed": true,
+   "detail": "[{\"job_type\":\"run_z3_viability_recovery_v1\",\"default_class\":\"INTERACTIVE\",\"obligation_kind\":\"required\"},{\"job_type\":\"run"
+  },
+  {
+   "name": "trigger function REVOKE FROM PUBLIC",
+   "passed": true,
+   "detail": "[{\"p\":false}]"
+  }
+ ],
+ "failures": [],
+ "status": "PASS"
+}

@@ -1,0 +1,30 @@
+== independent post-apply tree verification 2026-10-24T20:56:31Z node v22.23.4 ==
+-- applying nine patches in manifest order --
+OK 0001-postz-z3-migration.patch -> finnor-os/packages/db/migrations/postz_z3_viability.sql
+OK 0001b-bundle-generator-whitelist.patch -> finnor-os/scripts/bundle-migrations.ts
+OK 0001c-migrations-bundle.patch -> finnor-os/packages/db/migrations-bundle.ts
+OK 0001d-migration-head.patch -> finnor-os/packages/db/migration-head.ts
+OK 0002-compute-contract.patch -> finnor-os/packages/db/compute-contract.ts
+OK 0003-worker-register.patch -> finnor-os/apps/worker/src/index.ts
+OK 0004-company-brain-route.patch -> finnor-os/apps/api/app/api/company-brain/[operation]/route.ts
+OK 0005-mounted-work-panel.patch -> src/components/centropy/world/WorldWorkRecord.tsx
+OK 0005b-viability-panel-file.patch -> src/components/centropy/world/ViabilityPanel.tsx
+postimage comparison failures: 0
+-- status (must be exactly the nine targets) --
+ M finnor-os/apps/api/app/api/company-brain/[operation]/route.ts
+ M finnor-os/apps/worker/src/index.ts
+ M finnor-os/packages/db/compute-contract.ts
+ M finnor-os/packages/db/migration-head.ts
+ M finnor-os/packages/db/migrations-bundle.ts
+ M finnor-os/scripts/bundle-migrations.ts
+ M src/components/centropy/world/WorldWorkRecord.tsx
+?? finnor-os/packages/db/migrations/postz_z3_viability.sql
+?? src/components/centropy/world/ViabilityPanel.tsx
+-- backend typecheck (patched finnor-os) --
+backend-exit=0
+-- frontend mount typecheck (patched WorldWorkRecord + ViabilityPanel) --
+src/components/centropy/controls/LiveInstitutionalControl.tsx(7,20): error TS2307: Cannot find module './LiveInstitutionalControl.module.css' or its corresponding type declarations.
+frontend-exit=2
+-- worker entry typecheck (patched worker registration context) --
+entry-exit=0
+worktree removed

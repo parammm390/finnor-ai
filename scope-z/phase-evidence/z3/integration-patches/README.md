@@ -30,11 +30,11 @@ Payload history note: the payload was renamed from an earlier `0199_z3_viability
 draft (delta: two header comment lines + one `REVOKE ALL ON FUNCTION ... FROM PUBLIC`
 line, nothing else) to follow the committed `postz_z0_*` naming precedent and to advance
 the release migration head. The supervisor's disposable-PostgreSQL validator
-`../build/validate-migration-0199.mjs` predates the rename: its output label already
-expects `postz_z3_viability.sql`, but its `PAYLOAD` path constant still points at the
-old filename (its retained run log shows the resulting ENOENT). Re-point that one line to
-`integration-patches/postz_z3_viability.sql` to validate the current bytes; the
-`embedded-postgres` dependency is lockfile-pinned (package-lock line 4136).
+`../build/validate-migration-0199.mjs` predated the rename (its first retained run shows
+the resulting ENOENT in `../independent-verify-migration.log`); the supervisor re-pointed
+it the same evening and its second run confirmed the renamed payload digest
+(`../independent-verify-migration-2.log`). The `embedded-postgres` dependency is
+lockfile-pinned (package-lock line 4136).
 
 ### Migration-runtime closure (0001, 0001b, 0001c, 0001d are one unit)
 
@@ -64,8 +64,24 @@ sequence USAGE,SELECT), `s5_immutable_record()` (0150) triggers on the three non
 tables, a `z3_session_progress` trigger protecting preimage immutability, claim-fence
 monotonicity, published candidate/check immutability and terminal-status
 irreversibility, `REVOKE ALL ... FROM PUBLIC` on the new trigger function, and the two
-`compute_job_type_policies` rows matching the 0138 column/check domains. Applying SQL
-against any database was NOT run in this lane (no DB authority).
+`compute_job_type_policies` rows matching the 0138 column/check domains.
+
+DDL validation: applied against a disposable embedded PostgreSQL 18 (tmpdir deleted on
+exit; no shared state, no network) — 26/26 PASS, `../runs/04-migration-ddl/report.json`,
+log `../migration-ddl-validation.log`. Covers payload application, progress/fence/
+generation guards, candidate+preimage immutability, terminal irreversibility, delete
+refusal, finnor_app-role inserts/update under RLS (proving the trigger-function REVOKE
+does not block legitimate role DML), cross-tenant invisibility and insert refusal,
+append-only auxiliaries, both policy rows, and the REVOKE itself. Retained failure chain:
+the supervisor's first validator run passed "payload applies" then hit a node-pg
+multi-statement seed limit (`../migration-ddl-validation-attempt1-supervisor-script.log`);
+my first full validator had a pre-terminal/terminal test-ordering bug and a `'PUBLIC'`
+keyword bug (`../runs/04-migration-ddl/report-attempt*.json`). Environment note: the
+embedded postgres binaries needed their SONAME symlinks
+(`finnor-os/node_modules/@embedded-postgres/linux-x64/native/lib/lib*.so.*`), which the
+locked `--ignore-scripts` install had skipped; the symlinks were created additively and
+are a validation-tool environment repair only — no product code depends on them. Full
+staging application against the real disposable database remains the coordinator's step.
 
 - 0002/0003/0004 wire the two job types (`run_z3_viability_synthesis_v1`,
   `run_z3_viability_recovery_v1`, both INTERACTIVE + reconcilable) into the production

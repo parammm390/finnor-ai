@@ -82,15 +82,18 @@ try {
   catch (e) { bad("0199 applies", e.message); throw e; }
 
   // Seed one tenant row set and one session.
+  // node-pg uses the extended protocol when parameters are present, and the
+  // server rejects multiple commands in one prepared statement: seed separately.
+  await client.query("INSERT INTO finnor_os.users(tenant_id,id) VALUES($1,$2),($3,$4)",
+    [T1, U1, T2, "99999999-9999-4999-8999-999999999999"]);
+  await client.query("INSERT INTO finnor_os.works(tenant_id,id,created_by) VALUES($1,$2,$3)", [T1, W1, U1]);
+  await client.query("INSERT INTO finnor_os.work_inputs(tenant_id,id,work_id) VALUES($1,$2,$3)", [T1, I1, W1]);
   await client.query(
-    `INSERT INTO finnor_os.users(tenant_id,id) VALUES($1,$2),($3,$4);
-     INSERT INTO finnor_os.works(tenant_id,id,created_by) VALUES($1,$5,$2);
-     INSERT INTO finnor_os.work_inputs(tenant_id,id,work_id) VALUES($1,$6,$5);
-     INSERT INTO finnor_os.z3_viability_sessions(
+    `INSERT INTO finnor_os.z3_viability_sessions(
        id,tenant_id,principal_id,work_id,work_input_id,original_parent_id,
        arena_digest,binding_digest,arena,binding,obligation_refs,deadline_at)
-     VALUES($7,$1,$2,$5,$6,'parent','${"a".repeat(64)}','${"b".repeat(64)}','{}','{}','[]','2030-01-01')`,
-    [T1, U1, T2, "99999999-9999-4999-8999-999999999999", W1, I1, S1]);
+     VALUES($4,$1,$2,$3,$5,'parent','${"a".repeat(64)}','${"b".repeat(64)}','{}','{}','[]','2030-01-01')`,
+    [T1, U1, W1, S1, I1]);
   ok("seed insert");
 
   const expectRaise = async (name, statement, params) => {
@@ -148,6 +151,7 @@ try {
   await client.end();
 } catch (e) {
   if (!failures.length) bad("harness", e.message);
+  try { await client.end(); } catch {}
 } finally {
   try { await pg.stop(); } catch {}
   rmSync(dir, { recursive: true, force: true });

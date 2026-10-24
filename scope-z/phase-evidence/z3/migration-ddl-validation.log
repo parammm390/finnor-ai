@@ -1,0 +1,27 @@
+PASS payload digest pinned
+PASS shell
+PASS payload applies
+PASS seed insert
+PASS progress update (status/fence/generation)
+PASS candidate first publish
+PASS candidate immutable
+PASS arena preimage immutable
+PASS fence advance 1->2
+PASS fence retreat 2->1 refused
+PASS generation cannot reset
+PASS finnor_app inserts (requests/events/artifacts)
+PASS finnor_app update as in-scope principal
+PASS finnor_app candidate rewrite refused
+PASS RLS same-tenant visible
+PASS RLS cross-tenant hidden
+PASS RLS cross-tenant insert refused
+PASS terminal publish
+PASS terminal status irreversible
+PASS session delete refused
+PASS finnor_app terminal mutation refused
+PASS requests append-only
+PASS events append-only
+PASS artifacts append-only
+PASS compute_job_type_policies rows
+PASS trigger function REVOKE FROM PUBLIC
+{"status":"PASS","failures":[],"sha256":"9f4234029d0c01aea276f88a9c909e49d984dc5ab8227f12cd392c67e189b265"}
