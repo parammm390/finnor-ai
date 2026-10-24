@@ -1,0 +1,36 @@
+{
+  "evidenceClass": "OWNED_LITERAL_COMPONENT_RECONSTRUCTION_NOT_INTEGRATED_PRODUCT_OR_PHASE_I",
+  "inputs": [
+    {
+      "origin": "finnor-os/packages/orchestration/src/project-z/z0-convergence/semantics.ts",
+      "path": "source/semantics.ts",
+      "bytes": 5512,
+      "sha256": "45b56093dc1f13b78d3f9910364cae192a5cce530e4028a13071bd6dd4d9e389"
+    },
+    {
+      "origin": "finnor-os/packages/private-equity/src/application-semantics/contracts.ts",
+      "path": "source/application-contracts.ts",
+      "bytes": 22595,
+      "sha256": "4e308c8bdce98c1b4a917dfbd676f59a468a00843f32f4e7c9418d426480153e"
+    },
+    {
+      "origin": "finnor-os/packages/governed-execution/src/protocol.ts",
+      "path": "source/governed-protocol.ts",
+      "bytes": 2278,
+      "sha256": "96d1be8a37d35235308c90fa1458efa794f401d30744ae6e5839e1e424ee62bd"
+    },
+    {
+      "origin": "finnor-os/scripts/project-z/z0/verify-contracts.mts",
+      "path": "source/verify-contracts.mts",
+      "bytes": 8493,
+      "sha256": "7ba64589d32be2b208ff4212910d2f16146b751eebc906626852756e025eaca9"
+    }
+  ],
+  "originalDependencyLockSha256": "4116b2a7e02a28b8e49baa4a24a378e5170c5dc66d285075c8cf50bf11b9faed",
+  "sourceFallback": false,
+  "copiedNodeModules": false,
+  "nativeAssetsRequiredByThisFiniteSweep": false,
+  "expectedCasesChanged": false,
+  "authenticatedProductFlow": "NOT_RUN",
+  "installedIntegratedFlow": "NOT_RUN"
+}

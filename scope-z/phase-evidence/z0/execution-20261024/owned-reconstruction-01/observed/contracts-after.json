@@ -1,0 +1,169 @@
+{
+  "schema": "finnor.project-z.z0.isolated-contract-sweep.v1",
+  "baseline": false,
+  "observedAt": "2026-10-24T15:26:20.462Z",
+  "evidenceClass": "ISOLATED_LITERAL_CONTRACTS_NOT_AUTHENTICATED_PRODUCT_E2E",
+  "node": "v22.23.4",
+  "runnerSha256": "848e07fcf663a68e35af739331f8afbf55d130219e39f89cae052ae4160b734c",
+  "semanticsSha256": "24f271372f81d74bfc7be37e19999c245be638da1a0dc95f3034e2698156a072",
+  "fixtures": "literal synthetic IDs and original integer arithmetic, no real tenant or credentials",
+  "observed": [
+    {
+      "id": "original-input:harness_program_v1",
+      "expected": "same original input",
+      "status": "PASS"
+    },
+    {
+      "id": "original-input:economic_programme_v1",
+      "expected": "same original input",
+      "status": "PASS"
+    },
+    {
+      "id": "original-input:confidential_economic_computation_v1",
+      "expected": "same original input",
+      "status": "PASS"
+    },
+    {
+      "id": "missing-semantic-work",
+      "expected": "refused",
+      "status": "PASS"
+    },
+    {
+      "id": "missing-envelope-work",
+      "expected": "refused",
+      "status": "PASS"
+    },
+    {
+      "id": "conflicting-envelope-work",
+      "expected": "refused",
+      "status": "PASS"
+    },
+    {
+      "id": "malformed-work",
+      "expected": "refused",
+      "status": "PASS"
+    },
+    {
+      "id": "extra-tenant-selector",
+      "expected": "refused",
+      "status": "PASS"
+    },
+    {
+      "id": "extra-steering-envelope",
+      "expected": "refused",
+      "status": "PASS"
+    },
+    {
+      "id": "non-native-query",
+      "expected": "refused",
+      "status": "PASS"
+    },
+    {
+      "id": "sum-original-and-child-charges",
+      "expected": "520 - 27 - 6 = 487, child ceiling 200",
+      "status": "PASS"
+    },
+    {
+      "id": "no-new-parent-budget",
+      "expected": "488 > 487 refused",
+      "status": "PASS"
+    },
+    {
+      "id": "duplicate-demand",
+      "expected": "refused",
+      "status": "PASS"
+    },
+    {
+      "id": "unit-reinterpretation",
+      "expected": "refused",
+      "status": "PASS"
+    },
+    {
+      "id": "fractional-requests",
+      "expected": "refused",
+      "status": "PASS"
+    },
+    {
+      "id": "unknown-charge-amount",
+      "expected": "refused, not zero",
+      "status": "PASS"
+    },
+    {
+      "id": "original-overdrawn",
+      "expected": "refused",
+      "status": "PASS"
+    },
+    {
+      "id": "remaining-original-deadline",
+      "expected": "same requested attenuated deadline",
+      "status": "PASS"
+    },
+    {
+      "id": "deadline-extension:originalDeadlineAt",
+      "expected": "refused",
+      "status": "PASS"
+    },
+    {
+      "id": "deadline-extension:wallDeadlineAt",
+      "expected": "refused",
+      "status": "PASS"
+    },
+    {
+      "id": "deadline-extension:responsibilityDeadlineAt",
+      "expected": "refused",
+      "status": "PASS"
+    },
+    {
+      "id": "deadline-extension:programmeDeadlineAt",
+      "expected": "refused",
+      "status": "PASS"
+    },
+    {
+      "id": "expired-original-deadline",
+      "expected": "refused",
+      "status": "PASS"
+    },
+    {
+      "id": "last-original-unit",
+      "expected": "520 used, child 11 used",
+      "status": "PASS"
+    },
+    {
+      "id": "original-charge-exhaustion",
+      "expected": "refused",
+      "status": "PASS"
+    },
+    {
+      "id": "child-charge-exhaustion",
+      "expected": "refused",
+      "status": "PASS"
+    },
+    {
+      "id": "same-original-recovery-charge",
+      "expected": "520 used, child 11 used",
+      "status": "PASS"
+    },
+    {
+      "id": "no-forward-recovery-authority",
+      "expected": "refused",
+      "status": "PASS"
+    },
+    {
+      "id": "unsafe-numeric-charge",
+      "expected": "refused",
+      "status": "PASS"
+    }
+  ],
+  "pass": 29,
+  "fail": 0,
+  "costs": {
+    "elapsedMs": 29.061535,
+    "money": null,
+    "aggregateMemory": null
+  },
+  "authenticatedHttp": "NOT_RUN",
+  "databaseOwners": "NOT_RUN",
+  "mountedWork": "NOT_RUN",
+  "physicalRecovery": "NOT_RUN",
+  "rerun": "FINNOR_Z0_EVIDENCE_DIR=/absolute/owned/evidence node --import tsx finnor-os/scripts/project-z/z0/verify-contracts.mts"
+}

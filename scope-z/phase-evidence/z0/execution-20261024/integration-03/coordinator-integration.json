@@ -1,0 +1,142 @@
+{
+  "schema": "finnor.z0.coordinator-integration.v1",
+  "disposition": "PROPOSED_NOT_APPLIED",
+  "interfaceVersion": "institution-runtime-convergence-v1",
+  "sourceBase": "684d805e471836a720aa6741a3128eca17d28202",
+  "sourceTree": "163f63b65c88481194d0d48e77337494b3b9f24f",
+  "patchSha256": "a51bcd3c5cf76e9655fffa2ba77b945b932abe15f8d5d7b29d9a4aa7e29b74f2",
+  "paths": [
+    {
+      "path": "finnor-os/apps/api/app/api/queries/route.ts",
+      "preimageSha256": "33084eb58a28ee7385843665672f3c727ddaaf4d1719fd804c2d63e96c3c13d6",
+      "postimageSha256": "8bbfeab57f78a6e7abf3007e20175b51ee478d1af458221fa0a0f7a3f027b99c",
+      "patchSha256": "0ae22714d5b629569e4e7b0d5fc3c3bd2b4a64022ce297e774bb091e1875e621",
+      "sourceBytes": 5066,
+      "postimageBytes": 5253
+    },
+    {
+      "path": "finnor-os/packages/db/migrations-bundle.ts",
+      "preimageSha256": "7da76c665e8530c19072244c1c85ff15ecebf655b0c63deb723ff7d4db64455b",
+      "postimageSha256": "a7100f976a07f48d7f45d77c775223ad8749dce59e3bbbbdcd944407e1c0c666",
+      "patchSha256": "e81f92ecb8a2502baa4006803f9702a80ccdf69e3f37903c5d7e6ea1c7a15f6a",
+      "sourceBytes": 2206255,
+      "postimageBytes": 2233980
+    },
+    {
+      "path": "finnor-os/packages/db/migrations/postz_z0_institution_application_bridge.sql",
+      "preimageSha256": null,
+      "postimageSha256": "cb45fe38a9103fc5405e9a78f09492bad8e88213ae9fcab6640ec9cf4a259741",
+      "patchSha256": "3bab6d6ee04824cf759d6f05d1153255e72fdaa1ba01baaccd1fe9eb74c727ee",
+      "sourceBytes": null,
+      "postimageBytes": 27294
+    },
+    {
+      "path": "finnor-os/packages/orchestration/src/index.ts",
+      "preimageSha256": "29b662df15cf1ece9f868cd2c7b113e4989264e5ecd45d6cd9bdd38f7801e458",
+      "postimageSha256": "b33e81904fd4f3a7a618ec59ccea0b5e3f2032df9e983b5172f21ee9ed5c12fa",
+      "patchSha256": "b04edd28b284d5c5c540432be41c59333e3c266ed172fbdfbf521012270bee04",
+      "sourceBytes": 108734,
+      "postimageBytes": 107911
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/application-semantics/allocation.ts",
+      "preimageSha256": "eeb64f7cf27071bf06319820aacd88c58f8dddabf9aa1cac394e34565460b266",
+      "postimageSha256": "937caefee976fb312b9a9ef5805b0115bce81315d246fe33d7dbd0949e001a71",
+      "patchSha256": "8d7d9bd477b14b9f63be9f318cb8b92357c120550fcd486d2608dd6c3be0a229",
+      "sourceBytes": 21367,
+      "postimageBytes": 23110
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/application-semantics/api.ts",
+      "preimageSha256": "daa82aa0f3e822afed38b0a729ad77c807807dd2706906b56f476485e1c10837",
+      "postimageSha256": "8a97c2484347b481a7c2933c368fb75eb44b819d8b43ab58a926700cdbd5bbbf",
+      "patchSha256": "caded37f758640bd84ec9f27af953d394b89b63b8d016c04ea7c226fca13b60d",
+      "sourceBytes": 26280,
+      "postimageBytes": 27486
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/application-semantics/native-contracts.ts",
+      "preimageSha256": "218840dd44b47f0d766ba8f2c78d73ab968d603cbf980a4f82e2125a2e152cac",
+      "postimageSha256": "c422687345d006ac49413a4e52bf174ee07d23e79391b5b64fa970b946ae4f61",
+      "patchSha256": "3953ebf5d4956c63fca139a14ff4512fba2b3a2635371c105ada294f3118de5d",
+      "sourceBytes": 3049,
+      "postimageBytes": 3239
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/application-semantics/obligations.ts",
+      "preimageSha256": "c2a5814313014ff4ce8473f92adf2210942dc1a01991b186e6b0cc50b4789681",
+      "postimageSha256": "b2d1b47b1507f25267b28a1bb19ca66d5853c5f88073f91b994ec35d8a526b94",
+      "patchSha256": "0a8ad877629d2eec1ad85235bed9e1d0337b763a41048ef2b02a1cabde445ca5",
+      "sourceBytes": 29117,
+      "postimageBytes": 29724
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/application-semantics/ports.ts",
+      "preimageSha256": "ae59011c8b4e707044585ccdbf2a06038cf0cc0e1866d8a6c9cfb6cd67b2da4b",
+      "postimageSha256": "92f2ee31091afe4267935bc25a5197dd3310b46a3b985d3214e078a75165c01e",
+      "patchSha256": "b61759b3e72b336fb3d08620293fc3efb053443ec2b59598c1b7b780e7dee9c9",
+      "sourceBytes": 4986,
+      "postimageBytes": 5028
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/application-semantics/store.ts",
+      "preimageSha256": "076e70b9405e02c24b7375350bb751030e9c4e92729b0d8f51480715b2c40a54",
+      "postimageSha256": "6a3fbd4b63705eb9f426a55cea4ce19c1b061faede31b2cca23d57dfa446845b",
+      "patchSha256": "6c4bfab7f61c01246e1e6b724fc48aeb25ecbd28d9c050031831fc51fe0999fa",
+      "sourceBytes": 19011,
+      "postimageBytes": 19615
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/application-semantics/worker.ts",
+      "preimageSha256": "5af2f821ecca4078f6b759146713e6ad3cf054cc5d2b4532d2b77b4a197057c0",
+      "postimageSha256": "e9a2500cdeb6535eab14d19383f7d553b6435d78f192f10a28c5785da327300c",
+      "patchSha256": "1ca954f347a327cf771df9d5cf1e9355d468ce0a7350dcd7cb37cab52e219069",
+      "sourceBytes": 18777,
+      "postimageBytes": 19343
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/program-synthesis/institution-continuation.ts",
+      "preimageSha256": "c06a62b41bb9c923c53e54509ec519daa8852adbcb433c22e2cbcfcdbcba6a7f",
+      "postimageSha256": "eadf1cc5b7d91781dfc8e430dd27698e4725ba6d65948fc843833bff2efd83ec",
+      "patchSha256": "735dd6d030873aadde89478c9e3cb4979094f5d8e1336afaafa228c0f5a7e43d",
+      "sourceBytes": 23928,
+      "postimageBytes": 24110
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/program-synthesis/institution.ts",
+      "preimageSha256": "e5cbfa05da2f6a1ac6b5c5d91d0b3c10805ed56b96e8ac9a5a17058479b38d69",
+      "postimageSha256": "ca957fa26929f6a97c4c585010f4c4d8e668b1d3cbdde7df774a8cd81b7c43e1",
+      "patchSha256": "21444f2025a02616652cd858ec0417267445bf14f59419b405d2ab8d3e4ac94d",
+      "sourceBytes": 22993,
+      "postimageBytes": 23175
+    },
+    {
+      "path": "finnor-os/scripts/bundle-migrations.ts",
+      "preimageSha256": "ca089b9ba1105c95172ffbf067711fdd86ec54026b1600af34ca2077576d9c1d",
+      "postimageSha256": "4c6ff1914d09dea2af02cf583c3c88c54b33f2924a82f054c5aff5382bf8248f",
+      "patchSha256": "26eae9c9c08d787b1d1bb9743a9d686497f8d894f007f80c4914bbf20e214397",
+      "sourceBytes": 4525,
+      "postimageBytes": 4571
+    },
+    {
+      "path": "src/components/centropy/canvas/application-semantics-client.ts",
+      "preimageSha256": "f3c76c80a203de4f26d32025c4ec4d9f7e44cdca61eff30d990cd0f3a6712b98",
+      "postimageSha256": "28bed8bc474df284ce81601264b58bff31661f0ab48feb0f1d7673a5a630d793",
+      "patchSha256": "c3a74a5165cd652bf6da642f373bca9fd5bcb08e0e15a77748713f8122894861",
+      "sourceBytes": 44047,
+      "postimageBytes": 48144
+    },
+    {
+      "path": "src/components/centropy/canvas/ApplicationSemanticsPanel.tsx",
+      "preimageSha256": "5b13c158facb283bd127429ae648fa66ce7a1899d878fd6af2dab1363c9af6e2",
+      "postimageSha256": "7badac3cfbf5eedc320fd08f2cbb0a251c5a01dd16cc30f2ba25fe75f5f4e0fe",
+      "patchSha256": "029192da01baaa5168f9cee2b3decae479917bc9bed07b097d3b84adbb72c8df",
+      "sourceBytes": 55149,
+      "postimageBytes": 57784
+    }
+  ],
+  "authority": "COORDINATOR_REVIEW_AND_SHARED_FILE_OWNERSHIP_REQUIRED",
+  "migrationExecuted": false,
+  "grantsExecuted": false,
+  "authenticatedProductProof": "NOT_RUN"
+}

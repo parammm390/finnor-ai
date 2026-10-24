@@ -1,0 +1,34 @@
+{
+  "schema": "finnor.project-z.z0.execution-start.v1",
+  "observedAt": "2026-10-24T14:49:19Z",
+  "phase": "Z0",
+  "role": "independent implementation chat",
+  "sessionIdFromCreationReceipt": "66647028-fac4-4793-bec3-22b564d12b90",
+  "computerIdFromLaunchSnapshot": "eea8d359-5a5c-4aff-b465-494dd7a8ba88",
+  "worktree": "/home/factory-user/repos/finnor-z0",
+  "branch": "factory/project-z0",
+  "observedSourceHead": "684d805e471836a720aa6741a3128eca17d28202",
+  "observedSourceTree": "163f63b65c88481194d0d48e77337494b3b9f24f",
+  "nodeVersion": "v22.23.4",
+  "topologyAuthority": "current user shared-Computer, separate-chat override",
+  "sealedDistinctComputerControllerUsed": false,
+  "modelPolicy": {
+    "required": "gpt-6.1-sol/max",
+    "harnessReportedModel": "GPT-6.1 Sol",
+    "creationReceiptRequested": "gpt-6.1-sol/max",
+    "independentRuntimeReasoningAttestation": "NOT_OBSERVED",
+    "fallback": false,
+    "subagentsStarted": 0
+  },
+  "actualState": "reading and byte-verifying complete delivered context",
+  "fullReadAcknowledged": false,
+  "productImplementationStarted": false,
+  "productCompletion": "INCOMPLETE",
+  "externalActionsAuthorized": false,
+  "notes": [
+    "This is the executing chat's start observation, not a sealed-controller PASS or an independent model attestation.",
+    "Original untracked shared-computer-launch records remain untouched.",
+    "All sealed members and other lanes remain read-only.",
+    "Node heaps are limited to 1536 MiB and heavy commands use the user-specified shared flock."
+  ]
+}

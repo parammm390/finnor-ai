@@ -1,0 +1,23 @@
+{
+  "schema": "finnor.production-query-surface-proof.v1",
+  "scenario": "surface-negative-controls",
+  "inputs": {
+    "removedPublicIntent": "work_list",
+    "injectedNativeIntents": [
+      "harness_program_v1",
+      "economic_programme_v1",
+      "confidential_economic_computation_v1"
+    ]
+  },
+  "steps": [
+    "Load committed OpenAPI",
+    "Execute the real production query boundary or native refusal",
+    "Assert original authority and public-surface invariants"
+  ],
+  "observed": {
+    "missingPublicRejected": true,
+    "exposedNativeRejected": true
+  },
+  "openApiSha256": "466a0147bd8fc949b0ee4b438591c5a82891127a0471a85b8e2fef31bcf2791d",
+  "rerun": "npm --prefix finnor-os test -- --run tests/integration/production-query-surface.test.ts"
+}

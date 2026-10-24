@@ -1,0 +1,14 @@
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+ RUN  v4.1.12 /home/factory-user/repos/finnor-z0/finnor-os
+
+ ✓ tests/integration/production-query-surface.test.ts (3 tests) 1605ms
+     ✓ runs the complete production boundary against the generated public contract  1457ms
+
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+   Start at  15:05:20
+   Duration  8.19s (transform 3.32s, setup 106ms, import 6.29s, tests 1.61s, environment 0ms)
+

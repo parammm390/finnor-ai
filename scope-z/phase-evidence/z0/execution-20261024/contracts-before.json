@@ -1,0 +1,198 @@
+{
+  "schema": "finnor.project-z.z0.isolated-contract-sweep.v1",
+  "baseline": true,
+  "observedAt": "2026-10-24T14:57:23.089Z",
+  "evidenceClass": "ISOLATED_LITERAL_CONTRACTS_NOT_AUTHENTICATED_PRODUCT_E2E",
+  "node": "v22.23.4",
+  "runnerSha256": "7ba64589d32be2b208ff4212910d2f16146b751eebc906626852756e025eaca9",
+  "semanticsSha256": null,
+  "fixtures": "literal synthetic IDs and original integer arithmetic, no real tenant or credentials",
+  "observed": [
+    {
+      "id": "original-input:harness_program_v1",
+      "expected": "same original input",
+      "status": "FAIL",
+      "predicate": "OWNED_SEMANTICS_INTERFACE_UNAVAILABLE"
+    },
+    {
+      "id": "original-input:economic_programme_v1",
+      "expected": "same original input",
+      "status": "FAIL",
+      "predicate": "OWNED_SEMANTICS_INTERFACE_UNAVAILABLE"
+    },
+    {
+      "id": "original-input:confidential_economic_computation_v1",
+      "expected": "same original input",
+      "status": "FAIL",
+      "predicate": "OWNED_SEMANTICS_INTERFACE_UNAVAILABLE"
+    },
+    {
+      "id": "missing-semantic-work",
+      "expected": "refused",
+      "status": "FAIL",
+      "predicate": "OWNED_SEMANTICS_INTERFACE_UNAVAILABLE"
+    },
+    {
+      "id": "missing-envelope-work",
+      "expected": "refused",
+      "status": "FAIL",
+      "predicate": "OWNED_SEMANTICS_INTERFACE_UNAVAILABLE"
+    },
+    {
+      "id": "conflicting-envelope-work",
+      "expected": "refused",
+      "status": "FAIL",
+      "predicate": "OWNED_SEMANTICS_INTERFACE_UNAVAILABLE"
+    },
+    {
+      "id": "malformed-work",
+      "expected": "refused",
+      "status": "FAIL",
+      "predicate": "OWNED_SEMANTICS_INTERFACE_UNAVAILABLE"
+    },
+    {
+      "id": "extra-tenant-selector",
+      "expected": "refused",
+      "status": "FAIL",
+      "predicate": "OWNED_SEMANTICS_INTERFACE_UNAVAILABLE"
+    },
+    {
+      "id": "extra-steering-envelope",
+      "expected": "refused",
+      "status": "FAIL",
+      "predicate": "OWNED_SEMANTICS_INTERFACE_UNAVAILABLE"
+    },
+    {
+      "id": "non-native-query",
+      "expected": "refused",
+      "status": "FAIL",
+      "predicate": "OWNED_SEMANTICS_INTERFACE_UNAVAILABLE"
+    },
+    {
+      "id": "sum-original-and-child-charges",
+      "expected": "520 - 27 - 6 = 487, child ceiling 200",
+      "status": "FAIL",
+      "predicate": "OWNED_SEMANTICS_INTERFACE_UNAVAILABLE"
+    },
+    {
+      "id": "no-new-parent-budget",
+      "expected": "488 > 487 refused",
+      "status": "FAIL",
+      "predicate": "OWNED_SEMANTICS_INTERFACE_UNAVAILABLE"
+    },
+    {
+      "id": "duplicate-demand",
+      "expected": "refused",
+      "status": "FAIL",
+      "predicate": "OWNED_SEMANTICS_INTERFACE_UNAVAILABLE"
+    },
+    {
+      "id": "unit-reinterpretation",
+      "expected": "refused",
+      "status": "FAIL",
+      "predicate": "OWNED_SEMANTICS_INTERFACE_UNAVAILABLE"
+    },
+    {
+      "id": "fractional-requests",
+      "expected": "refused",
+      "status": "FAIL",
+      "predicate": "OWNED_SEMANTICS_INTERFACE_UNAVAILABLE"
+    },
+    {
+      "id": "unknown-charge-amount",
+      "expected": "refused, not zero",
+      "status": "FAIL",
+      "predicate": "OWNED_SEMANTICS_INTERFACE_UNAVAILABLE"
+    },
+    {
+      "id": "original-overdrawn",
+      "expected": "refused",
+      "status": "FAIL",
+      "predicate": "OWNED_SEMANTICS_INTERFACE_UNAVAILABLE"
+    },
+    {
+      "id": "remaining-original-deadline",
+      "expected": "same requested attenuated deadline",
+      "status": "FAIL",
+      "predicate": "OWNED_SEMANTICS_INTERFACE_UNAVAILABLE"
+    },
+    {
+      "id": "deadline-extension:originalDeadlineAt",
+      "expected": "refused",
+      "status": "FAIL",
+      "predicate": "OWNED_SEMANTICS_INTERFACE_UNAVAILABLE"
+    },
+    {
+      "id": "deadline-extension:wallDeadlineAt",
+      "expected": "refused",
+      "status": "FAIL",
+      "predicate": "OWNED_SEMANTICS_INTERFACE_UNAVAILABLE"
+    },
+    {
+      "id": "deadline-extension:responsibilityDeadlineAt",
+      "expected": "refused",
+      "status": "FAIL",
+      "predicate": "OWNED_SEMANTICS_INTERFACE_UNAVAILABLE"
+    },
+    {
+      "id": "deadline-extension:programmeDeadlineAt",
+      "expected": "refused",
+      "status": "FAIL",
+      "predicate": "OWNED_SEMANTICS_INTERFACE_UNAVAILABLE"
+    },
+    {
+      "id": "expired-original-deadline",
+      "expected": "refused",
+      "status": "FAIL",
+      "predicate": "OWNED_SEMANTICS_INTERFACE_UNAVAILABLE"
+    },
+    {
+      "id": "last-original-unit",
+      "expected": "520 used, child 11 used",
+      "status": "FAIL",
+      "predicate": "OWNED_SEMANTICS_INTERFACE_UNAVAILABLE"
+    },
+    {
+      "id": "original-charge-exhaustion",
+      "expected": "refused",
+      "status": "FAIL",
+      "predicate": "OWNED_SEMANTICS_INTERFACE_UNAVAILABLE"
+    },
+    {
+      "id": "child-charge-exhaustion",
+      "expected": "refused",
+      "status": "FAIL",
+      "predicate": "OWNED_SEMANTICS_INTERFACE_UNAVAILABLE"
+    },
+    {
+      "id": "same-original-recovery-charge",
+      "expected": "520 used, child 11 used",
+      "status": "FAIL",
+      "predicate": "OWNED_SEMANTICS_INTERFACE_UNAVAILABLE"
+    },
+    {
+      "id": "no-forward-recovery-authority",
+      "expected": "refused",
+      "status": "FAIL",
+      "predicate": "OWNED_SEMANTICS_INTERFACE_UNAVAILABLE"
+    },
+    {
+      "id": "unsafe-numeric-charge",
+      "expected": "refused",
+      "status": "FAIL",
+      "predicate": "OWNED_SEMANTICS_INTERFACE_UNAVAILABLE"
+    }
+  ],
+  "pass": 0,
+  "fail": 29,
+  "costs": {
+    "elapsedMs": 5.997960000000006,
+    "money": null,
+    "aggregateMemory": null
+  },
+  "authenticatedHttp": "NOT_RUN",
+  "databaseOwners": "NOT_RUN",
+  "mountedWork": "NOT_RUN",
+  "physicalRecovery": "NOT_RUN",
+  "rerun": "FINNOR_Z0_EVIDENCE_DIR=/absolute/owned/evidence node --import tsx finnor-os/scripts/project-z/z0/verify-contracts.mts"
+}

@@ -1,0 +1,105 @@
+{
+  "schema": "finnor.project-z.z0.scoped-diagnostic-bindings.v1",
+  "evidenceClass": "partial",
+  "finalManifest": "scope-z/phase-evidence/z0/execution-20261024/integration-05/coordinator-integration.json",
+  "patchSha256": "c4160a06674bda29c924e7b94be2e6c16ec1153ee3d5bbab50af5a44d9afd6ae",
+  "groups": [
+    {
+      "group": "owned",
+      "log": "overlay-final-owned-second.log",
+      "checkedManifest": "scope-z/phase-evidence/z0/execution-20261024/integration-05/coordinator-integration.json",
+      "selectedFiles": [
+        "finnor-os/packages/orchestration/src/project-z/z0-convergence/index.ts",
+        "finnor-os/packages/orchestration/src/project-z/z0-convergence/semantics.ts",
+        "finnor-os/packages/orchestration/src/project-z/z0-convergence/original-work-observation.ts",
+        "finnor-os/packages/orchestration/src/project-z/z0-convergence/institution-origin.ts",
+        "finnor-os/packages/orchestration/src/project-z/z0-convergence/institution-allocation.ts",
+        "finnor-os/packages/orchestration/src/project-z/z0-convergence/institution-consumer.ts",
+        "finnor-os/packages/orchestration/src/project-z/z0-convergence/projection.ts"
+      ],
+      "sharedPostimagesEqualLatest": true,
+      "diagnostics": 0,
+      "claim": "Selected-file diagnostics only, not full graph or runtime proof"
+    },
+    {
+      "group": "api",
+      "log": "overlay-final-api.log",
+      "checkedManifest": "scope-z/phase-evidence/z0/execution-20261024/integration-04/coordinator-integration.json",
+      "selectedFiles": [
+        "finnor-os/packages/private-equity/src/application-semantics/api.ts",
+        "finnor-os/packages/private-equity/src/application-semantics/native-contracts.ts",
+        "finnor-os/packages/private-equity/src/application-semantics/ports.ts",
+        "finnor-os/packages/private-equity/src/application-semantics/store.ts"
+      ],
+      "sharedPostimagesEqualLatest": true,
+      "diagnostics": 0,
+      "claim": "Selected-file diagnostics only, not full graph or runtime proof"
+    },
+    {
+      "group": "s5-s6",
+      "log": "overlay-first-s5-s6.log",
+      "checkedManifest": "scope-z/phase-evidence/z0/execution-20261024/integration-01/coordinator-integration.json",
+      "selectedFiles": [
+        "finnor-os/packages/private-equity/src/application-semantics/allocation.ts",
+        "finnor-os/packages/private-equity/src/application-semantics/obligations.ts",
+        "finnor-os/packages/private-equity/src/application-semantics/worker.ts"
+      ],
+      "sharedPostimagesEqualLatest": true,
+      "diagnostics": 0,
+      "claim": "Selected-file diagnostics only, not full graph or runtime proof"
+    },
+    {
+      "group": "p1",
+      "log": "overlay-first-p1.log",
+      "checkedManifest": "scope-z/phase-evidence/z0/execution-20261024/integration-01/coordinator-integration.json",
+      "selectedFiles": [
+        "finnor-os/packages/private-equity/src/program-synthesis/institution.ts",
+        "finnor-os/packages/private-equity/src/program-synthesis/institution-continuation.ts"
+      ],
+      "sharedPostimagesEqualLatest": true,
+      "diagnostics": 0,
+      "claim": "Selected-file diagnostics only, not full graph or runtime proof"
+    },
+    {
+      "group": "orchestration",
+      "log": "overlay-first-orchestration.log",
+      "checkedManifest": "scope-z/phase-evidence/z0/execution-20261024/integration-01/coordinator-integration.json",
+      "selectedFiles": [
+        "finnor-os/packages/orchestration/src/index.ts",
+        "finnor-os/apps/api/app/api/queries/route.ts"
+      ],
+      "sharedPostimagesEqualLatest": true,
+      "diagnostics": 0,
+      "claim": "Selected-file diagnostics only, not full graph or runtime proof"
+    },
+    {
+      "group": "frontend",
+      "log": "overlay-second-frontend.log",
+      "checkedManifest": "scope-z/phase-evidence/z0/execution-20261024/integration-01/coordinator-integration.json",
+      "selectedFiles": [
+        "src/components/centropy/canvas/application-semantics-client.ts",
+        "src/components/centropy/canvas/ApplicationSemanticsPanel.tsx"
+      ],
+      "sharedPostimagesEqualLatest": true,
+      "diagnostics": 0,
+      "claim": "Selected-file diagnostics only, not full graph or runtime proof"
+    },
+    {
+      "group": "scripts",
+      "log": "overlay-final-scripts-second.log",
+      "checkedManifest": "scope-z/phase-evidence/z0/execution-20261024/integration-05/coordinator-integration.json",
+      "selectedFiles": [
+        "finnor-os/scripts/project-z/z0/prepare-integration.mts",
+        "finnor-os/scripts/project-z/z0/integration-frontend.mts",
+        "finnor-os/scripts/project-z/z0/verify-integration-types.mts",
+        "finnor-os/scripts/project-z/z0/verify-contracts.mts",
+        "finnor-os/scripts/project-z/z0/prepare-owned-reconstruction.mts"
+      ],
+      "sharedPostimagesEqualLatest": true,
+      "diagnostics": 0,
+      "claim": "Selected-file diagnostics only, not full graph or runtime proof"
+    }
+  ],
+  "fullProjectTypecheck": "FAILED",
+  "completeNativeDependencyGraph": "NOT_RUN"
+}

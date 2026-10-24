@@ -1,0 +1,25 @@
+{
+  "sourceBase": "684d805e471836a720aa6741a3128eca17d28202",
+  "sourceTree": "163f63b65c88481194d0d48e77337494b3b9f24f",
+  "preimages": {
+    "finnor-os/apps/api/app/api/queries/route.ts": "33084eb58a28ee7385843665672f3c727ddaaf4d1719fd804c2d63e96c3c13d6",
+    "finnor-os/packages/db/migration-head.ts": "6d4f7df93db89c2c035c97b6f97ab6c821dd44b57bb43504eeec0b876fa2d70e",
+    "finnor-os/packages/db/migrations-bundle.ts": "7da76c665e8530c19072244c1c85ff15ecebf655b0c63deb723ff7d4db64455b",
+    "finnor-os/packages/db/migrations/postz_z0_institution_application_bridge.sql": null,
+    "finnor-os/packages/orchestration/src/index.ts": "29b662df15cf1ece9f868cd2c7b113e4989264e5ecd45d6cd9bdd38f7801e458",
+    "finnor-os/packages/private-equity/src/application-semantics/allocation.ts": "eeb64f7cf27071bf06319820aacd88c58f8dddabf9aa1cac394e34565460b266",
+    "finnor-os/packages/private-equity/src/application-semantics/api.ts": "daa82aa0f3e822afed38b0a729ad77c807807dd2706906b56f476485e1c10837",
+    "finnor-os/packages/private-equity/src/application-semantics/native-contracts.ts": "218840dd44b47f0d766ba8f2c78d73ab968d603cbf980a4f82e2125a2e152cac",
+    "finnor-os/packages/private-equity/src/application-semantics/obligations.ts": "c2a5814313014ff4ce8473f92adf2210942dc1a01991b186e6b0cc50b4789681",
+    "finnor-os/packages/private-equity/src/application-semantics/ports.ts": "ae59011c8b4e707044585ccdbf2a06038cf0cc0e1866d8a6c9cfb6cd67b2da4b",
+    "finnor-os/packages/private-equity/src/application-semantics/store.ts": "076e70b9405e02c24b7375350bb751030e9c4e92729b0d8f51480715b2c40a54",
+    "finnor-os/packages/private-equity/src/application-semantics/worker.ts": "5af2f821ecca4078f6b759146713e6ad3cf054cc5d2b4532d2b77b4a197057c0",
+    "finnor-os/packages/private-equity/src/program-synthesis/institution-continuation.ts": "c06a62b41bb9c923c53e54509ec519daa8852adbcb433c22e2cbcfcdbcba6a7f",
+    "finnor-os/packages/private-equity/src/program-synthesis/institution.ts": "e5cbfa05da2f6a1ac6b5c5d91d0b3c10805ed56b96e8ac9a5a17058479b38d69",
+    "finnor-os/scripts/bundle-migrations.ts": "ca089b9ba1105c95172ffbf067711fdd86ec54026b1600af34ca2077576d9c1d",
+    "infra/deployment/production.contract.json": "617b8597daad3d0cdea1052bdf0f6b995b28d47544fdafacab86c8366aac7992",
+    "scripts/release/release-policy.test.mjs": "f68fc24fcba37a4a5936d1bd00972fc1453b768772304d8d590591e358594e07",
+    "src/components/centropy/canvas/application-semantics-client.ts": "f3c76c80a203de4f26d32025c4ec4d9f7e44cdca61eff30d990cd0f3a6712b98",
+    "src/components/centropy/canvas/ApplicationSemanticsPanel.tsx": "5b13c158facb283bd127429ae648fa66ce7a1899d878fd6af2dab1363c9af6e2"
+  }
+}

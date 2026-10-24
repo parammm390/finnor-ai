@@ -1,0 +1,2 @@
+
+{"evidenceClass":"EXISTING_LINT_RULES_OVER_VIRTUAL_PROPOSED_FRONTEND_POSTIMAGES","files":["src/components/centropy/canvas/application-semantics-client.ts","src/components/centropy/canvas/ApplicationSemanticsPanel.tsx"],"errors":0,"warnings":0,"sharedFilesWritten":false}

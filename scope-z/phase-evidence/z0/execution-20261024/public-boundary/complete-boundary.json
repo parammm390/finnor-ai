@@ -1,0 +1,43 @@
+{
+  "schema": "finnor.production-query-surface-proof.v1",
+  "scenario": "complete-boundary",
+  "inputs": {
+    "publicIntents": [
+      "work_list",
+      "attention_queue",
+      "agent_activity",
+      "workforce_status",
+      "company_context",
+      "party_lookup",
+      "party_context",
+      "team_roster",
+      "pe_world_state",
+      "deal_context",
+      "deal_workstreams",
+      "open_requests",
+      "open_findings",
+      "open_deal_risks",
+      "critical_dependencies",
+      "closing_readiness"
+    ],
+    "nativeIntents": [
+      "harness_program_v1",
+      "economic_programme_v1",
+      "confidential_economic_computation_v1"
+    ]
+  },
+  "steps": [
+    "Load committed OpenAPI",
+    "Execute the real production query boundary or native refusal",
+    "Assert original authority and public-surface invariants"
+  ],
+  "observed": {
+    "scannedFiles": 1596,
+    "negativeControl": true,
+    "actions": 46,
+    "publicQueries": 16,
+    "nativeQueries": 3
+  },
+  "openApiSha256": "466a0147bd8fc949b0ee4b438591c5a82891127a0471a85b8e2fef31bcf2791d",
+  "rerun": "npm --prefix finnor-os test -- --run tests/integration/production-query-surface.test.ts"
+}

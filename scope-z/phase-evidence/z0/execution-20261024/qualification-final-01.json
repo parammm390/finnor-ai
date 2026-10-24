@@ -1,0 +1,75 @@
+{
+  "schema": "finnor.project-z.z0.qualification.v1",
+  "phase": "Z0",
+  "principalOutputType": "ConvergedInstitutionRuntime",
+  "computationDisposition": "INCOMPLETE",
+  "overallEvidenceClass": "partial",
+  "interfaceVersion": "institution-runtime-convergence-v1",
+  "scientificIncrement": false,
+  "sharedIntegration": "PROPOSED_NOT_APPLIED",
+  "gates": {
+    "architecture": { "state": "IN_PROGRESS", "evidenceClass": "partial" },
+    "internal-software": { "state": "IN_PROGRESS", "evidenceClass": "partial", "fullProjectTypecheck": "FAILED" },
+    "installed-development-reconstruction": { "state": "NOT_RUN", "componentReplayOnly": "PASSED" },
+    "mathematical-security-domain": { "state": "NOT_RUN" },
+    "protected-admission": { "state": "NOT_RUN" },
+    "equipped-increment": { "state": "NOT_RUN" },
+    "operational-100x": { "state": "NOT_RUN" },
+    "financial-headroom": { "state": "UNKNOWN" },
+    "financial-100x": { "state": "NOT_RUN" },
+    "production-activation": { "state": "NOT_RUN" }
+  },
+  "coverage": {
+    "contextAndLockDoctor": "PASSED",
+    "canonicalInventorySourceChecks": "PASSED",
+    "originalWorkAuthenticatedHttpAndDb": "NOT_RUN",
+    "originalParentNativePositiveAndNegative": "NOT_RUN",
+    "mountedCanonicalWorkAndReload": "NOT_RUN",
+    "physicalRecovery": "NOT_RUN",
+    "separatelyInstalledIntegratedRepeat": "NOT_RUN",
+    "historicalD2Repair": "REUSED"
+  },
+  "checks": {
+    "predeclaredLiteralContractsBefore": { "pass": 0, "fail": 29 },
+    "predeclaredLiteralContractsAfter": { "pass": 29, "fail": 0 },
+    "existingProductionQuerySurface": { "pass": 3, "fail": 0 },
+    "existingCanonicalManifest": { "http": 580, "planner": 77 },
+    "existingIndependentCoverage": { "total": 657, "classified": 657, "backendWithoutMount": 93, "unresolvedDynamic": 0 },
+    "scopedVirtualDiagnostics": { "state": "PASSED", "fullProject": false },
+    "proposedFrontendExistingEslint": { "errors": 0, "warnings": 0 },
+    "fullBackendTypecheck": { "state": "FAILED", "exit": 134, "reason": "1536 MiB heap OOM" },
+    "runtimeGraphTypecheck": { "state": "FAILED", "exit": 134, "reason": "1536 MiB heap OOM" },
+    "separateOwnedSemanticsComponentInstallBuildReplay": { "state": "PASSED", "pass": 29, "fail": 0, "productProof": false },
+    "sqlParseAndExecution": { "state": "NOT_RUN" }
+  },
+  "realRuntimeActions": {
+    "authBypassUsed": false,
+    "borrowedSiblingStack": false,
+    "migrationExecuted": false,
+    "grantsExecuted": false,
+    "newRuntimeReservationsCreated": 0,
+    "newRuntimeObligationsCreated": 0,
+    "preexistingRuntimeState": "UNKNOWN",
+    "externalSends": 0,
+    "pushOrPrOrDeployOrProvision": false
+  },
+  "costs": {
+    "completeS7RuntimeCosts": "NOT_RUN",
+    "wholeRunMoney": { "state": "UNKNOWN", "value": null },
+    "wholeRunLabor": { "state": "UNKNOWN", "value": null },
+    "wholeRunTokens": { "state": "UNKNOWN", "value": null },
+    "compute": "Partial wall-time and memory observations retained in check logs; not full billing",
+    "releaseSufficient": false
+  },
+  "remainingInternal": [
+    "Coordinator shared integration remains unapplied",
+    "SQL schema, role, guard, digest, idempotency and concurrency behavior unproved",
+    "Full graph checks failed and final complete emitted build not produced",
+    "D1 native accounting and useful G1 original-owner use not observed"
+  ],
+  "externalAuthorityNotDelivered": [
+    "Explicitly authorized disposable DB and tenant",
+    "Real local test-owner credentials and matching frontend/API Auth project",
+    "Owned stack, process and port identities"
+  ]
+}

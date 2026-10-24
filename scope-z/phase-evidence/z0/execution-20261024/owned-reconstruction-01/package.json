@@ -1,0 +1,13 @@
+{
+  "name": "finnor-z0-owned-contract-reconstruction",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": "22.x"
+  },
+  "dependencies": {
+    "typescript": "5.9.3",
+    "zod": "3.25.76"
+  }
+}

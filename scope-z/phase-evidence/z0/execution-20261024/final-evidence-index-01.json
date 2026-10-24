@@ -1,0 +1,470 @@
+{
+  "schema": "finnor.project-z.z0.local-evidence-index.v1",
+  "disposition": "INCOMPLETE",
+  "files": [
+    {
+      "path": "finnor-os/packages/orchestration/src/project-z/z0-convergence/index.ts",
+      "bytes": 950,
+      "sha256": "f981fac916e112c27447e984de35f34825f067f6a0c4d015e3d7f1b060b8fcc5"
+    },
+    {
+      "path": "finnor-os/packages/orchestration/src/project-z/z0-convergence/institution-allocation.ts",
+      "bytes": 22916,
+      "sha256": "d23214d462b59b9bb8dc5978c0378370e3efce4157a75c97863f93c1970feca3"
+    },
+    {
+      "path": "finnor-os/packages/orchestration/src/project-z/z0-convergence/institution-consumer.ts",
+      "bytes": 12770,
+      "sha256": "4ed54f2d92705fba331e52418cd3917b6fb323527906292d3e1828ba140f16d4"
+    },
+    {
+      "path": "finnor-os/packages/orchestration/src/project-z/z0-convergence/institution-origin.ts",
+      "bytes": 15645,
+      "sha256": "ab00503bee1ed124df0d6caf987e7d3150e2e7d81c1f9662c6fd077a31c50d3c"
+    },
+    {
+      "path": "finnor-os/packages/orchestration/src/project-z/z0-convergence/original-work-observation.ts",
+      "bytes": 1993,
+      "sha256": "0ac1dc3f861cac3d756b87f0caea18c317be0ba0b781fb29068095e2dcc005f4"
+    },
+    {
+      "path": "finnor-os/packages/orchestration/src/project-z/z0-convergence/projection.ts",
+      "bytes": 3048,
+      "sha256": "ecf403db23a1cf18657698ac81389f48f04f10d5fe879320a9a09fa0d0167039"
+    },
+    {
+      "path": "finnor-os/packages/orchestration/src/project-z/z0-convergence/s5-owner-adapter.sql",
+      "bytes": 27294,
+      "sha256": "cb45fe38a9103fc5405e9a78f09492bad8e88213ae9fcab6640ec9cf4a259741"
+    },
+    {
+      "path": "finnor-os/packages/orchestration/src/project-z/z0-convergence/semantics.ts",
+      "bytes": 5512,
+      "sha256": "45b56093dc1f13b78d3f9910364cae192a5cce530e4028a13071bd6dd4d9e389"
+    },
+    {
+      "path": "finnor-os/scripts/project-z/z0/integration-frontend.mts",
+      "bytes": 9113,
+      "sha256": "265be50fe90c1aab5a7b92f34381f328febde38d14bdc59fcb42fd4f8287b4f9"
+    },
+    {
+      "path": "finnor-os/scripts/project-z/z0/integration-preimages.json",
+      "bytes": 2661,
+      "sha256": "5c1c9405532a4b3f5a31cce66d7e7e093b0518a65b177cf30bc34ac08407eb17"
+    },
+    {
+      "path": "finnor-os/scripts/project-z/z0/prepare-integration.mts",
+      "bytes": 24553,
+      "sha256": "c5b7ca6c737aad14c553e9e465abd1a981efd2a085a06b3a8289913ecc3394ff"
+    },
+    {
+      "path": "finnor-os/scripts/project-z/z0/prepare-owned-reconstruction.mts",
+      "bytes": 7852,
+      "sha256": "cc21ffd291b10255bf5b1495df5c3900e5eeb535b94c358ecdcc8a8727d813b0"
+    },
+    {
+      "path": "finnor-os/scripts/project-z/z0/tsconfig.json",
+      "bytes": 222,
+      "sha256": "91537e4d04d1012983c1ae8dc90758c619e2d93d17f3d4f5c4934b1de8adab54"
+    },
+    {
+      "path": "finnor-os/scripts/project-z/z0/tsconfig.runtime.json",
+      "bytes": 293,
+      "sha256": "65aa9828de590aee48afe35e052423317ee3a3ea49c459f5e4973f080d0cb3fd"
+    },
+    {
+      "path": "finnor-os/scripts/project-z/z0/verify-contracts.mts",
+      "bytes": 8493,
+      "sha256": "7ba64589d32be2b208ff4212910d2f16146b751eebc906626852756e025eaca9"
+    },
+    {
+      "path": "finnor-os/scripts/project-z/z0/verify-integration-types.mts",
+      "bytes": 4747,
+      "sha256": "51a079a23f13107943deed8bce210e37e64d3f696555f6f97858a06a32ca9844"
+    },
+    {
+      "path": "scope-z/phase-evidence/z0/execution-20261024/assembly-check.log",
+      "bytes": 1641,
+      "sha256": "86cbd5131424357f4efca0a8e3a22bd8d13155e32915e8e3fe519b2913b3dfc2"
+    },
+    {
+      "path": "scope-z/phase-evidence/z0/execution-20261024/assembly-final.log",
+      "bytes": 1641,
+      "sha256": "86cbd5131424357f4efca0a8e3a22bd8d13155e32915e8e3fe519b2913b3dfc2"
+    },
+    {
+      "path": "scope-z/phase-evidence/z0/execution-20261024/canonical-coverage-check.log",
+      "bytes": 755,
+      "sha256": "315ecd236b4a68b37ceded8555b18f423dab91550df481a8c72173488f1ece5b"
+    },
+    {
+      "path": "scope-z/phase-evidence/z0/execution-20261024/canonical-manifest-check.log",
+      "bytes": 180,
+      "sha256": "0200a80a9442d2175db5876d6a12ef5cb01de44b8e5c6717b94f0527263673b8"
+    },
+    {
+      "path": "scope-z/phase-evidence/z0/execution-20261024/context-byte-verification.json",
+      "bytes": 8533,
+      "sha256": "750dd700c4fd48549f4481016719adee75160458de87acaf1d1a14652596556e"
+    },
+    {
+      "path": "scope-z/phase-evidence/z0/execution-20261024/contracts-after.json",
+      "bytes": 4164,
+      "sha256": "8d217fb67c862669435f840d2b82d6f416ccfc9fe02630495df4bb53054a542d"
+    },
+    {
+      "path": "scope-z/phase-evidence/z0/execution-20261024/contracts-before.json",
+      "bytes": 5840,
+      "sha256": "ca33876e12ed9252951170ac282ac39a787d17a8f2871535a0196ea1bd34abbd"
+    },
+    {
+      "path": "scope-z/phase-evidence/z0/execution-20261024/failure-model-and-design.md",
+      "bytes": 6105,
+      "sha256": "0764c3b44e388c08ec7294d2c0f3e088f458bbcbb6b24d2996f484fbf03f33b6"
+    },
+    {
+      "path": "scope-z/phase-evidence/z0/execution-20261024/full-read.json",
+      "bytes": 13465,
+      "sha256": "915479a8e6498cbd6ce77d9b04fb525d9ae01d5bec7b4f30e57337359d259267"
+    },
+    {
+      "path": "scope-z/phase-evidence/z0/execution-20261024/handoff-early-01.md",
+      "bytes": 5113,
+      "sha256": "4599370edd83444f2ab91e0b948cd4a95cb269b9f48923e0942dc94c29412d85"
+    },
+    {
+      "path": "scope-z/phase-evidence/z0/execution-20261024/handoff-final-01.md",
+      "bytes": 10051,
+      "sha256": "86045ee7b420cef4effe3a5ea256dc18ec89f8bf0dc218048080bc526b995816"
+    },
+    {
+      "path": "scope-z/phase-evidence/z0/execution-20261024/install-backend.log",
+      "bytes": 796,
+      "sha256": "fbcb7b81ccf19d793a5d4733e7f5cf7570cfc44ff7a7c30f0f9ea2e335219d22"
+    },
+    {
+      "path": "scope-z/phase-evidence/z0/execution-20261024/install-root.log",
+      "bytes": 3207,
+      "sha256": "749edb1b0f6952f55c559027cc3708697b32db9e43e7afb7d46940c82823b584"
+    },
+    {
+      "path": "scope-z/phase-evidence/z0/execution-20261024/integration-01/coordinator-integration.json",
+      "bytes": 7308,
+      "sha256": "8af752d64ec9d258d17bfa6419d52d09e0786fc657287eae554e15a4029973b2"
+    },
+    {
+      "path": "scope-z/phase-evidence/z0/execution-20261024/integration-01/coordinator-integration.patch",
+      "bytes": 146583,
+      "sha256": "61fa9961a6e290e8a2cf31c5219fd83b98bfa0dd9bc45d54d44dccab92d19337"
+    },
+    {
+      "path": "scope-z/phase-evidence/z0/execution-20261024/integration-02/coordinator-integration.json",
+      "bytes": 7308,
+      "sha256": "0eb7e5d1f6b0b58d6cfc3583edbc4a83c8220ff0e064f8c826f2d3ccf5e88f45"
+    },
+    {
+      "path": "scope-z/phase-evidence/z0/execution-20261024/integration-02/coordinator-integration.patch",
+      "bytes": 150483,
+      "sha256": "65d430f5c266d25ac88beebc05b63a8b077c33b70b7fd9d5aaa6b89a9c66d3e9"
+    },
+    {
+      "path": "scope-z/phase-evidence/z0/execution-20261024/integration-03/coordinator-integration.json",
+      "bytes": 7308,
+      "sha256": "dd03523e2496aac38e176081a1656e9f02d52b23d0411ee5789fef35f7566f12"
+    },
+    {
+      "path": "scope-z/phase-evidence/z0/execution-20261024/integration-03/coordinator-integration.patch",
+      "bytes": 151457,
+      "sha256": "a51bcd3c5cf76e9655fffa2ba77b945b932abe15f8d5d7b29d9a4aa7e29b74f2"
+    },
+    {
+      "path": "scope-z/phase-evidence/z0/execution-20261024/integration-04/coordinator-integration.json",
+      "bytes": 8510,
+      "sha256": "82caedaf158a2c74d185da4b34de45f44a5c6b3602c3a5674efe3ae837205c3b"
+    },
+    {
+      "path": "scope-z/phase-evidence/z0/execution-20261024/integration-04/coordinator-integration.patch",
+      "bytes": 153661,
+      "sha256": "c4160a06674bda29c924e7b94be2e6c16ec1153ee3d5bbab50af5a44d9afd6ae"
+    },
+    {
+      "path": "scope-z/phase-evidence/z0/execution-20261024/integration-05/coordinator-integration.json",
+      "bytes": 8687,
+      "sha256": "2050e9995bf27cbd300fa69226b829d138bf1e2742428b87eff32abe05ddc4d6"
+    },
+    {
+      "path": "scope-z/phase-evidence/z0/execution-20261024/integration-05/coordinator-integration.patch",
+      "bytes": 153661,
+      "sha256": "c4160a06674bda29c924e7b94be2e6c16ec1153ee3d5bbab50af5a44d9afd6ae"
+    },
+    {
+      "path": "scope-z/phase-evidence/z0/execution-20261024/integration-generation-fifth.log",
+      "bytes": 320,
+      "sha256": "c39f898b988718e79c42d2102bc67b76b2d262acdc7102eb8531618cc5a7fa97"
+    },
+    {
+      "path": "scope-z/phase-evidence/z0/execution-20261024/integration-generation-first.log",
+      "bytes": 262,
+      "sha256": "a9f4d6406642c505871cf3b24921fd65209e4458d15ef001dc8944a23f71ef30"
+    },
+    {
+      "path": "scope-z/phase-evidence/z0/execution-20261024/integration-generation-fourth.log",
+      "bytes": 262,
+      "sha256": "71b0f034f7a30f277b981bb02e0d33b4094a00df4e9a732d4aaaa80a14da1bba"
+    },
+    {
+      "path": "scope-z/phase-evidence/z0/execution-20261024/integration-generation-second.log",
+      "bytes": 262,
+      "sha256": "a21adf42eb6fdec77000548a7c15454e4be1bc43b8b037ef4c4af8bef33afd97"
+    },
+    {
+      "path": "scope-z/phase-evidence/z0/execution-20261024/integration-generation-third.log",
+      "bytes": 262,
+      "sha256": "c46bee5d069c922f8cbb0476f94754e6a4557774b1d10bb1ea15b7ca0fbc62b1"
+    },
+    {
+      "path": "scope-z/phase-evidence/z0/execution-20261024/lock-order-review-01.md",
+      "bytes": 1327,
+      "sha256": "e365a3e61a8c08ad67595f7703680dc347368ad3c5712308c1f418e65f4a0bf2"
+    },
+    {
+      "path": "scope-z/phase-evidence/z0/execution-20261024/overlay-eslint-first.log",
+      "bytes": 1010,
+      "sha256": "dc9eab02eaf96c49242393bccc399c2978c28852077dad4fba2bc81279c99df2"
+    },
+    {
+      "path": "scope-z/phase-evidence/z0/execution-20261024/overlay-eslint-second.log",
+      "bytes": 272,
+      "sha256": "18e8fc482beed8bfd682f7f5673d41c96b671b406ee15725be4c0ea8d1ba7d44"
+    },
+    {
+      "path": "scope-z/phase-evidence/z0/execution-20261024/overlay-final-api.log",
+      "bytes": 844,
+      "sha256": "48458a667e3f742cc8392cd83ee1aa7d2afce1419051909acf0ed118c391e5a7"
+    },
+    {
+      "path": "scope-z/phase-evidence/z0/execution-20261024/overlay-final-owned-second.log",
+      "bytes": 1138,
+      "sha256": "13a9bbd0fc4457af235b1a0ddb1a6a04803a827a176e6a87f60b3d6a7371ce0d"
+    },
+    {
+      "path": "scope-z/phase-evidence/z0/execution-20261024/overlay-final-owned.log",
+      "bytes": 1138,
+      "sha256": "338fb4348234e2f6a8383e61bef1bf110dd2605554db4d862d933612d4566cb9"
+    },
+    {
+      "path": "scope-z/phase-evidence/z0/execution-20261024/overlay-final-scripts-second.log",
+      "bytes": 851,
+      "sha256": "d2b6b181790024f470777702eac6146732d02f0c69f68343f6415da20add9960"
+    },
+    {
+      "path": "scope-z/phase-evidence/z0/execution-20261024/overlay-final-scripts.log",
+      "bytes": 785,
+      "sha256": "08f9428e08babc46ad06335292254b709150a900ebb7bf22daefbd59ea3e8df5"
+    },
+    {
+      "path": "scope-z/phase-evidence/z0/execution-20261024/overlay-first-api.log",
+      "bytes": 844,
+      "sha256": "6c31183a3018bcc20e62d56ecab019237de88efd2b5fe38f354e6d91bae06e4d"
+    },
+    {
+      "path": "scope-z/phase-evidence/z0/execution-20261024/overlay-first-frontend.log",
+      "bytes": 849,
+      "sha256": "35812d889a214e5a05b7c4d07e7dd43af75f06658b58631a047a8aa6c7152757"
+    },
+    {
+      "path": "scope-z/phase-evidence/z0/execution-20261024/overlay-first-orchestration.log",
+      "bytes": 655,
+      "sha256": "63525a24a5c8ad30c17a2bc17d92e409054b10f95f243ad3445e6b0b6fc2ffcb"
+    },
+    {
+      "path": "scope-z/phase-evidence/z0/execution-20261024/overlay-first-owned.log",
+      "bytes": 1138,
+      "sha256": "db051f87dbb2e2247e804dd683fb31a65854c0e2f47c8ea6b250897453664bc8"
+    },
+    {
+      "path": "scope-z/phase-evidence/z0/execution-20261024/overlay-first-p1.log",
+      "bytes": 709,
+      "sha256": "b032fd4052344b866a02a8027d4909810ecba2a3d05fa6996ac86492256be23d"
+    },
+    {
+      "path": "scope-z/phase-evidence/z0/execution-20261024/overlay-first-s5-s6.log",
+      "bytes": 778,
+      "sha256": "1db2c5b8a5ab18a8cd12f69d4fdfd01d37542654bc8e368cc917435dba454006"
+    },
+    {
+      "path": "scope-z/phase-evidence/z0/execution-20261024/overlay-first-scripts.log",
+      "bytes": 785,
+      "sha256": "ca5ad02281aad7cbf4afa63d764a75075ea694eccc6080b6a4d3ccb81d523f0d"
+    },
+    {
+      "path": "scope-z/phase-evidence/z0/execution-20261024/overlay-second-frontend.log",
+      "bytes": 683,
+      "sha256": "c3a79465a783df1e3359270593145033fe821bd2c873f5e588c0443c50aab597"
+    },
+    {
+      "path": "scope-z/phase-evidence/z0/execution-20261024/overlay-second-scripts.log",
+      "bytes": 785,
+      "sha256": "d02b493738cb0acfc8fd35a1e5ab57d8029ac40f6ff0aaf0f2e7eeb372036eed"
+    },
+    {
+      "path": "scope-z/phase-evidence/z0/execution-20261024/owned-reconstruction-01/build-receipt.json",
+      "bytes": 3015,
+      "sha256": "fd9ce1fad25bab88088e8364ce9418a6b26b8a201d029015ddad7b7432bed652"
+    },
+    {
+      "path": "scope-z/phase-evidence/z0/execution-20261024/owned-reconstruction-01/build.mjs",
+      "bytes": 4163,
+      "sha256": "24a325df73e7c0007c8e1819ea8952b3dcd0039403586988e4b01c8fb6950251"
+    },
+    {
+      "path": "scope-z/phase-evidence/z0/execution-20261024/owned-reconstruction-01/observed/contracts-after.json",
+      "bytes": 4155,
+      "sha256": "5005c1c2ff4256fa9810f761d1a96a58b7e056e6c70dfc4943691b13ceabfb0b"
+    },
+    {
+      "path": "scope-z/phase-evidence/z0/execution-20261024/owned-reconstruction-01/package-lock.json",
+      "bytes": 1212,
+      "sha256": "7e3a1978f81cd700013c70d68048e1e6fe01c1915b38af343dac19d15602782e"
+    },
+    {
+      "path": "scope-z/phase-evidence/z0/execution-20261024/owned-reconstruction-01/package.json",
+      "bytes": 229,
+      "sha256": "30b73f59a8aafa5ab8729548520f6b9f6a980ba8e0b1479120cc425405de5e5b"
+    },
+    {
+      "path": "scope-z/phase-evidence/z0/execution-20261024/owned-reconstruction-01/runtime/application-contracts.mjs",
+      "bytes": 22448,
+      "sha256": "22926d6d2a938925260cc010a0dcc97d38603d9d03b7861a062a972b33e9ad4d"
+    },
+    {
+      "path": "scope-z/phase-evidence/z0/execution-20261024/owned-reconstruction-01/runtime/governed-protocol.mjs",
+      "bytes": 2577,
+      "sha256": "506f8a11f49fa1704200b1e4a1d9393b2d9efb24c9e27c9da701d64437e9327c"
+    },
+    {
+      "path": "scope-z/phase-evidence/z0/execution-20261024/owned-reconstruction-01/runtime/semantics.mjs",
+      "bytes": 4904,
+      "sha256": "24f271372f81d74bfc7be37e19999c245be638da1a0dc95f3034e2698156a072"
+    },
+    {
+      "path": "scope-z/phase-evidence/z0/execution-20261024/owned-reconstruction-01/source-manifest.json",
+      "bytes": 1414,
+      "sha256": "1eee6b5c33c640bc8733619c4188317b71d5c8e57b9296bf2f080fb2c86b0984"
+    },
+    {
+      "path": "scope-z/phase-evidence/z0/execution-20261024/owned-reconstruction-01/source/application-contracts.ts",
+      "bytes": 22595,
+      "sha256": "4e308c8bdce98c1b4a917dfbd676f59a468a00843f32f4e7c9418d426480153e"
+    },
+    {
+      "path": "scope-z/phase-evidence/z0/execution-20261024/owned-reconstruction-01/source/governed-protocol.ts",
+      "bytes": 2278,
+      "sha256": "96d1be8a37d35235308c90fa1458efa794f401d30744ae6e5839e1e424ee62bd"
+    },
+    {
+      "path": "scope-z/phase-evidence/z0/execution-20261024/owned-reconstruction-01/source/semantics.ts",
+      "bytes": 5512,
+      "sha256": "45b56093dc1f13b78d3f9910364cae192a5cce530e4028a13071bd6dd4d9e389"
+    },
+    {
+      "path": "scope-z/phase-evidence/z0/execution-20261024/owned-reconstruction-01/source/verify-contracts.mts",
+      "bytes": 8493,
+      "sha256": "7ba64589d32be2b208ff4212910d2f16146b751eebc906626852756e025eaca9"
+    },
+    {
+      "path": "scope-z/phase-evidence/z0/execution-20261024/owned-reconstruction-01/verify.mjs",
+      "bytes": 8293,
+      "sha256": "848e07fcf663a68e35af739331f8afbf55d130219e39f89cae052ae4160b734c"
+    },
+    {
+      "path": "scope-z/phase-evidence/z0/execution-20261024/owned-reconstruction-build.log",
+      "bytes": 154,
+      "sha256": "d01529a539dcdec17549444a08c79f5802d214ef2f6048febcdde5a4f43099af"
+    },
+    {
+      "path": "scope-z/phase-evidence/z0/execution-20261024/owned-reconstruction-install-second.log",
+      "bytes": 27,
+      "sha256": "c2adff040cd55cdfd68c303625776e3d1df7d1410a9ee61fdb27561e9abdde98"
+    },
+    {
+      "path": "scope-z/phase-evidence/z0/execution-20261024/owned-reconstruction-install.log",
+      "bytes": 126,
+      "sha256": "e7f97b6992f4bdb0734e762b04268c861be71904aefaa18c6b3ec53eb908aae1"
+    },
+    {
+      "path": "scope-z/phase-evidence/z0/execution-20261024/owned-reconstruction-prepare.log",
+      "bytes": 273,
+      "sha256": "9fad9330c36a560ad04229ba83eb213a6b9c765116d9f065e1184f388880b66f"
+    },
+    {
+      "path": "scope-z/phase-evidence/z0/execution-20261024/owned-reconstruction-replay.log",
+      "bytes": 96,
+      "sha256": "e6a07aa287829d425a0bdb55698321c2fba4cfd2922aa78704cea4c4805f8449"
+    },
+    {
+      "path": "scope-z/phase-evidence/z0/execution-20261024/public-boundary.log",
+      "bytes": 772,
+      "sha256": "2977cc4361f2a7ad9a55a8771dd5cc9b0d0a4bfa6d1c069c02da7543d116dab0"
+    },
+    {
+      "path": "scope-z/phase-evidence/z0/execution-20261024/public-boundary/complete-boundary.json",
+      "bytes": 1171,
+      "sha256": "c4fc18973814b68c58b539c99c00a1cfd95233d1007ef655002aa15638ab29a9"
+    },
+    {
+      "path": "scope-z/phase-evidence/z0/execution-20261024/public-boundary/native-authority-refusal.json",
+      "bytes": 897,
+      "sha256": "074031c6a7487234a9c53e897d37339c80e8047bea5932019c6ad229678044ff"
+    },
+    {
+      "path": "scope-z/phase-evidence/z0/execution-20261024/public-boundary/surface-negative-controls.json",
+      "bytes": 759,
+      "sha256": "a6f80a1ae5a9af936ccb73c1423095cbe68f9d023e2ff8c129b267a9ec74e962"
+    },
+    {
+      "path": "scope-z/phase-evidence/z0/execution-20261024/qualification-final-01.json",
+      "bytes": 3584,
+      "sha256": "1b72f9a694c40fcfb3ee5e98fd1c4e0bc8b99c82cc5a1743cdc94b6b95cf7717"
+    },
+    {
+      "path": "scope-z/phase-evidence/z0/execution-20261024/scoped-diagnostic-bindings-01.json",
+      "bytes": 5056,
+      "sha256": "dfaa3aba808b1113f6a70ab4627827f96018e05c4c4ab82229deda02d2f4d8dd"
+    },
+    {
+      "path": "scope-z/phase-evidence/z0/execution-20261024/source-content-manifest-01.json",
+      "bytes": 4295,
+      "sha256": "e5f7eee0a276e3a1b1abce5b73d359e7de42648fb4cff85a7eff30a8a2ba6f2a"
+    },
+    {
+      "path": "scope-z/phase-evidence/z0/execution-20261024/start.json",
+      "bytes": 1544,
+      "sha256": "038531a6ddbd1e9aac171fc62ed07b61137e0fd3e352b9beda78cca819720bf9"
+    },
+    {
+      "path": "scope-z/phase-evidence/z0/execution-20261024/typecheck-first.log",
+      "bytes": 1119,
+      "sha256": "54d89812b6d4985eadf0ebc6b8727e0e2d68ea6221f7623355d2dd23ce53c417"
+    },
+    {
+      "path": "scope-z/phase-evidence/z0/execution-20261024/typecheck-owned-diagnostics-first.log",
+      "bytes": 1066,
+      "sha256": "32849170da5348643c6f9047191bcb7bbfb8bee607915914e8ef169bacdea5c6"
+    },
+    {
+      "path": "scope-z/phase-evidence/z0/execution-20261024/typecheck-runtime-first.log",
+      "bytes": 813,
+      "sha256": "d53087bb6070c84cf3bda79faf1f87dbbab4ff53390fbb3ae6b0d409df63dbe0"
+    }
+  ],
+  "populationSha256": "3aaf701b8cdf06a6d97483ae3792997dac451f6c1b5b2358d4e2b16f9cb1c735",
+  "excludes": [
+    "This self-referential index",
+    "Separate postcommit binding and local bundle envelope",
+    "Installed node_modules (locked registry integrities recorded instead)",
+    "User launch records and sealed history"
+  ],
+  "externalDelivery": false,
+  "productProof": false
+}

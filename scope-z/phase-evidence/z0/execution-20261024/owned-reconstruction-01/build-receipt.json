@@ -1,0 +1,76 @@
+{
+  "schema": "finnor.z0.installed-owned-component-build.v1",
+  "evidenceClass": "OWNED_LITERAL_COMPONENT_RECONSTRUCTION_NOT_INTEGRATED_PRODUCT_OR_PHASE_I",
+  "node": "v22.23.4",
+  "nodeBinarySha256": "94efd062ed066c1a0b332e18249859c905e920eeada5df55d24c99b919629a90",
+  "compilerLibrarySha256": "3ae902c92cc44dace175c0e69e13a4b0899f6983c6121d76b9ab8dd5795e7675",
+  "isolatedDependencyLockSha256": "7e3a1978f81cd700013c70d68048e1e6fe01c1915b38af343dac19d15602782e",
+  "dependencies": [
+    {
+      "name": "typescript",
+      "version": "5.9.3",
+      "packageJsonSha256": "822ef7ca6452205657b6288b066481ecf508bfbf43455d715cf7d3ec457561e6",
+      "originalRegistryIntegrity": "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw=="
+    },
+    {
+      "name": "zod",
+      "version": "3.25.76",
+      "packageJsonSha256": "70eedbe34fd52385a4ae2f3e5759b19682189f0118ea73a6e7c32c677f61668e",
+      "originalRegistryIntegrity": "sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ=="
+    }
+  ],
+  "inputs": [
+    {
+      "origin": "finnor-os/packages/orchestration/src/project-z/z0-convergence/semantics.ts",
+      "path": "source/semantics.ts",
+      "bytes": 5512,
+      "sha256": "45b56093dc1f13b78d3f9910364cae192a5cce530e4028a13071bd6dd4d9e389"
+    },
+    {
+      "origin": "finnor-os/packages/private-equity/src/application-semantics/contracts.ts",
+      "path": "source/application-contracts.ts",
+      "bytes": 22595,
+      "sha256": "4e308c8bdce98c1b4a917dfbd676f59a468a00843f32f4e7c9418d426480153e"
+    },
+    {
+      "origin": "finnor-os/packages/governed-execution/src/protocol.ts",
+      "path": "source/governed-protocol.ts",
+      "bytes": 2278,
+      "sha256": "96d1be8a37d35235308c90fa1458efa794f401d30744ae6e5839e1e424ee62bd"
+    },
+    {
+      "origin": "finnor-os/scripts/project-z/z0/verify-contracts.mts",
+      "path": "source/verify-contracts.mts",
+      "bytes": 8493,
+      "sha256": "7ba64589d32be2b208ff4212910d2f16146b751eebc906626852756e025eaca9"
+    }
+  ],
+  "emitted": [
+    {
+      "path": "runtime/semantics.mjs",
+      "bytes": 4904,
+      "sha256": "24f271372f81d74bfc7be37e19999c245be638da1a0dc95f3034e2698156a072"
+    },
+    {
+      "path": "runtime/application-contracts.mjs",
+      "bytes": 22448,
+      "sha256": "22926d6d2a938925260cc010a0dcc97d38603d9d03b7861a062a972b33e9ad4d"
+    },
+    {
+      "path": "runtime/governed-protocol.mjs",
+      "bytes": 2577,
+      "sha256": "506f8a11f49fa1704200b1e4a1d9393b2d9efb24c9e27c9da701d64437e9327c"
+    },
+    {
+      "path": "verify.mjs",
+      "bytes": 8293,
+      "sha256": "848e07fcf663a68e35af739331f8afbf55d130219e39f89cae052ae4160b734c"
+    }
+  ],
+  "sourceFallback": false,
+  "copiedNodeModules": false,
+  "expectedCasesChanged": false,
+  "relocations": "Only module specifiers and runner root/output/source paths; no oracle or runtime function replacement",
+  "authenticatedProductFlow": "NOT_RUN",
+  "installedIntegratedFlow": "NOT_RUN"
+}

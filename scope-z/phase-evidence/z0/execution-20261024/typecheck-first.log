@@ -1,0 +1,24 @@
+
+> finnor-os@0.1.0 typecheck
+> tsc -p tsconfig.json
+
+
+<--- Last few GCs --->
+
+[23841:0xb8ce000]    38740 ms: Scavenge (reduce) (interleaved) 1528.4 (1561.5) -> 1527.6 (1562.0) MB, pooled: 0 MB, 3.13 / 0.00 ms  (average mu = 0.146, current mu = 0.058) allocation failure; 
+[23841:0xb8ce000]    38772 ms: Mark-Compact (reduce) 1527.6 (1562.0) -> 1526.0 (1561.2) MB, pooled: 0 MB, 29.18 / 0.00 ms  (+ 587.7 ms in 0 steps since start of marking, biggest step 0.0 ms, walltime since start of marking 699 ms) (average mu = 0.217, cur
+
+<--- JS stacktrace --->
+
+FATAL ERROR: Ineffective mark-compacts near heap limit Allocation failed - JavaScript heap out of memory
+----- Native stack trace -----
+
+ 1: 0xe48bbe node::OOMErrorHandler(char const*, v8::OOMDetails const&) [node]
+ 2: 0x1248d00 v8::Utils::ReportOOMFailure(v8::internal::Isolate*, char const*, v8::OOMDetails const&) [node]
+ 3: 0x1248fd7 v8::internal::V8::FatalProcessOutOfMemory(v8::internal::Isolate*, char const*, v8::OOMDetails const&) [node]
+ 4: 0x1477ee5  [node]
+ 5: 0x1477f13  [node]
+ 6: 0x1490fea  [node]
+ 7: 0x14941b8  [node]
+ 8: 0x1cfcc61  [node]
+Aborted

@@ -1,0 +1,107 @@
+{
+  "schema": "finnor.project-z.z0.owned-content-cut.v1",
+  "sourceBase": "684d805e471836a720aa6741a3128eca17d28202",
+  "sourceBaseTree": "163f63b65c88481194d0d48e77337494b3b9f24f",
+  "ownedFiles": [
+    {
+      "path": "finnor-os/packages/orchestration/src/project-z/z0-convergence/index.ts",
+      "bytes": 950,
+      "sha256": "f981fac916e112c27447e984de35f34825f067f6a0c4d015e3d7f1b060b8fcc5"
+    },
+    {
+      "path": "finnor-os/packages/orchestration/src/project-z/z0-convergence/institution-allocation.ts",
+      "bytes": 22916,
+      "sha256": "d23214d462b59b9bb8dc5978c0378370e3efce4157a75c97863f93c1970feca3"
+    },
+    {
+      "path": "finnor-os/packages/orchestration/src/project-z/z0-convergence/institution-consumer.ts",
+      "bytes": 12770,
+      "sha256": "4ed54f2d92705fba331e52418cd3917b6fb323527906292d3e1828ba140f16d4"
+    },
+    {
+      "path": "finnor-os/packages/orchestration/src/project-z/z0-convergence/institution-origin.ts",
+      "bytes": 15645,
+      "sha256": "ab00503bee1ed124df0d6caf987e7d3150e2e7d81c1f9662c6fd077a31c50d3c"
+    },
+    {
+      "path": "finnor-os/packages/orchestration/src/project-z/z0-convergence/original-work-observation.ts",
+      "bytes": 1993,
+      "sha256": "0ac1dc3f861cac3d756b87f0caea18c317be0ba0b781fb29068095e2dcc005f4"
+    },
+    {
+      "path": "finnor-os/packages/orchestration/src/project-z/z0-convergence/projection.ts",
+      "bytes": 3048,
+      "sha256": "ecf403db23a1cf18657698ac81389f48f04f10d5fe879320a9a09fa0d0167039"
+    },
+    {
+      "path": "finnor-os/packages/orchestration/src/project-z/z0-convergence/s5-owner-adapter.sql",
+      "bytes": 27294,
+      "sha256": "cb45fe38a9103fc5405e9a78f09492bad8e88213ae9fcab6640ec9cf4a259741"
+    },
+    {
+      "path": "finnor-os/packages/orchestration/src/project-z/z0-convergence/semantics.ts",
+      "bytes": 5512,
+      "sha256": "45b56093dc1f13b78d3f9910364cae192a5cce530e4028a13071bd6dd4d9e389"
+    },
+    {
+      "path": "finnor-os/scripts/project-z/z0/integration-frontend.mts",
+      "bytes": 9113,
+      "sha256": "265be50fe90c1aab5a7b92f34381f328febde38d14bdc59fcb42fd4f8287b4f9"
+    },
+    {
+      "path": "finnor-os/scripts/project-z/z0/integration-preimages.json",
+      "bytes": 2661,
+      "sha256": "5c1c9405532a4b3f5a31cce66d7e7e093b0518a65b177cf30bc34ac08407eb17"
+    },
+    {
+      "path": "finnor-os/scripts/project-z/z0/prepare-integration.mts",
+      "bytes": 24553,
+      "sha256": "c5b7ca6c737aad14c553e9e465abd1a981efd2a085a06b3a8289913ecc3394ff"
+    },
+    {
+      "path": "finnor-os/scripts/project-z/z0/prepare-owned-reconstruction.mts",
+      "bytes": 7852,
+      "sha256": "cc21ffd291b10255bf5b1495df5c3900e5eeb535b94c358ecdcc8a8727d813b0"
+    },
+    {
+      "path": "finnor-os/scripts/project-z/z0/tsconfig.json",
+      "bytes": 222,
+      "sha256": "91537e4d04d1012983c1ae8dc90758c619e2d93d17f3d4f5c4934b1de8adab54"
+    },
+    {
+      "path": "finnor-os/scripts/project-z/z0/tsconfig.runtime.json",
+      "bytes": 293,
+      "sha256": "65aa9828de590aee48afe35e052423317ee3a3ea49c459f5e4973f080d0cb3fd"
+    },
+    {
+      "path": "finnor-os/scripts/project-z/z0/verify-contracts.mts",
+      "bytes": 8493,
+      "sha256": "7ba64589d32be2b208ff4212910d2f16146b751eebc906626852756e025eaca9"
+    },
+    {
+      "path": "finnor-os/scripts/project-z/z0/verify-integration-types.mts",
+      "bytes": 4747,
+      "sha256": "51a079a23f13107943deed8bce210e37e64d3f696555f6f97858a06a32ca9844"
+    }
+  ],
+  "ownedPopulationSha256": "f97f8f23f3746ef78e9a75bd096957483f231070aa5bbd3373cda2e54f4edefd",
+  "coordinatorProposal": "integration-05/coordinator-integration.json",
+  "coordinatorPatchSha256": "c4160a06674bda29c924e7b94be2e6c16ec1153ee3d5bbab50af5a44d9afd6ae",
+  "sharedFilesApplied": false,
+  "commitBinding": "postcommit-code-binding-01.json",
+  "toolchain": {
+    "node": "v22.23.4",
+    "npm": "11.19.1",
+    "npmExecutable": "/usr/bin/npm",
+    "nodeBinarySha256": "94efd062ed066c1a0b332e18249859c905e920eeada5df55d24c99b919629a90",
+    "heapCapMiB": 1536,
+    "heavyCommandLock": "/home/factory-user/repos/finnor-z-shared-heavy.lock"
+  },
+  "installedComponentOnly": {
+    "sourceMatchesFinal": true,
+    "sourceFallback": false,
+    "copiedNodeModules": false
+  },
+  "fullInstalledProduct": "NOT_RUN",
+  "fullProjectTypecheck": "FAILED"
+}
