@@ -68,8 +68,7 @@ verification drivers and evidence only.
 | `engineering-plan.md`, `mathematical-contract.md`, `reading-receipt.md`, `pre-code-freeze-correction.md` | pre-code artifacts (immutable) | frozen |
 | `integration-patches/` | nine preimage-bound coordinator patches + payloads + README + manifest | dual-verified |
 | `runs/04-migration-ddl/` + `migration-ddl-validation*.log` | disposable PostgreSQL 18 DDL application + guard/RLS/grant matrix (attempts 1-2 retained) | 26/26 PASS |
-| `runs/03-independent-reverification/`, `independent-verify-*.log`, `build/validate-migration-0199.mjs`, `build/run-verify-batch-*.sh` | supervisor-run independent reverifications (sweep PASS, probe PASS at be2c775, post-apply worktree typechecks) | preserved as-run |
-| `build/mount-check.mjs` + `build/mount-check.log` | post-apply frontend typecheck of patches 0005+0005b in a /tmp mirror of the whole `src/` tree with root-tsconfig include surface (needs `node_modules` + `finnor-os` sibling symlinks and `next-env.d.ts` in the program) | tsc exit 0 |
+| `runs/03-independent-reverification/`, `independent-verify-*.log`, `build/validate-migration-0199.mjs`, `build/run-verify-batch-2.sh` | supervisor-run independent reverifications (sweep PASS, probe PASS at be2c775, migration payload digest confirmed) | preserved as-run |
 
 ## Not reconstructible from this lane (external authority)
 
