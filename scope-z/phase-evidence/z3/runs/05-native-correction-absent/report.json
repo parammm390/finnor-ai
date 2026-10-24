@@ -1,0 +1,14 @@
+{
+  "schema": "finnor.z3.native-boundary-e2e.v1",
+  "status": "FAIL",
+  "scope": "REAL_OFFLINE_PRODUCER_CHECKER_AND_PROCESS_BOUNDARIES_NOT_NATIVE_DB_PROOF",
+  "cases": [],
+  "nativeOwner": "NOT_RUN",
+  "installedNative": "NOT_RUN",
+  "protectedAdmission": "NOT_RUN",
+  "financialQualification": "NOT_RUN",
+  "failure": {
+    "name": "Error",
+    "message": "Cannot find module '/home/factory-user/repos/finnor-z3/finnor-os/packages/private-equity/src/project-z/z3-viability/assets' imported from /home/factory-user/repos/finnor-z3/finnor-os/scripts/project-z/z3/native-boundary-e2e.mts"
+  }
+}

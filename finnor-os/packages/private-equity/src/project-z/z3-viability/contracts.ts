@@ -7,7 +7,7 @@ import { ExperimentRefSchema } from "@finnor/epistemic-runtime";
 import { hash, parseArena, parseBinding, Z3_VERSION,
   type Candidate, type CheckReceipt, type IncompleteCandidate } from "../../../../epistemic-runtime/src/project-z/z3-viability/contracts";
 
-export const Z3_NATIVE_VERSION = "z3-native-v1" as const;
+export const Z3_NATIVE_VERSION = "z3-native-v2" as const;
 export const Z3_PRODUCE_JOB = "run_z3_viability_synthesis_v1" as const;
 export const Z3_RECOVER_JOB = "run_z3_viability_recovery_v1" as const;
 export const Z3_COMPUTE_SCHEMA = "finnor.z3.viability-compute.v1" as const;
@@ -37,8 +37,17 @@ export const z3Ref = (kind: string, body: unknown): ViabilityRef => {
 };
 
 export interface ViabilityCheckpoint {
-  point: ViabilityBoundaryPoint; jobId: string; deliveryAttemptId: string; claimFence: number; at: string;
+  point: ViabilityBoundaryPoint; jobId: string; deliveryAttemptId: string;
+  claimFence: number; jobClaimFence: number; at: string;
 }
+
+/** A recovery job has its own physical fence. It is never overwritten by the
+ * monotonic session overlay, including when a fresh job starts at fence 1. */
+export interface ViabilityDelivery {
+  physical: Readonly<import("../../../../../apps/worker/src/queue").JobExecutionContext>;
+  jobType: typeof Z3_PRODUCE_JOB | typeof Z3_RECOVER_JOB;
+}
+export interface ViabilityClaim extends ViabilityDelivery { sessionFence: number }
 
 export interface ViabilitySessionRow {
   id: string; tenant_id: string; principal_id: string;
@@ -59,17 +68,16 @@ const RootSchema = z.object({
   entityType: z.enum(PE_WORLD_ROOT_TYPES), entityId: z.string().uuid(),
 }).strict();
 
-/** The server reconstructs the original binding from durable state. A caller
- * supplies the arena and the semantic digests; tenant, principal, Work input,
- * rights revision and runtime code identity are re-read, never trusted. */
+/** Only an original Work and idempotency key are selectors. Legacy fields
+ * remain optional expected-value assertions, never source/authority inputs. */
 export const SubmitSchema = z.object({
   workId: z.string().uuid(),
-  arena: z.unknown(),
-  originalParentId: z.string().trim().min(1).max(256),
-  sourceRevision: z.string().trim().min(1).max(256),
-  mandateDigest: Hex64, observationDigest: Hex64, resourceDigest: Hex64,
-  deadlineAt: z.string().datetime({ offset: true }),
-  reservationRef: ExperimentRefSchema.nullable(),
+  arena: z.unknown().optional(),
+  originalParentId: z.string().trim().min(1).max(256).optional(),
+  sourceRevision: z.string().trim().min(1).max(256).optional(),
+  mandateDigest: Hex64.optional(), observationDigest: Hex64.optional(), resourceDigest: Hex64.optional(),
+  deadlineAt: z.string().datetime({ offset: true }).optional(),
+  reservationRef: ExperimentRefSchema.nullable().optional(),
   idempotencyKey: z.string().trim().min(1).max(256),
 }).strict();
 export const ReadSchema = z.object({
@@ -114,6 +122,13 @@ export function parseStoredReceipt(value: unknown): CheckReceipt {
     || !["VIABLE", "UNREALIZABLE", "UNKNOWN", "REJECTED", "UNSUPPORTED"].includes(String(r.status))) {
     z3Fault("Z3_CHECK_PREIMAGE_INVALID");
   }
+  if (typeof r.reason !== "string" || !r.reason.length || r.reason.length > 256
+    || typeof r.ordinaryComplete !== "boolean") z3Fault("Z3_CHECK_PREIMAGE_INVALID");
+  if (r.status === "VIABLE" && (r.ordinaryComplete !== true || r.ordinaryStatus !== "WINNING"
+    || r.safety !== true || r.liveness !== true || r.nonconflicting !== true
+    || r.originalAssumptionsSatisfiable !== true)) z3Fault("Z3_CHECK_VIABLE_OBLIGATIONS_MISSING");
+  if (r.status === "UNREALIZABLE" && (r.ordinaryComplete !== true
+    || r.ordinaryStatus !== "UNREALIZABLE")) z3Fault("Z3_CHECK_COMPLETENESS_MISSING");
   return value as CheckReceipt;
 }
 

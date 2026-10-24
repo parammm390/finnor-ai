@@ -1,0 +1,19 @@
+packages/private-equity/src/project-z/z3-viability/process.ts(30,42): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Property 'NODE_ENV' is missing in type '{ LANG: string; }' but required in type 'ProcessEnv'.
+packages/private-equity/src/project-z/z3-viability/process.ts(34,13): error TS2339: Property 'kill' does not exist on type 'never'.
+  The intersection 'ChildProcessWithoutNullStreams & ChildProcessByStdio<Writable, Readable, Readable> & ... 7 more ... & ChildProcess' was reduced to 'never' because property 'stdin' has conflicting types in some constituents.
+packages/private-equity/src/project-z/z3-viability/process.ts(40,11): error TS2339: Property 'on' does not exist on type 'never'.
+  The intersection 'ChildProcessWithoutNullStreams & ChildProcessByStdio<Writable, Readable, Readable> & ... 7 more ... & ChildProcess' was reduced to 'never' because property 'stdin' has conflicting types in some constituents.
+packages/private-equity/src/project-z/z3-viability/process.ts(41,11): error TS2339: Property 'stdin' does not exist on type 'never'.
+  The intersection 'ChildProcessWithoutNullStreams & ChildProcessByStdio<Writable, Readable, Readable> & ... 7 more ... & ChildProcess' was reduced to 'never' because property 'stdin' has conflicting types in some constituents.
+packages/private-equity/src/project-z/z3-viability/process.ts(42,11): error TS2339: Property 'stdout' does not exist on type 'never'.
+  The intersection 'ChildProcessWithoutNullStreams & ChildProcessByStdio<Writable, Readable, Readable> & ... 7 more ... & ChildProcess' was reduced to 'never' because property 'stdin' has conflicting types in some constituents.
+packages/private-equity/src/project-z/z3-viability/process.ts(47,11): error TS2339: Property 'once' does not exist on type 'never'.
+  The intersection 'ChildProcessWithoutNullStreams & ChildProcessByStdio<Writable, Readable, Readable> & ... 7 more ... & ChildProcess' was reduced to 'never' because property 'stdin' has conflicting types in some constituents.
+packages/private-equity/src/project-z/z3-viability/process.ts(47,26): error TS7006: Parameter 'exitCode' implicitly has an 'any' type.
+packages/private-equity/src/project-z/z3-viability/process.ts(47,36): error TS7006: Parameter 'signal' implicitly has an 'any' type.
+packages/private-equity/src/project-z/z3-viability/process.ts(51,20): error TS2339: Property 'pid' does not exist on type 'never'.
+  The intersection 'ChildProcessWithoutNullStreams & ChildProcessByStdio<Writable, Readable, Readable> & ... 7 more ... & ChildProcess' was reduced to 'never' because property 'stdin' has conflicting types in some constituents.
+packages/private-equity/src/project-z/z3-viability/process.ts(61,11): error TS2339: Property 'stdin' does not exist on type 'never'.
+  The intersection 'ChildProcessWithoutNullStreams & ChildProcessByStdio<Writable, Readable, Readable> & ... 7 more ... & ChildProcess' was reduced to 'never' because property 'stdin' has conflicting types in some constituents.

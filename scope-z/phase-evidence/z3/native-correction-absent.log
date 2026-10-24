@@ -1,0 +1,1 @@
+{"status":"FAIL","cases":0,"reportDigest":"3d8853892e04026c80ebcd79ff369567976c16b9b57181463f630ca003824024","failure":{"name":"Error","message":"Cannot find module '/home/factory-user/repos/finnor-z3/finnor-os/packages/private-equity/src/project-z/z3-viability/assets' imported from /home/factory-user/repos/finnor-z3/finnor-os/scripts/project-z/z3/native-boundary-e2e.mts"}}

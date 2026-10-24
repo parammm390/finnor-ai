@@ -9,102 +9,23 @@
  * viability-recover starts a new delivery, which resumes from durable
  * preimages. Z3 owns no external effect, so recovery never replays one.
  */
-import { spawn } from "node:child_process";
-import { createHash } from "node:crypto";
-import { readFile } from "node:fs/promises";
-import { isAbsolute } from "node:path";
 import { PROFILE, type Candidate, type CheckReceipt } from "../../../../epistemic-runtime/src/project-z/z3-viability/contracts";
-import { codeIdentity } from "../../evidence-execution/store";
 import { canonicalApplicationActor } from "../../application-semantics/store";
 import type { JobExecutionContext } from "../../../../../apps/worker/src/queue";
 import { JobPayloadSchema, Z3NativeFault, Z3_PRODUCE_JOB, Z3_RECOVER_JOB,
-  candidateDigestOf, parseStoredCandidate, parseStoredReceipt, receiptDigestOf, z3Fault,
-  type ViabilityBoundaryPoint } from "./contracts";
+  candidateDigestOf, parseBinding, parseStoredCandidate, parseStoredReceipt, receiptDigestOf, z3Fault,
+  type ViabilityBoundaryPoint, type ViabilityClaim, type ViabilityDelivery } from "./contracts";
 import { adoptViabilityClaim, assertViabilityJobLease, checkpointViability,
   publishViabilityCandidate, publishViabilityObservation, publishViabilityResult,
-  recordViabilityFault, viabilitySession, Z3_TERMINAL_STATUSES,
-  type ViabilityBuildIdentity, type ViabilityMeters } from "./store";
+  recordViabilityFault, viabilitySession, withViabilityClaim, Z3_TERMINAL_STATUSES,
+  type ViabilityMeters } from "./store";
+import { viabilityRuntimeIdentity } from "./runtime";
+import { runViabilityChild, Z3ChildFault, type ViabilityChildObservation } from "./process";
 
 /** The solver enforces its own internal deadline/operation budget; these are
  * the hard outer wall caps for a stuck child process, never semantic limits. */
 const PRODUCER_WALL_MS = 30_000;
 const CHECKER_WALL_MS = 300_000;
-const MAX_CHILD_STDOUT = PROFILE.artifactBytes + PROFILE.inputBytes;
-const MAX_BUILD_BYTES = PROFILE.artifactBytes;
-
-interface PinnedToolchain {
-  producerBundle: string; checkerSource: string; python: string; identity: ViabilityBuildIdentity;
-}
-
-function pinnedAsset(envName: string): string {
-  const value = process.env[envName]?.trim() ?? "";
-  if (!value || !isAbsolute(value)) z3Fault("Z3_PRODUCER_BUILD_UNPINNED");
-  return value;
-}
-
-async function sha256File(path: string): Promise<string> {
-  const bytes = await readFile(path);
-  if (!bytes.length || bytes.length > MAX_BUILD_BYTES) z3Fault("Z3_BUILD_ARTIFACT_BOUND");
-  return createHash("sha256").update(bytes).digest("hex");
-}
-
-/** Producer and checker identities are pinned by content digest from explicit
- * absolute environment paths. There is no source-tree fallback: an unpinned
- * build fails closed before any session mutation. */
-async function pinToolchain(): Promise<PinnedToolchain> {
-  const producerBundle = pinnedAsset("FINNOR_Z3_PRODUCER_BUNDLE");
-  const checkerSource = pinnedAsset("FINNOR_Z3_CHECKER_SOURCE");
-  const python = process.env.FINNOR_Z3_PYTHON?.trim() || "python3";
-  if (python.includes("/") && !isAbsolute(python)) z3Fault("Z3_PRODUCER_BUILD_UNPINNED");
-  const identity: ViabilityBuildIdentity = {
-    producerBundleDigest: await sha256File(producerBundle),
-    checkerDigest: await sha256File(checkerSource),
-    nodeVersion: process.version, pythonExecutable: python,
-  };
-  return { producerBundle, checkerSource, python, identity };
-}
-
-/** One bounded NDJSON row in, exactly one row out. A child is killed at its
- * wall or byte cap, never negotiated with; stderr is discarded so an
- * untrusted diagnostic string can never become a fault identity. */
-async function runNdjsonChild(command: string, args: readonly string[], inputLine: string,
-  wallMs: number, timeoutCode: string): Promise<unknown> {
-  if (Buffer.byteLength(inputLine) > MAX_CHILD_STDOUT) z3Fault("Z3_CHILD_INPUT_BOUND");
-  return new Promise((resolve, reject) => {
-    let settled = false, stdoutBytes = 0;
-    const chunks: Buffer[] = [];
-    const stdio: ["pipe", "pipe", "ignore"] = ["pipe", "pipe", "ignore"];
-    const child = spawn(command, [...args], {
-      stdio, env: { NODE_ENV: process.env.NODE_ENV, PATH: process.env.PATH ?? "" },
-    });
-    const fail = (code: string): void => {
-      if (settled) return;
-      settled = true;
-      clearTimeout(timer);
-      child.kill("SIGKILL");
-      reject(new Z3NativeFault(code));
-    };
-    const timer = setTimeout(() => fail(timeoutCode), wallMs);
-    child.on("error", () => fail("Z3_CHILD_SPAWN_FAILED"));
-    child.stdin.on("error", () => fail("Z3_CHILD_STDIN_FAILED"));
-    child.stdout.on("data", (chunk: Buffer) => {
-      stdoutBytes += chunk.length;
-      if (stdoutBytes > MAX_CHILD_STDOUT) fail("Z3_CHILD_OUTPUT_BOUND");
-      else chunks.push(chunk);
-    });
-    child.on("close", (code, signal) => {
-      if (settled) return;
-      settled = true;
-      clearTimeout(timer);
-      if (code !== 0 || signal !== null) return reject(new Z3NativeFault("Z3_CHILD_EXIT_NONZERO"));
-      const lines = Buffer.concat(chunks).toString("utf8").split("\n").filter((line) => line.trim().length > 0);
-      const only: string | undefined = lines[0];
-      if (lines.length !== 1 || typeof only !== "string") return reject(new Z3NativeFault("Z3_CHILD_PROTOCOL_ROWS"));
-      try { resolve(JSON.parse(only)); } catch { reject(new Z3NativeFault("Z3_CHILD_OUTPUT_MALFORMED")); }
-    });
-    child.stdin.end(inputLine);
-  });
-}
 
 const PROOF_POINTS: readonly string[] = ["CLAIM", "STRATEGY", "OBSERVATION"];
 
@@ -116,88 +37,177 @@ const PROOF_POINTS: readonly string[] = ["CLAIM", "STRATEGY", "OBSERVATION"];
  * holds for the harness's physical kill; a missing kill within two minutes is
  * itself a failed proof, never a silent completion. */
 async function disposableRecoveryBoundary(point: ViabilityBoundaryPoint, sessionId: string,
-  sessionFence: number): Promise<void> {
+  sessionFence: number, signal: AbortSignal): Promise<void> {
   const requested = (process.env.FINNOR_Z3_FAULT_POINT ?? "").trim();
   if (!requested) return;
   if (process.env.FINNOR_Z3_DISPOSABLE_RECOVERY !== "1" || !PROOF_POINTS.includes(requested)) {
     z3Fault("Z3_RECOVERY_PROOF_CONFIGURATION");
   }
   if (requested !== point) return;
-  const code = await codeIdentity();
+  const code = await viabilityRuntimeIdentity();
   if ((process.env.FINNOR_Z3_AUTHORIZED_SOURCE ?? "").trim() !== code.digest) {
     z3Fault("Z3_RECOVERY_PROOF_SOURCE_MISMATCH");
   }
   if (typeof process.send !== "function") z3Fault("Z3_RECOVERY_PROOF_IPC_REQUIRED");
-  process.send({ kind: "Z3_DURABLE_BOUNDARY", point, sessionId, claimFence: sessionFence }, () => undefined);
+  process.send({ kind: "Z3_DURABLE_BOUNDARY", point, sessionId, claimFence: sessionFence, pid: process.pid }, () => undefined);
   await new Promise<never>((_resolve, reject) => {
-    const timer = setTimeout(() => reject(new Z3NativeFault("Z3_RECOVERY_PROOF_NOT_TERMINATED")), 120_000);
-    timer.unref();
+    const finish = (error: unknown) => { clearTimeout(timer); signal.removeEventListener("abort", abort); reject(error); };
+    const abort = () => finish(signal.reason ?? new Z3NativeFault("Z3_DELIVERY_ABORTED"));
+    const timer = setTimeout(() => finish(new Z3NativeFault("Z3_RECOVERY_PROOF_NOT_TERMINATED")), 120_000);
+    signal.addEventListener("abort", abort, { once: true });
+    if (signal.aborted) abort();
   });
 }
 
 async function drive(payloadRaw: Record<string, unknown>, actual: Readonly<JobExecutionContext> | undefined,
-  type: string): Promise<void> {
+  type: ViabilityDelivery["jobType"]): Promise<void> {
   let input;
   try { input = JobPayloadSchema.parse(payloadRaw); } catch { z3Fault("Z3_JOB_PAYLOAD_INVALID"); }
   const jobFence = Number(actual?.claimFence);
   if (!actual || actual.tenantId !== input.tenantId || actual.protocolVersion !== 1
-    || actual.retrySafety !== "reconcilable" || !Number.isSafeInteger(jobFence) || jobFence < 1) {
+    || actual.retrySafety !== "reconcilable" || typeof actual.registerHeartbeat !== "function"
+    || !Number.isSafeInteger(jobFence) || jobFence < 1) {
     z3Fault("Z3_ACTUAL_DURABLE_JOB_CONTEXT_REQUIRED");
   }
-  const execution = Object.freeze({ ...actual, claimFence: jobFence });
+  const physical = Object.freeze({ ...actual, claimFence: jobFence });
+  const delivery: ViabilityDelivery = Object.freeze({ physical, jobType: type });
   const ctx = await canonicalApplicationActor(input.tenantId, input.principalId);
   const first = await viabilitySession(ctx, input.sessionId);
   if (first.work_id !== input.workId) z3Fault("Z3_JOB_PAYLOAD_INVALID");
-  if (Z3_TERMINAL_STATUSES.includes(first.status)) return;
+  if (Z3_TERMINAL_STATUSES.includes(first.status) && !(type === Z3_RECOVER_JOB && first.status === "VIABLE" && first.s4_consumed)) return;
   const started = performance.now();
   const usage = process.resourceUsage();
-  // The session claim fence overlay: adoption increments the session-local
-  // fence, and every later boundary publishes under (token, session fence).
-  let claim: Readonly<JobExecutionContext> = execution;
+  let claim: ViabilityClaim = Object.freeze({ ...delivery, sessionFence: 0 });
+  let current = first, adopted = false, finished = false;
+  const children: ViabilityChildObservation[] = [];
+  const controller = new AbortController();
+  let leaseTimer: ReturnType<typeof setTimeout> | undefined;
+  const observeLease = async () => {
+    const startedAt = performance.now();
+    const lease = await assertViabilityJobLease(ctx, current, delivery);
+    if (leaseTimer) clearTimeout(leaseTimer);
+    // Subtract the whole round trip, conservatively. This timer still kills a
+    // child if an owner/currentness guard blocks behind a database lock.
+    const remaining = Math.floor(lease.leaseRemainingMs - (performance.now() - startedAt));
+    if (remaining < 1) z3Fault("Z3_ACTUAL_DURABLE_DELIVERY_EXPIRED_OR_CHANGED");
+    leaseTimer = setTimeout(() => controller.abort(new Z3NativeFault("Z3_DELIVERY_LEASE_EXPIRED")),
+      Math.min(2_147_483_647, remaining));
+  };
+  const deadline = Date.parse(parseBinding(first.binding).deadlineAt);
+  const deadlineTimer = setTimeout(() => controller.abort(new Z3NativeFault("Z3_DEADLINE_EXHAUSTED")),
+    Math.max(1, Math.min(2_147_483_647, deadline - Date.now())));
+  const interrupted = () => controller.abort(new Z3NativeFault("Z3_WORKER_INTERRUPTED"));
+  process.once("SIGTERM", interrupted);
+  process.once("SIGINT", interrupted);
+  const assertNotAborted = () => {
+    if (controller.signal.aborted) throw controller.signal.reason ?? new Z3NativeFault("Z3_DELIVERY_ABORTED");
+  };
+  let guarding: Promise<boolean> | null = null;
+  const guard = (): Promise<boolean> => {
+    if (finished) return Promise.resolve(true);
+    if (controller.signal.aborted) return Promise.resolve(false);
+    guarding ??= (async () => {
+      try {
+        await observeLease();
+        if (adopted) await withViabilityClaim(ctx, current, claim, async () => undefined);
+        return true;
+      } catch (error) { controller.abort(error); return false; }
+    })().finally(() => { guarding = null; });
+    return guarding;
+  };
+  // Queue renewal does not invoke callbacks after it loses the lease, hence
+  // this independent bounded guard is necessary as well as registerHeartbeat.
+  actual.registerHeartbeat(guard);
+  const guardTimer = setInterval(() => { void guard(); }, 1000);
+  const meters = (): ViabilityMeters => {
+    const after = process.resourceUsage();
+    return { wallMs: Math.round(performance.now() - started),
+      userCpuMicros: after.userCPUTime - usage.userCPUTime,
+      systemCpuMicros: after.systemCPUTime - usage.systemCPUTime,
+      processMaxRss: after.maxRSS, children: [...children],
+      meterBasis: "WORKER_PROCESS_DELTA_NOT_ISOLATED_CHILD_CPU", childCpuMicros: null, childMaxRss: null };
+  };
+  const wall = (cap: number) => {
+    assertNotAborted();
+    const remaining = Math.min(cap, Math.floor(deadline - Date.now()));
+    if (remaining < 1) z3Fault("Z3_DEADLINE_EXHAUSTED");
+    return remaining;
+  };
+  const boundary = async (point: ViabilityBoundaryPoint) => {
+    assertNotAborted();
+    await checkpointViability(ctx, current, point, claim);
+    await disposableRecoveryBoundary(point, current.id, claim.sessionFence, controller.signal);
+    assertNotAborted();
+  };
   try {
-    await assertViabilityJobLease(ctx, first, execution, type);
-    const toolchain = await pinToolchain();
-    let current = await adoptViabilityClaim(ctx, first, execution);
-    claim = Object.freeze({ ...execution, claimFence: Number(current.active_claim_fence) });
-    await checkpointViability(ctx, current, "CLAIM", claim);
-    await disposableRecoveryBoundary("CLAIM", current.id, claim.claimFence);
+    await observeLease();
+    const runtime = await viabilityRuntimeIdentity(), toolchain = runtime.toolchain;
+    if (runtime.digest !== parseBinding(first.binding).codeDigest) z3Fault("Z3_RUNTIME_SOURCE_CHANGED");
+    assertNotAborted();
+    current = await adoptViabilityClaim(ctx, first, delivery);
+    claim = Object.freeze({ ...delivery, sessionFence: Number(current.active_claim_fence) });
+    adopted = true;
+    await boundary("CLAIM");
     let candidate: Candidate;
     if (current.candidate === null) {
-      const produced = await runNdjsonChild(process.execPath, [toolchain.producerBundle, "produce-batch"],
-        JSON.stringify({ arena: current.arena, binding: current.binding }) + "\n",
-        PRODUCER_WALL_MS, "Z3_PRODUCER_TIMEOUT");
-      candidate = parseStoredCandidate(produced);
+      await toolchain.revalidate();
+      const remaining = wall(PRODUCER_WALL_MS);
+      const produced = await runViabilityChild({
+        command: process.execPath, args: ["--max-old-space-size=512", "--input-type=module", "--eval", toolchain.producer.source, "z3-cli", "produce-batch"],
+        inputLine: JSON.stringify({ arena: current.arena, binding: current.binding,
+          limits: { deadlineMs: Math.min(PROFILE.deadlineMs, remaining) } }) + "\n",
+        wallMs: remaining, signal: controller.signal,
+      });
+      children.push(produced.observation);
+      assertNotAborted();
+      candidate = parseStoredCandidate(produced.value);
       current = await publishViabilityCandidate(ctx, current, claim, candidate);
     } else {
       candidate = parseStoredCandidate(current.candidate);
       if (candidateDigestOf(candidate) !== current.candidate_digest) z3Fault("Z3_CANDIDATE_PREIMAGE_INVALID");
     }
-    await checkpointViability(ctx, current, "STRATEGY", claim);
-    await disposableRecoveryBoundary("STRATEGY", current.id, claim.claimFence);
+    await toolchain.revalidate();
+    await boundary("STRATEGY");
     let receipt: CheckReceipt;
     if (current.check_receipt === null) {
-      const observed = await runNdjsonChild(toolchain.python, [toolchain.checkerSource, "--batch"],
-        JSON.stringify({ arena: current.arena, binding: current.binding, candidate }) + "\n",
-        CHECKER_WALL_MS, "Z3_CHECKER_TIMEOUT");
-      receipt = parseStoredReceipt(observed);
+      const observed = await runViabilityChild({
+        command: toolchain.pythonExecutable, args: ["-I", "-c", toolchain.checker.source, "--batch"],
+        inputLine: JSON.stringify({ arena: current.arena, binding: current.binding, candidate }) + "\n",
+        wallMs: wall(CHECKER_WALL_MS), signal: controller.signal,
+      });
+      children.push(observed.observation);
+      assertNotAborted();
+      receipt = parseStoredReceipt(observed.value);
       current = await publishViabilityObservation(ctx, current, claim, receipt);
     } else {
       receipt = parseStoredReceipt(current.check_receipt);
       if (receiptDigestOf(receipt) !== current.check_digest) z3Fault("Z3_CHECK_PREIMAGE_INVALID");
     }
-    await checkpointViability(ctx, current, "OBSERVATION", claim);
-    await disposableRecoveryBoundary("OBSERVATION", current.id, claim.claimFence);
-    const after = process.resourceUsage();
-    const meters: ViabilityMeters = {
-      wallMs: Math.round(performance.now() - started),
-      userCpuMicros: after.userCPUTime - usage.userCPUTime,
-      systemCpuMicros: after.systemCPUTime - usage.systemCPUTime,
-      processMaxRss: after.maxRSS,
-    };
-    await publishViabilityResult(ctx, current, claim, candidate, receipt, meters, toolchain.identity);
+    await toolchain.revalidate();
+    await boundary("OBSERVATION");
+    assertNotAborted();
+    await publishViabilityResult(ctx, current, claim, candidate, receipt, meters(), toolchain.identity);
   } catch (error) {
-    await recordViabilityFault(ctx, input.sessionId, claim, error);
-    throw error;
+    if (error instanceof Z3ChildFault) children.push(error.observation);
+    finished = true;
+    clearInterval(guardTimer);
+    await guarding;
+    const cause = controller.signal.aborted ? controller.signal.reason ?? error : error;
+    await recordViabilityFault(ctx, input.sessionId, claim, cause, meters());
+    if (process.env.FINNOR_Z3_DISPOSABLE_RECOVERY === "1" && process.env.FINNOR_Z3_FAULT_POINT
+      && typeof process.send === "function" && cause instanceof Z3NativeFault) {
+      process.send({ kind: "Z3_DELIVERY_REFUSAL_OBSERVED", sessionId: input.sessionId,
+        pid: process.pid, reason: cause.code }, () => undefined);
+    }
+    throw cause;
+  } finally {
+    finished = true;
+    clearInterval(guardTimer);
+    clearTimeout(deadlineTimer);
+    if (leaseTimer) clearTimeout(leaseTimer);
+    process.removeListener("SIGTERM", interrupted);
+    process.removeListener("SIGINT", interrupted);
+    await guarding;
   }
 }
 

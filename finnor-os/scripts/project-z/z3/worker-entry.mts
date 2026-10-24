@@ -4,22 +4,31 @@
  * "running" with a dead lease as durable evidence, and readViabilityPublic
  * reports it as a superseded delivery. Refuses production and auth bypass.
  *
- * The coordinator's disposable authorization supplies this entry's BUNDLED
- * absolute path as workerEntry (plain Node cannot execute TypeScript); the
- * esbuild bundle command and its digest are recorded in
- * scope-z/phase-evidence/z3/integration-patches/. A short 30s lease (the
+ * The coordinator supplies the absolute source entry and runs it with this
+ * installation's own tsx. Single-file bundling would break native source
+ * identity and is not used. A short 30s lease (the
  * queue's non-test floor) keeps the three kill points inside the proof's
  * finite 90s windows; production lease defaults are untouched.
  */
-import "dotenv/config";
 import { ensureSecretsLoaded } from "@finnor/security";
 import { JobQueue } from "../../../apps/worker/src/queue";
 import { runZ3ViabilityRecoveryJob,
   runZ3ViabilitySynthesisJob } from "../../../packages/private-equity/src/project-z/z3-viability/worker";
+import { viabilityRuntimeIdentity } from "../../../packages/private-equity/src/project-z/z3-viability/runtime";
 
 if (process.env.AUTH_DEV_BYPASS) throw new Error("Z3 proof worker refuses an auth bypass");
-if (process.env.FINNOR_ENVIRONMENT === "production") throw new Error("Z3 proof worker is disposable-only");
-process.env.WORKER_JOB_LEASE_SECONDS ??= "30";
+let target: URL;
+try { target = new URL(process.env.DATABASE_URL ?? ""); }
+catch { throw new Error("Z3 proof worker requires an exact existing loopback database"); }
+if (!["postgres:", "postgresql:"].includes(target.protocol) || !["127.0.0.1", "localhost"].includes(target.hostname)
+  || process.env.DATABASE_URL !== process.env.FINNOR_Z3_DISPOSABLE_DATABASE_URL
+  || process.env.SECRETS_PROVIDER !== "env" || process.env.FINNOR_SECRET_IDS
+  || process.env.NODE_ENV === "production"
+  || process.env.FINNOR_ENVIRONMENT !== "staging" || process.env.FINNOR_Z3_DISPOSABLE_RECOVERY !== "1"
+  || process.env.FINNOR_Z3_AUTHORIZED_SOURCE !== (await viabilityRuntimeIdentity()).digest) {
+  throw new Error("Z3 proof worker requires current-source-bound existing disposable authorization");
+}
+process.env.WORKER_JOB_LEASE_SECONDS = "30";
 
 await ensureSecretsLoaded();
 const queue = new JobQueue();

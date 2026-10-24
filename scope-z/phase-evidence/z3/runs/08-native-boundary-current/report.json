@@ -1,0 +1,219 @@
+{
+  "schema": "finnor.z3.native-boundary-e2e.v1",
+  "status": "PASS",
+  "scope": "REAL_OFFLINE_PRODUCER_CHECKER_AND_PROCESS_BOUNDARIES_NOT_NATIVE_DB_PROOF",
+  "cases": [
+    {
+      "id": "N00_REAL_PINNED_ROUND_TRIP",
+      "passed": true,
+      "status": "VIABLE",
+      "producer": {
+        "pid": 167641,
+        "exitCode": 0,
+        "signal": null,
+        "closed": true,
+        "inputBytes": 1402,
+        "outputBytes": 691,
+        "wallMs": 58
+      },
+      "checker": {
+        "pid": 167654,
+        "exitCode": 0,
+        "signal": null,
+        "closed": true,
+        "inputBytes": 2105,
+        "outputBytes": 610,
+        "wallMs": 40
+      }
+    },
+    {
+      "id": "N09_FORGED_VIABLE_OBLIGATIONS",
+      "expected": "Z3_CHECK_VIABLE_OBLIGATIONS_MISSING",
+      "actual": "Z3_CHECK_VIABLE_OBLIGATIONS_MISSING",
+      "observation": null,
+      "passed": true
+    },
+    {
+      "id": "N07_CALLER_INTERPRETER",
+      "expected": "Z3_CALLER_SELECTED_INTERPRETER_UNSUPPORTED",
+      "actual": "Z3_CALLER_SELECTED_INTERPRETER_UNSUPPORTED",
+      "observation": null,
+      "passed": true
+    },
+    {
+      "id": "N14_PUBLIC_NATIVE_PROFILE_PROCESS_ROUND_TRIP_NOT_OWNER_PROOF",
+      "passed": true,
+      "originalArenaDigest": "67fe8f71b9f7101aab9d0f585ae1584a2d8a9769aeebe1b47b78cd662dbc19c8",
+      "independentCheck": "VIABLE"
+    },
+    {
+      "id": "N18_RENEWED_PARENT_REFUSED",
+      "expected": "Z3_ORIGINAL_BEHAVIOR_REVISION_BRIDGE_REQUIRED",
+      "actual": "Z3_ORIGINAL_BEHAVIOR_REVISION_BRIDGE_REQUIRED",
+      "observation": null,
+      "passed": true
+    },
+    {
+      "id": "N18_IDENTITY_REFINEMENT_NOT_NATIVE_REVISION_PROOF",
+      "passed": true,
+      "bridgeDigest": "472032c455a3bcb35c66bef102801dd45d5b4282a09beab1b11f8d019f831384"
+    },
+    {
+      "id": "N06_FORGED_CHECKER",
+      "expected": "Z3_CHECKER_ASSET_NOT_APPROVED",
+      "actual": "Z3_CHECKER_ASSET_NOT_APPROVED",
+      "observation": null,
+      "passed": true
+    },
+    {
+      "id": "N07_FORGED_PRODUCER",
+      "expected": "Z3_PRODUCER_ASSET_NOT_APPROVED",
+      "actual": "Z3_PRODUCER_ASSET_NOT_APPROVED",
+      "observation": null,
+      "passed": true
+    },
+    {
+      "id": "N08_REVALIDATE_AFTER_PIN",
+      "expected": "Z3_CHECKER_ASSET_NOT_APPROVED",
+      "actual": "Z3_CHECKER_ASSET_NOT_APPROVED",
+      "observation": null,
+      "passed": true
+    },
+    {
+      "id": "N08_CAPTURED_VERIFIED_BYTES_NO_PATH_REREAD",
+      "passed": true
+    },
+    {
+      "id": "N04_ABORT_WAITS_FOR_PHYSICAL_CLOSE",
+      "expected": "Z3_CHILD_ABORTED",
+      "actual": "Z3_CHILD_ABORTED",
+      "observation": {
+        "pid": 167664,
+        "exitCode": null,
+        "signal": "SIGKILL",
+        "closed": true,
+        "inputBytes": 0,
+        "outputBytes": 0,
+        "wallMs": 154
+      },
+      "passed": true
+    },
+    {
+      "id": "N05_ORIGINAL_REMAINING_DEADLINE",
+      "expected": "Z3_CHILD_TIMEOUT",
+      "actual": "Z3_CHILD_TIMEOUT",
+      "observation": {
+        "pid": 167671,
+        "exitCode": null,
+        "signal": "SIGKILL",
+        "closed": true,
+        "inputBytes": 0,
+        "outputBytes": 0,
+        "wallMs": 48
+      },
+      "passed": true
+    },
+    {
+      "id": "N09_MULTIPLE_PROTOCOL_ROWS",
+      "expected": "Z3_CHILD_PROTOCOL_ROWS",
+      "actual": "Z3_CHILD_PROTOCOL_ROWS",
+      "observation": {
+        "pid": 167678,
+        "exitCode": 0,
+        "signal": null,
+        "closed": true,
+        "inputBytes": 0,
+        "outputBytes": 6,
+        "wallMs": 36
+      },
+      "passed": true
+    },
+    {
+      "id": "N09_OUTPUT_BOUND",
+      "expected": "Z3_CHILD_OUTPUT_BOUND",
+      "actual": "Z3_CHILD_OUTPUT_BOUND",
+      "observation": {
+        "pid": 167685,
+        "exitCode": null,
+        "signal": "SIGKILL",
+        "closed": true,
+        "inputBytes": 0,
+        "outputBytes": 16384,
+        "wallMs": 35
+      },
+      "passed": true
+    },
+    {
+      "id": "N09_MALFORMED_PROTOCOL",
+      "expected": "Z3_CHILD_OUTPUT_MALFORMED",
+      "actual": "Z3_CHILD_OUTPUT_MALFORMED",
+      "observation": {
+        "pid": 167692,
+        "exitCode": 0,
+        "signal": null,
+        "closed": true,
+        "inputBytes": 0,
+        "outputBytes": 9,
+        "wallMs": 35
+      },
+      "passed": true
+    },
+    {
+      "id": "N09_CHILD_EXIT",
+      "expected": "Z3_CHILD_EXIT_NONZERO",
+      "actual": "Z3_CHILD_EXIT_NONZERO",
+      "observation": {
+        "pid": 167702,
+        "exitCode": 7,
+        "signal": null,
+        "closed": true,
+        "inputBytes": 0,
+        "outputBytes": 0,
+        "wallMs": 30
+      },
+      "passed": true
+    },
+    {
+      "id": "N07_CHILD_ENVIRONMENT_ALLOWLIST",
+      "passed": true,
+      "observation": {
+        "pid": 167710,
+        "exitCode": 0,
+        "signal": null,
+        "closed": true,
+        "inputBytes": 0,
+        "outputBytes": 17,
+        "wallMs": 37
+      }
+    }
+  ],
+  "nativeOwner": "NOT_RUN",
+  "installedNative": "NOT_RUN",
+  "protectedAdmission": "NOT_RUN",
+  "financialQualification": "NOT_RUN",
+  "build": {
+    "producerBundleDigest": "43a3d180cf01602ccacfc01147d934a5f3a5a437f5767eccb1a1ce933bdaa4d7",
+    "checkerDigest": "b71c0bec3be5eb1e6218e4b04a26bf07918a3f781e5712800a8ff061497e837e",
+    "nodeVersion": "v22.23.4",
+    "nodeExecutableDigest": "94efd062ed066c1a0b332e18249859c905e920eeada5df55d24c99b919629a90",
+    "pythonExecutable": "/usr/bin/python3.12",
+    "pythonExecutableDigest": "e50d468e8b0adfb05733f5b87b3cff34829c4a8c1aea50c865aa8bdfe4bb150f"
+  },
+  "sourceInventory": {
+    "finnor-os/packages/private-equity/src/project-z/z3-viability/api.ts": "55315c8cf3c0b01bdf1a07d121d11022ae80904fb0920b25d68ddddad144908a",
+    "finnor-os/packages/private-equity/src/project-z/z3-viability/assets.ts": "25f3d85f0a42c610abeeb19dd0ba8b73bedd36d2741e398e5c6cc647ce20cf1b",
+    "finnor-os/packages/private-equity/src/project-z/z3-viability/consumer.ts": "ecc18935d1b93b73e012eb4fbc5a496ea808d3fd2291d237abaa23a43dadc6c9",
+    "finnor-os/packages/private-equity/src/project-z/z3-viability/contracts.ts": "1fc951b024a6952165f5b069c1f82daa397ef4e83da6ba1f3795d1ce36810f43",
+    "finnor-os/packages/private-equity/src/project-z/z3-viability/delivery.ts": "3ac26d8a5193988d449d171560014eea09fa61b2394a02dd803664e6f8aa450b",
+    "finnor-os/packages/private-equity/src/project-z/z3-viability/native-model.ts": "c39b0089c8e2ecc9e66c91b21a9259787b3a715f2e11d030020c08074195245b",
+    "finnor-os/packages/private-equity/src/project-z/z3-viability/native-origin.ts": "5cb99c28b329b44f2eb50f350972af990dc003ca7b754be37a58e6ce57555f9e",
+    "finnor-os/packages/private-equity/src/project-z/z3-viability/process.ts": "299b4ef80ede03bad6a466bc99e767ae08062ba706d1f3e94eacdc013326d55b",
+    "finnor-os/packages/private-equity/src/project-z/z3-viability/runtime.ts": "2eb88947bac9d9a3f554c80132d00ace44177b7c49ef5cada29d5d73fd665c1d",
+    "finnor-os/packages/private-equity/src/project-z/z3-viability/store.ts": "39b85f4fb87883adec8409448cd8fad9af79ba9cecd84d7b60c8ba0459303f70",
+    "finnor-os/packages/private-equity/src/project-z/z3-viability/worker.ts": "23424ef1a7184a6c49ba76ef618f62fe2c6ef56253b92c3221cebfd0821310c0",
+    "finnor-os/packages/orchestration/src/project-z/z3-viability/revision.ts": "200a178eb9999ce3d0bc29e90a1ab790d0299f3efbd2961a0903a0e8296281ae",
+    "finnor-os/packages/epistemic-runtime/src/project-z/z3-viability/checker.py": "b71c0bec3be5eb1e6218e4b04a26bf07918a3f781e5712800a8ff061497e837e",
+    "finnor-os/packages/epistemic-runtime/src/project-z/z3-viability/contracts.ts": "7addbf753aa18a76763cc8619b87c76263c2b8b508fa4daa860bda3b5bc00de8",
+    "finnor-os/packages/epistemic-runtime/src/project-z/z3-viability/producer.ts": "538652946112222f7f47e4f08b9e12f44804fda5075c95b2e8cce5fc6d83fbb6"
+  }
+}

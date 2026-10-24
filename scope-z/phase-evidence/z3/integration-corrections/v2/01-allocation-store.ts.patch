@@ -1,0 +1,33 @@
+diff --git a/finnor-os/packages/private-equity/src/allocation-store.ts b/finnor-os/packages/private-equity/src/allocation-store.ts
+index 6705c05d8bbc965260aa89bdf1721aa54109f0ac..f79ca1ee2307e884df9cdebc503aacf85fb11cbf 100644
+--- a/finnor-os/packages/private-equity/src/allocation-store.ts
++++ b/finnor-os/packages/private-equity/src/allocation-store.ts
+@@ -353,8 +353,15 @@ export async function reserveInstitutionDemand(ctx:PeMutationContext,demand:Inst
+  await authorize(ctx,client);
+  return reserve(client);
+ }
+-export async function chargeInstitutionDemand(ctx:PeMutationContext,ref:ExperimentRef,request:InstitutionChargeRequest){
+- return locked(ctx,async c=>{
++/** Same original S5 owner, optionally joined to a physical publisher's transaction. */
++export const INSTITUTION_TRANSACTION_BINDING='finnor.s5.existing-institution-transaction.v1' as const;
++async function institutionTransaction<T>(ctx:PeMutationContext,client:pg.PoolClient|undefined,fn:(c:pg.PoolClient)=>Promise<T>):Promise<T>{
++ if(!client)return locked(ctx,fn);
++ await client.query('SELECT pg_advisory_xact_lock(hashtextextended($1,0))',[`s5-portfolio:${ctx.auth.tenantId}`]);
++ await authorize(ctx,client);return fn(client);
++}
++export async function chargeInstitutionDemand(ctx:PeMutationContext,ref:ExperimentRef,request:InstitutionChargeRequest,client?:pg.PoolClient){
++ return institutionTransaction(ctx,client,async c=>{
+   const r=await institutionState(ctx,c,ref);
+   if(!(await c.query<{allowed:boolean}>(
+     'SELECT finnor_os.x1_s5_charge_authorized($1::jsonb,$2) AS allowed',
+@@ -386,8 +393,8 @@ export async function chargeInstitutionDemand(ctx:PeMutationContext,ref:Experime
+   return {charge:body,semanticReplay:false};
+  });
+ }
+-export async function validateInstitutionDemand(ctx:PeMutationContext,ref:ExperimentRef){
+- return locked(ctx,async c=>{
++export async function validateInstitutionDemand(ctx:PeMutationContext,ref:ExperimentRef,client?:pg.PoolClient){
++ return institutionTransaction(ctx,client,async c=>{
+   const reservation=await institutionState(ctx,c,ref);
+   try{
+    const {currentness}=await currentInstitution(ctx,c,reservation);

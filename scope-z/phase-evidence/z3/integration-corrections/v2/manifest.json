@@ -1,0 +1,50 @@
+{
+  "schema": "finnor.z3.native-correction-patches.v2",
+  "repoSource": "CURRENT_OWNED_WORKTREE",
+  "priorNinePatchManifestSha256": "c63db52f0c01109567b01dc588e82c1ad445ef84c69d9199314a99fa4cbbe32f",
+  "sharedApplicationOwner": "COORDINATOR",
+  "prerequisite": "Original nine patches; coordinator catalogue CONTROL/invalidation corrections remain untouched",
+  "requests": [
+    {
+      "path": "finnor-os/packages/private-equity/src/allocation-store.ts",
+      "reason": "Reuse existing S5 currentness, portfolio serializer and physical charge in the SAME transaction, no second ledger",
+      "beforeFile": "01-allocation-store.ts.before",
+      "afterFile": "01-allocation-store.ts.after",
+      "beforeSha256": "fce8b9f05af8e78dfd81939a3e7cdd572b72401f7b0e49ddaf56cf4244e760fe",
+      "afterSha256": "8d88332d6568ac5802060c095500983f108850d27de2dfbc3ca27924bc9aa073",
+      "beforeBlob": "6705c05d8bbc965260aa89bdf1721aa54109f0ac",
+      "afterBlob": "f79ca1ee2307e884df9cdebc503aacf85fb11cbf",
+      "patchFile": "01-allocation-store.ts.patch",
+      "patchSha256": "fb277fd477759a4d27af035e37b4c6af608e4015a0a532c7ea889eabe7fcb2e1",
+      "appliedToLiveSharedSource": false
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/enterprise-control.ts",
+      "reason": "Concrete S4 owner entry selects checked actions, observes native outcomes, advances finite memory and original Work",
+      "beforeFile": "02-enterprise-control.ts.before",
+      "afterFile": "02-enterprise-control.ts.after",
+      "beforeSha256": "aa33dcf657cdcb4ef85a059b51b52b646a93a11aabd9801e2436511b22d7ce43",
+      "afterSha256": "80b83bbe81bed7d8401bfcf8d10c6ab55eaa2603d15346531ac0af63068e1952",
+      "beforeBlob": "4fdb3660a8cb13f06b8cb2eb0a364fca939b03f7",
+      "afterBlob": "e70e437e99a9756d339e56776adc8b50a2f77f08",
+      "patchFile": "02-enterprise-control.ts.patch",
+      "patchSha256": "36474d349e7c3f6498e0547984ae88e2bc6dd1b0a37d456f72cb8a2ea8a5a1d0",
+      "appliedToLiveSharedSource": false
+    },
+    {
+      "path": "src/components/centropy/world/ViabilityPanel.tsx",
+      "reason": "Mounted original-Work submit and explicit finite continuation, no caller-chosen digests or authority",
+      "beforeFile": "03-ViabilityPanel.tsx.before",
+      "afterFile": "03-ViabilityPanel.tsx.after",
+      "beforeSha256": "be45e0a6f4338ba313ffadcd8c3dd85884b9494372bc435d857d32dc850c9f14",
+      "afterSha256": "c94eee8a7cf178e9ba28e58d5cf41b95292e1da8d9558409af48b92ffece4948",
+      "beforeBlob": "d4c465d307ee66dc18cd9e340298bf414cd16f0d",
+      "afterBlob": "a7aa8871f048f816f976ce06808ca3c46da5998d",
+      "patchFile": "03-ViabilityPanel.tsx.patch",
+      "patchSha256": "f685e374cdb7def5f1a334f93a7164f4c50e885c19001e59215269c33a206520",
+      "appliedToLiveSharedSource": false
+    }
+  ],
+  "databaseExecutionAuthorized": false,
+  "protectedQualification": "NOT_RUN"
+}

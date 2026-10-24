@@ -1,0 +1,15 @@
+{
+  "schema": "finnor.z3.native-correction-e2e.v2",
+  "status": "NOT_RUN",
+  "cases": [],
+  "failures": [
+    "EXPLICIT_EXISTING_DB_AUTH_OWNED_WORKER_AUTHORIZATION_NOT_DELIVERED"
+  ],
+  "sourceNative": "NOT_RUN",
+  "installedNative": "NOT_RUN",
+  "protectedAdmission": "NOT_RUN",
+  "operationalQualification": "NOT_RUN",
+  "financialQualification": "NOT_RUN",
+  "money": null,
+  "unknownCostsAreNotZero": true
+}

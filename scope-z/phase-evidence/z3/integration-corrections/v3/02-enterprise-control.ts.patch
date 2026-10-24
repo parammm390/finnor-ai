@@ -1,0 +1,15 @@
+diff --git a/finnor-os/packages/private-equity/src/enterprise-control.ts b/finnor-os/packages/private-equity/src/enterprise-control.ts
+index 4fdb3660a8cb13f06b8cb2eb0a364fca939b03f7..e70e437e99a9756d339e56776adc8b50a2f77f08 100644
+--- a/finnor-os/packages/private-equity/src/enterprise-control.ts
++++ b/finnor-os/packages/private-equity/src/enterprise-control.ts
+@@ -639,3 +639,10 @@ export async function composeEnterpriseApplicationOperations(ctx:PeMutationConte
+   exploredNodes:selected.exploredNodes,disposition:selected.disposition,originalDeadline:row.parent.deadlineAt,executionAuthorityGranted:false});
+  return selected;
+ }
++
++/** S4-owned entry for the first original-Work Z3 native profile. This is a
++ * finite observed prefix, not a verdict-only acknowledgement or effect grant. */
++export async function continueEnterpriseViabilityTx(ctx:PeMutationContext,sessionId:string,
++ claim:import('./project-z/z3-viability/contracts').ViabilityClaim,client:PoolClient,db:import('@finnor/db').Db){
++ return (await import('./project-z/z3-viability/consumer')).consumeCheckedViabilityTx(ctx,sessionId,claim,client,db);
++}

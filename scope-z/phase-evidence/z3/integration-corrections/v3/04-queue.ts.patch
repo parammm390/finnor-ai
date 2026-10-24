@@ -1,0 +1,23 @@
+diff --git a/finnor-os/apps/worker/src/queue.ts b/finnor-os/apps/worker/src/queue.ts
+index 03f30c0191db0670e5e416fc7c35a7cf91246e61..b40768ddd04aaddac7b74ed9fd18f6a16cf36fb9 100644
+--- a/finnor-os/apps/worker/src/queue.ts
++++ b/finnor-os/apps/worker/src/queue.ts
+@@ -497,8 +497,9 @@ export class JobQueue {
+     const renewLease = async (): Promise<void> => {
+       const result = await getPool().query(
+         `WITH renewed AS (
+-           UPDATE jobs SET lease_expires_at=now()+($5 || ' seconds')::interval,lease_heartbeat_at=now()
++           UPDATE jobs SET lease_expires_at=clock_timestamp()+($5 || ' seconds')::interval,lease_heartbeat_at=clock_timestamp()
+             WHERE id=$1 AND status='running' AND lease_owner=$2 AND claim_token=$3 AND claim_fence=$4
++              AND lease_expires_at>clock_timestamp()
+             RETURNING id
+          )
+          UPDATE job_delivery_attempts SET heartbeat_at=now()
+@@ -544,6 +545,7 @@ export class JobQueue {
+            UPDATE jobs SET status='completed',completed_at=now(),started_at=NULL,
+                            lease_owner=NULL,lease_expires_at=NULL,lease_heartbeat_at=NULL,claim_token=NULL
+             WHERE id=$1 AND status='running' AND lease_owner=$2 AND claim_token=$3 AND claim_fence=$4
++              AND lease_expires_at>clock_timestamp()
+             RETURNING id
+          )
+          UPDATE job_delivery_attempts SET outcome='completed',finished_at=clock_timestamp(),heartbeat_at=clock_timestamp()

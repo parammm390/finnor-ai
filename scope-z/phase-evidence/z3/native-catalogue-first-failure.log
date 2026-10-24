@@ -1,0 +1,127 @@
+## r249 ApplyPatch (143 B)
+Success. Applied changes to the following files:
+M /home/factory-user/repos/finnor-z3/finnor-os/scripts/project-z/z3/prepare-reconstruction.mjs
+
+## r250 Execute Lint corrected owned native sources (26 B)
+exitCode: 0
+output:
+
+
+## r251 Execute Check existing catalogue consistency (6.5 KiB)
+exitCode: 1
+output:
+
+> centropy@0.1.0 workspace:check
+> node scripts/generate-workspace-contract.mjs --check
+
+
+> centropy@0.1.0 centropy:manifest:check
+> node scripts/centropy/generate-capability-manifest.mjs --check
+
+node:internal/errors:983
+  const err = new Error(message);
+              ^
+
+Error: Command failed: /home/factory-user/repos/finnor-z-toolchains/node22/node_modules/node/bin/node --max-old-space-size=1024 /home/factory-user/repos/finnor-z3/scripts/centropy/read-canonical-planner.mjs
+node:internal/modules/cjs/loader:1430
+  const err = new Error(message);
+              ^
+
+Error: Cannot find module './build/Release/fs_ext.node'
+Require stack:
+- /home/factory-user/repos/finnor-z3/finnor-os/node_modules/fs-ext/fs-ext.js
+- /home/factory-user/repos/finnor-z3/finnor-os/packages/private-equity/src/decision-slice/store.ts
+    at node:internal/modules/cjs/loader:1430:15
+    at nextResolveSimple (/home/factory-user/repos/finnor-z3/finnor-os/node_modules/tsx/dist/register-OY9cqBEN.cjs:10:1006)
+    at /home/factory-user/repos/finnor-z3/finnor-os/node_modules/tsx/dist/register-OY9cqBEN.cjs:9:4959
+    at /home/factory-user/repos/finnor-z3/finnor-os/node_modules/tsx/dist/register-OY9cqBEN.cjs:9:4261
+    at resolveTsPaths (/home/factory-user/repos/finnor-z3/finnor-os/node_modules/tsx/dist/register-OY9cqBEN.cjs:10:759)
+    at Function._resolveFilename (/home/factory-user/repos/finnor-z3/finnor-os/node_modules/tsx/dist/register-OY9cqBEN.cjs:10:1199)
+    at defaultResolveImpl (node:internal/modules/cjs/loader:1040:19)
+    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1045:22)
+    at Function._load (node:internal/modules/cjs/loader:1216:25)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:254:19) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [
+    '/home/factory-user/repos/finnor-z3/finnor-os/node_modules/fs-ext/fs-ext.js',
+    '/home/factory-user/repos/finnor-z3/finnor-os/packages/private-equity/src/decision-slice/store.ts'
+  ]
+}
+
+Node.js v22.23.4
+
+    at genericNodeError (node:internal/errors:983:15)
+    at wrappedFn (node:internal/errors:537:14)
+    at checkExecSyncError (node:child_process:916:11)
+    at execFileSync (node:child_process:952:15)
+    at readCanonicalPlanner (file:///home/factory-user/repos/finnor-z3/scripts/centropy/canonical-planner.mjs:9:18)
+    at registryEntries (file:///home/factory-user/repos/finnor-z3/scripts/centropy/generate-capability-manifest.mjs:332:20)
+    at file:///home/factory-user/repos/finnor-z3/scripts/centropy/generate-capability-manifest.mjs:357:37
+    at ModuleJob.run (node:internal/modules/esm/module_job:343:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:681:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5) {
+  status: 1,
+  signal: null,
+  output: [
+    null,
+    '',
+    'node:internal/modules/cjs/loader:1430\n' +
+      '  const err = new Error(message);\n' +
+      '              ^\n' +
+      '\n' +
+      "Error: Cannot find module './build/Release/fs_ext.node'\n" +
+      'Require stack:\n' +
+      '- /home/factory-user/repos/finnor-z3/finnor-os/node_modules/fs-ext/fs-ext.js\n' +
+      '- /home/factory-user/repos/finnor-z3/finnor-os/packages/private-equity/src/decision-slice/store.ts\n' +
+      '    at node:internal/modules/cjs/loader:1430:15\n' +
+      '    at nextResolveSimple (/home/factory-user/repos/finnor-z3/finnor-os/node_modules/tsx/dist/register-OY9cqBEN.cjs:10:1006)\n' +
+      '    at /home/factory-user/repos/finnor-z3/finnor-os/node_modules/tsx/dist/register-OY9cqBEN.cjs:9:4959\n' +
+      '    at /home/factory-user/repos/finnor-z3/finnor-os/node_modules/tsx/dist/register-OY9cqBEN.cjs:9:4261\n' +
+      '    at resolveTsPaths (/home/factory-user/repos/finnor-z3/finnor-os/node_modules/tsx/dist/register-OY9cqBEN.cjs:10:759)\n' +
+      '    at Function._resolveFilename (/home/factory-user/repos/finnor-z3/finnor-os/node_modules/tsx/dist/register-OY9cqBEN.cjs:10:1199)\n' +
+      '    at defaultResolveImpl (node:internal/modules/cjs/loader:1040:19)\n' +
+      '    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1045:22)\n' +
+      '    at Function._load (node:internal/modules/cjs/loader:1216:25)\n' +
+      '    at wrapModuleLoad (node:internal/modules/cjs/loader:254:19) {\n' +
+      "  code: 'MODULE_NOT_FOUND',\n" +
+      '  requireStack: [\n' +
+      "    '/home/factory-user/repos/finnor-z3/finnor-os/node_modules/fs-ext/fs-ext.js',\n" +
+      "    '/home/factory-user/repos/finnor-z3/finnor-os/packages/private-equity/src/decision-slice/store.ts'\n" +
+      '  ]\n' +
+      '}\n' +
+      '\n' +
+      'Node.js v22.23.4\n'
+  ],
+  pid: 168331,
+  stdout: '',
+  stderr: 'node:internal/modules/cjs/loader:1430\n' +
+    '  const err = new Error(message);\n' +
+    '              ^\n' +
+    '\n' +
+    "Error: Cannot find module './build/Release/fs_ext.node'\n" +
+    'Require stack:\n' +
+    '- /home/factory-user/repos/finnor-z3/finnor-os/node_modules/fs-ext/fs-ext.js\n' +
+    '- /home/factory-user/repos/finnor-z3/finnor-os/packages/private-equity/src/decision-slice/store.ts\n' +
+    '    at node:internal/modules/cjs/loader:1430:15\n' +
+    '    at nextResolveSimple (/home/factory-user/repos/finnor-z3/finnor-os/node_modules/tsx/dist/register-OY9cqBEN.cjs:10:1006)\n' +
+    '    at /home/factory-user/repos/finnor-z3/finnor-os/node_modules/tsx/dist/register-OY9cqBEN.cjs:9:4959\n' +
+    '    at /home/factory-user/repos/finnor-z3/finnor-os/node_modules/tsx/dist/register-OY9cqBEN.cjs:9:4261\n' +
+    '    at resolveTsPaths (/home/factory-user/repos/finnor-z3/finnor-os/node_modules/tsx/dist/register-OY9cqBEN.cjs:10:759)\n' +
+    '    at Function._resolveFilename (/home/factory-user/repos/finnor-z3/finnor-os/node_modules/tsx/dist/register-OY9cqBEN.cjs:10:1199)\n' +
+    '    at defaultResolveImpl (node:internal/modules/cjs/loader:1040:19)\n' +
+    '    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1045:22)\n' +
+    '    at Function._load (node:internal/modules/cjs/loader:1216:25)\n' +
+    '    at wrapModuleLoad (node:internal/modules/cjs/loader:254:19) {\n' +
+    "  code: 'MODULE_NOT_FOUND',\n" +
+    '  requireStack: [\n' +
+    "    '/home/factory-user/repos/finnor-z3/finnor-os/node_modules/fs-ext/fs-ext.js',\n" +
+    "    '/home/factory-user/repos/finnor-z3/finnor-os/packages/private-equity/src/decision-slice/store.ts'\n" +
+    '  ]\n' +
+    '}\n' +
+    '\n' +
+    'Node.js v22.23.4\n'
+}
+
+Node.js v22.23.4
+
+

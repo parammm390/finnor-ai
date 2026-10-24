@@ -1,0 +1,5 @@
+
+> centropy@0.1.0 centropy:manifest:check
+> node scripts/centropy/generate-capability-manifest.mjs --check
+
+CENTROPY capabilities: 580 HTTP route operations, 77 planner operations

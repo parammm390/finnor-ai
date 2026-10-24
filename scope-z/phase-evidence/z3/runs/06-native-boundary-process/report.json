@@ -1,0 +1,170 @@
+{
+  "schema": "finnor.z3.native-boundary-e2e.v1",
+  "status": "PASS",
+  "scope": "REAL_OFFLINE_PRODUCER_CHECKER_AND_PROCESS_BOUNDARIES_NOT_NATIVE_DB_PROOF",
+  "cases": [
+    {
+      "id": "N00_REAL_PINNED_ROUND_TRIP",
+      "passed": true,
+      "status": "VIABLE",
+      "producer": {
+        "pid": 149876,
+        "exitCode": 0,
+        "signal": null,
+        "closed": true,
+        "inputBytes": 1402,
+        "outputBytes": 690,
+        "wallMs": 75
+      },
+      "checker": {
+        "pid": 149884,
+        "exitCode": 0,
+        "signal": null,
+        "closed": true,
+        "inputBytes": 2104,
+        "outputBytes": 611,
+        "wallMs": 56
+      }
+    },
+    {
+      "id": "N06_FORGED_CHECKER",
+      "expected": "Z3_CHECKER_ASSET_NOT_APPROVED",
+      "actual": "Z3_CHECKER_ASSET_NOT_APPROVED",
+      "observation": null,
+      "passed": true
+    },
+    {
+      "id": "N07_FORGED_PRODUCER",
+      "expected": "Z3_PRODUCER_ASSET_NOT_APPROVED",
+      "actual": "Z3_PRODUCER_ASSET_NOT_APPROVED",
+      "observation": null,
+      "passed": true
+    },
+    {
+      "id": "N08_REVALIDATE_AFTER_PIN",
+      "expected": "Z3_CHECKER_ASSET_NOT_APPROVED",
+      "actual": "Z3_CHECKER_ASSET_NOT_APPROVED",
+      "observation": null,
+      "passed": true
+    },
+    {
+      "id": "N08_CAPTURED_VERIFIED_BYTES_NO_PATH_REREAD",
+      "passed": true
+    },
+    {
+      "id": "N04_ABORT_WAITS_FOR_PHYSICAL_CLOSE",
+      "expected": "Z3_CHILD_ABORTED",
+      "actual": "Z3_CHILD_ABORTED",
+      "observation": {
+        "pid": 149886,
+        "exitCode": null,
+        "signal": "SIGKILL",
+        "closed": true,
+        "inputBytes": 0,
+        "outputBytes": 0,
+        "wallMs": 153
+      },
+      "passed": true
+    },
+    {
+      "id": "N05_ORIGINAL_REMAINING_DEADLINE",
+      "expected": "Z3_CHILD_TIMEOUT",
+      "actual": "Z3_CHILD_TIMEOUT",
+      "observation": {
+        "pid": 149893,
+        "exitCode": null,
+        "signal": "SIGKILL",
+        "closed": true,
+        "inputBytes": 0,
+        "outputBytes": 0,
+        "wallMs": 49
+      },
+      "passed": true
+    },
+    {
+      "id": "N09_MULTIPLE_PROTOCOL_ROWS",
+      "expected": "Z3_CHILD_PROTOCOL_ROWS",
+      "actual": "Z3_CHILD_PROTOCOL_ROWS",
+      "observation": {
+        "pid": 149902,
+        "exitCode": 0,
+        "signal": null,
+        "closed": true,
+        "inputBytes": 0,
+        "outputBytes": 6,
+        "wallMs": 40
+      },
+      "passed": true
+    },
+    {
+      "id": "N09_OUTPUT_BOUND",
+      "expected": "Z3_CHILD_OUTPUT_BOUND",
+      "actual": "Z3_CHILD_OUTPUT_BOUND",
+      "observation": {
+        "pid": 149910,
+        "exitCode": null,
+        "signal": "SIGKILL",
+        "closed": true,
+        "inputBytes": 0,
+        "outputBytes": 16384,
+        "wallMs": 32
+      },
+      "passed": true
+    },
+    {
+      "id": "N09_MALFORMED_PROTOCOL",
+      "expected": "Z3_CHILD_OUTPUT_MALFORMED",
+      "actual": "Z3_CHILD_OUTPUT_MALFORMED",
+      "observation": {
+        "pid": 149917,
+        "exitCode": 0,
+        "signal": null,
+        "closed": true,
+        "inputBytes": 0,
+        "outputBytes": 9,
+        "wallMs": 36
+      },
+      "passed": true
+    },
+    {
+      "id": "N09_CHILD_EXIT",
+      "expected": "Z3_CHILD_EXIT_NONZERO",
+      "actual": "Z3_CHILD_EXIT_NONZERO",
+      "observation": {
+        "pid": 149924,
+        "exitCode": 7,
+        "signal": null,
+        "closed": true,
+        "inputBytes": 0,
+        "outputBytes": 0,
+        "wallMs": 30
+      },
+      "passed": true
+    },
+    {
+      "id": "N07_CHILD_ENVIRONMENT_ALLOWLIST",
+      "passed": true,
+      "observation": {
+        "pid": 149931,
+        "exitCode": 0,
+        "signal": null,
+        "closed": true,
+        "inputBytes": 0,
+        "outputBytes": 17,
+        "wallMs": 36
+      }
+    }
+  ],
+  "nativeOwner": "NOT_RUN",
+  "installedNative": "NOT_RUN",
+  "protectedAdmission": "NOT_RUN",
+  "financialQualification": "NOT_RUN",
+  "build": {
+    "producerBundleDigest": "43a3d180cf01602ccacfc01147d934a5f3a5a437f5767eccb1a1ce933bdaa4d7",
+    "checkerDigest": "b71c0bec3be5eb1e6218e4b04a26bf07918a3f781e5712800a8ff061497e837e",
+    "nodeVersion": "v22.23.4",
+    "nodeExecutableDigest": "94efd062ed066c1a0b332e18249859c905e920eeada5df55d24c99b919629a90",
+    "pythonExecutable": "/usr/bin/python3.12",
+    "pythonExecutableDigest": "e50d468e8b0adfb05733f5b87b3cff34829c4a8c1aea50c865aa8bdfe4bb150f"
+  }
+}

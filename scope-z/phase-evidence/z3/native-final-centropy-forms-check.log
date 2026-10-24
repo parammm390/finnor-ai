@@ -1,0 +1,5 @@
+
+> centropy@0.1.0 centropy:forms:check
+> node scripts/centropy/generate-human-forms.mjs --check
+
+Typed human forms: 95; Digital Twin variants: 27
