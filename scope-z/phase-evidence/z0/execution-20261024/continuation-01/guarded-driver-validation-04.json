@@ -1,0 +1,40 @@
+{
+  "schema": "finnor.project-z.z0.guarded-driver-validation.v1",
+  "evidenceClass": "SOURCE_ENGINEERING_NOT_AUTHENTICATED_NATIVE_PROOF",
+  "startingOwnHead": "3bfc4fdf1c60e53d224f8437a94f48e1d09b793f",
+  "startingOwnTree": "8d337980e33be78ced8bf23d6882f4d2969b0809",
+  "actualToolReceipt": "/home/factory-user/.factory/artifacts/scripts/66647028-fac4-4793-bec3-22b564d12b90/call_EjcIXT5VP4y56RW3WelRU7EN.log",
+  "priorUnchangedChecks": "guarded-driver-validation-03.json",
+  "preEditMap": {
+    "path": "original-recovery-binding-before-08.md",
+    "sha256": "8084c97211cd8ca63946dbe8a598ef35b85eccb93c0a0570a0f004d9420a20c2"
+  },
+  "syntaxChecks": [
+    { "file": "native-recovery.mjs", "sha256": "fc4c81fc33655716f1548ac757759b56b5aea84fac93d3abb77f14b727944104", "actualExit": 0 },
+    { "file": "run-native-e2e.mjs", "sha256": "0b6e24b973865477620fc3f245106f66215801c679e464baec92934b10d107c1", "actualExit": 0 }
+  ],
+  "scopedGitDiffCheck": { "actualExit": 0 },
+  "doctor": {
+    "path": "native-driver-doctor-11.log",
+    "sha256": "657eaee483cc296900954c9980f2586c4f70a49662203d23f207b46f95bce079",
+    "actualExit": 0,
+    "plannedCasesPerTarget": 54,
+    "executedNativeCases": 0
+  },
+  "missingAuthorityGuard": {
+    "path": "native-driver-authority-refusal-09.log",
+    "sha256": "459a0eebdf75d3bf42c4797cbc60023c90e1ba4f9d6514b0dc191dc449ae290f",
+    "actualExit": 2,
+    "expectedExit": 2,
+    "predicate": "Z0_NATIVE_AUTHORITY_NOT_DELIVERED",
+    "status": "NOT_RUN",
+    "executedNativeCases": 0
+  },
+  "newUnitTestsWritten": false,
+  "newIndependentReconstruction": "NOT_YET_RUN_AT_THIS_CHECKPOINT",
+  "sourceNative": "NOT_RUN",
+  "installedNative": "NOT_RUN",
+  "databaseAuthOrListenersExecuted": false,
+  "protectedAdmission": "NOT_GRANTED",
+  "slotReleased": false
+}

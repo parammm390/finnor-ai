@@ -484,7 +484,7 @@ async function physicalCut(session, fixture, boundary) {
       identity = await checkOwnedWorker(session.target, session.worker);
       process.kill(-identity.pid, "SIGSTOP"); paused = true;
       before = await snapshot(session, fixture);
-      cut = physicalBoundary(before, fixture, boundary, identity, session.activeActor ?? session.target.actor);
+      cut = physicalBoundary(before, fixture, boundary, identity, session.activeActor ?? session.target.actor, session.originalExpected);
       if (cut) break;
       process.kill(-identity.pid, "SIGCONT"); paused = false;
       await delay(100);
@@ -497,7 +497,7 @@ async function physicalCut(session, fixture, boundary) {
     process.kill(-identity.pid, "SIGKILL"); paused = false;
     for (const member of killedProcesses) await waitExit(member);
     const exitedAt = new Date().toISOString(), afterExit = await snapshot(session, fixture);
-    const afterExitCut = physicalBoundary(afterExit, fixture, boundary, identity, session.activeActor ?? session.target.actor);
+    const afterExitCut = physicalBoundary(afterExit, fixture, boundary, identity, session.activeActor ?? session.target.actor, session.originalExpected);
     await save(receipt("after-exit"), { status: "ACTUAL_PHYSICAL_EXIT_OBSERVED",
       witness: afterExitCut, exitedAt, afterExitSha256: digest(afterExit) });
     ensure(afterExitCut && originalDigest(afterExitCut) === originalDigest(cut), "Z0_EXACT_PHYSICAL_CUT_BOUNDARY_ADVANCED");

@@ -16,6 +16,7 @@ export const nativeRecoveryContract = Object.freeze({
   schema: "finnor.project-z.z0.exact-physical-recovery.v1",
   selector: ["type", "ownerId", "generation", "stage"],
   actualIdentity: "ONE_NATIVE_IDEMPOTENCY_KEY_JOB_UUID_TYPE_PROTOCOL_PAYLOAD_GENERATION_UNFINISHED_OWNED_DELIVERY",
+  originalResponsibility: "INDEPENDENT_ORIGINAL_COMPILER_PROGRAMME_AND_ROOT_X2_INSTITUTIONAL_ORIGIN",
   artifact: "EXACT_SELECTED_X2_SESSION_CHECKED_MODEL_AND_CHECK_PREIMAGES",
   ambiguity: "EXACT_SELECTED_X2_REQUEST_NODE_S5_CONSUMPTION_S6_OBLIGATION_EFFECT_AND_ACTION",
   recovery: "SAME_CAPTURED_JOB_AND_PAYLOAD_HIGHER_NEW_TOKEN_FENCE_PLUS_INDEPENDENT_TERMINAL_OUTCOME",
@@ -30,6 +31,7 @@ export function validateRecoverySelector(fixture, boundary) {
     && typeof selected.stage === "string" && /^[A-Za-z0-9_:.-]{1,128}$/.test(selected.stage)
     && ["CLAIM", "ARTIFACT", "AMBIGUITY"].includes(boundary)
     && (boundary === "CLAIM" || selected.type === "run_application_semantics_v1")
+    && (boundary === "CLAIM" || fixture.owner?.originalInputs)
     && (boundary !== "AMBIGUITY" || typeof fixture.recoveryNodeId === "string"
       && fixture.recoveryNodeId.length > 0 && fixture.recoveryNodeId.length <= 512),
   "Z0_INDEPENDENT_EXACT_RECOVERY_JOB_AND_BOUNDARY_SELECTOR_REQUIRED");
@@ -75,7 +77,16 @@ function ambiguityIdentity(value, session, nodeId, requestId = null) {
     inputDigest: row.input_digest, effectSemanticHash: row.effect_semantic_hash,
     canonicalActionSha256: originalDigest(frozenAction) };
 }
-export function physicalBoundary(value, fixture, boundary, worker, actor) {
+function belongsToOriginal(value, collection, owner, expected) {
+  if (!expected) return true;
+  if (collection === "compiler") return owner.id === expected.compilerRequestId;
+  if (collection === "programs") return owner.id === expected.programId;
+  const root = value.applications.find(row => row.id === owner.parent_id && row.id === row.parent_id);
+  const origin = root?.request?.institutionalOrigin;
+  return origin?.compilerRequestId === expected.compilerRequestId && origin.programId === expected.programId
+    && origin.responsibilityIdentity === expected.stableIdentity;
+}
+export function physicalBoundary(value, fixture, boundary, worker, actor, expected) {
   const selector = validateRecoverySelector(fixture, boundary);
   const job = one(value.jobs.filter(row => row.type === selector.type && row.idempotency_key === selector.idempotencyKey
     && row.protocol_version === 1 && row.payload?.[selector.key] === selector.ownerId
@@ -83,7 +94,9 @@ export function physicalBoundary(value, fixture, boundary, worker, actor) {
     && row.payload.principalId === actor.principalId));
   const owner = one(value[selector.collection].filter(row => row.id === selector.ownerId
     && row.generation === selector.generation && row.work_id === fixture.workId && row.work_input_id === fixture.workInputId));
-  if (!job || !owner || job.status !== "running" || !job.claim_token || Number(job.claim_fence) <= 0
+  if (!job || !owner || boundary !== "CLAIM" && !expected
+    || !belongsToOriginal(value, selector.collection, owner, expected)
+    || job.status !== "running" || !job.claim_token || Number(job.claim_fence) <= 0
     || job.lease_owner !== worker.workerInstanceId || !(Date.parse(job.lease_expires_at) > Date.now())
     || owner.claim_token !== job.claim_token || Number(owner.claim_fence) !== Number(job.claim_fence)) return null;
   const delivery = one(value.deliveries.filter(row => row.job_id === job.id && row.claim_token === job.claim_token
@@ -104,6 +117,8 @@ export function physicalBoundary(value, fixture, boundary, worker, actor) {
     if (!durable) return null;
   }
   return { schema: nativeRecoveryContract.schema, boundary,
+    originalResponsibility: expected ? { compilerRequestId: expected.compilerRequestId, programId: expected.programId,
+      stableIdentity: expected.stableIdentity, expectedEntityId: expected.entityId, actionSha256: expected.actionSha256 } : null,
     job: { id: job.id, type: job.type, protocolVersion: job.protocol_version, generation: selector.generation,
       ownerId: owner.id, idempotencyKey: job.idempotency_key, payloadSha256: originalDigest(job.payload) },
     delivery: { id: delivery.id, claimFence: Number(job.claim_fence),
@@ -121,7 +136,7 @@ export function recoveredExactJob(value, cut, worker) {
 export function retainedRecoveryBoundary(value, cut) {
   if (cut.boundary === "CLAIM") return true;
   const session = value.applications.find(row => row.id === cut.job.ownerId && row.generation === cut.job.generation);
-  if (!session) return false;
+  if (!session || !belongsToOriginal(value, "applications", session, cut.originalResponsibility)) return false;
   const actual = cut.boundary === "ARTIFACT" ? artifactIdentity(value, session)
     : ambiguityIdentity(value, session, cut.durable.nodeId, cut.durable.requestId);
   return !!actual && same(actual, cut.durable);
