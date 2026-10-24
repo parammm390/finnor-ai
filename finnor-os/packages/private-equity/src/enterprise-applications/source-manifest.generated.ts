@@ -124,7 +124,7 @@ export default {
     },
     {
       "path": "finnor-os/package-lock.json",
-      "sha256": "4116b2a7e02a28b8e49baa4a24a378e5170c5dc66d285075c8cf50bf11b9faed"
+      "sha256": "71d5f43a2b92e2e4eccee6b093231de493737ba5cd30bae0a3b296e20e2e7c39"
     },
     {
       "path": "finnor-os/packages/private-equity/src/enterprise-control.ts",
@@ -196,7 +196,7 @@ export default {
     },
     {
       "path": "package-lock.json",
-      "sha256": "af1d36679eb4123ab5f2d9f4668e82e1defc952a45777a74d3dff30c6d16f117"
+      "sha256": "78c026248ba2c20644aca03878a84d26d62e6914d22607a8a6dd33f3dd1992aa"
     },
     {
       "path": "finnor-os/scripts/x3/stamp-source.mts",
