@@ -7,11 +7,12 @@ import { createHash } from "node:crypto";
 import { spawn, execFileSync } from "node:child_process";
 const toolRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../../..");
 const options = Object.fromEntries(process.argv.slice(2).map(arg => {
-  const match = /^--(installation|output)=(\/.+)$/.exec(arg);
+  const match = /^--(installation|output|public-auth-input)=(\/.+)$/.exec(arg);
   if (!match) throw Error("Z0_RECONSTRUCTION_ABSOLUTE_ARGUMENT_REQUIRED");
   return [match[1], resolve(match[2])];
 }));
-if (Object.keys(options).length !== 2 || !options.output.startsWith(resolve(toolRoot, "scope-z/phase-evidence/z0") + sep)
+if (!options.installation || !options.output
+  || !options.output.startsWith(resolve(toolRoot, "scope-z/phase-evidence/z0") + sep)
   || existsSync(options.output) || process.versions.node.split(".")[0] !== "22") throw Error("Z0_FRESH_NODE22_RECONSTRUCTION_REQUIRED");
 const sha = body => createHash("sha256").update(body).digest("hex");
 const source = JSON.parse(await readFile(resolve(options.installation, "source-snapshot.json"), "utf8"));
@@ -25,6 +26,48 @@ if (new Set(members).size !== members.length || members.length !== source.files.
   || members.some(path => path.startsWith("/") || path.split("/").includes("..") || !source.files.some(file => file.path === path))) {
   throw Error("Z0_UNDECLARED_RECONSTRUCTION_ARCHIVE_MEMBER");
 }
+const frontendEnv = {};
+const publicAuthBuild = { schema: "finnor.project-z.z0.frontend-public-auth-build-receipt.v1",
+  sourcePopulationSha256: source.sourcePopulationSha256, state: "NOT_DELIVERED",
+  authenticationExecuted: false, environmentNames: [] };
+if (options["public-auth-input"]) {
+  if (!existsSync(options["public-auth-input"])) throw Error("Z0_PUBLIC_AUTH_BUILD_INPUT_NOT_DELIVERED");
+  const bytes = await readFile(options["public-auth-input"]);
+  let input, origin;
+  try {
+    if (bytes.length > 8192) throw Error();
+    input = JSON.parse(bytes);
+    if (!input || typeof input !== "object" || Array.isArray(input)) throw Error();
+    origin = new URL(input.authOrigin);
+  } catch { throw Error("Z0_INVALID_PUBLIC_AUTH_BUILD_INPUT"); }
+  const fields = ["schema", "phase", "sessionId", "sourcePopulationSha256", "expiresAt", "authOrigin", "publicUrlEnv", "publicAnonKeyEnv"];
+  if (Object.keys(input).length !== fields.length || fields.some(key => !Object.hasOwn(input, key))
+    || input.schema !== "finnor.project-z.z0.frontend-public-auth-build-input.v1" || input.phase !== "Z0"
+    || input.sessionId !== "66647028-fac4-4793-bec3-22b564d12b90"
+    || input.sourcePopulationSha256 !== source.sourcePopulationSha256 || !(Date.parse(input.expiresAt) > Date.now())) {
+    throw Error("Z0_SOURCE_BOUND_PUBLIC_AUTH_BUILD_INPUT_REQUIRED");
+  }
+  if (origin.origin !== input.authOrigin || origin.protocol !== "http:" || origin.username || origin.password
+    || !["127.0.0.1", "localhost", "[::1]"].includes(origin.hostname)) throw Error("Z0_PUBLIC_AUTH_LOOPBACK_ORIGIN_REQUIRED");
+  for (const key of ["publicUrlEnv", "publicAnonKeyEnv"]) if (!/^[A-Z][A-Z0-9_]{0,127}$/.test(input[key] ?? "")
+    || !process.env[input[key]]) throw Error("Z0_EXPLICIT_PUBLIC_AUTH_ENVIRONMENT_NAME_REQUIRED");
+  const url = process.env[input.publicUrlEnv], key = process.env[input.publicAnonKeyEnv];
+  let publicKey = /^sb_publishable_[A-Za-z0-9_-]{16,256}$/.test(key);
+  if (!publicKey && /^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(key)) {
+    try {
+      const claims = JSON.parse(Buffer.from(key.split(".")[1], "base64url").toString("utf8"));
+      publicKey = claims.role === "anon" && Object.keys(claims).every(name => ["role", "iss", "iat", "exp", "ref"].includes(name));
+    } catch { /* A malformed or non-public token never reaches the client build. */ }
+  }
+  if (url !== input.authOrigin || key !== key.trim() || key.length > 4096 || !publicKey) {
+    throw Error("Z0_PUBLIC_ANON_OR_PUBLISHABLE_BUILD_KEY_ONLY");
+  }
+  Object.assign(frontendEnv, { NEXT_PUBLIC_SUPABASE_URL: url, NEXT_PUBLIC_SUPABASE_ANON_KEY: key });
+  Object.assign(publicAuthBuild, { state: "EXPLICIT_PUBLIC_BUILD_INPUT", inputSha256: sha(bytes),
+    expiresAt: input.expiresAt, authOrigin: input.authOrigin, anonKeySha256: sha(key),
+    environmentNames: [input.publicUrlEnv, input.publicAnonKeyEnv],
+    injectedNames: Object.keys(frontendEnv), secretOrUserKeyAccepted: false });
+}
 await mkdir(options.output, { mode: 0o700 });
 const root = resolve(options.output, "runtime"), backend = resolve(root, "finnor-os"), home = resolve(options.output, "build-home");
 await mkdir(root); await mkdir(home);
@@ -35,10 +78,10 @@ const env = { PATH: dirname(process.execPath) + ":/usr/bin:/bin", HOME: home, LA
   PLAYWRIGHT_BROWSERS_PATH: resolve(root, "browsers"), npm_config_cache: resolve(home, "npm-cache"),
   npm_config_devdir: resolve(home, "node-gyp") };
 const steps = [];
-async function run(name, command, args, cwd = root, expectedCode = 0) {
+async function run(name, command, args, cwd = root, expectedCode = 0, buildEnv = {}) {
   const log = resolve(options.output, name + ".log"), stream = createWriteStream(log, { flags: "wx" });
   const started = new Date().toISOString(), start = performance.now();
-  const child = spawn(command, args, { cwd, env, stdio: ["ignore", "pipe", "pipe"] });
+  const child = spawn(command, args, { cwd, env: { ...env, ...buildEnv }, stdio: ["ignore", "pipe", "pipe"] });
   child.stdout.pipe(stream, { end: false }); child.stderr.pipe(stream, { end: false });
   const timer = setTimeout(() => child.kill("SIGKILL"), 600000);
   const exit = await new Promise((ok, reject) => { child.once("error", reject); child.once("close", (code, signal) => ok({ code, signal })); });
@@ -81,7 +124,9 @@ try {
     sourcePopulationSha256: source.sourcePopulationSha256, selectedFiles: typeInputs.length,
     outsideTargetFiles: 0, files: typeInputs,
   }, null, 2) + "\n", { flag: "wx" });
-  await run("07-actual-mounted-frontend-build", process.execPath, [resolve(root, "node_modules/next/dist/bin/next"), "build", "--webpack"]);
+  await writeFile(resolve(options.output, "frontend-public-auth-build.json"), JSON.stringify(publicAuthBuild, null, 2) + "\n", { flag: "wx" });
+  await run("07-actual-mounted-frontend-build", process.execPath, [resolve(root, "node_modules/next/dist/bin/next"), "build", "--webpack"],
+    root, 0, frontendEnv);
   await run("08-complete-emission", process.execPath, [resolve(backend, "scripts/project-z/z0/emit-converged-runtime.mjs"),
     "--installation=" + options.output, "--attempt=01"]);
   const manifest = JSON.parse(await readFile(resolve(backend, "x1-development-installation.json"), "utf8"));
@@ -93,6 +138,7 @@ try {
     sourcePopulationSha256: source.sourcePopulationSha256, archiveSha256: archive.sha256, steps,
     dependencyTreesCopied: false, localGitObjectsRequired: false, gitDiscoveryIsolated: true,
     gitCeiling: env.GIT_CEILING_DIRECTORIES, sentryRelease: env.SENTRY_RELEASE, backendTypeInputs: typeInputs.length,
+    frontendPublicAuthBuild: publicAuthBuild,
     typescriptRuntimeFallback: "REFUSED",
     native: "NOT_RUN", installedNative: "NOT_RUN", databaseOrAuthExecuted: false,
   }, null, 2) + "\n", { flag: "wx" });

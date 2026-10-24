@@ -24,6 +24,11 @@ if (source.schema !== "finnor.project-z.z0.converged-source-snapshot.v1" || sour
   throw Error("Z0_FRESH_EXACT_NODE22_INSTALLATION_REQUIRED");
 }
 const sha = bytes => createHash("sha256").update(bytes).digest("hex");
+const publicAuthBuild = JSON.parse(await readFile(resolve(installation, "frontend-public-auth-build.json"), "utf8"));
+if (publicAuthBuild.schema !== "finnor.project-z.z0.frontend-public-auth-build-receipt.v1"
+  || publicAuthBuild.sourcePopulationSha256 !== source.sourcePopulationSha256
+  || !["NOT_DELIVERED", "EXPLICIT_PUBLIC_BUILD_INPUT"].includes(publicAuthBuild.state)
+  || publicAuthBuild.authenticationExecuted !== false) throw Error("Z0_DECLARED_FRONTEND_PUBLIC_AUTH_BUILD_STATE_REQUIRED");
 const generatedFrontendChanges = [];
 for (const file of source.files) {
   const actual = await readFile(resolve(root, file.path));
@@ -245,10 +250,11 @@ const manifest = {
     builderSha256: sha(await readFile(fileURLToPath(import.meta.url))) },
   generatedFrontendChanges,
   frontend: { buildId: (await readFile(resolve(root, ".next-x1-install/BUILD_ID"), "utf8")).trim(),
-    mode: "ACTUAL_NEXT_STANDALONE_BUILD_NOT_STARTED" },
+    mode: "ACTUAL_NEXT_STANDALONE_BUILD_NOT_STARTED", publicAuthBuild },
   installedNative: "NOT_RUN", productionActive: false, protectedQualification: false, executionAuthorityGranted: false,
 };
 await save(resolve(backend, "x1-development-installation.json"), JSON.stringify(manifest, null, 2) + "\n");
+await save(resolve(installation, "full-installation-manifest-" + attempt + ".json"), JSON.stringify(manifest, null, 2) + "\n");
 await save(resolve(installation, "emitted-closure-" + attempt + ".json"), JSON.stringify({
   ...manifest, files: { count: files.size, populationSha256: sha(JSON.stringify(manifest.files)) },
   checkerPins: { count: checkerPins.length, sha256: sha(JSON.stringify(checkerPins)) }, packages: packages.length,

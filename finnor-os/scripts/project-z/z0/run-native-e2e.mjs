@@ -590,6 +590,10 @@ async function checkTargetSource(target) {
       && manifest.source.snapshotSha256 === target.sourceSnapshotSha256, "Z0_INSTALLED_SOURCE_BINDING_MISMATCH");
     ensure(target.loader === resolve(target.root, manifest.sourceCustodyAdapter.preload)
       && manifest.sourceCustodyAdapter.runtimeTypeScriptFallback === "REFUSED", "Z0_INSTALLED_JS_ONLY_LOADER_REQUIRED");
+    ensure(manifest.frontend.publicAuthBuild?.state === "EXPLICIT_PUBLIC_BUILD_INPUT"
+      && manifest.frontend.publicAuthBuild.authOrigin === target.authOrigin
+      && manifest.frontend.publicAuthBuild.anonKeySha256 === sha(envValue(target.authAnonKeyEnv)),
+    "Z0_INSTALLED_BROWSER_PUBLIC_AUTH_BUILD_INPUT_NOT_DELIVERED_OR_MISMATCHED");
   }
   for (const file of source.files) {
     const path = resolve(target.root, file.path);

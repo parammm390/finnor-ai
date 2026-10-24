@@ -28,6 +28,13 @@ const run = (name, executable, args, input, predicate, extra = {}) => {
   ensure(!child.error && predicate(child), "Z0_OFFLINE_RUNTIME_CASE_FAILED_" + name);
 };
 try {
+  const publicAuth = manifest.frontend.publicAuthBuild;
+  ensure(publicAuth?.schema === "finnor.project-z.z0.frontend-public-auth-build-receipt.v1"
+    && publicAuth.sourcePopulationSha256 === manifest.source.snapshotPopulationSha256
+    && ["NOT_DELIVERED", "EXPLICIT_PUBLIC_BUILD_INPUT"].includes(publicAuth.state)
+    && publicAuth.authenticationExecuted === false, "Z0_BROWSER_PUBLIC_AUTH_BUILD_STATE_UNDECLARED");
+  result.cases.push({ name: "BROWSER_PUBLIC_AUTH_BUILD_STATE_NOT_NATIVE_AUTH_PROOF",
+    status: "PASSED", publicBuildInput: publicAuth.state, authenticatedNative: "NOT_RUN" });
   const bridge = await import(pathToFileURL(installation.entrypoint("bridge")).href);
   const runtime = new bridge.ConvergedInstitutionRuntime(), capabilities = runtime.capabilities("private_equity");
   ensure(capabilities.length === 77 && new Set(capabilities.map(row => row.capability)).size === 77, "Z0_CANONICAL_CAPABILITY_CLOSURE_INCOMPLETE");
