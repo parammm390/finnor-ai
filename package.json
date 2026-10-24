@@ -42,12 +42,12 @@
     "lenis": "^1.3.23",
     "lucide-react": "^0.424.0",
     "next": "^16.4.1",
-    "nodemailer": "10.0.11",
+    "nodemailer": "10.1.4",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "tailwind-merge": "^2.4.0",
     "tailwindcss-animate": "^1.0.7",
-    "zod": "^3.25.76"
+    "zod": "file:vendor/finnor-zod-3.25.76-finnor.1.tgz"
   },
   "devDependencies": {
     "@playwright/test": "^1.61.1",
@@ -82,6 +82,9 @@
     },
     "postcss-nested": {
       "postcss-selector-parser": "7.1.6"
-    }
+    },
+    "fast-uri": "3.1.9",
+    "nodemailer": "$nodemailer",
+    "zod": "$zod"
   }
 }

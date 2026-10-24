@@ -1,0 +1,67 @@
+--- upstream/package/package.json
++++ patched/package/package.json
+@@ -2,2 +2,2 @@
+-  "name": "zod",
+-  "version": "4.6.7",
++  "name": "@finnor/zod",
++  "version": "3.25.76+finnor.1",
+@@ -35,3 +35,3 @@
+-  "main": "./index.cjs",
+-  "types": "./index.d.cts",
+-  "module": "./index.js",
++  "main": "./v3/index.cjs",
++  "types": "./v3/index.d.cts",
++  "module": "./v3/index.js",
+@@ -61,4 +61,4 @@
+-      "@zod/source": "./src/index.ts",
+-      "types": "./index.d.cts",
+-      "import": "./index.js",
+-      "require": "./index.cjs"
++      "types": "./v3/index.d.cts",
++      "import": "./v3/index.js",
++      "require": "./v3/index.cjs",
++      "@zod/source": "./src/v3/index.ts"
+@@ -139,7 +139,6 @@
+-  "scripts": {
+-    "clean": "git clean -xdf . -e node_modules",
+-    "build": "nub exec --node zshy --project tsconfig.build.json",
+-    "postbuild": "nub ../../scripts/write-stub-package-jsons.ts && nub exec --node biome check --write .",
+-    "test:watch": "nub exec --node vitest",
+-    "test": "nub exec --node vitest run",
+-    "prepublishOnly": "nub ../../scripts/check-versions.ts"
++  "finnorProvenance": {
++    "upstreamVersion": "4.6.7",
++    "upstreamIntegrity": "sha512-g8W2D2kU6a8untc053fX1uVBKzM7yqAxW/3zwk83+6RyF2+SKOuV+c0wBDhUwzV1PaGapmZH+rmcUzPf+3CGwg==",
++    "upstreamFix": "https://github.com/colinhacks/zod/commit/a0ebf970f2d752e5f58527cd2942ff48be4f46bd",
++    "advisory": "GHSA-mrhx-c7xc-m3w5",
++    "qualification": "LOCAL_PATCHED_V3_COMPATIBILITY_FORK; NOT_PUBLISHED_UPSTREAM_V3_FIX"
+--- upstream/package/src/v3/types.ts
++++ patched/package/src/v3/types.ts
+@@ -2267,0 +2268 @@
++        if (tooBig) return INVALID;
+@@ -2296 +2297 @@
+-        status.dirty();
++        return INVALID;
+@@ -3730 +3731 @@
+-        status.dirty();
++        return INVALID;
+--- upstream/package/v3/types.cjs
++++ patched/package/v3/types.cjs
+@@ -1794,0 +1795 @@
++                if (tooBig) return parseUtil_js_1.INVALID;
+@@ -1821 +1822 @@
+-                status.dirty();
++                return parseUtil_js_1.INVALID;
+@@ -2852 +2853 @@
+-                status.dirty();
++                return parseUtil_js_1.INVALID;
+--- upstream/package/v3/types.js
++++ patched/package/v3/types.js
+@@ -1773,0 +1774 @@
++                if (tooBig) return INVALID;
+@@ -1800 +1801 @@
+-                status.dirty();
++                return INVALID;
+@@ -2823 +2824 @@
+-                status.dirty();
++                return INVALID;
