@@ -91,7 +91,7 @@ jobs:
           DATABASE_URL: postgres://finnor:finnor@127.0.0.1:5432/finnor
           FINNOR_TEST_MANAGED_EXTENSIONS: omit
       - name: Verify relocated worker source custody
-        run: node --test scripts/release/worker-image-layout.e2e.test.mjs
+        run: node --test scripts/release/worker-image-layout.e2e.test.mjs scripts/release/analytical-profile.e2e.test.mjs
         env:
           FINNOR_WORKER_LAYOUT_EVIDENCE_DIR: ${{ runner.temp }}/finnor-worker-layout
       - name: Set up pinned QEMU for ARM64 image stages

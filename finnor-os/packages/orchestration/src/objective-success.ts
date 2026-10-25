@@ -118,6 +118,24 @@ export function parseObjectiveSuccessCondition(value: unknown): ObjectiveSuccess
   return validateQueries(parsed.data as ObjectiveSuccessCondition);
 }
 
+/** This reviewed mandate covers IC preparation, verified closing and economic
+ * qualification. A client may add criteria, but cannot remove those outcomes.
+ * Economic completion remains blocked until an accepted verification contract
+ * exists; an analytical result alone cannot establish a realized outcome. */
+export function assertReviewedAcquisitionSuccessCondition(condition: ObjectiveSuccessCondition, dealId: string): void {
+  const criteria = condition.criteria;
+  const qualifiedIc = criteria.some(c => c.kind === "private_equity_ic_preparation"
+    && c.dealId === dealId && c.requireAcquisition === true);
+  const verifiedClosing = criteria.some(c => c.kind === "canonical_query"
+    && c.request.intent === "closing_readiness" && c.request.dealId === dealId
+    && c.assertion.path.length === 2 && c.assertion.path[0] === "verifiedClosing" && c.assertion.path[1] === "status"
+    && c.assertion.operator === "eq" && c.assertion.expected === "CLOSED");
+  if (!criteria.some(c => c.kind === "no_open_execution") || !qualifiedIc || !verifiedClosing
+    || !criteria.some(c => c.kind === "manual_verification")) {
+    throw new Error("REVIEWED_ACQUISITION_COMPLETION_CONTRACT_REQUIRED");
+  }
+}
+
 export function parseObjectiveCompletionEvidence(value: unknown): ObjectiveCompletionEvidence[] {
   const parsed = ObjectiveCompletionEvidenceSchema.safeParse(value ?? []);
   if (!parsed.success) throw new Error(`Invalid objective completion evidence: ${parsed.error.issues.map((issue) => issue.message).join("; ")}`);

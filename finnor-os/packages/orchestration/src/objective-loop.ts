@@ -112,6 +112,7 @@ import {
   parseObjectiveCompletionEvidence,
   acquisitionCompletionEvidence,
   parseObjectiveSuccessCondition,
+  assertReviewedAcquisitionSuccessCondition,
   privateEquityObjectiveSuccessCondition,
   privateEquityWorldObjectiveSuccessCondition,
 } from "./objective-success";
@@ -605,6 +606,8 @@ export async function startWorkObjective(objective: string, ctx: TenantContext, 
     const requestedBudgets=Object.fromEntries(['maxSteps','maxActions','maxQueries','maxPlannerFailures','maxConsecutiveNoProgress'].map(key=>[key,options[key as keyof ObjectiveBudgets]??null])) as Record<string,number|string|null>;
     requestedBudgets.deadlineAt=options.deadlineAt?.toISOString()??null;
     const reviewed=await validateReviewedAcquisitionRequest({auth:ctx},options.outcomePack.input.acquisitionRequest,{workId:input.workId,workInputId:input.workInputId,instructionId:input.instructionId},requestedBudgets);
+    assertReviewedAcquisitionSuccessCondition(successCondition,reviewed.request.dealId);
+    if(canonicalJson(options.outcomePack.successCondition)!==canonicalJson(successCondition))throw Error('REVIEWED_ACQUISITION_COMPLETION_CONTRACT_CHANGED');
     if(options.outcomePack.subjectRefs.length!==1||options.outcomePack.subjectRefs[0]?.entityType!=='pe_deal'||options.outcomePack.subjectRefs[0].entityId!==reviewed.request.dealId)throw Error('REVIEWED_ACQUISITION_EXACT_PACK_SUBJECT_REQUIRED');
     options={...options,outcomePack:{...options.outcomePack,input:{...options.outcomePack.input,acquisitionRequest:reviewed.request,acquisitionAcceptance:reviewed.acceptance,acquisitionInputTypes:reviewed.inputTypes}}};
     if(Buffer.byteLength(JSON.stringify(options.outcomePack!.input))>131072)throw Error('REVIEWED_ACQUISITION_PACK_INPUT_BOUND');
@@ -1324,7 +1327,7 @@ async function inspectCanonicalState(tenantId: string, workId: string, loop: typ
   const privateEquityIcBasis = businessRequest.intent === "closing_readiness"
     ? await inspectPrivateEquityIcBasis(ctx, businessRequest.dealId, workId) : undefined;
   const objectiveSteps = aggregate.objectiveSteps as Array<typeof workObjectiveSteps.$inferSelect>;
-  const reviewedAcquisition=input?await readReviewedAcquisitionRequest({auth:ctx},workId,input.id):null;
+  const reviewedAcquisition=vertical.verticalKey==='private_equity'&&input?await readReviewedAcquisitionRequest({auth:ctx},workId,input.id):null;
   const ownerReads=input?ownerReadContext({steps:objectiveSteps,queries:aggregate.queryExecutions,workId,workInputId:input.id,objectiveRevision:loop.revision}):[];
   const actorId = ctx.employeeId ?? (/^[0-9a-f-]{36}$/i.test(ctx.userId) ? ctx.userId : null);
   const [identityAccess, computerConfig, computerRunRows, delegationRows, acknowledgementRows, eventWake] = await Promise.all([

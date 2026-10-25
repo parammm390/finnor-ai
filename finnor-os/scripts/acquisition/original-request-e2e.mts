@@ -18,6 +18,23 @@ export async function originalAcquisitionRequest(e:any){
  const budgets={maxSteps:96,maxActions:25,maxQueries:40,maxPlannerFailures:3,maxConsecutiveNoProgress:5,deadlineAt:new Date(deadlineAt).toISOString()};
  const input={mode:'approval',objective:original.instruction_text,subjectRefs:[root],successCondition,acquisitionRequest:request};
  const startBody={packId:'general_operator_objective',input,workId:work.workId,instructionId:original.instruction_id,idempotencyKey:'original-acquisition-'+original.instruction_id,channel:'console',budgets};
+ // A reviewed request must not let its caller define away the original outcome
+ // at first admission. Retry-only conflict checks cannot catch that boundary.
+ const weakAdmissions=[];
+ for(const criteria of [
+  [{kind:'no_open_execution'}],
+  successCondition.criteria.filter(c=>c.kind!=='private_equity_ic_preparation'),
+  successCondition.criteria.map(c=>c.kind==='private_equity_ic_preparation'?{...c,requireAcquisition:false}:c),
+  successCondition.criteria.filter(c=>c.kind!=='canonical_query'),
+  successCondition.criteria.filter(c=>c.kind!=='manual_verification'),
+ ]){
+  const refused=await http.startPack({...startBody,input:{...input,successCondition:{...successCondition,criteria}}});
+  weakAdmissions.push({criteria,refused});
+  assert(refused.status>=400,JSON.stringify(refused));
+  assert.equal((await admin.query('SELECT count(*)::int n FROM finnor_os.work_objective_loops WHERE tenant_id=$1 AND work_id=$2',[tenant,work.workId])).rows[0].n,0);
+  assert.equal((await admin.query('SELECT count(*)::int n FROM finnor_os.outcome_pack_runs WHERE tenant_id=$1 AND work_id=$2',[tenant,work.workId])).rows[0].n,0);
+ }
+ await writeFile(join(output,'original-request-completion-refusals.json'),JSON.stringify(weakAdmissions,null,2));
  let missionSubmission:import('../../../src/components/centropy/thread/mission-submission').MissionSubmission|undefined;
  if(e.dropFirstPackResponse){
   const {MissionSubmission}=await import('../../../src/components/centropy/thread/mission-submission');

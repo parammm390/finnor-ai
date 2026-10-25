@@ -13,7 +13,7 @@ import {
 } from "@finnor/shared-types";
 import { attachWorkEntity } from "@finnor/db";
 import {ReviewedAcquisitionRequestSchema} from '../../private-equity/src/acquisition/reviewed-request';
-import { parseObjectiveSuccessCondition } from "./objective-success";
+import { assertReviewedAcquisitionSuccessCondition, parseObjectiveSuccessCondition } from "./objective-success";
 import {
   startWorkObjective,
   type StartObjectiveOptions,
@@ -188,6 +188,9 @@ export function bindOutcomePack(packId: OutcomePackId, rawInput: unknown): Outco
     objective = String(input.objective);
     subjectRefs = input.subjectRefs as CanonicalEntityRef<string>[];
     successCondition = parseObjectiveSuccessCondition(input.successCondition);
+    if (input.acquisitionRequest) {
+      assertReviewedAcquisitionSuccessCondition(successCondition, (input.acquisitionRequest as { dealId: string }).dealId);
+    }
   } else {
     const dealId = String(input.dealId);
     subjectRefs = [{ entityType: "pe_deal", entityId: dealId }];

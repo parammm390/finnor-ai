@@ -8,7 +8,8 @@ import {reconcileAnalyticalExecutorJob} from '../../packages/private-equity/src/
 import {runProcedureInductionJob} from '../../packages/private-equity/src/procedure-induction/worker';
 import {runComputeSearchUnitJob} from '../../packages/private-equity/src/compute-search/worker';
 if(process.env.NODE_ENV!=='test'||!process.env.DATABASE_URL)throw Error('DISPOSABLE_NATIVE_WORKER_REQUIRED');
-const queue=new JobQueue('acquisition-analysis-worker-'+process.pid,30);
+// Exercise the production default lease; each registered contract must bound it.
+const queue=new JobQueue('acquisition-analysis-worker-'+process.pid);
 queue.register('evaluate_acquisition_v1',runAcquisitionDecisionJob,PRODUCTION_JOB_CONTRACTS.evaluate_acquisition_v1);
 queue.register('run_harness_program_v1',runHarnessProgramJob,PRODUCTION_JOB_CONTRACTS.run_harness_program_v1);
 queue.register('run_evidence_derivation_v1',runEvidenceDerivationJob,PRODUCTION_JOB_CONTRACTS.run_evidence_derivation_v1);
