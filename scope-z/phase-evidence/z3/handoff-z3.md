@@ -1,5 +1,19 @@
 # Z3 / ViabilityStrategy — Engineering Handoff (second, post-qualification round)
 
+> **SUPERSEDED (2026-10-24) — retained unedited as historical evidence.**
+> Coordinator reviews 04/05/06 found blocking defects in the state described
+> below: event-only S4 consumption without a concrete shared transaction seam,
+> non-atomic physical job lease fencing, unapproved/unpinned environment
+> assets, caller-chosen parent/dependency/deadline/budget authority, and a
+> mounted panel with no existing-Work submit caller. The claims below that
+> "nothing further is executable inside this lane's authority", that the API
+> registration surface was complete, and that the native runner digest
+> `3bc6bf7d…` is the authorization target are **not current**. The corrected
+> state, evidence, and gate are in `handoff-z3-native-correction.md`; the v2
+> native authorization contract is `native-authorization-v2.md` (the v1
+> contract quoted below is obsolete).
+
+
 Lane: `factory/project-z3-viability` on `/home/factory-user/repos/finnor-z3`,
 base `9f3edfd3b4c6758832c53139da0773218062191e`.
 Commits: `11a90a3` (implementation) → `be2c775` (patch/evidence closure) →

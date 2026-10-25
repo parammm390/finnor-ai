@@ -1,0 +1,523 @@
+{
+  "schema": "finnor.z3.final-bounded-engineering-delivery.v1",
+  "status": "SOURCE_ONLY_DELIVERY_VERIFIED_NOT_COORDINATOR_ACCEPTANCE",
+  "problems": [],
+  "lane": "factory/project-z3-viability",
+  "session": "edc35487-a8a2-4ff6-ab70-66838205c078",
+  "computer": "eea8d359",
+  "sourceHead": "c6b1df57b4602521c1b5369143f44289afd48beb",
+  "sourceHeadTree": "c7fa1e3abe61cf25dcc5bc49f8f53f16ea42fcbc",
+  "adoptedNativeCorrection": "ae8d1f68e201c23044be9cf7b7fec2c19a71750c",
+  "nativeProductDiffSinceAdopted": [],
+  "nativeStoreSha256": "f1418d93152ec14eda37be0a14543cc6d0081f7d8edf3b902521b83f736fd124",
+  "tools": [
+    {
+      "path": "finnor-os/scripts/project-z/z3/build-native-corrections.mjs",
+      "sha256": "773df256a59281eae14799af4862b3447cd8b1256002fe7a490e3375af1e30a9",
+      "mode": 420
+    },
+    {
+      "path": "finnor-os/scripts/project-z/z3/prepare-reconstruction.mjs",
+      "sha256": "ef59352a6fe751fa6ca0b46339627a36b386362b983f89ab44ae10c4c34685c8",
+      "mode": 420
+    },
+    {
+      "path": "finnor-os/scripts/project-z/z3/install-reconstruction.mjs",
+      "sha256": "3097ff65f9e68a364f81d91aebcb033fbfd4a553a796f76d6fd2f845f55b0171",
+      "mode": 420
+    },
+    {
+      "path": "finnor-os/scripts/project-z/z3/compare-reconstruction.mjs",
+      "sha256": "e005cb3a86d429adfd5b586fbf0bc832e998bd47734d96baa6b509bd7f5dc57e",
+      "mode": 420
+    },
+    {
+      "path": "finnor-os/scripts/project-z/z3/verify-reconstruction-source.mjs",
+      "sha256": "1b36d62eb68a6db7106c9a76c7a850a8495e730a6d760d8d0b7b9e669810553e",
+      "mode": 420
+    }
+  ],
+  "packages": [
+    {
+      "name": "02",
+      "path": "scope-z/phase-evidence/z3/reconstruction-02/manifest.json",
+      "sha256": "da5f52c86495aff73e625037295425f34b0037b22fd2ee494f2ba734789c8644",
+      "mode": 420,
+      "sourceHead": "ae8d1f68e201c23044be9cf7b7fec2c19a71750c",
+      "sourceHeadTree": "1491eb6a21301d9e339b54673386dd4279ea204b",
+      "uncommittedSource": false,
+      "files": 3047,
+      "inventorySha256": "243bdd793b75763947db390b1c6d3f29875d25beea76ec7608bccc2e21fdffb3",
+      "modeInventorySha256": null,
+      "archiveSha256": "a5a46c8cbd7c4fe43c16d91dc285c65c6a014b19f2f0b22ce4032fbdc5fec4c9",
+      "archiveBytes": 11967523,
+      "disposition": "RETAINED_SUPERSEDED_TARGET"
+    },
+    {
+      "name": "03",
+      "path": "scope-z/phase-evidence/z3/reconstruction-03/manifest.json",
+      "sha256": "0a35485cb4911e4657bdd99482310fce143e9386de40349dc2eb1c7a90a2c775",
+      "mode": 420,
+      "sourceHead": "ae8d1f68e201c23044be9cf7b7fec2c19a71750c",
+      "sourceHeadTree": "1491eb6a21301d9e339b54673386dd4279ea204b",
+      "uncommittedSource": true,
+      "files": 3124,
+      "inventorySha256": "9204343068c96d40414f493d9e0a6183ed9ed92d2e8d4671a6154aca086c89bd",
+      "modeInventorySha256": null,
+      "archiveSha256": "e32eb33bb199f64e460e4828751dc7086eb0b4470a56f87cb24eec8d2e379aff",
+      "archiveBytes": 14707146,
+      "disposition": "RETAINED_SUPERSEDED_TARGET"
+    },
+    {
+      "name": "04",
+      "path": "scope-z/phase-evidence/z3/reconstruction-04/manifest.json",
+      "sha256": "1230d96252d3591a06bb4d9ce362767b45e0cc235bd79817037725e966d64410",
+      "mode": 420,
+      "sourceHead": "c6b1df57b4602521c1b5369143f44289afd48beb",
+      "sourceHeadTree": "c7fa1e3abe61cf25dcc5bc49f8f53f16ea42fcbc",
+      "uncommittedSource": false,
+      "files": 3154,
+      "inventorySha256": "2b8bf789d8b6bcd1b81fb8d8bb80c2aaa77ed8a2ef06692def4affd8251c6406",
+      "modeInventorySha256": "106f2a911a5c72c70840bb3f00ba1837eca5d49b24bac6010dd57f05ad7c2047",
+      "archiveSha256": "226785ea2545a3cf580706979a3af1263fb246b9607c5ecd7358f2a174526036",
+      "archiveBytes": 15002808,
+      "disposition": "FINAL_COMMITTED_SOURCE_ONLY_NOT_INSTALLED"
+    }
+  ],
+  "passing": [
+    {
+      "name": "15-catalogue-final",
+      "path": "scope-z/phase-evidence/z3/runs/15-catalogue-final/report.json",
+      "sha256": "2392d81a1bae96c328e571ff22c42f35a898b1da875b018f02e354b382f5199a",
+      "mode": 420,
+      "status": "PASS",
+      "actualExitCode": 0
+    },
+    {
+      "name": "16-source-reconstruction",
+      "path": "scope-z/phase-evidence/z3/runs/16-source-reconstruction/report.json",
+      "sha256": "ee9f4e5d321622c09777e906bc9a3678febf73ab4bba3d875efb204bc2532631",
+      "mode": 420,
+      "status": "PASS",
+      "actualExitCode": 0
+    },
+    {
+      "name": "16-source-reconstruction-standalone",
+      "path": "scope-z/phase-evidence/z3/runs/16-source-reconstruction-standalone/report.json",
+      "sha256": "8357f23cb2e813ba46ce91cc5633fb7af84a4ac5e4321f4e17a69ca3ca92a650",
+      "mode": 420,
+      "status": "PASS",
+      "actualExitCode": 0
+    },
+    {
+      "name": "18-source-assets-final",
+      "path": "scope-z/phase-evidence/z3/runs/18-source-assets-final/report.json",
+      "sha256": "6dfd51006552a5dd05f9976ba4d7a593155a37aa5a73b0f7dea87049746a3668",
+      "mode": 420,
+      "status": "PASS",
+      "actualExitCode": 0
+    }
+  ],
+  "sourceRuns": [
+    {
+      "name": "11-final-source-boundary",
+      "path": "scope-z/phase-evidence/z3/runs/11-final-source-boundary/report.json",
+      "sha256": "4674f4ddf6b74b1fec6159e7ce723bd751b15454002c4cef1b54f3da74ff7d87",
+      "mode": 420,
+      "status": "PASS",
+      "exitCode": null,
+      "cases": 17,
+      "sourceInventoryDigest": null,
+      "retainedStoreSha256": "e9e259dc7c1535b13a1d90b3d8b7eb8bb11fcebc1bc96ff2b2e85c064b66809a",
+      "storeMatchesCurrent": false
+    },
+    {
+      "name": "13-final-v3-backend",
+      "path": "scope-z/phase-evidence/z3/runs/13-final-v3-backend/report.json",
+      "sha256": "ec6fa0bf048738a923b27dbb9b11f615db22a63030e770914254cca48b7a1bb5",
+      "mode": 420,
+      "status": "PASS",
+      "exitCode": 0,
+      "cases": null,
+      "sourceInventoryDigest": "42dbaeee5d46f7acc53a7f40002682d053839c9e285cc19d99502a548689e33b",
+      "retainedStoreSha256": "e9e259dc7c1535b13a1d90b3d8b7eb8bb11fcebc1bc96ff2b2e85c064b66809a",
+      "storeMatchesCurrent": false
+    },
+    {
+      "name": "13-final-v3-entry",
+      "path": "scope-z/phase-evidence/z3/runs/13-final-v3-entry/report.json",
+      "sha256": "8114ca257624f03e87eb057cf080a1bec8bcb6b0047759e8be08d37d175154f1",
+      "mode": 420,
+      "status": "PASS",
+      "exitCode": 0,
+      "cases": null,
+      "sourceInventoryDigest": "a090817fb94a602d7a46d7b5255e955f815a021f2c1be70ba8db822cdacf1c91",
+      "retainedStoreSha256": "e9e259dc7c1535b13a1d90b3d8b7eb8bb11fcebc1bc96ff2b2e85c064b66809a",
+      "storeMatchesCurrent": false
+    },
+    {
+      "name": "13-final-v3-frontend",
+      "path": "scope-z/phase-evidence/z3/runs/13-final-v3-frontend/report.json",
+      "sha256": "95abf89ab3575e49e546a7fdfd2cd15d2a914d1990556ecc95de0180f30d580d",
+      "mode": 420,
+      "status": "PASS",
+      "exitCode": 0,
+      "cases": null,
+      "sourceInventoryDigest": "ab1f199065a3f53eef82c0ba88a7c6f02e24e60148415bac9a7a7f36da50690b",
+      "retainedStoreSha256": null,
+      "storeMatchesCurrent": null
+    },
+    {
+      "name": "14-committed-boundary",
+      "path": "scope-z/phase-evidence/z3/runs/14-committed-boundary/report.json",
+      "sha256": "b38dc0a30e79fe70af4fd18efb0ec306e7c9868dd63cbc911a73508847bc2d34",
+      "mode": 420,
+      "status": "PASS",
+      "exitCode": null,
+      "cases": 17,
+      "sourceInventoryDigest": null,
+      "retainedStoreSha256": "f1418d93152ec14eda37be0a14543cc6d0081f7d8edf3b902521b83f736fd124",
+      "storeMatchesCurrent": true
+    },
+    {
+      "name": "14-committed-backend",
+      "path": "scope-z/phase-evidence/z3/runs/14-committed-backend/report.json",
+      "sha256": "429c881c3b18c38460485f2bcdda1843b537d4122a1a6b597a50ff2ae459a31b",
+      "mode": 420,
+      "status": "PASS",
+      "exitCode": 0,
+      "cases": null,
+      "sourceInventoryDigest": "1ab0a4e193a851fd0a7d9ead32e2e1aa12211c2a80994a209cc56a9308cf6a79",
+      "retainedStoreSha256": "f1418d93152ec14eda37be0a14543cc6d0081f7d8edf3b902521b83f736fd124",
+      "storeMatchesCurrent": true
+    },
+    {
+      "name": "14-committed-entry",
+      "path": "scope-z/phase-evidence/z3/runs/14-committed-entry/report.json",
+      "sha256": "e0bd55c7b9bc33175acd13514edbb5a4f4a22e4f685dedef82a2a3bc988b3643",
+      "mode": 420,
+      "status": "PASS",
+      "exitCode": 0,
+      "cases": null,
+      "sourceInventoryDigest": "c232fdf257256a9982f3ad22d3a12d57112ed8646a0d8faec146cba1fc81119c",
+      "retainedStoreSha256": "f1418d93152ec14eda37be0a14543cc6d0081f7d8edf3b902521b83f736fd124",
+      "storeMatchesCurrent": true
+    }
+  ],
+  "sourceModesCounts": {
+    "420": 3153,
+    "493": 1
+  },
+  "originalReadingReceipt": {
+    "path": "scope-z/phase-evidence/z3/reading-receipt.md",
+    "sha256": "1bbf46e6a48650a3b5e1a96fb395c49e97a985ad1959a55caf2f0f7f2376a3eb",
+    "mode": 420
+  },
+  "readingMeaning": "RETAINED_ACTUAL_READING_CHECKPOINT_NOT_NEW_HISTORICAL_ATTESTATION",
+  "nativeDriver": {
+    "path": "scripts/project-z/z3/native-correction-e2e.mjs",
+    "sha256": "d34590119f866a616a531d2e4b9ea4a57550604abc0a7bd4ee73f51c66d8a2a1",
+    "mode": 420
+  },
+  "nativeGuard": {
+    "path": "scope-z/phase-evidence/z3/runs/12-final-native-guard/report.json",
+    "sha256": "6f15e91478f6c7fc374cb6907f872ae1c6f1511fef5ea2e98a04e305115f9c78",
+    "mode": 384,
+    "status": "NOT_RUN",
+    "blockers": [
+      "EXPLICIT_EXISTING_DB_AUTH_OWNED_WORKER_AUTHORIZATION_NOT_DELIVERED"
+    ]
+  },
+  "failedInstall": {
+    "path": "scope-z/phase-evidence/z3/install-01/report.json",
+    "sha256": "973a454071f0f94a6e1e52da6046d101f74ae8cd4516309d1828855613320c8e",
+    "mode": 420,
+    "status": "FAIL",
+    "sourceManifestSha256": "da5f52c86495aff73e625037295425f34b0037b22fd2ee494f2ba734789c8644",
+    "steps": [
+      {
+        "name": "toolchain-npm",
+        "exitCode": 0,
+        "signal": null,
+        "wallMs": 239,
+        "logSha256": "2a14f031d5d789c0cc63d52dedaf5a298842d5a65156e31e999ee2443f80b8f4"
+      },
+      {
+        "name": "toolchain-python",
+        "exitCode": 0,
+        "signal": null,
+        "wallMs": 3,
+        "logSha256": "2c3cdf98640fba5e4c9b1ca5d06d437a4d33dd19259c49d4ebe27ca983aee3d1"
+      },
+      {
+        "name": "toolchain-gcc",
+        "exitCode": 0,
+        "signal": null,
+        "wallMs": 23,
+        "logSha256": "e1f68ff17ee62309011affeb3a3fc59d1b607df73214d25463f0bfdecaf24b9f"
+      },
+      {
+        "name": "root-ci",
+        "exitCode": 0,
+        "signal": null,
+        "wallMs": 19511,
+        "logSha256": "5f84e291ae95625778e6c3838dfde73d5f44867ea2e7fed1f4232c52e0fd7f82"
+      },
+      {
+        "name": "backend-ci",
+        "exitCode": 0,
+        "signal": null,
+        "wallMs": 23411,
+        "logSha256": "e436dda0f0918269789d506d6926c01f0ebdebf05b6511fffc494bc55091c3c4"
+      },
+      {
+        "name": "workspace-check",
+        "exitCode": 0,
+        "signal": null,
+        "wallMs": 193,
+        "logSha256": "ca451107f05daa0fa0222a45d07540e76962ff86a79d5ffa7deb4756b0cf7603"
+      },
+      {
+        "name": "centropy-manifest-check",
+        "exitCode": 1,
+        "signal": null,
+        "wallMs": 6271,
+        "logSha256": "0b1890eff8dc92cc7ece78fb993d245f15d4fc69219111ceae299b3376a07d77"
+      },
+      {
+        "name": "centropy-coverage-check",
+        "exitCode": 1,
+        "signal": null,
+        "wallMs": 18875,
+        "logSha256": "da95826d323e3983a04a3e4e474817439069ec792685df3e40712a23e7c093ae"
+      },
+      {
+        "name": "centropy-client-check",
+        "exitCode": 0,
+        "signal": null,
+        "wallMs": 2337,
+        "logSha256": "37e44d06c1f161532b3c509e2b4eeab74d91e0bc2868b29b10303bd4fc869e3b"
+      },
+      {
+        "name": "centropy-forms-check",
+        "exitCode": 0,
+        "signal": null,
+        "wallMs": 234,
+        "logSha256": "dd8e3985b8bac3ae4e2317db6dea4774e680ab5485b1b23028539da8b4d3e06c"
+      },
+      {
+        "name": "frontend-lint",
+        "exitCode": 0,
+        "signal": null,
+        "wallMs": 29339,
+        "logSha256": "14b288df5795e1fd58e5371b240b99da407f99d17f3b596c6513d1639396f8a4"
+      },
+      {
+        "name": "native-rebuild",
+        "exitCode": 0,
+        "signal": null,
+        "wallMs": 961,
+        "logSha256": "450af583933f53bcaadecfdb299b113d126693d45497a7db3ac7192cdc1c3439"
+      },
+      {
+        "name": "native-load",
+        "exitCode": 0,
+        "signal": null,
+        "wallMs": 46,
+        "logSha256": "ace543cb1759ff2a77f9a368e9ed7106286b614513f2ec2de3057eda0687a9a0"
+      },
+      {
+        "name": "backend-typecheck",
+        "exitCode": 0,
+        "signal": null,
+        "wallMs": 70221,
+        "logSha256": "adf67f5c0dd85ec43c13b67c7ea44f6f9e32b1429c0680c3605ec7c368f82f59"
+      },
+      {
+        "name": "entry-typecheck",
+        "exitCode": 0,
+        "signal": null,
+        "wallMs": 40019,
+        "logSha256": "75a11da44c802486bc6f65640aa48a730f0f684c5c07a42ba3cd1735eb3fb070"
+      },
+      {
+        "name": "frontend-build",
+        "exitCode": 1,
+        "signal": null,
+        "wallMs": 15346,
+        "logSha256": "f1734df99c97c66df264cbdaf24ff983c9b2741b24cff00a7b5f3170bce51f50"
+      },
+      {
+        "name": "backend-build",
+        "exitCode": 0,
+        "signal": null,
+        "wallMs": 185573,
+        "logSha256": "aa65153e13350fc4ae2893deb5f3cbe3429577179a35767f84dcbda8c0e97e2f"
+      },
+      {
+        "name": "cli-build",
+        "exitCode": 0,
+        "signal": null,
+        "wallMs": 15,
+        "logSha256": "98ff3099e90b010d18f227d02006477e3a761737081f8c2747251bc45c40c310"
+      },
+      {
+        "name": "public-run",
+        "exitCode": 0,
+        "signal": null,
+        "wallMs": 9453,
+        "logSha256": "207ca9ca8ba357480f590354ea8ee5e8e1429d9d1dd7a29e71d39c95f0e3eda4"
+      },
+      {
+        "name": "boundary-run",
+        "exitCode": 1,
+        "signal": null,
+        "wallMs": 1813,
+        "logSha256": "78e8a4b44685ee245289267134a98e98450b46fd5b30ab57c39e89f852ebe2b4"
+      }
+    ],
+    "assets": {
+      "producer": {
+        "path": "/home/factory-user/repos/finnor-z3/scope-z/phase-evidence/z3/install-01/cli.mjs",
+        "sha256": "22dd09738da29fe0ab4a0d9ab37b5461e546a3dd3dcdad6bd806e8d2542d5984"
+      },
+      "checker": {
+        "path": "/home/factory-user/repos/finnor-z3/scope-z/phase-evidence/z3/reconstruction-02/source/finnor-os/packages/epistemic-runtime/src/project-z/z3-viability/checker.py",
+        "sha256": "b71c0bec3be5eb1e6218e4b04a26bf07918a3f781e5712800a8ff061497e837e"
+      },
+      "node": {
+        "path": "/home/factory-user/repos/finnor-z-toolchains/node22/node_modules/node/bin/node",
+        "sha256": "94efd062ed066c1a0b332e18249859c905e920eeada5df55d24c99b919629a90"
+      },
+      "python": {
+        "path": "/usr/bin/python3.12",
+        "sha256": "e50d468e8b0adfb05733f5b87b3cff34829c4a8c1aea50c865aa8bdfe4bb150f"
+      },
+      "nativeBinding": {
+        "path": "/home/factory-user/repos/finnor-z3/scope-z/phase-evidence/z3/reconstruction-02/source/finnor-os/node_modules/fs-ext/build/Release/fs_ext.node",
+        "sha256": "d2cdc182689fc659e1f27e050eb9954d0e550edbe6e3ceb973018430122225f8"
+      }
+    },
+    "buildIds": {
+      ".next/BUILD_ID": null,
+      "finnor-os/apps/api/.next/BUILD_ID": "WHID6M_s_4IE9wdbQ0rEI"
+    },
+    "meaning": "ORIGINAL_RECONSTRUCTION_02_ONLY_NOT_CURRENT_SOURCE"
+  },
+  "invalidInstallInvocation": {
+    "path": "scope-z/phase-evidence/z3/install-reconstruction-02.log",
+    "sha256": "95297dfe961dea64d4f4c5894451da4bf397d8fcb3416abc34a3fde900057fbd",
+    "mode": 420,
+    "actualExitCode": 1,
+    "installationExecuted": false
+  },
+  "currentInstallPreflight": {
+    "path": "scope-z/phase-evidence/z3/install-03-preflight/preflight.json",
+    "sha256": "5ddc09a829750238d06d4742c8dc0457f0b37726596a1d36b5c3f38128648b2d",
+    "mode": 420,
+    "actualExitCode": 2,
+    "schema": "finnor.z3.install-preflight.v1",
+    "status": "BLOCKED_DISK_HEADROOM",
+    "sourceManifestSha256": "1230d96252d3591a06bb4d9ce362767b45e0cc235bd79817037725e966d64410",
+    "node": "v22.23.4",
+    "freeBytes": 2173267968,
+    "requiredFreeBytes": 4294967296,
+    "sourceFilesVerified": 3154,
+    "modesVerified": true,
+    "npmExecuted": false,
+    "applicationBuildExecuted": false,
+    "replayExecuted": false,
+    "databaseActions": 0,
+    "listenerStarted": false,
+    "installedNative": "NOT_RUN"
+  },
+  "failedCombinedAudit": {
+    "path": "scope-z/phase-evidence/z3/runs/17-producer-correspondence/report.json",
+    "sha256": "d024ee77411780f1ece48b377bd6fe025e0e583c0624c639713d9e4cb3bcc7fd",
+    "mode": 420,
+    "actualExitCode": 1,
+    "status": "FAIL",
+    "cause": "AUDIT_IDENTIFIER_GRAMMAR_EXCLUDED_DIGITS"
+  },
+  "retainedPatchWhitespaceDiagnostic": {
+    "path": "scope-z/phase-evidence/z3/runs/15-catalogue-final/staged-diff-check-initial.log",
+    "sha256": "39824d2bdf715713f6d2637bd96d9e6287b4c2b5049ce20e56cd89f5d6af8a84",
+    "mode": 420,
+    "rawStagedCheckExitCode": 2,
+    "diagnosticLiteralCopyExitCode": 2,
+    "nonPatchSourceCheckExitCode": 0,
+    "patchBytesChanged": false
+  },
+  "currentHandoff": {
+    "path": "scope-z/phase-evidence/z3/handoff-z3-native-correction.md",
+    "sha256": "1668a798cf01aa7b873f5b98030a76b78280fdab13a4a975f0150fd034c0ef9d",
+    "mode": 420
+  },
+  "remainingNativeBudgetAndObligations": {
+    "observed": false,
+    "remainingP1Attempts": null,
+    "remainingP1Steps": null,
+    "remainingS5ComputeRequests": null,
+    "originalDeadline": null,
+    "reservation": null,
+    "s6Outstanding": null,
+    "s6Unknown": "UNOBSERVED_NOT_CLEARED_OR_RELEASED",
+    "newNativeJobs": 0,
+    "newReservations": 0,
+    "newEffects": 0,
+    "budgetsRenewed": false
+  },
+  "qualification": {
+    "sourceOnlyPackage": "PASS",
+    "originalPublicMathematics": "RETAINED_PASS_NOT_RERUN",
+    "fullGraphSource": "RETAINED_SOURCE_BOUND_PASS_AND_COORDINATOR_14_PASS",
+    "currentSourceOwnLockInstalled": "NOT_RUN_BLOCKED_HEADROOM_AND_USER_DIRECTION",
+    "nativeSource": "NOT_RUN_MISSING_EXPLICIT_EXISTING_TARGET_AUTHORITY",
+    "mountedAuthenticated": "NOT_RUN",
+    "nativeInstalled": "NOT_RUN",
+    "protected": "NOT_RUN",
+    "equippedIncrement": "NOT_RUN",
+    "operational100x": "NOT_RUN",
+    "financial100x": "NOT_RUN",
+    "activation": "NOT_RUN",
+    "coordinatorAcceptance": "NOT_ACCEPTED",
+    "implementationSlot": "OCCUPIED"
+  },
+  "money": null,
+  "meterGaps": [
+    "isolated child CPU/RSS not measured",
+    "USD unknown, not zero",
+    "no existing native budgets or S6 state observed"
+  ],
+  "safety": {
+    "noNewInstall": true,
+    "noFullApplicationBuild": true,
+    "noGiantReplay": true,
+    "noDatabaseActions": true,
+    "noAuthActions": true,
+    "noDdlSeedGrantOrOwnerActions": true,
+    "noListenersStarted": true,
+    "noExternalPublication": true,
+    "noFinancialEffect": true,
+    "noTargetDeletion": true,
+    "noCoordinatorGateWritten": true
+  },
+  "retainedPreStagingIndex": {
+    "path": "scope-z/phase-evidence/z3/runs/19-engineering-delivery/report.json",
+    "sha256": "5e2b17058f23e2d5258b28b31b69950210356b298f90aad4339b05be6e1715f6",
+    "mode": 420
+  },
+  "retainedLogFormatting": {
+    "schema": "finnor.z3.retained-log-format-diagnostic.v1",
+    "rawCommand": "git -C /home/factory-user/repos/finnor-z3 diff --cached --check",
+    "rawExitCode": 2,
+    "scope": "Original install-01 logs retained byte-for-byte, including carriage returns and blank endings",
+    "originalTranscript": "/home/factory-user/.factory/artifacts/scripts/edc35487-a8a2-4ff6-ab70-66838205c078/call_uxmo8cyzCxDbT7rCPH3k4TJA.log",
+    "sourceCheck": "git -C /home/factory-user/repos/finnor-z3 diff --cached --check -- . ':(exclude)scope-z/phase-evidence/z3/install-01/*.log'",
+    "sourceCheckExitCode": 0,
+    "originalLogsChanged": false,
+    "packageChecksWeakened": false,
+    "qualification": "Formatting diagnostic on retained process output, not a product-source failure or native gate"
+  },
+  "checkpointMeaning": "Current handoff binding; original pre-staging index and every failure remain immutable"
+}

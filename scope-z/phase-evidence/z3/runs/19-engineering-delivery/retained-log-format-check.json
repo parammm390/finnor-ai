@@ -1,0 +1,12 @@
+{
+  "schema": "finnor.z3.retained-log-format-diagnostic.v1",
+  "rawCommand": "git -C /home/factory-user/repos/finnor-z3 diff --cached --check",
+  "rawExitCode": 2,
+  "scope": "Original install-01 logs retained byte-for-byte, including carriage returns and blank endings",
+  "originalTranscript": "/home/factory-user/.factory/artifacts/scripts/edc35487-a8a2-4ff6-ab70-66838205c078/call_uxmo8cyzCxDbT7rCPH3k4TJA.log",
+  "sourceCheck": "git -C /home/factory-user/repos/finnor-z3 diff --cached --check -- . ':(exclude)scope-z/phase-evidence/z3/install-01/*.log'",
+  "sourceCheckExitCode": 0,
+  "originalLogsChanged": false,
+  "packageChecksWeakened": false,
+  "qualification": "Formatting diagnostic on retained process output, not a product-source failure or native gate"
+}

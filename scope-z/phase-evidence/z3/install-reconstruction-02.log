@@ -1,0 +1,11 @@
+file:///home/factory-user/repos/finnor-z3/finnor-os/scripts/project-z/z3/install-reconstruction.mjs:10
+if (![reconstruction, output].every(p => p && isAbsolute(p))) throw Error("Absolute reconstruction and fresh output required");
+                                                                    ^
+
+Error: Absolute reconstruction and fresh output required
+    at file:///home/factory-user/repos/finnor-z3/finnor-os/scripts/project-z/z3/install-reconstruction.mjs:10:69
+    at ModuleJob.run (node:internal/modules/esm/module_job:343:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:681:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)
+
+Node.js v22.23.4

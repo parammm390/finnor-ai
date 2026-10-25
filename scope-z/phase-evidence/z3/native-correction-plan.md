@@ -201,3 +201,14 @@ retain actual exits and failures. No npm install, full application build,
 giant replay, DB/Auth/DDL/seed/grant/listener or external action is permitted
 in this final attempt. Existing installed receipts retain their original
 source binding and cannot qualify later source.
+
+## Retained bounded-audit harness failure
+
+N31 (2026-10-25): run 17's combined asset/static-column audit used
+`[a-z_]+` for SQL column identifiers. It therefore missed the already present
+`s4_consumed boolean` declaration and reported a false missing-column failure.
+The producer, checker, Node, Python, six INSERT column lists and 3,892-record
+denominator observations in that same report were correct. Preserve the FAIL
+report; correct the audit recognizer to admit digits after the initial
+identifier character, re-read the exact frozen payload, and produce a new
+receipt. Do not change the adopted migration or native source to fit the audit.

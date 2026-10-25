@@ -1,0 +1,143 @@
+{
+  "schema": "finnor.z3.reconstruction-source.v3",
+  "sourceHead": "c6b1df57b4602521c1b5369143f44289afd48beb",
+  "sourceHeadTree": "c7fa1e3abe61cf25dcc5bc49f8f53f16ea42fcbc",
+  "branch": "factory/project-z3-viability",
+  "sourceIncludesUncommittedCorrectionBytes": false,
+  "authoritativeIdentity": "SOURCE_INVENTORY_AND_ARCHIVE_NOT_HEAD_ALONE",
+  "inventorySha256": "2b8bf789d8b6bcd1b81fb8d8bb80c2aaa77ed8a2ef06692def4affd8251c6406",
+  "modeInventorySha256": "106f2a911a5c72c70840bb3f00ba1837eca5d49b24bac6010dd57f05ad7c2047",
+  "archiveSha256": "226785ea2545a3cf580706979a3af1263fb246b9607c5ecd7358f2a174526036",
+  "correctionManifestSha256": "37e8432a28fc436f1e8d5b5dbf8e337aedf2f6738febaf84f6885349d94e3c89",
+  "files": 3154,
+  "applications": [
+    {
+      "path": "finnor-os/packages/db/migrations/postz_z3_viability.sql",
+      "patchSha256": "d1f7b746399ae7afb3c2c93227298fe0bd56d9c52a0a9f9d47b8f53e3d7fd1ae",
+      "exitCode": 0,
+      "log": "patching file finnor-os/packages/db/migrations/postz_z3_viability.sql\n"
+    },
+    {
+      "path": "finnor-os/scripts/bundle-migrations.ts",
+      "patchSha256": "eafbb4a000b0acc8485c8673ea2930b0e31f339bdc517cf578262f2e141cf371",
+      "exitCode": 0,
+      "log": "patching file finnor-os/scripts/bundle-migrations.ts\n"
+    },
+    {
+      "path": "finnor-os/packages/db/migrations-bundle.ts",
+      "patchSha256": "6b3ed6993775014e2b5a94102839e9bd5f49f21da50f568f1e3b4b190c8b1dba",
+      "exitCode": 0,
+      "log": "patching file finnor-os/packages/db/migrations-bundle.ts\n"
+    },
+    {
+      "path": "finnor-os/packages/db/migration-head.ts",
+      "patchSha256": "88e5e3cb9388dbe77a3f4eb18126749c3f7a70bc0f28060538ba4e28d67c9b74",
+      "exitCode": 0,
+      "log": "patching file finnor-os/packages/db/migration-head.ts\n"
+    },
+    {
+      "path": "finnor-os/packages/db/compute-contract.ts",
+      "patchSha256": "419a894e719840f4d2a4bbb64c480924004350a66261ed37d018a88f6e90fbfd",
+      "exitCode": 0,
+      "log": "patching file finnor-os/packages/db/compute-contract.ts\n"
+    },
+    {
+      "path": "finnor-os/apps/worker/src/index.ts",
+      "patchSha256": "7154da53325f6c6b831bd38f674f913905ffed80e843e3d048113e63dfe40a18",
+      "exitCode": 0,
+      "log": "patching file finnor-os/apps/worker/src/index.ts\n"
+    },
+    {
+      "path": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
+      "patchSha256": "30b512139cefe200fc21cfd8731c8f756cb55381ce0823cd15e7733e23cf1f30",
+      "exitCode": 0,
+      "log": "patching file 'finnor-os/apps/api/app/api/company-brain/[operation]/route.ts'\n"
+    },
+    {
+      "path": "src/components/centropy/world/WorldWorkRecord.tsx",
+      "patchSha256": "e43da3c5de8fc69d47eb9e1878f5eeaedcdc1745c13069c37b72f497982161c3",
+      "exitCode": 0,
+      "log": "patching file src/components/centropy/world/WorldWorkRecord.tsx\n"
+    },
+    {
+      "path": "src/components/centropy/world/ViabilityPanel.tsx",
+      "patchSha256": "5204d21d3b76c42a2dcd8a7219a18ba82f621a90dcee32efc0b27ef6908aced4",
+      "exitCode": 0,
+      "log": "patching file src/components/centropy/world/ViabilityPanel.tsx\n"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/allocation-store.ts",
+      "patchSha256": "fb277fd477759a4d27af035e37b4c6af608e4015a0a532c7ea889eabe7fcb2e1",
+      "exitCode": 0,
+      "log": "patching file finnor-os/packages/private-equity/src/allocation-store.ts\n"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/enterprise-control.ts",
+      "patchSha256": "36474d349e7c3f6498e0547984ae88e2bc6dd1b0a37d456f72cb8a2ea8a5a1d0",
+      "exitCode": 0,
+      "log": "patching file finnor-os/packages/private-equity/src/enterprise-control.ts\n"
+    },
+    {
+      "path": "src/components/centropy/world/ViabilityPanel.tsx",
+      "patchSha256": "f685e374cdb7def5f1a334f93a7164f4c50e885c19001e59215269c33a206520",
+      "exitCode": 0,
+      "log": "patching file src/components/centropy/world/ViabilityPanel.tsx\n"
+    },
+    {
+      "path": "finnor-os/apps/worker/src/queue.ts",
+      "patchSha256": "760d1c2fa84d207246593ad38d266801097ea87e1024ab78332bb5afdb541b43",
+      "exitCode": 0,
+      "log": "patching file finnor-os/apps/worker/src/queue.ts\n"
+    },
+    {
+      "path": "scripts/centropy/generate-capability-manifest.mjs",
+      "patchSha256": "f6e40480d47d39645efa05e1e8f624d49ee81df50d9c8d3f9020f1759ad929d2",
+      "exitCode": 0,
+      "log": "patching file scripts/centropy/generate-capability-manifest.mjs\n"
+    },
+    {
+      "path": "src/lib/centropy/capability-manifest.generated.json",
+      "patchSha256": "5203a465858ab2790e61343ad06e71b0ce09a5a11808fe166bca0bfbd53b1b07",
+      "exitCode": 0,
+      "log": "patching file src/lib/centropy/capability-manifest.generated.json\n"
+    },
+    {
+      "path": "docs/centropy/capability-coverage.json",
+      "patchSha256": "6f4f89abe4bd26ff0361ced0a9448304f72d6349254a2707ee3c79c2317fa6fd",
+      "exitCode": 0,
+      "log": "patching file docs/centropy/capability-coverage.json\n"
+    }
+  ],
+  "lockfiles": {
+    "root": "af1d36679eb4123ab5f2d9f4668e82e1defc952a45777a74d3dff30c6d16f117",
+    "backend": "4116b2a7e02a28b8e49baa4a24a378e5170c5dc66d285075c8cf50bf11b9faed"
+  },
+  "publicSourceReference": {
+    "path": "scope-z/phase-evidence/z3/runs/02-checker-hardening",
+    "reportSha256": "61adc8485558490f3c4d3306ae1bee1894dae164e6592353fe902390783bb69c",
+    "recordsSha256": "183e3fa3cf66d12f03b4efb660f4b437b29fb984de805fabf5b88d508758c37b",
+    "meaning": "RETAINED_PUBLIC_MATHEMATICAL_REFERENCE_NOT_NATIVE_SOURCE_PROOF"
+  },
+  "replayAssets": {
+    "scope-z/phase-evidence/z3/build/cli.mjs": "43a3d180cf01602ccacfc01147d934a5f3a5a437f5767eccb1a1ce933bdaa4d7",
+    "scope-z/phase-evidence/z3/frozen-public-cases-v2.json": "0f1cc6af5de3a006a8880c7550f65c1c0d56e00fdaf34bf8b388c7cbc1e726c6",
+    "finnor-os/packages/epistemic-runtime/src/project-z/z3-viability/checker.py": "b71c0bec3be5eb1e6218e4b04a26bf07918a3f781e5712800a8ff061497e837e",
+    "finnor-os/scripts/project-z/z3/finite-e2e.py": "74520f769f9c20c2ce6f79593ba4443244cff3b9a5a8cc0dbb5f4c8c67e32dc8",
+    "finnor-os/scripts/project-z/z3/reference.py": "fa267cb6f8d70c4f07271d7ceef68a7a68b4fad9dd792185d2bf6fd17bcbf84e"
+  },
+  "canonicalProductionSourceCount": 1740,
+  "excluded": [
+    "Git objects",
+    "node_modules",
+    "dotenv files",
+    "credentials/keys",
+    "runtime user data",
+    "historical bulky evidence"
+  ],
+  "dependenciesBorrowed": false,
+  "applicationOrDatabaseExecuted": false,
+  "nativeSource": "NOT_RUN",
+  "installedNative": "NOT_RUN",
+  "protectedAdmission": "NOT_RUN",
+  "financialQualification": "NOT_RUN"
+}

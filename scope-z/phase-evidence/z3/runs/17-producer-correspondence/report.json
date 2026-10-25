@@ -1,0 +1,237 @@
+{
+  "schema": "finnor.z3.final-source-producer-correspondence.v1",
+  "status": "FAIL",
+  "sourceHead": "c6b1df57b4602521c1b5369143f44289afd48beb",
+  "sourceManifestSha256": "1230d96252d3591a06bb4d9ce362767b45e0cc235bd79817037725e966d64410",
+  "buildExitCode": 0,
+  "rootWorkingDirectory": "/home/factory-user/repos/finnor-z3/scope-z/phase-evidence/z3/reconstruction-04/source",
+  "compiler": {
+    "path": "/home/factory-user/repos/finnor-z3/finnor-os/node_modules/.bin/esbuild",
+    "realPath": "/home/factory-user/repos/finnor-z3/finnor-os/node_modules/esbuild/bin/esbuild",
+    "sha256": "3d1037d9a128440856daec17f4358ebb465b73823858a88a5fe1ce702cc17944",
+    "mode": 493,
+    "bytes": 9351,
+    "version": "0.25.12",
+    "authority": "EXISTING_DECLARED_LANE_LOCKFILE_COMPILER_NOT_FRESH_INSTALLED_PROOF"
+  },
+  "byteExactProducerCorrespondence": true,
+  "assets": {
+    "producer": {
+      "path": "/home/factory-user/repos/finnor-z3/scope-z/phase-evidence/z3/runs/17-producer-correspondence/cli.mjs",
+      "realPath": "/home/factory-user/repos/finnor-z3/scope-z/phase-evidence/z3/runs/17-producer-correspondence/cli.mjs",
+      "sha256": "43a3d180cf01602ccacfc01147d934a5f3a5a437f5767eccb1a1ce933bdaa4d7",
+      "mode": 420,
+      "bytes": 16702
+    },
+    "checker": {
+      "path": "/home/factory-user/repos/finnor-z3/scope-z/phase-evidence/z3/reconstruction-04/source/finnor-os/packages/epistemic-runtime/src/project-z/z3-viability/checker.py",
+      "realPath": "/home/factory-user/repos/finnor-z3/scope-z/phase-evidence/z3/reconstruction-04/source/finnor-os/packages/epistemic-runtime/src/project-z/z3-viability/checker.py",
+      "sha256": "b71c0bec3be5eb1e6218e4b04a26bf07918a3f781e5712800a8ff061497e837e",
+      "mode": 420,
+      "bytes": 19154
+    },
+    "node": {
+      "path": "/home/factory-user/repos/finnor-z-toolchains/node22/node_modules/node/bin/node",
+      "realPath": "/home/factory-user/repos/finnor-z-toolchains/node22/node_modules/node/bin/node",
+      "sha256": "94efd062ed066c1a0b332e18249859c905e920eeada5df55d24c99b919629a90",
+      "mode": 493,
+      "bytes": 124902584
+    },
+    "python": {
+      "path": "/usr/bin/python3.12",
+      "realPath": "/usr/bin/python3.12",
+      "sha256": "e50d468e8b0adfb05733f5b87b3cff34829c4a8c1aea50c865aa8bdfe4bb150f",
+      "mode": 493,
+      "bytes": 8020928
+    }
+  },
+  "approved": {
+    "producer": "43a3d180cf01602ccacfc01147d934a5f3a5a437f5767eccb1a1ce933bdaa4d7",
+    "checker": "b71c0bec3be5eb1e6218e4b04a26bf07918a3f781e5712800a8ff061497e837e",
+    "node": "94efd062ed066c1a0b332e18249859c905e920eeada5df55d24c99b919629a90",
+    "python": "e50d468e8b0adfb05733f5b87b3cff34829c4a8c1aea50c865aa8bdfe4bb150f"
+  },
+  "platform": "linux",
+  "architecture": "x64",
+  "nodeVersion": "v22.23.4",
+  "pythonVersion": "Python 3.12.3",
+  "buildLog": {
+    "path": "/home/factory-user/repos/finnor-z3/scope-z/phase-evidence/z3/runs/17-producer-correspondence/build.log",
+    "realPath": "/home/factory-user/repos/finnor-z3/scope-z/phase-evidence/z3/runs/17-producer-correspondence/build.log",
+    "sha256": "c82cd1e9175577137719c164030c20e2fae91b834d390d224e41a57fab46620e",
+    "mode": 420,
+    "bytes": 74
+  },
+  "migrationSourceOnly": {
+    "payload": {
+      "path": "/home/factory-user/repos/finnor-z3/scope-z/phase-evidence/z3/reconstruction-04/source/finnor-os/packages/db/migrations/postz_z3_viability.sql",
+      "realPath": "/home/factory-user/repos/finnor-z3/scope-z/phase-evidence/z3/reconstruction-04/source/finnor-os/packages/db/migrations/postz_z3_viability.sql",
+      "sha256": "9f4234029d0c01aea276f88a9c909e49d984dc5ab8227f12cd392c67e189b265",
+      "mode": 420,
+      "bytes": 7958
+    },
+    "store": {
+      "path": "/home/factory-user/repos/finnor-z3/scope-z/phase-evidence/z3/reconstruction-04/source/finnor-os/packages/private-equity/src/project-z/z3-viability/store.ts",
+      "realPath": "/home/factory-user/repos/finnor-z3/scope-z/phase-evidence/z3/reconstruction-04/source/finnor-os/packages/private-equity/src/project-z/z3-viability/store.ts",
+      "sha256": "f1418d93152ec14eda37be0a14543cc6d0081f7d8edf3b902521b83f736fd124",
+      "mode": 420,
+      "bytes": 44801
+    },
+    "tables": {
+      "z3_viability_sessions": [
+        "tenant_id",
+        "id",
+        "principal_id",
+        "work_id",
+        "work_input_id",
+        "original_parent_id",
+        "arena_digest",
+        "binding_digest",
+        "arena",
+        "binding",
+        "reservation_ref",
+        "status",
+        "reason",
+        "generation",
+        "active_claim_token",
+        "active_claim_fence",
+        "checkpoint",
+        "candidate",
+        "candidate_digest",
+        "check_receipt",
+        "check_digest",
+        "obligation_refs",
+        "deadline_at",
+        "created_at",
+        "updated_at"
+      ],
+      "z3_viability_requests": [
+        "tenant_id",
+        "principal_id",
+        "idempotency_key",
+        "request_digest",
+        "session_id",
+        "created_at"
+      ],
+      "z3_viability_events": [
+        "tenant_id",
+        "id",
+        "principal_id",
+        "session_id",
+        "kind",
+        "body",
+        "created_at"
+      ],
+      "z3_viability_artifacts": [
+        "tenant_id",
+        "principal_id",
+        "artifact_id",
+        "kind",
+        "digest",
+        "body",
+        "created_at"
+      ]
+    },
+    "inserts": [
+      {
+        "table": "z3_viability_events",
+        "columns": [
+          "tenant_id",
+          "principal_id",
+          "session_id",
+          "kind",
+          "body"
+        ],
+        "missing": []
+      },
+      {
+        "table": "z3_viability_artifacts",
+        "columns": [
+          "tenant_id",
+          "principal_id",
+          "artifact_id",
+          "kind",
+          "digest",
+          "body"
+        ],
+        "missing": []
+      },
+      {
+        "table": "z3_viability_requests",
+        "columns": [
+          "tenant_id",
+          "principal_id",
+          "idempotency_key",
+          "request_digest",
+          "session_id"
+        ],
+        "missing": []
+      },
+      {
+        "table": "z3_viability_sessions",
+        "columns": [
+          "id",
+          "tenant_id",
+          "principal_id",
+          "work_id",
+          "work_input_id",
+          "original_parent_id",
+          "arena_digest",
+          "binding_digest",
+          "arena",
+          "binding",
+          "reservation_ref",
+          "status",
+          "generation",
+          "checkpoint",
+          "obligation_refs",
+          "deadline_at"
+        ],
+        "missing": []
+      },
+      {
+        "table": "z3_viability_requests",
+        "columns": [
+          "tenant_id",
+          "principal_id",
+          "idempotency_key",
+          "request_digest",
+          "session_id"
+        ],
+        "missing": []
+      },
+      {
+        "table": "z3_viability_requests",
+        "columns": [
+          "tenant_id",
+          "principal_id",
+          "idempotency_key",
+          "request_digest",
+          "session_id"
+        ],
+        "missing": []
+      }
+    ],
+    "qualification": "DECLARED_Z3_INSERT_COLUMNS_ONLY_NOT_SQL_EXECUTION_OR_RLS_PROOF"
+  },
+  "retainedReferenceRecords": 3892,
+  "problems": [
+    "SESSION_COLUMN_MISSING:s4_consumed"
+  ],
+  "wallMs": 324,
+  "money": null,
+  "meterGaps": [
+    "compiler wall is only the retained build-log observation; isolated compiler CPU/RSS not measured",
+    "USD unknown; source compile is not a native S7 charge receipt",
+    "no existing P1/S5 budgets or S6 obligations observed"
+  ],
+  "dependenciesInstalled": false,
+  "publicReplayRerun": false,
+  "applicationBuildExecuted": false,
+  "databaseActions": 0,
+  "listenersStarted": 0,
+  "nativeOwner": "NOT_RUN",
+  "installedNative": "NOT_RUN",
+  "protectedAdmission": "NOT_RUN",
+  "financialQualification": "NOT_RUN"
+}

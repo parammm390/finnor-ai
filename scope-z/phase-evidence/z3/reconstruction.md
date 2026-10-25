@@ -1,5 +1,16 @@
 # Z3 reconstruction protocol
 
+> **SUPERSEDED (2026-10-24) — retained unedited as historical evidence.**
+> This protocol predates the native correction round required by coordinator
+> reviews 04/05/06. It freezes runtime artifacts at `11a90a3` (stale), omits
+> the correction packet, and its old handoff companion claimed the comparator
+> was unwritten. The current protocol — source distribution with the v4
+> correction packet applied, own-lock install/build/replay, and the semantic
+> comparator — is `reconstruction-correction.md`. The producer/checker
+> digests and sweep mathematics quoted below remain valid (no mathematical
+> source changed).
+
+
 Everything below reproduces from the lane branch `factory/project-z3-viability` alone
 (base commit `9f3edfd3b4c6758832c53139da0773218062191e`, tree
 `2dc4d5bc13d22853cf4dc9feb5f6ac7fbf6bb9c9`). Runtime artifacts — `cli.mts`,

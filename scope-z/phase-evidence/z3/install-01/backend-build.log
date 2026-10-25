@@ -1,0 +1,214 @@
+
+> @finnor/api@0.1.0 build
+> tsx ../../scripts/x3/stamp-source.mts && tsx ../../scripts/x5/stamp-source.mts && tsx ../../scripts/x4/stamp-source.mts && tsx ../../scripts/y2/stamp-source.mts && next build
+
+X3_EMITTED_SOURCE_STAMP 50
+X5_EMITTED_SOURCE_STAMP 78
+X4_EMITTED_SOURCE_STAMP 112
+Y2_EMITTED_SEMANTIC_SOURCE_STAMP 20
+⚠ No build cache found. Please configure build caching for faster rebuilds. Read more: https://nextjs.org/docs/messages/no-cache
+   ▲ Next.js 15.5.28
+   - Experiments (use with caution):
+     · extensionAlias
+
+   Creating an optimized production build ...
+   Skipping linting
+   Checking validity of types ...
+   Collecting page data ...
+   Generating static pages (0/65) ...
+   Generating static pages (16/65) 
+   Generating static pages (32/65) 
+   Generating static pages (48/65) 
+ ✓ Generating static pages (65/65)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                                                  Size  First Load JS
+┌ ƒ /api/actions                                                            482 B         102 kB
+├ ƒ /api/actions/[id]/confirm                                               482 B         102 kB
+├ ƒ /api/actions/[id]/escalate                                              482 B         102 kB
+├ ƒ /api/actions/[id]/reject                                                482 B         102 kB
+├ ƒ /api/actions/[id]/revert                                                482 B         102 kB
+├ ƒ /api/actions/human                                                      482 B         102 kB
+├ ƒ /api/actions/pending                                                    482 B         102 kB
+├ ƒ /api/actions/review-capability                                          482 B         102 kB
+├ ƒ /api/activity                                                           482 B         102 kB
+├ ƒ /api/admin/migrate                                                      482 B         102 kB
+├ ƒ /api/allocations/[operation]                                            482 B         102 kB
+├ ƒ /api/artifact-templates                                                 482 B         102 kB
+├ ƒ /api/artifact-templates/[key]/instantiate                               482 B         102 kB
+├ ƒ /api/artifacts                                                          482 B         102 kB
+├ ƒ /api/audit                                                              482 B         102 kB
+├ ƒ /api/branches/[operation]                                               482 B         102 kB
+├ ƒ /api/closing/[operation]                                                482 B         102 kB
+├ ƒ /api/coalition-programmes/[operation]                                   482 B         102 kB
+├ ƒ /api/company-brain/[operation]                                          482 B         102 kB
+├ ƒ /api/computer/runs/[id]                                                 482 B         102 kB
+├ ƒ /api/computer/runs/[id]/cancel                                          482 B         102 kB
+├ ƒ /api/connections/[ref]                                                  482 B         102 kB
+├ ƒ /api/connections/[ref]/verify                                           482 B         102 kB
+├ ƒ /api/connections/google/callback                                        482 B         102 kB
+├ ƒ /api/connections/google/start                                           482 B         102 kB
+├ ƒ /api/connections/microsoft-graph/callback                               482 B         102 kB
+├ ƒ /api/connections/microsoft-graph/start                                  482 B         102 kB
+├ ƒ /api/connections/microsoft-graph/status                                 482 B         102 kB
+├ ƒ /api/corrections                                                        482 B         102 kB
+├ ƒ /api/decision-atlases/[operation]                                       482 B         102 kB
+├ ƒ /api/dlq                                                                482 B         102 kB
+├ ƒ /api/dlq/[id]                                                           482 B         102 kB
+├ ƒ /api/dlq/[id]/discard                                                   482 B         102 kB
+├ ƒ /api/dlq/[id]/replay                                                    482 B         102 kB
+├ ƒ /api/documents/[id]                                                     482 B         102 kB
+├ ƒ /api/documents/[id]/artifact                                            482 B         102 kB
+├ ƒ /api/documents/[id]/artifact/[...action]                                482 B         102 kB
+├ ƒ /api/economic-outcomes/[operation]                                      482 B         102 kB
+├ ƒ /api/elicitation-protocols/[operation]                                  482 B         102 kB
+├ ƒ /api/employees                                                          482 B         102 kB
+├ ƒ /api/events                                                             482 B         102 kB
+├ ƒ /api/experiments/[operation]                                            482 B         102 kB
+├ ƒ /api/health                                                             482 B         102 kB
+├ ƒ /api/identification-plans/[operation]                                   482 B         102 kB
+├ ƒ /api/insights                                                           482 B         102 kB
+├ ƒ /api/instructions/[id]                                                  482 B         102 kB
+├ ƒ /api/instructions/[id]/cancel                                           482 B         102 kB
+├ ƒ /api/instructions/[id]/events                                           482 B         102 kB
+├ ƒ /api/integrations/microsoft-graph/source-scopes                         482 B         102 kB
+├ ƒ /api/integrations/microsoft-graph/source-scopes/[id]                    482 B         102 kB
+├ ƒ /api/integrations/status                                                482 B         102 kB
+├ ƒ /api/interventions/[operation]                                          482 B         102 kB
+├ ƒ /api/investment-cases                                                   482 B         102 kB
+├ ƒ /api/investment-cases/[id]/underwriting                                 482 B         102 kB
+├ ƒ /api/live-controls                                                      482 B         102 kB
+├ ƒ /api/me                                                                 482 B         102 kB
+├ ƒ /api/objectives                                                         482 B         102 kB
+├ ƒ /api/obligations/[operation]                                            482 B         102 kB
+├ ƒ /api/operating-profile                                                  482 B         102 kB
+├ ƒ /api/operational-deltas                                                 482 B         102 kB
+├ ƒ /api/operations/[id]                                                    482 B         102 kB
+├ ƒ /api/outcome-packs                                                      482 B         102 kB
+├ ƒ /api/outcome-packs/control                                              482 B         102 kB
+├ ƒ /api/outcome-packs/grants                                               482 B         102 kB
+├ ƒ /api/outcome-packs/grants/[id]                                          482 B         102 kB
+├ ƒ /api/policies/[operation]                                               482 B         102 kB
+├ ƒ /api/policies/[operation]/[actionType]                                  482 B         102 kB
+├ ƒ /api/policies/[operation]/[actionType]/simulate                         482 B         102 kB
+├ ƒ /api/private-equity/calibration                                         482 B         102 kB
+├ ƒ /api/private-equity/digital-twin                                        482 B         102 kB
+├ ƒ /api/private-equity/ic/cases                                            482 B         102 kB
+├ ƒ /api/private-equity/ic/cases/[id]                                       482 B         102 kB
+├ ƒ /api/private-equity/ic/cases/[id]/begin-preparation                     482 B         102 kB
+├ ƒ /api/private-equity/ic/cases/[id]/conditions                            482 B         102 kB
+├ ƒ /api/private-equity/ic/cases/[id]/conditions/[conditionId]/activate     482 B         102 kB
+├ ƒ /api/private-equity/ic/cases/[id]/conditions/[conditionId]/fail         482 B         102 kB
+├ ƒ /api/private-equity/ic/cases/[id]/conditions/[conditionId]/satisfy      482 B         102 kB
+├ ƒ /api/private-equity/ic/cases/[id]/conditions/[conditionId]/supersede    482 B         102 kB
+├ ƒ /api/private-equity/ic/cases/[id]/conditions/[conditionId]/waive        482 B         102 kB
+├ ƒ /api/private-equity/ic/cases/[id]/decision-proof                        482 B         102 kB
+├ ƒ /api/private-equity/ic/cases/[id]/decision-proposals                    482 B         102 kB
+├ ƒ /api/private-equity/ic/cases/[id]/dissents                              482 B         102 kB
+├ ƒ /api/private-equity/ic/cases/[id]/finalize                              482 B         102 kB
+├ ƒ /api/private-equity/ic/cases/[id]/memos                                 482 B         102 kB
+├ ƒ /api/private-equity/ic/cases/[id]/open-questions                        482 B         102 kB
+├ ƒ /api/private-equity/ic/cases/[id]/questions                             482 B         102 kB
+├ ƒ /api/private-equity/ic/cases/[id]/questions/[questionId]/answer         482 B         102 kB
+├ ƒ /api/private-equity/ic/cases/[id]/questions/[questionId]/resolve        482 B         102 kB
+├ ƒ /api/private-equity/ic/cases/[id]/questions/[questionId]/sources        482 B         102 kB
+├ ƒ /api/private-equity/ic/cases/[id]/questions/[questionId]/supersede      482 B         102 kB
+├ ƒ /api/private-equity/ic/cases/[id]/questions/[questionId]/waive          482 B         102 kB
+├ ƒ /api/private-equity/ic/cases/[id]/ready-for-review                      482 B         102 kB
+├ ƒ /api/private-equity/ic/cases/[id]/ready-for-vote                        482 B         102 kB
+├ ƒ /api/private-equity/ic/cases/[id]/recommendations                       482 B         102 kB
+├ ƒ /api/private-equity/ic/cases/[id]/reviewed-deck-link                    482 B         102 kB
+├ ƒ /api/private-equity/ic/cases/[id]/underwriting-run                      482 B         102 kB
+├ ƒ /api/private-equity/ic/cases/[id]/votes                                 482 B         102 kB
+├ ƒ /api/private-equity/ic/cases/[id]/voting/close                          482 B         102 kB
+├ ƒ /api/private-equity/ic/cases/[id]/voting/open                           482 B         102 kB
+├ ƒ /api/private-equity/ic/cases/[id]/withdraw                              482 B         102 kB
+├ ƒ /api/private-equity/ic/committee-configurations                         482 B         102 kB
+├ ƒ /api/push-subscriptions                                                 482 B         102 kB
+├ ƒ /api/queries                                                            482 B         102 kB
+├ ƒ /api/read-models/[view]                                                 482 B         102 kB
+├ ƒ /api/ready                                                              482 B         102 kB
+├ ƒ /api/receipts                                                           482 B         102 kB
+├ ƒ /api/receipts/[id]                                                      482 B         102 kB
+├ ƒ /api/reconciliation/[id]/resolve                                        482 B         102 kB
+├ ƒ /api/release                                                            482 B         102 kB
+├ ƒ /api/semantic-activity                                                  482 B         102 kB
+├ ƒ /api/setup/status                                                       482 B         102 kB
+├ ƒ /api/stream                                                             482 B         102 kB
+├ ƒ /api/threads                                                            482 B         102 kB
+├ ƒ /api/threads/[id]                                                       482 B         102 kB
+├ ƒ /api/threads/[id]/canvas                                                482 B         102 kB
+├ ƒ /api/underwriting/artifact-bindings                                     482 B         102 kB
+├ ƒ /api/underwriting/comparisons                                           482 B         102 kB
+├ ƒ /api/underwriting/model-versions/[id]/affected                          482 B         102 kB
+├ ƒ /api/underwriting/model-versions/diff                                   482 B         102 kB
+├ ƒ /api/underwriting/models                                                482 B         102 kB
+├ ƒ /api/underwriting/models/[id]/versions                                  482 B         102 kB
+├ ƒ /api/underwriting/projections                                           482 B         102 kB
+├ ƒ /api/underwriting/runs                                                  482 B         102 kB
+├ ƒ /api/underwriting/runs/[id]                                             482 B         102 kB
+├ ƒ /api/underwriting/runs/[id]/explain                                     482 B         102 kB
+├ ƒ /api/underwriting/runs/diff                                             482 B         102 kB
+├ ƒ /api/underwriting/scenarios                                             482 B         102 kB
+├ ƒ /api/underwriting/sensitivities                                         482 B         102 kB
+├ ƒ /api/underwriting/sensitivities/[id]                                    482 B         102 kB
+├ ƒ /api/user-prefs                                                         482 B         102 kB
+├ ƒ /api/user-prefs/digest                                                  482 B         102 kB
+├ ƒ /api/vitals                                                             482 B         102 kB
+├ ƒ /api/webhooks/esign                                                     482 B         102 kB
+├ ƒ /api/webhooks/ghl                                                       482 B         102 kB
+├ ƒ /api/webhooks/marketing                                                 482 B         102 kB
+├ ƒ /api/webhooks/microsoft-graph                                           482 B         102 kB
+├ ƒ /api/webhooks/payment                                                   482 B         102 kB
+├ ƒ /api/webhooks/vapi                                                      482 B         102 kB
+├ ƒ /api/workflows/runs                                                     482 B         102 kB
+├ ƒ /api/workflows/runs/[id]/cancel                                         482 B         102 kB
+├ ƒ /api/workflows/runs/[id]/escalate                                       482 B         102 kB
+├ ƒ /api/workflows/runs/[id]/pause                                          482 B         102 kB
+├ ƒ /api/workflows/runs/[id]/resume                                         482 B         102 kB
+├ ƒ /api/workflows/runs/[id]/retry                                          482 B         102 kB
+├ ƒ /api/workflows/steps/[id]/compensate                                    482 B         102 kB
+├ ƒ /api/workforce/assignments/[id]/reassign                                482 B         102 kB
+├ ƒ /api/workforce/profiles                                                 482 B         102 kB
+├ ƒ /api/workforce/proposals/[id]                                           482 B         102 kB
+├ ƒ /api/works                                                              482 B         102 kB
+├ ƒ /api/works/[id]                                                         482 B         102 kB
+├ ƒ /api/works/[id]/execution                                               482 B         102 kB
+├ ƒ /api/works/[id]/handoff                                                 482 B         102 kB
+├ ƒ /api/works/[id]/objective                                               482 B         102 kB
+├ ƒ /api/works/[id]/replay                                                  482 B         102 kB
+├ ƒ /api/works/[id]/retry                                                   482 B         102 kB
+└ ƒ /api/workspace-config                                                   482 B         102 kB
++ First Load JS shared by all                                              101 kB
+  ├ chunks/1956-5064779a29ef0a5d.js                                       45.6 kB
+  ├ chunks/87c73c54-0375ba195de27293.js                                   54.2 kB
+  └ other shared chunks (total)                                           1.53 kB
+
+Route (pages)                                                                Size  First Load JS
+─ ○ /404                                                                    182 B          83 kB
++ First Load JS shared by all                                             82.8 kB
+  ├ chunks/framework-bf8cc7b0cd28b74f.js                                  44.8 kB
+  ├ chunks/main-779016d3a860739c.js                                       36.4 kB
+  └ other shared chunks (total)                                            1.6 kB
+
+ƒ Middleware                                                              32.9 kB
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
+
+ ⚠ Compiled with warnings in 50s
+
+../../packages/epistemic-runtime/src/verified-capital-compiler/native.ts
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+../../packages/epistemic-runtime/src/verified-capital-compiler/native.ts
+../../packages/epistemic-runtime/src/verified-capital-compiler/index.ts
+../../packages/epistemic-runtime/src/index.ts
+./app/api/coalition-programmes/[operation]/route.ts
+
+(node:194902) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+

@@ -1,0 +1,534 @@
+{
+  "schema": "finnor.z3.standalone-catalogue-correspondence.v1",
+  "status": "PASS",
+  "nativeOwnerCorrectionCommit": "ae8d1f68e201c23044be9cf7b7fec2c19a71750c",
+  "packet": {
+    "path": "/home/factory-user/repos/finnor-z3/scope-z/phase-evidence/z3/integration-corrections/v4/manifest.json",
+    "sha256": "37e8432a28fc436f1e8d5b5dbf8e337aedf2f6738febaf84f6885349d94e3c89",
+    "mode": 420
+  },
+  "ownerPatchesByteIdenticalToV3": true,
+  "standaloneGenerated": {
+    "generator": {
+      "path": "/tmp/z3-cat-gen/scripts/centropy/generate-capability-manifest.mjs",
+      "sha256": "5c30228f508009f037e7b045d41f1447a2d7b6f23d4825b878436d9e60fa2cb9",
+      "mode": 420
+    },
+    "manifest": {
+      "path": "/tmp/z3-cat-gen/src/lib/centropy/capability-manifest.generated.json",
+      "sha256": "c56b2d3039058daf720db0e3c7782dbdde0654d2c0392982d0dbe83d1da5fae5",
+      "mode": 420
+    },
+    "coverage": {
+      "path": "/tmp/z3-cat-gen/docs/centropy/capability-coverage.json",
+      "sha256": "95b921455111e43fd35ba7f1a52fe4535195a94938f453d54e731524458ffe04",
+      "mode": 420
+    },
+    "counts": {
+      "total": 660,
+      "http": 583,
+      "planner": 77,
+      "classified": 660,
+      "classificationCoveragePercent": 100,
+      "unclassified": 0,
+      "backendApiWithoutMountedFrontend": 93,
+      "dynamicFrontendCalls": 77,
+      "unresolvedDynamicCalls": 0,
+      "disposition": {
+        "ACTIVE_TYPED_HUMAN_CONTROL": 66,
+        "INTENTIONAL_COMPATIBILITY": 23,
+        "ACTIVE_DIRECT_FRONTEND_PATH": 339,
+        "RESTRICTED_SYSTEM_OR_ADMIN": 58,
+        "PROVIDER_PROTOCOL_CALLBACK": 2,
+        "BACKEND_API_NO_MOUNTED_FRONTEND": 93,
+        "INTENTIONAL_ALTERNATE_CANONICAL_INTAKE": 2,
+        "CANONICAL_AGENT_CAPABILITY": 63,
+        "HUMAN_ONLY_CANONICAL_DECISION": 11,
+        "CANONICAL_RUNTIME_CONTROL": 2,
+        "UNAVAILABLE_CANONICAL_CAPABILITY": 1
+      }
+    }
+  },
+  "coordinator": {
+    "head": "9f3edfd3b4c6758832c53139da0773218062191e",
+    "tree": "2dc4d5bc13d22853cf4dc9feb5f6ac7fbf6bb9c9",
+    "meaning": "COMBINED_WORKING_SOURCE_BOUND_TO_FILE_INVENTORY_NOT_HEAD_ALONE",
+    "adoptionReceipt": {
+      "path": "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/coordinator-integration-04/z3-v3-application-01/application.json",
+      "sha256": "4ae0221bfa97e7122583e90ea8d0e4e901bf5b45de868960a0d1bad66a01d82d",
+      "mode": 420
+    },
+    "buildInventoryReceipt": {
+      "path": "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/coordinator-integration-04/build-inventory-preflight-01.json",
+      "sha256": "aa97d0ff34a38d818fde1d79298e767d4639a993875678c133a37de7f3b57911",
+      "mode": 420
+    },
+    "validationReceipt": {
+      "path": "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/coordinator-integration-04/validation-03/report.json",
+      "sha256": "dd08be08f06f2f5cf6588005c3cd5163d1efaa9cc9da63e4d74530b540c66efa",
+      "mode": 420
+    },
+    "validationSteps": [
+      {
+        "name": "migration-bundle",
+        "exitCode": 0
+      },
+      {
+        "name": "openapi",
+        "exitCode": 0
+      },
+      {
+        "name": "manifest",
+        "exitCode": 0
+      },
+      {
+        "name": "client",
+        "exitCode": 0
+      },
+      {
+        "name": "forms",
+        "exitCode": 0
+      },
+      {
+        "name": "coverage",
+        "exitCode": 0
+      },
+      {
+        "name": "workspace-check",
+        "exitCode": 0
+      },
+      {
+        "name": "manifest-check",
+        "exitCode": 0
+      },
+      {
+        "name": "client-check",
+        "exitCode": 0
+      },
+      {
+        "name": "forms-check",
+        "exitCode": 0
+      },
+      {
+        "name": "coverage-check",
+        "exitCode": 0
+      },
+      {
+        "name": "backend-types",
+        "exitCode": 0
+      },
+      {
+        "name": "frontend-types",
+        "exitCode": 0
+      },
+      {
+        "name": "affected-lint",
+        "exitCode": 0
+      }
+    ],
+    "buildExecuted": false,
+    "retainedLintWarning": "WorldWorkRecord.tsx:60 useEffect dependency scope; zero errors, one existing warning"
+  },
+  "owned": [
+    {
+      "path": "finnor-os/packages/orchestration/src/project-z/z3-viability/revision.ts",
+      "adoptedSha256": "200a178eb9999ce3d0bc29e90a1ab790d0299f3efbd2961a0903a0e8296281ae",
+      "coordinatorSha256": "200a178eb9999ce3d0bc29e90a1ab790d0299f3efbd2961a0903a0e8296281ae",
+      "currentLaneSha256": "200a178eb9999ce3d0bc29e90a1ab790d0299f3efbd2961a0903a0e8296281ae",
+      "mode": 420,
+      "currentLaneMatchesAdopted": true
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/project-z/z3-viability/assets.ts",
+      "adoptedSha256": "25f3d85f0a42c610abeeb19dd0ba8b73bedd36d2741e398e5c6cc647ce20cf1b",
+      "coordinatorSha256": "25f3d85f0a42c610abeeb19dd0ba8b73bedd36d2741e398e5c6cc647ce20cf1b",
+      "currentLaneSha256": "25f3d85f0a42c610abeeb19dd0ba8b73bedd36d2741e398e5c6cc647ce20cf1b",
+      "mode": 420,
+      "currentLaneMatchesAdopted": true
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/project-z/z3-viability/consumer.ts",
+      "adoptedSha256": "ecc18935d1b93b73e012eb4fbc5a496ea808d3fd2291d237abaa23a43dadc6c9",
+      "coordinatorSha256": "ecc18935d1b93b73e012eb4fbc5a496ea808d3fd2291d237abaa23a43dadc6c9",
+      "currentLaneSha256": "ecc18935d1b93b73e012eb4fbc5a496ea808d3fd2291d237abaa23a43dadc6c9",
+      "mode": 420,
+      "currentLaneMatchesAdopted": true
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/project-z/z3-viability/contracts.ts",
+      "adoptedSha256": "1fc951b024a6952165f5b069c1f82daa397ef4e83da6ba1f3795d1ce36810f43",
+      "coordinatorSha256": "1fc951b024a6952165f5b069c1f82daa397ef4e83da6ba1f3795d1ce36810f43",
+      "currentLaneSha256": "1fc951b024a6952165f5b069c1f82daa397ef4e83da6ba1f3795d1ce36810f43",
+      "mode": 420,
+      "currentLaneMatchesAdopted": true
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/project-z/z3-viability/delivery.ts",
+      "adoptedSha256": "3ac26d8a5193988d449d171560014eea09fa61b2394a02dd803664e6f8aa450b",
+      "coordinatorSha256": "3ac26d8a5193988d449d171560014eea09fa61b2394a02dd803664e6f8aa450b",
+      "currentLaneSha256": "3ac26d8a5193988d449d171560014eea09fa61b2394a02dd803664e6f8aa450b",
+      "mode": 420,
+      "currentLaneMatchesAdopted": true
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/project-z/z3-viability/native-model.ts",
+      "adoptedSha256": "2fe590e1be692811f6ded24a934a6217068e3e87f2ebfb98e3e20e029ada1e2b",
+      "coordinatorSha256": "2fe590e1be692811f6ded24a934a6217068e3e87f2ebfb98e3e20e029ada1e2b",
+      "currentLaneSha256": "2fe590e1be692811f6ded24a934a6217068e3e87f2ebfb98e3e20e029ada1e2b",
+      "mode": 420,
+      "currentLaneMatchesAdopted": true
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/project-z/z3-viability/native-origin.ts",
+      "adoptedSha256": "ababd41b13c00c0ad4f1d6afeb5fb6dccb577e18e5ed24425bb1ea7bcf802ae7",
+      "coordinatorSha256": "ababd41b13c00c0ad4f1d6afeb5fb6dccb577e18e5ed24425bb1ea7bcf802ae7",
+      "currentLaneSha256": "ababd41b13c00c0ad4f1d6afeb5fb6dccb577e18e5ed24425bb1ea7bcf802ae7",
+      "mode": 420,
+      "currentLaneMatchesAdopted": true
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/project-z/z3-viability/process.ts",
+      "adoptedSha256": "299b4ef80ede03bad6a466bc99e767ae08062ba706d1f3e94eacdc013326d55b",
+      "coordinatorSha256": "299b4ef80ede03bad6a466bc99e767ae08062ba706d1f3e94eacdc013326d55b",
+      "currentLaneSha256": "299b4ef80ede03bad6a466bc99e767ae08062ba706d1f3e94eacdc013326d55b",
+      "mode": 420,
+      "currentLaneMatchesAdopted": true
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/project-z/z3-viability/runtime.ts",
+      "adoptedSha256": "2eb88947bac9d9a3f554c80132d00ace44177b7c49ef5cada29d5d73fd665c1d",
+      "coordinatorSha256": "2eb88947bac9d9a3f554c80132d00ace44177b7c49ef5cada29d5d73fd665c1d",
+      "currentLaneSha256": "2eb88947bac9d9a3f554c80132d00ace44177b7c49ef5cada29d5d73fd665c1d",
+      "mode": 420,
+      "currentLaneMatchesAdopted": true
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/project-z/z3-viability/store.ts",
+      "adoptedSha256": "f1418d93152ec14eda37be0a14543cc6d0081f7d8edf3b902521b83f736fd124",
+      "coordinatorSha256": "f1418d93152ec14eda37be0a14543cc6d0081f7d8edf3b902521b83f736fd124",
+      "currentLaneSha256": "f1418d93152ec14eda37be0a14543cc6d0081f7d8edf3b902521b83f736fd124",
+      "mode": 420,
+      "currentLaneMatchesAdopted": true
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/project-z/z3-viability/worker.ts",
+      "adoptedSha256": "121b25b3b0b861a6902a8a8b8087ccb3a52f16d4a9c4364a4b89b768abf54c2d",
+      "coordinatorSha256": "121b25b3b0b861a6902a8a8b8087ccb3a52f16d4a9c4364a4b89b768abf54c2d",
+      "currentLaneSha256": "121b25b3b0b861a6902a8a8b8087ccb3a52f16d4a9c4364a4b89b768abf54c2d",
+      "mode": 420,
+      "currentLaneMatchesAdopted": true
+    },
+    {
+      "path": "finnor-os/scripts/project-z/z3/build-native-corrections.mjs",
+      "adoptedSha256": "a49841fbcc2510e193e381607848f3fcf5680a2429564141d84d3e6529d3075d",
+      "coordinatorSha256": "a49841fbcc2510e193e381607848f3fcf5680a2429564141d84d3e6529d3075d",
+      "currentLaneSha256": "773df256a59281eae14799af4862b3447cd8b1256002fe7a490e3375af1e30a9",
+      "mode": 420,
+      "currentLaneMatchesAdopted": false
+    },
+    {
+      "path": "finnor-os/scripts/project-z/z3/check-native-corrections.mjs",
+      "adoptedSha256": "f1c9168c56e6edd15637de784c0646c7830f4a0ffb4accdb86a4baf69ab9e0d0",
+      "coordinatorSha256": "f1c9168c56e6edd15637de784c0646c7830f4a0ffb4accdb86a4baf69ab9e0d0",
+      "currentLaneSha256": "f1c9168c56e6edd15637de784c0646c7830f4a0ffb4accdb86a4baf69ab9e0d0",
+      "mode": 420,
+      "currentLaneMatchesAdopted": true
+    },
+    {
+      "path": "finnor-os/scripts/project-z/z3/compare-reconstruction.mjs",
+      "adoptedSha256": "0efc232e9c6acb73c9bc1103227b3a657124d675c1b1867b1beba873bf3f4060",
+      "coordinatorSha256": "0efc232e9c6acb73c9bc1103227b3a657124d675c1b1867b1beba873bf3f4060",
+      "currentLaneSha256": "e005cb3a86d429adfd5b586fbf0bc832e998bd47734d96baa6b509bd7f5dc57e",
+      "mode": 420,
+      "currentLaneMatchesAdopted": false
+    },
+    {
+      "path": "finnor-os/scripts/project-z/z3/eslint.native.config.mjs",
+      "adoptedSha256": "cf78f8b502183459d3be637b9482f12b4a303ec2295174d0182e97b66ac09372",
+      "coordinatorSha256": "cf78f8b502183459d3be637b9482f12b4a303ec2295174d0182e97b66ac09372",
+      "currentLaneSha256": "cf78f8b502183459d3be637b9482f12b4a303ec2295174d0182e97b66ac09372",
+      "mode": 420,
+      "currentLaneMatchesAdopted": true
+    },
+    {
+      "path": "finnor-os/scripts/project-z/z3/install-reconstruction.mjs",
+      "adoptedSha256": "73d87dec86e18d233888aa263c46a82547822002cec604ca37f92b2fda82eda0",
+      "coordinatorSha256": "73d87dec86e18d233888aa263c46a82547822002cec604ca37f92b2fda82eda0",
+      "currentLaneSha256": "3097ff65f9e68a364f81d91aebcb033fbfd4a553a796f76d6fd2f845f55b0171",
+      "mode": 420,
+      "currentLaneMatchesAdopted": false
+    },
+    {
+      "path": "finnor-os/scripts/project-z/z3/native-boundary-e2e.mts",
+      "adoptedSha256": "17e95db3c6f7e2028fa541777d9ede52b6a15ae3e7a74f102478666ab4883779",
+      "coordinatorSha256": "17e95db3c6f7e2028fa541777d9ede52b6a15ae3e7a74f102478666ab4883779",
+      "currentLaneSha256": "17e95db3c6f7e2028fa541777d9ede52b6a15ae3e7a74f102478666ab4883779",
+      "mode": 420,
+      "currentLaneMatchesAdopted": true
+    },
+    {
+      "path": "finnor-os/scripts/project-z/z3/native-original-example.json",
+      "adoptedSha256": "b0a576777cf6811c91456d6887c3155379e9253fcbf3ba56f9c064251e7262ed",
+      "coordinatorSha256": "b0a576777cf6811c91456d6887c3155379e9253fcbf3ba56f9c064251e7262ed",
+      "currentLaneSha256": "b0a576777cf6811c91456d6887c3155379e9253fcbf3ba56f9c064251e7262ed",
+      "mode": 420,
+      "currentLaneMatchesAdopted": true
+    },
+    {
+      "path": "finnor-os/scripts/project-z/z3/prepare-reconstruction.mjs",
+      "adoptedSha256": "7eb0e51a492a118e5f7cf7bb90cc8342a9b62a8cc67784456baad72173638a37",
+      "coordinatorSha256": "7eb0e51a492a118e5f7cf7bb90cc8342a9b62a8cc67784456baad72173638a37",
+      "currentLaneSha256": "ef59352a6fe751fa6ca0b46339627a36b386362b983f89ab44ae10c4c34685c8",
+      "mode": 420,
+      "currentLaneMatchesAdopted": false
+    },
+    {
+      "path": "finnor-os/scripts/project-z/z3/worker-entry.mts",
+      "adoptedSha256": "0cb25aad707dd3d159164bd73a957195b1ae33fff1d1ebae1fdb36e0a9e367e0",
+      "coordinatorSha256": "0cb25aad707dd3d159164bd73a957195b1ae33fff1d1ebae1fdb36e0a9e367e0",
+      "currentLaneSha256": "0cb25aad707dd3d159164bd73a957195b1ae33fff1d1ebae1fdb36e0a9e367e0",
+      "mode": 420,
+      "currentLaneMatchesAdopted": true
+    },
+    {
+      "path": "scripts/project-z/z3/native-correction-e2e.mjs",
+      "adoptedSha256": "d34590119f866a616a531d2e4b9ea4a57550604abc0a7bd4ee73f51c66d8a2a1",
+      "coordinatorSha256": "d34590119f866a616a531d2e4b9ea4a57550604abc0a7bd4ee73f51c66d8a2a1",
+      "currentLaneSha256": "d34590119f866a616a531d2e4b9ea4a57550604abc0a7bd4ee73f51c66d8a2a1",
+      "mode": 420,
+      "currentLaneMatchesAdopted": true
+    },
+    {
+      "path": "scripts/project-z/z3/native-e2e.mjs",
+      "adoptedSha256": "9121f27c3f3f4ccf7d6a4a1233db53e108d314d0753e0576a57cc1a370b3bcb0",
+      "coordinatorSha256": "9121f27c3f3f4ccf7d6a4a1233db53e108d314d0753e0576a57cc1a370b3bcb0",
+      "currentLaneSha256": "9121f27c3f3f4ccf7d6a4a1233db53e108d314d0753e0576a57cc1a370b3bcb0",
+      "mode": 420,
+      "currentLaneMatchesAdopted": true
+    }
+  ],
+  "shared": [
+    {
+      "path": "finnor-os/packages/private-equity/src/allocation-store.ts",
+      "standaloneSha256": "8d88332d6568ac5802060c095500983f108850d27de2dfbc3ca27924bc9aa073",
+      "coordinatorSha256": "0ada66a6b1d37980691b37bc832e636da777f09d7493abdc6717b497f310cbbf",
+      "mode": 420,
+      "disposition": "PRESERVE_COORDINATOR_S5_Z1_DISJOINT_COMPOSITION"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/enterprise-control.ts",
+      "standaloneSha256": "80b83bbe81bed7d8401bfcf8d10c6ab55eaa2603d15346531ac0af63068e1952",
+      "coordinatorSha256": "80b83bbe81bed7d8401bfcf8d10c6ab55eaa2603d15346531ac0af63068e1952",
+      "mode": 420,
+      "disposition": "EXACT_V3_POSTIMAGE"
+    },
+    {
+      "path": "src/components/centropy/world/ViabilityPanel.tsx",
+      "standaloneSha256": "c94eee8a7cf178e9ba28e58d5cf41b95292e1da8d9558409af48b92ffece4948",
+      "coordinatorSha256": "c94eee8a7cf178e9ba28e58d5cf41b95292e1da8d9558409af48b92ffece4948",
+      "mode": 420,
+      "disposition": "EXACT_V3_POSTIMAGE"
+    },
+    {
+      "path": "finnor-os/apps/worker/src/queue.ts",
+      "standaloneSha256": "65ba4d30d3c1bae4afddf83db0aa0cbb730a06dc6dbc568a3fd3a68fa938384f",
+      "coordinatorSha256": "65ba4d30d3c1bae4afddf83db0aa0cbb730a06dc6dbc568a3fd3a68fa938384f",
+      "mode": 420,
+      "disposition": "EXACT_V3_POSTIMAGE"
+    }
+  ],
+  "completeZ3ManifestRowsEqual": true,
+  "completeZ3CoverageRowsEqual": true,
+  "z3Rows": [
+    {
+      "capabilityId": "http.post.company-brain.viability-read",
+      "family": "company-brain",
+      "owner": "@finnor/private-equity",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "company-brain/viability-read",
+      "routeDepth": 2,
+      "classification": "READ",
+      "kind": "read",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "query",
+      "effectClass": null,
+      "verificationClass": "canonical_read",
+      "presentationTargets": [
+        "WORLD",
+        "CANVAS"
+      ],
+      "invalidationTags": [],
+      "timeoutClass": "READ",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts"
+    },
+    {
+      "capabilityId": "http.post.company-brain.viability-recover",
+      "family": "company-brain",
+      "owner": "@finnor/private-equity",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "company-brain/viability-recover",
+      "routeDepth": 2,
+      "classification": "CONTROL",
+      "kind": "control",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "backend_policy",
+      "effectClass": "runtime_control",
+      "verificationClass": "canonical_reread",
+      "presentationTargets": [
+        "WORLD",
+        "CANVAS"
+      ],
+      "invalidationTags": [
+        "work",
+        "company-brain"
+      ],
+      "timeoutClass": "WRITE",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts"
+    },
+    {
+      "capabilityId": "http.post.company-brain.viability-submit",
+      "family": "company-brain",
+      "owner": "@finnor/private-equity",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "company-brain/viability-submit",
+      "routeDepth": 2,
+      "classification": "MUTATION",
+      "kind": "mutation",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "backend_policy",
+      "effectClass": "domain_mutation",
+      "verificationClass": "canonical_reread",
+      "presentationTargets": [
+        "WORLD",
+        "CANVAS"
+      ],
+      "invalidationTags": [
+        "work",
+        "company-brain"
+      ],
+      "timeoutClass": "WRITE",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts"
+    }
+  ],
+  "z3RowsSha256": "fe7a4a49f4c60114ea52a7047e1c176f2c19ed59556ff29ea0c3c89681bc0014",
+  "logs": [
+    {
+      "name": "manifest-write",
+      "exitCode": 0,
+      "path": "/home/factory-user/repos/finnor-z3/scope-z/phase-evidence/z3/runs/15-catalogue-final/manifest-write.log",
+      "sha256": "eff655cdc124db3ff39fc933a946f1c9ec719c355119df45cef47fb28caa0a3b",
+      "mode": 420
+    },
+    {
+      "name": "coverage-write",
+      "exitCode": 0,
+      "path": "/home/factory-user/repos/finnor-z3/scope-z/phase-evidence/z3/runs/15-catalogue-final/coverage-write.log",
+      "sha256": "b913533389f1df4b31418ac6933e11eb468425d3a910c5a693f687a6ea22076f",
+      "mode": 420
+    },
+    {
+      "name": "manifest-check",
+      "exitCode": 0,
+      "path": "/home/factory-user/repos/finnor-z3/scope-z/phase-evidence/z3/runs/15-catalogue-final/manifest-check.log",
+      "sha256": "eff655cdc124db3ff39fc933a946f1c9ec719c355119df45cef47fb28caa0a3b",
+      "mode": 420
+    },
+    {
+      "name": "coverage-check",
+      "exitCode": 0,
+      "path": "/home/factory-user/repos/finnor-z3/scope-z/phase-evidence/z3/runs/15-catalogue-final/coverage-check.log",
+      "sha256": "b913533389f1df4b31418ac6933e11eb468425d3a910c5a693f687a6ea22076f",
+      "mode": 420
+    },
+    {
+      "name": "packaging-lint",
+      "exitCode": 0,
+      "path": "/home/factory-user/repos/finnor-z3/scope-z/phase-evidence/z3/runs/15-catalogue-final/packaging-lint.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "mode": 420
+    }
+  ],
+  "nativeReports": [
+    {
+      "name": "14-committed-boundary",
+      "path": "/home/factory-user/repos/finnor-z3/scope-z/phase-evidence/z3/runs/14-committed-boundary/report.json",
+      "sha256": "b38dc0a30e79fe70af4fd18efb0ec306e7c9868dd63cbc911a73508847bc2d34",
+      "mode": 420,
+      "status": "PASS",
+      "exitCode": null,
+      "cases": 17,
+      "sourceInventoryDigest": null,
+      "checkedOwnedFiles": 15,
+      "drift": []
+    },
+    {
+      "name": "14-committed-backend",
+      "path": "/home/factory-user/repos/finnor-z3/scope-z/phase-evidence/z3/runs/14-committed-backend/report.json",
+      "sha256": "429c881c3b18c38460485f2bcdda1843b537d4122a1a6b597a50ff2ae459a31b",
+      "mode": 420,
+      "status": "PASS",
+      "exitCode": 0,
+      "cases": null,
+      "sourceInventoryDigest": "1ab0a4e193a851fd0a7d9ead32e2e1aa12211c2a80994a209cc56a9308cf6a79",
+      "checkedOwnedFiles": 14,
+      "drift": []
+    },
+    {
+      "name": "14-committed-entry",
+      "path": "/home/factory-user/repos/finnor-z3/scope-z/phase-evidence/z3/runs/14-committed-entry/report.json",
+      "sha256": "e0bd55c7b9bc33175acd13514edbb5a4f4a22e4f685dedef82a2a3bc988b3643",
+      "mode": 420,
+      "status": "PASS",
+      "exitCode": 0,
+      "cases": null,
+      "sourceInventoryDigest": "c232fdf257256a9982f3ad22d3a12d57112ed8646a0d8faec146cba1fc81119c",
+      "checkedOwnedFiles": 13,
+      "drift": []
+    },
+    {
+      "name": "13-final-v3-frontend",
+      "path": "/home/factory-user/repos/finnor-z3/scope-z/phase-evidence/z3/runs/13-final-v3-frontend/report.json",
+      "sha256": "95abf89ab3575e49e546a7fdfd2cd15d2a914d1990556ecc95de0180f30d580d",
+      "mode": 420,
+      "status": "PASS",
+      "exitCode": 0,
+      "cases": null,
+      "sourceInventoryDigest": "ab1f199065a3f53eef82c0ba88a7c6f02e24e60148415bac9a7a7f36da50690b",
+      "checkedOwnedFiles": 0,
+      "drift": []
+    }
+  ],
+  "problems": [],
+  "sourceGenerationDependencies": "EXPLICIT_BORROWED_ROOT_AND_BACKEND_SYMLINKS_NOT_INSTALLED_PROOF",
+  "coordinatorAction": "DO_NOT_REAPPLY_OR_OVERWRITE_COMBINED_GENERATOR_CATALOGUES_OR_S5",
+  "databaseActions": 0,
+  "listenersStarted": 0,
+  "installedNative": "NOT_RUN",
+  "protectedAdmission": "NOT_RUN",
+  "financialQualification": "NOT_RUN",
+  "money": null
+}

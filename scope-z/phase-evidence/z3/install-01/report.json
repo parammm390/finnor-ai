@@ -1,0 +1,425 @@
+{
+  "schema": "finnor.z3.lock-installed-engineering.v2",
+  "status": "FAIL",
+  "node": "v22.23.4",
+  "target": "FRESH_REGULAR_COPY_SAME_COMPUTER_NOT_SEPARATE_HOST",
+  "sourceManifestSha256": "da5f52c86495aff73e625037295425f34b0037b22fd2ee494f2ba734789c8644",
+  "steps": [
+    {
+      "name": "toolchain-npm",
+      "command": [
+        "npm",
+        "--version"
+      ],
+      "cwd": "/home/factory-user/repos/finnor-z3/scope-z/phase-evidence/z3/reconstruction-02/source",
+      "exitCode": 0,
+      "signal": null,
+      "spawnError": null,
+      "wallMs": 239,
+      "logSha256": "2a14f031d5d789c0cc63d52dedaf5a298842d5a65156e31e999ee2443f80b8f4"
+    },
+    {
+      "name": "toolchain-python",
+      "command": [
+        "/usr/bin/python3.12",
+        "--version"
+      ],
+      "cwd": "/home/factory-user/repos/finnor-z3/scope-z/phase-evidence/z3/reconstruction-02/source",
+      "exitCode": 0,
+      "signal": null,
+      "spawnError": null,
+      "wallMs": 3,
+      "logSha256": "2c3cdf98640fba5e4c9b1ca5d06d437a4d33dd19259c49d4ebe27ca983aee3d1"
+    },
+    {
+      "name": "toolchain-gcc",
+      "command": [
+        "gcc",
+        "--version"
+      ],
+      "cwd": "/home/factory-user/repos/finnor-z3/scope-z/phase-evidence/z3/reconstruction-02/source",
+      "exitCode": 0,
+      "signal": null,
+      "spawnError": null,
+      "wallMs": 23,
+      "logSha256": "e1f68ff17ee62309011affeb3a3fc59d1b607df73214d25463f0bfdecaf24b9f"
+    },
+    {
+      "name": "root-ci",
+      "command": [
+        "npm",
+        "ci",
+        "--no-audit",
+        "--no-fund"
+      ],
+      "cwd": "/home/factory-user/repos/finnor-z3/scope-z/phase-evidence/z3/reconstruction-02/source",
+      "exitCode": 0,
+      "signal": null,
+      "spawnError": null,
+      "wallMs": 19511,
+      "logSha256": "5f84e291ae95625778e6c3838dfde73d5f44867ea2e7fed1f4232c52e0fd7f82"
+    },
+    {
+      "name": "backend-ci",
+      "command": [
+        "npm",
+        "ci",
+        "--no-audit",
+        "--no-fund"
+      ],
+      "cwd": "/home/factory-user/repos/finnor-z3/scope-z/phase-evidence/z3/reconstruction-02/source/finnor-os",
+      "exitCode": 0,
+      "signal": null,
+      "spawnError": null,
+      "wallMs": 23411,
+      "logSha256": "e436dda0f0918269789d506d6926c01f0ebdebf05b6511fffc494bc55091c3c4"
+    },
+    {
+      "name": "workspace-check",
+      "command": [
+        "npm",
+        "run",
+        "workspace:check"
+      ],
+      "cwd": "/home/factory-user/repos/finnor-z3/scope-z/phase-evidence/z3/reconstruction-02/source",
+      "exitCode": 0,
+      "signal": null,
+      "spawnError": null,
+      "wallMs": 193,
+      "logSha256": "ca451107f05daa0fa0222a45d07540e76962ff86a79d5ffa7deb4756b0cf7603"
+    },
+    {
+      "name": "centropy-manifest-check",
+      "command": [
+        "npm",
+        "run",
+        "centropy:manifest:check"
+      ],
+      "cwd": "/home/factory-user/repos/finnor-z3/scope-z/phase-evidence/z3/reconstruction-02/source",
+      "exitCode": 1,
+      "signal": null,
+      "spawnError": null,
+      "wallMs": 6271,
+      "logSha256": "0b1890eff8dc92cc7ece78fb993d245f15d4fc69219111ceae299b3376a07d77"
+    },
+    {
+      "name": "centropy-coverage-check",
+      "command": [
+        "npm",
+        "run",
+        "centropy:coverage:check"
+      ],
+      "cwd": "/home/factory-user/repos/finnor-z3/scope-z/phase-evidence/z3/reconstruction-02/source",
+      "exitCode": 1,
+      "signal": null,
+      "spawnError": null,
+      "wallMs": 18875,
+      "logSha256": "da95826d323e3983a04a3e4e474817439069ec792685df3e40712a23e7c093ae"
+    },
+    {
+      "name": "centropy-client-check",
+      "command": [
+        "npm",
+        "run",
+        "centropy:client:check"
+      ],
+      "cwd": "/home/factory-user/repos/finnor-z3/scope-z/phase-evidence/z3/reconstruction-02/source",
+      "exitCode": 0,
+      "signal": null,
+      "spawnError": null,
+      "wallMs": 2337,
+      "logSha256": "37e44d06c1f161532b3c509e2b4eeab74d91e0bc2868b29b10303bd4fc869e3b"
+    },
+    {
+      "name": "centropy-forms-check",
+      "command": [
+        "npm",
+        "run",
+        "centropy:forms:check"
+      ],
+      "cwd": "/home/factory-user/repos/finnor-z3/scope-z/phase-evidence/z3/reconstruction-02/source",
+      "exitCode": 0,
+      "signal": null,
+      "spawnError": null,
+      "wallMs": 234,
+      "logSha256": "dd8e3985b8bac3ae4e2317db6dea4774e680ab5485b1b23028539da8b4d3e06c"
+    },
+    {
+      "name": "frontend-lint",
+      "command": [
+        "npm",
+        "run",
+        "lint"
+      ],
+      "cwd": "/home/factory-user/repos/finnor-z3/scope-z/phase-evidence/z3/reconstruction-02/source",
+      "exitCode": 0,
+      "signal": null,
+      "spawnError": null,
+      "wallMs": 29339,
+      "logSha256": "14b288df5795e1fd58e5371b240b99da407f99d17f3b596c6513d1639396f8a4"
+    },
+    {
+      "name": "native-rebuild",
+      "command": [
+        "npm",
+        "rebuild",
+        "fs-ext"
+      ],
+      "cwd": "/home/factory-user/repos/finnor-z3/scope-z/phase-evidence/z3/reconstruction-02/source/finnor-os",
+      "exitCode": 0,
+      "signal": null,
+      "spawnError": null,
+      "wallMs": 961,
+      "logSha256": "450af583933f53bcaadecfdb299b113d126693d45497a7db3ac7192cdc1c3439"
+    },
+    {
+      "name": "native-load",
+      "command": [
+        "/home/factory-user/repos/finnor-z-toolchains/node22/node_modules/node/bin/node",
+        "-e",
+        "console.log(typeof require('fs-ext').flockSync)"
+      ],
+      "cwd": "/home/factory-user/repos/finnor-z3/scope-z/phase-evidence/z3/reconstruction-02/source/finnor-os",
+      "exitCode": 0,
+      "signal": null,
+      "spawnError": null,
+      "wallMs": 46,
+      "logSha256": "ace543cb1759ff2a77f9a368e9ed7106286b614513f2ec2de3057eda0687a9a0"
+    },
+    {
+      "name": "backend-typecheck",
+      "command": [
+        "npm",
+        "run",
+        "typecheck"
+      ],
+      "cwd": "/home/factory-user/repos/finnor-z3/scope-z/phase-evidence/z3/reconstruction-02/source/finnor-os",
+      "exitCode": 0,
+      "signal": null,
+      "spawnError": null,
+      "wallMs": 70221,
+      "logSha256": "adf67f5c0dd85ec43c13b67c7ea44f6f9e32b1429c0680c3605ec7c368f82f59"
+    },
+    {
+      "name": "entry-typecheck",
+      "command": [
+        "/home/factory-user/repos/finnor-z-toolchains/node22/node_modules/node/bin/node",
+        "/home/factory-user/repos/finnor-z3/scope-z/phase-evidence/z3/reconstruction-02/source/finnor-os/node_modules/typescript/bin/tsc",
+        "-p",
+        "/home/factory-user/repos/finnor-z3/scope-z/phase-evidence/z3/reconstruction-02/source/finnor-os/scripts/project-z/z3/tsconfig.entry-check.json",
+        "--incremental",
+        "false"
+      ],
+      "cwd": "/home/factory-user/repos/finnor-z3/scope-z/phase-evidence/z3/reconstruction-02/source/finnor-os",
+      "exitCode": 0,
+      "signal": null,
+      "spawnError": null,
+      "wallMs": 40019,
+      "logSha256": "75a11da44c802486bc6f65640aa48a730f0f684c5c07a42ba3cd1735eb3fb070"
+    },
+    {
+      "name": "frontend-build",
+      "command": [
+        "npm",
+        "run",
+        "build"
+      ],
+      "cwd": "/home/factory-user/repos/finnor-z3/scope-z/phase-evidence/z3/reconstruction-02/source",
+      "exitCode": 1,
+      "signal": null,
+      "spawnError": null,
+      "wallMs": 15346,
+      "logSha256": "f1734df99c97c66df264cbdaf24ff983c9b2741b24cff00a7b5f3170bce51f50"
+    },
+    {
+      "name": "backend-build",
+      "command": [
+        "npm",
+        "run",
+        "build",
+        "--workspace",
+        "@finnor/api"
+      ],
+      "cwd": "/home/factory-user/repos/finnor-z3/scope-z/phase-evidence/z3/reconstruction-02/source/finnor-os",
+      "exitCode": 0,
+      "signal": null,
+      "spawnError": null,
+      "wallMs": 185573,
+      "logSha256": "aa65153e13350fc4ae2893deb5f3cbe3429577179a35767f84dcbda8c0e97e2f"
+    },
+    {
+      "name": "cli-build",
+      "command": [
+        "/home/factory-user/repos/finnor-z3/scope-z/phase-evidence/z3/reconstruction-02/source/finnor-os/node_modules/.bin/esbuild",
+        "scripts/project-z/z3/cli.mts",
+        "--bundle",
+        "--platform=node",
+        "--format=esm",
+        "--outfile=/home/factory-user/repos/finnor-z3/scope-z/phase-evidence/z3/install-01/cli.mjs"
+      ],
+      "cwd": "/home/factory-user/repos/finnor-z3/scope-z/phase-evidence/z3/reconstruction-02/source/finnor-os",
+      "exitCode": 0,
+      "signal": null,
+      "spawnError": null,
+      "wallMs": 15,
+      "logSha256": "98ff3099e90b010d18f227d02006477e3a761737081f8c2747251bc45c40c310"
+    },
+    {
+      "name": "public-run",
+      "command": [
+        "/usr/bin/python3.12",
+        "/home/factory-user/repos/finnor-z3/scope-z/phase-evidence/z3/reconstruction-02/source/finnor-os/scripts/project-z/z3/finite-e2e.py",
+        "--cli",
+        "/home/factory-user/repos/finnor-z3/scope-z/phase-evidence/z3/install-01/cli.mjs",
+        "--output",
+        "/home/factory-user/repos/finnor-z3/scope-z/phase-evidence/z3/install-01/public"
+      ],
+      "cwd": "/home/factory-user/repos/finnor-z3/scope-z/phase-evidence/z3/reconstruction-02/source",
+      "exitCode": 0,
+      "signal": null,
+      "spawnError": null,
+      "wallMs": 9453,
+      "logSha256": "207ca9ca8ba357480f590354ea8ee5e8e1429d9d1dd7a29e71d39c95f0e3eda4"
+    },
+    {
+      "name": "boundary-run",
+      "command": [
+        "/home/factory-user/repos/finnor-z-toolchains/node22/node_modules/node/bin/node",
+        "--import",
+        "/home/factory-user/repos/finnor-z3/scope-z/phase-evidence/z3/reconstruction-02/source/finnor-os/node_modules/tsx/dist/loader.mjs",
+        "/home/factory-user/repos/finnor-z3/scope-z/phase-evidence/z3/reconstruction-02/source/finnor-os/scripts/project-z/z3/native-boundary-e2e.mts",
+        "--cli=/home/factory-user/repos/finnor-z3/scope-z/phase-evidence/z3/install-01/cli.mjs",
+        "--output=/home/factory-user/repos/finnor-z3/scope-z/phase-evidence/z3/install-01/boundary"
+      ],
+      "cwd": "/home/factory-user/repos/finnor-z3/scope-z/phase-evidence/z3/reconstruction-02/source/finnor-os",
+      "exitCode": 1,
+      "signal": null,
+      "spawnError": null,
+      "wallMs": 1813,
+      "logSha256": "78e8a4b44685ee245289267134a98e98450b46fd5b30ab57c39e89f852ebe2b4"
+    }
+  ],
+  "assets": {
+    "producer": {
+      "path": "/home/factory-user/repos/finnor-z3/scope-z/phase-evidence/z3/install-01/cli.mjs",
+      "sha256": "22dd09738da29fe0ab4a0d9ab37b5461e546a3dd3dcdad6bd806e8d2542d5984"
+    },
+    "checker": {
+      "path": "/home/factory-user/repos/finnor-z3/scope-z/phase-evidence/z3/reconstruction-02/source/finnor-os/packages/epistemic-runtime/src/project-z/z3-viability/checker.py",
+      "sha256": "b71c0bec3be5eb1e6218e4b04a26bf07918a3f781e5712800a8ff061497e837e"
+    },
+    "node": {
+      "path": "/home/factory-user/repos/finnor-z-toolchains/node22/node_modules/node/bin/node",
+      "sha256": "94efd062ed066c1a0b332e18249859c905e920eeada5df55d24c99b919629a90"
+    },
+    "python": {
+      "path": "/usr/bin/python3.12",
+      "sha256": "e50d468e8b0adfb05733f5b87b3cff34829c4a8c1aea50c865aa8bdfe4bb150f"
+    },
+    "nativeBinding": {
+      "path": "/home/factory-user/repos/finnor-z3/scope-z/phase-evidence/z3/reconstruction-02/source/finnor-os/node_modules/fs-ext/build/Release/fs_ext.node",
+      "sha256": "d2cdc182689fc659e1f27e050eb9954d0e550edbe6e3ceb973018430122225f8"
+    }
+  },
+  "buildIds": {
+    ".next/BUILD_ID": null,
+    "finnor-os/apps/api/.next/BUILD_ID": "WHID6M_s_4IE9wdbQ0rEI"
+  },
+  "modules": [
+    {
+      "name": "next",
+      "from": "/home/factory-user/repos/finnor-z3/scope-z/phase-evidence/z3/reconstruction-02/source",
+      "path": "/home/factory-user/repos/finnor-z3/scope-z/phase-evidence/z3/reconstruction-02/source/node_modules/next/dist/server/next.js",
+      "sha256": "619bdfe17ccc471d1767114176a45266c86601d4d5d24a9d9194aa1f73b5afe1",
+      "local": true
+    },
+    {
+      "name": "react",
+      "from": "/home/factory-user/repos/finnor-z3/scope-z/phase-evidence/z3/reconstruction-02/source",
+      "path": "/home/factory-user/repos/finnor-z3/scope-z/phase-evidence/z3/reconstruction-02/source/node_modules/react/index.js",
+      "sha256": "60caffdecbdc5db3bc4ec4e83df9488345ccb271d07533b9210bf5750918d97e",
+      "local": true
+    },
+    {
+      "name": "typescript",
+      "from": "/home/factory-user/repos/finnor-z3/scope-z/phase-evidence/z3/reconstruction-02/source",
+      "path": "/home/factory-user/repos/finnor-z3/scope-z/phase-evidence/z3/reconstruction-02/source/node_modules/typescript/lib/typescript.js",
+      "sha256": "3ae902c92cc44dace175c0e69e13a4b0899f6983c6121d76b9ab8dd5795e7675",
+      "local": true
+    },
+    {
+      "name": "tsx",
+      "from": "/home/factory-user/repos/finnor-z3/scope-z/phase-evidence/z3/reconstruction-02/source/finnor-os",
+      "path": "/home/factory-user/repos/finnor-z3/scope-z/phase-evidence/z3/reconstruction-02/source/finnor-os/node_modules/tsx/dist/loader.mjs",
+      "sha256": "7e3dba3b9b862a5fa1c741d54fc921ee8b17fc7a4d0087fa64e42a32142cf03d",
+      "local": true
+    },
+    {
+      "name": "esbuild",
+      "from": "/home/factory-user/repos/finnor-z3/scope-z/phase-evidence/z3/reconstruction-02/source/finnor-os",
+      "path": "/home/factory-user/repos/finnor-z3/scope-z/phase-evidence/z3/reconstruction-02/source/finnor-os/node_modules/esbuild/lib/main.js",
+      "sha256": "0d1241812c443111d39475dfc66836003e9ef8b87e54d990dd67df29d20010e1",
+      "local": true
+    },
+    {
+      "name": "fs-ext",
+      "from": "/home/factory-user/repos/finnor-z3/scope-z/phase-evidence/z3/reconstruction-02/source/finnor-os",
+      "path": "/home/factory-user/repos/finnor-z3/scope-z/phase-evidence/z3/reconstruction-02/source/finnor-os/node_modules/fs-ext/fs-ext.js",
+      "sha256": "04372a7399c9abb187abc43ccb29ccae1a0692b7177cfff226f45acbda59dda3",
+      "local": true
+    },
+    {
+      "name": "pg",
+      "from": "/home/factory-user/repos/finnor-z3/scope-z/phase-evidence/z3/reconstruction-02/source/finnor-os",
+      "path": "/home/factory-user/repos/finnor-z3/scope-z/phase-evidence/z3/reconstruction-02/source/finnor-os/node_modules/pg/lib/index.js",
+      "sha256": "3fad6e6d3d976edbabe0cbc9e1d39f4340bcb719bbbb186a0d3a24f3dbd4a94c",
+      "local": true
+    },
+    {
+      "name": "typescript",
+      "from": "/home/factory-user/repos/finnor-z3/scope-z/phase-evidence/z3/reconstruction-02/source/finnor-os",
+      "path": "/home/factory-user/repos/finnor-z3/scope-z/phase-evidence/z3/reconstruction-02/source/finnor-os/node_modules/typescript/lib/typescript.js",
+      "sha256": "3ae902c92cc44dace175c0e69e13a4b0899f6983c6121d76b9ab8dd5795e7675",
+      "local": true
+    }
+  ],
+  "generatedSourceDeltas": [
+    {
+      "path": "finnor-os/packages/epistemic-runtime/src/strategic-response/source-manifest.generated.ts",
+      "beforeSha256": "de9f617993d4f4e1674230596d7568c6f13f607167625ae54e8b3ee00e7f1099",
+      "afterSha256": "54576e8d39353de894106df3e34efb997e6816560ec430cd69f92009fd253c97",
+      "permittedGeneratedPath": true
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/enterprise-applications/source-manifest.generated.ts",
+      "beforeSha256": "4bdb12ee04db3d711bdfd336ef8c38f91364c3b09adf86170030dfb1ebb723f0",
+      "afterSha256": "2a59e99b64069b6116bc63cb24fea159d22e6c5eb5e9e447680f19a32af01570",
+      "permittedGeneratedPath": true
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/policy-learning/source-manifest.generated.ts",
+      "beforeSha256": "6d3731a5ac533a03014e6d083332415563009768f4497e8c37c5dddbfd7fd439",
+      "afterSha256": "e3a2b851c682c5e40d7851780d8fcc32234da181e13ae4d45c1aec71c640c1c3",
+      "permittedGeneratedPath": true
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/system-identification/source-manifest.generated.ts",
+      "beforeSha256": "07b0ea6937c0038d862834c1d2eb87423c6d8464124f15ae83ad363e44daee28",
+      "afterSha256": "4e1d1ff93024fab994a106ac648a63dd8875464152626d460cbe0b48d33f5a75",
+      "permittedGeneratedPath": true
+    }
+  ],
+  "postbuildSourceInventorySha256": "fa3f5e04b69441ef65c0a936d4c480c7e1b1dbf0c4c5dbdf65532c16a16b1191",
+  "lockfiles": {
+    "root": "af1d36679eb4123ab5f2d9f4668e82e1defc952a45777a74d3dff30c6d16f117",
+    "backend": "4116b2a7e02a28b8e49baa4a24a378e5170c5dc66d285075c8cf50bf11b9faed"
+  },
+  "dependenciesBorrowed": false,
+  "databaseOrAuthProvisioned": false,
+  "listenerStarted": false,
+  "sourceNative": "NOT_RUN",
+  "installedNative": "NOT_RUN",
+  "protectedAdmission": "NOT_RUN",
+  "financialQualification": "NOT_RUN",
+  "money": null
+}

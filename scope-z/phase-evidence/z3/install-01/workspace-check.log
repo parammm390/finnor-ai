@@ -1,0 +1,6 @@
+
+> centropy@0.1.0 workspace:check
+> node scripts/generate-workspace-contract.mjs --check
+
+
+

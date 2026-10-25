@@ -1,0 +1,131 @@
+{"generatorSha256":"5c30228f508009f037e7b045d41f1447a2d7b6f23d4825b878436d9e60fa2cb9"}
+node:internal/errors:983
+  const err = new Error(message);
+              ^
+
+Error: Command failed: /home/factory-user/repos/finnor-z-toolchains/node22/node_modules/node/bin/node --max-old-space-size=1024 /tmp/z3-cat-gen/scripts/centropy/read-canonical-planner.mjs
+node:internal/modules/cjs/loader:1430
+  const err = new Error(message);
+              ^
+
+Error: Cannot find module 'tsx/cjs/api'
+Require stack:
+- /tmp/z3-cat-gen/finnor-os/package.json
+    at Function._resolveFilename (node:internal/modules/cjs/loader:1430:15)
+    at defaultResolveImpl (node:internal/modules/cjs/loader:1040:19)
+    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1045:22)
+    at Function._load (node:internal/modules/cjs/loader:1216:25)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:254:19)
+    at Module.require (node:internal/modules/cjs/loader:1527:12)
+    at require (node:internal/modules/helpers:147:16)
+    at file:///tmp/z3-cat-gen/scripts/centropy/read-canonical-planner.mjs:30:1
+    at ModuleJob.run (node:internal/modules/esm/module_job:343:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:681:26) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [ '/tmp/z3-cat-gen/finnor-os/package.json' ]
+}
+
+Node.js v22.23.4
+
+    at genericNodeError (node:internal/errors:983:15)
+    at wrappedFn (node:internal/errors:537:14)
+    at checkExecSyncError (node:child_process:916:11)
+    at execFileSync (node:child_process:952:15)
+    at readCanonicalPlanner (file:///tmp/z3-cat-gen/scripts/centropy/canonical-planner.mjs:9:18)
+    at registryEntries (file:///tmp/z3-cat-gen/scripts/centropy/generate-capability-manifest.mjs:337:20)
+    at file:///tmp/z3-cat-gen/scripts/centropy/generate-capability-manifest.mjs:362:37
+    at ModuleJob.run (node:internal/modules/esm/module_job:343:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:681:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5) {
+  status: 1,
+  signal: null,
+  output: [
+    null,
+    '',
+    'node:internal/modules/cjs/loader:1430\n' +
+      '  const err = new Error(message);\n' +
+      '              ^\n' +
+      '\n' +
+      "Error: Cannot find module 'tsx/cjs/api'\n" +
+      'Require stack:\n' +
+      '- /tmp/z3-cat-gen/finnor-os/package.json\n' +
+      '    at Function._resolveFilename (node:internal/modules/cjs/loader:1430:15)\n' +
+      '    at defaultResolveImpl (node:internal/modules/cjs/loader:1040:19)\n' +
+      '    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1045:22)\n' +
+      '    at Function._load (node:internal/modules/cjs/loader:1216:25)\n' +
+      '    at wrapModuleLoad (node:internal/modules/cjs/loader:254:19)\n' +
+      '    at Module.require (node:internal/modules/cjs/loader:1527:12)\n' +
+      '    at require (node:internal/modules/helpers:147:16)\n' +
+      '    at file:///tmp/z3-cat-gen/scripts/centropy/read-canonical-planner.mjs:30:1\n' +
+      '    at ModuleJob.run (node:internal/modules/esm/module_job:343:25)\n' +
+      '    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:681:26) {\n' +
+      "  code: 'MODULE_NOT_FOUND',\n" +
+      "  requireStack: [ '/tmp/z3-cat-gen/finnor-os/package.json' ]\n" +
+      '}\n' +
+      '\n' +
+      'Node.js v22.23.4\n'
+  ],
+  pid: 201963,
+  stdout: '',
+  stderr: 'node:internal/modules/cjs/loader:1430\n' +
+    '  const err = new Error(message);\n' +
+    '              ^\n' +
+    '\n' +
+    "Error: Cannot find module 'tsx/cjs/api'\n" +
+    'Require stack:\n' +
+    '- /tmp/z3-cat-gen/finnor-os/package.json\n' +
+    '    at Function._resolveFilename (node:internal/modules/cjs/loader:1430:15)\n' +
+    '    at defaultResolveImpl (node:internal/modules/cjs/loader:1040:19)\n' +
+    '    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1045:22)\n' +
+    '    at Function._load (node:internal/modules/cjs/loader:1216:25)\n' +
+    '    at wrapModuleLoad (node:internal/modules/cjs/loader:254:19)\n' +
+    '    at Module.require (node:internal/modules/cjs/loader:1527:12)\n' +
+    '    at require (node:internal/modules/helpers:147:16)\n' +
+    '    at file:///tmp/z3-cat-gen/scripts/centropy/read-canonical-planner.mjs:30:1\n' +
+    '    at ModuleJob.run (node:internal/modules/esm/module_job:343:25)\n' +
+    '    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:681:26) {\n' +
+    "  code: 'MODULE_NOT_FOUND',\n" +
+    "  requireStack: [ '/tmp/z3-cat-gen/finnor-os/package.json' ]\n" +
+    '}\n' +
+    '\n' +
+    'Node.js v22.23.4\n'
+}
+
+Node.js v22.23.4
+=== attempt 2 (tsx module linked) ===
+CENTROPY capabilities: 582 HTTP route operations, 77 planner operations
+node:internal/modules/cjs/loader:1430
+  const err = new Error(message);
+              ^
+
+Error: Cannot find module 'typescript'
+Require stack:
+- /tmp/z3-cat-gen/package.json
+    at Function._resolveFilename (node:internal/modules/cjs/loader:1430:15)
+    at defaultResolveImpl (node:internal/modules/cjs/loader:1040:19)
+    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1045:22)
+    at Function._load (node:internal/modules/cjs/loader:1216:25)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:254:19)
+    at Module.require (node:internal/modules/cjs/loader:1527:12)
+    at require (node:internal/modules/helpers:147:16)
+    at file:///tmp/z3-cat-gen/scripts/centropy/audit-capability-coverage.mjs:10:53
+    at ModuleJob.run (node:internal/modules/esm/module_job:343:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:681:26) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [ '/tmp/z3-cat-gen/package.json' ]
+}
+
+Node.js v22.23.4
+=== attempt 3 (root typescript linked) ===
+CENTROPY capabilities: 582 HTTP route operations, 77 planner operations
+file:///tmp/z3-cat-gen/scripts/centropy/audit-capability-coverage.mjs:225
+if (deniedLiteralCalls.length) throw new Error(`Mounted frontend calls denied by the product route catalogue: ${JSON.stringify(deniedLiteralCalls)}`)
+                                     ^
+
+Error: Mounted frontend calls denied by the product route catalogue: [{"file":"src/components/centropy/canvas/SourceDiagnostics.tsx","route":"integrations/microsoft-graph/coverage","method":"GET","line":46,"binding":"Canonical API import and finite TypeScript expression; source evidence only"}]
+    at file:///tmp/z3-cat-gen/scripts/centropy/audit-capability-coverage.mjs:225:38
+    at ModuleJob.run (node:internal/modules/esm/module_job:343:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:681:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)
+
+Node.js v22.23.4

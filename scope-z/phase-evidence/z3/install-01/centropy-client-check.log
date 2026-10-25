@@ -1,0 +1,7 @@
+
+> centropy@0.1.0 centropy:client:check
+> node scripts/centropy/generate-openapi-client.mjs --check
+
+CENTROPY OpenAPI client: 466a0147bd8fc949b0ee4b438591c5a82891127a0471a85b8e2fef31bcf2791d
+
+
