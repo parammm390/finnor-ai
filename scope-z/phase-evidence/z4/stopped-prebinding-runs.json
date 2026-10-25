@@ -1,0 +1,60 @@
+{
+  "reason": "Unit-only metadata can preserve the old constraint image; runs stopped for semantic-binding correction",
+  "processes": [
+    {
+      "pid": 172208,
+      "signal": "SIGTERM",
+      "parent": 172207,
+      "command": "/home/factory-user/repos/finnor-z4/finnor-os/packages/epistemic-runtime/native/z4-execution-proof/bin/z4-proof prove "
+    },
+    {
+      "pid": 172207,
+      "signal": "SIGTERM",
+      "parent": 172046,
+      "command": "/usr/bin/python3 /home/factory-user/repos/finnor-z4/finnor-os/packages/epistemic-runtime/native/z4-execution-proof/supervise.py prove 899865 2147483648 300 "
+    },
+    {
+      "pid": 172053,
+      "signal": "SIGTERM",
+      "parent": 171729,
+      "command": "flock /home/factory-user/repos/finnor-z-shared-heavy.lock /home/factory-user/repos/finnor-z-toolchains/node22/node_modules/.bin/node --import tsx /home/factory-user/repos/finnor-z4/finnor-os/scripts/project-z/z4/scaling.mts --steps 1 --observation 1 --evidence /home/factory-user/repos/finnor-z4/scope-z/phase-evidence/z4/scaling-01/t1-o1 "
+    },
+    {
+      "pid": 172046,
+      "signal": "SIGTERM",
+      "parent": 171835,
+      "command": "/home/factory-user/repos/finnor-z-toolchains/node22/node_modules/.bin/node --import tsx /home/factory-user/repos/finnor-z4/finnor-os/scripts/project-z/z4/public-sweep.mts --family quadratic --evidence /home/factory-user/repos/finnor-z4/scope-z/phase-evidence/z4/public-sweep-01/quadratic "
+    },
+    {
+      "pid": 171835,
+      "signal": "SIGTERM",
+      "parent": 169053,
+      "command": "flock /home/factory-user/repos/finnor-z-shared-heavy.lock /home/factory-user/repos/finnor-z-toolchains/node22/node_modules/.bin/node --import tsx /home/factory-user/repos/finnor-z4/finnor-os/scripts/project-z/z4/public-sweep.mts --family quadratic --evidence /home/factory-user/repos/finnor-z4/scope-z/phase-evidence/z4/public-sweep-01/quadratic "
+    },
+    {
+      "pid": 171730,
+      "signal": "SIGTERM",
+      "parent": 171729,
+      "command": "bash -c trap \"\" TERM; read -r _ <&3; kill -0 \"$1\" 2>/dev/null && { kill -TERM 0; sleep 1; kill -KILL 0; } factory-execute-watcher 171729 "
+    },
+    {
+      "pid": 171729,
+      "signal": "SIGTERM",
+      "parent": 147338,
+      "command": "python3 /home/factory-user/repos/finnor-z4/finnor-os/scripts/project-z/z4/run-scaling.py --repository /home/factory-user/repos/finnor-z4 --node /home/factory-user/repos/finnor-z-toolchains/node22/node_modules/.bin/node --evidence /home/factory-user/repos/finnor-z4/scope-z/phase-evidence/z4/scaling-01 "
+    },
+    {
+      "pid": 169054,
+      "signal": "SIGTERM",
+      "parent": 169053,
+      "command": "bash -c trap \"\" TERM; read -r _ <&3; kill -0 \"$1\" 2>/dev/null && { kill -TERM 0; sleep 1; kill -KILL 0; } factory-execute-watcher 169053 "
+    },
+    {
+      "pid": 169053,
+      "signal": "SIGTERM",
+      "parent": 147338,
+      "command": "python3 /home/factory-user/repos/finnor-z4/finnor-os/scripts/project-z/z4/run-public.py --repository /home/factory-user/repos/finnor-z4 --node /home/factory-user/repos/finnor-z-toolchains/node22/node_modules/.bin/node --evidence /home/factory-user/repos/finnor-z4/scope-z/phase-evidence/z4/public-sweep-01 "
+    }
+  ],
+  "nativeQualification": false
+}

@@ -1,0 +1,4 @@
+# Agent-created reconstruction payloads are declared by retained manifests.
+# Keep original command logs, identities, failures and compact evidence.
+reconstruction-*/target/
+reconstruction-*/vendor*/vendor/

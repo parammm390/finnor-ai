@@ -1,0 +1,332 @@
+{
+  "schema": "finnor.z4.shared-requests.v1",
+  "baseCommit": "9f3edfd3b4c6758832c53139da0773218062191e",
+  "status": "REQUESTED_NOT_APPLIED",
+  "liveSharedFilesWritten": 0,
+  "migrationExecuted": false,
+  "requests": [
+    {
+      "id": "SP-01",
+      "path": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
+      "preimageSha256": "0dec46803a98af52700832e83d01e138d643558a0717afbd185839810c6da9b8",
+      "requiresAbsent": false,
+      "postimageSha256": "81f7fa0965cce091e749e68803a42378c4e441a1d66a5cff62aa4c8a18b5bff1",
+      "patch": "SP-01.patch",
+      "patchSha256": "0789fe2cbbd627ce73d27c7875bf73a66d0bebe09cf50f0e988f398f5ca788a0",
+      "rationale": [
+        "Use the existing authenticated company-brain route and literal registry.",
+        "Authenticate before bounded body parsing and preserve canonical response/error handling."
+      ]
+    },
+    {
+      "id": "SP-02",
+      "path": "finnor-os/apps/api/app/api/queries/route.ts",
+      "preimageSha256": "8bbfeab57f78a6e7abf3007e20175b51ee478d1af458221fa0a0f7a3f027b99c",
+      "requiresAbsent": false,
+      "postimageSha256": "93ae88759e97d5649885c11ff4007fc114c85b73fd3f9c1607370cd82a6f1966",
+      "patch": "SP-02.patch",
+      "patchSha256": "c357a43e5683bd5b3ced66282d4b2133b5e4725eca7c25590211f153674479d0",
+      "rationale": [
+        "Never expose a lowered native-only invocation through the public query facade."
+      ]
+    },
+    {
+      "id": "SP-03",
+      "path": "finnor-os/apps/api/next.config.mjs",
+      "preimageSha256": "e862207e53d1e67ebf3df8e8f6c29304a5c60179600cb5c671239e09414cf189",
+      "requiresAbsent": false,
+      "postimageSha256": "bb3e0cb2fe2bce49dab1f5ae7b9a8630e968a022557008d6cf65fc2c8e2ef994",
+      "patch": "SP-03.patch",
+      "patchSha256": "a61ea470adcbc82869413fcd2e8e108f8b1d0f16278a9dbd520828ff03a44085",
+      "rationale": [
+        "Exclude build trees, caches and toolchains from the installed API artifact.",
+        "Trace required source/native assets, never Cargo target/cache or hidden toolchains."
+      ]
+    },
+    {
+      "id": "SP-04",
+      "path": "finnor-os/apps/worker/src/index.ts",
+      "preimageSha256": "5cffd9239ccd0bcb7abd4f301cc52fe28ab2adc2d33e218248524290f7865cb9",
+      "requiresAbsent": false,
+      "postimageSha256": "fcdb60c736a74e41060cc3a1b46ef7cbfe42f03b57f6f7ee7d57ef56b06e3a1d",
+      "patch": "SP-04.patch",
+      "patchSha256": "f17045376d0072f6bcc2f2dd6885fe827cafc112f3d96916eaac9fb6d67f7d1a",
+      "rationale": [
+        "Import the concrete original-Work worker, not an optional port.",
+        "Use the shared queue claim, lease, fence and production contract."
+      ]
+    },
+    {
+      "id": "SP-05",
+      "path": "finnor-os/apps/worker/src/queue.ts",
+      "preimageSha256": "d7b9bcacad8f78ed92343e57ed31df8fd5bfcbff149cbbbb29c62361c8bd2082",
+      "requiresAbsent": false,
+      "postimageSha256": "9edd80b2e18f82777af63d98209731f558b07a0cb4d12fe83664b9eeb69b4fc7",
+      "patch": "SP-05.patch",
+      "patchSha256": "b6cc604f2a2e026d4e7bbff0a2316ff921c85383fecd0bc744374701e392b076",
+      "rationale": [
+        "Expose an exact scoped-claim capability marker so replay fails before DB use if this seam is absent.",
+        "Optional narrowing only: an authorized replay worker can claim/recover one original job, never an entire class.",
+        "A scoped replay never quarantines another tenant/job's retired work.",
+        "Lease-expiry recovery remains the canonical queue transition, restricted to the same original job.",
+        "Narrow the inner eligible candidate before LIMIT. Preserve the unscoped production/query-plan SQL unchanged."
+      ]
+    },
+    {
+      "id": "SP-06",
+      "path": "finnor-os/packages/db/compute-contract.ts",
+      "preimageSha256": "d8783ff65e9ed0489a93077e2766ae5f395c32eb1fecda163c5d941a23e20814",
+      "requiresAbsent": false,
+      "postimageSha256": "646f89dca1712e03ff681cb511337d89d4275e0adfcbf0b888b3181c868f7ea4",
+      "patch": "SP-06.patch",
+      "patchSha256": "7ce6e4f79492f4f3a5a9f08d5e2d6d3b2c3219eb6bc32dd38b4ccc8b4b198d65",
+      "rationale": [
+        "Register the owned fenced heavy job in the sole compute contract."
+      ]
+    },
+    {
+      "id": "SP-07",
+      "path": "finnor-os/packages/db/migrations/postz_z4_execution_proof.sql",
+      "preimageSha256": null,
+      "requiresAbsent": true,
+      "postimageSha256": "750bb4bb02c15b24009d550739676d818e0726851cfaf6565534d0cac4fabf48",
+      "patch": "SP-07.patch",
+      "patchSha256": "93d3887ba8ca092ab1969b3b61c1a60f752a963e2c08d6c5fe41f4ee4a25f443",
+      "rationale": [
+        "Additive policy and compositional query-history migration, never executed by the lane."
+      ]
+    },
+    {
+      "id": "SP-08",
+      "path": "finnor-os/packages/db/schema.ts",
+      "preimageSha256": "dba2cd15f6e166d6efdb632f8428008fa995bc3ad900bf492c974a411daffbfc",
+      "requiresAbsent": false,
+      "postimageSha256": "4cd0b80df65de37001c362105b216ae3a82c311f4e47d9d01bce802c80bff9b6",
+      "patch": "SP-08.patch",
+      "patchSha256": "b8559a1e49d6019de120b3684a0d6be952929ffe260b86cbad0c02bc96120289",
+      "rationale": [
+        "Keep the Drizzle query-execution intent type aligned with the additive migration."
+      ]
+    },
+    {
+      "id": "SP-09",
+      "path": "finnor-os/packages/orchestration/src/fast-read-lane.ts",
+      "preimageSha256": "401e5462dee247c4c0928eafc677a48e90fa720e5ac632cd29b605f5f7f2f298",
+      "requiresAbsent": false,
+      "postimageSha256": "88b1ba7f378a523739d10488a62efd2c2a9a45bc5b16663047672389ecc99947",
+      "patch": "SP-09.patch",
+      "patchSha256": "b87b086de7e5b927202eb590bbbd2f10ca433778e75c519c63ed13671a6f9db8",
+      "rationale": [
+        "Deterministic planner validation admits only the exact two-field Z4 query."
+      ]
+    },
+    {
+      "id": "SP-10",
+      "path": "finnor-os/packages/orchestration/src/objective-loop.ts",
+      "preimageSha256": "1157ae1a2515f09267ccb430a309ff6194fed82d08e5644f77b98aa06c527838",
+      "requiresAbsent": false,
+      "postimageSha256": "3f0a8595eb6da4a588ed75531d3fb617688cbbbb7a8e8b0eebafb8b5094bc5ce",
+      "patch": "SP-10.patch",
+      "patchSha256": "dd278f55ec419bb63122ac8b12505aa0d919b51b2d24997227f4cd03c5795b70",
+      "rationale": [
+        "Inspect the selected proof objective, never substitute deal readiness.",
+        "Keep principal, Work and current input through decision-query execution.",
+        "Concrete fenced wake checks original plan, all three criteria and exact durable native acknowledgement."
+      ]
+    },
+    {
+      "id": "SP-11",
+      "path": "finnor-os/packages/orchestration/src/objective-success.ts",
+      "preimageSha256": "f463ac52c331902472c96b4bb85632afc60b22380c0290c8526fa344da1e6eaf",
+      "requiresAbsent": false,
+      "postimageSha256": "17806d535b49418f016bd52821ec62c85cda39c3a5f6e235e3aa8c7d9d86437f",
+      "patch": "SP-11.patch",
+      "patchSha256": "691a27b6702eb2e50f0bdd875623a4a340db9b4e334e5f1ba85e9370a9ed52af",
+      "rationale": [
+        "Reconstitute the real persisted principal for objective observation.",
+        "Pass the exact current Work input to canonical success verification."
+      ]
+    },
+    {
+      "id": "SP-12",
+      "path": "finnor-os/packages/orchestration/src/operational-query-runtime.ts",
+      "preimageSha256": "a932c6c75162aad6fa88cf8fd964b6fa65319f0d35673e68594e8c5d7ecab3a6",
+      "requiresAbsent": false,
+      "postimageSha256": "5a2086d26e17ead25bc11c7b7de2b5724672aeb418be6d1b1ad561e68cd6d179",
+      "patch": "SP-12.patch",
+      "patchSha256": "fea26d9400e48d6d4e1cce03762c657e3bd5600457ff20b1f6db2d2e108c14a2",
+      "rationale": [
+        "Wire the concrete existing-owner completion reader.",
+        "Reuse the canonical intent constant.",
+        "Limit Z4 discovery to the active private-equity vertical.",
+        "Dispatch through the native tenant/principal/Work envelope."
+      ]
+    },
+    {
+      "id": "SP-13",
+      "path": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+      "preimageSha256": "d41f4be6b7c38c1fee8556c6a8e1513b4f2350f31f87d582a9d44ca7c5c2ccaf",
+      "requiresAbsent": false,
+      "postimageSha256": "1baba1bbe9794d1c4e0edbd6e76837f36407c489744e2082ad14dea00921e202",
+      "patch": "SP-13.patch",
+      "patchSha256": "2e6a9f9a92d6a0bc0de16bfe9dce454401b7428d78ebff10b1eee3d3a10bfbb9",
+      "rationale": [
+        "Require original Work grounding for the registered planner query."
+      ]
+    },
+    {
+      "id": "SP-14",
+      "path": "finnor-os/packages/orchestration/src/project-z/z0-convergence/semantics.ts",
+      "preimageSha256": "45b56093dc1f13b78d3f9910364cae192a5cce530e4028a13071bd6dd4d9e389",
+      "requiresAbsent": false,
+      "postimageSha256": "32ee5a1fb870be02538b0ffd31f2074efaa091eb7faf2e0e3ab6a5bb166d61a1",
+      "patch": "SP-14.patch",
+      "patchSha256": "23bf266982ff17fdc77c33653cfb203451883be653a6dde2d60ff0d2948fc65c",
+      "rationale": [
+        "Coordinator/peer-owned proposal only: preserve original-Work convergence grounding.",
+        "Include Z4 in the same original-Work observer predicate, not an alternate lifecycle."
+      ]
+    },
+    {
+      "id": "SP-15",
+      "path": "finnor-os/packages/private-equity/src/enterprise-control.ts",
+      "preimageSha256": "aa33dcf657cdcb4ef85a059b51b52b646a93a11aabd9801e2436511b22d7ce43",
+      "requiresAbsent": false,
+      "postimageSha256": "3b2d0028303a83294332a57b6dd1776a43b46b5646300ab2aa1df1155a2f1862",
+      "patch": "SP-15.patch",
+      "patchSha256": "b8809b587fb432a5ae8b85c7678efb5ed20c7277b46976ec980e46e3334cab16",
+      "rationale": [
+        "Extend only the numeric analytical S4 choice, not the R3 protocol.",
+        "Verify exact S4 policy, decision, allocation and measurements before choice.",
+        "Require the real S4 boundary after its immutable choice and currentness check.",
+        "Retain guard provenance in native S4 prepared experience."
+      ]
+    },
+    {
+      "id": "SP-16",
+      "path": "finnor-os/packages/private-equity/src/enterprise-interventions.ts",
+      "preimageSha256": "2ade11d990db0eed59e81eefe206268d04a3f33fec73f90a36f2aaae390b41a0",
+      "requiresAbsent": false,
+      "postimageSha256": "b2bc29654047a06aa36a11d1e38d37af3871f26d19e6d05134b102ba0ce670e2",
+      "patch": "SP-16.patch",
+      "patchSha256": "846d8cfc8e42fa232cb68c58a03dd7cf20e0833afa6bfd1717851cb43025d817",
+      "rationale": [
+        "Add an optional exact invocation guard, preserving ordinary callers.",
+        "S3 independently verifies the original relation before native computation.",
+        "Persist the real output and acknowledge the same exact input after use.",
+        "Durable S3 owner readback recomputes the native five-field digest and rights."
+      ]
+    },
+    {
+      "id": "SP-17",
+      "path": "finnor-os/packages/shared-types/src/operational-queries.ts",
+      "preimageSha256": "ebd417c6b3eceaf1be87a444f9e0aff8cca2291d1b63f34793f709291a243662",
+      "requiresAbsent": false,
+      "postimageSha256": "10c30217cbab27beb83fa134f411725c8e6e40fe0e94d76b8d5310d686d9299c",
+      "patch": "SP-17.patch",
+      "patchSha256": "32b9e2dbc52717b459da31439967fd4cb7322e2bd66f3e68f3d20c1c0cd47e97",
+      "rationale": [
+        "Extend the canonical query universe, not a parallel query API.",
+        "Expose the exact Z4 canonical intent.",
+        "Type the canonical original-Work request.",
+        "Type the completion result envelope.",
+        "Include the result in the existing result union.",
+        "Preserve request/result type correspondence."
+      ]
+    },
+    {
+      "id": "SP-18",
+      "path": "finnor-os/scripts/bundle-migrations.ts",
+      "preimageSha256": "4c6ff1914d09dea2af02cf583c3c88c54b33f2924a82f054c5aff5382bf8248f",
+      "requiresAbsent": false,
+      "postimageSha256": "f44c9d04bde18fefb5bfe8d40211ca4a9cde78102c767c8f79553357a1a697a7",
+      "patch": "SP-18.patch",
+      "patchSha256": "198b20fd787a55202741214a017129acfb0dc88aef630e056740db9f680941c8",
+      "rationale": [
+        "Add only the exact namespaced migration to the shared bundler allowlist."
+      ]
+    },
+    {
+      "id": "SP-19",
+      "path": "finnor-os/scripts/generate-openapi.ts",
+      "preimageSha256": "18aac0a3c1b94837b2e917fd2b50ec2040ef89da0dde6b5e926773901d21cf9e",
+      "requiresAbsent": false,
+      "postimageSha256": "2e2ac8c565398878ff6b86c3ce6f486e7996407df532028d6f92b5fc1f31e6d3",
+      "patch": "SP-19.patch",
+      "patchSha256": "29524c126d641a04a15890e0b28e81bfc9522d80ccf4e40f1791a1d09a9e848b",
+      "rationale": [
+        "Generate schemas from the exact owned API contracts.",
+        "Include all eight bounded Z4 operation components.",
+        "Document actual queue and refusal statuses without a new endpoint or completion claim."
+      ]
+    },
+    {
+      "id": "SP-20",
+      "path": "finnor-os/scripts/release/run-pe5-water-retirement-certification.ts",
+      "preimageSha256": "90aa8af991cfa65b45fa6607caa7d0c1486e4254146832c71042a35757261c43",
+      "requiresAbsent": false,
+      "postimageSha256": "31aeeb19ad1ee63464f4219fe220d699e914420c58ed900012b733b3c856dfa1",
+      "patch": "SP-20.patch",
+      "patchSha256": "52c473c056038e62f34edd44533e26048f906d7dce3ae3bbf232ab3c7e2fc54a",
+      "rationale": [
+        "Keep the exact existing certification-source denominator aligned; do not execute its DB/DDL path."
+      ]
+    },
+    {
+      "id": "SP-21",
+      "path": "finnor-os/scripts/release/verify-pe-domain-boundary.ts",
+      "preimageSha256": "8650c2c385a49d3d5db991114c9084dfa676640f84888581dc741e0597605589",
+      "requiresAbsent": false,
+      "postimageSha256": "30efd8726acc703aec5a71c329fa1b620dae02ad69023288346115af8c262aba",
+      "patch": "SP-21.patch",
+      "patchSha256": "157d7e39e556ea67ebf8d605a9fd1dd50d0c691d935b654df5baca51383c31fb",
+      "rationale": [
+        "Classify the new exact native query in the existing boundary verifier.",
+        "Retain the full public/native denominator without advertising native intent on /api/queries.",
+        "Add an exact Z4 classification check, preserving every older boundary assertion.",
+        "Update the exact catalogue denominator for one additive intent, not a looser bound."
+      ]
+    },
+    {
+      "id": "SP-22",
+      "path": "scripts/centropy/generate-capability-manifest.mjs",
+      "preimageSha256": "68b98dcc2ca6f4c48a355741e986a7bdb658ed2b8fe14db31aca12ebf6228e49",
+      "requiresAbsent": false,
+      "postimageSha256": "40f7d196070d6b718521353a3d90259bb847bcaa759dea2efa5075ef33a6a905",
+      "patch": "SP-22.patch",
+      "patchSha256": "fd9c7a1ee5a10047aa742db9efb2b8455f6bee8f32dac966163a1f9707c5f192",
+      "rationale": [
+        "Discover the concrete registered operations from their owned registry.",
+        "Read-only metadata, cancellation and budget-consuming audit/use keep explicit classes.",
+        "Invalidate real Work/source/authority surfaces after bounded writes."
+      ]
+    },
+    {
+      "id": "SP-23",
+      "path": "scripts/centropy/generate-human-forms.mjs",
+      "preimageSha256": "fc3224a29a97fd6e9583016d13683dfff1a1ccf8ce107d7bde6b45636ebb8c9a",
+      "requiresAbsent": false,
+      "postimageSha256": "fa87dcb43e6bd42a63e38b7a1dbd5844446f19ec9ad515dae405fd1d2c6fd6fb",
+      "patch": "SP-23.patch",
+      "patchSha256": "a0cad56858a2811c4365b197504c48ccbd262946b6f7331e4a0dac09db08b141",
+      "rationale": [
+        "Use the existing generated human form plane for typed Z4 writes."
+      ]
+    },
+    {
+      "id": "SP-24",
+      "path": "src/components/centropy/world/WorldWorkRecord.tsx",
+      "preimageSha256": "06b7adb4a5ed940105c8af088e649da459dcde6fe0d48e0173896e0e841f6da5",
+      "requiresAbsent": false,
+      "postimageSha256": "d8af2bfbe6399dc6bdf012d1e7197ac943042debc2c6aa4b12d0df763de474bf",
+      "patch": "SP-24.patch",
+      "patchSha256": "c3cc7baa0546973bd296d8ca4f8137fee97374dfd196022cd6f7ac460d033c3b",
+      "rationale": [
+        "Mount the actual owned client panel in the canonical Work record.",
+        "Bind mounted controls to the selected original Work/root; the server validates its current input."
+      ]
+    }
+  ],
+  "combinedPatchSha256": "071eaa51b207b60df1173f571c317eb8bbf6bd3a84580fd6038b6b459a3601df",
+  "generatorSha256": "07e0b19e52297905455fb7d6fad4a238906472233238221b3c91da225be9c98e"
+}
