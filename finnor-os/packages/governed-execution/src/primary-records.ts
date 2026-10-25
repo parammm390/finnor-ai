@@ -20,23 +20,32 @@ function primaryCanonical(value:unknown):string{
  return encode(value,0);
 }
 
+export function primarySourceEndpoint(profile:PrimarySourceProfile){
+ const protectedSource=profile.environment==='LIVE';
+ if(!protectedSource&&(profile.environment!=='DEVELOPMENT'||profile.admissionRef!==null||process.env.NODE_ENV==='production'||process.env.FINNOR_V2_PROFILE!=='ordinary_disposable'))throw new LedgerFault(424,'LIVE_PRIMARY_S8_ROUTE_UNAVAILABLE');
+ const endpoint=new URL(profile.endpoint);
+ if(endpoint.pathname!=='/primary'||endpoint.search||endpoint.hash||endpoint.username||endpoint.password
+  ||(protectedSource?endpoint.protocol!=='https:':endpoint.protocol!=='http:'||endpoint.hostname!=='127.0.0.1'))
+  throw new LedgerFault(422,protectedSource?'PRIMARY_PROTECTED_ORIGIN_REQUIRED':'PRIMARY_DISPOSABLE_ORIGIN_REQUIRED');
+ brokerOrigin(endpoint.origin,protectedSource?'PROTECTED':'DISPOSABLE_TEST_AUTHORITY');
+ return endpoint;
+}
+
 /** S6 fixed primary READ / positive-confirmation protocol. This is not the
  * conditional set-field intervention protocol, and cannot write a financial field. */
 export async function primarySourceOperation(profile:PrimarySourceProfile,request:PrimaryRequest,input:{
  operation:'ACQUIRE'|'STATUS'|'PAGE'|'READ_RESULT';cursor?:string;deadlineAt:number;
 }):Promise<{response:SignedPrimaryResponse|null;requestStatus:SignedPrimaryRequestStatus|null;transportDigest:string;status:number}>{
- if(profile.environment!=='DEVELOPMENT'||profile.admissionRef!==null||process.env.NODE_ENV==='production'||process.env.FINNOR_V2_PROFILE!=='ordinary_disposable')throw new LedgerFault(424,'LIVE_PRIMARY_S8_ROUTE_UNAVAILABLE');
- const endpoint=new URL(profile.endpoint);
- // This first domain is deliberately disposable. A registered HTTPS string is
- // not live authority, nor permission for arbitrary private-network access.
- if(endpoint.protocol!=='http:'||endpoint.hostname!=='127.0.0.1'||endpoint.pathname!=='/primary'||endpoint.search||endpoint.hash)throw new LedgerFault(422,'PRIMARY_DISPOSABLE_ORIGIN_REQUIRED');
- brokerOrigin(endpoint.origin,'DISPOSABLE_TEST_AUTHORITY');
- if(!profile.credentialRef||!process.env.FINNOR_PRIMARY_CREDENTIAL_DIRECTORY)throw new LedgerFault(424,'PRIMARY_SCOPED_CREDENTIAL_UNAVAILABLE');
+ const protectedSource=profile.environment==='LIVE',endpoint=primarySourceEndpoint(profile);
+ const admission=protectedSource?await import('../../capability-evolution/src/primary-admission'):null;
+ const route=admission?await admission.admittedPrimarySource(profile,{kind:'request',request,operation:input.operation}):{credentialDirectory:process.env.FINNOR_PRIMARY_CREDENTIAL_DIRECTORY,ca:undefined};
+ if(!profile.credentialRef||!route.credentialDirectory)throw new LedgerFault(424,'PRIMARY_SCOPED_CREDENTIAL_UNAVAILABLE');
  if(!/^[A-Za-z0-9_-]{1,100}$/.test(profile.credentialRef))throw new LedgerFault(422,'PRIMARY_CREDENTIAL_REFERENCE_INVALID');
- const token=brokerToken(await brokerPrivateFile(process.env.FINNOR_PRIMARY_CREDENTIAL_DIRECTORY+'/'+profile.credentialRef));
+ const token=brokerToken(await brokerPrivateFile(route.credentialDirectory+'/'+profile.credentialRef));
  const url=new URL(input.operation==='ACQUIRE'?'/primary/requests':'/primary/requests/'+request.requestId+(input.operation==='STATUS'?'/status':''),endpoint.origin);
  if(input.operation==='PAGE'){if(!input.cursor||input.cursor.length>200)throw new LedgerFault(422,'PRIMARY_CURSOR_INVALID');url.searchParams.set('cursor',input.cursor);}
- const result=await brokerRequest(url,{method:input.operation==='ACQUIRE'?'POST':'GET',token,...(input.operation==='ACQUIRE'?{body:request}:{}),deadlineAt:input.deadlineAt});
+ const result=await brokerRequest(url,{method:input.operation==='ACQUIRE'?'POST':'GET',token,...(input.operation==='ACQUIRE'?{body:request}:{}),...(route.ca?{ca:route.ca}:{}),deadlineAt:input.deadlineAt});
+ if(admission)await admission.admittedPrimarySource(profile,{kind:'request',request,operation:input.operation});
  if(result.status===404&&input.operation==='STATUS')return {response:null,requestStatus:null,transportDigest:result.responseDigest,status:404};
  if(result.status!==200&&result.status!==202)throw new LedgerFault(503,'PRIMARY_SOURCE_TRANSPORT_UNAVAILABLE');
  const response=input.operation==='STATUS'?SignedPrimaryRequestStatusSchema.parse(result.body):SignedPrimaryResponseSchema.parse(result.body);

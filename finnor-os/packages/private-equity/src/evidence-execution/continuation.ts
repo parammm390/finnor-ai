@@ -1,13 +1,14 @@
 import {type PeMutationContext} from '../types';
 import {parseRequest} from './contracts';
 import {loadHandle} from './sources';
+import {assertAnalyticalExecutionProfile} from './profile';
 import {assertDependencies,authorize,newId,principal,revisions,sha,stable,tx} from './store';
 
 /** Additive owner adapter: a continuation reads an accepted input; it never calls
  * receiveWork, changes instruction text or rebases an old result. */
 export async function submitEvidenceContinuation(ctx:PeMutationContext,body:unknown,binding:{workId:string;inputId:string;inputDigest:string}){
  const request=parseRequest(body);if(request.workId!==binding.workId)throw Error('CONTINUATION_WORK_SCOPE_MISMATCH');
- if(request.mode!=='ordinary_disposable'||process.env.NODE_ENV==='production'||process.env.FINNOR_P4_PROFILE!=='ordinary_disposable')throw Error('PROTECTED_FUNDING_ADMISSION_AND_RUNTIME_BINDINGS_UNAVAILABLE');
+ assertAnalyticalExecutionProfile(request.mode);
  await authorize(ctx,request.root,[{type:'work',id:binding.workId}]);const handles=[];
  for(const input of request.inputs){const handle=await loadHandle(ctx,input.handleId,request.root);if(handle.inputId!==input.inputId)throw Error('HANDLE_INPUT_ID_MISMATCH');handles.push(handle);}
  const dependencies=[...handles.flatMap(h=>h.dependencies),...await revisions(ctx,['work-inputs:'+binding.workId,'rights:tenant'])];const digest=sha({request,binding});

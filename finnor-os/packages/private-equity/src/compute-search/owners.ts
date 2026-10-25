@@ -10,12 +10,12 @@ import type {ComputeSearchRequest} from './contracts';
 export async function resolveSearchOwners(ctx:PeMutationContext,q:ProgramRow,r:ComputeSearchRequest) {
  await assertProgramCurrent(ctx,q);
  if(stable(q.request.ownerBindings?.policyRef)!==stable(r.policyRequest)||stable(q.request.ownerBindings?.allocationRef)!==stable(r.computeGrant))throw Error('P2_EXACT_P1_OWNER_BINDINGS_REQUIRED');
- return resolveNativeComputeGrant(ctx,r.policyRequest,r.computeGrant,!!r.deliberation);
+ return resolveNativeComputeGrant(ctx,r.policyRequest,r.computeGrant,!!r.deliberation,q.request.root);
 }
 
 /** Shared S5 native-attempt grant resolver. A direct native producer has no
  * permission to invent a P1 episode, dollar/token conversion or new allowance. */
-export async function resolveNativeComputeGrant(ctx:PeMutationContext,policyRequest:import('@finnor/shared-types').ExperimentRef,computeGrant:import('@finnor/shared-types').ExperimentRef,deliberation=false) {
+export async function resolveNativeComputeGrant(ctx:PeMutationContext,policyRequest:import('@finnor/shared-types').ExperimentRef,computeGrant:import('@finnor/shared-types').ExperimentRef,deliberation=false,root?:{entityType:string;entityId:string}) {
  const policy=await readEnterpriseContingentPolicy(ctx,policyRequest);
  const {issued,validation:state}=await readValidatedNumericEnterpriseAllocation(ctx,computeGrant);
  if(state.status!=='CURRENT'||!issued.reservation)throw Error('P2_CURRENT_S4_S5_OWNERS_REQUIRED');
@@ -24,6 +24,7 @@ export async function resolveNativeComputeGrant(ctx:PeMutationContext,policyRequ
  const resources=issued.problem.resources.filter(r=>r.resourceClass==='COMPUTE'&&r.unit==='native-attempt'&&r.kind==='CUMULATIVE_EXPENDITURE');
  if(resources.length!==1)throw Error('P2_NATIVE_ATTEMPT_COMPUTE_RESOURCE_MAPPING_UNAVAILABLE');
  const resource=resources[0]!,envelope=issued.reservation.envelopes.find(e=>e.resourceId===resource.resourceId);
+ if(root&&!resource.permittedRoots.some(r=>r.entityType===root.entityType&&r.entityId===root.entityId))throw Error('P2_COMPUTE_RESOURCE_ROOT_NOT_PERMITTED');
  if(!envelope||envelope.unit!==resource.unit||stable(envelope.horizon)!==stable(policy.mandate.horizon)||!issued.problem.demandBindings.some(b=>stable(b.policyRef)===stable(policy.ref)&&b.resourceId===resource.resourceId&&b.component==='TOTAL'&&b.conversion==='IDENTICAL_UNIT_NO_CONVERSION'))throw Error('P2_S5_SAME_UNIT_COMPUTE_ENVELOPE_REQUIRED');
  const period=Math.floor((Date.now()-Date.parse(envelope.horizon.startAt))/envelope.horizon.periodMs);
  if(period<0||period>=envelope.horizon.periods)throw Error('P2_COMPUTE_HORIZON_EXPIRED_OR_NOT_STARTED');
@@ -33,7 +34,7 @@ export async function resolveNativeComputeGrant(ctx:PeMutationContext,policyRequ
  const deliberationConversion=deliberation?deriveEnterpriseDeliberationConversion(policy):null;
  return {policyRequest:policy.ref,computeGrant:issued.certificate.ref,mandateRef:policy.mandateRef,utilityRef:policy.mandate.utilityRef,deliberationConversion,
   loss:{unit:policy.mandate.utility.unit,horizon:policy.mandate.horizon,risk:policy.mandate.risk,discountFactors:policy.mandate.utility.discountFactors,tail:policy.mandate.utility.tail,marginalLossConversion:null,delayLossConversion:null,qualification:'S4_OWNED_UTILITY_MARGINAL_COMPUTE_CONVERSION_UNAVAILABLE'},
-  resourceId:resource.resourceId,resourceRef:resource.ref,reservationRef:issued.reservation.ref,capacity,
+  resourceId:resource.resourceId,resourceRef:resource.ref,reservationRef:issued.reservation.ref,capacity,permittedRoots:resource.permittedRoots,
   validUntil:issued.certificate.validUntil,resourceEnvelope:envelope,rightsRef:policy.bindings.rightsRef,
   billing:null,protectedReceipt:null,qualification:'AUTHENTIC_ORDINARY_NATIVE_COMPUTE_ENVELOPE_NO_DOLLAR_OR_TOKEN_CONVERSION'};
 }
@@ -42,6 +43,7 @@ export async function resolveNativeComputeGrant(ctx:PeMutationContext,policyRequ
  * reads and independently verifies the issued certificate and entire current
  * portfolio; this removes a duplicate certificate solve, not a currentness check. */
 export async function recheckSearchOwners(ctx:PeMutationContext,q:ProgramRow,s:any){
+ if(!s.binding.permittedRoots?.some((r:{entityType:string;entityId:string})=>r.entityType===q.request.root.entityType&&r.entityId===q.request.root.entityId))throw Error('P2_COMPUTE_RESOURCE_ROOT_NOT_PERMITTED');
  if(stable(q.request.ownerBindings?.policyRef)!==stable(s.request.policyRequest)||stable(q.request.ownerBindings?.allocationRef)!==stable(s.request.computeGrant))throw Error('P2_EXACT_P1_OWNER_BINDINGS_REQUIRED');
  const [policyRead,allocationRead]=await Promise.allSettled([
   readEnterpriseContingentPolicy(ctx,s.request.policyRequest),

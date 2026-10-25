@@ -29,8 +29,10 @@ export const PRIVATE_EQUITY_OPERATIONAL_QUERY_INTENTS = [
   "closing_readiness",
 ] as const;
 
-/** P1 and Y1 retain original Work cuts through the native tenant dispatcher. */
-export const PROGRAM_OPERATIONAL_QUERY_INTENTS = ["harness_program_v1","economic_programme_v1"] as const;
+/** P1 implements this read through the existing tenant query dispatcher. */
+export const PROGRAM_OPERATIONAL_QUERY_INTENTS = ["harness_program_v1","acquisition_decision_v1","primary_diligence_v1","economic_programme_v1"] as const;
+export interface PrimaryDiligenceQueryRequest { intent:"primary_diligence_v1"; workId:string;dealId:string;programmeId?:string }
+export interface AcquisitionDecisionQueryRequest { intent:"acquisition_decision_v1"; workId:string;dealId:string;decisionId?:string;investmentCaseId?:string }
 export interface HarnessProgramQueryRequest { intent: "harness_program_v1"; programId: string; workId: string }
 export interface EconomicProgrammeQueryRequest { intent: "economic_programme_v1"; programmeId: string; workId: string }
 /** Y4 exposes only current completion metadata, never recipient outputs. */
@@ -174,7 +176,9 @@ export type CoreOperationalQueryRequest =
   | TeamRosterRequest;
 
 export type CanonicalOperationalQueryRequest =
+  | PrimaryDiligenceQueryRequest
   | HarnessProgramQueryRequest
+  | AcquisitionDecisionQueryRequest
   | EconomicProgrammeQueryRequest
   | ConfidentialComputationQueryRequest
   | CoreOperationalQueryRequest
@@ -757,12 +761,16 @@ export interface PeWorldStateResult extends OperationalQueryResultBase<"pe_world
   provenance: Record<string, unknown>[];
 }
 
+export interface AcquisitionDecisionQueryResult extends OperationalQueryResultBase<"acquisition_decision_v1"> {}
+export interface PrimaryDiligenceQueryResult extends OperationalQueryResultBase<"primary_diligence_v1"> {}
 export interface HarnessProgramQueryResult extends OperationalQueryResultBase<"harness_program_v1"> {}
 export interface EconomicProgrammeQueryResult extends OperationalQueryResultBase<"economic_programme_v1"> {}
 export interface ConfidentialComputationQueryResult extends OperationalQueryResultBase<"confidential_economic_computation_v1"> {}
 
 export type OperationalQueryResult =
+  | PrimaryDiligenceQueryResult
   | HarnessProgramQueryResult
+  | AcquisitionDecisionQueryResult
   | EconomicProgrammeQueryResult
   | ConfidentialComputationQueryResult
   | WorkListResult
@@ -785,9 +793,11 @@ export type OperationalQueryResult =
 export type OperationalQueryResultEnvelope = OperationalQueryResult;
 
 export type OperationalQueryResultFor<R extends OperationalQueryRequest> =
-  R extends EconomicProgrammeQueryRequest ? EconomicProgrammeQueryResult
-    : R extends HarnessProgramQueryRequest ? HarnessProgramQueryResult
-    : R extends ConfidentialComputationQueryRequest ? ConfidentialComputationQueryResult
+  R extends PrimaryDiligenceQueryRequest ? PrimaryDiligenceQueryResult
+  : R extends AcquisitionDecisionQueryRequest ? AcquisitionDecisionQueryResult
+  : R extends HarnessProgramQueryRequest ? HarnessProgramQueryResult
+  : R extends EconomicProgrammeQueryRequest ? EconomicProgrammeQueryResult
+  : R extends ConfidentialComputationQueryRequest ? ConfidentialComputationQueryResult
     : R extends WorkListRequest ? WorkListResult
     : R extends AttentionQueueRequest ? AttentionQueueResult
       : R extends AgentActivityRequest ? AgentActivityResult

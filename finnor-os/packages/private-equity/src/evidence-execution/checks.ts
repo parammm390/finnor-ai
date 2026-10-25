@@ -26,7 +26,20 @@ export async function independentChecks(ctx:PeMutationContext,program:Derivation
   }else if(handle.source.kind==='model'){
    const s=handle.source;const persisted=(await c.query<{value:string}>("SELECT (result#>>$4::text[])::numeric::text value FROM finnor_os.underwriting_runs WHERE tenant_id=$1 AND id=$2 AND model_version_id=$3 AND computed_at<=$5 AND pg_xact_commit_timestamp(xmin)<=$5",[ctx.auth.tenantId,s.runId,s.modelVersionId,['outputs',s.output,'value'],handle.knowledgeAt])).rows[0];if(!persisted)throw Error('MODEL_INDEPENDENT_SOURCE_OUTPUT_UNAVAILABLE');expectedRows=loaded.rows.map(row=>({...row,value:cleanDecimal(persisted.value),fields:{...row.fields,value:cleanDecimal(persisted.value)}}));
   }else{
-   expectedRows=[];for(const row of loaded.rows){const material=loaded.witnesses.find(w=>row.witnessIds.includes(w.id));if(!material)continue;const scaled=(await c.query<{value:string}>('SELECT ($1::numeric*$2::numeric*$3::numeric)::text value',[material.rawValue,material.semantics.scale,material.semantics.sign==='NEGATE'?'-1':'1'])).rows[0]!.value;expectedRows.push({...row,value:cleanDecimal(scaled),fields:{...row.fields,value:cleanDecimal(scaled)}});}
+   expectedRows=[];for(const row of loaded.rows){
+    const material=loaded.witnesses.find(w=>row.witnessIds.includes(w.id));if(!material)continue;
+    const result=await c.query<{value:string}>(String.raw`WITH original AS (SELECT btrim($1::text) value), token AS (
+      SELECT CASE WHEN value ~ '^\([^()]+\)$' THEN substr(value,2,length(value)-2) ELSE value END digits,
+        value ~ '^\([^()]+\)$' negative FROM original
+     ), normalized AS (SELECT negative, CASE $4::text
+      WHEN 'COMMA_GROUPED' THEN CASE WHEN digits ~ '^[+-]?([0-9]+|[0-9]{1,3}(,[0-9]{3})+)(\.[0-9]+)?$' THEN replace(digits,',','') END
+      WHEN 'DOT_GROUPED' THEN CASE WHEN digits ~ '^[+-]?([0-9]+|[0-9]{1,3}(\.[0-9]{3})+)(,[0-9]+)?$' THEN replace(replace(digits,'.',''),',','.') END
+      WHEN 'PLAIN_DECIMAL' THEN CASE WHEN digits ~ '^[+-]?([0-9]+(\.[0-9]*)?|\.[0-9]+)([eE][+-]?[0-9]{1,3})?$' THEN digits END
+      END value FROM token WHERE NOT (negative AND digits ~ '^[+-]')
+     ) SELECT (value::numeric*$2::numeric*$3::numeric*(CASE WHEN negative THEN -1 ELSE 1 END))::text value FROM normalized WHERE value IS NOT NULL`,[material.rawValue,material.semantics.scale,material.semantics.sign==='NEGATE'?'-1':'1',material.interpretation?.numberFormat??'PLAIN_DECIMAL']);
+    const scaled=result.rows[0]?.value;if(scaled===undefined)throw Error('INDEPENDENT_DOCUMENT_NUMBER_FORMAT_MISMATCH');
+    expectedRows.push({...row,value:cleanDecimal(scaled),fields:{...row.fields,value:cleanDecimal(scaled)}});
+   }
   }
   const originalMatch=sha(expectedRows.map(r=>({id:r.recordId,value:r.value})))===sha(loaded.rows.map(r=>({id:r.recordId,value:r.value})));checks.push({id:'raw-fields:'+handle.inputId,method:'POSTGRES_NUMERIC',status:originalMatch?'PASS':'FAIL',expected:sha(expectedRows.map(r=>({id:r.recordId,value:r.value}))),actual:sha(loaded.rows.map(r=>({id:r.recordId,value:r.value}))),predicate:'numeric inputs equal independently read source field/anchor and exact scale/sign',witnessIds:loaded.witnesses.map(w=>w.id)});
   raw.set(handle.inputId,expectedRows);checks.push({id:'coverage:'+handle.inputId,method:'COVERAGE',status:handle.coverage.status==='COMPLETE'&&loaded.coverage.status==='COMPLETE'?'PASS':'FAIL',expected:'COMPLETE',actual:loaded.coverage.status,predicate:'complete declared selected universe; no global enterprise absence certificate',witnessIds:[]});

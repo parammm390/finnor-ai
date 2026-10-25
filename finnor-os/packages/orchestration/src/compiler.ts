@@ -14,6 +14,7 @@
 
 import {
   withTenant,
+  transactionClient,
   tasks,
   works,
   documents,
@@ -124,6 +125,12 @@ async function lookUpKnownId(db: Db, tenantId: string | undefined, field: string
     case "documentVersionId": {
       const result = await db.execute<{ id: string }>(sql`
         SELECT id::text FROM finnor_os.document_versions WHERE tenant_id=${tenantId}::uuid AND id=${value}::uuid LIMIT 1
+      `);
+      return result.rows[0] ? "verified" : "not_found";
+    }
+    case "capsuleId": {
+      const result = await db.execute<{ id: string }>(sql`
+        SELECT id::text FROM finnor_os.p6_capsules WHERE tenant_id=${tenantId}::uuid AND id=${value}::uuid LIMIT 1
       `);
       return result.rows[0] ? "verified" : "not_found";
     }
@@ -288,6 +295,12 @@ export async function groundEntitiesWithDb(db: Db, tenantOrPayload: string | Rec
     });
   }
   return results;
+}
+
+export async function groundActionReferencesWithDb(db:Db,tenantId:string,actionType:string,payload:Record<string,unknown>,scope:{workId:string;principalId:string}):Promise<GroundedField[]>{
+  const {groundOwnedPlannerReferences}=await import('../../private-equity/src/planner-references');
+  const owned=await groundOwnedPlannerReferences({auth:{tenantId,userId:scope.principalId,employeeId:scope.principalId,role:'owner'}},actionType,payload,scope.workId,transactionClient(db));
+  return [...await groundEntitiesWithDb(db,tenantId,owned?.canonicalPayload??payload),...(owned?.fields??[])];
 }
 
 /** A canonical non-model owner may reserve the future action identity. Only the
@@ -464,6 +477,15 @@ const PE_STATE_TABLES: Partial<Record<string, string>> = {
 };
 
 async function safePrivateEquityState(db: Db, tenantId: string, type: string, id: string): Promise<Record<string, unknown> | null> {
+  if (type === "pe_ic_case") {
+    const result = await db.execute<Record<string, unknown>>(sql`
+      SELECT id::text id,deal_id::text "dealId",investment_case_id::text "investmentCaseId",state,version,
+             primary_underwriting_run_id::text "primaryUnderwritingRunId",current_memo_id::text "currentMemoId",
+             current_deck_id::text "currentDeckId",current_recommendation_id::text "currentRecommendationId",updated_at "updatedAt"
+      FROM finnor_os.pe_ic_cases WHERE tenant_id=${tenantId}::uuid AND id=${id}::uuid LIMIT 1
+    `);
+    return result.rows[0] ?? null;
+  }
   if (type === "pe_deal") {
     const result = await db.execute<Record<string, unknown>>(sql`
       SELECT id::text id,status,version,graph_version "graphVersion",actual_close_at "actualCloseAt",updated_at "updatedAt"
@@ -702,7 +724,7 @@ function amountExposure(payload: Record<string, unknown>): { amount: number; cur
 
 function expectedState(actionType: string, payload: Record<string, unknown>, before: BusinessEffectStateSnapshot[]): Record<string, unknown> | null {
   if (["create_task", "schedule_internal_event", "delegate_objective",
-    "open_ic_case", "select_ic_memo_version", "create_ic_question", "prepare_ic_decision_proposal",
+    "open_ic_case", "create_ic_memo_draft", "prepare_ic_recommendation", "select_ic_memo_version", "create_ic_question", "prepare_ic_decision_proposal",
     "open_workstream", "create_deal_request", "record_finding", "raise_deal_risk", "link_deal_dependency", "create_closing_condition", "submit_condition_evidence"].includes(actionType)) return { exists: true };
   if (actionType === "update_task") return Object.fromEntries(["title", "dueAt", "status", "priority"].filter((key) => key in payload).map((key) => [key, payload[key]]));
   if (actionType === "assign_task" && payload.assigneeRef && typeof payload.assigneeRef === "object") {
@@ -713,6 +735,7 @@ function expectedState(actionType: string, payload: Record<string, unknown>, bef
   if (actionType === "cancel_delegation") return { status: "cancelled" };
   if (actionType === "reschedule_internal_event") return { startsAt: payload.startsAt, endsAt: payload.endsAt, status: "rescheduled" };
   if (actionType === "computer_task" && payload.authorizedEffect && typeof payload.authorizedEffect === "object") return { ...(payload.authorizedEffect as Record<string, unknown>).changes as Record<string, unknown> };
+  if (["start_acquisition_evaluation","start_primary_diligence"].includes(actionType)) return {exists:true};
   if (actionType === "submit_deliverable") return { state: "received" };
   if (actionType === "begin_ic_preparation") return { state: "PREPARING" };
   if (actionType === "select_ic_underwriting_run") return { primaryUnderwritingRunId: payload.underwritingRunId };
@@ -819,8 +842,10 @@ async function compileBusinessEffectWithDb(params: {
     // canonical-truth-registry entry. The BusinessEffect scope still freezes
     // their exact IDs in delta.values, and PE grounding verifies tenant/Deal
     // ownership. Its polymorphic target guard accepts only P1/Core entities.
-    if (params.action.actionType === "create_underwriting_run"
+    if (["create_underwriting_run","start_acquisition_evaluation"].includes(params.action.actionType)
       && ["underwriting_run", "underwriting_scenario", "underwriting_model_version"].includes(target.type)) return false;
+    if(params.action.actionType==='create_underwriting_run'&&target.type==='pe_finding'
+      &&Object.keys((payload.primaryFindingInputs??{}) as Record<string,unknown>).some(nodeId=>target.sourcePath==='primaryFindingInputs.'+nodeId+'.findingId'))return false;
     return true;
   });
   const resolved = await resolveBindings(params.db, params.action.tenantId, payload, Boolean(spec?.external), params.action.actionType);
@@ -1063,6 +1088,24 @@ function valuesMatch(expected: Record<string, unknown>, current: Record<string, 
  * Executor-returned IDs are hints only and cannot select an unrelated record. */
 async function observeCreatedCanonicalEffect(tenantId: string, effect: BusinessEffectSet): Promise<Record<string, unknown> | null> {
   const payload = effect.delta.values;
+  if(effect.operation.name==='start_primary_diligence')return (await import('../../private-equity/src/primary-diligence/action')).observePrimaryCreation(tenantId,effect);
+  if (effect.operation.name === 'create_ic_memo_draft' || effect.operation.name === 'prepare_ic_recommendation') {
+    return (await import('../../private-equity/src/ic-preparation-observation')).observeIcPreparationCreation(tenantId, effect);
+  }
+  if (effect.operation.name === "start_acquisition_evaluation") {
+    const initiatedBy=await withTenant(tenantId,async db=>(await db.select({id:domainActions.initiatedBy}).from(domainActions).where(and(eq(domainActions.tenantId,tenantId),eq(domainActions.id,effect.source.domainActionId))).limit(1))[0]?.id);
+    if(!initiatedBy)return null;
+    return withTenant(tenantId,async db=>{
+      const found=await db.execute<Record<string,unknown>>(sql`SELECT id,work_id,request,status FROM finnor_os.acquisition_decisions WHERE tenant_id=${tenantId}::uuid AND principal_id=${initiatedBy}::uuid AND idempotency_key=${effect.source.domainActionId} LIMIT 2`);
+      if(found.rows.length!==1)return null;
+      const row=found.rows[0]!,request=row.request as Record<string,unknown>;
+      // The compiler deliberately omits transport idempotency keys from the
+      // semantic delta. The action-derived key was checked by the lookup above.
+      const keys=["dealId","baseRunId","bidDomain","financingCases","constraints","limits","analysis"];
+      if(row.work_id!==effect.source.workId||keys.some(key=>stable(request[key])!==stable(payload[key])))return null;
+      return {exists:true,id:row.id,workId:row.work_id,status:row.status,analysisCompleted:false};
+    },initiatedBy);
+  }
   if (effect.operation.name === "create_underwriting_run") {
     return withTenant(tenantId, async db => {
       const rows = await db.execute<Record<string, any>>(sql`
@@ -1087,6 +1130,15 @@ async function observeCreatedCanonicalEffect(tenantId: string, effect: BusinessE
           || row.scenario_definition.name !== scenario.name
           || stable(row.scenario_definition.overrides) !== stable(scenario.overrides)
         : row.scenario_id !== (payload.scenarioId ?? null)) return null;
+      if(payload.explicitInputs||payload.primaryFindingInputs||payload.evidenceDerivationInputs){
+        const [action]=await db.select({principal:domainActions.initiatedBy}).from(domainActions).where(and(eq(domainActions.tenantId,tenantId),eq(domainActions.id,effect.source.domainActionId))).limit(1);
+        if(!action?.principal)return null;
+        const {prepareUnderwritingRun}=await import('../../private-equity/src/underwriting-repository');
+        type Inputs=Parameters<typeof prepareUnderwritingRun>[1];
+        const expected=await prepareUnderwritingRun({auth:{tenantId,userId:action.principal,employeeId:action.principal,role:'owner'}},{investmentCaseId:String(payload.investmentCaseId),modelVersionId:String(payload.modelVersionId),worldAt:String(payload.worldAt),workId:String(effect.source.workId),scenarioId:row.scenario_id??undefined,baseRunId:payload.baseRunId as string|undefined,
+          explicitInputs:payload.explicitInputs as Inputs['explicitInputs'],primaryFindingInputs:payload.primaryFindingInputs as Inputs['primaryFindingInputs'],evidenceDerivationInputs:payload.evidenceDerivationInputs as Inputs['evidenceDerivationInputs']});
+        if(expected.effectiveSnapshot.semanticHash!==row.input_hash)return null;
+      }
       return { id: row.id, workId: row.work_id, investmentCaseId: row.investment_case_id,
         modelVersionId: row.model_version_id, scenarioId: row.scenario_id, worldAt: observedWorldAt,
         status: row.status, validity: row.validity, inputHash: row.input_hash, resultHash: row.result_hash };
@@ -1246,7 +1298,7 @@ export async function recordBusinessEffectOutcome(tenantId: string, effect: Busi
           ? "Canonical outbound intent is recorded, but final external delivery has not yet been observed"
           : "The provider accepted the delivery, but no canonical or external delivery state was observed", checkedAt: new Date().toISOString(), observed: result.output };
     status = observed && !requiresExternalObservation ? "verified" : "partially_verified";
-  } else if (effect.operation.name === "create_underwriting_run" || effect.expected.state?.exists === true) {
+  } else if (["create_underwriting_run","start_acquisition_evaluation","start_primary_diligence"].includes(effect.operation.name) || effect.expected.state?.exists === true) {
     const observed = await observeCreatedCanonicalEffect(tenantId, effect);
     verification = { state: observed ? "verified" : "divergent", basis: observed ? "Native action-bound or preallocated canonical record satisfies the exact creation predicate" : "Execution reported success but the exact authorized creation predicate was not established", checkedAt: new Date().toISOString(), ...(observed ? { observed } : {}) };
     status = observed ? "verified" : "divergent";

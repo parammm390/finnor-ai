@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { redactText } from "@finnor/security";
+import { redactText, redactStructured } from "@finnor/security";
 
 describe("PII text redaction", () => {
   it("redacts real phone and Luhn-valid card values", () => {
@@ -13,5 +13,19 @@ describe("PII text redaction", () => {
     const result = redactText(`Forecast 2025-2032; receipt ${uuid}.`);
     expect(result.value).toBe(`Forecast 2025-2032; receipt ${uuid}.`);
     expect([...result.tokens.keys()]).toEqual([]);
+  });
+
+  it("preserves financial terminology while protecting identifiers and unknown numeric strings", () => {
+    expect(redactStructured({
+      grossNetTreatment: "SOURCE_SIGNED_GROSS_CREDIT_SEPARATE",
+      customerSSN: "fixture_identifier", customerSsn: "fixture_identifier", customer_ssn: "fixture_identifier",
+      socialSecurityNumber: "fixture_identifier", apiKey: "fixture_credential", accessToken: "fixture_credential",
+      nested: { customerEmail: "fixture_identifier", phone: "fixture_identifier", amount: "1000000000" },
+    })).toEqual({
+      grossNetTreatment: "SOURCE_SIGNED_GROSS_CREDIT_SEPARATE",
+      customerSSN: "[REDACTED]", customerSsn: "[REDACTED]", customer_ssn: "[REDACTED]",
+      socialSecurityNumber: "[REDACTED]", apiKey: "[REDACTED]", accessToken: "[REDACTED]",
+      nested: { customerEmail: "[REDACTED]", phone: "[REDACTED]", amount: "[PHONE_1]" },
+    });
   });
 });

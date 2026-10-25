@@ -1,6 +1,6 @@
 import {z} from 'zod';
 import {FinancialSemanticsSchema,EvidenceRootSchema} from '@finnor/shared-types';
-import {ComputeSearchRequestSchema} from '../compute-search/contracts';
+import {ComputeSearchRequestSchema,EligibleSearchProgramSchema} from '../compute-search/contracts';
 import {BoundedReferenceSchema as RefSchema} from '../bounded-reference';
 export {RefSchema};
 export const M2_VERSION='m2-bounded-deliberation-v1';
@@ -115,8 +115,7 @@ export const DeliberationCurrentReaderSchema=z.object({
 export const DeliberationProjectionSchema=z.object({
  schema:z.literal('finnor.m2.work-projection.v1'),workId:z.string().uuid(),
  policies:z.array(DeliberationCurrentReaderSchema).max(20),
- eligiblePrograms:z.array(z.object({programId:z.string().uuid(),status:z.enum(['QUEUED','WAITING']),
-  workRevision:z.string().uuid(),policyRequest:RefSchema,computeGrant:RefSchema}).strict()).max(20),
+ eligiblePrograms:z.array(EligibleSearchProgramSchema).max(20),
 }).strict();
 export type ModuleSnapshot=z.infer<typeof ModuleSnapshotSchema>;
 export type ModuleProposal=z.infer<typeof ModuleProposalSchema>;

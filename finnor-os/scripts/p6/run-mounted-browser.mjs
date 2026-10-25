@@ -89,13 +89,13 @@ try{
   ensureCanvas();
   activate('Inspect procedure evidence');
   await wait(()=>read("document.activeElement?.hasAttribute('data-procedure-proof')===true"));
-  activate('Select for disposable execution');
+  activate('Select for analysis');
   await wait(()=>read("!!document.querySelector('[data-selected-procedure]')"));
   nativeLabelFill('Desired analytical outcome','Compute the exact new net value after a recorded USD5 adjustment');
   nativeLabelFill('Observable calculations','net = price - debt - USD(5)');
   if(!read("!!document.querySelector('[data-selected-procedure]')")){
-   await wait(()=>read("Array.from(document.querySelectorAll('.ct-procedure button')).some(b=>b.textContent.trim()==='Select for disposable execution'&&!b.disabled)"));
-   activate('Select for disposable execution');
+   await wait(()=>read("Array.from(document.querySelectorAll('.ct-procedure button')).some(b=>b.textContent.trim()==='Select for analysis'&&!b.disabled)"));
+   activate('Select for analysis');
    await wait(()=>read("!!document.querySelector('[data-selected-procedure]')"));
   }
   await writeFile(join(out,'selected-procedure-pre-submit.json'),JSON.stringify({dom:dom(),selected:read("document.querySelector('[data-selected-procedure]')?.getAttribute('data-selected-procedure')"),scope:read("Array.from(document.querySelectorAll('.ct-program label')).find(l=>l.textContent.startsWith('Execution scope'))?.querySelector('select')?.value")},null,2));
@@ -114,7 +114,7 @@ try{
   nativeLabelFill('Procedure correction or failure','New convention requires independent reassessment');
   activate('Record counterexample and invalidate');
   const d=await wait(()=>{const d=dom();return d.state==='INVALIDATED'?d:null;});
-  assert.ok(!d.text.includes('Select for disposable execution'));return d;
+  assert.ok(!d.text.includes('Select for analysis'));return d;
  });
  await story('other-Work-never-displays-prior-procedure',async()=>{
   canvas(f.otherUrl);const d=await wait(()=>{const d=dom();return d.work==='none'?d:null;});

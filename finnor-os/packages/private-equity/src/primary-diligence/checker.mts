@@ -197,7 +197,7 @@ function check(frame: Frame): PrimaryClaimCheck {
   const { assertion: a, assertionRef, semantics: s, currentBindings: bindings } = frame;
   requireThat(reference(assertionRef, a, a.assertionId, a.revision), "ASSERTION_REFERENCE");
   requireThat(reference(bindings.semanticsRef, s, s.profileId, s.revision), "SEMANTICS_REFERENCE");
-  requireThat(s.environment === "DEVELOPMENT", "LIVE_NOT_ADMITTED");
+  requireThat(s.environment === "DEVELOPMENT" || s.environment === "LIVE", "PRIMARY_ENVIRONMENT_INVALID");
   requireThat(Date.parse(frame.knowledgeCut) <= Date.parse(frame.checkedAt), "KNOWLEDGE_CUT");
   for (const refs of [bindings.sourceProfileRefs, bindings.consentRefs])
     requireThat(new Set(refs.map(ref => `${ref.owner}:${ref.id}`)).size === refs.length, "AMBIGUOUS_CURRENT_REFERENCE");
@@ -293,8 +293,8 @@ function check(frame: Frame): PrimaryClaimCheck {
       reference(q.authorityRef, auth, auth.profileId, auth.revision), "GOVERNANCE_REFERENCE_DIGEST");
     requireThat(current(q.sourceProfileRef, bindings.sourceProfileRefs) && current(q.consentRef, bindings.consentRefs) &&
       same(q.authorityRef, bindings.authorityRef) && same(q.semanticsRef, bindings.semanticsRef), "CURRENT_OWNER_BINDINGS");
-    requireThat(p.environment === "DEVELOPMENT" && c.environment === "DEVELOPMENT" &&
-      auth.environment === "DEVELOPMENT", "LIVE_NOT_ADMITTED");
+    requireThat(p.environment === s.environment && c.environment === s.environment &&
+      auth.environment === s.environment, "PRIMARY_ENVIRONMENT_MISMATCH");
     let signatureValid = false;
     try {
       const key = createPublicKey(p.responsePublicKeyPem);

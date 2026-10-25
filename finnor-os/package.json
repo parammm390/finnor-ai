@@ -62,6 +62,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-secrets-manager": "^3.1086.0",
+    "@daytona/sdk": "0.226.0",
     "@getzep/zep-cloud": "^3.28.0",
     "@langchain/core": "^1.2.3",
     "@langchain/langgraph": "^1.4.8",

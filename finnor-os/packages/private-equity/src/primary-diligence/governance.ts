@@ -1,11 +1,12 @@
-import type {PrimaryAuthorityProfile,PrimaryConsent,PrimaryGrant,PrimaryMandate,PrimaryReferenceSemantics,PrimarySourceProfile} from '@finnor/shared-types';
+import type {PrimaryAuthorityProfile,PrimaryConsent,PrimaryGrant,PrimaryIntake,PrimaryMandate,PrimaryReferenceSemantics,PrimarySourceProfile} from '@finnor/shared-types';
 import type {PoolClient} from 'pg';
 import type {PeMutationContext} from '../types';
 import {actor,governance,retainedGovernance,rightsBinding,hash,exactWork,assertDependencies,tx,type Programme} from './store';
 import {resolveBilateralPredecessor} from '../bilateral-opportunities/handoff';
+import {assertPrimaryRuntimeMode,assertPrimarySourceAdmission} from './profile';
 
-export async function ownerBindings(ctx:PeMutationContext,p:Programme,c?:PoolClient){
- const intake=p.intake;
+export async function intakeBindings(ctx:PeMutationContext,intake:PrimaryIntake,c?:PoolClient){
+ const environment=assertPrimaryRuntimeMode(intake.mode);
  await resolveBilateralPredecessor(ctx,intake,c);
  // A supplied transaction client is one serial SQL connection, not a pool.
  const mandate=await governance<PrimaryMandate>(ctx,intake.mandateRef,'finnor.primary-mandate.v1',c);
@@ -15,12 +16,14 @@ export async function ownerBindings(ctx:PeMutationContext,p:Programme,c?:PoolCli
  for(const ref of intake.sourceProfileRefs)sources.push(await governance<PrimarySourceProfile>(ctx,ref,'finnor.primary-source-profile.v1',c));
  for(const ref of intake.consentRefs)consents.push(await governance<PrimaryConsent>(ctx,ref,'finnor.primary-consent.v1',c));
  for(const ref of intake.referenceSemanticsRefs)semantics.push(await governance<PrimaryReferenceSemantics>(ctx,ref,'finnor.primary-reference-semantics.v1',c));
+ if([mandate,authority,grant,...sources,...consents,...semantics].some(v=>v.environment!==environment))throw Error('PRIMARY_EXECUTION_PROFILE_MISMATCH');
+ for(const source of sources)await assertPrimarySourceAdmission(ctx,source);
  const now=Date.now();
  if([mandate,authority,grant,...sources,...consents,...semantics].some(v=>now>=Date.parse(v.expiresAt)||'validFrom' in v&&now<Date.parse(v.validFrom)))throw Error('PRIMARY_GOVERNANCE_EXPIRED_OR_NOT_YET_VALID');
  if(mandate.issuingPrincipalId!==actor(ctx)||authority.issuingPrincipalId!==actor(ctx)||grant.issuingPrincipalId!==actor(ctx)||grant.mandateId!==mandate.mandateId||mandate.authorityProfileId!==authority.profileId||grant.legalEntityId!==mandate.legalEntityId)throw Error('PRIMARY_MANDATE_AUTHORITY_GRANT_BINDING_INVALID');
  if(mandate.assertionIds.length!==intake.assertions.length||!intake.assertions.every(a=>mandate.assertionIds.includes(a.assertionId)&&a.semantics.legalEntityId===mandate.legalEntityId&&hash(a.materiality.decisionRef)===hash(mandate.decisionRef))||
  !sources.every(s=>mandate.sourceProfileIds.includes(s.profileId)&&s.purpose===mandate.permittedPurpose))throw Error('PRIMARY_FROZEN_MANDATE_SCOPE_INVALID');
- const rights=await rightsBinding(ctx,p.root,c);
+ const rights=await rightsBinding(ctx,intake.root,c);
  if([...sources,...consents].some(s=>hash(s.rightsRef)!==hash(rights.rightsRef)))throw Error('PRIMARY_CURRENT_S1_RIGHTS_MISMATCH');
  if(consents.some(v=>now>=Date.parse(v.retention.rawUntil)||now>=Date.parse(v.retention.derivativesUntil)))throw Error('PRIMARY_RETENTION_EXPIRED');
  if(consents.some(v=>!v.retention.retainAfterRevocation))throw Error('PRIMARY_IMMUTABLE_STORAGE_RETENTION_CONTRACT_UNSUPPORTED');
@@ -32,8 +35,12 @@ export async function ownerBindings(ctx:PeMutationContext,p:Programme,c?:PoolCli
   return row.problem.resources.map((r:{resourceId:string})=>'s5-resource:'+r.resourceId) as string[];
  };
  const resourceKeys=c?await reservation(c):await tx(ctx,reservation,true);
- if(c){await exactWork(ctx,p,c);await assertDependencies(ctx,p.starting_manifest.dependencies,c,true);}
  return {mandate,authority,grant,sources,consents,semantics,rights,resourceKeys,retainedOnly:false as boolean};
+}
+export async function ownerBindings(ctx:PeMutationContext,p:Programme,c?:PoolClient){
+ const bindings=await intakeBindings(ctx,p.intake,c);
+ if(c){await exactWork(ctx,p,c);await assertDependencies(ctx,p.starting_manifest.dependencies,c,true);}
+ return bindings;
 }
 export type OwnerBindings=Awaited<ReturnType<typeof ownerBindings>>;
 export async function retainedStatusBindings(ctx:PeMutationContext,p:Programme):Promise<OwnerBindings>{

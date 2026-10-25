@@ -101,7 +101,7 @@ export function induceProcedures(cut: EpisodeCut, codeDigest: string, id: () => 
         bytes: module.bounds.bytes, wallTimeMsMaximum: 10000, dollars: null,
         originalGrantRequired: true, totalMemoryCpuDiskQuotaQualified: false },
       fallback: { owner: 'P1', producerVersion: first.program.producer.version, codeDigest,
-        mode: 'REAL_FRESH_ORDINARY_SYNTHESIS_WITHIN_ORIGINAL_GRANT', admitted: null },
+        mode: 'REAL_FRESH_ANALYTICAL_SYNTHESIS_WITHIN_ORIGINAL_GRANT', admitted: null },
     };
     const refs = Object.fromEntries(Object.entries(components).map(([name, body]) =>
       [name, componentRef(name, body)])) as Record<keyof typeof components, ReturnType<typeof componentRef>>;
@@ -125,7 +125,7 @@ export function induceProcedures(cut: EpisodeCut, codeDigest: string, id: () => 
         'S4_CANONICAL_MANDATE', 'S5_FUNDING', 'S8_PROCEDURE_AND_PRODUCER_ADMISSION',
         'ATTESTED_RUNTIME_IMAGE', 'INDUCTION_FABRIC_ATTESTATION', 'COMPLETE_RECONCILED_DOLLARS',
         'INDEPENDENT_SEALED_TRANSFER_AND_REAL_REUSE_HORIZON'],
-      qualification: 'ORDINARY_TEST_ONLY_NO_S8_ADMISSION_NO_INTERVENTION_TRANSPORT_OR_ECONOMIC_CREDIT',
+      qualification: 'SOURCE_BOUND_ANALYTICAL_REUSE_NO_S8_ADMISSION_NO_INTERVENTION_TRANSPORT_OR_ECONOMIC_CREDIT',
     };
     capsules.push(parseCapsule(JSON.parse(stable(capsule))));
   }

@@ -9,15 +9,15 @@ type Reading={state:'PROPOSED'|'INVALIDATED';capsule:{id:string;admission:null;m
  support:{episodes:string[];companies:string[];adverseRecords:unknown[]};unavailableBindings:string[]};history:unknown[]}
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 
-export function ProcedureInductionPanel({root,workId,threadId,onSelect}:{root:Root;workId:string|null;threadId:string;onSelect:(id:string|null)=>void}){
+export function ProcedureInductionPanel({root,workId,threadId,mode,onSelect}:{root:Root;workId:string|null;threadId:string;mode:'ordinary_disposable'|'production_analysis'|null;onSelect:(id:string|null)=>void}){
  const {session}=useCentropyAuth()
- const identity=[session?.user.id??'none',session?.access_token??'',threadId,root.entityType,root.entityId,workId??'none'].join(':')
+ const identity=[session?.user.id??'none',session?.access_token??'',threadId,root.entityType,root.entityId,workId??'none',mode??'unavailable'].join(':')
  const current=useRef(identity);current.current=identity
  const epoch=useRef(0),container=useRef<HTMLDivElement>(null),active=useRef(false)
  const [reading,setReading]=useState<{identity:string;value:Reading}|null>(null)
  const [proof,setProof]=useState<{identity:string;value:unknown}|null>(null)
  const [programmes,setProgrammes]=useState(''),[lookup,setLookup]=useState(''),[correction,setCorrection]=useState('')
- const [cut,setCut]=useState(''),[busy,setBusy]=useState(false),[message,setMessage]=useState('Select native Work to inspect or induce an ordinary procedure.')
+ const [cut,setCut]=useState(''),[busy,setBusy]=useState(false),[message,setMessage]=useState('Select Work to inspect or derive a reusable analytical procedure.')
  const induction=useRef<{identity:string;id:string}|null>(null)
  const inspected=useRef<{identity:string;id:string}|null>(null)
  const pending=useRef<{fingerprint:string;request:Record<string,unknown>}|null>(null)
@@ -42,7 +42,7 @@ export function ProcedureInductionPanel({root,workId,threadId,onSelect}:{root:Ro
    inspected.current=value?{identity:expected,id:value.capsule.id}:null
    setReading(value?{identity:expected,value}:null)
    if(value?.state==='INVALIDATED'){setProof(null);onSelect(null)}
-   setMessage(value?value.state==='INVALIDATED'?'Invalidated. Historical module bytes and failures are retained.':'Executable proposal available for disposable evaluation only.':'No procedure has been induced for this Work.')
+   setMessage(value?value.state==='INVALIDATED'?'Invalidated. Historical module bytes and failures are retained.':'Procedure available for analysis. Each use checks current sources, applicability and the original criteria.':'No procedure has been induced for this Work.')
   }catch(error){if(sequence===epoch.current&&current.current===expected){clear();setBusy(false);setMessage(error instanceof CentropyApiError&&[401,403,404].includes(error.status)?'Procedure unavailable in the current access scope.':'The current procedure could not be verified. No ready claim is shown.')}}
   finally{active.current=false}
  },[identity,session,workId,root.entityType,root.entityId,onSelect,clear])
@@ -60,13 +60,13 @@ export function ProcedureInductionPanel({root,workId,threadId,onSelect}:{root:Ro
   return()=>{clearInterval(timer);document.removeEventListener('visibilitychange',focus);window.removeEventListener('focus',focus)}
  },[session,workId,refresh,clear])
  async function induce(event:FormEvent){
-  event.preventDefault();if(!session||!workId)return
+  event.preventDefault();if(!session||!workId||!mode)return
   const programIds=programmes.split(/[\s,]+/).filter(Boolean)
   if(programIds.length<2||programIds.some(id=>!uuid.test(id))||!Number.isFinite(Date.parse(cut))){setMessage('Provide at least two exact programme identifiers and a valid knowledge cut.');return}
-  const fingerprint=JSON.stringify({identity,programIds,cut})
+  const fingerprint=JSON.stringify({identity,programIds,cut,mode})
   if(pending.current?.fingerprint!==fingerprint)pending.current={fingerprint,request:{
    schema:'finnor.p6.induction-request.v1',root,workId,programIds,knowledgeCut:new Date(cut).toISOString(),
-   idempotencyKey:crypto.randomUUID(),mode:'ordinary_disposable'}}
+   idempotencyKey:crypto.randomUUID(),mode}}
   const sequence=++epoch.current,expected=identity;inspected.current=null;clear();setBusy(true)
   try{const result=await centropyPost<{inductionId:string}>('company-brain/procedure-induce',pending.current.request)
    if(sequence!==epoch.current||current.current!==expected)return
@@ -96,7 +96,7 @@ export function ProcedureInductionPanel({root,workId,threadId,onSelect}:{root:Ro
    <label>Source programme identifiers<textarea value={programmes} onChange={e=>setProgrammes(e.target.value)} required maxLength={2048}/></label>
    <label>Episode knowledge cut<input value={cut} onChange={e=>setCut(e.target.value)} required maxLength={64}/></label>
    <p>The declared original episodes include adverse, failed and incomplete records. This is not a global or independently controlled sample.</p>
-   <button type="submit" disabled={busy}>Induce executable procedure</button>
+   <button type="submit" disabled={busy||!mode}>Induce executable procedure</button>
   </form><form onSubmit={e=>{e.preventDefault();if(uuid.test(lookup)){clear();void refresh(++epoch.current,lookup)}}}>
    <label>Exact procedure identifier<input value={lookup} onChange={e=>setLookup(e.target.value)} required pattern={uuid.source}/></label>
    <button type="submit" disabled={busy}>Read authorized procedure</button>
@@ -104,7 +104,7 @@ export function ProcedureInductionPanel({root,workId,threadId,onSelect}:{root:Ro
   {visible?<><p>Procedure {visible.capsule.id} · {visible.state.toLowerCase()} · {visible.capsule.support.episodes.length} original episodes · {visible.capsule.support.adverseRecords.length} adverse records retained.</p>
    <p>USD cost remains unknown. Induction, checking, failed use, fallback, corrections and maintenance are not free.</p>
    <button type="button" onClick={()=>void inspect()}>Inspect procedure evidence</button>
-   {visible.state==='PROPOSED'?<button type="button" onClick={()=>onSelect(visible.capsule.id)}>Select for disposable execution</button>:null}
+   {visible.state==='PROPOSED'?<button type="button" disabled={!mode} onClick={()=>onSelect(visible.capsule.id)}>Select for analysis</button>:null}
    <details><summary>Procedure domain and outstanding qualifications</summary><pre>{JSON.stringify(visible.capsule.template,null,2)}</pre><p>{visible.capsule.unavailableBindings.join(', ')}</p></details>
    <form onSubmit={invalidate}><label>Procedure correction or failure<textarea value={correction} onChange={e=>setCorrection(e.target.value)} required maxLength={2000}/></label>
     <button type="submit" disabled={busy}>Record counterexample and invalidate</button></form>

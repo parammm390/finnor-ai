@@ -16,7 +16,7 @@ export async function disposablePlatform(options:{preserveDirectory?:boolean}={}
   await postgres.initialise();await appendFile(join(directory,'postgresql.conf'),'\ntrack_commit_timestamp=on\n');await postgres.start();await postgres.createDatabase('v2_e2e');
   const url=`postgres://finnor:finnor@127.0.0.1:${port}/v2_e2e`,applied=await migrate(url);
   admin=new pg.Client({connectionString:url});await admin.connect();await admin.query("ALTER ROLE finnor_app LOGIN PASSWORD 'finnor_app'");await admin.query("ALTER ROLE finnor_worker LOGIN PASSWORD 'finnor_worker'");await admin.query("SET app.test_vertical_mode='explicit'");
-  await admin.query("INSERT INTO finnor_os.compute_resource_policies(resource_key,capacity,per_tenant_capacity,interactive_reserve,lease_seconds,source) VALUES('native:p4',2,2,0,60,'explicit disposable V2 source/checker E2E, not production capacity')");
+  await admin.query("INSERT INTO finnor_os.compute_resource_policies(resource_key,capacity,per_tenant_capacity,interactive_reserve,lease_seconds,source) VALUES('native:p4',2,2,0,60,'explicit disposable V2 source/checker E2E, not production capacity') ON CONFLICT(resource_key) DO UPDATE SET capacity=EXCLUDED.capacity,per_tenant_capacity=EXCLUDED.per_tenant_capacity,interactive_reserve=EXCLUDED.interactive_reserve,lease_seconds=EXCLUDED.lease_seconds,source=EXCLUDED.source");
   process.env.DATABASE_URL=`postgres://finnor_app:finnor_app@127.0.0.1:${port}/v2_e2e`;await closePool();
   const workerUrl=`postgres://finnor_worker:finnor_worker@127.0.0.1:${port}/v2_e2e`;
   return {admin,applied,directory,url,workerUrl,close:async()=>{await closePool();await admin!.end();await postgres.stop();if(!options.preserveDirectory)await rm(directory,{recursive:true,force:true});}};

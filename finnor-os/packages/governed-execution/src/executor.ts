@@ -6,7 +6,9 @@ import {tmpdir,release} from 'node:os';
 import {join,dirname} from 'node:path';
 import {s6AdapterContract} from './adapter-contract.js';
 import {prepareLinuxNodeIsolation,readLinuxBootstrap} from './executor-linux.js';
-export interface IsolatedNodeRequest {script:string;input:unknown;wallTimeMs:number;protectedExecution?:boolean;requiredLimits?:{cpuTimeMs?:number;totalMemoryBytes?:number;threads?:number;diskBytes?:number}}
+import type {IsolatedExecutionOptions} from './executor-custody';
+import {launchDaytonaNodeExecutor} from './executor-daytona';
+export interface IsolatedNodeRequest extends IsolatedExecutionOptions {script:string;input:unknown;wallTimeMs:number;protectedExecution?:boolean;requiredLimits?:{cpuTimeMs?:number;totalMemoryBytes?:number;threads?:number;diskBytes?:number}}
 export interface IsolatedNodeResult {stdout:string;stderr:string;exitCode:number|null;signal:string|null;termination:'EXITED'|'WALL_TIME_LIMIT'|'OUTPUT_LIMIT';provenance:Record<string,unknown>}
 let active=0;
 const digest=(v:Uint8Array|string)=>createHash('sha256').update(v).digest('hex');
@@ -18,8 +20,13 @@ async function scratchUsage(path:string):Promise<{bytes:number;files:number;comp
 export async function launchIsolatedNodeExecutor(request:IsolatedNodeRequest):Promise<IsolatedNodeResult>{
  if(request.protectedExecution===true)throw new Error('EXECUTOR_PROTECTED_CLASS_UNADMITTED');
  if(request.requiredLimits&&Object.keys(request.requiredLimits).length)throw new Error('EXECUTOR_RESOURCE_BOUND_UNAVAILABLE');
- if(process.platform!=='darwin'&&process.platform!=='linux')throw new Error('ISOLATION_SUBSTRATE_UNAVAILABLE');
  const input=JSON.stringify(request.input);if(typeof request.script!=='string'||Buffer.byteLength(request.script)>1024*1024||input===undefined||Buffer.byteLength(input)>1024*1024||!Number.isInteger(request.wallTimeMs)||request.wallTimeMs<1||request.wallTimeMs>10000)throw new Error('EXECUTOR_ENVELOPE_INVALID');
+ if(request.backend==='daytona'){
+  if(!request.custody)throw Error('DAYTONA_DURABLE_CUSTODY_REQUIRED');
+  return launchDaytonaNodeExecutor(request,request.custody);
+ }
+ if(request.backend!==undefined&&request.backend!=='local')throw Error('ISOLATION_SUBSTRATE_UNAVAILABLE');
+ if(process.platform!=='darwin'&&process.platform!=='linux')throw new Error('ISOLATION_SUBSTRATE_UNAVAILABLE');
  if(active>=4)throw new Error('EXECUTOR_CONCURRENCY_LIMIT');active++;
  let scratch:string|undefined,linux:Awaited<ReturnType<typeof prepareLinuxNodeIsolation>>|undefined;
  try{

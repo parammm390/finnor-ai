@@ -262,6 +262,16 @@ export function validateOperationalQueryRequest(
   if (isRetiredWaterQuery(intent)) return { success: false, error: "Operational query intent belongs to the retired Water vertical" };
   if (!ACTIVE_INTENTS.has(intent)) return { success: false, error: "Unsupported operational query intent" };
 
+  if(intent === "primary_diligence_v1"){
+    const keys=["intent","dealId","workId","programmeId"];
+    if(Object.keys(value!).some(key=>!keys.includes(key))||typeof value?.workId!=="string"||!UUID.test(value.workId)||typeof value?.dealId!=="string"||!UUID.test(value.dealId)||value.programmeId!==undefined&&(typeof value.programmeId!=="string"||!UUID.test(value.programmeId)))return {success:false,error:"Primary diligence requires current Work and exact Deal/programme identifiers"};
+    return {success:true,request:value as unknown as OperationalQueryRequest};
+  }
+  if(intent === "acquisition_decision_v1"){
+    const keys=["intent","dealId","workId","decisionId","investmentCaseId"];
+    if(Object.keys(value!).some(key=>!keys.includes(key))||typeof value?.workId!=="string"||!UUID.test(value.workId)||typeof value?.dealId!=="string"||!UUID.test(value.dealId)||["decisionId","investmentCaseId"].some(key=>value?.[key]!==undefined&&(typeof value[key]!=="string"||!UUID.test(value[key] as string))))return {success:false,error:"Acquisition query requires current Work and exact Deal/decision identifiers"};
+    return {success:true,request:value as unknown as OperationalQueryRequest};
+  }
   if (intent === "economic_programme_v1") {
     if (Object.keys(value!).some(key=>!["intent","programmeId","workId"].includes(key)) || typeof value?.programmeId!=="string" || !UUID.test(value.programmeId) || typeof value?.workId!=="string" || !UUID.test(value.workId)) return {success:false,error:"Economic query requires exact programme and Work IDs"};
     return {success:true,request:value as unknown as OperationalQueryRequest};

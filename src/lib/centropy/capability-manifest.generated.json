@@ -3933,6 +3933,153 @@
       "source": "finnor-os/apps/api/app/api/coalition-programmes/[operation]/route.ts"
     },
     {
+      "capabilityId": "http.post.company-brain.acquisition-closing-context",
+      "family": "company-brain",
+      "owner": "@finnor/private-equity",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "company-brain/acquisition-closing-context",
+      "routeDepth": 2,
+      "classification": "READ",
+      "kind": "read",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "query",
+      "effectClass": null,
+      "verificationClass": "canonical_read",
+      "presentationTargets": [
+        "WORLD",
+        "CANVAS"
+      ],
+      "invalidationTags": [],
+      "timeoutClass": "READ",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts"
+    },
+    {
+      "capabilityId": "http.post.company-brain.acquisition-evaluate",
+      "family": "company-brain",
+      "owner": "@finnor/private-equity",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "company-brain/acquisition-evaluate",
+      "routeDepth": 2,
+      "classification": "MUTATION",
+      "kind": "mutation",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "backend_policy",
+      "effectClass": "domain_mutation",
+      "verificationClass": "canonical_reread",
+      "presentationTargets": [
+        "WORLD",
+        "CANVAS"
+      ],
+      "invalidationTags": [
+        "company-brain"
+      ],
+      "timeoutClass": "WRITE",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts"
+    },
+    {
+      "capabilityId": "http.post.company-brain.acquisition-intake-context",
+      "family": "company-brain",
+      "owner": "@finnor/private-equity",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "company-brain/acquisition-intake-context",
+      "routeDepth": 2,
+      "classification": "READ",
+      "kind": "read",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "query",
+      "effectClass": null,
+      "verificationClass": "canonical_read",
+      "presentationTargets": [
+        "WORLD",
+        "CANVAS"
+      ],
+      "invalidationTags": [],
+      "timeoutClass": "READ",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts"
+    },
+    {
+      "capabilityId": "http.post.company-brain.acquisition-intake-review",
+      "family": "company-brain",
+      "owner": "@finnor/private-equity",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "company-brain/acquisition-intake-review",
+      "routeDepth": 2,
+      "classification": "READ",
+      "kind": "read",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "query",
+      "effectClass": null,
+      "verificationClass": "canonical_read",
+      "presentationTargets": [
+        "WORLD",
+        "CANVAS"
+      ],
+      "invalidationTags": [],
+      "timeoutClass": "READ",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts"
+    },
+    {
+      "capabilityId": "http.post.company-brain.acquisition-read",
+      "family": "company-brain",
+      "owner": "@finnor/private-equity",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "company-brain/acquisition-read",
+      "routeDepth": 2,
+      "classification": "READ",
+      "kind": "read",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "query",
+      "effectClass": null,
+      "verificationClass": "canonical_read",
+      "presentationTargets": [
+        "WORLD",
+        "CANVAS"
+      ],
+      "invalidationTags": [],
+      "timeoutClass": "READ",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts"
+    },
+    {
       "capabilityId": "http.post.company-brain.application-acquire",
       "family": "company-brain",
       "owner": "@finnor/private-equity",
@@ -12738,7 +12885,7 @@
     {
       "capabilityId": "http.post.economic-outcomes.append",
       "family": "economic-outcomes",
-      "owner": "@finnor/api",
+      "owner": "@finnor/private-equity",
       "transport": "http",
       "method": "POST",
       "routePattern": "economic-outcomes/append",
@@ -12757,7 +12904,8 @@
       "verificationClass": "canonical_reread",
       "presentationTargets": [],
       "invalidationTags": [
-        "economic-outcomes"
+        "work",
+        "company-brain"
       ],
       "timeoutClass": "WRITE",
       "tests": [],
@@ -12766,7 +12914,7 @@
     {
       "capabilityId": "http.post.economic-outcomes.assess",
       "family": "economic-outcomes",
-      "owner": "@finnor/api",
+      "owner": "@finnor/private-equity",
       "transport": "http",
       "method": "POST",
       "routePattern": "economic-outcomes/assess",
@@ -12785,7 +12933,8 @@
       "verificationClass": "canonical_reread",
       "presentationTargets": [],
       "invalidationTags": [
-        "economic-outcomes"
+        "work",
+        "company-brain"
       ],
       "timeoutClass": "WRITE",
       "tests": [],
@@ -12794,7 +12943,7 @@
     {
       "capabilityId": "http.post.economic-outcomes.assign-programme",
       "family": "economic-outcomes",
-      "owner": "@finnor/api",
+      "owner": "@finnor/private-equity",
       "transport": "http",
       "method": "POST",
       "routePattern": "economic-outcomes/assign-programme",
@@ -12813,7 +12962,8 @@
       "verificationClass": "canonical_reread",
       "presentationTargets": [],
       "invalidationTags": [
-        "economic-outcomes"
+        "work",
+        "company-brain"
       ],
       "timeoutClass": "WRITE",
       "tests": [],
@@ -12822,7 +12972,7 @@
     {
       "capabilityId": "http.post.economic-outcomes.benchmark",
       "family": "economic-outcomes",
-      "owner": "@finnor/api",
+      "owner": "@finnor/private-equity",
       "transport": "http",
       "method": "POST",
       "routePattern": "economic-outcomes/benchmark",
@@ -12841,7 +12991,40 @@
       "verificationClass": "canonical_reread",
       "presentationTargets": [],
       "invalidationTags": [
-        "economic-outcomes"
+        "work",
+        "company-brain"
+      ],
+      "timeoutClass": "WRITE",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/economic-outcomes/[operation]/route.ts"
+    },
+    {
+      "capabilityId": "http.post.economic-outcomes.bind-work",
+      "family": "economic-outcomes",
+      "owner": "@finnor/private-equity",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "economic-outcomes/bind-work",
+      "routeDepth": 2,
+      "classification": "MUTATION",
+      "kind": "mutation",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": true,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "human_attestation",
+      "effectClass": "domain_mutation",
+      "verificationClass": "canonical_reread",
+      "presentationTargets": [
+        "WORLD",
+        "CANVAS"
+      ],
+      "invalidationTags": [
+        "work",
+        "company-brain"
       ],
       "timeoutClass": "WRITE",
       "tests": [],
@@ -12850,7 +13033,7 @@
     {
       "capabilityId": "http.post.economic-outcomes.execution-evidence",
       "family": "economic-outcomes",
-      "owner": "@finnor/api",
+      "owner": "@finnor/private-equity",
       "transport": "http",
       "method": "POST",
       "routePattern": "economic-outcomes/execution-evidence",
@@ -12876,7 +13059,7 @@
     {
       "capabilityId": "http.post.economic-outcomes.history",
       "family": "economic-outcomes",
-      "owner": "@finnor/api",
+      "owner": "@finnor/private-equity",
       "transport": "http",
       "method": "POST",
       "routePattern": "economic-outcomes/history",
@@ -12902,7 +13085,7 @@
     {
       "capabilityId": "http.post.economic-outcomes.learning-assessment",
       "family": "economic-outcomes",
-      "owner": "@finnor/api",
+      "owner": "@finnor/private-equity",
       "transport": "http",
       "method": "POST",
       "routePattern": "economic-outcomes/learning-assessment",
@@ -12928,7 +13111,7 @@
     {
       "capabilityId": "http.post.economic-outcomes.read",
       "family": "economic-outcomes",
-      "owner": "@finnor/api",
+      "owner": "@finnor/private-equity",
       "transport": "http",
       "method": "POST",
       "routePattern": "economic-outcomes/read",
@@ -12954,7 +13137,7 @@
     {
       "capabilityId": "http.post.economic-outcomes.reconcile-aggregate",
       "family": "economic-outcomes",
-      "owner": "@finnor/api",
+      "owner": "@finnor/private-equity",
       "transport": "http",
       "method": "POST",
       "routePattern": "economic-outcomes/reconcile-aggregate",
@@ -12973,7 +13156,8 @@
       "verificationClass": "canonical_reread",
       "presentationTargets": [],
       "invalidationTags": [
-        "economic-outcomes"
+        "work",
+        "company-brain"
       ],
       "timeoutClass": "WRITE",
       "tests": [],
@@ -12982,7 +13166,7 @@
     {
       "capabilityId": "http.post.economic-outcomes.register",
       "family": "economic-outcomes",
-      "owner": "@finnor/api",
+      "owner": "@finnor/private-equity",
       "transport": "http",
       "method": "POST",
       "routePattern": "economic-outcomes/register",
@@ -13001,7 +13185,8 @@
       "verificationClass": "canonical_reread",
       "presentationTargets": [],
       "invalidationTags": [
-        "economic-outcomes"
+        "work",
+        "company-brain"
       ],
       "timeoutClass": "WRITE",
       "tests": [],
@@ -13010,7 +13195,7 @@
     {
       "capabilityId": "http.post.economic-outcomes.register-assignment-protocol",
       "family": "economic-outcomes",
-      "owner": "@finnor/api",
+      "owner": "@finnor/private-equity",
       "transport": "http",
       "method": "POST",
       "routePattern": "economic-outcomes/register-assignment-protocol",
@@ -13029,7 +13214,8 @@
       "verificationClass": "canonical_reread",
       "presentationTargets": [],
       "invalidationTags": [
-        "economic-outcomes"
+        "work",
+        "company-brain"
       ],
       "timeoutClass": "WRITE",
       "tests": [],
@@ -13038,7 +13224,7 @@
     {
       "capabilityId": "http.post.economic-outcomes.register-benchmark",
       "family": "economic-outcomes",
-      "owner": "@finnor/api",
+      "owner": "@finnor/private-equity",
       "transport": "http",
       "method": "POST",
       "routePattern": "economic-outcomes/register-benchmark",
@@ -13057,9 +13243,71 @@
       "verificationClass": "canonical_reread",
       "presentationTargets": [],
       "invalidationTags": [
-        "economic-outcomes"
+        "work",
+        "company-brain"
       ],
       "timeoutClass": "WRITE",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/economic-outcomes/[operation]/route.ts"
+    },
+    {
+      "capabilityId": "http.post.economic-outcomes.register-work",
+      "family": "economic-outcomes",
+      "owner": "@finnor/private-equity",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "economic-outcomes/register-work",
+      "routeDepth": 2,
+      "classification": "MUTATION",
+      "kind": "mutation",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": true,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "human_attestation",
+      "effectClass": "domain_mutation",
+      "verificationClass": "canonical_reread",
+      "presentationTargets": [
+        "WORLD",
+        "CANVAS"
+      ],
+      "invalidationTags": [
+        "work",
+        "company-brain"
+      ],
+      "timeoutClass": "WRITE",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/economic-outcomes/[operation]/route.ts"
+    },
+    {
+      "capabilityId": "http.post.economic-outcomes.work-context",
+      "family": "economic-outcomes",
+      "owner": "@finnor/private-equity",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "economic-outcomes/work-context",
+      "routeDepth": 2,
+      "classification": "READ",
+      "kind": "read",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "query",
+      "effectClass": null,
+      "verificationClass": "canonical_read",
+      "presentationTargets": [
+        "WORLD",
+        "CANVAS"
+      ],
+      "invalidationTags": [],
+      "timeoutClass": "READ",
       "tests": [],
       "source": "finnor-os/apps/api/app/api/economic-outcomes/[operation]/route.ts"
     },
@@ -18469,6 +18717,35 @@
       "source": "finnor-os/packages/orchestration/src/plugin-registry.ts"
     },
     {
+      "capabilityId": "planner.query:acquisition_decision_v1",
+      "family": "operational-query",
+      "owner": "@finnor/orchestration",
+      "transport": "planner",
+      "method": null,
+      "routePattern": null,
+      "routeDepth": 0,
+      "classification": "READ",
+      "kind": "read",
+      "userProduct": true,
+      "agentProduct": true,
+      "modelCallable": true,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "query",
+      "effectClass": null,
+      "verificationClass": "backend_runtime",
+      "presentationTargets": [
+        "THREAD",
+        "CANVAS"
+      ],
+      "invalidationTags": [],
+      "timeoutClass": "RUNTIME",
+      "tests": [],
+      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts"
+    },
+    {
       "capabilityId": "planner.query:agent_activity",
       "family": "operational-query",
       "owner": "@finnor/orchestration",
@@ -18908,6 +19185,35 @@
     },
     {
       "capabilityId": "planner.query:pe_world_state",
+      "family": "operational-query",
+      "owner": "@finnor/orchestration",
+      "transport": "planner",
+      "method": null,
+      "routePattern": null,
+      "routeDepth": 0,
+      "classification": "READ",
+      "kind": "read",
+      "userProduct": true,
+      "agentProduct": true,
+      "modelCallable": true,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "query",
+      "effectClass": null,
+      "verificationClass": "backend_runtime",
+      "presentationTargets": [
+        "THREAD",
+        "CANVAS"
+      ],
+      "invalidationTags": [],
+      "timeoutClass": "RUNTIME",
+      "tests": [],
+      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts"
+    },
+    {
+      "capabilityId": "planner.query:primary_diligence_v1",
       "family": "operational-query",
       "owner": "@finnor/orchestration",
       "transport": "planner",
@@ -19489,6 +19795,66 @@
       "presentationTargets": [
         "THREAD",
         "CANVAS"
+      ],
+      "invalidationTags": [],
+      "timeoutClass": "RUNTIME",
+      "tests": [],
+      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts"
+    },
+    {
+      "capabilityId": "planner.start_acquisition_evaluation",
+      "family": "private-equity",
+      "owner": "@finnor/private-equity",
+      "transport": "planner",
+      "method": null,
+      "routePattern": null,
+      "routeDepth": 0,
+      "classification": "MUTATION",
+      "kind": "mutation",
+      "userProduct": true,
+      "agentProduct": true,
+      "modelCallable": true,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "backend_policy",
+      "effectClass": "planner_action",
+      "verificationClass": "backend_runtime",
+      "presentationTargets": [
+        "THREAD",
+        "CANVAS",
+        "WORLD"
+      ],
+      "invalidationTags": [],
+      "timeoutClass": "RUNTIME",
+      "tests": [],
+      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts"
+    },
+    {
+      "capabilityId": "planner.start_primary_diligence",
+      "family": "private-equity",
+      "owner": "@finnor/private-equity",
+      "transport": "planner",
+      "method": null,
+      "routePattern": null,
+      "routeDepth": 0,
+      "classification": "MUTATION",
+      "kind": "mutation",
+      "userProduct": true,
+      "agentProduct": true,
+      "modelCallable": true,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "backend_policy",
+      "effectClass": "planner_action",
+      "verificationClass": "backend_runtime",
+      "presentationTargets": [
+        "THREAD",
+        "CANVAS",
+        "WORLD"
       ],
       "invalidationTags": [],
       "timeoutClass": "RUNTIME",

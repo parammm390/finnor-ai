@@ -76,8 +76,13 @@ validate missing mandate/grant/contact-count/reservation/disclosure ledgers.
 Those remain mandatory parent-owner fences, not checker-issued permission.
 Current bindings must equal each observation's actual governance payloads and
 request refs. Revoked/revised profiles cannot be represented as current.
-Only DEVELOPMENT payloads are admitted; LIVE is explicitly outside this
-ordinary checker contract.
+Payloads must consistently use DEVELOPMENT or LIVE across semantics, source,
+consent and authority. LIVE content uses the same exact replay contract. Before
+acquisition and publication the parent separately verifies the source-specific
+signed transport admission and current activity, consent and fixed-read budget.
+The credential-free child does not issue transport, financial-domain, audit or
+economic admission. A LIVE source cannot promote an engineering verification
+grade or authorize a financial intervention.
 
 ## Independent conjuncts
 

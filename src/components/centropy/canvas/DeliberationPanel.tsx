@@ -67,7 +67,7 @@ export function DeliberationPanel({ root, workId, threadId }: Props) {
       await jarvisPost("company-brain/deliberation-" + operation, operation === "submit" ? {
         schema: "finnor.deliberation-request.v1", programId: candidate!.programId,
         policyRequest: candidate!.policyRequest, computeGrant: candidate!.computeGrant,
-        idempotencyKey: crypto.randomUUID(), mode: "ordinary_disposable", strategy: "ADAPTIVE",
+        idempotencyKey: crypto.randomUUID(), mode: candidate!.mode, strategy: "ADAPTIVE",
         limits: { maxUnits: 8, maxParallel: 2 }, valueEvidenceRef: null, sourceInspectionRef: null,
       } : { searchId: latest!.searchId })
       if (sequence === epoch.current && currentIdentity.current === expected) await refresh(sequence)

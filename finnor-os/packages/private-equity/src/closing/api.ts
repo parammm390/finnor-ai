@@ -2,7 +2,9 @@ import { randomUUID } from "node:crypto";
 import { evaluateAuthority } from "@finnor/authority";
 import { attachWorkEntity, receiveWork } from "@finnor/db";
 import type { PeMutationContext } from "../types";
-import { authorize, principal, revisions, closingTx as tx } from "../owner-context";
+import { authorize, principal, revisions, sameRevisions, closingTx as tx } from "../owner-context";
+import {requireAcquisitionClosingBasis} from '../acquisition/closing-context';
+import {assertEvidenceRunTransactionCurrent} from '../evidence-execution/consumer';
 import { compileClosingGraph, closingCanonical, closingDigest } from "./compiler";
 import { ClosingError, ClosingIntakeSchema, ClosingOperationSchemas, ClosingProfileSchema } from "./contracts";
 import { appendClosingObservation, appendClosingObservationTx, closingEvent, closingProgramme, closingProgrammesFor, enqueueClosing, readClosingProgramme, verifyClosingObservation } from "./store";
@@ -21,6 +23,8 @@ export async function submitClosingProgramme(ctx: PeMutationContext, value: unkn
   const existing = await tx(ctx, async c => (await c.query<ClosingProgrammeRow>("SELECT * FROM finnor_os.pe_closing_programmes WHERE tenant_id=$1 AND principal_id=$2 AND idempotency_key=$3", [ctx.auth.tenantId, principal(ctx), input.idempotencyKey])).rows[0], true);
   if (existing && existing.intake_digest !== intakeDigest) throw new ClosingError("CLOSING_IDEMPOTENCY_CONFLICT", 409);
   if (existing?.plan_revision_id) return { ...(await readClosingProgramme(ctx, existing.id)), replayed: true };
+  const acquisition=input.workId?await requireAcquisitionClosingBasis(ctx,{workId:input.workId,icCaseId:input.acquisitionIcCaseId,spec}):null;
+  if(acquisition&&!input.continuation)throw new ClosingError("CLOSING_ORIGINAL_FULL_WORK_BINDING_REQUIRED",409);
   if (spec.environment === "DEVELOPMENT" && process.env.NODE_ENV === "production") throw new ClosingError("DEVELOPMENT_CLOSING_IS_NOT_PRODUCTION_AUTHORITY", 403);
   const profileRow = await tx(ctx, async c => (await c.query("SELECT * FROM finnor_os.pe_closing_profiles WHERE tenant_id=$1 AND id=$2", [ctx.auth.tenantId, spec.profileId])).rows[0], true);
   if (!profileRow || profileRow.status !== "ACTIVE" || new Date(profileRow.valid_until).getTime() <= Date.now()) throw new ClosingError("QUALIFIED_CLOSING_PROFILE_UNAVAILABLE");
@@ -103,9 +107,11 @@ export async function submitClosingProgramme(ctx: PeMutationContext, value: unkn
     const currentAuthority = (await c.query("SELECT revision FROM finnor_os.authority_states WHERE tenant_id=$1 FOR SHARE", [ctx.auth.tenantId])).rows[0];
     if (Number(currentAuthority?.revision ?? 1) !== authority.authorityRevision) throw new ClosingError("CLOSING_INTAKE_AUTHORITY_CHANGED", 409);
     const keys = [...new Set([...spec.dependencyKeys, `evidence:${terms.source_id}`, "rights:tenant", `work-inputs:${intake.workId}`, ...spec.documents.map(d => `document:${d.documentId}`)])];
-    const pins = await revisions(ctx, keys, c, true);
+    const pins = await revisions(ctx, [...keys,...(acquisition?.dependencies.map(d=>d.key)??[])], c, true);
+    if(acquisition&&!sameRevisions(acquisition.dependencies,pins))throw new ClosingError("ACQUISITION_CLOSING_SOURCE_CHANGED",409);
+    if(acquisition?.acquisition)await assertEvidenceRunTransactionCurrent(c,ctx.auth.tenantId,acquisition.acquisition.runId);
     const originalLoop = (await c.query("SELECT deadline_at FROM finnor_os.work_objective_loops WHERE tenant_id=$1 AND work_id=$2", [ctx.auth.tenantId, intake.workId])).rows[0];
-    const deadline = new Date(Math.min(Date.parse(spec.originalGrant.deadlineAt), originalLoop?.deadline_at?.getTime() ?? Infinity));
+    const deadline = new Date(Math.min(Date.parse(spec.originalGrant.deadlineAt), originalLoop?.deadline_at?.getTime() ?? Infinity,acquisition?.validUntil?Date.parse(acquisition.validUntil):Infinity));
     const row = (await c.query<ClosingProgrammeRow>(
       "INSERT INTO finnor_os.pe_closing_programmes(id,tenant_id,transaction_id,principal_id,work_id,work_input_id,work_input_digest,profile_id,profile_digest,accepted_terms_source_id,accepted_terms_version_id,approved_terms_revision,spec,spec_digest,graph,dependency_pins,authority_revision,intake_authority_decision_id,original_deadline_at,idempotency_key,intake_digest) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13::jsonb,$14,$15::jsonb,$16::jsonb,$17,$18,$19,$20,$21) RETURNING *",
       [randomUUID(), ctx.auth.tenantId, spec.transactionId, principal(ctx), intake.workId, work.id, closingDigest(work.body),
@@ -119,7 +125,7 @@ export async function submitClosingProgramme(ctx: PeMutationContext, value: unkn
     // transaction spanning those owners.
     await appendClosingObservationTx(ctx, row, input.legalAcceptance, profile, c, db, false, false);
     await closingEvent(ctx, row, "LEGAL_SPEC_INTAKE", { specDigest: digest, originalGrant: spec.originalGrant,
-      workInputId: work.id, workContinuation: continuation ?? null, planPending: true, developmentDoesNotAdmit: true }, c, "legal-intake");
+      workInputId: work.id, workContinuation: continuation ?? null, acquisitionApproval:acquisition?{...acquisition.selected,acquisition:acquisition.acquisition,validUntil:acquisition.validUntil,dependencies:acquisition.dependencies}:null, planPending: true, developmentDoesNotAdmit: true }, c, "legal-intake");
     await enqueueClosing(ctx, row, "intake-recovery", c, 15000);
     return row;
   });

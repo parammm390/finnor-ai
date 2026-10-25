@@ -53,7 +53,7 @@ export type SeriesValue = Readonly<Record<string, ScalarValue>>;
 export type ModelValue = ScalarValue | SeriesValue;
 
 export interface InputProvenanceRef {
-  kind: "p1_assumption" | "evidence_version" | "model_parameter" | "human_input" | "artifact_anchor" | "evidence_derivation" | "primary_finding" | "confidential_computation";
+  kind: "p1_assumption" | "evidence_version" | "model_parameter" | "human_input" | "artifact_anchor" | "evidence_derivation" | "primary_finding" | "harness_program" | "confidential_computation";
   id: string;
   versionId?: string;
   anchorId?: string;

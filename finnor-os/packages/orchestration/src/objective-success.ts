@@ -33,8 +33,10 @@ import { validateOperationalQueryRequest } from "./fast-read-lane";
 import { executeTenantOperationalQuery } from "./operational-query-runtime";
 import { evaluateDealCloseEligibility, loadDealExecutionGraph, peTransaction } from "@finnor/private-equity/src/repository";
 import { getIcWorkspace } from "@finnor/private-equity/src/ic-repository";
-import type { PeMutationContext } from "@finnor/private-equity/src/types";
+import { PeDomainError, type PeMutationContext } from "@finnor/private-equity/src/types";
+import { readAcquisitionIcBasis, type AcquisitionIcBasis } from "@finnor/private-equity/src/acquisition/ic";
 import type { IcWorkspaceReadModel } from "@finnor/private-equity/src/ic-types";
+import {hasFinalizedIcBasis} from "@finnor/private-equity/src/ic-finalized-basis";
 import { artifactContext, getArtifact } from "@finnor/artifacts";
 
 const PathSchema = z.array(z.union([z.string().min(1).max(120), z.number().int().nonnegative()])).max(24);
@@ -66,7 +68,7 @@ const CriterionSchema = z.discriminatedUnion("kind", [
       z.object({ kind: z.literal("deal_closed") }).strict(),
     ]),
   }).strict(),
-  z.object({ kind: z.literal("private_equity_ic_preparation"), dealId: z.string().uuid(), requireScenario: z.boolean().optional() }).strict(),
+  z.object({ kind: z.literal("private_equity_ic_preparation"), dealId: z.string().uuid(), requireScenario: z.boolean().optional(), requireAcquisition: z.boolean().optional() }).strict(),
   z.object({ kind: z.literal("private_equity_ic_deck_draft"), dealId: z.string().uuid() }).strict(),
   z.object({ kind: z.literal("private_equity_underwriting_scenario"), dealId: z.string().uuid(), growthDecreaseBps: z.number().int().min(1).max(10_000), exitMultiple: z.string().regex(/^(?:0|[1-9]\d*)(?:\.\d+)?$/) }).strict(),
   z.object({ kind: z.literal("matched_wait"), minimumCount: z.number().int().min(1).max(25), eventType: z.string().min(1).max(200).optional() }).strict(),
@@ -236,7 +238,7 @@ export function privateEquityObjectiveSuccessCondition(params: {
     criteria: [
       { kind: "no_open_execution" },
       { kind: "all_objective_effects_verified", minimumCount: 0 },
-      { kind: "private_equity_ic_preparation", dealId: params.dealId, ...(revenueChallenge ? { requireScenario: true } : {}) },
+      { kind: "private_equity_ic_preparation", dealId: params.dealId, ...(revenueChallenge ? { requireScenario: true } : {}), ...(/\b(?:maximum|max)\s+bid\b|\bcompare\s+(?:the\s+)?financing\b/.test(normalized)?{requireAcquisition:true}:{}) },
       { kind: "decision_evidence", minimumCount: 1, accepted: ["canonical_query", "business_effect"] },
     ],
   };
@@ -468,8 +470,27 @@ function verifiedEffect(effect: EffectInspection): boolean {
 
 function effectIsBusinessEvidence(effect: EffectInspection): boolean {
   if (!verifiedEffect(effect)) return false;
+  // This receipt verifies accepting the child analysis. Its financial result is
+  // independently read through acquisition_decision_v1 after the worker ends.
+  if(['start_acquisition_evaluation','start_primary_diligence'].includes(effect.effect.operation.name))return false;
   if (effect.effect.expected.observation === "canonical_state" && effect.effect.expected.state) return true;
   return /\bcanonical\b/i.test(effect.verification?.basis ?? "");
+}
+
+export function acquisitionCompletionEvidence(inspection: ObjectiveSuccessInspection, workId: string): Extract<ObjectiveCompletionEvidence, { kind: "canonical_query" }> | null {
+  const actionIds = new Set(inspection.actions.filter((action) => action.actionType === "start_acquisition_evaluation" && action.status === "completed").map((action) => action.id));
+  const reads: Extract<ObjectiveCompletionEvidence, { kind: "canonical_query" }>[] = [];
+  for (const item of inspection.businessEffects) {
+    if (!item.domainActionId || !actionIds.has(item.domainActionId) || !verifiedEffect(item)
+      || item.effect.operation.name !== "start_acquisition_evaluation" || item.effect.source.workId !== workId) continue;
+    const observed = record(item.verification?.observed);
+    const decisionId = z.string().uuid().safeParse(observed.id);
+    const deals = item.effect.targets.filter((target) => target.type === "pe_deal");
+    if (observed.workId !== workId || !decisionId.success || deals.length !== 1) continue;
+    reads.push({ kind: "canonical_query", request: { intent: "acquisition_decision_v1", workId, dealId: deals[0]!.id, decisionId: decisionId.data },
+      assertion: { path: ["data", "status"], operator: "eq", expected: "TESTED" } });
+  }
+  return reads.length === 1 ? reads[0]! : null;
 }
 
 /** Cite the exact completed IC review action only when its Work-scoped effect
@@ -545,20 +566,28 @@ async function queryCriterion(params: {
   assertion: ObjectiveSuccessAssertion;
   executionKey: string;
   loopId:string;
+  businessDecisionEvidence?:boolean;
 }): Promise<{ satisfied: boolean; basis: string; evidenceRefs: Array<{ type: string; id: string }>; observed: unknown; queryExecutionId?: string }> {
-  const identity: { userId?: string; employeeId?: string; workInputId?: string } | null = params.request.intent === "economic_programme_v1" || params.request.intent === "harness_program_v1" || params.request.intent === "confidential_economic_computation_v1" || params.request.intent === "closing_readiness" || params.request.intent === "pe_world_state" ? await withTenant(params.tenantId,async db=>{
+  const identity: { userId?: string; employeeId?: string; workInputId?: string } | null = params.request.intent === "primary_diligence_v1" || params.request.intent === "acquisition_decision_v1" || params.request.intent === "economic_programme_v1" || params.request.intent === "harness_program_v1" || params.request.intent === "confidential_economic_computation_v1" || params.request.intent === "closing_readiness" || params.request.intent === "pe_world_state" ? await withTenant(params.tenantId,async db=>{
     const [loop]=await db.select({createdBy:workObjectiveLoops.createdBy}).from(workObjectiveLoops).where(and(eq(workObjectiveLoops.tenantId,params.tenantId),eq(workObjectiveLoops.workId,params.workId),eq(workObjectiveLoops.id,params.loopId))).limit(1);
     const [input]=await db.select({id:workInputs.id}).from(workInputs).where(and(eq(workInputs.tenantId,params.tenantId),eq(workInputs.workId,params.workId))).orderBy(sql`${workInputs.createdAt} DESC`,sql`${workInputs.id} DESC`).limit(1);
     if(!loop?.createdBy||!input)return null;
-    return {userId:loop.createdBy,employeeId:loop.createdBy,...(["harness_program_v1","economic_programme_v1","confidential_economic_computation_v1"].includes(params.request.intent)?{workInputId:input.id}:{})};
+    return {userId:loop.createdBy,employeeId:loop.createdBy,...(["harness_program_v1","acquisition_decision_v1","primary_diligence_v1","economic_programme_v1","confidential_economic_computation_v1"].includes(params.request.intent)?{workInputId:input.id}:{})};
   }):{};
   if (!identity) return { satisfied: false, basis: "Native verification requires the persisted current principal and Work input; no substitute identity was used.", evidenceRefs: [], observed: { predicate: "NATIVE_VERIFIER_PRINCIPAL_INPUT_REQUIRED" } };
   const result = await executeTenantOperationalQuery(params.tenantId, params.request as CanonicalOperationalQueryRequest, { workId: params.workId, executionKey: params.executionKey,...identity });
   const assertion = evaluateObjectiveAssertion(result, params.assertion);
+  const acquisition=record(result.data),financial=record(acquisition.result);
+  const primaryFindings=Array.isArray(acquisition.findings)?acquisition.findings.map(record):[];
+  const analysisComplete=!params.businessDecisionEvidence||(
+    params.request.intent==='acquisition_decision_v1'?Boolean(params.request.decisionId&&acquisition.status==='TESTED'&&financial.completeSearch===true)
+    :params.request.intent==='primary_diligence_v1'?Boolean(params.request.programmeId&&acquisition.status==='COMPLETE'&&primaryFindings.length&&primaryFindings.every(f=>f.conclusion!=='UNRESOLVED'&&Array.isArray(f.acceptedClaims)&&f.acceptedClaims.length))
+    :true);
+  const satisfied=assertion.satisfied&&analysisComplete;
   const executionId = result.execution?.id;
   return {
-    satisfied: assertion.satisfied,
-    basis: assertion.satisfied ? "The current Operational Query result satisfies the persisted assertion." : "The current Operational Query result does not satisfy the persisted assertion.",
+    satisfied,
+    basis: !analysisComplete?"The native query proves a workspace or unfinished analysis; current independently checked business evidence is required.":satisfied ? "The current Operational Query result satisfies the persisted assertion." : "The current Operational Query result does not satisfy the persisted assertion.",
     evidenceRefs: executionId ? [{ type: "work_query_execution", id: executionId }] : [],
     observed: { path: params.assertion.path, operator: params.assertion.operator, expected: params.assertion.expected, actual: assertion.actual },
     queryExecutionId: executionId,
@@ -627,11 +656,14 @@ export function assessPrivateEquityIcPreparation(input: {
 }): { satisfied: boolean; gaps: string[] } {
   const { workspace } = input;
   const preparedStates = new Set(["READY_FOR_REVIEW", "QUESTIONS_OPEN", "READY_FOR_VOTE", "VOTING", "CONDITIONS_PENDING"]);
+  const decided = workspace.case.state === "DECIDED";
+  const finalizedBasis = hasFinalizedIcBasis(workspace);
   const workTime = new Date(input.workCreatedAt).getTime();
   const runTime = new Date(String(workspace.underwriting?.run.computedAt ?? "")).getTime();
   const memoTime = new Date(String(workspace.artifacts.memo?.createdAt ?? "")).getTime();
   const gaps = [
-    ...(!preparedStates.has(String(workspace.case.state)) ? ["IC_CASE_NOT_PREPARED"] : []),
+    ...(!preparedStates.has(String(workspace.case.state)) && !finalizedBasis ? ["IC_CASE_NOT_PREPARED"] : []),
+    ...(decided && !finalizedBasis ? ["IC_FINALIZED_DECISION_PROOF_REQUIRED"] : []),
     ...(!workspace.underwriting?.eligibleUnderPinnedPolicy ? ["UNDERWRITING_BASIS_NOT_ELIGIBLE"] : []),
     ...(workspace.underwriting?.run.workId !== input.workId ? ["UNDERWRITING_NOT_LINKED_TO_WORK"] : []),
     ...(!Number.isFinite(workTime) || !Number.isFinite(runTime) || runTime < workTime ? ["NO_FRESH_UNDERWRITING_RUN"] : []),
@@ -653,9 +685,11 @@ async function privateEquityIcPreparationCriterion(params: {
   tenantId: string;
   workId: string;
   dealId: string;
+  loopId: string;
   requireScenario?: boolean;
+  requireAcquisition?: boolean;
 }): Promise<Omit<ObjectiveSuccessCriterionResult, "index" | "kind">> {
-  const { work, caseIds } = await withTenant(params.tenantId, async (db) => {
+  const { work, caseIds, principal } = await withTenant(params.tenantId, async (db) => {
     const [work] = await db.select({ createdAt: works.createdAt }).from(works).where(and(
       eq(works.tenantId, params.tenantId), eq(works.id, params.workId),
     )).limit(1);
@@ -665,7 +699,13 @@ async function privateEquityIcPreparationCriterion(params: {
       eq(workEntityLinks.entityType, "pe_ic_case"),
       inArray(workEntityLinks.relationship, ["about", "target", "result"]),
     )).limit(26);
-    return { work, caseIds: links.map((link) => link.entityId) };
+    const principals = await db.execute(sql`
+      SELECT principal.id::text,principal.role FROM finnor_os.work_objective_loops loop
+      JOIN finnor_os.users principal ON principal.tenant_id=loop.tenant_id AND principal.id=loop.created_by
+      WHERE loop.tenant_id=${params.tenantId}::uuid AND loop.work_id=${params.workId}::uuid
+        AND loop.id=${params.loopId}::uuid AND principal.status='active'
+    `);
+    return { work, caseIds: links.map((link) => link.entityId), principal: principals.rows[0] as { id: string; role: PeMutationContext['auth']['role'] } | undefined };
   });
   if (!work || caseIds.length === 0 || caseIds.length > 25) return {
     satisfied: false,
@@ -673,10 +713,27 @@ async function privateEquityIcPreparationCriterion(params: {
     evidenceRefs: [],
     observed: { linkedCaseCount: caseIds.length },
   };
-  const ctx: PeMutationContext = { auth: { tenantId: params.tenantId, userId: "system:objective-success", role: "owner" } };
+  if (!principal) return { satisfied: false, basis: "IC verification requires the persisted active objective principal.", evidenceRefs: [], observed: { predicate: "IC_CURRENT_PRINCIPAL_REQUIRED" } };
+  const ctx: PeMutationContext = { auth: { tenantId: params.tenantId, userId: principal.id, employeeId: principal.id, role: principal.role } };
+  const sourceRefusal = (error: unknown) => error instanceof PeDomainError
+    || /^ACQUISITION_[A-Z_]+$/.test(String(record(error).code ?? ""))
+    || error instanceof Error && ['CURRENT_AUTHENTICATED_PRINCIPAL_UNAVAILABLE', 'DERIVATION_CONSUMER_PROVENANCE_OR_CURRENTNESS_FAILED', 'PRIMARY_CONSUMER_PROVENANCE_OR_CURRENTNESS_FAILED', 'HARNESS_CONSUMER_PROVENANCE_OR_CURRENTNESS_FAILED'].includes(error.message);
+  let acquisition: AcquisitionIcBasis | null;
+  try { acquisition = await readAcquisitionIcBasis(ctx, { workId: params.workId, dealId: params.dealId }); }
+  catch (error) {
+    if (!sourceRefusal(error)) throw error;
+    return { satisfied: false, basis: "The acquisition source is unavailable or no longer current for the objective principal.", evidenceRefs: [], observed: { predicate: "IC_CURRENT_ACQUISITION_REQUIRED" } };
+  }
+  if (params.requireAcquisition && !acquisition) return { satisfied: false, basis: "The acquisition objective requires a completely checked current acquisition decision.", evidenceRefs: [], observed: { predicate: "IC_CHECKED_ACQUISITION_REQUIRED" } };
   const observations: Array<{ caseId: string; gaps: string[] }> = [];
   for (const caseId of caseIds) {
-    const workspace = await getIcWorkspace(ctx, { icCaseId: caseId });
+    let workspace: IcWorkspaceReadModel;
+    try { workspace = await getIcWorkspace(ctx, { icCaseId: caseId }); }
+    catch (error) {
+      if (!sourceRefusal(error)) throw error;
+      observations.push({ caseId, gaps: ["IC_CURRENT_UNDERWRITING_SOURCE_REQUIRED"] });
+      continue;
+    }
     if (workspace.case.dealId !== params.dealId) {
       observations.push({ caseId, gaps: ["IC_CASE_WRONG_DEAL"] });
       continue;
@@ -703,7 +760,40 @@ async function privateEquityIcPreparationCriterion(params: {
       memoContentVerified,
       requireScenario: params.requireScenario,
     });
-    if (assessment.satisfied) return {
+    if (acquisition) {
+      if (workspace.case.primaryUnderwritingRunId !== acquisition.runId) assessment.gaps.push("IC_ACQUISITION_RUN_MISMATCH");
+      const memo = workspace.memo;
+      const receipts = memo ? await withTenant(params.tenantId, async db => (await db.execute(sql`
+        SELECT action.id::text action_id FROM finnor_os.domain_actions action
+        JOIN finnor_os.business_effects effect ON effect.tenant_id=action.tenant_id AND effect.domain_action_id=action.id
+        JOIN finnor_os.decision_receipts receipt ON receipt.tenant_id=action.tenant_id AND receipt.domain_action_id=action.id
+        JOIN finnor_os.pe_document_links link ON link.tenant_id=action.tenant_id
+          AND link.id::text=(effect.observed_result #>> '{entity,entityId}') AND link.archived_at IS NULL
+        JOIN finnor_os.pe_ic_cases author_case ON author_case.tenant_id=link.tenant_id AND author_case.id=link.entity_id
+          AND author_case.deal_id=${params.dealId}::uuid AND author_case.investment_case_id=${workspace.case.investmentCaseId}::uuid
+        WHERE action.tenant_id=${params.tenantId}::uuid AND action.work_id=${params.workId}::uuid
+          AND action.action_type='create_ic_memo_draft' AND action.status='completed'
+          AND action.payload->>'dealId'=${params.dealId} AND action.payload->>'icCaseId'=link.entity_id::text
+          AND link.deal_id=${params.dealId}::uuid AND link.entity_type='pe_ic_case'
+          AND (link.entity_id=${caseId}::uuid OR ${hasFinalizedIcBasis(workspace)}::boolean)
+          AND link.document_id=${memo.documentId}::uuid
+          AND effect.status='verified' AND effect.verification->>'state'='verified'
+          AND effect.observed_result #>> '{canonicalState,documentVersionId}'=${memo.documentVersionId}
+          AND effect.observed_result #>> '{canonicalState,acquisitionDecisionId}'=${acquisition!.decision.decisionId}
+          AND effect.observed_result #>> '{canonicalState,acquisitionResultDigest}'=${acquisition!.resultDigest}
+          AND receipt.finalized_at IS NOT NULL AND receipt.failure IS NULL LIMIT 1
+      `)).rows) : [];
+      if (!receipts.length) assessment.gaps.push("IC_ACQUISITION_MEMO_RECEIPT_REQUIRED");
+      else {
+        const artifact = await getArtifact(ctx.auth, String(memo!.documentId), String(memo!.documentVersionId));
+        const text = artifact.ir.nodes.filter(node => node.kind === 'paragraph').map(node => String(node.data.text)).join('\n');
+        if (artifact.ir.kind !== 'docx' || artifact.document.external_id !== receipts[0]!.action_id
+          || artifact.version.source_ref !== receipts[0]!.action_id
+          || !text.includes('acquisition_decision:' + acquisition.decision.decisionId)
+          || !text.includes(acquisition.resultDigest) || !text.includes(acquisition.result.maximumBid.qualification)) assessment.gaps.push("IC_ACQUISITION_MEMO_CONTENT_REQUIRED");
+      }
+    }
+    if (!assessment.gaps.length) return {
       satisfied: true,
       basis: "The Work-linked IC Case has a fresh eligible underwriting run, persisted memo content, exact recommendation, and an unblocked review basis.",
       evidenceRefs: [
@@ -711,6 +801,7 @@ async function privateEquityIcPreparationCriterion(params: {
         { type: "underwriting_run", id: String(workspace.case.primaryUnderwritingRunId) },
         { type: "document_version", id: String(versionId) },
         { type: "pe_ic_recommendation", id: String(workspace.case.currentRecommendationId) },
+        ...(acquisition ? [{ type: "acquisition_decision", id: acquisition.decision.decisionId }] : []),
       ],
       observed: { caseId, state: workspace.case.state, asOf: workspace.asOf },
     };
@@ -822,7 +913,7 @@ export async function evaluateObjectiveSuccessCondition(params: {
 
   const validateEvidence = async (item: ObjectiveCompletionEvidence, index: number): Promise<ObjectiveSuccessCriterionResult> => {
     if (item.kind === "canonical_query") {
-      const result = await queryCriterion({ tenantId: params.tenantId, workId: params.workId, request: item.request, assertion: item.assertion, loopId:params.loopId, executionKey: `objective:${params.loopId}:step:${params.stepNumber}:success:evidence:${index}` });
+      const result = await queryCriterion({ tenantId: params.tenantId, workId: params.workId, request: item.request, assertion: item.assertion, loopId:params.loopId, executionKey: `objective:${params.loopId}:step:${params.stepNumber}:success:evidence:${index}`,businessDecisionEvidence:true });
       if (result.queryExecutionId) queryExecutionIds.push(result.queryExecutionId);
       return { index, kind: "decision_evidence", satisfied: result.satisfied, basis: result.basis, evidenceRefs: result.evidenceRefs, observed: result.observed };
     }
@@ -865,7 +956,7 @@ export async function evaluateObjectiveSuccessCondition(params: {
     } else if (criterion.kind === "private_equity_truth") {
       add(index, criterion, await privateEquityTruthCriterion({ tenantId: params.tenantId, criterion }));
     } else if (criterion.kind === "private_equity_ic_preparation") {
-      add(index, criterion, await privateEquityIcPreparationCriterion({ tenantId: params.tenantId, workId: params.workId, dealId: criterion.dealId, requireScenario: criterion.requireScenario }));
+      add(index, criterion, await privateEquityIcPreparationCriterion({ tenantId: params.tenantId, workId: params.workId, loopId: params.loopId, dealId: criterion.dealId, requireScenario: criterion.requireScenario, requireAcquisition: criterion.requireAcquisition }));
     } else if (criterion.kind === "private_equity_ic_deck_draft") {
       add(index, criterion, await privateEquityIcDeckCriterion({ tenantId: params.tenantId, workId: params.workId, dealId: criterion.dealId }));
     } else if (criterion.kind === "private_equity_underwriting_scenario") {

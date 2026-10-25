@@ -4,12 +4,23 @@ import {compileUnderwritingModel,type ResolvedInput,type UnderwritingInputSnapsh
 import {FinancialSemanticsSchema,EvidenceUnderwritingBindingSchema,type EvidenceUnderwritingBinding,type EvidenceDerivation,type ExperimentRef} from '@finnor/shared-types';
 import type {PoolClient} from 'pg';
 import {createUnderwritingRun} from '../underwriting-repository';
-import {assertPrimarySnapshotCurrent} from '../primary-diligence/consumer';
-import {assertConfidentialSnapshotCurrent,refuseUnadmittedConfidentialSink} from '../confidential-computation/consumer';
-import type {PeMutationContext} from '../types';
+import {assertPrimaryInputsCurrent} from '../primary-diligence/consumer';
+import {assertHarnessInputsCurrent} from '../program-synthesis/underwriting-consumer';
+import {PeDomainError,type PeMutationContext} from '../types';
+import {assertConfidentialInputsCurrent,refuseUnadmittedConfidentialSink} from '../confidential-computation/consumer';
 import {authorizeBeliefResources} from '../enterprise-beliefs';
 import {assertDependencies,authorize,currentDerivation,sha,stable,tx} from './store';
 export {EvidenceUnderwritingBindingSchema,type EvidenceUnderwritingBinding};
+const staleDerivationPredicates=new Set([
+ 'DERIVATION_NOT_CURRENT_COMPLETE_TESTED','DERIVATION_RUNTIME_CHANGED','DERIVATION_SCHEMA_CHANGED',
+ 'DERIVATION_OCR_RUNTIME_CHANGED','SOURCE_RIGHTS_MEMBERSHIP_OR_WORK_CHANGED',
+]);
+/** Expected source corrections are domain conflicts. Integrity, authorization
+ * and infrastructure failures retain their original failure behavior. */
+async function underwritingDerivation(ctx:PeMutationContext,id:string,client?:PoolClient){
+ try{return await currentDerivation(ctx,id,client);}
+ catch(error){if(error instanceof Error&&staleDerivationPredicates.has(error.message))throw new PeDomainError('STALE_EVIDENCE_DERIVATION','STALE_EVIDENCE_DERIVATION');throw error;}
+}
 export const evidenceDerivationRef=(derivation:EvidenceDerivation):ExperimentRef=>({
  owner:'P4',id:derivation.id,version:derivation.code.version,contentDigest:sha(derivation),
 });
@@ -30,7 +41,7 @@ export async function resolveEvidenceUnderwritingInputs(ctx:PeMutationContext,in
   WHERE v.tenant_id=$1 AND v.investment_case_id=$2 AND v.id=$3`,[ctx.auth.tenantId,investmentCaseId,modelVersionId])).rows[0],true);if(!model)throw Error('EXACT_CONSUMER_MODEL_UNAVAILABLE');const compiled=compileUnderwritingModel(model.definition),resolved:Record<string,ResolvedInput>={};
  for(const [nodeId,raw] of Object.entries(bindings)){const binding=EvidenceUnderwritingBindingSchema.parse(raw),node=compiled.nodeById[nodeId];if(!node||node.kind!=='input'||node.shape!=='scalar'||node.valueType!=='decimal'||node.source&&!['explicit','model_parameter'].includes(node.source.kind))throw Error('DERIVATION_CANNOT_SHADOW_BOUND_OR_NONSCALAR_INPUT');
   const expected=FinancialSemanticsSchema.parse(node.evidenceSemantics);if(expected.entityType!=='external_organization'||expected.entityId!==model.target)throw Error('CONSUMER_MODEL_TARGET_ENTITY_MISMATCH');
-  const derivation=await currentDerivation(ctx,binding.derivationId),output=derivation.result?.outputs[binding.output];if(!output||output.kind!=='scalar'||output.value===null||!output.semantics||stable(output.semantics)!==stable(expected))throw Error('DERIVATION_CONSUMER_ENTITY_PERIOD_UNIT_SCOPE_MISMATCH');
+  const derivation=await underwritingDerivation(ctx,binding.derivationId),output=derivation.result?.outputs[binding.output];if(!output||output.kind!=='scalar'||output.value===null||!output.semantics||stable(output.semantics)!==stable(expected))throw Error('DERIVATION_CONSUMER_ENTITY_PERIOD_UNIT_SCOPE_MISMATCH');
   const unit=output.semantics.unit==='currency'?'money':output.semantics.unit;if(node.unit!==unit||node.currency!==(output.semantics.currencyCode??undefined))throw Error('DERIVATION_CONSUMER_UNIT_CURRENCY_MISMATCH');
   if(node.allowedTruthClasses&&!node.allowedTruthClasses.includes('DERIVED_VALUE'))throw Error('CONSUMER_MODEL_DERIVED_TRUTH_CLASS_REFUSED');
   if(output.value.replace(/[-.]/g,'').replace(/^0+/,'').length>34)throw Error('EXISTING_UNDERWRITING_ENGINE_PRECISION_DOMAIN_EXCEEDED');
@@ -39,12 +50,21 @@ export async function resolveEvidenceUnderwritingInputs(ctx:PeMutationContext,in
  return resolved;
 }
 export async function assertEvidenceSnapshotCurrent(ctx:PeMutationContext,snapshot:UnderwritingInputSnapshot,client?:PoolClient,lock=false){
- await assertConfidentialSnapshotCurrent(ctx,snapshot,client,lock);
- await assertPrimarySnapshotCurrent(ctx,snapshot,client,lock);
- for(const input of Object.values(snapshot.values))for(const ref of input.provenance.filter(r=>r.kind==='evidence_derivation')){
-  const derivation=await currentDerivation(ctx,ref.id,client),output=derivation.result?.outputs[ref.anchorId??''];if(!output||output.kind!=='scalar'||output.value!==input.value||input.truthClass!=='DERIVED_VALUE'||input.status!=='KNOWN'||ref.semanticHash!==derivation.result?.digest)throw Error('DERIVATION_CONSUMER_PROVENANCE_OR_CURRENTNESS_FAILED');
-  if(client)await assertDependencies(ctx,derivation.invalidationKeys,client,lock);
+ return assertEvidenceInputsCurrent(ctx,Object.values(snapshot.values),client,lock);
+}
+/** One bounded read may contain many scenarios sharing a producer. Check that
+ * producer once within this call, and still compare every input/ref exactly.
+ * No producer or private value survives this authenticated call. */
+export async function assertEvidenceInputsCurrent(ctx:PeMutationContext,inputs:readonly ResolvedInput[],client?:PoolClient,lock=false){
+ await assertConfidentialInputsCurrent(ctx,inputs,client,lock);
+ const primaryScope=await assertPrimaryInputsCurrent(ctx,inputs,client,lock);
+ await assertHarnessInputsCurrent(ctx,inputs,client,lock);
+ const checked=new Map<string,EvidenceDerivation>();
+ for(const input of inputs)for(const ref of input.provenance.filter(r=>r.kind==='evidence_derivation')){
+  let derivation=checked.get(ref.id);if(!derivation){derivation=await underwritingDerivation(ctx,ref.id,client);if(client)await assertDependencies(ctx,derivation.invalidationKeys,client,lock);checked.set(ref.id,derivation);}
+  const output=derivation.result?.outputs[ref.anchorId??''];if(!output||output.kind!=='scalar'||output.value!==input.value||input.truthClass!=='DERIVED_VALUE'||input.status!=='KNOWN'||ref.semanticHash!==derivation.result?.digest)throw Error('DERIVATION_CONSUMER_PROVENANCE_OR_CURRENTNESS_FAILED');
  }
+ return primaryScope;
 }
 /** For existing IC transaction helpers without a context parameter, use only
  * the principal already bound by Core withTenantTransaction. Legacy runs have
@@ -53,16 +73,25 @@ export async function assertEvidenceRunTransactionCurrent(client:PoolClient,tena
  const row=(await client.query<{input_snapshot:UnderwritingInputSnapshot}>('SELECT input_snapshot FROM finnor_os.underwriting_runs WHERE tenant_id=$1 AND id=$2',[tenantId,runId])).rows[0];
  if(!row)throw Error('CURRENT_UNDERWRITING_RUN_UNAVAILABLE');
  refuseUnadmittedConfidentialSink(row.input_snapshot);
- if(!Object.values(row.input_snapshot.values).some(v=>v.provenance.some(p=>p.kind==='evidence_derivation'||p.kind==='primary_finding')))return false;
+ if(!Object.values(row.input_snapshot.values).some(v=>v.provenance.some(p=>p.kind==='evidence_derivation'||p.kind==='primary_finding'||p.kind==='harness_program')))return false;
  const identity=(await client.query<{id:string;role:string;status:string;transaction_read_only:string}>("SELECT id::text,role,status,current_setting('transaction_read_only') transaction_read_only FROM finnor_os.users WHERE tenant_id=$1 AND id=NULLIF(current_setting('app.user_id',true),'')::uuid",[tenantId])).rows[0];
  if(!identity||identity.status!=='active'||identity.role!=='owner')throw Error('CURRENT_AUTHENTICATED_PRINCIPAL_UNAVAILABLE');
  if(!['on','off'].includes(identity.transaction_read_only))throw Error('CURRENT_TRANSACTION_MODE_UNAVAILABLE');
  await assertEvidenceSnapshotCurrent({auth:{tenantId,userId:identity.id,employeeId:identity.id,role:'owner'},provenance:{sourceSystem:'P4:existing-consumer-currentness',createdBy:identity.id}},row.input_snapshot,client,identity.transaction_read_only==='off');return true;
 }
 export const EvidenceConsumeRequestSchema=z.object({investmentCaseId:z.string().uuid(),modelVersionId:z.string().uuid(),worldAt:z.string().datetime({offset:true}),idempotencyKey:z.string().min(1).max(200),workId:z.string().uuid().optional(),bindings:z.record(z.string(), EvidenceUnderwritingBindingSchema)}).strict();
+/** Both typed HTTP entry points use the producer's authenticated Work. A caller
+ * cannot move checked financial evidence into a different causal Work. */
+export async function resolveEvidenceBindingWork(ctx:PeMutationContext,bindings:Readonly<Record<string,EvidenceUnderwritingBinding>>,requestedWorkId?:string){
+ const keys=Object.keys(bindings);
+ if(!keys.length||keys.length>16)throw new PeDomainError('DERIVATION_CONSUMER_INPUT_BOUND','DERIVATION_CONSUMER_INPUT_BOUND');
+ const derivations=await Promise.all(Object.values(bindings).map(binding=>underwritingDerivation(ctx,EvidenceUnderwritingBindingSchema.parse(binding).derivationId)));
+ const workIds=[...new Set(derivations.map(d=>d.work.id))];
+ if(workIds.length!==1||requestedWorkId&&requestedWorkId!==workIds[0])throw new PeDomainError('DERIVATION_CONSUMER_WORK_SCOPE_MISMATCH','DERIVATION_CONSUMER_WORK_SCOPE_MISMATCH');
+ const workId=workIds[0]!;await authorizeBeliefResources(ctx,[{type:'work',id:workId}]);return workId;
+}
 export async function consumeEvidenceUnderwriting(ctx:PeMutationContext,body:unknown){const request=EvidenceConsumeRequestSchema.parse(body);
- const derivations=await Promise.all(Object.values(request.bindings).map(binding=>currentDerivation(ctx,binding.derivationId))),workIds=[...new Set(derivations.map(d=>d.work.id))];
- if(workIds.length!==1||request.workId&&request.workId!==workIds[0])throw Error('DERIVATION_CONSUMER_WORK_SCOPE_MISMATCH');const workId=workIds[0]!;
+ const workId=await resolveEvidenceBindingWork(ctx,request.bindings,request.workId);
  await authorizeBeliefResources(ctx,[{type:'work',id:workId},{type:'pe_investment_case',id:request.investmentCaseId}]);
  const run=await createUnderwritingRun(ctx,{investmentCaseId:request.investmentCaseId,modelVersionId:request.modelVersionId,worldAt:request.worldAt,idempotencyKey:request.idempotencyKey,workId,evidenceDerivationInputs:request.bindings});
  // Underwriting owns the immutable run's existing work_id foreign key. Core

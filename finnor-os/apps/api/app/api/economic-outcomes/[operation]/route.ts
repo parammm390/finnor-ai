@@ -6,6 +6,7 @@ import { registerEnterpriseOutcomeEstimand, readEnterpriseEconomicRecord, readEn
 import { EconomicContractError } from '../../../../../../packages/epistemic-runtime/src/economic-attribution';
 import { LedgerFault } from '../../../../../../packages/governed-execution/src/protocol';
 import { requireContext, errorResponse } from '../../../../lib/auth';
+import {readWorkEconomicContext,bindWorkEconomicTracking,registerWorkEconomicTracking} from '../../../../../../packages/private-equity/src/economic-work/owner';
 export const runtime = 'nodejs';
 const text = z.string().min(1).max(4096), key = text.max(256), ref = z.object({ owner: text.max(128), id: text, version: text.max(256), contentDigest: z.string().regex(/^[a-f0-9]{64}$/) }).strict();
 const reply = (v: unknown, status = 200) => Response.json(v, { status, headers: { 'cache-control': 'private, no-store' } });
@@ -43,6 +44,9 @@ export async function POST(req: Request, { params }: {
     try {
         const [auth, route, body] = await Promise.all([requireContext(req), params, boundedJson(req)]), ctx = { auth };
         switch (route.operation) {
+            case 'work-context': return reply(await readWorkEconomicContext(ctx,body));
+            case 'bind-work': return reply(await bindWorkEconomicTracking(ctx,body));
+            case 'register-work': return reply(await registerWorkEconomicTracking(ctx,body));
             case 'register-assignment-protocol': {
                 const v = z.object({ protocol: z.unknown(), rightsRef: text, idempotencyKey: key.optional() }).strict().parse(body);
                 return reply(await registerEnterpriseEconomicAssignmentProtocol(ctx, { ...v, protocol: v.protocol }));

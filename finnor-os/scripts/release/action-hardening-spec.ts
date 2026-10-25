@@ -53,8 +53,10 @@ const COMPUTER_FIXED_ROWS: ReadonlyArray<readonly [string, string, ActionProfile
 ];
 
 const PRIVATE_EQUITY_FIXED_ROWS: ReadonlyArray<readonly [string, string, ActionProfile, ApprovalFloor, string, boolean]> = [
+  ["private-equity", "start_primary_diligence", "DURABLE_WORKFLOW", "REQUIRED", "private-equity/primary/work/source-authority", false],
   ["private-equity", "execute_closing_operation", "EXTERNAL_SPEND", "TYPED_REQUIRED", "private-equity/s6-qualified-closing", true],
   ["private-equity", "create_underwriting_run", "INTERNAL_WRITE", "POLICY", "private-equity/underwriting/work", false],
+  ["private-equity", "start_acquisition_evaluation", "INTERNAL_WRITE", "POLICY", "private-equity/acquisition/work", false],
   ["private-equity", "open_ic_case", "DURABLE_WORKFLOW", "REQUIRED", "private-equity/ic/work/authority", false],
   ["private-equity", "begin_ic_preparation", "OPERATIONAL_CHANGE", "POLICY", "private-equity/ic/work", false],
   ["private-equity", "create_ic_deck_draft", "INTERNAL_DRAFT", "POLICY", "private-equity/ic/artifacts/work", false],
@@ -102,7 +104,7 @@ export const ACTION_HARDENING_SPEC: readonly ActionHardeningSpecRow[] = [...CORE
 export const CORE_ACTION_COUNT = 2;
 export const UNIVERSAL_ACTION_COUNT = 14;
 export const COMPUTER_ACTION_COUNT = 1;
-export const PRIVATE_EQUITY_ACTION_COUNT = 29;
+export const PRIVATE_EQUITY_ACTION_COUNT = 31;
 export const EXECUTABLE_ACTION_COUNT = ACTION_HARDENING_SPEC.length;
 /** Compatibility alias for release scripts that count the complete executable set. */
 export const TOTAL_ACTION_COUNT = EXECUTABLE_ACTION_COUNT;

@@ -1,13 +1,15 @@
 import {z} from 'zod';
 import {receiveWork,attachWorkEntityTx} from '@finnor/db';
-import {PrimaryIntakeSchema,PrimaryAdvanceSchema,PrimaryGovernanceSchema,VReferenceSchema,EvidenceRootSchema} from '@finnor/shared-types';
+import {PrimaryIntakeSchema,PrimaryAdvanceSchema,PrimaryGovernanceSchema,VReferenceSchema,EvidenceRootSchema,type PrimaryIntake,type PrimaryMandate} from '@finnor/shared-types';
 import {loadEnterpriseBeliefView} from '../enterprise-beliefs';
 import {PeDomainError,type PeMutationContext,type PeWorldRootRef} from '../types';
-import {actor,authorize,canonical,costReceipts,currentActor,currentFinding,event,exactWork,hash,newId,programme,putGovernance,reference,revisions,revokeGovernance,rightsBinding,tx,unavailable,type Programme} from './store';
-import {ownerBindings} from './governance';
+import {actor,authorize,canonical,costReceipts,currentActor,currentFinding,event,exactWork,hash,newId,programme,primaryCompletionEvent,putGovernance,reference,retainedGovernance,revisions,revokeGovernance,rightsBinding,tx,unavailable,type Programme} from './store';
+import {intakeBindings,ownerBindings} from './governance';
 import {PrimaryConsumeSchema,consumePrimaryUnderwriting} from './consumer';
 import {reserveFixedPrimaryBudget} from '../allocation-store';
 import {resolveBilateralPredecessor} from '../bilateral-opportunities/handoff';
+import {assertPrimaryRuntimeMode,primaryRuntimeEnvironment,primaryEnvironmentForMode} from './profile';
+import {evidenceContextRevisionKey} from '../owner-context';
 
 export const PRIMARY_OPERATIONS=['primary-context','primary-open-work','primary-reserve-budget','primary-governance-put','primary-governance-revoke','primary-submit','primary-read','primary-advance','primary-cancel','primary-consume'] as const;
 const rooted=z.object({root:EvidenceRootSchema}).strict(),identified=z.object({programmeId:z.string().uuid()}).strict();
@@ -20,6 +22,34 @@ export const PrimaryOperationSchemas={
  'primary-consume':PrimaryConsumeSchema,
 } as const;
 export const programmeRef=(p:Programme)=>reference('V2',p.id,p.revision,{intakeDigest:p.intake_digest,startingEvidenceDigest:p.starting_digest});
+async function currentPrimaryIntake(ctx:PeMutationContext,intake:PrimaryIntake,c:import('pg').PoolClient){
+ await currentActor(ctx,c);
+ const work=(await c.query("SELECT id::text,to_jsonb(w) body FROM finnor_os.work_inputs w WHERE tenant_id=$1 AND work_id=$2 ORDER BY created_at DESC,id DESC LIMIT 1",[ctx.auth.tenantId,intake.workId])).rows[0];
+ if(!work||work.id!==intake.expectedWorkInputId)throw Error('EXPECTED_CURRENT_WORK_INPUT_REQUIRED');
+ const target=(await c.query("SELECT target_organization_id::text target FROM finnor_os.pe_opportunities WHERE tenant_id=$1 AND id=$2 UNION ALL SELECT target_organization_id::text target FROM finnor_os.pe_deals WHERE tenant_id=$1 AND id=$2",[ctx.auth.tenantId,intake.root.entityId])).rows[0]?.target??(intake.root.entityType==='external_organization'?intake.root.entityId:null);
+ if(!target||!intake.assertions.every(a=>a.semantics.legalEntityId===target))throw Error('PRIMARY_CANONICAL_INVESTMENT_TARGET_MISMATCH');
+ await intakeBindings(ctx,intake,c);
+ return {work,target};
+}
+export async function validatePrimarySubmission(ctx:PeMutationContext,value:unknown,client?:import('pg').PoolClient){
+ const intake=PrimaryIntakeSchema.parse(value);await authorize(ctx,intake.root,intake.workId,client);
+ if(new Set(intake.assertions.map(a=>a.assertionId)).size!==intake.assertions.length)throw Error('DUPLICATE_FROZEN_ASSERTION_ID');
+ for(const a of intake.assertions)if(a.startingSupportRefs.some(r=>!intake.startingEvidenceRefs.some(s=>hash(r)===hash(s))))throw Error('STARTING_SUPPORT_NOT_IN_REGISTERED_MANIFEST');
+ const validate=async(c:import('pg').PoolClient)=>{await currentPrimaryIntake(ctx,intake,c);
+  for(const ref of intake.startingEvidenceRefs){
+   const row=ref.owner==='S1'?(await c.query('SELECT content_hash,version_number FROM finnor_os.evidence_source_versions WHERE tenant_id=$1 AND id=$2',[ctx.auth.tenantId,ref.id])).rows[0]:null;
+   if(!row||row.content_hash!==ref.contentDigest||String(row.version_number)!==ref.revision)throw Error('STARTING_EVIDENCE_EXACT_REVISION_UNAVAILABLE');
+  }
+ };
+ if(client)await validate(client);else await tx(ctx,validate,true);
+ return intake;
+}
+export async function readPrimaryContext(ctx:PeMutationContext,root:PeWorldRootRef){
+ await authorize(ctx,root);const rights=await rightsBinding(ctx,root);
+ const registered=await tx(ctx,async c=>(await c.query('SELECT v.body,v.id,v.revision,v.semantic_owner FROM finnor_os.primary_governance_versions v JOIN finnor_os.primary_governance_heads h USING(tenant_id,id,revision) WHERE v.tenant_id=$1 AND v.issuer_id=$2 AND h.state=\'CURRENT\' ORDER BY v.created_at LIMIT 129',[ctx.auth.tenantId,actor(ctx)])).rows,true);
+ if(registered.length>128)throw Error('PRIMARY_OWNER_REGISTRY_BOUND');
+ return {root,...rights,profiles:registered.map(r=>({ref:reference(r.semantic_owner,r.id,r.revision,r.body),body:r.body})),liveAcquisition:process.env.FINNOR_V2_PROFILE==='production_primary'&&process.env.FINNOR_PRIMARY_TRANSPORT_POLICY_FILE?'SOURCE_SPECIFIC_ADMISSION_REQUIRED':'BLOCKED_EXTERNAL'};
+}
 async function enqueue(ctx:PeMutationContext,p:Programme,c:import('pg').PoolClient){
  await c.query(`INSERT INTO finnor_os.jobs(tenant_id,type,payload,idempotency_key,lane,priority,protocol_version,retry_safety)
  VALUES($1,'advance_primary_diligence_v1',$2::jsonb,$3,'interactive',0,1,'reconcilable') ON CONFLICT(idempotency_key) DO NOTHING`,
@@ -27,7 +57,9 @@ async function enqueue(ctx:PeMutationContext,p:Programme,c:import('pg').PoolClie
 }
 export async function submitPrimary(ctx:PeMutationContext,value:unknown){
  const intake=PrimaryIntakeSchema.parse(value);await authorize(ctx,intake.root as PeWorldRootRef,intake.workId);
- if(intake.mode!=='ordinary_disposable'||process.env.NODE_ENV==='production'||process.env.FINNOR_V2_PROFILE!=='ordinary_disposable')throw Error('LIVE_PRIMARY_SOURCE_AUTHORITY_AND_S8_ADMISSION_UNAVAILABLE');
+ const {schema:_schema,root:_root,workId:_work,idempotencyKey:_key,...request}=intake;
+ await tx(ctx,async c=>(await import('../acquisition/reviewed-request')).assertReviewedAcquisitionAction(ctx,'start_primary_diligence',{...request,dealId:intake.root.entityId},intake.workId,c),true);
+ assertPrimaryRuntimeMode(intake.mode);
  await resolveBilateralPredecessor(ctx,intake);
  if(new Set(intake.assertions.map(a=>a.assertionId)).size!==intake.assertions.length)throw Error('DUPLICATE_FROZEN_ASSERTION_ID');
  const digest=hash(intake);
@@ -39,11 +71,8 @@ export async function submitPrimary(ctx:PeMutationContext,value:unknown){
   await currentActor(ctx,c);await c.query('SELECT pg_advisory_xact_lock(hashtextextended($1,72))',[ctx.auth.tenantId+':'+actor(ctx)+':'+intake.idempotencyKey]);
   const existing=(await c.query<Programme>('SELECT * FROM finnor_os.v2_programmes WHERE tenant_id=$1 AND principal_id=$2 AND idempotency_key=$3',[ctx.auth.tenantId,actor(ctx),intake.idempotencyKey])).rows[0];
   if(existing){if(existing.intake_digest!==digest)throw Error('PRIMARY_IDEMPOTENCY_CONFLICT');return {programmeId:existing.id,workId:existing.work_id,ref:programmeRef(existing),status:existing.status,replayed:true};}
-  const work=(await c.query("SELECT id::text,to_jsonb(w) body FROM finnor_os.work_inputs w WHERE tenant_id=$1 AND work_id=$2 ORDER BY created_at DESC,id DESC LIMIT 1",[ctx.auth.tenantId,intake.workId])).rows[0];
-  if(!work||work.id!==intake.expectedWorkInputId)throw Error('EXPECTED_CURRENT_WORK_INPUT_REQUIRED');
+  const {work,target}=await currentPrimaryIntake(ctx,intake,c);
   const predecessor=await resolveBilateralPredecessor(ctx,intake,c);
-  const target=(await c.query("SELECT target_organization_id::text target FROM finnor_os.pe_opportunities WHERE tenant_id=$1 AND id=$2 UNION ALL SELECT target_organization_id::text target FROM finnor_os.pe_deals WHERE tenant_id=$1 AND id=$2",[ctx.auth.tenantId,intake.root.entityId])).rows[0]?.target??(intake.root.entityType==='external_organization'?intake.root.entityId:null);
-  if(!target||!intake.assertions.every(a=>a.semantics.legalEntityId===target))throw Error('PRIMARY_CANONICAL_INVESTMENT_TARGET_MISMATCH');
   const cut=(await c.query('SELECT clock_timestamp() at')).rows[0].at.toISOString(),evidence:unknown[]=[];
   for(const ref of intake.startingEvidenceRefs){
    if(ref.owner!=='S1')throw Error('STARTING_EVIDENCE_OWNER_UNSUPPORTED');
@@ -51,7 +80,7 @@ export async function submitPrimary(ctx:PeMutationContext,value:unknown){
    if(!row||row.content_hash!==ref.contentDigest||String(row.version_number)!==ref.revision)throw Error('STARTING_EVIDENCE_EXACT_REVISION_UNAVAILABLE');
    evidence.push(row);
   }
-  const keys=['rights:tenant','work-inputs:'+intake.workId,'canonical:'+intake.root.entityType+':'+intake.root.entityId,'canonical:external_organization:'+target,
+  const keys=['rights:tenant','work-inputs:'+intake.workId,evidenceContextRevisionKey(intake.root as PeWorldRootRef),'canonical:external_organization:'+target,
    ...[...intake.sourceProfileRefs,...intake.consentRefs,...intake.referenceSemanticsRefs,intake.mandateRef,intake.authorityProfileRef,intake.budgetGrantRef].map(r=>'primary-governance:'+r.id),
    ...evidence.map(e=>'evidence:'+(e as {source_id:string}).source_id)];
   if(predecessor)keys.push(predecessor.dependencyKey);
@@ -83,19 +112,18 @@ export async function readPrimary(ctx:PeMutationContext,id:string){
  for(const row of rows)try{findings.push((await currentFinding(ctx,row.id)).finding);}catch{stale=true;}
  const costs=await costReceipts(ctx,p,grant);
  const fullScopeCurrent=await ownerBindings(ctx,p).then(()=>true).catch(()=>false);
+ const mandate=await retainedGovernance<PrimaryMandate>(ctx,p.intake.mandateRef,'finnor.primary-mandate.v1');
  return {programmeId:p.id,root:p.root,ref:programmeRef(p),workId:p.work_id,workRevision:p.work_input_id,status:stale?'BLOCKED':p.status,reason:stale?'FINDING_DEPENDENCY_OR_FRESHNESS_CHANGED':p.reason,
+  completionEvent:primaryCompletionEvent(p),deadlineAt:mandate.stopping.deadline,
   principalArtifactRef:findings.find(f=>f.artifactId===p.principal_artifact_id)?reference('V2',p.principal_artifact_id!,1,findings.find(f=>f.artifactId===p.principal_artifact_id)!):null,
   findings,assertions:rows.length||!fullScopeCurrent?p.intake.assertions.filter(a=>findings.some(f=>f.assertionRef.id===a.assertionId)):p.intake.assertions,startingEvidenceDigest:p.starting_digest,knowledgeCut:p.starting_manifest.knowledgeCut,
   advanceBindings:{mandateRef:p.intake.mandateRef,authorityProfileRef:p.intake.authorityProfileRef,budgetGrantRef:p.intake.budgetGrantRef,domainProfileRef:p.intake.referenceSemanticsRefs[0],evidenceRevisionVector:(await revisions(ctx,p.starting_manifest.dependencies.map(d=>d.key))).map(d=>({key:d.key,revision:d.revision}))},
   nextObligationRefs:p.next_obligations,requiredApprovalRefs:p.required_approvals,costReceipts:costs,
-  qualification:{engineering:'DEVELOPMENT',domain:'NOT_QUALIFIED',S8:'NOT_ADMITTED',live:'NOT_AUTHORIZED',auditOpinion:false}};
+  qualification:{engineering:'DEVELOPMENT',dataEnvironment:primaryEnvironmentForMode(p.intake.mode),domain:'NOT_QUALIFIED',S8:'NOT_ADMITTED',live:p.intake.mode==='protected'?'SCOPED_SOURCE_READ_ONLY':'NOT_AUTHORIZED',auditOpinion:false}};
 }
 export async function handlePrimaryOperation(ctx:PeMutationContext,operation:string,value:unknown):Promise<{status:number;body:unknown}>{
  try{
-  if(operation==='primary-context'){const input=rooted.parse(value);await authorize(ctx,input.root as PeWorldRootRef);const rights=await rightsBinding(ctx,input.root as PeWorldRootRef);
-   const registered=await tx(ctx,async c=>(await c.query('SELECT v.body,v.id,v.revision,v.semantic_owner FROM finnor_os.primary_governance_versions v JOIN finnor_os.primary_governance_heads h USING(tenant_id,id,revision) WHERE v.tenant_id=$1 AND v.issuer_id=$2 AND h.state=\'CURRENT\' ORDER BY v.created_at LIMIT 129',[ctx.auth.tenantId,actor(ctx)])).rows,true);
-   if(registered.length>128)throw Error('PRIMARY_OWNER_REGISTRY_BOUND');
-   return {status:200,body:{root:input.root,...rights,profiles:registered.map(r=>({ref:reference(r.semantic_owner,r.id,r.revision,r.body),body:r.body})),liveAcquisition:'BLOCKED_EXTERNAL'}};}
+  if(operation==='primary-context'){const input=rooted.parse(value);return {status:200,body:await readPrimaryContext(ctx,input.root)};}
   if(operation==='primary-open-work'){const input=PrimaryOperationSchemas['primary-open-work'].parse(value);await authorize(ctx,input.root as PeWorldRootRef);
    const work=await receiveWork({tenantId:ctx.auth.tenantId,userId:actor(ctx),instruction:input.instruction,channel:'console',idempotencyKey:'v2:'+actor(ctx)+':'+(input.investigation?.threadId??'standalone')+':'+input.idempotencyKey,
     activeContext:{entityType:input.root.entityType,entityId:input.root.entityId,entityRefs:[input.root],...(input.investigation?{employeeThreadId:input.investigation.threadId}:{})},
@@ -103,11 +131,11 @@ export async function handlePrimaryOperation(ctx:PeMutationContext,operation:str
     entityAttachments:[{...input.root,source:'V2:accepted-assertion-work'}],
     authorityContext:{principalId:actor(ctx),producer:'V2_ORDINARY_PRIMARY_DILIGENCE_NOT_LIVE_PERMISSION'}});
    return {status:201,body:{workId:work.workId,workInputId:work.workInputId}};}
-  if(operation==='primary-governance-put'){const input=PrimaryOperationSchemas['primary-governance-put'].parse(value);await authorize(ctx,input.root as PeWorldRootRef);return {status:201,body:{ref:await putGovernance(ctx,input.body,input.expectedRef),qualification:'AUTHENTICATED_DEVELOPMENT_OWNER_RECORD_NOT_LIVE_OR_PROFESSIONAL_ADMISSION'}};}
+  if(operation==='primary-governance-put'){const input=PrimaryOperationSchemas['primary-governance-put'].parse(value);await authorize(ctx,input.root as PeWorldRootRef);return {status:201,body:{ref:await putGovernance(ctx,input.body,input.expectedRef),qualification:'AUTHENTICATED_OWNER_RECORD_NOT_PROFESSIONAL_OR_ECONOMIC_ADMISSION'}};}
   if(operation==='primary-governance-revoke'){const input=PrimaryOperationSchemas['primary-governance-revoke'].parse(value);await authorize(ctx,input.root as PeWorldRootRef);return {status:200,body:await revokeGovernance(ctx,input.ref,input.reason)};}
   if(operation==='primary-submit')return {status:202,body:await submitPrimary(ctx,value)};
   if(operation==='primary-reserve-budget'){const input=PrimaryOperationSchemas['primary-reserve-budget'].parse(value);await authorize(ctx,input.root as PeWorldRootRef);
-   if(process.env.NODE_ENV==='production'||process.env.FINNOR_V2_PROFILE!=='ordinary_disposable')throw Error('PRIMARY_PROTECTED_FIXED_BUDGET_UNAVAILABLE');
+   primaryRuntimeEnvironment();
    return {status:201,body:await reserveFixedPrimaryBudget(ctx,input)};}
   if(operation==='primary-read')return {status:200,body:await readPrimary(ctx,identified.parse(value).programmeId)};
   if(operation==='primary-cancel'){const input=identified.parse(value),p=await programme(ctx,input.programmeId);await authorize(ctx,p.root,p.work_id);

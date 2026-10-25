@@ -42,7 +42,7 @@ export type ObjectiveSuccessCriterion =
         | { kind: "close_eligible" }
         | { kind: "deal_closed" };
     }
-  | { kind: "private_equity_ic_preparation"; dealId: string; requireScenario?: boolean }
+  | { kind: "private_equity_ic_preparation"; dealId: string; requireScenario?: boolean; requireAcquisition?: boolean }
   | { kind: "private_equity_ic_deck_draft"; dealId: string }
   | { kind: "private_equity_underwriting_scenario"; dealId: string; growthDecreaseBps: number; exitMultiple: string }
   | { kind: "matched_wait"; minimumCount: number; eventType?: string }

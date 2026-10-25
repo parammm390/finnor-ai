@@ -4,7 +4,7 @@ import {
   UnderwritingError,
   type PeMutationContext,
 } from "@finnor/private-equity";
-import type { TenantContext } from "@finnor/shared-types";
+import {EvidenceUnderwritingBindingSchema,FinancialSemanticsSchema,PrimaryUnderwritingInputsSchema,UnderwritingModelValueSchema,UnderwritingExplicitInputSchema as ExplicitInputSchema,type TenantContext} from "@finnor/shared-types";
 import { z } from "zod";
 import { artifactErrorResponse, boundedJson } from "./artifacts";
 import { errorResponse } from "./auth";
@@ -14,13 +14,7 @@ export const UnderwritingDecimalSchema = z.string().min(1).max(128).regex(/^[+-]
 const boundedText = z.string().trim().min(1).max(240);
 const semanticHash = z.string().regex(/^sha256:[0-9a-f]{64}$/);
 const anchorHash = z.string().regex(/^[0-9a-f]{64}$/);
-const modelScalar = z.union([z.string().max(4_096), z.boolean()]);
-export const UnderwritingModelValueSchema = z.union([
-  modelScalar,
-  z.record(z.string(), modelScalar).superRefine((value, context) => {
-    if (Object.keys(value).length > 240) context.addIssue({ code: z.ZodIssueCode.too_big, maximum: 240, origin: "array", inclusive: true, message: "Series exceeds 240 values" });
-  }),
-]);
+export {UnderwritingModelValueSchema} from "@finnor/shared-types";
 
 const InputSourceBindingSchema = z.object({
   kind: z.enum(["p1_assumption", "evidence_version", "artifact_anchor", "explicit", "model_parameter"]),
@@ -44,6 +38,7 @@ const NodeSchema = z.object({
   shape: z.enum(["scalar", "series"]),
   dependencies: z.array(z.string().min(1).max(200)).max(10_000),
   source: InputSourceBindingSchema.optional(),
+  evidenceSemantics: FinancialSemanticsSchema.optional(),
 }).passthrough();
 
 const SolverSettingsSchema = z.object({
@@ -77,24 +72,6 @@ export const UnderwritingModelDefinitionSchema = z.object({
   metadata: z.record(z.string(), z.union([z.string(), z.boolean(), z.number().finite()])).optional(),
 }).strict();
 
-const ProvenanceSchema = z.object({
-  kind: z.enum(["p1_assumption", "evidence_version", "model_parameter", "human_input", "artifact_anchor"]),
-  id: z.string().min(1).max(2_048),
-  versionId: z.string().min(1).max(2_048).optional(),
-  anchorId: z.string().min(1).max(2_048).optional(),
-  semanticHash: z.string().min(1).max(160).optional(),
-  effectiveAt: z.string().datetime({ offset: true }).optional(),
-  observedAt: z.string().datetime({ offset: true }).optional(),
-  retrievedAt: z.string().datetime({ offset: true }).optional(),
-}).strict();
-
-const ExplicitInputSchema = z.object({
-  value: UnderwritingModelValueSchema.nullable(),
-  truthClass: z.enum(["OBSERVED_FACT", "CANONICAL_ASSUMPTION", "MODEL_PARAMETER"]),
-  status: z.enum(["KNOWN", "UNKNOWN", "STALE", "CONFLICTING", "UNSUPPORTED"]).optional(),
-  provenance: z.array(ProvenanceSchema).max(32).optional(),
-  reason: z.string().max(1_000).optional(),
-}).strict();
 
 const ScenarioOverrideSchema = z.object({
   nodeId: z.string().min(1).max(200),
@@ -139,9 +116,17 @@ export const UnderwritingCreateRunSchema = z.object({
   baseRunId: UnderwritingUuidSchema.optional(),
   workId: UnderwritingUuidSchema.optional(),
   explicitInputs: z.record(z.string(), ExplicitInputSchema).optional(),
+  evidenceDerivationInputs: z.record(z.string(), EvidenceUnderwritingBindingSchema).optional(),
+  primaryFindingInputs: PrimaryUnderwritingInputsSchema.optional(),
 }).strict().superRefine((value, context) => {
   if (value.baseRunId && value.explicitInputs) {
     context.addIssue({ code: z.ZodIssueCode.custom, message: "A pinned baseRunId cannot be combined with newly resolved explicit inputs" });
+  }
+  if(value.baseRunId&&value.evidenceDerivationInputs){
+    context.addIssue({code:z.ZodIssueCode.custom,message:"A pinned baseRunId cannot be combined with newly resolved evidence derivations"});
+  }
+  if(value.baseRunId&&value.primaryFindingInputs){
+    context.addIssue({code:z.ZodIssueCode.custom,message:"A pinned baseRunId cannot be combined with newly resolved primary findings"});
   }
 });
 

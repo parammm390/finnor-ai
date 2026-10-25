@@ -1,4 +1,4 @@
-import {env as runtimeEnvironment} from 'node:process';
+import {assertAnalyticalExecutionProfile,analyticalExecutionCapabilities} from '../evidence-execution/profile';
 import {randomUUID} from 'node:crypto';
 import {z} from 'zod';
 import {DatabaseExecutionDeadlineError} from '@finnor/db';
@@ -10,11 +10,12 @@ import {ComputeSearchRequestSchema,SearchIdSchema,SearchProjectionSchema,bounded
 import {searchRow,currentSearch,append,snapshot,readStoredPlan,units} from './store';
 import {replan} from './controller';
 import {validateDeliberationBinding} from '../deliberation/store';
+import {assertP1ExecutionBinding,readAnalyticalExecutorJournal} from '../program-synthesis/isolated-custody';
 export const COMPUTE_SEARCH_OPERATIONS=['compute-search-submit','compute-search-read','compute-search-projection','compute-search-cancel','compute-search-resume','compute-search-reconcile'] as const;
 export async function readComputeSearch(ctx:PeMutationContext,id:string){
  let s=await searchRow(ctx,id);const q=await requestRow(ctx,s.program_id);await authorize(ctx,q.request.root,[{type:'work',id:q.work_id}]);
  if(!['CANCELLED','INVALIDATED'].includes(s.status)){
-  try{await currentSearch(ctx,s,q);}catch(error){
+  try{await currentSearch(ctx,s,q,'checked_evidence');}catch(error){
    // Authorization failure remains indistinguishable from an absent private resource.
    if((error as any).code==='PE_ENTITY_NOT_FOUND')throw unavailable();
    if(error instanceof DatabaseExecutionDeadlineError)throw error;
@@ -36,7 +37,9 @@ export async function handleComputeSearchOperation(ctx:PeMutationContext,operati
   if(operation==='compute-search-submit'){
    const request=ComputeSearchRequestSchema.parse(body),q=await requestRow(ctx,request.programId);await authorize(ctx,q.request.root,[{type:'work',id:q.work_id}]);
    await validateDeliberationBinding(ctx,q,request);
-   if(request.mode!=='ordinary_disposable'||runtimeEnvironment.NODE_ENV==='production'||process.env.FINNOR_P4_PROFILE!=='ordinary_disposable')throw Error('P2_PROTECTED_FUNDING_AND_RUNTIME_UNAVAILABLE');
+   if(request.mode==='protected')throw Error('P2_PROTECTED_FUNDING_AND_RUNTIME_UNAVAILABLE');
+   assertAnalyticalExecutionProfile(request.mode);
+   if(request.mode!==q.request.mode)throw Error('P2_EXACT_PARENT_EXECUTION_MODE_REQUIRED');
    const binding=await resolveSearchOwners(ctx,q,request),digest=sha(request);
    const accepted=await tx(ctx,async c=>{
     await c.query('SELECT pg_advisory_xact_lock(hashtextextended($1,4702))',[ctx.auth.tenantId+':'+principal(ctx)+':'+request.idempotencyKey]);
@@ -54,7 +57,8 @@ export async function handleComputeSearchOperation(ctx:PeMutationContext,operati
    const ids=await tx(ctx,async c=>(await c.query('SELECT s.id FROM finnor_os.p2_requests s JOIN finnor_os.p1_requests p ON p.id=s.program_id AND p.tenant_id=s.tenant_id AND p.principal_id=s.principal_id WHERE s.tenant_id=$1 AND s.principal_id=$2 AND p.work_id=$3 ORDER BY s.created_at DESC LIMIT 20',[ctx.auth.tenantId,principal(ctx),input.workId])).rows,true),searches=[];
    for(const row of ids){const s=await searchRow(ctx,row.id);if(input.methodOwner&&(s.request.deliberation?'M2':'P2')!==input.methodOwner)continue;const q=await requestRow(ctx,s.program_id);if(stable(q.request.root)===stable(input.root))searches.push(await readComputeSearch(ctx,s.id));}
    const candidates=await tx(ctx,async c=>(await c.query("SELECT id FROM finnor_os.p1_requests p WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3 AND status IN('QUEUED','WAITING') AND evidence_query_id IS NULL AND NOT EXISTS(SELECT 1 FROM finnor_os.p2_requests s WHERE s.tenant_id=p.tenant_id AND s.principal_id=p.principal_id AND s.program_id=p.id) ORDER BY created_at DESC LIMIT 20",[ctx.auth.tenantId,principal(ctx),input.workId])).rows,true),eligiblePrograms=[];
-   for(const row of candidates){const p=await requestRow(ctx,row.id);if(stable(p.request.root)!==stable(input.root)||!p.request.ownerBindings?.policyRef||!p.request.ownerBindings.allocationRef)continue;await assertProgramCurrent(ctx,p);eligiblePrograms.push({programId:p.id,status:p.status,workRevision:p.work_input_id,policyRequest:p.request.ownerBindings.policyRef,computeGrant:p.request.ownerBindings.allocationRef});}
+   const runtime=analyticalExecutionCapabilities();
+   for(const row of candidates){const p=await requestRow(ctx,row.id);if(p.request.mode!==runtime.mode||stable(p.request.root)!==stable(input.root)||!p.request.ownerBindings?.policyRef||!p.request.ownerBindings.allocationRef)continue;await assertProgramCurrent(ctx,p);eligiblePrograms.push({programId:p.id,status:p.status,workRevision:p.work_input_id,policyRequest:p.request.ownerBindings.policyRef,computeGrant:p.request.ownerBindings.allocationRef,mode:p.request.mode});}
    await authorize(ctx,input.root as any,[{type:'work',id:input.workId}]);return {status:200,body:{schema:'finnor.p2.work-projection.v1',workId:input.workId,searches,eligiblePrograms}};
   }
   const id=SearchIdSchema.parse(body).searchId;
@@ -71,9 +75,10 @@ export async function handleComputeSearchOperation(ctx:PeMutationContext,operati
   }
   if(operation==='compute-search-reconcile'||operation==='compute-search-resume'){
    if(operation==='compute-search-resume'&&['CANCELLED','INVALIDATED','STOPPED'].includes(s.status))throw Error('P2_TERMINAL_SEARCH_CANNOT_RENEW');
+   if(operation==='compute-search-resume'){assertAnalyticalExecutionProfile(s.request.mode);assertP1ExecutionBinding(q.proposed.executionBinding);}
    if(!['CANCELLED','INVALIDATED','STOPPED'].includes(s.status))await currentSearch(ctx,s,q);
-   const result=await tx(ctx,async c=>{const locked=await searchRow(ctx,id,c,true);const attempts=(await c.query('SELECT a.*,j.status job_status FROM finnor_os.p2_attempts a JOIN finnor_os.jobs j ON j.id=(a.body->>\'jobId\')::uuid WHERE a.tenant_id=$1 AND a.principal_id=$2 AND a.search_id=$3 ORDER BY a.created_at,a.id',[s.tenant_id,s.principal_id,s.id])).rows;
-    let preAdmissionRecovered=false;
+   const result=await tx(ctx,async c=>{const locked=await searchRow(ctx,id,c,true);const attempts=(await c.query("SELECT a.*,j.status job_status,(j.status='queued' OR j.status='running' AND j.lease_expires_at>clock_timestamp()) job_live FROM finnor_os.p2_attempts a JOIN finnor_os.jobs j ON j.id=COALESCE(a.body->'reconnection'->>'jobId',a.body->>'jobId')::uuid WHERE a.tenant_id=$1 AND a.principal_id=$2 AND a.search_id=$3 ORDER BY a.created_at,a.id FOR UPDATE OF a FOR SHARE OF j",[s.tenant_id,s.principal_id,s.id])).rows;
+    let preAdmissionRecovered=false,attemptReconciled=false;
     if(locked.request.deliberation){
      // A failed actual queue delivery can precede admission itself. Prove the
      // absence of physical intent for this exact failed delivery, of any
@@ -89,7 +94,7 @@ export async function handleComputeSearchOperation(ctx:PeMutationContext,operati
          AND j.payload->>'principalId'=u.principal_id::text
          AND j.payload->>'searchId'=u.search_id::text
          AND j.payload->>'generation'=u.generation::text
-         AND j.idempotency_key='p2:'||u.search_id::text||':'||u.generation::text||':'||u.id::text||':admission:'||u.attempts::text
+         AND split_part(j.idempotency_key,':dispatch:',1)='p2:'||u.search_id::text||':'||u.generation::text||':'||u.id::text||':admission:'||u.attempts::text
          AND j.status IN('quarantined','failed','cancelled','dead_letter')
          AND NOT EXISTS(SELECT 1 FROM finnor_os.p2_attempts a
            WHERE a.tenant_id=u.tenant_id AND a.principal_id=u.principal_id AND a.unit_id=u.id AND a.body->>'jobId'=j.id::text)
@@ -108,17 +113,38 @@ export async function handleComputeSearchOperation(ctx:PeMutationContext,operati
       await append(ctx,locked,'M2_PRE_ADMISSION_DELIVERY_RECONCILED',{unitId:cut.id,...disposition},c);preAdmissionRecovered=true;
      }
     }
-    for(const a of attempts.filter(a=>['INTENT','SUBMITTED'].includes(a.status)&&!['queued','running'].includes(a.job_status))){
+    for(const a of attempts.filter(a=>['INTENT','SUBMITTED'].includes(a.status)&&!a.job_live)){
      // INTENT precedes the durable SUBMITTED cut; no physical call can begin
      // before that cut. Charges stay spent, but unused endpoint occupancy ends.
      const unknown=a.status==='SUBMITTED',body={...a.body,recoveryObservedAt:new Date().toISOString(),physicalOutcome:unknown?'UNKNOWN':'PROVEN_NOT_SUBMITTED_DURABLE_CUT',liabilityRetained:true};
      await c.query('UPDATE finnor_os.p2_attempts SET status=$2,body=$3::jsonb,digest=$4 WHERE id=$1',[a.id,unknown?'UNKNOWN':'FAILED',stable(body),sha(body)]);
      if(!unknown&&a.endpoint_key)await c.query('UPDATE finnor_os.p2_endpoint_windows SET active=active-1 WHERE endpoint_key=$1 AND active>0',[a.endpoint_key]);
      await c.query("UPDATE finnor_os.p2_units SET status=CASE WHEN $2 THEN 'UNKNOWN' WHEN attempts>=CASE WHEN kind='CONTROL_M2' THEN 32 ELSE 2 END THEN 'FAILED' ELSE 'PENDING' END,claim_token=NULL WHERE id=$1 AND status IN('RUNNING','QUEUED')",[a.unit_id,unknown]);
-     await append(ctx,locked,'RECOVERY_RECONCILED',{attemptId:a.id,unitId:a.unit_id,unknown,grantChargesRetained:true,unsafeResubmission:false},c);
+     await append(ctx,locked,'RECOVERY_RECONCILED',{attemptId:a.id,unitId:a.unit_id,unknown,grantChargesRetained:true,unsafeResubmission:false},c);attemptReconciled=true;
+    }
+    let reconnected=false;
+    if(!['CANCELLED','INVALIDATED','STOPPED','FAILED'].includes(locked.status)&&q.proposed.executionBinding.backend==='daytona'){
+     for(const u of (await units(ctx,locked,c)).filter(u=>u.status==='UNKNOWN'&&u.kind==='EXECUTE_P1')){
+      const original=(await c.query<{id:string;body:any;digest:string}>("SELECT id,body,digest FROM finnor_os.p2_attempts WHERE tenant_id=$1 AND principal_id=$2 AND search_id=$3 AND unit_id=$4 AND status='UNKNOWN' AND endpoint_key IS NULL ORDER BY created_at,id LIMIT 2",[s.tenant_id,s.principal_id,s.id,u.id])).rows;
+      if(original.length!==1)continue;const a=original[0]!;
+      if(sha(a.body)!==a.digest||a.body.unitBodyDigest!==u.digest||a.body.workKind!==u.kind||a.body.chargedNativeAttempts!==1||a.body.originalEpisode!==q.episode_id)throw Error('P2_ORIGINAL_REMOTE_ATTEMPT_REQUIRED');
+      const intent=(await c.query<{body:any}>("SELECT body FROM finnor_os.p1_events WHERE tenant_id=$1 AND principal_id=$2 AND request_id=$3 AND generation=$4 AND kind='REMOTE_EXECUTOR_JOURNAL' AND body->>'stage'='INTENT' AND body->'binding'->'consumer'->>'owner'='P2' AND body->'binding'->'consumer'->>'id'=$5 LIMIT 2",[s.tenant_id,s.principal_id,q.id,q.generation,a.id])).rows;
+      if(intent.length!==1)continue;
+      const b=await readAnalyticalExecutorJournal(ctx,q,intent[0]!.body.attemptKey),consumer={owner:'P2',searchId:s.id,searchGeneration:s.generation,unitId:u.id,unitBodyDigest:u.digest,attemptId:a.id};
+      if(b.binding.consumer?.owner!=='P2'||b.binding.consumer.id!==a.id||b.binding.consumer.digest!==sha(consumer)||b.binding.moduleDigest!==u.body.moduleId?.slice('module:'.length)||b.binding.sourceDigest!==s.context?.sourceResultDigest||b.binding.inputDigest!==s.context?.inputDigest||b.originalDeadlineAt!==q.proposed.bounds.deadlineAt)throw Error('P2_REMOTE_JOURNAL_BINDING_CHANGED');
+      if(b.entries.some(e=>e.stage==='DELETED')&&!b.entries.some(e=>e.stage==='RESULT'))continue;
+      if(Date.now()>=Date.parse(q.proposed.bounds.deadlineAt))continue;
+      const live=(await c.query("SELECT id FROM finnor_os.jobs WHERE tenant_id=$1 AND type='run_compute_search_unit_v1' AND payload->>'searchId'=$2 AND payload->>'unitId'=$3 AND (status='queued' OR status='running' AND lease_expires_at>clock_timestamp())",[s.tenant_id,s.id,u.id])).rowCount;
+      const count=Number((await c.query("SELECT count(*) n FROM finnor_os.jobs WHERE tenant_id=$1 AND type='run_compute_search_unit_v1' AND payload->>'recoveryAttemptId'=$2",[s.tenant_id,a.id])).rows[0].n);
+      if(live||count>=60)continue;assertAnalyticalExecutionProfile(s.request.mode);assertP1ExecutionBinding(q.proposed.executionBinding);
+      await c.query("INSERT INTO finnor_os.jobs(tenant_id,type,payload,idempotency_key,lane,protocol_version,retry_safety) VALUES($1,'run_compute_search_unit_v1',$2::jsonb,$3,'interactive',$4,'reconcilable')",[s.tenant_id,stable({tenantId:s.tenant_id,principalId:s.principal_id,searchId:s.id,unitId:u.id,generation:s.generation,recoveryAttemptId:a.id,originalDeadlineAt:q.proposed.bounds.deadlineAt}),'p2-reconnect:'+a.id+':'+count,s.request.deliberation?2:1]);
+      await c.query("UPDATE finnor_os.p2_units SET status='QUEUED',claim_token=NULL,updated_at=clock_timestamp() WHERE id=$1",[u.id]);
+      await append(ctx,locked,'REMOTE_RECONNECTION_QUEUED',{unitId:u.id,attemptId:a.id,observation:count+1,originalEpisode:q.episode_id,originalDeadlineAt:q.proposed.bounds.deadlineAt,newPhysicalAttempt:false,nativeGrantDebit:0},c);reconnected=true;
+     }
     }
     if((await units(ctx,locked,c)).some(u=>u.status==='UNKNOWN')){if(['CANCELLED','INVALIDATED','STOPPED'].includes(locked.status))return snapshot(ctx,locked,q,c);locked.status='WAITING';locked.reason='UNKNOWN_PHYSICAL_OUTCOME_REQUIRES_OWNER_PROVIDER_EVIDENCE';await c.query("UPDATE finnor_os.p2_requests SET status='WAITING',reason=$2 WHERE id=$1",[locked.id,locked.reason]);return snapshot(ctx,locked,q,c);}
-    if(preAdmissionRecovered&&locked.context&&!['CANCELLED','INVALIDATED','STOPPED','FAILED'].includes(locked.status))return replan(ctx,locked,q,c);
+    if(reconnected){locked.status='RUNNING';locked.reason=null;await c.query("UPDATE finnor_os.p2_requests SET status='RUNNING',reason=NULL WHERE id=$1",[locked.id]);return snapshot(ctx,locked,q,c);}
+    if((preAdmissionRecovered||attemptReconciled)&&locked.context&&!['CANCELLED','INVALIDATED','STOPPED','FAILED'].includes(locked.status))return replan(ctx,locked,q,c);
     if(operation==='compute-search-resume'&&locked.context){locked.status='RUNNING';locked.reason=null;await c.query("UPDATE finnor_os.p2_requests SET status='RUNNING',reason=NULL WHERE id=$1",[locked.id]);return replan(ctx,locked,q,c);}
     if(operation==='compute-search-resume'&&!locked.context)await enqueueProgram(ctx,q,'p2-resume:'+locked.id+':'+locked.revision,c);
     return snapshot(ctx,locked,q,c);

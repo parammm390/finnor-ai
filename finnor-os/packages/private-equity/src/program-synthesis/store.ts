@@ -4,6 +4,7 @@ import type {PoolClient} from 'pg';
 import type {PeMutationContext} from '../types';
 import {authorize,codeIdentity,currentDerivation,principal,sha,stable,tx,unavailable,schemaIdentity,assertDependencies} from '../evidence-execution/store';
 import {isInstitutionRequest,type HarnessProgram,type HarnessRequest,type InstitutionHarnessRequest,type InstitutionHarnessProgram,type NativeHarnessProgram} from './contracts';
+import {acquisitionProgramPlan} from '../acquisition/continuation';
 
 export interface ProgramRow {id:string;tenant_id:string;principal_id:string;work_id:string;work_input_id:string;episode_id:string;plan_revision_id:string;request_digest:string;work_input_digest:string;request:HarnessRequest;proposed:HarnessProgram;generation:number;status:string;evidence_query_id:string|null;head_id:string|null;claim_token:string|null;claim_fence:number|null;poll_count:number;failure:string|null}
 export type InstitutionProgramRow=Omit<ProgramRow,'request'|'proposed'> & {
@@ -26,15 +27,18 @@ export async function requestRow(ctx:PeMutationContext,id:string,c?:PoolClient,l
  if(isInstitutionRequest(row.request))throw Error('ANALYTICAL_PROGRAMME_REQUIRED');
  return row as ProgramRow;
 }
-export async function assertProgramCurrent(ctx:PeMutationContext,q:ProgramRow|InstitutionProgramRow,c?:PoolClient,lock=false,stoppedSnapshot=false){
+export async function assertProgramCurrent(ctx:PeMutationContext,q:ProgramRow|InstitutionProgramRow,c?:PoolClient,lock=false,access:'execution'|'checked_evidence'|'stopped_snapshot'='execution'){
+ if(sha(q.request)!==q.request_digest)throw Error('PROGRAM_REQUEST_DIGEST_MISMATCH');
  await authorize(ctx,q.request.root,[{type:'work',id:q.work_id}],[],c);if(!isInstitutionRequest(q.request))for(const s of q.request.sources)if(s.source.kind!=='derivation')await authorize(ctx,s.source.subject,s.source.kind==='artifact'?[{type:'document',id:s.source.documentId}]:[],[],c);
  const read=async(client:PoolClient)=>{
   if(lock)await client.query('SELECT id FROM finnor_os.works WHERE tenant_id=$1 AND id=$2 FOR SHARE',[q.tenant_id,q.work_id]);
   const user=(await client.query('SELECT role,status FROM finnor_os.users WHERE tenant_id=$1 AND id=$2',[q.tenant_id,q.principal_id])).rows[0];if(user?.status!=='active'||user.role!=='owner')throw unavailable();
   const input=(await client.query<{id:string;body:unknown}>('SELECT id::text,to_jsonb(w) body FROM finnor_os.work_inputs w WHERE tenant_id=$1 AND work_id=$2 ORDER BY created_at DESC,id DESC LIMIT 1',[q.tenant_id,q.work_id])).rows[0];if(input?.id!==q.work_input_id||sha(input.body)!==q.work_input_digest)throw Error('EXACT_WORK_REVISION_CHANGED');
   const plan=(await client.query('SELECT status,work_input_id,objective_loop_id FROM finnor_os.work_plan_revisions WHERE tenant_id=$1 AND id=$2'+(lock?' FOR SHARE':''),[q.tenant_id,q.plan_revision_id])).rows[0];
-  let authenticStop=false;if(stoppedSnapshot&&q.status==='PARTIAL'&&plan?.status==='blocked')authenticStop=!!(await client.query("SELECT l.id FROM finnor_os.work_objective_loops l WHERE l.tenant_id=$1 AND l.id=$2 AND l.work_id=$3 AND l.created_by=$4 AND l.state='blocked' AND EXISTS(SELECT 1 FROM finnor_os.p1_events e WHERE e.tenant_id=$1 AND e.principal_id=$4 AND e.request_id=$5 AND e.generation=$6 AND e.kind='BOUNDED_STOP') AND NOT EXISTS(SELECT 1 FROM finnor_os.work_plan_revisions p WHERE p.tenant_id=$1 AND p.work_id=$3 AND p.status='active')",[q.tenant_id,plan.objective_loop_id,q.work_id,q.principal_id,q.id,q.generation])).rows[0];
-  if(!plan||plan.work_input_id!==q.work_input_id||(!['active','completed'].includes(plan.status)&&!authenticStop))throw Error('CANONICAL_PLAN_REVISION_SUPERSEDED');
+  let authenticStop=false;if(access==='stopped_snapshot'&&q.status==='PARTIAL'&&plan?.status==='blocked')authenticStop=!!(await client.query("SELECT l.id FROM finnor_os.work_objective_loops l WHERE l.tenant_id=$1 AND l.id=$2 AND l.work_id=$3 AND l.created_by=$4 AND l.state='blocked' AND EXISTS(SELECT 1 FROM finnor_os.p1_events e WHERE e.tenant_id=$1 AND e.principal_id=$4 AND e.request_id=$5 AND e.generation=$6 AND e.kind='BOUNDED_STOP') AND NOT EXISTS(SELECT 1 FROM finnor_os.work_plan_revisions p WHERE p.tenant_id=$1 AND p.work_id=$3 AND p.status='active')",[q.tenant_id,plan.objective_loop_id,q.work_id,q.principal_id,q.id,q.generation])).rows[0];
+  const acquisition=!isInstitutionRequest(q.request)&&'ownerContinuation' in q.proposed&&q.proposed.ownerContinuation
+   ?await acquisitionProgramPlan(ctx,q.proposed.ownerContinuation,q.request,client,access==='checked_evidence'&&q.status==='TESTED'?'checked_evidence':'execution'):null;
+  if(!plan||plan.work_input_id!==q.work_input_id||(!['active','completed'].includes(plan.status)&&!authenticStop&&!acquisition?.checkedEvidence))throw Error('CANONICAL_PLAN_REVISION_SUPERSEDED');
   if(isInstitutionRequest(q.request)){
    if(q.request.institution.compilerRequestId){
     const {compilerRow,assertInstitutionCompilerCurrent}=await import('../institution-program/store');
@@ -111,14 +115,37 @@ export async function enqueueProgram(ctx:PeMutationContext,q:ProgramRow|Institut
 export async function readCurrentProgram(ctx:PeMutationContext,id:string){
  const q=await requestRow(ctx,id);await authorize(ctx,q.request.root,[{type:'work',id:q.work_id}]);
  if(['CANCELLED','INVALIDATED'].includes(q.status))return {programId:q.id,workId:q.work_id,workRevision:q.work_input_id,status:q.status,program:null,reason:q.failure,incurredCosts:terminalCostSummary(await episodeCosts(ctx,q))};
- try{await assertProgramCurrent(ctx,q,undefined,false,q.status==='PARTIAL');let program=q.proposed;
-  if(q.head_id){program=await tx(ctx,async c=>{const stored=(await c.query<{body:HarnessProgram;digest:string}>('SELECT body,digest FROM finnor_os.p1_programs WHERE tenant_id=$1 AND principal_id=$2 AND id=$3',[q.tenant_id,q.principal_id,q.head_id])).rows[0];if(!stored)throw Error('PROGRAM_HEAD_MISSING');if(sha(stored.body)!==stored.digest)throw Error('PROGRAM_IMMUTABLE_DIGEST_MISMATCH');return stored.body;},true);await assertDependencies(ctx,program.dependencies);if(q.status==='TESTED'){if(!q.evidence_query_id||!program.result)throw Error('PROGRAM_MATERIAL_CHECK_MISSING');const d=await currentDerivation(ctx,program.semanticBindings.find((r:any)=>r.producer==='P4')?String((program.semanticBindings.find((r:any)=>r.producer==='P4') as any).id):'');if(d.work.revision!==q.work_input_id||d.coverage.status!=='COMPLETE_SELECTED_UNIVERSE')throw Error('P4_PROGRAM_EXACT_BINDING_MISMATCH');}}
+ try{await assertProgramCurrent(ctx,q,undefined,false,q.status==='TESTED'?'checked_evidence':q.status==='PARTIAL'?'stopped_snapshot':'execution');let program=q.proposed;
+  if(q.status==='TESTED')program=(await currentCheckedHarnessProgram(ctx,id)).program;
+  else if(q.head_id){program=await tx(ctx,async c=>{const stored=(await c.query<{body:HarnessProgram;digest:string}>('SELECT body,digest FROM finnor_os.p1_programs WHERE tenant_id=$1 AND principal_id=$2 AND id=$3',[q.tenant_id,q.principal_id,q.head_id])).rows[0];if(!stored)throw Error('PROGRAM_HEAD_MISSING');if(sha(stored.body)!==stored.digest)throw Error('PROGRAM_IMMUTABLE_DIGEST_MISMATCH');return stored.body;},true);await assertDependencies(ctx,program.dependencies);}
   if(q.head_id&&q.request.ownerBindings)await resolveEconomicBindings(ctx,q.request,{programId:q.id,workId:q.work_id,inputId:q.work_input_id,validAt:program.validAt,knowledgeAt:program.knowledgeAt});
-  await authorize(ctx,q.request.root,[{type:'work',id:q.work_id}]);return {programId:q.id,workId:q.work_id,workRevision:q.work_input_id,status:q.status,program,reason:q.failure,canResume:['WAITING','FAILED','PARTIAL'].includes(q.status)&&await tx(ctx,async c=>(await c.query('SELECT status FROM finnor_os.work_plan_revisions WHERE tenant_id=$1 AND id=$2',[q.tenant_id,q.plan_revision_id])).rows[0]?.status==='active',true),incurredCosts:await episodeCosts(ctx,q)};
+  await authorize(ctx,q.request.root,[{type:'work',id:q.work_id}]);return {programId:q.id,workId:q.work_id,workRevision:q.work_input_id,status:q.status,program,reason:q.failure,canResume:['WAITING','FAILED','PARTIAL'].includes(q.status)&&Date.now()<Date.parse(q.proposed.bounds.deadlineAt)&&await tx(ctx,async c=>(await c.query('SELECT status FROM finnor_os.work_plan_revisions WHERE tenant_id=$1 AND id=$2',[q.tenant_id,q.plan_revision_id])).rows[0]?.status==='active',true),incurredCosts:await episodeCosts(ctx,q)};
  }catch(error){if((error as Error).message==='Evidence resource is unavailable in the authenticated scope')throw error;const reason=safePredicate(error);await tx(ctx,async c=>{await c.query("UPDATE finnor_os.p1_requests SET status='INVALIDATED',failure=$4,updated_at=clock_timestamp() WHERE tenant_id=$1 AND principal_id=$2 AND id=$3 AND status<>'CANCELLED'",[q.tenant_id,q.principal_id,q.id,reason]);await trace(ctx,q,'INVALIDATED',{predicate:reason,priorHead:q.head_id,costUSD:null},c);});await authorize(ctx,q.request.root,[{type:'work',id:q.work_id}]);return {programId:q.id,workId:q.work_id,workRevision:q.work_input_id,status:'INVALIDATED',program:null,reason,incurredCosts:terminalCostSummary(await episodeCosts(ctx,q))};}
 }
+/** Exact checked producer for canonical consumers. It shares current Work,
+ * plan, source, privacy and immutable-head ownership with the programme reader
+ * and can run on the consumer's publication transaction. */
+export async function currentCheckedHarnessProgram(ctx:PeMutationContext,id:string,c?:PoolClient,lock=false){
+ const read=async(client:PoolClient)=>{
+  let q=await requestRow(ctx,id,client);await assertProgramCurrent(ctx,q,client,lock,'checked_evidence');
+  if(lock)q=(await client.query<ProgramRow>('SELECT * FROM finnor_os.p1_requests WHERE tenant_id=$1 AND principal_id=$2 AND id=$3 FOR SHARE',[q.tenant_id,q.principal_id,q.id])).rows[0]!;
+  if(q.status!=='TESTED'||!q.head_id)throw Error('CURRENT_CHECKED_HARNESS_REQUIRED');
+  const stored=(await client.query<{body:HarnessProgram;digest:string}>('SELECT body,digest FROM finnor_os.p1_programs WHERE tenant_id=$1 AND principal_id=$2 AND id=$3',[q.tenant_id,q.principal_id,q.head_id])).rows[0];
+  if(!stored||sha(stored.body)!==stored.digest)throw Error('PROGRAM_IMMUTABLE_DIGEST_MISMATCH');
+  const program=stored.body;
+  if(stable(program.executionBinding)!==stable(q.proposed.executionBinding))throw Error('PROGRAM_EXECUTOR_BINDING_MISMATCH');
+  if(program.id!==q.id||program.work.id!==q.work_id||program.work.revision!==q.work_input_id||program.acceptanceDigest!==sha(q.request.acceptance)||program.status!=='TESTED'||!program.result||!program.independentChecks.length||program.independentChecks.some((check:any)=>check.status!=='PASS'))throw Error('PROGRAM_MATERIAL_CHECK_MISSING');
+  await assertDependencies(ctx,program.dependencies,client,lock);
+  const binding=program.semanticBindings.find((raw:any)=>raw.producer==='P4') as {id:string;resultDigest:string}|undefined;
+  if(!binding||!q.evidence_query_id)throw Error('P4_PROGRAM_EXACT_BINDING_MISMATCH');
+  const source=await currentDerivation(ctx,binding.id,client);
+  if(source.work.id!==q.work_id||source.work.revision!==q.work_input_id||source.work.inputDigest!==q.work_input_digest||source.coverage.status!=='COMPLETE_SELECTED_UNIVERSE'||source.result?.digest!==binding.resultDigest)throw Error('P4_PROGRAM_EXACT_BINDING_MISMATCH');
+  return {q,program};
+ };
+ return c?read(c):tx(ctx,read,true);
+}
 /** Terminal accounting is retained without replaying private result/stdout bytes. */
-function terminalCostSummary(costs:HarnessProgram['costs']):HarnessProgram['costs']{return {...costs,nativeInvocations:costs.nativeInvocations.map((raw:any)=>({receiptDigest:sha(raw),invocationId:raw.invocationId??raw.execution?.provenance?.compute?.id??null,owner:raw.owner??null,operation:raw.operation??null,elapsedMs:raw.elapsedMs??raw.execution?.elapsedMs??null,termination:raw.execution?.termination??null,exitCode:raw.execution?.exitCode??null,costUSD:null,qualification:'INCURRED_ATTEMPT_IDENTITY_WITHOUT_PRIVATE_OUTPUT'})),modelInvocations:costs.modelInvocations.map((raw:any)=>({receiptDigest:sha(raw),route:raw.route,actualProvider:raw.actualProvider,usage:raw.usage??null,elapsedMs:raw.elapsedMs??null,status:raw.status,costUSD:null}))};}
+function terminalCostSummary(costs:HarnessProgram['costs']):HarnessProgram['costs']{return {...costs,nativeInvocations:costs.nativeInvocations.map((raw:any)=>({receiptDigest:sha(raw),invocationId:raw.invocationId??raw.execution?.provenance?.compute?.id??null,owner:raw.owner??null,operation:raw.operation??null,elapsedMs:raw.elapsedMs??raw.execution?.elapsedMs??null,termination:raw.execution?.termination??null,exitCode:raw.execution?.exitCode??null,costUSD:null,...(raw.remoteExecutionResponsibility?{remoteExecutionResponsibility:raw.remoteExecutionResponsibility}:{}),qualification:'INCURRED_ATTEMPT_IDENTITY_WITHOUT_PRIVATE_OUTPUT'})),modelInvocations:costs.modelInvocations.map((raw:any)=>({receiptDigest:sha(raw),route:raw.route,actualProvider:raw.actualProvider,usage:raw.usage??null,elapsedMs:raw.elapsedMs??null,status:raw.status,costUSD:null}))};}
 export function safePredicate(error:unknown){return String((error as Error).message).match(/^[A-Z][A-Z0-9_]{0,159}$/)?.[0]??'PROGRAM_OWNER_OR_CHECK_PREDICATE_UNPASSED';}
 
 /** Costs are cumulative across this original Work episode. Durable native/model
@@ -126,8 +153,18 @@ export function safePredicate(error:unknown){return String((error as Error).mess
 export async function episodeCosts(ctx:PeMutationContext,q:ProgramRow|InstitutionProgramRow,c?:PoolClient):Promise<HarnessProgram['costs']>{
  const read=async(client:PoolClient)=>{
   const e=(await client.query('SELECT attempts_used,steps_used,extract(epoch FROM(clock_timestamp()-created_at))*1000 wall_ms FROM finnor_os.p1_episodes WHERE id=$1 AND tenant_id=$2 AND principal_id=$3',[q.episode_id,q.tenant_id,q.principal_id])).rows[0];
-  const records=(await client.query<{kind:string;body:any}>(`SELECT e.kind,e.body FROM finnor_os.p1_events e JOIN finnor_os.p1_requests r ON r.id=e.request_id AND r.tenant_id=e.tenant_id AND r.principal_id=e.principal_id WHERE r.episode_id=$1 AND e.tenant_id=$2 AND e.principal_id=$3 AND e.kind IN('ISOLATED_MODULE_EXECUTION','MODEL_PROPOSAL_ATTEMPT','P4_CURRENT_PRODUCER_COST','OWNER_OPERATION_ATTEMPT') ORDER BY e.created_at,e.id`,[q.episode_id,q.tenant_id,q.principal_id])).rows;
+  const records=(await client.query<{kind:string;body:any}>(`SELECT e.kind,e.body FROM finnor_os.p1_events e JOIN finnor_os.p1_requests r ON r.id=e.request_id AND r.tenant_id=e.tenant_id AND r.principal_id=e.principal_id WHERE r.episode_id=$1 AND e.tenant_id=$2 AND e.principal_id=$3 AND e.kind IN('ISOLATED_MODULE_EXECUTION','MODEL_PROPOSAL_ATTEMPT','P4_CURRENT_PRODUCER_COST','OWNER_OPERATION_ATTEMPT','REMOTE_EXECUTOR_JOURNAL') ORDER BY e.created_at,e.id`,[q.episode_id,q.tenant_id,q.principal_id])).rows;
   const modelInvocations=records.filter(r=>r.kind==='MODEL_PROPOSAL_ATTEMPT').map(r=>r.body),native=records.flatMap(r=>r.kind==='ISOLATED_MODULE_EXECUTION'?[r.body]:['P4_CURRENT_PRODUCER_COST','OWNER_OPERATION_ATTEMPT'].includes(r.kind)?r.body.nativeInvocations??[]:[]),nativeInvocations=[...new Map(native.map(v=>[sha(v),v])).values()];
+  // An acknowledged result is not the beginning of cost responsibility. The
+  // original remote intent/acceptance survives a killed or rejected worker.
+  const remote=new Map<string,any[]>();for(const r of records.filter(r=>r.kind==='REMOTE_EXECUTOR_JOURNAL')){if(sha(r.body.data)!==r.body.digest)throw Error('DAYTONA_JOURNAL_INTEGRITY_FAILED');remote.set(r.body.attemptKey,[...(remote.get(r.body.attemptKey)??[]),r.body]);}
+  for(const [attemptKey,events] of remote){
+   const stage=(name:string)=>events.find(e=>e.stage===name),intent=stage('INTENT');if(!intent)throw Error('DAYTONA_ORIGINAL_INTENT_UNAVAILABLE');
+   const responsibility={attemptKey,workId:intent.binding.workId,programId:intent.binding.requestId,sandboxId:stage('SANDBOX_ACCEPTED')?.data.id??null,commandId:stage('COMMAND_ACCEPTED')?.data.id??null,resultRecorded:!!stage('RESULT'),cleanupRequired:!stage('DELETED'),creationAcceptanceEstablished:!!stage('SANDBOX_ACCEPTED'),commandAcceptanceEstablished:!!stage('COMMAND_ACCEPTED'),originalDeadlineAt:intent.originalDeadlineAt,executionDeadlineAt:intent.data.deadlineAt,recoveryDeadlineAt:intent.data.recoveryDeadlineAt,costUSD:null,costStatus:'UNMETERED'};
+   const id='daytona:'+attemptKey,receipt=nativeInvocations.find(v=>v.invocationId===id);
+   if(receipt)receipt.remoteExecutionResponsibility=responsibility;
+   else nativeInvocations.push({invocationId:id,owner:'S6',operation:'P1_TYPESCRIPT_MODULE',remoteExecutionResponsibility:responsibility,costUSD:null,qualification:'ORIGINAL_POSSIBLE_COMPUTE_COST_NOT_ACCEPTED_OUTPUT'});
+  }
   return {usd:null,status:'UNMETERED' as const,attempts:Number(e.attempts_used),steps:Number(e.steps_used),wallMs:Number(e.wall_ms),modelInvocations,nativeInvocations};
  };return c?read(c):tx(ctx,read,true);
 }

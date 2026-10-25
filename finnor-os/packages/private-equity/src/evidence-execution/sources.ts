@@ -7,12 +7,13 @@ import {canonicalExact,exactScale} from './exact';
 import {extractDocumentRows} from './documents';
 import {NativeFailure} from './backend';
 import {readModelSource} from './model-sources';
+import {evidenceContextRevisionKey} from '../owner-context';
 
 export interface LoadedSource {nativeInvocations:import('./backend').BackendReceipt[];rows:FinancialRow[];witnesses:EvidenceWitness[];view:BeliefView;dependencies:EvidenceDependency[];coverage:EvidenceHandle['coverage'];sourceCounts:Array<{id:string;expected:number;actual:number}>;contradictions:unknown[]}
 const instant=(v:string|Date)=>new Date(v).toISOString();
 export function rowFields(metricKey:string,value:string,semantics:FinancialSemantics,recordId:string){return {recordId,metricKey,value,...Object.fromEntries(Object.entries(semantics).map(([k,v])=>[k,v]))} as Record<string,string|null>;}
 export async function loadSource(ctx:PeMutationContext,root:PeWorldRootRef,source:EvidenceSource,times:{validAt?:string;knowledgeAt?:string}={}):Promise<LoadedSource>{
- await authorize(ctx,root);let subject=root;let keys=['rights:tenant',`canonical:${root.entityType}:${root.entityId}`];
+ await authorize(ctx,root);let subject=root;let keys=['rights:tenant',evidenceContextRevisionKey(root)];
  if('periodStart' in source&&Date.parse(source.periodStart)>Date.parse(source.periodEnd))throw Error('EXACT_ORDERED_FINANCIAL_PERIOD_REQUIRED');
  if(source.kind!=='derivation'){subject=source.subject as PeWorldRootRef;await authorize(ctx,subject,source.kind==='artifact'?[{type:'document',id:source.documentId}]:[]);
   if(source.kind==='metric'){if(source.calendar!=='OWNER_RECORDED'||source.consolidation!=='OWNER_SUBJECT_ONLY'||source.instrument!=='UNSPECIFIED'||source.scale!=='1'||source.sign!=='AS_RECORDED')throw Error('CANONICAL_CALENDAR_CONSOLIDATION_INSTRUMENT_SCALE_SIGN_ATTESTATION_UNAVAILABLE');
@@ -21,7 +22,7 @@ export async function loadSource(ctx:PeMutationContext,root:PeWorldRootRef,sourc
   }else if(source.kind==='artifact')keys.push('document:'+source.documentId,'document-binding:'+source.documentVersionId);
   else keys.push('model-version:'+source.modelVersionId,'model-run:'+source.runId);
  }else keys.push('derivation:'+source.derivationId);
- keys.push(`canonical:${subject.entityType}:${subject.entityId}`);
+ keys.push(evidenceContextRevisionKey(subject));
  const before=await revisions(ctx,keys);const view=await loadEnterpriseBeliefView(ctx,{root:subject,validAt:times.validAt,knowledgeAt:times.knowledgeAt,maxClaims:1000});
  // Refine only selected immutable numeric records. Preserve S1's partial
  // auxiliary Work/Document status and every candidate/byte/history restriction.

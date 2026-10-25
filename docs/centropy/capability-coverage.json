@@ -1,15 +1,15 @@
 {
   "schema": "centropy.capability-coverage-audit/v1",
-  "generatedAt": "2026-10-24T20:02:24.954Z",
-  "sourceBaseCommit": "94ef9737ae54283d756caacc704937f9bfd19dd8",
-  "manifestSha256": "3ff6d0b06d57e13d8412ae9160b5cc844da1d861478665f688d6cb863b2e5238",
-  "formsSha256": "1bc12487fb34759988ed4490715c21560653608fb313a409f0e6bcc551340e89",
+  "generatedAt": "2026-10-25T01:38:49.561Z",
+  "sourceBaseCommit": "886fb9413b3e3f63fa4eda73180007c62c538452",
+  "manifestSha256": "c4a40b34bd8cec21f1f27eb498d67d38e114d8604fa1d961ab27a8b61fd4490e",
+  "formsSha256": "05d642932b7b952294d2d6a71bf54d301ce3afe5b4b7d8806982a2312f98fda8",
   "method": "Actual API/planner manifest; import graph from active CENTROPY route entries; literal API call bindings; typed human form registrations; explicit restricted/compatibility/protocol classifications. Source presence is not execution evidence.",
   "counts": {
-    "total": 651,
-    "http": 580,
-    "planner": 71,
-    "classified": 651,
+    "total": 663,
+    "http": 588,
+    "planner": 75,
+    "classified": 663,
     "classificationCoveragePercent": 100,
     "unclassified": 0,
     "backendApiWithoutMountedFrontend": 93,
@@ -17,13 +17,13 @@
     "unresolvedDynamicCalls": 0,
     "disposition": {
       "ACTIVE_TYPED_HUMAN_CONTROL": 66,
-      "INTENTIONAL_COMPATIBILITY": 23,
-      "ACTIVE_DIRECT_FRONTEND_PATH": 336,
+      "INTENTIONAL_COMPATIBILITY": 26,
+      "ACTIVE_DIRECT_FRONTEND_PATH": 341,
       "RESTRICTED_SYSTEM_OR_ADMIN": 58,
       "PROVIDER_PROTOCOL_CALLBACK": 2,
       "BACKEND_API_NO_MOUNTED_FRONTEND": 93,
       "INTENTIONAL_ALTERNATE_CANONICAL_INTAKE": 2,
-      "CANONICAL_AGENT_CAPABILITY": 60,
+      "CANONICAL_AGENT_CAPABILITY": 64,
       "HUMAN_ONLY_CANONICAL_DECISION": 11
     }
   },
@@ -46,6 +46,7 @@
     "http.post.branches.read",
     "http.post.closing.ports",
     "http.post.closing.read",
+    "http.post.company-brain.acquisition-evaluate",
     "http.post.company-brain.application-resume",
     "http.post.company-brain.belief-pin",
     "http.post.company-brain.belief-view",
@@ -102,7 +103,6 @@
     "http.post.company-brain.procedure-interface",
     "http.post.company-brain.program-interface-module",
     "http.post.company-brain.program-module",
-    "http.post.company-brain.program-ports",
     "http.post.elicitation-protocols.history",
     "http.post.elicitation-protocols.status",
     "http.post.obligations.budget-status",
@@ -128,14 +128,14 @@
       "file": "src/components/centropy/shell/CentropyWorkspace.tsx",
       "route": "works/:ref/objective",
       "method": "POST",
-      "line": 269,
+      "line": 276,
       "binding": "Canonical API import and finite TypeScript expression; source evidence only"
     },
     {
       "file": "src/components/centropy/shell/CentropyWorkspace.tsx",
       "route": "instructions/:ref/cancel",
       "method": "POST",
-      "line": 403,
+      "line": 406,
       "binding": "Canonical API import and finite TypeScript expression; source evidence only"
     },
     {
@@ -191,7 +191,7 @@
       "file": "src/components/centropy/canvas/PrimaryDiligencePanel.tsx",
       "route": "works/:ref",
       "method": "GET",
-      "line": 61,
+      "line": 63,
       "binding": "Canonical API import and finite TypeScript expression; source evidence only"
     },
     {
@@ -527,7 +527,7 @@
       "file": "src/components/centropy/world/WorldWorkRecord.tsx",
       "route": "works/:ref",
       "method": "GET",
-      "line": 50,
+      "line": 51,
       "binding": "Canonical API import and finite TypeScript expression; source evidence only"
     },
     {
@@ -751,15 +751,24 @@
       "src/app/centropy/world/page.tsx"
     ],
     "files": [
+      "finnor-os/packages/shared-types/src/acquisition-closing.ts",
+      "finnor-os/packages/shared-types/src/acquisition-decisions.ts",
+      "finnor-os/packages/shared-types/src/acquisition-intake.ts",
       "finnor-os/packages/shared-types/src/allocation.ts",
       "finnor-os/packages/shared-types/src/application-semantics.ts",
       "finnor-os/packages/shared-types/src/capital-formation.ts",
       "finnor-os/packages/shared-types/src/certified-state-reduction.ts",
       "finnor-os/packages/shared-types/src/closing.ts",
       "finnor-os/packages/shared-types/src/contingent-control.ts",
+      "finnor-os/packages/shared-types/src/economic-attribution.ts",
       "finnor-os/packages/shared-types/src/enterprise-beliefs.ts",
+      "finnor-os/packages/shared-types/src/evidence-execution.ts",
       "finnor-os/packages/shared-types/src/experiments.ts",
       "finnor-os/packages/shared-types/src/interventions.ts",
+      "finnor-os/packages/shared-types/src/primary-diligence.ts",
+      "finnor-os/packages/shared-types/src/private-equity.ts",
+      "finnor-os/packages/shared-types/src/underwriting-inputs.ts",
+      "finnor-os/packages/shared-types/src/work-economic.ts",
       "src/app/centropy/agents/page.tsx",
       "src/app/centropy/bridge/page.tsx",
       "src/app/centropy/classic/page.tsx",
@@ -779,6 +788,7 @@
       "src/app/centropy/stage/page.tsx",
       "src/app/centropy/work/page.tsx",
       "src/app/centropy/world/page.tsx",
+      "src/components/centropy/canvas/AcquisitionDecisionPanel.tsx",
       "src/components/centropy/canvas/ApplicationSemanticsPanel.tsx",
       "src/components/centropy/canvas/ArtifactCanvas.tsx",
       "src/components/centropy/canvas/ArtifactDocumentEditor.tsx",
@@ -866,6 +876,7 @@
       "src/components/centropy/lib/business-invalidation.ts",
       "src/components/centropy/lib/centropy-auth.tsx",
       "src/components/centropy/lib/private-read-generation.ts",
+      "src/components/centropy/lib/use-analytical-runtime.ts",
       "src/components/centropy/lib/use-private-request-scope.ts",
       "src/components/centropy/pe/context-routing.ts",
       "src/components/centropy/pe/contracts.ts",
@@ -885,6 +896,7 @@
       "src/components/centropy/shell/CentropyWorkspace.tsx",
       "src/components/centropy/shell/HomeCanvas.tsx",
       "src/components/centropy/shell/legacy-link.ts",
+      "src/components/centropy/thread/AcquisitionMissionBuilder.tsx",
       "src/components/centropy/thread/Composer.tsx",
       "src/components/centropy/thread/ExecutionObject.tsx",
       "src/components/centropy/thread/ObjectiveControl.tsx",
@@ -895,12 +907,14 @@
       "src/components/centropy/thread/VerifiedUnderwritingOutcome.tsx",
       "src/components/centropy/thread/WorkRecovery.tsx",
       "src/components/centropy/thread/WorkforceAssignments.tsx",
+      "src/components/centropy/thread/mission-submission.ts",
       "src/components/centropy/thread/outcome-pack-model.ts",
       "src/components/centropy/thread/pending-effect-model.ts",
       "src/components/centropy/thread/thread-api.ts",
       "src/components/centropy/thread/thread-contract.ts",
       "src/components/centropy/thread/use-investigation.ts",
       "src/components/centropy/world/ConfidentialComputationPanel.tsx",
+      "src/components/centropy/world/WorkEconomicOutcome.tsx",
       "src/components/centropy/world/WorldExplorer.tsx",
       "src/components/centropy/world/WorldRelationships.tsx",
       "src/components/centropy/world/WorldWorkRecord.tsx",
@@ -983,7 +997,7 @@
       },
       {
         "file": "src/lib/centropy/capability-manifest.generated.json",
-        "sha256": "3ff6d0b06d57e13d8412ae9160b5cc844da1d861478665f688d6cb863b2e5238"
+        "sha256": "c4a40b34bd8cec21f1f27eb498d67d38e114d8604fa1d961ab27a8b61fd4490e"
       },
       {
         "file": "src/components/centropy/lib/private-read-generation.ts",
@@ -995,7 +1009,7 @@
       },
       {
         "file": "src/components/centropy/shell/CentropyWorkspace.tsx",
-        "sha256": "8e6b8cf104b7af0430ba9d6367c236a8ec9b892ec91ff3dd892b85e4ce4c40fe"
+        "sha256": "cd7122d022f288a1a2fde573b231b8a6b398b2335c469753bbb0b5e01a220bee"
       },
       {
         "file": "src/components/centropy/lib/use-private-request-scope.ts",
@@ -1015,7 +1029,7 @@
       },
       {
         "file": "src/components/centropy/canvas/CanvasDocument.tsx",
-        "sha256": "085756e58e97eaa9509a8f43931915dc60dd8b77d49aa9c74d32e7476dfb2cb3"
+        "sha256": "0091c6d49519443a10d922848ea192980a9fa8bbfa303f13fa35d8cbef3946f7"
       },
       {
         "file": "src/components/centropy/product/contracts.ts",
@@ -1027,7 +1041,7 @@
       },
       {
         "file": "src/components/centropy/canvas/canvas-contract.ts",
-        "sha256": "84289be94e3905fe03d7b62bc4589e50e8c8864546cff901e96561516f6ce41d"
+        "sha256": "96bfa67d20ee3237511bf06e9fcde2da14d5b9db32794e9a54197f3c238fdd9c"
       },
       {
         "file": "src/components/centropy/canvas/CanvasSectionNav.tsx",
@@ -1035,7 +1049,7 @@
       },
       {
         "file": "src/components/centropy/canvas/CanvasInstrument.tsx",
-        "sha256": "ca996ea370548ef8cc693430780e99291760bbfbae57bf513de6ef3bd5c8b3dd"
+        "sha256": "9c5f5c54a3a645c7528ef325883ddf94b3242014cb644ce1585bba9384898c23"
       },
       {
         "file": "src/components/centropy/canvas/ArtifactTemplateDesk.tsx",
@@ -1055,7 +1069,7 @@
       },
       {
         "file": "src/components/centropy/canvas/ComputeSearchPanel.tsx",
-        "sha256": "1153d4091261bf2ce4e0860738b6674ddfd45f0535c6cc00061b90aeb506f25a"
+        "sha256": "4534e3ac61fc5489369d480a312555b5c912f1c001208cca69cb898b7ad7b8a6"
       },
       {
         "file": "src/components/centropy/canvas/CapitalProgramPanel.tsx",
@@ -1159,15 +1173,15 @@
       },
       {
         "file": "src/components/centropy/canvas/DeliberationPanel.tsx",
-        "sha256": "e1b49fde1c9d58efb16951abf19d60fe065643ebe23c4adc82a730df565eecf1"
+        "sha256": "d553f678d0a571987adcf198d49de72ffde067828a428ba5c1c39116680c8a15"
       },
       {
         "file": "src/lib/jarvis/openapi-types.ts",
-        "sha256": "2f0ebfb4fa5bf17f7f8c565f2bdfe7e0c2bf538001ca7bbe5e7974280077443d"
+        "sha256": "e4ab88ff5d4ce28ecc0c7469a31bdcf4b55c428b65dc81999b9735ac403867fe"
       },
       {
         "file": "src/components/centropy/canvas/ProgramSynthesisPanel.tsx",
-        "sha256": "90fd5fb03b2bb6d7d6c273259e0bec4dcc8febd8c69fa5429513fbfd93cb024d"
+        "sha256": "9fd0d88d824be72f55aeda7a84c2dbad5c11ee6c72f9ca1483e4a302bbdefe50"
       },
       {
         "file": "src/components/centropy/canvas/program-grammar.ts",
@@ -1179,7 +1193,19 @@
       },
       {
         "file": "src/components/centropy/canvas/ProcedureInductionPanel.tsx",
-        "sha256": "669eb1d29cfafeac38cdf119998b723c7cd11be5d83dda645c5ad354a416d10f"
+        "sha256": "60230c37ae936f4fe28da8e93a6015fce71b5866e00742cfd185a884872ba49a"
+      },
+      {
+        "file": "src/components/centropy/lib/use-analytical-runtime.ts",
+        "sha256": "ee943a1cb557dfc8f4f52405894b4bc323aacce3e859380b9dd93a90c5819ef8"
+      },
+      {
+        "file": "src/components/centropy/canvas/AcquisitionDecisionPanel.tsx",
+        "sha256": "45968d61283fd22c1741ca1ac7a63be6dee4c31e11ec74e0209865ac5073b0da"
+      },
+      {
+        "file": "finnor-os/packages/shared-types/src/acquisition-decisions.ts",
+        "sha256": "ccc48036d26a16c8f10924fe0cf0db5ced7fa627c0a26e84f956501ebb5f3cbf"
       },
       {
         "file": "src/components/centropy/canvas/InstitutionProgramPanel.tsx",
@@ -1191,7 +1217,7 @@
       },
       {
         "file": "src/components/centropy/canvas/EvidenceWorkbench.tsx",
-        "sha256": "c302faa3cc1a0436f6610a9c59af485b27b87d9f083a543d3d1482c2b87dedb2"
+        "sha256": "6c7fc2631be175dd823074e8ace696278fcd40e3a42d9097623dbad1dafeaee4"
       },
       {
         "file": "src/components/centropy/canvas/IdentificationPlanPanel.tsx",
@@ -1203,7 +1229,7 @@
       },
       {
         "file": "src/components/centropy/canvas/PrimaryDiligencePanel.tsx",
-        "sha256": "9de72a469eda3dbdd08a11f563e1580ad9540f9618b80d214c418391b052e24f"
+        "sha256": "01c7c2adf041d581364c075497f6f20debe52bb9d18f2c59c2dd0839ce5b4e93"
       },
       {
         "file": "src/components/centropy/canvas/BilateralOpportunityPanel.tsx",
@@ -1235,7 +1261,7 @@
       },
       {
         "file": "finnor-os/packages/shared-types/src/contingent-control.ts",
-        "sha256": "9af172f67c8b8ba6865c0f9f3f1cd3ba029c8fcf56ff90cbcc3ad22a6a74db8f"
+        "sha256": "19bdaa74e9d04a308b92c97ffdb6e5a3bc8720c9cc6da7533ae79b67eff3ee84"
       },
       {
         "file": "finnor-os/packages/shared-types/src/interventions.ts",
@@ -1295,7 +1321,7 @@
       },
       {
         "file": "src/lib/centropy/human-forms.generated.json",
-        "sha256": "1bc12487fb34759988ed4490715c21560653608fb313a409f0e6bcc551340e89"
+        "sha256": "05d642932b7b952294d2d6a71bf54d301ce3afe5b4b7d8806982a2312f98fda8"
       },
       {
         "file": "src/components/centropy/controls/CanonicalRecordForm.tsx",
@@ -1343,11 +1369,15 @@
       },
       {
         "file": "src/components/centropy/closing/ClosingProgrammePanel.tsx",
-        "sha256": "39c4661db007f5502a921368dbdadb22a4b1782912ff86878470e914320fb924"
+        "sha256": "b9808aaeec42f31487029fea3aa2671fc8041d82f29c971376abbd06feda654d"
       },
       {
         "file": "finnor-os/packages/shared-types/src/closing.ts",
         "sha256": "fcf513a5f33c2f0415bfc848af87e5af8d5562255fa1feb717953e9fbb022165"
+      },
+      {
+        "file": "finnor-os/packages/shared-types/src/acquisition-closing.ts",
+        "sha256": "9a089804f3b35b7e76f79e3930c7940ca53b3e0ddc0b1a1230c04ddfcb01ce1d"
       },
       {
         "file": "src/components/centropy/canvas/CausalReplayPanel.tsx",
@@ -1359,7 +1389,7 @@
       },
       {
         "file": "src/components/centropy/canvas/canvas-compose.ts",
-        "sha256": "013fb5070cd8a0cc95a4446d3d8ca208f3d103dcd177c232fa3dd95573c4967c"
+        "sha256": "b2fcc14dfb35e6d47af53d856ef37e27b4789133a971a3fe01d4d48d1eb2cdd2"
       },
       {
         "file": "src/components/centropy/thread/thread-contract.ts",
@@ -1379,7 +1409,7 @@
       },
       {
         "file": "src/components/centropy/world/WorldWorkRecord.tsx",
-        "sha256": "06b7adb4a5ed940105c8af088e649da459dcde6fe0d48e0173896e0e841f6da5"
+        "sha256": "e0f680222a355d8acfdf6896102353e90b63746c304bb34c4818695ee46ab192"
       },
       {
         "file": "src/components/centropy/thread/PendingEffects.tsx",
@@ -1396,6 +1426,18 @@
       {
         "file": "src/components/centropy/product/approval-effect-model.ts",
         "sha256": "ea63e93fdcc0139664767a552278016940ffd9426547483866d36acbe466ac9c"
+      },
+      {
+        "file": "src/components/centropy/world/WorkEconomicOutcome.tsx",
+        "sha256": "ac086f035a084826f85fb6ac5e2e9865baa9174b77dd93b00688b2946875f74c"
+      },
+      {
+        "file": "finnor-os/packages/shared-types/src/work-economic.ts",
+        "sha256": "756daf771bf90d2d4132d4f0f33608bbd8b4f0b74b9ff14742c09ad2606c93e0"
+      },
+      {
+        "file": "finnor-os/packages/shared-types/src/economic-attribution.ts",
+        "sha256": "0db198753dd84518af0e10e3c668fd3a954ea2696b577d45f88fe8473eb91670"
       },
       {
         "file": "src/components/centropy/canvas/EconomicActionTheoryPanel.tsx",
@@ -1432,6 +1474,10 @@
       {
         "file": "src/components/centropy/thread/thread-api.ts",
         "sha256": "e311c751a724a55f05823fa0ea14b6e61417466403b30aac3b6e019563e8d03f"
+      },
+      {
+        "file": "src/components/centropy/thread/mission-submission.ts",
+        "sha256": "a63288b798c96de4bcf7cf2d4ab46b3dee50dea9a8f0c348f62453264e98661d"
       },
       {
         "file": "src/components/centropy/thread/use-investigation.ts",
@@ -1495,11 +1541,35 @@
       },
       {
         "file": "src/components/centropy/thread/OutcomePacks.tsx",
-        "sha256": "0ea25ba3e1e3d19ec7e78bf1400dbd3e96fa8b604ab78359bcf20d1405e4182e"
+        "sha256": "753ff606f309edfbcd846703934c758cd6ea2b99880727e10328b2d862190b27"
+      },
+      {
+        "file": "src/components/centropy/thread/AcquisitionMissionBuilder.tsx",
+        "sha256": "73df3678899232e083acb9c707eb2f8c577e7c5a1df950ecda252f62dd0ba01d"
+      },
+      {
+        "file": "finnor-os/packages/shared-types/src/acquisition-intake.ts",
+        "sha256": "122b0d560a9c30bd351c4d075fbf5a5af04ab49b16efd14697b7d886e434d1de"
+      },
+      {
+        "file": "finnor-os/packages/shared-types/src/underwriting-inputs.ts",
+        "sha256": "6ef887ce459242678a180bbadf7a90777ce3aa663606288febffebfe8a5db9b6"
+      },
+      {
+        "file": "finnor-os/packages/shared-types/src/primary-diligence.ts",
+        "sha256": "eddf521432f96ee0b68abeeebfdcf1e954d255b5e31db7bd0034ec203034b716"
+      },
+      {
+        "file": "finnor-os/packages/shared-types/src/evidence-execution.ts",
+        "sha256": "f999b870baa748d81f02e77c77b84f2290c22ff1abbc214ec7ff58ea3a918d2b"
+      },
+      {
+        "file": "finnor-os/packages/shared-types/src/private-equity.ts",
+        "sha256": "56613407cc4cdaebf42b68f1a6322e72a799ecbf43df970dfb3b9faee05441a1"
       },
       {
         "file": "src/components/centropy/thread/outcome-pack-model.ts",
-        "sha256": "7ca7d60754c769c991950db3d9cfa6d2beefa53b8ad1884e5f43bc7a4927633d"
+        "sha256": "28e4b46f421f63cb5653ba11a4adc3ae4e0a4b2a0468f05dcc6174e7838626a6"
       },
       {
         "file": "src/components/centropy/controls/SettingsDialog.tsx",
@@ -4734,7 +4804,7 @@
           "file": "src/components/centropy/thread/OutcomePacks.tsx",
           "route": "outcome-packs",
           "method": "GET",
-          "line": 67,
+          "line": 80,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         },
         {
@@ -6686,7 +6756,7 @@
           "file": "src/components/centropy/shell/CentropyWorkspace.tsx",
           "route": "user-prefs",
           "method": "GET",
-          "line": 141,
+          "line": 146,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         },
         {
@@ -7157,7 +7227,7 @@
           "file": "src/components/centropy/canvas/PrimaryDiligencePanel.tsx",
           "route": "works/:ref",
           "method": "GET",
-          "line": 61,
+          "line": 63,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         },
         {
@@ -7178,7 +7248,7 @@
           "file": "src/components/centropy/world/WorldWorkRecord.tsx",
           "route": "works/:ref",
           "method": "GET",
-          "line": 50,
+          "line": 51,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -7562,7 +7632,7 @@
           "file": "src/components/centropy/shell/CentropyWorkspace.tsx",
           "route": "actions",
           "method": "POST",
-          "line": 288,
+          "line": 295,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -10048,7 +10118,7 @@
           "file": "src/components/centropy/closing/ClosingProgrammePanel.tsx",
           "route": "closing/projection",
           "method": "POST",
-          "line": 46,
+          "line": 73,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -10428,6 +10498,332 @@
       "presentation": {
         "targets": [],
         "familyRendererSources": [],
+        "directRuntimeExecutionProvenByThisReport": false
+      },
+      "testEvidenceState": "SOURCE_REFERENCES_ONLY; executed proofs are indexed separately",
+      "compatibilityReason": null,
+      "externalConfiguration": null
+    },
+    {
+      "capabilityId": "http.post.company-brain.acquisition-closing-context",
+      "family": "company-brain",
+      "owner": "@finnor/private-equity",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "company-brain/acquisition-closing-context",
+      "routeDepth": 2,
+      "classification": "READ",
+      "kind": "read",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "query",
+      "effectClass": null,
+      "verificationClass": "canonical_read",
+      "presentationTargets": [
+        "WORLD",
+        "CANVAS"
+      ],
+      "invalidationTags": [],
+      "timeoutClass": "READ",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
+      "disposition": "ACTIVE_DIRECT_FRONTEND_PATH",
+      "actualRouteOrTool": "POST /api/company-brain/acquisition-closing-context",
+      "frontendSourceBindings": [
+        {
+          "file": "src/components/centropy/closing/ClosingProgrammePanel.tsx",
+          "route": "company-brain/acquisition-closing-context",
+          "method": "POST",
+          "line": 62,
+          "binding": "Canonical API import and finite TypeScript expression; source evidence only"
+        }
+      ],
+      "humanForms": [],
+      "humanRoute": null,
+      "agentPath": null,
+      "authorityPath": {
+        "class": "query",
+        "backendSource": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
+        "frontendNeverAuthorizes": true
+      },
+      "verificationPath": {
+        "class": "canonical_read",
+        "backendSource": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts"
+      },
+      "presentation": {
+        "targets": [
+          "WORLD",
+          "CANVAS"
+        ],
+        "familyRendererSources": [
+          "src/components/centropy/world/WorldExplorer.tsx"
+        ],
+        "directRuntimeExecutionProvenByThisReport": false
+      },
+      "testEvidenceState": "SOURCE_REFERENCES_ONLY; executed proofs are indexed separately",
+      "compatibilityReason": null,
+      "externalConfiguration": null
+    },
+    {
+      "capabilityId": "http.post.company-brain.acquisition-evaluate",
+      "family": "company-brain",
+      "owner": "@finnor/private-equity",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "company-brain/acquisition-evaluate",
+      "routeDepth": 2,
+      "classification": "MUTATION",
+      "kind": "mutation",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "backend_policy",
+      "effectClass": "domain_mutation",
+      "verificationClass": "canonical_reread",
+      "presentationTargets": [
+        "WORLD",
+        "CANVAS"
+      ],
+      "invalidationTags": [
+        "company-brain"
+      ],
+      "timeoutClass": "WRITE",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
+      "disposition": "BACKEND_API_NO_MOUNTED_FRONTEND",
+      "actualRouteOrTool": "POST /api/company-brain/acquisition-evaluate",
+      "frontendSourceBindings": [],
+      "humanForms": [],
+      "humanRoute": null,
+      "agentPath": null,
+      "authorityPath": {
+        "class": "backend_policy",
+        "backendSource": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
+        "frontendNeverAuthorizes": true
+      },
+      "verificationPath": {
+        "class": "canonical_reread",
+        "backendSource": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts"
+      },
+      "presentation": {
+        "targets": [
+          "WORLD",
+          "CANVAS"
+        ],
+        "familyRendererSources": [
+          "src/components/centropy/world/WorldExplorer.tsx"
+        ],
+        "directRuntimeExecutionProvenByThisReport": false
+      },
+      "testEvidenceState": "SOURCE_REFERENCES_ONLY; executed proofs are indexed separately",
+      "compatibilityReason": null,
+      "externalConfiguration": null
+    },
+    {
+      "capabilityId": "http.post.company-brain.acquisition-intake-context",
+      "family": "company-brain",
+      "owner": "@finnor/private-equity",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "company-brain/acquisition-intake-context",
+      "routeDepth": 2,
+      "classification": "READ",
+      "kind": "read",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "query",
+      "effectClass": null,
+      "verificationClass": "canonical_read",
+      "presentationTargets": [
+        "WORLD",
+        "CANVAS"
+      ],
+      "invalidationTags": [],
+      "timeoutClass": "READ",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
+      "disposition": "ACTIVE_DIRECT_FRONTEND_PATH",
+      "actualRouteOrTool": "POST /api/company-brain/acquisition-intake-context",
+      "frontendSourceBindings": [
+        {
+          "file": "src/components/centropy/thread/AcquisitionMissionBuilder.tsx",
+          "route": "company-brain/acquisition-intake-context",
+          "method": "POST",
+          "line": 39,
+          "binding": "Canonical API import and finite TypeScript expression; source evidence only"
+        }
+      ],
+      "humanForms": [],
+      "humanRoute": null,
+      "agentPath": null,
+      "authorityPath": {
+        "class": "query",
+        "backendSource": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
+        "frontendNeverAuthorizes": true
+      },
+      "verificationPath": {
+        "class": "canonical_read",
+        "backendSource": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts"
+      },
+      "presentation": {
+        "targets": [
+          "WORLD",
+          "CANVAS"
+        ],
+        "familyRendererSources": [
+          "src/components/centropy/world/WorldExplorer.tsx"
+        ],
+        "directRuntimeExecutionProvenByThisReport": false
+      },
+      "testEvidenceState": "SOURCE_REFERENCES_ONLY; executed proofs are indexed separately",
+      "compatibilityReason": null,
+      "externalConfiguration": null
+    },
+    {
+      "capabilityId": "http.post.company-brain.acquisition-intake-review",
+      "family": "company-brain",
+      "owner": "@finnor/private-equity",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "company-brain/acquisition-intake-review",
+      "routeDepth": 2,
+      "classification": "READ",
+      "kind": "read",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "query",
+      "effectClass": null,
+      "verificationClass": "canonical_read",
+      "presentationTargets": [
+        "WORLD",
+        "CANVAS"
+      ],
+      "invalidationTags": [],
+      "timeoutClass": "READ",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
+      "disposition": "ACTIVE_DIRECT_FRONTEND_PATH",
+      "actualRouteOrTool": "POST /api/company-brain/acquisition-intake-review",
+      "frontendSourceBindings": [
+        {
+          "file": "src/components/centropy/thread/AcquisitionMissionBuilder.tsx",
+          "route": "company-brain/acquisition-intake-review",
+          "method": "POST",
+          "line": 128,
+          "binding": "Canonical API import and finite TypeScript expression; source evidence only"
+        }
+      ],
+      "humanForms": [],
+      "humanRoute": null,
+      "agentPath": null,
+      "authorityPath": {
+        "class": "query",
+        "backendSource": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
+        "frontendNeverAuthorizes": true
+      },
+      "verificationPath": {
+        "class": "canonical_read",
+        "backendSource": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts"
+      },
+      "presentation": {
+        "targets": [
+          "WORLD",
+          "CANVAS"
+        ],
+        "familyRendererSources": [
+          "src/components/centropy/world/WorldExplorer.tsx"
+        ],
+        "directRuntimeExecutionProvenByThisReport": false
+      },
+      "testEvidenceState": "SOURCE_REFERENCES_ONLY; executed proofs are indexed separately",
+      "compatibilityReason": null,
+      "externalConfiguration": null
+    },
+    {
+      "capabilityId": "http.post.company-brain.acquisition-read",
+      "family": "company-brain",
+      "owner": "@finnor/private-equity",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "company-brain/acquisition-read",
+      "routeDepth": 2,
+      "classification": "READ",
+      "kind": "read",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "query",
+      "effectClass": null,
+      "verificationClass": "canonical_read",
+      "presentationTargets": [
+        "WORLD",
+        "CANVAS"
+      ],
+      "invalidationTags": [],
+      "timeoutClass": "READ",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
+      "disposition": "ACTIVE_DIRECT_FRONTEND_PATH",
+      "actualRouteOrTool": "POST /api/company-brain/acquisition-read",
+      "frontendSourceBindings": [
+        {
+          "file": "src/components/centropy/canvas/AcquisitionDecisionPanel.tsx",
+          "route": "company-brain/acquisition-read",
+          "method": "POST",
+          "line": 24,
+          "binding": "Canonical API import and finite TypeScript expression; source evidence only"
+        },
+        {
+          "file": "src/components/centropy/canvas/AcquisitionDecisionPanel.tsx",
+          "route": "company-brain/acquisition-read",
+          "method": "POST",
+          "line": 53,
+          "binding": "Canonical API import and finite TypeScript expression; source evidence only"
+        }
+      ],
+      "humanForms": [],
+      "humanRoute": null,
+      "agentPath": null,
+      "authorityPath": {
+        "class": "query",
+        "backendSource": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
+        "frontendNeverAuthorizes": true
+      },
+      "verificationPath": {
+        "class": "canonical_read",
+        "backendSource": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts"
+      },
+      "presentation": {
+        "targets": [
+          "WORLD",
+          "CANVAS"
+        ],
+        "familyRendererSources": [
+          "src/components/centropy/world/WorldExplorer.tsx"
+        ],
         "directRuntimeExecutionProvenByThisReport": false
       },
       "testEvidenceState": "SOURCE_REFERENCES_ONLY; executed proofs are indexed separately",
@@ -18905,7 +19301,7 @@
           "file": "src/components/centropy/canvas/EvidenceWorkbench.tsx",
           "route": "company-brain/evidence-cancel",
           "method": "POST",
-          "line": 55,
+          "line": 58,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -19029,7 +19425,7 @@
           "file": "src/components/centropy/canvas/EvidenceWorkbench.tsx",
           "route": "company-brain/evidence-handles",
           "method": "POST",
-          "line": 48,
+          "line": 50,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -19159,7 +19555,7 @@
           "file": "src/components/centropy/canvas/EvidenceWorkbench.tsx",
           "route": "company-brain/evidence-read",
           "method": "POST",
-          "line": 44,
+          "line": 46,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -19226,7 +19622,7 @@
           "file": "src/components/centropy/canvas/EvidenceWorkbench.tsx",
           "route": "company-brain/evidence-replay",
           "method": "POST",
-          "line": 49,
+          "line": 51,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -19293,7 +19689,7 @@
           "file": "src/components/centropy/canvas/EvidenceWorkbench.tsx",
           "route": "company-brain/evidence-submit",
           "method": "POST",
-          "line": 48,
+          "line": 50,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -19358,7 +19754,7 @@
           "file": "src/components/centropy/canvas/EvidenceWorkbench.tsx",
           "route": "company-brain/evidence-witness",
           "method": "POST",
-          "line": 50,
+          "line": 52,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -24358,7 +24754,7 @@
           "file": "src/components/centropy/canvas/PrimaryDiligencePanel.tsx",
           "route": "company-brain/primary-advance",
           "method": "POST",
-          "line": 73,
+          "line": 75,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -24425,7 +24821,7 @@
           "file": "src/components/centropy/canvas/PrimaryDiligencePanel.tsx",
           "route": "company-brain/primary-cancel",
           "method": "POST",
-          "line": 72,
+          "line": 74,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -24726,7 +25122,7 @@
           "file": "src/components/centropy/canvas/PrimaryDiligencePanel.tsx",
           "route": "company-brain/primary-open-work",
           "method": "POST",
-          "line": 62,
+          "line": 64,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -24791,7 +25187,7 @@
           "file": "src/components/centropy/canvas/PrimaryDiligencePanel.tsx",
           "route": "company-brain/primary-read",
           "method": "POST",
-          "line": 36,
+          "line": 38,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -24917,7 +25313,7 @@
           "file": "src/components/centropy/canvas/PrimaryDiligencePanel.tsx",
           "route": "company-brain/primary-submit",
           "method": "POST",
-          "line": 65,
+          "line": 67,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         },
         {
@@ -25669,7 +26065,7 @@
           "file": "src/components/centropy/canvas/ProgramSynthesisPanel.tsx",
           "route": "company-brain/program-artifact",
           "method": "POST",
-          "line": 51,
+          "line": 53,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -25736,7 +26132,7 @@
           "file": "src/components/centropy/canvas/ProgramSynthesisPanel.tsx",
           "route": "company-brain/program-cancel",
           "method": "POST",
-          "line": 49,
+          "line": 51,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -25908,9 +26304,17 @@
       "timeoutClass": "READ",
       "tests": [],
       "source": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
-      "disposition": "BACKEND_API_NO_MOUNTED_FRONTEND",
+      "disposition": "ACTIVE_DIRECT_FRONTEND_PATH",
       "actualRouteOrTool": "POST /api/company-brain/program-ports",
-      "frontendSourceBindings": [],
+      "frontendSourceBindings": [
+        {
+          "file": "src/components/centropy/lib/use-analytical-runtime.ts",
+          "route": "company-brain/program-ports",
+          "method": "POST",
+          "line": 19,
+          "binding": "Canonical API import and finite TypeScript expression; source evidence only"
+        }
+      ],
       "humanForms": [],
       "humanRoute": null,
       "agentPath": null,
@@ -25972,7 +26376,7 @@
           "file": "src/components/centropy/canvas/ProgramSynthesisPanel.tsx",
           "route": "company-brain/program-projection",
           "method": "POST",
-          "line": 37,
+          "line": 39,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -26037,7 +26441,7 @@
           "file": "src/components/centropy/canvas/ProgramSynthesisPanel.tsx",
           "route": "company-brain/program-read",
           "method": "POST",
-          "line": 30,
+          "line": 32,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -26104,7 +26508,7 @@
           "file": "src/components/centropy/canvas/ProgramSynthesisPanel.tsx",
           "route": "company-brain/program-resume",
           "method": "POST",
-          "line": 49,
+          "line": 51,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -26171,7 +26575,7 @@
           "file": "src/components/centropy/canvas/ProgramSynthesisPanel.tsx",
           "route": "company-brain/program-submit",
           "method": "POST",
-          "line": 48,
+          "line": 50,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -26234,6 +26638,13 @@
       "frontendSourceBindings": [
         {
           "file": "src/components/centropy/canvas/ProgramSynthesisPanel.tsx",
+          "route": "company-brain/program-witness",
+          "method": "POST",
+          "line": 52,
+          "binding": "Canonical API import and finite TypeScript expression; source evidence only"
+        },
+        {
+          "file": "src/components/centropy/canvas/AcquisitionDecisionPanel.tsx",
           "route": "company-brain/program-witness",
           "method": "POST",
           "line": 50,
@@ -29198,7 +29609,7 @@
     {
       "capabilityId": "http.post.economic-outcomes.append",
       "family": "economic-outcomes",
-      "owner": "@finnor/api",
+      "owner": "@finnor/private-equity",
       "transport": "http",
       "method": "POST",
       "routePattern": "economic-outcomes/append",
@@ -29217,7 +29628,8 @@
       "verificationClass": "canonical_reread",
       "presentationTargets": [],
       "invalidationTags": [
-        "economic-outcomes"
+        "work",
+        "company-brain"
       ],
       "timeoutClass": "WRITE",
       "tests": [],
@@ -29249,7 +29661,7 @@
     {
       "capabilityId": "http.post.economic-outcomes.assess",
       "family": "economic-outcomes",
-      "owner": "@finnor/api",
+      "owner": "@finnor/private-equity",
       "transport": "http",
       "method": "POST",
       "routePattern": "economic-outcomes/assess",
@@ -29268,7 +29680,8 @@
       "verificationClass": "canonical_reread",
       "presentationTargets": [],
       "invalidationTags": [
-        "economic-outcomes"
+        "work",
+        "company-brain"
       ],
       "timeoutClass": "WRITE",
       "tests": [],
@@ -29300,7 +29713,7 @@
     {
       "capabilityId": "http.post.economic-outcomes.assign-programme",
       "family": "economic-outcomes",
-      "owner": "@finnor/api",
+      "owner": "@finnor/private-equity",
       "transport": "http",
       "method": "POST",
       "routePattern": "economic-outcomes/assign-programme",
@@ -29319,7 +29732,8 @@
       "verificationClass": "canonical_reread",
       "presentationTargets": [],
       "invalidationTags": [
-        "economic-outcomes"
+        "work",
+        "company-brain"
       ],
       "timeoutClass": "WRITE",
       "tests": [],
@@ -29351,7 +29765,7 @@
     {
       "capabilityId": "http.post.economic-outcomes.benchmark",
       "family": "economic-outcomes",
-      "owner": "@finnor/api",
+      "owner": "@finnor/private-equity",
       "transport": "http",
       "method": "POST",
       "routePattern": "economic-outcomes/benchmark",
@@ -29370,7 +29784,8 @@
       "verificationClass": "canonical_reread",
       "presentationTargets": [],
       "invalidationTags": [
-        "economic-outcomes"
+        "work",
+        "company-brain"
       ],
       "timeoutClass": "WRITE",
       "tests": [],
@@ -29400,9 +29815,77 @@
       "externalConfiguration": null
     },
     {
+      "capabilityId": "http.post.economic-outcomes.bind-work",
+      "family": "economic-outcomes",
+      "owner": "@finnor/private-equity",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "economic-outcomes/bind-work",
+      "routeDepth": 2,
+      "classification": "MUTATION",
+      "kind": "mutation",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": true,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "human_attestation",
+      "effectClass": "domain_mutation",
+      "verificationClass": "canonical_reread",
+      "presentationTargets": [
+        "WORLD",
+        "CANVAS"
+      ],
+      "invalidationTags": [
+        "work",
+        "company-brain"
+      ],
+      "timeoutClass": "WRITE",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/economic-outcomes/[operation]/route.ts",
+      "disposition": "INTENTIONAL_COMPATIBILITY",
+      "actualRouteOrTool": "POST /api/economic-outcomes/bind-work",
+      "frontendSourceBindings": [
+        {
+          "file": "src/components/centropy/world/WorkEconomicOutcome.tsx",
+          "route": "economic-outcomes/bind-work",
+          "method": "POST",
+          "line": 48,
+          "binding": "Canonical API import and finite TypeScript expression; source evidence only"
+        }
+      ],
+      "humanForms": [],
+      "humanRoute": null,
+      "agentPath": null,
+      "authorityPath": {
+        "class": "human_attestation",
+        "backendSource": "finnor-os/apps/api/app/api/economic-outcomes/[operation]/route.ts",
+        "frontendNeverAuthorizes": true
+      },
+      "verificationPath": {
+        "class": "canonical_reread",
+        "backendSource": "finnor-os/apps/api/app/api/economic-outcomes/[operation]/route.ts"
+      },
+      "presentation": {
+        "targets": [
+          "WORLD",
+          "CANVAS"
+        ],
+        "familyRendererSources": [
+          "src/components/centropy/world/WorkEconomicOutcome.tsx"
+        ],
+        "directRuntimeExecutionProvenByThisReport": false
+      },
+      "testEvidenceState": "SOURCE_REFERENCES_ONLY; executed proofs are indexed separately",
+      "compatibilityReason": "Native S7 economic outcome owner API; no direct CENTROPY control or executed economic qualification is claimed.",
+      "externalConfiguration": null
+    },
+    {
       "capabilityId": "http.post.economic-outcomes.execution-evidence",
       "family": "economic-outcomes",
-      "owner": "@finnor/api",
+      "owner": "@finnor/private-equity",
       "transport": "http",
       "method": "POST",
       "routePattern": "economic-outcomes/execution-evidence",
@@ -29451,7 +29934,7 @@
     {
       "capabilityId": "http.post.economic-outcomes.history",
       "family": "economic-outcomes",
-      "owner": "@finnor/api",
+      "owner": "@finnor/private-equity",
       "transport": "http",
       "method": "POST",
       "routePattern": "economic-outcomes/history",
@@ -29500,7 +29983,7 @@
     {
       "capabilityId": "http.post.economic-outcomes.learning-assessment",
       "family": "economic-outcomes",
-      "owner": "@finnor/api",
+      "owner": "@finnor/private-equity",
       "transport": "http",
       "method": "POST",
       "routePattern": "economic-outcomes/learning-assessment",
@@ -29549,7 +30032,7 @@
     {
       "capabilityId": "http.post.economic-outcomes.read",
       "family": "economic-outcomes",
-      "owner": "@finnor/api",
+      "owner": "@finnor/private-equity",
       "transport": "http",
       "method": "POST",
       "routePattern": "economic-outcomes/read",
@@ -29598,7 +30081,7 @@
     {
       "capabilityId": "http.post.economic-outcomes.reconcile-aggregate",
       "family": "economic-outcomes",
-      "owner": "@finnor/api",
+      "owner": "@finnor/private-equity",
       "transport": "http",
       "method": "POST",
       "routePattern": "economic-outcomes/reconcile-aggregate",
@@ -29617,7 +30100,8 @@
       "verificationClass": "canonical_reread",
       "presentationTargets": [],
       "invalidationTags": [
-        "economic-outcomes"
+        "work",
+        "company-brain"
       ],
       "timeoutClass": "WRITE",
       "tests": [],
@@ -29649,7 +30133,7 @@
     {
       "capabilityId": "http.post.economic-outcomes.register",
       "family": "economic-outcomes",
-      "owner": "@finnor/api",
+      "owner": "@finnor/private-equity",
       "transport": "http",
       "method": "POST",
       "routePattern": "economic-outcomes/register",
@@ -29668,7 +30152,8 @@
       "verificationClass": "canonical_reread",
       "presentationTargets": [],
       "invalidationTags": [
-        "economic-outcomes"
+        "work",
+        "company-brain"
       ],
       "timeoutClass": "WRITE",
       "tests": [],
@@ -29700,7 +30185,7 @@
     {
       "capabilityId": "http.post.economic-outcomes.register-assignment-protocol",
       "family": "economic-outcomes",
-      "owner": "@finnor/api",
+      "owner": "@finnor/private-equity",
       "transport": "http",
       "method": "POST",
       "routePattern": "economic-outcomes/register-assignment-protocol",
@@ -29719,7 +30204,8 @@
       "verificationClass": "canonical_reread",
       "presentationTargets": [],
       "invalidationTags": [
-        "economic-outcomes"
+        "work",
+        "company-brain"
       ],
       "timeoutClass": "WRITE",
       "tests": [],
@@ -29751,7 +30237,7 @@
     {
       "capabilityId": "http.post.economic-outcomes.register-benchmark",
       "family": "economic-outcomes",
-      "owner": "@finnor/api",
+      "owner": "@finnor/private-equity",
       "transport": "http",
       "method": "POST",
       "routePattern": "economic-outcomes/register-benchmark",
@@ -29770,7 +30256,8 @@
       "verificationClass": "canonical_reread",
       "presentationTargets": [],
       "invalidationTags": [
-        "economic-outcomes"
+        "work",
+        "company-brain"
       ],
       "timeoutClass": "WRITE",
       "tests": [],
@@ -29793,6 +30280,129 @@
       "presentation": {
         "targets": [],
         "familyRendererSources": [],
+        "directRuntimeExecutionProvenByThisReport": false
+      },
+      "testEvidenceState": "SOURCE_REFERENCES_ONLY; executed proofs are indexed separately",
+      "compatibilityReason": "Native S7 economic outcome owner API; no direct CENTROPY control or executed economic qualification is claimed.",
+      "externalConfiguration": null
+    },
+    {
+      "capabilityId": "http.post.economic-outcomes.register-work",
+      "family": "economic-outcomes",
+      "owner": "@finnor/private-equity",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "economic-outcomes/register-work",
+      "routeDepth": 2,
+      "classification": "MUTATION",
+      "kind": "mutation",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": true,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "human_attestation",
+      "effectClass": "domain_mutation",
+      "verificationClass": "canonical_reread",
+      "presentationTargets": [
+        "WORLD",
+        "CANVAS"
+      ],
+      "invalidationTags": [
+        "work",
+        "company-brain"
+      ],
+      "timeoutClass": "WRITE",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/economic-outcomes/[operation]/route.ts",
+      "disposition": "INTENTIONAL_COMPATIBILITY",
+      "actualRouteOrTool": "POST /api/economic-outcomes/register-work",
+      "frontendSourceBindings": [],
+      "humanForms": [],
+      "humanRoute": null,
+      "agentPath": null,
+      "authorityPath": {
+        "class": "human_attestation",
+        "backendSource": "finnor-os/apps/api/app/api/economic-outcomes/[operation]/route.ts",
+        "frontendNeverAuthorizes": true
+      },
+      "verificationPath": {
+        "class": "canonical_reread",
+        "backendSource": "finnor-os/apps/api/app/api/economic-outcomes/[operation]/route.ts"
+      },
+      "presentation": {
+        "targets": [
+          "WORLD",
+          "CANVAS"
+        ],
+        "familyRendererSources": [],
+        "directRuntimeExecutionProvenByThisReport": false
+      },
+      "testEvidenceState": "SOURCE_REFERENCES_ONLY; executed proofs are indexed separately",
+      "compatibilityReason": "Native S7 economic outcome owner API; no direct CENTROPY control or executed economic qualification is claimed.",
+      "externalConfiguration": null
+    },
+    {
+      "capabilityId": "http.post.economic-outcomes.work-context",
+      "family": "economic-outcomes",
+      "owner": "@finnor/private-equity",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "economic-outcomes/work-context",
+      "routeDepth": 2,
+      "classification": "READ",
+      "kind": "read",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "query",
+      "effectClass": null,
+      "verificationClass": "canonical_read",
+      "presentationTargets": [
+        "WORLD",
+        "CANVAS"
+      ],
+      "invalidationTags": [],
+      "timeoutClass": "READ",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/economic-outcomes/[operation]/route.ts",
+      "disposition": "INTENTIONAL_COMPATIBILITY",
+      "actualRouteOrTool": "POST /api/economic-outcomes/work-context",
+      "frontendSourceBindings": [
+        {
+          "file": "src/components/centropy/world/WorkEconomicOutcome.tsx",
+          "route": "economic-outcomes/work-context",
+          "method": "POST",
+          "line": 24,
+          "binding": "Canonical API import and finite TypeScript expression; source evidence only"
+        }
+      ],
+      "humanForms": [],
+      "humanRoute": null,
+      "agentPath": null,
+      "authorityPath": {
+        "class": "query",
+        "backendSource": "finnor-os/apps/api/app/api/economic-outcomes/[operation]/route.ts",
+        "frontendNeverAuthorizes": true
+      },
+      "verificationPath": {
+        "class": "canonical_read",
+        "backendSource": "finnor-os/apps/api/app/api/economic-outcomes/[operation]/route.ts"
+      },
+      "presentation": {
+        "targets": [
+          "WORLD",
+          "CANVAS"
+        ],
+        "familyRendererSources": [
+          "src/components/centropy/world/WorkEconomicOutcome.tsx"
+        ],
         "directRuntimeExecutionProvenByThisReport": false
       },
       "testEvidenceState": "SOURCE_REFERENCES_ONLY; executed proofs are indexed separately",
@@ -31362,7 +31972,7 @@
           "file": "src/components/centropy/shell/CentropyWorkspace.tsx",
           "route": "instructions/:ref/cancel",
           "method": "POST",
-          "line": 403,
+          "line": 406,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -33119,7 +33729,7 @@
           "file": "src/components/centropy/shell/CentropyWorkspace.tsx",
           "route": "outcome-packs",
           "method": "POST",
-          "line": 353,
+          "line": 369,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -38705,7 +39315,7 @@
           "file": "src/components/centropy/shell/CentropyWorkspace.tsx",
           "route": "works/:ref/objective",
           "method": "POST",
-          "line": 269,
+          "line": 276,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         },
         {
@@ -41057,6 +41667,69 @@
       "externalConfiguration": null
     },
     {
+      "capabilityId": "planner.query:acquisition_decision_v1",
+      "family": "operational-query",
+      "owner": "@finnor/orchestration",
+      "transport": "planner",
+      "method": null,
+      "routePattern": null,
+      "routeDepth": 0,
+      "classification": "READ",
+      "kind": "read",
+      "userProduct": true,
+      "agentProduct": true,
+      "modelCallable": true,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "query",
+      "effectClass": null,
+      "verificationClass": "backend_runtime",
+      "presentationTargets": [
+        "THREAD",
+        "CANVAS"
+      ],
+      "invalidationTags": [],
+      "timeoutClass": "RUNTIME",
+      "tests": [],
+      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+      "disposition": "CANONICAL_AGENT_CAPABILITY",
+      "actualRouteOrTool": "query:acquisition_decision_v1",
+      "frontendSourceBindings": [],
+      "humanForms": [],
+      "humanRoute": null,
+      "agentPath": {
+        "registry": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+        "modelCallable": true,
+        "executor": "canonical operational-query executor"
+      },
+      "authorityPath": {
+        "class": "query",
+        "backendSource": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+        "frontendNeverAuthorizes": true
+      },
+      "verificationPath": {
+        "class": "backend_runtime",
+        "backendSource": "finnor-os/packages/orchestration/src/plugin-registry.ts"
+      },
+      "presentation": {
+        "targets": [
+          "THREAD",
+          "CANVAS"
+        ],
+        "familyRendererSources": [
+          "src/components/centropy/thread/RecordedValue.tsx",
+          "src/components/centropy/thread/PendingEffects.tsx",
+          "src/components/centropy/world/WorldWorkRecord.tsx"
+        ],
+        "directRuntimeExecutionProvenByThisReport": false
+      },
+      "testEvidenceState": "SOURCE_REFERENCES_ONLY; executed proofs are indexed separately",
+      "compatibilityReason": null,
+      "externalConfiguration": null
+    },
+    {
       "capabilityId": "planner.query:agent_activity",
       "family": "operational-query",
       "owner": "@finnor/orchestration",
@@ -42084,6 +42757,69 @@
       "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
       "disposition": "CANONICAL_AGENT_CAPABILITY",
       "actualRouteOrTool": "query:pe_world_state",
+      "frontendSourceBindings": [],
+      "humanForms": [],
+      "humanRoute": null,
+      "agentPath": {
+        "registry": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+        "modelCallable": true,
+        "executor": "canonical operational-query executor"
+      },
+      "authorityPath": {
+        "class": "query",
+        "backendSource": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+        "frontendNeverAuthorizes": true
+      },
+      "verificationPath": {
+        "class": "backend_runtime",
+        "backendSource": "finnor-os/packages/orchestration/src/plugin-registry.ts"
+      },
+      "presentation": {
+        "targets": [
+          "THREAD",
+          "CANVAS"
+        ],
+        "familyRendererSources": [
+          "src/components/centropy/thread/RecordedValue.tsx",
+          "src/components/centropy/thread/PendingEffects.tsx",
+          "src/components/centropy/world/WorldWorkRecord.tsx"
+        ],
+        "directRuntimeExecutionProvenByThisReport": false
+      },
+      "testEvidenceState": "SOURCE_REFERENCES_ONLY; executed proofs are indexed separately",
+      "compatibilityReason": null,
+      "externalConfiguration": null
+    },
+    {
+      "capabilityId": "planner.query:primary_diligence_v1",
+      "family": "operational-query",
+      "owner": "@finnor/orchestration",
+      "transport": "planner",
+      "method": null,
+      "routePattern": null,
+      "routeDepth": 0,
+      "classification": "READ",
+      "kind": "read",
+      "userProduct": true,
+      "agentProduct": true,
+      "modelCallable": true,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "query",
+      "effectClass": null,
+      "verificationClass": "backend_runtime",
+      "presentationTargets": [
+        "THREAD",
+        "CANVAS"
+      ],
+      "invalidationTags": [],
+      "timeoutClass": "RUNTIME",
+      "tests": [],
+      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+      "disposition": "CANONICAL_AGENT_CAPABILITY",
+      "actualRouteOrTool": "query:primary_diligence_v1",
       "frontendSourceBindings": [],
       "humanForms": [],
       "humanRoute": null,
@@ -43383,6 +44119,136 @@
         "targets": [
           "THREAD",
           "CANVAS"
+        ],
+        "familyRendererSources": [
+          "src/components/centropy/thread/RecordedValue.tsx",
+          "src/components/centropy/thread/PendingEffects.tsx",
+          "src/components/centropy/world/WorldWorkRecord.tsx"
+        ],
+        "directRuntimeExecutionProvenByThisReport": false
+      },
+      "testEvidenceState": "SOURCE_REFERENCES_ONLY; executed proofs are indexed separately",
+      "compatibilityReason": null,
+      "externalConfiguration": null
+    },
+    {
+      "capabilityId": "planner.start_acquisition_evaluation",
+      "family": "private-equity",
+      "owner": "@finnor/private-equity",
+      "transport": "planner",
+      "method": null,
+      "routePattern": null,
+      "routeDepth": 0,
+      "classification": "MUTATION",
+      "kind": "mutation",
+      "userProduct": true,
+      "agentProduct": true,
+      "modelCallable": true,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "backend_policy",
+      "effectClass": "planner_action",
+      "verificationClass": "backend_runtime",
+      "presentationTargets": [
+        "THREAD",
+        "CANVAS",
+        "WORLD"
+      ],
+      "invalidationTags": [],
+      "timeoutClass": "RUNTIME",
+      "tests": [],
+      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+      "disposition": "CANONICAL_AGENT_CAPABILITY",
+      "actualRouteOrTool": "start_acquisition_evaluation",
+      "frontendSourceBindings": [],
+      "humanForms": [],
+      "humanRoute": null,
+      "agentPath": {
+        "registry": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+        "modelCallable": true,
+        "executor": "canonical plugin/Core action executor"
+      },
+      "authorityPath": {
+        "class": "backend_policy",
+        "backendSource": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+        "frontendNeverAuthorizes": true
+      },
+      "verificationPath": {
+        "class": "backend_runtime",
+        "backendSource": "finnor-os/packages/orchestration/src/plugin-registry.ts"
+      },
+      "presentation": {
+        "targets": [
+          "THREAD",
+          "CANVAS",
+          "WORLD"
+        ],
+        "familyRendererSources": [
+          "src/components/centropy/thread/RecordedValue.tsx",
+          "src/components/centropy/thread/PendingEffects.tsx",
+          "src/components/centropy/world/WorldWorkRecord.tsx"
+        ],
+        "directRuntimeExecutionProvenByThisReport": false
+      },
+      "testEvidenceState": "SOURCE_REFERENCES_ONLY; executed proofs are indexed separately",
+      "compatibilityReason": null,
+      "externalConfiguration": null
+    },
+    {
+      "capabilityId": "planner.start_primary_diligence",
+      "family": "private-equity",
+      "owner": "@finnor/private-equity",
+      "transport": "planner",
+      "method": null,
+      "routePattern": null,
+      "routeDepth": 0,
+      "classification": "MUTATION",
+      "kind": "mutation",
+      "userProduct": true,
+      "agentProduct": true,
+      "modelCallable": true,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "backend_policy",
+      "effectClass": "planner_action",
+      "verificationClass": "backend_runtime",
+      "presentationTargets": [
+        "THREAD",
+        "CANVAS",
+        "WORLD"
+      ],
+      "invalidationTags": [],
+      "timeoutClass": "RUNTIME",
+      "tests": [],
+      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+      "disposition": "CANONICAL_AGENT_CAPABILITY",
+      "actualRouteOrTool": "start_primary_diligence",
+      "frontendSourceBindings": [],
+      "humanForms": [],
+      "humanRoute": null,
+      "agentPath": {
+        "registry": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+        "modelCallable": true,
+        "executor": "canonical plugin/Core action executor"
+      },
+      "authorityPath": {
+        "class": "backend_policy",
+        "backendSource": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+        "frontendNeverAuthorizes": true
+      },
+      "verificationPath": {
+        "class": "backend_runtime",
+        "backendSource": "finnor-os/packages/orchestration/src/plugin-registry.ts"
+      },
+      "presentation": {
+        "targets": [
+          "THREAD",
+          "CANVAS",
+          "WORLD"
         ],
         "familyRendererSources": [
           "src/components/centropy/thread/RecordedValue.tsx",

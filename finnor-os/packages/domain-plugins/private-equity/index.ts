@@ -1,3 +1,10 @@
+import {validateAcquisitionDecisionInput,submitAcquisitionDecision,readAcquisitionDecision} from '../../private-equity/src/acquisition/decision';
+import {AcquisitionActionSchema} from '../../private-equity/src/acquisition/contracts';
+import {acquisitionIcMemoSections,readAcquisitionIcBasis} from '../../private-equity/src/acquisition/ic';
+import {submitPrimary,validatePrimarySubmission} from '../../private-equity/src/primary-diligence/api';
+import {primaryActionIntake} from '../../private-equity/src/primary-diligence/action';
+import {assertReviewedAcquisitionAction} from '../../private-equity/src/acquisition/reviewed-request';
+import {prepareUnderwritingRun,type CreateUnderwritingRunInput} from '../../private-equity/src/underwriting-repository';
 import { randomUUID } from "node:crypto";
 import { and, desc, eq, sql } from "drizzle-orm";
 import { createGroundedMemoArtifact, getArtifact, instantiateArtifactTemplate, type GroundedMemoSection, type GroundedTemplateField } from "@finnor/artifacts";
@@ -96,7 +103,7 @@ type Row = Record<string, unknown>;
 export interface PrivateEquityActionContract {
   actionType: PrivateEquityActionType;
   canonicalMutationOwner: string;
-  resultEntityType: PeEntityRef["entityType"] | "underwriting_run" | "closing_operation";
+  resultEntityType: PeEntityRef["entityType"] | "underwriting_run" | "closing_operation" | "acquisition_decision" | "primary_diligence";
   idempotencyIdentity: "domain_action_id";
   verification: "canonical_return_and_reread" | "independent_signed_provider_observation";
   receiptPath: "core_durable_action_receipt";
@@ -105,8 +112,10 @@ export interface PrivateEquityActionContract {
 /** Auditable one-to-one map: the plugin translates, while PE2 remains the only
  * owner of business truth and state-machine semantics. */
 export const PRIVATE_EQUITY_ACTION_CONTRACTS: readonly PrivateEquityActionContract[] = [
+  ["start_primary_diligence", "submitPrimary", "primary_diligence"],
   ["execute_closing_operation", "S6 original-spec closing broker", "closing_operation"],
   ["create_underwriting_run", "createUnderwritingRun", "underwriting_run"],
+  ["start_acquisition_evaluation", "submitAcquisitionDecision", "acquisition_decision"],
   ["open_ic_case", "createIcCase", "pe_ic_case"],
   ["begin_ic_preparation", "beginIcPreparation", "pe_ic_case"],
   ["create_ic_deck_draft", "instantiateArtifactTemplate + attachCanonicalDocument", "pe_document_link"],
@@ -144,6 +153,8 @@ export const PRIVATE_EQUITY_ACTION_CONTRACTS: readonly PrivateEquityActionContra
 }));
 
 const CONTRACT_BY_ACTION = new Map(PRIVATE_EQUITY_ACTION_CONTRACTS.map((row) => [row.actionType, row]));
+const NON_GRAPH_RESULTS=new Set<string>(['underwriting_run','closing_operation','acquisition_decision','primary_diligence']);
+function isDealGraphResult(type:PrivateEquityActionContract['resultEntityType']):type is PeEntityRef['entityType']{return !NON_GRAPH_RESULTS.has(type);}
 const CREATE_ID_FIELD: Partial<Record<PrivateEquityActionType, string>> = {
   open_ic_case: "icCaseId",
   select_ic_memo_version: "memoSelectionId",
@@ -233,7 +244,6 @@ function sourcedMemoSections(input: {
   const result = record(input.run.result);
   const outputs = record(result.outputs);
   const values = record(record(input.run.inputSnapshot).values);
-  const revenue = record(values["operating.revenue_explicit"]);
   const riskRows = input.graph.dealRisks.filter((row) => row.archivedAt == null && ["open", "mitigating"].includes(String(row.state)));
   const findingRows = input.graph.findings.filter((row) => row.archivedAt == null && row.state === "open");
   const evidenceRows = input.graph.evidenceLinks.filter((row) => row.archivedAt == null);
@@ -241,21 +251,17 @@ function sourcedMemoSections(input: {
     throw new PeDomainError("IC_MEMO_SOURCE_LIMIT", "The Deal has too many current risk, finding, or evidence records for an unabridged memo");
   }
   const fact = (text: string, ...sourceRefs: string[]) => ({ text, sourceRefs });
-  const growth = record(values["operating.revenue_growth"]);
-  const inputText = revenue.value !== undefined
-    ? `Recorded revenue series (${String(revenue.status ?? "status unavailable")}): ${memoValue(revenue.value)}.`
-    : growth.value !== undefined
-      ? `Recorded revenue growth (${String(growth.status ?? "status unavailable")}, decimal rate): ${memoValue(growth.value)}.`
-      : "The Run does not expose an explicit revenue series or growth input in its snapshot.";
-  if (inputText.length > 3_500) throw new PeDomainError("IC_MEMO_SOURCE_LIMIT", "The revenue input series exceeds the memo source limit");
-  const highlightedOutputs = ["returns.gross_sponsor_irr", "returns.gross_sponsor_moic", "returns.sponsor_exit_proceeds", "exit.enterprise_value"]
-    .flatMap((key) => {
-      const output = recordedOutput(outputs, key);
-      if (output.value === undefined) return [];
-      const raw = memoValue(output.value);
-      if (raw.length > 2_000) throw new PeDomainError("IC_MEMO_SOURCE_LIMIT", `Output ${key} exceeds the memo source limit`);
-      return [fact(`${key.replaceAll(".", " ").replaceAll("_", " ")}: ${raw} (${String(output.unit ?? "unit not recorded")}; ${String(output.truthClass ?? "truth class unavailable")}).`, runRef)];
+  const financialSections = (heading: string, entries: Row): GroundedMemoSection[] => {
+    const paragraphs = Object.entries(entries).map(([key, raw]) => {
+      const value = record(raw);
+      return fact(`${key}: ${memoValue(value.value)} (${String(value.unit ?? "unit not recorded")}${value.currency ? ` ${String(value.currency)}` : ""}; ${String(value.status ?? "status unavailable")}; ${String(value.truthClass ?? "truth class unavailable")}).`, runRef);
     });
+    const sections: GroundedMemoSection[] = [];
+    for (let index = 0; index < paragraphs.length; index += 64) {
+      sections.push({ heading: heading + (index ? " continued" : ""), paragraphs: paragraphs.slice(index, index + 64) });
+    }
+    return sections;
+  };
   return [
     {
       heading: "Basis and source cutoff",
@@ -264,7 +270,8 @@ function sourcedMemoSections(input: {
         fact("This working memo copies recorded inputs and outputs. It does not resolve diligence findings or make the committee's investment decision.", `pe_ic_case:${input.caseId}`, runRef),
       ],
     },
-    { heading: "Revenue assumption and underwriting", paragraphs: [fact(inputText, runRef), ...highlightedOutputs] },
+    ...financialSections("Recorded underwriting inputs", values),
+    ...financialSections("Recorded underwriting outputs", outputs),
     {
       heading: "Open Deal risks",
       paragraphs: riskRows.length ? riskRows.map((row) => fact(`${String(row.state).toUpperCase()} · ${String(row.severity)} · ${String(row.statement)}`, `pe_deal_risk:${String(row.id)}`))
@@ -456,6 +463,15 @@ async function groundIcPlannerAction(params: {
         }
         return { investment, model };
       }, { readOnly: true });
+      if(payload.primaryFindingInputs||payload.explicitInputs||payload.evidenceDerivationInputs){
+        await prepareUnderwritingRun(ctx,{
+          investmentCaseId,modelVersionId,worldAt:String(payload.worldAt),workId,
+          scenarioId:scenarioId??undefined,baseRunId:baseRunId??undefined,
+          explicitInputs:payload.explicitInputs as CreateUnderwritingRunInput['explicitInputs'],
+          primaryFindingInputs:payload.primaryFindingInputs as CreateUnderwritingRunInput['primaryFindingInputs'],
+          evidenceDerivationInputs:payload.evidenceDerivationInputs as CreateUnderwritingRunInput['evidenceDerivationInputs'],
+        });
+      }
       groundedPayload.push({ field: "investmentCaseId", status: "verified" }, { field: "modelVersionId", status: "verified" }, { field: "worldAt", status: "verified" });
       if (scenarioId) groundedPayload.push({ field: "scenarioId", status: "verified" });
       if (payload.scenario) groundedPayload.push({ field: "scenario.overrides", status: "verified" });
@@ -536,6 +552,10 @@ async function groundIcPlannerAction(params: {
         if (!process.primaryUnderwritingRunId || !workspace.underwriting?.eligibleUnderPinnedPolicy) {
           throw new ActionGroundingError("IC_UNDERWRITING_REQUIRED", "A policy-eligible primary Underwriting Run must be pinned before drafting the memo");
         }
+        await readAcquisitionIcBasis(ctx, {
+          workId, dealId,
+          underwritingRunId: String(process.primaryUnderwritingRunId),
+        });
         groundedPayload.push({ field: "expectedCaseVersion", status: "verified" }, { field: "title", status: "verified" });
         entities.push({ entityType: "underwriting_run", entityId: String(process.primaryUnderwritingRunId), state: "eligible" });
         break;
@@ -639,7 +659,9 @@ function requiredEntityRefs(actionType: PrivateEquityActionType, payload: Payloa
     ...(versionField ? { expectedVersion: Number(payload[versionField]) } : {}),
   });
   switch (actionType) {
-    case "execute_closing_operation": return [];
+    case "execute_closing_operation":
+    case "start_primary_diligence":
+    case "start_acquisition_evaluation": return [];
     case "create_underwriting_run":
     case "open_ic_case":
     case "begin_ic_preparation":
@@ -779,6 +801,15 @@ async function groundPrivateEquityAction(draft: DraftAction, action: DomainActio
       { field: "dealId", status: "verified" }, { field: "workId", status: "verified" },
       { field: "programmeId", status: "verified" }, { field: "specDigest", status: "verified" },
     ] };
+  }
+  if (actionType === "start_primary_diligence") {
+    await validatePrimarySubmission(ctx,primaryActionIntake(payload,workId,action.id));
+    return {draft:{...draft,payload:Object.fromEntries(Object.entries(payload).filter(([key])=>key!=='workId'))},groundedPayload:[{field:'dealId',status:'verified'},{field:'workId',status:'verified'},{field:'expectedWorkInputId',status:'verified'},{field:'budgetGrantRef',status:'verified'}]};
+  }
+  if (actionType === "start_acquisition_evaluation") {
+    const input=AcquisitionActionSchema.parse(Object.fromEntries(Object.entries(payload).filter(([key])=>!["workId","idempotencyKey"].includes(key))));
+    const prepared=await validateAcquisitionDecisionInput(ctx,{...input,workId,idempotencyKey:action.id});
+    return {draft:{...draft,payload:AcquisitionActionSchema.parse(Object.fromEntries(Object.entries(prepared.request).filter(([key])=>!["workId","idempotencyKey"].includes(key))))},groundedPayload:[{field:"dealId",status:"verified"},{field:"workId",status:"verified"},{field:"baseRunId",status:"verified"}]};
   }
   if (actionType === "create_underwriting_run") {
     // The durable DomainAction creation time is a stable world cutoff across
@@ -993,17 +1024,35 @@ async function governanceProof(draft: DraftAction, tenantId: string, actorId: st
 function existingCreateResult(graph: DealExecutionGraph, actionType: PrivateEquityActionType, payload: Payload): PeMutationResult | null {
   const field = CREATE_ID_FIELD[actionType];
   const contract = CONTRACT_BY_ACTION.get(actionType);
-  if (!field || !contract || contract.resultEntityType === "underwriting_run" || contract.resultEntityType === "closing_operation" || typeof payload[field] !== "string") return null;
+  if (!field || !contract || !isDealGraphResult(contract.resultEntityType) || typeof payload[field] !== "string") return null;
   const row = currentRow(graph, contract.resultEntityType, payload[field] as string);
   return row ? { row, changed: false, idempotent: true } : null;
 }
 
 async function executeMutation(actionType: PrivateEquityActionType, payload: Payload, ctx: PeMutationContext, draft: DraftAction): Promise<PeMutationResult> {
+  const originalWorkId=draft.businessEffect?.source.workId;
+  if(originalWorkId&&actionType==='create_underwriting_run')await peTransaction(ctx,(_db,c)=>assertReviewedAcquisitionAction(ctx,actionType,payload,originalWorkId,c),{readOnly:true});
   const graph = await loadDealExecutionGraph(ctx, String(payload.dealId));
   const existing = existingCreateResult(graph, actionType, payload);
   if (existing) return existing;
   switch (actionType) {
+    case "start_primary_diligence": {
+      const workId=draft.businessEffect?.source.workId;
+      if(!workId)throw new PeDomainError('PRIMARY_CURRENT_WORK_REQUIRED','Primary diligence requires its approved original Work');
+      const accepted=await submitPrimary(ctx,primaryActionIntake(payload,workId,String(draft.domainActionId)));
+      return {row:{id:accepted.programmeId,programmeId:accepted.programmeId,workId:accepted.workId,ref:accepted.ref,status:accepted.status,analysisCompleted:false},changed:!accepted.replayed,idempotent:accepted.replayed};
+    }
     case "execute_closing_operation": throw new PeDomainError("CLOSING_NATIVE_TRANSPORT_REQUIRED", "Closing provider execution is not a canonical PE row mutation");
+    case "start_acquisition_evaluation": {
+      // The durable executor adds its trusted tenant scope to the grounded
+      // transport. Tenant identity comes from ctx, outside the financial mandate.
+      const input=AcquisitionActionSchema.parse(Object.fromEntries(Object.entries(payload).filter(([key])=>!["tenantId","workId","idempotencyKey"].includes(key))));
+      const workId=draft.businessEffect?.source.workId;
+      if(!workId)throw new PeDomainError('ACQUISITION_CURRENT_WORK_REQUIRED','Acquisition execution requires its frozen effect Work');
+      const accepted=await submitAcquisitionDecision(ctx,{...input,workId,idempotencyKey:String(draft.domainActionId)},draft.domainActionId);
+      const observed=await readAcquisitionDecision(ctx,accepted.decisionId);
+      return {row:{id:accepted.decisionId,decisionId:accepted.decisionId,workId:observed.workId,workInputId:observed.workInputId,status:observed.status,deadlineAt:observed.deadlineAt,completionEvent:observed.completionEvent,result:null,analysisCompleted:false},changed:!accepted.replayed,idempotent:accepted.replayed};
+    }
     case "create_underwriting_run": {
       const scenario = payload.scenario as { name: string; overrides: UnderwritingScenario["overrides"] } | undefined;
       const createdScenario = scenario ? await createUnderwritingScenario(ctx, {
@@ -1016,6 +1065,9 @@ async function executeMutation(actionType: PrivateEquityActionType, payload: Pay
         worldAt: String(payload.worldAt), idempotencyKey: String(draft.domainActionId),
         scenarioId, baseRunId: payload.baseRunId as string | undefined,
         workId: String(payload.workId),
+        explicitInputs:payload.explicitInputs as CreateUnderwritingRunInput['explicitInputs'],
+        primaryFindingInputs:payload.primaryFindingInputs as CreateUnderwritingRunInput['primaryFindingInputs'],
+        evidenceDerivationInputs:payload.evidenceDerivationInputs as CreateUnderwritingRunInput['evidenceDerivationInputs'],
       });
       const observed = await getUnderwritingRun(ctx, persisted.id);
       if (observed.workId !== payload.workId || observed.investmentCaseId !== payload.investmentCaseId
@@ -1115,15 +1167,26 @@ async function executeMutation(actionType: PrivateEquityActionType, payload: Pay
         || run.investmentCaseId !== workspace.case.investmentCaseId) {
         throw new PeDomainError("IC_MEMO_RUN_MISMATCH", "Memo source must be the valid Run created by this Work for the exact Investment Case");
       }
+      const acquisition = await readAcquisitionIcBasis(ctx, {
+        workId: String(payload.workId), dealId: String(payload.dealId),
+        underwritingRunId: runId,
+      });
       const actor = { tenantId: ctx.auth.tenantId, userId: ctx.auth.userId, role: "owner" as const };
       const created = await createGroundedMemoArtifact(actor, {
         actionId: String(draft.domainActionId), title: String(payload.title),
-        sections: sourcedMemoSections({ caseId: String(payload.icCaseId), run, graph }),
+        sections: [...sourcedMemoSections({ caseId: String(payload.icCaseId), run, graph }), ...(acquisition ? acquisitionIcMemoSections(acquisition) : [])],
       });
       const observed = await getArtifact(actor, created.documentId, created.version.id);
       if (observed.ir.kind !== "docx" || observed.document.external_id !== draft.domainActionId
         || observed.version.source_ref !== draft.domainActionId || observed.ir.semanticHash !== created.ir.semanticHash) {
         throw new PeDomainError("IC_MEMO_READBACK_MISMATCH", "The persisted source-backed memo does not match the governed action");
+      }
+      if (acquisition) {
+        const current = await readAcquisitionIcBasis(ctx, {
+          workId: String(payload.workId), dealId: String(payload.dealId),
+          decisionId: acquisition.decision.decisionId, underwritingRunId: runId,
+        });
+        if (current?.resultDigest !== acquisition.resultDigest) throw new PeDomainError("IC_MEMO_SOURCE_CHANGED", "The checked acquisition changed while creating its memo");
       }
       const link = await attachCanonicalDocument(ctx, {
         dealId: String(payload.dealId), entity: { entityType: "pe_ic_case", entityId: String(payload.icCaseId) },
@@ -1137,7 +1200,8 @@ async function executeMutation(actionType: PrivateEquityActionType, payload: Pay
         entities: [{ entityType: "pe_ic_case", entityId: String(payload.icCaseId), relationship: "target" }],
       });
       return {
-        row: { ...link.row, documentVersionId: created.version.id, sourceCompleteness: "COMPLETE", draftKind: "IC_MEMO_DRAFT" },
+        row: { ...link.row, documentVersionId: created.version.id, sourceCompleteness: "COMPLETE", draftKind: "IC_MEMO_DRAFT",
+          ...(acquisition ? { acquisitionDecisionId: acquisition.decision.decisionId, acquisitionResultDigest: acquisition.resultDigest } : {}) },
         changed: !created.replayed || link.changed,
         idempotent: created.replayed && link.idempotent,
       };
@@ -1202,8 +1266,8 @@ async function executeMutation(actionType: PrivateEquityActionType, payload: Pay
         ...materialRisks.map((row) => ({ source: { kind: "PE_RISK" as const, riskId: String(row.id) }, relationship: "REQUIRES" as const, idempotencyKey: `${draft.domainActionId}:risk:${String(row.id)}` })),
         ...materialFindings.map((row) => ({ source: { kind: "P1_WORLD" as const, entityType: "pe_finding" as const, entityId: String(row.id) }, relationship: "REQUIRES" as const, idempotencyKey: `${draft.domainActionId}:finding:${String(row.id)}` })),
       ];
-      const unresolvedItems = [...materialRisks, ...materialFindings].map((row) => String(row.title ?? "Untitled recorded item")).join("; ");
-      const rationale = `Continue diligence before an investment decision. The selected sourced memo and valid underwriting run record ${materialRisks.length} unresolved high or critical risk(s) and ${materialFindings.length} unresolved material or critical finding(s): ${unresolvedItems}. Committee review is required. The exact memo, run, and item references are attached to this recommendation.`;
+      const unresolvedItems = [...materialRisks, ...materialFindings].map((row) => String(row.statement ?? row.title ?? "Recorded item").slice(0, 200)).join("; ");
+      const rationale = `Continue diligence before an investment decision. The selected sourced memo and valid underwriting run record ${materialRisks.length} unresolved high or critical risk(s) and ${materialFindings.length} unresolved material or critical finding(s). Recorded unresolved items (excerpts): ${unresolvedItems}. Committee review is required. The exact memo, run, and item references are attached to this recommendation.`;
       const result = await createIcRecommendation(ctx, {
         icCaseId: String(payload.icCaseId), expectedCaseVersion: Number(payload.expectedCaseVersion),
         outcome: "CONTINUE_DILIGENCE", rationale, memoId: String(payload.memoId),
@@ -1306,6 +1370,8 @@ export const privateEquityPlugin: DomainEnginePlugin = {
   // independently discover the executable surface. A contract test proves this
   // list is exactly the schema-key set, preventing registration/schema drift.
   actionTypes: [
+    "start_primary_diligence",
+    "start_acquisition_evaluation",
     "execute_closing_operation",
     "create_underwriting_run",
     "open_ic_case",
@@ -1423,12 +1489,12 @@ export const privateEquityPlugin: DomainEnginePlugin = {
       const resultEntityType = contract.resultEntityType;
       const attachResult = actionType !== "open_workstream" && actionType !== "declare_deal_closed"
         && actionType !== "create_ic_deck_draft" && actionType !== "create_ic_memo_draft"
-        && !icCaseChildResult && resultEntityType !== "underwriting_run" && resultEntityType !== "closing_operation";
+        && !icCaseChildResult && isDealGraphResult(resultEntityType);
       const result = attachResult
         ? await withPeMutationTransaction(ctx, async () => {
           const mutation = await executeMutation(actionType, draft.payload, ctx, draft);
           await attachWorkToDealGraph(ctx, { dealId: String(draft.payload.dealId), workId,
-            entities: [{ entityType: resultEntityType, entityId: String(mutation.row.id), relationship: "result" }] });
+            entities: [{ entityType: resultEntityType as PeEntityRef["entityType"], entityId: String(mutation.row.id), relationship: "result" }] });
           return mutation;
         })
         : await executeMutation(actionType, draft.payload, ctx, draft);
@@ -1457,6 +1523,8 @@ export const privateEquityPlugin: DomainEnginePlugin = {
           canonicalObserved: true,
           verified: true,
           workAttachment: actionType === "declare_deal_closed" ? "preexisting_deal_anchor"
+            : actionType === "start_primary_diligence" ? "primary_diligence_original_work_id"
+            : actionType === "start_acquisition_evaluation" ? "acquisition_decision_work_id"
             : actionType === "create_underwriting_run" ? "underwriting_run_work_id"
               : actionType === "create_ic_deck_draft" || actionType === "create_ic_memo_draft" || icCaseChildResult
                 ? "ic_case_target_linked" : "result_linked",

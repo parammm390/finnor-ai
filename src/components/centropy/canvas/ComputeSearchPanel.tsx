@@ -4,7 +4,7 @@ import {useCentropyAuth as useJarvisAuth} from '@/components/centropy/lib/centro
 import {centropyPost as jarvisPost,CentropyApiError as JarvisApiError} from '@/components/centropy/lib/api'
 type Ref={owner:string;id:string;version:string;contentDigest:string}
 type Read={searchId:string;programId:string;status:string;reason:string|null;plan:{deliberationPolicyRef?:Ref;policyRequest:Ref;computeGrant:Ref;work:{id:string;revision:string};frontier:Array<{id:string;kind:string;status:string;mechanism:string;prerequisites:string[]}>;next:unknown[];incumbent:null|{moduleId:string;values:Record<string,{value:string;semantics:{unit:string;currencyCode:string|null}}>};stop:{heuristic:boolean;reason:string|null;remainingPredicates:string[]};quotaProfile:unknown[];outstanding:Array<{attemptId:string;status:string;disposition:string;liabilityRetained:boolean}>;costs:{usd:null;physicalAttempts:number;nativeAttempts:number;modelAttempts:number;recoveryAttempts:number};bottleneck:{kind:string};topology:{kind:string;selection:string};qualifications:string[]}}
-type Eligible={programId:string;status:string;workRevision:string;policyRequest:Ref;computeGrant:Ref}
+type Eligible={programId:string;status:string;workRevision:string;policyRequest:Ref;computeGrant:Ref;mode:'ordinary_disposable'|'production_analysis'}
 type Projection={workId:string;searches:Read[];eligiblePrograms:Eligible[]}
 export function ComputeSearchPanel({root,workId,threadId}:{root:{entityType:string;entityId:string};workId:string|null;threadId:string}){
  const {session}=useJarvisAuth()
@@ -32,7 +32,7 @@ export function ComputeSearchPanel({root,workId,threadId}:{root:{entityType:stri
  async function start(){
   const candidate=visible?.eligiblePrograms.find(p=>p.programId===selected)??visible?.eligiblePrograms[0];if(!candidate)return
   const sequence=++epoch.current,expected=identity;clear();setBusy(true)
-  try{await jarvisPost('company-brain/compute-search-submit',{schema:'finnor.compute-search-request.v1',programId:candidate.programId,policyRequest:candidate.policyRequest,computeGrant:candidate.computeGrant,idempotencyKey:crypto.randomUUID(),mode:'ordinary_disposable',strategy,limits:{maxUnits:8,maxParallel:parallel}})
+  try{await jarvisPost('company-brain/compute-search-submit',{schema:'finnor.compute-search-request.v1',programId:candidate.programId,policyRequest:candidate.policyRequest,computeGrant:candidate.computeGrant,idempotencyKey:crypto.randomUUID(),mode:candidate.mode,strategy,limits:{maxUnits:8,maxParallel:parallel}})
    if(sequence===epoch.current&&identityRef.current===expected)await refresh(sequence)
   }catch(error){if(sequence===epoch.current&&identityRef.current===expected){clear();setMessage(error instanceof JarvisApiError?(error.details as {predicate?:string})?.predicate?.replaceAll('_',' ').toLowerCase()??'The original allocation could not admit computation.':'Computation could not be accepted.')}}
   finally{if(sequence===epoch.current&&identityRef.current===expected)setBusy(false)}

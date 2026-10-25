@@ -7,13 +7,17 @@ import {fileURLToPath} from 'node:url';
 import {PRODUCTION_JOB_CONTRACTS} from '../../packages/db/compute-contract';
 import type {JobQueue} from '../../apps/worker/src/queue';
 const handlers:Record<string,string>={run_interface_acquisition_v1:'runInterfaceAcquisitionJob',
- run_evidence_derivation_v1:'runEvidenceDerivationJob',run_harness_program_v1:'runHarnessProgramJob'};
-export async function physicalNativeQueue(databaseUrl:string,directory:string){
+ run_evidence_derivation_v1:'runEvidenceDerivationJob',run_harness_program_v1:'runHarnessProgramJob',
+ run_compute_search_unit_v1:'runComputeSearchUnitJob',run_procedure_induction_v1:'runProcedureInductionJob',
+ reconcile_analytical_executor_v1:'reconcileAnalyticalExecutorJob'};
+export async function physicalNativeQueue(databaseUrl:string,directory:string,options:{leaseSeconds?:number;environment?:Record<string,string>}={}){
  if(new URL(databaseUrl).username!=='finnor_worker')throw Error('P5_RESTRICTED_WORKER_CONNECTION_REQUIRED');
  const worker=spawn(process.execPath,['--max-old-space-size=768','--import=tsx',fileURLToPath(new URL('./physical-worker.mts',import.meta.url))],{
   cwd:fileURLToPath(new URL('../../',import.meta.url)),
   env:{PATH:process.env.PATH,HOME:process.env.HOME,TMPDIR:process.env.TMPDIR,NODE_ENV:'test',DATABASE_URL:databaseUrl,
-   AUTH_DEV_BYPASS:'1',FINNOR_P4_PROFILE:'ordinary_disposable'},stdio:['ignore','pipe','pipe','ipc']});
+   AUTH_DEV_BYPASS:'1',FINNOR_P4_PROFILE:'ordinary_disposable',
+   ...Object.fromEntries(Object.entries(options.environment??{}).filter(([key])=>['FINNOR_P4_PROFILE','FINNOR_ENVIRONMENT','FINNOR_P1_EXECUTOR','DAYTONA_API_KEY','DAYTONA_API_URL','FINNOR_DAYTONA_PROFILE','FINNOR_DAYTONA_PROTOCOL_FIXTURE','FINNOR_M1_PROFILE','FINNOR_M1_STORE','FINNOR_S3_MODEL_STORE','FINNOR_S3_PYTHON','FINNOR_S4_POLICY_STORE','FINNOR_S5_PYTHON','P3_GOVERNORS'].includes(key))),
+   FINNOR_NATIVE_WORKER_LEASE_SECONDS:String(options.leaseSeconds??3)},stdio:['ignore','pipe','pipe','ipc']});
  const pending=new Map<string,{resolve:(v:any)=>void;reject:(e:Error)=>void}>(),registered=new Set(['run_interface_acquisition_v1']);
  let trace=Promise.resolve(),outputBytes=0;
  const record=(value:unknown)=>{trace=trace.then(()=>appendFile(join(directory,'physical-worker-'+worker.pid+'.jsonl'),JSON.stringify(value)+'\n',{mode:0o600}));};

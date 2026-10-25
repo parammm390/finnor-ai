@@ -6,29 +6,31 @@ Generated from source `process.env.*` references and local/deployment configurat
 
 | System / binding | Required / optional status | Referenced variable names | Environment presence | Binding / write-enable variable |
 | --- | --- | --- | --- | --- |
-| Postgres | required | `DATABASE_URL`, `MIGRATIONS_DATABASE_URL`, `POSTGRES_URL` | configured | not applicable / not configured |
-| Redis | required | `REDIS_URL` | configured | not applicable / not configured |
+| Postgres | required | `DATABASE_URL`, `POSTGRES_URL` | missing | not applicable / not configured |
+| Redis | required | `REDIS_URL` | missing | not applicable / not configured |
 | FINNOR release identity | required on every runtime | `FINNOR_BUILD_ID`, `FINNOR_COMMIT_SHA`, `FINNOR_ENVIRONMENT`, `FINNOR_RELEASE_SOURCE`, `FINNOR_VERSION` | missing | not applicable / not configured |
 | Azure persistent runtime | required by the production release workflow | none referenced | missing | not applicable / not configured |
-| Sentry | optional unless error reporting is enabled | `SENTRY_DSN` | configured | not applicable / not configured |
-| Supabase auth | required | `FINNOR_OS_SUPABASE_KEY`, `FINNOR_OS_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_ACCESS_TOKEN`, `SUPABASE_PROJECT_REF`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_URL` | configured | not applicable / not configured |
-| Vapi | required if voice is enabled | `NEXT_PUBLIC_VAPI_ASSISTANT_ID`, `NEXT_PUBLIC_VAPI_PUBLIC_KEY`, `NEXT_PUBLIC_VAPI_WEB_ASSISTANT_ID`, `VAPI_API_KEY`, `VAPI_ASSISTANT_ID`, `VAPI_PHONE_NUMBER_ID`, `VAPI_WEBHOOK_SECRET` | configured | not applicable / not configured |
+| Sentry | optional unless error reporting is enabled | `SENTRY_DSN` | missing | not applicable / not configured |
+| Supabase auth | required | `FINNOR_OS_SUPABASE_KEY`, `FINNOR_OS_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_ACCESS_TOKEN`, `SUPABASE_PROJECT_REF`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_URL` | missing | not applicable / not configured |
+| Vapi | required if voice is enabled | `NEXT_PUBLIC_VAPI_ASSISTANT_ID`, `NEXT_PUBLIC_VAPI_PUBLIC_KEY`, `VAPI_API_KEY`, `VAPI_ASSISTANT_ID`, `VAPI_PHONE_NUMBER_ID`, `VAPI_WEBHOOK_SECRET` | missing | not applicable / not configured |
 | OpenAI Realtime | required if Realtime is enabled | none referenced | missing | not applicable / not configured |
-| Bedrock LLM chain | required for the configured GLM/Mistral/DeepSeek chain | `AWS_BEARER_TOKEN_BEDROCK`, `AWS_BEDROCK_API_KEY`, `AWS_BEDROCK_DEEPSEEK_MODEL_ID`, `AWS_BEDROCK_GLM_MODEL_ID`, `AWS_BEDROCK_MISTRAL_MODEL_ID`, `AWS_BEDROCK_REGION` | configured | not applicable / not configured |
-| GLM provider family | required if selected by router | `AWS_BEARER_TOKEN_BEDROCK`, `AWS_BEDROCK_API_KEY`, `AWS_BEDROCK_GLM_MODEL_ID` | configured | not applicable / not configured |
-| Mistral | required if selected by router | `AWS_BEARER_TOKEN_BEDROCK`, `AWS_BEDROCK_API_KEY`, `AWS_BEDROCK_MISTRAL_MODEL_ID`, `MISTRAL_API_BASE_URL`, `MISTRAL_API_KEY`, `MISTRAL_MODEL` | configured | not applicable / not configured |
-| DeepSeek | required if selected by router | `AWS_BEARER_TOKEN_BEDROCK`, `AWS_BEDROCK_API_KEY`, `AWS_BEDROCK_DEEPSEEK_MODEL_ID`, `DEEPSEEK_API_BASE_URL`, `DEEPSEEK_API_KEY`, `DEEPSEEK_MODEL` | configured | not applicable / not configured |
-| Exa | required for web discovery | `EXA_API_KEY` | configured | not applicable / not configured |
+| Bedrock LLM chain | required for the configured GLM/Mistral/DeepSeek chain | `AWS_BEARER_TOKEN_BEDROCK`, `AWS_BEDROCK_API_KEY`, `AWS_BEDROCK_DEEPSEEK_MODEL_ID`, `AWS_BEDROCK_GLM_MODEL_ID`, `AWS_BEDROCK_MISTRAL_MODEL_ID`, `AWS_BEDROCK_REGION` | missing | not applicable / not configured |
+| GLM provider family | required if selected by router | `AWS_BEARER_TOKEN_BEDROCK`, `AWS_BEDROCK_API_KEY`, `AWS_BEDROCK_GLM_MODEL_ID` | missing | not applicable / not configured |
+| Mistral | required if selected by router | `AWS_BEARER_TOKEN_BEDROCK`, `AWS_BEDROCK_API_KEY`, `AWS_BEDROCK_MISTRAL_MODEL_ID`, `MISTRAL_API_BASE_URL`, `MISTRAL_API_KEY`, `MISTRAL_MODEL` | missing | not applicable / not configured |
+| DeepSeek | required if selected by router | `AWS_BEARER_TOKEN_BEDROCK`, `AWS_BEDROCK_API_KEY`, `AWS_BEDROCK_DEEPSEEK_MODEL_ID`, `DEEPSEEK_API_BASE_URL`, `DEEPSEEK_API_KEY`, `DEEPSEEK_MODEL` | missing | not applicable / not configured |
+| Exa | required for web discovery | `EXA_API_KEY` | missing | not applicable / not configured |
 | Firecrawl | required for verified web facts | `FIRECRAWL_API_BASE_URL`, `FIRECRAWL_API_KEY` | missing | not applicable / not configured |
-| Embeddings | optional unless semantic evidence is enabled | `EMBEDDINGS_API_KEY` | configured | not applicable / not configured |
+| Embeddings | optional unless semantic evidence is enabled | `EMBEDDINGS_API_KEY` | missing | not applicable / not configured |
+| Daytona analytical executor | required only when the P1 Daytona executor is selected; requires a pinned private runtime | `DAYTONA_API_KEY`, `DAYTONA_API_URL`, `FINNOR_DAYTONA_PROFILE`, `FINNOR_P1_EXECUTOR` | missing | not applicable / not configured |
+| Primary-source HTTPS transport | required only for independently admitted production_primary transport; diligence, consent and financial release gates remain separate | `FINNOR_PRIMARY_TRANSPORT_POLICY_FILE`, `FINNOR_V2_PROFILE` | missing | not applicable / not configured |
 | Zep | optional | `ZEP_API_KEY` | missing | not applicable / not configured |
-| Gmail / email | required only for a tenant-bound Gmail communication identity | `GMAIL_APP_PASSWORD`, `GMAIL_USER` | configured | not applicable / not configured |
-| Resend / system notifications | required only when the Finnor-owned notification sender is enabled | `RESEND_ALLOWLIST_OWNER_EMAIL`, `RESEND_API_KEY`, `RESEND_DAILY_CAP` | configured | not applicable / not configured |
+| Gmail / email | required only for a tenant-bound Gmail communication identity | `GMAIL_APP_PASSWORD`, `GMAIL_USER` | missing | not applicable / not configured |
+| Resend / system notifications | required only when the Finnor-owned notification sender is enabled | `RESEND_ALLOWLIST_OWNER_EMAIL`, `RESEND_API_KEY`, `RESEND_DAILY_CAP` | missing | not applicable / not configured |
 | Historical GHL callback quarantine | required while the retired callback endpoint remains configured | `GHL_WEBHOOK_PUBLIC_KEY`, `RETIRED_WATER_WEBHOOK_SECRET` | missing | not applicable / not configured |
 | Historical payment callback quarantine | required while the retired callback endpoint remains configured | `PAYMENT_EMULATOR_WEBHOOK_SECRET`, `RETIRED_WATER_WEBHOOK_SECRET`, `STRIPE_WEBHOOK_SECRET` | missing | not applicable / not configured |
 | Historical e-sign callback quarantine | required while the retired callback endpoint remains configured | `DOCUSIGN_CONNECT_SECRET`, `RETIRED_WATER_WEBHOOK_SECRET` | missing | not applicable / not configured |
 | Historical marketing callback quarantine | required while the retired callback endpoint remains configured | `MARKETING_WEBHOOK_SECRET`, `RETIRED_WATER_WEBHOOK_SECRET` | missing | not applicable / not configured |
-| Secrets provider | required when an external secret provider is selected | `AWS_BEARER_TOKEN_BEDROCK`, `AWS_BEDROCK_API_KEY`, `AWS_BEDROCK_DEEPSEEK_MODEL_ID`, `AWS_BEDROCK_GLM_MODEL_ID`, `AWS_BEDROCK_MISTRAL_MODEL_ID`, `AWS_BEDROCK_NOVA_MICRO_MODEL_ID`, `AWS_BEDROCK_OPENAI_OSS_MODEL_ID`, `AWS_BEDROCK_QWEN_FAST_MODEL_ID`, `AWS_BEDROCK_QWEN_PLANNING_MODEL_ID`, `AWS_BEDROCK_QWEN_PLANNING_REGION`, `AWS_BEDROCK_REGION`, `AWS_REGION`, `FINNOR_SECRET_IDS`, `SECRETS_PROVIDER` | configured | not applicable / not configured |
+| Secrets provider | required when an external secret provider is selected | `AWS_BEARER_TOKEN_BEDROCK`, `AWS_BEDROCK_API_KEY`, `AWS_BEDROCK_AUTH_MODE`, `AWS_BEDROCK_DEEPSEEK_MODEL_ID`, `AWS_BEDROCK_GLM_MODEL_ID`, `AWS_BEDROCK_MISTRAL_MODEL_ID`, `AWS_BEDROCK_NOVA_MICRO_MODEL_ID`, `AWS_BEDROCK_OPENAI_OSS_MODEL_ID`, `AWS_BEDROCK_QWEN_FAST_MODEL_ID`, `AWS_BEDROCK_QWEN_PLANNING_MODEL_ID`, `AWS_BEDROCK_QWEN_PLANNING_REGION`, `AWS_BEDROCK_REGION`, `AWS_DEFAULT_REGION`, `AWS_REGION`, `FINNOR_SECRET_IDS`, `SECRETS_PROVIDER` | missing | not applicable / not configured |
 
 ## Active provider boundary
 

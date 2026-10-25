@@ -36,8 +36,9 @@ import {
 import { PeDomainError, type PeMutationContext } from "./types";
 import { assertPeText, assertPeUuid, peProvenance, peTransaction, type PeClient } from "./repository";
 import { recordUnderwritingMetric } from "./underwriting-telemetry";
-import {resolveEvidenceUnderwritingInputs,assertEvidenceSnapshotCurrent,type EvidenceUnderwritingBinding} from './evidence-execution/consumer';
+import {resolveEvidenceUnderwritingInputs,assertEvidenceSnapshotCurrent,assertEvidenceInputsCurrent,type EvidenceUnderwritingBinding} from './evidence-execution/consumer';
 import {resolvePrimaryUnderwritingInputs,bindPrimaryConsumerDependencies} from './primary-diligence/consumer';
+import {resolveHarnessUnderwritingInputs} from './program-synthesis/underwriting-consumer';
 import {resolveConfidentialUnderwritingInputs,hasConfidentialSnapshot,sealConfidentialRunResult,refuseUnadmittedConfidentialSink} from './confidential-computation/consumer';
 import type {ConfidentialOutputBinding} from './confidential-computation/contracts';
 import type {PrimaryFindingBinding} from '@finnor/shared-types';
@@ -133,7 +134,7 @@ interface StoredRunIntegrity {
   result: UnderwritingRunResult;
 }
 
-async function assertStoredRunIntegrity(tenantId: string, run: StoredRunIntegrity,ctx:PeMutationContext,client:PeClient): Promise<void> {
+function assertStoredRunHashes(tenantId: string, run: StoredRunIntegrity): void {
   const inputHash = inputSnapshotHash(run.input_snapshot);
   const resultHash = runResultHash(run.result);
   if (run.input_snapshot.semanticHash !== run.input_hash || inputHash !== run.input_hash) {
@@ -144,6 +145,10 @@ async function assertStoredRunIntegrity(tenantId: string, run: StoredRunIntegrit
     recordUnderwritingMetric({ tenantId, runId: run.id }, "underwriting_result_hash_mismatches", 1, "count");
     fail("RESULT_SEMANTIC_HASH_MISMATCH", "Stored Run result failed immutable semantic-hash verification", { runId: run.id });
   }
+}
+
+async function assertStoredRunIntegrity(tenantId: string, run: StoredRunIntegrity,ctx:PeMutationContext,client:PeClient): Promise<void> {
+  assertStoredRunHashes(tenantId,run);
   await assertEvidenceSnapshotCurrent(ctx,run.input_snapshot,client);
 }
 
@@ -471,7 +476,7 @@ async function resolveArtifactInput(client: PeClient, tenantId: string, worldAt:
 
 function explicitResolved(node: InputNode, input: ExplicitUnderwritingInput | undefined): ResolvedInput {
   if (!input) return unknownInput(node, "EXPLICIT_INPUT_NOT_SUPPLIED");
-  if(input.provenance?.some(ref=>ref.kind==="primary_finding"))fail("MODEL_SCHEMA_INVALID","Primary provenance requires the exact scoped primary-finding owner binding",{nodeId:node.id});
+  if(input.provenance?.some(ref=>ref.kind==="primary_finding"||ref.kind==="harness_program"))fail("MODEL_SCHEMA_INVALID","Checked producer provenance requires its exact scoped owner binding",{nodeId:node.id});
   if (input.truthClass === "DERIVED_VALUE" || input.truthClass === "EXTERNAL_CALCULATED_COMPARISON" || input.truthClass === "UNKNOWN" || input.truthClass === "SCENARIO_OVERRIDE") {
     fail("MODEL_SCHEMA_INVALID", "Explicit base input has an invalid truth class", { nodeId: node.id, truthClass: input.truthClass });
   }
@@ -645,7 +650,7 @@ export async function createUnderwritingSensitivity(ctx: PeMutationContext, inpu
   return stored;
 }
 
-export async function prepareUnderwritingRun(ctx: PeMutationContext, input: Omit<CreateUnderwritingRunInput, "idempotencyKey" | "workId">): Promise<PreparedRun> {
+export async function prepareUnderwritingRun(ctx: PeMutationContext, input: Omit<CreateUnderwritingRunInput, "idempotencyKey">): Promise<PreparedRun> {
   assertPeUuid(input.investmentCaseId, "investmentCaseId");
   assertPeUuid(input.modelVersionId, "modelVersionId");
   if (input.scenarioId) assertPeUuid(input.scenarioId, "scenarioId");
@@ -683,7 +688,8 @@ export async function prepareUnderwritingRun(ctx: PeMutationContext, input: Omit
       }
       return sealInputSnapshot(base.input_snapshot);
     })() : await resolveInputSnapshot(client, ctx.auth.tenantId, row, compiled, worldAt, input.explicitInputs ?? {},derivedInputs);
-    await assertEvidenceSnapshotCurrent(ctx,baseSnapshot,client);
+    const {primaryWorkIds}=await assertEvidenceSnapshotCurrent(ctx,baseSnapshot,client);
+    if(input.workId&&(primaryWorkIds.length>1||primaryWorkIds.some(id=>id!==input.workId)))fail('MODEL_SCHEMA_INVALID','PRIMARY_CONSUMER_EXACT_WORK_SCOPE_MISMATCH');
     const applied = applyScenario(compiled, baseSnapshot, scenario);
     return { row, compiled, baseSnapshot, effectiveSnapshot: applied.snapshot, scenario, scenarioSemanticHash: applied.scenarioSemanticHash };
   }, { readOnly: true });
@@ -707,10 +713,12 @@ export async function persistPreparedUnderwritingRun(ctx: PeMutationContext, ori
     fail("RESULT_SEMANTIC_HASH_MISMATCH", "Prepared Run result does not match its exact engine/model/input identity");
   }
   return peTransaction(ctx, async (db, client) => {
-    await assertEvidenceSnapshotCurrent(ctx,input.prepared.effectiveSnapshot,client,true);
+    const {primaryWorkIds}=await assertEvidenceSnapshotCurrent(ctx,input.prepared.effectiveSnapshot,client,true);
+    if(primaryWorkIds.length>1||primaryWorkIds.length===1&&input.workId!==undefined&&primaryWorkIds[0]!==input.workId)fail('MODEL_SCHEMA_INVALID','PRIMARY_CONSUMER_EXACT_WORK_SCOPE_MISMATCH');
+    const workId=primaryWorkIds[0]??input.workId;
     await client.query("SELECT pg_advisory_xact_lock(hashtextextended($1, 4260))", [`${ctx.auth.tenantId}:${input.idempotencyKey}`]);
-    const existing = (await client.query<{ id: string; investment_case_id: string; model_version_id: string; world_at: Date; input_hash: string; result_hash: string; result: UnderwritingRunResult; input_snapshot: UnderwritingInputSnapshot }>(
-      `SELECT id::text,investment_case_id::text,model_version_id::text,world_at,input_hash,result_hash,result,input_snapshot
+    const existing = (await client.query<{ id: string; investment_case_id: string; model_version_id: string; work_id:string|null; world_at: Date; input_hash: string; result_hash: string; result: UnderwritingRunResult; input_snapshot: UnderwritingInputSnapshot }>(
+      `SELECT id::text,investment_case_id::text,model_version_id::text,work_id::text,world_at,input_hash,result_hash,result,input_snapshot
          FROM finnor_os.underwriting_runs WHERE tenant_id=$1 AND idempotency_key=$2`,
       [ctx.auth.tenantId, input.idempotencyKey],
     )).rows[0];
@@ -718,6 +726,7 @@ export async function persistPreparedUnderwritingRun(ctx: PeMutationContext, ori
       await assertStoredRunIntegrity(ctx.auth.tenantId, existing,ctx,client);
       const matches = existing.investment_case_id === input.prepared.row.investment_case_id
         && existing.model_version_id === input.prepared.row.id
+        && existing.work_id === (workId??null)
         && asIso(existing.world_at) === input.prepared.effectiveSnapshot.worldAt
         && existing.input_hash === input.prepared.effectiveSnapshot.semanticHash
         && existing.result.resultSemanticHash === input.result.resultSemanticHash;
@@ -730,7 +739,7 @@ export async function persistPreparedUnderwritingRun(ctx: PeMutationContext, ori
          id,tenant_id,investment_case_id,model_version_id,scenario_id,work_id,world_at,engine_version,model_semantic_hash,
          input_hash,input_snapshot,result_hash,result,status,validity,failure_code,idempotency_key,created_by
        ) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11::jsonb,$12,$13::jsonb,$14,$15,$16,$17,$18)`,
-      [id, ctx.auth.tenantId, input.prepared.row.investment_case_id, input.prepared.row.id, input.scenarioId ?? null, input.workId ?? null,
+      [id, ctx.auth.tenantId, input.prepared.row.investment_case_id, input.prepared.row.id, input.scenarioId ?? null, workId ?? null,
         input.prepared.effectiveSnapshot.worldAt, UNDERWRITING_ENGINE_VERSION, input.prepared.compiled.semanticHash,
         input.prepared.effectiveSnapshot.semanticHash, JSON.stringify(input.prepared.effectiveSnapshot), input.result.resultSemanticHash,
         JSON.stringify(input.result), input.result.status, input.result.validity, input.result.failure?.code ?? null, input.idempotencyKey, createdBy(ctx)],
@@ -786,6 +795,52 @@ export async function getUnderwritingRun(ctx: PeMutationContext, runId: string):
     await assertStoredRunIntegrity(ctx.auth.tenantId, row,ctx,client);
     return recordShape(row);
   }, { readOnly: true });
+}
+
+/** Verify a finite decision's exact run bindings in one read transaction. Do
+ * not materialize all financial results in the caller or synthesize a snapshot
+ * to collect dependencies. Hash every run, then check the distinct real inputs
+ * with their canonical producers. The caller still owns its final current read. */
+export async function assertUnderwritingRunsCurrent(ctx:PeMutationContext,bindings:readonly {runId:string;resultHash:string;workId:string}[]):Promise<void>{
+  if(!bindings.length||bindings.length>256)fail('SENSITIVITY_LIMIT','Run verification exceeds the bounded decision frontier');
+  for(const binding of bindings){assertPeUuid(binding.runId,'runId');assertPeUuid(binding.workId,'workId');}
+  return peTransaction(ctx,async(_db,client)=>{
+    const inputs=new Map<string,ResolvedInput>();
+    for(let offset=0;offset<bindings.length;offset+=16){
+      const batch=bindings.slice(offset,offset+16);
+      const rows=(await client.query<StoredRunIntegrity&{work_id:string|null}>(
+        'SELECT id::text,input_hash,input_snapshot,result_hash,result,work_id::text FROM finnor_os.underwriting_runs WHERE tenant_id=$1 AND id=ANY($2::uuid[])',
+        [ctx.auth.tenantId,batch.map(b=>b.runId)],
+      )).rows;
+      const byId=new Map(rows.map(row=>[row.id,row]));
+      for(const binding of batch){
+        const run=byId.get(binding.runId);if(!run)throw new PeDomainError('PE_ENTITY_NOT_FOUND','Underwriting Run was not found in the authenticated tenant');
+        assertStoredRunHashes(ctx.auth.tenantId,run);
+        if(run.result_hash!==binding.resultHash||run.work_id!==binding.workId)throw new PeDomainError('UNDERWRITING_RUN_BINDING_MISMATCH','Underwriting decision run binding changed');
+        for(const input of Object.values(run.input_snapshot.values))inputs.set(canonicalSerialize(input),input);
+      }
+    }
+    await assertEvidenceInputsCurrent(ctx,[...inputs.values()],client);
+  },{readOnly:true});
+}
+
+/** Internal checked-analysis continuation. Preserve the canonical baseline
+ * snapshot; replace only declared analytical parameters with exact P1 outputs.
+ * Public explicit inputs never receive permission to assert this provenance. */
+export async function createHarnessUnderwritingRun(ctx:PeMutationContext,input:{baseRunId:string;workId:string;workInputId:string;programId:string;bindings:Record<string,string>;idempotencyKey:string}){
+ const base=await getUnderwritingRun(ctx,input.baseRunId);
+ if(base.status!=='SUCCEEDED'||base.validity!=='VALID'||base.scenarioId!==null)fail('SCENARIO_INVALID_TARGET','Checked analysis requires a valid canonical baseline');
+ const prepared=await prepareUnderwritingRun(ctx,{investmentCaseId:String(base.investmentCaseId),modelVersionId:String(base.modelVersionId),worldAt:asIso(base.worldAt as Date),baseRunId:input.baseRunId});
+ const checked=await resolveHarnessUnderwritingInputs(ctx,{...input,investmentCaseId:String(base.investmentCaseId),modelVersionId:String(base.modelVersionId)});
+ for(const nodeId of Object.keys(checked.resolved)){
+  const value=prepared.baseSnapshot.values[nodeId];
+  if(!value||!['MODEL_PARAMETER','CANONICAL_ASSUMPTION'].includes(value.truthClass)||value.provenance.some(p=>['evidence_derivation','primary_finding','harness_program'].includes(p.kind)))fail('SCENARIO_INVALID_TARGET','Checked analysis cannot replace source-bound truth',{nodeId});
+ }
+ const snapshot=sealInputSnapshot({schemaVersion:prepared.baseSnapshot.schemaVersion,investmentCaseId:prepared.baseSnapshot.investmentCaseId,worldAt:prepared.baseSnapshot.worldAt,values:{...prepared.baseSnapshot.values,...checked.resolved}});
+ const result=executeUnderwritingModel(prepared.compiled,snapshot);
+ if(result.status!=='SUCCEEDED'||result.validity!=='VALID')fail(result.failure?.code??'UNSUPPORTED_INPUT','Checked analysis did not produce a valid canonical baseline');
+ const persisted=await persistPreparedUnderwritingRun(ctx,{prepared:{...prepared,baseSnapshot:snapshot,effectiveSnapshot:snapshot},result,idempotencyKey:input.idempotencyKey,workId:input.workId});
+ return {...persisted,analysisResultDigest:checked.resultDigest};
 }
 
 export async function getUnderwritingSensitivity(ctx: PeMutationContext, sensitivityId: string): Promise<Record<string, unknown>> {

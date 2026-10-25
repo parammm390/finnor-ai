@@ -64,9 +64,12 @@ export async function resolveConfidentialUnderwritingInputs(ctx:PeMutationContex
 /** Called by the existing immutable Run/IC read and write boundaries. Other
  * recipients cannot inherit a grant merely by reading a shared run ID. */
 export async function assertConfidentialSnapshotCurrent(ctx:PeMutationContext,snapshot:UnderwritingInputSnapshot,c?:PoolClient,lock=false):Promise<void>{
- const refs=Object.values(snapshot.values).flatMap(input=>input.provenance.filter(ref=>ref.kind==='confidential_computation').map(ref=>({input,ref})));
+ return assertConfidentialInputsCurrent(ctx,Object.values(snapshot.values),c,lock);
+}
+export async function assertConfidentialInputsCurrent(ctx:PeMutationContext,inputs:readonly ResolvedInput[],c?:PoolClient,lock=false):Promise<void>{
+ const refs=inputs.flatMap(input=>input.provenance.filter(ref=>ref.kind==='confidential_computation').map(ref=>({input,ref})));
  if(!refs.length)return;
- if(!c)return tx(ctx,client=>assertConfidentialSnapshotCurrent(ctx,snapshot,client,true));
+ if(!c)return tx(ctx,client=>assertConfidentialInputsCurrent(ctx,inputs,client,true));
  if(lock)await c.query('SELECT pg_advisory_xact_lock(hashtextextended($1,0))',['v3-material-cut:'+ctx.auth.tenantId]);
  await employeeAuthoritySnapshotTx(ctx.auth,c,lock);
  if(lock)await c.query('SELECT pg_advisory_xact_lock(hashtextextended($1,5510))',[ctx.auth.tenantId]);

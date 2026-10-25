@@ -1,4 +1,6 @@
+import {AcquisitionActionSchema} from '../../private-equity/src/acquisition/contracts';
 import { z } from "zod";
+import {PrimaryDiligenceActionSchema,PrimaryUnderwritingInputsSchema,EvidenceUnderwritingBindingSchema,UnderwritingModelValueSchema,UnderwritingExplicitInputSchema} from '@finnor/shared-types';
 import { PE_DEPENDENCY_ENDPOINT_TYPES, PE_ENTITY_TYPES, WORKSTREAM_KINDS } from "@finnor/private-equity/src/types";
 
 const uuid = z.string().uuid();
@@ -6,13 +8,6 @@ const version = z.number().int().positive();
 const dateTime = z.string().datetime({ offset: true });
 const text = z.string().trim().min(1).max(10_000);
 const shortText = z.string().trim().min(1).max(500);
-const underwritingScalar = z.union([z.string().max(4_096), z.boolean()]);
-const underwritingValue = z.union([
-  underwritingScalar,
-  z.record(z.string(), underwritingScalar).superRefine((value, context) => {
-    if (Object.keys(value).length > 240) context.addIssue({ code: z.ZodIssueCode.custom, message: "Series exceeds 240 values" });
-  }),
-]);
 
 const InternalPartyRefSchema = z.object({
   partyType: z.enum(["employee", "team"]),
@@ -44,6 +39,8 @@ export const IC_SOURCE_REFERENCE_SCHEMA = z.discriminatedUnion("kind", [
 ]);
 
 export const PRIVATE_EQUITY_ACTION_SCHEMAS = {
+  start_primary_diligence: PrimaryDiligenceActionSchema,
+  start_acquisition_evaluation: AcquisitionActionSchema,
   execute_closing_operation: z.object({
     dealId: uuid, programmeId: uuid,
     nodeKey: z.string().regex(/^[a-zA-Z0-9][a-zA-Z0-9:._-]{0,159}$/),
@@ -58,14 +55,20 @@ export const PRIVATE_EQUITY_ACTION_SCHEMAS = {
       name: shortText,
       overrides: z.array(z.object({
         nodeId: z.string().regex(/^[a-z][a-z0-9_.:-]{0,199}$/),
-        value: underwritingValue,
+        value: UnderwritingModelValueSchema,
         reason: z.string().trim().min(1).max(1_000),
       }).strict()).min(1).max(100),
     }).strict().optional(),
     baseRunId: uuid.optional(),
+    explicitInputs: z.record(z.string(), UnderwritingExplicitInputSchema).optional(),
+    primaryFindingInputs: PrimaryUnderwritingInputsSchema.optional(),
+    evidenceDerivationInputs: z.record(z.string(), EvidenceUnderwritingBindingSchema).optional(),
   }).strict().superRefine((value, context) => {
     if (value.scenario && value.scenarioId) {
       context.addIssue({ code: z.ZodIssueCode.custom, message: "Choose one existing scenarioId or one new scenario" });
+    }
+    if(value.baseRunId&&(value.explicitInputs||value.primaryFindingInputs||value.evidenceDerivationInputs)){
+      context.addIssue({code:z.ZodIssueCode.custom,message:'A pinned baseRunId cannot combine newly resolved financial inputs'});
     }
   }),
   open_ic_case: z.object({

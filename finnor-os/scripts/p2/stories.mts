@@ -10,9 +10,72 @@ import {createMetricSeries,recordMetricObservation} from '@finnor/private-equity
 import {createEvidenceSource,appendEvidenceVersion} from '@finnor/memory';
 import {receiveWork} from '@finnor/db';
 import {POST as allocationPost} from '../../apps/api/app/api/allocations/[operation]/route';
+import {daytonaProtocolFixture} from '../p1/daytona-protocol-fixture.mts';
+import {physicalNativeQueue} from '../p5/native-worker-client.mts';
 
 const ok=(r:any,status=200)=>{assert.equal(r.status,status,JSON.stringify(r));return r.body;};
 const pause=(ms:number)=>new Promise(r=>setTimeout(r,ms));
+export async function productionBoundExecutor(e:any,recovery=false,configurationDrift=false){
+ e={...e,evidence:join(e.evidence,configurationDrift?'configuration-restoration':recovery?'remote-reconnection':'bound-executor')};await mkdir(e.evidence,{recursive:true});
+ const names=['FINNOR_P4_PROFILE','FINNOR_ENVIRONMENT','FINNOR_P1_EXECUTOR','DAYTONA_API_KEY','DAYTONA_API_URL','FINNOR_DAYTONA_PROFILE','FINNOR_DAYTONA_PROTOCOL_FIXTURE','FINNOR_DAYTONA_PROTOCOL_LOST_ACK'];
+ const saved=Object.fromEntries(names.map(k=>[k,process.env[k]]));if(recovery)process.env.FINNOR_DAYTONA_PROTOCOL_LOST_ACK='1';
+ const provider=await daytonaProtocolFixture(e.evidence);
+ let queue:Awaited<ReturnType<typeof physicalNativeQueue>>|undefined,providerClosed=false,originalUnitId:string|null=null;
+ try{
+  Object.assign(process.env,provider.environment,{FINNOR_P4_PROFILE:'production_analysis',FINNOR_ENVIRONMENT:'production'});
+  const workerNames=[...names,'FINNOR_M1_PROFILE','FINNOR_M1_STORE','FINNOR_S3_MODEL_STORE','FINNOR_S3_PYTHON','FINNOR_S4_POLICY_STORE','FINNOR_S5_PYTHON','P3_GOVERNORS'];
+  const contracts=(await import('../../packages/db/compute-contract')).PRODUCTION_JOB_CONTRACTS;
+  const startWorker=async(extra:Record<string,string>={})=>{
+   const q=await physicalNativeQueue(e.workerDatabaseUrl,e.evidence,{leaseSeconds:30,environment:{...Object.fromEntries(workerNames.flatMap(k=>process.env[k]===undefined?[]:[[k,process.env[k]!]])),...extra}});
+   q.register('run_harness_program_v1',(await import('../../packages/private-equity/src/program-synthesis/worker')).runHarnessProgramJob,contracts.run_harness_program_v1);
+   q.register('run_evidence_derivation_v1',(await import('../../packages/private-equity/src/evidence-execution/worker')).runEvidenceDerivationJob,contracts.run_evidence_derivation_v1);
+   q.register('run_compute_search_unit_v1',(await import('../../packages/private-equity/src/compute-search/worker')).runComputeSearchUnitJob,contracts.run_compute_search_unit_v1);
+   return q;
+  };
+  queue=await startWorker();
+  e={...e,queue};
+  const f=await prepared({...e,request:()=>({...e.request(),mode:'production_analysis'})},'ADAPTIVE',{mode:'production_analysis',deferSearch:true});
+  const projection=ok(await e.api('compute-search-projection',{root:f.request.root,workId:f.p.workId,methodOwner:'P2'},f.identity));
+  const eligible=projection.eligiblePrograms.find((p:any)=>p.programId===f.p.programId);assert.equal(eligible?.mode,'production_analysis');
+  const deliberation=ok(await e.api('deliberation-projection',{root:f.request.root,workId:f.p.workId},f.identity));assert.equal(deliberation.eligiblePrograms.find((p:any)=>p.programId===f.p.programId)?.mode,eligible.mode);
+  await f.artifact('actual-ui-mode-projections.json',{projection,deliberation});
+  const episodeSql='SELECT p.episode_id,p.work_id,p.work_input_id,p.plan_revision_id,e.max_attempts,e.max_steps,e.deadline_at FROM finnor_os.p1_requests p JOIN finnor_os.p1_episodes e ON e.id=p.episode_id WHERE p.id=$1';
+  const originalEpisode=(await e.admin.query(episodeSql,[f.p.programId])).rows[0];
+  f.submitted=await e.api('compute-search-submit',{...f.search,mode:eligible.mode},f.identity);const accepted=ok(f.submitted,202);
+  if(configurationDrift){
+   await until(async()=>{await queue!.tick();return (await e.admin.query('SELECT context FROM finnor_os.p2_requests WHERE id=$1',[accepted.searchId])).rows[0]?.context;});
+   const selected=(await e.admin.query("SELECT id FROM finnor_os.p2_units WHERE search_id=$1 AND kind='EXECUTE_P1' AND status='QUEUED'",[accepted.searchId])).rows;assert.equal(selected.length,1);originalUnitId=selected[0].id;
+   await queue.close();queue=await startWorker({FINNOR_P1_EXECUTOR:'local'});e={...e,queue};await queue.tick();
+   const waiting=ok(await e.api('compute-search-read',{searchId:accepted.searchId},f.identity));await f.artifact('configuration-drift-wait.json',waiting);
+   assert.equal(waiting.status,'WAITING');assert.equal(waiting.reason,'P1_EXECUTOR_BOUND_CONFIGURATION_CHANGED');assert.equal(waiting.plan.costs.physicalAttempts,0);
+   assert.equal(waiting.plan.frontier.find((u:any)=>u.id===originalUnitId)?.status,'PENDING');
+   await queue.close();queue=await startWorker();e={...e,queue};ok(await e.api('compute-search-resume',{searchId:accepted.searchId},f.identity),202);
+  }
+  const done=await finish(e,{...accepted,programId:f.p.programId,identity:f.identity,recoverRemote:recovery});
+  await f.artifact('production-bound-executor-result.json',done);
+  assert.equal(done.program.status,'TESTED',JSON.stringify(done));
+  assert.equal(done.program.program.result.values.netEquity.value,'43');assert.equal(done.program.program.result.values.leverage.value,'3.5');
+  assert.equal(done.program.workId,f.p.workId);
+  const remote=(await e.admin.query("SELECT body FROM finnor_os.p1_events WHERE request_id=$1 AND kind='ISOLATED_MODULE_EXECUTION' ORDER BY created_at,id",[f.p.programId])).rows.map((r:any)=>r.body).filter((v:any)=>v.execution?.provenance?.substrate==='DAYTONA_PRIVATE_ANALYSIS_V1');
+  assert.equal(remote.length,1,'Adaptive search must execute its admitted numerical unit on the bound provider');
+  const attempts=(await e.admin.query('SELECT id,unit_id,status,body FROM finnor_os.p2_attempts WHERE tenant_id=$1 AND search_id=$2 ORDER BY created_at,id',[f.f.tenant,accepted.searchId])).rows;
+  const physical=attempts.filter((a:any)=>a.body.workKind==='EXECUTE_P1');assert.equal(physical.length,1);
+  if(configurationDrift)assert.equal(physical[0].unit_id,originalUnitId);
+  assert.equal(remote[0].execution.provenance.binding.consumer.owner,'P2');assert.equal(remote[0].execution.provenance.binding.consumer.id,physical[0].id);
+  assert.equal(attempts.length,2);assert(attempts.every((a:any)=>a.status==='COMPLETED'&&a.body.chargedNativeAttempts===1));
+  assert(done.plan.plan.incumbent.checks.every((c:any)=>c.status==='PASS'&&c.method==='POSTGRES_NUMERIC_ACCEPTED_EXPRESSION'));
+  const finalEpisode=(await e.admin.query(episodeSql,[f.p.programId])).rows[0];assert.deepEqual(finalEpisode,originalEpisode);
+  const ledger=(await e.admin.query('SELECT g.spent FROM finnor_os.p2_grant_usage g JOIN finnor_os.p2_requests s ON s.tenant_id=g.tenant_id AND s.principal_id=g.principal_id AND s.binding->>\'resourceId\'=g.resource_id AND s.request->\'computeGrant\'->>\'contentDigest\'=g.grant_digest WHERE s.id=$1',[accepted.searchId])).rows;assert.equal(ledger.length,1);assert.equal(Number(ledger[0].spent),2);
+  await f.artifact('production-unit-attempts.json',{attempts,remote,workId:f.p.workId,originalEpisode,finalEpisode,ledger});
+  providerClosed=true;await provider.close();const observed=JSON.parse(await readFile(join(e.evidence,'daytona-protocol.json'),'utf8'));
+  const sandboxes=Object.values(observed.sandboxes) as any[];
+  assert.equal(sandboxes.length,1);assert.equal(sandboxes[0].commands.length,1);assert.equal(sandboxes[0].state,'destroyed');
+  if(recovery){assert(observed.lostCommandAcknowledgement);assert.equal(remote[0].execution.provenance.commandId,observed.lostCommandAcknowledgement.commandId);assert.equal(remote[0].execution.provenance.sandboxId,observed.lostCommandAcknowledgement.sandboxId);}
+  return {mode:'production_analysis',workId:f.p.workId,programId:f.p.programId,searchId:accepted.searchId,values:{equity:'43',leverage:'3.5'},physicalCommands:1,recoveredOriginalCommand:recovery,configurationRestored:configurationDrift,hostedIsolationQualified:false,economicGainQualified:false};
+ }finally{
+  if(queue)await queue.close();if(!providerClosed)await provider.close();for(const k of names)if(saved[k]===undefined)delete process.env[k];else process.env[k]=saved[k];
+ }
+}
 async function until(fn:()=>Promise<any>,timeoutMs=20000){const end=Date.now()+timeoutMs;while(Date.now()<end){const value=await fn();if(value)return value;await pause(25);}throw Error('INDEPENDENT_OBSERVER_TIMEOUT');}
 function child(e:any,extra:Record<string,string>={}){
  const process=spawn(globalThis.process.execPath,['--import=tsx','scripts/p2/child-worker.mts'],{cwd:join(e.repo,'finnor-os'),env:{...globalThis.process.env,...extra},stdio:['ignore','pipe','pipe','ipc']});
@@ -58,12 +121,14 @@ export async function prepared(e:any,topology='ADAPTIVE',extra:any={}) {
  const policy=await support.policy(f,'compute',{compute:8});await support.resource(f,'compute','native-attempt','CUMULATIVE_EXPENDITURE',['8','8']);
  const allocation=ok(await api(f,'clear',support.clearing(f,{compute:['1']})));assert.equal(allocation.status,'FEASIBLE');
  const identity={tenant:f.tenant,actor:f.principal},request=e.request();request.computeSearch='P2_REQUIRED';if(f.browser)request.threadId=f.browser.thread.id;request.root=f.root;request.workId=f.work.workId;request.workInputId=f.work.workInputId;request.ownerBindings={policyRef:policy.ref,allocationRef:allocation.certificate.ref};request.sources=request.sources.map((s:any)=>({...s,source:{...s.source,subject:f.root}}));request.limits={maxCandidates:8,maxAttempts:8,maxSteps:4096,deadlineMs:300000};
- const response=await e.api('program-submit',request,identity);await artifact('p1-submission.json',{request,response});if(response.status!==202){try{await (await import('../../packages/private-equity/src/program-synthesis/api')).submitHarnessProgram(f.ctx,request);}catch(error){await artifact('p1-replay-diagnostic.json',{message:String(error),stack:(error as Error).stack,cause:String((error as any).cause)});}}const p=ok(response,202);let held:any;for(let tick=0;tick<40;tick++){await e.queue.tick();held=(await e.admin.query('SELECT p.status,e.attempts_used FROM finnor_os.p1_requests p JOIN finnor_os.p1_episodes e ON e.id=p.episode_id WHERE p.id=$1',[p.programId])).rows[0];if(held.status==='WAITING')break;await new Promise(r=>setTimeout(r,25));}assert.equal(held.status,'WAITING');assert.equal(held.attempts_used,0);await artifact('p1-held-for-allocation.json',held);
+ const response=await e.api('program-submit',request,identity);await artifact('p1-submission.json',{request,response});if(response.status!==202){try{await (await import('../../packages/private-equity/src/program-synthesis/api')).submitHarnessProgram(f.ctx,request);}catch(error){await artifact('p1-replay-diagnostic.json',{message:String(error),stack:(error as Error).stack,cause:String((error as any).cause)});}}const p=ok(response,202);let held:any;for(let tick=0;tick<40;tick++){await e.queue.tick();held=(await e.admin.query('SELECT p.status,e.attempts_used FROM finnor_os.p1_requests p JOIN finnor_os.p1_episodes e ON e.id=p.episode_id WHERE p.id=$1',[p.programId])).rows[0];if(held.status==='WAITING')break;await new Promise(r=>setTimeout(r,25));}
+ await artifact('p1-held-for-allocation.json',{held,jobs:(await e.admin.query('SELECT id,type,status,payload,attempts,protocol_version,run_at,last_error FROM finnor_os.jobs WHERE tenant_id=$1 ORDER BY run_at,id',[f.tenant])).rows,events:(await e.admin.query('SELECT kind,body FROM finnor_os.p1_events WHERE request_id=$1 ORDER BY created_at,id',[p.programId])).rows});
+ assert.equal(held.status,'WAITING');assert.equal(held.attempts_used,0);
  const search={schema:'finnor.compute-search-request.v1',programId:p.programId,policyRequest:policy.ref,computeGrant:allocation.certificate.ref,idempotencyKey:randomUUID(),mode:'ordinary_disposable',strategy:topology,limits:{maxUnits:8,maxParallel:2},...searchExtra};
  const submitted=deferSearch?null:await e.api('compute-search-submit',search,identity);await artifact('before-implementation-boundary.json',{request,p,search,submitted,policyRef:policy.ref,certificateRef:allocation.certificate.ref});
  return {f,policy,allocation,p,request,search,identity,submitted,artifact,dir,api};
 }
-export async function finish(e:any,p:any) {let plan:any,program:any;for(let i=0;i<100;i++){await e.queue.tick();plan=await e.api('compute-search-read',{searchId:p.searchId},p.identity);if(plan.status!==200)throw Error(JSON.stringify(plan));program=await e.api('program-read',{programId:p.programId},p.identity);if(['STOPPED','FAILED','CANCELLED','INVALIDATED'].includes(plan.body.status)&&['TESTED','FAILED','INVALIDATED','PARTIAL','CANCELLED'].includes(program.body.status))return {plan:plan.body,program:program.body};await new Promise(r=>setTimeout(r,40));}throw Error('P2_REAL_QUEUE_BOUND_EXHAUSTED');}
+export async function finish(e:any,p:any) {let plan:any,program:any;for(let i=0;i<100;i++){await e.queue.tick();plan=await e.api('compute-search-read',{searchId:p.searchId},p.identity);if(plan.status!==200)throw Error(JSON.stringify(plan));program=await e.api('program-read',{programId:p.programId},p.identity);if(p.recoverRemote&&plan.body.status==='WAITING'&&plan.body.plan.outstanding.some((a:any)=>a.status==='UNKNOWN')){const recovered=await e.api('compute-search-reconcile',{searchId:p.searchId},p.identity);ok(recovered);assert.equal(recovered.body.plan.status,'RUNNING','Reconciliation must reconnect the original remote unit instead of leaving UNKNOWN work stranded');}if(['STOPPED','FAILED','CANCELLED','INVALIDATED'].includes(plan.body.status)&&['TESTED','FAILED','INVALIDATED','PARTIAL','CANCELLED'].includes(program.body.status))return {plan:plan.body,program:program.body};await new Promise(r=>setTimeout(r,40));}throw Error('P2_REAL_QUEUE_BOUND_EXHAUSTED');}
 export async function ownerBackedSearch(e:any) {
  const f=await prepared(e);const accepted=ok(f.submitted,202),replay=ok(await e.api('compute-search-submit',f.search,f.identity),202);assert.equal(replay.searchId,accepted.searchId);
  const conflict=await e.api('compute-search-submit',{...f.search,strategy:'FIXED_SEQUENTIAL'},f.identity);assert.equal(conflict.status,422);

@@ -19,7 +19,9 @@ export async function inductionRow(ctx: PeMutationContext, id: string, c?: PoolC
     if (!row) throw unavailable();
     if (sha(row.request) !== row.request_digest || sha(row.cut) !== row.cut_digest)
       throw Error('P6_DURABLE_REQUEST_OR_CUT_PREIMAGE_INVALID');
-    return row;
+    const fence = row.claim_fence === null ? null : Number(row.claim_fence);
+    if (fence !== null && (!Number.isSafeInteger(fence) || fence < 1)) throw Error('P6_DURABLE_CLAIM_FENCE_INVALID');
+    return { ...row, claim_fence: fence };
   };
   return c ? read(c) : tx(ctx, read, true);
 }
@@ -27,7 +29,7 @@ export async function authorizeInduction(ctx: PeMutationContext, row: InductionR
   await authorize(ctx, row.request.root, [{ type: 'work', id: row.work_id }]);
   // Refresh rights for the full declared universe without rewriting its cut.
   const fresh = await readProcedureExperience(ctx, {
-    programIds: row.request.programIds, knowledgeCut: row.request.knowledgeCut, mode: 'ordinary_disposable',
+    programIds: row.request.programIds, knowledgeCut: row.request.knowledgeCut, mode: row.request.mode,
   });
   if (fresh.cutDigest !== row.cut.cutDigest) throw Error('P6_NATIVE_EPISODE_CUT_CHANGED');
   return fresh;
