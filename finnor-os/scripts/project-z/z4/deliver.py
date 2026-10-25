@@ -80,32 +80,48 @@ def archive(root, destination, members):
                             with path.open("rb") as stream:
                                 tar.addfile(info, stream)
     os.chmod(destination, 0o600)
+    return readback(destination, members, hardlinks)
+
+
+def readback(destination, members, hardlinks):
     expected = {entry["path"]: entry for entry in members}
-    seen = set()
-    with tarfile.open(destination, "r:gz") as tar:
+    check(len(expected) == len(members), "Z4_DELIVERY_DUPLICATE_MANIFEST_MEMBER")
+    seen, verified = set(), {}
+    stored_bodies, stored_bytes = 0, 0
+    with tarfile.open(destination, "r|gz") as tar:
         for item in tar:
             check(item.name in expected and item.name not in seen, "Z4_DELIVERY_UNDECLARED_ARCHIVE_MEMBER")
             seen.add(item.name)
             entry = expected[item.name]
+            mode = 0o700 if entry["kind"] == "symlink" else 0o500 if entry["executable"] else 0o400
+            check((item.uid, item.gid, item.mtime, item.uname, item.gname, item.mode) ==
+                  (0, 0, 0, "", "", mode), "Z4_DELIVERY_ARCHIVE_METADATA_READBACK")
             if entry["kind"] == "symlink":
                 check(item.issym() and item.linkname == entry["target"], "Z4_DELIVERY_SYMLINK_READBACK")
             else:
                 if item.islnk():
                     target = expected.get(item.linkname)
-                    check(item.linkname in seen and item.linkname != item.name and target is not None and
+                    check(item.linkname in verified and item.linkname != item.name and target is not None and
                           target["kind"] == "file" and target["sha256"] == entry["sha256"] and
-                          target["executable"] == entry["executable"] and
+                          target["bytes"] == entry["bytes"] and target["executable"] == entry["executable"] and
                           hardlinks.get(item.name) == item.linkname, "Z4_DELIVERY_HARDLINK_READBACK")
+                    actual_hash = verified[item.linkname]
                 else:
                     check(item.isfile() and item.size == entry["bytes"], "Z4_DELIVERY_FILE_READBACK")
-                h = hashlib.sha256()
-                with tar.extractfile(item) as stream:
-                    while chunk := stream.read(1024 * 1024):
-                        h.update(chunk)
-                check(h.hexdigest() == entry["sha256"], "Z4_DELIVERY_CONTENT_READBACK")
+                    h = hashlib.sha256()
+                    with tar.extractfile(item) as stream:
+                        while chunk := stream.read(1024 * 1024):
+                            h.update(chunk)
+                    actual_hash = h.hexdigest()
+                    stored_bodies += 1
+                    stored_bytes += item.size
+                check(actual_hash == entry["sha256"], "Z4_DELIVERY_CONTENT_READBACK")
+                verified[item.name] = actual_hash
     check(seen == set(expected), "Z4_DELIVERY_ARCHIVE_DENOMINATOR")
     return {"path": destination.name, "sha256": sha(destination), "bytes": destination.stat().st_size,
             "members": len(members), "hardlinkMembers": len(hardlinks),
+            "storedBodiesHashed": stored_bodies, "storedBytesHashed": stored_bytes,
+            "readbackAlgorithm": "SINGLE_FORWARD_STREAM_EARLIER_VERIFIED_BODY_REFERENCES",
             "readback": "PASSED_ALL_DECLARED_MEMBERS"}
 
 

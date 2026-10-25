@@ -70,3 +70,19 @@ trace aliases cannot bypass exact cache/native-intermediate exclusions.
 Keep the independent archive unsafe-member and symlink-target guards.
 Repeat actual full packaging/readback and relocation, not a post-code unit
 test or a relaxed manifest check.
+
+## Actual compressed-hardlink readback defect, before its repair
+
+`delivery-02` reached its 88,325-member installed archive, including 31,711
+hardlinks and 56,572 distinct regular bodies. The original readback called
+`extractfile` on every hardlink in random-access gzip mode. Each reference
+can seek backwards and decompress preceding data again. The recorded
+packaging process group was stopped with SIGTERM; the queued archive replay
+was also stopped before execution. These are interruptions, not passes.
+
+Read the archive in one forward stream. Hash every stored regular body once;
+validate each hardlink against an already verified earlier body, exact
+declared bytes/hash/executable mode and the writer's exact link target.
+Verify normalized header metadata and the complete member denominator.
+Retain the original archive and validate it with the repaired reader as a
+separate actual-artifact replay. Do not edit the interrupted attempt's state.
